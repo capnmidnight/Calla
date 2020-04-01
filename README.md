@@ -27,5 +27,19 @@ There are also Android and iOS clients for Jitsi that might be cool to fork and 
 ### Artwork
 Oh man, let's go nuts! I would love to see a wide variety of tilesets for rooms and avatars. Maybe customizable clothing and character features. 
 
-## Name
+## ADMIN
+
+### Conduct
+Please read the [Conduct Policy](CONDUCT.md)
+
+### Contributions
+If you think you can be a polite person in accordance with the Conduct Policy, I'd be more than happy to add anyone who asks as a contributor. Just [email me](sean.mcbeth+gh@gmail.com) your profile info and a brief description of what you'd like to work on.
+
+## OTHER
+What else?
+
+### Why?
+[Cuz why not?](https://www.youtube.com/watch?v=YEwlW5sHQ4Q)
+
+### Name
 "Jitsi" is the Bulgarian word for "wires", so "Lozya" is the Bulgarian word for "Vines". Apparently, "Jitsi" is also the Swahili word for "Juice", so in my mind, this project is Grape Vines. Yes, I name all of my projects after plants.
