@@ -1,0 +1,146 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#main,
+#main > * {
+    position: absolute;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    font-family: -apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif;
+    font-size: 12pt;
+    line-height: 1.5;
+}
+
+.accessibility-text {
+    display: none;
+}
+
+a:visited,
+a:focus {
+    color: #5a5a33;
+}
+
+.icon {
+    display: inline-block;
+    background-image: url("icons.min.png");
+    background-repeat: no-repeat;
+    background-size: 100%;
+    width: 25px;
+    height: 25px;
+    margin-left: 7px;
+}
+
+    .icon:hover {
+        margin: -1px 1px 1px 6px;
+        box-shadow: 1px 1px 7px #000;
+    }
+
+.icon-linkedin {
+    background-position: 0 -75px;
+}
+
+.icon-twitter {
+    background-position: 0 -100px;
+}
+
+.icon-github {
+    background-position: 0 -125px;
+}
+
+.icon-email {
+    background-position: 0 -150px;
+}
+
+.icon-calendar {
+    background-position: 0px -175px;
+}
+
+.icon-telephone {
+    background-position: 0px -200px;
+}
+
+.icon-resume {
+    background-position: 0px -225px;
+}
+
+.icon-shrink {
+    background-position: 0px -250px;
+}
+
+.icon-expand {
+    background-position: 0px -275px;
+}
+
+h2 {
+    font-family: monospace;
+}
+
+    h2 a[name]::before {
+        content: "[";
+    }
+
+    h2 a[name]::after {
+        content: "]";
+    }
+
+#menu {
+    text-align: center;
+    display: block;
+    position: fixed;
+    width: 100%;
+    font-family: monospace;
+    border-bottom: solid 2px #000;
+    background-color: #fff;
+}
+
+.menu-open {
+    right: 0;
+}
+
+
+    .menu-open > ul > li:first-child > a > .icon {
+        background-position: 0px -250px;
+    }
+
+.menu-closed {
+    left: calc(100% - 50px);
+}
+
+    .menu-closed > ul > li:first-child > a > .icon {
+        background-position: 0px -275px;
+    }
+
+#menu ul {
+    list-style-type: none;
+    padding: 0;
+    margin: auto 0;
+    display: flex;
+    flex-direction: row;
+}
+
+    #menu ul li {
+        display: inline-block;
+        flex: auto;
+    }
+
+        #menu ul li a {
+            display: inline-block;
+            text-decoration: none;
+            padding: 0.75em 0.5em;
+        }
+
+@media (min-width: 640px) {
+    #menu {
+        display: inline-block;
+        width: initial;
+    }
+}
