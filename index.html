@@ -15,7 +15,7 @@
         body,
         #main,
         #main > * {
-            position: absolute;
+            position: fixed;
             margin: 0;
             padding: 0;
             border: 0;
@@ -165,11 +165,13 @@
 
         #gui {
             display: flex;
+            overflow-y: scroll;
         }
 
         #intro {
-            width: 50%;
-            margin: 20% auto auto auto;
+            min-width: 360px;
+            max-width: 900px;
+            margin: 10em auto auto auto;
             background-color: white;
             padding: 1em 1em 3em 1em;
             border-radius: 5px;
@@ -312,6 +314,7 @@
                     location.hash = roomName;
                     gui.style.display = "none";
                     demo.style.display = "none";
+                    frontBuffer.style.display = "none";
                 }
             });
         }
@@ -322,6 +325,8 @@
                     noSSL: false,
                     disableThirdPartyRequests: true,
                     parentNode: jitsi,
+                    width: "100%",
+                    height: "100%",
                     configOverwrite: {
                         startAudioOnly: true
                     },
