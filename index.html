@@ -306,11 +306,12 @@
             var target = document.querySelector(targetID);
             var isOpen = target.className === "menu-open";
             target.className = isOpen ? "menu-closed" : "menu-open";
+            var ui = me ? frontBuffer : gui;
             if (isOpen) {
-                frontBuffer.hide();
+                ui.hide();
             }
             else {
-                frontBuffer.show();
+                ui.show();
             }
         }
     </script>
@@ -416,7 +417,6 @@
         }
 
         function conferenceLoaded(evt) {
-            console.log(evt);
             iframe = api.getIFrame();
         }
 
