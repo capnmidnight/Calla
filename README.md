@@ -23,7 +23,7 @@ Lozya adds a small, RPG-style map to the Jitsi meeting view. It gives you an ava
    - Modify "DOMAIN_NAME" in `index.html` scripts to point to your Jitsi Meet server.
 
 ## CONTRIBUTING
-Everything. I only just got the basic Jitsi server running as of 4/1/2020 (this is not an April Fool's joke. We don't have time for childish games right now).
+Everything. I only just got the basic Jitsi server running as of 4/1/2020 (this is not an April Fool's joke. We don't have time for childish games right now) and the basics of volume scaling done on 4/3/2020.
 
 ### Conduct
 First, please read the [Conduct Policy](CONDUCT.md).
@@ -41,18 +41,18 @@ The QA team is the software development team's best friend. Testing releases and
 IDK, I planned on just hacking this together as I went, but I will probaby write some notes on whatever I've done along they way. Won't say no to more docs.
 
 #### Client
-I have experience hacking on WebRTC stuffs, but I'm certainly welcome for more help. One of the reasons I went with copying the installation's Web resources directory was to get around having to learn their build system. It should be realtively easy to just hack on the HTML files in-place and add whatever JavaScript is needed to get the game view working.
-
-My current plan is to create a wrapper around the browser's WebRTC API that can capture Jitsi's parameters and create an extra data channel using the same handshake values that Jitsi negotiates for itself.
+I have experience hacking on WebRTC stuffs, but I'm certainly welcome for more help. Right now, there's a button to hide the Lozya interface to give access to the Jitsi interface. A lot of the settings can be controlled through the Jitsi Meet Web API, so I think I'd prefer to provide a full interface and hide Jitsi Meet's web interface completely.
 
 There are also Android and iOS clients for Jitsi that might be cool to fork and upgrade to have the game view. That is also outside of my current skillset. 
 
 #### Server
 I'm currently running an Azure VM in Central Korea region (hello, mid-pandemic resource shortages!) with 2 virtual CPUs and 4 GiB of RAM. Operating System is Ubuntu 18.04. This will cost approx. $75/mo, if left to run constantly.
 
-I set the server up using [the Jitsi quick-start instructions](https://github.com/jitsi/jitsi-meet/blob/master/doc/quick-install.md) (Actually, I followed [This video on YouTube](https://www.youtube.com/watch?v=8KR0AhDZF2A), but the directions are largely the same, I just found the video nice to see what to expect for results from each command). This repository is the static Web resources from that install.
+I set the server up using [the Jitsi quick-start instructions](https://github.com/jitsi/jitsi-meet/blob/master/doc/quick-install.md) (Actually, I followed [This video on YouTube](https://www.youtube.com/watch?v=8KR0AhDZF2A), but the directions are largely the same, I just found the video nice to see what to expect for results from each command). 
 
-I'm a software hacker, not a server administrator. Ideally, I'd prefer to fork [the Jitsi-Meet repository](https://github.com/jitsi/jitsi-meet) and install from that, but that's beyond this old Windows developer's Linuxfu right now.
+This repository is a set of static Web resources that use my private Jitsi Meet server through [the Jitsi Meet Web API](https://github.com/jitsi/jitsi-meet/blob/master/doc/api.md).
+
+I'm a software hacker, not a server administrator. There is one file that needs to be copied to the Jitsi Meet install, and one of Jitsi Meet's files edited slightly. Ideally, I'd prefer to fork [the Jitsi-Meet repository](https://github.com/jitsi/jitsi-meet) and install from that, but that's beyond this old Windows developer's Linuxfu right now.
 
 ## OTHER
 What else?
