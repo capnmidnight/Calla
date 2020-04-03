@@ -252,7 +252,7 @@
     <section id="menu" class="menu-open">
         <ul>
             <li>
-                <a onclick="shrink('menu')">
+                <a onclick="shrink('#menu')">
                     <span class="icon icon-shrink">
                         <span class="accessibility-text">Toggle menu visibility.</span>
                     </span>
@@ -303,20 +303,26 @@
     </script>
     <script id="lozya-menu">
         function shrink(targetID) {
-            var target = document.getElementById(targetID);
+            var target = document.querySelector(targetID);
             var isOpen = target.className === "menu-open";
             target.className = isOpen ? "menu-closed" : "menu-open";
+            if (isOpen) {
+                frontBuffer.hide();
+            }
+            else {
+                frontBuffer.show();
+            }
         }
     </script>
     <script id="lozya-gui">
-        var jitsi = document.getElementById("jitsi"),
-            frontBuffer = document.getElementById("frontBuffer"),
-            demo = document.getElementById("demo"),
-            gui = document.getElementById("gui"),
-            room = document.getElementById("room"),
-            user = document.getElementById("user"),
-            pass = document.getElementById("password"),
-            connect = document.getElementById("connect");
+        var jitsi = document.querySelector("#jitsi"),
+            frontBuffer = document.querySelector("#frontBuffer"),
+            demo = document.querySelector("#demo > video"),
+            gui = document.querySelector("#gui"),
+            room = document.querySelector("#room"),
+            user = document.querySelector("#user"),
+            pass = document.querySelector("#password"),
+            connect = document.querySelector("#connect");
 
         if (location.hash.length > 0) {
             room.value = location.hash.substr(1);
@@ -331,7 +337,9 @@
 
             jitsi.hide();
             frontBuffer.hide();
+            demo.parentElement.show();
             demo.show();
+            demo.play();
             gui.show();
         }
 
@@ -567,7 +575,9 @@
 
 
             gui.hide();
+            demo.pause();
             demo.hide();
+            demo.parentElement.hide();
             frontBuffer.show();
             resize();
             frontBuffer.focus();
@@ -717,14 +727,16 @@
 
         function rxGameData(evt) {
             //evt = {
-            //    senderInfo: {
+            //    data: {
+            //      senderInfo: {
             //        jid: "string", // the jid of the sender
             //        id: "string" // the participant id of the sender
-            //    },
-            //    eventData: {
+            //      },
+            //      eventData: {
             //        name: "string", // the name of the datachannel event: `endpoint-text-message`
             //        text: "string" // the received text from the sender
-            //    }
+            //      }
+            //   }
             //};
             var data = JSON.parse(evt.data.eventData.text);
             if (data.hax === "jitsi") {
