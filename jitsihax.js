@@ -26,10 +26,10 @@ addEventListener("message", function(evt) {
     try{
       var data = JSON.parse(evt.data);
       if(data.hax === "jitsi") {
-	 var commandID = "_" + data.command;
-         if(commands[commandID]){
+        var commandID = "_" + data.command;
+        if(commands[commandID]){
            commands[commandID](data);
-	 }
+        }
       }
     }
     catch(exp){

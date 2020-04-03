@@ -194,10 +194,9 @@
     </style>
     <style id="styles-game">
         #frontBuffer {
-            pointer-events: none;
-            margin: 5em;
-            width: calc(100% - 10em);
-            height: calc(100% - 10em);
+            margin: 7em;
+            width: calc(100% - 14em);
+            height: calc(100% - 14em);
         }
     </style>
 </head>
@@ -276,9 +275,16 @@
         </ul>
     </section>
     <script id="lozya-settings">
-        var JITSI_HOST = "primrosevr.com";
+        var JITSI_HOST = "primrosevr.com",
+            DISTANCE_MIN = 2,
+            DISTANCE_MAX = 10,
+            TILE_WIDTH = 32,
+            TILE_HEIGHT = 32.
+            MOVE_REPEAT = 125;
     </script>
     <script id="lozya-base">
+        var DISTANCE_DELTA = DISTANCE_MAX - DISTANCE_MIN;
+
         Element.prototype.show = function () {
             this.style.display = "";
         };
@@ -395,7 +401,7 @@
             api.addEventListener("videoConferenceJoined", startGame);
             api.addEventListener("participantJoined", addUser);
             api.addEventListener("participantLeft", removeUser);
-            api.addEventListener("endpointTextMessageReceived", gameData);
+            api.addEventListener("endpointTextMessageReceived", rxGameData);
             api.addEventListener("videoConferenceLeft", endGame);
 
             addEventListener("unload", endConference);
@@ -406,6 +412,14 @@
             iframe = api.getIFrame();
         }
 
+        function sendJitsiHax(command, obj) {
+            if (iframe) {
+                obj.hax = "jitsi";
+                obj.command = command;
+                iframe.contentWindow.postMessage(JSON.stringify(obj), "https://" + JITSI_HOST);
+            }
+        }
+
         function endConference() {
             endGame();
             api.dispose();
@@ -413,11 +427,79 @@
         }
     </script>
     <script id="lozya-user">
-        function User(id, displayName) {
+        function User(id, displayName, isMe) {
             this.id = id;
             this.displayName = displayName;
             this.x = 0;
             this.y = 0;
+            this.distSqToMe = 0;
+            this.isMe = isMe;
+            this.lastMove = MOVE_REPEAT;
+        };
+
+        User.prototype.setVolume = function (volume) {
+            if (!this.isMe) {
+                sendJitsiHax("setVolume", {
+                    user: this.id,
+                    volume: volume
+                });
+            }
+        };
+
+        User.prototype.moveBy = function (dx, dy) {
+            this.moveTo(this.x + dx, this.y + dy);
+        };
+
+        User.prototype.moveTo = function (x, y) {
+            this.x = x;
+            this.y = y;
+            if (this.isMe) {
+                for (var i = 0; i < userList.length; ++i) {
+                    var user = userList[i];
+                    txGameData(user.id, "moveTo", {
+                        x: this.x,
+                        y: this.y
+                    });
+                }
+            }
+        };
+
+        User.prototype.update = function (dt) {
+            if (this.isMe) {
+                this.lastMove += dt;
+                if (this.lastMove >= MOVE_REPEAT) {
+                    var dx = 0,
+                        dy = 0;
+
+                    for (var i = 0; i < keys.length; ++i) {
+                        var key = keys[i];
+                        switch (key) {
+                            case "ArrowUp": dy--; break;
+                            case "ArrowDown": dy++; break;
+                            case "ArrowLeft": dx--; break;
+                            case "ArrowRight": dx++; break;
+                        }
+                    }
+
+                    this.moveBy(dx, dy);
+                    this.lastMove -= MOVE_REPEAT;
+                }
+            }
+        }
+
+        User.prototype.draw = function (g) {
+            g.save();
+            g.translate(this.x * TILE_WIDTH, this.y * TILE_HEIGHT);
+            g.fillStyle = this.isMe ? "red" : "blue";
+            g.fillRect(0, 0, TILE_WIDTH, TILE_HEIGHT);
+            g.fillStyle = "black";
+            g.textBaseline = "bottom";
+            g.fillText(this.displayName || this.id, TILE_WIDTH / 2, 0);
+            g.restore();
+        };
+
+        User.prototype.requestPosition = function () {
+            txGameData(this.id, "requestPosition");
         };
 
         var userLookup = {},
@@ -431,9 +513,12 @@
             if (userLookup[evt.id]) {
                 removeUser(evt);
             }
-            var user = new User(evt.id, evt.displayName);
+            var user = new User(evt.id, evt.displayName, false);
             userLookup[evt.id] = user;
             userList.push(user);
+            setTimeout(function () {
+                user.requestPosition();
+            }, 3000);
         }
 
         function removeUser(evt) {
@@ -442,7 +527,7 @@
             //};
             var user = userLookup[evt.id];
             if (user) {
-                delete usersLookup[evt.id];
+                delete userLookup[evt.id];
 
                 var userIndex = userList.indexOf(user);
                 if (userIndex >= 0) {
@@ -450,33 +535,23 @@
                 }
             }
         }
-
-        function sendJitsiHax(obj) {
-            if (iframe) {
-                obj.hax = "jitsi";
-                iframe.contentWindow.postMessage(JSON.stringify(obj), "https://" + JITSI_HOST);
-            }
-        }
-
-        function setVolume(id, volume) {
-            sendJitsiHax({
-                command: "setVolume",
-                user: id,
-                volume: volume
-            });
-        }
     </script>
     <script id="lozya-game">
         var g = frontBuffer.getContext("2d"),
-            currentRoomName = null;
+            currentRoomName = null,
+            me = null,
+            TILE_COUNT_X = 0,
+            TILE_COUNT_Y = 0,
+            keys = [];
 
         function resize() {
             frontBuffer.width = frontBuffer.clientWidth * devicePixelRatio;
             frontBuffer.height = frontBuffer.clientHeight * devicePixelRatio;
+            TILE_COUNT_X = Math.floor(frontBuffer.width / TILE_WIDTH);
+            TILE_COUNT_Y = Math.floor(frontBuffer.height / TILE_HEIGHT);
         }
 
         addEventListener("resize", resize);
-        resize();
 
         function startGame(evt) {
             //evt = {
@@ -487,17 +562,39 @@
             //};
 
             currentRoomName = evt.roomName;
-            console.log("======= MY PARTICIPANT ID", evt.id);
+
+            me = new User(evt.id, evt.displayName, true);
+
 
             gui.hide();
             demo.hide();
             frontBuffer.show();
+            resize();
+            frontBuffer.focus();
 
             requestAnimationFrame(function (time) {
                 lastTime = time;
                 requestAnimationFrame(gameLoop);
             });
         }
+
+        function keyDown(evt) {
+            
+            var keyIndex = keys.indexOf(evt.key);
+            if (keyIndex < 0) {
+                keys.push(evt.key);
+            }
+        }
+
+        function keyUp(evt) {
+            var keyIndex = keys.indexOf(evt.key);
+            if (keyIndex >= 0) {
+                keys.splice(keyIndex, 1);
+            }
+        }
+
+        addEventListener("keydown", keyDown, true);
+        addEventListener("keyup", keyUp, true);
 
         function endGame(evt) {
             //evt = {
@@ -521,15 +618,104 @@
             }
         }
 
+        var DISTANCE_MIN_SQ = DISTANCE_MIN * DISTANCE_MIN,
+            DISTANCE_MAX_SQ = DISTANCE_MAX * DISTANCE_MAX;
+
         function update(dt) {
 
+            me.update(dt);
+
+            for (var i = 0; i < userList.length; ++i) {
+                var user = userList[i],
+                    dx = user.x - me.x,
+                    dy = user.y - me.y,
+                    distSq = Math.max(DISTANCE_MIN_SQ, Math.min(DISTANCE_MAX_SQ, dx * dx + dy * dy));
+
+                if (distSq != user.distSqToMe) {
+                    user.distSqToMe = distSq;
+                    var volume = 1 - ((Math.sqrt(distSq) - DISTANCE_MIN) / DISTANCE_DELTA);
+                    user.setVolume(volume);
+                    console.log("Setting volume of user " + user.id + " to " + volume);
+                }
+            }
         }
+
+        var map = [
+            "11111111111111111111",
+            "10000000000000000001",
+            "10000000000000000001",
+            "10000000000000000001",
+            "10000000000000000001",
+            "10000000000000000001",
+            "10000000000000000001",
+            "10000000000000000001",
+            "10000000000000000001",
+            "10000000000000000001",
+            "10000000000000000001",
+            "10000000000000000001",
+            "10000000000000000001",
+            "10000000000000000001",
+            "10000000000000000001",
+            "10000000000000000001",
+            "10000000000000000001",
+            "10000000000000000001",
+            "11111111111111111111"
+        ].map(function (row) { return row.split('').map(parseFloat); }),
+            mapHeight = map.length,
+            mapWidth = map[0].length,
+            midX = Math.floor(mapWidth / 2),
+            midY = Math.floor(mapHeight / 2);
+
+        var styles = ["lightgrey", "darkgrey"];
 
         function render() {
+            g.resetTransform();
 
+            g.fillStyle = "white";
+            g.fillRect(0, 0, frontBuffer.width, frontBuffer.height);
+
+            g.translate(Math.floor(TILE_COUNT_X * TILE_WIDTH / 2), Math.floor(TILE_COUNT_Y * TILE_HEIGHT / 2));
+            g.translate(-me.x * TILE_WIDTH, -me.y * TILE_HEIGHT);
+
+            g.save();
+            g.translate(-midX * TILE_WIDTH, -midY * TILE_HEIGHT);
+            for (var y = 0; y < map.length; ++y) {
+                var row = map[y];
+                for (var x = 0; x < row.length; ++x) {
+                    var tile = row[x];
+                    g.fillStyle = styles[tile];
+                    g.fillRect(x * TILE_WIDTH, y * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+                }
+            }
+            g.restore();
+
+            for (var i = 0; i < userList.length; ++i) {
+                userList[i].draw(g);
+            }
+
+            me.draw(g);
         }
 
-        function gameData(evt) {
+        function txGameData(id, command, obj) {
+            obj = obj || {};
+            obj.hax = "jitsi";
+            obj.command = command;
+            api.executeCommand("sendEndpointTextMessage", id, JSON.stringify(obj));
+        }
+
+        var commands = {
+            moveTo: function (id, evt) {
+                var user = userLookup[id];
+                if (user) {
+                    user.moveTo(evt.x, evt.y);
+                }
+            },
+            requestPosition: function (id) {
+                txGameData(id, "moveTo", { x: me.x, y: me.y });
+            }
+        }
+
+        function rxGameData(evt) {
             //evt = {
             //    senderInfo: {
             //        jid: "string", // the jid of the sender
@@ -540,6 +726,12 @@
             //        text: "string" // the received text from the sender
             //    }
             //};
+            var data = JSON.parse(evt.data.eventData.text);
+            if (data.hax === "jitsi") {
+                if (commands[data.command]) {
+                    commands[data.command](evt.data.senderInfo.id, data);
+                }
+            }
         }
     </script>
     <script id="jitsi-meet-api">
