@@ -17,9 +17,7 @@ Lozya adds a small, RPG-style map to the Jitsi meeting view. It gives you an ava
 - Once you are done changing settings, use the `>` arrow in the upper-right menu to return to the map view.
 - Use the Arrow Keys to move your character around.
 
-<video src="/capnmidnight/lozya/blob/master/demo.webm">
-
-</video>
+<img src="https://raw.githubusercontent.com/capnmidnight/lozya/master/screenshot.png">
 
 ## INSTALLATION
 
