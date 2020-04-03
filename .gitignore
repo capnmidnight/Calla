@@ -104,3 +104,4 @@ dist
 .tern-port
 /.vs
 /lozya.sln
+/Web.config
