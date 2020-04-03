@@ -50,7 +50,7 @@ There are also Android and iOS clients for Jitsi that might be cool to fork and 
 #### Server
 I'm currently running an Azure VM in Central Korea region (hello, mid-pandemic resource shortages!) with 2 virtual CPUs and 4 GiB of RAM. Operating System is Ubuntu 18.04. This will cost approx. $75/mo, if left to run constantly.
 
-I set the server up using [the Jitsi quick-start instructions](https://github.com/jitsi/jitsi-meet/blob/master/doc/quick-install.md) (Actually, I followed [This video on YouTube](https://www.youtube.com/watch?v=8KR0AhDZF2A, but the directions are largely the same, I just found the video nice to see what to expect for results from each command). This repository is the static Web resources from that install.
+I set the server up using [the Jitsi quick-start instructions](https://github.com/jitsi/jitsi-meet/blob/master/doc/quick-install.md) (Actually, I followed [This video on YouTube](https://www.youtube.com/watch?v=8KR0AhDZF2A), but the directions are largely the same, I just found the video nice to see what to expect for results from each command). This repository is the static Web resources from that install.
 
 I'm a software hacker, not a server administrator. Ideally, I'd prefer to fork [the Jitsi-Meet repository](https://github.com/jitsi/jitsi-meet) and install from that, but that's beyond this old Windows developer's Linuxfu right now.
 
