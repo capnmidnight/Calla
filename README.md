@@ -7,6 +7,21 @@ Even when it works, teleconferencing still kind of sucks. Only one person can re
 ## SOLUTION
 Lozya adds a small, RPG-style map to the Jitsi meeting view. It gives you an avatar to walk around the room. Users choose where to sit in relation to other users. Users very close to you are set to full volume. Users a little far away have their volume scaled down accordingly. Users too far away to care about are rendered with zero volume.
 
+ - Visit the current installation at [meet.primrosevr.com](https://meet.primrosevr.com).
+ - Enter a room name and user name.
+ - Click "Connect" and wait for the connection to go through.
+ - If you need to change your microphone settings, click the `<` arrow in the menu in the upper right corner of the window to hide the map view and give you full access to the Jitsi Meet interface. 
+ - Once you are done changing settings, use the `>` arrow in the upper-right menu to return to the map view.
+ - Use the Arrow Keys to move your character around.
+
+## INSTALLATION
+
+ - First, setup Jitsi Meet on a server of your choice: [Jitsi quick-start instructions](https://github.com/jitsi/jitsi-meet/blob/master/doc/quick-install.md).
+ - Next login to your Jitsi Meet server as root and edit `/usr/share/jitsi-meet/index.html` and add the following line: `<script type="text/javascript" src="jitsihax.js"></script>`.
+ - Copy the script `jitsihax.js` from this repo to `/usr/share/jitsi-meet/`.
+ - Install the rest of this repository onto another server of your choice.
+   - Modify "DOMAIN_NAME" in `index.html` scripts to point to your Jitsi Meet server.
+
 ## CONTRIBUTING
 Everything. I only just got the basic Jitsi server running as of 4/1/2020 (this is not an April Fool's joke. We don't have time for childish games right now).
 
