@@ -549,7 +549,9 @@
             currentRoomName = null,
             me = null,
             TILE_COUNT_X = 0,
+            TILE_COUNT_X_HALF = 0,
             TILE_COUNT_Y = 0,
+            TILE_COUNT_Y_HALF = 0,
             keys = [];
 
         function resize() {
@@ -557,6 +559,8 @@
             frontBuffer.height = frontBuffer.clientHeight * devicePixelRatio;
             TILE_COUNT_X = Math.floor(frontBuffer.width / TILE_WIDTH);
             TILE_COUNT_Y = Math.floor(frontBuffer.height / TILE_HEIGHT);
+            TILE_COUNT_X_HALF = Math.floor(TILE_COUNT_X / 2);
+            TILE_COUNT_Y_HALF = Math.floor(TILE_COUNT_Y / 2);
         }
 
         addEventListener("resize", resize);
@@ -603,8 +607,20 @@
             }
         }
 
-        addEventListener("keydown", keyDown, true);
-        addEventListener("keyup", keyUp, true);
+        addEventListener("keydown", keyDown);
+        addEventListener("keyup", keyUp);
+        frontBuffer.addEventListener("click", click);
+
+        function click(evt) {
+            if (me) {
+                var tileX = Math.floor(evt.offsetX * devicePixelRatio / TILE_WIDTH),
+                    tileY = Math.floor(evt.offsetY * devicePixelRatio / TILE_HEIGHT),
+                    dx = tileX - TILE_COUNT_X_HALF,
+                    dy = tileY - TILE_COUNT_Y_HALF;
+
+                me.moveBy(dx, dy);
+            }
+        }
 
         function endGame(evt) {
             //evt = {
