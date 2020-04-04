@@ -227,24 +227,15 @@
     grid-column: 2 / 4;
     grid-row: 1" />
 
-                    <label for="password" style="
-    grid-column: 1;
-    grid-row: 2">
-                        Room password (optional)
-                    </label>
-                    <input type="password" id="password" placeholder="(Optional)" style="
-    grid-column: 2 / 4;
-    grid-row: 2" />
-
 
                     <label for="user" style="
     grid-column: 1;
-    grid-row: 3">
+    grid-row: 2">
                         User name:
                     </label>
                     <input type="text" id="user" placeholder="(Required)" style="
     grid-column: 2 / 4;
-    grid-row: 3" />
+    grid-row: 2" />
 
                     <button type="button" id="connect" onclick="login()" style="
     grid-column: 3;
@@ -328,7 +319,6 @@
             gui = document.querySelector("#gui"),
             room = document.querySelector("#room"),
             user = document.querySelector("#user"),
-            pass = document.querySelector("#password"),
             connect = document.querySelector("#connect");
 
         if (location.hash.length > 0) {
@@ -340,7 +330,6 @@
             connect.unlock();
             room.unlock();
             user.unlock();
-            pass.unlock();
 
             jitsi.hide();
             frontBuffer.hide();
@@ -357,14 +346,12 @@
             connect.lock();
             room.lock();
             user.lock();
-            pass.lock();
             var roomName = room.value.trim(),
-                userName = user.value.trim(),
-                password = pass.value;
+                userName = user.value.trim();
 
             if (roomName.length > 0
                 && userName.length > 0) {
-                startConference(roomName, userName, password);
+                startConference(roomName, userName);
             }
             else {
                 showLogin();
@@ -384,7 +371,7 @@
         var api = null,
             iframe = null;
 
-        function startConference(roomName, userName, password) {
+        function startConference(roomName, userName) {
             jitsi.show();
 
             location.hash = roomName;
@@ -408,10 +395,6 @@
 
             api = new JitsiMeetExternalAPI(domain, options);
             api.executeCommand("displayName", userName);
-
-            if (password.length > 0) {
-                api.executeCommand("password", password);
-            }
 
             api.addEventListener("videoConferenceJoined", startGame);
             api.addEventListener("participantJoined", addUser);
