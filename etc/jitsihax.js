@@ -23,13 +23,13 @@
 
         commands = {
             setVolume: function (evt) {
-                var id = "#participant_" + evt.user + " audio",
+                var id = `#participant_${evt.user} audio`,
                     audio = document.querySelector(id);
                 if (audio) {
                     audio.volume = evt.volume;
                 }
                 else {
-                    console.warn("Could not find audio element for user " + user);
+                    console.warn(`Could not find audio element for user ${user}`);
                 }
             }
         };

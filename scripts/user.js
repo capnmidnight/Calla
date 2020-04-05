@@ -79,8 +79,6 @@ class User {
                 user: user.id,
                 volume: volume
             });
-
-            console.log("Setting volume of user " + user.id + " to " + volume);
         }
     }
 
