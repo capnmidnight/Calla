@@ -102,18 +102,12 @@ function startConference(roomName, userName) {
     api.addEventListener("participantJoined", addUser);
     api.addEventListener("participantLeft", removeUser);
     api.addEventListener("endpointTextMessageReceived", jitsiClient.rxGameData);
-    api.addEventListener("videoConferenceLeft", endGame);
 
     addEventListener("unload", () => api.dispose());
 }
 
 function conferenceLoaded(evt) {
     iframe = api.getIFrame();
-}
-
-function endConference() {
-    endGame();
-    api.dispose();
 }
 
 function addUser(evt) {
