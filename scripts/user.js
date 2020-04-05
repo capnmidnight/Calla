@@ -1,5 +1,7 @@
 ﻿"use strict";
 
+const POSITION_REQUEST_DEBOUNCE_TIME = 1000;
+
 class User {
     constructor(id, displayName, isMe) {
         this.id = id;
@@ -12,6 +14,8 @@ class User {
         this.t = 0;
         this.distSqToMe = 0;
         this.isMe = isMe;
+        this.hasPosition = isMe;
+        this.lastPositionRequestTime = Date.now() - POSITION_REQUEST_DEBOUNCE_TIME;
         this.lastMove = MOVE_REPEAT;
         this.keys = [];
 
@@ -54,6 +58,11 @@ class User {
                     y: y
                 });
             }
+        }
+        else if (!this.hasPosition) {
+            this.hasPosition = true;
+            this.x = x;
+            this.y = y;
         }
 
         this.sx = this.x;
@@ -106,6 +115,9 @@ class User {
                 this.lastMove = 0;
             }
         }
+        else if (!this.hasPosition) {
+            this.requestPosition();
+        }
 
         if (this.dist > 0) {
             this.t += dt;
@@ -124,25 +136,32 @@ class User {
     }
 
     draw(g) {
-        g.save();
-        g.translate(this.tx * TILE_WIDTH, this.ty * TILE_HEIGHT);
-        if (this.isMe && this.dist > 0) {
-            g.strokeStyle = "green";
-            g.strokeRect(0, 0, TILE_WIDTH, TILE_HEIGHT);
+        if (this.hasPosition) {
+            g.save();
+            g.translate(this.tx * TILE_WIDTH, this.ty * TILE_HEIGHT);
+            if (this.isMe && this.dist > 0) {
+                g.strokeStyle = "green";
+                g.strokeRect(0, 0, TILE_WIDTH, TILE_HEIGHT);
+            }
+            g.fillStyle = this.isMe ? "red" : "blue";
+            g.fillRect(
+                (this.x - this.tx) * TILE_WIDTH,
+                (this.y - this.ty) * TILE_HEIGHT,
+                TILE_WIDTH,
+                TILE_HEIGHT);
+            g.fillStyle = "black";
+            g.textBaseline = "bottom";
+            g.fillText(this.displayName || this.id, TILE_WIDTH / 2, 0);
+            g.restore();
         }
-        g.fillStyle = this.isMe ? "red" : "blue";
-        g.fillRect(
-            (this.x - this.tx) * TILE_WIDTH,
-            (this.y - this.ty) * TILE_HEIGHT,
-            TILE_WIDTH,
-            TILE_HEIGHT);
-        g.fillStyle = "black";
-        g.textBaseline = "bottom";
-        g.fillText(this.displayName || this.id, TILE_WIDTH / 2, 0);
-        g.restore();
     }
 
     requestPosition() {
-        jitsiClient.txGameData(this.id, "requestPosition");
+        const now = Date.now(),
+            dt = now - this.lastPositionRequestTime;
+        if (dt >= POSITION_REQUEST_DEBOUNCE_TIME) {
+            this.lastPositionRequestTime = now;
+            jitsiClient.txGameData(this.id, "requestPosition");
+        }
     }
 }
