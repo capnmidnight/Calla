@@ -1,0 +1,38 @@
+﻿* {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#main,
+#main > * {
+    position: fixed;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    font-family: -apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif;
+    font-size: 12pt;
+    line-height: 1.5;
+}
+
+.accessibility-text {
+    display: none;
+}
+
+a:visited,
+a:focus {
+    color: #5a5a33;
+}
+
+section h1 {
+    font-size: 2em;
+}
+
+section h2 {
+    font-size: 1.5em;
+}
