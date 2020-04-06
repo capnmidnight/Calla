@@ -35,9 +35,9 @@ class TileMap {
     draw(g) {
         g.save();
         g.translate(this.offsetX * map.tileWidth, this.offsetY * map.tileHeight);
-        for (var y = 0; y < this.height; ++y) {
-            for (var x = 0; x < this.width; ++x) {
-                var tile = this.tiles[y][x];
+        for (let y = 0; y < this.height; ++y) {
+            for (let x = 0; x < this.width; ++x) {
+                const tile = this.tiles[y][x];
                 this.tileset.draw(g, tile, x, y);
             }
         }

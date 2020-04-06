@@ -79,7 +79,7 @@ function addUser(evt) {
     if (userLookup[evt.id]) {
         removeUser(evt);
     }
-    var user = new User(evt.id, evt.displayName, false);
+    const user = new User(evt.id, evt.displayName, false);
     userLookup[evt.id] = user;
     userList.unshift(user);
 }
@@ -88,11 +88,11 @@ function removeUser(evt) {
     //evt = {
     //    id: "string" // the id of the participant
     //};
-    var user = userLookup[evt.id];
-    if (user) {
+    const user = userLookup[evt.id];
+    if (!!user) {
         delete userLookup[evt.id];
 
-        var userIndex = userList.indexOf(user);
+        const userIndex = userList.indexOf(user);
         if (userIndex >= 0) {
             userList.splice(userIndex, 1);
         }
@@ -103,7 +103,7 @@ function gameLoop(time) {
     if (currentRoomName !== null) {
         requestAnimationFrame(gameLoop);
     }
-    var dt = time - lastTime;
+    const dt = time - lastTime;
     lastTime = time;
     update(dt / 1000);
     render();

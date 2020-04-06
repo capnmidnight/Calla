@@ -23,7 +23,7 @@ const jitsiClient = (function () {
         removeEventListener: function (evtName, callback) {
             const handlers = eventHandlers[evtName];
             if (!!handlers) {
-                var idx = handlers.indexOf(callback);
+                const idx = handlers.indexOf(callback);
                 if (idx >= 0) {
                     handlers.splice(idx, 1);
                 }
@@ -54,9 +54,9 @@ const jitsiClient = (function () {
             //      }
             //   }
             //};
-            var data = JSON.parse(evt.data.eventData.text);
+            const data = JSON.parse(evt.data.eventData.text);
             if (data.hax === LOZYA_FINGERPRINT) {
-                var handlers = eventHandlers[data.command];
+                const handlers = eventHandlers[data.command];
                 if (!!handlers) {
                     data.participantID = evt.data.senderInfo.id;
                     for (let i = 0; i < handlers.length; ++i) {

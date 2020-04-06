@@ -23,7 +23,7 @@
 
         commands = {
             setVolume: function (evt) {
-                var id = `#participant_${evt.user} audio`,
+                const id = `#participant_${evt.user} audio`,
                     audio = document.querySelector(id);
                 if (audio) {
                     audio.volume = evt.volume;

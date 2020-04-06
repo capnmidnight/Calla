@@ -23,21 +23,21 @@ class User {
 
         if (isMe) {
             addEventListener("keydown", (evt) => {
-                var keyIndex = this.keys.indexOf(evt.key);
+                const keyIndex = this.keys.indexOf(evt.key);
                 if (keyIndex < 0) {
                     this.keys.push(evt.key);
                 }
             });
 
             addEventListener("keyup", (evt) => {
-                var keyIndex = this.keys.indexOf(evt.key);
+                const keyIndex = this.keys.indexOf(evt.key);
                 if (keyIndex >= 0) {
                     this.keys.splice(keyIndex, 1);
                 }
             });
 
             frontBuffer.addEventListener("click", (evt) => {
-                var tileX = Math.floor(evt.offsetX * devicePixelRatio / map.tileWidth),
+                const tileX = Math.floor(evt.offsetX * devicePixelRatio / map.tileWidth),
                     tileY = Math.floor(evt.offsetY * devicePixelRatio / map.tileHeight),
                     dx = tileX - TILE_COUNT_X_HALF,
                     dy = tileY - TILE_COUNT_Y_HALF;
@@ -81,13 +81,13 @@ class User {
     readUser(user) {
         if (this.isMe
             && !user.isMe) {
-            var dx = user.tx - this.tx,
+            const dx = user.tx - this.tx,
                 dy = user.ty - this.ty,
                 distSq = Math.max(AUDIO_DISTANCE_MIN_SQ, Math.min(AUDIO_DISTANCE_MAX_SQ, dx * dx + dy * dy));
 
             if (distSq !== user.distSqToMe) {
                 user.distSqToMe = distSq;
-                var volume = 1 - ((Math.sqrt(distSq) - AUDIO_DISTANCE_MIN) / AUDIO_DISTANCE_DELTA);
+                const volume = 1 - ((Math.sqrt(distSq) - AUDIO_DISTANCE_MIN) / AUDIO_DISTANCE_DELTA);
 
                 jitsiClient.txJitsiHax("setVolume", {
                     user: user.id,
@@ -101,11 +101,10 @@ class User {
         if (this.isMe) {
             this.lastMove += dt;
             if (this.lastMove >= MOVE_REPEAT) {
-                var dx = 0,
+                let dx = 0,
                     dy = 0;
 
-                for (var i = 0; i < this.keys.length; ++i) {
-                    var key = this.keys[i];
+                for (let key of this.keys) {
                     switch (key) {
                         case "ArrowUp": dy--; break;
                         case "ArrowDown": dy++; break;
@@ -141,7 +140,7 @@ class User {
                 this.t = this.dx = this.dy = this.dist = 0;
             }
             else {
-                var p = this.t / MOVE_TRANSITION_TIME,
+                const p = this.t / MOVE_TRANSITION_TIME,
                     s = Math.sin(Math.PI * p / 2);
                 this.x = this.sx + s * this.dx;
                 this.y = this.sy + s * this.dy;

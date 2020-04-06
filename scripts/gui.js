@@ -25,10 +25,12 @@ else {
 }
 
 function shrink(targetID) {
-    var target = document.querySelector(targetID);
-    var isOpen = target.className === "menu-open";
-    target.className = isOpen ? "menu-closed" : "menu-open";
-    var ui = me ? frontBuffer : gui;
+    const target = document.querySelector(targetID),
+        isOpen = target.className === "menu-open",
+        ui = !!me ? frontBuffer : gui
+
+    target.className = isOpen ? "menu-closed" : "menu-open";;
+
     if (isOpen) {
         ui.hide();
     }
@@ -56,7 +58,7 @@ function login() {
     connect.lock();
     room.lock();
     user.lock();
-    var roomName = room.value.trim(),
+    const roomName = room.value.trim(),
         userName = user.value.trim();
 
     if (roomName.length > 0
@@ -82,24 +84,21 @@ function startConference(roomName, userName) {
 
     location.hash = roomName;
 
-    var domain = JITSI_HOST,
-        options = {
-            noSSL: false,
-            disableThirdPartyRequests: true,
-            parentNode: jitsi,
-            width: "100%",
-            height: "100%",
-            configOverwrite: {
-                startAudioOnly: true
-            },
-            interfaceConfigOverwrite: {
-                DISABLE_VIDEO_BACKGROUND: true
-            },
-            roomName: roomName,
-            onload: conferenceLoaded
-        };
-
-    api = new JitsiMeetExternalAPI(domain, options);
+    api = new JitsiMeetExternalAPI(JITSI_HOST, {
+        noSSL: false,
+        disableThirdPartyRequests: true,
+        parentNode: jitsi,
+        width: "100%",
+        height: "100%",
+        configOverwrite: {
+            startAudioOnly: true
+        },
+        interfaceConfigOverwrite: {
+            DISABLE_VIDEO_BACKGROUND: true
+        },
+        roomName: roomName,
+        onload: conferenceLoaded
+    });
     api.executeCommand("displayName", userName);
     registerGameListeners(api);
     api.addEventListener("videoConferenceJoined", function (evt) {
