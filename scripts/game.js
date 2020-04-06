@@ -122,8 +122,7 @@ function update(dt) {
 function render() {
     g.resetTransform();
 
-    g.fillStyle = "white";
-    g.fillRect(0, 0, frontBuffer.width, frontBuffer.height);
+    g.clearRect(0, 0, frontBuffer.width, frontBuffer.height);
     g.translate(TILE_COUNT_X_HALF * map.tileWidth, TILE_COUNT_Y_HALF * map.tileHeight);
     g.translate(-me.x * map.tileWidth, -me.y * map.tileHeight);
 
