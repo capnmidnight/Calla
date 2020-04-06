@@ -94,7 +94,7 @@ function startConference(roomName, userName) {
 
     api = new JitsiMeetExternalAPI(domain, options);
     api.executeCommand("displayName", userName);
-
+    registerGameListeners(api);
     api.addEventListener("videoConferenceJoined", function (evt) {
         gui.hide();
         demo.pause();

@@ -30,6 +30,13 @@ function resize() {
     TILE_COUNT_Y_HALF = Math.floor(TILE_COUNT_Y / 2);
 }
 
+function registerGameListeners(api) {
+    api.addEventListener("videoConferenceLeft", endGame);
+    api.addEventListener("participantJoined", addUser);
+    api.addEventListener("participantLeft", removeUser);
+    api.addEventListener("endpointTextMessageReceived", jitsiClient.rxGameData);
+}
+
 function startGame(evt) {
     //evt = {
     //    roomName: "string", // the room name of the conference
@@ -39,11 +46,6 @@ function startGame(evt) {
     //};
 
     currentRoomName = evt.roomName;
-
-    api.addEventListener("videoConferenceLeft", endGame);
-    api.addEventListener("participantJoined", addUser);
-    api.addEventListener("participantLeft", removeUser);
-    api.addEventListener("endpointTextMessageReceived", jitsiClient.rxGameData);
 
     me = new User(evt.id, evt.displayName, true);
     userList.push(me);
