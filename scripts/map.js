@@ -15,7 +15,11 @@ TileSet.DEFAULT = {
     tileHeight: 32,
     draw: function (g, tile, x, y) {
         g.fillStyle = DEFAULT_STYLES[tile];
-        g.fillRect(x * map.tileWidth, y * map.tileHeight, map.tileWidth, map.tileHeight);
+        g.fillRect(
+            x * map.tileWidth - 0.25,
+            y * map.tileHeight - 0.25,
+            map.tileWidth + 0.5,
+            map.tileHeight + 0.5);
     }
 };
 
