@@ -212,9 +212,9 @@ function render() {
     const targetCameraX = -me.x * map.tileWidth,
         targetCameraY = -me.y * map.tileHeight;
 
-    cameraX = lerp(cameraX, targetCameraX, CAMERA_LERP);
-    cameraY = lerp(cameraY, targetCameraY, CAMERA_LERP);
     cameraZ = lerp(cameraZ, targetCameraZ, CAMERA_LERP * 10);
+    cameraX = lerp(cameraX, targetCameraX, CAMERA_LERP * cameraZ);
+    cameraY = lerp(cameraY, targetCameraY, CAMERA_LERP * cameraZ);
 
     g.resetTransform();
 
