@@ -130,8 +130,8 @@ function render() {
 
     map.draw(g);
 
-    for (let i = userList.length - 1; i >= 0; --i) {
-        userList[i].draw(g, map);
+    for (let user of userList) {
+        user.draw(g, map, userList);
     }
 }
 

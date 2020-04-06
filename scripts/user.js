@@ -1,6 +1,8 @@
 ﻿"use strict";
 
-const POSITION_REQUEST_DEBOUNCE_TIME = 1000;
+const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
+    STACKED_USER_OFFSET_X = 5,
+    STACKED_USER_OFFSET_Y = 5;
 
 class User {
     constructor(id, displayName, isMe) {
@@ -83,7 +85,7 @@ class User {
                 dy = user.ty - this.ty,
                 distSq = Math.max(AUDIO_DISTANCE_MIN_SQ, Math.min(AUDIO_DISTANCE_MAX_SQ, dx * dx + dy * dy));
 
-            if (distSq != user.distSqToMe) {
+            if (distSq !== user.distSqToMe) {
                 user.distSqToMe = distSq;
                 var volume = 1 - ((Math.sqrt(distSq) - AUDIO_DISTANCE_MIN) / AUDIO_DISTANCE_DELTA);
 
@@ -112,7 +114,8 @@ class User {
                     }
                 }
 
-                if (dx != 0 || dy != 0) {
+                if (dx !== 0
+                    || dy !== 0) {
                     this.moveBy(dx, dy);
                 }
 
@@ -146,20 +149,40 @@ class User {
         }
     }
 
-    draw(g, map) {
+    draw(g, map, userList) {
         if (this.hasPosition) {
-            g.save();
-            g.translate(this.tx * map.tileWidth, this.ty * map.tileHeight);
-            if (this.isMe && this.dist > 0) {
-                g.strokeStyle = "green";
-                g.strokeRect(0, 0, map.tileWidth, map.tileHeight);
+            let usersOnMyTile = 0,
+                myIndex = 0;
+            for (let user of userList) {
+                if (user.hasPosition
+                    && user.tx === this.tx
+                    && user.ty === this.ty) {
+                    if (user.id === this.id) {
+                        myIndex = usersOnMyTile;
+                    }
+                    ++usersOnMyTile;
+                }
             }
+
+            g.save();
+
+            const avatarWidth = map.tileWidth - (usersOnMyTile - 1) * STACKED_USER_OFFSET_X,
+                avatarHeight = map.tileHeight - (usersOnMyTile - 1) * STACKED_USER_OFFSET_Y,
+                offsetX = myIndex * STACKED_USER_OFFSET_X,
+                offsetY = myIndex * STACKED_USER_OFFSET_Y;
+
+            g.translate(this.tx * map.tileWidth + offsetX, this.ty * map.tileHeight + offsetY);
+
             g.fillStyle = this.isMe ? "red" : "blue";
             g.fillRect(
                 (this.x - this.tx) * map.tileWidth,
                 (this.y - this.ty) * map.tileHeight,
-                map.tileWidth,
-                map.tileHeight);
+                avatarWidth,
+                avatarHeight);
+
+            g.strokeStyle = "green";
+            g.strokeRect(0, 0, avatarWidth, avatarHeight);
+
             g.fillStyle = "black";
             g.textBaseline = "bottom";
             g.fillText(this.displayName || this.id, map.tileWidth / 2, 0);

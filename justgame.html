@@ -36,7 +36,7 @@
                     apiEvents[evt].push(func);
                 },
                 createTestUser: function () {
-                    if (userList.length < 5) {
+                    if (userList.length < 15) {
                         const evts = apiEvents.participantJoined;
                         for (let func of evts) {
                             func({
