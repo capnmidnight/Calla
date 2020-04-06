@@ -19,32 +19,6 @@ class User {
         this.hasPosition = isMe;
         this.lastPositionRequestTime = Date.now() - POSITION_REQUEST_DEBOUNCE_TIME;
         this.lastMove = MOVE_REPEAT;
-        this.keys = [];
-
-        if (isMe) {
-            addEventListener("keydown", (evt) => {
-                const keyIndex = this.keys.indexOf(evt.key);
-                if (keyIndex < 0) {
-                    this.keys.push(evt.key);
-                }
-            });
-
-            addEventListener("keyup", (evt) => {
-                const keyIndex = this.keys.indexOf(evt.key);
-                if (keyIndex >= 0) {
-                    this.keys.splice(keyIndex, 1);
-                }
-            });
-
-            frontBuffer.addEventListener("click", (evt) => {
-                const tileX = Math.floor(evt.offsetX * devicePixelRatio / map.tileWidth),
-                    tileY = Math.floor(evt.offsetY * devicePixelRatio / map.tileHeight),
-                    dx = tileX - TILE_COUNT_X_HALF,
-                    dy = tileY - TILE_COUNT_Y_HALF;
-
-                this.moveBy(dx, dy);
-            });
-        }
     }
 
     moveBy(dx, dy) {
@@ -97,14 +71,14 @@ class User {
         }
     }
 
-    readInput(dt) {
+    readInput(dt, keys) {
         if (this.isMe) {
             this.lastMove += dt;
             if (this.lastMove >= MOVE_REPEAT) {
                 let dx = 0,
                     dy = 0;
 
-                for (let key of this.keys) {
+                for (let key of keys) {
                     switch (key) {
                         case "ArrowUp": dy--; break;
                         case "ArrowDown": dy++; break;
