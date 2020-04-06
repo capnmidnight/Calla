@@ -17,3 +17,20 @@ Element.prototype.lock = function () {
 Element.prototype.unlock = function () {
     this.disabled = "";
 };
+
+(function () {
+    const oldAddEventListener = HTMLInputElement.prototype.addEventListener;
+
+    HTMLInputElement.prototype.addEventListener = function (evtName, func, bubbles) {
+        if (evtName === "enter") {
+            oldAddEventListener.call(this, "keypress", function (evt) {
+                if (evt.key === "Enter") {
+                    func(evt);
+                }
+            });
+        }
+        else {
+            oldAddEventListener.call(this, evtName, func, bubbles);
+        }
+    };
+})();

@@ -11,11 +11,18 @@ const jitsi = document.querySelector("#jitsi"),
 let api = null,
     iframe = null;
 
-if (location.hash.length > 0) {
-    room.value = location.hash.substr(1);
-}
+room.addEventListener("enter", user.focus.bind(user));
+user.addEventListener("enter", login);
 
 showLogin();
+
+if (location.hash.length > 0) {
+    room.value = location.hash.substr(1);
+    user.focus();
+}
+else {
+    room.focus();
+}
 
 function shrink(targetID) {
     var target = document.querySelector(targetID);
