@@ -4,7 +4,8 @@
 const map = TileMap.DEFAULT,
     userLookup = {},
     userList = [],
-    g = frontBuffer.getContext("2d");
+    g = frontBuffer.getContext("2d"),
+    CAMERA_LERP = 0.01;
 
 let AUDIO_DISTANCE_DELTA = AUDIO_DISTANCE_MAX - AUDIO_DISTANCE_MIN,
     AUDIO_DISTANCE_MIN_SQ = AUDIO_DISTANCE_MIN * AUDIO_DISTANCE_MIN,
@@ -16,6 +17,8 @@ let AUDIO_DISTANCE_DELTA = AUDIO_DISTANCE_MAX - AUDIO_DISTANCE_MIN,
     TILE_COUNT_Y_HALF = 0,
 
     lastTime = 0,
+    cameraX = 0,
+    cameraY = 0,
     currentRoomName = null,
     me = null;
 
@@ -121,12 +124,21 @@ function update(dt) {
     }
 }
 
+function lerp(a, b, p) {
+    return (1 - p) * a + p * b;
+}
+
 function render() {
     g.resetTransform();
 
     g.clearRect(0, 0, frontBuffer.width, frontBuffer.height);
     g.translate(TILE_COUNT_X_HALF * map.tileWidth, TILE_COUNT_Y_HALF * map.tileHeight);
-    g.translate(-me.x * map.tileWidth, -me.y * map.tileHeight);
+    const userX = -me.x * map.tileWidth,
+        userY = -me.y * map.tileHeight;
+
+    cameraX = lerp(cameraX, userX, CAMERA_LERP);
+    cameraY = lerp(cameraY, userY, CAMERA_LERP);
+    g.translate(cameraX, cameraY);
 
     map.draw(g);
 
