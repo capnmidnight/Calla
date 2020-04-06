@@ -9,19 +9,12 @@ const map = TileMap.DEFAULT,
     CAMERA_LERP = 0.01,
     CAMERA_ZOOM_MAX = 8,
     CAMERA_ZOOM_MIN = 0.1,
-    CAMERA_ZOOM_DELTA = CAMERA_ZOOM_MAX - CAMERA_ZOOM_MIN,
     CAMERA_ZOOM_SHAPE = 1 / 4,
     CAMERA_ZOOM_SPEED = 0.005,
     isFirefox = typeof InstallTrigger !== 'undefined';
 
-let AUDIO_DISTANCE_DELTA = AUDIO_DISTANCE_MAX - AUDIO_DISTANCE_MIN,
-    AUDIO_DISTANCE_MIN_SQ = AUDIO_DISTANCE_MIN * AUDIO_DISTANCE_MIN,
-    AUDIO_DISTANCE_MAX_SQ = AUDIO_DISTANCE_MAX * AUDIO_DISTANCE_MAX,
-
-    TILE_COUNT_X = 0,
-    TILE_COUNT_X_HALF = 0,
-    TILE_COUNT_Y = 0,
-    TILE_COUNT_Y_HALF = 0,
+let gridOffsetX = 0,
+    gridOffsetY = 0,
 
     lastTime = 0,
     mouseX = 0,
@@ -67,23 +60,19 @@ frontBuffer.addEventListener("click", (evt) => {
 function resize() {
     frontBuffer.width = frontBuffer.clientWidth * devicePixelRatio;
     frontBuffer.height = frontBuffer.clientHeight * devicePixelRatio;
-    TILE_COUNT_X = Math.floor(frontBuffer.width / map.tileWidth);
-    TILE_COUNT_Y = Math.floor(frontBuffer.height / map.tileHeight);
-    TILE_COUNT_X_HALF = Math.floor(TILE_COUNT_X / 2);
-    TILE_COUNT_Y_HALF = Math.floor(TILE_COUNT_Y / 2);
 }
 
 function zoom(evt) {
     evt.preventDefault();
     // Chrome and Firefox report scroll values in completely different ranges.
     const deltaZ = evt.deltaY * (isFirefox ? 1 : 0.02),
-        a = (targetCameraZ - CAMERA_ZOOM_MIN) / CAMERA_ZOOM_DELTA,
+        a = project(targetCameraZ, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
         b = Math.pow(a, CAMERA_ZOOM_SHAPE),
         c = b - deltaZ * CAMERA_ZOOM_SPEED,
-        d = Math.max(0, Math.min(1, c)),
+        d = clamp(c, 0, 1),
         e = Math.pow(d, 1 / CAMERA_ZOOM_SHAPE);
 
-    targetCameraZ = e * CAMERA_ZOOM_DELTA + CAMERA_ZOOM_MIN;
+    targetCameraZ = unproject(e, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX);
 }
 
 function registerGameListeners(api) {
@@ -166,6 +155,8 @@ function gameLoop(time) {
 }
 
 function update(dt) {
+    gridOffsetX = Math.floor(0.5 * frontBuffer.width / map.tileWidth) * map.tileWidth;
+    gridOffsetY = Math.floor(0.5 * frontBuffer.height / map.tileHeight) * map.tileHeight;
     for (let user of userList) {
         user.readInput(dt, keys);
     }
@@ -192,10 +183,8 @@ function drawMouse() {
 }
 
 function getMouseTile() {
-    const mapCenterX = TILE_COUNT_X_HALF * map.tileWidth,
-        mapCenterY = TILE_COUNT_Y_HALF * map.tileHeight,
-        imageX = mouseX - mapCenterX,
-        imageY = mouseY - mapCenterY,
+    const imageX = mouseX - gridOffsetX,
+        imageY = mouseY - gridOffsetY,
         zoomX = imageX / cameraZ,
         zoomY = imageY / cameraZ,
         mapX = zoomX - cameraX,
@@ -217,13 +206,8 @@ function render() {
     cameraY = lerp(cameraY, targetCameraY, CAMERA_LERP * cameraZ);
 
     g.resetTransform();
-
     g.clearRect(0, 0, frontBuffer.width, frontBuffer.height);
-
-    const mapCenterX = TILE_COUNT_X_HALF * map.tileWidth,
-        mapCenterY = TILE_COUNT_Y_HALF * map.tileHeight;
-
-    g.translate(mapCenterX, mapCenterY);
+    g.translate(gridOffsetX, gridOffsetY);
     g.scale(cameraZ, cameraZ);
     g.translate(cameraX, cameraY);
 

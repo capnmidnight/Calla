@@ -18,6 +18,18 @@ Element.prototype.unlock = function () {
     this.disabled = "";
 };
 
+function clamp(v, min, max) {
+    return Math.min(max, Math.max(min, v));
+}
+
+function project(v, min, max) {
+    return (v - min) / (max - min);
+}
+
+function unproject(v, min, max) {
+    return v * (max - min) + min;
+}
+
 (function () {
     const oldAddEventListener = HTMLInputElement.prototype.addEventListener;
 

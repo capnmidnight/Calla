@@ -14,7 +14,7 @@ class User {
         this.dx = 0; this.dy = 0;
         this.dist = 0;
         this.t = 0;
-        this.distSqToMe = 0;
+        this.distToMe = 0;
         this.isMe = isMe;
         this.stackUserCount = 1;
         this.stackIndex = 0;
@@ -63,11 +63,12 @@ class User {
             && !user.isMe) {
             const dx = user.tx - this.tx,
                 dy = user.ty - this.ty,
-                distSq = Math.max(AUDIO_DISTANCE_MIN_SQ, Math.min(AUDIO_DISTANCE_MAX_SQ, dx * dx + dy * dy));
+                distSq = dx * dx + dy * dy,
+                dist = clamp(Math.sqrt(distSq), AUDIO_DISTANCE_MIN, AUDIO_DISTANCE_MAX);
 
-            if (distSq !== user.distSqToMe) {
-                user.distSqToMe = distSq;
-                const volume = 1 - ((Math.sqrt(distSq) - AUDIO_DISTANCE_MIN) / AUDIO_DISTANCE_DELTA);
+            if (dist !== user.distToMe) {
+                user.distToMe = dist;
+                const volume = 1 - project(dist, AUDIO_DISTANCE_MIN, AUDIO_DISTANCE_MAX);
 
                 jitsiClient.txJitsiHax("setVolume", {
                     user: user.id,
