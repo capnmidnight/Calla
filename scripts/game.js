@@ -92,13 +92,13 @@ function startGame(evt) {
 }
 
 function gameLoop(time) {
+    if (currentRoomName !== null) {
+        requestAnimationFrame(gameLoop);
+    }
     var dt = time - lastTime;
     lastTime = time;
     update(dt / 1000);
     render();
-    if (currentRoomName !== null) {
-        requestAnimationFrame(gameLoop);
-    }
 }
 
 function update(dt) {
