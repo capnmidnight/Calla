@@ -35,8 +35,8 @@ class User {
             });
 
             frontBuffer.addEventListener("click", (evt) => {
-                var tileX = Math.floor(evt.offsetX * devicePixelRatio / TILE_WIDTH),
-                    tileY = Math.floor(evt.offsetY * devicePixelRatio / TILE_HEIGHT),
+                var tileX = Math.floor(evt.offsetX * devicePixelRatio / map.tileWidth),
+                    tileY = Math.floor(evt.offsetY * devicePixelRatio / map.tileHeight),
                     dx = tileX - TILE_COUNT_X_HALF,
                     dy = tileY - TILE_COUNT_Y_HALF;
 
@@ -51,12 +51,13 @@ class User {
 
     moveTo(x, y) {
         if (this.isMe) {
-            for (var i = 0; i < userList.length; ++i) {
-                var user = userList[i];
-                jitsiClient.txGameData(user.id, "moveTo", {
-                    x: x,
-                    y: y
-                });
+            for (let user of userList) {
+                if (!user.isMe) {
+                    jitsiClient.txGameData(user.id, "moveTo", {
+                        x: x,
+                        y: y
+                    });
+                }
             }
         }
         else if (!this.hasPosition) {
@@ -75,23 +76,26 @@ class User {
         this.t = 0;
     }
 
-    read(user) {
-        var dx = user.tx - this.tx,
-            dy = user.ty - this.ty,
-            distSq = Math.max(AUDIO_DISTANCE_MIN_SQ, Math.min(AUDIO_DISTANCE_MAX_SQ, dx * dx + dy * dy));
+    readUser(user) {
+        if (this.isMe
+            && !user.isMe) {
+            var dx = user.tx - this.tx,
+                dy = user.ty - this.ty,
+                distSq = Math.max(AUDIO_DISTANCE_MIN_SQ, Math.min(AUDIO_DISTANCE_MAX_SQ, dx * dx + dy * dy));
 
-        if (distSq != user.distSqToMe) {
-            user.distSqToMe = distSq;
-            var volume = 1 - ((Math.sqrt(distSq) - AUDIO_DISTANCE_MIN) / AUDIO_DISTANCE_DELTA);
+            if (distSq != user.distSqToMe) {
+                user.distSqToMe = distSq;
+                var volume = 1 - ((Math.sqrt(distSq) - AUDIO_DISTANCE_MIN) / AUDIO_DISTANCE_DELTA);
 
-            jitsiClient.txJitsiHax("setVolume", {
-                user: user.id,
-                volume: volume
-            });
+                jitsiClient.txJitsiHax("setVolume", {
+                    user: user.id,
+                    volume: volume
+                });
+            }
         }
     }
 
-    update(dt) {
+    readInput(dt) {
         if (this.isMe) {
             this.lastMove += dt;
             if (this.lastMove >= MOVE_REPEAT) {
@@ -116,9 +120,16 @@ class User {
             }
         }
         else if (!this.hasPosition) {
-            this.requestPosition();
+            const now = Date.now(),
+                dt = now - this.lastPositionRequestTime;
+            if (dt >= POSITION_REQUEST_DEBOUNCE_TIME) {
+                this.lastPositionRequestTime = now;
+                jitsiClient.txGameData(this.id, "userInitResponse");
+            }
         }
+    }
 
+    update(dt) {
         if (this.dist > 0) {
             this.t += dt;
             if (this.t >= MOVE_TRANSITION_TIME) {
@@ -135,33 +146,24 @@ class User {
         }
     }
 
-    draw(g) {
+    draw(g, map) {
         if (this.hasPosition) {
             g.save();
-            g.translate(this.tx * TILE_WIDTH, this.ty * TILE_HEIGHT);
+            g.translate(this.tx * map.tileWidth, this.ty * map.tileHeight);
             if (this.isMe && this.dist > 0) {
                 g.strokeStyle = "green";
-                g.strokeRect(0, 0, TILE_WIDTH, TILE_HEIGHT);
+                g.strokeRect(0, 0, map.tileWidth, map.tileHeight);
             }
             g.fillStyle = this.isMe ? "red" : "blue";
             g.fillRect(
-                (this.x - this.tx) * TILE_WIDTH,
-                (this.y - this.ty) * TILE_HEIGHT,
-                TILE_WIDTH,
-                TILE_HEIGHT);
+                (this.x - this.tx) * map.tileWidth,
+                (this.y - this.ty) * map.tileHeight,
+                map.tileWidth,
+                map.tileHeight);
             g.fillStyle = "black";
             g.textBaseline = "bottom";
-            g.fillText(this.displayName || this.id, TILE_WIDTH / 2, 0);
+            g.fillText(this.displayName || this.id, map.tileWidth / 2, 0);
             g.restore();
-        }
-    }
-
-    requestPosition() {
-        const now = Date.now(),
-            dt = now - this.lastPositionRequestTime;
-        if (dt >= POSITION_REQUEST_DEBOUNCE_TIME) {
-            this.lastPositionRequestTime = now;
-            jitsiClient.txGameData(this.id, "requestPosition");
         }
     }
 }

@@ -1,5 +1,11 @@
 ﻿"use strict";
 
+// TODO: move map data to requestable files
+const map = TileMap.DEFAULT,
+    userLookup = {},
+    userList = [],
+    g = frontBuffer.getContext("2d");
+
 let AUDIO_DISTANCE_DELTA = AUDIO_DISTANCE_MAX - AUDIO_DISTANCE_MIN,
     AUDIO_DISTANCE_MIN_SQ = AUDIO_DISTANCE_MIN * AUDIO_DISTANCE_MIN,
     AUDIO_DISTANCE_MAX_SQ = AUDIO_DISTANCE_MAX * AUDIO_DISTANCE_MAX,
@@ -13,41 +19,13 @@ let AUDIO_DISTANCE_DELTA = AUDIO_DISTANCE_MAX - AUDIO_DISTANCE_MIN,
     currentRoomName = null,
     me = null;
 
-// TODO: move map data to requestable files
-const map = [
-    "11111111111111111111",
-    "10000000000000000001",
-    "10000000000000000001",
-    "10000000000000000001",
-    "10000000000000000001",
-    "10000000000000000001",
-    "10000000000000000001",
-    "10000000000000000001",
-    "10000000000000000001",
-    "10000000000000000001",
-    "10000000000000000001",
-    "10000000000000000001",
-    "10000000000000000001",
-    "10000000000000000001",
-    "10000000000000000001",
-    "10000000000000000001",
-    "10000000000000000001",
-    "10000000000000000001",
-    "11111111111111111111"
-].map(function (row) { return row.split('').map(parseFloat); }),
-    mapHeight = map.length,
-    mapWidth = map[0].length,
-    midX = Math.floor(mapWidth / 2),
-    midY = Math.floor(mapHeight / 2),
-    styles = ["lightgrey", "darkgrey"];
-
 addEventListener("resize", resize);
 
 function resize() {
     frontBuffer.width = frontBuffer.clientWidth * devicePixelRatio;
     frontBuffer.height = frontBuffer.clientHeight * devicePixelRatio;
-    TILE_COUNT_X = Math.floor(frontBuffer.width / TILE_WIDTH);
-    TILE_COUNT_Y = Math.floor(frontBuffer.height / TILE_HEIGHT);
+    TILE_COUNT_X = Math.floor(frontBuffer.width / map.tileWidth);
+    TILE_COUNT_Y = Math.floor(frontBuffer.height / map.tileHeight);
     TILE_COUNT_X_HALF = Math.floor(TILE_COUNT_X / 2);
     TILE_COUNT_Y_HALF = Math.floor(TILE_COUNT_Y / 2);
 }
@@ -63,8 +41,12 @@ function startGame(evt) {
     currentRoomName = evt.roomName;
 
     api.addEventListener("videoConferenceLeft", endGame);
+    api.addEventListener("participantJoined", addUser);
+    api.addEventListener("participantLeft", removeUser);
+    api.addEventListener("endpointTextMessageReceived", jitsiClient.rxGameData);
 
     me = new User(evt.id, evt.displayName, true);
+    userList.push(me);
 
     jitsiClient.addEventListener("moveTo", function (evt) {
         const user = userLookup[evt.participantID];
@@ -73,14 +55,10 @@ function startGame(evt) {
         }
     });
 
-    jitsiClient.addEventListener("requestPosition", function (evt) {
+    jitsiClient.addEventListener("userInitResponse", function (evt) {
         jitsiClient.txGameData(evt.participantID, "moveTo", { x: me.x, y: me.y });
     });
 
-    gui.hide();
-    demo.pause();
-    demo.hide();
-    demo.parentElement.hide();
     frontBuffer.show();
     resize();
     frontBuffer.focus();
@@ -89,6 +67,34 @@ function startGame(evt) {
         lastTime = time;
         requestAnimationFrame(gameLoop);
     });
+}
+
+function addUser(evt) {
+    //evt = {
+    //    id: "string", // the id of the participant
+    //    displayName: "string" // the display name of the participant
+    //};
+    if (userLookup[evt.id]) {
+        removeUser(evt);
+    }
+    var user = new User(evt.id, evt.displayName, false);
+    userLookup[evt.id] = user;
+    userList.unshift(user);
+}
+
+function removeUser(evt) {
+    //evt = {
+    //    id: "string" // the id of the participant
+    //};
+    var user = userLookup[evt.id];
+    if (user) {
+        delete userLookup[evt.id];
+
+        var userIndex = userList.indexOf(user);
+        if (userIndex >= 0) {
+            userList.splice(userIndex, 1);
+        }
+    }
 }
 
 function gameLoop(time) {
@@ -102,13 +108,14 @@ function gameLoop(time) {
 }
 
 function update(dt) {
-
-    me.update(dt);
-
-    for (var i = 0; i < userList.length; ++i) {
-        var user = userList[i];
+    for (let user of userList) {
+        user.readInput(dt);
+    }
+    for (let user of userList) {
         user.update(dt);
-        me.read(user);
+    }
+    for (let user of userList) {
+        me.readUser(user);
     }
 }
 
@@ -117,27 +124,14 @@ function render() {
 
     g.fillStyle = "white";
     g.fillRect(0, 0, frontBuffer.width, frontBuffer.height);
+    g.translate(TILE_COUNT_X_HALF * map.tileWidth, TILE_COUNT_Y_HALF * map.tileHeight);
+    g.translate(-me.x * map.tileWidth, -me.y * map.tileHeight);
 
-    g.translate(Math.floor(TILE_COUNT_X * TILE_WIDTH / 2), Math.floor(TILE_COUNT_Y * TILE_HEIGHT / 2));
-    g.translate(-me.x * TILE_WIDTH, -me.y * TILE_HEIGHT);
+    map.draw(g);
 
-    g.save();
-    g.translate(-midX * TILE_WIDTH, -midY * TILE_HEIGHT);
-    for (var y = 0; y < map.length; ++y) {
-        var row = map[y];
-        for (var x = 0; x < row.length; ++x) {
-            var tile = row[x];
-            g.fillStyle = styles[tile];
-            g.fillRect(x * TILE_WIDTH, y * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
-        }
+    for (let i = userList.length - 1; i >= 0; --i) {
+        userList[i].draw(g, map);
     }
-    g.restore();
-
-    for (var i = 0; i < userList.length; ++i) {
-        userList[i].draw(g);
-    }
-
-    me.draw(g);
 }
 
 function endGame(evt) {

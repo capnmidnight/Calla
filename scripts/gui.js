@@ -2,14 +2,11 @@
 
 const jitsi = document.querySelector("#jitsi"),
     frontBuffer = document.querySelector("#frontBuffer"),
-    g = frontBuffer.getContext("2d"),
     demo = document.querySelector("#demo > video"),
     gui = document.querySelector("#gui"),
     room = document.querySelector("#room"),
     user = document.querySelector("#user"),
-    connect = document.querySelector("#connect"),
-    userLookup = {},
-    userList = [];
+    connect = document.querySelector("#connect");
 
 let api = null,
     iframe = null;
@@ -98,45 +95,17 @@ function startConference(roomName, userName) {
     api = new JitsiMeetExternalAPI(domain, options);
     api.executeCommand("displayName", userName);
 
-    api.addEventListener("videoConferenceJoined", startGame);
-    api.addEventListener("participantJoined", addUser);
-    api.addEventListener("participantLeft", removeUser);
-    api.addEventListener("endpointTextMessageReceived", jitsiClient.rxGameData);
+    api.addEventListener("videoConferenceJoined", function (evt) {
+        gui.hide();
+        demo.pause();
+        demo.hide();
+        demo.parentElement.hide();
+        startGame(evt);
+    });
 
     addEventListener("unload", () => api.dispose());
 }
 
 function conferenceLoaded(evt) {
     iframe = api.getIFrame();
-}
-
-function addUser(evt) {
-    //evt = {
-    //    id: "string", // the id of the participant
-    //    displayName: "string" // the display name of the participant
-    //};
-    if (userLookup[evt.id]) {
-        removeUser(evt);
-    }
-    var user = new User(evt.id, evt.displayName, false);
-    userLookup[evt.id] = user;
-    userList.push(user);
-    setTimeout(function () {
-        user.requestPosition();
-    }, 3000);
-}
-
-function removeUser(evt) {
-    //evt = {
-    //    id: "string" // the id of the participant
-    //};
-    var user = userLookup[evt.id];
-    if (user) {
-        delete userLookup[evt.id];
-
-        var userIndex = userList.indexOf(user);
-        if (userIndex >= 0) {
-            userList.splice(userIndex, 1);
-        }
-    }
 }

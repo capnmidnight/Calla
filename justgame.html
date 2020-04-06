@@ -1,0 +1,98 @@
+﻿<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, shrink-to-fit=0, initial-scale=1.0">
+    <script id="lozya-settings">
+        const JITSI_HOST = "primrosevr.com",
+            MOVE_REPEAT = 0.125,
+            MOVE_TRANSITION_TIME = 0.5;
+
+        // TODO: These need to be user-configurable settings
+        let AUDIO_DISTANCE_MIN = 2,
+            AUDIO_DISTANCE_MAX = 10;
+    </script>
+    <link type="text/css" rel="stylesheet" href="stylesheets/general.css" />
+    <link type="text/css" rel="stylesheet" href="stylesheets/gui.css" />
+</head>
+
+<body>
+    <section id="main">
+        <canvas id="frontBuffer"></canvas>
+    </section>
+
+    <script src="scripts/protos.js"></script>
+    <script type="text/javascript">
+        const
+            apiEvents = {
+                videoConferenceLeft: [],
+                participantJoined: [],
+                participantLeft: [],
+                endpointTextMessageReceived: []
+            },
+            api = {
+                addEventListener: function (evt, func) {
+                    apiEvents[evt].push(func);
+                },
+                createTestUser: function () {
+                    if (userList.length < 5) {
+                        const evts = apiEvents.participantJoined;
+                        for (let func of evts) {
+                            func({
+                                id: `user${userList.length + 1}`
+                            });
+                        }
+
+                        setTimeout(api.createTestUser, 1000);
+                    }
+                }
+            },
+            jitsiEvents = {
+                moveTo: [],
+                userInitResponse: []
+            },
+            jitsiClient = {
+                addEventListener: function (evt, func) {
+                    jitsiEvents[evt].push(func);
+                },
+                txJitsiHax: function () {
+
+                },
+                txGameData: function (id, msg, data) {
+                    if (msg === "userInitResponse") {
+                        for (let user of userList) {
+                            if (user.id === id) {
+                                setInterval(function () {
+                                    for (let func of jitsiEvents.moveTo) {
+                                        func({
+                                            participantID: id,
+                                            x: Math.floor(Math.random() * 10 - 5),
+                                            y: Math.floor(Math.random() * 10 - 5)
+                                        });
+                                    }
+                                }, 1000);
+                            }
+                        }
+                    }
+                },
+                rxGameData: function () {
+
+                }
+            };
+    </script>
+    <script src="scripts/map.js"></script>
+    <script src="scripts/user.js"></script>
+    <script src="scripts/game.js"></script>
+    <script type="text/javascript">
+        startGame({
+            id: "me",
+            roomName: "JustRendering",
+            displayName: "Just Rendering"
+        });
+
+        setTimeout(api.createTestUser, 1000);
+    </script>
+</body>
+
+</html>
