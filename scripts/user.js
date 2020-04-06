@@ -1,10 +1,10 @@
-﻿"use strict";
+﻿import { clamp, project } from "./protos.js";
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
     STACKED_USER_OFFSET_X = 5,
     STACKED_USER_OFFSET_Y = 5;
 
-class User {
+export class User {
     constructor(id, displayName, isMe) {
         this.id = id;
         this.displayName = displayName || id;
@@ -25,6 +25,19 @@ class User {
         this.hasPosition = isMe;
         this.lastPositionRequestTime = Date.now() - POSITION_REQUEST_DEBOUNCE_TIME;
         this.lastMove = Number.MAX_VALUE;
+        this.eventHandlers = {
+            move: [],
+            userPositionNeeded: [],
+            changeUserVolume: []
+        };
+    }
+
+    addEventListener(evtName, func) {
+        if (!this.eventHandlers[evtName]) {
+            throw new Error(`Unrecognized event type: ${evtName}`);
+        }
+
+        this.eventHandlers[evtName].push(func);
     }
 
     moveBy(dx, dy) {
@@ -33,13 +46,12 @@ class User {
 
     moveTo(x, y) {
         if (this.isMe) {
-            for (let user of userList) {
-                if (!user.isMe) {
-                    jitsiClient.txGameData(user.id, "moveTo", {
-                        x: x,
-                        y: y
-                    });
-                }
+            var evt = {
+                x: x,
+                y: y
+            };
+            for (let func of this.eventHandlers.move) {
+                func(evt);
             }
         }
         else if (!this.hasPosition) {
@@ -87,7 +99,9 @@ class User {
                 dt = now - this.lastPositionRequestTime;
             if (dt >= POSITION_REQUEST_DEBOUNCE_TIME) {
                 this.lastPositionRequestTime = now;
-                jitsiClient.txGameData(this.id, "userInitResponse");
+                for (let func of this.eventHandlers.userPositionNeeded) {
+                    func(this);
+                }
             }
         }
     }
@@ -139,17 +153,20 @@ class User {
 
             if (dist !== user.distToMe) {
                 user.distToMe = dist;
-                const volume = 1 - project(dist, audioDistMin, audioDistMax);
+                const volume = 1 - project(dist, audioDistMin, audioDistMax),
+                    evt = {
+                        user: user.id,
+                        volume: volume
+                    };
 
-                jitsiClient.txJitsiHax("setVolume", {
-                    user: user.id,
-                    volume: volume
-                });
+                for (let func of this.eventHandlers.changeUserVolume) {
+                    func(evt);
+                }
             }
         }
     }
 
-    drawShadow(g, map) {
+    drawShadow(g, map, cameraZ) {
         if (this.hasPosition) {
             g.save();
             {
@@ -190,7 +207,7 @@ class User {
         }
     }
 
-    drawName(g, map) {
+    drawName(g, map, cameraZ) {
         if (this.hasPosition) {
 
             g.save();

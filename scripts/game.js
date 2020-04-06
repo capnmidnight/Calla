@@ -1,30 +1,255 @@
-﻿class Game {
+﻿import { AppGui } from "./appgui.js";
+import { TileMap } from "./tilemap.js";
+import { User } from "./user.js";
+import { lerp, clamp, project, unproject, isFirefox } from "./protos.js";
+
+const CAMERA_LERP = 0.01,
+    CAMERA_ZOOM_MAX = 8,
+    CAMERA_ZOOM_MIN = 0.1,
+    CAMERA_ZOOM_SHAPE = 1 / 4,
+    CAMERA_ZOOM_SPEED = 0.005;
+
+export class Game {
+
+    constructor(jitsiClient) {
+        this.jitsiClient = jitsiClient;
+        this.frontBuffer = document.querySelector("#frontBuffer");
+        this.me = null
+        this.gui = new AppGui(this);
+        this.map = TileMap.DEFAULT;
+        this.keys = [];
+        this.userLookup = {};
+        this.userList = [];
+
+        addEventListener("resize", this.frontBuffer.resize.bind(this.frontBuffer));
+
+        addEventListener("keydown", (evt) => {
+            const keyIndex = this.keys.indexOf(evt.key);
+            if (keyIndex < 0) {
+                this.keys.push(evt.key);
+            }
+        });
+
+        addEventListener("keyup", (evt) => {
+            const keyIndex = this.keys.indexOf(evt.key);
+            if (keyIndex >= 0) {
+                this.keys.splice(keyIndex, 1);
+            }
+        });
+
+        this.frontBuffer.addEventListener("wheel", (evt) => {
+            evt.preventDefault();
+            // Chrome and Firefox report scroll values in completely different ranges.
+            const deltaZ = evt.deltaY * (isFirefox ? 1 : 0.02),
+                a = project(this.targetCameraZ, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
+                b = Math.pow(a, CAMERA_ZOOM_SHAPE),
+                c = b - deltaZ * CAMERA_ZOOM_SPEED,
+                d = clamp(c, 0, 1),
+                e = Math.pow(d, 1 / CAMERA_ZOOM_SHAPE);
+
+            this.targetCameraZ = unproject(e, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX);
+        });
+
+        this.frontBuffer.addEventListener("mousemove", (evt) => {
+            this.mouseX = evt.offsetX * devicePixelRatio;
+            this.mouseY = evt.offsetY * devicePixelRatio;
+        });
+
+        this.frontBuffer.addEventListener("click", (evt) => {
+            this.mouseX = evt.offsetX * devicePixelRatio;
+            this.mouseY = evt.offsetY * devicePixelRatio;
+            if (!!this.me) {
+                const tile = this.getMouseTile();
+                this.me.moveTo(tile.x, tile.y);
+            }
+        });
+
+        this.jitsiClient.addEventListener("moveTo", (evt) => {
+            const user = this.userLookup[evt.participantID];
+            if (!!user) {
+                user.moveTo(evt.x, evt.y);
+            }
+        });
+
+        this.jitsiClient.addEventListener("userInitResponse", (evt) => {
+            this.jitsiClient.txGameData(evt.participantID, "moveTo", { x: this.me.x, y: this.me.y });
+        });
+
+        this.g = this.frontBuffer.getContext("2d");
+        this._loop = this.loop.bind(this);
+        this.lastTime = 0;
+        this.mouseX = 0;
+        this.mouseY = 0;
+        this.gridOffsetX = 0;
+        this.gridOffsetY = 0;
+        this.cameraX = 0;
+        this.cameraY = 0;
+        this.cameraZ = 1;
+        this.targetCameraZ = 1;
+        this.currentRoomName = null;
+    }
+
+    registerGameListeners(api) {
+        api.addEventListener("videoConferenceJoined", this.start.bind(this));
+        api.addEventListener("videoConferenceLeft", this.end.bind(this));
+        api.addEventListener("participantJoined", this.addUser.bind(this));
+        api.addEventListener("participantLeft", this.removeUser.bind(this));
+        api.addEventListener("endpointTextMessageReceived", this.jitsiClient.rxGameData);
+    }
+
+    addUser(evt) {
+        //evt = {
+        //    id: "string", // the id of the participant
+        //    displayName: "string" // the display name of the participant
+        //};
+        if (this.userLookup[evt.id]) {
+            removeUser(evt);
+        }
+        const user = new User(evt.id, evt.displayName, false);
+        user.addEventListener("userPositionNeeded", (evt) => {
+            this.jitsiClient.txGameData(evt.id, "userInitResponse");
+        });
+        this.userLookup[evt.id] = user;
+        this.userList.unshift(user);
+    }
+
+    removeUser(evt) {
+        //evt = {
+        //    id: "string" // the id of the participant
+        //};
+        const user = this.userLookup[evt.id];
+        if (!!user) {
+            delete this.userLookup[evt.id];
+
+            const userIndex = this.userList.indexOf(user);
+            if (userIndex >= 0) {
+                this.userList.splice(userIndex, 1);
+            }
+        }
+    }
+
+    start(evt) {
+        //evt = {
+        //    roomName: "string", // the room name of the conference
+        //    id: "string", // the id of the local participant
+        //    displayName: "string", // the display name of the local participant
+        //    avatarURL: "string" // the avatar URL of the local participant
+        //};
+
+        this.currentRoomName = evt.roomName;
+
+        this.me = new User(evt.id, evt.displayName, true);
+        this.me.addEventListener("move", (evt) => {
+            for (let user of this.userList) {
+                if (!user.isMe) {
+                    this.jitsiClient.txGameData(user.id, "moveTo", evt);
+                }
+            }
+        });
+        this.me.addEventListener("changeUserVolume", (evt) => {
+            this.jitsiClient.txJitsiHax("setVolume", evt);
+        });
+        this.userList.push(this.me);
+
+        this.frontBuffer.show();
+        this.frontBuffer.resize();
+        this.frontBuffer.focus();
+
+        requestAnimationFrame((time) => {
+            this.lastTime = time;
+            requestAnimationFrame(this._loop);
+        });
+    }
+
+    loop(time) {
+        if (this.currentRoomName !== null) {
+            requestAnimationFrame(this._loop);
+        }
+        const dt = time - this.lastTime;
+        this.lastTime = time;
+        this.update(dt / 1000);
+        this.render();
+    }
+
+    end(evt) {
+        //evt = {
+        //    roomName: string // the room name of the conference
+        //};
+
+        if (evt.roomName === this.currentRoomName) {
+            this.currentRoomName = null;
+            this.gui.showLogin();
+        }
+    }
+
+    update(dt) {
+        this.gridOffsetX = Math.floor(0.5 * this.frontBuffer.width / this.map.tileWidth) * this.map.tileWidth;
+        this.gridOffsetY = Math.floor(0.5 * this.frontBuffer.height / this.map.tileHeight) * this.map.tileHeight;
+        for (let user of this.userList) {
+            user.readInput(dt, this.keys, MOVE_REPEAT);
+        }
+        for (let user of this.userList) {
+            user.update(dt, this.map, this.userList);
+        }
+        for (let user of this.userList) {
+            this.me.readUser(user, AUDIO_DISTANCE_MIN, AUDIO_DISTANCE_MAX);
+        }
+    }
+
+    getMouseTile() {
+        const imageX = this.mouseX - this.gridOffsetX,
+            imageY = this.mouseY - this.gridOffsetY,
+            zoomX = imageX / this.cameraZ,
+            zoomY = imageY / this.cameraZ,
+            mapX = zoomX - this.cameraX,
+            mapY = zoomY - this.cameraY,
+            mapWidth = this.map.tileWidth,
+            mapHeight = this.map.tileHeight,
+            gridX = Math.floor(mapX / mapWidth),
+            gridY = Math.floor(mapY / mapHeight),
+            tile = { x: gridX, y: gridY };
+        return tile;
+    }
+
     render() {
-        const targetCameraX = -me.x * map.tileWidth,
-            targetCameraY = -me.y * map.tileHeight;
+        const targetCameraX = -this.me.x * this.map.tileWidth,
+            targetCameraY = -this.me.y * this.map.tileHeight;
 
-        cameraZ = lerp(cameraZ, targetCameraZ, CAMERA_LERP * 10);
-        cameraX = lerp(cameraX, targetCameraX, CAMERA_LERP * cameraZ);
-        cameraY = lerp(cameraY, targetCameraY, CAMERA_LERP * cameraZ);
+        this.cameraZ = lerp(this.cameraZ, this.targetCameraZ, CAMERA_LERP * 10);
+        this.cameraX = lerp(this.cameraX, targetCameraX, CAMERA_LERP * this.cameraZ);
+        this.cameraY = lerp(this.cameraY, targetCameraY, CAMERA_LERP * this.cameraZ);
 
-        g.resetTransform();
-        g.clearRect(0, 0, frontBuffer.width, frontBuffer.height);
-        g.translate(gridOffsetX, gridOffsetY);
-        g.scale(cameraZ, cameraZ);
-        g.translate(cameraX, cameraY);
+        this.g.resetTransform();
+        this.g.clearRect(0, 0, this.frontBuffer.width, this.frontBuffer.height);
+        this.g.translate(this.gridOffsetX, this.gridOffsetY);
+        this.g.scale(this.cameraZ, this.cameraZ);
+        this.g.translate(this.cameraX, this.cameraY);
 
-        map.draw(g);
+        this.map.draw(this.g);
 
-        for (let user of userList) {
-            user.drawShadow(g, map);
+        for (let user of this.userList) {
+            user.drawShadow(this.g, this.map, this.cameraZ);
         }
-        for (let user of userList) {
-            user.drawAvatar(g, map);
-        }
-        for (let user of userList) {
-            user.drawName(g, map);
+        for (let user of this.userList) {
+            user.drawAvatar(this.g, this.map);
         }
 
-        drawMouse();
+        this.drawMouse();
+
+        for (let user of this.userList) {
+            user.drawName(this.g, this.map, this.cameraZ);
+        }
+
+    }
+
+
+    drawMouse() {
+        const tile = this.getMouseTile();
+        this.g.strokeStyle = "red";
+        this.g.strokeRect(
+            tile.x * this.map.tileWidth,
+            tile.y * this.map.tileHeight,
+            this.map.tileWidth,
+            this.map.tileHeight);
     }
 }

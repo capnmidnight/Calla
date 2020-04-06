@@ -1,29 +1,7 @@
-﻿const DEFAULT_STYLES = ["lightgrey", "darkgrey"]
+﻿import { TileSet } from "./tileset.js";
 
-class TileSet {
-    constructor(data) {
-        this.tileWidth = 0;
-        this.tileHeight = 0;
-    }
-
-    draw(g) {
-    }
-}
-
-TileSet.DEFAULT = {
-    tileWidth: 32,
-    tileHeight: 32,
-    draw: function (g, tile, x, y) {
-        g.fillStyle = DEFAULT_STYLES[tile];
-        g.fillRect(
-            x * map.tileWidth - 0.25,
-            y * map.tileHeight - 0.25,
-            map.tileWidth + 0.5,
-            map.tileHeight + 0.5);
-    }
-};
-
-class TileMap {
+// TODO: move map data to requestable files
+export class TileMap {
     constructor(data) {
         this.tileset = data.tileset || TileSet.DEFAULT;
         this.tileWidth = this.tileset.tileWidth;
@@ -39,7 +17,7 @@ class TileMap {
     draw(g) {
         g.save();
         {
-            g.translate(this.offsetX * map.tileWidth, this.offsetY * map.tileHeight);
+            g.translate(this.offsetX * this.tileWidth, this.offsetY * this.tileHeight);
             for (let y = 0; y < this.height; ++y) {
                 for (let x = 0; x < this.width; ++x) {
                     const tile = this.tiles[y][x];

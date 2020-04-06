@@ -18,50 +18,34 @@
 </head>
 
 <body>
+    <div style="display:none">
+        <div id="menuControl"></div>
+        <div id="jitsi"></div>
+        <div id="demo"><video></video></div>
+        <div id="loginView">
+            <div id="room"></div>
+            <div id="user"></div>
+            <div id="connect"></div>
+        </div>
+    </div>
     <section id="main">
         <canvas id="frontBuffer" style="border:inset 2px #ccc"></canvas>
     </section>
 
-    <script src="scripts/protos.js"></script>
-    <script type="text/javascript">
-        const
-            apiEvents = {
-                videoConferenceLeft: [],
-                participantJoined: [],
-                participantLeft: [],
-                endpointTextMessageReceived: []
-            },
-            api = {
-                addEventListener: function (evt, func) {
-                    apiEvents[evt].push(func);
-                },
-                createTestUser: function () {
-                    if (userList.length < 15) {
-                        const evts = apiEvents.participantJoined;
-                        for (let func of evts) {
-                            func({
-                                id: `user${userList.length + 1}`
-                            });
-                        }
+    <script type="module">
+        import { Game } from "./scripts/game.js";
 
-                        setTimeout(api.createTestUser, 1000);
-                    }
-                }
-            },
-            jitsiEvents = {
-                moveTo: [],
-                userInitResponse: []
-            },
+        const jitsiEvents = {
+            moveTo: [],
+            userInitResponse: []
+        },
             jitsiClient = {
                 addEventListener: function (evt, func) {
                     jitsiEvents[evt].push(func);
                 },
-                txJitsiHax: function () {
-
-                },
                 txGameData: function (id, msg, data) {
                     if (msg === "userInitResponse") {
-                        for (let user of userList) {
+                        for (let user of game.userList) {
                             if (user.id === id) {
                                 setInterval(function () {
                                     for (let func of jitsiEvents.moveTo) {
@@ -76,18 +60,37 @@
                         }
                     }
                 },
-                rxGameData: function () {
+                rxGameData: function () { },
+                txJitsiHax: function () { },
+            },
+            apiEvents = {
+                videoConferenceJoined: [],
+                videoConferenceLeft: [],
+                participantJoined: [],
+                participantLeft: [],
+                endpointTextMessageReceived: []
+            },
+            api = {
+                addEventListener: function (evt, func) {
+                    apiEvents[evt].push(func);
+                },
+                createTestUser: function () {
+                    if (game.userList.length < 15) {
+                        const evts = apiEvents.participantJoined;
+                        for (let func of evts) {
+                            func({
+                                id: `user${game.userList.length + 1}`
+                            });
+                        }
 
+                        setTimeout(api.createTestUser, 1000);
+                    }
                 }
-            };
-    </script>
-    <script src="scripts/map.js"></script>
-    <script src="scripts/user.js"></script>
-    <script src="scripts/game.js"></script>
-    <script src="scripts/app.js"></script>
-    <script type="text/javascript">
-        registerGameListeners(api);
-        startGame({
+            },
+            game = new Game(jitsiClient);
+
+        game.registerGameListeners(api);
+        game.start({
             id: "me",
             roomName: "JustRendering",
             displayName: "Just Rendering"

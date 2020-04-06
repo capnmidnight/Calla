@@ -1,19 +1,29 @@
-﻿"use strict";
-
-// Manages communication between Jitsi Meet and Lozya
-const jitsiClient = (function () {
+﻿// Manages communication between Jitsi Meet and Lozya
+export const jitsiClient = (function () {
 
     // helps us filter out data channel messages that don't belong to us
     const LOZYA_FINGERPRINT = "lozya";
 
-    const eventHandlers = {};
+    const eventHandlers = {
+        moveTo: [],
+        userInitResponse: []
+    };
+
+    let api = null,
+        iframe = null;
 
     return {
 
+        setJitsiApi(jitsi) {
+            api = jitsi;
+            iframe = api.getIFrame();
+        },
+
         /// Add a listener for Lozya events that come through the Jitsi Meet data channel.
         addEventListener: function (evtName, callback) {
+            
             if (!eventHandlers[evtName]) {
-                eventHandlers[evtName] = [];
+                throw new Error(`Unsupported event type: ${evtName}`);
             }
 
             eventHandlers[evtName].push(callback);
