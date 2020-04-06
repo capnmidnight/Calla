@@ -7,7 +7,7 @@ const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
 class User {
     constructor(id, displayName, isMe) {
         this.id = id;
-        this.displayName = displayName;
+        this.displayName = displayName || id;
         this.x = 0; this.y = 0;
         this.sx = 0; this.sy = 0;
         this.tx = 0; this.ty = 0;
@@ -16,6 +16,12 @@ class User {
         this.t = 0;
         this.distSqToMe = 0;
         this.isMe = isMe;
+        this.stackUserCount = 1;
+        this.stackIndex = 0;
+        this.stackAvatarHeight = 0;
+        this.stackAvatarWidth = 0;
+        this.stackOffsetX = 0;
+        this.stackOffsetY = 0;
         this.hasPosition = isMe;
         this.lastPositionRequestTime = Date.now() - POSITION_REQUEST_DEBOUNCE_TIME;
         this.lastMove = MOVE_REPEAT;
@@ -105,60 +111,99 @@ class User {
         }
     }
 
-    update(dt) {
-        if (this.dist > 0) {
-            this.t += dt;
-            if (this.t >= MOVE_TRANSITION_TIME) {
-                this.x = this.sx = this.tx;
-                this.y = this.sy = this.ty;
-                this.t = this.dx = this.dy = this.dist = 0;
-            }
-            else {
-                const p = this.t / MOVE_TRANSITION_TIME,
-                    s = Math.sin(Math.PI * p / 2);
-                this.x = this.sx + s * this.dx;
-                this.y = this.sy + s * this.dy;
-            }
-        }
-    }
-
-    draw(g, map, userList) {
+    update(dt, userList) {
         if (this.hasPosition) {
-            let usersOnMyTile = 0,
-                myIndex = 0;
+            if (this.dist > 0) {
+                this.t += dt;
+                if (this.t >= MOVE_TRANSITION_TIME) {
+                    this.x = this.sx = this.tx;
+                    this.y = this.sy = this.ty;
+                    this.t = this.dx = this.dy = this.dist = 0;
+                }
+                else {
+                    const p = this.t / MOVE_TRANSITION_TIME,
+                        s = Math.sin(Math.PI * p / 2);
+                    this.x = this.sx + s * this.dx;
+                    this.y = this.sy + s * this.dy;
+                }
+            }
+
+            this.stackUserCount = 0;
+            this.stackIndex = 0;
             for (let user of userList) {
                 if (user.hasPosition
                     && user.tx === this.tx
                     && user.ty === this.ty) {
                     if (user.id === this.id) {
-                        myIndex = usersOnMyTile;
+                        this.stackIndex = this.stackUserCount;
                     }
-                    ++usersOnMyTile;
+                    ++this.stackUserCount;
                 }
             }
 
+            this.stackAvatarWidth = map.tileWidth - (this.stackUserCount - 1) * STACKED_USER_OFFSET_X;
+            this.stackAvatarHeight = map.tileHeight - (this.stackUserCount - 1) * STACKED_USER_OFFSET_Y;
+            this.stackOffsetX = this.stackIndex * STACKED_USER_OFFSET_X;
+            this.stackOffsetY = this.stackIndex * STACKED_USER_OFFSET_Y;
+        }
+    }
+
+    drawShadow(g, map) {
+        if (this.hasPosition) {
             g.save();
+            {
+                g.translate(this.tx * map.tileWidth + this.stackOffsetX, this.ty * map.tileHeight + this.stackOffsetY);
+                g.shadowColor = "rgba(0, 0, 0, 0.5)";
+                g.shadowOffsetX = 3 * cameraZ;
+                g.shadowOffsetY = 3 * cameraZ;
+                g.shadowBlur = 3 * cameraZ;
 
-            const avatarWidth = map.tileWidth - (usersOnMyTile - 1) * STACKED_USER_OFFSET_X,
-                avatarHeight = map.tileHeight - (usersOnMyTile - 1) * STACKED_USER_OFFSET_Y,
-                offsetX = myIndex * STACKED_USER_OFFSET_X,
-                offsetY = myIndex * STACKED_USER_OFFSET_Y;
+                g.fillStyle = "black";
+                g.fillRect(
+                    (this.x - this.tx) * map.tileWidth,
+                    (this.y - this.ty) * map.tileHeight,
+                    this.stackAvatarWidth,
+                    this.stackAvatarHeight);
+            }
+            g.restore();
+        }
+    }
 
-            g.translate(this.tx * map.tileWidth + offsetX, this.ty * map.tileHeight + offsetY);
+    drawAvatar(g, map) {
+        if (this.hasPosition) {
+            g.save();
+            {
+                g.translate(this.tx * map.tileWidth + this.stackOffsetX, this.ty * map.tileHeight + this.stackOffsetY);
 
-            g.fillStyle = this.isMe ? "red" : "blue";
-            g.fillRect(
-                (this.x - this.tx) * map.tileWidth,
-                (this.y - this.ty) * map.tileHeight,
-                avatarWidth,
-                avatarHeight);
+                g.fillStyle = this.isMe ? "red" : "blue";
+                g.fillRect(
+                    (this.x - this.tx) * map.tileWidth,
+                    (this.y - this.ty) * map.tileHeight,
+                    this.stackAvatarWidth,
+                    this.stackAvatarHeight);
 
-            g.strokeStyle = "green";
-            g.strokeRect(0, 0, avatarWidth, avatarHeight);
+                g.strokeStyle = "grey";
+                g.strokeRect(0, 0, this.stackAvatarWidth, this.stackAvatarHeight);
+            }
+            g.restore();
+        }
+    }
 
-            g.fillStyle = "black";
-            g.textBaseline = "bottom";
-            g.fillText(this.displayName || this.id, map.tileWidth / 2, 0);
+    drawName(g, map) {
+        if (this.hasPosition) {
+
+            g.save();
+            {
+                g.translate(this.tx * map.tileWidth + this.stackOffsetX, this.ty * map.tileHeight + this.stackOffsetY);
+                g.shadowColor = "black";
+                g.shadowOffsetX = 3 * cameraZ;
+                g.shadowOffsetY = 3 * cameraZ;
+                g.shadowBlur = 3 * cameraZ;
+
+                g.fillStyle = "white";
+                g.textBaseline = "bottom";
+                g.fillText(this.displayName, 0, 0);
+            }
             g.restore();
         }
     }

@@ -170,7 +170,7 @@ function update(dt) {
         user.readInput(dt, keys);
     }
     for (let user of userList) {
-        user.update(dt);
+        user.update(dt, userList);
     }
     for (let user of userList) {
         me.readUser(user);
@@ -230,7 +230,13 @@ function render() {
     map.draw(g);
 
     for (let user of userList) {
-        user.draw(g, map, userList);
+        user.drawShadow(g, map);
+    }
+    for (let user of userList) {
+        user.drawAvatar(g, map);
+    }
+    for (let user of userList) {
+        user.drawName(g, map);
     }
 
     drawMouse();
