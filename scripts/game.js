@@ -10,8 +10,7 @@ const map = TileMap.DEFAULT,
     CAMERA_ZOOM_MAX = 8,
     CAMERA_ZOOM_MIN = 0.1,
     CAMERA_ZOOM_SHAPE = 1 / 4,
-    CAMERA_ZOOM_SPEED = 0.005,
-    isFirefox = typeof InstallTrigger !== 'undefined';
+    CAMERA_ZOOM_SPEED = 0.005;
 
 let gridOffsetX = 0,
     gridOffsetY = 0,
@@ -166,10 +165,6 @@ function update(dt) {
     for (let user of userList) {
         me.readUser(user, AUDIO_DISTANCE_MIN, AUDIO_DISTANCE_MAX);
     }
-}
-
-function lerp(a, b, p) {
-    return (1 - p) * a + p * b;
 }
 
 function drawMouse() {

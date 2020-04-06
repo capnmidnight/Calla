@@ -2,6 +2,8 @@
 
 // A few convenience methods for HTML elements.
 
+const isFirefox = typeof InstallTrigger !== 'undefined'
+
 Element.prototype.show = function () {
     this.style.display = "";
 };
@@ -20,6 +22,10 @@ Element.prototype.unlock = function () {
 
 function clamp(v, min, max) {
     return Math.min(max, Math.max(min, v));
+}
+
+function lerp(a, b, p) {
+    return (1 - p) * a + p * b;
 }
 
 function project(v, min, max) {
