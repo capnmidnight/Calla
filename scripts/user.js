@@ -24,7 +24,7 @@ class User {
         this.stackOffsetY = 0;
         this.hasPosition = isMe;
         this.lastPositionRequestTime = Date.now() - POSITION_REQUEST_DEBOUNCE_TIME;
-        this.lastMove = MOVE_REPEAT;
+        this.lastMove = Number.MAX_VALUE;
     }
 
     moveBy(dx, dy) {
@@ -58,30 +58,10 @@ class User {
         this.t = 0;
     }
 
-    readUser(user) {
-        if (this.isMe
-            && !user.isMe) {
-            const dx = user.tx - this.tx,
-                dy = user.ty - this.ty,
-                distSq = dx * dx + dy * dy,
-                dist = clamp(Math.sqrt(distSq), AUDIO_DISTANCE_MIN, AUDIO_DISTANCE_MAX);
-
-            if (dist !== user.distToMe) {
-                user.distToMe = dist;
-                const volume = 1 - project(dist, AUDIO_DISTANCE_MIN, AUDIO_DISTANCE_MAX);
-
-                jitsiClient.txJitsiHax("setVolume", {
-                    user: user.id,
-                    volume: volume
-                });
-            }
-        }
-    }
-
-    readInput(dt, keys) {
+    readInput(dt, keys, moveRepeat) {
         if (this.isMe) {
             this.lastMove += dt;
-            if (this.lastMove >= MOVE_REPEAT) {
+            if (this.lastMove >= moveRepeat) {
                 let dx = 0,
                     dy = 0;
 
@@ -112,7 +92,7 @@ class User {
         }
     }
 
-    update(dt, userList) {
+    update(dt, map, userList) {
         if (this.hasPosition) {
             if (this.dist > 0) {
                 this.t += dt;
@@ -146,6 +126,26 @@ class User {
             this.stackAvatarHeight = map.tileHeight - (this.stackUserCount - 1) * STACKED_USER_OFFSET_Y;
             this.stackOffsetX = this.stackIndex * STACKED_USER_OFFSET_X;
             this.stackOffsetY = this.stackIndex * STACKED_USER_OFFSET_Y;
+        }
+    }
+
+    readUser(user, audioDistMin, audioDistMax) {
+        if (this.isMe
+            && !user.isMe) {
+            const dx = user.tx - this.tx,
+                dy = user.ty - this.ty,
+                distSq = dx * dx + dy * dy,
+                dist = clamp(Math.sqrt(distSq), audioDistMin, audioDistMax);
+
+            if (dist !== user.distToMe) {
+                user.distToMe = dist;
+                const volume = 1 - project(dist, audioDistMin, audioDistMax);
+
+                jitsiClient.txJitsiHax("setVolume", {
+                    user: user.id,
+                    volume: volume
+                });
+            }
         }
     }
 

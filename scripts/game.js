@@ -158,13 +158,13 @@ function update(dt) {
     gridOffsetX = Math.floor(0.5 * frontBuffer.width / map.tileWidth) * map.tileWidth;
     gridOffsetY = Math.floor(0.5 * frontBuffer.height / map.tileHeight) * map.tileHeight;
     for (let user of userList) {
-        user.readInput(dt, keys);
+        user.readInput(dt, keys, MOVE_REPEAT);
     }
     for (let user of userList) {
-        user.update(dt, userList);
+        user.update(dt, map, userList);
     }
     for (let user of userList) {
-        me.readUser(user);
+        me.readUser(user, AUDIO_DISTANCE_MIN, AUDIO_DISTANCE_MAX);
     }
 }
 

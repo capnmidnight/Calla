@@ -1,27 +1,27 @@
 ﻿"use strict";
 
-const jitsi = document.querySelector("#jitsi"),
+const jitsiContainer = document.querySelector("#jitsi"),
     frontBuffer = document.querySelector("#frontBuffer"),
-    demo = document.querySelector("#demo > video"),
+    demoVideo = document.querySelector("#demo > video"),
     gui = document.querySelector("#gui"),
-    room = document.querySelector("#room"),
-    user = document.querySelector("#user"),
-    connect = document.querySelector("#connect");
+    roomNameInput = document.querySelector("#room"),
+    userNameInput = document.querySelector("#user"),
+    connectButton = document.querySelector("#connect");
 
 let api = null,
     iframe = null;
 
-room.addEventListener("enter", user.focus.bind(user));
-user.addEventListener("enter", login);
+roomNameInput.addEventListener("enter", userNameInput.focus.bind(userNameInput));
+userNameInput.addEventListener("enter", login);
 
 showLogin();
 
 if (location.hash.length > 0) {
-    room.value = location.hash.substr(1);
-    user.focus();
+    roomNameInput.value = location.hash.substr(1);
+    userNameInput.focus();
 }
 else {
-    room.focus();
+    roomNameInput.focus();
 }
 
 function shrink(targetID) {
@@ -40,26 +40,26 @@ function shrink(targetID) {
 }
 
 function showLogin() {
-    connect.innerHTML = "Connect";
-    connect.unlock();
-    room.unlock();
-    user.unlock();
+    connectButton.innerHTML = "Connect";
+    connectButton.unlock();
+    roomNameInput.unlock();
+    userNameInput.unlock();
 
-    jitsi.hide();
+    jitsiContainer.hide();
     frontBuffer.hide();
-    demo.parentElement.show();
-    demo.show();
-    demo.play();
+    demoVideo.parentElement.show();
+    demoVideo.show();
+    demoVideo.play();
     gui.show();
 }
 
 function login() {
-    connect.innerHTML = "Connecting...";
-    connect.lock();
-    room.lock();
-    user.lock();
-    const roomName = room.value.trim(),
-        userName = user.value.trim();
+    connectButton.innerHTML = "Connecting...";
+    connectButton.lock();
+    roomNameInput.lock();
+    userNameInput.lock();
+    const roomName = roomNameInput.value.trim(),
+        userName = userNameInput.value.trim();
 
     if (roomName.length > 0
         && userName.length > 0) {
@@ -69,25 +69,25 @@ function login() {
         showLogin();
 
         if (roomName.length === 0) {
-            room.value = "";
-            room.focus();
+            roomNameInput.value = "";
+            roomNameInput.focus();
         }
         else if (userName.length === 0) {
-            user.value = "";
-            user.focus();
+            userNameInput.value = "";
+            userNameInput.focus();
         }
     }
 }
 
 function startConference(roomName, userName) {
-    jitsi.show();
+    jitsiContainer.show();
 
     location.hash = roomName;
 
     api = new JitsiMeetExternalAPI(JITSI_HOST, {
         noSSL: false,
         disableThirdPartyRequests: true,
-        parentNode: jitsi,
+        parentNode: jitsiContainer,
         width: "100%",
         height: "100%",
         configOverwrite: {
@@ -103,9 +103,9 @@ function startConference(roomName, userName) {
     registerGameListeners(api);
     api.addEventListener("videoConferenceJoined", function (evt) {
         gui.hide();
-        demo.pause();
-        demo.hide();
-        demo.parentElement.hide();
+        demoVideo.pause();
+        demoVideo.hide();
+        demoVideo.parentElement.hide();
         startGame(evt);
     });
 

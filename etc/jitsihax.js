@@ -29,7 +29,7 @@
                     audio.volume = evt.volume;
                 }
                 else {
-                    console.warn(`Could not find audio element for user ${user}`);
+                    console.warn(`Could not find audio element for user ${userNameInput}`);
                 }
             }
         };
