@@ -97,6 +97,7 @@ export class Game {
         api.addEventListener("videoConferenceLeft", this.end.bind(this));
         api.addEventListener("participantJoined", this.addUser.bind(this));
         api.addEventListener("participantLeft", this.removeUser.bind(this));
+        api.addEventListener("avatarChanged", this.setAvatar.bind(this));
         api.addEventListener("endpointTextMessageReceived", this.jitsiClient.rxGameData);
     }
 
@@ -108,6 +109,7 @@ export class Game {
         if (this.userLookup[evt.id]) {
             removeUser(evt);
         }
+        
         const user = new User(evt.id, evt.displayName, false);
         user.addEventListener("userPositionNeeded", (evt) => {
             this.jitsiClient.txGameData(evt.id, "userInitResponse");
@@ -131,6 +133,17 @@ export class Game {
         }
     }
 
+    setAvatar(evt) {
+        //evt = {
+        //  id: string, // the id of the participant that changed his avatar.
+        //  avatarURL: string // the new avatar URL.
+        //}
+        const user = this.userLookup[evt.id];
+        if (!!user) {
+            user.setAvatar(evt.avatarURL);
+        }
+    }
+
     start(evt) {
         //evt = {
         //    roomName: "string", // the room name of the conference
@@ -140,8 +153,8 @@ export class Game {
         //};
 
         this.currentRoomName = evt.roomName;
-
         this.me = new User(evt.id, evt.displayName, true);
+        this.me.setAvatar(evt.avatarURL);
         this.me.addEventListener("move", (evt) => {
             for (let user of this.userList) {
                 if (!user.isMe) {

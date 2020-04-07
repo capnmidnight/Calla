@@ -16,6 +16,7 @@ export class User {
         this.t = 0;
         this.distToMe = 0;
         this.isMe = isMe;
+        this.image = null;
         this.stackUserCount = 1;
         this.stackIndex = 0;
         this.stackAvatarHeight = 0;
@@ -37,6 +38,14 @@ export class User {
         }
 
         this.eventHandlers[evtName].push(func);
+    }
+
+    setAvatar(url) {
+        const img = new Image();
+        img.addEventListener("load", (evt) => {
+            this.image = img;
+        });
+        img.src = url;
     }
 
     moveTo(x, y) {
@@ -169,15 +178,23 @@ export class User {
             {
                 g.translate(this.tx * map.tileWidth + this.stackOffsetX, this.ty * map.tileHeight + this.stackOffsetY);
 
-                g.fillStyle = this.isMe ? "red" : "blue";
-                g.fillRect(
-                    (this.x - this.tx) * map.tileWidth,
-                    (this.y - this.ty) * map.tileHeight,
-                    this.stackAvatarWidth,
-                    this.stackAvatarHeight);
+                const x = (this.x - this.tx) * map.tileWidth,
+                    y = (this.y - this.ty) * map.tileHeight;
 
-                g.strokeStyle = "grey";
-                g.strokeRect(0, 0, this.stackAvatarWidth, this.stackAvatarHeight);
+                if (!this.image) {
+                    g.fillStyle = this.isMe ? "red" : "blue";
+                    g.fillRect(
+                        x,
+                        y,
+                        this.stackAvatarWidth,
+                        this.stackAvatarHeight);
+
+                    g.strokeStyle = "grey";
+                    g.strokeRect(0, 0, this.stackAvatarWidth, this.stackAvatarHeight);
+                }
+                else {
+                    g.drawImage(this.image, x, y, this.stackAvatarWidth, this.stackAvatarHeight);
+                }
             }
             g.restore();
         }
