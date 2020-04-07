@@ -17,7 +17,7 @@ export class Game {
         this.g = this.frontBuffer.getContext("2d");
         this.me = null
         this.gui = new AppGui(this);
-        this.map = TileMap.DEFAULT;
+        this.map = null;
         this.keys = [];
         this.userLookup = {};
         this.userList = [];
@@ -154,6 +154,16 @@ export class Game {
         });
         this.userList.push(this.me);
 
+        this.map = new TileMap(this.currentRoomName);
+        this.map.load()
+            .catch(() => {
+                this.map = new TileMap("default");
+                return this.map.load();
+            })
+            .then(this.startLoop.bind(this));
+    }
+
+    startLoop() {
         this.frontBuffer.show();
         this.frontBuffer.resize();
         this.frontBuffer.focus();

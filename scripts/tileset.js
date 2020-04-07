@@ -1,32 +1,37 @@
-﻿const DEFAULT_STYLES = ["lightgrey", "darkgrey"]
-
-export class TileSet {
-    constructor(data) {
+﻿export class TileSet {
+    constructor(tilesetName) {
+        this.tilesetName = tilesetName;
         this.tileWidth = 0;
         this.tileHeight = 0;
+        this.tilesPerRow = 0;
+        this.image = new Image();
     }
 
-    draw(g) {
+    async load() {
+        const response = await fetch(`data/tilesets/${this.tilesetName}/index.json`),
+            data = await response.json(),
+            imageLoad = new Promise((resolve, reject) => {
+                this.image.addEventListener("load", (evt) => {
+                    this.tilesPerRow = this.image.width / this.tileWidth;
+                    resolve();
+                });
+                this.image.addEventListener("error", reject);
+            });
+
+        this.tileWidth = data.tileWidth;
+        this.tileHeight = data.tileHeight;
+        this.image.src = `data/tilesets/${this.tilesetName}/${data.file}`;
+        await imageLoad;
+    }
+
+    draw(g, tile, x, y) {
+        const sx = this.tileWidth * (tile % this.tilesPerRow),
+            sy = this.tileHeight * Math.floor(tile / this.tilesPerRow),
+            dx = x * this.tileWidth,
+            dy = y * this.tileHeight;
+
+        g.drawImage(this.image,
+            sx, sy, this.tileWidth, this.tileHeight,
+            dx, dy, this.tileWidth, this.tileHeight);
     }
 }
-
-TileSet.DEFAULT = {
-    tileWidth: 32,
-    tileHeight: 32,
-    draw: function (g, tile, x, y) {
-        const tx = x * this.tileWidth - 0.25,
-            ty = y * this.tileHeight - 0.25,
-            tw = this.tileWidth + 0.5,
-            th = this.tileHeight + 0.5;
-        g.save();
-        {
-            g.fillStyle = DEFAULT_STYLES[tile];
-            g.fillRect(tx, ty, tw, th);
-
-            g.strokeStyle = "rgba(0, 0, 0, 0.05)";
-            g.lineWidth = 0.5;
-            g.strokeRect(tx + 0.25, ty + 0.25, tw - 0.5, th - 0.5);
-        }
-        g.restore();
-    }
-};
