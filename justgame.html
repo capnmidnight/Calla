@@ -35,6 +35,18 @@
     <script type="module">
         import { Game } from "./scripts/game.js";
 
+        function spawn(id) {
+            for (let func of jitsiEvents.moveTo) {
+                func({
+                    participantID: id,
+                    x: Math.floor(Math.random() * 10 - 5),
+                    y: Math.floor(Math.random() * 10 - 5)
+                });
+            }
+
+            setTimeout(spawn.bind(null, id), 1000 * (1 + Math.random()));
+        }
+
         const jitsiEvents = {
             moveTo: [],
             userInitResponse: []
@@ -47,15 +59,7 @@
                     if (msg === "userInitResponse") {
                         for (let user of game.userList) {
                             if (user.id === id) {
-                                setInterval(function () {
-                                    for (let func of jitsiEvents.moveTo) {
-                                        func({
-                                            participantID: id,
-                                            x: Math.floor(Math.random() * 10 - 5),
-                                            y: Math.floor(Math.random() * 10 - 5)
-                                        });
-                                    }
-                                }, 1000);
+                                setTimeout(spawn.bind(null, id), 1000);
                             }
                         }
                     }
