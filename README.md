@@ -11,7 +11,7 @@ Even when it works, teleconferencing still kind of sucks. Only one person can re
 Lozya adds a small, RPG-style map to the Jitsi meeting view. It gives you an avatar to walk around the room. Users choose where to sit in relation to other users. Users very close to you are set to full volume. Users a little far away have their volume scaled down accordingly. Users too far away to care about are rendered with zero volume.
 
 - Visit the current installation at [meet.primrosevr.com](https://meet.primrosevr.com).
-- Enter a room name and user name.
+- Enter a room name and user name. Suggest "FromGithub" for the roomname to meet other people linking from this repo (maybe).
 - Click "Connect" and wait for the connection to go through.
 - If you need to change your microphone settings, click the `<` arrow in the menu in the upper right corner of the window to hide the map view and give you full access to the Jitsi Meet interface. 
 - Once you are done changing settings, use the `>` arrow in the upper-right menu to return to the map view.
@@ -24,12 +24,23 @@ Lozya adds a small, RPG-style map to the Jitsi meeting view. It gives you an ava
 - First, setup Jitsi Meet on a server of your choice: [Jitsi quick-start instructions](https://github.com/jitsi/jitsi-meet/blob/master/doc/quick-install.md).
 - Next login to your Jitsi Meet server as root and edit `/usr/share/jitsi-meet/index.html` and add the following line: `<script type="text/javascript" src="jitsihax.js"></script>`.
 - Copy the script `jitsihax.js` from this repo to `/usr/share/jitsi-meet/`.
-- Install the rest of this repository onto another server of your choice.
+- Edit `jitsihax.js`, changing `FRONT_END_SERVER` to point to where you will host the Lozya front-end.
+- Install the Lozya front-end (basically the rest of this repository) onto another server of your choice.
   - Modify "DOMAIN_NAME" in `index.html` scripts to point to your Jitsi Meet server.
+- You may also want to edit `index.html` to change/remove the link(s) to this repository and/or my Twitter profile.
+  
+Make sure you keep the distinction between your Jitsi installation and your Lozya installation clear. You can conceivably run them on the same server, but I won't be digging into customizing a Jitsi installation enough to figure that out, so my setup has them on separate servers. `jitsihax.js` needs to go on your Jitsi server, and you need to edit it to point to your Lozya server. `index.html` goes on your Lozay server, and you need to edit it to point to your Jitsi server.
+
+## USAGE
+
+- Be careful in picking your room name, if you don't want randos to join. Traffic is low right now, but you never know.
+- Try to pick a unique user name. A lot of people use "Test" and then there are a bunch of people with the same name running around.
+- Click on the map to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls.
+- Or, use the arrow keys on your keyboard to move.
+- You can roll your mouse wheel to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in ther Avatar.
+- In the upper-right corner of the page, there is a small menu linking to this Github repo and my Twitter account. The angle-bracket button minimizes the map view so you can get clear access to the Jitsi Meet interface. This is useful for opening your settings and entering your Gravatar email so you can have your own avatar.
 
 ## CONTRIBUTING
-
-Everything. I only just got the basic Jitsi server running as of 4/1/2020 (this is not an April Fool's joke. We don't have time for childish games right now) and the basics of volume scaling done on 4/3/2020.
 
 ### Conduct
 
@@ -49,13 +60,11 @@ The QA team is the software development team's best friend. Testing releases and
 
 #### Documentation
 
-IDK, I planned on just hacking this together as I went, but I will probaby write some notes on whatever I've done along they way. Won't say no to more docs.
+IDK, I planned on just hacking this together as I went, but I will probaby write some notes on whatever I've done along they way. Let me know if anything is particularly unclear and I'll write something about it.
 
 #### Client
 
-I have experience hacking on WebRTC stuffs, but I'm certainly welcome for more help. Right now, there's a button to hide the Lozya interface to give access to the Jitsi interface. A lot of the settings can be controlled through the Jitsi Meet Web API, so I think I'd prefer to provide a full interface and hide Jitsi Meet's web interface completely.
-
-There are also Android and iOS clients for Jitsi that might be cool to fork and upgrade to have the game view. That is also outside of my current skillset. 
+I'm pretty happy with how the client is working right now, but anyone is free to self-service add features.
 
 #### Server
 
