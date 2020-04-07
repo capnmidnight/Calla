@@ -24,7 +24,6 @@ export class User {
         this.stackOffsetY = 0;
         this.hasPosition = isMe;
         this.lastPositionRequestTime = Date.now() - POSITION_REQUEST_DEBOUNCE_TIME;
-        this.lastMove = Number.MAX_VALUE;
         this.eventHandlers = {
             move: [],
             userPositionNeeded: [],
@@ -40,18 +39,17 @@ export class User {
         this.eventHandlers[evtName].push(func);
     }
 
-    moveBy(dx, dy) {
-        this.moveTo(this.tx + dx, this.ty + dy);
-    }
-
     moveTo(x, y) {
         if (this.isMe) {
-            var evt = {
-                x: x,
-                y: y
-            };
-            for (let func of this.eventHandlers.move) {
-                func(evt);
+            if (x !== this.tx
+                || y !== this.ty) {
+                var evt = {
+                    x: x,
+                    y: y
+                };
+                for (let func of this.eventHandlers.move) {
+                    func(evt);
+                }
             }
         }
         else if (!this.hasPosition) {
@@ -64,45 +62,13 @@ export class User {
         this.sy = this.y;
         this.tx = x;
         this.ty = y;
-        this.dx = this.tx - this.sx;
-        this.dy = this.ty - this.sy;
-        this.dist = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
-        this.t = 0;
-    }
 
-    readInput(dt, keys, moveRepeat) {
-        if (this.isMe) {
-            this.lastMove += dt;
-            if (this.lastMove >= moveRepeat) {
-                let dx = 0,
-                    dy = 0;
-
-                for (let key of keys) {
-                    switch (key) {
-                        case "ArrowUp": dy--; break;
-                        case "ArrowDown": dy++; break;
-                        case "ArrowLeft": dx--; break;
-                        case "ArrowRight": dx++; break;
-                    }
-                }
-
-                if (dx !== 0
-                    || dy !== 0) {
-                    this.moveBy(dx, dy);
-                }
-
-                this.lastMove = 0;
-            }
-        }
-        else if (!this.hasPosition) {
-            const now = Date.now(),
-                dt = now - this.lastPositionRequestTime;
-            if (dt >= POSITION_REQUEST_DEBOUNCE_TIME) {
-                this.lastPositionRequestTime = now;
-                for (let func of this.eventHandlers.userPositionNeeded) {
-                    func(this);
-                }
-            }
+        if (this.tx !== this.sx
+            || this.ty !== this.sy) {
+            this.dx = this.tx - this.sx;
+            this.dy = this.ty - this.sy;
+            this.dist = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
+            this.t = 0;
         }
     }
 
@@ -140,6 +106,16 @@ export class User {
             this.stackAvatarHeight = map.tileHeight - (this.stackUserCount - 1) * STACKED_USER_OFFSET_Y;
             this.stackOffsetX = this.stackIndex * STACKED_USER_OFFSET_X;
             this.stackOffsetY = this.stackIndex * STACKED_USER_OFFSET_Y;
+        }
+        else {
+            const now = Date.now(),
+                dt = now - this.lastPositionRequestTime;
+            if (dt >= POSITION_REQUEST_DEBOUNCE_TIME) {
+                this.lastPositionRequestTime = now;
+                for (let func of this.eventHandlers.userPositionNeeded) {
+                    func(this);
+                }
+            }
         }
     }
 
@@ -220,6 +196,7 @@ export class User {
 
                 g.fillStyle = "white";
                 g.textBaseline = "bottom";
+                g.font = "regular 12pt 'Segoe UI'";
                 g.fillText(this.displayName, 0, 0);
             }
             g.restore();

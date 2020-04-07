@@ -14,12 +14,25 @@ export class Game {
     constructor(jitsiClient) {
         this.jitsiClient = jitsiClient;
         this.frontBuffer = document.querySelector("#frontBuffer");
+        this.g = this.frontBuffer.getContext("2d");
         this.me = null
         this.gui = new AppGui(this);
         this.map = TileMap.DEFAULT;
         this.keys = [];
         this.userLookup = {};
         this.userList = [];
+
+        this._loop = this.loop.bind(this);
+        this.lastTime = 0;
+        this.lastMove = Number.MAX_VALUE;
+        this.mouseX = 0;
+        this.mouseY = 0;
+        this.gridOffsetX = 0;
+        this.gridOffsetY = 0;
+        this.cameraX = 0;
+        this.cameraY = 0;
+        this.cameraZ = this.targetCameraZ = 1.5;
+        this.currentRoomName = null;
 
         addEventListener("resize", this.frontBuffer.resize.bind(this.frontBuffer));
 
@@ -59,8 +72,11 @@ export class Game {
             this.mouseX = evt.offsetX * devicePixelRatio;
             this.mouseY = evt.offsetY * devicePixelRatio;
             if (!!this.me) {
-                const tile = this.getMouseTile();
-                this.me.moveTo(tile.x, tile.y);
+                const tile = this.getMouseTile(),
+                    dx = tile.x - this.me.tx,
+                    dy = tile.y - this.me.ty,
+                    clearTile = this.map.getClearTile(this.me.tx, this.me.ty, dx, dy);
+                this.me.moveTo(clearTile.x, clearTile.y);
             }
         });
 
@@ -74,19 +90,6 @@ export class Game {
         this.jitsiClient.addEventListener("userInitResponse", (evt) => {
             this.jitsiClient.txGameData(evt.participantID, "moveTo", { x: this.me.x, y: this.me.y });
         });
-
-        this.g = this.frontBuffer.getContext("2d");
-        this._loop = this.loop.bind(this);
-        this.lastTime = 0;
-        this.mouseX = 0;
-        this.mouseY = 0;
-        this.gridOffsetX = 0;
-        this.gridOffsetY = 0;
-        this.cameraX = 0;
-        this.cameraY = 0;
-        this.cameraZ = 1;
-        this.targetCameraZ = 1;
-        this.currentRoomName = null;
     }
 
     registerGameListeners(api) {
@@ -185,9 +188,31 @@ export class Game {
     update(dt) {
         this.gridOffsetX = Math.floor(0.5 * this.frontBuffer.width / this.map.tileWidth) * this.map.tileWidth;
         this.gridOffsetY = Math.floor(0.5 * this.frontBuffer.height / this.map.tileHeight) * this.map.tileHeight;
-        for (let user of this.userList) {
-            user.readInput(dt, this.keys, MOVE_REPEAT);
+
+
+        this.lastMove += dt;
+        if (this.lastMove >= MOVE_REPEAT) {
+            let dx = 0,
+                dy = 0;
+
+            for (let key of this.keys) {
+                switch (key) {
+                    case "ArrowUp": dy--; break;
+                    case "ArrowDown": dy++; break;
+                    case "ArrowLeft": dx--; break;
+                    case "ArrowRight": dx++; break;
+                }
+            }
+
+            if (dx !== 0
+                || dy !== 0) {
+                const clearTile = this.map.getClearTile(this.me.tx, this.me.ty, dx, dy);
+                this.me.moveTo(clearTile.x, clearTile.y);
+            }
+
+            this.lastMove = 0;
         }
+
         for (let user of this.userList) {
             user.update(dt, this.map, this.userList);
         }
