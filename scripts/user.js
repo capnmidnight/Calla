@@ -8,6 +8,7 @@ export class User {
     constructor(id, displayName, isMe) {
         this.id = id;
         this.displayName = displayName || id;
+        this.muted = false;
         this.x = 0; this.y = 0;
         this.sx = 0; this.sy = 0;
         this.tx = 0; this.ty = 0;

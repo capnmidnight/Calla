@@ -90,6 +90,8 @@ export class Game {
         this.jitsiClient.addEventListener("userInitResponse", (evt) => {
             this.jitsiClient.txGameData(evt.participantID, "moveTo", { x: this.me.x, y: this.me.y });
         });
+
+        this.jitsiClient.addEventListener("muteStatusChanged", this.muteUser.bind(this));
     }
 
     getMouseTile() {
@@ -114,6 +116,7 @@ export class Game {
         api.addEventListener("participantLeft", this.removeUser.bind(this));
         api.addEventListener("avatarChanged", this.setAvatar.bind(this));
         api.addEventListener("endpointTextMessageReceived", this.jitsiClient.rxGameData);
+        api.addEventListener("audioMuteStatusChanged", this.muteUser.bind(this));
     }
 
     addUser(evt) {
@@ -131,6 +134,27 @@ export class Game {
         });
         this.userLookup[evt.id] = user;
         this.userList.unshift(user);
+    }
+
+    muteUser(evt) {
+        if (evt.participantID) {
+            const user = this.userLookup[evt.participantID];
+            if (!!user) {
+                user.muted = evt.muted;
+            }
+        }
+        else if (!this.me) {
+            setTimeout(this.muteUser.bind(this, evt), 1000);
+        }
+        else {
+            this.me.muted = evt.muted;
+            evt.participantID = this.me.id;
+            for (let user of this.userList) {
+                if (!user.isMe) {
+                    this.jitsiClient.txGameData(user.id, "muteStatusChanged", evt);
+                }
+            }
+        }
     }
 
     removeUser(evt) {

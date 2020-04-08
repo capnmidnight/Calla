@@ -6,7 +6,8 @@ export const jitsiClient = (function () {
 
     const eventHandlers = {
         moveTo: [],
-        userInitResponse: []
+        userInitResponse: [],
+        muteStatusChanged: []
     };
 
     let api = null,
