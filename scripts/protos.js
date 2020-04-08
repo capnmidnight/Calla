@@ -19,6 +19,21 @@ export function injectNewDOMMethods() {
         this.disabled = "";
     };
 
+    Element.prototype.blinkBorder = function (times, color) {
+        times = (times || 3) * 2;
+        color = color || "rgb(255, 127, 127)";
+
+        let state = false;
+        const interval = setInterval(() => {
+            state = !state;
+            this.style.backgroundColor = state ? color : "";
+            --times;
+            if (times === 0) {
+                clearInterval(interval);
+            }
+        }, 125);
+    };
+
     HTMLCanvasElement.prototype.resize = function () {
         this.width = this.clientWidth * devicePixelRatio;
         this.height = this.clientHeight * devicePixelRatio;

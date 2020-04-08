@@ -99,10 +99,12 @@ export class AppGui {
             this.showLogin();
 
             if (roomName.length === 0) {
+                this.roomNameInput.blinkBorder();
                 this.roomNameInput.value = "";
                 this.roomNameInput.focus();
             }
             else if (userName.length === 0) {
+                this.userNameInput.blinkBorder();
                 this.userNameInput.value = "";
                 this.userNameInput.focus();
             }
