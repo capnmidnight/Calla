@@ -4,6 +4,11 @@ export class AppGui {
     constructor(game) {
         injectNewDOMMethods();
         this.game = game;
+        this.appView = document.querySelector("#appView");
+        this.separator = document.querySelector("#separator");
+        this.showGameButton = document.querySelector("#showGame");
+        this.showJitsiButton = document.querySelector("#showJitsi");
+        this.mixViewsButton = document.querySelector("#mixViews");
         this.jitsiContainer = document.querySelector("#jitsi");
         this.demoVideo = document.querySelector("#demo > video");
         this.loginView = document.querySelector("#loginView");
@@ -12,7 +17,12 @@ export class AppGui {
         this.connectButton = document.querySelector("#connect");
         this.newRoomButton = document.querySelector("#createNewRoom");
         this.roomSelector = document.querySelector("#existingRooms");
+
         this.isFullGame = !!(this.appView
+            && this.separator
+            && this.showGameButton
+            && this.showJitsiButton
+            && this.mixViewsButton
             && this.jitsiContainer
             && this.demoVideo
             && this.loginView
@@ -21,6 +31,10 @@ export class AppGui {
             && this.connectButton
             && this.newRoomButton
             && this.roomSelector);
+
+        this.gameVisible = true;
+        this.jitsiVisible = true;
+        this.viewsCombined = true;
 
         if (this.isFullGame) {
             this.roomNameInput.addEventListener("enter", this.userNameInput.focus.bind(this.userNameInput));
@@ -45,6 +59,11 @@ export class AppGui {
                 this.roomNameInput.value = this.roomSelector.value;
             });
 
+            this.showGameButton.addEventListener("click", this.showView.bind(this, true, false, false));
+            this.showJitsiButton.addEventListener("click", this.showView.bind(this, false, true, false));
+            this.mixViewsButton.addEventListener("click", this.showView.bind(this, false, false, true));
+
+            this.showView(false, false, false);
             this.showLogin();
 
             this.userNameInput.value = localStorage.getItem("userName") || "";
@@ -65,6 +84,50 @@ export class AppGui {
         }
     }
 
+    showView(toggleGame, toggleJitsi, toggleMixViews) {
+        const showGame = this.gameVisible !== toggleGame,
+            showJitsi = this.jitsiVisible !== toggleJitsi,
+            mixViews = this.viewsCombined != toggleMixViews;
+
+        this.gameVisible = showGame || !showJitsi && toggleJitsi;
+        this.jitsiVisible = showJitsi || !showGame && toggleGame;
+        this.viewsCombined = mixViews;
+
+        this.showGameButton.innerHTML = this.gameVisible ? "Hide game" : "Show game";
+        this.showJitsiButton.innerHTML = this.jitsiVisible ? "Hide meeting" : "Show meeting";
+        this.mixViewsButton.innerHTML = this.viewsCombined ? "Separate game/meeting" : "Combine game/meeting";
+
+        if (this.gameVisible != this.jitsiVisible) {
+            this.mixViewsButton.lock();
+        }
+        else {
+            this.mixViewsButton.unlock();
+        }
+
+        const sepSize = this.separator.offsetHeight,
+            halfSize = `calc(50% - ${sepSize / 2}px)`,
+            fullSize = `calc(100% - ${sepSize}px)`,
+            containerSize = this.viewsCombined || !this.jitsiVisible || !this.gameVisible
+                ? fullSize
+                : halfSize;
+
+        this.game.frontBuffer.style.height = this.gameVisible ? containerSize : "0";
+        this.jitsiContainer.style.height = this.jitsiVisible ? containerSize : "0";
+
+        if (this.viewsCombined) {
+            this.appView.insertBefore(this.separator, this.jitsiContainer);
+            this.game.frontBuffer.style.position = "absolute";
+            this.game.frontBuffer.style.top = sepSize + "px";
+        }
+        else {
+            this.appView.insertBefore(this.separator, this.game.frontBuffer);
+            this.game.frontBuffer.style.position = "";
+            this.game.frontBuffer.style.top = "";
+        }
+
+        this.game.frontBuffer.resize();
+    }
+
     showLogin() {
         this.connectButton.innerHTML = "Connect";
         this.connectButton.unlock();
@@ -73,8 +136,7 @@ export class AppGui {
         this.roomSelector.unlock();
         this.newRoomButton.unlock();
 
-        this.jitsiContainer.hide();
-        this.game.frontBuffer.hide();
+        this.appView.hide();
         this.demoVideo.parentElement.show();
         this.demoVideo.show();
         this.demoVideo.play();
@@ -113,7 +175,7 @@ export class AppGui {
     }
 
     startConference(roomName, userName) {
-        this.jitsiContainer.show();
+        this.appView.show();
 
         location.hash = roomName;
 
@@ -124,10 +186,16 @@ export class AppGui {
             width: "100%",
             height: "100%",
             configOverwrite: {
-                startAudioOnly: true
+                startVideoMuted: 0,
+                startWithVideoMuted: true
             },
             interfaceConfigOverwrite: {
-                DISABLE_VIDEO_BACKGROUND: true
+                DISABLE_VIDEO_BACKGROUND: true,
+                SHOW_JITSI_WATERMARK: false,
+                SHOW_WATERMARK_FOR_GUESTS: false,
+                SHOW_POWERED_BY: true,
+                AUTHENTICATION_ENABLE: false,
+                MOBILE_APP_PROMO: false
             },
             roomName: roomName,
             onload: (evt) => {

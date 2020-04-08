@@ -22,8 +22,15 @@
 
 <body>
     <section id="main">
-        <div id="jitsi"></div>
-        <canvas id="frontBuffer"></canvas>
+        <div id="appView">
+            <div id="jitsi"></div>
+            <div id="separator" style="display:flex;flex-direction:row;">
+                <button type="button" id="showJitsi">Hide meeting</button>
+                <button type="button" id="showGame">Hide game</button>
+                <button type="button" id="mixViews">Separate game/meeting</button>
+            </div>
+            <canvas id="frontBuffer"></canvas>
+        </div>
         <div id="demo"><video src="videos/demo.webm" autoplay loop></video></div>
         <div id="loginView">
             <section id="intro">
