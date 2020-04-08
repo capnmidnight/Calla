@@ -5,8 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, shrink-to-fit=0, initial-scale=1.0">
     <script id="lozya-settings">
-        const JITSI_HOST = "primrosevr.com",
-            MOVE_REPEAT = 0.125,
+        const MOVE_REPEAT = 0.125,
             MOVE_TRANSITION_TIME = 0.5;
 
         // TODO: These need to be user-configurable settings
@@ -18,16 +17,6 @@
 </head>
 
 <body>
-    <div style="display:none">
-        <div id="menuControl"></div>
-        <div id="jitsi"></div>
-        <div id="demo"><video></video></div>
-        <div id="loginView">
-            <div id="room"></div>
-            <div id="user"></div>
-            <div id="connect"></div>
-        </div>
-    </div>
     <section id="main">
         <canvas id="frontBuffer" style="border:inset 2px #ccc"></canvas>
     </section>

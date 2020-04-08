@@ -7,7 +7,6 @@ export class AppGui {
         this.menu = document.querySelector("#menu");
         this.menuControl = document.querySelector("#menuControl");
         this.jitsiContainer = document.querySelector("#jitsi");
-        this.menuControl.addEventListener("click", this.shrink.bind(this));
         this.demoVideo = document.querySelector("#demo > video");
         this.loginView = document.querySelector("#loginView");
         this.roomNameInput = document.querySelector("#room");
@@ -15,43 +14,56 @@ export class AppGui {
         this.connectButton = document.querySelector("#connect");
         this.newRoomButton = document.querySelector("#createNewRoom");
         this.roomSelector = document.querySelector("#existingRooms");
+        this.isFullGame = !!(this.menu
+            && this.menuControl
+            && this.jitsiContainer
+            && this.demoVideo
+            && this.loginView
+            && this.roomNameInput
+            && this.userNameInput
+            && this.connectButton
+            && this.newRoomButton
+            && this.roomSelector);
 
-        this.roomNameInput.addEventListener("enter", this.userNameInput.focus.bind(this.userNameInput));
-        this.userNameInput.addEventListener("enter", this.login.bind(this));
-        this.connectButton.addEventListener("click", this.login.bind(this));
-        this.newRoomButton.addEventListener("click", (evt) => {
-            const open = this.roomNameInput.style.display !== "none";
-            this.roomNameInput.style.display = open ? "none" : "";
-            this.roomSelector.style.display = open ? "" : "none";
-            this.newRoomButton.innerHTML = open ? "New" : "Cancel";
-            if (open) {
-                for (let option of this.roomSelector.options) {
+        if (this.isFullGame) {
+            this.menuControl.addEventListener("click", this.shrink.bind(this));
+            this.roomNameInput.addEventListener("enter", this.userNameInput.focus.bind(this.userNameInput));
+            this.userNameInput.addEventListener("enter", this.login.bind(this));
+            this.connectButton.addEventListener("click", this.login.bind(this));
+            this.roomSelector.addEventListener("change", (evt) => {
+                this.roomNameInput.value = this.roomSelector.value;
+            });
+            this.newRoomButton.addEventListener("click", (evt) => {
+                const open = this.roomNameInput.style.display !== "none";
+                this.roomNameInput.style.display = open ? "none" : "";
+                this.roomSelector.style.display = open ? "" : "none";
+                this.newRoomButton.innerHTML = open ? "New" : "Cancel";
+                if (open) {
+                    for (let option of this.roomSelector.options) {
+                        if (option.value === this.roomNameInput.value) {
+                            this.roomSelector.value = this.roomNameInput.value;
+                        };
+                    }
+                }
+
+                this.roomNameInput.value = this.roomSelector.value;
+            });
+
+            this.showLogin();
+
+            if (location.hash.length > 0) {
+                this.roomNameInput.value = location.hash.substr(1);
+                for (let option in this.roomSelector.options) {
                     if (option.value === this.roomNameInput.value) {
                         this.roomSelector.value = this.roomNameInput.value;
                     };
                 }
+                this.userNameInput.focus();
             }
-
-            this.roomNameInput.value = this.roomSelector.value;
-        });
-        this.roomSelector.addEventListener("change", (evt) => {
-            this.roomNameInput.value = this.roomSelector.value;
-        });
-
-        this.showLogin();
-
-        if (location.hash.length > 0) {
-            this.roomNameInput.value = location.hash.substr(1);
-            for (let option in this.roomSelector.options) {
-                if (option.value === this.roomNameInput.value) {
-                    this.roomSelector.value = this.roomNameInput.value;
-                };
+            else {
+                this.roomNameInput.focus();
+                this.roomNameInput.value = this.roomSelector.value;
             }
-            this.userNameInput.focus();
-        }
-        else {
-            this.roomNameInput.focus();
-            this.roomNameInput.value = this.roomSelector.value;
         }
     }
 
@@ -74,6 +86,8 @@ export class AppGui {
         this.connectButton.unlock();
         this.roomNameInput.unlock();
         this.userNameInput.unlock();
+        this.roomSelector.unlock();
+        this.newRoomButton.unlock();
 
         this.jitsiContainer.hide();
         this.game.frontBuffer.hide();
@@ -88,6 +102,8 @@ export class AppGui {
         this.connectButton.lock();
         this.roomNameInput.lock();
         this.userNameInput.lock();
+        this.roomSelector.lock();
+        this.newRoomButton.lock();
         const roomName = this.roomNameInput.value.trim(),
             userName = this.userNameInput.value.trim();
 
