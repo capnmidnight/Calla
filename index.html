@@ -45,9 +45,21 @@
     grid-row: 1">
                         Room name:
                     </label>
+                    <select id="existingRooms" style="
+    grid-column: 2;
+    grid-row: 1">
+                        <option value="Lozya">Lozya</option>
+                        <option value="ALXCC">Alexandria Code &amp; Coffee</option>
+                        <option value="Vurv">Vurv</option>
+                    </select>
                     <input type="text" id="room" placeholder="(Required)" style="
-    grid-column: 2 / 4;
-    grid-row: 1" />
+    grid-column: 2;
+    grid-row: 1;
+    display: none" />
+                    <button type="button" id="createNewRoom" title="Create a new, temporary room" style="
+    grid-column: 3">
+                        New
+                    </button>
 
 
                     <label for="user" style="
@@ -56,12 +68,12 @@
                         User name:
                     </label>
                     <input type="text" id="user" placeholder="(Required)" style="
-    grid-column: 2 / 4;
+    grid-column: 2;
     grid-row: 2" />
 
                     <button type="button" id="connect" style="
     grid-column: 3;
-    grid-row: 4">
+    grid-row: 2">
                         Connect
                     </button>
                 </form>

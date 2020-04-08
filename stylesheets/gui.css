@@ -30,17 +30,21 @@
     height: calc(100% - 14em);
 }
 
-#loginView form {
-    display: grid;
-    grid-template-columns: 2fr 3fr 1fr;
-    grid-template-rows: auto;
+#loginView {
+    overflow-y: scroll;
 }
 
-    #loginView form > * {
-        margin: .25em;
-        padding: .25em;
+    #loginView form {
+        display: grid;
+        grid-template-columns: 2fr 4fr 2fr;
+        grid-template-rows: auto;
     }
 
-    #loginView form > label {
-        text-align: right;
-    }
+        #loginView form > * {
+            margin: .25em;
+            padding: .25em;
+        }
+
+        #loginView form > label {
+            text-align: right;
+        }

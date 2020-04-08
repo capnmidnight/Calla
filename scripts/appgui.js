@@ -13,21 +13,45 @@ export class AppGui {
         this.roomNameInput = document.querySelector("#room");
         this.userNameInput = document.querySelector("#user");
         this.connectButton = document.querySelector("#connect");
+        this.newRoomButton = document.querySelector("#createNewRoom");
+        this.roomSelector = document.querySelector("#existingRooms");
 
         this.roomNameInput.addEventListener("enter", this.userNameInput.focus.bind(this.userNameInput));
-
-
         this.userNameInput.addEventListener("enter", this.login.bind(this));
         this.connectButton.addEventListener("click", this.login.bind(this));
+        this.newRoomButton.addEventListener("click", (evt) => {
+            const open = this.roomNameInput.style.display !== "none";
+            this.roomNameInput.style.display = open ? "none" : "";
+            this.roomSelector.style.display = open ? "" : "none";
+            this.newRoomButton.innerHTML = open ? "New" : "Cancel";
+            if (open) {
+                for (let option of this.roomSelector.options) {
+                    if (option.value === this.roomNameInput.value) {
+                        this.roomSelector.value = this.roomNameInput.value;
+                    };
+                }
+            }
+
+            this.roomNameInput.value = this.roomSelector.value;
+        });
+        this.roomSelector.addEventListener("change", (evt) => {
+            this.roomNameInput.value = this.roomSelector.value;
+        });
 
         this.showLogin();
 
         if (location.hash.length > 0) {
             this.roomNameInput.value = location.hash.substr(1);
+            for (let option in this.roomSelector.options) {
+                if (option.value === this.roomNameInput.value) {
+                    this.roomSelector.value = this.roomNameInput.value;
+                };
+            }
             this.userNameInput.focus();
         }
         else {
             this.roomNameInput.focus();
+            this.roomNameInput.value = this.roomSelector.value;
         }
     }
 
