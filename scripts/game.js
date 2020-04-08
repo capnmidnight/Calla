@@ -116,6 +116,7 @@ export class Game {
         api.addEventListener("participantLeft", this.removeUser.bind(this));
         api.addEventListener("avatarChanged", this.setAvatar.bind(this));
         api.addEventListener("endpointTextMessageReceived", this.jitsiClient.rxGameData);
+        api.addEventListener("displayNameChange", this.changeUserName.bind(this));
         api.addEventListener("audioMuteStatusChanged", this.muteUser.bind(this));
     }
 
@@ -127,13 +128,25 @@ export class Game {
         if (this.userLookup[evt.id]) {
             removeUser(evt);
         }
-        
+
         const user = new User(evt.id, evt.displayName, false);
         user.addEventListener("userPositionNeeded", (evt) => {
             this.jitsiClient.txGameData(evt.id, "userInitResponse");
         });
         this.userLookup[evt.id] = user;
         this.userList.unshift(user);
+    }
+
+    changeUserName(evt) {
+        //evt = {
+        //    id: string, // the id of the participant that changed his display name
+        //    displayname: string // the new display name
+        //};
+
+        const user = this.userLookup[evt.id];
+        if (!!user) {
+            user.setDisplayName(evt.displayName);
+        }
     }
 
     muteUser(evt) {

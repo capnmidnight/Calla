@@ -49,6 +49,10 @@ export class User {
         img.src = url;
     }
 
+    setDisplayName(name) {
+        this.displayName = name || this.id;
+    }
+
     moveTo(x, y) {
         if (this.isMe) {
             if (x !== this.tx
