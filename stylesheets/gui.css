@@ -24,9 +24,10 @@
     box-shadow: rgba(0, 0, 0, .4) 10px 10px 20px;
 }
 
-@media(max-width: 640px){
+@media(max-width: 899px){
     #intro {
         border: none;
+        border-radius: 0;
         margin: auto;
     }
 }
