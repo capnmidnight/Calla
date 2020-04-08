@@ -33,12 +33,13 @@ Make sure you keep the distinction between your Jitsi installation and your Lozy
 
 ## USAGE
 
-- Be careful in picking your room name, if you don't want randos to join. Traffic is low right now, but you never know.
-- Try to pick a unique user name. A lot of people use "Test" and then there are a bunch of people with the same name running around.
-- Click on the map to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls.
-- Or, use the arrow keys on your keyboard to move.
-- You can roll your mouse wheel to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in ther Avatar.
-- In the upper-right corner of the page, there is a small menu linking to this Github repo and my Twitter account. The angle-bracket button minimizes the map view so you can get clear access to the Jitsi Meet interface. This is useful for opening your settings and entering your Gravatar email so you can have your own avatar.
+- __Be careful in picking your room name__, if you don't want randos to join. Traffic is low right now, but you never know.
+- Try to __pick a unique user name__. A lot of people use "Test" and then there are a bunch of people with the same name running around.
+- Either __Hide the game view__ or __Separate the game and meeting views__ to be able to access the Jitsi Meet user settings. Lozya captures all of the mouse clicks to enable moving.
+- __Click on the map__ to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls.
+- Or, __use the arrow keys__ on your keyboard to move.
+- You can __roll your mouse wheel__ to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in ther Avatar.
+- __Jitsi Meet's web client doesn't work on iOS!__ Sorry :(
 
 ## CONTRIBUTING
 
