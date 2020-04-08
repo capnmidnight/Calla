@@ -92,6 +92,21 @@ export class Game {
         });
     }
 
+    getMouseTile() {
+        const imageX = this.mouseX - this.gridOffsetX,
+            imageY = this.mouseY - this.gridOffsetY,
+            zoomX = imageX / this.cameraZ,
+            zoomY = imageY / this.cameraZ,
+            mapX = zoomX - this.cameraX,
+            mapY = zoomY - this.cameraY,
+            mapWidth = this.map.tileWidth,
+            mapHeight = this.map.tileHeight,
+            gridX = Math.floor(mapX / mapWidth),
+            gridY = Math.floor(mapY / mapHeight),
+            tile = { x: gridX, y: gridY };
+        return tile;
+    }
+
     registerGameListeners(api) {
         api.addEventListener("videoConferenceJoined", this.start.bind(this));
         api.addEventListener("videoConferenceLeft", this.end.bind(this));
@@ -242,21 +257,6 @@ export class Game {
         for (let user of this.userList) {
             this.me.readUser(user, AUDIO_DISTANCE_MIN, AUDIO_DISTANCE_MAX);
         }
-    }
-
-    getMouseTile() {
-        const imageX = this.mouseX - this.gridOffsetX,
-            imageY = this.mouseY - this.gridOffsetY,
-            zoomX = imageX / this.cameraZ,
-            zoomY = imageY / this.cameraZ,
-            mapX = zoomX - this.cameraX,
-            mapY = zoomY - this.cameraY,
-            mapWidth = this.map.tileWidth,
-            mapHeight = this.map.tileHeight,
-            gridX = Math.floor(mapX / mapWidth),
-            gridY = Math.floor(mapY / mapHeight),
-            tile = { x: gridX, y: gridY };
-        return tile;
     }
 
     render() {
