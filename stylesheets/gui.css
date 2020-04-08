@@ -16,7 +16,7 @@
 #intro {
     min-width: 360px;
     max-width: 900px;
-    margin: 10em auto auto auto;
+    margin: 5em auto auto auto;
     background-color: white;
     padding: 1em 1em 3em 1em;
     border-radius: 5px;
@@ -24,27 +24,24 @@
     box-shadow: rgba(0, 0, 0, .4) 10px 10px 20px;
 }
 
-#frontBuffer {
-    margin: 7em;
-    width: calc(100% - 14em);
-    height: calc(100% - 14em);
+@media(max-width: 640px){
+    #intro {
+        border: none;
+        margin: auto;
+    }
 }
 
 #loginView {
     overflow-y: scroll;
 }
 
-    #loginView form {
-        display: grid;
-        grid-template-columns: 2fr 4fr 2fr;
-        grid-template-rows: auto;
+    #loginView form > * {
+        margin: .25em;
+        padding: .25em;
     }
 
-        #loginView form > * {
-            margin: .25em;
-            padding: .25em;
-        }
+    #loginView form > label {
+        text-align: right;
+    }
 
-        #loginView form > label {
-            text-align: right;
         }

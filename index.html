@@ -17,7 +17,6 @@
     </script>
     <link type="text/css" rel="stylesheet" href="stylesheets/general.css" />
     <link type="text/css" rel="stylesheet" href="stylesheets/icons.css" />
-    <link type="text/css" rel="stylesheet" href="stylesheets/menu.css" />
     <link type="text/css" rel="stylesheet" href="stylesheets/gui.css" />
 </head>
 
@@ -30,16 +29,10 @@
             <section id="intro">
                 <h1>Lozya</h1>
                 <p>Teleconferencing with an RPG map. Walk around, talk to folks, have private conversations by huddling in a corner, or drop in on other conversations. Ideal for meetups!</p>
-                <h2>Usage</h2>
-                <ul>
-                    <li>Be careful in picking your room name, if you don't want randos to join. Traffic is low right now, but you never know.</li>
-                    <li>Try to pick a unique user name. A lot of people use "Test" and then there are a bunch of people with the same name running around.</li>
-                    <li>Click on the map to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls.</li>
-                    <li>Or, use the arrow keys on your keyboard to move.</li>
-                    <li>You can roll your mouse wheel to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in ther Avatar.</li>
-                    <li>In the upper-right corner of the page, there is a small menu linking to this Github repo and my Twitter account. The angle-bracket button minimizes the map view so you can get clear access to the Jitsi Meet interface. This is useful for opening your settings and entering your Gravatar email so you can have your own avatar.</li>
-                </ul>
-                <form autocomplete="on">
+                <form autocomplete="on" style="
+display: grid;
+grid-template-columns: 2fr 4fr 2fr;
+grid-template-rows: auto;">
                     <label for="room" style="
     grid-column: 1;
     grid-row: 1">
@@ -77,33 +70,34 @@
                         Connect
                     </button>
                 </form>
+                <h2>Usage</h2>
+                <ul>
+                    <li>Be careful in picking your room name, if you don't want randos to join. Traffic is low right now, but you never know.</li>
+                    <li>Try to pick a unique user name. A lot of people use "Test" and then there are a bunch of people with the same name running around.</li>
+                    <li>Click on the map to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls.</li>
+                    <li>Or, use the arrow keys on your keyboard to move.</li>
+                    <li>You can roll your mouse wheel to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in ther Avatar.</li>
+                    <li>In the upper-right corner of the page, there is a small menu linking to this Github repo and my Twitter account. The angle-bracket button minimizes the map view so you can get clear access to the Jitsi Meet interface. This is useful for opening your settings and entering your Gravatar email so you can have your own avatar.</li>
+                </ul>
+                <h2>Made by</h2>
+                <ul>
+                    <li>
+                        <a href="https://github.com/capnmidnight/lozya" target="_blank" rel="noopener">
+                            <span class="icon icon-github" title="Follow Lozya on Github">
+                                <span class="accessibility-text">Follow Lozya on Github</span>
+                            </span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://twitter.com/Sean_McBeth" target="_blank" rel="noopener">
+                            <span class="icon icon-twitter" title="Follow @Sean_McBeth on Twitter">
+                                <span class="accessibility-text">Follow @Sean_McBeth on Twitter</span>
+                            </span>
+                        </a>
+                    </li>
+                </ul>
             </section>
         </div>
-    </section>
-    <section id="menu" class="menu-open">
-        <ul>
-            <li>
-                <a id="menuControl">
-                    <span class="icon icon-shrink">
-                        <span class="accessibility-text">Toggle menu visibility.</span>
-                    </span>
-                </a>
-            </li>
-            <li>
-                <a href="https://github.com/capnmidnight/lozya" target="_blank" rel="noopener">
-                    <span class="icon icon-github" title="Follow Lozya on Github">
-                        <span class="accessibility-text">Follow Lozya on Github</span>
-                    </span>
-                </a>
-            </li>
-            <li>
-                <a href="https://twitter.com/Sean_McBeth" target="_blank" rel="noopener">
-                    <span class="icon icon-twitter" title="Follow @Sean_McBeth on Twitter">
-                        <span class="accessibility-text">Follow @Sean_McBeth on Twitter</span>
-                    </span>
-                </a>
-            </li>
-        </ul>
     </section>
 
     <script src="scripts/jitsi-meet-external-api.js"></script>

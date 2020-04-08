@@ -4,8 +4,6 @@ export class AppGui {
     constructor(game) {
         injectNewDOMMethods();
         this.game = game;
-        this.menu = document.querySelector("#menu");
-        this.menuControl = document.querySelector("#menuControl");
         this.jitsiContainer = document.querySelector("#jitsi");
         this.demoVideo = document.querySelector("#demo > video");
         this.loginView = document.querySelector("#loginView");
@@ -14,8 +12,7 @@ export class AppGui {
         this.connectButton = document.querySelector("#connect");
         this.newRoomButton = document.querySelector("#createNewRoom");
         this.roomSelector = document.querySelector("#existingRooms");
-        this.isFullGame = !!(this.menu
-            && this.menuControl
+        this.isFullGame = !!(this.appView
             && this.jitsiContainer
             && this.demoVideo
             && this.loginView
@@ -26,7 +23,6 @@ export class AppGui {
             && this.roomSelector);
 
         if (this.isFullGame) {
-            this.menuControl.addEventListener("click", this.shrink.bind(this));
             this.roomNameInput.addEventListener("enter", this.userNameInput.focus.bind(this.userNameInput));
             this.userNameInput.addEventListener("enter", this.login.bind(this));
             this.connectButton.addEventListener("click", this.login.bind(this));
@@ -66,20 +62,6 @@ export class AppGui {
                 this.roomNameInput.focus();
                 this.roomNameInput.value = this.roomSelector.value;
             }
-        }
-    }
-
-    shrink() {
-        const isOpen = this.menu.className === "menu-open",
-            ui = !!this.game.me ? this.game.frontBuffer : this.loginView
-
-        this.menu.className = isOpen ? "menu-closed" : "menu-open";;
-
-        if (isOpen) {
-            ui.hide();
-        }
-        else {
-            ui.show();
         }
     }
 
