@@ -39,7 +39,7 @@
                     <li>You can roll your mouse wheel to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in ther Avatar.</li>
                     <li>In the upper-right corner of the page, there is a small menu linking to this Github repo and my Twitter account. The angle-bracket button minimizes the map view so you can get clear access to the Jitsi Meet interface. This is useful for opening your settings and entering your Gravatar email so you can have your own avatar.</li>
                 </ul>
-                <form>
+                <form autocomplete="on">
                     <label for="room" style="
     grid-column: 1;
     grid-row: 1">
@@ -52,7 +52,7 @@
                         <option value="ALXCC">Alexandria Code &amp; Coffee</option>
                         <option value="Vurv">Vurv</option>
                     </select>
-                    <input type="text" id="room" placeholder="(Required)" style="
+                    <input type="text" id="roomName" autocomplete="off" placeholder="(Required)" style="
     grid-column: 2;
     grid-row: 1;
     display: none" />
@@ -67,7 +67,7 @@
     grid-row: 2">
                         User name:
                     </label>
-                    <input type="text" id="user" placeholder="(Required)" style="
+                    <input type="text" id="userName" placeholder="(Required)" name="userName" style="
     grid-column: 2;
     grid-row: 2" />
 

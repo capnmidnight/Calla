@@ -9,8 +9,8 @@ export class AppGui {
         this.jitsiContainer = document.querySelector("#jitsi");
         this.demoVideo = document.querySelector("#demo > video");
         this.loginView = document.querySelector("#loginView");
-        this.roomNameInput = document.querySelector("#room");
-        this.userNameInput = document.querySelector("#user");
+        this.roomNameInput = document.querySelector("#roomName");
+        this.userNameInput = document.querySelector("#userName");
         this.connectButton = document.querySelector("#connect");
         this.newRoomButton = document.querySelector("#createNewRoom");
         this.roomSelector = document.querySelector("#existingRooms");
@@ -50,6 +50,8 @@ export class AppGui {
             });
 
             this.showLogin();
+
+            this.userNameInput.value = localStorage.getItem("userName") || "";
 
             if (location.hash.length > 0) {
                 this.roomNameInput.value = location.hash.substr(1);
@@ -109,6 +111,7 @@ export class AppGui {
 
         if (roomName.length > 0
             && userName.length > 0) {
+            localStorage.setItem("userName", userName);
             this.startConference(roomName, userName);
         }
         else {
