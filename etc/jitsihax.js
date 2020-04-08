@@ -18,6 +18,35 @@
     const FRONT_END_SERVER = "https://meet.primrosevr.com",
         ALLOW_LOCAL_HOST = true;
 
+    var audioCtxts = {};
+    var gainNodes = {};
+    var panNodes = {};
+
+    function captureAudioElement(userId, audio) {
+        if(!audioCtxts.hasOwnProperty(userId)) {
+            audio.volume = 0;
+
+            var audioCtxt = new window.AudioContext();
+
+            var st = audio.mozCaptureStream ? audio.mozCaptureStream() : audio.captureStream();
+
+            var source = audioCtxt.createMediaStreamSource(st);
+            var gainNode = audioCtxt.createGain();
+            var panNode = audioCtxt.createStereoPanner();
+
+            source.connect(panNode);
+            panNode.connect(gainNode);
+            gainNode.connect(audioCtxt.destination);
+
+            audioCtxts[userId] = audioCtxt;
+            gainNodes[userId] = gainNode;
+            panNodes[userId] = panNode;
+        }
+        else {
+            console.warn(`Audio element for user ${userId} already grabbed.`);
+        }
+    }
+
     // helps us filter out data channel messages that don't belong to us
     const LOZYA_FINGERPRINT = "lozya",
 
@@ -26,7 +55,12 @@
                 const id = `#participant_${evt.user} audio`,
                     audio = document.querySelector(id);
                 if (audio) {
-                    audio.volume = evt.volume;
+                    if (!audioCtxts.hasOwnProperty(evt.user)) {
+                        captureAudioElement(evt.user, audio);
+                    }
+
+                    panNodes[evt.user].pan.value = evt.panning;
+                    gainNodes[evt.user].gain.value = evt.volume;
                 }
                 else {
                     console.warn(`Could not find audio element for user ${userNameInput}`);

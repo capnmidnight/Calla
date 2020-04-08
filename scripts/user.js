@@ -15,7 +15,8 @@ export class User {
         this.dx = 0; this.dy = 0;
         this.dist = 0;
         this.t = 0;
-        this.distToMe = 0;
+        this.distXToMe = 0;
+        this.distYToMe = 0;
         this.isMe = isMe;
         this.image = null;
         this.stackUserCount = 1;
@@ -136,17 +137,24 @@ export class User {
     readUser(user, audioDistMin, audioDistMax) {
         if (this.isMe
             && !user.isMe) {
-            const dx = user.tx - this.tx,
-                dy = user.ty - this.ty,
-                distSq = dx * dx + dy * dy,
-                dist = clamp(Math.sqrt(distSq), audioDistMin, audioDistMax);
+            const distX = user.tx - this.tx,
+                distY = user.ty - this.ty,
+                dist = Math.sqrt(distX * distX + distY * distY),
+                distPrev = Math.sqrt(user.distXToMe * user.distXToMe + user.distYToMe * user.distYToMe),
+                distCl = clamp(dist, audioDistMin, audioDistMax),
+                moved = distX !== user.distXToMe || distY !== user.distYToMe,
+                audible = dist < audioDistMax,
+                audiblePrev = distPrev < audioDistMax;
 
-            if (dist !== user.distToMe) {
-                user.distToMe = dist;
-                const volume = 1 - project(dist, audioDistMin, audioDistMax),
+            if (moved && (audiblePrev || audible)) {
+                user.distXToMe = distX;
+                user.distYToMe = distY;
+                const volume = 1 - project(distCl, audioDistMin, audioDistMax),
+                    panning = distX / (.1 + dist),
                     evt = {
                         user: user.id,
-                        volume: volume
+                        volume: volume,
+                        panning: panning
                     };
 
                 for (let func of this.eventHandlers.changeUserVolume) {
