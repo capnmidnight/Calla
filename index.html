@@ -45,6 +45,9 @@
                 <button type="button" id="showJitsi" accesskey="m">Hide meeting (ALT+M)</button>
                 <button type="button" id="showGame" accesskey="g">Hide game (ALT+G)</button>
                 <button type="button" id="mixViews" accesskey="x">Separate game/meeting (ALT+X)</button>
+                
+                <label for="fontSize">Font size:</label>
+                <input type="number" id="fontSize" value="10" min="5" max="32" style="width:3em" />
             </div>
             <canvas id="frontBuffer"></canvas>
         </div>
@@ -133,6 +136,7 @@ grid-template-rows: auto;">
         import { jitsiClient } from "./scripts/jitsihax-client.js";
         import { Game } from "./scripts/game.js";
         const game = new Game(jitsiClient);
+        window.game = game;
     </script>
 </body>
 
