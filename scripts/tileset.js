@@ -12,7 +12,7 @@
             data = await response.json(),
             imageLoad = new Promise((resolve, reject) => {
                 this.image.addEventListener("load", (evt) => {
-                    this.tilesPerRow = this.image.width / this.tileWidth;
+                    this.tilesPerRow = Math.floor(this.image.width / this.tileWidth);
                     resolve();
                 });
                 this.image.addEventListener("error", reject);
