@@ -1,4 +1,4 @@
-﻿import { clamp, project } from "./protos.js";
+﻿import { clamp, project } from "./math.js";
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
     STACKED_USER_OFFSET_X = 5,

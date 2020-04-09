@@ -1,7 +1,7 @@
 ﻿import { AppGui } from "./appgui.js";
 import { TileMap } from "./tilemap.js";
 import { User } from "./user.js";
-import { lerp, clamp, project, unproject, isFirefox } from "./protos.js";
+import { lerp, clamp, project, unproject } from "./math.js";
 
 const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_MAX = 8,
