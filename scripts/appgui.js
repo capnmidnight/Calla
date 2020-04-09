@@ -9,6 +9,7 @@ export class AppGui {
         this.showGameButton = document.querySelector("#showGame");
         this.showJitsiButton = document.querySelector("#showJitsi");
         this.mixViewsButton = document.querySelector("#mixViews");
+        this.fontSizeSpinner = document.querySelector("#fontSize");
         this.jitsiContainer = document.querySelector("#jitsi");
         this.demoVideo = document.querySelector("#demo > video");
         this.loginView = document.querySelector("#loginView");
@@ -23,6 +24,7 @@ export class AppGui {
             && this.showGameButton
             && this.showJitsiButton
             && this.mixViewsButton
+            && this.fontSizeSpinner
             && this.jitsiContainer
             && this.demoVideo
             && this.loginView
@@ -40,7 +42,7 @@ export class AppGui {
             this.roomNameInput.addEventListener("enter", this.userNameInput.focus.bind(this.userNameInput));
             this.userNameInput.addEventListener("enter", this.login.bind(this));
             this.connectButton.addEventListener("click", this.login.bind(this));
-            this.roomSelector.addEventListener("change", (evt) => {
+            this.roomSelector.addEventListener("input", (evt) => {
                 this.roomNameInput.value = this.roomSelector.value;
             });
             this.newRoomButton.addEventListener("click", (evt) => {
@@ -62,10 +64,16 @@ export class AppGui {
             this.showGameButton.addEventListener("click", this.showView.bind(this, true, false, false));
             this.showJitsiButton.addEventListener("click", this.showView.bind(this, false, true, false));
             this.mixViewsButton.addEventListener("click", this.showView.bind(this, false, false, true));
+            this.fontSizeSpinner.addEventListener("input", (evt) => {
+                const size = this.fontSizeSpinner.value;
+                this.game.fontSize = size;
+                localStorage.setItem("fontSize", size);
+            });
 
             this.showView(false, false, false);
             this.showLogin();
 
+            this.fontSizeSpinner.value = localStorage.getItem("fontSize") || 10;
             this.userNameInput.value = localStorage.getItem("userName") || "";
 
             if (location.hash.length > 0) {

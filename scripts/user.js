@@ -215,9 +215,8 @@ export class User {
         }
     }
 
-    drawName(g, map, cameraZ) {
+    drawName(g, map, cameraZ, fontSize) {
         if (this.hasPosition) {
-
             g.save();
             {
                 g.translate(this.tx * map.tileWidth + this.stackOffsetX, this.ty * map.tileHeight + this.stackOffsetY);
@@ -228,7 +227,7 @@ export class User {
 
                 g.fillStyle = "white";
                 g.textBaseline = "bottom";
-                g.font = "regular 12pt 'Segoe UI'";
+                g.font = `${fontSize}pt sans-serif`;
                 g.fillText(this.displayName, 0, 0);
             }
             g.restore();

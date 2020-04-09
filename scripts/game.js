@@ -33,6 +33,7 @@ export class Game {
         this.cameraY = 0;
         this.cameraZ = this.targetCameraZ = 1.5;
         this.currentRoomName = null;
+        this.fontSize = this.gui.fontSizeSpinner && this.gui.fontSizeSpinner.value || 10;
 
         addEventListener("resize", this.frontBuffer.resize.bind(this.frontBuffer));
 
@@ -322,7 +323,7 @@ export class Game {
         this.drawMouse();
 
         for (let user of this.userList) {
-            user.drawName(this.g, this.map, this.cameraZ);
+            user.drawName(this.g, this.map, this.cameraZ, this.fontSize);
         }
 
     }
