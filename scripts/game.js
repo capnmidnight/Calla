@@ -34,6 +34,7 @@ export class Game {
         this.fontSize = this.gui.fontSizeSpinner && this.gui.fontSizeSpinner.value || 10;
 
         this.pointers = [];
+        this.lastPinchDistance = 0;
 
         addEventListener("resize", this.frontBuffer.resize.bind(this.frontBuffer));
 
@@ -55,18 +56,27 @@ export class Game {
 
         // ============= KEYBOARD =================
 
-        // ============= MOUSE =================
+        // ============= POINTERS =================
+
+        const zoom = (deltaZ) => {
+            const mag = Math.abs(deltaZ);
+            if (0 < mag && mag <= 10) {
+                const a = project(this.targetCameraZ, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
+                    b = Math.pow(a, CAMERA_ZOOM_SHAPE),
+                    c = b - deltaZ * CAMERA_ZOOM_SPEED,
+                    d = clamp(c, 0, 1),
+                    e = Math.pow(d, 1 / CAMERA_ZOOM_SHAPE);
+
+                this.targetCameraZ = unproject(e, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX);
+
+                console.log(deltaZ, a, b, c, d, e, this.targetCameraZ);
+            }
+        };
 
         this.frontBuffer.addEventListener("wheel", (evt) => {
             // Chrome and Firefox report scroll values in completely different ranges.
-            const deltaZ = evt.deltaY * (isFirefox ? 1 : 0.02),
-                a = project(this.targetCameraZ, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
-                b = Math.pow(a, CAMERA_ZOOM_SHAPE),
-                c = b - deltaZ * CAMERA_ZOOM_SPEED,
-                d = clamp(c, 0, 1),
-                e = Math.pow(d, 1 / CAMERA_ZOOM_SHAPE);
-
-            this.targetCameraZ = unproject(e, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX);
+            const deltaZ = evt.deltaY * (isFirefox ? 1 : 0.02);
+            zoom(deltaZ);
         }, { passive: true });
 
         function readPointer(evt) {
@@ -126,10 +136,31 @@ export class Game {
         this.frontBuffer.addEventListener("pointerup", removePointer);
         this.frontBuffer.addEventListener("pointercancel", removePointer);
 
-        // ============= MOUSE =================
+        function getPinchDistance(evt) {
+            if (evt.targetTouches.length !== 2) {
+                return 0;
+            }
 
-        // ============= TOUCH =================
-        // ============= TOUCH =================
+            const a = evt.targetTouches[0],
+                b = evt.targetTouches[1],
+                dx = b.clientX - a.clientX,
+                dy = b.clientY - a.clientY;
+
+            return Math.sqrt(dx * dx + dy * dy);
+        };
+
+        this.frontBuffer.addEventListener("touchstart", (evt) => {
+            this.lastPinchDistance = getPinchDistance(evt);
+        }, { passive: true });
+
+        this.frontBuffer.addEventListener("touchmove", (evt) => {
+            const dist = getPinchDistance(evt),
+                dPinch = dist - this.lastPinchDistance;
+            zoom(-dPinch / 5);
+            this.lastPinchDistance = dist;
+        }, { passive: true });
+
+        // ============= POINTERS =================
 
         // ============= GAMEPAD =================
         // ============= GAMEPAD =================
