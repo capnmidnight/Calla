@@ -52,7 +52,6 @@ export class Game {
         });
 
         this.frontBuffer.addEventListener("wheel", (evt) => {
-            evt.preventDefault();
             // Chrome and Firefox report scroll values in completely different ranges.
             const deltaZ = evt.deltaY * (isFirefox ? 1 : 0.02),
                 a = project(this.targetCameraZ, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
