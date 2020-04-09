@@ -38,7 +38,8 @@
 
         const jitsiEvents = {
             moveTo: [],
-            userInitResponse: []
+            userInitResponse: [],
+            muteStatusChanged: []
         },
             jitsiClient = {
                 addEventListener: function (evt, func) {
@@ -62,7 +63,9 @@
                 participantJoined: [],
                 participantLeft: [],
                 avatarChanged: [],
-                endpointTextMessageReceived: []
+                endpointTextMessageReceived: [],
+                displayNameChange: [],
+                audioMuteStatusChanged: []
             },
             api = {
                 addEventListener: function (evt, func) {
