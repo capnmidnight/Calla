@@ -7,6 +7,7 @@ export class TileMap {
         this.tileset = null;
         this.tileWidth = 0;
         this.tileHeight = 0;
+        this.layers = 0;
         this.width = 0;
         this.height = 0;
         this.offsetX = 0;
@@ -22,8 +23,9 @@ export class TileMap {
         this.offsetX = data.offset.x;
         this.offsetY = data.offset.y;
         this.tiles = data.tiles;
-        this.width = this.tiles[0].length;
-        this.height = this.tiles.length;
+        this.layers = this.tiles.length;
+        this.height = this.tiles[0].length;
+        this.width = this.tiles[0][0].length;
         this.collision = data.collision;
         await this.tileset.load();
         this.tileWidth = this.tileset.tileWidth;
@@ -34,10 +36,14 @@ export class TileMap {
         g.save();
         {
             g.translate(this.offsetX * this.tileWidth, this.offsetY * this.tileHeight);
-            for (let y = 0; y < this.height; ++y) {
-                for (let x = 0; x < this.width; ++x) {
-                    const tile = this.tiles[y][x];
-                    this.tileset.draw(g, tile, x, y);
+            for (let l = 0; l < this.layers; ++l) {
+                const layer = this.tiles[l];
+                for (let y = 0; y < this.height; ++y) {
+                    const row = layer[y];
+                    for (let x = 0; x < this.width; ++x) {
+                        const tile = row[x];
+                        this.tileset.draw(g, tile, x, y);
+                    }
                 }
             }
         }
