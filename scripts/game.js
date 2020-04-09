@@ -25,8 +25,6 @@ export class Game {
         this._loop = this.loop.bind(this);
         this.lastTime = 0;
         this.lastMove = Number.MAX_VALUE;
-        this.mouseX = 0;
-        this.mouseY = 0;
         this.gridOffsetX = 0;
         this.gridOffsetY = 0;
         this.cameraX = 0;
@@ -34,6 +32,8 @@ export class Game {
         this.cameraZ = this.targetCameraZ = 1.5;
         this.currentRoomName = null;
         this.fontSize = this.gui.fontSizeSpinner && this.gui.fontSizeSpinner.value || 10;
+
+        this.cursor = null;
 
         addEventListener("resize", this.frontBuffer.resize.bind(this.frontBuffer));
 
@@ -63,16 +63,21 @@ export class Game {
             this.targetCameraZ = unproject(e, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX);
         });
 
+        function readCursor(evt) {
+            return {
+                x: evt.offsetX * devicePixelRatio,
+                y: evt.offsetY * devicePixelRatio
+            }
+        }
+
         this.frontBuffer.addEventListener("mousemove", (evt) => {
-            this.mouseX = evt.offsetX * devicePixelRatio;
-            this.mouseY = evt.offsetY * devicePixelRatio;
+            this.cursor = readCursor(evt);
         });
 
         this.frontBuffer.addEventListener("click", (evt) => {
-            this.mouseX = evt.offsetX * devicePixelRatio;
-            this.mouseY = evt.offsetY * devicePixelRatio;
+            const cursor = readCursor(evt);
             if (!!this.me) {
-                const tile = this.getMouseTile(),
+                const tile = this.cursorToTile(cursor),
                     dx = tile.x - this.me.tx,
                     dy = tile.y - this.me.ty,
                     clearTile = this.map.getClearTile(this.me.tx, this.me.ty, dx, dy);
@@ -94,9 +99,9 @@ export class Game {
         this.jitsiClient.addEventListener("muteStatusChanged", this.muteUser.bind(this));
     }
 
-    getMouseTile() {
-        const imageX = this.mouseX - this.gridOffsetX,
-            imageY = this.mouseY - this.gridOffsetY,
+    cursorToTile(cursor) {
+        const imageX = cursor.x - this.gridOffsetX,
+            imageY = cursor.y - this.gridOffsetY,
             zoomX = imageX / this.cameraZ,
             zoomY = imageY / this.cameraZ,
             mapX = zoomX - this.cameraX,
@@ -319,7 +324,7 @@ export class Game {
             user.drawAvatar(this.g, this.map);
         }
 
-        this.drawMouse();
+        this.drawCursor();
 
         for (let user of this.userList) {
             user.drawName(this.g, this.map, this.cameraZ, this.fontSize);
@@ -328,13 +333,15 @@ export class Game {
     }
 
 
-    drawMouse() {
-        const tile = this.getMouseTile();
-        this.g.strokeStyle = "red";
-        this.g.strokeRect(
-            tile.x * this.map.tileWidth,
-            tile.y * this.map.tileHeight,
-            this.map.tileWidth,
-            this.map.tileHeight);
+    drawCursor() {
+        if (!!this.cursor) {
+            const tile = this.cursorToTile(this.cursor);
+            this.g.strokeStyle = "red";
+            this.g.strokeRect(
+                tile.x * this.map.tileWidth,
+                tile.y * this.map.tileHeight,
+                this.map.tileWidth,
+                this.map.tileHeight);
+        }
     }
 }
