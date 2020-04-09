@@ -37,6 +37,8 @@ export class Game {
 
         addEventListener("resize", this.frontBuffer.resize.bind(this.frontBuffer));
 
+        // ============= KEYBOARD =================
+
         addEventListener("keydown", (evt) => {
             const keyIndex = this.keys.indexOf(evt.key);
             if (keyIndex < 0) {
@@ -50,6 +52,10 @@ export class Game {
                 this.keys.splice(keyIndex, 1);
             }
         });
+
+        // ============= KEYBOARD =================
+
+        // ============= MOUSE =================
 
         this.frontBuffer.addEventListener("wheel", (evt) => {
             // Chrome and Firefox report scroll values in completely different ranges.
@@ -84,6 +90,14 @@ export class Game {
                 this.me.moveTo(clearTile.x, clearTile.y);
             }
         });
+
+        // ============= MOUSE =================
+
+        // ============= TOUCH =================
+        // ============= TOUCH =================
+
+        // ============= GAMEPAD =================
+        // ============= GAMEPAD =================
 
         this.jitsiClient.addEventListener("moveTo", (evt) => {
             const user = this.userLookup[evt.participantID];
