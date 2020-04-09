@@ -33,7 +33,7 @@ export class Game {
         this.currentRoomName = null;
         this.fontSize = this.gui.fontSizeSpinner && this.gui.fontSizeSpinner.value || 10;
 
-        this.cursor = null;
+        this.pointers = [];
 
         addEventListener("resize", this.frontBuffer.resize.bind(this.frontBuffer));
 
@@ -69,27 +69,62 @@ export class Game {
             this.targetCameraZ = unproject(e, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX);
         }, { passive: true });
 
-        function readCursor(evt) {
+        function readPointer(evt) {
             return {
+                id: evt.pointerId,
                 x: evt.offsetX * devicePixelRatio,
                 y: evt.offsetY * devicePixelRatio
             }
         }
 
-        this.frontBuffer.addEventListener("mousemove", (evt) => {
-            this.cursor = readCursor(evt);
-        });
+        const findPointer = (pointer) => {
+            return this.pointers.findIndex(p => p.id === pointer.id);
+        };
+
+        const addPointer = (evt) => {
+            const pointer = readPointer(evt),
+                idx = findPointer(pointer);
+
+            if (idx === -1) {
+                this.pointers.push(pointer);
+            }
+
+            return idx;
+        };
+
+        const removePointer = (evt) => {
+            const pointer = readPointer(evt),
+                idx = findPointer(pointer);
+
+            if (idx >= 0) {
+                this.pointers.splice(idx, 1);
+            }
+
+            return pointer;
+        }
 
         this.frontBuffer.addEventListener("click", (evt) => {
-            const cursor = readCursor(evt);
+            const pointer = readPointer(evt);
             if (!!this.me) {
-                const tile = this.cursorToTile(cursor),
+                const tile = this.getTileAt(pointer),
                     dx = tile.x - this.me.tx,
                     dy = tile.y - this.me.ty,
                     clearTile = this.map.getClearTile(this.me.tx, this.me.ty, dx, dy);
                 this.me.moveTo(clearTile.x, clearTile.y);
             }
         });
+
+        this.frontBuffer.addEventListener("pointerdown", (evt) => {
+            addPointer(evt);
+        });
+
+        this.frontBuffer.addEventListener("pointermove", (evt) => {
+            const idx = addPointer(evt);
+            this.pointers[idx] = readPointer(evt);
+        });
+
+        this.frontBuffer.addEventListener("pointerup", removePointer);
+        this.frontBuffer.addEventListener("pointercancel", removePointer);
 
         // ============= MOUSE =================
 
@@ -113,7 +148,7 @@ export class Game {
         this.jitsiClient.addEventListener("muteStatusChanged", this.muteUser.bind(this));
     }
 
-    cursorToTile(cursor) {
+    getTileAt(cursor) {
         const imageX = cursor.x - this.gridOffsetX,
             imageY = cursor.y - this.gridOffsetY,
             zoomX = imageX / this.cameraZ,
@@ -348,8 +383,9 @@ export class Game {
 
 
     drawCursor() {
-        if (!!this.cursor) {
-            const tile = this.cursorToTile(this.cursor);
+        if (this.pointers.length === 1) {
+            const pointer = this.pointers[0],
+                tile = this.getTileAt(pointer);
             this.g.strokeStyle = "red";
             this.g.strokeRect(
                 tile.x * this.map.tileWidth,
