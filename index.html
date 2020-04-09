@@ -135,8 +135,7 @@ grid-template-rows: auto;">
     <script type="module">
         import { jitsiClient } from "./scripts/jitsihax-client.js";
         import { Game } from "./scripts/game.js";
-        const game = new Game(jitsiClient);
-        window.game = game;
+        window.game = new Game(jitsiClient);
     </script>
 </body>
 
