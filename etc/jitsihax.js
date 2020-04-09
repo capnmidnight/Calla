@@ -118,7 +118,7 @@
                     }
                 }
                 else {
-                    console.warn(`Could not find audio element for user ${userNameInput}`);
+                    console.warn(`Could not find audio element for user ${evt.user}`);
                 }
             },
 
