@@ -1,4 +1,5 @@
 ﻿import { injectNewDOMMethods } from "./protos.js";
+﻿import "./jitsi-meet-external-api.js";
 
 export class AppGui {
     constructor(game) {
