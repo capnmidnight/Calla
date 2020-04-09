@@ -58,5 +58,10 @@
     border-color: red;
     border-width: 0.5em 0;
     border-collapse: separate;
-    background-color: black;
+    background-color: white;
+    padding: 4px 0;
+}
+
+#separator > * {
+    margin-right: 0.5em;
 }
