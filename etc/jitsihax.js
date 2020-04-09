@@ -19,6 +19,8 @@
         ALLOW_LOCAL_HOST = true,
         USE_3D_SPATIALIZATION = true;
 
+    let USE_BASIC_AUDIO = true;
+
 
     // The rest is just implementation.
 
@@ -99,22 +101,34 @@
                 const id = `#participant_${evt.user} audio`,
                     audio = document.querySelector(id);
                 if (audio) {
-
-                    captureAudioElement(evt.user, audio);
-
-                    const source = sources[evt.user],
-                        time = audioContext.currentTime + transitionTime;
-
-                    if (spatialize) {
-                        source.panner.positionX.setValueAtTime(evt.x, time);
-
-                        // our 2D position is in X/Y coords, but our 3D position 
-                        // along the horizontal plane is X/Z coords.
-                        source.panner.positionZ.setValueAtTime(evt.y, time);
+                    if (USE_BASIC_AUDIO) {
+                        audio.volume = evt.volume;
                     }
                     else {
-                        source.pannner.pan.setTargetAtTime(evt.panning, time);
-                        source.gain.gain.setTargetAtTime(evt.volume, time);
+                        try {
+                            captureAudioElement(evt.user, audio);
+
+                            const source = sources[evt.user];
+                            const time = audioContext.currentTime + transitionTime;
+
+                            if (spatialize) {
+                                source.panner.positionX.setValueAtTime(evt.x, time);
+
+                                // our 2D position is in X/Y coords, but our 3D position 
+                                // along the horizontal plane is X/Z coords.
+                                source.panner.positionZ.setValueAtTime(evt.y, time);
+                            }
+                            else {
+                                source.pannner.pan.setTargetAtTime(evt.panning, time);
+                                source.gain.gain.setTargetAtTime(evt.volume, time);
+                            }
+                        }
+                        catch (exp) {
+                            console.warn("Couldn't configure advanced audio features");
+                            console.error(exp);
+                            USE_BASIC_AUDIO = true;
+                            command.setVolume(evt);
+                        }
                     }
                 }
                 else {
