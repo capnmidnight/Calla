@@ -7,7 +7,8 @@ const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_MAX = 8,
     CAMERA_ZOOM_MIN = 0.1,
     CAMERA_ZOOM_SHAPE = 1 / 4,
-    CAMERA_ZOOM_SPEED = 0.005;
+    CAMERA_ZOOM_SPEED = 0.005,
+    isFirefox = typeof InstallTrigger !== "undefined";
 
 export class Game {
 
@@ -60,7 +61,7 @@ export class Game {
 
         const zoom = (deltaZ) => {
             const mag = Math.abs(deltaZ);
-            if (0 < mag && mag <= 10) {
+            if (0 < mag && mag <= 50) {
                 const a = project(this.targetCameraZ, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
                     b = Math.pow(a, CAMERA_ZOOM_SHAPE),
                     c = b - deltaZ * CAMERA_ZOOM_SPEED,
@@ -68,8 +69,11 @@ export class Game {
                     e = Math.pow(d, 1 / CAMERA_ZOOM_SHAPE);
 
                 this.targetCameraZ = unproject(e, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX);
-
-                console.log(deltaZ, a, b, c, d, e, this.targetCameraZ);
+                if (!!this.gui.zoomSpinner) {
+                    this.gui.zoomSpinner.value = Math.round(100 * this.targetCameraZ) / 100;
+                }
+            } else {
+                console.log(mag);
             }
         };
 

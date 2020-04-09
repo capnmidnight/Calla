@@ -10,6 +10,7 @@ export class AppGui {
         this.showJitsiButton = document.querySelector("#showJitsi");
         this.mixViewsButton = document.querySelector("#mixViews");
         this.fontSizeSpinner = document.querySelector("#fontSize");
+        this.zoomSpinner = document.querySelector("#zoom");
         this.jitsiContainer = document.querySelector("#jitsi");
         this.demoVideo = document.querySelector("#demo > video");
         this.loginView = document.querySelector("#loginView");
@@ -25,6 +26,7 @@ export class AppGui {
             && this.showJitsiButton
             && this.mixViewsButton
             && this.fontSizeSpinner
+            && this.zoomSpinner
             && this.jitsiContainer
             && this.demoVideo
             && this.loginView
@@ -68,6 +70,9 @@ export class AppGui {
                 const size = this.fontSizeSpinner.value;
                 this.game.fontSize = size;
                 localStorage.setItem("fontSize", size);
+            });
+            this.zoomSpinner.addEventListener("input", (evt) => {
+                this.game.targetCameraZ = this.zoomSpinner.value;
             });
 
             this.showView(false, false, false);
