@@ -61,7 +61,7 @@ export class Game {
                 e = Math.pow(d, 1 / CAMERA_ZOOM_SHAPE);
 
             this.targetCameraZ = unproject(e, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX);
-        });
+        }, { passive: true });
 
         function readCursor(evt) {
             return {
