@@ -16,34 +16,78 @@
      */
 
     const FRONT_END_SERVER = "https://meet.primrosevr.com",
-        ALLOW_LOCAL_HOST = true;
+        ALLOW_LOCAL_HOST = true,
+        USE_3D_SPATIALIZATION = true;
 
-    var audioCtxts = {};
-    var gainNodes = {};
-    var panNodes = {};
+
+    // The rest is just implementation.
+
+    const sources = {},
+        spatialize = USE_3D_SPATIALIZATION && !!window["PannerNode"];
+
+    let audioContext = null,
+        minDistance = 2,
+        maxDistance = 15,
+        transitionTime = 0;
 
     function captureAudioElement(userId, audio) {
-        if(!audioCtxts.hasOwnProperty(userId)) {
+        if (!sources[userId]) {
             audio.volume = 0;
 
-            var audioCtxt = new window.AudioContext();
+            if (!audioContext) {
+                audioContext = new AudioContext();
 
-            var st = audio.mozCaptureStream ? audio.mozCaptureStream() : audio.captureStream();
+                if (spatialize) {
+                    const listener = audioContext.listener,
+                        time = audioContext.currentTime;
+                    listener.forwardX.setValueAtTime(0, time);
+                    listener.forwardY.setValueAtTime(0, time);
+                    listener.forwardZ.setValueAtTime(-1, time);
+                    listener.upX.setValueAtTime(0, time);
+                    listener.upY.setValueAtTime(1, time);
+                    listener.upZ.setValueAtTime(0, time);
+                }
+            }
 
-            var source = audioCtxt.createMediaStreamSource(st);
-            var gainNode = audioCtxt.createGain();
-            var panNode = audioCtxt.createStereoPanner();
+            const stream = !!audio.mozCaptureStream
+                ? audio.mozCaptureStream()
+                : audio.captureStream(),
+                source = audioContext.createMediaStreamSource(stream);
 
-            source.connect(panNode);
-            panNode.connect(gainNode);
-            gainNode.connect(audioCtxt.destination);
+            if (spatialize) {
+                const panner = audioContext.createPanner();
+                panner.panningModel = "HRTF";
+                panner.distanceModel = "inverse";
+                panner.refDistance = minDistance;
+                panner.maxDistance = maxDistance;
+                panner.rolloffFactor = 1;
+                panner.coneInnerAngle = 360;
+                panner.coneOuterAngle = 0;
+                panner.coneOuterGain = 0;
+                panner.positionY.value = 0;
 
-            audioCtxts[userId] = audioCtxt;
-            gainNodes[userId] = gainNode;
-            panNodes[userId] = panNode;
-        }
-        else {
-            console.warn(`Audio element for user ${userId} already grabbed.`);
+                source.connect(panner);
+                panner.connect(audioContext.destination);
+
+                sources[userId] = {
+                    source,
+                    panner
+                };
+            }
+            else {
+                const panner = audioContext.createStereoPanner(),
+                    gain = audioContext.createGain();
+
+                source.connect(panner);
+                panner.connect(gain);
+                gain.connect(audioContext.destination);
+
+                sources[userId] = {
+                    source,
+                    panner,
+                    gain
+                };
+            }
         }
     }
 
@@ -55,16 +99,33 @@
                 const id = `#participant_${evt.user} audio`,
                     audio = document.querySelector(id);
                 if (audio) {
-                    if (!audioCtxts.hasOwnProperty(evt.user)) {
-                        captureAudioElement(evt.user, audio);
-                    }
 
-                    panNodes[evt.user].pan.value = evt.panning;
-                    gainNodes[evt.user].gain.value = evt.volume;
+                    captureAudioElement(evt.user, audio);
+
+                    const source = sources[evt.user],
+                        time = audioContext.currentTime + transitionTime;
+
+                    if (spatialize) {
+                        source.panner.positionX.setValueAtTime(evt.x, time);
+
+                        // our 2D position is in X/Y coords, but our 3D position 
+                        // along the horizontal plane is X/Z coords.
+                        source.panner.positionZ.setValueAtTime(evt.y, time);
+                    }
+                    else {
+                        source.pannner.setValueAtTime(evt.panning, time);
+                        source.gain.setValueAtTime(evt.volume, time);
+                    }
                 }
                 else {
                     console.warn(`Could not find audio element for user ${userNameInput}`);
                 }
+            },
+
+            setAudioProperties: function (evt) {
+                minDistance = evt.minDistance;
+                maxDistance = evt.maxDistance;
+                transitionTime = evt.transitionTime;
             }
         };
 

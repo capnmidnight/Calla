@@ -153,8 +153,10 @@ export class User {
                     panning = distX / (.1 + dist),
                     evt = {
                         user: user.id,
-                        volume: volume,
-                        panning: panning
+                        x: distX,
+                        y: distY,
+                        volume,
+                        panning
                     };
 
                 for (let func of this.eventHandlers.changeUserVolume) {

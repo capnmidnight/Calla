@@ -200,6 +200,12 @@ export class AppGui {
             roomName: roomName,
             onload: (evt) => {
                 this.game.jitsiClient.setJitsiApi(api);
+
+                this.game.jitsiClient.txJitsiHax("setAudioProperties", {
+                    minDistance: AUDIO_DISTANCE_MIN,
+                    maxDistance: AUDIO_DISTANCE_MAX,
+                    transitionTime: MOVE_TRANSITION_TIME
+                });
             }
         });
         api.executeCommand("displayName", userName);
