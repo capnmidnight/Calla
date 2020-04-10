@@ -55,6 +55,15 @@ If you think you can be a polite person in accordance with the Conduct Policy, I
 
 Oh man, let's go nuts! I would love to see a wide variety of tilesets for rooms and avatars. Maybe customizable clothing and character features. 
 
+- You can use [Tiled](https://www.mapeditor.org/) to create a tilemap.
+ - You can do multiple layers.
+ - You can set blocks as non-walkable by opening your Tile Set, selecting the unwalkable block, and adding a custom property to it. Create a boolean value named "Collision", and set its value to "true". All instances of that tile will now be solid on your map.
+ - Save both your `.tmx` and `.tmz` file somewhere within reach. I save them to `<lozya-proj>\data\tilemaps\<room-name>.tmx` and `<lozya-proj>\data\tilesets\<tileset-name>\<tileset-name>.tsx`, respectively.
+- Then, you can use [tiled2lozya](https://github.com/capnmidnight/lozya/tree/master/etc) to convert your TMX/TSX files to JSON files that Lozya will understand.
+ - Syntax: `tiled2lozya path/to/my-room.tmx` `<lozya-proj>/data`
+ - It is a .NET Core 3.1 application, published as a portable executable, so it should be able to run on any Windows, Linux, or MacOS system that has .NET Core 3.1 installed.
+ - It will do some basic validation of your map first, before prompting you to allow it to write the files to disk.
+
 #### Testing
 
 The QA team is the software development team's best friend. Testing releases and filing issues is a huge amount of important work.
@@ -65,7 +74,7 @@ IDK, I planned on just hacking this together as I went, but I will probaby write
 
 #### Client
 
-I'm pretty happy with how the client is working right now, but anyone is free to self-service add features.
+I'm pretty happy with how the client is working right now, but anyone is free to self-service add features. But check the [Issues](https://github.com/capnmidnight/lozya/issues) nonetheless.
 
 #### Server
 
