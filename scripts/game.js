@@ -17,7 +17,6 @@ export class Game {
         this.frontBuffer = document.querySelector("#frontBuffer");
         this.g = this.frontBuffer.getContext("2d");
         this.me = null
-        this.gui = new AppGui(this);
         this.map = null;
         this.keys = [];
         this.userLookup = {};
@@ -32,7 +31,7 @@ export class Game {
         this.cameraY = 0;
         this.cameraZ = this.targetCameraZ = 1.5;
         this.currentRoomName = null;
-        this.fontSize = this.gui.fontSizeSpinner && this.gui.fontSizeSpinner.value || 10;
+        this.fontSize = 10;
 
         this.pointers = [];
         this.lastPinchDistance = 0;

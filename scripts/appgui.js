@@ -4,14 +4,66 @@ import "./protos.js";
 export class AppGui {
     constructor(game) {
         this.game = game;
+
+        // ======= FONT SIZE ==========
+        this.fontSizeSpinner = document.querySelector("#fontSize");
+        if (this.fontSizeSpinner) {
+            this.fontSizeSpinner.addEventListener("input", (evt) => {
+                const size = this.fontSizeSpinner.value;
+                this.game.fontSize = size;
+                localStorage.setItem("fontSize", size);
+            });
+            this.fontSizeSpinner.value = localStorage.getItem("fontSize") || this.game.fontSize;
+            this.game.fontSize = this.fontSizeSpinner.value;
+        }
+        // ======= FONT SIZE ==========
+
+        // ======= ZOOM ==========
+        this.zoomSpinner = document.querySelector("#zoom");
+        if (this.zoomSpinner) {
+            this.zoomSpinner.addEventListener("input", (evt) => {
+                this.game.targetCameraZ = this.zoomSpinner.value;
+            });
+            this.zoomSpinner.value = this.game.targetCameraZ;
+        }
+        // ======= ZOOM ==========
+
+        // ======= VIEWS ==========
+        this.gameVisible = true;
+        this.jitsiVisible = true;
+        this.viewsCombined = true;
         this.appView = document.querySelector("#appView");
         this.separator = document.querySelector("#separator");
         this.showGameButton = document.querySelector("#showGame");
         this.showJitsiButton = document.querySelector("#showJitsi");
         this.mixViewsButton = document.querySelector("#mixViews");
-        this.fontSizeSpinner = document.querySelector("#fontSize");
-        this.zoomSpinner = document.querySelector("#zoom");
         this.jitsiContainer = document.querySelector("#jitsi");
+        if (this.appView
+            && this.separator
+            && this.showGameButton
+            && this.showJitsiButton
+            && this.showmixViewsButton
+            && this.jitsiContainer) {
+            this.showGameButton.addEventListener("click", this.showView.bind(this, true, false, false));
+            this.showJitsiButton.addEventListener("click", this.showView.bind(this, false, true, false));
+            this.mixViewsButton.addEventListener("click", this.showView.bind(this, false, false, true));
+            this.showView(false, false, false);
+        }
+        else {
+            if (this.showGameButton) {
+                this.showGameButton.lock();
+            }
+            if (this.showJitsiButton) {
+                this.showJitsiButton.lock();
+            }
+            if (this.mixViewsButton) {
+                this.mixViewsButton.lock();
+            }
+        }
+
+        // ======= VIEWS ==========
+
+        // ======= LOGIN ==========
         this.demoVideo = document.querySelector("#demo > video");
         this.loginView = document.querySelector("#loginView");
         this.roomNameInput = document.querySelector("#roomName");
@@ -19,28 +71,13 @@ export class AppGui {
         this.connectButton = document.querySelector("#connect");
         this.newRoomButton = document.querySelector("#createNewRoom");
         this.roomSelector = document.querySelector("#existingRooms");
-
-        this.isFullGame = !!(this.appView
-            && this.separator
-            && this.showGameButton
-            && this.showJitsiButton
-            && this.mixViewsButton
-            && this.fontSizeSpinner
-            && this.zoomSpinner
-            && this.jitsiContainer
-            && this.demoVideo
+        if (this.demoVideo
             && this.loginView
             && this.roomNameInput
             && this.userNameInput
             && this.connectButton
             && this.newRoomButton
-            && this.roomSelector);
-
-        this.gameVisible = true;
-        this.jitsiVisible = true;
-        this.viewsCombined = true;
-
-        if (this.isFullGame) {
+            && this.roomSelector) {
             this.roomNameInput.addEventListener("enter", this.userNameInput.focus.bind(this.userNameInput));
             this.userNameInput.addEventListener("enter", this.login.bind(this));
             this.connectButton.addEventListener("click", this.login.bind(this));
@@ -62,23 +99,8 @@ export class AppGui {
 
                 this.roomNameInput.value = this.roomSelector.value;
             });
-
-            this.showGameButton.addEventListener("click", this.showView.bind(this, true, false, false));
-            this.showJitsiButton.addEventListener("click", this.showView.bind(this, false, true, false));
-            this.mixViewsButton.addEventListener("click", this.showView.bind(this, false, false, true));
-            this.fontSizeSpinner.addEventListener("input", (evt) => {
-                const size = this.fontSizeSpinner.value;
-                this.game.fontSize = size;
-                localStorage.setItem("fontSize", size);
-            });
-            this.zoomSpinner.addEventListener("input", (evt) => {
-                this.game.targetCameraZ = this.zoomSpinner.value;
-            });
-
-            this.showView(false, false, false);
             this.showLogin();
 
-            this.fontSizeSpinner.value = localStorage.getItem("fontSize") || 10;
             this.userNameInput.value = localStorage.getItem("userName") || "";
 
             if (location.hash.length > 0) {
@@ -104,6 +126,7 @@ export class AppGui {
                 this.roomNameInput.value = this.roomSelector.value;
             }
         }
+        // ======= LOGIN ==========
     }
 
     showView(toggleGame, toggleJitsi, toggleMixViews) {
