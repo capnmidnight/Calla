@@ -82,12 +82,21 @@ export class AppGui {
             this.userNameInput.value = localStorage.getItem("userName") || "";
 
             if (location.hash.length > 0) {
-                this.roomNameInput.value = location.hash.substr(1);
-                for (let option in this.roomSelector.options) {
+                const name = location.hash.substr(1);
+                let found = false;
+                for (let option of this.roomSelector.options) {
                     if (option.value === this.roomNameInput.value) {
-                        this.roomSelector.value = this.roomNameInput.value;
+                        this.roomSelector.value = name;
+                        found = true;
+                        break;
                     };
                 }
+
+                if (!found) {
+                    this.newRoomButton.click();
+                    this.roomNameInput.value = name;
+                }
+
                 this.userNameInput.focus();
             }
             else {
