@@ -4,8 +4,19 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>Tile_Map_Converter</RootNamespace>
-    <AssemblyName>xtiled</AssemblyName>
+    <AssemblyName>tiled2lozya</AssemblyName>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <Authors>Sean T. McBeth</Authors>
+    <Product>Lozya</Product>
+    <Description>Converts Tiled tilemaps to JSON files that Lozya understands</Description>
+    <PackageId>tiled2lozya</PackageId>
+    <Copyright>Sean T. McBeth</Copyright>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageProjectUrl>https://meet.primrosevr.com</PackageProjectUrl>
+    <PackageIcon>favicon-32x32.png</PackageIcon>
+    <RepositoryUrl>https://github.com/capnmidnight/lozya</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -15,6 +26,17 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\icons\favicon-32x32.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="..\LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
