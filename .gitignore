@@ -103,5 +103,7 @@ dist
 # TernJS port file
 .tern-port
 /.vs
-/lozya.sln
 /Web.config
+
+[Bb]in/
+[Oo]bj/
