@@ -28,6 +28,20 @@ export class AppGui {
         }
         // ======= ZOOM ==========
 
+        // ======= HEARING ==========
+        this.drawHearingCheckbox = document.querySelector("#drawHearing");
+        if (this.drawHearingCheckbox) {
+            this.drawHearingCheckbox.addEventListener("input", (evt) => {
+                this.game.drawHearing = this.drawHearingCheckbox.checked;
+                localStorage.setItem("drawHearing", this.game.drawHearing);
+            });
+            let drawHearing = localStorage.getItem("drawHearing");
+            drawHearing = drawHearing === null ? this.game.drawHearing : drawHearing === "true";
+            this.game.drawHearing = drawHearing;
+            this.drawHearingCheckbox.checked = drawHearing;
+        }
+        // ======= HEARING ==========
+
         // ======= VIEWS ==========
         this.gameVisible = true;
         this.jitsiVisible = true;

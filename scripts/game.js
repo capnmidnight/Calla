@@ -14,8 +14,10 @@ export class Game {
 
     constructor(jitsiClient) {
         this.jitsiClient = jitsiClient;
+
         this.frontBuffer = document.querySelector("#frontBuffer");
-        this.g = this.frontBuffer.getContext("2d");
+        this.gFront = this.frontBuffer.getContext("2d");
+
         this.me = null
         this.map = null;
         this.keys = [];
@@ -32,6 +34,7 @@ export class Game {
         this.cameraZ = this.targetCameraZ = 1.5;
         this.currentRoomName = null;
         this.fontSize = 10;
+        this.drawHearing = false;
 
         this.pointers = [];
         this.lastPinchDistance = 0;
@@ -180,6 +183,8 @@ export class Game {
         });
 
         this.jitsiClient.addEventListener("muteStatusChanged", this.muteUser.bind(this));
+
+        this.gui = new AppGui(this);
     }
 
     getTileAt(cursor) {
@@ -392,28 +397,42 @@ export class Game {
         this.cameraX = lerp(this.cameraX, targetCameraX, CAMERA_LERP * this.cameraZ);
         this.cameraY = lerp(this.cameraY, targetCameraY, CAMERA_LERP * this.cameraZ);
 
-        this.g.resetTransform();
-        this.g.imageSmoothingEnabled = false;
-        this.g.clearRect(0, 0, this.frontBuffer.width, this.frontBuffer.height);
-        this.g.translate(this.gridOffsetX, this.gridOffsetY);
-        this.g.scale(this.cameraZ, this.cameraZ);
-        this.g.translate(this.cameraX, this.cameraY);
+        this.gFront.resetTransform();
+        this.gFront.imageSmoothingEnabled = false;
+        this.gFront.clearRect(0, 0, this.frontBuffer.width, this.frontBuffer.height);
 
-        this.map.draw(this.g);
+        this.gFront.save();
+        {
+            this.gFront.translate(this.gridOffsetX, this.gridOffsetY);
+            this.gFront.scale(this.cameraZ, this.cameraZ);
+            this.gFront.translate(this.cameraX, this.cameraY);
 
-        for (let user of this.userList) {
-            user.drawShadow(this.g, this.map, this.cameraZ);
+            this.map.draw(this.gFront);
+
+            for (let user of this.userList) {
+                user.drawShadow(this.gFront, this.map, this.cameraZ);
+            }
+            for (let user of this.userList) {
+                user.drawAvatar(this.gFront, this.map);
+            }
+
+            this.drawCursor();
+
+            for (let user of this.userList) {
+                user.drawName(this.gFront, this.map, this.cameraZ, this.fontSize);
+            }
+
+            if (this.drawHearing) {
+                this.me.drawHearingRange(
+                    this.gFront,
+                    this.map,
+                    this.cameraZ,
+                    AUDIO_DISTANCE_MIN,
+                    AUDIO_DISTANCE_MAX);
+            }
+
         }
-        for (let user of this.userList) {
-            user.drawAvatar(this.g, this.map);
-        }
-
-        this.drawCursor();
-
-        for (let user of this.userList) {
-            user.drawName(this.g, this.map, this.cameraZ, this.fontSize);
-        }
-
+        this.gFront.restore();
     }
 
 
@@ -421,8 +440,8 @@ export class Game {
         if (this.pointers.length === 1) {
             const pointer = this.pointers[0],
                 tile = this.getTileAt(pointer);
-            this.g.strokeStyle = "red";
-            this.g.strokeRect(
+            this.gFront.strokeStyle = "red";
+            this.gFront.strokeRect(
                 tile.x * this.map.tileWidth,
                 tile.y * this.map.tileHeight,
                 this.map.tileWidth,

@@ -191,7 +191,9 @@ export class User {
         if (this.hasPosition) {
             g.save();
             {
-                g.translate(this.tx * map.tileWidth + this.stackOffsetX, this.ty * map.tileHeight + this.stackOffsetY);
+                g.translate(
+                    this.tx * map.tileWidth + this.stackOffsetX,
+                    this.ty * map.tileHeight + this.stackOffsetY);
 
                 const x = (this.x - this.tx) * map.tileWidth,
                     y = (this.y - this.ty) * map.tileHeight;
@@ -212,6 +214,44 @@ export class User {
                 }
             }
             g.restore();
+        }
+    }
+
+    drawHearingTile(g, map, dx, dy, p) {
+        g.save();
+        {
+            g.translate(
+                (this.tx + dx) * map.tileWidth,
+                (this.ty + dy) * map.tileHeight);
+            g.strokeStyle = `rgba(0, 255, 0, ${(1 - p) / 2})`;
+            g.strokeRect(0, 0, map.tileWidth, map.tileHeight);
+        }
+        g.restore();
+    }
+
+    drawHearingRange(g, map, cameraZ, minDist, maxDist) {
+        if (this.hasPosition) {
+            const tw = Math.min(maxDist, Math.ceil(g.canvas.width / (2 * map.tileWidth * cameraZ))),
+                th = Math.min(maxDist, Math.ceil(g.canvas.height / (2 * map.tileHeight * cameraZ)));
+
+            for (let dy = 0; dy < th; ++dy) {
+                for (let dx = 0; dx < tw; ++dx) {
+                    const dist = Math.sqrt(dx * dx + dy * dy),
+                        p = project(dist, minDist, maxDist);
+                    if (p <= 1) {
+                        this.drawHearingTile(g, map, dx, dy, p);
+                        if (dy != 0) {
+                            this.drawHearingTile(g, map, dx, -dy, p);
+                        }
+                        if (dx != 0) {
+                            this.drawHearingTile(g, map, -dx, dy, p);
+                        }
+                        if (dx != 0 && dy != 0) {
+                            this.drawHearingTile(g, map, -dx, -dy, p);
+                        }
+                    }
+                }
+            }
         }
     }
 

@@ -28,6 +28,9 @@
 
             <label for="zoom">Zoom:</label>
             <input type="number" id="zoom" value="1" min="0.1" max="8" step="0.1" style="width:4em" />
+
+            <label for="drawHearing">Draw hearing range:</label>
+            <input type="checkbox" id="drawHearing" />
         </div>
         <canvas id="frontBuffer" style="border:inset 2px #ccc;top:3em;bottom:0"></canvas>
     </section>
@@ -101,7 +104,8 @@
         game.start({
             id: "me",
             roomName: "island",
-            displayName: "Just Rendering"
+            displayName: "Just Rendering",
+            avatarURL: "https://secure.gravatar.com/avatar/2d598f70b2bd1d828a195ced8abd7e9e"
         });
 
         setTimeout(api.createTestUser, 1000);
