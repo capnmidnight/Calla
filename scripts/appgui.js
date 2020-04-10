@@ -30,7 +30,11 @@ export class AppGui {
 
         // ======= HEARING ==========
         this.drawHearingCheckbox = document.querySelector("#drawHearing");
-        if (this.drawHearingCheckbox) {
+        this.minAudioSpinner = document.querySelector("#minAudio");
+        this.maxAudioSpinner = document.querySelector("#maxAudio");
+        if (this.drawHearingCheckbox
+            && this.minAudioSpinner
+            && this.maxAudioSpinner) {
             this.drawHearingCheckbox.addEventListener("input", (evt) => {
                 this.game.drawHearing = this.drawHearingCheckbox.checked;
                 localStorage.setItem("drawHearing", this.game.drawHearing);
@@ -39,6 +43,18 @@ export class AppGui {
             drawHearing = drawHearing === null ? this.game.drawHearing : drawHearing === "true";
             this.game.drawHearing = drawHearing;
             this.drawHearingCheckbox.checked = drawHearing;
+
+            const setAudioRange = () => {
+                this.maxAudioSpinner.value = Math.max(1 * this.minAudioSpinner.value + 1, 1 * this.maxAudioSpinner.value);
+                AUDIO_DISTANCE_MIN = this.minAudioSpinner.value;
+                AUDIO_DISTANCE_MAX = this.maxAudioSpinner.value;
+                localStorage.setItem("minAudio", this.minAudioSpinner.value);
+                localStorage.setItem("maxAudio", this.maxAudioSpinner.value);
+            };
+            this.minAudioSpinner.addEventListener("input", setAudioRange);
+            this.maxAudioSpinner.addEventListener("input", setAudioRange);
+            AUDIO_DISTANCE_MIN = this.minAudioSpinner.value = 1 * localStorage.getItem("minAudio") || AUDIO_DISTANCE_MIN;
+            AUDIO_DISTANCE_MAX = this.maxAudioSpinner.value = 1 * localStorage.getItem("maxAudio") || AUDIO_DISTANCE_MAX;
         }
         // ======= HEARING ==========
 
