@@ -394,6 +394,7 @@ export class Game {
         this.cameraY = lerp(this.cameraY, targetCameraY, CAMERA_LERP * this.cameraZ);
 
         this.g.resetTransform();
+        this.g.imageSmoothingEnabled = false;
         this.g.clearRect(0, 0, this.frontBuffer.width, this.frontBuffer.height);
         this.g.translate(this.gridOffsetX, this.gridOffsetY);
         this.g.scale(this.cameraZ, this.cameraZ);
