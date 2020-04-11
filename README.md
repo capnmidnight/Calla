@@ -38,7 +38,9 @@ Make sure you keep the distinction between your Jitsi installation and your Lozy
 - Either __Hide the game view__ or __Separate the game and meeting views__ to be able to access the Jitsi Meet user settings. Lozya captures all of the mouse clicks to enable moving.
 - __Click on the map__ to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls.
 - Or, __use the arrow keys__ on your keyboard to move.
-- You can __roll your mouse wheel__ to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in ther Avatar.
+- __Click on yourself__ to open a list of Emoji. Select an Emoji to float it out into the map.
+- __Hit the E key__ to re-emote with your last selected Emoji.
+- You can __roll your mouse wheel__ or __pinch your touchscreen__ to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in ther Avatar.
 - __Jitsi Meet's web client doesn't work on iOS!__ Sorry :(
 
 ## CONTRIBUTING
