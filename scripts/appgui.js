@@ -173,12 +173,18 @@ export class AppGui {
         this.emojiPreview = document.querySelector("#emojiPreview");
         this.confirmEmojiButton = document.querySelector("#emoji button.confirm");
         this.cancelEmojiButton = document.querySelector("#emoji button.cancel");
+        this.emoteButton = document.querySelector("#emote");
+        this.selectEmojiButton = document.querySelector("#selectEmoji");
         if (this.emojiWindow
             && this.emojiContainer
             && this.recentEmoji
             && this.emojiPreview
             && this.confirmEmojiButton
-            && this.cancelEmojiButton) {
+            && this.cancelEmojiButton
+            && this.emoteButton
+            && this.selectEmojiButton) {
+
+            this.confirmEmojiButton.lock();
 
             const addIconsToContainer = (group, container) => {
                 for (let icon of group) {
@@ -206,6 +212,7 @@ export class AppGui {
 
             this.confirmEmojiButton.addEventListener("click", () => {
                 const idx = this.previousEmoji.indexOf(this.selectedEmoji);
+                this.emoteButton.innerHTML = `Emote (E) ${this.selectedEmoji.value}`;
                 if (idx === -1) {
                     this.previousEmoji.push(this.selectedEmoji);
                     this.recentEmoji.innerHTML = "";
@@ -219,10 +226,15 @@ export class AppGui {
             });
 
             this.cancelEmojiButton.addEventListener("click", () => {
-                this.selectedEmoji = null;
                 this.confirmEmojiButton.lock();
                 this.emojiWindow.hide();
             });
+
+            this.emoteButton.addEventListener("click", () => {
+                this.game.emote(this.game.me.id, this.game.currentEmoji);
+            });
+
+            this.selectEmojiButton.addEventListener("click", this.showEmoji.bind(this));
 
             this.emojiWindow.hide();
         }
@@ -234,10 +246,7 @@ export class AppGui {
     }
 
     showEmoji() {
-        this.selectedEmoji = null;
-        this.emojiPreview.innerHTML = "";
         this.emojiWindow.show();
-        this.confirmEmojiButton.lock();
     }
 
     previewEmoji(emoji) {

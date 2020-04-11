@@ -22,7 +22,7 @@ export class Game {
 
         this.me = null
         this.map = null;
-        this.keys = [];
+        this.keys = {};
         this.userLookup = {};
         this.userList = [];
 
@@ -41,7 +41,7 @@ export class Game {
         this.pointers = [];
         this.lastPinchDistance = 0;
 
-        this.currentEmote = null;
+        this.currentEmoji = null;
         this.emotes = [];
 
         addEventListener("resize", this.frontBuffer.resize.bind(this.frontBuffer));
@@ -49,16 +49,12 @@ export class Game {
         // ============= KEYBOARD =================
 
         addEventListener("keydown", (evt) => {
-            const keyIndex = this.keys.indexOf(evt.key);
-            if (keyIndex < 0) {
-                this.keys.push(evt.key);
-            }
+            this.keys[evt.key] = evt;
         });
 
         addEventListener("keyup", (evt) => {
-            const keyIndex = this.keys.indexOf(evt.key);
-            if (keyIndex >= 0) {
-                this.keys.splice(keyIndex, 1);
+            if (!!this.keys[evt.key]) {
+                delete this.keys[evt.key];
             }
         });
 
@@ -204,18 +200,25 @@ export class Game {
     }
 
     emote(userID, emoji) {
-        if (!!userID
-            && !!emoji) {
+        if (!!userID) {
             if (userID === this.me.id) {
-                this.currentEmote = emoji;
-                for (let user of this.userList) {
-                    if (user !== this.me) {
-                        this.jitsiClient.txGameData(user.id, "emote", emoji);
+                emoji = emoji || this.currentEmoji;
+                if (!emoji) {
+                    this.gui.showEmoji();
+                }
+                else {
+                    this.currentEmoji = emoji;
+                    for (let user of this.userList) {
+                        if (user !== this.me) {
+                            this.jitsiClient.txGameData(user.id, "emote", emoji);
+                        }
                     }
                 }
             }
+
             const user = this.userLookup[userID];
-            if (!!user) {
+            if (!!user
+                && !!emoji) {
                 this.emotes.push(new Emote(emoji, user.tx + 0.5, user.ty));
             }
         }
@@ -398,13 +401,13 @@ export class Game {
             let dx = 0,
                 dy = 0;
 
-            for (let key of this.keys) {
-                switch (key) {
+            for (let evt of Object.values(this.keys)) {
+                switch (evt.key) {
                     case "ArrowUp": dy--; break;
                     case "ArrowDown": dy++; break;
                     case "ArrowLeft": dx--; break;
                     case "ArrowRight": dx++; break;
-                    case "e": this.emote(this.me.id, this.currentEmote); break;
+                    case "e": !evt.altKey && this.emote(this.me.id, this.currentEmoji); break;
                 }
             }
 

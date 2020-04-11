@@ -19,17 +19,22 @@
 <body>
     <section id="main">
         <div id="appView">
+
             <div id="jitsi"></div>
+
             <div id="separator">
                 <button type="button" id="showJitsi" accesskey="m">Hide meeting (ALT+M)</button>
                 <button type="button" id="showGame" accesskey="g">Hide game (ALT+G)</button>
                 <button type="button" id="mixViews" accesskey="x">Separate game/meeting (ALT+X)</button>
 
-                <label for="fontSize">Font size:</label>
-                <input type="number" id="fontSize" value="10" min="5" max="32" style="width:3em" />
-
                 <label for="zoom">Zoom:</label>
                 <input type="number" id="zoom" value="1" min="0.1" max="8" step="0.1" style="width:4em" />
+
+                <button type="button" id="emote" style="margin-right:0;border-right:none;border-bottom-right-radius:0;border-top-right-radius:0;">Emote (E)</button>
+                <button type="button" id="selectEmoji" title="Select Emoji" style="border-left:none;border-bottom-left-radius:0;border-top-left-radius:0">⯆</button>
+
+                <label for="fontSize">Font size:</label>
+                <input type="number" id="fontSize" value="10" min="5" max="32" style="width:3em" />
 
                 Hearing range:
                 <label for="drawHearing">Draw:</label>
@@ -41,7 +46,9 @@
                 <label for="maxAudio">Max:</label>
                 <input type="number" id="maxAudio" value="10" min="0" max="100" style="width:3em" />
             </div>
+
             <canvas id="frontBuffer"></canvas>
+
             <div id="emojiWindow">
                 <div id="emoji" style="grid-template-rows:5fr auto auto">
                     <div id="emojiList" style="grid-row:1;overflow-y:scroll">
@@ -57,6 +64,7 @@
                     </div>
                 </div>
             </div>
+
         </div>
     </section>
 
