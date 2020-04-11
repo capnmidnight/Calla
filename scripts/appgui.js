@@ -1,9 +1,15 @@
 ﻿import "./jitsi-meet-external-api.js";
 import "./protos.js";
 
+import { bestIcons } from "./emoji.js";
+
 export class AppGui {
     constructor(game) {
         this.game = game;
+
+        this.eventHandlers = {
+            emojiSelected: []
+        };
 
         // ======= FONT SIZE ==========
         this.fontSizeSpinner = document.querySelector("#fontSize");
@@ -157,6 +163,87 @@ export class AppGui {
             }
         }
         // ======= LOGIN ==========
+
+        // ======= EMOJI ==========
+        this.previousEmoji = [];
+        this.selectedEmoji = null;
+        this.emojiWindow = document.querySelector("#emoji");
+        this.emojiContainer = document.querySelector("#emojiList");
+        this.recentEmoji = document.querySelector("#recentEmoji");
+        this.emojiPreview = document.querySelector("#emojiPreview");
+        this.confirmEmojiButton = document.querySelector("#emoji button.confirm");
+        this.cancelEmojiButton = document.querySelector("#emoji button.cancel");
+        if (this.emojiWindow
+            && this.emojiContainer
+            && this.recentEmoji
+            && this.emojiPreview
+            && this.confirmEmojiButton
+            && this.cancelEmojiButton) {
+
+            const addIconsToContainer = (group, container) => {
+                for (let icon of group) {
+                    const a = document.createElement("button");
+                    a.type = "button";
+                    a.addEventListener("click", this.previewEmoji.bind(this, icon));
+                    a.title = icon.desc;
+                    a.innerHTML = icon.value;
+                    container.appendChild(a);
+                }
+            };
+
+
+            for (let key of Object.keys(bestIcons)) {
+                const header = document.createElement("h1"),
+                    container = document.createElement("p"),
+                    group = bestIcons[key];
+
+                header.innerHTML = key;
+                addIconsToContainer(group, container);
+
+                this.emojiContainer.appendChild(header);
+                this.emojiContainer.appendChild(container);
+            }
+
+            this.confirmEmojiButton.addEventListener("click", () => {
+                const idx = this.previousEmoji.indexOf(this.selectedEmoji);
+                if (idx === -1) {
+                    this.previousEmoji.push(this.selectedEmoji);
+                    this.recentEmoji.innerHTML = "";
+                    addIconsToContainer(this.previousEmoji, this.recentEmoji);
+                }
+
+                for (let func of this.eventHandlers.emojiSelected) {
+                    func(this.game.me.id, this.selectedEmoji);
+                }
+                this.emojiWindow.hide();
+            });
+
+            this.cancelEmojiButton.addEventListener("click", () => {
+                this.selectedEmoji = null;
+                this.confirmEmojiButton.lock();
+                this.emojiWindow.hide();
+            });
+
+            this.emojiWindow.hide();
+        }
+        // ======= EMOJI ==========
+    }
+
+    addEventListener(eventName, func) {
+        this.eventHandlers[eventName].push(func);
+    }
+
+    showEmoji() {
+        this.selectedEmoji = null;
+        this.emojiPreview.innerHTML = "";
+        this.emojiWindow.show();
+        this.confirmEmojiButton.lock();
+    }
+
+    previewEmoji(emoji) {
+        this.selectedEmoji = emoji;
+        this.emojiPreview.innerHTML = `${emoji.value} - ${emoji.desc}`;
+        this.confirmEmojiButton.unlock();
     }
 
     showView(toggleGame, toggleJitsi, toggleMixViews) {

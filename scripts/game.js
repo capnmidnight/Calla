@@ -1,6 +1,8 @@
 ﻿import { AppGui } from "./appgui.js";
 import { TileMap } from "./tilemap.js";
 import { User } from "./user.js";
+import { Emote } from "./emote.js";
+
 import { lerp, clamp, project, unproject } from "./math.js";
 
 const CAMERA_LERP = 0.01,
@@ -39,6 +41,9 @@ export class Game {
         this.pointers = [];
         this.lastPinchDistance = 0;
 
+        this.currentEmote = null;
+        this.emotes = [];
+
         addEventListener("resize", this.frontBuffer.resize.bind(this.frontBuffer));
 
         // ============= KEYBOARD =================
@@ -74,8 +79,6 @@ export class Game {
                 if (!!this.gui.zoomSpinner) {
                     this.gui.zoomSpinner.value = Math.round(100 * this.targetCameraZ) / 100;
                 }
-            } else {
-                console.log(mag);
             }
         };
 
@@ -124,9 +127,15 @@ export class Game {
             if (!!this.me) {
                 const tile = this.getTileAt(pointer),
                     dx = tile.x - this.me.tx,
-                    dy = tile.y - this.me.ty,
-                    clearTile = this.map.getClearTile(this.me.tx, this.me.ty, dx, dy);
-                this.me.moveTo(clearTile.x, clearTile.y);
+                    dy = tile.y - this.me.ty;
+
+                if (dx === 0 && dy === 0) {
+                    this.gui.showEmoji();
+                }
+                else {
+                    const clearTile = this.map.getClearTile(this.me.tx, this.me.ty, dx, dy);
+                    this.me.moveTo(clearTile.x, clearTile.y);
+                }
             }
         });
 
@@ -171,6 +180,8 @@ export class Game {
         // ============= GAMEPAD =================
         // ============= GAMEPAD =================
 
+        // ============= ACTION ==================
+
         this.jitsiClient.addEventListener("moveTo", (evt) => {
             const user = this.userLookup[evt.participantID];
             if (!!user) {
@@ -178,13 +189,36 @@ export class Game {
             }
         });
 
+        this.jitsiClient.addEventListener("emote", (evt) => {
+            this.emote(evt.participantID, evt);
+        });
+
         this.jitsiClient.addEventListener("userInitResponse", (evt) => {
             this.jitsiClient.txGameData(evt.participantID, "moveTo", { x: this.me.x, y: this.me.y });
         });
-
         this.jitsiClient.addEventListener("muteStatusChanged", this.muteUser.bind(this));
 
         this.gui = new AppGui(this);
+
+        this.gui.addEventListener("emojiSelected", this.emote.bind(this));
+    }
+
+    emote(userID, emoji) {
+        if (!!userID
+            && !!emoji) {
+            if (userID === this.me.id) {
+                this.currentEmote = emoji;
+                for (let user of this.userList) {
+                    if (user !== this.me) {
+                        this.jitsiClient.txGameData(user.id, "emote", emoji);
+                    }
+                }
+            }
+            const user = this.userLookup[userID];
+            if (!!user) {
+                this.emotes.push(new Emote(emoji, user.tx + 0.5, user.ty));
+            }
+        }
     }
 
     getTileAt(cursor) {
@@ -311,6 +345,7 @@ export class Game {
             this.jitsiClient.txJitsiHax("setVolume", evt);
         });
         this.userList.push(this.me);
+        this.userLookup[this.me.id] = this.me;
 
         this.map = new TileMap(this.currentRoomName);
         this.map.load()
@@ -369,6 +404,7 @@ export class Game {
                     case "ArrowDown": dy++; break;
                     case "ArrowLeft": dx--; break;
                     case "ArrowRight": dx++; break;
+                    case "e": this.emote(this.me.id, this.currentEmote); break;
                 }
             }
 
@@ -380,6 +416,12 @@ export class Game {
 
             this.lastMove = 0;
         }
+
+        for (let emote of this.emotes) {
+            emote.update(dt);
+        }
+
+        this.emotes = this.emotes.filter(e => !e.isDead());
 
         for (let user of this.userList) {
             user.update(dt, this.map, this.userList);
@@ -412,6 +454,11 @@ export class Game {
             for (let user of this.userList) {
                 user.drawShadow(this.gFront, this.map, this.cameraZ);
             }
+
+            for (let emote of this.emotes) {
+                emote.drawShadow(this.gFront, this.map, this.cameraZ);
+            }
+
             for (let user of this.userList) {
                 user.drawAvatar(this.gFront, this.map);
             }
@@ -429,6 +476,10 @@ export class Game {
                     this.cameraZ,
                     AUDIO_DISTANCE_MIN,
                     AUDIO_DISTANCE_MAX);
+            }
+
+            for (let emote of this.emotes) {
+                emote.drawEmote(this.gFront, this.map);
             }
 
         }

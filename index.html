@@ -41,7 +41,7 @@
     <section id="main">
         <div id="appView">
             <div id="jitsi"></div>
-            <div id="separator" style="display:flex;flex-direction:row;">
+            <div id="separator">
                 <button type="button" id="showJitsi" accesskey="m">Hide meeting (ALT+M)</button>
                 <button type="button" id="showGame" accesskey="g">Hide game (ALT+G)</button>
                 <button type="button" id="mixViews" accesskey="x">Separate game/meeting (ALT+X)</button>
@@ -63,6 +63,21 @@
                 <input type="number" id="maxAudio" value="10" min="0" max="100" style="width:3em" />
             </div>
             <canvas id="frontBuffer"></canvas>
+            <div id="emojiWindow">
+                <div id="emoji" style="grid-template-rows:5fr auto auto">
+                    <div id="emojiList" style="grid-row:1;overflow-y:scroll">
+                        <h1>Recent</h1>
+                        <p id="recentEmoji">(None)</p>
+                    </div>
+                    <div id="emojiPreview" style="grid-row:2">
+
+                    </div>
+                    <div style="grid-row:3;display:flex;flex-direction:row-reverse">
+                        <button type="button" class="cancel">Cancel</button>
+                        <button type="button" class="confirm">OK</button>
+                    </div>
+                </div>
+            </div>
         </div>
         <div id="demo"><video src="videos/demo.webm" autoplay loop></video></div>
         <div id="loginView">

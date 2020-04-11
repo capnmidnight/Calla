@@ -18,32 +18,51 @@
 
 <body>
     <section id="main">
-        <div id="separator" style="display:flex;flex-direction:row;height:3em;">
-            <button type="button" id="showJitsi" accesskey="m">Hide meeting (ALT+M)</button>
-            <button type="button" id="showGame" accesskey="g">Hide game (ALT+G)</button>
-            <button type="button" id="mixViews" accesskey="x">Separate game/meeting (ALT+X)</button>
+        <div id="appView">
+            <div id="jitsi"></div>
+            <div id="separator">
+                <button type="button" id="showJitsi" accesskey="m">Hide meeting (ALT+M)</button>
+                <button type="button" id="showGame" accesskey="g">Hide game (ALT+G)</button>
+                <button type="button" id="mixViews" accesskey="x">Separate game/meeting (ALT+X)</button>
 
-            <label for="fontSize">Font size:</label>
-            <input type="number" id="fontSize" value="10" min="5" max="32" style="width:3em" />
+                <label for="fontSize">Font size:</label>
+                <input type="number" id="fontSize" value="10" min="5" max="32" style="width:3em" />
 
-            <label for="zoom">Zoom:</label>
-            <input type="number" id="zoom" value="1" min="0.1" max="8" step="0.1" style="width:4em" />
+                <label for="zoom">Zoom:</label>
+                <input type="number" id="zoom" value="1" min="0.1" max="8" step="0.1" style="width:4em" />
 
-            Hearing range:
-            <label for="drawHearing">Draw:</label>
-            <input type="checkbox" id="drawHearing" />
+                Hearing range:
+                <label for="drawHearing">Draw:</label>
+                <input type="checkbox" id="drawHearing" />
 
-            <label for="minAudio">Min:</label>
-            <input type="number" id="minAudio" value="2" min="0" max="100" style="width:3em" />
+                <label for="minAudio">Min:</label>
+                <input type="number" id="minAudio" value="2" min="0" max="100" style="width:3em" />
 
-            <label for="maxAudio">Max:</label>
-            <input type="number" id="maxAudio" value="10" min="0" max="100" style="width:3em" />
+                <label for="maxAudio">Max:</label>
+                <input type="number" id="maxAudio" value="10" min="0" max="100" style="width:3em" />
+            </div>
+            <canvas id="frontBuffer"></canvas>
+            <div id="emojiWindow">
+                <div id="emoji" style="grid-template-rows:5fr auto auto">
+                    <div id="emojiList" style="grid-row:1;overflow-y:scroll">
+                        <h1>Recent</h1>
+                        <p id="recentEmoji">(None)</p>
+                    </div>
+                    <div id="emojiPreview" style="grid-row:2">
+
+                    </div>
+                    <div style="grid-row:3;display:flex;flex-direction:row-reverse">
+                        <button type="button" class="cancel">Cancel</button>
+                        <button type="button" class="confirm">OK</button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <canvas id="frontBuffer" style="border:inset 2px #ccc;top:3em;bottom:0"></canvas>
     </section>
 
     <script type="module">
         import { Game } from "./scripts/game.js";
+        import { bestIcons } from "./scripts/emoji.js";
 
         function spawn(id) {
             for (let func of jitsiEvents.moveTo) {
@@ -54,11 +73,25 @@
                 });
             }
 
+            if (Math.random() <= 0.1) {
+                const groups = Object.values(bestIcons),
+                    groupIdx = Math.floor(Math.random() * groups.length),
+                    group = groups[groupIdx],
+                    emojiIdx = Math.floor(Math.random() * group.length),
+                    emoji = group[emojiIdx],
+                    evt = Object.assign({ participantID: id }, emoji);
+
+                for (let func of jitsiEvents.emote) {
+                    func(evt);
+                }
+            }
+
             setTimeout(spawn.bind(null, id), 1000 * (1 + Math.random()));
         }
 
         const jitsiEvents = {
             moveTo: [],
+            emote: [],
             userInitResponse: [],
             muteStatusChanged: []
         },
@@ -111,7 +144,7 @@
         game.start({
             id: "me",
             roomName: "island",
-            displayName: "Just Rendering",
+            displayName: "Just Rendering🤪",
             avatarURL: "https://secure.gravatar.com/avatar/2d598f70b2bd1d828a195ced8abd7e9e"
         });
 
