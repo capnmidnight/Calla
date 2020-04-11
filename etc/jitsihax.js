@@ -119,7 +119,7 @@
                                 source.panner.positionZ.setValueAtTime(evt.y, time);
                             }
                             else {
-                                source.pannner.pan.setTargetAtTime(evt.panning, time);
+                                source.panner.pan.setTargetAtTime(evt.panning, time);
                                 source.gain.gain.setTargetAtTime(evt.volume, time);
                             }
                         }
