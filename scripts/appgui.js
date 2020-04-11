@@ -72,7 +72,7 @@ export class AppGui {
             && this.separator
             && this.showGameButton
             && this.showJitsiButton
-            && this.showmixViewsButton
+            && this.mixViewsButton
             && this.jitsiContainer) {
             this.showGameButton.addEventListener("click", this.showView.bind(this, true, false, false));
             this.showJitsiButton.addEventListener("click", this.showView.bind(this, false, true, false));
