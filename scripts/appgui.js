@@ -264,9 +264,9 @@ export class AppGui {
         this.jitsiVisible = showJitsi || !showGame && toggleGame;
         this.viewsCombined = mixViews;
 
-        this.showGameButton.innerHTML = this.gameVisible ? "Hide game" : "Show game";
-        this.showJitsiButton.innerHTML = this.jitsiVisible ? "Hide meeting" : "Show meeting";
-        this.mixViewsButton.innerHTML = this.viewsCombined ? "Separate game/meeting" : "Combine game/meeting";
+        this.showGameButton.innerHTML = (this.gameVisible ? "Hide" : "Show") + ` game (ALT+${this.showGameButton.accessKey.toUpperCase()})`;
+        this.showJitsiButton.innerHTML = (this.jitsiVisible ? "Hide" : "Show") + ` meeting (ALT+${this.showJitsiButton.accessKey.toUpperCase()})`;
+        this.mixViewsButton.innerHTML = (this.viewsCombined ? "Separate" : "Combine") + ` game/meeting (ALT+${this.mixViewsButton.accessKey.toUpperCase()})`;
 
         if (this.gameVisible != this.jitsiVisible) {
             this.mixViewsButton.lock();
