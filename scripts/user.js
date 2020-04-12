@@ -149,7 +149,7 @@ export class User {
             if (moved && (audiblePrev || audible)) {
                 user.distXToMe = distX;
                 user.distYToMe = distY;
-                const volume = Math.sqrt(1 - project(distCl, audioDistMin, audioDistMax)),
+                const volume = 1 - Math.sqrt(project(distCl, audioDistMin, audioDistMax)),
                     panning = distX / (.1 + dist),
                     evt = {
                         user: user.id,
