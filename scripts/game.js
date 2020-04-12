@@ -126,7 +126,7 @@ export class Game {
                     dy = tile.y - this.me.ty;
 
                 if (dx === 0 && dy === 0) {
-                    this.gui.showEmoji();
+                    this.emote(this.me.id, this.currentEmoji);
                 }
                 else {
                     const clearTile = this.map.getClearTile(this.me.tx, this.me.ty, dx, dy);
