@@ -136,7 +136,7 @@ export class AppGui {
                     this.roomNameInput.value = this.roomSelector.value;
                 });
                 this.newRoomButton.addEventListener("click", (evt) => {
-                    const open = this.roomNameInput.style.isOpen();
+                    const open = this.roomNameInput.isOpen();
                     this.roomNameInput.style.display = open ? "none" : "";
                     this.roomSelector.style.display = open ? "" : "none";
                     this.newRoomButton.innerHTML = open ? "New" : "Cancel";
