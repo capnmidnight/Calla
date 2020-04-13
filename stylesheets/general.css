@@ -3,9 +3,7 @@
 }
 
 html,
-body,
-#main,
-#main > * {
+body {
     position: fixed;
     margin: 0;
     padding: 0;
@@ -24,15 +22,11 @@ body {
     display: none;
 }
 
-a:visited,
-a:focus {
-    color: #5a5a33;
-}
-
-section h1 {
+h1 {
     font-size: 2em;
+    text-transform: capitalize;
 }
 
-section h2 {
+h2 {
     font-size: 1.5em;
 }

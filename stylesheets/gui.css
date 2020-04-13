@@ -1,96 +1,90 @@
-﻿#demo {
+﻿body > section, #frontBuffer, #jitsi {
+    position: absolute;
+    display: block;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
     overflow: hidden;
 }
 
-    #demo > video {
-        min-width: 100%;
-        min-height: 100%;
-        opacity: 0.5;
-    }
-
-#gui {
-    display: flex;
-    overflow-y: scroll;
+body > section {
+    pointer-events: none;
 }
 
-#intro, #emoji {
-    min-width: 360px;
+    body > section > * {
+        pointer-events: initial;
+    }
+
+#guiView > div {
+    width: 50%;
     max-width: 900px;
+    max-height: 75%;
     background-color: white;
     padding: 1em 1em 3em 1em;
     margin: 5em auto auto auto;
     border-radius: 5px;
     border: solid 4px black;
     box-shadow: rgba(0, 0, 0, .4) 10px 10px 20px;
+    overflow-y: scroll;
 }
 
 @media(max-width: 899px) {
-    #intro, #emoji {
+    #guiView > div {
+        width: 100%;
+        height: 100%;
+        max-height: initial;
         border: none;
         border-radius: 0;
         margin: auto;
     }
 }
 
-#loginView {
-    overflow-y: scroll;
-}
-
-    #loginView form > * {
-        margin: .25em;
-        padding: .25em;
-    }
-
-    #loginView form > label {
-        text-align: right;
-    }
-
-#appView > * {
-    width: 100%;
-}
-
-#frontBuffer {
-    display: block;
-}
-
-#separator {
-    border-style: solid;
-    border-color: red;
-    border-width: 0.5em 0;
-    border-collapse: separate;
-    background-color: white;
+#toolbar {
+    background-color: #bbb;
     padding: 4px 0;
-    display:flex;
+    display: flex;
     flex-direction: row;
     flex-wrap: wrap;
 }
 
-    #separator > * {
-        margin-right: 0.5em;
+    #toolbar > * {
+        display:inline-flex;
+        margin: 0 0.5em 0 0;
+        padding: 0;
     }
 
-#emojiWindow{
-    position:fixed;
-    top: 0;
-    left: 0;
-    height: 100%;
-    pointer-events: none;
+#loginView form > * {
+    margin: .25em;
+    padding: .25em;
+}
+
+#login form > label {
+    text-align: right;
+    margin-right: 0.25em;
+}
+
+#emoji, #options {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    overflow-y: hidden !important;
 }
 
 #emoji {
-    display: grid;
-    height: 500px;
-    width: 500px;
-    max-width: 100%;
-    max-height: calc(100% - 5em);
-    pointer-events:initial;
+    grid-template-columns: 5fr 1fr 1fr;
 }
 
-    #emoji > h1 {
-        text-transform: capitalize;
-    }
+#options {
+    grid-template-columns: 5fr 1fr 1fr;
+}
 
-    #emoji p > button {
-        border: none;
-        background-color: transparent;
-    }
+#emojiList {
+    overflow-y: scroll;
+}
+
+#emoji p > button {
+    border: none;
+    background-color: transparent;
+}

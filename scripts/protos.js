@@ -1,11 +1,23 @@
 ﻿// A few convenience methods for HTML elements.
 
+Element.prototype.isOpen = function () {
+    return this.style.display !== "none";
+};
+
+Element.prototype.setOpen = function (v) {
+    this.style.display = v ? "" : "none";
+};
+
+Element.prototype.toggleOpen = function () {
+    this.setOpen(!this.isOpen());
+};
+
 Element.prototype.show = function () {
-    this.style.display = "";
+    this.setOpen(true);
 };
 
 Element.prototype.hide = function () {
-    this.style.display = "none";
+    this.setOpen(false);
 };
 
 Element.prototype.lock = function () {

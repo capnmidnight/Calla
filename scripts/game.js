@@ -44,8 +44,6 @@ export class Game {
         this.currentEmoji = null;
         this.emotes = [];
 
-        addEventListener("resize", this.frontBuffer.resize.bind(this.frontBuffer));
-
         // ============= KEYBOARD =================
 
         addEventListener("keydown", (evt) => {
@@ -79,9 +77,14 @@ export class Game {
         };
 
         this.frontBuffer.addEventListener("wheel", (evt) => {
-            // Chrome and Firefox report scroll values in completely different ranges.
-            const deltaZ = evt.deltaY * (isFirefox ? 1 : 0.02);
-            zoom(deltaZ);
+            if (!evt.shiftKey
+                && !evt.altKey
+                && !evt.ctrlKey
+                && !evt.metaKey) {
+                // Chrome and Firefox report scroll values in completely different ranges.
+                const deltaZ = evt.deltaY * (isFirefox ? 1 : 0.02);
+                zoom(deltaZ);
+            }
         }, { passive: true });
 
         function readPointer(evt) {
@@ -195,8 +198,6 @@ export class Game {
         this.jitsiClient.addEventListener("muteStatusChanged", this.muteUser.bind(this));
 
         this.gui = new AppGui(this);
-
-        this.gui.addEventListener("emojiSelected", this.emote.bind(this));
     }
 
     emote(userID, emoji) {
@@ -361,6 +362,7 @@ export class Game {
 
     startLoop() {
         this.frontBuffer.show();
+        this.gui.resize();
         this.frontBuffer.resize();
         this.frontBuffer.focus();
 

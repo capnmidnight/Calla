@@ -17,57 +17,155 @@
 </head>
 
 <body>
-    <section id="main">
-        <div id="appView">
-
-            <div id="jitsi"></div>
-
-            <div id="separator">
+    <section id="appView">
+        <div id="toolbar">
+            <span>
                 <button type="button" id="showJitsi" accesskey="m">Hide meeting (ALT+M)</button>
                 <button type="button" id="showGame" accesskey="g">Hide game (ALT+G)</button>
-                <button type="button" id="mixViews" accesskey="x">Separate game/meeting (ALT+X)</button>
+            </span>
 
+            <span>
+                <button type="button" id="emote">Emote (E) (@)</button>
+                <button type="button" id="selectEmoji" title="Select Emoji">⯆</button>
+            </span>
+
+            <span>
                 <label for="zoom">Zoom:</label>
                 <input type="number" id="zoom" value="1" min="0.1" max="8" step="0.1" style="width:4em" />
+            </span>
 
-                <button type="button" id="emote" style="margin-right:0;border-right:none;border-bottom-right-radius:0;border-top-right-radius:0;">Emote (E)</button>
-                <button type="button" id="selectEmoji" title="Select Emoji" style="border-left:none;border-bottom-left-radius:0;border-top-left-radius:0">⯆</button>
-
-                <!-- TODO everything below here can go into the Options view mentioned in Issue #22 -->
-
-                <label for="fontSize">Font size:</label>
-                <input type="number" id="fontSize" value="10" min="5" max="32" style="width:3em" />
-
-                Hearing range:
-                <label for="drawHearing">Draw:</label>
-                <input type="checkbox" id="drawHearing" />
-
-                <label for="minAudio">Min:</label>
-                <input type="number" id="minAudio" value="2" min="0" max="100" style="width:3em" />
-
-                <label for="maxAudio">Max:</label>
-                <input type="number" id="maxAudio" value="10" min="0" max="100" style="width:3em" />
-            </div>
-
-            <canvas id="frontBuffer"></canvas>
-
-            <div id="emojiWindow">
-                <div id="emoji" style="grid-template-rows:5fr auto auto">
-                    <div id="emojiList" style="grid-row:1;overflow-y:scroll">
-                        <h1>Recent</h1>
-                        <p id="recentEmoji">(None)</p>
-                    </div>
-                    <div id="emojiPreview" style="grid-row:2">
-
-                    </div>
-                    <div style="grid-row:3;display:flex;flex-direction:row-reverse">
-                        <button type="button" class="cancel">Cancel</button>
-                        <button type="button" class="confirm">OK</button>
-                    </div>
-                </div>
-            </div>
-
+            <button type="button" id="showOptions">Show options</button>
         </div>
+        <video id="jitsi" src="videos/demo.webm" style="min-width:100%;min-height:100%"></video>
+        <canvas id="frontBuffer"></canvas>
+    </section>
+
+    <section id="guiView">
+
+        <div id="emoji">
+            <h1 style="grid-row: 1; grid-column: 1/4">Emoji</h1>
+
+            <div id="emojiList" style="grid-row: 2; grid-column: 1/4">
+                <h2>Recent</h2>
+                <p id="recentEmoji">(None)</p>
+            </div>
+
+            <span id="emojiPreview" style="grid-row: 3; grid-column: 1"></span>
+            <button type="button" class="confirm" style="grid-row: 3; grid-column: 2">OK</button>
+            <button type="button" class="cancel" style="grid-row: 3; grid-column: 3">Cancel</button>
+        </div>
+
+        <div id="options">
+            <h1 style="grid-row:1; grid-column:1/4">Options</h1>
+
+            <div style="grid-row:2; grid-column:1/4">
+                <h2><label for="fontSize">Font size:</label></h2>
+                <p>
+                    <input type="number" id="fontSize" value="10" min="5" max="32" style="width:3em" />
+                </p>
+
+                <h2>Hearing range:</h2>
+                <p>
+                    <label for="drawHearing">Draw:</label>
+                    <input type="checkbox" id="drawHearing" />
+                </p>
+
+                <p>
+                    <label for="minAudio">Min:</label>
+                    <input type="number" id="minAudio" value="2" min="0" max="100" style="width:3em" />
+                </p>
+
+                <p>
+                    <label for="maxAudio">Max:</label>
+                    <input type="number" id="maxAudio" value="10" min="0" max="100" style="width:3em" />
+                </p>
+            </div>
+
+            <button type="button" class="confirm" style="grid-row:3; grid-column:3">OK</button>
+        </div>
+
+        <div id="login">
+            <h1>
+                Lozya
+                <a href="https://github.com/capnmidnight/lozya" target="_blank" rel="noopener">
+                    <span class="icon icon-github" title="Follow Lozya on Github">
+                        <span class="accessibility-text">Follow Lozya on Github</span>
+                    </span>
+                </a>
+            </h1>
+
+            <p>Teleconferencing with an RPG map. Walk around, talk to folks, have private conversations by huddling in a corner, or drop in on other conversations. Ideal for meetups!</p>
+
+            <p><strong>Note:</strong> Lozya is built on top of the open-source teleconferencing project <a href="https://jitsi.org">Jitsi Meet</a>. Unfortunately, Jitsi's web client doesn't work on iOS! Sorry :(</p>
+
+            <form autocomplete="on" style="
+display: grid;
+grid-template-columns: 2fr 4fr 2fr;
+grid-template-rows: auto;">
+                <label for="room" style="
+    grid-column: 1;
+    grid-row: 1">
+                    Room name:
+                </label>
+                <select id="existingRooms" style="
+    grid-column: 2;
+    grid-row: 1">
+                    <option value="Lozya">Lozya</option>
+                    <option value="island">Island</option>
+                    <option value="ALXCC">Alexandria Code &amp; Coffee</option>
+                    <option value="Vurv">Vurv</option>
+                </select>
+                <input type="text" id="roomName" autocomplete="off" placeholder="(Required)" style="
+    grid-column: 2;
+    grid-row: 1;
+    display: none" />
+                <button type="button" id="createNewRoom" title="Create a new, temporary room" style="
+    grid-column: 3">
+                    New
+                </button>
+
+
+                <label for="user" style="
+    grid-column: 1;
+    grid-row: 2">
+                    User name:
+                </label>
+                <input type="text" id="userName" placeholder="(Required)" name="userName" style="
+    grid-column: 2;
+    grid-row: 2" />
+
+                <button type="button" id="connect" style="
+    grid-column: 3;
+    grid-row: 2">
+                    Connect
+                </button>
+            </form>
+            <h2>Usage</h2>
+            <ul>
+                <li><strong>Be careful in picking your room name</strong>, if you don't want randos to join. Traffic is low right now, but you never know.</li>
+                <li>Try to <strong>pick a unique user name</strong>. A lot of people use "Test" and then there are a bunch of people with the same name running around.</li>
+                <li>Either <strong>Hide the game view</strong> or <strong>Separate the game and meeting views</strong> to be able to access the Jitsi Meet user settings. Lozya captures all of the mouse clicks to enable moving.</li>
+                <li><strong>Click on the map</strong> to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls.</li>
+                <li>Or, <strong>use the arrow keys</strong> on your keyboard to move.</li>
+                <li><strong>Click on yourself</strong> to open a list of Emoji. Select an Emoji to float it out into the map.</li>
+                <li><strong>Hit the E key</strong> to re-emote with your last selected Emoji.</li>
+                <li>You can <strong>roll your mouse wheel</strong> or <strong>pinch your touchscreen</strong> to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in their Avatar.</li>
+            </ul>
+            <h2>Made by</h2>
+            <p>
+                <a href="https://www.seanmcbeth.com" target="_blank" rel="noopener">
+                    <span class="icon icon-shrink" title="Sean T. McBeth" />
+                </a>
+                Sean T. McBeth
+            </p>
+            <p>
+                <a href="https://twitter.com/Sean_McBeth" target="_blank" rel="noopener">
+                    <span class="icon icon-twitter" title="Follow @Sean_McBeth on Twitter" />
+                </a>
+                Follow @Sean_McBeth on Twitter
+            </p>
+        </div>
+
     </section>
 
     <script type="module">
@@ -153,10 +251,13 @@
         game.registerGameListeners(api);
         game.start({
             id: "me",
-            roomName: "island",
+            roomName: "default",
             displayName: "Just Rendering🤪",
             avatarURL: "https://secure.gravatar.com/avatar/2d598f70b2bd1d828a195ced8abd7e9e"
         });
+
+        game.gui.appView.show();
+        game.gui.loginView.hide();
 
         setTimeout(api.createTestUser, 1000);
 

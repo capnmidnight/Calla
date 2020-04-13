@@ -11,242 +11,276 @@ export class AppGui {
             emojiSelected: []
         };
 
-        // ======= FONT SIZE ==========
-        this.fontSizeSpinner = document.querySelector("#fontSize");
-        if (this.fontSizeSpinner) {
-            this.fontSizeSpinner.addEventListener("input", (evt) => {
-                const size = this.fontSizeSpinner.value;
-                this.game.fontSize = size;
-                localStorage.setItem("fontSize", size);
-            });
-            this.fontSizeSpinner.value = localStorage.getItem("fontSize") || this.game.fontSize;
-            this.game.fontSize = this.fontSizeSpinner.value;
-        }
-        // ======= FONT SIZE ==========
-
-        // ======= ZOOM ==========
-        this.zoomSpinner = document.querySelector("#zoom");
-        if (this.zoomSpinner) {
-            this.zoomSpinner.addEventListener("input", (evt) => {
-                this.game.targetCameraZ = this.zoomSpinner.value;
-            });
-            this.zoomSpinner.value = this.game.targetCameraZ;
-        }
-        // ======= ZOOM ==========
-
-        // ======= HEARING ==========
-        this.drawHearingCheckbox = document.querySelector("#drawHearing");
-        this.minAudioSpinner = document.querySelector("#minAudio");
-        this.maxAudioSpinner = document.querySelector("#maxAudio");
-        if (this.drawHearingCheckbox
-            && this.minAudioSpinner
-            && this.maxAudioSpinner) {
-            this.drawHearingCheckbox.addEventListener("input", (evt) => {
-                this.game.drawHearing = this.drawHearingCheckbox.checked;
-                localStorage.setItem("drawHearing", this.game.drawHearing);
-            });
-            let drawHearing = localStorage.getItem("drawHearing");
-            drawHearing = drawHearing === null ? this.game.drawHearing : drawHearing === "true";
-            this.game.drawHearing = drawHearing;
-            this.drawHearingCheckbox.checked = drawHearing;
-
-            const setAudioRange = () => {
-                this.maxAudioSpinner.value = Math.max(1 * this.minAudioSpinner.value + 1, 1 * this.maxAudioSpinner.value);
-                AUDIO_DISTANCE_MIN = this.minAudioSpinner.value;
-                AUDIO_DISTANCE_MAX = this.maxAudioSpinner.value;
-                localStorage.setItem("minAudio", this.minAudioSpinner.value);
-                localStorage.setItem("maxAudio", this.maxAudioSpinner.value);
-            };
-            this.minAudioSpinner.addEventListener("input", setAudioRange);
-            this.maxAudioSpinner.addEventListener("input", setAudioRange);
-            AUDIO_DISTANCE_MIN = this.minAudioSpinner.value = 1 * localStorage.getItem("minAudio") || AUDIO_DISTANCE_MIN;
-            AUDIO_DISTANCE_MAX = this.maxAudioSpinner.value = 1 * localStorage.getItem("maxAudio") || AUDIO_DISTANCE_MAX;
-        }
-        // ======= HEARING ==========
-
-        // ======= VIEWS ==========
-        this.gameVisible = true;
-        this.jitsiVisible = true;
-        this.viewsCombined = true;
-        this.appView = document.querySelector("#appView");
-        this.separator = document.querySelector("#separator");
-        this.showGameButton = document.querySelector("#showGame");
-        this.showJitsiButton = document.querySelector("#showJitsi");
-        this.mixViewsButton = document.querySelector("#mixViews");
-        this.jitsiContainer = document.querySelector("#jitsi");
-        if (this.appView
-            && this.separator
-            && this.showGameButton
-            && this.showJitsiButton
-            && this.mixViewsButton
-            && this.jitsiContainer) {
-            this.showGameButton.addEventListener("click", this.showView.bind(this, true, false, false));
-            this.showJitsiButton.addEventListener("click", this.showView.bind(this, false, true, false));
-            this.mixViewsButton.addEventListener("click", this.showView.bind(this, false, false, true));
-            this.showView(false, false, false);
-        }
-        else {
-            if (this.showGameButton) {
-                this.showGameButton.lock();
-            }
-            if (this.showJitsiButton) {
-                this.showJitsiButton.lock();
-            }
-            if (this.mixViewsButton) {
-                this.mixViewsButton.lock();
+        // >>>>>>>>>> ZOOM >>>>>>>>>>
+        {
+            this.zoomSpinner = document.querySelector("#zoom");
+            if (this.zoomSpinner) {
+                this.zoomSpinner.addEventListener("input", (evt) => {
+                    this.game.targetCameraZ = this.zoomSpinner.value;
+                });
+                this.zoomSpinner.value = this.game.targetCameraZ;
             }
         }
+        // <<<<<<<<<< ZOOM <<<<<<<<<<
 
-        // ======= VIEWS ==========
+        // >>>>>>>>>> OPTIONS >>>>>>>>>>
+        {
+            this.optionsButton = document.querySelector("#showOptions");
+            this.optionsView = document.querySelector("#options");
+            this.optionsConfirmButton = document.querySelector("#options button.confirm");
+            if (this.optionsButton
+                && this.optionsView
+                && this.optionsConfirmButton) {
+                this.optionsButton.addEventListener("click", this.optionsView.show.bind(this.optionsView));
+                this.optionsConfirmButton.addEventListener("click", this.optionsView.hide.bind(this.optionsView));
 
-        // ======= LOGIN ==========
-        this.demoVideo = document.querySelector("#demo > video");
-        this.loginView = document.querySelector("#loginView");
-        this.roomNameInput = document.querySelector("#roomName");
-        this.userNameInput = document.querySelector("#userName");
-        this.connectButton = document.querySelector("#connect");
-        this.newRoomButton = document.querySelector("#createNewRoom");
-        this.roomSelector = document.querySelector("#existingRooms");
-        if (this.demoVideo
-            && this.loginView
-            && this.roomNameInput
-            && this.userNameInput
-            && this.connectButton
-            && this.newRoomButton
-            && this.roomSelector) {
-            this.roomNameInput.addEventListener("enter", this.userNameInput.focus.bind(this.userNameInput));
-            this.userNameInput.addEventListener("enter", this.login.bind(this));
-            this.connectButton.addEventListener("click", this.login.bind(this));
-            this.roomSelector.addEventListener("input", (evt) => {
-                this.roomNameInput.value = this.roomSelector.value;
-            });
-            this.newRoomButton.addEventListener("click", (evt) => {
-                const open = this.roomNameInput.style.display !== "none";
-                this.roomNameInput.style.display = open ? "none" : "";
-                this.roomSelector.style.display = open ? "" : "none";
-                this.newRoomButton.innerHTML = open ? "New" : "Cancel";
-                if (open) {
+                this.optionsView.hide();
+            }
+
+            // >>>>>>>>>> FONT SIZE >>>>>>>>>>
+            {
+                this.fontSizeSpinner = document.querySelector("#fontSize");
+                if (this.fontSizeSpinner) {
+                    this.fontSizeSpinner.addEventListener("input", (evt) => {
+                        const size = this.fontSizeSpinner.value;
+                        this.game.fontSize = size;
+                        localStorage.setItem("fontSize", size);
+                    });
+                    this.fontSizeSpinner.value = localStorage.getItem("fontSize") || this.game.fontSize;
+                    this.game.fontSize = this.fontSizeSpinner.value;
+                }
+            }
+            // <<<<<<<<<< FONT SIZE <<<<<<<<<<
+
+            // >>>>>>>>>> HEARING >>>>>>>>>>
+            {
+                this.drawHearingCheckbox = document.querySelector("#drawHearing");
+                this.minAudioSpinner = document.querySelector("#minAudio");
+                this.maxAudioSpinner = document.querySelector("#maxAudio");
+                if (this.drawHearingCheckbox
+                    && this.minAudioSpinner
+                    && this.maxAudioSpinner) {
+                    this.drawHearingCheckbox.addEventListener("input", (evt) => {
+                        this.game.drawHearing = this.drawHearingCheckbox.checked;
+                        localStorage.setItem("drawHearing", this.game.drawHearing);
+                    });
+                    let drawHearing = localStorage.getItem("drawHearing");
+                    drawHearing = drawHearing === null ? this.game.drawHearing : drawHearing === "true";
+                    this.game.drawHearing = drawHearing;
+                    this.drawHearingCheckbox.checked = drawHearing;
+
+                    const setAudioRange = () => {
+                        this.maxAudioSpinner.value = Math.max(1 * this.minAudioSpinner.value + 1, 1 * this.maxAudioSpinner.value);
+                        AUDIO_DISTANCE_MIN = this.minAudioSpinner.value;
+                        AUDIO_DISTANCE_MAX = this.maxAudioSpinner.value;
+                        localStorage.setItem("minAudio", this.minAudioSpinner.value);
+                        localStorage.setItem("maxAudio", this.maxAudioSpinner.value);
+                    };
+                    this.minAudioSpinner.addEventListener("input", setAudioRange);
+                    this.maxAudioSpinner.addEventListener("input", setAudioRange);
+                    AUDIO_DISTANCE_MIN = this.minAudioSpinner.value = 1 * localStorage.getItem("minAudio") || AUDIO_DISTANCE_MIN;
+                    AUDIO_DISTANCE_MAX = this.maxAudioSpinner.value = 1 * localStorage.getItem("maxAudio") || AUDIO_DISTANCE_MAX;
+                }
+            }
+            // <<<<<<<<<< HEARING <<<<<<<<<<
+        }
+        // <<<<<<<<<< OPTIONS <<<<<<<<<<
+
+        // >>>>>>>>>> VIEWS >>>>>>>>>>
+        {
+            this.gameVisible = true;
+            this.jitsiVisible = true;
+            this.bufferResizeTimeout = null;
+            this.appView = document.querySelector("#appView");
+            this.guiView = document.querySelector("#guiView");
+            this.jitsiContainer = document.querySelector("#jitsi");
+            this.toolbar = document.querySelector("#toolbar");
+            this.showJitsiButton = document.querySelector("#showJitsi");
+            this.showGameButton = document.querySelector("#showGame");
+            if (this.appView
+                && this.guiView
+                && this.jitsiContainer
+                && this.toolbar
+                && this.showJitsiButton
+                && this.showGameButton) {
+
+                this.showGameButton.addEventListener("click", this.showView.bind(this, true, false));
+                this.showJitsiButton.addEventListener("click", this.showView.bind(this, false, true));
+
+                addEventListener("resize", () => this.resize.bind(this));
+                addEventListener("resize", this.game.frontBuffer.resize.bind(this.game.frontBuffer));
+
+                this.showView(false, false);
+            }
+        }
+        // <<<<<<<<<< VIEWS <<<<<<<<<<
+
+        // >>>>>>>>>> LOGIN >>>>>>>>>>
+        {
+            this.loginView = document.querySelector("#login");
+            this.roomSelector = document.querySelector("#existingRooms");
+            this.newRoomButton = document.querySelector("#createNewRoom");
+            this.roomNameInput = document.querySelector("#roomName");
+            this.userNameInput = document.querySelector("#userName");
+            this.connectButton = document.querySelector("#connect");
+            if (this.loginView
+                && this.roomSelector
+                && this.newRoomButton
+                && this.roomNameInput
+                && this.userNameInput
+                && this.connectButton) {
+                this.roomNameInput.addEventListener("enter", this.userNameInput.focus.bind(this.userNameInput));
+                this.userNameInput.addEventListener("enter", this.login.bind(this));
+                this.connectButton.addEventListener("click", this.login.bind(this));
+                this.roomSelector.addEventListener("input", (evt) => {
+                    this.roomNameInput.value = this.roomSelector.value;
+                });
+                this.newRoomButton.addEventListener("click", (evt) => {
+                    const open = this.roomNameInput.style.isOpen();
+                    this.roomNameInput.style.display = open ? "none" : "";
+                    this.roomSelector.style.display = open ? "" : "none";
+                    this.newRoomButton.innerHTML = open ? "New" : "Cancel";
+                    if (open) {
+                        for (let option of this.roomSelector.options) {
+                            if (option.value === this.roomNameInput.value) {
+                                this.roomSelector.value = this.roomNameInput.value;
+                            };
+                        }
+                    }
+
+                    this.roomNameInput.value = this.roomSelector.value;
+                });
+                this.showLogin();
+
+                this.userNameInput.value = localStorage.getItem("userName") || "";
+
+                if (location.hash.length > 0) {
+                    const name = location.hash.substr(1);
+                    let found = false;
                     for (let option of this.roomSelector.options) {
                         if (option.value === this.roomNameInput.value) {
-                            this.roomSelector.value = this.roomNameInput.value;
+                            this.roomSelector.value = name;
+                            found = true;
+                            break;
                         };
                     }
+
+                    if (!found) {
+                        this.newRoomButton.click();
+                        this.roomNameInput.value = name;
+                    }
+
+                    this.userNameInput.focus();
                 }
-
-                this.roomNameInput.value = this.roomSelector.value;
-            });
-            this.showLogin();
-
-            this.userNameInput.value = localStorage.getItem("userName") || "";
-
-            if (location.hash.length > 0) {
-                const name = location.hash.substr(1);
-                let found = false;
-                for (let option of this.roomSelector.options) {
-                    if (option.value === this.roomNameInput.value) {
-                        this.roomSelector.value = name;
-                        found = true;
-                        break;
-                    };
+                else {
+                    this.roomNameInput.focus();
+                    this.roomNameInput.value = this.roomSelector.value;
                 }
-
-                if (!found) {
-                    this.newRoomButton.click();
-                    this.roomNameInput.value = name;
-                }
-
-                this.userNameInput.focus();
-            }
-            else {
-                this.roomNameInput.focus();
-                this.roomNameInput.value = this.roomSelector.value;
             }
         }
-        // ======= LOGIN ==========
+        // <<<<<<<<<< LOGIN <<<<<<<<<<
 
-        // ======= EMOJI ==========
-        this.previousEmoji = [];
-        this.selectedEmoji = null;
-        this.emojiWindow = document.querySelector("#emoji");
-        this.emojiContainer = document.querySelector("#emojiList");
-        this.recentEmoji = document.querySelector("#recentEmoji");
-        this.emojiPreview = document.querySelector("#emojiPreview");
-        this.confirmEmojiButton = document.querySelector("#emoji button.confirm");
-        this.cancelEmojiButton = document.querySelector("#emoji button.cancel");
-        this.emoteButton = document.querySelector("#emote");
-        this.selectEmojiButton = document.querySelector("#selectEmoji");
-        if (this.emojiWindow
-            && this.emojiContainer
-            && this.recentEmoji
-            && this.emojiPreview
-            && this.confirmEmojiButton
-            && this.cancelEmojiButton
-            && this.emoteButton
-            && this.selectEmojiButton) {
+        // >>>>>>>>>> EMOJI >>>>>>>>>>
+        {
+            this.previousEmoji = [];
+            this.selectedEmoji = null;
+            this.emojiView = document.querySelector("#emoji");
+            this.emojiContainer = document.querySelector("#emojiList");
+            this.recentEmoji = document.querySelector("#recentEmoji");
+            this.emojiPreview = document.querySelector("#emojiPreview");
+            this.confirmEmojiButton = document.querySelector("#emoji button.confirm");
+            this.cancelEmojiButton = document.querySelector("#emoji button.cancel");
+            this.emoteButton = document.querySelector("#emote");
+            this.selectEmojiButton = document.querySelector("#selectEmoji");
+            if (this.emojiView
+                && this.emojiContainer
+                && this.recentEmoji
+                && this.emojiPreview
+                && this.confirmEmojiButton
+                && this.cancelEmojiButton
+                && this.emoteButton
+                && this.selectEmojiButton) {
 
-            this.confirmEmojiButton.lock();
-
-            const addIconsToContainer = (group, container) => {
-                for (let icon of group) {
-                    const a = document.createElement("button");
-                    a.type = "button";
-                    a.addEventListener("click", this.previewEmoji.bind(this, icon));
-                    a.title = icon.desc;
-                    a.innerHTML = icon.value;
-                    container.appendChild(a);
-                }
-            };
-
-
-            for (let key of Object.keys(bestIcons)) {
-                const header = document.createElement("h1"),
-                    container = document.createElement("p"),
-                    group = bestIcons[key];
-
-                header.innerHTML = key;
-                addIconsToContainer(group, container);
-
-                this.emojiContainer.appendChild(header);
-                this.emojiContainer.appendChild(container);
-            }
-
-            this.confirmEmojiButton.addEventListener("click", () => {
-                const idx = this.previousEmoji.indexOf(this.selectedEmoji);
-                this.emoteButton.innerHTML = `Emote (E) ${this.selectedEmoji.value}`;
-                if (idx === -1) {
-                    this.previousEmoji.push(this.selectedEmoji);
-                    this.recentEmoji.innerHTML = "";
-                    addIconsToContainer(this.previousEmoji, this.recentEmoji);
-                }
-
-                for (let func of this.eventHandlers.emojiSelected) {
-                    func(this.game.me.id, this.selectedEmoji);
-                }
-                this.emojiWindow.hide();
-            });
-
-            this.cancelEmojiButton.addEventListener("click", () => {
                 this.confirmEmojiButton.lock();
-                this.emojiWindow.hide();
-            });
 
-            this.emoteButton.addEventListener("click", () => {
-                this.game.emote(this.game.me.id, this.game.currentEmoji);
-            });
+                const addIconsToContainer = (group, container) => {
+                    for (let icon of group) {
+                        const a = document.createElement("button");
+                        a.type = "button";
+                        a.addEventListener("click", this.previewEmoji.bind(this, icon));
+                        a.title = icon.desc;
+                        a.innerHTML = icon.value;
+                        container.appendChild(a);
+                    }
+                };
 
-            this.selectEmojiButton.addEventListener("click", this.showEmoji.bind(this));
 
-            this.emojiWindow.hide();
+                for (let key of Object.keys(bestIcons)) {
+                    const header = document.createElement("h1"),
+                        container = document.createElement("p"),
+                        group = bestIcons[key];
+
+                    header.innerHTML = key;
+                    addIconsToContainer(group, container);
+
+                    this.emojiContainer.appendChild(header);
+                    this.emojiContainer.appendChild(container);
+                }
+
+                this.confirmEmojiButton.addEventListener("click", () => {
+                    const idx = this.previousEmoji.indexOf(this.selectedEmoji);
+                    this.emoteButton.innerHTML = `Emote (E) ${this.selectedEmoji.value}`;
+                    if (idx === -1) {
+                        this.previousEmoji.push(this.selectedEmoji);
+                        this.recentEmoji.innerHTML = "";
+                        addIconsToContainer(this.previousEmoji, this.recentEmoji);
+                    }
+
+                    for (let func of this.eventHandlers.emojiSelected) {
+                        func(this.game.me.id, this.selectedEmoji);
+                    }
+                    this.emojiView.hide();
+                });
+
+                this.cancelEmojiButton.addEventListener("click", () => {
+                    this.confirmEmojiButton.lock();
+                    this.emojiView.hide();
+                });
+
+                this.emoteButton.addEventListener("click", () => {
+                    this.game.emote(this.game.me.id, this.game.currentEmoji);
+                });
+
+                this.selectEmojiButton.addEventListener("click", this.showEmoji.bind(this));
+                this.addEventListener("emojiSelected", this.game.emote.bind(this.game));
+
+                this.emojiView.hide();
+            }
         }
-        // ======= EMOJI ==========
+        // <<<<<<<<<< EMOJI <<<<<<<<<<
     }
 
     addEventListener(eventName, func) {
         this.eventHandlers[eventName].push(func);
     }
 
+    resize() {
+        const topValue = this.toolbar.offsetHeight,
+            height = `calc(100% - ${topValue}px)`;
+
+        this.guiView.style.top
+            = this.jitsiContainer.style.top
+            = this.game.frontBuffer.style.top
+            = topValue + "px";
+
+        this.guiView.style.height
+            = this.jitsiContainer.style.height
+            = this.game.frontBuffer.style.height
+            = height;
+    }
+
     showEmoji() {
-        this.emojiWindow.show();
+        this.emojiView.show();
     }
 
     previewEmoji(emoji) {
@@ -255,48 +289,25 @@ export class AppGui {
         this.confirmEmojiButton.unlock();
     }
 
-    showView(toggleGame, toggleJitsi, toggleMixViews) {
+    showView(toggleGame, toggleJitsi) {
         const showGame = this.gameVisible !== toggleGame,
-            showJitsi = this.jitsiVisible !== toggleJitsi,
-            mixViews = this.viewsCombined != toggleMixViews;
+            showJitsi = this.jitsiVisible !== toggleJitsi;
 
         this.gameVisible = showGame || !showJitsi && toggleJitsi;
         this.jitsiVisible = showJitsi || !showGame && toggleGame;
-        this.viewsCombined = mixViews;
 
-        this.showGameButton.innerHTML = (this.gameVisible ? "Hide" : "Show") + ` game (ALT+${this.showGameButton.accessKey.toUpperCase()})`;
-        this.showJitsiButton.innerHTML = (this.jitsiVisible ? "Hide" : "Show") + ` meeting (ALT+${this.showJitsiButton.accessKey.toUpperCase()})`;
-        this.mixViewsButton.innerHTML = (this.viewsCombined ? "Separate" : "Combine") + ` game/meeting (ALT+${this.mixViewsButton.accessKey.toUpperCase()})`;
+        this.game.frontBuffer.setOpen(this.gameVisible);
+        this.jitsiContainer.setOpen(this.jitsiVisible);
 
-        if (this.gameVisible != this.jitsiVisible) {
-            this.mixViewsButton.lock();
-        }
-        else {
-            this.mixViewsButton.unlock();
-        }
+        this.showGameButton.innerHTML = (this.gameVisible
+            ? "Hide"
+            : "Show")
+            + ` game (ALT+${this.showGameButton.accessKey.toUpperCase()})`;
 
-        const sepSize = this.separator.offsetHeight,
-            halfSize = `calc(50% - ${sepSize / 2}px)`,
-            fullSize = `calc(100% - ${sepSize}px)`,
-            containerSize = this.viewsCombined || !this.jitsiVisible || !this.gameVisible
-                ? fullSize
-                : halfSize;
-
-        this.game.frontBuffer.style.height = this.gameVisible ? containerSize : "0";
-        this.jitsiContainer.style.height = this.jitsiVisible ? containerSize : "0";
-
-        if (this.viewsCombined) {
-            this.appView.insertBefore(this.separator, this.jitsiContainer);
-            this.game.frontBuffer.style.position = "absolute";
-            this.game.frontBuffer.style.top = sepSize + "px";
-        }
-        else {
-            this.appView.insertBefore(this.separator, this.game.frontBuffer);
-            this.game.frontBuffer.style.position = "";
-            this.game.frontBuffer.style.top = "";
-        }
-
-        this.game.frontBuffer.resize();
+        this.showJitsiButton.innerHTML = (this.jitsiVisible
+            ? "Hide"
+            : "Show")
+            + ` meeting (ALT+${this.showJitsiButton.accessKey.toUpperCase()})`;
     }
 
     showLogin() {
@@ -308,9 +319,6 @@ export class AppGui {
         this.newRoomButton.unlock();
 
         this.appView.hide();
-        this.demoVideo.parentElement.show();
-        this.demoVideo.show();
-        this.demoVideo.play();
         this.loginView.show();
     }
 
@@ -383,8 +391,6 @@ export class AppGui {
         this.game.registerGameListeners(api);
         api.addEventListener("videoConferenceJoined", (evt) => {
             this.loginView.hide();
-            this.demoVideo.pause();
-            this.demoVideo.hide();
             this.demoVideo.parentElement.hide();
         });
 
