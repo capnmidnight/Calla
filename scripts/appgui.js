@@ -31,9 +31,14 @@ export class AppGui {
             if (this.optionsButton
                 && this.optionsView
                 && this.optionsConfirmButton) {
-                this.optionsButton.addEventListener("click", this.optionsView.show.bind(this.optionsView));
+                this.optionsButton.addEventListener("click", () => {
+                    this.optionsView.toggleOpen();
+                    this.optionsButton.innerHTML = (this.optionsView.isOpen()
+                        ? "Hide"
+                        : "Show")
+                        + ` options (ALT+${this.optionsButton.accessKey.toUpperCase()})`;
+                });
                 this.optionsConfirmButton.addEventListener("click", this.optionsView.hide.bind(this.optionsView));
-
                 this.optionsView.hide();
             }
 

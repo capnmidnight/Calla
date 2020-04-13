@@ -41,20 +41,17 @@
     <section id="appView">
         <div id="toolbar">
             <span>
-                <button type="button" id="showGame" accesskey="g">Hide game (ALT+G)</button>
-            </span>
-
-            <span>
-                <button type="button" id="emote">Emote (E) (@)</button>
+                <button type="button" id="emote" title="Emote">Emote (E) (@)</button>
                 <button type="button" id="selectEmoji" title="Select Emoji">⯆</button>
             </span>
 
             <span>
                 <label for="zoom">Zoom:</label>
-                <input type="number" id="zoom" value="1" min="0.1" max="8" step="0.1" style="width:4em" />
+                <input type="number" id="zoom" title="Change map zoom" value="1" min="0.1" max="8" step="0.1" style="width:4em" />
             </span>
 
-            <button type="button" id="showOptions">Show options</button>
+            <button type="button" id="showOptions" title="Show/hide options" accesskey="o">Show options (ALT+O)</button>
+            <button type="button" id="showGame" title="Show/hide game for access to Jitsi Meet options" accesskey="g">Hide game (ALT+G)</button>
         </div>
         <div id="jitsi"></div>
         <canvas id="frontBuffer"></canvas>
