@@ -20,29 +20,25 @@
     <section id="appView">
         <div id="toolbar">
             <span>
-                <button type="button" id="showJitsi" accesskey="m">Hide meeting (ALT+M)</button>
-                <button type="button" id="showGame" accesskey="g">Hide game (ALT+G)</button>
-            </span>
-
-            <span>
-                <button type="button" id="emote">Emote (E) (@)</button>
+                <button type="button" id="emote" title="Emote">Emote (E) (@)</button>
                 <button type="button" id="selectEmoji" title="Select Emoji">⯆</button>
             </span>
 
             <span>
                 <label for="zoom">Zoom:</label>
-                <input type="number" id="zoom" value="1" min="0.1" max="8" step="0.1" style="width:4em" />
+                <input type="number" id="zoom" title="Change map zoom" value="1" min="0.1" max="8" step="0.1" style="width:4em" />
             </span>
 
-            <button type="button" id="showOptions">Show options</button>
+            <button type="button" id="showOptions" title="Show/hide options" accesskey="o">Show options (ALT+O)</button>
+            <button type="button" id="showGame" title="Show/hide game for access to Jitsi Meet options" accesskey="g">Hide game (ALT+G)</button>
         </div>
-        <video id="jitsi" src="videos/demo.webm" style="min-width:100%;min-height:100%"></video>
+        <div id="jitsi"></div>
         <canvas id="frontBuffer"></canvas>
     </section>
 
     <section id="guiView">
 
-        <div id="emoji">
+        <div id="emoji" style="display:none">
             <h1 style="grid-row: 1; grid-column: 1/4">Emoji</h1>
 
             <div id="emojiList" style="grid-row: 2; grid-column: 1/4">
@@ -55,7 +51,7 @@
             <button type="button" class="cancel" style="grid-row: 3; grid-column: 3">Cancel</button>
         </div>
 
-        <div id="options">
+        <div id="options" style="display:none">
             <h1 style="grid-row:1; grid-column:1/4">Options</h1>
 
             <div style="grid-row:2; grid-column:1/4">
@@ -258,6 +254,13 @@ grid-template-rows: auto;">
 
         game.gui.appView.show();
         game.gui.loginView.hide();
+
+        const vid = document.createElement("video");
+        vid.src = "videos/demo.webm";
+        vid.style.height = "100%";
+        game.gui.jitsiContainer.appendChild(vid);
+        vid.loop = "loop";
+        vid.play();
 
         setTimeout(api.createTestUser, 1000);
 
