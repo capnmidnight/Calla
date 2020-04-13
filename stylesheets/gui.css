@@ -53,7 +53,6 @@ body > section {
     #toolbar > * {
         display:inline-flex;
         margin: 0 0.5em 0 0;
-        padding: 0;
     }
 
 #loginView form > * {
@@ -61,7 +60,7 @@ body > section {
     padding: .25em;
 }
 
-#login form > label {
+label {
     text-align: right;
     margin-right: 0.25em;
 }
