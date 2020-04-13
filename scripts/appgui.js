@@ -291,9 +291,9 @@ export class AppGui {
         }
 
         this.showGameButton.innerHTML = (this.game.frontBuffer.isOpen()
-            ? "Hide"
-            : "Show")
-            + ` game (ALT+${this.showGameButton.accessKey.toUpperCase()})`;
+            ? "Show"
+            : "Hide")
+            + ` meeting UI (ALT+${this.showGameButton.accessKey.toUpperCase()})`;
     }
 
     showLogin() {
