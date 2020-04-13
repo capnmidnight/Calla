@@ -88,29 +88,20 @@ export class AppGui {
 
         // >>>>>>>>>> VIEWS >>>>>>>>>>
         {
-            this.gameVisible = true;
-            this.jitsiVisible = true;
-            this.bufferResizeTimeout = null;
             this.appView = document.querySelector("#appView");
             this.guiView = document.querySelector("#guiView");
             this.jitsiContainer = document.querySelector("#jitsi");
             this.toolbar = document.querySelector("#toolbar");
-            this.showJitsiButton = document.querySelector("#showJitsi");
             this.showGameButton = document.querySelector("#showGame");
             if (this.appView
                 && this.guiView
                 && this.jitsiContainer
                 && this.toolbar
-                && this.showJitsiButton
                 && this.showGameButton) {
-
-                this.showGameButton.addEventListener("click", this.showView.bind(this, true, false));
-                this.showJitsiButton.addEventListener("click", this.showView.bind(this, false, true));
-
                 addEventListener("resize", () => this.resize.bind(this));
                 addEventListener("resize", this.game.frontBuffer.resize.bind(this.game.frontBuffer));
-
-                this.showView(false, false);
+                this.showGameButton.addEventListener("click", this.showView.bind(this, true));
+                this.showView(false);
             }
         }
         // <<<<<<<<<< VIEWS <<<<<<<<<<
@@ -289,25 +280,15 @@ export class AppGui {
         this.confirmEmojiButton.unlock();
     }
 
-    showView(toggleGame, toggleJitsi) {
-        const showGame = this.gameVisible !== toggleGame,
-            showJitsi = this.jitsiVisible !== toggleJitsi;
+    showView(toggleGame) {
+        if (toggleGame) {
+            this.game.frontBuffer.toggleOpen();
+        }
 
-        this.gameVisible = showGame || !showJitsi && toggleJitsi;
-        this.jitsiVisible = showJitsi || !showGame && toggleGame;
-
-        this.game.frontBuffer.setOpen(this.gameVisible);
-        this.jitsiContainer.setOpen(this.jitsiVisible);
-
-        this.showGameButton.innerHTML = (this.gameVisible
+        this.showGameButton.innerHTML = (this.game.frontBuffer.isOpen()
             ? "Hide"
             : "Show")
             + ` game (ALT+${this.showGameButton.accessKey.toUpperCase()})`;
-
-        this.showJitsiButton.innerHTML = (this.jitsiVisible
-            ? "Hide"
-            : "Show")
-            + ` meeting (ALT+${this.showJitsiButton.accessKey.toUpperCase()})`;
     }
 
     showLogin() {
