@@ -1,27 +1,45 @@
 ﻿export class TileSet {
-    constructor(tilesetName) {
-        this.tilesetName = tilesetName;
+    constructor(url) {
+        this.url = url;
         this.tileWidth = 0;
         this.tileHeight = 0;
         this.tilesPerRow = 0;
         this.image = new Image();
+        this.collision = {};
     }
 
     async load() {
-        const response = await fetch(`data/tilesets/${this.tilesetName}/index.json`),
-            data = await response.json(),
+        const response = await fetch(this.url),
+            tileset = await response.xml(),
             imageLoad = new Promise((resolve, reject) => {
                 this.image.addEventListener("load", (evt) => {
                     this.tilesPerRow = Math.floor(this.image.width / this.tileWidth);
                     resolve();
                 });
                 this.image.addEventListener("error", reject);
-            });
+            }),
+            image = tileset.querySelector("image"),
+            imageSource = image.getAttribute("source"),
+            imageURL = new URL(imageSource, this.url),
+            tiles = tileset.querySelectorAll("tile");
 
-        this.tileWidth = data.tileWidth;
-        this.tileHeight = data.tileHeight;
-        this.image.src = `data/tilesets/${this.tilesetName}/${data.file}`;
+        for (let tile of tiles) {
+            const id = 1 * tile.getAttribute("id"),
+                collid = tile.querySelector("properties > property[name='Collision']"),
+                value = collid.getAttribute("value");
+            this.collision[id] = value === "true";
+        }
+
+        this.name = tileset.getAttribute("name");
+        this.tileWidth = 1 * tileset.getAttribute("tilewidth");
+        this.tileHeight = 1 * tileset.getAttribute("tileheight");
+        this.tileCount = 1 * tileset.getAttribute("tilecount");
+        this.image.src = imageURL.href;
         await imageLoad;
+    }
+
+    isClear(tile) {
+        return !this.collision[tile - 1];
     }
 
     draw(g, tile, x, y) {

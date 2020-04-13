@@ -62,3 +62,11 @@ HTMLInputElement.prototype.addEventListener = function (evtName, func, bubbles) 
         oldAddEventListener.call(this, evtName, func, bubbles);
     }
 };
+
+Response.prototype.xml = async function () {
+    const text = await this.text(),
+        parser = new DOMParser(),
+        xml = parser.parseFromString(text, "text/xml");
+
+    return xml.documentElement;
+};

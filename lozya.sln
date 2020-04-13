@@ -24,8 +24,6 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "lozya", ".", "{B5927401-9E7
 		SlnRelativePath = "..\lozya\"
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tile Map Converter", "Tile Map Converter (C#)\Tile Map Converter.csproj", "{EB09F611-B38E-41F4-B8F0-AC8DBED46E43}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,10 +34,6 @@ Global
 		{B5927401-9E70-4C41-9D49-876BA7561BE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B5927401-9E70-4C41-9D49-876BA7561BE8}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{B5927401-9E70-4C41-9D49-876BA7561BE8}.Release|Any CPU.Build.0 = Debug|Any CPU
-		{EB09F611-B38E-41F4-B8F0-AC8DBED46E43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EB09F611-B38E-41F4-B8F0-AC8DBED46E43}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EB09F611-B38E-41F4-B8F0-AC8DBED46E43}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EB09F611-B38E-41F4-B8F0-AC8DBED46E43}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

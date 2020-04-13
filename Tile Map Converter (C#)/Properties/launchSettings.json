@@ -1,9 +1,0 @@
-{
-  "profiles": {
-    "Tile Map Converter": {
-      "commandName": "Project",
-      "commandLineArgs": "data\\tilemaps\\island.tmx data",
-      "workingDirectory": ".."
-    }
-  }
-}

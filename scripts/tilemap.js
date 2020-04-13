@@ -1,9 +1,10 @@
-﻿import { TileSet } from "./tileset.js";
+﻿import "./protos.js";
+import { TileSet } from "./tileset.js";
 
 // TODO: move map data to requestable files
 export class TileMap {
     constructor(tilemapName) {
-        this.tilemapName = tilemapName;
+        this.url = new URL(`data/tilemaps/${tilemapName}.tmx`, document.location);
         this.tileset = null;
         this.tileWidth = 0;
         this.tileHeight = 0;
@@ -17,16 +18,48 @@ export class TileMap {
     }
 
     async load() {
-        const response = await fetch(`data/tilemaps/${this.tilemapName}.json`),
-            data = await response.json();
-        this.tileset = new TileSet(data.tileset);
-        this.offsetX = data.offset.x;
-        this.offsetY = data.offset.y;
-        this.tiles = data.tiles;
-        this.layers = this.tiles.length;
-        this.height = this.tiles[0].length;
-        this.width = this.tiles[0][0].length;
-        this.collision = data.collision;
+        const response = await fetch(this.url.href),
+            map = await response.xml(),
+            width = 1 * map.getAttribute("width"),
+            height = 1 * map.getAttribute("height"),
+            tileWidth = 1 * map.getAttribute("tilewidth"),
+            tileHeight = 1 * map.getAttribute("tileheight"),
+            tileset = map.querySelector("tileset"),
+            tilesetSource = tileset.getAttribute("source"),
+            layers = map.querySelectorAll("layer > data");
+
+        this.layers = layers.length;
+        this.width = width;
+        this.height = height;
+        this.offsetX = -Math.floor(width / 2);
+        this.offsetY = -Math.floor(height / 2);
+        this.tileWidth = tileWidth;
+        this.tileHeight = tileHeight;
+
+        this.tiles = [];
+        for (let layer of layers) {
+            const tileIds = layer.innerHTML
+                    .replace(" ", "")
+                    .replace("\t", "")
+                    .replace("\n", "")
+                    .replace("\r", "")
+                    .split(","),
+                rows = [];
+            let row = [];
+            for (let tile of tileIds) {
+                row.push(tile);
+                if (row.length === width) {
+                    rows.push(row);
+                    row = [];
+                }
+            }
+            if (row.length > 0) {
+                rows.push(row);
+            }
+            this.tiles.push(rows);
+        }
+
+        this.tileset = new TileSet(new URL(tilesetSource, this.url));
         await this.tileset.load();
         this.tileWidth = this.tileset.tileWidth;
         this.tileHeight = this.tileset.tileHeight;
@@ -55,7 +88,7 @@ export class TileMap {
         y -= this.offsetY;
         return x < 0 || this.width <= x
             || y < 0 || this.height <= y
-            || this.collision[y][x] != 1;
+            || this.tileset.isClear(this.tiles[0][y][x]);
     }
 
     // Use Bresenham's line algorithm (with integer error)
