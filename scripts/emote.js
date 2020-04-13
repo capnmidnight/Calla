@@ -4,9 +4,10 @@ export class Emote {
     constructor(emoji, x, y) {
         this.emoji = emoji;
         this.x = x; this.y = y;
-        this.dx = Math.random() - 0.5; this.dy = -Math.random();
-        this.ax = Math.random() - 0.5; this.ay = Math.random();
+        this.dx = Math.random() - 0.5;
+        this.dy = -Math.random() * 0.5 - 0.5;
         this.life = 1;
+        this.width = -1;
     }
 
     isDead() {
@@ -15,8 +16,7 @@ export class Emote {
 
     update(dt) {
         this.life -= dt / EMOJI_LIFE;
-        this.ax *= 0.99; this.ay *= 0.99;
-        this.dx += this.ax * dt; this.dy += this.ay * dt;
+        this.dx *= 0.99; this.dy *= 0.99;
         this.x += this.dx * dt; this.y += this.dy * dt;
     }
 
@@ -35,12 +35,18 @@ export class Emote {
 
     drawEmote(g, map) {
         g.fillStyle = `rgba(0, 0, 0, ${this.life})`;
-        g.font = "12pt";
+        g.font = 2 * map.tileHeight + "px";
+
+        if (this.width === -1) {
+            const metrics = g.measureText(this.emoji.value);
+            this.width = metrics.width;
+        }
+
         g.fillText(
             this.emoji.value,
-            this.x * map.tileWidth,
+            this.x * map.tileWidth - this.width / 2,
             this.y * map.tileHeight,
-            map.tileWidth,
+            this.width,
             map.tileHeight);
     }
 }
