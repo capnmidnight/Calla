@@ -255,7 +255,7 @@ export class Game {
         api.addEventListener("participantJoined", this.addUser.bind(this));
         api.addEventListener("participantLeft", this.removeUser.bind(this));
         api.addEventListener("avatarChanged", this.setAvatar.bind(this));
-        api.addEventListener("endpointTextMessageReceived", this.jitsiClient.rxGameData);
+        api.addEventListener("endpointTextMessageReceived", this.jitsiClient.rxGameData.bind(this.jitsiClient));
         api.addEventListener("displayNameChange", this.changeUserName.bind(this));
         api.addEventListener("audioMuteStatusChanged", this.muteUser.bind(this));
     }
