@@ -1,5 +1,6 @@
-﻿import { clamp, project } from "./math.js";
-import { mutedSpeaker, videoCamera } from "./emoji.js";
+﻿import "./protos.js";
+import { clamp, project } from "./math.js";
+import { mutedSpeaker, videoCamera, people } from "./emoji.js";
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
     STACKED_USER_OFFSET_X = 5,
@@ -23,6 +24,8 @@ export class User extends EventTarget {
         this.distXToMe = 0;
         this.distYToMe = 0;
         this.isMe = isMe;
+        this.avatarEmoji = people.random().value;
+        this.avatarEmojiMetrics = null;
         this.avatarImage = null;
         this.avatarURL = null;
         this.stackUserCount = 1;
@@ -127,7 +130,11 @@ export class User extends EventTarget {
             }
 
             this.stackAvatarWidth = map.tileWidth - (this.stackUserCount - 1) * STACKED_USER_OFFSET_X;
+            const oldHeight = this.stackAvatarHeight;
             this.stackAvatarHeight = map.tileHeight - (this.stackUserCount - 1) * STACKED_USER_OFFSET_Y;
+            if (this.stackAvatarHeight != oldHeight) {
+                this.avatarEmojiMetrics = null;
+            }
             this.stackOffsetX = this.stackIndex * STACKED_USER_OFFSET_X;
             this.stackOffsetY = this.stackIndex * STACKED_USER_OFFSET_Y;
         }
@@ -171,29 +178,40 @@ export class User extends EventTarget {
         }
     }
 
+    isVisibleOnMap(g, map) {
+        if (!this.hasPosition) {
+            return false;
+        }
+
+        const x = this.x * map.tileWidth,
+            y = this.y * map.tileHeight,
+            t = g.getTransform(),
+            p = t.transformPoint({ x, y }),
+            visible = -map.tileWidth <= p.x
+                && p.x < g.canvas.width
+                && -map.tileHeight <= p.y
+                && p.y < g.canvas.height;
+
+        return visible;
+    }
+
     drawShadow(g, map, cameraZ) {
-        if (this.hasPosition) {
+        if (this.isVisibleOnMap(g, map)) {
             g.save();
             {
-                g.translate(this.tx * map.tileWidth + this.stackOffsetX, this.ty * map.tileHeight + this.stackOffsetY);
                 g.shadowColor = "rgba(0, 0, 0, 0.5)";
                 g.shadowOffsetX = 3 * cameraZ;
                 g.shadowOffsetY = 3 * cameraZ;
                 g.shadowBlur = 3 * cameraZ;
 
-                g.fillStyle = "black";
-                g.fillRect(
-                    (this.x - this.tx) * map.tileWidth,
-                    (this.y - this.ty) * map.tileHeight,
-                    this.stackAvatarWidth,
-                    this.stackAvatarHeight);
+                this.drawAvatar(g, map);
             }
             g.restore();
         }
     }
 
     drawAvatar(g, map) {
-        if (this.hasPosition) {
+        if (this.isVisibleOnMap(g, map)) {
             g.save();
             {
                 g.translate(
@@ -203,26 +221,28 @@ export class User extends EventTarget {
                 const x = (this.x - this.tx) * map.tileWidth,
                     y = (this.y - this.ty) * map.tileHeight;
 
-                if (!this.avatarImage) {
-                    g.fillStyle = this.isMe ? "red" : "blue";
-                    g.fillRect(
-                        x,
-                        y,
-                        this.stackAvatarWidth,
-                        this.stackAvatarHeight);
+                g.fillStyle = "black";
+                g.textBaseline = "top";
 
-                    g.strokeStyle = "grey";
-                    g.strokeRect(0, 0, this.stackAvatarWidth, this.stackAvatarHeight);
+                if (this.avatarImage) {
+                    g.drawImage(this.avatarImage, x, y, this.stackAvatarWidth, this.stackAvatarHeight);
                 }
                 else {
-                    g.drawImage(this.avatarImage, x, y, this.stackAvatarWidth, this.stackAvatarHeight);
+                    g.font = 0.9 * this.stackAvatarHeight + "px sans-serif";
+                    if (!this.avatarEmojiMetrics) {
+                        this.avatarEmojiMetrics = g.measureText(this.avatarEmoji);
+                    }
+                    g.fillText(
+                        this.avatarEmoji,
+                        x + (this.avatarEmojiMetrics.width - this.stackAvatarWidth) / 2 + this.avatarEmojiMetrics.actualBoundingBoxLeft,
+                        y + this.avatarEmojiMetrics.actualBoundingBoxAscent);
+                    g.strokeStyle = "grey";
+                    g.strokeRect(0, 0, this.stackAvatarWidth, this.stackAvatarHeight);
                 }
 
                 if (this.audioMuted || !this.videoMuted) {
                     const height = this.stackAvatarHeight / 2;
-                    g.fillStyle = "black";
                     g.font = height + "px sans-serif";
-                    g.textBaseline = "top";
 
                     if (this.audioMuted) {
                         const metrics = g.measureText(mutedSpeaker.value);
@@ -240,6 +260,25 @@ export class User extends EventTarget {
                             y + height);
                     }
                 }
+            }
+            g.restore();
+        }
+    }
+
+    drawName(g, map, cameraZ, fontSize) {
+        if (this.isVisibleOnMap(g, map)) {
+            g.save();
+            {
+                g.translate(this.tx * map.tileWidth + this.stackOffsetX, this.ty * map.tileHeight + this.stackOffsetY);
+                g.shadowColor = "black";
+                g.shadowOffsetX = 3 * cameraZ;
+                g.shadowOffsetY = 3 * cameraZ;
+                g.shadowBlur = 3 * cameraZ;
+
+                g.fillStyle = "white";
+                g.textBaseline = "bottom";
+                g.font = `${fontSize}pt sans-serif`;
+                g.fillText(this.displayName, 0, 0);
             }
             g.restore();
         }
@@ -280,25 +319,6 @@ export class User extends EventTarget {
                     }
                 }
             }
-        }
-    }
-
-    drawName(g, map, cameraZ, fontSize) {
-        if (this.hasPosition) {
-            g.save();
-            {
-                g.translate(this.tx * map.tileWidth + this.stackOffsetX, this.ty * map.tileHeight + this.stackOffsetY);
-                g.shadowColor = "black";
-                g.shadowOffsetX = 3 * cameraZ;
-                g.shadowOffsetY = 3 * cameraZ;
-                g.shadowBlur = 3 * cameraZ;
-
-                g.fillStyle = "white";
-                g.textBaseline = "bottom";
-                g.font = `${fontSize}pt sans-serif`;
-                g.fillText(this.displayName, 0, 0);
-            }
-            g.restore();
         }
     }
 }

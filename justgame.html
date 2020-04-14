@@ -273,7 +273,7 @@ grid-template-rows: auto;">
                     apiEvents[evt].push(func);
                 },
                 createTestUser: function () {
-                    if (game.userList.length < 15) {
+                    if (game.userList.length < 25) {
                         const evts = apiEvents.participantJoined;
                         for (let func of evts) {
                             func({

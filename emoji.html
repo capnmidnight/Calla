@@ -4,12 +4,12 @@
     <meta charset="utf-8" />
     <title></title>
     <script type="module">
-        import { bestIcons } from "./scripts/emoji.js";
+        import { allIcons } from "./scripts/emoji.js";
 
-        for (let key of Object.keys(bestIcons)) {
+        for (let key of Object.keys(allIcons)) {
             const header = document.createElement("h1"),
                 container = document.createElement("div"),
-                group = bestIcons[key];
+                group = allIcons[key];
 
             header.innerHTML = key;
             container.style.width = "100%";
