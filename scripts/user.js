@@ -204,7 +204,7 @@ export class User extends EventTarget {
                 g.shadowOffsetY = 3 * cameraZ;
                 g.shadowBlur = 3 * cameraZ;
 
-                this.drawAvatar(g, map);
+                this.innerDraw(g, map, false);
             }
             g.restore();
         }
@@ -214,54 +214,44 @@ export class User extends EventTarget {
         if (this.isVisibleOnMap(g, map)) {
             g.save();
             {
-                g.translate(
-                    this.tx * map.tileWidth + this.stackOffsetX,
-                    this.ty * map.tileHeight + this.stackOffsetY);
-
-                const x = (this.x - this.tx) * map.tileWidth,
-                    y = (this.y - this.ty) * map.tileHeight;
-
-                g.fillStyle = "black";
-                g.textBaseline = "top";
-
-                if (this.avatarImage) {
-                    g.drawImage(this.avatarImage, x, y, this.stackAvatarWidth, this.stackAvatarHeight);
-                }
-                else {
-                    g.font = 0.9 * this.stackAvatarHeight + "px sans-serif";
-                    if (!this.avatarEmojiMetrics) {
-                        this.avatarEmojiMetrics = g.measureText(this.avatarEmoji);
-                    }
-                    g.fillText(
-                        this.avatarEmoji,
-                        x + (this.avatarEmojiMetrics.width - this.stackAvatarWidth) / 2 + this.avatarEmojiMetrics.actualBoundingBoxLeft,
-                        y + this.avatarEmojiMetrics.actualBoundingBoxAscent);
-                    g.strokeStyle = "grey";
-                    g.strokeRect(0, 0, this.stackAvatarWidth, this.stackAvatarHeight);
-                }
-
-                if (this.audioMuted || !this.videoMuted) {
-                    const height = this.stackAvatarHeight / 2;
-                    g.font = height + "px sans-serif";
-
-                    if (this.audioMuted) {
-                        const metrics = g.measureText(mutedSpeaker.value);
-                        g.fillText(
-                            mutedSpeaker.value,
-                            x + this.stackAvatarWidth - metrics.width,
-                            y);
-                    }
-
-                    if (!this.videoMuted) {
-                        const metrics = g.measureText(videoCamera.value);
-                        g.fillText(
-                            videoCamera.value,
-                            x + this.stackAvatarWidth - metrics.width,
-                            y + height);
-                    }
-                }
+                this.innerDraw(g, map, true);
             }
             g.restore();
+        }
+    }
+
+    innerDraw(g, map, drawImage) {
+        g.translate(this.tx * map.tileWidth + this.stackOffsetX, this.ty * map.tileHeight + this.stackOffsetY);
+        const x = (this.x - this.tx) * map.tileWidth, y = (this.y - this.ty) * map.tileHeight;
+        g.fillStyle = "black";
+        g.textBaseline = "top";
+        if (!this.avatarImage) {
+            g.font = 0.9 * this.stackAvatarHeight + "px sans-serif";
+            if (!this.avatarEmojiMetrics) {
+                this.avatarEmojiMetrics = g.measureText(this.avatarEmoji);
+            }
+            g.fillText(this.avatarEmoji, x + (this.avatarEmojiMetrics.width - this.stackAvatarWidth) / 2 + this.avatarEmojiMetrics.actualBoundingBoxLeft, y + this.avatarEmojiMetrics.actualBoundingBoxAscent);
+            g.strokeStyle = "grey";
+            g.strokeRect(0, 0, this.stackAvatarWidth, this.stackAvatarHeight);
+        }
+        else if (drawImage) {
+            g.drawImage(this.avatarImage, x, y, this.stackAvatarWidth, this.stackAvatarHeight);
+        }
+        else {
+            g.fillRect(x, y, this.stackAvatarWidth, this.stackAvatarHeight);
+        }
+
+        if (this.audioMuted || !this.videoMuted) {
+            const height = this.stackAvatarHeight / 2;
+            g.font = height + "px sans-serif";
+            if (this.audioMuted) {
+                const metrics = g.measureText(mutedSpeaker.value);
+                g.fillText(mutedSpeaker.value, x + this.stackAvatarWidth - metrics.width, y);
+            }
+            if (!this.videoMuted) {
+                const metrics = g.measureText(videoCamera.value);
+                g.fillText(videoCamera.value, x + this.stackAvatarWidth - metrics.width, y + height);
+            }
         }
     }
 
