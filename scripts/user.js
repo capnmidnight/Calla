@@ -6,45 +6,6 @@ const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
     STACKED_USER_OFFSET_Y = 5,
     eventNames = ["moveTo", "userPositionNeeded", "changeUserVolume"];
 
-class UserMoveEvent extends Event {
-    constructor(participantID) {
-        super("moveTo");
-        this.participantID = participantID;
-        this.x = 0;
-        this.y = 0;
-    }
-
-    set(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-}
-
-class UserPositionNeededEvent extends Event {
-    constructor(participantID) {
-        super("userPositionNeeded");
-        this.participantID = participantID;
-    }
-}
-
-class UserVolumeChangedEvent extends Event {
-    constructor(participantID) {
-        super("changeUserVolume");
-        this.user = participantID;
-        this.x = 0;
-        this.y = 0;
-        this.volume = 0;
-        this.panning = 0;
-    }
-
-    set(x, y, volume, panning) {
-        this.x = x;
-        this.y = y;
-        this.volume = volume;
-        this.panning = panning;
-    }
-}
-
 export class User extends EventTarget {
     constructor(id, displayName, isMe) {
         super();
@@ -314,5 +275,45 @@ export class User extends EventTarget {
             }
             g.restore();
         }
+    }
+}
+
+
+class UserMoveEvent extends Event {
+    constructor(participantID) {
+        super("moveTo");
+        this.participantID = participantID;
+        this.x = 0;
+        this.y = 0;
+    }
+
+    set(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+
+class UserPositionNeededEvent extends Event {
+    constructor(participantID) {
+        super("userPositionNeeded");
+        this.participantID = participantID;
+    }
+}
+
+class UserVolumeChangedEvent extends Event {
+    constructor(participantID) {
+        super("changeUserVolume");
+        this.user = participantID;
+        this.x = 0;
+        this.y = 0;
+        this.volume = 0;
+        this.panning = 0;
+    }
+
+    set(x, y, volume, panning) {
+        this.x = x;
+        this.y = y;
+        this.volume = volume;
+        this.panning = panning;
     }
 }
