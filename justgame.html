@@ -177,6 +177,7 @@ grid-template-rows: auto;">
     </section>
 
     <script type="module">
+        import "./scripts/protos.js";
         import { Game } from "./scripts/game.js";
         import { bestIcons } from "./scripts/emoji.js";
 
@@ -193,10 +194,8 @@ grid-template-rows: auto;">
 
             if (Math.random() <= 0.1) {
                 const groups = Object.values(bestIcons),
-                    groupIdx = Math.floor(Math.random() * groups.length),
-                    group = groups[groupIdx],
-                    emojiIdx = Math.floor(Math.random() * group.length),
-                    emoji = group[emojiIdx],
+                    group = groups.random(),
+                    emoji = group.random(),
                     evt = { participantID: id, data: emoji };
 
                 for (let func of jitsiEvents.emote) {
