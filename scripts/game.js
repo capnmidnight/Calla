@@ -340,16 +340,14 @@ export class Game {
             setTimeout(this.muteUserAudio.bind(this, evt), 1000);
         }
         else {
-            this.me.muted = evt.muted;
+            this.me.audioMuted = evt.muted;
             evt.participantID = this.me.id;
             for (let user of this.userList) {
                 if (!user.isMe) {
                     this.jitsiClient.txGameData(user.id, "audioMuteStatusChanged", evt);
                 }
             }
-        }
 
-        if (!!this.me && evt.participantID === this.me.id) {
             this.gui.setUserAudioMuted(evt.muted);
         }
     }
@@ -369,16 +367,14 @@ export class Game {
             setTimeout(this.muteUserVideo.bind(this, evt), 1000);
         }
         else {
-            this.me.muted = evt.muted;
+            this.me.videoMuted = evt.muted;
             evt.participantID = this.me.id;
             for (let user of this.userList) {
                 if (!user.isMe) {
                     this.jitsiClient.txGameData(user.id, "videoMuteStatusChanged", evt);
                 }
             }
-        }
 
-        if (!!this.me && evt.participantID === this.me.id) {
             this.gui.setUserVideoMuted(evt.muted);
         }
     }
@@ -451,12 +447,12 @@ export class Game {
 
         this.jitsiClient.isAudioMuted()
             .then((muted) => {
-                this.muteUserAudio({ muted: muted });
+                this.muteUserAudio({ participantID: this.me.id, data: { muted: muted } });
             });
 
         this.jitsiClient.isVideoMuted()
             .then((muted) => {
-                this.muteUserVideo({ muted: muted });
+                this.muteUserVideo({ participantID: this.me.id, data: { muted: muted } });
             });
     }
 

@@ -307,19 +307,15 @@ export class AppGui extends EventTarget {
     }
 
     showEmoji() {
-        if (!!this.optionsView
-            && !this.optionsView.isOpen()
-            && !!this.loginView
-            && !this.loginView.isOpen()) {
+        if ((!this.optionsView || !this.optionsView.isOpen())
+            && (!this.loginView || !this.loginView.isOpen())) {
             this.emojiView.show();
         }
     }
 
     showOptions(toggleOptions) {
-        if (!!this.emojiView
-            && !this.emojiView.isOpen()
-            && !!this.emojiView
-            && !this.emojiView.isOpen()) {
+        if ((!this.emojiView || !this.emojiView.isOpen())
+            && (!this.emojiView || !this.emojiView.isOpen())) {
             this.optionsView.setOpenWithLabel(
                 toggleOptions !== this.optionsView.isOpen(),
                 this.optionsButton,
@@ -342,7 +338,6 @@ export class AppGui extends EventTarget {
     }
 
     showLogin() {
-        this.connectButton.innerHTML = "Connect";
         this.connectButton.unlock();
         this.roomNameInput.unlock();
         this.userNameInput.unlock();
@@ -351,6 +346,7 @@ export class AppGui extends EventTarget {
 
         this.appView.hide();
         this.loginView.show();
+        this.connectButton.innerHTML = "Connect";
     }
 
     login() {

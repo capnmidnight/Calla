@@ -221,8 +221,9 @@ export class User extends EventTarget {
     }
 
     innerDraw(g, map, drawImage) {
-        g.translate(this.tx * map.tileWidth + this.stackOffsetX, this.ty * map.tileHeight + this.stackOffsetY);
-        const x = (this.x - this.tx) * map.tileWidth, y = (this.y - this.ty) * map.tileHeight;
+        g.translate(
+            this.x * map.tileWidth + this.stackOffsetX,
+            this.y * map.tileHeight + this.stackOffsetY);
         g.fillStyle = "black";
         g.textBaseline = "top";
         if (!this.avatarImage) {
@@ -230,15 +231,31 @@ export class User extends EventTarget {
             if (!this.avatarEmojiMetrics) {
                 this.avatarEmojiMetrics = g.measureText(this.avatarEmoji);
             }
-            g.fillText(this.avatarEmoji, x + (this.avatarEmojiMetrics.width - this.stackAvatarWidth) / 2 + this.avatarEmojiMetrics.actualBoundingBoxLeft, y + this.avatarEmojiMetrics.actualBoundingBoxAscent);
-            g.strokeStyle = "grey";
-            g.strokeRect(0, 0, this.stackAvatarWidth, this.stackAvatarHeight);
+            g.fillText(
+                this.avatarEmoji,
+                (this.avatarEmojiMetrics.width - this.stackAvatarWidth) / 2 + this.avatarEmojiMetrics.actualBoundingBoxLeft,
+                this.avatarEmojiMetrics.actualBoundingBoxAscent);
+
+            if (this.isMe) {
+                g.strokeStyle = "green";
+                g.strokeRect(
+                    0, 0,
+                    this.stackAvatarWidth,
+                    this.stackAvatarHeight);
+            }
         }
         else if (drawImage) {
-            g.drawImage(this.avatarImage, x, y, this.stackAvatarWidth, this.stackAvatarHeight);
+            g.drawImage(
+                this.avatarImage,
+                0, 0,
+                this.stackAvatarWidth,
+                this.stackAvatarHeight);
         }
         else {
-            g.fillRect(x, y, this.stackAvatarWidth, this.stackAvatarHeight);
+            g.fillRect(
+                0, 0,
+                this.stackAvatarWidth,
+                this.stackAvatarHeight);
         }
 
         if (this.audioMuted || !this.videoMuted) {
@@ -246,11 +263,17 @@ export class User extends EventTarget {
             g.font = height + "px sans-serif";
             if (this.audioMuted) {
                 const metrics = g.measureText(mutedSpeaker.value);
-                g.fillText(mutedSpeaker.value, x + this.stackAvatarWidth - metrics.width, y);
+                g.fillText(
+                    mutedSpeaker.value,
+                    this.stackAvatarWidth - metrics.width,
+                    0);
             }
             if (!this.videoMuted) {
                 const metrics = g.measureText(videoCamera.value);
-                g.fillText(videoCamera.value, x + this.stackAvatarWidth - metrics.width, y + height);
+                g.fillText(
+                    videoCamera.value,
+                    this.stackAvatarWidth - metrics.width,
+                    height);
             }
         }
     }
@@ -259,7 +282,9 @@ export class User extends EventTarget {
         if (this.isVisibleOnMap(g, map)) {
             g.save();
             {
-                g.translate(this.tx * map.tileWidth + this.stackOffsetX, this.ty * map.tileHeight + this.stackOffsetY);
+                g.translate(
+                    this.x * map.tileWidth + this.stackOffsetX,
+                    this.y * map.tileHeight + this.stackOffsetY);
                 g.shadowColor = "black";
                 g.shadowOffsetX = 3 * cameraZ;
                 g.shadowOffsetY = 3 * cameraZ;
@@ -267,7 +292,7 @@ export class User extends EventTarget {
 
                 g.fillStyle = "white";
                 g.textBaseline = "bottom";
-                g.font = `${fontSize}pt sans-serif`;
+                g.font = `${fontSize * devicePixelRatio}pt sans-serif`;
                 g.fillText(this.displayName, 0, 0);
             }
             g.restore();
