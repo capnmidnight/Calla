@@ -218,8 +218,8 @@ export class AppGui extends EventTarget {
                         const a = document.createElement("button");
                         a.type = "button";
                         a.addEventListener("click", (evt) => {
-                            selectedEmoji = evt;
-                            emojiPreview.innerHTML = `${evt.value} - ${evt.desc}`;
+                            selectedEmoji = icon;
+                            emojiPreview.innerHTML = `${icon.value} - ${icon.desc}`;
                             confirmEmojiButton.unlock();
                         });
                         a.title = icon.desc;

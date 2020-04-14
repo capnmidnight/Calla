@@ -83,7 +83,8 @@ label {
     overflow-y: scroll;
 }
 
-#emoji p > button {
+#emojiList > p > button {
+    font-size: 200%;
     border: none;
     background-color: transparent;
 }

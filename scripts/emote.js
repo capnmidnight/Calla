@@ -35,8 +35,7 @@ export class Emote {
 
     drawEmote(g, map) {
         g.fillStyle = `rgba(0, 0, 0, ${this.life})`;
-        g.font = 2 * map.tileHeight + "px";
-
+        g.font = map.tileHeight / 2 + "px sans-serif";
         if (this.width === -1) {
             const metrics = g.measureText(this.emoji.value);
             this.width = metrics.width;
@@ -45,8 +44,6 @@ export class Emote {
         g.fillText(
             this.emoji.value,
             this.x * map.tileWidth - this.width / 2,
-            this.y * map.tileHeight,
-            this.width,
-            map.tileHeight);
+            this.y * map.tileHeight);
     }
 }
