@@ -296,7 +296,12 @@ export class AppGui extends EventTarget {
     }
 
     showEmoji() {
-        this.emojiView.show();
+        if (!!this.optionsView
+            && !this.optionsView.isOpen()
+            && !!this.loginView
+            && !this.loginView.isOpen()) {
+            this.emojiView.show();
+        }
     }
 
     showOptions(toggleOptions) {
