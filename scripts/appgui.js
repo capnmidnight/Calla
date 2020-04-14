@@ -243,7 +243,7 @@ export class AppGui extends EventTarget {
 
                 confirmEmojiButton.addEventListener("click", () => {
                     const idx = previousEmoji.indexOf(selectedEmoji);
-                    emoteButton.innerHTML = `Emote (E) ${selectedEmoji.value}`;
+                    emoteButton.innerHTML = `Emote <kbd>(E)</kbd> ${selectedEmoji.value}`;
                     if (idx === -1) {
                         previousEmoji.push(selectedEmoji);
                         recentEmoji.innerHTML = "";
@@ -253,6 +253,8 @@ export class AppGui extends EventTarget {
                     this.emojiView.hide();
                     this.game.emote(this.game.me.id, selectedEmoji);
                 });
+
+                emoteButton.innerHTML = `Emote <kbd>(E)</kbd> N/A`;
 
                 cancelEmojiButton.addEventListener("click", () => {
                     confirmEmojiButton.lock();
