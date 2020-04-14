@@ -1,5 +1,5 @@
 ﻿import { clamp, project } from "./math.js";
-import { mutedSpeaker } from "./emoji.js";
+import { mutedSpeaker, videoCamera } from "./emoji.js";
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
     STACKED_USER_OFFSET_X = 5,
@@ -12,7 +12,8 @@ export class User extends EventTarget {
 
         this.id = id;
         this.displayName = displayName || id;
-        this.muted = false;
+        this.audioMuted = false;
+        this.videoMuted = true;
         this.x = 0; this.y = 0;
         this.sx = 0; this.sy = 0;
         this.tx = 0; this.ty = 0;
@@ -22,7 +23,6 @@ export class User extends EventTarget {
         this.distXToMe = 0;
         this.distYToMe = 0;
         this.isMe = isMe;
-        this.image = null;
         this.avatarImage = null;
         this.avatarURL = null;
         this.stackUserCount = 1;
@@ -218,15 +218,27 @@ export class User extends EventTarget {
                     g.drawImage(this.avatarImage, x, y, this.stackAvatarWidth, this.stackAvatarHeight);
                 }
 
-                if (this.muted) {
+                if (this.audioMuted || !this.videoMuted) {
+                    const height = this.stackAvatarHeight / 2;
                     g.fillStyle = "black";
-                    g.font = this.stackAvatarHeight / 2 + "px sans-serif";
+                    g.font = height + "px sans-serif";
                     g.textBaseline = "top";
-                    const metrics = g.measureText(mutedSpeaker.value);
-                    g.fillText(
-                        mutedSpeaker.value,
-                        x + this.stackAvatarWidth - metrics.width,
-                        y);
+
+                    if (this.audioMuted) {
+                        const metrics = g.measureText(mutedSpeaker.value);
+                        g.fillText(
+                            mutedSpeaker.value,
+                            x + this.stackAvatarWidth - metrics.width,
+                            y);
+                    }
+
+                    if (!this.videoMuted) {
+                        const metrics = g.measureText(videoCamera.value);
+                        g.fillText(
+                            videoCamera.value,
+                            x + this.stackAvatarWidth - metrics.width,
+                            y + height);
+                    }
                 }
             }
             g.restore();

@@ -1,4 +1,5 @@
 ﻿export const mutedSpeaker = { value: "\u{1F507}", desc: "Muted Speaker" };
+export const videoCamera = { value: "\u{1F4F9}", desc: "Video Camera" };
 
 export const allIcons = {
     faces: [
@@ -1619,7 +1620,7 @@ export const allIcons = {
         { value: "\u{1F3A7}", desc: "Headphone" },
         { value: "\u{1F4F7}", desc: "Camera" },
         { value: "\u{1F4F8}", desc: "Camera with Flash" },
-        { value: "\u{1F4F9}", desc: "Video Camera" },
+        videoCamera,
         { value: "\u{1F4F1}", desc: "Mobile Phone" },
         { value: "\u{1F4F4}", desc: "Mobile Phone Off" },
         { value: "\u{1F4F2}", desc: "Mobile Phone with Arrow" },

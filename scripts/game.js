@@ -238,7 +238,8 @@ export class Game {
         this.jitsiClient.addEventListener("userInitResponse", (evt) => {
             this.jitsiClient.txGameData(evt.participantID, "moveTo", { x: this.me.x, y: this.me.y });
         });
-        this.jitsiClient.addEventListener("audioMuteStatusChanged", this.muteUser.bind(this));
+        this.jitsiClient.addEventListener("audioMuteStatusChanged", this.muteUserAudio.bind(this));
+        this.jitsiClient.addEventListener("videoMuteStatusChanged", this.muteUserVideo.bind(this));
 
         this.gui = new AppGui(this);
     }
@@ -291,7 +292,8 @@ export class Game {
         api.addEventListener("avatarChanged", this.setAvatar.bind(this));
         api.addEventListener("endpointTextMessageReceived", this.jitsiClient.rxGameData.bind(this.jitsiClient));
         api.addEventListener("displayNameChange", this.changeUserName.bind(this));
-        api.addEventListener("audioMuteStatusChanged", this.muteUser.bind(this));
+        api.addEventListener("audioMuteStatusChanged", this.muteUserAudio.bind(this));
+        api.addEventListener("videoMuteStatusChanged", this.muteUserVideo.bind(this));
     }
 
     addUser(evt) {
@@ -323,15 +325,19 @@ export class Game {
         }
     }
 
-    muteUser(evt) {
+    muteUserAudio(evt) {
         if (evt.participantID) {
             const user = this.userLookup[evt.participantID];
             if (!!user) {
-                user.muted = evt.data.muted;
+                user.audioMuted = evt.data.muted;
+            }
+            else {
+                console.warn("NO USER", evt);
             }
         }
         else if (!this.me) {
-            setTimeout(this.muteUser.bind(this, evt), 1000);
+            console.warn("NO ME", evt);
+            setTimeout(this.muteUserAudio.bind(this, evt), 1000);
         }
         else {
             this.me.muted = evt.muted;
@@ -343,8 +349,37 @@ export class Game {
             }
         }
 
-        if (evt.participantID === this.me.id) {
+        if (!!this.me && evt.participantID === this.me.id) {
             this.gui.setUserAudioMuted(evt.muted);
+        }
+    }
+
+    muteUserVideo(evt) {
+        if (evt.participantID) {
+            const user = this.userLookup[evt.participantID];
+            if (!!user) {
+                user.videoMuted = evt.data.muted;
+            }
+            else {
+                console.warn("NO USER", evt);
+            }
+        }
+        else if (!this.me) {
+            console.warn("NO ME", evt);
+            setTimeout(this.muteUserVideo.bind(this, evt), 1000);
+        }
+        else {
+            this.me.muted = evt.muted;
+            evt.participantID = this.me.id;
+            for (let user of this.userList) {
+                if (!user.isMe) {
+                    this.jitsiClient.txGameData(user.id, "videoMuteStatusChanged", evt);
+                }
+            }
+        }
+
+        if (!!this.me && evt.participantID === this.me.id) {
+            this.gui.setUserVideoMuted(evt.muted);
         }
     }
 
@@ -416,7 +451,12 @@ export class Game {
 
         this.jitsiClient.isAudioMuted()
             .then((muted) => {
-                this.muteUser({ muted: muted });
+                this.muteUserAudio({ muted: muted });
+            });
+
+        this.jitsiClient.isVideoMuted()
+            .then((muted) => {
+                this.muteUserVideo({ muted: muted });
             });
     }
 

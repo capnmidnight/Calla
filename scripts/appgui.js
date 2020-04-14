@@ -100,6 +100,13 @@ export class AppGui extends EventTarget {
 
             // >>>>>>>>>> VIDEO >>>>>>>>>>
             {
+                this.muteVideoButton = document.querySelector("#muteVideo");
+                if (this.muteVideoButton) {
+                    this.muteVideoButton.addEventListener("click", (evt) => {
+                        this.game.jitsiClient.toggleVideo();
+                    });
+                }
+                this.setUserVideoMuted(false);
             }
             // <<<<<<<<<< VIDEO <<<<<<<<<<
         }
@@ -278,6 +285,10 @@ export class AppGui extends EventTarget {
 
     setUserAudioMuted(muted) {
         this.muteAudioButton.updateLabel(muted, "Unmute", "Mute", " audio");
+    }
+
+    setUserVideoMuted(muted) {
+        this.muteVideoButton.updateLabel(muted, "Enable", "Disable", " video");
     }
 
     resize() {

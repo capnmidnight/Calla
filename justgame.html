@@ -207,13 +207,15 @@ grid-template-rows: auto;">
             setTimeout(spawn.bind(null, id), 1000 * (1 + Math.random()));
         }
 
-        let audioMuted = false;
+        let audioMuted = false,
+            videoMuted = true;
 
         const jitsiEvents = {
             moveTo: [],
             emote: [],
             userInitResponse: [],
-            audioMuteStatusChanged: []
+            audioMuteStatusChanged: [],
+            videoMuteStatusChanged: []
         },
             jitsiClient = {
                 addEventListener: function (evt, func) {
@@ -237,8 +239,18 @@ grid-template-rows: auto;">
                         func(evt);
                     }
                 },
+                toggleVideo: function () {
+                    videoMuted = !videoMuted;
+                    const evt = { participantID: game.me.id, data: { muted: videoMuted } };
+                    for (let func of apiEvents.videoMuteStatusChanged) {
+                        func(evt);
+                    }
+                },
                 isAudioMuted: function () {
                     return Promise.resolve(audioMuted);
+                },
+                isVideoMuted: function () {
+                    return Promise.resolve(videoMuted);
                 },
                 setAvatar: function (url) {
                     for (let func of apiEvents.avatarChanged) {
@@ -254,7 +266,8 @@ grid-template-rows: auto;">
                 avatarChanged: [],
                 endpointTextMessageReceived: [],
                 displayNameChange: [],
-                audioMuteStatusChanged: []
+                audioMuteStatusChanged: [],
+                videoMuteStatusChanged: []
             },
             api = {
                 addEventListener: function (evt, func) {
@@ -280,7 +293,7 @@ grid-template-rows: auto;">
             id: "me",
             roomName: "default",
             displayName: "Just Rendering🤪",
-            avatarURL: "https://secure.gravatar.com/avatar/2d598f70b2bd1d828a195ced8abd7e9e"
+            avatarURL: null
         });
 
         game.gui.appView.show();

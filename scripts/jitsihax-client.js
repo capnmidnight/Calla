@@ -1,7 +1,7 @@
 ﻿
 // helps us filter out data channel messages that don't belong to us
 const LOZYA_FINGERPRINT = "lozya",
-    eventNames = ["moveTo", "emote", "userInitResponse", "audioMuteStatusChanged"];
+    eventNames = ["moveTo", "emote", "userInitResponse", "audioMuteStatusChanged", "videoMuteStatusChanged"];
 
 class JitsiClientEvent extends Event {
     constructor(participantID, data) {
@@ -31,12 +31,20 @@ class JitsiClient extends EventTarget {
         this.api.executeCommand("toggleAudio");
     }
 
+    toggleVideo() {
+        this.api.executeCommand("toggleVideo");
+    }
+
     setAvatar(url) {
         this.api.executeCommand("avatarUrl", url);
     }
 
     isAudioMuted() {
         return this.api.isAudioMuted();
+    }
+
+    isVideoMuted() {
+        return this.api.isVideoMuted();
     }
 
     /// Add a listener for Lozya events that come through the Jitsi Meet data channel.
