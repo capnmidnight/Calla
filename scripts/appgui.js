@@ -369,10 +369,7 @@ export class AppGui extends EventTarget {
         });
         api.executeCommand("displayName", userName);
         this.game.registerGameListeners(api);
-        api.addEventListener("videoConferenceJoined", (evt) => {
-            this.loginView.hide();
-            this.demoVideo.parentElement.hide();
-        });
+        api.addEventListener("videoConferenceJoined", this.loginView.hide.bind(this.loginView));
 
         addEventListener("unload", () => api.dispose());
     }

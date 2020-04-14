@@ -2408,26 +2408,3 @@ export const bestIcons = {
         { value: "\u{267B}\u{FE0F}", desc: "Recycling Symbol" },
     ],
 };
-
-export function person(icon, skin, sex, hair) {
-    let value = icon.value;
-
-    if (skin) {
-        value += skin.value;
-    }
-
-    if (sex) {
-        value += sex.value;
-    }
-
-    if (hair) {
-        value += hair.value;
-    }
-
-    return value;
-}
-
-export class Emoji {
-    constructor() {
-    }
-}
