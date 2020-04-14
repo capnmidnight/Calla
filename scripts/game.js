@@ -368,9 +368,16 @@ export class Game {
         //  id: string, // the id of the participant that changed his avatar.
         //  avatarURL: string // the new avatar URL.
         //}
-        const user = this.userLookup[evt.id];
-        if (!!user) {
-            user.setAvatar(evt.avatarURL);
+        if (!!evt) {
+            const user = this.userLookup[evt.id];
+            if (!!user) {
+                user.setAvatar(evt.avatarURL);
+            }
+
+            if (!!this.me
+                && evt.id === this.me.id) {
+                this.gui.avatarURLInput.value = evt.avatarURL;
+            }
         }
     }
 
@@ -384,7 +391,8 @@ export class Game {
 
         this.currentRoomName = evt.roomName;
         this.me = new User(evt.id, evt.displayName, true);
-        this.me.setAvatar(evt.avatarURL);
+        this.userList.push(this.me);
+        this.userLookup[this.me.id] = this.me;
 
         this.me.addEventListener("changeUserVolume", this.jitsiClient.txJitsiHax.bind(this.jitsiClient, "setVolume"));
 
@@ -396,8 +404,7 @@ export class Game {
             }
         });
 
-        this.userList.push(this.me);
-        this.userLookup[this.me.id] = this.me;
+        this.setAvatar(evt);
 
         this.map = new TileMap(this.currentRoomName);
         this.map.load()

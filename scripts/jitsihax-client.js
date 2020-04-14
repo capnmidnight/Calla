@@ -31,6 +31,10 @@ class JitsiClient extends EventTarget {
         this.api.executeCommand("toggleAudio");
     }
 
+    setAvatar(url) {
+        this.api.executeCommand("avatarUrl", url);
+    }
+
     isAudioMuted() {
         return this.api.isAudioMuted();
     }

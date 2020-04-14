@@ -56,14 +56,20 @@
             <h1 style="grid-row:1; grid-column:1/4">Options</h1>
 
             <div style="grid-row:2; grid-column:1/4">
-                <h2><label for="fontSize">Font size:</label></h2>
+                <h2>Avatar</h2>
                 <p>
-                    <input type="number" id="fontSize" value="10" min="5" max="32" style="width:3em" />
+                    <label for="avatarURL">Avatar URL:</label>
+                    <input type="text" id="avatarURL" placeholder="(https://example.com/me.png)" />
                 </p>
 
                 <h2>Video</h2>
                 <p>
                     <button type="button" id="muteVideo" accesskey="v">Enable video</button>
+                </p>
+
+                <h2><label for="fontSize">Font size:</label></h2>
+                <p>
+                    <input type="number" id="fontSize" value="10" min="5" max="32" style="width:3em" />
                 </p>
 
                 <h2>Hearing range:</h2>
@@ -233,6 +239,11 @@ grid-template-rows: auto;">
                 },
                 isAudioMuted: function () {
                     return Promise.resolve(audioMuted);
+                },
+                setAvatar: function (url) {
+                    for (let func of apiEvents.avatarChanged) {
+                        func({ id: game.me.id, avatarURL: url });
+                    }
                 }
             },
             apiEvents = {

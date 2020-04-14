@@ -23,6 +23,8 @@ export class User extends EventTarget {
         this.distYToMe = 0;
         this.isMe = isMe;
         this.image = null;
+        this.avatarImage = null;
+        this.avatarURL = null;
         this.stackUserCount = 1;
         this.stackIndex = 0;
         this.stackAvatarHeight = 0;
@@ -44,11 +46,22 @@ export class User extends EventTarget {
     }
 
     setAvatar(url) {
-        const img = new Image();
-        img.addEventListener("load", (evt) => {
-            this.image = img;
-        });
-        img.src = url;
+        if (url !== null
+            && url !== undefined) {
+
+            if (url.length === 0) {
+                this.avatarURL = null;
+                this.avatarImage = null;
+            }
+            else {
+                this.avatarURL = url;
+                const img = new Image();
+                img.addEventListener("load", (evt) => {
+                    this.avatarImage = img;
+                });
+                img.src = url;
+            }
+        }
     }
 
     setDisplayName(name) {
@@ -190,7 +203,7 @@ export class User extends EventTarget {
                 const x = (this.x - this.tx) * map.tileWidth,
                     y = (this.y - this.ty) * map.tileHeight;
 
-                if (!this.image) {
+                if (!this.avatarImage) {
                     g.fillStyle = this.isMe ? "red" : "blue";
                     g.fillRect(
                         x,
@@ -202,7 +215,7 @@ export class User extends EventTarget {
                     g.strokeRect(0, 0, this.stackAvatarWidth, this.stackAvatarHeight);
                 }
                 else {
-                    g.drawImage(this.image, x, y, this.stackAvatarWidth, this.stackAvatarHeight);
+                    g.drawImage(this.avatarImage, x, y, this.stackAvatarWidth, this.stackAvatarHeight);
                 }
 
                 if (this.muted) {

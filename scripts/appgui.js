@@ -25,12 +25,15 @@ export class AppGui extends EventTarget {
         {
             this.optionsButton = document.querySelector("#showOptions");
             this.optionsView = document.querySelector("#options");
+            this.avatarURLInput = document.querySelector("#avatarURL");
             const optionsConfirmButton = document.querySelector("#options button.confirm");
             if (this.optionsButton
                 && this.optionsView
+                && this.avatarURLInput
                 && optionsConfirmButton) {
+
                 this.optionsButton.addEventListener("click", this.showOptions.bind(this, true));
-                optionsConfirmButton.addEventListener("click", this.optionsView.hide.bind(this.optionsView));
+                optionsConfirmButton.addEventListener("click", this.showOptions.bind(this, true));
 
                 this.optionsView.hide();
                 this.showOptions(false);
@@ -297,10 +300,22 @@ export class AppGui extends EventTarget {
     }
 
     showOptions(toggleOptions) {
-        this.optionsView.setOpenWithLabel(
-            toggleOptions !== this.optionsView.isOpen(),
-            this.optionsButton,
-            "Hide", "Show", " options");
+        if (!!this.emojiView
+            && !this.emojiView.isOpen()
+            && !!this.emojiView
+            && !this.emojiView.isOpen()) {
+            this.optionsView.setOpenWithLabel(
+                toggleOptions !== this.optionsView.isOpen(),
+                this.optionsButton,
+                "Hide", "Show", " options");
+
+            if (toggleOptions
+                && !this.optionsView.isOpen()
+                && !!this.game.me
+                && this.game.me.avatarURL !== this.avatarURLInput.value) {
+                this.game.jitsiClient.setAvatar(this.avatarURLInput.value);
+            }
+        }
     }
 
     showView(toggleGame) {
