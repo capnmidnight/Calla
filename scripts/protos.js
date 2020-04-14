@@ -8,8 +8,24 @@ Element.prototype.setOpen = function (v) {
     this.style.display = v ? "" : "none";
 };
 
+HTMLElement.prototype.setOpenWithLabel = function (v, label, enabledText, disabledText, bothText) {
+    bothText = bothText || "";
+    if (label.accessKey) {
+        bothText += ` <kbd>(ALT+${label.accessKey.toUpperCase()})</kbd>`;
+    }
+    this.setOpen(v);
+    label.innerHTML = (this.isOpen()
+        ? enabledText
+        : disabledText)
+        + bothText;
+};
+
 Element.prototype.toggleOpen = function () {
     this.setOpen(!this.isOpen());
+};
+
+HTMLElement.prototype.toggleOpenWithLabel = function (label, enabledText, disabledText, bothText) {
+    this.setOpenWithLabel(!this.isOpen(), label, enabledText, disabledText, bothText);
 };
 
 Element.prototype.show = function () {

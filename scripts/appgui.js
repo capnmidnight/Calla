@@ -29,15 +29,10 @@ export class AppGui extends EventTarget {
             if (this.optionsButton
                 && this.optionsView
                 && this.optionsConfirmButton) {
-                this.optionsButton.addEventListener("click", () => {
-                    this.optionsView.toggleOpen();
-                    this.optionsButton.innerHTML = (this.optionsView.isOpen()
-                        ? "Hide"
-                        : "Show")
-                        + ` options (ALT+${this.optionsButton.accessKey.toUpperCase()})`;
-                });
+                this.optionsButton.addEventListener("click", this.showOptions.bind(this, true));
                 this.optionsConfirmButton.addEventListener("click", this.optionsView.hide.bind(this.optionsView));
                 this.optionsView.hide();
+                this.showOptions(false);
             }
 
             // >>>>>>>>>> FONT SIZE >>>>>>>>>>
@@ -130,11 +125,10 @@ export class AppGui extends EventTarget {
                     this.roomNameInput.value = this.roomSelector.value;
                 });
                 this.newRoomButton.addEventListener("click", (evt) => {
-                    const open = this.roomNameInput.isOpen();
-                    this.roomNameInput.style.display = open ? "none" : "";
-                    this.roomSelector.style.display = open ? "" : "none";
-                    this.newRoomButton.innerHTML = open ? "New" : "Cancel";
-                    if (open) {
+                    const showSelector = this.roomNameInput.isOpen();
+                    this.roomNameInput.setOpen(!showSelector);
+                    this.roomSelector.setOpenWithLabel(showSelector, this.newRoomButton, "New", "Cancel");
+                    if (showSelector) {
                         for (let option of this.roomSelector.options) {
                             if (option.value === this.roomNameInput.value) {
                                 this.roomSelector.value = this.roomNameInput.value;
@@ -144,6 +138,7 @@ export class AppGui extends EventTarget {
 
                     this.roomNameInput.value = this.roomSelector.value;
                 });
+
                 this.showLogin();
 
                 this.userNameInput.value = localStorage.getItem("userName") || "";
@@ -281,15 +276,18 @@ export class AppGui extends EventTarget {
         this.confirmEmojiButton.unlock();
     }
 
-    showView(toggleGame) {
-        if (toggleGame) {
-            this.game.frontBuffer.toggleOpen();
-        }
+    showOptions(toggleOptions) {
+        this.optionsView.setOpenWithLabel(
+            toggleOptions !== this.optionsView.isOpen(),
+            this.optionsButton,
+            "Hide", "Show", " options");
+    }
 
-        this.showGameButton.innerHTML = (this.game.frontBuffer.isOpen()
-            ? "Show"
-            : "Hide")
-            + ` meeting UI (ALT+${this.showGameButton.accessKey.toUpperCase()})`;
+    showView(toggleGame) {
+        this.game.frontBuffer.setOpenWithLabel(
+            toggleGame !== this.game.frontBuffer.isOpen(),
+            this.showGameButton,
+            "Show", "Hide", " meeting UI");
     }
 
     showLogin() {
