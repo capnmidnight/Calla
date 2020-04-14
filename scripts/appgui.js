@@ -25,62 +25,73 @@ export class AppGui extends EventTarget {
         {
             this.optionsButton = document.querySelector("#showOptions");
             this.optionsView = document.querySelector("#options");
-            this.optionsConfirmButton = document.querySelector("#options button.confirm");
+            const optionsConfirmButton = document.querySelector("#options button.confirm");
             if (this.optionsButton
                 && this.optionsView
-                && this.optionsConfirmButton) {
+                && optionsConfirmButton) {
                 this.optionsButton.addEventListener("click", this.showOptions.bind(this, true));
-                this.optionsConfirmButton.addEventListener("click", this.optionsView.hide.bind(this.optionsView));
+                optionsConfirmButton.addEventListener("click", this.optionsView.hide.bind(this.optionsView));
+
                 this.optionsView.hide();
                 this.showOptions(false);
             }
 
             // >>>>>>>>>> FONT SIZE >>>>>>>>>>
             {
-                this.fontSizeSpinner = document.querySelector("#fontSize");
-                if (this.fontSizeSpinner) {
-                    this.fontSizeSpinner.addEventListener("input", (evt) => {
-                        const size = this.fontSizeSpinner.value;
+                const fontSizeSpinner = document.querySelector("#fontSize");
+                if (fontSizeSpinner) {
+                    fontSizeSpinner.addEventListener("input", (evt) => {
+                        const size = fontSizeSpinner.value;
                         this.game.fontSize = size;
                         localStorage.setItem("fontSize", size);
                     });
-                    this.fontSizeSpinner.value = localStorage.getItem("fontSize") || this.game.fontSize;
-                    this.game.fontSize = this.fontSizeSpinner.value;
+                    fontSizeSpinner.value = localStorage.getItem("fontSize") || this.game.fontSize;
+                    this.game.fontSize = fontSizeSpinner.value;
                 }
             }
             // <<<<<<<<<< FONT SIZE <<<<<<<<<<
 
             // >>>>>>>>>> HEARING >>>>>>>>>>
             {
-                this.drawHearingCheckbox = document.querySelector("#drawHearing");
-                this.minAudioSpinner = document.querySelector("#minAudio");
-                this.maxAudioSpinner = document.querySelector("#maxAudio");
-                if (this.drawHearingCheckbox
-                    && this.minAudioSpinner
-                    && this.maxAudioSpinner) {
-                    this.drawHearingCheckbox.addEventListener("input", (evt) => {
-                        this.game.drawHearing = this.drawHearingCheckbox.checked;
+                const drawHearingCheckbox = document.querySelector("#drawHearing"),
+                    minAudioSpinner = document.querySelector("#minAudio"),
+                    maxAudioSpinner = document.querySelector("#maxAudio");
+                if (drawHearingCheckbox
+                    && minAudioSpinner
+                    && maxAudioSpinner) {
+                    drawHearingCheckbox.addEventListener("input", (evt) => {
+                        this.game.drawHearing = drawHearingCheckbox.checked;
                         localStorage.setItem("drawHearing", this.game.drawHearing);
                     });
                     let drawHearing = localStorage.getItem("drawHearing");
                     drawHearing = drawHearing === null ? this.game.drawHearing : drawHearing === "true";
                     this.game.drawHearing = drawHearing;
-                    this.drawHearingCheckbox.checked = drawHearing;
+                    drawHearingCheckbox.checked = drawHearing;
 
                     const setAudioRange = () => {
-                        this.maxAudioSpinner.value = Math.max(1 * this.minAudioSpinner.value + 1, 1 * this.maxAudioSpinner.value);
-                        AUDIO_DISTANCE_MIN = this.minAudioSpinner.value;
-                        AUDIO_DISTANCE_MAX = this.maxAudioSpinner.value;
-                        localStorage.setItem("minAudio", this.minAudioSpinner.value);
-                        localStorage.setItem("maxAudio", this.maxAudioSpinner.value);
+                        maxAudioSpinner.value = Math.max(1 * minAudioSpinner.value + 1, 1 * maxAudioSpinner.value);
+                        AUDIO_DISTANCE_MIN = minAudioSpinner.value;
+                        AUDIO_DISTANCE_MAX = maxAudioSpinner.value;
+                        localStorage.setItem("minAudio", minAudioSpinner.value);
+                        localStorage.setItem("maxAudio", maxAudioSpinner.value);
                     };
-                    this.minAudioSpinner.addEventListener("input", setAudioRange);
-                    this.maxAudioSpinner.addEventListener("input", setAudioRange);
-                    AUDIO_DISTANCE_MIN = this.minAudioSpinner.value = 1 * localStorage.getItem("minAudio") || AUDIO_DISTANCE_MIN;
-                    AUDIO_DISTANCE_MAX = this.maxAudioSpinner.value = 1 * localStorage.getItem("maxAudio") || AUDIO_DISTANCE_MAX;
+                    minAudioSpinner.addEventListener("input", setAudioRange);
+                    maxAudioSpinner.addEventListener("input", setAudioRange);
+                    AUDIO_DISTANCE_MIN = minAudioSpinner.value = 1 * localStorage.getItem("minAudio") || AUDIO_DISTANCE_MIN;
+                    AUDIO_DISTANCE_MAX = maxAudioSpinner.value = 1 * localStorage.getItem("maxAudio") || AUDIO_DISTANCE_MAX;
                 }
             }
             // <<<<<<<<<< HEARING <<<<<<<<<<
+
+            // >>>>>>>>>> AUDIO >>>>>>>>>>
+            {
+            }
+            // <<<<<<<<<< AUDIO <<<<<<<<<<
+
+            // >>>>>>>>>> VIDEO >>>>>>>>>>
+            {
+            }
+            // <<<<<<<<<< VIDEO <<<<<<<<<<
         }
         // <<<<<<<<<< OPTIONS <<<<<<<<<<
 
@@ -171,32 +182,39 @@ export class AppGui extends EventTarget {
 
         // >>>>>>>>>> EMOJI >>>>>>>>>>
         {
-            this.previousEmoji = [];
-            this.selectedEmoji = null;
             this.emojiView = document.querySelector("#emoji");
-            this.emojiContainer = document.querySelector("#emojiList");
-            this.recentEmoji = document.querySelector("#recentEmoji");
-            this.emojiPreview = document.querySelector("#emojiPreview");
-            this.confirmEmojiButton = document.querySelector("#emoji button.confirm");
-            this.cancelEmojiButton = document.querySelector("#emoji button.cancel");
-            this.emoteButton = document.querySelector("#emote");
-            this.selectEmojiButton = document.querySelector("#selectEmoji");
-            if (this.emojiView
-                && this.emojiContainer
-                && this.recentEmoji
-                && this.emojiPreview
-                && this.confirmEmojiButton
-                && this.cancelEmojiButton
-                && this.emoteButton
-                && this.selectEmojiButton) {
 
-                this.confirmEmojiButton.lock();
+            const previousEmoji = [],
+                emojiContainer = document.querySelector("#emojiList"),
+                recentEmoji = document.querySelector("#recentEmoji"),
+                emojiPreview = document.querySelector("#emojiPreview"),
+                confirmEmojiButton = document.querySelector("#emoji button.confirm"),
+                cancelEmojiButton = document.querySelector("#emoji button.cancel"),
+                emoteButton = document.querySelector("#emote"),
+                selectEmojiButton = document.querySelector("#selectEmoji");
+
+            let selectedEmoji = null;
+
+            if (this.emojiView
+                && emojiContainer
+                && recentEmoji
+                && emojiPreview
+                && confirmEmojiButton
+                && cancelEmojiButton
+                && emoteButton
+                && selectEmojiButton) {
+
+                confirmEmojiButton.lock();
 
                 const addIconsToContainer = (group, container) => {
                     for (let icon of group) {
                         const a = document.createElement("button");
                         a.type = "button";
-                        a.addEventListener("click", this.previewEmoji.bind(this, icon));
+                        a.addEventListener("click", (evt) => {
+                            selectedEmoji = evt;
+                            emojiPreview.innerHTML = `${evt.value} - ${evt.desc}`;
+                            confirmEmojiButton.unlock();
+                        });
                         a.title = icon.desc;
                         a.innerHTML = icon.value;
                         container.appendChild(a);
@@ -212,33 +230,33 @@ export class AppGui extends EventTarget {
                     header.innerHTML = key;
                     addIconsToContainer(group, container);
 
-                    this.emojiContainer.appendChild(header);
-                    this.emojiContainer.appendChild(container);
+                    emojiContainer.appendChild(header);
+                    emojiContainer.appendChild(container);
                 }
 
-                this.confirmEmojiButton.addEventListener("click", () => {
-                    const idx = this.previousEmoji.indexOf(this.selectedEmoji);
-                    this.emoteButton.innerHTML = `Emote (E) ${this.selectedEmoji.value}`;
+                confirmEmojiButton.addEventListener("click", () => {
+                    const idx = previousEmoji.indexOf(selectedEmoji);
+                    emoteButton.innerHTML = `Emote (E) ${selectedEmoji.value}`;
                     if (idx === -1) {
-                        this.previousEmoji.push(this.selectedEmoji);
-                        this.recentEmoji.innerHTML = "";
-                        addIconsToContainer(this.previousEmoji, this.recentEmoji);
+                        previousEmoji.push(selectedEmoji);
+                        recentEmoji.innerHTML = "";
+                        addIconsToContainer(previousEmoji, recentEmoji);
                     }
 
                     this.emojiView.hide();
-                    this.game.emote(this.game.me.id, this.selectedEmoji);
+                    this.game.emote(this.game.me.id, selectedEmoji);
                 });
 
-                this.cancelEmojiButton.addEventListener("click", () => {
-                    this.confirmEmojiButton.lock();
+                cancelEmojiButton.addEventListener("click", () => {
+                    confirmEmojiButton.lock();
                     this.emojiView.hide();
                 });
 
-                this.emoteButton.addEventListener("click", () => {
+                emoteButton.addEventListener("click", () => {
                     this.game.emote(this.game.me.id, this.game.currentEmoji);
                 });
 
-                this.selectEmojiButton.addEventListener("click", this.showEmoji.bind(this));
+                selectEmojiButton.addEventListener("click", this.showEmoji.bind(this));
 
                 this.emojiView.hide();
             }
@@ -263,12 +281,6 @@ export class AppGui extends EventTarget {
 
     showEmoji() {
         this.emojiView.show();
-    }
-
-    previewEmoji(emoji) {
-        this.selectedEmoji = emoji;
-        this.emojiPreview.innerHTML = `${emoji.value} - ${emoji.desc}`;
-        this.confirmEmojiButton.unlock();
     }
 
     showOptions(toggleOptions) {
