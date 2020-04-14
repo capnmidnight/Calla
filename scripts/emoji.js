@@ -1,4 +1,6 @@
-﻿export const allIcons = {
+﻿export const mutedSpeaker = { value: "\u{1F507}", desc: "Muted Speaker" };
+
+export const allIcons = {
     faces: [
         { value: "\u{1F479}", desc: "Ogre" },
         { value: "\u{1F47A}", desc: "Goblin" },
@@ -1633,7 +1635,7 @@
         { value: "\u{1F4F6}", desc: "Antenna Bars" },
         { value: "\u{1F505}", desc: "Dim Button" },
         { value: "\u{1F506}", desc: "Bright Button" },
-        { value: "\u{1F507}", desc: "Muted Speaker" },
+        mutedSpeaker,
         { value: "\u{1F508}", desc: "Speaker Low Volume" },
         { value: "\u{1F509}", desc: "Speaker Medium Volume" },
         { value: "\u{1F50A}", desc: "Speaker High Volume" },

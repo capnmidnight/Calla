@@ -19,6 +19,7 @@
 <body>
     <section id="appView">
         <div id="toolbar">
+            <button type="button" id="muteAudio" accesskey="a">Mute audio</button>
             <span>
                 <button type="button" id="emote" title="Emote">Emote (E) (@)</button>
                 <button type="button" id="selectEmoji" title="Select Emoji">⯆</button>
@@ -58,6 +59,11 @@
                 <h2><label for="fontSize">Font size:</label></h2>
                 <p>
                     <input type="number" id="fontSize" value="10" min="5" max="32" style="width:3em" />
+                </p>
+
+                <h2>Video</h2>
+                <p>
+                    <button type="button" id="muteVideo" accesskey="v">Enable video</button>
                 </p>
 
                 <h2>Hearing range:</h2>
@@ -195,11 +201,13 @@ grid-template-rows: auto;">
             setTimeout(spawn.bind(null, id), 1000 * (1 + Math.random()));
         }
 
+        let audioMuted = false;
+
         const jitsiEvents = {
             moveTo: [],
             emote: [],
             userInitResponse: [],
-            muteStatusChanged: []
+            audioMuteStatusChanged: []
         },
             jitsiClient = {
                 addEventListener: function (evt, func) {
@@ -216,6 +224,16 @@ grid-template-rows: auto;">
                 },
                 rxGameData: function () { },
                 txJitsiHax: function () { },
+                toggleAudio: function () {
+                    audioMuted = !audioMuted;
+                    const evt = { participantID: game.me.id, data: { muted: audioMuted } };
+                    for (let func of apiEvents.audioMuteStatusChanged) {
+                        func(evt);
+                    }
+                },
+                isAudioMuted: function () {
+                    return Promise.resolve(audioMuted);
+                }
             },
             apiEvents = {
                 videoConferenceJoined: [],

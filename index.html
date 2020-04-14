@@ -40,6 +40,7 @@
 <body>
     <section id="appView">
         <div id="toolbar">
+            <button type="button" id="muteAudio" accesskey="a">Mute audio</button>
             <span>
                 <button type="button" id="emote" title="Emote">Emote (E) (@)</button>
                 <button type="button" id="selectEmoji" title="Select Emoji">⯆</button>
@@ -79,6 +80,11 @@
                 <h2><label for="fontSize">Font size:</label></h2>
                 <p>
                     <input type="number" id="fontSize" value="10" min="5" max="32" style="width:3em" />
+                </p>
+
+                <h2>Video</h2>
+                <p>
+                    <button type="button" id="muteVideo" accesskey="v" disabled>Enable video</button>
                 </p>
 
                 <h2>Hearing range:</h2>

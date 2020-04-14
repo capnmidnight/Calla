@@ -195,7 +195,7 @@ export class Game {
         this.jitsiClient.addEventListener("userInitResponse", (evt) => {
             this.jitsiClient.txGameData(evt.participantID, "moveTo", { x: this.me.x, y: this.me.y });
         });
-        this.jitsiClient.addEventListener("muteStatusChanged", this.muteUser.bind(this));
+        this.jitsiClient.addEventListener("audioMuteStatusChanged", this.muteUser.bind(this));
 
         this.gui = new AppGui(this);
     }
@@ -281,11 +281,10 @@ export class Game {
     }
 
     muteUser(evt) {
-        console.warn(evt);
         if (evt.participantID) {
             const user = this.userLookup[evt.participantID];
             if (!!user) {
-                user.muted = evt.muted;
+                user.muted = evt.data.muted;
             }
         }
         else if (!this.me) {
@@ -296,9 +295,13 @@ export class Game {
             evt.participantID = this.me.id;
             for (let user of this.userList) {
                 if (!user.isMe) {
-                    this.jitsiClient.txGameData(user.id, "muteStatusChanged", evt);
+                    this.jitsiClient.txGameData(user.id, "audioMuteStatusChanged", evt);
                 }
             }
+        }
+
+        if (evt.participantID === this.me.id) {
+            this.gui.setUserAudioMuted(evt.muted);
         }
     }
 
@@ -360,6 +363,11 @@ export class Game {
                 return this.map.load();
             })
             .then(this.startLoop.bind(this));
+
+        this.jitsiClient.isAudioMuted()
+            .then((muted) => {
+                this.muteUser({ muted: muted });
+            });
     }
 
     startLoop() {

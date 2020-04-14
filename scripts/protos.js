@@ -10,18 +10,15 @@ Element.prototype.setOpen = function (v) {
 
 Element.prototype.setOpenWithLabel = function (v, label, enabledText, disabledText, bothText) {
     this.setOpen(v);
-    label.updateLabel(this, enabledText, disabledText, bothText);
+    label.updateLabel(this.isOpen(), enabledText, disabledText, bothText);
 };
 
-Element.prototype.updateLabel = function (container, enabledText, disabledText, bothText) {
+Element.prototype.updateLabel = function (isOpen, enabledText, disabledText, bothText) {
     bothText = bothText || "";
     if (this.accessKey) {
         bothText += ` <kbd>(ALT+${this.accessKey.toUpperCase()})</kbd>`;
     }
-    this.innerHTML = (container.isOpen()
-        ? enabledText
-        : disabledText)
-        + bothText;
+    this.innerHTML = (isOpen ? enabledText : disabledText) + bothText;
 };
 
 Element.prototype.toggleOpen = function () {

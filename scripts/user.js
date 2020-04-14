@@ -1,4 +1,5 @@
 ﻿import { clamp, project } from "./math.js";
+import { mutedSpeaker } from "./emoji.js";
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
     STACKED_USER_OFFSET_X = 5,
@@ -241,6 +242,17 @@ export class User extends EventTarget {
                 }
                 else {
                     g.drawImage(this.image, x, y, this.stackAvatarWidth, this.stackAvatarHeight);
+                }
+
+                if (this.muted) {
+                    g.fillStyle = "black";
+                    g.font = this.stackAvatarHeight / 2 + "px sans-serif";
+                    g.textBaseline = "top";
+                    const metrics = g.measureText(mutedSpeaker.value);
+                    g.fillText(
+                        mutedSpeaker.value,
+                        x + this.stackAvatarWidth - metrics.width,
+                        y);
                 }
             }
             g.restore();

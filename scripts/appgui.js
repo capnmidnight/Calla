@@ -85,6 +85,13 @@ export class AppGui extends EventTarget {
 
             // >>>>>>>>>> AUDIO >>>>>>>>>>
             {
+                this.muteAudioButton = document.querySelector("#muteAudio");
+                if (this.muteAudioButton) {
+                    this.muteAudioButton.addEventListener("click", (evt) => {
+                        this.game.jitsiClient.toggleAudio();
+                    });
+                }
+                this.setUserAudioMuted(false);
             }
             // <<<<<<<<<< AUDIO <<<<<<<<<<
 
@@ -262,6 +269,10 @@ export class AppGui extends EventTarget {
             }
         }
         // <<<<<<<<<< EMOJI <<<<<<<<<<
+    }
+
+    setUserAudioMuted(muted) {
+        this.muteAudioButton.updateLabel(muted, "Unmute", "Mute", " audio");
     }
 
     resize() {
