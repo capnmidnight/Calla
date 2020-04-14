@@ -1,90 +1,72 @@
-﻿// Manages communication between Jitsi Meet and Lozya
-export const jitsiClient = (function () {
+﻿
+// helps us filter out data channel messages that don't belong to us
+const LOZYA_FINGERPRINT = "lozya",
+    eventNames = ["moveTo", "emote", "userInitResponse", "muteStatusChanged"];
 
-    // helps us filter out data channel messages that don't belong to us
-    const LOZYA_FINGERPRINT = "lozya";
+class JitsiClientEvent extends Event {
+    constructor(participantID, data) {
+        super(data.command);
+        this.participantID = participantID;
+        this.data = data;
+    }
+}
 
-    const eventHandlers = {
-        moveTo: [],
-        emote: [],
-        userInitResponse: [],
-        muteStatusChanged: []
-    };
+// Manages communication between Jitsi Meet and Lozya
+class JitsiClient extends EventTarget {
+    
+    setJitsiApi(api) {
+        this.api = api;
+        this.iframe = api.getIFrame();
+    }
 
-    let api = null,
-        iframe = null;
+    /// Send a Lozya message through the Jitsi Meet data channel.
+    txGameData(id, command, obj) {
+        obj = obj || {};
+        obj.hax = LOZYA_FINGERPRINT;
+        obj.command = command;
+        this.api.executeCommand("sendEndpointTextMessage", id, JSON.stringify(obj));
+    }
 
-    return {
+    /// Add a listener for Lozya events that come through the Jitsi Meet data channel.
+    addEventListener(evtName, callback) {
+        if (eventNames.indexOf[evtName] === -1) {
+            throw new Error(`Unsupported event type: ${evtName}`);
+        }
 
-        setJitsiApi(jitsi) {
-            api = jitsi;
-            iframe = api.getIFrame();
-        },
+        super.addEventListener(evtName, callback);
+    }
 
-        /// Add a listener for Lozya events that come through the Jitsi Meet data channel.
-        addEventListener: function (evtName, callback) {
-            
-            if (!eventHandlers[evtName]) {
-                throw new Error(`Unsupported event type: ${evtName}`);
-            }
-
-            eventHandlers[evtName].push(callback);
-        },
-
-        /// Remove a listener for Lozya events that come through the Jitsi Meet data channel
-        removeEventListener: function (evtName, callback) {
-            const handlers = eventHandlers[evtName];
-            if (!!handlers) {
-                const idx = handlers.indexOf(callback);
-                if (idx >= 0) {
-                    handlers.splice(idx, 1);
-                }
-            }
-        },
-
-        /// Send a Lozya message through the Jitsi Meet data channel.
-        txGameData: function (id, command, obj) {
-            obj = obj || {};
-            obj.hax = LOZYA_FINGERPRINT;
-            obj.command = command;
-            api.executeCommand("sendEndpointTextMessage", id, JSON.stringify(obj));
-        },
-
-        /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
-        /// to receive Lozya messages from the Jitsi Meet data channel.
-        rxGameData: function (evt) {
-            // JitsiExternalAPI::endpointTextMessageReceived event arguments format: 
-            // evt = {
-            //    data: {
-            //      senderInfo: {
-            //        jid: "string", // the jid of the sender
-            //        id: "string" // the participant id of the sender
-            //      },
-            //      eventData: {
-            //        name: "string", // the name of the datachannel event: `endpoint-text-message`
-            //        text: "string" // the received text from the sender
-            //      }
-            //   }
-            //};
-            const data = JSON.parse(evt.data.eventData.text);
-            if (data.hax === LOZYA_FINGERPRINT) {
-                const handlers = eventHandlers[data.command];
-                if (!!handlers) {
-                    data.participantID = evt.data.senderInfo.id;
-                    for (let i = 0; i < handlers.length; ++i) {
-                        handlers[i](data);
-                    }
-                }
-            }
-        },
-
-        /// Send a Lozya message to the jitsihax.js script
-        txJitsiHax: function (command, obj) {
-            if (iframe) {
-                obj.hax = LOZYA_FINGERPRINT;
-                obj.command = command;
-                iframe.contentWindow.postMessage(JSON.stringify(obj), "https://" + JITSI_HOST);
-            }
+    /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
+    /// to receive Lozya messages from the Jitsi Meet data channel.
+    rxGameData(evt) {
+        // JitsiExternalAPI::endpointTextMessageReceived event arguments format: 
+        // evt = {
+        //    data: {
+        //      senderInfo: {
+        //        jid: "string", // the jid of the sender
+        //        id: "string" // the participant id of the sender
+        //      },
+        //      eventData: {
+        //        name: "string", // the name of the datachannel event: `endpoint-text-message`
+        //        text: "string" // the received text from the sender
+        //      }
+        //   }
+        //};
+        const data = JSON.parse(evt.data.eventData.text);
+        if (data.hax === LOZYA_FINGERPRINT) {
+            const evt2 = new JitsiClientEvent(evt.data.senderInfo.id, data);
+            this.dispatchEvent(evt2);
         }
     }
-})();
+
+    /// Send a Lozya message to the jitsihax.js script
+    txJitsiHax(command, obj) {
+        if (this.iframe) {
+            obj.hax = LOZYA_FINGERPRINT;
+            obj.command = command;
+            this.iframe.contentWindow.postMessage(JSON.stringify(obj), "https://" + JITSI_HOST);
+        }
+    }
+}
+
+export const jitsiClient = new JitsiClient();

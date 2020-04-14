@@ -2,10 +2,52 @@
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
     STACKED_USER_OFFSET_X = 5,
-    STACKED_USER_OFFSET_Y = 5;
+    STACKED_USER_OFFSET_Y = 5,
+    eventNames = ["moveTo", "userPositionNeeded", "changeUserVolume"];
 
-export class User {
+class UserMoveEvent extends Event {
+    constructor(participantID) {
+        super("moveTo");
+        this.participantID = participantID;
+        this.x = 0;
+        this.y = 0;
+    }
+
+    set(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+
+class UserPositionNeededEvent extends Event {
+    constructor(participantID) {
+        super("userPositionNeeded");
+        this.participantID = participantID;
+    }
+}
+
+class UserVolumeChangedEvent extends Event {
+    constructor(participantID) {
+        super("changeUserVolume");
+        this.user = participantID;
+        this.x = 0;
+        this.y = 0;
+        this.volume = 0;
+        this.panning = 0;
+    }
+
+    set(x, y, volume, panning) {
+        this.x = x;
+        this.y = y;
+        this.volume = volume;
+        this.panning = panning;
+    }
+}
+
+export class User extends EventTarget {
     constructor(id, displayName, isMe) {
+        super();
+
         this.id = id;
         this.displayName = displayName || id;
         this.muted = false;
@@ -27,19 +69,16 @@ export class User {
         this.stackOffsetY = 0;
         this.hasPosition = isMe;
         this.lastPositionRequestTime = Date.now() - POSITION_REQUEST_DEBOUNCE_TIME;
-        this.eventHandlers = {
-            move: [],
-            userPositionNeeded: [],
-            changeUserVolume: []
-        };
+        this.moveEvent = new UserMoveEvent(this.id);
+        this.volumeChangedEvents = {};
     }
 
     addEventListener(evtName, func) {
-        if (!this.eventHandlers[evtName]) {
+        if (eventNames.indexOf(evtName) === -1) {
             throw new Error(`Unrecognized event type: ${evtName}`);
         }
 
-        this.eventHandlers[evtName].push(func);
+        super.addEventListener(evtName, func);
     }
 
     setAvatar(url) {
@@ -58,13 +97,8 @@ export class User {
         if (this.isMe) {
             if (x !== this.tx
                 || y !== this.ty) {
-                var evt = {
-                    x: x,
-                    y: y
-                };
-                for (let func of this.eventHandlers.move) {
-                    func(evt);
-                }
+                this.moveEvent.set(x, y);
+                this.dispatchEvent(this.moveEvent);
             }
         }
         else if (!this.hasPosition) {
@@ -127,9 +161,7 @@ export class User {
                 dt = now - this.lastPositionRequestTime;
             if (dt >= POSITION_REQUEST_DEBOUNCE_TIME) {
                 this.lastPositionRequestTime = now;
-                for (let func of this.eventHandlers.userPositionNeeded) {
-                    func(this);
-                }
+                this.dispatchEvent(new UserPositionNeededEvent(this.id));
             }
         }
     }
@@ -149,19 +181,17 @@ export class User {
             if (moved && (audiblePrev || audible)) {
                 user.distXToMe = distX;
                 user.distYToMe = distY;
+
+                if (!this.volumeChangedEvents[user.id]) {
+                    this.volumeChangedEvents[user.id] = new UserVolumeChangedEvent(user.id);
+                }
+
                 const volume = 1 - Math.sqrt(project(distCl, audioDistMin, audioDistMax)),
                     panning = distX / (.1 + dist),
-                    evt = {
-                        user: user.id,
-                        x: distX,
-                        y: distY,
-                        volume,
-                        panning
-                    };
+                    evt = this.volumeChangedEvents[user.id];
 
-                for (let func of this.eventHandlers.changeUserVolume) {
-                    func(evt);
-                }
+                evt.set(distX, distY, volume, panning);
+                this.dispatchEvent(evt);
             }
         }
     }

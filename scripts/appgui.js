@@ -225,9 +225,8 @@ export class AppGui extends EventTarget {
                         addIconsToContainer(this.previousEmoji, this.recentEmoji);
                     }
 
-                    this.dispatchEvent(new EmojiSelectedEvent(this.game.me.id, this.selectedEmoji));
-
                     this.emojiView.hide();
+                    this.game.emote(this.game.me.id, this.selectedEmoji);
                 });
 
                 this.cancelEmojiButton.addEventListener("click", () => {
@@ -236,14 +235,10 @@ export class AppGui extends EventTarget {
                 });
 
                 this.emoteButton.addEventListener("click", () => {
-                    this.game.emote({
-                        participantID: this.game.me.id,
-                        emoji: this.game.currentEmoji
-                    });
+                    this.game.emote(this.game.me.id, this.game.currentEmoji);
                 });
 
                 this.selectEmojiButton.addEventListener("click", this.showEmoji.bind(this));
-                this.addEventListener("emojiSelected", this.game.emote.bind(this.game));
 
                 this.emojiView.hide();
             }
@@ -372,14 +367,5 @@ export class AppGui extends EventTarget {
         api.addEventListener("videoConferenceJoined", this.loginView.hide.bind(this.loginView));
 
         addEventListener("unload", () => api.dispose());
-    }
-}
-
-class EmojiSelectedEvent extends Event {
-    constructor(participantID, emoji) {
-        super("emojiSelected");
-
-        this.participantID = participantID;
-        this.emoji = emoji;
     }
 }

@@ -172,8 +172,10 @@ grid-template-rows: auto;">
             for (let func of jitsiEvents.moveTo) {
                 func({
                     participantID: id,
-                    x: Math.floor(Math.random() * 10 - 5),
-                    y: Math.floor(Math.random() * 10 - 5)
+                    data: {
+                        x: Math.floor(Math.random() * 10 - 5),
+                        y: Math.floor(Math.random() * 10 - 5)
+                    }
                 });
             }
 
@@ -183,7 +185,7 @@ grid-template-rows: auto;">
                     group = groups[groupIdx],
                     emojiIdx = Math.floor(Math.random() * group.length),
                     emoji = group[emojiIdx],
-                    evt = { participantID: id, emoji };
+                    evt = { participantID: id, data: emoji };
 
                 for (let func of jitsiEvents.emote) {
                     func(evt);

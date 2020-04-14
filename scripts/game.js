@@ -129,10 +129,7 @@ export class Game {
                     dy = tile.y - this.me.ty;
 
                 if (dx === 0 && dy === 0) {
-                    this.emote({
-                        participantID: this.me.id,
-                        emoji: this.currentEmoji
-                    });
+                    this.emote(this.me.id, this.currentEmoji);
                 }
                 else {
                     const clearTile = this.map.getClearTile(this.me.tx, this.me.ty, dx, dy);
@@ -187,11 +184,13 @@ export class Game {
         this.jitsiClient.addEventListener("moveTo", (evt) => {
             const user = this.userLookup[evt.participantID];
             if (!!user) {
-                user.moveTo(evt.x, evt.y);
+                user.moveTo(evt.data.x, evt.data.y);
             }
         });
 
-        this.jitsiClient.addEventListener("emote", this.emote.bind(this));
+        this.jitsiClient.addEventListener("emote", (evt) => {
+            this.emote(evt.participantID, evt.data);
+        });
 
         this.jitsiClient.addEventListener("userInitResponse", (evt) => {
             this.jitsiClient.txGameData(evt.participantID, "moveTo", { x: this.me.x, y: this.me.y });
@@ -201,35 +200,27 @@ export class Game {
         this.gui = new AppGui(this);
     }
 
-    emote(evt) {
-        //evt = {
-        //    participantID: "abc123",
-        //    emoji: {
-        //        value: "😀",
-        //        desc: "Grinning face"
-        //    }
-        //};
-        console.log(evt);
-        if (!!evt.participantID) {
-            if (evt.participantID === this.me.id) {
-                evt.emoji = evt.emoji || this.currentEmoji;
-                if (!evt.emoji) {
+    emote(participantID, emoji) {
+        if (!!participantID) {
+            if (participantID === this.me.id) {
+                emoji = emoji || this.currentEmoji;
+                if (!emoji) {
                     this.gui.showEmoji();
                 }
                 else {
-                    this.currentEmoji = evt.emoji;
+                    this.currentEmoji = emoji;
                     for (let user of this.userList) {
                         if (user !== this.me) {
-                            this.jitsiClient.txGameData(user.id, "emote", evt.emoji);
+                            this.jitsiClient.txGameData(user.id, "emote", emoji);
                         }
                     }
                 }
             }
 
-            const user = this.userLookup[evt.participantID];
+            const user = this.userLookup[participantID];
             if (!!user
-                && !!evt.emoji) {
-                this.emotes.push(new Emote(evt.emoji, user.tx + 0.5, user.ty));
+                && !!emoji) {
+                this.emotes.push(new Emote(emoji, user.tx + 0.5, user.ty));
             }
         }
     }
@@ -271,7 +262,7 @@ export class Game {
 
         const user = new User(evt.id, evt.displayName, false);
         user.addEventListener("userPositionNeeded", (evt) => {
-            this.jitsiClient.txGameData(evt.id, "userInitResponse");
+            this.jitsiClient.txGameData(evt.participantID, "userInitResponse");
         });
         this.userLookup[evt.id] = user;
         this.userList.unshift(user);
@@ -290,6 +281,7 @@ export class Game {
     }
 
     muteUser(evt) {
+        console.warn(evt);
         if (evt.participantID) {
             const user = this.userLookup[evt.participantID];
             if (!!user) {
@@ -347,16 +339,17 @@ export class Game {
         this.currentRoomName = evt.roomName;
         this.me = new User(evt.id, evt.displayName, true);
         this.me.setAvatar(evt.avatarURL);
-        this.me.addEventListener("move", (evt) => {
+
+        this.me.addEventListener("changeUserVolume", this.jitsiClient.txJitsiHax.bind(this.jitsiClient, "setVolume"));
+
+        this.me.addEventListener("moveTo", (evt) => {
             for (let user of this.userList) {
                 if (!user.isMe) {
                     this.jitsiClient.txGameData(user.id, "moveTo", evt);
                 }
             }
         });
-        this.me.addEventListener("changeUserVolume", (evt) => {
-            this.jitsiClient.txJitsiHax("setVolume", evt);
-        });
+
         this.userList.push(this.me);
         this.userLookup[this.me.id] = this.me;
 
@@ -422,7 +415,7 @@ export class Game {
                         case "ArrowDown": dy++; break;
                         case "ArrowLeft": dx--; break;
                         case "ArrowRight": dx++; break;
-                        case "e": this.emote({ participantID: this.me.id, emoji: this.currentEmoji }); break;
+                        case "e": this.emote(this.me.id, this.currentEmoji); break;
                     }
                 }
             }
