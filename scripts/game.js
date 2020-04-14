@@ -413,12 +413,17 @@ export class Game {
                 dy = 0;
 
             for (let evt of Object.values(this.keys)) {
-                switch (evt.key) {
-                    case "ArrowUp": dy--; break;
-                    case "ArrowDown": dy++; break;
-                    case "ArrowLeft": dx--; break;
-                    case "ArrowRight": dx++; break;
-                    case "e": !evt.altKey && this.emote(this.me.id, this.currentEmoji); break;
+                if (!evt.altKey
+                    && !evt.shiftKey
+                    && !evt.ctrlKey
+                    && !evt.metaKey) {
+                    switch (evt.key) {
+                        case "ArrowUp": dy--; break;
+                        case "ArrowDown": dy++; break;
+                        case "ArrowLeft": dx--; break;
+                        case "ArrowRight": dx++; break;
+                        case "e": this.emote({ participantID: this.me.id, emoji: this.currentEmoji }); break;
+                    }
                 }
             }
 
