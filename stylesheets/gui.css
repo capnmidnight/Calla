@@ -10,6 +10,10 @@
     overflow: hidden;
 }
 
+#frontBuffer{
+    touch-action: none;
+}
+
 body > section {
     pointer-events: none;
 }

@@ -10,6 +10,7 @@ const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_MIN = 0.1,
     CAMERA_ZOOM_SHAPE = 1 / 4,
     CAMERA_ZOOM_SPEED = 0.005,
+    MAX_DRAG_DISTANCE = 2,
     isFirefox = typeof InstallTrigger !== "undefined";
 
 export class Game {
@@ -31,8 +32,8 @@ export class Game {
         this.lastMove = Number.MAX_VALUE;
         this.gridOffsetX = 0;
         this.gridOffsetY = 0;
-        this.cameraX = 0;
-        this.cameraY = 0;
+        this.cameraX = this.offsetCameraX = this.targetOffsetCameraX = 0;
+        this.cameraY = this.offsetCameraY = this.targetOffsetCameraY = 0;
         this.cameraZ = this.targetCameraZ = 1.5;
         this.currentRoomName = null;
         this.fontSize = 10;
@@ -43,6 +44,7 @@ export class Game {
 
         this.currentEmoji = null;
         this.emotes = [];
+        this.canClick = false;
 
         // ============= KEYBOARD =================
 
@@ -90,6 +92,8 @@ export class Game {
         function readPointer(evt) {
             return {
                 id: evt.pointerId,
+                buttons: evt.buttons,
+                dragDistance: 0,
                 x: evt.offsetX * devicePixelRatio,
                 y: evt.offsetY * devicePixelRatio
             }
@@ -99,18 +103,110 @@ export class Game {
             return this.pointers.findIndex(p => p.id === pointer.id);
         };
 
-        const addPointer = (evt) => {
-            const pointer = readPointer(evt),
-                idx = findPointer(pointer);
-
-            if (idx === -1) {
-                this.pointers.push(pointer);
+        const replacePointer = (pointer) => {
+            const idx = findPointer(pointer);
+            if (idx > -1) {
+                const last = this.pointers[idx];
+                this.pointers[idx] = pointer;
+                return last;
             }
-
-            return idx;
+            else {
+                this.pointers.push(pointer);
+                return null;
+            }
         };
 
-        const removePointer = (evt) => {
+        const getPressCount = () => {
+            let count = 0;
+            for (let pointer of this.pointers) {
+                if (pointer.buttons === 1) {
+                    ++count;
+                }
+            }
+            return count;
+        }
+
+        this.frontBuffer.addEventListener("pointerdown", (evt) => {
+            const oldCount = getPressCount(),
+                pointer = readPointer(evt),
+                _ = replacePointer(pointer),
+                newCount = getPressCount();
+
+            this.canClick = oldCount === 0
+                && newCount === 1;
+        });
+
+        const getPinchDistance = () => {
+            const count = getPressCount();
+            if (count !== 2) {
+                return null;
+            }
+
+            const pressed = this.pointers.filter(p => p.buttons === 1),
+                a = pressed[0],
+                b = pressed[1],
+                dx = b.x - a.x,
+                dy = b.y - a.y;
+
+            return Math.sqrt(dx * dx + dy * dy);
+        };
+
+        this.frontBuffer.addEventListener("pointermove", (evt) => {
+            const oldPinchDistance = getPinchDistance(),
+                pointer = readPointer(evt),
+                last = replacePointer(pointer),
+                count = getPressCount(),
+                newPinchDistance = getPinchDistance();
+
+            if (count === 1) {
+
+                if (!!last
+                    && pointer.buttons === 1
+                    && last.buttons === pointer.buttons) {
+                    const dx = pointer.x - last.x,
+                        dy = pointer.y - last.y,
+                        dist = Math.sqrt(dx * dx + dy * dy);
+                    pointer.dragDistance = last.dragDistance + dist;
+                   
+                    if (pointer.dragDistance > MAX_DRAG_DISTANCE) {
+                        this.targetOffsetCameraX = this.offsetCameraX += dx;
+                        this.targetOffsetCameraY = this.offsetCameraY += dy;
+                        this.canClick = false;
+                    }
+                }
+
+            }
+
+            if (oldPinchDistance !== null
+                && newPinchDistance !== null) {
+                const ddist = oldPinchDistance - newPinchDistance;
+                zoom(ddist / 5);
+                this.canClick = false;
+            }
+        });
+
+        this.frontBuffer.addEventListener("pointerup", (evt) => {
+            const pointer = readPointer(evt),
+                _ = replacePointer(pointer);
+
+            if (!!this.me && pointer.dragDistance < 2) {
+                const tile = this.getTileAt(pointer),
+                    dx = tile.x - this.me.tx,
+                    dy = tile.y - this.me.ty;
+
+                if (dx === 0 && dy === 0) {
+                    this.emote(this.me.id, this.currentEmoji);
+                }
+                else if (this.canClick) {
+                    const clearTile = this.map.getClearTile(this.me.tx, this.me.ty, dx, dy);
+                    this.me.moveTo(clearTile.x, clearTile.y);
+                    this.targetOffsetCameraX = 0;
+                    this.targetOffsetCameraY = 0;
+                }
+            }
+        });
+
+        this.frontBuffer.addEventListener("pointercancel", (evt) => {
             const pointer = readPointer(evt),
                 idx = findPointer(pointer);
 
@@ -119,60 +215,7 @@ export class Game {
             }
 
             return pointer;
-        }
-
-        this.frontBuffer.addEventListener("click", (evt) => {
-            const pointer = readPointer(evt);
-            if (!!this.me) {
-                const tile = this.getTileAt(pointer),
-                    dx = tile.x - this.me.tx,
-                    dy = tile.y - this.me.ty;
-
-                if (dx === 0 && dy === 0) {
-                    this.emote(this.me.id, this.currentEmoji);
-                }
-                else {
-                    const clearTile = this.map.getClearTile(this.me.tx, this.me.ty, dx, dy);
-                    this.me.moveTo(clearTile.x, clearTile.y);
-                }
-            }
         });
-
-        this.frontBuffer.addEventListener("pointerdown", (evt) => {
-            addPointer(evt);
-        });
-
-        this.frontBuffer.addEventListener("pointermove", (evt) => {
-            const idx = addPointer(evt);
-            this.pointers[idx] = readPointer(evt);
-        });
-
-        this.frontBuffer.addEventListener("pointerup", removePointer);
-        this.frontBuffer.addEventListener("pointercancel", removePointer);
-
-        function getPinchDistance(evt) {
-            if (evt.targetTouches.length !== 2) {
-                return 0;
-            }
-
-            const a = evt.targetTouches[0],
-                b = evt.targetTouches[1],
-                dx = b.clientX - a.clientX,
-                dy = b.clientY - a.clientY;
-
-            return Math.sqrt(dx * dx + dy * dy);
-        };
-
-        this.frontBuffer.addEventListener("touchstart", (evt) => {
-            this.lastPinchDistance = getPinchDistance(evt);
-        }, { passive: true });
-
-        this.frontBuffer.addEventListener("touchmove", (evt) => {
-            const dist = getPinchDistance(evt),
-                dPinch = dist - this.lastPinchDistance;
-            zoom(-dPinch / 5);
-            this.lastPinchDistance = dist;
-        }, { passive: true });
 
         // ============= POINTERS =================
 
@@ -226,8 +269,8 @@ export class Game {
     }
 
     getTileAt(cursor) {
-        const imageX = cursor.x - this.gridOffsetX,
-            imageY = cursor.y - this.gridOffsetY,
+        const imageX = cursor.x - this.gridOffsetX - this.offsetCameraX,
+            imageY = cursor.y - this.gridOffsetY - this.offsetCameraY,
             zoomX = imageX / this.cameraZ,
             zoomY = imageY / this.cameraZ,
             mapX = zoomX - this.cameraX,
@@ -432,6 +475,8 @@ export class Game {
                 || dy !== 0) {
                 const clearTile = this.map.getClearTile(this.me.tx, this.me.ty, dx, dy);
                 this.me.moveTo(clearTile.x, clearTile.y);
+                this.targetOffsetCameraX = 0;
+                this.targetOffsetCameraY = 0;
             }
 
             this.lastMove = 0;
@@ -459,13 +504,18 @@ export class Game {
         this.cameraX = lerp(this.cameraX, targetCameraX, CAMERA_LERP * this.cameraZ);
         this.cameraY = lerp(this.cameraY, targetCameraY, CAMERA_LERP * this.cameraZ);
 
+        this.offsetCameraX = lerp(this.offsetCameraX, this.targetOffsetCameraX, CAMERA_LERP);
+        this.offsetCameraY = lerp(this.offsetCameraY, this.targetOffsetCameraY, CAMERA_LERP);
+
         this.gFront.resetTransform();
         this.gFront.imageSmoothingEnabled = false;
         this.gFront.clearRect(0, 0, this.frontBuffer.width, this.frontBuffer.height);
 
         this.gFront.save();
         {
-            this.gFront.translate(this.gridOffsetX, this.gridOffsetY);
+            this.gFront.translate(
+                this.gridOffsetX + this.offsetCameraX,
+                this.gridOffsetY + this.offsetCameraY);
             this.gFront.scale(this.cameraZ, this.cameraZ);
             this.gFront.translate(this.cameraX, this.cameraY);
 
