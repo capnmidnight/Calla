@@ -3,13 +3,11 @@ import "./protos.js";
 
 import { bestIcons } from "./emoji.js";
 
-export class AppGui {
+export class AppGui extends EventTarget {
     constructor(game) {
-        this.game = game;
+        super();
 
-        this.eventHandlers = {
-            emojiSelected: []
-        };
+        this.game = game;
 
         // >>>>>>>>>> ZOOM >>>>>>>>>>
         {
@@ -232,9 +230,8 @@ export class AppGui {
                         addIconsToContainer(this.previousEmoji, this.recentEmoji);
                     }
 
-                    for (let func of this.eventHandlers.emojiSelected) {
-                        func(this.game.me.id, this.selectedEmoji);
-                    }
+                    this.dispatchEvent(new EmojiSelectedEvent(this.game.me.id, this.selectedEmoji));
+
                     this.emojiView.hide();
                 });
 
@@ -244,7 +241,10 @@ export class AppGui {
                 });
 
                 this.emoteButton.addEventListener("click", () => {
-                    this.game.emote(this.game.me.id, this.game.currentEmoji);
+                    this.game.emote({
+                        participantID: this.game.me.id,
+                        emoji: this.game.currentEmoji
+                    });
                 });
 
                 this.selectEmojiButton.addEventListener("click", this.showEmoji.bind(this));
@@ -254,10 +254,6 @@ export class AppGui {
             }
         }
         // <<<<<<<<<< EMOJI <<<<<<<<<<
-    }
-
-    addEventListener(eventName, func) {
-        this.eventHandlers[eventName].push(func);
     }
 
     resize() {
@@ -381,5 +377,14 @@ export class AppGui {
         });
 
         addEventListener("unload", () => api.dispose());
+    }
+}
+
+class EmojiSelectedEvent extends Event {
+    constructor(participantID, emoji) {
+        super("emojiSelected");
+
+        this.participantID = participantID;
+        this.emoji = emoji;
     }
 }

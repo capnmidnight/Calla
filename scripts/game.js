@@ -129,7 +129,10 @@ export class Game {
                     dy = tile.y - this.me.ty;
 
                 if (dx === 0 && dy === 0) {
-                    this.emote(this.me.id, this.currentEmoji);
+                    this.emote({
+                        participantID: this.me.id,
+                        emoji: this.currentEmoji
+                    });
                 }
                 else {
                     const clearTile = this.map.getClearTile(this.me.tx, this.me.ty, dx, dy);
@@ -188,9 +191,7 @@ export class Game {
             }
         });
 
-        this.jitsiClient.addEventListener("emote", (evt) => {
-            this.emote(evt.participantID, evt);
-        });
+        this.jitsiClient.addEventListener("emote", this.emote.bind(this));
 
         this.jitsiClient.addEventListener("userInitResponse", (evt) => {
             this.jitsiClient.txGameData(evt.participantID, "moveTo", { x: this.me.x, y: this.me.y });
@@ -200,27 +201,35 @@ export class Game {
         this.gui = new AppGui(this);
     }
 
-    emote(userID, emoji) {
-        if (!!userID) {
-            if (userID === this.me.id) {
-                emoji = emoji || this.currentEmoji;
-                if (!emoji) {
+    emote(evt) {
+        //evt = {
+        //    participantID: "abc123",
+        //    emoji: {
+        //        value: "😀",
+        //        desc: "Grinning face"
+        //    }
+        //};
+        console.log(evt);
+        if (!!evt.participantID) {
+            if (evt.participantID === this.me.id) {
+                evt.emoji = evt.emoji || this.currentEmoji;
+                if (!evt.emoji) {
                     this.gui.showEmoji();
                 }
                 else {
-                    this.currentEmoji = emoji;
+                    this.currentEmoji = evt.emoji;
                     for (let user of this.userList) {
                         if (user !== this.me) {
-                            this.jitsiClient.txGameData(user.id, "emote", emoji);
+                            this.jitsiClient.txGameData(user.id, "emote", evt.emoji);
                         }
                     }
                 }
             }
 
-            const user = this.userLookup[userID];
+            const user = this.userLookup[evt.participantID];
             if (!!user
-                && !!emoji) {
-                this.emotes.push(new Emote(emoji, user.tx + 0.5, user.ty));
+                && !!evt.emoji) {
+                this.emotes.push(new Emote(evt.emoji, user.tx + 0.5, user.ty));
             }
         }
     }

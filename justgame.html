@@ -183,7 +183,7 @@ grid-template-rows: auto;">
                     group = groups[groupIdx],
                     emojiIdx = Math.floor(Math.random() * group.length),
                     emoji = group[emojiIdx],
-                    evt = Object.assign({ participantID: id }, emoji);
+                    evt = { participantID: id, emoji };
 
                 for (let func of jitsiEvents.emote) {
                     func(evt);
