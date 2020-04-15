@@ -44,6 +44,7 @@ export class User extends EventTarget {
         this.lastPositionRequestTime = Date.now() - POSITION_REQUEST_DEBOUNCE_TIME;
         this.moveEvent = new UserMoveEvent(this.id);
         this.volumeChangedEvents = {};
+        this.visible = true;
     }
 
     init(evt) {
@@ -113,7 +114,7 @@ export class User extends EventTarget {
         }
     }
 
-    update(dt, map, userList) {
+    update(dt, g, map, userList) {
         if (this.isInitialized) {
             if (this.dist > 0) {
                 this.t += dt;
@@ -129,6 +130,16 @@ export class User extends EventTarget {
                     this.y = this.sy + s * this.dy;
                 }
             }
+
+            const x = this.x * map.tileWidth,
+                y = this.y * map.tileHeight,
+                t = g.getTransform(),
+                p = t.transformPoint({ x, y });
+
+            this.visible = -map.tileWidth <= p.x
+                && p.x < g.canvas.width
+                && -map.tileHeight <= p.y
+                && p.y < g.canvas.height;
 
             this.stackUserCount = 0;
             this.stackIndex = 0;
@@ -163,8 +174,7 @@ export class User extends EventTarget {
     }
 
     readUser(user, audioDistMin, audioDistMax) {
-        if (this.isMe
-            && !user.isMe) {
+        if (this.isMe && !user.isMe) {
             const distX = user.tx - this.tx,
                 distY = user.ty - this.ty,
                 dist = Math.sqrt(distX * distX + distY * distY),
@@ -192,25 +202,8 @@ export class User extends EventTarget {
         }
     }
 
-    isVisibleOnMap(g, map) {
-        if (!this.isInitialized) {
-            return false;
-        }
-
-        const x = this.x * map.tileWidth,
-            y = this.y * map.tileHeight,
-            t = g.getTransform(),
-            p = t.transformPoint({ x, y }),
-            visible = -map.tileWidth <= p.x
-                && p.x < g.canvas.width
-                && -map.tileHeight <= p.y
-                && p.y < g.canvas.height;
-
-        return visible;
-    }
-
     drawShadow(g, map, cameraZ) {
-        if (this.isVisibleOnMap(g, map)) {
+        if (this.visible) {
             g.save();
             {
                 g.shadowColor = "rgba(0, 0, 0, 0.5)";
@@ -225,7 +218,7 @@ export class User extends EventTarget {
     }
 
     drawAvatar(g, map) {
-        if (this.isVisibleOnMap(g, map)) {
+        if (this.visible) {
             g.save();
             {
                 this.innerDraw(g, map, true);
@@ -234,7 +227,7 @@ export class User extends EventTarget {
         }
     }
 
-    innerDraw(g, map, drawImage) {
+    innerDraw(g, map) {
         g.translate(
             this.x * map.tileWidth + this.stackOffsetX,
             this.y * map.tileHeight + this.stackOffsetY);
@@ -285,7 +278,7 @@ export class User extends EventTarget {
     }
 
     drawName(g, map, cameraZ, fontSize) {
-        if (this.isVisibleOnMap(g, map)) {
+        if (this.visible) {
             g.save();
             {
                 g.translate(
