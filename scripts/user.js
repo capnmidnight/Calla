@@ -235,14 +235,6 @@ export class User extends EventTarget {
                 this.avatarEmoji,
                 (this.avatarEmojiMetrics.width - this.stackAvatarWidth) / 2 + this.avatarEmojiMetrics.actualBoundingBoxLeft,
                 this.avatarEmojiMetrics.actualBoundingBoxAscent);
-
-            if (this.isMe) {
-                g.strokeStyle = "green";
-                g.strokeRect(
-                    0, 0,
-                    this.stackAvatarWidth,
-                    this.stackAvatarHeight);
-            }
         }
         else if (drawImage) {
             g.drawImage(
