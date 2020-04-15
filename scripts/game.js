@@ -542,7 +542,7 @@ export class Game {
         this.emotes = this.emotes.filter(e => !e.isDead());
 
         for (let user of this.userList) {
-            user.update(dt, this.gFront, this.map, this.userList);
+            user.update(dt, this.map, this.userList);
         }
         for (let user of this.userList) {
             this.me.readUser(user, AUDIO_DISTANCE_MIN, AUDIO_DISTANCE_MAX);

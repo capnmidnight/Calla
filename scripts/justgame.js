@@ -46,6 +46,7 @@ const jitsiEvents = {
         addEventListener: function (evt, func) {
             jitsiEvents[evt].push(func);
         },
+
         txGameData: function (id, msg, data) {
             if (msg === "userInitRequest") {
                 const user = game.userLookup[id];
@@ -60,8 +61,11 @@ const jitsiEvents = {
                 }
             }
         },
+
         rxGameData: function () { },
+
         txJitsiHax: function () { },
+
         toggleAudio: function () {
             audioMuted = !audioMuted;
             const evt = { participantID: game.me.id, data: { muted: audioMuted } };
@@ -69,6 +73,7 @@ const jitsiEvents = {
                 func(evt);
             }
         },
+
         toggleVideo: function () {
             videoMuted = !videoMuted;
             const evt = { participantID: game.me.id, data: { muted: videoMuted } };
@@ -76,17 +81,21 @@ const jitsiEvents = {
                 func(evt);
             }
         },
+
         isAudioMuted: function () {
             return Promise.resolve(audioMuted);
         },
+
         isVideoMuted: function () {
             return Promise.resolve(videoMuted);
         },
+
         setAvatarURL: function (url) {
             for (let func of apiEvents.avatarChanged) {
                 func({ id: game.me.id, avatarURL: url });
             }
         }
+
     },
     apiEvents = {
         videoConferenceJoined: [],

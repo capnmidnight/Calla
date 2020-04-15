@@ -120,7 +120,7 @@ export class User extends EventTarget {
         }
     }
 
-    update(dt, g, map, userList) {
+    update(dt, map, userList) {
         if (this.isInitialized) {
             if (this.dist > 0) {
                 this.t += dt;
@@ -136,16 +136,6 @@ export class User extends EventTarget {
                     this.y = this.sy + s * this.dy;
                 }
             }
-
-            const x = this.x * map.tileWidth,
-                y = this.y * map.tileHeight,
-                t = g.getTransform(),
-                p = t.transformPoint({ x, y });
-
-            this.visible = -map.tileWidth <= p.x
-                && p.x < g.canvas.width
-                && -map.tileHeight <= p.y
-                && p.y < g.canvas.height;
 
             this.stackUserCount = 0;
             this.stackIndex = 0;
@@ -209,6 +199,16 @@ export class User extends EventTarget {
     }
 
     drawShadow(g, map, cameraZ) {
+        const x = this.x * map.tileWidth,
+            y = this.y * map.tileHeight,
+            t = g.getTransform(),
+            p = t.transformPoint({ x, y });
+
+        this.visible = -map.tileWidth <= p.x
+            && p.x < g.canvas.width
+            && -map.tileHeight <= p.y
+            && p.y < g.canvas.height;
+
         if (this.visible) {
             g.save();
             {
