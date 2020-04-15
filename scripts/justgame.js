@@ -121,7 +121,7 @@ const jitsiEvents = {
         },
 
         setVolume: function (evt) {
-            this.txJitsiHax(this.jitsiClient, "setVolume", evt);
+            this.txJitsiHax("setVolume", evt);
         },
 
         sendPosition: function (toUserID, evt) {

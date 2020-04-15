@@ -112,7 +112,7 @@ class JitsiClient extends EventTarget {
     }
 
     setVolume(evt) {
-        this.txJitsiHax(this.jitsiClient, "setVolume", evt);
+        this.txJitsiHax("setVolume", evt);
     }
 
     sendPosition(toUserID, evt) {
