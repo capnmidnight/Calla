@@ -55,11 +55,19 @@
         <div id="options" style="display:none">
             <h1 style="grid-row:1; grid-column:1/4">Options</h1>
 
-            <div style="grid-row:2; grid-column:1/4">
+            <div style="grid-row:2; grid-column:1/4;overflow-y:scroll;">
                 <h2>Avatar</h2>
                 <p>
-                    <label for="avatarURL">Avatar URL:</label>
-                    <input type="text" id="avatarURL" placeholder="(https://example.com/me.png)" />
+                    <div>
+                        <label for="avatarURL">Avatar URL:</label>
+                        <input type="text" id="avatarURL" placeholder="(https://example.com/me.png)" />
+                    </div>
+                    or
+                    <div>
+                        <label>Avatar Emoji:</label>
+                        <span id="avatarEmoji">👤</span>
+                        <button type="button" id="selectAvatarEmoji">Select</button>
+                    </div>
                 </p>
 
                 <h2>Video</h2>

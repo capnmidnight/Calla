@@ -2,6 +2,7 @@
 import "./protos.js";
 
 import { EmojiForm } from "./emojiForm.js";
+import { bust } from "./emoji.js";
 
 export class AppGui extends EventTarget {
     constructor(game) {
@@ -21,18 +22,59 @@ export class AppGui extends EventTarget {
         }
         // <<<<<<<<<< ZOOM <<<<<<<<<<
 
+        // >>>>>>>>>> EMOJI >>>>>>>>>>
+        {
+            const emojiView = document.querySelector("#emoji"),
+                selectEmojiButton = document.querySelector("#selectEmoji"),
+                emoteButton = document.querySelector("#emote");
+
+            this.emojiForm = null;
+
+            if (emojiView
+                && emoteButton
+                && selectEmojiButton) {
+
+                this.emojiForm = new EmojiForm(emojiView);
+
+                emoteButton.addEventListener("click", () => this.game.emote());
+
+                selectEmojiButton.addEventListener("click", async (evt) => {
+                    if ((!this.optionsView || !this.optionsView.isOpen())
+                        && (!this.loginView || !this.loginView.isOpen())) {
+                        const emoji = await this.emojiForm.selectAsync();
+                        if (!!emoji) {
+                            this.game.emote(this.game.me.id, emoji);
+                        }
+                    }
+                });
+            }
+        }
+        // <<<<<<<<<< EMOJI <<<<<<<<<<
+
         // >>>>>>>>>> OPTIONS >>>>>>>>>>
         {
             this.optionsButton = document.querySelector("#showOptions");
             this.optionsView = document.querySelector("#options");
             this.avatarURLInput = document.querySelector("#avatarURL");
-            const optionsConfirmButton = document.querySelector("#options button.confirm");
+            this.avatarEmojiOutput = document.querySelector("#avatarEmoji");
+            const selectAvatarEmojiButton = document.querySelector("#selectAvatarEmoji"),
+                optionsConfirmButton = document.querySelector("#options button.confirm");
             if (this.optionsButton
                 && this.optionsView
                 && this.avatarURLInput
+                && this.avatarEmojiOutput
+                && selectAvatarEmojiButton
                 && optionsConfirmButton) {
 
                 this.optionsButton.addEventListener("click", this.showOptions.bind(this, true));
+
+                this.avatarEmojiOutput.innerHTML = bust.value;
+                selectAvatarEmojiButton.addEventListener("click", async (evt) => {
+                    const emoji = await this.emojiForm.selectAsync()
+                        || bust;
+                    this.avatarEmojiOutput.innerHTML = emoji.value;
+                });
+
                 optionsConfirmButton.addEventListener("click", this.showOptions.bind(this, true));
 
                 this.optionsView.hide();
@@ -196,35 +238,6 @@ export class AppGui extends EventTarget {
             }
         }
         // <<<<<<<<<< LOGIN <<<<<<<<<<
-
-        // >>>>>>>>>> EMOJI >>>>>>>>>>
-        {
-            const emojiView = document.querySelector("#emoji"),
-                selectEmojiButton = document.querySelector("#selectEmoji"),
-                emoteButton = document.querySelector("#emote");
-
-            this.emojiForm = null;
-
-            if (emojiView
-                && emoteButton
-                && selectEmojiButton) {
-
-                this.emojiForm = new EmojiForm(emojiView);
-
-                emoteButton.addEventListener("click", () => this.game.emote());
-
-                selectEmojiButton.addEventListener("click", async (evt) => {
-                    if ((!this.optionsView || !this.optionsView.isOpen())
-                        && (!this.loginView || !this.loginView.isOpen())) {
-                        const emoji = await this.emojiForm.selectAsync();
-                        if (!!emoji) {
-                            this.game.emote(this.game.me.id, emoji);
-                        }
-                    }
-                });
-            }
-        }
-        // <<<<<<<<<< EMOJI <<<<<<<<<<
     }
 
     setUserAudioMuted(muted) {
@@ -260,9 +273,18 @@ export class AppGui extends EventTarget {
 
             if (toggleOptions
                 && !this.optionsView.isOpen()
-                && !!this.game.me
-                && this.game.me.avatarURL !== this.avatarURLInput.value) {
-                this.game.jitsiClient.setAvatar(this.avatarURLInput.value);
+                && !!this.game.me) {
+                if (this.game.me.avatarURL !== this.avatarURLInput.value) {
+                    this.game.jitsiClient.setAvatarURL(this.avatarURLInput.value);
+                }
+                if (this.game.me.avatarEmoji !== this.avatarEmojiOutput.innerHTML) {
+                    this.game.me.avatarEmoji = this.avatarEmojiOutput.innerHTML;
+                    for (let user of this.game.userList) {
+                        if (!user.isMe) {
+                            this.game.jitsiClient.txGameData(user.id, "userInitResponse", this.game.me);
+                        }
+                    }
+                }
             }
         }
     }
