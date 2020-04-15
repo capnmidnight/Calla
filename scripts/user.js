@@ -34,7 +34,7 @@ export class User extends EventTarget {
         this.stackAvatarWidth = 0;
         this.stackOffsetX = 0;
         this.stackOffsetY = 0;
-        this.hasPosition = isMe;
+        this.isInitialized = isMe;
         this.lastPositionRequestTime = Date.now() - POSITION_REQUEST_DEBOUNCE_TIME;
         this.moveEvent = new UserMoveEvent(this.id);
         this.volumeChangedEvents = {};
@@ -45,6 +45,7 @@ export class User extends EventTarget {
         this.y = evt.y;
         this.avatarEmoji = evt.avatarEmoji;
         this.avatarEmojiMetrics = null;
+        this.isInitialized = true;
     }
 
     addEventListener(evtName, func) {
@@ -86,8 +87,8 @@ export class User extends EventTarget {
                 this.dispatchEvent(this.moveEvent);
             }
         }
-        else if (!this.hasPosition) {
-            this.hasPosition = true;
+        else if (!this.isInitialized) {
+            this.isInitialized = true;
             this.x = x;
             this.y = y;
         }
@@ -107,7 +108,7 @@ export class User extends EventTarget {
     }
 
     update(dt, map, userList) {
-        if (this.hasPosition) {
+        if (this.isInitialized) {
             if (this.dist > 0) {
                 this.t += dt;
                 if (this.t >= MOVE_TRANSITION_TIME) {
@@ -126,7 +127,7 @@ export class User extends EventTarget {
             this.stackUserCount = 0;
             this.stackIndex = 0;
             for (let user of userList) {
-                if (user.hasPosition
+                if (user.isInitialized
                     && user.tx === this.tx
                     && user.ty === this.ty) {
                     if (user.id === this.id) {
@@ -186,7 +187,7 @@ export class User extends EventTarget {
     }
 
     isVisibleOnMap(g, map) {
-        if (!this.hasPosition) {
+        if (!this.isInitialized) {
             return false;
         }
 
@@ -311,7 +312,7 @@ export class User extends EventTarget {
     }
 
     drawHearingRange(g, map, cameraZ, minDist, maxDist) {
-        if (this.hasPosition) {
+        if (this.isInitialized) {
             const tw = Math.min(maxDist, Math.ceil(g.canvas.width / (2 * map.tileWidth * cameraZ))),
                 th = Math.min(maxDist, Math.ceil(g.canvas.height / (2 * map.tileHeight * cameraZ)));
 
