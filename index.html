@@ -123,10 +123,8 @@
                 </a>
             </h1>
 
-            <p>Teleconferencing with an RPG map. Walk around, talk to folks, have private conversations by huddling in a corner, or drop in on other conversations. Ideal for meetups!</p>
-
-            <p><strong>Note:</strong> Lozya is built on top of the open-source teleconferencing project <a href="https://jitsi.org">Jitsi Meet</a>. Unfortunately, Jitsi's web client doesn't work on iPhones and iPads! Sorry :(</p>
-
+            <p>Voice chat with an RPG map. Volume scales with distance from other users. Walk around, talk to folks, have private conversations by huddling in a corner, or drop in on other conversations. Ideal for meetups!</p>
+            <h2>Login</h2>
             <form autocomplete="on" style="
 display: grid;
 grid-template-columns: 2fr 4fr 2fr;
@@ -134,7 +132,7 @@ grid-template-rows: auto;">
                 <label for="room" style="
     grid-column: 1;
     grid-row: 1">
-                    Room name:
+                    Room:
                 </label>
                 <select id="existingRooms" style="
     grid-column: 2;
@@ -157,7 +155,7 @@ grid-template-rows: auto;">
                 <label for="user" style="
     grid-column: 1;
     grid-row: 2">
-                    User name:
+                    Name:
                 </label>
                 <input type="text" id="userName" placeholder="(Required)" name="userName" style="
     grid-column: 2;
@@ -169,7 +167,10 @@ grid-template-rows: auto;">
                     Loading...
                 </button>
             </form>
-            <h2>Usage</h2>
+            <h2>Preview</h2>
+            <video src="videos/demo.webm" style="width:100%" loop autoplay controls></video>
+            <h2>Instructions</h2>
+            <aside style="border:dashed 2px darkred;background-color:wheat;border-radius:5px;padding:0.5em"><strong>Note:</strong> Lozya is built on top of <a href="https://jitsi.org">Jitsi Meet</a>. Jitsi does not support iPhones and iPads.</aside>
             <ul>
                 <li><strong>Be careful in picking your room name</strong>, if you don't want randos to join. Traffic is low right now, but you never know.</li>
                 <li>Try to <strong>pick a unique user name</strong>. A lot of people use "Test" and then there are a bunch of people with the same name running around.</li>
