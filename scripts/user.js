@@ -1,11 +1,11 @@
 ﻿import "./protos.js";
 import { clamp, project } from "./math.js";
-import { mutedSpeaker, videoCamera, people } from "./emoji.js";
+import { mutedSpeaker, videoCamera, people, bust } from "./emoji.js";
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
     STACKED_USER_OFFSET_X = 5,
     STACKED_USER_OFFSET_Y = 5,
-    eventNames = ["moveTo", "userPositionNeeded", "changeUserVolume"];
+    eventNames = ["moveTo", "userInitRequest", "changeUserVolume"];
 
 export class User extends EventTarget {
     constructor(id, displayName, isMe) {
@@ -24,7 +24,7 @@ export class User extends EventTarget {
         this.distXToMe = 0;
         this.distYToMe = 0;
         this.isMe = isMe;
-        this.avatarEmoji = people.random().value;
+        this.avatarEmoji = (isMe ? people.random() : bust).value;
         this.avatarEmojiMetrics = null;
         this.avatarImage = null;
         this.avatarURL = null;
@@ -38,6 +38,13 @@ export class User extends EventTarget {
         this.lastPositionRequestTime = Date.now() - POSITION_REQUEST_DEBOUNCE_TIME;
         this.moveEvent = new UserMoveEvent(this.id);
         this.volumeChangedEvents = {};
+    }
+
+    init(evt) {
+        this.x = evt.x;
+        this.y = evt.y;
+        this.avatarEmoji = evt.avatarEmoji;
+        this.avatarEmojiMetrics = null;
     }
 
     addEventListener(evtName, func) {
@@ -347,7 +354,7 @@ class UserMoveEvent extends Event {
 
 class UserPositionNeededEvent extends Event {
     constructor(participantID) {
-        super("userPositionNeeded");
+        super("userInitRequest");
         this.participantID = participantID;
     }
 }

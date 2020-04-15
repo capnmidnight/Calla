@@ -224,6 +224,17 @@ export class Game {
 
         // ============= ACTION ==================
 
+        this.jitsiClient.addEventListener("userInitRequest", (evt) => {
+            this.jitsiClient.txGameData(evt.participantID, "userInitResponse", this.me);
+        });
+
+        this.jitsiClient.addEventListener("userInitResponse", (evt) => {
+            const user = this.userLookup[evt.participantID];
+            if (!!user) {
+                user.init(evt.data);
+            }
+        });
+
         this.jitsiClient.addEventListener("moveTo", (evt) => {
             const user = this.userLookup[evt.participantID];
             if (!!user) {
@@ -233,10 +244,6 @@ export class Game {
 
         this.jitsiClient.addEventListener("emote", (evt) => {
             this.emote(evt.participantID, evt.data);
-        });
-
-        this.jitsiClient.addEventListener("userInitResponse", (evt) => {
-            this.jitsiClient.txGameData(evt.participantID, "moveTo", { x: this.me.x, y: this.me.y });
         });
         this.jitsiClient.addEventListener("audioMuteStatusChanged", this.muteUserAudio.bind(this));
         this.jitsiClient.addEventListener("videoMuteStatusChanged", this.muteUserVideo.bind(this));
@@ -309,8 +316,8 @@ export class Game {
         }
 
         const user = new User(evt.id, evt.displayName, false);
-        user.addEventListener("userPositionNeeded", (evt) => {
-            this.jitsiClient.txGameData(evt.participantID, "userInitResponse");
+        user.addEventListener("userInitRequest", (evt) => {
+            this.jitsiClient.txGameData(evt.participantID, "userInitRequest");
         });
         this.userLookup[evt.id] = user;
         this.userList.unshift(user);

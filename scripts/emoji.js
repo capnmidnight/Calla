@@ -1,7 +1,11 @@
 ﻿export const mutedSpeaker = { value: "\u{1F507}", desc: "Muted Speaker" };
 export const videoCamera = { value: "\u{1F4F9}", desc: "Video Camera" };
+export const speakingHead = { value: "\u{1F5E3}\u{FE0F}", desc: "Speaking Head" };
+export const bust = { value: "\u{1F464}", desc: "Bust in Silhouette" };
 
 export const people = [
+    speakingHead,
+    bust,
     { value: "\u{1F476}", desc: "baby" },
     { value: "\u{1F476}\u{1F3FB}", desc: "baby: light skin tone" },
     { value: "\u{1F476}\u{1F3FC}", desc: "baby: medium-light skin tone" },

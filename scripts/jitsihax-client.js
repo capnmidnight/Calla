@@ -1,7 +1,7 @@
 ﻿
 // helps us filter out data channel messages that don't belong to us
 const LOZYA_FINGERPRINT = "lozya",
-    eventNames = ["moveTo", "emote", "userInitResponse", "audioMuteStatusChanged", "videoMuteStatusChanged"];
+    eventNames = ["moveTo", "emote", "userInitRequest", "userInitResponse", "audioMuteStatusChanged", "videoMuteStatusChanged"];
 
 class JitsiClientEvent extends Event {
     constructor(participantID, data) {
@@ -25,6 +25,29 @@ class JitsiClient extends EventTarget {
         obj.hax = LOZYA_FINGERPRINT;
         obj.command = command;
         this.api.executeCommand("sendEndpointTextMessage", id, JSON.stringify(obj));
+    }
+
+    /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
+    /// to receive Lozya messages from the Jitsi Meet data channel.
+    rxGameData(evt) {
+        // JitsiExternalAPI::endpointTextMessageReceived event arguments format: 
+        // evt = {
+        //    data: {
+        //      senderInfo: {
+        //        jid: "string", // the jid of the sender
+        //        id: "string" // the participant id of the sender
+        //      },
+        //      eventData: {
+        //        name: "string", // the name of the datachannel event: `endpoint-text-message`
+        //        text: "string" // the received text from the sender
+        //      }
+        //   }
+        //};
+        const data = JSON.parse(evt.data.eventData.text);
+        if (data.hax === LOZYA_FINGERPRINT) {
+            const evt2 = new JitsiClientEvent(evt.data.senderInfo.id, data);
+            this.dispatchEvent(evt2);
+        }
     }
 
     toggleAudio() {
@@ -54,29 +77,6 @@ class JitsiClient extends EventTarget {
         }
 
         super.addEventListener(evtName, callback);
-    }
-
-    /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
-    /// to receive Lozya messages from the Jitsi Meet data channel.
-    rxGameData(evt) {
-        // JitsiExternalAPI::endpointTextMessageReceived event arguments format: 
-        // evt = {
-        //    data: {
-        //      senderInfo: {
-        //        jid: "string", // the jid of the sender
-        //        id: "string" // the participant id of the sender
-        //      },
-        //      eventData: {
-        //        name: "string", // the name of the datachannel event: `endpoint-text-message`
-        //        text: "string" // the received text from the sender
-        //      }
-        //   }
-        //};
-        const data = JSON.parse(evt.data.eventData.text);
-        if (data.hax === LOZYA_FINGERPRINT) {
-            const evt2 = new JitsiClientEvent(evt.data.senderInfo.id, data);
-            this.dispatchEvent(evt2);
-        }
     }
 
     /// Send a Lozya message to the jitsihax.js script
