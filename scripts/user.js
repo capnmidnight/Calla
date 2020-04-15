@@ -75,7 +75,13 @@ export class User extends EventTarget {
                 this.avatarURL = url;
                 const img = new Image();
                 img.addEventListener("load", (evt) => {
-                    this.avatarImage = img;
+                    this.avatarImage = document.createElement("canvas");
+                    this.avatarImage.width = img.width;
+                    this.avatarImage.height = img.height;
+                    const g = this.avatarImage.getContext("2d");
+                    g.clearRect(0, 0, img.width, img.height);
+                    g.imageSmoothingEnabled = false;
+                    g.drawImage(img, 0, 0);
                 });
                 img.src = url;
             }
@@ -211,7 +217,7 @@ export class User extends EventTarget {
                 g.shadowOffsetY = 3 * cameraZ;
                 g.shadowBlur = 3 * cameraZ;
 
-                this.innerDraw(g, map, false);
+                this.innerDraw(g, map);
             }
             g.restore();
         }
@@ -221,7 +227,7 @@ export class User extends EventTarget {
         if (this.visible) {
             g.save();
             {
-                this.innerDraw(g, map, true);
+                this.innerDraw(g, map);
             }
             g.restore();
         }
@@ -243,15 +249,9 @@ export class User extends EventTarget {
                 (this.avatarEmojiMetrics.width - this.stackAvatarWidth) / 2 + this.avatarEmojiMetrics.actualBoundingBoxLeft,
                 this.avatarEmojiMetrics.actualBoundingBoxAscent);
         }
-        else if (drawImage) {
+        else {
             g.drawImage(
                 this.avatarImage,
-                0, 0,
-                this.stackAvatarWidth,
-                this.stackAvatarHeight);
-        }
-        else {
-            g.fillRect(
                 0, 0,
                 this.stackAvatarWidth,
                 this.stackAvatarHeight);
