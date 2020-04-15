@@ -24,11 +24,12 @@ export class EmojiForm extends EventTarget {
 
         const addIconsToContainer = (group, container) => {
             for (let icon of group) {
-                const btn = document.createElement("button");
+                const g = document.createElement("span"),
+                    btn = document.createElement("button");
                 let alts = null;
 
                 if (!!icon.alt) {
-                    alts = document.createElement("span");
+                    alts = document.createElement("div");
                     allAlts.push(alts);
                     addIconsToContainer(icon.alt, alts);
                     alts.hide();
@@ -40,16 +41,17 @@ export class EmojiForm extends EventTarget {
                     emojiPreview.innerHTML = `${icon.value} - ${icon.desc}`;
                     confirmEmojiButton.unlock();
                     if (!!alts) {
-                        closeAll();
-                        alts.show();
+                        alts.toggleOpen();
                     }
                 });
                 btn.title = icon.desc;
                 btn.innerHTML = icon.value;
-                container.appendChild(btn);
+                g.appendChild(btn);
                 if (!!alts) {
-                    container.appendChild(alts);
+                    g.appendChild(alts);
                 }
+                g.style.backgroundColor = "rgba(0, 0, 0, 0.2)";
+                container.appendChild(g);
             }
         };
 
