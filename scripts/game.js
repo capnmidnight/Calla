@@ -167,7 +167,7 @@ export class Game {
                         dy = pointer.y - last.y,
                         dist = Math.sqrt(dx * dx + dy * dy);
                     pointer.dragDistance = last.dragDistance + dist;
-                   
+
                     if (pointer.dragDistance > MAX_DRAG_DISTANCE) {
                         this.targetOffsetCameraX = this.offsetCameraX += dx;
                         this.targetOffsetCameraY = this.offsetCameraY += dy;
@@ -195,7 +195,7 @@ export class Game {
                     dy = tile.y - this.me.ty;
 
                 if (dx === 0 && dy === 0) {
-                    this.emote(this.me.id, this.currentEmoji);
+                    this.emote();
                 }
                 else if (this.canClick) {
                     const clearTile = this.map.getClearTile(this.me.tx, this.me.ty, dx, dy);
@@ -244,14 +244,19 @@ export class Game {
         this.gui = new AppGui(this);
     }
 
-    emote(participantID, emoji) {
-        if (!!participantID) {
-            if (participantID === this.me.id) {
-                emoji = emoji || this.currentEmoji;
-                if (!emoji) {
-                    this.gui.showEmoji();
-                }
-                else {
+    async emote(participantID, emoji) {
+        participantID = participantID || this.me.id;
+        const user = this.userLookup[participantID];
+
+        if (!!user) {
+
+            if (user.isMe) {
+
+                emoji = emoji
+                    || this.currentEmoji
+                    || await this.gui.emojiForm.selectAsync();
+
+                if (!!emoji) {
                     this.currentEmoji = emoji;
                     for (let user of this.userList) {
                         if (user !== this.me) {
@@ -261,9 +266,7 @@ export class Game {
                 }
             }
 
-            const user = this.userLookup[participantID];
-            if (!!user
-                && !!emoji) {
+            if (!!emoji) {
                 this.emotes.push(new Emote(emoji, user.tx + 0.5, user.ty));
             }
         }
@@ -509,7 +512,7 @@ export class Game {
                         case "ArrowDown": dy++; break;
                         case "ArrowLeft": dx--; break;
                         case "ArrowRight": dx++; break;
-                        case "e": this.emote(this.me.id, this.currentEmoji); break;
+                        case "e": this.emote(); break;
                     }
                 }
             }

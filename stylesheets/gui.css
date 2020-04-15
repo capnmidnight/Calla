@@ -10,7 +10,7 @@
     overflow: hidden;
 }
 
-#frontBuffer{
+#frontBuffer {
     touch-action: none;
 }
 
@@ -55,7 +55,7 @@ body > section {
 }
 
     #toolbar > * {
-        display:inline-flex;
+        display: inline-flex;
         margin: 0 0.5em 0 0;
     }
 
@@ -79,16 +79,16 @@ label {
     grid-template-columns: 5fr 1fr 1fr;
 }
 
-#options {
-    grid-template-columns: 5fr 1fr 1fr;
-}
-
-#emojiList {
+#emoji > .content {
     overflow-y: scroll;
 }
 
-#emojiList > p > button {
-    font-size: 200%;
-    border: none;
-    background-color: transparent;
+    #emoji > .content > p > button {
+        font-size: 200%;
+        border: none;
+        background-color: transparent;
+    }
+
+#options {
+    grid-template-columns: 5fr 1fr 1fr;
 }

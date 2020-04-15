@@ -1,7 +1,7 @@
 ﻿import "./jitsi-meet-external-api.js";
 import "./protos.js";
 
-import { bestIcons } from "./emoji.js";
+import { EmojiForm } from "./emojiForm.js";
 
 export class AppGui extends EventTarget {
     constructor(game) {
@@ -199,85 +199,29 @@ export class AppGui extends EventTarget {
 
         // >>>>>>>>>> EMOJI >>>>>>>>>>
         {
-            this.emojiView = document.querySelector("#emoji");
+            const emojiView = document.querySelector("#emoji"),
+                selectEmojiButton = document.querySelector("#selectEmoji"),
+                emoteButton = document.querySelector("#emote");
 
-            const previousEmoji = [],
-                emojiContainer = document.querySelector("#emojiList"),
-                recentEmoji = document.querySelector("#recentEmoji"),
-                emojiPreview = document.querySelector("#emojiPreview"),
-                confirmEmojiButton = document.querySelector("#emoji button.confirm"),
-                cancelEmojiButton = document.querySelector("#emoji button.cancel"),
-                emoteButton = document.querySelector("#emote"),
-                selectEmojiButton = document.querySelector("#selectEmoji");
+            this.emojiForm = null;
 
-            let selectedEmoji = null;
-
-            if (this.emojiView
-                && emojiContainer
-                && recentEmoji
-                && emojiPreview
-                && confirmEmojiButton
-                && cancelEmojiButton
+            if (emojiView
                 && emoteButton
                 && selectEmojiButton) {
 
-                confirmEmojiButton.lock();
+                this.emojiForm = new EmojiForm(emojiView);
 
-                const addIconsToContainer = (group, container) => {
-                    for (let icon of group) {
-                        const a = document.createElement("button");
-                        a.type = "button";
-                        a.addEventListener("click", (evt) => {
-                            selectedEmoji = icon;
-                            emojiPreview.innerHTML = `${icon.value} - ${icon.desc}`;
-                            confirmEmojiButton.unlock();
-                        });
-                        a.title = icon.desc;
-                        a.innerHTML = icon.value;
-                        container.appendChild(a);
+                emoteButton.addEventListener("click", () => this.game.emote());
+
+                selectEmojiButton.addEventListener("click", async (evt) => {
+                    if ((!this.optionsView || !this.optionsView.isOpen())
+                        && (!this.loginView || !this.loginView.isOpen())) {
+                        const emoji = await this.emojiForm.selectAsync();
+                        if (!!emoji) {
+                            this.game.emote(this.game.me.id, emoji);
+                        }
                     }
-                };
-
-
-                for (let key of Object.keys(bestIcons)) {
-                    const header = document.createElement("h1"),
-                        container = document.createElement("p"),
-                        group = bestIcons[key];
-
-                    header.innerHTML = key;
-                    addIconsToContainer(group, container);
-
-                    emojiContainer.appendChild(header);
-                    emojiContainer.appendChild(container);
-                }
-
-                confirmEmojiButton.addEventListener("click", () => {
-                    const idx = previousEmoji.indexOf(selectedEmoji);
-                    emoteButton.innerHTML = `Emote <kbd>(E)</kbd> ${selectedEmoji.value}`;
-                    if (idx === -1) {
-                        previousEmoji.push(selectedEmoji);
-                        recentEmoji.innerHTML = "";
-                        addIconsToContainer(previousEmoji, recentEmoji);
-                    }
-
-                    this.emojiView.hide();
-                    this.game.emote(this.game.me.id, selectedEmoji);
                 });
-
-                emoteButton.innerHTML = `Emote <kbd>(E)</kbd> N/A`;
-
-                cancelEmojiButton.addEventListener("click", () => {
-                    confirmEmojiButton.lock();
-                    this.emojiView.hide();
-                });
-
-                emoteButton.addEventListener("click", () => {
-                    this.game.emote(this.game.me.id, this.game.currentEmoji);
-                });
-
-                selectEmojiButton.addEventListener("click", this.showEmoji.bind(this));
-
-                this.emojiView.hide();
             }
         }
         // <<<<<<<<<< EMOJI <<<<<<<<<<
@@ -306,16 +250,9 @@ export class AppGui extends EventTarget {
             = height;
     }
 
-    showEmoji() {
-        if ((!this.optionsView || !this.optionsView.isOpen())
-            && (!this.loginView || !this.loginView.isOpen())) {
-            this.emojiView.show();
-        }
-    }
-
     showOptions(toggleOptions) {
         if ((!this.emojiView || !this.emojiView.isOpen())
-            && (!this.emojiView || !this.emojiView.isOpen())) {
+            && (!this.loginView || !this.loginView.isOpen())) {
             this.optionsView.setOpenWithLabel(
                 toggleOptions !== this.optionsView.isOpen(),
                 this.optionsButton,
