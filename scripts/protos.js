@@ -88,7 +88,13 @@ Response.prototype.xml = async function () {
     return xml.documentElement;
 };
 
-Array.prototype.random = function () {
-    const idx = Math.floor(Math.random() * this.length);
-    return this[idx];
+Array.prototype.random = function (defaultValue) {
+    const offset = !!defaultValue ? 1 : 0,
+        idx = Math.floor(Math.random() * (this.length + offset)) - offset;
+    if (idx < 0) {
+        return defaultValue;
+    }
+    else {
+        return this[idx];
+    }
 };

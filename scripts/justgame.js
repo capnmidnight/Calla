@@ -4,7 +4,7 @@
 
 import "./protos.js";
 import { Game } from "./game.js";
-import { people, bestIcons } from "./emoji.js";
+import { randomPerson, bestIcons } from "./emoji.js";
 
 function mover(id) {
     for (let func of jitsiEvents.moveTo) {
@@ -52,7 +52,7 @@ const jitsiEvents = {
                 if (!!user) {
                     const evt = {
                         participantID: id,
-                        data: Object.assign({}, user, { avatarEmoji: people.random().value })
+                        data: Object.assign({}, user, { avatarEmoji: randomPerson().value })
                     };
                     for (let func of jitsiEvents.userInitResponse) {
                         func(evt);

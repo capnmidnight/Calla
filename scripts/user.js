@@ -1,6 +1,6 @@
 ﻿import "./protos.js";
 import { clamp, project } from "./math.js";
-import { mutedSpeaker, videoCamera, people, bust } from "./emoji.js";
+import { mutedSpeaker, videoCamera, randomPerson, bust } from "./emoji.js";
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
     STACKED_USER_OFFSET_X = 5,
@@ -15,7 +15,7 @@ export class User extends EventTarget {
 
         this.x = 0;
         this.y = 0;
-        this.avatarEmoji = (isMe ? people.random() : bust).value;
+        this.avatarEmoji = (isMe ? randomPerson() : bust).value;
         this.avatarEmojiMetrics = null;
 
         this.displayName = displayName || id;

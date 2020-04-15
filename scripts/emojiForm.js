@@ -13,20 +13,43 @@ export class EmojiForm extends EventTarget {
 
 
         confirmEmojiButton.lock();
-        let selectedEmoji = null;
+        let selectedEmoji = null,
+            allAlts = [];
+
+        const closeAll = () => {
+            for (let alt of allAlts) {
+                alt.hide();
+            }
+        }
 
         const addIconsToContainer = (group, container) => {
             for (let icon of group) {
-                const a = document.createElement("button");
-                a.type = "button";
-                a.addEventListener("click", (evt) => {
+                const btn = document.createElement("button");
+                let alts = null;
+
+                if (!!icon.alt) {
+                    alts = document.createElement("span");
+                    allAlts.push(alts);
+                    addIconsToContainer(icon.alt, alts);
+                    alts.hide();
+                }
+
+                btn.type = "button";
+                btn.addEventListener("click", (evt) => {
                     selectedEmoji = icon;
                     emojiPreview.innerHTML = `${icon.value} - ${icon.desc}`;
                     confirmEmojiButton.unlock();
+                    if (!!alts) {
+                        closeAll();
+                        alts.show();
+                    }
                 });
-                a.title = icon.desc;
-                a.innerHTML = icon.value;
-                container.appendChild(a);
+                btn.title = icon.desc;
+                btn.innerHTML = icon.value;
+                container.appendChild(btn);
+                if (!!alts) {
+                    container.appendChild(alts);
+                }
             }
         };
 
@@ -94,6 +117,7 @@ export class EmojiForm extends EventTarget {
                 this.addEventListener("emojiSelected", yes);
                 this.addEventListener("emojiCanceled", no);
 
+                closeAll();
                 emojiView.show();
             });
         };
