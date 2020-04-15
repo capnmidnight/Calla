@@ -292,9 +292,10 @@ export class AppGui extends EventTarget {
                 }
                 if (this.game.me.avatarEmoji !== this.avatarEmojiOutput.innerHTML) {
                     this.game.me.avatarEmoji = this.avatarEmojiOutput.innerHTML;
+                    const evt = Object.assign({}, this.me);
                     for (let user of this.game.userList) {
                         if (!user.isMe) {
-                            this.game.jitsiClient.txGameData(user.id, "userInitResponse", this.game.me);
+                            this.game.jitsiClient.sendUserState(user.id, evt);
                         }
                     }
                 }
@@ -378,12 +379,12 @@ export class AppGui extends EventTarget {
             roomName: roomName,
             onload: (evt) => {
                 this.game.jitsiClient.setJitsiApi(api);
-
-                this.game.jitsiClient.txJitsiHax("setAudioProperties", {
-                    minDistance: AUDIO_DISTANCE_MIN,
-                    maxDistance: AUDIO_DISTANCE_MAX,
-                    transitionTime: MOVE_TRANSITION_TIME
-                });
+                this.game.jitsiClient.setAudioProperties(
+                    AUDIO_DISTANCE_MIN,
+                    AUDIO_DISTANCE_MAX,
+                    MOVE_TRANSITION_TIME,
+                    false,
+                    true);
             }
         });
         api.executeCommand("displayName", userName);

@@ -17,6 +17,8 @@ class JitsiClient extends EventTarget {
     setJitsiApi(api) {
         this.api = api;
         this.iframe = api.getIFrame();
+        this.api.addEventListener("endpointTextMessageReceived",
+            this.rxGameData.bind(this));
     }
 
     /// Send a Lozya message through the Jitsi Meet data channel.
@@ -77,6 +79,44 @@ class JitsiClient extends EventTarget {
         }
 
         super.addEventListener(evtName, callback);
+    }
+
+    setAudioProperties(minDistance, maxDistance, transitionTime, useBasicAudio, use3dAudio) {
+        this.txJitsiHax("setAudioProperties", {
+            minDistance,
+            maxDistance,
+            transitionTime,
+            useBasicAudio,
+            use3dAudio
+        });
+    }
+
+    requestUserState(ofUserID) {
+        this.txGameData(ofUserID, "userInitRequest");
+    }
+
+    sendUserState(toUserID, fromUser) {
+        this.txGameData(toUserID, "userInitResponse", fromUser);
+    }
+
+    sendEmote(toUserID, emoji) {
+        this.txGameData(toUserID, "emote", emoji);
+    }
+
+    sendAudioMuteState(toUserID, muted) {
+        this.txGameData(toUserID, "audioMuteStatusChanged", { muted });
+    }
+
+    sendVideoMuteState(toUserID, muted) {
+        this.txGameData(toUserID, "videoMuteStatusChanged", { muted });
+    }
+
+    setVolume(evt) {
+        this.txJitsiHax(this.jitsiClient, "setVolume", evt);
+    }
+
+    sendPosition(toUserID, evt) {
+        this.txGameData(toUserID, "moveTo", evt);
     }
 
     /// Send a Lozya message to the jitsihax.js script

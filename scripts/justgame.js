@@ -94,6 +94,38 @@ const jitsiEvents = {
             for (let func of apiEvents.avatarChanged) {
                 func({ id: game.me.id, avatarURL: url });
             }
+        },
+
+        setAudioProperties: function (minDistance, maxDistance, transitionTime, useBasicAudio, use3dAudio) {
+        },
+
+        requestUserState: function (ofUserID) {
+            this.txGameData(ofUserID, "userInitRequest");
+        },
+
+
+        sendUserState: function (toUserID, fromUser) {
+            this.txGameData(toUserID, "userInitResponse", fromUser);
+        },
+
+        sendEmote: function (toUserID, emoji) {
+            this.txGameData(toUserID, "emote", emoji);
+        },
+
+        sendAudioMuteState: function (toUserID, muted) {
+            this.txGameData(toUserID, "audioMuteStatusChanged", { muted });
+        },
+
+        sendVideoMuteState: function (toUserID, muted) {
+            this.txGameData(toUserID, "videoMuteStatusChanged", { muted });
+        },
+
+        setVolume: function (evt) {
+            this.txJitsiHax(this.jitsiClient, "setVolume", evt);
+        },
+
+        sendPosition: function (toUserID, evt) {
+            this.txGameData(toUserID, "moveTo", evt);
         }
 
     },
