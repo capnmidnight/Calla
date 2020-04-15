@@ -82,7 +82,7 @@ const jitsiEvents = {
         isVideoMuted: function () {
             return Promise.resolve(videoMuted);
         },
-        setAvatar: function (url) {
+        setAvatarURL: function (url) {
             for (let func of apiEvents.avatarChanged) {
                 func({ id: game.me.id, avatarURL: url });
             }

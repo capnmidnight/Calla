@@ -12,20 +12,26 @@ export class User extends EventTarget {
         super();
 
         this.id = id;
+
+        this.x = 0;
+        this.y = 0;
+        this.avatarEmoji = (isMe ? people.random() : bust).value;
+        this.avatarEmojiMetrics = null;
+
         this.displayName = displayName || id;
         this.audioMuted = false;
         this.videoMuted = true;
-        this.x = 0; this.y = 0;
-        this.sx = 0; this.sy = 0;
-        this.tx = 0; this.ty = 0;
-        this.dx = 0; this.dy = 0;
+        this.sx = 0;
+        this.sy = 0;
+        this.tx = 0;
+        this.ty = 0;
+        this.dx = 0;
+        this.dy = 0;
         this.dist = 0;
         this.t = 0;
         this.distXToMe = 0;
         this.distYToMe = 0;
         this.isMe = isMe;
-        this.avatarEmoji = (isMe ? people.random() : bust).value;
-        this.avatarEmojiMetrics = null;
         this.avatarImage = null;
         this.avatarURL = null;
         this.stackUserCount = 1;
@@ -56,7 +62,7 @@ export class User extends EventTarget {
         super.addEventListener(evtName, func);
     }
 
-    setAvatar(url) {
+    setAvatarURL(url) {
         if (url !== null
             && url !== undefined) {
 

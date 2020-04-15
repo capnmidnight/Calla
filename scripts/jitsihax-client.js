@@ -58,7 +58,7 @@ class JitsiClient extends EventTarget {
         this.api.executeCommand("toggleVideo");
     }
 
-    setAvatar(url) {
+    setAvatarURL(url) {
         this.api.executeCommand("avatarUrl", url);
     }
 

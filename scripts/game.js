@@ -299,7 +299,7 @@ export class Game {
         api.addEventListener("videoConferenceLeft", this.end.bind(this));
         api.addEventListener("participantJoined", this.addUser.bind(this));
         api.addEventListener("participantLeft", this.removeUser.bind(this));
-        api.addEventListener("avatarChanged", this.setAvatar.bind(this));
+        api.addEventListener("avatarChanged", this.setAvatarURL.bind(this));
         api.addEventListener("endpointTextMessageReceived", this.jitsiClient.rxGameData.bind(this.jitsiClient));
         api.addEventListener("displayNameChange", this.changeUserName.bind(this));
         api.addEventListener("audioMuteStatusChanged", this.muteUserAudio.bind(this));
@@ -404,7 +404,7 @@ export class Game {
         }
     }
 
-    setAvatar(evt) {
+    setAvatarURL(evt) {
         //evt = {
         //  id: string, // the id of the participant that changed his avatar.
         //  avatarURL: string // the new avatar URL.
@@ -412,12 +412,12 @@ export class Game {
         if (!!evt) {
             const user = this.userLookup[evt.id];
             if (!!user) {
-                user.setAvatar(evt.avatarURL);
+                user.setAvatarURL(evt.avatarURL);
             }
 
             if (!!this.me
                 && evt.id === this.me.id) {
-                this.gui.avatarURLInput.value = evt.avatarURL;
+                this.gui.avatarURLInput.value = evt.avatarURL || "";
             }
         }
     }
@@ -436,7 +436,6 @@ export class Game {
         this.userLookup[this.me.id] = this.me;
 
         this.me.addEventListener("changeUserVolume", this.jitsiClient.txJitsiHax.bind(this.jitsiClient, "setVolume"));
-
         this.me.addEventListener("moveTo", (evt) => {
             for (let user of this.userList) {
                 if (!user.isMe) {
@@ -445,7 +444,7 @@ export class Game {
             }
         });
 
-        this.setAvatar(evt);
+        this.setAvatarURL(evt);
 
         this.map = new TileMap(this.currentRoomName);
         this.map.load()
