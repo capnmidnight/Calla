@@ -10,6 +10,19 @@ export class AppGui extends EventTarget {
 
         this.game = game;
 
+        // >>>>>>>>>> TWEET >>>>>>>>>>
+        {
+            const tweetButton = document.querySelector("#tweet");
+            if (tweetButton) {
+                tweetButton.addEventListener("click", (evt) => {
+                    const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
+                        url = new URL("https://twitter.com/intent/tweet?text=" + message);
+                    open(url);
+                });
+            }
+        }
+        // <<<<<<<<<< TWEET <<<<<<<<<<
+
         // >>>>>>>>>> ZOOM >>>>>>>>>>
         {
             this.zoomSpinner = document.querySelector("#zoom");
