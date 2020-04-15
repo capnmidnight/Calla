@@ -48,7 +48,7 @@ body > section {
 
 #toolbar {
     background-color: #bbb;
-    padding: 4px 0;
+    padding: 4px;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -79,15 +79,15 @@ label {
     grid-template-columns: 5fr 1fr 1fr;
 }
 
-#emoji > .content {
-    overflow-y: scroll;
-}
-
-    #emoji > .content > p > button {
-        font-size: 200%;
-        border: none;
-        background-color: transparent;
+    #emoji > .content {
+        overflow-y: scroll;
     }
+
+        #emoji > .content > p > button {
+            font-size: 200%;
+            border: none;
+            background-color: transparent;
+        }
 
 #options {
     grid-template-columns: 5fr 1fr 1fr;
