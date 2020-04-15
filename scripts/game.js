@@ -445,6 +445,7 @@ export class Game {
         });
 
         this.setAvatarURL(evt);
+        this.gui.avatarEmojiOutput.innerHTML = this.me.avatarEmoji;
 
         this.map = new TileMap(this.currentRoomName);
         this.map.load()
