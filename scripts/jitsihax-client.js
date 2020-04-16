@@ -3,22 +3,16 @@
 const LOZYA_FINGERPRINT = "lozya",
     eventNames = ["moveTo", "emote", "userInitRequest", "userInitResponse", "audioMuteStatusChanged", "videoMuteStatusChanged"];
 
-class JitsiClientEvent extends Event {
-    constructor(participantID, data) {
-        super(data.command);
-        this.participantID = participantID;
-        this.data = data;
-    }
-}
-
 // Manages communication between Jitsi Meet and Lozya
-class JitsiClient extends EventTarget {
-    
+export class JitsiClient extends EventTarget {
+
     setJitsiApi(api) {
         this.api = api;
-        this.iframe = api.getIFrame();
         this.api.addEventListener("endpointTextMessageReceived",
             this.rxGameData.bind(this));
+
+        this.iframe = api.getIFrame();
+        this.iframe.addEventListener("message", this.rxJitsiHax.bind(this));
     }
 
     /// Send a Lozya message through the Jitsi Meet data channel.
@@ -49,6 +43,31 @@ class JitsiClient extends EventTarget {
         if (data.hax === LOZYA_FINGERPRINT) {
             const evt2 = new JitsiClientEvent(evt.data.senderInfo.id, data);
             this.dispatchEvent(evt2);
+        }
+    }
+
+    /// Send a Lozya message to the jitsihax.js script
+    txJitsiHax(command, obj) {
+        if (this.iframe) {
+            obj.hax = LOZYA_FINGERPRINT;
+            obj.command = command;
+            this.iframe.contentWindow.postMessage(JSON.stringify(obj), "https://" + JITSI_HOST);
+        }
+    }
+
+    rxJitsiHax(evt) {
+        const isLocalHost = evt.origin.match(/^https?:\/\/localhost\b/);
+        if (evt.origin === JITSI_HOST || isLocalHost) {
+            try {
+                const data = JSON.parse(evt.data);
+                if (data.hax === LOZYA_FINGERPRINT) {
+                    const evt2 = new LozyaEvent(data);
+                    this.dispatchEvent(evt2);
+                }
+            }
+            catch (exp) {
+                console.error(exp);
+            }
         }
     }
 
@@ -118,15 +137,18 @@ class JitsiClient extends EventTarget {
     sendPosition(toUserID, evt) {
         this.txGameData(toUserID, "moveTo", evt);
     }
+}
 
-    /// Send a Lozya message to the jitsihax.js script
-    txJitsiHax(command, obj) {
-        if (this.iframe) {
-            obj.hax = LOZYA_FINGERPRINT;
-            obj.command = command;
-            this.iframe.contentWindow.postMessage(JSON.stringify(obj), "https://" + JITSI_HOST);
-        }
+class LozyaEvent extends Event {
+    constructor(data) {
+        super(data.command);
+        this.data = data;
     }
 }
 
-export const jitsiClient = new JitsiClient();
+class JitsiClientEvent extends LozyaEvent {
+    constructor(participantID, data) {
+        super(data);
+        this.participantID = participantID;
+    }
+}

@@ -3,161 +3,119 @@
 // meeting.
 
 import "./protos.js";
+import { JitsiClient } from "./jitsihax-client.js";
 import { Game } from "./game.js";
 import { randomPerson, bestIcons } from "./emoji.js";
 
-function mover(id) {
-    for (let func of jitsiEvents.moveTo) {
-        func({
-            participantID: id,
+class MockJitsiClient extends JitsiClient {
+    constructor() {
+        super();
+        this.audioMuted = false;
+        this.videoMuted = true;
+    }
+
+    mockRxGameData(command, id, data) {
+        data = Object.assign({},
+            data,
+            {
+                hax: "lozya",
+                command
+            });
+
+        const text = JSON.stringify(data);
+
+        this.rxGameData({
             data: {
-                x: Math.floor(Math.random() * 10 - 5),
-                y: Math.floor(Math.random() * 10 - 5)
+                senderInfo: {
+                    id
+                },
+                eventData: {
+                    text
+                }
             }
         });
     }
 
-    if (Math.random() <= 0.1) {
-        const groups = Object.values(bestIcons),
-            group = groups.random(),
-            emoji = group.random(),
-            evt = { participantID: id, data: emoji };
-
-        for (let func of jitsiEvents.emote) {
-            func(evt);
+    txGameData(id, msg, data) {
+        if (msg === "userInitRequest") {
+            const user = game.userLookup[id];
+            if (!!user) {
+                user.avatarEmoji = randomPerson().value;
+                this.mockRxGameData("userInitResponse", id, user);
+                mover(id);
+            }
         }
     }
 
-    setTimeout(mover.bind(null, id), 1000 * (1 + Math.random()));
+    txJitsiHax(command, obj) {
+    }
+
+    toggleAudio() {
+        this.audioMuted = !this.audioMuted;
+        this.mockRxGameData("audioMuteStatusChanged", game.me.id, { muted: this.audioMuted });
+    }
+
+    toggleVideo() {
+        this.videoMuted = !this.videoMuted;
+        this.mockRxGameData("videoMuteStatusChanged", game.me.id, { muted: this.videoMuted });
+    }
+
+    isAudioMuted() {
+        return Promise.resolve(this.audioMuted);
+    }
+
+    isVideoMuted() {
+        return Promise.resolve(this.videoMuted);
+    }
+
+    setAvatarURL(url) {
+        this.mockRxGameData("avatarChanged", game.me.id, { avatarURL: url });
+    }
 }
 
-let audioMuted = false,
-    videoMuted = true;
-
-const jitsiEvents = {
-    moveTo: [],
-    emote: [],
-    userInitRequest: [],
-    userInitResponse: [],
-    audioMuteStatusChanged: [],
-    videoMuteStatusChanged: []
-},
-    jitsiClient = {
-        addEventListener: function (evt, func) {
-            jitsiEvents[evt].push(func);
-        },
-
-        txGameData: function (id, msg, data) {
-            if (msg === "userInitRequest") {
-                const user = game.userLookup[id];
-                if (!!user) {
-                    const evt = {
-                        participantID: id,
-                        data: Object.assign({}, user, { avatarEmoji: randomPerson().value })
-                    };
-                    for (let func of jitsiEvents.userInitResponse) {
-                        func(evt);
-                    }
-                }
-            }
-        },
-
-        rxGameData: function () { },
-
-        txJitsiHax: function () { },
-
-        toggleAudio: function () {
-            audioMuted = !audioMuted;
-            const evt = { participantID: game.me.id, data: { muted: audioMuted } };
-            for (let func of apiEvents.audioMuteStatusChanged) {
-                func(evt);
-            }
-        },
-
-        toggleVideo: function () {
-            videoMuted = !videoMuted;
-            const evt = { participantID: game.me.id, data: { muted: videoMuted } };
-            for (let func of apiEvents.videoMuteStatusChanged) {
-                func(evt);
-            }
-        },
-
-        isAudioMuted: function () {
-            return Promise.resolve(audioMuted);
-        },
-
-        isVideoMuted: function () {
-            return Promise.resolve(videoMuted);
-        },
-
-        setAvatarURL: function (url) {
-            for (let func of apiEvents.avatarChanged) {
-                func({ id: game.me.id, avatarURL: url });
-            }
-        },
-
-        setAudioProperties: function (minDistance, maxDistance, transitionTime, useBasicAudio, use3dAudio) {
-        },
-
-        requestUserState: function (ofUserID) {
-            this.txGameData(ofUserID, "userInitRequest");
-        },
+class MockJitsiMeetExternalAPI extends EventTarget {
+    getIFrame() {
+        return {
+            addEventListener: function () { }
+        };
+    }
+};
 
 
-        sendUserState: function (toUserID, fromUser) {
-            this.txGameData(toUserID, "userInitResponse", fromUser);
-        },
+function mover(id) {
+    jitsiClient.mockRxGameData("moveTo", id, {
+        command: "moveTo",
+        x: Math.floor(Math.random() * 10 - 5),
+        y: Math.floor(Math.random() * 10 - 5)
+    });
+    
+    if (Math.random() <= 0.1) {
+        const groups = Object.values(bestIcons),
+            group = groups.random(),
+            emoji = group.random();
+        jitsiClient.mockRxGameData("emote", id, emoji);
+    }
 
-        sendEmote: function (toUserID, emoji) {
-            this.txGameData(toUserID, "emote", emoji);
-        },
+    setTimeout(() => mover(id), 1000 * (1 + Math.random()));
+}
 
-        sendAudioMuteState: function (toUserID, muted) {
-            this.txGameData(toUserID, "audioMuteStatusChanged", { muted });
-        },
+function createTestUser() {
+    if (game.userList.length < 5) {
+        const id = `user${game.userList.length + 1}`,
+            evt = Object.assign(
+                new Event("participantJoined"),
+                { id });
+        api.dispatchEvent(evt);
 
-        sendVideoMuteState: function (toUserID, muted) {
-            this.txGameData(toUserID, "videoMuteStatusChanged", { muted });
-        },
+        setTimeout(createTestUser, 1000);
+    }
+}
 
-        setVolume: function (evt) {
-            this.txJitsiHax("setVolume", evt);
-        },
-
-        sendPosition: function (toUserID, evt) {
-            this.txGameData(toUserID, "moveTo", evt);
-        }
-
-    },
-    apiEvents = {
-        videoConferenceJoined: [],
-        videoConferenceLeft: [],
-        participantJoined: [],
-        participantLeft: [],
-        avatarChanged: [],
-        endpointTextMessageReceived: [],
-        displayNameChange: [],
-        audioMuteStatusChanged: [],
-        videoMuteStatusChanged: []
-    },
-    api = {
-        addEventListener: function (evt, func) {
-            apiEvents[evt].push(func);
-        },
-        createTestUser: function () {
-            if (game.userList.length < 5) {
-                const id = `user${game.userList.length + 1}`,
-                    evt = { id };
-                for (let func of apiEvents.participantJoined) {
-                    func(evt);
-                }
-
-                setTimeout(mover.bind(null, id), 1000);
-                setTimeout(api.createTestUser, 1000);
-            }
-        }
-    },
+const jitsiClient = new MockJitsiClient(),
+    api = new MockJitsiMeetExternalAPI(),
     game = new Game(jitsiClient);
+
+jitsiClient.setJitsiApi(api);
 
 game.registerGameListeners(api);
 game.start({
@@ -170,13 +128,6 @@ game.start({
 game.gui.appView.show();
 game.gui.loginView.hide();
 
-const vid = document.createElement("video");
-vid.src = "videos/demo.webm";
-vid.style.height = "100%";
-game.gui.jitsiContainer.appendChild(vid);
-vid.loop = "loop";
-vid.play();
-
-setTimeout(api.createTestUser, 1000);
-
 window.game = game;
+
+createTestUser();
