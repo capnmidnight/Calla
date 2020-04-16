@@ -37,17 +37,13 @@ export class AppGui extends EventTarget {
 
         // >>>>>>>>>> EMOJI >>>>>>>>>>
         {
-            const emojiView = document.querySelector("#emoji"),
-                selectEmojiButton = document.querySelector("#selectEmoji"),
+            this.emojiForm = new EmojiForm(document.querySelector("#emoji"));
+
+            const selectEmojiButton = document.querySelector("#selectEmoji"),
                 emoteButton = document.querySelector("#emote");
 
-            this.emojiForm = null;
-
-            if (emojiView
-                && emoteButton
+            if (emoteButton
                 && selectEmojiButton) {
-
-                this.emojiForm = new EmojiForm(emojiView);
 
                 emoteButton.addEventListener("click", () => this.game.emote());
 
@@ -277,7 +273,7 @@ export class AppGui extends EventTarget {
     }
 
     showOptions(toggleOptions) {
-        if ((!this.emojiView || !this.emojiView.isOpen())
+        if ((!this.emojiForm.isOpen())
             && (!this.loginView || !this.loginView.isOpen())) {
             this.optionsView.setOpenWithLabel(
                 toggleOptions !== this.optionsView.isOpen(),

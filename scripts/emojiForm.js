@@ -4,17 +4,16 @@ export class EmojiForm extends EventTarget {
     constructor(emojiView) {
         super();
 
-        const previousEmoji = [],
-            emojiContainer = emojiView.querySelector(".content"),
+        const emojiContainer = emojiView.querySelector(".content"),
             confirmEmojiButton = emojiView.querySelector("button.confirm"),
             cancelEmojiButton = emojiView.querySelector("button.cancel"),
             recentEmoji = emojiView.querySelector(".recent"),
-            emojiPreview = emojiView.querySelector(".preview");
-
-
-        confirmEmojiButton.lock();
-        let selectedEmoji = null,
+            emojiPreview = emojiView.querySelector(".preview"),
+            cancel = new Event("emojiCanceled"),
+            previousEmoji = [],
             allAlts = [];
+
+        let selectedEmoji = null;
 
         const closeAll = () => {
             for (let alt of allAlts) {
@@ -55,19 +54,6 @@ export class EmojiForm extends EventTarget {
             }
         };
 
-
-        for (let key of Object.keys(bestIcons)) {
-            const header = document.createElement("h1"),
-                container = document.createElement("p"),
-                group = bestIcons[key];
-
-            header.innerHTML = key;
-            addIconsToContainer(group, container);
-
-            emojiContainer.appendChild(header);
-            emojiContainer.appendChild(container);
-        }
-
         confirmEmojiButton.addEventListener("click", () => {
             const idx = previousEmoji.indexOf(selectedEmoji);
             if (idx === -1) {
@@ -80,14 +66,11 @@ export class EmojiForm extends EventTarget {
             this.dispatchEvent(new EmojiSelectedEvent(selectedEmoji));
         });
 
-        const cancel = new Event("emojiCanceled");
         cancelEmojiButton.addEventListener("click", () => {
             confirmEmojiButton.lock();
             emojiView.hide();
             this.dispatchEvent(cancel);
         });
-
-        emojiView.hide();
 
         this.isOpen = emojiView.isOpen.bind(emojiView);
 
@@ -123,6 +106,21 @@ export class EmojiForm extends EventTarget {
                 emojiView.show();
             });
         };
+
+        for (let key of Object.keys(bestIcons)) {
+            const header = document.createElement("h1"),
+                container = document.createElement("p"),
+                group = bestIcons[key];
+
+            header.innerHTML = key;
+            addIconsToContainer(group, container);
+
+            emojiContainer.appendChild(header);
+            emojiContainer.appendChild(container);
+        }
+
+        confirmEmojiButton.lock();
+        emojiView.hide();
     }
 }
 
