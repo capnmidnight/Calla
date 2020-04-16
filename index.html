@@ -27,10 +27,6 @@
         const JITSI_HOST = "primrosevr.com",
             MOVE_REPEAT = 0.125,
             MOVE_TRANSITION_TIME = 0.5;
-
-        // TODO: These need to be user-configurable settings
-        let AUDIO_DISTANCE_MIN = 2,
-            AUDIO_DISTANCE_MAX = 10;
     </script>
     <link type="text/css" rel="stylesheet" href="stylesheets/general.css" />
     <link type="text/css" rel="stylesheet" href="stylesheets/icons.css" />
@@ -95,30 +91,35 @@
                     </div>
                 </p>
 
-                <h2>Video</h2>
+                <h2>Interface</h2>
                 <p>
-                    <button type="button" id="muteVideo" accesskey="v">Enable video</button>
-                </p>
-
-                <h2><label for="fontSize">Font size</label></h2>
-                <p>
+                    <label for="fontSize">Font size:</label>
                     <input type="number" id="fontSize" value="10" min="5" max="32" style="width:3em" />
                 </p>
 
-                <h2>Hearing range</h2>
+                <h2>Audio</h2>
                 <p>
-                    <label for="drawHearing">Draw:</label>
-                    <input type="checkbox" id="drawHearing" />
+                    <label for="audioMode">Mode:</label>
+                    <select id="audioMode">
+                        <option value="0">Mono</option>
+                        <option value="1">Stereo</option>
+                        <option value="2">3D</option>
+                    </select>
                 </p>
-
                 <p>
+                    <label for="drawHearing">Draw hearing range:</label>
+                    <input type="checkbox" id="drawHearing" />
+
                     <label for="minAudio">Min:</label>
                     <input type="number" id="minAudio" value="2" min="0" max="100" style="width:3em" />
-                </p>
 
-                <p>
                     <label for="maxAudio">Max:</label>
                     <input type="number" id="maxAudio" value="10" min="0" max="100" style="width:3em" />
+                </p>
+
+                <h2>Video</h2>
+                <p>
+                    <button type="button" id="muteVideo" accesskey="v">Enable video</button>
                 </p>
             </div>
 

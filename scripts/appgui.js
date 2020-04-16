@@ -3,12 +3,14 @@ import "./protos.js";
 
 import { EmojiForm } from "./emojiForm.js";
 import { bust } from "./emoji.js";
+import { clamp } from "./math.js";
 
 export class AppGui extends EventTarget {
     constructor(game) {
         super();
 
         this.game = game;
+        this.jitsiClient = game.jitsiClient;
 
         // >>>>>>>>>> TWEET >>>>>>>>>>
         {
@@ -107,32 +109,48 @@ export class AppGui extends EventTarget {
 
             // >>>>>>>>>> HEARING >>>>>>>>>>
             {
-                const drawHearingCheckbox = document.querySelector("#drawHearing"),
+                const audioModeSelector = document.querySelector("#audioMode"),
+                    drawHearingCheckbox = document.querySelector("#drawHearing"),
                     minAudioSpinner = document.querySelector("#minAudio"),
                     maxAudioSpinner = document.querySelector("#maxAudio");
-                if (drawHearingCheckbox
+
+                this.audioMode = (1 * localStorage.getItem("audioMode")) || 0;
+                this.drawHearing = localStorage.getItem("drawHearing") === "true";
+                this.audioDistanceMin = (1 * localStorage.getItem("minAudio")) || 2;
+                this.audioDistanceMax = (1 * localStorage.getItem("maxAudio")) || 10
+
+                if (audioModeSelector
+                    && drawHearingCheckbox
                     && minAudioSpinner
                     && maxAudioSpinner) {
-                    drawHearingCheckbox.addEventListener("input", (evt) => {
-                        this.game.drawHearing = drawHearingCheckbox.checked;
-                        localStorage.setItem("drawHearing", this.game.drawHearing);
+
+                    this.audioMode = clamp(this.audioMode, 0, 2);
+                    this.audioMode = 2;
+                    audioModeSelector.setSelectedValue(this.audioMode);
+                    audioModeSelector.addEventListener("input", (evt) => {
+                        this.audioMode = 1 * audioModeSelector.selectedValue;
+                        this.audioMode = clamp(this.audioMode, 0, 2);
+                        localStorage.setItem("audioMode", this.audioMode);
                     });
-                    let drawHearing = localStorage.getItem("drawHearing");
-                    drawHearing = drawHearing === null ? this.game.drawHearing : drawHearing === "true";
-                    this.game.drawHearing = drawHearing;
-                    drawHearingCheckbox.checked = drawHearing;
+
+                    drawHearingCheckbox.checked = this.drawHearing;
+                    drawHearingCheckbox.addEventListener("input", (evt) => {
+                        this.drawHearing = drawHearingCheckbox.checked;
+                        localStorage.setItem("drawHearing", this.drawHearing);
+                    });
 
                     const setAudioRange = () => {
                         maxAudioSpinner.value = Math.max(1 * minAudioSpinner.value + 1, 1 * maxAudioSpinner.value);
-                        AUDIO_DISTANCE_MIN = minAudioSpinner.value;
-                        AUDIO_DISTANCE_MAX = maxAudioSpinner.value;
+                        this.audioDistanceMin = minAudioSpinner.value;
+                        this.audioDistanceMax = maxAudioSpinner.value;
                         localStorage.setItem("minAudio", minAudioSpinner.value);
                         localStorage.setItem("maxAudio", maxAudioSpinner.value);
                     };
+
+                    minAudioSpinner.value = this.audioDistanceMin;
+                    maxAudioSpinner.value = this.audioDistanceMax;
                     minAudioSpinner.addEventListener("input", setAudioRange);
                     maxAudioSpinner.addEventListener("input", setAudioRange);
-                    AUDIO_DISTANCE_MIN = minAudioSpinner.value = 1 * localStorage.getItem("minAudio") || AUDIO_DISTANCE_MIN;
-                    AUDIO_DISTANCE_MAX = maxAudioSpinner.value = 1 * localStorage.getItem("maxAudio") || AUDIO_DISTANCE_MAX;
                 }
             }
             // <<<<<<<<<< HEARING <<<<<<<<<<
@@ -142,7 +160,7 @@ export class AppGui extends EventTarget {
                 this.muteAudioButton = document.querySelector("#muteAudio");
                 if (this.muteAudioButton) {
                     this.muteAudioButton.addEventListener("click", (evt) => {
-                        this.game.jitsiClient.toggleAudio();
+                        this.jitsiClient.toggleAudio();
                     });
                 }
                 this.setUserAudioMuted(false);
@@ -154,7 +172,7 @@ export class AppGui extends EventTarget {
                 this.muteVideoButton = document.querySelector("#muteVideo");
                 if (this.muteVideoButton) {
                     this.muteVideoButton.addEventListener("click", (evt) => {
-                        this.game.jitsiClient.toggleVideo();
+                        this.jitsiClient.toggleVideo();
                     });
                 }
                 this.setUserVideoMuted(false);
@@ -222,12 +240,14 @@ export class AppGui extends EventTarget {
 
                 this.userNameInput.value = localStorage.getItem("userName") || "";
 
-                if (location.hash.length > 0) {
+                if (location.hash.length > 1) {
                     const name = location.hash.substr(1);
                     let found = false;
                     for (let option of this.roomSelector.options) {
-                        if (option.value === this.roomNameInput.value) {
-                            this.roomSelector.value = name;
+                        if (option.value === name) {
+                            this.roomSelector.value
+                                = this.roomNameInput.value
+                                = name;
                             found = true;
                             break;
                         };
@@ -284,14 +304,14 @@ export class AppGui extends EventTarget {
                 && !this.optionsView.isOpen()
                 && !!this.game.me) {
                 if (this.game.me.avatarURL !== this.avatarURLInput.value) {
-                    this.game.jitsiClient.setAvatarURL(this.avatarURLInput.value);
+                    this.jitsiClient.setAvatarURL(this.avatarURLInput.value);
                 }
                 if (this.game.me.avatarEmoji !== this.avatarEmojiOutput.innerHTML) {
                     this.game.me.avatarEmoji = this.avatarEmojiOutput.innerHTML;
                     const evt = Object.assign({}, this.me);
                     for (let user of this.game.userList) {
                         if (!user.isMe) {
-                            this.game.jitsiClient.sendUserState(user.id, evt);
+                            this.jitsiClient.sendUserState(user.id, evt);
                         }
                     }
                 }
@@ -349,12 +369,27 @@ export class AppGui extends EventTarget {
         }
     }
 
+    setJitsiApi(api) {
+        this.api = api;
+        this.jitsiClient.setJitsiApi(this.api);
+        this.game.registerGameListeners(this.api);
+    }
+
+    setJitsiIFrame() {
+        this.jitsiClient.setJitsiIFrame(this.api.getIFrame());
+        this.jitsiClient.setAudioProperties(
+            this.audioDistanceMin,
+            this.audioDistanceMax,
+            MOVE_TRANSITION_TIME,
+            this.audioMode);
+    }
+
     startConference(roomName, userName) {
         this.appView.show();
 
         location.hash = roomName;
 
-        const api = new JitsiMeetExternalAPI(JITSI_HOST, {
+        this.api = new JitsiMeetExternalAPI(JITSI_HOST, {
             noSSL: false,
             disableThirdPartyRequests: true,
             parentNode: this.jitsiContainer,
@@ -373,20 +408,14 @@ export class AppGui extends EventTarget {
                 MOBILE_APP_PROMO: false
             },
             roomName: roomName,
-            onload: (evt) => {
-                this.game.jitsiClient.setJitsiApi(api);
-                this.game.jitsiClient.setAudioProperties(
-                    AUDIO_DISTANCE_MIN,
-                    AUDIO_DISTANCE_MAX,
-                    MOVE_TRANSITION_TIME,
-                    false,
-                    true);
-            }
+            onload: this.setJitsiIFrame.bind(this, null)
         });
-        api.executeCommand("displayName", userName);
-        this.game.registerGameListeners(api);
-        api.addEventListener("videoConferenceJoined", this.loginView.hide.bind(this.loginView));
 
-        addEventListener("unload", () => api.dispose());
+        addEventListener("unload", () => {
+            this.api.dispose();
+        });
+
+        this.setJitsiApi(this.api);
+        this.api.executeCommand("displayName", userName);
     }
 }

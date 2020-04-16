@@ -37,7 +37,6 @@ export class Game {
         this.cameraZ = this.targetCameraZ = 1.5;
         this.currentRoomName = null;
         this.fontSize = 10;
-        this.drawHearing = false;
 
         this.pointers = [];
         this.lastPinchDistance = 0;
@@ -421,7 +420,7 @@ export class Game {
         }
     }
 
-    start(evt) {
+    async start(evt) {
         //evt = {
         //    roomName: "string", // the room name of the conference
         //    id: "string", // the id of the local participant
@@ -450,22 +449,29 @@ export class Game {
         this.gui.avatarEmojiOutput.innerHTML = this.me.avatarEmoji;
 
         this.map = new TileMap(this.currentRoomName);
-        this.map.load()
-            .catch(() => {
+        let success = false;
+        for (let retryCount = 0; retryCount < 2; ++retryCount) {
+            try {
+                await this.map.load();
+                success = true;
+            }
+            catch (exp) {
+                console.warn(exp);
                 this.map = new TileMap("default");
-                return this.map.load();
-            })
-            .then(this.startLoop.bind(this));
+            }
+        }
 
-        this.jitsiClient.isAudioMuted()
-            .then((muted) => {
-                this.muteUserAudio({ participantID: this.me.id, data: { muted: muted } });
-            });
+        if (!success) {
+            console.error("Couldn't load any maps!");
+        }
 
-        this.jitsiClient.isVideoMuted()
-            .then((muted) => {
-                this.muteUserVideo({ participantID: this.me.id, data: { muted: muted } });
-            });
+        const audioMuted = await this.jitsiClient.isAudioMuted(),
+            videoMuted = await this.jitsiClient.isVideoMuted();
+        this.muteUserAudio({ participantID: this.me.id, data: { muted: audioMuted } });
+        this.muteUserVideo({ participantID: this.me.id, data: { muted: videoMuted } });
+
+        this.gui.loginView.hide();
+        this.startLoop();
     }
 
     startLoop() {
@@ -547,7 +553,7 @@ export class Game {
             user.update(dt, this.map, this.userList);
         }
         for (let user of this.userList) {
-            this.me.readUser(user, AUDIO_DISTANCE_MIN, AUDIO_DISTANCE_MAX);
+            this.me.readUser(user, this.gui.audioDistanceMin, this.gui.audioDistanceMax);
         }
     }
 
@@ -594,13 +600,13 @@ export class Game {
                 user.drawName(this.gFront, this.map, this.cameraZ, this.fontSize);
             }
 
-            if (this.drawHearing) {
+            if (this.gui.drawHearing) {
                 this.me.drawHearingRange(
                     this.gFront,
                     this.map,
                     this.cameraZ,
-                    AUDIO_DISTANCE_MIN,
-                    AUDIO_DISTANCE_MAX);
+                    this.gui.audioDistanceMin,
+                    this.gui.audioDistanceMax);
             }
 
             for (let emote of this.emotes) {

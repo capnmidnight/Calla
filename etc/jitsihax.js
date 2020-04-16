@@ -16,137 +16,227 @@
      */
 
     const FRONT_END_SERVER = "https://meet.primrosevr.com",
-        ALLOW_LOCAL_HOST = true,
-        USE_3D_SPATIALIZATION = true;
+        ALT_FRONT_END_SERVER = FRONT_END_SERVER,
+        ALLOW_LOCAL_HOST = true;
 
-    let USE_BASIC_AUDIO = true;
 
 
     // The rest is just implementation.
 
-    const sources = {},
-        spatialize = USE_3D_SPATIALIZATION && !!window["PannerNode"];
+    // helps us filter out data channel messages that don't belong to us
+    const LOZYA_FINGERPRINT = "lozya",
+        userLookup = {};
 
     let audioContext = null,
+        availableAudioModes = (window["StereoPannerNode"] && 1)
+            | (window["PannerNode"] && 2),
+
+        // these values will get overwritten when the user sets their audio properties
         minDistance = 2,
         maxDistance = 15,
-        transitionTime = 0;
+        transitionTime = 0,        
+        audioMode = 0, // 0 - basic volume scaling, 1 - stereo panning, 2 - spatialized audio
 
-    function captureAudioElement(userId, audio) {
-        if (!sources[userId]) {
-            audio.volume = 0;
+        use3D = false,
+        useStereo = false;
 
-            if (!audioContext) {
-                audioContext = new AudioContext();
+    function setAudioProperties(evt) {
+        minDistance = evt.minDistance;
+        maxDistance = evt.maxDistance;
+        transitionTime = evt.transitionTime;
+        audioMode = Math.max(0, Math.min(2, evt.audioMode));
 
-                if (spatialize) {
-                    const listener = audioContext.listener,
-                        time = audioContext.currentTime;
-                    listener.forwardX.setValueAtTime(0, time);
-                    listener.forwardY.setValueAtTime(0, time);
-                    listener.forwardZ.setValueAtTime(-1, time);
-                    listener.upX.setValueAtTime(0, time);
-                    listener.upY.setValueAtTime(1, time);
-                    listener.upZ.setValueAtTime(0, time);
-                }
+        updateAudioProperties();
+    }
+
+    function getUserAudio(userId) {
+        if (!userLookup[userId]) {
+            const audio = document.querySelector(id);
+            userLookup[userId] = {
+                audio,
+                source = null,
+                panner = null,
+                gain = null
+            };
+        }
+
+        const user = userLookup[userId];
+        console.log(userId, user.audio.parentElement);
+        return user;
+    }
+
+    function setUserAudioProperties(user) {
+
+        if (use3D) {
+            if (!!user.gain) {
+                user.gain.disconnect(audioContext.destination);
+                user.panner.disconnect(user.gain);
+                user.gain = null;
+                user.panner = null;
+            }
+            else if (!user.source) {
+                const stream = !!audio.mozCaptureStream
+                    ? audio.mozCaptureStream()
+                    : audio.captureStream();
+                user.source = audioContext.createMediaStreamSource(stream);
             }
 
-            const stream = !!audio.mozCaptureStream
-                ? audio.mozCaptureStream()
-                : audio.captureStream(),
-                source = audioContext.createMediaStreamSource(stream);
+            if (!user.panner) {
+                user.panner = audioContext.createPanner();
+                user.panner.panningModel = "HRTF";
+                user.panner.distanceModel = "inverse";
+                user.panner.rolloffFactor = 1;
+                user.panner.coneInnerAngle = 360;
+                user.panner.coneOuterAngle = 0;
+                user.panner.coneOuterGain = 0;
+                user.panner.positionY.value = 0;
 
-            if (spatialize) {
-                const panner = audioContext.createPanner();
-                panner.panningModel = "HRTF";
-                panner.distanceModel = "inverse";
-                panner.refDistance = minDistance;
-                panner.maxDistance = maxDistance;
-                panner.rolloffFactor = 1;
-                panner.coneInnerAngle = 360;
-                panner.coneOuterAngle = 0;
-                panner.coneOuterGain = 0;
-                panner.positionY.value = 0;
-
-                source.connect(panner);
-                panner.connect(audioContext.destination);
-
-                sources[userId] = {
-                    source,
-                    panner
-                };
+                user.source.connect(user.panner);
+                user.panner.connect(audioContext.destination);
             }
-            else {
-                const panner = audioContext.createStereoPanner(),
-                    gain = audioContext.createGain();
 
-                source.connect(panner);
-                panner.connect(gain);
-                gain.connect(audioContext.destination);
+            user.panner.refDistance = minDistance;
+            user.panner.maxDistance = maxDistance;
+        }
+        else if (useStereo) {
+            if (!!user.panner && !user.gain) {
+                user.panner.disconnect(audioContext.destination);
+                user.panner = null;
+            }
+            else if (!user.source) {
+                const stream = !!audio.mozCaptureStream
+                    ? audio.mozCaptureStream()
+                    : audio.captureStream();
+                user.source = audioContext.createMediaStreamSource(stream);
+            }
 
-                sources[userId] = {
-                    source,
-                    panner,
-                    gain
-                };
+            if (!user.panner) {
+                user.panner = audioContext.createStereoPanner();
+                user.gain = audioContext.createGain();
+
+                user.source.connect(user.panner);
+                user.panner.connect(user.gain);
+                user.gain.connect(audioContext.destination);
+            }
+        }
+        else {
+            if (!!user.source) {
+                user.source.disconnect(user.panner);
+                user.source = null;
+            }
+
+            if (!!user.gain) {
+                user.gain.disconnect(audioContext.destination);
+                user.panner.disconnect(user.gain);
+                user.gain = null;
+                user.panner = null;
+            }
+            else if (!!user.panner) {
+                user.panner.disconnect(audioContext.destination);
+                user.panner = null;
             }
         }
     }
 
-    // helps us filter out data channel messages that don't belong to us
-    const LOZYA_FINGERPRINT = "lozya",
+    function setVolume(evt) {
+        const id = `#participant_${evt.user} audio`,
+            user = getUserAudio(id);
 
-        commands = {
-            setVolume: function (evt) {
-                const id = `#participant_${evt.user} audio`,
-                    audio = document.querySelector(id);
-                if (audio) {
-                    if (USE_BASIC_AUDIO) {
-                        audio.volume = evt.volume;
-                    }
-                    else {
-                        try {
-                            captureAudioElement(evt.user, audio);
+        setUserAudioProperties(user);
 
-                            const source = sources[evt.user];
-                            const time = audioContext.currentTime + transitionTime;
+        if (!use3D && !useStereo) {
+            user.audio.volume = evt.volume;
+        }
+        else {
+            user.audio.volume = 0;
 
-                            if (spatialize) {
-                                source.panner.positionX.setValueAtTime(evt.x, time);
+            try {
+                const time = audioContext.currentTime + transitionTime;
 
-                                // our 2D position is in X/Y coords, but our 3D position 
-                                // along the horizontal plane is X/Z coords.
-                                source.panner.positionZ.setValueAtTime(evt.y, time);
-                            }
-                            else {
-                                source.panner.pan.setTargetAtTime(evt.panning, time);
-                                source.gain.gain.setTargetAtTime(evt.volume, time);
-                            }
-                        }
-                        catch (exp) {
-                            console.warn("Couldn't configure advanced audio features");
-                            console.error(exp);
-                            USE_BASIC_AUDIO = true;
-                            command.setVolume(evt);
-                        }
-                    }
+                if (use3D) {
+                    user.panner.positionX.setValueAtTime(evt.x, time);
+
+                    // our 2D position is in X/Y coords, but our 3D position 
+                    // along the horizontal plane is X/Z coords.
+                    user.panner.positionZ.setValueAtTime(evt.y, time);
                 }
                 else {
-                    console.warn(`Could not find audio element for user ${evt.user}`);
+                    user.panner.pan.setTargetAtTime(evt.panning, time);
+                    user.gain.gain.setTargetAtTime(evt.volume, time);
                 }
-            },
-
-            setAudioProperties: function (evt) {
-                minDistance = evt.minDistance;
-                maxDistance = evt.maxDistance;
-                transitionTime = evt.transitionTime;
             }
-        };
+            catch (exp) {
+                console.warn("Couldn't configure advanced audio features");
+                console.error(exp);
+
+                // disable the current audio mode from being re-used during
+                // the current session.
+                availableAudioModes &= ~audioMode;
+
+                // downgrade audio mode
+                --audioMode;
+
+                updateAudioProperties();
+
+                // retry
+                setVolume(evt);
+            }
+        }
+    }
+
+    const availableAudioModes = [
+        "Mono",
+        "Mono | Stereo",
+        "Mono | 3D",
+        "Mono | Stereo | 3D"
+    ];
+
+    function updateAudioProperties() {
+        console.info("Available audio modes: " + audioModes[availableAudioModes]);
+
+        use3D = (audioMode & availableAudioModes) === 2;
+        useStereo = (audioMode & availableAudioModes) === 1;
+
+        const useBasic = !use3D && !useStereo;
+
+        if (!useBasic && !audioContext) {
+            audioContext = new AudioContext();
+            if (use3D) {
+                const listener = audioContext.listener, time = audioContext.currentTime;
+                listener.forwardX.setValueAtTime(0, time);
+                listener.forwardY.setValueAtTime(0, time);
+                listener.forwardZ.setValueAtTime(-1, time);
+                listener.upX.setValueAtTime(0, time);
+                listener.upY.setValueAtTime(1, time);
+                listener.upZ.setValueAtTime(0, time);
+            }
+        }
+
+        for (let id in userLookup) {
+            const user = getUserAudio(id);
+            if (!user) {
+                delete userLookup[id];
+            }
+            else {
+                setUserAudioProperties(user);
+            }
+        }
+
+        if (useBasic && !!audioContext) {
+            delete audioContext;
+        }
+    }
+
+    const commands = {
+        setVolume,
+        setAudioProperties
+    };
 
     addEventListener("message", function (evt) {
         const isLocalHost = evt.origin.match(/^https?:\/\/localhost\b/);
 
         if (evt.origin === FRONT_END_SERVER
+            || evt.origin === ALT_FRONT_END_SERVER
             || ALLOW_LOCAL_HOST && isLocalHost) {
             try {
                 const data = JSON.parse(evt.data),

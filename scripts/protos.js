@@ -98,3 +98,18 @@ Array.prototype.random = function (defaultValue) {
         return this[idx];
     }
 };
+
+HTMLSelectElement.prototype.setSelectedValue = function (value) {
+    this.value = "";
+
+    if (value !== null
+        && value !== undefined) {
+        value = value.toString();
+        for (let option of this.options) {
+            if (option.value === value) {
+                this.value = value;
+                return;
+            }
+        }
+    }
+};

@@ -10,8 +10,10 @@ export class JitsiClient extends EventTarget {
         this.api = api;
         this.api.addEventListener("endpointTextMessageReceived",
             this.rxGameData.bind(this));
+    }
 
-        this.iframe = api.getIFrame();
+    setJitsiIFrame(iframe) {
+        this.iframe = iframe;
         this.iframe.addEventListener("message", this.rxJitsiHax.bind(this));
     }
 
@@ -100,13 +102,13 @@ export class JitsiClient extends EventTarget {
         super.addEventListener(evtName, callback);
     }
 
-    setAudioProperties(minDistance, maxDistance, transitionTime, useBasicAudio, use3dAudio) {
+    setAudioProperties(minDistance, maxDistance, transitionTime, audioMode) {
+        console.log("setAudioProperties", minDistance, maxDistance, transitionTime, audioMode);
         this.txJitsiHax("setAudioProperties", {
             minDistance,
             maxDistance,
             transitionTime,
-            useBasicAudio,
-            use3dAudio
+            audioMode
         });
     }
 

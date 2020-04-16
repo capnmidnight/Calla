@@ -113,11 +113,19 @@ function createTestUser() {
 
 const jitsiClient = new MockJitsiClient(),
     api = new MockJitsiMeetExternalAPI(),
-    game = new Game(jitsiClient);
+    game = new Game(jitsiClient),
+    gui = game.gui;
 
-jitsiClient.setJitsiApi(api);
+Object.assign(window, {
+    jitsiClient,
+    api,
+    game,
+    gui
+});
 
-game.registerGameListeners(api);
+gui.setJitsiApi(api);
+gui.setJitsiIFrame(api.getIFrame());
+
 game.start({
     id: "me",
     roomName: "default",
@@ -125,9 +133,7 @@ game.start({
     avatarURL: null
 });
 
-game.gui.appView.show();
-game.gui.loginView.hide();
-
-window.game = game;
+gui.appView.show();
+gui.loginView.hide();
 
 createTestUser();
