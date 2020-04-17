@@ -101,7 +101,7 @@ export class AppGui extends EventTarget {
                         this.game.fontSize = size;
                         localStorage.setItem("fontSize", size);
                     });
-                    fontSizeSpinner.value = localStorage.getItem("fontSize") || this.game.fontSize;
+                    fontSizeSpinner.value = localStorage.getInt("fontSize", 10);
                     this.game.fontSize = fontSizeSpinner.value;
                 }
             }
@@ -114,10 +114,10 @@ export class AppGui extends EventTarget {
                     minAudioSpinner = document.querySelector("#minAudio"),
                     maxAudioSpinner = document.querySelector("#maxAudio");
 
-                this.audioMode = (1 * localStorage.getItem("audioMode")) || 0;
+                this.audioMode = localStorage.getInt("audioMode", 2);
                 this.drawHearing = localStorage.getItem("drawHearing") === "true";
-                this.audioDistanceMin = (1 * localStorage.getItem("minAudio")) || 2;
-                this.audioDistanceMax = (1 * localStorage.getItem("maxAudio")) || 10
+                this.audioDistanceMin = localStorage.getInt("minAudio", 2);
+                this.audioDistanceMax = localStorage.getInt("maxAudio", 10);
 
                 if (audioModeSelector
                     && drawHearingCheckbox
@@ -125,12 +125,12 @@ export class AppGui extends EventTarget {
                     && maxAudioSpinner) {
 
                     this.audioMode = clamp(this.audioMode, 0, 2);
-                    this.audioMode = 2;
                     audioModeSelector.setSelectedValue(this.audioMode);
                     audioModeSelector.addEventListener("input", (evt) => {
-                        this.audioMode = 1 * audioModeSelector.selectedValue;
+                        this.audioMode = 1 * audioModeSelector.value;
                         this.audioMode = clamp(this.audioMode, 0, 2);
                         localStorage.setItem("audioMode", this.audioMode);
+                        this.updateAudioSettings();
                     });
 
                     drawHearingCheckbox.checked = this.drawHearing;
@@ -145,6 +145,7 @@ export class AppGui extends EventTarget {
                         this.audioDistanceMax = maxAudioSpinner.value;
                         localStorage.setItem("minAudio", minAudioSpinner.value);
                         localStorage.setItem("maxAudio", maxAudioSpinner.value);
+                        this.updateAudioSettings();
                     };
 
                     minAudioSpinner.value = this.audioDistanceMin;
@@ -377,6 +378,10 @@ export class AppGui extends EventTarget {
 
     setJitsiIFrame() {
         this.jitsiClient.setJitsiIFrame(this.api.getIFrame());
+        this.updateAudioSettings();
+    }
+
+    updateAudioSettings() {
         this.jitsiClient.setAudioProperties(
             this.audioDistanceMin,
             this.audioDistanceMax,

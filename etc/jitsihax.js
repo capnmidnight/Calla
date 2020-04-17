@@ -34,7 +34,7 @@
         // these values will get overwritten when the user sets their audio properties
         minDistance = 2,
         maxDistance = 15,
-        transitionTime = 0,        
+        transitionTime = 0,
         audioMode = 0, // 0 - basic volume scaling, 1 - stereo panning, 2 - spatialized audio
 
         use3D = false,
@@ -45,23 +45,31 @@
         maxDistance = evt.maxDistance;
         transitionTime = evt.transitionTime;
         audioMode = Math.max(0, Math.min(2, evt.audioMode));
-
         updateAudioProperties();
     }
 
     function getUserAudio(userId) {
         if (!userLookup[userId]) {
-            const audio = document.querySelector(id);
-            userLookup[userId] = {
-                audio,
-                source = null,
-                panner = null,
-                gain = null
-            };
+            const audio = document.querySelector(userId);
+            if (!!audio) {
+                userLookup[userId] = {
+                    x: 0,
+                    y: 0,
+                    lastVolume: 0,
+                    volume: 1,
+                    panning: 0,
+                    audio,
+                    source: null,
+                    panner: null,
+                    gain: null
+                };
+            }
         }
 
         const user = userLookup[userId];
-        console.log(userId, user.audio.parentElement);
+        if (!!user) {
+            console.log(userId, user.audio.parentElement);
+        }
         return user;
     }
 
@@ -75,9 +83,9 @@
                 user.panner = null;
             }
             else if (!user.source) {
-                const stream = !!audio.mozCaptureStream
-                    ? audio.mozCaptureStream()
-                    : audio.captureStream();
+                const stream = !!user.audio.mozCaptureStream
+                    ? user.audio.mozCaptureStream()
+                    : user.audio.captureStream();
                 user.source = audioContext.createMediaStreamSource(stream);
             }
 
@@ -95,8 +103,22 @@
                 user.panner.connect(audioContext.destination);
             }
 
+            const time = audioContext.currentTime + transitionTime;
+            // our 2D position is in X/Y coords, but our 3D position 
+            // along the horizontal plane is X/Z coords.
+            user.audio.volume = 0;
             user.panner.refDistance = minDistance;
-            user.panner.maxDistance = maxDistance;
+            user.panner.rolloffFactor = Math.sqrt(maxDistance + minDistance);
+            user.panner.positionX.setValueAtTime(user.x, time);
+            user.panner.positionZ.setValueAtTime(user.y, time);
+            if (user.volume !== user.lastVolume) {
+                if (user.volume === 0) {
+                    user.source.disconnect(user.panner);
+                }
+                else {
+                    user.source.connect(user.panner);
+                }
+            }
         }
         else if (useStereo) {
             if (!!user.panner && !user.gain) {
@@ -104,9 +126,9 @@
                 user.panner = null;
             }
             else if (!user.source) {
-                const stream = !!audio.mozCaptureStream
-                    ? audio.mozCaptureStream()
-                    : audio.captureStream();
+                const stream = !!user.audio.mozCaptureStream
+                    ? user.audio.mozCaptureStream()
+                    : user.audio.captureStream();
                 user.source = audioContext.createMediaStreamSource(stream);
             }
 
@@ -118,6 +140,11 @@
                 user.panner.connect(user.gain);
                 user.gain.connect(audioContext.destination);
             }
+
+            const time = audioContext.currentTime + transitionTime;
+            user.audio.volume = 0;
+            user.panner.pan.setValueAtTime(user.panning, time);
+            user.gain.gain.setValueAtTime(user.volume, time);
         }
         else {
             if (!!user.source) {
@@ -135,64 +162,65 @@
                 user.panner.disconnect(audioContext.destination);
                 user.panner = null;
             }
+
+            user.audio.volume = user.volume;
         }
+
+        user.lastVolume = user.volume;
     }
 
     function setVolume(evt) {
         const id = `#participant_${evt.user} audio`,
             user = getUserAudio(id);
-
-        setUserAudioProperties(user);
-
-        if (!use3D && !useStereo) {
-            user.audio.volume = evt.volume;
+        if (!user) {
+            return;
         }
-        else {
-            user.audio.volume = 0;
 
-            try {
-                const time = audioContext.currentTime + transitionTime;
+        user.x = evt.x;
+        user.y = evt.y;
+        user.lastVolume = user.volume;
+        user.volume = evt.volume;
+        user.panning = evt.panning;
 
-                if (use3D) {
-                    user.panner.positionX.setValueAtTime(evt.x, time);
+        try {
+            setUserAudioProperties(user);
+        }
+        catch (exp) {
+            console.warn("Couldn't configure advanced audio features");
+            console.error(exp);
 
-                    // our 2D position is in X/Y coords, but our 3D position 
-                    // along the horizontal plane is X/Z coords.
-                    user.panner.positionZ.setValueAtTime(evt.y, time);
-                }
-                else {
-                    user.panner.pan.setTargetAtTime(evt.panning, time);
-                    user.gain.gain.setTargetAtTime(evt.volume, time);
-                }
-            }
-            catch (exp) {
-                console.warn("Couldn't configure advanced audio features");
-                console.error(exp);
+            // disable the current audio mode from being re-used during
+            // the current session.
+            availableAudioModes &= ~audioMode;
 
-                // disable the current audio mode from being re-used during
-                // the current session.
-                availableAudioModes &= ~audioMode;
+            // downgrade audio mode
+            --audioMode;
 
-                // downgrade audio mode
-                --audioMode;
-
-                updateAudioProperties();
-
+            if (audioMode >= 0) {
                 // retry
+                updateAudioProperties();
                 setVolume(evt);
+            }
+            else {
+                audioMode = 0;
             }
         }
     }
 
-    const availableAudioModes = [
+    const availableAudioModeNames = [
         "Mono",
         "Mono | Stereo",
         "Mono | 3D",
         "Mono | Stereo | 3D"
     ];
 
+    let lastAudioModes = null;
+
     function updateAudioProperties() {
-        console.info("Available audio modes: " + audioModes[availableAudioModes]);
+        if (availableAudioModes !== lastAudioModes) {
+            lastAudioModes = availableAudioModes;
+            console.info("Available audio modes: " + availableAudioModeNames[availableAudioModes]);
+        }
 
         use3D = (audioMode & availableAudioModes) === 2;
         useStereo = (audioMode & availableAudioModes) === 1;
@@ -202,13 +230,13 @@
         if (!useBasic && !audioContext) {
             audioContext = new AudioContext();
             if (use3D) {
-                const listener = audioContext.listener, time = audioContext.currentTime;
-                listener.forwardX.setValueAtTime(0, time);
-                listener.forwardY.setValueAtTime(0, time);
-                listener.forwardZ.setValueAtTime(-1, time);
-                listener.upX.setValueAtTime(0, time);
-                listener.upY.setValueAtTime(1, time);
-                listener.upZ.setValueAtTime(0, time);
+                const listener = audioContext.listener;
+                listener.forwardX.value = 0;
+                listener.forwardY.value = 0;
+                listener.forwardZ.value = -1;
+                listener.upX.value = 0;
+                listener.upY.value = 1;
+                listener.upZ.value = 0;
             }
         }
 
@@ -223,7 +251,7 @@
         }
 
         if (useBasic && !!audioContext) {
-            delete audioContext;
+            audioContext = null;
         }
     }
 

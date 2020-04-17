@@ -103,7 +103,7 @@ export class JitsiClient extends EventTarget {
     }
 
     setAudioProperties(minDistance, maxDistance, transitionTime, audioMode) {
-        console.log("setAudioProperties", minDistance, maxDistance, transitionTime, audioMode);
+        console.trace("setAudioProperties", minDistance, maxDistance, transitionTime, audioMode);
         this.txJitsiHax("setAudioProperties", {
             minDistance,
             maxDistance,

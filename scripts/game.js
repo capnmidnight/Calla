@@ -339,12 +339,8 @@ export class Game {
             if (!!user) {
                 user.audioMuted = evt.data.muted;
             }
-            else {
-                console.warn("NO USER", evt);
-            }
         }
         else if (!this.me) {
-            console.warn("NO ME", evt);
             setTimeout(this.muteUserAudio.bind(this, evt), 1000);
         }
         else {
@@ -366,12 +362,8 @@ export class Game {
             if (!!user) {
                 user.videoMuted = evt.data.muted;
             }
-            else {
-                console.warn("NO USER", evt);
-            }
         }
         else if (!this.me) {
-            console.warn("NO ME", evt);
             setTimeout(this.muteUserVideo.bind(this, evt), 1000);
         }
         else {
