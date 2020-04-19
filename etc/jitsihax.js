@@ -24,7 +24,7 @@
     // The rest is just implementation.
 
     // helps us filter out data channel messages that don't belong to us
-    const LOZYA_FINGERPRINT = "lozya",
+    const APP_FINGERPRINT = "Calla",
         userLookup = {};
 
     let audioContext = null,
@@ -268,7 +268,7 @@
             || ALLOW_LOCAL_HOST && isLocalHost) {
             try {
                 const data = JSON.parse(evt.data),
-                    isJitsiHax = data.hax === LOZYA_FINGERPRINT,
+                    isJitsiHax = data.hax === APP_FINGERPRINT,
                     cmd = commands[data.command];
 
                 if (isJitsiHax && !!cmd) {

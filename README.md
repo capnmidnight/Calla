@@ -8,7 +8,7 @@ Even when it works, teleconferencing still kind of sucks. Only one person can re
 
 ## SOLUTION
 
-Lozya adds a small, RPG-style map to the Jitsi meeting view. It gives you an avatar to walk around the room. Users choose where to sit in relation to other users. Users very close to you are set to full volume. Users a little far away have their volume scaled down accordingly. Users too far away to care about are rendered with zero volume.
+Calla adds a small, RPG-style map to the Jitsi meeting view. It gives you an avatar to walk around the room. Users choose where to sit in relation to other users. Users very close to you are set to full volume. Users a little far away have their volume scaled down accordingly. Users too far away to care about are rendered with zero volume.
 
 - Visit the current installation at [meet.primrosevr.com](https://meet.primrosevr.com).
 - Enter a room name and user name. Suggest "FromGithub" for the roomname to meet other people linking from this repo (maybe).
@@ -17,25 +17,25 @@ Lozya adds a small, RPG-style map to the Jitsi meeting view. It gives you an ava
 - Once you are done changing settings, use the `>` arrow in the upper-right menu to return to the map view.
 - Use the Arrow Keys to move your character around.
 
-<img src="https://raw.githubusercontent.com/capnmidnight/lozya/master/screenshot.png">
+<img src="https://raw.githubusercontent.com/capnmidnight/Calla/master/screenshot.png">
 
 ## INSTALLATION
 
 - First, setup Jitsi Meet on a server of your choice: [Jitsi quick-start instructions](https://github.com/jitsi/jitsi-meet/blob/master/doc/quick-install.md).
 - Next login to your Jitsi Meet server as root and edit `/usr/share/jitsi-meet/index.html` and add the following line: `<script type="text/javascript" src="jitsihax.js"></script>`.
 - Copy the script `jitsihax.js` from this repo to `/usr/share/jitsi-meet/`.
-- Edit `jitsihax.js`, changing `FRONT_END_SERVER` to point to where you will host the Lozya front-end.
-- Install the Lozya front-end (basically the rest of this repository) onto another server of your choice.
+- Edit `jitsihax.js`, changing `FRONT_END_SERVER` to point to where you will host the Calla front-end.
+- Install the Calla front-end (basically the rest of this repository) onto another server of your choice.
   - Modify "DOMAIN_NAME" in `index.html` scripts to point to your Jitsi Meet server.
 - You may also want to edit `index.html` to change/remove the link(s) to this repository and/or my Twitter profile.
   
-Make sure you keep the distinction between your Jitsi installation and your Lozya installation clear. You can conceivably run them on the same server, but I won't be digging into customizing a Jitsi installation enough to figure that out, so my setup has them on separate servers. `jitsihax.js` needs to go on your Jitsi server, and you need to edit it to point to your Lozya server. `index.html` goes on your Lozay server, and you need to edit it to point to your Jitsi server.
+Make sure you keep the distinction between your Jitsi installation and your Calla installation clear. You can conceivably run them on the same server, but I won't be digging into customizing a Jitsi installation enough to figure that out, so my setup has them on separate servers. `jitsihax.js` needs to go on your Jitsi server, and you need to edit it to point to your Calla server. `index.html` goes on your Lozay server, and you need to edit it to point to your Jitsi server.
 
 ## USAGE
 
 - __Be careful in picking your room name__, if you don't want randos to join. Traffic is low right now, but you never know.
 - Try to __pick a unique user name__. A lot of people use "Test" and then there are a bunch of people with the same name running around.
-- Either __Hide the game view__ or __Separate the game and meeting views__ to be able to access the Jitsi Meet user settings. Lozya captures all of the mouse clicks to enable moving.
+- Either __Hide the game view__ or __Separate the game and meeting views__ to be able to access the Jitsi Meet user settings. Calla captures all of the mouse clicks to enable moving.
 - __Click on the map__ to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls.
 - Or, __use the arrow keys__ on your keyboard to move.
 - __Click on yourself__ to open a list of Emoji. Select an Emoji to float it out into the map.
@@ -60,9 +60,9 @@ Oh man, let's go nuts! I would love to see a wide variety of tilesets for rooms 
 - You can use [Tiled](https://www.mapeditor.org/) to create a tilemap.
 - You can do multiple layers.
 - You can set blocks as non-walkable by opening your Tile Set, selecting the unwalkable block, and adding a custom property to it. Create a boolean value named "Collision", and set its value to "true". All instances of that tile will now be solid on your map.
-- Save your `.tmx` file to `<lozya-proj>\data\tilemaps\<room-name>.tmx`.
-- Save your `.tsx` file to `<lozya-proj>\data\tilesets\<tileset-name>\<tileset-name>.tsx`.
-- And that's it! Lozya reads Tiled files directly.
+- Save your `.tmx` file to `<Calla-proj>\data\tilemaps\<room-name>.tmx`.
+- Save your `.tsx` file to `<Calla-proj>\data\tilesets\<tileset-name>\<tileset-name>.tsx`.
+- And that's it! Calla reads Tiled files directly.
 
 #### Testing
 
@@ -74,7 +74,7 @@ IDK, I planned on just hacking this together as I went, but I will probaby write
 
 #### Client
 
-I'm pretty happy with how the client is working right now, but anyone is free to self-service add features. But check the [Issues](https://github.com/capnmidnight/lozya/issues) nonetheless.
+I'm pretty happy with how the client is working right now, but anyone is free to self-service add features. But check the [Issues](https://github.com/capnmidnight/Calla/issues) nonetheless.
 
 #### Server
 
@@ -96,4 +96,4 @@ What else?
 
 ### Name
 
-"Jitsi" is the Bulgarian word for "wires", so "Lozya" is the Bulgarian word for "Vines". Apparently, "Jitsi" is also the Swahili word for "Juice", so in my mind, this project is Grape Vines. Yes, I name all of my projects after plants.
+"Jitsi" is the Bulgarian word for "wires", so "Calla" is the Bulgarian word for "Vines". Apparently, "Jitsi" is also the Swahili word for "Juice", so in my mind, this project is Grape Vines. Yes, I name all of my projects after plants.

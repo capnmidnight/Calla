@@ -18,7 +18,7 @@ class MockJitsiClient extends JitsiClient {
         data = Object.assign({},
             data,
             {
-                hax: "lozya",
+                hax: "Calla",
                 command
             });
 

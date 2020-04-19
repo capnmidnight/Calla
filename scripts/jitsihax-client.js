@@ -1,9 +1,9 @@
 ﻿
 // helps us filter out data channel messages that don't belong to us
-const LOZYA_FINGERPRINT = "lozya",
+const APP_FINGERPRINT = "Calla",
     eventNames = ["moveTo", "emote", "userInitRequest", "userInitResponse", "audioMuteStatusChanged", "videoMuteStatusChanged"];
 
-// Manages communication between Jitsi Meet and Lozya
+// Manages communication between Jitsi Meet and Calla
 export class JitsiClient extends EventTarget {
 
     setJitsiApi(api) {
@@ -17,16 +17,16 @@ export class JitsiClient extends EventTarget {
         this.iframe.addEventListener("message", this.rxJitsiHax.bind(this));
     }
 
-    /// Send a Lozya message through the Jitsi Meet data channel.
+    /// Send a Calla message through the Jitsi Meet data channel.
     txGameData(id, command, obj) {
         obj = obj || {};
-        obj.hax = LOZYA_FINGERPRINT;
+        obj.hax = APP_FINGERPRINT;
         obj.command = command;
         this.api.executeCommand("sendEndpointTextMessage", id, JSON.stringify(obj));
     }
 
     /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
-    /// to receive Lozya messages from the Jitsi Meet data channel.
+    /// to receive Calla messages from the Jitsi Meet data channel.
     rxGameData(evt) {
         // JitsiExternalAPI::endpointTextMessageReceived event arguments format: 
         // evt = {
@@ -42,16 +42,16 @@ export class JitsiClient extends EventTarget {
         //   }
         //};
         const data = JSON.parse(evt.data.eventData.text);
-        if (data.hax === LOZYA_FINGERPRINT) {
+        if (data.hax === APP_FINGERPRINT) {
             const evt2 = new JitsiClientEvent(evt.data.senderInfo.id, data);
             this.dispatchEvent(evt2);
         }
     }
 
-    /// Send a Lozya message to the jitsihax.js script
+    /// Send a Calla message to the jitsihax.js script
     txJitsiHax(command, obj) {
         if (this.iframe) {
-            obj.hax = LOZYA_FINGERPRINT;
+            obj.hax = APP_FINGERPRINT;
             obj.command = command;
             this.iframe.contentWindow.postMessage(JSON.stringify(obj), "https://" + JITSI_HOST);
         }
@@ -62,8 +62,8 @@ export class JitsiClient extends EventTarget {
         if (evt.origin === JITSI_HOST || isLocalHost) {
             try {
                 const data = JSON.parse(evt.data);
-                if (data.hax === LOZYA_FINGERPRINT) {
-                    const evt2 = new LozyaEvent(data);
+                if (data.hax === APP_FINGERPRINT) {
+                    const evt2 = new CallaEvent(data);
                     this.dispatchEvent(evt2);
                 }
             }
@@ -93,7 +93,7 @@ export class JitsiClient extends EventTarget {
         return this.api.isVideoMuted();
     }
 
-    /// Add a listener for Lozya events that come through the Jitsi Meet data channel.
+    /// Add a listener for Calla events that come through the Jitsi Meet data channel.
     addEventListener(evtName, callback) {
         if (eventNames.indexOf[evtName] === -1) {
             throw new Error(`Unsupported event type: ${evtName}`);
@@ -141,14 +141,14 @@ export class JitsiClient extends EventTarget {
     }
 }
 
-class LozyaEvent extends Event {
+class CallaEvent extends Event {
     constructor(data) {
         super(data.command);
         this.data = data;
     }
 }
 
-class JitsiClientEvent extends LozyaEvent {
+class JitsiClientEvent extends CallaEvent {
     constructor(participantID, data) {
         super(data);
         this.participantID = participantID;
