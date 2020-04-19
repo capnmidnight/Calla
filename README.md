@@ -1,4 +1,4 @@
-# Lozya
+# Calla
 
 A hack on top of [Jitsi](https://jitsi.org) to create a virtual meeting room where users can sit next to each other to hear each other better.
 
