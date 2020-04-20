@@ -1,4 +1,4 @@
-﻿import "./jitsi-meet-external-api.js";
+﻿import(`https://${JITSI_HOST}/libs/external_api.min.js`);
 import "./protos.js";
 
 import { EmojiForm } from "./emojiForm.js";
