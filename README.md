@@ -10,7 +10,7 @@ Even when it works, teleconferencing still kind of sucks. Only one person can re
 
 Calla adds a small, RPG-style map to the Jitsi meeting view. It gives you an avatar to walk around the room. Users choose where to sit in relation to other users. Users very close to you are set to full volume. Users a little far away have their volume scaled down accordingly. Users too far away to care about are rendered with zero volume.
 
-- Visit the current installation at [meet.primrosevr.com](https://meet.primrosevr.com).
+- Visit the current installation at [www.calla.chat](https://www.calla.chat).
 - Enter a room name and user name. Suggest "FromGithub" for the roomname to meet other people linking from this repo (maybe).
 - Click "Connect" and wait for the connection to go through.
 - If you need to change your microphone settings, click the `<` arrow in the menu in the upper right corner of the window to hide the map view and give you full access to the Jitsi Meet interface. 
