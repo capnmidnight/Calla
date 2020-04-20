@@ -16,7 +16,7 @@
      */
 
     const FRONT_END_SERVER = "https://meet.primrosevr.com",
-        ALT_FRONT_END_SERVER = FRONT_END_SERVER,
+        ALT_FRONT_END_SERVER = "https://www.calla.chat",
         ALLOW_LOCAL_HOST = true;
 
 

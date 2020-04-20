@@ -24,7 +24,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
     <link rel="manifest" href="/manifest.json">
     <script id="app-settings">
-        const JITSI_HOST = "primrosevr.com",
+        const JITSI_HOST = "jitsi.calla.chat",
             MOVE_REPEAT = 0.125,
             MOVE_TRANSITION_TIME = 0.5;
     </script>
@@ -216,7 +216,7 @@ grid-template-rows: auto;">
         const pageFileName = document.location.pathname.substring(1) || "index.html",
             pageName = pageFileName.match(/(\w+)\.html/)[1],
             scriptFile = `./scripts/${pageName}.js`;
-
+        console.log(pageFileName, pageName, scriptFile);
         import(scriptFile);
     </script>
 </body>
