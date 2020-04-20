@@ -2,223 +2,30 @@
 <html lang="en-us">
 
 <head>
-    <meta charset="utf-8">
-    <title>Calla: telebazar</title>
-    <meta name="viewport" content="width=device-width, shrink-to-fit=0, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="keywords" content="peer-to-peer, networking, Web applications, WebRTC">
-    <meta name="msapplication-TileColor" content="#253858">
-    <meta name="msapplication-TileImage" content="/icons/ms-icon-144x144.png">
-    <meta name="theme-color" content="#253858">
-    <link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-icon-57x57.png">
-    <link rel="apple-touch-icon" sizes="60x60" href="/icons/apple-icon-60x60.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="/icons/apple-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="/icons/apple-icon-76x76.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="/icons/apple-icon-114x114.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="/icons/apple-icon-120x120.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="/icons/apple-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-icon-180x180.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/icons/android-icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="/icons/favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
-    <link rel="manifest" href="/manifest.json">
     <script id="app-settings">
-        const JITSI_HOST = "primrosevr.com",
+        const JITSI_HOST = "jitsi.calla.chat",
             MOVE_REPEAT = 0.125,
             MOVE_TRANSITION_TIME = 0.5;
     </script>
-    <link type="text/css" rel="stylesheet" href="stylesheets/general.css" />
-    <link type="text/css" rel="stylesheet" href="stylesheets/icons.css" />
-    <link type="text/css" rel="stylesheet" href="stylesheets/gui.css" />
+    <script type="module">
+        (async function () {
+            const response = await fetch("index.html"),
+                html = await response.text(),
+                parser = new DOMParser(),
+                doc = parser.parseFromString(html, "text/html"),
+                pageFileName = document.location.pathname.substring(1) || "index.html",
+                pageName = pageFileName.match(/(\w+)\.html/)[1],
+                scriptFile = `./scripts/${pageName}.js`;
+
+            document.head.innerHTML += doc.head.innerHTML;
+            document.body.innerHTML += doc.body.innerHTML;
+            import(scriptFile);
+        })();
+    </script>
 </head>
 
 <body>
-    <section id="appView">
-        <div id="toolbar">
-            <button type="button" id="muteAudio" accesskey="a">Mute audio</button>
-            <span>
-                <button type="button" id="emote" title="Emote">Emote (E) (@)</button>
-                <button type="button" id="selectEmoji" title="Select Emoji">🔻</button>
-            </span>
 
-            <span>
-                <label for="zoom">Zoom:</label>
-                <input type="number" id="zoom" title="Change map zoom" value="1" min="0.1" max="8" step="0.1" style="width:4em" />
-            </span>
-
-            <button type="button" id="showOptions" title="Show/hide options" accesskey="o">Show options (ALT+O)</button>
-            <button type="button" id="showGame" title="Show/hide game for access to Jitsi Meet options" accesskey="g">Show meeting UI (ALT+G)</button>
-            <button type="button" id="tweet" title="Share your current room to twitter">
-                <span style="margin:auto">Share room</span>
-                <img src="https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png" style="height:1.5em" />
-            </button>
-        </div>
-        <div id="jitsi"></div>
-        <canvas id="frontBuffer"></canvas>
-    </section>
-
-    <section id="guiView">
-
-        <div id="emoji" style="display:none">
-            <h1 style="grid-row: 1; grid-column: 1/4">Emoji</h1>
-
-            <div class="content" style="grid-row: 2; grid-column: 1/4">
-                <h2>Recent</h2>
-                <p class="recent">(None)</p>
-            </div>
-
-            <span class="preview" style="grid-row: 3; grid-column: 1"></span>
-            <button type="button" class="confirm" style="grid-row: 3; grid-column: 2">OK</button>
-            <button type="button" class="cancel" style="grid-row: 3; grid-column: 3">Cancel</button>
-        </div>
-
-        <div id="options" style="display:none">
-            <h1 style="grid-row:1; grid-column:1/4">Options</h1>
-
-            <div style="grid-row:2; grid-column:1/4;overflow-y:scroll;">
-                <h2>Avatar</h2>
-                <p>
-                    <div>
-                        <label for="avatarURL">Avatar URL:</label>
-                        <input type="text" id="avatarURL" placeholder="(https://example.com/me.png)" />
-                    </div>
-                    or
-                    <div>
-                        <label>Avatar Emoji:</label>
-                        <span id="avatarEmoji">👤</span>
-                        <button type="button" id="selectAvatarEmoji">Select</button>
-                    </div>
-                </p>
-
-                <h2>Interface</h2>
-                <p>
-                    <label for="fontSize">Font size:</label>
-                    <input type="number" id="fontSize" value="10" min="5" max="32" style="width:3em" />
-                </p>
-
-                <h2>Audio</h2>
-                <p>
-                    <label for="audioMode">Mode:</label>
-                    <select id="audioMode">
-                        <option value="0">Mono</option>
-                        <option value="1">Stereo</option>
-                        <option value="2">3D</option>
-                    </select>
-                </p>
-                <p>
-                    <label for="drawHearing">Draw hearing range:</label>
-                    <input type="checkbox" id="drawHearing" />
-
-                    <label for="minAudio">Min:</label>
-                    <input type="number" id="minAudio" value="2" min="0" max="100" style="width:3em" />
-
-                    <label for="maxAudio">Max:</label>
-                    <input type="number" id="maxAudio" value="10" min="0" max="100" style="width:3em" />
-                </p>
-
-                <h2>Video</h2>
-                <p>
-                    <button type="button" id="muteVideo" accesskey="v">Enable video</button>
-                </p>
-            </div>
-
-            <button type="button" class="confirm" style="grid-row:3; grid-column:3">OK</button>
-        </div>
-
-        <div id="login">
-            <h1>
-                Calla
-                <a href="https://github.com/capnmidnight/Calla" target="_blank" rel="noopener">
-                    <span class="icon icon-github" title="Follow Calla on Github">
-                        <span class="accessibility-text">Follow Calla on Github</span>
-                    </span>
-                </a>
-            </h1>
-
-            <p>Voice chat with an RPG map. Volume scales with distance from other users. Walk around, talk to folks, have private conversations by huddling in a corner, or drop in on other conversations. Ideal for meetups!</p>
-            <h2>Login</h2>
-            <form autocomplete="on" style="
-display: grid;
-grid-template-columns: 2fr 4fr 2fr;
-grid-template-rows: auto;">
-                <label for="room" style="
-    grid-column: 1;
-    grid-row: 1">
-                    Room:
-                </label>
-                <select id="existingRooms" style="
-    grid-column: 2;
-    grid-row: 1">
-                    <option value="Calla">Calla</option>
-                    <option value="island">Island</option>
-                    <option value="ALXCC">Alexandria Code &amp; Coffee</option>
-                    <option value="Vurv">Vurv</option>
-                </select>
-                <input type="text" id="roomName" autocomplete="off" placeholder="(Required)" style="
-    grid-column: 2;
-    grid-row: 1;
-    display: none" />
-                <button type="button" id="createNewRoom" title="Create a new, temporary room" style="
-    grid-column: 3">
-                    New
-                </button>
-
-
-                <label for="user" style="
-    grid-column: 1;
-    grid-row: 2">
-                    Name:
-                </label>
-                <input type="text" id="userName" placeholder="(Required)" name="userName" style="
-    grid-column: 2;
-    grid-row: 2" />
-
-                <button type="button" id="connect" disabled style="
-    grid-column: 3;
-    grid-row: 2">
-                    Loading...
-                </button>
-            </form>
-            <h2>Preview</h2>
-            <video src="videos/demo.webm" style="width:100%" loop autoplay controls></video>
-            <h2>Instructions</h2>
-            <aside style="border:dashed 2px darkred;background-color:wheat;border-radius:5px;padding:0.5em"><strong>Note:</strong> Calla is built on top of <a href="https://jitsi.org">Jitsi Meet</a>. Jitsi does not support iPhones and iPads.</aside>
-            <ul>
-                <li><strong>Be careful in picking your room name</strong>, if you don't want randos to join. Traffic is low right now, but you never know.</li>
-                <li>Try to <strong>pick a unique user name</strong>. A lot of people use "Test" and then there are a bunch of people with the same name running around.</li>
-                <li><strong>Open the Options view</strong> to set the URL to the avatar image you would like to use.</li>
-                <li><strong>Click on the map</strong> to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls.</li>
-                <li>Or, <strong>use the arrow keys</strong> on your keyboard to move.</li>
-                <li><strong>Click on yourself</strong> to open a list of Emoji. Select an Emoji to float it out into the map.</li>
-                <li><strong>Hit the E key</strong> to re-emote with your last selected Emoji.</li>
-                <li>You can <strong>roll your mouse wheel</strong> or <strong>pinch your touchscreen</strong> to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in their Avatar.</li>
-                <li>Either <strong>Hide the game view</strong> or <strong>Separate the game and meeting views</strong> to be able to access the Jitsi Meet interface. Calla captures all of the mouse clicks to enable moving.</li>
-            </ul>
-            <h2>Made by</h2>
-            <p>
-                <a href="https://www.seanmcbeth.com" target="_blank" rel="noopener">
-                    <span class="icon icon-shrink" title="Sean T. McBeth" />
-                </a>
-                Sean T. McBeth
-            </p>
-            <p>
-                <a href="https://twitter.com/Sean_McBeth" target="_blank" rel="noopener">
-                    <span class="icon icon-twitter" title="Follow @Sean_McBeth on Twitter" />
-                </a>
-                Follow @Sean_McBeth on Twitter
-            </p>
-        </div>
-
-    </section>
-
-    <script type="module">
-        const pageFileName = document.location.pathname.substring(1) || "index.html",
-            pageName = pageFileName.match(/(\w+)\.html/)[1],
-            scriptFile = `./scripts/${pageName}.js`;
-
-        import(scriptFile);
-    </script>
 </body>
 
 </html>
