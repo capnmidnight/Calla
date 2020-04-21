@@ -88,6 +88,7 @@ class TestUser {
         this.id = id;
         this.x = x;
         this.y = y;
+        this.audio = null;
     }
 
     start() {
@@ -96,6 +97,19 @@ class TestUser {
             { id: this.id });
 
         api.dispatchEvent(evt);
+
+        const elementID = `participant_${this.id}`,
+            element = document.createElement("span"),
+            audio = document.createElement("audio")
+        audio.autoplay = "autoplay";
+        audio.loop = "loop";
+        audio.src = `test-audio/${this.id}.mp3`;
+        element.appendChild(audio);
+
+        element.id = elementID;
+        document.body.appendChild(element);
+
+        this.audio = audio;
     }
 
     update() {
