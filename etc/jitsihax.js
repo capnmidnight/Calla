@@ -67,8 +67,8 @@
         }
 
         const user = userLookup[userId];
-        if (!!user) {
-            console.log(userId, user.audio.parentElement);
+        if (!user) {
+            console.warn(`no audio for user ${userId}`);
         }
         return user;
     }
@@ -109,8 +109,8 @@
             user.audio.volume = 0;
             user.panner.refDistance = minDistance;
             user.panner.rolloffFactor = Math.sqrt(maxDistance + minDistance);
-            user.panner.positionX.setValueAtTime(user.x, time);
-            user.panner.positionZ.setValueAtTime(user.y, time);
+            user.panner.positionX.linearRampToValueAtTime(user.x, time);
+            user.panner.positionZ.linearRampToValueAtTime(user.y, time);
             if (user.volume !== user.lastVolume) {
                 if (user.volume === 0) {
                     user.source.disconnect(user.panner);
@@ -143,8 +143,8 @@
 
             const time = audioContext.currentTime + transitionTime;
             user.audio.volume = 0;
-            user.panner.pan.setValueAtTime(user.panning, time);
-            user.gain.gain.setValueAtTime(user.volume, time);
+            user.panner.pan.linearRampToValueAtTime(user.panning, time);
+            user.gain.gain.linearRampToValueAtTime(user.volume, time);
         }
         else {
             if (!!user.source) {
