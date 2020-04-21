@@ -15,6 +15,7 @@ export class JitsiClient extends EventTarget {
     setJitsiIFrame(iframe) {
         this.iframe = iframe;
         this.iframe.addEventListener("message", this.rxJitsiHax.bind(this));
+        this.apiWindow = this.iframe.contentWindow || window;
     }
 
     /// Send a Calla message through the Jitsi Meet data channel.
@@ -53,7 +54,7 @@ export class JitsiClient extends EventTarget {
         if (this.iframe) {
             obj.hax = APP_FINGERPRINT;
             obj.command = command;
-            this.iframe.contentWindow.postMessage(JSON.stringify(obj), "https://" + JITSI_HOST);
+            this.apiWindow.postMessage(JSON.stringify(obj), this.apiWindow.location.origin);
         }
     }
 
@@ -103,7 +104,6 @@ export class JitsiClient extends EventTarget {
     }
 
     setAudioProperties(minDistance, maxDistance, transitionTime, audioMode) {
-        console.trace("setAudioProperties", minDistance, maxDistance, transitionTime, audioMode);
         this.txJitsiHax("setAudioProperties", {
             minDistance,
             maxDistance,

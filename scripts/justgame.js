@@ -6,6 +6,7 @@ import "./protos.js";
 import { JitsiClient } from "./jitsihax-client.js";
 import { Game } from "./game.js";
 import { randomPerson, bestIcons } from "./emoji.js";
+import "../etc/jitsihax.js";
 
 class MockJitsiClient extends JitsiClient {
     constructor() {
@@ -47,9 +48,6 @@ class MockJitsiClient extends JitsiClient {
                 testUser.update();
             }
         }
-    }
-
-    txJitsiHax(command, obj) {
     }
 
     toggleAudio() {
