@@ -32,6 +32,7 @@ export class User extends EventTarget {
         this.distXToMe = 0;
         this.distYToMe = 0;
         this.isMe = isMe;
+        this.isActive = false;
         this.avatarImage = null;
         this.avatarURL = null;
         this.stackUserCount = 1;
@@ -190,10 +191,9 @@ export class User extends EventTarget {
                 }
 
                 const volume = 1 - Math.sqrt(project(distCl, audioDistMin, audioDistMax)),
-                    panning = distX / (.1 + dist),
                     evt = this.volumeChangedEvents[user.id];
 
-                evt.set(distX, distY, volume, panning);
+                evt.set(user.tx, user.ty, volume);
                 this.dispatchEvent(evt);
             }
         }
@@ -229,6 +229,10 @@ export class User extends EventTarget {
             g.save();
             {
                 this.innerDraw(g, map);
+                if (this.isActive) {
+                    g.strokeStyle = "white";
+                    g.strokeRect(0, 0, this.stackAvatarWidth, this.stackAvatarHeight);
+                }
             }
             g.restore();
         }
@@ -363,17 +367,15 @@ class UserPositionNeededEvent extends Event {
 class UserVolumeChangedEvent extends Event {
     constructor(participantID) {
         super("changeUserVolume");
-        this.user = participantID;
+        this.participantID = participantID;
         this.x = 0;
         this.y = 0;
         this.volume = 0;
-        this.panning = 0;
     }
 
-    set(x, y, volume, panning) {
+    set(x, y, volume) {
         this.x = x;
         this.y = y;
         this.volume = volume;
-        this.panning = panning;
     }
 }

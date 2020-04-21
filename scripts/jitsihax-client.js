@@ -14,8 +14,8 @@ export class JitsiClient extends EventTarget {
 
     setJitsiIFrame(iframe) {
         this.iframe = iframe;
-        this.iframe.addEventListener("message", this.rxJitsiHax.bind(this));
         this.apiWindow = this.iframe.contentWindow || window;
+        this.apiWindow.addEventListener("message", this.rxJitsiHax.bind(this));
     }
 
     /// Send a Calla message through the Jitsi Meet data channel.
@@ -51,10 +51,10 @@ export class JitsiClient extends EventTarget {
 
     /// Send a Calla message to the jitsihax.js script
     txJitsiHax(command, obj) {
-        if (this.iframe) {
+        if (this.apiWindow) {
             obj.hax = APP_FINGERPRINT;
             obj.command = command;
-            this.apiWindow.postMessage(JSON.stringify(obj), this.apiWindow.location.origin);
+            this.apiWindow.postMessage(JSON.stringify(obj), "https://" + JITSI_HOST);
         }
     }
 
@@ -103,12 +103,11 @@ export class JitsiClient extends EventTarget {
         super.addEventListener(evtName, callback);
     }
 
-    setAudioProperties(minDistance, maxDistance, transitionTime, audioMode) {
+    setAudioProperties(minDistance, maxDistance, transitionTime) {
         this.txJitsiHax("setAudioProperties", {
             minDistance,
             maxDistance,
-            transitionTime,
-            audioMode
+            transitionTime
         });
     }
 
@@ -138,6 +137,10 @@ export class JitsiClient extends EventTarget {
 
     sendPosition(toUserID, evt) {
         this.txGameData(toUserID, "moveTo", evt);
+    }
+
+    updatePosition(evt) {
+        this.txJitsiHax("setLocalPosition", evt);
     }
 }
 

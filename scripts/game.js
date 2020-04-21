@@ -247,7 +247,16 @@ export class Game {
         this.jitsiClient.addEventListener("audioMuteStatusChanged", this.muteUserAudio.bind(this));
         this.jitsiClient.addEventListener("videoMuteStatusChanged", this.muteUserVideo.bind(this));
 
+        this.jitsiClient.addEventListener("audioActivity", this.updateAudioActivity.bind(this));
+
         this.gui = new AppGui(this);
+    }
+
+    updateAudioActivity(evt) {
+        const user = this.userLookup[evt.data.participantID];
+        if (!!user) {
+            user.isActive = evt.data.isActive;
+        }
     }
 
     async emote(participantID, emoji) {
@@ -430,6 +439,7 @@ export class Game {
         });
 
         this.me.addEventListener("moveTo", (evt) => {
+            this.jitsiClient.updatePosition(evt);
             for (let user of this.userList) {
                 if (!user.isMe) {
                     this.jitsiClient.sendPosition(user.id, evt);

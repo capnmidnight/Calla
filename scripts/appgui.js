@@ -109,29 +109,20 @@ export class AppGui extends EventTarget {
 
             // >>>>>>>>>> HEARING >>>>>>>>>>
             {
-                const audioModeSelector = document.querySelector("#audioMode"),
-                    drawHearingCheckbox = document.querySelector("#drawHearing"),
+                const drawHearingCheckbox = document.querySelector("#drawHearing"),
                     minAudioSpinner = document.querySelector("#minAudio"),
                     maxAudioSpinner = document.querySelector("#maxAudio");
 
-                this.audioMode = localStorage.getInt("audioMode", 2);
                 this.drawHearing = localStorage.getItem("drawHearing") === "true";
-                this.audioDistanceMin = localStorage.getInt("minAudio", 2);
-                this.audioDistanceMax = localStorage.getInt("maxAudio", 10);
 
-                if (audioModeSelector
-                    && drawHearingCheckbox
+                this.audioDistanceMin = localStorage.getInt("minAudio", 2);
+                this.audioDistanceMin = Math.max(1, this.audioDistanceMin);
+                this.audioDistanceMax = localStorage.getInt("maxAudio", 10);
+                this.audioDistanceMax = Math.max(this.audioDistanceMin + 1, this.audioDistanceMax);
+
+                if (drawHearingCheckbox
                     && minAudioSpinner
                     && maxAudioSpinner) {
-
-                    this.audioMode = clamp(this.audioMode, 0, 2);
-                    audioModeSelector.setSelectedValue(this.audioMode);
-                    audioModeSelector.addEventListener("input", (evt) => {
-                        this.audioMode = 1 * audioModeSelector.value;
-                        this.audioMode = clamp(this.audioMode, 0, 2);
-                        localStorage.setItem("audioMode", this.audioMode);
-                        this.updateAudioSettings();
-                    });
 
                     drawHearingCheckbox.checked = this.drawHearing;
                     drawHearingCheckbox.addEventListener("input", (evt) => {
@@ -140,9 +131,10 @@ export class AppGui extends EventTarget {
                     });
 
                     const setAudioRange = () => {
-                        maxAudioSpinner.value = Math.max(1 * minAudioSpinner.value + 1, 1 * maxAudioSpinner.value);
-                        this.audioDistanceMin = minAudioSpinner.value;
-                        this.audioDistanceMax = maxAudioSpinner.value;
+                        this.audioDistanceMin = parseFloat(minAudioSpinner.value);
+                        this.audioDistanceMax = parseFloat(maxAudioSpinner.value);
+                        this.audioDistanceMax = Math.max(this.audioDistanceMin + 1, this.audioDistanceMax);
+                        maxAudioSpinner.value = this.audioDistanceMax;
                         localStorage.setItem("minAudio", minAudioSpinner.value);
                         localStorage.setItem("maxAudio", maxAudioSpinner.value);
                         this.updateAudioSettings();
@@ -385,8 +377,7 @@ export class AppGui extends EventTarget {
         this.jitsiClient.setAudioProperties(
             this.audioDistanceMin,
             this.audioDistanceMax,
-            MOVE_TRANSITION_TIME,
-            this.audioMode);
+            MOVE_TRANSITION_TIME);
     }
 
     startConference(roomName, userName) {
