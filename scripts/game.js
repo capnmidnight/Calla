@@ -310,7 +310,7 @@ export class Game {
         //    displayName: "string" // the display name of the participant
         //};
         if (this.userLookup[evt.id]) {
-            removeUser(evt);
+            this.removeUser(evt);
         }
 
         const user = new User(evt.id, evt.displayName, false);
