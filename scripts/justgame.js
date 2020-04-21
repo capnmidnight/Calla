@@ -81,7 +81,7 @@ class MockJitsiMeetExternalAPI extends EventTarget {
     }
 };
 
-class TestUser {
+class MockUser {
     constructor(id, x, y) {
         this.id = id;
         this.x = x;
@@ -127,29 +127,17 @@ class TestUser {
     }
 }
 
-const testUsers = [
-    new TestUser("user1", -5, -5),
-    new TestUser("user2", -5, 5),
-    new TestUser("user3", 5, -5),
-    new TestUser("user4", 5, 5),
-    new TestUser("user5", 0, 0)
-];
-
-function createTestUser() {
-    if (game.userList.length < 5) {
-        const idx = game.userList.length - 1,
-            user = testUsers[idx];
-
-        user.start();
-
-        setTimeout(createTestUser, 1000);
-    }
-}
-
 const jitsiClient = new MockJitsiClient(),
     api = new MockJitsiMeetExternalAPI(),
     game = new Game(jitsiClient),
-    gui = game.gui;
+    gui = game.gui,
+    testUsers = [
+        new MockUser("user1", -5, -5),
+        new MockUser("user2", -5, 5),
+        new MockUser("user3", 5, -5),
+        new MockUser("user4", 5, 5),
+        new MockUser("user5", 0, 0)
+    ];
 
 Object.assign(window, {
     jitsiClient,
@@ -171,4 +159,14 @@ game.start({
 gui.appView.show();
 gui.loginView.hide();
 
-createTestUser();
+
+(function createTestUser() {
+    if (game.userList.length < 5) {
+        const idx = game.userList.length - 1,
+            user = testUsers[idx];
+
+        user.start();
+
+        setTimeout(createTestUser, 1000);
+    }
+})();
