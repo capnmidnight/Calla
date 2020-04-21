@@ -42,7 +42,9 @@ class MockJitsiClient extends JitsiClient {
             if (!!user) {
                 user.avatarEmoji = randomPerson().value;
                 this.mockRxGameData("userInitResponse", id, user);
-                mover(id);
+                const idx = testUsers.findIndex(x => x.id === id),
+                    testUser = testUsers[idx];
+                testUser.update();
             }
         }
     }
@@ -81,31 +83,52 @@ class MockJitsiMeetExternalAPI extends EventTarget {
     }
 };
 
-
-function mover(id) {
-    jitsiClient.mockRxGameData("moveTo", id, {
-        command: "moveTo",
-        x: Math.floor(Math.random() * 10 - 5),
-        y: Math.floor(Math.random() * 10 - 5)
-    });
-    
-    if (Math.random() <= 0.1) {
-        const groups = Object.values(bestIcons),
-            group = groups.random(),
-            emoji = group.random();
-        jitsiClient.mockRxGameData("emote", id, emoji);
+class TestUser {
+    constructor(id, x, y) {
+        this.id = id;
+        this.x = x;
+        this.y = y;
     }
 
-    setTimeout(() => mover(id), 1000 * (1 + Math.random()));
+    start() {
+        const evt = Object.assign(
+            new Event("participantJoined"),
+            { id: this.id });
+
+        api.dispatchEvent(evt);
+    }
+
+    update() {
+        const x = this.x + Math.floor(2 * Math.random() - 1),
+            y = this.y + Math.floor(2 * Math.random() - 1);
+
+        jitsiClient.mockRxGameData("moveTo", this.id, { command: "moveTo", x, y });
+
+        if (Math.random() <= 0.1) {
+            const groups = Object.values(bestIcons),
+                group = groups.random(),
+                emoji = group.random();
+            jitsiClient.mockRxGameData("emote", this.id, emoji);
+        }
+
+        setTimeout(() => this.update(), 1000 * (1 + Math.random()));
+    }
 }
+
+const testUsers = [
+    new TestUser("user1", -5, -5),
+    new TestUser("user2", -5, 5),
+    new TestUser("user3", 5, -5),
+    new TestUser("user4", 5, 5),
+    new TestUser("user5", 0, 0)
+];
 
 function createTestUser() {
     if (game.userList.length < 5) {
-        const id = `user${game.userList.length + 1}`,
-            evt = Object.assign(
-                new Event("participantJoined"),
-                { id });
-        api.dispatchEvent(evt);
+        const idx = game.userList.length - 1,
+            user = testUsers[idx];
+
+        user.start();
 
         setTimeout(createTestUser, 1000);
     }
