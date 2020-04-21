@@ -50,6 +50,7 @@ export class User extends EventTarget {
     init(evt) {
         this.x = evt.x;
         this.y = evt.y;
+        this.displayName = evt.displayName;
         this.avatarEmoji = evt.avatarEmoji;
         this.avatarEmojiMetrics = null;
         this.isInitialized = true;

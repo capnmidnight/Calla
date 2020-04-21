@@ -115,7 +115,7 @@ HTMLSelectElement.prototype.setSelectedValue = function (value) {
 };
 
 Storage.prototype.getInt = function (name, defaultValue) {
-    const n = 1 * this.getItem(name);
+    const n = parseFloat(this.getItem(name));
     if (!Number.isInteger(n)) {
         return defaultValue;
     }
