@@ -78,7 +78,7 @@ I'm pretty happy with how the client is working right now, but anyone is free to
 
 #### Server
 
-I'm currently running an Azure VM in Central Korea region (hello, mid-pandemic resource shortages!) with 2 virtual CPUs and 4 GiB of RAM. Operating System is Ubuntu 18.04. This will cost approx. $75/mo, if left to run constantly.
+I'm currently running a VM on Azure with 2 virtual CPUs and 4 GiB of RAM. Operating System is Ubuntu 18.04. This will cost me about $200/mo.
 
 I set the server up using [the Jitsi quick-start instructions](https://github.com/jitsi/jitsi-meet/blob/master/doc/quick-install.md) (Actually, I followed [This video on YouTube](https://www.youtube.com/watch?v=8KR0AhDZF2A), but the directions are largely the same, I just found the video nice to see what to expect for results from each command). 
 
