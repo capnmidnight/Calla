@@ -49,7 +49,6 @@ export class EmojiForm extends EventTarget {
                 if (!!alts) {
                     g.appendChild(alts);
                 }
-                g.style.backgroundColor = "rgba(0, 0, 0, 0.2)";
                 container.appendChild(g);
             }
         };
