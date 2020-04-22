@@ -107,6 +107,9 @@
 
                     <label for="maxAudio">Max:</label>
                     <input type="number" id="maxAudio" value="10" min="0" max="100" style="width:3em" />
+
+                    <label for="rolloff">Rolloff:</label>
+                    <input type="number" id="rolloff" value="5" min="0.1" max="10" step="0.1" style="width:3em" />
                 </p>
 
                 <h2>Video</h2>
@@ -208,7 +211,6 @@ grid-template-rows: auto;">
         const pageFileName = document.location.pathname.substring(1) || "index.html",
             pageName = pageFileName.match(/(\w+)\.html/)[1],
             scriptFile = `./scripts/${pageName}.js`;
-        console.log(pageFileName, pageName, scriptFile);
         import(scriptFile);
     </script>
 </body>

@@ -1,6 +1,7 @@
 ﻿import "./protos.js";
 
 export const mutedSpeaker = { value: "\u{1F507}", desc: "Muted Speaker" };
+export const activeSpeaker = { value: "\u{1F509}", desc: "Speaker Medium Volume" };
 export const videoCamera = { value: "\u{1F4F9}", desc: "Video Camera" };
 export const speakingHead = { value: "\u{1F5E3}\u{FE0F}", desc: "Speaking Head" };
 export const bust = { value: "\u{1F464}", desc: "Bust in Silhouette" };
@@ -3436,7 +3437,7 @@ export const allIcons = {
         { value: "\u{1F506}", desc: "Bright Button" },
         mutedSpeaker,
         { value: "\u{1F508}", desc: "Speaker Low Volume" },
-        { value: "\u{1F509}", desc: "Speaker Medium Volume" },
+        activeSpeaker,
         { value: "\u{1F50A}", desc: "Speaker High Volume" },
         { value: "\u{1F50B}", desc: "Battery" },
         { value: "\u{1F50C}", desc: "Electric Plug" },

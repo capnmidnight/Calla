@@ -76,6 +76,7 @@ class MockJitsiClient extends JitsiClient {
 class MockJitsiMeetExternalAPI extends EventTarget {
     getIFrame() {
         return {
+            src: window.location.href,
             addEventListener: function () { }
         };
     }

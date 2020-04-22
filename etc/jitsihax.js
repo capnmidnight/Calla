@@ -18,72 +18,122 @@
     const FRONT_END_SERVER = "https://meet.primrosevr.com",
         ALT_FRONT_END_SERVER = "https://www.calla.chat",
         ALLOW_LOCAL_HOST = true,
-        BUFFER_SIZE = 16,
-        AVERAGING_FRAMES = 10;
+        BUFFER_SIZE = 1024;
 
     // The rest is just implementation.
 
     function ensureContext() {
         if (!audioContext) {
             audioContext = new AudioContext();
-            const listener = audioContext.listener;
-            listener.positionX.value = 0;
-            listener.positionY.value = 0;
-            listener.positionZ.value = 0;
-            listener.forwardX.value = 0;
-            listener.forwardY.value = 0;
-            listener.forwardZ.value = -1;
-            listener.upX.value = 0;
-            listener.upY.value = 1;
-            listener.upZ.value = 0;
+            const time = audioContext.currentTime,
+                listener = audioContext.listener;
+            listener.positionX.setValueAtTime(0, time);
+            listener.positionY.setValueAtTime(0, time);
+            listener.positionZ.setValueAtTime(0, time);
+            listener.forwardX.setValueAtTime(0, time);
+            listener.forwardY.setValueAtTime(0, time);
+            listener.forwardZ.setValueAtTime(-1, time);
+            listener.upX.setValueAtTime(0, time);
+            listener.upY.setValueAtTime(1, time);
+            listener.upZ.setValueAtTime(0, time);
             requestAnimationFrame(updater);
             window.audioContext = audioContext;
         }
     }
 
-    function getUserAudio(userID) {
+    class User {
+        constructor(userID, audio) {
+            this.id = userID;
+            this.lastAudible = true;
+            this.activityCounter = 0;
+            this.wasActive = false;
+
+            this.audio = audio;
+
+            const stream = !!audio.mozCaptureStream
+                ? audio.mozCaptureStream()
+                : audio.captureStream();
+
+            this.source = audioContext.createMediaStreamSource(stream);
+            this.panner = audioContext.createPanner();
+            this.analyser = audioContext.createAnalyser();
+            this.buffer = new Float32Array(BUFFER_SIZE);
+
+            this.audio.volume = 0;
+
+            this.panner.panningModel = "HRTF";
+            this.panner.distanceModel = "inverse";
+            this.panner.rolloffFactor = 1;
+            this.panner.coneInnerAngle = 360;
+            this.panner.coneOuterAngle = 0;
+            this.panner.coneOuterGain = 0;
+            this.panner.positionY.setValueAtTime(0, audioContext.currentTime);
+
+            this.analyser.fftSize = 2 * BUFFER_SIZE;
+            this.analyser.smoothingTimeConstant = 0.2;
+
+
+            this.source.connect(this.analyser);
+            this.source.connect(this.panner);
+            this.panner.connect(audioContext.destination);
+        }
+
+        setPosition(evt) {
+            console.log(evt);
+            const time = audioContext.currentTime + transitionTime;
+            // our 2D position is in X/Y coords, but our 3D position
+            // along the horizontal plane is X/Z coords.
+            this.panner.positionX.linearRampToValueAtTime(evt.data.x, time);
+            this.panner.positionZ.linearRampToValueAtTime(evt.data.y, time);
+            this.panner.refDistance = minDistance;
+            this.panner.rolloffFactor = rolloff;
+        }
+
+        update() {
+            const listener = audioContext.listener,
+                distX = this.panner.positionX.value - listener.positionX.value,
+                distZ = this.panner.positionZ.value - listener.positionZ.value,
+                dist = Math.sqrt(distX * distX + distZ * distZ),
+                range = clamp(project(dist, minDistance, maxDistance), 0, 1),
+                audible = range < 1;
+
+            if (audible !== this.lastAudible) {
+                this.lastAudible = audible;
+                if (audible) {
+                    this.source.connect(this.panner);
+                }
+                else {
+                    this.source.disconnect(this.panner);
+                }
+            }
+
+            this.analyser.getFloatFrequencyData(this.buffer);
+
+            const average = 1.1 + analyserFrequencyAverage(this.analyser, this.buffer, 85, 255) / 100;
+            if (average >= 0.5 && this.activityCounter < activityCounterMax) {
+                this.activityCounter++;
+            } else if (average < 0.5 && this.activityCounter > activityCounterMin) {
+                this.activityCounter--;
+            }
+
+            const isActive = this.activityCounter > activityCounterThresh;
+            if (this.wasActive !== isActive) {
+                this.wasActive = isActive;
+                txJitsiHax("audioActivity", {
+                    participantID: this.id,
+                    isActive
+                });
+            }
+        }
+    }
+
+    function getUser(userID) {
         if (!userLookup[userID]) {
             const elementID = `#participant_${userID} audio`,
                 audio = document.querySelector(elementID);
 
             if (!!audio) {
-                const stream = !!audio.mozCaptureStream
-                    ? audio.mozCaptureStream()
-                    : audio.captureStream(),
-                    source = audioContext.createMediaStreamSource(stream),
-                    panner = audioContext.createPanner(),
-                    analyser = audioContext.createAnalyser(),
-                    buffer = new Float32Array((2 + AVERAGING_FRAMES) * BUFFER_SIZE);
-
-                audio.volume = 0;
-
-                panner.panningModel = "HRTF";
-                panner.distanceModel = "inverse";
-                panner.rolloffFactor = 1;
-                panner.coneInnerAngle = 360;
-                panner.coneOuterAngle = 0;
-                panner.coneOuterGain = 0;
-                panner.positionY.value = 0;
-
-                analyser.fftSize = 2 * BUFFER_SIZE;
-
-                source.connect(analyser);
-                source.connect(panner);
-                panner.connect(audioContext.destination);
-
-                userLookup[userID] = {
-                    id: userID,
-                    x: 0,
-                    y: 0,
-                    lastVolume: 0,
-                    volume: 1,
-                    audio,
-                    source,
-                    panner,
-                    analyser,
-                    buffer
-                };
-
+                userLookup[userID] = new User(userID, audio);
                 userList.push(userLookup[userID]);
             }
         }
@@ -95,36 +145,46 @@
         return user;
     }
 
-    function updateUserAudio(user) {
-        const time = audioContext.currentTime + transitionTime;
-        // our 2D position is in X/Y coords, but our 3D position 
-        // along the horizontal plane is X/Z coords.
-        user.panner.positionX.linearRampToValueAtTime(user.x, time);
-        user.panner.positionZ.linearRampToValueAtTime(user.y, time);
-        if (user.volume !== user.lastVolume) {
-            if (user.volume === 0) {
-                user.source.disconnect(user.panner);
-            }
-            else {
-                user.source.connect(user.panner);
-            }
+    function updater() {
+        requestAnimationFrame(updater);
+        for (let user of userList) {
+            user.update();
         }
-
-        user.lastVolume = user.volume;
     }
 
-    function setVolume(evt) {
-        const user = getUserAudio(evt.participantID);
+    function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz) {
+        const sampleRate = analyser.context.sampleRate,
+            start = frequencyToIndex(minHz, sampleRate),
+            end = frequencyToIndex(maxHz, sampleRate),
+            count = end - start
+        let sum = 0
+        for (let i = start; i < end; ++i) {
+            sum += frequencies[i];
+        }
+        return count === 0 ? 0 : (sum / count);
+    }
+
+    function frequencyToIndex(frequency, sampleRate) {
+        var nyquist = sampleRate / 2
+        var index = Math.round(frequency / nyquist * BUFFER_SIZE)
+        return clamp(index, 0, BUFFER_SIZE)
+    }
+
+    function clamp(v, min, max) {
+        return Math.min(max, Math.max(min, v));
+    }
+
+    function project(v, min, max) {
+        return (v - min) / (max - min);
+    }
+
+    function setUserPosition(evt) {
+        const user = getUser(evt.participantID);
         if (!user) {
             return;
         }
 
-        user.x = evt.x;
-        user.y = evt.y;
-        user.lastVolume = user.volume;
-        user.volume = evt.volume;
-
-        updateUserAudio(user);
+        user.setPosition(evt);
     }
 
     function setLocalPosition(evt) {
@@ -136,54 +196,22 @@
     }
 
     function setAudioProperties(evt) {
+        origin = evt.origin;
         minDistance = evt.minDistance;
         maxDistance = evt.maxDistance;
         transitionTime = evt.transitionTime;
+        rolloff = evt.rolloff;
 
         ensureContext();
-
-        for (let user of userList) {
-            user.panner.refDistance = minDistance;
-            user.panner.rolloffFactor = Math.sqrt(maxDistance + minDistance);
-            updateUserAudio(user);
-        }
-    }
-
-    function updater() {
-        requestAnimationFrame(updater);
-        for (let user of userList) {
-            const lastAvg = user.buffer.length - BUFFER_SIZE,
-                avg = user.buffer.length - 2 * BUFFER_SIZE,
-                lastValue = user.buffer.length - 3 * BUFFER_SIZE;
-
-            for (let i = user.buffer.length - 1; i >= BUFFER_SIZE; --i) {
-                user.buffer[i] = user.buffer[i - BUFFER_SIZE];
-            }
-
-            user.analyser.getFloatFrequencyData(user.buffer);
-
-            let totalDelta = 0;
-            for (let i = 0; i < BUFFER_SIZE; ++i) {
-                const delta = (user.buffer[i] - user.buffer[lastValue + i]) / AVERAGING_FRAMES;
-                user.buffer[avg + i] = user.buffer[lastAvg + i] + delta;
-                totalDelta += delta;
-            }
-
-            sendAudioActivity(user.id, totalDelta > 0);
-        }
-    }
-
-    function sendAudioActivity(userID, active) {
-        txJitsiHax("audioActivity", {
-            participantID: userID,
-            isActive: active
-        });
     }
 
     function txJitsiHax(command, obj) {
-        obj.hax = APP_FINGERPRINT;
-        obj.command = command;
-        postMessage(JSON.stringify(obj), location.origin);
+        if (!!origin) {
+            obj.hax = APP_FINGERPRINT;
+            obj.command = command;
+            const msg = JSON.stringify(obj);
+            window.parent.postMessage(msg, origin);
+        }
     }
 
     function rxJitsiHax(evt) {
@@ -214,21 +242,21 @@
         userList = [],
         commands = {
             setLocalPosition,
-            setVolume,
+            setUserPosition,
             setAudioProperties
-        };
+        },
+        activityCounterMin = 0,
+        activityCounterMax = 60,
+        activityCounterThresh = 5;
 
     let audioContext = null,
 
         // these values will get overwritten when the user sets their audio properties
-        minDistance = 2,
-        maxDistance = 15,
-        transitionTime = 0;
-
-    Object.assign(window, {
-        userLookup,
-        userList
-    });
+        minDistance = 1,
+        maxDistance = 10,
+        rolloff = 5,
+        transitionTime = 0.125,
+        origin = null;
 
     addEventListener("message", rxJitsiHax);
 })();

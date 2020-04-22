@@ -238,6 +238,7 @@ export class Game {
             const user = this.userLookup[evt.participantID];
             if (!!user) {
                 user.moveTo(evt.data.x, evt.data.y);
+                this.jitsiClient.setUserPosition(evt);
             }
         });
 
@@ -434,10 +435,6 @@ export class Game {
         this.userList.push(this.me);
         this.userLookup[this.me.id] = this.me;
 
-        this.me.addEventListener("changeUserVolume", (evt) => {
-            this.jitsiClient.setVolume(evt);
-        });
-
         this.me.addEventListener("moveTo", (evt) => {
             this.jitsiClient.updatePosition(evt);
             for (let user of this.userList) {
@@ -553,9 +550,6 @@ export class Game {
 
         for (let user of this.userList) {
             user.update(dt, this.map, this.userList);
-        }
-        for (let user of this.userList) {
-            this.me.readUser(user, this.gui.audioDistanceMin, this.gui.audioDistanceMax);
         }
     }
 

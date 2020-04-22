@@ -111,7 +111,8 @@ export class AppGui extends EventTarget {
             {
                 const drawHearingCheckbox = document.querySelector("#drawHearing"),
                     minAudioSpinner = document.querySelector("#minAudio"),
-                    maxAudioSpinner = document.querySelector("#maxAudio");
+                    maxAudioSpinner = document.querySelector("#maxAudio"),
+                    rolloffSpinner = document.querySelector("#rolloff");
 
                 this.drawHearing = localStorage.getItem("drawHearing") === "true";
 
@@ -119,6 +120,8 @@ export class AppGui extends EventTarget {
                 this.audioDistanceMin = Math.max(1, this.audioDistanceMin);
                 this.audioDistanceMax = localStorage.getInt("maxAudio", 10);
                 this.audioDistanceMax = Math.max(this.audioDistanceMin + 1, this.audioDistanceMax);
+                this.rolloff = localStorage.getInt("rolloff", 50) / 10;
+                this.rolloff = Math.max(0.1, Math.min(10, this.rolloff));
 
                 if (drawHearingCheckbox
                     && minAudioSpinner
@@ -132,18 +135,26 @@ export class AppGui extends EventTarget {
 
                     const setAudioRange = () => {
                         this.audioDistanceMin = parseFloat(minAudioSpinner.value);
+
                         this.audioDistanceMax = parseFloat(maxAudioSpinner.value);
                         this.audioDistanceMax = Math.max(this.audioDistanceMin + 1, this.audioDistanceMax);
                         maxAudioSpinner.value = this.audioDistanceMax;
-                        localStorage.setItem("minAudio", minAudioSpinner.value);
-                        localStorage.setItem("maxAudio", maxAudioSpinner.value);
+
+                        this.rolloff = parseFloat(rolloffSpinner.value);
+
+                        localStorage.setItem("minAudio", this.audioDistanceMin);
+                        localStorage.setItem("maxAudio", this.audioDistanceMax);
+                        localStorage.setItem("rolloff", 10 * this.rolloff);
+
                         this.updateAudioSettings();
                     };
 
                     minAudioSpinner.value = this.audioDistanceMin;
                     maxAudioSpinner.value = this.audioDistanceMax;
+                    rolloffSpinner.value = this.rolloff;
                     minAudioSpinner.addEventListener("input", setAudioRange);
                     maxAudioSpinner.addEventListener("input", setAudioRange);
+                    rolloffSpinner.addEventListener("input", setAudioRange);
                 }
             }
             // <<<<<<<<<< HEARING <<<<<<<<<<
@@ -374,10 +385,13 @@ export class AppGui extends EventTarget {
     }
 
     updateAudioSettings() {
+        console.log("UPDATE AUDIO SETTINGS");
         this.jitsiClient.setAudioProperties(
+            location.origin,
+            MOVE_TRANSITION_TIME,
             this.audioDistanceMin,
             this.audioDistanceMax,
-            MOVE_TRANSITION_TIME);
+            this.rolloff);
     }
 
     startConference(roomName, userName) {

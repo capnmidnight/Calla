@@ -1,11 +1,17 @@
 ﻿import "./protos.js";
 import { clamp, project } from "./math.js";
-import { mutedSpeaker, videoCamera, randomPerson, bust } from "./emoji.js";
+import {
+    mutedSpeaker,
+    activeSpeaker,
+    videoCamera,
+    randomPerson,
+    bust
+} from "./emoji.js";
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
     STACKED_USER_OFFSET_X = 5,
     STACKED_USER_OFFSET_Y = 5,
-    eventNames = ["moveTo", "userInitRequest", "changeUserVolume"];
+    eventNames = ["moveTo", "userInitRequest"];
 
 export class User extends EventTarget {
     constructor(id, displayName, isMe) {
@@ -44,7 +50,6 @@ export class User extends EventTarget {
         this.isInitialized = isMe;
         this.lastPositionRequestTime = Date.now() - POSITION_REQUEST_DEBOUNCE_TIME;
         this.moveEvent = new UserMoveEvent(this.id);
-        this.volumeChangedEvents = {};
         this.visible = true;
     }
 
@@ -171,34 +176,6 @@ export class User extends EventTarget {
         }
     }
 
-    readUser(user, audioDistMin, audioDistMax) {
-        if (this.isMe && !user.isMe) {
-            const distX = user.tx - this.tx,
-                distY = user.ty - this.ty,
-                dist = Math.sqrt(distX * distX + distY * distY),
-                distPrev = Math.sqrt(user.distXToMe * user.distXToMe + user.distYToMe * user.distYToMe),
-                distCl = clamp(dist, audioDistMin, audioDistMax),
-                moved = distX !== user.distXToMe || distY !== user.distYToMe,
-                audible = dist < audioDistMax,
-                audiblePrev = distPrev < audioDistMax;
-
-            if (moved && (audiblePrev || audible)) {
-                user.distXToMe = distX;
-                user.distYToMe = distY;
-
-                if (!this.volumeChangedEvents[user.id]) {
-                    this.volumeChangedEvents[user.id] = new UserVolumeChangedEvent(user.id);
-                }
-
-                const volume = 1 - Math.sqrt(project(distCl, audioDistMin, audioDistMax)),
-                    evt = this.volumeChangedEvents[user.id];
-
-                evt.set(user.tx, user.ty, volume);
-                this.dispatchEvent(evt);
-            }
-        }
-    }
-
     drawShadow(g, map, cameraZ) {
         const x = this.x * map.tileWidth,
             y = this.y * map.tileHeight,
@@ -229,9 +206,14 @@ export class User extends EventTarget {
             g.save();
             {
                 this.innerDraw(g, map);
-                if (this.isActive) {
-                    g.strokeStyle = "white";
-                    g.strokeRect(0, 0, this.stackAvatarWidth, this.stackAvatarHeight);
+                if (this.isActive && !this.audioMuted) {
+                    const height = this.stackAvatarHeight / 2;
+                    g.font = height + "px sans-serif";
+                    const metrics = g.measureText(activeSpeaker.value);
+                    g.fillText(
+                        activeSpeaker.value,
+                        this.stackAvatarWidth - metrics.width,
+                        0);
                 }
             }
             g.restore();
@@ -361,21 +343,5 @@ class UserPositionNeededEvent extends Event {
     constructor(participantID) {
         super("userInitRequest");
         this.participantID = participantID;
-    }
-}
-
-class UserVolumeChangedEvent extends Event {
-    constructor(participantID) {
-        super("changeUserVolume");
-        this.participantID = participantID;
-        this.x = 0;
-        this.y = 0;
-        this.volume = 0;
-    }
-
-    set(x, y, volume) {
-        this.x = x;
-        this.y = y;
-        this.volume = volume;
     }
 }

@@ -6,6 +6,11 @@ const APP_FINGERPRINT = "Calla",
 // Manages communication between Jitsi Meet and Calla
 export class JitsiClient extends EventTarget {
 
+    constructor() {
+        super();
+        addEventListener("message", this.rxJitsiHax.bind(this));
+    }
+
     setJitsiApi(api) {
         this.api = api;
         this.api.addEventListener("endpointTextMessageReceived",
@@ -14,8 +19,8 @@ export class JitsiClient extends EventTarget {
 
     setJitsiIFrame(iframe) {
         this.iframe = iframe;
+        this.apiOrigin = new URL(iframe.src).origin;
         this.apiWindow = this.iframe.contentWindow || window;
-        this.apiWindow.addEventListener("message", this.rxJitsiHax.bind(this));
     }
 
     /// Send a Calla message through the Jitsi Meet data channel.
@@ -54,13 +59,13 @@ export class JitsiClient extends EventTarget {
         if (this.apiWindow) {
             obj.hax = APP_FINGERPRINT;
             obj.command = command;
-            this.apiWindow.postMessage(JSON.stringify(obj), "https://" + JITSI_HOST);
+            this.apiWindow.postMessage(JSON.stringify(obj), this.apiOrigin);
         }
     }
 
     rxJitsiHax(evt) {
         const isLocalHost = evt.origin.match(/^https?:\/\/localhost\b/);
-        if (evt.origin === JITSI_HOST || isLocalHost) {
+        if (evt.origin === "https://" + JITSI_HOST || isLocalHost) {
             try {
                 const data = JSON.parse(evt.data);
                 if (data.hax === APP_FINGERPRINT) {
@@ -103,11 +108,13 @@ export class JitsiClient extends EventTarget {
         super.addEventListener(evtName, callback);
     }
 
-    setAudioProperties(minDistance, maxDistance, transitionTime) {
+    setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
         this.txJitsiHax("setAudioProperties", {
+            origin,
+            transitionTime,
             minDistance,
             maxDistance,
-            transitionTime
+            rolloff
         });
     }
 
@@ -131,8 +138,8 @@ export class JitsiClient extends EventTarget {
         this.txGameData(toUserID, "videoMuteStatusChanged", { muted });
     }
 
-    setVolume(evt) {
-        this.txJitsiHax("setVolume", evt);
+    setUserPosition(evt) {
+        this.txJitsiHax("setUserPosition", evt);
     }
 
     sendPosition(toUserID, evt) {
