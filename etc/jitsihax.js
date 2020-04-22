@@ -79,7 +79,6 @@
         }
 
         setPosition(evt) {
-            console.log(evt);
             const time = audioContext.currentTime + transitionTime;
             // our 2D position is in X/Y coords, but our 3D position
             // along the horizontal plane is X/Z coords.
