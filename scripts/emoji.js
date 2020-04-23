@@ -6,6 +6,47 @@ export const videoCamera = { value: "\u{1F4F9}", desc: "Video Camera" };
 export const speakingHead = { value: "\u{1F5E3}\u{FE0F}", desc: "Speaking Head" };
 export const bust = { value: "\u{1F464}", desc: "Bust in Silhouette" };
 
+const surfer = {
+    value: "\u{1F3C4}", desc: "person surfing", alt: [
+        { value: "\u{1F3C4}\u{1F3FB}", desc: "person surfing: light skin tone" },
+        { value: "\u{1F3C4}\u{1F3FC}", desc: "person surfing: medium-light skin tone" },
+        { value: "\u{1F3C4}\u{1F3FD}", desc: "person surfing: medium skin tone" },
+        { value: "\u{1F3C4}\u{1F3FE}", desc: "person surfing: medium-dark skin tone" },
+        { value: "\u{1F3C4}\u{1F3FF}", desc: "person surfing: dark skin tone" },
+    ]
+};
+
+const manSurfing = {
+    value: "\u{1F3C4}\u{200D}\u{2642}\u{FE0F}", desc: "man surfing", alt: [
+        { value: "\u{1F3C4}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man surfing: light skin tone" },
+        { value: "\u{1F3C4}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man surfing: medium-light skin tone" },
+        { value: "\u{1F3C4}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man surfing: medium skin tone" },
+        { value: "\u{1F3C4}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man surfing: medium-dark skin tone" },
+        { value: "\u{1F3C4}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man surfing: dark skin tone" },
+    ]
+};
+
+const womanSurfing = {
+    value: "\u{1F3C4}\u{200D}\u{2640}\u{FE0F}", desc: "woman surfing", alt: [
+        { value: "\u{1F3C4}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman surfing: light skin tone" },
+        { value: "\u{1F3C4}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman surfing: medium-light skin tone" },
+        { value: "\u{1F3C4}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman surfing: medium skin tone" },
+        { value: "\u{1F3C4}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman surfing: medium-dark skin tone" },
+        { value: "\u{1F3C4}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman surfing: dark skin tone" },
+    ]
+};
+
+export function isInSet(set, v) {
+    return set.value === v
+        || set.alt && set.alt.findIndex(e => e.value === v) >= 0;
+}
+
+export function isSurfer(v) {
+    return isInSet(surfer, v)
+        || isInSet(manSurfing, v)
+        || isInSet(womanSurfing, v);
+}
+
 export const people = [
     speakingHead,
     bust,
@@ -1531,33 +1572,9 @@ export const people = [
             { value: "\u{1F3CC}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman golfing: dark skin tone" },
         ]
     },
-    {
-        value: "\u{1F3C4}", desc: "person surfing", alt: [
-            { value: "\u{1F3C4}\u{1F3FB}", desc: "person surfing: light skin tone" },
-            { value: "\u{1F3C4}\u{1F3FC}", desc: "person surfing: medium-light skin tone" },
-            { value: "\u{1F3C4}\u{1F3FD}", desc: "person surfing: medium skin tone" },
-            { value: "\u{1F3C4}\u{1F3FE}", desc: "person surfing: medium-dark skin tone" },
-            { value: "\u{1F3C4}\u{1F3FF}", desc: "person surfing: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F3C4}\u{200D}\u{2642}\u{FE0F}", desc: "man surfing", alt: [
-            { value: "\u{1F3C4}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man surfing: light skin tone" },
-            { value: "\u{1F3C4}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man surfing: medium-light skin tone" },
-            { value: "\u{1F3C4}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man surfing: medium skin tone" },
-            { value: "\u{1F3C4}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man surfing: medium-dark skin tone" },
-            { value: "\u{1F3C4}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man surfing: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F3C4}\u{200D}\u{2640}\u{FE0F}", desc: "woman surfing", alt: [
-            { value: "\u{1F3C4}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman surfing: light skin tone" },
-            { value: "\u{1F3C4}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman surfing: medium-light skin tone" },
-            { value: "\u{1F3C4}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman surfing: medium skin tone" },
-            { value: "\u{1F3C4}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman surfing: medium-dark skin tone" },
-            { value: "\u{1F3C4}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman surfing: dark skin tone" },
-        ]
-    },
+    surfer,
+    manSurfing,
+    womanSurfing,
     {
         value: "\u{1F6A3}", desc: "person rowing boat", alt: [
             { value: "\u{1F6A3}\u{1F3FB}", desc: "person rowing boat: light skin tone" },

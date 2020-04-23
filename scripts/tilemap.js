@@ -1,5 +1,6 @@
 ﻿import "./protos.js";
 import { TileSet } from "./tileset.js";
+import { isSurfer } from "./emoji.js";
 
 // TODO: move map data to requestable files
 export class TileMap {
@@ -83,18 +84,19 @@ export class TileMap {
         g.restore();
     }
 
-    isClear(x, y) {
+    isClear(x, y, avatar) {
         x -= this.offsetX;
         y -= this.offsetY;
         return x < 0 || this.width <= x
             || y < 0 || this.height <= y
-            || this.tileset.isClear(this.tiles[0][y][x]);
+            || this.tileset.isClear(this.tiles[0][y][x])
+            || isSurfer(avatar);
     }
 
     // Use Bresenham's line algorithm (with integer error)
     // to draw a line through the map, cutting it off if
     // it hits a wall.
-    getClearTile(x, y, dx, dy) {
+    getClearTile(x, y, dx, dy, avatar) {
         const x1 = x + dx,
             y1 = y + dy,
             sx = x < x1 ? 1 : -1,
@@ -109,7 +111,7 @@ export class TileMap {
             || y !== y1) {
             const e2 = err;
             if (e2 > -dx) {
-                if (this.isClear(x + sx, y)) {
+                if (this.isClear(x + sx, y, avatar)) {
                     err -= dy;
                     x += sx;
                 }
@@ -118,7 +120,7 @@ export class TileMap {
                 }
             }
             if (e2 < dy) {
-                if (this.isClear(x, y + sy)) {
+                if (this.isClear(x, y + sy, avatar)) {
                     err += dx;
                     y += sy;
                 }

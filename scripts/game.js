@@ -225,10 +225,7 @@ export class Game extends EventTarget {
                     this.emote();
                 }
                 else if (this.canClick) {
-                    const clearTile = this.map.getClearTile(this.me.tx, this.me.ty, dx, dy);
-                    this.me.moveTo(clearTile.x, clearTile.y);
-                    this.targetOffsetCameraX = 0;
-                    this.targetOffsetCameraY = 0;
+                    this.moveMeBy(dx, dy);
                 }
             }
         });
@@ -356,6 +353,13 @@ export class Game extends EventTarget {
             gridY = Math.floor(mapY / mapHeight),
             tile = { x: gridX, y: gridY };
         return tile;
+    }
+
+    moveMeBy(dx, dy) {
+        const clearTile = this.map.getClearTile(this.me.tx, this.me.ty, dx, dy, this.me.avatarEmoji);
+        this.me.moveTo(clearTile.x, clearTile.y);
+        this.targetOffsetCameraX = 0;
+        this.targetOffsetCameraY = 0;
     }
 
     registerGameListeners(api) {
@@ -636,10 +640,7 @@ export class Game extends EventTarget {
 
             if (dx !== 0
                 || dy !== 0) {
-                const clearTile = this.map.getClearTile(this.me.tx, this.me.ty, dx, dy);
-                this.me.moveTo(clearTile.x, clearTile.y);
-                this.targetOffsetCameraX = 0;
-                this.targetOffsetCameraY = 0;
+                this.moveMeBy(dx, dy);
             }
 
             this.lastMove = 0;
