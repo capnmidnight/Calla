@@ -10,7 +10,7 @@ const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_MIN = 0.1,
     CAMERA_ZOOM_SHAPE = 1 / 4,
     CAMERA_ZOOM_SPEED = 0.005,
-    MAX_DRAG_DISTANCE = 2,
+    MAX_DRAG_DISTANCE = 5,
     isFirefox = typeof InstallTrigger !== "undefined";
 
 export class Game extends EventTarget {
