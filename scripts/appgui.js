@@ -501,16 +501,12 @@ export class AppGui extends EventTarget {
             this.guiView = document.querySelector("#guiView");
             this.jitsiContainer = document.querySelector("#jitsi");
             this.toolbar = document.querySelector("#toolbar");
-            this.showGameButton = document.querySelector("#showGame");
             if (this.appView
                 && this.guiView
                 && this.jitsiContainer
-                && this.toolbar
-                && this.showGameButton) {
+                && this.toolbar) {
                 addEventListener("resize", () => this.resize.bind(this));
                 addEventListener("resize", this.game.frontBuffer.resize.bind(this.game.frontBuffer));
-                this.showGameButton.addEventListener("click", this.showView.bind(this, true));
-                this.showView(false);
             }
         }
         // <<<<<<<<<< VIEWS <<<<<<<<<<
@@ -610,13 +606,6 @@ export class AppGui extends EventTarget {
             = this.jitsiContainer.style.height
             = this.game.frontBuffer.style.height
             = height;
-    }
-
-    showView(toggleGame) {
-        this.game.frontBuffer.setOpenWithLabel(
-            toggleGame !== this.game.frontBuffer.isOpen(),
-            this.showGameButton,
-            "Show", "Hide", " meeting UI");
     }
 
     showLogin() {
