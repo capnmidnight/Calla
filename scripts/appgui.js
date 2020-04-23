@@ -3,7 +3,7 @@ import "./protos.js";
 
 import { EmojiForm } from "./emojiForm.js";
 import { bust } from "./emoji.js";
-import { clamp } from "./math.js";
+import { isGoodNumber } from "./math.js";
 
 export class AppGui extends EventTarget {
     constructor(game) {
@@ -207,6 +207,102 @@ export class AppGui extends EventTarget {
                     }
                 }
                 // <<<<<<<<<< KEYBOARD <<<<<<<<<<
+
+                // >>>>>>>>>> GAMEPAD >>>>>>>>>>
+                {
+                    const gamepadSelector = document.querySelector("#gamepads"),
+                        gamepadStatusBox = document.querySelector("#gamepadStatus"),
+                        gpButtonUp = document.querySelector("#gpButtonUp"),
+                        gpButtonDown = document.querySelector("#gpButtonDown"),
+                        gpButtonLeft = document.querySelector("#gpButtonLeft"),
+                        gpButtonRight = document.querySelector("#gpButtonRight"),
+                        gpButtonEmote = document.querySelector("#gpButtonEmote"),
+                        gpButtonToggleAudio = document.querySelector("#gpButtonToggleAudio");
+                    if (gamepadSelector
+                        && gamepadStatusBox
+                        && gpButtonUp
+                        && gpButtonDown
+                        && gpButtonLeft
+                        && gpButtonRight
+                        && gpButtonEmote
+                        && gpButtonToggleAudio) {
+
+                        const refreshGamepadList = (evt) => {
+                            gamepadSelector.innerHTML = "";
+                            if (this.game.gamepads.length === 0) {
+                                gamepadStatusBox.innerHTML = "No gamepads detected";
+                                gamepadSelector.lock();
+                            }
+                            else {
+                                gamepadStatusBox.innerHTML = "";
+                                if (this.game.gamepads.length > 1) {
+                                    gamepadSelector.unlock();
+                                }
+                                for (let pad of this.game.gamepads) {
+                                    const opt = document.createElement("option");
+                                    opt.innerHTML = pad.id;
+                                    if (this.game.gamepadIndex === gamepadSelector.options.length) {
+                                        opt.selected = "selected";
+                                    }
+                                    gamepadSelector.appendChild(opt);
+                                }
+                            }
+                        };
+
+                        this.addEventListener("optionsOpened", refreshGamepadList);
+                        addEventListener("gamepadconnected", refreshGamepadList);
+                        addEventListener("gamepaddisconnected", refreshGamepadList);
+
+                        gamepadSelector.addEventListener("input", (evt) => {
+                            this.game.gamepadIndex = gamepadSelector.selectedIndex;
+                        });
+
+                        const setGPOption = (btn, get, set) => {
+                            set(localStorage.getInt(btn.id, get()));
+
+                            this.game.addEventListener("gamepadButtonPressed", (evt) => {
+                                if (document.activeElement === btn) {
+                                    btn.value = evt.button;
+                                }
+                            });
+
+                            btn.addEventListener("input", (evt) => {
+                                btn.value = get();
+                            });
+
+                            const refresh = (evt) => {
+                                btn.value = get();
+
+                                if (this.game.gamepads.length === 0) {
+                                    btn.lock();
+                                }
+                                else {
+                                    btn.unlock();
+                                }
+                            };
+
+                            this.addEventListener("optionsOpened", refresh);
+                            addEventListener("gamepadconnected", refresh);
+                            addEventListener("gamepaddisconnected", refresh);
+
+                            this.addEventListener("optionsConfirmed", (evt) => {
+                                const value = parseInt(btn.value, 10);
+                                if (isGoodNumber(value)) {
+                                    set(value);
+                                    localStorage.setItem(btn.id, value);
+                                }
+                            });
+                        };
+
+                        setGPOption(gpButtonUp, () => this.game.buttonUp, v => this.game.buttonUp = v);
+                        setGPOption(gpButtonDown, () => this.game.buttonDown, v => this.game.buttonDown = v);
+                        setGPOption(gpButtonLeft, () => this.game.buttonLeft, v => this.game.buttonLeft = v);
+                        setGPOption(gpButtonRight, () => this.game.buttonRight, v => this.game.buttonRight = v);
+                        setGPOption(gpButtonEmote, () => this.game.buttonEmote, v => this.game.buttonEmote = v);
+                        setGPOption(gpButtonToggleAudio, () => this.game.buttonToggleAudio, v => this.game.buttonToggleAudio = v);
+                    }
+                }
+                // <<<<<<<<<< GAMEPAD <<<<<<<<<<
 
                 // >>>>>>>>>> HEARING >>>>>>>>>>
                 {

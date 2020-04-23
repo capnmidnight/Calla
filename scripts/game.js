@@ -54,6 +54,17 @@ export class Game extends EventTarget {
         this.keyLeft = "ArrowLeft";
         this.keyRight = "ArrowRight";
 
+        this.gamepads = [];
+        this.gamepadButtonPressedEvents = [];
+        this.lastGamepadIndex = -1;
+        this.gamepadIndex = -1;
+        this.buttonEmote = 0;
+        this.buttonToggleAudio = 1;
+        this.buttonUp = 12;
+        this.buttonDown = 13;
+        this.buttonLeft = 14;
+        this.buttonRight = 15;
+
         // ============= KEYBOARD =================
 
         addEventListener("keydown", (evt) => {
@@ -236,6 +247,29 @@ export class Game extends EventTarget {
         // ============= POINTERS =================
 
         // ============= GAMEPAD =================
+        {
+            addEventListener("gamepadconnected", (evt) => {
+                const pad = evt.gamepad,
+                    idx = this.gamepads.findIndex(x => x.id === pad.id);
+                if (idx === -1) {
+                    this.gamepads.push(pad);
+                    if (this.gamepads.length === 1) {
+                        this.gamepadIndex = 0;
+                    }
+                }
+            });
+
+            addEventListener("gamepaddisconnected", (evt) => {
+                const pad = evt.gamepad,
+                    idx = this.gamepads.findIndex(x => x.id === pad.id);
+                if (idx >= 0) {
+                    this.gamepads.splice(idx, 1);
+                    if (this.gamepads.length === 0) {
+                        this.gamepadIndex = -1;
+                    }
+                }
+            });
+        }
         // ============= GAMEPAD =================
 
         // ============= ACTION ==================
@@ -545,6 +579,61 @@ export class Game extends EventTarget {
                 }
             }
 
+            if (0 <= this.gamepadIndex && this.gamepadIndex < this.gamepads.length) {
+                const lastPad = this.gamepads[this.gamepadIndex],
+                    pad = navigator.getGamepads()[lastPad.index];
+
+                if (this.gamepadIndex != this.lastGamepadIndex) {
+                    while (this.gamepadButtonPressedEvents.length > pad.buttons.length) {
+                        this.gamepadButtonPressedEvents.pop();
+                    }
+                    while (this.gamepadButtonPressedEvents.length < pad.buttons.length) {
+                        this.gamepadButtonPressedEvents.push(new GamepadButtonPressedEvent(this.gamepadButtonPressedEvents.length));
+                    }
+                }
+                this.lastGamepadIndex = this.gamepadIndex;
+
+                for (let i = 0; i < pad.buttons.length; ++i) {
+                    if (!lastPad.buttons[i].pressed
+                        && pad.buttons[i].pressed) {
+                        this.dispatchEvent(this.gamepadButtonPressedEvents[i]);
+                    }
+                }
+
+                if (pad.buttons[this.buttonEmote].pressed) {
+                    this.emote();
+                }
+
+                if (!lastPad.buttons[this.buttonToggleAudio].pressed
+                    && pad.buttons[this.buttonToggleAudio].pressed) {
+                    this.jitsiClient.toggleAudio();
+                }
+
+                if (pad.buttons[this.buttonUp].pressed) {
+                    --dy;
+                }
+                else if (pad.buttons[this.buttonDown].pressed) {
+                    ++dy;
+                }
+
+                if (pad.buttons[this.buttonLeft].pressed) {
+                    --dx;
+                }
+                else if (pad.buttons[this.buttonRight].pressed) {
+                    ++dx;
+                }
+
+                dx += Math.round(pad.axes[0]);
+                dy += Math.round(pad.axes[1]);
+                this.targetOffsetCameraX += -50 * Math.round(2 * pad.axes[2]);
+                this.targetOffsetCameraY += -50 * Math.round(2 * pad.axes[3]);
+
+                this.gamepads[this.gamepadIndex] = pad;
+            }
+
+            dx = clamp(dx, -1, 1);
+            dy = clamp(dy, -1, 1);
+
             if (dx !== 0
                 || dy !== 0) {
                 const clearTile = this.map.getClearTile(this.me.tx, this.me.ty, dx, dy);
@@ -639,5 +728,12 @@ export class Game extends EventTarget {
                 this.map.tileWidth,
                 this.map.tileHeight);
         }
+    }
+}
+
+class GamepadButtonPressedEvent extends Event {
+    constructor(button) {
+        super("gamepadButtonPressed");
+        this.button = button;
     }
 }
