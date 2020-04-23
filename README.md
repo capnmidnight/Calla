@@ -1,6 +1,7 @@
 # Calla
 
 A hack on top of [Jitsi](https://jitsi.org) to create a virtual meeting room where users can sit next to each other to hear each other better.
+<img src="https://raw.githubusercontent.com/capnmidnight/Calla/master/repo-preview.jpg">
 
 ## PROBLEM
 
@@ -16,8 +17,6 @@ Calla adds a small, RPG-style map to the Jitsi meeting view. It gives you an ava
 - If you need to change your microphone settings, click the `<` arrow in the menu in the upper right corner of the window to hide the map view and give you full access to the Jitsi Meet interface. 
 - Once you are done changing settings, use the `>` arrow in the upper-right menu to return to the map view.
 - Use the Arrow Keys to move your character around.
-
-<img src="https://raw.githubusercontent.com/capnmidnight/Calla/master/screenshot.png">
 
 ## INSTALLATION
 
