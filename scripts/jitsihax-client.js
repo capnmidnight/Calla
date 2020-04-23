@@ -79,6 +79,48 @@ export class JitsiClient extends EventTarget {
         }
     }
 
+    async getAudioOutputDevices() {
+        const devices = await this.api.getAvailableDevices();
+        return devices && devices.audioOutput || [];
+    }
+
+    async getCurrentAudioOutputDevice() {
+        const devices = await this.api.getCurrentDevices();
+        return devices && devices.audioOutput || null;
+    }
+
+    setAudioOutputDevice(device) {
+        this.api.setAudioOutputDevice(device.label, device.id);
+    }
+
+    async getAudioInputDevices() {
+        const devices = await this.api.getAvailableDevices();
+        return devices && devices.audioInput || [];
+    }
+
+    async getCurrentAudioInputDevice() {
+        const devices = await this.api.getCurrentDevices();
+        return devices && devices.audioInput || null;
+    }
+
+    setAudioInputDevice(device) {
+        this.api.setAudioInputDevice(device.label, device.id);
+    }
+
+    async getVideoInputDevices() {
+            const devices = await this.api.getAvailableDevices();
+        return devices && devices.videoInput || [];
+    }
+
+    async getCurrentVideoInputDevice() {
+        const devices = await this.api.getCurrentDevices();
+        return devices && devices.videoInput || null;
+    }
+
+    setVideoInputDevice(device) {
+        this.api.setVideoInputDevice(device.label, device.id);
+    }
+
     toggleAudio() {
         this.api.executeCommand("toggleAudio");
     }

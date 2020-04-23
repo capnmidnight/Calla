@@ -80,7 +80,33 @@ class MockJitsiMeetExternalAPI extends EventTarget {
             addEventListener: function () { }
         };
     }
-};
+
+    async getAvailableDevices() {
+        const current = await this.getCurrentDevices();
+        return {
+            audioInput: [current.audioInput],
+            audioOutput: [current.audioOutput],
+            videoInput: [current.videoInput]
+        };
+    }
+
+    getCurrentDevices() {
+        return Promise.resolve({
+            audioInput: { id: "mock-audio-input", label: "Mock audio input device" },
+            audioOutput: { id: "mock-audio-output", label: "Mock audio output device" },
+            videoInput: { id: "mock-video-input", label: "Mock video input device" }
+        });
+    }
+
+    setAudioOutputDevice(device) {
+    }
+
+    setAudioInputDevice(device) {
+    }
+
+    setVideoInputDevice(device) {
+    }
+}
 
 class MockUser {
     constructor(id, x, y) {

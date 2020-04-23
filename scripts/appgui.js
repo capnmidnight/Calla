@@ -301,13 +301,16 @@ export class AppGui extends EventTarget {
                 }
                 // <<<<<<<<<< GAMEPAD <<<<<<<<<<
 
-                // >>>>>>>>>> HEARING >>>>>>>>>>
+                // >>>>>>>>>> AUDIO >>>>>>>>>>
                 {
-                    const drawHearingCheckbox = document.querySelector("#drawHearing"),
+                    const audioInputDeviceSelector = document.querySelector("#audioInputDevices"),
+                        audioOutputDeviceSelector = document.querySelector("#audioOutputDevices"),
+                        drawHearingCheckbox = document.querySelector("#drawHearing"),
                         minAudioSpinner = document.querySelector("#minAudio"),
                         maxAudioSpinner = document.querySelector("#maxAudio"),
                         rolloffSpinner = document.querySelector("#rolloff");
 
+                    this.muteAudioButton = document.querySelector("#muteAudio");
                     this.drawHearing = localStorage.getItem("drawHearing") === "true";
 
                     this.audioDistanceMin = localStorage.getInt("minAudio", 2);
@@ -317,9 +320,87 @@ export class AppGui extends EventTarget {
                     this.rolloff = localStorage.getInt("rolloff", 50) / 10;
                     this.rolloff = Math.max(0.1, Math.min(10, this.rolloff));
 
-                    if (drawHearingCheckbox
+                    if (audioInputDeviceSelector
+                        && audioOutputDeviceSelector
+                        && drawHearingCheckbox
                         && minAudioSpinner
-                        && maxAudioSpinner) {
+                        && maxAudioSpinner
+                        && this.muteAudioButton) {
+
+                        let lastAudioInputDevice = null,
+                            audioInputDevices = null;
+
+                        this.addEventListener("optionsOpened", async (evt) => {
+                            lastAudioInputDevice = await this.jitsiClient.getCurrentAudioInputDevice();
+                            audioInputDevices = await this.jitsiClient.getAudioInputDevices();
+                            audioInputDeviceSelector.innerHTML = "";
+                            if (audioInputDevices.length === 0) {
+                                const opt = document.createElement("option");
+                                opt.innerHTML = "No audio input devices available";
+                                audioInputDeviceSelector.appendChild(opt);
+                                audioInputDeviceSelector.lock();
+                            }
+                            else {
+                                audioInputDeviceSelector.unlock();
+                                for (let audioInputDevice of audioInputDevices) {
+                                    const opt = document.createElement("option");
+                                    opt.innerHTML = audioInputDevice.label;
+                                    if (!!lastAudioInputDevice
+                                        && audioInputDevice.id === lastAudioInputDevice.id) {
+                                        opt.selected = "selected";
+                                    }
+                                    audioInputDeviceSelector.appendChild(opt);
+                                }
+                            }
+                        });
+
+                        audioInputDeviceSelector.addEventListener("input", (evt) => {
+                            if (audioInputDevices) {
+                                const audioInputDevice = audioInputDevices[audioInputDeviceSelector.selectedIndex];
+
+                                if (audioInputDevice !== lastAudioInputDevice) {
+                                    this.jitsiClient.setAudioInputDevice(audioInputDevice);
+                                    lastAudioInputDevice = audioInputDevice;
+                                }
+                            }
+                        });
+
+                        let lastAudioOutputDevice = null,
+                            audioOutputDevices = null
+
+                        this.addEventListener("optionsOpened", async (evt) => {
+                            lastAudioOutputDevice = await this.jitsiClient.getCurrentAudioInputDevice();
+                            audioOutputDevices = await this.jitsiClient.getAudioOutputDevices();
+                            audioOutputDeviceSelector.innerHTML = "";
+                            if (audioOutputDevices.length === 0) {
+                                const opt = document.createElement("option");
+                                opt.innerHTML = "No audio output devices available";
+                                audioOutputDeviceSelector.appendChild(opt);
+                                audioOutputDeviceSelector.lock();
+                            }
+                            else {
+                                audioOutputDeviceSelector.unlock();
+                                for (let audioOutputDevice of audioOutputDevices) {
+                                    const opt = document.createElement("option");
+                                    opt.innerHTML = audioOutputDevice.label;
+                                    if (!!lastAudioOutputDevice
+                                        && audioOutputDevice.id === lastAudioOutputDevice.id) {
+                                        opt.selected = "selected";
+                                    }
+                                    audioOutputDeviceSelector.appendChild(opt);
+                                }
+                            }
+                        });
+
+                        audioOutputDeviceSelector.addEventListener("input", (evt) => {
+                            if (audioOutputDevices) {
+                                const audioOutputDevice = audioOutputDevices[audioOutputDeviceSelector.selectedIndex];
+                                if (audioOutputDevice !== lastAudioOutputDevice) {
+                                    this.jitsiClient.setAudioOutputDevice(audioOutputDevice);
+                                    lastAudioOutputDevice = audioOutputDevice;
+                                }
+                            }
+                        });
 
                         drawHearingCheckbox.checked = this.drawHearing;
                         drawHearingCheckbox.addEventListener("input", (evt) => {
@@ -349,31 +430,65 @@ export class AppGui extends EventTarget {
                         minAudioSpinner.addEventListener("input", setAudioRange);
                         maxAudioSpinner.addEventListener("input", setAudioRange);
                         rolloffSpinner.addEventListener("input", setAudioRange);
-                    }
-                }
-                // <<<<<<<<<< HEARING <<<<<<<<<<
 
-                // >>>>>>>>>> AUDIO >>>>>>>>>>
-                {
-                    this.muteAudioButton = document.querySelector("#muteAudio");
-                    if (this.muteAudioButton) {
                         this.muteAudioButton.addEventListener("click", (evt) => {
                             this.jitsiClient.toggleAudio();
                         });
                     }
+
                     this.setUserAudioMuted(false);
                 }
                 // <<<<<<<<<< AUDIO <<<<<<<<<<
 
                 // >>>>>>>>>> VIDEO >>>>>>>>>>
                 {
+                    const videoInputDeviceSelector = document.querySelector("#videoInputDevices");
                     this.muteVideoButton = document.querySelector("#muteVideo");
-                    if (this.muteVideoButton) {
+                    if (videoInputDeviceSelector
+                        && this.muteVideoButton) {
                         this.muteVideoButton.addEventListener("click", (evt) => {
                             this.jitsiClient.toggleVideo();
                         });
+
+                        let lastVideoInputDevice = null,
+                            videoInputDevices = null;
+
+                        this.addEventListener("optionsOpened", async (evt) => {
+                            lastVideoInputDevice = await this.jitsiClient.getCurrentVideoInputDevice();
+                            videoInputDevices = await this.jitsiClient.getVideoInputDevices();
+                            videoInputDeviceSelector.innerHTML = "";
+                            if (videoInputDevices.length === 0) {
+                                const opt = document.createElement("option");
+                                opt.innerHTML = "No video input devices available";
+                                videoInputDeviceSelector.appendChild(opt);
+                                videoInputDeviceSelector.lock();
+                            }
+                            else {
+                                videoInputDeviceSelector.unlock();
+                                for (let videoInputDevice of videoInputDevices) {
+                                    const opt = document.createElement("option");
+                                    opt.innerHTML = videoInputDevice.label;
+                                    if (!!lastVideoInputDevice
+                                        && videoInputDevice.id === lastVideoInputDevice.id) {
+                                        opt.selected = "selected";
+                                    }
+                                    videoInputDeviceSelector.appendChild(opt);
+                                }
+                            }
+                        });
+
+                        videoInputDeviceSelector.addEventListener("input", (evt) => {
+                            if (videoInputDevices) {
+                                const videoInputDevice = videoInputDevices[videoInputDeviceSelector.selectedIndex];
+
+                                if (videoInputDevice !== lastVideoInputDevice) {
+                                    this.jitsiClient.setVideoInputDevice(videoInputDevice);
+                                    lastVideoInputDevice = videoInputDevice;
+                                }
+                            }
+                        });
                     }
-                    this.setUserVideoMuted(false);
+                    this.setUserVideoMuted(true);
                 }
                 // <<<<<<<<<< VIDEO <<<<<<<<<<
             }
