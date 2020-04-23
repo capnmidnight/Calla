@@ -1,4 +1,12 @@
-﻿export function clamp(v, min, max) {
+﻿export function isGoodNumber(v) {
+    return v !== null
+        && v !== undefined
+        && (typeof (v) === "number"
+            || v instanceof Number)
+        && !Number.isNaN(v);
+}
+
+export function clamp(v, min, max) {
     return Math.min(max, Math.max(min, v));
 }
 

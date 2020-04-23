@@ -11,6 +11,9 @@ export class AppGui extends EventTarget {
 
         this.game = game;
         this.jitsiClient = game.jitsiClient;
+        this.optionsView = null;
+        this.emoteButton = null;
+        this.muteAudioButton = null;
 
         // >>>>>>>>>> TWEET >>>>>>>>>>
         {
@@ -40,14 +43,14 @@ export class AppGui extends EventTarget {
         // >>>>>>>>>> EMOJI >>>>>>>>>>
         {
             this.emojiForm = new EmojiForm(document.querySelector("#emoji"));
+            this.emoteButton = document.querySelector("#emote")
 
-            const selectEmojiButton = document.querySelector("#selectEmoji"),
-                emoteButton = document.querySelector("#emote");
+            const selectEmojiButton = document.querySelector("#selectEmoji");
 
-            if (emoteButton
+            if (this.emoteButton
                 && selectEmojiButton) {
 
-                emoteButton.addEventListener("click", () => this.game.emote());
+                this.emoteButton.addEventListener("click", () => this.game.emote());
 
                 selectEmojiButton.addEventListener("click", async (evt) => {
                     if ((!this.optionsView || !this.optionsView.isOpen())
@@ -64,124 +67,223 @@ export class AppGui extends EventTarget {
 
         // >>>>>>>>>> OPTIONS >>>>>>>>>>
         {
-            this.optionsButton = document.querySelector("#showOptions");
             this.optionsView = document.querySelector("#options");
-            this.avatarURLInput = document.querySelector("#avatarURL");
-            this.avatarEmojiOutput = document.querySelector("#avatarEmoji");
-            const selectAvatarEmojiButton = document.querySelector("#selectAvatarEmoji"),
+            const optionsButton = document.querySelector("#showOptions"),
                 optionsConfirmButton = document.querySelector("#options button.confirm");
-            if (this.optionsButton
-                && this.optionsView
-                && this.avatarURLInput
-                && this.avatarEmojiOutput
-                && selectAvatarEmojiButton
+            if (this.optionsView
+                && optionsButton
                 && optionsConfirmButton) {
 
-                this.optionsButton.addEventListener("click", this.showOptions.bind(this, true));
+                const toggleOptionsView = () => {
+                    this.optionsView.setOpenWithLabel(
+                        !this.optionsView.isOpen(),
+                        optionsButton,
+                        "Hide", "Show", " options");
+                };
 
-                this.avatarEmojiOutput.innerHTML = bust.value;
-                selectAvatarEmojiButton.addEventListener("click", async (evt) => {
-                    const emoji = await this.emojiForm.selectAsync()
-                        || bust;
-                    this.avatarEmojiOutput.innerHTML = emoji.value;
+                optionsButton.addEventListener("click", (evt) => {
+                    if (!this.emojiForm.isOpen()
+                        && (!this.loginView || !this.loginView.isOpen())) {
+                        toggleOptionsView();
+                        if (this.optionsView.isOpen()) {
+                            this.dispatchEvent(new Event("optionsOpened"));
+                        }
+                    }
                 });
 
-                optionsConfirmButton.addEventListener("click", this.showOptions.bind(this, true));
+                optionsConfirmButton.addEventListener("click", (evt) => {
+                    if (this.optionsView.isOpen()) {
+                        toggleOptionsView();
+                        this.dispatchEvent(new Event("optionsConfirmed"));
+                    }
+                });
 
-                this.optionsView.hide();
-                this.showOptions(false);
-            }
+                this.optionsView.show();
+                toggleOptionsView();
 
-            // >>>>>>>>>> FONT SIZE >>>>>>>>>>
-            {
-                const fontSizeSpinner = document.querySelector("#fontSize");
-                if (fontSizeSpinner) {
-                    fontSizeSpinner.addEventListener("input", (evt) => {
-                        const size = fontSizeSpinner.value;
-                        this.game.fontSize = size;
-                        localStorage.setItem("fontSize", size);
-                    });
-                    fontSizeSpinner.value = localStorage.getInt("fontSize", 10);
-                    this.game.fontSize = fontSizeSpinner.value;
+                // >>>>>>>>>> AVATAR >>>>>>>>>>
+                {
+                    const avatarURLInput = document.querySelector("#avatarURL"),
+                        avatarEmojiOutput = document.querySelector("#avatarEmoji"),
+                        selectAvatarEmojiButton = document.querySelector("#selectAvatarEmoji");
+                    if (avatarURLInput
+                        && avatarEmojiOutput
+                        && selectAvatarEmojiButton) {
+
+                        selectAvatarEmojiButton.addEventListener("click", async (evt) => {
+                            const emoji = await this.emojiForm.selectAsync()
+                                || bust;
+                            avatarEmojiOutput.innerHTML = emoji.value;
+                        });
+
+                        this.addEventListener("optionsOpened", (evt) => {
+                            avatarURLInput.value = this.game.me && this.game.me.avatarURL
+                                || "";
+                            avatarEmojiOutput.innerHTML = this.game.me && this.game.me.avatarEmoji
+                                || bust.value;
+                        });
+
+                        this.addEventListener("optionsConfirmed", (evt) => {
+                            if (!!this.game.me) {
+                                if (this.game.me.avatarURL !== avatarURLInput.value) {
+                                    this.jitsiClient.setAvatarURL(avatarURLInput.value);
+                                }
+                                if (this.game.me.avatarEmoji !== avatarEmojiOutput.innerHTML) {
+                                    this.game.me.avatarEmoji = avatarEmojiOutput.innerHTML;
+                                    const evt = Object.assign({}, this.me);
+                                    for (let user of this.game.userList) {
+                                        if (!user.isMe) {
+                                            this.jitsiClient.sendUserState(user.id, evt);
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
                 }
-            }
-            // <<<<<<<<<< FONT SIZE <<<<<<<<<<
+                // <<<<<<<<<< AVATAR <<<<<<<<<<
 
-            // >>>>>>>>>> HEARING >>>>>>>>>>
-            {
-                const drawHearingCheckbox = document.querySelector("#drawHearing"),
-                    minAudioSpinner = document.querySelector("#minAudio"),
-                    maxAudioSpinner = document.querySelector("#maxAudio"),
-                    rolloffSpinner = document.querySelector("#rolloff");
+                // >>>>>>>>>> FONT SIZE >>>>>>>>>>
+                {
+                    const fontSizeSpinner = document.querySelector("#fontSize");
+                    if (fontSizeSpinner) {
+                        fontSizeSpinner.addEventListener("input", (evt) => {
+                            const size = fontSizeSpinner.value;
+                            this.game.fontSize = size;
+                            localStorage.setItem("fontSize", size);
+                        });
+                        fontSizeSpinner.value = localStorage.getInt("fontSize", 10);
+                        this.game.fontSize = fontSizeSpinner.value;
+                    }
+                }
+                // <<<<<<<<<< FONT SIZE <<<<<<<<<<
 
-                this.drawHearing = localStorage.getItem("drawHearing") === "true";
+                // >>>>>>>>>> KEYBOARD >>>>>>>>>>
+                {
+                    const keyButtonUp = document.querySelector("#keyButtonUp"),
+                        keyButtonDown = document.querySelector("#keyButtonDown"),
+                        keyButtonLeft = document.querySelector("#keyButtonLeft"),
+                        keyButtonRight = document.querySelector("#keyButtonRight"),
+                        keyButtonEmote = document.querySelector("#keyButtonEmote"),
+                        keyButtonToggleAudio = document.querySelector("#keyButtonToggleAudio");
+                    if (keyButtonUp
+                        && keyButtonDown
+                        && keyButtonLeft
+                        && keyButtonRight
+                        && keyButtonEmote
+                        && keyButtonToggleAudio) {
 
-                this.audioDistanceMin = localStorage.getInt("minAudio", 2);
-                this.audioDistanceMin = Math.max(1, this.audioDistanceMin);
-                this.audioDistanceMax = localStorage.getInt("maxAudio", 10);
-                this.audioDistanceMax = Math.max(this.audioDistanceMin + 1, this.audioDistanceMax);
-                this.rolloff = localStorage.getInt("rolloff", 50) / 10;
-                this.rolloff = Math.max(0.1, Math.min(10, this.rolloff));
+                        const setKeyOption = (key, get, set) => {
+                            set(localStorage.getItem(key.id) || get());
 
-                if (drawHearingCheckbox
-                    && minAudioSpinner
-                    && maxAudioSpinner) {
+                            key.addEventListener("keyup", (evt) => {
+                                if (document.activeElement === key) {
+                                    key.value = evt.key;
+                                }
+                            });
 
-                    drawHearingCheckbox.checked = this.drawHearing;
-                    drawHearingCheckbox.addEventListener("input", (evt) => {
-                        this.drawHearing = drawHearingCheckbox.checked;
-                        localStorage.setItem("drawHearing", this.drawHearing);
-                    });
+                            key.value = get();
 
-                    const setAudioRange = () => {
-                        this.audioDistanceMin = parseFloat(minAudioSpinner.value);
+                            this.addEventListener("optionsConfirmed", (evt) => {
+                                set(key.value);
+                                localStorage.setItem(key.id, key.value);
+                            });
+                        };
 
-                        this.audioDistanceMax = parseFloat(maxAudioSpinner.value);
-                        this.audioDistanceMax = Math.max(this.audioDistanceMin + 1, this.audioDistanceMax);
+                        setKeyOption(keyButtonUp, () => this.game.keyUp, v => this.game.keyUp = v);
+                        setKeyOption(keyButtonDown, () => this.game.keyDown, v => this.game.keyDown = v);
+                        setKeyOption(keyButtonLeft, () => this.game.keyLeft, v => this.game.keyLeft = v);
+                        setKeyOption(keyButtonRight, () => this.game.keyRight, v => this.game.keyRight = v);
+                        setKeyOption(keyButtonEmote, () => this.game.keyEmote, v => {
+                            this.game.keyEmote = v;
+                            this.refreshEmojiButton();
+                        });
+                        setKeyOption(keyButtonToggleAudio, () => this.game.keyToggleAudio, v => {
+                            this.game.keyToggleAudio = v;
+                            if (!!this.game.me) {
+                                this.setUserAudioMuted(this.game.me.audioMuted);
+                            }
+                        });
+                    }
+                }
+                // <<<<<<<<<< KEYBOARD <<<<<<<<<<
+
+                // >>>>>>>>>> HEARING >>>>>>>>>>
+                {
+                    const drawHearingCheckbox = document.querySelector("#drawHearing"),
+                        minAudioSpinner = document.querySelector("#minAudio"),
+                        maxAudioSpinner = document.querySelector("#maxAudio"),
+                        rolloffSpinner = document.querySelector("#rolloff");
+
+                    this.drawHearing = localStorage.getItem("drawHearing") === "true";
+
+                    this.audioDistanceMin = localStorage.getInt("minAudio", 2);
+                    this.audioDistanceMin = Math.max(1, this.audioDistanceMin);
+                    this.audioDistanceMax = localStorage.getInt("maxAudio", 10);
+                    this.audioDistanceMax = Math.max(this.audioDistanceMin + 1, this.audioDistanceMax);
+                    this.rolloff = localStorage.getInt("rolloff", 50) / 10;
+                    this.rolloff = Math.max(0.1, Math.min(10, this.rolloff));
+
+                    if (drawHearingCheckbox
+                        && minAudioSpinner
+                        && maxAudioSpinner) {
+
+                        drawHearingCheckbox.checked = this.drawHearing;
+                        drawHearingCheckbox.addEventListener("input", (evt) => {
+                            this.drawHearing = drawHearingCheckbox.checked;
+                            localStorage.setItem("drawHearing", this.drawHearing);
+                        });
+
+                        const setAudioRange = () => {
+                            this.audioDistanceMin = parseFloat(minAudioSpinner.value);
+
+                            this.audioDistanceMax = parseFloat(maxAudioSpinner.value);
+                            this.audioDistanceMax = Math.max(this.audioDistanceMin + 1, this.audioDistanceMax);
+                            maxAudioSpinner.value = this.audioDistanceMax;
+
+                            this.rolloff = parseFloat(rolloffSpinner.value);
+
+                            localStorage.setItem("minAudio", this.audioDistanceMin);
+                            localStorage.setItem("maxAudio", this.audioDistanceMax);
+                            localStorage.setItem("rolloff", 10 * this.rolloff);
+
+                            this.updateAudioSettings();
+                        };
+
+                        minAudioSpinner.value = this.audioDistanceMin;
                         maxAudioSpinner.value = this.audioDistanceMax;
-
-                        this.rolloff = parseFloat(rolloffSpinner.value);
-
-                        localStorage.setItem("minAudio", this.audioDistanceMin);
-                        localStorage.setItem("maxAudio", this.audioDistanceMax);
-                        localStorage.setItem("rolloff", 10 * this.rolloff);
-
-                        this.updateAudioSettings();
-                    };
-
-                    minAudioSpinner.value = this.audioDistanceMin;
-                    maxAudioSpinner.value = this.audioDistanceMax;
-                    rolloffSpinner.value = this.rolloff;
-                    minAudioSpinner.addEventListener("input", setAudioRange);
-                    maxAudioSpinner.addEventListener("input", setAudioRange);
-                    rolloffSpinner.addEventListener("input", setAudioRange);
+                        rolloffSpinner.value = this.rolloff;
+                        minAudioSpinner.addEventListener("input", setAudioRange);
+                        maxAudioSpinner.addEventListener("input", setAudioRange);
+                        rolloffSpinner.addEventListener("input", setAudioRange);
+                    }
                 }
-            }
-            // <<<<<<<<<< HEARING <<<<<<<<<<
+                // <<<<<<<<<< HEARING <<<<<<<<<<
 
-            // >>>>>>>>>> AUDIO >>>>>>>>>>
-            {
-                this.muteAudioButton = document.querySelector("#muteAudio");
-                if (this.muteAudioButton) {
-                    this.muteAudioButton.addEventListener("click", (evt) => {
-                        this.jitsiClient.toggleAudio();
-                    });
+                // >>>>>>>>>> AUDIO >>>>>>>>>>
+                {
+                    this.muteAudioButton = document.querySelector("#muteAudio");
+                    if (this.muteAudioButton) {
+                        this.muteAudioButton.addEventListener("click", (evt) => {
+                            this.jitsiClient.toggleAudio();
+                        });
+                    }
+                    this.setUserAudioMuted(false);
                 }
-                this.setUserAudioMuted(false);
-            }
-            // <<<<<<<<<< AUDIO <<<<<<<<<<
+                // <<<<<<<<<< AUDIO <<<<<<<<<<
 
-            // >>>>>>>>>> VIDEO >>>>>>>>>>
-            {
-                this.muteVideoButton = document.querySelector("#muteVideo");
-                if (this.muteVideoButton) {
-                    this.muteVideoButton.addEventListener("click", (evt) => {
-                        this.jitsiClient.toggleVideo();
-                    });
+                // >>>>>>>>>> VIDEO >>>>>>>>>>
+                {
+                    this.muteVideoButton = document.querySelector("#muteVideo");
+                    if (this.muteVideoButton) {
+                        this.muteVideoButton.addEventListener("click", (evt) => {
+                            this.jitsiClient.toggleVideo();
+                        });
+                    }
+                    this.setUserVideoMuted(false);
                 }
-                this.setUserVideoMuted(false);
+                // <<<<<<<<<< VIDEO <<<<<<<<<<
             }
-            // <<<<<<<<<< VIDEO <<<<<<<<<<
         }
         // <<<<<<<<<< OPTIONS <<<<<<<<<<
 
@@ -274,11 +376,17 @@ export class AppGui extends EventTarget {
     }
 
     setUserAudioMuted(muted) {
-        this.muteAudioButton.updateLabel(muted, "Unmute", "Mute", " audio");
+        this.muteAudioButton.updateLabel(muted, "Unmute", "Mute", ` audio (<kbd>${this.game.keyToggleAudio.toUpperCase()}</kbd>)`);
     }
 
     setUserVideoMuted(muted) {
         this.muteVideoButton.updateLabel(muted, "Enable", "Disable", " video");
+    }
+
+    refreshEmojiButton() {
+        const emoji = this.game.currentEmoji,
+            emojiValue = emoji && emoji.value || "@";
+        this.emoteButton.innerHTML = `Emote (<kbd>${this.game.keyEmote.toUpperCase()}</kbd>) (${emojiValue})`
     }
 
     resize() {
@@ -294,33 +402,6 @@ export class AppGui extends EventTarget {
             = this.jitsiContainer.style.height
             = this.game.frontBuffer.style.height
             = height;
-    }
-
-    showOptions(toggleOptions) {
-        if ((!this.emojiForm.isOpen())
-            && (!this.loginView || !this.loginView.isOpen())) {
-            this.optionsView.setOpenWithLabel(
-                toggleOptions !== this.optionsView.isOpen(),
-                this.optionsButton,
-                "Hide", "Show", " options");
-
-            if (toggleOptions
-                && !this.optionsView.isOpen()
-                && !!this.game.me) {
-                if (this.game.me.avatarURL !== this.avatarURLInput.value) {
-                    this.jitsiClient.setAvatarURL(this.avatarURLInput.value);
-                }
-                if (this.game.me.avatarEmoji !== this.avatarEmojiOutput.innerHTML) {
-                    this.game.me.avatarEmoji = this.avatarEmojiOutput.innerHTML;
-                    const evt = Object.assign({}, this.me);
-                    for (let user of this.game.userList) {
-                        if (!user.isMe) {
-                            this.jitsiClient.sendUserState(user.id, evt);
-                        }
-                    }
-                }
-            }
-        }
     }
 
     showView(toggleGame) {
@@ -385,7 +466,6 @@ export class AppGui extends EventTarget {
     }
 
     updateAudioSettings() {
-        console.log("UPDATE AUDIO SETTINGS");
         this.jitsiClient.setAudioProperties(
             location.origin,
             MOVE_TRANSITION_TIME,

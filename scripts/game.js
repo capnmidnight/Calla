@@ -13,9 +13,11 @@ const CAMERA_LERP = 0.01,
     MAX_DRAG_DISTANCE = 2,
     isFirefox = typeof InstallTrigger !== "undefined";
 
-export class Game {
+export class Game extends EventTarget {
 
     constructor(jitsiClient) {
+        super();
+
         this.jitsiClient = jitsiClient;
 
         this.frontBuffer = document.querySelector("#frontBuffer");
@@ -45,10 +47,25 @@ export class Game {
         this.emotes = [];
         this.canClick = false;
 
+        this.keyEmote = "e";
+        this.keyToggleAudio = "a";
+        this.keyUp = "ArrowUp";
+        this.keyDown = "ArrowDown";
+        this.keyLeft = "ArrowLeft";
+        this.keyRight = "ArrowRight";
+
         // ============= KEYBOARD =================
 
         addEventListener("keydown", (evt) => {
             this.keys[evt.key] = evt;
+            if (!evt.ctrlKey
+                && !evt.altKey
+                && !evt.shiftKey
+                && !evt.metaKey
+                && evt.key === this.keyToggleAudio) {
+                this.gui.setUserAudioMuted(!this.me.audioMuted);
+                this.jitsiClient.toggleAudio();
+            }
         });
 
         addEventListener("keyup", (evt) => {
@@ -273,7 +290,11 @@ export class Game {
                     || await this.gui.emojiForm.selectAsync();
 
                 if (!!emoji) {
+                    const isNew = this.currentEmoji !== emoji;
                     this.currentEmoji = emoji;
+                    if (isNew) {
+                        this.gui.refreshEmojiButton();
+                    }
                     for (let user of this.userList) {
                         if (user !== this.me) {
                             this.jitsiClient.sendEmote(user.id, emoji);
@@ -414,11 +435,6 @@ export class Game {
             if (!!user) {
                 user.setAvatarURL(evt.avatarURL);
             }
-
-            if (!!this.me
-                && evt.id === this.me.id) {
-                this.gui.avatarURLInput.value = evt.avatarURL || "";
-            }
         }
     }
 
@@ -445,7 +461,6 @@ export class Game {
         });
 
         this.setAvatarURL(evt);
-        this.gui.avatarEmojiOutput.innerHTML = this.me.avatarEmoji;
 
         this.map = new TileMap(this.currentRoomName);
         let success = false;
@@ -510,7 +525,6 @@ export class Game {
         this.gridOffsetX = Math.floor(0.5 * this.frontBuffer.width / this.map.tileWidth) * this.map.tileWidth;
         this.gridOffsetY = Math.floor(0.5 * this.frontBuffer.height / this.map.tileHeight) * this.map.tileHeight;
 
-
         this.lastMove += dt;
         if (this.lastMove >= MOVE_REPEAT) {
             let dx = 0,
@@ -522,11 +536,11 @@ export class Game {
                     && !evt.ctrlKey
                     && !evt.metaKey) {
                     switch (evt.key) {
-                        case "ArrowUp": dy--; break;
-                        case "ArrowDown": dy++; break;
-                        case "ArrowLeft": dx--; break;
-                        case "ArrowRight": dx++; break;
-                        case "e": this.emote(); break;
+                        case this.keyUp: dy--; break;
+                        case this.keyDown: dy++; break;
+                        case this.keyLeft: dx--; break;
+                        case this.keyRight: dx++; break;
+                        case this.keyEmote: this.emote(); break;
                     }
                 }
             }

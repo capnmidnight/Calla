@@ -36,9 +36,9 @@
 <body>
     <section id="appView">
         <div id="toolbar">
-            <button type="button" id="muteAudio" accesskey="a">Mute audio</button>
+            <button type="button" id="muteAudio">Mute audio <kbd>(A)</kbd></button>
             <span>
-                <button type="button" id="emote" title="Emote">Emote (E) (@)</button>
+                <button type="button" id="emote" title="Emote">Emote <kbd>(E)</kbd>(@)</button>
                 <button type="button" id="selectEmoji" title="Select Emoji">🔻</button>
             </span>
 
@@ -47,8 +47,8 @@
                 <input type="number" id="zoom" title="Change map zoom" value="1" min="0.1" max="8" step="0.1" style="width:4em" />
             </span>
 
-            <button type="button" id="showOptions" title="Show/hide options" accesskey="o">Show options (ALT+O)</button>
-            <button type="button" id="showGame" title="Show/hide game for access to Jitsi Meet options" accesskey="g">Show meeting UI (ALT+G)</button>
+            <button type="button" id="showOptions" title="Show/hide options" accesskey="o">Show options <kbd>(ALT+O)</kbd></button>
+            <button type="button" id="showGame" title="Show/hide game for access to Jitsi Meet options" accesskey="g">Show meeting UI <kbd>(ALT+G)</kbd></button>
             <button type="button" id="tweet" title="Share your current room to twitter">
                 <span style="margin:auto">Share room</span>
                 <img src="https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png" style="height:1.5em" />
@@ -95,6 +95,25 @@
                 <p>
                     <label for="fontSize">Font size:</label>
                     <input type="number" id="fontSize" value="10" min="5" max="32" style="width:3em" />
+                </p>
+
+                <h2>Input</h2>
+                <h3>Keyboard</h3>
+                <p>
+                    <label for="keyButtonUp">Up:</label>
+                    <input type="text" id="keyButtonUp" style="width:7em" />
+                    <label for="keyButtonDown">Down:</label>
+                    <input type="text" id="keyButtonDown" style="width:7em" />
+                    <label for="keyButtonLeft">Left:</label>
+                    <input type="text" id="keyButtonLeft" style="width:7em" />
+                    <label for="keyButtonRight">Right:</label>
+                    <input type="text" id="keyButtonRight" style="width:7em" />
+                </p>
+                <p>
+                    <label for="keyButtonEmote">Emote:</label>
+                    <input type="text" id="keyButtonEmote" style="width:7em" />
+                    <label for="keyButtonToggleAudio">Toggle audio:</label>
+                    <input type="text" id="keyButtonToggleAudio" style="width:7em" />
                 </p>
 
                 <h2>Audio</h2>
