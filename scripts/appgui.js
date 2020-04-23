@@ -211,7 +211,6 @@ export class AppGui extends EventTarget {
                 // >>>>>>>>>> GAMEPAD >>>>>>>>>>
                 {
                     const gamepadSelector = document.querySelector("#gamepads"),
-                        gamepadStatusBox = document.querySelector("#gamepadStatus"),
                         gpButtonUp = document.querySelector("#gpButtonUp"),
                         gpButtonDown = document.querySelector("#gpButtonDown"),
                         gpButtonLeft = document.querySelector("#gpButtonLeft"),
@@ -219,7 +218,6 @@ export class AppGui extends EventTarget {
                         gpButtonEmote = document.querySelector("#gpButtonEmote"),
                         gpButtonToggleAudio = document.querySelector("#gpButtonToggleAudio");
                     if (gamepadSelector
-                        && gamepadStatusBox
                         && gpButtonUp
                         && gpButtonDown
                         && gpButtonLeft
@@ -230,14 +228,13 @@ export class AppGui extends EventTarget {
                         const refreshGamepadList = (evt) => {
                             gamepadSelector.innerHTML = "";
                             if (this.game.gamepads.length === 0) {
-                                gamepadStatusBox.innerHTML = "No gamepads detected";
+                                const opt = document.createElement("option");
+                                opt.innerHTML = "No gamepads detected";
+                                gamepadSelector.appendChild(opt);
                                 gamepadSelector.lock();
                             }
                             else {
-                                gamepadStatusBox.innerHTML = "";
-                                if (this.game.gamepads.length > 1) {
-                                    gamepadSelector.unlock();
-                                }
+                                gamepadSelector.unlock();
                                 for (let pad of this.game.gamepads) {
                                     const opt = document.createElement("option");
                                     opt.innerHTML = pad.id;
