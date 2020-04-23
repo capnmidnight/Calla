@@ -89,22 +89,6 @@ export class Game extends EventTarget {
 
         // ============= POINTERS =================
 
-        const zoom = (deltaZ) => {
-            const mag = Math.abs(deltaZ);
-            if (0 < mag && mag <= 50) {
-                const a = project(this.targetCameraZ, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
-                    b = Math.pow(a, CAMERA_ZOOM_SHAPE),
-                    c = b - deltaZ * CAMERA_ZOOM_SPEED,
-                    d = clamp(c, 0, 1),
-                    e = Math.pow(d, 1 / CAMERA_ZOOM_SHAPE);
-
-                this.targetCameraZ = unproject(e, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX);
-                if (!!this.gui.zoomSpinner) {
-                    this.gui.zoomSpinner.value = Math.round(100 * this.targetCameraZ) / 100;
-                }
-            }
-        };
-
         this.frontBuffer.addEventListener("wheel", (evt) => {
             if (!evt.shiftKey
                 && !evt.altKey
@@ -112,7 +96,7 @@ export class Game extends EventTarget {
                 && !evt.metaKey) {
                 // Chrome and Firefox report scroll values in completely different ranges.
                 const deltaZ = evt.deltaY * (isFirefox ? 1 : 0.02);
-                zoom(deltaZ);
+                this.zoom(deltaZ);
             }
         }, { passive: true });
 
@@ -207,7 +191,7 @@ export class Game extends EventTarget {
             if (oldPinchDistance !== null
                 && newPinchDistance !== null) {
                 const ddist = oldPinchDistance - newPinchDistance;
-                zoom(ddist / 5);
+                this.zoom(ddist / 5);
                 this.canClick = false;
             }
         });
@@ -360,6 +344,22 @@ export class Game extends EventTarget {
         this.me.moveTo(clearTile.x, clearTile.y);
         this.targetOffsetCameraX = 0;
         this.targetOffsetCameraY = 0;
+    }
+
+    zoom(deltaZ) {
+        const mag = Math.abs(deltaZ);
+        if (0 < mag && mag <= 50) {
+            const a = project(this.targetCameraZ, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
+                b = Math.pow(a, CAMERA_ZOOM_SHAPE),
+                c = b - deltaZ * CAMERA_ZOOM_SPEED,
+                d = clamp(c, 0, 1),
+                e = Math.pow(d, 1 / CAMERA_ZOOM_SHAPE);
+
+            this.targetCameraZ = unproject(e, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX);
+            if (!!this.gui.zoomSpinner) {
+                this.gui.zoomSpinner.value = Math.round(100 * this.targetCameraZ) / 100;
+            }
+        }
     }
 
     registerGameListeners(api) {
@@ -633,8 +633,10 @@ export class Game extends EventTarget {
 
                 dx += Math.round(pad.axes[0]);
                 dy += Math.round(pad.axes[1]);
+
                 this.targetOffsetCameraX += -50 * Math.round(2 * pad.axes[2]);
                 this.targetOffsetCameraY += -50 * Math.round(2 * pad.axes[3]);
+                this.zoom(2 * (pad.buttons[6].value - pad.buttons[7].value));
 
                 this.gamepads[this.gamepadIndex] = pad;
             }
