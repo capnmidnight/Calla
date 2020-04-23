@@ -9,10 +9,8 @@ import { randomPerson, bestIcons } from "./emoji.js";
 import "../etc/jitsihax.js";
 
 class MockJitsiClient extends JitsiClient {
-    constructor() {
-        super();
-        this.audioMuted = false;
-        this.videoMuted = true;
+    constructor(ApiClass) {
+        super(ApiClass);
     }
 
     mockRxGameData(command, id, data) {
@@ -43,21 +41,71 @@ class MockJitsiClient extends JitsiClient {
             if (!!user) {
                 user.avatarEmoji = randomPerson().value;
                 this.mockRxGameData("userInitResponse", id, user);
-                const idx = testUsers.findIndex(x => x.id === id),
-                    testUser = testUsers[idx];
-                testUser.update();
             }
         }
     }
 
     toggleAudio() {
-        this.audioMuted = !this.audioMuted;
-        this.mockRxGameData("audioMuteStatusChanged", game.me.id, { muted: this.audioMuted });
+        super.toggleAudio();
+        this.mockRxGameData("audioMuteStatusChanged", game.me.id, { muted: this.api.audioMuted });
     }
 
     toggleVideo() {
-        this.videoMuted = !this.videoMuted;
-        this.mockRxGameData("videoMuteStatusChanged", game.me.id, { muted: this.videoMuted });
+        super.toggleVideo();
+        this.mockRxGameData("videoMuteStatusChanged", game.me.id, { muted: this.api.videoMuted });
+    }
+
+    setAvatarURL(url) {
+        super.setAvatarURL(url);
+        this.mockRxGameData("avatarChanged", game.me.id, { avatarURL: url });
+    }
+}
+
+class MockJitsiMeetExternalAPI extends EventTarget {
+    constructor(host, options) {
+        super();
+        this.options = options;
+        this.audioMuted = false;
+        this.videoMuted = true;
+        this.currentDevices = {
+            audioInput: { id: "mock-audio-input", label: "Mock audio input device" },
+            audioOutput: { id: "mock-audio-output", label: "Mock audio output device" },
+            videoInput: { id: "mock-video-input", label: "Mock video input device" }
+        };
+    }
+
+    dispose() {
+    }
+
+    getIFrame() {
+        return {
+            src: window.location.href,
+            addEventListener: function () { }
+        };
+    }
+
+    getAvailableDevices() {
+        return Promise.resolve({
+            audioInput: [this.currentDevices.audioInput],
+            audioOutput: [this.currentDevices.audioOutput],
+            videoInput: [this.currentDevices.videoInput]
+        });
+    }
+
+    getCurrentDevices() {
+        return Promise.resolve(this.currentDevices);
+    }
+
+    setAudioOutputDevice(device) {
+        this.currentDevices.audioOutput = device;
+    }
+
+    setAudioInputDevice(device) {
+        this.currentDevices.audioInput = device;
+    }
+
+    setVideoInputDevice(device) {
+        this.currentDevices.videoInput = device;
     }
 
     isAudioMuted() {
@@ -68,43 +116,30 @@ class MockJitsiClient extends JitsiClient {
         return Promise.resolve(this.videoMuted);
     }
 
-    setAvatarURL(url) {
-        this.mockRxGameData("avatarChanged", game.me.id, { avatarURL: url });
-    }
-}
-
-class MockJitsiMeetExternalAPI extends EventTarget {
-    getIFrame() {
-        return {
-            src: window.location.href,
-            addEventListener: function () { }
-        };
-    }
-
-    async getAvailableDevices() {
-        const current = await this.getCurrentDevices();
-        return {
-            audioInput: [current.audioInput],
-            audioOutput: [current.audioOutput],
-            videoInput: [current.videoInput]
-        };
-    }
-
-    getCurrentDevices() {
-        return Promise.resolve({
-            audioInput: { id: "mock-audio-input", label: "Mock audio input device" },
-            audioOutput: { id: "mock-audio-output", label: "Mock audio output device" },
-            videoInput: { id: "mock-video-input", label: "Mock video input device" }
-        });
-    }
-
-    setAudioOutputDevice(device) {
-    }
-
-    setAudioInputDevice(device) {
-    }
-
-    setVideoInputDevice(device) {
+    executeCommand(command, param) {
+        if (command === "displayName") {
+            this.dispatchEvent(Object.assign(
+                new Event("videoConferenceJoined"),
+                {
+                    roomName: this.options.roomName,
+                    id: "mock-local-user",
+                    displayName: param
+                }));
+        }
+        else if (command === "toggleAudio") {
+            this.audioMuted = !this.audioMuted;
+        }
+        else if (command === "toggleVideo") {
+            this.videoMuted = !this.videoMuted;
+        }
+        else if (command === "hangup") {
+            for (let user of testUsers) {
+                user.stop();
+            }
+        }
+        else {
+            console.log("executeCommand", arguments);
+        }
     }
 }
 
@@ -116,12 +151,18 @@ class MockUser {
         this.audio = null;
     }
 
+    schedule() {
+        this.timeout = setTimeout(
+            () => this.update(),
+            1000 * (1 + Math.random()));
+    }
+
     start() {
         const evt = Object.assign(
             new Event("participantJoined"),
             { id: this.id });
 
-        api.dispatchEvent(evt);
+        jitsiClient.api.dispatchEvent(evt);
 
         const elementID = `participant_${this.id}`,
             element = document.createElement("span"),
@@ -135,6 +176,15 @@ class MockUser {
         document.body.appendChild(element);
 
         this.audio = audio;
+        this.schedule();
+    }
+
+    stop() {
+        clearTimeout(this.timeout);
+        if (!!this.audio) {
+            this.audio.pause();
+            document.body.removeChild(this.audio.parentElement);
+        }
     }
 
     update() {
@@ -150,12 +200,11 @@ class MockUser {
             jitsiClient.mockRxGameData("emote", this.id, emoji);
         }
 
-        setTimeout(() => this.update(), 1000 * (1 + Math.random()));
+        this.schedule();
     }
 }
 
-const jitsiClient = new MockJitsiClient(),
-    api = new MockJitsiMeetExternalAPI(),
+const jitsiClient = new MockJitsiClient(MockJitsiMeetExternalAPI),
     game = new Game(jitsiClient),
     gui = game.gui,
     testUsers = [
@@ -168,32 +217,15 @@ const jitsiClient = new MockJitsiClient(),
 
 Object.assign(window, {
     jitsiClient,
-    api,
     game,
     gui
 });
 
-gui.setJitsiApi(api);
-gui.setJitsiIFrame(api.getIFrame());
-
-game.start({
-    id: "me",
-    roomName: "default",
-    displayName: "Just Rendering🤪",
-    avatarURL: null
-});
-
-gui.appView.show();
-gui.loginView.hide();
-
-
-(function createTestUser() {
+game.addEventListener("gameStarted", function createTestUser() {
     if (game.userList.length < 5) {
         const idx = game.userList.length - 1,
             user = testUsers[idx];
-
         user.start();
-
         setTimeout(createTestUser, 1000);
     }
-})();
+});

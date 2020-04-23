@@ -6,8 +6,9 @@ const APP_FINGERPRINT = "Calla",
 // Manages communication between Jitsi Meet and Calla
 export class JitsiClient extends EventTarget {
 
-    constructor() {
+    constructor(ApiClass) {
         super();
+        this.ApiClass = ApiClass;
         addEventListener("message", this.rxJitsiHax.bind(this));
     }
 
@@ -77,6 +78,42 @@ export class JitsiClient extends EventTarget {
                 console.error(exp);
             }
         }
+    }
+
+    join(parentNode, roomName, onload) {
+        return new this.ApiClass(JITSI_HOST, {
+            parentNode,
+            roomName,
+            onload,
+            noSSL: false,
+            disableThirdPartyRequests: true,
+            width: "100%",
+            height: "100%",
+            configOverwrite: {
+                startVideoMuted: 0,
+                startWithVideoMuted: true
+            },
+            interfaceConfigOverwrite: {
+                DISABLE_VIDEO_BACKGROUND: true,
+                SHOW_JITSI_WATERMARK: false,
+                SHOW_WATERMARK_FOR_GUESTS: false,
+                SHOW_POWERED_BY: true,
+                AUTHENTICATION_ENABLE: false,
+                MOBILE_APP_PROMO: false
+            }
+        });
+
+        addEventListener("unload", () => {
+            this.api.dispose();
+        });
+    }
+
+    setUserName(userName) {
+        this.api.executeCommand("displayName", userName);
+    }
+
+    leave() {
+        this.api.executeCommand("hangup");
     }
 
     async getAudioOutputDevices() {

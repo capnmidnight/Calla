@@ -1,9 +1,7 @@
-﻿import(`https://${JITSI_HOST}/libs/external_api.min.js`);
-import "./protos.js";
-
-import { EmojiForm } from "./emojiForm.js";
+﻿import { EmojiForm } from "./emojiForm.js";
 import { bust } from "./emoji.js";
 import { isGoodNumber } from "./math.js";
+import "./protos.js";
 
 export class AppGui extends EventTarget {
     constructor(game) {
@@ -519,12 +517,14 @@ export class AppGui extends EventTarget {
             this.roomNameInput = document.querySelector("#roomName");
             this.userNameInput = document.querySelector("#userName");
             this.connectButton = document.querySelector("#connect");
+            const leaveButton = document.querySelector("#leave");
             if (this.loginView
                 && this.roomSelector
                 && this.newRoomButton
                 && this.roomNameInput
                 && this.userNameInput
-                && this.connectButton) {
+                && this.connectButton
+                && leaveButton) {
                 this.roomNameInput.addEventListener("enter", this.userNameInput.focus.bind(this.userNameInput));
                 this.userNameInput.addEventListener("enter", this.login.bind(this));
                 this.connectButton.addEventListener("click", this.login.bind(this));
@@ -544,6 +544,15 @@ export class AppGui extends EventTarget {
                     }
 
                     this.roomNameInput.value = this.roomSelector.value;
+                });
+
+                leaveButton.addEventListener("click", (evt) => {
+                    this.game.end();
+                });
+
+                this.game.addEventListener("gameEnded", (evt) => {
+                    this.jitsiClient.leave();
+                    this.showLogin();
                 });
 
                 this.showLogin();
@@ -616,6 +625,7 @@ export class AppGui extends EventTarget {
         this.newRoomButton.unlock();
 
         this.appView.hide();
+        this.jitsiContainer.innerHTML = "";
         this.loginView.show();
         this.connectButton.innerHTML = "Connect";
     }
@@ -651,17 +661,6 @@ export class AppGui extends EventTarget {
         }
     }
 
-    setJitsiApi(api) {
-        this.api = api;
-        this.jitsiClient.setJitsiApi(this.api);
-        this.game.registerGameListeners(this.api);
-    }
-
-    setJitsiIFrame() {
-        this.jitsiClient.setJitsiIFrame(this.api.getIFrame());
-        this.updateAudioSettings();
-    }
-
     updateAudioSettings() {
         this.jitsiClient.setAudioProperties(
             location.origin,
@@ -673,36 +672,17 @@ export class AppGui extends EventTarget {
 
     startConference(roomName, userName) {
         this.appView.show();
-
         location.hash = roomName;
+        this.api = this.jitsiClient.join(
+            this.jitsiContainer,
+            roomName,
+            () => {
+                this.jitsiClient.setJitsiIFrame(this.api.getIFrame());
+                this.updateAudioSettings();
+            });
 
-        this.api = new JitsiMeetExternalAPI(JITSI_HOST, {
-            noSSL: false,
-            disableThirdPartyRequests: true,
-            parentNode: this.jitsiContainer,
-            width: "100%",
-            height: "100%",
-            configOverwrite: {
-                startVideoMuted: 0,
-                startWithVideoMuted: true
-            },
-            interfaceConfigOverwrite: {
-                DISABLE_VIDEO_BACKGROUND: true,
-                SHOW_JITSI_WATERMARK: false,
-                SHOW_WATERMARK_FOR_GUESTS: false,
-                SHOW_POWERED_BY: true,
-                AUTHENTICATION_ENABLE: false,
-                MOBILE_APP_PROMO: false
-            },
-            roomName: roomName,
-            onload: this.setJitsiIFrame.bind(this, null)
-        });
-
-        addEventListener("unload", () => {
-            this.api.dispose();
-        });
-
-        this.setJitsiApi(this.api);
-        this.api.executeCommand("displayName", userName);
+        this.jitsiClient.setJitsiApi(this.api);
+        this.game.registerGameListeners(this.api);
+        this.jitsiClient.setUserName(userName);
     }
 }

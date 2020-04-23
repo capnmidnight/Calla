@@ -364,7 +364,11 @@ export class Game extends EventTarget {
 
     registerGameListeners(api) {
         api.addEventListener("videoConferenceJoined", this.start.bind(this));
-        api.addEventListener("videoConferenceLeft", this.end.bind(this));
+        api.addEventListener("videoConferenceLeft", (evt) => {
+            if (evt.roomName.toLowerCase() === this.currentRoomName) {
+                this.end();
+            }
+        });
         api.addEventListener("participantJoined", this.addUser.bind(this));
         api.addEventListener("participantLeft", this.removeUser.bind(this));
         api.addEventListener("avatarChanged", this.setAvatarURL.bind(this));
@@ -484,7 +488,7 @@ export class Game extends EventTarget {
         //    avatarURL: "string" // the avatar URL of the local participant
         //};
 
-        this.currentRoomName = evt.roomName;
+        this.currentRoomName = evt.roomName.toLowerCase();
         this.me = new User(evt.id, evt.displayName, true);
         this.userList.push(this.me);
         this.userLookup[this.me.id] = this.me;
@@ -524,6 +528,7 @@ export class Game extends EventTarget {
 
         this.gui.loginView.hide();
         this.startLoop();
+        this.dispatchEvent(new Event("gameStarted"));
     }
 
     startLoop() {
@@ -541,22 +546,21 @@ export class Game extends EventTarget {
     loop(time) {
         if (this.currentRoomName !== null) {
             requestAnimationFrame(this._loop);
+            const dt = time - this.lastTime;
+            this.lastTime = time;
+            this.update(dt / 1000);
+            this.render();
         }
-        const dt = time - this.lastTime;
-        this.lastTime = time;
-        this.update(dt / 1000);
-        this.render();
     }
 
-    end(evt) {
-        //evt = {
-        //    roomName: string // the room name of the conference
-        //};
-
-        if (evt.roomName === this.currentRoomName) {
-            this.currentRoomName = null;
-            this.gui.showLogin();
-        }
+    end() {
+        this.currentRoomName = null;
+        this.map = null;
+        this.userLookup = {};
+        this.userList.splice(0);
+        this.me = null;
+        this.gui.showLogin();
+        this.dispatchEvent(new Event("gameEnded"));
     }
 
     update(dt) {
