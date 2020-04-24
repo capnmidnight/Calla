@@ -28,7 +28,7 @@ Calla adds a small, RPG-style map to the Jitsi meeting view. It gives you an ava
   - Modify "DOMAIN_NAME" in `index.html` scripts to point to your Jitsi Meet server.
 - You may also want to edit `index.html` to change/remove the link(s) to this repository and/or my Twitter profile.
   
-Make sure you keep the distinction between your Jitsi installation and your Calla installation clear. You can conceivably run them on the same server, but I won't be digging into customizing a Jitsi installation enough to figure that out, so my setup has them on separate servers. `jitsihax.js` needs to go on your Jitsi server, and you need to edit it to point to your Calla server. `index.html` goes on your Lozay server, and you need to edit it to point to your Jitsi server.
+Make sure you keep the distinction between your Jitsi installation and your Calla installation clear. You can conceivably run them on the same server, but I won't be digging into customizing a Jitsi installation enough to figure that out, so my setup has them on separate servers. `jitsihax.js` needs to go on your Jitsi server, and you need to edit it to point to your Calla server. `index.html` goes on your Calla server, and you need to edit it to point to your Jitsi server.
 
 ## USAGE
 
@@ -95,4 +95,4 @@ What else?
 
 ### Name
 
-"Jitsi" is the Bulgarian word for "wires", so "Calla" is the Bulgarian word for "Vines". Apparently, "Jitsi" is also the Swahili word for "Juice", so in my mind, this project is Grape Vines. Yes, I name all of my projects after plants.
+Calla is a type of Lily, and it sounds like "making a call". I name all of my projects after plants.
