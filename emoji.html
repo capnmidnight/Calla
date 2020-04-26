@@ -2,31 +2,31 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title></title>
+    <link rel="stylesheet" href="stylesheets/gui.css" />
     <script type="module">
-        import { allIcons } from "./scripts/emoji.js";
-
-        for (let key of Object.keys(allIcons)) {
-            const header = document.createElement("h1"),
-                container = document.createElement("div"),
-                group = allIcons[key];
-
-            header.innerHTML = key;
-            container.style.width = "100%";
-
-            for (let icon of group) {
-                const span = document.createElement("span");
-                span.title = icon.desc;
-                span.innerHTML = icon.value;
-                container.appendChild(span);
-            }
-
-            document.body.appendChild(header);
-            document.body.appendChild(container);
-        }
+        import { EmojiForm } from "./scripts/emojiForm.js";
+        window.emoji = new EmojiForm(document.querySelector("#emoji"));
+        (async function () {
+            const emote = await emoji.selectAsync();
+            console.log(emote);
+        })();
     </script>
 </head>
 <body>
+    <section id="guiView">
 
+        <div id="emoji" style="display:none">
+            <h1 style="grid-row: 1; grid-column: 1/4">Emoji</h1>
+
+            <div class="content" style="grid-row: 2; grid-column: 1/4">
+                <h2>Recent</h2>
+                <p class="recent">(None)</p>
+            </div>
+
+            <span class="preview" style="grid-row: 3; grid-column: 1"></span>
+            <button type="button" class="confirm" style="grid-row: 3; grid-column: 2">OK</button>
+            <button type="button" class="cancel" style="grid-row: 3; grid-column: 3">Cancel</button>
+        </div>
+    </section>
 </body>
 </html>
