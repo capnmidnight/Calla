@@ -34,7 +34,6 @@ Make sure you keep the distinction between your Jitsi installation and your Call
 
 - __Be careful in picking your room name__, if you don't want randos to join. Traffic is low right now, but you never know.
 - Try to __pick a unique user name__. A lot of people use "Test" and then there are a bunch of people with the same name running around.
-- Either __Hide the game view__ or __Separate the game and meeting views__ to be able to access the Jitsi Meet user settings. Calla captures all of the mouse clicks to enable moving.
 - __Click on the map__ to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls.
 - Or, __use the arrow keys__ on your keyboard to move.
 - __Click on yourself__ to open a list of Emoji. Select an Emoji to float it out into the map.
