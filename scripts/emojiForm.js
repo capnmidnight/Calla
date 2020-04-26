@@ -1,4 +1,5 @@
-﻿import { bestIcons } from "./emoji.js";
+﻿import "./protos.js";
+import { bestIcons } from "./emoji.js";
 
 export class EmojiForm extends EventTarget {
     constructor(emojiView) {
@@ -13,7 +14,8 @@ export class EmojiForm extends EventTarget {
             previousEmoji = [],
             allAlts = [];
 
-        let selectedEmoji = null;
+        let selectedEmoji = null,
+            idCounter = 0;
 
         const closeAll = () => {
             for (let alt of allAlts) {
@@ -21,34 +23,53 @@ export class EmojiForm extends EventTarget {
             }
         }
 
-        const addIconsToContainer = (group, container) => {
+        const addIconsToContainer = (group, container, isAlts) => {
             for (let icon of group) {
-                const g = document.createElement("span"),
+                const g = document.createElement(isAlts ? "ul" : "span"),
                     btn = document.createElement("button");
                 let alts = null;
 
-                if (!!icon.alt) {
-                    alts = document.createElement("div");
-                    allAlts.push(alts);
-                    addIconsToContainer(icon.alt, alts);
-                    alts.hide();
-                }
-
                 btn.type = "button";
+                btn.title = icon.desc;
+                btn.innerHTML = icon.value;
                 btn.addEventListener("click", (evt) => {
                     selectedEmoji = icon;
                     emojiPreview.innerHTML = `${icon.value} - ${icon.desc}`;
                     confirmEmojiButton.unlock();
                     if (!!alts) {
                         alts.toggleOpen();
+                        btn.innerHTML = icon.value + (alts.isOpen() ? "-" : "+");
                     }
                 });
-                btn.title = icon.desc;
-                btn.innerHTML = icon.value;
-                g.appendChild(btn);
-                if (!!alts) {
-                    g.appendChild(alts);
+
+                if (isAlts) {
+                    const item = document.createElement("li"),
+                        id = `emoji-with-alt-${idCounter++}`,
+                        label = document.createElement("label");
+
+                    btn.id = id;
+                    label.htmlFor = id;
+                    label.innerHTML = icon.desc;
+
+                    item.appendChild(btn);
+                    item.appendChild(label);
+
+                    g.appendChild(item);
                 }
+                else {
+                    g.appendChild(btn);
+                }
+
+                if (!!icon.alt) {
+                    alts = document.createElement("div");
+                    allAlts.push(alts);
+                    addIconsToContainer(icon.alt, alts, true);
+                    alts.hide();
+                    g.appendChild(alts);
+                    btn.style.width = "3em";
+                    btn.innerHTML += "+";
+                }
+
                 container.appendChild(g);
             }
         };

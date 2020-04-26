@@ -6,6 +6,21 @@ export const videoCamera = { value: "\u{1F4F9}", desc: "Video Camera" };
 export const speakingHead = { value: "\u{1F5E3}\u{FE0F}", desc: "Speaking Head" };
 export const bust = { value: "\u{1F464}", desc: "Bust in Silhouette" };
 
+export const chess = [
+    { value: "\u{2654}", desc: "White Chess King" },
+    { value: "\u{2655}", desc: "White Chess Queen" },
+    { value: "\u{2656}", desc: "White Chess Rook" },
+    { value: "\u{2657}", desc: "White Chess Bishop" },
+    { value: "\u{2658}", desc: "White Chess Knight" },
+    { value: "\u{2659}", desc: "White Chess Pawn" },
+    { value: "\u{265A}", desc: "Black Chess King" },
+    { value: "\u{265B}", desc: "Black Chess Queen" },
+    { value: "\u{265C}", desc: "Black Chess Rook" },
+    { value: "\u{265D}", desc: "Black Chess Bishop" },
+    { value: "\u{265E}", desc: "Black Chess Knight" },
+    { value: "\u{265F}", desc: "Black Chess Pawn" },
+];
+
 const surfer = {
     value: "\u{1F3C4}", desc: "person surfing", alt: [
         { value: "\u{1F3C4}\u{1F3FB}", desc: "person surfing: light skin tone" },
@@ -36,6 +51,66 @@ const womanSurfing = {
     ]
 };
 
+const rower = {
+    value: "\u{1F6A3}", desc: "person rowing boat", alt: [
+        { value: "\u{1F6A3}\u{1F3FB}", desc: "person rowing boat: light skin tone" },
+        { value: "\u{1F6A3}\u{1F3FC}", desc: "person rowing boat: medium-light skin tone" },
+        { value: "\u{1F6A3}\u{1F3FD}", desc: "person rowing boat: medium skin tone" },
+        { value: "\u{1F6A3}\u{1F3FE}", desc: "person rowing boat: medium-dark skin tone" },
+        { value: "\u{1F6A3}\u{1F3FF}", desc: "person rowing boat: dark skin tone" },
+    ]
+};
+
+const manRowing = {
+    value: "\u{1F6A3}\u{200D}\u{2642}\u{FE0F}", desc: "man rowing boat", alt: [
+        { value: "\u{1F6A3}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man rowing boat: light skin tone" },
+        { value: "\u{1F6A3}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man rowing boat: medium-light skin tone" },
+        { value: "\u{1F6A3}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man rowing boat: medium skin tone" },
+        { value: "\u{1F6A3}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man rowing boat: medium-dark skin tone" },
+        { value: "\u{1F6A3}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man rowing boat: dark skin tone" },
+    ]
+};
+
+const womanRowing = {
+    value: "\u{1F6A3}\u{200D}\u{2640}\u{FE0F}", desc: "woman rowing boat", alt: [
+        { value: "\u{1F6A3}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman rowing boat: light skin tone" },
+        { value: "\u{1F6A3}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman rowing boat: medium-light skin tone" },
+        { value: "\u{1F6A3}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman rowing boat: medium skin tone" },
+        { value: "\u{1F6A3}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman rowing boat: medium-dark skin tone" },
+        { value: "\u{1F6A3}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman rowing boat: dark skin tone" },
+    ]
+};
+
+const swimmer = {
+    value: "\u{1F3CA}", desc: "person swimming", alt: [
+        { value: "\u{1F3CA}\u{1F3FB}", desc: "person swimming: light skin tone" },
+        { value: "\u{1F3CA}\u{1F3FC}", desc: "person swimming: medium-light skin tone" },
+        { value: "\u{1F3CA}\u{1F3FD}", desc: "person swimming: medium skin tone" },
+        { value: "\u{1F3CA}\u{1F3FE}", desc: "person swimming: medium-dark skin tone" },
+        { value: "\u{1F3CA}\u{1F3FF}", desc: "person swimming: dark skin tone" },
+    ]
+};
+
+const manSwimming = {
+    value: "\u{1F3CA}\u{200D}\u{2642}\u{FE0F}", desc: "man swimming", alt: [
+        { value: "\u{1F3CA}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man swimming: light skin tone" },
+        { value: "\u{1F3CA}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man swimming: medium-light skin tone" },
+        { value: "\u{1F3CA}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man swimming: medium skin tone" },
+        { value: "\u{1F3CA}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man swimming: medium-dark skin tone" },
+        { value: "\u{1F3CA}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man swimming: dark skin tone" },
+    ]
+};
+
+const womanSwimming = {
+    value: "\u{1F3CA}\u{200D}\u{2640}\u{FE0F}", desc: "woman swimming", alt: [
+        { value: "\u{1F3CA}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman swimming: light skin tone" },
+        { value: "\u{1F3CA}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman swimming: medium-light skin tone" },
+        { value: "\u{1F3CA}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman swimming: medium skin tone" },
+        { value: "\u{1F3CA}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman swimming: medium-dark skin tone" },
+        { value: "\u{1F3CA}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman swimming: dark skin tone" },
+    ]
+};
+
 export function isInSet(set, v) {
     return set.value === v
         || set.alt && set.alt.findIndex(e => e.value === v) >= 0;
@@ -47,9 +122,63 @@ export function isSurfer(v) {
         || isInSet(womanSurfing, v);
 }
 
+const personFrowning = {
+    value: "\u{1F64D}", desc: "person frowning", alt: [
+        { value: "\u{1F64D}\u{1F3FB}", desc: "person frowning: light skin tone" },
+        { value: "\u{1F64D}\u{1F3FC}", desc: "person frowning: medium-light skin tone" },
+        { value: "\u{1F64D}\u{1F3FD}", desc: "person frowning: medium skin tone" },
+        { value: "\u{1F64D}\u{1F3FE}", desc: "person frowning: medium-dark skin tone" },
+        { value: "\u{1F64D}\u{1F3FF}", desc: "person frowning: dark skin tone" },
+    ]
+},
+    manFrowning = {
+        value: "\u{1F64D}\u{200D}\u{2642}\u{FE0F}", desc: "man frowning", alt: [
+            { value: "\u{1F64D}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man frowning: light skin tone" },
+            { value: "\u{1F64D}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man frowning: medium-light skin tone" },
+            { value: "\u{1F64D}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man frowning: medium skin tone" },
+            { value: "\u{1F64D}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man frowning: medium-dark skin tone" },
+            { value: "\u{1F64D}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man frowning: dark skin tone" },
+        ]
+    },
+    womanFrowning = {
+        value: "\u{1F64D}\u{200D}\u{2640}\u{FE0F}", desc: "woman frowning", alt: [
+            { value: "\u{1F64D}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman frowning: light skin tone" },
+            { value: "\u{1F64D}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman frowning: medium-light skin tone" },
+            { value: "\u{1F64D}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman frowning: medium skin tone" },
+            { value: "\u{1F64D}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman frowning: medium-dark skin tone" },
+            { value: "\u{1F64D}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman frowning: dark skin tone" },
+        ]
+    };
+
+const personPouting = {
+    value: "\u{1F64E}", desc: "person pouting", alt: [
+        { value: "\u{1F64E}\u{1F3FB}", desc: "person pouting: light skin tone" },
+        { value: "\u{1F64E}\u{1F3FC}", desc: "person pouting: medium-light skin tone" },
+        { value: "\u{1F64E}\u{1F3FD}", desc: "person pouting: medium skin tone" },
+        { value: "\u{1F64E}\u{1F3FE}", desc: "person pouting: medium-dark skin tone" },
+        { value: "\u{1F64E}\u{1F3FF}", desc: "person pouting: dark skin tone" },
+    ]
+},
+    manPouting = {
+        value: "\u{1F64E}\u{200D}\u{2642}\u{FE0F}", desc: "man pouting", alt: [
+            { value: "\u{1F64E}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man pouting: light skin tone" },
+            { value: "\u{1F64E}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man pouting: medium-light skin tone" },
+            { value: "\u{1F64E}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man pouting: medium skin tone" },
+            { value: "\u{1F64E}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man pouting: medium-dark skin tone" },
+            { value: "\u{1F64E}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man pouting: dark skin tone" },
+        ]
+    },
+    womanPouting = {
+        value: "\u{1F64E}\u{200D}\u{2640}\u{FE0F}", desc: "woman pouting", alt: [
+            { value: "\u{1F64E}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman pouting: light skin tone" },
+            { value: "\u{1F64E}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman pouting: medium-light skin tone" },
+            { value: "\u{1F64E}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman pouting: medium skin tone" },
+            { value: "\u{1F64E}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman pouting: medium-dark skin tone" },
+            { value: "\u{1F64E}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman pouting: dark skin tone" },
+        ]
+    };
+
 export const people = [
-    speakingHead,
-    bust,
     {
         value: "\u{1F476}", desc: "baby", alt: [
             { value: "\u{1F476}\u{1F3FB}", desc: "baby: light skin tone" },
@@ -61,217 +190,232 @@ export const people = [
     },
     {
         value: "\u{1F9D2}", desc: "child", alt: [
-            { value: "\u{1F9D2}\u{1F3FB}", desc: "child: light skin tone" },
-            { value: "\u{1F9D2}\u{1F3FC}", desc: "child: medium-light skin tone" },
-            { value: "\u{1F9D2}\u{1F3FD}", desc: "child: medium skin tone" },
-            { value: "\u{1F9D2}\u{1F3FE}", desc: "child: medium-dark skin tone" },
-            { value: "\u{1F9D2}\u{1F3FF}", desc: "child: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F466}", desc: "boy", alt: [
-            { value: "\u{1F466}\u{1F3FB}", desc: "boy: light skin tone" },
-            { value: "\u{1F466}\u{1F3FC}", desc: "boy: medium-light skin tone" },
-            { value: "\u{1F466}\u{1F3FD}", desc: "boy: medium skin tone" },
-            { value: "\u{1F466}\u{1F3FE}", desc: "boy: medium-dark skin tone" },
-            { value: "\u{1F466}\u{1F3FF}", desc: "boy: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F467}", desc: "girl", alt: [
-            { value: "\u{1F467}\u{1F3FB}", desc: "girl: light skin tone" },
-            { value: "\u{1F467}\u{1F3FC}", desc: "girl: medium-light skin tone" },
-            { value: "\u{1F467}\u{1F3FD}", desc: "girl: medium skin tone" },
-            { value: "\u{1F467}\u{1F3FE}", desc: "girl: medium-dark skin tone" },
-            { value: "\u{1F467}\u{1F3FF}", desc: "girl: dark skin tone" },
+            {
+                value: "\u{1F9D2}", desc: "child", alt: [
+                    { value: "\u{1F9D2}\u{1F3FB}", desc: "child: light skin tone" },
+                    { value: "\u{1F9D2}\u{1F3FC}", desc: "child: medium-light skin tone" },
+                    { value: "\u{1F9D2}\u{1F3FD}", desc: "child: medium skin tone" },
+                    { value: "\u{1F9D2}\u{1F3FE}", desc: "child: medium-dark skin tone" },
+                    { value: "\u{1F9D2}\u{1F3FF}", desc: "child: dark skin tone" }
+                ]
+            },
+            {
+                value: "\u{1F466}", desc: "boy", alt: [
+                    { value: "\u{1F466}\u{1F3FB}", desc: "boy: light skin tone" },
+                    { value: "\u{1F466}\u{1F3FC}", desc: "boy: medium-light skin tone" },
+                    { value: "\u{1F466}\u{1F3FD}", desc: "boy: medium skin tone" },
+                    { value: "\u{1F466}\u{1F3FE}", desc: "boy: medium-dark skin tone" },
+                    { value: "\u{1F466}\u{1F3FF}", desc: "boy: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F467}", desc: "girl", alt: [
+                    { value: "\u{1F467}\u{1F3FB}", desc: "girl: light skin tone" },
+                    { value: "\u{1F467}\u{1F3FC}", desc: "girl: medium-light skin tone" },
+                    { value: "\u{1F467}\u{1F3FD}", desc: "girl: medium skin tone" },
+                    { value: "\u{1F467}\u{1F3FE}", desc: "girl: medium-dark skin tone" },
+                    { value: "\u{1F467}\u{1F3FF}", desc: "girl: dark skin tone" },
+                ]
+            },
         ]
     },
     {
         value: "\u{1F9D1}", desc: "person", alt: [
-            { value: "\u{1F9D1}\u{1F3FB}", desc: "person: light skin tone" },
-            { value: "\u{1F9D1}\u{1F3FC}", desc: "person: medium-light skin tone" },
-            { value: "\u{1F9D1}\u{1F3FD}", desc: "person: medium skin tone" },
-            { value: "\u{1F9D1}\u{1F3FE}", desc: "person: medium-dark skin tone" },
-            { value: "\u{1F9D1}\u{1F3FF}", desc: "person: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F471}", desc: "person: blond hair", alt: [
-            { value: "\u{1F471}\u{1F3FB}", desc: "person: light skin tone, blond hair" },
-            { value: "\u{1F471}\u{1F3FC}", desc: "person: medium-light skin tone, blond hair" },
-            { value: "\u{1F471}\u{1F3FD}", desc: "person: medium skin tone, blond hair" },
-            { value: "\u{1F471}\u{1F3FE}", desc: "person: medium-dark skin tone, blond hair" },
-            { value: "\u{1F471}\u{1F3FF}", desc: "person: dark skin tone, blond hair" },
-        ]
-    },
-    {
-        value: "\u{1F468}", desc: "man", alt: [
-            { value: "\u{1F468}\u{1F3FB}", desc: "man: light skin tone" },
-            { value: "\u{1F468}\u{1F3FC}", desc: "man: medium-light skin tone" },
-            { value: "\u{1F468}\u{1F3FD}", desc: "man: medium skin tone" },
-            { value: "\u{1F468}\u{1F3FE}", desc: "man: medium-dark skin tone" },
-            { value: "\u{1F468}\u{1F3FF}", desc: "man: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F9D4}", desc: "man: beard", alt: [
-            { value: "\u{1F9D4}\u{1F3FB}", desc: "man: light skin tone, beard" },
-            { value: "\u{1F9D4}\u{1F3FC}", desc: "man: medium-light skin tone, beard" },
-            { value: "\u{1F9D4}\u{1F3FD}", desc: "man: medium skin tone, beard" },
-            { value: "\u{1F9D4}\u{1F3FE}", desc: "man: medium-dark skin tone, beard" },
-            { value: "\u{1F9D4}\u{1F3FF}", desc: "man: dark skin tone, beard" },
-            { value: "\u{1F471}\u{200D}\u{2642}\u{FE0F}", desc: "man: blond hair" },
-            { value: "\u{1F471}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man: light skin tone, blond hair" },
-            { value: "\u{1F471}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man: medium-light skin tone, blond hair" },
-            { value: "\u{1F471}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man: medium skin tone, blond hair" },
-            { value: "\u{1F471}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man: medium-dark skin tone, blond hair" },
-            { value: "\u{1F471}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man: dark skin tone, blond hair" },
-            { value: "\u{1F468}\u{200D}\u{1F9B0}", desc: "man: red hair" },
-            { value: "\u{1F468}\u{1F3FB}\u{200D}\u{1F9B0}", desc: "man: light skin tone, red hair" },
-            { value: "\u{1F468}\u{1F3FC}\u{200D}\u{1F9B0}", desc: "man: medium-light skin tone, red hair" },
-            { value: "\u{1F468}\u{1F3FD}\u{200D}\u{1F9B0}", desc: "man: medium skin tone, red hair" },
-            { value: "\u{1F468}\u{1F3FE}\u{200D}\u{1F9B0}", desc: "man: medium-dark skin tone, red hair" },
-            { value: "\u{1F468}\u{1F3FF}\u{200D}\u{1F9B0}", desc: "man: dark skin tone, red hair" },
-            { value: "\u{1F468}\u{200D}\u{1F9B1}", desc: "man: curly hair" },
-            { value: "\u{1F468}\u{1F3FB}\u{200D}\u{1F9B1}", desc: "man: light skin tone, curly hair" },
-            { value: "\u{1F468}\u{1F3FC}\u{200D}\u{1F9B1}", desc: "man: medium-light skin tone, curly hair" },
-            { value: "\u{1F468}\u{1F3FD}\u{200D}\u{1F9B1}", desc: "man: medium skin tone, curly hair" },
-            { value: "\u{1F468}\u{1F3FE}\u{200D}\u{1F9B1}", desc: "man: medium-dark skin tone, curly hair" },
-            { value: "\u{1F468}\u{1F3FF}\u{200D}\u{1F9B1}", desc: "man: dark skin tone, curly hair" },
-            { value: "\u{1F468}\u{200D}\u{1F9B3}", desc: "man: white hair" },
-            { value: "\u{1F468}\u{1F3FB}\u{200D}\u{1F9B3}", desc: "man: light skin tone, white hair" },
-            { value: "\u{1F468}\u{1F3FC}\u{200D}\u{1F9B3}", desc: "man: medium-light skin tone, white hair" },
-            { value: "\u{1F468}\u{1F3FD}\u{200D}\u{1F9B3}", desc: "man: medium skin tone, white hair" },
-            { value: "\u{1F468}\u{1F3FE}\u{200D}\u{1F9B3}", desc: "man: medium-dark skin tone, white hair" },
-            { value: "\u{1F468}\u{1F3FF}\u{200D}\u{1F9B3}", desc: "man: dark skin tone, white hair" },
-            { value: "\u{1F468}\u{200D}\u{1F9B2}", desc: "man: bald" },
-            { value: "\u{1F468}\u{1F3FB}\u{200D}\u{1F9B2}", desc: "man: light skin tone, bald" },
-            { value: "\u{1F468}\u{1F3FC}\u{200D}\u{1F9B2}", desc: "man: medium-light skin tone, bald" },
-            { value: "\u{1F468}\u{1F3FD}\u{200D}\u{1F9B2}", desc: "man: medium skin tone, bald" },
-            { value: "\u{1F468}\u{1F3FE}\u{200D}\u{1F9B2}", desc: "man: medium-dark skin tone, bald" },
-            { value: "\u{1F468}\u{1F3FF}\u{200D}\u{1F9B2}", desc: "man: dark skin tone, bald" },
-        ]
-    },
-    {
-        value: "\u{1F469}", desc: "woman", alt: [
-            { value: "\u{1F469}\u{1F3FB}", desc: "woman: light skin tone" },
-            { value: "\u{1F469}\u{1F3FC}", desc: "woman: medium-light skin tone" },
-            { value: "\u{1F469}\u{1F3FD}", desc: "woman: medium skin tone" },
-            { value: "\u{1F469}\u{1F3FE}", desc: "woman: medium-dark skin tone" },
-            { value: "\u{1F469}\u{1F3FF}", desc: "woman: dark skin tone" },
-            { value: "\u{1F471}\u{200D}\u{2640}\u{FE0F}", desc: "woman: blond hair" },
-            { value: "\u{1F471}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman: light skin tone, blond hair" },
-            { value: "\u{1F471}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman: medium-light skin tone, blond hair" },
-            { value: "\u{1F471}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman: medium skin tone, blond hair" },
-            { value: "\u{1F471}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman: medium-dark skin tone, blond hair" },
-            { value: "\u{1F471}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman: dark skin tone, blond hair" },
-            { value: "\u{1F469}\u{200D}\u{1F9B0}", desc: "woman: red hair" },
-            { value: "\u{1F469}\u{1F3FB}\u{200D}\u{1F9B0}", desc: "woman: light skin tone, red hair" },
-            { value: "\u{1F469}\u{1F3FC}\u{200D}\u{1F9B0}", desc: "woman: medium-light skin tone, red hair" },
-            { value: "\u{1F469}\u{1F3FD}\u{200D}\u{1F9B0}", desc: "woman: medium skin tone, red hair" },
-            { value: "\u{1F469}\u{1F3FE}\u{200D}\u{1F9B0}", desc: "woman: medium-dark skin tone, red hair" },
-            { value: "\u{1F469}\u{1F3FF}\u{200D}\u{1F9B0}", desc: "woman: dark skin tone, red hair" },
-            { value: "\u{1F469}\u{200D}\u{1F9B1}", desc: "woman: curly hair" },
-            { value: "\u{1F469}\u{1F3FB}\u{200D}\u{1F9B1}", desc: "woman: light skin tone, curly hair" },
-            { value: "\u{1F469}\u{1F3FC}\u{200D}\u{1F9B1}", desc: "woman: medium-light skin tone, curly hair" },
-            { value: "\u{1F469}\u{1F3FD}\u{200D}\u{1F9B1}", desc: "woman: medium skin tone, curly hair" },
-            { value: "\u{1F469}\u{1F3FE}\u{200D}\u{1F9B1}", desc: "woman: medium-dark skin tone, curly hair" },
-            { value: "\u{1F469}\u{1F3FF}\u{200D}\u{1F9B1}", desc: "woman: dark skin tone, curly hair" },
-            { value: "\u{1F469}\u{200D}\u{1F9B3}", desc: "woman: white hair" },
-            { value: "\u{1F469}\u{1F3FB}\u{200D}\u{1F9B3}", desc: "woman: light skin tone, white hair" },
-            { value: "\u{1F469}\u{1F3FC}\u{200D}\u{1F9B3}", desc: "woman: medium-light skin tone, white hair" },
-            { value: "\u{1F469}\u{1F3FD}\u{200D}\u{1F9B3}", desc: "woman: medium skin tone, white hair" },
-            { value: "\u{1F469}\u{1F3FE}\u{200D}\u{1F9B3}", desc: "woman: medium-dark skin tone, white hair" },
-            { value: "\u{1F469}\u{1F3FF}\u{200D}\u{1F9B3}", desc: "woman: dark skin tone, white hair" },
-            { value: "\u{1F469}\u{200D}\u{1F9B2}", desc: "woman: bald" },
-            { value: "\u{1F469}\u{1F3FB}\u{200D}\u{1F9B2}", desc: "woman: light skin tone, bald" },
-            { value: "\u{1F469}\u{1F3FC}\u{200D}\u{1F9B2}", desc: "woman: medium-light skin tone, bald" },
-            { value: "\u{1F469}\u{1F3FD}\u{200D}\u{1F9B2}", desc: "woman: medium skin tone, bald" },
-            { value: "\u{1F469}\u{1F3FE}\u{200D}\u{1F9B2}", desc: "woman: medium-dark skin tone, bald" },
-            { value: "\u{1F469}\u{1F3FF}\u{200D}\u{1F9B2}", desc: "woman: dark skin tone, bald" },
-        ]
-    },
-    {
-        value: "\u{1F9D3}", desc: "older person", alt: [
-            { value: "\u{1F9D3}\u{1F3FB}", desc: "older person: light skin tone" },
-            { value: "\u{1F9D3}\u{1F3FC}", desc: "older person: medium-light skin tone" },
-            { value: "\u{1F9D3}\u{1F3FD}", desc: "older person: medium skin tone" },
-            { value: "\u{1F9D3}\u{1F3FE}", desc: "older person: medium-dark skin tone" },
-            { value: "\u{1F9D3}\u{1F3FF}", desc: "older person: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F474}", desc: "old man", alt: [
-            { value: "\u{1F474}\u{1F3FB}", desc: "old man: light skin tone" },
-            { value: "\u{1F474}\u{1F3FC}", desc: "old man: medium-light skin tone" },
-            { value: "\u{1F474}\u{1F3FD}", desc: "old man: medium skin tone" },
-            { value: "\u{1F474}\u{1F3FE}", desc: "old man: medium-dark skin tone" },
-            { value: "\u{1F474}\u{1F3FF}", desc: "old man: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F475}", desc: "old woman", alt: [
-            { value: "\u{1F475}\u{1F3FB}", desc: "old woman: light skin tone" },
-            { value: "\u{1F475}\u{1F3FC}", desc: "old woman: medium-light skin tone" },
-            { value: "\u{1F475}\u{1F3FD}", desc: "old woman: medium skin tone" },
-            { value: "\u{1F475}\u{1F3FE}", desc: "old woman: medium-dark skin tone" },
-            { value: "\u{1F475}\u{1F3FF}", desc: "old woman: dark skin tone" }
+            {
+                value: "\u{1F9D1}", desc: "person", alt: [
+                    {
+                        value: "\u{1F9D1}", desc: "person", alt: [
+                            { value: "\u{1F9D1}\u{1F3FB}", desc: "person: light skin tone" },
+                            { value: "\u{1F9D1}\u{1F3FC}", desc: "person: medium-light skin tone" },
+                            { value: "\u{1F9D1}\u{1F3FD}", desc: "person: medium skin tone" },
+                            { value: "\u{1F9D1}\u{1F3FE}", desc: "person: medium-dark skin tone" },
+                            { value: "\u{1F9D1}\u{1F3FF}", desc: "person: dark skin tone" },
+                        ]
+                    },
+                    {
+                        value: "\u{1F471}", desc: "person: blond hair", alt: [
+                            { value: "\u{1F471}\u{1F3FB}", desc: "person: light skin tone, blond hair" },
+                            { value: "\u{1F471}\u{1F3FC}", desc: "person: medium-light skin tone, blond hair" },
+                            { value: "\u{1F471}\u{1F3FD}", desc: "person: medium skin tone, blond hair" },
+                            { value: "\u{1F471}\u{1F3FE}", desc: "person: medium-dark skin tone, blond hair" },
+                            { value: "\u{1F471}\u{1F3FF}", desc: "person: dark skin tone, blond hair" },
+                        ]
+                    },
+                    {
+                        value: "\u{1F9D3}", desc: "older person", alt: [
+                            { value: "\u{1F9D3}\u{1F3FB}", desc: "older person: light skin tone" },
+                            { value: "\u{1F9D3}\u{1F3FC}", desc: "older person: medium-light skin tone" },
+                            { value: "\u{1F9D3}\u{1F3FD}", desc: "older person: medium skin tone" },
+                            { value: "\u{1F9D3}\u{1F3FE}", desc: "older person: medium-dark skin tone" },
+                            { value: "\u{1F9D3}\u{1F3FF}", desc: "older person: dark skin tone" },
+                        ]
+                    },
+                    personFrowning,
+                    personPouting,
+                ]
+            },
+            {
+                value: "\u{1F468}", desc: "man", alt: [
+                    {
+                        value: "\u{1F468}", desc: "man", alt: [
+                            { value: "\u{1F468}\u{1F3FB}", desc: "man: light skin tone" },
+                            { value: "\u{1F468}\u{1F3FC}", desc: "man: medium-light skin tone" },
+                            { value: "\u{1F468}\u{1F3FD}", desc: "man: medium skin tone" },
+                            { value: "\u{1F468}\u{1F3FE}", desc: "man: medium-dark skin tone" },
+                            { value: "\u{1F468}\u{1F3FF}", desc: "man: dark skin tone" },
+                        ]
+                    },
+                    {
+                        value: "\u{1F471}\u{200D}\u{2642}\u{FE0F}", desc: "man: blond hair", alt: [
+                            { value: "\u{1F471}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man: light skin tone, blond hair" },
+                            { value: "\u{1F471}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man: medium-light skin tone, blond hair" },
+                            { value: "\u{1F471}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man: medium skin tone, blond hair" },
+                            { value: "\u{1F471}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man: medium-dark skin tone, blond hair" },
+                            { value: "\u{1F471}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man: dark skin tone, blond hair" },
+                        ]
+                    },
+                    {
+                        value: "\u{1F468}\u{200D}\u{1F9B0}", desc: "man: red hair", alt: [
+                            { value: "\u{1F468}\u{1F3FB}\u{200D}\u{1F9B0}", desc: "man: light skin tone, red hair" },
+                            { value: "\u{1F468}\u{1F3FC}\u{200D}\u{1F9B0}", desc: "man: medium-light skin tone, red hair" },
+                            { value: "\u{1F468}\u{1F3FD}\u{200D}\u{1F9B0}", desc: "man: medium skin tone, red hair" },
+                            { value: "\u{1F468}\u{1F3FE}\u{200D}\u{1F9B0}", desc: "man: medium-dark skin tone, red hair" },
+                            { value: "\u{1F468}\u{1F3FF}\u{200D}\u{1F9B0}", desc: "man: dark skin tone, red hair" },
+                        ]
+                    },
+                    {
+                        value: "\u{1F468}\u{200D}\u{1F9B1}", desc: "man: curly hair", alt: [
+                            { value: "\u{1F468}\u{1F3FB}\u{200D}\u{1F9B1}", desc: "man: light skin tone, curly hair" },
+                            { value: "\u{1F468}\u{1F3FC}\u{200D}\u{1F9B1}", desc: "man: medium-light skin tone, curly hair" },
+                            { value: "\u{1F468}\u{1F3FD}\u{200D}\u{1F9B1}", desc: "man: medium skin tone, curly hair" },
+                            { value: "\u{1F468}\u{1F3FE}\u{200D}\u{1F9B1}", desc: "man: medium-dark skin tone, curly hair" },
+                            { value: "\u{1F468}\u{1F3FF}\u{200D}\u{1F9B1}", desc: "man: dark skin tone, curly hair" },
+                        ]
+                    },
+                    {
+                        value: "\u{1F468}\u{200D}\u{1F9B3}", desc: "man: white hair", alt: [
+                            { value: "\u{1F468}\u{1F3FB}\u{200D}\u{1F9B3}", desc: "man: light skin tone, white hair" },
+                            { value: "\u{1F468}\u{1F3FC}\u{200D}\u{1F9B3}", desc: "man: medium-light skin tone, white hair" },
+                            { value: "\u{1F468}\u{1F3FD}\u{200D}\u{1F9B3}", desc: "man: medium skin tone, white hair" },
+                            { value: "\u{1F468}\u{1F3FE}\u{200D}\u{1F9B3}", desc: "man: medium-dark skin tone, white hair" },
+                            { value: "\u{1F468}\u{1F3FF}\u{200D}\u{1F9B3}", desc: "man: dark skin tone, white hair" },]
+                    },
+                    {
+                        value: "\u{1F468}\u{200D}\u{1F9B2}", desc: "man: bald", alt: [
+                            { value: "\u{1F468}\u{1F3FB}\u{200D}\u{1F9B2}", desc: "man: light skin tone, bald" },
+                            { value: "\u{1F468}\u{1F3FC}\u{200D}\u{1F9B2}", desc: "man: medium-light skin tone, bald" },
+                            { value: "\u{1F468}\u{1F3FD}\u{200D}\u{1F9B2}", desc: "man: medium skin tone, bald" },
+                            { value: "\u{1F468}\u{1F3FE}\u{200D}\u{1F9B2}", desc: "man: medium-dark skin tone, bald" },
+                            { value: "\u{1F468}\u{1F3FF}\u{200D}\u{1F9B2}", desc: "man: dark skin tone, bald" },
+                        ]
+                    },
+                    {
+                        value: "\u{1F9D4}", desc: "man: beard", alt: [
+                            { value: "\u{1F9D4}\u{1F3FB}", desc: "man: light skin tone, beard" },
+                            { value: "\u{1F9D4}\u{1F3FC}", desc: "man: medium-light skin tone, beard" },
+                            { value: "\u{1F9D4}\u{1F3FD}", desc: "man: medium skin tone, beard" },
+                            { value: "\u{1F9D4}\u{1F3FE}", desc: "man: medium-dark skin tone, beard" },
+                            { value: "\u{1F9D4}\u{1F3FF}", desc: "man: dark skin tone, beard" },
+                        ]
+                    },
+                    {
+                        value: "\u{1F474}", desc: "old man", alt: [
+                            { value: "\u{1F474}\u{1F3FB}", desc: "old man: light skin tone" },
+                            { value: "\u{1F474}\u{1F3FC}", desc: "old man: medium-light skin tone" },
+                            { value: "\u{1F474}\u{1F3FD}", desc: "old man: medium skin tone" },
+                            { value: "\u{1F474}\u{1F3FE}", desc: "old man: medium-dark skin tone" },
+                            { value: "\u{1F474}\u{1F3FF}", desc: "old man: dark skin tone" },
+                        ]
+                    },
+                    manFrowning,
+                    manPouting,
+                ]
+            },
+            {
+                value: "\u{1F469}", desc: "woman", alt: [
+                    {
+                        value: "\u{1F469}", desc: "woman", alt: [
+                            { value: "\u{1F469}\u{1F3FB}", desc: "woman: light skin tone" },
+                            { value: "\u{1F469}\u{1F3FC}", desc: "woman: medium-light skin tone" },
+                            { value: "\u{1F469}\u{1F3FD}", desc: "woman: medium skin tone" },
+                            { value: "\u{1F469}\u{1F3FE}", desc: "woman: medium-dark skin tone" },
+                            { value: "\u{1F469}\u{1F3FF}", desc: "woman: dark skin tone" },
+                        ]
+                    },
+                    {
+                        value: "\u{1F471}\u{200D}\u{2640}\u{FE0F}", desc: "woman: blond hair", alt: [
+                            { value: "\u{1F471}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman: light skin tone, blond hair" },
+                            { value: "\u{1F471}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman: medium-light skin tone, blond hair" },
+                            { value: "\u{1F471}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman: medium skin tone, blond hair" },
+                            { value: "\u{1F471}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman: medium-dark skin tone, blond hair" },
+                            { value: "\u{1F471}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman: dark skin tone, blond hair" },
+                        ]
+                    },
+                    {
+                        value: "\u{1F469}\u{200D}\u{1F9B0}", desc: "woman: red hair", alt: [
+                            { value: "\u{1F469}\u{1F3FB}\u{200D}\u{1F9B0}", desc: "woman: light skin tone, red hair" },
+                            { value: "\u{1F469}\u{1F3FC}\u{200D}\u{1F9B0}", desc: "woman: medium-light skin tone, red hair" },
+                            { value: "\u{1F469}\u{1F3FD}\u{200D}\u{1F9B0}", desc: "woman: medium skin tone, red hair" },
+                            { value: "\u{1F469}\u{1F3FE}\u{200D}\u{1F9B0}", desc: "woman: medium-dark skin tone, red hair" },
+                            { value: "\u{1F469}\u{1F3FF}\u{200D}\u{1F9B0}", desc: "woman: dark skin tone, red hair" },
+                        ]
+                    },
+                    {
+                        value: "\u{1F469}\u{200D}\u{1F9B1}", desc: "woman: curly hair", alt: [
+                            { value: "\u{1F469}\u{1F3FB}\u{200D}\u{1F9B1}", desc: "woman: light skin tone, curly hair" },
+                            { value: "\u{1F469}\u{1F3FC}\u{200D}\u{1F9B1}", desc: "woman: medium-light skin tone, curly hair" },
+                            { value: "\u{1F469}\u{1F3FD}\u{200D}\u{1F9B1}", desc: "woman: medium skin tone, curly hair" },
+                            { value: "\u{1F469}\u{1F3FE}\u{200D}\u{1F9B1}", desc: "woman: medium-dark skin tone, curly hair" },
+                            { value: "\u{1F469}\u{1F3FF}\u{200D}\u{1F9B1}", desc: "woman: dark skin tone, curly hair" },
+                        ]
+                    },
+                    {
+                        value: "\u{1F469}\u{200D}\u{1F9B3}", desc: "woman: white hair", alt: [
+                            { value: "\u{1F469}\u{1F3FB}\u{200D}\u{1F9B3}", desc: "woman: light skin tone, white hair" },
+                            { value: "\u{1F469}\u{1F3FC}\u{200D}\u{1F9B3}", desc: "woman: medium-light skin tone, white hair" },
+                            { value: "\u{1F469}\u{1F3FD}\u{200D}\u{1F9B3}", desc: "woman: medium skin tone, white hair" },
+                            { value: "\u{1F469}\u{1F3FE}\u{200D}\u{1F9B3}", desc: "woman: medium-dark skin tone, white hair" },
+                            { value: "\u{1F469}\u{1F3FF}\u{200D}\u{1F9B3}", desc: "woman: dark skin tone, white hair" },
+                        ]
+                    },
+                    {
+                        value: "\u{1F469}\u{200D}\u{1F9B2}", desc: "woman: bald", alt: [
+                            { value: "\u{1F469}\u{1F3FB}\u{200D}\u{1F9B2}", desc: "woman: light skin tone, bald" },
+                            { value: "\u{1F469}\u{1F3FC}\u{200D}\u{1F9B2}", desc: "woman: medium-light skin tone, bald" },
+                            { value: "\u{1F469}\u{1F3FD}\u{200D}\u{1F9B2}", desc: "woman: medium skin tone, bald" },
+                            { value: "\u{1F469}\u{1F3FE}\u{200D}\u{1F9B2}", desc: "woman: medium-dark skin tone, bald" },
+                            { value: "\u{1F469}\u{1F3FF}\u{200D}\u{1F9B2}", desc: "woman: dark skin tone, bald" },
+                        ]
+                    },
+                    {
+                        value: "\u{1F475}", desc: "old woman", alt: [
+                            { value: "\u{1F475}\u{1F3FB}", desc: "old woman: light skin tone" },
+                            { value: "\u{1F475}\u{1F3FC}", desc: "old woman: medium-light skin tone" },
+                            { value: "\u{1F475}\u{1F3FD}", desc: "old woman: medium skin tone" },
+                            { value: "\u{1F475}\u{1F3FE}", desc: "old woman: medium-dark skin tone" },
+                            { value: "\u{1F475}\u{1F3FF}", desc: "old woman: dark skin tone" }
+                        ]
+                    },
+                    womanFrowning,
+                    womanPouting,
+                ]
+            },
         ]
     },
 
     // person - gesture
     {
         value: "\u{1F64D}", desc: "person frowning", alt: [
-            { value: "\u{1F64D}\u{1F3FB}", desc: "person frowning: light skin tone" },
-            { value: "\u{1F64D}\u{1F3FC}", desc: "person frowning: medium-light skin tone" },
-            { value: "\u{1F64D}\u{1F3FD}", desc: "person frowning: medium skin tone" },
-            { value: "\u{1F64D}\u{1F3FE}", desc: "person frowning: medium-dark skin tone" },
-            { value: "\u{1F64D}\u{1F3FF}", desc: "person frowning: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F64D}\u{200D}\u{2642}\u{FE0F}", desc: "man frowning", alt: [
-            { value: "\u{1F64D}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man frowning: light skin tone" },
-            { value: "\u{1F64D}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man frowning: medium-light skin tone" },
-            { value: "\u{1F64D}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man frowning: medium skin tone" },
-            { value: "\u{1F64D}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man frowning: medium-dark skin tone" },
-            { value: "\u{1F64D}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man frowning: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F64D}\u{200D}\u{2640}\u{FE0F}", desc: "woman frowning", alt: [
-            { value: "\u{1F64D}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman frowning: light skin tone" },
-            { value: "\u{1F64D}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman frowning: medium-light skin tone" },
-            { value: "\u{1F64D}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman frowning: medium skin tone" },
-            { value: "\u{1F64D}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman frowning: medium-dark skin tone" },
-            { value: "\u{1F64D}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman frowning: dark skin tone" },
+            personFrowning,
+            manFrowning,
+            womanFrowning,
         ]
     },
     {
         value: "\u{1F64E}", desc: "person pouting", alt: [
-            { value: "\u{1F64E}\u{1F3FB}", desc: "person pouting: light skin tone" },
-            { value: "\u{1F64E}\u{1F3FC}", desc: "person pouting: medium-light skin tone" },
-            { value: "\u{1F64E}\u{1F3FD}", desc: "person pouting: medium skin tone" },
-            { value: "\u{1F64E}\u{1F3FE}", desc: "person pouting: medium-dark skin tone" },
-            { value: "\u{1F64E}\u{1F3FF}", desc: "person pouting: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F64E}\u{200D}\u{2642}\u{FE0F}", desc: "man pouting", alt: [
-            { value: "\u{1F64E}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man pouting: light skin tone" },
-            { value: "\u{1F64E}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man pouting: medium-light skin tone" },
-            { value: "\u{1F64E}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man pouting: medium skin tone" },
-            { value: "\u{1F64E}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man pouting: medium-dark skin tone" },
-            { value: "\u{1F64E}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man pouting: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F64E}\u{200D}\u{2640}\u{FE0F}", desc: "woman pouting", alt: [
-            { value: "\u{1F64E}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman pouting: light skin tone" },
-            { value: "\u{1F64E}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman pouting: medium-light skin tone" },
-            { value: "\u{1F64E}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman pouting: medium skin tone" },
-            { value: "\u{1F64E}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman pouting: medium-dark skin tone" },
-            { value: "\u{1F64E}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman pouting: dark skin tone" },
+            personPouting,
+            manPouting,
+            womanPouting,
         ]
     },
     {
@@ -1221,138 +1365,158 @@ export const people = [
     // person - activity
     {
         value: "\u{1F486}", desc: "person getting massage", alt: [
-            { value: "\u{1F486}\u{1F3FB}", desc: "person getting massage: light skin tone" },
-            { value: "\u{1F486}\u{1F3FC}", desc: "person getting massage: medium-light skin tone" },
-            { value: "\u{1F486}\u{1F3FD}", desc: "person getting massage: medium skin tone" },
-            { value: "\u{1F486}\u{1F3FE}", desc: "person getting massage: medium-dark skin tone" },
-            { value: "\u{1F486}\u{1F3FF}", desc: "person getting massage: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F486}\u{200D}\u{2642}\u{FE0F}", desc: "man getting massage", alt: [
-            { value: "\u{1F486}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man getting massage: light skin tone" },
-            { value: "\u{1F486}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man getting massage: medium-light skin tone" },
-            { value: "\u{1F486}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man getting massage: medium skin tone" },
-            { value: "\u{1F486}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man getting massage: medium-dark skin tone" },
-            { value: "\u{1F486}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man getting massage: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F486}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting massage", alt: [
-            { value: "\u{1F486}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting massage: light skin tone" },
-            { value: "\u{1F486}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting massage: medium-light skin tone" },
-            { value: "\u{1F486}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting massage: medium skin tone" },
-            { value: "\u{1F486}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting massage: medium-dark skin tone" },
-            { value: "\u{1F486}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting massage: dark skin tone" },
+            {
+                value: "\u{1F486}", desc: "person getting massage", alt: [
+                    { value: "\u{1F486}\u{1F3FB}", desc: "person getting massage: light skin tone" },
+                    { value: "\u{1F486}\u{1F3FC}", desc: "person getting massage: medium-light skin tone" },
+                    { value: "\u{1F486}\u{1F3FD}", desc: "person getting massage: medium skin tone" },
+                    { value: "\u{1F486}\u{1F3FE}", desc: "person getting massage: medium-dark skin tone" },
+                    { value: "\u{1F486}\u{1F3FF}", desc: "person getting massage: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F486}\u{200D}\u{2642}\u{FE0F}", desc: "man getting massage", alt: [
+                    { value: "\u{1F486}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man getting massage: light skin tone" },
+                    { value: "\u{1F486}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man getting massage: medium-light skin tone" },
+                    { value: "\u{1F486}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man getting massage: medium skin tone" },
+                    { value: "\u{1F486}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man getting massage: medium-dark skin tone" },
+                    { value: "\u{1F486}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man getting massage: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F486}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting massage", alt: [
+                    { value: "\u{1F486}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting massage: light skin tone" },
+                    { value: "\u{1F486}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting massage: medium-light skin tone" },
+                    { value: "\u{1F486}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting massage: medium skin tone" },
+                    { value: "\u{1F486}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting massage: medium-dark skin tone" },
+                    { value: "\u{1F486}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting massage: dark skin tone" },
+                ]
+            },
         ]
     },
     {
         value: "\u{1F487}", desc: "person getting haircut", alt: [
-            { value: "\u{1F487}\u{1F3FB}", desc: "person getting haircut: light skin tone" },
-            { value: "\u{1F487}\u{1F3FC}", desc: "person getting haircut: medium-light skin tone" },
-            { value: "\u{1F487}\u{1F3FD}", desc: "person getting haircut: medium skin tone" },
-            { value: "\u{1F487}\u{1F3FE}", desc: "person getting haircut: medium-dark skin tone" },
-            { value: "\u{1F487}\u{1F3FF}", desc: "person getting haircut: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F487}\u{200D}\u{2642}\u{FE0F}", desc: "man getting haircut", alt: [
-            { value: "\u{1F487}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man getting haircut: light skin tone" },
-            { value: "\u{1F487}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man getting haircut: medium-light skin tone" },
-            { value: "\u{1F487}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man getting haircut: medium skin tone" },
-            { value: "\u{1F487}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man getting haircut: medium-dark skin tone" },
-            { value: "\u{1F487}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man getting haircut: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F487}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting haircut", alt: [
-            { value: "\u{1F487}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting haircut: light skin tone" },
-            { value: "\u{1F487}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting haircut: medium-light skin tone" },
-            { value: "\u{1F487}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting haircut: medium skin tone" },
-            { value: "\u{1F487}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting haircut: medium-dark skin tone" },
-            { value: "\u{1F487}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting haircut: dark skin tone" },
+            {
+                value: "\u{1F487}", desc: "person getting haircut", alt: [
+                    { value: "\u{1F487}\u{1F3FB}", desc: "person getting haircut: light skin tone" },
+                    { value: "\u{1F487}\u{1F3FC}", desc: "person getting haircut: medium-light skin tone" },
+                    { value: "\u{1F487}\u{1F3FD}", desc: "person getting haircut: medium skin tone" },
+                    { value: "\u{1F487}\u{1F3FE}", desc: "person getting haircut: medium-dark skin tone" },
+                    { value: "\u{1F487}\u{1F3FF}", desc: "person getting haircut: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F487}\u{200D}\u{2642}\u{FE0F}", desc: "man getting haircut", alt: [
+                    { value: "\u{1F487}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man getting haircut: light skin tone" },
+                    { value: "\u{1F487}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man getting haircut: medium-light skin tone" },
+                    { value: "\u{1F487}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man getting haircut: medium skin tone" },
+                    { value: "\u{1F487}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man getting haircut: medium-dark skin tone" },
+                    { value: "\u{1F487}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man getting haircut: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F487}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting haircut", alt: [
+                    { value: "\u{1F487}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting haircut: light skin tone" },
+                    { value: "\u{1F487}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting haircut: medium-light skin tone" },
+                    { value: "\u{1F487}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting haircut: medium skin tone" },
+                    { value: "\u{1F487}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting haircut: medium-dark skin tone" },
+                    { value: "\u{1F487}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman getting haircut: dark skin tone" },
+                ]
+            },
         ]
     },
     {
         value: "\u{1F6B6}", desc: "person walking", alt: [
-            { value: "\u{1F6B6}\u{1F3FB}", desc: "person walking: light skin tone" },
-            { value: "\u{1F6B6}\u{1F3FC}", desc: "person walking: medium-light skin tone" },
-            { value: "\u{1F6B6}\u{1F3FD}", desc: "person walking: medium skin tone" },
-            { value: "\u{1F6B6}\u{1F3FE}", desc: "person walking: medium-dark skin tone" },
-            { value: "\u{1F6B6}\u{1F3FF}", desc: "person walking: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F6B6}\u{200D}\u{2642}\u{FE0F}", desc: "man walking", alt: [
-            { value: "\u{1F6B6}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man walking: light skin tone" },
-            { value: "\u{1F6B6}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man walking: medium-light skin tone" },
-            { value: "\u{1F6B6}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man walking: medium skin tone" },
-            { value: "\u{1F6B6}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man walking: medium-dark skin tone" },
-            { value: "\u{1F6B6}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man walking: dark skin tone" },
-            { value: "\u{1F6B6}\u{200D}\u{2640}\u{FE0F}", desc: "woman walking" },
-        ]
-    },
-    {
-        value: "\u{1F6B6}\u{200D}\u{2640}", desc: "woman walking", alt: [
-            { value: "\u{1F6B6}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman walking: light skin tone" },
-            { value: "\u{1F6B6}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman walking: medium-light skin tone" },
-            { value: "\u{1F6B6}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman walking: medium skin tone" },
-            { value: "\u{1F6B6}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman walking: medium-dark skin tone" },
-            { value: "\u{1F6B6}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman walking: dark skin tone" },
+            {
+                value: "\u{1F6B6}", desc: "person walking", alt: [
+                    { value: "\u{1F6B6}\u{1F3FB}", desc: "person walking: light skin tone" },
+                    { value: "\u{1F6B6}\u{1F3FC}", desc: "person walking: medium-light skin tone" },
+                    { value: "\u{1F6B6}\u{1F3FD}", desc: "person walking: medium skin tone" },
+                    { value: "\u{1F6B6}\u{1F3FE}", desc: "person walking: medium-dark skin tone" },
+                    { value: "\u{1F6B6}\u{1F3FF}", desc: "person walking: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F6B6}\u{200D}\u{2642}\u{FE0F}", desc: "man walking", alt: [
+                    { value: "\u{1F6B6}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man walking: light skin tone" },
+                    { value: "\u{1F6B6}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man walking: medium-light skin tone" },
+                    { value: "\u{1F6B6}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man walking: medium skin tone" },
+                    { value: "\u{1F6B6}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man walking: medium-dark skin tone" },
+                    { value: "\u{1F6B6}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man walking: dark skin tone" },
+                    { value: "\u{1F6B6}\u{200D}\u{2640}\u{FE0F}", desc: "woman walking" },
+                ]
+            },
+            {
+                value: "\u{1F6B6}\u{200D}\u{2640}", desc: "woman walking", alt: [
+                    { value: "\u{1F6B6}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman walking: light skin tone" },
+                    { value: "\u{1F6B6}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman walking: medium-light skin tone" },
+                    { value: "\u{1F6B6}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman walking: medium skin tone" },
+                    { value: "\u{1F6B6}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman walking: medium-dark skin tone" },
+                    { value: "\u{1F6B6}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman walking: dark skin tone" },
+                ]
+            },
         ]
     },
     {
         value: "\u{1F9CD}", desc: "person standing", alt: [
-            { value: "\u{1F9CD}\u{1F3FB}", desc: "person standing: light skin tone" },
-            { value: "\u{1F9CD}\u{1F3FC}", desc: "person standing: medium-light skin tone" },
-            { value: "\u{1F9CD}\u{1F3FD}", desc: "person standing: medium skin tone" },
-            { value: "\u{1F9CD}\u{1F3FE}", desc: "person standing: medium-dark skin tone" },
-            { value: "\u{1F9CD}\u{1F3FF}", desc: "person standing: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F9CD}\u{200D}\u{2642}\u{FE0F}", desc: "man standing", alt: [
-            { value: "\u{1F9CD}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man standing: light skin tone" },
-            { value: "\u{1F9CD}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man standing: medium-light skin tone" },
-            { value: "\u{1F9CD}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man standing: medium skin tone" },
-            { value: "\u{1F9CD}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man standing: medium-dark skin tone" },
-            { value: "\u{1F9CD}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man standing: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F9CD}\u{200D}\u{2640}\u{FE0F}", desc: "woman standing", alt: [
-            { value: "\u{1F9CD}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman standing: light skin tone" },
-            { value: "\u{1F9CD}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman standing: medium-light skin tone" },
-            { value: "\u{1F9CD}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman standing: medium skin tone" },
-            { value: "\u{1F9CD}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman standing: medium-dark skin tone" },
-            { value: "\u{1F9CD}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman standing: dark skin tone" },
+            {
+                value: "\u{1F9CD}", desc: "person standing", alt: [
+                    { value: "\u{1F9CD}\u{1F3FB}", desc: "person standing: light skin tone" },
+                    { value: "\u{1F9CD}\u{1F3FC}", desc: "person standing: medium-light skin tone" },
+                    { value: "\u{1F9CD}\u{1F3FD}", desc: "person standing: medium skin tone" },
+                    { value: "\u{1F9CD}\u{1F3FE}", desc: "person standing: medium-dark skin tone" },
+                    { value: "\u{1F9CD}\u{1F3FF}", desc: "person standing: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F9CD}\u{200D}\u{2642}\u{FE0F}", desc: "man standing", alt: [
+                    { value: "\u{1F9CD}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man standing: light skin tone" },
+                    { value: "\u{1F9CD}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man standing: medium-light skin tone" },
+                    { value: "\u{1F9CD}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man standing: medium skin tone" },
+                    { value: "\u{1F9CD}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man standing: medium-dark skin tone" },
+                    { value: "\u{1F9CD}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man standing: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F9CD}\u{200D}\u{2640}\u{FE0F}", desc: "woman standing", alt: [
+                    { value: "\u{1F9CD}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman standing: light skin tone" },
+                    { value: "\u{1F9CD}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman standing: medium-light skin tone" },
+                    { value: "\u{1F9CD}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman standing: medium skin tone" },
+                    { value: "\u{1F9CD}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman standing: medium-dark skin tone" },
+                    { value: "\u{1F9CD}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman standing: dark skin tone" },
+                ]
+            },
         ]
     },
     {
         value: "\u{1F9CE}", desc: "person kneeling", alt: [
-            { value: "\u{1F9CE}\u{1F3FB}", desc: "person kneeling: light skin tone" },
-            { value: "\u{1F9CE}\u{1F3FC}", desc: "person kneeling: medium-light skin tone" },
-            { value: "\u{1F9CE}\u{1F3FD}", desc: "person kneeling: medium skin tone" },
-            { value: "\u{1F9CE}\u{1F3FE}", desc: "person kneeling: medium-dark skin tone" },
-            { value: "\u{1F9CE}\u{1F3FF}", desc: "person kneeling: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F9CE}\u{200D}\u{2642}\u{FE0F}", desc: "man kneeling", alt: [
-            { value: "\u{1F9CE}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man kneeling: light skin tone" },
-            { value: "\u{1F9CE}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man kneeling: medium-light skin tone" },
-            { value: "\u{1F9CE}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man kneeling: medium skin tone" },
-            { value: "\u{1F9CE}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man kneeling: medium-dark skin tone" },
-            { value: "\u{1F9CE}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man kneeling: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F9CE}\u{200D}\u{2640}\u{FE0F}", desc: "woman kneeling", alt: [
-            { value: "\u{1F9CE}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman kneeling: light skin tone" },
-            { value: "\u{1F9CE}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman kneeling: medium-light skin tone" },
-            { value: "\u{1F9CE}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman kneeling: medium skin tone" },
-            { value: "\u{1F9CE}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman kneeling: medium-dark skin tone" },
-            { value: "\u{1F9CE}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman kneeling: dark skin tone" },
+            {
+                value: "\u{1F9CE}", desc: "person kneeling", alt: [
+                    { value: "\u{1F9CE}\u{1F3FB}", desc: "person kneeling: light skin tone" },
+                    { value: "\u{1F9CE}\u{1F3FC}", desc: "person kneeling: medium-light skin tone" },
+                    { value: "\u{1F9CE}\u{1F3FD}", desc: "person kneeling: medium skin tone" },
+                    { value: "\u{1F9CE}\u{1F3FE}", desc: "person kneeling: medium-dark skin tone" },
+                    { value: "\u{1F9CE}\u{1F3FF}", desc: "person kneeling: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F9CE}\u{200D}\u{2642}\u{FE0F}", desc: "man kneeling", alt: [
+                    { value: "\u{1F9CE}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man kneeling: light skin tone" },
+                    { value: "\u{1F9CE}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man kneeling: medium-light skin tone" },
+                    { value: "\u{1F9CE}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man kneeling: medium skin tone" },
+                    { value: "\u{1F9CE}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man kneeling: medium-dark skin tone" },
+                    { value: "\u{1F9CE}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man kneeling: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F9CE}\u{200D}\u{2640}\u{FE0F}", desc: "woman kneeling", alt: [
+                    { value: "\u{1F9CE}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman kneeling: light skin tone" },
+                    { value: "\u{1F9CE}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman kneeling: medium-light skin tone" },
+                    { value: "\u{1F9CE}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman kneeling: medium skin tone" },
+                    { value: "\u{1F9CE}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman kneeling: medium-dark skin tone" },
+                    { value: "\u{1F9CE}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman kneeling: dark skin tone" },
+                ]
+            },
         ]
     },
     {
@@ -1411,29 +1575,33 @@ export const people = [
     },
     {
         value: "\u{1F3C3}", desc: "person running", alt: [
-            { value: "\u{1F3C3}\u{1F3FB}", desc: "person running: light skin tone" },
-            { value: "\u{1F3C3}\u{1F3FC}", desc: "person running: medium-light skin tone" },
-            { value: "\u{1F3C3}\u{1F3FD}", desc: "person running: medium skin tone" },
-            { value: "\u{1F3C3}\u{1F3FE}", desc: "person running: medium-dark skin tone" },
-            { value: "\u{1F3C3}\u{1F3FF}", desc: "person running: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F3C3}\u{200D}\u{2642}\u{FE0F}", desc: "man running", alt: [
-            { value: "\u{1F3C3}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man running: light skin tone" },
-            { value: "\u{1F3C3}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man running: medium-light skin tone" },
-            { value: "\u{1F3C3}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man running: medium skin tone" },
-            { value: "\u{1F3C3}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man running: medium-dark skin tone" },
-            { value: "\u{1F3C3}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man running: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F3C3}\u{200D}\u{2640}\u{FE0F}", desc: "woman running", alt: [
-            { value: "\u{1F3C3}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman running: light skin tone" },
-            { value: "\u{1F3C3}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman running: medium-light skin tone" },
-            { value: "\u{1F3C3}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman running: medium skin tone" },
-            { value: "\u{1F3C3}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman running: medium-dark skin tone" },
-            { value: "\u{1F3C3}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman running: dark skin tone" },
+            {
+                value: "\u{1F3C3}", desc: "person running", alt: [
+                    { value: "\u{1F3C3}\u{1F3FB}", desc: "person running: light skin tone" },
+                    { value: "\u{1F3C3}\u{1F3FC}", desc: "person running: medium-light skin tone" },
+                    { value: "\u{1F3C3}\u{1F3FD}", desc: "person running: medium skin tone" },
+                    { value: "\u{1F3C3}\u{1F3FE}", desc: "person running: medium-dark skin tone" },
+                    { value: "\u{1F3C3}\u{1F3FF}", desc: "person running: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F3C3}\u{200D}\u{2642}\u{FE0F}", desc: "man running", alt: [
+                    { value: "\u{1F3C3}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man running: light skin tone" },
+                    { value: "\u{1F3C3}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man running: medium-light skin tone" },
+                    { value: "\u{1F3C3}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man running: medium skin tone" },
+                    { value: "\u{1F3C3}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man running: medium-dark skin tone" },
+                    { value: "\u{1F3C3}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man running: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F3C3}\u{200D}\u{2640}\u{FE0F}", desc: "woman running", alt: [
+                    { value: "\u{1F3C3}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman running: light skin tone" },
+                    { value: "\u{1F3C3}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman running: medium-light skin tone" },
+                    { value: "\u{1F3C3}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman running: medium skin tone" },
+                    { value: "\u{1F3C3}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman running: medium-dark skin tone" },
+                    { value: "\u{1F3C3}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman running: dark skin tone" },
+                ]
+            },
         ]
     },
     {
@@ -1471,56 +1639,64 @@ export const people = [
     },
     {
         value: "\u{1F9D6}", desc: "person in steamy room", alt: [
-            { value: "\u{1F9D6}\u{1F3FB}", desc: "person in steamy room: light skin tone" },
-            { value: "\u{1F9D6}\u{1F3FC}", desc: "person in steamy room: medium-light skin tone" },
-            { value: "\u{1F9D6}\u{1F3FD}", desc: "person in steamy room: medium skin tone" },
-            { value: "\u{1F9D6}\u{1F3FE}", desc: "person in steamy room: medium-dark skin tone" },
-            { value: "\u{1F9D6}\u{1F3FF}", desc: "person in steamy room: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F9D6}\u{200D}\u{2642}\u{FE0F}", desc: "man in steamy room", alt: [
-            { value: "\u{1F9D6}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man in steamy room: light skin tone" },
-            { value: "\u{1F9D6}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man in steamy room: medium-light skin tone" },
-            { value: "\u{1F9D6}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man in steamy room: medium skin tone" },
-            { value: "\u{1F9D6}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man in steamy room: medium-dark skin tone" },
-            { value: "\u{1F9D6}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man in steamy room: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F9D6}\u{200D}\u{2640}\u{FE0F}", desc: "woman in steamy room", alt: [
-            { value: "\u{1F9D6}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman in steamy room: light skin tone" },
-            { value: "\u{1F9D6}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman in steamy room: medium-light skin tone" },
-            { value: "\u{1F9D6}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman in steamy room: medium skin tone" },
-            { value: "\u{1F9D6}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman in steamy room: medium-dark skin tone" },
-            { value: "\u{1F9D6}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman in steamy room: dark skin tone" },
+            {
+                value: "\u{1F9D6}", desc: "person in steamy room", alt: [
+                    { value: "\u{1F9D6}\u{1F3FB}", desc: "person in steamy room: light skin tone" },
+                    { value: "\u{1F9D6}\u{1F3FC}", desc: "person in steamy room: medium-light skin tone" },
+                    { value: "\u{1F9D6}\u{1F3FD}", desc: "person in steamy room: medium skin tone" },
+                    { value: "\u{1F9D6}\u{1F3FE}", desc: "person in steamy room: medium-dark skin tone" },
+                    { value: "\u{1F9D6}\u{1F3FF}", desc: "person in steamy room: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F9D6}\u{200D}\u{2642}\u{FE0F}", desc: "man in steamy room", alt: [
+                    { value: "\u{1F9D6}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man in steamy room: light skin tone" },
+                    { value: "\u{1F9D6}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man in steamy room: medium-light skin tone" },
+                    { value: "\u{1F9D6}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man in steamy room: medium skin tone" },
+                    { value: "\u{1F9D6}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man in steamy room: medium-dark skin tone" },
+                    { value: "\u{1F9D6}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man in steamy room: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F9D6}\u{200D}\u{2640}\u{FE0F}", desc: "woman in steamy room", alt: [
+                    { value: "\u{1F9D6}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman in steamy room: light skin tone" },
+                    { value: "\u{1F9D6}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman in steamy room: medium-light skin tone" },
+                    { value: "\u{1F9D6}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman in steamy room: medium skin tone" },
+                    { value: "\u{1F9D6}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman in steamy room: medium-dark skin tone" },
+                    { value: "\u{1F9D6}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman in steamy room: dark skin tone" },
+                ]
+            },
         ]
     },
     {
         value: "\u{1F9D7}", desc: "person climbing", alt: [
-            { value: "\u{1F9D7}\u{1F3FB}", desc: "person climbing: light skin tone" },
-            { value: "\u{1F9D7}\u{1F3FC}", desc: "person climbing: medium-light skin tone" },
-            { value: "\u{1F9D7}\u{1F3FD}", desc: "person climbing: medium skin tone" },
-            { value: "\u{1F9D7}\u{1F3FE}", desc: "person climbing: medium-dark skin tone" },
-            { value: "\u{1F9D7}\u{1F3FF}", desc: "person climbing: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F9D7}\u{200D}\u{2642}\u{FE0F}", desc: "man climbing", alt: [
-            { value: "\u{1F9D7}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man climbing: light skin tone" },
-            { value: "\u{1F9D7}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man climbing: medium-light skin tone" },
-            { value: "\u{1F9D7}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man climbing: medium skin tone" },
-            { value: "\u{1F9D7}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man climbing: medium-dark skin tone" },
-            { value: "\u{1F9D7}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man climbing: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F9D7}\u{200D}\u{2640}\u{FE0F}", desc: "woman climbing", alt: [
-            { value: "\u{1F9D7}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman climbing: light skin tone" },
-            { value: "\u{1F9D7}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman climbing: medium-light skin tone" },
-            { value: "\u{1F9D7}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman climbing: medium skin tone" },
-            { value: "\u{1F9D7}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman climbing: medium-dark skin tone" },
-            { value: "\u{1F9D7}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman climbing: dark skin tone" },
+            {
+                value: "\u{1F9D7}", desc: "person climbing", alt: [
+                    { value: "\u{1F9D7}\u{1F3FB}", desc: "person climbing: light skin tone" },
+                    { value: "\u{1F9D7}\u{1F3FC}", desc: "person climbing: medium-light skin tone" },
+                    { value: "\u{1F9D7}\u{1F3FD}", desc: "person climbing: medium skin tone" },
+                    { value: "\u{1F9D7}\u{1F3FE}", desc: "person climbing: medium-dark skin tone" },
+                    { value: "\u{1F9D7}\u{1F3FF}", desc: "person climbing: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F9D7}\u{200D}\u{2642}\u{FE0F}", desc: "man climbing", alt: [
+                    { value: "\u{1F9D7}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man climbing: light skin tone" },
+                    { value: "\u{1F9D7}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man climbing: medium-light skin tone" },
+                    { value: "\u{1F9D7}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man climbing: medium skin tone" },
+                    { value: "\u{1F9D7}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man climbing: medium-dark skin tone" },
+                    { value: "\u{1F9D7}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man climbing: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F9D7}\u{200D}\u{2640}\u{FE0F}", desc: "woman climbing", alt: [
+                    { value: "\u{1F9D7}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman climbing: light skin tone" },
+                    { value: "\u{1F9D7}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman climbing: medium-light skin tone" },
+                    { value: "\u{1F9D7}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman climbing: medium skin tone" },
+                    { value: "\u{1F9D7}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman climbing: medium-dark skin tone" },
+                    { value: "\u{1F9D7}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman climbing: dark skin tone" },
+                ]
+            },
         ]
     },
 
@@ -1547,221 +1723,209 @@ export const people = [
     },
     {
         value: "\u{1F3CC}\u{FE0F}", desc: "person golfing", alt: [
-            { value: "\u{1F3CC}\u{1F3FB}", desc: "person golfing: light skin tone" },
-            { value: "\u{1F3CC}\u{1F3FC}", desc: "person golfing: medium-light skin tone" },
-            { value: "\u{1F3CC}\u{1F3FD}", desc: "person golfing: medium skin tone" },
-            { value: "\u{1F3CC}\u{1F3FE}", desc: "person golfing: medium-dark skin tone" },
-            { value: "\u{1F3CC}\u{1F3FF}", desc: "person golfing: dark skin tone" },
+            {
+                value: "\u{1F3CC}\u{FE0F}", desc: "person golfing", alt: [
+                    { value: "\u{1F3CC}\u{1F3FB}", desc: "person golfing: light skin tone" },
+                    { value: "\u{1F3CC}\u{1F3FC}", desc: "person golfing: medium-light skin tone" },
+                    { value: "\u{1F3CC}\u{1F3FD}", desc: "person golfing: medium skin tone" },
+                    { value: "\u{1F3CC}\u{1F3FE}", desc: "person golfing: medium-dark skin tone" },
+                    { value: "\u{1F3CC}\u{1F3FF}", desc: "person golfing: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F3CC}\u{FE0F}\u{200D}\u{2642}\u{FE0F}", desc: "man golfing", alt: [
+                    { value: "\u{1F3CC}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man golfing: light skin tone" },
+                    { value: "\u{1F3CC}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man golfing: medium-light skin tone" },
+                    { value: "\u{1F3CC}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man golfing: medium skin tone" },
+                    { value: "\u{1F3CC}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man golfing: medium-dark skin tone" },
+                    { value: "\u{1F3CC}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man golfing: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F3CC}\u{FE0F}\u{200D}\u{2640}\u{FE0F}", desc: "woman golfing", alt: [
+                    { value: "\u{1F3CC}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman golfing: light skin tone" },
+                    { value: "\u{1F3CC}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman golfing: medium-light skin tone" },
+                    { value: "\u{1F3CC}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman golfing: medium skin tone" },
+                    { value: "\u{1F3CC}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman golfing: medium-dark skin tone" },
+                    { value: "\u{1F3CC}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman golfing: dark skin tone" },
+                ]
+            },
         ]
     },
     {
-        value: "\u{1F3CC}\u{FE0F}\u{200D}\u{2642}\u{FE0F}", desc: "man golfing", alt: [
-            { value: "\u{1F3CC}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man golfing: light skin tone" },
-            { value: "\u{1F3CC}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man golfing: medium-light skin tone" },
-            { value: "\u{1F3CC}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man golfing: medium skin tone" },
-            { value: "\u{1F3CC}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man golfing: medium-dark skin tone" },
-            { value: "\u{1F3CC}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man golfing: dark skin tone" },
+        value: "\u{1F3C4}", desc: "person surfing", alt: [
+            surfer,
+            manSurfing,
+            womanSurfing,
         ]
     },
-    {
-        value: "\u{1F3CC}\u{FE0F}\u{200D}\u{2640}\u{FE0F}", desc: "woman golfing", alt: [
-            { value: "\u{1F3CC}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman golfing: light skin tone" },
-            { value: "\u{1F3CC}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman golfing: medium-light skin tone" },
-            { value: "\u{1F3CC}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman golfing: medium skin tone" },
-            { value: "\u{1F3CC}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman golfing: medium-dark skin tone" },
-            { value: "\u{1F3CC}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman golfing: dark skin tone" },
-        ]
-    },
-    surfer,
-    manSurfing,
-    womanSurfing,
     {
         value: "\u{1F6A3}", desc: "person rowing boat", alt: [
-            { value: "\u{1F6A3}\u{1F3FB}", desc: "person rowing boat: light skin tone" },
-            { value: "\u{1F6A3}\u{1F3FC}", desc: "person rowing boat: medium-light skin tone" },
-            { value: "\u{1F6A3}\u{1F3FD}", desc: "person rowing boat: medium skin tone" },
-            { value: "\u{1F6A3}\u{1F3FE}", desc: "person rowing boat: medium-dark skin tone" },
-            { value: "\u{1F6A3}\u{1F3FF}", desc: "person rowing boat: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F6A3}\u{200D}\u{2642}\u{FE0F}", desc: "man rowing boat", alt: [
-            { value: "\u{1F6A3}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man rowing boat: light skin tone" },
-            { value: "\u{1F6A3}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man rowing boat: medium-light skin tone" },
-            { value: "\u{1F6A3}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man rowing boat: medium skin tone" },
-            { value: "\u{1F6A3}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man rowing boat: medium-dark skin tone" },
-            { value: "\u{1F6A3}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man rowing boat: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F6A3}\u{200D}\u{2640}\u{FE0F}", desc: "woman rowing boat", alt: [
-            { value: "\u{1F6A3}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman rowing boat: light skin tone" },
-            { value: "\u{1F6A3}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman rowing boat: medium-light skin tone" },
-            { value: "\u{1F6A3}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman rowing boat: medium skin tone" },
-            { value: "\u{1F6A3}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman rowing boat: medium-dark skin tone" },
-            { value: "\u{1F6A3}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman rowing boat: dark skin tone" },
+            rower,
+            manRowing,
+            womanRowing,
         ]
     },
     {
         value: "\u{1F3CA}", desc: "person swimming", alt: [
-            { value: "\u{1F3CA}\u{1F3FB}", desc: "person swimming: light skin tone" },
-            { value: "\u{1F3CA}\u{1F3FC}", desc: "person swimming: medium-light skin tone" },
-            { value: "\u{1F3CA}\u{1F3FD}", desc: "person swimming: medium skin tone" },
-            { value: "\u{1F3CA}\u{1F3FE}", desc: "person swimming: medium-dark skin tone" },
-            { value: "\u{1F3CA}\u{1F3FF}", desc: "person swimming: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F3CA}\u{200D}\u{2642}\u{FE0F}", desc: "man swimming", alt: [
-            { value: "\u{1F3CA}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man swimming: light skin tone" },
-            { value: "\u{1F3CA}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man swimming: medium-light skin tone" },
-            { value: "\u{1F3CA}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man swimming: medium skin tone" },
-            { value: "\u{1F3CA}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man swimming: medium-dark skin tone" },
-            { value: "\u{1F3CA}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man swimming: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F3CA}\u{200D}\u{2640}\u{FE0F}", desc: "woman swimming", alt: [
-            { value: "\u{1F3CA}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman swimming: light skin tone" },
-            { value: "\u{1F3CA}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman swimming: medium-light skin tone" },
-            { value: "\u{1F3CA}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman swimming: medium skin tone" },
-            { value: "\u{1F3CA}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman swimming: medium-dark skin tone" },
-            { value: "\u{1F3CA}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman swimming: dark skin tone" },
+            swimmer,
+            manSwimming,
+            womanSwimming,
         ]
     },
     {
         value: "\u{26F9}\u{FE0F}", desc: "person bouncing ball", alt: [
-            { value: "\u{26F9}\u{1F3FB}", desc: "person bouncing ball: light skin tone" },
-            { value: "\u{26F9}\u{1F3FC}", desc: "person bouncing ball: medium-light skin tone" },
-            { value: "\u{26F9}\u{1F3FD}", desc: "person bouncing ball: medium skin tone" },
-            { value: "\u{26F9}\u{1F3FE}", desc: "person bouncing ball: medium-dark skin tone" },
-            { value: "\u{26F9}\u{1F3FF}", desc: "person bouncing ball: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{26F9}\u{FE0F}\u{200D}\u{2642}\u{FE0F}", desc: "man bouncing ball", alt: [
-            { value: "\u{26F9}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man bouncing ball: light skin tone" },
-            { value: "\u{26F9}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man bouncing ball: medium-light skin tone" },
-            { value: "\u{26F9}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man bouncing ball: medium skin tone" },
-            { value: "\u{26F9}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man bouncing ball: medium-dark skin tone" },
-            { value: "\u{26F9}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man bouncing ball: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{26F9}\u{FE0F}\u{200D}\u{2640}\u{FE0F}", desc: "woman bouncing ball", alt: [
-            { value: "\u{26F9}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman bouncing ball: light skin tone" },
-            { value: "\u{26F9}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman bouncing ball: medium-light skin tone" },
-            { value: "\u{26F9}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman bouncing ball: medium skin tone" },
-            { value: "\u{26F9}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman bouncing ball: medium-dark skin tone" },
-            { value: "\u{26F9}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman bouncing ball: dark skin tone" },
+            {
+                value: "\u{26F9}\u{FE0F}", desc: "person bouncing ball", alt: [
+                    { value: "\u{26F9}\u{1F3FB}", desc: "person bouncing ball: light skin tone" },
+                    { value: "\u{26F9}\u{1F3FC}", desc: "person bouncing ball: medium-light skin tone" },
+                    { value: "\u{26F9}\u{1F3FD}", desc: "person bouncing ball: medium skin tone" },
+                    { value: "\u{26F9}\u{1F3FE}", desc: "person bouncing ball: medium-dark skin tone" },
+                    { value: "\u{26F9}\u{1F3FF}", desc: "person bouncing ball: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{26F9}\u{FE0F}\u{200D}\u{2642}\u{FE0F}", desc: "man bouncing ball", alt: [
+                    { value: "\u{26F9}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man bouncing ball: light skin tone" },
+                    { value: "\u{26F9}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man bouncing ball: medium-light skin tone" },
+                    { value: "\u{26F9}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man bouncing ball: medium skin tone" },
+                    { value: "\u{26F9}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man bouncing ball: medium-dark skin tone" },
+                    { value: "\u{26F9}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man bouncing ball: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{26F9}\u{FE0F}\u{200D}\u{2640}\u{FE0F}", desc: "woman bouncing ball", alt: [
+                    { value: "\u{26F9}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman bouncing ball: light skin tone" },
+                    { value: "\u{26F9}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman bouncing ball: medium-light skin tone" },
+                    { value: "\u{26F9}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman bouncing ball: medium skin tone" },
+                    { value: "\u{26F9}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman bouncing ball: medium-dark skin tone" },
+                    { value: "\u{26F9}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman bouncing ball: dark skin tone" },
+                ]
+            },
         ]
     },
     {
         value: "\u{1F3CB}\u{FE0F}", desc: "person lifting weights", alt: [
-            { value: "\u{1F3CB}\u{1F3FB}", desc: "person lifting weights: light skin tone" },
-            { value: "\u{1F3CB}\u{1F3FC}", desc: "person lifting weights: medium-light skin tone" },
-            { value: "\u{1F3CB}\u{1F3FD}", desc: "person lifting weights: medium skin tone" },
-            { value: "\u{1F3CB}\u{1F3FE}", desc: "person lifting weights: medium-dark skin tone" },
-            { value: "\u{1F3CB}\u{1F3FF}", desc: "person lifting weights: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F3CB}\u{FE0F}\u{200D}\u{2642}\u{FE0F}", desc: "man lifting weights", alt: [
-            { value: "\u{1F3CB}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man lifting weights: light skin tone" },
-            { value: "\u{1F3CB}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man lifting weights: medium-light skin tone" },
-            { value: "\u{1F3CB}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man lifting weights: medium skin tone" },
-            { value: "\u{1F3CB}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man lifting weights: medium-dark skin tone" },
-            { value: "\u{1F3CB}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man lifting weights: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F3CB}\u{FE0F}\u{200D}\u{2640}\u{FE0F}", desc: "woman lifting weights", alt: [
-            { value: "\u{1F3CB}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman lifting weights: light skin tone" },
-            { value: "\u{1F3CB}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman lifting weights: medium-light skin tone" },
-            { value: "\u{1F3CB}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman lifting weights: medium skin tone" },
-            { value: "\u{1F3CB}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman lifting weights: medium-dark skin tone" },
-            { value: "\u{1F3CB}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman lifting weights: dark skin tone" },
+            {
+                value: "\u{1F3CB}\u{FE0F}", desc: "person lifting weights", alt: [
+                    { value: "\u{1F3CB}\u{1F3FB}", desc: "person lifting weights: light skin tone" },
+                    { value: "\u{1F3CB}\u{1F3FC}", desc: "person lifting weights: medium-light skin tone" },
+                    { value: "\u{1F3CB}\u{1F3FD}", desc: "person lifting weights: medium skin tone" },
+                    { value: "\u{1F3CB}\u{1F3FE}", desc: "person lifting weights: medium-dark skin tone" },
+                    { value: "\u{1F3CB}\u{1F3FF}", desc: "person lifting weights: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F3CB}\u{FE0F}\u{200D}\u{2642}\u{FE0F}", desc: "man lifting weights", alt: [
+                    { value: "\u{1F3CB}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man lifting weights: light skin tone" },
+                    { value: "\u{1F3CB}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man lifting weights: medium-light skin tone" },
+                    { value: "\u{1F3CB}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man lifting weights: medium skin tone" },
+                    { value: "\u{1F3CB}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man lifting weights: medium-dark skin tone" },
+                    { value: "\u{1F3CB}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man lifting weights: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F3CB}\u{FE0F}\u{200D}\u{2640}\u{FE0F}", desc: "woman lifting weights", alt: [
+                    { value: "\u{1F3CB}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman lifting weights: light skin tone" },
+                    { value: "\u{1F3CB}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman lifting weights: medium-light skin tone" },
+                    { value: "\u{1F3CB}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman lifting weights: medium skin tone" },
+                    { value: "\u{1F3CB}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman lifting weights: medium-dark skin tone" },
+                    { value: "\u{1F3CB}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman lifting weights: dark skin tone" },
+                ]
+            },
         ]
     },
     {
         value: "\u{1F6B4}", desc: "person biking", alt: [
-            { value: "\u{1F6B4}\u{1F3FB}", desc: "person biking: light skin tone" },
-            { value: "\u{1F6B4}\u{1F3FC}", desc: "person biking: medium-light skin tone" },
-            { value: "\u{1F6B4}\u{1F3FD}", desc: "person biking: medium skin tone" },
-            { value: "\u{1F6B4}\u{1F3FE}", desc: "person biking: medium-dark skin tone" },
-            { value: "\u{1F6B4}\u{1F3FF}", desc: "person biking: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F6B4}\u{200D}\u{2642}\u{FE0F}", desc: "man biking", alt: [
-            { value: "\u{1F6B4}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man biking: light skin tone" },
-            { value: "\u{1F6B4}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man biking: medium-light skin tone" },
-            { value: "\u{1F6B4}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man biking: medium skin tone" },
-            { value: "\u{1F6B4}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man biking: medium-dark skin tone" },
-            { value: "\u{1F6B4}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man biking: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F6B4}\u{200D}\u{2640}\u{FE0F}", desc: "woman biking", alt: [
-            { value: "\u{1F6B4}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman biking: light skin tone" },
-            { value: "\u{1F6B4}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman biking: medium-light skin tone" },
-            { value: "\u{1F6B4}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman biking: medium skin tone" },
-            { value: "\u{1F6B4}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman biking: medium-dark skin tone" },
-            { value: "\u{1F6B4}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman biking: dark skin tone" },
+            {
+                value: "\u{1F6B4}", desc: "person biking", alt: [
+                    { value: "\u{1F6B4}\u{1F3FB}", desc: "person biking: light skin tone" },
+                    { value: "\u{1F6B4}\u{1F3FC}", desc: "person biking: medium-light skin tone" },
+                    { value: "\u{1F6B4}\u{1F3FD}", desc: "person biking: medium skin tone" },
+                    { value: "\u{1F6B4}\u{1F3FE}", desc: "person biking: medium-dark skin tone" },
+                    { value: "\u{1F6B4}\u{1F3FF}", desc: "person biking: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F6B4}\u{200D}\u{2642}\u{FE0F}", desc: "man biking", alt: [
+                    { value: "\u{1F6B4}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man biking: light skin tone" },
+                    { value: "\u{1F6B4}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man biking: medium-light skin tone" },
+                    { value: "\u{1F6B4}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man biking: medium skin tone" },
+                    { value: "\u{1F6B4}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man biking: medium-dark skin tone" },
+                    { value: "\u{1F6B4}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man biking: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F6B4}\u{200D}\u{2640}\u{FE0F}", desc: "woman biking", alt: [
+                    { value: "\u{1F6B4}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman biking: light skin tone" },
+                    { value: "\u{1F6B4}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman biking: medium-light skin tone" },
+                    { value: "\u{1F6B4}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman biking: medium skin tone" },
+                    { value: "\u{1F6B4}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman biking: medium-dark skin tone" },
+                    { value: "\u{1F6B4}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman biking: dark skin tone" },
+                ]
+            },
         ]
     },
     {
         value: "\u{1F6B5}", desc: "person mountain biking", alt: [
-            { value: "\u{1F6B5}\u{1F3FB}", desc: "person mountain biking: light skin tone" },
-            { value: "\u{1F6B5}\u{1F3FC}", desc: "person mountain biking: medium-light skin tone" },
-            { value: "\u{1F6B5}\u{1F3FD}", desc: "person mountain biking: medium skin tone" },
-            { value: "\u{1F6B5}\u{1F3FE}", desc: "person mountain biking: medium-dark skin tone" },
-            { value: "\u{1F6B5}\u{1F3FF}", desc: "person mountain biking: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F6B5}\u{200D}\u{2642}\u{FE0F}", desc: "man mountain biking", alt: [
-            { value: "\u{1F6B5}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man mountain biking: light skin tone" },
-            { value: "\u{1F6B5}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man mountain biking: medium-light skin tone" },
-            { value: "\u{1F6B5}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man mountain biking: medium skin tone" },
-            { value: "\u{1F6B5}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man mountain biking: medium-dark skin tone" },
-            { value: "\u{1F6B5}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man mountain biking: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F6B5}\u{200D}\u{2640}\u{FE0F}", desc: "woman mountain biking", alt: [
-            { value: "\u{1F6B5}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman mountain biking: light skin tone" },
-            { value: "\u{1F6B5}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman mountain biking: medium-light skin tone" },
-            { value: "\u{1F6B5}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman mountain biking: medium skin tone" },
-            { value: "\u{1F6B5}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman mountain biking: medium-dark skin tone" },
-            { value: "\u{1F6B5}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman mountain biking: dark skin tone" },
+            {
+                value: "\u{1F6B5}", desc: "person mountain biking", alt: [
+                    { value: "\u{1F6B5}\u{1F3FB}", desc: "person mountain biking: light skin tone" },
+                    { value: "\u{1F6B5}\u{1F3FC}", desc: "person mountain biking: medium-light skin tone" },
+                    { value: "\u{1F6B5}\u{1F3FD}", desc: "person mountain biking: medium skin tone" },
+                    { value: "\u{1F6B5}\u{1F3FE}", desc: "person mountain biking: medium-dark skin tone" },
+                    { value: "\u{1F6B5}\u{1F3FF}", desc: "person mountain biking: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F6B5}\u{200D}\u{2642}\u{FE0F}", desc: "man mountain biking", alt: [
+                    { value: "\u{1F6B5}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man mountain biking: light skin tone" },
+                    { value: "\u{1F6B5}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man mountain biking: medium-light skin tone" },
+                    { value: "\u{1F6B5}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man mountain biking: medium skin tone" },
+                    { value: "\u{1F6B5}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man mountain biking: medium-dark skin tone" },
+                    { value: "\u{1F6B5}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man mountain biking: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F6B5}\u{200D}\u{2640}\u{FE0F}", desc: "woman mountain biking", alt: [
+                    { value: "\u{1F6B5}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman mountain biking: light skin tone" },
+                    { value: "\u{1F6B5}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman mountain biking: medium-light skin tone" },
+                    { value: "\u{1F6B5}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman mountain biking: medium skin tone" },
+                    { value: "\u{1F6B5}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman mountain biking: medium-dark skin tone" },
+                    { value: "\u{1F6B5}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman mountain biking: dark skin tone" },
+                ]
+            },
         ]
     },
     {
         value: "\u{1F938}", desc: "person cartwheeling", alt: [
-            { value: "\u{1F938}\u{1F3FB}", desc: "person cartwheeling: light skin tone" },
-            { value: "\u{1F938}\u{1F3FC}", desc: "person cartwheeling: medium-light skin tone" },
-            { value: "\u{1F938}\u{1F3FD}", desc: "person cartwheeling: medium skin tone" },
-            { value: "\u{1F938}\u{1F3FE}", desc: "person cartwheeling: medium-dark skin tone" },
-            { value: "\u{1F938}\u{1F3FF}", desc: "person cartwheeling: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F938}\u{200D}\u{2642}\u{FE0F}", desc: "man cartwheeling", alt: [
-            { value: "\u{1F938}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man cartwheeling: light skin tone" },
-            { value: "\u{1F938}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man cartwheeling: medium-light skin tone" },
-            { value: "\u{1F938}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man cartwheeling: medium skin tone" },
-            { value: "\u{1F938}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man cartwheeling: medium-dark skin tone" },
-            { value: "\u{1F938}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man cartwheeling: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F938}\u{200D}\u{2640}\u{FE0F}", desc: "woman cartwheeling", alt: [
-            { value: "\u{1F938}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman cartwheeling: light skin tone" },
-            { value: "\u{1F938}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman cartwheeling: medium-light skin tone" },
-            { value: "\u{1F938}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman cartwheeling: medium skin tone" },
-            { value: "\u{1F938}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman cartwheeling: medium-dark skin tone" },
-            { value: "\u{1F938}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman cartwheeling: dark skin tone" },
+            {
+                value: "\u{1F938}", desc: "person cartwheeling", alt: [
+                    { value: "\u{1F938}\u{1F3FB}", desc: "person cartwheeling: light skin tone" },
+                    { value: "\u{1F938}\u{1F3FC}", desc: "person cartwheeling: medium-light skin tone" },
+                    { value: "\u{1F938}\u{1F3FD}", desc: "person cartwheeling: medium skin tone" },
+                    { value: "\u{1F938}\u{1F3FE}", desc: "person cartwheeling: medium-dark skin tone" },
+                    { value: "\u{1F938}\u{1F3FF}", desc: "person cartwheeling: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F938}\u{200D}\u{2642}\u{FE0F}", desc: "man cartwheeling", alt: [
+                    { value: "\u{1F938}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man cartwheeling: light skin tone" },
+                    { value: "\u{1F938}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man cartwheeling: medium-light skin tone" },
+                    { value: "\u{1F938}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man cartwheeling: medium skin tone" },
+                    { value: "\u{1F938}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man cartwheeling: medium-dark skin tone" },
+                    { value: "\u{1F938}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man cartwheeling: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F938}\u{200D}\u{2640}\u{FE0F}", desc: "woman cartwheeling", alt: [
+                    { value: "\u{1F938}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman cartwheeling: light skin tone" },
+                    { value: "\u{1F938}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman cartwheeling: medium-light skin tone" },
+                    { value: "\u{1F938}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman cartwheeling: medium skin tone" },
+                    { value: "\u{1F938}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman cartwheeling: medium-dark skin tone" },
+                    { value: "\u{1F938}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman cartwheeling: dark skin tone" },
+                ]
+            },
         ]
     },
     {
@@ -1772,112 +1936,128 @@ export const people = [
     },
     {
         value: "\u{1F93D}", desc: "person playing water polo", alt: [
-            { value: "\u{1F93D}\u{1F3FB}", desc: "person playing water polo: light skin tone" },
-            { value: "\u{1F93D}\u{1F3FC}", desc: "person playing water polo: medium-light skin tone" },
-            { value: "\u{1F93D}\u{1F3FD}", desc: "person playing water polo: medium skin tone" },
-            { value: "\u{1F93D}\u{1F3FE}", desc: "person playing water polo: medium-dark skin tone" },
-            { value: "\u{1F93D}\u{1F3FF}", desc: "person playing water polo: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F93D}\u{200D}\u{2642}\u{FE0F}", desc: "man playing water polo", alt: [
-            { value: "\u{1F93D}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man playing water polo: light skin tone" },
-            { value: "\u{1F93D}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man playing water polo: medium-light skin tone" },
-            { value: "\u{1F93D}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man playing water polo: medium skin tone" },
-            { value: "\u{1F93D}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man playing water polo: medium-dark skin tone" },
-            { value: "\u{1F93D}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man playing water polo: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F93D}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing water polo", alt: [
-            { value: "\u{1F93D}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing water polo: light skin tone" },
-            { value: "\u{1F93D}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing water polo: medium-light skin tone" },
-            { value: "\u{1F93D}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing water polo: medium skin tone" },
-            { value: "\u{1F93D}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing water polo: medium-dark skin tone" },
-            { value: "\u{1F93D}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing water polo: dark skin tone" },
+            {
+                value: "\u{1F93D}", desc: "person playing water polo", alt: [
+                    { value: "\u{1F93D}\u{1F3FB}", desc: "person playing water polo: light skin tone" },
+                    { value: "\u{1F93D}\u{1F3FC}", desc: "person playing water polo: medium-light skin tone" },
+                    { value: "\u{1F93D}\u{1F3FD}", desc: "person playing water polo: medium skin tone" },
+                    { value: "\u{1F93D}\u{1F3FE}", desc: "person playing water polo: medium-dark skin tone" },
+                    { value: "\u{1F93D}\u{1F3FF}", desc: "person playing water polo: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F93D}\u{200D}\u{2642}\u{FE0F}", desc: "man playing water polo", alt: [
+                    { value: "\u{1F93D}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man playing water polo: light skin tone" },
+                    { value: "\u{1F93D}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man playing water polo: medium-light skin tone" },
+                    { value: "\u{1F93D}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man playing water polo: medium skin tone" },
+                    { value: "\u{1F93D}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man playing water polo: medium-dark skin tone" },
+                    { value: "\u{1F93D}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man playing water polo: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F93D}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing water polo", alt: [
+                    { value: "\u{1F93D}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing water polo: light skin tone" },
+                    { value: "\u{1F93D}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing water polo: medium-light skin tone" },
+                    { value: "\u{1F93D}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing water polo: medium skin tone" },
+                    { value: "\u{1F93D}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing water polo: medium-dark skin tone" },
+                    { value: "\u{1F93D}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing water polo: dark skin tone" },
+                ]
+            },
         ]
     },
     {
         value: "\u{1F93E}", desc: "person playing handball", alt: [
-            { value: "\u{1F93E}\u{1F3FB}", desc: "person playing handball: light skin tone" },
-            { value: "\u{1F93E}\u{1F3FC}", desc: "person playing handball: medium-light skin tone" },
-            { value: "\u{1F93E}\u{1F3FD}", desc: "person playing handball: medium skin tone" },
-            { value: "\u{1F93E}\u{1F3FE}", desc: "person playing handball: medium-dark skin tone" },
-            { value: "\u{1F93E}\u{1F3FF}", desc: "person playing handball: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F93E}\u{200D}\u{2642}\u{FE0F}", desc: "man playing handball", alt: [
-            { value: "\u{1F93E}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man playing handball: light skin tone" },
-            { value: "\u{1F93E}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man playing handball: medium-light skin tone" },
-            { value: "\u{1F93E}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man playing handball: medium skin tone" },
-            { value: "\u{1F93E}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man playing handball: medium-dark skin tone" },
-            { value: "\u{1F93E}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man playing handball: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F93E}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing handball", alt: [
-            { value: "\u{1F93E}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing handball: light skin tone" },
-            { value: "\u{1F93E}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing handball: medium-light skin tone" },
-            { value: "\u{1F93E}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing handball: medium skin tone" },
-            { value: "\u{1F93E}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing handball: medium-dark skin tone" },
-            { value: "\u{1F93E}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing handball: dark skin tone" },
+            {
+                value: "\u{1F93E}", desc: "person playing handball", alt: [
+                    { value: "\u{1F93E}\u{1F3FB}", desc: "person playing handball: light skin tone" },
+                    { value: "\u{1F93E}\u{1F3FC}", desc: "person playing handball: medium-light skin tone" },
+                    { value: "\u{1F93E}\u{1F3FD}", desc: "person playing handball: medium skin tone" },
+                    { value: "\u{1F93E}\u{1F3FE}", desc: "person playing handball: medium-dark skin tone" },
+                    { value: "\u{1F93E}\u{1F3FF}", desc: "person playing handball: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F93E}\u{200D}\u{2642}\u{FE0F}", desc: "man playing handball", alt: [
+                    { value: "\u{1F93E}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man playing handball: light skin tone" },
+                    { value: "\u{1F93E}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man playing handball: medium-light skin tone" },
+                    { value: "\u{1F93E}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man playing handball: medium skin tone" },
+                    { value: "\u{1F93E}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man playing handball: medium-dark skin tone" },
+                    { value: "\u{1F93E}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man playing handball: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F93E}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing handball", alt: [
+                    { value: "\u{1F93E}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing handball: light skin tone" },
+                    { value: "\u{1F93E}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing handball: medium-light skin tone" },
+                    { value: "\u{1F93E}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing handball: medium skin tone" },
+                    { value: "\u{1F93E}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing handball: medium-dark skin tone" },
+                    { value: "\u{1F93E}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman playing handball: dark skin tone" },
+                ]
+            },
         ]
     },
     {
         value: "\u{1F939}", desc: "person juggling", alt: [
-            { value: "\u{1F939}\u{1F3FB}", desc: "person juggling: light skin tone" },
-            { value: "\u{1F939}\u{1F3FC}", desc: "person juggling: medium-light skin tone" },
-            { value: "\u{1F939}\u{1F3FD}", desc: "person juggling: medium skin tone" },
-            { value: "\u{1F939}\u{1F3FE}", desc: "person juggling: medium-dark skin tone" },
-            { value: "\u{1F939}\u{1F3FF}", desc: "person juggling: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F939}\u{200D}\u{2642}\u{FE0F}", desc: "man juggling", alt: [
-            { value: "\u{1F939}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man juggling: light skin tone" },
-            { value: "\u{1F939}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man juggling: medium-light skin tone" },
-            { value: "\u{1F939}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man juggling: medium skin tone" },
-            { value: "\u{1F939}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man juggling: medium-dark skin tone" },
-            { value: "\u{1F939}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man juggling: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F939}\u{200D}\u{2640}\u{FE0F}", desc: "woman juggling", alt: [
-            { value: "\u{1F939}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman juggling: light skin tone" },
-            { value: "\u{1F939}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman juggling: medium-light skin tone" },
-            { value: "\u{1F939}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman juggling: medium skin tone" },
-            { value: "\u{1F939}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman juggling: medium-dark skin tone" },
-            { value: "\u{1F939}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman juggling: dark skin tone" },
+            {
+                value: "\u{1F939}", desc: "person juggling", alt: [
+                    { value: "\u{1F939}\u{1F3FB}", desc: "person juggling: light skin tone" },
+                    { value: "\u{1F939}\u{1F3FC}", desc: "person juggling: medium-light skin tone" },
+                    { value: "\u{1F939}\u{1F3FD}", desc: "person juggling: medium skin tone" },
+                    { value: "\u{1F939}\u{1F3FE}", desc: "person juggling: medium-dark skin tone" },
+                    { value: "\u{1F939}\u{1F3FF}", desc: "person juggling: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F939}\u{200D}\u{2642}\u{FE0F}", desc: "man juggling", alt: [
+                    { value: "\u{1F939}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man juggling: light skin tone" },
+                    { value: "\u{1F939}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man juggling: medium-light skin tone" },
+                    { value: "\u{1F939}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man juggling: medium skin tone" },
+                    { value: "\u{1F939}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man juggling: medium-dark skin tone" },
+                    { value: "\u{1F939}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man juggling: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F939}\u{200D}\u{2640}\u{FE0F}", desc: "woman juggling", alt: [
+                    { value: "\u{1F939}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman juggling: light skin tone" },
+                    { value: "\u{1F939}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman juggling: medium-light skin tone" },
+                    { value: "\u{1F939}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman juggling: medium skin tone" },
+                    { value: "\u{1F939}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman juggling: medium-dark skin tone" },
+                    { value: "\u{1F939}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman juggling: dark skin tone" },
+                ]
+            },
         ]
     },
 
     // person - resting
     {
         value: "\u{1F9D8}", desc: "person in lotus position", alt: [
-            { value: "\u{1F9D8}\u{1F3FB}", desc: "person in lotus position: light skin tone" },
-            { value: "\u{1F9D8}\u{1F3FC}", desc: "person in lotus position: medium-light skin tone" },
-            { value: "\u{1F9D8}\u{1F3FD}", desc: "person in lotus position: medium skin tone" },
-            { value: "\u{1F9D8}\u{1F3FE}", desc: "person in lotus position: medium-dark skin tone" },
-            { value: "\u{1F9D8}\u{1F3FF}", desc: "person in lotus position: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F9D8}\u{200D}\u{2642}\u{FE0F}", desc: "man in lotus position", alt: [
-            { value: "\u{1F9D8}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man in lotus position: light skin tone" },
-            { value: "\u{1F9D8}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man in lotus position: medium-light skin tone" },
-            { value: "\u{1F9D8}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man in lotus position: medium skin tone" },
-            { value: "\u{1F9D8}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man in lotus position: medium-dark skin tone" },
-            { value: "\u{1F9D8}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man in lotus position: dark skin tone" },
-        ]
-    },
-    {
-        value: "\u{1F9D8}\u{200D}\u{2640}\u{FE0F}", desc: "woman in lotus position", alt: [
-            { value: "\u{1F9D8}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman in lotus position: light skin tone" },
-            { value: "\u{1F9D8}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman in lotus position: medium-light skin tone" },
-            { value: "\u{1F9D8}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman in lotus position: medium skin tone" },
-            { value: "\u{1F9D8}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman in lotus position: medium-dark skin tone" },
-            { value: "\u{1F9D8}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman in lotus position: dark skin tone" },
+            {
+                value: "\u{1F9D8}", desc: "person in lotus position", alt: [
+                    { value: "\u{1F9D8}\u{1F3FB}", desc: "person in lotus position: light skin tone" },
+                    { value: "\u{1F9D8}\u{1F3FC}", desc: "person in lotus position: medium-light skin tone" },
+                    { value: "\u{1F9D8}\u{1F3FD}", desc: "person in lotus position: medium skin tone" },
+                    { value: "\u{1F9D8}\u{1F3FE}", desc: "person in lotus position: medium-dark skin tone" },
+                    { value: "\u{1F9D8}\u{1F3FF}", desc: "person in lotus position: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F9D8}\u{200D}\u{2642}\u{FE0F}", desc: "man in lotus position", alt: [
+                    { value: "\u{1F9D8}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man in lotus position: light skin tone" },
+                    { value: "\u{1F9D8}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man in lotus position: medium-light skin tone" },
+                    { value: "\u{1F9D8}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man in lotus position: medium skin tone" },
+                    { value: "\u{1F9D8}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man in lotus position: medium-dark skin tone" },
+                    { value: "\u{1F9D8}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man in lotus position: dark skin tone" },
+                ]
+            },
+            {
+                value: "\u{1F9D8}\u{200D}\u{2640}\u{FE0F}", desc: "woman in lotus position", alt: [
+                    { value: "\u{1F9D8}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman in lotus position: light skin tone" },
+                    { value: "\u{1F9D8}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman in lotus position: medium-light skin tone" },
+                    { value: "\u{1F9D8}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman in lotus position: medium skin tone" },
+                    { value: "\u{1F9D8}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman in lotus position: medium-dark skin tone" },
+                    { value: "\u{1F9D8}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman in lotus position: dark skin tone" },
+                ]
+            },
         ]
     },
     {
@@ -1910,125 +2090,129 @@ export function randomPerson() {
     return value;
 }
 
+const faces = [
+    { value: "\u{1F479}", desc: "Ogre" },
+    { value: "\u{1F47A}", desc: "Goblin" },
+    { value: "\u{1F47B}", desc: "Ghost" },
+    { value: "\u{1F47D}", desc: "Alien" },
+    { value: "\u{1F47E}", desc: "Alien Monster" },
+    { value: "\u{1F47F}", desc: "Angry Face with Horns" },
+    { value: "\u{1F480}", desc: "Skull" },
+    { value: "\u{1F4A9}", desc: "Pile of Poo" },
+    { value: "\u{1F600}", desc: "Grinning Face" },
+    { value: "\u{1F601}", desc: "Beaming Face with Smiling Eyes" },
+    { value: "\u{1F602}", desc: "Face with Tears of Joy" },
+    { value: "\u{1F603}", desc: "Grinning Face with Big Eyes" },
+    { value: "\u{1F604}", desc: "Grinning Face with Smiling Eyes" },
+    { value: "\u{1F605}", desc: "Grinning Face with Sweat" },
+    { value: "\u{1F606}", desc: "Grinning Squinting Face" },
+    { value: "\u{1F607}", desc: "Smiling Face with Halo" },
+    { value: "\u{1F608}", desc: "Smiling Face with Horns" },
+    { value: "\u{1F609}", desc: "Winking Face" },
+    { value: "\u{1F60A}", desc: "Smiling Face with Smiling Eyes" },
+    { value: "\u{1F60B}", desc: "Face Savoring Food" },
+    { value: "\u{1F60C}", desc: "Relieved Face" },
+    { value: "\u{1F60D}", desc: "Smiling Face with Heart-Eyes" },
+    { value: "\u{1F60E}", desc: "Smiling Face with Sunglasses" },
+    { value: "\u{1F60F}", desc: "Smirking Face" },
+    { value: "\u{1F610}", desc: "Neutral Face" },
+    { value: "\u{1F611}", desc: "Expressionless Face" },
+    { value: "\u{1F612}", desc: "Unamused Face" },
+    { value: "\u{1F613}", desc: "Downcast Face with Sweat" },
+    { value: "\u{1F614}", desc: "Pensive Face" },
+    { value: "\u{1F615}", desc: "Confused Face" },
+    { value: "\u{1F616}", desc: "Confounded Face" },
+    { value: "\u{1F617}", desc: "Kissing Face" },
+    { value: "\u{1F618}", desc: "Face Blowing a Kiss" },
+    { value: "\u{1F619}", desc: "Kissing Face with Smiling Eyes" },
+    { value: "\u{1F61A}", desc: "Kissing Face with Closed Eyes" },
+    { value: "\u{1F61B}", desc: "Face with Tongue" },
+    { value: "\u{1F61C}", desc: "Winking Face with Tongue" },
+    { value: "\u{1F61D}", desc: "Squinting Face with Tongue" },
+    { value: "\u{1F61E}", desc: "Disappointed Face" },
+    { value: "\u{1F61F}", desc: "Worried Face" },
+    { value: "\u{1F620}", desc: "Angry Face" },
+    { value: "\u{1F621}", desc: "Pouting Face" },
+    { value: "\u{1F622}", desc: "Crying Face" },
+    { value: "\u{1F623}", desc: "Persevering Face" },
+    { value: "\u{1F624}", desc: "Face with Steam From Nose" },
+    { value: "\u{1F625}", desc: "Sad but Relieved Face" },
+    { value: "\u{1F626}", desc: "Frowning Face with Open Mouth" },
+    { value: "\u{1F627}", desc: "Anguished Face" },
+    { value: "\u{1F628}", desc: "Fearful Face" },
+    { value: "\u{1F629}", desc: "Weary Face" },
+    { value: "\u{1F62A}", desc: "Sleepy Face" },
+    { value: "\u{1F62B}", desc: "Tired Face" },
+    { value: "\u{1F62C}", desc: "Grimacing Face" },
+    { value: "\u{1F62D}", desc: "Loudly Crying Face" },
+    { value: "\u{1F62E}", desc: "Face with Open Mouth" },
+    { value: "\u{1F62F}", desc: "Hushed Face" },
+    { value: "\u{1F630}", desc: "Anxious Face with Sweat" },
+    { value: "\u{1F631}", desc: "Face Screaming in Fear" },
+    { value: "\u{1F632}", desc: "Astonished Face" },
+    { value: "\u{1F633}", desc: "Flushed Face" },
+    { value: "\u{1F634}", desc: "Sleeping Face" },
+    { value: "\u{1F635}", desc: "Dizzy Face" },
+    { value: "\u{1F636}", desc: "Face Without Mouth" },
+    { value: "\u{1F637}", desc: "Face with Medical Mask" },
+    { value: "\u{1F638}", desc: "Grinning Cat with Smiling Eyes" },
+    { value: "\u{1F639}", desc: "Cat with Tears of Joy" },
+    { value: "\u{1F63A}", desc: "Grinning Cat" },
+    { value: "\u{1F63B}", desc: "Smiling Cat with Heart-Eyes" },
+    { value: "\u{1F63C}", desc: "Cat with Wry Smile" },
+    { value: "\u{1F63D}", desc: "Kissing Cat" },
+    { value: "\u{1F63E}", desc: "Pouting Cat" },
+    { value: "\u{1F63F}", desc: "Crying Cat" },
+    { value: "\u{1F640}", desc: "Weary Cat" },
+    { value: "\u{1F641}", desc: "Slightly Frowning Face" },
+    { value: "\u{1F642}", desc: "Slightly Smiling Face" },
+    { value: "\u{1F643}", desc: "Upside-Down Face" },
+    { value: "\u{1F644}", desc: "Face with Rolling Eyes" },
+    { value: "\u{1F648}", desc: "See-No-Evil Monkey" },
+    { value: "\u{1F649}", desc: "Hear-No-Evil Monkey" },
+    { value: "\u{1F64A}", desc: "Speak-No-Evil Monkey" },
+    { value: "\u{1F910}", desc: "Zipper-Mouth Face" },
+    { value: "\u{1F911}", desc: "Money-Mouth Face" },
+    { value: "\u{1F912}", desc: "Face with Thermometer" },
+    { value: "\u{1F913}", desc: "Nerd Face" },
+    { value: "\u{1F914}", desc: "Thinking Face" },
+    { value: "\u{1F915}", desc: "Face with Head-Bandage" },
+    { value: "\u{1F916}", desc: "Robot" },
+    { value: "\u{1F917}", desc: "Hugging Face" },
+    { value: "\u{1F920}", desc: "Cowboy Hat Face" },
+    { value: "\u{1F921}", desc: "Clown Face" },
+    { value: "\u{1F922}", desc: "Nauseated Face" },
+    { value: "\u{1F923}", desc: "Rolling on the Floor Laughing" },
+    { value: "\u{1F924}", desc: "Drooling Face" },
+    { value: "\u{1F925}", desc: "Lying Face" },
+    { value: "\u{1F927}", desc: "Sneezing Face" },
+    { value: "\u{1F928}", desc: "Face with Raised Eyebrow" },
+    { value: "\u{1F929}", desc: "Star-Struck" },
+    { value: "\u{1F92A}", desc: "Zany Face" },
+    { value: "\u{1F92B}", desc: "Shushing Face" },
+    { value: "\u{1F92C}", desc: "Face with Symbols on Mouth" },
+    { value: "\u{1F92D}", desc: "Face with Hand Over Mouth" },
+    { value: "\u{1F92E}", desc: "Face Vomiting" },
+    { value: "\u{1F92F}", desc: "Exploding Head" },
+    { value: "\u{1F970}", desc: "Smiling Face with Hearts" },
+    { value: "\u{1F971}", desc: "Yawning Face" },
+    { value: "\u{1F972}", desc: "Smiling Face with Tear" },
+    { value: "\u{1F973}", desc: "Partying Face" },
+    { value: "\u{1F974}", desc: "Woozy Face" },
+    { value: "\u{1F975}", desc: "Hot Face" },
+    { value: "\u{1F976}", desc: "Cold Face" },
+    { value: "\u{1F978}", desc: "Disguised Face" },
+    { value: "\u{1F97A}", desc: "Pleading Face" },
+    { value: "\u{1F9D0}", desc: "Face with Monocle" },
+    { value: "\u{2620}\u{FE0F}", desc: "Skull and Crossbones" },
+    { value: "\u{2639}\u{FE0F}", desc: "Frowning Face" },
+    { value: "\u{263A}\u{FE0F}", desc: "Smiling Face" },
+    speakingHead,
+    bust,
+];
+
 export const allIcons = {
-    faces: [
-        { value: "\u{1F479}", desc: "Ogre" },
-        { value: "\u{1F47A}", desc: "Goblin" },
-        { value: "\u{1F47B}", desc: "Ghost" },
-        { value: "\u{1F47D}", desc: "Alien" },
-        { value: "\u{1F47E}", desc: "Alien Monster" },
-        { value: "\u{1F47F}", desc: "Angry Face with Horns" },
-        { value: "\u{1F480}", desc: "Skull" },
-        { value: "\u{1F4A9}", desc: "Pile of Poo" },
-        { value: "\u{1F600}", desc: "Grinning Face" },
-        { value: "\u{1F601}", desc: "Beaming Face with Smiling Eyes" },
-        { value: "\u{1F602}", desc: "Face with Tears of Joy" },
-        { value: "\u{1F603}", desc: "Grinning Face with Big Eyes" },
-        { value: "\u{1F604}", desc: "Grinning Face with Smiling Eyes" },
-        { value: "\u{1F605}", desc: "Grinning Face with Sweat" },
-        { value: "\u{1F606}", desc: "Grinning Squinting Face" },
-        { value: "\u{1F607}", desc: "Smiling Face with Halo" },
-        { value: "\u{1F608}", desc: "Smiling Face with Horns" },
-        { value: "\u{1F609}", desc: "Winking Face" },
-        { value: "\u{1F60A}", desc: "Smiling Face with Smiling Eyes" },
-        { value: "\u{1F60B}", desc: "Face Savoring Food" },
-        { value: "\u{1F60C}", desc: "Relieved Face" },
-        { value: "\u{1F60D}", desc: "Smiling Face with Heart-Eyes" },
-        { value: "\u{1F60E}", desc: "Smiling Face with Sunglasses" },
-        { value: "\u{1F60F}", desc: "Smirking Face" },
-        { value: "\u{1F610}", desc: "Neutral Face" },
-        { value: "\u{1F611}", desc: "Expressionless Face" },
-        { value: "\u{1F612}", desc: "Unamused Face" },
-        { value: "\u{1F613}", desc: "Downcast Face with Sweat" },
-        { value: "\u{1F614}", desc: "Pensive Face" },
-        { value: "\u{1F615}", desc: "Confused Face" },
-        { value: "\u{1F616}", desc: "Confounded Face" },
-        { value: "\u{1F617}", desc: "Kissing Face" },
-        { value: "\u{1F618}", desc: "Face Blowing a Kiss" },
-        { value: "\u{1F619}", desc: "Kissing Face with Smiling Eyes" },
-        { value: "\u{1F61A}", desc: "Kissing Face with Closed Eyes" },
-        { value: "\u{1F61B}", desc: "Face with Tongue" },
-        { value: "\u{1F61C}", desc: "Winking Face with Tongue" },
-        { value: "\u{1F61D}", desc: "Squinting Face with Tongue" },
-        { value: "\u{1F61E}", desc: "Disappointed Face" },
-        { value: "\u{1F61F}", desc: "Worried Face" },
-        { value: "\u{1F620}", desc: "Angry Face" },
-        { value: "\u{1F621}", desc: "Pouting Face" },
-        { value: "\u{1F622}", desc: "Crying Face" },
-        { value: "\u{1F623}", desc: "Persevering Face" },
-        { value: "\u{1F624}", desc: "Face with Steam From Nose" },
-        { value: "\u{1F625}", desc: "Sad but Relieved Face" },
-        { value: "\u{1F626}", desc: "Frowning Face with Open Mouth" },
-        { value: "\u{1F627}", desc: "Anguished Face" },
-        { value: "\u{1F628}", desc: "Fearful Face" },
-        { value: "\u{1F629}", desc: "Weary Face" },
-        { value: "\u{1F62A}", desc: "Sleepy Face" },
-        { value: "\u{1F62B}", desc: "Tired Face" },
-        { value: "\u{1F62C}", desc: "Grimacing Face" },
-        { value: "\u{1F62D}", desc: "Loudly Crying Face" },
-        { value: "\u{1F62E}", desc: "Face with Open Mouth" },
-        { value: "\u{1F62F}", desc: "Hushed Face" },
-        { value: "\u{1F630}", desc: "Anxious Face with Sweat" },
-        { value: "\u{1F631}", desc: "Face Screaming in Fear" },
-        { value: "\u{1F632}", desc: "Astonished Face" },
-        { value: "\u{1F633}", desc: "Flushed Face" },
-        { value: "\u{1F634}", desc: "Sleeping Face" },
-        { value: "\u{1F635}", desc: "Dizzy Face" },
-        { value: "\u{1F636}", desc: "Face Without Mouth" },
-        { value: "\u{1F637}", desc: "Face with Medical Mask" },
-        { value: "\u{1F638}", desc: "Grinning Cat with Smiling Eyes" },
-        { value: "\u{1F639}", desc: "Cat with Tears of Joy" },
-        { value: "\u{1F63A}", desc: "Grinning Cat" },
-        { value: "\u{1F63B}", desc: "Smiling Cat with Heart-Eyes" },
-        { value: "\u{1F63C}", desc: "Cat with Wry Smile" },
-        { value: "\u{1F63D}", desc: "Kissing Cat" },
-        { value: "\u{1F63E}", desc: "Pouting Cat" },
-        { value: "\u{1F63F}", desc: "Crying Cat" },
-        { value: "\u{1F640}", desc: "Weary Cat" },
-        { value: "\u{1F641}", desc: "Slightly Frowning Face" },
-        { value: "\u{1F642}", desc: "Slightly Smiling Face" },
-        { value: "\u{1F643}", desc: "Upside-Down Face" },
-        { value: "\u{1F644}", desc: "Face with Rolling Eyes" },
-        { value: "\u{1F648}", desc: "See-No-Evil Monkey" },
-        { value: "\u{1F649}", desc: "Hear-No-Evil Monkey" },
-        { value: "\u{1F64A}", desc: "Speak-No-Evil Monkey" },
-        { value: "\u{1F910}", desc: "Zipper-Mouth Face" },
-        { value: "\u{1F911}", desc: "Money-Mouth Face" },
-        { value: "\u{1F912}", desc: "Face with Thermometer" },
-        { value: "\u{1F913}", desc: "Nerd Face" },
-        { value: "\u{1F914}", desc: "Thinking Face" },
-        { value: "\u{1F915}", desc: "Face with Head-Bandage" },
-        { value: "\u{1F916}", desc: "Robot" },
-        { value: "\u{1F917}", desc: "Hugging Face" },
-        { value: "\u{1F920}", desc: "Cowboy Hat Face" },
-        { value: "\u{1F921}", desc: "Clown Face" },
-        { value: "\u{1F922}", desc: "Nauseated Face" },
-        { value: "\u{1F923}", desc: "Rolling on the Floor Laughing" },
-        { value: "\u{1F924}", desc: "Drooling Face" },
-        { value: "\u{1F925}", desc: "Lying Face" },
-        { value: "\u{1F927}", desc: "Sneezing Face" },
-        { value: "\u{1F928}", desc: "Face with Raised Eyebrow" },
-        { value: "\u{1F929}", desc: "Star-Struck" },
-        { value: "\u{1F92A}", desc: "Zany Face" },
-        { value: "\u{1F92B}", desc: "Shushing Face" },
-        { value: "\u{1F92C}", desc: "Face with Symbols on Mouth" },
-        { value: "\u{1F92D}", desc: "Face with Hand Over Mouth" },
-        { value: "\u{1F92E}", desc: "Face Vomiting" },
-        { value: "\u{1F92F}", desc: "Exploding Head" },
-        { value: "\u{1F970}", desc: "Smiling Face with Hearts" },
-        { value: "\u{1F971}", desc: "Yawning Face" },
-        { value: "\u{1F972}", desc: "Smiling Face with Tear" },
-        { value: "\u{1F973}", desc: "Partying Face" },
-        { value: "\u{1F974}", desc: "Woozy Face" },
-        { value: "\u{1F975}", desc: "Hot Face" },
-        { value: "\u{1F976}", desc: "Cold Face" },
-        { value: "\u{1F978}", desc: "Disguised Face" },
-        { value: "\u{1F97A}", desc: "Pleading Face" },
-        { value: "\u{1F9D0}", desc: "Face with Monocle" },
-        { value: "\u{2620}\u{FE0F}", desc: "Skull and Crossbones" },
-        { value: "\u{2639}\u{FE0F}", desc: "Frowning Face" },
-        { value: "\u{263A}\u{FE0F}", desc: "Smiling Face" },
-    ],
+    faces,
 
     love: [
         { value: "\u{1F48B}", desc: "Kiss Mark" },
@@ -2972,20 +3156,7 @@ export const allIcons = {
         { value: "\u{26CE}", desc: "Ophiuchus" },
     ],
 
-    chess: [
-        { value: "\u{2654}", desc: "White Chess King" },
-        { value: "\u{2655}", desc: "White Chess Queen" },
-        { value: "\u{2656}", desc: "White Chess Rook" },
-        { value: "\u{2657}", desc: "White Chess Bishop" },
-        { value: "\u{2658}", desc: "White Chess Knight" },
-        { value: "\u{2659}", desc: "White Chess Pawn" },
-        { value: "\u{265A}", desc: "Black Chess King" },
-        { value: "\u{265B}", desc: "Black Chess Queen" },
-        { value: "\u{265C}", desc: "Black Chess Rook" },
-        { value: "\u{265D}", desc: "Black Chess Bishop" },
-        { value: "\u{265E}", desc: "Black Chess Knight" },
-        { value: "\u{265F}", desc: "Black Chess Pawn" },
-    ],
+    chess,
 
     numbers: [
         { value: "\u{30}\u{FE0F}", desc: "Digit Zero" },
@@ -3763,121 +3934,7 @@ export const allIcons = {
 };
 
 export const bestIcons = {
-    faces: [
-        { value: "\u{1F479}", desc: "Ogre" },
-        { value: "\u{1F47A}", desc: "Goblin" },
-        { value: "\u{1F47B}", desc: "Ghost" },
-        { value: "\u{1F47D}", desc: "Alien" },
-        { value: "\u{1F47E}", desc: "Alien Monster" },
-        { value: "\u{1F47F}", desc: "Angry Face with Horns" },
-        { value: "\u{1F480}", desc: "Skull" },
-        { value: "\u{1F4A9}", desc: "Pile of Poo" },
-        { value: "\u{1F600}", desc: "Grinning Face" },
-        { value: "\u{1F601}", desc: "Beaming Face with Smiling Eyes" },
-        { value: "\u{1F602}", desc: "Face with Tears of Joy" },
-        { value: "\u{1F603}", desc: "Grinning Face with Big Eyes" },
-        { value: "\u{1F604}", desc: "Grinning Face with Smiling Eyes" },
-        { value: "\u{1F605}", desc: "Grinning Face with Sweat" },
-        { value: "\u{1F606}", desc: "Grinning Squinting Face" },
-        { value: "\u{1F607}", desc: "Smiling Face with Halo" },
-        { value: "\u{1F608}", desc: "Smiling Face with Horns" },
-        { value: "\u{1F609}", desc: "Winking Face" },
-        { value: "\u{1F60A}", desc: "Smiling Face with Smiling Eyes" },
-        { value: "\u{1F60B}", desc: "Face Savoring Food" },
-        { value: "\u{1F60C}", desc: "Relieved Face" },
-        { value: "\u{1F60D}", desc: "Smiling Face with Heart-Eyes" },
-        { value: "\u{1F60E}", desc: "Smiling Face with Sunglasses" },
-        { value: "\u{1F60F}", desc: "Smirking Face" },
-        { value: "\u{1F610}", desc: "Neutral Face" },
-        { value: "\u{1F611}", desc: "Expressionless Face" },
-        { value: "\u{1F612}", desc: "Unamused Face" },
-        { value: "\u{1F613}", desc: "Downcast Face with Sweat" },
-        { value: "\u{1F614}", desc: "Pensive Face" },
-        { value: "\u{1F615}", desc: "Confused Face" },
-        { value: "\u{1F616}", desc: "Confounded Face" },
-        { value: "\u{1F617}", desc: "Kissing Face" },
-        { value: "\u{1F618}", desc: "Face Blowing a Kiss" },
-        { value: "\u{1F619}", desc: "Kissing Face with Smiling Eyes" },
-        { value: "\u{1F61A}", desc: "Kissing Face with Closed Eyes" },
-        { value: "\u{1F61B}", desc: "Face with Tongue" },
-        { value: "\u{1F61C}", desc: "Winking Face with Tongue" },
-        { value: "\u{1F61D}", desc: "Squinting Face with Tongue" },
-        { value: "\u{1F61E}", desc: "Disappointed Face" },
-        { value: "\u{1F61F}", desc: "Worried Face" },
-        { value: "\u{1F620}", desc: "Angry Face" },
-        { value: "\u{1F621}", desc: "Pouting Face" },
-        { value: "\u{1F622}", desc: "Crying Face" },
-        { value: "\u{1F623}", desc: "Persevering Face" },
-        { value: "\u{1F624}", desc: "Face with Steam From Nose" },
-        { value: "\u{1F625}", desc: "Sad but Relieved Face" },
-        { value: "\u{1F626}", desc: "Frowning Face with Open Mouth" },
-        { value: "\u{1F627}", desc: "Anguished Face" },
-        { value: "\u{1F628}", desc: "Fearful Face" },
-        { value: "\u{1F629}", desc: "Weary Face" },
-        { value: "\u{1F62A}", desc: "Sleepy Face" },
-        { value: "\u{1F62B}", desc: "Tired Face" },
-        { value: "\u{1F62C}", desc: "Grimacing Face" },
-        { value: "\u{1F62D}", desc: "Loudly Crying Face" },
-        { value: "\u{1F62E}", desc: "Face with Open Mouth" },
-        { value: "\u{1F62F}", desc: "Hushed Face" },
-        { value: "\u{1F630}", desc: "Anxious Face with Sweat" },
-        { value: "\u{1F631}", desc: "Face Screaming in Fear" },
-        { value: "\u{1F632}", desc: "Astonished Face" },
-        { value: "\u{1F633}", desc: "Flushed Face" },
-        { value: "\u{1F634}", desc: "Sleeping Face" },
-        { value: "\u{1F635}", desc: "Dizzy Face" },
-        { value: "\u{1F636}", desc: "Face Without Mouth" },
-        { value: "\u{1F637}", desc: "Face with Medical Mask" },
-        { value: "\u{1F638}", desc: "Grinning Cat with Smiling Eyes" },
-        { value: "\u{1F639}", desc: "Cat with Tears of Joy" },
-        { value: "\u{1F63A}", desc: "Grinning Cat" },
-        { value: "\u{1F63B}", desc: "Smiling Cat with Heart-Eyes" },
-        { value: "\u{1F63C}", desc: "Cat with Wry Smile" },
-        { value: "\u{1F63D}", desc: "Kissing Cat" },
-        { value: "\u{1F63E}", desc: "Pouting Cat" },
-        { value: "\u{1F63F}", desc: "Crying Cat" },
-        { value: "\u{1F640}", desc: "Weary Cat" },
-        { value: "\u{1F641}", desc: "Slightly Frowning Face" },
-        { value: "\u{1F642}", desc: "Slightly Smiling Face" },
-        { value: "\u{1F643}", desc: "Upside-Down Face" },
-        { value: "\u{1F644}", desc: "Face with Rolling Eyes" },
-        { value: "\u{1F648}", desc: "See-No-Evil Monkey" },
-        { value: "\u{1F649}", desc: "Hear-No-Evil Monkey" },
-        { value: "\u{1F64A}", desc: "Speak-No-Evil Monkey" },
-        { value: "\u{1F910}", desc: "Zipper-Mouth Face" },
-        { value: "\u{1F911}", desc: "Money-Mouth Face" },
-        { value: "\u{1F912}", desc: "Face with Thermometer" },
-        { value: "\u{1F913}", desc: "Nerd Face" },
-        { value: "\u{1F914}", desc: "Thinking Face" },
-        { value: "\u{1F915}", desc: "Face with Head-Bandage" },
-        { value: "\u{1F916}", desc: "Robot" },
-        { value: "\u{1F917}", desc: "Hugging Face" },
-        { value: "\u{1F920}", desc: "Cowboy Hat Face" },
-        { value: "\u{1F921}", desc: "Clown Face" },
-        { value: "\u{1F922}", desc: "Nauseated Face" },
-        { value: "\u{1F923}", desc: "Rolling on the Floor Laughing" },
-        { value: "\u{1F924}", desc: "Drooling Face" },
-        { value: "\u{1F925}", desc: "Lying Face" },
-        { value: "\u{1F927}", desc: "Sneezing Face" },
-        { value: "\u{1F928}", desc: "Face with Raised Eyebrow" },
-        { value: "\u{1F929}", desc: "Star-Struck" },
-        { value: "\u{1F92A}", desc: "Zany Face" },
-        { value: "\u{1F92B}", desc: "Shushing Face" },
-        { value: "\u{1F92C}", desc: "Face with Symbols on Mouth" },
-        { value: "\u{1F92D}", desc: "Face with Hand Over Mouth" },
-        { value: "\u{1F92E}", desc: "Face Vomiting" },
-        { value: "\u{1F92F}", desc: "Exploding Head" },
-        { value: "\u{1F970}", desc: "Smiling Face with Hearts" },
-        { value: "\u{1F971}", desc: "Yawning Face" },
-        { value: "\u{1F973}", desc: "Partying Face" },
-        { value: "\u{1F974}", desc: "Woozy Face" },
-        { value: "\u{1F975}", desc: "Hot Face" },
-        { value: "\u{1F976}", desc: "Cold Face" },
-        { value: "\u{1F97A}", desc: "Pleading Face" },
-        { value: "\u{1F9D0}", desc: "Face with Monocle" },
-        { value: "\u{2620}\u{FE0F}", desc: "Skull and Crossbones" },
-        { value: "\u{2639}\u{FE0F}", desc: "Frowning Face" },
-    ],
+    faces,
 
     people,
 
@@ -4210,6 +4267,8 @@ export const bestIcons = {
         { value: "\u{1F9CA}", desc: "Ice" },
         { value: "\u{2615}", desc: "Hot Beverage" },
     ],
+
+    chess,
 
     other: [
         { value: "\u{1F38C}", desc: "Crossed Flags" },
