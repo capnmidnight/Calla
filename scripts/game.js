@@ -73,7 +73,8 @@ export class Game extends EventTarget {
                 && !evt.altKey
                 && !evt.shiftKey
                 && !evt.metaKey
-                && evt.key === this.keyToggleAudio) {
+                && evt.key === this.keyToggleAudio
+                && !!this.me) {
                 this.gui.setUserAudioMuted(!this.me.audioMuted);
                 this.jitsiClient.toggleAudio();
             }
