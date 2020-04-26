@@ -85,6 +85,7 @@ label {
 
         #emoji > .content button {
             font-size: 200%;
+            width: 2em;
         }
 
 #options {
