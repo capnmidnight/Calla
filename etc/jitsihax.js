@@ -18,7 +18,8 @@
     const FRONT_END_SERVER = "https://meet.primrosevr.com",
         ALT_FRONT_END_SERVER = "https://www.calla.chat",
         ALLOW_LOCAL_HOST = true,
-        BUFFER_SIZE = 1024;
+        BUFFER_SIZE = 1024,
+        isOldAudioAPI = !AudioListener.prototype.hasOwnProperty("positionX");
 
     // The rest is just implementation.
 
@@ -27,15 +28,22 @@
             audioContext = new AudioContext();
             const time = audioContext.currentTime,
                 listener = audioContext.listener;
-            listener.positionX.setValueAtTime(0, time);
-            listener.positionY.setValueAtTime(0, time);
-            listener.positionZ.setValueAtTime(0, time);
-            listener.forwardX.setValueAtTime(0, time);
-            listener.forwardY.setValueAtTime(0, time);
-            listener.forwardZ.setValueAtTime(-1, time);
-            listener.upX.setValueAtTime(0, time);
-            listener.upY.setValueAtTime(1, time);
-            listener.upZ.setValueAtTime(0, time);
+
+            if (isOldAudioAPI) {
+                listener.setPosition(0, 0, 0);
+                listener.setOrientation(0, 0, -1, 0, 1, 0);
+            }
+            else {
+                listener.positionX.setValueAtTime(0, time);
+                listener.positionY.setValueAtTime(0, time);
+                listener.positionZ.setValueAtTime(0, time);
+                listener.forwardX.setValueAtTime(0, time);
+                listener.forwardY.setValueAtTime(0, time);
+                listener.forwardZ.setValueAtTime(-1, time);
+                listener.upX.setValueAtTime(0, time);
+                listener.upY.setValueAtTime(1, time);
+                listener.upZ.setValueAtTime(0, time);
+            }
             requestAnimationFrame(updater);
             window.audioContext = audioContext;
         }
@@ -63,10 +71,12 @@
 
             this.panner.panningModel = "HRTF";
             this.panner.distanceModel = "inverse";
-            this.panner.rolloffFactor = 1;
+            this.panner.refDistance = minDistance;
+            this.panner.rolloffFactor = rolloff;
             this.panner.coneInnerAngle = 360;
             this.panner.coneOuterAngle = 0;
             this.panner.coneOuterGain = 0;
+
             this.panner.positionY.setValueAtTime(0, audioContext.currentTime);
 
             this.analyser.fftSize = 2 * BUFFER_SIZE;
@@ -84,18 +94,21 @@
             // along the horizontal plane is X/Z coords.
             this.panner.positionX.linearRampToValueAtTime(evt.data.x, time);
             this.panner.positionZ.linearRampToValueAtTime(evt.data.y, time);
-            this.panner.refDistance = minDistance;
-            this.panner.rolloffFactor = rolloff;
+        }
+
+        isAudible() {
+            const lx = isOldAudioAPI ? listenerX : audioContext.listener.positionX.value,
+                ly = isOldAudioAPI ? listenerY : audioContext.listener.positionZ.value,
+                distX = this.panner.positionX.value - lx,
+                distZ = this.panner.positionZ.value - ly,
+                dist = Math.sqrt(distX * distX + distZ * distZ),
+                range = clamp(project(dist, minDistance, maxDistance), 0, 1);
+
+            return range < 1;
         }
 
         update() {
-            const listener = audioContext.listener,
-                distX = this.panner.positionX.value - listener.positionX.value,
-                distZ = this.panner.positionZ.value - listener.positionZ.value,
-                dist = Math.sqrt(distX * distX + distZ * distZ),
-                range = clamp(project(dist, minDistance, maxDistance), 0, 1),
-                audible = range < 1;
-
+            const audible = this.isAudible();
             if (audible !== this.lastAudible) {
                 this.lastAudible = audible;
                 if (audible) {
@@ -146,6 +159,22 @@
 
     function updater() {
         requestAnimationFrame(updater);
+
+        if (isOldAudioAPI) {
+            const time = audioContext.currentTime,
+                p = project(time, startMoveTime, endMoveTime);
+
+            if (p <= 1) {
+                const deltaX = targetListenerX - startListenerX,
+                    deltaY = targetListenerY - startListenerY;
+
+                listenerX = startListenerX + p * deltaX;
+                listenerY = startListenerY + p * deltaY;
+
+                audioContext.listener.setPosition(listenerX, 0, listenerY);
+            }
+        }
+
         for (let user of userList) {
             user.update();
         }
@@ -190,8 +219,18 @@
         ensureContext();
         const time = audioContext.currentTime + transitionTime,
             listener = audioContext.listener;
-        listener.positionX.linearRampToValueAtTime(evt.x, time);
-        listener.positionZ.linearRampToValueAtTime(evt.y, time);
+        if (isOldAudioAPI) {
+            startMoveTime = audioContext.currentTime;
+            endMoveTime = time;
+            startListenerX = listenerX;
+            startListenerY = listenerY;
+            targetListenerX = evt.x;
+            targetListenerY = evt.y;
+        }
+        else {
+            listener.positionX.linearRampToValueAtTime(evt.x, time);
+            listener.positionZ.linearRampToValueAtTime(evt.y, time);
+        }
     }
 
     function setAudioProperties(evt) {
@@ -202,6 +241,10 @@
         rolloff = evt.rolloff;
 
         ensureContext();
+        for (let user of userList) {
+            user.panner.refDistance = minDistance;
+            user.panner.rolloffFactor = rolloff;
+        }
     }
 
     function txJitsiHax(command, obj) {
@@ -255,7 +298,15 @@
         maxDistance = 10,
         rolloff = 5,
         transitionTime = 0.125,
-        origin = null;
+        origin = null,
+        startMoveTime = 0,
+        endMoveTime = 0,
+        startListenerX = 0,
+        startListenerY = 0,
+        targetListenerX = 0,
+        targetListenerY = 0,
+        listenerX = 0,
+        listenerY = 0;
 
     addEventListener("message", rxJitsiHax);
 })();
