@@ -83,6 +83,12 @@ label {
         overflow-y: scroll;
     }
 
+    #emoji > .content > h1 > a{
+        text-decoration: none;
+        color: black;
+        text-transform: capitalize;
+    }
+
         #emoji > .content button {
             font-size: 200%;
             width: 2em;

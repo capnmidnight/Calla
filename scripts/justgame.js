@@ -5,7 +5,7 @@
 import "./protos.js";
 import { JitsiClient } from "./jitsihax-client.js";
 import { Game } from "./game.js";
-import { randomPerson, bestIcons } from "./emoji.js";
+import { randomPerson, allIcons as icons } from "./emoji.js";
 import "../etc/jitsihax.js";
 
 class MockJitsiClient extends JitsiClient {
@@ -194,7 +194,7 @@ class MockUser {
         jitsiClient.mockRxGameData("moveTo", this.id, { command: "moveTo", x, y });
 
         if (Math.random() <= 0.1) {
-            const groups = Object.values(bestIcons),
+            const groups = Object.values(icons),
                 group = groups.random(),
                 emoji = group.random();
             jitsiClient.mockRxGameData("emote", this.id, emoji);

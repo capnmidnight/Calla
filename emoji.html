@@ -7,8 +7,10 @@
         import { EmojiForm } from "./scripts/emojiForm.js";
         window.emoji = new EmojiForm(document.querySelector("#emoji"));
         (async function () {
-            const emote = await emoji.selectAsync();
-            console.log(emote);
+            while (true) {
+                const emote = await emoji.selectAsync();
+                console.log(emote);
+            }
         })();
     </script>
 </head>

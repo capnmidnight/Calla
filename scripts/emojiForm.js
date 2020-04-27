@@ -1,5 +1,5 @@
 ﻿import "./protos.js";
-import { bestIcons } from "./emoji.js";
+import { allIcons as icons } from "./emoji.js";
 
 export class EmojiForm extends EventTarget {
     constructor(emojiView) {
@@ -33,9 +33,18 @@ export class EmojiForm extends EventTarget {
                 btn.title = icon.desc;
                 btn.innerHTML = icon.value;
                 btn.addEventListener("click", (evt) => {
-                    selectedEmoji = icon;
-                    emojiPreview.innerHTML = `${icon.value} - ${icon.desc}`;
+                    const emoji = !selectedEmoji
+                        ? icon
+                        : !evt.ctrlKey
+                            ? icon
+                            : {
+                                value: selectedEmoji.value + icon.value,
+                                desc: selectedEmoji.desc + "/" + icon.desc
+                            };
+                    selectedEmoji = emoji;
+                    emojiPreview.innerHTML = `${emoji.value} - ${emoji.desc}`;
                     confirmEmojiButton.unlock();
+
                     if (!!alts) {
                         alts.toggleOpen();
                         btn.innerHTML = icon.value + (alts.isOpen() ? "-" : "+");
@@ -70,9 +79,41 @@ export class EmojiForm extends EventTarget {
                     btn.innerHTML += "+";
                 }
 
+                if (!!icon.width) {
+                    btn.style.width = icon.width;
+                }
+
+                if (!!icon.color) {
+                    btn.style.color = icon.color;
+                }
+
                 container.appendChild(g);
             }
         };
+
+        for (let key of Object.keys(icons)) {
+            const header = document.createElement("h1"),
+                headerButton = document.createElement("a"),
+                container = document.createElement("p"),
+                group = icons[key];
+
+            headerButton.href = "javascript:undefined;";
+            headerButton.innerHTML = key + " -";
+            headerButton.title = key;
+
+            addIconsToContainer(group, container);
+            header.appendChild(headerButton);
+            emojiContainer.appendChild(header);
+            emojiContainer.appendChild(container);
+
+            headerButton.addEventListener("click", (evt) => {
+                container.toggleOpen();
+                headerButton.innerHTML = key + (container.isOpen() ? " -" : " +");
+            });
+        }
+
+        confirmEmojiButton.lock();
+        emojiView.hide();
 
         confirmEmojiButton.addEventListener("click", () => {
             const idx = previousEmoji.indexOf(selectedEmoji);
@@ -126,21 +167,6 @@ export class EmojiForm extends EventTarget {
                 emojiView.show();
             });
         };
-
-        for (let key of Object.keys(bestIcons)) {
-            const header = document.createElement("h1"),
-                container = document.createElement("p"),
-                group = bestIcons[key];
-
-            header.innerHTML = key;
-            addIconsToContainer(group, container);
-
-            emojiContainer.appendChild(header);
-            emojiContainer.appendChild(container);
-        }
-
-        confirmEmojiButton.lock();
-        emojiView.hide();
     }
 }
 
