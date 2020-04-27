@@ -2846,6 +2846,8 @@ const faces = [
     bust,
 ];
 
+export const emojiStyle = { value: "\u{FE0F}", desc: "Variation Selector-16: emoji style" };
+export const textStyle = { value: "\u{FE0E}", desc: "Variation Selector-15: text style" };
 export const allIcons = {
     faces,
 
@@ -4568,8 +4570,8 @@ export const allIcons = {
     ],
 
     combiners: [
-        { value: "\u{FE0E}", desc: "Variation Selector-15: text style" },
-        { value: "\u{FE0F}", desc: "Variation Selector-16: emoji style" },
+        textStyle,
+        emojiStyle,
         { value: "\u{200D}", desc: "Zero Width Joiner" },
         { value: "\u{20E3}", desc: "Combining Enclosing Keycap" },
     ],

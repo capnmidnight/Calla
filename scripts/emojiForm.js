@@ -1,5 +1,9 @@
 ﻿import "./protos.js";
-import { allIcons as icons } from "./emoji.js";
+import {
+    allIcons as icons,
+    emojiStyle,
+    textStyle
+} from "./emoji.js";
 
 export class EmojiForm extends EventTarget {
     constructor(emojiView) {
@@ -23,6 +27,18 @@ export class EmojiForm extends EventTarget {
             }
         }
 
+        function combine(a, b) {
+            let left = a.value;
+            const idx = left.indexOf(emojiStyle.value);
+            if (idx >= 0) {
+                left = left.substring(0, idx);
+            }
+            return {
+                value: left + b.value,
+                desc: a.desc + "/" + b.desc
+            };
+        }
+
         const addIconsToContainer = (group, container, isAlts) => {
             for (let icon of group) {
                 const g = document.createElement(isAlts ? "ul" : "span"),
@@ -33,16 +49,10 @@ export class EmojiForm extends EventTarget {
                 btn.title = icon.desc;
                 btn.innerHTML = icon.value;
                 btn.addEventListener("click", (evt) => {
-                    const emoji = !selectedEmoji
-                        ? icon
-                        : !evt.ctrlKey
-                            ? icon
-                            : {
-                                value: selectedEmoji.value + icon.value,
-                                desc: selectedEmoji.desc + "/" + icon.desc
-                            };
-                    selectedEmoji = emoji;
-                    emojiPreview.innerHTML = `${emoji.value} - ${emoji.desc}`;
+                    selectedEmoji = selectedEmoji && evt.ctrlKey
+                        ? combine(selectedEmoji, icon)
+                        : icon;
+                    emojiPreview.innerHTML = `${selectedEmoji.value} - ${selectedEmoji.desc}`;
                     confirmEmojiButton.unlock();
 
                     if (!!alts) {
