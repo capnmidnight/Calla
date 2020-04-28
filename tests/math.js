@@ -1,4 +1,5 @@
-﻿import { TestCase } from "../etc/assert.js";
+﻿import "../scripts/protos.js";
+import { TestCase } from "../etc/assert.js";
 import { lerp } from "../scripts/math.js";
 
 export class MathTests extends TestCase {
@@ -109,5 +110,11 @@ export class MathTests extends TestCase {
             expected = 1.1;
 
         this.isEqualTo(actual, expected);
+    }
+
+    async test_Mouse() {
+        this.message("Move the mouse");
+        const evt = await window.getEventValue("mousemove");
+        this.hasValue(evt);
     }
 }

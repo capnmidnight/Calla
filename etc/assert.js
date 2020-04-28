@@ -108,8 +108,6 @@ export class HtmlTestOutput extends TestOutput {
         super(...CaseClasses);
 
         const draw = (evt) => {
-            console.table(evt.stats);
-
             const table = document.createElement("table"),
                 tbody = document.createElement("tbody"),
                 progRow = document.createElement("tr"),
@@ -347,6 +345,10 @@ class TestRunner extends EventTarget {
         const testCase = new CaseClass(),
             func = testCase[funcName],
             score = results[className][funcName],
+            onMessage = (evt) => {
+                score.message = evt.message;
+                onUpdate();
+            },
             onSuccess = (evt) => {
                 score.success(evt.message);
                 onUpdate();
@@ -355,6 +357,7 @@ class TestRunner extends EventTarget {
                 score.fail(evt.message);
                 onUpdate();
             };
+        testCase.addEventListener("testcasemessage", onMessage);
         testCase.addEventListener("testcasesuccess", onSuccess);
         testCase.addEventListener("testcasefail", onFailure);
         try {
@@ -374,6 +377,7 @@ class TestRunner extends EventTarget {
         }
         testCase.removeEventListener("testcasefail", onFailure);
         testCase.removeEventListener("testcasesuccess", onSuccess);
+        testCase.removeEventListener("testcasemessage", onMessage);
         onUpdate();
     }
 
@@ -386,6 +390,13 @@ class TestRunner extends EventTarget {
 
     testNames(TestClass) {
         return Object.getOwnPropertyNames(TestClass);
+    }
+}
+
+class TestCaseMessageEvent extends Event {
+    constructor(message) {
+        super("testcasemessage");
+        this.message = message;
     }
 }
 
@@ -407,14 +418,19 @@ export class TestCase extends EventTarget {
     setup() { }
     teardown() { }
 
-    success(message) {
-        message = message || "Success";
-        this.dispatchEvent(new TestCaseSuccessEvent(message));
+    message(msg) {
+        msg = msg || "N/A";
+        this.dispatchEvent(new TestCaseMessageEvent(msg));
     }
 
-    fail(message) {
-        message = message || "Fail";
-        this.dispatchEvent(new TestCaseFailEvent(message));
+    success(msg) {
+        msg = msg || "Success";
+        this.dispatchEvent(new TestCaseSuccessEvent(msg));
+    }
+
+    fail(msg) {
+        msg = msg || "Fail";
+        this.dispatchEvent(new TestCaseFailEvent(msg));
     }
 
     isEqualTo(actual, expected, message) {
@@ -425,8 +441,16 @@ export class TestCase extends EventTarget {
         this.isEqualTo(value, null, message);
     }
 
+    isNotNull(value, message) {
+        this.isNotEqualTo(value, null, message);
+    }
+
     isUndefined(value, message) {
         this.isEqualTo(value, undefined, message);
+    }
+
+    isNotUndefined(value, message) {
+        this.isNotEqualTo(value, undefined, message);
     }
 
     isTrue(value, message) {
@@ -437,7 +461,13 @@ export class TestCase extends EventTarget {
         this.isEqualTo(value, false, message);
     }
 
+    hasValue(value, message) {
+        message = message || `${value} is a value`;
+        this.isFalse(value === null || value === undefined, message);
+    }
+
     isEmpty(value, message) {
+        message = message || `${value} is empty`;
         this.isEqualTo(value.length, 0, message);
     }
 
@@ -472,10 +502,9 @@ export class TestCase extends EventTarget {
 
     _twoValueTest(actual, op, expected, testFunc, message) {
         const testValue = testFunc(actual, expected),
-            testString = testValue ? "Success!" : "Fail!",
-            testMessage = `Expect ${actual} ${op} ${expected} -> ${testString}`;
+            testString = testValue ? "yes" : "no";
 
-        message = ((message && message + ". ") || "") + testMessage;
+        message = message || `[Actual: ${actual}] ${op} [Expected: ${expected}] (${testString})`;
 
         if (testValue) {
             this.success(message);

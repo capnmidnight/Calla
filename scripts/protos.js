@@ -122,3 +122,55 @@ Storage.prototype.getInt = function (name, defaultValue) {
 
     return n;
 };
+
+function add(a, b) {
+    return evt => {
+        a(evt);
+        b(evt);
+    };
+}
+
+EventTarget.prototype.once = function (event, func) {
+    const handler = (evt) => {
+        this.removeEventListener(event, handler);
+        func(evt);
+    };
+    this.addEventListener(event, handler);
+};
+
+EventTarget.prototype.getEventValue = function (resolveEvt, rejectEvt, timeout) {
+    return new Promise((resolve, reject) => {
+        const hasResolveEvt = resolveEvt !== undefined && resolveEvt !== null,
+            removeResolve = () => {
+                if (hasResolveEvt) {
+                    this.removeEventListener(resolveEvt, resolve);
+                }
+            },
+            hasRejectEvt = rejectEvt !== undefined && rejectEvt !== null,
+            removeReject = () => {
+                if (hasRejectEvt) {
+                    this.removeEventListener(rejectEvt, reject);
+                }
+            },
+            remove = add(removeResolve, removeReject);
+
+        resolve = add(remove, resolve);
+        reject = add(remove, reject);
+
+        if (timeout !== undefined
+            && timeout !== null) {
+            const timer = setTimeout(reject, timeout),
+                cancel = () => clearTimeout(timer);
+            resolve = add(cancel, resolve);
+            reject = add(cancel, reject);
+        }
+
+        if (hasResolveEvt) {   
+            this.addEventListener(resolveEvt, resolve);
+        }
+
+        if (hasRejectEvt) {
+            this.addEventListener(rejectEvt, reject);
+        }
+    });
+};
