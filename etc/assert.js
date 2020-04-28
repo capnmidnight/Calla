@@ -1,90 +1,55 @@
-﻿class TestOutput extends EventTarget {
-    constructor(TestRunnerClass, ...CaseClasses) {
-        super();
+﻿class TestOutputResultsEvent extends Event {
+    constructor(table, stats) {
+        super("testoutputresults");
+        this.table = table;
+        this.stats = stats;
+    }
+}
 
-        this.testRunner = new TestRunnerClass(...CaseClasses);
-        this.testRunner.addEventListener("resultsupdated", (evt) => {
-            const table = {};
+class TestOutput extends EventTarget {
+    constructor(...CaseClasses) {
+        super();
+        this.CaseClasses = CaseClasses;
+    }
+
+    async run(className, testName) {
+        const testRunner = new TestRunner(...this.CaseClasses);
+
+        testRunner.addEventListener("testrunneresults", (evt) => {
+            const table = evt.results;
             let totalFound = 0,
                 totalRan = 0,
                 totalCompleted = 0,
                 totalIncomplete = 0,
                 totalSucceeded = 0,
                 totalFailed = 0;
-            for (let name of evt.results.found) {
-                ++totalFound;
-                const parts = name.split("::"),
-                    className = parts[0],
-                    testName = parts[1];
-                if (!table[className]) {
-                    table[className] = {};
-                }
 
-                if (!table[className][testName]) {
-                    table[className][testName] = {
-                        started: false,
-                        completed: false,
-                        completedValue: null,
-                        incomplete: false,
-                        incompleteValue: null,
-                        succeeded: false,
-                        successMessage: null,
-                        failed: false,
-                        failedMessage: false
+            for (let testCaseName in table) {
+                const testCase = table[testCaseName];
+                for (let testName in testCase) {
+                    const test = testCase[testName];
+                    ++totalFound;
+
+                    if (test.state & TestState.started) {
+                        ++totalRan;
+                    }
+
+                    if (test.state & TestState.completed) {
+                        ++totalCompleted;
+                    }
+
+                    if (test.state & TestState.incomplete) {
+                        ++totalIncomplete;
+                    }
+
+                    if (test.state & TestState.succeeded) {
+                        ++totalSucceeded;
+                    }
+
+                    if (test.state & TestState.failed) {
+                        ++totalFailed;
                     }
                 }
-            }
-
-            for (let name of evt.results.started) {
-                ++totalRan;
-                const parts = name.split("::"),
-                    className = parts[0],
-                    testName = parts[1];
-                table[className][testName].started = true;
-            }
-
-            for (let event of evt.results.succeeded) {
-                ++totalSucceeded;
-                const name = event.name,
-                    parts = name.split("::"),
-                    className = parts[0],
-                    testName = parts[1],
-                    message = event.message;
-                table[className][testName].succeeded = true;
-                table[className][testName].successMessage = message;
-            }
-
-            for (let event of evt.results.failed) {
-                ++totalFailed;
-                const name = event.name,
-                    parts = name.split("::"),
-                    className = parts[0],
-                    testName = parts[1],
-                    message = event.message;
-                table[className][testName].failed = true;
-                table[className][testName].failedMessage = message;
-            }
-
-            for (let event of evt.results.completed) {
-                ++totalCompleted;
-                const name = event.name,
-                    parts = name.split("::"),
-                    className = parts[0],
-                    testName = parts[1],
-                    value = event.value;
-                table[className][testName].completed = true;
-                table[className][testName].completedValue = value;
-            }
-
-            for (let event of evt.results.incomplete) {
-                ++totalIncomplete;
-                const name = event.name,
-                    parts = name.split("::"),
-                    className = parts[0],
-                    testName = parts[1],
-                    error = event.error;
-                table[className][testName].incomplete = true;
-                table[className][testName].incompleteValue = error;
             }
 
             const stats = {
@@ -96,31 +61,21 @@
                 totalFailed
             };
 
-            this.dispatchEvent(new OutputResultsEvent(table, stats));
+            this.dispatchEvent(new TestOutputResultsEvent(table, stats));
         });
-    }
 
-    async run(className, testName) {
-        this.testRunner.run(className, testName);
-    }
-}
-
-class OutputResultsEvent extends Event {
-    constructor(table, stats) {
-        super("outputresultsupdated");
-        this.table = table;
-        this.stats = stats;
+        testRunner.run(className, testName);
     }
 }
 
 export class ConsoleTestOutput extends TestOutput {
     constructor(TestRunnerClass, ...CaseClasses) {
         super(TestRunnerClass, ...CaseClasses);
-        this.addEventListener("outputresultsupdated", (evt) => {
+        this.addEventListener("testoutputresults", (evt) => {
             console.clear();
-            for (let className in evt.table) {
-                console.group(className);
-                console.table(evt.table[className]);
+            for (let testCaseName in evt.table) {
+                console.group(testCaseName);
+                console.table(evt.table[testCaseName]);
                 console.groupEnd();
             }
             console.table(evt.stats);
@@ -149,8 +104,8 @@ export class ConsoleTestOutput extends TestOutput {
 }
 
 export class HtmlTestOutput extends TestOutput {
-    constructor(container, TestRunnerClass, ...CaseClasses) {
-        super(TestRunnerClass, ...CaseClasses);
+    constructor(container, ...CaseClasses) {
+        super(...CaseClasses);
 
         const draw = (evt) => {
             console.table(evt.stats);
@@ -159,13 +114,15 @@ export class HtmlTestOutput extends TestOutput {
                 tbody = document.createElement("tbody"),
                 progRow = document.createElement("tr"),
                 progCell = document.createElement("td"),
+                rerunCell = document.createElement("td"),
                 progFound = document.createElement("span"),
                 progFailed = document.createElement("span"),
-                progSucceeded = document.createElement("span");
+                progSucceeded = document.createElement("span"),
+                rerunButton = document.createElement("button");
 
             table.style.width = "100%";
 
-            progCell.colSpan = 3;
+            progCell.colSpan = 4;
             progCell.style.height = "2em";
 
             progSucceeded.style.position = "absolute";
@@ -192,57 +149,69 @@ export class HtmlTestOutput extends TestOutput {
             progFound.style.height = "1em";
             progFound.innerHTML = ".";
 
+            rerunButton.type = "button";
+            rerunButton.innerHTML = "\u{1F504}\u{FE0F}";
+            rerunButton.addEventListener("click", (evt) => {
+                this.run();
+            });
+
             progCell.appendChild(progSucceeded);
             progCell.appendChild(progFailed);
             progCell.appendChild(progFound);
             progRow.appendChild(progCell);
+
+            rerunCell.appendChild(rerunButton);
+            progRow.appendChild(rerunCell);
             tbody.appendChild(progRow);
 
-            for (let className in evt.table) {
+            for (let testCaseName in evt.table) {
                 const groupHeaderRow = document.createElement("tr"),
-                    groupHeaderCell = document.createElement("td");
+                    groupHeaderCell = document.createElement("td"),
+                    rerunGroupCell = document.createElement("td"),
+                    rerunGroupButton = document.createElement("button");
+
+                groupHeaderCell.colSpan = 4;
+                groupHeaderCell.appendChild(document.createTextNode(testCaseName));
+
+                rerunGroupCell.appendChild(rerunGroupButton);
+                rerunGroupButton.type = "button";
+                rerunGroupButton.innerHTML = "\u{1F504}\u{FE0F}";
+                rerunGroupButton.addEventListener("click", (evt) => {
+                    this.run(testCaseName);
+                });
 
                 groupHeaderRow.appendChild(groupHeaderCell);
-                groupHeaderCell.appendChild(document.createTextNode(className));
-                groupHeaderCell.colSpan = 3;
+                groupHeaderRow.appendChild(rerunGroupCell);
                 tbody.appendChild(groupHeaderRow);
 
-                for (let funcName in evt.table[className]) {
-                    const e = evt.table[className][funcName],
+                for (let testName in evt.table[testCaseName]) {
+                    const e = evt.table[testCaseName][testName],
                         funcRow = document.createElement("tr"),
                         nameCell = document.createElement("td"),
                         stateCell = document.createElement("td"),
-                        valueCell = document.createElement("td");
+                        valueCell = document.createElement("td"),
+                        msgCell = document.createElement("td"),
+                        rerunTestCell = document.createElement("td"),
+                        rerunTestButton = document.createElement("button");
 
-                    nameCell.appendChild(document.createTextNode(funcName));
-                    stateCell.innerHTML = e.succeeded
-                        ? "Success"
-                        : e.failed
-                            ? "Failed"
-                            : e.completed
-                                ? "Complete"
-                                : e.incomplete
-                                    ? "Incomplete"
-                                    : e.started
-                                        ? "Started"
-                                        : "Not started";
+                    nameCell.appendChild(document.createTextNode(testName));
+                    stateCell.innerHTML = TestStateNames[e.state];
+                    valueCell.appendChild(document.createTextNode(e.value));
+                    msgCell.appendChild(document.createTextNode(e.message));
 
-                    valueCell.appendChild(document.createTextNode(
-                        e.succeeded
-                            ? e.successMessage
-                            : e.failed
-                                ? e.failedMessage
-                                : e.completed
-                                    ? e.completedValue
-                                    : e.incomplete
-                                        ? e.incompleteValue
-                                        : e.started
-                                            ? null
-                                            : "Not started"));
+                    rerunTestButton.type = "button";
+                    rerunTestButton.innerHTML = "\u{1F504}\u{FE0F}";
+                    rerunTestButton.addEventListener("click", (evt) => {
+                        this.run(testCaseName, testName);
+                    });
+
+                    rerunTestCell.appendChild(rerunTestButton);
 
                     funcRow.appendChild(nameCell);
                     funcRow.appendChild(stateCell);
                     funcRow.appendChild(valueCell);
+                    funcRow.appendChild(msgCell);
+                    funcRow.appendChild(rerunTestCell);
 
                     tbody.appendChild(funcRow);
                 }
@@ -253,89 +222,187 @@ export class HtmlTestOutput extends TestOutput {
             container.appendChild(table);
         };
 
-        this.addEventListener("outputresultsupdated", draw);
+        this.addEventListener("testoutputresults", draw);
     }
 }
 
-export class TestRunner extends EventTarget {
+const TestState = {
+    found: 0,
+    started: 1,
+    succeeded: 2,
+    failed: 4,
+    completed: 8,
+    incomplete: 16,
+};
+
+const TestStateNames = {
+    0: "Found",
+    1: "Started",
+    3: "Success",
+    5: "Failure",
+    11: "Succeeded",
+    13: "Failed",
+    17: "Incomplete",
+    18: "Incomplete",
+    19: "Incomplete",
+    20: "Incomplete",
+    21: "Incomplete",
+    22: "Incomplete",
+    23: "Incomplete",
+    24: "Incomplete",
+    25: "Incomplete",
+    26: "Incomplete",
+    27: "Incomplete",
+    28: "Incomplete",
+    29: "Incomplete",
+    30: "Incomplete",
+    31: "Incomplete",
+};
+
+class TestScore {
+    constructor(name) {
+        this.name = name;
+        this.state = TestState.found;
+        this.value = null;
+        this.message = null;
+    }
+
+    start() {
+        this.state |= TestState.started;
+    }
+
+    success(message) {
+        this.state |= TestState.succeeded;
+        this.message = message;
+    }
+
+    fail(message) {
+        this.state |= TestState.failed;
+        this.message = message;
+    }
+
+    complete(value) {
+        this.state |= TestState.completed;
+        this.value = value;
+    }
+
+    incomplete(value) {
+        this.state |= TestState.incomplete;
+        this.value = value;
+    }
+}
+
+class TestRunnerResultsEvent extends Event {
+    constructor(results) {
+        super("testrunneresults");
+        this.results = results;
+    }
+}
+
+class TestRunner extends EventTarget {
     constructor(...CaseClasses) {
         super();
-
-        this.caseTypes = [];
-        for (let CaseClass of CaseClasses) {
-            this.addCase(CaseClass);
-        }
+        this.CaseClasses = CaseClasses;
     }
 
-    addCase(CaseClass) {
-        this.caseTypes.push(CaseClass);
+    async run(testCaseName, testName) {
+
+        const results = {};
+        const onUpdate = () => this.dispatchEvent(new TestRunnerResultsEvent(results));
+
+        for (let CaseClass of this.CaseClasses) {
+            results[CaseClass.name] = {};
+            for (let name of this.testNames(CaseClass.prototype)) {
+                if (this.isTest(CaseClass.prototype, name)) {
+                    results[CaseClass.name][name] = new TestScore(name);
+                    onUpdate();
+                }
+            }
+        }
+
+        const q = [];
+        for (let CaseClass of this.CaseClasses) {
+            const className = CaseClass.name;
+            if (className === testCaseName
+                || testCaseName === undefined
+                || testCaseName === null) {
+                for (let funcName of this.testNames(CaseClass.prototype)) {
+                    if (this.isTest(CaseClass.prototype, funcName, testName)) {
+                        q.push(this.runTest.bind(this, CaseClass, funcName, results, className, onUpdate));
+                    }
+                }
+            }
+        }
+
+        const update = () => {
+            if (q.length > 0) {
+                const test = q.shift();
+                test()
+                    .then(restart)
+                    .catch(restart);
+            }
+        },
+            restart = () => setTimeout(update, 0);
+        restart();
     }
 
-    async run(className, testName) {
-
-        const results = {
-            found: [],
-            started: [],
-            completed: [],
-            incomplete: [],
-            succeeded: [],
-            failed: []
-        };
-
-        const onUpdate = () => this.dispatchEvent(new TestRunResultsEvent(results));
-
-        let currentTestName = null;
-        const cases = this.caseTypes
-            .filter(Class => Class.name === className
-                || className === undefined
-                || className === null)
-            .map(Class => {
-                const testCase = new Class();
-                testCase.addEventListener("testfound", (evt) => {
-                    const name = Class.name + "::" + evt.name;
-                    results.found.push(name);
-                    onUpdate();
-                });
-                testCase.addEventListener("teststarted", (evt) => {
-                    const name = Class.name + "::" + evt.name;
-                    currentTestName = name;
-                    results.started.push(name);
-                    onUpdate();
-                });
-                testCase.addEventListener("testsucceeded", (evt) => {
-                    evt.name = currentTestName;
-                    results.succeeded.push(evt);
-                    onUpdate();
-                });
-                testCase.addEventListener("testfailed", (evt) => {
-                    evt.name = currentTestName;
-                    results.failed.push(evt);
-                    onUpdate();
-                });
-                testCase.addEventListener("testcompleted", (evt) => {
-                    evt.name = currentTestName;
-                    results.completed.push(evt);
-                    onUpdate();
-                });
-                testCase.addEventListener("testnotcompleted", (evt) => {
-                    evt.name = currentTestName;
-                    results.incomplete.push(evt);
-                    onUpdate();
-                });
-                testCase.find();
-                return testCase;
-            });
-
-        for (let testCase of cases) {
-            await testCase.run(testName);
+    async runTest(CaseClass, funcName, results, className, onUpdate) {
+        const testCase = new CaseClass(),
+            func = testCase[funcName],
+            score = results[className][funcName],
+            onSuccess = (evt) => {
+                score.success(evt.message);
+                onUpdate();
+            },
+            onFailure = (evt) => {
+                score.fail(evt.message);
+                onUpdate();
+            };
+        testCase.addEventListener("testcasesuccess", onSuccess);
+        testCase.addEventListener("testcasefail", onFailure);
+        try {
+            score.start();
+            onUpdate();
+            testCase.setup();
+            let value = func.call(testCase);
+            if (value instanceof Promise) {
+                value = await value;
+            }
+            score.complete(value);
+            onUpdate();
+            testCase.teardown();
         }
+        catch (error) {
+            score.incomplete(error);
+        }
+        testCase.removeEventListener("testcasefail", onFailure);
+        testCase.removeEventListener("testcasesuccess", onSuccess);
+        onUpdate();
+    }
+
+    isTest(testCase, name, testName) {
+        return (name === testName
+            || ((testName === undefined || testName === null)
+                && name.startsWith("test_")))
+            && testCase[name] instanceof Function;
+    }
+
+    testNames(TestClass) {
+        return Object.getOwnPropertyNames(TestClass);
     }
 }
 
-class TestRunResultsEvent extends Event {
-    constructor(results) {
-        super("resultsupdated");
-        this.results = results;
+class TestCaseSuccessEvent extends Event {
+    constructor(message) {
+        super("testcasesuccess");
+        this.message = message;
+    }
+}
+
+class TestCaseFailEvent extends Event {
+    constructor(message) {
+        super("testcasefail");
+        this.message = message;
     }
 }
 
@@ -343,49 +410,18 @@ export class TestCase extends EventTarget {
     setup() { }
     teardown() { }
 
-    found(name) {
-        this.dispatchEvent(new FoundEvent(name));
-    }
-
-    started(name) {
-        this.dispatchEvent(new StartEvent(name));
-    }
-
-    complete(value) {
-        this.dispatchEvent(new CompleteEvent(value));
-    }
-
-    incomplete(error) {
-        this.dispatchEvent(new IncompleteEvent(error));
-    }
-
     success(message) {
         message = message || "Success";
-        this.dispatchEvent(new SuccessEvent(message));
+        this.dispatchEvent(new TestCaseSuccessEvent(message));
     }
 
     fail(message) {
         message = message || "Fail";
-        this.dispatchEvent(new FailEvent(message));
-    }
-
-    twoValueTest(actual, op, expected, testFunc, message) {
-        const testValue = testFunc(actual, expected),
-            testString = testValue ? "Success!" : "Fail!",
-            testMessage = `Expect ${actual} ${op} ${expected} -> ${testString}`;
-
-        message = ((message && message + ". ") || "") + testMessage;
-
-        if (testValue) {
-            this.success(message);
-        }
-        else {
-            this.fail(message);
-        }
+        this.dispatchEvent(new TestCaseFailEvent(message));
     }
 
     isEqualTo(actual, expected, message) {
-        this.twoValueTest(actual, "===", expected, (a, b) => a === b, message);
+        this._twoValueTest(actual, "===", expected, (a, b) => a === b, message);
     }
 
     isNull(value, message) {
@@ -409,26 +445,50 @@ export class TestCase extends EventTarget {
     }
 
     isNotEqualTo(actual, expected, message) {
-        this.twoValueTest(actual, "!==", expected, (a, b) => a !== b, message);
+        this._twoValueTest(actual, "!==", expected, (a, b) => a !== b, message);
     }
 
     isLessThan(actual, expected, message) {
-        this.twoValueTest(actual, "<", expected, (a, b) => a < b, message);
+        this._twoValueTest(actual, "<", expected, (a, b) => a < b, message);
     }
 
     isLessThanEqual(actual, expected, message) {
-        this.twoValueTest(actual, "<=", expected, (a, b) => a <= b, message);
+        this._twoValueTest(actual, "<=", expected, (a, b) => a <= b, message);
     }
 
     isGreaterThan(actual, expected, message) {
-        this.twoValueTest(actual, ">", expected, (a, b) => a > b, message);
+        this._twoValueTest(actual, ">", expected, (a, b) => a > b, message);
     }
 
     isGreaterThanEqual(actual, expected, message) {
-        this.twoValueTest(actual, ">=", expected, (a, b) => a >= b, message);
+        this._twoValueTest(actual, ">=", expected, (a, b) => a >= b, message);
     }
 
-    throwTest(func, op, message) {
+    throws(func, message) {
+        this._throwTest(func, true, message);
+    }
+
+    doesNotThrow(func, message) {
+        this._throwTest(func, false, message);
+    }
+
+
+    _twoValueTest(actual, op, expected, testFunc, message) {
+        const testValue = testFunc(actual, expected),
+            testString = testValue ? "Success!" : "Fail!",
+            testMessage = `Expect ${actual} ${op} ${expected} -> ${testString}`;
+
+        message = ((message && message + ". ") || "") + testMessage;
+
+        if (testValue) {
+            this.success(message);
+        }
+        else {
+            this.fail(message);
+        }
+    }
+
+    _throwTest(func, op, message) {
         let threw = false;
         try {
             func();
@@ -449,97 +509,5 @@ export class TestCase extends EventTarget {
         else {
             this.fail(message);
         }
-    }
-
-    throws(func, message) {
-        this.throwTest(func, true, message);
-    }
-
-    doesNotThrow(func, message) {
-        this.throwTest(func, false, message);
-    }
-
-    testNames() {
-        return Object.getOwnPropertyNames(Object.getPrototypeOf(this));
-    }
-
-    isTest(name, testName) {
-        return (name === testName
-            || ((testName === undefined || testName === null)
-                && name.startsWith("test_")))
-            && this[name] instanceof Function;
-    }
-
-    find() {
-        for (let name of this.testNames()) {
-            if (this.isTest(name)) {
-                this.found(name);
-            }
-        }
-    }
-
-    async run(testName) {
-        this.setup();
-        for (let name of this.testNames()) {
-            if (this.isTest(name, testName)) {
-                const func = this[name];
-                try {
-                    this.started(name);
-
-                    let value = func.call(this);
-                    if (value instanceof Promise) {
-                        value = await value;
-                    }
-
-                    this.complete(value);
-                }
-                catch (error) {
-                    this.incomplete(error);
-                }
-            }
-        }
-        this.teardown();
-    }
-}
-
-class FoundEvent extends Event {
-    constructor(name) {
-        super("testfound");
-        this.name = name;
-    }
-}
-
-class StartEvent extends Event {
-    constructor(name) {
-        super("teststarted");
-        this.name = name;
-    }
-}
-
-class SuccessEvent extends Event {
-    constructor(message) {
-        super("testsucceeded");
-        this.message = message;
-    }
-}
-
-class FailEvent extends Event {
-    constructor(message) {
-        super("testfailed");
-        this.message = message;
-    }
-}
-
-class CompleteEvent extends Event {
-    constructor(value) {
-        super("testcompleted");
-        this.value = value;
-    }
-}
-
-class IncompleteEvent extends Event {
-    constructor(error) {
-        super("testnotcompleted");
-        this.error = error;
     }
 }
