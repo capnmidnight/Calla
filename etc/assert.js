@@ -15,7 +15,7 @@ class TestOutput extends EventTarget {
     async run(className, testName) {
         const testRunner = new TestRunner(...this.CaseClasses);
 
-        testRunner.addEventListener("testrunneresults", (evt) => {
+        testRunner.addEventListener("testrunnerresults", (evt) => {
             const table = evt.results;
             let totalFound = 0,
                 totalRan = 0,
@@ -122,32 +122,34 @@ export class HtmlTestOutput extends TestOutput {
 
             table.style.width = "100%";
 
-            progCell.colSpan = 4;
+            progCell.colSpan = 3;
             progCell.style.height = "2em";
 
-            progSucceeded.style.position = "absolute";
+            progSucceeded.style.display = "inline-block";
             progSucceeded.style.overflow = "hidden";
             progSucceeded.style.backgroundColor = "green";
             progSucceeded.style.color = "green";
             progSucceeded.style.width = Math.round(100 * evt.stats.totalSucceeded / evt.stats.totalFound) + "%";
             progSucceeded.style.height = "1em";
-            progSucceeded.innerHTML = ".";
+            progCell.appendChild(progSucceeded);
 
-            progFailed.style.position = "absolute";
+            progFailed.style.display = "inline-block";
             progFailed.style.overflow = "hidden";
             progFailed.style.backgroundColor = "red";
             progFailed.style.color = "red";
             progFailed.style.width = Math.round(100 * evt.stats.totalFailed / evt.stats.totalFound) + "%";
             progFailed.style.height = "1em";
-            progFailed.innerHTML = ".";
+            progCell.appendChild(progFailed);
 
-            progFound.style.position = "absolute";
+            progFound.style.display = "inline-block";
             progFound.style.overflow = "hidden";
             progFound.style.backgroundColor = "grey";
             progFound.style.color = "grey";
             progFound.style.width = Math.round(100 * (evt.stats.totalFound - evt.stats.totalSucceeded - evt.stats.totalFailed) / evt.stats.totalFound) + "%";
             progFound.style.height = "1em";
-            progFound.innerHTML = ".";
+            progCell.appendChild(progFound);
+
+            progRow.appendChild(progCell);
 
             rerunButton.type = "button";
             rerunButton.innerHTML = "\u{1F504}\u{FE0F}";
@@ -155,14 +157,13 @@ export class HtmlTestOutput extends TestOutput {
                 this.run();
             });
 
-            progCell.appendChild(progSucceeded);
-            progCell.appendChild(progFailed);
-            progCell.appendChild(progFound);
-            progRow.appendChild(progCell);
-
             rerunCell.appendChild(rerunButton);
             progRow.appendChild(rerunCell);
             tbody.appendChild(progRow);
+
+            const headerRow = document.createElement("tr");
+            headerRow.innerHTML = "<td>Name</td><td>Status</td><td></td><td>Rerun</td>";
+            tbody.appendChild(headerRow);
 
             for (let testCaseName in evt.table) {
                 const groupHeaderRow = document.createElement("tr"),
@@ -170,7 +171,7 @@ export class HtmlTestOutput extends TestOutput {
                     rerunGroupCell = document.createElement("td"),
                     rerunGroupButton = document.createElement("button");
 
-                groupHeaderCell.colSpan = 4;
+                groupHeaderCell.colSpan = 3;
                 groupHeaderCell.appendChild(document.createTextNode(testCaseName));
 
                 rerunGroupCell.appendChild(rerunGroupButton);
@@ -189,14 +190,12 @@ export class HtmlTestOutput extends TestOutput {
                         funcRow = document.createElement("tr"),
                         nameCell = document.createElement("td"),
                         stateCell = document.createElement("td"),
-                        valueCell = document.createElement("td"),
                         msgCell = document.createElement("td"),
                         rerunTestCell = document.createElement("td"),
                         rerunTestButton = document.createElement("button");
 
                     nameCell.appendChild(document.createTextNode(testName));
                     stateCell.innerHTML = TestStateNames[e.state];
-                    valueCell.appendChild(document.createTextNode(e.value));
                     msgCell.appendChild(document.createTextNode(e.message));
 
                     rerunTestButton.type = "button";
@@ -209,7 +208,6 @@ export class HtmlTestOutput extends TestOutput {
 
                     funcRow.appendChild(nameCell);
                     funcRow.appendChild(stateCell);
-                    funcRow.appendChild(valueCell);
                     funcRow.appendChild(msgCell);
                     funcRow.appendChild(rerunTestCell);
 
@@ -263,7 +261,6 @@ class TestScore {
     constructor(name) {
         this.name = name;
         this.state = TestState.found;
-        this.value = null;
         this.message = null;
     }
 
@@ -283,18 +280,18 @@ class TestScore {
 
     complete(value) {
         this.state |= TestState.completed;
-        this.value = value;
+        this.message = this.message || value;
     }
 
     incomplete(value) {
         this.state |= TestState.incomplete;
-        this.value = value;
+        this.message = this.message || value;
     }
 }
 
 class TestRunnerResultsEvent extends Event {
     constructor(results) {
-        super("testrunneresults");
+        super("testrunnerresults");
         this.results = results;
     }
 }
