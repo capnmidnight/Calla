@@ -4,6 +4,7 @@ import {
     emojiStyle,
     textStyle
 } from "./emoji.js";
+import * as H from "./html.js";
 
 export class EmojiForm extends EventTarget {
     constructor(emojiView) {
@@ -41,46 +42,40 @@ export class EmojiForm extends EventTarget {
 
         const addIconsToContainer = (group, container, isAlts) => {
             for (let icon of group) {
-                const g = document.createElement(isAlts ? "ul" : "span"),
-                    btn = document.createElement("button");
+                const g = isAlts ? H.ul() : H.span(),
+                    btn = H.button({
+                        type: "button",
+                        title: icon.desc,
+                        onclick: (evt) => {
+                            selectedEmoji = selectedEmoji && evt.ctrlKey
+                                ? combine(selectedEmoji, icon)
+                                : icon;
+                            emojiPreview.innerHTML = `${selectedEmoji.value} - ${selectedEmoji.desc}`;
+                            confirmEmojiButton.unlock();
+
+                            if (!!alts) {
+                                alts.toggleOpen();
+                                btn.innerHTML = icon.value + (alts.isOpen() ? "-" : "+");
+                            }
+                        }
+                    }, icon.value);
+
                 let alts = null;
 
-                btn.type = "button";
-                btn.title = icon.desc;
-                btn.innerHTML = icon.value;
-                btn.addEventListener("click", (evt) => {
-                    selectedEmoji = selectedEmoji && evt.ctrlKey
-                        ? combine(selectedEmoji, icon)
-                        : icon;
-                    emojiPreview.innerHTML = `${selectedEmoji.value} - ${selectedEmoji.desc}`;
-                    confirmEmojiButton.unlock();
-
-                    if (!!alts) {
-                        alts.toggleOpen();
-                        btn.innerHTML = icon.value + (alts.isOpen() ? "-" : "+");
-                    }
-                });
-
                 if (isAlts) {
-                    const item = document.createElement("li"),
-                        id = `emoji-with-alt-${idCounter++}`,
-                        label = document.createElement("label");
-
-                    btn.id = id;
-                    label.htmlFor = id;
-                    label.innerHTML = icon.desc;
-
-                    item.appendChild(btn);
-                    item.appendChild(label);
-
-                    g.appendChild(item);
+                    btn.id = `emoji-with-alt-${idCounter++}`;
+                    g.appendChild(H.li(
+                        btn,
+                        H.label({
+                            htmlFor: btn.id
+                        }, icon.desc)));
                 }
                 else {
                     g.appendChild(btn);
                 }
 
                 if (!!icon.alt) {
-                    alts = document.createElement("div");
+                    alts = H.div();
                     allAlts.push(alts);
                     addIconsToContainer(icon.alt, alts, true);
                     alts.hide();
@@ -102,24 +97,23 @@ export class EmojiForm extends EventTarget {
         };
 
         for (let key of Object.keys(icons)) {
-            const header = document.createElement("h1"),
-                headerButton = document.createElement("a"),
-                container = document.createElement("p"),
-                group = icons[key];
 
-            headerButton.href = "javascript:undefined;";
-            headerButton.innerHTML = key + " -";
-            headerButton.title = key;
+            const header = H.h1(),
+                container = H.p(),
+                headerButton = H.a({
+                    href: "javascript:undefined",
+                    title: key,
+                    onclick: () => {
+                        container.toggleOpen();
+                        headerButton.innerHTML = key + (container.isOpen() ? " -" : " +");
+                    }
+                }, key + " -"),
+                group = icons[key];
 
             addIconsToContainer(group, container);
             header.appendChild(headerButton);
             emojiContainer.appendChild(header);
             emojiContainer.appendChild(container);
-
-            headerButton.addEventListener("click", (evt) => {
-                container.toggleOpen();
-                headerButton.innerHTML = key + (container.isOpen() ? " -" : " +");
-            });
         }
 
         confirmEmojiButton.lock();

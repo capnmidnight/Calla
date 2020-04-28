@@ -1,6 +1,7 @@
 ﻿import { EmojiForm } from "./emojiForm.js";
 import { bust } from "./emoji.js";
 import { isGoodNumber } from "./math.js";
+import { option } from "./html.js";
 import "./protos.js";
 
 export class AppGui extends EventTarget {
@@ -226,21 +227,15 @@ export class AppGui extends EventTarget {
                         const refreshGamepadList = (evt) => {
                             gamepadSelector.innerHTML = "";
                             if (this.game.gamepads.length === 0) {
-                                const opt = document.createElement("option");
-                                opt.innerHTML = "No gamepads detected";
-                                gamepadSelector.appendChild(opt);
+                                gamepadSelector.appendChild(option("No gamepads detected"));
                                 gamepadSelector.lock();
                             }
                             else {
                                 gamepadSelector.unlock();
-                                for (let pad of this.game.gamepads) {
-                                    const opt = document.createElement("option");
-                                    opt.innerHTML = pad.id;
-                                    if (this.game.gamepadIndex === gamepadSelector.options.length) {
-                                        opt.selected = "selected";
-                                    }
-                                    gamepadSelector.appendChild(opt);
-                                }
+                                this.game.gamepads.map((pad, i) => option({
+                                    selected: i === this.game.gamepadIndex
+                                }, pad.id))
+                                    .forEach(opt => gamepadSelector.appendChild(opt));
                             }
                         };
 
@@ -333,22 +328,16 @@ export class AppGui extends EventTarget {
                             audioInputDevices = await this.jitsiClient.getAudioInputDevices();
                             audioInputDeviceSelector.innerHTML = "";
                             if (audioInputDevices.length === 0) {
-                                const opt = document.createElement("option");
-                                opt.innerHTML = "No audio input devices available";
-                                audioInputDeviceSelector.appendChild(opt);
                                 audioInputDeviceSelector.lock();
+                                audioInputDeviceSelector.appendChild(option("No audio input devices available"));
                             }
                             else {
                                 audioInputDeviceSelector.unlock();
-                                for (let audioInputDevice of audioInputDevices) {
-                                    const opt = document.createElement("option");
-                                    opt.innerHTML = audioInputDevice.label;
-                                    if (!!lastAudioInputDevice
-                                        && audioInputDevice.id === lastAudioInputDevice.id) {
-                                        opt.selected = "selected";
-                                    }
-                                    audioInputDeviceSelector.appendChild(opt);
-                                }
+                                audioInputDevices.map(a =>
+                                    option(a.label, {
+                                        selected: !!lastAudioInputDevice && a.id === lastAudioInputDevice.id
+                                    }))
+                                    .forEach(opt => audioInputDeviceSelector.appendChild(opt));
                             }
                         });
 
@@ -371,22 +360,15 @@ export class AppGui extends EventTarget {
                             audioOutputDevices = await this.jitsiClient.getAudioOutputDevices();
                             audioOutputDeviceSelector.innerHTML = "";
                             if (audioOutputDevices.length === 0) {
-                                const opt = document.createElement("option");
-                                opt.innerHTML = "No audio output devices available";
-                                audioOutputDeviceSelector.appendChild(opt);
                                 audioOutputDeviceSelector.lock();
+                                audioOutputDeviceSelector.appendChild(option("No audio output devices available"));
                             }
                             else {
                                 audioOutputDeviceSelector.unlock();
-                                for (let audioOutputDevice of audioOutputDevices) {
-                                    const opt = document.createElement("option");
-                                    opt.innerHTML = audioOutputDevice.label;
-                                    if (!!lastAudioOutputDevice
-                                        && audioOutputDevice.id === lastAudioOutputDevice.id) {
-                                        opt.selected = "selected";
-                                    }
-                                    audioOutputDeviceSelector.appendChild(opt);
-                                }
+                                audioOutputDevices.map(a => option(a.label, {
+                                    selected: !!lastAudioOutputDevice && a.id === lastAudioOutputDevice.id
+                                }))
+                                    .forEach(opt => audioOutputDeviceSelector.appendChild(opt));
                             }
                         });
 
@@ -456,22 +438,14 @@ export class AppGui extends EventTarget {
                             videoInputDevices = await this.jitsiClient.getVideoInputDevices();
                             videoInputDeviceSelector.innerHTML = "";
                             if (videoInputDevices.length === 0) {
-                                const opt = document.createElement("option");
-                                opt.innerHTML = "No video input devices available";
-                                videoInputDeviceSelector.appendChild(opt);
                                 videoInputDeviceSelector.lock();
+                                videoInputDeviceSelector.appendChild(option("No video input devices available"));
                             }
                             else {
                                 videoInputDeviceSelector.unlock();
-                                for (let videoInputDevice of videoInputDevices) {
-                                    const opt = document.createElement("option");
-                                    opt.innerHTML = videoInputDevice.label;
-                                    if (!!lastVideoInputDevice
-                                        && videoInputDevice.id === lastVideoInputDevice.id) {
-                                        opt.selected = "selected";
-                                    }
-                                    videoInputDeviceSelector.appendChild(opt);
-                                }
+                                videoInputDevices.map(v => option(v.label, {
+                                    selected: !!lastVideoInputDevice && v.id === lastVideoInputDevice.id
+                                })).forEach(opt => videoInputDeviceSelector.appendChild(opt));
                             }
                         });
 

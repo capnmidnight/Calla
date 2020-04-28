@@ -1,4 +1,6 @@
-﻿class TestOutputResultsEvent extends Event {
+﻿import * as H from "../scripts/html.js";
+
+class TestOutputResultsEvent extends Event {
     constructor(table, stats) {
         super("testoutputresults");
         this.table = table;
@@ -103,118 +105,70 @@ export class ConsoleTestOutput extends TestOutput {
     }
 }
 
+function bar(color, width) {
+    return {
+        style: {
+            backgroundColor: color,
+            color,
+            width
+        }
+    };
+}
+
+function refresher(thunk) {
+    return H.td(H.button({
+        type: "button",
+        onclick: thunk
+    }, "\u{1F504}\u{FE0F}"));
+}
+
 export class HtmlTestOutput extends TestOutput {
     constructor(container, ...CaseClasses) {
         super(...CaseClasses);
 
         const draw = (evt) => {
-            const table = document.createElement("table"),
-                tbody = document.createElement("tbody"),
-                progRow = document.createElement("tr"),
-                progCell = document.createElement("td"),
-                rerunCell = document.createElement("td"),
-                progFound = document.createElement("span"),
-                progFailed = document.createElement("span"),
-                progSucceeded = document.createElement("span"),
-                rerunButton = document.createElement("button");
-
-            table.style.width = "100%";
-
-            progCell.colSpan = 3;
-            progCell.style.height = "2em";
-
-            progSucceeded.style.display = "inline-block";
-            progSucceeded.style.overflow = "hidden";
-            progSucceeded.style.backgroundColor = "green";
-            progSucceeded.style.color = "green";
-            progSucceeded.style.width = Math.round(100 * evt.stats.totalSucceeded / evt.stats.totalFound) + "%";
-            progSucceeded.style.height = "1em";
-            progCell.appendChild(progSucceeded);
-
-            progFailed.style.display = "inline-block";
-            progFailed.style.overflow = "hidden";
-            progFailed.style.backgroundColor = "red";
-            progFailed.style.color = "red";
-            progFailed.style.width = Math.round(100 * evt.stats.totalFailed / evt.stats.totalFound) + "%";
-            progFailed.style.height = "1em";
-            progCell.appendChild(progFailed);
-
-            progFound.style.display = "inline-block";
-            progFound.style.overflow = "hidden";
-            progFound.style.backgroundColor = "grey";
-            progFound.style.color = "grey";
-            progFound.style.width = Math.round(100 * (evt.stats.totalFound - evt.stats.totalSucceeded - evt.stats.totalFailed) / evt.stats.totalFound) + "%";
-            progFound.style.height = "1em";
-            progCell.appendChild(progFound);
-
-            progRow.appendChild(progCell);
-
-            rerunButton.type = "button";
-            rerunButton.innerHTML = "\u{1F504}\u{FE0F}";
-            rerunButton.addEventListener("click", (evt) => {
-                this.run();
-            });
-
-            rerunCell.appendChild(rerunButton);
-            progRow.appendChild(rerunCell);
-            tbody.appendChild(progRow);
-
-            const headerRow = document.createElement("tr");
-            headerRow.innerHTML = "<td>Name</td><td>Status</td><td></td><td>Rerun</td>";
-            tbody.appendChild(headerRow);
+            const s = Math.round(100 * evt.stats.totalSucceeded / evt.stats.totalFound),
+                f = Math.round(100 * evt.stats.totalFailed / evt.stats.totalFound),
+                t = Math.round(100 * (evt.stats.totalFound - evt.stats.totalSucceeded - evt.stats.totalFailed) / evt.stats.totalFound),
+                basicStyle = { style: { display: "inline-block", overflow: "hidden", height: "1em" } },
+                table = H.table({
+                    style: { width: "100%" }
+                }, H.tbody(
+                    H.tr(
+                        H.td({
+                            colSpan: 3,
+                            style: { height: "2em" }
+                        },
+                            H.span(basicStyle, bar("green", s + "%")),
+                            H.span(basicStyle, bar("red", f + "%")),
+                            H.span(basicStyle, bar("grey", t + "%"))),
+                        refresher(() =>
+                            this.run())),
+                    H.tr(
+                        H.td("Name"),
+                        H.td("Status"),
+                        H.td(),
+                        H.td("Rerun")))),
+                    tbody = table.querySelector("tbody");
 
             for (let testCaseName in evt.table) {
-                const groupHeaderRow = document.createElement("tr"),
-                    groupHeaderCell = document.createElement("td"),
-                    rerunGroupCell = document.createElement("td"),
-                    rerunGroupButton = document.createElement("button");
-
-                groupHeaderCell.colSpan = 3;
-                groupHeaderCell.appendChild(document.createTextNode(testCaseName));
-
-                rerunGroupCell.appendChild(rerunGroupButton);
-                rerunGroupButton.type = "button";
-                rerunGroupButton.innerHTML = "\u{1F504}\u{FE0F}";
-                rerunGroupButton.addEventListener("click", (evt) => {
-                    this.run(testCaseName);
-                });
-
-                groupHeaderRow.appendChild(groupHeaderCell);
-                groupHeaderRow.appendChild(rerunGroupCell);
-                tbody.appendChild(groupHeaderRow);
+                tbody.appendChild(H.tr(
+                    H.td({ colSpan: 3 }, testCaseName),
+                    refresher((evt) =>
+                        this.run(testCaseName))));
 
                 for (let testName in evt.table[testCaseName]) {
-                    const e = evt.table[testCaseName][testName],
-                        funcRow = document.createElement("tr"),
-                        nameCell = document.createElement("td"),
-                        stateCell = document.createElement("td"),
-                        msgCell = document.createElement("td"),
-                        rerunTestCell = document.createElement("td"),
-                        rerunTestButton = document.createElement("button");
-
-                    nameCell.appendChild(document.createTextNode(testName));
-                    stateCell.innerHTML = TestStateNames[e.state];
-                    msgCell.appendChild(document.createTextNode(e.message));
-
-                    rerunTestButton.type = "button";
-                    rerunTestButton.innerHTML = "\u{1F504}\u{FE0F}";
-                    rerunTestButton.addEventListener("click", (evt) => {
-                        this.run(testCaseName, testName);
-                    });
-
-                    rerunTestCell.appendChild(rerunTestButton);
-
-                    funcRow.appendChild(nameCell);
-                    funcRow.appendChild(stateCell);
-                    funcRow.appendChild(msgCell);
-                    funcRow.appendChild(rerunTestCell);
-
-                    tbody.appendChild(funcRow);
+                    const e = evt.table[testCaseName][testName];
+                    tbody.appendChild(H.tr(
+                        H.td(testName),
+                        H.td(TestStateNames[e.state]),
+                        H.td(e.message),
+                        refresher(() => 
+                            this.run(testCaseName, testName))));
                 }
             }
 
             container.innerHTML = "";
-            table.appendChild(tbody);
             container.appendChild(table);
         };
 

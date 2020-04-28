@@ -6,6 +6,7 @@ import "./protos.js";
 import { JitsiClient } from "./jitsihax-client.js";
 import { Game } from "./game.js";
 import { randomPerson, allIcons as icons } from "./emoji.js";
+import { audio, span } from "./html.js";
 import "../etc/jitsihax.js";
 
 class MockJitsiClient extends JitsiClient {
@@ -164,18 +165,13 @@ class MockUser {
 
         jitsiClient.api.dispatchEvent(evt);
 
-        const elementID = `participant_${this.id}`,
-            element = document.createElement("span"),
-            audio = document.createElement("audio")
-        audio.autoplay = "autoplay";
-        audio.loop = "loop";
-        audio.src = `test-audio/${this.id}.mp3`;
-        element.appendChild(audio);
+        document.body.appendChild(span({ id: `participant_${this.id}` },
+            this.audio = audio({
+                autoplay: "autoplay",
+                loop: "loop",
+                src: `test-audio/${this.id}.mp3`
+            })));
 
-        element.id = elementID;
-        document.body.appendChild(element);
-
-        this.audio = audio;
         this.schedule();
     }
 
