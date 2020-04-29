@@ -12,7 +12,7 @@
                         elem[key][subKey] = value[subKey];
                     }
                 }
-                else if (key === "textContent") {
+                else if (key === "textContent" || key === "innerText") {
                     elem.appendChild(document.createTextNode(value));
                 }
                 else if (key.startsWith("on") && typeof value === "function") {
