@@ -1,7 +1,14 @@
 ﻿
 // helps us filter out data channel messages that don't belong to us
 const APP_FINGERPRINT = "Calla",
-    eventNames = ["moveTo", "emote", "userInitRequest", "userInitResponse", "audioMuteStatusChanged", "videoMuteStatusChanged"];
+    eventNames = [
+        "moveTo",
+        "emote",
+        "userInitRequest",
+        "userInitResponse",
+        "audioMuteStatusChanged",
+        "videoMuteStatusChanged"
+    ];
 
 // Manages communication between Jitsi Meet and Calla
 export class JitsiClient extends EventTarget {
@@ -73,7 +80,9 @@ export class JitsiClient extends EventTarget {
             parentNode,
             roomName,
             onload: () => {
-                this.setJitsiIFrame(this.api.getIFrame());
+                this.iframe = this.api.getIFrame();
+                this.apiOrigin = new URL(this.iframe.src).origin;
+                this.apiWindow = this.iframe.contentWindow || window;
                 callback();
             },
             noSSL: false,
@@ -104,8 +113,6 @@ export class JitsiClient extends EventTarget {
             });
         };
 
-
-
         reroute("videoConferenceJoined");
         reroute("videoConferenceLeft");
         reroute("participantJoined");
@@ -124,12 +131,6 @@ export class JitsiClient extends EventTarget {
         this.api.executeCommand("displayName", userName);
 
         return this.api;
-    }
-
-    setJitsiIFrame(iframe) {
-        this.iframe = iframe;
-        this.apiOrigin = new URL(iframe.src).origin;
-        this.apiWindow = this.iframe.contentWindow || window;
     }
 
     setUserName(userName) {
