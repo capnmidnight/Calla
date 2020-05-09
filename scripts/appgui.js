@@ -647,16 +647,11 @@ export class AppGui extends EventTarget {
     startConference(roomName, userName) {
         this.appView.show();
         location.hash = roomName;
-        this.api = this.jitsiClient.join(
+        this.jitsiClient.join(
             this.jitsiContainer,
             roomName,
-            () => {
-                this.jitsiClient.setJitsiIFrame(this.api.getIFrame());
-                this.updateAudioSettings();
-            });
-
-        this.jitsiClient.setJitsiApi(this.api);
-        this.game.registerGameListeners(this.api);
-        this.jitsiClient.setUserName(userName);
+            userName,
+            () =>
+                this.updateAudioSettings());
     }
 }

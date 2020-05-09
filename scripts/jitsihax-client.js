@@ -12,18 +12,6 @@ export class JitsiClient extends EventTarget {
         addEventListener("message", this.rxJitsiHax.bind(this));
     }
 
-    setJitsiApi(api) {
-        this.api = api;
-        this.api.addEventListener("endpointTextMessageReceived",
-            this.rxGameData.bind(this));
-    }
-
-    setJitsiIFrame(iframe) {
-        this.iframe = iframe;
-        this.apiOrigin = new URL(iframe.src).origin;
-        this.apiWindow = this.iframe.contentWindow || window;
-    }
-
     /// Send a Calla message through the Jitsi Meet data channel.
     txGameData(id, command, obj) {
         obj = obj || {};
@@ -80,11 +68,14 @@ export class JitsiClient extends EventTarget {
         }
     }
 
-    join(parentNode, roomName, onload) {
-        return new this.ApiClass(JITSI_HOST, {
+    join(parentNode, roomName, userName, callback) {
+        this.api = new this.ApiClass(JITSI_HOST, {
             parentNode,
             roomName,
-            onload,
+            onload: () => {
+                this.setJitsiIFrame(this.api.getIFrame());
+                callback();
+            },
             noSSL: false,
             disableThirdPartyRequests: true,
             width: "100%",
@@ -103,13 +94,45 @@ export class JitsiClient extends EventTarget {
             }
         });
 
-        addEventListener("unload", () => {
-            this.api.dispose();
-        });
+        const reroute = (evtType) => {
+            this.api.addEventListener(evtType, (fakeEvt) => {
+                console.log("===================================", evtType, fakeEvt);
+                const evt = Object.assign(
+                    new Event(evtType),
+                    fakeEvt);
+                this.dispatchEvent(evt);
+            });
+        };
+
+
+
+        reroute("videoConferenceJoined");
+        reroute("videoConferenceLeft");
+        reroute("participantJoined");
+        reroute("participantLeft");
+        reroute("avatarChanged");
+        reroute("displayNameChange");
+        reroute("audioMuteStatusChanged");
+        reroute("videoMuteStatusChanged");
+
+        this.api.addEventListener("endpointTextMessageReceived",
+            this.rxGameData.bind(this));
+
+        addEventListener("unload", () =>
+            this.api.dispose());
+
+        this.api.executeCommand("displayName", userName);
+
+        return this.api;
+    }
+
+    setJitsiIFrame(iframe) {
+        this.iframe = iframe;
+        this.apiOrigin = new URL(iframe.src).origin;
+        this.apiWindow = this.iframe.contentWindow || window;
     }
 
     setUserName(userName) {
-        this.api.executeCommand("displayName", userName);
     }
 
     leave() {

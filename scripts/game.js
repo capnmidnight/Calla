@@ -19,6 +19,18 @@ export class Game extends EventTarget {
         super();
 
         this.jitsiClient = jitsiClient;
+        this.jitsiClient.addEventListener("videoConferenceJoined", this.start.bind(this));
+        this.jitsiClient.addEventListener("videoConferenceLeft", (evt) => {
+            if (evt.roomName.toLowerCase() === this.currentRoomName) {
+                this.end();
+            }
+        });
+        this.jitsiClient.addEventListener("participantJoined", this.addUser.bind(this));
+        this.jitsiClient.addEventListener("participantLeft", this.removeUser.bind(this));
+        this.jitsiClient.addEventListener("avatarChanged", this.setAvatarURL.bind(this));
+        this.jitsiClient.addEventListener("displayNameChange", this.changeUserName.bind(this));
+        this.jitsiClient.addEventListener("audioMuteStatusChanged", this.muteUserAudio.bind(this));
+        this.jitsiClient.addEventListener("videoMuteStatusChanged", this.muteUserVideo.bind(this));
 
         this.frontBuffer = document.querySelector("#frontBuffer");
         this.gFront = this.frontBuffer.getContext("2d");
@@ -361,21 +373,6 @@ export class Game extends EventTarget {
                 this.gui.zoomSpinner.value = Math.round(100 * this.targetCameraZ) / 100;
             }
         }
-    }
-
-    registerGameListeners(api) {
-        api.addEventListener("videoConferenceJoined", this.start.bind(this));
-        api.addEventListener("videoConferenceLeft", (evt) => {
-            if (evt.roomName.toLowerCase() === this.currentRoomName) {
-                this.end();
-            }
-        });
-        api.addEventListener("participantJoined", this.addUser.bind(this));
-        api.addEventListener("participantLeft", this.removeUser.bind(this));
-        api.addEventListener("avatarChanged", this.setAvatarURL.bind(this));
-        api.addEventListener("displayNameChange", this.changeUserName.bind(this));
-        api.addEventListener("audioMuteStatusChanged", this.muteUserAudio.bind(this));
-        api.addEventListener("videoMuteStatusChanged", this.muteUserVideo.bind(this));
     }
 
     addUser(evt) {
