@@ -103,24 +103,67 @@ export class JitsiClient extends EventTarget {
             }
         });
 
-        const reroute = (evtType) => {
-            this.api.addEventListener(evtType, (fakeEvt) => {
-                console.log("===================================", evtType, fakeEvt);
+        const reroute = (evtType, copy) => {
+            this.api.addEventListener(evtType, (rootEvt) => {
                 const evt = Object.assign(
                     new Event(evtType),
-                    fakeEvt);
+                    copy(rootEvt));
                 this.dispatchEvent(evt);
             });
         };
 
-        reroute("videoConferenceJoined");
-        reroute("videoConferenceLeft");
-        reroute("participantJoined");
-        reroute("participantLeft");
-        reroute("avatarChanged");
-        reroute("displayNameChange");
-        reroute("audioMuteStatusChanged");
-        reroute("videoMuteStatusChanged");
+        reroute("videoConferenceJoined", (evt) => {
+            return {
+                roomName: evt.roomName,
+                id: evt.id,
+                displayName: evt.displayName
+            };
+        });
+
+        reroute("videoConferenceLeft", (evt) => {
+            return {
+                roomName: evt.roomName
+            };
+        });
+
+        reroute("participantJoined", (evt) => {
+            return {
+                id: evt.id,
+                displayName: evt.displayName
+            };
+        });
+
+        reroute("participantLeft", (evt) => {
+            return {
+                id: evt.id
+            };
+        });
+
+        reroute("avatarChanged", (evt) => {
+            return {
+                id: evt.id,
+                avatarURL: evt.avatarURL
+            };
+        });
+
+        reroute("displayNameChange", (evt) => {
+            return {
+                id: evt.id,
+                displayName: evt.displayName
+            };
+        });
+
+        reroute("audioMuteStatusChanged", (evt) => {
+            return {
+                muted: evt.muted
+            };
+        });
+
+        reroute("videoMuteStatusChanged", (evt) => {
+            return {
+                muted: evt.muted
+            };
+        });
 
         this.api.addEventListener("endpointTextMessageReceived",
             this.rxGameData.bind(this));
@@ -131,9 +174,6 @@ export class JitsiClient extends EventTarget {
         this.api.executeCommand("displayName", userName);
 
         return this.api;
-    }
-
-    setUserName(userName) {
     }
 
     leave() {
@@ -169,7 +209,7 @@ export class JitsiClient extends EventTarget {
     }
 
     async getVideoInputDevices() {
-            const devices = await this.api.getAvailableDevices();
+        const devices = await this.api.getAvailableDevices();
         return devices && devices.videoInput || [];
     }
 

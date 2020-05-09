@@ -395,7 +395,7 @@ export class Game extends EventTarget {
     changeUserName(evt) {
         //evt = {
         //    id: string, // the id of the participant that changed his display name
-        //    displayname: string // the new display name
+        //    displayName: string // the new display name
         //};
 
         const user = this.userLookup[evt.id];
