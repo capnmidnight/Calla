@@ -1,5 +1,7 @@
 ﻿import { EmojiForm } from "./emojiForm.js";
 import {
+    pauseButton,
+    playButton,
     bust,
     mutedSpeaker,
     speakerHighVolume,
@@ -18,6 +20,21 @@ export class AppGui extends EventTarget {
         this.optionsView = null;
         this.emoteButton = null;
         this.muteAudioButton = null;
+
+        // >>>>>>>>>> TOGGLE GAME VIEW >>>>>>>>>>
+        {
+            const hideGameButton = document.querySelector("#hideGame");
+            if (hideGameButton) {
+                hideGameButton.addEventListener("click", (evt) => {
+                    this.game.frontBuffer.setOpenWithLabel(
+                        !this.game.frontBuffer.isOpen(),
+                        hideGameButton,
+                        pauseButton.value,
+                        playButton.value);
+                });
+            }
+        }
+        // <<<<<<<<<< TOGGLE GAME VIEW <<<<<<<<<<
 
         // >>>>>>>>>> TWEET >>>>>>>>>>
         {

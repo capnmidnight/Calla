@@ -3918,25 +3918,43 @@ export const shapes = [
     { value: "\u{2B50}", desc: "Star" },
     { value: "\u{1F4A0}", desc: "Diamond with a Dot" }
 ];
+export const shuffleTracksButton = { value: "\u{1F500}", desc: "Shuffle Tracks Button" };
+export const repeatButton = { value: "\u{1F501}", desc: "Repeat Button" };
+export const repeatSingleButton = { value: "\u{1F502}", desc: "Repeat Single Button" };
+export const upwardsButton = { value: "\u{1F53C}", desc: "Upwards Button" };
+export const downwardsButton = { value: "\u{1F53D}", desc: "Downwards Button" };
+export const playButton = { value: "\u{25B6}\u{FE0F}", desc: "Play Button" };
+export const reverseButton = { value: "\u{25C0}\u{FE0F}", desc: "Reverse Button" };
+export const ejectButton = { value: "\u{23CF}\u{FE0F}", desc: "Eject Button" };
+export const fastForwardButton = { value: "\u{23E9}", desc: "Fast-Forward Button" };
+export const fastReverseButton = { value: "\u{23EA}", desc: "Fast Reverse Button" };
+export const fastUpButton = { value: "\u{23EB}", desc: "Fast Up Button" };
+export const fastDownButton = { value: "\u{23EC}", desc: "Fast Down Button" };
+export const nextTrackButton = { value: "\u{23ED}\u{FE0F}", desc: "Next Track Button" };
+export const lastTrackButton = { value: "\u{23EE}\u{FE0F}", desc: "Last Track Button" };
+export const playOrPauseButton = { value: "\u{23EF}\u{FE0F}", desc: "Play or Pause Button" };
+export const pauseButton = { value: "\u{23F8}\u{FE0F}", desc: "Pause Button" };
+export const stopButton = { value: "\u{23F9}\u{FE0F}", desc: "Stop Button" };
+export const recordButton = { value: "\u{23FA}\u{FE0F}", desc: "Record Button" };
 export const mediaPlayer = [
-    { value: "\u{1F500}", desc: "Shuffle Tracks Button" },
-    { value: "\u{1F501}", desc: "Repeat Button" },
-    { value: "\u{1F502}", desc: "Repeat Single Button" },
-    { value: "\u{1F53C}", desc: "Upwards Button" },
-    { value: "\u{1F53D}", desc: "Downwards Button" },
-    { value: "\u{25B6}\u{FE0F}", desc: "Play Button" },
-    { value: "\u{25C0}\u{FE0F}", desc: "Reverse Button" },
-    { value: "\u{23CF}\u{FE0F}", desc: "Eject Button" },
-    { value: "\u{23E9}", desc: "Fast-Forward Button" },
-    { value: "\u{23EA}", desc: "Fast Reverse Button" },
-    { value: "\u{23EB}", desc: "Fast Up Button" },
-    { value: "\u{23EC}", desc: "Fast Down Button" },
-    { value: "\u{23ED}\u{FE0F}", desc: "Next Track Button" },
-    { value: "\u{23EE}\u{FE0F}", desc: "Last Track Button" },
-    { value: "\u{23EF}\u{FE0F}", desc: "Play or Pause Button" },
-    { value: "\u{23F8}\u{FE0F}", desc: "Pause Button" },
-    { value: "\u{23F9}\u{FE0F}", desc: "Stop Button" },
-    { value: "\u{23FA}\u{FE0F}", desc: "Record Button" },
+    shuffleTracksButton,
+    repeatButton,
+    repeatSingleButton,
+    upwardsButton,
+    downwardsButton,
+    pauseButton,
+    reverseButton,
+    ejectButton,
+    fastForwardButton,
+    fastReverseButton,
+    fastUpButton,
+    fastDownButton,
+    nextTrackButton,
+    lastTrackButton,
+    playOrPauseButton,
+    pauseButton,
+    stopButton,
+    recordButton,
 ];
 export const zodiac = [
     { value: "\u{2648}", desc: "Aries" },

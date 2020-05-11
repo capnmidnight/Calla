@@ -1,4 +1,4 @@
-# Calla
+﻿# Calla
 
 A hack on top of [Jitsi](https://jitsi.org) to create a virtual meeting room where users can sit next to each other to hear each other better.
 <img src="https://raw.githubusercontent.com/capnmidnight/Calla/master/repo-preview.jpg">
@@ -11,12 +11,23 @@ Even when it works, teleconferencing still kind of sucks. Only one person can re
 
 Calla adds a small, RPG-style map to the Jitsi meeting view. It gives you an avatar to walk around the room. Users choose where to sit in relation to other users. Users very close to you are set to full volume. Users a little far away have their volume scaled down accordingly. Users too far away to care about are rendered with zero volume.
 
+NOTE: __Jitsi Meet's web client doesn't work on iOS!__ Sorry :(
+
 - Visit the current installation at [www.calla.chat](https://www.calla.chat).
-- Enter a room name and user name. Suggest "FromGithub" for the roomname to meet other people linking from this repo (maybe).
+- Enter a room name and user name. Suggest "Calla" for the roomname to meet other people linking from this repo (maybe). 
+  - __Be careful in picking your room name__, if you don't want randos to join. Traffic is low right now, but you never know. 
+  - Try to __pick a unique user name__. A lot of people use "Test" and then there are a bunch of people with the same name running around.
 - Click "Connect" and wait for the connection to go through.
-- If you need to change your microphone settings, click the `<` arrow in the menu in the upper right corner of the window to hide the map view and give you full access to the Jitsi Meet interface. 
-- Once you are done changing settings, use the `>` arrow in the upper-right menu to return to the map view.
-- Use the Arrow Keys to move your character around.
+- Movement:
+  - __Click on the map__ to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls.
+  - Or, __use the arrow keys__ on your keyboard to move.
+  - __Click on yourself__ to open a list of Emoji. Select an Emoji to float it out into the map.
+  - __Hit the E key__ to re-emote with your last selected Emoji.
+  - You can __roll your mouse wheel__ or __pinch your touchscreen__ to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in ther Avatar.
+- Options:
+  - You can change your Microphone and Speaker device in the Options view. Click the Gear icon (⚙️) in the toolbar. 
+  - If you need to change any settings in Jitsi Meet that aren't accessible in Calla, click the Pause icon (⏸️) in the upper right corner of the window to hide the map view and give you full access to the Jitsi Meet interface. 
+    - Once you are done changing settings, use the Play icon (▶️) in the upper-right corner of the window to return to the map view.
 
 ## INSTALLATION
 
@@ -29,17 +40,6 @@ Calla adds a small, RPG-style map to the Jitsi meeting view. It gives you an ava
 - You may also want to edit `index.html` to change/remove the link(s) to this repository and/or my Twitter profile.
   
 Make sure you keep the distinction between your Jitsi installation and your Calla installation clear. You can conceivably run them on the same server, but I won't be digging into customizing a Jitsi installation enough to figure that out, so my setup has them on separate servers. `jitsihax.js` needs to go on your Jitsi server, and you need to edit it to point to your Calla server. `index.html` goes on your Calla server, and you need to edit it to point to your Jitsi server.
-
-## USAGE
-
-- __Be careful in picking your room name__, if you don't want randos to join. Traffic is low right now, but you never know.
-- Try to __pick a unique user name__. A lot of people use "Test" and then there are a bunch of people with the same name running around.
-- __Click on the map__ to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls.
-- Or, __use the arrow keys__ on your keyboard to move.
-- __Click on yourself__ to open a list of Emoji. Select an Emoji to float it out into the map.
-- __Hit the E key__ to re-emote with your last selected Emoji.
-- You can __roll your mouse wheel__ or __pinch your touchscreen__ to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in ther Avatar.
-- __Jitsi Meet's web client doesn't work on iOS!__ Sorry :(
 
 ## CONTRIBUTING
 

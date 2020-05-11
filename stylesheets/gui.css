@@ -59,6 +59,13 @@ body > section {
         margin: 0 0.5em 0 0;
     }
 
+#hideGame{
+    position: fixed;
+    top: 0;
+    right: 0;
+    margin: 4px;
+}
+
 #loginView form > * {
     margin: .25em;
     padding: .25em;
