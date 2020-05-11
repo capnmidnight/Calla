@@ -30,10 +30,15 @@ export class EmojiForm extends EventTarget {
 
         function combine(a, b) {
             let left = a.value;
-            const idx = left.indexOf(emojiStyle.value);
+
+            let idx = left.indexOf(emojiStyle.value);
+            if (idx === -1) {
+                idx = left.indexOf(textStyle.value);
+            }
             if (idx >= 0) {
                 left = left.substring(0, idx);
             }
+
             return {
                 value: left + b.value,
                 desc: a.desc + "/" + b.desc
@@ -97,23 +102,24 @@ export class EmojiForm extends EventTarget {
         };
 
         for (let key of Object.keys(icons)) {
+            if (key !== "combiners") {
+                const header = H.h1(),
+                    container = H.p(),
+                    headerButton = H.a({
+                        href: "javascript:undefined",
+                        title: key,
+                        onclick: () => {
+                            container.toggleOpen();
+                            headerButton.innerHTML = key + (container.isOpen() ? " -" : " +");
+                        }
+                    }, key + " -"),
+                    group = icons[key];
 
-            const header = H.h1(),
-                container = H.p(),
-                headerButton = H.a({
-                    href: "javascript:undefined",
-                    title: key,
-                    onclick: () => {
-                        container.toggleOpen();
-                        headerButton.innerHTML = key + (container.isOpen() ? " -" : " +");
-                    }
-                }, key + " -"),
-                group = icons[key];
-
-            addIconsToContainer(group, container);
-            header.appendChild(headerButton);
-            emojiContainer.appendChild(header);
-            emojiContainer.appendChild(container);
+                addIconsToContainer(group, container);
+                header.appendChild(headerButton);
+                emojiContainer.appendChild(header);
+                emojiContainer.appendChild(container);
+            }
         }
 
         confirmEmojiButton.lock();

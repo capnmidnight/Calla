@@ -3,7 +3,7 @@ import { project } from "./math.js";
 import { canvas } from "./html.js";
 import {
     mutedSpeaker,
-    activeSpeaker,
+    speakerMediumVolume,
     videoCamera,
     randomPerson,
     bust
@@ -211,9 +211,9 @@ export class User extends EventTarget {
                 if (this.isActive && !this.audioMuted) {
                     const height = this.stackAvatarHeight / 2;
                     g.font = height + "px sans-serif";
-                    const metrics = g.measureText(activeSpeaker.value);
+                    const metrics = g.measureText(speakerMediumVolume.value);
                     g.fillText(
-                        activeSpeaker.value,
+                        speakerMediumVolume.value,
                         this.stackAvatarWidth - metrics.width,
                         0);
                 }
