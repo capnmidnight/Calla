@@ -1,5 +1,10 @@
 ﻿import { EmojiForm } from "./emojiForm.js";
-import { bust, mutedSpeaker, speakerHighVolume } from "./emoji.js";
+import {
+    bust,
+    mutedSpeaker,
+    speakerHighVolume,
+    videoCamera
+} from "./emoji.js";
 import { isGoodNumber } from "./math.js";
 import { option } from "./html.js";
 import "./protos.js";
@@ -558,11 +563,17 @@ export class AppGui extends EventTarget {
     }
 
     setUserAudioMuted(muted) {
-        this.muteAudioButton.updateLabel(muted, mutedSpeaker.value, speakerHighVolume.value);
+        this.muteAudioButton.updateLabel(
+            muted,
+            mutedSpeaker.value,
+            speakerHighVolume.value);
     }
 
     setUserVideoMuted(muted) {
-        this.muteVideoButton.updateLabel(muted, "Enable", "Disable", " video");
+        this.muteVideoButton.updateLabel(
+            muted,
+            mutedSpeaker.value,
+            videoCamera.value);
     }
 
     refreshEmojiButton() {
