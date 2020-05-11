@@ -1,5 +1,5 @@
 ﻿import { EmojiForm } from "./emojiForm.js";
-import { bust } from "./emoji.js";
+import { bust, mutedSpeaker, speakerHighVolume } from "./emoji.js";
 import { isGoodNumber } from "./math.js";
 import { option } from "./html.js";
 import "./protos.js";
@@ -193,15 +193,10 @@ export class AppGui extends EventTarget {
                         setKeyOption(keyButtonDown, () => this.game.keyDown, v => this.game.keyDown = v);
                         setKeyOption(keyButtonLeft, () => this.game.keyLeft, v => this.game.keyLeft = v);
                         setKeyOption(keyButtonRight, () => this.game.keyRight, v => this.game.keyRight = v);
+                        setKeyOption(keyButtonToggleAudio, () => this.game.keyToggleAudio, v => this.game.keyToggleAudio = v);
                         setKeyOption(keyButtonEmote, () => this.game.keyEmote, v => {
                             this.game.keyEmote = v;
                             this.refreshEmojiButton();
-                        });
-                        setKeyOption(keyButtonToggleAudio, () => this.game.keyToggleAudio, v => {
-                            this.game.keyToggleAudio = v;
-                            if (!!this.game.me) {
-                                this.setUserAudioMuted(this.game.me.audioMuted);
-                            }
                         });
                     }
                 }
@@ -563,7 +558,7 @@ export class AppGui extends EventTarget {
     }
 
     setUserAudioMuted(muted) {
-        this.muteAudioButton.updateLabel(muted, "Unmute", "Mute", ` audio (<kbd>${this.game.keyToggleAudio.toUpperCase()}</kbd>)`);
+        this.muteAudioButton.updateLabel(muted, mutedSpeaker.value, speakerHighVolume.value);
     }
 
     setUserVideoMuted(muted) {

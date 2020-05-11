@@ -405,25 +405,29 @@ export class Game extends EventTarget {
     }
 
     muteUserAudio(evt) {
-        if (evt.participantID) {
-            const user = this.userLookup[evt.participantID];
-            if (!!user) {
-                user.audioMuted = evt.data.muted;
-            }
+        let mutingUser = this.me;
+        if (!!evt.participantID) {
+            mutingUser = this.userLookup[evt.participantID];
         }
-        else if (!this.me) {
+
+        if (!mutingUser) {
+            console.log("no user");
             setTimeout(this.muteUserAudio.bind(this, evt), 1000);
         }
         else {
-            this.me.audioMuted = evt.muted;
-            evt.participantID = this.me.id;
-            for (let user of this.userList) {
-                if (!user.isMe) {
-                    this.jitsiClient.sendAudioMuteState(user.id, evt.muted);
-                }
-            }
+            const muted = evt.data && evt.data.muted
+                || !evt.data && evt.muted;
+            mutingUser.audioMuted = muted;
 
-            this.gui.setUserAudioMuted(evt.muted);
+            if (mutingUser === this.me) {
+                evt.participantID = this.me.id;
+                for (let user of this.userList) {
+                    if (!user.isMe) {
+                        this.jitsiClient.sendAudioMuteState(user.id, evt.muted);
+                    }
+                }
+                this.gui.setUserAudioMuted(muted);
+            }
         }
     }
 
