@@ -78,17 +78,10 @@ export class AppGui extends EventTarget {
                 && optionsButton
                 && optionsConfirmButton) {
 
-                const toggleOptionsView = () => {
-                    this.optionsView.setOpenWithLabel(
-                        !this.optionsView.isOpen(),
-                        optionsButton,
-                        "Hide", "Show", " options");
-                };
-
                 optionsButton.addEventListener("click", (evt) => {
                     if (!this.emojiForm.isOpen()
                         && (!this.loginView || !this.loginView.isOpen())) {
-                        toggleOptionsView();
+                        this.optionsView.toggleOpen();
                         if (this.optionsView.isOpen()) {
                             this.dispatchEvent(new Event("optionsOpened"));
                         }
@@ -97,13 +90,12 @@ export class AppGui extends EventTarget {
 
                 optionsConfirmButton.addEventListener("click", (evt) => {
                     if (this.optionsView.isOpen()) {
-                        toggleOptionsView();
+                        this.optionsView.hide();
                         this.dispatchEvent(new Event("optionsConfirmed"));
                     }
                 });
 
-                this.optionsView.show();
-                toggleOptionsView();
+                this.optionsView.hide();
 
                 // >>>>>>>>>> AVATAR >>>>>>>>>>
                 {
