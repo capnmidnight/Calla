@@ -1,34 +1,45 @@
-﻿function tag(name, ...rest) {
-    const elem = document.createElement(name);
-
+﻿export function assignAttributes(elem, ...rest) {
     rest.filter(x => !(x instanceof Element)
-        && !(x instanceof String)
-        && typeof x !== "string")
+            && !(x instanceof String)
+            && typeof x !== "string")
         .forEach(attr => {
-            for (let key in attr) {
-                const value = attr[key];
-                if (key === "style") {
-                    for (let subKey in value) {
-                        elem[key][subKey] = value[subKey];
-                    }
-                }
-                else if (key === "textContent" || key === "innerText") {
-                    elem.appendChild(document.createTextNode(value));
-                }
-                else if (key.startsWith("on") && typeof value === "function") {
-                    elem.addEventListener(key.substring(2), value);
-                }
-                else if (!(typeof value === "boolean" || value instanceof Boolean)) {
-                    elem[key] = value;
-                }
-                else if (value) {
-                    elem.setAttribute(key, "");
-                }
-                else {
-                    elem.removeAttribute(key);
+        for (let key in attr) {
+            const value = attr[key];
+            if (key === "style") {
+                for (let subKey in value) {
+                    elem[key][subKey] = value[subKey];
                 }
             }
-        });
+            else if (key === "textContent" || key === "innerText") {
+                elem.appendChild(document.createTextNode(value));
+            }
+            else if (key.startsWith("on") && typeof value === "function") {
+                elem.addEventListener(key.substring(2), value);
+            }
+            else if (!(typeof value === "boolean" || value instanceof Boolean)
+                || key === "muted") {
+                elem[key] = value;
+            }
+            else if (value) {
+                elem.setAttribute(key, "");
+            }
+            else {
+                elem.removeAttribute(key);
+            }
+        }
+    });
+}
+
+export function clear(elem) {
+    while (elem.lastChild) {
+        elem.lastChild.remove();
+    }
+}
+
+export function tag(name, ...rest) {
+    const elem = document.createElement(name);
+
+    assignAttributes(elem, ...rest);
 
     const textContent = rest.filter(x => x instanceof String || typeof x === "string")
         .reduce((a, b) => (a + "\n" + b), "")
@@ -38,8 +49,7 @@
         elem.appendChild(document.createTextNode(textContent));
     }
 
-    rest
-        .filter(x => x instanceof Element)
+    rest.filter(x => x instanceof Element)
         .forEach(elem.appendChild.bind(elem));
 
     return elem;
@@ -61,7 +71,7 @@ export function bdo(...rest) { return tag("bdo", ...rest); }
 export function big(...rest) { return tag("big", ...rest); }
 export function blockquote(...rest) { return tag("blockquote", ...rest); }
 export function body(...rest) { return tag("body", ...rest); }
-export function br(...rest) { return tag("br", ...rest); }
+export function br() { return tag("br"); }
 export function button(...rest) { return tag("button", ...rest); }
 export function canvas(...rest) { return tag("canvas", ...rest); }
 export function caption(...rest) { return tag("caption", ...rest); }
@@ -139,6 +149,7 @@ export function sup(...rest) { return tag("sup", ...rest); }
 export function table(...rest) { return tag("table", ...rest); }
 export function tbody(...rest) { return tag("tbody", ...rest); }
 export function td(...rest) { return tag("td", ...rest); }
+export function text(value) { return document.createTextNode(value); }
 export function textarea(...rest) { return tag("textarea", ...rest); }
 export function tfoot(...rest) { return tag("tfoot", ...rest); }
 export function th(...rest) { return tag("th", ...rest); }
@@ -151,3 +162,83 @@ export function ul(...rest) { return tag("ul", ...rest); }
 export function varTag(...rest) { return tag("var", ...rest); }
 export function video(...rest) { return tag("video", ...rest); }
 export function wbr(...rest) { return tag("wbr", ...rest); }
+
+export function isCanvas(elem) {
+    if (elem instanceof HTMLCanvasElement) {
+        return true;
+    }
+
+    if (window.OffscreenCanvas
+        && elem instanceof OffscreenCanvas) {
+        return true;
+    }
+
+    return false;
+}
+
+export function offscreenCanvas(options) {
+    const width = options && options.width || 512,
+        height = options && options.height || width;
+
+    if (options instanceof Object) {
+        Object.assign(options, {
+            width,
+            height
+        });
+    }
+
+    if (window.OffscreenCanvas) {
+        return new OffscreenCanvas(width, height);
+    }
+
+    return canvas(options);
+}
+
+export function setCanvasSize(canv, w, h, superscale = 1) {
+    w = Math.floor(w * superscale);
+    h = Math.floor(h * superscale);
+    if (canv.width != w
+        || canv.height != h) {
+        canv.width = w;
+        canv.height = h;
+        return true;
+    }
+    return false;
+}
+
+export function setContextSize(ctx, w, h, superscale = 1) {
+    const oldImageSmoothingEnabled = ctx.imageSmoothingEnabled,
+        oldTextBaseline = ctx.textBaseline,
+        oldTextAlign = ctx.textAlign,
+        oldFont = ctx.font,
+        resized = setCanvasSize(
+            ctx.canvas,
+            w,
+            h,
+            superscale);
+
+    if (resized) {
+        ctx.imageSmoothingEnabled = oldImageSmoothingEnabled;
+        ctx.textBaseline = oldTextBaseline;
+        ctx.textAlign = oldTextAlign;
+        ctx.font = oldFont;
+    }
+
+    return resized;
+}
+
+export function resizeCanvas(canv, superscale = 1) {
+    return setCanvasSize(
+        canv,
+        canv.clientWidth,
+        canv.clientHeight,
+        superscale);
+}
+
+export function resizeContext(ctx, superscale = 1) {
+    return setContextSize(
+        ctx,
+        ctx.canvas.clientWidth,
+        ctx.canvas.clientHeight,
+        superscale);
+}
