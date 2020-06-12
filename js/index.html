@@ -292,7 +292,7 @@ grid-template-rows: auto;">
     <script type="module">
         const pageFileName = document.location.pathname.substring(1) || "index.html",
             pageName = pageFileName.match(/(\w+)\.html/)[1],
-            scriptFile = `./scripts/${pageName}.js`;
+            scriptFile = `./${pageName}.js`;
         import(scriptFile);
     </script>
 </body>

@@ -1,6 +1,6 @@
-﻿import "../scripts/protos.js";
+﻿import "../package/src/protos.js";
 import { TestCase } from "../etc/assert.js";
-import { lerp } from "../scripts/math.js";
+import { lerp } from "../package/src/math.js";
 
 export class MathTests extends TestCase {
     test_Lerp0() {

@@ -7,15 +7,27 @@ const APP_FINGERPRINT = "Calla",
         "userInitRequest",
         "userInitResponse",
         "audioMuteStatusChanged",
-        "videoMuteStatusChanged"
+        "videoMuteStatusChanged",
+        "videoConferenceJoined",
+        "videoConferenceLeft",
+        "participantJoined",
+        "participantLeft",
+        "avatarChanged",
+        "displayNameChange",
+        "audioActivity"
     ];
 
 // Manages communication between Jitsi Meet and Calla
 export class JitsiClient extends EventTarget {
 
-    constructor(ApiClass) {
+    constructor(ApiClass, parentNode) {
         super();
         this.ApiClass = ApiClass;
+        this.parentNode = parentNode;
+        this.api = null;
+        this.iframe = null;
+        this.apiOrigin = null;
+        this.apiWindow = null;
         addEventListener("message", this.rxJitsiHax.bind(this));
     }
 
@@ -75,105 +87,106 @@ export class JitsiClient extends EventTarget {
         }
     }
 
-    join(parentNode, roomName, userName, callback) {
-        this.api = new this.ApiClass(JITSI_HOST, {
-            parentNode,
-            roomName,
-            onload: () => {
-                this.iframe = this.api.getIFrame();
-                this.apiOrigin = new URL(this.iframe.src).origin;
-                this.apiWindow = this.iframe.contentWindow || window;
-                callback();
-            },
-            noSSL: false,
-            disableThirdPartyRequests: true,
-            width: "100%",
-            height: "100%",
-            configOverwrite: {
-                startVideoMuted: 0,
-                startWithVideoMuted: true
-            },
-            interfaceConfigOverwrite: {
-                DISABLE_VIDEO_BACKGROUND: true,
-                SHOW_JITSI_WATERMARK: false,
-                SHOW_WATERMARK_FOR_GUESTS: false,
-                SHOW_POWERED_BY: true,
-                AUTHENTICATION_ENABLE: false,
-                MOBILE_APP_PROMO: false
-            }
-        });
-
-        const reroute = (evtType, copy) => {
-            this.api.addEventListener(evtType, (rootEvt) => {
-                const evt = Object.assign(
-                    new Event(evtType),
-                    copy(rootEvt));
-                this.dispatchEvent(evt);
+    joinAsync(roomName, userName) {
+        return new Promise((resolve, reject) => {
+            this.api = new this.ApiClass(JITSI_HOST, {
+                parentNode: this.parentNode,
+                roomName,
+                onload: () => {
+                    this.iframe = this.api.getIFrame();
+                    this.apiOrigin = new URL(this.iframe.src).origin;
+                    this.apiWindow = this.iframe.contentWindow || window;
+                    resolve();
+                },
+                noSSL: false,
+                width: "100%",
+                height: "100%",
+                configOverwrite: {
+                    startVideoMuted: 0,
+                    startWithVideoMuted: true
+                },
+                interfaceConfigOverwrite: {
+                    DISABLE_VIDEO_BACKGROUND: true,
+                    SHOW_JITSI_WATERMARK: false,
+                    SHOW_WATERMARK_FOR_GUESTS: false,
+                    SHOW_POWERED_BY: true,
+                    AUTHENTICATION_ENABLE: false,
+                    MOBILE_APP_PROMO: false
+                }
             });
-        };
 
-        reroute("videoConferenceJoined", (evt) => {
-            return {
-                roomName: evt.roomName,
-                id: evt.id,
-                displayName: evt.displayName
+            const reroute = (evtType, copy) => {
+                this.api.addEventListener(evtType, (rootEvt) => {
+                    const evt = Object.assign(
+                        new Event(evtType),
+                        copy(rootEvt));
+                    this.dispatchEvent(evt);
+                });
             };
+
+            reroute("videoConferenceJoined", (evt) => {
+                return {
+                    roomName: evt.roomName,
+                    id: evt.id,
+                    displayName: evt.displayName
+                };
+            });
+
+            reroute("videoConferenceLeft", (evt) => {
+                return {
+                    roomName: evt.roomName
+                };
+            });
+
+            reroute("participantJoined", (evt) => {
+                return {
+                    id: evt.id,
+                    displayName: evt.displayName
+                };
+            });
+
+            reroute("participantLeft", (evt) => {
+                return {
+                    id: evt.id
+                };
+            });
+
+            reroute("avatarChanged", (evt) => {
+                return {
+                    id: evt.id,
+                    avatarURL: evt.avatarURL
+                };
+            });
+
+            reroute("displayNameChange", (evt) => {
+                return {
+                    id: evt.id,
+
+                    // The External API misnames this
+                    displayName: evt.displayname 
+                };
+            });
+
+            reroute("audioMuteStatusChanged", (evt) => {
+                return {
+                    muted: evt.muted
+                };
+            });
+
+            reroute("videoMuteStatusChanged", (evt) => {
+                return {
+                    muted: evt.muted
+                };
+            });
+
+            this.api.addEventListener("endpointTextMessageReceived",
+                this.rxGameData.bind(this));
+
+            addEventListener("unload", () =>
+                this.api.dispose());
+
+            this.api.executeCommand("displayName", userName);
         });
-
-        reroute("videoConferenceLeft", (evt) => {
-            return {
-                roomName: evt.roomName
-            };
-        });
-
-        reroute("participantJoined", (evt) => {
-            return {
-                id: evt.id,
-                displayName: evt.displayName
-            };
-        });
-
-        reroute("participantLeft", (evt) => {
-            return {
-                id: evt.id
-            };
-        });
-
-        reroute("avatarChanged", (evt) => {
-            return {
-                id: evt.id,
-                avatarURL: evt.avatarURL
-            };
-        });
-
-        reroute("displayNameChange", (evt) => {
-            return {
-                id: evt.id,
-                displayName: evt.displayName
-            };
-        });
-
-        reroute("audioMuteStatusChanged", (evt) => {
-            return {
-                muted: evt.muted
-            };
-        });
-
-        reroute("videoMuteStatusChanged", (evt) => {
-            return {
-                muted: evt.muted
-            };
-        });
-
-        this.api.addEventListener("endpointTextMessageReceived",
-            this.rxGameData.bind(this));
-
-        addEventListener("unload", () =>
-            this.api.dispose());
-
-        this.api.executeCommand("displayName", userName);
-
-        return this.api;
     }
 
     leave() {
@@ -244,7 +257,7 @@ export class JitsiClient extends EventTarget {
 
     /// Add a listener for Calla events that come through the Jitsi Meet data channel.
     addEventListener(evtName, callback) {
-        if (eventNames.indexOf[evtName] === -1) {
+        if (eventNames.indexOf(evtName) === -1) {
             throw new Error(`Unsupported event type: ${evtName}`);
         }
 

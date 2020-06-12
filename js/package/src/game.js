@@ -5,6 +5,8 @@ import { Emote } from "./emote.js";
 
 import { lerp, clamp, project, unproject } from "./math.js";
 
+import { version } from "./version.js";
+
 const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_MAX = 8,
     CAMERA_ZOOM_MIN = 0.1,
@@ -19,7 +21,10 @@ export class Game extends EventTarget {
         super();
 
         this.jitsiClient = jitsiClient;
-        this.jitsiClient.addEventListener("videoConferenceJoined", this.start.bind(this));
+
+        this.jitsiClient.addEventListener("videoConferenceJoined", (evt) =>
+            this.start(evt));
+
         this.jitsiClient.addEventListener("videoConferenceLeft", (evt) => {
             if (evt.roomName.toLowerCase() === this.currentRoomName) {
                 this.end();
@@ -299,9 +304,13 @@ export class Game extends EventTarget {
     }
 
     updateAudioActivity(evt) {
-        const user = this.userLookup[evt.data.participantID];
+        const id = evt.data && evt.data.participantID
+                || evt.participantID,
+            isActive = evt.data && evt.data.isActive
+                || evt.isActive,
+            user = this.userLookup[id];
         if (!!user) {
-            user.isActive = evt.data.isActive;
+            user.isActive = isActive;
         }
     }
 
@@ -420,10 +429,12 @@ export class Game extends EventTarget {
             mutingUser.audioMuted = muted;
 
             if (mutingUser === this.me) {
-                evt.participantID = this.me.id;
-                for (let user of this.userList) {
-                    if (!user.isMe) {
-                        this.jitsiClient.sendAudioMuteState(user.id, evt.muted);
+                if (!evt.participantID) {
+                    evt.participantID = this.me.id;
+                    for (let user of this.userList) {
+                        if (!user.isMe) {
+                            this.jitsiClient.sendAudioMuteState(user.id, evt.muted);
+                        }
                     }
                 }
                 this.gui.setUserAudioMuted(muted);
@@ -447,10 +458,12 @@ export class Game extends EventTarget {
             mutingUser.videoMuted = muted;
 
             if (mutingUser === this.me) {
-                evt.participantID = this.me.id;
-                for (let user of this.userList) {
-                    if (!user.isMe) {
-                        this.jitsiClient.sendVideoMuteState(user.id, evt.muted);
+                if (!evt.participantID) {
+                    evt.participantID = this.me.id;
+                    for (let user of this.userList) {
+                        if (!user.isMe) {
+                            this.jitsiClient.sendVideoMuteState(user.id, evt.muted);
+                        }
                     }
                 }
                 this.gui.setUserVideoMuted(muted);
@@ -743,6 +756,9 @@ export class Game extends EventTarget {
         }
     }
 }
+
+Game.version = version;
+console.info(`Calla: ${version}`);
 
 class GamepadButtonPressedEvent extends Event {
     constructor(button) {

@@ -2,16 +2,16 @@
 // be able to test the UI without having to connect to a
 // meeting.
 
-import "./protos.js";
-import { JitsiClient } from "./jitsihax-client.js";
-import { Game } from "./game.js";
-import { randomPerson, allIcons as icons } from "./emoji.js";
-import { audio, span } from "./html.js";
-import "../etc/jitsihax.js";
+import "./package/src/protos.js";
+import { JitsiClient } from "./package/src/jitsihax-client.js";
+import { Game } from "./package/src/game.js";
+import { randomPerson, allIcons as icons } from "./package/src/emoji.js";
+import { audio, span } from "./package/src/html.js";
+import "./etc/jitsihax.js";
 
 class MockJitsiClient extends JitsiClient {
-    constructor(ApiClass) {
-        super(ApiClass);
+    constructor(ApiClass, parentNode) {
+        super(ApiClass, parentNode);
     }
 
     mockRxGameData(command, id, data) {
@@ -200,7 +200,7 @@ class MockUser {
     }
 }
 
-const jitsiClient = new MockJitsiClient(MockJitsiMeetExternalAPI),
+const jitsiClient = new MockJitsiClient(MockJitsiMeetExternalAPI, document.querySelector("#jitsi")),
     game = new Game(jitsiClient),
     gui = game.gui,
     testUsers = [

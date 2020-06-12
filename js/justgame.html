@@ -15,7 +15,7 @@
                 doc = parser.parseFromString(html, "text/html"),
                 pageFileName = document.location.pathname.substring(1) || "index.html",
                 pageName = pageFileName.match(/(\w+)\.html/)[1],
-                scriptFile = `./scripts/${pageName}.js`;
+                scriptFile = `./${pageName}.js`;
 
             document.head.innerHTML += doc.head.innerHTML;
             document.body.innerHTML += doc.body.innerHTML;

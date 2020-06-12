@@ -632,7 +632,7 @@ export class AppGui extends EventTarget {
         if (roomName.length > 0
             && userName.length > 0) {
             localStorage.setItem("userName", userName);
-            this.startConference(roomName, userName);
+            this.startConferenceAsync(roomName, userName);
         }
         else {
             this.showLogin();
@@ -659,14 +659,12 @@ export class AppGui extends EventTarget {
             this.rolloff);
     }
 
-    startConference(roomName, userName) {
+    async startConferenceAsync(roomName, userName) {
         this.appView.show();
         location.hash = roomName;
-        this.jitsiClient.join(
-            this.jitsiContainer,
+        await this.jitsiClient.joinAsync(
             roomName,
-            userName,
-            () =>
-                this.updateAudioSettings());
+            userName);
+        this.updateAudioSettings();
     }
 }
