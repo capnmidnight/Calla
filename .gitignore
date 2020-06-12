@@ -108,3 +108,5 @@ dist
 [Bb]in/
 [Oo]bj/
 *.user
+
+/js/package/README.md
