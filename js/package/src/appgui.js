@@ -57,6 +57,10 @@ export class AppGui extends EventTarget {
                     this.game.targetCameraZ = this.zoomSpinner.value;
                 });
                 this.zoomSpinner.value = this.game.targetCameraZ;
+
+                this.game.addEventListener("zoomupdated", () => {
+                    this.zoomSpinner.value = Math.round(100 * this.game.targetCameraZ) / 100;
+                });
             }
         }
         // <<<<<<<<<< ZOOM <<<<<<<<<<
@@ -71,17 +75,22 @@ export class AppGui extends EventTarget {
             if (this.emoteButton
                 && selectEmojiButton) {
 
-                this.emoteButton.addEventListener("click", () => this.game.emote());
-
-                selectEmojiButton.addEventListener("click", async (evt) => {
+                this.emoteButton.addEventListener("click", () => this.game.emote(this.game.me.id, this.game.currentEmoji));
+                this.selectEmojiAsync = async () => {
                     if ((!this.optionsView || !this.optionsView.isOpen())
                         && (!this.loginView || !this.loginView.isOpen())) {
                         const emoji = await this.emojiForm.selectAsync();
+
                         if (!!emoji) {
+                            const isNew = emoji !== game.currentEmoji;
                             this.game.emote(this.game.me.id, emoji);
+                            if (isNew) {
+                                this.refreshEmojiButton();
+                            }
                         }
                     }
-                });
+                };
+                selectEmojiButton.addEventListener("click", this.selectEmojiAsync);
             }
         }
         // <<<<<<<<<< EMOJI <<<<<<<<<<
@@ -313,12 +322,12 @@ export class AppGui extends EventTarget {
                         rolloffSpinner = document.querySelector("#rolloff");
 
                     this.muteAudioButton = document.querySelector("#muteAudio");
-                    this.drawHearing = localStorage.getItem("drawHearing") === "true";
+                    this.game.drawHearing = localStorage.getItem("drawHearing") === "true";
 
-                    this.audioDistanceMin = localStorage.getInt("minAudio", 2);
-                    this.audioDistanceMin = Math.max(1, this.audioDistanceMin);
-                    this.audioDistanceMax = localStorage.getInt("maxAudio", 10);
-                    this.audioDistanceMax = Math.max(this.audioDistanceMin + 1, this.audioDistanceMax);
+                    this.game.audioDistanceMin = localStorage.getInt("minAudio", this.game.audioDistanceMin);
+                    this.game.audioDistanceMin = Math.max(1, this.game.audioDistanceMin);
+                    this.game.audioDistanceMax = localStorage.getInt("maxAudio", this.game.audioDistanceMax);
+                    this.game.audioDistanceMax = Math.max(this.game.audioDistanceMin + 1, this.game.audioDistanceMax);
                     this.rolloff = localStorage.getInt("rolloff", 50) / 10;
                     this.rolloff = Math.max(0.1, Math.min(10, this.rolloff));
 
@@ -391,30 +400,30 @@ export class AppGui extends EventTarget {
                             }
                         });
 
-                        drawHearingCheckbox.checked = this.drawHearing;
+                        drawHearingCheckbox.checked = this.game.drawHearing;
                         drawHearingCheckbox.addEventListener("input", (evt) => {
-                            this.drawHearing = drawHearingCheckbox.checked;
+                            this.game.drawHearing = drawHearingCheckbox.checked;
                             localStorage.setItem("drawHearing", this.drawHearing);
                         });
 
                         const setAudioRange = () => {
-                            this.audioDistanceMin = parseFloat(minAudioSpinner.value);
+                            this.game.audioDistanceMin = parseFloat(minAudioSpinner.value);
 
-                            this.audioDistanceMax = parseFloat(maxAudioSpinner.value);
-                            this.audioDistanceMax = Math.max(this.audioDistanceMin + 1, this.audioDistanceMax);
-                            maxAudioSpinner.value = this.audioDistanceMax;
+                            this.game.audioDistanceMax = parseFloat(maxAudioSpinner.value);
+                            this.game.audioDistanceMax = Math.max(this.game.audioDistanceMin + 1, this.game.audioDistanceMax);
+                            maxAudioSpinner.value = this.game.audioDistanceMax;
 
                             this.rolloff = parseFloat(rolloffSpinner.value);
 
-                            localStorage.setItem("minAudio", this.audioDistanceMin);
-                            localStorage.setItem("maxAudio", this.audioDistanceMax);
+                            localStorage.setItem("minAudio", this.game.audioDistanceMin);
+                            localStorage.setItem("maxAudio", this.game.audioDistanceMax);
                             localStorage.setItem("rolloff", 10 * this.rolloff);
 
                             this.updateAudioSettings();
                         };
 
-                        minAudioSpinner.value = this.audioDistanceMin;
-                        maxAudioSpinner.value = this.audioDistanceMax;
+                        minAudioSpinner.value = this.game.audioDistanceMin;
+                        maxAudioSpinner.value = this.game.audioDistanceMax;
                         rolloffSpinner.value = this.rolloff;
                         minAudioSpinner.addEventListener("input", setAudioRange);
                         maxAudioSpinner.addEventListener("input", setAudioRange);
@@ -569,6 +578,27 @@ export class AppGui extends EventTarget {
             }
         }
         // <<<<<<<<<< LOGIN <<<<<<<<<<
+
+        this.game.addEventListener("audiomuted", (evt) => {
+            this.setUserAudioMuted(evt.muted);
+        });
+
+        this.game.addEventListener("videomuted", (evt) => {
+            this.setUserVideoMuted(evt.muted);
+        });
+
+        this.game.addEventListener("gamestarted", () => {
+            this.loginView.hide();
+            this.resize();
+        });
+
+        this.game.addEventListener("gameended", () => {
+            this.showLogin();
+        });
+
+        this.game.addEventListener("emojineeded", () => {
+            this.selectEmojiAsync();
+        });
     }
 
     setUserAudioMuted(muted) {
@@ -654,8 +684,8 @@ export class AppGui extends EventTarget {
         this.jitsiClient.setAudioProperties(
             location.origin,
             MOVE_TRANSITION_TIME,
-            this.audioDistanceMin,
-            this.audioDistanceMax,
+            this.game.audioDistanceMin,
+            this.game.audioDistanceMax,
             this.rolloff);
     }
 

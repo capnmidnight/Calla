@@ -1,5 +1,4 @@
-﻿import { AppGui } from "./appgui.js";
-import { TileMap } from "./tilemap.js";
+﻿import { TileMap } from "./tilemap.js";
 import { User } from "./user.js";
 import { Emote } from "./emote.js";
 
@@ -13,7 +12,23 @@ const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_SHAPE = 1 / 4,
     CAMERA_ZOOM_SPEED = 0.005,
     MAX_DRAG_DISTANCE = 5,
-    isFirefox = typeof InstallTrigger !== "undefined";
+    isFirefox = typeof InstallTrigger !== "undefined",
+    gameStartedEvt = new Event("gamestarted"),
+    gameEndedEvt = new Event("gameended"),
+    zoomUpdatedEvt = new Event("zoomupdated"),
+    emojiNeededEvt = new Event("emojineeded"),
+    audioMutedEvt = Object.assign(new Event("audiomuted"), {
+        muted: true
+    }),
+    audioUnmutedEvt = Object.assign(new Event("audiomuted"), {
+        muted: false
+    }),
+    videoMutedEvt = Object.assign(new Event("videomuted"), {
+        muted: true
+    }),
+    videoUnmutedEvt = Object.assign(new Event("videomuted"), {
+        muted: false
+    });
 
 export class Game extends EventTarget {
 
@@ -57,12 +72,16 @@ export class Game extends EventTarget {
         this.currentRoomName = null;
         this.fontSize = 10;
 
+        this.drawHearing = false;
+        this.audioDistanceMin = 2;
+        this.audioDistanceMax = 10;
+
         this.pointers = [];
         this.lastPinchDistance = 0;
+        this.canClick = false;
 
         this.currentEmoji = null;
         this.emotes = [];
-        this.canClick = false;
 
         this.keyEmote = "e";
         this.keyToggleAudio = "a";
@@ -92,8 +111,10 @@ export class Game extends EventTarget {
                 && !evt.metaKey
                 && evt.key === this.keyToggleAudio
                 && !!this.me) {
-                this.gui.setUserAudioMuted(!this.me.audioMuted);
                 this.jitsiClient.toggleAudio();
+                this.dispatchEvent(this.me.audioMuted
+                    ? audioUnmutedEvt
+                    : audioMutedEvt);
             }
         });
 
@@ -224,7 +245,7 @@ export class Game extends EventTarget {
                     dy = tile.y - this.me.ty;
 
                 if (dx === 0 && dy === 0) {
-                    this.emote();
+                    this.emote(this.me.id, this.currentEmoji);
                 }
                 else if (this.canClick) {
                     this.moveMeBy(dx, dy);
@@ -299,8 +320,6 @@ export class Game extends EventTarget {
         this.jitsiClient.addEventListener("videoMuteStatusChanged", this.muteUserVideo.bind(this));
 
         this.jitsiClient.addEventListener("audioActivity", this.updateAudioActivity.bind(this));
-
-        this.gui = new AppGui(this);
     }
 
     updateAudioActivity(evt) {
@@ -314,8 +333,7 @@ export class Game extends EventTarget {
         }
     }
 
-    async emote(participantID, emoji) {
-        participantID = participantID || this.me.id;
+    emote(participantID, emoji) {
         const user = this.userLookup[participantID];
 
         if (!!user) {
@@ -323,15 +341,13 @@ export class Game extends EventTarget {
             if (user.isMe) {
 
                 emoji = emoji
-                    || this.currentEmoji
-                    || await this.gui.emojiForm.selectAsync();
+                    || this.currentEmoji;
 
-                if (!!emoji) {
-                    const isNew = this.currentEmoji !== emoji;
+                if (!emoji) {
+                    this.dispatchEvent(emojiNeededEvt);
+                }
+                else {
                     this.currentEmoji = emoji;
-                    if (isNew) {
-                        this.gui.refreshEmojiButton();
-                    }
                     for (let user of this.userList) {
                         if (user !== this.me) {
                             this.jitsiClient.sendEmote(user.id, emoji);
@@ -378,9 +394,7 @@ export class Game extends EventTarget {
                 e = Math.pow(d, 1 / CAMERA_ZOOM_SHAPE);
 
             this.targetCameraZ = unproject(e, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX);
-            if (!!this.gui.zoomSpinner) {
-                this.gui.zoomSpinner.value = Math.round(100 * this.targetCameraZ) / 100;
-            }
+            this.dispatchEvent(zoomUpdatedEvt);
         }
     }
 
@@ -437,7 +451,10 @@ export class Game extends EventTarget {
                         }
                     }
                 }
-                this.gui.setUserAudioMuted(muted);
+
+                this.dispatchEvent(muted
+                    ? audioMutedEvt
+                    : audioUnmutedEvt);
             }
         }
     }
@@ -466,7 +483,10 @@ export class Game extends EventTarget {
                         }
                     }
                 }
-                this.gui.setUserVideoMuted(muted);
+
+                this.dispatchEvent(muted
+                    ? videoMutedEvt
+                    : videoUnmutedEvt);
             }
         }
     }
@@ -545,14 +565,12 @@ export class Game extends EventTarget {
         this.muteUserAudio({ participantID: this.me.id, data: { muted: audioMuted } });
         this.muteUserVideo({ participantID: this.me.id, data: { muted: videoMuted } });
 
-        this.gui.loginView.hide();
         this.startLoop();
-        this.dispatchEvent(new Event("gameStarted"));
+        this.dispatchEvent(gameStartedEvt);
     }
 
     startLoop() {
         this.frontBuffer.show();
-        this.gui.resize();
         this.frontBuffer.resize();
         this.frontBuffer.focus();
 
@@ -578,8 +596,7 @@ export class Game extends EventTarget {
         this.userLookup = {};
         this.userList.splice(0);
         this.me = null;
-        this.gui.showLogin();
-        this.dispatchEvent(new Event("gameEnded"));
+        this.dispatchEvent(gameEndedEvt);
     }
 
     update(dt) {
@@ -601,7 +618,7 @@ export class Game extends EventTarget {
                         case this.keyDown: dy++; break;
                         case this.keyLeft: dx--; break;
                         case this.keyRight: dx++; break;
-                        case this.keyEmote: this.emote(); break;
+                        case this.keyEmote: this.emote(this.me.id, this.currentEmoji); break;
                     }
                 }
             }
@@ -628,7 +645,7 @@ export class Game extends EventTarget {
                 }
 
                 if (pad.buttons[this.buttonEmote].pressed) {
-                    this.emote();
+                    this.emote(this.me.id, this.currentEmoji);
                 }
 
                 if (!lastPad.buttons[this.buttonToggleAudio].pressed
@@ -725,13 +742,13 @@ export class Game extends EventTarget {
                 user.drawName(this.gFront, this.map, this.cameraZ, this.fontSize);
             }
 
-            if (this.gui.drawHearing) {
+            if (this.drawHearing) {
                 this.me.drawHearingRange(
                     this.gFront,
                     this.map,
                     this.cameraZ,
-                    this.gui.audioDistanceMin,
-                    this.gui.audioDistanceMax);
+                    this.audioDistanceMin,
+                    this.audioDistanceMax);
             }
 
             for (let emote of this.emotes) {

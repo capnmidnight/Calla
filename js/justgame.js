@@ -5,6 +5,7 @@
 import "./package/src/protos.js";
 import { JitsiClient } from "./package/src/jitsihax-client.js";
 import { Game } from "./package/src/game.js";
+import { AppGui } from "./package/src/appgui.js";
 import { randomPerson, allIcons as icons } from "./package/src/emoji.js";
 import { audio, span } from "./package/src/html.js";
 import "./etc/jitsihax.js";
@@ -202,7 +203,7 @@ class MockUser {
 
 const jitsiClient = new MockJitsiClient(MockJitsiMeetExternalAPI, document.querySelector("#jitsi")),
     game = new Game(jitsiClient),
-    gui = game.gui,
+    gui = new AppGui(game),
     testUsers = [
         new MockUser("user1", -5, -5),
         new MockUser("user2", -5, 5),
@@ -217,7 +218,7 @@ Object.assign(window, {
     gui
 });
 
-game.addEventListener("gameStarted", function createTestUser() {
+game.addEventListener("gamestarted", function createTestUser() {
     if (game.userList.length < 5) {
         const idx = game.userList.length - 1,
             user = testUsers[idx];
