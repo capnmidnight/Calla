@@ -49,7 +49,6 @@ export class EmojiForm extends EventTarget {
             for (let icon of group) {
                 const g = isAlts ? H.ul() : H.span(),
                     btn = H.button({
-                        type: "button",
                         title: icon.desc,
                         onclick: (evt) => {
                             selectedEmoji = selectedEmoji && evt.ctrlKey

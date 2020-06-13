@@ -77,7 +77,10 @@ export function big(...rest) { return tag("big", ...rest); }
 export function blockquote(...rest) { return tag("blockquote", ...rest); }
 export function body(...rest) { return tag("body", ...rest); }
 export function br() { return tag("br"); }
-export function button(...rest) { return tag("button", ...rest); }
+export function htmlButton(...rest) { return tag("button", ...rest); }
+export function button(...rest) { return htmlButton(...rest, { type: "button" }); }
+export function submitButton(...rest) { return htmlButton(...rest, { type: "submit" }); }
+export function resetButton(...rest) { return htmlButton(...rest, { type: "reset" }); }
 export function canvas(...rest) { return tag("canvas", ...rest); }
 export function caption(...rest) { return tag("caption", ...rest); }
 export function center(...rest) { return tag("center", ...rest); }

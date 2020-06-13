@@ -117,7 +117,6 @@ function bar(color, width) {
 
 function refresher(thunk) {
     return H.td(H.button({
-        type: "button",
         onclick: thunk
     }, "\u{1F504}\u{FE0F}"));
 }
