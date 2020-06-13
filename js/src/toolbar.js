@@ -142,6 +142,7 @@ export class ToolBar extends EventTarget {
     }
 
     advertise() {
+        // GitHub link
         this.appendChild(a({
             href: "https://github.com/capnmidnight/Calla",
             target: "_blank",
@@ -154,6 +155,7 @@ export class ToolBar extends EventTarget {
                 role: "presentation"
             })));
 
+        // My own Twitter link
         this.appendChild(a({
             href: "https://twitter.com/Sean_McBeth",
             target: "_blank",

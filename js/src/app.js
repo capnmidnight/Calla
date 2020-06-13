@@ -1,6 +1,5 @@
 ﻿import { Game } from "./game.js";
 import { AppGui } from "./appgui.js";
-import { a, span } from "./html.js";
 
 export function init(JitsiClientClass, parentNode) {
     const jitsiClient = new JitsiClientClass(parentNode),
