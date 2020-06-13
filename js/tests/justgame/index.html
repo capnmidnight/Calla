@@ -1,0 +1,28 @@
+﻿<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <script id="app-settings">
+        const JITSI_HOST = "jitsi.calla.chat",
+            MOVE_REPEAT = 0.125,
+            MOVE_TRANSITION_TIME = 0.5;
+    </script>
+    <script type="module">
+        import { appendAll } from "../../package/src/html.js";
+        (async function () {
+            const response = await fetch("../../index.html"),
+                html = await response.text(),
+                parser = new DOMParser(),
+                doc = parser.parseFromString(html, "text/html");
+            appendAll(document.head, ...doc.head.children);
+            appendAll(document.body, ...doc.body.children);
+            await import("./bundle.min.js");
+        })();
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

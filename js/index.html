@@ -44,9 +44,9 @@
             MOVE_REPEAT = 0.125,
             MOVE_TRANSITION_TIME = 0.5;
     </script>
-    <link type="text/css" rel="stylesheet" href="stylesheets/general.css" />
-    <link type="text/css" rel="stylesheet" href="stylesheets/icons.css" />
-    <link type="text/css" rel="stylesheet" href="stylesheets/gui.css" />
+    <link type="text/css" rel="stylesheet" href="/stylesheets/general.css" />
+    <link type="text/css" rel="stylesheet" href="/stylesheets/icons.css" />
+    <link type="text/css" rel="stylesheet" href="/stylesheets/gui.css" />
 </head>
 
 <body>
@@ -258,7 +258,7 @@ grid-template-rows: auto;">
                 </button>
             </form>
             <h2>Preview</h2>
-            <video src="videos/demo.webm" style="width:100%" loop autoplay controls></video>
+            <video src="/videos/demo.webm" style="width:100%" loop autoplay controls></video>
             <h2>Instructions</h2>
             <aside style="border:dashed 2px darkred;background-color:wheat;border-radius:5px;padding:0.5em"><strong>Note:</strong> Calla is built on top of <a href="https://jitsi.org">Jitsi Meet</a>. Jitsi does not support iPhones and iPads.</aside>
             <ul>
@@ -288,13 +288,8 @@ grid-template-rows: auto;">
         </div>
 
     </section>
-
-    <script type="module">
-        const pageFileName = document.location.pathname.substring(1) || "index.html",
-            pageName = pageFileName.match(/(\w+)\.html/)[1],
-            scriptFile = `./${pageName}.js`;
-        import(scriptFile);
-    </script>
+    <script type="module" src="index.js"></script>
+    <!--<script type="module" src="bundle.min.js"></script>-->
 </body>
 
 </html>

@@ -1,27 +1,8 @@
 {
+  "private": true,
   "name": "calla",
   "version": "0.0.1",
-  "description": "Spatialized Voice Chat for Jitsi Meet",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "pkg": "node .\\writeversion.js && copy ..\\..\\README.md . && rollup -c && minify calla.js > calla.min.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/capnmidnight/Calla.git"
-  },
-  "keywords": [
-    "HTML5",
-    "Jitsi Meet",
-    "WebRTC",
-    "teleconferencing",
-    "video"
-  ],
-  "author": "Sean T. McBeth <sean.mcbeth+npm@gmail.com> (https://www.seanmcbeth.com)",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/capnmidnight/Calla/issues"
-  },
-  "homepage": "https://www.calla.chat"
+  }
 }

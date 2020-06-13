@@ -1,4 +1,10 @@
-﻿export function assignAttributes(elem, ...rest) {
+﻿export function appendAll(parent, ...elems) {
+    for (let i = 0; i < elems.length; ++i) {
+        parent.appendChild(elems[i]);
+    }
+}
+
+export function assignAttributes(elem, ...rest) {
     rest.filter(x => !(x instanceof Element)
             && !(x instanceof String)
             && typeof x !== "string")
@@ -49,8 +55,7 @@ export function tag(name, ...rest) {
         elem.appendChild(document.createTextNode(textContent));
     }
 
-    rest.filter(x => x instanceof Element)
-        .forEach(elem.appendChild.bind(elem));
+    appendAll(elem, ...rest.filter(x => x instanceof Element));
 
     return elem;
 }

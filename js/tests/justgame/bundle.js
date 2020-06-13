@@ -1,325 +1,3 @@
-// helps us filter out data channel messages that don't belong to us
-const APP_FINGERPRINT = "Calla",
-    eventNames = [
-        "moveTo",
-        "emote",
-        "userInitRequest",
-        "userInitResponse",
-        "audioMuteStatusChanged",
-        "videoMuteStatusChanged",
-        "videoConferenceJoined",
-        "videoConferenceLeft",
-        "participantJoined",
-        "participantLeft",
-        "avatarChanged",
-        "displayNameChange",
-        "audioActivity"
-    ];
-
-// Manages communication between Jitsi Meet and Calla
-class JitsiClient extends EventTarget {
-
-    constructor(ApiClass, parentNode) {
-        super();
-        this.ApiClass = ApiClass;
-        this.parentNode = parentNode;
-        this.api = null;
-        this.iframe = null;
-        this.apiOrigin = null;
-        this.apiWindow = null;
-        addEventListener("message", this.rxJitsiHax.bind(this));
-    }
-
-    /// Send a Calla message through the Jitsi Meet data channel.
-    txGameData(id, command, obj) {
-        obj = obj || {};
-        obj.hax = APP_FINGERPRINT;
-        obj.command = command;
-        this.api.executeCommand("sendEndpointTextMessage", id, JSON.stringify(obj));
-    }
-
-    /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
-    /// to receive Calla messages from the Jitsi Meet data channel.
-    rxGameData(evt) {
-        // JitsiExternalAPI::endpointTextMessageReceived event arguments format: 
-        // evt = {
-        //    data: {
-        //      senderInfo: {
-        //        jid: "string", // the jid of the sender
-        //        id: "string" // the participant id of the sender
-        //      },
-        //      eventData: {
-        //        name: "string", // the name of the datachannel event: `endpoint-text-message`
-        //        text: "string" // the received text from the sender
-        //      }
-        //   }
-        //};
-        const data = JSON.parse(evt.data.eventData.text);
-        if (data.hax === APP_FINGERPRINT) {
-            const evt2 = new JitsiClientEvent(evt.data.senderInfo.id, data);
-            this.dispatchEvent(evt2);
-        }
-    }
-
-    /// Send a Calla message to the jitsihax.js script
-    txJitsiHax(command, obj) {
-        if (this.apiWindow) {
-            obj.hax = APP_FINGERPRINT;
-            obj.command = command;
-            this.apiWindow.postMessage(JSON.stringify(obj), this.apiOrigin);
-        }
-    }
-
-    rxJitsiHax(evt) {
-        const isLocalHost = evt.origin.match(/^https?:\/\/localhost\b/);
-        if (evt.origin === "https://" + JITSI_HOST || isLocalHost) {
-            try {
-                const data = JSON.parse(evt.data);
-                if (data.hax === APP_FINGERPRINT) {
-                    const evt2 = new CallaEvent(data);
-                    this.dispatchEvent(evt2);
-                }
-            }
-            catch (exp) {
-                console.error(exp);
-            }
-        }
-    }
-
-    joinAsync(roomName, userName) {
-        return new Promise((resolve, reject) => {
-            this.api = new this.ApiClass(JITSI_HOST, {
-                parentNode: this.parentNode,
-                roomName,
-                onload: () => {
-                    this.iframe = this.api.getIFrame();
-                    this.apiOrigin = new URL(this.iframe.src).origin;
-                    this.apiWindow = this.iframe.contentWindow || window;
-                    resolve();
-                },
-                noSSL: false,
-                width: "100%",
-                height: "100%",
-                configOverwrite: {
-                    startVideoMuted: 0,
-                    startWithVideoMuted: true
-                },
-                interfaceConfigOverwrite: {
-                    DISABLE_VIDEO_BACKGROUND: true,
-                    SHOW_JITSI_WATERMARK: false,
-                    SHOW_WATERMARK_FOR_GUESTS: false,
-                    SHOW_POWERED_BY: true,
-                    AUTHENTICATION_ENABLE: false,
-                    MOBILE_APP_PROMO: false
-                }
-            });
-
-            const reroute = (evtType, copy) => {
-                this.api.addEventListener(evtType, (rootEvt) => {
-                    const evt = Object.assign(
-                        new Event(evtType),
-                        copy(rootEvt));
-                    this.dispatchEvent(evt);
-                });
-            };
-
-            reroute("videoConferenceJoined", (evt) => {
-                return {
-                    roomName: evt.roomName,
-                    id: evt.id,
-                    displayName: evt.displayName
-                };
-            });
-
-            reroute("videoConferenceLeft", (evt) => {
-                return {
-                    roomName: evt.roomName
-                };
-            });
-
-            reroute("participantJoined", (evt) => {
-                return {
-                    id: evt.id,
-                    displayName: evt.displayName
-                };
-            });
-
-            reroute("participantLeft", (evt) => {
-                return {
-                    id: evt.id
-                };
-            });
-
-            reroute("avatarChanged", (evt) => {
-                return {
-                    id: evt.id,
-                    avatarURL: evt.avatarURL
-                };
-            });
-
-            reroute("displayNameChange", (evt) => {
-                return {
-                    id: evt.id,
-
-                    // The External API misnames this
-                    displayName: evt.displayname 
-                };
-            });
-
-            reroute("audioMuteStatusChanged", (evt) => {
-                return {
-                    muted: evt.muted
-                };
-            });
-
-            reroute("videoMuteStatusChanged", (evt) => {
-                return {
-                    muted: evt.muted
-                };
-            });
-
-            this.api.addEventListener("endpointTextMessageReceived",
-                this.rxGameData.bind(this));
-
-            addEventListener("unload", () =>
-                this.api.dispose());
-
-            this.api.executeCommand("displayName", userName);
-        });
-    }
-
-    leave() {
-        this.api.executeCommand("hangup");
-    }
-
-    async getAudioOutputDevices() {
-        const devices = await this.api.getAvailableDevices();
-        return devices && devices.audioOutput || [];
-    }
-
-    async getCurrentAudioOutputDevice() {
-        const devices = await this.api.getCurrentDevices();
-        return devices && devices.audioOutput || null;
-    }
-
-    setAudioOutputDevice(device) {
-        this.api.setAudioOutputDevice(device.label, device.id);
-    }
-
-    async getAudioInputDevices() {
-        const devices = await this.api.getAvailableDevices();
-        return devices && devices.audioInput || [];
-    }
-
-    async getCurrentAudioInputDevice() {
-        const devices = await this.api.getCurrentDevices();
-        return devices && devices.audioInput || null;
-    }
-
-    setAudioInputDevice(device) {
-        this.api.setAudioInputDevice(device.label, device.id);
-    }
-
-    async getVideoInputDevices() {
-        const devices = await this.api.getAvailableDevices();
-        return devices && devices.videoInput || [];
-    }
-
-    async getCurrentVideoInputDevice() {
-        const devices = await this.api.getCurrentDevices();
-        return devices && devices.videoInput || null;
-    }
-
-    setVideoInputDevice(device) {
-        this.api.setVideoInputDevice(device.label, device.id);
-    }
-
-    toggleAudio() {
-        this.api.executeCommand("toggleAudio");
-    }
-
-    toggleVideo() {
-        this.api.executeCommand("toggleVideo");
-    }
-
-    setAvatarURL(url) {
-        this.api.executeCommand("avatarUrl", url);
-    }
-
-    isAudioMuted() {
-        return this.api.isAudioMuted();
-    }
-
-    isVideoMuted() {
-        return this.api.isVideoMuted();
-    }
-
-    /// Add a listener for Calla events that come through the Jitsi Meet data channel.
-    addEventListener(evtName, callback) {
-        if (eventNames.indexOf(evtName) === -1) {
-            throw new Error(`Unsupported event type: ${evtName}`);
-        }
-
-        super.addEventListener(evtName, callback);
-    }
-
-    setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
-        this.txJitsiHax("setAudioProperties", {
-            origin,
-            transitionTime,
-            minDistance,
-            maxDistance,
-            rolloff
-        });
-    }
-
-    requestUserState(ofUserID) {
-        this.txGameData(ofUserID, "userInitRequest");
-    }
-
-    sendUserState(toUserID, fromUser) {
-        this.txGameData(toUserID, "userInitResponse", fromUser);
-    }
-
-    sendEmote(toUserID, emoji) {
-        this.txGameData(toUserID, "emote", emoji);
-    }
-
-    sendAudioMuteState(toUserID, muted) {
-        this.txGameData(toUserID, "audioMuteStatusChanged", { muted });
-    }
-
-    sendVideoMuteState(toUserID, muted) {
-        this.txGameData(toUserID, "videoMuteStatusChanged", { muted });
-    }
-
-    setUserPosition(evt) {
-        this.txJitsiHax("setUserPosition", evt);
-    }
-
-    sendPosition(toUserID, evt) {
-        this.txGameData(toUserID, "moveTo", evt);
-    }
-
-    updatePosition(evt) {
-        this.txJitsiHax("setLocalPosition", evt);
-    }
-}
-
-class CallaEvent extends Event {
-    constructor(data) {
-        super(data.command);
-        this.data = data;
-    }
-}
-
-class JitsiClientEvent extends CallaEvent {
-    constructor(participantID, data) {
-        super(data);
-        this.participantID = participantID;
-    }
-}
-
 // A few convenience methods for HTML elements.
 
 Element.prototype.isOpen = function () {
@@ -5556,6 +5234,12 @@ function unproject(v, min, max) {
     return v * (max - min) + min;
 }
 
+function appendAll(parent, ...elems) {
+    for (let i = 0; i < elems.length; ++i) {
+        parent.appendChild(elems[i]);
+    }
+}
+
 function assignAttributes(elem, ...rest) {
     rest.filter(x => !(x instanceof Element)
             && !(x instanceof String)
@@ -5601,13 +5285,13 @@ function tag(name, ...rest) {
         elem.appendChild(document.createTextNode(textContent));
     }
 
-    rest.filter(x => x instanceof Element)
-        .forEach(elem.appendChild.bind(elem));
+    appendAll(elem, ...rest.filter(x => x instanceof Element));
 
     return elem;
 }
 
 function a(...rest) { return tag("a", ...rest); }
+function audio(...rest) { return tag("audio", ...rest); }
 function button(...rest) { return tag("button", ...rest); }
 function canvas(...rest) { return tag("canvas", ...rest); }
 function div(...rest) { return tag("div", ...rest); }
@@ -5622,7 +5306,7 @@ function ul(...rest) { return tag("ul", ...rest); }
 const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
     STACKED_USER_OFFSET_X = 5,
     STACKED_USER_OFFSET_Y = 5,
-    eventNames$1 = ["moveTo", "userInitRequest"];
+    eventNames = ["moveTo", "userInitRequest"];
 
 class User extends EventTarget {
     constructor(id, displayName, isMe) {
@@ -5674,7 +5358,7 @@ class User extends EventTarget {
     }
 
     addEventListener(evtName, func) {
-        if (eventNames$1.indexOf(evtName) === -1) {
+        if (eventNames.indexOf(evtName) === -1) {
             throw new Error(`Unrecognized event type: ${evtName}`);
         }
 
@@ -7656,4 +7340,854 @@ class AppGui extends EventTarget {
     }
 }
 
-export { AppGui, Game, JitsiClient };
+(function () {
+
+    /*
+     * This file is not part of the front-end code. It is
+     * meant to be included in the Jitsi Meet server
+     * installation. This is typically /usr/share/jitsi-meet.
+     * 
+     * Once installed in the Jitsi Meet server, edit
+     * Jitsi Meet's index.html to include jitsihax.js.
+     * 
+     * Don't forget to also edit FRONT_END_SERVER below
+     * to the server you are setting up to use the
+     * Jitsi Meet External API:
+     *   https://github.com/jitsi/jitsi-meet/blob/master/doc/api.md
+     */
+
+    const FRONT_END_SERVER = "https://meet.primrosevr.com",
+        ALT_FRONT_END_SERVER = "https://www.calla.chat",
+        BUFFER_SIZE = 1024,
+        isOldAudioAPI = !AudioListener.prototype.hasOwnProperty("positionX");
+
+    // The rest is just implementation.
+
+    function ensureContext() {
+        if (!audioContext) {
+            audioContext = new AudioContext();
+            const time = audioContext.currentTime,
+                listener = audioContext.listener;
+
+            if (isOldAudioAPI) {
+                listener.setPosition(0, 0, 0);
+                listener.setOrientation(0, 0, -1, 0, 1, 0);
+            }
+            else {
+                listener.positionX.setValueAtTime(0, time);
+                listener.positionY.setValueAtTime(0, time);
+                listener.positionZ.setValueAtTime(0, time);
+                listener.forwardX.setValueAtTime(0, time);
+                listener.forwardY.setValueAtTime(0, time);
+                listener.forwardZ.setValueAtTime(-1, time);
+                listener.upX.setValueAtTime(0, time);
+                listener.upY.setValueAtTime(1, time);
+                listener.upZ.setValueAtTime(0, time);
+            }
+            requestAnimationFrame(updater);
+            window.audioContext = audioContext;
+        }
+    }
+
+    class User {
+        constructor(userID, audio) {
+            this.id = userID;
+            this.lastAudible = true;
+            this.activityCounter = 0;
+            this.wasActive = false;
+
+            this.audio = audio;
+
+            const stream = !!audio.mozCaptureStream
+                ? audio.mozCaptureStream()
+                : audio.captureStream();
+
+            this.source = audioContext.createMediaStreamSource(stream);
+            this.panner = audioContext.createPanner();
+            this.analyser = audioContext.createAnalyser();
+            this.buffer = new Float32Array(BUFFER_SIZE);
+
+            this.audio.volume = 0;
+
+            this.panner.panningModel = "HRTF";
+            this.panner.distanceModel = "inverse";
+            this.panner.refDistance = minDistance;
+            this.panner.rolloffFactor = rolloff;
+            this.panner.coneInnerAngle = 360;
+            this.panner.coneOuterAngle = 0;
+            this.panner.coneOuterGain = 0;
+
+            this.panner.positionY.setValueAtTime(0, audioContext.currentTime);
+
+            this.analyser.fftSize = 2 * BUFFER_SIZE;
+            this.analyser.smoothingTimeConstant = 0.2;
+
+
+            this.source.connect(this.analyser);
+            this.source.connect(this.panner);
+            this.panner.connect(audioContext.destination);
+        }
+
+        setPosition(evt) {
+            const time = audioContext.currentTime + transitionTime;
+            // our 2D position is in X/Y coords, but our 3D position
+            // along the horizontal plane is X/Z coords.
+            this.panner.positionX.linearRampToValueAtTime(evt.data.x, time);
+            this.panner.positionZ.linearRampToValueAtTime(evt.data.y, time);
+        }
+
+        isAudible() {
+            const lx = isOldAudioAPI ? listenerX : audioContext.listener.positionX.value,
+                ly = isOldAudioAPI ? listenerY : audioContext.listener.positionZ.value,
+                distX = this.panner.positionX.value - lx,
+                distZ = this.panner.positionZ.value - ly,
+                dist = Math.sqrt(distX * distX + distZ * distZ),
+                range = clamp(project(dist, minDistance, maxDistance), 0, 1);
+
+            return range < 1;
+        }
+
+        update() {
+            const audible = this.isAudible();
+            if (audible !== this.lastAudible) {
+                this.lastAudible = audible;
+                if (audible) {
+                    this.source.connect(this.panner);
+                }
+                else {
+                    this.source.disconnect(this.panner);
+                }
+            }
+
+            this.analyser.getFloatFrequencyData(this.buffer);
+
+            const average = 1.1 + analyserFrequencyAverage(this.analyser, this.buffer, 85, 255) / 100;
+            if (average >= 0.5 && this.activityCounter < activityCounterMax) {
+                this.activityCounter++;
+            } else if (average < 0.5 && this.activityCounter > activityCounterMin) {
+                this.activityCounter--;
+            }
+
+            const isActive = this.activityCounter > activityCounterThresh;
+            if (this.wasActive !== isActive) {
+                this.wasActive = isActive;
+                txJitsiHax("audioActivity", {
+                    participantID: this.id,
+                    isActive
+                });
+            }
+        }
+    }
+
+    function getUser(userID) {
+        if (!userLookup[userID]) {
+            const elementID = `#participant_${userID} audio`,
+                audio = document.querySelector(elementID);
+
+            if (!!audio) {
+                userLookup[userID] = new User(userID, audio);
+                userList.push(userLookup[userID]);
+            }
+        }
+
+        const user = userLookup[userID];
+        if (!user) {
+            console.warn(`no audio for user ${userID}`);
+        }
+        return user;
+    }
+
+    function updater() {
+        requestAnimationFrame(updater);
+
+        if (isOldAudioAPI) {
+            const time = audioContext.currentTime,
+                p = project(time, startMoveTime, endMoveTime);
+
+            if (p <= 1) {
+                const deltaX = targetListenerX - startListenerX,
+                    deltaY = targetListenerY - startListenerY;
+
+                listenerX = startListenerX + p * deltaX;
+                listenerY = startListenerY + p * deltaY;
+
+                audioContext.listener.setPosition(listenerX, 0, listenerY);
+            }
+        }
+
+        for (let user of userList) {
+            user.update();
+        }
+    }
+
+    function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz) {
+        const sampleRate = analyser.context.sampleRate,
+            start = frequencyToIndex(minHz, sampleRate),
+            end = frequencyToIndex(maxHz, sampleRate),
+            count = end - start;
+        let sum = 0;
+        for (let i = start; i < end; ++i) {
+            sum += frequencies[i];
+        }
+        return count === 0 ? 0 : (sum / count);
+    }
+
+    function frequencyToIndex(frequency, sampleRate) {
+        var nyquist = sampleRate / 2;
+        var index = Math.round(frequency / nyquist * BUFFER_SIZE);
+        return clamp(index, 0, BUFFER_SIZE)
+    }
+
+    function clamp(v, min, max) {
+        return Math.min(max, Math.max(min, v));
+    }
+
+    function project(v, min, max) {
+        return (v - min) / (max - min);
+    }
+
+    function setUserPosition(evt) {
+        const user = getUser(evt.participantID);
+        if (!user) {
+            return;
+        }
+
+        user.setPosition(evt);
+    }
+
+    function setLocalPosition(evt) {
+        ensureContext();
+        const time = audioContext.currentTime + transitionTime,
+            listener = audioContext.listener;
+        if (isOldAudioAPI) {
+            startMoveTime = audioContext.currentTime;
+            endMoveTime = time;
+            startListenerX = listenerX;
+            startListenerY = listenerY;
+            targetListenerX = evt.x;
+            targetListenerY = evt.y;
+        }
+        else {
+            listener.positionX.linearRampToValueAtTime(evt.x, time);
+            listener.positionZ.linearRampToValueAtTime(evt.y, time);
+        }
+    }
+
+    function setAudioProperties(evt) {
+        origin = evt.origin;
+        minDistance = evt.minDistance;
+        maxDistance = evt.maxDistance;
+        transitionTime = evt.transitionTime;
+        rolloff = evt.rolloff;
+
+        ensureContext();
+        for (let user of userList) {
+            user.panner.refDistance = minDistance;
+            user.panner.rolloffFactor = rolloff;
+        }
+    }
+
+    function txJitsiHax(command, obj) {
+        if (!!origin) {
+            obj.hax = APP_FINGERPRINT;
+            obj.command = command;
+            const msg = JSON.stringify(obj);
+            window.parent.postMessage(msg, origin);
+        }
+    }
+
+    function rxJitsiHax(evt) {
+        const isLocalHost = evt.origin.match(/^https?:\/\/localhost\b/);
+
+        if (evt.origin === FRONT_END_SERVER
+            || evt.origin === ALT_FRONT_END_SERVER
+            ||  isLocalHost) {
+            try {
+                const data = JSON.parse(evt.data),
+                    isJitsiHax = data.hax === APP_FINGERPRINT,
+                    cmd = commands[data.command];
+
+                if (isJitsiHax && !!cmd) {
+                    cmd(data);
+                }
+            }
+            catch (exp) {
+                console.error(exp);
+            }
+        }
+    }
+
+
+    // helps us filter out data channel messages that don't belong to us
+    const APP_FINGERPRINT = "Calla",
+        userLookup = {},
+        userList = [],
+        commands = {
+            setLocalPosition,
+            setUserPosition,
+            setAudioProperties
+        },
+        activityCounterMin = 0,
+        activityCounterMax = 60,
+        activityCounterThresh = 5;
+
+    let audioContext = null,
+
+        // these values will get overwritten when the user sets their audio properties
+        minDistance = 1,
+        maxDistance = 10,
+        rolloff = 5,
+        transitionTime = 0.125,
+        origin = null,
+        startMoveTime = 0,
+        endMoveTime = 0,
+        startListenerX = 0,
+        startListenerY = 0,
+        targetListenerX = 0,
+        targetListenerY = 0,
+        listenerX = 0,
+        listenerY = 0;
+
+    addEventListener("message", rxJitsiHax);
+})();
+
+// helps us filter out data channel messages that don't belong to us
+const APP_FINGERPRINT = "Calla",
+    eventNames$1 = [
+        "moveTo",
+        "emote",
+        "userInitRequest",
+        "userInitResponse",
+        "audioMuteStatusChanged",
+        "videoMuteStatusChanged",
+        "videoConferenceJoined",
+        "videoConferenceLeft",
+        "participantJoined",
+        "participantLeft",
+        "avatarChanged",
+        "displayNameChange",
+        "audioActivity"
+    ];
+
+// Manages communication between Jitsi Meet and Calla
+class JitsiClient extends EventTarget {
+
+    constructor(ApiClass, parentNode) {
+        super();
+        this.ApiClass = ApiClass;
+        this.parentNode = parentNode;
+        this.api = null;
+        this.iframe = null;
+        this.apiOrigin = null;
+        this.apiWindow = null;
+        addEventListener("message", this.rxJitsiHax.bind(this));
+    }
+
+    /// Send a Calla message through the Jitsi Meet data channel.
+    txGameData(id, command, obj) {
+        obj = obj || {};
+        obj.hax = APP_FINGERPRINT;
+        obj.command = command;
+        this.api.executeCommand("sendEndpointTextMessage", id, JSON.stringify(obj));
+    }
+
+    /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
+    /// to receive Calla messages from the Jitsi Meet data channel.
+    rxGameData(evt) {
+        // JitsiExternalAPI::endpointTextMessageReceived event arguments format: 
+        // evt = {
+        //    data: {
+        //      senderInfo: {
+        //        jid: "string", // the jid of the sender
+        //        id: "string" // the participant id of the sender
+        //      },
+        //      eventData: {
+        //        name: "string", // the name of the datachannel event: `endpoint-text-message`
+        //        text: "string" // the received text from the sender
+        //      }
+        //   }
+        //};
+        const data = JSON.parse(evt.data.eventData.text);
+        if (data.hax === APP_FINGERPRINT) {
+            const evt2 = new JitsiClientEvent(evt.data.senderInfo.id, data);
+            this.dispatchEvent(evt2);
+        }
+    }
+
+    /// Send a Calla message to the jitsihax.js script
+    txJitsiHax(command, obj) {
+        if (this.apiWindow) {
+            obj.hax = APP_FINGERPRINT;
+            obj.command = command;
+            this.apiWindow.postMessage(JSON.stringify(obj), this.apiOrigin);
+        }
+    }
+
+    rxJitsiHax(evt) {
+        const isLocalHost = evt.origin.match(/^https?:\/\/localhost\b/);
+        if (evt.origin === "https://" + JITSI_HOST || isLocalHost) {
+            try {
+                const data = JSON.parse(evt.data);
+                if (data.hax === APP_FINGERPRINT) {
+                    const evt2 = new CallaEvent(data);
+                    this.dispatchEvent(evt2);
+                }
+            }
+            catch (exp) {
+                console.error(exp);
+            }
+        }
+    }
+
+    joinAsync(roomName, userName) {
+        return new Promise((resolve, reject) => {
+            this.api = new this.ApiClass(JITSI_HOST, {
+                parentNode: this.parentNode,
+                roomName,
+                onload: () => {
+                    this.iframe = this.api.getIFrame();
+                    this.apiOrigin = new URL(this.iframe.src).origin;
+                    this.apiWindow = this.iframe.contentWindow || window;
+                    resolve();
+                },
+                noSSL: false,
+                width: "100%",
+                height: "100%",
+                configOverwrite: {
+                    startVideoMuted: 0,
+                    startWithVideoMuted: true
+                },
+                interfaceConfigOverwrite: {
+                    DISABLE_VIDEO_BACKGROUND: true,
+                    SHOW_JITSI_WATERMARK: false,
+                    SHOW_WATERMARK_FOR_GUESTS: false,
+                    SHOW_POWERED_BY: true,
+                    AUTHENTICATION_ENABLE: false,
+                    MOBILE_APP_PROMO: false
+                }
+            });
+
+            const reroute = (evtType, copy) => {
+                this.api.addEventListener(evtType, (rootEvt) => {
+                    const evt = Object.assign(
+                        new Event(evtType),
+                        copy(rootEvt));
+                    this.dispatchEvent(evt);
+                });
+            };
+
+            reroute("videoConferenceJoined", (evt) => {
+                return {
+                    roomName: evt.roomName,
+                    id: evt.id,
+                    displayName: evt.displayName
+                };
+            });
+
+            reroute("videoConferenceLeft", (evt) => {
+                return {
+                    roomName: evt.roomName
+                };
+            });
+
+            reroute("participantJoined", (evt) => {
+                return {
+                    id: evt.id,
+                    displayName: evt.displayName
+                };
+            });
+
+            reroute("participantLeft", (evt) => {
+                return {
+                    id: evt.id
+                };
+            });
+
+            reroute("avatarChanged", (evt) => {
+                return {
+                    id: evt.id,
+                    avatarURL: evt.avatarURL
+                };
+            });
+
+            reroute("displayNameChange", (evt) => {
+                return {
+                    id: evt.id,
+
+                    // The External API misnames this
+                    displayName: evt.displayname 
+                };
+            });
+
+            reroute("audioMuteStatusChanged", (evt) => {
+                return {
+                    muted: evt.muted
+                };
+            });
+
+            reroute("videoMuteStatusChanged", (evt) => {
+                return {
+                    muted: evt.muted
+                };
+            });
+
+            this.api.addEventListener("endpointTextMessageReceived",
+                this.rxGameData.bind(this));
+
+            addEventListener("unload", () =>
+                this.api.dispose());
+
+            this.api.executeCommand("displayName", userName);
+        });
+    }
+
+    leave() {
+        this.api.executeCommand("hangup");
+    }
+
+    async getAudioOutputDevices() {
+        const devices = await this.api.getAvailableDevices();
+        return devices && devices.audioOutput || [];
+    }
+
+    async getCurrentAudioOutputDevice() {
+        const devices = await this.api.getCurrentDevices();
+        return devices && devices.audioOutput || null;
+    }
+
+    setAudioOutputDevice(device) {
+        this.api.setAudioOutputDevice(device.label, device.id);
+    }
+
+    async getAudioInputDevices() {
+        const devices = await this.api.getAvailableDevices();
+        return devices && devices.audioInput || [];
+    }
+
+    async getCurrentAudioInputDevice() {
+        const devices = await this.api.getCurrentDevices();
+        return devices && devices.audioInput || null;
+    }
+
+    setAudioInputDevice(device) {
+        this.api.setAudioInputDevice(device.label, device.id);
+    }
+
+    async getVideoInputDevices() {
+        const devices = await this.api.getAvailableDevices();
+        return devices && devices.videoInput || [];
+    }
+
+    async getCurrentVideoInputDevice() {
+        const devices = await this.api.getCurrentDevices();
+        return devices && devices.videoInput || null;
+    }
+
+    setVideoInputDevice(device) {
+        this.api.setVideoInputDevice(device.label, device.id);
+    }
+
+    toggleAudio() {
+        this.api.executeCommand("toggleAudio");
+    }
+
+    toggleVideo() {
+        this.api.executeCommand("toggleVideo");
+    }
+
+    setAvatarURL(url) {
+        this.api.executeCommand("avatarUrl", url);
+    }
+
+    isAudioMuted() {
+        return this.api.isAudioMuted();
+    }
+
+    isVideoMuted() {
+        return this.api.isVideoMuted();
+    }
+
+    /// Add a listener for Calla events that come through the Jitsi Meet data channel.
+    addEventListener(evtName, callback) {
+        if (eventNames$1.indexOf(evtName) === -1) {
+            throw new Error(`Unsupported event type: ${evtName}`);
+        }
+
+        super.addEventListener(evtName, callback);
+    }
+
+    setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
+        this.txJitsiHax("setAudioProperties", {
+            origin,
+            transitionTime,
+            minDistance,
+            maxDistance,
+            rolloff
+        });
+    }
+
+    requestUserState(ofUserID) {
+        this.txGameData(ofUserID, "userInitRequest");
+    }
+
+    sendUserState(toUserID, fromUser) {
+        this.txGameData(toUserID, "userInitResponse", fromUser);
+    }
+
+    sendEmote(toUserID, emoji) {
+        this.txGameData(toUserID, "emote", emoji);
+    }
+
+    sendAudioMuteState(toUserID, muted) {
+        this.txGameData(toUserID, "audioMuteStatusChanged", { muted });
+    }
+
+    sendVideoMuteState(toUserID, muted) {
+        this.txGameData(toUserID, "videoMuteStatusChanged", { muted });
+    }
+
+    setUserPosition(evt) {
+        this.txJitsiHax("setUserPosition", evt);
+    }
+
+    sendPosition(toUserID, evt) {
+        this.txGameData(toUserID, "moveTo", evt);
+    }
+
+    updatePosition(evt) {
+        this.txJitsiHax("setLocalPosition", evt);
+    }
+}
+
+class CallaEvent extends Event {
+    constructor(data) {
+        super(data.command);
+        this.data = data;
+    }
+}
+
+class JitsiClientEvent extends CallaEvent {
+    constructor(participantID, data) {
+        super(data);
+        this.participantID = participantID;
+    }
+}
+
+class MockJitsiClient extends JitsiClient {
+    constructor(ApiClass, parentNode) {
+        super(ApiClass, parentNode);
+    }
+
+    mockRxGameData(command, id, data) {
+        data = Object.assign({},
+            data,
+            {
+                hax: "Calla",
+                command
+            });
+
+        const text = JSON.stringify(data);
+
+        this.rxGameData({
+            data: {
+                senderInfo: {
+                    id
+                },
+                eventData: {
+                    text
+                }
+            }
+        });
+    }
+
+    txGameData(id, msg, data) {
+        if (msg === "userInitRequest") {
+            const user = game.userLookup[id];
+            if (!!user) {
+                user.avatarEmoji = randomPerson().value;
+                this.mockRxGameData("userInitResponse", id, user);
+            }
+        }
+    }
+
+    toggleAudio() {
+        super.toggleAudio();
+        this.mockRxGameData("audioMuteStatusChanged", game.me.id, { muted: this.api.audioMuted });
+    }
+
+    toggleVideo() {
+        super.toggleVideo();
+        this.mockRxGameData("videoMuteStatusChanged", game.me.id, { muted: this.api.videoMuted });
+    }
+
+    setAvatarURL(url) {
+        super.setAvatarURL(url);
+        this.mockRxGameData("avatarChanged", game.me.id, { avatarURL: url });
+    }
+}
+
+class MockJitsiMeetExternalAPI extends EventTarget {
+    constructor(host, options) {
+        super();
+        this.options = options;
+        this.audioMuted = false;
+        this.videoMuted = true;
+        this.currentDevices = {
+            audioInput: { id: "mock-audio-input", label: "Mock audio input device" },
+            audioOutput: { id: "mock-audio-output", label: "Mock audio output device" },
+            videoInput: { id: "mock-video-input", label: "Mock video input device" }
+        };
+    }
+
+    dispose() {
+    }
+
+    getIFrame() {
+        return {
+            src: window.location.href,
+            addEventListener: function () { }
+        };
+    }
+
+    getAvailableDevices() {
+        return Promise.resolve({
+            audioInput: [this.currentDevices.audioInput],
+            audioOutput: [this.currentDevices.audioOutput],
+            videoInput: [this.currentDevices.videoInput]
+        });
+    }
+
+    getCurrentDevices() {
+        return Promise.resolve(this.currentDevices);
+    }
+
+    setAudioOutputDevice(device) {
+        this.currentDevices.audioOutput = device;
+    }
+
+    setAudioInputDevice(device) {
+        this.currentDevices.audioInput = device;
+    }
+
+    setVideoInputDevice(device) {
+        this.currentDevices.videoInput = device;
+    }
+
+    isAudioMuted() {
+        return Promise.resolve(this.audioMuted);
+    }
+
+    isVideoMuted() {
+        return Promise.resolve(this.videoMuted);
+    }
+
+    executeCommand(command, param) {
+        if (command === "displayName") {
+            this.dispatchEvent(Object.assign(
+                new Event("videoConferenceJoined"),
+                {
+                    roomName: this.options.roomName,
+                    id: "mock-local-user",
+                    displayName: param
+                }));
+        }
+        else if (command === "toggleAudio") {
+            this.audioMuted = !this.audioMuted;
+        }
+        else if (command === "toggleVideo") {
+            this.videoMuted = !this.videoMuted;
+        }
+        else if (command === "hangup") {
+            for (let user of testUsers) {
+                user.stop();
+            }
+        }
+        else {
+            console.log("executeCommand", arguments);
+        }
+    }
+}
+
+class MockUser {
+    constructor(id, x, y) {
+        this.id = id;
+        this.x = x;
+        this.y = y;
+        this.audio = null;
+    }
+
+    schedule() {
+        this.timeout = setTimeout(
+            () => this.update(),
+            1000 * (1 + Math.random()));
+    }
+
+    start() {
+        const evt = Object.assign(
+            new Event("participantJoined"),
+            { id: this.id });
+
+        jitsiClient.api.dispatchEvent(evt);
+
+        document.body.appendChild(span({ id: `participant_${this.id}` },
+            this.audio = audio({
+                autoplay: "autoplay",
+                loop: "loop",
+                src: `/test-audio/${this.id}.mp3`
+            })));
+
+        this.schedule();
+    }
+
+    stop() {
+        clearTimeout(this.timeout);
+        if (!!this.audio) {
+            this.audio.pause();
+            document.body.removeChild(this.audio.parentElement);
+        }
+    }
+
+    update() {
+        const x = this.x + Math.floor(2 * Math.random() - 1),
+            y = this.y + Math.floor(2 * Math.random() - 1);
+
+        jitsiClient.mockRxGameData("moveTo", this.id, { command: "moveTo", x, y });
+
+        if (Math.random() <= 0.1) {
+            const groups = Object.values(allIcons),
+                group = groups.random(),
+                emoji = group.random();
+            jitsiClient.mockRxGameData("emote", this.id, emoji);
+        }
+
+        this.schedule();
+    }
+}
+
+// Creates a mock interface for the Jitsi Meet client, to
+
+const jitsiClient$1 = new MockJitsiClient(MockJitsiMeetExternalAPI, document.querySelector("#jitsi")),
+    game$1 = new Game(jitsiClient$1),
+    gui = new AppGui(game$1, jitsiClient$1),
+    testUsers$1 = [
+        new MockUser("user1", -5, -5),
+        new MockUser("user2", -5, 5),
+        new MockUser("user3", 5, -5),
+        new MockUser("user4", 5, 5),
+        new MockUser("user5", 0, 0)
+    ];
+
+Object.assign(window, {
+    jitsiClient: jitsiClient$1,
+    game: game$1,
+    gui
+});
+
+game$1.addEventListener("gamestarted", function createTestUser() {
+    if (game$1.userList.length < 5) {
+        const idx = game$1.userList.length - 1,
+            user = testUsers$1[idx];
+        user.start();
+        setTimeout(createTestUser, 1000);
+    }
+});

@@ -5,7 +5,7 @@ import { isSurfer } from "./emoji.js";
 // TODO: move map data to requestable files
 export class TileMap {
     constructor(tilemapName) {
-        this.url = new URL(`data/tilemaps/${tilemapName}.tmx`, document.location);
+        this.url = new URL(`/data/tilemaps/${tilemapName}.tmx`, document.location);
         this.tileset = null;
         this.tileWidth = 0;
         this.tileHeight = 0;
