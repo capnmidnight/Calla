@@ -36,7 +36,7 @@ NOTE: __Jitsi Meet's web client doesn't work on iOS!__ Sorry :(
 - Copy the script `jitsihax.js` from this repo to `/usr/share/jitsi-meet/`.
 - Edit `jitsihax.js`, changing `FRONT_END_SERVER` to point to where you will host the Calla front-end.
 - Install the Calla front-end (basically the rest of this repository) onto another server of your choice.
-  - Modify "DOMAIN_NAME" in `index.html` scripts to point to your Jitsi Meet server.
+  - Modify "JITSI_HOST" in `index.html` scripts to point to your Jitsi Meet server.
 - You may also want to edit `index.html` to change/remove the link(s) to this repository and/or my Twitter profile.
   
 Make sure you keep the distinction between your Jitsi installation and your Calla installation clear. You can conceivably run them on the same server, but I won't be digging into customizing a Jitsi installation enough to figure that out, so my setup has them on separate servers. `jitsihax.js` needs to go on your Jitsi server, and you need to edit it to point to your Calla server. `index.html` goes on your Calla server, and you need to edit it to point to your Jitsi server.

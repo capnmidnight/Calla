@@ -24,6 +24,13 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Calla", "js\", "{B5927401-9
 		SlnRelativePath = "js\"
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{CD75547F-4771-4B69-B087-126E9CE4F3F2}"
+	ProjectSection(SolutionItems) = preProject
+		CONDUCT.md = CONDUCT.md
+		LICENSE.txt = LICENSE.txt
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
