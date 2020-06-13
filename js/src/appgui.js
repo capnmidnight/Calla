@@ -46,7 +46,7 @@ export class AppGui extends EventTarget {
         this.toolbar.addEventListener("emote", () => this.game.emote(this.game.me.id, this.game.currentEmoji));
         this.toolbar.addEventListener("selectemoji", () => this.selectEmojiAsync());
         this.toolbar.addEventListener("zoomchanged", () => this.game.targetCameraZ = this.toolbar.zoom);
-        this.game.addEventListener("zoomupdated", () => this.toolbar.zoom = this.game.targetCameraZ);
+        this.game.addEventListener("zoomchanged", () => this.toolbar.zoom = this.game.targetCameraZ);
         this.toolbar.addEventListener("tweet", () => {
             const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
                 url = new URL("https://twitter.com/intent/tweet?text=" + message);

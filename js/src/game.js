@@ -13,7 +13,7 @@ const CAMERA_LERP = 0.01,
     isFirefox = typeof InstallTrigger !== "undefined",
     gameStartedEvt = new Event("gamestarted"),
     gameEndedEvt = new Event("gameended"),
-    zoomUpdatedEvt = new Event("zoomupdated"),
+    zoomChangedEvt = new Event("zoomchanged"),
     emojiNeededEvt = new Event("emojineeded"),
     audioMutedEvt = Object.assign(new Event("audiomuted"), {
         muted: true
@@ -393,7 +393,7 @@ export class Game extends EventTarget {
                 e = Math.pow(d, 1 / CAMERA_ZOOM_SHAPE);
 
             this.targetCameraZ = unproject(e, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX);
-            this.dispatchEvent(zoomUpdatedEvt);
+            this.dispatchEvent(zoomChangedEvt);
         }
     }
 
@@ -565,7 +565,7 @@ export class Game extends EventTarget {
         this.muteUserVideo({ participantID: this.me.id, data: { muted: videoMuted } });
 
         this.startLoop();
-        this.dispatchEvent(zoomUpdatedEvt);
+        this.dispatchEvent(zoomChangedEvt);
         this.dispatchEvent(gameStartedEvt);
     }
 
