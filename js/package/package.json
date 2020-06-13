@@ -1,8 +1,0 @@
-{
-  "private": true,
-  "name": "calla",
-  "version": "0.0.1",
-  "scripts": {
-    "pkg": "node .\\writeversion.js && copy ..\\..\\README.md . && rollup -c && minify calla.js > calla.min.js"
-  }
-}

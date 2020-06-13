@@ -1,5 +1,5 @@
-﻿import { BaseJitsiClient } from "../../package/src/jitsihax-client-base.js";
-import { randomPerson } from "../../package/src/emoji.js";
+﻿import { BaseJitsiClient } from "../../src/jitsihax-client-base.js";
+import { randomPerson } from "../../src/emoji.js";
 import { MockJitsiMeetExternalAPI } from "./mockjitsimeetexternalapi.js";
 
 export class MockJitsiClient extends BaseJitsiClient {

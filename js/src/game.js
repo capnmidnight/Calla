@@ -4,8 +4,6 @@ import { Emote } from "./emote.js";
 
 import { lerp, clamp, project, unproject } from "./math.js";
 
-import { version } from "./version.js";
-
 const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_MAX = 8,
     CAMERA_ZOOM_MIN = 0.1,
@@ -774,9 +772,6 @@ export class Game extends EventTarget {
         }
     }
 }
-
-Game.version = version;
-console.info(`Calla: ${version}`);
 
 class GamepadButtonPressedEvent extends Event {
     constructor(button) {

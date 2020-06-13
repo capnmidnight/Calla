@@ -1,4 +1,4 @@
-﻿import * as H from "../package/src/html.js";
+﻿import * as H from "../src/html.js";
 
 class TestOutputResultsEvent extends Event {
     constructor(table, stats) {

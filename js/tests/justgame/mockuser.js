@@ -1,5 +1,5 @@
-﻿import { allIcons as icons } from "../../package/src/emoji.js";
-import { audio, span } from "../../package/src/html.js";
+﻿import { allIcons as icons } from "../../src/emoji.js";
+import { audio, span } from "../../src/html.js";
 
 export class MockUser {
     constructor(id, x, y) {

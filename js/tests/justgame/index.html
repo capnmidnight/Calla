@@ -8,7 +8,7 @@
             MOVE_TRANSITION_TIME = 0.5;
     </script>
     <script type="module">
-        import { appendAll } from "../../package/src/html.js";
+        import { appendAll } from "../../src/html.js";
         (async function () {
             const response = await fetch("../../index.html"),
                 html = await response.text(),
