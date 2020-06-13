@@ -1,35 +1,42 @@
+﻿export function isFunction(obj) {
+    return typeof obj === "function"
+        || obj instanceof Function;
 }
 
 export function assignAttributes(elem, ...rest) {
-    rest.filter(x => !(x instanceof Element)
-            && !(x instanceof String)
-            && typeof x !== "string")
+    rest.filter(x => typeof x === "object"
+        && !(x instanceof Element
+            || x instanceof String
+            || x instanceof Number
+            || x instanceof Function
+            || x instanceof Boolean
+            || x instanceof Symbol))
         .forEach(attr => {
-        for (let key in attr) {
-            const value = attr[key];
-            if (key === "style") {
-                for (let subKey in value) {
-                    elem[key][subKey] = value[subKey];
+            for (let key in attr) {
+                const value = attr[key];
+                if (key === "style") {
+                    for (let subKey in value) {
+                        elem[key][subKey] = value[subKey];
+                    }
+                }
+                else if (key === "textContent" || key === "innerText") {
+                    elem.appendChild(document.createTextNode(value));
+                }
+                else if (key.startsWith("on") && isFunction(value)) {
+                    elem.addEventListener(key.substring(2), value);
+                }
+                else if (!(typeof value === "boolean" || value instanceof Boolean)
+                    || key === "muted") {
+                    elem[key] = value;
+                }
+                else if (value) {
+                    elem.setAttribute(key, "");
+                }
+                else {
+                    elem.removeAttribute(key);
                 }
             }
-            else if (key === "textContent" || key === "innerText") {
-                elem.appendChild(document.createTextNode(value));
-            }
-            else if (key.startsWith("on") && typeof value === "function") {
-                elem.addEventListener(key.substring(2), value);
-            }
-            else if (!(typeof value === "boolean" || value instanceof Boolean)
-                || key === "muted") {
-                elem[key] = value;
-            }
-            else if (value) {
-                elem.setAttribute(key, "");
-            }
-            else {
-                elem.removeAttribute(key);
-            }
-        }
-    });
+        });
 }
 
 export function clear(elem) {
