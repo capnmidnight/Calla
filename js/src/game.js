@@ -565,6 +565,7 @@ export class Game extends EventTarget {
         this.muteUserVideo({ participantID: this.me.id, data: { muted: videoMuted } });
 
         this.startLoop();
+        this.dispatchEvent(zoomUpdatedEvt);
         this.dispatchEvent(gameStartedEvt);
     }
 

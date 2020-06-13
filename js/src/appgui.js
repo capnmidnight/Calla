@@ -1,24 +1,14 @@
 ﻿import { EmojiForm } from "./emojiForm.js";
 import {
-    button,
-    run,
-    img,
-    span,
-    label,
-    input,
-    kbd,
-    div
-} from "./html.js";
-import {
     pauseButton,
     playButton,
     bust,
     mutedSpeaker,
-    speakerHighVolume,
     videoCamera
 } from "./emoji.js";
 import { isGoodNumber } from "./math.js";
 import { option } from "./html.js";
+import { ToolBar } from "./toolbar.js";
 import "./protos.js";
 
 export class AppGui extends EventTarget {
@@ -29,24 +19,40 @@ export class AppGui extends EventTarget {
         this.jitsiClient = jitsiClient;
         this.optionsView = null;
         this.emoteButton = null;
-        this.muteAudioButton = null;
 
         // >>>>>>>>>> VIEWS >>>>>>>>>>
         {
             this.appView = document.querySelector("#appView");
-            this.guiView = document.querySelector("#guiView");
+            this.emojiForm = new EmojiForm(document.querySelector("#emoji"));
             this.jitsiContainer = document.querySelector("#jitsi");
-            this.toolbar = div({ id: "toolbar" });
-            this.appView.insertBefore(this.toolbar, this.appView.firstChild);
+            this.guiView = document.querySelector("#guiView");
             if (this.appView
                 && this.guiView
-                && this.jitsiContainer
-                && this.toolbar) {
-                addEventListener("resize", () => this.resize.bind(this));
-                addEventListener("resize", this.game.frontBuffer.resize.bind(this.game.frontBuffer));
+                && this.jitsiContainer) {
+                addEventListener("resize", () => {
+                    this.resize();
+                    this.game.frontBuffer.resize();
+                });
             }
         }
         // <<<<<<<<<< VIEWS <<<<<<<<<<
+
+        // >>>>>>>>>> TOOLBAR >>>>>>>>>>
+        this.toolbar = new ToolBar();
+        this.appView.insertBefore(this.toolbar.element, this.appView.firstChild);
+
+        this.toolbar.addEventListener("toggleaudio", () => this.jitsiClient.toggleAudio());
+        this.toolbar.addEventListener("leave", () => this.game.end());
+        this.toolbar.addEventListener("emote", () => this.game.emote(this.game.me.id, this.game.currentEmoji));
+        this.toolbar.addEventListener("selectemoji", () => this.selectEmojiAsync());
+        this.toolbar.addEventListener("zoomchanged", () => this.game.targetCameraZ = this.toolbar.zoom);
+        this.game.addEventListener("zoomupdated", () => this.toolbar.zoom = this.game.targetCameraZ);
+        this.toolbar.addEventListener("tweet", () => {
+            const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
+                url = new URL("https://twitter.com/intent/tweet?text=" + message);
+            open(url);
+        });
+        // <<<<<<<<<< TOOLBAR <<<<<<<<<<
 
         // >>>>>>>>>> TOGGLE GAME VIEW >>>>>>>>>>
         {
@@ -63,81 +69,14 @@ export class AppGui extends EventTarget {
         }
         // <<<<<<<<<< TOGGLE GAME VIEW <<<<<<<<<<
 
-        // >>>>>>>>>> EMOJI >>>>>>>>>>
-        {
-            this.emojiForm = new EmojiForm(document.querySelector("#emoji"));
-            this.emoteButton = button(
-                { title: "Emote" },
-                "Emote ",
-                kbd("(E)"),
-                "(@)");
-            const selectEmojiButton = button({ title: "Select Emoji" }, "🔻");
-            
-            this.toolbar.appendChild(span(this.emoteButton, selectEmojiButton));
-
-            if (this.emoteButton
-                && selectEmojiButton) {
-
-                this.emoteButton.addEventListener("click", () => this.game.emote(this.game.me.id, this.game.currentEmoji));
-                this.selectEmojiAsync = async () => {
-                    if ((!this.optionsView || !this.optionsView.isOpen())
-                        && (!this.loginView || !this.loginView.isOpen())) {
-                        const emoji = await this.emojiForm.selectAsync();
-
-                        if (!!emoji) {
-                            const isNew = emoji !== game.currentEmoji;
-                            this.game.emote(this.game.me.id, emoji);
-                            if (isNew) {
-                                this.refreshEmojiButton();
-                            }
-                        }
-                    }
-                };
-                selectEmojiButton.addEventListener("click", this.selectEmojiAsync);
-            }
-        }
-        // <<<<<<<<<< EMOJI <<<<<<<<<<
-
-        // >>>>>>>>>> ZOOM >>>>>>>>>>
-        {
-            this.zoomSpinner = input({
-                type: "number",
-                id: "zoom",
-                title: "Change map zoom",
-                value: 1,
-                min: 0.1,
-                max: 8,
-                step: 0.1,
-                style: { width: "4em" }
-            });
-            this.toolbar.appendChild(span(
-                label({ for: "zoom" }, "Zoom"),
-                this.zoomSpinner));
-
-            document.querySelector("#zoom");
-            if (this.zoomSpinner) {
-                this.zoomSpinner.addEventListener("input", (evt) => {
-                    this.game.targetCameraZ = this.zoomSpinner.value;
-                });
-                this.zoomSpinner.value = this.game.targetCameraZ;
-
-                this.game.addEventListener("zoomupdated", () => {
-                    this.zoomSpinner.value = Math.round(100 * this.game.targetCameraZ) / 100;
-                });
-            }
-        }
-        // <<<<<<<<<< ZOOM <<<<<<<<<<
-
         // >>>>>>>>>> OPTIONS >>>>>>>>>>
         {
             this.optionsView = document.querySelector("#options");
-            const optionsButton = this.toolbar.appendChild(button({ title: "Show/hide options" }, "⚙️")),
-                optionsConfirmButton = document.querySelector("#options button.confirm");
+            const optionsConfirmButton = document.querySelector("#options button.confirm");
             if (this.optionsView
-                && optionsButton
                 && optionsConfirmButton) {
 
-                optionsButton.addEventListener("click", (evt) => {
+                this.toolbar.addEventListener("options", (evt) => {
                     if (!this.emojiForm.isOpen()
                         && (!this.loginView || !this.loginView.isOpen())) {
                         this.optionsView.toggleOpen();
@@ -354,9 +293,6 @@ export class AppGui extends EventTarget {
                         maxAudioSpinner = document.querySelector("#maxAudio"),
                         rolloffSpinner = document.querySelector("#rolloff");
 
-                    this.muteAudioButton = button("🔊");
-                    this.toolbar.insertBefore(this.muteAudioButton, this.toolbar.firstChild);
-
                     this.game.drawHearing = localStorage.getItem("drawHearing") === "true";
 
                     this.game.audioDistanceMin = localStorage.getInt("minAudio", this.game.audioDistanceMin);
@@ -370,8 +306,7 @@ export class AppGui extends EventTarget {
                         && audioOutputDeviceSelector
                         && drawHearingCheckbox
                         && minAudioSpinner
-                        && maxAudioSpinner
-                        && this.muteAudioButton) {
+                        && maxAudioSpinner) {
 
                         let lastAudioInputDevice = null,
                             audioInputDevices = null;
@@ -463,10 +398,6 @@ export class AppGui extends EventTarget {
                         minAudioSpinner.addEventListener("input", setAudioRange);
                         maxAudioSpinner.addEventListener("input", setAudioRange);
                         rolloffSpinner.addEventListener("input", setAudioRange);
-
-                        this.muteAudioButton.addEventListener("click", (evt) => {
-                            this.jitsiClient.toggleAudio();
-                        });
                     }
 
                     this.setUserAudioMuted(false);
@@ -520,27 +451,6 @@ export class AppGui extends EventTarget {
         }
         // <<<<<<<<<< OPTIONS <<<<<<<<<<
 
-        // >>>>>>>>>> TWEET >>>>>>>>>>
-        {
-            const tweetButton = this.toolbar.appendChild(button(
-                { title: "Share your current room to twitter" },
-                run("Share room"),
-                img({
-                    src: "https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png",
-                    alt: "icon",
-                    role: "presentation",
-                    style: { height: "1.5em" }
-                })));
-            if (tweetButton) {
-                tweetButton.addEventListener("click", (evt) => {
-                    const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
-                        url = new URL("https://twitter.com/intent/tweet?text=" + message);
-                    open(url);
-                });
-            }
-        }
-        // <<<<<<<<<< TWEET <<<<<<<<<<
-
         // >>>>>>>>>> LOGIN >>>>>>>>>>
         {
             this.loginView = document.querySelector("#login");
@@ -549,17 +459,13 @@ export class AppGui extends EventTarget {
             this.roomNameInput = document.querySelector("#roomName");
             this.userNameInput = document.querySelector("#userName");
             this.connectButton = document.querySelector("#connect");
-            const leaveButton = this.toolbar.appendChild(button(
-                { title: "Leave the room" },
-                run("Leave")));
 
             if (this.loginView
                 && this.roomSelector
                 && this.newRoomButton
                 && this.roomNameInput
                 && this.userNameInput
-                && this.connectButton
-                && leaveButton) {
+                && this.connectButton) {
                 this.roomNameInput.addEventListener("enter", this.userNameInput.focus.bind(this.userNameInput));
                 this.userNameInput.addEventListener("enter", this.login.bind(this));
                 this.connectButton.addEventListener("click", this.login.bind(this));
@@ -579,10 +485,6 @@ export class AppGui extends EventTarget {
                     }
 
                     this.roomNameInput.value = this.roomSelector.value;
-                });
-
-                leaveButton.addEventListener("click", (evt) => {
-                    this.game.end();
                 });
 
                 this.game.addEventListener("gameEnded", (evt) => {
@@ -645,10 +547,7 @@ export class AppGui extends EventTarget {
     }
 
     setUserAudioMuted(muted) {
-        this.muteAudioButton.updateLabel(
-            muted,
-            mutedSpeaker.value,
-            speakerHighVolume.value);
+        this.toolbar.setAudioMuted(muted);
     }
 
     setUserVideoMuted(muted) {
@@ -658,10 +557,25 @@ export class AppGui extends EventTarget {
             videoCamera.value);
     }
 
+    async selectEmojiAsync() {
+        if ((!this.optionsView || !this.optionsView.isOpen())
+            && (!this.loginView || !this.loginView.isOpen())) {
+            const emoji = await this.emojiForm.selectAsync();
+
+            if (!!emoji) {
+                const isNew = emoji !== this.game.currentEmoji;
+                this.game.emote(this.game.me.id, emoji);
+                if (isNew) {
+                    this.refreshEmojiButton();
+                }
+            }
+        }
+    }
+
     refreshEmojiButton() {
         const emoji = this.game.currentEmoji,
             emojiValue = emoji && emoji.value || "@";
-        this.emoteButton.innerHTML = `Emote (<kbd>${this.game.keyEmote.toUpperCase()}</kbd>) (${emojiValue})`
+        this.toolbar.setEmojiButton(this.game.keyEmote, emojiValue);
     }
 
     resize() {
