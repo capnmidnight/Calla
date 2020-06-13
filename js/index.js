@@ -10,7 +10,7 @@ import { AppGui } from "./package/src/appgui.js";
         JitsiMeetExternalAPI,
         document.querySelector("#jitsi")),
         game = new Game(jitsiClient),
-        gui = new AppGui(game);
+        gui = new AppGui(game, jitsiClient);
 
     Object.assign(window, {
         game,

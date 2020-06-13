@@ -12,11 +12,11 @@ import { option } from "./html.js";
 import "./protos.js";
 
 export class AppGui extends EventTarget {
-    constructor(game) {
+    constructor(game, jitsiClient) {
         super();
 
         this.game = game;
-        this.jitsiClient = game.jitsiClient;
+        this.jitsiClient = jitsiClient;
         this.optionsView = null;
         this.emoteButton = null;
         this.muteAudioButton = null;

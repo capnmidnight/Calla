@@ -203,7 +203,7 @@ class MockUser {
 
 const jitsiClient = new MockJitsiClient(MockJitsiMeetExternalAPI, document.querySelector("#jitsi")),
     game = new Game(jitsiClient),
-    gui = new AppGui(game),
+    gui = new AppGui(game, jitsiClient),
     testUsers = [
         new MockUser("user1", -5, -5),
         new MockUser("user2", -5, 5),
