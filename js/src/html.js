@@ -166,6 +166,12 @@ export function varTag(...rest) { return tag("var", ...rest); }
 export function video(...rest) { return tag("video", ...rest); }
 export function wbr(...rest) { return tag("wbr", ...rest); }
 
+export function run(txt) {
+    return span({
+        style: { margin: "auto" },
+    }, txt);
+}
+
 export function isCanvas(elem) {
     if (elem instanceof HTMLCanvasElement) {
         return true;
