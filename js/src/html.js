@@ -1,7 +1,3 @@
-﻿export function appendAll(parent, ...elems) {
-    for (let i = 0; i < elems.length; ++i) {
-        parent.appendChild(elems[i]);
-    }
 }
 
 export function assignAttributes(elem, ...rest) {

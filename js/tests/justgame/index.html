@@ -8,14 +8,13 @@
             MOVE_TRANSITION_TIME = 0.5;
     </script>
     <script type="module">
-        import { appendAll } from "../../src/html.js";
         (async function () {
             const response = await fetch("../../index.html"),
                 html = await response.text(),
                 parser = new DOMParser(),
                 doc = parser.parseFromString(html, "text/html");
-            appendAll(document.head, ...doc.head.children);
-            appendAll(document.body, ...doc.body.children);
+            document.head.append(...doc.head.children);
+            document.body.append(...doc.body.children);
             await import("./index.js");
         })();
     </script>
