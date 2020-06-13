@@ -75,6 +75,7 @@ export class Game extends EventTarget {
         this.drawHearing = false;
         this.audioDistanceMin = 2;
         this.audioDistanceMax = 10;
+        this.rolloff = 5;
 
         this.pointers = [];
         this.lastPinchDistance = 0;

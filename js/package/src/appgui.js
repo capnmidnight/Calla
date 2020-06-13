@@ -328,8 +328,8 @@ export class AppGui extends EventTarget {
                     this.game.audioDistanceMin = Math.max(1, this.game.audioDistanceMin);
                     this.game.audioDistanceMax = localStorage.getInt("maxAudio", this.game.audioDistanceMax);
                     this.game.audioDistanceMax = Math.max(this.game.audioDistanceMin + 1, this.game.audioDistanceMax);
-                    this.rolloff = localStorage.getInt("rolloff", 50) / 10;
-                    this.rolloff = Math.max(0.1, Math.min(10, this.rolloff));
+                    this.game.rolloff = localStorage.getInt("rolloff", this.game.rolloff * 10) / 10;
+                    this.game.rolloff = Math.max(0.1, Math.min(10, this.game.rolloff));
 
                     if (audioInputDeviceSelector
                         && audioOutputDeviceSelector
@@ -413,18 +413,18 @@ export class AppGui extends EventTarget {
                             this.game.audioDistanceMax = Math.max(this.game.audioDistanceMin + 1, this.game.audioDistanceMax);
                             maxAudioSpinner.value = this.game.audioDistanceMax;
 
-                            this.rolloff = parseFloat(rolloffSpinner.value);
+                            this.game.rolloff = parseFloat(rolloffSpinner.value);
 
                             localStorage.setItem("minAudio", this.game.audioDistanceMin);
                             localStorage.setItem("maxAudio", this.game.audioDistanceMax);
-                            localStorage.setItem("rolloff", 10 * this.rolloff);
+                            localStorage.setItem("rolloff", 10 * this.game.rolloff);
 
                             this.updateAudioSettings();
                         };
 
                         minAudioSpinner.value = this.game.audioDistanceMin;
                         maxAudioSpinner.value = this.game.audioDistanceMax;
-                        rolloffSpinner.value = this.rolloff;
+                        rolloffSpinner.value = this.game.rolloff;
                         minAudioSpinner.addEventListener("input", setAudioRange);
                         maxAudioSpinner.addEventListener("input", setAudioRange);
                         rolloffSpinner.addEventListener("input", setAudioRange);
@@ -686,7 +686,7 @@ export class AppGui extends EventTarget {
             MOVE_TRANSITION_TIME,
             this.game.audioDistanceMin,
             this.game.audioDistanceMax,
-            this.rolloff);
+            this.game.rolloff);
     }
 
     async startConferenceAsync(roomName, userName) {
