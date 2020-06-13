@@ -47,15 +47,14 @@ export function tag(name, ...rest) {
 
     assignAttributes(elem, ...rest);
 
-    const textContent = rest.filter(x => x instanceof String || typeof x === "string")
-        .reduce((a, b) => (a + "\n" + b), "")
-        .trim();
-
-    if (textContent.length > 0) {
-        elem.appendChild(document.createTextNode(textContent));
+    for (let x of rest) {
+        if (x instanceof String || typeof x === "string") {
+            elem.appendChild(document.createTextNode(x));
+        }
+        else if (x instanceof Element) {
+            elem.appendChild(x);
+        }
     }
-
-    appendAll(elem, ...rest.filter(x => x instanceof Element));
 
     return elem;
 }
