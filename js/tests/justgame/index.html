@@ -16,7 +16,7 @@
                 doc = parser.parseFromString(html, "text/html");
             appendAll(document.head, ...doc.head.children);
             appendAll(document.body, ...doc.body.children);
-            await import("./bundle.min.js");
+            await import("./index.js");
         })();
     </script>
 </head>

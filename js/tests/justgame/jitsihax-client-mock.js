@@ -1,9 +1,14 @@
-﻿import { JitsiClient } from "../../package/src/jitsihax-client.js";
+﻿import { BaseJitsiClient } from "../../package/src/jitsihax-client-base.js";
 import { randomPerson } from "../../package/src/emoji.js";
+import { MockJitsiMeetExternalAPI } from "./mockjitsimeetexternalapi.js";
 
-export class MockJitsiClient extends JitsiClient {
-    constructor(ApiClass, parentNode) {
-        super(ApiClass, parentNode);
+export class MockJitsiClient extends BaseJitsiClient {
+    constructor(parentNode) {
+        super(parentNode);
+    }
+
+    async getApiClassAsync() {
+        return MockJitsiMeetExternalAPI;
     }
 
     mockRxGameData(command, id, data) {

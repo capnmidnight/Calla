@@ -1,4 +1,4 @@
-﻿import { JitsiClient } from "../../package/src/lib-jitsi-meet-client.js";
+﻿import { JitsiClient } from "../../package/src/jitsihax-client-lib-jitsi-meet.js";
 import { Game } from "../../package/src/game.js";
 const jitsiClient = new JitsiClient();
 jitsiClient.joinAsync("Calla", "testUser");

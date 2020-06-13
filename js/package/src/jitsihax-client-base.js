@@ -18,11 +18,10 @@ const APP_FINGERPRINT = "Calla",
     ];
 
 // Manages communication between Jitsi Meet and Calla
-export class JitsiClient extends EventTarget {
+export class BaseJitsiClient extends EventTarget {
 
-    constructor(ApiClass, parentNode) {
+    constructor(parentNode) {
         super();
-        this.ApiClass = ApiClass;
         this.parentNode = parentNode;
         this.api = null;
         this.iframe = null;
@@ -87,9 +86,14 @@ export class JitsiClient extends EventTarget {
         }
     }
 
-    joinAsync(roomName, userName) {
-        return new Promise((resolve, reject) => {
-            this.api = new this.ApiClass(JITSI_HOST, {
+    async getApiClassAsync() {
+        throw new Error("Not implemented in base class.");
+    }
+
+    async joinAsync(roomName, userName) {
+        const ApiClass = await this.getApiClassAsync();
+        await new Promise((resolve, reject) => {
+            this.api = new ApiClass(JITSI_HOST, {
                 parentNode: this.parentNode,
                 roomName,
                 onload: () => {
