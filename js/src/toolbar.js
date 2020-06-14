@@ -6,7 +6,6 @@
     Input,
     KBD,
     Label,
-    Run,
     Span,
     alt,
     ariaLabel,
@@ -38,6 +37,12 @@ import {
     pauseButton,
     playButton
 } from "./emoji.js";
+
+function Run(txt) {
+    return Span(
+        style({ margin: "auto" }),
+        txt);
+}
 
 const toggleAudioEvt = new Event("toggleaudio"),
     emoteEvt = new Event("emote"),

@@ -187,12 +187,6 @@ export function Video(...rest) { return tag("video", ...rest); }
 export function WBR() { return tag("wbr"); }
 export function XMP(...rest) { return tag("xmp", ...rest); }
 
-export function Run(txt) {
-    return Span(
-        style({ margin: "auto" }),
-        txt);
-}
-
 export function isCanvas(elem) {
     if (elem instanceof HTMLCanvasElement) {
         return true;
