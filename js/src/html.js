@@ -760,3 +760,15 @@ export function onVisibilityChange(callback) { return new Func("visibilitychange
 export function onVolumeChange(callback) { return new Func("volumechange", callback); }
 export function onWaiting(callback) { return new Func("waiting", callback); }
 export function onWheel(callback) { return new Func("wheel", callback); }
+
+export const fillPageStyle = style({
+    position: "absolute",
+    display: "block",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    padding: 0,
+    margin: 0,
+    overflow: "hidden",
+});

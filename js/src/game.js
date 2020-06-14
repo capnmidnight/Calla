@@ -1,7 +1,12 @@
 ﻿import { TileMap } from "./tilemap.js";
 import { User } from "./user.js";
 import { Emote } from "./emote.js";
-
+import {
+    Canvas,
+    id,
+    style,
+    fillPageStyle
+} from "./html.js";
 import { lerp, clamp, project, unproject } from "./math.js";
 
 const CAMERA_LERP = 0.01,
@@ -50,7 +55,10 @@ export class Game extends EventTarget {
         this.jitsiClient.addEventListener("audioMuteStatusChanged", this.muteUserAudio.bind(this));
         this.jitsiClient.addEventListener("videoMuteStatusChanged", this.muteUserVideo.bind(this));
 
-        this.frontBuffer = document.querySelector("#frontBuffer");
+        this.frontBuffer = Canvas(
+            id("frontBuffer"),
+            fillPageStyle,
+            style({ touchAction: "none" }));
         this.gFront = this.frontBuffer.getContext("2d");
 
         this.me = null
@@ -323,7 +331,7 @@ export class Game extends EventTarget {
 
     updateAudioActivity(evt) {
         const id = evt.data && evt.data.participantID
-                || evt.participantID,
+            || evt.participantID,
             isActive = evt.data && evt.data.isActive
                 || evt.isActive,
             user = this.userLookup[id];

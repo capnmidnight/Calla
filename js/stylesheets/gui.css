@@ -1,4 +1,4 @@
-﻿body > section, #frontBuffer, #jitsi {
+﻿body > section {
     position: absolute;
     display: block;
     top: 0;
@@ -8,10 +8,6 @@
     padding: 0;
     margin: 0;
     overflow: hidden;
-}
-
-#frontBuffer {
-    touch-action: none;
 }
 
 body > section {
@@ -45,14 +41,6 @@ body > section {
         margin: auto;
     }
 }
-
-#hideGame {
-    position: fixed;
-    top: 0;
-    right: 0;
-    margin: 4px;
-}
-
 #loginView form > * {
     margin: .25em;
     padding: .25em;

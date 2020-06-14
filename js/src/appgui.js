@@ -1,18 +1,21 @@
 ﻿import { EmojiForm } from "./emojiForm.js";
 import {
-    pauseButton,
-    playButton,
     bust,
     mutedSpeaker,
     videoCamera
 } from "./emoji.js";
 import { isGoodNumber } from "./math.js";
-import { Option } from "./html.js";
+import {
+    Div,
+    Option,
+    id,
+    fillPageStyle
+} from "./html.js";
 import { ToolBar } from "./toolbar.js";
 import "./protos.js";
 
 export class AppGui extends EventTarget {
-    constructor(game, jitsiClient) {
+    constructor(appViewElement, game, jitsiClient) {
         super();
 
         this.game = game;
@@ -22,13 +25,15 @@ export class AppGui extends EventTarget {
 
         // >>>>>>>>>> VIEWS >>>>>>>>>>
         {
-            this.appView = document.querySelector("#appView");
+            this.appView = appViewElement;
             this.emojiForm = new EmojiForm(document.querySelector("#emoji"));
-            this.jitsiContainer = document.querySelector("#jitsi");
+            this.jitsiContainer = this.appView.appendChild(Div(
+                id("jitsi"),
+                fillPageStyle));
+            this.appView.appendChild(this.game.frontBuffer);
             this.guiView = document.querySelector("#guiView");
             if (this.appView
-                && this.guiView
-                && this.jitsiContainer) {
+                && this.guiView) {
                 addEventListener("resize", () => {
                     this.resize();
                     this.game.frontBuffer.resize();
@@ -639,6 +644,7 @@ export class AppGui extends EventTarget {
         this.appView.show();
         location.hash = roomName;
         await this.jitsiClient.joinAsync(
+            this.jitsiContainer,
             roomName,
             userName);
         this.updateAudioSettings();

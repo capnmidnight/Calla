@@ -90,7 +90,7 @@ export class BaseJitsiClient extends EventTarget {
         throw new Error("Not implemented in base class.");
     }
 
-    async joinAsync(roomName, userName) {
+    async joinAsync(parentNode, roomName, userName) {
         const ApiClass = await this.getApiClassAsync();
         await new Promise((resolve, reject) => {
             this.api = new ApiClass(JITSI_HOST, {

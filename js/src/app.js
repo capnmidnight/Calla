@@ -1,10 +1,10 @@
 ﻿import { Game } from "./game.js";
 import { AppGui } from "./appgui.js";
 
-export function init(JitsiClientClass, parentNode) {
-    const jitsiClient = new JitsiClientClass(parentNode),
+export function init(JitsiClientClass, appViewElement) {
+    const jitsiClient = new JitsiClientClass(),
         game = new Game(jitsiClient),
-        gui = new AppGui(game, jitsiClient);
+        gui = new AppGui(appViewElement, game, jitsiClient);
 
     Object.assign(window, {
         jitsiClient,

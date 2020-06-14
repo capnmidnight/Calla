@@ -7,7 +7,7 @@ import { MockUser } from "./mockuser.js";
 import { MockJitsiClient } from "./jitsihax-client-mock.js";
 import { init } from "../../src/app.js";
 
-const game = init(MockJitsiClient, document.querySelector("#jitsi")),
+const game = init(MockJitsiClient, document.querySelector("#appView")),
     testUsers = [
         new MockUser("user1", -5, -5),
         new MockUser("user2", -5, 5),

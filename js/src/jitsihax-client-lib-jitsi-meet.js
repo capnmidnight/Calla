@@ -402,7 +402,7 @@ export class JitsiClient extends EventTarget {
         }
     }
 
-    async joinAsync(roomName, userName) {
+    async joinAsync(parentNode, roomName, userName) {
         roomName = roomName.toLocaleLowerCase();
 
         await import(`https://${JITSI_HOST}/libs/lib-jitsi-meet.min.js`);
