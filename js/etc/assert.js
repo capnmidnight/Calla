@@ -1,4 +1,15 @@
-﻿import * as H from "../src/html.js";
+﻿import {
+    Table,
+    TBody,
+    TR,
+    TD,
+    Span,
+    Button,
+    style,
+    colSpan,
+    onclick,
+    monospaceFamily
+} from "../src/html.js";
 
 class TestOutputResultsEvent extends Event {
     constructor(table, stats) {
@@ -116,9 +127,9 @@ function bar(color, width) {
 }
 
 function refresher(thunk) {
-    return H.td(H.button({
-        onclick: thunk
-    }, "\u{1F504}\u{FE0F}"));
+    return TD(Button(
+        onclick(thunk),
+        "\u{1F504}\u{FE0F}"));
 }
 
 export class HtmlTestOutput extends TestOutput {
@@ -130,39 +141,41 @@ export class HtmlTestOutput extends TestOutput {
                 f = Math.round(100 * evt.stats.totalFailed / evt.stats.totalFound),
                 t = Math.round(100 * (evt.stats.totalFound - evt.stats.totalSucceeded - evt.stats.totalFailed) / evt.stats.totalFound),
                 basicStyle = { style: { display: "inline-block", overflow: "hidden", height: "1em" } },
-                table = H.table({
-                    style: { width: "100%" }
-                }, H.tbody(
-                    H.tr(
-                        H.td({
-                            colSpan: 3,
-                            style: { height: "2em" }
-                        },
-                            H.span(basicStyle, bar("green", s + "%")),
-                            H.span(basicStyle, bar("red", f + "%")),
-                            H.span(basicStyle, bar("grey", t + "%"))),
-                        refresher(() =>
-                            this.run())),
-                    H.tr(
-                        H.td("Name"),
-                        H.td("Status"),
-                        H.td(),
-                        H.td("Rerun")))),
-                    tbody = table.querySelector("tbody");
+                table = Table(
+                    style({
+                        fontFamily: monospaceFamily,
+                        width: "100%"
+                    }),
+                    TBody(
+                        TR(
+                            TD(colSpan(3),
+                                style({ height: "2em" }),
+                                Span(basicStyle, bar("green", s + "%")),
+                                Span(basicStyle, bar("red", f + "%")),
+                                Span(basicStyle, bar("grey", t + "%"))),
+                            refresher(() =>
+                                this.run())),
+                        TR(
+                            TD("Name"),
+                            TD("Status"),
+                            TD(),
+                            TD("Rerun")))),
+                tbody = table.querySelector("tbody");
 
             for (let testCaseName in evt.table) {
-                tbody.appendChild(H.tr(
-                    H.td({ colSpan: 3 }, testCaseName),
-                    refresher((evt) =>
+                tbody.appendChild(TR(
+                    TD(colSpan(3),
+                        testCaseName),
+                    refresher(() =>
                         this.run(testCaseName))));
 
                 for (let testName in evt.table[testCaseName]) {
                     const e = evt.table[testCaseName][testName];
-                    tbody.appendChild(H.tr(
-                        H.td(testName),
-                        H.td(TestStateNames[e.state]),
-                        H.td(e.message),
-                        refresher(() => 
+                    tbody.appendChild(TR(
+                        TD(testName),
+                        TD(TestStateNames[e.state]),
+                        TD(e.message),
+                        refresher(() =>
                             this.run(testCaseName, testName))));
                 }
             }

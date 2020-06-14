@@ -4,7 +4,21 @@ import {
     emojiStyle,
     textStyle
 } from "./emoji.js";
-import * as H from "./html.js";
+import {
+    UL,
+    Span,
+    Button,
+    LI,
+    Label,
+    Div,
+    H1,
+    P,
+    A,
+    title,
+    href,
+    htmlFor,
+    onclick
+} from "./html.js";
 
 export class EmojiForm extends EventTarget {
     constructor(emojiView) {
@@ -47,10 +61,10 @@ export class EmojiForm extends EventTarget {
 
         const addIconsToContainer = (group, container, isAlts) => {
             for (let icon of group) {
-                const g = isAlts ? H.ul() : H.span(),
-                    btn = H.button({
-                        title: icon.desc,
-                        onclick: (evt) => {
+                const g = isAlts ? UL() : Span(),
+                    btn = Button(
+                        title(icon.desc),
+                        onclick((evt) => {
                             selectedEmoji = selectedEmoji && evt.ctrlKey
                                 ? combine(selectedEmoji, icon)
                                 : icon;
@@ -61,25 +75,22 @@ export class EmojiForm extends EventTarget {
                                 alts.toggleOpen();
                                 btn.innerHTML = icon.value + (alts.isOpen() ? "-" : "+");
                             }
-                        }
-                    }, icon.value);
+                        }), icon.value);
 
                 let alts = null;
 
                 if (isAlts) {
                     btn.id = `emoji-with-alt-${idCounter++}`;
-                    g.appendChild(H.li(
-                        btn,
-                        H.label({
-                            htmlFor: btn.id
-                        }, icon.desc)));
+                    g.appendChild(LI(btn,
+                        Label(htmlFor(btn.id),
+                            icon.desc)));
                 }
                 else {
                     g.appendChild(btn);
                 }
 
                 if (!!icon.alt) {
-                    alts = H.div();
+                    alts = Div();
                     allAlts.push(alts);
                     addIconsToContainer(icon.alt, alts, true);
                     alts.hide();
@@ -102,16 +113,16 @@ export class EmojiForm extends EventTarget {
 
         for (let key of Object.keys(icons)) {
             if (key !== "combiners") {
-                const header = H.h1(),
-                    container = H.p(),
-                    headerButton = H.a({
-                        href: "javascript:undefined",
-                        title: key,
-                        onclick: () => {
+                const header = H1(),
+                    container = P(),
+                    headerButton = A(
+                        href("javascript:undefined"),
+                        title(key),
+                        onclick(() => {
                             container.toggleOpen();
                             headerButton.innerHTML = key + (container.isOpen() ? " -" : " +");
-                        }
-                    }, key + " -"),
+                        }),
+                        key + " -"),
                     group = icons[key];
 
                 addIconsToContainer(group, container);

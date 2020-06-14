@@ -1,6 +1,6 @@
 ﻿import {
     tag,
-    span
+    Span
 } from "./html.js";
 
 import '../lib/jquery.js';
@@ -622,7 +622,7 @@ export class JitsiClient extends EventTarget {
 
         let container = document.getElementById(containerID);
         if (container === null) {
-            container = span({ id: containerID });
+            container = Span({ id: containerID });
             document.body.appendChild(container);
         }
 

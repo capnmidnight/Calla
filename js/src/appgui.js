@@ -7,7 +7,7 @@ import {
     videoCamera
 } from "./emoji.js";
 import { isGoodNumber } from "./math.js";
-import { option } from "./html.js";
+import { Option } from "./html.js";
 import { ToolBar } from "./toolbar.js";
 import "./protos.js";
 
@@ -217,12 +217,12 @@ export class AppGui extends EventTarget {
                         const refreshGamepadList = (evt) => {
                             gamepadSelector.innerHTML = "";
                             if (this.game.gamepads.length === 0) {
-                                gamepadSelector.appendChild(option("No gamepads detected"));
+                                gamepadSelector.appendChild(Option("No gamepads detected"));
                                 gamepadSelector.lock();
                             }
                             else {
                                 gamepadSelector.unlock();
-                                this.game.gamepads.map((pad, i) => option({
+                                this.game.gamepads.map((pad, i) => Option({
                                     selected: i === this.game.gamepadIndex
                                 }, pad.id))
                                     .forEach(opt => gamepadSelector.appendChild(opt));
@@ -317,12 +317,12 @@ export class AppGui extends EventTarget {
                             audioInputDeviceSelector.innerHTML = "";
                             if (audioInputDevices.length === 0) {
                                 audioInputDeviceSelector.lock();
-                                audioInputDeviceSelector.appendChild(option("No audio input devices available"));
+                                audioInputDeviceSelector.appendChild(Option("No audio input devices available"));
                             }
                             else {
                                 audioInputDeviceSelector.unlock();
                                 audioInputDevices.map(a =>
-                                    option(a.label, {
+                                    Option(a.label, {
                                         selected: !!lastAudioInputDevice && a.id === lastAudioInputDevice.id
                                     }))
                                     .forEach(opt => audioInputDeviceSelector.appendChild(opt));
@@ -349,11 +349,11 @@ export class AppGui extends EventTarget {
                             audioOutputDeviceSelector.innerHTML = "";
                             if (audioOutputDevices.length === 0) {
                                 audioOutputDeviceSelector.lock();
-                                audioOutputDeviceSelector.appendChild(option("No audio output devices available"));
+                                audioOutputDeviceSelector.appendChild(Option("No audio output devices available"));
                             }
                             else {
                                 audioOutputDeviceSelector.unlock();
-                                audioOutputDevices.map(a => option(a.label, {
+                                audioOutputDevices.map(a => Option(a.label, {
                                     selected: !!lastAudioOutputDevice && a.id === lastAudioOutputDevice.id
                                 }))
                                     .forEach(opt => audioOutputDeviceSelector.appendChild(opt));
@@ -423,11 +423,11 @@ export class AppGui extends EventTarget {
                             videoInputDeviceSelector.innerHTML = "";
                             if (videoInputDevices.length === 0) {
                                 videoInputDeviceSelector.lock();
-                                videoInputDeviceSelector.appendChild(option("No video input devices available"));
+                                videoInputDeviceSelector.appendChild(Option("No video input devices available"));
                             }
                             else {
                                 videoInputDeviceSelector.unlock();
-                                videoInputDevices.map(v => option(v.label, {
+                                videoInputDevices.map(v => Option(v.label, {
                                     selected: !!lastVideoInputDevice && v.id === lastVideoInputDevice.id
                                 })).forEach(opt => videoInputDeviceSelector.appendChild(opt));
                             }

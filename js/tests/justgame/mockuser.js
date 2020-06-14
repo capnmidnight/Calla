@@ -1,5 +1,5 @@
 ﻿import { allIcons as icons } from "../../src/emoji.js";
-import { audio, span } from "../../src/html.js";
+import { Audio, Span } from "../../src/html.js";
 
 export class MockUser {
     constructor(id, x, y) {
@@ -22,8 +22,8 @@ export class MockUser {
 
         jitsiClient.api.dispatchEvent(evt);
 
-        document.body.appendChild(span({ id: `participant_${this.id}` },
-            this.audio = audio({
+        document.body.appendChild(Span({ id: `participant_${this.id}` },
+            this.audio = Audio({
                 autoplay: "autoplay",
                 loop: "loop",
                 src: `/test-audio/${this.id}.mp3`

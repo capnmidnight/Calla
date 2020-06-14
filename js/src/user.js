@@ -1,6 +1,6 @@
 ﻿import "./protos.js";
 import { project } from "./math.js";
-import { canvas } from "./html.js";
+import { Canvas } from "./html.js";
 import {
     mutedSpeaker,
     speakerMediumVolume,
@@ -83,7 +83,7 @@ export class User extends EventTarget {
                 this.avatarURL = url;
                 const img = new Image();
                 img.addEventListener("load", (evt) => {
-                    this.avatarImage = canvas({
+                    this.avatarImage = Canvas({
                         width: img.width,
                         height: img.height
                     });
