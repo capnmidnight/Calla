@@ -2,7 +2,5 @@
 // be able to test the UI without having to connect to a
 // meeting.
 import { ToolBar } from "../../src/toolbar.js";
-const appView = document.querySelector("#appView"),
-    toolbar = new ToolBar();
-
-appView.appendChild(toolbar.element);
+const toolbar = new ToolBar();
+document.body.appendChild(toolbar.element);
