@@ -12,10 +12,6 @@ export function init(JitsiClientClass, appViewElement) {
         gui
     });
 
-    if (gui.toolbar) {
-        gui.toolbar.advertise();
-    }
-
     jitsiClient.addEventListener("videoConferenceJoined", (evt) => {
         game.start(evt);
     });
@@ -125,5 +121,5 @@ export function init(JitsiClientClass, appViewElement) {
         gui.selectEmojiAsync();
     });
 
-    return game;
+    return { jitsiClient, game, gui };
 }

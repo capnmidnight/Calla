@@ -1,5 +1,4 @@
 ﻿import {
-    A,
     Button,
     Div,
     Img,
@@ -8,19 +7,14 @@
     Label,
     Span,
     alt,
-    ariaLabel,
-    className,
-    href,
     htmlFor,
     id,
     min,
     max,
-    rel,
     role,
     src,
     step,
     style,
-    target,
     title,
     type,
     value,
@@ -228,29 +222,5 @@ export class ToolBar extends EventTarget {
 
     setEmojiButton(key, value) {
         this.emoteButton.innerHTML = `Emote (<kbd>${key.toUpperCase()}</kbd>) (${value})`
-    }
-
-    advertise() {
-        // GitHub link
-        this.appendChild(A(
-            href("https://github.com/capnmidnight/Calla"),
-            target("_blank"),
-            rel("noopener"),
-            ariaLabel("Follow Calla on Git Hub"),
-            title("Follow Calla on GitHub"),
-            Span(
-                className("icon icon-github"),
-                role("presentation"))));
-
-        // My own Twitter link
-        this.appendChild(A(
-            href("https://twitter.com/Sean_McBeth"),
-            target("_blank"),
-            rel("noopener"),
-            ariaLabel("Follow Sean on Twitter"),
-            title("Follow @Sean_McBeth on Twitter"),
-            Span(
-                className("icon icon-twitter"),
-                role("presentation"))));
     }
 }
