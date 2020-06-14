@@ -51,7 +51,6 @@ export class AppGui extends EventTarget {
         this.toolbar.addEventListener("emote", () => this.game.emote(this.game.me.id, this.game.currentEmoji));
         this.toolbar.addEventListener("selectemoji", () => this.selectEmojiAsync());
         this.toolbar.addEventListener("zoomchanged", () => this.game.targetCameraZ = this.toolbar.zoom);
-        this.game.addEventListener("zoomchanged", () => this.toolbar.zoom = this.game.targetCameraZ);
         this.toolbar.addEventListener("tweet", () => {
             const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
                 url = new URL("https://twitter.com/intent/tweet?text=" + message);
@@ -521,6 +520,14 @@ export class AppGui extends EventTarget {
             }
         }
         // <<<<<<<<<< LOGIN <<<<<<<<<<
+    }
+
+    get zoom() {
+        return this.toolbar.zoom;
+    }
+
+    set zoom(value) {
+        this.toolbar.zoom = value;
     }
 
     setUserAudioMuted(muted) {

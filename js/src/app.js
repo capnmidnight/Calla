@@ -121,5 +121,9 @@ export function init(JitsiClientClass, appViewElement) {
         gui.selectEmojiAsync();
     });
 
+    game.addEventListener("zoomchanged", () => {
+        gui.zoom = game.targetCameraZ;
+    });
+
     return { jitsiClient, game, gui };
 }
