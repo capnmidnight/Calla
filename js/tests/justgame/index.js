@@ -17,10 +17,8 @@ const { game } = init(MockJitsiClient, document.querySelector("#appView")),
     ];
 
 game.addEventListener("gamestarted", function createTestUser() {
-    if (game.userList.length < 5) {
-        const idx = game.userList.length - 1,
-            user = testUsers[idx];
-        user.start();
+    if (testUsers.length > 0) {
+        testUsers.shift().start();
         setTimeout(createTestUser, 1000);
     }
 });
