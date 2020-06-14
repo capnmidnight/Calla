@@ -18,10 +18,6 @@ body {
     line-height: 1.5;
 }
 
-.accessibility-text {
-    display: none;
-}
-
 h1 {
     font-size: 2em;
     text-transform: capitalize;
