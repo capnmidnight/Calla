@@ -1,6 +1,0 @@
-{
-  "private": true,
-  "scripts": {
-    "pkg": "rollup -c && minify bundle.js > bundle.min.js"
-  }
-}
