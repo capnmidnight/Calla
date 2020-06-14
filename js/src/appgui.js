@@ -398,8 +398,6 @@ export class AppGui extends EventTarget {
                         maxAudioSpinner.addEventListener("input", setAudioRange);
                         rolloffSpinner.addEventListener("input", setAudioRange);
                     }
-
-                    this.setUserAudioMuted(false);
                 }
                 // <<<<<<<<<< AUDIO <<<<<<<<<<
 
