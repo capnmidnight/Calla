@@ -1,12 +1,14 @@
 ﻿import { allIcons as icons } from "../../src/emoji.js";
 import {
     Audio,
-    Span,
+    Span
+} from "../../src/htmltags.js";
+import {
     autoPlay,
     id,
     loop,
     src
-} from "../../src/html.js";
+} from "../../src/htmlattrs.js";
 
 export class MockUser {
     constructor(id, x, y) {

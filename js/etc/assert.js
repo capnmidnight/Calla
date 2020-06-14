@@ -4,12 +4,19 @@
     TR,
     TD,
     Span,
-    Button,
+    Button
+} from "../src/htmltags.js";
+
+import {
     style,
     colSpan,
-    onClick,
     monospaceFamily
-} from "../src/html.js";
+} from "../src/htmlattrs.js";
+
+import {
+    onClick
+} from "../src/htmlevts.js";
+
 
 class TestOutputResultsEvent extends Event {
     constructor(table, stats) {

@@ -7,11 +7,13 @@ import {
 import { isGoodNumber } from "./math.js";
 import {
     Div,
-    Option,
+    Option
+} from "./htmltags.js";
+import {
     id,
     fillPageStyle,
     selected
-} from "./html.js";
+} from "./htmlattrs.js";
 import { ToolBar } from "./toolbar.js";
 import "./protos.js";
 

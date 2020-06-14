@@ -5,20 +5,26 @@ import {
     textStyle
 } from "./emoji.js";
 import {
-    UL,
-    Span,
+    A,
     Button,
-    LI,
-    Label,
     Div,
     H1,
+    H2,
+    LI,
+    Label,
     P,
-    A,
-    title,
+    Span,
+    UL
+} from "./htmltags.js";
+import {
+    className,
     href,
     htmlFor,
-    onClick
-} from "./html.js";
+    id,
+    style,
+    title
+} from "./htmlattrs.js";
+import { onClick } from "./htmlevts.js";
 
 export class EmojiForm extends EventTarget {
     constructor(emojiView) {

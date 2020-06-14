@@ -5,7 +5,9 @@
     Input,
     KBD,
     Label,
-    Span,
+    Span
+} from "./htmltags.js";
+import {
     alt,
     htmlFor,
     id,
@@ -18,10 +20,12 @@
     title,
     type,
     value,
-    onClick,
-    onInput,
     systemFamily
-} from "./html.js";
+} from "./htmlattrs.js";
+import {
+    onClick,
+    onInput
+} from "./htmlevts.js";
 
 import {
     mutedSpeaker,

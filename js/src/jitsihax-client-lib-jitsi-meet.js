@@ -1,7 +1,7 @@
 ﻿import {
     tag,
     Span
-} from "./html.js";
+} from "./htmltags.js";
 
 import '../lib/jquery.js';
 

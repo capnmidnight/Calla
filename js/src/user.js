@@ -1,10 +1,12 @@
 ﻿import "./protos.js";
 import { project } from "./math.js";
 import {
-    Canvas,
+    Canvas
+} from "./htmltags.js";
+import {
     width,
     height
-} from "./html.js";
+} from "./htmlattrs.js";
 import {
     mutedSpeaker,
     speakerMediumVolume,
