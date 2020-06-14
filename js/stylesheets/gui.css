@@ -46,20 +46,7 @@ body > section {
     }
 }
 
-#toolbar {
-    background-color: #bbb;
-    padding: 4px;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-}
-
-    #toolbar > * {
-        display: inline-flex;
-        margin: 0 0.5em 0 0;
-    }
-
-#hideGame{
+#hideGame {
     position: fixed;
     top: 0;
     right: 0;
@@ -90,11 +77,11 @@ label {
         overflow-y: scroll;
     }
 
-    #emoji > .content > h1 > a{
-        text-decoration: none;
-        color: black;
-        text-transform: capitalize;
-    }
+        #emoji > .content > h1 > a {
+            text-decoration: none;
+            color: black;
+            text-transform: capitalize;
+        }
 
         #emoji > .content button {
             font-size: 200%;

@@ -39,7 +39,7 @@ export class AppGui extends EventTarget {
 
         // >>>>>>>>>> TOOLBAR >>>>>>>>>>
         this.toolbar = new ToolBar();
-        this.appView.insertBefore(this.toolbar.element, this.appView.firstChild);
+        this.appView.appendChild(this.toolbar.element);
 
         this.toolbar.addEventListener("toggleaudio", () => this.jitsiClient.toggleAudio());
         this.toolbar.addEventListener("leave", () => this.game.end());
@@ -52,22 +52,11 @@ export class AppGui extends EventTarget {
                 url = new URL("https://twitter.com/intent/tweet?text=" + message);
             open(url);
         });
+        this.toolbar.addEventListener("toggleui", () => {
+            this.game.frontBuffer.setOpen(this.toolbar.visible);
+            this.resize();
+        });
         // <<<<<<<<<< TOOLBAR <<<<<<<<<<
-
-        // >>>>>>>>>> TOGGLE GAME VIEW >>>>>>>>>>
-        {
-            const hideGameButton = document.querySelector("#hideGame");
-            if (hideGameButton) {
-                hideGameButton.addEventListener("click", (evt) => {
-                    this.game.frontBuffer.setOpenWithLabel(
-                        !this.game.frontBuffer.isOpen(),
-                        hideGameButton,
-                        pauseButton.value,
-                        playButton.value);
-                });
-            }
-        }
-        // <<<<<<<<<< TOGGLE GAME VIEW <<<<<<<<<<
 
         // >>>>>>>>>> OPTIONS >>>>>>>>>>
         {

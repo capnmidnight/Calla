@@ -1,18 +1,37 @@
 ﻿import {
-    div,
-    button,
-    kbd,
-    span,
-    input,
-    label,
-    run,
-    img,
-    a
+    Div,
+    Button,
+    KBD,
+    Span,
+    Input,
+    Label,
+    Run,
+    Img,
+    A,
+    alt,
+    id,
+    role,
+    style,
+    title,
+    type,
+    value,
+    min,
+    max,
+    step,
+    htmlFor,
+    src,
+    onclick,
+    oninput,
+    systemFamily
 } from "./html.js";
 
 import {
     mutedSpeaker,
-    speakerHighVolume
+    speakerHighVolume,
+    gear,
+    downwardsButton,
+    pauseButton,
+    playButton
 } from "./emoji.js";
 
 const toggleAudioEvt = new Event("toggleaudio"),
@@ -21,93 +40,146 @@ const toggleAudioEvt = new Event("toggleaudio"),
     zoomChangedEvt = new Event("zoomchanged"),
     optionsEvt = new Event("options"),
     tweetEvt = new Event("tweet"),
-    leaveEvt = new Event("leave");
+    leaveEvt = new Event("leave"),
+    toggleUIEvt = new Event("toggleui"),
+    subelStyle = style({
+        display: "inline-flex",
+        margin: "0 0.5em 0 0"
+    }),
+    sysFontStyle = style({ fontFamily: systemFamily });
 
 export class ToolBar extends EventTarget {
     constructor() {
         super();
 
-        this.element = div({ id: "toolbar" });
+        this.toolbar = Div(
+            style({
+                display: "flex",
+                width: "100vw",
+                padding: "4px",
+                flexDirection: "row",
+                flexWrap: "wrap",
+                boxSizing: "border-box"
+            }),
+            sysFontStyle);
+
+        this.element = Div(
+            id("toolbar"),
+            style({
+                position: "fixed",
+                top: 0,
+                right: 0,
+                backgroundColor: "#bbb",
+                display: "flex",
+                flexDirection: "row",
+                flexWrap: "wrap"
+            }),
+            this.toolbar);
 
         const _ = (evt) => () => this.dispatchEvent(evt);
 
         // >>>>>>>>>> AUDIO >>>>>>>>>>
-        this.muteAudioButton = button({
-            onclick: _(toggleAudioEvt)
-        }, "🔊");
-        this.element.appendChild(this.muteAudioButton);
+        this.muteAudioButton = Button(
+            onclick(_(toggleAudioEvt)),
+            subelStyle,
+            sysFontStyle,
+            speakerHighVolume.value);
+        this.toolbar.appendChild(this.muteAudioButton);
         // <<<<<<<<<< AUDIO <<<<<<<<<<
 
         // >>>>>>>>>> EMOJI >>>>>>>>>>
-        this.emoteButton = button(
-            {
-                title: "Emote",
-                onclick: _(emoteEvt)
-            },
+        this.emoteButton = Button(
+            title("Emote"),
+            onclick(_(emoteEvt)),
+            sysFontStyle,
             "Emote ",
-            kbd("(E)"),
+            KBD("(E)"),
             "(@)");
 
-        const selectEmojiButton = button({
-            title: "Select Emoji",
-            onclick: _(selectEmojiEvt)
-        }, "🔻");
+        const selectEmojiButton = Button(
+            title("Select Emoji"),
+            sysFontStyle,
+            onclick(_(selectEmojiEvt)),
+            downwardsButton.value);
 
-        this.element.appendChild(span(this.emoteButton, selectEmojiButton));
+        this.toolbar.appendChild(Span(
+            subelStyle,
+            this.emoteButton,
+            selectEmojiButton));
         // <<<<<<<<<< EMOJI <<<<<<<<<<
 
         // >>>>>>>>>> ZOOM >>>>>>>>>>
-        this.zoomSpinner = input({
-            type: "number",
-            id: "zoom",
-            title: "Change map zoom",
-            value: 1,
-            min: 0.1,
-            max: 8,
-            step: 0.1,
-            style: { width: "4em" },
-            oninput: _(zoomChangedEvt)
-        });
+        this.zoomSpinner = Input(
+            type("number"),
+            id("zoom"),
+            title("Change map zoom"),
+            value(1),
+            min(0.1),
+            max(8),
+            step(0.1),
+            style({ width: "4em" }),
+            sysFontStyle,
+            oninput(_(zoomChangedEvt)));
 
-        this.element.appendChild(span(
-            label({ for: "zoom" }, "Zoom"),
+        this.toolbar.appendChild(Span(
+            subelStyle,
+            Label(
+                htmlFor("zoom"),
+                style({ margin: "auto" }),
+                "Zoom"),
             this.zoomSpinner));
         // <<<<<<<<<< ZOOM <<<<<<<<<<
 
         // >>>>>>>>>> OPTIONS >>>>>>>>>>
-        this.element.appendChild(button({
-            title: "Show/hide options",
-            onclick: _(optionsEvt)
-        }, "⚙️"));
+        this.toolbar.appendChild(Button(
+            title("Show/hide options"),
+            onclick(_(optionsEvt)),
+            subelStyle,
+            sysFontStyle,
+            gear.value));
         // <<<<<<<<<< OPTIONS <<<<<<<<<<
 
         // >>>>>>>>>> TWEET >>>>>>>>>>
-        this.element.appendChild(button(
-            {
-                title: "Share your current room to twitter",
-                onclick: _(tweetEvt)
-            },
-            run("Share room"),
-            img({
-                src: "https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png",
-                alt: "icon",
-                role: "presentation",
-                style: { height: "1.5em" }
-            })));
+        this.toolbar.appendChild(Button(
+            title("Share your current room to twitter"),
+            onclick(_(tweetEvt)),
+            subelStyle,
+            sysFontStyle,
+            Run("Share room"),
+            Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
+                alt("icon"),
+                role("presentation"),
+                style({ height: "1.5em" }))));
         // <<<<<<<<<< TWEET <<<<<<<<<<
 
         // >>>>>>>>>> LOGIN >>>>>>>>>>
-        this.element.appendChild(button(
-            {
-                title: "Leave the room",
-                onclick: _(leaveEvt)
-            },
-            run("Leave")));
+        this.toolbar.appendChild(Button(
+            title("Leave the room"),
+            onclick(_(leaveEvt)),
+            subelStyle,
+            sysFontStyle,
+            Run("Leave")));
         // <<<<<<<<<< LOGIN <<<<<<<<<<
+
+        // >>>>>>>>>> HIDER >>>>>>>>>>
+        this.hideButton = this.element.appendChild(Button(
+            title("Show/hide Jitsi Meet interface"),
+            style({
+                position: "absolute",
+                right: 0,
+                margin: "4px"
+            }),
+            sysFontStyle,
+            onclick(() => this.visible = !this.visible),
+            onclick(_(toggleUIEvt)),
+            Run(pauseButton.value)));
+        // <<<<<<<<<< HIDER <<<<<<<<<<
+
+        Object.seal(this);
     }
 
     get offsetHeight() {
-        return this.element.offsetHeight;
+        return this.toolbar.offsetHeight;
     }
 
     get zoom() {
@@ -118,6 +190,18 @@ export class ToolBar extends EventTarget {
         this.zoomSpinner.value = Math.round(value * 100) / 100;
     }
 
+    get visible() {
+        return this.toolbar.style.display !== "none";
+    }
+
+    set visible(value) {
+        this.toolbar.setOpenWithLabel(
+            value,
+            this.hideButton,
+            pauseButton.value,
+            playButton.value);
+    }
+
     setAudioMuted(muted) {
         this.muteAudioButton.updateLabel(
             muted,
@@ -126,15 +210,15 @@ export class ToolBar extends EventTarget {
     }
 
     appendChild(child) {
-        return this.element.appendChild(child);
+        return this.toolbar.appendChild(child);
     }
 
     insertBefore(newChild, refChild) {
-        return this.element.insertBefore(newChild, refChild);
+        return this.toolbar.insertBefore(newChild, refChild);
     }
 
     append(...children) {
-        this.element.append(...children);
+        this.toolbar.append(...children);
     }
 
     setEmojiButton(key, value) {
@@ -143,27 +227,27 @@ export class ToolBar extends EventTarget {
 
     advertise() {
         // GitHub link
-        this.appendChild(a({
+        this.appendChild(A({
             href: "https://github.com/capnmidnight/Calla",
             target: "_blank",
             rel: "noopener",
             ariaLabel: "Follow Calla on Git Hub",
             title: "Follow Calla on GitHub"
         },
-            span({
+            Span({
                 className: "icon icon-github",
                 role: "presentation"
             })));
 
         // My own Twitter link
-        this.appendChild(a({
+        this.appendChild(A({
             href: "https://twitter.com/Sean_McBeth",
             target: "_blank",
             rel: "noopener",
             ariaLabel: "Follow Sean on Twitter",
             title: "Follow @Sean_McBeth on Twitter"
         },
-            span({
+            Span({
                 className: "icon icon-twitter",
                 role: "presentation"
             })));

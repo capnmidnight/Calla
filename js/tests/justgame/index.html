@@ -2,6 +2,9 @@
 <html lang="en-us">
 
 <head>
+    <link type="text/css" rel="stylesheet" href="/stylesheets/general.css" />
+    <link type="text/css" rel="stylesheet" href="/stylesheets/icons.css" />
+    <link type="text/css" rel="stylesheet" href="/stylesheets/gui.css" />
     <script id="app-settings">
         const JITSI_HOST = "jitsi.calla.chat",
             MOVE_REPEAT = 0.125,
@@ -13,7 +16,6 @@
                 html = await response.text(),
                 parser = new DOMParser(),
                 doc = parser.parseFromString(html, "text/html");
-            document.head.append(...doc.head.children);
             document.body.append(...doc.body.children);
             await import("./index.js");
         })();
