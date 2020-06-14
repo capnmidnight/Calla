@@ -89,37 +89,40 @@ export class ToolBar extends EventTarget {
         const _ = (evt) => () => this.dispatchEvent(evt);
 
         // >>>>>>>>>> AUDIO >>>>>>>>>>
-        this.muteAudioButton = Button(
+        this.muteAudioButton = this.toolbar.appendChild(Button(
             onClick(_(toggleAudioEvt)),
             subelStyle,
             sysFontStyle,
-            speakerHighVolume.value);
-        this.toolbar.appendChild(this.muteAudioButton);
+            speakerHighVolume.value));
         // <<<<<<<<<< AUDIO <<<<<<<<<<
 
         // >>>>>>>>>> EMOJI >>>>>>>>>>
-        this.emoteButton = Button(
+        const emojiControl = this.toolbar.appendChild(Span(subelStyle));
+
+        this.emoteButton = emojiControl.appendChild(Button(
             title("Emote"),
             onClick(_(emoteEvt)),
             sysFontStyle,
             "Emote ",
             KBD("(E)"),
-            "(@)");
+            "(@)"));
 
-        const selectEmojiButton = Button(
+        emojiControl.appendChild(Button(
             title("Select Emoji"),
             sysFontStyle,
             onClick(_(selectEmojiEvt)),
-            downwardsButton.value);
-
-        this.toolbar.appendChild(Span(
-            subelStyle,
-            this.emoteButton,
-            selectEmojiButton));
+            downwardsButton.value));
         // <<<<<<<<<< EMOJI <<<<<<<<<<
 
         // >>>>>>>>>> ZOOM >>>>>>>>>>
-        this.zoomSpinner = Input(
+        const zoomControl = this.toolbar.appendChild(Span(
+            subelStyle,
+            Label(
+                htmlFor("zoom"),
+                style({ margin: "auto" }),
+                "Zoom")));
+
+        this.zoomSpinner = zoomControl.appendChild(Input(
             type("number"),
             id("zoom"),
             title("Change map zoom"),
@@ -129,15 +132,7 @@ export class ToolBar extends EventTarget {
             step(0.1),
             style({ width: "4em" }),
             sysFontStyle,
-            onInput(_(zoomChangedEvt)));
-
-        this.toolbar.appendChild(Span(
-            subelStyle,
-            Label(
-                htmlFor("zoom"),
-                style({ margin: "auto" }),
-                "Zoom"),
-            this.zoomSpinner));
+            onInput(_(zoomChangedEvt))));
         // <<<<<<<<<< ZOOM <<<<<<<<<<
 
         // >>>>>>>>>> OPTIONS >>>>>>>>>>

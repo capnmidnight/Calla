@@ -3,4 +3,4 @@ import { Game } from "../../src/game.js";
 const jitsiClient = new JitsiClient();
 jitsiClient.joinAsync(null, "Calla", "testUser");
 window.jitsiClient = jitsiClient;
-window.game = new Game(jitsiClient);
+window.game = new Game();

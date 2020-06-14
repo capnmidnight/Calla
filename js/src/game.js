@@ -31,29 +31,19 @@ const CAMERA_LERP = 0.01,
     }),
     videoUnmutedEvt = Object.assign(new Event("videomuted"), {
         muted: false
-    });
+    }),
+    emoteEvt = Object.assign(new Event("emote"), {
+        participantID: null,
+        emoji: null
+    }),
+    userJoinedEvt = Object.assign(new Event("userjoined", {
+        user: null
+    }));
 
 export class Game extends EventTarget {
 
-    constructor(jitsiClient) {
+    constructor() {
         super();
-
-        this.jitsiClient = jitsiClient;
-
-        this.jitsiClient.addEventListener("videoConferenceJoined", (evt) =>
-            this.start(evt));
-
-        this.jitsiClient.addEventListener("videoConferenceLeft", (evt) => {
-            if (evt.roomName.toLowerCase() === this.currentRoomName) {
-                this.end();
-            }
-        });
-        this.jitsiClient.addEventListener("participantJoined", this.addUser.bind(this));
-        this.jitsiClient.addEventListener("participantLeft", this.removeUser.bind(this));
-        this.jitsiClient.addEventListener("avatarChanged", this.setAvatarURL.bind(this));
-        this.jitsiClient.addEventListener("displayNameChange", this.changeUserName.bind(this));
-        this.jitsiClient.addEventListener("audioMuteStatusChanged", this.muteUserAudio.bind(this));
-        this.jitsiClient.addEventListener("videoMuteStatusChanged", this.muteUserVideo.bind(this));
 
         this.frontBuffer = Canvas(
             id("frontBuffer"),
@@ -118,10 +108,7 @@ export class Game extends EventTarget {
                 && !evt.metaKey
                 && evt.key === this.keyToggleAudio
                 && !!this.me) {
-                this.jitsiClient.toggleAudio();
-                this.dispatchEvent(this.me.audioMuted
-                    ? audioUnmutedEvt
-                    : audioMutedEvt);
+                this.toggleMyAudio();
             }
         });
 
@@ -300,33 +287,6 @@ export class Game extends EventTarget {
         // ============= GAMEPAD =================
 
         // ============= ACTION ==================
-
-        this.jitsiClient.addEventListener("userInitRequest", (evt) => {
-            this.jitsiClient.sendUserState(evt.participantID, this.me);
-        });
-
-        this.jitsiClient.addEventListener("userInitResponse", (evt) => {
-            const user = this.userLookup[evt.participantID];
-            if (!!user) {
-                user.init(evt.data);
-            }
-        });
-
-        this.jitsiClient.addEventListener("moveTo", (evt) => {
-            const user = this.userLookup[evt.participantID];
-            if (!!user) {
-                user.moveTo(evt.data.x, evt.data.y);
-                this.jitsiClient.setUserPosition(evt);
-            }
-        });
-
-        this.jitsiClient.addEventListener("emote", (evt) => {
-            this.emote(evt.participantID, evt.data);
-        });
-        this.jitsiClient.addEventListener("audioMuteStatusChanged", this.muteUserAudio.bind(this));
-        this.jitsiClient.addEventListener("videoMuteStatusChanged", this.muteUserVideo.bind(this));
-
-        this.jitsiClient.addEventListener("audioActivity", this.updateAudioActivity.bind(this));
     }
 
     updateAudioActivity(evt) {
@@ -357,7 +317,9 @@ export class Game extends EventTarget {
                     this.currentEmoji = emoji;
                     for (let user of this.userList) {
                         if (user !== this.me) {
-                            this.jitsiClient.sendEmote(user.id, emoji);
+                            emoteEvt.participantID = user.id;
+                            emoteEvt.emoji = emoji;
+                            this.dispatchEvent(emoteEvt);
                         }
                     }
                 }
@@ -415,11 +377,10 @@ export class Game extends EventTarget {
         }
 
         const user = new User(evt.id, evt.displayName, false);
-        user.addEventListener("userInitRequest", (evt) => {
-            this.jitsiClient.requestUserState(evt.participantID);
-        });
         this.userLookup[evt.id] = user;
         this.userList.unshift(user);
+        userJoinedEvt.user = user;
+        this.dispatchEvent(userJoinedEvt);
     }
 
     changeUserName(evt) {
@@ -432,6 +393,20 @@ export class Game extends EventTarget {
         if (!!user) {
             user.setDisplayName(evt.displayName);
         }
+    }
+
+    toggleMyAudio() {
+        this.muteUserAudio({
+            participantID: this.me.id,
+            muted: !this.me.audioMuted
+        });
+    }
+
+    toggleMyVideo() {
+        this.muteUserVideo({
+            participantID: this.me.id,
+            muted: !this.me.videoMuted
+        });
     }
 
     muteUserAudio(evt) {
@@ -450,15 +425,6 @@ export class Game extends EventTarget {
             mutingUser.audioMuted = muted;
 
             if (mutingUser === this.me) {
-                if (!evt.participantID) {
-                    evt.participantID = this.me.id;
-                    for (let user of this.userList) {
-                        if (!user.isMe) {
-                            this.jitsiClient.sendAudioMuteState(user.id, evt.muted);
-                        }
-                    }
-                }
-
                 this.dispatchEvent(muted
                     ? audioMutedEvt
                     : audioUnmutedEvt);
@@ -482,15 +448,6 @@ export class Game extends EventTarget {
             mutingUser.videoMuted = muted;
 
             if (mutingUser === this.me) {
-                if (!evt.participantID) {
-                    evt.participantID = this.me.id;
-                    for (let user of this.userList) {
-                        if (!user.isMe) {
-                            this.jitsiClient.sendVideoMuteState(user.id, evt.muted);
-                        }
-                    }
-                }
-
                 this.dispatchEvent(muted
                     ? videoMutedEvt
                     : videoUnmutedEvt);
@@ -539,15 +496,6 @@ export class Game extends EventTarget {
         this.userList.push(this.me);
         this.userLookup[this.me.id] = this.me;
 
-        this.me.addEventListener("moveTo", (evt) => {
-            this.jitsiClient.updatePosition(evt);
-            for (let user of this.userList) {
-                if (!user.isMe) {
-                    this.jitsiClient.sendPosition(user.id, evt);
-                }
-            }
-        });
-
         this.setAvatarURL(evt);
 
         this.map = new TileMap(this.currentRoomName);
@@ -566,11 +514,6 @@ export class Game extends EventTarget {
         if (!success) {
             console.error("Couldn't load any maps!");
         }
-
-        const audioMuted = await this.jitsiClient.isAudioMuted(),
-            videoMuted = await this.jitsiClient.isVideoMuted();
-        this.muteUserAudio({ participantID: this.me.id, data: { muted: audioMuted } });
-        this.muteUserVideo({ participantID: this.me.id, data: { muted: videoMuted } });
 
         this.startLoop();
         this.dispatchEvent(zoomChangedEvt);
@@ -658,7 +601,7 @@ export class Game extends EventTarget {
 
                 if (!lastPad.buttons[this.buttonToggleAudio].pressed
                     && pad.buttons[this.buttonToggleAudio].pressed) {
-                    this.jitsiClient.toggleAudio();
+                    this.toggleMyAudio();
                 }
 
                 if (pad.buttons[this.buttonUp].pressed) {

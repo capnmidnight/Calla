@@ -9,7 +9,8 @@ import {
     Div,
     Option,
     id,
-    fillPageStyle
+    fillPageStyle,
+    selected
 } from "./html.js";
 import { ToolBar } from "./toolbar.js";
 import "./protos.js";
@@ -113,12 +114,18 @@ export class AppGui extends EventTarget {
 
                         this.addEventListener("optionsConfirmed", (evt) => {
                             if (!!this.game.me) {
-                                if (this.game.me.avatarURL !== avatarURLInput.value) {
-                                    this.jitsiClient.setAvatarURL(avatarURLInput.value);
+                                let newAvatarURL = avatarURLInput.value;
+                                if (newAvatarURL.length === 0) {
+                                    newAvatarURL = null;
                                 }
+
+                                if (this.game.me.avatarURL !== newAvatarURL) {
+                                    this.jitsiClient.setAvatarURL(newAvatarURL);
+                                }
+
                                 if (this.game.me.avatarEmoji !== avatarEmojiOutput.innerHTML) {
                                     this.game.me.avatarEmoji = avatarEmojiOutput.innerHTML;
-                                    const evt = Object.assign({}, this.me);
+                                    const evt = Object.assign({}, this.game.me);
                                     for (let user of this.game.userList) {
                                         if (!user.isMe) {
                                             this.jitsiClient.sendUserState(user.id, evt);
@@ -216,10 +223,10 @@ export class AppGui extends EventTarget {
                             }
                             else {
                                 gamepadSelector.unlock();
-                                this.game.gamepads.map((pad, i) => Option({
-                                    selected: i === this.game.gamepadIndex
-                                }, pad.id))
-                                    .forEach(opt => gamepadSelector.appendChild(opt));
+                                gamepadSelector.append(...this.game.gamepads.map((pad, i) =>
+                                    Option(
+                                        pad.id,
+                                        selected(i === this.game.gamepadIndex))));
                             }
                         };
 
@@ -305,7 +312,7 @@ export class AppGui extends EventTarget {
                         let lastAudioInputDevice = null,
                             audioInputDevices = null;
 
-                        this.addEventListener("optionsOpened", async (evt) => {
+                        this.addEventListener("optionsOpened", async () => {
                             lastAudioInputDevice = await this.jitsiClient.getCurrentAudioInputDevice();
                             audioInputDevices = await this.jitsiClient.getAudioInputDevices();
                             audioInputDeviceSelector.innerHTML = "";
@@ -315,11 +322,10 @@ export class AppGui extends EventTarget {
                             }
                             else {
                                 audioInputDeviceSelector.unlock();
-                                audioInputDevices.map(a =>
-                                    Option(a.label, {
-                                        selected: !!lastAudioInputDevice && a.id === lastAudioInputDevice.id
-                                    }))
-                                    .forEach(opt => audioInputDeviceSelector.appendChild(opt));
+                                audioInputDeviceSelector.append(...audioInputDevices.map(a =>
+                                    Option(
+                                        a.label,
+                                        selected(!!lastAudioInputDevice && a.id === lastAudioInputDevice.id))));
                             }
                         });
 
@@ -347,10 +353,10 @@ export class AppGui extends EventTarget {
                             }
                             else {
                                 audioOutputDeviceSelector.unlock();
-                                audioOutputDevices.map(a => Option(a.label, {
-                                    selected: !!lastAudioOutputDevice && a.id === lastAudioOutputDevice.id
-                                }))
-                                    .forEach(opt => audioOutputDeviceSelector.appendChild(opt));
+                                audioOutputDeviceSelector.append(...audioOutputDevices.map(a =>
+                                    Option(
+                                        a.label,
+                                        selected(!!lastAudioOutputDevice && a.id === lastAudioOutputDevice.id))));
                             }
                         });
 
@@ -421,9 +427,10 @@ export class AppGui extends EventTarget {
                             }
                             else {
                                 videoInputDeviceSelector.unlock();
-                                videoInputDevices.map(v => Option(v.label, {
-                                    selected: !!lastVideoInputDevice && v.id === lastVideoInputDevice.id
-                                })).forEach(opt => videoInputDeviceSelector.appendChild(opt));
+                                videoInputDeviceSelector.append(...videoInputDevices.map(v =>
+                                    Option(
+                                        v.label,
+                                        selected(!!lastVideoInputDevice && v.id === lastVideoInputDevice.id))));
                             }
                         });
 
@@ -517,27 +524,6 @@ export class AppGui extends EventTarget {
             }
         }
         // <<<<<<<<<< LOGIN <<<<<<<<<<
-
-        this.game.addEventListener("audiomuted", (evt) => {
-            this.setUserAudioMuted(evt.muted);
-        });
-
-        this.game.addEventListener("videomuted", (evt) => {
-            this.setUserVideoMuted(evt.muted);
-        });
-
-        this.game.addEventListener("gamestarted", () => {
-            this.loginView.hide();
-            this.resize();
-        });
-
-        this.game.addEventListener("gameended", () => {
-            this.showLogin();
-        });
-
-        this.game.addEventListener("emojineeded", () => {
-            this.selectEmojiAsync();
-        });
     }
 
     setUserAudioMuted(muted) {

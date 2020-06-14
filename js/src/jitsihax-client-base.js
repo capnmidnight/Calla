@@ -251,12 +251,26 @@ export class BaseJitsiClient extends EventTarget {
         this.api.executeCommand("avatarUrl", url);
     }
 
-    isAudioMuted() {
-        return this.api.isAudioMuted();
+    async isAudioMutedAsync() {
+        return await this.api.isAudioMuted();
     }
 
-    isVideoMuted() {
-        return this.api.isVideoMuted();
+    async setAudioMutedAsync(muted) {
+        const isMuted = await this.isAudioMutedAsync();
+        if (muted !== isMuted) {
+            this.toggleAudio();
+        }
+    }
+
+    async isVideoMutedAsync() {
+        return await this.api.isVideoMuted();
+    }
+
+    async setVideoMutedAsync(muted) {
+        const isMuted = await this.isVideoMutedAsync();
+        if (muted !== isMuted) {
+            this.toggleVideo();
+        }
     }
 
     /// Add a listener for Calla events that come through the Jitsi Meet data channel.

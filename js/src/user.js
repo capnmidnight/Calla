@@ -1,6 +1,10 @@
 ﻿import "./protos.js";
 import { project } from "./math.js";
-import { Canvas } from "./html.js";
+import {
+    Canvas,
+    width,
+    height
+} from "./html.js";
 import {
     mutedSpeaker,
     speakerMediumVolume,
@@ -58,6 +62,10 @@ export class User extends EventTarget {
         this.x = evt.x;
         this.y = evt.y;
         this.displayName = evt.displayName;
+        this.avatarURL = evt.avatarURL;
+        if (!this.avatarURL && !!this.avatarImage) {
+            this.avatarImage = null;
+        }
         this.avatarEmoji = evt.avatarEmoji;
         this.avatarEmojiMetrics = null;
         this.isInitialized = true;
@@ -83,10 +91,9 @@ export class User extends EventTarget {
                 this.avatarURL = url;
                 const img = new Image();
                 img.addEventListener("load", (evt) => {
-                    this.avatarImage = Canvas({
-                        width: img.width,
-                        height: img.height
-                    });
+                    this.avatarImage = Canvas(
+                        width(img.width),
+                        height(img.height));
                     const g = this.avatarImage.getContext("2d");
                     g.clearRect(0, 0, img.width, img.height);
                     g.imageSmoothingEnabled = false;

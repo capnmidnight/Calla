@@ -45,12 +45,12 @@
         this.currentDevices.videoInput = device;
     }
 
-    isAudioMuted() {
-        return Promise.resolve(this.audioMuted);
+    async isAudioMuted() {
+        return this.audioMuted;
     }
 
-    isVideoMuted() {
-        return Promise.resolve(this.videoMuted);
+    async isVideoMuted() {
+        return this.videoMuted;
     }
 
     executeCommand(command, param) {
