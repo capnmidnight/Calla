@@ -37,7 +37,6 @@ export class AppGui extends EventTarget {
                 && this.guiView) {
                 addEventListener("resize", () => {
                     this.resize();
-                    this.game.frontBuffer.resize();
                 });
             }
         }
@@ -571,6 +570,8 @@ export class AppGui extends EventTarget {
             = this.jitsiContainer.style.height
             = this.game.frontBuffer.style.height
             = height;
+
+        this.game.frontBuffer.resize();
     }
 
     showLogin() {
