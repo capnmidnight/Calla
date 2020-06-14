@@ -3,50 +3,6 @@
         || obj instanceof Function;
 }
 
-export function assignAttributes(elem, ...rest) {
-    rest.filter(x => typeof x === "object"
-        && !(x instanceof Element
-            || x instanceof String
-            || x instanceof Number
-            || x instanceof Function
-            || x instanceof Boolean
-            || x instanceof Symbol))
-        .forEach(attr => {
-            if (attr instanceof Attr) {
-                attr.apply(elem);
-            }
-            else if (attr instanceof Func) {
-                attr.add(elem);
-            }
-            else {
-                for (let key in attr) {
-                    const value = attr[key];
-                    if (key === "style") {
-                        for (let subKey in value) {
-                            elem[key][subKey] = value[subKey];
-                        }
-                    }
-                    else if (key === "textContent" || key === "innerText") {
-                        elem.appendChild(document.createTextNode(value));
-                    }
-                    else if (key.startsWith("on") && isFunction(value)) {
-                        elem.addEventListener(key.substring(2), value);
-                    }
-                    else if (!(typeof value === "boolean" || value instanceof Boolean)
-                        || key === "muted") {
-                        elem[key] = value;
-                    }
-                    else if (value) {
-                        elem.setAttribute(key, "");
-                    }
-                    else {
-                        elem.removeAttribute(key);
-                    }
-                }
-            }
-        });
-}
-
 export function clear(elem) {
     while (elem.lastChild) {
         elem.lastChild.remove();
@@ -56,14 +12,26 @@ export function clear(elem) {
 export function tag(name, ...rest) {
     const elem = document.createElement(name);
 
-    assignAttributes(elem, ...rest);
-
     for (let x of rest) {
-        if (x instanceof String || typeof x === "string") {
-            elem.appendChild(document.createTextNode(x));
-        }
-        else if (x instanceof Element) {
-            elem.appendChild(x);
+        if (x !== null && x !== undefined) {
+            if (x instanceof String || typeof x === "string"
+                || x instanceof Number || typeof x === "number"
+                || x instanceof Boolean || typeof x === "boolean"
+                || x instanceof Date) {
+                elem.appendChild(document.createTextNode(x));
+            }
+            else if (x instanceof Element) {
+                elem.appendChild(x);
+            }
+            else if (x instanceof Attr) {
+                x.apply(elem);
+            }
+            else if (x instanceof Func) {
+                x.add(elem);
+            }
+            else {
+                console.trace(`Skipping ${x}: unsupported value type.`);
+            }
         }
     }
 
@@ -345,22 +313,56 @@ export function align(value) { return new Attr("align", ["applet", "caption", "c
 export function allow(value) { return new Attr("allow", ["iframe"], value); }
 // Alternative text in case an image can't be displayed.
 export function alt(value) { return new Attr("alt", ["applet", "area", "img", "input"], value); }
+export function ariaActiveDescendant(value) { return new Attr("ariaActiveDescendant", [], value); }
+export function ariaAtomic(value) { return new Attr("ariaAtomic", [], value); }
+export function ariaAutoComplete(value) { return new Attr("ariaAutoComplete", [], value); }
+export function ariaBusy(value) { return new Attr("ariaBusy", [], value); }
+export function ariaChecked(value) { return new Attr("ariaChecked", [], value); }
+export function ariaControls(value) { return new Attr("ariaControls", [], value); }
+export function ariaDescribedBy(value) { return new Attr("ariaDescribedBy", [], value); }
+export function ariaDisabled(value) { return new Attr("ariaDisabled", [], value); }
+export function ariaDropEffect(value) { return new Attr("ariaDropEffect", [], value); }
+export function ariaExpanded(value) { return new Attr("ariaExpanded", [], value); }
+export function ariaFlowTo(value) { return new Attr("ariaFlowTo", [], value); }
+export function ariaGrabbed(value) { return new Attr("ariaGrabbed", [], value); }
+export function ariaHasPopup(value) { return new Attr("ariaHasPopup", [], value); }
+export function ariaHidden(value) { return new Attr("ariaHidden", [], value); }
+export function ariaInvalid(value) { return new Attr("ariaInvalid", [], value); }
+export function ariaLabel(value) { return new Attr("ariaLabel", [], value); }
+export function ariaLabelledBy(value) { return new Attr("ariaLabelledBy", [], value); }
+export function ariaLevel(value) { return new Attr("ariaLevel", [], value); }
+export function ariaLive(value) { return new Attr("ariaLive", [], value); }
+export function ariaMultiline(value) { return new Attr("ariaMultiline", [], value); }
+export function ariaMultiSelectable(value) { return new Attr("ariaMultiSelectable", [], value); }
+export function ariaOwns(value) { return new Attr("ariaOwns", [], value); }
+export function ariaPosInSet(value) { return new Attr("ariaPosInSet", [], value); }
+export function ariaPressed(value) { return new Attr("ariaPressed", [], value); }
+export function ariaReadOnly(value) { return new Attr("ariaReadOnly", [], value); }
+export function ariaRelevant(value) { return new Attr("ariaRelevant", [], value); }
+export function ariaRequired(value) { return new Attr("ariaRequired", [], value); }
+export function ariaSelected(value) { return new Attr("ariaSelected", [], value); }
+export function ariaSetSize(value) { return new Attr("ariaSetsize", [], value); }
+export function ariaSort(value) { return new Attr("ariaSort", [], value); }
+export function ariaValueMax(value) { return new Attr("ariaValueMax", [], value); }
+export function ariaValueMin(value) { return new Attr("ariaValueMin", [], value); }
+export function ariaValueNow(value) { return new Attr("ariaValueNow", [], value); }
+export function ariaValueText(value) { return new Attr("ariaValueText", [], value); }
 // Executes the script asynchronously.
 export function async(value) { return new Attr("async", ["script"], value); }
 // Sets whether input is automatically capitalized when entered by user
-export function autocapitalize(value) { return new Attr("autocapitalize", [], value); }
+export function autoCapitalize(value) { return new Attr("autocapitalize", [], value); }
 // Indicates whether controls in this form can by default have their values automatically completed by the browser.
-export function autocomplete(value) { return new Attr("autocomplete", ["form", "input", "select", "textarea"], value); }
+export function autoComplete(value) { return new Attr("autocomplete", ["form", "input", "select", "textarea"], value); }
 // The element should be automatically focused after the page loaded.
-export function autofocus(value) { return new Attr("autofocus", ["button", "input", "keygen", "select", "textarea"], value); }
+export function autoFocus(value) { return new Attr("autofocus", ["button", "input", "keygen", "select", "textarea"], value); }
 // The audio or video should play as soon as possible.
-export function autoplay(value) { return new Attr("autoplay", ["audio", "video"], value); }
+export function autoPlay(value) { return new Attr("autoplay", ["audio", "video"], value); }
 // Contains the time range of already buffered media.
 export function buffered(value) { return new Attr("buffered", ["audio", "video"], value); }
 // From the HTML Media Capture
 export function capture(value) { return new Attr("capture", ["input"], value); }
 // Declares the character encoding of the page or script.
-export function charset(value) { return new Attr("charset", ["meta", "script"], value); }
+export function charSet(value) { return new Attr("charset", ["meta", "script"], value); }
 // Indicates whether the element should be checked on page load.
 export function checked(value) { return new Attr("checked", ["command", "input"], value); }
 // Contains a URI which points to the source of the quote or change.
@@ -370,7 +372,7 @@ export function className(value) { return new Attr("className", [], value); }
 // Specifies the URL of the applet's class file to be loaded and executed.
 export function code(value) { return new Attr("code", ["applet"], value); }
 // This attribute gives the absolute or relative URL of the directory where applets' .class files referenced by the code attribute are stored.
-export function codebase(value) { return new Attr("codebase", ["applet"], value); }
+export function codeBase(value) { return new Attr("codebase", ["applet"], value); }
 // Defines the number of columns in a textarea.
 export function cols(value) { return new Attr("cols", ["textarea"], value); }
 // The colspan attribute defines the number of columns a cell should span.
@@ -378,23 +380,23 @@ export function colSpan(value) { return new Attr("colspan", ["td", "th"], value)
 // A value associated with http-equiv or name depending on the context.
 export function content(value) { return new Attr("content", ["meta"], value); }
 // Indicates whether the element's content is editable.
-export function contenteditable(value) { return new Attr("contenteditable", [], value); }
+export function contentEditable(value) { return new Attr("contenteditable", [], value); }
 // Defines the ID of a <menu> element which will serve as the element's context menu.
-export function contextmenu(value) { return new Attr("contextmenu", [], value); }
+export function contextMenu(value) { return new Attr("contextmenu", [], value); }
 // Indicates whether the browser should show playback controls to the user.
 export function controls(value) { return new Attr("controls", ["audio", "video"], value); }
 // A set of values specifying the coordinates of the hot-spot region.
 export function coords(value) { return new Attr("coords", ["area"], value); }
 // How the element handles cross-origin requests
-export function crossorigin(value) { return new Attr("crossorigin", ["audio", "img", "link", "script", "video"], value); }
+export function crossOrigin(value) { return new Attr("crossorigin", ["audio", "img", "link", "script", "video"], value); }
 // Specifies the Content Security Policy that an embedded document must agree to enforce upon itself.
 export function csp(value) { return new Attr("csp", ["iframe"], value); }
 // Specifies the URL of the resource.
 export function data(value) { return new Attr("data", ["object"], value); }
 // Lets you attach custom attributes to an HTML element.
-export function datanewattr(name, value) { return new Attr("data" + name, [], value); }
+export function customData(name, value) { return new Attr("data" + name, [], value); }
 // Indicates the date and time associated with the element.
-export function datetime(value) { return new Attr("datetime", ["del", "ins", "time"], value); }
+export function dateTime(value) { return new Attr("datetime", ["del", "ins", "time"], value); }
 // Indicates the preferred method to decode the image.
 export function decoding(value) { return new Attr("decoding", ["img"], value); }
 // Indicates that the track should be enabled unless the user's preferences indicate something different.
@@ -406,32 +408,31 @@ export function dir(value) { return new Attr("dir", [], value); }
 // Indicates whether the user can interact with the element.
 export function disabled(value) { return new Attr("disabled", ["button", "command", "fieldset", "input", "keygen", "optgroup", "option", "select", "textarea"], value); }
 // ??? 
-export function dirname(value) { return new Attr("dirname", ["input", "textarea"], value); }
+export function dirName(value) { return new Attr("dirname", ["input", "textarea"], value); }
 // Indicates that the hyperlink is to be used for downloading a resource.
 export function download(value) { return new Attr("download", ["a", "area"], value); }
 // Defines whether the element can be dragged.
 export function draggable(value) { return new Attr("draggable", [], value); }
 // Indicates that the element accepts the dropping of content onto it.
-export function dropzone(value) { return new Attr("dropzone", [], value); }
+export function dropZone(value) { return new Attr("dropzone", [], value); }
 // Defines the content type of the form data when the method is POST.
-export function enctype(value) { return new Attr("enctype", ["form"], value); }
+export function encType(value) { return new Attr("enctype", ["form"], value); }
 // The enterkeyhint specifies what action label (or icon) to present for the enter key on virtual keyboards. The attribute can be used with form controls (such as the value of textarea elements), or in elements in an editing host (e.g., using contenteditable attribute).
-export function enterkeyhint(value) { return new Attr("enterkeyhint", ["textarea"], value); }
+export function enterKeyHint(value) { return new Attr("enterkeyhint", ["textarea"], value); }
 // Describes elements which belongs to this one.
-const el = document.createElement("label");
 export function htmlFor(value) { return new Attr("htmlFor", ["label", "output"], value); }
 // Indicates the form that is the owner of the element.
 export function form(value) { return new Attr("form", ["button", "fieldset", "input", "keygen", "label", "meter", "object", "output", "progress", "select", "textarea"], value); }
 // Indicates the action of the element, overriding the action defined in the <form>.
-export function formaction(value) { return new Attr("formaction", ["input", "button"], value); }
+export function formAction(value) { return new Attr("formaction", ["input", "button"], value); }
 // If the button/input is a submit button (type="submit"), this attribute sets the encoding type to use during form submission. If this attribute is specified, it overrides the enctype attribute of the button's form owner.
-export function formenctype(value) { return new Attr("formenctype", ["button", "input"], value); }
+export function formEncType(value) { return new Attr("formenctype", ["button", "input"], value); }
 // If the button/input is a submit button (type="submit"), this attribute sets the submission method to use during form submission (GET, POST, etc.). If this attribute is specified, it overrides the method attribute of the button's form owner.
-export function formmethod(value) { return new Attr("formmethod", ["button", "input"], value); }
+export function formMethod(value) { return new Attr("formmethod", ["button", "input"], value); }
 // If the button/input is a submit button (type="submit"), this boolean attribute specifies that the form is not to be validated when it is submitted. If this attribute is specified, it overrides the novalidate attribute of the button's form owner.
-export function formnovalidate(value) { return new Attr("formnovalidate", ["button", "input"], value); }
+export function formNoValidate(value) { return new Attr("formnovalidate", ["button", "input"], value); }
 // If the button/input is a submit button (type="submit"), this attribute specifies the browsing context (for example, tab, window, or inline frame) in which to display the response that is received after submitting the form. If this attribute is specified, it overrides the target attribute of the button's form owner.
-export function formtarget(value) { return new Attr("formtarget", ["button", "input"], value); }
+export function formTarget(value) { return new Attr("formtarget", ["button", "input"], value); }
 // IDs of the <th> elements which applies to this element.
 export function headers(value) { return new Attr("headers", ["td", "th"], value); }
 // Specifies the height of elements listed here. For all other elements, use the CSS height property.
@@ -443,7 +444,7 @@ export function high(value) { return new Attr("high", ["meter"], value); }
 // The URL of a linked resource.
 export function href(value) { return new Attr("href", ["a", "area", "base", "link"], value); }
 // Specifies the language of the linked resource.
-export function hreflang(value) { return new Attr("hreflang", ["a", "area", "link"], value); }
+export function hrefLang(value) { return new Attr("hreflang", ["a", "area", "link"], value); }
 // Defines a pragma directive.
 export function httpEquiv(value) { return new Attr("httpEquiv", ["meta"], value); }
 // Specifies a picture which represents the command.
@@ -452,18 +453,19 @@ export function icon(value) { return new Attr("icon", ["command"], value); }
 export function id(value) { return new Attr("id", [], value); }
 // Indicates the relative fetch priority for the resource.
 export function importance(value) { return new Attr("importance", ["iframe", "img", "link", "script"], value); }
+export function innerText(value) { return Text(value); }
+// Provides a hint as to the type of data that might be entered by the user while editing the element or its contents. The attribute can be used with form controls (such as the value of textarea elements), or in elements in an editing host (e.g., using contenteditable attribute).
+export function inputMode(value) { return new Attr("inputmode", ["textarea"], value); }
 // Specifies a Subresource Integrity value that allows browsers to verify what they fetch.
 export function integrity(value) { return new Attr("integrity", ["link", "script"], value); }
 // This attribute tells the browser to ignore the actual intrinsic size of the image and pretend it’s the size specified in the attribute.
-export function intrinsicsize(value) { return new Attr("intrinsicsize", ["img"], value); }
-// Provides a hint as to the type of data that might be entered by the user while editing the element or its contents. The attribute can be used with form controls (such as the value of textarea elements), or in elements in an editing host (e.g., using contenteditable attribute).
-export function inputmode(value) { return new Attr("inputmode", ["textarea"], value); }
+export function intrinsicSize(value) { return new Attr("intrinsicsize", ["img"], value); }
 // Indicates that the image is part of a server-side image map.
-export function ismap(value) { return new Attr("ismap", ["img"], value); }
+export function isMap(value) { return new Attr("ismap", ["img"], value); }
 // Specifies the type of key generated.
-export function keytype(value) { return new Attr("keytype", ["keygen"], value); }
+export function keyType(value) { return new Attr("keytype", ["keygen"], value); }
 // ???
-export function itemprop(value) { return new Attr("itemprop", [], value); }
+export function itemProp(value) { return new Attr("itemprop", [], value); }
 // Specifies the kind of text track.
 export function kind(value) { return new Attr("kind", ["track"], value); }
 // Specifies a user-readable title of the element.
@@ -481,9 +483,9 @@ export function low(value) { return new Attr("low", ["meter"], value); }
 // Indicates the maximum value allowed.
 export function max(value) { return new Attr("max", ["input", "meter", "progress"], value); }
 // Defines the maximum number of characters allowed in the element.
-export function maxlength(value) { return new Attr("maxlength", ["input", "textarea"], value); }
+export function maxLength(value) { return new Attr("maxlength", ["input", "textarea"], value); }
 // Defines the minimum number of characters allowed in the element.
-export function minlength(value) { return new Attr("minlength", ["input", "textarea"], value); }
+export function minLength(value) { return new Attr("minlength", ["input", "textarea"], value); }
 // Specifies a hint of the media for which the linked resource was designed.
 export function media(value) { return new Attr("media", ["a", "area", "link", "source", "style"], value); }
 // Defines which HTTP method to use when submitting the form. Can be GET (default) or POST.
@@ -497,7 +499,7 @@ export function muted(value) { return new Attr("muted", ["audio", "video"], valu
 // Name of the element. For example used by the server to identify the fields in form submits.
 export function name(value) { return new Attr("name", ["button", "form", "fieldset", "iframe", "input", "keygen", "object", "output", "select", "textarea", "map", "meta", "param"], value); }
 // This attribute indicates that the form shouldn't be validated when submitted.
-export function novalidate(value) { return new Attr("novalidate", ["form"], value); }
+export function noValidate(value) { return new Attr("novalidate", ["form"], value); }
 // Indicates whether the details will be shown on page load.
 export function open(value) { return new Attr("open", ["details"], value); }
 // Indicates the optimal numeric value.
@@ -507,17 +509,17 @@ export function pattern(value) { return new Attr("pattern", ["input"], value); }
 // The ping attribute specifies a space-separated list of URLs to be notified if a user follows the hyperlink.
 export function ping(value) { return new Attr("ping", ["a", "area"], value); }
 // Provides a hint to the user of what can be entered in the field.
-export function placeholder(value) { return new Attr("placeholder", ["input", "textarea"], value); }
+export function placeHolder(value) { return new Attr("placeholder", ["input", "textarea"], value); }
 // A URL indicating a poster frame to show until the user plays or seeks.
 export function poster(value) { return new Attr("poster", ["video"], value); }
 // Indicates whether the whole resource, parts of it or nothing should be preloaded.
 export function preload(value) { return new Attr("preload", ["audio", "video"], value); }
 // Indicates whether the element can be edited.
-export function readonly(value) { return new Attr("readonly", ["input", "textarea"], value); }
+export function readOnly(value) { return new Attr("readonly", ["input", "textarea"], value); }
 // ???
-export function radiogroup(value) { return new Attr("radiogroup", ["command"], value); }
+export function radioGroup(value) { return new Attr("radiogroup", ["command"], value); }
 // Specifies which referrer is sent when fetching the resource.
-export function referrerpolicy(value) { return new Attr("referrerpolicy", ["a", "area", "iframe", "img", "link", "script"], value); }
+export function referrerPolicy(value) { return new Attr("referrerpolicy", ["a", "area", "iframe", "img", "link", "script"], value); }
 // Specifies the relationship of the target object to the link object.
 export function rel(value) { return new Attr("rel", ["a", "area", "link"], value); }
 // Indicates whether this element is required to fill out or not.
@@ -528,7 +530,7 @@ export function reversed(value) { return new Attr("reversed", ["ol"], value); }
 export function role(value) { return new Attr("role", [], value); }
 export function rows(value) { return new Attr("rows", ["textarea"], value); }
 // Defines the number of rows a table cell should span over.
-export function rowspan(value) { return new Attr("rowspan", ["td", "th"], value); }
+export function rowSpan(value) { return new Attr("rowspan", ["td", "th"], value); }
 // Stops a document loaded in an iframe from using certain features (such as submitting forms or opening new windows).
 export function sandbox(value) { return new Attr("sandbox", ["iframe"], value); }
 // Defines the cells that the header test (defined in the th element) relates to.
@@ -548,15 +550,15 @@ export function sizes(value) { return new Attr("sizes", ["link", "img", "source"
 // ???
 export function span(value) { return new Attr("span", ["col", "colgroup"], value); }
 // Indicates whether spell checking is allowed for the element.
-export function spellcheck(value) { return new Attr("spellcheck", [], value); }
+export function spellCheck(value) { return new Attr("spellcheck", [], value); }
 // The URL of the embeddable content.
 export function src(value) { return new Attr("src", ["audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"], value); }
 // ???
-export function srcdoc(value) { return new Attr("srcdoc", ["iframe"], value); }
+export function srcDoc(value) { return new Attr("srcdoc", ["iframe"], value); }
 // ???
-export function srclang(value) { return new Attr("srclang", ["track"], value); }
+export function srcLang(value) { return new Attr("srclang", ["track"], value); }
 // One or more responsive image candidates.
-export function srcset(value) { return new Attr("srcset", ["img", "source"], value); }
+export function srcSet(value) { return new Attr("srcset", ["img", "source"], value); }
 // Defines the first number if other than 1.
 export function start(value) { return new Attr("start", ["ol"], value); }
 // Defines CSS styles which will override styles previously set.
@@ -566,7 +568,8 @@ export function step(value) { return new Attr("step", ["input"], value); }
 // ???
 export function summary(value) { return new Attr("summary", ["table"], value); }
 // Overrides the browser's default tab order and follows the one specified instead.
-export function tabindex(value) { return new Attr("tabindex", [], value); }
+export function tabIndex(value) { return new Attr("tabindex", [], value); }
+export function textContent(value) { return Text(value); }
 // Text to be displayed in a tooltip when hovering over the element.
 export function title(value) { return new Attr("title", [], value); }
 // ???
@@ -578,7 +581,7 @@ export function type(value) { return new Attr("type", ["button", "input", "comma
 // Defines a default value which will be displayed in the element on page load.
 export function value(value) { return new Attr("value", ["button", "data", "input", "li", "meter", "option", "progress", "param"], value); }
 // ???
-export function usemap(value) { return new Attr("usemap", ["img", "input", "object"], value); }
+export function useMap(value) { return new Attr("usemap", ["img", "input", "object"], value); }
 // For the elements listed here, this establishes the element's width.
 export function width(value) { return new Attr("width", ["canvas", "embed", "iframe", "img", "input", "object", "video"], value); }
 // Indicates whether the text should be wrapped.
@@ -604,144 +607,141 @@ class Func {
 }
 
 
-export function onabort(callback) { return new Func("abort", callback); }
-export function onafterprint(callback) { return new Func("afterprint", callback); }
-export function onanimationcancel(callback) { return new Func("animationcancel", callback); }
-export function onanimationend(callback) { return new Func("animationend", callback); }
-export function onanimationiteration(callback) { return new Func("animationiteration", callback); }
-export function onanimationstart(callback) { return new Func("animationstart", callback); }
-export function onappinstalled(callback) { return new Func("appinstalled", callback); }
-export function _onaudioprocess(callback) { return new Func("audioprocess", callback); }
-export function onaudioend(callback) { return new Func("audioend", callback); }
-export function onaudiostart(callback) { return new Func("audiostart", callback); }
-export function onauxclick(callback) { return new Func("auxclick", callback); }
-export function onbeforeinput(callback) { return new Func("beforeinput", callback); }
-export function onbeforeprint(callback) { return new Func("beforeprint", callback); }
-export function onbeforeunload(callback) { return new Func("beforeunload", callback); }
-export function onbeginEvent(callback) { return new Func("beginEvent", callback); }
-export function onblocked(callback) { return new Func("blocked", callback); }
-export function onblur(callback) { return new Func("blur", callback); }
-export function onboundary(callback) { return new Func("boundary", callback); }
-export function oncanplay(callback) { return new Func("canplay", callback); }
-export function oncanplaythrough(callback) { return new Func("canplaythrough", callback); }
-export function onchange(callback) { return new Func("change", callback); }
-export function onchargingchange(callback) { return new Func("chargingchange", callback); }
-export function onchargingtimechange(callback) { return new Func("chargingtimechange", callback); }
-export function onchecking(callback) { return new Func("checking", callback); }
-export function onclick(callback) { return new Func("click", callback); }
-export function onclose(callback) { return new Func("close", callback); }
-export function oncomplete(callback) { return new Func("complete", callback); }
-export function oncompositionend(callback) { return new Func("compositionend", callback); }
-export function oncompositionstart(callback) { return new Func("compositionstart", callback); }
-export function oncompositionupdate(callback) { return new Func("compositionupdate", callback); }
-export function oncontextmenu(callback) { return new Func("contextmenu", callback); }
-export function oncopy(callback) { return new Func("copy", callback); }
-export function oncut(callback) { return new Func("cut", callback); }
-export function ondblclick(callback) { return new Func("dblclick", callback); }
-export function ondevicechange(callback) { return new Func("devicechange", callback); }
-export function ondevicemotion(callback) { return new Func("devicemotion", callback); }
-export function ondeviceorientation(callback) { return new Func("deviceorientation", callback); }
-export function ondischargingtimechange(callback) { return new Func("dischargingtimechange", callback); }
-export function ondownloading(callback) { return new Func("downloading", callback); }
-export function ondrag(callback) { return new Func("drag", callback); }
-export function ondragend(callback) { return new Func("dragend", callback); }
-export function ondragenter(callback) { return new Func("dragenter", callback); }
-export function ondragleave(callback) { return new Func("dragleave", callback); }
-export function ondragover(callback) { return new Func("dragover", callback); }
-export function ondragstart(callback) { return new Func("dragstart", callback); }
-export function ondrop(callback) { return new Func("drop", callback); }
-export function ondurationchange(callback) { return new Func("durationchange", callback); }
-export function onemptied(callback) { return new Func("emptied", callback); }
-export function onend(callback) { return new Func("end", callback); }
-export function onended(callback) { return new Func("ended", callback); }
-export function onendEvent(callback) { return new Func("endEvent", callback); }
-export function onerror(callback) { return new Func("error", callback); }
-export function onfocus(callback) { return new Func("focus", callback); }
-export function onfocusin(callback) { return new Func("focusin", callback); }
-export function onfocusout(callback) { return new Func("focusout", callback); }
-export function onfullscreenchange(callback) { return new Func("fullscreenchange", callback); }
-export function onfullscreenerror(callback) { return new Func("fullscreenerror", callback); }
-export function ongamepadconnected(callback) { return new Func("gamepadconnected", callback); }
-export function ongamepaddisconnected(callback) { return new Func("gamepaddisconnected", callback); }
-export function ongotpointercapture(callback) { return new Func("gotpointercapture", callback); }
-export function onhashchange(callback) { return new Func("hashchange", callback); }
-export function onlostpointercapture(callback) { return new Func("lostpointercapture", callback); }
-export function oninput(callback) { return new Func("input", callback); }
-export function oninvalid(callback) { return new Func("invalid", callback); }
-export function onkeydown(callback) { return new Func("keydown", callback); }
-export function _onkeypress(callback) { return new Func("keypress", callback); }
-export function onkeyup(callback) { return new Func("keyup", callback); }
-export function onlanguagechange(callback) { return new Func("languagechange", callback); }
-export function onlevelchange(callback) { return new Func("levelchange", callback); }
-export function onload(callback) { return new Func("load", callback); }
-export function onloadeddata(callback) { return new Func("loadeddata", callback); }
-export function onloadedmetadata(callback) { return new Func("loadedmetadata", callback); }
-export function onloadend(callback) { return new Func("loadend", callback); }
-export function onloadstart(callback) { return new Func("loadstart", callback); }
-export function onmark(callback) { return new Func("mark", callback); }
-export function onmessage(callback) { return new Func("message", callback); }
-export function onmessageerror(callback) { return new Func("messageerror", callback); }
-export function onmousedown(callback) { return new Func("mousedown", callback); }
-export function onmouseenter(callback) { return new Func("mouseenter", callback); }
-export function onmouseleave(callback) { return new Func("mouseleave", callback); }
-export function onmousemove(callback) { return new Func("mousemove", callback); }
-export function onmouseout(callback) { return new Func("mouseout", callback); }
-export function onmouseover(callback) { return new Func("mouseover", callback); }
-export function onmouseup(callback) { return new Func("mouseup", callback); }
-export function onnomatch(callback) { return new Func("nomatch", callback); }
-export function onnotificationclick(callback) { return new Func("notificationclick", callback); }
-export function onnoupdate(callback) { return new Func("noupdate", callback); }
-export function onobsolete(callback) { return new Func("obsolete", callback); }
-export function onoffline(callback) { return new Func("offline", callback); }
-export function ononline(callback) { return new Func("online", callback); }
-export function onopen(callback) { return new Func("open", callback); }
-export function onorientationchange(callback) { return new Func("orientationchange", callback); }
-export function onpagehide(callback) { return new Func("pagehide", callback); }
-export function onpageshow(callback) { return new Func("pageshow", callback); }
-export function onpaste(callback) { return new Func("paste", callback); }
-export function onpause(callback) { return new Func("pause", callback); }
-export function onpointercancel(callback) { return new Func("pointercancel", callback); }
-export function onpointerdown(callback) { return new Func("pointerdown", callback); }
-export function onpointerenter(callback) { return new Func("pointerenter", callback); }
-export function onpointerleave(callback) { return new Func("pointerleave", callback); }
-export function onpointerlockchange(callback) { return new Func("pointerlockchange", callback); }
-export function onpointerlockerror(callback) { return new Func("pointerlockerror", callback); }
-export function onpointermove(callback) { return new Func("pointermove", callback); }
-export function onpointerout(callback) { return new Func("pointerout", callback); }
-export function onpointerover(callback) { return new Func("pointerover", callback); }
-export function onpointerup(callback) { return new Func("pointerup", callback); }
-export function onplay(callback) { return new Func("play", callback); }
-export function onplaying(callback) { return new Func("playing", callback); }
-export function onpopstate(callback) { return new Func("popstate", callback); }
-export function onprogress(callback) { return new Func("progress", callback); }
-export function onpush(callback) { return new Func("push", callback); }
-export function onpushsubscriptionchange(callback) { return new Func("pushsubscriptionchange", callback); }
-export function onratechange(callback) { return new Func("ratechange", callback); }
-export function onreadystatechange(callback) { return new Func("readystatechange", callback); }
-export function onrepeatEvent(callback) { return new Func("repeatEvent", callback); }
-export function onreset(callback) { return new Func("reset", callback); }
-export function onresize(callback) { return new Func("resize", callback); }
-export function onresourcetimingbufferfull(callback) { return new Func("resourcetimingbufferfull", callback); }
-export function onresult(callback) { return new Func("result", callback); }
-export function onresume(callback) { return new Func("resume", callback); }
-export function onscroll(callback) { return new Func("scroll", callback); }
-export function onseeked(callback) { return new Func("seeked", callback); }
-export function onseeking(callback) { return new Func("seeking", callback); }
-export function onselect(callback) { return new Func("select", callback); }
-export function onselectstart(callback) { return new Func("selectstart", callback); }
-export function onselectionchange(callback) { return new Func("selectionchange", callback); }
-export function onshow(callback) { return new Func("show", callback); }
-export function onslotchange(callback) { return new Func("slotchange", callback); }
-export function onsoundend(callback) { return new Func("soundend", callback); }
-export function onsoundstart(callback) { return new Func("soundstart", callback); }
-export function onspeechend(callback) { return new Func("speechend", callback); }
-export function onspeechstart(callback) { return new Func("speechstart", callback); }
-export function onstalled(callback) { return new Func("stalled", callback); }
-export function onstart(callback) { return new Func("start", callback); }
-export function onstorage(callback) { return new Func("storage", callback); }
-export function onsubmit(callback) { return new Func("submit", callback); }
-export function onsuccess(callback) { return new Func("success", callback); }
-export function onsuspend(callback) { return new Func("suspend", callback); }
+export function onAbort(callback) { return new Func("abort", callback); }
+export function onAfterPrint(callback) { return new Func("afterprint", callback); }
+export function onAnimationCancel(callback) { return new Func("animationcancel", callback); }
+export function onAnimationEnd(callback) { return new Func("animationend", callback); }
+export function onAnimationIteration(callback) { return new Func("animationiteration", callback); }
+export function onAnimationStart(callback) { return new Func("animationstart", callback); }
+export function onAppInstalled(callback) { return new Func("appinstalled", callback); }
+export function _onAudioProcess(callback) { return new Func("audioprocess", callback); }
+export function onAudioEnd(callback) { return new Func("audioend", callback); }
+export function onAudioStart(callback) { return new Func("audiostart", callback); }
+export function onAuxClick(callback) { return new Func("auxclick", callback); }
+export function onBeforeInput(callback) { return new Func("beforeinput", callback); }
+export function onBeforePrint(callback) { return new Func("beforeprint", callback); }
+export function onBeforeUnload(callback) { return new Func("beforeunload", callback); }
+export function onBlocked(callback) { return new Func("blocked", callback); }
+export function onBlur(callback) { return new Func("blur", callback); }
+export function onBoundary(callback) { return new Func("boundary", callback); }
+export function onCanPlay(callback) { return new Func("canplay", callback); }
+export function onCanPlayThrough(callback) { return new Func("canplaythrough", callback); }
+export function onChange(callback) { return new Func("change", callback); }
+export function onChargingChange(callback) { return new Func("chargingchange", callback); }
+export function onChargingTimeChange(callback) { return new Func("chargingtimechange", callback); }
+export function onChecking(callback) { return new Func("checking", callback); }
+export function onClick(callback) { return new Func("click", callback); }
+export function onClose(callback) { return new Func("close", callback); }
+export function onComplete(callback) { return new Func("complete", callback); }
+export function onCompositionEnd(callback) { return new Func("compositionend", callback); }
+export function onCompositionStart(callback) { return new Func("compositionstart", callback); }
+export function onCompositionUpdate(callback) { return new Func("compositionupdate", callback); }
+export function onContextMenu(callback) { return new Func("contextmenu", callback); }
+export function onCopy(callback) { return new Func("copy", callback); }
+export function onCut(callback) { return new Func("cut", callback); }
+export function onDblClick(callback) { return new Func("dblclick", callback); }
+export function onDeviceChange(callback) { return new Func("devicechange", callback); }
+export function onDeviceMotion(callback) { return new Func("devicemotion", callback); }
+export function onDeviceOrientation(callback) { return new Func("deviceorientation", callback); }
+export function onDischargingTimeChange(callback) { return new Func("dischargingtimechange", callback); }
+export function onDownloading(callback) { return new Func("downloading", callback); }
+export function onDrag(callback) { return new Func("drag", callback); }
+export function onDragEnd(callback) { return new Func("dragend", callback); }
+export function onDragEnter(callback) { return new Func("dragenter", callback); }
+export function onDragLeave(callback) { return new Func("dragleave", callback); }
+export function onDragOver(callback) { return new Func("dragover", callback); }
+export function onDragStart(callback) { return new Func("dragstart", callback); }
+export function onDrop(callback) { return new Func("drop", callback); }
+export function onDurationChange(callback) { return new Func("durationchange", callback); }
+export function onEmptied(callback) { return new Func("emptied", callback); }
+export function onEnd(callback) { return new Func("end", callback); }
+export function onEnded(callback) { return new Func("ended", callback); }
+export function onError(callback) { return new Func("error", callback); }
+export function onFocus(callback) { return new Func("focus", callback); }
+export function onFocusIn(callback) { return new Func("focusin", callback); }
+export function onFocusOut(callback) { return new Func("focusout", callback); }
+export function onFullScreenChange(callback) { return new Func("fullscreenchange", callback); }
+export function onFullScreenError(callback) { return new Func("fullscreenerror", callback); }
+export function onGamepadConnected(callback) { return new Func("gamepadconnected", callback); }
+export function onGamepadDisconnected(callback) { return new Func("gamepaddisconnected", callback); }
+export function onGotPointerCapture(callback) { return new Func("gotpointercapture", callback); }
+export function onHashChange(callback) { return new Func("hashchange", callback); }
+export function onLostPointerCapture(callback) { return new Func("lostpointercapture", callback); }
+export function onInput(callback) { return new Func("input", callback); }
+export function onInvalid(callback) { return new Func("invalid", callback); }
+export function onKeyDown(callback) { return new Func("keydown", callback); }
+export function onKeyPress(callback) { return new Func("keypress", callback); }
+export function onKeyUp(callback) { return new Func("keyup", callback); }
+export function onLanguageChange(callback) { return new Func("languagechange", callback); }
+export function onLevelChange(callback) { return new Func("levelchange", callback); }
+export function onLoad(callback) { return new Func("load", callback); }
+export function onLoadedData(callback) { return new Func("loadeddata", callback); }
+export function onLoadedMetadata(callback) { return new Func("loadedmetadata", callback); }
+export function onLoadEnd(callback) { return new Func("loadend", callback); }
+export function onLoadStart(callback) { return new Func("loadstart", callback); }
+export function onMark(callback) { return new Func("mark", callback); }
+export function onMessage(callback) { return new Func("message", callback); }
+export function onMessageError(callback) { return new Func("messageerror", callback); }
+export function onMouseDown(callback) { return new Func("mousedown", callback); }
+export function onMouseEnter(callback) { return new Func("mouseenter", callback); }
+export function onMouseLeave(callback) { return new Func("mouseleave", callback); }
+export function onMouseMove(callback) { return new Func("mousemove", callback); }
+export function onMouseOut(callback) { return new Func("mouseout", callback); }
+export function onMouseOver(callback) { return new Func("mouseover", callback); }
+export function onMouseUp(callback) { return new Func("mouseup", callback); }
+export function onNoMatch(callback) { return new Func("nomatch", callback); }
+export function onNotificationClick(callback) { return new Func("notificationclick", callback); }
+export function onNoUpdate(callback) { return new Func("noupdate", callback); }
+export function onObsolete(callback) { return new Func("obsolete", callback); }
+export function onOffline(callback) { return new Func("offline", callback); }
+export function onOnline(callback) { return new Func("online", callback); }
+export function onOpen(callback) { return new Func("open", callback); }
+export function onOrientationChange(callback) { return new Func("orientationchange", callback); }
+export function onPageHide(callback) { return new Func("pagehide", callback); }
+export function onPageShow(callback) { return new Func("pageshow", callback); }
+export function onPaste(callback) { return new Func("paste", callback); }
+export function onPause(callback) { return new Func("pause", callback); }
+export function onPointerCancel(callback) { return new Func("pointercancel", callback); }
+export function onPointerDown(callback) { return new Func("pointerdown", callback); }
+export function onPointerEnter(callback) { return new Func("pointerenter", callback); }
+export function onPointerLeave(callback) { return new Func("pointerleave", callback); }
+export function onPointerLockChange(callback) { return new Func("pointerlockchange", callback); }
+export function onPointerLockError(callback) { return new Func("pointerlockerror", callback); }
+export function onPointerMove(callback) { return new Func("pointermove", callback); }
+export function onPointerOut(callback) { return new Func("pointerout", callback); }
+export function onPointerOver(callback) { return new Func("pointerover", callback); }
+export function onPointerUp(callback) { return new Func("pointerup", callback); }
+export function onPlay(callback) { return new Func("play", callback); }
+export function onPlaying(callback) { return new Func("playing", callback); }
+export function onPopstate(callback) { return new Func("popstate", callback); }
+export function onProgress(callback) { return new Func("progress", callback); }
+export function onPush(callback) { return new Func("push", callback); }
+export function onPushSubscriptionChange(callback) { return new Func("pushsubscriptionchange", callback); }
+export function onRatechange(callback) { return new Func("ratechange", callback); }
+export function onReadystatechange(callback) { return new Func("readystatechange", callback); }
+export function onReset(callback) { return new Func("reset", callback); }
+export function onResize(callback) { return new Func("resize", callback); }
+export function onResourceTimingBufferFull(callback) { return new Func("resourcetimingbufferfull", callback); }
+export function onResult(callback) { return new Func("result", callback); }
+export function onResume(callback) { return new Func("resume", callback); }
+export function onScroll(callback) { return new Func("scroll", callback); }
+export function onSeeked(callback) { return new Func("seeked", callback); }
+export function onSeeking(callback) { return new Func("seeking", callback); }
+export function onSelect(callback) { return new Func("select", callback); }
+export function onSelectStart(callback) { return new Func("selectstart", callback); }
+export function onSelectionChange(callback) { return new Func("selectionchange", callback); }
+export function onShow(callback) { return new Func("show", callback); }
+export function onSlotChange(callback) { return new Func("slotchange", callback); }
+export function onSoundEnd(callback) { return new Func("soundend", callback); }
+export function onSoundStart(callback) { return new Func("soundstart", callback); }
+export function onSpeechEnd(callback) { return new Func("speechend", callback); }
+export function onSpeechStart(callback) { return new Func("speechstart", callback); }
+export function onStalled(callback) { return new Func("stalled", callback); }
+export function onStart(callback) { return new Func("start", callback); }
+export function onStorage(callback) { return new Func("storage", callback); }
+export function onSubmit(callback) { return new Func("submit", callback); }
+export function onSuccess(callback) { return new Func("success", callback); }
+export function onSuspend(callback) { return new Func("suspend", callback); }
 export function onSVGAbort(callback) { return new Func("SVGAbort", callback); }
 export function onSVGError(callback) { return new Func("SVGError", callback); }
 export function onSVGLoad(callback) { return new Func("SVGLoad", callback); }
@@ -749,20 +749,20 @@ export function onSVGResize(callback) { return new Func("SVGResize", callback); 
 export function onSVGScroll(callback) { return new Func("SVGScroll", callback); }
 export function onSVGUnload(callback) { return new Func("SVGUnload", callback); }
 export function onSVGZoom(callback) { return new Func("SVGZoom", callback); }
-export function ontimeout(callback) { return new Func("timeout", callback); }
-export function ontimeupdate(callback) { return new Func("timeupdate", callback); }
-export function ontouchcancel(callback) { return new Func("touchcancel", callback); }
-export function ontouchend(callback) { return new Func("touchend", callback); }
-export function ontouchmove(callback) { return new Func("touchmove", callback); }
-export function ontouchstart(callback) { return new Func("touchstart", callback); }
-export function ontransitionend(callback) { return new Func("transitionend", callback); }
-export function onunload(callback) { return new Func("unload", callback); }
-export function onupdateready(callback) { return new Func("updateready", callback); }
-export function onupgradeneeded(callback) { return new Func("upgradeneeded", callback); }
-export function onuserproximity(callback) { return new Func("userproximity", callback); }
-export function onvoiceschanged(callback) { return new Func("voiceschanged", callback); }
-export function onversionchange(callback) { return new Func("versionchange", callback); }
-export function onvisibilitychange(callback) { return new Func("visibilitychange", callback); }
-export function onvolumechange(callback) { return new Func("volumechange", callback); }
-export function onwaiting(callback) { return new Func("waiting", callback); }
-export function onwheel(callback) { return new Func("wheel", callback); }
+export function onTimeout(callback) { return new Func("timeout", callback); }
+export function onTimeUpdate(callback) { return new Func("timeupdate", callback); }
+export function onTouchCancel(callback) { return new Func("touchcancel", callback); }
+export function onTouchEnd(callback) { return new Func("touchend", callback); }
+export function onTouchMove(callback) { return new Func("touchmove", callback); }
+export function onTouchStart(callback) { return new Func("touchstart", callback); }
+export function onTransitionEnd(callback) { return new Func("transitionend", callback); }
+export function onUnload(callback) { return new Func("unload", callback); }
+export function onUpdateReady(callback) { return new Func("updateready", callback); }
+export function onUpgradeNeeded(callback) { return new Func("upgradeneeded", callback); }
+export function onUserProximity(callback) { return new Func("userproximity", callback); }
+export function onVoicesChanged(callback) { return new Func("voiceschanged", callback); }
+export function onVersionChange(callback) { return new Func("versionchange", callback); }
+export function onVisibilityChange(callback) { return new Func("visibilitychange", callback); }
+export function onVolumeChange(callback) { return new Func("volumechange", callback); }
+export function onWaiting(callback) { return new Func("waiting", callback); }
+export function onWheel(callback) { return new Func("wheel", callback); }

@@ -17,7 +17,7 @@ import {
     title,
     href,
     htmlFor,
-    onclick
+    onClick
 } from "./html.js";
 
 export class EmojiForm extends EventTarget {
@@ -64,7 +64,7 @@ export class EmojiForm extends EventTarget {
                 const g = isAlts ? UL() : Span(),
                     btn = Button(
                         title(icon.desc),
-                        onclick((evt) => {
+                        onClick((evt) => {
                             selectedEmoji = selectedEmoji && evt.ctrlKey
                                 ? combine(selectedEmoji, icon)
                                 : icon;
@@ -118,7 +118,7 @@ export class EmojiForm extends EventTarget {
                     headerButton = A(
                         href("javascript:undefined"),
                         title(key),
-                        onclick(() => {
+                        onClick(() => {
                             container.toggleOpen();
                             headerButton.innerHTML = key + (container.isOpen() ? " -" : " +");
                         }),

@@ -7,7 +7,7 @@
     Button,
     style,
     colSpan,
-    onclick,
+    onClick,
     monospaceFamily
 } from "../src/html.js";
 
@@ -117,18 +117,16 @@ export class ConsoleTestOutput extends TestOutput {
 }
 
 function bar(color, width) {
-    return {
-        style: {
-            backgroundColor: color,
-            color,
-            width
-        }
-    };
+    return style({
+        backgroundColor: color,
+        color,
+        width
+    });
 }
 
 function refresher(thunk) {
     return TD(Button(
-        onclick(thunk),
+        onClick(thunk),
         "\u{1F504}\u{FE0F}"));
 }
 
@@ -140,7 +138,11 @@ export class HtmlTestOutput extends TestOutput {
             const s = Math.round(100 * evt.stats.totalSucceeded / evt.stats.totalFound),
                 f = Math.round(100 * evt.stats.totalFailed / evt.stats.totalFound),
                 t = Math.round(100 * (evt.stats.totalFound - evt.stats.totalSucceeded - evt.stats.totalFailed) / evt.stats.totalFound),
-                basicStyle = { style: { display: "inline-block", overflow: "hidden", height: "1em" } },
+                basicStyle = style({
+                    display: "inline-block",
+                    overflow: "hidden",
+                    height: "1em"
+                }),
                 table = Table(
                     style({
                         fontFamily: monospaceFamily,

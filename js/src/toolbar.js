@@ -1,27 +1,32 @@
 ﻿import {
-    Div,
+    A,
     Button,
-    KBD,
-    Span,
+    Div,
+    Img,
     Input,
+    KBD,
     Label,
     Run,
-    Img,
-    A,
+    Span,
     alt,
+    ariaLabel,
+    className,
+    href,
+    htmlFor,
     id,
+    min,
+    max,
+    rel,
     role,
+    src,
+    step,
     style,
+    target,
     title,
     type,
     value,
-    min,
-    max,
-    step,
-    htmlFor,
-    src,
-    onclick,
-    oninput,
+    onClick,
+    onInput,
     systemFamily
 } from "./html.js";
 
@@ -80,7 +85,7 @@ export class ToolBar extends EventTarget {
 
         // >>>>>>>>>> AUDIO >>>>>>>>>>
         this.muteAudioButton = Button(
-            onclick(_(toggleAudioEvt)),
+            onClick(_(toggleAudioEvt)),
             subelStyle,
             sysFontStyle,
             speakerHighVolume.value);
@@ -90,7 +95,7 @@ export class ToolBar extends EventTarget {
         // >>>>>>>>>> EMOJI >>>>>>>>>>
         this.emoteButton = Button(
             title("Emote"),
-            onclick(_(emoteEvt)),
+            onClick(_(emoteEvt)),
             sysFontStyle,
             "Emote ",
             KBD("(E)"),
@@ -99,7 +104,7 @@ export class ToolBar extends EventTarget {
         const selectEmojiButton = Button(
             title("Select Emoji"),
             sysFontStyle,
-            onclick(_(selectEmojiEvt)),
+            onClick(_(selectEmojiEvt)),
             downwardsButton.value);
 
         this.toolbar.appendChild(Span(
@@ -119,7 +124,7 @@ export class ToolBar extends EventTarget {
             step(0.1),
             style({ width: "4em" }),
             sysFontStyle,
-            oninput(_(zoomChangedEvt)));
+            onInput(_(zoomChangedEvt)));
 
         this.toolbar.appendChild(Span(
             subelStyle,
@@ -133,7 +138,7 @@ export class ToolBar extends EventTarget {
         // >>>>>>>>>> OPTIONS >>>>>>>>>>
         this.toolbar.appendChild(Button(
             title("Show/hide options"),
-            onclick(_(optionsEvt)),
+            onClick(_(optionsEvt)),
             subelStyle,
             sysFontStyle,
             gear.value));
@@ -142,7 +147,7 @@ export class ToolBar extends EventTarget {
         // >>>>>>>>>> TWEET >>>>>>>>>>
         this.toolbar.appendChild(Button(
             title("Share your current room to twitter"),
-            onclick(_(tweetEvt)),
+            onClick(_(tweetEvt)),
             subelStyle,
             sysFontStyle,
             Run("Share room"),
@@ -155,7 +160,7 @@ export class ToolBar extends EventTarget {
         // >>>>>>>>>> LOGIN >>>>>>>>>>
         this.toolbar.appendChild(Button(
             title("Leave the room"),
-            onclick(_(leaveEvt)),
+            onClick(_(leaveEvt)),
             subelStyle,
             sysFontStyle,
             Run("Leave")));
@@ -170,8 +175,8 @@ export class ToolBar extends EventTarget {
                 margin: "4px"
             }),
             sysFontStyle,
-            onclick(() => this.visible = !this.visible),
-            onclick(_(toggleUIEvt)),
+            onClick(() => this.visible = !this.visible),
+            onClick(_(toggleUIEvt)),
             Run(pauseButton.value)));
         // <<<<<<<<<< HIDER <<<<<<<<<<
 
@@ -227,29 +232,25 @@ export class ToolBar extends EventTarget {
 
     advertise() {
         // GitHub link
-        this.appendChild(A({
-            href: "https://github.com/capnmidnight/Calla",
-            target: "_blank",
-            rel: "noopener",
-            ariaLabel: "Follow Calla on Git Hub",
-            title: "Follow Calla on GitHub"
-        },
-            Span({
-                className: "icon icon-github",
-                role: "presentation"
-            })));
+        this.appendChild(A(
+            href("https://github.com/capnmidnight/Calla"),
+            target("_blank"),
+            rel("noopener"),
+            ariaLabel("Follow Calla on Git Hub"),
+            title("Follow Calla on GitHub"),
+            Span(
+                className("icon icon-github"),
+                role("presentation"))));
 
         // My own Twitter link
-        this.appendChild(A({
-            href: "https://twitter.com/Sean_McBeth",
-            target: "_blank",
-            rel: "noopener",
-            ariaLabel: "Follow Sean on Twitter",
-            title: "Follow @Sean_McBeth on Twitter"
-        },
-            Span({
-                className: "icon icon-twitter",
-                role: "presentation"
-            })));
+        this.appendChild(A(
+            href("https://twitter.com/Sean_McBeth"),
+            target("_blank"),
+            rel("noopener"),
+            ariaLabel("Follow Sean on Twitter"),
+            title("Follow @Sean_McBeth on Twitter"),
+            Span(
+                className("icon icon-twitter"),
+                role("presentation"))));
     }
 }
