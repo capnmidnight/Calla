@@ -162,7 +162,6 @@ export function Table(...rest) { return tag("table", ...rest); }
 export function TBody(...rest) { return tag("tbody", ...rest); }
 export function TD(...rest) { return tag("td", ...rest); }
 export function Template(...rest) { return tag("template", ...rest); }
-export function Text(value) { return document.createTextNode(value); }
 export function TextArea(...rest) { return tag("textarea", ...rest); }
 export function TFoot(...rest) { return tag("tfoot", ...rest); }
 export function TH(...rest) { return tag("th", ...rest); }
