@@ -51,30 +51,11 @@ label {
     margin-right: 0.25em;
 }
 
-#emoji, #options {
+#options {
     display: grid;
     grid-template-rows: auto 1fr auto;
     overflow-y: hidden !important;
 }
-
-#emoji {
-    grid-template-columns: 5fr 1fr 1fr;
-}
-
-    #emoji > .content {
-        overflow-y: scroll;
-    }
-
-        #emoji > .content > h1 > a {
-            text-decoration: none;
-            color: black;
-            text-transform: capitalize;
-        }
-
-        #emoji > .content button {
-            font-size: 200%;
-            width: 2em;
-        }
 
 #options {
     grid-template-columns: 5fr 1fr 1fr;

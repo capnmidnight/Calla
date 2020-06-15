@@ -29,12 +29,16 @@ export class AppGui extends EventTarget {
         // >>>>>>>>>> VIEWS >>>>>>>>>>
         {
             this.appView = appViewElement;
-            this.emojiForm = new EmojiForm(document.querySelector("#emoji"));
+            this.guiView = document.querySelector("#guiView");
+
             this.jitsiContainer = this.appView.appendChild(Div(
                 id("jitsi"),
                 fillPageStyle));
             this.appView.appendChild(this.game.frontBuffer);
-            this.guiView = document.querySelector("#guiView");
+
+            this.emojiForm = new EmojiForm();
+            this.guiView.appendChild(this.emojiForm.element);
+
             if (this.appView
                 && this.guiView) {
                 addEventListener("resize", () => {

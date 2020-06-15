@@ -22,20 +22,64 @@ import {
     htmlFor,
     id,
     style,
-    title
+    title,
+    systemFamily
 } from "./htmlattrs.js";
 import { onClick } from "./htmlevts.js";
 
+const systemFont = style({ fontFamily: systemFamily }),
+    headerStyle = style({
+        textDecoration: "none",
+        color: "black",
+        textTransform: "capitalize",
+        fontFamily: systemFamily
+    }),
+    buttonStyle = style({
+        fontSize: "200%",
+        width: "2em",
+        fontFamily: systemFamily
+    }),
+    cancelEvt = new Event("emojiCanceled");
+
 export class EmojiForm extends EventTarget {
-    constructor(emojiView) {
+    constructor() {
         super();
 
-        const emojiContainer = emojiView.querySelector(".content"),
-            confirmEmojiButton = emojiView.querySelector("button.confirm"),
-            cancelEmojiButton = emojiView.querySelector("button.cancel"),
-            recentEmoji = emojiView.querySelector(".recent"),
-            emojiPreview = emojiView.querySelector(".preview"),
-            cancel = new Event("emojiCanceled"),
+        this.element = Div(id("emoji"),
+            style({
+                display: "grid",
+                gridTemplateColumns: "5fr 1fr 1fr",
+                gridTemplateRows: "auto 1fr auto auto",
+                overflowY: "hidden",
+                width: "50%",
+                maxWidth: "900px",
+                maxHeight: "75vh",
+                backgroundColor: "white",
+                padding: "1em 1em 3em 1em",
+                margin: "5em auto auto auto",
+                borderRadius: "5px",
+                border: "solid 4px black",
+                boxShadow: "rgba(0, 0, 0, .4) 10px 10px 20px"
+            }),
+            systemFont,
+            H1(style({ gridArea: "1/1/2/4" }), "Emoji"),
+            Div(style({ gridArea: "3/1", height: "1em" }), " "));
+
+        const emojiContainer = this.element.appendChild(Div(style({
+            overflowY: "scroll",
+            gridArea: "2/1/3/4"
+        }),
+            H2("Recent"))),
+            recentEmoji = emojiContainer.appendChild(P("(None)")),
+            emojiPreview = this.element.appendChild(Span(style({ gridArea: "4/1/5/4" }))),
+            confirmEmojiButton = this.element.appendChild(Button(className("confirm"),
+                style({ gridArea: "4/2" }),
+                systemFont,
+                "OK")),
+            cancelEmojiButton = this.element.appendChild(Button(className("cancel"),
+                style({ gridArea: "4/3" }),
+                systemFont,
+                "Cancel")),
             previousEmoji = [],
             allAlts = [];
 
@@ -70,6 +114,7 @@ export class EmojiForm extends EventTarget {
                 const g = isAlts ? UL() : Span(),
                     btn = Button(
                         title(icon.desc),
+                        buttonStyle,
                         onClick((evt) => {
                             selectedEmoji = selectedEmoji && evt.ctrlKey
                                 ? combine(selectedEmoji, icon)
@@ -124,6 +169,7 @@ export class EmojiForm extends EventTarget {
                     headerButton = A(
                         href("javascript:undefined"),
                         title(key),
+                        headerStyle,
                         onClick(() => {
                             container.toggleOpen();
                             headerButton.innerHTML = key + (container.isOpen() ? " -" : " +");
@@ -139,7 +185,7 @@ export class EmojiForm extends EventTarget {
         }
 
         confirmEmojiButton.lock();
-        emojiView.hide();
+        this.hide();
 
         confirmEmojiButton.addEventListener("click", () => {
             const idx = previousEmoji.indexOf(selectedEmoji);
@@ -149,17 +195,17 @@ export class EmojiForm extends EventTarget {
                 addIconsToContainer(previousEmoji, recentEmoji);
             }
 
-            emojiView.hide();
+            this.hide();
             this.dispatchEvent(new EmojiSelectedEvent(selectedEmoji));
         });
 
         cancelEmojiButton.addEventListener("click", () => {
             confirmEmojiButton.lock();
-            emojiView.hide();
-            this.dispatchEvent(cancel);
+            this.hide();
+            this.dispatchEvent(cancelEvt);
         });
 
-        this.isOpen = emojiView.isOpen.bind(emojiView);
+        this.isOpen = this.element.isOpen.bind(this.element);
 
         this.selectAsync = () => {
             return new Promise((resolve, reject) => {
@@ -190,9 +236,17 @@ export class EmojiForm extends EventTarget {
                 this.addEventListener("emojiCanceled", no);
 
                 closeAll();
-                emojiView.show();
+                this.show();
             });
         };
+    }
+
+    show() {
+        this.element.show("grid");
+    }
+
+    hide() {
+        this.element.hide();
     }
 }
 

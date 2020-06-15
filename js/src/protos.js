@@ -4,12 +4,14 @@ Element.prototype.isOpen = function () {
     return this.style.display !== "none";
 };
 
-Element.prototype.setOpen = function (v) {
-    this.style.display = v ? "" : "none";
+Element.prototype.setOpen = function (v, displayType = "") {
+    this.style.display = v
+        ? displayType
+        : "none";
 };
 
-Element.prototype.setOpenWithLabel = function (v, label, enabledText, disabledText, bothText) {
-    this.setOpen(v);
+Element.prototype.setOpenWithLabel = function (v, label, enabledText, disabledText, bothText, displayType = "") {
+    this.setOpen(v, displayType);
     label.updateLabel(this.isOpen(), enabledText, disabledText, bothText);
 };
 
@@ -21,16 +23,16 @@ Element.prototype.updateLabel = function (isOpen, enabledText, disabledText, bot
     this.innerHTML = (isOpen ? enabledText : disabledText) + bothText;
 };
 
-Element.prototype.toggleOpen = function () {
-    this.setOpen(!this.isOpen());
+Element.prototype.toggleOpen = function (displayType = "") {
+    this.setOpen(!this.isOpen(), displayType);
 };
 
-Element.prototype.toggleOpenWithLabel = function (label, enabledText, disabledText, bothText) {
-    this.setOpenWithLabel(!this.isOpen(), label, enabledText, disabledText, bothText);
+Element.prototype.toggleOpenWithLabel = function (label, enabledText, disabledText, bothText, displayType = "") {
+    this.setOpenWithLabel(!this.isOpen(), label, enabledText, disabledText, bothText, displayType);
 };
 
-Element.prototype.show = function () {
-    this.setOpen(true);
+Element.prototype.show = function (displayType = "") {
+    this.setOpen(true, displayType);
 };
 
 Element.prototype.hide = function () {
