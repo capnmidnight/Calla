@@ -1,10 +1,4 @@
-﻿// A selection of fonts for preferred monospace rendering.
-export const monospaceFamily = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
-
-// A selection of fonts that should match whatever the user's operating system normally uses.
-export const systemFamily = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
-
-export class HtmlAttr {
+﻿export class HtmlAttr {
     constructor(key, tags, value) {
         tags = tags.map(t => t.toLocaleUpperCase());
 
@@ -38,6 +32,7 @@ export class HtmlAttr {
 
 // List of types the server accepts, typically a file type.
 export function accept(value) { return new HtmlAttr("accept", ["form", "input"], value); }
+export function accessKey(value) { return new HtmlAttr("accessKey", ["input", "button"], value); }
 // Specifies the horizontal alignment of the element.
 export function align(value) { return new HtmlAttr("align", ["applet", "caption", "col", "colgroup", "hr", "iframe", "img", "table", "tbody", "td", "tfoot> , <th", "thead", "tr"], value); }
 // Specifies a feature-policy for the iframe.
@@ -327,3 +322,11 @@ export const fillPageStyle = style({
     margin: 0,
     overflow: "hidden",
 });
+
+// A selection of fonts for preferred monospace rendering.
+export const monospaceFamily = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
+export const monospaceFont = style({ fontFamily: monospaceFamily });
+
+// A selection of fonts that should match whatever the user's operating system normally uses.
+export const systemFamily = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
+export const systemFont = style({ fontFamily: systemFamily });
