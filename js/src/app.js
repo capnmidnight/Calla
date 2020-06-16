@@ -1,16 +1,86 @@
 ﻿import { Game } from "./game.js";
+import { ToolBar } from "./toolbar.js";
 import { AppGui } from "./appgui.js";
 
 export function init(JitsiClientClass, appViewElement) {
-    const jitsiClient = new JitsiClientClass(),
-        game = new Game(),
+    const game = new Game(),
+        jitsiClient = new JitsiClientClass(),
+        toolbar = new ToolBar(),
         gui = new AppGui(appViewElement, game, jitsiClient);
 
     Object.assign(window, {
         jitsiClient,
         game,
+        toolbar,
         gui
     });
+
+    appViewElement.appendChild(toolbar.element);
+
+    game.addEventListener("emote", (evt) => {
+        jitsiClient.sendEmote(evt.participantID, evt.emoji);
+    });
+
+    game.addEventListener("audiomuted", async (evt) => {
+        await jitsiClient.setAudioMutedAsync(evt.muted);
+        for (let user of game.userList) {
+            if (!user.isMe) {
+                jitsiClient.sendAudioMuteState(user.id, evt.muted);
+            }
+        }
+    });
+
+    game.addEventListener("videomuted", async (evt) => {
+        await jitsiClient.setVideoMutedAsync(evt.muted);
+        for (let user of game.userList) {
+            if (!user.isMe) {
+                jitsiClient.sendVideoMuteState(user.id, evt.muted);
+            }
+        }
+    });
+
+    game.addEventListener("gamestarted", () => {
+        game.me.addEventListener("moveTo", (evt) => {
+            jitsiClient.updatePosition(evt);
+            for (let user of game.userList) {
+                if (!user.isMe) {
+                    jitsiClient.sendPosition(user.id, evt);
+                }
+            }
+        });
+    });
+
+    game.addEventListener("userjoined", (evt) => {
+        evt.user.addEventListener("userInitRequest", (evt2) => {
+            jitsiClient.requestUserState(evt2.participantID);
+        });
+    });
+
+    game.addEventListener("audiomuted", async (evt) => {
+        toolbar.setAudioMuted(evt.muted);
+    });
+
+    game.addEventListener("videomuted", async (evt) => {
+        gui.setUserVideoMuted(evt.muted);
+    });
+
+    game.addEventListener("gamestarted", () => {
+        gui.loginView.hide();
+        gui.resize();
+    });
+
+    game.addEventListener("gameended", () => {
+        gui.showLogin();
+    });
+
+    game.addEventListener("emojineeded", () => {
+        gui.selectEmojiAsync();
+    });
+
+    game.addEventListener("zoomchanged", () => {
+        toolbar.zoom = game.targetCameraZ;
+    });
+
 
     jitsiClient.addEventListener("videoConferenceJoined", (evt) => {
         game.start(evt);
@@ -29,15 +99,19 @@ export function init(JitsiClientClass, appViewElement) {
     jitsiClient.addEventListener("participantLeft", (evt) => {
         game.removeUser(evt);
     });
+
     jitsiClient.addEventListener("avatarChanged", (evt) => {
         game.setAvatarURL(evt);
     });
+
     jitsiClient.addEventListener("displayNameChange", (evt) => {
         game.changeUserName(evt);
     });
+
     jitsiClient.addEventListener("audioMuteStatusChanged", (evt) => {
         game.muteUserAudio(evt);
     });
+
     jitsiClient.addEventListener("videoMuteStatusChanged", (evt) => {
         game.muteUserVideo(evt);
     });
@@ -69,60 +143,43 @@ export function init(JitsiClientClass, appViewElement) {
         game.updateAudioActivity(evt);
     });
 
-    game.addEventListener("emote", (evt) => {
-        jitsiClient.sendEmote(evt.participantID, evt.emoji);
+
+    toolbar.addEventListener("toggleaudio", () => {
+        jitsiClient.toggleAudio();
     });
 
-    game.addEventListener("audiomuted", async (evt) => {
-        gui.setUserAudioMuted(evt.muted);
-        await jitsiClient.setAudioMutedAsync(evt.muted);
-        for (let user of game.userList) {
-            if (!user.isMe) {
-                jitsiClient.sendAudioMuteState(user.id, evt.muted);
-            }
-        }
+    toolbar.addEventListener("leave", () => {
+        game.end();
     });
 
-    game.addEventListener("videomuted", async (evt) => {
-        gui.setUserVideoMuted(evt.muted);
-        await jitsiClient.setVideoMutedAsync(evt.muted);
-        for (let user of game.userList) {
-            if (!user.isMe) {
-                jitsiClient.sendVideoMuteState(user.id, evt.muted);
-            }
-        }
+    toolbar.addEventListener("emote", () => {
+        game.emote(game.me.id, game.currentEmoji);
     });
 
-    game.addEventListener("gamestarted", () => {
-        gui.loginView.hide();
-        gui.resize();
-
-        game.me.addEventListener("moveTo", (evt) => {
-            jitsiClient.updatePosition(evt);
-            for (let user of game.userList) {
-                if (!user.isMe) {
-                    jitsiClient.sendPosition(user.id, evt);
-                }
-            }
-        });
+    toolbar.addEventListener("zoomchanged", () => {
+        game.targetCameraZ = toolbar.zoom;
     });
 
-    game.addEventListener("userjoined", (evt) => {
-        evt.user.addEventListener("userInitRequest", (evt2) => {
-            jitsiClient.requestUserState(evt2.participantID);
-        });
-    });
-
-    game.addEventListener("gameended", () => {
-        gui.showLogin();
-    });
-
-    game.addEventListener("emojineeded", () => {
+    toolbar.addEventListener("selectemoji", () => {
         gui.selectEmojiAsync();
     });
 
-    game.addEventListener("zoomchanged", () => {
-        gui.zoom = game.targetCameraZ;
+    toolbar.addEventListener("tweet", () => {
+        const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
+            url = new URL("https://twitter.com/intent/tweet?text=" + message);
+        open(url);
+    });
+
+    toolbar.addEventListener("toggleui", () => {
+        game.frontBuffer.setOpen(toolbar.visible);
+    });
+
+    toolbar.addEventListener("toggleui", () => {
+        gui.resize();
+    });
+
+    toolbar.addEventListener("options", () => {
+        gui.showOptions();
     });
 
     window.addEventListener("resize", () => {
@@ -130,5 +187,10 @@ export function init(JitsiClientClass, appViewElement) {
         game.frontBuffer.resize();
     });
 
-    return { jitsiClient, game, gui };
+    return {
+        jitsiClient,
+        game,
+        toolbar,
+        gui
+    };
 }

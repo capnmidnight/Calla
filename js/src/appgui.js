@@ -14,7 +14,6 @@ import {
     fillPageStyle,
     selected
 } from "./htmlattrs.js";
-import { ToolBar } from "./toolbar.js";
 import "./protos.js";
 
 export class AppGui extends EventTarget {
@@ -41,42 +40,12 @@ export class AppGui extends EventTarget {
         }
         // <<<<<<<<<< VIEWS <<<<<<<<<<
 
-        // >>>>>>>>>> TOOLBAR >>>>>>>>>>
-        this.toolbar = new ToolBar();
-        this.appView.appendChild(this.toolbar.element);
-
-        this.toolbar.addEventListener("toggleaudio", () => this.jitsiClient.toggleAudio());
-        this.toolbar.addEventListener("leave", () => this.game.end());
-        this.toolbar.addEventListener("emote", () => this.game.emote(this.game.me.id, this.game.currentEmoji));
-        this.toolbar.addEventListener("selectemoji", () => this.selectEmojiAsync());
-        this.toolbar.addEventListener("zoomchanged", () => this.game.targetCameraZ = this.toolbar.zoom);
-        this.toolbar.addEventListener("tweet", () => {
-            const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
-                url = new URL("https://twitter.com/intent/tweet?text=" + message);
-            open(url);
-        });
-        this.toolbar.addEventListener("toggleui", () => {
-            this.game.frontBuffer.setOpen(this.toolbar.visible);
-            this.resize();
-        });
-        // <<<<<<<<<< TOOLBAR <<<<<<<<<<
-
         // >>>>>>>>>> OPTIONS >>>>>>>>>>
         {
             this.optionsView = document.querySelector("#options");
             const optionsConfirmButton = document.querySelector("#options button.confirm");
             if (this.optionsView
                 && optionsConfirmButton) {
-
-                this.toolbar.addEventListener("options", (evt) => {
-                    if (!this.emojiForm.isOpen()
-                        && (!this.loginView || !this.loginView.isOpen())) {
-                        this.optionsView.toggleOpen();
-                        if (this.optionsView.isOpen()) {
-                            this.dispatchEvent(new Event("optionsOpened"));
-                        }
-                    }
-                });
 
                 optionsConfirmButton.addEventListener("click", (evt) => {
                     if (this.optionsView.isOpen()) {
@@ -521,18 +490,6 @@ export class AppGui extends EventTarget {
         // <<<<<<<<<< LOGIN <<<<<<<<<<
     }
 
-    get zoom() {
-        return this.toolbar.zoom;
-    }
-
-    set zoom(value) {
-        this.toolbar.zoom = value;
-    }
-
-    setUserAudioMuted(muted) {
-        this.toolbar.setAudioMuted(muted);
-    }
-
     setUserVideoMuted(muted) {
         this.muteVideoButton.updateLabel(
             muted,
@@ -587,6 +544,16 @@ export class AppGui extends EventTarget {
         this.jitsiContainer.innerHTML = "";
         this.loginView.show();
         this.connectButton.innerHTML = "Connect";
+    }
+
+    showOptions() {
+        if (!this.emojiForm.isOpen()
+            && (!this.loginView || !this.loginView.isOpen())) {
+            this.optionsView.toggleOpen();
+            if (this.optionsView.isOpen()) {
+                this.dispatchEvent(new Event("optionsOpened"));
+            }
+        }
     }
 
     login() {
