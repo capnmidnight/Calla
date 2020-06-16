@@ -1,4 +1,5 @@
 ﻿import "./protos.js";
+import { FormDialog } from "./formDialog.js";
 import {
     allIcons as icons,
     emojiStyle,
@@ -20,7 +21,6 @@ import {
     className,
     href,
     htmlFor,
-    id,
     style,
     title,
     systemFamily,
@@ -40,9 +40,9 @@ const headerStyle = style({
     }),
     cancelEvt = new Event("emojiCanceled");
 
-export class EmojiForm extends EventTarget {
+export class EmojiForm extends FormDialog {
     constructor() {
-        super();
+        super("Emoji");
 
         const emojiPreview = this.element.appendChild(Span(style({ gridArea: "4/1/5/4" }))),
             confirmEmojiButton = this.element.appendChild(Button(className("confirm"),
@@ -156,8 +156,8 @@ export class EmojiForm extends EventTarget {
 
                 addIconsToContainer(group, container);
                 header.appendChild(headerButton);
-                emojiContainer.appendChild(header);
-                emojiContainer.appendChild(container);
+                this.content.appendChild(header);
+                this.content.appendChild(container);
             }
         }
 
@@ -216,14 +216,6 @@ export class EmojiForm extends EventTarget {
                 this.show();
             });
         };
-    }
-
-    show() {
-        this.element.show("grid");
-    }
-
-    hide() {
-        this.element.hide();
     }
 }
 
