@@ -132,15 +132,7 @@ function add(a, b) {
     };
 }
 
-EventTarget.prototype.once = function (event, func) {
-    const handler = (evt) => {
-        this.removeEventListener(event, handler);
-        func(evt);
-    };
-    this.addEventListener(event, handler);
-};
-
-EventTarget.prototype.getEventValue = function (resolveEvt, rejectEvt, timeout) {
+EventTarget.prototype.once = function (resolveEvt, rejectEvt, timeout) {
     return new Promise((resolve, reject) => {
         const hasResolveEvt = resolveEvt !== undefined && resolveEvt !== null,
             removeResolve = () => {
