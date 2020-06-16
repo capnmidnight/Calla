@@ -1,5 +1,8 @@
 ﻿import { HtmlAttr, type } from "./htmlattrs.js";
 import { HtmlEvt } from "./htmlevts.js";
+import { HtmlCustomTag } from "./htmlcustom.js";
+import { LabeledInputTag } from "./labeledInputTag.js";
+import { LabeledSelectTag } from "./labeledSelectTag.js";
 
 export function clear(elem) {
     while (elem.lastChild) {
@@ -20,6 +23,9 @@ export function tag(name, ...rest) {
             }
             else if (x instanceof Element) {
                 elem.appendChild(x);
+            }
+            else if (x instanceof HtmlCustomTag) {
+                elem.appendChild(x.element);
             }
             else if (x instanceof HtmlAttr) {
                 x.apply(elem);
@@ -256,4 +262,12 @@ export function resizeContext(ctx, superscale = 1) {
         ctx.canvas.clientWidth,
         ctx.canvas.clientHeight,
         superscale);
+}
+
+export function LabeledInput(id, inputType, labelText, ...rest) {
+    return new LabeledInputTag(id, inputType, labelText, ...rest);
+}
+
+export function LabeledSelect(id, labelText, noSelectionText, ...rest) {
+    return new LabeledSelectTag(id, labelText, noSelectionText, ...rest);
 }
