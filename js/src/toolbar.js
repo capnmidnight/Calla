@@ -20,7 +20,7 @@ import {
     title,
     type,
     value,
-    systemFamily
+    systemFont
 } from "./htmlattrs.js";
 import {
     onClick,
@@ -53,8 +53,7 @@ const toggleAudioEvt = new Event("toggleaudio"),
     subelStyle = style({
         display: "inline-flex",
         margin: "0 0.5em 0 0"
-    }),
-    sysFontStyle = style({ fontFamily: systemFamily });
+    });
 
 export class ToolBar extends EventTarget {
     constructor() {
@@ -69,7 +68,7 @@ export class ToolBar extends EventTarget {
                 flexWrap: "wrap",
                 boxSizing: "border-box"
             }),
-            sysFontStyle);
+            systemFont);
 
         this.element = Div(
             id("toolbar"),
@@ -90,7 +89,7 @@ export class ToolBar extends EventTarget {
         this.muteAudioButton = this.toolbar.appendChild(Button(
             onClick(_(toggleAudioEvt)),
             subelStyle,
-            sysFontStyle,
+            systemFont,
             speakerHighVolume.value));
         // <<<<<<<<<< AUDIO <<<<<<<<<<
 
@@ -100,14 +99,14 @@ export class ToolBar extends EventTarget {
         this.emoteButton = emojiControl.appendChild(Button(
             title("Emote"),
             onClick(_(emoteEvt)),
-            sysFontStyle,
+            systemFont,
             "Emote ",
             KBD("(E)"),
             "(@)"));
 
         emojiControl.appendChild(Button(
             title("Select Emoji"),
-            sysFontStyle,
+            systemFont,
             onClick(_(selectEmojiEvt)),
             downwardsButton.value));
         // <<<<<<<<<< EMOJI <<<<<<<<<<
@@ -129,7 +128,7 @@ export class ToolBar extends EventTarget {
             max(8),
             step(0.1),
             style({ width: "4em" }),
-            sysFontStyle,
+            systemFont,
             onInput(_(zoomChangedEvt))));
         // <<<<<<<<<< ZOOM <<<<<<<<<<
 
@@ -138,7 +137,7 @@ export class ToolBar extends EventTarget {
             title("Show/hide options"),
             onClick(_(optionsEvt)),
             subelStyle,
-            sysFontStyle,
+            systemFont,
             gear.value));
         // <<<<<<<<<< OPTIONS <<<<<<<<<<
 
@@ -147,7 +146,7 @@ export class ToolBar extends EventTarget {
             title("Share your current room to twitter"),
             onClick(_(tweetEvt)),
             subelStyle,
-            sysFontStyle,
+            systemFont,
             Run("Share room"),
             Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
                 alt("icon"),
@@ -172,7 +171,7 @@ export class ToolBar extends EventTarget {
                 right: 0,
                 margin: "4px"
             }),
-            sysFontStyle,
+            systemFont,
             onClick(() => this.visible = !this.visible),
             onClick(_(toggleUIEvt)),
             Run(pauseButton.value)));

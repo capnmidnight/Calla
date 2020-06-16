@@ -23,16 +23,15 @@ import {
     id,
     style,
     title,
-    systemFamily
+    systemFamily,
+    systemFont
 } from "./htmlattrs.js";
 import { onClick } from "./htmlevts.js";
 
-const systemFont = style({ fontFamily: systemFamily }),
-    headerStyle = style({
+const headerStyle = style({
         textDecoration: "none",
         color: "black",
-        textTransform: "capitalize",
-        fontFamily: systemFamily
+        textTransform: "capitalize"
     }),
     buttonStyle = style({
         fontSize: "200%",
@@ -45,33 +44,7 @@ export class EmojiForm extends EventTarget {
     constructor() {
         super();
 
-        this.element = Div(id("emoji"),
-            style({
-                display: "grid",
-                gridTemplateColumns: "5fr 1fr 1fr",
-                gridTemplateRows: "auto 1fr auto auto",
-                overflowY: "hidden",
-                width: "50%",
-                maxWidth: "900px",
-                maxHeight: "75vh",
-                backgroundColor: "white",
-                padding: "1em 1em 3em 1em",
-                margin: "5em auto auto auto",
-                borderRadius: "5px",
-                border: "solid 4px black",
-                boxShadow: "rgba(0, 0, 0, .4) 10px 10px 20px"
-            }),
-            systemFont,
-            H1(style({ gridArea: "1/1/2/4" }), "Emoji"),
-            Div(style({ gridArea: "3/1", height: "1em" }), " "));
-
-        const emojiContainer = this.element.appendChild(Div(style({
-            overflowY: "scroll",
-            gridArea: "2/1/3/4"
-        }),
-            H2("Recent"))),
-            recentEmoji = emojiContainer.appendChild(P("(None)")),
-            emojiPreview = this.element.appendChild(Span(style({ gridArea: "4/1/5/4" }))),
+        const emojiPreview = this.element.appendChild(Span(style({ gridArea: "4/1/5/4" }))),
             confirmEmojiButton = this.element.appendChild(Button(className("confirm"),
                 style({ gridArea: "4/2" }),
                 systemFont,
@@ -79,8 +52,12 @@ export class EmojiForm extends EventTarget {
             cancelEmojiButton = this.element.appendChild(Button(className("cancel"),
                 style({ gridArea: "4/3" }),
                 systemFont,
-                "Cancel")),
-            previousEmoji = [],
+                "Cancel"));
+
+        this.content.appendChild(H2("Recent"));
+        const recentEmoji = this.content.appendChild(P("(None)"));
+
+        const previousEmoji = [],
             allAlts = [];
 
         let selectedEmoji = null,
