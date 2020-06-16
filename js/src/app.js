@@ -125,5 +125,10 @@ export function init(JitsiClientClass, appViewElement) {
         gui.zoom = game.targetCameraZ;
     });
 
+    window.addEventListener("resize", () => {
+        gui.resize();
+        game.frontBuffer.resize();
+    });
+
     return { jitsiClient, game, gui };
 }

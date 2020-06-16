@@ -38,13 +38,6 @@ export class AppGui extends EventTarget {
 
             this.emojiForm = new EmojiForm();
             this.guiView.appendChild(this.emojiForm.element);
-
-            if (this.appView
-                && this.guiView) {
-                addEventListener("resize", () => {
-                    this.resize();
-                });
-            }
         }
         // <<<<<<<<<< VIEWS <<<<<<<<<<
 
@@ -581,8 +574,6 @@ export class AppGui extends EventTarget {
             = this.jitsiContainer.style.height
             = this.game.frontBuffer.style.height
             = height;
-
-        this.game.frontBuffer.resize();
     }
 
     showLogin() {
