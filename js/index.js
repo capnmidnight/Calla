@@ -1,8 +1,13 @@
-﻿import { JitsiClient } from "./src/jitsihax-client-external-api.js";
-import { init } from "./src/app.js";
+﻿import { JitsiClient } from "./html/jitsihax-client-external-api.js";
+import { init } from "./html/app.js";
 import {
     A,
-    Span,
+    H2,
+    P,
+    Span
+} from "./html/htmltags.js";
+
+import {
     ariaLabel,
     className,
     href,
@@ -10,26 +15,40 @@ import {
     title,
     rel,
     role
-} from "../../src/html.js";
+} from "./html/htmlattrs.js";
 
-const { gui } = init(JitsiClient, document.querySelector("#appView"));
+const { toolbar, loginForm } = init(JitsiClient, document.querySelector("#appView"));
 
-// GitHub link
-gui.toolbar.appendChild(
-    A(href("https://github.com/capnmidnight/Calla"),
+
+function adLink(url, label, icon) {
+    return A(
+        href(url),
         target("_blank"),
         rel("noopener"),
-        ariaLabel("Follow Calla on Git Hub"),
-        title("Follow Calla on GitHub"),
-        Span(className("icon icon-github"),
-            role("presentation"))));
+        ariaLabel(label.replace("GitHub", "Git Hub")),
+        title(label),
+        Span(className(`icon icon-${icon}`),
+            role("presentation")));
+}
 
-// My own Twitter link
-gui.toolbar.appendChild(
-    A(href("https://twitter.com/Sean_McBeth"),
-        target("_blank"),
-        rel("noopener"),
-        ariaLabel("Follow Sean on Twitter"),
-        title("Follow @Sean_McBeth on Twitter"),
-        Span(className("icon icon-twitter"),
-            role("presentation"))));
+toolbar.append(
+    adLink(
+        "https://github.com/capnmidnight/Calla",
+        "Follow Calla on GitHub",
+        "github"),
+    adLink(
+        "https://twitter.com/Sean_McBeth",
+        "Follow Sean on Twitter",
+        "twitter"));
+
+loginForm.append(
+    H2("Made by"),
+    P(adLink(
+        "https://www.seanmcbeth.com",
+        "Sean T. McBeth",
+        "shrink"),
+        "Sean T. McBeth"),
+    P(adLink("https://twitter.com/Sean_McBeth",
+        "Follow Sean on Twitter",
+        "twitter"),
+        "Follow @Sean_McBeth on Twitter"));

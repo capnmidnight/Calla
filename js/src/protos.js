@@ -39,6 +39,15 @@ Element.prototype.hide = function () {
     this.setOpen(false);
 };
 
+Element.prototype.setLocked = function (value) {
+    if (value) {
+        this.lock();
+    }
+    else {
+        this.unlock();
+    }
+};
+
 Element.prototype.lock = function () {
     this.disabled = "disabled";
 };

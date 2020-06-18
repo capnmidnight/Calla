@@ -1,21 +1,58 @@
 ﻿import { Game } from "./game.js";
-import { ToolBar } from "./toolbar.js";
-import { AppGui } from "./appgui.js";
+import { ToolBar } from "./forms/toolbar.js";
+import { OptionsForm } from "./forms/optionsForm.js";
+import { EmojiForm } from "./forms/emojiForm.js";
+import { LoginForm } from "./forms/loginForm.js";
 
-export function init(JitsiClientClass, appViewElement) {
+export function init(JitsiClientClass) {
     const game = new Game(),
+        loginForm = new LoginForm(),
         jitsiClient = new JitsiClientClass(),
         toolbar = new ToolBar(),
-        gui = new AppGui(appViewElement, game, jitsiClient);
+        optionsForm = new OptionsForm(),
+        emojiForm = new EmojiForm(),
+        forExport = {
+            game,
+            loginForm,
+            jitsiClient,
+            toolbar,
+            optionsForm,
+            emojiForm
+        };
 
-    Object.assign(window, {
-        jitsiClient,
-        game,
-        toolbar,
-        gui
+    Object.assign(window, forExport);
+
+    function showLogin() {
+        jitsiClient.element.hide();
+        game.frontBuffer.hide();
+        toolbar.hide();
+        optionsForm.hide();
+        emojiForm.hide();
+        loginForm.show();
+    }
+
+    showLogin();
+
+    document.body.append(
+        jitsiClient.element,
+        game.frontBuffer,
+        toolbar.element,
+        optionsForm.element,
+        emojiForm.element,
+        loginForm.element);
+
+    async function selectEmojiAsync() {
+        const emoji = await emojiForm.selectAsync();
+        if (!!emoji) {
+            game.emote(game.me.id, emoji);
+            toolbar.setEmojiButton(game.keyEmote, emoji);
+        }
+    }
+
+    loginForm.addEventListener("login", () => {
+        console.log("LOGGING IN");
     });
 
-    appViewElement.appendChild(toolbar.element);
 
     game.addEventListener("emote", (evt) => {
         jitsiClient.sendEmote(evt.participantID, evt.emoji);
@@ -61,21 +98,19 @@ export function init(JitsiClientClass, appViewElement) {
     });
 
     game.addEventListener("videomuted", async (evt) => {
-        gui.setUserVideoMuted(evt.muted);
+        //gui.setUserVideoMuted(evt.muted);
     });
 
     game.addEventListener("gamestarted", () => {
-        gui.loginView.hide();
-        gui.resize();
+        loginView.hide();
+        //gui.resize(toolbar.offsetHeight);
     });
 
     game.addEventListener("gameended", () => {
-        gui.showLogin();
+        //gui.showLogin();
     });
 
-    game.addEventListener("emojineeded", () => {
-        gui.selectEmojiAsync();
-    });
+    game.addEventListener("emojineeded", selectEmojiAsync);
 
     game.addEventListener("zoomchanged", () => {
         toolbar.zoom = game.targetCameraZ;
@@ -160,9 +195,7 @@ export function init(JitsiClientClass, appViewElement) {
         game.targetCameraZ = toolbar.zoom;
     });
 
-    toolbar.addEventListener("selectemoji", () => {
-        gui.selectEmojiAsync();
-    });
+    toolbar.addEventListener("selectemoji", selectEmojiAsync);
 
     toolbar.addEventListener("tweet", () => {
         const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
@@ -175,22 +208,22 @@ export function init(JitsiClientClass, appViewElement) {
     });
 
     toolbar.addEventListener("toggleui", () => {
-        gui.resize();
+        //gui.resize(toolbar.offsetHeight);
     });
 
     toolbar.addEventListener("options", () => {
-        gui.showOptions();
+        //gui.showOptions();
+    });
+
+
+    window.addEventListener("resize", () => {
+        //gui.resize(toolbar.offsetHeight);
     });
 
     window.addEventListener("resize", () => {
-        gui.resize();
         game.frontBuffer.resize();
     });
 
-    return {
-        jitsiClient,
-        game,
-        toolbar,
-        gui
-    };
+    loginForm.ready = true;
+    return forExport;
 }

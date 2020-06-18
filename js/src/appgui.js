@@ -1,4 +1,4 @@
-﻿import { EmojiForm } from "./emojiForm.js";
+﻿import { EmojiForm } from "./forms/emojiForm.js";
 import {
     bust,
     mutedSpeaker,
@@ -8,12 +8,12 @@ import { isGoodNumber } from "./math.js";
 import {
     Div,
     Option
-} from "./htmltags.js";
+} from "./html/tags.js";
 import {
     id,
     fillPageStyle,
     selected
-} from "./htmlattrs.js";
+} from "./html/attrs.js";
 import "./protos.js";
 
 export class AppGui extends EventTarget {
@@ -30,7 +30,7 @@ export class AppGui extends EventTarget {
             this.appView = appViewElement;
             this.guiView = document.querySelector("#guiView");
 
-            this.jitsiContainer = this.appView.appendChild(Div(
+            this.element = this.appView.appendChild(Div(
                 id("jitsi"),
                 fillPageStyle));
             this.appView.appendChild(this.game.frontBuffer);
@@ -158,7 +158,6 @@ export class AppGui extends EventTarget {
                         setKeyOption(keyButtonToggleAudio, () => this.game.keyToggleAudio, v => this.game.keyToggleAudio = v);
                         setKeyOption(keyButtonEmote, () => this.game.keyEmote, v => {
                             this.game.keyEmote = v;
-                            this.refreshEmojiButton();
                         });
                     }
                 }
@@ -497,38 +496,22 @@ export class AppGui extends EventTarget {
             videoCamera.value);
     }
 
-    async selectEmojiAsync() {
-        if ((!this.optionsView || !this.optionsView.isOpen())
-            && (!this.loginView || !this.loginView.isOpen())) {
-            const emoji = await this.emojiForm.selectAsync();
-
-            if (!!emoji) {
-                const isNew = emoji !== this.game.currentEmoji;
-                this.game.emote(this.game.me.id, emoji);
-                if (isNew) {
-                    this.refreshEmojiButton();
-                }
-            }
-        }
-    }
-
     refreshEmojiButton() {
         const emoji = this.game.currentEmoji,
             emojiValue = emoji && emoji.value || "@";
         this.toolbar.setEmojiButton(this.game.keyEmote, emojiValue);
     }
 
-    resize() {
-        const topValue = this.toolbar.offsetHeight,
-            height = `calc(100% - ${topValue}px)`;
+    resize(topValue) {
+        const height = `calc(100% - ${topValue}px)`;
 
         this.guiView.style.top
-            = this.jitsiContainer.style.top
+            = this.element.style.top
             = this.game.frontBuffer.style.top
             = topValue + "px";
 
         this.guiView.style.height
-            = this.jitsiContainer.style.height
+            = this.element.style.height
             = this.game.frontBuffer.style.height
             = height;
     }
@@ -541,7 +524,7 @@ export class AppGui extends EventTarget {
         this.newRoomButton.unlock();
 
         this.appView.hide();
-        this.jitsiContainer.innerHTML = "";
+        this.element.innerHTML = "";
         this.loginView.show();
         this.connectButton.innerHTML = "Connect";
     }
@@ -600,7 +583,6 @@ export class AppGui extends EventTarget {
         this.appView.show();
         location.hash = roomName;
         await this.jitsiClient.joinAsync(
-            this.jitsiContainer,
             roomName,
             userName);
         this.updateAudioSettings();

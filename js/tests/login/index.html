@@ -1,0 +1,21 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <script type="module">
+        import { LoginForm } from "../../src/forms/loginForm.js";
+        const loginForm = new LoginForm();
+        document.body.appendChild(loginForm.element);
+        async function show() {
+            loginForm.enable();
+            loginForm.show();
+            const login = await loginForm.once("login");
+            console.log(login);
+            setTimeout(show, 1000);
+        }
+        setTimeout(show, 500);
+    </script>
+</head>
+<body>
+</body>
+</html>

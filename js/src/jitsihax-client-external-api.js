@@ -1,8 +1,8 @@
 ﻿import { BaseJitsiClient } from "./jitsihax-client-base.js";
 
 export class JitsiClient extends BaseJitsiClient {
-    constructor(parentNode) {
-        super(parentNode);
+    constructor() {
+        super();
     }
 
     async getApiClassAsync() {

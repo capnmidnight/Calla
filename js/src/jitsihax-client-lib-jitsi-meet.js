@@ -1,7 +1,7 @@
 ﻿import {
     tag,
     Span
-} from "./htmltags.js";
+} from "./html/tags.js";
 
 import '../lib/jquery.js';
 
@@ -402,7 +402,7 @@ export class JitsiClient extends EventTarget {
         }
     }
 
-    async joinAsync(parentNode, roomName, userName) {
+    async joinAsync(roomName, userName) {
         roomName = roomName.toLocaleLowerCase();
 
         await import(`https://${JITSI_HOST}/libs/lib-jitsi-meet.min.js`);

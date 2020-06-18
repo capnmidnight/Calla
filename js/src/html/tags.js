@@ -1,8 +1,9 @@
-﻿import { HtmlAttr, type } from "./htmlattrs.js";
-import { HtmlEvt } from "./htmlevts.js";
-import { HtmlCustomTag } from "./htmlcustom.js";
+﻿import { HtmlAttr, type } from "./attrs.js";
+import { HtmlEvt, isFunction } from "./evts.js";
+import { HtmlCustomTag } from "./custom.js";
 import { LabeledInputTag } from "./labeledInputTag.js";
-import { LabeledSelectTag } from "./labeledSelectTag.js";
+import { SelectBoxTag } from "./selectBoxTag.js";
+import { LabeledSelectBoxTag } from "./labeledSelectBoxTag.js";
 
 export function clear(elem) {
     while (elem.lastChild) {
@@ -12,6 +13,12 @@ export function clear(elem) {
 
 export function tag(name, ...rest) {
     const elem = document.createElement(name);
+
+    for (let i = 0; i < rest.length; ++i) {
+        if (isFunction(rest[i])) {
+            rest[i] = rest[i](true);
+        }
+    }
 
     for (let x of rest) {
         if (x !== null && x !== undefined) {
@@ -268,6 +275,10 @@ export function LabeledInput(id, inputType, labelText, ...rest) {
     return new LabeledInputTag(id, inputType, labelText, ...rest);
 }
 
-export function LabeledSelect(id, labelText, noSelectionText, ...rest) {
-    return new LabeledSelectTag(id, labelText, noSelectionText, ...rest);
+export function SelectBox(noSelectionText, ...rest) {
+    return new SelectBoxTag(noSelectionText, ...rest);
+}
+
+export function LabeledSelectBox(id, labelText, noSelectionText, ...rest) {
+    return new LabeledSelectBoxTag(id, labelText, noSelectionText, ...rest);
 }

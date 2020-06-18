@@ -1,4 +1,6 @@
-﻿
+﻿import { Div } from "./html/tags.js";
+import { id } from "./html/attrs.js";
+
 // helps us filter out data channel messages that don't belong to us
 const APP_FINGERPRINT = "Calla",
     eventNames = [
@@ -20,9 +22,9 @@ const APP_FINGERPRINT = "Calla",
 // Manages communication between Jitsi Meet and Calla
 export class BaseJitsiClient extends EventTarget {
 
-    constructor(parentNode) {
+    constructor() {
         super();
-        this.parentNode = parentNode;
+        this.element = Div(id("jitsi"));
         this.api = null;
         this.iframe = null;
         this.apiOrigin = null;
@@ -90,11 +92,11 @@ export class BaseJitsiClient extends EventTarget {
         throw new Error("Not implemented in base class.");
     }
 
-    async joinAsync(parentNode, roomName, userName) {
+    async joinAsync(roomName, userName) {
         const ApiClass = await this.getApiClassAsync();
         await new Promise((resolve, reject) => {
             this.api = new ApiClass(JITSI_HOST, {
-                parentNode: this.parentNode,
+                parentNode: this.element,
                 roomName,
                 onload: () => {
                     this.iframe = this.api.getIFrame();

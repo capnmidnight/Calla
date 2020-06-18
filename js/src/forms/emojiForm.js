@@ -1,10 +1,13 @@
-﻿import "./protos.js";
+﻿import "../protos.js";
+
 import { FormDialog } from "./formDialog.js";
+
 import {
     allIcons as icons,
     emojiStyle,
     textStyle
-} from "./emoji.js";
+} from "../emoji.js";
+
 import {
     A,
     Button,
@@ -16,7 +19,8 @@ import {
     P,
     Span,
     UL
-} from "./htmltags.js";
+} from "../html/tags.js";
+
 import {
     className,
     href,
@@ -25,14 +29,15 @@ import {
     title,
     systemFamily,
     systemFont
-} from "./htmlattrs.js";
-import { onClick } from "./htmlevts.js";
+} from "../html/attrs.js";
+
+import { onClick } from "../html/evts.js";
 
 const headerStyle = style({
-        textDecoration: "none",
-        color: "black",
-        textTransform: "capitalize"
-    }),
+    textDecoration: "none",
+    color: "black",
+    textTransform: "capitalize"
+}),
     buttonStyle = style({
         fontSize: "200%",
         width: "2em",
@@ -42,20 +47,42 @@ const headerStyle = style({
 
 export class EmojiForm extends FormDialog {
     constructor() {
-        super("Emoji");
+        super("emoji", "Emoji");
 
-        const emojiPreview = this.element.appendChild(Span(style({ gridArea: "4/1/5/4" }))),
-            confirmEmojiButton = this.element.appendChild(Button(className("confirm"),
+        this.element.append(
+
+            this.preview = Span(style({ gridArea: "4/1/5/4" })),
+
+            this.confirmButton = Button(className("confirm"),
                 style({ gridArea: "4/2" }),
                 systemFont,
-                "OK")),
-            cancelEmojiButton = this.element.appendChild(Button(className("cancel"),
+                "OK",
+                onClick(() => {
+                    const idx = previousEmoji.indexOf(selectedEmoji);
+                    if (idx === -1) {
+                        previousEmoji.push(selectedEmoji);
+                        this.recent.innerHTML = "";
+                        addIconsToContainer(previousEmoji, this.recent);
+                    }
+
+                    this.hide();
+                    this.dispatchEvent(new EmojiSelectedEvent(selectedEmoji));
+                })),
+
+            Button(className("cancel"),
                 style({ gridArea: "4/3" }),
                 systemFont,
-                "Cancel"));
+                "Cancel",
+                onClick(() => {
+                    this.confirmButton.lock();
+                    this.hide();
+                    this.dispatchEvent(cancelEvt);
+                })));
 
-        this.content.appendChild(H2("Recent"));
-        const recentEmoji = this.content.appendChild(P("(None)"));
+        this.content.append(
+            H2("Recent"),
+
+            this.recent = this.content.appendChild(P("(None)"));
 
         const previousEmoji = [],
             allAlts = [];
@@ -96,8 +123,8 @@ export class EmojiForm extends FormDialog {
                             selectedEmoji = selectedEmoji && evt.ctrlKey
                                 ? combine(selectedEmoji, icon)
                                 : icon;
-                            emojiPreview.innerHTML = `${selectedEmoji.value} - ${selectedEmoji.desc}`;
-                            confirmEmojiButton.unlock();
+                            this.preview.innerHTML = `${selectedEmoji.value} - ${selectedEmoji.desc}`;
+                            this.confirmButton.unlock();
 
                             if (!!alts) {
                                 alts.toggleOpen();
@@ -161,26 +188,7 @@ export class EmojiForm extends FormDialog {
             }
         }
 
-        confirmEmojiButton.lock();
-        this.hide();
-
-        confirmEmojiButton.addEventListener("click", () => {
-            const idx = previousEmoji.indexOf(selectedEmoji);
-            if (idx === -1) {
-                previousEmoji.push(selectedEmoji);
-                recentEmoji.innerHTML = "";
-                addIconsToContainer(previousEmoji, recentEmoji);
-            }
-
-            this.hide();
-            this.dispatchEvent(new EmojiSelectedEvent(selectedEmoji));
-        });
-
-        cancelEmojiButton.addEventListener("click", () => {
-            confirmEmojiButton.lock();
-            this.hide();
-            this.dispatchEvent(cancelEvt);
-        });
+        this.confirmButton.lock();
 
         this.isOpen = this.element.isOpen.bind(this.element);
 

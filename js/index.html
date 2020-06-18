@@ -47,116 +47,11 @@
     <link type="text/css" rel="stylesheet" href="/stylesheets/general.css" />
     <link type="text/css" rel="stylesheet" href="/stylesheets/icons.css" />
     <link type="text/css" rel="stylesheet" href="/stylesheets/gui.css" />
+    <script type="module" src="index.js"></script>
+    <!--<script type="module" src="bundle.min.js"></script>-->
 </head>
 
 <body>
-    <section id="appView">
-    </section>
-
-    <section id="guiView">
-
-        <div id="options" style="display:none">
-            <h1 style="grid-row:1; grid-column:1/4">Options</h1>
-
-            <div style="grid-row:2; grid-column:1/4;overflow-y:scroll;">
-                <h2>Avatar</h2>
-                <p>
-                    <div>
-                        <label for="avatarURL">Avatar URL:</label>
-                        <input type="text" id="avatarURL" placeholder="(https://example.com/me.png)" />
-                    </div>
-                    or
-                    <div>
-                        <label>Avatar Emoji:</label>
-                        <span id="avatarEmoji">👤</span>
-                        <button type="button" id="selectAvatarEmoji">Select</button>
-                    </div>
-                </p>
-
-                <h2>Interface</h2>
-                <p>
-                    <label for="fontSize">Font size:</label>
-                    <input type="number" id="fontSize" value="10" min="5" max="32" style="width:3em" />
-                </p>
-
-                <h2>Input</h2>
-                <h3>Keyboard</h3>
-                <p>
-                    <label for="keyButtonUp">Up:</label>
-                    <input type="text" id="keyButtonUp" style="width:7em" />
-                    <label for="keyButtonDown">Down:</label>
-                    <input type="text" id="keyButtonDown" style="width:7em" />
-                    <label for="keyButtonLeft">Left:</label>
-                    <input type="text" id="keyButtonLeft" style="width:7em" />
-                    <label for="keyButtonRight">Right:</label>
-                    <input type="text" id="keyButtonRight" style="width:7em" />
-                </p>
-                <p>
-                    <label for="keyButtonEmote">Emote:</label>
-                    <input type="text" id="keyButtonEmote" style="width:7em" />
-                    <label for="keyButtonToggleAudio">Toggle audio:</label>
-                    <input type="text" id="keyButtonToggleAudio" style="width:7em" />
-                </p>
-
-                <h3>Gamepad</h3>
-                <p>
-                    <label for="gamepads">Use gamepad:</label>
-                    <select id="gamepads"></select>
-                </p>
-                <p>
-                    <label for="gpButtonUp">Up:</label>
-                    <input type="text" id="gpButtonUp" style="width:3em" />
-                    <label for="gpButtonDown">Down:</label>
-                    <input type="text" id="gpButtonDown" style="width:3em" />
-                    <label for="gpButtonLeft">Left:</label>
-                    <input type="text" id="gpButtonLeft" style="width:3em" />
-                    <label for="gpButtonRight">Right:</label>
-                    <input type="text" id="gpButtonRight" style="width:3em" />
-                </p>
-                <p>
-                    <label for="gpButtonEmote">Emote:</label>
-                    <input type="text" id="gpButtonEmote" style="width:3em" />
-                    <label for="gpButtonToggleAudio">Toggle audio:</label>
-                    <input type="text" id="gpButtonToggleAudio" style="width:3em" />
-                </p>
-
-                <h2>Audio</h2>
-                <p>
-                    <label for="audioInputDevices">Input:</label>
-                    <select id="audioInputDevices"></select>
-                </p>
-                <p>
-
-                    <label for="audioOutputDevices">Output:</label>
-                    <select id="audioOutputDevices"></select>
-                </p>
-                <p>
-                    <label for="drawHearing">Draw hearing range:</label>
-                    <input type="checkbox" id="drawHearing" />
-
-                    <label for="minAudio">Min:</label>
-                    <input type="number" id="minAudio" value="2" min="0" max="100" style="width:3em" />
-
-                    <label for="maxAudio">Max:</label>
-                    <input type="number" id="maxAudio" value="10" min="0" max="100" style="width:3em" />
-
-                    <label for="rolloff">Rolloff:</label>
-                    <input type="number" id="rolloff" value="5" min="0.1" max="10" step="0.1" style="width:3em" />
-                </p>
-
-                <h2>Video</h2>
-                <p>
-                    <button type="button" id="muteVideo" accesskey="v">Enable video</button>
-                </p>
-                <p>
-                    <label for="videoInputDevices">Device:</label>
-                    <select id="videoInputDevices"></select>
-                </p>
-            </div>
-
-            <button type="button" class="confirm" style="grid-row:3; grid-column:3">OK</button>
-        </div>
-
         <div id="login">
             <h1>
                 Calla
@@ -209,39 +104,7 @@ grid-template-rows: auto;">
                     Loading...
                 </button>
             </form>
-            <h2>Preview</h2>
-            <video src="/videos/demo.webm" style="width:100%" loop autoplay controls></video>
-            <h2>Instructions</h2>
-            <aside style="border:dashed 2px darkred;background-color:wheat;border-radius:5px;padding:0.5em"><strong>Note:</strong> Calla is built on top of <a href="https://jitsi.org">Jitsi Meet</a>. Jitsi does not support iPhones and iPads.</aside>
-            <ul>
-                <li><strong>Be careful in picking your room name</strong>, if you don't want randos to join. Traffic is low right now, but you never know.</li>
-                <li>Try to <strong>pick a unique user name</strong>. A lot of people use "Test" and then there are a bunch of people with the same name running around.</li>
-                <li><strong>Open the Options view</strong> to set the URL to the avatar image you would like to use, or to change your microphone settings.</li>
-                <li><strong>Click on the map</strong> to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls.</li>
-                <li>Or, <strong>use the arrow keys</strong> on your keyboard to move.</li>
-                <li><strong>Click on yourself</strong> to open a list of Emoji. Select an Emoji to float it out into the map.</li>
-                <li><strong>Hit the E key</strong> to re-emote with your last selected Emoji.</li>
-                <li>You can <strong>roll your mouse wheel</strong> or <strong>pinch your touchscreen</strong> to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in their Avatar.</li>
-                <li>You can <strong>click the Pause button (⏸️)</strong> in the upper-right corner to show the default Jitsi Meet interface, in case you need to change any settings there (the game view blocks clicks on the Jitsi Meet interface).</li>
-            </ul>
-            <h2>Made by</h2>
-            <p>
-                <a href="https://www.seanmcbeth.com" target="_blank" rel="noopener">
-                    <span class="icon icon-shrink" title="Sean T. McBeth" />
-                </a>
-                Sean T. McBeth
-            </p>
-            <p>
-                <a href="https://twitter.com/Sean_McBeth" target="_blank" rel="noopener">
-                    <span class="icon icon-twitter" title="Follow @Sean_McBeth on Twitter" />
-                </a>
-                Follow @Sean_McBeth on Twitter
-            </p>
         </div>
-
-    </section>
-    <script type="module" src="index.js"></script>
-    <!--<script type="module" src="bundle.min.js"></script>-->
 </body>
 
 </html>

@@ -1,12 +1,12 @@
 ﻿import { TileMap } from "./tilemap.js";
 import { User } from "./user.js";
 import { Emote } from "./emote.js";
-import { Canvas } from "./htmltags.js";
+import { Canvas } from "./html/tags.js";
 import {
     id,
     style,
     fillPageStyle
-} from "./htmlattrs.js";
+} from "./html/attrs.js";
 import { lerp, clamp, project, unproject } from "./math.js";
 
 const CAMERA_LERP = 0.01,

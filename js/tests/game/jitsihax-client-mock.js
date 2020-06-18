@@ -3,8 +3,8 @@ import { randomPerson } from "../../src/emoji.js";
 import { MockJitsiMeetExternalAPI } from "./mockjitsimeetexternalapi.js";
 
 export class MockJitsiClient extends BaseJitsiClient {
-    constructor(parentNode) {
-        super(parentNode);
+    constructor() {
+        super();
     }
 
     async getApiClassAsync() {

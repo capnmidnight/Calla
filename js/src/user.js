@@ -2,11 +2,11 @@
 import { project } from "./math.js";
 import {
     Canvas
-} from "./htmltags.js";
+} from "./html/tags.js";
 import {
     width,
     height
-} from "./htmlattrs.js";
+} from "./html/attrs.js";
 import {
     mutedSpeaker,
     speakerMediumVolume,

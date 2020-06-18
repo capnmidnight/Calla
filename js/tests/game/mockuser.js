@@ -1,14 +1,16 @@
 ﻿import { allIcons as icons } from "../../src/emoji.js";
+
 import {
     Audio,
     Span
-} from "../../src/htmltags.js";
+} from "../../src/html/tags.js";
+
 import {
     autoPlay,
     id,
     loop,
     src
-} from "../../src/htmlattrs.js";
+} from "../../src/html/attrs.js";
 
 export class MockUser {
     constructor(id, x, y) {
@@ -33,9 +35,9 @@ export class MockUser {
 
         document.body.appendChild(Span(id(`participant_${this.id}`),
             this.audio = Audio(
-                autoPlay(true),
-                loop(true),
-                src(`/test-audio/${this.id}.mp3`)
+                src(`/test-audio/${this.id}.mp3`),
+                autoPlay,
+                loop
             )));
 
         this.schedule();

@@ -5,17 +5,17 @@
     TD,
     Span,
     Button
-} from "../src/htmltags.js";
+} from "../html/tags.js";
 
 import {
     style,
     colSpan,
     monospaceFamily
-} from "../src/htmlattrs.js";
+} from "../html/attrs.js";
 
 import {
     onClick
-} from "../src/htmlevts.js";
+} from "../html/evts.js";
 
 
 class TestOutputResultsEvent extends Event {

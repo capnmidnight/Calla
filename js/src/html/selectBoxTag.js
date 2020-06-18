@@ -1,31 +1,19 @@
-﻿import "./protos.js";
+﻿import "../protos.js";
 import {
-    Label,
     Option,
     Select,
     clear
-} from "./htmltags.js";
-import { htmlFor } from "./htmlattrs.js";
-import { HtmlCustomTag } from "./htmlcustom.js";
-import { isFunction } from "./htmlevts.js";
+} from "./tags.js";
+import { HtmlCustomTag } from "./custom.js";
+import { isFunction } from "./evts.js";
 
 const _values = new Map();
 
-export class LabeledSelectTag extends HtmlCustomTag {
-    constructor(id, labelText, noSelectionText, ...rest) {
-        super();
+export class SelectBoxTag extends HtmlCustomTag {
+    constructor(noSelectionText, ...rest) {
+        super("select", ...rest);
 
         this.noSelectionText = noSelectionText;
-
-        this.label = Label(
-            htmlFor(id),
-            labelText);
-
-        this.select = Select(...rest);
-
-        this.element.append(
-            this.label,
-            this.select);
 
         this.setValues([]);
 
@@ -53,44 +41,57 @@ export class LabeledSelectTag extends HtmlCustomTag {
         const values = _values.get(this);
         values.splice(0, values.length, ...newItems);
 
-        clear(this.select);
+        clear(this.element);
         if (values.length === 0) {
-            this.select.append(Option(this.noSelectionText));
-            this.select.lock();
+            this.element.append(Option(this.noSelectionText));
+            this.element.lock();
         }
         else {
             for (let value of values) {
-                this.select.append(Option(toString(value)));
+                this.element.append(Option(toString(value)));
             }
-            this.select.unlock();
+            this.element.unlock();
         }
     }
 
     get options() {
-        return this.select.options;
+        return this.element.options;
     }
 
     get selectedIndex() {
-        return this.select.selectedIndex;
+        return this.element.selectedIndex;
     }
 
     set selectedIndex(i) {
-        this.select.selectedIndex = i;
+        this.element.selectedIndex = i;
     }
 
     get selectedValue() {
-        return this.values[this.selectedIndex];
+        if (this.selectedIndex === -1) {
+            return null;
+        }
+        else {
+            return _values.get(this)[this.selectedIndex];
+        }
     }
 
     set selectedValue(v) {
-        this.selectedIndex = this.values.indexOf(v);
+        this.selectedIndex = _values.get(this).indexOf(v);
     }
 
     addEventListener(name, callback) {
-        this.select.addEventListener(name, callback);
+        this.element.addEventListener(name, callback);
     }
 
     removeEventListener(name, callback) {
-        this.select.removeEventListener(name, callback);
+        this.element.removeEventListener(name, callback);
+    }
+
+    setOpen(v) {
+        this.element.setOpen(v);
+    }
+
+    get style() {
+        return this.element.style;
     }
 }

@@ -1,11 +1,11 @@
-﻿import "./protos.js";
-import { Input, Label } from "./htmltags.js";
-import { htmlFor, type } from "./htmlattrs.js";
-import { HtmlCustomTag } from "./htmlcustom.js";
+﻿import "../protos.js";
+import { Input, Label } from "./tags.js";
+import { htmlFor, type } from "./attrs.js";
+import { HtmlCustomTag } from "./custom.js";
 
 export class LabeledInputTag extends HtmlCustomTag {
     constructor(id, inputType, labelText, ...rest) {
-        super();
+        super("div");
 
         this.label = Label(
             htmlFor(id),
