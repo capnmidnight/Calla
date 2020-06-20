@@ -82,7 +82,7 @@ export class EmojiForm extends FormDialog {
         this.content.append(
             H2("Recent"),
 
-            this.recent = this.content.appendChild(P("(None)"));
+            this.recent = P("(None)"));
 
         const previousEmoji = [],
             allAlts = [];
