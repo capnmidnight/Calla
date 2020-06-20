@@ -2,39 +2,7 @@
 
 import { FormDialog } from "./formDialog.js";
 
-import {
-    A,
-    Button,
-    Form,
-    H2,
-    Input,
-    Label,
-    P,
-    SelectBox,
-    Span,
-    clear
-} from "../html/tags.js";
-
-import {
-    ariaLabel,
-    autoComplete,
-    className,
-    disabled,
-    href,
-    htmlFor,
-    id,
-    placeHolder,
-    rel,
-    style,
-    target,
-    title,
-    type
-} from "../html/attrs.js";
-
-import { onClick, onInput } from "../html/evts.js";
-
-import { preview } from "./preview.js";
-import { instructions } from "./instructions.js";
+import { SelectBox } from "../html/tags.js";
 
 const loginEvt = new Event("login"),
     defaultRooms = new Map([
@@ -46,16 +14,7 @@ const loginEvt = new Event("login"),
 
 export class LoginForm extends FormDialog {
     constructor() {
-        super("login",
-            "Calla",
-            A(
-                href("https://github.com/capnmidnight/Calla"),
-                target("_blank"),
-                rel("noopener"),
-                Span(
-                    className("icon icon-github"),
-                    title("Follow Calla on Github"),
-                    ariaLabel("Follow Calla on Git Hub"))));
+        super("login");
 
         const self = Object.seal({
             ready: false,
@@ -72,83 +31,34 @@ export class LoginForm extends FormDialog {
                     || this.connected
                     || !canConnect);
                 this.connectButton.innerHTML =
-                    this.ready
-                        ? this.connecting
+                    this.connected
+                        ? "Connected"
+                        : this.connecting
                             ? "Connecting..."
-                            : this.connected
-                                ? "Connected"
-                                : "Connect"
-                        : "Loading...";
+                            : this.ready
+                                ? "Connect"
+                                : "Loading...";
             }
         });
 
         _state.set(this, self);
 
-        const onValidate = onInput(() => {
-            self.validate();
+        this.roomLabel = this.element.querySelector("label[for='roomSelector']");
+        this.roomSelect = SelectBox("No rooms available", this.element.querySelector("#roomSelector"));
+        this.roomInput = this.element.querySelector("#roomName");
+        this.createRoomButton = this.element.querySelector("#createNewRoom");
+        this.userNameInput = this.element.querySelector("#userName")
+        this.connectButton = this.element.querySelector("#connect");
+
+        this.roomInput.addEventListener("input", self.validate);
+        this.userNameInput.addEventListener("input", self.validate);
+        this.createRoomButton.addEventListener("click", () => {
+            this.roomSelectMode = !this.roomSelectMode;
         });
-
-        this.content.append(
-            P("Voice chat with an RPG map. Volume scales with distance from other users. Walk around, talk to folks, have private conversations by huddling in a corner, or drop in on other conversations. Ideal for meetups!"),
-            H2("Login"),
-            Form(
-                autoComplete("on"),
-                style({
-                    display: "grid",
-                    gridTemplateRows: "auto",
-                    gridTemplateColumns: "2fr 4fr 2fr"
-                }),
-
-                this.roomLabel = Label(
-                    htmlFor("existingRooms"),
-                    style({ gridArea: "1/1" }),
-                    "Room: "),
-                this.roomSelect = SelectBox(
-                    id("existingRooms"),
-                    style({ gridArea: "1/2" })),
-
-                this.roomInput = Input(
-                    id("roomName"),
-                    type("text"),
-                    autoComplete("off"),
-                    placeHolder("(Required)"),
-                    style({
-                        display: "none",
-                        gridArea: "1/2"
-                    }),
-                    onValidate),
-
-                this.createRoomButton = Button(
-                    id("createNewRoom"),
-                    title("Create a new, temporary room"),
-                    style({ gridArea: "1/3" }),
-                    "New",
-                    onClick(() => this.roomSelectMode = !this.roomSelectMode)),
-
-                Label(
-                    htmlFor("userName"),
-                    "User: ",
-                    style({ gridArea: "2/1" })),
-                this.userNameInput = Input(
-                    id("userName"),
-                    placeHolder("(Required)"),
-                    type("text"),
-                    style({ gridArea: "2/2" }),
-                    onValidate),
-
-                this.connectButton = Button(
-                    id("connect"),
-                    title("Create a new, temporary room"),
-                    disabled,
-                    style({ gridArea: "2/3" }),
-                    "Loading...",
-                    onClick(() => {
-                        this.connecting = true;
-                        this.dispatchEvent(loginEvt);
-                    }))),
-
-            ...preview(),
-            ...instructions());
+        this.connectButton.addEventListener("click", () => {
+            this.connecting = true;
+            this.dispatchEvent(loginEvt);
+        });
 
         this.roomSelect.setValues(
             defaultRooms.keys(),
@@ -185,7 +95,7 @@ export class LoginForm extends FormDialog {
 
     get selectedRoom() {
         const room = this.roomSelectMode
-            ? this.roomSelect.value
+            ? this.roomSelect.selectedValue
             : this.roomInput.value;
 
         return room.toLocaleLowerCase();
@@ -235,5 +145,10 @@ export class LoginForm extends FormDialog {
         const self = _state.get(this);
         self.connected = v;
         self.validate();
+    }
+
+    show() {
+        this.ready = true;
+        super.show();
     }
 }

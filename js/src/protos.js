@@ -99,6 +99,14 @@ Response.prototype.xml = async function () {
     return xml.documentElement;
 };
 
+Response.prototype.html = async function () {
+    const text = await this.text(),
+        parser = new DOMParser(),
+        xml = parser.parseFromString(text, "text/html");
+
+    return xml.documentElement;
+};
+
 Array.prototype.random = function (defaultValue) {
     const offset = !!defaultValue ? 1 : 0,
         idx = Math.floor(Math.random() * (this.length + offset)) - offset;

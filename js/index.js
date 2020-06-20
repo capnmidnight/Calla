@@ -19,7 +19,6 @@ import {
 
 const { toolbar, loginForm } = init(JitsiClient, document.querySelector("#appView"));
 
-
 function adLink(url, label, icon) {
     return A(
         href(url),
@@ -41,7 +40,7 @@ toolbar.append(
         "Follow Sean on Twitter",
         "twitter"));
 
-loginForm.append(
+loginForm.content.append(
     H2("Made by"),
     P(adLink(
         "https://www.seanmcbeth.com",
