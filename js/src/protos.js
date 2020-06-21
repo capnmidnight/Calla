@@ -185,3 +185,45 @@ EventTarget.prototype.once = function (resolveEvt, rejectEvt, timeout) {
         }
     });
 };
+
+EventTarget.prototype.until = function (untilEvt, callback, test, repeatTimeout, cancelTimeout) {
+    return new Promise((resolve, reject) => {
+        let timer = null,
+            canceller = null;
+
+        const cleanup = () => {
+            if (timer !== null) {
+                clearTimeout(timer);
+            }
+
+            if (canceller !== null) {
+                clearTimeout(canceller);
+            }
+
+            this.removeEventListener(untilEvt, success);
+        }
+
+        function success(evt) {
+            if (test(evt)) {
+                cleanup();
+                resolve(evt);
+            }
+        }
+
+        this.addEventListener(untilEvt, success);
+
+        if (cancelTimeout !== undefined) {
+            canceller = setTimeout(() => {
+                cleanup();
+                reject("timeout");
+            }, cancelTimeout);
+        }
+
+        function repeater() {
+            callback();
+            timer = setTimeout(repeater, repeatTimeout);
+        }
+
+        timer = setTimeout(repeater, 0);
+    });
+};

@@ -298,6 +298,13 @@ export class BaseJitsiClient extends EventTarget {
         this.txGameData(ofUserID, "userInitRequest");
     }
 
+    requstUserStateAsync(ofUserID) {
+        return this.until("userInitResponse",
+            () => this.requestUserState(ofUserID),
+            (evt) => evt.participantID === ofUserID,
+            1000);
+    }
+
     sendUserState(toUserID, fromUser) {
         this.txGameData(toUserID, "userInitResponse", fromUser);
     }

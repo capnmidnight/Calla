@@ -1,11 +1,14 @@
-﻿import { JitsiClient } from "../../src/jitsihax-client-external-api.js";
+﻿import "../../src/protos.js";
+import { JitsiClient } from "../../src/jitsihax-client-external-api.js";
 import { P, Div, Button } from "../../src/html/tags.js";
 import { style } from "../../src/html/attrs.js";
 import { onClick } from "../../src/html/evts.js";
 
 let hash = document.location.hash.length > 0
     ? parseFloat(document.location.hash.substring(1))
-    : 1;
+    : 1,
+    myID = null,
+    users = new Map();
 
 const client = new JitsiClient(),
     output = Div(
@@ -22,14 +25,15 @@ const client = new JitsiClient(),
         style({
             position: "absolute",
             top: 0,
-            left: "calc(50% - 5em)",
-            width: "10em"
+            left: "calc(50% - 3.5em)",
+            width: "7em",
+            padding: "0.5em"
         }),
         onClick(() => {
             const loc = new URL(document.location.href);
             ++hash;
-            loc.hash = "#" + hash
-            window.open(loc.href);
+            loc.hash = "#" + hash;
+            window.open(loc.href, "_blank", "width:800,height:600,screenX:10,screenY:10");
         }),
         "Spawn");
 
@@ -79,7 +83,9 @@ const allTests = [
     }
 ];
 
-async function setup() {
+async function setup(evt) {
+
+    myID = evt.id;
 
     const audioOutputDevices = await client.getAudioOutputDevices(),
         audioInputDevices = await client.getAudioInputDevices(),
@@ -96,7 +102,11 @@ async function setup() {
     echoValue(curVideoIn);
 }
 
-async function runTest() {
+async function runTest(evt) {
+    const state = await client.requstUserStateAsync(evt.id);
+    console.log("=============== GOT USER STATE");
+    echoEvt(state);
+
     const tests = allTests.slice();
     while (tests.length > 0) {
         echoValue(tests.length);
@@ -131,10 +141,16 @@ function wait(ms) {
 
     document.body.removeChild(document.body.querySelector("#login"));
 
-
     client.addEventListener("moveTo", echoEvt);
     client.addEventListener("emote", echoEvt);
     client.addEventListener("userInitRequest", echoEvt);
+    client.addEventListener("userInitRequest", (evt) => {
+        client.sendUserState(evt.participantID, {
+            id: myID,
+            x: 0,
+            y: 0
+        });
+    });
     client.addEventListener("userInitResponse", echoEvt);
     client.addEventListener("audioMuteStatusChanged", echoEvt);
     client.addEventListener("videoMuteStatusChanged", echoEvt);
@@ -147,13 +163,19 @@ function wait(ms) {
     client.addEventListener("audioActivity", echoEvt);
 
     client.addEventListener("videoConferenceJoined", setup);
-    client.addEventListener("participantJoined", runTest);
+    client.addEventListener("participantJoined", (evt) => {
+        users.set(evt.id, evt.displayName);
+    });
+    client.addEventListener("participantJoined", runTest, { once: true });
+    client.addEventListener("participantLeft", (evt) => {
+        users.delete(evt.id);
+    });
 
     await client.joinAsync("TestRoom", "TestUser" + hash);
 })();
 
 function echoValue(value) {
-    console.log(value);
+    console.log("============== VALUE:", value);
     const label = P(value);
     output.appendChild(label);
     setTimeout(() => {
@@ -162,5 +184,6 @@ function echoValue(value) {
 }
 
 function echoEvt(evt) {
-    echoValue(evt.type);
+    console.log(`============ ECHO EVT ${evt.type} ==============`);
+    console.log(evt);
 }
