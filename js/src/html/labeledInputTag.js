@@ -22,8 +22,8 @@ export class LabeledInputTag extends HtmlCustomTag {
         Object.seal(this);
     }
 
-    addEventListener(name, callback) {
-        this.input.addEventListener(name, callback);
+    addEventListener(name, callback, opts) {
+        this.input.addEventListener(name, callback, opts);
     }
 
     removeEventListener(name, callback) {

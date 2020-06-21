@@ -73,12 +73,12 @@ export class User extends EventTarget {
         this.isInitialized = true;
     }
 
-    addEventListener(evtName, func) {
+    addEventListener(evtName, func, opts) {
         if (eventNames.indexOf(evtName) === -1) {
             throw new Error(`Unrecognized event type: ${evtName}`);
         }
 
-        super.addEventListener(evtName, func);
+        super.addEventListener(evtName, func, opts);
     }
 
     setAvatarURL(url) {

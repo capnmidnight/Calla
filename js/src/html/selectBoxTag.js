@@ -79,8 +79,8 @@ export class SelectBoxTag extends HtmlCustomTag {
         this.selectedIndex = _values.get(this).indexOf(v);
     }
 
-    addEventListener(name, callback) {
-        this.element.addEventListener(name, callback);
+    addEventListener(name, callback, opts) {
+        this.element.addEventListener(name, callback, opts);
     }
 
     removeEventListener(name, callback) {

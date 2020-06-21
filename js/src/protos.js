@@ -78,16 +78,16 @@ HTMLCanvasElement.prototype.resize = function () {
 
 const oldAddEventListener = HTMLInputElement.prototype.addEventListener;
 
-HTMLInputElement.prototype.addEventListener = function (evtName, func, bubbles) {
+HTMLInputElement.prototype.addEventListener = function (evtName, func, opts) {
     if (evtName === "enter") {
         oldAddEventListener.call(this, "keypress", function (evt) {
             if (evt.key === "Enter") {
                 func(evt);
             }
-        });
+        }, opts);
     }
     else {
-        oldAddEventListener.call(this, evtName, func, bubbles);
+        oldAddEventListener.call(this, evtName, func, opts);
     }
 };
 

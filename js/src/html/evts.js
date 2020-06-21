@@ -4,13 +4,13 @@
 }
 
 export class HtmlEvt {
-    constructor(name, callback) {
+    constructor(name, callback, opts) {
         if (!isFunction(callback)) {
             throw new Error("A function instance is required for this parameter");
         }
 
         this.add = (elem) => {
-            elem.addEventListener(name, callback);
+            elem.addEventListener(name, callback, opts);
         };
 
         this.remove = (elem) => {

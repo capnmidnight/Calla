@@ -52,8 +52,8 @@ export class LabeledSelectBoxTag extends HtmlCustomTag {
         this.selectedValue = v;
     }
 
-    addEventListener(name, callback) {
-        this.select.addEventListener(name, callback);
+    addEventListener(name, callback, opts) {
+        this.select.addEventListener(name, callback, opts);
     }
 
     removeEventListener(name, callback) {

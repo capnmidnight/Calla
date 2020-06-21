@@ -746,12 +746,12 @@ export class JitsiClient extends EventTarget {
     }
 
     /// Add a listener for Calla events that come through the Jitsi Meet data channel.
-    addEventListener(evtName, callback) {
+    addEventListener(evtName, callback, opts) {
         if (eventNames.indexOf(evtName) === -1) {
             throw new Error(`Unsupported event type: ${evtName}`);
         }
 
-        super.addEventListener(evtName, callback);
+        super.addEventListener(evtName, callback, opts);
     }
 
     setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
