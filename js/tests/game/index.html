@@ -1,29 +1,6 @@
-﻿<!DOCTYPE html>
-<html lang="en-us">
-
-<head>
-    <link type="text/css" rel="stylesheet" href="/stylesheets/general.css" />
-    <link type="text/css" rel="stylesheet" href="/stylesheets/icons.css" />
-    <link type="text/css" rel="stylesheet" href="/stylesheets/gui.css" />
-    <script id="app-settings">
-        const JITSI_HOST = "jitsi.calla.chat",
-            MOVE_REPEAT = 0.125,
-            MOVE_TRANSITION_TIME = 0.5;
-    </script>
-    <script type="module">
-        (async function () {
-            const response = await fetch("../../index.html"),
-                html = await response.text(),
-                parser = new DOMParser(),
-                doc = parser.parseFromString(html, "text/html");
-            document.body.append(...doc.body.children);
-            await import("./index.js");
-        })();
-    </script>
-</head>
-
-<body>
-
-</body>
-
-</html>
+﻿<script id="app-settings">
+    const JITSI_HOST = "jitsi.calla.chat",
+        MOVE_REPEAT = 0.125,
+        MOVE_TRANSITION_TIME = 0.5;
+</script>
+<script type="module" src="index.js"></script>
