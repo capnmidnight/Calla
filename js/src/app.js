@@ -89,7 +89,7 @@ export function init(JitsiClientClass) {
 
     game.addEventListener("userjoined", (evt) => {
         evt.user.addEventListener("userInitRequest", (evt2) => {
-            jitsiClient.requestUserState(evt2.participantID);
+            jitsiClient.userInitRequest(evt2.participantID);
         });
     });
 
@@ -152,7 +152,7 @@ export function init(JitsiClientClass) {
     });
 
     jitsiClient.addEventListener("userInitRequest", (evt) => {
-        jitsiClient.sendUserState(evt.participantID, game.me);
+        jitsiClient.userInitResponse(evt.participantID, game.me);
     });
 
     jitsiClient.addEventListener("userInitResponse", (evt) => {

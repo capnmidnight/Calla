@@ -32,62 +32,6 @@ export class BaseJitsiClient extends EventTarget {
         addEventListener("message", this.rxJitsiHax.bind(this));
     }
 
-    /// Send a Calla message through the Jitsi Meet data channel.
-    txGameData(id, command, obj) {
-        obj = obj || {};
-        obj.hax = APP_FINGERPRINT;
-        obj.command = command;
-        this.api.executeCommand("sendEndpointTextMessage", id, JSON.stringify(obj));
-    }
-
-    /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
-    /// to receive Calla messages from the Jitsi Meet data channel.
-    rxGameData(evt) {
-        // JitsiExternalAPI::endpointTextMessageReceived event arguments format: 
-        // evt = {
-        //    data: {
-        //      senderInfo: {
-        //        jid: "string", // the jid of the sender
-        //        id: "string" // the participant id of the sender
-        //      },
-        //      eventData: {
-        //        name: "string", // the name of the datachannel event: `endpoint-text-message`
-        //        text: "string" // the received text from the sender
-        //      }
-        //   }
-        //};
-        const data = JSON.parse(evt.data.eventData.text);
-        if (data.hax === APP_FINGERPRINT) {
-            const evt2 = new JitsiClientEvent(evt.data.senderInfo.id, data);
-            this.dispatchEvent(evt2);
-        }
-    }
-
-    /// Send a Calla message to the jitsihax.js script
-    txJitsiHax(command, obj) {
-        if (this.apiWindow) {
-            obj.hax = APP_FINGERPRINT;
-            obj.command = command;
-            this.apiWindow.postMessage(JSON.stringify(obj), this.apiOrigin);
-        }
-    }
-
-    rxJitsiHax(evt) {
-        const isLocalHost = evt.origin.match(/^https?:\/\/localhost\b/);
-        if (evt.origin === "https://" + JITSI_HOST || isLocalHost) {
-            try {
-                const data = JSON.parse(evt.data);
-                if (data.hax === APP_FINGERPRINT) {
-                    const evt2 = new CallaEvent(data);
-                    this.dispatchEvent(evt2);
-                }
-            }
-            catch (exp) {
-                console.error(exp);
-            }
-        }
-    }
-
     async getApiClassAsync() {
         throw new Error("Not implemented in base class.");
     }
@@ -284,28 +228,49 @@ export class BaseJitsiClient extends EventTarget {
         super.addEventListener(evtName, callback, opts);
     }
 
-    setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
-        this.txJitsiHax("setAudioProperties", {
-            origin,
-            transitionTime,
-            minDistance,
-            maxDistance,
-            rolloff
-        });
+    /// Send a Calla message through the Jitsi Meet data channel.
+    txGameData(id, command, obj) {
+        obj = obj || {};
+        obj.hax = APP_FINGERPRINT;
+        obj.command = command;
+        this.api.executeCommand("sendEndpointTextMessage", id, JSON.stringify(obj));
     }
 
-    requestUserState(ofUserID) {
-        this.txGameData(ofUserID, "userInitRequest");
+    /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
+    /// to receive Calla messages from the Jitsi Meet data channel.
+    rxGameData(evt) {
+        // JitsiExternalAPI::endpointTextMessageReceived event arguments format: 
+        // evt = {
+        //    data: {
+        //      senderInfo: {
+        //        jid: "string", // the jid of the sender
+        //        id: "string" // the participant id of the sender
+        //      },
+        //      eventData: {
+        //        name: "string", // the name of the datachannel event: `endpoint-text-message`
+        //        text: "string" // the received text from the sender
+        //      }
+        //   }
+        //};
+        const data = JSON.parse(evt.data.eventData.text);
+        if (data.hax === APP_FINGERPRINT) {
+            const evt2 = new JitsiClientEvent(evt.data.senderInfo.id, data);
+            this.dispatchEvent(evt2);
+        }
     }
 
-    requstUserStateAsync(ofUserID) {
+    userInitRequest(toUserID) {
+        this.txGameData(toUserID, "userInitRequest");
+    }
+
+    userInitRequestAsync(toUserID) {
         return this.until("userInitResponse",
-            () => this.requestUserState(ofUserID),
-            (evt) => evt.participantID === ofUserID,
+            () => this.userInitRequest(toUserID),
+            (evt) => evt.participantID === toUserID,
             1000);
     }
 
-    sendUserState(toUserID, fromUser) {
+    userInitResponse(toUserID, fromUser) {
         this.txGameData(toUserID, "userInitResponse", fromUser);
     }
 
@@ -321,12 +286,47 @@ export class BaseJitsiClient extends EventTarget {
         this.txGameData(toUserID, "videoMuteStatusChanged", { muted });
     }
 
-    setUserPosition(evt) {
-        this.txJitsiHax("setUserPosition", evt);
-    }
-
     sendPosition(toUserID, evt) {
         this.txGameData(toUserID, "moveTo", evt);
+    }
+
+    /// Send a Calla message to the jitsihax.js script
+    txJitsiHax(command, obj) {
+        if (this.apiWindow) {
+            obj.hax = APP_FINGERPRINT;
+            obj.command = command;
+            this.apiWindow.postMessage(JSON.stringify(obj), this.apiOrigin);
+        }
+    }
+
+    rxJitsiHax(evt) {
+        const isLocalHost = evt.origin.match(/^https?:\/\/localhost\b/);
+        if (evt.origin === "https://" + JITSI_HOST || isLocalHost) {
+            try {
+                const data = JSON.parse(evt.data);
+                if (data.hax === APP_FINGERPRINT) {
+                    const evt2 = new CallaEvent(data);
+                    this.dispatchEvent(evt2);
+                }
+            }
+            catch (exp) {
+                console.error(exp);
+            }
+        }
+    }
+
+    setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
+        this.txJitsiHax("setAudioProperties", {
+            origin,
+            transitionTime,
+            minDistance,
+            maxDistance,
+            rolloff
+        });
+    }
+
+    setUserPosition(evt) {
+        this.txJitsiHax("setUserPosition", evt);
     }
 
     updatePosition(evt) {

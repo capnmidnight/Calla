@@ -103,7 +103,7 @@ async function setup(evt) {
 }
 
 async function runTest(evt) {
-    const state = await client.requstUserStateAsync(evt.id);
+    const state = await client.userInitRequestAsync(evt.id);
     console.log("=============== GOT USER STATE");
     echoEvt(state);
 
@@ -145,7 +145,7 @@ function wait(ms) {
     client.addEventListener("emote", echoEvt);
     client.addEventListener("userInitRequest", echoEvt);
     client.addEventListener("userInitRequest", (evt) => {
-        client.sendUserState(evt.participantID, {
+        client.userInitResponse(evt.participantID, {
             id: myID,
             x: 0,
             y: 0

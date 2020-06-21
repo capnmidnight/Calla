@@ -794,11 +794,11 @@ export class JitsiClient extends EventTarget {
         user.setPosition(evt);
     }
 
-    requestUserState(ofUserID) {
-        this.txGameData(ofUserID, "userInitRequest");
+    userInitRequest(toUserID) {
+        this.txGameData(toUserID, "userInitRequest");
     }
 
-    sendUserState(toUserID, fromUser) {
+    userInitResponse(toUserID, fromUser) {
         this.txGameData(toUserID, "userInitResponse", fromUser);
     }
 

@@ -94,7 +94,7 @@ export class AppGui extends EventTarget {
                                     const evt = Object.assign({}, this.game.me);
                                     for (let user of this.game.userList) {
                                         if (!user.isMe) {
-                                            this.jitsiClient.sendUserState(user.id, evt);
+                                            this.jitsiClient.userInitResponse(user.id, evt);
                                         }
                                     }
                                 }
