@@ -55,14 +55,14 @@ export function init(JitsiClientClass) {
 
 
     game.addEventListener("emote", (evt) => {
-        jitsiClient.sendEmote(evt.participantID, evt.emoji);
+        jitsiClient.emote(evt.participantID, evt.emoji);
     });
 
     game.addEventListener("audiomuted", async (evt) => {
         await jitsiClient.setAudioMutedAsync(evt.muted);
         for (let user of game.userList) {
             if (!user.isMe) {
-                jitsiClient.sendAudioMuteState(user.id, evt.muted);
+                jitsiClient.audioMuteStatusChanged(user.id, evt.muted);
             }
         }
     });
@@ -71,17 +71,17 @@ export function init(JitsiClientClass) {
         await jitsiClient.setVideoMutedAsync(evt.muted);
         for (let user of game.userList) {
             if (!user.isMe) {
-                jitsiClient.sendVideoMuteState(user.id, evt.muted);
+                jitsiClient.videoMuteStatusChanged(user.id, evt.muted);
             }
         }
     });
 
     game.addEventListener("gamestarted", () => {
         game.me.addEventListener("moveTo", (evt) => {
-            jitsiClient.updatePosition(evt);
+            jitsiClient.setLocalPosition(evt);
             for (let user of game.userList) {
                 if (!user.isMe) {
-                    jitsiClient.sendPosition(user.id, evt);
+                    jitsiClient.moveTo(user.id, evt);
                 }
             }
         });

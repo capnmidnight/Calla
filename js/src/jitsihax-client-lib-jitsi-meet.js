@@ -767,7 +767,7 @@ export class JitsiClient extends EventTarget {
         }
     }
 
-    updatePosition(evt) {
+    setLocalPosition(evt) {
         this.ensureContext();
         const time = this.audioContext.currentTime + this.transitionTime,
             listener = this.audioContext.listener;
@@ -802,19 +802,19 @@ export class JitsiClient extends EventTarget {
         this.txGameData(toUserID, "userInitResponse", fromUser);
     }
 
-    sendEmote(toUserID, emoji) {
+    emote(toUserID, emoji) {
         this.txGameData(toUserID, "emote", emoji);
     }
 
-    sendAudioMuteState(toUserID, muted) {
+    audioMuteStatusChanged(toUserID, muted) {
         this.txGameData(toUserID, "audioMuteStatusChanged", { muted });
     }
 
-    sendVideoMuteState(toUserID, muted) {
+    videoMuteStatusChanged(toUserID, muted) {
         this.txGameData(toUserID, "videoMuteStatusChanged", { muted });
     }
 
-    sendPosition(toUserID, evt) {
+    moveTo(toUserID, evt) {
         this.txGameData(toUserID, "moveTo", evt);
     }
 }
