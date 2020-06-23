@@ -4,7 +4,7 @@ export class InputBinding extends EventTarget {
     constructor() {
         super();
 
-        this.bindings = new Map([
+        const bindings = new Map([
             ["keyButtonUp", "ArrowUp"],
             ["keyButtonDown", "ArrowDown"],
             ["keyButtonLeft", "ArrowLeft"],
@@ -20,13 +20,13 @@ export class InputBinding extends EventTarget {
             ["gpButtonToggleAudio", 1]
         ]);
 
-        for (let id of this.bindings.keys()) {
+        for (let id of bindings.keys()) {
             Object.defineProperty(this, id, {
-                get: () => this.bindings.get(id),
+                get: () => bindings.get(id),
                 set: (v) => {
-                    if (this.bindings.has(id)
-                        && v !== this.bindings.get(id)) {
-                        this.bindings.set(id, v);
+                    if (bindings.has(id)
+                        && v !== bindings.get(id)) {
+                        bindings.set(id, v);
                         this.dispatchEvent(inputBindingChangedEvt);
                     }
                 }
