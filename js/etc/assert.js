@@ -164,7 +164,8 @@ export class HtmlTestOutput extends TestOutput {
                     }),
                     TBody(
                         TR(
-                            TD(colSpan(3),
+                            TD(
+                                colSpan(3),
                                 style({ height: "2em" }),
                                 Span(basicStyle, bar("green", s + "%")),
                                 Span(basicStyle, bar("red", f + "%")),
@@ -180,7 +181,8 @@ export class HtmlTestOutput extends TestOutput {
 
             for (let testCaseName in evt.table) {
                 tbody.appendChild(TR(
-                    TD(colSpan(3),
+                    TD(
+                        colSpan(3),
                         testCaseName),
                     refresher(() =>
                         this.run(testCaseName))));
@@ -214,27 +216,27 @@ const TestState = {
 };
 
 const TestStateNames = {
-    0: "Found",
-    1: "Started",
-    3: "Success",
-    5: "Failure",
-    11: "Succeeded",
-    13: "Failed",
-    17: "Incomplete",
-    18: "Incomplete",
-    19: "Incomplete",
-    20: "Incomplete",
-    21: "Incomplete",
-    22: "Incomplete",
-    23: "Incomplete",
-    24: "Incomplete",
-    25: "Incomplete",
-    26: "Incomplete",
-    27: "Incomplete",
-    28: "Incomplete",
-    29: "Incomplete",
-    30: "Incomplete",
-    31: "Incomplete",
+    0x00: "Found",
+    0x01: "Started",
+    0x03: "Success",
+    0x05: "Failure",
+    0x0B: "Succeeded",
+    0x0D: "Failed",
+    0x11: "Incomplete",
+    0x12: "Incomplete",
+    0x13: "Incomplete",
+    0x14: "Incomplete",
+    0x15: "Incomplete",
+    0x16: "Incomplete",
+    0x17: "Incomplete",
+    0x18: "Incomplete",
+    0x19: "Incomplete",
+    0x1A: "Incomplete",
+    0x1B: "Incomplete",
+    0x1C: "Incomplete",
+    0x1D: "Incomplete",
+    0x1E: "Incomplete",
+    0x1F: "Incomplete",
 };
 
 class TestScore {
