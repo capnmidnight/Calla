@@ -55,7 +55,7 @@ export function init(JitsiClientClass) {
 
 
     game.addEventListener("emote", (evt) => {
-        jitsiClient.emote(evt.id, evt.emoji);
+        jitsiClient.emote(evt.emoji);
     });
 
     game.addEventListener("audiomuted", async (evt) => {

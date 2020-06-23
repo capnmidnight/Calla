@@ -295,8 +295,10 @@ export class BaseJitsiClient extends EventTarget {
         this.txGameData(toUserID, "userInitResponse", fromUserState);
     }
 
-    emote(toUserID, emoji) {
-        this.txGameData(toUserID, "emote", emoji);
+    emote(emoji) {
+        for (let toUserID of this.otherUsers.keys()) {
+            this.txGameData(toUserID, "emote", emoji);
+        }
     }
 
     audioMuteStatusChanged(toUserID, muted) {

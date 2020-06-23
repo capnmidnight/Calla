@@ -45,6 +45,22 @@ class TestBase extends TestCase {
             this.isNotEqualTo(response.data.userNumber, userNumber);
         }
     }
+
+    async sendEmoji() {
+        await wait(1000);
+        client.emote(bust);
+        this.success("Emoji sent");
+    }
+
+    async recvEmoji() {
+        const evt = await client.once("emote", 5000);
+        this.hasValue(evt);
+        this.hasValue(evt.id);
+        this.isTrue(client.otherUsers.has(evt.id));
+        this.hasValue(evt.data);
+        this.isEqualTo(evt.data.value, bust.value);
+        this.isEqualTo(evt.data.desc, bust.desc);
+    }
 }
 
 class JitsiClient1_Tests extends TestBase {
@@ -135,19 +151,11 @@ class JitsiClient1_Tests extends TestBase {
     }
 
     async test_15_recvEmoji() {
-        const evt = await client.once("emote", 5000);
-        this.hasValue(evt);
-        this.hasValue(evt.data);
-        this.isEqualTo(evt.data.value, bust.value);
-        this.isEqualTo(evt.data.desc, bust.desc);
+        await this.recvEmoji();
     }
 
     async test_16_sendEmoji() {
-        await wait(1000);
-        for (let id of client.otherUsers.keys()) {
-            client.emote(id, bust);
-        }
-        this.success("Emoji sent");
+        await this.sendEmoji();
     }
 }
 
@@ -165,19 +173,11 @@ class JitsiClient2_Tests extends TestBase {
     }
 
     async test_15_sendEmoji() {
-        await wait(1000);
-        for (let id of client.otherUsers.keys()) {
-            client.emote(id, bust);
-        }
-        this.success("Emoji sent");
+        await this.sendEmoji();
     }
 
     async test_16_recvEmoji() {
-        const evt = await client.once("emote", 5000);
-        this.hasValue(evt);
-        this.hasValue(evt.data);
-        this.isEqualTo(evt.data.value, bust.value);
-        this.isEqualTo(evt.data.desc, bust.desc);
+        await this.recvEmoji();
     }
 }
 
