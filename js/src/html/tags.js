@@ -4,6 +4,7 @@ import { HtmlCustomTag } from "./custom.js";
 import { LabeledInputTag } from "./labeledInputTag.js";
 import { SelectBoxTag } from "./selectBoxTag.js";
 import { LabeledSelectBoxTag } from "./labeledSelectBoxTag.js";
+import { OptionPanelTag } from "./optionPanelTag.js";
 
 export function clear(elem) {
     while (elem.lastChild) {
@@ -281,4 +282,8 @@ export function SelectBox(noSelectionText, ...rest) {
 
 export function LabeledSelectBox(id, labelText, noSelectionText, ...rest) {
     return new LabeledSelectBoxTag(id, labelText, noSelectionText, ...rest);
+}
+
+export function OptionPanel(id, name, ...rest) {
+    return new OptionPanelTag(id, name, ...rest);
 }

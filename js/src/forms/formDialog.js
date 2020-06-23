@@ -35,8 +35,12 @@ export class FormDialog extends EventTarget {
                     boxShadow: "rgba(0, 0, 0, .4) 10px 10px 20px"
                 }),
                 systemFont,
-                H1(style({ gridArea: "1/1/2/4" }), ...rest),
-                Div(style({ gridArea: "3/1", height: "1em" }), " "));
+                H1(
+                    style({ gridArea: "1/1/2/4" }),
+                    ...rest),
+                this.header = Div(
+                    style({ gridArea: "2/1/3/4" })),
+                Div(style({ gridArea: "4/1", height: "1em" }), " "));
 
         this.content = this.element.querySelector(".content")
             || this.element.appendChild(
@@ -44,7 +48,7 @@ export class FormDialog extends EventTarget {
                     className("content"),
                     style({
                         overflowY: "scroll",
-                        gridArea: "2/1/3/4"
+                        gridArea: "3/1/3/4"
                     })));
     }
 

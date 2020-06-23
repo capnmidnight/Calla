@@ -13,7 +13,8 @@ import {
     LabeledInput,
     LabeledSelectBox,
     P,
-    Span
+    Span,
+    OptionPanel
 } from "../html/tags.js";
 
 import {
@@ -66,7 +67,7 @@ export class OptionsForm extends FormDialog {
         this.element.append(
             this.confirmButton = Button(
                 className("confirm"),
-                style({ gridArea: "3/3" }),
+                style({ gridArea: "4/3" }),
                 systemFont,
                 "OK"));
 
@@ -109,9 +110,8 @@ export class OptionsForm extends FormDialog {
             return gp;
         }
 
-        this.content.append(
-            H2("Avatar"),
-            P(
+        const panels = [
+            OptionPanel("avatar", "Avatar",
                 this.avatarURL = LabeledInput(
                     "avatarURL",
                     "text",
@@ -129,8 +129,7 @@ export class OptionsForm extends FormDialog {
                         "Select",
                         onClick(_(selectAvatarEvt))))),
 
-            H2("Interface"),
-            P(
+            OptionPanel("interface", "Interface",
                 this.fontSize = LabeledInput(
                     "fontSize",
                     "number",
@@ -141,91 +140,112 @@ export class OptionsForm extends FormDialog {
                     style({ width: "3em" }),
                     onInput(_(fontSizeChangedEvt)))),
 
-            H2("Input"),
-
-            H3("Keyboard"),
-            P(
+            OptionPanel("keyboard", "Keyboard",
                 this.keyButtonUp = makeKeyboardBinder("keyButtonUp", "Up: "),
                 this.keyButtonDown = makeKeyboardBinder("keyButtonDown", "Down: "),
                 this.keyButtonLeft = makeKeyboardBinder("keyButtonLeft", "Left: "),
-                this.keyButtonRight = makeKeyboardBinder("keyButtonRight", "Right: ")),
-            P(
+                this.keyButtonRight = makeKeyboardBinder("keyButtonRight", "Right: "),
                 this.keyButtonEmote = makeKeyboardBinder("keyButtonEmote", "Emote: "),
                 this.keyButtonToggleAudio = makeKeyboardBinder("keyButtonToggleAudio", "Toggle audio: ")),
 
-            H3("Gamepad"),
-            P(
+            OptionPanel("gamepad", "Gamepad",
                 this.gpSelect = LabeledSelectBox(
                     "gamepads",
                     "Use gamepad: ",
                     "No gamepads available",
-                    onInput(_(gamepadChangedEvt)))),
-            P(
+                    onInput(_(gamepadChangedEvt))),
                 this.gpButtonUp = makeGamepadBinder("gpButtonUp", "Up: "),
                 this.gpButtonDown = makeGamepadBinder("gpButtonDown", "Down: "),
                 this.gpButtonLeft = makeGamepadBinder("gpButtonLeft", "Left: "),
-                this.gpButtonRight = makeGamepadBinder("gpButtonRight", "Right: ")),
-            P(
+                this.gpButtonRight = makeGamepadBinder("gpButtonRight", "Right: "),
                 this.gpButtonEmote = makeGamepadBinder("gpButtonEmote", "Emote: "),
                 this.gpButtonToggleAudio = makeGamepadBinder("gpButtonToggleAudio", "Toggle audio: ")),
 
-            H2("Audio"),
-            P(
-                this.audioInputSelect = LabeledSelectBox(
-                    "audioInputDevices",
-                    "Input: ",
-                    "No audio input devices available")),
-            P(
-                this.audioOutputSelect = LabeledSelectBox(
-                    "audioOutputDevices",
-                    "Output: ",
-                    "No audio output devices available")),
-            P(
-                this.drawHearingCheck = LabeledInput(
-                    "drawHearing",
-                    "checkbox",
-                    "Draw hearing range: "),
-                this.minAudio = LabeledInput(
-                    "minAudio",
-                    "number",
-                    "Min: ",
-                    value(2),
-                    min(0),
-                    max(100),
-                    numberWidthStyle,
-                    audioPropsChanged),
-                this.maxAudio = LabeledInput(
-                    "maxAudio",
-                    "number",
-                    "Min: ",
-                    value(10),
-                    min(0),
-                    max(100),
-                    numberWidthStyle,
-                    audioPropsChanged),
-                this.rolloff = LabeledInput(
-                    "rollof",
-                    "number",
-                    "Rollof: ",
-                    value(5),
-                    min(0.1),
-                    max(10),
-                    step(0.1),
-                    numberWidthStyle,
-                    audioPropsChanged)),
+            OptionPanel("audio", "Audio",
+                P(
+                    this.audioInputSelect = LabeledSelectBox(
+                        "audioInputDevices",
+                        "Input: ",
+                        "No audio input devices available")),
+                P(
+                    this.audioOutputSelect = LabeledSelectBox(
+                        "audioOutputDevices",
+                        "Output: ",
+                        "No audio output devices available")),
+                P(
+                    this.drawHearingCheck = LabeledInput(
+                        "drawHearing",
+                        "checkbox",
+                        "Draw hearing range: "),
+                    this.minAudio = LabeledInput(
+                        "minAudio",
+                        "number",
+                        "Min: ",
+                        value(2),
+                        min(0),
+                        max(100),
+                        numberWidthStyle,
+                        audioPropsChanged),
+                    this.maxAudio = LabeledInput(
+                        "maxAudio",
+                        "number",
+                        "Min: ",
+                        value(10),
+                        min(0),
+                        max(100),
+                        numberWidthStyle,
+                        audioPropsChanged),
+                    this.rolloff = LabeledInput(
+                        "rollof",
+                        "number",
+                        "Rollof: ",
+                        value(5),
+                        min(0.1),
+                        max(10),
+                        step(0.1),
+                        numberWidthStyle,
+                        audioPropsChanged))),
 
-            H2("Video"),
-            P(
-                this.enableVideo = Button(
-                    accessKey("v"),
-                    "Enable video",
-                    onClick(_(toggleVideoEvt)))),
-            P(
-                this.videoInputSelect = LabeledSelectBox(
-                    "videoInputDevices",
-                    "Device: ",
-                    "No video input devices available",
-                    onInput(_(videoInputChangedEvt)))));
+            OptionPanel("video", "Video",
+                P(
+                    this.enableVideo = Button(
+                        accessKey("v"),
+                        "Enable video",
+                        onClick(_(toggleVideoEvt)))),
+                P(
+                    this.videoInputSelect = LabeledSelectBox(
+                        "videoInputDevices",
+                        "Device: ",
+                        "No video input devices available",
+                        onInput(_(videoInputChangedEvt)))))
+        ];
+
+        const cols = [];
+        for (let i = 0; i < panels.length; ++i) {
+            cols[i] = "1fr";
+            panels[i].element.style.gridColumnStart = i + 1;
+        }
+
+        Object.assign(this.header.style, {
+            display: "grid",
+            gridTemplateColumns: cols.join(" ")
+        });
+
+        this.header.append(...panels.map(p => p.button));
+        this.content.append(...panels.map(p => p.element));
+
+        const showPanel = (p) =>
+            () => {
+                for (let i = 0; i < panels.length; ++i) {
+                    panels[i].visible = i === p;
+                }
+            };
+
+        for (let i = 0; i < panels.length; ++i) {
+            panels[i].addEventListener("select", showPanel(i));
+        }
+
+        showPanel(0)();
 
         self.inputBinding.addEventListener("inputbindingchanged", () => {
             for (let id of Object.getOwnPropertyNames(self.inputBinding)) {
