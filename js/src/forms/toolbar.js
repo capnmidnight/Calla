@@ -155,7 +155,6 @@ export class ToolBar extends EventTarget {
                 }),
                 systemFont,
                 onClick(() => this.visible = !this.visible),
-                onClick(_(toggleUIEvt)),
                 Run(pauseButton.value)));
 
         Object.seal(this);
@@ -183,6 +182,7 @@ export class ToolBar extends EventTarget {
             this.hideButton,
             pauseButton.value,
             playButton.value);
+        this.dispatchEvent(toggleUIEvt);
     }
 
     hide() {
