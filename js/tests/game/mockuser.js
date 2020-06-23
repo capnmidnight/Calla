@@ -31,14 +31,14 @@ export class MockUser {
             new Event("participantJoined"),
             { id: this.id });
 
-        jitsiClient.api.dispatchEvent(evt);
-
         document.body.appendChild(Span(id(`participant_${this.id}`),
             this.audio = Audio(
                 src(`/test-audio/${this.id}.mp3`),
                 autoPlay,
                 loop
             )));
+
+        jitsiClient.api.dispatchEvent(evt);
 
         this.schedule();
     }
