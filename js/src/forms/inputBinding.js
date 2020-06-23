@@ -33,41 +33,6 @@ export class InputBinding extends EventTarget {
             });
         }
 
-        const gpStates = [],
-            gpDownEvts = [],
-            gpUpEvts = [],
-            gpChecker = () => {
-                requestAnimationFrame(gpChecker);
-                const gamepads = navigator.getGamepads();
-                for (let g = 0; g < gamepads.length; ++g) {
-                    if (gamepads[g] !== null) {
-                        if (g <= gpStates.length) {
-                            gpStates[g] = [];
-                        }
-                        const gamepad = gamepads[g],
-                            states = gpStates[g];
-                        for (let b = 0; b < gamepad.buttons.length; ++b) {
-                            const lastState = states[b],
-                                state = gamepad.buttons[b].pressed;
-                            if (state !== lastState) {
-                                states[b] = state;
-                                if (gpDownEvts.length <= b) {
-                                    gpDownEvts[b] = Object.assign(new Event("gamepadbuttondown"), { button: b });
-                                }
-
-                                if (gpUpEvts.length <= b) {
-                                    gpUpEvts[b] = Object.assign(new Event("gamepadbuttonup"), { button: b });
-                                }
-
-                                this.dispatchEvent(state ? gpDownEvts[b] : gpUpEvts[b]);
-                            }
-                        }
-                    }
-                }
-            }
-
-        requestAnimationFrame(gpChecker);
-
         Object.freeze(this);
     }
 }

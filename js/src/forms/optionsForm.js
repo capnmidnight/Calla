@@ -37,6 +37,7 @@ import {
 } from "../html/evts.js";
 
 import { InputBinding } from "./inputBinding.js";
+import { GamepadManager } from "../gamepad/manager.js";
 
 const keyWidthStyle = style({ width: "7em" }),
     numberWidthStyle = style({ width: "3em" }),
@@ -93,7 +94,7 @@ export class OptionsForm extends FormDialog {
                 label,
                 numberWidthStyle,
                 bindingChanged);
-            this._inputBinding.addEventListener("gamepadbuttonup", (evt) => {
+            GamepadManager.addEventListener("gamepadbuttonup", (evt) => {
                 if (document.activeElement === gp) {
                     key.value
                         = this._inputBinding[id]
