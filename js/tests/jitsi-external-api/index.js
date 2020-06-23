@@ -157,6 +157,13 @@ class JitsiClient1_Tests extends TestBase {
     async test_16_sendEmoji() {
         await this.sendEmoji();
     }
+
+    async test_99_participantLeft() {
+        const evt = await client.once("participantLeft", 5000);
+        this.hasValue(evt);
+        this.hasValue(evt.id);
+        this.isFalse(client.otherUsers.has(evt.id));
+    }
 }
 
 class JitsiClient2_Tests extends TestBase {
@@ -178,6 +185,10 @@ class JitsiClient2_Tests extends TestBase {
 
     async test_16_recvEmoji() {
         await this.recvEmoji();
+    }
+
+    async test_99_participantLeft() {
+        window.close();
     }
 }
 
