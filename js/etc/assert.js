@@ -4,7 +4,10 @@
     TR,
     TD,
     Span,
-    Button
+    Button,
+
+    clear,
+    Div
 } from "../src/html/tags.js";
 
 import {
@@ -138,8 +141,10 @@ function refresher(thunk) {
 }
 
 export class HtmlTestOutput extends TestOutput {
-    constructor(container, ...CaseClasses) {
+    constructor(...CaseClasses) {
         super(...CaseClasses);
+
+        this.element = Div();
 
         const draw = (evt) => {
             const s = Math.round(100 * evt.stats.totalSucceeded / evt.stats.totalFound),
@@ -189,8 +194,8 @@ export class HtmlTestOutput extends TestOutput {
                 }
             }
 
-            container.innerHTML = "";
-            container.appendChild(table);
+            clear(this.element);
+            this.element.appendChild(table);
         };
 
         this.addEventListener("testoutputresults", draw);
@@ -434,6 +439,10 @@ export class TestCase extends EventTarget {
 
     isFalse(value, message) {
         this.isEqualTo(value, false, message);
+    }
+
+    isBoolean(value, message) {
+        this.isEqualTo(value === true || value === false, true, message);
     }
 
     hasValue(value, message) {
