@@ -332,21 +332,23 @@ class TestRunner extends EventTarget {
         testCase.addEventListener("testcasemessage", onMessage);
         testCase.addEventListener("testcasesuccess", onSuccess);
         testCase.addEventListener("testcasefail", onFailure);
+        let message = null;
         try {
             score.start();
             onUpdate();
             testCase.setup();
-            let message = func.call(testCase);
+            message = func.call(testCase);
             if (message instanceof Promise) {
                 message = await message;
             }
-            score.finish(message);
-            onUpdate();
-            testCase.teardown();
         }
         catch (error) {
+            message = error;
             onFailure({ message: error });
         }
+        score.finish(message);
+        onUpdate();
+        testCase.teardown();
         testCase.removeEventListener("testcasefail", onFailure);
         testCase.removeEventListener("testcasesuccess", onSuccess);
         testCase.removeEventListener("testcasemessage", onMessage);
