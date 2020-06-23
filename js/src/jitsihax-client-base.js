@@ -288,8 +288,8 @@ export class BaseJitsiClient extends EventTarget {
             1000);
     }
 
-    userInitResponse(toUserID, fromUser) {
-        this.txGameData(toUserID, "userInitResponse", fromUser);
+    userInitResponse(toUserID, fromUserState) {
+        this.txGameData(toUserID, "userInitResponse", fromUserState);
     }
 
     emote(toUserID, emoji) {
