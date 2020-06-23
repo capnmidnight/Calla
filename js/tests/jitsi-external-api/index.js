@@ -26,13 +26,6 @@ class TestBase extends TestCase {
     }
 
     async initUsers() {
-        const respond = (evt) => {
-            console.log("======================== RESPONDING");
-            client.userInitResponse(evt.id, { userNumber });
-        };
-
-        client.addEventListener("userInitRequest", respond);
-
         const requests = [];
         for (let id of client.otherUsers.keys()) {
             requests.push(client.userInitRequestAsync(id));
@@ -49,7 +42,6 @@ class TestBase extends TestCase {
             this.hasValue(response.data.userNumber);
             this.isNotEqualTo(response.data.userNumber, userNumber);
         }
-        client.removeEventListener("userInitRequest", respond);
     }
 }
 
@@ -150,7 +142,7 @@ class JitsiClient2_Tests extends TestBase {
         await this.waitForJoin();
     }
 
-    async test_14_initUser() {
+    async test_02_initUser() {
         await this.initUsers();
     }
 }
@@ -202,6 +194,11 @@ const client = new JitsiClient(),
     client.addEventListener("avatarChanged", echoEvt);
     client.addEventListener("displayNameChange", echoEvt);
     client.addEventListener("audioActivity", echoEvt);
+
+    client.addEventListener("userInitRequest", (evt) => {
+        client.userInitResponse(evt.id, { userNumber });
+    });
+
 
     cons.run();
 })();

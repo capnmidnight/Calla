@@ -115,7 +115,8 @@ export class BaseJitsiClient extends EventTarget {
             });
 
             reroute("avatarChanged", (evt) => {
-                if (this.otherUsers.has(evt.id)) {
+                if (this.otherUsers.has(evt.id)
+                    && evt.avatarURL !== undefined) {
                     return {
                         id: evt.id,
                         avatarURL: evt.avatarURL
@@ -137,12 +138,14 @@ export class BaseJitsiClient extends EventTarget {
 
             reroute("audioMuteStatusChanged", (evt) => {
                 return {
+                    id: this.localUser,
                     muted: evt.muted
                 };
             });
 
             reroute("videoMuteStatusChanged", (evt) => {
                 return {
+                    id: this.localUser,
                     muted: evt.muted
                 };
             });
