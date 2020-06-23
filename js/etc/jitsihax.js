@@ -15,8 +15,7 @@
      *   https://github.com/jitsi/jitsi-meet/blob/master/doc/api.md
      */
 
-    const FRONT_END_SERVER = "https://meet.primrosevr.com",
-        ALT_FRONT_END_SERVER = "https://www.calla.chat",
+    const FRONT_END_SERVER = "https://www.calla.chat",
         ALLOW_LOCAL_HOST = true,
         BUFFER_SIZE = 1024,
         isOldAudioAPI = !AudioListener.prototype.hasOwnProperty("positionX");
@@ -260,7 +259,6 @@
         const isLocalHost = evt.origin.match(/^https?:\/\/localhost\b/);
 
         if (evt.origin === FRONT_END_SERVER
-            || evt.origin === ALT_FRONT_END_SERVER
             || ALLOW_LOCAL_HOST && isLocalHost) {
             try {
                 const data = JSON.parse(evt.data),
