@@ -4,13 +4,14 @@ import { JitsiClient } from "../../src/jitsihax-client-external-api.js";
 import { bust } from "../../src/emoji.js";
 import { wait } from "../../src/wait.js";
 
-const userNumber = document.location.hash.length > 0
+const TEST_ROOM_NAME = "testroom",
+    userNumber = document.location.hash.length > 0
     ? parseFloat(document.location.hash.substring(1))
     : 1;
 
 class TestBase extends TestCase {
     async joinChannel() {
-        await client.joinAsync("TestRoom", "TestUser" + userNumber);
+        await client.joinAsync(TEST_ROOM_NAME, "TestUser" + userNumber);
         const evt = await client.once("videoConferenceJoined");
         this.hasValue(evt);
         this.isEqualTo(evt.id, client.localUser);
@@ -158,11 +159,20 @@ class JitsiClient1_Tests extends TestBase {
         await this.sendEmoji();
     }
 
-    async test_99_participantLeft() {
+    async test_98_participantLeft() {
         const evt = await client.once("participantLeft", 5000);
         this.hasValue(evt);
         this.hasValue(evt.id);
         this.isFalse(client.otherUsers.has(evt.id));
+    }
+
+    async test_99_leaveConference() {
+        const evtTask = client.once("videoConferenceLeft", 5000);
+        client.leave();
+        const evt = await evtTask;
+        this.hasValue(evt);
+        this.hasValue(evt.roomName);
+        this.isEqualTo(evt.roomName, TEST_ROOM_NAME);
     }
 }
 
@@ -187,7 +197,7 @@ class JitsiClient2_Tests extends TestBase {
         await this.recvEmoji();
     }
 
-    async test_99_participantLeft() {
+    async test_98_participantLeft() {
         window.close();
     }
 }

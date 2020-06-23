@@ -39,6 +39,11 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     async joinAsync(roomName, userName) {
+        if (this.api !== null) {
+            this.api.dispose();
+            this.api = null;
+        }
+
         const ApiClass = await this.getApiClassAsync();
         await new Promise((resolve, reject) => {
             this.api = new ApiClass(JITSI_HOST, {
@@ -153,8 +158,11 @@ export class BaseJitsiClient extends EventTarget {
             this.api.addEventListener("endpointTextMessageReceived",
                 this.rxGameData.bind(this));
 
-            addEventListener("unload", () =>
-                this.api.dispose());
+            addEventListener("unload", () => {
+                if (this.api !== null) {
+                    this.api.dispose();
+                }
+            });
 
             this.api.executeCommand("displayName", userName);
         });
