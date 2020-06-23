@@ -132,7 +132,7 @@
             if (this.wasActive !== isActive) {
                 this.wasActive = isActive;
                 txJitsiHax("audioActivity", {
-                    participantID: this.id,
+                    id: this.id,
                     isActive
                 });
             }
@@ -207,7 +207,7 @@
     }
 
     function setUserPosition(evt) {
-        const user = getUser(evt.participantID);
+        const user = getUser(evt.id);
         if (!user) {
             return;
         }

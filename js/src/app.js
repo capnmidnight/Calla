@@ -55,7 +55,7 @@ export function init(JitsiClientClass) {
 
 
     game.addEventListener("emote", (evt) => {
-        jitsiClient.emote(evt.participantID, evt.emoji);
+        jitsiClient.emote(evt.id, evt.emoji);
     });
 
     game.addEventListener("audiomuted", async (evt) => {
@@ -89,7 +89,7 @@ export function init(JitsiClientClass) {
 
     game.addEventListener("userjoined", (evt) => {
         evt.user.addEventListener("userInitRequest", (evt2) => {
-            jitsiClient.userInitRequest(evt2.participantID);
+            jitsiClient.userInitRequest(evt2.id);
         });
     });
 
@@ -152,18 +152,18 @@ export function init(JitsiClientClass) {
     });
 
     jitsiClient.addEventListener("userInitRequest", (evt) => {
-        jitsiClient.userInitResponse(evt.participantID, game.me);
+        jitsiClient.userInitResponse(evt.id, game.me);
     });
 
     jitsiClient.addEventListener("userInitResponse", (evt) => {
-        const user = game.userLookup[evt.participantID];
+        const user = game.userLookup[evt.id];
         if (!!user) {
             user.init(evt.data);
         }
     });
 
     jitsiClient.addEventListener("moveTo", (evt) => {
-        const user = game.userLookup[evt.participantID];
+        const user = game.userLookup[evt.id];
         if (!!user) {
             user.moveTo(evt.data.x, evt.data.y);
             jitsiClient.setUserPosition(evt);
@@ -171,7 +171,7 @@ export function init(JitsiClientClass) {
     });
 
     jitsiClient.addEventListener("emote", (evt) => {
-        game.emote(evt.participantID, evt.data);
+        game.emote(evt.id, evt.data);
     });
 
     jitsiClient.addEventListener("audioActivity", (evt) => {

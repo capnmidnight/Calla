@@ -337,9 +337,9 @@ export class User extends EventTarget {
 
 
 class UserMoveEvent extends Event {
-    constructor(participantID) {
+    constructor(id) {
         super("moveTo");
-        this.participantID = participantID;
+        this.id = id;
         this.x = 0;
         this.y = 0;
     }
@@ -351,8 +351,8 @@ class UserMoveEvent extends Event {
 }
 
 class UserPositionNeededEvent extends Event {
-    constructor(participantID) {
+    constructor(id) {
         super("userInitRequest");
-        this.participantID = participantID;
+        this.id = id;
     }
 }

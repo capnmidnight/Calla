@@ -266,7 +266,7 @@ export class BaseJitsiClient extends EventTarget {
     userInitRequestAsync(toUserID) {
         return this.until("userInitResponse",
             () => this.userInitRequest(toUserID),
-            (evt) => evt.participantID === toUserID,
+            (evt) => evt.id === toUserID,
             1000);
     }
 
@@ -342,8 +342,8 @@ class CallaEvent extends Event {
 }
 
 class JitsiClientEvent extends CallaEvent {
-    constructor(participantID, data) {
+    constructor(id, data) {
         super(data);
-        this.participantID = participantID;
+        this.id = id;
     }
 }

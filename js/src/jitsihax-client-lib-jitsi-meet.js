@@ -444,15 +444,15 @@ export class JitsiClient extends EventTarget {
             } = JitsiMeetJS.events.conference;
 
             this.room.addEventListener(CONFERENCE_JOINED, () => {
-                const participantID = this.room.myUserId();
+                const id = this.room.myUserId();
 
                 for (let track of tracks) {
-                    this.addTrack(participantID, track);
+                    this.addTrack(id, track);
                 }
 
                 const evt = Object.assign(
                     new Event("videoConferenceJoined"), {
-                    id: participantID,
+                    id: id,
                     roomName,
                     displayName: userName
                 });
@@ -557,7 +557,7 @@ export class JitsiClient extends EventTarget {
 
     audioActivity(id, isActive) {
         const evt = Object.assign(new Event("audioActivity"), {
-            participantID: id,
+            id: id,
             isActive
         });
 
@@ -584,8 +584,8 @@ export class JitsiClient extends EventTarget {
         }
     }
 
-    addTrack(participantID, track) {
-        const containerID = `participant_${participantID}`,
+    addTrack(id, track) {
+        const containerID = `participant_${id}`,
             trackPrefix = track.isLocal() ? "local" : "remote",
             trackId = track.getId(),
             {
@@ -605,11 +605,11 @@ export class JitsiClient extends EventTarget {
 
         track.addEventListener(TRACK_MUTE_CHANGED, (track) => {
             const evtName = track.type + "MuteStatusChanged",
-                participantID = track.getParticipantId(),
+                id = track.getParticipantId(),
                 muted = track.muted,
                 evt = Object.assign(
                     new Event(evtName), {
-                    participantID,
+                    id,
                     muted
                 });
 
@@ -786,7 +786,7 @@ export class JitsiClient extends EventTarget {
     }
 
     setUserPosition(evt) {
-        const user = this.getUser(evt.participantID);
+        const user = this.getUser(evt.id);
         if (!user) {
             return;
         }
@@ -827,8 +827,8 @@ class CallaEvent extends Event {
 }
 
 class JitsiClientEvent extends CallaEvent {
-    constructor(participantID, data) {
+    constructor(id, data) {
         super(data);
-        this.participantID = participantID;
+        this.id = id;
     }
 }

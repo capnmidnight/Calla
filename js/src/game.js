@@ -29,7 +29,7 @@ const CAMERA_LERP = 0.01,
         muted: false
     }),
     emoteEvt = Object.assign(new Event("emote"), {
-        participantID: null,
+        id: null,
         emoji: null
     }),
     userJoinedEvt = Object.assign(new Event("userjoined", {
@@ -286,8 +286,8 @@ export class Game extends EventTarget {
     }
 
     updateAudioActivity(evt) {
-        const id = evt.data && evt.data.participantID
-            || evt.participantID,
+        const id = evt.data && evt.data.id
+            || evt.id,
             isActive = evt.data && evt.data.isActive
                 || evt.isActive,
             user = this.userLookup[id];
@@ -296,8 +296,8 @@ export class Game extends EventTarget {
         }
     }
 
-    emote(participantID, emoji) {
-        const user = this.userLookup[participantID];
+    emote(id, emoji) {
+        const user = this.userLookup[id];
 
         if (!!user) {
 
@@ -313,7 +313,7 @@ export class Game extends EventTarget {
                     this.currentEmoji = emoji;
                     for (let user of this.userList) {
                         if (user !== this.me) {
-                            emoteEvt.participantID = user.id;
+                            emoteEvt.id = user.id;
                             emoteEvt.emoji = emoji;
                             this.dispatchEvent(emoteEvt);
                         }
@@ -393,22 +393,22 @@ export class Game extends EventTarget {
 
     toggleMyAudio() {
         this.muteUserAudio({
-            participantID: this.me.id,
+            id: this.me.id,
             muted: !this.me.audioMuted
         });
     }
 
     toggleMyVideo() {
         this.muteUserVideo({
-            participantID: this.me.id,
+            id: this.me.id,
             muted: !this.me.videoMuted
         });
     }
 
     muteUserAudio(evt) {
         let mutingUser = this.me;
-        if (!!evt.participantID) {
-            mutingUser = this.userLookup[evt.participantID];
+        if (!!evt.id) {
+            mutingUser = this.userLookup[evt.id];
         }
 
         if (!mutingUser) {
@@ -430,8 +430,8 @@ export class Game extends EventTarget {
 
     muteUserVideo(evt) {
         let mutingUser = this.me;
-        if (!!evt.participantID) {
-            mutingUser = this.userLookup[evt.participantID];
+        if (!!evt.id) {
+            mutingUser = this.userLookup[evt.id];
         }
 
         if (!mutingUser) {
