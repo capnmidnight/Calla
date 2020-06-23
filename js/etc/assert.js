@@ -369,7 +369,9 @@ class TestRunner extends EventTarget {
     }
 
     testNames(TestClass) {
-        return Object.getOwnPropertyNames(TestClass);
+        const names = Object.getOwnPropertyNames(TestClass);
+        names.sort();
+        return names;
     }
 }
 
