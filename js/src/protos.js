@@ -1,5 +1,7 @@
 ﻿// A few convenience methods for HTML elements.
 
+import { isGoodNumber } from "./math.js";
+
 Element.prototype.isOpen = function () {
     return this.style.display !== "none";
 };
@@ -150,6 +152,13 @@ function add(a, b) {
 }
 
 EventTarget.prototype.once = function (resolveEvt, rejectEvt, timeout) {
+
+    if (timeout === undefined
+        && isGoodNumber(rejectEvt)) {
+        timeout = rejectEvt;
+        rejectEvt = undefined;
+    }
+
     return new Promise((resolve, reject) => {
         const hasResolveEvt = resolveEvt !== undefined && resolveEvt !== null,
             removeResolve = () => {
