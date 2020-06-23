@@ -1,44 +1,11 @@
-﻿import "../protos.js";
-
-import { bust } from "../emoji.js";
-
-import { FormDialog } from "./formDialog.js";
-
-import {
-    Button,
-    Div,
-    H2,
-    H3,
-    Label,
-    LabeledInput,
-    LabeledSelectBox,
-    P,
-    Span,
-    OptionPanel
-} from "../html/tags.js";
-
-import {
-    accessKey,
-    className,
-    htmlFor,
-    id,
-    min,
-    max,
-    placeHolder,
-    step,
-    style,
-    value,
-    systemFont
-} from "../html/attrs.js";
-
-import {
-    onInput,
-    onClick,
-    onKeyUp
-} from "../html/evts.js";
-
-import { InputBinding } from "./inputBinding.js";
+﻿import { bust } from "../emoji.js";
 import { GamepadManager } from "../gamepad/manager.js";
+import { accessKey, className, htmlFor, id, max, min, placeHolder, step, style, systemFont, value } from "../html/attrs.js";
+import { onClick, onInput, onKeyUp } from "../html/evts.js";
+import { Button, Div, Label, LabeledInput, LabeledSelectBox, OptionPanel, P, Span } from "../html/tags.js";
+import "../protos.js";
+import { FormDialog } from "./formDialog.js";
+import { InputBinding } from "./inputBinding.js";
 
 const keyWidthStyle = style({ width: "7em" }),
     numberWidthStyle = style({ width: "3em" }),
@@ -242,10 +209,9 @@ export class OptionsForm extends FormDialog {
             };
 
         for (let i = 0; i < panels.length; ++i) {
+            panels[i].visible = i === 0;
             panels[i].addEventListener("select", showPanel(i));
         }
-
-        showPanel(0)();
 
         self.inputBinding.addEventListener("inputbindingchanged", () => {
             for (let id of Object.getOwnPropertyNames(self.inputBinding)) {
