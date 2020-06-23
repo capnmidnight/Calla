@@ -50,6 +50,10 @@ class GamepadStateManager extends EventTarget {
         return gamepads.keys();
     }
 
+    get gamepads() {
+        return gamepads.values();
+    }
+
     get(id) {
         return gamepads.get(id);
     }

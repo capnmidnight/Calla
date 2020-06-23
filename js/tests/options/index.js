@@ -1,4 +1,6 @@
 ﻿import { OptionsForm } from "../../src/forms/optionsForm.js";
+import { GamepadManager } from "../../src/gamepad/manager.js";
+
 const options = new OptionsForm();
 document.body.appendChild(options.element);
 
@@ -10,7 +12,21 @@ options.inputBinding = {
     keyButtonUp: "ArrowLeft"
 };
 
+GamepadManager.addEventListener("gamepadconnected", () => {
+    options.gamepads = GamepadManager.gamepads;
+});
+
+GamepadManager.addEventListener("gamepaddisconnected", () => {
+    options.gamepads = GamepadManager.gamepads;
+});
+
 async function show() {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+
+    options.audioInputDevices = devices.filter(d => d.kind === "audioinput");
+    options.audioOutputDevices = devices.filter(d => d.kind === "audiooutput");
+    options.videoInputDevices = devices.filter(d => d.kind === "videoinput");
+
     const confirmed = await options.showAsync();
     console.log(confirmed);
     setTimeout(show, 1000);

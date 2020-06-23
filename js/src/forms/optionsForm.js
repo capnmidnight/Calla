@@ -48,7 +48,8 @@ const keyWidthStyle = style({ width: "7em" }),
     inputBindingChangedEvt = new Event("inputbindingchanged"),
     audioPropsChangedEvt = new Event("audiopropschanged"),
     toggleVideoEvt = new Event("videoenablechanged"),
-    videoInputChangedEvt = new Event("videoinputchanged");
+    videoInputChangedEvt = new Event("videoinputchanged"),
+    selfs = new Map();
 
 export class OptionsForm extends FormDialog {
     constructor() {
@@ -56,7 +57,11 @@ export class OptionsForm extends FormDialog {
 
         const _ = (evt) => () => this.dispatchEvent(evt);
 
-        this._inputBinding = new InputBinding();
+        const self = {
+            inputBinding: new InputBinding()
+        };
+
+        selfs.set(this, self);
 
         this.element.append(
             this.confirmButton = Button(
@@ -77,12 +82,12 @@ export class OptionsForm extends FormDialog {
                     if (evt.key !== "Tab"
                         && evt.key !== "Shift") {
                         key.value
-                            = this._inputBinding[id]
+                            = self.inputBinding[id]
                             = evt.key;
                         this.dispatchEvent(inputBindingChangedEvt);
                     }
                 }));
-            key.value = this._inputBinding[id];
+            key.value = self.inputBinding[id];
             return key;
         }
 
@@ -95,12 +100,12 @@ export class OptionsForm extends FormDialog {
             GamepadManager.addEventListener("gamepadbuttonup", (evt) => {
                 if (document.activeElement === gp) {
                     gp.value
-                        = this._inputBinding[id]
+                        = self.inputBinding[id]
                         = evt.button;
                     this.dispatchEvent(inputBindingChangedEvt);
                 }
             });
-            gp.value = this._inputBinding[id];
+            gp.value = self.inputBinding[id];
             return gp;
         }
 
@@ -216,20 +221,25 @@ export class OptionsForm extends FormDialog {
                     "Enable video",
                     onClick(_(toggleVideoEvt)))),
             P(
-                this.videoInputDevices = LabeledSelectBox(
+                this.videoInputSelect = LabeledSelectBox(
                     "videoInputDevices",
                     "Device: ",
                     "No video input devices available",
                     onInput(_(videoInputChangedEvt)))));
 
-        this._inputBinding.addEventListener("inputbindingchanged", () => {
-            for (let id of Object.getOwnPropertyNames(this._inputBinding)) {
+        self.inputBinding.addEventListener("inputbindingchanged", () => {
+            for (let id of Object.getOwnPropertyNames(self.inputBinding)) {
                 if (value[id] !== undefined
                     && this[id] != undefined) {
                     this[id].value = value[id];
                 }
             }
         });
+
+        this.gamepads = [];
+        this.audioInputDevices = [];
+        this.audioOutputDevices = [];
+        this.videoInputDevices = [];
 
         Object.seal(this);
     }
@@ -242,18 +252,59 @@ export class OptionsForm extends FormDialog {
     }
 
     get inputBinding() {
-        return this._inputBinding;
+        const self = selfs.get(this);
+        return self.inputBinding;
     }
 
     set inputBinding(value) {
+        const self = selfs.get(this);
         for (let id of Object.getOwnPropertyNames(value)) {
-            if (this._inputBinding[id] !== undefined
+            if (self.inputBinding[id] !== undefined
                 && value[id] !== undefined
                 && this[id] != undefined) {
-                this._inputBinding[id]
+                self.inputBinding[id]
                     = this[id].value
                     = value[id];
             }
         }
+    }
+
+    get audioInputDevices() {
+        return this.audioInputSelect.getValues();
+    }
+
+    set audioInputDevices(values) {
+        this.audioInputSelect.setValues(values, v => v.label);
+    }
+
+    get audioOutputDevices() {
+        return this.audioOutputSelect.getValues();
+    }
+
+    set audioOutputDevices(values) {
+        this.audioOutputSelect.setValues(values, v => v.label);
+    }
+
+    get videoInputDevices() {
+        return this.videoInputSelect.getValues();
+    }
+
+    set videoInputDevices(values) {
+        this.videoInputSelect.setValues(values, v => v.label);
+    }
+
+    get gamepads() {
+        return this.gpSelect.getValues();
+    }
+
+    set gamepads(values) {
+        const disable = values.length === 0;
+        this.gpSelect.setValues(values, v => v.id);
+        this.gpButtonUp.setLocked(disable);
+        this.gpButtonDown.setLocked(disable);
+        this.gpButtonLeft.setLocked(disable);
+        this.gpButtonRight.setLocked(disable);
+        this.gpButtonEmote.setLocked(disable);
+        this.gpButtonToggleAudio.setLocked(disable);
     }
 }

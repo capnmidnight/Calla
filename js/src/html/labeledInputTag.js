@@ -49,4 +49,8 @@ export class LabeledInputTag extends HtmlCustomTag {
     set checked(v) {
         this.input.checked = v;
     }
+
+    setLocked(value) {
+        this.input.setLocked(value);
+    }
 }

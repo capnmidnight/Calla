@@ -21,7 +21,7 @@ export class SelectBoxTag extends HtmlCustomTag {
     }
 
     getValues() {
-        return _values.get(this).slice();
+        return _values.get(this);
     }
 
     setValues(newItems, toString = null) {
