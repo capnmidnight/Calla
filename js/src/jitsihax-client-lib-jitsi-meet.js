@@ -15,14 +15,18 @@ const BUFFER_SIZE = 1024,
     activityCounterMax = 60,
     activityCounterThresh = 5,
     eventNames = [
-        "audioMuteStatusChanged", // done
-        "videoMuteStatusChanged", // done
-        "videoConferenceJoined", // done
-        "videoConferenceLeft", // done
-        "participantJoined", // done
-        "participantLeft", // done
-        "displayNameChange", // done
-        "audioActivity", // done
+        "audioMuteStatusChanged",
+        "videoMuteStatusChanged",
+        "localAudioMuteStatusChanged",
+        "localVideoMuteStatusChanged",
+        "remoteAudioMuteStatusChanged",
+        "removeVideoMuteStatusChanged",
+        "videoConferenceJoined",
+        "videoConferenceLeft",
+        "participantJoined",
+        "participantLeft",
+        "displayNameChange",
+        "audioActivity",
         "moveTo",
         "emote",
         "userInitRequest",

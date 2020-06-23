@@ -10,6 +10,10 @@ const APP_FINGERPRINT = "Calla",
         "userInitResponse",
         "audioMuteStatusChanged",
         "videoMuteStatusChanged",
+        "localAudioMuteStatusChanged",
+        "localVideoMuteStatusChanged",
+        "remoteAudioMuteStatusChanged",
+        "remoteVideoMuteStatusChanged",
         "videoConferenceJoined",
         "videoConferenceLeft",
         "participantJoined",
@@ -156,6 +160,18 @@ export class BaseJitsiClient extends EventTarget {
                     muted: evt.muted
                 };
             });
+
+            const localizeMuteEvent = (type) => (evt) => {
+                const evt2 = Object.assign(
+                    new Event((evt.id === this.localUser ? "local" : "remote") + type + "MuteStatusChanged"), {
+                    id: evt.id,
+                    muted: evt.muted
+                });
+                this.dispatchEvent(evt2);
+            };
+
+            this.addEventListener("audioMuteStatusChanged", localizeMuteEvent("Audio"));
+            this.addEventListener("videoMuteStatusChanged", localizeMuteEvent("Video"));
 
             this.api.addEventListener("endpointTextMessageReceived",
                 this.rxGameData.bind(this));

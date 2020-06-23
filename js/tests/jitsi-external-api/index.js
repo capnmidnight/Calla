@@ -63,17 +63,20 @@ class TestBase extends TestCase {
 
     async sendAudioMuted() {
         await wait(1000);
-        let evtTask = client.once("audioMuteStatusChanged", 5000);
+        const evtTask = client.once("localAudioMuteStatusChanged", 5000);
         await client.setAudioMutedAsync(true);
-        let evt = await evtTask;
+        const evt = await evtTask;
         this.hasValue(evt);
         this.hasValue(evt.id);
         this.isEqualTo(evt.id, client.localUser);
         this.isTrue(evt.muted);
+    }
 
-        evtTask = client.once("audioMuteStatusChanged", 5000);
+    async sendAudioUnmuted() {
+        await wait(1000);
+        const evtTask = client.once("localAudioMuteStatusChanged", 5000);
         await client.setAudioMutedAsync(false);
-        evt = await evtTask;
+        const evt = await evtTask;
         this.hasValue(evt);
         this.hasValue(evt.id);
         this.isEqualTo(evt.id, client.localUser);
@@ -81,17 +84,57 @@ class TestBase extends TestCase {
     }
 
     async recvAudioMuted() {
-        let evt = await client.once("audioMuteStatusChanged", 5000);
+        let evt = await client.once("remoteAudioMuteStatusChanged", 5000);
         this.hasValue(evt);
         this.hasValue(evt.id);
         this.isTrue(client.otherUsers.has(evt.id));
         this.isTrue(evt.muted);
+    }
 
-        evt = await client.once("audioMuteStatusChanged", 5000);
+    async recvAudioUnmuted() {
+        let evt = await client.once("remoteAudioMuteStatusChanged", 5000);
         this.hasValue(evt);
         this.hasValue(evt.id);
         this.isTrue(client.otherUsers.has(evt.id));
         this.isFalse(evt.muted);
+    }
+
+    async sendVideoUnmuted() {
+        await wait(1000);
+        const evtTask = client.once("localVideoMuteStatusChanged", 5000);
+        await client.setVideoMutedAsync(false);
+        const evt = await evtTask;
+        this.hasValue(evt);
+        this.hasValue(evt.id);
+        this.isEqualTo(evt.id, client.localUser);
+        this.isFalse(evt.muted);
+    }
+
+    async sendVideoMuted() {
+        await wait(1000);
+        const evtTask = client.once("localVideoMuteStatusChanged", 5000);
+        await client.setVideoMutedAsync(true);
+        const evt = await evtTask;
+        this.hasValue(evt);
+        this.hasValue(evt.id);
+        this.isEqualTo(evt.id, client.localUser);
+        this.isTrue(evt.muted);
+    }
+
+    async recvVideoUnmuted() {
+        const evt = await client.once("remoteVideoMuteStatusChanged", 5000);
+        this.hasValue(evt);
+        this.hasValue(evt.id);
+        this.isTrue(client.otherUsers.has(evt.id));
+        this.isFalse(evt.muted);
+    }
+
+    async recvVideoMuted() {
+        const evt = await client.once("remoteVideoMuteStatusChanged", 5000);
+        this.hasValue(evt);
+        this.hasValue(evt.id);
+        this.isTrue(client.otherUsers.has(evt.id));
+        this.isTrue(evt.muted);
     }
 }
 
@@ -134,7 +177,7 @@ class JitsiClient1_Tests extends TestBase {
     }
 
     async test_07_toggleAudio() {
-        const evt = client.once("audioMuteStatusChanged", 1000);
+        const evt = client.once("localAudioMuteStatusChanged", 1000);
         client.toggleAudio();
         await evt;
         this.success("audio mute status changed");
@@ -146,14 +189,14 @@ class JitsiClient1_Tests extends TestBase {
     }
 
     async test_09_setAudioMuted() {
-        const evt = client.once("audioMuteStatusChanged", 1000);
+        const evt = client.once("localAudioMuteStatusChanged", 1000);
         await client.setAudioMutedAsync(false);
         await evt;
         this.success("audio mute status changed");
     }
 
     async test_10_toggleVideo() {
-        const evt = client.once("videoMuteStatusChanged", 1000);
+        const evt = client.once("localVideoMuteStatusChanged", 1000);
         client.toggleVideo();
         await evt;
         this.success("video mute status changed");
@@ -165,7 +208,7 @@ class JitsiClient1_Tests extends TestBase {
     }
 
     async test_12_setVideoMuted() {
-        const evt = client.once("videoMuteStatusChanged", 1000);
+        const evt = client.once("localVideoMuteStatusChanged", 1000);
         await client.setVideoMutedAsync(false);
         await evt;
         this.success("video mute status changed");
@@ -196,6 +239,30 @@ class JitsiClient1_Tests extends TestBase {
 
     async test_18_recvAudioMuted() {
         await this.recvAudioMuted();
+    }
+
+    async test_19_sendAudioUnmuted() {
+        await this.sendAudioUnmuted();
+    }
+
+    async test_20_recvAudioUnmuted() {
+        await this.recvAudioUnmuted();
+    }
+
+    async test_21_sendVideoUnmuted() {
+        await this.sendVideoUnmuted();
+    }
+
+    async test_22_recvVideoUnmuted() {
+        await this.recvVideoUnmuted();
+    }
+
+    async test_23_sendVideoMuted() {
+        await this.sendVideoMuted();
+    }
+
+    async test_24_recvVideoMuted() {
+        await this.recvVideoMuted();
     }
 
     async test_98_participantLeft() {
@@ -244,6 +311,30 @@ class JitsiClient2_Tests extends TestBase {
         await this.sendAudioMuted();
     }
 
+    async test_19_recvAudioUnmuted() {
+        await this.recvAudioUnmuted();
+    }
+
+    async test_20_sendAudioUnmuted() {
+        await this.sendAudioUnmuted();
+    }
+
+    async test_21_recvVideoUnmuted() {
+        await this.recvVideoUnmuted();
+    }
+
+    async test_22_sendVideoUnmuted() {
+        await this.sendVideoUnmuted();
+    }
+
+    async test_23_recvVideoMuted() {
+        await this.recvVideoMuted();
+    }
+
+    async test_24_sendVideoMuted() {
+        await this.sendVideoMuted();
+    }
+
     async test_98_participantLeft() {
         await wait(1000);
         window.close();
@@ -290,6 +381,10 @@ const client = new JitsiClient(),
     client.addEventListener("userInitResponse", echoEvt);
     client.addEventListener("audioMuteStatusChanged", echoEvt);
     client.addEventListener("videoMuteStatusChanged", echoEvt);
+    client.addEventListener("localAudioMuteStatusChanged", echoEvt);
+    client.addEventListener("localVideoMuteStatusChanged", echoEvt);
+    client.addEventListener("remoteAudioMuteStatusChanged", echoEvt);
+    client.addEventListener("remoteVideoMuteStatusChanged", echoEvt);
     client.addEventListener("videoConferenceJoined", echoEvt);
     client.addEventListener("videoConferenceLeft", echoEvt);
     client.addEventListener("participantJoined", echoEvt);
