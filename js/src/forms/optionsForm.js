@@ -36,6 +36,8 @@ import {
     onKeyUp
 } from "../html/evts.js";
 
+import { InputBinding } from "./inputBinding.js";
+
 const keyWidthStyle = style({ width: "7em" }),
     numberWidthStyle = style({ width: "3em" }),
     avatarUrlChangedEvt = new Event("avatarurlchanged"),
@@ -46,43 +48,6 @@ const keyWidthStyle = style({ width: "7em" }),
     audioPropsChangedEvt = new Event("audiopropschanged"),
     toggleVideoEvt = new Event("videoenablechanged"),
     videoInputChangedEvt = new Event("videoinputchanged");
-
-class InputBinding extends EventTarget {
-    constructor() {
-        super();
-
-        this.bindings = new Map([
-            ["keyButtonUp", "ArrowUp"],
-            ["keyButtonDown", "ArrowDown"],
-            ["keyButtonLeft", "ArrowLeft"],
-            ["keyButtonRight", "ArrowRight"],
-            ["keyButtonEmote", "e"],
-            ["keyButtonToggleAudio", "a"],
-
-            ["gpButtonUp", 12],
-            ["gpButtonDown", 13],
-            ["gpButtonLeft", 14],
-            ["gpButtonRight", 15],
-            ["gpButtonEmote", 0],
-            ["gpButtonToggleAudio", 1]
-        ]);
-
-        for (let id of this.bindings.keys()) {
-            Object.defineProperty(this, id, {
-                get: () => this.bindings.get(id),
-                set: (v) => {
-                    if (this.bindings.has(id)
-                        && v !== this.bindings.get(id)) {
-                        this.bindings.set(id, v);
-                        this.dispatchEvent(inputBindingChangedEvt);
-                    }
-                }
-            });
-        }
-
-        Object.freeze(this);
-    }
-}
 
 export class OptionsForm extends FormDialog {
     constructor() {
@@ -111,8 +76,8 @@ export class OptionsForm extends FormDialog {
                 onKeyUp((evt) => {
                     if (evt.key !== "Tab"
                         && evt.key !== "Shift") {
-                        this._inputBinding[id]
-                            = key.value
+                        key.value
+                            = this._inputBinding[id]
                             = evt.key;
                         this.dispatchEvent(inputBindingChangedEvt);
                     }
@@ -128,6 +93,15 @@ export class OptionsForm extends FormDialog {
                 label,
                 numberWidthStyle,
                 bindingChanged);
+            this._inputBinding.addEventListener("gamepadbuttonup", (evt) => {
+                if (document.activeElement === gp) {
+                    key.value
+                        = this._inputBinding[id]
+                        = evt.button;
+                    this.dispatchEvent(inputBindingChangedEvt);
+                }
+            });
+            gp.value = this._inputBinding[id];
             return gp;
         }
 
