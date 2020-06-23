@@ -453,7 +453,9 @@ export class TestCase extends EventTarget {
 
     hasValue(value, message) {
         message = message || `${value} is a value`;
-        this.isFalse(value === null || value === undefined, message);
+        const badMessage = message || `${value} is not a value`,
+            isValue = value !== null && value !== undefined;
+        this.isTrue(isValue, isValue ? message : badMessage);
     }
 
     isEmpty(value, message) {
