@@ -29,6 +29,7 @@ export class BaseJitsiClient extends EventTarget {
         this.iframe = null;
         this.apiOrigin = null;
         this.apiWindow = null;
+        this.localUser = null;
         this.otherUsers = new Map();
         addEventListener("message", this.rxJitsiHax.bind(this));
     }
@@ -79,6 +80,7 @@ export class BaseJitsiClient extends EventTarget {
             };
 
             reroute("videoConferenceJoined", (evt) => {
+                this.localUser = evt.id;
                 return {
                     roomName: evt.roomName,
                     id: evt.id,
@@ -87,6 +89,7 @@ export class BaseJitsiClient extends EventTarget {
             });
 
             reroute("videoConferenceLeft", (evt) => {
+                this.localUser = null;
                 return {
                     roomName: evt.roomName
                 };
