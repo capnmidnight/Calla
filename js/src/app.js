@@ -67,13 +67,8 @@ export function init(JitsiClientClass) {
     });
 
     game.addEventListener("gamestarted", () => {
-        game.me.addEventListener("moveTo", (evt) => {
-            jitsiClient.setLocalPosition(evt);
-            for (let user of game.userList) {
-                if (!user.isMe) {
-                    jitsiClient.moveTo(user.id, evt);
-                }
-            }
+        game.me.addEventListener("userMoved", (evt) => {
+            jitsiClient.setPosition(evt);
         });
     });
 
@@ -152,11 +147,11 @@ export function init(JitsiClientClass) {
         }
     });
 
-    jitsiClient.addEventListener("moveTo", (evt) => {
+    jitsiClient.addEventListener("userMoved", (evt) => {
         const user = game.userLookup[evt.id];
         if (!!user) {
             user.moveTo(evt.x, evt.y);
-            jitsiClient.setUserPosition(evt);
+            jitsiClient.setPosition(evt);
         }
     });
 

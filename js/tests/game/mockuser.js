@@ -55,7 +55,7 @@ export class MockUser {
         const x = this.x + Math.floor(2 * Math.random() - 1),
             y = this.y + Math.floor(2 * Math.random() - 1);
 
-        jitsiClient.mockRxGameData("moveTo", this.id, { command: "moveTo", x, y });
+        jitsiClient.mockRxGameData("userMoved", this.id, { x, y });
 
         if (Math.random() <= 0.1) {
             const groups = Object.values(icons),

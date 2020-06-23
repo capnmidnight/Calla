@@ -375,7 +375,7 @@ const client = new JitsiClient(),
 
     document.body.removeChild(document.body.querySelector("#login"));
 
-    client.addEventListener("moveTo", echoEvt);
+    client.addEventListener("userMoved", echoEvt);
     client.addEventListener("emote", echoEvt);
     client.addEventListener("userInitRequest", echoEvt);
     client.addEventListener("userInitResponse", echoEvt);

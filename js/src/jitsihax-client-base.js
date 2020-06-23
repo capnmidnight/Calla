@@ -4,7 +4,7 @@ import { id } from "./html/attrs.js";
 // helps us filter out data channel messages that don't belong to us
 const APP_FINGERPRINT = "Calla",
     eventNames = [
-        "moveTo",
+        "userMoved",
         "emote",
         "userInitRequest",
         "userInitResponse",
@@ -341,10 +341,6 @@ export class BaseJitsiClient extends EventTarget {
         }
     }
 
-    moveTo(toUserID, evt) {
-        this.txGameData(toUserID, "moveTo", evt);
-    }
-
     /// Send a Calla message to the jitsihax.js script
     txJitsiHax(command, obj) {
         if (this.apiWindow) {
@@ -380,12 +376,16 @@ export class BaseJitsiClient extends EventTarget {
         });
     }
 
-    setUserPosition(evt) {
-        this.txJitsiHax("setUserPosition", evt);
-    }
-
-    setLocalPosition(evt) {
-        this.txJitsiHax("setLocalPosition", evt);
+    setPosition(evt) {
+        if (evt.id === this.localUser) {
+            this.txJitsiHax("setLocalPosition", evt);
+            for (let toUserID of this.otherUsers.keys()) {
+                this.txGameData(toUserID, "userMoved", evt);
+            }
+        }
+        else {
+            this.txJitsiHax("setUserPosition", evt);
+        }
     }
 }
 
