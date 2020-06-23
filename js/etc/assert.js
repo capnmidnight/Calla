@@ -192,7 +192,7 @@ export class HtmlTestOutput extends TestOutput {
                     tbody.appendChild(TR(
                         TD(testName),
                         TD(TestStateNames[e.state]),
-                        TD(e.message),
+                        TD(e.messages.join(", ")),
                         refresher(() =>
                             this.run(testCaseName, testName))));
                 }
@@ -243,7 +243,7 @@ class TestScore {
     constructor(name) {
         this.name = name;
         this.state = TestState.found;
-        this.message = null;
+        this.messages = [];
     }
 
     start() {
@@ -252,22 +252,22 @@ class TestScore {
 
     success(message) {
         this.state |= TestState.succeeded;
-        this.message = message;
+        this.messages.push(message);
     }
 
     fail(message) {
         this.state |= TestState.failed;
-        this.message = message;
+        this.messages.push(message);
     }
 
     complete(value) {
         this.state |= TestState.completed;
-        this.message = this.message || value;
+        this.messages.push(this.message || value);
     }
 
     incomplete(value) {
         this.state |= TestState.incomplete;
-        this.message = this.message || value;
+        this.messages.push(this.message || value);
     }
 }
 
@@ -330,7 +330,7 @@ class TestRunner extends EventTarget {
             func = testCase[funcName],
             score = results[className][funcName],
             onMessage = (evt) => {
-                score.message = evt.message;
+                score.messages.push(evt.message);
                 onUpdate();
             },
             onSuccess = (evt) => {
