@@ -1,13 +1,9 @@
-﻿import { TileMap } from "./tilemap.js";
-import { User } from "./user.js";
-import { Emote } from "./emote.js";
+﻿import { Emote } from "./emote.js";
+import { fillPageStyle, id, style } from "./html/attrs.js";
 import { Canvas } from "./html/tags.js";
-import {
-    id,
-    style,
-    fillPageStyle
-} from "./html/attrs.js";
-import { lerp, clamp, project, unproject } from "./math.js";
+import { clamp, lerp, project, unproject } from "./math.js";
+import { TileMap } from "./tilemap.js";
+import { User } from "./user.js";
 
 const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_MAX = 8,

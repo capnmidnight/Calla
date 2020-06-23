@@ -1,16 +1,6 @@
-﻿import "../protos.js";
-
-import {
-    Div,
-    H1
-} from "../html/tags.js";
-
-import {
-    id,
-    style,
-    systemFont,
-    className
-} from "../html/attrs.js";
+﻿import { className, id, style, systemFont } from "../html/attrs.js";
+import { Div, H1 } from "../html/tags.js";
+import "../protos.js";
 
 export class FormDialog extends EventTarget {
     constructor(name, ...rest) {
