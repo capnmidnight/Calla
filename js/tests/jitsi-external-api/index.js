@@ -337,7 +337,8 @@ class JitsiClient2_Tests extends TestBase {
 
     async test_98_participantLeft() {
         await wait(1000);
-        window.close();
+        client.leave();
+        this.success("Conference left");
     }
 }
 
