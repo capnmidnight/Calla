@@ -60,8 +60,7 @@ class TestOutput extends EventTarget {
                     if (test.state & TestState.completed) {
                         ++totalCompleted;
                     }
-
-                    if (test.state & TestState.incomplete) {
+                    else {
                         ++totalIncomplete;
                     }
 
@@ -191,7 +190,7 @@ export class HtmlTestOutput extends TestOutput {
                     const e = evt.table[testCaseName][testName];
                     tbody.appendChild(TR(
                         TD(testName),
-                        TD(TestStateNames[e.state]),
+                        TD(makeStatus(e.state)),
                         TD(e.messages.join(", ")),
                         refresher(() =>
                             this.run(testCaseName, testName))));
@@ -211,33 +210,25 @@ const TestState = {
     started: 1,
     succeeded: 2,
     failed: 4,
-    completed: 8,
-    incomplete: 16,
+    completed: 8
 };
 
-const TestStateNames = {
-    0x00: "Found",
-    0x01: "Started",
-    0x03: "Success",
-    0x05: "Failure",
-    0x0B: "Succeeded",
-    0x0D: "Failed",
-    0x11: "Incomplete",
-    0x12: "Incomplete",
-    0x13: "Incomplete",
-    0x14: "Incomplete",
-    0x15: "Incomplete",
-    0x16: "Incomplete",
-    0x17: "Incomplete",
-    0x18: "Incomplete",
-    0x19: "Incomplete",
-    0x1A: "Incomplete",
-    0x1B: "Incomplete",
-    0x1C: "Incomplete",
-    0x1D: "Incomplete",
-    0x1E: "Incomplete",
-    0x1F: "Incomplete",
-};
+function makeStatus(id) {
+    const complete = id & TestState.completed;
+
+    if (id & TestState.failed) {
+        return complete ? "Failure" : "Failing";
+    }
+    else if (id & TestState.succeeded) {
+        return complete ? "Success" : "Succeeding";
+    }
+    else if (id & TestState.started) {
+        return complete ? "No test ran" : "Running";
+    }
+    else {
+        return "Found";
+    }
+}
 
 class TestScore {
     constructor(name) {
@@ -260,14 +251,11 @@ class TestScore {
         this.messages.push(message);
     }
 
-    complete(value) {
+    finish(value) {
         this.state |= TestState.completed;
-        this.messages.push(this.message || value);
-    }
-
-    incomplete(value) {
-        this.state |= TestState.incomplete;
-        this.messages.push(this.message || value);
+        if (!!value) {
+            this.messages.push(value);
+        }
     }
 }
 
@@ -348,16 +336,16 @@ class TestRunner extends EventTarget {
             score.start();
             onUpdate();
             testCase.setup();
-            let value = func.call(testCase);
-            if (value instanceof Promise) {
-                value = await value;
+            let message = func.call(testCase);
+            if (message instanceof Promise) {
+                message = await message;
             }
-            score.complete(value);
+            score.finish(message);
             onUpdate();
             testCase.teardown();
         }
         catch (error) {
-            score.incomplete(error);
+            onFailure({ message: error });
         }
         testCase.removeEventListener("testcasefail", onFailure);
         testCase.removeEventListener("testcasesuccess", onSuccess);
