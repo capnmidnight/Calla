@@ -1,6 +1,8 @@
 ﻿import "../../src/protos.js";
 import { HtmlTestOutput as TestOutput, TestCase } from "../../etc/assert.js";
 import { JitsiClient } from "../../src/jitsihax-client-external-api.js";
+import { bust } from "../../src/emoji.js";
+import { wait } from "../../src/wait.js";
 
 const userNumber = document.location.hash.length > 0
     ? parseFloat(document.location.hash.substring(1))
@@ -131,6 +133,22 @@ class JitsiClient1_Tests extends TestBase {
     async test_14_initUser() {
         await this.initUsers();
     }
+
+    async test_15_recvEmoji() {
+        const evt = await client.once("emote", 5000);
+        this.hasValue(evt);
+        this.hasValue(evt.data);
+        this.isEqualTo(evt.data.value, bust.value);
+        this.isEqualTo(evt.data.desc, bust.desc);
+    }
+
+    async test_16_sendEmoji() {
+        await wait(1000);
+        for (let id of client.otherUsers.keys()) {
+            client.emote(id, bust);
+        }
+        this.success("Emoji sent");
+    }
 }
 
 class JitsiClient2_Tests extends TestBase {
@@ -138,12 +156,28 @@ class JitsiClient2_Tests extends TestBase {
         await this.joinChannel();
     }
 
-    async test_01_participantJoined() {
+    async test_13_participantJoined() {
         await this.waitForJoin();
     }
 
-    async test_02_initUser() {
+    async test_14_initUser() {
         await this.initUsers();
+    }
+
+    async test_15_sendEmoji() {
+        await wait(1000);
+        for (let id of client.otherUsers.keys()) {
+            client.emote(id, bust);
+        }
+        this.success("Emoji sent");
+    }
+
+    async test_16_recvEmoji() {
+        const evt = await client.once("emote", 5000);
+        this.hasValue(evt);
+        this.hasValue(evt.data);
+        this.isEqualTo(evt.data.value, bust.value);
+        this.isEqualTo(evt.data.desc, bust.desc);
     }
 }
 
