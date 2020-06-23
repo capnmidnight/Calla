@@ -1019,33 +1019,34 @@ export const womanGuard = {
         { value: "\u{1F482}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman guard: dark skin tone" },
     ]
 };
-export const detective = {
-    value: "\u{1F575}\u{FE0F}", desc: "detective", alt: [
-        { value: "\u{1F575}\u{1F3FB}", desc: "detective: light skin tone" },
-        { value: "\u{1F575}\u{1F3FC}", desc: "detective: medium-light skin tone" },
-        { value: "\u{1F575}\u{1F3FD}", desc: "detective: medium skin tone" },
-        { value: "\u{1F575}\u{1F3FE}", desc: "detective: medium-dark skin tone" },
-        { value: "\u{1F575}\u{1F3FF}", desc: "detective: dark skin tone" },
+export const spy = {
+    value: "\u{1F575}\u{FE0F}", desc: "spy", alt: [
+        { value: "\u{1F575}\u{1F3FB}", desc: "spy: light skin tone" },
+        { value: "\u{1F575}\u{1F3FC}", desc: "spy: medium-light skin tone" },
+        { value: "\u{1F575}\u{1F3FD}", desc: "spy: medium skin tone" },
+        { value: "\u{1F575}\u{1F3FE}", desc: "spy: medium-dark skin tone" },
+        { value: "\u{1F575}\u{1F3FF}", desc: "spy: dark skin tone" },
     ]
 };
-export const manDetective = {
-    value: "\u{1F575}\u{FE0F}\u{200D}\u{2642}\u{FE0F}", desc: "man detective", alt: [
-        { value: "\u{1F575}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man detective: light skin tone" },
-        { value: "\u{1F575}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man detective: medium-light skin tone" },
-        { value: "\u{1F575}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man detective: medium skin tone" },
-        { value: "\u{1F575}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man detective: medium-dark skin tone" },
-        { value: "\u{1F575}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man detective: dark skin tone" },
+export const manSpy = {
+    value: "\u{1F575}\u{FE0F}\u{200D}\u{2642}\u{FE0F}", desc: "man spy", alt: [
+        { value: "\u{1F575}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", desc: "man spy: light skin tone" },
+        { value: "\u{1F575}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", desc: "man spy: medium-light skin tone" },
+        { value: "\u{1F575}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", desc: "man spy: medium skin tone" },
+        { value: "\u{1F575}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", desc: "man spy: medium-dark skin tone" },
+        { value: "\u{1F575}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", desc: "man spy: dark skin tone" },
     ]
 };
-export const womanDetective = {
-    value: "\u{1F575}\u{FE0F}\u{200D}\u{2640}\u{FE0F}", desc: "woman detective", alt: [
-        { value: "\u{1F575}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman detective: light skin tone" },
-        { value: "\u{1F575}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman detective: medium-light skin tone" },
-        { value: "\u{1F575}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman detective: medium skin tone" },
-        { value: "\u{1F575}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman detective: medium-dark skin tone" },
-        { value: "\u{1F575}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman detective: dark skin tone" },
+export const womanSpy = {
+    value: "\u{1F575}\u{FE0F}\u{200D}\u{2640}\u{FE0F}", desc: "woman spy", alt: [
+        { value: "\u{1F575}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", desc: "woman spy: light skin tone" },
+        { value: "\u{1F575}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", desc: "woman spy: medium-light skin tone" },
+        { value: "\u{1F575}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", desc: "woman spy: medium skin tone" },
+        { value: "\u{1F575}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", desc: "woman spy: medium-dark skin tone" },
+        { value: "\u{1F575}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", desc: "woman spy: dark skin tone" },
     ]
 };
+
 export const policeOfficer = {
     value: "\u{1F46E}", desc: "police officer", alt: [
         { value: "\u{1F46E}\u{1F3FB}", desc: "police officer: light skin tone" },
@@ -1297,17 +1298,10 @@ export const roles = [
         ]
     },
     {
-        value: "\u{1F46E}", desc: "police officer", alt: [
-            policeOfficer,
-            manPoliceOfficer,
-            womanPoliceOfficer,
-        ]
-    },
-    {
-        value: "\u{1F575}\u{FE0F}", desc: "detective", alt: [
-            detective,
-            manDetective,
-            womanDetective,
+        value: "\u{1F575}\u{FE0F}", desc: "spy", alt: [
+            spy,
+            manSpy,
+            womanSpy,
         ]
     },
     {
@@ -2550,8 +2544,7 @@ export const people = [
                     personBowing,
                     personFacePalming,
                     personShrugging,
-                    policeOfficer,
-                    detective,
+                    spy,
                     guard,
                     constructionWorker,
                     personWearingTurban,
@@ -2631,7 +2624,7 @@ export const people = [
                     manAstronaut,
                     manFirefighter,
                     manPoliceOfficer,
-                    manDetective,
+                    manSpy,
                     manGuard,
                     manConstructionWorker,
                     prince,
@@ -2713,7 +2706,7 @@ export const people = [
                     womanAstronaut,
                     womanFirefighter,
                     womanPoliceOfficer,
-                    womanDetective,
+                    womanSpy,
                     womanGuard,
                     womanConstructionWorker,
                     princess,
@@ -3035,28 +3028,50 @@ export const faces = [
     speakingHead,
     bust,
 ];
+
+export const kissMark = { value: "\u{1F48B}", desc: "Kiss Mark" };
+export const loveLetter = { value: "\u{1F48C}", desc: "Love Letter" };
+export const beatingHeart = { value: "\u{1F493}", desc: "Beating Heart" };
+export const brokenHeart = { value: "\u{1F494}", desc: "Broken Heart" };
+export const twoHearts = { value: "\u{1F495}", desc: "Two Hearts" };
+export const sparklingHeart = { value: "\u{1F496}", desc: "Sparkling Heart" };
+export const growingHeart = { value: "\u{1F497}", desc: "Growing Heart" };
+export const heartWithArrow = { value: "\u{1F498}", desc: "Heart with Arrow" };
+export const blueHeart = { value: "\u{1F499}", desc: "Blue Heart" };
+export const greenHeart = { value: "\u{1F49A}", desc: "Green Heart" };
+export const yellowHeart = { value: "\u{1F49B}", desc: "Yellow Heart" };
+export const purpleHeart = { value: "\u{1F49C}", desc: "Purple Heart" };
+export const heartWithRibbon = { value: "\u{1F49D}", desc: "Heart with Ribbon" };
+export const revolvingHearts = { value: "\u{1F49E}", desc: "Revolving Hearts" };
+export const heartDecoration = { value: "\u{1F49F}", desc: "Heart Decoration" };
+export const blackHeart = { value: "\u{1F5A4}", desc: "Black Heart" };
+export const whiteHeart = { value: "\u{1F90D}", desc: "White Heart" };
+export const brownHeart = { value: "\u{1F90E}", desc: "Brown Heart" };
+export const orangeHeart = { value: "\u{1F9E1}", desc: "Orange Heart" };
+export const heartExclamation = { value: "\u{2763}\u{FE0F}", desc: "Heart Exclamation" };
+export const redHeart = { value: "\u{2764}\u{FE0F}", desc: "Red Heart" };
 export const love = [
-    { value: "\u{1F48B}", desc: "Kiss Mark" },
-    { value: "\u{1F48C}", desc: "Love Letter" },
-    { value: "\u{1F493}", desc: "Beating Heart" },
-    { value: "\u{1F494}", desc: "Broken Heart" },
-    { value: "\u{1F495}", desc: "Two Hearts" },
-    { value: "\u{1F496}", desc: "Sparkling Heart" },
-    { value: "\u{1F497}", desc: "Growing Heart" },
-    { value: "\u{1F498}", desc: "Heart with Arrow" },
-    { value: "\u{1F499}", desc: "Blue Heart" },
-    { value: "\u{1F49A}", desc: "Green Heart" },
-    { value: "\u{1F49B}", desc: "Yellow Heart" },
-    { value: "\u{1F49C}", desc: "Purple Heart" },
-    { value: "\u{1F49D}", desc: "Heart with Ribbon" },
-    { value: "\u{1F49E}", desc: "Revolving Hearts" },
-    { value: "\u{1F49F}", desc: "Heart Decoration" },
-    { value: "\u{1F5A4}", desc: "Black Heart" },
-    { value: "\u{1F90D}", desc: "White Heart" },
-    { value: "\u{1F90E}", desc: "Brown Heart" },
-    { value: "\u{1F9E1}", desc: "Orange Heart" },
-    { value: "\u{2763}\u{FE0F}", desc: "Heart Exclamation" },
-    { value: "\u{2764}\u{FE0F}", desc: "Red Heart" },
+    kissMark,
+    loveLetter,
+    beatingHeart,
+    brokenHeart,
+    twoHearts,
+    sparklingHeart,
+    growingHeart,
+    heartWithArrow,
+    blueHeart,
+    greenHeart,
+    yellowHeart,
+    purpleHeart,
+    heartWithRibbon,
+    revolvingHearts,
+    heartDecoration,
+    blackHeart,
+    whiteHeart,
+    brownHeart,
+    orangeHeart,
+    heartExclamation,
+    redHeart,
 ];
 
 export const cartoon = [
@@ -3702,77 +3717,145 @@ export const flags = [
     { value: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}", desc: "Flag: Wales" },
     { value: "\u{1F6A9}", desc: "Triangular Flag" },
 ];
+
+export const motorcycle = { value: "\u{1F3CD}\u{FE0F}", desc: "Motorcycle" };
+export const racingCar = { value: "\u{1F3CE}\u{FE0F}", desc: "Racing Car" };
+export const seat = { value: "\u{1F4BA}", desc: "Seat" };
+export const rocket = { value: "\u{1F680}", desc: "Rocket" };
+export const helicopter = { value: "\u{1F681}", desc: "Helicopter" };
+export const locomotive = { value: "\u{1F682}", desc: "Locomotive" };
+export const railwayCar = { value: "\u{1F683}", desc: "Railway Car" };
+export const highspeedTrain = { value: "\u{1F684}", desc: "High-Speed Train" };
+export const bulletTrain = { value: "\u{1F685}", desc: "Bullet Train" };
+export const train = { value: "\u{1F686}", desc: "Train" };
+export const metro = { value: "\u{1F687}", desc: "Metro" };
+export const lightRail = { value: "\u{1F688}", desc: "Light Rail" };
+export const station = { value: "\u{1F689}", desc: "Station" };
+export const tram = { value: "\u{1F68A}", desc: "Tram" };
+export const tramCar = { value: "\u{1F68B}", desc: "Tram Car" };
+export const bus = { value: "\u{1F68C}", desc: "Bus" };
+export const oncomingBus = { value: "\u{1F68D}", desc: "Oncoming Bus" };
+export const trolleyBus = { value: "\u{1F68E}", desc: "Trolleybus" };
+export const busStop = { value: "\u{1F68F}", desc: "Bus Stop" };
+export const miniBus = { value: "\u{1F690}", desc: "Minibus" };
+export const ambulance = { value: "\u{1F691}", desc: "Ambulance" };
+export const fireEngine = { value: "\u{1F692}", desc: "Fire Engine" };
+export const policeCar = { value: "\u{1F693}", desc: "Police Car" };
+export const oncomingPoliceCar = { value: "\u{1F694}", desc: "Oncoming Police Car" };
+export const taxi = { value: "\u{1F695}", desc: "Taxi" };
+export const oncomingTaxi = { value: "\u{1F696}", desc: "Oncoming Taxi" };
+export const automobile = { value: "\u{1F697}", desc: "Automobile" };
+export const oncomingAutomobile = { value: "\u{1F698}", desc: "Oncoming Automobile" };
+export const sportUtilityVehicle = { value: "\u{1F699}", desc: "Sport Utility Vehicle" };
+export const deliveryTruck = { value: "\u{1F69A}", desc: "Delivery Truck" };
+export const articulatedLorry = { value: "\u{1F69B}", desc: "Articulated Lorry" };
+export const tractor = { value: "\u{1F69C}", desc: "Tractor" };
+export const monorail = { value: "\u{1F69D}", desc: "Monorail" };
+export const mountainRailway = { value: "\u{1F69E}", desc: "Mountain Railway" };
+export const suspensionRailway = { value: "\u{1F69F}", desc: "Suspension Railway" };
+export const mountainCableway = { value: "\u{1F6A0}", desc: "Mountain Cableway" };
+export const aerialTramway = { value: "\u{1F6A1}", desc: "Aerial Tramway" };
+export const ship = { value: "\u{1F6A2}", desc: "Ship" };
+export const speedBoat = { value: "\u{1F6A4}", desc: "Speedboat" };
+export const horizontalTrafficLight = { value: "\u{1F6A5}", desc: "Horizontal Traffic Light" };
+export const verticalTrafficLight = { value: "\u{1F6A6}", desc: "Vertical Traffic Light" };
+export const construction = { value: "\u{1F6A7}", desc: "Construction" };
+export const policeCarLight = { value: "\u{1F6A8}", desc: "Police Car Light" };
+export const bicycle = { value: "\u{1F6B2}", desc: "Bicycle" };
+export const stopSign = { value: "\u{1F6D1}", desc: "Stop Sign" };
+export const oilDrum = { value: "\u{1F6E2}\u{FE0F}", desc: "Oil Drum" };
+export const motorway = { value: "\u{1F6E3}\u{FE0F}", desc: "Motorway" };
+export const railwayTrack = { value: "\u{1F6E4}\u{FE0F}", desc: "Railway Track" };
+export const motorBoat = { value: "\u{1F6E5}\u{FE0F}", desc: "Motor Boat" };
+export const smallAirplane = { value: "\u{1F6E9}\u{FE0F}", desc: "Small Airplane" };
+export const airplaneDeparture = { value: "\u{1F6EB}", desc: "Airplane Departure" };
+export const airplaneArrival = { value: "\u{1F6EC}", desc: "Airplane Arrival" };
+export const satellite = { value: "\u{1F6F0}\u{FE0F}", desc: "Satellite" };
+export const passengerShip = { value: "\u{1F6F3}\u{FE0F}", desc: "Passenger Ship" };
+export const kickScooter = { value: "\u{1F6F4}", desc: "Kick Scooter" };
+export const motorScooter = { value: "\u{1F6F5}", desc: "Motor Scooter" };
+export const canoe = { value: "\u{1F6F6}", desc: "Canoe" };
+export const flyingSaucer = { value: "\u{1F6F8}", desc: "Flying Saucer" };
+export const skateboard = { value: "\u{1F6F9}", desc: "Skateboard" };
+export const autoRickshaw = { value: "\u{1F6FA}", desc: "Auto Rickshaw" };
+export const pickupTruck = { value: "\u{1F6FB}", desc: "Pickup Truck" };
+export const rollerSkate = { value: "\u{1F6FC}", desc: "Roller Skate" };
+export const motorizedWheelchair = { value: "\u{1F9BC}", desc: "Motorized Wheelchair" };
+export const manualWheelchair = { value: "\u{1F9BD}", desc: "Manual Wheelchair" };
+export const parachute = { value: "\u{1FA82}", desc: "Parachute" };
+export const anchor = { value: "\u{2693}", desc: "Anchor" };
+export const ferry = { value: "\u{26F4}\u{FE0F}", desc: "Ferry" };
+export const sailboat = { value: "\u{26F5}", desc: "Sailboat" };
+export const fuelPump = { value: "\u{26FD}", desc: "Fuel Pump" };
+export const airplane = { value: "\u{2708}\u{FE0F}", desc: "Airplane" };
 export const vehicles = [
-    { value: "\u{1F3CD}\u{FE0F}", desc: "Motorcycle" },
-    { value: "\u{1F3CE}\u{FE0F}", desc: "Racing Car" },
-    { value: "\u{1F4BA}", desc: "Seat" },
-    { value: "\u{1F680}", desc: "Rocket" },
-    { value: "\u{1F681}", desc: "Helicopter" },
-    { value: "\u{1F682}", desc: "Locomotive" },
-    { value: "\u{1F683}", desc: "Railway Car" },
-    { value: "\u{1F684}", desc: "High-Speed Train" },
-    { value: "\u{1F685}", desc: "Bullet Train" },
-    { value: "\u{1F686}", desc: "Train" },
-    { value: "\u{1F687}", desc: "Metro" },
-    { value: "\u{1F688}", desc: "Light Rail" },
-    { value: "\u{1F689}", desc: "Station" },
-    { value: "\u{1F68A}", desc: "Tram" },
-    { value: "\u{1F68B}", desc: "Tram Car" },
-    { value: "\u{1F68C}", desc: "Bus" },
-    { value: "\u{1F68D}", desc: "Oncoming Bus" },
-    { value: "\u{1F68E}", desc: "Trolleybus" },
-    { value: "\u{1F68F}", desc: "Bus Stop" },
-    { value: "\u{1F690}", desc: "Minibus" },
-    { value: "\u{1F691}", desc: "Ambulance" },
-    { value: "\u{1F692}", desc: "Fire Engine" },
-    { value: "\u{1F693}", desc: "Police Car" },
-    { value: "\u{1F694}", desc: "Oncoming Police Car" },
-    { value: "\u{1F695}", desc: "Taxi" },
-    { value: "\u{1F696}", desc: "Oncoming Taxi" },
-    { value: "\u{1F697}", desc: "Automobile" },
-    { value: "\u{1F698}", desc: "Oncoming Automobile" },
-    { value: "\u{1F699}", desc: "Sport Utility Vehicle" },
-    { value: "\u{1F69A}", desc: "Delivery Truck" },
-    { value: "\u{1F69B}", desc: "Articulated Lorry" },
-    { value: "\u{1F69C}", desc: "Tractor" },
-    { value: "\u{1F69D}", desc: "Monorail" },
-    { value: "\u{1F69E}", desc: "Mountain Railway" },
-    { value: "\u{1F69F}", desc: "Suspension Railway" },
-    { value: "\u{1F6A0}", desc: "Mountain Cableway" },
-    { value: "\u{1F6A1}", desc: "Aerial Tramway" },
-    { value: "\u{1F6A2}", desc: "Ship" },
-    { value: "\u{1F6A4}", desc: "Speedboat" },
-    { value: "\u{1F6A5}", desc: "Horizontal Traffic Light" },
-    { value: "\u{1F6A6}", desc: "Vertical Traffic Light" },
-    { value: "\u{1F6A7}", desc: "Construction" },
-    { value: "\u{1F6A8}", desc: "Police Car Light" },
-    { value: "\u{1F6B2}", desc: "Bicycle" },
-    { value: "\u{1F6D1}", desc: "Stop Sign" },
-    { value: "\u{1F6E2}\u{FE0F}", desc: "Oil Drum" },
-    { value: "\u{1F6E3}\u{FE0F}", desc: "Motorway" },
-    { value: "\u{1F6E4}\u{FE0F}", desc: "Railway Track" },
-    { value: "\u{1F6E5}\u{FE0F}", desc: "Motor Boat" },
-    { value: "\u{1F6E9}\u{FE0F}", desc: "Small Airplane" },
-    { value: "\u{1F6EB}", desc: "Airplane Departure" },
-    { value: "\u{1F6EC}", desc: "Airplane Arrival" },
-    { value: "\u{1F6F0}\u{FE0F}", desc: "Satellite" },
-    { value: "\u{1F6F3}\u{FE0F}", desc: "Passenger Ship" },
-    { value: "\u{1F6F4}", desc: "Kick Scooter" },
-    { value: "\u{1F6F5}", desc: "Motor Scooter" },
-    { value: "\u{1F6F6}", desc: "Canoe" },
-    { value: "\u{1F6F8}", desc: "Flying Saucer" },
-    { value: "\u{1F6F9}", desc: "Skateboard" },
-    { value: "\u{1F6FA}", desc: "Auto Rickshaw" },
-    { value: "\u{1F6FB}", desc: "Pickup Truck" },
-    { value: "\u{1F6FC}", desc: "Roller Skate" },
-    { value: "\u{1F9BC}", desc: "Motorized Wheelchair" },
-    { value: "\u{1F9BD}", desc: "Manual Wheelchair" },
-    { value: "\u{1FA82}", desc: "Parachute" },
-    { value: "\u{2693}", desc: "Anchor" },
-    { value: "\u{26F4}\u{FE0F}", desc: "Ferry" },
-    { value: "\u{26F5}", desc: "Sailboat" },
-    { value: "\u{26FD}", desc: "Fuel Pump" },
-    { value: "\u{2708}\u{FE0F}", desc: "Airplane" },
+    motorcycle,
+    racingCar,
+    seat,
+    rocket,
+    helicopter,
+    locomotive,
+    railwayCar,
+    highspeedTrain,
+    bulletTrain,
+    train,
+    metro,
+    lightRail,
+    station,
+    tram,
+    tramCar,
+    bus,
+    oncomingBus,
+    trolleyBus,
+    busStop,
+    miniBus,
+    ambulance,
+    fireEngine,
+    taxi,
+    oncomingTaxi,
+    automobile,
+    oncomingAutomobile,
+    sportUtilityVehicle,
+    deliveryTruck,
+    articulatedLorry,
+    tractor,
+    monorail,
+    mountainRailway,
+    suspensionRailway,
+    mountainCableway,
+    aerialTramway,
+    ship,
+    speedBoat,
+    horizontalTrafficLight,
+    verticalTrafficLight,
+    construction,
+    bicycle,
+    stopSign,
+    oilDrum,
+    motorway,
+    railwayTrack,
+    motorBoat,
+    smallAirplane,
+    airplaneDeparture,
+    airplaneArrival,
+    satellite,
+    passengerShip,
+    kickScooter,
+    motorScooter,
+    canoe,
+    flyingSaucer,
+    skateboard,
+    autoRickshaw,
+    pickupTruck,
+    rollerSkate,
+    motorizedWheelchair,
+    manualWheelchair,
+    parachute,
+    anchor,
+    ferry,
+    sailboat,
+    fuelPump,
+    airplane,
 ];
 export const bloodTypes = [
     { value: "\u{1F170}", desc: "A Button (Blood Type)" },
