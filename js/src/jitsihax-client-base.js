@@ -29,6 +29,7 @@ export class BaseJitsiClient extends EventTarget {
         this.iframe = null;
         this.apiOrigin = null;
         this.apiWindow = null;
+        this.otherUsers = new Map();
         addEventListener("message", this.rxJitsiHax.bind(this));
     }
 
@@ -67,10 +68,13 @@ export class BaseJitsiClient extends EventTarget {
 
             const reroute = (evtType, copy) => {
                 this.api.addEventListener(evtType, (rootEvt) => {
-                    const evt = Object.assign(
-                        new Event(evtType),
-                        copy(rootEvt));
-                    this.dispatchEvent(evt);
+                    const clone = copy(rootEvt);
+                    if (clone !== undefined) {
+                        const evt = Object.assign(
+                            new Event(evtType),
+                            clone);
+                        this.dispatchEvent(evt);
+                    }
                 });
             };
 
@@ -89,32 +93,43 @@ export class BaseJitsiClient extends EventTarget {
             });
 
             reroute("participantJoined", (evt) => {
-                return {
-                    id: evt.id,
-                    displayName: evt.displayName
-                };
+                if (evt.id !== "local") {
+                    this.otherUsers.set(evt.id, evt.displayName);
+                    return {
+                        id: evt.id,
+                        displayName: evt.displayName
+                    };
+                }
             });
 
             reroute("participantLeft", (evt) => {
-                return {
-                    id: evt.id
-                };
+                if (this.otherUsers.has(evt.id)) {
+                    this.otherUsers.delete(evt.id);
+                    return {
+                        id: evt.id
+                    };
+                }
             });
 
             reroute("avatarChanged", (evt) => {
-                return {
-                    id: evt.id,
-                    avatarURL: evt.avatarURL
-                };
+                if (this.otherUsers.has(evt.id)) {
+                    return {
+                        id: evt.id,
+                        avatarURL: evt.avatarURL
+                    };
+                }
             });
 
             reroute("displayNameChange", (evt) => {
-                return {
-                    id: evt.id,
+                if (this.otherUsers.has(evt.id)) {
+                    this.otherUsers.set(evt.id, evt.displayname);
+                    return {
+                        id: evt.id,
 
-                    // The External API misnames this
-                    displayName: evt.displayname
-                };
+                        // The External API misnames this
+                        displayName: evt.displayname
+                    };
+                }
             });
 
             reroute("audioMuteStatusChanged", (evt) => {
