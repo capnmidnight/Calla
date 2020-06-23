@@ -65,8 +65,7 @@ export class OptionsForm extends FormDialog {
                 systemFont,
                 "OK"));
 
-        const bindingChanged = onInput(_(inputBindingChangedEvt)),
-            audioPropsChanged = onInput(_(audioPropsChangedEvt));
+        const audioPropsChanged = onInput(_(audioPropsChangedEvt));
 
         const makeKeyboardBinder = (id, label) => {
             const key = LabeledInput(
@@ -92,11 +91,10 @@ export class OptionsForm extends FormDialog {
                 id,
                 "text",
                 label,
-                numberWidthStyle,
-                bindingChanged);
+                numberWidthStyle);
             GamepadManager.addEventListener("gamepadbuttonup", (evt) => {
                 if (document.activeElement === gp) {
-                    key.value
+                    gp.value
                         = this._inputBinding[id]
                         = evt.button;
                     this.dispatchEvent(inputBindingChangedEvt);
