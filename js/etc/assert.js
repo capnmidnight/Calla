@@ -144,7 +144,9 @@ export class HtmlTestOutput extends TestOutput {
     constructor(...CaseClasses) {
         super(...CaseClasses);
 
-        this.element = Div();
+        this.element = Div(style({
+            overflowY: "scroll"
+        }));
 
         const draw = (evt) => {
             const s = Math.round(100 * evt.stats.totalSucceeded / evt.stats.totalFound),
