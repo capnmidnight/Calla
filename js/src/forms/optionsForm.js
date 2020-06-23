@@ -31,13 +31,6 @@ export class OptionsForm extends FormDialog {
 
         selfs.set(this, self);
 
-        this.element.append(
-            this.confirmButton = Button(
-                className("confirm"),
-                style({ gridArea: "4/3" }),
-                systemFont,
-                "OK"));
-
         const audioPropsChanged = onInput(_(audioPropsChangedEvt));
 
         const makeKeyboardBinder = (id, label) => {
@@ -200,6 +193,11 @@ export class OptionsForm extends FormDialog {
 
         this.header.append(...panels.map(p => p.button));
         this.content.append(...panels.map(p => p.element));
+        this.footer.append(
+            this.confirmButton = Button(
+                className("confirm"),
+                systemFont,
+                "OK"));
 
         const showPanel = (p) =>
             () => {

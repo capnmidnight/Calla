@@ -1,10 +1,10 @@
 ﻿import { HtmlAttr, type } from "./attrs.js";
-import { HtmlEvt, isFunction } from "./evts.js";
 import { HtmlCustomTag } from "./custom.js";
+import { HtmlEvt, isFunction } from "./evts.js";
 import { LabeledInputTag } from "./labeledInputTag.js";
-import { SelectBoxTag } from "./selectBoxTag.js";
 import { LabeledSelectBoxTag } from "./labeledSelectBoxTag.js";
 import { OptionPanelTag } from "./optionPanelTag.js";
+import { SelectBoxTag } from "./selectBoxTag.js";
 
 export function clear(elem) {
     while (elem.lastChild) {

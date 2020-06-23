@@ -12,7 +12,7 @@ export class FormDialog extends EventTarget {
                 style({
                     display: "grid",
                     gridTemplateColumns: "5fr 1fr 1fr",
-                    gridTemplateRows: "auto 1fr auto auto",
+                    gridTemplateRows: "auto auto 1fr auto auto",
                     overflowY: "hidden",
                     width: "50%",
                     maxWidth: "900px",
@@ -27,10 +27,13 @@ export class FormDialog extends EventTarget {
                 systemFont,
                 H1(
                     style({ gridArea: "1/1/2/4" }),
-                    ...rest),
-                this.header = Div(
-                    style({ gridArea: "2/1/3/4" })),
-                Div(style({ gridArea: "4/1", height: "1em" }), " "));
+                    ...rest));
+
+        this.header = this.element.querySelector(".header")
+            || this.element.appendChild(
+                Div(
+                    className("header"),
+                    style({ gridArea: "2/1/3/4" })));
 
         this.content = this.element.querySelector(".content")
             || this.element.appendChild(
@@ -38,7 +41,17 @@ export class FormDialog extends EventTarget {
                     className("content"),
                     style({
                         overflowY: "scroll",
-                        gridArea: "3/1/3/4"
+                        gridArea: "3/1/4/4"
+                    })));
+
+        this.footer = this.element.querySelector(".footer")
+            || this.element.appendChild(
+                Div(
+                    className("footer"),
+                    style({
+                        display: "flex",
+                        flexDirection: "row-reverse",
+                        gridArea: "4/1/5/4"
                     })));
     }
 

@@ -49,39 +49,8 @@ export class EmojiForm extends FormDialog {
     constructor() {
         super("emoji", "Emoji");
 
-        this.element.append(
-
-            this.preview = Span(style({ gridArea: "4/1/5/4" })),
-
-            this.confirmButton = Button(className("confirm"),
-                style({ gridArea: "4/2" }),
-                systemFont,
-                "OK",
-                onClick(() => {
-                    const idx = previousEmoji.indexOf(selectedEmoji);
-                    if (idx === -1) {
-                        previousEmoji.push(selectedEmoji);
-                        this.recent.innerHTML = "";
-                        addIconsToContainer(previousEmoji, this.recent);
-                    }
-
-                    this.hide();
-                    this.dispatchEvent(new EmojiSelectedEvent(selectedEmoji));
-                })),
-
-            Button(className("cancel"),
-                style({ gridArea: "4/3" }),
-                systemFont,
-                "Cancel",
-                onClick(() => {
-                    this.confirmButton.lock();
-                    this.hide();
-                    this.dispatchEvent(cancelEvt);
-                })));
-
-        this.content.append(
+        this.header.append(
             H2("Recent"),
-
             this.recent = P("(None)"));
 
         const previousEmoji = [],
@@ -187,6 +156,36 @@ export class EmojiForm extends FormDialog {
                 this.content.appendChild(container);
             }
         }
+
+        this.footer.append(
+
+            this.confirmButton = Button(className("confirm"),
+                style({ gridArea: "4/2" }),
+                systemFont,
+                "OK",
+                onClick(() => {
+                    const idx = previousEmoji.indexOf(selectedEmoji);
+                    if (idx === -1) {
+                        previousEmoji.push(selectedEmoji);
+                        this.recent.innerHTML = "";
+                        addIconsToContainer(previousEmoji, this.recent);
+                    }
+
+                    this.hide();
+                    this.dispatchEvent(new EmojiSelectedEvent(selectedEmoji));
+                })),
+
+            Button(className("cancel"),
+                style({ gridArea: "4/3" }),
+                systemFont,
+                "Cancel",
+                onClick(() => {
+                    this.confirmButton.lock();
+                    this.hide();
+                    this.dispatchEvent(cancelEvt);
+                })),
+
+            this.preview = Span(style({ gridArea: "4/1/5/4" })));
 
         this.confirmButton.lock();
 

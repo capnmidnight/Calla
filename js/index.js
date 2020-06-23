@@ -1,11 +1,11 @@
-﻿import { JitsiClient } from "./html/jitsihax-client-external-api.js";
-import { init } from "./html/app.js";
+﻿import { JitsiClient } from "./src/jitsihax-client-external-api.js";
+import { init } from "./src/app.js";
 import {
     A,
     H2,
     P,
     Span
-} from "./html/htmltags.js";
+} from "./src/html/tags.js";
 
 import {
     ariaLabel,
@@ -15,7 +15,7 @@ import {
     title,
     rel,
     role
-} from "./html/htmlattrs.js";
+} from "./src/html/attrs.js";
 
 const { toolbar, loginForm } = init(JitsiClient, document.querySelector("#appView"));
 
