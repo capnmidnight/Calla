@@ -142,6 +142,7 @@ export class BaseJitsiClient extends EventTarget {
             });
 
             reroute("audioMuteStatusChanged", (evt) => {
+                this.audioMuteStatusChanged(evt.muted);
                 return {
                     id: this.localUser,
                     muted: evt.muted
@@ -149,6 +150,7 @@ export class BaseJitsiClient extends EventTarget {
             });
 
             reroute("videoMuteStatusChanged", (evt) => {
+                this.videoMuteStatusChanged(evt.muted);
                 return {
                     id: this.localUser,
                     muted: evt.muted
@@ -258,11 +260,13 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     /// Send a Calla message through the Jitsi Meet data channel.
-    txGameData(id, command, obj) {
-        obj = obj || {};
-        obj.hax = APP_FINGERPRINT;
-        obj.command = command;
-        this.api.executeCommand("sendEndpointTextMessage", id, JSON.stringify(obj));
+    txGameData(id, command, value) {
+        const data = {
+            hax: APP_FINGERPRINT,
+            command,
+            value
+        };
+        this.api.executeCommand("sendEndpointTextMessage", id, JSON.stringify(data));
     }
 
     /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
@@ -309,12 +313,16 @@ export class BaseJitsiClient extends EventTarget {
         }
     }
 
-    audioMuteStatusChanged(toUserID, muted) {
-        this.txGameData(toUserID, "audioMuteStatusChanged", { muted });
+    audioMuteStatusChanged(muted) {
+        for (let toUserID of this.otherUsers.keys()) {
+            this.txGameData(toUserID, "audioMuteStatusChanged", { muted });
+        }
     }
 
-    videoMuteStatusChanged(toUserID, muted) {
-        this.txGameData(toUserID, "videoMuteStatusChanged", { muted });
+    videoMuteStatusChanged(muted) {
+        for (let toUserID of this.otherUsers.keys()) {
+            this.txGameData(toUserID, "videoMuteStatusChanged", { muted });
+        }
     }
 
     moveTo(toUserID, evt) {
@@ -365,16 +373,11 @@ export class BaseJitsiClient extends EventTarget {
     }
 }
 
-class CallaEvent extends Event {
-    constructor(data) {
-        super(data.command);
-        this.data = data;
-    }
-}
-
-class JitsiClientEvent extends CallaEvent {
+class JitsiClientEvent extends Event {
     constructor(id, data) {
-        super(data);
+        super(data.command);
         this.id = id;
+        Object.assign(this, data.value);
+        Object.freeze(this);
     }
 }

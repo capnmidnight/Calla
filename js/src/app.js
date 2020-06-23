@@ -60,20 +60,10 @@ export function init(JitsiClientClass) {
 
     game.addEventListener("audiomuted", async (evt) => {
         await jitsiClient.setAudioMutedAsync(evt.muted);
-        for (let user of game.userList) {
-            if (!user.isMe) {
-                jitsiClient.audioMuteStatusChanged(user.id, evt.muted);
-            }
-        }
     });
 
     game.addEventListener("videomuted", async (evt) => {
         await jitsiClient.setVideoMutedAsync(evt.muted);
-        for (let user of game.userList) {
-            if (!user.isMe) {
-                jitsiClient.videoMuteStatusChanged(user.id, evt.muted);
-            }
-        }
     });
 
     game.addEventListener("gamestarted", () => {
@@ -165,7 +155,7 @@ export function init(JitsiClientClass) {
     jitsiClient.addEventListener("moveTo", (evt) => {
         const user = game.userLookup[evt.id];
         if (!!user) {
-            user.moveTo(evt.data.x, evt.data.y);
+            user.moveTo(evt.x, evt.y);
             jitsiClient.setUserPosition(evt);
         }
     });

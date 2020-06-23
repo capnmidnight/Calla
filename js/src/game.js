@@ -286,13 +286,9 @@ export class Game extends EventTarget {
     }
 
     updateAudioActivity(evt) {
-        const id = evt.data && evt.data.id
-            || evt.id,
-            isActive = evt.data && evt.data.isActive
-                || evt.isActive,
-            user = this.userLookup[id];
+        const user = this.userLookup[evt.id];
         if (!!user) {
-            user.isActive = isActive;
+            user.isActive = evt.isActive;
         }
     }
 
@@ -416,12 +412,11 @@ export class Game extends EventTarget {
             setTimeout(this.muteUserAudio.bind(this, evt), 1000);
         }
         else {
-            const muted = evt.data && evt.data.muted
-                || !evt.data && evt.muted;
-            mutingUser.audioMuted = muted;
+            mutingUser.audioMuted = evt.muted;
 
             if (mutingUser === this.me) {
-                this.dispatchEvent(muted
+                this.dispatchEvent(
+                    evt.muted
                     ? audioMutedEvt
                     : audioUnmutedEvt);
             }
@@ -439,12 +434,10 @@ export class Game extends EventTarget {
             setTimeout(this.muteUserVideo.bind(this, evt), 1000);
         }
         else {
-            const muted = evt.data && evt.data.muted
-                || !evt.data && evt.muted;
-            mutingUser.videoMuted = muted;
+            mutingUser.videoMuted = evt.muted;
 
             if (mutingUser === this.me) {
-                this.dispatchEvent(muted
+                this.dispatchEvent(evt.muted
                     ? videoMutedEvt
                     : videoUnmutedEvt);
             }

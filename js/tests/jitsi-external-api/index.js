@@ -41,9 +41,8 @@ class TestBase extends TestCase {
             this.hasValue(response.id);
             this.isNotEqualTo(response.id, client.localUser);
 
-            this.hasValue(response.data);
-            this.hasValue(response.data.userNumber);
-            this.isNotEqualTo(response.data.userNumber, userNumber);
+            this.hasValue(response.userNumber);
+            this.isNotEqualTo(response.userNumber, userNumber);
         }
     }
 
@@ -58,9 +57,41 @@ class TestBase extends TestCase {
         this.hasValue(evt);
         this.hasValue(evt.id);
         this.isTrue(client.otherUsers.has(evt.id));
-        this.hasValue(evt.data);
-        this.isEqualTo(evt.data.value, bust.value);
-        this.isEqualTo(evt.data.desc, bust.desc);
+        this.isEqualTo(evt.value, bust.value);
+        this.isEqualTo(evt.desc, bust.desc);
+    }
+
+    async sendAudioMuted() {
+        await wait(1000);
+        let evtTask = client.once("audioMuteStatusChanged", 5000);
+        await client.setAudioMutedAsync(true);
+        let evt = await evtTask;
+        this.hasValue(evt);
+        this.hasValue(evt.id);
+        this.isEqualTo(evt.id, client.localUser);
+        this.isTrue(evt.muted);
+
+        evtTask = client.once("audioMuteStatusChanged", 5000);
+        await client.setAudioMutedAsync(false);
+        evt = await evtTask;
+        this.hasValue(evt);
+        this.hasValue(evt.id);
+        this.isEqualTo(evt.id, client.localUser);
+        this.isFalse(evt.muted);
+    }
+
+    async recvAudioMuted() {
+        let evt = await client.once("audioMuteStatusChanged", 5000);
+        this.hasValue(evt);
+        this.hasValue(evt.id);
+        this.isTrue(client.otherUsers.has(evt.id));
+        this.isTrue(evt.muted);
+
+        evt = await client.once("audioMuteStatusChanged", 5000);
+        this.hasValue(evt);
+        this.hasValue(evt.id);
+        this.isTrue(client.otherUsers.has(evt.id));
+        this.isFalse(evt.muted);
     }
 }
 
@@ -159,6 +190,14 @@ class JitsiClient1_Tests extends TestBase {
         await this.sendEmoji();
     }
 
+    async test_17_sendAudioMuted() {
+        await this.sendAudioMuted();
+    }
+
+    async test_18_recvAudioMuted() {
+        await this.recvAudioMuted();
+    }
+
     async test_98_participantLeft() {
         const evt = await client.once("participantLeft", 5000);
         this.hasValue(evt);
@@ -197,7 +236,16 @@ class JitsiClient2_Tests extends TestBase {
         await this.recvEmoji();
     }
 
+    async test_17_recvAudioMuted() {
+        await this.recvAudioMuted();
+    }
+
+    async test_18_sendAudioMuted() {
+        await this.sendAudioMuted();
+    }
+
     async test_98_participantLeft() {
+        await wait(1000);
         window.close();
     }
 }
