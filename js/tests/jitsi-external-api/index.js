@@ -136,6 +136,23 @@ class TestBase extends TestCase {
         this.isTrue(client.otherUsers.has(evt.id));
         this.isTrue(evt.muted);
     }
+
+    async sendPosition() {
+        const x = ((userNumber - 1) * 2 - 1) * 5;
+        await wait(1000);
+        client.setPosition({ id: client.localUser, x, y: 0 });
+        this.success("Position sent");
+    }
+
+    async recvPosition() {
+        const x = ((userNumber - 1) * 2 - 1) * -5;
+        const evt = await client.once("userMoved", 5000);
+        this.hasValue(evt);
+        this.hasValue(evt.id);
+        this.isTrue(client.otherUsers.has(evt.id));
+        this.isEqualTo(evt.x, x);
+        this.isEqualTo(evt.y, 0);
+    }
 }
 
 class JitsiClient1_Tests extends TestBase {
@@ -265,6 +282,14 @@ class JitsiClient1_Tests extends TestBase {
         await this.recvVideoMuted();
     }
 
+    async test_25_sendPosition() {
+        await this.sendPosition();
+    }
+
+    async test_26_recvPosition() {
+        await this.recvPosition();
+    }
+
     async test_98_participantLeft() {
         const evt = await client.once("participantLeft", 5000);
         this.hasValue(evt);
@@ -333,6 +358,14 @@ class JitsiClient2_Tests extends TestBase {
 
     async test_24_sendVideoMuted() {
         await this.sendVideoMuted();
+    }
+
+    async test_25_recvPosition() {
+        await this.recvPosition();
+    }
+
+    async test_26_sendPosition() {
+        await this.sendPosition();
     }
 
     async test_98_participantLeft() {

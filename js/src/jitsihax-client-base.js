@@ -2,7 +2,9 @@
 import { id } from "./html/attrs.js";
 
 // helps us filter out data channel messages that don't belong to us
-const APP_FINGERPRINT = "Calla",
+const APP_FINGERPRINT
+    = window.APP_FINGERPRINT
+    = "Calla",
     eventNames = [
         "userMoved",
         "emote",
