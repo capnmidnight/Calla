@@ -15,6 +15,9 @@ import { init } from "../../src/app.js";
     document.head.append(...doc.head.childNodes);
     document.body.append(...doc.body.childNodes);
 
+    const loginContent = document.querySelector("#login > .content")
+    loginContent.parentElement.removeChild(loginContent);
+
     const { game } = init(MockJitsiClient, document.querySelector("#appView")),
         testUsers = [
             new MockUser("user1", -5, -5),
