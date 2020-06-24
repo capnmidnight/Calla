@@ -4,7 +4,7 @@
 
 import "../../etc/jitsihax.js";
 import { MockUser } from "./mockuser.js";
-import { MockJitsiClient } from "./jitsihax-client-mock.js";
+import { MockJitsiClient as JitsiClient } from "./jitsihax-client-mock.js";
 import { init } from "../../src/app.js";
 
 (async function () {

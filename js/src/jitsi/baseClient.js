@@ -1,6 +1,6 @@
-﻿import { CallaUserEvent } from "./events.js";
-import { id } from "./html/attrs.js";
-import { Div } from "./html/tags.js";
+﻿import { CallaUserEvent } from "../events.js";
+import { id } from "../html/attrs.js";
+import { Div } from "../html/tags.js";
 
 // helps us filter out data channel messages that don't belong to us
 const APP_FINGERPRINT

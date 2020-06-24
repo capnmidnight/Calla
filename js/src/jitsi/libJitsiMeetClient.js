@@ -1,9 +1,9 @@
 ﻿import {
     tag,
     Span
-} from "./html/tags.js";
+} from "../html/tags.js";
 
-import '../lib/jquery.js';
+import '../../lib/jquery.js';
 
 // helps us filter out data channel messages that don't belong to us
 const BUFFER_SIZE = 1024,
@@ -161,7 +161,7 @@ function logger(obj, name, handler) {
 }
 
 // Manages communication between Jitsi Meet and Calla
-export class JitsiClient extends EventTarget {
+export class LibJitsiMeetClient extends EventTarget {
 
     constructor() {
         super();

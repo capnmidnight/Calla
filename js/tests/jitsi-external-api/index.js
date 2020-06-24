@@ -2,7 +2,7 @@
 import { bust } from "../../src/emoji.js";
 import "../../src/protos.js";
 import { wait } from "../../src/wait.js";
-import { ExternalJitsiClient as JitsiClient } from "../../src/jitsihax-client-external-api.js";
+import { ExternalJitsiClient as JitsiClient } from "../../src/jitsi/jitsihax-client-external-api.js";
 
 const TEST_ROOM_NAME = "testroom",
     userNumber = document.location.hash.length > 0

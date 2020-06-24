@@ -1,5 +1,5 @@
-﻿import { CallaEvent } from "./events.js";
-import { BaseJitsiClient } from "./jitsihax-client-base.js";
+﻿import { CallaEvent } from "../events.js";
+import { BaseJitsiClient } from "./baseClient.js";
 
 export class ExternalJitsiClient extends BaseJitsiClient {
     constructor() {

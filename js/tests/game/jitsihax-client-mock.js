@@ -1,6 +1,6 @@
 ﻿import { randomPerson } from "../../src/emoji.js";
-import { CallaEvent } from "../../src/events.js";
-import { BaseJitsiClient } from "../../src/jitsihax-client-base.js";
+﻿import { CallaEvent, CallaUserEvent } from "../../src/events.js";
+import { BaseJitsiClient } from "../../src/jitsi/baseClient.js";
 
 const userNumber = document.location.hash.length > 0
         ? parseFloat(document.location.hash.substring(1))

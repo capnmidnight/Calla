@@ -1,4 +1,4 @@
-﻿import { JitsiClient } from "./src/jitsihax-client-external-api.js";
+﻿import { ExternalJitsiClient as JitsiClient } from "./src/jitsi/externalAPIClient.js";
 import { init } from "./src/app.js";
 import {
     A,
