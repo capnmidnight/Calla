@@ -1,21 +1,36 @@
-﻿import "../../src/protos.js";
-import { HtmlTestOutput as TestOutput, TestCase } from "../../etc/assert.js";
-//import { MockJitsiClient as JitsiClient } from "../game/jitsihax-client-mock.js";
-import { ExternalJitsiClient as JitsiClient } from "../../src/jitsihax-client-external-api.js";
+﻿import { HtmlTestOutput as TestOutput, TestCase } from "../../etc/assert.js";
 import { bust } from "../../src/emoji.js";
+import "../../src/protos.js";
 import { wait } from "../../src/wait.js";
+import { ExternalJitsiClient as JitsiClient } from "../../src/jitsihax-client-external-api.js";
 
 const TEST_ROOM_NAME = "testroom",
     userNumber = document.location.hash.length > 0
-    ? parseFloat(document.location.hash.substring(1))
-    : 1;
+        ? parseFloat(document.location.hash.substring(1))
+        : 1;
 
 class TestBase extends TestCase {
-    async joinChannel() {
-        const evtTask = client.once("videoConferenceJoined");
-        await client.joinAsync(TEST_ROOM_NAME, "TestUser" + userNumber);
+
+    async withEvt(name, action) {
+        const evtTask = client.once(name, 5000);
+        this.hasValue(evtTask);
+        this.isTrue(evtTask instanceof Promise);
+
+        const actionResult = action();
+        if (actionResult instanceof Promise) {
+            await actionResult;
+        }
+
         const evt = await evtTask;
         this.hasValue(evt);
+
+        return evt;
+    }
+
+
+    async joinChannel() {
+        const evt = await this.withEvt("videoConferenceJoined", () =>
+            client.joinAsync(TEST_ROOM_NAME, "TestUser" + userNumber));
         this.isEqualTo(evt.id, client.localUser);
     }
 
@@ -65,10 +80,8 @@ class TestBase extends TestCase {
 
     async sendAudioMuted() {
         await wait(1000);
-        const evtTask = client.once("localAudioMuteStatusChanged", 5000);
-        await client.setAudioMutedAsync(true);
-        const evt = await evtTask;
-        this.hasValue(evt);
+        const evt = await this.withEvt("localAudioMuteStatusChanged", () =>
+            client.setAudioMutedAsync(true));
         this.hasValue(evt.id);
         this.isEqualTo(evt.id, client.localUser);
         this.isTrue(evt.muted);
@@ -76,17 +89,15 @@ class TestBase extends TestCase {
 
     async sendAudioUnmuted() {
         await wait(1000);
-        const evtTask = client.once("localAudioMuteStatusChanged", 5000);
-        await client.setAudioMutedAsync(false);
-        const evt = await evtTask;
-        this.hasValue(evt);
+        const evt = await this.withEvt("localAudioMuteStatusChanged", () =>
+            client.setAudioMutedAsync(false));
         this.hasValue(evt.id);
         this.isEqualTo(evt.id, client.localUser);
         this.isFalse(evt.muted);
     }
 
     async recvAudioMuted() {
-        let evt = await client.once("remoteAudioMuteStatusChanged", 5000);
+        const evt = await client.once("remoteAudioMuteStatusChanged", 5000);
         this.hasValue(evt);
         this.hasValue(evt.id);
         this.isTrue(client.otherUsers.has(evt.id));
@@ -94,7 +105,7 @@ class TestBase extends TestCase {
     }
 
     async recvAudioUnmuted() {
-        let evt = await client.once("remoteAudioMuteStatusChanged", 5000);
+        const evt = await client.once("remoteAudioMuteStatusChanged", 5000);
         this.hasValue(evt);
         this.hasValue(evt.id);
         this.isTrue(client.otherUsers.has(evt.id));
@@ -103,10 +114,8 @@ class TestBase extends TestCase {
 
     async sendVideoUnmuted() {
         await wait(1000);
-        const evtTask = client.once("localVideoMuteStatusChanged", 5000);
-        await client.setVideoMutedAsync(false);
-        const evt = await evtTask;
-        this.hasValue(evt);
+        const evt = await this.withEvt("localVideoMuteStatusChanged", () =>
+            client.setVideoMutedAsync(false));
         this.hasValue(evt.id);
         this.isEqualTo(evt.id, client.localUser);
         this.isFalse(evt.muted);
@@ -114,10 +123,8 @@ class TestBase extends TestCase {
 
     async sendVideoMuted() {
         await wait(1000);
-        const evtTask = client.once("localVideoMuteStatusChanged", 5000);
-        await client.setVideoMutedAsync(true);
-        const evt = await evtTask;
-        this.hasValue(evt);
+        const evt = await this.withEvt("localVideoMuteStatusChanged", () =>
+            client.setVideoMutedAsync(true));
         this.hasValue(evt.id);
         this.isEqualTo(evt.id, client.localUser);
         this.isTrue(evt.muted);
@@ -158,219 +165,229 @@ class TestBase extends TestCase {
 }
 
 class JitsiClient1_Tests extends TestBase {
-    async test_00_joinChannel() {
+    async test_000_joinChannel() {
         await this.joinChannel();
     }
 
-    async test_01_getAudioOutputDevices() {
+    async test_010_getAudioOutputDevices() {
         const audioOutputDevices = await client.getAudioOutputDevices();
         this.hasValue(audioOutputDevices);
         this.isGreaterThan(audioOutputDevices.length, 0);
     }
 
-    async test_02_getCurrentAudioOutputDevice() {
+    async test_020_getCurrentAudioOutputDevice() {
         const curAudioOut = await client.getCurrentAudioOutputDevice();
         this.hasValue(curAudioOut);
     }
 
-    async test_03_getAudioInputDevices() {
+    async test_030_getAudioInputDevices() {
         const audioInputDevices = await client.getAudioInputDevices();
         this.hasValue(audioInputDevices);
         this.isGreaterThan(audioInputDevices.length, 0);
     }
 
-    async test_04_getCurrentAudioInputDevice() {
+    async test_040_getCurrentAudioInputDevice() {
         const curAudioIn = await client.getCurrentAudioInputDevice();
         this.hasValue(curAudioIn);
     }
 
-    async test_05_getVideoInputDevices() {
+    async test_050_getVideoInputDevices() {
         const videoInputDevices = await client.getVideoInputDevices();
         this.hasValue(videoInputDevices);
         this.isGreaterThan(videoInputDevices.length, 0);
     }
 
-    async test_06_getCurrentVideoInputDevice() {
+    async test_060_getCurrentVideoInputDevice() {
         const curVideoIn = await client.getCurrentVideoInputDevice();
         this.isNull(curVideoIn);
     }
 
-    async test_07_toggleAudio() {
-        const evt = client.once("localAudioMuteStatusChanged", 1000);
-        client.toggleAudio();
-        await evt;
-        this.success("audio mute status changed");
+    async test_070_toggleAudio() {
+        const evt = await this.withEvt("localAudioMuteStatusChanged", () =>
+            client.toggleAudio());
+        this.isTrue(evt.muted);
     }
 
-    async test_08_isAudioMuted() {
+    async test_080_isAudioMuted() {
         let muted = await client.isAudioMutedAsync();
-        this.isBoolean(muted);
+        this.isTrue(muted);
     }
 
-    async test_09_setAudioMuted() {
-        const evt = client.once("localAudioMuteStatusChanged", 1000);
-        await client.setAudioMutedAsync(false);
-        await evt;
-        this.success("audio mute status changed");
+    async test_090_setAudioMuted() {
+        const evt = await this.withEvt("localAudioMuteStatusChanged", () =>
+            client.setAudioMutedAsync(false));
+        this.isFalse(evt.muted);
     }
 
-    async test_10_toggleVideo() {
-        const evt = client.once("localVideoMuteStatusChanged", 1000);
-        client.toggleVideo();
-        await evt;
-        this.success("video mute status changed");
+    async test_100_toggleVideo() {
+        const evt = await this.withEvt("localVideoMuteStatusChanged", () =>
+            client.toggleVideo());
+        this.isFalse(evt.muted);
     }
 
-    async test_11_isVideoMuted() {
+    async test_110_isVideoMuted() {
         let muted = await client.isVideoMutedAsync();
-        this.isBoolean(muted);
+        this.isFalse(muted);
     }
 
-    async test_12_setVideoMuted() {
-        const evt = client.once("localVideoMuteStatusChanged", 1000);
-        await client.setVideoMutedAsync(false);
-        await evt;
-        this.success("video mute status changed");
+    async test_120_setVideoMuted() {
+        const evt = await this.withEvt("localVideoMuteStatusChanged", () =>
+            client.setVideoMutedAsync(true));
+        this.isTrue(evt.muted);
     }
 
-    async test_13_participantJoined() {
+    async test_125_resetDevices() {
+        const audioMuted = await client.isAudioMutedAsync(),
+            videoMuted = await client.isVideoMutedAsync();
+
+        if (audioMuted) {
+            await client.setAudioMutedAsync(false);
+        }
+
+        if (!videoMuted) {
+            await client.setVideoMutedAsync(true);
+        }
+
+        this.success("Devices normalized");
+    }
+
+    async test_130_participantJoined() {
         const loc = new URL(document.location.href);
-        loc.hash = "#" + (userNumber + 1);
-        window.open(loc.href, "_blank", "screenX:10,screenY:10,width:400,height:600");
+        loc.hash = "2";
         await this.waitForJoin();
     }
 
-    async test_14_initUser() {
+    //*
+    async test_140_initUser() {
         await this.initUsers();
     }
 
-    async test_15_recvEmoji() {
+    async test_150_recvEmoji() {
         await this.recvEmoji();
     }
 
-    async test_16_sendEmoji() {
+    async test_160_sendEmoji() {
         await this.sendEmoji();
     }
 
-    async test_17_sendAudioMuted() {
+    async test_170_sendAudioMuted() {
         await this.sendAudioMuted();
     }
 
-    async test_18_recvAudioMuted() {
+    async test_180_recvAudioMuted() {
         await this.recvAudioMuted();
     }
 
-    async test_19_sendAudioUnmuted() {
+    async test_190_sendAudioUnmuted() {
         await this.sendAudioUnmuted();
     }
 
-    async test_20_recvAudioUnmuted() {
+    async test_200_recvAudioUnmuted() {
         await this.recvAudioUnmuted();
     }
 
-    async test_21_sendVideoUnmuted() {
+    async test_210_sendVideoUnmuted() {
         await this.sendVideoUnmuted();
     }
 
-    async test_22_recvVideoUnmuted() {
+    async test_220_recvVideoUnmuted() {
         await this.recvVideoUnmuted();
     }
 
-    async test_23_sendVideoMuted() {
+    async test_230_sendVideoMuted() {
         await this.sendVideoMuted();
     }
 
-    async test_24_recvVideoMuted() {
+    async test_240_recvVideoMuted() {
         await this.recvVideoMuted();
     }
 
-    async test_25_sendPosition() {
+    async test_250_sendPosition() {
         await this.sendPosition();
     }
 
-    async test_26_recvPosition() {
+    async test_260_recvPosition() {
         await this.recvPosition();
     }
 
-    async test_98_participantLeft() {
+    async test_998_participantLeft() {
         const evt = await client.once("participantLeft", 5000);
         this.hasValue(evt);
         this.hasValue(evt.id);
         this.isFalse(client.otherUsers.has(evt.id));
     }
 
-    async test_99_leaveConference() {
-        const evtTask = client.once("videoConferenceLeft", 5000);
-        client.leave();
-        const evt = await evtTask;
-        this.hasValue(evt);
+    async test_999_leaveConference() {
+        const evt = await this.withEvt("videoConferenceLeft", () =>
+            client.leave());
         this.hasValue(evt.roomName);
         this.isEqualTo(evt.roomName, TEST_ROOM_NAME);
     }
+    //*/
 }
 
 class JitsiClient2_Tests extends TestBase {
-    async test_00_joinChannel() {
+    async test_000_joinChannel() {
         await this.joinChannel();
     }
 
-    async test_13_participantJoined() {
+    async test_130_participantJoined() {
         await this.waitForJoin();
     }
 
-    async test_14_initUser() {
+    async test_140_initUser() {
         await this.initUsers();
     }
 
-    async test_15_sendEmoji() {
+    async test_150_sendEmoji() {
         await this.sendEmoji();
     }
 
-    async test_16_recvEmoji() {
+    async test_160_recvEmoji() {
         await this.recvEmoji();
     }
 
-    async test_17_recvAudioMuted() {
+    async test_170_recvAudioMuted() {
         await this.recvAudioMuted();
     }
 
-    async test_18_sendAudioMuted() {
+    async test_180_sendAudioMuted() {
         await this.sendAudioMuted();
     }
 
-    async test_19_recvAudioUnmuted() {
+    async test_190_recvAudioUnmuted() {
         await this.recvAudioUnmuted();
     }
 
-    async test_20_sendAudioUnmuted() {
+    async test_200_sendAudioUnmuted() {
         await this.sendAudioUnmuted();
     }
 
-    async test_21_recvVideoUnmuted() {
+    async test_210_recvVideoUnmuted() {
         await this.recvVideoUnmuted();
     }
 
-    async test_22_sendVideoUnmuted() {
+    async test_220_sendVideoUnmuted() {
         await this.sendVideoUnmuted();
     }
 
-    async test_23_recvVideoMuted() {
+    async test_230_recvVideoMuted() {
         await this.recvVideoMuted();
     }
 
-    async test_24_sendVideoMuted() {
+    async test_240_sendVideoMuted() {
         await this.sendVideoMuted();
     }
 
-    async test_25_recvPosition() {
+    async test_250_recvPosition() {
         await this.recvPosition();
     }
 
-    async test_26_sendPosition() {
+    async test_260_sendPosition() {
         await this.sendPosition();
     }
 
-    async test_98_participantLeft() {
+    async test_980_participantLeft() {
         await wait(1000);
         client.leave();
         this.success("Conference left");

@@ -1,5 +1,6 @@
-﻿import { Div } from "./html/tags.js";
+﻿import { CallaUserEvent } from "./events.js";
 import { id } from "./html/attrs.js";
+import { Div } from "./html/tags.js";
 
 // helps us filter out data channel messages that don't belong to us
 const APP_FINGERPRINT
@@ -42,6 +43,42 @@ export class BaseJitsiClient extends EventTarget {
     async joinAsync(roomName, userName) {
         this.dispose();
         await this.initializeAsync(JITSI_HOST, roomName);
+
+        this.addEventListener("videoConferenceJoined", (evt) => {
+            this.localUser = evt.id;
+        });
+
+        this.addEventListener("videoConferenceLeft", (evt) => {
+            this.localUser = null;
+        });
+
+        this.addEventListener("participantJoined", (evt) => {
+            this.otherUsers.set(evt.id, evt.displayName);
+        });
+
+        this.addEventListener("participantLeft", (evt) => {
+            if (this.otherUsers.has(evt.id)) {
+                this.otherUsers.delete(evt.id);
+            }
+        });
+
+        this.addEventListener("displayNameChange", (evt) => {
+            if (this.otherUsers.has(evt.id)) {
+                this.otherUsers.set(evt.id, evt.displayname);
+            }
+        });
+
+        this.addEventListener("audioMuteStatusChanged", (evt) => {
+            if (evt.id === this.localUser) {
+                this.audioMuteStatusChanged(evt.muted);
+            }
+        });
+
+        this.addEventListener("videoMuteStatusChanged", (evt) => {
+            if (evt.id === this.localUser) {
+                this.videoMuteStatusChanged(evt.muted);
+            }
+        });
 
         const localizeMuteEvent = (type) => (evt) => {
             const evt2 = Object.assign(
@@ -133,6 +170,14 @@ export class BaseJitsiClient extends EventTarget {
         throw new Error("Not implemented in base class");
     }
 
+    setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
+        throw new Error("Not implemented in base class.");
+    }
+
+    setPosition(evt) {
+        throw new Error("Not implemented in base class.");
+    }
+
     async setAudioMutedAsync(muted) {
         const isMuted = await this.isAudioMutedAsync();
         if (muted !== isMuted) {
@@ -184,7 +229,7 @@ export class BaseJitsiClient extends EventTarget {
         //};
         const data = JSON.parse(evt.data.eventData.text);
         if (data.hax === APP_FINGERPRINT) {
-            const evt2 = new JitsiClientEvent(evt.data.senderInfo.id, data);
+            const evt2 = new CallaUserEvent(evt.data.senderInfo.id, data);
             this.dispatchEvent(evt2);
         }
     }
@@ -220,22 +265,5 @@ export class BaseJitsiClient extends EventTarget {
         for (let toUserID of this.otherUsers.keys()) {
             this.txGameData(toUserID, "videoMuteStatusChanged", { muted });
         }
-    }
-
-    setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
-        throw new Error("Not implemented in base class.");
-    }
-
-    setPosition(evt) {
-        throw new Error("Not implemented in base class.");
-    }
-}
-
-class JitsiClientEvent extends Event {
-    constructor(id, data) {
-        super(data.command);
-        this.id = id;
-        Object.assign(this, data.value);
-        Object.freeze(this);
     }
 }

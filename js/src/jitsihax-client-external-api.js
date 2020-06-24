@@ -1,4 +1,5 @@
-﻿import { BaseJitsiClient } from "./jitsihax-client-base.js";
+﻿import { CallaEvent } from "./events.js";
+import { BaseJitsiClient } from "./jitsihax-client-base.js";
 
 export class ExternalJitsiClient extends BaseJitsiClient {
     constructor() {
@@ -58,7 +59,6 @@ export class ExternalJitsiClient extends BaseJitsiClient {
             };
 
             reroute("videoConferenceJoined", (evt) => {
-                this.localUser = evt.id;
                 return {
                     roomName: evt.roomName,
                     id: evt.id,
@@ -67,7 +67,6 @@ export class ExternalJitsiClient extends BaseJitsiClient {
             });
 
             reroute("videoConferenceLeft", (evt) => {
-                this.localUser = null;
                 return {
                     roomName: evt.roomName
                 };
@@ -75,7 +74,6 @@ export class ExternalJitsiClient extends BaseJitsiClient {
 
             reroute("participantJoined", (evt) => {
                 if (evt.id !== "local") {
-                    this.otherUsers.set(evt.id, evt.displayName);
                     return {
                         id: evt.id,
                         displayName: evt.displayName
@@ -84,17 +82,13 @@ export class ExternalJitsiClient extends BaseJitsiClient {
             });
 
             reroute("participantLeft", (evt) => {
-                if (this.otherUsers.has(evt.id)) {
-                    this.otherUsers.delete(evt.id);
-                    return {
-                        id: evt.id
-                    };
-                }
+                return {
+                    id: evt.id
+                };
             });
 
             reroute("avatarChanged", (evt) => {
-                if (this.otherUsers.has(evt.id)
-                    && evt.avatarURL !== undefined) {
+                if (evt.avatarURL !== undefined) {
                     return {
                         id: evt.id,
                         avatarURL: evt.avatarURL
@@ -103,21 +97,17 @@ export class ExternalJitsiClient extends BaseJitsiClient {
             });
 
             reroute("displayNameChange", (evt) => {
-                if (this.otherUsers.has(evt.id)) {
-                    this.otherUsers.set(evt.id, evt.displayname);
-                    return {
-                        id: evt.id,
+                return {
+                    id: evt.id,
 
-                        // The External API misnames this, 
-                        // so we guard against future change.
-                        displayName: evt.displayName
-                            || evt.displayname
-                    };
-                }
+                    // The External API misnames this, 
+                    // so we guard against future change.
+                    displayName: evt.displayName
+                        || evt.displayname
+                };
             });
 
             reroute("audioMuteStatusChanged", (evt) => {
-                this.audioMuteStatusChanged(evt.muted);
                 return {
                     id: this.localUser,
                     muted: evt.muted
@@ -125,7 +115,6 @@ export class ExternalJitsiClient extends BaseJitsiClient {
             });
 
             reroute("videoMuteStatusChanged", (evt) => {
-                this.videoMuteStatusChanged(evt.muted);
                 return {
                     id: this.localUser,
                     muted: evt.muted
@@ -137,7 +126,6 @@ export class ExternalJitsiClient extends BaseJitsiClient {
             });
         });
     }
-
 
     setDisplayName(userName) {
         this.api.executeCommand("displayName", userName);

@@ -1,15 +1,136 @@
-﻿import { BaseJitsiClient } from "../../src/jitsihax-client-base.js";
-import { randomPerson } from "../../src/emoji.js";
-import { MockJitsiMeetExternalAPI } from "./mockjitsimeetexternalapi.js";
+﻿import { randomPerson } from "../../src/emoji.js";
+import { CallaEvent } from "../../src/events.js";
+import { BaseJitsiClient } from "../../src/jitsihax-client-base.js";
+
+const TEST_FINGERPRINT = "jitsihax-client-mock",
+    userNumber = document.location.hash.length > 0
+        ? parseFloat(document.location.hash.substring(1))
+        : 1;
 
 export class MockJitsiClient extends BaseJitsiClient {
     constructor() {
         super();
-        window.addEventListener("message", this.rxJitsiHax.bind(this));
+        this.host;
+        this.roomName = null;
+        this.userName = null;
+        this.audioMuted = false;
+        this.videoMuted = true;
+        this.testWindow = null;
+        this.availableDevices = {
+            audioInput: [{ id: "mock-audio-input", label: "Mock audio input device" }],
+            audioOutput: [{ id: "mock-audio-output", label: "Mock audio output device" }],
+            videoInput: [{ id: "mock-video-input", label: "Mock video input device" }]
+        }
+
+        this.currentDevices = {
+            audioInput: this.availableDevices.audioInput[0],
+            audioOutput: this.availableDevices.audioOutput[0],
+            videoInput: null
+        };
+
+        window.addEventListener("message", (evt) => {
+            this.rxJitsiHax(evt);
+        });
+
+        window.addEventListener("message", (evt) => {
+            this.rxTestHax(evt);
+        });
     }
 
     async initializeAsync(host, roomName) {
-        return new MockJitsiMeetExternalAPI(roomName);
+        this.host = host;
+        this.roomName = roomName;
+    }
+
+    setDisplayName(displayName) {
+        this.userName = displayName;
+        this.dispatchEvent(Object.assign(
+            new Event("videoConferenceJoined"),
+            {
+                roomName: this.roomName,
+                id: "mock-local-user-" + userNumber,
+                displayName
+            }));
+    }
+
+    leave() {
+        throw new Error("Not implemented in base class");
+    }
+
+    async getAudioOutputDevices() {
+        return this.availableDevices.audioOutput;
+    }
+
+    async getCurrentAudioOutputDevice() {
+        return this.currentDevices.audioOutput;
+    }
+
+    setAudioOutputDevice(device) {
+        this.currentDevices.audioOutput = device;
+    }
+
+    async getAudioInputDevices() {
+        return this.availableDevices.audioInput;
+    }
+
+    async getCurrentAudioInputDevice() {
+        return this.currentDevices.audioInput;
+    }
+
+    setAudioInputDevice(device) {
+        this.currentDevices.audioInput = device;
+    }
+
+    async getVideoInputDevices() {
+        return this.availableDevices.videoInput;
+    }
+
+    async getCurrentVideoInputDevice() {
+        return this.currentDevices.videoInput;
+    }
+
+    setVideoInputDevice(device) {
+        this.currentDevices.videoInput = device;
+    }
+
+    toggleAudio() {
+        this.audioMuted = !this.audioMuted;
+        this.dispatchEvent(Object.assign(new Event("audioMuteStatusChanged"), {
+            id: this.localUser,
+            muted: this.audioMuted
+        }));
+    }
+
+    toggleVideo() {
+        this.videoMuted = !this.videoMuted;
+        this.dispatchEvent(Object.assign(new Event("videoMuteStatusChanged"), {
+            id: this.localUser,
+            muted: this.videoMuted
+        }));
+    }
+
+    async isAudioMutedAsync() {
+        return this.audioMuted;
+    }
+
+    async isVideoMutedAsync() {
+        return this.videoMuted;
+    }
+
+    setAvatarURL(url) {
+        throw new Error("Not implemented in base class");
+    }
+
+    sendMessageTo(toUserID, data) {
+        throw new Error("Not implemented in base class");
+    }
+
+    setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
+        throw new Error("Not implemented in base class.");
+    }
+
+    setPosition(evt) {
+        throw new Error("Not implemented in base class.");
     }
 
     mockRxGameData(command, id, data) {
@@ -42,21 +163,6 @@ export class MockJitsiClient extends BaseJitsiClient {
                 this.mockRxGameData("userInitResponse", id, user);
             }
         }
-    }
-
-    toggleAudio() {
-        super.toggleAudio();
-        this.mockRxGameData("audioMuteStatusChanged", this.localUser, { muted: this.api.audioMuted });
-    }
-
-    toggleVideo() {
-        super.toggleVideo();
-        this.mockRxGameData("videoMuteStatusChanged", this.localUser, { muted: this.api.videoMuted });
-    }
-
-    setAvatarURL(url) {
-        super.setAvatarURL(url);
-        this.mockRxGameData("avatarChanged", this.localUser, { avatarURL: url });
     }
 
     /// Send a Calla message to the jitsihax.js script
