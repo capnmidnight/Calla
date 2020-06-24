@@ -73,7 +73,7 @@ export function init(JitsiClientClass) {
     });
 
     game.addEventListener("userjoined", (evt) => {
-        evt.user.addEventListener("userInitRequest", (evt2) => {
+        evt.user.addEventListener("userPositionNeeded", (evt2) => {
             jitsiClient.userInitRequest(evt2.id);
         });
     });

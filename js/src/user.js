@@ -18,7 +18,7 @@ import {
 const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
     STACKED_USER_OFFSET_X = 5,
     STACKED_USER_OFFSET_Y = 5,
-    eventNames = ["userMoved", "userInitRequest"];
+    eventNames = ["userMoved", "userPositionNeeded"];
 
 export class User extends EventTarget {
     constructor(id, displayName, isMe) {
@@ -352,7 +352,7 @@ class UserMoveEvent extends Event {
 
 class UserPositionNeededEvent extends Event {
     constructor(id) {
-        super("userInitRequest");
+        super("userPositionNeeded");
         this.id = id;
     }
 }
