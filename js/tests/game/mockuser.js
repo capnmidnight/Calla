@@ -1,4 +1,4 @@
-﻿import { allIcons as icons } from "../../src/emoji.js";
+﻿import { allIcons as icons, randomPerson } from "../../src/emoji.js";
 
 import {
     Audio,
@@ -18,6 +18,8 @@ export class MockUser {
         this.x = x;
         this.y = y;
         this.audio = null;
+        this.displayName = id;
+        this.avatarEmoji = randomPerson().value;
     }
 
     schedule() {
@@ -29,7 +31,10 @@ export class MockUser {
     start() {
         const evt = Object.assign(
             new Event("participantJoined"),
-            { id: this.id });
+            {
+                id: this.id,
+                displayName: this.displayName
+            });
 
         document.body.appendChild(Span(id(`participant_${this.id}`),
             this.audio = Audio(
@@ -38,7 +43,7 @@ export class MockUser {
                 loop
             )));
 
-        jitsiClient.api.dispatchEvent(evt);
+        jitsiClient.dispatchEvent(evt);
 
         this.schedule();
     }
@@ -55,13 +60,20 @@ export class MockUser {
         const x = this.x + Math.floor(2 * Math.random() - 1),
             y = this.y + Math.floor(2 * Math.random() - 1);
 
-        jitsiClient.mockRxGameData("userMoved", this.id, { x, y });
+        jitsiClient.sendMessageTo(jitsiClient.localUser, {
+            command: "userMoved",
+            value: { id: this.id, x, y }
+        });
 
         if (Math.random() <= 0.1) {
             const groups = Object.values(icons),
                 group = groups.random(),
                 emoji = group.random();
-            jitsiClient.mockRxGameData("emote", this.id, emoji);
+            jitsiClient.sendMessageTo(jitsiClient.localUser, {
+                command: "emote",
+                id: this.id,
+                value: emoji
+            });
         }
 
         this.schedule();

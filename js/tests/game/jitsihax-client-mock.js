@@ -1,15 +1,15 @@
-﻿import { randomPerson } from "../../src/emoji.js";
 ﻿import { CallaEvent, CallaUserEvent } from "../../src/events.js";
 import { BaseJitsiClient } from "../../src/jitsi/baseClient.js";
 
 const userNumber = document.location.hash.length > 0
-        ? parseFloat(document.location.hash.substring(1))
-        : 1;
+    ? parseFloat(document.location.hash.substring(1))
+    : 1;
 
 export class MockJitsiClient extends BaseJitsiClient {
-    constructor() {
+    constructor(testUsers) {
         super();
         this.host;
+        this.testUsers = null;
         this.roomName = null;
         this.userName = null;
         this.audioMuted = false;
@@ -28,10 +28,6 @@ export class MockJitsiClient extends BaseJitsiClient {
 
         window.addEventListener("message", (evt) => {
             this.rxJitsiHax(evt);
-        });
-
-        window.addEventListener("message", (evt) => {
-            this.rxTestHax(evt);
         });
     }
 
@@ -120,7 +116,17 @@ export class MockJitsiClient extends BaseJitsiClient {
     }
 
     sendMessageTo(toUserID, data) {
-        throw new Error("Not implemented in base class");
+        if (toUserID === this.localUser) {
+            this.dispatchEvent(new CallaUserEvent(data.value.id, data));
+        }
+        else {
+            const user = this.testUsers.filter(u => u.id === toUserID)[0];
+            if (!!user) {
+                if (data.command === "userInitRequest") {
+                    this.userInitResponse(this.localUser, user);
+                }
+            }
+        }
     }
 
     setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
@@ -129,38 +135,6 @@ export class MockJitsiClient extends BaseJitsiClient {
 
     setPosition(evt) {
         throw new Error("Not implemented in base class.");
-    }
-
-    mockRxGameData(command, id, data) {
-        data = Object.assign({},
-            data,
-            {
-                hax: "Calla",
-                command
-            });
-
-        const text = JSON.stringify(data);
-
-        this.rxGameData({
-            data: {
-                senderInfo: {
-                    id
-                },
-                eventData: {
-                    text
-                }
-            }
-        });
-    }
-
-    txGameData(id, msg, data) {
-        if (msg === "userInitRequest") {
-            const user = game.userLookup[id];
-            if (!!user) {
-                user.avatarEmoji = randomPerson().value;
-                this.mockRxGameData("userInitResponse", id, user);
-            }
-        }
     }
 
     /// Send a Calla message to the jitsihax.js script

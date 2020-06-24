@@ -18,7 +18,7 @@ import { init } from "../../src/app.js";
     const loginContent = document.querySelector("#login > .content")
     loginContent.parentElement.removeChild(loginContent);
 
-    const { game } = init(MockJitsiClient, document.querySelector("#appView")),
+    const { game, loginForm, jitsiClient } = init(JitsiClient, document.querySelector("#appView")),
         testUsers = [
             new MockUser("user1", -5, -5),
             new MockUser("user2", -5, 5),
@@ -27,10 +27,16 @@ import { init } from "../../src/app.js";
             new MockUser("user5", 0, 0)
         ];
 
+    jitsiClient.testUsers = testUsers.slice();
+
     game.addEventListener("gamestarted", function createTestUser() {
         if (testUsers.length > 0) {
             testUsers.shift().start();
             setTimeout(createTestUser, 1000);
         }
     });
+
+    loginForm.userNameInput.value = "Sean";
+    loginForm.userNameInput.dispatchEvent(new Event("input"));
+    loginForm.connectButton.click();
 })();
