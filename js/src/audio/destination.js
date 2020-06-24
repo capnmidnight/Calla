@@ -72,7 +72,7 @@ export class Destination {
         }
     }
 
-    setProperties(evt) {
+    setAudioProperties(evt) {
         this.minDistance = evt.minDistance;
         this.maxDistance = evt.maxDistance;
         this.transitionTime = evt.transitionTime;

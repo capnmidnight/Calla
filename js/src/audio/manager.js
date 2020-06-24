@@ -64,11 +64,10 @@ export class Manager extends EventTarget {
     setAudioProperties(evt) {
         this.origin = evt.origin;
 
-        this.destination.setProperties(evt);
+        this.destination.setAudioProperties(evt);
 
         for (let source of sourceList) {
-            source.panner.refDistance = destination.minDistance;
-            source.panner.rolloffFactor = destination.rolloff;
+            source.setAudioProperties(evt);
         }
     }
 }

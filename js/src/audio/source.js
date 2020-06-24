@@ -71,6 +71,11 @@ export class Source extends EventTarget {
         this.panner.connect(this.audioContext.destination);
     }
 
+    setAudioProperties(evt) {
+        this.panner.refDistance = evt.minDistance;
+        this.panner.rolloffFactor = evt.rolloff;
+    }
+
     setPosition(evt) {
         const time = this.audioContext.currentTime + this.destination.transitionTime;
         // our 2D position is in X/Y coords, but our 3D position

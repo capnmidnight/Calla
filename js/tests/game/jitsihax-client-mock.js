@@ -126,14 +126,6 @@ export class MockJitsiClient extends BaseJitsiClient {
         }
     }
 
-    setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
-        throw new Error("Not implemented in base class.");
-    }
-
-    setPosition(evt) {
-        throw new Error("Not implemented in base class.");
-    }
-
     /// Send a Calla message to the jitsihax.js script
     txJitsiHax(command, value) {
         const evt = {
