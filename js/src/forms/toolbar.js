@@ -212,7 +212,7 @@ export class ToolBar extends EventTarget {
         this.toolbar.append(...children);
     }
 
-    setEmojiButton(key, value) {
-        this.emoteButton.innerHTML = `Emote (<kbd>${key.toUpperCase()}</kbd>) (${value})`
+    setEmojiButton(key, emoji) {
+        this.emoteButton.innerHTML = `Emote (<kbd>${key.toUpperCase()}</kbd>) (${emoji.value})`
     }
 }
