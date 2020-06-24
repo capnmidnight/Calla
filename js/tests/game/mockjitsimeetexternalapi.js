@@ -1,32 +1,27 @@
 ﻿export class MockJitsiMeetExternalAPI extends EventTarget {
-    constructor(host, options) {
+    constructor(roomName) {
         super();
-        this.options = options;
+        this.roomName = roomName;
         this.audioMuted = false;
         this.videoMuted = true;
+        this.availableDevices = {
+            audioInput: [{ id: "mock-audio-input", label: "Mock audio input device" }],
+            audioOutput: [{ id: "mock-audio-output", label: "Mock audio output device" }],
+            videoInput: [{ id: "mock-video-input", label: "Mock video input device" }]
+        }
+
         this.currentDevices = {
-            audioInput: { id: "mock-audio-input", label: "Mock audio input device" },
-            audioOutput: { id: "mock-audio-output", label: "Mock audio output device" },
-            videoInput: { id: "mock-video-input", label: "Mock video input device" }
+            audioInput: this.availableDevices.audioInput[0],
+            audioOutput: this.availableDevices.audioOutput[0],
+            videoInput: null
         };
     }
 
     dispose() {
     }
 
-    getIFrame() {
-        return {
-            src: window.location.href,
-            addEventListener: function () { }
-        };
-    }
-
     getAvailableDevices() {
-        return Promise.resolve({
-            audioInput: [this.currentDevices.audioInput],
-            audioOutput: [this.currentDevices.audioOutput],
-            videoInput: [this.currentDevices.videoInput]
-        });
+        return Promise.resolve(this.availableDevices);
     }
 
     getCurrentDevices() {
@@ -58,7 +53,7 @@
             this.dispatchEvent(Object.assign(
                 new Event("videoConferenceJoined"),
                 {
-                    roomName: this.options.roomName,
+                    roomName: this.roomName,
                     id: "mock-local-user",
                     displayName: param
                 }));

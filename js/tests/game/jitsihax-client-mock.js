@@ -5,10 +5,11 @@ import { MockJitsiMeetExternalAPI } from "./mockjitsimeetexternalapi.js";
 export class MockJitsiClient extends BaseJitsiClient {
     constructor() {
         super();
+        window.addEventListener("message", this.rxJitsiHax.bind(this));
     }
 
-    async getApiClassAsync() {
-        return MockJitsiMeetExternalAPI;
+    async initializeAsync(host, roomName) {
+        return new MockJitsiMeetExternalAPI(roomName);
     }
 
     mockRxGameData(command, id, data) {
@@ -45,26 +46,24 @@ export class MockJitsiClient extends BaseJitsiClient {
 
     toggleAudio() {
         super.toggleAudio();
-        this.mockRxGameData("audioMuteStatusChanged", game.me.id, { muted: this.api.audioMuted });
+        this.mockRxGameData("audioMuteStatusChanged", this.localUser, { muted: this.api.audioMuted });
     }
 
     toggleVideo() {
         super.toggleVideo();
-        this.mockRxGameData("videoMuteStatusChanged", game.me.id, { muted: this.api.videoMuted });
+        this.mockRxGameData("videoMuteStatusChanged", this.localUser, { muted: this.api.videoMuted });
     }
 
     setAvatarURL(url) {
         super.setAvatarURL(url);
-        this.mockRxGameData("avatarChanged", game.me.id, { avatarURL: url });
+        this.mockRxGameData("avatarChanged", this.localUser, { avatarURL: url });
     }
 
     /// Send a Calla message to the jitsihax.js script
     txJitsiHax(command, obj) {
-        if (this.apiWindow) {
-            obj.hax = APP_FINGERPRINT;
-            obj.command = command;
-            this.apiWindow.postMessage(JSON.stringify(obj), this.apiOrigin);
-        }
+        obj.hax = APP_FINGERPRINT;
+        obj.command = command;
+        window.postMessage(JSON.stringify(obj), this.apiOrigin);
     }
 
     rxJitsiHax(evt) {

@@ -1,6 +1,7 @@
 ﻿import "../../src/protos.js";
 import { HtmlTestOutput as TestOutput, TestCase } from "../../etc/assert.js";
-import { JitsiClient } from "../../src/jitsihax-client-external-api.js";
+//import { MockJitsiClient as JitsiClient } from "../game/jitsihax-client-mock.js";
+import { ExternalJitsiClient as JitsiClient } from "../../src/jitsihax-client-external-api.js";
 import { bust } from "../../src/emoji.js";
 import { wait } from "../../src/wait.js";
 
@@ -11,8 +12,9 @@ const TEST_ROOM_NAME = "testroom",
 
 class TestBase extends TestCase {
     async joinChannel() {
+        const evtTask = client.once("videoConferenceJoined");
         await client.joinAsync(TEST_ROOM_NAME, "TestUser" + userNumber);
-        const evt = await client.once("videoConferenceJoined");
+        const evt = await evtTask;
         this.hasValue(evt);
         this.isEqualTo(evt.id, client.localUser);
     }

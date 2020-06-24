@@ -31,223 +31,106 @@ export class BaseJitsiClient extends EventTarget {
     constructor() {
         super();
         this.element = Div(id("jitsi"));
-        this.api = null;
-        this.iframe = null;
-        this.apiOrigin = null;
-        this.apiWindow = null;
         this.localUser = null;
         this.otherUsers = new Map();
-        addEventListener("message", this.rxJitsiHax.bind(this));
     }
 
-    async getApiClassAsync() {
+    async initializeAsync(host, roomName) {
         throw new Error("Not implemented in base class.");
     }
 
     async joinAsync(roomName, userName) {
-        if (this.api !== null) {
-            this.api.dispose();
-            this.api = null;
-        }
+        this.dispose();
+        await this.initializeAsync(JITSI_HOST, roomName);
 
-        const ApiClass = await this.getApiClassAsync();
-        await new Promise((resolve, reject) => {
-            this.api = new ApiClass(JITSI_HOST, {
-                parentNode: this.element,
-                roomName,
-                onload: () => {
-                    this.iframe = this.api.getIFrame();
-                    this.apiOrigin = new URL(this.iframe.src).origin;
-                    this.apiWindow = this.iframe.contentWindow || window;
-                    resolve();
-                },
-                noSSL: false,
-                width: "100%",
-                height: "100%",
-                configOverwrite: {
-                    startVideoMuted: 0,
-                    startWithVideoMuted: true
-                },
-                interfaceConfigOverwrite: {
-                    DISABLE_VIDEO_BACKGROUND: true,
-                    SHOW_JITSI_WATERMARK: false,
-                    SHOW_WATERMARK_FOR_GUESTS: false,
-                    SHOW_POWERED_BY: true,
-                    AUTHENTICATION_ENABLE: false,
-                    MOBILE_APP_PROMO: false
-                }
+        const localizeMuteEvent = (type) => (evt) => {
+            const evt2 = Object.assign(
+                new Event((evt.id === this.localUser ? "local" : "remote") + type + "MuteStatusChanged"), {
+                id: evt.id,
+                muted: evt.muted
             });
+            this.dispatchEvent(evt2);
+        };
 
-            const reroute = (evtType, copy) => {
-                this.api.addEventListener(evtType, (rootEvt) => {
-                    const clone = copy(rootEvt);
-                    if (clone !== undefined) {
-                        const evt = Object.assign(
-                            new Event(evtType),
-                            clone);
-                        this.dispatchEvent(evt);
-                    }
-                });
-            };
+        this.addEventListener("audioMuteStatusChanged", localizeMuteEvent("Audio"));
+        this.addEventListener("videoMuteStatusChanged", localizeMuteEvent("Video"));
 
-            reroute("videoConferenceJoined", (evt) => {
-                this.localUser = evt.id;
-                return {
-                    roomName: evt.roomName,
-                    id: evt.id,
-                    displayName: evt.displayName
-                };
-            });
-
-            reroute("videoConferenceLeft", (evt) => {
-                this.localUser = null;
-                return {
-                    roomName: evt.roomName
-                };
-            });
-
-            reroute("participantJoined", (evt) => {
-                if (evt.id !== "local") {
-                    this.otherUsers.set(evt.id, evt.displayName);
-                    return {
-                        id: evt.id,
-                        displayName: evt.displayName
-                    };
-                }
-            });
-
-            reroute("participantLeft", (evt) => {
-                if (this.otherUsers.has(evt.id)) {
-                    this.otherUsers.delete(evt.id);
-                    return {
-                        id: evt.id
-                    };
-                }
-            });
-
-            reroute("avatarChanged", (evt) => {
-                if (this.otherUsers.has(evt.id)
-                    && evt.avatarURL !== undefined) {
-                    return {
-                        id: evt.id,
-                        avatarURL: evt.avatarURL
-                    };
-                }
-            });
-
-            reroute("displayNameChange", (evt) => {
-                if (this.otherUsers.has(evt.id)) {
-                    this.otherUsers.set(evt.id, evt.displayname);
-                    return {
-                        id: evt.id,
-
-                        // The External API misnames this
-                        displayName: evt.displayname
-                    };
-                }
-            });
-
-            reroute("audioMuteStatusChanged", (evt) => {
-                this.audioMuteStatusChanged(evt.muted);
-                return {
-                    id: this.localUser,
-                    muted: evt.muted
-                };
-            });
-
-            reroute("videoMuteStatusChanged", (evt) => {
-                this.videoMuteStatusChanged(evt.muted);
-                return {
-                    id: this.localUser,
-                    muted: evt.muted
-                };
-            });
-
-            const localizeMuteEvent = (type) => (evt) => {
-                const evt2 = Object.assign(
-                    new Event((evt.id === this.localUser ? "local" : "remote") + type + "MuteStatusChanged"), {
-                    id: evt.id,
-                    muted: evt.muted
-                });
-                this.dispatchEvent(evt2);
-            };
-
-            this.addEventListener("audioMuteStatusChanged", localizeMuteEvent("Audio"));
-            this.addEventListener("videoMuteStatusChanged", localizeMuteEvent("Video"));
-
-            this.api.addEventListener("endpointTextMessageReceived",
-                this.rxGameData.bind(this));
-
-            addEventListener("unload", () => {
-                if (this.api !== null) {
-                    this.api.dispose();
-                }
-            });
-
-            this.api.executeCommand("displayName", userName);
+        window.addEventListener("unload", () => {
+            this.dispose();
         });
+
+        this.setDisplayName(userName);
+    }
+
+    dispose() {
+    }
+
+    setDisplayName(userName) {
+        throw new Error("Not implemented in base class");
     }
 
     leave() {
-        this.api.executeCommand("hangup");
+        throw new Error("Not implemented in base class");
     }
 
     async getAudioOutputDevices() {
-        const devices = await this.api.getAvailableDevices();
-        return devices && devices.audioOutput || [];
+        throw new Error("Not implemented in base class");
     }
 
     async getCurrentAudioOutputDevice() {
-        const devices = await this.api.getCurrentDevices();
-        return devices && devices.audioOutput || null;
+        throw new Error("Not implemented in base class");
     }
 
     setAudioOutputDevice(device) {
-        this.api.setAudioOutputDevice(device.label, device.id);
+        throw new Error("Not implemented in base class");
     }
 
     async getAudioInputDevices() {
-        const devices = await this.api.getAvailableDevices();
-        return devices && devices.audioInput || [];
+        throw new Error("Not implemented in base class");
     }
 
     async getCurrentAudioInputDevice() {
-        const devices = await this.api.getCurrentDevices();
-        return devices && devices.audioInput || null;
+        throw new Error("Not implemented in base class");
     }
 
     setAudioInputDevice(device) {
-        this.api.setAudioInputDevice(device.label, device.id);
+        throw new Error("Not implemented in base class");
     }
 
     async getVideoInputDevices() {
-        const devices = await this.api.getAvailableDevices();
-        return devices && devices.videoInput || [];
+        throw new Error("Not implemented in base class");
     }
 
     async getCurrentVideoInputDevice() {
-        const devices = await this.api.getCurrentDevices();
-        return devices && devices.videoInput || null;
+        throw new Error("Not implemented in base class");
     }
 
     setVideoInputDevice(device) {
-        this.api.setVideoInputDevice(device.label, device.id);
+        throw new Error("Not implemented in base class");
     }
 
     toggleAudio() {
-        this.api.executeCommand("toggleAudio");
+        throw new Error("Not implemented in base class");
     }
 
     toggleVideo() {
-        this.api.executeCommand("toggleVideo");
+        throw new Error("Not implemented in base class");
     }
 
     setAvatarURL(url) {
-        this.api.executeCommand("avatarUrl", url);
+        throw new Error("Not implemented in base class");
     }
 
     async isAudioMutedAsync() {
-        return await this.api.isAudioMuted();
+        throw new Error("Not implemented in base class");
+    }
+
+    async isVideoMutedAsync() {
+        throw new Error("Not implemented in base class");
+    }
+
+    sendMessageTo(toUserID, data) {
+        throw new Error("Not implemented in base class");
     }
 
     async setAudioMutedAsync(muted) {
@@ -255,10 +138,6 @@ export class BaseJitsiClient extends EventTarget {
         if (muted !== isMuted) {
             this.toggleAudio();
         }
-    }
-
-    async isVideoMutedAsync() {
-        return await this.api.isVideoMuted();
     }
 
     async setVideoMutedAsync(muted) {
@@ -284,7 +163,7 @@ export class BaseJitsiClient extends EventTarget {
             command,
             value
         };
-        this.api.executeCommand("sendEndpointTextMessage", id, JSON.stringify(data));
+        this.sendMessageTo(id, data);
     }
 
     /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
@@ -344,11 +223,11 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
-        throw new Error("Not implemented");
+        throw new Error("Not implemented in base class.");
     }
 
     setPosition(evt) {
-        throw new Error("Not implemented");
+        throw new Error("Not implemented in base class.");
     }
 }
 
