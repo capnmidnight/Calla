@@ -14,7 +14,6 @@ export class Manager extends EventTarget {
         this.sourceLookup = {};
         this.sourceList = [];
         this.destination = new Destination();
-        this.origin = null;
 
         this.updater = () => {
             requestAnimationFrame(this.updater);
@@ -62,8 +61,6 @@ export class Manager extends EventTarget {
     }
 
     setAudioProperties(evt) {
-        this.origin = evt.origin;
-
         this.destination.setAudioProperties(evt);
 
         for (let source of sourceList) {
