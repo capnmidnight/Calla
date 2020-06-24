@@ -1,4 +1,4 @@
-﻿import { HtmlTestOutput as TestOutput } from "../etc/assert.js";
+﻿import { HtmlTestOutput as TestOutput } from "../testing/HtmlTestOutput.js";
 import { MathTests } from "./math.js";
 
 const cons = new TestOutput(MathTests);
