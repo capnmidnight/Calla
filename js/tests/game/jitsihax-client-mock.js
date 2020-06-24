@@ -2,8 +2,7 @@
 import { CallaEvent } from "../../src/events.js";
 import { BaseJitsiClient } from "../../src/jitsihax-client-base.js";
 
-const TEST_FINGERPRINT = "jitsihax-client-mock",
-    userNumber = document.location.hash.length > 0
+const userNumber = document.location.hash.length > 0
         ? parseFloat(document.location.hash.substring(1))
         : 1;
 
@@ -15,7 +14,6 @@ export class MockJitsiClient extends BaseJitsiClient {
         this.userName = null;
         this.audioMuted = false;
         this.videoMuted = true;
-        this.testWindow = null;
         this.availableDevices = {
             audioInput: [{ id: "mock-audio-input", label: "Mock audio input device" }],
             audioOutput: [{ id: "mock-audio-output", label: "Mock audio output device" }],
@@ -169,12 +167,12 @@ export class MockJitsiClient extends BaseJitsiClient {
     txJitsiHax(command, obj) {
         obj.hax = APP_FINGERPRINT;
         obj.command = command;
-        window.postMessage(JSON.stringify(obj), this.apiOrigin);
+        window.postMessage(JSON.stringify(obj));
     }
 
     rxJitsiHax(evt) {
         const isLocalHost = evt.origin.match(/^https?:\/\/localhost\b/);
-        if (evt.origin === "https://" + JITSI_HOST || isLocalHost) {
+        if (isLocalHost) {
             try {
                 const data = JSON.parse(evt.data);
                 if (data.hax === APP_FINGERPRINT) {
