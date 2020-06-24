@@ -1,9 +1,6 @@
 ﻿import { CallaEvent, CallaUserEvent } from "../../src/events.js";
 import { BaseJitsiClient } from "../../src/jitsi/baseClient.js";
-
-const userNumber = document.location.hash.length > 0
-    ? parseFloat(document.location.hash.substring(1))
-    : 1;
+import { userNumber } from "../client-tests/userNumber.js";
 
 export class MockJitsiClient extends BaseJitsiClient {
     constructor(testUsers) {

@@ -75,8 +75,8 @@ export class Source extends EventTarget {
         const time = this.audioContext.currentTime + this.destination.transitionTime;
         // our 2D position is in X/Y coords, but our 3D position
         // along the horizontal plane is X/Z coords.
-        this.panner.positionX.linearRampToValueAtTime(evt.data.x, time);
-        this.panner.positionZ.linearRampToValueAtTime(evt.data.y, time);
+        this.panner.positionX.linearRampToValueAtTime(evt.x, time);
+        this.panner.positionZ.linearRampToValueAtTime(evt.y, time);
     }
 
     isAudible() {

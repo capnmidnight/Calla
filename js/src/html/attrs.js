@@ -10,9 +10,7 @@
                 console.warn(`Element ${elem.tagName} does not support Attribute ${key}`);
             }
             else if (key === "style") {
-                for (let subKey in value) {
-                    elem[key][subKey] = value[subKey];
-                }
+                Object.assign(elem[key], value);
             }
             else if (!(typeof value === "boolean" || value instanceof Boolean)
                 || key === "muted") {

@@ -7,13 +7,6 @@ const BUFFER_SIZE = 1024,
         isActive: false
     }));
 
-function updater() {
-    requestAnimationFrame(updater);
-    destination.update();
-    for (let source of sourceList) {
-        source.update();
-    }
-}
 
 export class Manager extends EventTarget {
     constructor() {
@@ -21,12 +14,20 @@ export class Manager extends EventTarget {
         this.sourceLookup = {};
         this.sourceList = [];
         this.destination = null;
+
+        this.updater = () => {
+            requestAnimationFrame(this.updater);
+            this.destination.update();
+            for (let source of this.sourceList) {
+                source.update();
+            }
+        };
     }
 
     ensureDestination() {
         if (this.destination === null) {
             this.destination = new Destination();
-            requestAnimationFrame(updater);
+            requestAnimationFrame(this.updater);
             window.destination = this.destination;
         }
 
@@ -46,11 +47,11 @@ export class Manager extends EventTarget {
                     audioActivityEvt.isActive = evt.isActive;
                     this.dispatchEvent(audioActivityEvt);
                 });
-                sourceList.push(source);
+                this.sourceList.push(source);
             }
         }
 
-        const user = sourceLookup[userID];
+        const user = this.sourceLookup[userID];
         if (!user) {
             console.warn(`no audio for user ${userID}`);
         }

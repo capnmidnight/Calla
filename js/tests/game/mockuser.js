@@ -10,6 +10,7 @@ export class MockUser {
         this.audio = null;
         this.displayName = id;
         this.avatarEmoji = randomPerson().value;
+        this.emoteEvt = { id, value: null, desc: null };
     }
 
     schedule() {
@@ -59,10 +60,10 @@ export class MockUser {
             const groups = Object.values(icons),
                 group = groups.random(),
                 emoji = group.random();
+            Object.assign(this.emoteEvt, emoji);
             jitsiClient.sendMessageTo(jitsiClient.localUser, {
                 command: "emote",
-                id: this.id,
-                value: emoji
+                value: this.emoteEvt
             });
         }
 

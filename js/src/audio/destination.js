@@ -5,11 +5,11 @@ const isOldAudioAPI = !AudioListener.prototype.hasOwnProperty("positionX");
 export class Destination {
     constructor() {
         this.audioContext = new AudioContext();
-        this.listener = audioContext.listener;
+        this.listener = this.audioContext.listener;
 
         this.minDistance = 1;
         this.maxDistance = 10;
-        this.rolloff = 5;
+        this.rolloff = 1;
         this.transitionTime = 0.125;
 
         if (isOldAudioAPI) {
@@ -31,7 +31,7 @@ export class Destination {
             this.listener.setOrientation(0, 0, -1, 0, 1, 0);
         }
         else {
-            const time = audioContext.currentTime;
+            const time = this.audioContext.currentTime;
             this.listener.positionX.setValueAtTime(0, time);
             this.listener.positionY.setValueAtTime(0, time);
             this.listener.positionZ.setValueAtTime(0, time);

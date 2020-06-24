@@ -2,7 +2,7 @@
 // be able to test the UI without having to connect to a
 // meeting.
 
-import "../../etc/jitsihax.js";
+import "../../src/audio/externalAPIServer.js"
 import { MockUser } from "./mockuser.js";
 import { MockJitsiClient as JitsiClient } from "./jitsihax-client-mock.js";
 import { init } from "../../src/app.js";

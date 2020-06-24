@@ -1,7 +1,9 @@
-﻿export class CallaEvent extends Event {
+﻿import "./protos.js";
+
+export class CallaEvent extends Event {
     constructor(data) {
         super(data.command);
-        Object.assign(this, data.value);
+        Event.clone(this, data.value);
     }
 }
 

@@ -156,7 +156,7 @@ export function init(JitsiClientClass) {
     });
 
     jitsiClient.addEventListener("emote", (evt) => {
-        game.emote(evt.id, evt.data);
+        game.emote(evt.id, evt);
     });
 
     jitsiClient.addEventListener("audioActivity", (evt) => {

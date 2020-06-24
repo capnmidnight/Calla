@@ -32,11 +32,10 @@ window.addEventListener("message", (msg) => {
         || ALLOW_LOCAL_HOST && isLocalHost) {
         try {
             const evt = JSON.parse(msg.data),
-                isJitsiHax = evt.hax === APP_FINGERPRINT,
-                cmd = manager[evt.command];
+                isJitsiHax = evt.hax === APP_FINGERPRINT;
 
-            if (isJitsiHax && !!cmd) {
-                cmd(evt.value);
+            if (isJitsiHax && !!manager[evt.command]) {
+                manager[evt.command](evt.value);
             }
         }
         catch (exp) {

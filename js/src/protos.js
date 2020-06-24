@@ -151,6 +151,18 @@ function add(a, b) {
     };
 }
 
+Event.clone = function (target, ...objs) {
+    for (let obj of objs) {
+        for (let key in obj) {
+            if (key !== "isTrusted") {
+                target[key] = obj[key];
+            }
+        }
+    }
+
+    return target;
+}
+
 EventTarget.prototype.once = function (resolveEvt, rejectEvt, timeout) {
 
     if (timeout === undefined
