@@ -50,9 +50,8 @@ export function init(JitsiClientClass) {
     }
 
     loginForm.addEventListener("login", () => {
-        console.log("LOGGING IN");
+        jitsiClient.joinAsync(loginForm.selectedRoom, loginForm.userName);
     });
-
 
     game.addEventListener("emote", (evt) => {
         jitsiClient.emote(evt.emoji);
@@ -87,7 +86,8 @@ export function init(JitsiClientClass) {
     });
 
     game.addEventListener("gamestarted", () => {
-        loginView.hide();
+        loginForm.hide();
+        toolbar.show();
         //gui.resize(toolbar.offsetHeight);
     });
 
@@ -143,7 +143,7 @@ export function init(JitsiClientClass) {
     jitsiClient.addEventListener("userInitResponse", (evt) => {
         const user = game.userLookup[evt.id];
         if (!!user) {
-            user.init(evt.data);
+            user.init(evt);
         }
     });
 
