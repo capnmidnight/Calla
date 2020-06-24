@@ -50,8 +50,14 @@ export class User extends EventTarget {
     }
 
     init(evt) {
-        this.x = evt.x;
-        this.y = evt.y;
+        this.sx
+            = this.tx
+            = this.x
+            = evt.x;
+        this.sx
+            = this.ty
+            = this.y
+            = evt.y;
         this.displayName = evt.displayName;
         this.avatarURL = evt.avatarURL;
         if (!this.avatarURL && !!this.avatarImage) {

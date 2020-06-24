@@ -3,7 +3,8 @@
 export class Emote {
     constructor(emoji, x, y) {
         this.emoji = emoji;
-        this.x = x; this.y = y;
+        this.x = x;
+        this.y = y;
         this.dx = Math.random() - 0.5;
         this.dy = -Math.random() * 0.5 - 0.5;
         this.life = 1;
@@ -16,8 +17,10 @@ export class Emote {
 
     update(dt) {
         this.life -= dt / EMOJI_LIFE;
-        this.dx *= 0.99; this.dy *= 0.99;
-        this.x += this.dx * dt; this.y += this.dy * dt;
+        this.dx *= 0.99;
+        this.dy *= 0.99;
+        this.x += this.dx * dt;
+        this.y += this.dy * dt;
     }
 
     drawShadow(g, map, cameraZ) {
