@@ -20,8 +20,6 @@ export function init(JitsiClientClass) {
             emojiForm
         };
 
-    Object.assign(window, forExport);
-
     function showLogin() {
         jitsiClient.element.hide();
         game.frontBuffer.hide();
@@ -88,6 +86,7 @@ export function init(JitsiClientClass) {
     game.addEventListener("gamestarted", () => {
         loginForm.hide();
         toolbar.show();
+        jitsiClient.setPosition(game.me);
         //gui.resize(toolbar.offsetHeight);
     });
 
@@ -144,6 +143,7 @@ export function init(JitsiClientClass) {
         const user = game.userLookup[evt.id];
         if (!!user) {
             user.init(evt);
+            jitsiClient.setPosition(evt);
         }
     });
 

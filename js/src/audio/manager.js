@@ -13,7 +13,8 @@ export class Manager extends EventTarget {
         super();
         this.sourceLookup = {};
         this.sourceList = [];
-        this.destination = null;
+        this.destination = new Destination();
+        this.origin = null;
 
         this.updater = () => {
             requestAnimationFrame(this.updater);
@@ -22,16 +23,7 @@ export class Manager extends EventTarget {
                 source.update();
             }
         };
-    }
-
-    ensureDestination() {
-        if (this.destination === null) {
-            this.destination = new Destination();
-            requestAnimationFrame(this.updater);
-            window.destination = this.destination;
-        }
-
-        return this.destination;
+        requestAnimationFrame(this.updater);
     }
 
 
@@ -41,7 +33,7 @@ export class Manager extends EventTarget {
                 audio = document.querySelector(elementID);
 
             if (!!audio) {
-                const source = this.sourceLookup[userID] = new Source(userID, audio, this.ensureDestination(), BUFFER_SIZE);
+                const source = this.sourceLookup[userID] = new Source(userID, audio, this.destination, BUFFER_SIZE);
                 source.addEventListener("audioActivity", (evt) => {
                     audioActivityEvt.id = evt.id;
                     audioActivityEvt.isActive = evt.isActive;
@@ -51,11 +43,11 @@ export class Manager extends EventTarget {
             }
         }
 
-        const user = this.sourceLookup[userID];
-        if (!user) {
+        const source = this.sourceLookup[userID];
+        if (!source) {
             console.warn(`no audio for user ${userID}`);
         }
-        return user;
+        return source;
     }
 
     setUserPosition(evt) {
@@ -66,19 +58,17 @@ export class Manager extends EventTarget {
     }
 
     setLocalPosition(evt) {
-        this.ensureDestination()
-            .setPosition(evt);
+        this.destination.setPosition(evt);
     }
 
     setAudioProperties(evt) {
-        origin = evt.origin;
+        this.origin = evt.origin;
 
-        this.ensureDestination()
-            .setProperties(evt);
+        this.destination.setProperties(evt);
 
-        for (let user of sourceList) {
-            user.panner.refDistance = destination.minDistance;
-            user.panner.rolloffFactor = destination.rolloff;
+        for (let source of sourceList) {
+            source.panner.refDistance = destination.minDistance;
+            source.panner.rolloffFactor = destination.rolloff;
         }
     }
 }

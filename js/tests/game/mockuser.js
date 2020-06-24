@@ -3,10 +3,11 @@ import { autoPlay, id, loop, src } from "../../src/html/attrs.js";
 import { Audio, Span } from "../../src/html/tags.js";
 
 export class MockUser {
-    constructor(id, x, y) {
+    constructor(id, x, y, jitsiClient) {
         this.id = id;
         this.x = x;
         this.y = y;
+        this.jitsiClient = jitsiClient;
         this.audio = null;
         this.displayName = id;
         this.avatarEmoji = randomPerson().value;
@@ -34,7 +35,7 @@ export class MockUser {
                 loop
             )));
 
-        jitsiClient.dispatchEvent(evt);
+        this.jitsiClient.dispatchEvent(evt);
 
         this.schedule();
     }
@@ -51,7 +52,7 @@ export class MockUser {
         const x = this.x + Math.floor(2 * Math.random() - 1),
             y = this.y + Math.floor(2 * Math.random() - 1);
 
-        jitsiClient.sendMessageTo(jitsiClient.localUser, {
+        this.jitsiClient.sendMessageTo(this.jitsiClient.localUser, {
             command: "userMoved",
             value: { id: this.id, x, y }
         });
@@ -61,7 +62,7 @@ export class MockUser {
                 group = groups.random(),
                 emoji = group.random();
             Object.assign(this.emoteEvt, emoji);
-            jitsiClient.sendMessageTo(jitsiClient.localUser, {
+            this.jitsiClient.sendMessageTo(this.jitsiClient.localUser, {
                 command: "emote",
                 value: this.emoteEvt
             });

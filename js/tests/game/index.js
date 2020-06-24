@@ -20,11 +20,11 @@ import { init } from "../../src/app.js";
 
     const { game, loginForm, jitsiClient } = init(JitsiClient, document.querySelector("#appView")),
         testUsers = [
-            new MockUser("user1", -5, -5),
-            new MockUser("user2", -5, 5),
-            new MockUser("user3", 5, -5),
-            new MockUser("user4", 5, 5),
-            new MockUser("user5", 0, 0)
+            new MockUser("user1", -5, -5, jitsiClient),
+            new MockUser("user2", -5, 5, jitsiClient),
+            new MockUser("user3", 5, -5, jitsiClient),
+            new MockUser("user4", 5, 5, jitsiClient),
+            new MockUser("user5", 0, 0, jitsiClient)
         ];
 
     jitsiClient.testUsers = testUsers.slice();

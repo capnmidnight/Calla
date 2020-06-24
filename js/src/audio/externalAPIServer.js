@@ -5,8 +5,6 @@ const FRONT_END_SERVER = "https://www.calla.chat",
     APP_FINGERPRINT = "Calla",
     manager = new Manager();
 
-let origin = null;
-
 manager.addEventListener("audioActivity", (evt) => {
     txJitsiHax("audioActivity", {
         id: evt.id,
@@ -15,13 +13,13 @@ manager.addEventListener("audioActivity", (evt) => {
 });
 
 function txJitsiHax(command, value) {
-    if (origin !== null) {
+    if (manager.origin !== null) {
         const evt = {
             hax: APP_FINGERPRINT,
             command,
             value
         }
-        window.parent.postMessage(JSON.stringify(evt), origin);
+        window.parent.postMessage(JSON.stringify(evt), manager.origin);
     }
 }
 

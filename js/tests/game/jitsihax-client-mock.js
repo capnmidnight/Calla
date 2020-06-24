@@ -3,7 +3,7 @@ import { BaseJitsiClient } from "../../src/jitsi/baseClient.js";
 import { userNumber } from "../client-tests/userNumber.js";
 
 export class MockJitsiClient extends BaseJitsiClient {
-    constructor(testUsers) {
+    constructor() {
         super();
         this.host;
         this.testUsers = null;
