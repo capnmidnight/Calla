@@ -2,7 +2,7 @@
 import { bust } from "../../src/emoji.js";
 import "../../src/protos.js";
 import { wait } from "../../src/wait.js";
-import { ExternalJitsiClient as JitsiClient } from "../../src/jitsi/jitsihax-client-external-api.js";
+import { ExternalJitsiClient as JitsiClient } from "../../src/jitsi/externalAPIClient.js";
 
 const TEST_ROOM_NAME = "testroom",
     userNumber = document.location.hash.length > 0
@@ -254,6 +254,7 @@ class JitsiClient1_Tests extends TestBase {
     async test_130_participantJoined() {
         const loc = new URL(document.location.href);
         loc.hash = "2";
+        window.open(loc.href, "_blank", "screenX:10,screenY:10,width:400,height:600");
         await this.waitForJoin();
     }
 
