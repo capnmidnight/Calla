@@ -138,19 +138,22 @@ export class MockJitsiClient extends BaseJitsiClient {
     }
 
     /// Send a Calla message to the jitsihax.js script
-    txJitsiHax(command, obj) {
-        obj.hax = APP_FINGERPRINT;
-        obj.command = command;
-        window.postMessage(JSON.stringify(obj));
+    txJitsiHax(command, value) {
+        const evt = {
+            hax: APP_FINGERPRINT,
+            command,
+            value
+        };
+        window.postMessage(JSON.stringify(evt));
     }
 
-    rxJitsiHax(evt) {
-        const isLocalHost = evt.origin.match(/^https?:\/\/localhost\b/);
+    rxJitsiHax(msg) {
+        const isLocalHost = msg.origin.match(/^https?:\/\/localhost\b/);
         if (isLocalHost) {
             try {
-                const data = JSON.parse(evt.data);
-                if (data.hax === APP_FINGERPRINT) {
-                    const evt2 = new CallaEvent(data);
+                const evt = JSON.parse(msg.data);
+                if (evt.hax === APP_FINGERPRINT) {
+                    const evt2 = new CallaEvent(evt);
                     this.dispatchEvent(evt2);
                 }
             }

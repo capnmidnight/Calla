@@ -1,13 +1,16 @@
-﻿import { CallaEvent } from "../events.js";
-import { BaseJitsiClient } from "./baseClient.js";
+﻿import { BaseJitsiClient } from "./baseClient.js";
+import { ExternalJitsiAudioClient } from "../audio/externalAPIClient.js";
+
+const audioActivityEvt = Object.assign(new Event("audioActivity", {
+    id: null,
+    isActive: false
+}));
 
 export class ExternalJitsiClient extends BaseJitsiClient {
     constructor() {
         super();
         this.api = null;
-        this.apiOrigin = null;
-        this.apiWindow = null;
-        window.addEventListener("message", this.rxJitsiHax.bind(this));
+        this.audioClient = null;
     }
 
     dispose() {
@@ -25,8 +28,15 @@ export class ExternalJitsiClient extends BaseJitsiClient {
                 roomName,
                 onload: () => {
                     const iframe = this.api.getIFrame();
-                    this.apiOrigin = new URL(iframe.src).origin;
-                    this.apiWindow = iframe.contentWindow;
+                    this.audioClient = new ExternalJitsiAudioClient(
+                        JITSI_HOST,
+                        new URL(iframe.src).origin,
+                        iframe.contentWindow);
+                    this.audioClient.addEventListener("audioActivity", (evt) => {
+                        audioActivityEvt.id = evt.id;
+                        audioActivityEvt.isActive = evt.isActive;
+                        this.dispatchEvent(audioActivityEvt);
+                    });
                     resolve();
                 },
                 noSSL: false,
@@ -201,50 +211,24 @@ export class ExternalJitsiClient extends BaseJitsiClient {
         this.api.executeCommand("sendEndpointTextMessage", toUserID, JSON.stringify(data));
     }
 
-    /// Send a Calla message to the jitsihax.js script
-    txJitsiHax(command, obj) {
-        if (this.apiWindow) {
-            obj.hax = APP_FINGERPRINT;
-            obj.command = command;
-            this.apiWindow.postMessage(JSON.stringify(obj), this.apiOrigin);
-        }
-    }
-
-    rxJitsiHax(evt) {
-        const isLocalHost = evt.origin.match(/^https?:\/\/localhost\b/);
-        if (evt.origin === "https://" + JITSI_HOST || isLocalHost) {
-            try {
-                const data = JSON.parse(evt.data);
-                if (data.hax === APP_FINGERPRINT) {
-                    const evt2 = new CallaEvent(data);
-                    this.dispatchEvent(evt2);
-                }
-            }
-            catch (exp) {
-                console.error(exp);
-            }
-        }
-    }
-
     setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
-        this.txJitsiHax("setAudioProperties", {
+        this.audioClient.setAudioProperties(
             origin,
             transitionTime,
             minDistance,
             maxDistance,
-            rolloff
-        });
+            rolloff);
     }
 
     setPosition(evt) {
         if (evt.id === this.localUser) {
-            this.txJitsiHax("setLocalPosition", evt);
+            this.audioClient.setLocalPosition(evt);
             for (let toUserID of this.otherUsers.keys()) {
                 this.txGameData(toUserID, "userMoved", evt);
             }
         }
         else {
-            this.txJitsiHax("setUserPosition", evt);
+            this.audioClient.setUserPosition(evt);
         }
     }
 }

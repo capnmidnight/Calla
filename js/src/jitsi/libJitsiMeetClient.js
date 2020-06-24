@@ -389,11 +389,13 @@ export class LibJitsiMeetClient extends EventTarget {
 
 
     /// Send a Calla message through the Jitsi Meet data channel.
-    txGameData(id, command, obj) {
-        obj = obj || {};
-        obj.hax = APP_FINGERPRINT;
-        obj.type = command;
-        this.room.sendMessage(obj, id);
+    txGameData(id, command, value) {
+        const evt = {
+            hax: APP_FINGERPRINT,
+            command,
+            value
+        };
+        this.room.sendMessage(evt, id);
     }
 
     /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
