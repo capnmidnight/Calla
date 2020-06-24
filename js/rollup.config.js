@@ -8,6 +8,6 @@ export default [{
     input: "src/audio/externalAPIServer.js",
     output: {
         file: "etc/jitsihax.js",
-        format: "es"
+        format: "iife"
     }
 }];
