@@ -1,4 +1,4 @@
-﻿import { clamp } from "../math.js";
+﻿import { clamp, project } from "../math.js";
 
 const audioActivityEvt = Object.assign(new Event("audioActivity", {
     id: null,
@@ -8,16 +8,16 @@ const audioActivityEvt = Object.assign(new Event("audioActivity", {
     activityCounterMax = 60,
     activityCounterThresh = 5;
 
-function frequencyToIndex(frequency, sampleRate) {
+function frequencyToIndex(frequency, sampleRate, bufferSize) {
     var nyquist = sampleRate / 2
-    var index = Math.round(frequency / nyquist * BUFFER_SIZE)
-    return clamp(index, 0, BUFFER_SIZE)
+    var index = Math.round(frequency / nyquist * bufferSize)
+    return clamp(index, 0, bufferSize)
 }
 
-function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz) {
+function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz, bufferSize) {
     const sampleRate = analyser.context.sampleRate,
-        start = frequencyToIndex(minHz, sampleRate),
-        end = frequencyToIndex(maxHz, sampleRate),
+        start = frequencyToIndex(minHz, sampleRate, bufferSize),
+        end = frequencyToIndex(maxHz, sampleRate, bufferSize),
         count = end - start
     let sum = 0
     for (let i = start; i < end; ++i) {
@@ -39,6 +39,8 @@ export class Source extends EventTarget {
         this.destination = destination;
         this.audioContext = destination.audioContext;
 
+        this.bufferSize = bufferSize;
+
         const stream = !!audio.mozCaptureStream
             ? audio.mozCaptureStream()
             : audio.captureStream();
@@ -46,7 +48,7 @@ export class Source extends EventTarget {
         this.source = this.audioContext.createMediaStreamSource(stream);
         this.panner = this.audioContext.createPanner();
         this.analyser = this.audioContext.createAnalyser();
-        this.buffer = new Float32Array(bufferSize);
+        this.buffer = new Float32Array(this.bufferSize);
 
         this.audio.volume = 0;
 
@@ -60,7 +62,7 @@ export class Source extends EventTarget {
 
         this.panner.positionY.setValueAtTime(0, this.audioContext.currentTime);
 
-        this.analyser.fftSize = 2 * bufferSize;
+        this.analyser.fftSize = 2 * this.bufferSize;
         this.analyser.smoothingTimeConstant = 0.2;
 
 
@@ -103,7 +105,7 @@ export class Source extends EventTarget {
 
         this.analyser.getFloatFrequencyData(this.buffer);
 
-        const average = 1.1 + analyserFrequencyAverage(this.analyser, this.buffer, 85, 255) / 100;
+        const average = 1.1 + analyserFrequencyAverage(this.analyser, this.buffer, 85, 255, this.bufferSize) / 100;
         if (average >= 0.5 && this.activityCounter < activityCounterMax) {
             this.activityCounter++;
         } else if (average < 0.5 && this.activityCounter > activityCounterMin) {

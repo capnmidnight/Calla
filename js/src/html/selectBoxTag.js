@@ -1,11 +1,7 @@
 ﻿import "../protos.js";
-import {
-    Option,
-    Select,
-    clear
-} from "./tags.js";
 import { HtmlCustomTag } from "./custom.js";
 import { isFunction } from "./evts.js";
+import { clear, Option } from "./tags.js";
 
 const _values = new Map();
 

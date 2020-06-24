@@ -1,9 +1,10 @@
-﻿import {
-    tag,
-    Span
-} from "../html/tags.js";
+﻿import '../../lib/jquery.js';
+import { tag } from "../html/tag.js";
+import { Span } from "../html/tags.js";
+import { project, clamp } from '../math.js';
+import { CallaUserEvent } from '../events.js';
 
-import '../../lib/jquery.js';
+
 
 // helps us filter out data channel messages that don't belong to us
 const BUFFER_SIZE = 1024,
@@ -138,14 +139,6 @@ function frequencyToIndex(frequency, sampleRate) {
     var nyquist = sampleRate / 2
     var index = Math.round(frequency / nyquist * BUFFER_SIZE)
     return clamp(index, 0, BUFFER_SIZE)
-}
-
-function clamp(v, min, max) {
-    return Math.min(max, Math.max(min, v));
-}
-
-function project(v, min, max) {
-    return (v - min) / (max - min);
 }
 
 function logger(obj, name, handler) {
@@ -403,7 +396,7 @@ export class LibJitsiMeetClient extends EventTarget {
     rxGameData(user, data) {
         if (data.hax === APP_FINGERPRINT) {
             console.log("RX GAME DATA", user, data);
-            const evt = new JitsiClientEvent(user.getId(), data);
+            const evt = new CallaUserEvent(user.getId(), data);
             this.dispatchEvent(evt);
         }
     }
@@ -822,19 +815,5 @@ export class LibJitsiMeetClient extends EventTarget {
 
     moveTo(toUserID, evt) {
         this.txGameData(toUserID, "moveTo", evt);
-    }
-}
-
-class CallaEvent extends Event {
-    constructor(data) {
-        super(data.command);
-        this.data = data;
-    }
-}
-
-class JitsiClientEvent extends CallaEvent {
-    constructor(id, data) {
-        super(data);
-        this.id = id;
     }
 }

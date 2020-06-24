@@ -1,16 +1,6 @@
 ﻿import { allIcons as icons, randomPerson } from "../../src/emoji.js";
-
-import {
-    Audio,
-    Span
-} from "../../src/html/tags.js";
-
-import {
-    autoPlay,
-    id,
-    loop,
-    src
-} from "../../src/html/attrs.js";
+import { autoPlay, id, loop, src } from "../../src/html/attrs.js";
+import { Audio, Span } from "../../src/html/tags.js";
 
 export class MockUser {
     constructor(id, x, y) {

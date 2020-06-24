@@ -1,5 +1,5 @@
 ﻿import "../protos.js";
-import { tag } from "./tags.js";
+import { tag } from "./tag.js";
 
 export class HtmlCustomTag extends EventTarget {
     constructor(tagName, ...rest) {

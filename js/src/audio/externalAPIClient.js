@@ -1,4 +1,6 @@
-﻿export class ExternalJitsiAudioClient extends EventTarget {
+﻿import { CallaEvent } from "../events.js";
+
+export class ExternalJitsiAudioClient extends EventTarget {
     constructor(host, apiOrigin, apiWindow) {
         super();
         this.host = host;

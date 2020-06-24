@@ -1,19 +1,8 @@
-﻿import "./protos.js";
+﻿import { bust, mutedSpeaker, randomPerson, speakerMediumVolume, videoCamera } from "./emoji.js";
+import { height, width } from "./html/attrs.js";
+import { Canvas } from "./html/tags.js";
 import { project } from "./math.js";
-import {
-    Canvas
-} from "./html/tags.js";
-import {
-    width,
-    height
-} from "./html/attrs.js";
-import {
-    mutedSpeaker,
-    speakerMediumVolume,
-    videoCamera,
-    randomPerson,
-    bust
-} from "./emoji.js";
+import "./protos.js";
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
     STACKED_USER_OFFSET_X = 5,
