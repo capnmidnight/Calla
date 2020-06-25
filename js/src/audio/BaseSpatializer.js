@@ -7,6 +7,8 @@
         this.node = drain;
         this.node.connect(this.destination.audioContext.destination);
         this.source = null;
+
+        this._muted = false;
     }
 
     checkStream() {
@@ -40,6 +42,14 @@
         this.node = null;
         this.audio = null;
         this.destination = null;
+    }
+
+    get muted() {
+        return this._muted;
+    }
+
+    set muted(value) {
+        this._muted = value;
     }
 
     setAudioProperties(evt) {

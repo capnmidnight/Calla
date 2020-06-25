@@ -13,8 +13,6 @@ export class FullSpatializer extends BaseSpatializer {
         this.node.coneOuterAngle = 0;
         this.node.coneOuterGain = 0;
         this.node.positionY.setValueAtTime(0, this.destination.audioContext.currentTime);
-
-        this._muted = false;
     }
 
     setAudioProperties(evt) {
@@ -38,13 +36,9 @@ export class FullSpatializer extends BaseSpatializer {
         return this.node.positionZ.value;
     }
 
-    get muted() {
-        return this._muted;
-    }
-
     set muted(value) {
         if (!!this.source && value !== this.muted) {
-            this._muted = value;
+            super.muted = value;
             if (this.muted) {
                 this.source.disconnect(this.node);
             }
