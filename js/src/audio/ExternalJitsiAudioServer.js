@@ -1,9 +1,9 @@
-﻿import { Manager } from "./manager.js";
+﻿import { AudioManager } from "./AudioManager.js";
 
 const FRONT_END_SERVER = "https://www.calla.chat",
     ALLOW_LOCAL_HOST = true,
     APP_FINGERPRINT = "Calla",
-    manager = new Manager();
+    manager = new AudioManager();
 
 let origin = null;
 

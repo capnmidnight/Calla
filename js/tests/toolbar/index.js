@@ -1,4 +1,4 @@
-﻿import { ToolBar } from "../../src/forms/toolbar.js";
+﻿import { ToolBar } from "../../src/forms/ToolBar.js";
 import { P } from "../../src/html/tags.js";
 const toolbar = new ToolBar();
 document.body.appendChild(toolbar.element);

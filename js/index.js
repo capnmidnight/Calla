@@ -1,5 +1,5 @@
-﻿import { ExternalJitsiClient as JitsiClient } from "./src/jitsi/externalAPIClient.js";
-import { init } from "./src/app.js";
+﻿import { ExternalJitsiClient as JitsiClient } from "./src/jitsi/ExternalJitsiClient.js";
+import { init } from./src/init.jsjs";
 import {
     A,
     H2,

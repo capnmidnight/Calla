@@ -1,4 +1,4 @@
-﻿import { ExternalJitsiClient } from "../../src/jitsi/externalAPIClient.js";
+﻿import { ExternalJitsiClient } from "../../src/jitsi/ExternalJitsiClient.js";
 import { RunTest } from "../client-tests/jitsiClientTest.js";
 
 RunTest(ExternalJitsiClient);

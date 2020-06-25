@@ -1,7 +1,7 @@
 ﻿/* global JitsiMeetExternalAPI */
 
-import { BaseJitsiClient } from "./baseClient.js";
-import { ExternalJitsiAudioClient } from "../audio/externalAPIClient.js";
+import { BaseJitsiClient } from "./BaseJitsiClient.js";
+import { ExternalJitsiAudioClient } from "../audio/ExternalJitsiAudioClient.js";
 
 const audioActivityEvt = Object.assign(new Event("audioActivity", {
     id: null,

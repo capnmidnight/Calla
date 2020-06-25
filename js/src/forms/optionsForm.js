@@ -1,13 +1,13 @@
 ﻿import "../protos.js";
 
 import { bust } from "../emoji.js";
-import { GamepadManager } from "../gamepad/manager.js";
+import { GamepadManager } from "../gamepad/GamepadStateManager.js";
 import { accessKey, className, htmlFor, id, max, min, placeHolder, step, style, systemFont, title, value } from "../html/attrs.js";
 import { onClick, onInput, onKeyUp } from "../html/evts.js";
 import { Button, clear, Div, Label, LabeledInput, LabeledSelectBox, OptionPanel, P, Span } from "../html/tags.js";
 import { isGoodNumber } from "../math.js";
-import { FormDialog } from "./formDialog.js";
-import { InputBinding } from "./inputBinding.js";
+import { FormDialog } from "./FormDialog.js";
+import { InputBinding } from "./InputBinding.js";
 
 const keyWidthStyle = style({ width: "7em" }),
     numberWidthStyle = style({ width: "3em" }),

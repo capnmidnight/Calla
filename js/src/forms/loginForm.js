@@ -1,6 +1,6 @@
 ﻿import "../protos.js";
 
-import { FormDialog } from "./formDialog.js";
+import { FormDialog } from "./FormDialog.js";
 
 import { SelectBox } from "../html/tags.js";
 

@@ -1,7 +1,7 @@
 ﻿import "../protos.js";
 import { Label, SelectBox } from "./tags.js";
 import { htmlFor, id } from "./attrs.js";
-import { HtmlCustomTag } from "./custom.js";
+import { HtmlCustomTag } from "./HtmlCustomTag.js";
 
 export class LabeledSelectBoxTag extends HtmlCustomTag {
     constructor(tagId, labelText, noSelectionText, makeID, makeLabel, ...rest) {

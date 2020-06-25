@@ -4,7 +4,7 @@
 
 import { MockUser } from "./mockuser.js";
 import { MockJitsiClient as JitsiClient } from "./jitsihax-client-mock.js";
-import { init } from "../../src/app.js";
+import { init } from "../../src/init.js";
 import { Img } from "../../src/html/tags.js";
 import { src, style } from "../../src/html/attrs.js";
 

@@ -5,10 +5,10 @@
 // provide gamepad axis binding selector
 
 import { Game } from "./game.js";
-import { ToolBar } from "./forms/toolbar.js";
-import { OptionsForm } from "./forms/optionsForm.js";
-import { EmojiForm } from "./forms/emojiForm.js";
-import { LoginForm } from "./forms/loginForm.js";
+import { ToolBar } from "./forms/ToolBar.js/index.js";
+import { OptionsForm } from "./forms/OptionsForm.js";
+import { EmojiForm } from "./forms/EmojiForm.js";
+import { LoginForm } from "./forms/LoginForm.js";
 
 export function init(host, JitsiClientClass) {
     const game = new Game(),

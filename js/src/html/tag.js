@@ -1,5 +1,5 @@
 ﻿import { HtmlAttr } from "./attrs.js";
-import { HtmlCustomTag } from "./custom.js";
+import { HtmlCustomTag } from "./HtmlCustomTag.js";
 import { HtmlEvt, isFunction } from "./evts.js";
 
 export function tag(name, ...rest) {

@@ -1,7 +1,7 @@
 ﻿import { Button, H2, P } from "./tags.js";
 import { onClick } from "./evts.js";
 import { id } from "./attrs.js";
-import { HtmlCustomTag } from "./custom.js";
+import { HtmlCustomTag } from "./HtmlCustomTag.js";
 
 const selectEvt = new Event("select");
 

@@ -5,7 +5,7 @@ export default [{
         format: "es"
     }
 }, {
-    input: "src/audio/externalAPIServer.js",
+    input: "src/audio/ExternalJitsiAudioServer.js",
     output: {
         file: "etc/jitsihax.js",
         format: "iife"

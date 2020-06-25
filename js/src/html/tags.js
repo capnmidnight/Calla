@@ -1,7 +1,7 @@
-﻿import { LabeledInputTag } from "./labeledInputTag.js";
-import { LabeledSelectBoxTag } from "./labeledSelectBoxTag.js";
-import { OptionPanelTag } from "./optionPanelTag.js";
-import { SelectBoxTag } from "./selectBoxTag.js";
+﻿import { LabeledInputTag } from "./LabeledInputTag.js";
+import { LabeledSelectBoxTag } from "./LabeledSelectBoxTag.js";
+import { OptionPanelTag } from "./OptionPanelTag.js";
+import { SelectBoxTag } from "./SelectBoxTag.js";
 import { tag } from "./tag.js";
 import { type } from "./attrs.js";
 

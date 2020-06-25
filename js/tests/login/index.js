@@ -1,4 +1,4 @@
-﻿import { LoginForm } from "../../src/forms/loginForm.js";
+﻿import { LoginForm } from "../../src/forms/LoginForm.js";
 (async function () {
     const request = await fetch("../../index.html"),
         doc = await request.html(),

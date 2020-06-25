@@ -1,7 +1,7 @@
 ﻿import { CallaEvent } from "../../src/events.js";
-import { BaseJitsiClient } from "../../src/jitsi/baseClient.js";
+import { BaseJitsiClient } from "../../src/jitsi/BaseJitsiClient.js";
 import { userNumber } from "../client-tests/userNumber.js";
-import { Manager } from "../../src/audio/manager.js";
+import { AudioManager } from "../../src/audio/AudioManager.js";
 
 export class MockJitsiClient extends BaseJitsiClient {
     constructor() {
@@ -38,7 +38,7 @@ export class MockJitsiClient extends BaseJitsiClient {
             this.rxJitsiHax(evt);
         });
 
-        this.audioClient = new Manager();
+        this.audioClient = new AudioManager();
     }
 
     async initializeAsync(host, roomName) {

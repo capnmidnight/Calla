@@ -1,5 +1,5 @@
-﻿import { OptionsForm } from "../../src/forms/optionsForm.js";
-import { GamepadManager } from "../../src/gamepad/manager.js";
+﻿import { OptionsForm } from "../../src/forms/OptionsForm.js";
+import { GamepadManager } from "../../src/gamepad/GamepadStateManager.js";
 
 const options = new OptionsForm();
 document.body.appendChild(options.element);

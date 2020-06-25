@@ -1,7 +1,7 @@
 ﻿import "../protos.js";
 import { Input, Label } from "./tags.js";
 import { htmlFor, type } from "./attrs.js";
-import { HtmlCustomTag } from "./custom.js";
+import { HtmlCustomTag } from "./HtmlCustomTag.js";
 
 export class LabeledInputTag extends HtmlCustomTag {
     constructor(id, inputType, labelText, ...rest) {

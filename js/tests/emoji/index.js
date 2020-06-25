@@ -1,4 +1,4 @@
-﻿import { EmojiForm } from "../../src/forms/emojiForm.js";
+﻿import { EmojiForm } from "../../src/forms/EmojiForm.js";
 const emoji = new EmojiForm();
 document.body.appendChild(emoji.element);
 (async function () {

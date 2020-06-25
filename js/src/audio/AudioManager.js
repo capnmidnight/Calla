@@ -1,5 +1,5 @@
-﻿import { Source } from "./source.js";
-import { Destination } from "./destination.js";
+﻿import { Source } from "./Source.js";
+import { Destination } from "./Destination.js";
 
 const BUFFER_SIZE = 1024,
     audioActivityEvt = Object.assign(new Event("audioActivity", {
@@ -8,7 +8,7 @@ const BUFFER_SIZE = 1024,
     }));
 
 
-export class Manager extends EventTarget {
+export class AudioManager extends EventTarget {
     constructor() {
         super();
         this.sourceLookup = {};
