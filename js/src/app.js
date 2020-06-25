@@ -34,6 +34,7 @@ export function init(host, JitsiClientClass) {
     game.fontSize = options.fontSize;
     game.targetCameraZ = toolbar.zoom;
 
+    refreshGamepads();
     showLogin();
 
     function showLogin() {
@@ -64,10 +65,19 @@ export function init(host, JitsiClientClass) {
         game.audioDistanceMax = options.maxAudioDistance;
     }
 
+    function refreshGamepads() {
+        options.gamepads = [...navigator.getGamepads()]
+            .filter(g => g !== null);
+    }
+
+
     window.addEventListener("resize", () => {
         game.resize(toolbar.offsetHeight);
+        client.resize(toolbar.offsetHeight);
     });
 
+    window.addEventListener("gamepadconnected", refreshGamepads);
+    window.addEventListener("gamepaddisconnected", refreshGamepads);
 
     toolbar.addEventListener("selectemoji", selectEmojiAsync);
 
@@ -135,6 +145,18 @@ export function init(host, JitsiClientClass) {
         game.fontSize = options.fontSize;
     });
 
+    options.addEventListener("audioinputchanged", () => {
+        client.setAudioInputDevice(options.currentAudioInputDevice);
+    });
+
+    options.addEventListener("audiooutputchanged", () => {
+        client.setAudioOutputDevice(options.currentAudioOutputDevice);
+    });
+
+    options.addEventListener("videoinputchanged", () => {
+        client.setVideoInputDevice(options.currentVideoInputDevice);
+    });
+
 
     game.addEventListener("emote", (evt) => {
         client.emote(evt.emoji);
@@ -193,6 +215,10 @@ export function init(host, JitsiClientClass) {
         options.audioInputDevices = await client.getAudioInputDevices();
         options.audioOutputDevices = await client.getAudioOutputDevices();
         options.videoInputDevices = await client.getVideoInputDevices();
+
+        options.currentAudioInputDevice = await client.getCurrentAudioInputDevice();
+        options.currentAudioOutputDevice = await client.getCurrentAudioOutputDevice();
+        options.currentVideoInputDevice = await client.getCurrentVideoInputDevice();
 
         const audioMuted = await client.isAudioMutedAsync();
         game.muteUserAudio({ id: client.localUser, muted: audioMuted });

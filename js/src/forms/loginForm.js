@@ -44,7 +44,11 @@ export class LoginForm extends FormDialog {
         _state.set(this, self);
 
         this.roomLabel = this.element.querySelector("label[for='roomSelector']");
-        this.roomSelect = SelectBox("No rooms available", this.element.querySelector("#roomSelector"));
+        this.roomSelect = SelectBox(
+            "No rooms available",
+            v => v,
+            k => defaultRooms.get(k),
+            this.element.querySelector("#roomSelector"));
         this.roomInput = this.element.querySelector("#roomName");
         this.createRoomButton = this.element.querySelector("#createNewRoom");
         this.userNameInput = this.element.querySelector("#userName")
@@ -60,9 +64,8 @@ export class LoginForm extends FormDialog {
             this.dispatchEvent(loginEvt);
         });
 
-        this.roomSelect.setValues(
-            defaultRooms.keys(),
-            (k) => defaultRooms.get(k));
+        this.roomSelect.emptySelectionEnabled = false;
+        this.roomSelect.values = defaultRooms.keys();
         this.roomSelectMode = true;
         this.roomSelect.selectedIndex = 0;
 

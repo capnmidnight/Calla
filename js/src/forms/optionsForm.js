@@ -19,6 +19,8 @@ const keyWidthStyle = style({ width: "7em" }),
     audioPropsChangedEvt = new Event("audiopropschanged"),
     toggleDrawHearingEvt = new Event("toggledrawhearing"),
     toggleVideoEvt = new Event("togglevideo"),
+    audioInputChangedEvt = new Event("audioinputchanged"),
+    audioOutputChangedEvt = new Event("audiooutputchanged"),
     videoInputChangedEvt = new Event("videoinputchanged"),
     selfs = new Map();
 
@@ -115,7 +117,9 @@ export class OptionsForm extends FormDialog {
                 this.gpSelect = LabeledSelectBox(
                     "gamepads",
                     "Use gamepad: ",
-                    "No gamepads available",
+                    "No gamepad",
+                    gp => gp.id,
+                    gp => gp.id,
                     onInput(_(gamepadChangedEvt))),
                 this.gpButtonUp = makeGamepadBinder("gpButtonUp", "Up: "),
                 this.gpButtonDown = makeGamepadBinder("gpButtonDown", "Down: "),
@@ -129,12 +133,18 @@ export class OptionsForm extends FormDialog {
                     this.audioInputSelect = LabeledSelectBox(
                         "audioInputDevices",
                         "Input: ",
-                        "No audio input devices available")),
+                        "No audio input",
+                        d => d.id,
+                        d => d.label,
+                        onInput(_(audioInputChangedEvt)))),
                 P(
                     this.audioOutputSelect = LabeledSelectBox(
                         "audioOutputDevices",
                         "Output: ",
-                        "No audio output devices available")),
+                        "No audio output",
+                        d => d.id,
+                        d => d.label,
+                        onInput(_(audioOutputChangedEvt)))),
                 P(
                     this.drawHearingCheck = LabeledInput(
                         "drawHearing",
@@ -180,7 +190,9 @@ export class OptionsForm extends FormDialog {
                     this.videoInputSelect = LabeledSelectBox(
                         "videoInputDevices",
                         "Device: ",
-                        "No video input devices available",
+                        "No video input",
+                        d => d.id,
+                        d => d.label,
                         onInput(_(videoInputChangedEvt)))))
         ];
 
@@ -276,29 +288,64 @@ export class OptionsForm extends FormDialog {
         }
     }
 
+    get gamepads() {
+        return this.gpSelect.values;
+    }
+
+    set gamepads(values) {
+        this.gpSelect.values = values;
+    }
+
     get audioInputDevices() {
-        return this.audioInputSelect.getValues();
+        return this.audioInputSelect.values;
     }
 
     set audioInputDevices(values) {
-        this.audioInputSelect.setValues(values, v => v.label);
+        this.audioInputSelect.values = values;
     }
 
+    get currentAudioInputDevice() {
+        return this.audioInputSelect.selectedValue;
+    }
+
+    set currentAudioInputDevice(value) {
+        this.audioInputSelect.selectedValue = value;
+    }
+
+
     get audioOutputDevices() {
-        return this.audioOutputSelect.getValues();
+        return this.audioOutputSelect.values;
     }
 
     set audioOutputDevices(values) {
-        this.audioOutputSelect.setValues(values, v => v.label);
+        this.audioOutputSelect.values = values;
     }
 
+    get currentAudioOutputDevice() {
+        return this.audioOutputSelect.selectedValue;
+    }
+
+    set currentAudioOutputDevice(value) {
+        this.audioOutputSelect.selectedValue = value;
+    }
+
+
     get videoInputDevices() {
-        return this.videoInputSelect.getValues();
+        return this.videoInputSelect.values;
     }
 
     set videoInputDevices(values) {
-        this.videoInputSelect.setValues(values, v => v.label);
+        this.videoInputSelect.values = values;
     }
+
+    get currentVideoInputDevice() {
+        return this.videoInputSelect.selectedValue;
+    }
+
+    set currentVideoInputDevice(value) {
+        this.videoInputSelect.selectedValue = value;
+    }
+
 
     get videoEnabled() {
         return this._videoEnabled;
@@ -317,7 +364,7 @@ export class OptionsForm extends FormDialog {
 
     set gamepads(values) {
         const disable = values.length === 0;
-        this.gpSelect.setValues(values, v => v.id);
+        this.gpSelect.values = values;
         this.gpButtonUp.setLocked(disable);
         this.gpButtonDown.setLocked(disable);
         this.gpButtonLeft.setLocked(disable);

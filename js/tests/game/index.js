@@ -19,7 +19,9 @@ import { src, style } from "../../src/html/attrs.js";
     const loginContent = document.querySelector("#login > .content")
     loginContent.parentElement.removeChild(loginContent);
 
-    const { game, login, client, toolbar } = init("jitsi.calla.chat", JitsiClient);
+    const components = init("jitsi.calla.chat", JitsiClient);
+    const { game, login, client, toolbar } = components;
+    Object.assign(window, components);
 
     let testUsers = null,
         spawnUserTimer = null;

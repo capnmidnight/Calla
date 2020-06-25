@@ -13,14 +13,24 @@ export class MockJitsiClient extends BaseJitsiClient {
         this.audioMuted = false;
         this.videoMuted = true;
         this.availableDevices = {
-            audioInput: [{ id: "mock-audio-input", label: "Mock audio input device" }],
-            audioOutput: [{ id: "mock-audio-output", label: "Mock audio output device" }],
-            videoInput: [{ id: "mock-video-input", label: "Mock video input device" }]
+            audioInput: [
+                { id: "mock-audio-input-1", label: "Mock audio input device #1" },
+                { id: "mock-audio-input-2", label: "Mock audio input device #2" },
+                { id: "mock-audio-input-3", label: "Mock audio input device #3" }
+            ],
+            audioOutput: [
+                { id: "mock-audio-output-1", label: "Mock audio output device #1" },
+                { id: "mock-audio-output-2", label: "Mock audio output device #2" }
+            ],
+            videoInput: [
+                { id: "mock-video-input-1", label: "Mock video input device #1" },
+                { id: "mock-video-input-2", label: "Mock video input device #2" }
+            ]
         };
 
         this.currentDevices = {
-            audioInput: this.availableDevices.audioInput[0],
-            audioOutput: this.availableDevices.audioOutput[0],
+            audioInput: this.availableDevices.audioInput[1],
+            audioOutput: this.availableDevices.audioOutput[1],
             videoInput: null
         };
 

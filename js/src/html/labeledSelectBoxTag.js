@@ -4,32 +4,36 @@ import { htmlFor, id } from "./attrs.js";
 import { HtmlCustomTag } from "./custom.js";
 
 export class LabeledSelectBoxTag extends HtmlCustomTag {
-    constructor(tagId, labelText, noSelectionText, ...rest) {
+    constructor(tagId, labelText, noSelectionText, makeID, makeLabel, ...rest) {
         super("div");
-
-        this.noSelectionText = noSelectionText;
 
         this.label = Label(
             htmlFor(tagId),
             labelText);
 
-        this.select = new SelectBox(id(tagId), ...rest);
+        this.select = new SelectBox(noSelectionText, makeID, makeLabel, id(tagId), ...rest);
 
         this.element.append(
             this.label,
             this.select.element);
 
-        this.setValues([]);
-
         Object.seal(this);
     }
 
-    getValues() {
-        return this.select.getValues();
+    get emptySelectionEnabled() {
+        return this.select.emptySelectionEnabled;
     }
 
-    setValues(newItems, toString = null) {
-        this.select.setValues(newItems, toString);
+    set emptySelectionEnabled(value) {
+        this.select.emptySelectionEnabled = value;
+    }
+
+    get values() {
+        return this.select.values;
+    }
+
+    set values(values) {
+        this.select.values = values;
     }
 
     get options() {
@@ -49,7 +53,7 @@ export class LabeledSelectBoxTag extends HtmlCustomTag {
     }
 
     set selectedValue(v) {
-        this.selectedValue = v;
+        this.select.selectedValue = v;
     }
 
     addEventListener(name, callback, opts) {

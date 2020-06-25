@@ -2,50 +2,70 @@
 import { HtmlCustomTag } from "./custom.js";
 import { isFunction } from "./evts.js";
 import { clear, Option } from "./tags.js";
+import { value } from "./attrs.js";
 
 const _values = new Map();
 
 export class SelectBoxTag extends HtmlCustomTag {
-    constructor(noSelectionText, ...rest) {
+    constructor(noSelectionText, makeID, makeLabel, ...rest) {
         super("select", ...rest);
 
-        this.noSelectionText = noSelectionText;
+        if (!isFunction(makeID)) {
+            throw new Error("makeID parameter must be a Function");
+        }
 
-        this.setValues([]);
+        if (!isFunction(makeLabel)) {
+            throw new Error("makeLabel parameter must be a Function");
+        }
+
+        _values.set(this, []);
+
+        this.noSelectionText = noSelectionText;
+        this.makeID = (v) => v !== null && makeID(v) || null;
+        this.makeLabel = (v) => v !== null && makeLabel(v) || "None";
+        this.emptySelectionEnabled = true;
 
         Object.seal(this);
     }
 
-    getValues() {
+    get emptySelectionEnabled() {
+        return this._emptySelectionEnabled;
+    }
+
+    set emptySelectionEnabled(value) {
+        this._emptySelectionEnabled = value;
+        this._render();
+    }
+
+    get values() {
         return _values.get(this);
     }
 
-    setValues(newItems, toString = null) {
-        if (toString === null
-            || toString === undefined) {
-            toString = (o) => o.toString();
-        }
-
-        if (!isFunction(toString)) {
-            throw new Error("toString parameter must be a Function");
-        }
-
-        if (!_values.has(this)) {
-            _values.set(this, []);
-        }
-
+    set values(newItems) {
+        const curValue = this.selectedValue;
         const values = _values.get(this);
         values.splice(0, values.length, ...newItems);
+        this._render();
+        this.selectedValue = curValue;
+    }
 
+    _render() {
         clear(this.element);
-        if (values.length === 0) {
+        if (this.values.length === 0) {
             this.element.append(Option(this.noSelectionText));
             this.element.lock();
         }
         else {
-            for (let value of values) {
-                this.element.append(Option(toString(value)));
+            if (this.emptySelectionEnabled) {
+                this.element.append(Option(this.noSelectionText));
             }
+            for (let v of this.values) {
+                this.element.append(
+                    Option(
+                        value(this.makeID(v)),
+                        this.makeLabel(v)));
+            }
+
             this.element.unlock();
         }
     }
@@ -55,24 +75,34 @@ export class SelectBoxTag extends HtmlCustomTag {
     }
 
     get selectedIndex() {
-        return this.element.selectedIndex;
+        let i = this.element.selectedIndex;
+        if (this.emptySelectionEnabled) {
+            --i;
+        }
+        return i;
     }
 
     set selectedIndex(i) {
+        if (this.emptySelectionEnabled) {
+            ++i;
+        }
         this.element.selectedIndex = i;
     }
 
     get selectedValue() {
-        if (this.selectedIndex === -1) {
-            return null;
+        if (0 <= this.selectedIndex && this.selectedIndex < this.values.length) {
+            return this.values[this.selectedIndex];
         }
         else {
-            return _values.get(this)[this.selectedIndex];
+            return null;
         }
     }
 
-    set selectedValue(v) {
-        this.selectedIndex = _values.get(this).indexOf(v);
+    set selectedValue(value) {
+        this.selectedIndex = _values.get(this)
+            .findIndex(v =>
+                value !== null
+                && this.makeID(value) === this.makeID(v));
     }
 
     addEventListener(name, callback, opts) {

@@ -237,12 +237,12 @@ export function LabeledInput(id, inputType, labelText, ...rest) {
     return new LabeledInputTag(id, inputType, labelText, ...rest);
 }
 
-export function SelectBox(noSelectionText, ...rest) {
-    return new SelectBoxTag(noSelectionText, ...rest);
+export function SelectBox(noSelectionText, makeID, makeLabel, ...rest) {
+    return new SelectBoxTag(noSelectionText, makeID, makeLabel, ...rest);
 }
 
-export function LabeledSelectBox(id, labelText, noSelectionText, ...rest) {
-    return new LabeledSelectBoxTag(id, labelText, noSelectionText, ...rest);
+export function LabeledSelectBox(id, labelText, noSelectionText, makeID, makeLabel, ...rest) {
+    return new LabeledSelectBoxTag(id, labelText, noSelectionText, makeID, makeLabel, ...rest);
 }
 
 export function OptionPanel(id, name, ...rest) {
