@@ -1,4 +1,5 @@
 ﻿import { clamp, project } from "../math.js";
+import { FullSpatializer } from "./FullSpatializer.js";
 
 const audioActivityEvt = Object.assign(new Event("audioActivity", {
     id: null,
@@ -36,104 +37,56 @@ export class Source extends EventTarget {
         this.wasActive = false;
 
         this.destination = destination;
-        this.audioContext = destination.audioContext;
-
-        this.bufferSize = bufferSize;
 
         this.audio = audio;
         this.audio.volume = 0;
 
-        this.panner = this.audioContext.createPanner();
-        this.panner.panningModel = "HRTF";
-        this.panner.distanceModel = "inverse";
-        this.panner.refDistance = destination.minDistance;
-        this.panner.rolloffFactor = destination.rolloff;
-        this.panner.coneInnerAngle = 360;
-        this.panner.coneOuterAngle = 0;
-        this.panner.coneOuterGain = 0;
-        this.panner.positionY.setValueAtTime(0, this.audioContext.currentTime);
-        this.panner.connect(this.audioContext.destination);
+        this.bufferSize = bufferSize;
+        this.buffer = new Float32Array(this.bufferSize);
 
-        this.analyser = this.audioContext.createAnalyser();
+        this.analyser = this.destination.audioContext.createAnalyser();
         this.analyser.fftSize = 2 * this.bufferSize;
         this.analyser.smoothingTimeConstant = 0.2;
 
-        this.buffer = new Float32Array(this.bufferSize);
-
-        this.source = null;
+        this.spatializer = new FullSpatializer(this.destination, this.audio, this.analyser);
 
         Object.seal(this);
     }
 
     dispose() {
-        if (!!this.source) {
-            this.source.disconnect(this.analyser);
-            this.source.disconnect(this.panner);
-            this.source = null;
-        }
-
-        this.panner.disconnect(this.audioContext.destination);
+        this.spatializer.dispose();
         this.audio.pause();
 
+        this.spatializer = null;
         this.destination = null;
-        this.audioContext = null;
         this.audio = null;
-        this.panner = null;
         this.analyser = null;
         this.buffer = null;
     }
 
     setAudioProperties(evt) {
-        this.panner.refDistance = evt.minDistance;
-        this.panner.rolloffFactor = evt.rolloff;
+        this.spatializer.setAudioProperties(evt);
     }
 
     setPosition(evt) {
-        const time = this.audioContext.currentTime + this.destination.transitionTime;
-        // our 2D position is in X/Y coords, but our 3D position
-        // along the horizontal plane is X/Z coords.
-        this.panner.positionX.linearRampToValueAtTime(evt.x, time);
-        this.panner.positionZ.linearRampToValueAtTime(evt.y, time);
+        this.spatializer.setPosition(evt);
     }
 
     isAudible() {
         const
             lx = this.destination.positionX,
             ly = this.destination.positionY,
-            distX = this.panner.positionX.value - lx,
-            distZ = this.panner.positionZ.value - ly,
-            dist = Math.sqrt(distX * distX + distZ * distZ),
+            distX = this.spatializer.positionX - lx,
+            distY = this.spatializer.positionY - ly,
+            dist = Math.sqrt(distX * distX + distY * distY),
             range = clamp(project(dist, this.destination.minDistance, this.destination.maxDistance), 0, 1);
 
         return range < 1;
     }
 
     update() {
-        if (!this.source) {
-            try {
-                const stream = !!this.audio.mozCaptureStream
-                    ? this.audio.mozCaptureStream()
-                    : this.audio.captureStream();
-
-                this.source = this.audioContext.createMediaStreamSource(stream);
-                this.source.connect(this.analyser);
-                this.source.connect(this.panner);
-            }
-            catch (exp) {
-                console.warn("Source isn't available yet. Will retry in a moment. Reason: ", exp);
-            }
-        }
-        else {
-            const audible = this.isAudible();
-            if (audible !== this.lastAudible) {
-                this.lastAudible = audible;
-                if (audible) {
-                    this.source.connect(this.panner);
-                }
-                else {
-                    this.source.disconnect(this.panner);
-                }
-            }
+        if (this.spatializer.checkStream()) {
+            this.spatializer.muted = !this.isAudible();
 
             this.analyser.getFloatFrequencyData(this.buffer);
 
