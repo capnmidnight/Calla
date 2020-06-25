@@ -8,6 +8,12 @@ export default [{
     input: "src/audio/ExternalJitsiAudioServer.js",
     output: {
         file: "etc/jitsihax.js",
-        format: "iife"
+        format: "es"
+    }
+}, {
+    input: "tests/game/index.js",
+    output: {
+        file: "tests/game/bundle.js",
+        format: "es"
     }
 }];

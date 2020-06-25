@@ -1,126 +1,213 @@
-(function () {
-    "use strict";
+function clamp(v, min, max) {
+    return Math.min(max, Math.max(min, v));
+}
 
-    /*
-     * This file is not part of the front-end code. It is
-     * meant to be included in the Jitsi Meet server
-     * installation. This is typically /usr/share/jitsi-meet.
-     * 
-     * Once installed in the Jitsi Meet server, edit
-     * Jitsi Meet's index.html to include jitsihax.js.
-     * 
-     * Don't forget to also edit FRONT_END_SERVER below
-     * to the server you are setting up to use the
-     * Jitsi Meet External API:
-     *   https://github.com/jitsi/jitsi-meet/blob/master/doc/api.md
-     */
+function project(v, min, max) {
+    return (v - min) / (max - min);
+}
 
-    const FRONT_END_SERVER = "https://www.calla.chat",
-        ALLOW_LOCAL_HOST = true,
-        BUFFER_SIZE = 1024,
-        isOldAudioAPI = !AudioListener.prototype.hasOwnProperty("positionX");
+class BaseSpatializer {
 
-    // The rest is just implementation.
-
-    function ensureContext() {
-        if (!audioContext) {
-            audioContext = new AudioContext();
-            const time = audioContext.currentTime,
-                listener = audioContext.listener;
-
-            if (isOldAudioAPI) {
-                listener.setPosition(0, 0, 0);
-                listener.setOrientation(0, 0, -1, 0, 1, 0);
-            }
-            else {
-                listener.positionX.setValueAtTime(0, time);
-                listener.positionY.setValueAtTime(0, time);
-                listener.positionZ.setValueAtTime(0, time);
-                listener.forwardX.setValueAtTime(0, time);
-                listener.forwardY.setValueAtTime(0, time);
-                listener.forwardZ.setValueAtTime(-1, time);
-                listener.upX.setValueAtTime(0, time);
-                listener.upY.setValueAtTime(1, time);
-                listener.upZ.setValueAtTime(0, time);
-            }
-            requestAnimationFrame(updater);
-            window.audioContext = audioContext;
-        }
+    constructor(destination, audio, analyser, drain) {
+        this.destination = destination;
+        this.audio = audio;
+        this.analyser = analyser;
+        this.node = drain;
+        this.node.connect(this.destination.audioContext.destination);
+        this.source = null;
     }
 
-    class User {
-        constructor(userID, audio) {
-            this.id = userID;
-            this.lastAudible = true;
-            this.activityCounter = 0;
-            this.wasActive = false;
+    checkStream() {
+        if (!this.source) {
+            try {
+                const stream = !!this.audio.mozCaptureStream
+                    ? this.audio.mozCaptureStream()
+                    : this.audio.captureStream();
 
-            this.audio = audio;
-
-            const stream = !!audio.mozCaptureStream
-                ? audio.mozCaptureStream()
-                : audio.captureStream();
-
-            this.source = audioContext.createMediaStreamSource(stream);
-            this.panner = audioContext.createPanner();
-            this.analyser = audioContext.createAnalyser();
-            this.buffer = new Float32Array(BUFFER_SIZE);
-
-            this.audio.volume = 0;
-
-            this.panner.panningModel = "HRTF";
-            this.panner.distanceModel = "inverse";
-            this.panner.refDistance = minDistance;
-            this.panner.rolloffFactor = rolloff;
-            this.panner.coneInnerAngle = 360;
-            this.panner.coneOuterAngle = 0;
-            this.panner.coneOuterGain = 0;
-
-            this.panner.positionY.setValueAtTime(0, audioContext.currentTime);
-
-            this.analyser.fftSize = 2 * BUFFER_SIZE;
-            this.analyser.smoothingTimeConstant = 0.2;
-
-
-            this.source.connect(this.analyser);
-            this.source.connect(this.panner);
-            this.panner.connect(audioContext.destination);
+                this.source = this.destination.audioContext.createMediaStreamSource(stream);
+                this.source.connect(this.analyser);
+                this.source.connect(this.node);
+            }
+            catch (exp) {
+                console.warn("Source isn't available yet. Will retry in a moment. Reason: ", exp);
+                return false;
+            }
         }
 
-        setPosition(evt) {
-            const time = audioContext.currentTime + transitionTime;
-            // our 2D position is in X/Y coords, but our 3D position
-            // along the horizontal plane is X/Z coords.
-            this.panner.positionX.linearRampToValueAtTime(evt.data.x, time);
-            this.panner.positionZ.linearRampToValueAtTime(evt.data.y, time);
+        return true;
+    }
+
+    dispose() {
+        if (!!this.source) {
+            this.source.disconnect(this.analyser);
+            this.source.disconnect(this.node);
+            this.source = null;
         }
 
-        isAudible() {
-            const lx = isOldAudioAPI ? listenerX : audioContext.listener.positionX.value,
-                ly = isOldAudioAPI ? listenerY : audioContext.listener.positionZ.value,
-                distX = this.panner.positionX.value - lx,
-                distZ = this.panner.positionZ.value - ly,
-                dist = Math.sqrt(distX * distX + distZ * distZ),
-                range = clamp(project(dist, minDistance, maxDistance), 0, 1);
+        this.node.disconnect(this.destination.audioContext.destination);
+        this.node = null;
+        this.audio = null;
+        this.destination = null;
+    }
 
-            return range < 1;
-        }
+    update() {
+    }
 
-        update() {
-            const audible = this.isAudible();
-            if (audible !== this.lastAudible) {
-                this.lastAudible = audible;
-                if (audible) {
-                    this.source.connect(this.panner);
+    setAudioProperties(evt) {
+        throw new Error("Not implemented in base class.");
+    }
+
+    setPosition(evt) {
+        throw new Error("Not implemented in base class.");
+    }
+
+    get positionX() {
+        throw new Error("Not implemented in base class.");
+    }
+
+    get positionY() {
+        throw new Error("Not implemented in base class.");
+    }
+}
+
+class FullSpatializer extends BaseSpatializer {
+
+    constructor(destination, audio, analyser) {
+        super(destination, audio, analyser, destination.audioContext.createPanner());
+
+        this.node.panningModel = "HRTF";
+        this.node.distanceModel = "inverse";
+        this.node.refDistance = destination.minDistance;
+        this.node.rolloffFactor = destination.rolloff;
+        this.node.coneInnerAngle = 360;
+        this.node.coneOuterAngle = 0;
+        this.node.coneOuterGain = 0;
+        this.node.positionY.setValueAtTime(0, this.destination.audioContext.currentTime);
+        this.wasMuted = false;
+    }
+
+    setAudioProperties(evt) {
+        this.node.refDistance = evt.minDistance;
+        this.node.rolloffFactor = evt.rolloff;
+    }
+
+    setPosition(evt) {
+        const time = this.destination.audioContext.currentTime + this.destination.transitionTime;
+        // our 2D position is in X/Y coords, but our 3D position
+        // along the horizontal plane is X/Z coords.
+        this.node.positionX.linearRampToValueAtTime(evt.x, time);
+        this.node.positionZ.linearRampToValueAtTime(evt.y, time);
+    }
+
+    get positionX() {
+        return this.node.positionX.value;
+    }
+
+    get positionY() {
+        return this.node.positionZ.value;
+    }
+
+    update() {
+        if (!!this.source) {
+            const lx = this.destination.positionX,
+                ly = this.destination.positionY,
+                distX = this.positionX - lx,
+                distY = this.positionY - ly,
+                dist = Math.sqrt(distX * distX + distY * distY),
+                range = clamp(project(dist, this.destination.minDistance, this.destination.maxDistance), 0, 1),
+                muted = range >= 1;
+
+            if (muted !== this.wasMuted) {
+                this.wasMuted = muted;
+                if (muted) {
+                    this.source.disconnect(this.node);
                 }
                 else {
-                    this.source.disconnect(this.panner);
+                    this.source.connect(this.node);
                 }
             }
+        }
+    }
+}
+
+const audioActivityEvt = Object.assign(new Event("audioActivity", {
+    id: null,
+    isActive: false
+})),
+    activityCounterMin = 0,
+    activityCounterMax = 60,
+    activityCounterThresh = 5;
+
+function frequencyToIndex(frequency, sampleRate, bufferSize) {
+    var nyquist = sampleRate / 2;
+    var index = Math.round(frequency / nyquist * bufferSize);
+    return clamp(index, 0, bufferSize)
+}
+
+function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz, bufferSize) {
+    const sampleRate = analyser.context.sampleRate,
+        start = frequencyToIndex(minHz, sampleRate, bufferSize),
+        end = frequencyToIndex(maxHz, sampleRate, bufferSize),
+        count = end - start;
+    let sum = 0;
+    for (let i = start; i < end; ++i) {
+        sum += frequencies[i];
+    }
+    return count === 0 ? 0 : (sum / count);
+}
+
+class Source extends EventTarget {
+    constructor(userID, audio, destination, bufferSize) {
+        super();
+
+        this.id = userID;
+        this.lastAudible = true;
+        this.activityCounter = 0;
+        this.wasActive = false;
+
+        this.destination = destination;
+
+        this.audio = audio;
+        this.audio.volume = 0;
+
+        this.bufferSize = bufferSize;
+        this.buffer = new Float32Array(this.bufferSize);
+
+        this.analyser = this.destination.audioContext.createAnalyser();
+        this.analyser.fftSize = 2 * this.bufferSize;
+        this.analyser.smoothingTimeConstant = 0.2;
+
+        this.spatializer = new FullSpatializer(this.destination, this.audio, this.analyser);
+
+        Object.seal(this);
+    }
+
+    dispose() {
+        this.spatializer.dispose();
+        this.audio.pause();
+
+        this.spatializer = null;
+        this.destination = null;
+        this.audio = null;
+        this.analyser = null;
+        this.buffer = null;
+    }
+
+    setAudioProperties(evt) {
+        this.spatializer.setAudioProperties(evt);
+    }
+
+    setPosition(evt) {
+        this.spatializer.setPosition(evt);
+    }
+
+    update() {
+        if (this.spatializer.checkStream()) {
+            this.spatializer.update();
 
             this.analyser.getFloatFrequencyData(this.buffer);
 
-            const average = 1.1 + analyserFrequencyAverage(this.analyser, this.buffer, 85, 255) / 100;
+            const average = 1.1 + analyserFrequencyAverage(this.analyser, this.buffer, 85, 255, this.bufferSize) / 100;
             if (average >= 0.5 && this.activityCounter < activityCounterMax) {
                 this.activityCounter++;
             } else if (average < 0.5 && this.activityCounter > activityCounterMin) {
@@ -130,181 +217,234 @@
             const isActive = this.activityCounter > activityCounterThresh;
             if (this.wasActive !== isActive) {
                 this.wasActive = isActive;
-                txJitsiHax("audioActivity", {
-                    id: this.id,
-                    isActive
-                });
+                audioActivityEvt.id = this.id;
+                audioActivityEvt.isActive = isActive;
+                this.dispatchEvent(audioActivityEvt);
             }
         }
     }
+}
 
-    function getUser(userID) {
-        if (!userLookup[userID]) {
+const isOldAudioAPI = !AudioListener.prototype.hasOwnProperty("positionX");
+
+class Destination {
+    constructor() {
+        this.audioContext = new AudioContext();
+        this.listener = this.audioContext.listener;
+
+        this.minDistance = 1;
+        this.maxDistance = 10;
+        this.rolloff = 1;
+        this.transitionTime = 0.125;
+
+        if (isOldAudioAPI) {
+            this.startMoveTime
+                = this.endMoveTime
+                = 0;
+
+            this.listenerX
+                = this.targetListenerX
+                = this.startListenerX
+                = 0;
+
+            this.listenerY
+                = this.targetListenerY
+                = this.startListenerY
+                = 0;
+
+            this.listener.setPosition(0, 0, 0);
+            this.listener.setOrientation(0, 0, -1, 0, 1, 0);
+        }
+        else {
+            const time = this.audioContext.currentTime;
+            this.listener.positionX.setValueAtTime(0, time);
+            this.listener.positionY.setValueAtTime(0, time);
+            this.listener.positionZ.setValueAtTime(0, time);
+            this.listener.forwardX.setValueAtTime(0, time);
+            this.listener.forwardY.setValueAtTime(0, time);
+            this.listener.forwardZ.setValueAtTime(-1, time);
+            this.listener.upX.setValueAtTime(0, time);
+            this.listener.upY.setValueAtTime(1, time);
+            this.listener.upZ.setValueAtTime(0, time);
+        }
+    }
+
+    get positionX() {
+        return isOldAudioAPI
+            ? this.listenerX
+            : this.audioContext.listener.positionX.value
+    }
+
+    get positionY() {
+        return isOldAudioAPI
+            ? this.listenerY
+            : this.audioContext.listener.positionZ.value;
+    }
+
+    setPosition(evt) {
+        const time = this.audioContext.currentTime + this.transitionTime;
+        if (isOldAudioAPI) {
+            this.startMoveTime = this.audioContext.currentTime;
+            this.endMoveTime = time;
+            this.startListenerX = this.listenerX;
+            this.startListenerY = this.listenerY;
+            this.targetListenerX = evt.x;
+            this.targetListenerY = evt.y;
+        }
+        else {
+            this.listener.positionX.linearRampToValueAtTime(evt.x, time);
+            this.listener.positionZ.linearRampToValueAtTime(evt.y, time);
+        }
+    }
+
+    setAudioProperties(evt) {
+        this.minDistance = evt.minDistance;
+        this.maxDistance = evt.maxDistance;
+        this.transitionTime = evt.transitionTime;
+        this.rolloff = evt.rolloff;
+    }
+
+    update() {
+        if (isOldAudioAPI) {
+            const time = this.audioContext.currentTime,
+                p = project(time, this.startMoveTime, this.endMoveTime);
+
+            if (p <= 1) {
+                const deltaX = this.targetListenerX - this.startListenerX,
+                    deltaY = this.targetListenerY - this.startListenerY;
+
+                this.listenerX = this.startListenerX + p * deltaX;
+                this.listenerY = this.startListenerY + p * deltaY;
+
+                this.listener.setPosition(this.listenerX, 0, this.listenerY);
+            }
+        }
+    }
+}
+
+const BUFFER_SIZE = 1024,
+    audioActivityEvt$1 = Object.assign(new Event("audioActivity", {
+        id: null,
+        isActive: false
+    }));
+
+
+class AudioManager extends EventTarget {
+    constructor() {
+        super();
+        this.sourceLookup = {};
+        this.sourceList = [];
+        this.destination = new Destination();
+
+        this.updater = () => {
+            requestAnimationFrame(this.updater);
+            this.destination.update();
+            for (let source of this.sourceList) {
+                source.update();
+            }
+        };
+        requestAnimationFrame(this.updater);
+    }
+
+
+    getSource(userID) {
+        if (!this.sourceLookup[userID]) {
             const elementID = `#participant_${userID} audio`,
                 audio = document.querySelector(elementID);
 
             if (!!audio) {
-                userLookup[userID] = new User(userID, audio);
-                userList.push(userLookup[userID]);
+                const source = this.sourceLookup[userID] = new Source(userID, audio, this.destination, BUFFER_SIZE);
+                source.addEventListener("audioActivity", (evt) => {
+                    audioActivityEvt$1.id = evt.id;
+                    audioActivityEvt$1.isActive = evt.isActive;
+                    this.dispatchEvent(audioActivityEvt$1);
+                });
+                this.sourceList.push(source);
             }
         }
 
-        const user = userLookup[userID];
-        if (!user) {
+        const source = this.sourceLookup[userID];
+        if (!source) {
             console.warn(`no audio for user ${userID}`);
         }
-        return user;
+        return source;
     }
 
-    function updater() {
-        requestAnimationFrame(updater);
+    setUserPosition(evt) {
+        const source = this.getSource(evt.id);
+        if (!!source) {
+            source.setPosition(evt);
+        }
+    }
 
-        if (isOldAudioAPI) {
-            const time = audioContext.currentTime,
-                p = project(time, startMoveTime, endMoveTime);
+    setLocalPosition(evt) {
+        this.destination.setPosition(evt);
+    }
 
-            if (p <= 1) {
-                const deltaX = targetListenerX - startListenerX,
-                    deltaY = targetListenerY - startListenerY;
+    setAudioProperties(evt) {
+        this.destination.setAudioProperties(evt);
 
-                listenerX = startListenerX + p * deltaX;
-                listenerY = startListenerY + p * deltaY;
+        for (let source of this.sourceList) {
+            source.setAudioProperties(evt);
+        }
+    }
 
-                audioContext.listener.setPosition(listenerX, 0, listenerY);
+    removeUser(evt) {
+        const source = this.sourceLookup[evt.id];
+        if (!!source) {
+            const sourceIdx = this.sourceList.indexOf(source);
+            if (sourceIdx > -1) {
+                this.sourceList.splice(sourceIdx, 1);
             }
-        }
 
-        for (let user of userList) {
-            user.update();
-        }
-    }
-
-    function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz) {
-        const sampleRate = analyser.context.sampleRate,
-            start = frequencyToIndex(minHz, sampleRate),
-            end = frequencyToIndex(maxHz, sampleRate),
-            count = end - start
-        let sum = 0
-        for (let i = start; i < end; ++i) {
-            sum += frequencies[i];
-        }
-        return count === 0 ? 0 : (sum / count);
-    }
-
-    function frequencyToIndex(frequency, sampleRate) {
-        var nyquist = sampleRate / 2
-        var index = Math.round(frequency / nyquist * BUFFER_SIZE)
-        return clamp(index, 0, BUFFER_SIZE)
-    }
-
-    function clamp(v, min, max) {
-        return Math.min(max, Math.max(min, v));
-    }
-
-    function project(v, min, max) {
-        return (v - min) / (max - min);
-    }
-
-    function setUserPosition(evt) {
-        const user = getUser(evt.id);
-        if (!user) {
-            return;
-        }
-
-        user.setPosition(evt);
-    }
-
-    function setLocalPosition(evt) {
-        ensureContext();
-        const time = audioContext.currentTime + transitionTime,
-            listener = audioContext.listener;
-        if (isOldAudioAPI) {
-            startMoveTime = audioContext.currentTime;
-            endMoveTime = time;
-            startListenerX = listenerX;
-            startListenerY = listenerY;
-            targetListenerX = evt.x;
-            targetListenerY = evt.y;
-        }
-        else {
-            listener.positionX.linearRampToValueAtTime(evt.x, time);
-            listener.positionZ.linearRampToValueAtTime(evt.y, time);
+            source.dispose();
+            delete this.sourceLookup[evt.id];
         }
     }
+}
 
-    function setAudioProperties(evt) {
-        origin = evt.origin;
-        minDistance = evt.minDistance;
-        maxDistance = evt.maxDistance;
-        transitionTime = evt.transitionTime;
-        rolloff = evt.rolloff;
+const FRONT_END_SERVER = "https://www.calla.chat",
+    APP_FINGERPRINT = "Calla",
+    manager = new AudioManager();
 
-        ensureContext();
-        for (let user of userList) {
-            user.panner.refDistance = minDistance;
-            user.panner.rolloffFactor = rolloff;
-        }
+let origin = null;
+
+manager.addEventListener("audioActivity", (evt) => {
+    txJitsiHax("audioActivity", {
+        id: evt.id,
+        isActive: evt.isActive
+    });
+});
+
+function txJitsiHax(command, value) {
+    if (origin !== null) {
+        const evt = {
+            hax: APP_FINGERPRINT,
+            command,
+            value
+        };
+        window.parent.postMessage(JSON.stringify(evt), origin);
     }
+}
 
-    function txJitsiHax(command, obj) {
-        if (!!origin) {
-            obj.hax = APP_FINGERPRINT;
-            obj.command = command;
-            const msg = JSON.stringify(obj);
-            window.parent.postMessage(msg, origin);
-        }
-    }
+window.addEventListener("message", (msg) => {
+    const isLocalHost = msg.origin.match(/^https?:\/\/localhost\b/);
 
-    function rxJitsiHax(evt) {
-        const isLocalHost = evt.origin.match(/^https?:\/\/localhost\b/);
+    if (msg.origin === FRONT_END_SERVER
+        ||  isLocalHost) {
+        try {
+            const evt = JSON.parse(msg.data),
+                isJitsiHax = evt.hax === APP_FINGERPRINT;
 
-        if (evt.origin === FRONT_END_SERVER
-            || ALLOW_LOCAL_HOST && isLocalHost) {
-            try {
-                const data = JSON.parse(evt.data),
-                    isJitsiHax = data.hax === APP_FINGERPRINT,
-                    cmd = commands[data.command];
-
-                if (isJitsiHax && !!cmd) {
-                    cmd(data);
+            if (isJitsiHax && !!manager[evt.command]) {
+                manager[evt.command](evt.value);
+                if (evt.command === "setAudioProperties") {
+                    origin = evt.origin;
                 }
             }
-            catch (exp) {
-                console.error(exp);
-            }
+        }
+        catch (exp) {
+            console.error(exp);
         }
     }
-
-
-    // helps us filter out data channel messages that don't belong to us
-    const APP_FINGERPRINT = "Calla",
-        userLookup = {},
-        userList = [],
-        commands = {
-            setLocalPosition,
-            setUserPosition,
-            setAudioProperties
-        },
-        activityCounterMin = 0,
-        activityCounterMax = 60,
-        activityCounterThresh = 5;
-
-    let audioContext = null,
-
-        // these values will get overwritten when the user sets their audio properties
-        minDistance = 1,
-        maxDistance = 10,
-        rolloff = 5,
-        transitionTime = 0.125,
-        origin = null,
-        startMoveTime = 0,
-        endMoveTime = 0,
-        startListenerX = 0,
-        startListenerY = 0,
-        targetListenerX = 0,
-        targetListenerY = 0,
-        listenerX = 0,
-        listenerY = 0;
-
-    addEventListener("message", rxJitsiHax);
-})();
+});
