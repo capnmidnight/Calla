@@ -7,7 +7,7 @@ let muted = false;
 
 toolbar.addEventListener("toggleaudio", (evt) => {
     muted = !muted;
-    toolbar.setAudioMuted(muted);
+    toolbar.audioEnabled = !muted;
 });
 
 function echo(evt) {
@@ -28,3 +28,4 @@ toolbar.addEventListener("options", echo);
 toolbar.addEventListener("tweet", echo);
 toolbar.addEventListener("leave", echo);
 toolbar.addEventListener("toggleui", echo);
+toolbar.addEventListener("toggleoptions", echo);

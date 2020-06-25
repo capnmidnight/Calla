@@ -1,4 +1,4 @@
-﻿import { EventedGamepad } from "./EventedGamepad";
+﻿import { EventedGamepad } from "./EventedGamepad.js";
 
 const gamepadConnectedEvt = Object.assign(new Event("gamepadconnected"), {
     gamepad: null

@@ -1,5 +1,5 @@
 ﻿import { ExternalJitsiClient as JitsiClient } from "./src/jitsi/ExternalJitsiClient.js";
-import { init } from./src/init.jsjs";
+import { init } from "./src/init.js";
 import {
     A,
     H2,
@@ -17,7 +17,7 @@ import {
     role
 } from "./src/html/attrs.js";
 
-const { toolbar, loginForm } = init("jitsi.calla.chat", JitsiClient);
+const { toolbar, login } = init("jitsi.calla.chat", JitsiClient);
 
 function adLink(url, label, icon) {
     return A(
@@ -40,7 +40,7 @@ toolbar.append(
         "Follow Sean on Twitter",
         "twitter"));
 
-loginForm.content.append(
+login.content.append(
     H2("Made by"),
     P(adLink(
         "https://www.seanmcbeth.com",

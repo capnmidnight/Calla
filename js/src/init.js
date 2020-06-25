@@ -4,8 +4,8 @@
 // use gamepad manager
 // provide gamepad axis binding selector
 
-import { Game } from "./game.js";
-import { ToolBar } from "./forms/ToolBar.js/index.js";
+import { Game } from "./Game.js";
+import { ToolBar } from "./forms/ToolBar.js";
 import { OptionsForm } from "./forms/OptionsForm.js";
 import { EmojiForm } from "./forms/EmojiForm.js";
 import { LoginForm } from "./forms/LoginForm.js";
