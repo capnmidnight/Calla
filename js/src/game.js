@@ -16,18 +16,8 @@ const CAMERA_LERP = 0.01,
     gameEndedEvt = new Event("gameended"),
     zoomChangedEvt = new Event("zoomchanged"),
     emojiNeededEvt = new Event("emojineeded"),
-    audioMutedEvt = Object.assign(new Event("audiomuted"), {
-        muted: true
-    }),
-    audioUnmutedEvt = Object.assign(new Event("audiomuted"), {
-        muted: false
-    }),
-    videoMutedEvt = Object.assign(new Event("videomuted"), {
-        muted: true
-    }),
-    videoUnmutedEvt = Object.assign(new Event("videomuted"), {
-        muted: false
-    }),
+    toggleAudioEvt = new Event("toggleaudio"),
+    toggleVideoEvt = new Event("togglevideo"),
     emoteEvt = Object.assign(new Event("emote"), {
         id: null,
         emoji: null
@@ -41,11 +31,11 @@ export class Game extends EventTarget {
     constructor() {
         super();
 
-        this.frontBuffer = Canvas(
+        this.element = Canvas(
             id("frontBuffer"),
             fillPageStyle,
             style({ touchAction: "none" }));
-        this.gFront = this.frontBuffer.getContext("2d");
+        this.gFront = this.element.getContext("2d");
 
         this.me = null
         this.map = null;
@@ -118,7 +108,7 @@ export class Game extends EventTarget {
 
         // ============= POINTERS =================
 
-        this.frontBuffer.addEventListener("wheel", (evt) => {
+        this.element.addEventListener("wheel", (evt) => {
             if (!evt.shiftKey
                 && !evt.altKey
                 && !evt.ctrlKey
@@ -166,7 +156,7 @@ export class Game extends EventTarget {
             return count;
         }
 
-        this.frontBuffer.addEventListener("pointerdown", (evt) => {
+        this.element.addEventListener("pointerdown", (evt) => {
             const oldCount = getPressCount(),
                 pointer = readPointer(evt),
                 _ = replacePointer(pointer),
@@ -191,7 +181,7 @@ export class Game extends EventTarget {
             return Math.sqrt(dx * dx + dy * dy);
         };
 
-        this.frontBuffer.addEventListener("pointermove", (evt) => {
+        this.element.addEventListener("pointermove", (evt) => {
             const oldPinchDistance = getPinchDistance(),
                 pointer = readPointer(evt),
                 last = replacePointer(pointer),
@@ -225,7 +215,7 @@ export class Game extends EventTarget {
             }
         });
 
-        this.frontBuffer.addEventListener("pointerup", (evt) => {
+        this.element.addEventListener("pointerup", (evt) => {
             const pointer = readPointer(evt),
                 _ = replacePointer(pointer);
 
@@ -243,7 +233,7 @@ export class Game extends EventTarget {
             }
         });
 
-        this.frontBuffer.addEventListener("pointercancel", (evt) => {
+        this.element.addEventListener("pointercancel", (evt) => {
             const pointer = readPointer(evt),
                 idx = findPointer(pointer);
 
@@ -283,6 +273,18 @@ export class Game extends EventTarget {
         // ============= GAMEPAD =================
 
         // ============= ACTION ==================
+    }
+
+    hide() {
+        this.element.hide();
+    }
+
+    show() {
+        this.element.show();
+    }
+
+    setOpen(v) {
+        this.element.setOpen(v);
     }
 
     updateAudioActivity(evt) {
@@ -388,17 +390,11 @@ export class Game extends EventTarget {
     }
 
     toggleMyAudio() {
-        this.muteUserAudio({
-            id: this.me.id,
-            muted: !this.me.audioMuted
-        });
+        this.dispatchEvent(toggleAudioEvt);
     }
 
     toggleMyVideo() {
-        this.muteUserVideo({
-            id: this.me.id,
-            muted: !this.me.videoMuted
-        });
+        this.dispatchEvent(toggleVideoEvt);
     }
 
     muteUserAudio(evt) {
@@ -413,13 +409,6 @@ export class Game extends EventTarget {
         }
         else {
             mutingUser.audioMuted = evt.muted;
-
-            if (mutingUser === this.me) {
-                this.dispatchEvent(
-                    evt.muted
-                    ? audioMutedEvt
-                    : audioUnmutedEvt);
-            }
         }
     }
 
@@ -435,12 +424,6 @@ export class Game extends EventTarget {
         }
         else {
             mutingUser.videoMuted = evt.muted;
-
-            if (mutingUser === this.me) {
-                this.dispatchEvent(evt.muted
-                    ? videoMutedEvt
-                    : videoUnmutedEvt);
-            }
         }
     }
 
@@ -510,14 +493,22 @@ export class Game extends EventTarget {
     }
 
     startLoop() {
-        this.frontBuffer.show();
-        this.frontBuffer.resize();
-        this.frontBuffer.focus();
+        this.element.show();
+        this.element.resize();
+        this.element.focus();
 
         requestAnimationFrame((time) => {
             this.lastTime = time;
             requestAnimationFrame(this._loop);
         });
+    }
+
+    resize(top) {
+        if (top !== undefined) {
+            this.element.style.top = top + "px";
+            this.element.style.height = `calc(100% - ${top}px)`;
+        }
+        this.element.resize();
     }
 
     loop(time) {
@@ -540,8 +531,8 @@ export class Game extends EventTarget {
     }
 
     update(dt) {
-        this.gridOffsetX = Math.floor(0.5 * this.frontBuffer.width / this.map.tileWidth) * this.map.tileWidth;
-        this.gridOffsetY = Math.floor(0.5 * this.frontBuffer.height / this.map.tileHeight) * this.map.tileHeight;
+        this.gridOffsetX = Math.floor(0.5 * this.element.width / this.map.tileWidth) * this.map.tileWidth;
+        this.gridOffsetY = Math.floor(0.5 * this.element.height / this.map.tileHeight) * this.map.tileHeight;
 
         this.lastMove += dt;
         if (this.lastMove >= MOVE_REPEAT) {
@@ -652,7 +643,7 @@ export class Game extends EventTarget {
 
         this.gFront.resetTransform();
         this.gFront.imageSmoothingEnabled = false;
-        this.gFront.clearRect(0, 0, this.frontBuffer.width, this.frontBuffer.height);
+        this.gFront.clearRect(0, 0, this.element.width, this.element.height);
 
         this.gFront.save();
         {

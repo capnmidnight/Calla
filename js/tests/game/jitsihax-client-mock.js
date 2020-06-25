@@ -107,6 +107,12 @@ export class MockJitsiClient extends BaseJitsiClient {
         return this.videoMuted;
     }
 
+    setAvatarURL(url) {
+        this.dispatchEvent(Object.assign(new Event("avatarChanged"), {
+            avatarURL: url
+        }));
+    }
+
     sendMessageTo(toUserID, data) {
         if (toUserID === this.localUser) {
             this.dispatchEvent(new CallaEvent(data));

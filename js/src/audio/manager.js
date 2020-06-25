@@ -63,8 +63,21 @@ export class Manager extends EventTarget {
     setAudioProperties(evt) {
         this.destination.setAudioProperties(evt);
 
-        for (let source of sourceList) {
+        for (let source of this.sourceList) {
             source.setAudioProperties(evt);
+        }
+    }
+
+    removeUser(evt) {
+        const source = this.sourceLookup[evt.id];
+        if (!!source) {
+            const sourceIdx = this.sourceList.indexOf(source);
+            if (sourceIdx > -1) {
+                this.sourceList.splice(sourceIdx, 1);
+            }
+
+            source.dispose();
+            delete this.sourceLookup[evt.id];
         }
     }
 }

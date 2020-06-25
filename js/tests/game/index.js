@@ -6,6 +6,8 @@ import "../../src/audio/externalAPIServer.js"
 import { MockUser } from "./mockuser.js";
 import { MockJitsiClient as JitsiClient } from "./jitsihax-client-mock.js";
 import { init } from "../../src/app.js";
+import { Img } from "../../src/html/tags.js";
+import { src, style } from "../../src/html/attrs.js";
 
 (async function () {
     const response = await fetch("../../index.html"),
@@ -18,25 +20,49 @@ import { init } from "../../src/app.js";
     const loginContent = document.querySelector("#login > .content")
     loginContent.parentElement.removeChild(loginContent);
 
-    const { game, loginForm, jitsiClient } = init("jitsi.calla.chat", JitsiClient),
-        testUsers = [
-            new MockUser("user1", -5, -5, jitsiClient),
-            new MockUser("user2", -5, 5, jitsiClient),
-            new MockUser("user3", 5, -5, jitsiClient),
-            new MockUser("user4", 5, 5, jitsiClient),
-            new MockUser("user5", 0, 0, jitsiClient)
-        ];
+    const { game, login, client, toolbar } = init("jitsi.calla.chat", JitsiClient);
 
-    jitsiClient.testUsers = testUsers.slice();
+    let testUsers = null,
+        spawnUserTimer = null;
 
-    game.addEventListener("gamestarted", function createTestUser() {
-        if (testUsers.length > 0) {
-            testUsers.shift().start();
-            setTimeout(createTestUser, 1000);
+    client.element.append(
+        Img(
+            src("../../screenshot.png"),
+            style({
+                width: "100%"
+            })));
+
+    game.addEventListener("gamestarted", () => {
+        testUsers = makeUsers();
+        client.testUsers = testUsers.slice();
+        spawnUserTimer = setTimeout(spawnUsers, 0);
+    });
+
+    toolbar.addEventListener("leave", () => {
+        clearTimeout(spawnUserTimer);
+        for (let testUser of client.testUsers) {
+            testUser.stop();
         }
     });
 
-    loginForm.userNameInput.value = "Sean";
-    loginForm.userNameInput.dispatchEvent(new Event("input"));
-    loginForm.connectButton.click();
+    login.userNameInput.value = "Sean";
+    login.userNameInput.dispatchEvent(new Event("input"));
+    login.connectButton.click();
+
+    function spawnUsers() {
+        if (testUsers.length > 0) {
+            testUsers.shift().start();
+            spawnUserTimer = setTimeout(spawnUsers, 1000);
+        }
+    }
+
+    function makeUsers() {
+        return [
+            new MockUser("user1", -5, -5, client),
+            new MockUser("user2", -5, 5, client),
+            new MockUser("user3", 5, -5, client),
+            new MockUser("user4", 5, 5, client),
+            new MockUser("user5", 0, 0, client)
+        ]
+    }
 })();

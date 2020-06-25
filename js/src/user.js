@@ -17,8 +17,7 @@ export class User extends EventTarget {
 
         this.x = 0;
         this.y = 0;
-        this.avatarEmoji = (isMe ? randomPerson() : bust).value;
-        this.avatarEmojiMetrics = null;
+        this.avatarEmoji = (isMe ? randomPerson() : bust);
 
         this.displayName = displayName || id;
         this.audioMuted = false;
@@ -63,10 +62,23 @@ export class User extends EventTarget {
         if (!this.avatarURL && !!this.avatarImage) {
             this.avatarImage = null;
         }
+
         this.avatarEmoji = evt.avatarEmoji;
-        this.avatarEmojiMetrics = null;
         this.isInitialized = true;
     }
+
+    get avatarEmoji() {
+        return this._avatarEmoji;
+    }
+
+    set avatarEmoji(emoji) {
+        this._avatarEmoji = emoji;
+        this.avatarEmojiMetrics = null;
+        if (!!emoji) {
+            this.setAvatarURL("");
+        }
+    }
+
 
     addEventListener(evtName, func, opts) {
         if (eventNames.indexOf(evtName) === -1) {
@@ -235,10 +247,10 @@ export class User extends EventTarget {
         if (!this.avatarImage) {
             g.font = 0.9 * this.stackAvatarHeight + "px sans-serif";
             if (!this.avatarEmojiMetrics) {
-                this.avatarEmojiMetrics = g.measureText(this.avatarEmoji);
+                this.avatarEmojiMetrics = g.measureText(this.avatarEmoji.value);
             }
             g.fillText(
-                this.avatarEmoji,
+                this.avatarEmoji.value,
                 (this.avatarEmojiMetrics.width - this.stackAvatarWidth) / 2 + this.avatarEmojiMetrics.actualBoundingBoxLeft,
                 this.avatarEmojiMetrics.actualBoundingBoxAscent);
         }

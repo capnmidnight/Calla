@@ -1,5 +1,5 @@
 ﻿import { CallaUserEvent } from "../events.js";
-import { id } from "../html/attrs.js";
+import { id, style } from "../html/attrs.js";
 import { Div } from "../html/tags.js";
 
 // helps us filter out data channel messages that don't belong to us
@@ -31,10 +31,36 @@ export class BaseJitsiClient extends EventTarget {
 
     constructor() {
         super();
-        this.element = Div(id("jitsi"));
+        this.element = Div(
+            id("jitsi"),
+            style({
+                position: "absolute",
+                left: 0,
+                top: 0,
+                width: "100%",
+                height: "100%",
+                margin: 0,
+                padding: 0,
+                overflow: "hidden"
+            }));
         this.localUser = null;
         this.otherUsers = new Map();
         this.audioClient = null;
+    }
+
+    hide() {
+        this.element.hide();
+    }
+
+    show() {
+        this.element.show();
+    }
+
+    resize(top) {
+        if (top !== undefined) {
+            this.element.style.top = top + "px";
+            this.element.style.height = `calc(100% - ${top}px)`;
+        }
     }
 
     async initializeAsync(host, roomName) {
@@ -191,6 +217,10 @@ export class BaseJitsiClient extends EventTarget {
         else {
             this.audioClient.setUserPosition(evt);
         }
+    }
+
+    removeUser(evt) {
+        this.audioClient.removeUser(evt);
     }
 
     async setAudioMutedAsync(muted) {

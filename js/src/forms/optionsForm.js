@@ -1,9 +1,11 @@
-﻿import { bust } from "../emoji.js";
+﻿import "../protos.js";
+
+import { bust } from "../emoji.js";
 import { GamepadManager } from "../gamepad/manager.js";
-import { accessKey, className, htmlFor, id, max, min, placeHolder, step, style, systemFont, value } from "../html/attrs.js";
+import { accessKey, className, htmlFor, id, max, min, placeHolder, step, style, systemFont, title, value } from "../html/attrs.js";
 import { onClick, onInput, onKeyUp } from "../html/evts.js";
-import { Button, Div, Label, LabeledInput, LabeledSelectBox, OptionPanel, P, Span } from "../html/tags.js";
-import "../protos.js";
+import { Button, clear, Div, Label, LabeledInput, LabeledSelectBox, OptionPanel, P, Span } from "../html/tags.js";
+import { isGoodNumber } from "../math.js";
 import { FormDialog } from "./formDialog.js";
 import { InputBinding } from "./inputBinding.js";
 
@@ -15,7 +17,8 @@ const keyWidthStyle = style({ width: "7em" }),
     fontSizeChangedEvt = new Event("fontsizechanged"),
     inputBindingChangedEvt = new Event("inputbindingchanged"),
     audioPropsChangedEvt = new Event("audiopropschanged"),
-    toggleVideoEvt = new Event("videoenablechanged"),
+    toggleDrawHearingEvt = new Event("toggledrawhearing"),
+    toggleVideoEvt = new Event("togglevideo"),
     videoInputChangedEvt = new Event("videoinputchanged"),
     selfs = new Map();
 
@@ -72,14 +75,14 @@ export class OptionsForm extends FormDialog {
 
         const panels = [
             OptionPanel("avatar", "Avatar",
-                this.avatarURL = LabeledInput(
+                this.avatarURLInput = LabeledInput(
                     "avatarURL",
                     "text",
                     "Avatar URL: ",
                     placeHolder("https://example.com/me.png"),
                     onInput(_(avatarUrlChangedEvt))),
                 " or ",
-                this.avatarEmoji = Div(
+                this.avatarEmojiInput = Div(
                     Label(
                         htmlFor("selectAvatarEmoji"),
                         "Avatar Emoji: "),
@@ -90,7 +93,7 @@ export class OptionsForm extends FormDialog {
                         onClick(_(selectAvatarEvt))))),
 
             OptionPanel("interface", "Interface",
-                this.fontSize = LabeledInput(
+                this.fontSizeInput = LabeledInput(
                     "fontSize",
                     "number",
                     "Font size: ",
@@ -136,17 +139,18 @@ export class OptionsForm extends FormDialog {
                     this.drawHearingCheck = LabeledInput(
                         "drawHearing",
                         "checkbox",
-                        "Draw hearing range: "),
-                    this.minAudio = LabeledInput(
+                        "Draw hearing range: ",
+                        onInput(_(toggleDrawHearingEvt))),
+                    this.minAudioInput = LabeledInput(
                         "minAudio",
                         "number",
                         "Min: ",
-                        value(2),
+                        value(1),
                         min(0),
                         max(100),
                         numberWidthStyle,
                         audioPropsChanged),
-                    this.maxAudio = LabeledInput(
+                    this.maxAudioInput = LabeledInput(
                         "maxAudio",
                         "number",
                         "Min: ",
@@ -155,11 +159,11 @@ export class OptionsForm extends FormDialog {
                         max(100),
                         numberWidthStyle,
                         audioPropsChanged),
-                    this.rolloff = LabeledInput(
+                    this.rolloffInput = LabeledInput(
                         "rollof",
                         "number",
                         "Rollof: ",
-                        value(5),
+                        value(1),
                         min(0.1),
                         max(10),
                         step(0.1),
@@ -197,7 +201,8 @@ export class OptionsForm extends FormDialog {
             this.confirmButton = Button(
                 className("confirm"),
                 systemFont,
-                "OK"));
+                "OK",
+                onClick(() => this.hide())));
 
         const showPanel = (p) =>
             () => {
@@ -225,7 +230,25 @@ export class OptionsForm extends FormDialog {
         this.audioOutputDevices = [];
         this.videoInputDevices = [];
 
+        this._videoEnabled = false;
+        this._drawHearing = false;
+
         Object.seal(this);
+    }
+
+    setAvatarEmoji(e) {
+        clear(this.avatarEmojiPreview);
+        this.avatarEmojiPreview.append(Span(
+            title(e.desc),
+            e.value));
+    }
+
+    get avatarURL() {
+        return this.avatarURLInput.value;
+    }
+
+    set avatarURL(value) {
+        this.avatarURLInput.value = value;
     }
 
     async showAsync() {
@@ -277,6 +300,17 @@ export class OptionsForm extends FormDialog {
         this.videoInputSelect.setValues(values, v => v.label);
     }
 
+    get videoEnabled() {
+        return this._videoEnabled;
+    }
+
+    set videoEnabled(value) {
+        this._videoEnabled = value;
+        this.enableVideo.innerHTML = value
+            ? "Disable video"
+            : "Enable video";
+    }
+
     get gamepads() {
         return this.gpSelect.getValues();
     }
@@ -290,5 +324,91 @@ export class OptionsForm extends FormDialog {
         this.gpButtonRight.setLocked(disable);
         this.gpButtonEmote.setLocked(disable);
         this.gpButtonToggleAudio.setLocked(disable);
+    }
+
+    get drawHearing() {
+        return this._drawHearing;
+    }
+
+    set drawHearing(value) {
+        this._drawHearing = value;
+        this.drawHearingCheck.checked = value;
+    }
+
+    get minAudioDistance() {
+        const value = parseFloat(this.minAudioInput.value);
+        if (isGoodNumber(value)) {
+            return value;
+        }
+        else {
+            return 1;
+        }
+    }
+
+    set minAudioDistance(value) {
+        if (isGoodNumber(value)
+            && value > 0) {
+            this.minAudioDistance.value = value;
+            if (this.minAudioDistance > this.maxAudioDistance) {
+                this.maxAudioDistance = this.minAudioDistance;
+            }
+        }
+    }
+
+
+    get maxAudioDistance() {
+        const value = parseFloat(this.maxAudioInput.value);
+        if (isGoodNumber(value)) {
+            return value;
+        }
+        else {
+            return 10;
+        }
+    }
+
+    set maxAudioDistance(value) {
+        if (isGoodNumber(value)
+            && value > 0) {
+            this.maxAudioDistance.value = value;
+            if (this.minAudioDistance > this.maxAudioDistance) {
+                this.minAudioDistance = this.maxAudioDistance;
+            }
+        }
+    }
+
+
+    get audioRolloff() {
+        const value = parseFloat(this.rolloffInput.value);
+        if (isGoodNumber(value)) {
+            return value;
+        }
+        else {
+            return 1;
+        }
+    }
+
+    set audioRolloff(value) {
+        if (isGoodNumber(value)
+            && value > 0) {
+            this.audioRolloff.value = value;
+        }
+    }
+
+
+    get fontSize() {
+        const value = parseFloat(this.fontSizeInput.value);
+        if (isGoodNumber(value)) {
+            return value;
+        }
+        else {
+            return 16;
+        }
+    }
+
+    set fontSize(value) {
+        if (isGoodNumber(value)
+            && value > 0) {
+            this.fontSizeInput.value = value;
+        }
     }
 }

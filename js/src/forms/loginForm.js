@@ -144,7 +144,7 @@ export class LoginForm extends FormDialog {
     set connected(v) {
         const self = _state.get(this);
         self.connected = v;
-        self.validate();
+        this.connecting = false;
     }
 
     show() {

@@ -46,7 +46,7 @@ const toggleAudioEvt = new Event("toggleaudio"),
     emoteEvt = new Event("emote"),
     selectEmojiEvt = new Event("selectemoji"),
     zoomChangedEvt = new Event("zoomchanged"),
-    optionsEvt = new Event("options"),
+    toggleOptionsEvt = new Event("toggleoptions"),
     tweetEvt = new Event("tweet"),
     leaveEvt = new Event("leave"),
     toggleUIEvt = new Event("toggleui"),
@@ -115,7 +115,7 @@ export class ToolBar extends EventTarget {
                         type("number"),
                         id("zoom"),
                         title("Change map zoom"),
-                        value(1),
+                        value(2),
                         min(0.1),
                         max(8),
                         step(0.1),
@@ -125,7 +125,7 @@ export class ToolBar extends EventTarget {
 
                 Button(
                     title("Show/hide options"),
-                    onClick(_(optionsEvt)),
+                    onClick(_(toggleOptionsEvt)),
                     subelStyle,
                     systemFont,
                     gear.value),
@@ -140,12 +140,14 @@ export class ToolBar extends EventTarget {
                         alt("icon"),
                         role("presentation"),
                         style({ height: "1.5em" }))),
+
                 Button(
                     title("Leave the room"),
                     onClick(_(leaveEvt)),
                     subelStyle,
                     systemFont,
                     Run("Leave"))),
+
             this.hideButton = Button(
                 title("Show/hide Jitsi Meet interface"),
                 style({
@@ -156,6 +158,8 @@ export class ToolBar extends EventTarget {
                 systemFont,
                 onClick(() => this.visible = !this.visible),
                 Run(pauseButton.value)));
+
+        this._audioEnabled = true;
 
         Object.seal(this);
     }
@@ -193,11 +197,16 @@ export class ToolBar extends EventTarget {
         this.visible = true;
     }
 
-    setAudioMuted(muted) {
+    get audioEnabled() {
+        return this._audioEnabled;
+    }
+
+    set audioEnabled(value) {
+        this._audioEnabled = value;
         this.muteAudioButton.updateLabel(
-            muted,
-            mutedSpeaker.value,
-            speakerHighVolume.value);
+            value,
+            speakerHighVolume.value,
+            mutedSpeaker.value);
     }
 
     appendChild(child) {

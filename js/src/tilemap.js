@@ -90,7 +90,7 @@ export class TileMap {
         return x < 0 || this.width <= x
             || y < 0 || this.height <= y
             || this.tileset.isClear(this.tiles[0][y][x])
-            || isSurfer(avatar);
+            || isSurfer(avatar.value);
     }
 
     // Use Bresenham's line algorithm (with integer error)

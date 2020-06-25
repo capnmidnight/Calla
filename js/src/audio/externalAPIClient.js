@@ -51,4 +51,8 @@ export class ExternalJitsiAudioClient extends EventTarget {
     setAudioProperties(evt) {
         this.txJitsiHax("setAudioProperties", evt);
     }
+
+    removeUser(evt) {
+        this.txJitsiHax("removeUser", evt);
+    }
 }

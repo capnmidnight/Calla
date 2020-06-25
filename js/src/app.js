@@ -6,166 +6,73 @@ import { LoginForm } from "./forms/loginForm.js";
 
 export function init(host, JitsiClientClass) {
     const game = new Game(),
-        loginForm = new LoginForm(),
-        jitsiClient = new JitsiClientClass(),
+        login = new LoginForm(),
+        client = new JitsiClientClass(),
         toolbar = new ToolBar(),
-        optionsForm = new OptionsForm(),
-        emojiForm = new EmojiForm(),
+        options = new OptionsForm(),
+        emoji = new EmojiForm(),
         forExport = {
             game,
-            loginForm,
-            jitsiClient,
+            login,
+            client,
             toolbar,
-            optionsForm,
-            emojiForm
+            options,
+            emoji
         };
 
-    function showLogin() {
-        jitsiClient.element.hide();
-        game.frontBuffer.hide();
-        toolbar.hide();
-        optionsForm.hide();
-        emojiForm.hide();
-        loginForm.show();
-    }
+    document.body.append(
+        client.element,
+        game.element,
+        toolbar.element,
+        options.element,
+        emoji.element,
+        login.element);
+
+    game.drawHearing = options.drawHearing;
+    game.audioDistanceMin = options.minAudioDistance;
+    game.audioDistanceMax = options.maxAudioDistance;
+    game.fontSize = options.fontSize;
+    game.targetCameraZ = toolbar.zoom;
 
     showLogin();
 
-    document.body.append(
-        jitsiClient.element,
-        game.frontBuffer,
-        toolbar.element,
-        optionsForm.element,
-        emojiForm.element,
-        loginForm.element);
+    function showLogin() {
+        client.hide();
+        game.hide();
+        toolbar.hide();
+        options.hide();
+        emoji.hide();
+        login.show();
+    }
 
     async function selectEmojiAsync() {
-        const emoji = await emojiForm.selectAsync();
-        if (!!emoji) {
-            game.emote(game.me.id, emoji);
-            toolbar.setEmojiButton(game.keyEmote, emoji);
+        const e = await emoji.selectAsync();
+        if (!!e) {
+            game.emote(game.me.id, e);
+            toolbar.setEmojiButton(game.keyEmote, e);
         }
     }
 
-    loginForm.addEventListener("login", () => {
-        jitsiClient.joinAsync(host, loginForm.selectedRoom, loginForm.userName);
-    });
+    function setAudioProperties() {
+        client.setAudioProperties(
+            window.location.origin,
+            0.125,
+            options.minAudioDistance,
+            options.maxAudioDistance,
+            options.audioRolloff);
+        game.audioDistanceMin = options.minAudioDistance;
+        game.audioDistanceMax = options.maxAudioDistance;
+    }
 
-    game.addEventListener("emote", (evt) => {
-        jitsiClient.emote(evt.emoji);
-    });
-
-    game.addEventListener("audiomuted", async (evt) => {
-        await jitsiClient.setAudioMutedAsync(evt.muted);
-    });
-
-    game.addEventListener("videomuted", async (evt) => {
-        await jitsiClient.setVideoMutedAsync(evt.muted);
-    });
-
-    game.addEventListener("gamestarted", () => {
-        game.me.addEventListener("userMoved", (evt) => {
-            jitsiClient.setPosition(evt);
-        });
-    });
-
-    game.addEventListener("userjoined", (evt) => {
-        evt.user.addEventListener("userPositionNeeded", (evt2) => {
-            jitsiClient.userInitRequest(evt2.id);
-        });
-    });
-
-    game.addEventListener("audiomuted", async (evt) => {
-        toolbar.setAudioMuted(evt.muted);
-    });
-
-    game.addEventListener("videomuted", async (evt) => {
-        //gui.setUserVideoMuted(evt.muted);
-    });
-
-    game.addEventListener("gamestarted", () => {
-        loginForm.hide();
-        toolbar.show();
-        jitsiClient.setPosition(game.me);
-        //gui.resize(toolbar.offsetHeight);
-    });
-
-    game.addEventListener("gameended", () => {
-        //gui.showLogin();
-    });
-
-    game.addEventListener("emojineeded", selectEmojiAsync);
-
-    game.addEventListener("zoomchanged", () => {
-        toolbar.zoom = game.targetCameraZ;
+    window.addEventListener("resize", () => {
+        game.resize(toolbar.offsetHeight);
     });
 
 
-    jitsiClient.addEventListener("videoConferenceJoined", (evt) => {
-        game.start(evt);
-    });
-
-    jitsiClient.addEventListener("videoConferenceLeft", (evt) => {
-        if (evt.roomName.toLowerCase() === game.currentRoomName) {
-            game.end();
-        }
-    });
-
-    jitsiClient.addEventListener("participantJoined", (evt) => {
-        game.addUser(evt);
-    });
-
-    jitsiClient.addEventListener("participantLeft", (evt) => {
-        game.removeUser(evt);
-    });
-
-    jitsiClient.addEventListener("avatarChanged", (evt) => {
-        game.setAvatarURL(evt);
-    });
-
-    jitsiClient.addEventListener("displayNameChange", (evt) => {
-        game.changeUserName(evt);
-    });
-
-    jitsiClient.addEventListener("audioMuteStatusChanged", (evt) => {
-        game.muteUserAudio(evt);
-    });
-
-    jitsiClient.addEventListener("videoMuteStatusChanged", (evt) => {
-        game.muteUserVideo(evt);
-    });
-
-    jitsiClient.addEventListener("userInitRequest", (evt) => {
-        jitsiClient.userInitResponse(evt.id, game.me);
-    });
-
-    jitsiClient.addEventListener("userInitResponse", (evt) => {
-        const user = game.userLookup[evt.id];
-        if (!!user) {
-            user.init(evt);
-            jitsiClient.setPosition(evt);
-        }
-    });
-
-    jitsiClient.addEventListener("userMoved", (evt) => {
-        const user = game.userLookup[evt.id];
-        if (!!user) {
-            user.moveTo(evt.x, evt.y);
-            jitsiClient.setPosition(evt);
-        }
-    });
-
-    jitsiClient.addEventListener("emote", (evt) => {
-        game.emote(evt.id, evt);
-    });
-
-    jitsiClient.addEventListener("audioActivity", (evt) => {
-        game.updateAudioActivity(evt);
-    });
-
+    toolbar.addEventListener("selectemoji", selectEmojiAsync);
 
     toolbar.addEventListener("toggleaudio", () => {
-        jitsiClient.toggleAudio();
+        client.toggleAudio();
     });
 
     toolbar.addEventListener("leave", () => {
@@ -180,8 +87,6 @@ export function init(host, JitsiClientClass) {
         game.targetCameraZ = toolbar.zoom;
     });
 
-    toolbar.addEventListener("selectemoji", selectEmojiAsync);
-
     toolbar.addEventListener("tweet", () => {
         const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
             url = new URL("https://twitter.com/intent/tweet?text=" + message);
@@ -189,26 +94,186 @@ export function init(host, JitsiClientClass) {
     });
 
     toolbar.addEventListener("toggleui", () => {
-        game.frontBuffer.setOpen(toolbar.visible);
+        game.setOpen(toolbar.visible);
+        game.resize(toolbar.offsetHeight);
+        client.resize(toolbar.offsetHeight);
     });
 
-    toolbar.addEventListener("toggleui", () => {
-        //gui.resize(toolbar.offsetHeight);
-    });
-
-    toolbar.addEventListener("options", () => {
-        //gui.showOptions();
+    toolbar.addEventListener("toggleoptions", () => {
+        options.toggleOpen();
     });
 
 
-    window.addEventListener("resize", () => {
-        //gui.resize(toolbar.offsetHeight);
+    login.addEventListener("login", () => {
+        client.joinAsync(host, login.selectedRoom, login.userName);
     });
 
-    window.addEventListener("resize", () => {
-        game.frontBuffer.resize();
+
+    options.addEventListener("selectavatar", async () => {
+        const e = await emoji.selectAsync();
+        if (!!e) {
+            game.me.avatarEmoji = e;
+            options.setAvatarEmoji(e);
+        }
     });
 
-    loginForm.ready = true;
+    options.addEventListener("avatarurlchanged", () => {
+        client.setAvatarURL(options.avatarURL);
+    });
+
+    options.addEventListener("audiopropschanged", setAudioProperties);
+
+    options.addEventListener("togglevideo", () => {
+        client.toggleVideo();
+    });
+
+    options.addEventListener("toggledrawhearing", () => {
+        game.drawHearing = options.drawHearing = !options.drawHearing;
+    });
+
+    options.addEventListener("fontsizechanged", () => {
+        game.fontSize = options.fontSize;
+    });
+
+
+    game.addEventListener("emote", (evt) => {
+        client.emote(evt.emoji);
+    });
+
+    game.addEventListener("userjoined", (evt) => {
+        evt.user.addEventListener("userPositionNeeded", (evt2) => {
+            client.userInitRequest(evt2.id);
+        });
+    });
+
+    game.addEventListener("toggleaudio", async (evt) => {
+        client.toggleAudio();
+    });
+
+    game.addEventListener("togglevideo", async (evt) => {
+        client.toggleVideo();
+    });
+
+    game.addEventListener("gamestarted", () => {
+        game.me.addEventListener("userMoved", (evt) => {
+            client.setPosition(evt);
+        });
+        setAudioProperties();
+        login.hide();
+        toolbar.show();
+        client.show();
+        client.setPosition(game.me);
+        options.setAvatarEmoji(game.me.avatarEmoji);
+    });
+
+    game.addEventListener("gameended", () => {
+        game.hide();
+        client.hide();
+        login.connected = false;
+        showLogin();
+    });
+
+    game.addEventListener("emojineeded", selectEmojiAsync);
+
+    game.addEventListener("zoomchanged", () => {
+        toolbar.zoom = game.targetCameraZ;
+    });
+
+    client.addEventListener("videoConferenceJoined", async (evt) => {
+        login.connected = true;
+
+        game.start(evt);
+        for (let user of client.otherUsers.entries()) {
+            game.addUser({
+                id: user[0],
+                displayName: user[1]
+            });
+        }
+
+        options.audioInputDevices = await client.getAudioInputDevices();
+        options.audioOutputDevices = await client.getAudioOutputDevices();
+        options.videoInputDevices = await client.getVideoInputDevices();
+
+        const audioMuted = await client.isAudioMutedAsync();
+        game.muteUserAudio({ id: client.localUser, muted: audioMuted });
+        toolbar.audioEnabled = !audioMuted;
+
+        const videoMuted = await client.isVideoMutedAsync();
+        game.muteUserVideo({ id: client.localUser, muted: videoMuted });
+        options.videoEnabled = !videoMuted;
+    });
+
+    client.addEventListener("videoConferenceLeft", (evt) => {
+        if (evt.roomName.toLowerCase() === game.currentRoomName) {
+            game.end();
+        }
+    });
+
+    client.addEventListener("participantJoined", (evt) => {
+        game.addUser(evt);
+    });
+
+    client.addEventListener("participantLeft", (evt) => {
+        game.removeUser(evt);
+        client.removeUser(evt);
+    });
+
+    client.addEventListener("avatarChanged", (evt) => {
+        game.setAvatarURL(evt);
+    });
+
+    client.addEventListener("displayNameChange", (evt) => {
+        game.changeUserName(evt);
+    });
+
+    client.addEventListener("audioMuteStatusChanged", (evt) => {
+        game.muteUserAudio(evt);
+        if (evt.id === client.localUser) {
+            toolbar.audioEnabled = !evt.muted;
+        }
+    });
+
+    client.addEventListener("videoMuteStatusChanged", (evt) => {
+        game.muteUserVideo(evt);
+        if (evt.id === client.localUser) {
+            options.videoEnabled = !evt.muted;
+        }
+    });
+
+    client.addEventListener("userInitRequest", (evt) => {
+        client.userInitResponse(evt.id, game.me);
+    });
+
+    client.addEventListener("userInitResponse", (evt) => {
+        const user = game.userLookup[evt.id];
+        if (!!user) {
+            user.init(evt);
+            client.setPosition(evt);
+        }
+    });
+
+    client.addEventListener("userMoved", (evt) => {
+        const user = game.userLookup[evt.id];
+        if (!!user) {
+            user.moveTo(evt.x, evt.y);
+            client.setPosition(evt);
+        }
+    });
+
+    client.addEventListener("emote", (evt) => {
+        game.emote(evt.id, evt);
+    });
+
+    client.addEventListener("audioActivity", (evt) => {
+        game.updateAudioActivity(evt);
+    });
+
+    client.addEventListener("avatarChanged", (evt) => {
+        console.log(evt);
+        options.avatarURL = evt.avatarURL;
+        game.me.setAvatarURL(evt.avatarURL);
+    });
+
+    login.ready = true;
     return forExport;
 }

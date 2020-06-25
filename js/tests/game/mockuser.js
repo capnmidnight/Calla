@@ -3,14 +3,14 @@ import { autoPlay, id, loop, src } from "../../src/html/attrs.js";
 import { Audio, Span } from "../../src/html/tags.js";
 
 export class MockUser {
-    constructor(id, x, y, jitsiClient) {
+    constructor(id, x, y, client) {
         this.id = id;
         this.x = x;
         this.y = y;
-        this.jitsiClient = jitsiClient;
+        this.client = client;
         this.audio = null;
         this.displayName = id;
-        this.avatarEmoji = randomPerson().value;
+        this.avatarEmoji = randomPerson();
         this.emoteEvt = { id, value: null, desc: null };
     }
 
@@ -35,7 +35,7 @@ export class MockUser {
                 loop
             )));
 
-        this.jitsiClient.dispatchEvent(evt);
+        this.client.dispatchEvent(evt);
 
         this.schedule();
     }
@@ -43,8 +43,11 @@ export class MockUser {
     stop() {
         clearTimeout(this.timeout);
         if (!!this.audio) {
-            this.audio.pause();
             document.body.removeChild(this.audio.parentElement);
+
+            this.client.dispatchEvent(Object.assign(new Event("participantLeft"), {
+                id: this.id
+            }));
         }
     }
 
@@ -52,7 +55,7 @@ export class MockUser {
         const x = this.x + Math.floor(2 * Math.random() - 1),
             y = this.y + Math.floor(2 * Math.random() - 1);
 
-        this.jitsiClient.sendMessageTo(this.jitsiClient.localUser, {
+        this.client.sendMessageTo(this.client.localUser, {
             command: "userMoved",
             value: { id: this.id, x, y }
         });
@@ -62,7 +65,7 @@ export class MockUser {
                 group = groups.random(),
                 emoji = group.random();
             Object.assign(this.emoteEvt, emoji);
-            this.jitsiClient.sendMessageTo(this.jitsiClient.localUser, {
+            this.client.sendMessageTo(this.client.localUser, {
                 command: "emote",
                 value: this.emoteEvt
             });
