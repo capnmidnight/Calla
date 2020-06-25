@@ -31,12 +31,11 @@ export class MockUser {
         document.body.appendChild(Span(id(`participant_${this.id}`),
             this.audio = Audio(
                 src(`/test-audio/${this.id}.mp3`),
+                autoPlay,
                 loop
             )));
 
         this.jitsiClient.dispatchEvent(evt);
-
-        this.audio.play();
 
         this.schedule();
     }
