@@ -7,8 +7,6 @@
         this.node = drain;
         this.node.connect(this.destination.audioContext.destination);
         this.source = null;
-
-        this._muted = false;
     }
 
     checkStream() {
@@ -44,12 +42,7 @@
         this.destination = null;
     }
 
-    get muted() {
-        return this._muted;
-    }
-
-    set muted(value) {
-        this._muted = value;
+    update() {
     }
 
     setAudioProperties(evt) {
@@ -65,14 +58,6 @@
     }
 
     get positionY() {
-        throw new Error("Not implemented in base class.");
-    }
-
-    get muted() {
-        throw new Error("Not implemented in base class.");
-    }
-
-    set muted(value) {
         throw new Error("Not implemented in base class.");
     }
 }

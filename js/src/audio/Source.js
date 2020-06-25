@@ -1,4 +1,4 @@
-﻿import { clamp, project } from "../math.js";
+﻿import { clamp } from "../math.js";
 import { FullSpatializer } from "./FullSpatializer.js";
 
 const audioActivityEvt = Object.assign(new Event("audioActivity", {
@@ -72,21 +72,9 @@ export class Source extends EventTarget {
         this.spatializer.setPosition(evt);
     }
 
-    isAudible() {
-        const
-            lx = this.destination.positionX,
-            ly = this.destination.positionY,
-            distX = this.spatializer.positionX - lx,
-            distY = this.spatializer.positionY - ly,
-            dist = Math.sqrt(distX * distX + distY * distY),
-            range = clamp(project(dist, this.destination.minDistance, this.destination.maxDistance), 0, 1);
-
-        return range < 1;
-    }
-
     update() {
         if (this.spatializer.checkStream()) {
-            this.spatializer.muted = !this.isAudible();
+            this.spatializer.update();
 
             this.analyser.getFloatFrequencyData(this.buffer);
 

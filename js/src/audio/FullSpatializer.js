@@ -1,4 +1,5 @@
 ﻿import { BaseSpatializer } from "./BaseSpatializer.js";
+import { clamp, project } from "../math.js";
 
 export class FullSpatializer extends BaseSpatializer {
 
@@ -13,6 +14,7 @@ export class FullSpatializer extends BaseSpatializer {
         this.node.coneOuterAngle = 0;
         this.node.coneOuterGain = 0;
         this.node.positionY.setValueAtTime(0, this.destination.audioContext.currentTime);
+        this.wasMuted = false;
     }
 
     setAudioProperties(evt) {
@@ -36,14 +38,24 @@ export class FullSpatializer extends BaseSpatializer {
         return this.node.positionZ.value;
     }
 
-    set muted(value) {
-        if (!!this.source && value !== this.muted) {
-            super.muted = value;
-            if (this.muted) {
-                this.source.disconnect(this.node);
-            }
-            else {
-                this.source.connect(this.node);
+    update() {
+        if (!!this.source) {
+            const lx = this.destination.positionX,
+                ly = this.destination.positionY,
+                distX = this.positionX - lx,
+                distY = this.positionY - ly,
+                dist = Math.sqrt(distX * distX + distY * distY),
+                range = clamp(project(dist, this.destination.minDistance, this.destination.maxDistance), 0, 1),
+                muted = range >= 1;
+
+            if (muted !== this.wasMuted) {
+                this.wasMuted = muted;
+                if (muted) {
+                    this.source.disconnect(this.node);
+                }
+                else {
+                    this.source.connect(this.node);
+                }
             }
         }
     }
