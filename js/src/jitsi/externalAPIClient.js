@@ -1,4 +1,6 @@
-﻿import { BaseJitsiClient } from "./baseClient.js";
+﻿/* global JitsiMeetExternalAPI */
+
+import { BaseJitsiClient } from "./baseClient.js";
 import { ExternalJitsiAudioClient } from "../audio/externalAPIClient.js";
 
 const audioActivityEvt = Object.assign(new Event("audioActivity", {
@@ -209,26 +211,5 @@ export class ExternalJitsiClient extends BaseJitsiClient {
 
     sendMessageTo(toUserID, data) {
         this.api.executeCommand("sendEndpointTextMessage", toUserID, JSON.stringify(data));
-    }
-
-    setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
-        this.audioClient.setAudioProperties(
-            origin,
-            transitionTime,
-            minDistance,
-            maxDistance,
-            rolloff);
-    }
-
-    setPosition(evt) {
-        if (evt.id === this.localUser) {
-            this.audioClient.setLocalPosition(evt);
-            for (let toUserID of this.otherUsers.keys()) {
-                this.txGameData(toUserID, "userMoved", evt);
-            }
-        }
-        else {
-            this.audioClient.setUserPosition(evt);
-        }
     }
 }

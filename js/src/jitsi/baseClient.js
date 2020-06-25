@@ -34,6 +34,7 @@ export class BaseJitsiClient extends EventTarget {
         this.element = Div(id("jitsi"));
         this.localUser = null;
         this.otherUsers = new Map();
+        this.audioClient = null;
     }
 
     async initializeAsync(host, roomName) {
@@ -171,11 +172,25 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
-        throw new Error("Not implemented in base class.");
+        this.audioClient.setAudioProperties({
+            origin,
+            transitionTime,
+            minDistance,
+            maxDistance,
+            rolloff
+        });
     }
 
     setPosition(evt) {
-        throw new Error("Not implemented in base class.");
+        if (evt.id === this.localUser) {
+            this.audioClient.setLocalPosition(evt);
+            for (let toUserID of this.otherUsers.keys()) {
+                this.txGameData(toUserID, "userMoved", evt);
+            }
+        }
+        else {
+            this.audioClient.setUserPosition(evt);
+        }
     }
 
     async setAudioMutedAsync(muted) {

@@ -48,13 +48,7 @@ export class ExternalJitsiAudioClient extends EventTarget {
         this.txJitsiHax("setUserPosition", evt);
     }
 
-    setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
-        this.txJitsiHax("setAudioProperties", {
-            origin,
-            transitionTime,
-            minDistance,
-            maxDistance,
-            rolloff
-        });
+    setAudioProperties(evt) {
+        this.txJitsiHax("setAudioProperties", evt);
     }
 }

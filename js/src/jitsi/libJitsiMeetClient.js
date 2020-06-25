@@ -1,20 +1,13 @@
 ﻿import '../../lib/jquery.js';
 import { tag } from "../html/tag.js";
 import { Span } from "../html/tags.js";
-import { project, clamp } from '../math.js';
 import { CallaUserEvent } from '../events.js';
+import { Manager } from '../audio/manager.js';
 
 
 
 // helps us filter out data channel messages that don't belong to us
-const BUFFER_SIZE = 1024,
-    APP_FINGERPRINT = "Calla",
-    isOldAudioAPI = !AudioListener.prototype.hasOwnProperty("positionX"),
-    userLookup = {},
-    userList = [],
-    activityCounterMin = 0,
-    activityCounterMax = 60,
-    activityCounterThresh = 5,
+const APP_FINGERPRINT = "Calla",
     eventNames = [
         "audioMuteStatusChanged",
         "videoMuteStatusChanged",
@@ -35,123 +28,7 @@ const BUFFER_SIZE = 1024,
         "avatarChanged"
     ];
 
-class User {
-    constructor(jitsiClient, userID, audio) {
-        this.jitsiClient = jitsiClient;
-        this.id = userID;
-        this.lastAudible = true;
-        this.activityCounter = 0;
-        this.wasActive = false;
 
-        this.audio = audio;
-
-        const stream = !!audio.mozCaptureStream
-            ? audio.mozCaptureStream()
-            : audio.captureStream();
-
-        this.source = audioContext.createMediaStreamSource(stream);
-        this.panner = audioContext.createPanner();
-        this.analyser = audioContext.createAnalyser();
-        this.buffer = new Float32Array(BUFFER_SIZE);
-
-        this.audio.volume = 0;
-
-        this.panner.panningModel = "HRTF";
-        this.panner.distanceModel = "inverse";
-        this.panner.refDistance = minDistance;
-        this.panner.rolloffFactor = rolloff;
-        this.panner.coneInnerAngle = 360;
-        this.panner.coneOuterAngle = 0;
-        this.panner.coneOuterGain = 0;
-
-        this.panner.positionY.setValueAtTime(0, audioContext.currentTime);
-
-        this.analyser.fftSize = 2 * BUFFER_SIZE;
-        this.analyser.smoothingTimeConstant = 0.2;
-
-
-        this.source.connect(this.analyser);
-        this.source.connect(this.panner);
-        this.panner.connect(audioContext.destination);
-    }
-
-    setPosition(evt) {
-        const time = audioContext.currentTime + transitionTime;
-        // our 2D position is in X/Y coords, but our 3D position
-        // along the horizontal plane is X/Z coords.
-        this.panner.positionX.linearRampToValueAtTime(evt.x, time);
-        this.panner.positionZ.linearRampToValueAtTime(evt.y, time);
-    }
-
-    isAudible() {
-        const lx = isOldAudioAPI ? listenerX : audioContext.listener.positionX.value,
-            ly = isOldAudioAPI ? listenerY : audioContext.listener.positionZ.value,
-            distX = this.panner.positionX.value - lx,
-            distZ = this.panner.positionZ.value - ly,
-            dist = Math.sqrt(distX * distX + distZ * distZ),
-            range = clamp(project(dist, minDistance, maxDistance), 0, 1);
-
-        return range < 1;
-    }
-
-    update() {
-        const audible = this.isAudible();
-        if (audible !== this.lastAudible) {
-            this.lastAudible = audible;
-            if (audible) {
-                this.source.connect(this.panner);
-            }
-            else {
-                this.source.disconnect(this.panner);
-            }
-        }
-
-        this.analyser.getFloatFrequencyData(this.buffer);
-
-        const average = 1.1 + analyserFrequencyAverage(this.analyser, this.buffer, 85, 255) / 100;
-        if (average >= 0.5 && this.activityCounter < activityCounterMax) {
-            this.activityCounter++;
-        } else if (average < 0.5 && this.activityCounter > activityCounterMin) {
-            this.activityCounter--;
-        }
-
-        const isActive = this.activityCounter > activityCounterThresh;
-        if (this.wasActive !== isActive) {
-            this.wasActive = isActive;
-            this.jitsiClient.audioActivity(this.id, isActive);
-        }
-    }
-}
-
-function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz) {
-    const sampleRate = analyser.context.sampleRate,
-        start = frequencyToIndex(minHz, sampleRate),
-        end = frequencyToIndex(maxHz, sampleRate),
-        count = end - start
-    let sum = 0
-    for (let i = start; i < end; ++i) {
-        sum += frequencies[i];
-    }
-    return count === 0 ? 0 : (sum / count);
-}
-
-function frequencyToIndex(frequency, sampleRate) {
-    var nyquist = sampleRate / 2
-    var index = Math.round(frequency / nyquist * BUFFER_SIZE)
-    return clamp(index, 0, BUFFER_SIZE)
-}
-
-function logger(obj, name, handler) {
-    const func = !handler
-        ? console.log.bind(console, name)
-        : (evt) => {
-            console.log(name, evt);
-            handler(evt);
-        };
-
-    obj.addEventListener(name, func);
-    return func;
-}
 
 // Manages communication between Jitsi Meet and Calla
 export class LibJitsiMeetClient extends EventTarget {
@@ -160,20 +37,8 @@ export class LibJitsiMeetClient extends EventTarget {
         super();
         this._connection = { value: null };
         this._room = { value: null };
-        this._audioContext = { value: null };
-        this._minDistance = { value: 1 };
-        this._maxDistance = { value: 10 };
-        this._rolloff = { value: 5 };
-        this._transitionTime = { value: 0.125 };
-        this._startMoveTime = { value: 0 };
-        this._endMoveTime = { value: 0 };
-        this._startListenerX = { value: 0 };
-        this._startListenerY = { value: 0 };
-        this._targetListenerX = { value: 0 };
-        this._targetListenerY = { value: 0 };
-        this._listenerX = { value: 0 };
-        this._listenerY = { value: 0 };
         this.updater = this._updater.bind(this);
+        this.audioClient = new Manager();
         Object.freeze(this);
     }
 
@@ -193,192 +58,6 @@ export class LibJitsiMeetClient extends EventTarget {
     set room(value) {
         this._room.value = value;
     }
-
-
-    get audioContext() {
-        return this._audioContext;
-    }
-
-    set audioContext(value) {
-        this._audioContext.value = value;
-    }
-
-
-    get minDistance() {
-        return this._minDistance;
-    }
-
-    set minDistance(value) {
-        this._minDistance.value = value;
-    }
-
-
-    get maxDistance() {
-        return this._maxDistance;
-    }
-
-    set maxDistance(value) {
-        this._maxDistance.value = value;
-    }
-
-
-    get rolloff() {
-        return this._rolloff;
-    }
-
-    set rolloff(value) {
-        this._rolloff.value = value;
-    }
-
-
-    get transitionTime() {
-        return this._transitionTime;
-    }
-
-    set transitionTime(value) {
-        this._transitionTime.value = value;
-    }
-
-
-    get startMoveTime() {
-        return this._startMoveTime;
-    }
-
-    set startMoveTime(value) {
-        this._startMoveTime.value = value;
-    }
-
-
-    get endMoveTime() {
-        return this._endMoveTime;
-    }
-
-    set endMoveTime(value) {
-        this._endMoveTime.value = value;
-    }
-
-
-    get startListenerX() {
-        return this._startListenerX;
-    }
-
-    set startListenerX(value) {
-        this._startListenerX.value = value;
-    }
-
-
-    get startListenerY() {
-        return this._startListenerY;
-    }
-
-    set startListenerY(value) {
-        this._startListenerY.value = value;
-    }
-
-
-    get targetListenerX() {
-        return this._targetListenerX;
-    }
-
-    set targetListenerX(value) {
-        this._targetListenerX.value = value;
-    }
-
-
-    get targetListenerY() {
-        return this._targetListenerY;
-    }
-
-    set targetListenerY(value) {
-        this._targetListenerY.value = value;
-    }
-
-
-    get listenerX() {
-        return this._listenerX;
-    }
-
-    set listenerX(value) {
-        this._listenerX.value = value;
-    }
-
-
-    get listenerY() {
-        return this._listenerY;
-    }
-
-    set listenerY(value) {
-        this._listenerY.value = value;
-    }
-
-    ensureContext() {
-        if (!this.audioContext) {
-            this.audioContext = new AudioContext();
-            const time = this.audioContext.currentTime,
-                listener = this.audioContext.listener;
-
-            if (isOldAudioAPI) {
-                listener.setPosition(0, 0, 0);
-                listener.setOrientation(0, 0, -1, 0, 1, 0);
-            }
-            else {
-                listener.positionX.setValueAtTime(0, time);
-                listener.positionY.setValueAtTime(0, time);
-                listener.positionZ.setValueAtTime(0, time);
-                listener.forwardX.setValueAtTime(0, time);
-                listener.forwardY.setValueAtTime(0, time);
-                listener.forwardZ.setValueAtTime(-1, time);
-                listener.upX.setValueAtTime(0, time);
-                listener.upY.setValueAtTime(1, time);
-                listener.upZ.setValueAtTime(0, time);
-            }
-            requestAnimationFrame(this.updater);
-        }
-    }
-
-    _updater() {
-        requestAnimationFrame(this.updater);
-
-        if (isOldAudioAPI) {
-            const time = this.audioContext.currentTime,
-                p = project(time, this.startMoveTime, this.endMoveTime);
-
-            if (p <= 1) {
-                const deltaX = this.targetListenerX - this.startListenerX,
-                    deltaY = this.targetListenerY - this.startListenerY;
-
-                this.listenerX = this.startListenerX + p * deltaX;
-                this.listenerY = this.startListenerY + p * deltaY;
-
-                this.audioContext.listener.setPosition(this.listenerX, 0, this.listenerY);
-            }
-        }
-
-        for (let user of userList) {
-            user.update();
-        }
-    }
-
-
-
-    getUser(userID) {
-        if (!userLookup[userID]) {
-            const elementID = `#participant_${userID} audio`,
-                audio = document.querySelector(elementID);
-
-            if (!!audio) {
-                userLookup[userID] = new User(this, userID, audio);
-                userList.push(userLookup[userID]);
-            }
-        }
-
-        const user = userLookup[userID];
-        if (!user) {
-            console.warn(`no audio for user ${userID}`);
-        }
-        return user;
-    }
-
 
 
     /// Send a Calla message through the Jitsi Meet data channel.
@@ -401,20 +80,20 @@ export class LibJitsiMeetClient extends EventTarget {
         }
     }
 
-    async joinAsync(roomName, userName) {
+    async joinAsync(host, roomName, userName) {
         roomName = roomName.toLocaleLowerCase();
 
-        await import(`https://${JITSI_HOST}/libs/lib-jitsi-meet.min.js`);
+        await import(`https://${host}/libs/lib-jitsi-meet.min.js`);
 
         JitsiMeetJS.setLogLevel(JitsiMeetJS.logLevels.ERROR);
         JitsiMeetJS.init();
 
         this.connection = new JitsiMeetJS.JitsiConnection(null, null, {
             hosts: {
-                domain: JITSI_HOST,
-                muc: `conference.${JITSI_HOST}`
+                domain: host,
+                muc: `conference.${host}`
             },
-            serviceUrl: `https://${JITSI_HOST}/http-bind`,
+            serviceUrl: `https://${host}/http-bind`,
             enableLipSync: true
         });
 
@@ -751,46 +430,6 @@ export class LibJitsiMeetClient extends EventTarget {
         }
 
         super.addEventListener(evtName, callback, opts);
-    }
-
-    setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
-        this.minDistance = evt.minDistance;
-        this.maxDistance = evt.maxDistance;
-        this.transitionTime = evt.transitionTime;
-        this.rolloff = evt.rolloff;
-
-        this.ensureContext();
-        for (let user of this.userList) {
-            user.panner.refDistance = minDistance;
-            user.panner.rolloffFactor = rolloff;
-        }
-    }
-
-    setLocalPosition(evt) {
-        this.ensureContext();
-        const time = this.audioContext.currentTime + this.transitionTime,
-            listener = this.audioContext.listener;
-        if (isOldAudioAPI) {
-            this.startMoveTime = this.audioContext.currentTime;
-            this.endMoveTime = time;
-            this.startListenerX = this.listenerX;
-            this.startListenerY = this.listenerY;
-            this.targetListenerX = evt.x;
-            this.targetListenerY = evt.y;
-        }
-        else {
-            listener.positionX.linearRampToValueAtTime(evt.x, time);
-            listener.positionZ.linearRampToValueAtTime(evt.y, time);
-        }
-    }
-
-    setUserPosition(evt) {
-        const user = this.getUser(evt.id);
-        if (!user) {
-            return;
-        }
-
-        user.setPosition(evt);
     }
 
     userInitRequest(toUserID) {

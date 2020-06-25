@@ -1,6 +1,7 @@
-﻿import { CallaEvent, CallaUserEvent } from "../../src/events.js";
+﻿import { CallaEvent } from "../../src/events.js";
 import { BaseJitsiClient } from "../../src/jitsi/baseClient.js";
 import { userNumber } from "../client-tests/userNumber.js";
+import { Manager } from "../../src/audio/manager.js";
 
 export class MockJitsiClient extends BaseJitsiClient {
     constructor() {
@@ -26,6 +27,8 @@ export class MockJitsiClient extends BaseJitsiClient {
         window.addEventListener("message", (evt) => {
             this.rxJitsiHax(evt);
         });
+
+        this.audioClient = new Manager();
     }
 
     async initializeAsync(host, roomName) {
@@ -42,10 +45,6 @@ export class MockJitsiClient extends BaseJitsiClient {
                 id: "mock-local-user-" + userNumber,
                 displayName
             }));
-    }
-
-    leave() {
-        throw new Error("Not implemented in base class");
     }
 
     async getAudioOutputDevices() {
@@ -108,13 +107,9 @@ export class MockJitsiClient extends BaseJitsiClient {
         return this.videoMuted;
     }
 
-    setAvatarURL(url) {
-        throw new Error("Not implemented in base class");
-    }
-
     sendMessageTo(toUserID, data) {
         if (toUserID === this.localUser) {
-            this.dispatchEvent(new CallaUserEvent(data.value.id, data));
+            this.dispatchEvent(new CallaEvent(data));
         }
         else {
             const user = this.testUsers.filter(u => u.id === toUserID)[0];
@@ -123,54 +118,6 @@ export class MockJitsiClient extends BaseJitsiClient {
                     this.userInitResponse(this.localUser, user);
                 }
             }
-        }
-    }
-
-    /// Send a Calla message to the jitsihax.js script
-    txJitsiHax(command, value) {
-        const evt = {
-            hax: APP_FINGERPRINT,
-            command,
-            value
-        };
-        window.postMessage(JSON.stringify(evt));
-    }
-
-    rxJitsiHax(msg) {
-        const isLocalHost = msg.origin.match(/^https?:\/\/localhost\b/);
-        if (isLocalHost) {
-            try {
-                const evt = JSON.parse(msg.data);
-                if (evt.hax === APP_FINGERPRINT) {
-                    const evt2 = new CallaEvent(evt);
-                    this.dispatchEvent(evt2);
-                }
-            }
-            catch (exp) {
-                console.error(exp);
-            }
-        }
-    }
-
-    setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
-        this.txJitsiHax("setAudioProperties", {
-            origin,
-            transitionTime,
-            minDistance,
-            maxDistance,
-            rolloff
-        });
-    }
-
-    setPosition(evt) {
-        if (evt.id === this.localUser) {
-            this.txJitsiHax("setLocalPosition", evt);
-            for (let toUserID of this.otherUsers.keys()) {
-                this.txGameData(toUserID, "userMoved", evt);
-            }
-        }
-        else {
-            this.txJitsiHax("setUserPosition", evt);
         }
     }
 }
