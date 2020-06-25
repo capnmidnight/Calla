@@ -74,7 +74,6 @@ export class Game extends EventTarget {
         this.keyRight = "ArrowRight";
 
         this.gamepads = [];
-        this.gamepadButtonPressedEvents = [];
         this.lastGamepadIndex = -1;
         this.gamepadIndex = -1;
         this.buttonEmote = 0;
@@ -558,22 +557,7 @@ export class Game extends EventTarget {
                 const lastPad = this.gamepads[this.gamepadIndex],
                     pad = navigator.getGamepads()[lastPad.index];
 
-                if (this.gamepadIndex != this.lastGamepadIndex) {
-                    while (this.gamepadButtonPressedEvents.length > pad.buttons.length) {
-                        this.gamepadButtonPressedEvents.pop();
-                    }
-                    while (this.gamepadButtonPressedEvents.length < pad.buttons.length) {
-                        this.gamepadButtonPressedEvents.push(new GamepadButtonPressedEvent(this.gamepadButtonPressedEvents.length));
-                    }
-                }
                 this.lastGamepadIndex = this.gamepadIndex;
-
-                for (let i = 0; i < pad.buttons.length; ++i) {
-                    if (!lastPad.buttons[i].pressed
-                        && pad.buttons[i].pressed) {
-                        this.dispatchEvent(this.gamepadButtonPressedEvents[i]);
-                    }
-                }
 
                 if (pad.buttons[this.buttonEmote].pressed) {
                     this.emote(this.me.id, this.currentEmoji);
@@ -702,12 +686,5 @@ export class Game extends EventTarget {
                 this.map.tileWidth,
                 this.map.tileHeight);
         }
-    }
-}
-
-class GamepadButtonPressedEvent extends Event {
-    constructor(button) {
-        super("gamepadButtonPressed");
-        this.button = button;
     }
 }

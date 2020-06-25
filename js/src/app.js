@@ -1,4 +1,10 @@
-﻿import { Game } from "./game.js";
+﻿// TODO
+// set input bindings
+// read/write localSettings
+// use gamepad manager
+// provide gamepad axis binding selector
+
+import { Game } from "./game.js";
 import { ToolBar } from "./forms/toolbar.js";
 import { OptionsForm } from "./forms/optionsForm.js";
 import { EmojiForm } from "./forms/emojiForm.js";
@@ -155,6 +161,10 @@ export function init(host, JitsiClientClass) {
 
     options.addEventListener("videoinputchanged", () => {
         client.setVideoInputDevice(options.currentVideoInputDevice);
+    });
+
+    options.addEventListener("gamepadchanged", () => {
+        game.gamepadIndex = options.currentGamepadIndex;
     });
 
 

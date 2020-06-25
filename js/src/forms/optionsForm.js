@@ -373,6 +373,14 @@ export class OptionsForm extends FormDialog {
         this.gpButtonToggleAudio.setLocked(disable);
     }
 
+    get currentGamepadIndex() {
+        return this.gpSelect.selectedIndex;
+    }
+
+    set currentGamepadIndex(value) {
+        this.gpSelect.selectedIndex = value;
+    }
+
     get drawHearing() {
         return this._drawHearing;
     }
