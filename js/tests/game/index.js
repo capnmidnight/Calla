@@ -18,7 +18,7 @@ import { init } from "../../src/app.js";
     const loginContent = document.querySelector("#login > .content")
     loginContent.parentElement.removeChild(loginContent);
 
-    const { game, loginForm, jitsiClient } = init(JitsiClient, document.querySelector("#appView")),
+    const { game, loginForm, jitsiClient } = init("jitsi.calla.chat", JitsiClient),
         testUsers = [
             new MockUser("user1", -5, -5, jitsiClient),
             new MockUser("user2", -5, 5, jitsiClient),

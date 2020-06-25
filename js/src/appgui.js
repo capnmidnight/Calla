@@ -583,6 +583,7 @@ export class AppGui extends EventTarget {
         this.appView.show();
         location.hash = roomName;
         await this.jitsiClient.joinAsync(
+            "jitsi.calla.chat",
             roomName,
             userName);
         this.updateAudioSettings();

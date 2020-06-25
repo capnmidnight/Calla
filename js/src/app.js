@@ -4,7 +4,7 @@ import { OptionsForm } from "./forms/optionsForm.js";
 import { EmojiForm } from "./forms/emojiForm.js";
 import { LoginForm } from "./forms/loginForm.js";
 
-export function init(JitsiClientClass) {
+export function init(host, JitsiClientClass) {
     const game = new Game(),
         loginForm = new LoginForm(),
         jitsiClient = new JitsiClientClass(),
@@ -48,7 +48,7 @@ export function init(JitsiClientClass) {
     }
 
     loginForm.addEventListener("login", () => {
-        jitsiClient.joinAsync(loginForm.selectedRoom, loginForm.userName);
+        jitsiClient.joinAsync(host, loginForm.selectedRoom, loginForm.userName);
     });
 
     game.addEventListener("emote", (evt) => {

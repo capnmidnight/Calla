@@ -29,7 +29,7 @@ export class ExternalJitsiClient extends BaseJitsiClient {
                 onload: () => {
                     const iframe = this.api.getIFrame();
                     this.audioClient = new ExternalJitsiAudioClient(
-                        JITSI_HOST,
+                        host,
                         new URL(iframe.src).origin,
                         iframe.contentWindow);
                     this.audioClient.addEventListener("audioActivity", (evt) => {

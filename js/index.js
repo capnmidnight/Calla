@@ -17,7 +17,7 @@ import {
     role
 } from "./src/html/attrs.js";
 
-const { toolbar, loginForm } = init(JitsiClient, document.querySelector("#appView"));
+const { toolbar, loginForm } = init("jitsi.calla.chat", JitsiClient);
 
 function adLink(url, label, icon) {
     return A(

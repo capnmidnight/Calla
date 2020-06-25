@@ -31,7 +31,10 @@ export class TestBase extends TestCase {
 
     async joinChannel() {
         const evt = await this.withEvt("videoConferenceJoined", () =>
-            this.client.joinAsync(TEST_ROOM_NAME, "TestUser" + userNumber));
+            this.client.joinAsync(
+                "jitsi.calla.chat",
+                TEST_ROOM_NAME,
+                "TestUser" + userNumber));
         this.isEqualTo(evt.id, this.client.localUser);
     }
 

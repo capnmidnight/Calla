@@ -40,9 +40,9 @@ export class BaseJitsiClient extends EventTarget {
         throw new Error("Not implemented in base class.");
     }
 
-    async joinAsync(roomName, userName) {
+    async joinAsync(host, roomName, userName) {
         this.dispose();
-        await this.initializeAsync(JITSI_HOST, roomName);
+        await this.initializeAsync(host, roomName);
 
         this.addEventListener("videoConferenceJoined", (evt) => {
             this.localUser = evt.id;
