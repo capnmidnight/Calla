@@ -1,6 +1,5 @@
 ﻿import { TestCase } from "../../testing/TestCase.js";
 import { bust } from "../../src/emoji.js";
-import { wait } from "../../src/wait.js";
 import { userNumber } from "./userNumber.js";
 
 const TEST_ROOM_NAME = "testroom";
@@ -68,7 +67,6 @@ export class TestBase extends TestCase {
     }
 
     async sendEmoji() {
-        await wait(1000);
         this.client.emote(bust);
         this.success("Emoji sent");
     }
@@ -83,7 +81,6 @@ export class TestBase extends TestCase {
     }
 
     async sendAudioMuted() {
-        await wait(1000);
         const evt = await this.withEvt("localAudioMuteStatusChanged", () =>
             this.client.setAudioMutedAsync(true));
         this.hasValue(evt.id);
@@ -92,7 +89,6 @@ export class TestBase extends TestCase {
     }
 
     async sendAudioUnmuted() {
-        await wait(1000);
         const evt = await this.withEvt("localAudioMuteStatusChanged", () =>
             this.client.setAudioMutedAsync(false));
         this.hasValue(evt.id);
@@ -117,7 +113,6 @@ export class TestBase extends TestCase {
     }
 
     async sendVideoUnmuted() {
-        await wait(1000);
         const evt = await this.withEvt("localVideoMuteStatusChanged", () =>
             this.client.setVideoMutedAsync(false));
         this.hasValue(evt.id);
@@ -126,7 +121,6 @@ export class TestBase extends TestCase {
     }
 
     async sendVideoMuted() {
-        await wait(1000);
         const evt = await this.withEvt("localVideoMuteStatusChanged", () =>
             this.client.setVideoMutedAsync(true));
         this.hasValue(evt.id);
@@ -152,7 +146,6 @@ export class TestBase extends TestCase {
 
     async sendPosition() {
         const x = ((userNumber - 1) * 2 - 1) * 5;
-        await wait(1000);
         this.client.setPosition({ id: this.client.localUser, x, y: 0 });
         this.success("Position sent");
     }
