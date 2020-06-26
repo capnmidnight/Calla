@@ -557,6 +557,14 @@ class LabeledSelectBoxTag extends HtmlCustomTag {
         this.select.selectedValue = v;
     }
 
+    indexOf(value) {
+        return this.select.indexOf(value);
+    }
+
+    contains(value) {
+        return this.select.contains(value);
+    }
+
     addEventListener(name, callback, opts) {
         this.select.addEventListener(name, callback, opts);
     }
@@ -685,11 +693,19 @@ class SelectBoxTag extends HtmlCustomTag {
         }
     }
 
-    set selectedValue(value) {
-        this.selectedIndex = _values.get(this)
+    indexOf(value) {
+        return _values.get(this)
             .findIndex(v =>
                 value !== null
                 && this.makeID(value) === this.makeID(v));
+    }
+
+    set selectedValue(value) {
+        this.selectedIndex = this.indexOf(value);
+    }
+
+    contains(value) {
+        return this.indexOf(value) >= 0.
     }
 
     addEventListener(name, callback, opts) {
@@ -6939,22 +6955,26 @@ class Game extends EventTarget {
         this.currentEmoji = null;
         this.emotes = [];
 
-        this.keyEmote = "e";
-        this.keyToggleAudio = "a";
-        this.keyUp = "ArrowUp";
-        this.keyDown = "ArrowDown";
-        this.keyLeft = "ArrowLeft";
-        this.keyRight = "ArrowRight";
+        this.inputBinding = {
+            keyButtonUp: "ArrowUp",
+            keyButtonDown: "ArrowDown",
+            keyButtonLeft: "ArrowLeft",
+            keyButtonRight: "ArrowRight",
+            keyButtonEmote: "e",
+            keyButtonToggleAudio: "a",
+
+            gpButtonUp: 12,
+            gpButtonDown: 13,
+            gpButtonLeft: 14,
+            gpButtonRight: 15,
+            gpButtonEmote: 0,
+            gpButtonToggleAudio: 1
+        };
 
         this.gamepads = [];
         this.lastGamepadIndex = -1;
         this.gamepadIndex = -1;
-        this.buttonEmote = 0;
-        this.buttonToggleAudio = 1;
-        this.buttonUp = 12;
-        this.buttonDown = 13;
-        this.buttonLeft = 14;
-        this.buttonRight = 15;
+
 
         // ============= KEYBOARD =================
 
@@ -6964,7 +6984,7 @@ class Game extends EventTarget {
                 && !evt.altKey
                 && !evt.shiftKey
                 && !evt.metaKey
-                && evt.key === this.keyToggleAudio
+                && evt.key === this.inputBinding.keyButtonToggleAudio
                 && !!this.me) {
                 this.toggleMyAudio();
             }
@@ -7431,11 +7451,11 @@ class Game extends EventTarget {
                     && !evt.ctrlKey
                     && !evt.metaKey) {
                     switch (evt.key) {
-                        case this.keyUp: dy--; break;
-                        case this.keyDown: dy++; break;
-                        case this.keyLeft: dx--; break;
-                        case this.keyRight: dx++; break;
-                        case this.keyEmote: this.emote(this.me.id, this.currentEmoji); break;
+                        case this.inputBinding.keyButtonUp: dy--; break;
+                        case this.inputBinding.keyButtonDown: dy++; break;
+                        case this.inputBinding.keyButtonLeft: dx--; break;
+                        case this.inputBinding.keyButtonRight: dx++; break;
+                        case this.inputBinding.keyButtonEmote: this.emote(this.me.id, this.currentEmoji); break;
                     }
                 }
             }
@@ -7446,26 +7466,26 @@ class Game extends EventTarget {
 
                 this.lastGamepadIndex = this.gamepadIndex;
 
-                if (pad.buttons[this.buttonEmote].pressed) {
+                if (pad.buttons[this.inputBinding.gpButtonEmote].pressed) {
                     this.emote(this.me.id, this.currentEmoji);
                 }
 
-                if (!lastPad.buttons[this.buttonToggleAudio].pressed
-                    && pad.buttons[this.buttonToggleAudio].pressed) {
+                if (!lastPad.buttons[this.inputBinding.gpButtonToggleAudio].pressed
+                    && pad.buttons[this.inputBinding.gpButtonToggleAudio].pressed) {
                     this.toggleMyAudio();
                 }
 
-                if (pad.buttons[this.buttonUp].pressed) {
+                if (pad.buttons[this.inputBinding.gpButtonUp].pressed) {
                     --dy;
                 }
-                else if (pad.buttons[this.buttonDown].pressed) {
+                else if (pad.buttons[this.inputBinding.gpButtonDown].pressed) {
                     ++dy;
                 }
 
-                if (pad.buttons[this.buttonLeft].pressed) {
+                if (pad.buttons[this.inputBinding.gpButtonLeft].pressed) {
                     --dx;
                 }
-                else if (pad.buttons[this.buttonRight].pressed) {
+                else if (pad.buttons[this.inputBinding.gpButtonRight].pressed) {
                     ++dx;
                 }
 
@@ -8037,6 +8057,14 @@ class InputBinding extends EventTarget {
             });
         }
 
+        this.clone = () => {
+            const c = {};
+            for (let kp of bindings.entries()) {
+                c[kp[0]] = kp[1];
+            }
+            return c;
+        };
+
         Object.freeze(this);
     }
 }
@@ -8182,8 +8210,11 @@ class OptionsForm extends FormDialog {
                         "drawHearing",
                         "checkbox",
                         "Draw hearing range: ",
-                        onInput(_(toggleDrawHearingEvt))),
-                    this.minAudioInput = LabeledInput(
+                        onInput(() => {
+                            this.drawHearing = !this.drawHearing;
+                            this.dispatchEvent(toggleDrawHearingEvt);
+                        })),
+                    this.audioMinInput = LabeledInput(
                         "minAudio",
                         "number",
                         "Min: ",
@@ -8192,7 +8223,7 @@ class OptionsForm extends FormDialog {
                         max(100),
                         numberWidthStyle,
                         audioPropsChanged),
-                    this.maxAudioInput = LabeledInput(
+                    this.audioMaxInput = LabeledInput(
                         "maxAudio",
                         "number",
                         "Min: ",
@@ -8201,7 +8232,7 @@ class OptionsForm extends FormDialog {
                         max(100),
                         numberWidthStyle,
                         audioPropsChanged),
-                    this.rolloffInput = LabeledInput(
+                    this.audioRolloffInput = LabeledInput(
                         "rollof",
                         "number",
                         "Rollof: ",
@@ -8304,7 +8335,7 @@ class OptionsForm extends FormDialog {
 
     get inputBinding() {
         const self = selfs.get(this);
-        return self.inputBinding;
+        return self.inputBinding.clone();
     }
 
     set inputBinding(value) {
@@ -8405,11 +8436,11 @@ class OptionsForm extends FormDialog {
         this.gpButtonToggleAudio.setLocked(disable);
     }
 
-    get currentGamepadIndex() {
+    get gamepadIndex() {
         return this.gpSelect.selectedIndex;
     }
 
-    set currentGamepadIndex(value) {
+    set gamepadIndex(value) {
         this.gpSelect.selectedIndex = value;
     }
 
@@ -8422,8 +8453,8 @@ class OptionsForm extends FormDialog {
         this.drawHearingCheck.checked = value;
     }
 
-    get minAudioDistance() {
-        const value = parseFloat(this.minAudioInput.value);
+    get audioDistanceMin() {
+        const value = parseFloat(this.audioMinInput.value);
         if (isGoodNumber(value)) {
             return value;
         }
@@ -8432,19 +8463,19 @@ class OptionsForm extends FormDialog {
         }
     }
 
-    set minAudioDistance(value) {
+    set audioDistanceMin(value) {
         if (isGoodNumber(value)
             && value > 0) {
-            this.minAudioDistance.value = value;
-            if (this.minAudioDistance > this.maxAudioDistance) {
-                this.maxAudioDistance = this.minAudioDistance;
+            this.audioMinInput.value = value;
+            if (this.audioDistanceMin > this.audioDistanceMax) {
+                this.audioDistanceMax = this.audioDistanceMin;
             }
         }
     }
 
 
-    get maxAudioDistance() {
-        const value = parseFloat(this.maxAudioInput.value);
+    get audioDistanceMax() {
+        const value = parseFloat(this.audioMaxInput.value);
         if (isGoodNumber(value)) {
             return value;
         }
@@ -8453,19 +8484,19 @@ class OptionsForm extends FormDialog {
         }
     }
 
-    set maxAudioDistance(value) {
+    set audioDistanceMax(value) {
         if (isGoodNumber(value)
             && value > 0) {
-            this.maxAudioDistance.value = value;
-            if (this.minAudioDistance > this.maxAudioDistance) {
-                this.minAudioDistance = this.maxAudioDistance;
+            this.audioMaxInput.value = value;
+            if (this.audioDistanceMin > this.audioDistanceMax) {
+                this.audioDistanceMin = this.audioDistanceMax;
             }
         }
     }
 
 
     get audioRolloff() {
-        const value = parseFloat(this.rolloffInput.value);
+        const value = parseFloat(this.audioRolloffInput.value);
         if (isGoodNumber(value)) {
             return value;
         }
@@ -8477,7 +8508,7 @@ class OptionsForm extends FormDialog {
     set audioRolloff(value) {
         if (isGoodNumber(value)
             && value > 0) {
-            this.audioRolloff.value = value;
+            this.audioRolloffInput.value = value;
         }
     }
 
@@ -8704,7 +8735,7 @@ const loginEvt = new Event("login"),
         ["island", "Island"],
         ["alxcc", "Alexandria Code & Coffee"],
         ["vurv", "Vurv"]]),
-    _state = new Map();
+    selfs$1 = new Map();
 
 class LoginForm extends FormDialog {
     constructor() {
@@ -8715,9 +8746,7 @@ class LoginForm extends FormDialog {
             connecting: false,
             connected: false,
             validate: () => {
-                const canConnect = (this.roomSelectMode
-                    ? this.roomSelect.selectedIndex >= 0
-                    : this.roomInput.value.length > 0)
+                const canConnect = this.roomName.length > 0
                     && this.userName.length > 0;
 
                 this.connectButton.setLocked(!this.ready
@@ -8735,14 +8764,19 @@ class LoginForm extends FormDialog {
             }
         });
 
-        _state.set(this, self);
+        selfs$1.set(this, self);
 
         this.roomLabel = this.element.querySelector("label[for='roomSelector']");
+
         this.roomSelect = SelectBox(
             "No rooms available",
             v => v,
             k => defaultRooms.get(k),
             this.element.querySelector("#roomSelector"));
+        this.roomSelect.addEventListener("input", () => {
+            self.validate();
+        });
+
         this.roomInput = this.element.querySelector("#roomName");
         this.createRoomButton = this.element.querySelector("#createNewRoom");
         this.userNameInput = this.element.querySelector("#userName");
@@ -8750,9 +8784,11 @@ class LoginForm extends FormDialog {
 
         this.roomInput.addEventListener("input", self.validate);
         this.userNameInput.addEventListener("input", self.validate);
+
         this.createRoomButton.addEventListener("click", () => {
             this.roomSelectMode = !this.roomSelectMode;
         });
+
         this.connectButton.addEventListener("click", () => {
             this.connecting = true;
             this.dispatchEvent(loginEvt);
@@ -8771,7 +8807,7 @@ class LoginForm extends FormDialog {
     }
 
     set roomSelectMode(value) {
-        const self = _state.get(this);
+        const self = selfs$1.get(this);
         this.roomSelect.setOpen(value);
         this.roomInput.setOpen(!value);
         this.createRoomButton.innerHTML = value
@@ -8790,12 +8826,30 @@ class LoginForm extends FormDialog {
         self.validate();
     }
 
-    get selectedRoom() {
+    get roomName() {
         const room = this.roomSelectMode
             ? this.roomSelect.selectedValue
             : this.roomInput.value;
 
-        return room.toLocaleLowerCase();
+        return room && room.toLocaleLowerCase() || "";
+    }
+
+    set roomName(v) {
+        if (v === null
+            || v === undefined
+            || v.length === 0) {
+            v = defaultRooms.keys().next();
+        }
+
+        this.roomInput.value = v;
+        this.roomSelect.selectedValue = v;
+        this.roomSelectMode = this.roomSelect.contains(v);
+        selfs$1.get(this).validate();
+    }
+
+    set userName(value) {
+        this.userNameInput.value = value;
+        selfs$1.get(this).validate();
     }
 
     get userName() {
@@ -8812,34 +8866,34 @@ class LoginForm extends FormDialog {
     }
 
     get ready() {
-        const self = _state.get(this);
+        const self = selfs$1.get(this);
         return self.ready;
     }
 
     set ready(v) {
-        const self = _state.get(this);
+        const self = selfs$1.get(this);
         self.ready = v;
         self.validate();
     }
 
     get connecting() {
-        const self = _state.get(this);
+        const self = selfs$1.get(this);
         return self.connecting;
     }
 
     set connecting(v) {
-        const self = _state.get(this);
+        const self = selfs$1.get(this);
         self.connecting = v;
         self.validate();
     }
 
     get connected() {
-        const self = _state.get(this);
+        const self = selfs$1.get(this);
         return self.connected;
     }
 
     set connected(v) {
-        const self = _state.get(this);
+        const self = selfs$1.get(this);
         self.connected = v;
         this.connecting = false;
     }
@@ -8919,6 +8973,171 @@ class InstructionsForm extends FormDialog {
     }
 }
 
+const selfs$2 = new Map(),
+    KEY = "CallaSettings",
+    DEFAULT_SETTINGS = {
+        drawHearing: false,
+        audioDistanceMin: 1,
+        audioDistanceMax: 10,
+        audioRolloff: 1,
+        fontSize: 12,
+        zoom: 1.5,
+        userName: "",
+        roomName: "calla",
+        gamepadIndex: 0,
+        inputBinding: {
+            keyButtonUp: "ArrowUp",
+            keyButtonDown: "ArrowDown",
+            keyButtonLeft: "ArrowLeft",
+            keyButtonRight: "ArrowRight",
+            keyButtonEmote: "e",
+            keyButtonToggleAudio: "a",
+
+            gpButtonUp: 12,
+            gpButtonDown: 13,
+            gpButtonLeft: 14,
+            gpButtonRight: 15,
+            gpButtonEmote: 0,
+            gpButtonToggleAudio: 1
+        }
+    };
+
+function commit(settings) {
+    const self = selfs$2.get(settings);
+    localStorage.setItem(KEY, JSON.stringify(self));
+}
+
+function load() {
+    const selfStr = localStorage.getItem(KEY);
+    if (!!selfStr) {
+        return Object.assign(
+            {},
+            DEFAULT_SETTINGS,
+            JSON.parse(selfStr));
+    }
+}
+
+class Settings {
+    constructor() {
+        const self = Object.seal(load() || DEFAULT_SETTINGS);
+        selfs$2.set(this, self);
+        if (window.location.hash.length > 0) {
+            self.roomName = window.location.hash.substring(1);
+        }
+        Object.seal(this);
+    }
+
+    get drawHearing() {
+        return selfs$2.get(this).drawHearing;
+    }
+
+    set drawHearing(value) {
+        if (value !== this.drawHearing) {
+            selfs$2.get(this).drawHearing = value;
+            commit(this);
+        }
+    }
+
+    get audioDistanceMin() {
+        return selfs$2.get(this).audioDistanceMin;
+    }
+
+    set audioDistanceMin(value) {
+        if (value !== this.audioDistanceMin) {
+            selfs$2.get(this).audioDistanceMin = value;
+            commit(this);
+        }
+    }
+
+    get audioDistanceMax() {
+        return selfs$2.get(this).audioDistanceMax;
+    }
+
+    set audioDistanceMax(value) {
+        if (value !== this.audioDistanceMax) {
+            selfs$2.get(this).audioDistanceMax = value;
+            commit(this);
+        }
+    }
+
+    get audioRolloff() {
+        return selfs$2.get(this).audioRolloff;
+    }
+
+    set audioRolloff(value) {
+        if (value !== this.audioRolloff) {
+            selfs$2.get(this).audioRolloff = value;
+            commit(this);
+        }
+    }
+
+    get fontSize() {
+        return selfs$2.get(this).fontSize;
+    }
+
+    set fontSize(value) {
+        if (value !== this.fontSize) {
+            selfs$2.get(this).fontSize = value;
+            commit(this);
+        }
+    }
+
+    get zoom() {
+        return selfs$2.get(this).zoom;
+    }
+
+    set zoom(value) {
+        if (value !== this.zoom) {
+            selfs$2.get(this).zoom = value;
+            commit(this);
+        }
+    }
+
+    get userName() {
+        return selfs$2.get(this).userName;
+    }
+
+    set userName(value) {
+        if (value !== this.userName) {
+            selfs$2.get(this).userName = value;
+            commit(this);
+        }
+    }
+
+    get roomName() {
+        return selfs$2.get(this).roomName;
+    }
+
+    set roomName(value) {
+        if (value !== this.roomName) {
+            selfs$2.get(this).roomName = value;
+            commit(this);
+        }
+    }
+
+    get gamepadIndex() {
+        return selfs$2.get(this).gamepadIndex;
+    }
+
+    set gamepadIndex(value) {
+        if (value !== this.gamepadIndex) {
+            selfs$2.get(this).gamepadIndex = value;
+            commit(this);
+        }
+    }
+
+    get inputBinding() {
+        return selfs$2.get(this).inputBinding;
+    }
+
+    set inputBinding(value) {
+        if (value !== this.inputBinding) {
+            selfs$2.get(this).inputBinding = value;
+            commit(this);
+        }
+    }
+}
+
 // TODO
 
 function init(host, JitsiClientClass) {
@@ -8929,6 +9148,7 @@ function init(host, JitsiClientClass) {
         options = new OptionsForm(),
         emoji = new EmojiForm(),
         instructions = new InstructionsForm(),
+        settings = new Settings(),
         forExport = {
             client,
             game,
@@ -8936,20 +9156,29 @@ function init(host, JitsiClientClass) {
             options,
             emoji,
             login,
-            instructions
+            instructions,
+            settings
         };
 
     for (let e of Object.values(forExport)) {
-        document.body.append(e.element);
+        if (e.element) {
+            document.body.append(e.element);
+        }
     }
 
-    game.drawHearing = options.drawHearing;
-    game.audioDistanceMin = options.minAudioDistance;
-    game.audioDistanceMax = options.maxAudioDistance;
-    game.fontSize = options.fontSize;
-    game.targetCameraZ = toolbar.zoom;
-
     refreshGamepads();
+
+    options.drawHearing = game.drawHearing = settings.drawHearing;
+    options.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
+    options.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;
+    options.audioRolloff = settings.audioRolloff;
+    options.fontSize = game.fontSize = settings.fontSize;
+    options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
+    options.inputBinding = game.inputBinding = settings.inputBinding;
+    toolbar.zoom = game.cameraZ = game.targetCameraZ = settings.zoom;
+    login.userName = settings.userName;
+    login.roomName = settings.roomName;
+
     showLogin();
 
     function showLogin() {
@@ -8988,11 +9217,9 @@ function init(host, JitsiClientClass) {
         client.setAudioProperties(
             window.location.origin,
             0.125,
-            options.minAudioDistance,
-            options.maxAudioDistance,
-            options.audioRolloff);
-        game.audioDistanceMin = options.minAudioDistance;
-        game.audioDistanceMax = options.maxAudioDistance;
+            settings.audioDistanceMin = game.audioDistanceMin = options.audioDistanceMin,
+            settings.audioDistanceMax = game.audioDistanceMax = options.audioDistanceMax,
+            settings.audioRolloff = options.audioRolloff);
     }
 
     function refreshGamepads() {
@@ -9024,7 +9251,7 @@ function init(host, JitsiClientClass) {
     });
 
     toolbar.addEventListener("zoomchanged", () => {
-        game.targetCameraZ = toolbar.zoom;
+        settings.zoom = game.targetCameraZ = toolbar.zoom;
     });
 
     toolbar.addEventListener("tweet", () => {
@@ -9055,7 +9282,10 @@ function init(host, JitsiClientClass) {
 
 
     login.addEventListener("login", () => {
-        client.joinAsync(host, login.selectedRoom, login.userName);
+        client.joinAsync(
+            host,
+            settings.roomName = login.roomName,
+            settings.userName = login.userName);
     });
 
 
@@ -9078,11 +9308,11 @@ function init(host, JitsiClientClass) {
     });
 
     options.addEventListener("toggledrawhearing", () => {
-        game.drawHearing = options.drawHearing = !options.drawHearing;
+        settings.drawHearing = game.drawHearing = options.drawHearing;
     });
 
     options.addEventListener("fontsizechanged", () => {
-        game.fontSize = options.fontSize;
+        settings.fontSize = game.fontSize = options.fontSize;
     });
 
     options.addEventListener("audioinputchanged", () => {
@@ -9098,9 +9328,12 @@ function init(host, JitsiClientClass) {
     });
 
     options.addEventListener("gamepadchanged", () => {
-        game.gamepadIndex = options.currentGamepadIndex;
+        settings.gamepadIndex = game.gamepadIndex = options.gamepadIndex;
     });
 
+    options.addEventListener("inputbindingchanged", () => {
+        settings.inputBinding = game.inputBinding = options.inputBinding;
+    });
 
     game.addEventListener("emote", (evt) => {
         client.emote(evt.emoji);
@@ -9142,7 +9375,7 @@ function init(host, JitsiClientClass) {
     game.addEventListener("emojineeded", selectEmojiAsync);
 
     game.addEventListener("zoomchanged", () => {
-        toolbar.zoom = game.targetCameraZ;
+        settings.zoom = toolbar.zoom = game.targetCameraZ;
     });
 
     client.addEventListener("videoConferenceJoined", async (evt) => {
