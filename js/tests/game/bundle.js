@@ -213,18 +213,22 @@ EventTarget.prototype.once = function (resolveEvt, rejectEvt, timeout) {
 
         if (timeout !== undefined
             && timeout !== null) {
-            const timer = setTimeout(reject, timeout),
+            const timer = setTimeout(() => {
+                reject("Timeout");
+            }, timeout),
                 cancel = () => clearTimeout(timer);
             resolve = add(cancel, resolve);
             reject = add(cancel, reject);
         }
 
-        if (hasResolveEvt) {   
+        if (hasResolveEvt) {
             this.addEventListener(resolveEvt, resolve);
         }
 
         if (hasRejectEvt) {
-            this.addEventListener(rejectEvt, reject);
+            this.addEventListener(rejectEvt, () => {
+                reject("Rejection event found");
+            });
         }
     });
 };
@@ -269,6 +273,19 @@ EventTarget.prototype.until = function (untilEvt, callback, test, repeatTimeout,
 
         timer = setTimeout(repeater, 0);
     });
+};
+
+EventTarget.prototype.addEventListeners = function (obj) {
+    for (let evtName in obj) {
+        let callback = obj[evtName];
+        let opts = undefined;
+        if (callback instanceof Array) {
+            opts = callback[1];
+            callback = callback[0];
+        }
+
+        this.addEventListener(evtName, callback, opts);
+    }
 };
 
 function isInSet(set, v) {
@@ -5700,12 +5717,8 @@ class MockUser {
         this.client = client;
         this.audio = null;
         this.displayName = id;
-        this._avatarEmoji = randomPerson();
+        this.avatarEmoji = randomPerson();
         this.emoteEvt = { id, value: null, desc: null };
-    }
-
-    get avatarEmoji() {
-        return this._avatarEmoji;
     }
 
     schedule() {
@@ -5769,6 +5782,16 @@ class MockUser {
     }
 }
 
+function copy(dest, evt) {
+    for (let key in dest) {
+        dest[key] = null;
+        if (evt[key] !== undefined) {
+            dest[key] = evt[key];
+        }
+    }
+
+    return dest;
+}
 class CallaEvent extends Event {
     constructor(data) {
         super(data.command);
@@ -5784,7 +5807,7 @@ class CallaUserEvent extends CallaEvent {
 }
 
 // helps us filter out data channel messages that don't belong to us
-const APP_FINGERPRINT
+const APP_FINGERPRINT$1
     = window.APP_FINGERPRINT
     = "Calla",
     eventNames = [
@@ -5806,7 +5829,31 @@ const APP_FINGERPRINT
         "displayNameChange",
         "audioActivity",
         "setAvatarEmoji"
-    ];
+    ],
+    evtMuted = Object.seal({
+        id: null,
+        muted: null
+    }),
+    evtEmoji = Object.seal({
+        id: null,
+        value: null,
+        desc: null
+    }),
+    evtUserState = Object.seal({
+        id: null,
+        x: null,
+        y: null,
+        displayName: null,
+        avatarURL: null,
+        avatarEmoji: null
+    }),
+    evtAudioProperties = Object.seal({
+        origin: null,
+        transitionTime: null,
+        minDistance: null,
+        maxDistance: null,
+        rolloff: null
+    });
 
 // Manages communication between Jitsi Meet and Calla
 class BaseJitsiClient extends EventTarget {
@@ -5877,29 +5924,28 @@ class BaseJitsiClient extends EventTarget {
             }
         });
 
-        this.addEventListener("audioMuteStatusChanged", (evt) => {
-            if (evt.id === this.localUser) {
-                this.audioMuteStatusChanged(evt.muted);
-            }
-        });
-
-        this.addEventListener("videoMuteStatusChanged", (evt) => {
-            if (evt.id === this.localUser) {
-                this.videoMuteStatusChanged(evt.muted);
-            }
-        });
-
         const localizeMuteEvent = (type) => (evt) => {
-            const evt2 = Object.assign(
-                new Event((evt.id === this.localUser ? "local" : "remote") + type + "MuteStatusChanged"), {
-                id: evt.id,
-                muted: evt.muted
-            });
+            const isLocal = evt.id === this.localUser
+                || evt.id === null
+                || evt.id === undefined,
+                evt2 = Object.assign(
+                    new Event((isLocal ? "local" : "remote") + type + "MuteStatusChanged"), {
+                    id: this.localUser,
+                    muted: evt.muted
+                });
             this.dispatchEvent(evt2);
         };
 
         this.addEventListener("audioMuteStatusChanged", localizeMuteEvent("Audio"));
         this.addEventListener("videoMuteStatusChanged", localizeMuteEvent("Video"));
+
+        this.addEventListener("localAudioMuteStatusChanged", (evt) => {
+            this.audioMuteStatusChanged(evt.muted);
+        });
+
+        this.addEventListener("localVideoMuteStatusChanged", (evt) => {
+            this.videoMuteStatusChanged(evt.muted);
+        });
 
         window.addEventListener("unload", () => {
             this.dispose();
@@ -5980,13 +6026,13 @@ class BaseJitsiClient extends EventTarget {
     }
 
     setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
-        this.audioClient.setAudioProperties({
-            origin,
-            transitionTime,
-            minDistance,
-            maxDistance,
-            rolloff
-        });
+        evtAudioProperties.origin = origin;
+        evtAudioProperties.transitionTime = transitionTime;
+        evtAudioProperties.minDistance = minDistance;
+        evtAudioProperties.maxDistance = maxDistance;
+        evtAudioProperties.rolloff = rolloff;
+
+        this.audioClient.setAudioProperties(evtAudioProperties);
     }
 
     setPosition(evt) {
@@ -6031,7 +6077,7 @@ class BaseJitsiClient extends EventTarget {
     /// Send a Calla message through the Jitsi Meet data channel.
     txGameData(id, command, value) {
         const data = {
-            hax: APP_FINGERPRINT,
+            hax: APP_FINGERPRINT$1,
             command,
             value
         };
@@ -6055,7 +6101,7 @@ class BaseJitsiClient extends EventTarget {
         //   }
         //};
         const data = JSON.parse(evt.data.eventData.text);
-        if (data.hax === APP_FINGERPRINT) {
+        if (data.hax === APP_FINGERPRINT$1) {
             const evt2 = new CallaUserEvent(evt.data.senderInfo.id, data);
             this.dispatchEvent(evt2);
         }
@@ -6073,30 +6119,36 @@ class BaseJitsiClient extends EventTarget {
     }
 
     userInitResponse(toUserID, fromUserState) {
-        this.txGameData(toUserID, "userInitResponse", fromUserState);
+        this.txGameData(toUserID, "userInitResponse", copy(evtUserState, fromUserState));
     }
 
     setAvatarEmoji(emoji) {
+        copy(evtEmoji, emoji);
         for (let toUserID of this.otherUsers.keys()) {
-            this.txGameData(toUserID, "setAvatarEmoji", emoji);
+            this.txGameData(toUserID, "setAvatarEmoji", evtEmoji);
         }
     }
 
     emote(emoji) {
+        copy(evtEmoji, emoji);
         for (let toUserID of this.otherUsers.keys()) {
-            this.txGameData(toUserID, "emote", emoji);
+            this.txGameData(toUserID, "emote", evtEmoji);
         }
     }
 
     audioMuteStatusChanged(muted) {
+        evtMuted.id = this.localUser;
+        evtMuted.muted = muted;
         for (let toUserID of this.otherUsers.keys()) {
-            this.txGameData(toUserID, "audioMuteStatusChanged", { muted });
+            this.txGameData(toUserID, "audioMuteStatusChanged", evtMuted);
         }
     }
 
     videoMuteStatusChanged(muted) {
+        evtMuted.id = this.localUser;
+        evtMuted.muted = muted;
         for (let toUserID of this.otherUsers.keys()) {
-            this.txGameData(toUserID, "videoMuteStatusChanged", { muted });
+            this.txGameData(toUserID, "videoMuteStatusChanged", evtMuted);
         }
     }
 }
@@ -6502,6 +6554,131 @@ class AudioManager extends EventTarget {
     }
 }
 
+const FRONT_END_SERVER = "https://www.calla.chat",
+    APP_FINGERPRINT$2 = "Calla",
+    manager = new AudioManager();
+
+let origin = null;
+
+manager.addEventListener("audioActivity", (evt) => {
+    txJitsiHax("audioActivity", {
+        id: evt.id,
+        isActive: evt.isActive
+    });
+});
+
+function txJitsiHax(command, value) {
+    if (origin !== null) {
+        const evt = {
+            hax: APP_FINGERPRINT$2,
+            command,
+            value
+        };
+        window.parent.postMessage(JSON.stringify(evt), origin);
+    }
+}
+
+window.addEventListener("message", (msg) => {
+    const isLocalHost = msg.origin.match(/^https?:\/\/localhost\b/);
+
+    if (msg.origin === FRONT_END_SERVER
+        ||  isLocalHost) {
+        try {
+            const evt = JSON.parse(msg.data),
+                isJitsiHax = evt.hax === APP_FINGERPRINT$2;
+
+            if (isJitsiHax && !!manager[evt.command]) {
+                manager[evt.command](evt.value);
+                if (evt.command === "setAudioProperties") {
+                    origin = evt.value.origin;
+                    console.log(origin);
+                }
+            }
+        }
+        catch (exp) {
+            console.error(exp);
+        }
+    }
+});
+
+const evtSetPosition = Object.seal({
+    id: null,
+    x: null,
+    y: null
+}),
+    evtSetAudioProperties = Object.seal({
+        origin: null,
+        transitionTime: null,
+        minDistance: null,
+        maxDistance: null,
+        rolloff: null
+    }),
+    evtRemoveUser = Object.seal({
+        id: null
+    });
+
+class ExternalJitsiAudioClient extends EventTarget {
+    constructor(host, apiOrigin, apiWindow) {
+        super();
+        this.host = host;
+        this.apiOrigin = apiOrigin;
+        this.apiWindow = apiWindow;
+        window.addEventListener("message", (evt) => {
+            this.rxJitsiHax(evt);
+        });
+    }
+
+
+    /// Send a Calla message to the jitsihax.js script
+    txJitsiHax(command, value) {
+        if (this.apiWindow) {
+            const evt = {
+                hax: APP_FINGERPRINT,
+                command: command,
+                value: value
+            };
+            try {
+                this.apiWindow.postMessage(JSON.stringify(evt), this.apiOrigin);
+            }
+            catch (exp) {
+                console.error(exp);
+            }
+        }
+    }
+
+    rxJitsiHax(msg) {
+        const isLocalHost = msg.origin.match(/^https?:\/\/localhost\b/);
+        if (msg.origin === "https://" + this.host || isLocalHost) {
+            try {
+                const evt = JSON.parse(msg.data);
+                if (evt.hax === APP_FINGERPRINT) {
+                    const evt2 = new CallaEvent(evt);
+                    this.dispatchEvent(evt2);
+                }
+            }
+            catch (exp) {
+                console.error(exp);
+            }
+        }
+    }
+
+    setLocalPosition(evt) {
+        this.txJitsiHax("setLocalPosition", copy(evtSetPosition, evt));
+    }
+
+    setUserPosition(evt) {
+        this.txJitsiHax("setUserPosition", copy(evtSetPosition, evt));
+    }
+
+    setAudioProperties(evt) {
+        this.txJitsiHax("setAudioProperties", copy(evtSetAudioProperties, evt));
+    }
+
+    removeUser(evt) {
+        this.txJitsiHax("removeUser", copy(evtRemoveUser, evt));
+    }
+}
+
 class MockJitsiClient extends BaseJitsiClient {
     constructor() {
         super();
@@ -6533,11 +6710,7 @@ class MockJitsiClient extends BaseJitsiClient {
             videoInput: null
         };
 
-        window.addEventListener("message", (evt) => {
-            this.rxJitsiHax(evt);
-        });
-
-        this.audioClient = new AudioManager();
+        this.audioClient = new ExternalJitsiAudioClient("jisti.calla.chat", window.location.origin, window);
     }
 
     async initializeAsync(host, roomName) {
@@ -6634,6 +6807,1383 @@ class MockJitsiClient extends BaseJitsiClient {
                 }
             }
         }
+    }
+}
+
+class FormDialog extends EventTarget {
+    constructor(name, ...rest) {
+        super();
+
+        const formStyle = style({
+            position: "absolute",
+            display: "grid",
+            gridTemplateColumns: "5fr 1fr 1fr",
+            gridTemplateRows: "auto auto 1fr auto auto",
+            overflowY: "hidden",
+            width: "50%",
+            left: "25%",
+            top: "3em",
+            maxWidth: "900px",
+            maxHeight: "calc(100% - 4em)",
+            backgroundColor: "white",
+            padding: "1em 1em 3em 1em",
+            margin: "auto",
+            borderRadius: "5px",
+            border: "solid 4px black",
+            boxShadow: "rgba(0, 0, 0, .4) 10px 10px 20px",
+            fontFamily: systemFamily
+        });
+
+        this.element = document.getElementById(name) ||
+            Div(
+                id(name),
+                H1(
+                    style({ gridArea: "1/1/2/4" }),
+                    ...rest));
+
+        formStyle.apply(this.element);
+
+        this.header = this.element.querySelector(".header")
+            || this.element.appendChild(
+                Div(
+                    className("header"),
+                    style({ gridArea: "2/1/3/4" })));
+
+        this.content = this.element.querySelector(".content")
+            || this.element.appendChild(
+                Div(
+                    className("content"),
+                    style({
+                        overflowY: "scroll",
+                        gridArea: "3/1/4/4"
+                    })));
+
+        this.footer = this.element.querySelector(".footer")
+            || this.element.appendChild(
+                Div(
+                    className("footer"),
+                    style({
+                        display: "flex",
+                        flexDirection: "row-reverse",
+                        gridArea: "4/1/5/4"
+                    })));
+    }
+
+    appendChild(child) {
+        return this.element.appendChild(child);
+    }
+
+    append(...rest) {
+        this.element.append(...rest);
+    }
+
+    show() {
+        this.element.show("grid");
+    }
+
+    hide() {
+        this.element.hide();
+    }
+
+    toggleOpen() {
+        this.element.toggleOpen("grid");
+    }
+}
+
+const headerStyle = style({
+    textDecoration: "none",
+    color: "black",
+    textTransform: "capitalize"
+}),
+    buttonStyle = style({
+        fontSize: "200%",
+        width: "2em",
+        fontFamily: systemFamily
+    }),
+    cancelEvt = new Event("emojiCanceled");
+
+class EmojiForm extends FormDialog {
+    constructor() {
+        super("emoji", "Emoji");
+
+        this.header.append(
+            H2("Recent"),
+            this.recent = P("(None)"));
+
+        const previousEmoji = [],
+            allAlts = [];
+
+        let selectedEmoji = null,
+            idCounter = 0;
+
+        const closeAll = () => {
+            for (let alt of allAlts) {
+                alt.hide();
+            }
+        };
+
+        function combine(a, b) {
+            let left = a.value;
+
+            let idx = left.indexOf(emojiStyle.value);
+            if (idx === -1) {
+                idx = left.indexOf(textStyle.value);
+            }
+            if (idx >= 0) {
+                left = left.substring(0, idx);
+            }
+
+            return {
+                value: left + b.value,
+                desc: a.desc + "/" + b.desc
+            };
+        }
+
+        const addIconsToContainer = (group, container, isAlts) => {
+            for (let icon of group) {
+                const g = isAlts ? UL() : Span(),
+                    btn = Button(
+                        title(icon.desc),
+                        buttonStyle,
+                        onClick((evt) => {
+                            selectedEmoji = selectedEmoji && evt.ctrlKey
+                                ? combine(selectedEmoji, icon)
+                                : icon;
+                            this.preview.innerHTML = `${selectedEmoji.value} - ${selectedEmoji.desc}`;
+                            this.confirmButton.unlock();
+
+                            if (!!alts) {
+                                alts.toggleOpen();
+                                btn.innerHTML = icon.value + (alts.isOpen() ? "-" : "+");
+                            }
+                        }), icon.value);
+
+                let alts = null;
+
+                if (isAlts) {
+                    btn.id = `emoji-with-alt-${idCounter++}`;
+                    g.appendChild(LI(btn,
+                        Label(htmlFor(btn.id),
+                            icon.desc)));
+                }
+                else {
+                    g.appendChild(btn);
+                }
+
+                if (!!icon.alt) {
+                    alts = Div();
+                    allAlts.push(alts);
+                    addIconsToContainer(icon.alt, alts, true);
+                    alts.hide();
+                    g.appendChild(alts);
+                    btn.style.width = "3em";
+                    btn.innerHTML += "+";
+                }
+
+                if (!!icon.width) {
+                    btn.style.width = icon.width;
+                }
+
+                if (!!icon.color) {
+                    btn.style.color = icon.color;
+                }
+
+                container.appendChild(g);
+            }
+        };
+
+        for (let key of Object.keys(allIcons)) {
+            if (key !== "combiners") {
+                const header = H1(),
+                    container = P(),
+                    headerButton = A(
+                        href("javascript:undefined"),
+                        title(key),
+                        headerStyle,
+                        onClick(() => {
+                            container.toggleOpen();
+                            headerButton.innerHTML = key + (container.isOpen() ? " -" : " +");
+                        }),
+                        key + " -"),
+                    group = allIcons[key];
+
+                addIconsToContainer(group, container);
+                header.appendChild(headerButton);
+                this.content.appendChild(header);
+                this.content.appendChild(container);
+            }
+        }
+
+        this.footer.append(
+
+            this.confirmButton = Button(className("confirm"),
+                systemFont,
+                "OK",
+                onClick(() => {
+                    const idx = previousEmoji.indexOf(selectedEmoji);
+                    if (idx === -1) {
+                        previousEmoji.push(selectedEmoji);
+                        this.recent.innerHTML = "";
+                        addIconsToContainer(previousEmoji, this.recent);
+                    }
+
+                    this.hide();
+                    this.dispatchEvent(new EmojiSelectedEvent(selectedEmoji));
+                })),
+
+            Button(className("cancel"),
+                systemFont,
+                "Cancel",
+                onClick(() => {
+                    this.confirmButton.lock();
+                    this.hide();
+                    this.dispatchEvent(cancelEvt);
+                })),
+
+            this.preview = Span(style({ gridArea: "4/1/5/4" })));
+
+        this.confirmButton.lock();
+
+        this.isOpen = this.element.isOpen.bind(this.element);
+
+        this.selectAsync = () => {
+            return new Promise((resolve, reject) => {
+                let yes = null,
+                    no = null;
+
+                const done = () => {
+                    this.removeEventListener("emojiSelected", yes);
+                    this.removeEventListener("emojiCanceled", no);
+                };
+
+                yes = (evt) => {
+                    done();
+                    try {
+                        resolve(evt.emoji);
+                    }
+                    catch (exp) {
+                        reject(exp);
+                    }
+                };
+
+                no = () => {
+                    done();
+                    resolve(null);
+                };
+
+                this.addEventListener("emojiSelected", yes);
+                this.addEventListener("emojiCanceled", no);
+
+                closeAll();
+                this.show();
+            });
+        };
+    }
+}
+
+class EmojiSelectedEvent extends Event {
+    constructor(emoji) {
+        super("emojiSelected");
+        this.emoji = emoji;
+    }
+}
+
+function instructions() {
+    return [
+        Aside(
+            style({
+                border: "dashed 2px darkred",
+                backgroundColor: "wheat",
+                borderRadius: "5px",
+                padding: "0.5em"
+            }),
+            Strong("Note: "),
+            "Calla is built on top of ",
+            A(
+                href("https://jitsi.org"),
+                target("_blank"),
+                rel("noopener"),
+                "Jitsi Meet"),
+            ". Jitsi does not support iPhones and iPads."),
+        UL(
+            LI(
+                Strong("Be careful in picking your room name"),
+                ", if you don't want randos to join. Traffic is low right now, but you never know."),
+            LI(
+                "Try to ",
+                Strong("pick a unique user name"),
+                ". A lot of people use \"Test\" and then there are a bunch of people with the same name running around."),
+            LI(
+                Strong("Open the Options view"),
+                " to set your avatar, or to change your microphone settings."),
+            LI(
+                Strong("Click on the map"),
+                " to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls."),
+            LI(
+                "Or, ",
+                Strong("use the arrow keys"),
+                " on your keyboard to move."),
+            LI(
+                Strong("Click on yourself"),
+                " to open a list of Emoji. Select an Emoji to float it out into the map."),
+            LI(
+                Strong("Hit the E key"),
+                " to re-emote with your last selected Emoji."),
+            LI(
+                "You can ",
+                Strong("roll your mouse wheel"),
+                " or ",
+                Strong("pinch your touchscreen"),
+                " to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in their Avatar."),
+            LI(
+                "You can ",
+                Strong(" click the Pause button(⏸️)"),
+                " in the upper-right corner to show the default Jitsi Meet interface, in case you need to change any settings there (the game view blocks clicks on the Jitsi Meet interface)."))];
+}
+
+class InstructionsForm extends FormDialog {
+
+    constructor() {
+        super("instructions", "Instructions");
+
+        this.content.append(...instructions());
+
+        this.footer.append(
+            Button(
+                systemFont,
+                style({ gridArea: "4/2" }),
+                "Close",
+                onClick(() => this.hide())));
+    }
+}
+
+const loginEvt = new Event("login"),
+    defaultRooms = new Map([
+        ["calla", "Calla"],
+        ["island", "Island"],
+        ["alxcc", "Alexandria Code & Coffee"],
+        ["vurv", "Vurv"]]),
+    selfs = new Map();
+
+class LoginForm extends FormDialog {
+    constructor() {
+        super("login");
+
+        const self = Object.seal({
+            ready: false,
+            connecting: false,
+            connected: false,
+            validate: () => {
+                const canConnect = this.roomName.length > 0
+                    && this.userName.length > 0;
+
+                this.connectButton.setLocked(!this.ready
+                    || this.connecting
+                    || this.connected
+                    || !canConnect);
+                this.connectButton.innerHTML =
+                    this.connected
+                        ? "Connected"
+                        : this.connecting
+                            ? "Connecting..."
+                            : this.ready
+                                ? "Connect"
+                                : "Loading...";
+            }
+        });
+
+        selfs.set(this, self);
+
+        this.roomLabel = this.element.querySelector("label[for='roomSelector']");
+
+        this.roomSelect = SelectBox(
+            "No rooms available",
+            v => v,
+            k => defaultRooms.get(k),
+            this.element.querySelector("#roomSelector"));
+        this.roomSelect.addEventListener("input", () => {
+            self.validate();
+        });
+
+        this.roomInput = this.element.querySelector("#roomName");
+        this.createRoomButton = this.element.querySelector("#createNewRoom");
+        this.userNameInput = this.element.querySelector("#userName");
+        this.connectButton = this.element.querySelector("#connect");
+
+        this.roomInput.addEventListener("input", self.validate);
+        this.userNameInput.addEventListener("input", self.validate);
+
+        this.createRoomButton.addEventListener("click", () => {
+            this.roomSelectMode = !this.roomSelectMode;
+        });
+
+        this.connectButton.addEventListener("click", () => {
+            this.connecting = true;
+            this.dispatchEvent(loginEvt);
+        });
+
+        this.roomSelect.emptySelectionEnabled = false;
+        this.roomSelect.values = defaultRooms.keys();
+        this.roomSelectMode = true;
+        this.roomSelect.selectedIndex = 0;
+
+        self.validate();
+    }
+
+    get roomSelectMode() {
+        return this.roomSelect.style.display !== "none";
+    }
+
+    set roomSelectMode(value) {
+        const self = selfs.get(this);
+        this.roomSelect.setOpen(value);
+        this.roomInput.setOpen(!value);
+        this.createRoomButton.innerHTML = value
+            ? "New"
+            : "Cancel";
+
+        if (value) {
+            this.roomLabel.htmlFor = this.roomSelect.id;
+            this.roomSelect.selectedValue = this.roomInput.value.toLocaleLowerCase();
+        }
+        else if (this.roomSelect.selectedIndex >= 0) {
+            this.roomLabel.htmlFor = this.roomInput.id;
+            this.roomInput.value = this.roomSelect.selectedValue;
+        }
+
+        self.validate();
+    }
+
+    get roomName() {
+        const room = this.roomSelectMode
+            ? this.roomSelect.selectedValue
+            : this.roomInput.value;
+
+        return room && room.toLocaleLowerCase() || "";
+    }
+
+    set roomName(v) {
+        if (v === null
+            || v === undefined
+            || v.length === 0) {
+            v = defaultRooms.keys().next();
+        }
+
+        this.roomInput.value = v;
+        this.roomSelect.selectedValue = v;
+        this.roomSelectMode = this.roomSelect.contains(v);
+        selfs.get(this).validate();
+    }
+
+    set userName(value) {
+        this.userNameInput.value = value;
+        selfs.get(this).validate();
+    }
+
+    get userName() {
+        return this.userNameInput.value;
+    }
+
+    get connectButtonText() {
+        return this.connectButton.innerText
+            || this.connectButton.textContent;
+    }
+
+    set connectButtonText(str) {
+        this.connectButton.innerHTML = str;
+    }
+
+    get ready() {
+        const self = selfs.get(this);
+        return self.ready;
+    }
+
+    set ready(v) {
+        const self = selfs.get(this);
+        self.ready = v;
+        self.validate();
+    }
+
+    get connecting() {
+        const self = selfs.get(this);
+        return self.connecting;
+    }
+
+    set connecting(v) {
+        const self = selfs.get(this);
+        self.connecting = v;
+        self.validate();
+    }
+
+    get connected() {
+        const self = selfs.get(this);
+        return self.connected;
+    }
+
+    set connected(v) {
+        const self = selfs.get(this);
+        self.connected = v;
+        this.connecting = false;
+    }
+
+    show() {
+        this.ready = true;
+        super.show();
+    }
+}
+
+const gamepadStates = new Map();
+
+class EventedGamepad extends EventTarget {
+    constructor(pad) {
+        super();
+        if (!(pad instanceof Gamepad)) {
+            throw new Error("Value must be a Gamepad");
+        }
+        this.id = pad.id;
+        const self = {
+            btnDownEvts: [],
+            btnUpEvts: [],
+            btnState: []
+        };
+        gamepadStates.set(this, self);
+        this.buttons = [];
+        this.axes = [];
+        this.hapticActuators = [];
+        for (let b = 0; b < pad.buttons.length; ++b) {
+            self.btnDownEvts[b] = Object.assign(new Event("gamepadbuttondown"), {
+                button: b
+            });
+            self.btnUpEvts[b] = Object.assign(new Event("gamepadbuttonup"), {
+                button: b
+            });
+            self.btnState[b] = pad.buttons[b].pressed;
+            this.buttons[b] = pad.buttons[b];
+        }
+        for (let a = 0; a < pad.axes.length; ++a) {
+            this.axes[a] = pad.axes[a];
+        }
+        if (pad.hapticActuators !== undefined) {
+            for (let h = 0; h < pad.hapticActuators.length; ++h) {
+                this.hapticActuators[h] = pad.hapticActuators[h];
+            }
+        }
+        Object.freeze(this);
+    }
+
+    dispose() {
+        gamepadStates.delete(this);
+    }
+
+    _update(pad) {
+        if (!(pad instanceof Gamepad)) {
+            throw new Error("Value must be a Gamepad");
+        }
+        const self = gamepadStates.get(this);
+        for (let b = 0; b < pad.buttons.length; ++b) {
+            const wasPressed = self.btnState[b], pressed = pad.buttons[b].pressed;
+            if (pressed !== wasPressed) {
+                self.btnState[b] = pressed;
+                this.dispatchEvent((state
+                    ? self.btnDownEvts
+                    : self.btnUpEvts)[b]);
+            }
+            this.buttons[b] = pad.buttons[b];
+        }
+        for (let a = 0; a < pad.axes.length; ++a) {
+            this.axes[a] = pad.axes[a];
+        }
+        if (pad.hapticActuators !== undefined) {
+            for (let h = 0; h < pad.hapticActuators.length; ++h) {
+                this.hapticActuators[h] = pad.hapticActuators[h];
+            }
+        }
+    }
+}
+
+const gamepadConnectedEvt = Object.assign(new Event("gamepadconnected"), {
+    gamepad: null
+}),
+    gamepadDisconnectedEvt = Object.assign(new Event("gamepaddisconnected"), {
+        gamepad: null
+    }),
+
+    gamepads = new Map(),
+    anyButtonDownEvt = Object.assign(new Event("gamepadbuttondown"), { button: 0 }),
+    anyButtonUpEvt = Object.assign(new Event("gamepadbuttonup"), { button: 0 });
+
+class GamepadStateManager extends EventTarget {
+    constructor() {
+        super();
+
+        const onAnyButtonDown = (evt) => {
+            anyButtonDownEvt.button = evt.button;
+            this.dispatchEvent(anyButtonDownEvt);
+        };
+
+        const onAnyButtonUp = (evt) => {
+            anyButtonUpEvt.button = evt.button;
+            this.dispatchEvent(anyButtonUpEvt);
+        };
+
+        window.addEventListener("gamepadconnected", (evt) => {
+            const pad = evt.gamepad,
+                gamepad = new EventedGamepad(pad);
+            gamepad.addEventListener("gamepadbuttondown", onAnyButtonDown);
+            gamepad.addEventListener("gamepadbuttonup", onAnyButtonUp);
+            gamepads.set(pad.id, gamepad);
+            gamepadConnectedEvt.gamepad = gamepad;
+            this.dispatchEvent(gamepadConnectedEvt);
+        });
+
+        window.addEventListener("gamepaddisconnected", (evt) => {
+            const gamepad = gamepads.get(pad.id);
+            gamepads.delete(pad.id);
+            gamepad.removeEventListener("gamepadbuttondown", onAnyButtonDown);
+            gamepad.removeEventListener("gamepadbuttonup", onAnyButtonUp);
+            gamepadDisconnectedEvt.gamepad = gamepad;
+            this.dispatchEvent(gamepadDisconnectedEvt);
+            gamepad.dispose();
+        });
+
+        Object.freeze(this);
+    }
+
+    get gamepadIDs() {
+        return [...gamepads.keys()];
+    }
+
+    get gamepads() {
+        return [...gamepads.values()];
+    }
+
+    get(id) {
+        return gamepads.get(id);
+    }
+}
+
+const GamepadManager = new GamepadStateManager();
+
+
+function update() {
+    requestAnimationFrame(update);
+    const pads = navigator.getGamepads();
+    for (let pad of pads) {
+        if (pad !== null
+            && gamepads.has(pad.id)) {
+            const gamepad = gamepads.get(pad.id);
+            gamepad.update(pad);
+        }
+    }
+}
+
+requestAnimationFrame(update);
+
+const inputBindingChangedEvt = new Event("inputBindingChanged");
+
+class InputBinding extends EventTarget {
+    constructor() {
+        super();
+
+        const bindings = new Map([
+            ["keyButtonUp", "ArrowUp"],
+            ["keyButtonDown", "ArrowDown"],
+            ["keyButtonLeft", "ArrowLeft"],
+            ["keyButtonRight", "ArrowRight"],
+            ["keyButtonEmote", "e"],
+            ["keyButtonToggleAudio", "a"],
+
+            ["gpButtonUp", 12],
+            ["gpButtonDown", 13],
+            ["gpButtonLeft", 14],
+            ["gpButtonRight", 15],
+            ["gpButtonEmote", 0],
+            ["gpButtonToggleAudio", 1]
+        ]);
+
+        for (let id of bindings.keys()) {
+            Object.defineProperty(this, id, {
+                get: () => bindings.get(id),
+                set: (v) => {
+                    if (bindings.has(id)
+                        && v !== bindings.get(id)) {
+                        bindings.set(id, v);
+                        this.dispatchEvent(inputBindingChangedEvt);
+                    }
+                }
+            });
+        }
+
+        this.clone = () => {
+            const c = {};
+            for (let kp of bindings.entries()) {
+                c[kp[0]] = kp[1];
+            }
+            return c;
+        };
+
+        Object.freeze(this);
+    }
+}
+
+const keyWidthStyle = style({ width: "7em" }),
+    numberWidthStyle = style({ width: "3em" }),
+    avatarUrlChangedEvt = new Event("avatarURLChanged"),
+    gamepadChangedEvt = new Event("gamepadChanged"),
+    selectAvatarEvt = new Event("selectAvatar"),
+    fontSizeChangedEvt = new Event("fontSizeChanged"),
+    inputBindingChangedEvt$1 = new Event("inputBindingChanged"),
+    audioPropsChangedEvt = new Event("audioPropertiesChanged"),
+    toggleDrawHearingEvt = new Event("toggleDrawHearing"),
+    toggleVideoEvt = new Event("toggleVideo"),
+    audioInputChangedEvt = new Event("audioInputChanged"),
+    audioOutputChangedEvt = new Event("audioOutputChanged"),
+    videoInputChangedEvt = new Event("videoInputChanged"),
+    selfs$1 = new Map();
+
+class OptionsForm extends FormDialog {
+    constructor() {
+        super("options", "Options");
+
+        const _ = (evt) => () => this.dispatchEvent(evt);
+
+        const self = {
+            inputBinding: new InputBinding()
+        };
+
+        selfs$1.set(this, self);
+
+        const audioPropsChanged = onInput(_(audioPropsChangedEvt));
+
+        const makeKeyboardBinder = (id, label) => {
+            const key = LabeledInput(
+                id,
+                "text",
+                label,
+                keyWidthStyle,
+                onKeyUp((evt) => {
+                    if (evt.key !== "Tab"
+                        && evt.key !== "Shift") {
+                        key.value
+                            = self.inputBinding[id]
+                            = evt.key;
+                        this.dispatchEvent(inputBindingChangedEvt$1);
+                    }
+                }));
+            key.value = self.inputBinding[id];
+            return key;
+        };
+
+        const makeGamepadBinder = (id, label) => {
+            const gp = LabeledInput(
+                id,
+                "text",
+                label,
+                numberWidthStyle);
+            GamepadManager.addEventListener("gamepadbuttonup", (evt) => {
+                if (document.activeElement === gp) {
+                    gp.value
+                        = self.inputBinding[id]
+                        = evt.button;
+                    this.dispatchEvent(inputBindingChangedEvt$1);
+                }
+            });
+            gp.value = self.inputBinding[id];
+            return gp;
+        };
+
+        const panels = [
+            OptionPanel("avatar", "Avatar",
+                this.avatarURLInput = LabeledInput(
+                    "avatarURL",
+                    "text",
+                    "Avatar URL: ",
+                    placeHolder("https://example.com/me.png"),
+                    onInput(_(avatarUrlChangedEvt))),
+                " or ",
+                this.avatarEmojiInput = Div(
+                    Label(
+                        htmlFor("selectAvatarEmoji"),
+                        "Avatar Emoji: "),
+                    this.avatarEmojiPreview = Span(bust.value),
+                    Button(
+                        id("selectAvatarEmoji"),
+                        "Select",
+                        onClick(_(selectAvatarEvt))))),
+
+            OptionPanel("interface", "Interface",
+                this.fontSizeInput = LabeledInput(
+                    "fontSize",
+                    "number",
+                    "Font size: ",
+                    value(10),
+                    min(5),
+                    max(32),
+                    style({ width: "3em" }),
+                    onInput(_(fontSizeChangedEvt)))),
+
+            OptionPanel("keyboard", "Keyboard",
+                this.keyButtonUp = makeKeyboardBinder("keyButtonUp", "Up: "),
+                this.keyButtonDown = makeKeyboardBinder("keyButtonDown", "Down: "),
+                this.keyButtonLeft = makeKeyboardBinder("keyButtonLeft", "Left: "),
+                this.keyButtonRight = makeKeyboardBinder("keyButtonRight", "Right: "),
+                this.keyButtonEmote = makeKeyboardBinder("keyButtonEmote", "Emote: "),
+                this.keyButtonToggleAudio = makeKeyboardBinder("keyButtonToggleAudio", "Toggle audio: ")),
+
+            OptionPanel("gamepad", "Gamepad",
+                this.gpSelect = LabeledSelectBox(
+                    "gamepads",
+                    "Use gamepad: ",
+                    "No gamepad",
+                    gp => gp.id,
+                    gp => gp.id,
+                    onInput(_(gamepadChangedEvt))),
+                this.gpButtonUp = makeGamepadBinder("gpButtonUp", "Up: "),
+                this.gpButtonDown = makeGamepadBinder("gpButtonDown", "Down: "),
+                this.gpButtonLeft = makeGamepadBinder("gpButtonLeft", "Left: "),
+                this.gpButtonRight = makeGamepadBinder("gpButtonRight", "Right: "),
+                this.gpButtonEmote = makeGamepadBinder("gpButtonEmote", "Emote: "),
+                this.gpButtonToggleAudio = makeGamepadBinder("gpButtonToggleAudio", "Toggle audio: ")),
+
+            OptionPanel("audio", "Audio",
+                P(
+                    this.audioInputSelect = LabeledSelectBox(
+                        "audioInputDevices",
+                        "Input: ",
+                        "No audio input",
+                        d => d.deviceId,
+                        d => d.label,
+                        onInput(_(audioInputChangedEvt)))),
+                P(
+                    this.audioOutputSelect = LabeledSelectBox(
+                        "audioOutputDevices",
+                        "Output: ",
+                        "No audio output",
+                        d => d.deviceId,
+                        d => d.label,
+                        onInput(_(audioOutputChangedEvt)))),
+                P(
+                    this.drawHearingCheck = LabeledInput(
+                        "drawHearing",
+                        "checkbox",
+                        "Draw hearing range: ",
+                        onInput(() => {
+                            this.drawHearing = !this.drawHearing;
+                            this.dispatchEvent(toggleDrawHearingEvt);
+                        })),
+                    this.audioMinInput = LabeledInput(
+                        "minAudio",
+                        "number",
+                        "Min: ",
+                        value(1),
+                        min(0),
+                        max(100),
+                        numberWidthStyle,
+                        audioPropsChanged),
+                    this.audioMaxInput = LabeledInput(
+                        "maxAudio",
+                        "number",
+                        "Min: ",
+                        value(10),
+                        min(0),
+                        max(100),
+                        numberWidthStyle,
+                        audioPropsChanged),
+                    this.audioRolloffInput = LabeledInput(
+                        "rollof",
+                        "number",
+                        "Rollof: ",
+                        value(1),
+                        min(0.1),
+                        max(10),
+                        step(0.1),
+                        numberWidthStyle,
+                        audioPropsChanged))),
+
+            OptionPanel("video", "Video",
+                P(
+                    this.enableVideo = Button(
+                        accessKey("v"),
+                        "Enable video",
+                        onClick(_(toggleVideoEvt)))),
+                P(
+                    this.videoInputSelect = LabeledSelectBox(
+                        "videoInputDevices",
+                        "Device: ",
+                        "No video input",
+                        d => d.deviceId,
+                        d => d.label,
+                        onInput(_(videoInputChangedEvt)))))
+        ];
+
+        const cols = [];
+        for (let i = 0; i < panels.length; ++i) {
+            cols[i] = "1fr";
+            panels[i].element.style.gridColumnStart = i + 1;
+        }
+
+        Object.assign(this.header.style, {
+            display: "grid",
+            gridTemplateColumns: cols.join(" ")
+        });
+
+        this.header.append(...panels.map(p => p.button));
+        this.content.append(...panels.map(p => p.element));
+        this.footer.append(
+            this.confirmButton = Button(
+                className("confirm"),
+                systemFont,
+                "Close",
+                onClick(() => this.hide())));
+
+        const showPanel = (p) =>
+            () => {
+                for (let i = 0; i < panels.length; ++i) {
+                    panels[i].visible = i === p;
+                }
+            };
+
+        for (let i = 0; i < panels.length; ++i) {
+            panels[i].visible = i === 0;
+            panels[i].addEventListener("select", showPanel(i));
+        }
+
+        self.inputBinding.addEventListener("inputBindingChanged", () => {
+            for (let id of Object.getOwnPropertyNames(self.inputBinding)) {
+                if (value[id] !== undefined
+                    && this[id] != undefined) {
+                    this[id].value = value[id];
+                }
+            }
+        });
+
+        this.gamepads = [];
+        this.audioInputDevices = [];
+        this.audioOutputDevices = [];
+        this.videoInputDevices = [];
+
+        this._videoEnabled = false;
+        this._drawHearing = false;
+
+        Object.seal(this);
+    }
+
+    setAvatarEmoji(e) {
+        clear(this.avatarEmojiPreview);
+        this.avatarEmojiPreview.append(Span(
+            title(e.desc),
+            e.value));
+    }
+
+    get avatarURL() {
+        return this.avatarURLInput.value;
+    }
+
+    set avatarURL(value) {
+        this.avatarURLInput.value = value;
+    }
+
+    async showAsync() {
+        this.show();
+        await this.confirmButton.once("click");
+        this.hide();
+        return false;
+    }
+
+    get inputBinding() {
+        const self = selfs$1.get(this);
+        return self.inputBinding.clone();
+    }
+
+    set inputBinding(value) {
+        const self = selfs$1.get(this);
+        for (let id of Object.getOwnPropertyNames(value)) {
+            if (self.inputBinding[id] !== undefined
+                && value[id] !== undefined
+                && this[id] != undefined) {
+                self.inputBinding[id]
+                    = this[id].value
+                    = value[id];
+            }
+        }
+    }
+
+    get gamepads() {
+        return this.gpSelect.values;
+    }
+
+    set gamepads(values) {
+        this.gpSelect.values = values;
+    }
+
+    get audioInputDevices() {
+        return this.audioInputSelect.values;
+    }
+
+    set audioInputDevices(values) {
+        this.audioInputSelect.values = values;
+    }
+
+    get currentAudioInputDevice() {
+        return this.audioInputSelect.selectedValue;
+    }
+
+    set currentAudioInputDevice(value) {
+        this.audioInputSelect.selectedValue = value;
+    }
+
+
+    get audioOutputDevices() {
+        return this.audioOutputSelect.values;
+    }
+
+    set audioOutputDevices(values) {
+        this.audioOutputSelect.values = values;
+    }
+
+    get currentAudioOutputDevice() {
+        return this.audioOutputSelect.selectedValue;
+    }
+
+    set currentAudioOutputDevice(value) {
+        this.audioOutputSelect.selectedValue = value;
+    }
+
+
+    get videoInputDevices() {
+        return this.videoInputSelect.values;
+    }
+
+    set videoInputDevices(values) {
+        this.videoInputSelect.values = values;
+    }
+
+    get currentVideoInputDevice() {
+        return this.videoInputSelect.selectedValue;
+    }
+
+    set currentVideoInputDevice(value) {
+        this.videoInputSelect.selectedValue = value;
+    }
+
+
+    get videoEnabled() {
+        return this._videoEnabled;
+    }
+
+    set videoEnabled(value) {
+        this._videoEnabled = value;
+        this.enableVideo.innerHTML = value
+            ? "Disable video"
+            : "Enable video";
+    }
+
+    get gamepads() {
+        return this.gpSelect.getValues();
+    }
+
+    set gamepads(values) {
+        const disable = values.length === 0;
+        this.gpSelect.values = values;
+        this.gpButtonUp.setLocked(disable);
+        this.gpButtonDown.setLocked(disable);
+        this.gpButtonLeft.setLocked(disable);
+        this.gpButtonRight.setLocked(disable);
+        this.gpButtonEmote.setLocked(disable);
+        this.gpButtonToggleAudio.setLocked(disable);
+    }
+
+    get gamepadIndex() {
+        return this.gpSelect.selectedIndex;
+    }
+
+    set gamepadIndex(value) {
+        this.gpSelect.selectedIndex = value;
+    }
+
+    get drawHearing() {
+        return this._drawHearing;
+    }
+
+    set drawHearing(value) {
+        this._drawHearing = value;
+        this.drawHearingCheck.checked = value;
+    }
+
+    get audioDistanceMin() {
+        const value = parseFloat(this.audioMinInput.value);
+        if (isGoodNumber(value)) {
+            return value;
+        }
+        else {
+            return 1;
+        }
+    }
+
+    set audioDistanceMin(value) {
+        if (isGoodNumber(value)
+            && value > 0) {
+            this.audioMinInput.value = value;
+            if (this.audioDistanceMin > this.audioDistanceMax) {
+                this.audioDistanceMax = this.audioDistanceMin;
+            }
+        }
+    }
+
+
+    get audioDistanceMax() {
+        const value = parseFloat(this.audioMaxInput.value);
+        if (isGoodNumber(value)) {
+            return value;
+        }
+        else {
+            return 10;
+        }
+    }
+
+    set audioDistanceMax(value) {
+        if (isGoodNumber(value)
+            && value > 0) {
+            this.audioMaxInput.value = value;
+            if (this.audioDistanceMin > this.audioDistanceMax) {
+                this.audioDistanceMin = this.audioDistanceMax;
+            }
+        }
+    }
+
+
+    get audioRolloff() {
+        const value = parseFloat(this.audioRolloffInput.value);
+        if (isGoodNumber(value)) {
+            return value;
+        }
+        else {
+            return 1;
+        }
+    }
+
+    set audioRolloff(value) {
+        if (isGoodNumber(value)
+            && value > 0) {
+            this.audioRolloffInput.value = value;
+        }
+    }
+
+
+    get fontSize() {
+        const value = parseFloat(this.fontSizeInput.value);
+        if (isGoodNumber(value)) {
+            return value;
+        }
+        else {
+            return 16;
+        }
+    }
+
+    set fontSize(value) {
+        if (isGoodNumber(value)
+            && value > 0) {
+            this.fontSizeInput.value = value;
+        }
+    }
+}
+
+function Run(txt) {
+    return Span(
+        style({ margin: "auto" }),
+        txt);
+}
+
+const toggleAudioEvt = new Event("toggleAudio"),
+    emoteEvt = new Event("emote"),
+    selectEmojiEvt = new Event("selectEmoji"),
+    zoomChangedEvt = new Event("zoomChanged"),
+    toggleOptionsEvt = new Event("toggleOptions"),
+    tweetEvt = new Event("tweet"),
+    leaveEvt = new Event("leave"),
+    toggleUIEvt = new Event("toggleUI"),
+    toggleInstructionsEvt = new Event("toggleInstructions"),
+    subelStyle = style({
+        display: "inline-flex",
+        margin: "0 0.5em 0 0"
+    });
+
+class ToolBar extends EventTarget {
+    constructor() {
+        super();
+
+        const _ = (evt) => () => this.dispatchEvent(evt);
+
+        this.element = Div(
+            id("toolbar"),
+            style({
+                position: "fixed",
+                top: 0,
+                right: 0,
+                backgroundColor: "#bbb",
+                display: "flex",
+                flexDirection: "row",
+                flexWrap: "wrap"
+            }),
+
+            this.toolbar = Div(
+                style({
+                    display: "flex",
+                    width: "100vw",
+                    padding: "4px",
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    boxSizing: "border-box"
+                }),
+                systemFont,
+
+                this.muteAudioButton = Button(
+                    onClick(_(toggleAudioEvt)),
+                    subelStyle,
+                    systemFont,
+                    speakerHighVolume.value),
+
+                this.emojiControl = Span(
+                    subelStyle,
+                    this.emoteButton = Button(
+                        title("Emote"),
+                        onClick(_(emoteEvt)),
+                        systemFont,
+                        "Emote ",
+                        KBD("(E)"),
+                        "(@)"),
+                    Button(
+                        title("Select Emoji"),
+                        systemFont,
+                        onClick(_(selectEmojiEvt)),
+                        downwardsButton.value)),
+
+                Span(
+                    subelStyle,
+                    Label(
+                        htmlFor("zoom"),
+                        style({ margin: "auto" }),
+                        "Zoom"),
+                    this.zoomSpinner = Input(
+                        type("number"),
+                        id("zoom"),
+                        title("Change map zoom"),
+                        value(2),
+                        min(0.1),
+                        max(8),
+                        step(0.1),
+                        style({ width: "4em" }),
+                        systemFont,
+                        onInput(_(zoomChangedEvt)))),
+
+                this.optionsButton = Button(
+                    title("Show/hide options"),
+                    onClick(_(toggleOptionsEvt)),
+                    subelStyle,
+                    systemFont,
+                    gear.value),
+
+                this.instructionsButton = Button(
+                    title("Show/hide instructions"),
+                    onClick(_(toggleInstructionsEvt)),
+                    subelStyle,
+                    systemFont,
+                    questionMark.value),
+
+                Button(
+                    title("Share your current room to twitter"),
+                    onClick(_(tweetEvt)),
+                    subelStyle,
+                    systemFont,
+                    Run("Share room"),
+                    Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
+                        alt("icon"),
+                        role("presentation"),
+                        style({ height: "1.5em" }))),
+
+                Button(
+                    title("Leave the room"),
+                    onClick(_(leaveEvt)),
+                    subelStyle,
+                    systemFont,
+                    style({ marginLeft: "1em" }),
+                    Run("Leave"))),
+
+            this.hideButton = Button(
+                title("Show/hide Jitsi Meet interface"),
+                style({
+                    position: "absolute",
+                    right: 0,
+                    margin: "4px"
+                }),
+                systemFont,
+                onClick(() => this.visible = !this.visible),
+                Run(pauseButton.value)));
+
+        this._audioEnabled = true;
+
+        Object.seal(this);
+    }
+
+    get offsetHeight() {
+        return this.toolbar.offsetHeight;
+    }
+
+    get zoom() {
+        return this.zoomSpinner.value;
+    }
+
+    set zoom(value) {
+        this.zoomSpinner.value = Math.round(value * 100) / 100;
+    }
+
+    get visible() {
+        return this.toolbar.style.display !== "none";
+    }
+
+    set visible(value) {
+        this.toolbar.setOpenWithLabel(
+            value,
+            this.hideButton,
+            pauseButton.value,
+            playButton.value);
+        this.dispatchEvent(toggleUIEvt);
+    }
+
+    hide() {
+        this.visible = false;
+    }
+
+    show() {
+        this.visible = true;
+    }
+
+    get audioEnabled() {
+        return this._audioEnabled;
+    }
+
+    set audioEnabled(value) {
+        this._audioEnabled = value;
+        this.muteAudioButton.updateLabel(
+            value,
+            speakerHighVolume.value,
+            mutedSpeaker.value);
+    }
+
+    appendChild(child) {
+        return this.toolbar.appendChild(child);
+    }
+
+    insertBefore(newChild, refChild) {
+        return this.toolbar.insertBefore(newChild, refChild);
+    }
+
+    append(...children) {
+        this.toolbar.append(...children);
+    }
+
+    setEmojiButton(key, emoji) {
+        this.emoteButton.innerHTML = `Emote (<kbd>${key.toUpperCase()}</kbd>) (${emoji.value})`;
     }
 }
 
@@ -6940,7 +8490,7 @@ class User extends EventTarget {
             this.avatarImage = null;
         }
 
-        this.avatarEmoji = evt._avatarEmoji;
+        this.avatarEmoji = evt.avatarEmoji;
         this.isInitialized = true;
     }
 
@@ -7248,17 +8798,17 @@ const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_SPEED = 0.005,
     MAX_DRAG_DISTANCE = 5,
     isFirefox = typeof InstallTrigger !== "undefined",
-    gameStartedEvt = new Event("gamestarted"),
-    gameEndedEvt = new Event("gameended"),
-    zoomChangedEvt = new Event("zoomchanged"),
-    emojiNeededEvt = new Event("emojineeded"),
-    toggleAudioEvt = new Event("toggleaudio"),
-    toggleVideoEvt = new Event("togglevideo"),
-    emoteEvt = Object.assign(new Event("emote"), {
+    gameStartedEvt = new Event("gameStarted"),
+    gameEndedEvt = new Event("gameEnded"),
+    zoomChangedEvt$1 = new Event("zoomChanged"),
+    emojiNeededEvt = new Event("emojiNeeded"),
+    toggleAudioEvt$1 = new Event("toggleAudio"),
+    toggleVideoEvt$1 = new Event("toggleVideo"),
+    emoteEvt$1 = Object.assign(new Event("emote"), {
         id: null,
         emoji: null
     }),
-    userJoinedEvt = Object.assign(new Event("userjoined", {
+    userJoinedEvt = Object.assign(new Event("userJoined", {
         user: null
     }));
 
@@ -7318,8 +8868,6 @@ class Game extends EventTarget {
             gpButtonToggleAudio: 1
         };
 
-        this.gamepads = [];
-        this.lastGamepadIndex = -1;
         this.gamepadIndex = -1;
 
 
@@ -7485,32 +9033,6 @@ class Game extends EventTarget {
 
         // ============= POINTERS =================
 
-        // ============= GAMEPAD =================
-        {
-            addEventListener("gamepadconnected", (evt) => {
-                const pad = evt.gamepad,
-                    idx = this.gamepads.findIndex(x => x.id === pad.id);
-                if (idx === -1) {
-                    this.gamepads.push(pad);
-                    if (this.gamepads.length === 1) {
-                        this.gamepadIndex = 0;
-                    }
-                }
-            });
-
-            addEventListener("gamepaddisconnected", (evt) => {
-                const pad = evt.gamepad,
-                    idx = this.gamepads.findIndex(x => x.id === pad.id);
-                if (idx >= 0) {
-                    this.gamepads.splice(idx, 1);
-                    if (this.gamepads.length === 0) {
-                        this.gamepadIndex = -1;
-                    }
-                }
-            });
-        }
-        // ============= GAMEPAD =================
-
         // ============= ACTION ==================
     }
 
@@ -7550,9 +9072,9 @@ class Game extends EventTarget {
                     this.currentEmoji = emoji;
                     for (let user of this.userList) {
                         if (user !== this.me) {
-                            emoteEvt.id = user.id;
-                            emoteEvt.emoji = emoji;
-                            this.dispatchEvent(emoteEvt);
+                            emoteEvt$1.id = user.id;
+                            emoteEvt$1.emoji = emoji;
+                            this.dispatchEvent(emoteEvt$1);
                         }
                     }
                 }
@@ -7596,7 +9118,7 @@ class Game extends EventTarget {
                 e = Math.pow(d, 1 / CAMERA_ZOOM_SHAPE);
 
             this.targetCameraZ = unproject(e, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX);
-            this.dispatchEvent(zoomChangedEvt);
+            this.dispatchEvent(zoomChangedEvt$1);
         }
     }
 
@@ -7629,11 +9151,11 @@ class Game extends EventTarget {
     }
 
     toggleMyAudio() {
-        this.dispatchEvent(toggleAudioEvt);
+        this.dispatchEvent(toggleAudioEvt$1);
     }
 
     toggleMyVideo() {
-        this.dispatchEvent(toggleVideoEvt);
+        this.dispatchEvent(toggleVideoEvt$1);
     }
 
     muteUserAudio(evt) {
@@ -7741,7 +9263,7 @@ class Game extends EventTarget {
         }
 
         this.startLoop();
-        this.dispatchEvent(zoomChangedEvt);
+        this.dispatchEvent(zoomChangedEvt$1);
         this.dispatchEvent(gameStartedEvt);
     }
 
@@ -7807,11 +9329,8 @@ class Game extends EventTarget {
                 }
             }
 
-            if (0 <= this.gamepadIndex && this.gamepadIndex < this.gamepads.length) {
-                const lastPad = this.gamepads[this.gamepadIndex],
-                    pad = navigator.getGamepads()[lastPad.index];
-
-                this.lastGamepadIndex = this.gamepadIndex;
+            const pad = GamepadManager.gamepads[this.gamepadIndex];
+            if (pad) {
 
                 if (pad.buttons[this.inputBinding.gpButtonEmote].pressed) {
                     this.emote(this.me.id, this.currentEmoji);
@@ -7842,8 +9361,6 @@ class Game extends EventTarget {
                 this.targetOffsetCameraX += -50 * Math.round(2 * pad.axes[2]);
                 this.targetOffsetCameraY += -50 * Math.round(2 * pad.axes[3]);
                 this.zoom(2 * (pad.buttons[6].value - pad.buttons[7].value));
-
-                this.gamepads[this.gamepadIndex] = pad;
             }
 
             dx = clamp(dx, -1, 1);
@@ -7940,1383 +9457,6 @@ class Game extends EventTarget {
                 this.map.tileWidth,
                 this.map.tileHeight);
         }
-    }
-}
-
-function Run(txt) {
-    return Span(
-        style({ margin: "auto" }),
-        txt);
-}
-
-const toggleAudioEvt$1 = new Event("toggleaudio"),
-    emoteEvt$1 = new Event("emote"),
-    selectEmojiEvt = new Event("selectemoji"),
-    zoomChangedEvt$1 = new Event("zoomchanged"),
-    toggleOptionsEvt = new Event("toggleoptions"),
-    tweetEvt = new Event("tweet"),
-    leaveEvt = new Event("leave"),
-    toggleUIEvt = new Event("toggleui"),
-    toggleInstructionsEvt = new Event("toggleinstructions"),
-    subelStyle = style({
-        display: "inline-flex",
-        margin: "0 0.5em 0 0"
-    });
-
-class ToolBar extends EventTarget {
-    constructor() {
-        super();
-
-        const _ = (evt) => () => this.dispatchEvent(evt);
-
-        this.element = Div(
-            id("toolbar"),
-            style({
-                position: "fixed",
-                top: 0,
-                right: 0,
-                backgroundColor: "#bbb",
-                display: "flex",
-                flexDirection: "row",
-                flexWrap: "wrap"
-            }),
-
-            this.toolbar = Div(
-                style({
-                    display: "flex",
-                    width: "100vw",
-                    padding: "4px",
-                    flexDirection: "row",
-                    flexWrap: "wrap",
-                    boxSizing: "border-box"
-                }),
-                systemFont,
-
-                this.muteAudioButton = Button(
-                    onClick(_(toggleAudioEvt$1)),
-                    subelStyle,
-                    systemFont,
-                    speakerHighVolume.value),
-
-                this.emojiControl = Span(
-                    subelStyle,
-                    this.emoteButton = Button(
-                        title("Emote"),
-                        onClick(_(emoteEvt$1)),
-                        systemFont,
-                        "Emote ",
-                        KBD("(E)"),
-                        "(@)"),
-                    Button(
-                        title("Select Emoji"),
-                        systemFont,
-                        onClick(_(selectEmojiEvt)),
-                        downwardsButton.value)),
-
-                Span(
-                    subelStyle,
-                    Label(
-                        htmlFor("zoom"),
-                        style({ margin: "auto" }),
-                        "Zoom"),
-                    this.zoomSpinner = Input(
-                        type("number"),
-                        id("zoom"),
-                        title("Change map zoom"),
-                        value(2),
-                        min(0.1),
-                        max(8),
-                        step(0.1),
-                        style({ width: "4em" }),
-                        systemFont,
-                        onInput(_(zoomChangedEvt$1)))),
-
-                this.optionsButton = Button(
-                    title("Show/hide options"),
-                    onClick(_(toggleOptionsEvt)),
-                    subelStyle,
-                    systemFont,
-                    gear.value),
-
-                this.instructionsButton = Button(
-                    title("Show/hide instructions"),
-                    onClick(_(toggleInstructionsEvt)),
-                    subelStyle,
-                    systemFont,
-                    questionMark.value),
-
-                Button(
-                    title("Share your current room to twitter"),
-                    onClick(_(tweetEvt)),
-                    subelStyle,
-                    systemFont,
-                    Run("Share room"),
-                    Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
-                        alt("icon"),
-                        role("presentation"),
-                        style({ height: "1.5em" }))),
-
-                Button(
-                    title("Leave the room"),
-                    onClick(_(leaveEvt)),
-                    subelStyle,
-                    systemFont,
-                    style({ marginLeft: "1em" }),
-                    Run("Leave"))),
-
-            this.hideButton = Button(
-                title("Show/hide Jitsi Meet interface"),
-                style({
-                    position: "absolute",
-                    right: 0,
-                    margin: "4px"
-                }),
-                systemFont,
-                onClick(() => this.visible = !this.visible),
-                Run(pauseButton.value)));
-
-        this._audioEnabled = true;
-
-        Object.seal(this);
-    }
-
-    get offsetHeight() {
-        return this.toolbar.offsetHeight;
-    }
-
-    get zoom() {
-        return this.zoomSpinner.value;
-    }
-
-    set zoom(value) {
-        this.zoomSpinner.value = Math.round(value * 100) / 100;
-    }
-
-    get visible() {
-        return this.toolbar.style.display !== "none";
-    }
-
-    set visible(value) {
-        this.toolbar.setOpenWithLabel(
-            value,
-            this.hideButton,
-            pauseButton.value,
-            playButton.value);
-        this.dispatchEvent(toggleUIEvt);
-    }
-
-    hide() {
-        this.visible = false;
-    }
-
-    show() {
-        this.visible = true;
-    }
-
-    get audioEnabled() {
-        return this._audioEnabled;
-    }
-
-    set audioEnabled(value) {
-        this._audioEnabled = value;
-        this.muteAudioButton.updateLabel(
-            value,
-            speakerHighVolume.value,
-            mutedSpeaker.value);
-    }
-
-    appendChild(child) {
-        return this.toolbar.appendChild(child);
-    }
-
-    insertBefore(newChild, refChild) {
-        return this.toolbar.insertBefore(newChild, refChild);
-    }
-
-    append(...children) {
-        this.toolbar.append(...children);
-    }
-
-    setEmojiButton(key, emoji) {
-        this.emoteButton.innerHTML = `Emote (<kbd>${key.toUpperCase()}</kbd>) (${emoji.value})`;
-    }
-}
-
-const gamepadStates = new Map();
-
-class EventedGamepad extends EventTarget {
-    constructor(pad) {
-        super();
-        if (!(pad instanceof Gamepad)) {
-            throw new Error("Value must be a Gamepad");
-        }
-        this.id = pad.id;
-        const self = {
-            btnDownEvts: [],
-            btnUpEvts: [],
-            btnState: []
-        };
-        gamepadStates.set(this, self);
-        this.buttons = [];
-        this.axes = [];
-        this.hapticActuators = [];
-        for (let b = 0; b < pad.buttons.length; ++b) {
-            self.btnDownEvts[b] = Object.assign(new Event("gamepadbuttondown"), {
-                button: b
-            });
-            self.btnUpEvts[b] = Object.assign(new Event("gamepadbuttonup"), {
-                button: b
-            });
-            self.btnState[b] = pad.buttons[b].pressed;
-            this.buttons[b] = pad.buttons[b];
-        }
-        for (let a = 0; a < pad.axes.length; ++a) {
-            this.axes[a] = pad.axes[a];
-        }
-        if (pad.hapticActuators !== undefined) {
-            for (let h = 0; h < pad.hapticActuators.length; ++h) {
-                this.hapticActuators[h] = pad.hapticActuators[h];
-            }
-        }
-        Object.freeze(this);
-    }
-
-    dispose() {
-        gamepadStates.delete(this);
-    }
-
-    _update(pad) {
-        if (!(pad instanceof Gamepad)) {
-            throw new Error("Value must be a Gamepad");
-        }
-        const self = gamepadStates.get(this);
-        for (let b = 0; b < pad.buttons.length; ++b) {
-            const wasPressed = self.btnState[b], pressed = pad.buttons[b].pressed;
-            if (pressed !== wasPressed) {
-                self.btnState[b] = pressed;
-                this.dispatchEvent((state
-                    ? self.btnDownEvts
-                    : self.btnUpEvts)[b]);
-            }
-            this.buttons[b] = pad.buttons[b];
-        }
-        for (let a = 0; a < pad.axes.length; ++a) {
-            this.axes[a] = pad.axes[a];
-        }
-        if (pad.hapticActuators !== undefined) {
-            for (let h = 0; h < pad.hapticActuators.length; ++h) {
-                this.hapticActuators[h] = pad.hapticActuators[h];
-            }
-        }
-    }
-}
-
-const gamepadConnectedEvt = Object.assign(new Event("gamepadconnected"), {
-    gamepad: null
-}),
-    gamepadDisconnectedEvt = Object.assign(new Event("gamepaddisconnected"), {
-        gamepad: null
-    }),
-
-    gamepads = new Map(),
-    anyButtonDownEvt = Object.assign(new Event("gamepadbuttondown"), { button: 0 }),
-    anyButtonUpEvt = Object.assign(new Event("gamepadbuttonup"), { button: 0 });
-
-class GamepadStateManager extends EventTarget {
-    constructor() {
-        super();
-
-        const onAnyButtonDown = (evt) => {
-            anyButtonDownEvt.button = evt.button;
-            this.dispatchEvent(anyButtonDownEvt);
-        };
-
-        const onAnyButtonUp = (evt) => {
-            anyButtonUpEvt.button = evt.button;
-            this.dispatchEvent(anyButtonUpEvt);
-        };
-
-        window.addEventListener("gamepadconnected", (evt) => {
-            const pad = evt.gamepad,
-                gamepad = new EventedGamepad(pad);
-            gamepad.addEventListener("gamepadbuttondown", onAnyButtonDown);
-            gamepad.addEventListener("gamepadbuttonup", onAnyButtonUp);
-            gamepads.set(pad.id, gamepad);
-            gamepadConnectedEvt.gamepad = gamepad;
-            this.dispatchEvent(gamepadConnectedEvt);
-        });
-
-        window.addEventListener("gamepaddisconnected", (evt) => {
-            const gamepad = gamepads.get(pad.id);
-            gamepads.delete(pad.id);
-            gamepad.removeEventListener("gamepadbuttondown", onAnyButtonDown);
-            gamepad.removeEventListener("gamepadbuttonup", onAnyButtonUp);
-            gamepadDisconnectedEvt.gamepad = gamepad;
-            this.dispatchEvent(gamepadDisconnectedEvt);
-            gamepad.dispose();
-        });
-
-        Object.freeze(this);
-    }
-
-    get gamepadIDs() {
-        return gamepads.keys();
-    }
-
-    get gamepads() {
-        return gamepads.values();
-    }
-
-    get(id) {
-        return gamepads.get(id);
-    }
-}
-
-const GamepadManager = new GamepadStateManager();
-
-
-function update() {
-    requestAnimationFrame(update);
-    const pads = navigator.getGamepads();
-    for (let pad of pads) {
-        if (pad !== null
-            && gamepads.has(pad.id)) {
-            const gamepad = gamepads.get(pad.id);
-            gamepad.update(pad);
-        }
-    }
-}
-
-requestAnimationFrame(update);
-
-class FormDialog extends EventTarget {
-    constructor(name, ...rest) {
-        super();
-
-        const formStyle = style({
-            position: "absolute",
-            display: "grid",
-            gridTemplateColumns: "5fr 1fr 1fr",
-            gridTemplateRows: "auto auto 1fr auto auto",
-            overflowY: "hidden",
-            width: "50%",
-            left: "25%",
-            top: "3em",
-            maxWidth: "900px",
-            maxHeight: "calc(100% - 4em)",
-            backgroundColor: "white",
-            padding: "1em 1em 3em 1em",
-            margin: "auto",
-            borderRadius: "5px",
-            border: "solid 4px black",
-            boxShadow: "rgba(0, 0, 0, .4) 10px 10px 20px",
-            fontFamily: systemFamily
-        });
-
-        this.element = document.getElementById(name) ||
-            Div(
-                id(name),
-                H1(
-                    style({ gridArea: "1/1/2/4" }),
-                    ...rest));
-
-        formStyle.apply(this.element);
-
-        this.header = this.element.querySelector(".header")
-            || this.element.appendChild(
-                Div(
-                    className("header"),
-                    style({ gridArea: "2/1/3/4" })));
-
-        this.content = this.element.querySelector(".content")
-            || this.element.appendChild(
-                Div(
-                    className("content"),
-                    style({
-                        overflowY: "scroll",
-                        gridArea: "3/1/4/4"
-                    })));
-
-        this.footer = this.element.querySelector(".footer")
-            || this.element.appendChild(
-                Div(
-                    className("footer"),
-                    style({
-                        display: "flex",
-                        flexDirection: "row-reverse",
-                        gridArea: "4/1/5/4"
-                    })));
-    }
-
-    appendChild(child) {
-        return this.element.appendChild(child);
-    }
-
-    append(...rest) {
-        this.element.append(...rest);
-    }
-
-    show() {
-        this.element.show("grid");
-    }
-
-    hide() {
-        this.element.hide();
-    }
-
-    toggleOpen() {
-        this.element.toggleOpen("grid");
-    }
-}
-
-const inputBindingChangedEvt = new Event("inputbindingchanged");
-
-class InputBinding extends EventTarget {
-    constructor() {
-        super();
-
-        const bindings = new Map([
-            ["keyButtonUp", "ArrowUp"],
-            ["keyButtonDown", "ArrowDown"],
-            ["keyButtonLeft", "ArrowLeft"],
-            ["keyButtonRight", "ArrowRight"],
-            ["keyButtonEmote", "e"],
-            ["keyButtonToggleAudio", "a"],
-
-            ["gpButtonUp", 12],
-            ["gpButtonDown", 13],
-            ["gpButtonLeft", 14],
-            ["gpButtonRight", 15],
-            ["gpButtonEmote", 0],
-            ["gpButtonToggleAudio", 1]
-        ]);
-
-        for (let id of bindings.keys()) {
-            Object.defineProperty(this, id, {
-                get: () => bindings.get(id),
-                set: (v) => {
-                    if (bindings.has(id)
-                        && v !== bindings.get(id)) {
-                        bindings.set(id, v);
-                        this.dispatchEvent(inputBindingChangedEvt);
-                    }
-                }
-            });
-        }
-
-        this.clone = () => {
-            const c = {};
-            for (let kp of bindings.entries()) {
-                c[kp[0]] = kp[1];
-            }
-            return c;
-        };
-
-        Object.freeze(this);
-    }
-}
-
-const keyWidthStyle = style({ width: "7em" }),
-    numberWidthStyle = style({ width: "3em" }),
-    avatarUrlChangedEvt = new Event("avatarurlchanged"),
-    gamepadChangedEvt = new Event("gamepadchanged"),
-    selectAvatarEvt = new Event("selectavatar"),
-    fontSizeChangedEvt = new Event("fontsizechanged"),
-    inputBindingChangedEvt$1 = new Event("inputbindingchanged"),
-    audioPropsChangedEvt = new Event("audiopropschanged"),
-    toggleDrawHearingEvt = new Event("toggledrawhearing"),
-    toggleVideoEvt$1 = new Event("togglevideo"),
-    audioInputChangedEvt = new Event("audioinputchanged"),
-    audioOutputChangedEvt = new Event("audiooutputchanged"),
-    videoInputChangedEvt = new Event("videoinputchanged"),
-    selfs = new Map();
-
-class OptionsForm extends FormDialog {
-    constructor() {
-        super("options", "Options");
-
-        const _ = (evt) => () => this.dispatchEvent(evt);
-
-        const self = {
-            inputBinding: new InputBinding()
-        };
-
-        selfs.set(this, self);
-
-        const audioPropsChanged = onInput(_(audioPropsChangedEvt));
-
-        const makeKeyboardBinder = (id, label) => {
-            const key = LabeledInput(
-                id,
-                "text",
-                label,
-                keyWidthStyle,
-                onKeyUp((evt) => {
-                    if (evt.key !== "Tab"
-                        && evt.key !== "Shift") {
-                        key.value
-                            = self.inputBinding[id]
-                            = evt.key;
-                        this.dispatchEvent(inputBindingChangedEvt$1);
-                    }
-                }));
-            key.value = self.inputBinding[id];
-            return key;
-        };
-
-        const makeGamepadBinder = (id, label) => {
-            const gp = LabeledInput(
-                id,
-                "text",
-                label,
-                numberWidthStyle);
-            GamepadManager.addEventListener("gamepadbuttonup", (evt) => {
-                if (document.activeElement === gp) {
-                    gp.value
-                        = self.inputBinding[id]
-                        = evt.button;
-                    this.dispatchEvent(inputBindingChangedEvt$1);
-                }
-            });
-            gp.value = self.inputBinding[id];
-            return gp;
-        };
-
-        const panels = [
-            OptionPanel("avatar", "Avatar",
-                this.avatarURLInput = LabeledInput(
-                    "avatarURL",
-                    "text",
-                    "Avatar URL: ",
-                    placeHolder("https://example.com/me.png"),
-                    onInput(_(avatarUrlChangedEvt))),
-                " or ",
-                this.avatarEmojiInput = Div(
-                    Label(
-                        htmlFor("selectAvatarEmoji"),
-                        "Avatar Emoji: "),
-                    this.avatarEmojiPreview = Span(bust.value),
-                    Button(
-                        id("selectAvatarEmoji"),
-                        "Select",
-                        onClick(_(selectAvatarEvt))))),
-
-            OptionPanel("interface", "Interface",
-                this.fontSizeInput = LabeledInput(
-                    "fontSize",
-                    "number",
-                    "Font size: ",
-                    value(10),
-                    min(5),
-                    max(32),
-                    style({ width: "3em" }),
-                    onInput(_(fontSizeChangedEvt)))),
-
-            OptionPanel("keyboard", "Keyboard",
-                this.keyButtonUp = makeKeyboardBinder("keyButtonUp", "Up: "),
-                this.keyButtonDown = makeKeyboardBinder("keyButtonDown", "Down: "),
-                this.keyButtonLeft = makeKeyboardBinder("keyButtonLeft", "Left: "),
-                this.keyButtonRight = makeKeyboardBinder("keyButtonRight", "Right: "),
-                this.keyButtonEmote = makeKeyboardBinder("keyButtonEmote", "Emote: "),
-                this.keyButtonToggleAudio = makeKeyboardBinder("keyButtonToggleAudio", "Toggle audio: ")),
-
-            OptionPanel("gamepad", "Gamepad",
-                this.gpSelect = LabeledSelectBox(
-                    "gamepads",
-                    "Use gamepad: ",
-                    "No gamepad",
-                    gp => gp.id,
-                    gp => gp.id,
-                    onInput(_(gamepadChangedEvt))),
-                this.gpButtonUp = makeGamepadBinder("gpButtonUp", "Up: "),
-                this.gpButtonDown = makeGamepadBinder("gpButtonDown", "Down: "),
-                this.gpButtonLeft = makeGamepadBinder("gpButtonLeft", "Left: "),
-                this.gpButtonRight = makeGamepadBinder("gpButtonRight", "Right: "),
-                this.gpButtonEmote = makeGamepadBinder("gpButtonEmote", "Emote: "),
-                this.gpButtonToggleAudio = makeGamepadBinder("gpButtonToggleAudio", "Toggle audio: ")),
-
-            OptionPanel("audio", "Audio",
-                P(
-                    this.audioInputSelect = LabeledSelectBox(
-                        "audioInputDevices",
-                        "Input: ",
-                        "No audio input",
-                        d => d.deviceId,
-                        d => d.label,
-                        onInput(_(audioInputChangedEvt)))),
-                P(
-                    this.audioOutputSelect = LabeledSelectBox(
-                        "audioOutputDevices",
-                        "Output: ",
-                        "No audio output",
-                        d => d.deviceId,
-                        d => d.label,
-                        onInput(_(audioOutputChangedEvt)))),
-                P(
-                    this.drawHearingCheck = LabeledInput(
-                        "drawHearing",
-                        "checkbox",
-                        "Draw hearing range: ",
-                        onInput(() => {
-                            this.drawHearing = !this.drawHearing;
-                            this.dispatchEvent(toggleDrawHearingEvt);
-                        })),
-                    this.audioMinInput = LabeledInput(
-                        "minAudio",
-                        "number",
-                        "Min: ",
-                        value(1),
-                        min(0),
-                        max(100),
-                        numberWidthStyle,
-                        audioPropsChanged),
-                    this.audioMaxInput = LabeledInput(
-                        "maxAudio",
-                        "number",
-                        "Min: ",
-                        value(10),
-                        min(0),
-                        max(100),
-                        numberWidthStyle,
-                        audioPropsChanged),
-                    this.audioRolloffInput = LabeledInput(
-                        "rollof",
-                        "number",
-                        "Rollof: ",
-                        value(1),
-                        min(0.1),
-                        max(10),
-                        step(0.1),
-                        numberWidthStyle,
-                        audioPropsChanged))),
-
-            OptionPanel("video", "Video",
-                P(
-                    this.enableVideo = Button(
-                        accessKey("v"),
-                        "Enable video",
-                        onClick(_(toggleVideoEvt$1)))),
-                P(
-                    this.videoInputSelect = LabeledSelectBox(
-                        "videoInputDevices",
-                        "Device: ",
-                        "No video input",
-                        d => d.deviceId,
-                        d => d.label,
-                        onInput(_(videoInputChangedEvt)))))
-        ];
-
-        const cols = [];
-        for (let i = 0; i < panels.length; ++i) {
-            cols[i] = "1fr";
-            panels[i].element.style.gridColumnStart = i + 1;
-        }
-
-        Object.assign(this.header.style, {
-            display: "grid",
-            gridTemplateColumns: cols.join(" ")
-        });
-
-        this.header.append(...panels.map(p => p.button));
-        this.content.append(...panels.map(p => p.element));
-        this.footer.append(
-            this.confirmButton = Button(
-                className("confirm"),
-                systemFont,
-                "Close",
-                onClick(() => this.hide())));
-
-        const showPanel = (p) =>
-            () => {
-                for (let i = 0; i < panels.length; ++i) {
-                    panels[i].visible = i === p;
-                }
-            };
-
-        for (let i = 0; i < panels.length; ++i) {
-            panels[i].visible = i === 0;
-            panels[i].addEventListener("select", showPanel(i));
-        }
-
-        self.inputBinding.addEventListener("inputbindingchanged", () => {
-            for (let id of Object.getOwnPropertyNames(self.inputBinding)) {
-                if (value[id] !== undefined
-                    && this[id] != undefined) {
-                    this[id].value = value[id];
-                }
-            }
-        });
-
-        this.gamepads = [];
-        this.audioInputDevices = [];
-        this.audioOutputDevices = [];
-        this.videoInputDevices = [];
-
-        this._videoEnabled = false;
-        this._drawHearing = false;
-
-        Object.seal(this);
-    }
-
-    setAvatarEmoji(e) {
-        clear(this.avatarEmojiPreview);
-        this.avatarEmojiPreview.append(Span(
-            title(e.desc),
-            e.value));
-    }
-
-    get avatarURL() {
-        return this.avatarURLInput.value;
-    }
-
-    set avatarURL(value) {
-        this.avatarURLInput.value = value;
-    }
-
-    async showAsync() {
-        this.show();
-        await this.confirmButton.once("click");
-        this.hide();
-        return false;
-    }
-
-    get inputBinding() {
-        const self = selfs.get(this);
-        return self.inputBinding.clone();
-    }
-
-    set inputBinding(value) {
-        const self = selfs.get(this);
-        for (let id of Object.getOwnPropertyNames(value)) {
-            if (self.inputBinding[id] !== undefined
-                && value[id] !== undefined
-                && this[id] != undefined) {
-                self.inputBinding[id]
-                    = this[id].value
-                    = value[id];
-            }
-        }
-    }
-
-    get gamepads() {
-        return this.gpSelect.values;
-    }
-
-    set gamepads(values) {
-        this.gpSelect.values = values;
-    }
-
-    get audioInputDevices() {
-        return this.audioInputSelect.values;
-    }
-
-    set audioInputDevices(values) {
-        this.audioInputSelect.values = values;
-    }
-
-    get currentAudioInputDevice() {
-        return this.audioInputSelect.selectedValue;
-    }
-
-    set currentAudioInputDevice(value) {
-        this.audioInputSelect.selectedValue = value;
-    }
-
-
-    get audioOutputDevices() {
-        return this.audioOutputSelect.values;
-    }
-
-    set audioOutputDevices(values) {
-        this.audioOutputSelect.values = values;
-    }
-
-    get currentAudioOutputDevice() {
-        return this.audioOutputSelect.selectedValue;
-    }
-
-    set currentAudioOutputDevice(value) {
-        this.audioOutputSelect.selectedValue = value;
-    }
-
-
-    get videoInputDevices() {
-        return this.videoInputSelect.values;
-    }
-
-    set videoInputDevices(values) {
-        this.videoInputSelect.values = values;
-    }
-
-    get currentVideoInputDevice() {
-        return this.videoInputSelect.selectedValue;
-    }
-
-    set currentVideoInputDevice(value) {
-        this.videoInputSelect.selectedValue = value;
-    }
-
-
-    get videoEnabled() {
-        return this._videoEnabled;
-    }
-
-    set videoEnabled(value) {
-        this._videoEnabled = value;
-        this.enableVideo.innerHTML = value
-            ? "Disable video"
-            : "Enable video";
-    }
-
-    get gamepads() {
-        return this.gpSelect.getValues();
-    }
-
-    set gamepads(values) {
-        const disable = values.length === 0;
-        this.gpSelect.values = values;
-        this.gpButtonUp.setLocked(disable);
-        this.gpButtonDown.setLocked(disable);
-        this.gpButtonLeft.setLocked(disable);
-        this.gpButtonRight.setLocked(disable);
-        this.gpButtonEmote.setLocked(disable);
-        this.gpButtonToggleAudio.setLocked(disable);
-    }
-
-    get gamepadIndex() {
-        return this.gpSelect.selectedIndex;
-    }
-
-    set gamepadIndex(value) {
-        this.gpSelect.selectedIndex = value;
-    }
-
-    get drawHearing() {
-        return this._drawHearing;
-    }
-
-    set drawHearing(value) {
-        this._drawHearing = value;
-        this.drawHearingCheck.checked = value;
-    }
-
-    get audioDistanceMin() {
-        const value = parseFloat(this.audioMinInput.value);
-        if (isGoodNumber(value)) {
-            return value;
-        }
-        else {
-            return 1;
-        }
-    }
-
-    set audioDistanceMin(value) {
-        if (isGoodNumber(value)
-            && value > 0) {
-            this.audioMinInput.value = value;
-            if (this.audioDistanceMin > this.audioDistanceMax) {
-                this.audioDistanceMax = this.audioDistanceMin;
-            }
-        }
-    }
-
-
-    get audioDistanceMax() {
-        const value = parseFloat(this.audioMaxInput.value);
-        if (isGoodNumber(value)) {
-            return value;
-        }
-        else {
-            return 10;
-        }
-    }
-
-    set audioDistanceMax(value) {
-        if (isGoodNumber(value)
-            && value > 0) {
-            this.audioMaxInput.value = value;
-            if (this.audioDistanceMin > this.audioDistanceMax) {
-                this.audioDistanceMin = this.audioDistanceMax;
-            }
-        }
-    }
-
-
-    get audioRolloff() {
-        const value = parseFloat(this.audioRolloffInput.value);
-        if (isGoodNumber(value)) {
-            return value;
-        }
-        else {
-            return 1;
-        }
-    }
-
-    set audioRolloff(value) {
-        if (isGoodNumber(value)
-            && value > 0) {
-            this.audioRolloffInput.value = value;
-        }
-    }
-
-
-    get fontSize() {
-        const value = parseFloat(this.fontSizeInput.value);
-        if (isGoodNumber(value)) {
-            return value;
-        }
-        else {
-            return 16;
-        }
-    }
-
-    set fontSize(value) {
-        if (isGoodNumber(value)
-            && value > 0) {
-            this.fontSizeInput.value = value;
-        }
-    }
-}
-
-const headerStyle = style({
-    textDecoration: "none",
-    color: "black",
-    textTransform: "capitalize"
-}),
-    buttonStyle = style({
-        fontSize: "200%",
-        width: "2em",
-        fontFamily: systemFamily
-    }),
-    cancelEvt = new Event("emojiCanceled");
-
-class EmojiForm extends FormDialog {
-    constructor() {
-        super("emoji", "Emoji");
-
-        this.header.append(
-            H2("Recent"),
-            this.recent = P("(None)"));
-
-        const previousEmoji = [],
-            allAlts = [];
-
-        let selectedEmoji = null,
-            idCounter = 0;
-
-        const closeAll = () => {
-            for (let alt of allAlts) {
-                alt.hide();
-            }
-        };
-
-        function combine(a, b) {
-            let left = a.value;
-
-            let idx = left.indexOf(emojiStyle.value);
-            if (idx === -1) {
-                idx = left.indexOf(textStyle.value);
-            }
-            if (idx >= 0) {
-                left = left.substring(0, idx);
-            }
-
-            return {
-                value: left + b.value,
-                desc: a.desc + "/" + b.desc
-            };
-        }
-
-        const addIconsToContainer = (group, container, isAlts) => {
-            for (let icon of group) {
-                const g = isAlts ? UL() : Span(),
-                    btn = Button(
-                        title(icon.desc),
-                        buttonStyle,
-                        onClick((evt) => {
-                            selectedEmoji = selectedEmoji && evt.ctrlKey
-                                ? combine(selectedEmoji, icon)
-                                : icon;
-                            this.preview.innerHTML = `${selectedEmoji.value} - ${selectedEmoji.desc}`;
-                            this.confirmButton.unlock();
-
-                            if (!!alts) {
-                                alts.toggleOpen();
-                                btn.innerHTML = icon.value + (alts.isOpen() ? "-" : "+");
-                            }
-                        }), icon.value);
-
-                let alts = null;
-
-                if (isAlts) {
-                    btn.id = `emoji-with-alt-${idCounter++}`;
-                    g.appendChild(LI(btn,
-                        Label(htmlFor(btn.id),
-                            icon.desc)));
-                }
-                else {
-                    g.appendChild(btn);
-                }
-
-                if (!!icon.alt) {
-                    alts = Div();
-                    allAlts.push(alts);
-                    addIconsToContainer(icon.alt, alts, true);
-                    alts.hide();
-                    g.appendChild(alts);
-                    btn.style.width = "3em";
-                    btn.innerHTML += "+";
-                }
-
-                if (!!icon.width) {
-                    btn.style.width = icon.width;
-                }
-
-                if (!!icon.color) {
-                    btn.style.color = icon.color;
-                }
-
-                container.appendChild(g);
-            }
-        };
-
-        for (let key of Object.keys(allIcons)) {
-            if (key !== "combiners") {
-                const header = H1(),
-                    container = P(),
-                    headerButton = A(
-                        href("javascript:undefined"),
-                        title(key),
-                        headerStyle,
-                        onClick(() => {
-                            container.toggleOpen();
-                            headerButton.innerHTML = key + (container.isOpen() ? " -" : " +");
-                        }),
-                        key + " -"),
-                    group = allIcons[key];
-
-                addIconsToContainer(group, container);
-                header.appendChild(headerButton);
-                this.content.appendChild(header);
-                this.content.appendChild(container);
-            }
-        }
-
-        this.footer.append(
-
-            this.confirmButton = Button(className("confirm"),
-                systemFont,
-                "OK",
-                onClick(() => {
-                    const idx = previousEmoji.indexOf(selectedEmoji);
-                    if (idx === -1) {
-                        previousEmoji.push(selectedEmoji);
-                        this.recent.innerHTML = "";
-                        addIconsToContainer(previousEmoji, this.recent);
-                    }
-
-                    this.hide();
-                    this.dispatchEvent(new EmojiSelectedEvent(selectedEmoji));
-                })),
-
-            Button(className("cancel"),
-                systemFont,
-                "Cancel",
-                onClick(() => {
-                    this.confirmButton.lock();
-                    this.hide();
-                    this.dispatchEvent(cancelEvt);
-                })),
-
-            this.preview = Span(style({ gridArea: "4/1/5/4" })));
-
-        this.confirmButton.lock();
-
-        this.isOpen = this.element.isOpen.bind(this.element);
-
-        this.selectAsync = () => {
-            return new Promise((resolve, reject) => {
-                let yes = null,
-                    no = null;
-
-                const done = () => {
-                    this.removeEventListener("emojiSelected", yes);
-                    this.removeEventListener("emojiCanceled", no);
-                };
-
-                yes = (evt) => {
-                    done();
-                    try {
-                        resolve(evt.emoji);
-                    }
-                    catch (exp) {
-                        reject(exp);
-                    }
-                };
-
-                no = () => {
-                    done();
-                    resolve(null);
-                };
-
-                this.addEventListener("emojiSelected", yes);
-                this.addEventListener("emojiCanceled", no);
-
-                closeAll();
-                this.show();
-            });
-        };
-    }
-}
-
-class EmojiSelectedEvent extends Event {
-    constructor(emoji) {
-        super("emojiSelected");
-        this.emoji = emoji;
-    }
-}
-
-const loginEvt = new Event("login"),
-    defaultRooms = new Map([
-        ["calla", "Calla"],
-        ["island", "Island"],
-        ["alxcc", "Alexandria Code & Coffee"],
-        ["vurv", "Vurv"]]),
-    selfs$1 = new Map();
-
-class LoginForm extends FormDialog {
-    constructor() {
-        super("login");
-
-        const self = Object.seal({
-            ready: false,
-            connecting: false,
-            connected: false,
-            validate: () => {
-                const canConnect = this.roomName.length > 0
-                    && this.userName.length > 0;
-
-                this.connectButton.setLocked(!this.ready
-                    || this.connecting
-                    || this.connected
-                    || !canConnect);
-                this.connectButton.innerHTML =
-                    this.connected
-                        ? "Connected"
-                        : this.connecting
-                            ? "Connecting..."
-                            : this.ready
-                                ? "Connect"
-                                : "Loading...";
-            }
-        });
-
-        selfs$1.set(this, self);
-
-        this.roomLabel = this.element.querySelector("label[for='roomSelector']");
-
-        this.roomSelect = SelectBox(
-            "No rooms available",
-            v => v,
-            k => defaultRooms.get(k),
-            this.element.querySelector("#roomSelector"));
-        this.roomSelect.addEventListener("input", () => {
-            self.validate();
-        });
-
-        this.roomInput = this.element.querySelector("#roomName");
-        this.createRoomButton = this.element.querySelector("#createNewRoom");
-        this.userNameInput = this.element.querySelector("#userName");
-        this.connectButton = this.element.querySelector("#connect");
-
-        this.roomInput.addEventListener("input", self.validate);
-        this.userNameInput.addEventListener("input", self.validate);
-
-        this.createRoomButton.addEventListener("click", () => {
-            this.roomSelectMode = !this.roomSelectMode;
-        });
-
-        this.connectButton.addEventListener("click", () => {
-            this.connecting = true;
-            this.dispatchEvent(loginEvt);
-        });
-
-        this.roomSelect.emptySelectionEnabled = false;
-        this.roomSelect.values = defaultRooms.keys();
-        this.roomSelectMode = true;
-        this.roomSelect.selectedIndex = 0;
-
-        self.validate();
-    }
-
-    get roomSelectMode() {
-        return this.roomSelect.style.display !== "none";
-    }
-
-    set roomSelectMode(value) {
-        const self = selfs$1.get(this);
-        this.roomSelect.setOpen(value);
-        this.roomInput.setOpen(!value);
-        this.createRoomButton.innerHTML = value
-            ? "New"
-            : "Cancel";
-
-        if (value) {
-            this.roomLabel.htmlFor = this.roomSelect.id;
-            this.roomSelect.selectedValue = this.roomInput.value.toLocaleLowerCase();
-        }
-        else if (this.roomSelect.selectedIndex >= 0) {
-            this.roomLabel.htmlFor = this.roomInput.id;
-            this.roomInput.value = this.roomSelect.selectedValue;
-        }
-
-        self.validate();
-    }
-
-    get roomName() {
-        const room = this.roomSelectMode
-            ? this.roomSelect.selectedValue
-            : this.roomInput.value;
-
-        return room && room.toLocaleLowerCase() || "";
-    }
-
-    set roomName(v) {
-        if (v === null
-            || v === undefined
-            || v.length === 0) {
-            v = defaultRooms.keys().next();
-        }
-
-        this.roomInput.value = v;
-        this.roomSelect.selectedValue = v;
-        this.roomSelectMode = this.roomSelect.contains(v);
-        selfs$1.get(this).validate();
-    }
-
-    set userName(value) {
-        this.userNameInput.value = value;
-        selfs$1.get(this).validate();
-    }
-
-    get userName() {
-        return this.userNameInput.value;
-    }
-
-    get connectButtonText() {
-        return this.connectButton.innerText
-            || this.connectButton.textContent;
-    }
-
-    set connectButtonText(str) {
-        this.connectButton.innerHTML = str;
-    }
-
-    get ready() {
-        const self = selfs$1.get(this);
-        return self.ready;
-    }
-
-    set ready(v) {
-        const self = selfs$1.get(this);
-        self.ready = v;
-        self.validate();
-    }
-
-    get connecting() {
-        const self = selfs$1.get(this);
-        return self.connecting;
-    }
-
-    set connecting(v) {
-        const self = selfs$1.get(this);
-        self.connecting = v;
-        self.validate();
-    }
-
-    get connected() {
-        const self = selfs$1.get(this);
-        return self.connected;
-    }
-
-    set connected(v) {
-        const self = selfs$1.get(this);
-        self.connected = v;
-        this.connecting = false;
-    }
-
-    show() {
-        this.ready = true;
-        super.show();
-    }
-}
-
-function instructions() {
-    return [
-        Aside(
-            style({
-                border: "dashed 2px darkred",
-                backgroundColor: "wheat",
-                borderRadius: "5px",
-                padding: "0.5em"
-            }),
-            Strong("Note: "),
-            "Calla is built on top of ",
-            A(
-                href("https://jitsi.org"),
-                target("_blank"),
-                rel("noopener"),
-                "Jitsi Meet"),
-            ". Jitsi does not support iPhones and iPads."),
-        UL(
-            LI(
-                Strong("Be careful in picking your room name"),
-                ", if you don't want randos to join. Traffic is low right now, but you never know."),
-            LI(
-                "Try to ",
-                Strong("pick a unique user name"),
-                ". A lot of people use \"Test\" and then there are a bunch of people with the same name running around."),
-            LI(
-                Strong("Open the Options view"),
-                " to set your avatar, or to change your microphone settings."),
-            LI(
-                Strong("Click on the map"),
-                " to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls."),
-            LI(
-                "Or, ",
-                Strong("use the arrow keys"),
-                " on your keyboard to move."),
-            LI(
-                Strong("Click on yourself"),
-                " to open a list of Emoji. Select an Emoji to float it out into the map."),
-            LI(
-                Strong("Hit the E key"),
-                " to re-emote with your last selected Emoji."),
-            LI(
-                "You can ",
-                Strong("roll your mouse wheel"),
-                " or ",
-                Strong("pinch your touchscreen"),
-                " to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in their Avatar."),
-            LI(
-                "You can ",
-                Strong(" click the Pause button(⏸️)"),
-                " in the upper-right corner to show the default Jitsi Meet interface, in case you need to change any settings there (the game view blocks clicks on the Jitsi Meet interface)."))];
-}
-
-class InstructionsForm extends FormDialog {
-
-    constructor() {
-        super("instructions", "Instructions");
-
-        this.content.append(...instructions());
-
-        this.footer.append(
-            Button(
-                systemFont,
-                style({ gridArea: "4/2" }),
-                "Close",
-                onClick(() => this.hide())));
     }
 }
 
@@ -9488,23 +9628,24 @@ class Settings {
 // TODO
 
 function init(host, JitsiClientClass) {
-    const game = new Game(),
-        login = new LoginForm(),
+    const settings = new Settings(),
         client = new JitsiClientClass(),
+        game = new Game(),
+        login = new LoginForm(),
         toolbar = new ToolBar(),
         options = new OptionsForm(),
         emoji = new EmojiForm(),
         instructions = new InstructionsForm(),
-        settings = new Settings(),
+
         forExport = {
+            settings,
             client,
             game,
+            login,
             toolbar,
             options,
             emoji,
-            login,
-            instructions,
-            settings
+            instructions
         };
 
     for (let e of Object.values(forExport)) {
@@ -9556,7 +9697,7 @@ function init(host, JitsiClientClass) {
     async function selectEmojiAsync() {
         await withEmojiSelection((e) => {
             game.emote(client.localUser, e);
-            toolbar.setEmojiButton(game.keyEmote, e);
+            toolbar.setEmojiButton(settings.inputBinding.keyButtonEmote, e);
         });
     }
 
@@ -9570,60 +9711,54 @@ function init(host, JitsiClientClass) {
     }
 
     function refreshGamepads() {
-        options.gamepads = [...navigator.getGamepads()]
-            .filter(g => g !== null);
+        options.gamepads = GamepadManager.gamepads;
     }
 
 
-    window.addEventListener("resize", () => {
-        game.resize(toolbar.offsetHeight);
-        client.resize(toolbar.offsetHeight);
+    window.addEventListeners({
+        resize: () => {
+            game.resize(toolbar.offsetHeight);
+            client.resize(toolbar.offsetHeight);
+        },
+        gamepadconnected: refreshGamepads,
+        gamepaddisconnected: refreshGamepads
     });
 
-    window.addEventListener("gamepadconnected", refreshGamepads);
-    window.addEventListener("gamepaddisconnected", refreshGamepads);
-
-    toolbar.addEventListener("selectemoji", selectEmojiAsync);
-
-    toolbar.addEventListener("toggleaudio", () => {
-        client.toggleAudio();
-    });
-
-    toolbar.addEventListener("leave", () => {
-        game.end();
-    });
-
-    toolbar.addEventListener("emote", () => {
-        game.emote(client.localUser, game.currentEmoji);
-    });
-
-    toolbar.addEventListener("zoomchanged", () => {
-        settings.zoom = game.targetCameraZ = toolbar.zoom;
-    });
-
-    toolbar.addEventListener("tweet", () => {
-        const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
-            url = new URL("https://twitter.com/intent/tweet?text=" + message);
-        open(url);
-    });
-
-    toolbar.addEventListener("toggleui", () => {
-        game.setOpen(toolbar.visible);
-        game.resize(toolbar.offsetHeight);
-        client.resize(toolbar.offsetHeight);
-    });
-
-    toolbar.addEventListener("toggleoptions", () => {
-        if (!emoji.isOpen()) {
-            instructions.hide();
-            options.toggleOpen();
-        }
-    });
-
-    toolbar.addEventListener("toggleinstructions", () => {
-        if (!emoji.isOpen()) {
-            options.hide();
-            instructions.toggleOpen();
+    toolbar.addEventListeners({
+        toggleAudio: () => {
+            client.toggleAudio();
+        },
+        selectEmoji: selectEmojiAsync,
+        emote: () => {
+            game.emote(client.localUser, game.currentEmoji);
+        },
+        zoomChanged: () => {
+            settings.zoom = game.targetCameraZ = toolbar.zoom;
+        },
+        toggleOptions: () => {
+            if (!emoji.isOpen()) {
+                instructions.hide();
+                options.toggleOpen();
+            }
+        },
+        toggleInstructions: () => {
+            if (!emoji.isOpen()) {
+                options.hide();
+                instructions.toggleOpen();
+            }
+        },
+        tweet: () => {
+            const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
+                url = new URL("https://twitter.com/intent/tweet?text=" + message);
+            open(url);
+        },
+        leave: () => {
+            game.end();
+        },
+        toggleUI: () => {
+            game.setOpen(toolbar.visible);
+            game.resize(toolbar.offsetHeight);
+            client.resize(toolbar.offsetHeight);
         }
     });
 
@@ -9636,195 +9771,169 @@ function init(host, JitsiClientClass) {
     });
 
 
-    options.addEventListener("selectavatar", async () => {
-        withEmojiSelection((e) => {
-            game.me.avatarEmoji = e;
-            options.setAvatarEmoji(e);
-            client.setAvatarEmoji(e);
-        });
-    });
-
-    options.addEventListener("avatarurlchanged", () => {
-        client.setAvatarURL(options.avatarURL);
-    });
-
-    options.addEventListener("audiopropschanged", setAudioProperties);
-
-    options.addEventListener("togglevideo", () => {
-        client.toggleVideo();
-    });
-
-    options.addEventListener("toggledrawhearing", () => {
-        settings.drawHearing = game.drawHearing = options.drawHearing;
-    });
-
-    options.addEventListener("fontsizechanged", () => {
-        settings.fontSize = game.fontSize = options.fontSize;
-    });
-
-    options.addEventListener("audioinputchanged", () => {
-        client.setAudioInputDevice(options.currentAudioInputDevice);
-    });
-
-    options.addEventListener("audiooutputchanged", () => {
-        client.setAudioOutputDevice(options.currentAudioOutputDevice);
-    });
-
-    options.addEventListener("videoinputchanged", () => {
-        client.setVideoInputDevice(options.currentVideoInputDevice);
-    });
-
-    options.addEventListener("gamepadchanged", () => {
-        settings.gamepadIndex = game.gamepadIndex = options.gamepadIndex;
-    });
-
-    options.addEventListener("inputbindingchanged", () => {
-        settings.inputBinding = game.inputBinding = options.inputBinding;
-    });
-
-    game.addEventListener("emote", (evt) => {
-        client.emote(evt.emoji);
-    });
-
-    game.addEventListener("userjoined", (evt) => {
-        evt.user.addEventListener("userPositionNeeded", (evt2) => {
-            client.userInitRequest(evt2.id);
-        });
-    });
-
-    game.addEventListener("toggleaudio", async (evt) => {
-        client.toggleAudio();
-    });
-
-    game.addEventListener("togglevideo", async (evt) => {
-        client.toggleVideo();
-    });
-
-    game.addEventListener("gamestarted", () => {
-        game.me.addEventListener("userMoved", (evt) => {
-            client.setPosition(evt);
-        });
-        setAudioProperties();
-        login.hide();
-        toolbar.show();
-        client.show();
-        client.setPosition(game.me);
-        options.setAvatarEmoji(game.me.avatarEmoji);
-    });
-
-    game.addEventListener("gameended", () => {
-        game.hide();
-        client.hide();
-        login.connected = false;
-        showLogin();
-    });
-
-    game.addEventListener("emojineeded", selectEmojiAsync);
-
-    game.addEventListener("zoomchanged", () => {
-        settings.zoom = toolbar.zoom = game.targetCameraZ;
-    });
-
-    client.addEventListener("videoConferenceJoined", async (evt) => {
-        login.connected = true;
-
-        game.start(evt);
-        for (let user of client.otherUsers.entries()) {
-            game.addUser({
-                id: user[0],
-                displayName: user[1]
+    options.addEventListeners({
+        selectAvatar: async () => {
+            withEmojiSelection((e) => {
+                game.me.avatarEmoji = e;
+                options.setAvatarEmoji(e);
+                client.setAvatarEmoji(e);
             });
+        },
+        avatarURLChanged: () => {
+            client.setAvatarURL(options.avatarURL);
+        },
+        audioPropertiesChanged: setAudioProperties,
+        toggleVideo: () => {
+            client.toggleVideo();
+        },
+        toggleDrawHearing: () => {
+            settings.drawHearing = game.drawHearing = options.drawHearing;
+        },
+        fontSizeChanged: () => {
+            settings.fontSize = game.fontSize = options.fontSize;
+        },
+        audioInputChanged: () => {
+            client.setAudioInputDevice(options.currentAudioInputDevice);
+        },
+        audioOutputChanged: () => {
+            client.setAudioOutputDevice(options.currentAudioOutputDevice);
+        },
+        videoInputChanged: () => {
+            client.setVideoInputDevice(options.currentVideoInputDevice);
+        },
+        gamepadChanged: () => {
+            settings.gamepadIndex = game.gamepadIndex = options.gamepadIndex;
+        },
+        inputBindingChanged: () => {
+            settings.inputBinding = game.inputBinding = options.inputBinding;
         }
-
-        options.audioInputDevices = await client.getAudioInputDevices();
-        options.audioOutputDevices = await client.getAudioOutputDevices();
-        options.videoInputDevices = await client.getVideoInputDevices();
-
-        options.currentAudioInputDevice = await client.getCurrentAudioInputDevice();
-        options.currentAudioOutputDevice = await client.getCurrentAudioOutputDevice();
-        options.currentVideoInputDevice = await client.getCurrentVideoInputDevice();
-
-        const audioMuted = await client.isAudioMutedAsync();
-        game.muteUserAudio({ id: client.localUser, muted: audioMuted });
-        toolbar.audioEnabled = !audioMuted;
-
-        const videoMuted = await client.isVideoMutedAsync();
-        game.muteUserVideo({ id: client.localUser, muted: videoMuted });
-        options.videoEnabled = !videoMuted;
     });
 
-    client.addEventListener("videoConferenceLeft", (evt) => {
-        if (evt.roomName.toLowerCase() === game.currentRoomName) {
-            game.end();
+    game.addEventListeners({
+        emote: (evt) => {
+            client.emote(evt.emoji);
+        },
+        userJoined: (evt) => {
+            evt.user.addEventListener("userPositionNeeded", (evt2) => {
+                client.userInitRequest(evt2.id);
+            });
+        },
+        toggleAudio: async () => {
+            client.toggleAudio();
+        },
+        toggleVideo: async () => {
+            client.toggleVideo();
+        },
+        gameStarted: () => {
+            game.me.addEventListener("userMoved", (evt) => {
+                client.setPosition(evt);
+            });
+            setAudioProperties();
+            login.hide();
+            toolbar.show();
+            client.show();
+            client.setPosition(game.me);
+            options.setAvatarEmoji(game.me.avatarEmoji);
+        },
+        gameEnded: () => {
+            game.hide();
+            client.hide();
+            login.connected = false;
+            showLogin();
+        },
+        emojiNeeded: selectEmojiAsync,
+        zoomChanged: () => {
+            settings.zoom = toolbar.zoom = game.targetCameraZ;
         }
     });
 
-    client.addEventListener("participantJoined", (evt) => {
-        game.addUser(evt);
-    });
+    client.addEventListeners({
+        videoConferenceJoined: async (evt) => {
+            login.connected = true;
 
-    client.addEventListener("participantLeft", (evt) => {
-        game.removeUser(evt);
-        client.removeUser(evt);
-    });
+            game.start(evt);
+            for (let user of client.otherUsers.entries()) {
+                game.addUser({
+                    id: user[0],
+                    displayName: user[1]
+                });
+            }
 
-    client.addEventListener("avatarChanged", (evt) => {
-        game.setAvatarURL(evt);
-    });
+            options.audioInputDevices = await client.getAudioInputDevices();
+            options.audioOutputDevices = await client.getAudioOutputDevices();
+            options.videoInputDevices = await client.getVideoInputDevices();
 
-    client.addEventListener("displayNameChange", (evt) => {
-        game.changeUserName(evt);
-    });
+            options.currentAudioInputDevice = await client.getCurrentAudioInputDevice();
+            options.currentAudioOutputDevice = await client.getCurrentAudioOutputDevice();
+            options.currentVideoInputDevice = await client.getCurrentVideoInputDevice();
 
-    client.addEventListener("audioMuteStatusChanged", (evt) => {
-        game.muteUserAudio(evt);
-        if (evt.id === client.localUser) {
+            const audioMuted = await client.isAudioMutedAsync();
+            game.muteUserAudio({ id: client.localUser, muted: audioMuted });
+            toolbar.audioEnabled = !audioMuted;
+
+            const videoMuted = await client.isVideoMutedAsync();
+            game.muteUserVideo({ id: client.localUser, muted: videoMuted });
+            options.videoEnabled = !videoMuted;
+        },
+        videoConferenceLeft: (evt) => {
+            if (evt.roomName.toLowerCase() === game.currentRoomName) {
+                game.end();
+            }
+        },
+        participantJoined: (evt) => {
+            game.addUser(evt);
+        },
+        participantLeft: (evt) => {
+            game.removeUser(evt);
+            client.removeUser(evt);
+        },
+        avatarChanged: (evt) => {
+            game.setAvatarURL(evt);
+            if (evt.id === client.localUser) {
+                options.avatarURL = evt.avatarURL;
+            }
+        },
+        displayNameChange: (evt) => {
+            game.changeUserName(evt);
+        },
+        audioMuteStatusChanged: (evt) => {
+            game.muteUserAudio(evt);
+        },
+        localAudioMuteStatusChanged: (evt) => {
             toolbar.audioEnabled = !evt.muted;
-        }
-    });
-
-    client.addEventListener("videoMuteStatusChanged", (evt) => {
-        game.muteUserVideo(evt);
-        if (evt.id === client.localUser) {
+        },
+        videoMuteStatusChanged: (evt) => {
+            game.muteUserVideo(evt);
+        },
+        localVideoMuteStatusChanged: (evt) => {
             options.videoEnabled = !evt.muted;
+        },
+        userInitRequest: (evt) => {
+            client.userInitResponse(evt.id, game.me);
+        },
+        userInitResponse: (evt) => {
+            const user = game.userLookup[evt.id];
+            if (!!user) {
+                user.init(evt);
+                client.setPosition(evt);
+            }
+        },
+        userMoved: (evt) => {
+            const user = game.userLookup[evt.id];
+            if (!!user) {
+                user.moveTo(evt.x, evt.y);
+                client.setPosition(evt);
+            }
+        },
+        emote: (evt) => {
+            game.emote(evt.id, evt);
+        },
+        setAvatarEmoji: (evt) => {
+            game.setAvatarEmoji(evt);
+        },
+        audioActivity: (evt) => {
+            game.updateAudioActivity(evt);
         }
-    });
-
-    client.addEventListener("userInitRequest", (evt) => {
-        client.userInitResponse(evt.id, game.me);
-    });
-
-    client.addEventListener("userInitResponse", (evt) => {
-        const user = game.userLookup[evt.id];
-        if (!!user) {
-            user.init(evt);
-            client.setPosition(evt);
-        }
-    });
-
-    client.addEventListener("userMoved", (evt) => {
-        const user = game.userLookup[evt.id];
-        if (!!user) {
-            user.moveTo(evt.x, evt.y);
-            client.setPosition(evt);
-        }
-    });
-
-    client.addEventListener("emote", (evt) => {
-        game.emote(evt.id, evt);
-    });
-
-    client.addEventListener("setAvatarEmoji", (evt) => {
-        game.setAvatarEmoji(evt);
-    });
-
-    client.addEventListener("audioActivity", (evt) => {
-        game.updateAudioActivity(evt);
-    });
-
-    client.addEventListener("avatarChanged", (evt) => {
-        options.avatarURL = evt.avatarURL;
-        game.me.setAvatarURL(evt.avatarURL);
     });
 
     login.ready = true;
@@ -9858,7 +9967,7 @@ function init(host, JitsiClientClass) {
                 width: "100%"
             })));
 
-    game.addEventListener("gamestarted", () => {
+    game.addEventListener("gameStarted", () => {
         testUsers = makeUsers();
         client.testUsers = testUsers.slice();
         spawnUserTimer = setTimeout(spawnUsers, 0);
