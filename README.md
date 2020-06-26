@@ -32,7 +32,7 @@ NOTE: __Jitsi Meet's web client doesn't work on iOS!__ Sorry :(
 ## INSTALLATION
 
 - First, setup Jitsi Meet on a server of your choice: [Jitsi quick-start instructions](https://github.com/jitsi/jitsi-meet/blob/master/doc/quick-install.md).
-- Next login to your Jitsi Meet server as root and edit `/usr/share/jitsi-meet/index.html` and add the following line: `<script type="text/javascript" src="jitsihax.js"></script>`.
+- Next login to your Jitsi Meet server as root and edit `/usr/share/jitsi-meet/index.html` and add the following line: `<script type="module" src="jitsihax.js"></script>`.
 - Copy the script `jitsihax.js` from this repo to `/usr/share/jitsi-meet/`.
 - Edit `jitsihax.js`, changing `FRONT_END_SERVER` to point to where you will host the Calla front-end.
 - Install the Calla front-end (basically the rest of this repository) onto another server of your choice.
