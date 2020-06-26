@@ -21,10 +21,6 @@
         this.position.update(this.destination.audioContext.currentTime);
     }
 
-    setAudioProperties(evt) {
-        throw new Error("Not implemented in base class.");
-    }
-
     setTarget(evt) {
         this.position.setTarget(evt.x, evt.y, this.destination.audioContext.currentTime, this.destination.transitionTime);
     }

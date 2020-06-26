@@ -5,6 +5,7 @@ import { clamp, project } from "../math.js";
 export class VolumeOnlySpatializer extends BaseSpatializer {
     constructor(userID, destination, audio) {
         super(userID, destination, audio, new InterpolatedPosition());
+        this.audio.play();
     }
 
     update() {

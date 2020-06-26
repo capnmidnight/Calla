@@ -10,9 +10,44 @@ const BUFFER_SIZE = 1024,
 export class AudioManager extends EventTarget {
     constructor() {
         super();
-        this.sourceLookup = {};
+
+        this.onAudioActivity = (evt) => {
+            audioActivityEvt.id = evt.id;
+            audioActivityEvt.isActive = evt.isActive;
+            this.dispatchEvent(audioActivityEvt);
+        };
+
+        this.sourceLookup = new Map();
         this.sourceList = [];
         this.destination = new Destination();
+        const recreationQ = [];
+        this.destination.addEventListener("contextDestroying", () => {
+            for (let source of this.sourceList) {
+                source.removeEventListener("audioActivity", this.onAudioActivity);
+                recreationQ.push({
+                    id: source.id,
+                    x: source.position.x,
+                    y: source.position.y,
+                    audio: source.audio
+                });
+
+                this.sourceLookup.delete(source.id);
+
+                source.dispose();
+            }
+
+            this.sourceList.splice(0);
+        });
+
+        this.destination.addEventListener("contextDestroyed", () => {
+            this.destination.createContext();
+
+            for (let recreate of recreationQ) {
+                const source = this.createSource(recreate.id, recreate.audio);
+                source.setTarget(recreate);
+            }
+            recreationQ.splice(0);
+        });
 
         this.updater = () => {
             requestAnimationFrame(this.updater);
@@ -26,25 +61,27 @@ export class AudioManager extends EventTarget {
 
 
     getSource(userID) {
-        if (!this.sourceLookup[userID]) {
+        if (!this.sourceLookup.has(userID)) {
             const elementID = `#participant_${userID} audio`,
                 audio = document.querySelector(elementID);
 
             if (!!audio) {
-                const source = this.sourceLookup[userID] = this.destination.createSpatializer(userID, audio, BUFFER_SIZE);
-                source.addEventListener("audioActivity", (evt) => {
-                    audioActivityEvt.id = evt.id;
-                    audioActivityEvt.isActive = evt.isActive;
-                    this.dispatchEvent(audioActivityEvt);
-                });
-                this.sourceList.push(source);
+                this.createSource(userID, audio);
             }
         }
 
-        const source = this.sourceLookup[userID];
+        const source = this.sourceLookup.get(userID);
         if (!source) {
             console.warn(`no audio for user ${userID}`);
         }
+        return source;
+    }
+
+    createSource(userID, audio) {
+        const source = this.destination.createSpatializer(userID, audio, BUFFER_SIZE);
+        source.addEventListener("audioActivity", this.onAudioActivity);
+        this.sourceList.push(source);
+        this.sourceLookup.set(userID, source);
         return source;
     }
 
@@ -61,22 +98,19 @@ export class AudioManager extends EventTarget {
 
     setAudioProperties(evt) {
         this.destination.setAudioProperties(evt);
-
-        for (let source of this.sourceList) {
-            source.setAudioProperties(evt);
-        }
     }
 
     removeUser(evt) {
-        const source = this.sourceLookup[evt.id];
-        if (!!source) {
-            const sourceIdx = this.sourceList.indexOf(source);
+        if (this.sourceLookup.has(evt.id)) {
+            const source = this.sourceLookup.get(evt.id),
+                sourceIdx = this.sourceList.indexOf(source);
+
             if (sourceIdx > -1) {
                 this.sourceList.splice(sourceIdx, 1);
             }
 
             source.dispose();
-            delete this.sourceLookup[evt.id];
+            this.sourceLookup.delete(evt.id);
         }
     }
 }

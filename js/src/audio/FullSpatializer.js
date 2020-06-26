@@ -21,15 +21,18 @@ export class FullSpatializer extends BaseWebAudioSpatializer {
         Object.seal(this);
     }
 
-    setAudioProperties(evt) {
-        this.inNode.refDistance = evt.minDistance;
-        this.inNode.rolloffFactor = evt.rolloff;
-    }
-
     update() {
         super.update();
 
         if (!!this.source) {
+            if (this.inNode.refDistance !== this.destination.minDistance) {
+                this.inNode.refDistance = this.destination.minDistance;
+            }
+
+            if (this.inNode.rolloffFactor !== this.destination.rolloff) {
+                this.inNode.rolloffFactor = this.destination.rolloff;
+            }
+
             const lx = this.destination.position.x,
                 ly = this.destination.position.y,
                 distX = this.position.x - lx,

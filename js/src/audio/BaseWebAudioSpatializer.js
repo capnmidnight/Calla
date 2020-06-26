@@ -54,6 +54,7 @@ export class BaseWebAudioSpatializer extends BaseSpatializer {
         this.lastAudible = true;
         this.activityCounter = 0;
 
+        this.stream = null;
         this.source = null;
     }
 
@@ -62,13 +63,17 @@ export class BaseWebAudioSpatializer extends BaseSpatializer {
 
         if (!this.source) {
             try {
-                const stream = !!this.audio.mozCaptureStream
-                    ? this.audio.mozCaptureStream()
-                    : this.audio.captureStream();
+                if (!this.stream) {
+                    this.stream = !!this.audio.mozCaptureStream
+                        ? this.audio.mozCaptureStream()
+                        : this.audio.captureStream();
+                }
 
-                this.source = this.destination.audioContext.createMediaStreamSource(stream);
-                this.source.connect(this.analyser);
-                this.source.connect(this.inNode);
+                if (this.stream.active) {
+                    this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
+                    this.source.connect(this.analyser);
+                    this.source.connect(this.inNode);
+                }
             }
             catch (exp) {
                 console.warn("Source isn't available yet. Will retry in a moment. Reason: ", exp);
@@ -99,7 +104,6 @@ export class BaseWebAudioSpatializer extends BaseSpatializer {
         if (!!this.source) {
             this.source.disconnect(this.analyser);
             this.source.disconnect(this.inNode);
-            this.source = null;
         }
 
         this.outNode.disconnect(this.destination.audioContext.destination);
@@ -108,6 +112,8 @@ export class BaseWebAudioSpatializer extends BaseSpatializer {
             this.inNode.disconnect(this.outNode);
         }
 
+        this.source = null;
+        this.stream = null;
         this.outNode = null;
         this.inNode = null;
         this.analyser = null;
