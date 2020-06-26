@@ -1,10 +1,13 @@
 ﻿import { BaseWebAudioSpatializer } from "./BaseWebAudioSpatializer.js";
 import { clamp, project } from "../math.js";
+import { WebAudioNodePosition } from "./WebAudioNodePosition.js";
 
 export class FullSpatializer extends BaseWebAudioSpatializer {
 
     constructor(destination, audio, bufferSize) {
         super(destination, audio, bufferSize, destination.audioContext.createPanner());
+
+        this.position = new WebAudioNodePosition(this.node);
 
         this.node.panningModel = "HRTF";
         this.node.distanceModel = "inverse";
@@ -13,7 +16,6 @@ export class FullSpatializer extends BaseWebAudioSpatializer {
         this.node.coneInnerAngle = 360;
         this.node.coneOuterAngle = 0;
         this.node.coneOuterGain = 0;
-        this.node.positionY.setValueAtTime(0, this.destination.audioContext.currentTime);
         this.wasMuted = false;
 
         Object.seal(this);
@@ -24,20 +26,16 @@ export class FullSpatializer extends BaseWebAudioSpatializer {
         this.node.rolloffFactor = evt.rolloff;
     }
 
-    setPosition(evt) {
-        const time = this.destination.audioContext.currentTime + this.destination.transitionTime;
-        // our 2D position is in X/Y coords, but our 3D position
-        // along the horizontal plane is X/Z coords.
-        this.node.positionX.linearRampToValueAtTime(evt.x, time);
-        this.node.positionZ.linearRampToValueAtTime(evt.y, time);
+    setTarget(evt) {
+        this.position.setTarget(evt.x, evt.y, this.destination.audioContext.currentTime, this.destination.transitionTime);
     }
 
     get positionX() {
-        return this.node.positionX.value;
+        return this.position.x;
     }
 
     get positionY() {
-        return this.node.positionZ.value;
+        return this.position.y;
     }
 
     update() {

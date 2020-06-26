@@ -1,5 +1,4 @@
-﻿import { clamp } from "../math.js";
-import { FullSpatializer } from "./FullSpatializer.js";
+﻿import { FullSpatializer } from "./FullSpatializer.js";
 
 const audioActivityEvt = Object.assign(new Event("audioActivity", {
     id: null,
@@ -43,7 +42,7 @@ export class Source extends EventTarget {
     }
 
     setPosition(evt) {
-        this.spatializer.setPosition(evt);
+        this.spatializer.setTarget(evt);
     }
 
     update() {

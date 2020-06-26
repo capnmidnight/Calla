@@ -57,7 +57,7 @@ export class AudioManager extends EventTarget {
     }
 
     setLocalPosition(evt) {
-        this.destination.setPosition(evt);
+        this.destination.setTarget(evt);
     }
 
     setAudioProperties(evt) {

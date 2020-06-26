@@ -18,7 +18,7 @@
         throw new Error("Not implemented in base class.");
     }
 
-    setPosition(evt) {
+    setTarget(evt) {
         throw new Error("Not implemented in base class.");
     }
 

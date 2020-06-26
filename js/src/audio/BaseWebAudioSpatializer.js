@@ -32,6 +32,8 @@ export class BaseWebAudioSpatializer extends BaseSpatializer {
     constructor(destination, audio, bufferSize, drain) {
         super(destination, audio);
 
+        this.wasActive = false;
+
         this.bufferSize = bufferSize;
         this.buffer = new Float32Array(this.bufferSize);
 
