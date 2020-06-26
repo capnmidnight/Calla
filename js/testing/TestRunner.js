@@ -44,53 +44,48 @@ export class TestRunner extends EventTarget {
         restart();
     }
     async runTest(CaseClass, funcName, results, className, onUpdate) {
-        try {
-            const testCase = new CaseClass(),
-                func = testCase[funcName],
-                score = results[className][funcName],
-                onMessage = (evt) => {
-                    score.messages.push(evt.message);
-                    onUpdate();
-                }, onSuccess = (evt) => {
-                    score.success(evt.message);
-                    onUpdate();
-                }, onFailure = (evt) => {
-                    score.fail(evt.message);
-                    onUpdate();
-                };
-
-            for (let prop of this.props) {
-                Object.assign(testCase, prop);
-            }
-
-            testCase.addEventListener("testcasemessage", onMessage);
-            testCase.addEventListener("testcasesuccess", onSuccess);
-            testCase.addEventListener("testcasefail", onFailure);
-            let message = null;
-            try {
-                score.start();
+        const testCase = new CaseClass(),
+            func = testCase[funcName],
+            score = results[className][funcName],
+            onMessage = (evt) => {
+                score.messages.push(evt.message);
                 onUpdate();
-                testCase.setup();
-                message = func.call(testCase);
-                if (message instanceof Promise) {
-                    message = await message;
-                }
-            }
-            catch (error) {
-                message = error;
-                onFailure({ message: error });
-            }
-            score.finish(message);
-            onUpdate();
-            testCase.teardown();
-            testCase.removeEventListener("testcasefail", onFailure);
-            testCase.removeEventListener("testcasesuccess", onSuccess);
-            testCase.removeEventListener("testcasemessage", onMessage);
-            onUpdate();
+            }, onSuccess = (evt) => {
+                score.success(evt.message);
+                onUpdate();
+            }, onFailure = (evt) => {
+                score.fail(evt.message);
+                onUpdate();
+            };
+
+        for (let prop of this.props) {
+            Object.assign(testCase, prop);
         }
-        catch (err) {
-            console.error(err);
+
+        testCase.addEventListener("testcasemessage", onMessage);
+        testCase.addEventListener("testcasesuccess", onSuccess);
+        testCase.addEventListener("testcasefail", onFailure);
+        let message = null;
+        try {
+            score.start();
+            onUpdate();
+            testCase.setup();
+            message = func.call(testCase);
+            if (message instanceof Promise) {
+                message = await message;
+            }
         }
+        catch (exp) {
+            message = exp;
+            onFailure({ message: exp });
+        }
+        score.finish(message);
+        onUpdate();
+        testCase.teardown();
+        testCase.removeEventListener("testcasefail", onFailure);
+        testCase.removeEventListener("testcasesuccess", onSuccess);
+        testCase.removeEventListener("testcasemessage", onMessage);
+        onUpdate();
     }
     isTest(testCase, name, testName) {
         return (name === testName

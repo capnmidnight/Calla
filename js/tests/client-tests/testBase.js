@@ -61,8 +61,8 @@ export class TestBase extends TestCase {
             this.hasValue(response.id);
             this.isNotEqualTo(response.id, this.client.localUser);
 
-            this.hasValue(response.userNumber);
-            this.isNotEqualTo(response.userNumber, userNumber);
+            this.hasValue(response.x);
+            this.isNotEqualTo(response.x, userNumber);
         }
     }
 

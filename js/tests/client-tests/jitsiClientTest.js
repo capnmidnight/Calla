@@ -65,7 +65,7 @@ export async function RunTest(JitsiClient) {
     client.addEventListener("audioActivity", echoEvt);
 
     client.addEventListener("userInitRequest", (evt) => {
-        client.userInitResponse(evt.id, { userNumber });
+        client.userInitResponse(evt.id, { x: userNumber, y: userNumber });
     });
 
 

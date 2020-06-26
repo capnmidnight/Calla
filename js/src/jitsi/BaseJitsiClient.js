@@ -1,4 +1,4 @@
-﻿import { CallaUserEvent } from "../events.js";
+﻿import { CallaUserEvent, copy } from "../events.js";
 import { id, style } from "../html/attrs.js";
 import { Div } from "../html/tags.js";
 
@@ -25,7 +25,31 @@ const APP_FINGERPRINT
         "displayNameChange",
         "audioActivity",
         "setAvatarEmoji"
-    ];
+    ],
+    evtMuted = Object.seal({
+        id: null,
+        muted: null
+    }),
+    evtEmoji = Object.seal({
+        id: null,
+        value: null,
+        desc: null
+    }),
+    evtUserState = Object.seal({
+        id: null,
+        x: null,
+        y: null,
+        displayName: null,
+        avatarURL: null,
+        avatarEmoji: null
+    }),
+    evtAudioProperties = Object.seal({
+        origin: null,
+        transitionTime: null,
+        minDistance: null,
+        maxDistance: null,
+        rolloff: null
+    });
 
 // Manages communication between Jitsi Meet and Calla
 export class BaseJitsiClient extends EventTarget {
@@ -96,29 +120,28 @@ export class BaseJitsiClient extends EventTarget {
             }
         });
 
-        this.addEventListener("audioMuteStatusChanged", (evt) => {
-            if (evt.id === this.localUser) {
-                this.audioMuteStatusChanged(evt.muted);
-            }
-        });
-
-        this.addEventListener("videoMuteStatusChanged", (evt) => {
-            if (evt.id === this.localUser) {
-                this.videoMuteStatusChanged(evt.muted);
-            }
-        });
-
         const localizeMuteEvent = (type) => (evt) => {
-            const evt2 = Object.assign(
-                new Event((evt.id === this.localUser ? "local" : "remote") + type + "MuteStatusChanged"), {
-                id: evt.id,
-                muted: evt.muted
-            });
+            const isLocal = evt.id === this.localUser
+                || evt.id === null
+                || evt.id === undefined,
+                evt2 = Object.assign(
+                    new Event((isLocal ? "local" : "remote") + type + "MuteStatusChanged"), {
+                    id: this.localUser,
+                    muted: evt.muted
+                });
             this.dispatchEvent(evt2);
         };
 
         this.addEventListener("audioMuteStatusChanged", localizeMuteEvent("Audio"));
         this.addEventListener("videoMuteStatusChanged", localizeMuteEvent("Video"));
+
+        this.addEventListener("localAudioMuteStatusChanged", (evt) => {
+            this.audioMuteStatusChanged(evt.muted);
+        });
+
+        this.addEventListener("localVideoMuteStatusChanged", (evt) => {
+            this.videoMuteStatusChanged(evt.muted);
+        });
 
         window.addEventListener("unload", () => {
             this.dispose();
@@ -199,13 +222,13 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
-        this.audioClient.setAudioProperties({
-            origin,
-            transitionTime,
-            minDistance,
-            maxDistance,
-            rolloff
-        });
+        evtAudioProperties.origin = origin;
+        evtAudioProperties.transitionTime = transitionTime;
+        evtAudioProperties.minDistance = minDistance;
+        evtAudioProperties.maxDistance = maxDistance;
+        evtAudioProperties.rolloff = rolloff;
+
+        this.audioClient.setAudioProperties(evtAudioProperties);
     }
 
     setPosition(evt) {
@@ -292,30 +315,36 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     userInitResponse(toUserID, fromUserState) {
-        this.txGameData(toUserID, "userInitResponse", fromUserState);
+        this.txGameData(toUserID, "userInitResponse", copy(evtUserState, fromUserState));
     }
 
     setAvatarEmoji(emoji) {
+        copy(evtEmoji, emoji);
         for (let toUserID of this.otherUsers.keys()) {
-            this.txGameData(toUserID, "setAvatarEmoji", emoji);
+            this.txGameData(toUserID, "setAvatarEmoji", evtEmoji);
         }
     }
 
     emote(emoji) {
+        copy(evtEmoji, emoji);
         for (let toUserID of this.otherUsers.keys()) {
-            this.txGameData(toUserID, "emote", emoji);
+            this.txGameData(toUserID, "emote", evtEmoji);
         }
     }
 
     audioMuteStatusChanged(muted) {
+        evtMuted.id = this.localUser;
+        evtMuted.muted = muted;
         for (let toUserID of this.otherUsers.keys()) {
-            this.txGameData(toUserID, "audioMuteStatusChanged", { muted });
+            this.txGameData(toUserID, "audioMuteStatusChanged", evtMuted);
         }
     }
 
     videoMuteStatusChanged(muted) {
+        evtMuted.id = this.localUser;
+        evtMuted.muted = muted;
         for (let toUserID of this.otherUsers.keys()) {
-            this.txGameData(toUserID, "videoMuteStatusChanged", { muted });
+            this.txGameData(toUserID, "videoMuteStatusChanged", evtMuted);
         }
     }
 }

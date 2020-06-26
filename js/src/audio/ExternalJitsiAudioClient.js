@@ -1,5 +1,4 @@
-﻿import { CallaEvent } from "../events.js";
-import { copy } from "../html/evts.js";
+﻿import { CallaEvent, copy } from "../events.js";
 
 const evtSetPosition = Object.seal({
     id: null,

@@ -3,14 +3,6 @@
         || obj instanceof Function;
 }
 
-export function copy(dest, evt) {
-    for (let key in dest) {
-        dest[key] = evt[key];
-    }
-
-    return dest;
-};
-
 export class HtmlEvt {
     constructor(name, callback, opts) {
         if (!isFunction(callback)) {

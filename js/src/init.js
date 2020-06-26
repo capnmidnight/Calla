@@ -81,7 +81,7 @@ export function init(host, JitsiClientClass) {
     async function selectEmojiAsync() {
         await withEmojiSelection((e) => {
             game.emote(client.localUser, e);
-            toolbar.setEmojiButton(game.keyEmote, e);
+            toolbar.setEmojiButton(settings.inputBinding.keyButtonEmote, e);
         });
     }
 
@@ -202,10 +202,10 @@ export function init(host, JitsiClientClass) {
                 client.userInitRequest(evt2.id);
             });
         },
-        toggleAudio: async (evt) => {
+        toggleAudio: async () => {
             client.toggleAudio();
         },
-        toggleVideo: async (evt) => {
+        toggleVideo: async () => {
             client.toggleVideo();
         },
         gameStarted: () => {
@@ -282,15 +282,15 @@ export function init(host, JitsiClientClass) {
         },
         audioMuteStatusChanged: (evt) => {
             game.muteUserAudio(evt);
-            if (evt.id === client.localUser) {
-                toolbar.audioEnabled = !evt.muted;
-            }
+        },
+        localAudioMuteStatusChanged: (evt) => {
+            toolbar.audioEnabled = !evt.muted;
         },
         videoMuteStatusChanged: (evt) => {
             game.muteUserVideo(evt);
-            if (evt.id === client.localUser) {
-                options.videoEnabled = !evt.muted;
-            }
+        },
+        localVideoMuteStatusChanged: (evt) => {
+            options.videoEnabled = !evt.muted;
         },
         userInitRequest: (evt) => {
             client.userInitResponse(evt.id, game.me);
@@ -320,6 +320,6 @@ export function init(host, JitsiClientClass) {
         }
     });
 
-login.ready = true;
-return forExport;
+    login.ready = true;
+    return forExport;
 }

@@ -191,18 +191,22 @@ EventTarget.prototype.once = function (resolveEvt, rejectEvt, timeout) {
 
         if (timeout !== undefined
             && timeout !== null) {
-            const timer = setTimeout(reject, timeout),
+            const timer = setTimeout(() => {
+                reject("Timeout");
+            }, timeout),
                 cancel = () => clearTimeout(timer);
             resolve = add(cancel, resolve);
             reject = add(cancel, reject);
         }
 
-        if (hasResolveEvt) {   
+        if (hasResolveEvt) {
             this.addEventListener(resolveEvt, resolve);
         }
 
         if (hasRejectEvt) {
-            this.addEventListener(rejectEvt, reject);
+            this.addEventListener(rejectEvt, () => {
+                reject("Rejection event found");
+            });
         }
     });
 };

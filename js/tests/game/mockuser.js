@@ -10,12 +10,8 @@ export class MockUser {
         this.client = client;
         this.audio = null;
         this.displayName = id;
-        this._avatarEmoji = randomPerson();
+        this.avatarEmoji = randomPerson();
         this.emoteEvt = { id, value: null, desc: null };
-    }
-
-    get avatarEmoji() {
-        return this._avatarEmoji;
     }
 
     schedule() {
