@@ -33,6 +33,14 @@ export class InputBinding extends EventTarget {
             });
         }
 
+        this.clone = () => {
+            const c = {};
+            for (let kp of bindings.entries()) {
+                c[kp[0]] = kp[1];
+            }
+            return c;
+        };
+
         Object.freeze(this);
     }
 }

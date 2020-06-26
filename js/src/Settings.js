@@ -9,7 +9,22 @@
         zoom: 1.5,
         userName: "",
         roomName: "calla",
-        gamepadIndex: 0
+        gamepadIndex: 0,
+        inputBinding: {
+            keyButtonUp: "ArrowUp",
+            keyButtonDown: "ArrowDown",
+            keyButtonLeft: "ArrowLeft",
+            keyButtonRight: "ArrowRight",
+            keyButtonEmote: "e",
+            keyButtonToggleAudio: "a",
+
+            gpButtonUp: 12,
+            gpButtonDown: 13,
+            gpButtonLeft: 14,
+            gpButtonRight: 15,
+            gpButtonEmote: 0,
+            gpButtonToggleAudio: 1
+        }
     };
 
 function commit(settings) {
@@ -132,6 +147,17 @@ export class Settings {
     set gamepadIndex(value) {
         if (value !== this.gamepadIndex) {
             selfs.get(this).gamepadIndex = value;
+            commit(this);
+        }
+    }
+
+    get inputBinding() {
+        return selfs.get(this).inputBinding;
+    }
+
+    set inputBinding(value) {
+        if (value !== this.inputBinding) {
+            selfs.get(this).inputBinding = value;
             commit(this);
         }
     }

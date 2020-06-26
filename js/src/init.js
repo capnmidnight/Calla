@@ -1,6 +1,4 @@
 ﻿// TODO
-// set input bindings
-// read/write localSettings
 // use gamepad manager
 // provide gamepad axis binding selector
 
@@ -46,6 +44,7 @@ export function init(host, JitsiClientClass) {
     options.audioRolloff = settings.audioRolloff;
     options.fontSize = game.fontSize = settings.fontSize;
     options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
+    options.inputBinding = game.inputBinding = settings.inputBinding;
     toolbar.zoom = game.cameraZ = game.targetCameraZ = settings.zoom;
     login.userName = settings.userName;
     login.roomName = settings.roomName;
@@ -202,6 +201,9 @@ export function init(host, JitsiClientClass) {
         settings.gamepadIndex = game.gamepadIndex = options.gamepadIndex;
     });
 
+    options.addEventListener("inputbindingchanged", () => {
+        settings.inputBinding = game.inputBinding = options.inputBinding;
+    });
 
     game.addEventListener("emote", (evt) => {
         client.emote(evt.emoji);

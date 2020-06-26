@@ -66,22 +66,26 @@ export class Game extends EventTarget {
         this.currentEmoji = null;
         this.emotes = [];
 
-        this.keyEmote = "e";
-        this.keyToggleAudio = "a";
-        this.keyUp = "ArrowUp";
-        this.keyDown = "ArrowDown";
-        this.keyLeft = "ArrowLeft";
-        this.keyRight = "ArrowRight";
+        this.inputBinding = {
+            keyButtonUp: "ArrowUp",
+            keyButtonDown: "ArrowDown",
+            keyButtonLeft: "ArrowLeft",
+            keyButtonRight: "ArrowRight",
+            keyButtonEmote: "e",
+            keyButtonToggleAudio: "a",
+
+            gpButtonUp: 12,
+            gpButtonDown: 13,
+            gpButtonLeft: 14,
+            gpButtonRight: 15,
+            gpButtonEmote: 0,
+            gpButtonToggleAudio: 1
+        };
 
         this.gamepads = [];
         this.lastGamepadIndex = -1;
         this.gamepadIndex = -1;
-        this.buttonEmote = 0;
-        this.buttonToggleAudio = 1;
-        this.buttonUp = 12;
-        this.buttonDown = 13;
-        this.buttonLeft = 14;
-        this.buttonRight = 15;
+
 
         // ============= KEYBOARD =================
 
@@ -91,7 +95,7 @@ export class Game extends EventTarget {
                 && !evt.altKey
                 && !evt.shiftKey
                 && !evt.metaKey
-                && evt.key === this.keyToggleAudio
+                && evt.key === this.inputBinding.keyButtonToggleAudio
                 && !!this.me) {
                 this.toggleMyAudio();
             }
@@ -558,11 +562,11 @@ export class Game extends EventTarget {
                     && !evt.ctrlKey
                     && !evt.metaKey) {
                     switch (evt.key) {
-                        case this.keyUp: dy--; break;
-                        case this.keyDown: dy++; break;
-                        case this.keyLeft: dx--; break;
-                        case this.keyRight: dx++; break;
-                        case this.keyEmote: this.emote(this.me.id, this.currentEmoji); break;
+                        case this.inputBinding.keyButtonUp: dy--; break;
+                        case this.inputBinding.keyButtonDown: dy++; break;
+                        case this.inputBinding.keyButtonLeft: dx--; break;
+                        case this.inputBinding.keyButtonRight: dx++; break;
+                        case this.inputBinding.keyButtonEmote: this.emote(this.me.id, this.currentEmoji); break;
                     }
                 }
             }
@@ -573,26 +577,26 @@ export class Game extends EventTarget {
 
                 this.lastGamepadIndex = this.gamepadIndex;
 
-                if (pad.buttons[this.buttonEmote].pressed) {
+                if (pad.buttons[this.inputBinding.gpButtonEmote].pressed) {
                     this.emote(this.me.id, this.currentEmoji);
                 }
 
-                if (!lastPad.buttons[this.buttonToggleAudio].pressed
-                    && pad.buttons[this.buttonToggleAudio].pressed) {
+                if (!lastPad.buttons[this.inputBinding.gpButtonToggleAudio].pressed
+                    && pad.buttons[this.inputBinding.gpButtonToggleAudio].pressed) {
                     this.toggleMyAudio();
                 }
 
-                if (pad.buttons[this.buttonUp].pressed) {
+                if (pad.buttons[this.inputBinding.gpButtonUp].pressed) {
                     --dy;
                 }
-                else if (pad.buttons[this.buttonDown].pressed) {
+                else if (pad.buttons[this.inputBinding.gpButtonDown].pressed) {
                     ++dy;
                 }
 
-                if (pad.buttons[this.buttonLeft].pressed) {
+                if (pad.buttons[this.inputBinding.gpButtonLeft].pressed) {
                     --dx;
                 }
-                else if (pad.buttons[this.buttonRight].pressed) {
+                else if (pad.buttons[this.inputBinding.gpButtonRight].pressed) {
                     ++dx;
                 }
 

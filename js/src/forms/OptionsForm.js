@@ -275,7 +275,7 @@ export class OptionsForm extends FormDialog {
 
     get inputBinding() {
         const self = selfs.get(this);
-        return self.inputBinding;
+        return self.inputBinding.clone();
     }
 
     set inputBinding(value) {
