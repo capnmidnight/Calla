@@ -69,7 +69,7 @@ export function init(host, JitsiClientClass) {
 
     async function selectEmojiAsync() {
         await withEmojiSelection((e) => {
-            game.emote(game.me.id, e);
+            game.emote(client.localUser, e);
             toolbar.setEmojiButton(game.keyEmote, e);
         });
     }
@@ -110,7 +110,7 @@ export function init(host, JitsiClientClass) {
     });
 
     toolbar.addEventListener("emote", () => {
-        game.emote(game.me.id, game.currentEmoji);
+        game.emote(client.localUser, game.currentEmoji);
     });
 
     toolbar.addEventListener("zoomchanged", () => {
@@ -333,7 +333,6 @@ export function init(host, JitsiClientClass) {
     });
 
     client.addEventListener("avatarChanged", (evt) => {
-        console.log(evt);
         options.avatarURL = evt.avatarURL;
         game.me.setAvatarURL(evt.avatarURL);
     });
