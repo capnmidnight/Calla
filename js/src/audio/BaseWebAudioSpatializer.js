@@ -29,10 +29,10 @@ function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz, bufferSiz
 
 export class BaseWebAudioSpatializer extends BaseSpatializer {
 
-    constructor(destination, audio, bufferSize, inNode, outNode) {
-        super(destination, audio);
+    constructor(userID, destination, audio, position, bufferSize, inNode, outNode) {
+        super(userID, destination, audio, position);
 
-        this.wasActive = false;
+        this.audio.volume = 0;
 
         this.bufferSize = bufferSize;
         this.buffer = new Float32Array(this.bufferSize);
@@ -50,26 +50,15 @@ export class BaseWebAudioSpatializer extends BaseSpatializer {
             this.inNode.connect(this.outNode);
         }
 
+        this.wasActive = false;
+        this.lastAudible = true;
+        this.activityCounter = 0;
+
         this.source = null;
-        this.position = null;
-    }
-
-    setTarget(evt) {
-        this.position.setTarget(evt.x, evt.y, this.destination.audioContext.currentTime, this.destination.transitionTime);
-    }
-
-    get positionX() {
-        return this.position.x;
-    }
-
-    get positionY() {
-        return this.position.y;
     }
 
     update() {
         super.update();
-
-        this.position.update(this.destination.audioContext.currentTime);
 
         if (!this.source) {
             try {
@@ -124,6 +113,6 @@ export class BaseWebAudioSpatializer extends BaseSpatializer {
         this.analyser = null;
         this.buffer = null;
 
-        base.dispose();
+        super.dispose();
     }
 }

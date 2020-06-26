@@ -4,10 +4,10 @@ import { WebAudioNodePosition } from "./WebAudioNodePosition.js";
 
 export class FullSpatializer extends BaseWebAudioSpatializer {
 
-    constructor(destination, audio, bufferSize) {
-        super(destination, audio, bufferSize, destination.audioContext.createPanner());
-
-        this.position = new WebAudioNodePosition(this.inNode);
+    constructor(userID, destination, audio, bufferSize) {
+        const panner = destination.audioContext.createPanner(),
+            position = new WebAudioNodePosition(panner);
+        super(userID, destination, audio, position, bufferSize, panner);
 
         this.inNode.panningModel = "HRTF";
         this.inNode.distanceModel = "inverse";

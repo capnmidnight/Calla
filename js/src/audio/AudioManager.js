@@ -1,5 +1,4 @@
-﻿import { Source } from "./Source.js";
-import { Destination } from "./Destination.js";
+﻿import { Destination } from "./Destination.js";
 
 const BUFFER_SIZE = 1024,
     audioActivityEvt = Object.assign(new Event("audioActivity", {
@@ -32,7 +31,7 @@ export class AudioManager extends EventTarget {
                 audio = document.querySelector(elementID);
 
             if (!!audio) {
-                const source = this.sourceLookup[userID] = new Source(userID, audio, this.destination, BUFFER_SIZE);
+                const source = this.sourceLookup[userID] = this.destination.createSpatializer(userID, audio, BUFFER_SIZE);
                 source.addEventListener("audioActivity", (evt) => {
                     audioActivityEvt.id = evt.id;
                     audioActivityEvt.isActive = evt.isActive;
@@ -52,7 +51,7 @@ export class AudioManager extends EventTarget {
     setUserPosition(evt) {
         const source = this.getSource(evt.id);
         if (!!source) {
-            source.setPosition(evt);
+            source.setTarget(evt);
         }
     }
 

@@ -1,17 +1,24 @@
 ﻿export class BaseSpatializer extends EventTarget {
-    constructor(destination, audio) {
+    constructor(userID, destination, audio, position) {
         super();
 
+        this.id = userID;
         this.destination = destination;
         this.audio = audio;
+        this.position = position;
     }
 
     dispose() {
-        this.destination = null;
+        this.audio.pause();
+
+        this.position = null;
         this.audio = null;
+        this.destination = null;
+        this.id = null;
     }
 
     update() {
+        this.position.update(this.destination.audioContext.currentTime);
     }
 
     setAudioProperties(evt) {
@@ -19,14 +26,6 @@
     }
 
     setTarget(evt) {
-        throw new Error("Not implemented in base class.");
-    }
-
-    get positionX() {
-        throw new Error("Not implemented in base class.");
-    }
-
-    get positionY() {
-        throw new Error("Not implemented in base class.");
+        this.position.setTarget(evt.x, evt.y, this.destination.audioContext.currentTime, this.destination.transitionTime);
     }
 }

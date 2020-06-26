@@ -4,16 +4,12 @@ import { InterpolatedPosition } from "./InterpolatedPosition.js";
 
 export class StereoSpatializer extends BaseWebAudioSpatializer {
 
-    constructor(destination, audio, bufferSize) {
-        super(destination, audio, bufferSize,
+    constructor(userID, destination, audio, bufferSize) {
+        super(userID, destination, audio, new InterpolatedPosition(), bufferSize,
             destination.audioContext.createStereoPanner(),
             destination.audioContext.createGain());
 
-        this.position = new InterpolatedPosition();
         Object.seal(this);
-    }
-
-    setAudioProperties(evt) {
     }
 
     update() {
@@ -35,3 +31,4 @@ export class StereoSpatializer extends BaseWebAudioSpatializer {
         }
     }
 }
+
