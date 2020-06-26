@@ -2,32 +2,33 @@
 // use gamepad manager
 // provide gamepad axis binding selector
 
-import { Game } from "./Game.js";
-import { ToolBar } from "./forms/ToolBar.js";
-import { OptionsForm } from "./forms/OptionsForm.js";
 import { EmojiForm } from "./forms/EmojiForm.js";
-import { LoginForm } from "./forms/LoginForm.js";
 import { InstructionsForm } from "./forms/InstructionsForm.js";
+import { LoginForm } from "./forms/LoginForm.js";
+import { OptionsForm } from "./forms/OptionsForm.js";
+import { ToolBar } from "./forms/ToolBar.js";
+import { Game } from "./Game.js";
 import { Settings } from "./Settings.js";
 
 export function init(host, JitsiClientClass) {
-    const game = new Game(),
+    const settings = new Settings(),
+        game = new Game(),
         login = new LoginForm(),
         client = new JitsiClientClass(),
         toolbar = new ToolBar(),
         options = new OptionsForm(),
         emoji = new EmojiForm(),
         instructions = new InstructionsForm(),
-        settings = new Settings(),
+
         forExport = {
-            client,
+            settings,
             game,
+            login,
+            client,
             toolbar,
             options,
             emoji,
-            login,
-            instructions,
-            settings
+            instructions
         };
 
     for (let e of Object.values(forExport)) {
