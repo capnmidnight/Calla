@@ -1,9 +1,6 @@
 ﻿import "../protos.js";
-
-import { FormDialog } from "./FormDialog.js";
-
 import { SelectBox } from "../html/tags.js";
-import { onInput } from "../html/evts.js";
+import { FormDialog } from "./FormDialog.js";
 
 const loginEvt = new Event("login"),
     defaultRooms = new Map([

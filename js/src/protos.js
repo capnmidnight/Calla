@@ -248,3 +248,16 @@ EventTarget.prototype.until = function (untilEvt, callback, test, repeatTimeout,
         timer = setTimeout(repeater, 0);
     });
 };
+
+EventTarget.prototype.addEventListeners = function (obj) {
+    for (let evtName in obj) {
+        let callback = obj[evtName];
+        let opts = undefined;
+        if (callback instanceof Array) {
+            opts = callback[1];
+            callback = callback[0];
+        }
+
+        this.addEventListener(evtName, callback, opts);
+    }
+};

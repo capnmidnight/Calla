@@ -1,4 +1,4 @@
-﻿const inputBindingChangedEvt = new Event("inputbindingchanged");
+﻿const inputBindingChangedEvt = new Event("inputBindingChanged");
 
 export class InputBinding extends EventTarget {
     constructor() {

@@ -12,17 +12,17 @@ const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_SPEED = 0.005,
     MAX_DRAG_DISTANCE = 5,
     isFirefox = typeof InstallTrigger !== "undefined",
-    gameStartedEvt = new Event("gamestarted"),
-    gameEndedEvt = new Event("gameended"),
-    zoomChangedEvt = new Event("zoomchanged"),
-    emojiNeededEvt = new Event("emojineeded"),
-    toggleAudioEvt = new Event("toggleaudio"),
-    toggleVideoEvt = new Event("togglevideo"),
+    gameStartedEvt = new Event("gameStarted"),
+    gameEndedEvt = new Event("gameEnded"),
+    zoomChangedEvt = new Event("zoomChanged"),
+    emojiNeededEvt = new Event("emojiNeeded"),
+    toggleAudioEvt = new Event("toggleAudio"),
+    toggleVideoEvt = new Event("toggleVideo"),
     emoteEvt = Object.assign(new Event("emote"), {
         id: null,
         emoji: null
     }),
-    userJoinedEvt = Object.assign(new Event("userjoined", {
+    userJoinedEvt = Object.assign(new Event("userJoined", {
         user: null
     }));
 

@@ -11,17 +11,17 @@ import { InputBinding } from "./InputBinding.js";
 
 const keyWidthStyle = style({ width: "7em" }),
     numberWidthStyle = style({ width: "3em" }),
-    avatarUrlChangedEvt = new Event("avatarurlchanged"),
-    gamepadChangedEvt = new Event("gamepadchanged"),
-    selectAvatarEvt = new Event("selectavatar"),
-    fontSizeChangedEvt = new Event("fontsizechanged"),
-    inputBindingChangedEvt = new Event("inputbindingchanged"),
-    audioPropsChangedEvt = new Event("audiopropschanged"),
-    toggleDrawHearingEvt = new Event("toggledrawhearing"),
-    toggleVideoEvt = new Event("togglevideo"),
-    audioInputChangedEvt = new Event("audioinputchanged"),
-    audioOutputChangedEvt = new Event("audiooutputchanged"),
-    videoInputChangedEvt = new Event("videoinputchanged"),
+    avatarUrlChangedEvt = new Event("avatarURLChanged"),
+    gamepadChangedEvt = new Event("gamepadChanged"),
+    selectAvatarEvt = new Event("selectAvatar"),
+    fontSizeChangedEvt = new Event("fontSizeChanged"),
+    inputBindingChangedEvt = new Event("inputBindingChanged"),
+    audioPropsChangedEvt = new Event("audioPropertiesChanged"),
+    toggleDrawHearingEvt = new Event("toggleDrawHearing"),
+    toggleVideoEvt = new Event("toggleVideo"),
+    audioInputChangedEvt = new Event("audioInputChanged"),
+    audioOutputChangedEvt = new Event("audioOutputChanged"),
+    videoInputChangedEvt = new Event("videoInputChanged"),
     selfs = new Map();
 
 export class OptionsForm extends FormDialog {
@@ -231,7 +231,7 @@ export class OptionsForm extends FormDialog {
             panels[i].addEventListener("select", showPanel(i));
         }
 
-        self.inputBinding.addEventListener("inputbindingchanged", () => {
+        self.inputBinding.addEventListener("inputBindingChanged", () => {
             for (let id of Object.getOwnPropertyNames(self.inputBinding)) {
                 if (value[id] !== undefined
                     && this[id] != undefined) {

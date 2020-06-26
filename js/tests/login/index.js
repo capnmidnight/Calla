@@ -17,11 +17,11 @@
 
         console.log(`Logging in: User ${user}, Room ${room}.`);
         setTimeout(() => {
-            if (room === "calla") {
-                loginForm.connecting = false;
-            }
-            else if (room === "island") {
+            if (room === "island") {
                 loginForm.connected = true;
+            }
+            else {
+                loginForm.connecting = false;
             }
         }, 1000);
     });

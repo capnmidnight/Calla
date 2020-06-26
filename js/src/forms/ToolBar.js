@@ -10,15 +10,15 @@ function Run(txt) {
         txt);
 }
 
-const toggleAudioEvt = new Event("toggleaudio"),
+const toggleAudioEvt = new Event("toggleAudio"),
     emoteEvt = new Event("emote"),
-    selectEmojiEvt = new Event("selectemoji"),
-    zoomChangedEvt = new Event("zoomchanged"),
-    toggleOptionsEvt = new Event("toggleoptions"),
+    selectEmojiEvt = new Event("selectEmoji"),
+    zoomChangedEvt = new Event("zoomChanged"),
+    toggleOptionsEvt = new Event("toggleOptions"),
     tweetEvt = new Event("tweet"),
     leaveEvt = new Event("leave"),
-    toggleUIEvt = new Event("toggleui"),
-    toggleInstructionsEvt = new Event("toggleinstructions"),
+    toggleUIEvt = new Event("toggleUI"),
+    toggleInstructionsEvt = new Event("toggleInstructions"),
     subelStyle = style({
         display: "inline-flex",
         margin: "0 0.5em 0 0"

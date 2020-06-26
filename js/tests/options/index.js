@@ -4,7 +4,7 @@ import { GamepadManager } from "../../src/gamepad/GamepadStateManager.js";
 const options = new OptionsForm();
 document.body.appendChild(options.element);
 
-options.addEventListener("inputbindingchanged", () => {
+options.addEventListener("inputBindingChanged", () => {
     console.log(options.inputBinding);
 });
 

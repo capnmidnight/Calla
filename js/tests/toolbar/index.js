@@ -5,7 +5,7 @@ document.body.appendChild(toolbar.element);
 
 let muted = false;
 
-toolbar.addEventListener("toggleaudio", (evt) => {
+toolbar.addEventListener("toggleAudio", (evt) => {
     muted = !muted;
     toolbar.audioEnabled = !muted;
 });
@@ -20,13 +20,15 @@ function echo(evt) {
 
 document.body.append(P("asdf"));
 
-toolbar.addEventListener("toggleaudio", echo);
-toolbar.addEventListener("emote", echo);
-toolbar.addEventListener("selectemoji", echo);
-toolbar.addEventListener("zoomchanged", echo);
-toolbar.addEventListener("options", echo);
-toolbar.addEventListener("tweet", echo);
-toolbar.addEventListener("leave", echo);
-toolbar.addEventListener("toggleui", echo);
-toolbar.addEventListener("toggleoptions", echo);
-toolbar.addEventListener("toggleinstructions", echo);
+toolbar.addEventListeners({
+    toggleAudio: echo,
+    emote: echo,
+    selectEmoji: echo,
+    zoomChanged: echo,
+    options: echo,
+    tweet: echo,
+    leave: echo,
+    toggleUI: echo,
+    toggleOptions: echo,
+    toggleInstructions: echo
+})

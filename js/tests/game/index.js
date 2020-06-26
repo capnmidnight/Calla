@@ -33,7 +33,7 @@ import { src, style } from "../../src/html/attrs.js";
                 width: "100%"
             })));
 
-    game.addEventListener("gamestarted", () => {
+    game.addEventListener("gameStarted", () => {
         testUsers = makeUsers();
         client.testUsers = testUsers.slice();
         spawnUserTimer = setTimeout(spawnUsers, 0);
