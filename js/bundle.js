@@ -716,6 +716,7 @@ function clear(elem) {
 }
 
 function A(...rest) { return tag("a", ...rest); }
+function Aside(...rest) { return tag("aside", ...rest); }
 function HtmlButton(...rest) { return tag("button", ...rest); }
 function Button(...rest) { return HtmlButton(...rest, type("button")); }
 function Canvas(...rest) { return tag("canvas", ...rest); }
@@ -730,6 +731,7 @@ function LI(...rest) { return tag("li", ...rest); }
 function Option(...rest) { return tag("option", ...rest); }
 function P(...rest) { return tag("p", ...rest); }
 function Span(...rest) { return tag("span", ...rest); }
+function Strong(...rest) { return tag("strong", ...rest); }
 function UL(...rest) { return tag("ul", ...rest); }
 
 function LabeledInput(id, inputType, labelText, ...rest) {
@@ -6258,28 +6260,50 @@ const medieval = [
     { value: "\u{269C}\u{FE0F}", desc: "Fleur-de-lis" },
     { value: "\u{1FA96}", desc: "Military Helmet" }
 ];
+
+const doubleExclamationMark = { value: "\u{203C}\u{FE0F}", desc: "Double Exclamation Mark" };
+const interrobang = { value: "\u{2049}\u{FE0F}", desc: "Exclamation Question Mark" };
+const information = { value: "\u{2139}\u{FE0F}", desc: "Information" };
+const circledM = { value: "\u{24C2}\u{FE0F}", desc: "Circled M" };
+const checkMarkButton = { value: "\u{2705}", desc: "Check Mark Button" };
+const checkMark = { value: "\u{2714}\u{FE0F}", desc: "Check Mark" };
+const eightSpokedAsterisk = { value: "\u{2733}\u{FE0F}", desc: "Eight-Spoked Asterisk" };
+const crossMark = { value: "\u{274C}", desc: "Cross Mark" };
+const crossMarkButton = { value: "\u{274E}", desc: "Cross Mark Button" };
+const questionMark = { value: "\u{2753}", desc: "Question Mark" };
+const whiteQuestionMark = { value: "\u{2754}", desc: "White Question Mark" };
+const whiteExclamationMark = { value: "\u{2755}", desc: "White Exclamation Mark" };
+const exclamationMark = { value: "\u{2757}", desc: "Exclamation Mark" };
+const curlyLoop = { value: "\u{27B0}", desc: "Curly Loop" };
+const doubleCurlyLoop = { value: "\u{27BF}", desc: "Double Curly Loop" };
+const wavyDash = { value: "\u{3030}\u{FE0F}", desc: "Wavy Dash" };
+const partAlternationMark = { value: "\u{303D}\u{FE0F}", desc: "Part Alternation Mark" };
+const tradeMark = { value: "\u{2122}\u{FE0F}", desc: "Trade Mark" };
+const copyright = { value: "\u{A9}\u{FE0F}", desc: "Copyright" };
+const registered = { value: "\u{AE}\u{FE0F}", desc: "Registered" };
 const marks = [
-    { value: "\u{203C}\u{FE0F}", desc: "Double Exclamation Mark" },
-    { value: "\u{2049}\u{FE0F}", desc: "Exclamation Question Mark" },
-    { value: "\u{2139}\u{FE0F}", desc: "Information" },
-    { value: "\u{24C2}\u{FE0F}", desc: "Circled M" },
-    { value: "\u{2705}", desc: "Check Mark Button" },
-    { value: "\u{2714}\u{FE0F}", desc: "Check Mark" },
-    { value: "\u{2733}\u{FE0F}", desc: "Eight-Spoked Asterisk" },
-    { value: "\u{274C}", desc: "Cross Mark" },
-    { value: "\u{274E}", desc: "Cross Mark Button" },
-    { value: "\u{2753}", desc: "Question Mark" },
-    { value: "\u{2754}", desc: "White Question Mark" },
-    { value: "\u{2755}", desc: "White Exclamation Mark" },
-    { value: "\u{2757}", desc: "Exclamation Mark" },
-    { value: "\u{27B0}", desc: "Curly Loop" },
-    { value: "\u{27BF}", desc: "Double Curly Loop" },
-    { value: "\u{3030}\u{FE0F}", desc: "Wavy Dash" },
-    { value: "\u{303D}\u{FE0F}", desc: "Part Alternation Mark" },
-    { value: "\u{2122}\u{FE0F}", desc: "Trade Mark" },
-    { value: "\u{A9}\u{FE0F}", desc: "Copyright" },
-    { value: "\u{AE}\u{FE0F}", desc: "Registered" },
+    doubleExclamationMark,
+    interrobang,
+    information,
+    circledM,
+    checkMarkButton,
+    checkMark,
+    eightSpokedAsterisk,
+    crossMark,
+    crossMarkButton,
+    questionMark,
+    whiteQuestionMark,
+    whiteExclamationMark,
+    exclamationMark,
+    curlyLoop,
+    doubleCurlyLoop,
+    wavyDash,
+    partAlternationMark,
+    tradeMark,
+    copyright,
+    registered,
 ];
+
 const textStyle = { value: "\u{FE0E}", desc: "Variation Selector-15: text style" };
 const emojiStyle = { value: "\u{FE0F}", desc: "Variation Selector-16: emoji style" };
 const zeroWidthJoiner = { value: "\u{200D}", desc: "Zero Width Joiner" };
@@ -7545,6 +7569,7 @@ const toggleAudioEvt$1 = new Event("toggleaudio"),
     tweetEvt = new Event("tweet"),
     leaveEvt = new Event("leave"),
     toggleUIEvt = new Event("toggleui"),
+    toggleInstructionsEvt = new Event("toggleinstructions"),
     subelStyle = style({
         display: "inline-flex",
         margin: "0 0.5em 0 0"
@@ -7618,12 +7643,19 @@ class ToolBar extends EventTarget {
                         systemFont,
                         onInput(_(zoomChangedEvt$1)))),
 
-                Button(
+                this.optionsButton = Button(
                     title("Show/hide options"),
                     onClick(_(toggleOptionsEvt)),
                     subelStyle,
                     systemFont,
                     gear.value),
+
+                this.instructionsButton = Button(
+                    title("Show/hide instructions"),
+                    onClick(_(toggleInstructionsEvt)),
+                    subelStyle,
+                    systemFont,
+                    questionMark.value),
 
                 Button(
                     title("Share your current room to twitter"),
@@ -7641,6 +7673,7 @@ class ToolBar extends EventTarget {
                     onClick(_(leaveEvt)),
                     subelStyle,
                     systemFont,
+                    style({ marginLeft: "1em" }),
                     Run("Leave"))),
 
             this.hideButton = Button(
@@ -7872,31 +7905,34 @@ class FormDialog extends EventTarget {
     constructor(name, ...rest) {
         super();
 
+        const formStyle = style({
+            position: "absolute",
+            display: "grid",
+            gridTemplateColumns: "5fr 1fr 1fr",
+            gridTemplateRows: "auto auto 1fr auto auto",
+            overflowY: "hidden",
+            width: "50%",
+            left: "25%",
+            top: "3em",
+            maxWidth: "900px",
+            maxHeight: "calc(100% - 4em)",
+            backgroundColor: "white",
+            padding: "1em 1em 3em 1em",
+            margin: "auto",
+            borderRadius: "5px",
+            border: "solid 4px black",
+            boxShadow: "rgba(0, 0, 0, .4) 10px 10px 20px",
+            fontFamily: systemFamily
+        });
+
         this.element = document.getElementById(name) ||
             Div(
                 id(name),
-                style({
-                    position: "absolute",
-                    display: "grid",
-                    gridTemplateColumns: "5fr 1fr 1fr",
-                    gridTemplateRows: "auto auto 1fr auto auto",
-                    overflowY: "hidden",
-                    width: "50%",
-                    left: "25%",
-                    top: "3em",
-                    maxWidth: "900px",
-                    maxHeight: "calc(100% - 4em)",
-                    backgroundColor: "white",
-                    padding: "1em 1em 3em 1em",
-                    margin: "auto",
-                    borderRadius: "5px",
-                    border: "solid 4px black",
-                    boxShadow: "rgba(0, 0, 0, .4) 10px 10px 20px"
-                }),
-                systemFont,
                 H1(
                     style({ gridArea: "1/1/2/4" }),
                     ...rest));
+
+        formStyle.apply(this.element);
 
         this.header = this.element.querySelector(".header")
             || this.element.appendChild(
@@ -7941,7 +7977,7 @@ class FormDialog extends EventTarget {
     }
 
     toggleOpen() {
-        this.element.toggleOpen();
+        this.element.toggleOpen("grid");
     }
 }
 
@@ -8188,7 +8224,7 @@ class OptionsForm extends FormDialog {
             this.confirmButton = Button(
                 className("confirm"),
                 systemFont,
-                "OK",
+                "Close",
                 onClick(() => this.hide())));
 
         const showPanel = (p) =>
@@ -8570,7 +8606,6 @@ class EmojiForm extends FormDialog {
         this.footer.append(
 
             this.confirmButton = Button(className("confirm"),
-                style({ gridArea: "4/2" }),
                 systemFont,
                 "OK",
                 onClick(() => {
@@ -8586,7 +8621,6 @@ class EmojiForm extends FormDialog {
                 })),
 
             Button(className("cancel"),
-                style({ gridArea: "4/3" }),
                 systemFont,
                 "Cancel",
                 onClick(() => {
@@ -8795,6 +8829,75 @@ class LoginForm extends FormDialog {
     }
 }
 
+function instructions() {
+    return [
+        Aside(
+            style({
+                border: "dashed 2px darkred",
+                backgroundColor: "wheat",
+                borderRadius: "5px",
+                padding: "0.5em"
+            }),
+            Strong("Note: "),
+            "Calla is built on top of ",
+            A(
+                href("https://jitsi.org"),
+                target("_blank"),
+                rel("noopener"),
+                "Jitsi Meet"),
+            ". Jitsi does not support iPhones and iPads."),
+        UL(
+            LI(
+                Strong("Be careful in picking your room name"),
+                ", if you don't want randos to join. Traffic is low right now, but you never know."),
+            LI(
+                "Try to ",
+                Strong("pick a unique user name"),
+                ". A lot of people use \"Test\" and then there are a bunch of people with the same name running around."),
+            LI(
+                Strong("Open the Options view"),
+                " to set your avatar, or to change your microphone settings."),
+            LI(
+                Strong("Click on the map"),
+                " to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls."),
+            LI(
+                "Or, ",
+                Strong("use the arrow keys"),
+                " on your keyboard to move."),
+            LI(
+                Strong("Click on yourself"),
+                " to open a list of Emoji. Select an Emoji to float it out into the map."),
+            LI(
+                Strong("Hit the E key"),
+                " to re-emote with your last selected Emoji."),
+            LI(
+                "You can ",
+                Strong("roll your mouse wheel"),
+                " or ",
+                Strong("pinch your touchscreen"),
+                " to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in their Avatar."),
+            LI(
+                "You can ",
+                Strong(" click the Pause button(⏸️)"),
+                " in the upper-right corner to show the default Jitsi Meet interface, in case you need to change any settings there (the game view blocks clicks on the Jitsi Meet interface)."))];
+}
+
+class InstructionsForm extends FormDialog {
+
+    constructor() {
+        super("instructions", "Instructions");
+
+        this.content.append(...instructions());
+
+        this.footer.append(
+            Button(
+                systemFont,
+                style({ gridArea: "4/2" }),
+                "Close",
+                onClick(() => this.hide())));
+    }
+}
+
 // TODO
 
 function init(host, JitsiClientClass) {
@@ -8804,22 +8907,20 @@ function init(host, JitsiClientClass) {
         toolbar = new ToolBar(),
         options = new OptionsForm(),
         emoji = new EmojiForm(),
+        instructions = new InstructionsForm(),
         forExport = {
-            game,
-            login,
             client,
+            game,
             toolbar,
             options,
-            emoji
+            emoji,
+            login,
+            instructions
         };
 
-    document.body.append(
-        client.element,
-        game.element,
-        toolbar.element,
-        options.element,
-        emoji.element,
-        login.element);
+    for (let e of Object.values(forExport)) {
+        document.body.append(e.element);
+    }
 
     game.drawHearing = options.drawHearing;
     game.audioDistanceMin = options.minAudioDistance;
@@ -8836,15 +8937,30 @@ function init(host, JitsiClientClass) {
         toolbar.hide();
         options.hide();
         emoji.hide();
+        instructions.hide();
         login.show();
     }
 
+    async function withEmojiSelection(callback) {
+        if (!emoji.isOpen()) {
+            toolbar.optionsButton.lock();
+            toolbar.instructionsButton.lock();
+            options.hide();
+            instructions.hide();
+            const e = await emoji.selectAsync();
+            if (!!e) {
+                callback(e);
+            }
+            toolbar.optionsButton.unlock();
+            toolbar.instructionsButton.unlock();
+        }
+    }
+
     async function selectEmojiAsync() {
-        const e = await emoji.selectAsync();
-        if (!!e) {
+        await withEmojiSelection((e) => {
             game.emote(game.me.id, e);
             toolbar.setEmojiButton(game.keyEmote, e);
-        }
+        });
     }
 
     function setAudioProperties() {
@@ -8903,7 +9019,17 @@ function init(host, JitsiClientClass) {
     });
 
     toolbar.addEventListener("toggleoptions", () => {
-        options.toggleOpen();
+        if (!emoji.isOpen()) {
+            instructions.hide();
+            options.toggleOpen();
+        }
+    });
+
+    toolbar.addEventListener("toggleinstructions", () => {
+        if (!emoji.isOpen()) {
+            options.hide();
+            instructions.toggleOpen();
+        }
     });
 
 
@@ -8913,11 +9039,10 @@ function init(host, JitsiClientClass) {
 
 
     options.addEventListener("selectavatar", async () => {
-        const e = await emoji.selectAsync();
-        if (!!e) {
+        withEmojiSelection((e) => {
             game.me.avatarEmoji = e;
             options.setAvatarEmoji(e);
-        }
+        });
     });
 
     options.addEventListener("avatarurlchanged", () => {
