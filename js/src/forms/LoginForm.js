@@ -3,6 +3,7 @@
 import { FormDialog } from "./FormDialog.js";
 
 import { SelectBox } from "../html/tags.js";
+import { onInput } from "../html/evts.js";
 
 const loginEvt = new Event("login"),
     defaultRooms = new Map([
@@ -10,7 +11,7 @@ const loginEvt = new Event("login"),
         ["island", "Island"],
         ["alxcc", "Alexandria Code & Coffee"],
         ["vurv", "Vurv"]]),
-    _state = new Map();
+    selfs = new Map();
 
 export class LoginForm extends FormDialog {
     constructor() {
@@ -21,9 +22,7 @@ export class LoginForm extends FormDialog {
             connecting: false,
             connected: false,
             validate: () => {
-                const canConnect = (this.roomSelectMode
-                    ? this.roomSelect.selectedIndex >= 0
-                    : this.roomInput.value.length > 0)
+                const canConnect = this.roomName.length > 0
                     && this.userName.length > 0;
 
                 this.connectButton.setLocked(!this.ready
@@ -41,14 +40,19 @@ export class LoginForm extends FormDialog {
             }
         });
 
-        _state.set(this, self);
+        selfs.set(this, self);
 
         this.roomLabel = this.element.querySelector("label[for='roomSelector']");
+
         this.roomSelect = SelectBox(
             "No rooms available",
             v => v,
             k => defaultRooms.get(k),
             this.element.querySelector("#roomSelector"));
+        this.roomSelect.addEventListener("input", () => {
+            self.validate();
+        });
+
         this.roomInput = this.element.querySelector("#roomName");
         this.createRoomButton = this.element.querySelector("#createNewRoom");
         this.userNameInput = this.element.querySelector("#userName")
@@ -56,9 +60,11 @@ export class LoginForm extends FormDialog {
 
         this.roomInput.addEventListener("input", self.validate);
         this.userNameInput.addEventListener("input", self.validate);
+
         this.createRoomButton.addEventListener("click", () => {
             this.roomSelectMode = !this.roomSelectMode;
         });
+
         this.connectButton.addEventListener("click", () => {
             this.connecting = true;
             this.dispatchEvent(loginEvt);
@@ -77,7 +83,7 @@ export class LoginForm extends FormDialog {
     }
 
     set roomSelectMode(value) {
-        const self = _state.get(this);
+        const self = selfs.get(this);
         this.roomSelect.setOpen(value);
         this.roomInput.setOpen(!value);
         this.createRoomButton.innerHTML = value
@@ -96,12 +102,30 @@ export class LoginForm extends FormDialog {
         self.validate();
     }
 
-    get selectedRoom() {
+    get roomName() {
         const room = this.roomSelectMode
             ? this.roomSelect.selectedValue
             : this.roomInput.value;
 
-        return room.toLocaleLowerCase();
+        return room && room.toLocaleLowerCase() || "";
+    }
+
+    set roomName(v) {
+        if (v === null
+            || v === undefined
+            || v.length === 0) {
+            v = defaultRooms.keys().next();
+        }
+
+        this.roomInput.value = v;
+        this.roomSelect.selectedValue = v;
+        this.roomSelectMode = this.roomSelect.contains(v);
+        selfs.get(this).validate();
+    }
+
+    set userName(value) {
+        this.userNameInput.value = value;
+        selfs.get(this).validate();
     }
 
     get userName() {
@@ -118,34 +142,34 @@ export class LoginForm extends FormDialog {
     }
 
     get ready() {
-        const self = _state.get(this);
+        const self = selfs.get(this);
         return self.ready;
     }
 
     set ready(v) {
-        const self = _state.get(this);
+        const self = selfs.get(this);
         self.ready = v;
         self.validate();
     }
 
     get connecting() {
-        const self = _state.get(this);
+        const self = selfs.get(this);
         return self.connecting;
     }
 
     set connecting(v) {
-        const self = _state.get(this);
+        const self = selfs.get(this);
         self.connecting = v;
         self.validate();
     }
 
     get connected() {
-        const self = _state.get(this);
+        const self = selfs.get(this);
         return self.connected;
     }
 
     set connected(v) {
-        const self = _state.get(this);
+        const self = selfs.get(this);
         self.connected = v;
         this.connecting = false;
     }

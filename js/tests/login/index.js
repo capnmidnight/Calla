@@ -13,7 +13,7 @@
 
     loginForm.addEventListener("login", () => {
         const user = loginForm.userName,
-            room = loginForm.selectedRoom;
+            room = loginForm.roomName;
 
         console.log(`Logging in: User ${user}, Room ${room}.`);
         setTimeout(() => {

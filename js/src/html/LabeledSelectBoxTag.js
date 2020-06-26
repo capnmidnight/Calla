@@ -56,6 +56,14 @@ export class LabeledSelectBoxTag extends HtmlCustomTag {
         this.select.selectedValue = v;
     }
 
+    indexOf(value) {
+        return this.select.indexOf(value);
+    }
+
+    contains(value) {
+        return this.select.contains(value);
+    }
+
     addEventListener(name, callback, opts) {
         this.select.addEventListener(name, callback, opts);
     }

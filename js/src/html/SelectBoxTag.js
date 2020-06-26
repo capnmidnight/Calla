@@ -98,11 +98,19 @@ export class SelectBoxTag extends HtmlCustomTag {
         }
     }
 
-    set selectedValue(value) {
-        this.selectedIndex = _values.get(this)
+    indexOf(value) {
+        return _values.get(this)
             .findIndex(v =>
                 value !== null
                 && this.makeID(value) === this.makeID(v));
+    }
+
+    set selectedValue(value) {
+        this.selectedIndex = this.indexOf(value);
+    }
+
+    contains(value) {
+        return this.indexOf(value) >= 0.
     }
 
     addEventListener(name, callback, opts) {

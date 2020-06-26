@@ -46,8 +46,7 @@ import { src, style } from "../../src/html/attrs.js";
         }
     });
 
-    login.userNameInput.value = "Sean";
-    login.userNameInput.dispatchEvent(new Event("input"));
+    login.userName = "Sean";
     login.connectButton.click();
 
     function spawnUsers() {

@@ -150,8 +150,11 @@ export class OptionsForm extends FormDialog {
                         "drawHearing",
                         "checkbox",
                         "Draw hearing range: ",
-                        onInput(_(toggleDrawHearingEvt))),
-                    this.minAudioInput = LabeledInput(
+                        onInput(() => {
+                            this.drawHearing = !this.drawHearing;
+                            this.dispatchEvent(toggleDrawHearingEvt);
+                        })),
+                    this.audioMinInput = LabeledInput(
                         "minAudio",
                         "number",
                         "Min: ",
@@ -160,7 +163,7 @@ export class OptionsForm extends FormDialog {
                         max(100),
                         numberWidthStyle,
                         audioPropsChanged),
-                    this.maxAudioInput = LabeledInput(
+                    this.audioMaxInput = LabeledInput(
                         "maxAudio",
                         "number",
                         "Min: ",
@@ -169,7 +172,7 @@ export class OptionsForm extends FormDialog {
                         max(100),
                         numberWidthStyle,
                         audioPropsChanged),
-                    this.rolloffInput = LabeledInput(
+                    this.audioRolloffInput = LabeledInput(
                         "rollof",
                         "number",
                         "Rollof: ",
@@ -373,11 +376,11 @@ export class OptionsForm extends FormDialog {
         this.gpButtonToggleAudio.setLocked(disable);
     }
 
-    get currentGamepadIndex() {
+    get gamepadIndex() {
         return this.gpSelect.selectedIndex;
     }
 
-    set currentGamepadIndex(value) {
+    set gamepadIndex(value) {
         this.gpSelect.selectedIndex = value;
     }
 
@@ -390,8 +393,8 @@ export class OptionsForm extends FormDialog {
         this.drawHearingCheck.checked = value;
     }
 
-    get minAudioDistance() {
-        const value = parseFloat(this.minAudioInput.value);
+    get audioDistanceMin() {
+        const value = parseFloat(this.audioMinInput.value);
         if (isGoodNumber(value)) {
             return value;
         }
@@ -400,19 +403,19 @@ export class OptionsForm extends FormDialog {
         }
     }
 
-    set minAudioDistance(value) {
+    set audioDistanceMin(value) {
         if (isGoodNumber(value)
             && value > 0) {
-            this.minAudioDistance.value = value;
-            if (this.minAudioDistance > this.maxAudioDistance) {
-                this.maxAudioDistance = this.minAudioDistance;
+            this.audioMinInput.value = value;
+            if (this.audioDistanceMin > this.audioDistanceMax) {
+                this.audioDistanceMax = this.audioDistanceMin;
             }
         }
     }
 
 
-    get maxAudioDistance() {
-        const value = parseFloat(this.maxAudioInput.value);
+    get audioDistanceMax() {
+        const value = parseFloat(this.audioMaxInput.value);
         if (isGoodNumber(value)) {
             return value;
         }
@@ -421,19 +424,19 @@ export class OptionsForm extends FormDialog {
         }
     }
 
-    set maxAudioDistance(value) {
+    set audioDistanceMax(value) {
         if (isGoodNumber(value)
             && value > 0) {
-            this.maxAudioDistance.value = value;
-            if (this.minAudioDistance > this.maxAudioDistance) {
-                this.minAudioDistance = this.maxAudioDistance;
+            this.audioMaxInput.value = value;
+            if (this.audioDistanceMin > this.audioDistanceMax) {
+                this.audioDistanceMin = this.audioDistanceMax;
             }
         }
     }
 
 
     get audioRolloff() {
-        const value = parseFloat(this.rolloffInput.value);
+        const value = parseFloat(this.audioRolloffInput.value);
         if (isGoodNumber(value)) {
             return value;
         }
@@ -445,7 +448,7 @@ export class OptionsForm extends FormDialog {
     set audioRolloff(value) {
         if (isGoodNumber(value)
             && value > 0) {
-            this.audioRolloff.value = value;
+            this.audioRolloffInput.value = value;
         }
     }
 

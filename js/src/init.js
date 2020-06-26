@@ -10,6 +10,7 @@ import { OptionsForm } from "./forms/OptionsForm.js";
 import { EmojiForm } from "./forms/EmojiForm.js";
 import { LoginForm } from "./forms/LoginForm.js";
 import { InstructionsForm } from "./forms/InstructionsForm.js";
+import { Settings } from "./Settings.js";
 
 export function init(host, JitsiClientClass) {
     const game = new Game(),
@@ -19,6 +20,7 @@ export function init(host, JitsiClientClass) {
         options = new OptionsForm(),
         emoji = new EmojiForm(),
         instructions = new InstructionsForm(),
+        settings = new Settings(),
         forExport = {
             client,
             game,
@@ -26,20 +28,28 @@ export function init(host, JitsiClientClass) {
             options,
             emoji,
             login,
-            instructions
+            instructions,
+            settings
         };
 
     for (let e of Object.values(forExport)) {
-        document.body.append(e.element);
+        if (e.element) {
+            document.body.append(e.element);
+        }
     }
 
-    game.drawHearing = options.drawHearing;
-    game.audioDistanceMin = options.minAudioDistance;
-    game.audioDistanceMax = options.maxAudioDistance;
-    game.fontSize = options.fontSize;
-    game.targetCameraZ = toolbar.zoom;
-
     refreshGamepads();
+
+    options.drawHearing = game.drawHearing = settings.drawHearing;
+    options.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
+    options.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;
+    options.audioRolloff = settings.audioRolloff;
+    options.fontSize = game.fontSize = settings.fontSize;
+    options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
+    toolbar.zoom = game.cameraZ = game.targetCameraZ = settings.zoom;
+    login.userName = settings.userName;
+    login.roomName = settings.roomName;
+
     showLogin();
 
     function showLogin() {
@@ -78,11 +88,9 @@ export function init(host, JitsiClientClass) {
         client.setAudioProperties(
             window.location.origin,
             0.125,
-            options.minAudioDistance,
-            options.maxAudioDistance,
-            options.audioRolloff);
-        game.audioDistanceMin = options.minAudioDistance;
-        game.audioDistanceMax = options.maxAudioDistance;
+            settings.audioDistanceMin = game.audioDistanceMin = options.audioDistanceMin,
+            settings.audioDistanceMax = game.audioDistanceMax = options.audioDistanceMax,
+            settings.audioRolloff = options.audioRolloff);
     }
 
     function refreshGamepads() {
@@ -114,7 +122,7 @@ export function init(host, JitsiClientClass) {
     });
 
     toolbar.addEventListener("zoomchanged", () => {
-        game.targetCameraZ = toolbar.zoom;
+        settings.zoom = game.targetCameraZ = toolbar.zoom;
     });
 
     toolbar.addEventListener("tweet", () => {
@@ -145,7 +153,10 @@ export function init(host, JitsiClientClass) {
 
 
     login.addEventListener("login", () => {
-        client.joinAsync(host, login.selectedRoom, login.userName);
+        client.joinAsync(
+            host,
+            settings.roomName = login.roomName,
+            settings.userName = login.userName);
     });
 
 
@@ -168,11 +179,11 @@ export function init(host, JitsiClientClass) {
     });
 
     options.addEventListener("toggledrawhearing", () => {
-        game.drawHearing = options.drawHearing = !options.drawHearing;
+        settings.drawHearing = game.drawHearing = options.drawHearing;
     });
 
     options.addEventListener("fontsizechanged", () => {
-        game.fontSize = options.fontSize;
+        settings.fontSize = game.fontSize = options.fontSize;
     });
 
     options.addEventListener("audioinputchanged", () => {
@@ -188,7 +199,7 @@ export function init(host, JitsiClientClass) {
     });
 
     options.addEventListener("gamepadchanged", () => {
-        game.gamepadIndex = options.currentGamepadIndex;
+        settings.gamepadIndex = game.gamepadIndex = options.gamepadIndex;
     });
 
 
@@ -232,7 +243,7 @@ export function init(host, JitsiClientClass) {
     game.addEventListener("emojineeded", selectEmojiAsync);
 
     game.addEventListener("zoomchanged", () => {
-        toolbar.zoom = game.targetCameraZ;
+        settings.zoom = toolbar.zoom = game.targetCameraZ;
     });
 
     client.addEventListener("videoConferenceJoined", async (evt) => {
