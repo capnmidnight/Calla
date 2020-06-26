@@ -454,6 +454,20 @@ export class Game extends EventTarget {
         }
     }
 
+    setAvatarEmoji(evt) {
+        //evt = {
+        //  id: string, // the id of the participant that changed his avatar.
+        //  value: string // the emoji text to use as the avatar.
+        //  desc: string // a description of the emoji
+        //}
+        if (!!evt) {
+            const user = this.userLookup[evt.id];
+            if (!!user) {
+                user.avatarEmoji = evt;
+            }
+        }
+    }
+
     async start(evt) {
         //evt = {
         //    roomName: "string", // the room name of the conference

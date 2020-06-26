@@ -63,7 +63,7 @@ export class User extends EventTarget {
             this.avatarImage = null;
         }
 
-        this.avatarEmoji = evt.avatarEmoji;
+        this.avatarEmoji = evt._avatarEmoji;
         this.isInitialized = true;
     }
 

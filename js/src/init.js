@@ -153,6 +153,7 @@ export function init(host, JitsiClientClass) {
         withEmojiSelection((e) => {
             game.me.avatarEmoji = e;
             options.setAvatarEmoji(e);
+            client.setAvatarEmoji(e);
         });
     });
 
@@ -321,6 +322,10 @@ export function init(host, JitsiClientClass) {
 
     client.addEventListener("emote", (evt) => {
         game.emote(evt.id, evt);
+    });
+
+    client.addEventListener("setAvatarEmoji", (evt) => {
+        game.setAvatarEmoji(evt);
     });
 
     client.addEventListener("audioActivity", (evt) => {

@@ -23,7 +23,8 @@ const APP_FINGERPRINT
         "participantLeft",
         "avatarChanged",
         "displayNameChange",
-        "audioActivity"
+        "audioActivity",
+        "setAvatarEmoji"
     ];
 
 // Manages communication between Jitsi Meet and Calla
@@ -292,6 +293,12 @@ export class BaseJitsiClient extends EventTarget {
 
     userInitResponse(toUserID, fromUserState) {
         this.txGameData(toUserID, "userInitResponse", fromUserState);
+    }
+
+    setAvatarEmoji(emoji) {
+        for (let toUserID of this.otherUsers.keys()) {
+            this.txGameData(toUserID, "setAvatarEmoji", emoji);
+        }
     }
 
     emote(emoji) {
