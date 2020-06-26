@@ -37,7 +37,8 @@ window.addEventListener("message", (msg) => {
             if (isJitsiHax && !!manager[evt.command]) {
                 manager[evt.command](evt.value);
                 if (evt.command === "setAudioProperties") {
-                    origin = evt.origin;
+                    origin = evt.value.origin;
+                    console.log(origin);
                 }
             }
         }

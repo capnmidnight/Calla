@@ -2,7 +2,7 @@
 import { tag } from "../html/tag.js";
 import { Span } from "../html/tags.js";
 import { CallaUserEvent } from '../events.js';
-import { AudioManager } from '../audio/AudioManager.js';
+import { AudioManager as AudioClient } from '../audio/AudioManager.js';
 
 
 
@@ -38,7 +38,7 @@ export class LibJitsiMeetClient extends EventTarget {
         this._connection = { value: null };
         this._room = { value: null };
         this.updater = this._updater.bind(this);
-        this.audioClient = new AudioManager();
+        this.audioClient = new AudioClient();
         Object.freeze(this);
     }
 

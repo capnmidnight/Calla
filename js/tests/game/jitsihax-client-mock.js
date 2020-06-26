@@ -1,7 +1,8 @@
 ﻿import { CallaEvent } from "../../src/events.js";
 import { BaseJitsiClient } from "../../src/jitsi/BaseJitsiClient.js";
 import { userNumber } from "../client-tests/userNumber.js";
-import { AudioManager } from "../../src/audio/AudioManager.js";
+import "../../src/audio/ExternalJitsiAudioServer.js";
+import { ExternalJitsiAudioClient as AudioClient } from "../../src/audio/ExternalJitsiAudioClient.js";
 
 export class MockJitsiClient extends BaseJitsiClient {
     constructor() {
@@ -34,11 +35,7 @@ export class MockJitsiClient extends BaseJitsiClient {
             videoInput: null
         };
 
-        window.addEventListener("message", (evt) => {
-            this.rxJitsiHax(evt);
-        });
-
-        this.audioClient = new AudioManager();
+        this.audioClient = new AudioClient("jisti.calla.chat", window.location.origin, window);
     }
 
     async initializeAsync(host, roomName) {

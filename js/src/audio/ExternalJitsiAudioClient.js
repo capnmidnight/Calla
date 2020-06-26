@@ -1,4 +1,21 @@
 ﻿import { CallaEvent } from "../events.js";
+import { copy } from "../html/evts.js";
+
+const evtSetPosition = Object.seal({
+    id: null,
+    x: null,
+    y: null
+}),
+    evtSetAudioProperties = Object.seal({
+        origin: null,
+        transitionTime: null,
+        minDistance: null,
+        maxDistance: null,
+        rolloff: null
+    }),
+    evtRemoveUser = Object.seal({
+        id: null
+    });
 
 export class ExternalJitsiAudioClient extends EventTarget {
     constructor(host, apiOrigin, apiWindow) {
@@ -20,7 +37,12 @@ export class ExternalJitsiAudioClient extends EventTarget {
                 command: command,
                 value: value
             };
-            this.apiWindow.postMessage(JSON.stringify(evt), this.apiOrigin);
+            try {
+                this.apiWindow.postMessage(JSON.stringify(evt), this.apiOrigin);
+            }
+            catch (exp) {
+                console.error(exp);
+            }
         }
     }
 
@@ -41,18 +63,18 @@ export class ExternalJitsiAudioClient extends EventTarget {
     }
 
     setLocalPosition(evt) {
-        this.txJitsiHax("setLocalPosition", evt);
+        this.txJitsiHax("setLocalPosition", copy(evtSetPosition, evt));
     }
 
     setUserPosition(evt) {
-        this.txJitsiHax("setUserPosition", evt);
+        this.txJitsiHax("setUserPosition", copy(evtSetPosition, evt));
     }
 
     setAudioProperties(evt) {
-        this.txJitsiHax("setAudioProperties", evt);
+        this.txJitsiHax("setAudioProperties", copy(evtSetAudioProperties, evt));
     }
 
     removeUser(evt) {
-        this.txJitsiHax("removeUser", evt);
+        this.txJitsiHax("removeUser", copy(evtRemoveUser, evt));
     }
 }
