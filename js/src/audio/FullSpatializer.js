@@ -1,10 +1,10 @@
-﻿import { BaseSpatializer } from "./BaseSpatializer.js";
+﻿import { BaseWebAudioSpatializer } from "./BaseWebAudioSpatializer.js";
 import { clamp, project } from "../math.js";
 
-export class FullSpatializer extends BaseSpatializer {
+export class FullSpatializer extends BaseWebAudioSpatializer {
 
-    constructor(destination, audio, analyser) {
-        super(destination, audio, analyser, destination.audioContext.createPanner());
+    constructor(destination, audio, bufferSize) {
+        super(destination, audio, bufferSize, destination.audioContext.createPanner());
 
         this.node.panningModel = "HRTF";
         this.node.distanceModel = "inverse";
@@ -15,6 +15,8 @@ export class FullSpatializer extends BaseSpatializer {
         this.node.coneOuterGain = 0;
         this.node.positionY.setValueAtTime(0, this.destination.audioContext.currentTime);
         this.wasMuted = false;
+
+        Object.seal(this);
     }
 
     setAudioProperties(evt) {
@@ -39,6 +41,8 @@ export class FullSpatializer extends BaseSpatializer {
     }
 
     update() {
+        super.update();
+
         if (!!this.source) {
             const lx = this.destination.positionX,
                 ly = this.destination.positionY,
