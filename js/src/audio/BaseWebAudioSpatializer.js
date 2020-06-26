@@ -29,7 +29,7 @@ function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz, bufferSiz
 
 export class BaseWebAudioSpatializer extends BaseSpatializer {
 
-    constructor(destination, audio, bufferSize, drain) {
+    constructor(destination, audio, bufferSize, inNode, outNode) {
         super(destination, audio);
 
         this.wasActive = false;
@@ -41,14 +41,35 @@ export class BaseWebAudioSpatializer extends BaseSpatializer {
         this.analyser.fftSize = 2 * this.bufferSize;
         this.analyser.smoothingTimeConstant = 0.2;
 
-        this.node = drain;
-        this.node.connect(this.destination.audioContext.destination);
+        this.inNode = inNode;
+
+        this.outNode = outNode || inNode;
+        this.outNode.connect(this.destination.audioContext.destination);
+
+        if (this.inNode !== this.outNode) {
+            this.inNode.connect(this.outNode);
+        }
 
         this.source = null;
+        this.position = null;
+    }
+
+    setTarget(evt) {
+        this.position.setTarget(evt.x, evt.y, this.destination.audioContext.currentTime, this.destination.transitionTime);
+    }
+
+    get positionX() {
+        return this.position.x;
+    }
+
+    get positionY() {
+        return this.position.y;
     }
 
     update() {
         super.update();
+
+        this.position.update(this.destination.audioContext.currentTime);
 
         if (!this.source) {
             try {
@@ -58,7 +79,7 @@ export class BaseWebAudioSpatializer extends BaseSpatializer {
 
                 this.source = this.destination.audioContext.createMediaStreamSource(stream);
                 this.source.connect(this.analyser);
-                this.source.connect(this.node);
+                this.source.connect(this.inNode);
             }
             catch (exp) {
                 console.warn("Source isn't available yet. Will retry in a moment. Reason: ", exp);
@@ -88,12 +109,18 @@ export class BaseWebAudioSpatializer extends BaseSpatializer {
     dispose() {
         if (!!this.source) {
             this.source.disconnect(this.analyser);
-            this.source.disconnect(this.node);
+            this.source.disconnect(this.inNode);
             this.source = null;
         }
 
-        this.node.disconnect(this.destination.audioContext.destination);
-        this.node = null;
+        this.outNode.disconnect(this.destination.audioContext.destination);
+
+        if (this.inNode !== this.outNode) {
+            this.inNode.disconnect(this.outNode);
+        }
+
+        this.outNode = null;
+        this.inNode = null;
         this.analyser = null;
         this.buffer = null;
 

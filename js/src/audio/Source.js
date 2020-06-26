@@ -1,4 +1,5 @@
 ﻿import { FullSpatializer } from "./FullSpatializer.js";
+import { StereoSpatializer } from "./StereoSpatializer.js";
 
 const audioActivityEvt = Object.assign(new Event("audioActivity", {
     id: null,
@@ -19,7 +20,7 @@ export class Source extends EventTarget {
         this.audio = audio;
         this.audio.volume = 0;
 
-        this.spatializer = new FullSpatializer(this.destination, this.audio, bufferSize);
+        this.spatializer = new StereoSpatializer(this.destination, this.audio, bufferSize);
         this.spatializer.addEventListener("audioActivity", (evt) => {
             audioActivityEvt.isActive = evt.isActive;
             this.dispatchEvent(audioActivityEvt);
