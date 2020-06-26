@@ -9,6 +9,7 @@ import { ToolBar } from "./forms/ToolBar.js";
 import { OptionsForm } from "./forms/OptionsForm.js";
 import { EmojiForm } from "./forms/EmojiForm.js";
 import { LoginForm } from "./forms/LoginForm.js";
+import { InstructionsForm } from "./forms/InstructionsForm.js";
 
 export function init(host, JitsiClientClass) {
     const game = new Game(),
@@ -17,22 +18,20 @@ export function init(host, JitsiClientClass) {
         toolbar = new ToolBar(),
         options = new OptionsForm(),
         emoji = new EmojiForm(),
+        instructions = new InstructionsForm(),
         forExport = {
-            game,
-            login,
             client,
+            game,
             toolbar,
             options,
-            emoji
+            emoji,
+            login,
+            instructions
         };
 
-    document.body.append(
-        client.element,
-        game.element,
-        toolbar.element,
-        options.element,
-        emoji.element,
-        login.element);
+    for (let e of Object.values(forExport)) {
+        document.body.append(e.element);
+    }
 
     game.drawHearing = options.drawHearing;
     game.audioDistanceMin = options.minAudioDistance;
@@ -49,15 +48,30 @@ export function init(host, JitsiClientClass) {
         toolbar.hide();
         options.hide();
         emoji.hide();
+        instructions.hide();
         login.show();
     }
 
+    async function withEmojiSelection(callback) {
+        if (!emoji.isOpen()) {
+            toolbar.optionsButton.lock();
+            toolbar.instructionsButton.lock();
+            options.hide();
+            instructions.hide();
+            const e = await emoji.selectAsync();
+            if (!!e) {
+                callback(e);
+            }
+            toolbar.optionsButton.unlock();
+            toolbar.instructionsButton.unlock();
+        }
+    }
+
     async function selectEmojiAsync() {
-        const e = await emoji.selectAsync();
-        if (!!e) {
+        await withEmojiSelection((e) => {
             game.emote(game.me.id, e);
             toolbar.setEmojiButton(game.keyEmote, e);
-        }
+        });
     }
 
     function setAudioProperties() {
@@ -116,7 +130,17 @@ export function init(host, JitsiClientClass) {
     });
 
     toolbar.addEventListener("toggleoptions", () => {
-        options.toggleOpen();
+        if (!emoji.isOpen()) {
+            instructions.hide();
+            options.toggleOpen();
+        }
+    });
+
+    toolbar.addEventListener("toggleinstructions", () => {
+        if (!emoji.isOpen()) {
+            options.hide();
+            instructions.toggleOpen();
+        }
     });
 
 
@@ -126,11 +150,10 @@ export function init(host, JitsiClientClass) {
 
 
     options.addEventListener("selectavatar", async () => {
-        const e = await emoji.selectAsync();
-        if (!!e) {
+        withEmojiSelection((e) => {
             game.me.avatarEmoji = e;
             options.setAvatarEmoji(e);
-        }
+        });
     });
 
     options.addEventListener("avatarurlchanged", () => {

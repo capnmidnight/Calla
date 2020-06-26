@@ -1,40 +1,8 @@
-﻿import {
-    Button,
-    Div,
-    Img,
-    Input,
-    KBD,
-    Label,
-    Span
-} from "../html/tags.js";
-import {
-    alt,
-    htmlFor,
-    id,
-    min,
-    max,
-    role,
-    src,
-    step,
-    style,
-    title,
-    type,
-    value,
-    systemFont
-} from "../html/attrs.js";
-import {
-    onClick,
-    onInput
-} from "../html/evts.js";
+﻿import { downwardsButton, gear, mutedSpeaker, pauseButton, playButton, speakerHighVolume, questionMark } from "../emoji.js";
+import { alt, htmlFor, id, max, min, role, src, step, style, systemFont, title, type, value } from "../html/attrs.js";
+import { onClick, onInput } from "../html/evts.js";
+import { Button, Div, Img, Input, KBD, Label, Span } from "../html/tags.js";
 
-import {
-    mutedSpeaker,
-    speakerHighVolume,
-    gear,
-    downwardsButton,
-    pauseButton,
-    playButton
-} from "../emoji.js";
 
 function Run(txt) {
     return Span(
@@ -50,6 +18,7 @@ const toggleAudioEvt = new Event("toggleaudio"),
     tweetEvt = new Event("tweet"),
     leaveEvt = new Event("leave"),
     toggleUIEvt = new Event("toggleui"),
+    toggleInstructionsEvt = new Event("toggleinstructions"),
     subelStyle = style({
         display: "inline-flex",
         margin: "0 0.5em 0 0"
@@ -123,12 +92,19 @@ export class ToolBar extends EventTarget {
                         systemFont,
                         onInput(_(zoomChangedEvt)))),
 
-                Button(
+                this.optionsButton = Button(
                     title("Show/hide options"),
                     onClick(_(toggleOptionsEvt)),
                     subelStyle,
                     systemFont,
                     gear.value),
+
+                this.instructionsButton = Button(
+                    title("Show/hide instructions"),
+                    onClick(_(toggleInstructionsEvt)),
+                    subelStyle,
+                    systemFont,
+                    questionMark.value),
 
                 Button(
                     title("Share your current room to twitter"),
@@ -146,6 +122,7 @@ export class ToolBar extends EventTarget {
                     onClick(_(leaveEvt)),
                     subelStyle,
                     systemFont,
+                    style({ marginLeft: "1em" }),
                     Run("Leave"))),
 
             this.hideButton = Button(

@@ -213,7 +213,7 @@ export class OptionsForm extends FormDialog {
             this.confirmButton = Button(
                 className("confirm"),
                 systemFont,
-                "OK",
+                "Close",
                 onClick(() => this.hide())));
 
         const showPanel = (p) =>

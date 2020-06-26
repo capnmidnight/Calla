@@ -29,3 +29,4 @@ toolbar.addEventListener("tweet", echo);
 toolbar.addEventListener("leave", echo);
 toolbar.addEventListener("toggleui", echo);
 toolbar.addEventListener("toggleoptions", echo);
+toolbar.addEventListener("toggleinstructions", echo);

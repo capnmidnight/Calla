@@ -4830,28 +4830,50 @@ export const medieval = [
     { value: "\u{269C}\u{FE0F}", desc: "Fleur-de-lis" },
     { value: "\u{1FA96}", desc: "Military Helmet" }
 ];
+
+export const doubleExclamationMark = { value: "\u{203C}\u{FE0F}", desc: "Double Exclamation Mark" };
+export const interrobang = { value: "\u{2049}\u{FE0F}", desc: "Exclamation Question Mark" };
+export const information = { value: "\u{2139}\u{FE0F}", desc: "Information" };
+export const circledM = { value: "\u{24C2}\u{FE0F}", desc: "Circled M" };
+export const checkMarkButton = { value: "\u{2705}", desc: "Check Mark Button" };
+export const checkMark = { value: "\u{2714}\u{FE0F}", desc: "Check Mark" };
+export const eightSpokedAsterisk = { value: "\u{2733}\u{FE0F}", desc: "Eight-Spoked Asterisk" };
+export const crossMark = { value: "\u{274C}", desc: "Cross Mark" };
+export const crossMarkButton = { value: "\u{274E}", desc: "Cross Mark Button" };
+export const questionMark = { value: "\u{2753}", desc: "Question Mark" };
+export const whiteQuestionMark = { value: "\u{2754}", desc: "White Question Mark" };
+export const whiteExclamationMark = { value: "\u{2755}", desc: "White Exclamation Mark" };
+export const exclamationMark = { value: "\u{2757}", desc: "Exclamation Mark" };
+export const curlyLoop = { value: "\u{27B0}", desc: "Curly Loop" };
+export const doubleCurlyLoop = { value: "\u{27BF}", desc: "Double Curly Loop" };
+export const wavyDash = { value: "\u{3030}\u{FE0F}", desc: "Wavy Dash" };
+export const partAlternationMark = { value: "\u{303D}\u{FE0F}", desc: "Part Alternation Mark" };
+export const tradeMark = { value: "\u{2122}\u{FE0F}", desc: "Trade Mark" };
+export const copyright = { value: "\u{A9}\u{FE0F}", desc: "Copyright" };
+export const registered = { value: "\u{AE}\u{FE0F}", desc: "Registered" };
 export const marks = [
-    { value: "\u{203C}\u{FE0F}", desc: "Double Exclamation Mark" },
-    { value: "\u{2049}\u{FE0F}", desc: "Exclamation Question Mark" },
-    { value: "\u{2139}\u{FE0F}", desc: "Information" },
-    { value: "\u{24C2}\u{FE0F}", desc: "Circled M" },
-    { value: "\u{2705}", desc: "Check Mark Button" },
-    { value: "\u{2714}\u{FE0F}", desc: "Check Mark" },
-    { value: "\u{2733}\u{FE0F}", desc: "Eight-Spoked Asterisk" },
-    { value: "\u{274C}", desc: "Cross Mark" },
-    { value: "\u{274E}", desc: "Cross Mark Button" },
-    { value: "\u{2753}", desc: "Question Mark" },
-    { value: "\u{2754}", desc: "White Question Mark" },
-    { value: "\u{2755}", desc: "White Exclamation Mark" },
-    { value: "\u{2757}", desc: "Exclamation Mark" },
-    { value: "\u{27B0}", desc: "Curly Loop" },
-    { value: "\u{27BF}", desc: "Double Curly Loop" },
-    { value: "\u{3030}\u{FE0F}", desc: "Wavy Dash" },
-    { value: "\u{303D}\u{FE0F}", desc: "Part Alternation Mark" },
-    { value: "\u{2122}\u{FE0F}", desc: "Trade Mark" },
-    { value: "\u{A9}\u{FE0F}", desc: "Copyright" },
-    { value: "\u{AE}\u{FE0F}", desc: "Registered" },
+    doubleExclamationMark,
+    interrobang,
+    information,
+    circledM,
+    checkMarkButton,
+    checkMark,
+    eightSpokedAsterisk,
+    crossMark,
+    crossMarkButton,
+    questionMark,
+    whiteQuestionMark,
+    whiteExclamationMark,
+    exclamationMark,
+    curlyLoop,
+    doubleCurlyLoop,
+    wavyDash,
+    partAlternationMark,
+    tradeMark,
+    copyright,
+    registered,
 ];
+
 export const textStyle = { value: "\u{FE0E}", desc: "Variation Selector-15: text style" };
 export const emojiStyle = { value: "\u{FE0F}", desc: "Variation Selector-16: emoji style" };
 export const zeroWidthJoiner = { value: "\u{200D}", desc: "Zero Width Joiner" };

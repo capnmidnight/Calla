@@ -16,7 +16,6 @@ import {
 
 export function instructions() {
     return [
-        H2("Instructions"),
         Aside(
             style({
                 border: "dashed 2px darkred",

@@ -46,16 +46,19 @@
     <link type="text/css" rel="stylesheet" href="/stylesheets/general.css" />
     <link type="text/css" rel="stylesheet" href="/stylesheets/icons.css" />
     <link type="text/css" rel="stylesheet" href="/stylesheets/gui.css" />
-    <script type="module" src="index.js"></script>
-    <!--<script type="module" src="bundle.min.js"></script>-->
+    <!--<script type="module" src="index.js"></script>-->
+    <script type="module" src="bundle.min.js"></script>
 </head>
 
 <body>
-    <div id="login" style="display: grid;
+    <div id="login" style="
+        position:absolute;
+        display: grid;
         grid-template-columns: 5fr 1fr 1fr;
         grid-template-rows: auto auto 1fr auto auto;
         overflow-y: hidden;
         width: 50%;
+        left: 25%;
         max-width: 900px;
         max-height: 75vh;
         background-color: white;

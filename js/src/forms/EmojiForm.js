@@ -160,7 +160,6 @@ export class EmojiForm extends FormDialog {
         this.footer.append(
 
             this.confirmButton = Button(className("confirm"),
-                style({ gridArea: "4/2" }),
                 systemFont,
                 "OK",
                 onClick(() => {
@@ -176,7 +175,6 @@ export class EmojiForm extends FormDialog {
                 })),
 
             Button(className("cancel"),
-                style({ gridArea: "4/3" }),
                 systemFont,
                 "Cancel",
                 onClick(() => {
