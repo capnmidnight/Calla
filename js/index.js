@@ -1,23 +1,11 @@
-﻿import { ExternalJitsiClient as JitsiClient } from "./src/jitsi/ExternalJitsiClient.js";
+﻿/* global JITSI_HOST */
+
+import { ariaLabel, className, href, rel, role, target, title } from "./src/html/attrs.js";
+import { A, H2, P, Span } from "./src/html/tags.js";
 import { init } from "./src/init.js";
-import {
-    A,
-    H2,
-    P,
-    Span
-} from "./src/html/tags.js";
+import { ExternalJitsiClient as JitsiClient } from "./src/jitsi/ExternalJitsiClient.js";
 
-import {
-    ariaLabel,
-    className,
-    href,
-    target,
-    title,
-    rel,
-    role
-} from "./src/html/attrs.js";
-
-const { toolbar, login } = init("jitsi.calla.chat", JitsiClient);
+const { toolbar, login } = init(JITSI_HOST, JitsiClient);
 
 function adLink(url, label, icon) {
     return A(

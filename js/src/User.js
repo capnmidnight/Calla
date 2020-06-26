@@ -7,6 +7,7 @@ import "./protos.js";
 const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
     STACKED_USER_OFFSET_X = 5,
     STACKED_USER_OFFSET_Y = 5,
+    MOVE_TRANSITION_TIME = 0.5,
     eventNames = ["userMoved", "userPositionNeeded"];
 
 export class User extends EventTarget {
