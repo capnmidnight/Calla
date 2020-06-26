@@ -771,7 +771,8 @@ const APP_FINGERPRINT$1
         "participantLeft",
         "avatarChanged",
         "displayNameChange",
-        "audioActivity"
+        "audioActivity",
+        "setAvatarEmoji"
     ];
 
 // Manages communication between Jitsi Meet and Calla
@@ -1040,6 +1041,12 @@ class BaseJitsiClient extends EventTarget {
 
     userInitResponse(toUserID, fromUserState) {
         this.txGameData(toUserID, "userInitResponse", fromUserState);
+    }
+
+    setAvatarEmoji(emoji) {
+        for (let toUserID of this.otherUsers.keys()) {
+            this.txGameData(toUserID, "setAvatarEmoji", emoji);
+        }
     }
 
     emote(emoji) {
@@ -6570,7 +6577,7 @@ class User extends EventTarget {
             this.avatarImage = null;
         }
 
-        this.avatarEmoji = evt.avatarEmoji;
+        this.avatarEmoji = evt._avatarEmoji;
         this.isInitialized = true;
     }
 
@@ -7316,6 +7323,20 @@ class Game extends EventTarget {
             const user = this.userLookup[evt.id];
             if (!!user) {
                 user.setAvatarURL(evt.avatarURL);
+            }
+        }
+    }
+
+    setAvatarEmoji(evt) {
+        //evt = {
+        //  id: string, // the id of the participant that changed his avatar.
+        //  value: string // the emoji text to use as the avatar.
+        //  desc: string // a description of the emoji
+        //}
+        if (!!evt) {
+            const user = this.userLookup[evt.id];
+            if (!!user) {
+                user.avatarEmoji = evt;
             }
         }
     }
@@ -8145,7 +8166,7 @@ class OptionsForm extends FormDialog {
                         "audioInputDevices",
                         "Input: ",
                         "No audio input",
-                        d => d.id,
+                        d => d.deviceId,
                         d => d.label,
                         onInput(_(audioInputChangedEvt)))),
                 P(
@@ -8153,7 +8174,7 @@ class OptionsForm extends FormDialog {
                         "audioOutputDevices",
                         "Output: ",
                         "No audio output",
-                        d => d.id,
+                        d => d.deviceId,
                         d => d.label,
                         onInput(_(audioOutputChangedEvt)))),
                 P(
@@ -8202,7 +8223,7 @@ class OptionsForm extends FormDialog {
                         "videoInputDevices",
                         "Device: ",
                         "No video input",
-                        d => d.id,
+                        d => d.deviceId,
                         d => d.label,
                         onInput(_(videoInputChangedEvt)))))
         ];
@@ -8958,7 +8979,7 @@ function init(host, JitsiClientClass) {
 
     async function selectEmojiAsync() {
         await withEmojiSelection((e) => {
-            game.emote(game.me.id, e);
+            game.emote(client.localUser, e);
             toolbar.setEmojiButton(game.keyEmote, e);
         });
     }
@@ -8999,7 +9020,7 @@ function init(host, JitsiClientClass) {
     });
 
     toolbar.addEventListener("emote", () => {
-        game.emote(game.me.id, game.currentEmoji);
+        game.emote(client.localUser, game.currentEmoji);
     });
 
     toolbar.addEventListener("zoomchanged", () => {
@@ -9042,6 +9063,7 @@ function init(host, JitsiClientClass) {
         withEmojiSelection((e) => {
             game.me.avatarEmoji = e;
             options.setAvatarEmoji(e);
+            client.setAvatarEmoji(e);
         });
     });
 
@@ -9212,12 +9234,15 @@ function init(host, JitsiClientClass) {
         game.emote(evt.id, evt);
     });
 
+    client.addEventListener("setAvatarEmoji", (evt) => {
+        game.setAvatarEmoji(evt);
+    });
+
     client.addEventListener("audioActivity", (evt) => {
         game.updateAudioActivity(evt);
     });
 
     client.addEventListener("avatarChanged", (evt) => {
-        console.log(evt);
         options.avatarURL = evt.avatarURL;
         game.me.setAvatarURL(evt.avatarURL);
     });
