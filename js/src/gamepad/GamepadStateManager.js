@@ -8,8 +8,9 @@ const gamepadConnectedEvt = Object.assign(new Event("gamepadconnected"), {
     }),
 
     gamepads = new Map(),
-    anyButtonDownEvt = Object.assign(new Event("gamepadbuttondown"), { button: 0 }),
-    anyButtonUpEvt = Object.assign(new Event("gamepadbuttonup"), { button: 0 });
+    anyButtonDownEvt = Object.assign(new Event("gamepadbuttondown"), { button: -1 }),
+    anyButtonUpEvt = Object.assign(new Event("gamepadbuttonup"), { button: -1 }),
+    anyAxisMaxedEvt = Object.assign(new Event("gamepadaxismaxed"), { axis: -1 });
 
 class GamepadStateManager extends EventTarget {
     constructor() {
@@ -25,21 +26,29 @@ class GamepadStateManager extends EventTarget {
             this.dispatchEvent(anyButtonUpEvt);
         };
 
+        const onAnyAxisMaxed = (evt) => {
+            anyAxisMaxedEvt.axis = evt.axis;
+            this.dispatchEvent(anyAxisMaxedEvt);
+        };
+
         window.addEventListener("gamepadconnected", (evt) => {
             const pad = evt.gamepad,
                 gamepad = new EventedGamepad(pad);
             gamepad.addEventListener("gamepadbuttondown", onAnyButtonDown);
             gamepad.addEventListener("gamepadbuttonup", onAnyButtonUp);
+            gamepad.addEventListener("gamepadaxismaxed", onAnyAxisMaxed);
             gamepads.set(pad.id, gamepad);
             gamepadConnectedEvt.gamepad = gamepad;
             this.dispatchEvent(gamepadConnectedEvt);
         });
 
         window.addEventListener("gamepaddisconnected", (evt) => {
-            const gamepad = gamepads.get(pad.id);
-            gamepads.delete(pad.id);
+            const id = evt.gamepad.id,
+                gamepad = gamepads.get(id);
+            gamepads.delete(id);
             gamepad.removeEventListener("gamepadbuttondown", onAnyButtonDown);
             gamepad.removeEventListener("gamepadbuttonup", onAnyButtonUp);
+            gamepad.removeEventListener("gamepadaxismaxed", onAnyAxisMaxed);
             gamepadDisconnectedEvt.gamepad = gamepad;
             this.dispatchEvent(gamepadDisconnectedEvt);
             gamepad.dispose();
