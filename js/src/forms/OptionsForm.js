@@ -134,7 +134,7 @@ export class OptionsForm extends FormDialog {
                         "audioInputDevices",
                         "Input: ",
                         "No audio input",
-                        d => d.id,
+                        d => d.deviceId,
                         d => d.label,
                         onInput(_(audioInputChangedEvt)))),
                 P(
@@ -142,7 +142,7 @@ export class OptionsForm extends FormDialog {
                         "audioOutputDevices",
                         "Output: ",
                         "No audio output",
-                        d => d.id,
+                        d => d.deviceId,
                         d => d.label,
                         onInput(_(audioOutputChangedEvt)))),
                 P(
@@ -191,7 +191,7 @@ export class OptionsForm extends FormDialog {
                         "videoInputDevices",
                         "Device: ",
                         "No video input",
-                        d => d.id,
+                        d => d.deviceId,
                         d => d.label,
                         onInput(_(videoInputChangedEvt)))))
         ];
