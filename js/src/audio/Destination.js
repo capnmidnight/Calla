@@ -63,7 +63,7 @@ export class Destination extends EventTarget{
     }
 
     setTarget(evt) {
-        this.position.setTarget(evt.x, evt.y, this.audioContext.currentTime, this.transitionTime);
+        this.position.setTarget(evt, this.audioContext.currentTime, this.transitionTime);
     }
 
     setAudioProperties(evt) {

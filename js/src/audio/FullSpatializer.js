@@ -1,5 +1,4 @@
 ﻿import { BaseWebAudioSpatializer } from "./BaseWebAudioSpatializer.js";
-import { clamp, project } from "../math.js";
 import { WebAudioNodePosition } from "./WebAudioNodePosition.js";
 
 export class FullSpatializer extends BaseWebAudioSpatializer {
@@ -24,31 +23,23 @@ export class FullSpatializer extends BaseWebAudioSpatializer {
     update() {
         super.update();
 
-        if (!!this.source) {
-            if (this.inNode.refDistance !== this.destination.minDistance) {
-                this.inNode.refDistance = this.destination.minDistance;
+        if (this.inNode.refDistance !== this.destination.minDistance) {
+            this.inNode.refDistance = this.destination.minDistance;
+        }
+
+        if (this.inNode.rolloffFactor !== this.destination.rolloff) {
+            this.inNode.rolloffFactor = this.destination.rolloff;
+        }
+
+        const muted = this.volume <= 0;
+
+        if (!!this.source && muted !== this.wasMuted) {
+            this.wasMuted = muted;
+            if (muted) {
+                this.source.disconnect(this.inNode);
             }
-
-            if (this.inNode.rolloffFactor !== this.destination.rolloff) {
-                this.inNode.rolloffFactor = this.destination.rolloff;
-            }
-
-            const lx = this.destination.position.x,
-                ly = this.destination.position.y,
-                distX = this.position.x - lx,
-                distY = this.position.y - ly,
-                dist = Math.sqrt(distX * distX + distY * distY),
-                range = clamp(project(dist, this.destination.minDistance, this.destination.maxDistance), 0, 1),
-                muted = range >= 1;
-
-            if (muted !== this.wasMuted) {
-                this.wasMuted = muted;
-                if (muted) {
-                    this.source.disconnect(this.inNode);
-                }
-                else {
-                    this.source.connect(this.inNode);
-                }
+            else {
+                this.source.connect(this.inNode);
             }
         }
     }

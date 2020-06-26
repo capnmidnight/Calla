@@ -8,7 +8,7 @@ export class BasePosition {
         throw new Error("Not implemented in base class.");
     }
 
-    setTarget(x, y, t, dt) {
+    setTarget(evt, t, dt) {
         throw new Error("Not implemented in base class.");
     }
 

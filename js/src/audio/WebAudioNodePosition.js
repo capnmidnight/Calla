@@ -15,17 +15,15 @@ export class WebAudioNodePosition extends BasePosition {
     }
 
     get y() {
-        // our 2D position is in X/Y coords, but our 3D position
-        // along the horizontal plane is X/Z coords.
         return this.node.positionZ.value;
     }
 
-    setTarget(x, y, t, dt) {
+    setTarget(evt, t, dt) {
         const time = t + dt;
         // our 2D position is in X/Y coords, but our 3D position
         // along the horizontal plane is X/Z coords.
-        this.node.positionX.linearRampToValueAtTime(x, time);
-        this.node.positionZ.linearRampToValueAtTime(y, time);
+        this.node.positionX.linearRampToValueAtTime(evt.x, time);
+        this.node.positionZ.linearRampToValueAtTime(evt.y, time);
     }
 }
 
