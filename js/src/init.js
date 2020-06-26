@@ -8,6 +8,7 @@ import { LoginForm } from "./forms/LoginForm.js";
 import { OptionsForm } from "./forms/OptionsForm.js";
 import { ToolBar } from "./forms/ToolBar.js";
 import { Game } from "./Game.js";
+import { GamepadManager } from "./gamepad/GamepadStateManager.js";
 import { Settings } from "./Settings.js";
 
 export function init(host, JitsiClientClass) {
@@ -94,8 +95,7 @@ export function init(host, JitsiClientClass) {
     }
 
     function refreshGamepads() {
-        options.gamepads = [...navigator.getGamepads()]
-            .filter(g => g !== null);
+        options.gamepads = GamepadManager.gamepads;
     }
 
 

@@ -4,6 +4,7 @@ import { Canvas } from "./html/tags.js";
 import { clamp, lerp, project, unproject } from "./math.js";
 import { TileMap } from "./TileMap.js";
 import { User } from "./User.js";
+import { GamepadManager } from "./gamepad/GamepadStateManager.js";
 
 const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_MAX = 8,
@@ -82,8 +83,6 @@ export class Game extends EventTarget {
             gpButtonToggleAudio: 1
         };
 
-        this.gamepads = [];
-        this.lastGamepadIndex = -1;
         this.gamepadIndex = -1;
 
 
@@ -248,32 +247,6 @@ export class Game extends EventTarget {
         });
 
         // ============= POINTERS =================
-
-        // ============= GAMEPAD =================
-        {
-            addEventListener("gamepadconnected", (evt) => {
-                const pad = evt.gamepad,
-                    idx = this.gamepads.findIndex(x => x.id === pad.id);
-                if (idx === -1) {
-                    this.gamepads.push(pad);
-                    if (this.gamepads.length === 1) {
-                        this.gamepadIndex = 0;
-                    }
-                }
-            });
-
-            addEventListener("gamepaddisconnected", (evt) => {
-                const pad = evt.gamepad,
-                    idx = this.gamepads.findIndex(x => x.id === pad.id);
-                if (idx >= 0) {
-                    this.gamepads.splice(idx, 1);
-                    if (this.gamepads.length === 0) {
-                        this.gamepadIndex = -1;
-                    }
-                }
-            });
-        }
-        // ============= GAMEPAD =================
 
         // ============= ACTION ==================
     }
@@ -571,11 +544,8 @@ export class Game extends EventTarget {
                 }
             }
 
-            if (0 <= this.gamepadIndex && this.gamepadIndex < this.gamepads.length) {
-                const lastPad = this.gamepads[this.gamepadIndex],
-                    pad = navigator.getGamepads()[lastPad.index];
-
-                this.lastGamepadIndex = this.gamepadIndex;
+            const pad = GamepadManager.gamepads[this.gamepadIndex];
+            if (pad) {
 
                 if (pad.buttons[this.inputBinding.gpButtonEmote].pressed) {
                     this.emote(this.me.id, this.currentEmoji);
@@ -606,8 +576,6 @@ export class Game extends EventTarget {
                 this.targetOffsetCameraX += -50 * Math.round(2 * pad.axes[2]);
                 this.targetOffsetCameraY += -50 * Math.round(2 * pad.axes[3]);
                 this.zoom(2 * (pad.buttons[6].value - pad.buttons[7].value));
-
-                this.gamepads[this.gamepadIndex] = pad;
             }
 
             dx = clamp(dx, -1, 1);
