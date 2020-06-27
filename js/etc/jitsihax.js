@@ -594,7 +594,7 @@ class AudioManager extends EventTarget {
     }
 }
 
-const FRONT_END_SERVER = "https://www.calla.chat",
+const FRONT_END_SERVER = "https://calla" + window.location.hostname.substring(window.location.hostname.indexOf('.')),
     APP_FINGERPRINT = "Calla",
     manager = new AudioManager();
 
