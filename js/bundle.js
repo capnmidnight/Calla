@@ -6720,15 +6720,21 @@ class OptionsForm extends FormDialog {
 
         this._videoEnabled = false;
         this._drawHearing = false;
+        this._avatarEmoji = null;
 
         Object.seal(this);
     }
 
-    setAvatarEmoji(e) {
+    get avatarEmoji() {
+        return this._avatarEmoji;
+    }
+
+    set avatarEmoji(e) {
+        this._avatarEmoji = e;
         clear(this.avatarEmojiPreview);
         this.avatarEmojiPreview.append(Span(
-            title(e.desc),
-            e.value));
+            title(e && e.desc || "(None)"),
+            e && e.value || "N/A"));
     }
 
     get avatarURL() {
@@ -8427,8 +8433,9 @@ const selfs$2 = new Map(),
         audioRolloff: 1,
         fontSize: 12,
         zoom: 1.5,
-        userName: "",
         roomName: "calla",
+        userName: "",
+        avatarEmoji: null,
         gamepadIndex: 0,
         inputBinding: {
             keyButtonUp: "ArrowUp",
@@ -8545,6 +8552,17 @@ class Settings {
     set userName(value) {
         if (value !== this.userName) {
             selfs$2.get(this).userName = value;
+            commit(this);
+        }
+    }
+
+    get avatarEmoji() {
+        return selfs$2.get(this).avatarEmoji;
+    }
+
+    set avatarEmoji(value) {
+        if (value !== this.avatarEmoji) {
+            selfs$2.get(this).avatarEmoji = value;
             commit(this);
         }
     }
@@ -8732,8 +8750,10 @@ function init(host, JitsiClientClass) {
     options.addEventListeners({
         selectAvatar: async () => {
             withEmojiSelection((e) => {
-                game.me.avatarEmoji = e;
-                options.setAvatarEmoji(e);
+                settings.avatarEmoji
+                    = options.avatarEmoji
+                    = game.me.avatarEmoji
+                    = e;
                 client.setAvatarEmoji(e);
             });
         },
@@ -8791,7 +8811,13 @@ function init(host, JitsiClientClass) {
             toolbar.show();
             client.show();
             client.setPosition(game.me);
-            options.setAvatarEmoji(game.me.avatarEmoji);
+
+            if (settings.avatarEmoji !== null) {
+                game.me.avatarEmoji = settings.avatarEmoji;
+            }
+            settings.avatarEmoji
+                = options.avatarEmoji
+                = game.me.avatarEmoji;
         },
         gameEnded: () => {
             game.hide();
@@ -8812,12 +8838,6 @@ function init(host, JitsiClientClass) {
             window.location.hash = login.roomName;
 
             game.start(evt);
-            for (let user of client.otherUsers.entries()) {
-                game.addUser({
-                    id: user[0],
-                    displayName: user[1]
-                });
-            }
 
             options.audioInputDevices = await client.getAudioInputDevices();
             options.audioOutputDevices = await client.getAudioOutputDevices();
@@ -8998,6 +9018,7 @@ class BaseJitsiClient extends EventTarget {
         this.localUser = null;
         this.otherUsers = new Map();
         this.audioClient = null;
+        this.preInitEvtQ = [];
     }
 
     hide() {
@@ -9017,6 +9038,27 @@ class BaseJitsiClient extends EventTarget {
 
     async initializeAsync(host, roomName) {
         throw new Error("Not implemented in base class.");
+    }
+
+    dispatchEvent(evt) {
+        if (evt.type === "videoConferenceJoined") {
+            super.dispatchEvent(evt);
+            for (evt of this.preInitEvtQ) {
+                if (evt.hasOwnProperty("id")
+                    && evt.id === null) {
+                    evt.id = this.localUser;
+                }
+
+                super.dispatchEvent(evt);
+            }
+            this.preInitEvtQ.splice(1);
+        }
+        else if (this.localUser === null) {
+            this.preInitEvtQ.push(evt);
+        }
+        else {
+            super.dispatchEvent(evt);
+        }
     }
 
     async joinAsync(host, roomName, userName) {
@@ -9439,11 +9481,19 @@ class ExternalJitsiClient extends BaseJitsiClient {
                     if (!test || test(rootEvt)) {
                         copy(dest, rootEvt);
 
-                        // The version of the External API that I'm using 
-                        // misspells the name of this field.
-                        if (evtType === "displayNameChange"
-                            && rootEvt.displayname !== undefined) {
-                            dest.displayName = rootEvt.displayname;
+                        if (evtType === "displayNameChange") {
+
+                            // The version of the External API that I'm using
+                            // is inconsistent with how parameters are set.
+                            if (rootEvt.id === "local") {
+                                rootEvt.id = null;
+                            }
+
+                            // The version of the External API that I'm using 
+                            // misspells the name of this field.
+                            if (rootEvt.displayname !== undefined) {
+                                dest.displayName = rootEvt.displayname;
+                            }
                         }
 
                         if (dest.hasOwnProperty("id")
