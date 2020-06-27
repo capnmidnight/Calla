@@ -1,3 +1,93 @@
+class HtmlAttr {
+    constructor(key, tags, value) {
+        tags = tags.map(t => t.toLocaleUpperCase());
+
+        this.apply = (elem) => {
+            const isValid = tags.length === 0
+                || tags.indexOf(elem.tagName) > -1;
+
+            if (!isValid) {
+                console.warn(`Element ${elem.tagName} does not support Attribute ${key}`);
+            }
+            else if (key === "style") {
+                Object.assign(elem[key], value);
+            }
+            else if (!(typeof value === "boolean" || value instanceof Boolean)
+                || key === "muted") {
+                elem[key] = value;
+            }
+            else if (value) {
+                elem.setAttribute(key, "");
+            }
+            else {
+                elem.removeAttribute(key);
+            }
+        };
+
+        Object.freeze(this);
+    }
+}
+function accessKey(value) { return new HtmlAttr("accessKey", ["input", "button"], value); }
+// Alternative text in case an image can't be displayed.
+function alt(value) { return new HtmlAttr("alt", ["applet", "area", "img", "input"], value); }
+function ariaLabel(value) { return new HtmlAttr("ariaLabel", [], value); }
+// Often used with CSS to style elements with common properties.
+function className(value) { return new HtmlAttr("className", [], value); }
+// Describes elements which belongs to this one.
+function htmlFor(value) { return new HtmlAttr("htmlFor", ["label", "output"], value); }
+// Specifies the height of elements listed here. For all other elements, use the CSS height property.
+function height(value) { return new HtmlAttr("height", ["canvas", "embed", "iframe", "img", "input", "object", "video"], value); }
+// The URL of a linked resource.
+function href(value) { return new HtmlAttr("href", ["a", "area", "base", "link"], value); }
+// Often used with CSS to style a specific element. The value of this attribute must be unique.
+function id(value) { return new HtmlAttr("id", [], value); }
+// Indicates the maximum value allowed.
+function max(value) { return new HtmlAttr("max", ["input", "meter", "progress"], value); }
+// Indicates the minimum value allowed.
+function min(value) { return new HtmlAttr("min", ["input", "meter"], value); }
+// Provides a hint to the user of what can be entered in the field.
+function placeHolder(value) { return new HtmlAttr("placeholder", ["input", "textarea"], value); }
+// Specifies the relationship of the target object to the link object.
+function rel(value) { return new HtmlAttr("rel", ["a", "area", "link"], value); }
+// Defines the number of rows in a text area.
+function role(value) { return new HtmlAttr("role", [], value); }
+// The URL of the embeddable content.
+function src(value) { return new HtmlAttr("src", ["audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"], value); }
+// Defines CSS styles which will override styles previously set.
+function style(value) { return new HtmlAttr("style", [], value); }
+// ???
+function step(value) { return new HtmlAttr("step", ["input"], value); }
+// Text to be displayed in a tooltip when hovering over the element.
+function title(value) { return new HtmlAttr("title", [], value); }
+// ???
+function target(value) { return new HtmlAttr("target", ["a", "area", "base", "form"], value); }
+// Defines the type of the element.
+function type(value) { return new HtmlAttr("type", ["button", "input", "command", "embed", "object", "script", "source", "style", "menu"], value); }
+// Defines a default value which will be displayed in the element on page load.
+function value(value) { return new HtmlAttr("value", ["button", "data", "input", "li", "meter", "option", "progress", "param"], value); }
+// For the elements listed here, this establishes the element's width.
+function width(value) { return new HtmlAttr("width", ["canvas", "embed", "iframe", "img", "input", "object", "video"], value); }
+
+const fillPageStyle = style({
+    position: "absolute",
+    display: "block",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    padding: 0,
+    margin: 0,
+    overflow: "hidden",
+});
+
+// A selection of fonts for preferred monospace rendering.
+const monospaceFamily = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
+const monospaceFont = style({ fontFamily: monospaceFamily });
+
+// A selection of fonts that should match whatever the user's operating system normally uses.
+const systemFamily = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
+const systemFont = style({ fontFamily: systemFamily });
+
 function isGoodNumber(v) {
     return v !== null
         && v !== undefined
@@ -287,120 +377,6 @@ EventTarget.prototype.addEventListeners = function (obj) {
         this.addEventListener(evtName, callback, opts);
     }
 };
-
-function copy(dest, evt) {
-    for (let key in dest) {
-        dest[key] = null;
-        if (evt[key] !== undefined) {
-            dest[key] = evt[key];
-        }
-    }
-
-    return dest;
-}
-class CallaEvent extends Event {
-    constructor(data) {
-        super(data.command);
-        Event.clone(this, data.value);
-    }
-}
-
-class CallaUserEvent extends CallaEvent {
-    constructor(id, data) {
-        super(data);
-        this.id = id;
-    }
-}
-
-class HtmlAttr {
-    constructor(key, tags, value) {
-        tags = tags.map(t => t.toLocaleUpperCase());
-
-        this.apply = (elem) => {
-            const isValid = tags.length === 0
-                || tags.indexOf(elem.tagName) > -1;
-
-            if (!isValid) {
-                console.warn(`Element ${elem.tagName} does not support Attribute ${key}`);
-            }
-            else if (key === "style") {
-                Object.assign(elem[key], value);
-            }
-            else if (!(typeof value === "boolean" || value instanceof Boolean)
-                || key === "muted") {
-                elem[key] = value;
-            }
-            else if (value) {
-                elem.setAttribute(key, "");
-            }
-            else {
-                elem.removeAttribute(key);
-            }
-        };
-
-        Object.freeze(this);
-    }
-}
-function accessKey(value) { return new HtmlAttr("accessKey", ["input", "button"], value); }
-// Alternative text in case an image can't be displayed.
-function alt(value) { return new HtmlAttr("alt", ["applet", "area", "img", "input"], value); }
-function ariaLabel(value) { return new HtmlAttr("ariaLabel", [], value); }
-// Often used with CSS to style elements with common properties.
-function className(value) { return new HtmlAttr("className", [], value); }
-// Describes elements which belongs to this one.
-function htmlFor(value) { return new HtmlAttr("htmlFor", ["label", "output"], value); }
-// Specifies the height of elements listed here. For all other elements, use the CSS height property.
-function height(value) { return new HtmlAttr("height", ["canvas", "embed", "iframe", "img", "input", "object", "video"], value); }
-// The URL of a linked resource.
-function href(value) { return new HtmlAttr("href", ["a", "area", "base", "link"], value); }
-// Often used with CSS to style a specific element. The value of this attribute must be unique.
-function id(value) { return new HtmlAttr("id", [], value); }
-// Indicates the maximum value allowed.
-function max(value) { return new HtmlAttr("max", ["input", "meter", "progress"], value); }
-// Indicates the minimum value allowed.
-function min(value) { return new HtmlAttr("min", ["input", "meter"], value); }
-// Provides a hint to the user of what can be entered in the field.
-function placeHolder(value) { return new HtmlAttr("placeholder", ["input", "textarea"], value); }
-// Specifies the relationship of the target object to the link object.
-function rel(value) { return new HtmlAttr("rel", ["a", "area", "link"], value); }
-// Defines the number of rows in a text area.
-function role(value) { return new HtmlAttr("role", [], value); }
-// The URL of the embeddable content.
-function src(value) { return new HtmlAttr("src", ["audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"], value); }
-// Defines CSS styles which will override styles previously set.
-function style(value) { return new HtmlAttr("style", [], value); }
-// ???
-function step(value) { return new HtmlAttr("step", ["input"], value); }
-// Text to be displayed in a tooltip when hovering over the element.
-function title(value) { return new HtmlAttr("title", [], value); }
-// ???
-function target(value) { return new HtmlAttr("target", ["a", "area", "base", "form"], value); }
-// Defines the type of the element.
-function type(value) { return new HtmlAttr("type", ["button", "input", "command", "embed", "object", "script", "source", "style", "menu"], value); }
-// Defines a default value which will be displayed in the element on page load.
-function value(value) { return new HtmlAttr("value", ["button", "data", "input", "li", "meter", "option", "progress", "param"], value); }
-// For the elements listed here, this establishes the element's width.
-function width(value) { return new HtmlAttr("width", ["canvas", "embed", "iframe", "img", "input", "object", "video"], value); }
-
-const fillPageStyle = style({
-    position: "absolute",
-    display: "block",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    padding: 0,
-    margin: 0,
-    overflow: "hidden",
-});
-
-// A selection of fonts for preferred monospace rendering.
-const monospaceFamily = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
-const monospaceFont = style({ fontFamily: monospaceFamily });
-
-// A selection of fonts that should match whatever the user's operating system normally uses.
-const systemFamily = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
-const systemFont = style({ fontFamily: systemFamily });
 
 function isFunction(obj) {
     return typeof obj === "function"
@@ -793,627 +769,6 @@ function OptionPanel(id, name, ...rest) {
     return new OptionPanelTag(id, name, ...rest);
 }
 
-// helps us filter out data channel messages that don't belong to us
-const APP_FINGERPRINT$1
-    = window.APP_FINGERPRINT
-    = "Calla",
-    eventNames = [
-        "userMoved",
-        "emote",
-        "userInitRequest",
-        "userInitResponse",
-        "audioMuteStatusChanged",
-        "videoMuteStatusChanged",
-        "localAudioMuteStatusChanged",
-        "localVideoMuteStatusChanged",
-        "remoteAudioMuteStatusChanged",
-        "remoteVideoMuteStatusChanged",
-        "videoConferenceJoined",
-        "videoConferenceLeft",
-        "participantJoined",
-        "participantLeft",
-        "avatarChanged",
-        "displayNameChange",
-        "audioActivity",
-        "setAvatarEmoji"
-    ],
-    evtMuted = Object.seal({
-        id: null,
-        muted: null
-    }),
-    evtEmoji = Object.seal({
-        id: null,
-        value: null,
-        desc: null
-    }),
-    evtUserState = Object.seal({
-        id: null,
-        x: null,
-        y: null,
-        displayName: null,
-        avatarURL: null,
-        avatarEmoji: null
-    }),
-    evtAudioProperties = Object.seal({
-        origin: null,
-        transitionTime: null,
-        minDistance: null,
-        maxDistance: null,
-        rolloff: null
-    });
-
-// Manages communication between Jitsi Meet and Calla
-class BaseJitsiClient extends EventTarget {
-
-    constructor() {
-        super();
-        this.element = Div(
-            id("jitsi"),
-            style({
-                position: "absolute",
-                left: 0,
-                top: 0,
-                width: "100%",
-                height: "100%",
-                margin: 0,
-                padding: 0,
-                overflow: "hidden"
-            }));
-        this.localUser = null;
-        this.otherUsers = new Map();
-        this.audioClient = null;
-    }
-
-    hide() {
-        this.element.hide();
-    }
-
-    show() {
-        this.element.show();
-    }
-
-    resize(top) {
-        if (top !== undefined) {
-            this.element.style.top = top + "px";
-            this.element.style.height = `calc(100% - ${top}px)`;
-        }
-    }
-
-    async initializeAsync(host, roomName) {
-        throw new Error("Not implemented in base class.");
-    }
-
-    async joinAsync(host, roomName, userName) {
-        this.dispose();
-        await this.initializeAsync(host, roomName);
-
-        this.addEventListener("videoConferenceJoined", (evt) => {
-            this.localUser = evt.id;
-        });
-
-        this.addEventListener("videoConferenceLeft", (evt) => {
-            this.localUser = null;
-        });
-
-        this.addEventListener("participantJoined", (evt) => {
-            this.otherUsers.set(evt.id, evt.displayName);
-        });
-
-        this.addEventListener("participantLeft", (evt) => {
-            if (this.otherUsers.has(evt.id)) {
-                this.otherUsers.delete(evt.id);
-            }
-        });
-
-        this.addEventListener("displayNameChange", (evt) => {
-            if (this.otherUsers.has(evt.id)) {
-                this.otherUsers.set(evt.id, evt.displayname);
-            }
-        });
-
-        const localizeMuteEvent = (type) => (evt) => {
-            const isLocal = evt.id === this.localUser
-                || evt.id === null
-                || evt.id === undefined,
-                evt2 = Object.assign(
-                    new Event((isLocal ? "local" : "remote") + type + "MuteStatusChanged"), {
-                    id: this.localUser,
-                    muted: evt.muted
-                });
-            this.dispatchEvent(evt2);
-        };
-
-        this.addEventListener("audioMuteStatusChanged", localizeMuteEvent("Audio"));
-        this.addEventListener("videoMuteStatusChanged", localizeMuteEvent("Video"));
-
-        this.addEventListener("localAudioMuteStatusChanged", (evt) => {
-            this.audioMuteStatusChanged(evt.muted);
-        });
-
-        this.addEventListener("localVideoMuteStatusChanged", (evt) => {
-            this.videoMuteStatusChanged(evt.muted);
-        });
-
-        window.addEventListener("unload", () => {
-            this.dispose();
-        });
-
-        this.setDisplayName(userName);
-    }
-
-    dispose() {
-    }
-
-    setDisplayName(userName) {
-        throw new Error("Not implemented in base class");
-    }
-
-    leave() {
-        throw new Error("Not implemented in base class");
-    }
-
-    async getAudioOutputDevices() {
-        throw new Error("Not implemented in base class");
-    }
-
-    async getCurrentAudioOutputDevice() {
-        throw new Error("Not implemented in base class");
-    }
-
-    setAudioOutputDevice(device) {
-        throw new Error("Not implemented in base class");
-    }
-
-    async getAudioInputDevices() {
-        throw new Error("Not implemented in base class");
-    }
-
-    async getCurrentAudioInputDevice() {
-        throw new Error("Not implemented in base class");
-    }
-
-    setAudioInputDevice(device) {
-        throw new Error("Not implemented in base class");
-    }
-
-    async getVideoInputDevices() {
-        throw new Error("Not implemented in base class");
-    }
-
-    async getCurrentVideoInputDevice() {
-        throw new Error("Not implemented in base class");
-    }
-
-    setVideoInputDevice(device) {
-        throw new Error("Not implemented in base class");
-    }
-
-    toggleAudio() {
-        throw new Error("Not implemented in base class");
-    }
-
-    toggleVideo() {
-        throw new Error("Not implemented in base class");
-    }
-
-    setAvatarURL(url) {
-        throw new Error("Not implemented in base class");
-    }
-
-    async isAudioMutedAsync() {
-        throw new Error("Not implemented in base class");
-    }
-
-    async isVideoMutedAsync() {
-        throw new Error("Not implemented in base class");
-    }
-
-    sendMessageTo(toUserID, data) {
-        throw new Error("Not implemented in base class");
-    }
-
-    setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
-        evtAudioProperties.origin = origin;
-        evtAudioProperties.transitionTime = transitionTime;
-        evtAudioProperties.minDistance = minDistance;
-        evtAudioProperties.maxDistance = maxDistance;
-        evtAudioProperties.rolloff = rolloff;
-
-        this.audioClient.setAudioProperties(evtAudioProperties);
-    }
-
-    setPosition(evt) {
-        if (evt.id === this.localUser) {
-            this.audioClient.setLocalPosition(evt);
-            for (let toUserID of this.otherUsers.keys()) {
-                this.txGameData(toUserID, "userMoved", evt);
-            }
-        }
-        else {
-            this.audioClient.setUserPosition(evt);
-        }
-    }
-
-    removeUser(evt) {
-        this.audioClient.removeUser(evt);
-    }
-
-    async setAudioMutedAsync(muted) {
-        const isMuted = await this.isAudioMutedAsync();
-        if (muted !== isMuted) {
-            this.toggleAudio();
-        }
-    }
-
-    async setVideoMutedAsync(muted) {
-        const isMuted = await this.isVideoMutedAsync();
-        if (muted !== isMuted) {
-            this.toggleVideo();
-        }
-    }
-
-    /// Add a listener for Calla events that come through the Jitsi Meet data channel.
-    addEventListener(evtName, callback, opts) {
-        if (eventNames.indexOf(evtName) === -1) {
-            throw new Error(`Unsupported event type: ${evtName}`);
-        }
-
-        super.addEventListener(evtName, callback, opts);
-    }
-
-    /// Send a Calla message through the Jitsi Meet data channel.
-    txGameData(id, command, value) {
-        const data = {
-            hax: APP_FINGERPRINT$1,
-            command,
-            value
-        };
-        this.sendMessageTo(id, data);
-    }
-
-    /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
-    /// to receive Calla messages from the Jitsi Meet data channel.
-    rxGameData(evt) {
-        // JitsiExternalAPI::endpointTextMessageReceived event arguments format: 
-        // evt = {
-        //    data: {
-        //      senderInfo: {
-        //        jid: "string", // the jid of the sender
-        //        id: "string" // the participant id of the sender
-        //      },
-        //      eventData: {
-        //        name: "string", // the name of the datachannel event: `endpoint-text-message`
-        //        text: "string" // the received text from the sender
-        //      }
-        //   }
-        //};
-        const data = JSON.parse(evt.data.eventData.text);
-        if (data.hax === APP_FINGERPRINT$1) {
-            const evt2 = new CallaUserEvent(evt.data.senderInfo.id, data);
-            this.dispatchEvent(evt2);
-        }
-    }
-
-    userInitRequest(toUserID) {
-        this.txGameData(toUserID, "userInitRequest");
-    }
-
-    userInitRequestAsync(toUserID) {
-        return this.until("userInitResponse",
-            () => this.userInitRequest(toUserID),
-            (evt) => evt.id === toUserID,
-            1000);
-    }
-
-    userInitResponse(toUserID, fromUserState) {
-        this.txGameData(toUserID, "userInitResponse", copy(evtUserState, fromUserState));
-    }
-
-    setAvatarEmoji(emoji) {
-        copy(evtEmoji, emoji);
-        for (let toUserID of this.otherUsers.keys()) {
-            this.txGameData(toUserID, "setAvatarEmoji", evtEmoji);
-        }
-    }
-
-    emote(emoji) {
-        copy(evtEmoji, emoji);
-        for (let toUserID of this.otherUsers.keys()) {
-            this.txGameData(toUserID, "emote", evtEmoji);
-        }
-    }
-
-    audioMuteStatusChanged(muted) {
-        evtMuted.id = this.localUser;
-        evtMuted.muted = muted;
-        for (let toUserID of this.otherUsers.keys()) {
-            this.txGameData(toUserID, "audioMuteStatusChanged", evtMuted);
-        }
-    }
-
-    videoMuteStatusChanged(muted) {
-        evtMuted.id = this.localUser;
-        evtMuted.muted = muted;
-        for (let toUserID of this.otherUsers.keys()) {
-            this.txGameData(toUserID, "videoMuteStatusChanged", evtMuted);
-        }
-    }
-}
-
-const evtSetPosition = Object.seal({
-    id: null,
-    x: null,
-    y: null
-}),
-    evtSetAudioProperties = Object.seal({
-        origin: null,
-        transitionTime: null,
-        minDistance: null,
-        maxDistance: null,
-        rolloff: null
-    }),
-    evtRemoveUser = Object.seal({
-        id: null
-    });
-
-class ExternalJitsiAudioClient extends EventTarget {
-    constructor(host, apiOrigin, apiWindow) {
-        super();
-        this.host = host;
-        this.apiOrigin = apiOrigin;
-        this.apiWindow = apiWindow;
-        window.addEventListener("message", (evt) => {
-            this.rxJitsiHax(evt);
-        });
-    }
-
-
-    /// Send a Calla message to the jitsihax.js script
-    txJitsiHax(command, value) {
-        if (this.apiWindow) {
-            const evt = {
-                hax: APP_FINGERPRINT,
-                command: command,
-                value: value
-            };
-            try {
-                this.apiWindow.postMessage(JSON.stringify(evt), this.apiOrigin);
-            }
-            catch (exp) {
-                console.error(exp);
-            }
-        }
-    }
-
-    rxJitsiHax(msg) {
-        const isLocalHost = msg.origin.match(/^https?:\/\/localhost\b/);
-        if (msg.origin === "https://" + this.host || isLocalHost) {
-            try {
-                const evt = JSON.parse(msg.data);
-                if (evt.hax === APP_FINGERPRINT) {
-                    const evt2 = new CallaEvent(evt);
-                    this.dispatchEvent(evt2);
-                }
-            }
-            catch (exp) {
-                console.error(exp);
-            }
-        }
-    }
-
-    setLocalPosition(evt) {
-        this.txJitsiHax("setLocalPosition", copy(evtSetPosition, evt));
-    }
-
-    setUserPosition(evt) {
-        this.txJitsiHax("setUserPosition", copy(evtSetPosition, evt));
-    }
-
-    setAudioProperties(evt) {
-        this.txJitsiHax("setAudioProperties", copy(evtSetAudioProperties, evt));
-    }
-
-    removeUser(evt) {
-        this.txJitsiHax("removeUser", copy(evtRemoveUser, evt));
-    }
-}
-
-/* global JitsiMeetExternalAPI */
-
-const audioActivityEvt = Object.assign(new Event("audioActivity", {
-    id: null,
-    isActive: false
-})),
-    evtVideoConferenceJoined = Object.seal({
-        roomName: null,
-        id: null,
-        displayName: null
-    }),
-    evtVideoConferenceLeft = Object.seal({
-        roomName: null
-    }),
-    evtParticipantLeft = Object.seal({
-        id: null
-    }),
-    evtAvatarChanged = Object.seal({
-        id: null,
-        avatarURL: null
-    }),
-    evtParticipantName = Object.seal({
-        id: null,
-        displayName: null
-    }),
-    evtMuted$1 = Object.seal({
-        id: null,
-        muted: null
-    });
-
-class ExternalJitsiClient extends BaseJitsiClient {
-    constructor() {
-        super();
-        this.api = null;
-        this.audioClient = null;
-    }
-
-    dispose() {
-        if (this.api !== null) {
-            this.api.dispose();
-            this.api = null;
-        }
-    }
-
-    async initializeAsync(host, roomName) {
-        await import(`https://${host}/libs/external_api.min.js`);
-        return new Promise((resolve) => {
-            this.api = new JitsiMeetExternalAPI(host, {
-                parentNode: this.element,
-                roomName,
-                onload: () => {
-                    const iframe = this.api.getIFrame();
-                    this.audioClient = new ExternalJitsiAudioClient(
-                        host,
-                        new URL(iframe.src).origin,
-                        iframe.contentWindow);
-                    this.audioClient.addEventListener("audioActivity", (evt) => {
-                        audioActivityEvt.id = evt.id;
-                        audioActivityEvt.isActive = evt.isActive;
-                        this.dispatchEvent(audioActivityEvt);
-                    });
-                    resolve();
-                },
-                noSSL: false,
-                width: "100%",
-                height: "100%",
-                configOverwrite: {
-                    startVideoMuted: 0,
-                    startWithVideoMuted: true
-                },
-                interfaceConfigOverwrite: {
-                    DISABLE_VIDEO_BACKGROUND: true,
-                    SHOW_JITSI_WATERMARK: false,
-                    SHOW_WATERMARK_FOR_GUESTS: false,
-                    SHOW_POWERED_BY: true,
-                    AUTHENTICATION_ENABLE: false,
-                    MOBILE_APP_PROMO: false
-                }
-            });
-
-            const reroute = (evtType, dest, test) => {
-                this.api.addEventListener(evtType, (rootEvt) => {
-                    if (!test || test(rootEvt)) {
-                        copy(dest, rootEvt);
-
-                        // The version of the External API that I'm using 
-                        // misspells the name of this field.
-                        if (evtType === "displayNameChange"
-                            && rootEvt.displayname !== undefined) {
-                            dest.displayName = rootEvt.displayname;
-                        }
-
-                        if (dest.hasOwnProperty("id")
-                            && (rootEvt.id === null
-                                || rootEvt.id === undefined)) {
-                            dest.id = this.localUser;
-                        }
-
-                        const evt = Object.assign(
-                            new Event(evtType),
-                            dest);
-                        this.dispatchEvent(evt);
-                    }
-                });
-            };
-
-            reroute("videoConferenceJoined", evtVideoConferenceJoined);
-            reroute("videoConferenceLeft", evtVideoConferenceLeft);
-            reroute("participantJoined", evtParticipantName, (evt) => evt.id !== "local");
-            reroute("participantLeft", evtParticipantLeft);
-            reroute("avatarChanged", evtAvatarChanged, (evt) => evt.avatarURL !== undefined);
-            reroute("displayNameChange", evtParticipantName);
-            reroute("audioMuteStatusChanged", evtMuted$1);
-            reroute("videoMuteStatusChanged", evtMuted$1);
-
-            this.api.addEventListener("endpointTextMessageReceived", (evt) => {
-                this.rxGameData(evt);
-            });
-        });
-    }
-
-    setDisplayName(userName) {
-        this.api.executeCommand("displayName", userName);
-    }
-
-    leave() {
-        this.api.executeCommand("hangup");
-    }
-
-    async getAudioOutputDevices() {
-        const devices = await this.api.getAvailableDevices();
-        return devices && devices.audioOutput || [];
-    }
-
-    async getCurrentAudioOutputDevice() {
-        const devices = await this.api.getCurrentDevices();
-        return devices && devices.audioOutput || null;
-    }
-
-    setAudioOutputDevice(device) {
-        this.api.setAudioOutputDevice(device.label, device.id);
-    }
-
-    async getAudioInputDevices() {
-        const devices = await this.api.getAvailableDevices();
-        return devices && devices.audioInput || [];
-    }
-
-    async getCurrentAudioInputDevice() {
-        const devices = await this.api.getCurrentDevices();
-        return devices && devices.audioInput || null;
-    }
-
-    setAudioInputDevice(device) {
-        this.api.setAudioInputDevice(device.label, device.id);
-    }
-
-    async getVideoInputDevices() {
-        const devices = await this.api.getAvailableDevices();
-        return devices && devices.videoInput || [];
-    }
-
-    async getCurrentVideoInputDevice() {
-        const devices = await this.api.getCurrentDevices();
-        return devices && devices.videoInput || null;
-    }
-
-    setVideoInputDevice(device) {
-        this.api.setVideoInputDevice(device.label, device.id);
-    }
-
-    toggleAudio() {
-        this.api.executeCommand("toggleAudio");
-    }
-
-    toggleVideo() {
-        this.api.executeCommand("toggleVideo");
-    }
-
-    setAvatarURL(url) {
-        this.api.executeCommand("avatarUrl", url);
-    }
-
-    async isAudioMutedAsync() {
-        return await this.api.isAudioMuted();
-    }
-
-    async isVideoMutedAsync() {
-        return await this.api.isVideoMuted();
-    }
-
-    sendMessageTo(toUserID, data) {
-        this.api.executeCommand("sendEndpointTextMessage", toUserID, JSON.stringify(data));
-    }
-}
-
 class FormDialog extends EventTarget {
     constructor(name, ...rest) {
         super();
@@ -1441,36 +796,33 @@ class FormDialog extends EventTarget {
         this.element = document.getElementById(name) ||
             Div(
                 id(name),
-                H1(
-                    style({ gridArea: "1/1/2/4" }),
-                    ...rest));
+                H1(...rest));
 
         formStyle.apply(this.element);
 
+        style({ gridArea: "1/1/2/4" }).apply(this.element.querySelector("h1"));
+
         this.header = this.element.querySelector(".header")
-            || this.element.appendChild(
-                Div(
-                    className("header"),
-                    style({ gridArea: "2/1/3/4" })));
+            || this.element.appendChild(Div(className("header")));
+
+        style({ gridArea: "2/1/3/4" }).apply(this.header);
 
         this.content = this.element.querySelector(".content")
-            || this.element.appendChild(
-                Div(
-                    className("content"),
-                    style({
-                        overflowY: "scroll",
-                        gridArea: "3/1/4/4"
-                    })));
+            || this.element.appendChild(Div(className("content")));
+
+        style({
+            overflowY: "scroll",
+            gridArea: "3/1/4/4"
+        }).apply(this.content);
 
         this.footer = this.element.querySelector(".footer")
-            || this.element.appendChild(
-                Div(
-                    className("footer"),
-                    style({
-                        display: "flex",
-                        flexDirection: "row-reverse",
-                        gridArea: "4/1/5/4"
-                    })));
+            || this.element.appendChild(Div(className("footer")));
+
+        style({
+            display: "flex",
+            flexDirection: "row-reverse",
+            gridArea: "4/1/5/4"
+        }).apply(this.footer);
     }
 
     appendChild(child) {
@@ -6880,16 +6232,31 @@ class EventedGamepad extends EventTarget {
         if (!(pad instanceof Gamepad)) {
             throw new Error("Value must be a Gamepad");
         }
+
         this.id = pad.id;
+        this.displayId = pad.displayId;
+
+        this.connected = pad.connected;
+        this.hand = pad.hand;
+        this.pose = pad.pose;
+
         const self = {
             btnDownEvts: [],
             btnUpEvts: [],
-            btnState: []
+            btnState: [],
+            axisMaxed: [],
+            axisMaxEvts: [],
+            sticks: []
         };
-        gamepadStates.set(this, self);
+
         this.buttons = [];
         this.axes = [];
         this.hapticActuators = [];
+        this.axisThresholdMax = 0.9;
+        this.axisThresholdMin = 0.1;
+
+        this._isStick = (a) => a % 2 === 0 && a < pad.axes.length - 1;
+
         for (let b = 0; b < pad.buttons.length; ++b) {
             self.btnDownEvts[b] = Object.assign(new Event("gamepadbuttondown"), {
                 button: b
@@ -6897,18 +6264,31 @@ class EventedGamepad extends EventTarget {
             self.btnUpEvts[b] = Object.assign(new Event("gamepadbuttonup"), {
                 button: b
             });
-            self.btnState[b] = pad.buttons[b].pressed;
+            self.btnState[b] = false;
+
             this.buttons[b] = pad.buttons[b];
         }
+
         for (let a = 0; a < pad.axes.length; ++a) {
+            self.axisMaxEvts[a] = Object.assign(new Event("gamepadaxismaxed"), {
+                axis: a
+            });
+            self.axisMaxed[a] = false;
+            if (this._isStick(a)) {
+                self.sticks[a / 2] = { x: 0, y: 0 };
+            }
+
             this.axes[a] = pad.axes[a];
         }
+
         if (pad.hapticActuators !== undefined) {
             for (let h = 0; h < pad.hapticActuators.length; ++h) {
                 this.hapticActuators[h] = pad.hapticActuators[h];
             }
         }
-        Object.freeze(this);
+
+        Object.seal(this);
+        gamepadStates.set(this, self);
     }
 
     dispose() {
@@ -6919,20 +6299,47 @@ class EventedGamepad extends EventTarget {
         if (!(pad instanceof Gamepad)) {
             throw new Error("Value must be a Gamepad");
         }
+
+        this.connected = pad.connected;
+        this.hand = pad.hand;
+        this.pose = pad.pose;
+
         const self = gamepadStates.get(this);
+
         for (let b = 0; b < pad.buttons.length; ++b) {
-            const wasPressed = self.btnState[b], pressed = pad.buttons[b].pressed;
+            const wasPressed = self.btnState[b],
+                pressed = pad.buttons[b].pressed;
             if (pressed !== wasPressed) {
                 self.btnState[b] = pressed;
                 this.dispatchEvent((state
                     ? self.btnDownEvts
                     : self.btnUpEvts)[b]);
             }
+
             this.buttons[b] = pad.buttons[b];
         }
+
         for (let a = 0; a < pad.axes.length; ++a) {
-            this.axes[a] = pad.axes[a];
+            const wasMaxed = self.axisMaxed[a],
+                maxed = pad.axes[a] >= this.axisThresholdMax,
+                mined = pad.axes[a] <= this.axisThresholdMin;
+            if (maxed && !wasMaxed) {
+                this.dispatchEvent(self.axisMaxEvts[a]);
+            }
+
+            this.axes[a] = maxed
+                ? 1
+                : (mined
+                    ? 0
+                    : pads.axes[a]);
         }
+
+        for (let a = 0; a < this.axes.length - 1; a += 2) {
+            const stick = self.sticks[a / 2];
+            stick.x = this.axes[a];
+            stick.y = this.axes[a + 1];
+        }
+
         if (pad.hapticActuators !== undefined) {
             for (let h = 0; h < pad.hapticActuators.length; ++h) {
                 this.hapticActuators[h] = pad.hapticActuators[h];
@@ -6949,8 +6356,9 @@ const gamepadConnectedEvt = Object.assign(new Event("gamepadconnected"), {
     }),
 
     gamepads = new Map(),
-    anyButtonDownEvt = Object.assign(new Event("gamepadbuttondown"), { button: 0 }),
-    anyButtonUpEvt = Object.assign(new Event("gamepadbuttonup"), { button: 0 });
+    anyButtonDownEvt = Object.assign(new Event("gamepadbuttondown"), { button: -1 }),
+    anyButtonUpEvt = Object.assign(new Event("gamepadbuttonup"), { button: -1 }),
+    anyAxisMaxedEvt = Object.assign(new Event("gamepadaxismaxed"), { axis: -1 });
 
 class GamepadStateManager extends EventTarget {
     constructor() {
@@ -6966,21 +6374,29 @@ class GamepadStateManager extends EventTarget {
             this.dispatchEvent(anyButtonUpEvt);
         };
 
+        const onAnyAxisMaxed = (evt) => {
+            anyAxisMaxedEvt.axis = evt.axis;
+            this.dispatchEvent(anyAxisMaxedEvt);
+        };
+
         window.addEventListener("gamepadconnected", (evt) => {
             const pad = evt.gamepad,
                 gamepad = new EventedGamepad(pad);
             gamepad.addEventListener("gamepadbuttondown", onAnyButtonDown);
             gamepad.addEventListener("gamepadbuttonup", onAnyButtonUp);
+            gamepad.addEventListener("gamepadaxismaxed", onAnyAxisMaxed);
             gamepads.set(pad.id, gamepad);
             gamepadConnectedEvt.gamepad = gamepad;
             this.dispatchEvent(gamepadConnectedEvt);
         });
 
         window.addEventListener("gamepaddisconnected", (evt) => {
-            const gamepad = gamepads.get(pad.id);
-            gamepads.delete(pad.id);
+            const id = evt.gamepad.id,
+                gamepad = gamepads.get(id);
+            gamepads.delete(id);
             gamepad.removeEventListener("gamepadbuttondown", onAnyButtonDown);
             gamepad.removeEventListener("gamepadbuttonup", onAnyButtonUp);
+            gamepad.removeEventListener("gamepadaxismaxed", onAnyAxisMaxed);
             gamepadDisconnectedEvt.gamepad = gamepad;
             this.dispatchEvent(gamepadDisconnectedEvt);
             gamepad.dispose();
@@ -7974,7 +7390,8 @@ class TileMap {
 const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
     STACKED_USER_OFFSET_X = 5,
     STACKED_USER_OFFSET_Y = 5,
-    eventNames$1 = ["userMoved", "userPositionNeeded"];
+    MOVE_TRANSITION_TIME = 0.5,
+    eventNames = ["userMoved", "userPositionNeeded"];
 
 class User extends EventTarget {
     constructor(id, displayName, isMe) {
@@ -8048,7 +7465,7 @@ class User extends EventTarget {
 
 
     addEventListener(evtName, func, opts) {
-        if (eventNames$1.indexOf(evtName) === -1) {
+        if (eventNames.indexOf(evtName) === -1) {
             throw new Error(`Unrecognized event type: ${evtName}`);
         }
 
@@ -8337,6 +7754,7 @@ const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_SHAPE = 1 / 4,
     CAMERA_ZOOM_SPEED = 0.005,
     MAX_DRAG_DISTANCE = 5,
+    MOVE_REPEAT = 0.125,
     isFirefox = typeof InstallTrigger !== "undefined",
     gameStartedEvt = new Event("gameStarted"),
     gameEndedEvt = new Event("gameEnded"),
@@ -9391,6 +8809,8 @@ function init(host, JitsiClientClass) {
         videoConferenceJoined: async (evt) => {
             login.connected = true;
 
+            window.location.hash = login.roomName;
+
             game.start(evt);
             for (let user of client.otherUsers.entries()) {
                 game.addUser({
@@ -9480,7 +8900,654 @@ function init(host, JitsiClientClass) {
     return forExport;
 }
 
-const { toolbar, login } = init("jitsi.calla.chat", ExternalJitsiClient);
+function copy(dest, evt) {
+    for (let key in dest) {
+        dest[key] = null;
+        if (evt[key] !== undefined) {
+            dest[key] = evt[key];
+        }
+    }
+
+    return dest;
+}
+class CallaEvent extends Event {
+    constructor(data) {
+        super(data.command);
+        Event.clone(this, data.value);
+    }
+}
+
+class CallaUserEvent extends CallaEvent {
+    constructor(id, data) {
+        super(data);
+        this.id = id;
+    }
+}
+
+// helps us filter out data channel messages that don't belong to us
+const APP_FINGERPRINT$1
+    = window.APP_FINGERPRINT
+    = "Calla",
+    eventNames$1 = [
+        "userMoved",
+        "emote",
+        "userInitRequest",
+        "userInitResponse",
+        "audioMuteStatusChanged",
+        "videoMuteStatusChanged",
+        "localAudioMuteStatusChanged",
+        "localVideoMuteStatusChanged",
+        "remoteAudioMuteStatusChanged",
+        "remoteVideoMuteStatusChanged",
+        "videoConferenceJoined",
+        "videoConferenceLeft",
+        "participantJoined",
+        "participantLeft",
+        "avatarChanged",
+        "displayNameChange",
+        "audioActivity",
+        "setAvatarEmoji"
+    ],
+    evtMuted = Object.seal({
+        id: null,
+        muted: null
+    }),
+    evtEmoji = Object.seal({
+        id: null,
+        value: null,
+        desc: null
+    }),
+    evtUserState = Object.seal({
+        id: null,
+        x: null,
+        y: null,
+        displayName: null,
+        avatarURL: null,
+        avatarEmoji: null
+    }),
+    evtAudioProperties = Object.seal({
+        origin: null,
+        transitionTime: null,
+        minDistance: null,
+        maxDistance: null,
+        rolloff: null
+    });
+
+// Manages communication between Jitsi Meet and Calla
+class BaseJitsiClient extends EventTarget {
+
+    constructor() {
+        super();
+        this.element = Div(
+            id("jitsi"),
+            style({
+                position: "absolute",
+                left: 0,
+                top: 0,
+                width: "100%",
+                height: "100%",
+                margin: 0,
+                padding: 0,
+                overflow: "hidden"
+            }));
+        this.localUser = null;
+        this.otherUsers = new Map();
+        this.audioClient = null;
+    }
+
+    hide() {
+        this.element.hide();
+    }
+
+    show() {
+        this.element.show();
+    }
+
+    resize(top) {
+        if (top !== undefined) {
+            this.element.style.top = top + "px";
+            this.element.style.height = `calc(100% - ${top}px)`;
+        }
+    }
+
+    async initializeAsync(host, roomName) {
+        throw new Error("Not implemented in base class.");
+    }
+
+    async joinAsync(host, roomName, userName) {
+        this.dispose();
+        await this.initializeAsync(host, roomName);
+
+        this.addEventListener("videoConferenceJoined", (evt) => {
+            this.localUser = evt.id;
+        });
+
+        this.addEventListener("videoConferenceLeft", (evt) => {
+            this.localUser = null;
+        });
+
+        this.addEventListener("participantJoined", (evt) => {
+            this.otherUsers.set(evt.id, evt.displayName);
+        });
+
+        this.addEventListener("participantLeft", (evt) => {
+            if (this.otherUsers.has(evt.id)) {
+                this.otherUsers.delete(evt.id);
+            }
+        });
+
+        this.addEventListener("displayNameChange", (evt) => {
+            if (this.otherUsers.has(evt.id)) {
+                this.otherUsers.set(evt.id, evt.displayname);
+            }
+        });
+
+        const localizeMuteEvent = (type) => (evt) => {
+            const isLocal = evt.id === this.localUser
+                || evt.id === null
+                || evt.id === undefined,
+                evt2 = Object.assign(
+                    new Event((isLocal ? "local" : "remote") + type + "MuteStatusChanged"), {
+                    id: this.localUser,
+                    muted: evt.muted
+                });
+            this.dispatchEvent(evt2);
+        };
+
+        this.addEventListener("audioMuteStatusChanged", localizeMuteEvent("Audio"));
+        this.addEventListener("videoMuteStatusChanged", localizeMuteEvent("Video"));
+
+        this.addEventListener("localAudioMuteStatusChanged", (evt) => {
+            this.audioMuteStatusChanged(evt.muted);
+        });
+
+        this.addEventListener("localVideoMuteStatusChanged", (evt) => {
+            this.videoMuteStatusChanged(evt.muted);
+        });
+
+        window.addEventListener("unload", () => {
+            this.dispose();
+        });
+
+        this.setDisplayName(userName);
+    }
+
+    dispose() {
+    }
+
+    setDisplayName(userName) {
+        throw new Error("Not implemented in base class");
+    }
+
+    leave() {
+        throw new Error("Not implemented in base class");
+    }
+
+    async getAudioOutputDevices() {
+        throw new Error("Not implemented in base class");
+    }
+
+    async getCurrentAudioOutputDevice() {
+        throw new Error("Not implemented in base class");
+    }
+
+    setAudioOutputDevice(device) {
+        throw new Error("Not implemented in base class");
+    }
+
+    async getAudioInputDevices() {
+        throw new Error("Not implemented in base class");
+    }
+
+    async getCurrentAudioInputDevice() {
+        throw new Error("Not implemented in base class");
+    }
+
+    setAudioInputDevice(device) {
+        throw new Error("Not implemented in base class");
+    }
+
+    async getVideoInputDevices() {
+        throw new Error("Not implemented in base class");
+    }
+
+    async getCurrentVideoInputDevice() {
+        throw new Error("Not implemented in base class");
+    }
+
+    setVideoInputDevice(device) {
+        throw new Error("Not implemented in base class");
+    }
+
+    toggleAudio() {
+        throw new Error("Not implemented in base class");
+    }
+
+    toggleVideo() {
+        throw new Error("Not implemented in base class");
+    }
+
+    setAvatarURL(url) {
+        throw new Error("Not implemented in base class");
+    }
+
+    async isAudioMutedAsync() {
+        throw new Error("Not implemented in base class");
+    }
+
+    async isVideoMutedAsync() {
+        throw new Error("Not implemented in base class");
+    }
+
+    sendMessageTo(toUserID, data) {
+        throw new Error("Not implemented in base class");
+    }
+
+    setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
+        evtAudioProperties.origin = origin;
+        evtAudioProperties.transitionTime = transitionTime;
+        evtAudioProperties.minDistance = minDistance;
+        evtAudioProperties.maxDistance = maxDistance;
+        evtAudioProperties.rolloff = rolloff;
+
+        this.audioClient.setAudioProperties(evtAudioProperties);
+    }
+
+    setPosition(evt) {
+        if (evt.id === this.localUser) {
+            this.audioClient.setLocalPosition(evt);
+            for (let toUserID of this.otherUsers.keys()) {
+                this.txGameData(toUserID, "userMoved", evt);
+            }
+        }
+        else {
+            this.audioClient.setUserPosition(evt);
+        }
+    }
+
+    removeUser(evt) {
+        this.audioClient.removeUser(evt);
+    }
+
+    async setAudioMutedAsync(muted) {
+        const isMuted = await this.isAudioMutedAsync();
+        if (muted !== isMuted) {
+            this.toggleAudio();
+        }
+    }
+
+    async setVideoMutedAsync(muted) {
+        const isMuted = await this.isVideoMutedAsync();
+        if (muted !== isMuted) {
+            this.toggleVideo();
+        }
+    }
+
+    /// Add a listener for Calla events that come through the Jitsi Meet data channel.
+    addEventListener(evtName, callback, opts) {
+        if (eventNames$1.indexOf(evtName) === -1) {
+            throw new Error(`Unsupported event type: ${evtName}`);
+        }
+
+        super.addEventListener(evtName, callback, opts);
+    }
+
+    /// Send a Calla message through the Jitsi Meet data channel.
+    txGameData(id, command, value) {
+        const data = {
+            hax: APP_FINGERPRINT$1,
+            command,
+            value
+        };
+        this.sendMessageTo(id, data);
+    }
+
+    /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
+    /// to receive Calla messages from the Jitsi Meet data channel.
+    rxGameData(evt) {
+        // JitsiExternalAPI::endpointTextMessageReceived event arguments format: 
+        // evt = {
+        //    data: {
+        //      senderInfo: {
+        //        jid: "string", // the jid of the sender
+        //        id: "string" // the participant id of the sender
+        //      },
+        //      eventData: {
+        //        name: "string", // the name of the datachannel event: `endpoint-text-message`
+        //        text: "string" // the received text from the sender
+        //      }
+        //   }
+        //};
+        const data = JSON.parse(evt.data.eventData.text);
+        if (data.hax === APP_FINGERPRINT$1) {
+            const evt2 = new CallaUserEvent(evt.data.senderInfo.id, data);
+            this.dispatchEvent(evt2);
+        }
+    }
+
+    userInitRequest(toUserID) {
+        this.txGameData(toUserID, "userInitRequest");
+    }
+
+    userInitRequestAsync(toUserID) {
+        return this.until("userInitResponse",
+            () => this.userInitRequest(toUserID),
+            (evt) => evt.id === toUserID,
+            1000);
+    }
+
+    userInitResponse(toUserID, fromUserState) {
+        this.txGameData(toUserID, "userInitResponse", copy(evtUserState, fromUserState));
+    }
+
+    setAvatarEmoji(emoji) {
+        copy(evtEmoji, emoji);
+        for (let toUserID of this.otherUsers.keys()) {
+            this.txGameData(toUserID, "setAvatarEmoji", evtEmoji);
+        }
+    }
+
+    emote(emoji) {
+        copy(evtEmoji, emoji);
+        for (let toUserID of this.otherUsers.keys()) {
+            this.txGameData(toUserID, "emote", evtEmoji);
+        }
+    }
+
+    audioMuteStatusChanged(muted) {
+        evtMuted.id = this.localUser;
+        evtMuted.muted = muted;
+        for (let toUserID of this.otherUsers.keys()) {
+            this.txGameData(toUserID, "audioMuteStatusChanged", evtMuted);
+        }
+    }
+
+    videoMuteStatusChanged(muted) {
+        evtMuted.id = this.localUser;
+        evtMuted.muted = muted;
+        for (let toUserID of this.otherUsers.keys()) {
+            this.txGameData(toUserID, "videoMuteStatusChanged", evtMuted);
+        }
+    }
+}
+
+const evtSetPosition = Object.seal({
+    id: null,
+    x: null,
+    y: null
+}),
+    evtSetAudioProperties = Object.seal({
+        origin: null,
+        transitionTime: null,
+        minDistance: null,
+        maxDistance: null,
+        rolloff: null
+    }),
+    evtRemoveUser = Object.seal({
+        id: null
+    });
+
+class ExternalJitsiAudioClient extends EventTarget {
+    constructor(host, apiOrigin, apiWindow) {
+        super();
+        this.host = host;
+        this.apiOrigin = apiOrigin;
+        this.apiWindow = apiWindow;
+        window.addEventListener("message", (evt) => {
+            this.rxJitsiHax(evt);
+        });
+    }
+
+
+    /// Send a Calla message to the jitsihax.js script
+    txJitsiHax(command, value) {
+        if (this.apiWindow) {
+            const evt = {
+                hax: APP_FINGERPRINT,
+                command: command,
+                value: value
+            };
+            try {
+                this.apiWindow.postMessage(JSON.stringify(evt), this.apiOrigin);
+            }
+            catch (exp) {
+                console.error(exp);
+            }
+        }
+    }
+
+    rxJitsiHax(msg) {
+        const isLocalHost = msg.origin.match(/^https?:\/\/localhost\b/);
+        if (msg.origin === "https://" + this.host || isLocalHost) {
+            try {
+                const evt = JSON.parse(msg.data);
+                if (evt.hax === APP_FINGERPRINT) {
+                    const evt2 = new CallaEvent(evt);
+                    this.dispatchEvent(evt2);
+                }
+            }
+            catch (exp) {
+                console.error(exp);
+            }
+        }
+    }
+
+    setLocalPosition(evt) {
+        this.txJitsiHax("setLocalPosition", copy(evtSetPosition, evt));
+    }
+
+    setUserPosition(evt) {
+        this.txJitsiHax("setUserPosition", copy(evtSetPosition, evt));
+    }
+
+    setAudioProperties(evt) {
+        this.txJitsiHax("setAudioProperties", copy(evtSetAudioProperties, evt));
+    }
+
+    removeUser(evt) {
+        this.txJitsiHax("removeUser", copy(evtRemoveUser, evt));
+    }
+}
+
+/* global JitsiMeetExternalAPI */
+
+const audioActivityEvt = Object.assign(new Event("audioActivity", {
+    id: null,
+    isActive: false
+})),
+    evtVideoConferenceJoined = Object.seal({
+        roomName: null,
+        id: null,
+        displayName: null
+    }),
+    evtVideoConferenceLeft = Object.seal({
+        roomName: null
+    }),
+    evtParticipantLeft = Object.seal({
+        id: null
+    }),
+    evtAvatarChanged = Object.seal({
+        id: null,
+        avatarURL: null
+    }),
+    evtParticipantName = Object.seal({
+        id: null,
+        displayName: null
+    }),
+    evtMuted$1 = Object.seal({
+        id: null,
+        muted: null
+    });
+
+class ExternalJitsiClient extends BaseJitsiClient {
+    constructor() {
+        super();
+        this.api = null;
+        this.audioClient = null;
+    }
+
+    dispose() {
+        if (this.api !== null) {
+            this.api.dispose();
+            this.api = null;
+        }
+    }
+
+    async initializeAsync(host, roomName) {
+        await import(`https://${host}/libs/external_api.min.js`);
+        return new Promise((resolve) => {
+            this.api = new JitsiMeetExternalAPI(host, {
+                parentNode: this.element,
+                roomName,
+                onload: () => {
+                    const iframe = this.api.getIFrame();
+                    this.audioClient = new ExternalJitsiAudioClient(
+                        host,
+                        new URL(iframe.src).origin,
+                        iframe.contentWindow);
+                    this.audioClient.addEventListener("audioActivity", (evt) => {
+                        audioActivityEvt.id = evt.id;
+                        audioActivityEvt.isActive = evt.isActive;
+                        this.dispatchEvent(audioActivityEvt);
+                    });
+                    resolve();
+                },
+                noSSL: false,
+                width: "100%",
+                height: "100%",
+                configOverwrite: {
+                    startVideoMuted: 0,
+                    startWithVideoMuted: true
+                },
+                interfaceConfigOverwrite: {
+                    DISABLE_VIDEO_BACKGROUND: true,
+                    SHOW_JITSI_WATERMARK: false,
+                    SHOW_WATERMARK_FOR_GUESTS: false,
+                    SHOW_POWERED_BY: true,
+                    AUTHENTICATION_ENABLE: false,
+                    MOBILE_APP_PROMO: false
+                }
+            });
+
+            const reroute = (evtType, dest, test) => {
+                this.api.addEventListener(evtType, (rootEvt) => {
+                    if (!test || test(rootEvt)) {
+                        copy(dest, rootEvt);
+
+                        // The version of the External API that I'm using 
+                        // misspells the name of this field.
+                        if (evtType === "displayNameChange"
+                            && rootEvt.displayname !== undefined) {
+                            dest.displayName = rootEvt.displayname;
+                        }
+
+                        if (dest.hasOwnProperty("id")
+                            && (rootEvt.id === null
+                                || rootEvt.id === undefined)) {
+                            dest.id = this.localUser;
+                        }
+
+                        const evt = Object.assign(
+                            new Event(evtType),
+                            dest);
+                        this.dispatchEvent(evt);
+                    }
+                });
+            };
+
+            reroute("videoConferenceJoined", evtVideoConferenceJoined);
+            reroute("videoConferenceLeft", evtVideoConferenceLeft);
+            reroute("participantJoined", evtParticipantName, (evt) => evt.id !== "local");
+            reroute("participantLeft", evtParticipantLeft);
+            reroute("avatarChanged", evtAvatarChanged, (evt) => evt.avatarURL !== undefined);
+            reroute("displayNameChange", evtParticipantName);
+            reroute("audioMuteStatusChanged", evtMuted$1);
+            reroute("videoMuteStatusChanged", evtMuted$1);
+
+            this.api.addEventListener("endpointTextMessageReceived", (evt) => {
+                this.rxGameData(evt);
+            });
+        });
+    }
+
+    setDisplayName(userName) {
+        this.api.executeCommand("displayName", userName);
+    }
+
+    leave() {
+        this.api.executeCommand("hangup");
+    }
+
+    async getAudioOutputDevices() {
+        const devices = await this.api.getAvailableDevices();
+        return devices && devices.audioOutput || [];
+    }
+
+    async getCurrentAudioOutputDevice() {
+        const devices = await this.api.getCurrentDevices();
+        return devices && devices.audioOutput || null;
+    }
+
+    setAudioOutputDevice(device) {
+        this.api.setAudioOutputDevice(device.label, device.id);
+    }
+
+    async getAudioInputDevices() {
+        const devices = await this.api.getAvailableDevices();
+        return devices && devices.audioInput || [];
+    }
+
+    async getCurrentAudioInputDevice() {
+        const devices = await this.api.getCurrentDevices();
+        return devices && devices.audioInput || null;
+    }
+
+    setAudioInputDevice(device) {
+        this.api.setAudioInputDevice(device.label, device.id);
+    }
+
+    async getVideoInputDevices() {
+        const devices = await this.api.getAvailableDevices();
+        return devices && devices.videoInput || [];
+    }
+
+    async getCurrentVideoInputDevice() {
+        const devices = await this.api.getCurrentDevices();
+        return devices && devices.videoInput || null;
+    }
+
+    setVideoInputDevice(device) {
+        this.api.setVideoInputDevice(device.label, device.id);
+    }
+
+    toggleAudio() {
+        this.api.executeCommand("toggleAudio");
+    }
+
+    toggleVideo() {
+        this.api.executeCommand("toggleVideo");
+    }
+
+    setAvatarURL(url) {
+        this.api.executeCommand("avatarUrl", url);
+    }
+
+    async isAudioMutedAsync() {
+        return await this.api.isAudioMuted();
+    }
+
+    async isVideoMutedAsync() {
+        return await this.api.isVideoMuted();
+    }
+
+    sendMessageTo(toUserID, data) {
+        this.api.executeCommand("sendEndpointTextMessage", toUserID, JSON.stringify(data));
+    }
+}
+
+/* global JITSI_HOST */
+
+const { toolbar, login } = init(JITSI_HOST, ExternalJitsiClient);
 
 function adLink(url, label, icon) {
     return A(

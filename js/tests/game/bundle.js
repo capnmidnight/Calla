@@ -6157,127 +6157,184 @@ const userNumber = document.location.hash.length > 0
     ? parseFloat(document.location.hash.substring(1))
     : 1;
 
-class BaseSpatializer {
-
-    constructor(destination, audio, analyser, drain) {
-        this.destination = destination;
-        this.audio = audio;
-        this.analyser = analyser;
-        this.node = drain;
-        this.node.connect(this.destination.audioContext.destination);
-        this.source = null;
-    }
-
-    checkStream() {
-        if (!this.source) {
-            try {
-                const stream = !!this.audio.mozCaptureStream
-                    ? this.audio.mozCaptureStream()
-                    : this.audio.captureStream();
-
-                this.source = this.destination.audioContext.createMediaStreamSource(stream);
-                this.source.connect(this.analyser);
-                this.source.connect(this.node);
-            }
-            catch (exp) {
-                console.warn("Source isn't available yet. Will retry in a moment. Reason: ", exp);
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    dispose() {
-        if (!!this.source) {
-            this.source.disconnect(this.analyser);
-            this.source.disconnect(this.node);
-            this.source = null;
-        }
-
-        this.node.disconnect(this.destination.audioContext.destination);
-        this.node = null;
-        this.audio = null;
-        this.destination = null;
-    }
-
-    update() {
-    }
-
-    setAudioProperties(evt) {
+class BasePosition {
+    get x() {
         throw new Error("Not implemented in base class.");
     }
 
-    setPosition(evt) {
+    get y() {
         throw new Error("Not implemented in base class.");
     }
 
-    get positionX() {
+    setTarget(evt, t, dt) {
         throw new Error("Not implemented in base class.");
     }
 
-    get positionY() {
-        throw new Error("Not implemented in base class.");
+    update(t) {
     }
 }
 
-class FullSpatializer extends BaseSpatializer {
+class InterpolatedPosition extends BasePosition {
 
-    constructor(destination, audio, analyser) {
-        super(destination, audio, analyser, destination.audioContext.createPanner());
+    constructor() {
+        super();
 
-        this.node.panningModel = "HRTF";
-        this.node.distanceModel = "inverse";
-        this.node.refDistance = destination.minDistance;
-        this.node.rolloffFactor = destination.rolloff;
-        this.node.coneInnerAngle = 360;
-        this.node.coneOuterAngle = 0;
-        this.node.coneOuterGain = 0;
-        this.node.positionY.setValueAtTime(0, this.destination.audioContext.currentTime);
-        this.wasMuted = false;
+        this._st
+            = this._et
+            = 0;
+        this._x
+            = this._tx
+            = this._sx
+            = 0;
+        this._y
+            = this._ty
+            = this._sy
+            = 0;
     }
 
-    setAudioProperties(evt) {
-        this.node.refDistance = evt.minDistance;
-        this.node.rolloffFactor = evt.rolloff;
+    get x() {
+        return this._x;
     }
 
-    setPosition(evt) {
-        const time = this.destination.audioContext.currentTime + this.destination.transitionTime;
+    get y() {
+        return this._y;
+    }
+
+    setTarget(evt, t, dt) {
+        this._st = t;
+        this._et = t + dt;
+        this._sx = this._x;
+        this._sy = this._y;
+        this._tx = evt.x;
+        this._ty = evt.y;
+    }
+
+    update(t) {
+        const p = project(t, this._st, this._et);
+        if (p <= 1) {
+            const deltaX = this._tx - this._sx,
+                deltaY = this._ty - this._sy;
+            this._x = this._sx + p * deltaX;
+            this._y = this._sy + p * deltaY;
+        }
+    }
+}
+
+class WebAudioOldListenerPosition extends InterpolatedPosition {
+    constructor(listener) {
+        super();
+        this.listener = listener;
+        this.listener.setPosition(0, 0, 0);
+        this.listener.setOrientation(0, 0, -1, 0, 1, 0);
+    }
+
+    update(t) {
+        super.update(t);
+        this.listener.setPosition(this.x, 0, this.y);
+    }
+}
+
+class WebAudioNodePosition extends BasePosition {
+    constructor(node) {
+        super();
+
+        this.node = node;
+        this.node.positionX.setValueAtTime(0, 0);
+        this.node.positionY.setValueAtTime(0, 0);
+        this.node.positionZ.setValueAtTime(0, 0);
+    }
+
+    get x() {
+        return this.node.positionX.value;
+    }
+
+    get y() {
+        return this.node.positionZ.value;
+    }
+
+    setTarget(evt, t, dt) {
+        const time = t + dt;
         // our 2D position is in X/Y coords, but our 3D position
         // along the horizontal plane is X/Z coords.
         this.node.positionX.linearRampToValueAtTime(evt.x, time);
         this.node.positionZ.linearRampToValueAtTime(evt.y, time);
     }
+}
 
-    get positionX() {
-        return this.node.positionX.value;
+class WebAudioNewListenerPosition extends WebAudioNodePosition {
+    constructor(node) {
+        super(node);
+        this.node.forwardX.setValueAtTime(0, 0);
+        this.node.forwardY.setValueAtTime(0, 0);
+        this.node.forwardZ.setValueAtTime(-1, 0);
+        this.node.upX.setValueAtTime(0, 0);
+        this.node.upY.setValueAtTime(1, 0);
+        this.node.upZ.setValueAtTime(0, 0);
+    }
+}
+
+class MockAudioContext {
+    constructor() {
+        this._t = Date.now() / 1000;
+    }
+    get currentTime() {
+        return Date.now() / 1000 - this._t;
+    }
+}
+
+class BaseSpatializer extends EventTarget {
+    constructor(userID, destination, audio, position) {
+        super();
+
+        this.id = userID;
+        this.destination = destination;
+        this.audio = audio;
+        this.position = position;
+        this.volume = 1;
+        this.pan = 0;
     }
 
-    get positionY() {
-        return this.node.positionZ.value;
+    dispose() {
+        this.audio.pause();
+
+        this.position = null;
+        this.audio = null;
+        this.destination = null;
+        this.id = null;
     }
 
     update() {
-        if (!!this.source) {
-            const lx = this.destination.positionX,
-                ly = this.destination.positionY,
-                distX = this.positionX - lx,
-                distY = this.positionY - ly,
-                dist = Math.sqrt(distX * distX + distY * distY),
-                range = clamp(project(dist, this.destination.minDistance, this.destination.maxDistance), 0, 1),
-                muted = range >= 1;
+        this.position.update(this.destination.audioContext.currentTime);
 
-            if (muted !== this.wasMuted) {
-                this.wasMuted = muted;
-                if (muted) {
-                    this.source.disconnect(this.node);
-                }
-                else {
-                    this.source.connect(this.node);
-                }
-            }
-        }
+        const lx = this.destination.position.x,
+            ly = this.destination.position.y,
+            distX = this.position.x - lx,
+            distY = this.position.y - ly,
+            dist = Math.sqrt(distX * distX + distY * distY);
+
+        this.volume = 1 - clamp(project(dist, this.destination.minDistance, this.destination.maxDistance), 0, 1);
+        this.pan = dist > 0
+            ? distX / dist
+            : 0;
+    }
+
+    setTarget(evt) {
+        this.position.setTarget(evt, this.destination.audioContext.currentTime, this.destination.transitionTime);
+    }
+}
+
+class VolumeOnlySpatializer extends BaseSpatializer {
+
+    constructor(userID, destination, audio) {
+        super(userID, destination, audio, new InterpolatedPosition());
+        this.audio.play();
+
+        Object.seal(this);
+    }
+
+    update() {
+        super.update();
+        this.audio.volume = this.volume;
     }
 }
 
@@ -6307,18 +6364,11 @@ function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz, bufferSiz
     return count === 0 ? 0 : (sum / count);
 }
 
-class Source extends EventTarget {
-    constructor(userID, audio, destination, bufferSize) {
-        super();
+class BaseWebAudioSpatializer extends BaseSpatializer {
 
-        this.id = userID;
-        this.lastAudible = true;
-        this.activityCounter = 0;
-        this.wasActive = false;
+    constructor(userID, destination, audio, position, bufferSize, inNode, outNode) {
+        super(userID, destination, audio, position);
 
-        this.destination = destination;
-
-        this.audio = audio;
         this.audio.volume = 0;
 
         this.bufferSize = bufferSize;
@@ -6328,34 +6378,46 @@ class Source extends EventTarget {
         this.analyser.fftSize = 2 * this.bufferSize;
         this.analyser.smoothingTimeConstant = 0.2;
 
-        this.spatializer = new FullSpatializer(this.destination, this.audio, this.analyser);
+        this.inNode = inNode;
 
-        Object.seal(this);
-    }
+        this.outNode = outNode || inNode;
+        this.outNode.connect(this.destination.audioContext.destination);
 
-    dispose() {
-        this.spatializer.dispose();
-        this.audio.pause();
+        if (this.inNode !== this.outNode) {
+            this.inNode.connect(this.outNode);
+        }
 
-        this.spatializer = null;
-        this.destination = null;
-        this.audio = null;
-        this.analyser = null;
-        this.buffer = null;
-    }
+        this.wasActive = false;
+        this.lastAudible = true;
+        this.activityCounter = 0;
 
-    setAudioProperties(evt) {
-        this.spatializer.setAudioProperties(evt);
-    }
-
-    setPosition(evt) {
-        this.spatializer.setPosition(evt);
+        this.stream = null;
+        this.source = null;
     }
 
     update() {
-        if (this.spatializer.checkStream()) {
-            this.spatializer.update();
+        super.update();
 
+        if (!this.source) {
+            try {
+                if (!this.stream) {
+                    this.stream = !!this.audio.mozCaptureStream
+                        ? this.audio.mozCaptureStream()
+                        : this.audio.captureStream();
+                }
+
+                if (this.stream.active) {
+                    this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
+                    this.source.connect(this.analyser);
+                    this.source.connect(this.inNode);
+                }
+            }
+            catch (exp) {
+                console.warn("Source isn't available yet. Will retry in a moment. Reason: ", exp);
+            }
+        }
+
+        if (!!this.source) {
             this.analyser.getFloatFrequencyData(this.buffer);
 
             const average = 1.1 + analyserFrequencyAverage(this.analyser, this.buffer, 85, 255, this.bufferSize) / 100;
@@ -6374,78 +6436,149 @@ class Source extends EventTarget {
             }
         }
     }
+
+    dispose() {
+        if (!!this.source) {
+            this.source.disconnect(this.analyser);
+            this.source.disconnect(this.inNode);
+        }
+
+        this.outNode.disconnect(this.destination.audioContext.destination);
+
+        if (this.inNode !== this.outNode) {
+            this.inNode.disconnect(this.outNode);
+        }
+
+        this.source = null;
+        this.stream = null;
+        this.outNode = null;
+        this.inNode = null;
+        this.analyser = null;
+        this.buffer = null;
+
+        super.dispose();
+    }
 }
 
-const isOldAudioAPI = !AudioListener.prototype.hasOwnProperty("positionX");
+class FullSpatializer extends BaseWebAudioSpatializer {
 
-class Destination {
+    constructor(userID, destination, audio, bufferSize) {
+        const panner = destination.audioContext.createPanner(),
+            position = new WebAudioNodePosition(panner);
+        super(userID, destination, audio, position, bufferSize, panner);
+
+        this.inNode.panningModel = "HRTF";
+        this.inNode.distanceModel = "inverse";
+        this.inNode.refDistance = destination.minDistance;
+        this.inNode.rolloffFactor = destination.rolloff;
+        this.inNode.coneInnerAngle = 360;
+        this.inNode.coneOuterAngle = 0;
+        this.inNode.coneOuterGain = 0;
+        this.wasMuted = false;
+
+        Object.seal(this);
+    }
+
+    update() {
+        super.update();
+
+        if (this.inNode.refDistance !== this.destination.minDistance) {
+            this.inNode.refDistance = this.destination.minDistance;
+        }
+
+        if (this.inNode.rolloffFactor !== this.destination.rolloff) {
+            this.inNode.rolloffFactor = this.destination.rolloff;
+        }
+
+        const muted = this.volume <= 0;
+
+        if (!!this.source && muted !== this.wasMuted) {
+            this.wasMuted = muted;
+            if (muted) {
+                this.source.disconnect(this.inNode);
+            }
+            else {
+                this.source.connect(this.inNode);
+            }
+        }
+    }
+}
+
+class StereoSpatializer extends BaseWebAudioSpatializer {
+
+    constructor(userID, destination, audio, bufferSize) {
+        super(userID, destination, audio, new InterpolatedPosition(), bufferSize,
+            destination.audioContext.createStereoPanner(),
+            destination.audioContext.createGain());
+
+        Object.seal(this);
+    }
+
+    update() {
+        super.update();
+        this.inNode.pan.value = this.pan;
+        this.outNode.gain.value = this.volume;
+    }
+}
+
+/* global window, AudioListener, AudioContext, Event, EventTarget */
+
+const contextDestroyingEvt = new Event("contextDestroying"),
+    contextDestroyedEvt = new Event("contextDestroyed");
+
+let hasWebAudioAPI = window.hasOwnProperty("AudioListener"),
+    hasFullSpatializer = hasWebAudioAPI && window.hasOwnProperty("PannerNode"),
+    isLatestWebAudioAPI = hasWebAudioAPI && AudioListener.prototype.hasOwnProperty("positionX");
+
+class Destination extends EventTarget{
+
     constructor() {
-        this.audioContext = new AudioContext();
-        this.listener = this.audioContext.listener;
+        super();
 
         this.minDistance = 1;
         this.maxDistance = 10;
         this.rolloff = 1;
         this.transitionTime = 0.125;
 
-        if (isOldAudioAPI) {
-            this.startMoveTime
-                = this.endMoveTime
-                = 0;
+        this.createContext();
+    }
 
-            this.listenerX
-                = this.targetListenerX
-                = this.startListenerX
-                = 0;
-
-            this.listenerY
-                = this.targetListenerY
-                = this.startListenerY
-                = 0;
-
-            this.listener.setPosition(0, 0, 0);
-            this.listener.setOrientation(0, 0, -1, 0, 1, 0);
-        }
-        else {
-            const time = this.audioContext.currentTime;
-            this.listener.positionX.setValueAtTime(0, time);
-            this.listener.positionY.setValueAtTime(0, time);
-            this.listener.positionZ.setValueAtTime(0, time);
-            this.listener.forwardX.setValueAtTime(0, time);
-            this.listener.forwardY.setValueAtTime(0, time);
-            this.listener.forwardZ.setValueAtTime(-1, time);
-            this.listener.upX.setValueAtTime(0, time);
-            this.listener.upY.setValueAtTime(1, time);
-            this.listener.upZ.setValueAtTime(0, time);
+    createContext() {
+        if (!this.audioContext) {
+            try {
+                if (hasWebAudioAPI) {
+                    this.audioContext = new AudioContext();
+                    try {
+                        if (isLatestWebAudioAPI) {
+                            this.position = new WebAudioNewListenerPosition(this.audioContext.listener);
+                        }
+                    }
+                    catch (exp2) {
+                        isLatestWebAudioAPI = false;
+                        console.warn("No AudioListener.positionX property!", exp2);
+                    }
+                    finally {
+                        if (!isLatestWebAudioAPI) {
+                            this.position = new WebAudioOldListenerPosition(this.audioContext.listener);
+                        }
+                    }
+                }
+            }
+            catch (exp1) {
+                hasWebAudioAPI = false;
+                console.warn("No WebAudio API!", exp1);
+            }
+            finally {
+                if (!hasWebAudioAPI) {
+                    this.audioContext = new MockAudioContext();
+                    this.position = new InterpolatedPosition();
+                }
+            }
         }
     }
 
-    get positionX() {
-        return isOldAudioAPI
-            ? this.listenerX
-            : this.audioContext.listener.positionX.value
-    }
-
-    get positionY() {
-        return isOldAudioAPI
-            ? this.listenerY
-            : this.audioContext.listener.positionZ.value;
-    }
-
-    setPosition(evt) {
-        const time = this.audioContext.currentTime + this.transitionTime;
-        if (isOldAudioAPI) {
-            this.startMoveTime = this.audioContext.currentTime;
-            this.endMoveTime = time;
-            this.startListenerX = this.listenerX;
-            this.startListenerY = this.listenerY;
-            this.targetListenerX = evt.x;
-            this.targetListenerY = evt.y;
-        }
-        else {
-            this.listener.positionX.linearRampToValueAtTime(evt.x, time);
-            this.listener.positionZ.linearRampToValueAtTime(evt.y, time);
-        }
+    setTarget(evt) {
+        this.position.setTarget(evt, this.audioContext.currentTime, this.transitionTime);
     }
 
     setAudioProperties(evt) {
@@ -6456,18 +6589,42 @@ class Destination {
     }
 
     update() {
-        if (isOldAudioAPI) {
-            const time = this.audioContext.currentTime,
-                p = project(time, this.startMoveTime, this.endMoveTime);
+        this.position.update(this.audioContext.currentTime);
+    }
 
-            if (p <= 1) {
-                const deltaX = this.targetListenerX - this.startListenerX,
-                    deltaY = this.targetListenerY - this.startListenerY;
-
-                this.listenerX = this.startListenerX + p * deltaX;
-                this.listenerY = this.startListenerY + p * deltaY;
-
-                this.listener.setPosition(this.listenerX, 0, this.listenerY);
+    createSpatializer(userID, audio, bufferSize) {
+        try {
+            if (hasWebAudioAPI) {
+                try {
+                    if (hasFullSpatializer) {
+                        return new FullSpatializer(userID, this, audio, bufferSize);
+                    }
+                }
+                catch (exp2) {
+                    hasFullSpatializer = false;
+                    console.warn("No 360 spatializer support", exp2);
+                }
+                finally {
+                    if (!hasFullSpatializer) {
+                        return new StereoSpatializer(userID, this, audio, bufferSize);
+                    }
+                }
+            }
+        }
+        catch (exp1) {
+            hasWebAudioAPI = false;
+            if (this.audioContext) {
+                this.dispatchEvent(contextDestroyingEvt);
+                this.audioContext.close();
+                this.audioContext = null;
+                this.position = null;
+                this.dispatchEvent(contextDestroyedEvt);
+            }
+            console.warn("No WebAudio API!", exp1);
+        }
+        finally {
+            if (!hasWebAudioAPI) {
+                return new VolumeOnlySpatializer(userID, this, audio);
             }
         }
     }
@@ -6483,9 +6640,44 @@ const BUFFER_SIZE = 1024,
 class AudioManager extends EventTarget {
     constructor() {
         super();
-        this.sourceLookup = {};
+
+        this.onAudioActivity = (evt) => {
+            audioActivityEvt$1.id = evt.id;
+            audioActivityEvt$1.isActive = evt.isActive;
+            this.dispatchEvent(audioActivityEvt$1);
+        };
+
+        this.sourceLookup = new Map();
         this.sourceList = [];
         this.destination = new Destination();
+        const recreationQ = [];
+        this.destination.addEventListener("contextDestroying", () => {
+            for (let source of this.sourceList) {
+                source.removeEventListener("audioActivity", this.onAudioActivity);
+                recreationQ.push({
+                    id: source.id,
+                    x: source.position.x,
+                    y: source.position.y,
+                    audio: source.audio
+                });
+
+                this.sourceLookup.delete(source.id);
+
+                source.dispose();
+            }
+
+            this.sourceList.splice(0);
+        });
+
+        this.destination.addEventListener("contextDestroyed", () => {
+            this.destination.createContext();
+
+            for (let recreate of recreationQ) {
+                const source = this.createSource(recreate.id, recreate.audio);
+                source.setTarget(recreate);
+            }
+            recreationQ.splice(0);
+        });
 
         this.updater = () => {
             requestAnimationFrame(this.updater);
@@ -6499,57 +6691,56 @@ class AudioManager extends EventTarget {
 
 
     getSource(userID) {
-        if (!this.sourceLookup[userID]) {
+        if (!this.sourceLookup.has(userID)) {
             const elementID = `#participant_${userID} audio`,
                 audio = document.querySelector(elementID);
 
             if (!!audio) {
-                const source = this.sourceLookup[userID] = new Source(userID, audio, this.destination, BUFFER_SIZE);
-                source.addEventListener("audioActivity", (evt) => {
-                    audioActivityEvt$1.id = evt.id;
-                    audioActivityEvt$1.isActive = evt.isActive;
-                    this.dispatchEvent(audioActivityEvt$1);
-                });
-                this.sourceList.push(source);
+                this.createSource(userID, audio);
             }
         }
 
-        const source = this.sourceLookup[userID];
+        const source = this.sourceLookup.get(userID);
         if (!source) {
             console.warn(`no audio for user ${userID}`);
         }
         return source;
     }
 
+    createSource(userID, audio) {
+        const source = this.destination.createSpatializer(userID, audio, BUFFER_SIZE);
+        source.addEventListener("audioActivity", this.onAudioActivity);
+        this.sourceList.push(source);
+        this.sourceLookup.set(userID, source);
+        return source;
+    }
+
     setUserPosition(evt) {
         const source = this.getSource(evt.id);
         if (!!source) {
-            source.setPosition(evt);
+            source.setTarget(evt);
         }
     }
 
     setLocalPosition(evt) {
-        this.destination.setPosition(evt);
+        this.destination.setTarget(evt);
     }
 
     setAudioProperties(evt) {
         this.destination.setAudioProperties(evt);
-
-        for (let source of this.sourceList) {
-            source.setAudioProperties(evt);
-        }
     }
 
     removeUser(evt) {
-        const source = this.sourceLookup[evt.id];
-        if (!!source) {
-            const sourceIdx = this.sourceList.indexOf(source);
+        if (this.sourceLookup.has(evt.id)) {
+            const source = this.sourceLookup.get(evt.id),
+                sourceIdx = this.sourceList.indexOf(source);
+
             if (sourceIdx > -1) {
                 this.sourceList.splice(sourceIdx, 1);
             }
 
             source.dispose();
-            delete this.sourceLookup[evt.id];
+            this.sourceLookup.delete(evt.id);
         }
     }
 }
@@ -6837,36 +7028,33 @@ class FormDialog extends EventTarget {
         this.element = document.getElementById(name) ||
             Div(
                 id(name),
-                H1(
-                    style({ gridArea: "1/1/2/4" }),
-                    ...rest));
+                H1(...rest));
 
         formStyle.apply(this.element);
 
+        style({ gridArea: "1/1/2/4" }).apply(this.element.querySelector("h1"));
+
         this.header = this.element.querySelector(".header")
-            || this.element.appendChild(
-                Div(
-                    className("header"),
-                    style({ gridArea: "2/1/3/4" })));
+            || this.element.appendChild(Div(className("header")));
+
+        style({ gridArea: "2/1/3/4" }).apply(this.header);
 
         this.content = this.element.querySelector(".content")
-            || this.element.appendChild(
-                Div(
-                    className("content"),
-                    style({
-                        overflowY: "scroll",
-                        gridArea: "3/1/4/4"
-                    })));
+            || this.element.appendChild(Div(className("content")));
+
+        style({
+            overflowY: "scroll",
+            gridArea: "3/1/4/4"
+        }).apply(this.content);
 
         this.footer = this.element.querySelector(".footer")
-            || this.element.appendChild(
-                Div(
-                    className("footer"),
-                    style({
-                        display: "flex",
-                        flexDirection: "row-reverse",
-                        gridArea: "4/1/5/4"
-                    })));
+            || this.element.appendChild(Div(className("footer")));
+
+        style({
+            display: "flex",
+            flexDirection: "row-reverse",
+            gridArea: "4/1/5/4"
+        }).apply(this.footer);
     }
 
     appendChild(child) {
@@ -7340,16 +7528,31 @@ class EventedGamepad extends EventTarget {
         if (!(pad instanceof Gamepad)) {
             throw new Error("Value must be a Gamepad");
         }
+
         this.id = pad.id;
+        this.displayId = pad.displayId;
+
+        this.connected = pad.connected;
+        this.hand = pad.hand;
+        this.pose = pad.pose;
+
         const self = {
             btnDownEvts: [],
             btnUpEvts: [],
-            btnState: []
+            btnState: [],
+            axisMaxed: [],
+            axisMaxEvts: [],
+            sticks: []
         };
-        gamepadStates.set(this, self);
+
         this.buttons = [];
         this.axes = [];
         this.hapticActuators = [];
+        this.axisThresholdMax = 0.9;
+        this.axisThresholdMin = 0.1;
+
+        this._isStick = (a) => a % 2 === 0 && a < pad.axes.length - 1;
+
         for (let b = 0; b < pad.buttons.length; ++b) {
             self.btnDownEvts[b] = Object.assign(new Event("gamepadbuttondown"), {
                 button: b
@@ -7357,18 +7560,31 @@ class EventedGamepad extends EventTarget {
             self.btnUpEvts[b] = Object.assign(new Event("gamepadbuttonup"), {
                 button: b
             });
-            self.btnState[b] = pad.buttons[b].pressed;
+            self.btnState[b] = false;
+
             this.buttons[b] = pad.buttons[b];
         }
+
         for (let a = 0; a < pad.axes.length; ++a) {
+            self.axisMaxEvts[a] = Object.assign(new Event("gamepadaxismaxed"), {
+                axis: a
+            });
+            self.axisMaxed[a] = false;
+            if (this._isStick(a)) {
+                self.sticks[a / 2] = { x: 0, y: 0 };
+            }
+
             this.axes[a] = pad.axes[a];
         }
+
         if (pad.hapticActuators !== undefined) {
             for (let h = 0; h < pad.hapticActuators.length; ++h) {
                 this.hapticActuators[h] = pad.hapticActuators[h];
             }
         }
-        Object.freeze(this);
+
+        Object.seal(this);
+        gamepadStates.set(this, self);
     }
 
     dispose() {
@@ -7379,20 +7595,47 @@ class EventedGamepad extends EventTarget {
         if (!(pad instanceof Gamepad)) {
             throw new Error("Value must be a Gamepad");
         }
+
+        this.connected = pad.connected;
+        this.hand = pad.hand;
+        this.pose = pad.pose;
+
         const self = gamepadStates.get(this);
+
         for (let b = 0; b < pad.buttons.length; ++b) {
-            const wasPressed = self.btnState[b], pressed = pad.buttons[b].pressed;
+            const wasPressed = self.btnState[b],
+                pressed = pad.buttons[b].pressed;
             if (pressed !== wasPressed) {
                 self.btnState[b] = pressed;
                 this.dispatchEvent((state
                     ? self.btnDownEvts
                     : self.btnUpEvts)[b]);
             }
+
             this.buttons[b] = pad.buttons[b];
         }
+
         for (let a = 0; a < pad.axes.length; ++a) {
-            this.axes[a] = pad.axes[a];
+            const wasMaxed = self.axisMaxed[a],
+                maxed = pad.axes[a] >= this.axisThresholdMax,
+                mined = pad.axes[a] <= this.axisThresholdMin;
+            if (maxed && !wasMaxed) {
+                this.dispatchEvent(self.axisMaxEvts[a]);
+            }
+
+            this.axes[a] = maxed
+                ? 1
+                : (mined
+                    ? 0
+                    : pads.axes[a]);
         }
+
+        for (let a = 0; a < this.axes.length - 1; a += 2) {
+            const stick = self.sticks[a / 2];
+            stick.x = this.axes[a];
+            stick.y = this.axes[a + 1];
+        }
+
         if (pad.hapticActuators !== undefined) {
             for (let h = 0; h < pad.hapticActuators.length; ++h) {
                 this.hapticActuators[h] = pad.hapticActuators[h];
@@ -7409,8 +7652,9 @@ const gamepadConnectedEvt = Object.assign(new Event("gamepadconnected"), {
     }),
 
     gamepads = new Map(),
-    anyButtonDownEvt = Object.assign(new Event("gamepadbuttondown"), { button: 0 }),
-    anyButtonUpEvt = Object.assign(new Event("gamepadbuttonup"), { button: 0 });
+    anyButtonDownEvt = Object.assign(new Event("gamepadbuttondown"), { button: -1 }),
+    anyButtonUpEvt = Object.assign(new Event("gamepadbuttonup"), { button: -1 }),
+    anyAxisMaxedEvt = Object.assign(new Event("gamepadaxismaxed"), { axis: -1 });
 
 class GamepadStateManager extends EventTarget {
     constructor() {
@@ -7426,21 +7670,29 @@ class GamepadStateManager extends EventTarget {
             this.dispatchEvent(anyButtonUpEvt);
         };
 
+        const onAnyAxisMaxed = (evt) => {
+            anyAxisMaxedEvt.axis = evt.axis;
+            this.dispatchEvent(anyAxisMaxedEvt);
+        };
+
         window.addEventListener("gamepadconnected", (evt) => {
             const pad = evt.gamepad,
                 gamepad = new EventedGamepad(pad);
             gamepad.addEventListener("gamepadbuttondown", onAnyButtonDown);
             gamepad.addEventListener("gamepadbuttonup", onAnyButtonUp);
+            gamepad.addEventListener("gamepadaxismaxed", onAnyAxisMaxed);
             gamepads.set(pad.id, gamepad);
             gamepadConnectedEvt.gamepad = gamepad;
             this.dispatchEvent(gamepadConnectedEvt);
         });
 
         window.addEventListener("gamepaddisconnected", (evt) => {
-            const gamepad = gamepads.get(pad.id);
-            gamepads.delete(pad.id);
+            const id = evt.gamepad.id,
+                gamepad = gamepads.get(id);
+            gamepads.delete(id);
             gamepad.removeEventListener("gamepadbuttondown", onAnyButtonDown);
             gamepad.removeEventListener("gamepadbuttonup", onAnyButtonUp);
+            gamepad.removeEventListener("gamepadaxismaxed", onAnyAxisMaxed);
             gamepadDisconnectedEvt.gamepad = gamepad;
             this.dispatchEvent(gamepadDisconnectedEvt);
             gamepad.dispose();
@@ -8434,6 +8686,7 @@ class TileMap {
 const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
     STACKED_USER_OFFSET_X = 5,
     STACKED_USER_OFFSET_Y = 5,
+    MOVE_TRANSITION_TIME = 0.5,
     eventNames$1 = ["userMoved", "userPositionNeeded"];
 
 class User extends EventTarget {
@@ -8797,6 +9050,7 @@ const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_SHAPE = 1 / 4,
     CAMERA_ZOOM_SPEED = 0.005,
     MAX_DRAG_DISTANCE = 5,
+    MOVE_REPEAT = 0.125,
     isFirefox = typeof InstallTrigger !== "undefined",
     gameStartedEvt = new Event("gameStarted"),
     gameEndedEvt = new Event("gameEnded"),
@@ -9850,6 +10104,8 @@ function init(host, JitsiClientClass) {
     client.addEventListeners({
         videoConferenceJoined: async (evt) => {
             login.connected = true;
+
+            window.location.hash = login.roomName;
 
             game.start(evt);
             for (let user of client.otherUsers.entries()) {
