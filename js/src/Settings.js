@@ -7,8 +7,9 @@
         audioRolloff: 1,
         fontSize: 12,
         zoom: 1.5,
-        userName: "",
         roomName: "calla",
+        userName: "",
+        avatarEmoji: null,
         gamepadIndex: 0,
         inputBinding: {
             keyButtonUp: "ArrowUp",
@@ -125,6 +126,17 @@ export class Settings {
     set userName(value) {
         if (value !== this.userName) {
             selfs.get(this).userName = value;
+            commit(this);
+        }
+    }
+
+    get avatarEmoji() {
+        return selfs.get(this).avatarEmoji;
+    }
+
+    set avatarEmoji(value) {
+        if (value !== this.avatarEmoji) {
+            selfs.get(this).avatarEmoji = value;
             commit(this);
         }
     }

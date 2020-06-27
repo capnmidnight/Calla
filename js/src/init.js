@@ -158,8 +158,10 @@ export function init(host, JitsiClientClass) {
     options.addEventListeners({
         selectAvatar: async () => {
             withEmojiSelection((e) => {
-                game.me.avatarEmoji = e;
-                options.setAvatarEmoji(e);
+                settings.avatarEmoji
+                    = options.avatarEmoji
+                    = game.me.avatarEmoji
+                    = e;
                 client.setAvatarEmoji(e);
             });
         },
@@ -217,7 +219,13 @@ export function init(host, JitsiClientClass) {
             toolbar.show();
             client.show();
             client.setPosition(game.me);
-            options.setAvatarEmoji(game.me.avatarEmoji);
+
+            if (settings.avatarEmoji !== null) {
+                game.me.avatarEmoji = settings.avatarEmoji
+            }
+            settings.avatarEmoji
+                = options.avatarEmoji
+                = game.me.avatarEmoji;
         },
         gameEnded: () => {
             game.hide();

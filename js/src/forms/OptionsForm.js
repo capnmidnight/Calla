@@ -247,15 +247,21 @@ export class OptionsForm extends FormDialog {
 
         this._videoEnabled = false;
         this._drawHearing = false;
+        this._avatarEmoji = null;
 
         Object.seal(this);
     }
 
-    setAvatarEmoji(e) {
+    get avatarEmoji() {
+        return this._avatarEmoji;
+    }
+
+    set avatarEmoji(e) {
+        this._avatarEmoji = e;
         clear(this.avatarEmojiPreview);
         this.avatarEmojiPreview.append(Span(
-            title(e.desc),
-            e.value));
+            title(e && e.desc || "(None)"),
+            e && e.value || "N/A"));
     }
 
     get avatarURL() {
