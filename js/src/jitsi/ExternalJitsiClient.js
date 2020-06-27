@@ -87,11 +87,19 @@ export class ExternalJitsiClient extends BaseJitsiClient {
                     if (!test || test(rootEvt)) {
                         copy(dest, rootEvt);
 
-                        // The version of the External API that I'm using 
-                        // misspells the name of this field.
-                        if (evtType === "displayNameChange"
-                            && rootEvt.displayname !== undefined) {
-                            dest.displayName = rootEvt.displayname;
+                        if (evtType === "displayNameChange") {
+
+                            // The version of the External API that I'm using
+                            // is inconsistent with how parameters are set.
+                            if (rootEvt.id === "local") {
+                                rootEvt.id = null;
+                            }
+
+                            // The version of the External API that I'm using 
+                            // misspells the name of this field.
+                            if (rootEvt.displayname !== undefined) {
+                                dest.displayName = rootEvt.displayname;
+                            }
                         }
 
                         if (dest.hasOwnProperty("id")

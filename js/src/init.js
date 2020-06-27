@@ -238,12 +238,6 @@ export function init(host, JitsiClientClass) {
             window.location.hash = login.roomName;
 
             game.start(evt);
-            for (let user of client.otherUsers.entries()) {
-                game.addUser({
-                    id: user[0],
-                    displayName: user[1]
-                });
-            }
 
             options.audioInputDevices = await client.getAudioInputDevices();
             options.audioOutputDevices = await client.getAudioOutputDevices();

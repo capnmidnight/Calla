@@ -71,6 +71,7 @@ export class BaseJitsiClient extends EventTarget {
         this.localUser = null;
         this.otherUsers = new Map();
         this.audioClient = null;
+        this.preInitEvtQ = [];
     }
 
     hide() {
@@ -90,6 +91,27 @@ export class BaseJitsiClient extends EventTarget {
 
     async initializeAsync(host, roomName) {
         throw new Error("Not implemented in base class.");
+    }
+
+    dispatchEvent(evt) {
+        if (evt.type === "videoConferenceJoined") {
+            super.dispatchEvent(evt);
+            for (evt of this.preInitEvtQ) {
+                if (evt.hasOwnProperty("id")
+                    && evt.id === null) {
+                    evt.id = this.localUser;
+                }
+
+                super.dispatchEvent(evt);
+            }
+            this.preInitEvtQ.splice(1);
+        }
+        else if (this.localUser === null) {
+            this.preInitEvtQ.push(evt);
+        }
+        else {
+            super.dispatchEvent(evt);
+        }
     }
 
     async joinAsync(host, roomName, userName) {
