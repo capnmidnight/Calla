@@ -44,7 +44,7 @@ Make sure you keep the distinction between your Jitsi installation and your Call
 ### Docker-compose installation
 
 - Set up Jitsi Meet using docker-compose: [Jitsi Self-Hosting Guide - Docker](https://jitsi.github.io/handbook/docs/devops-guide/devops-guide-docker)
-- Use a reverse proxy (e.g. https://github.com/nginx-proxy/nginx-proxy) to have the Jitsi Meet frontend virtual hosted on https://jitsi.<domain>
+- Use a reverse proxy (e.g. https://github.com/nginx-proxy/nginx-proxy) to have the Jitsi Meet frontend virtual hosted on `https://jitsi.<domain>`
 - Do the remaining steps from within the Jitsi base directory (where the Jitsi docker-compose.yml lives)
 - `git clone` this repository into the Calla folder
 - Edit the docker-compose.yml to add the following service section:
@@ -55,7 +55,7 @@ services:
         build: Calla
         restart: ${RESTART_POLICY}
 ```
-- Add the necessary reverse proxy configuration to the calla service have the Calla fronted virtual hosted on https://calla.<domain>, e.g.:
+- Add the necessary reverse proxy configuration to the calla service have the Calla fronted virtual hosted on `https://calla.<domain>`, e.g.:
 ```
         environment:
             - VIRTUAL_HOST=calla.<domain>
