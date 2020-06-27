@@ -235,6 +235,8 @@ export function init(host, JitsiClientClass) {
         videoConferenceJoined: async (evt) => {
             login.connected = true;
 
+            window.location.hash = login.roomName;
+
             game.start(evt);
             for (let user of client.otherUsers.entries()) {
                 game.addUser({
