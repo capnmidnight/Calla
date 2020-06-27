@@ -41,6 +41,37 @@ NOTE: __Jitsi Meet's web client doesn't work on iOS!__ Sorry :(
   
 Make sure you keep the distinction between your Jitsi installation and your Calla installation clear. You can conceivably run them on the same server, but I won't be digging into customizing a Jitsi installation enough to figure that out, so my setup has them on separate servers. `jitsihax.js` needs to go on your Jitsi server, and you need to edit it to point to your Calla server. `index.html` goes on your Calla server, and you need to edit it to point to your Jitsi server.
 
+### Docker-compose installation
+
+- Set up Jitsi Meet using docker-compose: [Jitsi Self-Hosting Guide - Docker](https://jitsi.github.io/handbook/docs/devops-guide/devops-guide-docker)
+- Use a reverse proxy (e.g. https://github.com/nginx-proxy/nginx-proxy) to have the Jitsi Meet frontend virtual hosted on https://jitsi.<domain>
+- Do the remaining steps from within the Jitsi base directory (where the Jitsi docker-compose.yml lives)
+- `git clone` this repository into the Calla folder
+- Edit the docker-compose.yml to add the following service section:
+```
+services:
+    # Calla
+    calla:
+        build: Calla
+        restart: ${RESTART_POLICY}
+```
+- Add the necessary reverse proxy configuration to the calla service have the Calla fronted virtual hosted on https://calla.<domain>, e.g.:
+```
+        environment:
+            - VIRTUAL_HOST=calla.<domain>
+            - LETSENCRYPT_HOST=calla.<domain>
+            - LETSENCRYPT_EMAIL=webmaster@<domain>
+        networks:
+            proxy:
+```
+- Start Jitsi and Calla: `$ docker-compose up -d`
+- Copy jitsihax.js into the jitsi web volume: `$ cp Calla/js/etc/jitsihax.js web/`
+- Copy jitsihax.js to the right place in the (running) docker container: `$ docker-compose exec web cp /config/jitsihax.js /usr/share/jitsi-meet/libs/`
+- Tell jitsi to load jitsihax.js: Append the following line to the bottom of web/interface_config.js
+```
+</script><script type="module" src="libs/jitsihax.js">
+```
+
 ## CONTRIBUTING
 
 ### Conduct
