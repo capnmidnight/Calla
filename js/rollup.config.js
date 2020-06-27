@@ -10,10 +10,4 @@ export default [{
         file: "etc/jitsihax.js",
         format: "es"
     }
-}, {
-    input: "tests/game/index.js",
-    output: {
-        file: "tests/game/bundle.js",
-        format: "es"
-    }
 }];

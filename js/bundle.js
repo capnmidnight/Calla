@@ -8587,8 +8587,8 @@ class Settings {
 
 function init(host, JitsiClientClass) {
     const settings = new Settings(),
-        client = new JitsiClientClass(),
         game = new Game(),
+        client = new JitsiClientClass(),
         login = new LoginForm(),
         toolbar = new ToolBar(),
         options = new OptionsForm(),
@@ -8869,7 +8869,12 @@ function init(host, JitsiClientClass) {
             options.videoEnabled = !evt.muted;
         },
         userInitRequest: (evt) => {
-            client.userInitResponse(evt.id, game.me);
+            if (game.me && game.me.id) {
+                client.userInitResponse(evt.id, game.me);
+            }
+            else {
+                console.log("Local user not initialized");
+            }
         },
         userInitResponse: (evt) => {
             const user = game.userLookup[evt.id];
