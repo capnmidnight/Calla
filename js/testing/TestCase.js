@@ -9,9 +9,8 @@ export class TestCase extends EventTarget {
         msg = msg || "N/A";
         this.dispatchEvent(new TestCaseMessageEvent(msg));
     }
-    success(msg) {
-        msg = msg || "Success";
-        this.dispatchEvent(new TestCaseSuccessEvent(msg));
+    success() {
+        this.dispatchEvent(new TestCaseSuccessEvent());
     }
     fail(msg) {
         msg = msg || "Fail";
@@ -78,7 +77,7 @@ export class TestCase extends EventTarget {
         const testValue = testFunc(actual, expected), testString = testValue ? "yes" : "no";
         message = message || `[Actual: ${actual}] ${op} [Expected: ${expected}] (${testString})`;
         if (testValue) {
-            this.success(message);
+            this.success();
         }
         else {
             this.fail(message);

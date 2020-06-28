@@ -9,9 +9,8 @@ export class TestScore {
     start() {
         this.state |= TestState.started;
     }
-    success(message) {
+    success() {
         this.state |= TestState.succeeded;
-        this.messages.push(message);
     }
     fail(message) {
         this.state |= TestState.failed;

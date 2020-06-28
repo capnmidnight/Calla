@@ -51,7 +51,7 @@ export class TestRunner extends EventTarget {
                 score.messages.push(evt.message);
                 onUpdate();
             }, onSuccess = (evt) => {
-                score.success(evt.message);
+                score.success();
                 onUpdate();
             }, onFailure = (evt) => {
                 score.fail(evt.message);

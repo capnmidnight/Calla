@@ -1,6 +1,5 @@
 ﻿export class TestCaseSuccessEvent extends Event {
-    constructor(message) {
+    constructor() {
         super("testcasesuccess");
-        this.message = message;
     }
 }
