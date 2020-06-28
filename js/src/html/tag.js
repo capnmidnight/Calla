@@ -1,6 +1,7 @@
 ﻿import { HtmlAttr } from "./attrs.js";
 import { HtmlCustomTag } from "./HtmlCustomTag.js";
-import { HtmlEvt, isFunction } from "./evts.js";
+import { HtmlEvt } from "./evts.js";
+import { isFunction } from "../events.js";
 
 export function tag(name, ...rest) {
     const elem = document.createElement(name);

@@ -11,16 +11,7 @@ export function copy(dest, evt) {
     return dest;
 };
 
-export class CallaEvent extends Event {
-    constructor(data) {
-        super(data.command);
-        Event.clone(this, data.value);
-    }
-}
-
-export class CallaUserEvent extends CallaEvent {
-    constructor(id, data) {
-        super(data);
-        this.id = id;
-    }
+export function isFunction(obj) {
+    return typeof obj === "function"
+        || obj instanceof Function;
 }

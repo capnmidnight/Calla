@@ -1,6 +1,6 @@
 ﻿import { TestScore } from "./TestScore.js";
 import { TestRunnerResultsEvent } from "./TestRunnerResultsEvent.js";
-import { isFunction } from "../src/html/evts.js";
+import { isFunction } from "../src/events.js";
 
 export class TestRunner extends EventTarget {
     constructor(...rest) {

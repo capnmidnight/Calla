@@ -1,4 +1,4 @@
-﻿import { CallaEvent, copy } from "../events.js";
+﻿import { copy } from "../events.js";
 
 const evtSetPosition = Object.seal({
     id: null,
@@ -51,7 +51,7 @@ export class ExternalJitsiAudioClient extends EventTarget {
             try {
                 const evt = JSON.parse(msg.data);
                 if (evt.hax === APP_FINGERPRINT) {
-                    const evt2 = new CallaEvent(evt);
+                    const evt2 = new AudioClientEvent(evt);
                     this.dispatchEvent(evt2);
                 }
             }
@@ -75,5 +75,12 @@ export class ExternalJitsiAudioClient extends EventTarget {
 
     removeUser(evt) {
         this.txJitsiHax("removeUser", copy(evtRemoveUser, evt));
+    }
+}
+
+export class AudioClientEvent extends Event {
+    constructor(data) {
+        super(data.command);
+        Event.clone(this, data.value);
     }
 }

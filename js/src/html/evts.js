@@ -1,7 +1,4 @@
-﻿export function isFunction(obj) {
-    return typeof obj === "function"
-        || obj instanceof Function;
-}
+﻿import { isFunction } from "../events.js";
 
 export class HtmlEvt {
     constructor(name, callback, opts) {

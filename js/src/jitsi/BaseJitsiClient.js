@@ -1,4 +1,4 @@
-﻿import { CallaUserEvent, copy } from "../events.js";
+﻿import { copy } from "../events.js";
 import { id, style } from "../html/attrs.js";
 import { Div } from "../html/tags.js";
 
@@ -368,5 +368,13 @@ export class BaseJitsiClient extends EventTarget {
         for (let toUserID of this.otherUsers.keys()) {
             this.txGameData(toUserID, "videoMuteStatusChanged", evtMuted);
         }
+    }
+}
+
+class CallaUserEvent extends Event {
+    constructor(command, id, value) {
+        super(command);
+        this.id = id;
+        Event.clone(this, value);
     }
 }

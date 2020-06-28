@@ -1,5 +1,4 @@
-﻿import { isFunction } from "../src/html/evts.js";
-import { TestOutputResultsEvent } from "./TestOutputResultsEvent.js";
+﻿import { TestOutputResultsEvent } from "./TestOutputResultsEvent.js";
 import { TestState } from "./TestState.js";
 import { TestRunner } from "./TestRunner.js";
 
