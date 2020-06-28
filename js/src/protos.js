@@ -265,3 +265,11 @@ EventTarget.prototype.addEventListeners = function (obj) {
         this.addEventListener(evtName, callback, opts);
     }
 };
+
+Array.prototype.clear = function () {
+    this.splice(0);
+};
+
+Array.prototype.removeAt = function (idx) {
+    this.splice(idx, 1);
+};

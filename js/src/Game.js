@@ -241,7 +241,7 @@ export class Game extends EventTarget {
                 idx = findPointer(pointer);
 
             if (idx >= 0) {
-                this.pointers.splice(idx, 1);
+                this.pointers.removeAt(idx);
             }
 
             return pointer;
@@ -414,7 +414,7 @@ export class Game extends EventTarget {
 
             const userIndex = this.userList.indexOf(user);
             if (userIndex >= 0) {
-                this.userList.splice(userIndex, 1);
+                this.userList.removeAt(userIndex);
             }
         }
     }
@@ -516,7 +516,7 @@ export class Game extends EventTarget {
         this.currentRoomName = null;
         this.map = null;
         this.userLookup = {};
-        this.userList.splice(0);
+        this.userList.clear();
         this.me = null;
         this.dispatchEvent(gameEndedEvt);
     }

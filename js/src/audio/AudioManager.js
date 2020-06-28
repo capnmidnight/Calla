@@ -36,7 +36,7 @@ export class AudioManager extends EventTarget {
                 source.dispose();
             }
 
-            this.sourceList.splice(0);
+            this.sourceList.clear();
         });
 
         this.destination.addEventListener("contextDestroyed", () => {
@@ -46,7 +46,7 @@ export class AudioManager extends EventTarget {
                 const source = this.createSource(recreate.id, recreate.audio);
                 source.setTarget(recreate);
             }
-            recreationQ.splice(0);
+            recreationQ.clear();
         });
 
         this.updater = () => {
@@ -106,7 +106,7 @@ export class AudioManager extends EventTarget {
                 sourceIdx = this.sourceList.indexOf(source);
 
             if (sourceIdx > -1) {
-                this.sourceList.splice(sourceIdx, 1);
+                this.sourceList.removeAt(sourceIdx);
             }
 
             source.dispose();
