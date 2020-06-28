@@ -151,7 +151,7 @@ export class TestBase extends TestCase {
     async sendPosition() {
         await wait(1000);
         const x = ((userNumber - 1) * 2 - 1) * 5;
-        this.client.setPosition({ id: this.client.localUser, x, y: 0 });
+        this.client.setLocalPosition({ x, y: 0 });
         this.success("Position sent");
     }
 

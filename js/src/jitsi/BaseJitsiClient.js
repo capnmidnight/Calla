@@ -272,16 +272,15 @@ export class BaseJitsiClient extends EventTarget {
         this.audioClient.setAudioProperties(evtAudioProperties);
     }
 
-    setPosition(evt) {
-        if (evt.id === this.localUser) {
-            this.audioClient.setLocalPosition(evt);
-            for (let toUserID of this.otherUsers.keys()) {
-                this.sendMessageTo(toUserID, "userMoved", evt);
-            }
+    setLocalPosition(evt) {
+        this.audioClient.setLocalPosition(evt);
+        for (let toUserID of this.otherUsers.keys()) {
+            this.sendMessageTo(toUserID, "userMoved", evt);
         }
-        else {
-            this.audioClient.setUserPosition(evt);
-        }
+    }
+
+    setUserPosition(evt) {
+        this.audioClient.setUserPosition(evt);
     }
 
     removeUser(evt) {

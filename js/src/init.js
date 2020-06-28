@@ -211,14 +211,16 @@ export function init(host, JitsiClientClass) {
             client.toggleVideo();
         },
         gameStarted: () => {
-            game.me.addEventListener("userMoved", (evt) => {
-                client.setPosition(evt);
-            });
-            setAudioProperties();
             login.hide();
             toolbar.show();
             client.show();
-            client.setPosition(game.me);
+
+            setAudioProperties();
+
+            client.setLocalPosition(game.me);
+            game.me.addEventListener("userMoved", () => {
+                client.setLocalPosition(game.me);
+            });
 
             if (settings.avatarEmoji !== null) {
                 game.me.avatarEmoji = settings.avatarEmoji
@@ -308,14 +310,14 @@ export function init(host, JitsiClientClass) {
             const user = game.userLookup[evt.id];
             if (!!user) {
                 user.init(evt);
-                client.setPosition(evt);
+                client.setUserPosition(evt);
             }
         },
         userMoved: (evt) => {
             const user = game.userLookup[evt.id];
             if (!!user) {
                 user.moveTo(evt.x, evt.y);
-                client.setPosition(evt);
+                client.setUserPosition(evt);
             }
         },
         emote: (evt) => {
