@@ -20,15 +20,16 @@ GamepadManager.addEventListener("gamepaddisconnected", () => {
     options.gamepads = GamepadManager.gamepads;
 });
 
-async function show() {
+(async function () {
     const devices = await navigator.mediaDevices.enumerateDevices();
-
     options.audioInputDevices = devices.filter(d => d.kind === "audioinput");
     options.audioOutputDevices = devices.filter(d => d.kind === "audiooutput");
     options.videoInputDevices = devices.filter(d => d.kind === "videoinput");
+});
 
-    const confirmed = await options.showAsync();
-    console.log(confirmed);
+async function show() {
+    await options.showAsync();
     setTimeout(show, 1000);
 }
+
 show();

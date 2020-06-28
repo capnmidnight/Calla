@@ -12,10 +12,16 @@ export class InstructionsForm extends FormDialog {
         this.content.append(...instructions());
 
         this.footer.append(
-            Button(
+            this.confirmButton = Button(
                 systemFont,
                 style({ gridArea: "4/2" }),
                 "Close",
                 onClick(() => this.hide())));
+    }
+
+    async showAsync() {
+        this.show();
+        await this.confirmButton.once("click");
+        return false;
     }
 }

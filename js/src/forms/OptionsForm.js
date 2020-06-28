@@ -275,8 +275,6 @@ export class OptionsForm extends FormDialog {
     async showAsync() {
         this.show();
         await this.confirmButton.once("click");
-        this.hide();
-        return false;
     }
 
     get inputBinding() {
