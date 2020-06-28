@@ -286,13 +286,7 @@ export class Game extends EventTarget {
                 }
                 else {
                     this.currentEmoji = emoji;
-                    for (let user of this.userList) {
-                        if (user !== this.me) {
-                            emoteEvt.id = user.id;
-                            emoteEvt.emoji = emoji;
-                            this.dispatchEvent(emoteEvt);
-                        }
-                    }
+                    this.dispatchEvent(emoteEvt);
                 }
             }
 
