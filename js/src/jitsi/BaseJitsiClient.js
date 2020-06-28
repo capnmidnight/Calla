@@ -239,8 +239,27 @@ export class BaseJitsiClient extends EventTarget {
         throw new Error("Not implemented in base class");
     }
 
-    sendMessageTo(toUserID, data) {
+    txGameData(toUserID, data) {
         throw new Error("Not implemented in base class");
+    }
+
+    rxGameData(fromUserID, data) {
+        throw new Error("Not implemented in base class");
+    }
+
+    /// Send a Calla message through the Jitsi Meet data channel.
+    sendMessageTo(toUserID, command, value) {
+        const data = {
+            hax: APP_FINGERPRINT,
+            command,
+            value
+        };
+        this.txGameData(toUserID, data);
+    }
+
+    receiveMessageFrom(fromUserID, command, value) {
+        const evt = new JitsiClientEvent(command, fromUserID, value);
+        this.dispatchEvent(evt);
     }
 
     setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
@@ -257,7 +276,7 @@ export class BaseJitsiClient extends EventTarget {
         if (evt.id === this.localUser) {
             this.audioClient.setLocalPosition(evt);
             for (let toUserID of this.otherUsers.keys()) {
-                this.txGameData(toUserID, "userMoved", evt);
+                this.sendMessageTo(toUserID, "userMoved", evt);
             }
         }
         else {
@@ -292,41 +311,8 @@ export class BaseJitsiClient extends EventTarget {
         super.addEventListener(evtName, callback, opts);
     }
 
-    /// Send a Calla message through the Jitsi Meet data channel.
-    txGameData(id, command, value) {
-        const data = {
-            hax: APP_FINGERPRINT,
-            command,
-            value
-        };
-        this.sendMessageTo(id, data);
-    }
-
-    /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
-    /// to receive Calla messages from the Jitsi Meet data channel.
-    rxGameData(evt) {
-        // JitsiExternalAPI::endpointTextMessageReceived event arguments format: 
-        // evt = {
-        //    data: {
-        //      senderInfo: {
-        //        jid: "string", // the jid of the sender
-        //        id: "string" // the participant id of the sender
-        //      },
-        //      eventData: {
-        //        name: "string", // the name of the datachannel event: `endpoint-text-message`
-        //        text: "string" // the received text from the sender
-        //      }
-        //   }
-        //};
-        const data = JSON.parse(evt.data.eventData.text);
-        if (data.hax === APP_FINGERPRINT) {
-            const evt2 = new CallaUserEvent(evt.data.senderInfo.id, data);
-            this.dispatchEvent(evt2);
-        }
-    }
-
     userInitRequest(toUserID) {
-        this.txGameData(toUserID, "userInitRequest");
+        this.sendMessageTo(toUserID, "userInitRequest");
     }
 
     userInitRequestAsync(toUserID) {
@@ -337,20 +323,20 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     userInitResponse(toUserID, fromUserState) {
-        this.txGameData(toUserID, "userInitResponse", copy(evtUserState, fromUserState));
+        this.sendMessageTo(toUserID, "userInitResponse", copy(evtUserState, fromUserState));
     }
 
     setAvatarEmoji(emoji) {
         copy(evtEmoji, emoji);
         for (let toUserID of this.otherUsers.keys()) {
-            this.txGameData(toUserID, "setAvatarEmoji", evtEmoji);
+            this.sendMessageTo(toUserID, "setAvatarEmoji", evtEmoji);
         }
     }
 
     emote(emoji) {
         copy(evtEmoji, emoji);
         for (let toUserID of this.otherUsers.keys()) {
-            this.txGameData(toUserID, "emote", evtEmoji);
+            this.sendMessageTo(toUserID, "emote", evtEmoji);
         }
     }
 
@@ -358,7 +344,7 @@ export class BaseJitsiClient extends EventTarget {
         evtMuted.id = this.localUser;
         evtMuted.muted = muted;
         for (let toUserID of this.otherUsers.keys()) {
-            this.txGameData(toUserID, "audioMuteStatusChanged", evtMuted);
+            this.sendMessageTo(toUserID, "audioMuteStatusChanged", evtMuted);
         }
     }
 
@@ -366,12 +352,12 @@ export class BaseJitsiClient extends EventTarget {
         evtMuted.id = this.localUser;
         evtMuted.muted = muted;
         for (let toUserID of this.otherUsers.keys()) {
-            this.txGameData(toUserID, "videoMuteStatusChanged", evtMuted);
+            this.sendMessageTo(toUserID, "videoMuteStatusChanged", evtMuted);
         }
     }
 }
 
-class CallaUserEvent extends Event {
+class JitsiClientEvent extends Event {
     constructor(command, id, value) {
         super(command);
         this.id = id;

@@ -30,6 +30,10 @@ const audioActivityEvt = Object.assign(new Event("audioActivity", {
     evtMuted = Object.seal({
         id: null,
         muted: null
+    }),
+    evtReceiveMessage = Object.seal({
+        command: null,
+        value: null
     });
 
 export class ExternalJitsiClient extends BaseJitsiClient {
@@ -201,7 +205,29 @@ export class ExternalJitsiClient extends BaseJitsiClient {
         return await this.api.isVideoMuted();
     }
 
-    sendMessageTo(toUserID, data) {
+    txGameData(toUserID, data) {
         this.api.executeCommand("sendEndpointTextMessage", toUserID, JSON.stringify(data));
+    }
+
+    /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
+    /// to receive Calla messages from the Jitsi Meet data channel.
+    rxGameData(evt) {
+        // JitsiExternalAPI::endpointTextMessageReceived event arguments format:
+        // evt = {
+        //    data: {
+        //      senderInfo: {
+        //        jid: "string", // the jid of the sender
+        //        id: "string" // the participant id of the sender
+        //      },
+        //      eventData: {
+        //        name: "string", // the name of the datachannel event: `endpoint-text-message`
+        //        text: "string" // the received text from the sender
+        //      }
+        //   }
+        //};
+        const data = JSON.parse(evt.data.eventData.text);
+        if (data.hax === APP_FINGERPRINT) {
+            this.receiveMessageFrom(evt.data.senderInfo.id, data.command, data.value);
+        }
     }
 }

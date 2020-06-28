@@ -1,5 +1,4 @@
-﻿import { CallaEvent } from "../../src/events.js";
-import { BaseJitsiClient } from "../../src/jitsi/BaseJitsiClient.js";
+﻿import { BaseJitsiClient } from "../../src/jitsi/BaseJitsiClient.js";
 import { userNumber } from "../client-tests/userNumber.js";
 import "../../src/audio/ExternalJitsiAudioServer.js";
 import { ExternalJitsiAudioClient as AudioClient } from "../../src/audio/ExternalJitsiAudioClient.js";
@@ -120,17 +119,16 @@ export class MockJitsiClient extends BaseJitsiClient {
         }));
     }
 
-    sendMessageTo(toUserID, data) {
-        if (toUserID === this.localUser) {
-            this.dispatchEvent(new CallaEvent(data));
+    txGameData(toUserID, data) {
+        if (toUserID !== this.localUser
+            && data.command === "userInitRequest") {
+            data.command = "userInitResponse";
+            data.value = this.testUsers.filter(u => u.id === toUserID)[0];
+            this.rxGameData(toUserID, data);
         }
-        else {
-            const user = this.testUsers.filter(u => u.id === toUserID)[0];
-            if (!!user) {
-                if (data.command === "userInitRequest") {
-                    this.userInitResponse(this.localUser, user);
-                }
-            }
-        }
+    }
+
+    rxGameData(fromUserID, data) {
+        this.receiveMessageFrom(fromUserID, data.command, data.value);
     }
 }
