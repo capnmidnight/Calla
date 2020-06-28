@@ -94,7 +94,15 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     dispatchEvent(evt) {
-        if (evt.type === "videoConferenceJoined") {
+        if (this.localUser !== null) {
+            super.dispatchEvent(evt);
+            if (evt.type === "videoConferenceLeft") {
+                this.localUser = null;
+            }
+        }
+        else if (evt.type === "videoConferenceJoined") {
+            this.localUser = evt.id;
+
             super.dispatchEvent(evt);
             for (evt of this.preInitEvtQ) {
                 if (evt.hasOwnProperty("id")
@@ -104,27 +112,17 @@ export class BaseJitsiClient extends EventTarget {
 
                 super.dispatchEvent(evt);
             }
-            this.preInitEvtQ.splice(1);
-        }
-        else if (this.localUser === null) {
-            this.preInitEvtQ.push(evt);
+
+            this.preInitEvtQ.clear();
         }
         else {
-            super.dispatchEvent(evt);
+            this.preInitEvtQ.push(evt);
         }
     }
 
     async joinAsync(host, roomName, userName) {
         this.dispose();
         await this.initializeAsync(host, roomName);
-
-        this.addEventListener("videoConferenceJoined", (evt) => {
-            this.localUser = evt.id;
-        });
-
-        this.addEventListener("videoConferenceLeft", (evt) => {
-            this.localUser = null;
-        });
 
         this.addEventListener("participantJoined", (evt) => {
             this.otherUsers.set(evt.id, evt.displayName);
