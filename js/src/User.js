@@ -54,7 +54,7 @@ export class User extends EventTarget {
             = this.tx
             = this.x
             = evt.x;
-        this.sx
+        this.sy
             = this.ty
             = this.y
             = evt.y;
