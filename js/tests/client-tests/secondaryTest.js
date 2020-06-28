@@ -1,4 +1,4 @@
-﻿import { TestBase } from "./testBase.js";
+﻿import { TestBase } from "./baseTest.js";
 
 export class JitsiClient2_Tests extends TestBase {
 
@@ -68,6 +68,6 @@ export class JitsiClient2_Tests extends TestBase {
 
     async test_980_participantLeft() {
         this.client.leave();
-        this.success("Conference left");
+        this.success();
     }
 }

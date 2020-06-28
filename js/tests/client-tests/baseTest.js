@@ -32,7 +32,7 @@ export class TestBase extends TestCase {
                 "jitsi.calla.chat",
                 TEST_ROOM_NAME,
                 "TestUser" + userNumber));
-        this.isEqualTo(evt.id, this.client.localUser, "User ID doesn't match");
+        this.isEqualTo(evt.id, this.client.localUser);
     }
 
     async waitForJoin() {
@@ -67,7 +67,7 @@ export class TestBase extends TestCase {
     async sendEmoji() {
         await wait(1000);
         this.client.emote(bust);
-        this.success("Emoji sent");
+        this.success();
     }
 
     async recvEmoji() {
@@ -100,7 +100,6 @@ export class TestBase extends TestCase {
 
     async recvAudioMuted() {
         const evt = await this.client.once("remoteAudioMuteStatusChanged", 5000);
-        this.hasValue(evt);
         this.hasValue(evt.id);
         this.isTrue(this.client.otherUsers.has(evt.id));
         this.isTrue(evt.muted);
@@ -108,7 +107,6 @@ export class TestBase extends TestCase {
 
     async recvAudioUnmuted() {
         const evt = await this.client.once("remoteAudioMuteStatusChanged", 5000);
-        this.hasValue(evt);
         this.hasValue(evt.id);
         this.isTrue(this.client.otherUsers.has(evt.id));
         this.isFalse(evt.muted);
@@ -134,7 +132,6 @@ export class TestBase extends TestCase {
 
     async recvVideoUnmuted() {
         const evt = await this.client.once("remoteVideoMuteStatusChanged", 5000);
-        this.hasValue(evt);
         this.hasValue(evt.id);
         this.isTrue(this.client.otherUsers.has(evt.id));
         this.isFalse(evt.muted);
@@ -142,7 +139,6 @@ export class TestBase extends TestCase {
 
     async recvVideoMuted() {
         const evt = await this.client.once("remoteVideoMuteStatusChanged", 5000);
-        this.hasValue(evt);
         this.hasValue(evt.id);
         this.isTrue(this.client.otherUsers.has(evt.id));
         this.isTrue(evt.muted);
@@ -152,13 +148,12 @@ export class TestBase extends TestCase {
         await wait(1000);
         const x = ((userNumber - 1) * 2 - 1) * 5;
         this.client.setLocalPosition({ x, y: 0 });
-        this.success("Position sent");
+        this.success();
     }
 
     async recvPosition() {
         const x = ((userNumber - 1) * 2 - 1) * -5;
         const evt = await this.client.once("userMoved", 5000);
-        this.hasValue(evt);
         this.hasValue(evt.id);
         this.isTrue(this.client.otherUsers.has(evt.id));
         this.isEqualTo(evt.x, x);

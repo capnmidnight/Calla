@@ -1,4 +1,4 @@
-﻿import { TestBase } from "./testBase.js";
+﻿import { TestBase } from "./baseTest.js";
 
 const TEST_ROOM_NAME = "testroom";
 
@@ -18,6 +18,7 @@ export class JitsiClient1_Tests extends TestBase {
         this.isGreaterThan(audioOutputDevices.length, 0);
     }
 
+    //*
     async test_020_getCurrentAudioOutputDevice() {
         const curAudioOut = await this.client.getCurrentAudioOutputDevice();
         this.hasValue(curAudioOut);
@@ -91,7 +92,7 @@ export class JitsiClient1_Tests extends TestBase {
             await this.client.setVideoMutedAsync(true);
         }
 
-        this.success("Devices normalized");
+        this.success();
     }
 
     async test_130_participantJoined() {
@@ -101,7 +102,6 @@ export class JitsiClient1_Tests extends TestBase {
         await this.waitForJoin();
     }
 
-    //*
     async test_140_initUser() {
         await this.initUsers();
     }

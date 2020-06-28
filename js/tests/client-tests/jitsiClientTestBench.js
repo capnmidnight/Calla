@@ -1,8 +1,8 @@
 ﻿import "../../src/protos.js";
 import { HtmlTestOutput as TestOutput } from "../../testing/HtmlTestOutput.js";
-import { JitsiClient1_Tests } from "../client-tests/mainTest.js";
-import { JitsiClient2_Tests } from "../client-tests/secondaryTest.js";
-import { userNumber } from "../client-tests/userNumber.js";
+import { JitsiClient1_Tests } from "./mainTest.js";
+import { JitsiClient2_Tests } from "./secondaryTest.js";
+import { userNumber } from "./userNumber.js";
 
 
 function echoEvt(evt) {
