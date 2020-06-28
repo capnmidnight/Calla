@@ -122,13 +122,11 @@ export class MockJitsiClient extends BaseJitsiClient {
     txGameData(toUserID, data) {
         if (toUserID !== this.localUser
             && data.command === "userInitRequest") {
-            data.command = "userInitResponse";
-            data.value = this.testUsers.filter(u => u.id === toUserID)[0];
-            this.rxGameData(toUserID, data);
+            const user = this.testUsers.filter(u => u.id === toUserID)[0];
+            this.receiveMessageFrom(toUserID, "userInitResponse", user);
         }
     }
 
-    rxGameData(fromUserID, data) {
-        this.receiveMessageFrom(fromUserID, data.command, data.value);
+    rxGameData(evt) {
     }
 }

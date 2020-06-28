@@ -18,12 +18,12 @@ export class JitsiClient2_Tests extends TestBase {
         await this.initUsers();
     }
 
-    async test_150_sendEmoji() {
-        await this.sendEmoji();
+    async test_150_recvEmoji() {
+        await this.recvEmoji();
     }
 
-    async test_160_recvEmoji() {
-        await this.recvEmoji();
+    async test_160_sendEmoji() {
+        await this.sendEmoji();
     }
 
     async test_170_recvAudioMuted() {
@@ -34,6 +34,7 @@ export class JitsiClient2_Tests extends TestBase {
         await this.sendAudioMuted();
     }
 
+    //*
     async test_190_recvAudioUnmuted() {
         await this.recvAudioUnmuted();
     }
@@ -70,4 +71,5 @@ export class JitsiClient2_Tests extends TestBase {
         this.client.leave();
         this.success();
     }
+    //*/
 }

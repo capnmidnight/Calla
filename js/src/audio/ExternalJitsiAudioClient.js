@@ -1,22 +1,4 @@
-﻿import { copy } from "../events.js";
-
-const evtSetPosition = Object.seal({
-    id: null,
-    x: null,
-    y: null
-}),
-    evtSetAudioProperties = Object.seal({
-        origin: null,
-        transitionTime: null,
-        minDistance: null,
-        maxDistance: null,
-        rolloff: null
-    }),
-    evtRemoveUser = Object.seal({
-        id: null
-    });
-
-export class ExternalJitsiAudioClient extends EventTarget {
+﻿export class ExternalJitsiAudioClient extends EventTarget {
     constructor(host, apiOrigin, apiWindow) {
         super();
         this.host = host;
@@ -62,19 +44,19 @@ export class ExternalJitsiAudioClient extends EventTarget {
     }
 
     setLocalPosition(evt) {
-        this.txJitsiHax("setLocalPosition", copy(evtSetPosition, evt));
+        this.txJitsiHax("setLocalPosition", evt);
     }
 
     setUserPosition(evt) {
-        this.txJitsiHax("setUserPosition", copy(evtSetPosition, evt));
+        this.txJitsiHax("setUserPosition", evt);
     }
 
     setAudioProperties(evt) {
-        this.txJitsiHax("setAudioProperties", copy(evtSetAudioProperties, evt));
+        this.txJitsiHax("setAudioProperties", evt);
     }
 
     removeUser(evt) {
-        this.txJitsiHax("removeUser", copy(evtRemoveUser, evt));
+        this.txJitsiHax("removeUser", evt);
     }
 }
 

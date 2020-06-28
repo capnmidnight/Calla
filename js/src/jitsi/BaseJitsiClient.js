@@ -1,5 +1,4 @@
-﻿import { copy } from "../events.js";
-import { id, style } from "../html/attrs.js";
+﻿import { id, style } from "../html/attrs.js";
 import { Div } from "../html/tags.js";
 
 // helps us filter out data channel messages that don't belong to us
@@ -25,31 +24,7 @@ const APP_FINGERPRINT
         "displayNameChange",
         "audioActivity",
         "setAvatarEmoji"
-    ],
-    evtMuted = Object.seal({
-        id: null,
-        muted: null
-    }),
-    evtEmoji = Object.seal({
-        id: null,
-        value: null,
-        desc: null
-    }),
-    evtUserState = Object.seal({
-        id: null,
-        x: null,
-        y: null,
-        displayName: null,
-        avatarURL: null,
-        avatarEmoji: null
-    }),
-    evtAudioProperties = Object.seal({
-        origin: null,
-        transitionTime: null,
-        minDistance: null,
-        maxDistance: null,
-        rolloff: null
-    });
+    ];
 
 // Manages communication between Jitsi Meet and Calla
 export class BaseJitsiClient extends EventTarget {
@@ -95,6 +70,12 @@ export class BaseJitsiClient extends EventTarget {
 
     dispatchEvent(evt) {
         if (this.localUser !== null) {
+            if (evt.id === null
+                || evt.id === undefined
+                || evt.id === "local") {
+                evt.id = this.localUser;
+            }
+
             super.dispatchEvent(evt);
             if (evt.type === "videoConferenceLeft") {
                 this.localUser = null;
@@ -103,14 +84,9 @@ export class BaseJitsiClient extends EventTarget {
         else if (evt.type === "videoConferenceJoined") {
             this.localUser = evt.id;
 
-            super.dispatchEvent(evt);
+            this.dispatchEvent(evt);
             for (evt of this.preInitEvtQ) {
-                if (evt.hasOwnProperty("id")
-                    && evt.id === null) {
-                    evt.id = this.localUser;
-                }
-
-                super.dispatchEvent(evt);
+                this.dispatchEvent(evt);
             }
 
             this.preInitEvtQ.clear();
@@ -145,10 +121,11 @@ export class BaseJitsiClient extends EventTarget {
                 || evt.id === null
                 || evt.id === undefined,
                 evt2 = Object.assign(
-                    new Event((isLocal ? "local" : "remote") + type + "MuteStatusChanged"), {
-                    id: this.localUser,
-                    muted: evt.muted
-                });
+                    new Event((isLocal ? "local" : "remote") + type + "MuteStatusChanged"),
+                    {
+                        id: isLocal ? this.localUser : evt.id,
+                        muted: evt.muted
+                    });
             this.dispatchEvent(evt2);
         };
 
@@ -241,20 +218,17 @@ export class BaseJitsiClient extends EventTarget {
         throw new Error("Not implemented in base class");
     }
 
-    rxGameData(fromUserID, data) {
+    rxGameData(evt) {
         throw new Error("Not implemented in base class");
     }
 
     /// Send a Calla message through the Jitsi Meet data channel.
     sendMessageTo(toUserID, command, value) {
-        const data = {
+        this.txGameData(toUserID, {
             hax: APP_FINGERPRINT,
             command,
-            value: Object.assign(
-                value || {},
-                { id: this.localUser })
-        };
-        this.txGameData(toUserID, data);
+            value
+        });
     }
 
     receiveMessageFrom(fromUserID, command, value) {
@@ -263,13 +237,14 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
-        evtAudioProperties.origin = origin;
-        evtAudioProperties.transitionTime = transitionTime;
-        evtAudioProperties.minDistance = minDistance;
-        evtAudioProperties.maxDistance = maxDistance;
-        evtAudioProperties.rolloff = rolloff;
-
-        this.audioClient.setAudioProperties(evtAudioProperties);
+        const evt = {
+            origin,
+            transitionTime,
+            minDistance,
+            maxDistance,
+            rolloff
+        };
+        this.audioClient.setAudioProperties(evt);
     }
 
     setLocalPosition(evt) {
@@ -322,36 +297,32 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     userInitResponse(toUserID, fromUserState) {
-        this.sendMessageTo(toUserID, "userInitResponse", copy(evtUserState, fromUserState));
+        this.sendMessageTo(toUserID, "userInitResponse", fromUserState);
     }
 
     setAvatarEmoji(emoji) {
-        copy(evtEmoji, emoji);
         for (let toUserID of this.otherUsers.keys()) {
-            this.sendMessageTo(toUserID, "setAvatarEmoji", evtEmoji);
+            this.sendMessageTo(toUserID, "setAvatarEmoji", emoji);
         }
     }
 
     emote(emoji) {
-        copy(evtEmoji, emoji);
         for (let toUserID of this.otherUsers.keys()) {
-            this.sendMessageTo(toUserID, "emote", evtEmoji);
+            this.sendMessageTo(toUserID, "emote", emoji);
         }
     }
 
     audioMuteStatusChanged(muted) {
-        evtMuted.id = this.localUser;
-        evtMuted.muted = muted;
+        const evt = { muted };
         for (let toUserID of this.otherUsers.keys()) {
-            this.sendMessageTo(toUserID, "audioMuteStatusChanged", evtMuted);
+            this.sendMessageTo(toUserID, "audioMuteStatusChanged", evt);
         }
     }
 
     videoMuteStatusChanged(muted) {
-        evtMuted.id = this.localUser;
-        evtMuted.muted = muted;
+        const evt = { muted };
         for (let toUserID of this.otherUsers.keys()) {
-            this.sendMessageTo(toUserID, "videoMuteStatusChanged", evtMuted);
+            this.sendMessageTo(toUserID, "videoMuteStatusChanged", evt);
         }
     }
 }

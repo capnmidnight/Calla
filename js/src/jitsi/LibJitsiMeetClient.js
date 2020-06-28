@@ -1,83 +1,57 @@
 ﻿import '../../lib/jquery.js';
 import { tag } from "../html/tag.js";
 import { Span } from "../html/tags.js";
-import { CallaUserEvent } from '../events.js';
+import { BaseJitsiClient } from "./BaseJitsiClient.js";
 import { AudioManager as AudioClient } from '../audio/AudioManager.js';
 
+const selfs = new Map();
 
 
-// helps us filter out data channel messages that don't belong to us
-const APP_FINGERPRINT = "Calla",
-    eventNames = [
-        "audioMuteStatusChanged",
-        "videoMuteStatusChanged",
-        "localAudioMuteStatusChanged",
-        "localVideoMuteStatusChanged",
-        "remoteAudioMuteStatusChanged",
-        "removeVideoMuteStatusChanged",
-        "videoConferenceJoined",
-        "videoConferenceLeft",
-        "participantJoined",
-        "participantLeft",
-        "displayNameChange",
-        "audioActivity",
-        "moveTo",
-        "emote",
-        "userInitRequest",
-        "userInitResponse",
-        "avatarChanged"
-    ];
+function logger(source, evtName, callback) {
+    const handler = (evt) => {
+        console.log(evtName, evt);
+        if (!!callback) {
+            callback(evt);
+        }
+    };
 
+    source.addEventListener(evtName, handler);
 
+    return handler;
+}
 
 // Manages communication between Jitsi Meet and Calla
-export class LibJitsiMeetClient extends EventTarget {
+export class LibJitsiMeetClient extends BaseJitsiClient {
 
     constructor() {
         super();
+        const self = {
+            connection: null,
+            room: null
+        };
         this._connection = { value: null };
         this._room = { value: null };
-        this.updater = this._updater.bind(this);
         this.audioClient = new AudioClient();
-        Object.freeze(this);
+
+        selfs.set(this, self);
+        Object.seal(this);
     }
 
 
     get connection() {
-        return this._connection.value;
+        return selfs.get(this).connection;
     }
 
     set connection(value) {
-        this._connection.value = value;
+        selfs.get(this).connection = value;
     }
 
     get room() {
-        return this._room.value;
+        return selfs.get(this).room;
     }
 
     set room(value) {
-        this._room.value = value;
-    }
-
-
-    /// Send a Calla message through the Jitsi Meet data channel.
-    txGameData(id, command, value) {
-        const evt = {
-            hax: APP_FINGERPRINT,
-            command,
-            value
-        };
-        this.room.sendMessage(evt, id);
-    }
-
-    /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
-    /// to receive Calla messages from the Jitsi Meet data channel.
-    rxGameData(user, data) {
-        if (data.hax === APP_FINGERPRINT) {
-            console.log("RX GAME DATA", user, data);
-            const evt = new CallaUserEvent(user.getId(), data);
-            this.dispatchEvent(evt);
-        }
+        return selfs.get(this).room = value;
     }
 
     async joinAsync(host, roomName, userName) {
@@ -203,7 +177,7 @@ export class LibJitsiMeetClient extends EventTarget {
                 this.removeTrack(track));
 
             this.room.addEventListener(ENDPOINT_MESSAGE_RECEIVED, (user, data) =>
-                this.rxGameData(user, data));
+                this.rxGameData({ user, data }));
 
 
             addEventListener("unload", () =>
@@ -232,16 +206,6 @@ export class LibJitsiMeetClient extends EventTarget {
 
         const tracks = await JitsiMeetJS.createLocalTracks({ devices: ["audio"] });
     }
-
-    audioActivity(id, isActive) {
-        const evt = Object.assign(new Event("audioActivity"), {
-            id: id,
-            isActive
-        });
-
-        this.dispatchEvent(evt);
-    }
-
 
     removeTrack(track) {
         const trackPrefix = track.isLocal() ? "local" : "remote",
@@ -324,6 +288,19 @@ export class LibJitsiMeetClient extends EventTarget {
         }
     }
 
+    txGameData(toUserID, data) {
+        this.room.sendMessage(data, toUserID);
+    }
+
+    /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
+    /// to receive Calla messages from the Jitsi Meet data channel.
+    rxGameData(evt) {
+        if (evt.data.hax === APP_FINGERPRINT) {
+            console.log("RX GAME DATA", evt.user, evt.data);
+            this.receiveMessageFrom(user.getId(), evt.data);
+        }
+    }
+
     leave() {
         if (!!this.room) {
             this.room.leave();
@@ -347,6 +324,10 @@ export class LibJitsiMeetClient extends EventTarget {
         };
     }
 
+    getCurrentDevices() {
+        throw new Error("Not implemented in base class");
+    }
+
     async getAudioOutputDevices() {
         const devices = await this.getAvailableDevices();
         return devices && devices.audioOutput || [];
@@ -358,7 +339,7 @@ export class LibJitsiMeetClient extends EventTarget {
     }
 
     setAudioOutputDevice(device) {
-        this.api.setAudioOutputDevice(device.label, device.id);
+        throw new Error("Not implemented in base class");
     }
 
     async getAudioInputDevices() {
@@ -372,7 +353,7 @@ export class LibJitsiMeetClient extends EventTarget {
     }
 
     setAudioInputDevice(device) {
-        this.api.setAudioInputDevice(device.label, device.id);
+        throw new Error("Not implemented in base class");
     }
 
     async getVideoInputDevices() {
@@ -386,73 +367,30 @@ export class LibJitsiMeetClient extends EventTarget {
     }
 
     setVideoInputDevice(device) {
-        this.api.setVideoInputDevice(device.label, device.id);
+        throw new Error("Not implemented in base class");
+    }
+
+    setDisplayName(userName) {
+        throw new Error("Not implemented in base class");
     }
 
     toggleAudio() {
-        this.api.executeCommand("toggleAudio");
+        throw new Error("Not implemented in base class");
     }
 
     toggleVideo() {
-        this.api.executeCommand("toggleVideo");
+        throw new Error("Not implemented in base class");
     }
 
     setAvatarURL(url) {
-        this.api.executeCommand("avatarUrl", url);
+        throw new Error("Not implemented in base class");
     }
 
     async isAudioMutedAsync() {
-        return await this.api.isAudioMuted();
-    }
-
-    async setAudioMutedAsync(muted) {
-        const isMuted = await this.isAudioMutedAsync();
-        if (muted !== isMuted) {
-            this.toggleAudio();
-        }
+        throw new Error("Not implemented in base class");
     }
 
     async isVideoMutedAsync() {
-        return await this.api.isVideoMuted();
-    }
-
-    async setVideoMutedAsync(muted) {
-        const isMuted = await this.isVideoMutedAsync();
-        if (muted !== isMuted) {
-            this.toggleVideo();
-        }
-    }
-
-    /// Add a listener for Calla events that come through the Jitsi Meet data channel.
-    addEventListener(evtName, callback, opts) {
-        if (eventNames.indexOf(evtName) === -1) {
-            throw new Error(`Unsupported event type: ${evtName}`);
-        }
-
-        super.addEventListener(evtName, callback, opts);
-    }
-
-    userInitRequest(toUserID) {
-        this.txGameData(toUserID, "userInitRequest");
-    }
-
-    userInitResponse(toUserID, fromUser) {
-        this.txGameData(toUserID, "userInitResponse", fromUser);
-    }
-
-    emote(toUserID, emoji) {
-        this.txGameData(toUserID, "emote", emoji);
-    }
-
-    audioMuteStatusChanged(toUserID, muted) {
-        this.txGameData(toUserID, "audioMuteStatusChanged", { muted });
-    }
-
-    videoMuteStatusChanged(toUserID, muted) {
-        this.txGameData(toUserID, "videoMuteStatusChanged", { muted });
-    }
-
-    moveTo(toUserID, evt) {
-        this.txGameData(toUserID, "moveTo", evt);
+        throw new Error("Not implemented in base class");
     }
 }

@@ -32,7 +32,7 @@ export class TestBase extends TestCase {
                 "jitsi.calla.chat",
                 TEST_ROOM_NAME,
                 "TestUser" + userNumber));
-        this.isEqualTo(evt.id, this.client.localUser);
+        this.isEqualTo(evt.id, this.client.localUser, "UserID");
     }
 
     async waitForJoin() {
@@ -76,72 +76,72 @@ export class TestBase extends TestCase {
         this.hasValue(evt.value, "Emoji value");
         this.hasValue(evt.desc, "Emoji description");
         this.isTrue(this.client.otherUsers.has(evt.id), "User exists");
-        this.isEqualTo(evt.value, bust.value);
-        this.isEqualTo(evt.desc, bust.desc);
+        this.isEqualTo(evt.value, bust.value, "Emoji value");
+        this.isEqualTo(evt.desc, bust.desc, "Emoji desc");
     }
 
     async sendAudioMuted() {
         await wait(1000);
         const evt = await this.withEvt("localAudioMuteStatusChanged", () =>
             this.client.setAudioMutedAsync(true));
-        this.hasValue(evt.id);
-        this.isEqualTo(evt.id, this.client.localUser);
-        this.isTrue(evt.muted);
+        this.hasValue(evt.id, "UserID");
+        this.isEqualTo(evt.id, this.client.localUser, "Local User");
+        this.isTrue(evt.muted, "Muted");
+    }
+
+    async recvAudioMuted() {
+        const evt = await this.client.once("remoteAudioMuteStatusChanged", 5000);
+        this.hasValue(evt.id, "UserID");
+        this.isTrue(this.client.otherUsers.has(evt.id), "Remote User");
+        this.isTrue(evt.muted, "Muted");
     }
 
     async sendAudioUnmuted() {
         await wait(1000);
         const evt = await this.withEvt("localAudioMuteStatusChanged", () =>
             this.client.setAudioMutedAsync(false));
-        this.hasValue(evt.id);
-        this.isEqualTo(evt.id, this.client.localUser);
-        this.isFalse(evt.muted);
-    }
-
-    async recvAudioMuted() {
-        const evt = await this.client.once("remoteAudioMuteStatusChanged", 5000);
-        this.hasValue(evt.id);
-        this.isTrue(this.client.otherUsers.has(evt.id));
-        this.isTrue(evt.muted);
+        this.hasValue(evt.id, "UserID");
+        this.isEqualTo(evt.id, this.client.localUser, "Local User");
+        this.isFalse(evt.muted, "Muted");
     }
 
     async recvAudioUnmuted() {
         const evt = await this.client.once("remoteAudioMuteStatusChanged", 5000);
-        this.hasValue(evt.id);
-        this.isTrue(this.client.otherUsers.has(evt.id));
-        this.isFalse(evt.muted);
+        this.hasValue(evt.id, "UserID");
+        this.isTrue(this.client.otherUsers.has(evt.id), "Remote User");
+        this.isFalse(evt.muted, "Muted");
     }
 
     async sendVideoUnmuted() {
         await wait(1000);
         const evt = await this.withEvt("localVideoMuteStatusChanged", () =>
             this.client.setVideoMutedAsync(false));
-        this.hasValue(evt.id);
-        this.isEqualTo(evt.id, this.client.localUser);
-        this.isFalse(evt.muted);
+        this.hasValue(evt.id, "UserID");
+        this.isEqualTo(evt.id, this.client.localUser, "Local User");
+        this.isFalse(evt.muted, "Muted");
+    }
+
+    async recvVideoUnmuted() {
+        const evt = await this.client.once("remoteVideoMuteStatusChanged", 5000);
+        this.hasValue(evt.id, "UserID");
+        this.isTrue(this.client.otherUsers.has(evt.id), "Remote User");
+        this.isFalse(evt.muted, "Muted");
     }
 
     async sendVideoMuted() {
         await wait(1000);
         const evt = await this.withEvt("localVideoMuteStatusChanged", () =>
             this.client.setVideoMutedAsync(true));
-        this.hasValue(evt.id);
-        this.isEqualTo(evt.id, this.client.localUser);
-        this.isTrue(evt.muted);
-    }
-
-    async recvVideoUnmuted() {
-        const evt = await this.client.once("remoteVideoMuteStatusChanged", 5000);
-        this.hasValue(evt.id);
-        this.isTrue(this.client.otherUsers.has(evt.id));
-        this.isFalse(evt.muted);
+        this.hasValue(evt.id, "UserID");
+        this.isEqualTo(evt.id, this.client.localUser, "Local User");
+        this.isTrue(evt.muted, "Muted");
     }
 
     async recvVideoMuted() {
         const evt = await this.client.once("remoteVideoMuteStatusChanged", 5000);
-        this.hasValue(evt.id);
-        this.isTrue(this.client.otherUsers.has(evt.id));
-        this.isTrue(evt.muted);
+        this.hasValue(evt.id, "UserID");
+        this.isTrue(this.client.otherUsers.has(evt.id), "Remote User");
+        this.isTrue(evt.muted, "Muted");
     }
 
     async sendPosition() {
@@ -154,8 +154,8 @@ export class TestBase extends TestCase {
     async recvPosition() {
         const x = ((userNumber - 1) * 2 - 1) * -5;
         const evt = await this.client.once("userMoved", 5000);
-        this.hasValue(evt.id);
-        this.isTrue(this.client.otherUsers.has(evt.id));
+        this.hasValue(evt.id, "UserID");
+        this.isTrue(this.client.otherUsers.has(evt.id), "Remote User");
         this.isEqualTo(evt.x, x);
         this.isEqualTo(evt.y, 0);
     }

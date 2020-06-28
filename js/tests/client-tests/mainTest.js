@@ -1,4 +1,5 @@
 ﻿import { TestBase } from "./baseTest.js";
+import { wait } from "../../src/wait.js";
 
 const TEST_ROOM_NAME = "testroom";
 
@@ -14,70 +15,71 @@ export class JitsiClient1_Tests extends TestBase {
 
     async test_010_getAudioOutputDevices() {
         const audioOutputDevices = await this.client.getAudioOutputDevices();
-        this.hasValue(audioOutputDevices);
-        this.isGreaterThan(audioOutputDevices.length, 0);
+        this.hasValue(audioOutputDevices, "Devices");
+        this.isGreaterThan(audioOutputDevices.length, 0, "Device Count");
     }
 
-    //*
     async test_020_getCurrentAudioOutputDevice() {
         const curAudioOut = await this.client.getCurrentAudioOutputDevice();
-        this.hasValue(curAudioOut);
+        this.hasValue(curAudioOut, "Audio Output");
     }
 
     async test_030_getAudioInputDevices() {
         const audioInputDevices = await this.client.getAudioInputDevices();
-        this.hasValue(audioInputDevices);
-        this.isGreaterThan(audioInputDevices.length, 0);
+        this.hasValue(audioInputDevices, "Devices");
+        this.isGreaterThan(audioInputDevices.length, 0, "Device Count");
     }
 
     async test_040_getCurrentAudioInputDevice() {
         const curAudioIn = await this.client.getCurrentAudioInputDevice();
-        this.hasValue(curAudioIn);
+        this.hasValue(curAudioIn, "Audio Input");
     }
 
     async test_050_getVideoInputDevices() {
         const videoInputDevices = await this.client.getVideoInputDevices();
-        this.hasValue(videoInputDevices);
-        this.isGreaterThan(videoInputDevices.length, 0);
+        this.hasValue(videoInputDevices, "Devices");
+        this.isGreaterThan(videoInputDevices.length, 0, "Device Count");
     }
 
     async test_060_getCurrentVideoInputDevice() {
         const curVideoIn = await this.client.getCurrentVideoInputDevice();
-        this.isNull(curVideoIn);
+        this.isNull(curVideoIn, "Current Video");
     }
 
     async test_070_toggleAudio() {
         const evt = await this.withEvt("localAudioMuteStatusChanged", () =>
             this.client.toggleAudio());
-        this.isTrue(evt.muted);
+        this.isTrue(evt.muted, "Muted");
     }
 
     async test_080_isAudioMuted() {
         let muted = await this.client.isAudioMutedAsync();
-        this.isTrue(muted);
+        this.isTrue(muted, "Muted");
     }
 
     async test_090_setAudioMuted() {
+        await wait(1000);
         const evt = await this.withEvt("localAudioMuteStatusChanged", () =>
             this.client.setAudioMutedAsync(false));
-        this.isFalse(evt.muted);
+        this.isFalse(evt.muted, "Muted");
     }
 
     async test_100_toggleVideo() {
         const evt = await this.withEvt("localVideoMuteStatusChanged", () =>
             this.client.toggleVideo());
-        this.isFalse(evt.muted);
+        this.isFalse(evt.muted, "Muted");
     }
 
     async test_110_isVideoMuted() {
         let muted = await this.client.isVideoMutedAsync();
-        this.isFalse(muted);
+        this.isFalse(muted, "Muted");
     }
 
     async test_120_setVideoMuted() {
+        await wait(1000);
         const evt = await this.withEvt("localVideoMuteStatusChanged", () =>
             this.client.setVideoMutedAsync(true));
-        this.isTrue(evt.muted);
+        this.isTrue(evt.muted, "Muted");
     }
 
     async test_125_resetDevices() {
@@ -94,11 +96,12 @@ export class JitsiClient1_Tests extends TestBase {
 
         this.success();
     }
+    //*
 
     async test_130_participantJoined() {
         const loc = new URL(document.location.href);
         loc.hash = "2";
-        window.open(loc.href, "_blank", "screenX:10,screenY:10,width:400,height:600");
+        window.open(loc.href, "_blank", "left=10,top=10,width=800,height=1000");
         await this.waitForJoin();
     }
 
@@ -106,12 +109,12 @@ export class JitsiClient1_Tests extends TestBase {
         await this.initUsers();
     }
 
-    async test_150_recvEmoji() {
-        await this.recvEmoji();
+    async test_150_sendEmoji() {
+        await this.sendEmoji();
     }
 
-    async test_160_sendEmoji() {
-        await this.sendEmoji();
+    async test_160_recvEmoji() {
+        await this.recvEmoji();
     }
 
     async test_170_sendAudioMuted() {
@@ -156,16 +159,14 @@ export class JitsiClient1_Tests extends TestBase {
 
     async test_998_participantLeft() {
         const evt = await this.client.once("participantLeft", 5000);
-        this.hasValue(evt);
-        this.hasValue(evt.id);
-        this.isFalse(this.client.otherUsers.has(evt.id));
+        this.hasValue(evt.id, "UserID");
+        this.isFalse(this.client.otherUsers.has(evt.id), "Remote User");
     }
 
     async test_999_leaveConference() {
         const evt = await this.withEvt("videoConferenceLeft", () =>
             this.client.leave());
-        this.hasValue(evt.roomName);
-        this.isEqualTo(evt.roomName, TEST_ROOM_NAME);
+        this.isEqualTo(evt.roomName, TEST_ROOM_NAME, "Room Name");
     }
     //*/
 }

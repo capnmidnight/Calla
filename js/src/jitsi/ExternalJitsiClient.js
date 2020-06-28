@@ -2,35 +2,6 @@
 
 import { BaseJitsiClient } from "./BaseJitsiClient.js";
 import { ExternalJitsiAudioClient } from "../audio/ExternalJitsiAudioClient.js";
-import { copy } from "../events.js";
-
-const audioActivityEvt = Object.assign(new Event("audioActivity", {
-    id: null,
-    isActive: false
-})),
-    evtVideoConferenceJoined = Object.seal({
-        id: null,
-        roomName: null,
-        displayName: null
-    }),
-    evtVideoConferenceLeft = Object.seal({
-        roomName: null
-    }),
-    evtParticipantLeft = Object.seal({
-        id: null
-    }),
-    evtAvatarChanged = Object.seal({
-        id: null,
-        avatarURL: null
-    }),
-    evtParticipantName = Object.seal({
-        id: null,
-        displayName: null
-    }),
-    evtMuted = Object.seal({
-        id: null,
-        muted: null
-    });
 
 export class ExternalJitsiClient extends BaseJitsiClient {
     constructor() {
@@ -59,9 +30,8 @@ export class ExternalJitsiClient extends BaseJitsiClient {
                         new URL(iframe.src).origin,
                         iframe.contentWindow);
                     this.audioClient.addEventListener("audioActivity", (evt) => {
-                        audioActivityEvt.id = evt.id;
-                        audioActivityEvt.isActive = evt.isActive;
-                        this.dispatchEvent(audioActivityEvt);
+                        const evt2 = Event.clone(new Event("audioActivity"), evt);
+                        this.dispatchEvent(evt2);
                     });
                     resolve();
                 },
@@ -82,48 +52,40 @@ export class ExternalJitsiClient extends BaseJitsiClient {
                 }
             });
 
-            const reroute = (evtType, dest, test) => {
-                this.api.addEventListener(evtType, (rootEvt) => {
-                    if (!test || test(rootEvt)) {
-                        copy(dest, rootEvt);
+            const reroute = (evtType, test) => {
+                test = test || (() => true);
 
+                this.api.addEventListener(evtType, (evt) => {
+                    if (test(evt)) {
+                        const evt2 = Event.clone(new Event(evtType), evt);
                         if (evtType === "displayNameChange") {
 
                             // The version of the External API that I'm using
                             // is inconsistent with how parameters are set.
-                            if (rootEvt.id === "local") {
-                                rootEvt.id = null;
+                            if (evt2.id === "local") {
+                                evt2.id = null;
                             }
 
                             // The version of the External API that I'm using 
                             // misspells the name of this field.
-                            if (rootEvt.displayname !== undefined) {
-                                dest.displayName = rootEvt.displayname;
+                            if (evt2.displayname !== undefined) {
+                                evt2.displayName = evt2.displayname;
                             }
                         }
 
-                        if (dest.hasOwnProperty("id")
-                            && (rootEvt.id === null
-                                || rootEvt.id === undefined)) {
-                            dest.id = this.localUser;
-                        }
-
-                        const evt = Object.assign(
-                            new Event(evtType),
-                            dest);
-                        this.dispatchEvent(evt);
+                        this.dispatchEvent(evt2);
                     }
                 });
             };
 
-            reroute("videoConferenceJoined", evtVideoConferenceJoined);
-            reroute("videoConferenceLeft", evtVideoConferenceLeft);
-            reroute("participantJoined", evtParticipantName, (evt) => evt.id !== "local");
-            reroute("participantLeft", evtParticipantLeft);
-            reroute("avatarChanged", evtAvatarChanged, (evt) => evt.avatarURL !== undefined);
-            reroute("displayNameChange", evtParticipantName);
-            reroute("audioMuteStatusChanged", evtMuted);
-            reroute("videoMuteStatusChanged", evtMuted);
+            reroute("videoConferenceJoined");
+            reroute("videoConferenceLeft");
+            reroute("participantJoined", (evt) => evt.id !== "local");
+            reroute("participantLeft");
+            reroute("avatarChanged", (evt) => evt.avatarURL !== undefined);
+            reroute("displayNameChange");
+            reroute("audioMuteStatusChanged");
+            reroute("videoMuteStatusChanged");
 
             this.api.addEventListener("endpointTextMessageReceived", (evt) => {
                 this.rxGameData(evt);
