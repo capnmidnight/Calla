@@ -9,8 +9,8 @@ const audioActivityEvt = Object.assign(new Event("audioActivity", {
     isActive: false
 })),
     evtVideoConferenceJoined = Object.seal({
-        roomName: null,
         id: null,
+        roomName: null,
         displayName: null
     }),
     evtVideoConferenceLeft = Object.seal({
@@ -30,10 +30,6 @@ const audioActivityEvt = Object.assign(new Event("audioActivity", {
     evtMuted = Object.seal({
         id: null,
         muted: null
-    }),
-    evtReceiveMessage = Object.seal({
-        command: null,
-        value: null
     });
 
 export class ExternalJitsiClient extends BaseJitsiClient {

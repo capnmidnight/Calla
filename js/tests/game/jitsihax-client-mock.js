@@ -47,8 +47,8 @@ export class MockJitsiClient extends BaseJitsiClient {
         this.dispatchEvent(Object.assign(
             new Event("videoConferenceJoined"),
             {
-                roomName: this.roomName,
                 id: "mock-local-user-" + userNumber,
+                roomName: this.roomName,
                 displayName
             }));
     }
@@ -91,16 +91,16 @@ export class MockJitsiClient extends BaseJitsiClient {
 
     toggleAudio() {
         this.audioMuted = !this.audioMuted;
-        this.dispatchEvent(Object.assign(new Event("audioMuteStatusChanged"), {
-            id: this.localUser,
+        this.dispatchEvent(Object.assign(
+            new Event("audioMuteStatusChanged"), {
             muted: this.audioMuted
         }));
     }
 
     toggleVideo() {
         this.videoMuted = !this.videoMuted;
-        this.dispatchEvent(Object.assign(new Event("videoMuteStatusChanged"), {
-            id: this.localUser,
+        this.dispatchEvent(Object.assign(
+            new Event("videoMuteStatusChanged"), {
             muted: this.videoMuted
         }));
     }

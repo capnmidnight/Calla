@@ -6,8 +6,7 @@ import { userNumber } from "../client-tests/userNumber.js";
 
 
 function echoEvt(evt) {
-    console.log(`============ ECHO EVT ${evt.type} ==============`);
-    console.log(evt);
+    console.log(evt.type, evt.id, evt);
 }
 
 export async function RunTest(JitsiClient) {

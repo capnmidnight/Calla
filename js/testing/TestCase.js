@@ -42,9 +42,12 @@ export class TestCase extends EventTarget {
         this.isEqualTo(value === true || value === false, true, message);
     }
     hasValue(value, message) {
-        message = message || `${value} is a value`;
-        const badMessage = message || `${value} is not a value`, isValue = value !== null && value !== undefined;
-        this.isTrue(isValue, isValue ? message : badMessage);
+        message = message || value;
+        const goodMessage = `${message} is a value`,
+            badMessage = `${message} is not a value`,
+            isValue = value !== null
+                && value !== undefined;
+        this.isTrue(isValue, isValue ? goodMessage : badMessage);
     }
     isEmpty(value, message) {
         message = message || `${value} is empty`;

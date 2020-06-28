@@ -13,17 +13,14 @@ export class TestBase extends TestCase {
     }
 
     async withEvt(name, action) {
-        const evtTask = this.client.once(name, 5000);
-        this.hasValue(evtTask);
-        this.isTrue(evtTask instanceof Promise);
-
-        const actionResult = action();
+        const evtTask = this.client.once(name, 5000),
+            actionResult = action();
         if (actionResult instanceof Promise) {
             await actionResult;
         }
 
         const evt = await evtTask;
-        this.hasValue(evt);
+        this.hasValue(evt, "Event");
 
         return evt;
     }
@@ -35,7 +32,7 @@ export class TestBase extends TestCase {
                 "jitsi.calla.chat",
                 TEST_ROOM_NAME,
                 "TestUser" + userNumber));
-        this.isEqualTo(evt.id, this.client.localUser);
+        this.isEqualTo(evt.id, this.client.localUser, "User ID doesn't match");
     }
 
     async waitForJoin() {
@@ -43,9 +40,9 @@ export class TestBase extends TestCase {
             await this.client.once("participantJoined", 5000);
         }
 
-        this.isGreaterThan(this.client.otherUsers.size, 0);
+        this.isGreaterThan(this.client.otherUsers.size, 0, "No users found");
         for (let id of this.client.otherUsers.keys()) {
-            this.hasValue(id);
+            this.hasValue(id, "UserID");
         }
     }
 
@@ -55,15 +52,15 @@ export class TestBase extends TestCase {
             requests.push(this.client.userInitRequestAsync(id));
         }
         const responses = await Promise.all(requests);
-        this.hasValue(responses);
-        this.isGreaterThan(responses.length, 0);
+        this.hasValue(responses, "Response");
+        this.isGreaterThan(responses.length, 0, "No responses");
 
         for (let response of responses) {
-            this.hasValue(response.id);
-            this.isNotEqualTo(response.id, this.client.localUser);
+            this.hasValue(response.id, "UserID");
+            this.isNotEqualTo(response.id, this.client.localUser, "other user ID overlaps local user ID");
 
-            this.hasValue(response.x);
-            this.isNotEqualTo(response.x, userNumber);
+            this.hasValue(response.x, "User parameter");
+            this.isNotEqualTo(response.x, userNumber, "Wrong user parameter");
         }
     }
 
@@ -75,9 +72,10 @@ export class TestBase extends TestCase {
 
     async recvEmoji() {
         const evt = await this.client.once("emote", 5000);
-        this.hasValue(evt);
-        this.hasValue(evt.id);
-        this.isTrue(this.client.otherUsers.has(evt.id));
+        this.hasValue(evt.id, "Other User ID");
+        this.hasValue(evt.value, "Emoji value");
+        this.hasValue(evt.desc, "Emoji description");
+        this.isTrue(this.client.otherUsers.has(evt.id), "User exists");
         this.isEqualTo(evt.value, bust.value);
         this.isEqualTo(evt.desc, bust.desc);
     }
