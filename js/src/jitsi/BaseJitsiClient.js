@@ -250,7 +250,9 @@ export class BaseJitsiClient extends EventTarget {
         const data = {
             hax: APP_FINGERPRINT,
             command,
-            value
+            value: Object.assign(
+                value || {},
+                { id: this.localUser })
         };
         this.txGameData(toUserID, data);
     }
