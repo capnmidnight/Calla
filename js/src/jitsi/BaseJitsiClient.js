@@ -171,9 +171,11 @@ export class BaseJitsiClient extends EventTarget {
             this.dispose();
         });
 
+        const joinInfo = await joinTask;
+
         this.setDisplayName(userName);
 
-        return await joinTask;
+        return joinInfo;
     }
 
     dispose() {
