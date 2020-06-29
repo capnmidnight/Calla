@@ -5,7 +5,7 @@ import { A, H2, P, Span } from "./src/html/tags.js";
 import { init } from "./src/init.js";
 import { ExternalJitsiClient as JitsiClient } from "./src/jitsi/ExternalJitsiClient.js";
 
-const { toolbar, login } = init(JITSI_HOST, JitsiClient);
+const { toolbar, login } = init(JITSI_HOST, new JitsiClient());
 
 function adLink(url, label, icon) {
     return A(

@@ -10,11 +10,16 @@ import { ToolBar } from "./forms/ToolBar.js";
 import { Game } from "./Game.js";
 import { GamepadManager } from "./gamepad/GamepadStateManager.js";
 import { Settings } from "./Settings.js";
+import { BaseJitsiClient } from "./jitsi/BaseJitsiClient.js";
 
-export function init(host, JitsiClientClass) {
+/**
+ * 
+ * @param {string} host
+ * @param {BaseJitsiClient} client
+ */
+export function init(host, client) {
     const settings = new Settings(),
         game = new Game(),
-        client = new JitsiClientClass(),
         login = new LoginForm(),
         toolbar = new ToolBar(),
         options = new OptionsForm(),

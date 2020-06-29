@@ -1,7 +1,7 @@
 ﻿import { ExternalJitsiClient as JitsiClient } from "../../src/jitsi/ExternalJitsiClient.js";
 import { init } from "../../src/init.js";
 
-const { client } = init("jitsi.calla.chat", JitsiClient);
+const { client } = init("jitsi.calla.chat", new JitsiClient());
 
 function echoEvt(evt) {
     console.log(evt.type, evt.id, evt);

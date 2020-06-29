@@ -19,7 +19,7 @@ import { src, style } from "../../src/html/attrs.js";
     const loginContent = document.querySelector("#login > .content")
     loginContent.parentElement.removeChild(loginContent);
 
-    const components = init("jitsi.calla.chat", JitsiClient);
+    const components = init("jitsi.calla.chat", new JitsiClient());
     const { game, login, client, toolbar } = components;
     Object.assign(window, components);
 
