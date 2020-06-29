@@ -1,7 +1,9 @@
 ﻿import { BaseJitsiClient } from "../../src/jitsi/BaseJitsiClient.js";
 import { userNumber } from "../client-tests/userNumber.js";
 import "../../src/audio/ExternalJitsiAudioServer.js";
-import { ExternalJitsiAudioClient as AudioClient } from "../../src/audio/ExternalJitsiAudioClient.js";
+
+//import { ExternalJitsiAudioClient as AudioClient } from "../../src/audio/ExternalJitsiAudioClient.js";
+import { AudioManager as AudioClient } from "../../src/audio/AudioManager.js";
 
 export class MockJitsiClient extends BaseJitsiClient {
     constructor() {
@@ -37,20 +39,22 @@ export class MockJitsiClient extends BaseJitsiClient {
         this.audioClient = new AudioClient("jisti.calla.chat", window.location.origin, window);
     }
 
-    async initializeAsync(host, roomName) {
+    async initializeAsync(host, roomName, userName) {
         this.host = host;
         this.roomName = roomName;
-    }
+        this.userName = userName;
 
-    setDisplayName(displayName) {
-        this.userName = displayName;
         this.dispatchEvent(Object.assign(
             new Event("videoConferenceJoined"),
             {
                 id: "mock-local-user-" + userNumber,
-                roomName: this.roomName,
-                displayName
+                roomName: roomName,
+                displayName: userName
             }));
+    }
+
+    setDisplayName(displayName) {
+        this.userName = displayName;
     }
 
     async getAudioOutputDevicesAsync() {
