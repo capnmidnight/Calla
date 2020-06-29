@@ -2,6 +2,7 @@
 import { bust } from "../../src/emoji.js";
 import { userNumber } from "./userNumber.js";
 import { wait } from "../../src/wait.js";
+import { BaseJitsiClient } from "../../src/jitsi/BaseJitsiClient.js";
 
 const TEST_ROOM_NAME = "testroom";
 
@@ -9,6 +10,8 @@ export class TestBase extends TestCase {
 
     constructor() {
         super();
+
+        /** @type {BaseJitsiClient} */
         this.client = null;
     }
 

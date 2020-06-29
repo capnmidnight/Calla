@@ -86,6 +86,7 @@ export class ExternalJitsiClient extends BaseJitsiClient {
             reroute("displayNameChange");
             reroute("audioMuteStatusChanged");
             reroute("videoMuteStatusChanged");
+            reroute("participantRoleChanged");
 
             this.api.addEventListener("endpointTextMessageReceived", (evt) => {
                 this.rxGameData(evt);

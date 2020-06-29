@@ -7,17 +7,18 @@ import { AudioManager as AudioClient } from '../audio/AudioManager.js';
 const selfs = new Map();
 
 
-function logger(source, evtName, callback) {
-    const handler = (evt) => {
-        console.log(evtName, evt);
-        if (!!callback) {
-            callback(evt);
-        }
+function logger(source, evtName) {
+    const handler = (...rest) => {
+        console.log(evtName, ...rest);
     };
 
     source.addEventListener(evtName, handler);
+}
 
-    return handler;
+function setLoggers(source, evtObj) {
+    for (let evtName of Object.values(evtObj)) {
+        logger(source, evtName);
+    }
 }
 
 // Manages communication between Jitsi Meet and Calla
@@ -25,10 +26,12 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
 
     constructor() {
         super();
-        const self = {
+        const self = Object.seal({
             connection: null,
-            room: null
-        };
+            room: null,
+            audioInput: null,
+            videoInput: null
+        });
         this._connection = { value: null };
         this._room = { value: null };
         this.audioClient = new AudioClient();
@@ -46,11 +49,11 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         selfs.get(this).connection = value;
     }
 
-    get room() {
+    get conference() {
         return selfs.get(this).room;
     }
 
-    set room(value) {
+    set conference(value) {
         return selfs.get(this).room = value;
     }
 
@@ -77,8 +80,10 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             CONNECTION_DISCONNECTED
         } = JitsiMeetJS.events.connection;
 
-        const onConnect = () => {
-            this.room = this.connection.initJitsiConference(roomName, {
+        setLoggers(this.connection, JitsiMeetJS.events.connection);
+
+        const onConnect = (connectionID) => {
+            this.conference = this.connection.initJitsiConference(roomName, {
                 openBridgeChannel: true
             });
 
@@ -90,13 +95,14 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 USER_JOINED,
                 USER_LEFT,
                 DISPLAY_NAME_CHANGED,
-                AVATAR_CHANGED,
                 ENDPOINT_MESSAGE_RECEIVED,
-                DATA_CHANNEL_OPENED,
+                DATA_CHANNEL_OPENED
             } = JitsiMeetJS.events.conference;
 
-            this.room.addEventListener(CONFERENCE_JOINED, () => {
-                const id = this.room.myUserId();
+            setLoggers(this.conference, JitsiMeetJS.events.conference);
+
+            this.conference.addEventListener(CONFERENCE_JOINED, () => {
+                const id = this.conference.myUserId();
 
                 for (let track of tracks) {
                     this.addTrack(id, track);
@@ -112,7 +118,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 this.dispatchEvent(evt);
             });
 
-            this.room.addEventListener(CONFERENCE_LEFT, () => {
+            this.conference.addEventListener(CONFERENCE_LEFT, () => {
                 const evt = Object.assign(
                     new Event("videoConferenceLeft"), {
                     roomName
@@ -131,7 +137,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 }
             };
 
-            this.room.addEventListener(USER_JOINED, (id, user) => {
+            this.conference.addEventListener(USER_JOINED, (id, user) => {
                 userJoinedEvent = Object.assign(
                     new Event("participantJoined"), {
                     id,
@@ -140,12 +146,12 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 checkUser();
             });
 
-            this.room.addEventListener(DATA_CHANNEL_OPENED, () => {
+            this.conference.addEventListener(DATA_CHANNEL_OPENED, () => {
                 dataChannelOpen = true;
                 checkUser();
             });
 
-            this.room.addEventListener(USER_LEFT, (id) => {
+            this.conference.addEventListener(USER_LEFT, (id) => {
                 const evt = Object.assign(
                     new Event("participantLeft"), {
                     id
@@ -154,10 +160,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 this.dispatchEvent(evt);
             });
 
-            // TODO lib-jitsi-meet doesn't currently call AVATAR_CHANGED
-            logger(this.room, AVATAR_CHANGED);
-
-            this.room.addEventListener(DISPLAY_NAME_CHANGED, (id, displayName) => {
+            this.conference.addEventListener(DISPLAY_NAME_CHANGED, (id, displayName) => {
                 const evt = Object.assign(
                     new Event("displayNameChange"), {
                     id,
@@ -167,40 +170,40 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 this.displayName(evt);
             });
 
-            this.room.addEventListener(TRACK_ADDED, (track) => {
+            this.conference.addEventListener(TRACK_ADDED, (track) => {
                 if (!track.isLocal()) {
                     this.addTrack(track.getParticipantId(), track);
                 }
             });
 
-            this.room.addEventListener(TRACK_REMOVED, (track) =>
+            this.conference.addEventListener(TRACK_REMOVED, (track) =>
                 this.removeTrack(track));
 
-            this.room.addEventListener(ENDPOINT_MESSAGE_RECEIVED, (user, data) =>
+            this.conference.addEventListener(ENDPOINT_MESSAGE_RECEIVED, (user, data) =>
                 this.rxGameData({ user, data }));
 
 
             addEventListener("unload", () =>
                 this.leave());
 
-            this.room.join();
-            this.room.setDisplayName(userName);
+            this.conference.join();
+            this.conference.setDisplayName(userName);
         };
 
-        this.connection.addEventListener(CONNECTION_ESTABLISHED, onConnect);
+        const onFailed = () => {
+        };
 
-        const onFailed = logger(this.connection, CONNECTION_FAILED);
-        const onDisconnect = logger(this.connection, CONNECTION_DISCONNECTED, () => {
+        const onDisconnect = () => {
             this.connection.removeEventListener(CONNECTION_ESTABLISHED, onConnect);
             this.connection.removeEventListener(CONNECTION_FAILED, onFailed);
             this.connection.removeEventListener(CONNECTION_DISCONNECTED, onDisconnect);
-        });
+        };
 
-        const {
-            DEVICE_LIST_CHANGED
-        } = JitsiMeetJS.events.mediaDevices;
+        this.connection.addEventListener(CONNECTION_ESTABLISHED, onConnect);
+        this.connection.addEventListener(CONNECTION_DISCONNECTED, onFailed);
+        this.connection.addEventListener(CONNECTION_DISCONNECTED, onDisconnect);
 
-        logger(JitsiMeetJS.mediaDevices, DEVICE_LIST_CHANGED);
+        setLoggers(JitsiMeetJS.mediaDevices, JitsiMeetJS.events.mediaDevices);
 
         this.connection.connect();
 
@@ -227,15 +230,17 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     addTrack(id, track) {
+
+        selfs.get(this)[track.track.kind + "Input"] = track.track.label;
+
         const containerID = `participant_${id}`,
             trackPrefix = track.isLocal() ? "local" : "remote",
             trackId = track.getId(),
             {
-                TRACK_AUDIO_LEVEL_CHANGED,
-                TRACK_MUTE_CHANGED,
-                LOCAL_TRACK_STOPPED,
-                TRACK_AUDIO_OUTPUT_CHANGED
+                TRACK_MUTE_CHANGED
             } = JitsiMeetJS.events.track;
+
+        setLoggers(track, JitsiMeetJS.events.track);
 
         let trackType = track.getType();
         trackType = trackType[0].toLocaleUpperCase()
@@ -258,10 +263,6 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             this.dispatch(evt);
         });
 
-        //logger(track, TRACK_AUDIO_LEVEL_CHANGED);
-        logger(track, TRACK_AUDIO_OUTPUT_CHANGED);
-        logger(track, LOCAL_TRACK_STOPPED);
-
         let container = document.getElementById(containerID);
         if (container === null) {
             container = Span({ id: containerID });
@@ -283,13 +284,13 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         container.appendChild(elem);
 
         if (track.isLocal()) {
-            this.room.addTrack(track);
+            this.conference.addTrack(track);
             elem.muted = true;
         }
     }
 
     txGameData(toUserID, data) {
-        this.room.sendMessage(data, toUserID);
+        this.conference.sendMessage(data, toUserID);
     }
 
     /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
@@ -302,8 +303,8 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     leave() {
-        if (!!this.room) {
-            this.room.leave();
+        if (!!this.conference) {
+            this.conference.leave();
         }
     }
 
@@ -317,15 +318,13 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             }
         });
 
+        console.log("DEVICES", devices);
+
         return {
             audioOutput: devices.filter(d => d.kind === "audiooutput"),
             audioInput: devices.filter(d => d.kind === "audioinput"),
             videoInput: devices.filter(d => d.kind === "videoinput")
         };
-    }
-
-    getCurrentDevices() {
-        throw new Error("Not implemented in base class");
     }
 
     async getAudioOutputDevices() {
@@ -334,12 +333,11 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async getCurrentAudioOutputDevice() {
-        const devices = await this.getCurrentDevices();
-        return devices && devices.audioOutput || null;
+        return JitsiMeetJS.mediaDevices.getAudioOutputDevice();
     }
 
     setAudioOutputDevice(device) {
-        throw new Error("Not implemented in base class");
+        JitsiMeetJS.mediaDevices.setAudiouOutputDevice(device);
     }
 
     async getAudioInputDevices() {
@@ -348,8 +346,15 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async getCurrentAudioInputDevice() {
-        const devices = await this.getCurrentDevices();
-        return devices && devices.audioInput || null;
+        const label = selfs.get(this).audioInput,
+            devices = await this.getAudioInputDevices(),
+            device = devices.filter((d) => d.label === label);
+        if (device.length === 0) {
+            return null;
+        }
+        else {
+            return device[0];
+        }
     }
 
     setAudioInputDevice(device) {
@@ -362,8 +367,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async getCurrentVideoInputDevice() {
-        const devices = await this.getCurrentDevices();
-        return devices && devices.videoInput || null;
+        return selfs.get(this).videoInput;
     }
 
     setVideoInputDevice(device) {

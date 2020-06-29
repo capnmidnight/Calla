@@ -9,6 +9,12 @@ function echoEvt(evt) {
     console.log(evt.type, evt.id, evt);
 }
 
+function echoEvts(evt, ...evtNameList) {
+    for (let evtName of evtNameList) {
+        evt.addEventListener(evtName, echoEvt);
+    }
+}
+
 export async function RunTest(JitsiClient) {
 
     const response = await fetch("../../index.html"),
@@ -45,23 +51,26 @@ export async function RunTest(JitsiClient) {
 
     document.body.removeChild(document.body.querySelector("#login"));
 
-    client.addEventListener("userMoved", echoEvt);
-    client.addEventListener("emote", echoEvt);
-    client.addEventListener("userInitRequest", echoEvt);
-    client.addEventListener("userInitResponse", echoEvt);
-    client.addEventListener("audioMuteStatusChanged", echoEvt);
-    client.addEventListener("videoMuteStatusChanged", echoEvt);
-    client.addEventListener("localAudioMuteStatusChanged", echoEvt);
-    client.addEventListener("localVideoMuteStatusChanged", echoEvt);
-    client.addEventListener("remoteAudioMuteStatusChanged", echoEvt);
-    client.addEventListener("remoteVideoMuteStatusChanged", echoEvt);
-    client.addEventListener("videoConferenceJoined", echoEvt);
-    client.addEventListener("videoConferenceLeft", echoEvt);
-    client.addEventListener("participantJoined", echoEvt);
-    client.addEventListener("participantLeft", echoEvt);
-    client.addEventListener("avatarChanged", echoEvt);
-    client.addEventListener("displayNameChange", echoEvt);
-    client.addEventListener("audioActivity", echoEvt);
+    echoEvts(
+        client,
+        "userMoved",
+        "emote",
+        "userInitRequest",
+        "userInitResponse",
+        "audioMuteStatusChanged",
+        "videoMuteStatusChanged",
+        "localAudioMuteStatusChanged",
+        "localVideoMuteStatusChanged",
+        "remoteAudioMuteStatusChanged",
+        "remoteVideoMuteStatusChanged",
+        "videoConferenceJoined",
+        "videoConferenceLeft",
+        "participantJoined",
+        "participantLeft",
+        "avatarChanged",
+        "displayNameChange",
+        "audioActivity",
+        "participantRoleChanged");
 
     client.addEventListener("userInitRequest", (evt) => {
         client.userInitResponse(evt.id, { x: userNumber, y: userNumber });

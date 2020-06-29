@@ -74,13 +74,11 @@ export class TestCase extends EventTarget {
         this._throwTest(func, false, message);
     }
     _twoValueTest(actual, op, expected, testFunc, message) {
-        const testValue = testFunc(actual, expected), testString = testValue ? "yes" : "no";
-        message = message || `[Actual: ${actual}] ${op} [Expected: ${expected}] (${testString})`;
-        if (testValue) {
+        if (testFunc(actual, expected)) {
             this.success();
         }
         else {
-            this.fail(message);
+            this.fail(`${message || ""} [Actual: ${actual}] ${op} [Expected: ${expected}]`);
         }
     }
     _throwTest(func, op, message) {
@@ -91,7 +89,9 @@ export class TestCase extends EventTarget {
         catch (exp) {
             threw = true;
         }
-        const testValue = threw === op, testString = testValue ? "Success!" : "Fail!", testMessage = `Expected function to ${op} -> ${testString}`;
+        const testValue = threw === op,
+            testString = testValue ? "Success!" : "Fail!",
+            testMessage = `Expected function to ${op} -> ${testString}`;
         message = ((message && message + ". ") || "") + testMessage;
         if (testValue) {
             this.success(message);
