@@ -7,28 +7,17 @@ export class FormDialog extends EventTarget {
         super();
 
         const formStyle = style({
-            position: "absolute",
             display: "grid",
             gridTemplateColumns: "5fr 1fr 1fr",
             gridTemplateRows: "auto auto 1fr auto auto",
             overflowY: "hidden",
-            width: "50%",
-            left: "25%",
-            top: "3em",
-            maxWidth: "900px",
-            maxHeight: "calc(100% - 4em)",
-            backgroundColor: "white",
-            padding: "1em 1em 3em 1em",
-            margin: "auto",
-            borderRadius: "5px",
-            border: "solid 4px black",
-            boxShadow: "rgba(0, 0, 0, .4) 10px 10px 20px",
             fontFamily: systemFamily
         });
 
         this.element = document.getElementById(name) ||
             Div(
                 id(name),
+                className("dialog"),
                 H1(...rest));
 
         formStyle.apply(this.element);

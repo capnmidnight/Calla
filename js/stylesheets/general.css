@@ -26,3 +26,53 @@ h1 {
 h2 {
     font-size: 1.5em;
 }
+
+.dialog {
+    position: absolute;
+    top: 3em;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: white;
+    padding: 1em 1em 3em 1em;
+    margin: auto;
+    border-radius: 5px;
+    border: solid 4px black;
+    box-shadow: rgba(0, 0, 0, .4) 10px 10px 20px
+}
+
+.dialog h1{
+    font-size: 1em;
+}
+
+.dialog h2{
+    font-size: 0.75em;
+}
+
+@media (min-width: 600px) {
+    .dialog {
+        left: 15%;
+        right: 15%;
+        max-width: 100vw;
+        min-height: 300px;
+        max-height: calc(100vh - 4em);
+    }
+
+        .dialog h1 {
+            font-size: 2em;
+        }
+
+        .dialog h2 {
+            font-size: 1.5em;
+        }
+}
+
+@media (min-width: 1025px) {
+    .dialog {
+        left: 25%;
+        right: 25%;
+        max-width: 100vw;
+        min-height: 300px;
+        max-height: calc(100vh - 4em);
+    }
+}
