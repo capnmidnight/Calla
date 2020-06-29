@@ -1,7 +1,6 @@
 ﻿import { BaseJitsiClient } from "../../src/jitsi/BaseJitsiClient.js";
 import { userNumber } from "../client-tests/userNumber.js";
-import "../../src/audio/ExternalJitsiAudioServer.js";
-
+//import "../../src/audio/ExternalJitsiAudioServer.js";
 //import { ExternalJitsiAudioClient as AudioClient } from "../../src/audio/ExternalJitsiAudioClient.js";
 import { AudioManager as AudioClient } from "../../src/audio/AudioManager.js";
 
