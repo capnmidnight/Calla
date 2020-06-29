@@ -1,5 +1,9 @@
 ﻿import { Destination } from "./Destination.js";
 import { BaseAudioClient } from "./BaseAudioClient.js";
+//import { WorkerTimer as Timer } from "../timers/WorkerTimer.js";
+import { RequestAnimationFrameTimer as Timer } from "../timers/RequestAnimationFrameTimer.js";
+//import { SetIntervalTimer as Timer } from "../timers/SetIntervalTimer.js";
+//import { SetTimeoutTimer as Timer } from "../timers/SetTimeoutTimer.js";
 
 const BUFFER_SIZE = 1024,
     audioActivityEvt = Object.assign(new Event("audioActivity", {
@@ -41,6 +45,7 @@ export class AudioManager extends BaseAudioClient {
         });
 
         this.destination.addEventListener("contextDestroyed", () => {
+            this.timer.stop();
             this.destination.createContext();
 
             for (let recreate of recreationQ) {
@@ -48,16 +53,17 @@ export class AudioManager extends BaseAudioClient {
                 source.setTarget(recreate);
             }
             recreationQ.clear();
+            this.timer.start();
         });
 
-        this.updater = () => {
-            requestAnimationFrame(this.updater);
+        this.timer = new Timer(250);
+        this.timer.addEventListener("tick", () => {
             this.destination.update();
             for (let source of this.sourceList) {
                 source.update();
             }
-        };
-        requestAnimationFrame(this.updater);
+        });
+        this.timer.start();
 
         Object.seal(this);
     }
