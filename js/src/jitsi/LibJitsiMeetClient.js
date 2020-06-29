@@ -291,7 +291,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
 
     async leaveAsync() {
         if (!!this.conference) {
-            const leaveTask = this.once("videoConferenceLeft");
+            const leaveTask = this.once("videoConferenceLeft", 5000);
             this.conference.leave();
             await leaveTask;
         }
@@ -404,7 +404,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async toggleAudioAsync() {
-        const changeTask = this.once("localAudioMuteStatusChanged");
+        const changeTask = this.once("localAudioMuteStatusChanged", 5000);
         const cur = selfs.get(this).audioInput;
         if (cur) {
             const muted = cur.isMuted();
@@ -428,7 +428,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async toggleVideoAsync() {
-        const changeTask = this.once("localVideoMuteStatusChanged");
+        const changeTask = this.once("localVideoMuteStatusChanged", 5000);
         const cur = selfs.get(this).videoInput;
         if (cur) {
             const muted = cur.isMuted();

@@ -114,7 +114,7 @@ export class MathTests extends TestCase {
 
     async test_Mouse() {
         this.message("Move the mouse");
-        const evt = await window.once("mousemove");
+        const evt = await window.once("mousemove", 5000);
         this.hasValue(evt);
     }
 }

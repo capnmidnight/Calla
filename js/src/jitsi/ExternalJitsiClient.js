@@ -99,7 +99,7 @@ export class ExternalJitsiClient extends BaseJitsiClient {
     }
 
     async leaveAsync() {
-        const leaveTask = this.once("videoConferenceLeft");
+        const leaveTask = this.once("videoConferenceLeft", 5000);
         this.api.executeCommand("hangup");
         await leaveTask;
     }
@@ -131,7 +131,7 @@ export class ExternalJitsiClient extends BaseJitsiClient {
     async setAudioInputDeviceAsync(device) {
         const muted = await this.isAudioMutedAsync();
         if (muted) {
-            const unmuteTask = this.once("localAudioMuteStatusChanged");
+            const unmuteTask = this.once("localAudioMuteStatusChanged", 5000);
             await this.setAudioMutedAsync(false);
             await unmuteTask;
         }
@@ -152,7 +152,7 @@ export class ExternalJitsiClient extends BaseJitsiClient {
     async setVideoInputDeviceAsync(device) {
         const muted = await this.isVideoMutedAsync();
         if (muted) {
-            const unmuteTask = this.once("localVideoMuteStatusChanged");
+            const unmuteTask = this.once("localVideoMuteStatusChanged", 5000);
             await this.setVideoMutedAsync(false);
             await unmuteTask;
         }
@@ -161,13 +161,13 @@ export class ExternalJitsiClient extends BaseJitsiClient {
     }
 
     async toggleAudioAsync() {
-        const changeTask = this.once("localAudioMuteStatusChanged");
+        const changeTask = this.once("localAudioMuteStatusChanged", 5000);
         this.api.executeCommand("toggleAudio");
         return await changeTask;
     }
 
     async toggleVideoAsync() {
-        const changeTask = this.once("localVideoMuteStatusChanged");
+        const changeTask = this.once("localVideoMuteStatusChanged", 5000);
         this.api.executeCommand("toggleVideo");
         return await changeTask;
     }
