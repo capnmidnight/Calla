@@ -66,6 +66,8 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async initializeAsync(host, roomName, userName) {
+        const self = selfs.get(this);
+
         roomName = roomName.toLocaleLowerCase();
 
         await import(`https://${host}/libs/lib-jitsi-meet.min.js`);
@@ -112,28 +114,24 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             this.conference.addEventListener(CONFERENCE_JOINED, async () => {
                 const id = this.conference.myUserId();
 
-                const tracks = await JitsiMeetJS.createLocalTracks({ devices: ["audio"] });
-                for (let track of tracks) {
-                    this.addTrack(id, track);
-                }
-
-                const evt = Object.assign(
+                this.dispatchEvent(Object.assign(
                     new Event("videoConferenceJoined"), {
                     id,
                     roomName,
                     displayName: userName
-                });
+                }));
 
-                this.dispatchEvent(evt);
+                const tracks = await JitsiMeetJS.createLocalTracks({ devices: ["audio"] });
+                for (let track of tracks) {
+                    this.conference.addTrack(track);
+                }
             });
 
             this.conference.addEventListener(CONFERENCE_LEFT, () => {
-                const evt = Object.assign(
+                this.dispatchEvent(Object.assign(
                     new Event("videoConferenceLeft"), {
                     roomName
-                });
-
-                this.dispatchEvent(evt);
+                }));
             });
 
 
@@ -180,25 +178,77 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             });
 
             this.conference.addEventListener(TRACK_ADDED, (track) => {
-                if (!track.isLocal()) {
-                    this.addTrack(track.getParticipantId(), track);
+                const userID = track.getParticipantId(),
+                    containerID = `participant_${userID}`,
+                    isLocal = track.isLocal(),
+                    trackPrefix = isLocal ? "local" : "remote",
+                    trackKind = track.getType(),
+                    trackType = trackKind.firstLetterToUpper(),
+                    trackID = track.getId(),
+                    trackElementID = `${trackPrefix}${trackType}_${trackID}`;
+
+                setLoggers(track, JitsiMeetJS.events.track);
+
+                track.addEventListener(JitsiMeetJS.events.track.TRACK_MUTE_CHANGED, (track) => {
+                    const evtName = trackKind + "MuteStatusChanged",
+                        id = track.getParticipantId(),
+                        muted = track.isMuted(),
+                        evt = Object.assign(
+                            new Event(evtName), {
+                            id,
+                            muted
+                        });
+
+                    this.dispatchEvent(evt);
+                });
+
+                let container = document.getElementById(containerID);
+                if (container === null) {
+                    container = Span(id(containerID));
+                    this.element.appendChild(container);
+                }
+
+                let elem = document.getElementById(trackElementID);
+                if (elem !== null) {
+                    container.removeChild(elem);
+                }
+
+                elem = tag(trackType,
+                    id(trackElementID),
+                    autoPlay,
+                    srcObject(track.stream),
+                    muted(isLocal));
+
+                container.appendChild(elem);
+
+                self.trackContainers.set(track, container);
+                if (isLocal) {
+                    self[trackKind + "Input"] = track;
                 }
             });
 
-            this.conference.addEventListener(TRACK_REMOVED, (track) =>
-                this.removeTrack(track));
+            this.conference.addEventListener(TRACK_REMOVED, (track) => {
+                const container = self.trackContainers.get(track),
+                    trackKind = track.getType();
+                this.element.removeChild(container);
+                self.trackContainers.delete(track);
+                self[trackKind + "Input"] = null;
+            });
 
-            this.conference.addEventListener(ENDPOINT_MESSAGE_RECEIVED, (user, data) =>
-                this.rxGameData({ user, data }));
+            this.conference.addEventListener(ENDPOINT_MESSAGE_RECEIVED, (user, data) => {
+                this.rxGameData({ user, data });
+            });
 
-
-            addEventListener("unload", () =>
-                this.leaveAsync());
+            window.addEventListener("unload", () => {
+                this.leaveAsync();
+            });
 
             this.conference.join();
         };
 
-        const onFailed = () => {
+        const onFailed = (evt) => {
+            console.error("Connection failed", evt);
+            onDisconnect();
         };
 
         const onDisconnect = () => {
@@ -208,72 +258,12 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         };
 
         this.connection.addEventListener(CONNECTION_ESTABLISHED, onConnect);
-        this.connection.addEventListener(CONNECTION_DISCONNECTED, onFailed);
+        this.connection.addEventListener(CONNECTION_FAILED, onFailed);
         this.connection.addEventListener(CONNECTION_DISCONNECTED, onDisconnect);
 
         setLoggers(JitsiMeetJS.mediaDevices, JitsiMeetJS.events.mediaDevices);
 
         this.connection.connect();
-    }
-
-    removeTrack(track) {
-        const self = selfs.get(this),
-            container = self.trackContainers.get(track);
-        this.element.removeChild(container);
-        self.trackContainers.delete(track);
-    }
-
-    addTrack(userID, track) {
-        const self = selfs.get(this),
-            containerID = `participant_${userID}`,
-            isLocal = track.isLocal(),
-            trackPrefix = isLocal ? "local" : "remote",
-            trackKind = track.getType(),
-            trackType = trackKind.firstLetterToUpper(),
-            trackID = track.getId(),
-            trackElementID = `${trackPrefix}${trackType}_${trackID}`;
-
-        setLoggers(track, JitsiMeetJS.events.track);
-
-        console.log(track, "is", trackType);
-
-        track.addEventListener(JitsiMeetJS.events.track.TRACK_MUTE_CHANGED, (track) => {
-            const evtName = track.type + "MuteStatusChanged",
-                id = track.getParticipantId(),
-                muted = track.isMuted(),
-                evt = Object.assign(
-                    new Event(evtName), {
-                    id,
-                    muted
-                });
-
-            this.dispatchEvent(evt);
-        });
-
-        let container = document.getElementById(containerID);
-        if (container === null) {
-            container = Span(id(containerID));
-            this.element.appendChild(container);
-        }
-
-        let elem = document.getElementById(trackElementID);
-        if (elem !== null) {
-            container.removeChild(elem);
-        }
-
-        elem = tag(trackType,
-            id(trackElementID),
-            autoPlay,
-            srcObject(track.stream),
-            muted(isLocal));
-
-        container.appendChild(elem);
-
-        self.trackContainers.set(track, container);
-        if (isLocal) {
-            self[trackKind + "Input"] = track;
-            this.conference.addTrack(track);
-        }
     }
 
     txGameData(toUserID, data) {
@@ -284,7 +274,6 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     /// to receive Calla messages from the Jitsi Meet data channel.
     rxGameData(evt) {
         if (evt.data.hax === APP_FINGERPRINT) {
-            console.log("RX GAME DATA", evt.user, evt.data);
             this.receiveMessageFrom(evt.user.getId(), evt.data.command, evt.data.value);
         }
     }
@@ -359,12 +348,14 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             this.conference.removeTrack(cur);
         }
 
-        const next = await JitsiMeetJS.createLocalTracks({
+        const tracks = await JitsiMeetJS.createLocalTracks({
             devices: ["audio"],
             micDeviceId: device.deviceId
         });
 
-        this.addTrack(this.localUser, next[0]);
+        for (let track of tracks) {
+            this.conference.addTrack(track);
+        }
     }
 
     async getVideoInputDevicesAsync() {
@@ -388,15 +379,17 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         const self = selfs.get(this),
             cur = self.videoInput;
         if (cur) {
-            this.removeTrack(cur);
+            this.conference.removeTrack(cur);
         }
 
-        const next = await JitsiMeetJS.createLocalTracks({
+        const tracks = await JitsiMeetJS.createLocalTracks({
             devices: ["video"],
             cameraDeviceId: device.deviceId
         });
 
-        this.addTrack(this.localUser, next[0]);
+        for (let track of tracks) {
+            this.conference.addTrack(track);
+        }
     }
 
     setDisplayName(userName) {
@@ -417,7 +410,10 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         }
         else {
             const avail = await this.getAudioInputDevicesAsync();
-            if (avail.length > 0) {
+            if (avail.length === 0) {
+                throw new Error("No audio input devices available");
+            }
+            else {
                 await this.setAudioInputDeviceAsync(avail[0]);
                 this.dispatchEvent(Object.assign(
                     new Event("audioMuteStatusChanged"),
@@ -431,17 +427,17 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         const changeTask = this.once("localVideoMuteStatusChanged", 5000);
         const cur = selfs.get(this).videoInput;
         if (cur) {
-            const muted = cur.isMuted();
-            if (muted) {
-                await cur.unmute();
-            }
-            else {
-                await cur.mute();
-            }
+            this.conference.removeTrack(cur);
+            this.dispatchEvent(Object.assign(
+                new Event("videoMuteStatusChanged"),
+                { muted: true }));
         }
         else {
             const avail = await this.getVideoInputDevicesAsync();
-            if (avail.length > 0) {
+            if (avail.length === 0) {
+                throw new Error("No video input devices available");
+            }
+            else {
                 await this.setVideoInputDeviceAsync(avail[0]);
                 this.dispatchEvent(Object.assign(
                     new Event("videoMuteStatusChanged"),
