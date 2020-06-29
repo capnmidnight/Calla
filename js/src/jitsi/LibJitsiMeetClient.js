@@ -333,11 +333,19 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async getCurrentAudioOutputDevice() {
-        return JitsiMeetJS.mediaDevices.getAudioOutputDevice();
+        const deviceId = JitsiMeetJS.mediaDevices.getAudioOutputDevice(),
+            devices = await this.getAudioOutputDevices(),
+            device = devices.filter((d) => d.deviceId === deviceId);
+        if (device.length === 0) {
+            return null;
+        }
+        else {
+            return device[0];
+        }
     }
 
     setAudioOutputDevice(device) {
-        JitsiMeetJS.mediaDevices.setAudiouOutputDevice(device);
+        JitsiMeetJS.mediaDevices.setAudioOutputDevice(device.deviceId);
     }
 
     async getAudioInputDevices() {

@@ -14,14 +14,14 @@ export class JitsiClient1_Tests extends TestBase {
     }
 
     async test_010_getAudioOutputDevices() {
-        const audioOutputDevices = await this.client.getAudioOutputDevices();
-        this.hasValue(audioOutputDevices, "Devices");
-        this.isGreaterThan(audioOutputDevices.length, 0, "Device Count");
+        const devs = await this.client.getAudioOutputDevices();
+        this.hasValue(devs, "Devices");
+        this.isGreaterThan(devs.length, 0, "Device Count");
     }
 
     async test_020_getCurrentAudioOutputDevice() {
-        const curAudioOut = await this.client.getCurrentAudioOutputDevice();
-        this.hasValue(curAudioOut, "Audio Output");
+        const cur = await this.client.getCurrentAudioOutputDevice();
+        this.hasValue(cur, "Audio Output");
     }
 
     async test_025_setCurrentAudioOutputDevice() {
@@ -43,14 +43,14 @@ export class JitsiClient1_Tests extends TestBase {
     }
 
     async test_030_getAudioInputDevices() {
-        const audioInputDevices = await this.client.getAudioInputDevices();
-        this.hasValue(audioInputDevices, "Devices");
-        this.isGreaterThan(audioInputDevices.length, 0, "Device Count");
+        const devs = await this.client.getAudioInputDevices();
+        this.hasValue(devs, "Devices");
+        this.isGreaterThan(devs.length, 0, "Device Count");
     }
 
     async test_040_getCurrentAudioInputDevice() {
-        const curAudioIn = await this.client.getCurrentAudioInputDevice();
-        this.hasValue(curAudioIn, "Audio Input");
+        const cur = await this.client.getCurrentAudioInputDevice();
+        this.hasValue(cur, "Audio Input");
     }
 
     async test_045_setCurrentAudioInputDevice() {
@@ -72,14 +72,14 @@ export class JitsiClient1_Tests extends TestBase {
     }
 
     async test_050_getVideoInputDevices() {
-        const videoInputDevices = await this.client.getVideoInputDevices();
-        this.hasValue(videoInputDevices, "Devices");
-        this.isGreaterThan(videoInputDevices.length, 0, "Device Count");
+        const devs = await this.client.getVideoInputDevices();
+        this.hasValue(devs, "Devices");
+        this.isGreaterThan(devs.length, 0, "Device Count");
     }
 
     async test_060_getCurrentVideoInputDevice() {
-        const curVideoIn = await this.client.getCurrentVideoInputDevice();
-        this.isNull(curVideoIn, "Current Video");
+        const cur = await this.client.getCurrentVideoInputDevice();
+        this.isNull(cur, "Current Video");
     }
 
     async test_065_setCurrentVideoInputDevice() {
