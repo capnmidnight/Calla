@@ -19,14 +19,22 @@ export class InterpolatedPosition extends BasePosition {
             = 0;
     }
 
+    /** @type {number} */
     get x() {
         return this._x;
     }
 
+    /** @type {number} */
     get y() {
         return this._y;
     }
 
+    /**
+     * 
+     * @param {UserPosition} evt
+     * @param {number} t
+     * @param {number} dt
+     */
     setTarget(evt, t, dt) {
         this._st = t;
         this._et = t + dt;
@@ -36,6 +44,10 @@ export class InterpolatedPosition extends BasePosition {
         this._ty = evt.y;
     }
 
+    /**
+     * 
+     * @param {number} t
+     */
     update(t) {
         const p = project(t, this._st, this._et);
         if (p <= 1) {

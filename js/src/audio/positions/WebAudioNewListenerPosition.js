@@ -1,6 +1,11 @@
 ﻿import { WebAudioNodePosition } from "./WebAudioNodePosition.js";
 
 export class WebAudioNewListenerPosition extends WebAudioNodePosition {
+    /**
+     * 
+     * @param {AudioListener} node
+     * @param {boolean} forceInterpolation
+     */
     constructor(node, forceInterpolation) {
         super(node, forceInterpolation);
         this.node.forwardX.setValueAtTime(0, 0);

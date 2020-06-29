@@ -26,6 +26,12 @@ export class Destination extends EventTarget {
         this.rolloff = 1;
         this.transitionTime = 0.125;
 
+        /** @type {AudioContext|MockAudioContext} */
+        this.audioContext = null;
+
+        /** @type {BasePosition} */
+        this.position = null;
+
         this.createContext();
     }
 
@@ -80,6 +86,13 @@ export class Destination extends EventTarget {
         this.position.update(this.audioContext.currentTime);
     }
 
+    /**
+     * 
+     * @param {string} userID
+     * @param {HTMLAudioElement} audio
+     * @param {number} bufferSize
+     * @return {BaseSpatializer}
+     */
     createSpatializer(userID, audio, bufferSize) {
         try {
             if (hasWebAudioAPI) {

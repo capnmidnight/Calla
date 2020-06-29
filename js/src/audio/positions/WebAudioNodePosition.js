@@ -2,8 +2,15 @@
 import { InterpolatedPosition } from "./InterpolatedPosition.js";
 
 export class WebAudioNodePosition extends BasePosition {
+    /**
+     * 
+     * @param {PannerNode|AudioListener} node
+     * @param {boolean} forceInterpolation
+     */
     constructor(node, forceInterpolation) {
         super();
+
+        /** @type {BasePosition} */
         this._p = forceInterpolation ? new InterpolatedPosition() : null;
         this.node = node;
         this.node.positionX.setValueAtTime(0, 0);
@@ -11,14 +18,22 @@ export class WebAudioNodePosition extends BasePosition {
         this.node.positionZ.setValueAtTime(0, 0);
     }
 
+    /** @type {number} */
     get x() {
         return this.node.positionX.value;
     }
 
+    /** @type {number} */
     get y() {
         return this.node.positionZ.value;
     }
 
+    /**
+     *
+     * @param {UserPosition} evt
+     * @param {number} t
+     * @param {number} dt
+     */
     setTarget(evt, t, dt) {
         if (this._p) {
             this._p.setTarget(evt, t, dt);
@@ -32,6 +47,10 @@ export class WebAudioNodePosition extends BasePosition {
         }
     }
 
+    /**
+     *
+     * @param {number} t
+     */
     update(t) {
         if (this._p) {
             this._p.update(t);

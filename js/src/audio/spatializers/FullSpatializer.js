@@ -3,6 +3,14 @@ import { WebAudioNodePosition } from "../positions/WebAudioNodePosition.js";
 
 export class FullSpatializer extends BaseWebAudioSpatializer {
 
+    /**
+     *
+     * @param {string} userID
+     * @param {Destination} destination
+     * @param {HTMLAudioElement} audio
+     * @param {number} bufferSize
+     * @param {boolean} forceInterpolatedPosition
+     */
     constructor(userID, destination, audio, bufferSize, forceInterpolatedPosition) {
         const panner = destination.audioContext.createPanner(),
             position = new WebAudioNodePosition(panner, forceInterpolatedPosition);

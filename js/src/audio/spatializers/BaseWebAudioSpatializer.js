@@ -9,12 +9,26 @@ const audioActivityEvt = Object.assign(new Event("audioActivity", {
     activityCounterMax = 60,
     activityCounterThresh = 5;
 
+/**
+ * 
+ * @param {number} frequency
+ * @param {number} sampleRate
+ * @param {number} bufferSize
+ */
 function frequencyToIndex(frequency, sampleRate, bufferSize) {
     var nyquist = sampleRate / 2
     var index = Math.round(frequency / nyquist * bufferSize)
     return clamp(index, 0, bufferSize)
 }
 
+/**
+ * 
+ * @param {AnalyserNode} analyser
+ * @param {Float32Array} frequencies
+ * @param {number} minHz
+ * @param {number} maxHz
+ * @param {number} bufferSize
+ */
 function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz, bufferSize) {
     const sampleRate = analyser.context.sampleRate,
         start = frequencyToIndex(minHz, sampleRate, bufferSize),
@@ -29,6 +43,16 @@ function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz, bufferSiz
 
 export class BaseWebAudioSpatializer extends BaseSpatializer {
 
+    /**
+     * 
+     * @param {string} userID
+     * @param {Destination} destination
+     * @param {HTMLAudioElement} audio
+     * @param {BasePosition} position
+     * @param {number} bufferSize
+     * @param {PannerNode|StereoPannerNode} inNode
+     * @param {GainNode=} outNode
+     */
     constructor(userID, destination, audio, position, bufferSize, inNode, outNode) {
         super(userID, destination, audio, position);
 
@@ -37,10 +61,12 @@ export class BaseWebAudioSpatializer extends BaseSpatializer {
         this.bufferSize = bufferSize;
         this.buffer = new Float32Array(this.bufferSize);
 
+        /** @type {AnalyserNode} */
         this.analyser = this.destination.audioContext.createAnalyser();
         this.analyser.fftSize = 2 * this.bufferSize;
         this.analyser.smoothingTimeConstant = 0.2;
 
+        /** @type {PannerNode|StereoPannerNode} */
         this.inNode = inNode;
 
         this.outNode = outNode || inNode;
@@ -50,11 +76,15 @@ export class BaseWebAudioSpatializer extends BaseSpatializer {
             this.inNode.connect(this.outNode);
         }
 
+        /** @type {boolean} */
         this.wasActive = false;
         this.lastAudible = true;
         this.activityCounter = 0;
 
+        /** @type {MediaStream} */
         this.stream = null;
+
+        /** @type {MediaSource} */
         this.source = null;
     }
 

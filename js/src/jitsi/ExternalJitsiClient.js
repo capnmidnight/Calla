@@ -7,7 +7,8 @@ export class ExternalJitsiClient extends BaseJitsiClient {
     constructor() {
         super();
         this.api = null;
-        this.audioClient = null;
+
+        Object.seal(this);
     }
 
     dispose() {

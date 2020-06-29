@@ -6,4 +6,9 @@
     get currentTime() {
         return performance.now() / 1000 - this._t;
     }
+
+    /** @type {AudioDestinationNode} */
+    get destination() {
+        return null;
+    }
 }
