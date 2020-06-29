@@ -294,14 +294,23 @@ export function init(host, client) {
         audioMuteStatusChanged: (evt) => {
             game.muteUserAudio(evt);
         },
-        localAudioMuteStatusChanged: (evt) => {
+        localAudioMuteStatusChanged: async (evt) => {
             toolbar.audioEnabled = !evt.muted;
+            if (!evt.muted) {
+                options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
+            }
         },
         videoMuteStatusChanged: (evt) => {
             game.muteUserVideo(evt);
         },
-        localVideoMuteStatusChanged: (evt) => {
+        localVideoMuteStatusChanged: async (evt) => {
             options.videoEnabled = !evt.muted;
+            if (!evt.muted) {
+                options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
+            }
+            else {
+                options.currentVideoInputDevice = null;
+            }
         },
         userInitRequest: (evt) => {
             if (game.me && game.me.id) {
