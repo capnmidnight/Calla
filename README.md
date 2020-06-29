@@ -67,7 +67,7 @@ services:
 - Start Jitsi and Calla: `$ docker-compose up -d`
 - Copy jitsihax.js into the jitsi web volume: `$ cp Calla/js/etc/jitsihax.js web/`
 - Copy jitsihax.js to the right place in the (running) docker container: `$ docker-compose exec web cp /config/jitsihax.js /usr/share/jitsi-meet/libs/`
-- Tell jitsi to load jitsihax.js: Append the following line to the bottom of web/interface_config.js
+- Tell jitsi to load jitsihax.js: Append the following line to the bottom of web/interface_config.js (this works because Jitsi injects `interface_config.js` directly into its own `index.html` page.)
 ```
 </script><script type="module" src="libs/jitsihax.js">
 ```
