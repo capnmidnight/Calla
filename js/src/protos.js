@@ -273,3 +273,8 @@ Array.prototype.clear = function () {
 Array.prototype.removeAt = function (idx) {
     this.splice(idx, 1);
 };
+
+String.prototype.firstLetterToUpper = function () {
+    return this[0].toLocaleUpperCase()
+        + this.substring(1);
+};

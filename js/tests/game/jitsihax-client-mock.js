@@ -53,11 +53,11 @@ export class MockJitsiClient extends BaseJitsiClient {
             }));
     }
 
-    async getAudioOutputDevices() {
+    async getAudioOutputDevicesAsync() {
         return this.availableDevices.audioOutput;
     }
 
-    async getCurrentAudioOutputDevice() {
+    async getCurrentAudioOutputDeviceAsync() {
         return this.currentDevices.audioOutput;
     }
 
@@ -65,31 +65,31 @@ export class MockJitsiClient extends BaseJitsiClient {
         this.currentDevices.audioOutput = device;
     }
 
-    async getAudioInputDevices() {
+    async getAudioInputDevicesAsync() {
         return this.availableDevices.audioInput;
     }
 
-    async getCurrentAudioInputDevice() {
+    async getCurrentAudioInputDeviceAsync() {
         return this.currentDevices.audioInput;
     }
 
-    setAudioInputDevice(device) {
+    async setAudioInputDeviceAsync(device) {
         this.currentDevices.audioInput = device;
     }
 
-    async getVideoInputDevices() {
+    async getVideoInputDevicesAsync() {
         return this.availableDevices.videoInput;
     }
 
-    async getCurrentVideoInputDevice() {
+    async getCurrentVideoInputDeviceAsync() {
         return this.currentDevices.videoInput;
     }
 
-    setVideoInputDevice(device) {
+    async setVideoInputDeviceAsync(device) {
         this.currentDevices.videoInput = device;
     }
 
-    toggleAudio() {
+    async toggleAudioAsync() {
         this.audioMuted = !this.audioMuted;
         this.dispatchEvent(Object.assign(
             new Event("audioMuteStatusChanged"), {
@@ -97,7 +97,7 @@ export class MockJitsiClient extends BaseJitsiClient {
         }));
     }
 
-    toggleVideo() {
+    async toggleVideoAsync() {
         this.videoMuted = !this.videoMuted;
         this.dispatchEvent(Object.assign(
             new Event("videoMuteStatusChanged"), {

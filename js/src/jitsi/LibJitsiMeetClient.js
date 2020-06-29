@@ -3,6 +3,7 @@ import { tag } from "../html/tag.js";
 import { Span } from "../html/tags.js";
 import { BaseJitsiClient } from "./BaseJitsiClient.js";
 import { AudioManager as AudioClient } from '../audio/AudioManager.js';
+import { id, autoPlay, srcObject, muted } from '../html/attrs.js';
 
 const selfs = new Map();
 
@@ -30,7 +31,8 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             connection: null,
             room: null,
             audioInput: null,
-            videoInput: null
+            videoInput: null,
+            trackContainers: new Map()
         });
         this._connection = { value: null };
         this._room = { value: null };
@@ -57,7 +59,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         return selfs.get(this).room = value;
     }
 
-    async joinAsync(host, roomName, userName) {
+    async initializeAsync(host, roomName, userName) {
         roomName = roomName.toLocaleLowerCase();
 
         await import(`https://${host}/libs/lib-jitsi-meet.min.js`);
@@ -101,16 +103,17 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
 
             setLoggers(this.conference, JitsiMeetJS.events.conference);
 
-            this.conference.addEventListener(CONFERENCE_JOINED, () => {
+            this.conference.addEventListener(CONFERENCE_JOINED, async () => {
                 const id = this.conference.myUserId();
 
+                const tracks = await JitsiMeetJS.createLocalTracks({ devices: ["audio"] });
                 for (let track of tracks) {
                     this.addTrack(id, track);
                 }
 
                 const evt = Object.assign(
                     new Event("videoConferenceJoined"), {
-                    id: id,
+                    id,
                     roomName,
                     displayName: userName
                 });
@@ -184,10 +187,9 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
 
 
             addEventListener("unload", () =>
-                this.leave());
+                this.leaveAsync());
 
             this.conference.join();
-            this.conference.setDisplayName(userName);
         };
 
         const onFailed = () => {
@@ -206,86 +208,65 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         setLoggers(JitsiMeetJS.mediaDevices, JitsiMeetJS.events.mediaDevices);
 
         this.connection.connect();
-
-        const tracks = await JitsiMeetJS.createLocalTracks({ devices: ["audio"] });
     }
 
     removeTrack(track) {
-        const trackPrefix = track.isLocal() ? "local" : "remote",
-            trackId = track.getId();
-
-        let trackType = track.getType();
-        trackType = trackType[0].toLocaleUpperCase()
-            + trackType.substring(1);
-
-        const trackID = `${trackPrefix}${trackType}_${trackId}`,
-            elem = document.getElementById(trackID);
-        if (elem !== null) {
-            const container = elem.parentElement;
-            container.removeChild(elem);
-            if (container.childElementCount === 0) {
-                container.parentElement.removeChild(container);
-            }
-        }
+        const self = selfs.get(this),
+            container = self.trackContainers.get(track);
+        document.body.removeChild(container);
+        self.trackContainers.delete(track);
     }
 
-    addTrack(id, track) {
-
-        selfs.get(this)[track.track.kind + "Input"] = track.track.label;
-
-        const containerID = `participant_${id}`,
-            trackPrefix = track.isLocal() ? "local" : "remote",
-            trackId = track.getId(),
-            {
-                TRACK_MUTE_CHANGED
-            } = JitsiMeetJS.events.track;
+    addTrack(userID, track) {
+        const self = selfs.get(this),
+            containerID = `participant_${userID}`,
+            isLocal = track.isLocal(),
+            trackPrefix = isLocal ? "local" : "remote",
+            trackKind = track.getType(),
+            trackType = trackKind.firstLetterToUpper(),
+            trackID = track.getId(),
+            trackElementID = `${trackPrefix}${trackType}_${trackID}`;
 
         setLoggers(track, JitsiMeetJS.events.track);
 
-        let trackType = track.getType();
-        trackType = trackType[0].toLocaleUpperCase()
-            + trackType.substring(1);
-
-        const trackID = `${trackPrefix}${trackType}_${trackId}`;
-
         console.log(track, "is", trackType);
 
-        track.addEventListener(TRACK_MUTE_CHANGED, (track) => {
+        track.addEventListener(JitsiMeetJS.events.track.TRACK_MUTE_CHANGED, (track) => {
             const evtName = track.type + "MuteStatusChanged",
                 id = track.getParticipantId(),
-                muted = track.muted,
+                muted = track.isMuted(),
                 evt = Object.assign(
                     new Event(evtName), {
                     id,
                     muted
                 });
 
-            this.dispatch(evt);
+            this.dispatchEvent(evt);
         });
 
         let container = document.getElementById(containerID);
         if (container === null) {
-            container = Span({ id: containerID });
+            container = Span(id(containerID));
             document.body.appendChild(container);
         }
 
-        let elem = document.getElementById(trackID);
+        let elem = document.getElementById(trackElementID);
         if (elem !== null) {
             container.removeChild(elem);
         }
 
-        elem = tag(trackType, {
-            id: trackID,
-            autoplay: true,
-            srcObject: track.stream,
-            muted: track.isLocal()
-        });
+        elem = tag(trackType,
+            id(trackElementID),
+            autoPlay,
+            srcObject(track.stream),
+            muted(isLocal));
 
         container.appendChild(elem);
 
-        if (track.isLocal()) {
+        self.trackContainers.set(track, container);
+        if (isLocal) {
+            self[trackKind + "Input"] = track;
             this.conference.addTrack(track);
-            elem.muted = true;
         }
     }
 
@@ -302,13 +283,15 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         }
     }
 
-    leave() {
+    async leaveAsync() {
         if (!!this.conference) {
+            const leaveTask = this.once("videoConferenceLeft");
             this.conference.leave();
+            await leaveTask;
         }
     }
 
-    async getAvailableDevices() {
+    async getAvailableDevicesAsync() {
         const devices = await new Promise((resolve, reject) => {
             try {
                 JitsiMeetJS.mediaDevices.enumerateDevices(resolve);
@@ -327,14 +310,14 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         };
     }
 
-    async getAudioOutputDevices() {
-        const devices = await this.getAvailableDevices();
+    async getAudioOutputDevicesAsync() {
+        const devices = await this.getAvailableDevicesAsync();
         return devices && devices.audioOutput || [];
     }
 
-    async getCurrentAudioOutputDevice() {
+    async getCurrentAudioOutputDeviceAsync() {
         const deviceId = JitsiMeetJS.mediaDevices.getAudioOutputDevice(),
-            devices = await this.getAudioOutputDevices(),
+            devices = await this.getAudioOutputDevicesAsync(),
             device = devices.filter((d) => d.deviceId === deviceId);
         if (device.length === 0) {
             return null;
@@ -348,15 +331,15 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         JitsiMeetJS.mediaDevices.setAudioOutputDevice(device.deviceId);
     }
 
-    async getAudioInputDevices() {
-        const devices = await this.getAvailableDevices();
+    async getAudioInputDevicesAsync() {
+        const devices = await this.getAvailableDevicesAsync();
         return devices && devices.audioInput || [];
     }
 
-    async getCurrentAudioInputDevice() {
-        const label = selfs.get(this).audioInput,
-            devices = await this.getAudioInputDevices(),
-            device = devices.filter((d) => d.label === label);
+    async getCurrentAudioInputDeviceAsync() {
+        const cur = selfs.get(this).audioInput,
+            devices = await this.getAudioInputDevicesAsync(),
+            device = devices.filter((d) => cur !== null && d.deviceId === cur.deviceId);
         if (device.length === 0) {
             return null;
         }
@@ -365,33 +348,85 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         }
     }
 
-    setAudioInputDevice(device) {
-        throw new Error("Not implemented in base class");
+    async setAudioInputDeviceAsync(device) {
+        const self = selfs.get(this),
+            cur = self.audioInput;
+        if (cur) {
+            this.conference.removeTrack(cur);
+        }
+
+        const next = await JitsiMeetJS.createLocalTracks({
+            devices: ["audio"],
+            micDeviceId: device.deviceId
+        });
+
+        this.addTrack(this.localUser, next[0]);
     }
 
-    async getVideoInputDevices() {
-        const devices = await this.getAvailableDevices();
+    async getVideoInputDevicesAsync() {
+        const devices = await this.getAvailableDevicesAsync();
         return devices && devices.videoInput || [];
     }
 
-    async getCurrentVideoInputDevice() {
-        return selfs.get(this).videoInput;
+    async getCurrentVideoInputDeviceAsync() {
+        const cur = selfs.get(this).videoInput,
+            devices = await this.getVideoInputDevicesAsync(),
+            device = devices.filter((d) => cur !== null && d.deviceId === cur.deviceId);
+        if (device.length === 0) {
+            return null;
+        }
+        else {
+            return device[0];
+        }
     }
 
-    setVideoInputDevice(device) {
-        throw new Error("Not implemented in base class");
+    async setVideoInputDeviceAsync(device) {
+        const self = selfs.get(this),
+            cur = self.videoInput;
+        if (cur) {
+            this.removeTrack(cur);
+        }
+
+        const next = await JitsiMeetJS.createLocalTracks({
+            devices: ["video"],
+            cameraDeviceId: device.deviceId
+        });
+
+        this.addTrack(this.localUser, next[0]);
     }
 
     setDisplayName(userName) {
-        throw new Error("Not implemented in base class");
+        this.conference.setDisplayName(userName);
     }
 
-    toggleAudio() {
-        throw new Error("Not implemented in base class");
+    async toggleAudioAsync() {
+        const changeTask = this.once("localAudioMuteStatusChanged");
+        const cur = selfs.get(this).audioInput;
+        if (cur) {
+            const muted = cur.isMuted();
+            if (muted) {
+                await cur.unmute();
+            }
+            else {
+                await cur.mute();
+            }
+        }
+        return await changeTask;
     }
 
-    toggleVideo() {
-        throw new Error("Not implemented in base class");
+    async toggleVideoAsync() {
+        const changeTask = this.once("localVideoMuteStatusChanged");
+        const cur = selfs.get(this).videoInput;
+        if (cur) {
+            const muted = cur.isMuted();
+            if (muted) {
+                await cur.unmute();
+            }
+            else {
+                await cur.mute();
+            }
+        }
+        return await changeTask;
     }
 
     setAvatarURL(url) {
@@ -399,10 +434,12 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async isAudioMutedAsync() {
-        throw new Error("Not implemented in base class");
+        const cur = selfs.get(this).audioInput;
+        return cur && cur.isMuted();
     }
 
     async isVideoMutedAsync() {
-        throw new Error("Not implemented in base class");
+        const cur = selfs.get(this).videoInput;
+        return cur && cur.isMuted();
     }
 }

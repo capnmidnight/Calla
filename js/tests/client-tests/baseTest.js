@@ -15,27 +15,16 @@ export class TestBase extends TestCase {
         this.client = null;
     }
 
-    async withEvt(name, action) {
-        const evtTask = this.client.once(name, 5000),
-            actionResult = action();
-        if (actionResult instanceof Promise) {
-            await actionResult;
-        }
-
-        const evt = await evtTask;
-        this.hasValue(evt, "Event");
-
-        return evt;
-    }
-
 
     async joinChannel() {
-        const evt = await this.withEvt("videoConferenceJoined", () =>
-            this.client.joinAsync(
-                "jitsi.calla.chat",
-                TEST_ROOM_NAME,
-                "TestUser" + userNumber));
+        const testUserName = "TestUser" + userNumber,
+            evt = await this.client.joinAsync(
+            "jitsi.calla.chat",
+            TEST_ROOM_NAME,
+            testUserName);
         this.isEqualTo(evt.id, this.client.localUser, "UserID");
+        this.isEqualTo(evt.displayName, testUserName, "UserName");
+        this.isEqualTo(evt.roomName, TEST_ROOM_NAME, "RoomName");
     }
 
     async waitForJoin() {
@@ -85,8 +74,7 @@ export class TestBase extends TestCase {
 
     async sendAudioMuted() {
         await wait(1000);
-        const evt = await this.withEvt("localAudioMuteStatusChanged", () =>
-            this.client.setAudioMutedAsync(true));
+        const evt = await this.client.setAudioMutedAsync(true);
         this.hasValue(evt.id, "UserID");
         this.isEqualTo(evt.id, this.client.localUser, "Local User");
         this.isTrue(evt.muted, "Muted");
@@ -101,8 +89,7 @@ export class TestBase extends TestCase {
 
     async sendAudioUnmuted() {
         await wait(1000);
-        const evt = await this.withEvt("localAudioMuteStatusChanged", () =>
-            this.client.setAudioMutedAsync(false));
+        const evt = await this.client.setAudioMutedAsync(false);
         this.hasValue(evt.id, "UserID");
         this.isEqualTo(evt.id, this.client.localUser, "Local User");
         this.isFalse(evt.muted, "Muted");
@@ -117,8 +104,7 @@ export class TestBase extends TestCase {
 
     async sendVideoUnmuted() {
         await wait(1000);
-        const evt = await this.withEvt("localVideoMuteStatusChanged", () =>
-            this.client.setVideoMutedAsync(false));
+        const evt = await this.client.setVideoMutedAsync(false);
         this.hasValue(evt.id, "UserID");
         this.isEqualTo(evt.id, this.client.localUser, "Local User");
         this.isFalse(evt.muted, "Muted");
@@ -133,8 +119,7 @@ export class TestBase extends TestCase {
 
     async sendVideoMuted() {
         await wait(1000);
-        const evt = await this.withEvt("localVideoMuteStatusChanged", () =>
-            this.client.setVideoMutedAsync(true));
+        const evt = await this.client.setVideoMutedAsync(true);
         this.hasValue(evt.id, "UserID");
         this.isEqualTo(evt.id, this.client.localUser, "Local User");
         this.isTrue(evt.muted, "Muted");

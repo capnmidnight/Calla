@@ -280,6 +280,8 @@ export function src(value) { return new HtmlAttr("src", ["audio", "embed", "ifra
 export function srcDoc(value) { return new HtmlAttr("srcdoc", ["iframe"], value); }
 // ???
 export function srcLang(value) { return new HtmlAttr("srclang", ["track"], value); }
+// A MediaStream object to use as a source for an HTML video or audio element
+export function srcObject(value) { return new HtmlAttr("srcObject", ["audio", "video"], value); }
 // One or more responsive image candidates.
 export function srcSet(value) { return new HtmlAttr("srcset", ["img", "source"], value); }
 // Defines the first number if other than 1.

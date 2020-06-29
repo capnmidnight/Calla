@@ -115,7 +115,7 @@ export function init(host, client) {
 
     toolbar.addEventListeners({
         toggleAudio: () => {
-            client.toggleAudio();
+            client.toggleAudioAsync();
         },
         selectEmoji: selectEmojiAsync,
         emote: () => {
@@ -175,7 +175,7 @@ export function init(host, client) {
         },
         audioPropertiesChanged: setAudioProperties,
         toggleVideo: () => {
-            client.toggleVideo();
+            client.toggleVideoAsync();
         },
         toggleDrawHearing: () => {
             settings.drawHearing = game.drawHearing = options.drawHearing;
@@ -184,13 +184,13 @@ export function init(host, client) {
             settings.fontSize = game.fontSize = options.fontSize;
         },
         audioInputChanged: () => {
-            client.setAudioInputDevice(options.currentAudioInputDevice);
+            client.setAudioInputDeviceAsync(options.currentAudioInputDevice);
         },
         audioOutputChanged: () => {
             client.setAudioOutputDevice(options.currentAudioOutputDevice);
         },
         videoInputChanged: () => {
-            client.setVideoInputDevice(options.currentVideoInputDevice);
+            client.setVideoInputDeviceAsync(options.currentVideoInputDevice);
         },
         gamepadChanged: () => {
             settings.gamepadIndex = game.gamepadIndex = options.gamepadIndex;
@@ -209,11 +209,11 @@ export function init(host, client) {
                 client.userInitRequest(evt2.id);
             });
         },
-        toggleAudio: async () => {
-            client.toggleAudio();
+        toggleAudio: () => {
+            client.toggleAudioAsync();
         },
-        toggleVideo: async () => {
-            client.toggleVideo();
+        toggleVideo: () => {
+            client.toggleVideoAsync();
         },
         gameStarted: () => {
             login.hide();
@@ -254,13 +254,13 @@ export function init(host, client) {
 
             game.start(evt);
 
-            options.audioInputDevices = await client.getAudioInputDevices();
-            options.audioOutputDevices = await client.getAudioOutputDevices();
-            options.videoInputDevices = await client.getVideoInputDevices();
+            options.audioInputDevices = await client.getAudioInputDevicesAsync();
+            options.audioOutputDevices = await client.getAudioOutputDevicesAsync();
+            options.videoInputDevices = await client.getVideoInputDevicesAsync();
 
-            options.currentAudioInputDevice = await client.getCurrentAudioInputDevice();
-            options.currentAudioOutputDevice = await client.getCurrentAudioOutputDevice();
-            options.currentVideoInputDevice = await client.getCurrentVideoInputDevice();
+            options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
+            options.currentAudioOutputDevice = await client.getCurrentAudioOutputDeviceAsync();
+            options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
 
             const audioMuted = await client.isAudioMutedAsync();
             game.muteUserAudio({ id: client.localUser, muted: audioMuted });

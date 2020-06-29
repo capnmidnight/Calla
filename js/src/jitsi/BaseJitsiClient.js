@@ -123,7 +123,7 @@ export class BaseJitsiClient extends EventTarget {
      */
     async joinAsync(host, roomName, userName) {
         this.dispose();
-        await this.initializeAsync(host, roomName);
+        await this.initializeAsync(host, roomName, userName);
 
         this.addEventListener("participantJoined", (evt) => {
             this.otherUsers.set(evt.id, evt.displayName);
@@ -169,7 +169,11 @@ export class BaseJitsiClient extends EventTarget {
             this.dispose();
         });
 
+        const evt = await this.once("videoConferenceJoined");
+
         this.setDisplayName(userName);
+
+        return evt;
     }
 
     dispose() {
@@ -183,18 +187,18 @@ export class BaseJitsiClient extends EventTarget {
         throw new Error("Not implemented in base class");
     }
 
-    leave() {
+    async leaveAsync() {
         throw new Error("Not implemented in base class");
     }
 
 
-    async getAudioOutputDevices() {
+    async getAudioOutputDevicesAsync() {
         throw new Error("Not implemented in base class");
     }
 
     /**
      * @return {Promise.<MediaDeviceInfo>} */
-    async getCurrentAudioOutputDevice() {
+    async getCurrentAudioOutputDeviceAsync() {
         throw new Error("Not implemented in base class");
     }
 
@@ -206,35 +210,35 @@ export class BaseJitsiClient extends EventTarget {
         throw new Error("Not implemented in base class");
     }
 
-    async getAudioInputDevices() {
+    async getAudioInputDevicesAsync() {
         throw new Error("Not implemented in base class");
     }
 
-    async getCurrentAudioInputDevice() {
+    async getCurrentAudioInputDeviceAsync() {
         throw new Error("Not implemented in base class");
     }
 
-    setAudioInputDevice(device) {
+    async setAudioInputDeviceAsync(device) {
         throw new Error("Not implemented in base class");
     }
 
-    async getVideoInputDevices() {
+    async getVideoInputDevicesAsync() {
         throw new Error("Not implemented in base class");
     }
 
-    async getCurrentVideoInputDevice() {
+    async getCurrentVideoInputDeviceAsync() {
         throw new Error("Not implemented in base class");
     }
 
-    setVideoInputDevice(device) {
+    async setVideoInputDeviceAsync(device) {
         throw new Error("Not implemented in base class");
     }
 
-    toggleAudio() {
+    async toggleAudioAsync() {
         throw new Error("Not implemented in base class");
     }
 
-    toggleVideo() {
+    async toggleVideoAsync() {
         throw new Error("Not implemented in base class");
     }
 
@@ -309,10 +313,11 @@ export class BaseJitsiClient extends EventTarget {
      * @param {boolean} muted
      */
     async setAudioMutedAsync(muted) {
-        const isMuted = await this.isAudioMutedAsync();
+        let isMuted = await this.isAudioMutedAsync();
         if (muted !== isMuted) {
-            this.toggleAudio();
+            isMuted = await this.toggleAudioAsync();
         }
+        return isMuted;
     }
 
     /**
@@ -320,10 +325,11 @@ export class BaseJitsiClient extends EventTarget {
      * @param {boolean} muted
      */
     async setVideoMutedAsync(muted) {
-        const isMuted = await this.isVideoMutedAsync();
+        let isMuted = await this.isVideoMutedAsync();
         if (muted !== isMuted) {
-            this.toggleVideo();
+            isMuted = await this.toggleVideoAsync();
         }
+        return isMuted;
     }
 
     /// Add a listener for Calla events that come through the Jitsi Meet data channel.
@@ -353,8 +359,8 @@ export class BaseJitsiClient extends EventTarget {
      * 
      * @param {string} toUserID
      */
-    userInitRequestAsync(toUserID) {
-        return this.until("userInitResponse",
+    async userInitRequestAsync(toUserID) {
+        return await this.until("userInitResponse",
             () => this.userInitRequest(toUserID),
             (evt) => evt.id === toUserID,
             1000);

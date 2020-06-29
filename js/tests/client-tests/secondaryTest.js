@@ -68,7 +68,7 @@ export class JitsiClient2_Tests extends TestBase {
     }
 
     async test_980_participantLeft() {
-        this.client.leave();
+        await this.client.leaveAsync();
         this.success();
     }
     //*/

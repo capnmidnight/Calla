@@ -14,19 +14,19 @@ export class JitsiClient1_Tests extends TestBase {
     }
 
     async test_010_getAudioOutputDevices() {
-        const devs = await this.client.getAudioOutputDevices();
+        const devs = await this.client.getAudioOutputDevicesAsync();
         this.hasValue(devs, "Devices");
         this.isGreaterThan(devs.length, 0, "Device Count");
     }
 
     async test_020_getCurrentAudioOutputDevice() {
-        const cur = await this.client.getCurrentAudioOutputDevice();
+        const cur = await this.client.getCurrentAudioOutputDeviceAsync();
         this.hasValue(cur, "Audio Output");
     }
 
     async test_025_setCurrentAudioOutputDevice() {
-        const devs = await this.client.getAudioOutputDevices(),
-            cur = await this.client.getCurrentAudioOutputDevice(),
+        const devs = await this.client.getAudioOutputDevicesAsync(),
+            cur = await this.client.getCurrentAudioOutputDeviceAsync(),
             alt = devs.filter(a => cur === null || a.groupId !== cur.groupId);
 
         this.isGreaterThan(alt.length, 0, "Alternate devices");
@@ -35,7 +35,7 @@ export class JitsiClient1_Tests extends TestBase {
         this.client.setAudioOutputDevice(next);
 
         await wait(250);
-        const now = await this.client.getCurrentAudioOutputDevice();
+        const now = await this.client.getCurrentAudioOutputDeviceAsync();
         this.hasValue(now, "New device");
         this.isEqualTo(now.deviceId, next.deviceId, "deviceId");
         this.isEqualTo(now.kind, next.kind, "kind");
@@ -43,28 +43,28 @@ export class JitsiClient1_Tests extends TestBase {
     }
 
     async test_030_getAudioInputDevices() {
-        const devs = await this.client.getAudioInputDevices();
+        const devs = await this.client.getAudioInputDevicesAsync();
         this.hasValue(devs, "Devices");
         this.isGreaterThan(devs.length, 0, "Device Count");
     }
 
     async test_040_getCurrentAudioInputDevice() {
-        const cur = await this.client.getCurrentAudioInputDevice();
+        const cur = await this.client.getCurrentAudioInputDeviceAsync();
         this.hasValue(cur, "Audio Input");
     }
 
     async test_045_setCurrentAudioInputDevice() {
-        const devs = await this.client.getAudioInputDevices(),
-            cur = await this.client.getCurrentAudioInputDevice(),
+        const devs = await this.client.getAudioInputDevicesAsync(),
+            cur = await this.client.getCurrentAudioInputDeviceAsync(),
             alt = devs.filter(a => cur === null || a.groupId !== cur.groupId);
 
         this.isGreaterThan(alt.length, 0, "Alternate devices");
 
         const next = alt[0];
-        this.client.setAudioInputDevice(next);
+        await this.client.setAudioInputDeviceAsync(next);
 
         await wait(250);
-        const now = await this.client.getCurrentAudioInputDevice();
+        const now = await this.client.getCurrentAudioInputDeviceAsync();
         this.hasValue(now, "New device");
         this.isEqualTo(now.deviceId, next.deviceId, "deviceId");
         this.isEqualTo(now.kind, next.kind, "kind");
@@ -72,36 +72,28 @@ export class JitsiClient1_Tests extends TestBase {
     }
 
     async test_050_getVideoInputDevices() {
-        const devs = await this.client.getVideoInputDevices();
+        const devs = await this.client.getVideoInputDevicesAsync();
         this.hasValue(devs, "Devices");
         this.isGreaterThan(devs.length, 0, "Device Count");
     }
 
     async test_060_getCurrentVideoInputDevice() {
-        const cur = await this.client.getCurrentVideoInputDevice();
+        const cur = await this.client.getCurrentVideoInputDeviceAsync();
         this.isNull(cur, "Current Video");
     }
 
     async test_065_setCurrentVideoInputDevice() {
-        const muted1 = await this.client.isVideoMutedAsync();
-        if (muted1) {
-            const unmuteTask = this.client.once("localVideoMuteStatusChanged");
-            await this.client.setVideoMutedAsync(false);
-            const muted2 = (await unmuteTask).muted;
-            this.isFalse(muted2, "Video muted");
-        }
-
-        const devs = await this.client.getVideoInputDevices(),
-            cur = await this.client.getCurrentVideoInputDevice(),
+        const devs = await this.client.getVideoInputDevicesAsync(),
+            cur = await this.client.getCurrentVideoInputDeviceAsync(),
             alt = devs.filter(a => cur === null || a.groupId !== cur.groupId);
 
         this.isGreaterThan(alt.length, 0, "Alternate devices");
 
         const next = alt[0];
-        this.client.setVideoInputDevice(next);
+        await this.client.setVideoInputDeviceAsync(next);
 
         await wait(250);
-        const now = await this.client.getCurrentVideoInputDevice();
+        const now = await this.client.getCurrentVideoInputDeviceAsync();
         this.hasValue(now, "New device");
         this.isEqualTo(now.deviceId, next.deviceId, "deviceId");
         this.isEqualTo(now.kind, next.kind, "kind");
@@ -124,8 +116,7 @@ export class JitsiClient1_Tests extends TestBase {
     }
 
     async test_070_toggleAudio() {
-        const evt = await this.withEvt("localAudioMuteStatusChanged", () =>
-            this.client.toggleAudio());
+        const evt = await this.client.toggleAudioAsync();
         this.isTrue(evt.muted, "Muted");
     }
 
@@ -136,14 +127,12 @@ export class JitsiClient1_Tests extends TestBase {
 
     async test_090_setAudioMuted() {
         await wait(1000);
-        const evt = await this.withEvt("localAudioMuteStatusChanged", () =>
-            this.client.setAudioMutedAsync(false));
+        const evt = await this.client.setAudioMutedAsync(false);
         this.isFalse(evt.muted, "Muted");
     }
 
     async test_100_toggleVideo() {
-        const evt = await this.withEvt("localVideoMuteStatusChanged", () =>
-            this.client.toggleVideo());
+        const evt = await this.client.toggleVideoAsync();
         this.isFalse(evt.muted, "Muted");
     }
 
@@ -154,8 +143,7 @@ export class JitsiClient1_Tests extends TestBase {
 
     async test_120_setVideoMuted() {
         await wait(1000);
-        const evt = await this.withEvt("localVideoMuteStatusChanged", () =>
-            this.client.setVideoMutedAsync(true));
+        const evt = await this.client.setVideoMutedAsync(true);
         this.isTrue(evt.muted, "Muted");
     }
 
@@ -242,8 +230,7 @@ export class JitsiClient1_Tests extends TestBase {
     }
 
     async test_999_leaveConference() {
-        const evt = await this.withEvt("videoConferenceLeft", () =>
-            this.client.leave());
+        const evt = await this.client.leaveAsync();
         this.isEqualTo(evt.roomName, TEST_ROOM_NAME, "Room Name");
     }
     //*/

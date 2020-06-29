@@ -17,7 +17,7 @@ export class ExternalJitsiClient extends BaseJitsiClient {
         }
     }
 
-    async initializeAsync(host, roomName) {
+    async initializeAsync(host, roomName, userName) {
         await import(`https://${host}/libs/external_api.min.js`);
         return new Promise((resolve) => {
             this.api = new JitsiMeetExternalAPI(host, {
@@ -98,16 +98,18 @@ export class ExternalJitsiClient extends BaseJitsiClient {
         this.api.executeCommand("displayName", userName);
     }
 
-    leave() {
+    async leaveAsync() {
+        const leaveTask = this.once("videoConferenceLeft");
         this.api.executeCommand("hangup");
+        await leaveTask;
     }
 
-    async getAudioOutputDevices() {
+    async getAudioOutputDevicesAsync() {
         const devices = await this.api.getAvailableDevices();
         return devices && devices.audioOutput || [];
     }
 
-    async getCurrentAudioOutputDevice() {
+    async getCurrentAudioOutputDeviceAsync() {
         const devices = await this.api.getCurrentDevices();
         return devices && devices.audioOutput || null;
     }
@@ -116,40 +118,58 @@ export class ExternalJitsiClient extends BaseJitsiClient {
         this.api.setAudioOutputDevice(device.label, device.id);
     }
 
-    async getAudioInputDevices() {
+    async getAudioInputDevicesAsync() {
         const devices = await this.api.getAvailableDevices();
         return devices && devices.audioInput || [];
     }
 
-    async getCurrentAudioInputDevice() {
+    async getCurrentAudioInputDeviceAsync() {
         const devices = await this.api.getCurrentDevices();
         return devices && devices.audioInput || null;
     }
 
-    setAudioInputDevice(device) {
+    async setAudioInputDeviceAsync(device) {
+        const muted = await this.isAudioMutedAsync();
+        if (muted) {
+            const unmuteTask = this.once("localAudioMuteStatusChanged");
+            await this.setAudioMutedAsync(false);
+            await unmuteTask;
+        }
+
         this.api.setAudioInputDevice(device.label, device.id);
     }
 
-    async getVideoInputDevices() {
+    async getVideoInputDevicesAsync() {
         const devices = await this.api.getAvailableDevices();
         return devices && devices.videoInput || [];
     }
 
-    async getCurrentVideoInputDevice() {
+    async getCurrentVideoInputDeviceAsync() {
         const devices = await this.api.getCurrentDevices();
         return devices && devices.videoInput || null;
     }
 
-    setVideoInputDevice(device) {
+    async setVideoInputDeviceAsync(device) {
+        const muted = await this.isVideoMutedAsync();
+        if (muted) {
+            const unmuteTask = this.once("localVideoMuteStatusChanged");
+            await this.setVideoMutedAsync(false);
+            await unmuteTask;
+        }
+
         this.api.setVideoInputDevice(device.label, device.id);
     }
 
-    toggleAudio() {
+    async toggleAudioAsync() {
+        const changeTask = this.once("localAudioMuteStatusChanged");
         this.api.executeCommand("toggleAudio");
+        return await changeTask;
     }
 
-    toggleVideo() {
+    async toggleVideoAsync() {
+        const changeTask = this.once("localVideoMuteStatusChanged");
         this.api.executeCommand("toggleVideo");
+        return await changeTask;
     }
 
     setAvatarURL(url) {
