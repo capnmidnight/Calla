@@ -162,8 +162,6 @@ export class JitsiClient1_Tests extends TestBase {
         this.success();
     }
 
-    /*
-
     async test_130_participantJoined() {
         const loc = new URL(document.location.href);
         loc.hash = "2";
@@ -171,6 +169,8 @@ export class JitsiClient1_Tests extends TestBase {
         await this.waitForJoin();
     }
 
+
+    //*
     async test_140_initUser() {
         await this.initUsers();
     }
