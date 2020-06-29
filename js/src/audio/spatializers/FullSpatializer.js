@@ -15,7 +15,6 @@ export class FullSpatializer extends BaseWebAudioSpatializer {
         this.inNode.coneInnerAngle = 360;
         this.inNode.coneOuterAngle = 0;
         this.inNode.coneOuterGain = 0;
-        this.wasMuted = false;
 
         Object.seal(this);
     }
@@ -29,18 +28,6 @@ export class FullSpatializer extends BaseWebAudioSpatializer {
 
         if (this.inNode.rolloffFactor !== this.destination.rolloff) {
             this.inNode.rolloffFactor = this.destination.rolloff;
-        }
-
-        const muted = this.volume <= 0;
-
-        if (!!this.source && muted !== this.wasMuted) {
-            this.wasMuted = muted;
-            if (muted) {
-                this.source.disconnect(this.inNode);
-            }
-            else {
-                this.source.connect(this.inNode);
-            }
         }
     }
 }

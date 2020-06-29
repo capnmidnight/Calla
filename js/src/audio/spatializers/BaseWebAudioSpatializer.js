@@ -58,6 +58,14 @@ export class BaseWebAudioSpatializer extends BaseSpatializer {
         this.source = null;
     }
 
+    mute() {
+        this.outNode.disconnect(this.destination.audioContext.destination);
+    }
+
+    unmute() {
+        this.outNode.connect(this.destination.audioContext.destination);
+    }
+
     update() {
         super.update();
 

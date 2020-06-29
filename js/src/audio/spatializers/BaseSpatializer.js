@@ -22,6 +22,7 @@ export class BaseSpatializer extends EventTarget {
         this.position = position;
         this.volume = 1;
         this.pan = 0;
+        this.wasMuted = false;
     }
 
     /**
@@ -36,6 +37,14 @@ export class BaseSpatializer extends EventTarget {
         this.id = null;
     }
 
+    mute() {
+        throw new Error("Not implemented in base class");
+    }
+
+    unmute() {
+        throw new Error("Not implemented in base class");
+    }
+
     /**
      * Run the position interpolation
      */
@@ -46,12 +55,25 @@ export class BaseSpatializer extends EventTarget {
             ly = this.destination.position.y,
             distX = this.position.x - lx,
             distY = this.position.y - ly,
-            dist = Math.sqrt(distX * distX + distY * distY);
+            dist = Math.sqrt(distX * distX + distY * distY),
+            projected = project(dist, this.destination.minDistance, this.destination.maxDistance);
 
-        this.volume = 1 - clamp(project(dist, this.destination.minDistance, this.destination.maxDistance), 0, 1);
+        this.volume = 1 - clamp(projected, 0, 1);
         this.pan = dist > 0
             ? distX / dist
             : 0;
+
+        const muted = this.volume <= 0;
+
+        if (muted !== this.wasMuted) {
+            this.wasMuted = muted;
+            if (muted) {
+                this.mute();
+            }
+            else {
+                this.unmute();
+            }
+        }
     }
 
     /**
