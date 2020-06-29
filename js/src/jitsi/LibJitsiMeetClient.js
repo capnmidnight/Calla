@@ -281,7 +281,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     rxGameData(evt) {
         if (evt.data.hax === APP_FINGERPRINT) {
             console.log("RX GAME DATA", evt.user, evt.data);
-            this.receiveMessageFrom(user.getId(), evt.data);
+            this.receiveMessageFrom(evt.user.getId(), evt.data);
         }
     }
 
