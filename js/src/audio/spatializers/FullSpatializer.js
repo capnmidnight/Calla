@@ -1,5 +1,5 @@
 ﻿import { BaseWebAudioSpatializer } from "./BaseWebAudioSpatializer.js";
-import { WebAudioNodePosition } from "./WebAudioNodePosition.js";
+import { WebAudioNodePosition } from "../positions/WebAudioNodePosition.js";
 
 export class FullSpatializer extends BaseWebAudioSpatializer {
 

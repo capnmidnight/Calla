@@ -1,6 +1,6 @@
-﻿import { clamp, project } from "../math.js";
-import { Destination } from "./Destination.js";
-import { BasePosition } from "./BasePosition.js";
+﻿import { clamp, project } from "../../math.js";
+import { Destination } from "../Destination.js";
+import { BasePosition } from "../positions/BasePosition.js";
 
 /** Base class providing functionality for spatializers. */
 export class BaseSpatializer extends EventTarget {

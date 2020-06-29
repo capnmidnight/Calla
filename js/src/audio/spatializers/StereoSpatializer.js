@@ -1,5 +1,5 @@
 ﻿import { BaseWebAudioSpatializer } from "./BaseWebAudioSpatializer.js";
-import { InterpolatedPosition } from "./InterpolatedPosition.js";
+import { InterpolatedPosition } from "../positions/InterpolatedPosition.js";
 
 export class StereoSpatializer extends BaseWebAudioSpatializer {
 

@@ -1,5 +1,5 @@
 ﻿import { BaseSpatializer } from "./BaseSpatializer.js";
-import { clamp } from "../math.js";
+import { clamp } from "../../math.js";
 
 const audioActivityEvt = Object.assign(new Event("audioActivity", {
     id: null,

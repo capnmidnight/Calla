@@ -1,12 +1,12 @@
 ﻿/* global window, AudioListener, AudioContext, Event, EventTarget */
 
-import { WebAudioOldListenerPosition } from "./WebAudioOldListenerPosition.js";
-import { WebAudioNewListenerPosition } from "./WebAudioNewListenerPosition.js";
-import { InterpolatedPosition } from "./InterpolatedPosition.js";
 import { MockAudioContext } from "./MockAudioContext.js";
-import { VolumeOnlySpatializer } from "./VolumeOnlySpatializer.js";
-import { FullSpatializer } from "./FullSpatializer.js";
-import { StereoSpatializer } from "./StereoSpatializer.js";
+import { WebAudioOldListenerPosition } from "./positions/WebAudioOldListenerPosition.js";
+import { WebAudioNewListenerPosition } from "./positions/WebAudioNewListenerPosition.js";
+import { InterpolatedPosition } from "./positions/InterpolatedPosition.js";
+import { VolumeOnlySpatializer } from "./spatializers/VolumeOnlySpatializer.js";
+import { FullSpatializer } from "./spatializers/FullSpatializer.js";
+import { StereoSpatializer } from "./spatializers/StereoSpatializer.js";
 
 const contextDestroyingEvt = new Event("contextDestroying"),
     contextDestroyedEvt = new Event("contextDestroyed");

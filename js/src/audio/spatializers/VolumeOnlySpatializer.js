@@ -1,5 +1,5 @@
 ﻿import { BaseSpatializer } from "./BaseSpatializer.js";
-import { InterpolatedPosition } from "./InterpolatedPosition.js";
+import { InterpolatedPosition } from "../positions/InterpolatedPosition.js";
 
 export class VolumeOnlySpatializer extends BaseSpatializer {
 
