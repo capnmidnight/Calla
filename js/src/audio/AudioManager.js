@@ -1,7 +1,7 @@
 ﻿import { Destination } from "./Destination.js";
 import { BaseAudioClient } from "./BaseAudioClient.js";
-//import { WorkerTimer as Timer } from "../timers/WorkerTimer.js";
-import { RequestAnimationFrameTimer as Timer } from "../timers/RequestAnimationFrameTimer.js";
+import { WorkerTimer as Timer } from "../timers/WorkerTimer.js";
+//import { RequestAnimationFrameTimer as Timer } from "../timers/RequestAnimationFrameTimer.js";
 import { BaseTimer } from "../timers/BaseTimer.js";
 //import { SetIntervalTimer as Timer } from "../timers/SetIntervalTimer.js";
 //import { SetTimeoutTimer as Timer } from "../timers/SetTimeoutTimer.js";
