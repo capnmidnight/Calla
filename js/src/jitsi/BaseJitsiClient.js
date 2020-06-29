@@ -1,5 +1,6 @@
 ﻿import { id, style } from "../html/attrs.js";
 import { Div } from "../html/tags.js";
+import { BaseAudioClient } from "../audio/BaseAudioClient.js";
 
 // helps us filter out data channel messages that don't belong to us
 const APP_FINGERPRINT
@@ -23,7 +24,9 @@ const APP_FINGERPRINT
         "avatarChanged",
         "displayNameChange",
         "audioActivity",
-        "setAvatarEmoji"
+        "setAvatarEmoji",
+        "deviceListChanged",
+        "participantRoleChanged",
     ];
 
 // Manages communication between Jitsi Meet and Calla
@@ -31,6 +34,7 @@ export class BaseJitsiClient extends EventTarget {
 
     constructor() {
         super();
+        /** @type {HTMLElement} */
         this.element = Div(
             id("jitsi"),
             style({
@@ -43,9 +47,15 @@ export class BaseJitsiClient extends EventTarget {
                 padding: 0,
                 overflow: "hidden"
             }));
+
+        /** @type {String} */
         this.localUser = null;
+
         this.otherUsers = new Map();
+
+        /** @type {BaseAudioClient} */
         this.audioClient = null;
+
         this.preInitEvtQ = [];
     }
 
@@ -57,6 +67,10 @@ export class BaseJitsiClient extends EventTarget {
         this.element.show();
     }
 
+    /**
+     * 
+     * @param {number} top
+     */
     resize(top) {
         if (top !== undefined) {
             this.element.style.top = top + "px";
@@ -64,6 +78,11 @@ export class BaseJitsiClient extends EventTarget {
         }
     }
 
+    /**
+     * 
+     * @param {string} host
+     * @param {string} roomName
+     */
     async initializeAsync(host, roomName) {
         throw new Error("Not implemented in base class.");
     }
@@ -96,6 +115,12 @@ export class BaseJitsiClient extends EventTarget {
         }
     }
 
+    /**
+     * 
+     * @param {string} host
+     * @param {string} roomName
+     * @param {string} userName
+     */
     async joinAsync(host, roomName, userName) {
         this.dispose();
         await this.initializeAsync(host, roomName);
@@ -150,6 +175,10 @@ export class BaseJitsiClient extends EventTarget {
     dispose() {
     }
 
+    /**
+     * 
+     * @param {string} userName
+     */
     setDisplayName(userName) {
         throw new Error("Not implemented in base class");
     }
@@ -158,14 +187,21 @@ export class BaseJitsiClient extends EventTarget {
         throw new Error("Not implemented in base class");
     }
 
+
     async getAudioOutputDevices() {
         throw new Error("Not implemented in base class");
     }
 
+    /**
+     * @return {Promise.<MediaDeviceInfo>} */
     async getCurrentAudioOutputDevice() {
         throw new Error("Not implemented in base class");
     }
 
+    /**
+     * 
+     * @param {MediaDeviceInfo} device
+     */
     setAudioOutputDevice(device) {
         throw new Error("Not implemented in base class");
     }
@@ -206,10 +242,16 @@ export class BaseJitsiClient extends EventTarget {
         throw new Error("Not implemented in base class");
     }
 
+    /**
+     * @return {Promise.<boolean>}
+     */
     async isAudioMutedAsync() {
         throw new Error("Not implemented in base class");
     }
 
+    /**
+     * @return {Promise.<boolean>}
+     */
     async isVideoMutedAsync() {
         throw new Error("Not implemented in base class");
     }
@@ -262,6 +304,10 @@ export class BaseJitsiClient extends EventTarget {
         this.audioClient.removeUser(evt);
     }
 
+    /**
+     *
+     * @param {boolean} muted
+     */
     async setAudioMutedAsync(muted) {
         const isMuted = await this.isAudioMutedAsync();
         if (muted !== isMuted) {
@@ -269,6 +315,10 @@ export class BaseJitsiClient extends EventTarget {
         }
     }
 
+    /**
+     *
+     * @param {boolean} muted
+     */
     async setVideoMutedAsync(muted) {
         const isMuted = await this.isVideoMutedAsync();
         if (muted !== isMuted) {
@@ -277,6 +327,12 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     /// Add a listener for Calla events that come through the Jitsi Meet data channel.
+    /**
+     * 
+     * @param {string} evtName
+     * @param {function} callback
+     * @param {AddEventListenerOptions} opts
+     */
     addEventListener(evtName, callback, opts) {
         if (eventNames.indexOf(evtName) === -1) {
             throw new Error(`Unsupported event type: ${evtName}`);
@@ -285,10 +341,18 @@ export class BaseJitsiClient extends EventTarget {
         super.addEventListener(evtName, callback, opts);
     }
 
+    /**
+     * 
+     * @param {string} toUserID
+     */
     userInitRequest(toUserID) {
         this.sendMessageTo(toUserID, "userInitRequest");
     }
 
+    /**
+     * 
+     * @param {string} toUserID
+     */
     userInitRequestAsync(toUserID) {
         return this.until("userInitResponse",
             () => this.userInitRequest(toUserID),
@@ -296,6 +360,11 @@ export class BaseJitsiClient extends EventTarget {
             1000);
     }
 
+    /**
+     * 
+     * @param {string} toUserID
+     * @param {User} fromUserState
+     */
     userInitResponse(toUserID, fromUserState) {
         this.sendMessageTo(toUserID, "userInitResponse", fromUserState);
     }
@@ -312,6 +381,10 @@ export class BaseJitsiClient extends EventTarget {
         }
     }
 
+    /**
+     *
+     * @param {boolean} muted
+     */
     audioMuteStatusChanged(muted) {
         const evt = { muted };
         for (let toUserID of this.otherUsers.keys()) {
@@ -319,6 +392,10 @@ export class BaseJitsiClient extends EventTarget {
         }
     }
 
+    /**
+     * 
+     * @param {boolean} muted
+     */
     videoMuteStatusChanged(muted) {
         const evt = { muted };
         for (let toUserID of this.otherUsers.keys()) {

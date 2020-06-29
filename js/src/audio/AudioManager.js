@@ -1,4 +1,5 @@
 ﻿import { Destination } from "./Destination.js";
+import { BaseAudioClient } from "./BaseAudioClient.js";
 
 const BUFFER_SIZE = 1024,
     audioActivityEvt = Object.assign(new Event("audioActivity", {
@@ -7,7 +8,7 @@ const BUFFER_SIZE = 1024,
     }));
 
 
-export class AudioManager extends EventTarget {
+export class AudioManager extends BaseAudioClient {
     constructor() {
         super();
 
@@ -57,6 +58,8 @@ export class AudioManager extends EventTarget {
             }
         };
         requestAnimationFrame(this.updater);
+
+        Object.seal(this);
     }
 
 

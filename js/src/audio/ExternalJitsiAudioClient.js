@@ -1,16 +1,29 @@
-﻿export class ExternalJitsiAudioClient extends EventTarget {
+﻿import { BaseAudioClient } from "./BaseAudioClient.js";
+
+export class ExternalJitsiAudioClient extends BaseAudioClient {
     constructor(host, apiOrigin, apiWindow) {
         super();
+
+        /** @type {string} */
         this.host = host;
+
+        /** @type {string} */
         this.apiOrigin = apiOrigin;
+
+        /** @type {Window} */
         this.apiWindow = apiWindow;
+
         window.addEventListener("message", (evt) => {
             this.rxJitsiHax(evt);
         });
     }
 
 
-    /// Send a Calla message to the jitsihax.js script
+    /**
+     * Send a message to the Calla app
+     * @param {string} command
+     * @param {any} value
+     */
     txJitsiHax(command, value) {
         if (this.apiWindow) {
             const evt = {
@@ -27,6 +40,10 @@
         }
     }
 
+    /**
+     * Recieve a message from the Calla app.
+     * @param {MessageEvent} msg
+     */
     rxJitsiHax(msg) {
         const isLocalHost = msg.origin.match(/^https?:\/\/localhost\b/);
         if (msg.origin === "https://" + this.host || isLocalHost) {
