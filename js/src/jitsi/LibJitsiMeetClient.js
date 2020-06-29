@@ -18,7 +18,9 @@ function logger(source, evtName) {
 
 function setLoggers(source, evtObj) {
     for (let evtName of Object.values(evtObj)) {
-        logger(source, evtName);
+        if (evtName.indexOf("audioLevelsChanged") === -1) {
+            logger(source, evtName);
+        }
     }
 }
 
