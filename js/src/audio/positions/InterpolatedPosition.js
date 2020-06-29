@@ -1,4 +1,4 @@
-﻿import { project } from "../math.js";
+﻿import { project, lerp } from "../../math.js";
 import { BasePosition } from "./BasePosition.js";
 
 export class InterpolatedPosition extends BasePosition {
@@ -39,10 +39,8 @@ export class InterpolatedPosition extends BasePosition {
     update(t) {
         const p = project(t, this._st, this._et);
         if (p <= 1) {
-            const deltaX = this._tx - this._sx,
-                deltaY = this._ty - this._sy;
-            this._x = this._sx + p * deltaX;
-            this._y = this._sy + p * deltaY;
+            this._x = lerp(this._sx, this._tx, p);
+            this._y = lerp(this._sy, this._ty, p);
         }
     }
 }

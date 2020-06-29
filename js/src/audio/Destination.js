@@ -8,7 +8,8 @@ import { VolumeOnlySpatializer } from "./spatializers/VolumeOnlySpatializer.js";
 import { FullSpatializer } from "./spatializers/FullSpatializer.js";
 import { StereoSpatializer } from "./spatializers/StereoSpatializer.js";
 
-const contextDestroyingEvt = new Event("contextDestroying"),
+const forceInterpolatedPosition = true,
+    contextDestroyingEvt = new Event("contextDestroying"),
     contextDestroyedEvt = new Event("contextDestroyed");
 
 let hasWebAudioAPI = window.hasOwnProperty("AudioListener"),
@@ -33,9 +34,10 @@ export class Destination extends EventTarget {
             try {
                 if (hasWebAudioAPI) {
                     this.audioContext = new AudioContext();
+
                     try {
                         if (isLatestWebAudioAPI) {
-                            this.position = new WebAudioNewListenerPosition(this.audioContext.listener);
+                            this.position = new WebAudioNewListenerPosition(this.audioContext.listener, forceInterpolatedPosition);
                         }
                     }
                     catch (exp2) {
@@ -83,7 +85,7 @@ export class Destination extends EventTarget {
             if (hasWebAudioAPI) {
                 try {
                     if (hasFullSpatializer) {
-                        return new FullSpatializer(userID, this, audio, bufferSize);
+                        return new FullSpatializer(userID, this, audio, bufferSize, forceInterpolatedPosition);
                     }
                 }
                 catch (exp2) {
