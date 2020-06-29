@@ -82,5 +82,6 @@ export class BaseSpatializer extends EventTarget {
      */
     setTarget(evt) {
         this.position.setTarget(evt, this.destination.audioContext.currentTime, this.destination.transitionTime);
+        this.update();
     }
 }

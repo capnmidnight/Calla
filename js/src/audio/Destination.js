@@ -15,7 +15,7 @@ let hasWebAudioAPI = window.hasOwnProperty("AudioListener"),
     hasFullSpatializer = hasWebAudioAPI && window.hasOwnProperty("PannerNode"),
     isLatestWebAudioAPI = hasWebAudioAPI && AudioListener.prototype.hasOwnProperty("positionX");
 
-export class Destination extends EventTarget{
+export class Destination extends EventTarget {
 
     constructor() {
         super();
@@ -64,6 +64,7 @@ export class Destination extends EventTarget{
 
     setTarget(evt) {
         this.position.setTarget(evt, this.audioContext.currentTime, this.transitionTime);
+        this.update();
     }
 
     setAudioProperties(evt) {
