@@ -64,7 +64,7 @@ export class User extends EventTarget {
             this.avatarImage = null;
         }
 
-        this.avatarEmoji = evt.avatarEmoji;
+        this.avatarEmoji = evt._avatarEmoji;
         this.isInitialized = true;
     }
 
@@ -245,7 +245,14 @@ export class User extends EventTarget {
             this.y * map.tileHeight + this.stackOffsetY);
         g.fillStyle = "black";
         g.textBaseline = "top";
-        if (!this.avatarImage) {
+        if (this.avatarImage) {
+            g.drawImage(
+                this.avatarImage,
+                0, 0,
+                this.stackAvatarWidth,
+                this.stackAvatarHeight);
+        }
+        else if(this.avatarEmoji) {
             g.font = 0.9 * this.stackAvatarHeight + "px sans-serif";
             if (!this.avatarEmojiMetrics) {
                 this.avatarEmojiMetrics = g.measureText(this.avatarEmoji.value);
@@ -254,13 +261,6 @@ export class User extends EventTarget {
                 this.avatarEmoji.value,
                 (this.avatarEmojiMetrics.width - this.stackAvatarWidth) / 2 + this.avatarEmojiMetrics.actualBoundingBoxLeft,
                 this.avatarEmojiMetrics.actualBoundingBoxAscent);
-        }
-        else {
-            g.drawImage(
-                this.avatarImage,
-                0, 0,
-                this.stackAvatarWidth,
-                this.stackAvatarHeight);
         }
 
         if (this.audioMuted || !this.videoMuted) {

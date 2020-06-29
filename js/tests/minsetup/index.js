@@ -1,5 +1,6 @@
-﻿import { ExternalJitsiClient as JitsiClient } from "../../src/jitsi/ExternalJitsiClient.js";
-import { init } from "../../src/init.js";
+﻿import { init } from "../../src/init.js";
+//import { ExternalJitsiClient as JitsiClient } from "../../src/jitsi/ExternalJitsiClient.js";
+import { LibJitsiMeetClient as JitsiClient} from "../../src/jitsi/LibJitsiMeetClient.js";
 
 const { client } = init("jitsi.calla.chat", new JitsiClient());
 

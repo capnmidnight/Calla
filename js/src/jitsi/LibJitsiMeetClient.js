@@ -10,6 +10,10 @@ const selfs = new Map();
 
 function logger(source, evtName) {
     const handler = (...rest) => {
+        if (evtName === "conference.endpoint_message_received"
+            && rest[1].type === "e2e-ping-request") {
+            return;
+        }
         console.log(evtName, ...rest);
     };
 
@@ -172,7 +176,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                     displayName
                 });
 
-                this.displayName(evt);
+                this.dispatchEvent(evt);
             });
 
             this.conference.addEventListener(TRACK_ADDED, (track) => {
@@ -215,7 +219,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     removeTrack(track) {
         const self = selfs.get(this),
             container = self.trackContainers.get(track);
-        document.body.removeChild(container);
+        this.element.removeChild(container);
         self.trackContainers.delete(track);
     }
 
@@ -249,7 +253,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         let container = document.getElementById(containerID);
         if (container === null) {
             container = Span(id(containerID));
-            document.body.appendChild(container);
+            this.element.appendChild(container);
         }
 
         let elem = document.getElementById(trackElementID);
@@ -281,7 +285,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     rxGameData(evt) {
         if (evt.data.hax === APP_FINGERPRINT) {
             console.log("RX GAME DATA", evt.user, evt.data);
-            this.receiveMessageFrom(evt.user.getId(), evt.data);
+            this.receiveMessageFrom(evt.user.getId(), evt.data.command, evt.data.value);
         }
     }
 
@@ -302,8 +306,6 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 reject(exp);
             }
         });
-
-        console.log("DEVICES", devices);
 
         return {
             audioOutput: devices.filter(d => d.kind === "audiooutput"),
@@ -413,6 +415,15 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 await cur.mute();
             }
         }
+        else {
+            const avail = await this.getAudioInputDevicesAsync();
+            if (avail.length > 0) {
+                await this.setAudioInputDeviceAsync(avail[0]);
+                this.dispatchEvent(Object.assign(
+                    new Event("audioMuteStatusChanged"),
+                    { muted: false }));
+            }
+        }
         return await changeTask;
     }
 
@@ -428,6 +439,15 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 await cur.mute();
             }
         }
+        else {
+            const avail = await this.getVideoInputDevicesAsync();
+            if (avail.length > 0) {
+                await this.setVideoInputDeviceAsync(avail[0]);
+                this.dispatchEvent(Object.assign(
+                    new Event("videoMuteStatusChanged"),
+                    { muted: false }));
+            }
+        }
         return await changeTask;
     }
 
@@ -437,11 +457,21 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
 
     async isAudioMutedAsync() {
         const cur = selfs.get(this).audioInput;
-        return cur && cur.isMuted();
+        if (cur === null) {
+            return true;
+        }
+        else {
+            return cur.isMuted();
+        }
     }
 
     async isVideoMutedAsync() {
         const cur = selfs.get(this).videoInput;
-        return cur && cur.isMuted();
+        if (cur === null) {
+            return true;
+        }
+        else {
+            return cur.isMuted();
+        }
     }
 }

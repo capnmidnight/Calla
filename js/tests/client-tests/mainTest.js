@@ -183,6 +183,14 @@ export class JitsiClient1_Tests extends TestBase {
         await this.recvEmoji();
     }
 
+    async test_165_sendPosition() {
+        await this.sendPosition();
+    }
+
+    async test_166_recvPosition() {
+        await this.recvPosition();
+    }
+
     async test_170_sendAudioMuted() {
         await this.sendAudioMuted();
     }
@@ -213,14 +221,6 @@ export class JitsiClient1_Tests extends TestBase {
 
     async test_240_recvVideoMuted() {
         await this.recvVideoMuted();
-    }
-
-    async test_250_sendPosition() {
-        await this.sendPosition();
-    }
-
-    async test_260_recvPosition() {
-        await this.recvPosition();
     }
 
     async test_998_participantLeft() {
