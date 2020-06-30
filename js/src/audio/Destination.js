@@ -8,7 +8,7 @@ import { VolumeOnlySpatializer } from "./spatializers/VolumeOnlySpatializer.js";
 import { FullSpatializer } from "./spatializers/FullSpatializer.js";
 import { StereoSpatializer } from "./spatializers/StereoSpatializer.js";
 
-const forceInterpolatedPosition = true,
+const forceInterpolatedPosition = false,
     contextDestroyingEvt = new Event("contextDestroying"),
     contextDestroyedEvt = new Event("contextDestroyed");
 

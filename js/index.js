@@ -3,6 +3,7 @@
 import { ariaLabel, className, href, rel, role, target, title } from "./src/html/attrs.js";
 import { A, H2, P, Span } from "./src/html/tags.js";
 import { init } from "./src/init.js";
+//import { LibJitsiMeetClient as JitsiClient } from "./src/jitsi/LibJitsiMeetClient.js";
 import { ExternalJitsiClient as JitsiClient } from "./src/jitsi/ExternalJitsiClient.js";
 
 const { toolbar, login } = init(JITSI_HOST, new JitsiClient());

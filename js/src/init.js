@@ -223,8 +223,8 @@ export function init(host, client) {
             setAudioProperties();
 
             client.setLocalPosition(game.me);
-            game.me.addEventListener("userMoved", () => {
-                client.setLocalPosition(game.me);
+            game.me.addEventListener("userMoved", (evt) => {
+                client.setLocalPosition(evt);
             });
 
             if (settings.avatarEmoji !== null) {
