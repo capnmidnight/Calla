@@ -561,7 +561,7 @@ class StereoSpatializer extends BaseWebAudioSpatializer {
 
 /* global window, AudioListener, AudioContext, Event, EventTarget */
 
-const forceInterpolatedPosition = false,
+const forceInterpolatedPosition = true,
     contextDestroyingEvt = new Event("contextDestroying"),
     contextDestroyedEvt = new Event("contextDestroyed");
 
@@ -1093,7 +1093,6 @@ class WorkerTimer extends BaseTimer {
                 dt = null,
                 running = false;
             onmessage = function (e) {
-                console.log(e);
                 if (e.data === "stop") {
                     running = false;
                 } else {
