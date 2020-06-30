@@ -27,6 +27,10 @@ export class EmojiGroup extends Emoji {
         /** @type {string} */
         this.width = null;
     }
+
+    random() {
+        return this.alts.random();
+    }
 }
 
 /**

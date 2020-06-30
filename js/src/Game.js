@@ -285,7 +285,7 @@ export class Game extends EventTarget {
                     this.dispatchEvent(emojiNeededEvt);
                 }
                 else {
-                    this.currentEmoji = emoji;
+                    emoteEvt.emoji = this.currentEmoji = emoji;
                     this.dispatchEvent(emoteEvt);
                 }
             }
