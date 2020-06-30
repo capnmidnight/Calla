@@ -140,7 +140,9 @@ export class BaseJitsiClient extends EventTarget {
         });
 
         this.addEventListener("displayNameChange", (evt) => {
-            this.otherUsers.set(evt.id, evt.displayname);
+            if (evt.id !== this.localUser) {
+                this.otherUsers.set(evt.id, evt.displayname);
+            }
         });
 
         const localizeMuteEvent = (type) => (evt) => {
