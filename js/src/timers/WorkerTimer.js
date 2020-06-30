@@ -12,7 +12,6 @@ export class WorkerTimer extends BaseTimer {
                 dt = null,
                 running = false;
             onmessage = function (e) {
-                console.log(e);
                 if (e.data === "stop") {
                     running = false;
                 } else {
