@@ -1,3 +1,9 @@
-﻿export const userNumber = document.location.hash.length > 0
-    ? parseFloat(document.location.hash.substring(1))
-    : 1;
+﻿export const userNumber = (function () {
+    const loc = new URL(document.location.href);
+    if (loc.searchParams.has("testUserNumber")) {
+        return parseFloat(loc.searchParams.get("testUserNumber"));
+    }
+    else {
+        return 1;
+    }
+})();

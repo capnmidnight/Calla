@@ -2,7 +2,7 @@
 import { HtmlTestOutput as TestOutput } from "../../testing/HtmlTestOutput.js";
 import { JitsiClient1_Tests } from "./mainTest.js";
 import { JitsiClient2_Tests } from "./secondaryTest.js";
-import { userNumber } from "./userNumber.js";
+import { userNumber } from "../../testing/userNumber.js";
 
 
 function echoEvt(evt) {

@@ -1,5 +1,6 @@
 ﻿import { TestBase } from "./baseTest.js";
 import { wait } from "../../src/wait.js";
+import { openSideTest } from "../../testing/windowing.js";
 
 const TEST_ROOM_NAME = "testroom";
 
@@ -163,9 +164,7 @@ export class JitsiClient1_Tests extends TestBase {
     }
 
     async test_130_participantJoined() {
-        const loc = new URL(document.location.href);
-        loc.hash = "2";
-        window.open(loc.href, "_blank", "left=10,top=10,width=800,height=1000");
+        openSideTest();
         await this.waitForJoin();
     }
 
