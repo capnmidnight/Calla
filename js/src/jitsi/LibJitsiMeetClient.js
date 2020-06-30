@@ -1,5 +1,4 @@
-﻿import '../../lib/jquery.js';
-import { tag } from "../html/tag.js";
+﻿import { tag } from "../html/tag.js";
 import { Span } from "../html/tags.js";
 import { BaseJitsiClient } from "./BaseJitsiClient.js";
 import { AudioManager as AudioClient } from '../audio/AudioManager.js';
@@ -66,11 +65,11 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async initializeAsync(host, roomName, userName) {
+        await import(`//${window.location.host}/lib/jquery.min.js`);
+        await import(`https://${host}/libs/lib-jitsi-meet.min.js`);
         const self = selfs.get(this);
 
         roomName = roomName.toLocaleLowerCase();
-
-        await import(`https://${host}/libs/lib-jitsi-meet.min.js`);
 
         JitsiMeetJS.setLogLevel(JitsiMeetJS.logLevels.ERROR);
         JitsiMeetJS.init();
