@@ -83,6 +83,7 @@ export class EmojiForm extends FormDialog {
         }
 
         const addIconsToContainer = (group, container, isAlts) => {
+            group = group.alts || group;
             for (let icon of group) {
                 const g = isAlts ? UL() : Span(),
                     btn = Button(
@@ -113,10 +114,10 @@ export class EmojiForm extends FormDialog {
                     g.appendChild(btn);
                 }
 
-                if (!!icon.alt) {
+                if (!!icon.alts) {
                     alts = Div();
                     allAlts.push(alts);
-                    addIconsToContainer(icon.alt, alts, true);
+                    addIconsToContainer(icon.alts, alts, true);
                     alts.hide();
                     g.appendChild(alts);
                     btn.style.width = "3em";
