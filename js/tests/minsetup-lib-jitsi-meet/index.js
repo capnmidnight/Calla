@@ -4,6 +4,7 @@ import { Button } from "../../src/html/tags.js";
 import { style } from "../../src/html/attrs.js";
 import { onClick } from "../../src/html/evts.js";
 import { openSideTest } from "../../testing/windowing.js";
+import { userNumber } from "../../testing/userNumber.js";
 
 init("jitsi.calla.chat", new JitsiClient());
 

@@ -103,6 +103,15 @@ export class LoginForm extends FormDialog {
         }
     }
 
+    removeEventListener(evtName, callback) {
+        if (evtName === "login") {
+            this.connectButton.removeEventListener("click", callback);
+        }
+        else {
+            super.removeEventListener(evtName, callback);
+        }
+    }
+
     get roomSelectMode() {
         return this.roomSelect.style.display !== "none";
     }

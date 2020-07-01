@@ -3,6 +3,11 @@
 import { BaseJitsiClient } from "./BaseJitsiClient.js";
 import { ExternalJitsiAudioClient } from "../audio/ExternalJitsiAudioClient.js";
 
+const audioActivityEvt = Object.assign(new Event("audioActivity"), {
+    id: null,
+    isActive: false
+});
+
 export class ExternalJitsiClient extends BaseJitsiClient {
     constructor() {
         super();
@@ -31,8 +36,9 @@ export class ExternalJitsiClient extends BaseJitsiClient {
                         new URL(iframe.src).origin,
                         iframe.contentWindow);
                     this.audioClient.addEventListener("audioActivity", (evt) => {
-                        const evt2 = Event.clone(new Event("audioActivity"), evt);
-                        this.dispatchEvent(evt2);
+                        audioActivityEvt.id = evt.id;
+                        audioActivityEvt.isActive = evt.isActive;
+                        this.dispatchEvent(audioActivityEvt);
                     });
                     resolve();
                 },

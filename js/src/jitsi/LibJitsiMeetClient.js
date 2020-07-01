@@ -4,7 +4,11 @@ import { BaseJitsiClient } from "./BaseJitsiClient.js";
 import { AudioManager as AudioClient } from '../audio/AudioManager.js';
 import { id, autoPlay, srcObject, muted } from '../html/attrs.js';
 
-const selfs = new Map();
+const selfs = new Map(),
+    audioActivityEvt = Object.assign(new Event("audioActivity"), {
+        id: null,
+        isActive: false
+    });
 
 
 function logger(source, evtName) {
@@ -42,6 +46,11 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         this._connection = { value: null };
         this._room = { value: null };
         this.audioClient = new AudioClient();
+        this.audioClient.addEventListener("audioActivity", (evt) => {
+            audioActivityEvt.id = evt.id;
+            audioActivityEvt.isActive = evt.isActive;
+            this.dispatchEvent(audioActivityEvt);
+        });
 
         selfs.set(this, self);
         Object.seal(this);

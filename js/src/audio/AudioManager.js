@@ -72,13 +72,13 @@ export class AudioManager extends BaseAudioClient {
                 source.update();
             }
         });
-        this.timer.start();
 
         Object.seal(this);
     }
 
     start() {
         this.destination.createContext();
+        this.timer.start();
     }
 
     /**
