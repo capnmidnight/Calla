@@ -77,6 +77,10 @@ export class AudioManager extends BaseAudioClient {
         Object.seal(this);
     }
 
+    start() {
+        this.destination.createContext();
+    }
+
     /**
      * 
      * @param {string} userID

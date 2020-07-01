@@ -31,8 +31,6 @@ export class Destination extends EventTarget {
 
         /** @type {BasePosition} */
         this.position = null;
-
-        this.createContext();
     }
 
     createContext() {

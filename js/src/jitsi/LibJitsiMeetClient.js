@@ -469,4 +469,8 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             return cur.isMuted();
         }
     }
+
+    startAudio() {
+        this.audioClient.start();
+    }
 }

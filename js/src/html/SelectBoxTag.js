@@ -128,4 +128,12 @@ export class SelectBoxTag extends HtmlCustomTag {
     get style() {
         return this.element.style;
     }
+
+    focus() {
+        this.element.focus();
+    }
+
+    blur() {
+        this.element.blur();
+    }
 }

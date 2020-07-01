@@ -153,6 +153,7 @@ export function init(host, client) {
 
 
     login.addEventListener("login", () => {
+        client.startAudio();
         client.joinAsync(
             host,
             settings.roomName = login.roomName,

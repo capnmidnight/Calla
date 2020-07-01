@@ -412,6 +412,9 @@ export class BaseJitsiClient extends EventTarget {
             this.sendMessageTo(toUserID, "videoMuteStatusChanged", evt);
         }
     }
+
+    startAudio() {
+    }
 }
 
 class JitsiClientEvent extends Event {

@@ -51,16 +51,17 @@ export class LoginForm extends FormDialog {
             self.validate();
         });
 
-        this.roomInput = this.element.querySelector("#roomName");
-        this.createRoomButton = this.element.querySelector("#createNewRoom");
-        this.userNameInput = this.element.querySelector("#userName")
-        this.connectButton = this.element.querySelector("#connect");
+        this.roomSelect.emptySelectionEnabled = false;
+        this.roomSelect.values = defaultRooms.keys();
+        this.roomSelect.selectedIndex = 0;
 
+        this.roomInput = this.element.querySelector("#roomName");
         this.roomInput.addEventListener("input", self.validate);
         this.roomInput.addEventListener("enter", () => {
             this.userNameInput.focus();
         });
 
+        this.userNameInput = this.element.querySelector("#userName")
         this.userNameInput.addEventListener("input", self.validate);
         this.userNameInput.addEventListener("enter", () => {
             if (this.roomName.length > 0
@@ -78,21 +79,28 @@ export class LoginForm extends FormDialog {
             }
         });
 
+        this.createRoomButton = this.element.querySelector("#createNewRoom");
         this.createRoomButton.addEventListener("click", () => {
             this.roomSelectMode = !this.roomSelectMode;
         });
 
-        this.connectButton.addEventListener("click", () => {
+        this.connectButton = this.element.querySelector("#connect");
+        this.addEventListener("login", () => {
             this.connecting = true;
-            this.dispatchEvent(loginEvt);
         });
 
-        this.roomSelect.emptySelectionEnabled = false;
-        this.roomSelect.values = defaultRooms.keys();
         this.roomSelectMode = true;
-        this.roomSelect.selectedIndex = 0;
 
         self.validate();
+    }
+
+    addEventListener(evtName, callback, options) {
+        if (evtName === "login") {
+            this.connectButton.addEventListener("click", callback, options);
+        }
+        else {
+            super.addEventListener(evtName, callback, options);
+        }
     }
 
     get roomSelectMode() {
