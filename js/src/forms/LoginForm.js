@@ -46,6 +46,7 @@ export class LoginForm extends FormDialog {
             v => v,
             k => defaultRooms.get(k),
             this.element.querySelector("#roomSelector"));
+
         this.roomSelect.addEventListener("input", () => {
             self.validate();
         });
@@ -56,7 +57,26 @@ export class LoginForm extends FormDialog {
         this.connectButton = this.element.querySelector("#connect");
 
         this.roomInput.addEventListener("input", self.validate);
+        this.roomInput.addEventListener("enter", () => {
+            this.userNameInput.focus();
+        });
+
         this.userNameInput.addEventListener("input", self.validate);
+        this.userNameInput.addEventListener("enter", () => {
+            if (this.roomName.length > 0
+                && this.userName.length > 0) {
+                this.connectButton.click();
+            }
+            else if (this.userName.length === 0) {
+                this.userNameInput.focus();
+            }
+            else if (this.roomSelectMode) {
+                this.roomSelect.focus();
+            }
+            else {
+                this.roomInput.focus();
+            }
+        });
 
         this.createRoomButton.addEventListener("click", () => {
             this.roomSelectMode = !this.roomSelectMode;
