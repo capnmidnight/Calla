@@ -59,138 +59,7 @@ export function isSurfer(emoji) {
         || isInSet(womanSwimming, emoji);
 }
 
-export const whiteChessKing = new Emoji("\u{2654}", "White Chess King");
-export const whiteChessQueen = new Emoji("\u{2655}", "White Chess Queen");
-export const whiteChessRook = new Emoji("\u{2656}", "White Chess Rook");
-export const whiteChessBishop = new Emoji("\u{2657}", "White Chess Bishop");
-export const whiteChessKnight = new Emoji("\u{2658}", "White Chess Knight");
-export const whiteChessPawn = new Emoji("\u{2659}", "White Chess Pawn");
-export const whiteChessPieces = Object.assign(new EmojiGroup(
-    whiteChessKing.value
-    + whiteChessQueen.value
-    + whiteChessRook.value
-    + whiteChessBishop.value
-    + whiteChessKnight.value
-    + whiteChessPawn.value,
-    "White Chess Pieces",
-    whiteChessKing,
-    whiteChessQueen,
-    whiteChessRook,
-    whiteChessBishop,
-    whiteChessKnight,
-    whiteChessPawn), {
-    width: "auto",
-    king: whiteChessKing,
-    queen: whiteChessQueen,
-    rook: whiteChessRook,
-    bishop: whiteChessBishop,
-    knight: whiteChessKnight,
-    pawn: whiteChessPawn
-});
 
-export const blackChessKing = new Emoji("\u{265A}", "Black Chess King");
-export const blackChessQueen = new Emoji("\u{265B}", "Black Chess Queen");
-export const blackChessRook = new Emoji("\u{265C}", "Black Chess Rook");
-export const blackChessBishop = new Emoji("\u{265D}", "Black Chess Bishop");
-export const blackChessKnight = new Emoji("\u{265E}", "Black Chess Knight");
-export const blackChessPawn = new Emoji("\u{265F}", "Black Chess Pawn");
-export const blackChessPieces = Object.assign(new EmojiGroup(
-    blackChessKing.value
-    + blackChessQueen.value
-    + blackChessRook.value
-    + blackChessBishop.value
-    + blackChessKnight.value
-    + blackChessPawn.value,
-    "Black Chess Pieces",
-    blackChessKing,
-    blackChessQueen,
-    blackChessRook,
-    blackChessBishop,
-    blackChessKnight,
-    blackChessPawn), {
-    width: "auto",
-    king: blackChessKing,
-    queen: blackChessQueen,
-    rook: blackChessRook,
-    bishop: blackChessBishop,
-    knight: blackChessKnight,
-    pawn: blackChessPawn
-});
-export const chessPawns = Object.assign(new EmojiGroup(
-    whiteChessPawn.value + blackChessPawn.value,
-    "Chess Pawns",
-    whiteChessPawn,
-    blackChessPawn), {
-    width: "auto",
-    white: whiteChessPawn,
-    black: blackChessPawn
-});
-export const chessRooks = Object.assign(new EmojiGroup(
-    whiteChessRook.value + blackChessRook.value,
-    "Chess Rooks",
-    whiteChessRook,
-    blackChessRook), {
-    width: "auto",
-    white: whiteChessRook,
-    black: blackChessRook
-});
-export const chessBishops = Object.assign(new EmojiGroup(
-    whiteChessBishop.value + blackChessBishop.value,
-    "Chess Bishops",
-    whiteChessBishop,
-    blackChessBishop), {
-    width: "auto",
-    white: whiteChessBishop,
-    black: blackChessBishop
-});
-export const chessKnights = Object.assign(new EmojiGroup(
-    whiteChessKnight.value + blackChessKnight.value,
-    "Chess Knights",
-    whiteChessKnight,
-    blackChessKnight), {
-    width: "auto",
-    white: whiteChessKnight,
-    black: blackChessKnight
-});
-export const chessQueens = Object.assign(new EmojiGroup(
-    whiteChessQueen.value + blackChessQueen.value,
-    "Chess Queens",
-    whiteChessQueen,
-    blackChessQueen), {
-    width: "auto",
-    white: whiteChessQueen,
-    black: blackChessQueen
-});
-export const chessKings = Object.assign(new EmojiGroup(
-    whiteChessKing.value + blackChessKing.value,
-    "Chess Kings",
-    whiteChessKing,
-    blackChessKing), {
-    width: "auto",
-    white: whiteChessKing,
-    black: blackChessKing
-});
-export const chess = Object.assign(new EmojiGroup(
-    chessKings.value,
-    "Chess Pieces",
-    whiteChessPieces,
-    blackChessPieces,
-    chessPawns,
-    chessRooks,
-    chessBishops,
-    chessKnights,
-    chessQueens,
-    chessKings), {
-    width: "auto",
-    white: whiteChessPieces,
-    black: blackChessPieces,
-    pawns: chessPawns,
-    rooks: chessRooks,
-    bishops: chessBishops,
-    knights: chessKnights,
-    queens: chessQueens,
-    kings: chessKings
-});
 
 export const personSurfingLightSkinTone = new Emoji("\u{1F3C4}\u{1F3FB}", "person surfing: light skin tone");
 export const personSurfingMediumLightSkinTone = new Emoji("\u{1F3C4}\u{1F3FC}", "person surfing: medium-light skin tone");
@@ -4352,6 +4221,139 @@ export const marks = [
     copyright,
     registered,
 ];
+
+export const whiteChessKing = new Emoji("\u{2654}", "White Chess King");
+export const whiteChessQueen = new Emoji("\u{2655}", "White Chess Queen");
+export const whiteChessRook = new Emoji("\u{2656}", "White Chess Rook");
+export const whiteChessBishop = new Emoji("\u{2657}", "White Chess Bishop");
+export const whiteChessKnight = new Emoji("\u{2658}", "White Chess Knight");
+export const whiteChessPawn = new Emoji("\u{2659}", "White Chess Pawn");
+export const whiteChessPieces = Object.assign(new EmojiGroup(
+    whiteChessKing.value
+    + whiteChessQueen.value
+    + whiteChessRook.value
+    + whiteChessBishop.value
+    + whiteChessKnight.value
+    + whiteChessPawn.value,
+    "White Chess Pieces",
+    whiteChessKing,
+    whiteChessQueen,
+    whiteChessRook,
+    whiteChessBishop,
+    whiteChessKnight,
+    whiteChessPawn), {
+    width: "auto",
+    king: whiteChessKing,
+    queen: whiteChessQueen,
+    rook: whiteChessRook,
+    bishop: whiteChessBishop,
+    knight: whiteChessKnight,
+    pawn: whiteChessPawn
+});
+
+export const blackChessKing = new Emoji("\u{265A}", "Black Chess King");
+export const blackChessQueen = new Emoji("\u{265B}", "Black Chess Queen");
+export const blackChessRook = new Emoji("\u{265C}", "Black Chess Rook");
+export const blackChessBishop = new Emoji("\u{265D}", "Black Chess Bishop");
+export const blackChessKnight = new Emoji("\u{265E}", "Black Chess Knight");
+export const blackChessPawn = new Emoji("\u{265F}", "Black Chess Pawn");
+export const blackChessPieces = Object.assign(new EmojiGroup(
+    blackChessKing.value
+    + blackChessQueen.value
+    + blackChessRook.value
+    + blackChessBishop.value
+    + blackChessKnight.value
+    + blackChessPawn.value,
+    "Black Chess Pieces",
+    blackChessKing,
+    blackChessQueen,
+    blackChessRook,
+    blackChessBishop,
+    blackChessKnight,
+    blackChessPawn), {
+    width: "auto",
+    king: blackChessKing,
+    queen: blackChessQueen,
+    rook: blackChessRook,
+    bishop: blackChessBishop,
+    knight: blackChessKnight,
+    pawn: blackChessPawn
+});
+export const chessPawns = Object.assign(new EmojiGroup(
+    whiteChessPawn.value + blackChessPawn.value,
+    "Chess Pawns",
+    whiteChessPawn,
+    blackChessPawn), {
+    width: "auto",
+    white: whiteChessPawn,
+    black: blackChessPawn
+});
+export const chessRooks = Object.assign(new EmojiGroup(
+    whiteChessRook.value + blackChessRook.value,
+    "Chess Rooks",
+    whiteChessRook,
+    blackChessRook), {
+    width: "auto",
+    white: whiteChessRook,
+    black: blackChessRook
+});
+export const chessBishops = Object.assign(new EmojiGroup(
+    whiteChessBishop.value + blackChessBishop.value,
+    "Chess Bishops",
+    whiteChessBishop,
+    blackChessBishop), {
+    width: "auto",
+    white: whiteChessBishop,
+    black: blackChessBishop
+});
+export const chessKnights = Object.assign(new EmojiGroup(
+    whiteChessKnight.value + blackChessKnight.value,
+    "Chess Knights",
+    whiteChessKnight,
+    blackChessKnight), {
+    width: "auto",
+    white: whiteChessKnight,
+    black: blackChessKnight
+});
+export const chessQueens = Object.assign(new EmojiGroup(
+    whiteChessQueen.value + blackChessQueen.value,
+    "Chess Queens",
+    whiteChessQueen,
+    blackChessQueen), {
+    width: "auto",
+    white: whiteChessQueen,
+    black: blackChessQueen
+});
+export const chessKings = Object.assign(new EmojiGroup(
+    whiteChessKing.value + blackChessKing.value,
+    "Chess Kings",
+    whiteChessKing,
+    blackChessKing), {
+    width: "auto",
+    white: whiteChessKing,
+    black: blackChessKing
+});
+export const chess = Object.assign(new EmojiGroup(
+    chessKings.value,
+    "Chess Pieces",
+    whiteChessPieces,
+    blackChessPieces,
+    chessPawns,
+    chessRooks,
+    chessBishops,
+    chessKnights,
+    chessQueens,
+    chessKings), {
+    width: "auto",
+    white: whiteChessPieces,
+    black: blackChessPieces,
+    pawns: chessPawns,
+    rooks: chessRooks,
+    bishops: chessBishops,
+    knights: chessKnights,
+    queens: chessQueens,
+    kings: chessKings
+});
 
 export const textStyle = new Emoji("\u{FE0E}", "Variation Selector-15: text style");
 export const emojiStyle = new Emoji("\u{FE0F}", "Variation Selector-16: emoji style");
