@@ -1,6 +1,6 @@
 ﻿import "./protos.js";
 import { TileSet } from "./TileSet.js";
-import { isSurfer } from "./emoji.js";
+import { isSurfer } from "./emoji/emoji.js";
 
 // TODO: move map data to requestable files
 export class TileMap {

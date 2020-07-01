@@ -1,5 +1,5 @@
 ﻿import { TestCase } from "../../testing/TestCase.js";
-import { bust } from "../../src/emoji.js";
+import { bust } from "../../src/emoji/emoji.js";
 import { userNumber } from "../../testing/userNumber.js";
 import { wait } from "../../src/wait.js";
 import { BaseJitsiClient } from "../../src/jitsi/BaseJitsiClient.js";

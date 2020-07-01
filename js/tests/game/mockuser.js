@@ -1,4 +1,4 @@
-﻿import { allIcons as icons, randomPerson } from "../../src/emoji.js";
+﻿import { allIcons as icons, randomPerson } from "../../src/emoji/emoji.js";
 import { autoPlay, id, loop, src } from "../../src/html/attrs.js";
 import { Audio, Span } from "../../src/html/tags.js";
 

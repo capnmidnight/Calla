@@ -1,4 +1,4 @@
-﻿import { downwardsButton, gear, mutedSpeaker, pauseButton, playButton, speakerHighVolume, questionMark } from "../emoji.js";
+﻿import { downwardsButton, gear, mutedSpeaker, pauseButton, playButton, speakerHighVolume, questionMark } from "../emoji/emoji.js";
 import { alt, htmlFor, id, max, min, role, src, step, style, systemFont, title, type, value } from "../html/attrs.js";
 import { onClick, onInput } from "../html/evts.js";
 import { Button, Div, Img, Input, KBD, Label, Span } from "../html/tags.js";

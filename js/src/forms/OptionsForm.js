@@ -1,6 +1,6 @@
 ﻿import "../protos.js";
 
-import { bust } from "../emoji.js";
+import { bust } from "../emoji/emoji.js";
 import { GamepadManager } from "../gamepad/GamepadStateManager.js";
 import { accessKey, className, htmlFor, id, max, min, placeHolder, step, style, systemFont, title, value } from "../html/attrs.js";
 import { onClick, onInput, onKeyUp } from "../html/evts.js";

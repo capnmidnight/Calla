@@ -6,7 +6,7 @@ import {
     allIcons as icons,
     emojiStyle,
     textStyle
-} from "../emoji.js";
+} from "../emoji/emoji.js";
 
 import {
     A,

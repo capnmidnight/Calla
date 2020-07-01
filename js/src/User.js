@@ -1,4 +1,4 @@
-﻿import { bust, mutedSpeaker, randomPerson, speakerMediumVolume, videoCamera } from "./emoji.js";
+﻿import { bust, mutedSpeaker, randomPerson, speakerMediumVolume, videoCamera } from "./emoji/emoji.js";
 import { height, width } from "./html/attrs.js";
 import { Canvas } from "./html/tags.js";
 import { project } from "./math.js";
