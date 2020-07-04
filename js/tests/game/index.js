@@ -2,8 +2,8 @@
 // be able to test the UI without having to connect to a
 // meeting.
 
-import { MockUser } from "./mockuser.js";
-import { MockJitsiClient as JitsiClient } from "./jitsihax-client-mock.js";
+import { MockUser } from "./MockUser.js";
+import { MockJitsiClient as JitsiClient } from "./MockJitsiClient.js";
 import { init } from "../../src/init.js";
 import { Img } from "../../src/html/tags.js";
 import { src, style } from "../../src/html/attrs.js";
