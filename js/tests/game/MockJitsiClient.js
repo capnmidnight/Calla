@@ -1,7 +1,5 @@
 ﻿import { BaseJitsiClient } from "../../src/jitsi/BaseJitsiClient.js";
 import { userNumber } from "../../testing/userNumber.js";
-//import "../../src/audio/ExternalJitsiAudioServer.js";
-//import { ExternalJitsiAudioClient as AudioClient } from "../../src/audio/ExternalJitsiAudioClient.js";
 import { AudioManager as AudioClient } from "../../src/audio/AudioManager.js";
 
 export class MockJitsiClient extends BaseJitsiClient {
@@ -131,5 +129,9 @@ export class MockJitsiClient extends BaseJitsiClient {
     }
 
     rxGameData(evt) {
+    }
+
+    startAudio() {
+        this.audioClient.start();
     }
 }
