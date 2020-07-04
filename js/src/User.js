@@ -146,7 +146,7 @@ export class User extends EventTarget {
         }
     }
 
-    update(dt, map, userList) {
+    update(dt, map, users) {
         if (this.isInitialized) {
             if (this.dist > 0) {
                 this.t += dt;
@@ -165,7 +165,7 @@ export class User extends EventTarget {
 
             this.stackUserCount = 0;
             this.stackIndex = 0;
-            for (let user of userList) {
+            for (let user of users.values()) {
                 if (user.isInitialized
                     && user.tx === this.tx
                     && user.ty === this.ty) {

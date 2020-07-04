@@ -322,15 +322,15 @@ export function init(host, client) {
             }
         },
         userInitResponse: (evt) => {
-            const user = game.userLookup[evt.id];
-            if (!!user) {
+            if (game.users.has(evt.id)) {
+                const user = game.users.get(evt.id);
                 user.init(evt);
                 client.setUserPosition(evt);
             }
         },
         userMoved: (evt) => {
-            const user = game.userLookup[evt.id];
-            if (!!user) {
+            if (game.users.has(evt.id)) {
+                const user = game.users.get(evt.id);
                 user.moveTo(evt.x, evt.y);
                 client.setUserPosition(evt);
             }

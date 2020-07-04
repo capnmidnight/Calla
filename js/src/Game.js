@@ -42,8 +42,9 @@ export class Game extends EventTarget {
         this.me = null
         this.map = null;
         this.keys = {};
-        this.userLookup = {};
-        this.userList = [];
+
+        /** @type {Map.<string, User>} */
+        this.users = new Map();
 
         this._loop = this.loop.bind(this);
         this.lastTime = 0;
@@ -265,17 +266,15 @@ export class Game extends EventTarget {
     }
 
     updateAudioActivity(evt) {
-        const user = this.userLookup[evt.id];
-        if (!!user) {
+        if (this.users.has(evt.id)) {
+            const user = this.users.get(evt.id);
             user.isActive = evt.isActive;
         }
     }
 
     emote(id, emoji) {
-        const user = this.userLookup[id];
-
-        if (!!user) {
-
+        if (this.users.has(id)) {
+            const user = this.users.get(id);
             if (user.isMe) {
 
                 emoji = emoji
@@ -337,13 +336,12 @@ export class Game extends EventTarget {
         //    id: "string", // the id of the participant
         //    displayName: "string" // the display name of the participant
         //};
-        if (this.userLookup[evt.id]) {
+        if (this.users.has(evt.id)) {
             this.removeUser(evt);
         }
 
         const user = new User(evt.id, evt.displayName, false);
-        this.userLookup[evt.id] = user;
-        this.userList.unshift(user);
+        this.users.set(evt.id, user);
         userJoinedEvt.user = user;
         this.dispatchEvent(userJoinedEvt);
     }
@@ -354,8 +352,8 @@ export class Game extends EventTarget {
         //    displayName: string // the new display name
         //};
 
-        const user = this.userLookup[evt.id];
-        if (!!user) {
+        if (this.users.has(evt.id)) {
+            const user = this.users.get(id);
             user.setDisplayName(evt.displayName);
         }
     }
@@ -370,8 +368,8 @@ export class Game extends EventTarget {
 
     muteUserAudio(evt) {
         let mutingUser = this.me;
-        if (!!evt.id) {
-            mutingUser = this.userLookup[evt.id];
+        if (!!evt.id && this.users.has(evt.id)) {
+            mutingUser = this.users.get(evt.id);
         }
 
         if (!mutingUser) {
@@ -385,8 +383,8 @@ export class Game extends EventTarget {
 
     muteUserVideo(evt) {
         let mutingUser = this.me;
-        if (!!evt.id) {
-            mutingUser = this.userLookup[evt.id];
+        if (!!evt.id && this.users.has(evt.id)) {
+            mutingUser = this.users.get(evt.id);
         }
 
         if (!mutingUser) {
@@ -402,14 +400,8 @@ export class Game extends EventTarget {
         //evt = {
         //    id: "string" // the id of the participant
         //};
-        const user = this.userLookup[evt.id];
-        if (!!user) {
-            delete this.userLookup[evt.id];
-
-            const userIndex = this.userList.indexOf(user);
-            if (userIndex >= 0) {
-                this.userList.removeAt(userIndex);
-            }
+        if (this.users.has(evt.id)) {
+            this.users.delete(evt.id);
         }
     }
 
@@ -419,8 +411,8 @@ export class Game extends EventTarget {
         //  avatarURL: string // the new avatar URL.
         //}
         if (!!evt) {
-            const user = this.userLookup[evt.id];
-            if (!!user) {
+            if (this.users.has(evt.id)) {
+                const user = this.users.get(evt.id);
                 user.setAvatarURL(evt.avatarURL);
             }
         }
@@ -433,8 +425,8 @@ export class Game extends EventTarget {
         //  desc: string // a description of the emoji
         //}
         if (!!evt) {
-            const user = this.userLookup[evt.id];
-            if (!!user) {
+            if (this.users.has(evt.id)) {
+                const user = this.users.get(id);
                 user.avatarEmoji = evt;
             }
         }
@@ -450,8 +442,7 @@ export class Game extends EventTarget {
 
         this.currentRoomName = evt.roomName.toLowerCase();
         this.me = new User(evt.id, evt.displayName, true);
-        this.userList.push(this.me);
-        this.userLookup[this.me.id] = this.me;
+        this.users.set(this.me.id, this.me);
 
         this.setAvatarURL(evt);
 
@@ -509,8 +500,7 @@ export class Game extends EventTarget {
     end() {
         this.currentRoomName = null;
         this.map = null;
-        this.userLookup = {};
-        this.userList.clear();
+        this.users.clear();
         this.me = null;
         this.dispatchEvent(gameEndedEvt);
     }
@@ -590,8 +580,8 @@ export class Game extends EventTarget {
 
         this.emotes = this.emotes.filter(e => !e.isDead());
 
-        for (let user of this.userList) {
-            user.update(dt, this.map, this.userList);
+        for (let user of this.users.values()) {
+            user.update(dt, this.map, this.users);
         }
     }
 
@@ -620,7 +610,7 @@ export class Game extends EventTarget {
 
             this.map.draw(this.gFront);
 
-            for (let user of this.userList) {
+            for (let user of this.users.values()) {
                 user.drawShadow(this.gFront, this.map, this.cameraZ);
             }
 
@@ -628,13 +618,13 @@ export class Game extends EventTarget {
                 emote.drawShadow(this.gFront, this.map, this.cameraZ);
             }
 
-            for (let user of this.userList) {
+            for (let user of this.users.values()) {
                 user.drawAvatar(this.gFront, this.map);
             }
 
             this.drawCursor();
 
-            for (let user of this.userList) {
+            for (let user of this.users.values()) {
                 user.drawName(this.gFront, this.map, this.cameraZ, this.fontSize);
             }
 
