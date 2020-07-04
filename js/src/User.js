@@ -3,6 +3,8 @@ import { height, width } from "./html/attrs.js";
 import { Canvas } from "./html/tags.js";
 import { project } from "./math.js";
 import { EmojiAvatar } from "./avatars/EmojiAvatar.js";
+import { PhotoAvatar } from "./avatars/PhotoAvatar.js";
+import { VideoAvatar } from "./avatars/VideoAvatar.js";
 import "./protos.js";
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
@@ -20,6 +22,8 @@ export class User extends EventTarget {
         this.x = 0;
         this.y = 0;
         this.avatarEmoji = (isMe ? randomPerson() : bust);
+        this.avatarImage = null;
+        this.avatarVideo = null;
 
         this.displayName = displayName || id;
         this.audioMuted = false;
@@ -36,8 +40,6 @@ export class User extends EventTarget {
         this.distYToMe = 0;
         this.isMe = isMe;
         this.isActive = false;
-        this.avatarImage = null;
-        this.avatarURL = null;
         this.stackUserCount = 1;
         this.stackIndex = 0;
         this.stackAvatarHeight = 0;
@@ -60,16 +62,32 @@ export class User extends EventTarget {
             = this.y
             = evt.y;
         this.displayName = evt.displayName;
-        this.avatarURL = evt.avatarURL;
-        if (!this.avatarURL && !!this.avatarImage) {
-            this.avatarImage = null;
+
+        if (evt._avatarURL !== null
+            && evt._avatarURL !== undefined) {
+            this.avatarImage = evt._avatarURL;
         }
 
         if (evt._avatarEmoji !== null
             && evt._avatarEmoji !== undefined) {
-            this.avatarEmoji = new EmojiAvatar(evt._avatarEmoji);
+            this.avatarEmoji = evt._avatarEmoji;
         }
         this.isInitialized = true;
+    }
+
+    get avatarImage() {
+        return this._avatarImage;
+    }
+
+    set avatarImage(url) {
+        this._avatarURL = url;
+        if (url === null
+            || url === undefined) {
+            this._avatarImage = null;
+        }
+        else {
+            this._avatarImage = new PhotoAvatar(url);
+        }
     }
 
     get avatarEmoji() {
@@ -77,13 +95,20 @@ export class User extends EventTarget {
     }
 
     set avatarEmoji(emoji) {
-        if (emoji === null) {
+        if (emoji === null
+            || emoji === undefined) {
             this._avatarEmoji = null;
         }
         else {
+            this.avatarImage = null;
             this._avatarEmoji = new EmojiAvatar(emoji);
-            this.setAvatarURL("");
         }
+    }
+
+    get avatar() {
+        return this.avatarVideo
+            || this.avatarImage
+            || this.avatarEmoji;
     }
 
 
@@ -93,31 +118,6 @@ export class User extends EventTarget {
         }
 
         super.addEventListener(evtName, func, opts);
-    }
-
-    setAvatarURL(url) {
-        if (url !== null
-            && url !== undefined) {
-
-            if (url.length === 0) {
-                this.avatarURL = null;
-                this.avatarImage = null;
-            }
-            else {
-                this.avatarURL = url;
-                const img = new Image();
-                img.addEventListener("load", (evt) => {
-                    this.avatarImage = Canvas(
-                        width(img.width),
-                        height(img.height));
-                    const g = this.avatarImage.getContext("2d");
-                    g.clearRect(0, 0, img.width, img.height);
-                    g.imageSmoothingEnabled = false;
-                    g.drawImage(img, 0, 0);
-                });
-                img.src = url;
-            }
-        }
     }
 
     setDisplayName(name) {
@@ -184,7 +184,6 @@ export class User extends EventTarget {
 
             this.stackAvatarWidth = map.tileWidth - (this.stackUserCount - 1) * STACKED_USER_OFFSET_X;
             this.stackAvatarHeight = map.tileHeight - (this.stackUserCount - 1) * STACKED_USER_OFFSET_Y;
-            this.avatarEmoji.update(this.stackAvatarHeight);
             this.stackOffsetX = this.stackIndex * STACKED_USER_OFFSET_X;
             this.stackOffsetY = this.stackIndex * STACKED_USER_OFFSET_Y;
         }
@@ -248,16 +247,8 @@ export class User extends EventTarget {
             this.y * map.tileHeight + this.stackOffsetY);
         g.fillStyle = "black";
         g.textBaseline = "top";
-        if (this.avatarImage) {
-            g.drawImage(
-                this.avatarImage,
-                0, 0,
-                this.stackAvatarWidth,
-                this.stackAvatarHeight);
-        }
-        else if (this.avatarEmoji) {
-            this.avatarEmoji.draw(g);
-        }
+
+        this.avatar.draw(g, this.stackAvatarWidth, this.stackAvatarHeight);
 
         if (this.audioMuted || !this.videoMuted) {
             const height = this.stackAvatarHeight / 2;

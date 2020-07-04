@@ -23,20 +23,19 @@ export class EmojiAvatar extends BaseAvatar {
         return selfs.get(this).canSwim;
     }
 
-    update(stackAvatarHeight) {
-        const self = selfs.get(this);
-        if (stackAvatarHeight != self.height) {
-            self.metrics = null;
-            self.height = stackAvatarHeight;
-        }
-    }
-
-    draw(g) {
+    draw(g, width, height) {
         const self = selfs.get(this);
         g.font = 0.9 * self.height + "px sans-serif";
-        if (!self.metrics) {
+
+        if (height !== self.height) {
+            self.metrics = null;
+            self.height = height;
+        }
+
+        if (self.metrics === null) {
             self.metrics = g.measureText(this.value);
         }
+
         g.fillText(
             this.value,
             (self.metrics.width - self.height) / 2 + self.metrics.actualBoundingBoxLeft,

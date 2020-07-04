@@ -413,7 +413,7 @@ export class Game extends EventTarget {
         if (!!evt) {
             if (this.users.has(evt.id)) {
                 const user = this.users.get(evt.id);
-                user.setAvatarURL(evt.avatarURL);
+                user.avatarImage = evt.avatarURL;
             }
         }
     }

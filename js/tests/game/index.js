@@ -2,11 +2,9 @@
 // be able to test the UI without having to connect to a
 // meeting.
 
-import { MockUser } from "./MockUser.js";
-import { MockJitsiClient as JitsiClient } from "./MockJitsiClient.js";
 import { init } from "../../src/init.js";
-import { Img } from "../../src/html/tags.js";
-import { src, style } from "../../src/html/attrs.js";
+import { MockJitsiClient as JitsiClient } from "./MockJitsiClient.js";
+import { MockUser } from "./MockUser.js";
 
 (async function () {
     const response = await fetch("../../index.html"),
@@ -26,16 +24,10 @@ import { src, style } from "../../src/html/attrs.js";
     let testUsers = null,
         spawnUserTimer = null;
 
-    client.element.append(
-        Img(
-            src("../../screenshot.png"),
-            style({
-                width: "100%"
-            })));
-
     game.addEventListener("gameStarted", () => {
         testUsers = makeUsers();
         client.testUsers = testUsers.slice();
+        game.me.avatarImage = "https://www.seanmcbeth.com/2015-05.min.jpg";
         spawnUserTimer = setTimeout(spawnUsers, 0);
     });
 
