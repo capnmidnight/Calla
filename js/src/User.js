@@ -2,6 +2,7 @@
 import { height, width } from "./html/attrs.js";
 import { Canvas } from "./html/tags.js";
 import { project } from "./math.js";
+import { EmojiAvatar } from "./avatars/EmojiAvatar.js";
 import "./protos.js";
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
@@ -64,7 +65,10 @@ export class User extends EventTarget {
             this.avatarImage = null;
         }
 
-        this.avatarEmoji = evt._avatarEmoji;
+        if (evt._avatarEmoji !== null
+            && evt._avatarEmoji !== undefined) {
+            this.avatarEmoji = new EmojiAvatar(evt._avatarEmoji);
+        }
         this.isInitialized = true;
     }
 
@@ -73,9 +77,11 @@ export class User extends EventTarget {
     }
 
     set avatarEmoji(emoji) {
-        this._avatarEmoji = emoji;
-        this.avatarEmojiMetrics = null;
-        if (!!emoji) {
+        if (emoji === null) {
+            this._avatarEmoji = null;
+        }
+        else {
+            this._avatarEmoji = new EmojiAvatar(emoji);
             this.setAvatarURL("");
         }
     }
@@ -177,11 +183,8 @@ export class User extends EventTarget {
             }
 
             this.stackAvatarWidth = map.tileWidth - (this.stackUserCount - 1) * STACKED_USER_OFFSET_X;
-            const oldHeight = this.stackAvatarHeight;
             this.stackAvatarHeight = map.tileHeight - (this.stackUserCount - 1) * STACKED_USER_OFFSET_Y;
-            if (this.stackAvatarHeight != oldHeight) {
-                this.avatarEmojiMetrics = null;
-            }
+            this.avatarEmoji.update(this.stackAvatarHeight);
             this.stackOffsetX = this.stackIndex * STACKED_USER_OFFSET_X;
             this.stackOffsetY = this.stackIndex * STACKED_USER_OFFSET_Y;
         }
@@ -252,15 +255,8 @@ export class User extends EventTarget {
                 this.stackAvatarWidth,
                 this.stackAvatarHeight);
         }
-        else if(this.avatarEmoji) {
-            g.font = 0.9 * this.stackAvatarHeight + "px sans-serif";
-            if (!this.avatarEmojiMetrics) {
-                this.avatarEmojiMetrics = g.measureText(this.avatarEmoji.value);
-            }
-            g.fillText(
-                this.avatarEmoji.value,
-                (this.avatarEmojiMetrics.width - this.stackAvatarWidth) / 2 + this.avatarEmojiMetrics.actualBoundingBoxLeft,
-                this.avatarEmojiMetrics.actualBoundingBoxAscent);
+        else if (this.avatarEmoji) {
+            this.avatarEmoji.draw(g);
         }
 
         if (this.audioMuted || !this.videoMuted) {
