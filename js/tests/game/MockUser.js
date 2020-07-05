@@ -1,6 +1,7 @@
 ﻿import { allIcons as icons, randomPerson } from "../../src/emoji/emoji.js";
 import { autoPlay, id, loop, src } from "../../src/html/attrs.js";
 import { Audio, Span } from "../../src/html/tags.js";
+import { AvatarMode } from "../../src/avatars/BaseAvatar.js";
 
 export class MockUser {
     constructor(id, x, y, client) {
@@ -12,6 +13,17 @@ export class MockUser {
         this.displayName = id;
         this._avatarEmoji = randomPerson();
         this.emoteEvt = { id, value: null, desc: null };
+    }
+
+    serialize() {
+        return {
+            id: this.id,
+            x: this.x,
+            y: this.y,
+            displayName: this.displayName,
+            avatarMode: AvatarMode.emoji,
+            avatarID: this._avatarEmoji
+        };
     }
 
     schedule() {

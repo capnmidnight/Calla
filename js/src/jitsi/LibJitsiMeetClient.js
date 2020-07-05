@@ -233,6 +233,11 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 if (isLocal) {
                     self[trackKind + "Input"] = track;
                 }
+
+                this.dispatchEvent(Object.assign(new Event(trackKind + "Added"), {
+                    id: userID,
+                    element: elem
+                }));
             });
 
             this.conference.addEventListener(TRACK_REMOVED, (track) => {

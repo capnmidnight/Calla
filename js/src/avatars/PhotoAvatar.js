@@ -33,10 +33,11 @@ export class PhotoAvatar extends BaseAvatar {
 
     draw(g, width, height) {
         if (this.image !== null) {
+            const imageWidth = height * this.image.width / this.image.height;
             g.drawImage(
                 this.image,
-                0, 0,
-                width,
+                (width - imageWidth) / 2, 0,
+                imageWidth,
                 height);
         }
     }

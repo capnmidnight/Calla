@@ -1,17 +1,31 @@
-﻿import { bust, mutedSpeaker, randomPerson, speakerMediumVolume, videoCamera } from "./emoji/emoji.js";
-import { height, width } from "./html/attrs.js";
-import { Canvas } from "./html/tags.js";
+﻿import "./protos.js";
 import { project } from "./math.js";
+import { bust, mutedSpeaker, randomPerson, speakerMediumVolume, videoCamera } from "./emoji/emoji.js";
 import { EmojiAvatar } from "./avatars/EmojiAvatar.js";
 import { PhotoAvatar } from "./avatars/PhotoAvatar.js";
 import { VideoAvatar } from "./avatars/VideoAvatar.js";
-import "./protos.js";
+import { AvatarMode } from "./avatars/BaseAvatar.js";
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
     STACKED_USER_OFFSET_X = 5,
     STACKED_USER_OFFSET_Y = 5,
     MOVE_TRANSITION_TIME = 0.5,
     eventNames = ["userMoved", "userPositionNeeded"];
+
+function resetAvatarMode(self) {
+    if (self.avatarVideo) {
+        self.avatarMode = AvatarMode.video;
+    }
+    else if (self.avatarPhoto) {
+        self.avatarMode = AvatarMode.photo;
+    }
+    else if (self.avatarEmoji) {
+        self.avatarMode = AvatarMode.emoji;
+    }
+    else {
+        self.avatarMode = AvatarMode.none;
+    }
+}
 
 export class User extends EventTarget {
     constructor(id, displayName, isMe) {
@@ -21,6 +35,8 @@ export class User extends EventTarget {
 
         this.x = 0;
         this.y = 0;
+
+        this.avatarMode = AvatarMode.none;
         this.avatarEmoji = (isMe ? randomPerson() : bust);
         this.avatarImage = null;
         this.avatarVideo = null;
@@ -52,7 +68,7 @@ export class User extends EventTarget {
         this.visible = true;
     }
 
-    init(evt) {
+    deserialize(evt) {
         this.sx
             = this.tx
             = this.x
@@ -61,18 +77,39 @@ export class User extends EventTarget {
             = this.ty
             = this.y
             = evt.y;
+
         this.displayName = evt.displayName;
+        this.avatarMode = evt.avatarMode;
+        this.avatarID = evt.avatarID;
 
-        if (evt._avatarURL !== null
-            && evt._avatarURL !== undefined) {
-            this.avatarImage = evt._avatarURL;
-        }
-
-        if (evt._avatarEmoji !== null
-            && evt._avatarEmoji !== undefined) {
-            this.avatarEmoji = evt._avatarEmoji;
-        }
         this.isInitialized = true;
+    }
+
+    serialize() {
+        return {
+            id: this.id,
+            x: this.tx,
+            y: this.ty,
+            displayName: this.displayName,
+            avatarMode: this.avatarMode,
+            avatarID: this.avatarID
+        };
+    }
+
+    get avatarVideo() {
+        return this._avatarVideo;
+    }
+
+    set avatarVideo(video) {
+        if (video === null
+            || video === undefined) {
+            this._avatarVideo = null;
+            resetAvatarMode(this);
+        }
+        else {
+            this.avatarMode = AvatarMode.video;
+            this._avatarVideo = new VideoAvatar(video);
+        }
     }
 
     get avatarImage() {
@@ -84,8 +121,10 @@ export class User extends EventTarget {
         if (url === null
             || url === undefined) {
             this._avatarImage = null;
+            resetAvatarMode(this);
         }
         else {
+            this.avatarMode = AvatarMode.photo;
             this._avatarImage = new PhotoAvatar(url);
         }
     }
@@ -98,19 +137,54 @@ export class User extends EventTarget {
         if (emoji === null
             || emoji === undefined) {
             this._avatarEmoji = null;
+            resetAvatarMode(this);
         }
         else {
-            this.avatarImage = null;
+            this.avatarMode = AvatarMode.emoji;
             this._avatarEmoji = new EmojiAvatar(emoji);
         }
     }
 
     get avatar() {
-        return this.avatarVideo
-            || this.avatarImage
-            || this.avatarEmoji;
+        if (this.avatarMode === AvatarMode.none) {
+            resetAvatarMode(this);
+        }
+
+        switch (this.avatarMode) {
+            case AvatarMode.emoji:
+                return this.avatarEmoji;
+            case AvatarMode.photo:
+                return this.avatarImage;
+            case AvatarMode.video:
+                return this.avatarVideo;
+            default:
+                return null;
+        }
     }
 
+    get avatarID() {
+        switch (this.avatarMode) {
+            case AvatarMode.emoji:
+                return { value: this.avatarEmoji.value, desc: this.avatarEmoji.desc };
+            case AvatarMode.photo:
+                return this.avatarImage.url;
+            default:
+                return null;
+        }
+    }
+
+    set avatarID(id) {
+        switch (this.avatarMode) {
+            case AvatarMode.emoji:
+                this.avatarEmoji = id;
+                break;
+            case AvatarMode.photo:
+                this.avatarImage = id;
+                break;
+            default:
+                break;
+        }
+    }
 
     addEventListener(evtName, func, opts) {
         if (eventNames.indexOf(evtName) === -1) {
@@ -248,7 +322,9 @@ export class User extends EventTarget {
         g.fillStyle = "black";
         g.textBaseline = "top";
 
-        this.avatar.draw(g, this.stackAvatarWidth, this.stackAvatarHeight);
+        if (this.avatar) {
+            this.avatar.draw(g, this.stackAvatarWidth, this.stackAvatarHeight);
+        }
 
         if (this.audioMuted || !this.videoMuted) {
             const height = this.stackAvatarHeight / 2;
@@ -260,7 +336,7 @@ export class User extends EventTarget {
                     this.stackAvatarWidth - metrics.width,
                     0);
             }
-            if (!this.videoMuted) {
+            if (!this.videoMuted && !(this.avatar instanceof VideoAvatar)) {
                 const metrics = g.measureText(videoCamera.value);
                 g.fillText(
                     videoCamera.value,

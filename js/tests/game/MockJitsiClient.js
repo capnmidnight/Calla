@@ -124,7 +124,7 @@ export class MockJitsiClient extends BaseJitsiClient {
         if (toUserID !== this.localUser
             && data.command === "userInitRequest") {
             const user = this.testUsers.filter(u => u.id === toUserID)[0];
-            this.receiveMessageFrom(toUserID, "userInitResponse", user);
+            this.receiveMessageFrom(toUserID, "userInitResponse", user.serialize());
         }
     }
 

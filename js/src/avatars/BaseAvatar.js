@@ -15,3 +15,10 @@
         throw new Error("Not implemented in base class");
     }
 }
+
+export const AvatarMode = Object.freeze({
+    none: null,
+    emoji: "emoji",
+    photo: "photo",
+    video: "video"
+});

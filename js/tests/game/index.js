@@ -5,6 +5,8 @@
 import { init } from "../../src/init.js";
 import { MockJitsiClient as JitsiClient } from "./MockJitsiClient.js";
 import { MockUser } from "./MockUser.js";
+import { Video } from "../../src/html/tags.js";
+import { srcObject, autoPlay } from "../../src/html/attrs.js";
 
 (async function () {
     const response = await fetch("../../index.html"),
@@ -24,11 +26,17 @@ import { MockUser } from "./MockUser.js";
     let testUsers = null,
         spawnUserTimer = null;
 
-    game.addEventListener("gameStarted", () => {
+    game.addEventListener("gameStarted", async () => {
         testUsers = makeUsers();
         client.testUsers = testUsers.slice();
-        game.me.avatarImage = "https://www.seanmcbeth.com/2015-05.min.jpg";
         spawnUserTimer = setTimeout(spawnUsers, 0);
+
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const video = Video(
+            autoPlay,
+            srcObject(stream));
+        client.element.appendChild(video);
+        game.me.avatarVideo = video;
     });
 
     toolbar.addEventListener("leave", () => {

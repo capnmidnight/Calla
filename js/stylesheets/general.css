@@ -16,6 +16,8 @@ body {
     font-family: -apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif;
     font-size: 12pt;
     line-height: 1.5;
+    background-image: url("../starfield.jpg");
+    background-size: cover;
 }
 
 h1 {

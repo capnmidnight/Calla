@@ -405,16 +405,21 @@ export class Game extends EventTarget {
         }
     }
 
+    setAvatarVideo(evt) {
+        if (!!evt && this.users.has(evt.id)) {
+            const user = this.users.get(evt.id);
+            user.avatarVideo = evt.element;
+        }
+    }
+
     setAvatarURL(evt) {
         //evt = {
         //  id: string, // the id of the participant that changed his avatar.
         //  avatarURL: string // the new avatar URL.
         //}
-        if (!!evt) {
-            if (this.users.has(evt.id)) {
-                const user = this.users.get(evt.id);
-                user.avatarImage = evt.avatarURL;
-            }
+        if (!!evt && this.users.has(evt.id)) {
+            const user = this.users.get(evt.id);
+            user.avatarImage = evt.avatarURL;
         }
     }
 
@@ -424,11 +429,9 @@ export class Game extends EventTarget {
         //  value: string // the emoji text to use as the avatar.
         //  desc: string // a description of the emoji
         //}
-        if (!!evt) {
-            if (this.users.has(evt.id)) {
-                const user = this.users.get(id);
-                user.avatarEmoji = evt;
-            }
+        if (!!evt && this.users.has(evt.id)) {
+            const user = this.users.get(id);
+            user.avatarEmoji = evt;
         }
     }
 

@@ -27,6 +27,8 @@ const APP_FINGERPRINT
         "setAvatarEmoji",
         "deviceListChanged",
         "participantRoleChanged",
+        "audioAdded",
+        "videoAdded"
     ];
 
 // Manages communication between Jitsi Meet and Calla
@@ -41,8 +43,8 @@ export class BaseJitsiClient extends EventTarget {
                 position: "absolute",
                 left: 0,
                 top: 0,
-                width: "100%",
-                height: "100%",
+                width: 0,
+                height: 0,
                 margin: 0,
                 padding: 0,
                 overflow: "hidden"

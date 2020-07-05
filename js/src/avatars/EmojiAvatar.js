@@ -8,14 +8,15 @@ export class EmojiAvatar extends BaseAvatar {
         super();
 
         const self = {
-            metrics: null,
             canSwim: isSurfer(emoji),
-            height: 0
+            x: 0,
+            y: 0,
+            aspectRatio: null
         }
 
         this.value = emoji.value;
         this.desc = emoji.desc;
-        
+
         selfs.set(this, self);
     }
 
@@ -25,20 +26,30 @@ export class EmojiAvatar extends BaseAvatar {
 
     draw(g, width, height) {
         const self = selfs.get(this);
-        g.font = 0.9 * self.height + "px sans-serif";
 
-        if (height !== self.height) {
-            self.metrics = null;
-            self.height = height;
+        if (self.aspectRatio === null) {
+            const oldFont = g.font;
+            const size = 100;
+            g.font = size + "px sans-serif";
+            const metrics = g.measureText(this.value);
+            console.log(this.value, metrics);
+            self.aspectRatio = metrics.width / size;
+            self.x = (size - metrics.width) / 2;
+            self.y = metrics.actualBoundingBoxAscent / 2;
+
+            self.x /= size;
+            self.y /= size;
+
+            g.font = oldFont;
         }
 
-        if (self.metrics === null) {
-            self.metrics = g.measureText(this.value);
-        }
+        if (self.aspectRatio !== null) {
+            const fontHeight = self.aspectRatio <= 1
+                ? height
+                : width / self.aspectRatio;
 
-        g.fillText(
-            this.value,
-            (self.metrics.width - self.height) / 2 + self.metrics.actualBoundingBoxLeft,
-            self.metrics.actualBoundingBoxAscent);
+            g.font = fontHeight + "px sans-serif";
+            g.fillText(this.value, self.x * fontHeight, self.y * fontHeight);
+        }
     }
 }

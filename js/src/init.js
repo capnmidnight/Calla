@@ -279,6 +279,9 @@ export function init(host, client) {
         participantJoined: (evt) => {
             game.addUser(evt);
         },
+        videoAdded: (evt) => {
+            game.setAvatarVideo(evt);
+        },
         participantLeft: (evt) => {
             game.removeUser(evt);
             client.removeUser(evt);
@@ -315,7 +318,7 @@ export function init(host, client) {
         },
         userInitRequest: (evt) => {
             if (game.me && game.me.id) {
-                client.userInitResponse(evt.id, game.me);
+                client.userInitResponse(evt.id, game.me.serialize());
             }
             else {
                 console.log("Local user not initialized");
@@ -324,7 +327,7 @@ export function init(host, client) {
         userInitResponse: (evt) => {
             if (game.users.has(evt.id)) {
                 const user = game.users.get(evt.id);
-                user.init(evt);
+                user.deserialize(evt);
                 client.setUserPosition(evt);
             }
         },
