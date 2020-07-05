@@ -353,7 +353,7 @@ export class Game extends EventTarget {
         //};
 
         if (this.users.has(evt.id)) {
-            const user = this.users.get(id);
+            const user = this.users.get(evt.id);
             user.setDisplayName(evt.displayName);
         }
     }
