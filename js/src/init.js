@@ -142,7 +142,7 @@ export function init(host, client) {
             open(url);
         },
         leave: () => {
-            game.end();
+            client.leave();
         },
         toggleUI: () => {
             game.setOpen(toolbar.visible);

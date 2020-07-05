@@ -183,6 +183,7 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     dispose() {
+        this.leave();
     }
 
     /**
@@ -194,6 +195,12 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     async leaveAsync() {
+        const leaveTask = this.once("videoConferenceLeft", 5000);
+        this.leave();
+        await leaveTask;
+    }
+
+    leave() {
         throw new Error("Not implemented in base class");
     }
 

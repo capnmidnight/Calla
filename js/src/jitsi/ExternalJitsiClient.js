@@ -17,6 +17,7 @@ export class ExternalJitsiClient extends BaseJitsiClient {
     }
 
     dispose() {
+        super.dispose();
         if (this.api !== null) {
             this.api.dispose();
             this.api = null;
@@ -105,10 +106,8 @@ export class ExternalJitsiClient extends BaseJitsiClient {
         this.api.executeCommand("displayName", userName);
     }
 
-    async leaveAsync() {
-        const leaveTask = this.once("videoConferenceLeft", 5000);
+    leave() {
         this.api.executeCommand("hangup");
-        await leaveTask;
     }
 
     async getAudioOutputDevicesAsync() {

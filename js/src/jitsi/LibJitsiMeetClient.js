@@ -252,10 +252,6 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 this.rxGameData({ user, data });
             });
 
-            window.addEventListener("unload", () => {
-                this.leaveAsync();
-            });
-
             this.conference.join();
         };
 
@@ -291,11 +287,9 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         }
     }
 
-    async leaveAsync() {
+    leave() {
         if (!!this.conference) {
-            const leaveTask = this.once("videoConferenceLeft", 5000);
             this.conference.leave();
-            await leaveTask;
         }
     }
 
