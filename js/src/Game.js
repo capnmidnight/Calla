@@ -347,18 +347,6 @@ export class Game extends EventTarget {
         this.dispatchEvent(userJoinedEvt);
     }
 
-    changeUserName(evt) {
-        //evt = {
-        //    id: string, // the id of the participant that changed his display name
-        //    displayName: string // the new display name
-        //};
-
-        if (this.users.has(evt.id)) {
-            const user = this.users.get(evt.id);
-            user.setDisplayName(evt.displayName);
-        }
-    }
-
     toggleMyAudio() {
         this.dispatchEvent(toggleAudioEvt);
     }
@@ -397,20 +385,49 @@ export class Game extends EventTarget {
         }
     }
 
+    withUser(id, callback, timeout) {
+        if (timeout === undefined) {
+            timeout = 5000;
+        } 
+        if (!!id) {
+            if (this.users.has(id)) {
+                const user = this.users.get(id)
+                callback(user);
+            }
+            else {
+                console.log("No user, trying again in a quarter second");
+                if (timeout > 0) {
+                    setTimeout(() => {
+                        this.withUser(id, callback, timeout - 250);
+                    }, 250);
+                }
+            }
+        }
+    }
+
+    changeUserName(evt) {
+        //evt = {
+        //    id: string, // the id of the participant that changed his display name
+        //    displayName: string // the new display name
+        //};
+        this.withUser(evt && evt.id, (user) => {
+            user.setDisplayName(evt.displayName);
+        });
+    }
+
     removeUser(evt) {
         //evt = {
         //    id: "string" // the id of the participant
         //};
-        if (this.users.has(evt.id)) {
-            this.users.delete(evt.id);
-        }
+        this.withUser(evt && evt.id, (user) => {
+            this.users.delete(user.id);
+        });
     }
 
     setAvatarVideo(evt) {
-        if (!!evt && this.users.has(evt.id)) {
-            const user = this.users.get(evt.id);
+        this.withUser(evt && evt.id, (user) => {
             user.avatarVideo = evt.element;
-        }
+        });
     }
 
     setAvatarURL(evt) {
@@ -418,10 +435,9 @@ export class Game extends EventTarget {
         //  id: string, // the id of the participant that changed his avatar.
         //  avatarURL: string // the new avatar URL.
         //}
-        if (!!evt && this.users.has(evt.id)) {
-            const user = this.users.get(evt.id);
+        this.withUser(evt && evt.id, (user) => {
             user.avatarImage = evt.avatarURL;
-        }
+        });
     }
 
     setAvatarEmoji(evt) {
@@ -430,10 +446,9 @@ export class Game extends EventTarget {
         //  value: string // the emoji text to use as the avatar.
         //  desc: string // a description of the emoji
         //}
-        if (!!evt && this.users.has(evt.id)) {
-            const user = this.users.get(id);
+        this.withUser(evt && evt.id, (user) => {
             user.avatarEmoji = evt;
-        }
+        });
     }
 
     async start(evt) {

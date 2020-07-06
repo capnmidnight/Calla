@@ -28,7 +28,9 @@ const APP_FINGERPRINT
         "deviceListChanged",
         "participantRoleChanged",
         "audioAdded",
-        "videoAdded"
+        "videoAdded",
+        "audioRemoved",
+        "videoRemoved"
     ];
 
 // Manages communication between Jitsi Meet and Calla

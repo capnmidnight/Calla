@@ -250,7 +250,8 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 console.log("REMOVE TRACK", track);
 
                 if (self.trackElements.has(track)) {
-                    const element = self.trackElements.get(track),
+                    const userID = track.getParticipantId(),
+                        element = self.trackElements.get(track),
                         container = element.parentElement,
                         trackKind = track.getType(),
                         field = trackKind + "Input";
@@ -264,6 +265,10 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                     if (self[field] === track) {
                         self[field] = null;
                     }
+
+                    this.dispatchEvent(Object.assign(new Event(trackKind + "Removed"), {
+                        id: userID
+                    }));
                 }
             });
 

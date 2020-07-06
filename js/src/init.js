@@ -281,6 +281,9 @@ export function init(host, client) {
         videoAdded: (evt) => {
             game.setAvatarVideo(evt);
         },
+        videoRemoved: (evt) => {
+            game.setAvatarVideo(evt);
+        },
         participantLeft: (evt) => {
             game.removeUser(evt);
             client.removeUser(evt);
