@@ -38,13 +38,18 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         super();
         const self = Object.seal({
             connection: null,
-            room: null,
+            conference: null,
+
+            /** @type {HTMLAudioElement} */
             audioInput: null,
+
+            /** @type {HTMLVideoElement} */
             videoInput: null,
-            trackContainers: new Map()
+
+            /** @type {Map.<MediaStreamTrack, Element>} */
+            trackElements: new Map()
         });
-        this._connection = { value: null };
-        this._room = { value: null };
+
         this.audioClient = new AudioClient();
         this.audioClient.addEventListener("audioActivity", (evt) => {
             audioActivityEvt.id = evt.id;
@@ -66,11 +71,11 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     get conference() {
-        return selfs.get(this).room;
+        return selfs.get(this).conference;
     }
 
     set conference(value) {
-        return selfs.get(this).room = value;
+        return selfs.get(this).conference = value;
     }
 
     async initializeAsync(host, roomName, userName) {
@@ -224,12 +229,12 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 elem = tag(trackType,
                     id(trackElementID),
                     autoPlay,
-                    srcObject(track.stream),
-                    muted(isLocal));
+                    muted,
+                    srcObject(track.stream));
 
                 container.appendChild(elem);
 
-                self.trackContainers.set(track, container);
+                self.trackElements.set(track, elem);
                 if (isLocal) {
                     self[trackKind + "Input"] = track;
                 }
@@ -241,11 +246,25 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             });
 
             this.conference.addEventListener(TRACK_REMOVED, (track) => {
-                const container = self.trackContainers.get(track),
-                    trackKind = track.getType();
-                this.element.removeChild(container);
-                self.trackContainers.delete(track);
-                self[trackKind + "Input"] = null;
+
+                console.log("REMOVE TRACK", track);
+
+                if (self.trackElements.has(track)) {
+                    const element = self.trackElements.get(track),
+                        container = element.parentElement,
+                        trackKind = track.getType(),
+                        field = trackKind + "Input";
+
+                    container.removeChild(element);
+                    if (container.childElementCount === 0) {
+                        this.element.removeChild(container);
+                    }
+                    self.trackElements.delete(track);
+
+                    if (self[field] === track) {
+                        self[field] = null;
+                    }
+                }
             });
 
             this.conference.addEventListener(ENDPOINT_MESSAGE_RECEIVED, (user, data) => {
@@ -288,8 +307,11 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     leave() {
-        if (!!this.conference) {
-            this.conference.leave();
+        if (this.conference) {
+            const leaveTask = this.conference.leave();
+            leaveTask
+                .then(() => this.connection.disconnect());
+            return leaveTask;
         }
     }
 

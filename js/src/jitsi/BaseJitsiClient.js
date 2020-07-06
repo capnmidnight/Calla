@@ -199,7 +199,10 @@ export class BaseJitsiClient extends EventTarget {
 
     async leaveAsync() {
         const leaveTask = this.once("videoConferenceLeft", 5000);
-        this.leave();
+        const maybeLeaveTask = this.leave();
+        if (maybeLeaveTask instanceof Promise) {
+            console.trace("Leaving", await maybeLeaveTask);
+        }
         return await leaveTask;
     }
 
