@@ -78,4 +78,6 @@ export async function RunTest(JitsiClient) {
 
 
     cons.run();
+
+    document.body.style.backgroundImage = "none";
 }

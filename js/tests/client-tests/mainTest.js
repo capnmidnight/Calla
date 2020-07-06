@@ -168,8 +168,6 @@ export class JitsiClient1_Tests extends TestBase {
         await this.waitForJoin();
     }
 
-
-    //*
     async test_140_initUser() {
         await this.initUsers();
     }
@@ -232,5 +230,4 @@ export class JitsiClient1_Tests extends TestBase {
         const evt = await this.client.leaveAsync();
         this.isEqualTo(evt.roomName, TEST_ROOM_NAME, "Room Name");
     }
-    //*/
 }

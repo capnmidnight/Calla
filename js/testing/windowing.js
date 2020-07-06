@@ -14,10 +14,6 @@ export function openSideTest() {
     openWindow(loc.href, width, 0, width, height);
 }
 
-export function openTestWindow(href) {
-    openWindow(href, 0, 0, window.screen.availWidth / 2, window.screen.availHeight);
-}
-
 window.addEventListener("unload", () => {
     for (let w of windows) {
         w.close();

@@ -177,7 +177,10 @@ export class BaseJitsiClient extends EventTarget {
 
         const joinInfo = await joinTask;
 
-        this.setDisplayName(userName);
+        if (joinInfo.displayName !== userName) {
+            joinInfo.displayName = userName;
+            this.setDisplayName(userName);
+        }
 
         return joinInfo;
     }
@@ -197,7 +200,7 @@ export class BaseJitsiClient extends EventTarget {
     async leaveAsync() {
         const leaveTask = this.once("videoConferenceLeft", 5000);
         this.leave();
-        await leaveTask;
+        return await leaveTask;
     }
 
     leave() {

@@ -24,6 +24,12 @@ export class ExternalJitsiClient extends BaseJitsiClient {
         }
     }
 
+    /**
+     * 
+     * @param {string} host
+     * @param {string} roomName
+     * @param {string} userName
+     */
     async initializeAsync(host, roomName, userName) {
         await import(`https://${host}/libs/external_api.min.js`);
         return new Promise((resolve) => {
@@ -107,7 +113,9 @@ export class ExternalJitsiClient extends BaseJitsiClient {
     }
 
     leave() {
-        this.api.executeCommand("hangup");
+        if (this.api !== null) {
+            this.api.executeCommand("hangup");
+        }
     }
 
     async getAudioOutputDevicesAsync() {

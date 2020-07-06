@@ -1,5 +1,4 @@
 ﻿// TODO
-// use gamepad manager
 // provide gamepad axis binding selector
 
 import { EmojiForm } from "./forms/EmojiForm.js";

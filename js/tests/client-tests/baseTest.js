@@ -19,12 +19,12 @@ export class TestBase extends TestCase {
     async joinChannel() {
         const testUserName = "TestUser" + userNumber,
             evt = await this.client.joinAsync(
-            "jitsi.calla.chat",
-            TEST_ROOM_NAME,
-            testUserName);
-        this.isEqualTo(evt.id, this.client.localUser, "UserID");
-        this.isEqualTo(evt.displayName, testUserName, "UserName");
+                "jitsi.calla.chat",
+                TEST_ROOM_NAME,
+                testUserName);
+        this.isEqualTo(evt.displayName, testUserName);
         this.isEqualTo(evt.roomName, TEST_ROOM_NAME, "RoomName");
+        this.isEqualTo(evt.id, this.client.localUser, "UserID");
     }
 
     async waitForJoin() {
@@ -134,6 +134,7 @@ export class TestBase extends TestCase {
 
     async sendPosition() {
         await wait(1000);
+        this.client.startAudio();
         const x = ((userNumber - 1) * 2 - 1) * 5;
         this.client.setLocalPosition({ x, y: 0 });
         this.success();

@@ -238,19 +238,21 @@ EventTarget.prototype.until = function (untilEvt, callback, test, repeatTimeout,
 
         this.addEventListener(untilEvt, success);
 
-        if (cancelTimeout !== undefined) {
-            canceller = setTimeout(() => {
-                cleanup();
-                reject("timeout");
-            }, cancelTimeout);
-        }
+        if (repeatTimeout !== undefined) {
+            if (cancelTimeout !== undefined) {
+                canceller = setTimeout(() => {
+                    cleanup();
+                    reject("timeout");
+                }, cancelTimeout);
+            }
 
-        function repeater() {
-            callback();
-            timer = setTimeout(repeater, repeatTimeout);
-        }
+            function repeater() {
+                callback();
+                timer = setTimeout(repeater, repeatTimeout);
+            }
 
-        timer = setTimeout(repeater, 0);
+            timer = setTimeout(repeater, 0);
+        }
     });
 };
 
