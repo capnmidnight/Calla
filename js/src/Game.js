@@ -85,6 +85,7 @@ export class Game extends EventTarget {
             gpButtonToggleAudio: 1
         };
 
+        this.lastGamepadIndex = -1;
         this.gamepadIndex = -1;
 
 
@@ -539,7 +540,7 @@ export class Game extends EventTarget {
                     this.emote(this.me.id, this.currentEmoji);
                 }
 
-                if (!lastPad.buttons[this.inputBinding.gpButtonToggleAudio].pressed
+                if (!pad.lastButtons[this.inputBinding.gpButtonToggleAudio].pressed
                     && pad.buttons[this.inputBinding.gpButtonToggleAudio].pressed) {
                     this.toggleMyAudio();
                 }

@@ -5,10 +5,12 @@ const gamepadConnectedEvt = Object.assign(new Event("gamepadconnected"), {
 }),
     gamepadDisconnectedEvt = Object.assign(new Event("gamepaddisconnected"), {
         gamepad: null
-    }),
+    });
 
-    gamepads = new Map(),
-    anyButtonDownEvt = Object.assign(new Event("gamepadbuttondown"), { button: -1 }),
+/** @type {Map.<string, EventedGamepad>} */
+const gamepads = new Map();
+
+const anyButtonDownEvt = Object.assign(new Event("gamepadbuttondown"), { button: -1 }),
     anyButtonUpEvt = Object.assign(new Event("gamepadbuttonup"), { button: -1 }),
     anyAxisMaxedEvt = Object.assign(new Event("gamepadaxismaxed"), { axis: -1 });
 
@@ -30,8 +32,8 @@ class GamepadStateManager extends EventTarget {
             anyAxisMaxedEvt.axis = evt.axis;
             this.dispatchEvent(anyAxisMaxedEvt);
         };
-
-        window.addEventListener("gamepadconnected", (evt) => {
+        
+        window.addEventListener("gamepadconnected", (/** @type {GamepadEvent} */ evt) => {
             const pad = evt.gamepad,
                 gamepad = new EventedGamepad(pad);
             gamepad.addEventListener("gamepadbuttondown", onAnyButtonDown);
@@ -57,14 +59,21 @@ class GamepadStateManager extends EventTarget {
         Object.freeze(this);
     }
 
+    /** @type {string[]} */
     get gamepadIDs() {
         return [...gamepads.keys()];
     }
 
+    /** @type {EventedGamepad[]} */
     get gamepads() {
         return [...gamepads.values()];
     }
 
+    /**
+     * 
+     * @param {string} id
+     * @returns {EventedGamepad}
+     */
     get(id) {
         return gamepads.get(id);
     }
@@ -80,7 +89,7 @@ function update() {
         if (pad !== null
             && gamepads.has(pad.id)) {
             const gamepad = gamepads.get(pad.id);
-            gamepad.update(pad);
+            gamepad._update(pad);
         }
     }
 }

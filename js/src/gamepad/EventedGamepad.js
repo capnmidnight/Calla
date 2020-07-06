@@ -23,6 +23,7 @@ export class EventedGamepad extends EventTarget {
             sticks: []
         };
 
+        this.lastButtons = [];
         this.buttons = [];
         this.axes = [];
         this.hapticActuators = [];
@@ -40,6 +41,7 @@ export class EventedGamepad extends EventTarget {
             });
             self.btnState[b] = false;
 
+            this.lastButtons[b] = null;
             this.buttons[b] = pad.buttons[b];
         }
 
@@ -90,22 +92,22 @@ export class EventedGamepad extends EventTarget {
                     : self.btnUpEvts)[b]);
             }
 
+            this.lastButtons[b] = this.buttons[b];
             this.buttons[b] = pad.buttons[b];
         }
 
         for (let a = 0; a < pad.axes.length; ++a) {
             const wasMaxed = self.axisMaxed[a],
-                maxed = pad.axes[a] >= this.axisThresholdMax,
-                mined = pad.axes[a] <= this.axisThresholdMin;
+                val = pad.axes[a],
+                dir = Math.sign(val),
+                mag = Math.abs(val),
+                maxed = mag >= this.axisThresholdMax,
+                mined = mag <= this.axisThresholdMin;
             if (maxed && !wasMaxed) {
                 this.dispatchEvent(self.axisMaxEvts[a]);
             }
 
-            this.axes[a] = maxed
-                ? 1
-                : (mined
-                    ? 0
-                    : pads.axes[a]);
+            this.axes[a] = dir * (maxed ? 1 : (mined ? 0 : mag));
         }
 
         for (let a = 0; a < this.axes.length - 1; a += 2) {
