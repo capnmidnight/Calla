@@ -11,6 +11,14 @@ export class Emoji {
         this.value = value;
         this.desc = desc;
     }
+
+    /**
+     *
+     * @param {(Emoji|EmojiGroup)} e
+     */
+    contains(e) {
+        return this.value.indexOf(e.value) >= 0;
+    }
 }
 
 function e(v, d) {
@@ -24,34 +32,58 @@ export class EmojiGroup extends Emoji {
      * @param {string} desc - an English text description of the pictogram.
      * @param {(Emoji|EmojiGroup)[]} rest - Emojis in this group.
      */
-    constructor(value, desc, ...rest) {
-        super(value, desc);
+    constructor(...rest) {
+        const first = rest.splice(0, 1)[0];
+        super(first.value, first.desc);
         /** @type {(Emoji|EmojiGroup)[]} */
         this.alts = rest;
         /** @type {string} */
         this.width = null;
     }
 
+    /**
+     * @returns {(Emoji|EmojiGroup)}
+     */
     random() {
         return this.alts.random();
     }
+
+    /**
+     * 
+     * @param {(Emoji|EmojiGroup)} e
+     */
+    contains(e) {
+        return super.contains(e)
+            || this.alts.reduce((a, b) => a || b.contains(e), false);
+    }
 }
 
-function g(v, d, ...r) {
-    return new EmojiGroup(v, d, ...r);
+function g(...r) {
+    return new EmojiGroup(...r);
 }
 
-const female = e("\u{200D}\u{2640}\u{FE0F}", "Female");
-const male = e("\u{200D}\u{2642}\u{FE0F}", "Male");
-export const sex = [
+export const textStyle = e("\u{FE0E}", "Variation Selector-15: text style");
+export const emojiStyle = e("\u{FE0F}", "Variation Selector-16: emoji style");
+export const zeroWidthJoiner = e("\u{200D}", "Zero Width Joiner");
+export const combiningClosingKeycap = e("\u{20E3}", "Combining Enclosing Keycap");
+export const combiners = [
+    textStyle,
+    emojiStyle,
+    zeroWidthJoiner,
+    combiningClosingKeycap,
+];
+
+export const female = e("\u{2640}\u{FE0F}", "Female");
+export const male = e("\u{2642}\u{FE0F}", "Male");
+export const sexes = [
     female,
     male,
 ];
-const skinL = e("\u{1F3FB}", "Light Skin Tone");
-const skinML = e("\u{1F3FC}", "Medium-Light Skin Tone");
-const skinM = e("\u{1F3FD}", "Medium Skin Tone");
-const skinMD = e("\u{1F3FE}", "Medium-Dark Skin Tone");
-const skinD = e("\u{1F3FF}", "Dark Skin Tone");
+export const skinL = e("\u{1F3FB}", "Light Skin Tone");
+export const skinML = e("\u{1F3FC}", "Medium-Light Skin Tone");
+export const skinM = e("\u{1F3FD}", "Medium Skin Tone");
+export const skinMD = e("\u{1F3FE}", "Medium-Dark Skin Tone");
+export const skinD = e("\u{1F3FF}", "Dark Skin Tone");
 export const skinTones = [
     skinL,
     skinML,
@@ -59,2110 +91,400 @@ export const skinTones = [
     skinMD,
     skinD,
 ];
+export const hairRed = e("\u{1F9B0}", "Red Hair");
+export const hairCurly = e("\u{1F9B1}", "Curly Hair");
+export const hairWhite = e("\u{1F9B3}", "White Hair");
+export const hairBald = e("\u{1F9B2}", "Bald");
 export const hairColors = [
-    e("\u{1F9B0}", "Red Hair"),
-    e("\u{1F9B1}", "Curly Hair"),
-    e("\u{1F9B3}", "White Hair"),
-    e("\u{1F9B2}", "Bald"),
+    hairRed,
+    hairCurly,
+    hairWhite,
+    hairBald,
 ];
 
 function combo(a, b) {
     if (a instanceof Array) {
         return a.map(c => combo(c, b));
     }
+    else if (a instanceof EmojiGroup) {
+        return g(
+            combo(e(a.value, a.desc), b),
+            ...combo(a.alts, b));
+    }
+    else if (b instanceof Array) {
+        return b.map(c => combo(a, c));
+    }
     else {
-        return b.map(t => e(a.value + t.value, a.desc + ": " + t.desc));
+        return e(a.value + b.value, a.desc + ": " + b.desc);
+    }
+}
+
+function join(a, b) {
+    if (a instanceof Array) {
+        return a.map(c => join(c, b));
+    }
+    else if (a instanceof EmojiGroup) {
+        return g(
+            join(e(a.value, a.desc), b),
+            ...join(a.alts, b));
+    }
+    else if (b instanceof Array) {
+        return b.map(c => join(a, c));
+    }
+    else {
+        return e(a.value + zeroWidthJoiner.value + b.value, a.desc + ": " + b.desc);
     }
 }
 
 /**
- * Check to see if a given Emoji is part of a specific EmojiGroup
- * @param {EmojiGroup} group
- * @param {Emoji} emoji
- */
-export function isInSet(group, emoji) {
-    return group.value === emoji
-        || group.alts && group.alts.findIndex(e => e.value === emoji) >= 0;
-}
-
-/**
  * Check to see if a given Emoji walks on water.
- * @param {Emoji} emoji
+ * @param {Emoji} e
  */
-export function isSurfer(emoji) {
-    return isInSet(personSurfing, emoji)
-        || isInSet(manSurfing, emoji)
-        || isInSet(womanSurfing, emoji)
-        || isInSet(personRowing, emoji)
-        || isInSet(manRowing, emoji)
-        || isInSet(womanRowing, emoji)
-        || isInSet(personSwimming, emoji)
-        || isInSet(manSwimming, emoji)
-        || isInSet(womanSwimming, emoji);
+export function isSurfer(e) {
+    return surfers.contains(e)
+        || rowers.contains(e)
+        || swimmers.contains(e);
 }
 
+function skin(v, d, ...rest) {
+    const person = e(v, d),
+        light = combo(person, skinL),
+        mediumLight = combo(person, skinML),
+        medium = combo(person, skinM),
+        mediumDark = combo(person, skinMD),
+        dark = combo(person, skinD);
+    return Object.assign(
+        g(person, person, light, mediumLight, medium, mediumDark, dark, ...rest), {
+        default: person,
+        light,
+        mediumLight,
+        medium,
+        mediumDark,
+        dark
+    });
+}
 
+function sex(person) {
+    const man = join(person, male),
+        woman = join(person, female);
 
-export const personSurfingLightSkinTone = e("\u{1F3C4}\u{1F3FB}", "person surfing: light skin tone");
-export const personSurfingMediumLightSkinTone = e("\u{1F3C4}\u{1F3FC}", "person surfing: medium-light skin tone");
-export const personSurfingMediumSkinTone = e("\u{1F3C4}\u{1F3FD}", "person surfing: medium skin tone");
-export const personSurfingMediumDarkSkinTone = e("\u{1F3C4}\u{1F3FE}", "person surfing: medium-dark skin tone");
-export const personSurfingDarkSkinTone = e("\u{1F3C4}\u{1F3FF}", "person surfing: dark skin tone");
-export const personSurfing = g(
-    "\u{1F3C4}", "person surfing",
-    personSurfingLightSkinTone,
-    personSurfingMediumLightSkinTone,
-    personSurfingMediumSkinTone,
-    personSurfingMediumDarkSkinTone,
-    personSurfingDarkSkinTone);
-export const manSurfing = g(
-    "\u{1F3C4}\u{200D}\u{2642}\u{FE0F}", "man surfing",
-    e("\u{1F3C4}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man surfing: light skin tone"),
-    e("\u{1F3C4}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man surfing: medium-light skin tone"),
-    e("\u{1F3C4}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man surfing: medium skin tone"),
-    e("\u{1F3C4}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man surfing: medium-dark skin tone"),
-    e("\u{1F3C4}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man surfing: dark skin tone"));
-export const womanSurfing = g(
-    "\u{1F3C4}\u{200D}\u{2640}\u{FE0F}", "woman surfing",
-    e("\u{1F3C4}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman surfing: light skin tone"),
-    e("\u{1F3C4}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman surfing: medium-light skin tone"),
-    e("\u{1F3C4}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman surfing: medium skin tone"),
-    e("\u{1F3C4}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman surfing: medium-dark skin tone"),
-    e("\u{1F3C4}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman surfing: dark skin tone"));
-export const personRowing = g(
-    "\u{1F6A3}", "person rowing boat",
-    e("\u{1F6A3}\u{1F3FB}", "person rowing boat: light skin tone"),
-    e("\u{1F6A3}\u{1F3FC}", "person rowing boat: medium-light skin tone"),
-    e("\u{1F6A3}\u{1F3FD}", "person rowing boat: medium skin tone"),
-    e("\u{1F6A3}\u{1F3FE}", "person rowing boat: medium-dark skin tone"),
-    e("\u{1F6A3}\u{1F3FF}", "person rowing boat: dark skin tone"));
-export const manRowing = g(
-    "\u{1F6A3}\u{200D}\u{2642}\u{FE0F}", "man rowing boat",
-    e("\u{1F6A3}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man rowing boat: light skin tone"),
-    e("\u{1F6A3}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man rowing boat: medium-light skin tone"),
-    e("\u{1F6A3}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man rowing boat: medium skin tone"),
-    e("\u{1F6A3}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man rowing boat: medium-dark skin tone"),
-    e("\u{1F6A3}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man rowing boat: dark skin tone"));
-export const womanRowing = g(
-    "\u{1F6A3}\u{200D}\u{2640}\u{FE0F}", "woman rowing boat",
-    e("\u{1F6A3}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman rowing boat: light skin tone"),
-    e("\u{1F6A3}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman rowing boat: medium-light skin tone"),
-    e("\u{1F6A3}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman rowing boat: medium skin tone"),
-    e("\u{1F6A3}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman rowing boat: medium-dark skin tone"),
-    e("\u{1F6A3}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman rowing boat: dark skin tone"));
-export const personSwimming = g(
-    "\u{1F3CA}", "person swimming",
-    e("\u{1F3CA}\u{1F3FB}", "person swimming: light skin tone"),
-    e("\u{1F3CA}\u{1F3FC}", "person swimming: medium-light skin tone"),
-    e("\u{1F3CA}\u{1F3FD}", "person swimming: medium skin tone"),
-    e("\u{1F3CA}\u{1F3FE}", "person swimming: medium-dark skin tone"),
-    e("\u{1F3CA}\u{1F3FF}", "person swimming: dark skin tone"));
-export const manSwimming = g(
-    "\u{1F3CA}\u{200D}\u{2642}\u{FE0F}", "man swimming",
-    e("\u{1F3CA}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man swimming: light skin tone"),
-    e("\u{1F3CA}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man swimming: medium-light skin tone"),
-    e("\u{1F3CA}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man swimming: medium skin tone"),
-    e("\u{1F3CA}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man swimming: medium-dark skin tone"),
-    e("\u{1F3CA}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man swimming: dark skin tone"));
-export const womanSwimming = g(
-    "\u{1F3CA}\u{200D}\u{2640}\u{FE0F}", "woman swimming",
-    e("\u{1F3CA}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman swimming: light skin tone"),
-    e("\u{1F3CA}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman swimming: medium-light skin tone"),
-    e("\u{1F3CA}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman swimming: medium skin tone"),
-    e("\u{1F3CA}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman swimming: medium-dark skin tone"),
-    e("\u{1F3CA}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman swimming: dark skin tone"));
-export const personFrowning = g(
-    "\u{1F64D}", "person frowning",
-    e("\u{1F64D}\u{1F3FB}", "person frowning: light skin tone"),
-    e("\u{1F64D}\u{1F3FC}", "person frowning: medium-light skin tone"),
-    e("\u{1F64D}\u{1F3FD}", "person frowning: medium skin tone"),
-    e("\u{1F64D}\u{1F3FE}", "person frowning: medium-dark skin tone"),
-    e("\u{1F64D}\u{1F3FF}", "person frowning: dark skin tone"));
-export const manFrowning = g(
-    "\u{1F64D}\u{200D}\u{2642}\u{FE0F}", "man frowning",
-    e("\u{1F64D}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man frowning: light skin tone"),
-    e("\u{1F64D}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man frowning: medium-light skin tone"),
-    e("\u{1F64D}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man frowning: medium skin tone"),
-    e("\u{1F64D}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man frowning: medium-dark skin tone"),
-    e("\u{1F64D}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man frowning: dark skin tone"));
-export const womanFrowning = g(
-    "\u{1F64D}\u{200D}\u{2640}\u{FE0F}", "woman frowning",
-    e("\u{1F64D}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman frowning: light skin tone"),
-    e("\u{1F64D}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman frowning: medium-light skin tone"),
-    e("\u{1F64D}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman frowning: medium skin tone"),
-    e("\u{1F64D}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman frowning: medium-dark skin tone"),
-    e("\u{1F64D}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman frowning: dark skin tone"));
-export const personPouting = g(
-    "\u{1F64E}", "person pouting",
-    e("\u{1F64E}\u{1F3FB}", "person pouting: light skin tone"),
-    e("\u{1F64E}\u{1F3FC}", "person pouting: medium-light skin tone"),
-    e("\u{1F64E}\u{1F3FD}", "person pouting: medium skin tone"),
-    e("\u{1F64E}\u{1F3FE}", "person pouting: medium-dark skin tone"),
-    e("\u{1F64E}\u{1F3FF}", "person pouting: dark skin tone"));
-export const manPouting = g(
-    "\u{1F64E}\u{200D}\u{2642}\u{FE0F}", "man pouting",
-    e("\u{1F64E}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man pouting: light skin tone"),
-    e("\u{1F64E}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man pouting: medium-light skin tone"),
-    e("\u{1F64E}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man pouting: medium skin tone"),
-    e("\u{1F64E}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man pouting: medium-dark skin tone"),
-    e("\u{1F64E}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man pouting: dark skin tone"));
-export const womanPouting = g(
-    "\u{1F64E}\u{200D}\u{2640}\u{FE0F}", "woman pouting",
-    e("\u{1F64E}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman pouting: light skin tone"),
-    e("\u{1F64E}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman pouting: medium-light skin tone"),
-    e("\u{1F64E}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman pouting: medium skin tone"),
-    e("\u{1F64E}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman pouting: medium-dark skin tone"),
-    e("\u{1F64E}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman pouting: dark skin tone"));
-export const baby = g(
-    "\u{1F476}", "baby",
-    e("\u{1F476}\u{1F3FB}", "baby: light skin tone"),
-    e("\u{1F476}\u{1F3FC}", "baby: medium-light skin tone"),
-    e("\u{1F476}\u{1F3FD}", "baby: medium skin tone"),
-    e("\u{1F476}\u{1F3FE}", "baby: medium-dark skin tone"),
-    e("\u{1F476}\u{1F3FF}", "baby: dark skin tone"));
-export const child = g(
-    "\u{1F9D2}", "child",
-    e("\u{1F9D2}\u{1F3FB}", "child: light skin tone"),
-    e("\u{1F9D2}\u{1F3FC}", "child: medium-light skin tone"),
-    e("\u{1F9D2}\u{1F3FD}", "child: medium skin tone"),
-    e("\u{1F9D2}\u{1F3FE}", "child: medium-dark skin tone"),
-    e("\u{1F9D2}\u{1F3FF}", "child: dark skin tone"));
-export const boy = g(
-    "\u{1F466}", "boy",
-    e("\u{1F466}\u{1F3FB}", "boy: light skin tone"),
-    e("\u{1F466}\u{1F3FC}", "boy: medium-light skin tone"),
-    e("\u{1F466}\u{1F3FD}", "boy: medium skin tone"),
-    e("\u{1F466}\u{1F3FE}", "boy: medium-dark skin tone"),
-    e("\u{1F466}\u{1F3FF}", "boy: dark skin tone"));
-export const girl = g(
-    "\u{1F467}", "girl",
-    e("\u{1F467}\u{1F3FB}", "girl: light skin tone"),
-    e("\u{1F467}\u{1F3FC}", "girl: medium-light skin tone"),
-    e("\u{1F467}\u{1F3FD}", "girl: medium skin tone"),
-    e("\u{1F467}\u{1F3FE}", "girl: medium-dark skin tone"),
-    e("\u{1F467}\u{1F3FF}", "girl: dark skin tone"));
-export const person = g(
-    "\u{1F9D1}", "person",
-    e("\u{1F9D1}\u{1F3FB}", "person: light skin tone"),
-    e("\u{1F9D1}\u{1F3FC}", "person: medium-light skin tone"),
-    e("\u{1F9D1}\u{1F3FD}", "person: medium skin tone"),
-    e("\u{1F9D1}\u{1F3FE}", "person: medium-dark skin tone"),
-    e("\u{1F9D1}\u{1F3FF}", "person: dark skin tone"));
-export const blondPerson = g(
-    "\u{1F471}", "person: blond hair",
-    e("\u{1F471}\u{1F3FB}", "person: light skin tone, blond hair"),
-    e("\u{1F471}\u{1F3FC}", "person: medium-light skin tone, blond hair"),
-    e("\u{1F471}\u{1F3FD}", "person: medium skin tone, blond hair"),
-    e("\u{1F471}\u{1F3FE}", "person: medium-dark skin tone, blond hair"),
-    e("\u{1F471}\u{1F3FF}", "person: dark skin tone, blond hair"));
-export const olderPerson = g(
-    "\u{1F9D3}", "older person",
-    e("\u{1F9D3}\u{1F3FB}", "older person: light skin tone"),
-    e("\u{1F9D3}\u{1F3FC}", "older person: medium-light skin tone"),
-    e("\u{1F9D3}\u{1F3FD}", "older person: medium skin tone"),
-    e("\u{1F9D3}\u{1F3FE}", "older person: medium-dark skin tone"),
-    e("\u{1F9D3}\u{1F3FF}", "older person: dark skin tone"));
-export const personGesturingNo = g(
-    "\u{1F645}", "person gesturing NO",
-    e("\u{1F645}\u{1F3FB}", "person gesturing NO: light skin tone"),
-    e("\u{1F645}\u{1F3FC}", "person gesturing NO: medium-light skin tone"),
-    e("\u{1F645}\u{1F3FD}", "person gesturing NO: medium skin tone"),
-    e("\u{1F645}\u{1F3FE}", "person gesturing NO: medium-dark skin tone"),
-    e("\u{1F645}\u{1F3FF}", "person gesturing NO: dark skin tone"));
-export const manGesturingNo = g(
-    "\u{1F645}\u{200D}\u{2642}\u{FE0F}", "man gesturing NO",
-    e("\u{1F645}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man gesturing NO: light skin tone"),
-    e("\u{1F645}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man gesturing NO: medium-light skin tone"),
-    e("\u{1F645}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man gesturing NO: medium skin tone"),
-    e("\u{1F645}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man gesturing NO: medium-dark skin tone"),
-    e("\u{1F645}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man gesturing NO: dark skin tone"));
-export const womanGesturingNo = g(
-    "\u{1F645}\u{200D}\u{2640}\u{FE0F}", "woman gesturing NO",
-    e("\u{1F645}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman gesturing NO: light skin tone"),
-    e("\u{1F645}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman gesturing NO: medium-light skin tone"),
-    e("\u{1F645}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman gesturing NO: medium skin tone"),
-    e("\u{1F645}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman gesturing NO: medium-dark skin tone"),
-    e("\u{1F645}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman gesturing NO: dark skin tone"));
-export const man = g(
-    "\u{1F468}", "man",
-    e("\u{1F468}\u{1F3FB}", "man: light skin tone"),
-    e("\u{1F468}\u{1F3FC}", "man: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}", "man: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}", "man: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}", "man: dark skin tone"));
-export const blondMan = g(
-    "\u{1F471}\u{200D}\u{2642}\u{FE0F}", "man: blond hair",
-    e("\u{1F471}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man: light skin tone, blond hair"),
-    e("\u{1F471}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man: medium-light skin tone, blond hair"),
-    e("\u{1F471}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man: medium skin tone, blond hair"),
-    e("\u{1F471}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man: medium-dark skin tone, blond hair"),
-    e("\u{1F471}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man: dark skin tone, blond hair"));
-export const redHairedMan = g(
-    "\u{1F468}\u{200D}\u{1F9B0}", "man: red hair",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F9B0}", "man: light skin tone, red hair"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F9B0}", "man: medium-light skin tone, red hair"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F9B0}", "man: medium skin tone, red hair"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F9B0}", "man: medium-dark skin tone, red hair"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F9B0}", "man: dark skin tone, red hair"));
-export const curlyHairedMan = g(
-    "\u{1F468}\u{200D}\u{1F9B1}", "man: curly hair",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F9B1}", "man: light skin tone, curly hair"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F9B1}", "man: medium-light skin tone, curly hair"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F9B1}", "man: medium skin tone, curly hair"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F9B1}", "man: medium-dark skin tone, curly hair"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F9B1}", "man: dark skin tone, curly hair"));
-export const whiteHairedMan = g(
-    "\u{1F468}\u{200D}\u{1F9B3}", "man: white hair",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F9B3}", "man: light skin tone, white hair"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F9B3}", "man: medium-light skin tone, white hair"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F9B3}", "man: medium skin tone, white hair"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F9B3}", "man: medium-dark skin tone, white hair"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F9B3}", "man: dark skin tone, white hair"));
-export const baldMan = g(
-    "\u{1F468}\u{200D}\u{1F9B2}", "man: bald",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F9B2}", "man: light skin tone, bald"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F9B2}", "man: medium-light skin tone, bald"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F9B2}", "man: medium skin tone, bald"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F9B2}", "man: medium-dark skin tone, bald"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F9B2}", "man: dark skin tone, bald"));
-export const beardedMan = g(
-    "\u{1F9D4}", "man: beard",
-    e("\u{1F9D4}\u{1F3FB}", "man: light skin tone, beard"),
-    e("\u{1F9D4}\u{1F3FC}", "man: medium-light skin tone, beard"),
-    e("\u{1F9D4}\u{1F3FD}", "man: medium skin tone, beard"),
-    e("\u{1F9D4}\u{1F3FE}", "man: medium-dark skin tone, beard"),
-    e("\u{1F9D4}\u{1F3FF}", "man: dark skin tone, beard"));
-export const oldMan = g(
-    "\u{1F474}", "old man",
-    e("\u{1F474}\u{1F3FB}", "old man: light skin tone"),
-    e("\u{1F474}\u{1F3FC}", "old man: medium-light skin tone"),
-    e("\u{1F474}\u{1F3FD}", "old man: medium skin tone"),
-    e("\u{1F474}\u{1F3FE}", "old man: medium-dark skin tone"),
-    e("\u{1F474}\u{1F3FF}", "old man: dark skin tone"));
-export const woman = g(
-    "\u{1F469}", "woman",
-    e("\u{1F469}\u{1F3FB}", "woman: light skin tone"),
-    e("\u{1F469}\u{1F3FC}", "woman: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}", "woman: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}", "woman: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}", "woman: dark skin tone"));
-export const blondWoman = g(
-    "\u{1F471}\u{200D}\u{2640}\u{FE0F}", "woman: blond hair",
-    e("\u{1F471}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman: light skin tone, blond hair"),
-    e("\u{1F471}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman: medium-light skin tone, blond hair"),
-    e("\u{1F471}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman: medium skin tone, blond hair"),
-    e("\u{1F471}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman: medium-dark skin tone, blond hair"),
-    e("\u{1F471}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman: dark skin tone, blond hair"));
-export const redHairedWoman = g(
-    "\u{1F469}\u{200D}\u{1F9B0}", "woman: red hair",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F9B0}", "woman: light skin tone, red hair"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F9B0}", "woman: medium-light skin tone, red hair"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F9B0}", "woman: medium skin tone, red hair"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F9B0}", "woman: medium-dark skin tone, red hair"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F9B0}", "woman: dark skin tone, red hair"));
-export const curlyHairedWoman = g(
-    "\u{1F469}\u{200D}\u{1F9B1}", "woman: curly hair",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F9B1}", "woman: light skin tone, curly hair"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F9B1}", "woman: medium-light skin tone, curly hair"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F9B1}", "woman: medium skin tone, curly hair"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F9B1}", "woman: medium-dark skin tone, curly hair"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F9B1}", "woman: dark skin tone, curly hair"));
-export const whiteHairedWoman = g(
-    "\u{1F469}\u{200D}\u{1F9B3}", "woman: white hair",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F9B3}", "woman: light skin tone, white hair"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F9B3}", "woman: medium-light skin tone, white hair"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F9B3}", "woman: medium skin tone, white hair"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F9B3}", "woman: medium-dark skin tone, white hair"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F9B3}", "woman: dark skin tone, white hair"));
-export const baldWoman = g(
-    "\u{1F469}\u{200D}\u{1F9B2}", "woman: bald",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F9B2}", "woman: light skin tone, bald"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F9B2}", "woman: medium-light skin tone, bald"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F9B2}", "woman: medium skin tone, bald"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F9B2}", "woman: medium-dark skin tone, bald"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F9B2}", "woman: dark skin tone, bald"));
-export const oldWoman = g(
-    "\u{1F475}", "old woman",
-    e("\u{1F475}\u{1F3FB}", "old woman: light skin tone"),
-    e("\u{1F475}\u{1F3FC}", "old woman: medium-light skin tone"),
-    e("\u{1F475}\u{1F3FD}", "old woman: medium skin tone"),
-    e("\u{1F475}\u{1F3FE}", "old woman: medium-dark skin tone"),
-    e("\u{1F475}\u{1F3FF}", "old woman: dark skin tone"));
-export const personGesturingOK = g(
-    "\u{1F646}", "person gesturing OK",
-    e("\u{1F646}\u{1F3FB}", "person gesturing OK: light skin tone"),
-    e("\u{1F646}\u{1F3FC}", "person gesturing OK: medium-light skin tone"),
-    e("\u{1F646}\u{1F3FD}", "person gesturing OK: medium skin tone"),
-    e("\u{1F646}\u{1F3FE}", "person gesturing OK: medium-dark skin tone"),
-    e("\u{1F646}\u{1F3FF}", "person gesturing OK: dark skin tone"));
-export const manGesturingOK = g(
-    "\u{1F646}\u{200D}\u{2642}\u{FE0F}", "man gesturing OK",
-    e("\u{1F646}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man gesturing OK: light skin tone"),
-    e("\u{1F646}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man gesturing OK: medium-light skin tone"),
-    e("\u{1F646}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man gesturing OK: medium skin tone"),
-    e("\u{1F646}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man gesturing OK: medium-dark skin tone"),
-    e("\u{1F646}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man gesturing OK: dark skin tone"));
-export const womanGesturingOK = g(
-    "\u{1F646}\u{200D}\u{2640}\u{FE0F}", "woman gesturing OK",
-    e("\u{1F646}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman gesturing OK: light skin tone"),
-    e("\u{1F646}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman gesturing OK: medium-light skin tone"),
-    e("\u{1F646}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman gesturing OK: medium skin tone"),
-    e("\u{1F646}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman gesturing OK: medium-dark skin tone"),
-    e("\u{1F646}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman gesturing OK: dark skin tone"));
-export const personTippingHand = g(
-    "\u{1F481}", "person tipping hand",
-    e("\u{1F481}\u{1F3FB}", "person tipping hand: light skin tone"),
-    e("\u{1F481}\u{1F3FC}", "person tipping hand: medium-light skin tone"),
-    e("\u{1F481}\u{1F3FD}", "person tipping hand: medium skin tone"),
-    e("\u{1F481}\u{1F3FE}", "person tipping hand: medium-dark skin tone"),
-    e("\u{1F481}\u{1F3FF}", "person tipping hand: dark skin tone"));
-export const manTippingHand = g(
-    "\u{1F481}\u{200D}\u{2642}\u{FE0F}", "man tipping hand",
-    e("\u{1F481}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man tipping hand: light skin tone"),
-    e("\u{1F481}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man tipping hand: medium-light skin tone"),
-    e("\u{1F481}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man tipping hand: medium skin tone"),
-    e("\u{1F481}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man tipping hand: medium-dark skin tone"),
-    e("\u{1F481}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man tipping hand: dark skin tone"));
-export const womanTippingHand = g(
-    "\u{1F481}\u{200D}\u{2640}\u{FE0F}", "woman tipping hand",
-    e("\u{1F481}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman tipping hand: light skin tone"),
-    e("\u{1F481}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman tipping hand: medium-light skin tone"),
-    e("\u{1F481}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman tipping hand: medium skin tone"),
-    e("\u{1F481}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman tipping hand: medium-dark skin tone"),
-    e("\u{1F481}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman tipping hand: dark skin tone"));
-export const personRaisingHand = g(
-    "\u{1F64B}", "person raising hand",
-    e("\u{1F64B}\u{1F3FB}", "person raising hand: light skin tone"),
-    e("\u{1F64B}\u{1F3FC}", "person raising hand: medium-light skin tone"),
-    e("\u{1F64B}\u{1F3FD}", "person raising hand: medium skin tone"),
-    e("\u{1F64B}\u{1F3FE}", "person raising hand: medium-dark skin tone"),
-    e("\u{1F64B}\u{1F3FF}", "person raising hand: dark skin tone"));
-export const manRaisingHand = g(
-    "\u{1F64B}\u{200D}\u{2642}\u{FE0F}", "man raising hand",
-    e("\u{1F64B}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man raising hand: light skin tone"),
-    e("\u{1F64B}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man raising hand: medium-light skin tone"),
-    e("\u{1F64B}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man raising hand: medium skin tone"),
-    e("\u{1F64B}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man raising hand: medium-dark skin tone"),
-    e("\u{1F64B}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man raising hand: dark skin tone"));
-export const womanRaisingHand = g(
-    "\u{1F64B}\u{200D}\u{2640}\u{FE0F}", "woman raising hand",
-    e("\u{1F64B}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman raising hand: light skin tone"),
-    e("\u{1F64B}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman raising hand: medium-light skin tone"),
-    e("\u{1F64B}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman raising hand: medium skin tone"),
-    e("\u{1F64B}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman raising hand: medium-dark skin tone"),
-    e("\u{1F64B}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman raising hand: dark skin tone"));
-export const deafPerson = g(
-    "\u{1F9CF}", "deaf person",
-    e("\u{1F9CF}\u{1F3FB}", "deaf person: light skin tone"),
-    e("\u{1F9CF}\u{1F3FC}", "deaf person: medium-light skin tone"),
-    e("\u{1F9CF}\u{1F3FD}", "deaf person: medium skin tone"),
-    e("\u{1F9CF}\u{1F3FE}", "deaf person: medium-dark skin tone"),
-    e("\u{1F9CF}\u{1F3FF}", "deaf person: dark skin tone"));
-export const deafMan = g(
-    "\u{1F9CF}\u{200D}\u{2642}\u{FE0F}", "deaf man",
-    e("\u{1F9CF}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "deaf man: light skin tone"),
-    e("\u{1F9CF}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "deaf man: medium-light skin tone"),
-    e("\u{1F9CF}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "deaf man: medium skin tone"),
-    e("\u{1F9CF}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "deaf man: medium-dark skin tone"),
-    e("\u{1F9CF}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "deaf man: dark skin tone"));
-export const deafWoman = g(
-    "\u{1F9CF}\u{200D}\u{2640}\u{FE0F}", "deaf woman",
-    e("\u{1F9CF}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "deaf woman: light skin tone"),
-    e("\u{1F9CF}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "deaf woman: medium-light skin tone"),
-    e("\u{1F9CF}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "deaf woman: medium skin tone"),
-    e("\u{1F9CF}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "deaf woman: medium-dark skin tone"),
-    e("\u{1F9CF}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "deaf woman: dark skin tone"));
-export const personBowing = g(
-    "\u{1F647}", "person bowing",
-    e("\u{1F647}\u{1F3FB}", "person bowing: light skin tone"),
-    e("\u{1F647}\u{1F3FC}", "person bowing: medium-light skin tone"),
-    e("\u{1F647}\u{1F3FD}", "person bowing: medium skin tone"),
-    e("\u{1F647}\u{1F3FE}", "person bowing: medium-dark skin tone"),
-    e("\u{1F647}\u{1F3FF}", "person bowing: dark skin tone"));
-export const manBowing = g(
-    "\u{1F647}\u{200D}\u{2642}\u{FE0F}", "man bowing",
-    e("\u{1F647}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man bowing: light skin tone"),
-    e("\u{1F647}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man bowing: medium-light skin tone"),
-    e("\u{1F647}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man bowing: medium skin tone"),
-    e("\u{1F647}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man bowing: medium-dark skin tone"),
-    e("\u{1F647}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man bowing: dark skin tone"));
-export const womanBowing = g(
-    "\u{1F647}\u{200D}\u{2640}\u{FE0F}", "woman bowing",
-    e("\u{1F647}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman bowing: light skin tone"),
-    e("\u{1F647}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman bowing: medium-light skin tone"),
-    e("\u{1F647}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman bowing: medium skin tone"),
-    e("\u{1F647}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman bowing: medium-dark skin tone"),
-    e("\u{1F647}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman bowing: dark skin tone"));
-export const personFacePalming = g(
-    "\u{1F926}", "person facepalming",
-    e("\u{1F926}\u{1F3FB}", "person facepalming: light skin tone"),
-    e("\u{1F926}\u{1F3FC}", "person facepalming: medium-light skin tone"),
-    e("\u{1F926}\u{1F3FD}", "person facepalming: medium skin tone"),
-    e("\u{1F926}\u{1F3FE}", "person facepalming: medium-dark skin tone"),
-    e("\u{1F926}\u{1F3FF}", "person facepalming: dark skin tone"));
-export const manFacePalming = g(
-    "\u{1F926}\u{200D}\u{2642}\u{FE0F}", "man facepalming",
-    e("\u{1F926}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man facepalming: light skin tone"),
-    e("\u{1F926}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man facepalming: medium-light skin tone"),
-    e("\u{1F926}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man facepalming: medium skin tone"),
-    e("\u{1F926}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man facepalming: medium-dark skin tone"),
-    e("\u{1F926}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man facepalming: dark skin tone"));
-export const womanFacePalming = g(
-    "\u{1F926}\u{200D}\u{2640}\u{FE0F}", "woman facepalming",
-    e("\u{1F926}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman facepalming: light skin tone"),
-    e("\u{1F926}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman facepalming: medium-light skin tone"),
-    e("\u{1F926}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman facepalming: medium skin tone"),
-    e("\u{1F926}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman facepalming: medium-dark skin tone"),
-    e("\u{1F926}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman facepalming: dark skin tone"));
-export const personShrugging = g(
-    "\u{1F937}", "person shrugging",
-    e("\u{1F937}\u{1F3FB}", "person shrugging: light skin tone"),
-    e("\u{1F937}\u{1F3FC}", "person shrugging: medium-light skin tone"),
-    e("\u{1F937}\u{1F3FD}", "person shrugging: medium skin tone"),
-    e("\u{1F937}\u{1F3FE}", "person shrugging: medium-dark skin tone"),
-    e("\u{1F937}\u{1F3FF}", "person shrugging: dark skin tone"));
-export const manShrugging = g(
-    "\u{1F937}\u{200D}\u{2642}\u{FE0F}", "man shrugging",
-    e("\u{1F937}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man shrugging: light skin tone"),
-    e("\u{1F937}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man shrugging: medium-light skin tone"),
-    e("\u{1F937}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man shrugging: medium skin tone"),
-    e("\u{1F937}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man shrugging: medium-dark skin tone"),
-    e("\u{1F937}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man shrugging: dark skin tone"));
-export const womanShrugging = g(
-    "\u{1F937}\u{200D}\u{2640}\u{FE0F}", "woman shrugging",
-    e("\u{1F937}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman shrugging: light skin tone"),
-    e("\u{1F937}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman shrugging: medium-light skin tone"),
-    e("\u{1F937}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman shrugging: medium skin tone"),
-    e("\u{1F937}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman shrugging: medium-dark skin tone"),
-    e("\u{1F937}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman shrugging: dark skin tone"));
+    return Object.assign(
+        g(person, person, man, woman), {
+        default: person,
+        man,
+        woman
+    });
+}
+
+function skinAndSex(v, d) {
+    return sex(skin(v, d));
+}
+
+function skinAndHair(v, d, ...rest) {
+    const people = skin(v, d),
+        red = join(people, hairRed),
+        curly = join(people, hairCurly),
+        white = join(people, hairWhite),
+        bald = join(people, hairBald);
+    return Object.assign(
+        g(people, people, red, curly, white, bald, ...rest), {
+        default: people,
+        red,
+        curly,
+        white,
+        bald
+    });;
+}
+
+function sym(symbol, name) {
+    const j = e(symbol.value, name),
+        men = join(man.default, j),
+        women = join(woman.default, j);
+    return Object.assign(
+        g(symbol, men, women), {
+        symbol,
+        men,
+        women
+    });
+}
+
+export const frowners = skinAndSex("\u{1F64D}", "Frowning");
+export const pouters = skinAndSex("\u{1F64E}", "Pouting");
+export const gesturingNo = skinAndSex("\u{1F645}", "Gesturing NO");
+export const gesturingOK = skinAndSex("\u{1F646}", "Gesturing OK");
+export const tippingHand = skinAndSex("\u{1F481}", "Tipping Hand");
+export const raisingHand = skinAndSex("\u{1F64B}", "Raising Hand");
+export const bowing = skinAndSex("\u{1F647}", "Bowing");
+export const facePalming = skinAndSex("\u{1F926}", "Facepalming");
+export const shrugging = skinAndSex("\u{1F937}", "Shrugging");
+export const cantHear = skinAndSex("\u{1F9CF}", "Can't Hear");
+export const gettingMassage = skinAndSex("\u{1F486}", "Getting Massage");
+export const gettingHaircut = skinAndSex("\u{1F487}", "Getting Haircut");
+
+export const constructionWorkers = skinAndSex("\u{1F477}", "Construction Worker");
+export const guards = skinAndSex("\u{1F482}", "Guard");
+export const spies = skinAndSex("\u{1F575}", "Spy");
+export const police = skinAndSex("\u{1F46E}", "Police");
+export const wearingTurban = skinAndSex("\u{1F473}", "Wearing Turban");
+export const superheroes = skinAndSex("\u{1F9B8}", "Superhero");
+export const supervillains = skinAndSex("\u{1F9B9}", "Supervillain");
+export const mages = skinAndSex("\u{1F9D9}", "Mage");
+export const fairies = skinAndSex("\u{1F9DA}", "Fairy");
+export const vampires = skinAndSex("\u{1F9DB}", "Vampire");
+export const merpeople = skinAndSex("\u{1F9DC}", "Merperson");
+export const elves = skinAndSex("\u{1F9DD}", "Elf");
+export const walking = skinAndSex("\u{1F6B6}", "Walking");
+export const standing = skinAndSex("\u{1F9CD}", "Standing");
+export const kneeling = skinAndSex("\u{1F9CE}", "Kneeling");
+export const runners = skinAndSex("\u{1F3C3}", "Running");
+
 export const gestures = g(
-    personGesturingOK.value, "gestures",
-    g(
-        "\u{1F64D}", "person frowning",
-        personFrowning,
-        manFrowning,
-        womanFrowning),
-    g(
-        "\u{1F64E}", "person pouting",
-        personPouting,
-        manPouting,
-        womanPouting),
-    g(
-        "\u{1F645}", "person gesturing NO",
-        personGesturingNo,
-        manGesturingNo,
-        womanGesturingNo),
-    g(
-        "\u{1F646}", "person gesturing OK",
-        personGesturingOK,
-        manGesturingOK,
-        womanGesturingOK),
-    g(
-        "\u{1F481}", "person tipping hand",
-        personTippingHand,
-        manTippingHand,
-        womanTippingHand),
-    g(
-        "\u{1F64B}", "person raising hand",
-        personRaisingHand,
-        manRaisingHand,
-        womanRaisingHand),
-    g(
-        "\u{1F9CF}", "deaf person",
-        deafPerson,
-        deafMan,
-        deafWoman),
-    g(
-        "\u{1F647}", "person bowing",
-        personBowing,
-        manBowing,
-        womanBowing),
-    g(
-        "\u{1F926}", "person facepalming",
-        personFacePalming,
-        manFacePalming,
-        womanFacePalming),
-    g(
-        "\u{1F937}", "person shrugging",
-        personShrugging,
-        manShrugging,
-        womanShrugging));
-export const manHealthWorker = g(
-    "\u{1F468}\u{200D}\u{2695}\u{FE0F}", "man health worker",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{2695}\u{FE0F}", "man health worker: light skin tone"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{2695}\u{FE0F}", "man health worker: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{2695}\u{FE0F}", "man health worker: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{2695}\u{FE0F}", "man health worker: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{2695}\u{FE0F}", "man health worker: dark skin tone"));
-export const womanHealthWorker = g(
-    "\u{1F469}\u{200D}\u{2695}\u{FE0F}", "woman health worker",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{2695}\u{FE0F}", "woman health worker: light skin tone"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{2695}\u{FE0F}", "woman health worker: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{2695}\u{FE0F}", "woman health worker: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{2695}\u{FE0F}", "woman health worker: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{2695}\u{FE0F}", "woman health worker: dark skin tone"));
-export const manStudent = g(
-    "\u{1F468}\u{200D}\u{1F393}", "man student",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F393}", "man student: light skin tone"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F393}", "man student: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F393}", "man student: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F393}", "man student: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F393}", "man student: dark skin tone"));
-export const womanStudent = g(
-    "\u{1F469}\u{200D}\u{1F393}", "woman student",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F393}", "woman student: light skin tone"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F393}", "woman student: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F393}", "woman student: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F393}", "woman student: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F393}", "woman student: dark skin tone"));
-export const manTeacher = g(
-    "\u{1F468}\u{200D}\u{1F3EB}", "man teacher",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F3EB}", "man teacher: light skin tone"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F3EB}", "man teacher: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F3EB}", "man teacher: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F3EB}", "man teacher: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F3EB}", "man teacher: dark skin tone"));
-export const womanTeacher = g(
-    "\u{1F469}\u{200D}\u{1F3EB}", "woman teacher",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F3EB}", "woman teacher: light skin tone"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F3EB}", "woman teacher: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F3EB}", "woman teacher: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F3EB}", "woman teacher: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F3EB}", "woman teacher: dark skin tone"));
-export const manJudge = g(
-    "\u{1F468}\u{200D}\u{2696}\u{FE0F}", "man judge",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{2696}\u{FE0F}", "man judge: light skin tone"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{2696}\u{FE0F}", "man judge: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{2696}\u{FE0F}", "man judge: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{2696}\u{FE0F}", "man judge: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{2696}\u{FE0F}", "man judge: dark skin tone"));
-export const womanJudge = g(
-    "\u{1F469}\u{200D}\u{2696}\u{FE0F}", "woman judge",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{2696}\u{FE0F}", "woman judge: light skin tone"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{2696}\u{FE0F}", "woman judge: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{2696}\u{FE0F}", "woman judge: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{2696}\u{FE0F}", "woman judge: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{2696}\u{FE0F}", "woman judge: dark skin tone"));
-export const manFarmer = g(
-    "\u{1F468}\u{200D}\u{1F33E}", "man farmer",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F33E}", "man farmer: light skin tone"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F33E}", "man farmer: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F33E}", "man farmer: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F33E}", "man farmer: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F33E}", "man farmer: dark skin tone"));
-export const womanFarmer = g(
-    "\u{1F469}\u{200D}\u{1F33E}", "woman farmer",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F33E}", "woman farmer: light skin tone"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F33E}", "woman farmer: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F33E}", "woman farmer: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F33E}", "woman farmer: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F33E}", "woman farmer: dark skin tone"));
-export const manCook = g(
-    "\u{1F468}\u{200D}\u{1F373}", "man cook",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F373}", "man cook: light skin tone"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F373}", "man cook: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F373}", "man cook: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F373}", "man cook: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F373}", "man cook: dark skin tone"));
-export const womanCook = g(
-    "\u{1F469}\u{200D}\u{1F373}", "woman cook",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F373}", "woman cook: light skin tone"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F373}", "woman cook: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F373}", "woman cook: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F373}", "woman cook: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F373}", "woman cook: dark skin tone"));
-export const manMechanic = g(
-    "\u{1F468}\u{200D}\u{1F527}", "man mechanic",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F527}", "man mechanic: light skin tone"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F527}", "man mechanic: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F527}", "man mechanic: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F527}", "man mechanic: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F527}", "man mechanic: dark skin tone"));
-export const womanMechanic = g(
-    "\u{1F469}\u{200D}\u{1F527}", "woman mechanic",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F527}", "woman mechanic: light skin tone"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F527}", "woman mechanic: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F527}", "woman mechanic: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F527}", "woman mechanic: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F527}", "woman mechanic: dark skin tone"));
-export const manFactoryWorker = g(
-    "\u{1F468}\u{200D}\u{1F3ED}", "man factory worker",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F3ED}", "man factory worker: light skin tone"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F3ED}", "man factory worker: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F3ED}", "man factory worker: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F3ED}", "man factory worker: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F3ED}", "man factory worker: dark skin tone"));
-export const womanFactoryWorker = g(
-    "\u{1F469}\u{200D}\u{1F3ED}", "woman factory worker",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F3ED}", "woman factory worker: light skin tone"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F3ED}", "woman factory worker: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F3ED}", "woman factory worker: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F3ED}", "woman factory worker: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F3ED}", "woman factory worker: dark skin tone"));
-export const manOfficeWorker = g(
-    "\u{1F468}\u{200D}\u{1F4BC}", "man office worker",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F4BC}", "man office worker: light skin tone"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F4BC}", "man office worker: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F4BC}", "man office worker: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F4BC}", "man office worker: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F4BC}", "man office worker: dark skin tone"));
-export const womanOfficeWorker = g(
-    "\u{1F469}\u{200D}\u{1F4BC}", "woman office worker",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F4BC}", "woman office worker: light skin tone"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F4BC}", "woman office worker: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F4BC}", "woman office worker: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F4BC}", "woman office worker: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F4BC}", "woman office worker: dark skin tone"));
-export const prince = g(
-    "\u{1F934}", "prince",
-    e("\u{1F934}\u{1F3FB}", "prince: light skin tone"),
-    e("\u{1F934}\u{1F3FC}", "prince: medium-light skin tone"),
-    e("\u{1F934}\u{1F3FD}", "prince: medium skin tone"),
-    e("\u{1F934}\u{1F3FE}", "prince: medium-dark skin tone"),
-    e("\u{1F934}\u{1F3FF}", "prince: dark skin tone"));
-export const princess = g(
-    "\u{1F478}", "princess",
-    e("\u{1F478}\u{1F3FB}", "princess: light skin tone"),
-    e("\u{1F478}\u{1F3FC}", "princess: medium-light skin tone"),
-    e("\u{1F478}\u{1F3FD}", "princess: medium skin tone"),
-    e("\u{1F478}\u{1F3FE}", "princess: medium-dark skin tone"),
-    e("\u{1F478}\u{1F3FF}", "princess: dark skin tone"));
-export const constructionWorker = g(
-    "\u{1F477}", "construction worker",
-    e("\u{1F477}\u{1F3FB}", "construction worker: light skin tone"),
-    e("\u{1F477}\u{1F3FC}", "construction worker: medium-light skin tone"),
-    e("\u{1F477}\u{1F3FD}", "construction worker: medium skin tone"),
-    e("\u{1F477}\u{1F3FE}", "construction worker: medium-dark skin tone"),
-    e("\u{1F477}\u{1F3FF}", "construction worker: dark skin tone"));
-export const manConstructionWorker = g(
-    "\u{1F477}\u{200D}\u{2642}\u{FE0F}", "man construction worker",
-    e("\u{1F477}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man construction worker: light skin tone"),
-    e("\u{1F477}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man construction worker: medium-light skin tone"),
-    e("\u{1F477}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man construction worker: medium skin tone"),
-    e("\u{1F477}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man construction worker: medium-dark skin tone"),
-    e("\u{1F477}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man construction worker: dark skin tone"));
-export const womanConstructionWorker = g(
-    "\u{1F477}\u{200D}\u{2640}\u{FE0F}", "woman construction worker",
-    e("\u{1F477}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman construction worker: light skin tone"),
-    e("\u{1F477}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman construction worker: medium-light skin tone"),
-    e("\u{1F477}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman construction worker: medium skin tone"),
-    e("\u{1F477}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman construction worker: medium-dark skin tone"),
-    e("\u{1F477}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman construction worker: dark skin tone"));
-export const guard = g(
-    "\u{1F482}", "guard",
-    e("\u{1F482}\u{1F3FB}", "guard: light skin tone"),
-    e("\u{1F482}\u{1F3FC}", "guard: medium-light skin tone"),
-    e("\u{1F482}\u{1F3FD}", "guard: medium skin tone"),
-    e("\u{1F482}\u{1F3FE}", "guard: medium-dark skin tone"),
-    e("\u{1F482}\u{1F3FF}", "guard: dark skin tone"));
-export const manGuard = g(
-    "\u{1F482}\u{200D}\u{2642}\u{FE0F}", "man guard",
-    e("\u{1F482}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man guard: light skin tone"),
-    e("\u{1F482}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man guard: medium-light skin tone"),
-    e("\u{1F482}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man guard: medium skin tone"),
-    e("\u{1F482}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man guard: medium-dark skin tone"),
-    e("\u{1F482}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man guard: dark skin tone"));
-export const womanGuard = g(
-    "\u{1F482}\u{200D}\u{2640}\u{FE0F}", "woman guard",
-    e("\u{1F482}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman guard: light skin tone"),
-    e("\u{1F482}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman guard: medium-light skin tone"),
-    e("\u{1F482}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman guard: medium skin tone"),
-    e("\u{1F482}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman guard: medium-dark skin tone"),
-    e("\u{1F482}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman guard: dark skin tone"));
-export const spy = g(
-    "\u{1F575}\u{FE0F}", "spy",
-    e("\u{1F575}\u{1F3FB}", "spy: light skin tone"),
-    e("\u{1F575}\u{1F3FC}", "spy: medium-light skin tone"),
-    e("\u{1F575}\u{1F3FD}", "spy: medium skin tone"),
-    e("\u{1F575}\u{1F3FE}", "spy: medium-dark skin tone"),
-    e("\u{1F575}\u{1F3FF}", "spy: dark skin tone"));
-export const manSpy = g(
-    "\u{1F575}\u{FE0F}\u{200D}\u{2642}\u{FE0F}", "man spy",
-    e("\u{1F575}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man spy: light skin tone"),
-    e("\u{1F575}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man spy: medium-light skin tone"),
-    e("\u{1F575}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man spy: medium skin tone"),
-    e("\u{1F575}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man spy: medium-dark skin tone"),
-    e("\u{1F575}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man spy: dark skin tone"));
-export const womanSpy = g(
-    "\u{1F575}\u{FE0F}\u{200D}\u{2640}\u{FE0F}", "woman spy",
-    e("\u{1F575}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman spy: light skin tone"),
-    e("\u{1F575}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman spy: medium-light skin tone"),
-    e("\u{1F575}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman spy: medium skin tone"),
-    e("\u{1F575}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman spy: medium-dark skin tone"),
-    e("\u{1F575}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman spy: dark skin tone"));
-export const policeOfficer = g(
-    "\u{1F46E}", "police officer",
-    e("\u{1F46E}\u{1F3FB}", "police officer: light skin tone"),
-    e("\u{1F46E}\u{1F3FC}", "police officer: medium-light skin tone"),
-    e("\u{1F46E}\u{1F3FD}", "police officer: medium skin tone"),
-    e("\u{1F46E}\u{1F3FE}", "police officer: medium-dark skin tone"),
-    e("\u{1F46E}\u{1F3FF}", "police officer: dark skin tone"));
-export const manPoliceOfficer = g(
-    "\u{1F46E}\u{200D}\u{2642}\u{FE0F}", "man police officer",
-    e("\u{1F46E}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man police officer: light skin tone"),
-    e("\u{1F46E}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man police officer: medium-light skin tone"),
-    e("\u{1F46E}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man police officer: medium skin tone"),
-    e("\u{1F46E}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man police officer: medium-dark skin tone"),
-    e("\u{1F46E}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man police officer: dark skin tone"));
-export const womanPoliceOfficer = g(
-    "\u{1F46E}\u{200D}\u{2640}\u{FE0F}", "woman police officer",
-    e("\u{1F46E}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman police officer: light skin tone"),
-    e("\u{1F46E}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman police officer: medium-light skin tone"),
-    e("\u{1F46E}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman police officer: medium skin tone"),
-    e("\u{1F46E}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman police officer: medium-dark skin tone"),
-    e("\u{1F46E}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman police officer: dark skin tone"));
-export const manFirefighter = g(
-    "\u{1F468}\u{200D}\u{1F692}", "man firefighter",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F692}", "man firefighter: light skin tone"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F692}", "man firefighter: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F692}", "man firefighter: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F692}", "man firefighter: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F692}", "man firefighter: dark skin tone"));
-export const womanFirefighter = g(
-    "\u{1F469}\u{200D}\u{1F692}", "woman firefighter",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F692}", "woman firefighter: light skin tone"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F692}", "woman firefighter: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F692}", "woman firefighter: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F692}", "woman firefighter: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F692}", "woman firefighter: dark skin tone"));
-export const manAstronaut = g(
-    "\u{1F468}\u{200D}\u{1F680}", "man astronaut",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F680}", "man astronaut: light skin tone"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F680}", "man astronaut: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F680}", "man astronaut: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F680}", "man astronaut: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F680}", "man astronaut: dark skin tone"));
-export const womanAstronaut = g(
-    "\u{1F469}\u{200D}\u{1F680}", "woman astronaut",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F680}", "woman astronaut: light skin tone"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F680}", "woman astronaut: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F680}", "woman astronaut: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F680}", "woman astronaut: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F680}", "woman astronaut: dark skin tone"));
-export const manPilot = g(
-    "\u{1F468}\u{200D}\u{2708}\u{FE0F}", "man pilot",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{2708}\u{FE0F}", "man pilot: light skin tone"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{2708}\u{FE0F}", "man pilot: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{2708}\u{FE0F}", "man pilot: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{2708}\u{FE0F}", "man pilot: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{2708}\u{FE0F}", "man pilot: dark skin tone"));
-export const womanPilot = g(
-    "\u{1F469}\u{200D}\u{2708}\u{FE0F}", "woman pilot",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{2708}\u{FE0F}", "woman pilot: light skin tone"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{2708}\u{FE0F}", "woman pilot: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{2708}\u{FE0F}", "woman pilot: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{2708}\u{FE0F}", "woman pilot: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{2708}\u{FE0F}", "woman pilot: dark skin tone"));
-export const manArtist = g(
-    "\u{1F468}\u{200D}\u{1F3A8}", "man artist",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F3A8}", "man artist: light skin tone"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F3A8}", "man artist: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F3A8}", "man artist: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F3A8}", "man artist: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F3A8}", "man artist: dark skin tone"));
-export const womanArtist = g(
-    "\u{1F469}\u{200D}\u{1F3A8}", "woman artist",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F3A8}", "woman artist: light skin tone"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F3A8}", "woman artist: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F3A8}", "woman artist: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F3A8}", "woman artist: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F3A8}", "woman artist: dark skin tone"));
-export const manSinger = g(
-    "\u{1F468}\u{200D}\u{1F3A4}", "man singer",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F3A4}", "man singer: light skin tone"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F3A4}", "man singer: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F3A4}", "man singer: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F3A4}", "man singer: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F3A4}", "man singer: dark skin tone"));
-export const womanSinger = g(
-    "\u{1F469}\u{200D}\u{1F3A4}", "woman singer",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F3A4}", "woman singer: light skin tone"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F3A4}", "woman singer: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F3A4}", "woman singer: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F3A4}", "woman singer: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F3A4}", "woman singer: dark skin tone"));
-export const manTechnologist = g(
-    "\u{1F468}\u{200D}\u{1F4BB}", "man technologist",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F4BB}", "man technologist: light skin tone"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F4BB}", "man technologist: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F4BB}", "man technologist: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F4BB}", "man technologist: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F4BB}", "man technologist: dark skin tone"));
-export const womanTechnologist = g(
-    "\u{1F469}\u{200D}\u{1F4BB}", "woman technologist",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F4BB}", "woman technologist: light skin tone"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F4BB}", "woman technologist: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F4BB}", "woman technologist: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F4BB}", "woman technologist: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F4BB}", "woman technologist: dark skin tone"));
-export const manScientist = g(
-    "\u{1F468}\u{200D}\u{1F52C}", "man scientist",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F52C}", "man scientist: light skin tone"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F52C}", "man scientist: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F52C}", "man scientist: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F52C}", "man scientist: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F52C}", "man scientist: dark skin tone"));
-export const womanScientist = g(
-    "\u{1F469}\u{200D}\u{1F52C}", "woman scientist",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F52C}", "woman scientist: light skin tone"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F52C}", "woman scientist: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F52C}", "woman scientist: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F52C}", "woman scientist: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F52C}", "woman scientist: dark skin tone"));
-export const roles = [
-    g(
-        "\u{2695}\u{FE0F}", "health worker",
-        manHealthWorker,
-        womanHealthWorker),
-    g(
-        "\u{1F393}", "student",
-        manStudent,
-        womanStudent),
-    g(
-        "\u{1F3EB}", "teacher",
-        manTeacher,
-        womanTeacher),
-    g(
-        "\u{2696}\u{FE0F}", "judge",
-        manJudge,
-        womanJudge),
-    g(
-        "\u{1F33E}", "farmer",
-        manFarmer,
-        womanFarmer),
-    g(
-        "\u{1F373}", "cook",
-        manCook,
-        womanCook),
-    g(
-        "\u{1F527}", "mechanic",
-        manMechanic,
-        womanMechanic),
-    g(
-        "\u{1F3ED}", "factory worker",
-        manFactoryWorker,
-        womanFactoryWorker),
-    g(
-        "\u{1F4BC}", "office worker",
-        manOfficeWorker,
-        womanOfficeWorker),
-    g(
-        "\u{1F52C}", "scientist",
-        manScientist,
-        womanScientist),
-    g(
-        "\u{1F4BB}", "technologist",
-        manTechnologist,
-        womanTechnologist),
-    g(
-        "\u{1F3A4}", "singer",
-        manSinger,
-        womanSinger),
-    g(
-        "\u{1F3A8}", "artist",
-        manArtist,
-        womanArtist),
-    g(
-        "\u{2708}\u{FE0F}", "pilot",
-        manPilot,
-        womanPilot),
-    g(
-        "\u{1F680}", "astronaut",
-        manAstronaut,
-        womanAstronaut),
-    g(
-        "\u{1F692}", "firefighter",
-        manFirefighter,
-        womanFirefighter),
-    g(
-        "\u{1F575}\u{FE0F}", "spy",
-        spy,
-        manSpy,
-        womanSpy),
-    g(
-        "\u{1F482}", "guard",
-        guard,
-        manGuard,
-        womanGuard),
-    g(
-        "\u{1F477}", "construction worker",
-        constructionWorker,
-        manConstructionWorker,
-        womanConstructionWorker),
-    g(
-        "\u{1F934}", "royalty",
-        prince,
-        princess)
-];
-export const personWearingTurban = g(
-    "\u{1F473}", "person wearing turban",
-    e("\u{1F473}\u{1F3FB}", "person wearing turban: light skin tone"),
-    e("\u{1F473}\u{1F3FC}", "person wearing turban: medium-light skin tone"),
-    e("\u{1F473}\u{1F3FD}", "person wearing turban: medium skin tone"),
-    e("\u{1F473}\u{1F3FE}", "person wearing turban: medium-dark skin tone"),
-    e("\u{1F473}\u{1F3FF}", "person wearing turban: dark skin tone"));
-export const manWearingTurban = g(
-    "\u{1F473}\u{200D}\u{2642}\u{FE0F}", "man wearing turban",
-    e("\u{1F473}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man wearing turban: light skin tone"),
-    e("\u{1F473}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man wearing turban: medium-light skin tone"),
-    e("\u{1F473}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man wearing turban: medium skin tone"),
-    e("\u{1F473}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man wearing turban: medium-dark skin tone"),
-    e("\u{1F473}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man wearing turban: dark skin tone"));
-export const womanWearingTurban = g(
-    "\u{1F473}\u{200D}\u{2640}\u{FE0F}", "woman wearing turban",
-    e("\u{1F473}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman wearing turban: light skin tone"),
-    e("\u{1F473}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman wearing turban: medium-light skin tone"),
-    e("\u{1F473}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman wearing turban: medium skin tone"),
-    e("\u{1F473}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman wearing turban: medium-dark skin tone"),
-    e("\u{1F473}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman wearing turban: dark skin tone"));
-export const wearingTurban = g(
-    personWearingTurban.value, "wearing turban",
-    personWearingTurban,
-    manWearingTurban,
-    womanWearingTurban);
-export const manWithChineseCap = g(
-    "\u{1F472}", "man with Chinese cap",
-    e("\u{1F472}\u{1F3FB}", "man with Chinese cap: light skin tone"),
-    e("\u{1F472}\u{1F3FC}", "man with Chinese cap: medium-light skin tone"),
-    e("\u{1F472}\u{1F3FD}", "man with Chinese cap: medium skin tone"),
-    e("\u{1F472}\u{1F3FE}", "man with Chinese cap: medium-dark skin tone"),
-    e("\u{1F472}\u{1F3FF}", "man with Chinese cap: dark skin tone"));
-export const womanWithHeadscarf = g(
-    "\u{1F9D5}", "woman with headscarf",
-    e("\u{1F9D5}\u{1F3FB}", "woman with headscarf: light skin tone"),
-    e("\u{1F9D5}\u{1F3FC}", "woman with headscarf: medium-light skin tone"),
-    e("\u{1F9D5}\u{1F3FD}", "woman with headscarf: medium skin tone"),
-    e("\u{1F9D5}\u{1F3FE}", "woman with headscarf: medium-dark skin tone"),
-    e("\u{1F9D5}\u{1F3FF}", "woman with headscarf: dark skin tone"));
-export const manInTuxedo = g(
-    "\u{1F935}", "man in tuxedo",
-    e("\u{1F935}\u{1F3FB}", "man in tuxedo: light skin tone"),
-    e("\u{1F935}\u{1F3FC}", "man in tuxedo: medium-light skin tone"),
-    e("\u{1F935}\u{1F3FD}", "man in tuxedo: medium skin tone"),
-    e("\u{1F935}\u{1F3FE}", "man in tuxedo: medium-dark skin tone"),
-    e("\u{1F935}\u{1F3FF}", "man in tuxedo: dark skin tone"));
-export const brideWithVeil = g(
-    "\u{1F470}", "bride with veil",
-    e("\u{1F470}\u{1F3FB}", "bride with veil: light skin tone"),
-    e("\u{1F470}\u{1F3FC}", "bride with veil: medium-light skin tone"),
-    e("\u{1F470}\u{1F3FD}", "bride with veil: medium skin tone"),
-    e("\u{1F470}\u{1F3FE}", "bride with veil: medium-dark skin tone"),
-    e("\u{1F470}\u{1F3FF}", "bride with veil: dark skin tone"));
-export const pregnantWoman = g(
-    "\u{1F930}", "pregnant woman",
-    e("\u{1F930}\u{1F3FB}", "pregnant woman: light skin tone"),
-    e("\u{1F930}\u{1F3FC}", "pregnant woman: medium-light skin tone"),
-    e("\u{1F930}\u{1F3FD}", "pregnant woman: medium skin tone"),
-    e("\u{1F930}\u{1F3FE}", "pregnant woman: medium-dark skin tone"),
-    e("\u{1F930}\u{1F3FF}", "pregnant woman: dark skin tone"));
-export const breastFeeding = g(
-    "\u{1F931}", "breast-feeding",
-    e("\u{1F931}\u{1F3FB}", "breast-feeding: light skin tone"),
-    e("\u{1F931}\u{1F3FC}", "breast-feeding: medium-light skin tone"),
-    e("\u{1F931}\u{1F3FD}", "breast-feeding: medium skin tone"),
-    e("\u{1F931}\u{1F3FE}", "breast-feeding: medium-dark skin tone"),
-    e("\u{1F931}\u{1F3FF}", "breast-feeding: dark skin tone"));
-export const otherPeople = [
-    wearingTurban,
+    e(gesturingOK.value, "Gestures"),
+    frowners,
+    pouters,
+    gesturingNo,
+    gesturingOK,
+    tippingHand,
+    raisingHand,
+    bowing,
+    facePalming,
+    shrugging,
+    cantHear,
+    gettingMassage,
+    gettingHaircut);
+
+
+export const baby = skin("\u{1F476}", "Baby");
+export const child = skin("\u{1F9D2}", "Child");
+export const boy = skin("\u{1F466}", "Boy");
+export const girl = skin("\u{1F467}", "Girl");
+export const children = g(child, child, boy, girl);
+
+
+export const blondes = skinAndSex("\u{1F471}", "Blond Person");
+export const person = skin("\u{1F9D1}", "Person", blondes.default, wearingTurban.default);
+
+export const beardedMan = skin("\u{1F9D4}", "Bearded Man");
+export const manInSuitLevitating = e("\u{1F574}\u{FE0F}", "Man in Suit, Levitating");
+export const manWithChineseCap = skin("\u{1F472}", "Man With Chinese Cap");
+export const manInTuxedo = skin("\u{1F935}", "Man in Tuxedo");
+export const man = skinAndHair("\u{1F468}", "Man",
+    blondes.man,
+    beardedMan,
+    manInSuitLevitating,
     manWithChineseCap,
-    womanWithHeadscarf,
-    manInTuxedo,
-    brideWithVeil,
+    wearingTurban.man,
+    manInTuxedo);
+
+export const pregnantWoman = skin("\u{1F930}", "Pregnant Woman");
+export const breastFeeding = skin("\u{1F931}", "Breast-Feeding");
+export const womanWithHeadscarf = skin("\u{1F9D5}", "Woman With Headscarf");
+export const brideWithVeil = skin("\u{1F470}", "Bride With Veil");
+export const woman = skinAndHair("\u{1F469}", "Woman",
+    blondes.woman,
     pregnantWoman,
-    breastFeeding
-];
-export const babyAngel = g(
-    "\u{1F47C}", "baby angel",
-    e("\u{1F47C}\u{1F3FB}", "baby angel: light skin tone"),
-    e("\u{1F47C}\u{1F3FC}", "baby angel: medium-light skin tone"),
-    e("\u{1F47C}\u{1F3FD}", "baby angel: medium skin tone"),
-    e("\u{1F47C}\u{1F3FE}", "baby angel: medium-dark skin tone"),
-    e("\u{1F47C}\u{1F3FF}", "baby angel: dark skin tone"));
-export const santaClaus = g(
-    "\u{1F385}", "Santa Claus",
-    e("\u{1F385}\u{1F3FB}", "Santa Claus: light skin tone"),
-    e("\u{1F385}\u{1F3FC}", "Santa Claus: medium-light skin tone"),
-    e("\u{1F385}\u{1F3FD}", "Santa Claus: medium skin tone"),
-    e("\u{1F385}\u{1F3FE}", "Santa Claus: medium-dark skin tone"),
-    e("\u{1F385}\u{1F3FF}", "Santa Claus: dark skin tone"));
-export const mrsClaus = g(
-    "\u{1F936}", "Mrs. Claus",
-    e("\u{1F936}\u{1F3FB}", "Mrs. Claus: light skin tone"),
-    e("\u{1F936}\u{1F3FC}", "Mrs. Claus: medium-light skin tone"),
-    e("\u{1F936}\u{1F3FD}", "Mrs. Claus: medium skin tone"),
-    e("\u{1F936}\u{1F3FE}", "Mrs. Claus: medium-dark skin tone"),
-    e("\u{1F936}\u{1F3FF}", "Mrs. Claus: dark skin tone"));
-export const superhero = g(
-    "\u{1F9B8}", "superhero",
-    e("\u{1F9B8}\u{1F3FB}", "superhero: light skin tone"),
-    e("\u{1F9B8}\u{1F3FC}", "superhero: medium-light skin tone"),
-    e("\u{1F9B8}\u{1F3FD}", "superhero: medium skin tone"),
-    e("\u{1F9B8}\u{1F3FE}", "superhero: medium-dark skin tone"),
-    e("\u{1F9B8}\u{1F3FF}", "superhero: dark skin tone"));
-export const manSuperhero = g(
-    "\u{1F9B8}\u{200D}\u{2642}\u{FE0F}", "man superhero",
-    e("\u{1F9B8}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man superhero: light skin tone"),
-    e("\u{1F9B8}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man superhero: medium-light skin tone"),
-    e("\u{1F9B8}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man superhero: medium skin tone"),
-    e("\u{1F9B8}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man superhero: medium-dark skin tone"),
-    e("\u{1F9B8}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man superhero: dark skin tone"));
-export const womanSuperhero = g(
-    "\u{1F9B8}\u{200D}\u{2640}\u{FE0F}", "woman superhero",
-    e("\u{1F9B8}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman superhero: light skin tone"),
-    e("\u{1F9B8}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman superhero: medium-light skin tone"),
-    e("\u{1F9B8}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman superhero: medium skin tone"),
-    e("\u{1F9B8}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman superhero: medium-dark skin tone"),
-    e("\u{1F9B8}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman superhero: dark skin tone"));
-export const supervillain = g(
-    "\u{1F9B9}", "supervillain",
-    e("\u{1F9B9}\u{1F3FB}", "supervillain: light skin tone"),
-    e("\u{1F9B9}\u{1F3FC}", "supervillain: medium-light skin tone"),
-    e("\u{1F9B9}\u{1F3FD}", "supervillain: medium skin tone"),
-    e("\u{1F9B9}\u{1F3FE}", "supervillain: medium-dark skin tone"),
-    e("\u{1F9B9}\u{1F3FF}", "supervillain: dark skin tone"));
-export const manSupervillain = g(
-    "\u{1F9B9}\u{200D}\u{2642}\u{FE0F}", "man supervillain",
-    e("\u{1F9B9}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man supervillain: light skin tone"),
-    e("\u{1F9B9}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man supervillain: medium-light skin tone"),
-    e("\u{1F9B9}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man supervillain: medium skin tone"),
-    e("\u{1F9B9}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man supervillain: medium-dark skin tone"),
-    e("\u{1F9B9}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man supervillain: dark skin tone"));
-export const womanSupervillain = g(
-    "\u{1F9B9}\u{200D}\u{2640}\u{FE0F}", "woman supervillain",
-    e("\u{1F9B9}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman supervillain: light skin tone"),
-    e("\u{1F9B9}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman supervillain: medium-light skin tone"),
-    e("\u{1F9B9}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman supervillain: medium skin tone"),
-    e("\u{1F9B9}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman supervillain: medium-dark skin tone"),
-    e("\u{1F9B9}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman supervillain: dark skin tone"));
-export const mage = g(
-    "\u{1F9D9}", "mage",
-    e("\u{1F9D9}\u{1F3FB}", "mage: light skin tone"),
-    e("\u{1F9D9}\u{1F3FC}", "mage: medium-light skin tone"),
-    e("\u{1F9D9}\u{1F3FD}", "mage: medium skin tone"),
-    e("\u{1F9D9}\u{1F3FE}", "mage: medium-dark skin tone"),
-    e("\u{1F9D9}\u{1F3FF}", "mage: dark skin tone"));
-export const manMage = g(
-    "\u{1F9D9}\u{200D}\u{2642}\u{FE0F}", "man mage",
-    e("\u{1F9D9}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man mage: light skin tone"),
-    e("\u{1F9D9}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man mage: medium-light skin tone"),
-    e("\u{1F9D9}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man mage: medium skin tone"),
-    e("\u{1F9D9}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man mage: medium-dark skin tone"),
-    e("\u{1F9D9}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man mage: dark skin tone"));
-export const womanMage = g(
-    "\u{1F9D9}\u{200D}\u{2640}\u{FE0F}", "woman mage",
-    e("\u{1F9D9}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman mage: light skin tone"),
-    e("\u{1F9D9}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman mage: medium-light skin tone"),
-    e("\u{1F9D9}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman mage: medium skin tone"),
-    e("\u{1F9D9}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman mage: medium-dark skin tone"),
-    e("\u{1F9D9}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman mage: dark skin tone"));
-export const fairy = g(
-    "\u{1F9DA}", "fairy",
-    e("\u{1F9DA}\u{1F3FB}", "fairy: light skin tone"),
-    e("\u{1F9DA}\u{1F3FC}", "fairy: medium-light skin tone"),
-    e("\u{1F9DA}\u{1F3FD}", "fairy: medium skin tone"),
-    e("\u{1F9DA}\u{1F3FE}", "fairy: medium-dark skin tone"),
-    e("\u{1F9DA}\u{1F3FF}", "fairy: dark skin tone"));
-export const manFairy = g(
-    "\u{1F9DA}\u{200D}\u{2642}\u{FE0F}", "man fairy",
-    e("\u{1F9DA}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man fairy: light skin tone"),
-    e("\u{1F9DA}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man fairy: medium-light skin tone"),
-    e("\u{1F9DA}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man fairy: medium skin tone"),
-    e("\u{1F9DA}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man fairy: medium-dark skin tone"),
-    e("\u{1F9DA}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man fairy: dark skin tone"));
-export const womanFairy = g(
-    "\u{1F9DA}\u{200D}\u{2640}\u{FE0F}", "woman fairy",
-    e("\u{1F9DA}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman fairy: light skin tone"),
-    e("\u{1F9DA}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman fairy: medium-light skin tone"),
-    e("\u{1F9DA}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman fairy: medium skin tone"),
-    e("\u{1F9DA}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman fairy: medium-dark skin tone"),
-    e("\u{1F9DA}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman fairy: dark skin tone"));
-export const vampire = g(
-    "\u{1F9DB}", "vampire",
-    e("\u{1F9DB}\u{1F3FB}", "vampire: light skin tone"),
-    e("\u{1F9DB}\u{1F3FC}", "vampire: medium-light skin tone"),
-    e("\u{1F9DB}\u{1F3FD}", "vampire: medium skin tone"),
-    e("\u{1F9DB}\u{1F3FE}", "vampire: medium-dark skin tone"),
-    e("\u{1F9DB}\u{1F3FF}", "vampire: dark skin tone"));
-export const manVampire = g(
-    "\u{1F9DB}\u{200D}\u{2642}\u{FE0F}", "man vampire",
-    e("\u{1F9DB}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man vampire: light skin tone"),
-    e("\u{1F9DB}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man vampire: medium-light skin tone"),
-    e("\u{1F9DB}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man vampire: medium skin tone"),
-    e("\u{1F9DB}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man vampire: medium-dark skin tone"),
-    e("\u{1F9DB}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man vampire: dark skin tone"));
-export const womanVampire = g(
-    "\u{1F9DB}\u{200D}\u{2640}\u{FE0F}", "woman vampire",
-    e("\u{1F9DB}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman vampire: light skin tone"),
-    e("\u{1F9DB}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman vampire: medium-light skin tone"),
-    e("\u{1F9DB}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman vampire: medium skin tone"),
-    e("\u{1F9DB}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman vampire: medium-dark skin tone"),
-    e("\u{1F9DB}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman vampire: dark skin tone"));
-export const merperson = g(
-    "\u{1F9DC}", "merperson",
-    e("\u{1F9DC}\u{1F3FB}", "merperson: light skin tone"),
-    e("\u{1F9DC}\u{1F3FC}", "merperson: medium-light skin tone"),
-    e("\u{1F9DC}\u{1F3FD}", "merperson: medium skin tone"),
-    e("\u{1F9DC}\u{1F3FE}", "merperson: medium-dark skin tone"),
-    e("\u{1F9DC}\u{1F3FF}", "merperson: dark skin tone"));
-export const merman = g(
-    "\u{1F9DC}\u{200D}\u{2642}\u{FE0F}", "merman",
-    e("\u{1F9DC}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "merman: light skin tone"),
-    e("\u{1F9DC}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "merman: medium-light skin tone"),
-    e("\u{1F9DC}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "merman: medium skin tone"),
-    e("\u{1F9DC}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "merman: medium-dark skin tone"),
-    e("\u{1F9DC}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "merman: dark skin tone"));
-export const mermaid = g(
-    "\u{1F9DC}\u{200D}\u{2640}\u{FE0F}", "mermaid",
-    e("\u{1F9DC}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "mermaid: light skin tone"),
-    e("\u{1F9DC}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "mermaid: medium-light skin tone"),
-    e("\u{1F9DC}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "mermaid: medium skin tone"),
-    e("\u{1F9DC}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "mermaid: medium-dark skin tone"),
-    e("\u{1F9DC}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "mermaid: dark skin tone"));
-export const elf = g(
-    "\u{1F9DD}", "elf",
-    e("\u{1F9DD}\u{1F3FB}", "elf: light skin tone"),
-    e("\u{1F9DD}\u{1F3FC}", "elf: medium-light skin tone"),
-    e("\u{1F9DD}\u{1F3FD}", "elf: medium skin tone"),
-    e("\u{1F9DD}\u{1F3FE}", "elf: medium-dark skin tone"),
-    e("\u{1F9DD}\u{1F3FF}", "elf: dark skin tone"));
-export const manElf = g(
-    "\u{1F9DD}\u{200D}\u{2642}\u{FE0F}", "man elf",
-    e("\u{1F9DD}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man elf: light skin tone"),
-    e("\u{1F9DD}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man elf: medium-light skin tone"),
-    e("\u{1F9DD}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man elf: medium skin tone"),
-    e("\u{1F9DD}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man elf: medium-dark skin tone"),
-    e("\u{1F9DD}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man elf: dark skin tone"));
-export const womanElf = g(
-    "\u{1F9DD}\u{200D}\u{2640}\u{FE0F}", "woman elf",
-    e("\u{1F9DD}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman elf: light skin tone"),
-    e("\u{1F9DD}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman elf: medium-light skin tone"),
-    e("\u{1F9DD}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman elf: medium skin tone"),
-    e("\u{1F9DD}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman elf: medium-dark skin tone"),
-    e("\u{1F9DD}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman elf: dark skin tone"));
-export const genie = e("\u{1F9DE}", "genie");
-export const manGenie = e("\u{1F9DE}\u{200D}\u{2642}\u{FE0F}", "man genie");
-export const womanGenie = e("\u{1F9DE}\u{200D}\u{2640}\u{FE0F}", "woman genie");
-export const zombie = e("\u{1F9DF}", "zombie");
-export const manZombie = e("\u{1F9DF}\u{200D}\u{2642}\u{FE0F}", "man zombie");
-export const womanZombie = e("\u{1F9DF}\u{200D}\u{2640}\u{FE0F}", "woman zombie");
+    breastFeeding,
+    womanWithHeadscarf,
+    wearingTurban.woman,
+    brideWithVeil);
+export const adults = g(
+    e(person.value, "Adult"),
+    person,
+    man,
+    woman);
+
+export const olderPerson = skin("\u{1F9D3}", "Older Person");
+export const oldMan = skin("\u{1F474}", "Old Man");
+export const oldWoman = skin("\u{1F475}", "Old Woman");
+export const olderPeople = g(olderPerson, olderPerson, oldMan, oldWoman);
+
+export const medical = e("\u{2695}\u{FE0F}", "Medical");
+export const healthCareWorkers = sym(medical, "Health Care");
+
+export const graduationCap = e("\u{1F393}", "Graduation Cap");
+export const students = sym(graduationCap, "Student");
+
+export const school = e("\u{1F3EB}", "School");
+export const teachers = sym(school, "Teacher");
+
+export const balanceScale = e("\u{2696}\u{FE0F}", "Balance Scale");
+export const judges = sym(balanceScale, "Judge");
+
+export const sheafOfRice = e("\u{1F33E}", "Sheaf of Rice");
+export const farmers = sym(sheafOfRice, "Farmer");
+
+export const cooking = e("\u{1F373}", "Cooking");
+export const cooks = sym(cooking, "Cook");
+
+export const wrench = e("\u{1F527}", "Wrench");
+export const mechanics = sym(wrench, "Mechanic");
+
+export const factory = e("\u{1F3ED}", "Factory");
+export const factoryWorkers = sym(factory, "Factory Worker");
+
+export const briefcase = e("\u{1F4BC}", "Briefcase");
+export const officeWorkers = sym(briefcase, "Office Worker");
+
+export const fireEngine = e("\u{1F692}", "Fire Engine");
+export const fireFighters = sym(fireEngine, "Fire Fighter");
+
+export const rocket = e("\u{1F680}", "Rocket");
+export const astronauts = sym(rocket, "Astronaut");
+
+export const airplane = e("\u{2708}\u{FE0F}", "Airplane");
+export const pilots = sym(airplane, "Pilot");
+
+export const artistPalette = e("\u{1F3A8}", "Artist Palette");
+export const artists = sym(artistPalette, "Artist");
+
+export const microphone = e("\u{1F3A4}", "Microphone");
+export const singers = sym(microphone, "Singer");
+
+export const laptop = e("\u{1F4BB}", "Laptop");
+export const technologists = sym(laptop, "Technologist");
+
+export const microscope = e("\u{1F52C}", "Microscope");
+export const scientists = sym(microscope, "Scientist");
+
+export const crown = e("\u{1F451}", "Crown");
+export const prince = skin("\u{1F934}", "Prince");
+export const princess = skin("\u{1F478}", "Princess");
+export const royalty = g(crown, prince, princess);
+
+export const roles = g(
+    e("Roles", "Roles"),
+    healthCareWorkers,
+    students,
+    teachers,
+    judges,
+    farmers,
+    cooks,
+    mechanics,
+    factoryWorkers,
+    officeWorkers,
+    scientists,
+    technologists,
+    singers,
+    artists,
+    pilots,
+    astronauts,
+    fireFighters,
+    spies,
+    guards,
+    constructionWorkers,
+    royalty);
+
+export const cherub = skin("\u{1F47C}", "Cherub");
+export const santaClaus = skin("\u{1F385}", "Santa Claus");
+export const mrsClaus = skin("\u{1F936}", "Mrs. Claus");
+
+export const genies = sex(e("\u{1F9DE}", "Genie"));
+export const zombies = sex(e("\u{1F9DF}", "Zombie"));
+
 export const fantasy = [
-    babyAngel,
+    cherub,
     santaClaus,
     mrsClaus,
-    g(
-        "\u{1F9B8}", "superhero",
-        superhero,
-        manSuperhero,
-        womanSuperhero),
-    g(
-        "\u{1F9B9}", "supervillain",
-        supervillain,
-        manSupervillain,
-        womanSupervillain),
-    g(
-        "\u{1F9D9}", "mage",
-        mage,
-        manMage,
-        womanMage),
-    g(
-        "\u{1F9DA}", "fairy",
-        fairy,
-        manFairy,
-        womanFairy),
-    g(
-        "\u{1F9DB}", "vampire",
-        vampire,
-        manVampire,
-        womanVampire),
-    g(
-        "\u{1F9DC}", "merperson",
-        merperson,
-        merman,
-        mermaid),
-    g(
-        "\u{1F9DD}", "elf",
-        elf,
-        manElf,
-        womanElf),
-    g(
-        "\u{1F9DE}", "genie",
-        genie,
-        manGenie,
-        womanGenie),
-    g(
-        "\u{1F9DF}", "zombie",
-        zombie,
-        manZombie,
-        womanZombie)
+    superheroes,
+    supervillains,
+    mages,
+    fairies,
+    vampires,
+    merpeople,
+    elves,
+    genies,
+    zombies
 ];
 
-export const personGettingMassage = g(
-    "\u{1F486}", "person getting massage",
-    e("\u{1F486}\u{1F3FB}", "person getting massage: light skin tone"),
-    e("\u{1F486}\u{1F3FC}", "person getting massage: medium-light skin tone"),
-    e("\u{1F486}\u{1F3FD}", "person getting massage: medium skin tone"),
-    e("\u{1F486}\u{1F3FE}", "person getting massage: medium-dark skin tone"),
-    e("\u{1F486}\u{1F3FF}", "person getting massage: dark skin tone"));
-export const manGettingMassage = g(
-    "\u{1F486}\u{200D}\u{2642}\u{FE0F}", "man getting massage",
-    e("\u{1F486}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man getting massage: light skin tone"),
-    e("\u{1F486}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man getting massage: medium-light skin tone"),
-    e("\u{1F486}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man getting massage: medium skin tone"),
-    e("\u{1F486}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man getting massage: medium-dark skin tone"),
-    e("\u{1F486}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man getting massage: dark skin tone"));
-export const womanGettingMassage = g(
-    "\u{1F486}\u{200D}\u{2640}\u{FE0F}", "woman getting massage",
-    e("\u{1F486}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman getting massage: light skin tone"),
-    e("\u{1F486}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman getting massage: medium-light skin tone"),
-    e("\u{1F486}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman getting massage: medium skin tone"),
-    e("\u{1F486}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman getting massage: medium-dark skin tone"),
-    e("\u{1F486}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman getting massage: dark skin tone"));
-export const personGettingHaircut = g(
-    "\u{1F487}", "person getting haircut",
-    e("\u{1F487}\u{1F3FB}", "person getting haircut: light skin tone"),
-    e("\u{1F487}\u{1F3FC}", "person getting haircut: medium-light skin tone"),
-    e("\u{1F487}\u{1F3FD}", "person getting haircut: medium skin tone"),
-    e("\u{1F487}\u{1F3FE}", "person getting haircut: medium-dark skin tone"),
-    e("\u{1F487}\u{1F3FF}", "person getting haircut: dark skin tone"));
-export const manGettingHaircut = g(
-    "\u{1F487}\u{200D}\u{2642}\u{FE0F}", "man getting haircut",
-    e("\u{1F487}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man getting haircut: light skin tone"),
-    e("\u{1F487}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man getting haircut: medium-light skin tone"),
-    e("\u{1F487}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man getting haircut: medium skin tone"),
-    e("\u{1F487}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man getting haircut: medium-dark skin tone"),
-    e("\u{1F487}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man getting haircut: dark skin tone"));
-export const womanGettingHaircut = g(
-    "\u{1F487}\u{200D}\u{2640}\u{FE0F}", "woman getting haircut",
-    e("\u{1F487}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman getting haircut: light skin tone"),
-    e("\u{1F487}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman getting haircut: medium-light skin tone"),
-    e("\u{1F487}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman getting haircut: medium skin tone"),
-    e("\u{1F487}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman getting haircut: medium-dark skin tone"),
-    e("\u{1F487}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman getting haircut: dark skin tone"));
-export const personWalking = g(
-    "\u{1F6B6}", "person walking",
-    e("\u{1F6B6}\u{1F3FB}", "person walking: light skin tone"),
-    e("\u{1F6B6}\u{1F3FC}", "person walking: medium-light skin tone"),
-    e("\u{1F6B6}\u{1F3FD}", "person walking: medium skin tone"),
-    e("\u{1F6B6}\u{1F3FE}", "person walking: medium-dark skin tone"),
-    e("\u{1F6B6}\u{1F3FF}", "person walking: dark skin tone"));
-export const manWalking = {
-    value: "\u{1F6B6}\u{200D}\u{2642}\u{FE0F}", desc: "man walking", alts: [
-        e("\u{1F6B6}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man walking: light skin tone"),
-        e("\u{1F6B6}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man walking: medium-light skin tone"),
-        e("\u{1F6B6}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man walking: medium skin tone"),
-        e("\u{1F6B6}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man walking: medium-dark skin tone"),
-        e("\u{1F6B6}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man walking: dark skin tone"),
-        e("\u{1F6B6}\u{200D}\u{2640}\u{FE0F}", "woman walking"),
-    ]
-};
-export const womanWalking = g(
-    "\u{1F6B6}\u{200D}\u{2640}", "woman walking",
-    e("\u{1F6B6}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman walking: light skin tone"),
-    e("\u{1F6B6}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman walking: medium-light skin tone"),
-    e("\u{1F6B6}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman walking: medium skin tone"),
-    e("\u{1F6B6}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman walking: medium-dark skin tone"),
-    e("\u{1F6B6}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman walking: dark skin tone"));
-export const personStanding = g(
-    "\u{1F9CD}", "person standing",
-    e("\u{1F9CD}\u{1F3FB}", "person standing: light skin tone"),
-    e("\u{1F9CD}\u{1F3FC}", "person standing: medium-light skin tone"),
-    e("\u{1F9CD}\u{1F3FD}", "person standing: medium skin tone"),
-    e("\u{1F9CD}\u{1F3FE}", "person standing: medium-dark skin tone"),
-    e("\u{1F9CD}\u{1F3FF}", "person standing: dark skin tone"));
-export const manStanding = g(
-    "\u{1F9CD}\u{200D}\u{2642}\u{FE0F}", "man standing",
-    e("\u{1F9CD}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man standing: light skin tone"),
-    e("\u{1F9CD}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man standing: medium-light skin tone"),
-    e("\u{1F9CD}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man standing: medium skin tone"),
-    e("\u{1F9CD}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man standing: medium-dark skin tone"),
-    e("\u{1F9CD}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man standing: dark skin tone"));
-export const womanStanding = g(
-    "\u{1F9CD}\u{200D}\u{2640}\u{FE0F}", "woman standing",
-    e("\u{1F9CD}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman standing: light skin tone"),
-    e("\u{1F9CD}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman standing: medium-light skin tone"),
-    e("\u{1F9CD}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman standing: medium skin tone"),
-    e("\u{1F9CD}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman standing: medium-dark skin tone"),
-    e("\u{1F9CD}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman standing: dark skin tone"));
-export const personKneeling = g(
-    "\u{1F9CE}", "person kneeling",
-    e("\u{1F9CE}\u{1F3FB}", "person kneeling: light skin tone"),
-    e("\u{1F9CE}\u{1F3FC}", "person kneeling: medium-light skin tone"),
-    e("\u{1F9CE}\u{1F3FD}", "person kneeling: medium skin tone"),
-    e("\u{1F9CE}\u{1F3FE}", "person kneeling: medium-dark skin tone"),
-    e("\u{1F9CE}\u{1F3FF}", "person kneeling: dark skin tone"));
-export const manKneeling = g(
-    "\u{1F9CE}\u{200D}\u{2642}\u{FE0F}", "man kneeling",
-    e("\u{1F9CE}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man kneeling: light skin tone"),
-    e("\u{1F9CE}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man kneeling: medium-light skin tone"),
-    e("\u{1F9CE}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man kneeling: medium skin tone"),
-    e("\u{1F9CE}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man kneeling: medium-dark skin tone"),
-    e("\u{1F9CE}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man kneeling: dark skin tone"));
-export const womanKneeling = g(
-    "\u{1F9CE}\u{200D}\u{2640}\u{FE0F}", "woman kneeling",
-    e("\u{1F9CE}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman kneeling: light skin tone"),
-    e("\u{1F9CE}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman kneeling: medium-light skin tone"),
-    e("\u{1F9CE}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman kneeling: medium skin tone"),
-    e("\u{1F9CE}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman kneeling: medium-dark skin tone"),
-    e("\u{1F9CE}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman kneeling: dark skin tone"));
-export const manWithProbingCane = g(
-    "\u{1F468}\u{200D}\u{1F9AF}", "man with probing cane",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F9AF}", "man with probing cane: light skin tone"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F9AF}", "man with probing cane: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F9AF}", "man with probing cane: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F9AF}", "man with probing cane: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F9AF}", "man with probing cane: dark skin tone"));
-export const womanWithProbingCane = g(
-    "\u{1F469}\u{200D}\u{1F9AF}", "woman with probing cane",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F9AF}", "woman with probing cane: light skin tone"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F9AF}", "woman with probing cane: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F9AF}", "woman with probing cane: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F9AF}", "woman with probing cane: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F9AF}", "woman with probing cane: dark skin tone"));
-export const manInMotorizedWheelchair = g(
-    "\u{1F468}\u{200D}\u{1F9BC}", "man in motorized wheelchair",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F9BC}", "man in motorized wheelchair: light skin tone"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F9BC}", "man in motorized wheelchair: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F9BC}", "man in motorized wheelchair: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F9BC}", "man in motorized wheelchair: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F9BC}", "man in motorized wheelchair: dark skin tone"));
-export const womanInMotorizedWheelchair = g(
-    "\u{1F469}\u{200D}\u{1F9BC}", "woman in motorized wheelchair",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F9BC}", "woman in motorized wheelchair: light skin tone"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F9BC}", "woman in motorized wheelchair: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F9BC}", "woman in motorized wheelchair: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F9BC}", "woman in motorized wheelchair: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F9BC}", "woman in motorized wheelchair: dark skin tone"));
-export const manInManualWheelchair = g(
-    "\u{1F468}\u{200D}\u{1F9BD}", "man in manual wheelchair",
-    e("\u{1F468}\u{1F3FB}\u{200D}\u{1F9BD}", "man in manual wheelchair: light skin tone"),
-    e("\u{1F468}\u{1F3FC}\u{200D}\u{1F9BD}", "man in manual wheelchair: medium-light skin tone"),
-    e("\u{1F468}\u{1F3FD}\u{200D}\u{1F9BD}", "man in manual wheelchair: medium skin tone"),
-    e("\u{1F468}\u{1F3FE}\u{200D}\u{1F9BD}", "man in manual wheelchair: medium-dark skin tone"),
-    e("\u{1F468}\u{1F3FF}\u{200D}\u{1F9BD}", "man in manual wheelchair: dark skin tone"));
-export const womanInManualWheelchair = g(
-    "\u{1F469}\u{200D}\u{1F9BD}", "woman in manual wheelchair",
-    e("\u{1F469}\u{1F3FB}\u{200D}\u{1F9BD}", "woman in manual wheelchair: light skin tone"),
-    e("\u{1F469}\u{1F3FC}\u{200D}\u{1F9BD}", "woman in manual wheelchair: medium-light skin tone"),
-    e("\u{1F469}\u{1F3FD}\u{200D}\u{1F9BD}", "woman in manual wheelchair: medium skin tone"),
-    e("\u{1F469}\u{1F3FE}\u{200D}\u{1F9BD}", "woman in manual wheelchair: medium-dark skin tone"),
-    e("\u{1F469}\u{1F3FF}\u{200D}\u{1F9BD}", "woman in manual wheelchair: dark skin tone"));
-export const personRunning = g(
-    "\u{1F3C3}", "person running",
-    e("\u{1F3C3}\u{1F3FB}", "person running: light skin tone"),
-    e("\u{1F3C3}\u{1F3FC}", "person running: medium-light skin tone"),
-    e("\u{1F3C3}\u{1F3FD}", "person running: medium skin tone"),
-    e("\u{1F3C3}\u{1F3FE}", "person running: medium-dark skin tone"),
-    e("\u{1F3C3}\u{1F3FF}", "person running: dark skin tone"));
-export const manRunning = g(
-    "\u{1F3C3}\u{200D}\u{2642}\u{FE0F}", "man running",
-    e("\u{1F3C3}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man running: light skin tone"),
-    e("\u{1F3C3}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man running: medium-light skin tone"),
-    e("\u{1F3C3}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man running: medium skin tone"),
-    e("\u{1F3C3}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man running: medium-dark skin tone"),
-    e("\u{1F3C3}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man running: dark skin tone"));
-export const womanRunning = g(
-    "\u{1F3C3}\u{200D}\u{2640}\u{FE0F}", "woman running",
-    e("\u{1F3C3}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman running: light skin tone"),
-    e("\u{1F3C3}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman running: medium-light skin tone"),
-    e("\u{1F3C3}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman running: medium skin tone"),
-    e("\u{1F3C3}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman running: medium-dark skin tone"),
-    e("\u{1F3C3}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman running: dark skin tone"));
-export const manDancing = g(
-    "\u{1F57A}", "man dancing",
-    e("\u{1F57A}\u{1F3FB}", "man dancing: light skin tone"),
-    e("\u{1F57A}\u{1F3FC}", "man dancing: medium-light skin tone"),
-    e("\u{1F57A}\u{1F3FD}", "man dancing: medium skin tone"),
-    e("\u{1F57A}\u{1F3FE}", "man dancing: medium-dark skin tone"),
-    e("\u{1F57A}\u{1F3FF}", "man dancing: dark skin tone"));
-export const womanDancing = g(
-    "\u{1F483}", "woman dancing",
-    e("\u{1F483}\u{1F3FB}", "woman dancing: light skin tone"),
-    e("\u{1F483}\u{1F3FC}", "woman dancing: medium-light skin tone"),
-    e("\u{1F483}\u{1F3FD}", "woman dancing: medium skin tone"),
-    e("\u{1F483}\u{1F3FE}", "woman dancing: medium-dark skin tone"),
-    e("\u{1F483}\u{1F3FF}", "woman dancing: dark skin tone"));
-export const manInSuitLevitating = g(
-    "\u{1F574}\u{FE0F}", "man in suit levitating",
-    e("\u{1F574}\u{1F3FB}", "man in suit levitating: light skin tone"),
-    e("\u{1F574}\u{1F3FC}", "man in suit levitating: medium-light skin tone"),
-    e("\u{1F574}\u{1F3FD}", "man in suit levitating: medium skin tone"),
-    e("\u{1F574}\u{1F3FE}", "man in suit levitating: medium-dark skin tone"),
-    e("\u{1F574}\u{1F3FF}", "man in suit levitating: dark skin tone"));
-export const personInSteamyRoom = g(
-    "\u{1F9D6}", "person in steamy room",
-    e("\u{1F9D6}\u{1F3FB}", "person in steamy room: light skin tone"),
-    e("\u{1F9D6}\u{1F3FC}", "person in steamy room: medium-light skin tone"),
-    e("\u{1F9D6}\u{1F3FD}", "person in steamy room: medium skin tone"),
-    e("\u{1F9D6}\u{1F3FE}", "person in steamy room: medium-dark skin tone"),
-    e("\u{1F9D6}\u{1F3FF}", "person in steamy room: dark skin tone"));
-export const manInSteamyRoom = g(
-    "\u{1F9D6}\u{200D}\u{2642}\u{FE0F}", "man in steamy room",
-    e("\u{1F9D6}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man in steamy room: light skin tone"),
-    e("\u{1F9D6}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man in steamy room: medium-light skin tone"),
-    e("\u{1F9D6}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man in steamy room: medium skin tone"),
-    e("\u{1F9D6}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man in steamy room: medium-dark skin tone"),
-    e("\u{1F9D6}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man in steamy room: dark skin tone"));
-export const womanInSteamyRoom = g(
-    "\u{1F9D6}\u{200D}\u{2640}\u{FE0F}", "woman in steamy room",
-    e("\u{1F9D6}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman in steamy room: light skin tone"),
-    e("\u{1F9D6}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman in steamy room: medium-light skin tone"),
-    e("\u{1F9D6}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman in steamy room: medium skin tone"),
-    e("\u{1F9D6}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman in steamy room: medium-dark skin tone"),
-    e("\u{1F9D6}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman in steamy room: dark skin tone"));
-export const activity = [
-    g(
-        "\u{1F486}", "person getting massage",
-        personGettingMassage,
-        manGettingMassage,
-        womanGettingMassage),
-    g(
-        "\u{1F487}", "person getting haircut",
-        personGettingHaircut,
-        manGettingHaircut,
-        womanGettingHaircut),
-    g(
-        "\u{1F6B6}", "person walking",
-        personWalking,
-        manWalking,
-        womanWalking),
-    g(
-        "\u{1F9CD}", "person standing",
-        personStanding,
-        manStanding,
-        womanStanding),
-    g(
-        "\u{1F9CE}", "person kneeling",
-        personKneeling,
-        manKneeling,
-        womanKneeling),
-    g(
-        "\u{1F9AF}", "probing cane",
-        manWithProbingCane,
-        womanWithProbingCane),
-    g(
-        "\u{1F9BC}", "motorized wheelchair",
-        manInMotorizedWheelchair,
-        womanInMotorizedWheelchair),
-    g(
-        "\u{1F9BD}", "manual wheelchair",
-        manInManualWheelchair,
-        womanInManualWheelchair),
-    g(
-        "\u{1F3C3}", "person running",
-        personRunning,
-        manRunning,
-        womanRunning),
-    g(
-        "\u{1F57A}", "dancing",
-        manDancing,
-        womanDancing),
-    manInSuitLevitating,
-    g(
-        "\u{1F9D6}", "person in steamy room",
-        personInSteamyRoom,
-        manInSteamyRoom,
-        womanInSteamyRoom),
+export const whiteCane = e("\u{1F9AF}", "Probing Cane");
+export const withProbingCane = sym(whiteCane, "Probing");
+
+export const motorizedWheelchair = e("\u{1F9BC}", "Motorized Wheelchair");
+export const inMotorizedWheelchair = sym(motorizedWheelchair, "In Motorized Wheelchair");
+
+export const manualWheelchair = e("\u{1F9BD}", "Manual Wheelchair");
+export const inManualWheelchair = sym(manualWheelchair, "In Manual Wheelchair");
+
+
+export const manDancing = skin("\u{1F57A}", "Man Dancing");
+export const womanDancing = skin("\u{1F483}", "Woman Dancing");
+export const dancers = g(e(manDancing.value, "Dancing"), manDancing, womanDancing);
+
+export const jugglers = skinAndSex("\u{1F939}", "Juggler");
+
+export const climbers = skinAndSex("\u{1F9D7}", "Climber");
+export const fencer = e("\u{1F93A}", "Fencer");
+export const jockeys = skin("\u{1F3C7}", "Jockey");
+export const skier = e("\u{26F7}\u{FE0F}", "Skier");
+export const snowboarders = skin("\u{1F3C2}", "Snowboarder");
+export const golfers = skinAndSex("\u{1F3CC}\u{FE0F}", "Golfer");
+export const surfers = skinAndSex("\u{1F3C4}", "Surfing");
+export const rowers = skinAndSex("\u{1F6A3}", "Rowing Boat");
+export const swimmers = skinAndSex("\u{1F3CA}", "Swimming");
+export const basketballers = skinAndSex("\u{26F9}\u{FE0F}", "Basket Baller");
+export const weightLifters = skinAndSex("\u{1F3CB}\u{FE0F}", "Weight Lifter");
+export const bikers = skinAndSex("\u{1F6B4}", "Biker");
+export const mountainBikers = skinAndSex("\u{1F6B5}", "Mountain Biker");
+export const cartwheelers = skinAndSex("\u{1F938}", "Cartwheeler");
+export const wrestlers = sex(e("\u{1F93C}", "Wrestler"));
+export const waterPoloers = skinAndSex("\u{1F93D}", "Water Polo Player");
+export const handBallers = skinAndSex("\u{1F93E}", "Hand Baller");
+
+export const inMotion = [
+    walking,
+    standing,
+    kneeling,
+    withProbingCane,
+    inMotorizedWheelchair,
+    inManualWheelchair,
+    dancers,
+    jugglers,
+    climbers,
+    fencer,
+    jockeys,
+    skier,
+    snowboarders,
+    golfers,
+    surfers,
+    rowers,
+    swimmers,
+    runners,
+    basketballers,
+    weightLifters,
+    bikers,
+    mountainBikers,
+    cartwheelers,
+    wrestlers,
+    waterPoloers,
+    handBallers
 ];
 
-export const personClimbing = g(
-    "\u{1F9D7}", "person climbing",
-    e("\u{1F9D7}\u{1F3FB}", "person climbing: light skin tone"),
-    e("\u{1F9D7}\u{1F3FC}", "person climbing: medium-light skin tone"),
-    e("\u{1F9D7}\u{1F3FD}", "person climbing: medium skin tone"),
-    e("\u{1F9D7}\u{1F3FE}", "person climbing: medium-dark skin tone"),
-    e("\u{1F9D7}\u{1F3FF}", "person climbing: dark skin tone"));
-export const manClimbing = g(
-    "\u{1F9D7}\u{200D}\u{2642}\u{FE0F}", "man climbing",
-    e("\u{1F9D7}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man climbing: light skin tone"),
-    e("\u{1F9D7}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man climbing: medium-light skin tone"),
-    e("\u{1F9D7}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man climbing: medium skin tone"),
-    e("\u{1F9D7}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man climbing: medium-dark skin tone"),
-    e("\u{1F9D7}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man climbing: dark skin tone"));
-export const womanClimbing = g(
-    "\u{1F9D7}\u{200D}\u{2640}\u{FE0F}", "woman climbing",
-    e("\u{1F9D7}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman climbing: light skin tone"),
-    e("\u{1F9D7}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman climbing: medium-light skin tone"),
-    e("\u{1F9D7}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman climbing: medium skin tone"),
-    e("\u{1F9D7}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman climbing: medium-dark skin tone"),
-    e("\u{1F9D7}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman climbing: dark skin tone"));
-export const personFencing = e("\u{1F93A}", "person fencing");
-export const personRacingHorse = g(
-    "\u{1F3C7}", "horse racing",
-    e("\u{1F3C7}\u{1F3FB}", "horse racing: light skin tone"),
-    e("\u{1F3C7}\u{1F3FC}", "horse racing: medium-light skin tone"),
-    e("\u{1F3C7}\u{1F3FD}", "horse racing: medium skin tone"),
-    e("\u{1F3C7}\u{1F3FE}", "horse racing: medium-dark skin tone"),
-    e("\u{1F3C7}\u{1F3FF}", "horse racing: dark skin tone"));
-export const personSkiing = e("\u{26F7}\u{FE0F}", "skier");
-export const personSnowboarding = g(
-    "\u{1F3C2}", "snowboarder",
-    e("\u{1F3C2}\u{1F3FB}", "snowboarder: light skin tone"),
-    e("\u{1F3C2}\u{1F3FC}", "snowboarder: medium-light skin tone"),
-    e("\u{1F3C2}\u{1F3FD}", "snowboarder: medium skin tone"),
-    e("\u{1F3C2}\u{1F3FE}", "snowboarder: medium-dark skin tone"),
-    e("\u{1F3C2}\u{1F3FF}", "snowboarder: dark skin tone"));
-export const personGolfing = g(
-    "\u{1F3CC}\u{FE0F}", "person golfing",
-    e("\u{1F3CC}\u{1F3FB}", "person golfing: light skin tone"),
-    e("\u{1F3CC}\u{1F3FC}", "person golfing: medium-light skin tone"),
-    e("\u{1F3CC}\u{1F3FD}", "person golfing: medium skin tone"),
-    e("\u{1F3CC}\u{1F3FE}", "person golfing: medium-dark skin tone"),
-    e("\u{1F3CC}\u{1F3FF}", "person golfing: dark skin tone"));
-export const manGolfing = g(
-    "\u{1F3CC}\u{FE0F}\u{200D}\u{2642}\u{FE0F}", "man golfing",
-    e("\u{1F3CC}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man golfing: light skin tone"),
-    e("\u{1F3CC}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man golfing: medium-light skin tone"),
-    e("\u{1F3CC}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man golfing: medium skin tone"),
-    e("\u{1F3CC}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man golfing: medium-dark skin tone"),
-    e("\u{1F3CC}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man golfing: dark skin tone"));
-export const womanGolfing = g(
-    "\u{1F3CC}\u{FE0F}\u{200D}\u{2640}\u{FE0F}", "woman golfing",
-    e("\u{1F3CC}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman golfing: light skin tone"),
-    e("\u{1F3CC}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman golfing: medium-light skin tone"),
-    e("\u{1F3CC}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman golfing: medium skin tone"),
-    e("\u{1F3CC}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman golfing: medium-dark skin tone"),
-    e("\u{1F3CC}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman golfing: dark skin tone"));
-export const personBouncingBall = g(
-    "\u{26F9}\u{FE0F}", "person bouncing ball",
-    e("\u{26F9}\u{1F3FB}", "person bouncing ball: light skin tone"),
-    e("\u{26F9}\u{1F3FC}", "person bouncing ball: medium-light skin tone"),
-    e("\u{26F9}\u{1F3FD}", "person bouncing ball: medium skin tone"),
-    e("\u{26F9}\u{1F3FE}", "person bouncing ball: medium-dark skin tone"),
-    e("\u{26F9}\u{1F3FF}", "person bouncing ball: dark skin tone"));
-export const manBouncingBall = g(
-    "\u{26F9}\u{FE0F}\u{200D}\u{2642}\u{FE0F}", "man bouncing ball",
-    e("\u{26F9}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man bouncing ball: light skin tone"),
-    e("\u{26F9}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man bouncing ball: medium-light skin tone"),
-    e("\u{26F9}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man bouncing ball: medium skin tone"),
-    e("\u{26F9}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man bouncing ball: medium-dark skin tone"),
-    e("\u{26F9}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man bouncing ball: dark skin tone"));
-export const womanBouncingBall = g(
-    "\u{26F9}\u{FE0F}\u{200D}\u{2640}\u{FE0F}", "woman bouncing ball",
-    e("\u{26F9}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman bouncing ball: light skin tone"),
-    e("\u{26F9}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman bouncing ball: medium-light skin tone"),
-    e("\u{26F9}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman bouncing ball: medium skin tone"),
-    e("\u{26F9}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman bouncing ball: medium-dark skin tone"),
-    e("\u{26F9}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman bouncing ball: dark skin tone"));
-export const personLiftingWeights = g(
-    "\u{1F3CB}\u{FE0F}", "person lifting weights",
-    e("\u{1F3CB}\u{1F3FB}", "person lifting weights: light skin tone"),
-    e("\u{1F3CB}\u{1F3FC}", "person lifting weights: medium-light skin tone"),
-    e("\u{1F3CB}\u{1F3FD}", "person lifting weights: medium skin tone"),
-    e("\u{1F3CB}\u{1F3FE}", "person lifting weights: medium-dark skin tone"),
-    e("\u{1F3CB}\u{1F3FF}", "person lifting weights: dark skin tone"));
-export const manLifitingWeights = g(
-    "\u{1F3CB}\u{FE0F}\u{200D}\u{2642}\u{FE0F}", "man lifting weights",
-    e("\u{1F3CB}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man lifting weights: light skin tone"),
-    e("\u{1F3CB}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man lifting weights: medium-light skin tone"),
-    e("\u{1F3CB}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man lifting weights: medium skin tone"),
-    e("\u{1F3CB}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man lifting weights: medium-dark skin tone"),
-    e("\u{1F3CB}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man lifting weights: dark skin tone"));
-export const womanLiftingWeights = g(
-    "\u{1F3CB}\u{FE0F}\u{200D}\u{2640}\u{FE0F}", "woman lifting weights",
-    e("\u{1F3CB}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman lifting weights: light skin tone"),
-    e("\u{1F3CB}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman lifting weights: medium-light skin tone"),
-    e("\u{1F3CB}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman lifting weights: medium skin tone"),
-    e("\u{1F3CB}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman lifting weights: medium-dark skin tone"),
-    e("\u{1F3CB}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman lifting weights: dark skin tone"));
-export const personBiking = g(
-    "\u{1F6B4}", "person biking",
-    e("\u{1F6B4}\u{1F3FB}", "person biking: light skin tone"),
-    e("\u{1F6B4}\u{1F3FC}", "person biking: medium-light skin tone"),
-    e("\u{1F6B4}\u{1F3FD}", "person biking: medium skin tone"),
-    e("\u{1F6B4}\u{1F3FE}", "person biking: medium-dark skin tone"),
-    e("\u{1F6B4}\u{1F3FF}", "person biking: dark skin tone"));
-export const manBiking = g(
-    "\u{1F6B4}\u{200D}\u{2642}\u{FE0F}", "man biking",
-    e("\u{1F6B4}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man biking: light skin tone"),
-    e("\u{1F6B4}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man biking: medium-light skin tone"),
-    e("\u{1F6B4}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man biking: medium skin tone"),
-    e("\u{1F6B4}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man biking: medium-dark skin tone"),
-    e("\u{1F6B4}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man biking: dark skin tone"));
-export const womanBiking = g(
-    "\u{1F6B4}\u{200D}\u{2640}\u{FE0F}", "woman biking",
-    e("\u{1F6B4}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman biking: light skin tone"),
-    e("\u{1F6B4}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman biking: medium-light skin tone"),
-    e("\u{1F6B4}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman biking: medium skin tone"),
-    e("\u{1F6B4}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman biking: medium-dark skin tone"),
-    e("\u{1F6B4}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman biking: dark skin tone"));
-export const personMountainBiking = g(
-    "\u{1F6B5}", "person mountain biking",
-    e("\u{1F6B5}\u{1F3FB}", "person mountain biking: light skin tone"),
-    e("\u{1F6B5}\u{1F3FC}", "person mountain biking: medium-light skin tone"),
-    e("\u{1F6B5}\u{1F3FD}", "person mountain biking: medium skin tone"),
-    e("\u{1F6B5}\u{1F3FE}", "person mountain biking: medium-dark skin tone"),
-    e("\u{1F6B5}\u{1F3FF}", "person mountain biking: dark skin tone"));
-export const manMountainBiking = g(
-    "\u{1F6B5}\u{200D}\u{2642}\u{FE0F}", "man mountain biking",
-    e("\u{1F6B5}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man mountain biking: light skin tone"),
-    e("\u{1F6B5}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man mountain biking: medium-light skin tone"),
-    e("\u{1F6B5}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man mountain biking: medium skin tone"),
-    e("\u{1F6B5}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man mountain biking: medium-dark skin tone"),
-    e("\u{1F6B5}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man mountain biking: dark skin tone"));
-export const womanMountainBiking = g(
-    "\u{1F6B5}\u{200D}\u{2640}\u{FE0F}", "woman mountain biking",
-    e("\u{1F6B5}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman mountain biking: light skin tone"),
-    e("\u{1F6B5}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman mountain biking: medium-light skin tone"),
-    e("\u{1F6B5}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman mountain biking: medium skin tone"),
-    e("\u{1F6B5}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman mountain biking: medium-dark skin tone"),
-    e("\u{1F6B5}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman mountain biking: dark skin tone"));
-export const personCartwheeling = g(
-    "\u{1F938}", "person cartwheeling",
-    e("\u{1F938}\u{1F3FB}", "person cartwheeling: light skin tone"),
-    e("\u{1F938}\u{1F3FC}", "person cartwheeling: medium-light skin tone"),
-    e("\u{1F938}\u{1F3FD}", "person cartwheeling: medium skin tone"),
-    e("\u{1F938}\u{1F3FE}", "person cartwheeling: medium-dark skin tone"),
-    e("\u{1F938}\u{1F3FF}", "person cartwheeling: dark skin tone"));
-export const manCartwheeling = g(
-    "\u{1F938}\u{200D}\u{2642}\u{FE0F}", "man cartwheeling",
-    e("\u{1F938}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man cartwheeling: light skin tone"),
-    e("\u{1F938}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man cartwheeling: medium-light skin tone"),
-    e("\u{1F938}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man cartwheeling: medium skin tone"),
-    e("\u{1F938}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man cartwheeling: medium-dark skin tone"),
-    e("\u{1F938}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man cartwheeling: dark skin tone"));
-export const womanCartweeling = g(
-    "\u{1F938}\u{200D}\u{2640}\u{FE0F}", "woman cartwheeling",
-    e("\u{1F938}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman cartwheeling: light skin tone"),
-    e("\u{1F938}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman cartwheeling: medium-light skin tone"),
-    e("\u{1F938}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman cartwheeling: medium skin tone"),
-    e("\u{1F938}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman cartwheeling: medium-dark skin tone"),
-    e("\u{1F938}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman cartwheeling: dark skin tone"));
-export const peopleWrestling = e("\u{1F93C}", "people wrestling");
-export const menWrestling = e("\u{1F93C}\u{200D}\u{2642}\u{FE0F}", "men wrestling");
-export const womenWrestling = e("\u{1F93C}\u{200D}\u{2640}\u{FE0F}", "women wrestling");
-export const personPlayingWaterPolo = g(
-    "\u{1F93D}", "person playing water polo",
-    e("\u{1F93D}\u{1F3FB}", "person playing water polo: light skin tone"),
-    e("\u{1F93D}\u{1F3FC}", "person playing water polo: medium-light skin tone"),
-    e("\u{1F93D}\u{1F3FD}", "person playing water polo: medium skin tone"),
-    e("\u{1F93D}\u{1F3FE}", "person playing water polo: medium-dark skin tone"),
-    e("\u{1F93D}\u{1F3FF}", "person playing water polo: dark skin tone"));
-export const manPlayingWaterPolo = g(
-    "\u{1F93D}\u{200D}\u{2642}\u{FE0F}", "man playing water polo",
-    e("\u{1F93D}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man playing water polo: light skin tone"),
-    e("\u{1F93D}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man playing water polo: medium-light skin tone"),
-    e("\u{1F93D}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man playing water polo: medium skin tone"),
-    e("\u{1F93D}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man playing water polo: medium-dark skin tone"),
-    e("\u{1F93D}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man playing water polo: dark skin tone"));
-export const womanPlayingWaterPolo = g(
-    "\u{1F93D}\u{200D}\u{2640}\u{FE0F}", "woman playing water polo",
-    e("\u{1F93D}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman playing water polo: light skin tone"),
-    e("\u{1F93D}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman playing water polo: medium-light skin tone"),
-    e("\u{1F93D}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman playing water polo: medium skin tone"),
-    e("\u{1F93D}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman playing water polo: medium-dark skin tone"),
-    e("\u{1F93D}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman playing water polo: dark skin tone"));
-export const personPlayingHandball = g(
-    "\u{1F93E}", "person playing handball",
-    e("\u{1F93E}\u{1F3FB}", "person playing handball: light skin tone"),
-    e("\u{1F93E}\u{1F3FC}", "person playing handball: medium-light skin tone"),
-    e("\u{1F93E}\u{1F3FD}", "person playing handball: medium skin tone"),
-    e("\u{1F93E}\u{1F3FE}", "person playing handball: medium-dark skin tone"),
-    e("\u{1F93E}\u{1F3FF}", "person playing handball: dark skin tone"));
-export const manPlayingHandball = g(
-    "\u{1F93E}\u{200D}\u{2642}\u{FE0F}", "man playing handball",
-    e("\u{1F93E}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man playing handball: light skin tone"),
-    e("\u{1F93E}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man playing handball: medium-light skin tone"),
-    e("\u{1F93E}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man playing handball: medium skin tone"),
-    e("\u{1F93E}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man playing handball: medium-dark skin tone"),
-    e("\u{1F93E}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man playing handball: dark skin tone"));
-export const womanPlayingHandball = g(
-    "\u{1F93E}\u{200D}\u{2640}\u{FE0F}", "woman playing handball",
-    e("\u{1F93E}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman playing handball: light skin tone"),
-    e("\u{1F93E}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman playing handball: medium-light skin tone"),
-    e("\u{1F93E}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman playing handball: medium skin tone"),
-    e("\u{1F93E}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman playing handball: medium-dark skin tone"),
-    e("\u{1F93E}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman playing handball: dark skin tone"));
-export const personJuggling = g(
-    "\u{1F939}", "person juggling",
-    e("\u{1F939}\u{1F3FB}", "person juggling: light skin tone"),
-    e("\u{1F939}\u{1F3FC}", "person juggling: medium-light skin tone"),
-    e("\u{1F939}\u{1F3FD}", "person juggling: medium skin tone"),
-    e("\u{1F939}\u{1F3FE}", "person juggling: medium-dark skin tone"),
-    e("\u{1F939}\u{1F3FF}", "person juggling: dark skin tone"));
-export const manJuggling = g(
-    "\u{1F939}\u{200D}\u{2642}\u{FE0F}", "man juggling",
-    e("\u{1F939}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man juggling: light skin tone"),
-    e("\u{1F939}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man juggling: medium-light skin tone"),
-    e("\u{1F939}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man juggling: medium skin tone"),
-    e("\u{1F939}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man juggling: medium-dark skin tone"),
-    e("\u{1F939}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man juggling: dark skin tone"));
-export const womanJuggling = g(
-    "\u{1F939}\u{200D}\u{2640}\u{FE0F}", "woman juggling",
-    e("\u{1F939}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman juggling: light skin tone"),
-    e("\u{1F939}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman juggling: medium-light skin tone"),
-    e("\u{1F939}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman juggling: medium skin tone"),
-    e("\u{1F939}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman juggling: medium-dark skin tone"),
-    e("\u{1F939}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman juggling: dark skin tone"));
-export const sports = [
-    g(
-        "\u{1F9D7}", "person climbing",
-        personClimbing,
-        manClimbing,
-        womanClimbing),
-    personFencing,
-    personRacingHorse,
-    personSkiing,
-    personSnowboarding,
-    g(
-        "\u{1F3CC}\u{FE0F}", "person golfing",
-        personGolfing,
-        manGolfing,
-        womanGolfing),
-    g(
-        "\u{1F3C4}", "person surfing",
-        personSurfing,
-        manSurfing,
-        womanSurfing),
-    g(
-        "\u{1F6A3}", "person rowing boat",
-        personRowing,
-        manRowing,
-        womanRowing),
-    g(
-        "\u{1F3CA}", "person swimming",
-        personSwimming,
-        manSwimming,
-        womanSwimming),
-    g(
-        "\u{26F9}\u{FE0F}", "person bouncing ball",
-        personBouncingBall,
-        manBouncingBall,
-        womanBouncingBall),
-    g(
-        "\u{1F3CB}\u{FE0F}", "person lifting weights",
-        personLiftingWeights,
-        manLifitingWeights,
-        womanLiftingWeights),
-    g(
-        "\u{1F6B4}", "person biking",
-        personBiking,
-        manBiking,
-        womanBiking),
-    g(
-        "\u{1F6B5}", "person mountain biking",
-        personMountainBiking,
-        manMountainBiking,
-        womanMountainBiking),
-    g(
-        "\u{1F938}", "person cartwheeling",
-        personCartwheeling,
-        manCartwheeling,
-        womanCartweeling),
-    g(
-        "\u{1F93C}", "people wrestling",
-        peopleWrestling,
-        menWrestling,
-        womenWrestling),
-    g(
-        "\u{1F93D}", "person playing water polo",
-        personPlayingWaterPolo,
-        manPlayingWaterPolo,
-        womanPlayingWaterPolo),
-    g(
-        "\u{1F93E}", "person playing handball",
-        personPlayingHandball,
-        manPlayingHandball,
-        womanPlayingHandball),
-    g(
-        "\u{1F939}", "person juggling",
-        personJuggling,
-        manJuggling,
-        womanJuggling)
+export const inLotusPosition = skinAndSex("\u{1F9D8}", "In Lotus Position");
+export const inBath = skin("\u{1F6C0}", "In Bath");
+export const inBed = skin("\u{1F6CC}", "In Bed");
+export const inSauna = skinAndSex("\u{1F9D6}", "In Sauna");
+export const resting = [
+    inLotusPosition,
+    inBath,
+    inBed,
+    inSauna
 ];
-export const personInLotusPosition = g(
-    "\u{1F9D8}", "person in lotus position",
-    e("\u{1F9D8}\u{1F3FB}", "person in lotus position: light skin tone"),
-    e("\u{1F9D8}\u{1F3FC}", "person in lotus position: medium-light skin tone"),
-    e("\u{1F9D8}\u{1F3FD}", "person in lotus position: medium skin tone"),
-    e("\u{1F9D8}\u{1F3FE}", "person in lotus position: medium-dark skin tone"),
-    e("\u{1F9D8}\u{1F3FF}", "person in lotus position: dark skin tone"));
-export const manInLotusPosition = g(
-    "\u{1F9D8}\u{200D}\u{2642}\u{FE0F}", "man in lotus position",
-    e("\u{1F9D8}\u{1F3FB}\u{200D}\u{2642}\u{FE0F}", "man in lotus position: light skin tone"),
-    e("\u{1F9D8}\u{1F3FC}\u{200D}\u{2642}\u{FE0F}", "man in lotus position: medium-light skin tone"),
-    e("\u{1F9D8}\u{1F3FD}\u{200D}\u{2642}\u{FE0F}", "man in lotus position: medium skin tone"),
-    e("\u{1F9D8}\u{1F3FE}\u{200D}\u{2642}\u{FE0F}", "man in lotus position: medium-dark skin tone"),
-    e("\u{1F9D8}\u{1F3FF}\u{200D}\u{2642}\u{FE0F}", "man in lotus position: dark skin tone"));
-export const womanInLotusPosition = g(
-    "\u{1F9D8}\u{200D}\u{2640}\u{FE0F}", "woman in lotus position",
-    e("\u{1F9D8}\u{1F3FB}\u{200D}\u{2640}\u{FE0F}", "woman in lotus position: light skin tone"),
-    e("\u{1F9D8}\u{1F3FC}\u{200D}\u{2640}\u{FE0F}", "woman in lotus position: medium-light skin tone"),
-    e("\u{1F9D8}\u{1F3FD}\u{200D}\u{2640}\u{FE0F}", "woman in lotus position: medium skin tone"),
-    e("\u{1F9D8}\u{1F3FE}\u{200D}\u{2640}\u{FE0F}", "woman in lotus position: medium-dark skin tone"),
-    e("\u{1F9D8}\u{1F3FF}\u{200D}\u{2640}\u{FE0F}", "woman in lotus position: dark skin tone"));
-export const personTakingBath = g(
-    "\u{1F6C0}", "person taking bath",
-    e("\u{1F6C0}\u{1F3FB}", "person taking bath: light skin tone"),
-    e("\u{1F6C0}\u{1F3FC}", "person taking bath: medium-light skin tone"),
-    e("\u{1F6C0}\u{1F3FD}", "person taking bath: medium skin tone"),
-    e("\u{1F6C0}\u{1F3FE}", "person taking bath: medium-dark skin tone"),
-    e("\u{1F6C0}\u{1F3FF}", "person taking bath: dark skin tone"));
-export const personInBed = g(
-    "\u{1F6CC}", "person in bed",
-    e("\u{1F6CC}\u{1F3FB}", "person in bed: light skin tone"),
-    e("\u{1F6CC}\u{1F3FC}", "person in bed: medium-light skin tone"),
-    e("\u{1F6CC}\u{1F3FD}", "person in bed: medium skin tone"),
-    e("\u{1F6CC}\u{1F3FE}", "person in bed: medium-dark skin tone"),
-    e("\u{1F6CC}\u{1F3FF}", "person in bed: dark skin tone"));
-export const personResting = [
-    g(
-        personInLotusPosition.value, "in lotus position",
-        personInLotusPosition,
-        manInLotusPosition,
-        womanInLotusPosition),
-    personTakingBath,
-    personInBed,
-];
-export const people = [
-    {
-        value: baby.value, desc: "baby", alts: [
-            baby,
-            babyAngel,
-        ]
-    },
-    g(
-        "\u{1F9D2}", "child",
-        child,
-        boy,
-        girl),
-    {
-        value: "\u{1F9D1}", desc: "person", alts: [
-            g(
-                "\u{1F9D1}", "person",
-                person,
-                blondPerson,
-                olderPerson,
-                personFrowning,
-                personPouting,
-                personGesturingNo,
-                personGesturingOK,
-                personTippingHand,
-                personRaisingHand,
-                deafPerson,
-                personBowing,
-                personFacePalming,
-                personShrugging,
-                spy,
-                guard,
-                constructionWorker,
-                personWearingTurban,
-                superhero,
-                supervillain,
-                mage,
-                fairy,
-                vampire,
-                merperson,
-                elf,
-                genie,
-                zombie,
-                personGettingMassage,
-                personGettingHaircut,
-                personWalking,
-                personStanding,
-                personKneeling,
-                personRunning,
-                personInSteamyRoom,
-                personClimbing,
-                personFencing,
-                personRacingHorse,
-                personSkiing,
-                personSnowboarding,
-                personGolfing,
-                personSurfing,
-                personRowing,
-                personSwimming,
-                personBouncingBall,
-                personLiftingWeights,
-                personBiking,
-                personMountainBiking,
-                personCartwheeling,
-                peopleWrestling,
-                personPlayingWaterPolo,
-                personPlayingHandball,
-                personJuggling,
-                personInLotusPosition,
-                personTakingBath,
-                personInBed),
-            g(
-                "\u{1F468}", "man",
-                man,
-                blondMan,
-                redHairedMan,
-                curlyHairedMan,
-                whiteHairedMan,
-                baldMan,
-                beardedMan,
-                oldMan,
-                manFrowning,
-                manPouting,
-                manGesturingNo,
-                manGesturingOK,
-                manTippingHand,
-                manRaisingHand,
-                deafMan,
-                manBowing,
-                manFacePalming,
-                manShrugging,
-                manHealthWorker,
-                manStudent,
-                manTeacher,
-                manJudge,
-                manFarmer,
-                manCook,
-                manMechanic,
-                manFactoryWorker,
-                manOfficeWorker,
-                manScientist,
-                manTechnologist,
-                manSinger,
-                manArtist,
-                manPilot,
-                manAstronaut,
-                manFirefighter,
-                manPoliceOfficer,
-                manSpy,
-                manGuard,
-                manConstructionWorker,
-                prince,
-                manWearingTurban,
-                manWithChineseCap,
-                manInTuxedo,
-                santaClaus,
-                manSuperhero,
-                manSupervillain,
-                manMage,
-                manFairy,
-                manVampire,
-                merman,
-                manElf,
-                manGenie,
-                manZombie,
-                manGettingMassage,
-                manGettingHaircut,
-                manWalking,
-                manStanding,
-                manKneeling,
-                manWithProbingCane,
-                manInMotorizedWheelchair,
-                manInManualWheelchair,
-                manRunning,
-                manDancing,
-                manInSuitLevitating,
-                manInSteamyRoom,
-                manClimbing,
-                manGolfing,
-                manSurfing,
-                manRowing,
-                manSwimming,
-                manBouncingBall,
-                manLifitingWeights,
-                manBiking,
-                manMountainBiking,
-                manCartwheeling,
-                menWrestling,
-                manPlayingWaterPolo,
-                manPlayingHandball,
-                manJuggling,
-                manInLotusPosition),
-            g(
-                "\u{1F469}", "woman",
-                woman,
-                blondWoman,
-                redHairedWoman,
-                curlyHairedWoman,
-                whiteHairedWoman,
-                baldWoman,
-                oldWoman,
-                womanFrowning,
-                womanPouting,
-                womanGesturingNo,
-                womanGesturingOK,
-                womanTippingHand,
-                womanRaisingHand,
-                deafWoman,
-                womanBowing,
-                womanFacePalming,
-                womanShrugging,
-                womanHealthWorker,
-                womanStudent,
-                womanTeacher,
-                womanJudge,
-                womanFarmer,
-                womanCook,
-                womanMechanic,
-                womanFactoryWorker,
-                womanOfficeWorker,
-                womanScientist,
-                womanTechnologist,
-                womanSinger,
-                womanArtist,
-                womanPilot,
-                womanAstronaut,
-                womanFirefighter,
-                womanPoliceOfficer,
-                womanSpy,
-                womanGuard,
-                womanConstructionWorker,
-                princess,
-                womanWearingTurban,
-                womanWithHeadscarf,
-                brideWithVeil,
-                pregnantWoman,
-                breastFeeding,
-                mrsClaus,
-                womanSuperhero,
-                womanSupervillain,
-                womanMage,
-                womanFairy,
-                womanVampire,
-                mermaid,
-                womanElf,
-                womanGenie,
-                womanZombie,
-                womanGettingMassage,
-                womanGettingHaircut,
-                womanWalking,
-                womanStanding,
-                womanKneeling,
-                womanWithProbingCane,
-                womanInMotorizedWheelchair,
-                womanInManualWheelchair,
-                womanRunning,
-                womanDancing,
-                womanInSteamyRoom,
-                womanClimbing,
-                womanGolfing,
-                womanSurfing,
-                womanRowing,
-                womanSwimming,
-                womanBouncingBall,
-                womanLiftingWeights,
-                womanBiking,
-                womanMountainBiking,
-                womanCartweeling,
-                womenWrestling,
-                womanPlayingWaterPolo,
-                womanPlayingHandball,
-                womanJuggling,
-                womanInLotusPosition),
-        ]
-    },
-    g(
-        "\u{1F9D3}", "older person",
-        olderPerson,
-        oldMan,
-        oldWoman),
-];
+
+export const babies = g(baby, baby, cherub);
+export const people = g(
+    e("People", "People"),
+    babies,
+    children,
+    adults,
+    olderPeople);
 
 export const allPeople = [
     people,
     gestures,
-    activity,
+    inMotion,
+    resting,
     roles,
-    fantasy,
-    sports,
-    personResting,
-    otherPeople,
+    fantasy
 ];
 
 export function randomPerson() {
@@ -2667,7 +989,7 @@ export const plants = [
     e("\u{1F33A}", "Hibiscus"),
     e("\u{1F33B}", "Sunflower"),
     e("\u{1F33C}", "Blossom"),
-    e("\u{1F33E}", "Sheaf of Rice"),
+    sheafOfRice,
     e("\u{1F33F}", "Herb"),
     e("\u{1F340}", "Four Leaf Clover"),
     e("\u{1F341}", "Maple Leaf"),
@@ -2723,7 +1045,7 @@ export const food = [
     e("\u{1F365}", "Fish Cake with Swirl"),
     e("\u{1F371}", "Bento Box"),
     e("\u{1F372}", "Pot of Food"),
-    e("\u{1F373}", "Cooking"),
+    cooking,
     e("\u{1F37F}", "Popcorn"),
     e("\u{1F950}", "Croissant"),
     e("\u{1F951}", "Avocado"),
@@ -3094,7 +1416,6 @@ export const flags = [
 export const motorcycle = e("\u{1F3CD}\u{FE0F}", "Motorcycle");
 export const racingCar = e("\u{1F3CE}\u{FE0F}", "Racing Car");
 export const seat = e("\u{1F4BA}", "Seat");
-export const rocket = e("\u{1F680}", "Rocket");
 export const helicopter = e("\u{1F681}", "Helicopter");
 export const locomotive = e("\u{1F682}", "Locomotive");
 export const railwayCar = e("\u{1F683}", "Railway Car");
@@ -3112,7 +1433,6 @@ export const trolleyBus = e("\u{1F68E}", "Trolleybus");
 export const busStop = e("\u{1F68F}", "Bus Stop");
 export const miniBus = e("\u{1F690}", "Minibus");
 export const ambulance = e("\u{1F691}", "Ambulance");
-export const fireEngine = e("\u{1F692}", "Fire Engine");
 export const policeCar = e("\u{1F693}", "Police Car");
 export const oncomingPoliceCar = e("\u{1F694}", "Oncoming Police Car");
 export const taxi = e("\u{1F695}", "Taxi");
@@ -3153,14 +1473,11 @@ export const skateboard = e("\u{1F6F9}", "Skateboard");
 export const autoRickshaw = e("\u{1F6FA}", "Auto Rickshaw");
 export const pickupTruck = e("\u{1F6FB}", "Pickup Truck");
 export const rollerSkate = e("\u{1F6FC}", "Roller Skate");
-export const motorizedWheelchair = e("\u{1F9BC}", "Motorized Wheelchair");
-export const manualWheelchair = e("\u{1F9BD}", "Manual Wheelchair");
 export const parachute = e("\u{1FA82}", "Parachute");
 export const anchor = e("\u{2693}", "Anchor");
 export const ferry = e("\u{26F4}\u{FE0F}", "Ferry");
 export const sailboat = e("\u{26F5}", "Sailboat");
 export const fuelPump = e("\u{26FD}", "Fuel Pump");
-export const airplane = e("\u{2708}\u{FE0F}", "Airplane");
 export const vehicles = [
     motorcycle,
     racingCar,
@@ -3561,8 +1878,8 @@ export const math = [
 export const games = [
     e("\u{2660}\u{FE0F}", "Spade Suit"),
     e("\u{2663}\u{FE0F}", "Club Suit"),
-    { value: "\u{2665}\u{FE0F}", desc: "Heart Suit", color: "red" },
-    { value: "\u{2666}\u{FE0F}", desc: "Diamond Suit", color: "red" },
+    Object.assign(e("\u{2665}\u{FE0F}", "Heart Suit"), { color: "red" }),
+    Object.assign(e("\u{2666}\u{FE0F}", "Diamond Suit"), { color: "red" }),
     e("\u{1F004}", "Mahjong Red Dragon"),
     e("\u{1F0CF}", "Joker"),
     e("\u{1F3AF}", "Direct Hit"),
@@ -3634,7 +1951,7 @@ export const clothing = [
     e("\u{1F97D}", "Goggles"),
     e("\u{1F97E}", "Hiking Boot"),
     e("\u{1F97F}", "Flat Shoe"),
-    e("\u{1F9AF}", "White Cane"),
+    whiteCane,
     e("\u{1F9BA}", "Safety Vest"),
     e("\u{1F9E2}", "Billed Cap"),
     e("\u{1F9E3}", "Scarf"),
@@ -3669,9 +1986,9 @@ export const town = [
     e("\u{1F3E8}", "Hotel"),
     e("\u{1F3E9}", "Love Hotel"),
     e("\u{1F3EA}", "Convenience Store"),
-    e("\u{1F3EB}", "School"),
+    school,
     e("\u{1F3EC}", "Department Store"),
-    e("\u{1F3ED}", "Factory"),
+    factory,
     e("\u{1F309}", "Bridge at Night"),
     e("\u{26F2}", "Fountain"),
     e("\u{1F6CD}\u{FE0F}", "Shopping Bags"),
@@ -3804,15 +2121,12 @@ export const adhesiveBandage = e("\u{1FA79}", "Adhesive Bandage");
 export const stehoscope = e("\u{1FA7A}", "Stethoscope");
 export const syringe = e("\u{1F489}", "Syringe");
 export const pill = e("\u{1F48A}", "Pill");
-export const micrscope = e("\u{1F52C}", "Microscope");
 export const testTube = e("\u{1F9EA}", "Test Tube");
 export const petriDish = e("\u{1F9EB}", "Petri Dish");
 export const dna = e("\u{1F9EC}", "DNA");
 export const abacus = e("\u{1F9EE}", "Abacus");
 export const magnet = e("\u{1F9F2}", "Magnet");
 export const telescope = e("\u{1F52D}", "Telescope");
-export const medicalSymbol = e("\u{2695}\u{FE0F}", "Medical Symbol");
-export const balanceScale = e("\u{2696}\u{FE0F}", "Balance Scale");
 export const alembic = e("\u{2697}\u{FE0F}", "Alembic");
 export const gear = e("\u{2699}\u{FE0F}", "Gear");
 export const atomSymbol = e("\u{269B}\u{FE0F}", "Atom Symbol");
@@ -3825,14 +2139,14 @@ export const science = [
     stehoscope,
     syringe,
     pill,
-    micrscope,
+    microscope,
     testTube,
     petriDish,
     dna,
     abacus,
     magnet,
     telescope,
-    medicalSymbol,
+    medical,
     balanceScale,
     alembic,
     gear,
@@ -3843,8 +2157,6 @@ export const science = [
 export const joystick = e("\u{1F579}\u{FE0F}", "Joystick");
 export const videoGame = e("\u{1F3AE}", "Video Game");
 export const lightBulb = e("\u{1F4A1}", "Light Bulb");
-export const laptop = e("\u{1F4BB}", "Laptop");
-export const briefcase = e("\u{1F4BC}", "Briefcase");
 export const computerDisk = e("\u{1F4BD}", "Computer Disk");
 export const floppyDisk = e("\u{1F4BE}", "Floppy Disk");
 export const opticalDisk = e("\u{1F4BF}", "Optical Disk");
@@ -3868,7 +2180,6 @@ export const filProjector = e("\u{1F4FD}\u{FE0F}", "Film Projector");
 export const studioMicrophone = e("\u{1F399}\u{FE0F}", "Studio Microphone");
 export const levelSlider = e("\u{1F39A}\u{FE0F}", "Level Slider");
 export const controlKnobs = e("\u{1F39B}\u{FE0F}", "Control Knobs");
-export const microphone = e("\u{1F3A4}", "Microphone");
 export const movieCamera = e("\u{1F3A5}", "Movie Camera");
 export const headphone = e("\u{1F3A7}", "Headphone");
 export const camera = e("\u{1F4F7}", "Camera");
@@ -3987,15 +2298,16 @@ export const celebration = [
     e("\u{1F390}", "Wind Chime"),
     e("\u{1F391}", "Moon Viewing Ceremony"),
     e("\u{1F392}", "Backpack"),
-    e("\u{1F393}", "Graduation Cap"),
+    graduationCap,
     e("\u{1F9E7}", "Red Envelope"),
     e("\u{1F3EE}", "Red Paper Lantern"),
     e("\u{1F396}\u{FE0F}", "Military Medal"),
 ];
+
 export const tools = [
     e("\u{1F3A3}", "Fishing Pole"),
     e("\u{1F526}", "Flashlight"),
-    e("\u{1F527}", "Wrench"),
+    wrench,
     e("\u{1F528}", "Hammer"),
     e("\u{1F529}", "Nut and Bolt"),
     e("\u{1F6E0}\u{FE0F}", "Hammer and Wrench"),
@@ -4163,7 +2475,7 @@ export const activities = [
     e("\u{1F3A0}", "Carousel Horse"),
     e("\u{1F3A1}", "Ferris Wheel"),
     e("\u{1F3A2}", "Roller Coaster"),
-    e("\u{1F3A8}", "Artist Palette"),
+    artistPalette,
     e("\u{1F3AA}", "Circus Tent"),
     e("\u{1F3AB}", "Ticket"),
     e("\u{1F3AC}", "Clapper Board"),
@@ -4193,7 +2505,7 @@ export const travel = [
 export const medieval = [
     e("\u{1F3F0}", "Castle"),
     e("\u{1F3F9}", "Bow and Arrow"),
-    e("\u{1F451}", "Crown"),
+    crown,
     e("\u{1F531}", "Trident Emblem"),
     e("\u{1F5E1}\u{FE0F}", "Dagger"),
     e("\u{1F6E1}\u{FE0F}", "Shield"),
@@ -4254,13 +2566,7 @@ export const whiteChessBishop = e("\u{2657}", "White Chess Bishop");
 export const whiteChessKnight = e("\u{2658}", "White Chess Knight");
 export const whiteChessPawn = e("\u{2659}", "White Chess Pawn");
 export const whiteChessPieces = Object.assign(g(
-    whiteChessKing.value
-    + whiteChessQueen.value
-    + whiteChessRook.value
-    + whiteChessBishop.value
-    + whiteChessKnight.value
-    + whiteChessPawn.value,
-    "White Chess Pieces",
+    e(whiteChessKing.value + whiteChessQueen.value + whiteChessRook.value + whiteChessBishop.value + whiteChessKnight.value + whiteChessPawn.value, "White Chess Pieces"),
     whiteChessKing,
     whiteChessQueen,
     whiteChessRook,
@@ -4283,13 +2589,7 @@ export const blackChessBishop = e("\u{265D}", "Black Chess Bishop");
 export const blackChessKnight = e("\u{265E}", "Black Chess Knight");
 export const blackChessPawn = e("\u{265F}", "Black Chess Pawn");
 export const blackChessPieces = Object.assign(g(
-    blackChessKing.value
-    + blackChessQueen.value
-    + blackChessRook.value
-    + blackChessBishop.value
-    + blackChessKnight.value
-    + blackChessPawn.value,
-    "Black Chess Pieces",
+    e(blackChessKing.value + blackChessQueen.value + blackChessRook.value + blackChessBishop.value + blackChessKnight.value + blackChessPawn.value, "Black Chess Pieces"),
     blackChessKing,
     blackChessQueen,
     blackChessRook,
@@ -4305,8 +2605,7 @@ export const blackChessPieces = Object.assign(g(
     pawn: blackChessPawn
 });
 export const chessPawns = Object.assign(g(
-    whiteChessPawn.value + blackChessPawn.value,
-    "Chess Pawns",
+    e(whiteChessPawn.value + blackChessPawn.value, "Chess Pawns"),
     whiteChessPawn,
     blackChessPawn), {
     width: "auto",
@@ -4314,8 +2613,7 @@ export const chessPawns = Object.assign(g(
     black: blackChessPawn
 });
 export const chessRooks = Object.assign(g(
-    whiteChessRook.value + blackChessRook.value,
-    "Chess Rooks",
+    e(whiteChessRook.value + blackChessRook.value, "Chess Rooks"),
     whiteChessRook,
     blackChessRook), {
     width: "auto",
@@ -4323,8 +2621,7 @@ export const chessRooks = Object.assign(g(
     black: blackChessRook
 });
 export const chessBishops = Object.assign(g(
-    whiteChessBishop.value + blackChessBishop.value,
-    "Chess Bishops",
+    e(whiteChessBishop.value + blackChessBishop.value, "Chess Bishops"),
     whiteChessBishop,
     blackChessBishop), {
     width: "auto",
@@ -4332,8 +2629,7 @@ export const chessBishops = Object.assign(g(
     black: blackChessBishop
 });
 export const chessKnights = Object.assign(g(
-    whiteChessKnight.value + blackChessKnight.value,
-    "Chess Knights",
+    e(whiteChessKnight.value + blackChessKnight.value, "Chess Knights"),
     whiteChessKnight,
     blackChessKnight), {
     width: "auto",
@@ -4341,8 +2637,7 @@ export const chessKnights = Object.assign(g(
     black: blackChessKnight
 });
 export const chessQueens = Object.assign(g(
-    whiteChessQueen.value + blackChessQueen.value,
-    "Chess Queens",
+    e(whiteChessQueen.value + blackChessQueen.value, "Chess Queens"),
     whiteChessQueen,
     blackChessQueen), {
     width: "auto",
@@ -4350,8 +2645,7 @@ export const chessQueens = Object.assign(g(
     black: blackChessQueen
 });
 export const chessKings = Object.assign(g(
-    whiteChessKing.value + blackChessKing.value,
-    "Chess Kings",
+    e(whiteChessKing.value + blackChessKing.value, "Chess Kings"),
     whiteChessKing,
     blackChessKing), {
     width: "auto",
@@ -4359,8 +2653,7 @@ export const chessKings = Object.assign(g(
     black: blackChessKing
 });
 export const chess = Object.assign(g(
-    chessKings.value,
-    "Chess Pieces",
+    e(chessKings.value, "Chess Pieces"),
     whiteChessPieces,
     blackChessPieces,
     chessPawns,
@@ -4380,44 +2673,27 @@ export const chess = Object.assign(g(
     kings: chessKings
 });
 
-export const textStyle = e("\u{FE0E}", "Variation Selector-15: text style");
-export const emojiStyle = e("\u{FE0F}", "Variation Selector-16: emoji style");
-export const zeroWidthJoiner = e("\u{200D}", "Zero Width Joiner");
-export const combiningClosingKeycap = e("\u{20E3}", "Combining Enclosing Keycap");
-export const combiners = [
-    textStyle,
-    emojiStyle,
-    zeroWidthJoiner,
-    combiningClosingKeycap,
-];
 export const allIcons = {
     faces,
     love,
     cartoon,
     hands,
     bodyParts,
-    sex,
     people,
     gestures,
-    activity,
+    inMotion,
+    resting,
     roles,
     fantasy,
-    sports,
-    personResting,
-    otherPeople,
-    skinTones,
-    hairColors,
     animals,
     plants,
     food,
     sweets,
     drinks,
     utensils,
-    nations,
     flags,
     vehicles,
     bloodTypes,
-    regions,
     japanese,
     time,
     clocks,
@@ -4426,8 +2702,6 @@ export const allIcons = {
     mediaPlayer,
     zodiac,
     chess,
-    numbers,
-    tags,
     math,
     games,
     sportsEquipment,
@@ -4450,7 +2724,5 @@ export const allIcons = {
     household,
     activities,
     travel,
-    medieval,
-    marks,
-    combiners
+    medieval
 };
