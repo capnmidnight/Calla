@@ -50,6 +50,9 @@ export class MockJitsiClient extends BaseJitsiClient {
             }));
     }
 
+    leave() {
+    }
+
     setDisplayName(displayName) {
         this.userName = displayName;
     }
