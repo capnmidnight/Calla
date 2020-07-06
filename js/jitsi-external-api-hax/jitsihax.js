@@ -584,8 +584,6 @@ class Destination extends EventTarget {
 
         /** @type {BasePosition} */
         this.position = null;
-
-        this.createContext();
     }
 
     createContext() {
@@ -931,7 +929,8 @@ function add(a, b) {
 Event.clone = function (target, ...objs) {
     for (let obj of objs) {
         for (let key in obj) {
-            if (key !== "isTrusted") {
+            if (key !== "isTrusted"
+                && !Event.prototype.hasOwnProperty(key)) {
                 target[key] = obj[key];
             }
         }
@@ -1014,19 +1013,21 @@ EventTarget.prototype.until = function (untilEvt, callback, test, repeatTimeout,
 
         this.addEventListener(untilEvt, success);
 
-        if (cancelTimeout !== undefined) {
-            canceller = setTimeout(() => {
-                cleanup();
-                reject("timeout");
-            }, cancelTimeout);
-        }
+        if (repeatTimeout !== undefined) {
+            if (cancelTimeout !== undefined) {
+                canceller = setTimeout(() => {
+                    cleanup();
+                    reject("timeout");
+                }, cancelTimeout);
+            }
 
-        function repeater() {
-            callback();
-            timer = setTimeout(repeater, repeatTimeout);
-        }
+            function repeater() {
+                callback();
+                timer = setTimeout(repeater, repeatTimeout);
+            }
 
-        timer = setTimeout(repeater, 0);
+            timer = setTimeout(repeater, 0);
+        }
     });
 };
 
@@ -1221,9 +1222,13 @@ class AudioManager extends BaseAudioClient {
                 source.update();
             }
         });
-        this.timer.start();
 
         Object.seal(this);
+    }
+
+    start() {
+        this.destination.createContext();
+        this.timer.start();
     }
 
     /**
