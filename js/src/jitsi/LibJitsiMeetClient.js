@@ -1,8 +1,7 @@
 ﻿import { tag } from "../html/tag.js";
-import { Span } from "../html/tags.js";
 import { BaseJitsiClient } from "./BaseJitsiClient.js";
 import { AudioManager as AudioClient } from '../audio/AudioManager.js';
-import { id, autoPlay, srcObject, muted } from '../html/attrs.js';
+import { autoPlay, srcObject, muted } from '../html/attrs.js';
 
 const selfs = new Map(),
     audioActivityEvt = Object.assign(new Event("audioActivity"), {
@@ -44,10 +43,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             audioInput: null,
 
             /** @type {HTMLVideoElement} */
-            videoInput: null,
-
-            /** @type {Map.<MediaStreamTrack, Element>} */
-            trackElements: new Map()
+            videoInput: null
         });
 
         this.audioClient = new AudioClient();
@@ -192,13 +188,9 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
 
             this.conference.addEventListener(TRACK_ADDED, (track) => {
                 const userID = track.getParticipantId(),
-                    containerID = `participant_${userID}`,
                     isLocal = track.isLocal(),
-                    trackPrefix = isLocal ? "local" : "remote",
                     trackKind = track.getType(),
-                    trackType = trackKind.firstLetterToUpper(),
-                    trackID = track.getId(),
-                    trackElementID = `${trackPrefix}${trackType}_${trackID}`;
+                    trackType = trackKind.firstLetterToUpper();
 
                 setLoggers(track, JitsiMeetJS.events.track);
 
@@ -215,30 +207,16 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                     this.dispatchEvent(evt);
                 });
 
-                let container = document.getElementById(containerID);
-                if (container === null) {
-                    container = Span(id(containerID));
-                    this.element.appendChild(container);
-                }
-
-                let elem = document.getElementById(trackElementID);
-                if (elem !== null) {
-                    container.removeChild(elem);
-                }
-
-                elem = tag(trackType,
-                    id(trackElementID),
-                    autoPlay,
-                    muted,
+                const elem = tag(trackType,
+                    autoPlay(!isLocal),
+                    muted(isLocal),
                     srcObject(track.stream));
-                
-                if (trackKind === "audio") {
-                    container.appendChild(elem);
-                }
 
-                self.trackElements.set(track, elem);
                 if (isLocal) {
                     self[trackKind + "Input"] = track;
+                }
+                else if (trackKind === "audio") {
+                    this.audioClient.createSource(userID, elem);
                 }
 
                 this.dispatchEvent(Object.assign(new Event(trackKind + "Added"), {
@@ -248,32 +226,17 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             });
 
             this.conference.addEventListener(TRACK_REMOVED, (track) => {
+                const userID = track.getParticipantId(),
+                    trackKind = track.getType(),
+                    field = trackKind + "Input";
 
-                console.log("REMOVE TRACK", track);
-
-                if (self.trackElements.has(track)) {
-                    const userID = track.getParticipantId(),
-                        element = self.trackElements.get(track),
-                        container = element.parentElement,
-                        trackKind = track.getType(),
-                        field = trackKind + "Input";
-
-                    if (container) {
-                        container.removeChild(element);
-                        if (container.childElementCount === 0) {
-                            this.element.removeChild(container);
-                        }
-                    }
-                    self.trackElements.delete(track);
-
-                    if (self[field] === track) {
-                        self[field] = null;
-                    }
-
-                    this.dispatchEvent(Object.assign(new Event(trackKind + "Removed"), {
-                        id: userID
-                    }));
+                if (self[field] === track) {
+                    self[field] = null;
                 }
+
+                this.dispatchEvent(Object.assign(new Event(trackKind + "Removed"), {
+                    id: userID
+                }));
             });
 
             this.conference.addEventListener(ENDPOINT_MESSAGE_RECEIVED, (user, data) => {

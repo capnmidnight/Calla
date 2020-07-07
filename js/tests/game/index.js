@@ -35,7 +35,6 @@ import { srcObject, autoPlay } from "../../src/html/attrs.js";
         const video = Video(
             autoPlay,
             srcObject(stream));
-        client.element.appendChild(video);
         game.me.avatarVideo = video;
     });
 

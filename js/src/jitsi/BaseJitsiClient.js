@@ -38,19 +38,6 @@ export class BaseJitsiClient extends EventTarget {
 
     constructor() {
         super();
-        /** @type {HTMLElement} */
-        this.element = Div(
-            id("jitsi"),
-            style({
-                position: "absolute",
-                left: 0,
-                top: 0,
-                width: 0,
-                height: 0,
-                margin: 0,
-                padding: 0,
-                overflow: "hidden"
-            }));
 
         /** @type {String} */
         this.localUser = null;
@@ -64,11 +51,9 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     hide() {
-        this.element.hide();
     }
 
     show() {
-        this.element.show();
     }
 
     /**
@@ -76,10 +61,6 @@ export class BaseJitsiClient extends EventTarget {
      * @param {number} top
      */
     resize(top) {
-        if (top !== undefined) {
-            this.element.style.top = top + "px";
-            this.element.style.height = `calc(100% - ${top}px)`;
-        }
     }
 
     /**

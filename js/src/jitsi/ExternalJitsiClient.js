@@ -11,9 +11,43 @@ const audioActivityEvt = Object.assign(new Event("audioActivity"), {
 export class ExternalJitsiClient extends BaseJitsiClient {
     constructor() {
         super();
+
+        /** @type {HTMLElement} */
+        this.element = Div(
+            id("jitsi"),
+            style({
+                position: "absolute",
+                left: 0,
+                top: 0,
+                width: 0,
+                height: 0,
+                margin: 0,
+                padding: 0,
+                overflow: "hidden"
+            }));
+
         this.api = null;
 
         Object.seal(this);
+    }
+
+    hide() {
+        this.element.hide();
+    }
+
+    show() {
+        this.element.show();
+    }
+
+    /**
+     * 
+     * @param {number} top
+     */
+    resize(top) {
+        if (top !== undefined) {
+            this.element.style.top = top + "px";
+            this.element.style.height = `calc(100% - ${top}px)`;
+        }
     }
 
     dispose() {
