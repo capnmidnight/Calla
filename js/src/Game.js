@@ -4,7 +4,7 @@ import { Canvas } from "./html/tags.js";
 import { clamp, lerp, project, unproject } from "./math.js";
 import { TileMap } from "./TileMap.js";
 import { User } from "./User.js";
-import { GamepadManager } from "./gamepad/GamepadStateManager.js";
+import { EventedGamepad } from "./gamepad/EventedGamepad.js";
 
 const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_MAX = 8,
@@ -27,6 +27,9 @@ const CAMERA_LERP = 0.01,
     userJoinedEvt = Object.assign(new Event("userJoined", {
         user: null
     }));
+
+/** @type {Map.<Game, EventedGamepad>} */
+const gamepads = new Map();
 
 export class Game extends EventTarget {
 
@@ -76,6 +79,9 @@ export class Game extends EventTarget {
             keyButtonRight: "ArrowRight",
             keyButtonEmote: "e",
             keyButtonToggleAudio: "a",
+
+            gpAxisLeftRight: 0,
+            gpAxisUpDown: 1,
 
             gpButtonUp: 12,
             gpButtonDown: 13,
@@ -388,7 +394,7 @@ export class Game extends EventTarget {
     withUser(id, callback, timeout) {
         if (timeout === undefined) {
             timeout = 5000;
-        } 
+        }
         if (!!id) {
             if (this.users.has(id)) {
                 const user = this.users.get(id)
@@ -548,8 +554,14 @@ export class Game extends EventTarget {
                 }
             }
 
-            const pad = GamepadManager.gamepads[this.gamepadIndex];
-            if (pad) {
+            const gp = navigator.getGamepads()[this.gamepadIndex];
+            if (gp) {
+                if (!gamepads.has(this)) {
+                    gamepads.set(this, new EventedGamepad(gp));
+                }
+
+                const pad = gamepads.get(this);
+                pad.update(gp);
 
                 if (pad.buttons[this.inputBinding.gpButtonEmote].pressed) {
                     this.emote(this.me.id, this.currentEmoji);
@@ -574,8 +586,8 @@ export class Game extends EventTarget {
                     ++dx;
                 }
 
-                dx += Math.round(pad.axes[0]);
-                dy += Math.round(pad.axes[1]);
+                dx += Math.round(pad.axes[this.inputBinding.gpAxisLeftRight]);
+                dy += Math.round(pad.axes[this.inputBinding.gpAxisUpDown]);
 
                 this.targetOffsetCameraX += -50 * Math.round(2 * pad.axes[2]);
                 this.targetOffsetCameraY += -50 * Math.round(2 * pad.axes[3]);

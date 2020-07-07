@@ -12,6 +12,9 @@ export class InputBinding extends EventTarget {
             ["keyButtonEmote", "e"],
             ["keyButtonToggleAudio", "a"],
 
+            ["gpAxisLeftRight", 0],
+            ["gpAxisUpDown", 1],
+
             ["gpButtonUp", 12],
             ["gpButtonDown", 13],
             ["gpButtonLeft", 14],

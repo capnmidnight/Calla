@@ -1,13 +1,9 @@
-﻿// TODO
-// provide gamepad axis binding selector
-
-import { EmojiForm } from "./forms/EmojiForm.js";
+﻿import { EmojiForm } from "./forms/EmojiForm.js";
 import { InstructionsForm } from "./forms/InstructionsForm.js";
 import { LoginForm } from "./forms/LoginForm.js";
 import { OptionsForm } from "./forms/OptionsForm.js";
 import { ToolBar } from "./forms/ToolBar.js";
 import { Game } from "./Game.js";
-import { GamepadManager } from "./gamepad/GamepadStateManager.js";
 import { Settings } from "./Settings.js";
 import { BaseJitsiClient } from "./jitsi/BaseJitsiClient.js";
 
@@ -99,9 +95,9 @@ export function init(host, client) {
     }
 
     function refreshGamepads() {
-        options.gamepads = GamepadManager.gamepads;
+        options.gamepads = navigator.getGamepads();
+        options.gamepadIndex = game.gamepadIndex;
     }
-
 
     window.addEventListeners({
         resize: () => {

@@ -71,7 +71,7 @@ export class EventedGamepad extends EventTarget {
         gamepadStates.delete(this);
     }
 
-    _update(pad) {
+    update(pad) {
         if (!(pad instanceof Gamepad)) {
             throw new Error("Value must be a Gamepad");
         }
@@ -87,7 +87,7 @@ export class EventedGamepad extends EventTarget {
                 pressed = pad.buttons[b].pressed;
             if (pressed !== wasPressed) {
                 self.btnState[b] = pressed;
-                this.dispatchEvent((state
+                this.dispatchEvent((pressed
                     ? self.btnDownEvts
                     : self.btnUpEvts)[b]);
             }

@@ -1,5 +1,4 @@
 ﻿import { OptionsForm } from "../../src/forms/OptionsForm.js";
-import { GamepadManager } from "../../src/gamepad/GamepadStateManager.js";
 
 const options = new OptionsForm();
 document.body.appendChild(options.element);
@@ -12,13 +11,21 @@ options.inputBinding = {
     keyButtonUp: "ArrowLeft"
 };
 
-GamepadManager.addEventListener("gamepadconnected", () => {
-    options.gamepads = GamepadManager.gamepads;
+function refreshGamepads() {
+    options.gamepads = navigator.getGamepads();
+}
+
+window.addEventListeners({
+    gamepadconnected: refreshGamepads,
+    gamepaddisconnected: refreshGamepads
 });
 
-GamepadManager.addEventListener("gamepaddisconnected", () => {
-    options.gamepads = GamepadManager.gamepads;
+options.addEventListeners({
+    gamepadChanged: () => {
+        console.log(options.currentGamepadIndex);
+    }
 });
+
 
 (async function () {
     const devices = await navigator.mediaDevices.enumerateDevices();
