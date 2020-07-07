@@ -8,10 +8,15 @@ export class VideoAvatar extends BaseAvatar {
     constructor(video) {
         super();
         this.video = video;
+        this.video.play();
+        this.video
+            .once("canplay")
+            .then(() => this.video.play());
     }
 
     draw(g, width, height) {
         if (this.video !== null) {
+            this.video.play();
             const videoWidth = height * this.video.videoWidth / this.video.videoHeight;
             g.drawImage(
                 this.video,

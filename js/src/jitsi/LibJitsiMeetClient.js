@@ -231,8 +231,10 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                     autoPlay,
                     muted,
                     srcObject(track.stream));
-
-                container.appendChild(elem);
+                
+                if (trackKind === "audio") {
+                    container.appendChild(elem);
+                }
 
                 self.trackElements.set(track, elem);
                 if (isLocal) {
@@ -256,9 +258,11 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                         trackKind = track.getType(),
                         field = trackKind + "Input";
 
-                    container.removeChild(element);
-                    if (container.childElementCount === 0) {
-                        this.element.removeChild(container);
+                    if (container) {
+                        container.removeChild(element);
+                        if (container.childElementCount === 0) {
+                            this.element.removeChild(container);
+                        }
                     }
                     self.trackElements.delete(track);
 
