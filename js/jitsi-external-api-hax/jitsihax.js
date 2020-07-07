@@ -1153,9 +1153,6 @@ class WorkerTimer extends BaseTimer {
     }
 }
 
-//import { SetIntervalTimer as Timer } from "../timers/SetIntervalTimer.js";
-//import { SetTimeoutTimer as Timer } from "../timers/SetTimeoutTimer.js";
-
 const BUFFER_SIZE = 1024,
     audioActivityEvt$1 = Object.assign(new Event("audioActivity", {
         id: null,
@@ -1214,7 +1211,6 @@ class AudioManager extends BaseAudioClient {
             this.timer.start();
         });
 
-        /** @type {BaseTimer} */
         this.timer = new WorkerTimer(250);
         this.timer.addEventListener("tick", () => {
             this.destination.update();

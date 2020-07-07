@@ -469,11 +469,17 @@ class HtmlCustomTag extends EventTarget {
         super();
         if (rest.length === 1
             && rest[0] instanceof Element) {
+            /** @type {Element} */
             this.element = rest[0];
         }
         else {
+            /** @type {Element} */
             this.element = tag(tagName, ...rest);
         }
+    }
+
+    get id() {
+        return this.element.id;
     }
 }
 
@@ -3594,6 +3600,142 @@ class LoginForm extends FormDialog {
     }
 }
 
+const inputBindingChangedEvt = new Event("inputBindingChanged");
+
+class InputBinding extends EventTarget {
+    constructor() {
+        super();
+
+        const bindings = new Map([
+            ["keyButtonUp", "ArrowUp"],
+            ["keyButtonDown", "ArrowDown"],
+            ["keyButtonLeft", "ArrowLeft"],
+            ["keyButtonRight", "ArrowRight"],
+            ["keyButtonEmote", "e"],
+            ["keyButtonToggleAudio", "a"],
+
+            ["gpAxisLeftRight", 0],
+            ["gpAxisUpDown", 1],
+
+            ["gpButtonUp", 12],
+            ["gpButtonDown", 13],
+            ["gpButtonLeft", 14],
+            ["gpButtonRight", 15],
+            ["gpButtonEmote", 0],
+            ["gpButtonToggleAudio", 1]
+        ]);
+
+        for (let id of bindings.keys()) {
+            Object.defineProperty(this, id, {
+                get: () => bindings.get(id),
+                set: (v) => {
+                    if (bindings.has(id)
+                        && v !== bindings.get(id)) {
+                        bindings.set(id, v);
+                        this.dispatchEvent(inputBindingChangedEvt);
+                    }
+                }
+            });
+        }
+
+        this.clone = () => {
+            const c = {};
+            for (let kp of bindings.entries()) {
+                c[kp[0]] = kp[1];
+            }
+            return c;
+        };
+
+        Object.freeze(this);
+    }
+}
+
+const tickEvt = Object.assign(new Event("tick"), {
+    dt: 0
+});
+
+class BaseTimer extends EventTarget {
+
+    /**
+     * 
+     * @param {number} targetFrameRate
+     */
+    constructor(targetFrameRate) {
+        super();
+        this._lt = 0;
+        this._timer = null;
+        this.targetFrameRate = targetFrameRate;
+    }
+
+    /**
+     * 
+     * @param {number} dt
+     */
+    _onTick(dt) {
+        tickEvt.dt = dt;
+        this.dispatchEvent(tickEvt);
+    }
+
+    restart() {
+        this.stop();
+        this.start();
+    }
+
+    get isRunning() {
+        return this._timer !== null;
+    }
+
+    start() {
+        throw new Error("Not implemented in base class");
+    }
+
+    stop() {
+        this._timer = null;
+    }
+
+    /** @type {number} */
+    get targetFrameRate() {
+        return this._targetFPS;
+    }
+
+    set targetFrameRate(fps) {
+        this._targetFPS = fps;
+        this._frameTime = 1000 / fps;
+    }
+}
+
+class RequestAnimationFrameTimer extends BaseTimer {
+    constructor() {
+        super(60);
+    }
+
+    start() {
+        const updater = (t) => {
+            const dt = t - this._lt;
+            this._lt = t;
+            this._timer = requestAnimationFrame(updater);
+            this._onTick(dt);
+        };
+        this._lt = performance.now();
+        this._timer = requestAnimationFrame(updater);
+    }
+
+    stop() {
+        if (this.isRunning) {
+            cancelAnimationFrame(this._timer);
+            super.stop();
+        }
+    }
+
+    get targetFrameRate() {
+        return super.targetFrameRate;
+    }
+
+    set targetFrameRate(fps) {
+        console.warn("You cannot change the target framerate for requestAnimationFrame");
+    }
+}
+
 const gamepadStates = new Map();
 
 class EventedGamepad extends EventTarget {
@@ -3667,7 +3809,7 @@ class EventedGamepad extends EventTarget {
         gamepadStates.delete(this);
     }
 
-    _update(pad) {
+    update(pad) {
         if (!(pad instanceof Gamepad)) {
             throw new Error("Value must be a Gamepad");
         }
@@ -3683,7 +3825,7 @@ class EventedGamepad extends EventTarget {
                 pressed = pad.buttons[b].pressed;
             if (pressed !== wasPressed) {
                 self.btnState[b] = pressed;
-                this.dispatchEvent((state
+                this.dispatchEvent((pressed
                     ? self.btnDownEvts
                     : self.btnUpEvts)[b]);
             }
@@ -3720,149 +3862,6 @@ class EventedGamepad extends EventTarget {
     }
 }
 
-const gamepadConnectedEvt = Object.assign(new Event("gamepadconnected"), {
-    gamepad: null
-}),
-    gamepadDisconnectedEvt = Object.assign(new Event("gamepaddisconnected"), {
-        gamepad: null
-    });
-
-/** @type {Map.<string, EventedGamepad>} */
-const gamepads = new Map();
-
-const anyButtonDownEvt = Object.assign(new Event("gamepadbuttondown"), { button: -1 }),
-    anyButtonUpEvt = Object.assign(new Event("gamepadbuttonup"), { button: -1 }),
-    anyAxisMaxedEvt = Object.assign(new Event("gamepadaxismaxed"), { axis: -1 });
-
-class GamepadStateManager extends EventTarget {
-    constructor() {
-        super();
-
-        const onAnyButtonDown = (evt) => {
-            anyButtonDownEvt.button = evt.button;
-            this.dispatchEvent(anyButtonDownEvt);
-        };
-
-        const onAnyButtonUp = (evt) => {
-            anyButtonUpEvt.button = evt.button;
-            this.dispatchEvent(anyButtonUpEvt);
-        };
-
-        const onAnyAxisMaxed = (evt) => {
-            anyAxisMaxedEvt.axis = evt.axis;
-            this.dispatchEvent(anyAxisMaxedEvt);
-        };
-        
-        window.addEventListener("gamepadconnected", (/** @type {GamepadEvent} */ evt) => {
-            const pad = evt.gamepad,
-                gamepad = new EventedGamepad(pad);
-            gamepad.addEventListener("gamepadbuttondown", onAnyButtonDown);
-            gamepad.addEventListener("gamepadbuttonup", onAnyButtonUp);
-            gamepad.addEventListener("gamepadaxismaxed", onAnyAxisMaxed);
-            gamepads.set(pad.id, gamepad);
-            gamepadConnectedEvt.gamepad = gamepad;
-            this.dispatchEvent(gamepadConnectedEvt);
-        });
-
-        window.addEventListener("gamepaddisconnected", (evt) => {
-            const id = evt.gamepad.id,
-                gamepad = gamepads.get(id);
-            gamepads.delete(id);
-            gamepad.removeEventListener("gamepadbuttondown", onAnyButtonDown);
-            gamepad.removeEventListener("gamepadbuttonup", onAnyButtonUp);
-            gamepad.removeEventListener("gamepadaxismaxed", onAnyAxisMaxed);
-            gamepadDisconnectedEvt.gamepad = gamepad;
-            this.dispatchEvent(gamepadDisconnectedEvt);
-            gamepad.dispose();
-        });
-
-        Object.freeze(this);
-    }
-
-    /** @type {string[]} */
-    get gamepadIDs() {
-        return [...gamepads.keys()];
-    }
-
-    /** @type {EventedGamepad[]} */
-    get gamepads() {
-        return [...gamepads.values()];
-    }
-
-    /**
-     * 
-     * @param {string} id
-     * @returns {EventedGamepad}
-     */
-    get(id) {
-        return gamepads.get(id);
-    }
-}
-
-const GamepadManager = new GamepadStateManager();
-
-
-function update() {
-    requestAnimationFrame(update);
-    const pads = navigator.getGamepads();
-    for (let pad of pads) {
-        if (pad !== null
-            && gamepads.has(pad.id)) {
-            const gamepad = gamepads.get(pad.id);
-            gamepad._update(pad);
-        }
-    }
-}
-
-requestAnimationFrame(update);
-
-const inputBindingChangedEvt = new Event("inputBindingChanged");
-
-class InputBinding extends EventTarget {
-    constructor() {
-        super();
-
-        const bindings = new Map([
-            ["keyButtonUp", "ArrowUp"],
-            ["keyButtonDown", "ArrowDown"],
-            ["keyButtonLeft", "ArrowLeft"],
-            ["keyButtonRight", "ArrowRight"],
-            ["keyButtonEmote", "e"],
-            ["keyButtonToggleAudio", "a"],
-
-            ["gpButtonUp", 12],
-            ["gpButtonDown", 13],
-            ["gpButtonLeft", 14],
-            ["gpButtonRight", 15],
-            ["gpButtonEmote", 0],
-            ["gpButtonToggleAudio", 1]
-        ]);
-
-        for (let id of bindings.keys()) {
-            Object.defineProperty(this, id, {
-                get: () => bindings.get(id),
-                set: (v) => {
-                    if (bindings.has(id)
-                        && v !== bindings.get(id)) {
-                        bindings.set(id, v);
-                        this.dispatchEvent(inputBindingChangedEvt);
-                    }
-                }
-            });
-        }
-
-        this.clone = () => {
-            const c = {};
-            for (let kp of bindings.entries()) {
-                c[kp[0]] = kp[1];
-            }
-            return c;
-        };
-
-        Object.freeze(this);
-    }
-}
-
 const keyWidthStyle = style({ width: "7em" }),
     numberWidthStyle = style({ width: "3em" }),
     avatarUrlChangedEvt = new Event("avatarURLChanged"),
@@ -3876,6 +3875,12 @@ const keyWidthStyle = style({ width: "7em" }),
     audioInputChangedEvt = new Event("audioInputChanged"),
     audioOutputChangedEvt = new Event("audioOutputChanged"),
     videoInputChangedEvt = new Event("videoInputChanged"),
+    gamepadButtonUpEvt = Object.assign(new Event("gamepadbuttonup"), {
+        button: 0
+    }),
+    gamepadAxisMaxedEvt = Object.assign(new Event("gamepadaxismaxed"), {
+        axis: 0
+    }),
     selfs$1 = new Map();
 
 class OptionsForm extends FormDialog {
@@ -3885,7 +3890,11 @@ class OptionsForm extends FormDialog {
         const _ = (evt) => () => this.dispatchEvent(evt);
 
         const self = {
-            inputBinding: new InputBinding()
+            inputBinding: new InputBinding(),
+            timer: new RequestAnimationFrameTimer(),
+
+            /** @type {EventedGamepad} */
+            pad: null
         };
 
         selfs$1.set(this, self);
@@ -3911,17 +3920,35 @@ class OptionsForm extends FormDialog {
             return key;
         };
 
-        const makeGamepadBinder = (id, label) => {
+        const makeGamepadButtonBinder = (id, label) => {
             const gp = LabeledInput(
                 id,
                 "text",
                 label,
                 numberWidthStyle);
-            GamepadManager.addEventListener("gamepadbuttonup", (evt) => {
-                if (document.activeElement === gp) {
+            this.addEventListener("gamepadbuttonup", (evt) => {
+                if (document.activeElement === gp.input) {
                     gp.value
                         = self.inputBinding[id]
                         = evt.button;
+                    this.dispatchEvent(inputBindingChangedEvt$1);
+                }
+            });
+            gp.value = self.inputBinding[id];
+            return gp;
+        };
+
+        const makeGamepadAxisBinder = (id, label) => {
+            const gp = LabeledInput(
+                id,
+                "text",
+                label,
+                numberWidthStyle);
+            this.addEventListener("gamepadaxismaxed", (evt) => {
+                if (document.activeElement === gp.input) {
+                    gp.value
+                        = self.inputBinding[id]
+                        = evt.axis;
                     this.dispatchEvent(inputBindingChangedEvt$1);
                 }
             });
@@ -3975,12 +4002,14 @@ class OptionsForm extends FormDialog {
                     gp => gp.id,
                     gp => gp.id,
                     onInput(_(gamepadChangedEvt))),
-                this.gpButtonUp = makeGamepadBinder("gpButtonUp", "Up: "),
-                this.gpButtonDown = makeGamepadBinder("gpButtonDown", "Down: "),
-                this.gpButtonLeft = makeGamepadBinder("gpButtonLeft", "Left: "),
-                this.gpButtonRight = makeGamepadBinder("gpButtonRight", "Right: "),
-                this.gpButtonEmote = makeGamepadBinder("gpButtonEmote", "Emote: "),
-                this.gpButtonToggleAudio = makeGamepadBinder("gpButtonToggleAudio", "Toggle audio: ")),
+                this.gpAxisLeftRight = makeGamepadAxisBinder("gpAxisLeftRight", "Left/Right axis:"),
+                this.gpAxisUpDown = makeGamepadAxisBinder("gpAxisUpDown", "Up/Down axis:"),
+                this.gpButtonUp = makeGamepadButtonBinder("gpButtonUp", "Up button: "),
+                this.gpButtonDown = makeGamepadButtonBinder("gpButtonDown", "Down button: "),
+                this.gpButtonLeft = makeGamepadButtonBinder("gpButtonLeft", "Left button: "),
+                this.gpButtonRight = makeGamepadButtonBinder("gpButtonRight", "Right button: "),
+                this.gpButtonEmote = makeGamepadButtonBinder("gpButtonEmote", "Emote button: "),
+                this.gpButtonToggleAudio = makeGamepadButtonBinder("gpButtonToggleAudio", "Toggle audio button: ")),
 
             OptionPanel("audio", "Audio",
                 P(
@@ -4078,6 +4107,16 @@ class OptionsForm extends FormDialog {
                 for (let i = 0; i < panels.length; ++i) {
                     panels[i].visible = i === p;
                 }
+
+                const isGamepad = panels[p].id === "gamepad";
+                if (self.timer.isRunning !== isGamepad) {
+                    if (isGamepad) {
+                        self.timer.start();
+                    }
+                    else {
+                        self.timer.stop();
+                    }
+                }
             };
 
         for (let i = 0; i < panels.length; ++i) {
@@ -4090,6 +4129,26 @@ class OptionsForm extends FormDialog {
                 if (value[id] !== undefined
                     && this[id] != undefined) {
                     this[id].value = value[id];
+                }
+            }
+        });
+
+        self.timer.addEventListener("tick", () => {
+            const pad = this.currentGamepad;
+            if (pad) {
+                if (self.pad) {
+                    self.pad.update(pad);
+                }
+                else {
+                    self.pad = new EventedGamepad(pad);
+                    self.pad.addEventListener("gamepadbuttonup", (evt) => {
+                        gamepadButtonUpEvt.button = evt.button;
+                        this.dispatchEvent(gamepadButtonUpEvt);
+                    });
+                    self.pad.addEventListener("gamepadaxismaxed", (evt) => {
+                        gamepadAxisMaxedEvt.axis = evt.axis;
+                        this.dispatchEvent(gamepadAxisMaxedEvt);
+                    });
                 }
             }
         });
@@ -4155,6 +4214,19 @@ class OptionsForm extends FormDialog {
 
     set gamepads(values) {
         this.gpSelect.values = values;
+    }
+
+    get currentGamepadIndex() {
+        return this.gpSelect.selectedIndex;
+    }
+
+    get currentGamepad() {
+        if (this.currentGamepadIndex < 0) {
+            return null;
+        }
+        else {
+            return navigator.getGamepads()[this.currentGamepadIndex];
+        }
     }
 
     get audioInputDevices() {
@@ -4899,10 +4971,15 @@ class VideoAvatar extends BaseAvatar {
     constructor(video) {
         super();
         this.video = video;
+        this.video.play();
+        this.video
+            .once("canplay")
+            .then(() => this.video.play());
     }
 
     draw(g, width, height) {
         if (this.video !== null) {
+            this.video.play();
             const videoWidth = height * this.video.videoWidth / this.video.videoHeight;
             g.drawImage(
                 this.video,
@@ -5355,6 +5432,9 @@ const CAMERA_LERP = 0.01,
         user: null
     }));
 
+/** @type {Map.<Game, EventedGamepad>} */
+const gamepads = new Map();
+
 class Game extends EventTarget {
 
     constructor() {
@@ -5403,6 +5483,9 @@ class Game extends EventTarget {
             keyButtonRight: "ArrowRight",
             keyButtonEmote: "e",
             keyButtonToggleAudio: "a",
+
+            gpAxisLeftRight: 0,
+            gpAxisUpDown: 1,
 
             gpButtonUp: 12,
             gpButtonDown: 13,
@@ -5715,7 +5798,7 @@ class Game extends EventTarget {
     withUser(id, callback, timeout) {
         if (timeout === undefined) {
             timeout = 5000;
-        } 
+        }
         if (!!id) {
             if (this.users.has(id)) {
                 const user = this.users.get(id);
@@ -5875,8 +5958,14 @@ class Game extends EventTarget {
                 }
             }
 
-            const pad = GamepadManager.gamepads[this.gamepadIndex];
-            if (pad) {
+            const gp = navigator.getGamepads()[this.gamepadIndex];
+            if (gp) {
+                if (!gamepads.has(this)) {
+                    gamepads.set(this, new EventedGamepad(gp));
+                }
+
+                const pad = gamepads.get(this);
+                pad.update(gp);
 
                 if (pad.buttons[this.inputBinding.gpButtonEmote].pressed) {
                     this.emote(this.me.id, this.currentEmoji);
@@ -5901,8 +5990,8 @@ class Game extends EventTarget {
                     ++dx;
                 }
 
-                dx += Math.round(pad.axes[0]);
-                dy += Math.round(pad.axes[1]);
+                dx += Math.round(pad.axes[this.inputBinding.gpAxisLeftRight]);
+                dy += Math.round(pad.axes[this.inputBinding.gpAxisUpDown]);
 
                 this.targetOffsetCameraX += -50 * Math.round(2 * pad.axes[2]);
                 this.targetOffsetCameraY += -50 * Math.round(2 * pad.axes[3]);
@@ -6662,8 +6751,6 @@ class JitsiClientEvent extends Event {
     }
 }
 
-// TODO
-
 /**
  * 
  * @param {string} host
@@ -6752,9 +6839,9 @@ function init(host, client) {
     }
 
     function refreshGamepads() {
-        options.gamepads = GamepadManager.gamepads;
+        options.gamepads = navigator.getGamepads();
+        options.gamepadIndex = game.gamepadIndex;
     }
-
 
     window.addEventListeners({
         resize: () => {
@@ -7672,60 +7759,6 @@ class Destination extends EventTarget {
     }
 }
 
-const tickEvt = Object.assign(new Event("tick"), {
-    dt: 0
-});
-
-class BaseTimer extends EventTarget {
-
-    /**
-     * 
-     * @param {number} targetFrameRate
-     */
-    constructor(targetFrameRate) {
-        super();
-        this._lt = 0;
-        this._timer = null;
-        this.targetFrameRate = targetFrameRate;
-    }
-
-    /**
-     * 
-     * @param {number} dt
-     */
-    _onTick(dt) {
-        tickEvt.dt = dt;
-        this.dispatchEvent(tickEvt);
-    }
-
-    restart() {
-        this.stop();
-        this.start();
-    }
-
-    get isRunning() {
-        return this._timer !== null;
-    }
-
-    start() {
-        throw new Error("Not implemented in base class");
-    }
-
-    stop() {
-        this._timer = null;
-    }
-
-    /** @type {number} */
-    get targetFrameRate() {
-        return this._targetFPS;
-    }
-
-    set targetFrameRate(fps) {
-        this._targetFPS = fps;
-        this._frameTime = 1000 / fps;
-    }
-}
-
 function createWorker(script, stripFunc = true) {
     if (isFunction(script)) {
         script = script.toString();
@@ -7817,9 +7850,6 @@ class WorkerTimer extends BaseTimer {
     }
 }
 
-//import { SetIntervalTimer as Timer } from "../timers/SetIntervalTimer.js";
-//import { SetTimeoutTimer as Timer } from "../timers/SetTimeoutTimer.js";
-
 const BUFFER_SIZE = 1024,
     audioActivityEvt$1 = Object.assign(new Event("audioActivity", {
         id: null,
@@ -7878,7 +7908,6 @@ class AudioManager extends BaseAudioClient {
             this.timer.start();
         });
 
-        /** @type {BaseTimer} */
         this.timer = new WorkerTimer(250);
         this.timer.addEventListener("tick", () => {
             this.destination.update();
@@ -8188,8 +8217,10 @@ class LibJitsiMeetClient extends BaseJitsiClient {
                     autoPlay,
                     muted,
                     srcObject(track.stream));
-
-                container.appendChild(elem);
+                
+                if (trackKind === "audio") {
+                    container.appendChild(elem);
+                }
 
                 self.trackElements.set(track, elem);
                 if (isLocal) {
@@ -8213,9 +8244,11 @@ class LibJitsiMeetClient extends BaseJitsiClient {
                         trackKind = track.getType(),
                         field = trackKind + "Input";
 
-                    container.removeChild(element);
-                    if (container.childElementCount === 0) {
-                        this.element.removeChild(container);
+                    if (container) {
+                        container.removeChild(element);
+                        if (container.childElementCount === 0) {
+                            this.element.removeChild(container);
+                        }
                     }
                     self.trackElements.delete(track);
 
