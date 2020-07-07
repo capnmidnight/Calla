@@ -1,5 +1,6 @@
 ﻿* {
     box-sizing: border-box;
+    font-family: -apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif;
 }
 
 html,
@@ -12,8 +13,7 @@ body {
     height: 100%;
 }
 
-body {
-    font-family: -apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif;
+body{
     font-size: 12pt;
     line-height: 1.5;
     background-image: url("../starfield.jpg");
@@ -40,7 +40,7 @@ h2 {
     margin: auto;
     border-radius: 5px;
     border: solid 4px black;
-    box-shadow: rgba(0, 0, 0, .4) 10px 10px 20px
+    box-shadow: rgba(0, 0, 0, .4) 10px 10px 20px;
 }
 
     .dialog h1 {
