@@ -67,12 +67,12 @@ export class BaseSpatializer extends EventTarget {
 
         if (muted !== this.wasMuted) {
             this.wasMuted = muted;
-            if (muted) {
-                this.mute();
-            }
-            else {
-                this.unmute();
-            }
+            //if (muted) {
+            //    this.mute();
+            //}
+            //else {
+            //    this.unmute();
+            //}
         }
     }
 

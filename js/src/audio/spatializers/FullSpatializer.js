@@ -15,7 +15,6 @@ export class FullSpatializer extends BaseWebAudioSpatializer {
         const panner = destination.audioContext.createPanner(),
             position = new WebAudioNodePosition(panner, forceInterpolatedPosition);
         super(userID, destination, audio, position, bufferSize, panner);
-        this.forceInterpolatedPosition = forceInterpolatedPosition;
 
         this.inNode.panningModel = "HRTF";
         this.inNode.distanceModel = "inverse";

@@ -7,14 +7,17 @@ import { InterpolatedPosition } from "./positions/InterpolatedPosition.js";
 import { VolumeOnlySpatializer } from "./spatializers/VolumeOnlySpatializer.js";
 import { FullSpatializer } from "./spatializers/FullSpatializer.js";
 import { StereoSpatializer } from "./spatializers/StereoSpatializer.js";
+import { GoogleResonanceAudioScene } from "./positions/GoogleResonanceAudioScene.js";
+import { GoogleResonanceAudioSpatializer } from "./spatializers/GoogleResonanceAudioSpatializer.js";
 
-const forceInterpolatedPosition = true,
+const forceInterpolatedPosition = false,
     contextDestroyingEvt = new Event("contextDestroying"),
     contextDestroyedEvt = new Event("contextDestroyed");
 
 let hasWebAudioAPI = window.hasOwnProperty("AudioListener"),
     hasFullSpatializer = hasWebAudioAPI && window.hasOwnProperty("PannerNode"),
-    isLatestWebAudioAPI = hasWebAudioAPI && AudioListener.prototype.hasOwnProperty("positionX");
+    isLatestWebAudioAPI = hasWebAudioAPI && AudioListener.prototype.hasOwnProperty("positionX"),
+    attemptResonanceAPI = true;
 
 export class Destination extends EventTarget {
 
@@ -41,7 +44,20 @@ export class Destination extends EventTarget {
 
                     try {
                         if (isLatestWebAudioAPI) {
-                            this.position = new WebAudioNewListenerPosition(this.audioContext.listener, forceInterpolatedPosition);
+                            try {
+                                if (attemptResonanceAPI) {
+                                    this.position = new GoogleResonanceAudioScene(this.audioContext);
+                                }
+                            }
+                            catch (exp3) {
+                                attemptResonanceAPI = false;
+                                console.warn("Resonance Audio API not available!", exp3);
+                            }
+                            finally {
+                                if (!attemptResonanceAPI) {
+                                    this.position = new WebAudioNewListenerPosition(this.audioContext.listener, forceInterpolatedPosition);
+                                }
+                            }
                         }
                     }
                     catch (exp2) {
@@ -96,7 +112,20 @@ export class Destination extends EventTarget {
             if (hasWebAudioAPI) {
                 try {
                     if (hasFullSpatializer) {
-                        return new FullSpatializer(userID, this, audio, bufferSize, forceInterpolatedPosition);
+                        try {
+                            if (attemptResonanceAPI) {
+                                return new GoogleResonanceAudioSpatializer(userID, this, audio, bufferSize);
+                            }
+                        }
+                        catch (exp3) {
+                            attemptResonanceAPI = false;
+                            console.warn("Resonance Audio API not available!", exp3);
+                        }
+                        finally {
+                            if (!attemptResonanceAPI) {
+                                return new FullSpatializer(userID, this, audio, bufferSize, forceInterpolatedPosition);
+                            }
+                        }
                     }
                 }
                 catch (exp2) {
