@@ -65,12 +65,14 @@ function g(...r) {
 export const textStyle = e("\u{FE0E}", "Variation Selector-15: text style");
 export const emojiStyle = e("\u{FE0F}", "Variation Selector-16: emoji style");
 export const zeroWidthJoiner = e("\u{200D}", "Zero Width Joiner");
-export const combiningClosingKeycap = e("\u{20E3}", "Combining Enclosing Keycap");
+export const combiningEnclosingCircleBackslash = e("\u{20E3}", "Combining Enclosing Circle Backslash");
+export const combiningEnclosingKeycap = e("\u{20E3}", "Combining Enclosing Keycap");
 export const combiners = [
     textStyle,
     emojiStyle,
     zeroWidthJoiner,
-    combiningClosingKeycap,
+    combiningEnclosingCircleBackslash,
+    combiningEnclosingKeycap,
 ];
 
 export const female = e("\u{2640}\u{FE0F}", "Female");

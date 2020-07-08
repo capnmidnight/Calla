@@ -1,13 +1,23 @@
-﻿import { ToolBar } from "../../src/forms/ToolBar.js";
-import { P } from "../../src/html/tags.js";
-const toolbar = new ToolBar();
-document.body.appendChild(toolbar.element);
+﻿import { HeaderBar } from "../../src/forms/HeaderBar.js";
+import { P, BR } from "../../src/html/tags.js";
+import { FooterBar } from "../../src/forms/FooterBar.js";
+
+const headbar = new HeaderBar();
+const footbar = new FooterBar();
+
+document.body.append(
+    headbar.element,
+    BR(),
+    BR(),
+    BR(),
+    BR(),
+    footbar.element);
 
 let muted = false;
 
-toolbar.addEventListener("toggleAudio", (evt) => {
+footbar.addEventListener("toggleAudio", (evt) => {
     muted = !muted;
-    toolbar.audioEnabled = !muted;
+    footbar.audioEnabled = !muted;
 });
 
 function echo(evt) {
@@ -18,17 +28,16 @@ function echo(evt) {
     }, 3000);
 }
 
-document.body.append(P("asdf"));
-
-toolbar.addEventListeners({
-    toggleAudio: echo,
-    emote: echo,
-    selectEmoji: echo,
-    zoomChanged: echo,
+headbar.addEventListeners({
     options: echo,
     tweet: echo,
     leave: echo,
-    toggleUI: echo,
     toggleOptions: echo,
     toggleInstructions: echo
-})
+});
+
+footbar.addEventListeners({
+    toggleAudio: echo,
+    emote: echo,
+    selectEmoji: echo
+});

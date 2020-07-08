@@ -4,9 +4,8 @@ import { ariaLabel, className, href, rel, role, target, title } from "./src/html
 import { A, H2, P, Span } from "./src/html/tags.js";
 import { init } from "./src/init.js";
 import { LibJitsiMeetClient as JitsiClient } from "./src/jitsi/LibJitsiMeetClient.js";
-//import { ExternalJitsiClient as JitsiClient } from "./src/jitsi/ExternalJitsiClient.js";
 
-const { toolbar, login } = init(JITSI_HOST, new JitsiClient());
+const { login } = init(JITSI_HOST, new JitsiClient());
 
 function adLink(url, label, icon) {
     return A(
@@ -18,16 +17,6 @@ function adLink(url, label, icon) {
         Span(className(`icon icon-${icon}`),
             role("presentation")));
 }
-
-toolbar.append(
-    adLink(
-        "https://github.com/capnmidnight/Calla",
-        "Follow Calla on GitHub",
-        "github"),
-    adLink(
-        "https://twitter.com/Sean_McBeth",
-        "Follow Sean on Twitter",
-        "twitter"));
 
 login.content.append(
     H2("Made by"),

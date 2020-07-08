@@ -39,17 +39,6 @@ export class ExternalJitsiClient extends BaseJitsiClient {
         this.element.show();
     }
 
-    /**
-     * 
-     * @param {number} top
-     */
-    resize(top) {
-        if (top !== undefined) {
-            this.element.style.top = top + "px";
-            this.element.style.height = `calc(100% - ${top}px)`;
-        }
-    }
-
     dispose() {
         super.dispose();
         if (this.api !== null) {

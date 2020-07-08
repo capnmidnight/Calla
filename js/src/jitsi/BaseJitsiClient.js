@@ -50,19 +50,6 @@ export class BaseJitsiClient extends EventTarget {
         this.preInitEvtQ = [];
     }
 
-    hide() {
-    }
-
-    show() {
-    }
-
-    /**
-     * 
-     * @param {number} top
-     */
-    resize(top) {
-    }
-
     /**
      * 
      * @param {string} host

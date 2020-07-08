@@ -30,11 +30,7 @@ h2 {
 }
 
 .dialog {
-    position: absolute;
     top: 3em;
-    left: 0;
-    right: 0;
-    bottom: 0;
     background-color: white;
     padding: 1em 1em 3em 1em;
     margin: auto;

@@ -311,18 +311,6 @@ export function width(value) { return new HtmlAttr("width", ["canvas", "embed", 
 // Indicates whether the text should be wrapped.
 export function wrap(value) { return new HtmlAttr("wrap", ["textarea"], value); }
 
-export const fillPageStyle = style({
-    position: "absolute",
-    display: "block",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    padding: 0,
-    margin: 0,
-    overflow: "hidden",
-});
-
 // A selection of fonts for preferred monospace rendering.
 export const monospaceFamily = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
 export const monospaceFont = style({ fontFamily: monospaceFamily });
@@ -330,3 +318,57 @@ export const monospaceFont = style({ fontFamily: monospaceFamily });
 // A selection of fonts that should match whatever the user's operating system normally uses.
 export const systemFamily = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
 export const systemFont = style({ fontFamily: systemFamily });
+
+
+
+/**
+ * 
+ * @param {number} x
+ */
+export function col(x, w) {
+    if (w === undefined) {
+        w = 1;
+    }
+
+    return style({
+        gridColumnStart: x,
+        gridColumnEnd: x + w
+    });
+}
+
+/**
+ * 
+ * @param {number} y
+ */
+export function row(y, h) {
+    if (h === undefined) {
+        h = 1;
+    }
+
+    return style({
+        gridRowStart: y,
+        gridRowEnd: y + h
+    });
+}
+
+/**
+ * 
+ * @param {number} x
+ * @param {number} y
+ */
+export function grid(x, y, w, h) {
+    if (w === undefined) {
+        w = 1;
+    }
+
+    if (h === undefined) {
+        h = 1;
+    }
+
+    return style({
+        gridRowStart: y,
+        gridRowEnd: y + h,
+        gridColumnStart: x,
+        gridColumnEnd: x + w
+    });
+}

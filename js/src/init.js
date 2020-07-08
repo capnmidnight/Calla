@@ -2,10 +2,12 @@
 import { InstructionsForm } from "./forms/InstructionsForm.js";
 import { LoginForm } from "./forms/LoginForm.js";
 import { OptionsForm } from "./forms/OptionsForm.js";
-import { ToolBar } from "./forms/ToolBar.js";
+import { HeaderBar } from "./forms/HeaderBar.js";
+import { FooterBar } from "./forms/FooterBar.js";
 import { Game } from "./Game.js";
 import { Settings } from "./Settings.js";
 import { BaseJitsiClient } from "./jitsi/BaseJitsiClient.js";
+import { grid } from "./html/attrs.js";
 
 /**
  * 
@@ -16,7 +18,8 @@ export function init(host, client) {
     const settings = new Settings(),
         game = new Game(),
         login = new LoginForm(),
-        toolbar = new ToolBar(),
+        headbar = new HeaderBar(),
+        footbar = new FooterBar(),
         options = new OptionsForm(),
         emoji = new EmojiForm(),
         instructions = new InstructionsForm(),
@@ -26,20 +29,44 @@ export function init(host, client) {
             client,
             game,
             login,
-            toolbar,
+            headbar,
+            footbar,
             options,
             emoji,
             instructions
-        };
+        },
 
-    for (let e of Object.values(forExport)) {
+        forAppend = [
+            game,
+            instructions,
+            options,
+            emoji,
+            login,
+            headbar,
+            footbar
+        ].filter(x => x.element);
+
+    document.body.style.display = "grid";
+    document.body.style.gridTemplateRows = "auto 1fr auto";
+    let z = 0;
+    for (let e of forAppend) {
         if (e.element) {
+            let y = 2;
+            if (e === headbar) {
+                y = 1;
+            }
+            else if (e === footbar) {
+                y = 3;
+            }
+            grid(1, y).apply(e.element);
+            e.element.style.zIndex = (z++);
             document.body.append(e.element);
         }
     }
 
     refreshGamepads();
-
+    headbar.enabled = false;
+    footbar.enabled = false;
     options.drawHearing = game.drawHearing = settings.drawHearing;
     options.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
     options.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;
@@ -47,40 +74,41 @@ export function init(host, client) {
     options.fontSize = game.fontSize = settings.fontSize;
     options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
     options.inputBinding = game.inputBinding = settings.inputBinding;
-    toolbar.zoom = game.cameraZ = game.targetCameraZ = settings.zoom;
+    game.cameraZ = game.targetCameraZ = settings.zoom;
     login.userName = settings.userName;
     login.roomName = settings.roomName;
 
     showLogin();
 
     function showLogin() {
-        client.hide();
         game.hide();
         options.hide();
         emoji.hide();
         instructions.hide();
+        headbar.enabled = false;
+        footbar.enabled = false;
         login.show();
     }
 
     async function withEmojiSelection(callback) {
         if (!emoji.isOpen()) {
-            toolbar.optionsButton.lock();
-            toolbar.instructionsButton.lock();
+            headbar.optionsButton.lock();
+            headbar.instructionsButton.lock();
             options.hide();
             instructions.hide();
             const e = await emoji.selectAsync();
             if (!!e) {
                 callback(e);
             }
-            toolbar.optionsButton.unlock();
-            toolbar.instructionsButton.unlock();
+            headbar.optionsButton.unlock();
+            headbar.instructionsButton.unlock();
         }
     }
 
     async function selectEmojiAsync() {
         await withEmojiSelection((e) => {
             game.emote(client.localUser, e);
-            toolbar.setEmojiButton(settings.inputBinding.keyButtonEmote, e);
+            footbar.setEmojiButton(settings.inputBinding.keyButtonEmote, e);
         });
     }
 
@@ -100,34 +128,23 @@ export function init(host, client) {
 
     window.addEventListeners({
         resize: () => {
-            game.resize(toolbar.offsetHeight);
-            client.resize(toolbar.offsetHeight);
+            game.resize();
         },
         gamepadconnected: refreshGamepads,
         gamepaddisconnected: refreshGamepads
     });
 
-    toolbar.addEventListeners({
-        toggleAudio: () => {
-            client.toggleAudioAsync();
-        },
-        selectEmoji: selectEmojiAsync,
-        emote: () => {
-            game.emote(client.localUser, game.currentEmoji);
-        },
-        zoomChanged: () => {
-            settings.zoom = game.targetCameraZ = toolbar.zoom;
-        },
+    headbar.addEventListeners({
         toggleOptions: () => {
             if (!emoji.isOpen()) {
-                instructions.hide();
+                login.hide();
                 options.toggleOpen();
             }
         },
         toggleInstructions: () => {
             if (!emoji.isOpen()) {
                 options.hide();
-                instructions.toggleOpen();
+                login.toggleOpen();
             }
         },
         tweet: () => {
@@ -137,6 +154,19 @@ export function init(host, client) {
         },
         leave: () => {
             client.leave();
+        }
+    });
+
+    footbar.addEventListeners({
+        selectEmoji: selectEmojiAsync,
+        emote: () => {
+            game.emote(client.localUser, game.currentEmoji);
+        },
+        toggleAudio: () => {
+            client.toggleAudioAsync();
+        },
+        toggleVideo: () => {
+            client.toggleVideoAsync();
         }
     });
 
@@ -207,7 +237,8 @@ export function init(host, client) {
         },
         gameStarted: () => {
             login.hide();
-            client.show();
+            headbar.enabled = true;
+            footbar.enabled = true;
 
             setAudioProperties();
 
@@ -225,13 +256,12 @@ export function init(host, client) {
         },
         gameEnded: () => {
             game.hide();
-            client.hide();
             login.connected = false;
             showLogin();
         },
         emojiNeeded: selectEmojiAsync,
         zoomChanged: () => {
-            settings.zoom = toolbar.zoom = game.targetCameraZ;
+            settings.zoom = game.targetCameraZ;
         }
     });
 
@@ -253,7 +283,7 @@ export function init(host, client) {
 
             const audioMuted = await client.isAudioMutedAsync();
             game.muteUserAudio({ id: client.localUser, muted: audioMuted });
-            toolbar.audioEnabled = !audioMuted;
+            footbar.audioEnabled = !audioMuted;
 
             const videoMuted = await client.isVideoMutedAsync();
             game.muteUserVideo({ id: client.localUser, muted: videoMuted });
@@ -290,7 +320,7 @@ export function init(host, client) {
             game.muteUserAudio(evt);
         },
         localAudioMuteStatusChanged: async (evt) => {
-            toolbar.audioEnabled = !evt.muted;
+            footbar.audioEnabled = !evt.muted;
             if (!evt.muted) {
                 options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
             }
@@ -300,6 +330,7 @@ export function init(host, client) {
         },
         localVideoMuteStatusChanged: async (evt) => {
             options.videoEnabled = !evt.muted;
+            footbar.videoEnabled = !evt.muted;
             if (!evt.muted) {
                 options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
             }

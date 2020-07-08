@@ -1,5 +1,5 @@
 ﻿import { Emote } from "./Emote.js";
-import { fillPageStyle, id, style } from "./html/attrs.js";
+import { id, style } from "./html/attrs.js";
 import { Canvas } from "./html/tags.js";
 import { clamp, lerp, project, unproject } from "./math.js";
 import { TileMap } from "./TileMap.js";
@@ -38,8 +38,11 @@ export class Game extends EventTarget {
 
         this.element = Canvas(
             id("frontBuffer"),
-            fillPageStyle,
-            style({ touchAction: "none" }));
+            style({
+                width: "100%",
+                height: "100%",
+                touchAction: "none"
+            }));
         this.gFront = this.element.getContext("2d");
 
         this.me = null
@@ -494,8 +497,8 @@ export class Game extends EventTarget {
     }
 
     startLoop() {
-        this.element.show();
-        this.element.resize();
+        this.show();
+        this.resize();
         this.element.focus();
 
         requestAnimationFrame((time) => {
@@ -504,11 +507,7 @@ export class Game extends EventTarget {
         });
     }
 
-    resize(top) {
-        if (top !== undefined) {
-            this.element.style.top = top + "px";
-            this.element.style.height = `calc(100% - ${top}px)`;
-        }
+    resize() {
         this.element.resize();
     }
 

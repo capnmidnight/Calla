@@ -20,7 +20,7 @@ import { srcObject, autoPlay } from "../../src/html/attrs.js";
     loginContent.parentElement.removeChild(loginContent);
 
     const components = init("jitsi.calla.chat", new JitsiClient());
-    const { game, login, client, toolbar } = components;
+    const { game, login, client, headbar } = components;
     Object.assign(window, components);
 
     let testUsers = null,
@@ -38,7 +38,7 @@ import { srcObject, autoPlay } from "../../src/html/attrs.js";
         game.me.avatarVideo = video;
     });
 
-    toolbar.addEventListener("leave", () => {
+    headbar.addEventListener("leave", () => {
         clearTimeout(spawnUserTimer);
         for (let testUser of client.testUsers) {
             testUser.stop();
