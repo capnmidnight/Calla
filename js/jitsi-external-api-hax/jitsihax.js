@@ -287,12 +287,12 @@ class BaseSpatializer extends EventTarget {
 
         if (muted !== this.wasMuted) {
             this.wasMuted = muted;
-            if (muted) {
-                this.mute();
-            }
-            else {
-                this.unmute();
-            }
+            //if (muted) {
+            //    this.mute();
+            //}
+            //else {
+            //    this.unmute();
+            //}
         }
     }
 
@@ -509,7 +509,6 @@ class FullSpatializer extends BaseWebAudioSpatializer {
         const panner = destination.audioContext.createPanner(),
             position = new WebAudioNodePosition(panner, forceInterpolatedPosition);
         super(userID, destination, audio, position, bufferSize, panner);
-        this.forceInterpolatedPosition = forceInterpolatedPosition;
 
         this.inNode.panningModel = "HRTF";
         this.inNode.distanceModel = "inverse";
@@ -559,15 +558,194 @@ class StereoSpatializer extends BaseWebAudioSpatializer {
     }
 }
 
+class GoogleResonanceAudioScene extends InterpolatedPosition {
+    /**
+     *
+     * @param {AudioContext} audioContext
+     */
+    constructor(audioContext) {
+        super();
+
+        this.scene = new ResonanceAudio(audioContext);
+        this.scene.output.connect(audioContext.destination);
+
+        this.position = new InterpolatedPosition();
+
+        this.scene.setRoomProperties({
+            width: 3.1,
+            height: 2.5,
+            depth: 3.4,
+        }, {
+            left: 'brick-bare',
+            right: 'curtain-heavy',
+            front: 'marble',
+            back: 'glass-thin',
+            down: 'grass',
+            up: 'transparent',
+        });
+    }
+
+    update(t) {
+        super.update(t);
+        this.scene.setListenerPosition(this.x, 0, this.y);
+    }
+}
+
+const audioActivityEvt$1 = Object.assign(new Event("audioActivity", {
+    id: null,
+    isActive: false
+})),
+    activityCounterMin$1 = 0,
+    activityCounterMax$1 = 60,
+    activityCounterThresh$1 = 5;
+
+/**
+ * 
+ * @param {number} frequency
+ * @param {number} sampleRate
+ * @param {number} bufferSize
+ */
+function frequencyToIndex$1(frequency, sampleRate, bufferSize) {
+    var nyquist = sampleRate / 2;
+    var index = Math.round(frequency / nyquist * bufferSize);
+    return clamp(index, 0, bufferSize)
+}
+
+/**
+ * 
+ * @param {AnalyserNode} analyser
+ * @param {Float32Array} frequencies
+ * @param {number} minHz
+ * @param {number} maxHz
+ * @param {number} bufferSize
+ */
+function analyserFrequencyAverage$1(analyser, frequencies, minHz, maxHz, bufferSize) {
+    const sampleRate = analyser.context.sampleRate,
+        start = frequencyToIndex$1(minHz, sampleRate, bufferSize),
+        end = frequencyToIndex$1(maxHz, sampleRate, bufferSize),
+        count = end - start;
+    let sum = 0;
+    for (let i = start; i < end; ++i) {
+        sum += frequencies[i];
+    }
+    return count === 0 ? 0 : (sum / count);
+}
+
+class GoogleResonanceAudioSpatializer extends BaseSpatializer {
+
+    /**
+     * 
+     * @param {string} userID
+     * @param {Destination} destination
+     * @param {HTMLAudioElement} audio
+     * @param {number} bufferSize
+     */
+    constructor(userID, destination, audio, bufferSize) {
+        const position = new InterpolatedPosition();
+        super(userID, destination, audio, position);
+
+        this.audio.volume = 0;
+
+        this.bufferSize = bufferSize;
+        this.buffer = new Float32Array(this.bufferSize);
+
+        /** @type {AnalyserNode} */
+        this.analyser = this.destination.audioContext.createAnalyser();
+        this.analyser.fftSize = 2 * this.bufferSize;
+        this.analyser.smoothingTimeConstant = 0.2;
+
+        this.inNode = this.destination.position.scene.createSource();
+
+        /** @type {boolean} */
+        this.wasActive = false;
+        this.lastAudible = true;
+        this.activityCounter = 0;
+
+        /** @type {MediaStream} */
+        this.stream = null;
+
+        /** @type {MediaSource} */
+        this.source = null;
+    }
+
+    mute() {
+        this.source.disconnect(this.analyser);
+        this.source.disconnect(this.inNode.input);
+    }
+
+    unmute() {
+        this.source.connect(this.analyser);
+        this.source.connect(this.inNode.input);
+    }
+
+    update() {
+        super.update();
+
+        this.inNode.setPosition(this.position.x, 0, this.position.y);
+
+        if (!this.source) {
+            try {
+                if (!this.stream) {
+                    this.stream = !!this.audio.mozCaptureStream
+                        ? this.audio.mozCaptureStream()
+                        : this.audio.captureStream();
+                }
+
+                if (this.stream.active) {
+                    this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
+                    this.unmute();
+                }
+            }
+            catch (exp) {
+                console.warn("Source isn't available yet. Will retry in a moment. Reason: ", exp);
+            }
+        }
+
+        if (!!this.source) {
+            this.analyser.getFloatFrequencyData(this.buffer);
+
+            const average = 1.1 + analyserFrequencyAverage$1(this.analyser, this.buffer, 85, 255, this.bufferSize) / 100;
+            if (average >= 0.5 && this.activityCounter < activityCounterMax$1) {
+                this.activityCounter++;
+            } else if (average < 0.5 && this.activityCounter > activityCounterMin$1) {
+                this.activityCounter--;
+            }
+
+            const isActive = this.activityCounter > activityCounterThresh$1;
+            if (this.wasActive !== isActive) {
+                this.wasActive = isActive;
+                audioActivityEvt$1.id = this.id;
+                audioActivityEvt$1.isActive = isActive;
+                this.dispatchEvent(audioActivityEvt$1);
+            }
+        }
+    }
+
+    dispose() {
+        if (!!this.source) {
+            this.mute();
+        }
+
+        this.source = null;
+        this.stream = null;
+        this.inNode = null;
+        this.analyser = null;
+        this.buffer = null;
+
+        super.dispose();
+    }
+}
+
 /* global window, AudioListener, AudioContext, Event, EventTarget */
 
-const forceInterpolatedPosition = true,
+const forceInterpolatedPosition = false,
     contextDestroyingEvt = new Event("contextDestroying"),
     contextDestroyedEvt = new Event("contextDestroyed");
 
 let hasWebAudioAPI = window.hasOwnProperty("AudioListener"),
     hasFullSpatializer = hasWebAudioAPI && window.hasOwnProperty("PannerNode"),
-    isLatestWebAudioAPI = hasWebAudioAPI && AudioListener.prototype.hasOwnProperty("positionX");
+    isLatestWebAudioAPI = hasWebAudioAPI && AudioListener.prototype.hasOwnProperty("positionX"),
+    attemptResonanceAPI = true;
 
 class Destination extends EventTarget {
 
@@ -594,7 +772,20 @@ class Destination extends EventTarget {
 
                     try {
                         if (isLatestWebAudioAPI) {
-                            this.position = new WebAudioNewListenerPosition(this.audioContext.listener, forceInterpolatedPosition);
+                            try {
+                                if (attemptResonanceAPI) {
+                                    this.position = new GoogleResonanceAudioScene(this.audioContext);
+                                }
+                            }
+                            catch (exp3) {
+                                attemptResonanceAPI = false;
+                                console.warn("Resonance Audio API not available!", exp3);
+                            }
+                            finally {
+                                if (!attemptResonanceAPI) {
+                                    this.position = new WebAudioNewListenerPosition(this.audioContext.listener, forceInterpolatedPosition);
+                                }
+                            }
                         }
                     }
                     catch (exp2) {
@@ -649,7 +840,20 @@ class Destination extends EventTarget {
             if (hasWebAudioAPI) {
                 try {
                     if (hasFullSpatializer) {
-                        return new FullSpatializer(userID, this, audio, bufferSize, forceInterpolatedPosition);
+                        try {
+                            if (attemptResonanceAPI) {
+                                return new GoogleResonanceAudioSpatializer(userID, this, audio, bufferSize);
+                            }
+                        }
+                        catch (exp3) {
+                            attemptResonanceAPI = false;
+                            console.warn("Resonance Audio API not available!", exp3);
+                        }
+                        finally {
+                            if (!attemptResonanceAPI) {
+                                return new FullSpatializer(userID, this, audio, bufferSize, forceInterpolatedPosition);
+                            }
+                        }
                     }
                 }
                 catch (exp2) {
@@ -1154,7 +1358,7 @@ class WorkerTimer extends BaseTimer {
 }
 
 const BUFFER_SIZE = 1024,
-    audioActivityEvt$1 = Object.assign(new Event("audioActivity", {
+    audioActivityEvt$2 = Object.assign(new Event("audioActivity", {
         id: null,
         isActive: false
     }));
@@ -1165,9 +1369,9 @@ class AudioManager extends BaseAudioClient {
         super();
 
         this.onAudioActivity = (evt) => {
-            audioActivityEvt$1.id = evt.id;
-            audioActivityEvt$1.isActive = evt.isActive;
-            this.dispatchEvent(audioActivityEvt$1);
+            audioActivityEvt$2.id = evt.id;
+            audioActivityEvt$2.isActive = evt.isActive;
+            this.dispatchEvent(audioActivityEvt$2);
         };
 
         /** @type {Map.<string, BaseSpatializer>} */
