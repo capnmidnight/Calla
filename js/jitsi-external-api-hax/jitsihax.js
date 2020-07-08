@@ -25,6 +25,13 @@ function clamp(v, min, max) {
     return Math.min(max, Math.max(min, v));
 }
 
+/**
+ * 
+ * @param {number} a
+ * @param {number} b
+ * @param {number} p
+ * @returns {number}
+ */
 function lerp(a, b, p) {
     return (1 - p) * a + p * b;
 }
@@ -242,7 +249,6 @@ class BaseSpatializer extends EventTarget {
         this.position = position;
         this.volume = 1;
         this.pan = 0;
-        this.wasMuted = false;
     }
 
     /**
@@ -255,14 +261,6 @@ class BaseSpatializer extends EventTarget {
         this.audio = null;
         this.destination = null;
         this.id = null;
-    }
-
-    mute() {
-        throw new Error("Not implemented in base class");
-    }
-
-    unmute() {
-        throw new Error("Not implemented in base class");
     }
 
     /**
@@ -282,18 +280,6 @@ class BaseSpatializer extends EventTarget {
         this.pan = dist > 0
             ? distX / dist
             : 0;
-
-        const muted = this.volume <= 0;
-
-        if (muted !== this.wasMuted) {
-            this.wasMuted = muted;
-            //if (muted) {
-            //    this.mute();
-            //}
-            //else {
-            //    this.unmute();
-            //}
-        }
     }
 
     /**
@@ -324,14 +310,6 @@ class VolumeOnlySpatializer extends BaseSpatializer {
     update() {
         super.update();
         this.audio.volume = this.volume;
-    }
-
-    mute() {
-        this.audio.muted = true;
-    }
-
-    unmute() {
-        this.audio.muted = false;
     }
 }
 
@@ -420,14 +398,6 @@ class BaseWebAudioSpatializer extends BaseSpatializer {
 
         /** @type {MediaSource} */
         this.source = null;
-    }
-
-    mute() {
-        this.outNode.disconnect(this.destination.audioContext.destination);
-    }
-
-    unmute() {
-        this.outNode.connect(this.destination.audioContext.destination);
     }
 
     update() {
@@ -566,22 +536,24 @@ class GoogleResonanceAudioScene extends InterpolatedPosition {
     constructor(audioContext) {
         super();
 
-        this.scene = new ResonanceAudio(audioContext);
+        this.scene = new ResonanceAudio(audioContext, {
+            ambisonicOrder: 3
+        });
         this.scene.output.connect(audioContext.destination);
 
         this.position = new InterpolatedPosition();
 
         this.scene.setRoomProperties({
-            width: 3.1,
-            height: 2.5,
-            depth: 3.4,
+            width: 10,
+            height: 5,
+            depth: 10,
         }, {
-            left: 'brick-bare',
-            right: 'curtain-heavy',
-            front: 'marble',
-            back: 'glass-thin',
-            down: 'grass',
-            up: 'transparent',
+            left: "transparent",
+            right: "transparent",
+            front: "transparent",
+            back: "transparent",
+            down: "grass",
+            up: "transparent",
         });
     }
 
@@ -668,16 +640,6 @@ class GoogleResonanceAudioSpatializer extends BaseSpatializer {
         this.source = null;
     }
 
-    mute() {
-        this.source.disconnect(this.analyser);
-        this.source.disconnect(this.inNode.input);
-    }
-
-    unmute() {
-        this.source.connect(this.analyser);
-        this.source.connect(this.inNode.input);
-    }
-
     update() {
         super.update();
 
@@ -693,7 +655,7 @@ class GoogleResonanceAudioSpatializer extends BaseSpatializer {
 
                 if (this.stream.active) {
                     this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
-                    this.unmute();
+                    this.source.connect(this.inNode.input);
                 }
             }
             catch (exp) {
@@ -723,7 +685,7 @@ class GoogleResonanceAudioSpatializer extends BaseSpatializer {
 
     dispose() {
         if (!!this.source) {
-            this.mute();
+            this.source.disconnect(this.inNode.input);
         }
 
         this.source = null;

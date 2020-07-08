@@ -74,18 +74,6 @@ function value(value) { return new HtmlAttr("value", ["button", "data", "input",
 // For the elements listed here, this establishes the element's width.
 function width(value) { return new HtmlAttr("width", ["canvas", "embed", "iframe", "img", "input", "object", "video"], value); }
 
-const fillPageStyle = style({
-    position: "absolute",
-    display: "block",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    padding: 0,
-    margin: 0,
-    overflow: "hidden",
-});
-
 // A selection of fonts for preferred monospace rendering.
 const monospaceFamily = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
 const monospaceFont = style({ fontFamily: monospaceFamily });
@@ -93,6 +81,28 @@ const monospaceFont = style({ fontFamily: monospaceFamily });
 // A selection of fonts that should match whatever the user's operating system normally uses.
 const systemFamily = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
 const systemFont = style({ fontFamily: systemFamily });
+
+/**
+ * 
+ * @param {number} x
+ * @param {number} y
+ */
+function grid(x, y, w, h) {
+    if (w === undefined) {
+        w = 1;
+    }
+
+    if (h === undefined) {
+        h = 1;
+    }
+
+    return style({
+        gridRowStart: y,
+        gridRowEnd: y + h,
+        gridColumnStart: x,
+        gridColumnEnd: x + w
+    });
+}
 
 function isGoodNumber(v) {
     return v !== null
@@ -106,6 +116,13 @@ function clamp(v, min, max) {
     return Math.min(max, Math.max(min, v));
 }
 
+/**
+ * 
+ * @param {number} a
+ * @param {number} b
+ * @param {number} p
+ * @returns {number}
+ */
 function lerp(a, b, p) {
     return (1 - p) * a + p * b;
 }
@@ -771,7 +788,6 @@ function clear(elem) {
 }
 
 function A(...rest) { return tag("a", ...rest); }
-function Aside(...rest) { return tag("aside", ...rest); }
 function HtmlButton(...rest) { return tag("button", ...rest); }
 function Button(...rest) { return HtmlButton(...rest, type("button")); }
 function Canvas(...rest) { return tag("canvas", ...rest); }
@@ -780,13 +796,11 @@ function H1(...rest) { return tag("h1", ...rest); }
 function H2(...rest) { return tag("h2", ...rest); }
 function Img(...rest) { return tag("img", ...rest); }
 function Input(...rest) { return tag("input", ...rest); }
-function KBD(...rest) { return tag("kbd", ...rest); }
 function Label(...rest) { return tag("label", ...rest); }
 function LI(...rest) { return tag("li", ...rest); }
 function Option(...rest) { return tag("option", ...rest); }
 function P(...rest) { return tag("p", ...rest); }
 function Span(...rest) { return tag("span", ...rest); }
-function Strong(...rest) { return tag("strong", ...rest); }
 function UL(...rest) { return tag("ul", ...rest); }
 
 function LabeledInput(id, inputType, labelText, ...rest) {
@@ -811,6 +825,8 @@ class FormDialog extends EventTarget {
 
         const formStyle = style({
             display: "grid",
+            width: "100%",
+            height: "100%",
             gridTemplateColumns: "5fr 1fr 1fr",
             gridTemplateRows: "auto auto 1fr auto auto",
             overflowY: "hidden",
@@ -2190,6 +2206,8 @@ const clocks = [
     e("\u{231B}", "Hourglass Done"),
     e("\u{23F3}", "Hourglass Not Done"),
 ];
+const downRightArrow = e("\u{2198}", "Down-Right Arrow");
+const downRightArrowEmoji = e("\u{2198}\u{FE0F}", "Down-Right Arrow");
 const arrows = [
     e("\u{1F503}\u{FE0F}", "Clockwise Vertical Arrows"),
     e("\u{1F504}\u{FE0F}", "Counterclockwise Arrows Button"),
@@ -2197,7 +2215,7 @@ const arrows = [
     e("\u{2195}\u{FE0F}", "Up-Down Arrow"),
     e("\u{2196}\u{FE0F}", "Up-Left Arrow"),
     e("\u{2197}\u{FE0F}", "Up-Right Arrow"),
-    e("\u{2198}\u{FE0F}", "Down-Right Arrow"),
+    downRightArrowEmoji,
     e("\u{2199}\u{FE0F}", "Down-Left Arrow"),
     e("\u{21A9}\u{FE0F}", "Right Arrow Curving Left"),
     e("\u{21AA}\u{FE0F}", "Left Arrow Curving Right"),
@@ -2250,7 +2268,6 @@ const repeatButton = e("\u{1F501}", "Repeat Button");
 const repeatSingleButton = e("\u{1F502}", "Repeat Single Button");
 const upwardsButton = e("\u{1F53C}", "Upwards Button");
 const downwardsButton = e("\u{1F53D}", "Downwards Button");
-const playButton = e("\u{25B6}\u{FE0F}", "Play Button");
 const reverseButton = e("\u{25C0}\u{FE0F}", "Reverse Button");
 const ejectButton = e("\u{23CF}\u{FE0F}", "Eject Button");
 const fastForwardButton = e("\u{23E9}", "Fast-Forward Button");
@@ -2559,74 +2576,38 @@ const telescope = e("\u{1F52D}", "Telescope");
 const alembic = e("\u{2697}\u{FE0F}", "Alembic");
 const gear = e("\u{2699}\u{FE0F}", "Gear");
 const atomSymbol = e("\u{269B}\u{FE0F}", "Atom Symbol");
-const magnifyingGlassTiltedLeft = e("\u{1F50D}", "Magnifying Glass Tilted Left");
-const magnifyingGlassTiltedRight = e("\u{1F50E}", "Magnifying Glass Tilted Right");
-const science = [
-    droplet,
-    dropOfBlood,
-    adhesiveBandage,
-    stehoscope,
-    syringe,
-    pill,
-    microscope,
-    testTube,
-    petriDish,
-    dna,
-    abacus,
-    magnet,
-    telescope,
-    medical,
-    balanceScale,
-    alembic,
-    gear,
-    atomSymbol,
-    magnifyingGlassTiltedLeft,
-    magnifyingGlassTiltedRight,
-];
-const joystick = e("\u{1F579}\u{FE0F}", "Joystick");
+const keyboard = e("\u{2328}\u{FE0F}", "Keyboard");
+const telephone = e("\u{260E}\u{FE0F}", "Telephone");
+const studioMicrophone = e("\u{1F399}\u{FE0F}", "Studio Microphone");
+const levelSlider = e("\u{1F39A}\u{FE0F}", "Level Slider");
+const controlKnobs = e("\u{1F39B}\u{FE0F}", "Control Knobs");
+const movieCamera = e("\u{1F3A5}", "Movie Camera");
+const headphone = e("\u{1F3A7}", "Headphone");
 const videoGame = e("\u{1F3AE}", "Video Game");
 const lightBulb = e("\u{1F4A1}", "Light Bulb");
 const computerDisk = e("\u{1F4BD}", "Computer Disk");
 const floppyDisk = e("\u{1F4BE}", "Floppy Disk");
 const opticalDisk = e("\u{1F4BF}", "Optical Disk");
 const dvd = e("\u{1F4C0}", "DVD");
-const desktopComputer = e("\u{1F5A5}\u{FE0F}", "Desktop Computer");
-const keyboard = e("\u{2328}\u{FE0F}", "Keyboard");
-const printer = e("\u{1F5A8}\u{FE0F}", "Printer");
-const computerMouse = e("\u{1F5B1}\u{FE0F}", "Computer Mouse");
-const trackball = e("\u{1F5B2}\u{FE0F}", "Trackball");
-const telephone = e("\u{260E}\u{FE0F}", "Telephone");
 const telephoneReceiver = e("\u{1F4DE}", "Telephone Receiver");
 const pager = e("\u{1F4DF}", "Pager");
 const faxMachine = e("\u{1F4E0}", "Fax Machine");
 const satelliteAntenna = e("\u{1F4E1}", "Satellite Antenna");
 const loudspeaker = e("\u{1F4E2}", "Loudspeaker");
 const megaphone = e("\u{1F4E3}", "Megaphone");
-const television = e("\u{1F4FA}", "Television");
-const radio = e("\u{1F4FB}", "Radio");
-const videocassette = e("\u{1F4FC}", "Videocassette");
-const filProjector = e("\u{1F4FD}\u{FE0F}", "Film Projector");
-const studioMicrophone = e("\u{1F399}\u{FE0F}", "Studio Microphone");
-const levelSlider = e("\u{1F39A}\u{FE0F}", "Level Slider");
-const controlKnobs = e("\u{1F39B}\u{FE0F}", "Control Knobs");
-const movieCamera = e("\u{1F3A5}", "Movie Camera");
-const headphone = e("\u{1F3A7}", "Headphone");
+const mobilePhone = e("\u{1F4F1}", "Mobile Phone");
+const mobilePhoneWithArrow = e("\u{1F4F2}", "Mobile Phone with Arrow");
+const mobilePhoneVibrating = e("\u{1F4F3}", "Mobile Phone Vibrating");
+const mobilePhoneOff = e("\u{1F4F4}", "Mobile Phone Off");
+const noMobilePhone = e("\u{1F4F5}", "No Mobile Phone");
+const antennaBars = e("\u{1F4F6}", "Antenna Bars");
 const camera = e("\u{1F4F7}", "Camera");
 const cameraWithFlash = e("\u{1F4F8}", "Camera with Flash");
 const videoCamera = e("\u{1F4F9}", "Video Camera");
-const mobilePhone = e("\u{1F4F1}", "Mobile Phone");
-const mobilePhoneOff = e("\u{1F4F4}", "Mobile Phone Off");
-const mobilePhoneWithArrow = e("\u{1F4F2}", "Mobile Phone with Arrow");
-const lockedWithPen = e("\u{1F50F}", "Locked with Pen");
-const lockedWithKey = e("\u{1F510}", "Locked with Key");
-const locked = e("\u{1F512}", "Locked");
-const unlocked = e("\u{1F513}", "Unlocked");
-const bell = e("\u{1F514}", "Bell");
-const bellWithSlash = e("\u{1F515}", "Bell with Slash");
-const bookmark = e("\u{1F516}", "Bookmark");
-const link = e("\u{1F517}", "Link");
-const vibrationMode = e("\u{1F4F3}", "Vibration Mode");
-const antennaBars = e("\u{1F4F6}", "Antenna Bars");
+const television = e("\u{1F4FA}", "Television");
+const radio = e("\u{1F4FB}", "Radio");
+const videocassette = e("\u{1F4FC}", "Videocassette");
+const filmProjector = e("\u{1F4FD}\u{FE0F}", "Film Projector");
 const dimButton = e("\u{1F505}", "Dim Button");
 const brightButton = e("\u{1F506}", "Bright Button");
 const mutedSpeaker = e("\u{1F507}", "Muted Speaker");
@@ -2635,6 +2616,24 @@ const speakerMediumVolume = e("\u{1F509}", "Speaker Medium Volume");
 const speakerHighVolume = e("\u{1F50A}", "Speaker High Volume");
 const battery = e("\u{1F50B}", "Battery");
 const electricPlug = e("\u{1F50C}", "Electric Plug");
+const magnifyingGlassTiltedLeft = e("\u{1F50D}", "Magnifying Glass Tilted Left");
+const magnifyingGlassTiltedRight = e("\u{1F50E}", "Magnifying Glass Tilted Right");
+const lockedWithPen = e("\u{1F50F}", "Locked with Pen");
+const lockedWithKey = e("\u{1F510}", "Locked with Key");
+const key = e("\u{1F511}", "Key");
+const locked = e("\u{1F512}", "Locked");
+const unlocked = e("\u{1F513}", "Unlocked");
+const bell = e("\u{1F514}", "Bell");
+const bellWithSlash = e("\u{1F515}", "Bell with Slash");
+const bookmark = e("\u{1F516}", "Bookmark");
+const link = e("\u{1F517}", "Link");
+const joystick = e("\u{1F579}\u{FE0F}", "Joystick");
+const desktopComputer = e("\u{1F5A5}\u{FE0F}", "Desktop Computer");
+const printer = e("\u{1F5A8}\u{FE0F}", "Printer");
+const computerMouse = e("\u{1F5B1}\u{FE0F}", "Computer Mouse");
+const trackball = e("\u{1F5B2}\u{FE0F}", "Trackball");
+const clamp$1 = e("\u{1F5DC}", "Compression");
+const oldKey = e("\u{1F5DD}", "Old Key");
 const tech = [
     joystick,
     videoGame,
@@ -2660,7 +2659,7 @@ const tech = [
     television,
     radio,
     videocassette,
-    filProjector,
+    filmProjector,
     studioMicrophone,
     levelSlider,
     controlKnobs,
@@ -2681,7 +2680,7 @@ const tech = [
     bellWithSlash,
     bookmark,
     link,
-    vibrationMode,
+    mobilePhoneVibrating,
     antennaBars,
     dimButton,
     brightButton,
@@ -2749,7 +2748,7 @@ const tools = [
     e("\u{26CF}\u{FE0F}", "Pick"),
     e("\u{26D1}\u{FE0F}", "Rescue Worker’s Helmet"),
     e("\u{26D3}\u{FE0F}", "Chains"),
-    e("\u{1F5DC}\u{FE0F}", "Clamp"),
+    clamp$1,
     e("\u{1FA9A}", "Carpentry Saw"),
     e("\u{1FA9B}", "Screwdriver"),
     e("\u{1FA9C}", "Ladder"),
@@ -2797,7 +2796,7 @@ const office = [
 ];
 const signs = [
     e("\u{1F3A6}", "Cinema"),
-    e("\u{1F4F5}", "No Mobile Phones"),
+    noMobilePhone,
     e("\u{1F51E}", "No One Under Eighteen"),
     e("\u{1F6AB}", "Prohibited"),
     e("\u{1F6AC}", "Cigarette"),
@@ -2853,22 +2852,23 @@ const religion = [
     e("\u{2734}\u{FE0F}", "Eight-Pointed Star"),
     e("\u{1F4FF}", "Prayer Beads"),
 ];
+const door = e("\u{1F6AA}", "Door");
 const household = [
     e("\u{1F484}", "Lipstick"),
     e("\u{1F48D}", "Ring"),
     e("\u{1F48E}", "Gem Stone"),
     e("\u{1F4F0}", "Newspaper"),
-    e("\u{1F511}", "Key"),
+    key,
     e("\u{1F525}", "Fire"),
     e("\u{1FAA8}", "Rock"),
     e("\u{1FAB5}", "Wood"),
     e("\u{1F52B}", "Pistol"),
     e("\u{1F56F}\u{FE0F}", "Candle"),
     e("\u{1F5BC}\u{FE0F}", "Framed Picture"),
-    e("\u{1F5DD}\u{FE0F}", "Old Key"),
+    oldKey,
     e("\u{1F5DE}\u{FE0F}", "Rolled-Up Newspaper"),
     e("\u{1F5FA}\u{FE0F}", "World Map"),
-    e("\u{1F6AA}", "Door"),
+    door,
     e("\u{1F6BD}", "Toilet"),
     e("\u{1F6BF}", "Shower"),
     e("\u{1F6C1}", "Bathtub"),
@@ -2945,6 +2945,15 @@ const medieval = [
     e("\u{1FA96}", "Military Helmet")
 ];
 const questionMark = e("\u{2753}", "Question Mark");
+const squareFourCourners = e("\u{26F6}\u{FE0F}", "Square: Four Corners");
+
+const dice1 = e("\u2680", "Dice: Side 1");
+const dice2 = e("\u2681", "Dice: Side 2");
+const dice3 = e("\u2682", "Dice: Side 3");
+const dice4 = e("\u2683", "Dice: Side 4");
+const dice5 = e("\u2684", "Dice: Side 5");
+const dice6 = e("\u2685", "Dice: Side 6");
+const dice = g(e(dice3.value, "Dice"), dice1, dice2, dice3, dice4, dice5, dice6);
 
 const whiteChessKing = e("\u{2654}", "White Chess King");
 const whiteChessQueen = e("\u{2655}", "White Chess Queen");
@@ -3059,6 +3068,29 @@ const chess = Object.assign(g(
     queens: chessQueens,
     kings: chessKings
 });
+
+const science = [
+    droplet,
+    dropOfBlood,
+    adhesiveBandage,
+    stehoscope,
+    syringe,
+    pill,
+    microscope,
+    testTube,
+    petriDish,
+    dna,
+    abacus,
+    magnet,
+    telescope,
+    medical,
+    balanceScale,
+    alembic,
+    gear,
+    atomSymbol,
+    magnifyingGlassTiltedLeft,
+    magnifyingGlassTiltedRight,
+];
 
 const allIcons = {
     faces,
@@ -3310,81 +3342,6 @@ class EmojiSelectedEvent extends Event {
     constructor(emoji) {
         super("emojiSelected");
         this.emoji = emoji;
-    }
-}
-
-function instructions() {
-    return [
-        Aside(
-            style({
-                border: "dashed 2px darkred",
-                backgroundColor: "wheat",
-                borderRadius: "5px",
-                padding: "0.5em"
-            }),
-            Strong("Note: "),
-            "Calla is built on top of ",
-            A(
-                href("https://jitsi.org"),
-                target("_blank"),
-                rel("noopener"),
-                "Jitsi Meet"),
-            ". Jitsi does not support iPhones and iPads."),
-        UL(
-            LI(
-                Strong("Be careful in picking your room name"),
-                ", if you don't want randos to join. Traffic is low right now, but you never know."),
-            LI(
-                "Try to ",
-                Strong("pick a unique user name"),
-                ". A lot of people use \"Test\" and then there are a bunch of people with the same name running around."),
-            LI(
-                Strong("Open the Options view"),
-                " to set your avatar, or to change your microphone settings."),
-            LI(
-                Strong("Click on the map"),
-                " to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls."),
-            LI(
-                "Or, ",
-                Strong("use the arrow keys"),
-                " on your keyboard to move."),
-            LI(
-                Strong("Click on yourself"),
-                " to open a list of Emoji. Select an Emoji to float it out into the map."),
-            LI(
-                Strong("Hit the E key"),
-                " to re-emote with your last selected Emoji."),
-            LI(
-                "You can ",
-                Strong("roll your mouse wheel"),
-                " or ",
-                Strong("pinch your touchscreen"),
-                " to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in their Avatar."),
-            LI(
-                "You can ",
-                Strong(" click the Pause button(⏸️)"),
-                " in the upper-right corner to show the default Jitsi Meet interface, in case you need to change any settings there (the game view blocks clicks on the Jitsi Meet interface)."))];
-}
-
-class InstructionsForm extends FormDialog {
-
-    constructor() {
-        super("instructions", "Instructions");
-
-        this.content.append(...instructions());
-
-        this.footer.append(
-            this.confirmButton = Button(
-                systemFont,
-                style({ gridArea: "4/2" }),
-                "Close",
-                onClick(() => this.hide())));
-    }
-
-    async showAsync() {
-        this.show();
-        await this.confirmButton.once("click");
-        return false;
     }
 }
 
@@ -4401,174 +4358,203 @@ class OptionsForm extends FormDialog {
     }
 }
 
-function Run(txt) {
+function Run(...rest) {
     return Span(
         style({ margin: "auto" }),
-        txt);
+        ...rest);
 }
 
-const toggleAudioEvt = new Event("toggleAudio"),
-    emoteEvt = new Event("emote"),
-    selectEmojiEvt = new Event("selectEmoji"),
-    zoomChangedEvt = new Event("zoomChanged"),
-    toggleOptionsEvt = new Event("toggleOptions"),
+const toggleOptionsEvt = new Event("toggleOptions"),
     tweetEvt = new Event("tweet"),
     leaveEvt = new Event("leave"),
-    toggleUIEvt = new Event("toggleUI"),
+    toggleFullscreenEvt = new Event("toggleFullscreen"),
     toggleInstructionsEvt = new Event("toggleInstructions"),
     subelStyle = style({
-        display: "inline-flex",
-        margin: "0 0.5em 0 0"
+        fontSize: "1.25em",
+        width: "3em",
+        height: "100%",
+        pointerEvents: "all"
     });
 
-class ToolBar extends EventTarget {
+class HeaderBar extends EventTarget {
     constructor() {
         super();
 
         const _ = (evt) => () => this.dispatchEvent(evt);
 
         this.element = Div(
-            id("toolbar"),
+            id("headbar"),
             style({
-                position: "fixed",
-                top: 0,
-                right: 0,
-                backgroundColor: "#bbb",
-                display: "flex",
-                flexDirection: "row",
-                flexWrap: "wrap"
+                gridTemplateColumns: "auto auto auto 1fr auto auto",
+                display: "grid",
+                padding: "4px",
+                width: "100%",
+                columnGap: "5px",
+                backgroundColor: "transparent",
+                pointerEvents: "none"
             }),
 
-            this.toolbar = Div(
-                style({
-                    display: "flex",
-                    width: "100vw",
-                    padding: "4px",
-                    flexDirection: "row",
-                    flexWrap: "wrap",
-                    boxSizing: "border-box"
-                }),
-                systemFont,
+            this.optionsButton = Button(
+                title("Show/hide options"),
+                onClick(_(toggleOptionsEvt)),
+                subelStyle,
+                grid(1, 1),
+                Run(gear.value)),
 
-                this.muteAudioButton = Button(
-                    onClick(_(toggleAudioEvt)),
-                    subelStyle,
-                    systemFont,
-                    speakerHighVolume.value),
+            this.instructionsButton = Button(
+                title("Show/hide instructions"),
+                onClick(_(toggleInstructionsEvt)),
+                subelStyle,
+                grid(2, 1),
+                Run(questionMark.value)),
 
-                this.emojiControl = Span(
-                    subelStyle,
-                    this.emoteButton = Button(
-                        title("Emote"),
-                        onClick(_(emoteEvt)),
-                        systemFont,
-                        "Emote ",
-                        KBD("(E)"),
-                        "(@)"),
-                    Button(
-                        title("Select Emoji"),
-                        systemFont,
-                        onClick(_(selectEmojiEvt)),
-                        downwardsButton.value)),
+            Button(
+                title("Share your current room to twitter"),
+                onClick(_(tweetEvt)),
+                subelStyle,
+                grid(3, 1),
+                Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
+                    alt("icon"),
+                    role("presentation"),
+                    style({
+                        height: "1.75em",
+                        marginTop: "3px",
+                        marginBottom: "-3px"
+                    }))),
 
-                Span(
-                    subelStyle,
-                    Label(
-                        htmlFor("zoom"),
-                        style({ margin: "auto" }),
-                        "Zoom"),
-                    this.zoomSpinner = Input(
-                        type("number"),
-                        id("zoom"),
-                        title("Change map zoom"),
-                        value(2),
-                        min(0.1),
-                        max(8),
-                        step(0.1),
-                        style({ width: "4em" }),
-                        systemFont,
-                        onInput(_(zoomChangedEvt)))),
 
-                this.optionsButton = Button(
-                    title("Show/hide options"),
-                    onClick(_(toggleOptionsEvt)),
-                    subelStyle,
-                    systemFont,
-                    gear.value),
+            this.fullscreenButton = Button(
+                title("Toggle fullscreen"),
+                onClick(_(toggleFullscreenEvt)),
+                subelStyle,
+                grid(5, 1),
+                Run(squareFourCourners.value)),
 
-                this.instructionsButton = Button(
-                    title("Show/hide instructions"),
-                    onClick(_(toggleInstructionsEvt)),
-                    subelStyle,
-                    systemFont,
-                    questionMark.value),
 
-                Button(
-                    title("Share your current room to twitter"),
-                    onClick(_(tweetEvt)),
-                    subelStyle,
-                    systemFont,
-                    Run("Share room"),
-                    Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
-                        alt("icon"),
-                        role("presentation"),
-                        style({ height: "1.5em" }))),
-
-                Button(
-                    title("Leave the room"),
-                    onClick(_(leaveEvt)),
-                    subelStyle,
-                    systemFont,
-                    style({ marginLeft: "1em" }),
-                    Run("Leave"))),
-
-            this.hideButton = Button(
-                title("Show/hide Jitsi Meet interface"),
-                style({
-                    position: "absolute",
-                    right: 0,
-                    margin: "4px"
-                }),
-                systemFont,
-                onClick(() => this.visible = !this.visible),
-                Run(pauseButton.value)));
-
-        this._audioEnabled = true;
+            Button(
+                title("Leave the room"),
+                onClick(_(leaveEvt)),
+                subelStyle,
+                grid(6, 1),
+                Run(door.value)));
 
         Object.seal(this);
     }
 
-    get offsetHeight() {
-        return this.toolbar.offsetHeight;
+    get isFullscreen() {
+        return document.fullscreenElement !== null;
     }
 
-    get zoom() {
-        return this.zoomSpinner.value;
-    }
-
-    set zoom(value) {
-        this.zoomSpinner.value = Math.round(value * 100) / 100;
-    }
-
-    get visible() {
-        return this.toolbar.style.display !== "none";
-    }
-
-    set visible(value) {
-        this.toolbar.setOpenWithLabel(
+    set isFullscreen(value) {
+        if (value) {
+            document.body.requestFullscreen();
+        }
+        else {
+            document.exitFullscreen();
+        }
+        this.fullscreenButton.updateLabel(
             value,
-            this.hideButton,
-            pauseButton.value,
-            playButton.value);
-        this.dispatchEvent(toggleUIEvt);
+            downRightArrow.value,
+            squareFourCourners.value);
     }
 
-    hide() {
-        this.visible = false;
+    get enabled() {
+        return !this.instructionsButton.disabled;
     }
 
-    show() {
-        this.visible = true;
+    set enabled(v) {
+        for (let button of this.element.querySelectorAll("button")) {
+            button.disabled = !v;
+        }
+    }
+}
+
+function Run$1(...rest) {
+    return Span(
+        style({ margin: "auto" }),
+        ...rest);
+}
+
+const toggleAudioEvt = new Event("toggleAudio"),
+    toggleVideoEvt$1 = new Event("toggleVideo"),
+    emoteEvt = new Event("emote"),
+    selectEmojiEvt = new Event("selectEmoji"),
+    subelStyle$1 = style({
+        fontSize: "1.25em",
+        width: "3em",
+        height: "100%"
+    }),
+    subButtonStyle = style({
+        fontSize: "1.25em",
+        height: "100%"
+    });
+
+class FooterBar extends EventTarget {
+    constructor() {
+        super();
+
+        const _ = (evt) => () => this.dispatchEvent(evt);
+
+        /** @type {HTMLButtonElement} */
+        this.muteAudioButton = null;
+
+        this.element = Div(
+            id("footbar"),
+            style({
+                gridTemplateColumns: "auto 1fr auto",
+                display: "grid",
+                padding: "4px",
+                width: "100%",
+                columnGap: "5px",
+                backgroundColor: "transparent"
+            }),
+
+            this.muteAudioButton = Button(
+                title("Toggle audio mute/unmute"),
+                onClick(_(toggleAudioEvt)),
+                grid(1, 1),
+                subelStyle$1,
+                Run$1(speakerHighVolume.value)),
+
+            this.emojiControl = Span(
+                grid(2, 1),
+                style({ textAlign: "center" }),
+                subButtonStyle,
+                Button(
+                    title("Emote"),
+                    onClick(_(emoteEvt)),
+                    subButtonStyle,
+                    style({ borderRight: "none" }),
+                    this.emoteButton = Run$1("Emote")),
+                Button(
+                    title("Select Emoji"),
+                    onClick(_(selectEmojiEvt)),
+                    subButtonStyle,
+                    style({ borderLeft: "none" }),
+                    Run$1(upwardsButton.value))),
+
+
+            this.muteVideoButton = Button(
+                title("Toggle video mute/unmute"),
+                onClick(_(toggleVideoEvt$1)),
+                grid(3, 1),
+                subelStyle$1,
+                Run$1(mobilePhoneOff.value)));
+
+        this._audioEnabled = true;
+        this._videoEnabled = false;
+
+        Object.seal(this);
+    }
+
+    get enabled() {
+        return !this.muteAudioButton.disabled;
+    }
+
+    set enabled(v) {
+        for (let button of this.element.querySelectorAll("button")) {
+            button.disabled = !v;
+        }
     }
 
     get audioEnabled() {
@@ -4583,20 +4569,20 @@ class ToolBar extends EventTarget {
             mutedSpeaker.value);
     }
 
-    appendChild(child) {
-        return this.toolbar.appendChild(child);
+    get videoEnabled() {
+        return this._videoEnabled;
     }
 
-    insertBefore(newChild, refChild) {
-        return this.toolbar.insertBefore(newChild, refChild);
-    }
-
-    append(...children) {
-        this.toolbar.append(...children);
+    set videoEnabled(value) {
+        this._videoEnabled = value;
+        this.muteVideoButton.updateLabel(
+            value,
+            mobilePhone.value,
+            mobilePhoneOff.value);
     }
 
     setEmojiButton(key, emoji) {
-        this.emoteButton.innerHTML = `Emote (<kbd>${key.toUpperCase()}</kbd>) (${emoji.value})`;
+        this.emoteButton.innerHTML = emoji.value;
     }
 }
 
@@ -5420,10 +5406,10 @@ const CAMERA_LERP = 0.01,
     isFirefox = typeof InstallTrigger !== "undefined",
     gameStartedEvt = new Event("gameStarted"),
     gameEndedEvt = new Event("gameEnded"),
-    zoomChangedEvt$1 = new Event("zoomChanged"),
+    zoomChangedEvt = new Event("zoomChanged"),
     emojiNeededEvt = new Event("emojiNeeded"),
     toggleAudioEvt$1 = new Event("toggleAudio"),
-    toggleVideoEvt$1 = new Event("toggleVideo"),
+    toggleVideoEvt$2 = new Event("toggleVideo"),
     emoteEvt$1 = Object.assign(new Event("emote"), {
         id: null,
         emoji: null
@@ -5442,8 +5428,11 @@ class Game extends EventTarget {
 
         this.element = Canvas(
             id("frontBuffer"),
-            fillPageStyle,
-            style({ touchAction: "none" }));
+            style({
+                width: "100%",
+                height: "100%",
+                touchAction: "none"
+            }));
         this.gFront = this.element.getContext("2d");
 
         this.me = null;
@@ -5738,7 +5727,7 @@ class Game extends EventTarget {
                 e = Math.pow(d, 1 / CAMERA_ZOOM_SHAPE);
 
             this.targetCameraZ = unproject(e, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX);
-            this.dispatchEvent(zoomChangedEvt$1);
+            this.dispatchEvent(zoomChangedEvt);
         }
     }
 
@@ -5762,7 +5751,7 @@ class Game extends EventTarget {
     }
 
     toggleMyVideo() {
-        this.dispatchEvent(toggleVideoEvt$1);
+        this.dispatchEvent(toggleVideoEvt$2);
     }
 
     muteUserAudio(evt) {
@@ -5893,13 +5882,13 @@ class Game extends EventTarget {
         }
 
         this.startLoop();
-        this.dispatchEvent(zoomChangedEvt$1);
+        this.dispatchEvent(zoomChangedEvt);
         this.dispatchEvent(gameStartedEvt);
     }
 
     startLoop() {
-        this.element.show();
-        this.element.resize();
+        this.show();
+        this.resize();
         this.element.focus();
 
         requestAnimationFrame((time) => {
@@ -5908,11 +5897,7 @@ class Game extends EventTarget {
         });
     }
 
-    resize(top) {
-        if (top !== undefined) {
-            this.element.style.top = top + "px";
-            this.element.style.height = `calc(100% - ${top}px)`;
-        }
+    resize() {
         this.element.resize();
     }
 
@@ -6359,19 +6344,6 @@ class BaseJitsiClient extends EventTarget {
         this.preInitEvtQ = [];
     }
 
-    hide() {
-    }
-
-    show() {
-    }
-
-    /**
-     * 
-     * @param {number} top
-     */
-    resize(top) {
-    }
-
     /**
      * 
      * @param {string} host
@@ -6741,30 +6713,58 @@ function init(host, client) {
     const settings = new Settings(),
         game = new Game(),
         login = new LoginForm(),
-        toolbar = new ToolBar(),
+        headbar = new HeaderBar(),
+        footbar = new FooterBar(),
         options = new OptionsForm(),
         emoji = new EmojiForm(),
-        instructions = new InstructionsForm(),
 
         forExport = {
             settings,
             client,
             game,
             login,
-            toolbar,
+            headbar,
+            footbar,
+            options,
+            emoji
+        },
+
+        forAppend = [
+            game,
             options,
             emoji,
-            instructions
-        };
+            headbar,
+            footbar,
+            login
+        ].filter(x => x.element);
 
-    for (let e of Object.values(forExport)) {
+    document.body.style.display = "grid";
+    document.body.style.gridTemplateRows = "auto 1fr auto";
+    let z = 0;
+    for (let e of forAppend) {
         if (e.element) {
+            let g = null;
+            if (e === headbar) {
+                g = grid(1, 1);
+            }
+            else if (e === footbar) {
+                g = grid(1, 3);
+            }
+            else if (e === game || e === login) {
+                g = grid(1, 1, 1, 3);
+            }
+            else {
+                g = grid(1, 2);
+            }
+            g.apply(e.element);
+            e.element.style.zIndex = (z++);
             document.body.append(e.element);
         }
     }
 
     refreshGamepads();
-
+    headbar.enabled = false;
+    footbar.enabled = false;
     options.drawHearing = game.drawHearing = settings.drawHearing;
     options.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
     options.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;
@@ -6772,41 +6772,39 @@ function init(host, client) {
     options.fontSize = game.fontSize = settings.fontSize;
     options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
     options.inputBinding = game.inputBinding = settings.inputBinding;
-    toolbar.zoom = game.cameraZ = game.targetCameraZ = settings.zoom;
+    game.cameraZ = game.targetCameraZ = settings.zoom;
     login.userName = settings.userName;
     login.roomName = settings.roomName;
 
     showLogin();
 
     function showLogin() {
-        client.hide();
         game.hide();
-        toolbar.hide();
         options.hide();
         emoji.hide();
-        instructions.hide();
+        headbar.enabled = false;
+        footbar.enabled = false;
         login.show();
     }
 
     async function withEmojiSelection(callback) {
         if (!emoji.isOpen()) {
-            toolbar.optionsButton.lock();
-            toolbar.instructionsButton.lock();
+            headbar.optionsButton.lock();
+            headbar.instructionsButton.lock();
             options.hide();
-            instructions.hide();
             const e = await emoji.selectAsync();
             if (!!e) {
                 callback(e);
             }
-            toolbar.optionsButton.unlock();
-            toolbar.instructionsButton.unlock();
+            headbar.optionsButton.unlock();
+            headbar.instructionsButton.unlock();
         }
     }
 
     async function selectEmojiAsync() {
         await withEmojiSelection((e) => {
             game.emote(client.localUser, e);
-            toolbar.setEmojiButton(settings.inputBinding.keyButtonEmote, e);
+            footbar.setEmojiButton(settings.inputBinding.keyButtonEmote, e);
         });
     }
 
@@ -6826,35 +6824,27 @@ function init(host, client) {
 
     window.addEventListeners({
         resize: () => {
-            game.resize(toolbar.offsetHeight);
-            client.resize(toolbar.offsetHeight);
+            game.resize();
         },
         gamepadconnected: refreshGamepads,
         gamepaddisconnected: refreshGamepads
     });
 
-    toolbar.addEventListeners({
-        toggleAudio: () => {
-            client.toggleAudioAsync();
-        },
-        selectEmoji: selectEmojiAsync,
-        emote: () => {
-            game.emote(client.localUser, game.currentEmoji);
-        },
-        zoomChanged: () => {
-            settings.zoom = game.targetCameraZ = toolbar.zoom;
-        },
+    headbar.addEventListeners({
         toggleOptions: () => {
             if (!emoji.isOpen()) {
-                instructions.hide();
+                login.hide();
                 options.toggleOpen();
             }
         },
         toggleInstructions: () => {
             if (!emoji.isOpen()) {
                 options.hide();
-                instructions.toggleOpen();
+                login.toggleOpen();
             }
+        },
+        toggleFullscreen: () => {
+            headbar.isFullscreen = !headbar.isFullscreen;
         },
         tweet: () => {
             const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
@@ -6863,11 +6853,19 @@ function init(host, client) {
         },
         leave: () => {
             client.leave();
+        }
+    });
+
+    footbar.addEventListeners({
+        selectEmoji: selectEmojiAsync,
+        emote: () => {
+            game.emote(client.localUser, game.currentEmoji);
         },
-        toggleUI: () => {
-            game.setOpen(toolbar.visible);
-            game.resize(toolbar.offsetHeight);
-            client.resize(toolbar.offsetHeight);
+        toggleAudio: () => {
+            client.toggleAudioAsync();
+        },
+        toggleVideo: () => {
+            client.toggleVideoAsync();
         }
     });
 
@@ -6937,9 +6935,10 @@ function init(host, client) {
             client.toggleVideoAsync();
         },
         gameStarted: () => {
+            grid(1, 2).apply(login.element);
             login.hide();
-            toolbar.show();
-            client.show();
+            headbar.enabled = true;
+            footbar.enabled = true;
 
             setAudioProperties();
 
@@ -6957,13 +6956,12 @@ function init(host, client) {
         },
         gameEnded: () => {
             game.hide();
-            client.hide();
             login.connected = false;
             showLogin();
         },
         emojiNeeded: selectEmojiAsync,
         zoomChanged: () => {
-            settings.zoom = toolbar.zoom = game.targetCameraZ;
+            settings.zoom = game.targetCameraZ;
         }
     });
 
@@ -6985,16 +6983,14 @@ function init(host, client) {
 
             const audioMuted = await client.isAudioMutedAsync();
             game.muteUserAudio({ id: client.localUser, muted: audioMuted });
-            toolbar.audioEnabled = !audioMuted;
+            footbar.audioEnabled = !audioMuted;
 
             const videoMuted = await client.isVideoMutedAsync();
             game.muteUserVideo({ id: client.localUser, muted: videoMuted });
             options.videoEnabled = !videoMuted;
         },
         videoConferenceLeft: (evt) => {
-            if (evt.roomName.toLowerCase() === game.currentRoomName) {
-                game.end();
-            }
+            game.end();
         },
         participantJoined: (evt) => {
             game.addUser(evt);
@@ -7022,7 +7018,7 @@ function init(host, client) {
             game.muteUserAudio(evt);
         },
         localAudioMuteStatusChanged: async (evt) => {
-            toolbar.audioEnabled = !evt.muted;
+            footbar.audioEnabled = !evt.muted;
             if (!evt.muted) {
                 options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
             }
@@ -7032,6 +7028,7 @@ function init(host, client) {
         },
         localVideoMuteStatusChanged: async (evt) => {
             options.videoEnabled = !evt.muted;
+            footbar.videoEnabled = !evt.muted;
             if (!evt.muted) {
                 options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
             }
@@ -7300,7 +7297,6 @@ class BaseSpatializer extends EventTarget {
         this.position = position;
         this.volume = 1;
         this.pan = 0;
-        this.wasMuted = false;
     }
 
     /**
@@ -7313,14 +7309,6 @@ class BaseSpatializer extends EventTarget {
         this.audio = null;
         this.destination = null;
         this.id = null;
-    }
-
-    mute() {
-        throw new Error("Not implemented in base class");
-    }
-
-    unmute() {
-        throw new Error("Not implemented in base class");
     }
 
     /**
@@ -7340,18 +7328,6 @@ class BaseSpatializer extends EventTarget {
         this.pan = dist > 0
             ? distX / dist
             : 0;
-
-        const muted = this.volume <= 0;
-
-        if (muted !== this.wasMuted) {
-            this.wasMuted = muted;
-            //if (muted) {
-            //    this.mute();
-            //}
-            //else {
-            //    this.unmute();
-            //}
-        }
     }
 
     /**
@@ -7382,14 +7358,6 @@ class VolumeOnlySpatializer extends BaseSpatializer {
     update() {
         super.update();
         this.audio.volume = this.volume;
-    }
-
-    mute() {
-        this.audio.muted = true;
-    }
-
-    unmute() {
-        this.audio.muted = false;
     }
 }
 
@@ -7478,14 +7446,6 @@ class BaseWebAudioSpatializer extends BaseSpatializer {
 
         /** @type {MediaSource} */
         this.source = null;
-    }
-
-    mute() {
-        this.outNode.disconnect(this.destination.audioContext.destination);
-    }
-
-    unmute() {
-        this.outNode.connect(this.destination.audioContext.destination);
     }
 
     update() {
@@ -7624,22 +7584,24 @@ class GoogleResonanceAudioScene extends InterpolatedPosition {
     constructor(audioContext) {
         super();
 
-        this.scene = new ResonanceAudio(audioContext);
+        this.scene = new ResonanceAudio(audioContext, {
+            ambisonicOrder: 3
+        });
         this.scene.output.connect(audioContext.destination);
 
         this.position = new InterpolatedPosition();
 
         this.scene.setRoomProperties({
-            width: 3.1,
-            height: 2.5,
-            depth: 3.4,
+            width: 10,
+            height: 5,
+            depth: 10,
         }, {
-            left: 'brick-bare',
-            right: 'curtain-heavy',
-            front: 'marble',
-            back: 'glass-thin',
-            down: 'grass',
-            up: 'transparent',
+            left: "transparent",
+            right: "transparent",
+            front: "transparent",
+            back: "transparent",
+            down: "grass",
+            up: "transparent",
         });
     }
 
@@ -7726,16 +7688,6 @@ class GoogleResonanceAudioSpatializer extends BaseSpatializer {
         this.source = null;
     }
 
-    mute() {
-        this.source.disconnect(this.analyser);
-        this.source.disconnect(this.inNode.input);
-    }
-
-    unmute() {
-        this.source.connect(this.analyser);
-        this.source.connect(this.inNode.input);
-    }
-
     update() {
         super.update();
 
@@ -7751,7 +7703,7 @@ class GoogleResonanceAudioSpatializer extends BaseSpatializer {
 
                 if (this.stream.active) {
                     this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
-                    this.unmute();
+                    this.source.connect(this.inNode.input);
                 }
             }
             catch (exp) {
@@ -7781,7 +7733,7 @@ class GoogleResonanceAudioSpatializer extends BaseSpatializer {
 
     dispose() {
         if (!!this.source) {
-            this.mute();
+            this.source.disconnect(this.inNode.input);
         }
 
         this.source = null;
@@ -8406,6 +8358,8 @@ class LibJitsiMeetClient extends BaseJitsiClient {
                     self[field] = null;
                 }
 
+                track.dispose();
+
                 this.dispatchEvent(Object.assign(new Event(trackKind + "Removed"), {
                     id: userID
                 }));
@@ -8452,6 +8406,14 @@ class LibJitsiMeetClient extends BaseJitsiClient {
 
     leave() {
         if (this.conference) {
+            const self = selfs$4.get(this);
+            if (self.audioInput) {
+                this.conference.removeTrack(self.audioInput);
+            }
+
+            if (self.videoInput) {
+                this.conference.removeTrack(self.videoInput);
+            }
             const leaveTask = this.conference.leave();
             leaveTask
                 .then(() => this.connection.disconnect());
@@ -8650,9 +8612,8 @@ class LibJitsiMeetClient extends BaseJitsiClient {
 }
 
 /* global JITSI_HOST */
-//import { ExternalJitsiClient as JitsiClient } from "./src/jitsi/ExternalJitsiClient.js";
 
-const { toolbar, login } = init(JITSI_HOST, new LibJitsiMeetClient());
+const { login } = init(JITSI_HOST, new LibJitsiMeetClient());
 
 function adLink(url, label, icon) {
     return A(
@@ -8664,16 +8625,6 @@ function adLink(url, label, icon) {
         Span(className(`icon icon-${icon}`),
             role("presentation")));
 }
-
-toolbar.append(
-    adLink(
-        "https://github.com/capnmidnight/Calla",
-        "Follow Calla on GitHub",
-        "github"),
-    adLink(
-        "https://twitter.com/Sean_McBeth",
-        "Follow Sean on Twitter",
-        "twitter"));
 
 login.content.append(
     H2("Made by"),
