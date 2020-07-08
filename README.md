@@ -26,8 +26,6 @@ NOTE: __Jitsi Meet's web client doesn't work on iOS!__ Sorry :(
   - You can __roll your mouse wheel__ or __pinch your touchscreen__ to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in ther Avatar.
 - Options:
   - You can change your Microphone and Speaker device in the Options view. Click the Gear icon (⚙️) in the toolbar. 
-  - If you need to change any settings in Jitsi Meet that aren't accessible in Calla, click the Pause icon (⏸️) in the upper right corner of the window to hide the map view and give you full access to the Jitsi Meet interface. 
-    - Once you are done changing settings, use the Play icon (▶️) in the upper-right corner of the window to return to the map view.
 
 ## INSTALLATION
 

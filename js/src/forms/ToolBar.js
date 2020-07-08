@@ -1,13 +1,13 @@
-﻿import { downwardsButton, gear, mutedSpeaker, pauseButton, playButton, speakerHighVolume, questionMark } from "../emoji/emoji.js";
-import { alt, htmlFor, id, max, min, role, src, step, style, systemFont, title, type, value } from "../html/attrs.js";
+﻿import { downwardsButton, gear, mutedSpeaker, speakerHighVolume, questionMark, door } from "../emoji/emoji.js";
+import { alt, htmlFor, id, max, min, role, src, step, style, title, type, value } from "../html/attrs.js";
 import { onClick, onInput } from "../html/evts.js";
 import { Button, Div, Img, Input, KBD, Label, Span } from "../html/tags.js";
 
 
-function Run(txt) {
+function Run(...rest) {
     return Span(
         style({ margin: "auto" }),
-        txt);
+        ...rest);
 }
 
 const toggleAudioEvt = new Event("toggleAudio"),
@@ -17,12 +17,65 @@ const toggleAudioEvt = new Event("toggleAudio"),
     toggleOptionsEvt = new Event("toggleOptions"),
     tweetEvt = new Event("tweet"),
     leaveEvt = new Event("leave"),
-    toggleUIEvt = new Event("toggleUI"),
     toggleInstructionsEvt = new Event("toggleInstructions"),
     subelStyle = style({
         display: "inline-flex",
-        margin: "0 0.5em 0 0"
+        margin: "0 0.5em 0 0",
+        textAlign: "center",
+        fontSize: "150%"
     });
+
+/**
+ * 
+ * @param {number} n
+ */
+function col(n, m) {
+    if (m === undefined) {
+        m = n + 1;
+    }
+
+    return style({
+        gridColumnStart: n,
+        gridColumnEnd: m
+    });
+}
+
+/**
+ * 
+ * @param {number} n
+ */
+function row(n, m) {
+    if (m === undefined) {
+        m = n + 1;
+    }
+
+    return style({
+        gridRowStart: n,
+        gridRowEnd: m
+    });
+}
+
+/**
+ * 
+ * @param {number} x
+ * @param {number} y
+ */
+function grid(x, y, w, h) {
+    if (w === undefined) {
+        w = 1;
+    }
+
+    if (h === undefined) {
+        h = 1;
+    }
+
+    return style({
+        gridRowStart: y,
+        gridRowEnd: y + h,
+        gridColumnStart: x,
+        gridColumnEnd: x + w
+    });
+}
 
 export class ToolBar extends EventTarget {
     constructor() {
@@ -34,107 +87,89 @@ export class ToolBar extends EventTarget {
             id("toolbar"),
             style({
                 position: "fixed",
+                display: "grid",
+                padding: "4px",
                 top: 0,
                 right: 0,
-                backgroundColor: "#bbb",
-                display: "flex",
-                flexDirection: "row",
-                flexWrap: "wrap"
+                width: "100vw",
+                gridTemplateColumns: "4em auto 4em 4em 4em 1em 4em",
+                backgroundColor: "#bbb"
             }),
 
-            this.toolbar = Div(
-                style({
-                    display: "flex",
-                    width: "100vw",
-                    padding: "4px",
-                    flexDirection: "row",
-                    flexWrap: "wrap",
-                    boxSizing: "border-box"
-                }),
-                systemFont,
 
-                this.muteAudioButton = Button(
-                    onClick(_(toggleAudioEvt)),
-                    subelStyle,
-                    systemFont,
-                    speakerHighVolume.value),
+            this.muteAudioButton = Button(
+                onClick(_(toggleAudioEvt)),
+                grid(1, 1),
+                subelStyle,
+                Run(speakerHighVolume.value)),
 
+            Span(
+                grid(2, 1),
+                style({ textAlign: "center" }),
                 this.emojiControl = Span(
-                    subelStyle,
-                    this.emoteButton = Button(
+                    Button(
                         title("Emote"),
+                        subelStyle,
                         onClick(_(emoteEvt)),
-                        systemFont,
-                        "Emote ",
-                        KBD("(E)"),
-                        "(@)"),
+                        this.emoteButton = Run(
+                            "Emote ",
+                            KBD("(E)"),
+                            "(@)")),
                     Button(
                         title("Select Emoji"),
-                        systemFont,
+                        subelStyle,
                         onClick(_(selectEmojiEvt)),
-                        downwardsButton.value)),
+                        Run(downwardsButton.value))),
 
                 Span(
-                    subelStyle,
                     Label(
                         htmlFor("zoom"),
+                        subelStyle,
                         style({ margin: "auto" }),
                         "Zoom"),
                     this.zoomSpinner = Input(
                         type("number"),
                         id("zoom"),
+                        subelStyle,
                         title("Change map zoom"),
                         value(2),
                         min(0.1),
                         max(8),
                         step(0.1),
                         style({ width: "4em" }),
-                        systemFont,
-                        onInput(_(zoomChangedEvt)))),
+                        onInput(_(zoomChangedEvt))))),
 
-                this.optionsButton = Button(
-                    title("Show/hide options"),
-                    onClick(_(toggleOptionsEvt)),
-                    subelStyle,
-                    systemFont,
-                    gear.value),
-
-                this.instructionsButton = Button(
-                    title("Show/hide instructions"),
-                    onClick(_(toggleInstructionsEvt)),
-                    subelStyle,
-                    systemFont,
-                    questionMark.value),
-
-                Button(
-                    title("Share your current room to twitter"),
-                    onClick(_(tweetEvt)),
-                    subelStyle,
-                    systemFont,
-                    Run("Share room"),
+            Button(
+                title("Share your current room to twitter"),
+                onClick(_(tweetEvt)),
+                subelStyle,
+                grid(3, 1),
+                Run(
                     Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
                         alt("icon"),
                         role("presentation"),
-                        style({ height: "1.5em" }))),
+                        style({ height: "1.5em" })))),
 
-                Button(
-                    title("Leave the room"),
-                    onClick(_(leaveEvt)),
-                    subelStyle,
-                    systemFont,
-                    style({ marginLeft: "1em" }),
-                    Run("Leave"))),
+            this.optionsButton = Button(
+                title("Show/hide options"),
+                onClick(_(toggleOptionsEvt)),
+                subelStyle,
+                grid(4, 1),
+                Run(gear.value)),
 
-            this.hideButton = Button(
-                title("Show/hide Jitsi Meet interface"),
-                style({
-                    position: "absolute",
-                    right: 0,
-                    margin: "4px"
-                }),
-                systemFont,
-                onClick(() => this.visible = !this.visible),
-                Run(pauseButton.value)));
+            this.instructionsButton = Button(
+                title("Show/hide instructions"),
+                onClick(_(toggleInstructionsEvt)),
+                subelStyle,
+                grid(5, 1),
+                Run(questionMark.value)),
+
+            Button(
+                title("Leave the room"),
+                onClick(_(leaveEvt)),
+                subelStyle,
+                grid(7, 1),
+                Run(door.value)));
 
         this._audioEnabled = true;
 
@@ -142,7 +177,7 @@ export class ToolBar extends EventTarget {
     }
 
     get offsetHeight() {
-        return this.toolbar.offsetHeight;
+        return this.element.offsetHeight;
     }
 
     get zoom() {
@@ -151,27 +186,6 @@ export class ToolBar extends EventTarget {
 
     set zoom(value) {
         this.zoomSpinner.value = Math.round(value * 100) / 100;
-    }
-
-    get visible() {
-        return this.toolbar.style.display !== "none";
-    }
-
-    set visible(value) {
-        this.toolbar.setOpenWithLabel(
-            value,
-            this.hideButton,
-            pauseButton.value,
-            playButton.value);
-        this.dispatchEvent(toggleUIEvt);
-    }
-
-    hide() {
-        this.visible = false;
-    }
-
-    show() {
-        this.visible = true;
     }
 
     get audioEnabled() {
@@ -187,15 +201,15 @@ export class ToolBar extends EventTarget {
     }
 
     appendChild(child) {
-        return this.toolbar.appendChild(child);
+        return this.element.appendChild(child);
     }
 
     insertBefore(newChild, refChild) {
-        return this.toolbar.insertBefore(newChild, refChild);
+        return this.element.insertBefore(newChild, refChild);
     }
 
     append(...children) {
-        this.toolbar.append(...children);
+        this.element.append(...children);
     }
 
     setEmojiButton(key, emoji) {

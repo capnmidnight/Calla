@@ -56,7 +56,6 @@ export function init(host, client) {
     function showLogin() {
         client.hide();
         game.hide();
-        toolbar.hide();
         options.hide();
         emoji.hide();
         instructions.hide();
@@ -138,11 +137,6 @@ export function init(host, client) {
         },
         leave: () => {
             client.leave();
-        },
-        toggleUI: () => {
-            game.setOpen(toolbar.visible);
-            game.resize(toolbar.offsetHeight);
-            client.resize(toolbar.offsetHeight);
         }
     });
 
@@ -213,7 +207,6 @@ export function init(host, client) {
         },
         gameStarted: () => {
             login.hide();
-            toolbar.show();
             client.show();
 
             setAudioProperties();

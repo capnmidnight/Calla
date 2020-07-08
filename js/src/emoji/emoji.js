@@ -2424,6 +2424,7 @@ export const religion = [
     e("\u{2734}\u{FE0F}", "Eight-Pointed Star"),
     e("\u{1F4FF}", "Prayer Beads"),
 ];
+export const door = e("\u{1F6AA}", "Door");
 export const household = [
     e("\u{1F484}", "Lipstick"),
     e("\u{1F48D}", "Ring"),
@@ -2439,7 +2440,7 @@ export const household = [
     e("\u{1F5DD}\u{FE0F}", "Old Key"),
     e("\u{1F5DE}\u{FE0F}", "Rolled-Up Newspaper"),
     e("\u{1F5FA}\u{FE0F}", "World Map"),
-    e("\u{1F6AA}", "Door"),
+    door,
     e("\u{1F6BD}", "Toilet"),
     e("\u{1F6BF}", "Shower"),
     e("\u{1F6C1}", "Bathtub"),

@@ -60,9 +60,5 @@ export function instructions() {
                 Strong("roll your mouse wheel"),
                 " or ",
                 Strong("pinch your touchscreen"),
-                " to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in their Avatar."),
-            LI(
-                "You can ",
-                Strong(" click the Pause button(⏸️)"),
-                " in the upper-right corner to show the default Jitsi Meet interface, in case you need to change any settings there (the game view blocks clicks on the Jitsi Meet interface)."))];
+                " to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in their Avatar."))];
 }
