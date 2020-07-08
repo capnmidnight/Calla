@@ -234,6 +234,8 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                     self[field] = null;
                 }
 
+                track.dispose();
+
                 this.dispatchEvent(Object.assign(new Event(trackKind + "Removed"), {
                     id: userID
                 }));
@@ -280,6 +282,14 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
 
     leave() {
         if (this.conference) {
+            const self = selfs.get(this);
+            if (self.audioInput) {
+                this.conference.removeTrack(self.audioInput);
+            }
+
+            if (self.videoInput) {
+                this.conference.removeTrack(self.videoInput);
+            }
             const leaveTask = this.conference.leave();
             leaveTask
                 .then(() => this.connection.disconnect());
