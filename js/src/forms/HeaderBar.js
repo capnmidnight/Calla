@@ -1,4 +1,4 @@
-﻿import { door, gear, questionMark } from "../emoji/emoji.js";
+﻿import { door, gear, questionMark, squareFourCourners, downRightArrow } from "../emoji/emoji.js";
 import { alt, grid, id, role, src, style, title } from "../html/attrs.js";
 import { onClick } from "../html/evts.js";
 import { Button, Div, Img, Span } from "../html/tags.js";
@@ -13,11 +13,13 @@ function Run(...rest) {
 const toggleOptionsEvt = new Event("toggleOptions"),
     tweetEvt = new Event("tweet"),
     leaveEvt = new Event("leave"),
+    toggleFullscreenEvt = new Event("toggleFullscreen"),
     toggleInstructionsEvt = new Event("toggleInstructions"),
     subelStyle = style({
         fontSize: "1.25em",
         width: "3em",
-        height: "100%"
+        height: "100%",
+        pointerEvents: "all"
     });
 
 export class HeaderBar extends EventTarget {
@@ -29,48 +31,77 @@ export class HeaderBar extends EventTarget {
         this.element = Div(
             id("headbar"),
             style({
+                gridTemplateColumns: "auto auto auto 1fr auto auto",
                 display: "grid",
                 padding: "4px",
                 width: "100%",
-                gridTemplateColumns: "auto 1fr auto auto auto",
                 columnGap: "5px",
-                backgroundColor: "#bbb"
+                backgroundColor: "transparent",
+                pointerEvents: "none"
             }),
 
-
-            Button(
-                title("Leave the room"),
-                onClick(_(leaveEvt)),
+            this.optionsButton = Button(
+                title("Show/hide options"),
+                onClick(_(toggleOptionsEvt)),
                 subelStyle,
                 grid(1, 1),
-                Run(door.value)),
+                Run(gear.value)),
+
+            this.instructionsButton = Button(
+                title("Show/hide instructions"),
+                onClick(_(toggleInstructionsEvt)),
+                subelStyle,
+                grid(2, 1),
+                Run(questionMark.value)),
 
             Button(
                 title("Share your current room to twitter"),
                 onClick(_(tweetEvt)),
                 subelStyle,
                 grid(3, 1),
-                Run(
-                    Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
-                        alt("icon"),
-                        role("presentation"),
-                        style({ height: "1.5em" })))),
+                Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
+                    alt("icon"),
+                    role("presentation"),
+                    style({
+                        height: "1.75em",
+                        marginTop: "3px",
+                        marginBottom: "-3px"
+                    }))),
 
-            this.instructionsButton = Button(
-                title("Show/hide instructions"),
-                onClick(_(toggleInstructionsEvt)),
-                subelStyle,
-                grid(4, 1),
-                Run(questionMark.value)),
 
-            this.optionsButton = Button(
-                title("Show/hide options"),
-                onClick(_(toggleOptionsEvt)),
+            this.fullscreenButton = Button(
+                title("Toggle fullscreen"),
+                onClick(_(toggleFullscreenEvt)),
                 subelStyle,
                 grid(5, 1),
-                Run(gear.value)));
+                Run(squareFourCourners.value)),
+
+
+            Button(
+                title("Leave the room"),
+                onClick(_(leaveEvt)),
+                subelStyle,
+                grid(6, 1),
+                Run(door.value)));
 
         Object.seal(this);
+    }
+
+    get isFullscreen() {
+        return document.fullscreenElement !== null;
+    }
+
+    set isFullscreen(value) {
+        if (value) {
+            document.body.requestFullscreen();
+        }
+        else {
+            document.exitFullscreen();
+        }
+        this.fullscreenButton.updateLabel(
+            value,
+            downRightArrow.value,
+            squareFourCourners.value);
     }
 
     get enabled() {

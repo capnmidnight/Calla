@@ -1,5 +1,4 @@
 ﻿import { EmojiForm } from "./forms/EmojiForm.js";
-import { InstructionsForm } from "./forms/InstructionsForm.js";
 import { LoginForm } from "./forms/LoginForm.js";
 import { OptionsForm } from "./forms/OptionsForm.js";
 import { HeaderBar } from "./forms/HeaderBar.js";
@@ -22,7 +21,6 @@ export function init(host, client) {
         footbar = new FooterBar(),
         options = new OptionsForm(),
         emoji = new EmojiForm(),
-        instructions = new InstructionsForm(),
 
         forExport = {
             settings,
@@ -32,18 +30,16 @@ export function init(host, client) {
             headbar,
             footbar,
             options,
-            emoji,
-            instructions
+            emoji
         },
 
         forAppend = [
             game,
-            instructions,
             options,
             emoji,
-            login,
             headbar,
-            footbar
+            footbar,
+            login
         ].filter(x => x.element);
 
     document.body.style.display = "grid";
@@ -51,14 +47,20 @@ export function init(host, client) {
     let z = 0;
     for (let e of forAppend) {
         if (e.element) {
-            let y = 2;
+            let g = null;
             if (e === headbar) {
-                y = 1;
+                g = grid(1, 1);
             }
             else if (e === footbar) {
-                y = 3;
+                g = grid(1, 3);
             }
-            grid(1, y).apply(e.element);
+            else if (e === game || e === login) {
+                g = grid(1, 1, 1, 3);
+            }
+            else {
+                g = grid(1, 2);
+            }
+            g.apply(e.element);
             e.element.style.zIndex = (z++);
             document.body.append(e.element);
         }
@@ -84,7 +86,6 @@ export function init(host, client) {
         game.hide();
         options.hide();
         emoji.hide();
-        instructions.hide();
         headbar.enabled = false;
         footbar.enabled = false;
         login.show();
@@ -95,7 +96,6 @@ export function init(host, client) {
             headbar.optionsButton.lock();
             headbar.instructionsButton.lock();
             options.hide();
-            instructions.hide();
             const e = await emoji.selectAsync();
             if (!!e) {
                 callback(e);
@@ -146,6 +146,9 @@ export function init(host, client) {
                 options.hide();
                 login.toggleOpen();
             }
+        },
+        toggleFullscreen: () => {
+            headbar.isFullscreen = !headbar.isFullscreen;
         },
         tweet: () => {
             const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
@@ -236,6 +239,7 @@ export function init(host, client) {
             client.toggleVideoAsync();
         },
         gameStarted: () => {
+            grid(1, 2).apply(login.element);
             login.hide();
             headbar.enabled = true;
             footbar.enabled = true;
@@ -290,9 +294,7 @@ export function init(host, client) {
             options.videoEnabled = !videoMuted;
         },
         videoConferenceLeft: (evt) => {
-            if (evt.roomName.toLowerCase() === game.currentRoomName) {
-                game.end();
-            }
+            game.end();
         },
         participantJoined: (evt) => {
             game.addUser(evt);

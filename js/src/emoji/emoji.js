@@ -1638,6 +1638,9 @@ export const clocks = [
     e("\u{231B}", "Hourglass Done"),
     e("\u{23F3}", "Hourglass Not Done"),
 ];
+export const downRightArrow = e("\u{2198}", "Down-Right Arrow");
+export const downRightArrowText = e("\u{2198}\u{FE0E}", "Down-Right Arrow");
+export const downRightArrowEmoji = e("\u{2198}\u{FE0F}", "Down-Right Arrow");
 export const arrows = [
     e("\u{1F503}\u{FE0F}", "Clockwise Vertical Arrows"),
     e("\u{1F504}\u{FE0F}", "Counterclockwise Arrows Button"),
@@ -1645,7 +1648,7 @@ export const arrows = [
     e("\u{2195}\u{FE0F}", "Up-Down Arrow"),
     e("\u{2196}\u{FE0F}", "Up-Left Arrow"),
     e("\u{2197}\u{FE0F}", "Up-Right Arrow"),
-    e("\u{2198}\u{FE0F}", "Down-Right Arrow"),
+    downRightArrowEmoji,
     e("\u{2199}\u{FE0F}", "Down-Left Arrow"),
     e("\u{21A9}\u{FE0F}", "Right Arrow Curving Left"),
     e("\u{21AA}\u{FE0F}", "Left Arrow Curving Right"),
@@ -2132,74 +2135,39 @@ export const telescope = e("\u{1F52D}", "Telescope");
 export const alembic = e("\u{2697}\u{FE0F}", "Alembic");
 export const gear = e("\u{2699}\u{FE0F}", "Gear");
 export const atomSymbol = e("\u{269B}\u{FE0F}", "Atom Symbol");
-export const magnifyingGlassTiltedLeft = e("\u{1F50D}", "Magnifying Glass Tilted Left");
-export const magnifyingGlassTiltedRight = e("\u{1F50E}", "Magnifying Glass Tilted Right");
-export const science = [
-    droplet,
-    dropOfBlood,
-    adhesiveBandage,
-    stehoscope,
-    syringe,
-    pill,
-    microscope,
-    testTube,
-    petriDish,
-    dna,
-    abacus,
-    magnet,
-    telescope,
-    medical,
-    balanceScale,
-    alembic,
-    gear,
-    atomSymbol,
-    magnifyingGlassTiltedLeft,
-    magnifyingGlassTiltedRight,
-];
-export const joystick = e("\u{1F579}\u{FE0F}", "Joystick");
+export const keyboard = e("\u{2328}\u{FE0F}", "Keyboard");
+export const telephone = e("\u{260E}\u{FE0F}", "Telephone");
+export const studioMicrophone = e("\u{1F399}\u{FE0F}", "Studio Microphone");
+export const levelSlider = e("\u{1F39A}\u{FE0F}", "Level Slider");
+export const controlKnobs = e("\u{1F39B}\u{FE0F}", "Control Knobs");
+export const movieCamera = e("\u{1F3A5}", "Movie Camera");
+export const headphone = e("\u{1F3A7}", "Headphone");
 export const videoGame = e("\u{1F3AE}", "Video Game");
 export const lightBulb = e("\u{1F4A1}", "Light Bulb");
 export const computerDisk = e("\u{1F4BD}", "Computer Disk");
 export const floppyDisk = e("\u{1F4BE}", "Floppy Disk");
 export const opticalDisk = e("\u{1F4BF}", "Optical Disk");
 export const dvd = e("\u{1F4C0}", "DVD");
-export const desktopComputer = e("\u{1F5A5}\u{FE0F}", "Desktop Computer");
-export const keyboard = e("\u{2328}\u{FE0F}", "Keyboard");
-export const printer = e("\u{1F5A8}\u{FE0F}", "Printer");
-export const computerMouse = e("\u{1F5B1}\u{FE0F}", "Computer Mouse");
-export const trackball = e("\u{1F5B2}\u{FE0F}", "Trackball");
-export const telephone = e("\u{260E}\u{FE0F}", "Telephone");
 export const telephoneReceiver = e("\u{1F4DE}", "Telephone Receiver");
 export const pager = e("\u{1F4DF}", "Pager");
 export const faxMachine = e("\u{1F4E0}", "Fax Machine");
 export const satelliteAntenna = e("\u{1F4E1}", "Satellite Antenna");
 export const loudspeaker = e("\u{1F4E2}", "Loudspeaker");
 export const megaphone = e("\u{1F4E3}", "Megaphone");
-export const television = e("\u{1F4FA}", "Television");
-export const radio = e("\u{1F4FB}", "Radio");
-export const videocassette = e("\u{1F4FC}", "Videocassette");
-export const filProjector = e("\u{1F4FD}\u{FE0F}", "Film Projector");
-export const studioMicrophone = e("\u{1F399}\u{FE0F}", "Studio Microphone");
-export const levelSlider = e("\u{1F39A}\u{FE0F}", "Level Slider");
-export const controlKnobs = e("\u{1F39B}\u{FE0F}", "Control Knobs");
-export const movieCamera = e("\u{1F3A5}", "Movie Camera");
-export const headphone = e("\u{1F3A7}", "Headphone");
+export const mobilePhone = e("\u{1F4F1}", "Mobile Phone");
+export const mobilePhoneWithArrow = e("\u{1F4F2}", "Mobile Phone with Arrow");
+export const mobilePhoneVibrating = e("\u{1F4F3}", "Mobile Phone Vibrating");
+export const mobilePhoneOff = e("\u{1F4F4}", "Mobile Phone Off");
+export const noMobilePhone = e("\u{1F4F5}", "No Mobile Phone");
+export const antennaBars = e("\u{1F4F6}", "Antenna Bars");
 export const camera = e("\u{1F4F7}", "Camera");
 export const cameraWithFlash = e("\u{1F4F8}", "Camera with Flash");
 export const videoCamera = e("\u{1F4F9}", "Video Camera");
-export const mobilePhone = e("\u{1F4F1}", "Mobile Phone");
-export const mobilePhoneOff = e("\u{1F4F4}", "Mobile Phone Off");
-export const mobilePhoneWithArrow = e("\u{1F4F2}", "Mobile Phone with Arrow");
-export const lockedWithPen = e("\u{1F50F}", "Locked with Pen");
-export const lockedWithKey = e("\u{1F510}", "Locked with Key");
-export const locked = e("\u{1F512}", "Locked");
-export const unlocked = e("\u{1F513}", "Unlocked");
-export const bell = e("\u{1F514}", "Bell");
-export const bellWithSlash = e("\u{1F515}", "Bell with Slash");
-export const bookmark = e("\u{1F516}", "Bookmark");
-export const link = e("\u{1F517}", "Link");
-export const vibrationMode = e("\u{1F4F3}", "Vibration Mode");
-export const antennaBars = e("\u{1F4F6}", "Antenna Bars");
+export const television = e("\u{1F4FA}", "Television");
+export const radio = e("\u{1F4FB}", "Radio");
+export const videocassette = e("\u{1F4FC}", "Videocassette");
+export const filmProjector = e("\u{1F4FD}\u{FE0F}", "Film Projector");
+export const portableStereo = e("\u{1F4FE}\u{FE0F}", "Portable Stereo");
 export const dimButton = e("\u{1F505}", "Dim Button");
 export const brightButton = e("\u{1F506}", "Bright Button");
 export const mutedSpeaker = e("\u{1F507}", "Muted Speaker");
@@ -2208,6 +2176,53 @@ export const speakerMediumVolume = e("\u{1F509}", "Speaker Medium Volume");
 export const speakerHighVolume = e("\u{1F50A}", "Speaker High Volume");
 export const battery = e("\u{1F50B}", "Battery");
 export const electricPlug = e("\u{1F50C}", "Electric Plug");
+export const magnifyingGlassTiltedLeft = e("\u{1F50D}", "Magnifying Glass Tilted Left");
+export const magnifyingGlassTiltedRight = e("\u{1F50E}", "Magnifying Glass Tilted Right");
+export const lockedWithPen = e("\u{1F50F}", "Locked with Pen");
+export const lockedWithKey = e("\u{1F510}", "Locked with Key");
+export const key = e("\u{1F511}", "Key");
+export const locked = e("\u{1F512}", "Locked");
+export const unlocked = e("\u{1F513}", "Unlocked");
+export const bell = e("\u{1F514}", "Bell");
+export const bellWithSlash = e("\u{1F515}", "Bell with Slash");
+export const bookmark = e("\u{1F516}", "Bookmark");
+export const link = e("\u{1F517}", "Link");
+export const joystick = e("\u{1F579}\u{FE0F}", "Joystick");
+export const desktopComputer = e("\u{1F5A5}\u{FE0F}", "Desktop Computer");
+export const printer = e("\u{1F5A8}\u{FE0F}", "Printer");
+export const computerMouse = e("\u{1F5B1}\u{FE0F}", "Computer Mouse");
+export const trackball = e("\u{1F5B2}\u{FE0F}", "Trackball");
+export const blackFolder = e("\u{1F5BF}", "Black Folder");
+export const folder = e("\u{1F5C0}", "Folder");
+export const openFolder = e("\u{1F5C1}", "Open Folder");
+export const cardIndexDividers = e("\u{1F5C2}", "Card Index Dividers");
+export const cardFileBox = e("\u{1F5C3}", "Card File Box");
+export const fileCabinet = e("\u{1F5C4}", "File Cabinet");
+export const emptyNote = e("\u{1F5C5}", "Empty Note");
+export const emptyNotePage = e("\u{1F5C6}", "Empty Note Page");
+export const emptyNotePad = e("\u{1F5C7}", "Empty Note Pad");
+export const note = e("\u{1F5C8}", "Note");
+export const notePage = e("\u{1F5C9}", "Note Page");
+export const notePad = e("\u{1F5CA}", "Note Pad");
+export const emptyDocument = e("\u{1F5CB}", "Empty Document");
+export const emptyPage = e("\u{1F5CC}", "Empty Page");
+export const emptyPages = e("\u{1F5CD}", "Empty Pages");
+export const document = e("\u{1F5CE}", "Document");
+export const page = e("\u{1F5CF}", "Page");
+export const pages = e("\u{1F5D0}", "Pages");
+export const wastebasket = e("\u{1F5D1}", "Wastebasket");
+export const spiralNotePad = e("\u{1F5D2}", "Spiral Note Pad");
+export const spiralCalendar = e("\u{1F5D3}", "Spiral Calendar");
+export const desktopWindow = e("\u{1F5D4}", "Desktop Window");
+export const minimize = e("\u{1F5D5}", "Minimize");
+export const maximize = e("\u{1F5D6}", "Maximize");
+export const overlap = e("\u{1F5D7}", "Overlap");
+export const reload = e("\u{1F5D8}", "Reload");
+export const close = e("\u{1F5D9}", "Close");
+export const increaseFontSize = e("\u{1F5DA}", "Increase Font Size");
+export const decreaseFontSize = e("\u{1F5DB}", "Decrease Font Size");
+export const clamp = e("\u{1F5DC}", "Compression");
+export const oldKey = e("\u{1F5DD}", "Old Key");
 export const tech = [
     joystick,
     videoGame,
@@ -2233,7 +2248,7 @@ export const tech = [
     television,
     radio,
     videocassette,
-    filProjector,
+    filmProjector,
     studioMicrophone,
     levelSlider,
     controlKnobs,
@@ -2254,7 +2269,7 @@ export const tech = [
     bellWithSlash,
     bookmark,
     link,
-    vibrationMode,
+    mobilePhoneVibrating,
     antennaBars,
     dimButton,
     brightButton,
@@ -2322,7 +2337,7 @@ export const tools = [
     e("\u{26CF}\u{FE0F}", "Pick"),
     e("\u{26D1}\u{FE0F}", "Rescue Worker’s Helmet"),
     e("\u{26D3}\u{FE0F}", "Chains"),
-    e("\u{1F5DC}\u{FE0F}", "Clamp"),
+    clamp,
     e("\u{1FA9A}", "Carpentry Saw"),
     e("\u{1FA9B}", "Screwdriver"),
     e("\u{1FA9C}", "Ladder"),
@@ -2370,7 +2385,7 @@ export const office = [
 ];
 export const signs = [
     e("\u{1F3A6}", "Cinema"),
-    e("\u{1F4F5}", "No Mobile Phones"),
+    noMobilePhone,
     e("\u{1F51E}", "No One Under Eighteen"),
     e("\u{1F6AB}", "Prohibited"),
     e("\u{1F6AC}", "Cigarette"),
@@ -2432,14 +2447,14 @@ export const household = [
     e("\u{1F48D}", "Ring"),
     e("\u{1F48E}", "Gem Stone"),
     e("\u{1F4F0}", "Newspaper"),
-    e("\u{1F511}", "Key"),
+    key,
     e("\u{1F525}", "Fire"),
     e("\u{1FAA8}", "Rock"),
     e("\u{1FAB5}", "Wood"),
     e("\u{1F52B}", "Pistol"),
     e("\u{1F56F}\u{FE0F}", "Candle"),
     e("\u{1F5BC}\u{FE0F}", "Framed Picture"),
-    e("\u{1F5DD}\u{FE0F}", "Old Key"),
+    oldKey,
     e("\u{1F5DE}\u{FE0F}", "Rolled-Up Newspaper"),
     e("\u{1F5FA}\u{FE0F}", "World Map"),
     door,
@@ -2539,6 +2554,7 @@ export const partAlternationMark = e("\u{303D}\u{FE0F}", "Part Alternation Mark"
 export const tradeMark = e("\u{2122}\u{FE0F}", "Trade Mark");
 export const copyright = e("\u{A9}\u{FE0F}", "Copyright");
 export const registered = e("\u{AE}\u{FE0F}", "Registered");
+export const squareFourCourners = e("\u{26F6}\u{FE0F}", "Square: Four Corners");
 export const marks = [
     doubleExclamationMark,
     interrobang,
@@ -2561,6 +2577,14 @@ export const marks = [
     copyright,
     registered,
 ];
+
+export const dice1 = e("\u2680", "Dice: Side 1");
+export const dice2 = e("\u2681", "Dice: Side 2");
+export const dice3 = e("\u2682", "Dice: Side 3");
+export const dice4 = e("\u2683", "Dice: Side 4");
+export const dice5 = e("\u2684", "Dice: Side 5");
+export const dice6 = e("\u2685", "Dice: Side 6");
+export const dice = g(e(dice3.value, "Dice"), dice1, dice2, dice3, dice4, dice5, dice6);
 
 export const whiteChessKing = e("\u{2654}", "White Chess King");
 export const whiteChessQueen = e("\u{2655}", "White Chess Queen");
@@ -2675,6 +2699,29 @@ export const chess = Object.assign(g(
     queens: chessQueens,
     kings: chessKings
 });
+
+export const science = [
+    droplet,
+    dropOfBlood,
+    adhesiveBandage,
+    stehoscope,
+    syringe,
+    pill,
+    microscope,
+    testTube,
+    petriDish,
+    dna,
+    abacus,
+    magnet,
+    telescope,
+    medical,
+    balanceScale,
+    alembic,
+    gear,
+    atomSymbol,
+    magnifyingGlassTiltedLeft,
+    magnifyingGlassTiltedRight,
+];
 
 export const allIcons = {
     faces,

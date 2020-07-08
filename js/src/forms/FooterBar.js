@@ -36,12 +36,12 @@ export class FooterBar extends EventTarget {
         this.element = Div(
             id("footbar"),
             style({
+                gridTemplateColumns: "auto 1fr auto",
                 display: "grid",
                 padding: "4px",
                 width: "100%",
-                gridTemplateColumns: "auto 1fr auto",
                 columnGap: "5px",
-                backgroundColor: "#bbb"
+                backgroundColor: "transparent"
             }),
 
             this.muteAudioButton = Button(
@@ -51,23 +51,21 @@ export class FooterBar extends EventTarget {
                 subelStyle,
                 Run(speakerHighVolume.value)),
 
-            this.emojiControl = Div(
+            this.emojiControl = Span(
                 grid(2, 1),
                 style({ textAlign: "center" }),
                 subButtonStyle,
                 Button(
                     title("Emote"),
                     onClick(_(emoteEvt)),
-                    style({ textAlign: "center" }),
                     subButtonStyle,
-                    this.emoteButton = Run(
-                        "Emote ",
-                        KBD("(E)"),
-                        "(@)")),
+                    style({ borderRight: "none" }),
+                    this.emoteButton = Run("Emote")),
                 Button(
                     title("Select Emoji"),
                     onClick(_(selectEmojiEvt)),
                     subButtonStyle,
+                    style({ borderLeft: "none" }),
                     Run(upwardsButton.value))),
 
 
@@ -119,6 +117,6 @@ export class FooterBar extends EventTarget {
     }
 
     setEmojiButton(key, emoji) {
-        this.emoteButton.innerHTML = `Emote (<kbd>${key.toUpperCase()}</kbd>) (${emoji.value})`
+        this.emoteButton.innerHTML = emoji.value;
     }
 }
