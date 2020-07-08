@@ -30,14 +30,11 @@ NOTE: __Jitsi Meet's web client doesn't work on iOS!__ Sorry :(
 ## INSTALLATION
 
 - First, setup Jitsi Meet on a server of your choice: [Jitsi quick-start instructions](https://github.com/jitsi/jitsi-meet/blob/master/doc/quick-install.md).
-- Next login to your Jitsi Meet server as root and edit `/usr/share/jitsi-meet/index.html` and add the following line: `<script type="module" src="jitsihax.js"></script>`.
-- Copy the script `jitsihax.js` from this repo to `/usr/share/jitsi-meet/`.
-- Edit `jitsihax.js`, changing `FRONT_END_SERVER` to point to where you will host the Calla front-end.
 - Install the Calla front-end (basically the rest of this repository) onto another server of your choice.
   - Modify "JITSI_HOST" in `index.html` scripts to point to your Jitsi Meet server.
 - You may also want to edit `index.html` to change/remove the link(s) to this repository and/or my Twitter profile.
   
-Make sure you keep the distinction between your Jitsi installation and your Calla installation clear. You can conceivably run them on the same server, but I won't be digging into customizing a Jitsi installation enough to figure that out, so my setup has them on separate servers. `jitsihax.js` needs to go on your Jitsi server, and you need to edit it to point to your Calla server. `index.html` goes on your Calla server, and you need to edit it to point to your Jitsi server.
+Make sure you keep the distinction between your Jitsi installation and your Calla installation clear. You can conceivably run them on the same server, but I won't be digging into customizing a Jitsi installation enough to figure that out, so my setup has them on separate servers.
 
 ### Docker-compose installation
 
@@ -63,12 +60,6 @@ services:
             proxy:
 ```
 - Start Jitsi and Calla: `$ docker-compose up -d`
-- Copy jitsihax.js into the jitsi web volume: `$ cp Calla/js/etc/jitsihax.js web/`
-- Copy jitsihax.js to the right place in the (running) docker container: `$ docker-compose exec web cp /config/jitsihax.js /usr/share/jitsi-meet/libs/`
-- Tell jitsi to load jitsihax.js: Append the following line to the bottom of web/interface_config.js (this works because Jitsi injects `interface_config.js` directly into its own `index.html` page.)
-```
-</script><script type="module" src="libs/jitsihax.js">
-```
 
 ## CONTRIBUTING
 
