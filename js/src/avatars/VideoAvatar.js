@@ -16,13 +16,16 @@ export class VideoAvatar extends BaseAvatar {
 
     draw(g, width, height) {
         if (this.video !== null) {
-            this.video.play();
-            const videoWidth = height * this.video.videoWidth / this.video.videoHeight;
+            const offset = (this.video.videoWidth - this.video.videoHeight) / 2,
+                sx = Math.max(0, offset),
+                sy = Math.max(0, -offset),
+                dim = Math.min(this.video.videoWidth, this.video.videoHeight);
             g.drawImage(
                 this.video,
-                (width - videoWidth) / 2, 0,
-                videoWidth,
-                height);
+                sx, sy,
+                dim, dim,
+                0, 0,
+                width, height);
         }
     }
 }

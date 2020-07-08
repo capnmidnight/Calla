@@ -31,14 +31,24 @@ export class PhotoAvatar extends BaseAvatar {
             = url && url.href || url;
     }
 
+    /**
+     * 
+     * @param {CanvasRenderingContext2D} g
+     * @param {any} width
+     * @param {any} height
+     */
     draw(g, width, height) {
         if (this.image !== null) {
-            const imageWidth = height * this.image.width / this.image.height;
+            const offset = (this.image.width - this.image.height) / 2,
+                sx = Math.max(0, offset),
+                sy = Math.max(0, -offset),
+                dim = Math.min(this.image.width, this.image.height);
             g.drawImage(
                 this.image,
-                (width - imageWidth) / 2, 0,
-                imageWidth,
-                height);
+                sx, sy,
+                dim, dim,
+                0, 0,
+                width, height);
         }
     }
 }
