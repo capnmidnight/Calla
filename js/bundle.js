@@ -135,6 +135,25 @@ function unproject(v, min, max) {
     return v * (max - min) + min;
 }
 
+function t(o, s, c) {
+    return typeof o === s || o instanceof c;
+}
+
+function isFunction(obj) {
+    return t(obj, "function", Function);
+}
+
+function isString(obj) {
+    return t(obj, "string", String);
+}
+
+function isNumber(obj) {
+    return t(obj, "number", Number);
+}
+function isBoolean(obj) {
+    return t(obj, "boolean", Boolean);
+}
+
 // A few convenience methods for HTML elements.
 
 Element.prototype.isOpen = function () {
@@ -308,28 +327,29 @@ EventTarget.prototype.once = function (resolveEvt, rejectEvt, timeout) {
     }
 
     return new Promise((resolve, reject) => {
-        const hasResolveEvt = resolveEvt !== undefined && resolveEvt !== null,
-            removeResolve = () => {
-                if (hasResolveEvt) {
-                    this.removeEventListener(resolveEvt, resolve);
-                }
-            },
-            hasRejectEvt = rejectEvt !== undefined && rejectEvt !== null,
-            removeReject = () => {
-                if (hasRejectEvt) {
-                    this.removeEventListener(rejectEvt, reject);
-                }
-            },
-            remove = add(removeResolve, removeReject);
+        const hasResolveEvt = isString(resolveEvt);
+        if (hasResolveEvt) {
+            const oldResolve = resolve;
+            const remove = () => {
+                this.removeEventListener(resolveEvt, oldResolve);
+            };
+            resolve = add(remove, resolve);
+            reject = add(remove, reject);
+        }
 
-        resolve = add(remove, resolve);
-        reject = add(remove, reject);
+        const hasRejectEvt = isString(rejectEvt);
+        if (hasRejectEvt) {
+            const oldReject = reject;
+            const remove = () => {
+                this.removeEventListener(rejectEvt, oldReject);
+            };
 
-        if (timeout !== undefined
-            && timeout !== null) {
-            const timer = setTimeout(() => {
-                reject("Timeout");
-            }, timeout),
+            resolve = add(remove, resolve);
+            reject = add(remove, reject);
+        }
+
+        if (isNumber(timeout)) {
+            const timer = setTimeout(reject, timeout, "Timeout"),
                 cancel = () => clearTimeout(timer);
             resolve = add(cancel, resolve);
             reject = add(cancel, reject);
@@ -344,6 +364,35 @@ EventTarget.prototype.once = function (resolveEvt, rejectEvt, timeout) {
                 reject("Rejection event found");
             });
         }
+    });
+};
+
+EventTarget.prototype.when = function (resolveEvt, filterTest, timeout) {
+
+    if (!isString(resolveEvt)) {
+        throw new Error("Filtering tests function is required. Otherwise, use `once`.");
+    }
+
+    if (!isFunction(filterTest)) {
+        throw new Error("Filtering tests function is required. Otherwise, use `once`.");
+    }
+
+    return new Promise((resolve, reject) => {
+        const remove = () => {
+            this.removeEventListener(resolveEvt, resolve);
+        };
+
+        resolve = add(remove, resolve);
+        reject = add(remove, reject);
+
+        if (isNumber(timeout)) {
+            const timer = setTimeout(reject, timeout, "Timeout"),
+                cancel = () => clearTimeout(timer);
+            resolve = add(cancel, resolve);
+            reject = add(cancel, reject);
+        }
+
+        this.addEventListener(resolveEvt, resolve);
     });
 };
 
@@ -417,11 +466,6 @@ String.prototype.firstLetterToUpper = function () {
         + this.substring(1);
 };
 
-function isFunction(obj) {
-    return typeof obj === "function"
-        || obj instanceof Function;
-}
-
 class HtmlEvt {
     constructor(name, callback, opts) {
         if (!isFunction(callback)) {
@@ -454,9 +498,9 @@ function tag(name, ...rest) {
 
     for (let x of rest) {
         if (x !== null && x !== undefined) {
-            if (x instanceof String || typeof x === "string"
-                || x instanceof Number || typeof x === "number"
-                || x instanceof Boolean || typeof x === "boolean"
+            if (isString(x)
+                || isNumber(x)
+                || isBoolean(x)
                 || x instanceof Date) {
                 elem.appendChild(document.createTextNode(x));
             }
@@ -6264,6 +6308,14 @@ class BaseAudioClient extends EventTarget {
     }
 
     /**
+     *
+     * @param {string} deviceID
+     */
+    setAudioOutputDevice(deviceID) {
+        throw new Error("Not implemented in base class");
+    }
+
+    /**
      * Set the position of the listener.
      * @param {Point} evt
      */
@@ -6289,9 +6341,9 @@ class BaseAudioClient extends EventTarget {
 
     /**
      * 
-     * @param {BaseUser} evt
+     * @param {string} userID
      */
-    removeUser(evt) {
+    removeSource(userID) {
         throw new Error("Not implemented in base class");
     }
 }
@@ -6588,7 +6640,7 @@ class BaseJitsiClient extends EventTarget {
     }
 
     removeUser(evt) {
-        this.audioClient.removeUser(evt);
+        this.audioClient.removeSource(evt.id);
     }
 
     /**
@@ -7299,6 +7351,10 @@ class BaseSpatializer extends EventTarget {
         this.pan = 0;
     }
 
+    setAudioOutputDevice(deviceID) {
+        this.audio.setSinkId(deviceID);
+    }
+
     /**
      * Discard values and make this instance useless.
      */
@@ -7901,8 +7957,7 @@ function createWorker(script, stripFunc = true) {
         script = script.toString();
         stripFunc = true;
     }
-    else if (typeof script !== "string"
-        && !(script instanceof String)) {
+    else if (!isString(script)) {
         throw new Error("Script parameter must be either a string or function");
     }
 
@@ -8005,7 +8060,7 @@ class AudioManager extends BaseAudioClient {
         };
 
         /** @type {Map.<string, BaseSpatializer>} */
-        this.sourceLookup = new Map();
+        this.sources = new Map();
 
         /** @type {BaseSpatializer[]} */
         this.sourceList = [];
@@ -8016,7 +8071,7 @@ class AudioManager extends BaseAudioClient {
         const recreationQ = [];
 
         this.destination.addEventListener("contextDestroying", () => {
-            for (let source of this.sourceList) {
+            for (let source of this.sources.values()) {
                 source.removeEventListener("audioActivity", this.onAudioActivity);
                 recreationQ.push({
                     id: source.id,
@@ -8025,12 +8080,10 @@ class AudioManager extends BaseAudioClient {
                     audio: source.audio
                 });
 
-                this.sourceLookup.delete(source.id);
-
                 source.dispose();
             }
 
-            this.sourceList.clear();
+            this.sources.clear();
         });
 
         this.destination.addEventListener("contextDestroyed", () => {
@@ -8048,7 +8101,7 @@ class AudioManager extends BaseAudioClient {
         this.timer = new WorkerTimer(250);
         this.timer.addEventListener("tick", () => {
             this.destination.update();
-            for (let source of this.sourceList) {
+            for (let source of this.sources.values()) {
                 source.update();
             }
         });
@@ -8062,28 +8115,6 @@ class AudioManager extends BaseAudioClient {
     }
 
     /**
-     * 
-     * @param {string} userID
-     * @return {BaseSpatializer}
-     */
-    getSource(userID) {
-        if (!this.sourceLookup.has(userID)) {
-            const elementID = `#participant_${userID} audio`,
-                audio = document.querySelector(elementID);
-
-            if (!!audio) {
-                this.createSource(userID, audio);
-            }
-        }
-
-        const source = this.sourceLookup.get(userID);
-        if (!source) {
-            console.warn(`no audio for user ${userID}`);
-        }
-        return source;
-    }
-
-    /**
      *
      * @param {string} userID
      * @param {HTMLAudioElement} audio
@@ -8092,14 +8123,31 @@ class AudioManager extends BaseAudioClient {
     createSource(userID, audio) {
         const source = this.destination.createSpatializer(userID, audio, BUFFER_SIZE);
         source.addEventListener("audioActivity", this.onAudioActivity);
-        this.sourceList.push(source);
-        this.sourceLookup.set(userID, source);
+        this.sources.set(userID, source);
         return source;
     }
 
+    setAudioOutputDevice(deviceID) {
+        for (let source of this.sources.values()) {
+            source.setAudioOutputDevice(deviceID);
+        }
+    }
+
+    /**
+     *
+     * @param {string} userID
+     */
+    removeSource(userID) {
+        if (this.sources.has(userID)) {
+            const source = this.sources.get(userID);
+            source.dispose();
+            this.sources.delete(userID);
+        }
+    }
+
     setUserPosition(evt) {
-        const source = this.getSource(evt.id);
-        if (!!source) {
+        if (this.sources.has(evt.id)) {
+            const source = this.sources.get(evt.id);
             source.setTarget(evt);
         }
     }
@@ -8111,27 +8159,20 @@ class AudioManager extends BaseAudioClient {
     setAudioProperties(evt) {
         this.destination.setAudioProperties(evt);
     }
-
-    removeUser(evt) {
-        if (this.sourceLookup.has(evt.id)) {
-            const source = this.sourceLookup.get(evt.id),
-                sourceIdx = this.sourceList.indexOf(source);
-
-            if (sourceIdx > -1) {
-                this.sourceList.removeAt(sourceIdx);
-            }
-
-            source.dispose();
-            this.sourceLookup.delete(evt.id);
-        }
-    }
 }
 
-const selfs$4 = new Map(),
-    audioActivityEvt$3 = Object.assign(new Event("audioActivity"), {
-        id: null,
-        isActive: false
-    });
+/** @typedef MediaElements
+ * @type {object}
+ * @property {HTMLAudioElement} audio
+ * @property {HTMLVideoElement} video */
+
+/** @type {Map.<string, MediaElements>} */
+const userInputs = new Map();
+
+const audioActivityEvt$3 = Object.assign(new Event("audioActivity"), {
+    id: null,
+    isActive: false
+});
 
 
 function logger(source, evtName) {
@@ -8159,17 +8200,8 @@ class LibJitsiMeetClient extends BaseJitsiClient {
 
     constructor() {
         super();
-        const self = Object.seal({
-            connection: null,
-            conference: null,
-
-            /** @type {HTMLAudioElement} */
-            audioInput: null,
-
-            /** @type {HTMLVideoElement} */
-            videoInput: null
-        });
-
+        this.connection = null;
+        this.conference = null;
         this.audioClient = new AudioManager();
         this.audioClient.addEventListener("audioActivity", (evt) => {
             audioActivityEvt$3.id = evt.id;
@@ -8177,31 +8209,12 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             this.dispatchEvent(audioActivityEvt$3);
         });
 
-        selfs$4.set(this, self);
         Object.seal(this);
-    }
-
-
-    get connection() {
-        return selfs$4.get(this).connection;
-    }
-
-    set connection(value) {
-        selfs$4.get(this).connection = value;
-    }
-
-    get conference() {
-        return selfs$4.get(this).conference;
-    }
-
-    set conference(value) {
-        return selfs$4.get(this).conference = value;
     }
 
     async initializeAsync(host, roomName, userName) {
         await import(`//${window.location.host}/lib/jquery.min.js`);
         await import(`https://${host}/libs/lib-jitsi-meet.min.js`);
-        const self = selfs$4.get(this);
 
         roomName = roomName.toLocaleLowerCase();
 
@@ -8275,7 +8288,24 @@ class LibJitsiMeetClient extends BaseJitsiClient {
                 if (!!userJoinedEvent && dataChannelOpen) {
                     this.dispatchEvent(userJoinedEvent);
                 }
-            };
+            },
+
+                onTrackMuteChanged = (track, muted) => {
+                    const userID = track.getParticipantId() || this.localUser,
+                        trackKind = track.getType(),
+                        muteChangedEvtName = trackKind + "MuteStatusChanged",
+                        evt = Object.assign(
+                            new Event(muteChangedEvtName), {
+                            id: userID,
+                            muted
+                        });
+
+                    this.dispatchEvent(evt);
+                },
+
+                onTrackChanged = (track) => {
+                    onTrackMuteChanged(track, track.isMuted());
+                };
 
             this.conference.addEventListener(USER_JOINED, (id, user) => {
                 userJoinedEvent = Object.assign(
@@ -8311,35 +8341,33 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             });
 
             this.conference.addEventListener(TRACK_ADDED, (track) => {
-                const userID = track.getParticipantId(),
+                const userID = track.getParticipantId() || this.localUser,
                     isLocal = track.isLocal(),
                     trackKind = track.getType(),
                     trackType = trackKind.firstLetterToUpper();
 
                 setLoggers(track, JitsiMeetJS.events.track);
 
-                track.addEventListener(JitsiMeetJS.events.track.TRACK_MUTE_CHANGED, (track) => {
-                    const evtName = trackKind + "MuteStatusChanged",
-                        id = track.getParticipantId(),
-                        muted = track.isMuted(),
-                        evt = Object.assign(
-                            new Event(evtName), {
-                            id,
-                            muted
-                        });
-
-                    this.dispatchEvent(evt);
-                });
+                track.addEventListener(JitsiMeetJS.events.track.TRACK_MUTE_CHANGED, onTrackChanged);
 
                 const elem = tag(trackType,
                     autoPlay(!isLocal),
                     muted(isLocal),
                     srcObject(track.stream));
 
-                if (isLocal) {
-                    self[trackKind + "Input"] = track;
+                if (!userInputs.has(userID)) {
+                    userInputs.set(userID, { audio: null, video: null });
                 }
-                else if (trackKind === "audio") {
+
+                const inputs = userInputs.get(userID),
+                    hasCurrentTrack = !!inputs[trackKind];
+                if (hasCurrentTrack) {
+                    inputs[trackKind].dispose();
+                }
+
+                inputs[trackKind] = track;
+
+                if (!isLocal && trackKind === "audio") {
                     this.audioClient.createSource(userID, elem);
                 }
 
@@ -8347,18 +8375,30 @@ class LibJitsiMeetClient extends BaseJitsiClient {
                     id: userID,
                     element: elem
                 }));
+
+                onTrackMuteChanged(track, false);
             });
 
             this.conference.addEventListener(TRACK_REMOVED, (track) => {
-                const userID = track.getParticipantId(),
-                    trackKind = track.getType(),
-                    field = trackKind + "Input";
 
-                if (self[field] === track) {
-                    self[field] = null;
+                const userID = track.getParticipantId() || this.localUser,
+                    isLocal = track.isLocal(),
+                    trackKind = track.getType();
+
+                if (userInputs.has(userID)) {
+                    const inputs = userInputs.get(userID);
+                    if (inputs[trackKind] === track) {
+                        inputs[trackKind] = null;
+                    }
+                }
+
+                if (!isLocal && trackKind === "audio") {
+                    this.audioClient.removeSource(userID);
                 }
 
                 track.dispose();
+
+                onTrackMuteChanged(track, true);
 
                 this.dispatchEvent(Object.assign(new Event(trackKind + "Removed"), {
                     id: userID
@@ -8406,14 +8446,17 @@ class LibJitsiMeetClient extends BaseJitsiClient {
 
     leave() {
         if (this.conference) {
-            const self = selfs$4.get(this);
-            if (self.audioInput) {
-                this.conference.removeTrack(self.audioInput);
+            if (this.localUser !== null && userInputs.has(this.localUser)) {
+                const inputs = userInputs.get(this.localUser);
+                if (inputs.audio) {
+                    this.conference.removeTrack(inputs.audio);
+                }
+
+                if (inputs.video) {
+                    this.conference.removeTrack(inputs.video);
+                }
             }
 
-            if (self.videoInput) {
-                this.conference.removeTrack(self.videoInput);
-            }
             const leaveTask = this.conference.leave();
             leaveTask
                 .then(() => this.connection.disconnect());
@@ -8457,6 +8500,14 @@ class LibJitsiMeetClient extends BaseJitsiClient {
 
     setAudioOutputDevice(device) {
         JitsiMeetJS.mediaDevices.setAudioOutputDevice(device.deviceId);
+        this.audioClient.setAudioOutputDevice(device.deviceId);
+    }
+
+    getCurrentMediaTrack(type) {
+        return this.localUser !== null
+            && userInputs.has(this.localUser)
+            && userInputs.get(this.localUser)[type]
+            || null;
     }
 
     async getAudioInputDevicesAsync() {
@@ -8465,7 +8516,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async getCurrentAudioInputDeviceAsync() {
-        const cur = selfs$4.get(this).audioInput,
+        const cur = this.getCurrentMediaTrack("audio"),
             devices = await this.getAudioInputDevicesAsync(),
             device = devices.filter((d) => cur !== null && d.deviceId === cur.deviceId);
         if (device.length === 0) {
@@ -8476,64 +8527,9 @@ class LibJitsiMeetClient extends BaseJitsiClient {
         }
     }
 
-    async setAudioInputDeviceAsync(device) {
-        const self = selfs$4.get(this),
-            cur = self.audioInput;
-        if (cur) {
-            this.conference.removeTrack(cur);
-        }
-
-        const tracks = await JitsiMeetJS.createLocalTracks({
-            devices: ["audio"],
-            micDeviceId: device.deviceId
-        });
-
-        for (let track of tracks) {
-            this.conference.addTrack(track);
-        }
-    }
-
-    async getVideoInputDevicesAsync() {
-        const devices = await this.getAvailableDevicesAsync();
-        return devices && devices.videoInput || [];
-    }
-
-    async getCurrentVideoInputDeviceAsync() {
-        const cur = selfs$4.get(this).videoInput,
-            devices = await this.getVideoInputDevicesAsync(),
-            device = devices.filter((d) => cur !== null && d.deviceId === cur.deviceId);
-        if (device.length === 0) {
-            return null;
-        }
-        else {
-            return device[0];
-        }
-    }
-
-    async setVideoInputDeviceAsync(device) {
-        const self = selfs$4.get(this),
-            cur = self.videoInput;
-        if (cur) {
-            this.conference.removeTrack(cur);
-        }
-
-        const tracks = await JitsiMeetJS.createLocalTracks({
-            devices: ["video"],
-            cameraDeviceId: device.deviceId
-        });
-
-        for (let track of tracks) {
-            this.conference.addTrack(track);
-        }
-    }
-
-    setDisplayName(userName) {
-        this.conference.setDisplayName(userName);
-    }
-
     async toggleAudioAsync() {
         const changeTask = this.once("localAudioMuteStatusChanged", 5000);
-        const cur = selfs$4.get(this).audioInput;
+        const cur = this.getCurrentMediaTrack("audio");
         if (cur) {
             const muted = cur.isMuted();
             if (muted) {
@@ -8550,22 +8546,56 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             }
             else {
                 await this.setAudioInputDeviceAsync(avail[0]);
-                this.dispatchEvent(Object.assign(
-                    new Event("audioMuteStatusChanged"),
-                    { muted: false }));
             }
         }
         return await changeTask;
     }
 
+    async setAudioInputDeviceAsync(device) {
+        const cur = this.getCurrentMediaTrack("audio");
+        if (cur) {
+            const removeTask = this.when("audioRemoved", (evt) => evt.id === this.localUser);
+            this.conference.removeTrack(cur);
+            await removeTask;
+        }
+
+        if (device) {
+            const addTask = this.when("audioAdded", (evt) => evt.id === this.localUser);
+            const tracks = await JitsiMeetJS.createLocalTracks({
+                devices: ["audio"],
+                micDeviceId: device.deviceId
+            });
+
+            for (let track of tracks) {
+                this.conference.addTrack(track);
+            }
+
+            await addTask;
+        }
+    }
+
+    async getVideoInputDevicesAsync() {
+        const devices = await this.getAvailableDevicesAsync();
+        return devices && devices.videoInput || [];
+    }
+
+    async getCurrentVideoInputDeviceAsync() {
+        const cur = this.getCurrentMediaTrack("video"),
+            devices = await this.getVideoInputDevicesAsync(),
+            device = devices.filter((d) => cur !== null && d.deviceId === cur.deviceId);
+        if (device.length === 0) {
+            return null;
+        }
+        else {
+            return device[0];
+        }
+    }
+
     async toggleVideoAsync() {
         const changeTask = this.once("localVideoMuteStatusChanged", 5000);
-        const cur = selfs$4.get(this).videoInput;
+        const cur = this.getCurrentMediaTrack("video");
         if (cur) {
-            this.conference.removeTrack(cur);
-            this.dispatchEvent(Object.assign(
-                new Event("videoMuteStatusChanged"),
-                { muted: true }));
+            await this.setVideoInputDeviceAsync(null);
         }
         else {
             const avail = await this.getVideoInputDevicesAsync();
@@ -8574,36 +8604,55 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             }
             else {
                 await this.setVideoInputDeviceAsync(avail[0]);
-                this.dispatchEvent(Object.assign(
-                    new Event("videoMuteStatusChanged"),
-                    { muted: false }));
             }
         }
+
         return await changeTask;
+    }
+
+    async setVideoInputDeviceAsync(device) {
+        const cur = this.getCurrentMediaTrack("video");
+        if (cur) {
+            const removeTask = this.when("videoRemoved", (evt) => evt.id === this.localUser);
+            this.conference.removeTrack(cur);
+            await removeTask;
+        }
+
+        if (device) {
+            const addTask = this.when("videoAdded", (evt) => evt.id === this.localUser);
+            const tracks = await JitsiMeetJS.createLocalTracks({
+                devices: ["video"],
+                cameraDeviceId: device.deviceId
+            });
+
+            for (let track of tracks) {
+                this.conference.addTrack(track);
+            }
+
+            await addTask;
+        }
+    }
+
+    setDisplayName(userName) {
+        this.conference.setDisplayName(userName);
     }
 
     setAvatarURL(url) {
         throw new Error("Not implemented in base class");
     }
 
+    isMediaMuted(type) {
+        const cur = this.getCurrentMediaTrack(type);
+        return cur === null
+            || cur.isMuted();
+    }
+
     async isAudioMutedAsync() {
-        const cur = selfs$4.get(this).audioInput;
-        if (cur === null) {
-            return true;
-        }
-        else {
-            return cur.isMuted();
-        }
+        return this.isMediaMuted("audio");
     }
 
     async isVideoMutedAsync() {
-        const cur = selfs$4.get(this).videoInput;
-        if (cur === null) {
-            return true;
-        }
-        else {
-            return cur.isMuted();
-        }
+        return this.isMediaMuted("video");
     }
 
     startAudio() {
