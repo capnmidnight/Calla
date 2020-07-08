@@ -27,7 +27,6 @@ class HtmlAttr {
         Object.freeze(this);
     }
 }
-function accessKey(value) { return new HtmlAttr("accessKey", ["input", "button"], value); }
 // Alternative text in case an image can't be displayed.
 function alt(value) { return new HtmlAttr("alt", ["applet", "area", "img", "input"], value); }
 function ariaLabel(value) { return new HtmlAttr("ariaLabel", [], value); }
@@ -104,37 +103,6 @@ function grid(x, y, w, h) {
     });
 }
 
-function isGoodNumber(v) {
-    return v !== null
-        && v !== undefined
-        && (typeof (v) === "number"
-            || v instanceof Number)
-        && !Number.isNaN(v);
-}
-
-function clamp(v, min, max) {
-    return Math.min(max, Math.max(min, v));
-}
-
-/**
- * 
- * @param {number} a
- * @param {number} b
- * @param {number} p
- * @returns {number}
- */
-function lerp(a, b, p) {
-    return (1 - p) * a + p * b;
-}
-
-function project(v, min, max) {
-    return (v - min) / (max - min);
-}
-
-function unproject(v, min, max) {
-    return v * (max - min) + min;
-}
-
 function t(o, s, c) {
     return typeof o === s || o instanceof c;
 }
@@ -152,6 +120,62 @@ function isNumber(obj) {
 }
 function isBoolean(obj) {
     return t(obj, "boolean", Boolean);
+}
+
+/**
+ * Check a value to see if it is of a number type
+ * and is not the special NaN value.
+ * 
+ * @param {any} v
+ */
+function isGoodNumber(v) {
+    return isNumber(v)
+        && !Number.isNaN(v);
+}
+
+/**
+ * Force a value onto a range
+ * 
+ * @param {number} v
+ * @param {number} min
+ * @param {number} max
+ */
+function clamp(v, min, max) {
+    return Math.min(max, Math.max(min, v));
+}
+
+/**
+ * Translate a value into a range.
+ * 
+ * @param {number} v
+ * @param {number} min
+ * @param {number} max
+ */
+function project(v, min, max) {
+    return (v - min) / (max - min);
+}
+
+/**
+ * Translate a value out of a range.
+ * 
+ * @param {number} v
+ * @param {number} min
+ * @param {number} max
+ */
+function unproject(v, min, max) {
+    return v * (max - min) + min;
+}
+
+/**
+ * Pick a value that is proportionally between two values.
+ * 
+ * @param {number} a
+ * @param {number} b
+ * @param {number} p
+ * @returns {number}
+ */
+function lerp(a, b, p) {
+    return (1 - p) * a + p * b;
 }
 
 // A few convenience methods for HTML elements.
@@ -349,7 +373,7 @@ EventTarget.prototype.once = function (resolveEvt, rejectEvt, timeout) {
         }
 
         if (isNumber(timeout)) {
-            const timer = setTimeout(reject, timeout, "Timeout"),
+            const timer = setTimeout(reject, timeout, `'${resolveEvt}' has timed out.`),
                 cancel = () => clearTimeout(timer);
             resolve = add(cancel, resolve);
             reject = add(cancel, reject);
@@ -386,7 +410,7 @@ EventTarget.prototype.when = function (resolveEvt, filterTest, timeout) {
         reject = add(remove, reject);
 
         if (isNumber(timeout)) {
-            const timer = setTimeout(reject, timeout, "Timeout"),
+            const timer = setTimeout(reject, timeout, `'${resolveEvt}' has timed out.`),
                 cancel = () => clearTimeout(timer);
             resolve = add(cancel, resolve);
             reject = add(cancel, reject);
@@ -426,7 +450,7 @@ EventTarget.prototype.until = function (untilEvt, callback, test, repeatTimeout,
             if (cancelTimeout !== undefined) {
                 canceller = setTimeout(() => {
                     cleanup();
-                    reject("timeout");
+                    reject(`'${untilEvt}' has timed out.`);
                 }, cancelTimeout);
             }
 
@@ -672,7 +696,7 @@ class OptionPanelTag extends HtmlCustomTag {
     constructor(panelID, name, ...rest) {
         super("div",
             id(panelID),
-            H2(name),
+            style({ padding: "1em" }),
             P(...rest));
 
         this.button = Button(
@@ -687,7 +711,14 @@ class OptionPanelTag extends HtmlCustomTag {
 
     set visible(v) {
         this.element.setOpen(v);
-        this.button.setLocked(v);
+        //this.button.setLocked(v);
+        style({
+            backgroundColor: v ? "#ddd" : "transparent",
+            borderTop: v ? "" : "none",
+            borderRight: v ? "" : "none",
+            borderBottom: v ? "none" : "",
+            borderLeft: v ? "" : "none",
+        }).apply(this.button);
     }
 }
 
@@ -3601,142 +3632,6 @@ class LoginForm extends FormDialog {
     }
 }
 
-const inputBindingChangedEvt = new Event("inputBindingChanged");
-
-class InputBinding extends EventTarget {
-    constructor() {
-        super();
-
-        const bindings = new Map([
-            ["keyButtonUp", "ArrowUp"],
-            ["keyButtonDown", "ArrowDown"],
-            ["keyButtonLeft", "ArrowLeft"],
-            ["keyButtonRight", "ArrowRight"],
-            ["keyButtonEmote", "e"],
-            ["keyButtonToggleAudio", "a"],
-
-            ["gpAxisLeftRight", 0],
-            ["gpAxisUpDown", 1],
-
-            ["gpButtonUp", 12],
-            ["gpButtonDown", 13],
-            ["gpButtonLeft", 14],
-            ["gpButtonRight", 15],
-            ["gpButtonEmote", 0],
-            ["gpButtonToggleAudio", 1]
-        ]);
-
-        for (let id of bindings.keys()) {
-            Object.defineProperty(this, id, {
-                get: () => bindings.get(id),
-                set: (v) => {
-                    if (bindings.has(id)
-                        && v !== bindings.get(id)) {
-                        bindings.set(id, v);
-                        this.dispatchEvent(inputBindingChangedEvt);
-                    }
-                }
-            });
-        }
-
-        this.clone = () => {
-            const c = {};
-            for (let kp of bindings.entries()) {
-                c[kp[0]] = kp[1];
-            }
-            return c;
-        };
-
-        Object.freeze(this);
-    }
-}
-
-const tickEvt = Object.assign(new Event("tick"), {
-    dt: 0
-});
-
-class BaseTimer extends EventTarget {
-
-    /**
-     * 
-     * @param {number} targetFrameRate
-     */
-    constructor(targetFrameRate) {
-        super();
-        this._lt = 0;
-        this._timer = null;
-        this.targetFrameRate = targetFrameRate;
-    }
-
-    /**
-     * 
-     * @param {number} dt
-     */
-    _onTick(dt) {
-        tickEvt.dt = dt;
-        this.dispatchEvent(tickEvt);
-    }
-
-    restart() {
-        this.stop();
-        this.start();
-    }
-
-    get isRunning() {
-        return this._timer !== null;
-    }
-
-    start() {
-        throw new Error("Not implemented in base class");
-    }
-
-    stop() {
-        this._timer = null;
-    }
-
-    /** @type {number} */
-    get targetFrameRate() {
-        return this._targetFPS;
-    }
-
-    set targetFrameRate(fps) {
-        this._targetFPS = fps;
-        this._frameTime = 1000 / fps;
-    }
-}
-
-class RequestAnimationFrameTimer extends BaseTimer {
-    constructor() {
-        super(60);
-    }
-
-    start() {
-        const updater = (t) => {
-            const dt = t - this._lt;
-            this._lt = t;
-            this._timer = requestAnimationFrame(updater);
-            this._onTick(dt);
-        };
-        this._lt = performance.now();
-        this._timer = requestAnimationFrame(updater);
-    }
-
-    stop() {
-        if (this.isRunning) {
-            cancelAnimationFrame(this._timer);
-            super.stop();
-        }
-    }
-
-    get targetFrameRate() {
-        return super.targetFrameRate;
-    }
-
-    set targetFrameRate(fps) {
-        console.warn("You cannot change the target framerate for requestAnimationFrame");
-    }
-}
-
 const gamepadStates = new Map();
 
 class EventedGamepad extends EventTarget {
@@ -3863,6 +3758,142 @@ class EventedGamepad extends EventTarget {
     }
 }
 
+const tickEvt = Object.assign(new Event("tick"), {
+    dt: 0
+});
+
+class BaseTimer extends EventTarget {
+
+    /**
+     * 
+     * @param {number} targetFrameRate
+     */
+    constructor(targetFrameRate) {
+        super();
+        this._lt = 0;
+        this._timer = null;
+        this.targetFrameRate = targetFrameRate;
+    }
+
+    /**
+     * 
+     * @param {number} dt
+     */
+    _onTick(dt) {
+        tickEvt.dt = dt;
+        this.dispatchEvent(tickEvt);
+    }
+
+    restart() {
+        this.stop();
+        this.start();
+    }
+
+    get isRunning() {
+        return this._timer !== null;
+    }
+
+    start() {
+        throw new Error("Not implemented in base class");
+    }
+
+    stop() {
+        this._timer = null;
+    }
+
+    /** @type {number} */
+    get targetFrameRate() {
+        return this._targetFPS;
+    }
+
+    set targetFrameRate(fps) {
+        this._targetFPS = fps;
+        this._frameTime = 1000 / fps;
+    }
+}
+
+class RequestAnimationFrameTimer extends BaseTimer {
+    constructor() {
+        super(60);
+    }
+
+    start() {
+        const updater = (t) => {
+            const dt = t - this._lt;
+            this._lt = t;
+            this._timer = requestAnimationFrame(updater);
+            this._onTick(dt);
+        };
+        this._lt = performance.now();
+        this._timer = requestAnimationFrame(updater);
+    }
+
+    stop() {
+        if (this.isRunning) {
+            cancelAnimationFrame(this._timer);
+            super.stop();
+        }
+    }
+
+    get targetFrameRate() {
+        return super.targetFrameRate;
+    }
+
+    set targetFrameRate(fps) {
+        console.warn("You cannot change the target framerate for requestAnimationFrame");
+    }
+}
+
+const inputBindingChangedEvt = new Event("inputBindingChanged");
+
+class InputBinding extends EventTarget {
+    constructor() {
+        super();
+
+        const bindings = new Map([
+            ["keyButtonUp", "ArrowUp"],
+            ["keyButtonDown", "ArrowDown"],
+            ["keyButtonLeft", "ArrowLeft"],
+            ["keyButtonRight", "ArrowRight"],
+            ["keyButtonEmote", "e"],
+            ["keyButtonToggleAudio", "a"],
+
+            ["gpAxisLeftRight", 0],
+            ["gpAxisUpDown", 1],
+
+            ["gpButtonUp", 12],
+            ["gpButtonDown", 13],
+            ["gpButtonLeft", 14],
+            ["gpButtonRight", 15],
+            ["gpButtonEmote", 0],
+            ["gpButtonToggleAudio", 1]
+        ]);
+
+        for (let id of bindings.keys()) {
+            Object.defineProperty(this, id, {
+                get: () => bindings.get(id),
+                set: (v) => {
+                    if (bindings.has(id)
+                        && v !== bindings.get(id)) {
+                        bindings.set(id, v);
+                        this.dispatchEvent(inputBindingChangedEvt);
+                    }
+                }
+            });
+        }
+
+        this.clone = () => {
+            const c = {};
+            for (let kp of bindings.entries()) {
+                c[kp[0]] = kp[1];
+            }
+            return c;
+        };
+
+        Object.freeze(this);
+    }
+}
+
 const keyWidthStyle = style({ width: "7em" }),
     numberWidthStyle = style({ width: "3em" }),
     avatarUrlChangedEvt = new Event("avatarURLChanged"),
@@ -3872,7 +3903,6 @@ const keyWidthStyle = style({ width: "7em" }),
     inputBindingChangedEvt$1 = new Event("inputBindingChanged"),
     audioPropsChangedEvt = new Event("audioPropertiesChanged"),
     toggleDrawHearingEvt = new Event("toggleDrawHearing"),
-    toggleVideoEvt = new Event("toggleVideo"),
     audioInputChangedEvt = new Event("audioInputChanged"),
     audioOutputChangedEvt = new Event("audioOutputChanged"),
     videoInputChangedEvt = new Event("videoInputChanged"),
@@ -3985,50 +4015,7 @@ class OptionsForm extends FormDialog {
                     min(5),
                     max(32),
                     style({ width: "3em" }),
-                    onInput(_(fontSizeChangedEvt)))),
-
-            OptionPanel("keyboard", "Keyboard",
-                this.keyButtonUp = makeKeyboardBinder("keyButtonUp", "Up: "),
-                this.keyButtonDown = makeKeyboardBinder("keyButtonDown", "Down: "),
-                this.keyButtonLeft = makeKeyboardBinder("keyButtonLeft", "Left: "),
-                this.keyButtonRight = makeKeyboardBinder("keyButtonRight", "Right: "),
-                this.keyButtonEmote = makeKeyboardBinder("keyButtonEmote", "Emote: "),
-                this.keyButtonToggleAudio = makeKeyboardBinder("keyButtonToggleAudio", "Toggle audio: ")),
-
-            OptionPanel("gamepad", "Gamepad",
-                this.gpSelect = LabeledSelectBox(
-                    "gamepads",
-                    "Use gamepad: ",
-                    "No gamepad",
-                    gp => gp.id,
-                    gp => gp.id,
-                    onInput(_(gamepadChangedEvt))),
-                this.gpAxisLeftRight = makeGamepadAxisBinder("gpAxisLeftRight", "Left/Right axis:"),
-                this.gpAxisUpDown = makeGamepadAxisBinder("gpAxisUpDown", "Up/Down axis:"),
-                this.gpButtonUp = makeGamepadButtonBinder("gpButtonUp", "Up button: "),
-                this.gpButtonDown = makeGamepadButtonBinder("gpButtonDown", "Down button: "),
-                this.gpButtonLeft = makeGamepadButtonBinder("gpButtonLeft", "Left button: "),
-                this.gpButtonRight = makeGamepadButtonBinder("gpButtonRight", "Right button: "),
-                this.gpButtonEmote = makeGamepadButtonBinder("gpButtonEmote", "Emote button: "),
-                this.gpButtonToggleAudio = makeGamepadButtonBinder("gpButtonToggleAudio", "Toggle audio button: ")),
-
-            OptionPanel("audio", "Audio",
-                P(
-                    this.audioInputSelect = LabeledSelectBox(
-                        "audioInputDevices",
-                        "Input: ",
-                        "No audio input",
-                        d => d.deviceId,
-                        d => d.label,
-                        onInput(_(audioInputChangedEvt)))),
-                P(
-                    this.audioOutputSelect = LabeledSelectBox(
-                        "audioOutputDevices",
-                        "Output: ",
-                        "No audio output",
-                        d => d.deviceId,
-                        d => d.label,
-                        onInput(_(audioOutputChangedEvt)))),
+                    onInput(_(fontSizeChangedEvt))),
                 P(
                     this.drawHearingCheck = LabeledInput(
                         "drawHearing",
@@ -4067,26 +4054,60 @@ class OptionsForm extends FormDialog {
                         numberWidthStyle,
                         audioPropsChanged))),
 
-            OptionPanel("video", "Video",
-                P(
-                    this.enableVideo = Button(
-                        accessKey("v"),
-                        "Enable video",
-                        onClick(_(toggleVideoEvt)))),
-                P(
-                    this.videoInputSelect = LabeledSelectBox(
-                        "videoInputDevices",
-                        "Device: ",
-                        "No video input",
-                        d => d.deviceId,
-                        d => d.label,
-                        onInput(_(videoInputChangedEvt)))))
+            OptionPanel("keyboard", "Keyboard",
+                this.keyButtonUp = makeKeyboardBinder("keyButtonUp", "Up: "),
+                this.keyButtonDown = makeKeyboardBinder("keyButtonDown", "Down: "),
+                this.keyButtonLeft = makeKeyboardBinder("keyButtonLeft", "Left: "),
+                this.keyButtonRight = makeKeyboardBinder("keyButtonRight", "Right: "),
+                this.keyButtonEmote = makeKeyboardBinder("keyButtonEmote", "Emote: "),
+                this.keyButtonToggleAudio = makeKeyboardBinder("keyButtonToggleAudio", "Toggle audio: ")),
+
+            OptionPanel("gamepad", "Gamepad",
+                this.gpSelect = LabeledSelectBox(
+                    "gamepads",
+                    "Use gamepad: ",
+                    "No gamepad",
+                    gp => gp.id,
+                    gp => gp.id,
+                    onInput(_(gamepadChangedEvt))),
+                this.gpAxisLeftRight = makeGamepadAxisBinder("gpAxisLeftRight", "Left/Right axis:"),
+                this.gpAxisUpDown = makeGamepadAxisBinder("gpAxisUpDown", "Up/Down axis:"),
+                this.gpButtonUp = makeGamepadButtonBinder("gpButtonUp", "Up button: "),
+                this.gpButtonDown = makeGamepadButtonBinder("gpButtonDown", "Down button: "),
+                this.gpButtonLeft = makeGamepadButtonBinder("gpButtonLeft", "Left button: "),
+                this.gpButtonRight = makeGamepadButtonBinder("gpButtonRight", "Right button: "),
+                this.gpButtonEmote = makeGamepadButtonBinder("gpButtonEmote", "Emote button: "),
+                this.gpButtonToggleAudio = makeGamepadButtonBinder("gpButtonToggleAudio", "Toggle audio button: ")),
+
+            OptionPanel("devices", "Devices",
+                this.videoInputSelect = LabeledSelectBox(
+                    "videoInputDevices",
+                    "Video Input: ",
+                    "No video input",
+                    d => d.deviceId,
+                    d => d.label,
+                    onInput(_(videoInputChangedEvt))),
+                this.audioInputSelect = LabeledSelectBox(
+                    "audioInputDevices",
+                    "Audio Input: ",
+                    "No audio input",
+                    d => d.deviceId,
+                    d => d.label,
+                    onInput(_(audioInputChangedEvt))),
+                this.audioOutputSelect = LabeledSelectBox(
+                    "audioOutputDevices",
+                    "Audio Output: ",
+                    "No audio output",
+                    d => d.deviceId,
+                    d => d.label,
+                    onInput(_(audioOutputChangedEvt))))
         ];
 
         const cols = [];
         for (let i = 0; i < panels.length; ++i) {
             cols[i] = "1fr";
             panels[i].element.style.gridColumnStart = i + 1;
+            panels[i].button.style.fontSize = "24pt";
         }
 
         Object.assign(this.header.style, {
@@ -4096,6 +4117,12 @@ class OptionsForm extends FormDialog {
 
         this.header.append(...panels.map(p => p.button));
         this.content.append(...panels.map(p => p.element));
+        style({
+            backgroundColor: "#ddd",
+            borderLeft: "solid 2px black",
+            borderRight: "solid 2px black",
+            borderBottom: "solid 2px black"
+        }).apply(this.content);
         this.footer.append(
             this.confirmButton = Button(
                 className("confirm"),
@@ -4159,7 +4186,6 @@ class OptionsForm extends FormDialog {
         this.audioOutputDevices = [];
         this.videoInputDevices = [];
 
-        this._videoEnabled = false;
         this._drawHearing = false;
         this._avatarEmoji = null;
 
@@ -4278,18 +4304,6 @@ class OptionsForm extends FormDialog {
 
     set currentVideoInputDevice(value) {
         this.videoInputSelect.selectedValue = value;
-    }
-
-
-    get videoEnabled() {
-        return this._videoEnabled;
-    }
-
-    set videoEnabled(value) {
-        this._videoEnabled = value;
-        this.enableVideo.innerHTML = value
-            ? "Disable video"
-            : "Enable video";
     }
 
     get gamepads() {
@@ -4520,7 +4534,7 @@ function Run$1(...rest) {
 }
 
 const toggleAudioEvt = new Event("toggleAudio"),
-    toggleVideoEvt$1 = new Event("toggleVideo"),
+    toggleVideoEvt = new Event("toggleVideo"),
     emoteEvt = new Event("emote"),
     selectEmojiEvt = new Event("selectEmoji"),
     subelStyle$1 = style({
@@ -4580,7 +4594,7 @@ class FooterBar extends EventTarget {
 
             this.muteVideoButton = Button(
                 title("Toggle video mute/unmute"),
-                onClick(_(toggleVideoEvt$1)),
+                onClick(_(toggleVideoEvt)),
                 grid(3, 1),
                 subelStyle$1,
                 Run$1(mobilePhoneOff.value)));
@@ -4981,14 +4995,24 @@ class PhotoAvatar extends BaseAvatar {
             = url && url.href || url;
     }
 
+    /**
+     * 
+     * @param {CanvasRenderingContext2D} g
+     * @param {any} width
+     * @param {any} height
+     */
     draw(g, width, height) {
         if (this.image !== null) {
-            const imageWidth = height * this.image.width / this.image.height;
+            const offset = (this.image.width - this.image.height) / 2,
+                sx = Math.max(0, offset),
+                sy = Math.max(0, -offset),
+                dim = Math.min(this.image.width, this.image.height);
             g.drawImage(
                 this.image,
-                (width - imageWidth) / 2, 0,
-                imageWidth,
-                height);
+                sx, sy,
+                dim, dim,
+                0, 0,
+                width, height);
         }
     }
 }
@@ -5009,13 +5033,16 @@ class VideoAvatar extends BaseAvatar {
 
     draw(g, width, height) {
         if (this.video !== null) {
-            this.video.play();
-            const videoWidth = height * this.video.videoWidth / this.video.videoHeight;
+            const offset = (this.video.videoWidth - this.video.videoHeight) / 2,
+                sx = Math.max(0, offset),
+                sy = Math.max(0, -offset),
+                dim = Math.min(this.video.videoWidth, this.video.videoHeight);
             g.drawImage(
                 this.video,
-                (width - videoWidth) / 2, 0,
-                videoWidth,
-                height);
+                sx, sy,
+                dim, dim,
+                0, 0,
+                width, height);
         }
     }
 }
@@ -5453,7 +5480,7 @@ const CAMERA_LERP = 0.01,
     zoomChangedEvt = new Event("zoomChanged"),
     emojiNeededEvt = new Event("emojiNeeded"),
     toggleAudioEvt$1 = new Event("toggleAudio"),
-    toggleVideoEvt$2 = new Event("toggleVideo"),
+    toggleVideoEvt$1 = new Event("toggleVideo"),
     emoteEvt$1 = Object.assign(new Event("emote"), {
         id: null,
         emoji: null
@@ -5795,7 +5822,7 @@ class Game extends EventTarget {
     }
 
     toggleMyVideo() {
-        this.dispatchEvent(toggleVideoEvt$2);
+        this.dispatchEvent(toggleVideoEvt$1);
     }
 
     muteUserAudio(evt) {
@@ -6359,10 +6386,6 @@ const APP_FINGERPRINT$1
         "userInitResponse",
         "audioMuteStatusChanged",
         "videoMuteStatusChanged",
-        "localAudioMuteStatusChanged",
-        "localVideoMuteStatusChanged",
-        "remoteAudioMuteStatusChanged",
-        "remoteVideoMuteStatusChanged",
         "videoConferenceJoined",
         "videoConferenceLeft",
         "participantJoined",
@@ -6407,6 +6430,7 @@ class BaseJitsiClient extends EventTarget {
     }
 
     dispatchEvent(evt) {
+        console.log(evt.type, evt);
         if (this.localUser !== null) {
             if (evt.id === null
                 || evt.id === undefined
@@ -6461,30 +6485,6 @@ class BaseJitsiClient extends EventTarget {
             if (evt.id !== this.localUser) {
                 this.otherUsers.set(evt.id, evt.displayname);
             }
-        });
-
-        const localizeMuteEvent = (type) => (evt) => {
-            const isLocal = evt.id === this.localUser
-                || evt.id === null
-                || evt.id === undefined,
-                evt2 = Object.assign(
-                    new Event((isLocal ? "local" : "remote") + type + "MuteStatusChanged"),
-                    {
-                        id: isLocal ? this.localUser : evt.id,
-                        muted: evt.muted
-                    });
-            this.dispatchEvent(evt2);
-        };
-
-        this.addEventListener("audioMuteStatusChanged", localizeMuteEvent("Audio"));
-        this.addEventListener("videoMuteStatusChanged", localizeMuteEvent("Video"));
-
-        this.addEventListener("localAudioMuteStatusChanged", (evt) => {
-            this.audioMuteStatusChanged(evt.muted);
-        });
-
-        this.addEventListener("localVideoMuteStatusChanged", (evt) => {
-            this.videoMuteStatusChanged(evt.muted);
         });
 
         window.addEventListener("unload", () => {
@@ -6719,28 +6719,6 @@ class BaseJitsiClient extends EventTarget {
     emote(emoji) {
         for (let toUserID of this.otherUsers.keys()) {
             this.sendMessageTo(toUserID, "emote", emoji);
-        }
-    }
-
-    /**
-     *
-     * @param {boolean} muted
-     */
-    audioMuteStatusChanged(muted) {
-        const evt = { muted };
-        for (let toUserID of this.otherUsers.keys()) {
-            this.sendMessageTo(toUserID, "audioMuteStatusChanged", evt);
-        }
-    }
-
-    /**
-     * 
-     * @param {boolean} muted
-     */
-    videoMuteStatusChanged(muted) {
-        const evt = { muted };
-        for (let toUserID of this.otherUsers.keys()) {
-            this.sendMessageTo(toUserID, "videoMuteStatusChanged", evt);
         }
     }
 
@@ -7039,7 +7017,7 @@ function init(host, client) {
 
             const videoMuted = await client.isVideoMutedAsync();
             game.muteUserVideo({ id: client.localUser, muted: videoMuted });
-            options.videoEnabled = !videoMuted;
+            footbar.videoEnabled = !videoMuted;
         },
         videoConferenceLeft: (evt) => {
             game.end();
@@ -7066,26 +7044,18 @@ function init(host, client) {
         displayNameChange: (evt) => {
             game.changeUserName(evt);
         },
-        audioMuteStatusChanged: (evt) => {
+        audioMuteStatusChanged: async (evt) => {
             game.muteUserAudio(evt);
-        },
-        localAudioMuteStatusChanged: async (evt) => {
-            footbar.audioEnabled = !evt.muted;
-            if (!evt.muted) {
+            if (evt.id === client.localUser) {
+                footbar.audioEnabled = !evt.muted;
                 options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
             }
         },
-        videoMuteStatusChanged: (evt) => {
+        videoMuteStatusChanged: async (evt) => {
             game.muteUserVideo(evt);
-        },
-        localVideoMuteStatusChanged: async (evt) => {
-            options.videoEnabled = !evt.muted;
-            footbar.videoEnabled = !evt.muted;
-            if (!evt.muted) {
+            if (evt.id === client.localUser) {
+                footbar.videoEnabled = !evt.muted;
                 options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
-            }
-            else {
-                options.currentVideoInputDevice = null;
             }
         },
         userInitRequest: (evt) => {
@@ -7952,96 +7922,6 @@ class Destination extends EventTarget {
     }
 }
 
-function createWorker(script, stripFunc = true) {
-    if (isFunction(script)) {
-        script = script.toString();
-        stripFunc = true;
-    }
-    else if (!isString(script)) {
-        throw new Error("Script parameter must be either a string or function");
-    }
-
-    if (stripFunc) {
-        script = script.trim();
-        const start = script.indexOf('{');
-        script = script.substring(start + 1, script.length - 1);
-    }
-
-    const blob = new Blob([script], { type: "text/javascript" }),
-        dataURI = URL.createObjectURL(blob);
-    return new Worker(dataURI);
-}
-
-class WorkerTimer extends BaseTimer {
-
-    constructor(targetFrameRate) {
-        super(targetFrameRate);
-
-        this._running = false;
-        this._timer = createWorker(function () {
-            let lt = 0,
-                dt = null,
-                running = false;
-            onmessage = function (e) {
-                if (e.data === "stop") {
-                    running = false;
-                } else {
-                    const fps = parseFloat(e.data);
-                    if (fps === Math.floor(fps)) {
-                        dt = 1000 / fps;
-                        if (!running) {
-                            running = true;
-                            loop();
-                        }
-                    }
-                }
-            };
-
-            function loop() {
-                while (running) {
-                    var t = performance.now();
-                    if (t - lt >= dt) {
-                        postMessage("ok");
-                        lt = t;
-                    }
-                }
-            }
-        });
-
-        this._timer.onmessage = () => {
-            const t = performance.now(),
-                dt = t - this._lt;
-            this._lt = t;
-            this._onTick(dt);
-        };
-    }
-
-    get targetFrameRate() {
-        return super.targetFrameRate;
-    }
-
-    set targetFrameRate(fps) {
-        super.targetFrameRate = fps;
-        if (this.isRunning) {
-            this._timer.postMessage(fps);
-        }
-    }
-
-    start() {
-        this._timer.postMessage(this.targetFrameRate);
-    }
-
-    stop() {
-        if (this.isRunning) {
-            this._timer.postMessage("stop");
-        }
-    }
-
-    get isRunning() {
-        return this._running;
-    }
-}
-
 const BUFFER_SIZE = 1024,
     audioActivityEvt$2 = Object.assign(new Event("audioActivity", {
         id: null,
@@ -8098,7 +7978,7 @@ class AudioManager extends BaseAudioClient {
             this.timer.start();
         });
 
-        this.timer = new WorkerTimer(250);
+        this.timer = new RequestAnimationFrameTimer();
         this.timer.addEventListener("tick", () => {
             this.destination.update();
             for (let source of this.sources.values()) {
@@ -8499,7 +8379,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     setAudioOutputDevice(device) {
-        JitsiMeetJS.mediaDevices.setAudioOutputDevice(device.deviceId);
+        //JitsiMeetJS.mediaDevices.setAudioOutputDevice(device.deviceId);
         this.audioClient.setAudioOutputDevice(device.deviceId);
     }
 
@@ -8527,8 +8407,12 @@ class LibJitsiMeetClient extends BaseJitsiClient {
         }
     }
 
+    taskOf(evt) {
+        return this.when(evt, (evt) => evt.id === this.localUser, 5000);
+    }
+
     async toggleAudioAsync() {
-        const changeTask = this.once("localAudioMuteStatusChanged", 5000);
+        const changeTask = this.taskOf("audioMuteStatusChanged");
         const cur = this.getCurrentMediaTrack("audio");
         if (cur) {
             const muted = cur.isMuted();
@@ -8554,13 +8438,13 @@ class LibJitsiMeetClient extends BaseJitsiClient {
     async setAudioInputDeviceAsync(device) {
         const cur = this.getCurrentMediaTrack("audio");
         if (cur) {
-            const removeTask = this.when("audioRemoved", (evt) => evt.id === this.localUser);
+            const removeTask = this.taskOf("audioRemoved");
             this.conference.removeTrack(cur);
             await removeTask;
         }
 
         if (device) {
-            const addTask = this.when("audioAdded", (evt) => evt.id === this.localUser);
+            const addTask = this.taskOf("audioAdded");
             const tracks = await JitsiMeetJS.createLocalTracks({
                 devices: ["audio"],
                 micDeviceId: device.deviceId
@@ -8592,7 +8476,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async toggleVideoAsync() {
-        const changeTask = this.once("localVideoMuteStatusChanged", 5000);
+        const changeTask = this.when("videoMuteStatusChanged", (evt) => evt.id === this.this.localUser, 5000);
         const cur = this.getCurrentMediaTrack("video");
         if (cur) {
             await this.setVideoInputDeviceAsync(null);
@@ -8613,13 +8497,13 @@ class LibJitsiMeetClient extends BaseJitsiClient {
     async setVideoInputDeviceAsync(device) {
         const cur = this.getCurrentMediaTrack("video");
         if (cur) {
-            const removeTask = this.when("videoRemoved", (evt) => evt.id === this.localUser);
+            const removeTask = this.taskOf("videoRemoved");
             this.conference.removeTrack(cur);
             await removeTask;
         }
 
         if (device) {
-            const addTask = this.when("videoAdded", (evt) => evt.id === this.localUser);
+            const addTask = this.taskOf("videoAdded");
             const tracks = await JitsiMeetJS.createLocalTracks({
                 devices: ["video"],
                 cameraDeviceId: device.deviceId
