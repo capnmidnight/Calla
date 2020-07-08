@@ -79,16 +79,6 @@ export class GoogleResonanceAudioSpatializer extends BaseSpatializer {
         this.source = null;
     }
 
-    mute() {
-        this.source.disconnect(this.analyser);
-        this.source.disconnect(this.inNode.input);
-    }
-
-    unmute() {
-        this.source.connect(this.analyser);
-        this.source.connect(this.inNode.input);
-    }
-
     update() {
         super.update();
 
@@ -104,7 +94,7 @@ export class GoogleResonanceAudioSpatializer extends BaseSpatializer {
 
                 if (this.stream.active) {
                     this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
-                    this.unmute();
+                    this.source.connect(this.inNode.input);
                 }
             }
             catch (exp) {
@@ -134,7 +124,7 @@ export class GoogleResonanceAudioSpatializer extends BaseSpatializer {
 
     dispose() {
         if (!!this.source) {
-            this.mute();
+            this.source.disconnect(this.inNode.input);
         }
 
         this.source = null;

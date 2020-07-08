@@ -22,7 +22,6 @@ export class BaseSpatializer extends EventTarget {
         this.position = position;
         this.volume = 1;
         this.pan = 0;
-        this.wasMuted = false;
     }
 
     /**
@@ -35,14 +34,6 @@ export class BaseSpatializer extends EventTarget {
         this.audio = null;
         this.destination = null;
         this.id = null;
-    }
-
-    mute() {
-        throw new Error("Not implemented in base class");
-    }
-
-    unmute() {
-        throw new Error("Not implemented in base class");
     }
 
     /**
@@ -62,18 +53,6 @@ export class BaseSpatializer extends EventTarget {
         this.pan = dist > 0
             ? distX / dist
             : 0;
-
-        const muted = this.volume <= 0;
-
-        if (muted !== this.wasMuted) {
-            this.wasMuted = muted;
-            //if (muted) {
-            //    this.mute();
-            //}
-            //else {
-            //    this.unmute();
-            //}
-        }
     }
 
     /**

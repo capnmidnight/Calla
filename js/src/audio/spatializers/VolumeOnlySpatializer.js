@@ -20,12 +20,4 @@ export class VolumeOnlySpatializer extends BaseSpatializer {
         super.update();
         this.audio.volume = this.volume;
     }
-
-    mute() {
-        this.audio.muted = true;
-    }
-
-    unmute() {
-        this.audio.muted = false;
-    }
 }
