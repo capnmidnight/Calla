@@ -1,6 +1,7 @@
 ﻿// A few convenience methods for HTML elements.
 
 import { isGoodNumber } from "./math.js";
+import { isFunction, isString, isNumber } from "./events.js";
 
 Element.prototype.isOpen = function () {
     return this.style.display !== "none";
@@ -173,28 +174,29 @@ EventTarget.prototype.once = function (resolveEvt, rejectEvt, timeout) {
     }
 
     return new Promise((resolve, reject) => {
-        const hasResolveEvt = resolveEvt !== undefined && resolveEvt !== null,
-            removeResolve = () => {
-                if (hasResolveEvt) {
-                    this.removeEventListener(resolveEvt, resolve);
-                }
-            },
-            hasRejectEvt = rejectEvt !== undefined && rejectEvt !== null,
-            removeReject = () => {
-                if (hasRejectEvt) {
-                    this.removeEventListener(rejectEvt, reject);
-                }
-            },
-            remove = add(removeResolve, removeReject);
+        const hasResolveEvt = isString(resolveEvt);
+        if (hasResolveEvt) {
+            const oldResolve = resolve;
+            const remove = () => {
+                this.removeEventListener(resolveEvt, oldResolve);
+            };
+            resolve = add(remove, resolve);
+            reject = add(remove, reject);
+        }
 
-        resolve = add(remove, resolve);
-        reject = add(remove, reject);
+        const hasRejectEvt = isString(rejectEvt);
+        if (hasRejectEvt) {
+            const oldReject = reject;
+            const remove = () => {
+                this.removeEventListener(rejectEvt, oldReject);
+            };
 
-        if (timeout !== undefined
-            && timeout !== null) {
-            const timer = setTimeout(() => {
-                reject("Timeout");
-            }, timeout),
+            resolve = add(remove, resolve);
+            reject = add(remove, reject);
+        }
+
+        if (isNumber(timeout)) {
+            const timer = setTimeout(reject, timeout, "Timeout"),
                 cancel = () => clearTimeout(timer);
             resolve = add(cancel, resolve);
             reject = add(cancel, reject);
@@ -209,6 +211,35 @@ EventTarget.prototype.once = function (resolveEvt, rejectEvt, timeout) {
                 reject("Rejection event found");
             });
         }
+    });
+};
+
+EventTarget.prototype.when = function (resolveEvt, filterTest, timeout) {
+
+    if (!isString(resolveEvt)) {
+        throw new Error("Filtering tests function is required. Otherwise, use `once`.");
+    }
+
+    if (!isFunction(filterTest)) {
+        throw new Error("Filtering tests function is required. Otherwise, use `once`.");
+    }
+
+    return new Promise((resolve, reject) => {
+        const remove = () => {
+            this.removeEventListener(resolveEvt, resolve);
+        };
+
+        resolve = add(remove, resolve);
+        reject = add(remove, reject);
+
+        if (isNumber(timeout)) {
+            const timer = setTimeout(reject, timeout, "Timeout"),
+                cancel = () => clearTimeout(timer);
+            resolve = add(cancel, resolve);
+            reject = add(cancel, reject);
+        }
+
+        this.addEventListener(resolveEvt, resolve);
     });
 };
 

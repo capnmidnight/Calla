@@ -1,7 +1,7 @@
 ﻿import { HtmlAttr } from "./attrs.js";
 import { HtmlCustomTag } from "./HtmlCustomTag.js";
 import { HtmlEvt } from "./evts.js";
-import { isFunction } from "../events.js";
+import { isFunction, isString, isNumber, isBoolean } from "../events.js";
 
 export function tag(name, ...rest) {
     const elem = document.createElement(name);
@@ -14,9 +14,9 @@ export function tag(name, ...rest) {
 
     for (let x of rest) {
         if (x !== null && x !== undefined) {
-            if (x instanceof String || typeof x === "string"
-                || x instanceof Number || typeof x === "number"
-                || x instanceof Boolean || typeof x === "boolean"
+            if (isString(x)
+                || isNumber(x)
+                || isBoolean(x)
                 || x instanceof Date) {
                 elem.appendChild(document.createTextNode(x));
             }

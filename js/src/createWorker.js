@@ -1,12 +1,11 @@
-﻿import { isFunction } from "./events.js";
+﻿import { isFunction, isString } from "./events.js";
 
 export function createWorker(script, stripFunc = true) {
     if (isFunction(script)) {
         script = script.toString();
         stripFunc = true;
     }
-    else if (typeof script !== "string"
-        && !(script instanceof String)) {
+    else if (!isString(script)) {
         throw new Error("Script parameter must be either a string or function");
     }
 

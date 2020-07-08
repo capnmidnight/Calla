@@ -64,7 +64,6 @@ export class JitsiClient1_Tests extends TestBase {
         const next = alt[0];
         await this.client.setAudioInputDeviceAsync(next);
 
-        await wait(250);
         const now = await this.client.getCurrentAudioInputDeviceAsync();
         this.hasValue(now, "New device");
         this.isEqualTo(now.deviceId, next.deviceId, "deviceId");
@@ -93,7 +92,6 @@ export class JitsiClient1_Tests extends TestBase {
         const next = alt[0];
         await this.client.setVideoInputDeviceAsync(next);
 
-        await wait(250);
         const now = await this.client.getCurrentVideoInputDeviceAsync();
         this.hasValue(now, "New device");
         this.isEqualTo(now.deviceId, next.deviceId, "deviceId");
@@ -133,8 +131,9 @@ export class JitsiClient1_Tests extends TestBase {
     }
 
     async test_100_toggleVideo() {
+        const isMuted = await this.client.isVideoMutedAsync();
         const evt = await this.client.toggleVideoAsync();
-        this.isFalse(evt.muted, "Muted");
+        this.isNotEqualTo(evt.muted, isMuted, "Muted");
     }
 
     async test_110_isVideoMuted() {

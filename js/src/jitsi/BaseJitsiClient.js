@@ -294,7 +294,7 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     removeUser(evt) {
-        this.audioClient.removeUser(evt);
+        this.audioClient.removeSource(evt.id);
     }
 
     /**

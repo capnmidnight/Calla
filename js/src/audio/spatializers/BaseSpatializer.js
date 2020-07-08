@@ -24,6 +24,10 @@ export class BaseSpatializer extends EventTarget {
         this.pan = 0;
     }
 
+    setAudioOutputDevice(deviceID) {
+        this.audio.setSinkId(deviceID);
+    }
+
     /**
      * Discard values and make this instance useless.
      */

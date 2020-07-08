@@ -5,6 +5,14 @@
     }
 
     /**
+     *
+     * @param {string} deviceID
+     */
+    setAudioOutputDevice(deviceID) {
+        throw new Error("Not implemented in base class");
+    }
+
+    /**
      * Set the position of the listener.
      * @param {Point} evt
      */
@@ -30,9 +38,9 @@
 
     /**
      * 
-     * @param {BaseUser} evt
+     * @param {string} userID
      */
-    removeUser(evt) {
+    removeSource(userID) {
         throw new Error("Not implemented in base class");
     }
 }

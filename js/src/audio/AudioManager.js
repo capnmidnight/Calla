@@ -20,7 +20,7 @@ export class AudioManager extends BaseAudioClient {
         };
 
         /** @type {Map.<string, BaseSpatializer>} */
-        this.sourceLookup = new Map();
+        this.sources = new Map();
 
         /** @type {BaseSpatializer[]} */
         this.sourceList = [];
@@ -31,7 +31,7 @@ export class AudioManager extends BaseAudioClient {
         const recreationQ = [];
 
         this.destination.addEventListener("contextDestroying", () => {
-            for (let source of this.sourceList) {
+            for (let source of this.sources.values()) {
                 source.removeEventListener("audioActivity", this.onAudioActivity);
                 recreationQ.push({
                     id: source.id,
@@ -40,12 +40,10 @@ export class AudioManager extends BaseAudioClient {
                     audio: source.audio
                 });
 
-                this.sourceLookup.delete(source.id);
-
                 source.dispose();
             }
 
-            this.sourceList.clear();
+            this.sources.clear();
         });
 
         this.destination.addEventListener("contextDestroyed", () => {
@@ -63,7 +61,7 @@ export class AudioManager extends BaseAudioClient {
         this.timer = new WorkerTimer(250);
         this.timer.addEventListener("tick", () => {
             this.destination.update();
-            for (let source of this.sourceList) {
+            for (let source of this.sources.values()) {
                 source.update();
             }
         });
@@ -77,28 +75,6 @@ export class AudioManager extends BaseAudioClient {
     }
 
     /**
-     * 
-     * @param {string} userID
-     * @return {BaseSpatializer}
-     */
-    getSource(userID) {
-        if (!this.sourceLookup.has(userID)) {
-            const elementID = `#participant_${userID} audio`,
-                audio = document.querySelector(elementID);
-
-            if (!!audio) {
-                this.createSource(userID, audio);
-            }
-        }
-
-        const source = this.sourceLookup.get(userID);
-        if (!source) {
-            console.warn(`no audio for user ${userID}`);
-        }
-        return source;
-    }
-
-    /**
      *
      * @param {string} userID
      * @param {HTMLAudioElement} audio
@@ -107,14 +83,31 @@ export class AudioManager extends BaseAudioClient {
     createSource(userID, audio) {
         const source = this.destination.createSpatializer(userID, audio, BUFFER_SIZE);
         source.addEventListener("audioActivity", this.onAudioActivity);
-        this.sourceList.push(source);
-        this.sourceLookup.set(userID, source);
+        this.sources.set(userID, source);
         return source;
     }
 
+    setAudioOutputDevice(deviceID) {
+        for (let source of this.sources.values()) {
+            source.setAudioOutputDevice(deviceID);
+        }
+    }
+
+    /**
+     *
+     * @param {string} userID
+     */
+    removeSource(userID) {
+        if (this.sources.has(userID)) {
+            const source = this.sources.get(userID);
+            source.dispose();
+            this.sources.delete(userID);
+        }
+    }
+
     setUserPosition(evt) {
-        const source = this.getSource(evt.id);
-        if (!!source) {
+        if (this.sources.has(evt.id)) {
+            const source = this.sources.get(evt.id);
             source.setTarget(evt);
         }
     }
@@ -125,19 +118,5 @@ export class AudioManager extends BaseAudioClient {
 
     setAudioProperties(evt) {
         this.destination.setAudioProperties(evt);
-    }
-
-    removeUser(evt) {
-        if (this.sourceLookup.has(evt.id)) {
-            const source = this.sourceLookup.get(evt.id),
-                sourceIdx = this.sourceList.indexOf(source);
-
-            if (sourceIdx > -1) {
-                this.sourceList.removeAt(sourceIdx);
-            }
-
-            source.dispose();
-            this.sourceLookup.delete(evt.id);
-        }
     }
 }

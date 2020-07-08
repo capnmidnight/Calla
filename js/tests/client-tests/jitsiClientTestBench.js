@@ -33,21 +33,7 @@ export async function RunTest(JitsiClient) {
 
     document.body.append(
         ...doc.body.childNodes,
-        client.element,
         cons.element);
-
-    Object.assign(client.element.style, {
-        bottom: undefined,
-        height: "50%"
-    });
-
-    Object.assign(cons.element.style, {
-        position: "absolute",
-        top: "50%",
-        left: 0,
-        width: "100%",
-        height: "50%"
-    });
 
     document.body.removeChild(document.body.querySelector("#login"));
 
