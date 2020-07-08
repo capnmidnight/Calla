@@ -291,7 +291,7 @@ export function init(host, client) {
 
             const videoMuted = await client.isVideoMutedAsync();
             game.muteUserVideo({ id: client.localUser, muted: videoMuted });
-            options.videoEnabled = !videoMuted;
+            footbar.videoEnabled = !videoMuted;
         },
         videoConferenceLeft: (evt) => {
             game.end();
@@ -318,26 +318,18 @@ export function init(host, client) {
         displayNameChange: (evt) => {
             game.changeUserName(evt);
         },
-        audioMuteStatusChanged: (evt) => {
+        audioMuteStatusChanged: async (evt) => {
             game.muteUserAudio(evt);
-        },
-        localAudioMuteStatusChanged: async (evt) => {
-            footbar.audioEnabled = !evt.muted;
-            if (!evt.muted) {
+            if (evt.id === client.localUser) {
+                footbar.audioEnabled = !evt.muted;
                 options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
             }
         },
-        videoMuteStatusChanged: (evt) => {
+        videoMuteStatusChanged: async (evt) => {
             game.muteUserVideo(evt);
-        },
-        localVideoMuteStatusChanged: async (evt) => {
-            options.videoEnabled = !evt.muted;
-            footbar.videoEnabled = !evt.muted;
-            if (!evt.muted) {
+            if (evt.id === client.localUser) {
+                footbar.videoEnabled = !evt.muted;
                 options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
-            }
-            else {
-                options.currentVideoInputDevice = null;
             }
         },
         userInitRequest: (evt) => {

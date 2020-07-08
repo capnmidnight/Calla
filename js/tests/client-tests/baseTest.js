@@ -80,8 +80,12 @@ export class TestBase extends TestCase {
         this.isTrue(evt.muted, "Muted");
     }
 
+    taskOf(evt) {
+        return this.client.when(evt, (evt) => evt.id !== this.client.localUser, 5000);
+    }
+
     async recvAudioMuted() {
-        const evt = await this.client.once("remoteAudioMuteStatusChanged", 5000);
+        const evt = await this.taskOf("audioMuteStatusChanged");
         this.hasValue(evt.id, "UserID");
         this.isTrue(this.client.otherUsers.has(evt.id), "Remote User");
         this.isTrue(evt.muted, "Muted");
@@ -96,7 +100,7 @@ export class TestBase extends TestCase {
     }
 
     async recvAudioUnmuted() {
-        const evt = await this.client.once("remoteAudioMuteStatusChanged", 5000);
+        const evt = await this.taskOf("audioMuteStatusChanged");
         this.hasValue(evt.id, "UserID");
         this.isTrue(this.client.otherUsers.has(evt.id), "Remote User");
         this.isFalse(evt.muted, "Muted");
@@ -111,7 +115,7 @@ export class TestBase extends TestCase {
     }
 
     async recvVideoUnmuted() {
-        const evt = await this.client.once("remoteVideoMuteStatusChanged", 5000);
+        const evt = await this.taskOf("videoMuteStatusChanged");
         this.hasValue(evt.id, "UserID");
         this.isTrue(this.client.otherUsers.has(evt.id), "Remote User");
         this.isFalse(evt.muted, "Muted");
@@ -126,7 +130,7 @@ export class TestBase extends TestCase {
     }
 
     async recvVideoMuted() {
-        const evt = await this.client.once("remoteVideoMuteStatusChanged", 5000);
+        const evt = await this.taskOf("videoMuteStatusChanged");
         this.hasValue(evt.id, "UserID");
         this.isTrue(this.client.otherUsers.has(evt.id), "Remote User");
         this.isTrue(evt.muted, "Muted");

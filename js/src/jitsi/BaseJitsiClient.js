@@ -1,6 +1,4 @@
-﻿import { id, style } from "../html/attrs.js";
-import { Div } from "../html/tags.js";
-import { BaseAudioClient } from "../audio/BaseAudioClient.js";
+﻿import { BaseAudioClient } from "../audio/BaseAudioClient.js";
 
 // helps us filter out data channel messages that don't belong to us
 const APP_FINGERPRINT
@@ -13,10 +11,6 @@ const APP_FINGERPRINT
         "userInitResponse",
         "audioMuteStatusChanged",
         "videoMuteStatusChanged",
-        "localAudioMuteStatusChanged",
-        "localVideoMuteStatusChanged",
-        "remoteAudioMuteStatusChanged",
-        "remoteVideoMuteStatusChanged",
         "videoConferenceJoined",
         "videoConferenceLeft",
         "participantJoined",
@@ -61,6 +55,7 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     dispatchEvent(evt) {
+        console.log(evt.type, evt);
         if (this.localUser !== null) {
             if (evt.id === null
                 || evt.id === undefined
@@ -115,30 +110,6 @@ export class BaseJitsiClient extends EventTarget {
             if (evt.id !== this.localUser) {
                 this.otherUsers.set(evt.id, evt.displayname);
             }
-        });
-
-        const localizeMuteEvent = (type) => (evt) => {
-            const isLocal = evt.id === this.localUser
-                || evt.id === null
-                || evt.id === undefined,
-                evt2 = Object.assign(
-                    new Event((isLocal ? "local" : "remote") + type + "MuteStatusChanged"),
-                    {
-                        id: isLocal ? this.localUser : evt.id,
-                        muted: evt.muted
-                    });
-            this.dispatchEvent(evt2);
-        };
-
-        this.addEventListener("audioMuteStatusChanged", localizeMuteEvent("Audio"));
-        this.addEventListener("videoMuteStatusChanged", localizeMuteEvent("Video"));
-
-        this.addEventListener("localAudioMuteStatusChanged", (evt) => {
-            this.audioMuteStatusChanged(evt.muted);
-        });
-
-        this.addEventListener("localVideoMuteStatusChanged", (evt) => {
-            this.videoMuteStatusChanged(evt.muted);
         });
 
         window.addEventListener("unload", () => {
@@ -373,28 +344,6 @@ export class BaseJitsiClient extends EventTarget {
     emote(emoji) {
         for (let toUserID of this.otherUsers.keys()) {
             this.sendMessageTo(toUserID, "emote", emoji);
-        }
-    }
-
-    /**
-     *
-     * @param {boolean} muted
-     */
-    audioMuteStatusChanged(muted) {
-        const evt = { muted };
-        for (let toUserID of this.otherUsers.keys()) {
-            this.sendMessageTo(toUserID, "audioMuteStatusChanged", evt);
-        }
-    }
-
-    /**
-     * 
-     * @param {boolean} muted
-     */
-    videoMuteStatusChanged(muted) {
-        const evt = { muted };
-        for (let toUserID of this.otherUsers.keys()) {
-            this.sendMessageTo(toUserID, "videoMuteStatusChanged", evt);
         }
     }
 

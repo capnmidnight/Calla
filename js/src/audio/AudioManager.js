@@ -1,6 +1,6 @@
-﻿import { Destination } from "./Destination.js";
-import { BaseAudioClient } from "./BaseAudioClient.js";
-import { WorkerTimer } from "../timers/WorkerTimer.js";
+﻿import { BaseAudioClient } from "./BaseAudioClient.js";
+import { Destination } from "./Destination.js";
+import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 
 const BUFFER_SIZE = 1024,
     audioActivityEvt = Object.assign(new Event("audioActivity", {
@@ -58,7 +58,7 @@ export class AudioManager extends BaseAudioClient {
             this.timer.start();
         });
 
-        this.timer = new WorkerTimer(250);
+        this.timer = new RequestAnimationFrameTimer();
         this.timer.addEventListener("tick", () => {
             this.destination.update();
             for (let source of this.sources.values()) {

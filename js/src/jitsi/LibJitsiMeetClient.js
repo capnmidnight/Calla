@@ -341,7 +341,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     setAudioOutputDevice(device) {
-        JitsiMeetJS.mediaDevices.setAudioOutputDevice(device.deviceId);
+        //JitsiMeetJS.mediaDevices.setAudioOutputDevice(device.deviceId);
         this.audioClient.setAudioOutputDevice(device.deviceId);
     }
 
@@ -369,8 +369,12 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         }
     }
 
+    taskOf(evt) {
+        return this.when(evt, (evt) => evt.id === this.localUser, 5000);
+    }
+
     async toggleAudioAsync() {
-        const changeTask = this.once("localAudioMuteStatusChanged", 5000);
+        const changeTask = this.taskOf("audioMuteStatusChanged");
         const cur = this.getCurrentMediaTrack("audio");
         if (cur) {
             const muted = cur.isMuted();
@@ -396,13 +400,13 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     async setAudioInputDeviceAsync(device) {
         const cur = this.getCurrentMediaTrack("audio");
         if (cur) {
-            const removeTask = this.when("audioRemoved", (evt) => evt.id === this.localUser);
+            const removeTask = this.taskOf("audioRemoved");
             this.conference.removeTrack(cur);
             await removeTask;
         }
 
         if (device) {
-            const addTask = this.when("audioAdded", (evt) => evt.id === this.localUser);
+            const addTask = this.taskOf("audioAdded");
             const tracks = await JitsiMeetJS.createLocalTracks({
                 devices: ["audio"],
                 micDeviceId: device.deviceId
@@ -434,7 +438,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async toggleVideoAsync() {
-        const changeTask = this.once("localVideoMuteStatusChanged", 5000);
+        const changeTask = this.when("videoMuteStatusChanged", (evt) => evt.id === this.this.localUser, 5000);
         const cur = this.getCurrentMediaTrack("video");
         if (cur) {
             await this.setVideoInputDeviceAsync(null);
@@ -455,13 +459,13 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     async setVideoInputDeviceAsync(device) {
         const cur = this.getCurrentMediaTrack("video");
         if (cur) {
-            const removeTask = this.when("videoRemoved", (evt) => evt.id === this.localUser);
+            const removeTask = this.taskOf("videoRemoved");
             this.conference.removeTrack(cur);
             await removeTask;
         }
 
         if (device) {
-            const addTask = this.when("videoAdded", (evt) => evt.id === this.localUser);
+            const addTask = this.taskOf("videoAdded");
             const tracks = await JitsiMeetJS.createLocalTracks({
                 devices: ["video"],
                 cameraDeviceId: device.deviceId

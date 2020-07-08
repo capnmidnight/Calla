@@ -196,7 +196,7 @@ EventTarget.prototype.once = function (resolveEvt, rejectEvt, timeout) {
         }
 
         if (isNumber(timeout)) {
-            const timer = setTimeout(reject, timeout, "Timeout"),
+            const timer = setTimeout(reject, timeout, `'${resolveEvt}' has timed out.`),
                 cancel = () => clearTimeout(timer);
             resolve = add(cancel, resolve);
             reject = add(cancel, reject);
@@ -233,7 +233,7 @@ EventTarget.prototype.when = function (resolveEvt, filterTest, timeout) {
         reject = add(remove, reject);
 
         if (isNumber(timeout)) {
-            const timer = setTimeout(reject, timeout, "Timeout"),
+            const timer = setTimeout(reject, timeout, `'${resolveEvt}' has timed out.`),
                 cancel = () => clearTimeout(timer);
             resolve = add(cancel, resolve);
             reject = add(cancel, reject);
@@ -273,7 +273,7 @@ EventTarget.prototype.until = function (untilEvt, callback, test, repeatTimeout,
             if (cancelTimeout !== undefined) {
                 canceller = setTimeout(() => {
                     cleanup();
-                    reject("timeout");
+                    reject(`'${untilEvt}' has timed out.`);
                 }, cancelTimeout);
             }
 

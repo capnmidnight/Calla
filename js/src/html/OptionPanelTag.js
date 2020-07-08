@@ -1,6 +1,6 @@
 ﻿import { Button, H2, P } from "./tags.js";
 import { onClick } from "./evts.js";
-import { id } from "./attrs.js";
+import { id, style } from "./attrs.js";
 import { HtmlCustomTag } from "./HtmlCustomTag.js";
 
 const selectEvt = new Event("select");
@@ -9,7 +9,7 @@ export class OptionPanelTag extends HtmlCustomTag {
     constructor(panelID, name, ...rest) {
         super("div",
             id(panelID),
-            H2(name),
+            style({ padding: "1em" }),
             P(...rest));
 
         this.button = Button(
@@ -24,6 +24,13 @@ export class OptionPanelTag extends HtmlCustomTag {
 
     set visible(v) {
         this.element.setOpen(v);
-        this.button.setLocked(v);
+        //this.button.setLocked(v);
+        style({
+            backgroundColor: v ? "#ddd" : "transparent",
+            borderTop: v ? "" : "none",
+            borderRight: v ? "" : "none",
+            borderBottom: v ? "none" : "",
+            borderLeft: v ? "" : "none",
+        }).apply(this.button);
     }
 }

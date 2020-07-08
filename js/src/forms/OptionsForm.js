@@ -1,14 +1,15 @@
 ﻿import "../protos.js";
 
 import { bust } from "../emoji/emoji.js";
-import { accessKey, className, htmlFor, id, max, min, placeHolder, step, style, systemFont, title, value } from "../html/attrs.js";
+import { EventedGamepad } from "../gamepad/EventedGamepad.js";
+import { className, htmlFor, id, max, min, placeHolder, step, style, systemFont, title, value } from "../html/attrs.js";
 import { onClick, onInput, onKeyUp } from "../html/evts.js";
 import { Button, clear, Div, Label, LabeledInput, LabeledSelectBox, OptionPanel, P, Span } from "../html/tags.js";
 import { isGoodNumber } from "../math.js";
+import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 import { FormDialog } from "./FormDialog.js";
 import { InputBinding } from "./InputBinding.js";
-import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
-import { EventedGamepad } from "../gamepad/EventedGamepad.js";
+
 
 const keyWidthStyle = style({ width: "7em" }),
     numberWidthStyle = style({ width: "3em" }),
@@ -19,7 +20,6 @@ const keyWidthStyle = style({ width: "7em" }),
     inputBindingChangedEvt = new Event("inputBindingChanged"),
     audioPropsChangedEvt = new Event("audioPropertiesChanged"),
     toggleDrawHearingEvt = new Event("toggleDrawHearing"),
-    toggleVideoEvt = new Event("toggleVideo"),
     audioInputChangedEvt = new Event("audioInputChanged"),
     audioOutputChangedEvt = new Event("audioOutputChanged"),
     videoInputChangedEvt = new Event("videoInputChanged"),
@@ -132,50 +132,7 @@ export class OptionsForm extends FormDialog {
                     min(5),
                     max(32),
                     style({ width: "3em" }),
-                    onInput(_(fontSizeChangedEvt)))),
-
-            OptionPanel("keyboard", "Keyboard",
-                this.keyButtonUp = makeKeyboardBinder("keyButtonUp", "Up: "),
-                this.keyButtonDown = makeKeyboardBinder("keyButtonDown", "Down: "),
-                this.keyButtonLeft = makeKeyboardBinder("keyButtonLeft", "Left: "),
-                this.keyButtonRight = makeKeyboardBinder("keyButtonRight", "Right: "),
-                this.keyButtonEmote = makeKeyboardBinder("keyButtonEmote", "Emote: "),
-                this.keyButtonToggleAudio = makeKeyboardBinder("keyButtonToggleAudio", "Toggle audio: ")),
-
-            OptionPanel("gamepad", "Gamepad",
-                this.gpSelect = LabeledSelectBox(
-                    "gamepads",
-                    "Use gamepad: ",
-                    "No gamepad",
-                    gp => gp.id,
-                    gp => gp.id,
-                    onInput(_(gamepadChangedEvt))),
-                this.gpAxisLeftRight = makeGamepadAxisBinder("gpAxisLeftRight", "Left/Right axis:"),
-                this.gpAxisUpDown = makeGamepadAxisBinder("gpAxisUpDown", "Up/Down axis:"),
-                this.gpButtonUp = makeGamepadButtonBinder("gpButtonUp", "Up button: "),
-                this.gpButtonDown = makeGamepadButtonBinder("gpButtonDown", "Down button: "),
-                this.gpButtonLeft = makeGamepadButtonBinder("gpButtonLeft", "Left button: "),
-                this.gpButtonRight = makeGamepadButtonBinder("gpButtonRight", "Right button: "),
-                this.gpButtonEmote = makeGamepadButtonBinder("gpButtonEmote", "Emote button: "),
-                this.gpButtonToggleAudio = makeGamepadButtonBinder("gpButtonToggleAudio", "Toggle audio button: ")),
-
-            OptionPanel("audio", "Audio",
-                P(
-                    this.audioInputSelect = LabeledSelectBox(
-                        "audioInputDevices",
-                        "Input: ",
-                        "No audio input",
-                        d => d.deviceId,
-                        d => d.label,
-                        onInput(_(audioInputChangedEvt)))),
-                P(
-                    this.audioOutputSelect = LabeledSelectBox(
-                        "audioOutputDevices",
-                        "Output: ",
-                        "No audio output",
-                        d => d.deviceId,
-                        d => d.label,
-                        onInput(_(audioOutputChangedEvt)))),
+                    onInput(_(fontSizeChangedEvt))),
                 P(
                     this.drawHearingCheck = LabeledInput(
                         "drawHearing",
@@ -214,26 +171,60 @@ export class OptionsForm extends FormDialog {
                         numberWidthStyle,
                         audioPropsChanged))),
 
-            OptionPanel("video", "Video",
-                P(
-                    this.enableVideo = Button(
-                        accessKey("v"),
-                        "Enable video",
-                        onClick(_(toggleVideoEvt)))),
-                P(
-                    this.videoInputSelect = LabeledSelectBox(
-                        "videoInputDevices",
-                        "Device: ",
-                        "No video input",
-                        d => d.deviceId,
-                        d => d.label,
-                        onInput(_(videoInputChangedEvt)))))
+            OptionPanel("keyboard", "Keyboard",
+                this.keyButtonUp = makeKeyboardBinder("keyButtonUp", "Up: "),
+                this.keyButtonDown = makeKeyboardBinder("keyButtonDown", "Down: "),
+                this.keyButtonLeft = makeKeyboardBinder("keyButtonLeft", "Left: "),
+                this.keyButtonRight = makeKeyboardBinder("keyButtonRight", "Right: "),
+                this.keyButtonEmote = makeKeyboardBinder("keyButtonEmote", "Emote: "),
+                this.keyButtonToggleAudio = makeKeyboardBinder("keyButtonToggleAudio", "Toggle audio: ")),
+
+            OptionPanel("gamepad", "Gamepad",
+                this.gpSelect = LabeledSelectBox(
+                    "gamepads",
+                    "Use gamepad: ",
+                    "No gamepad",
+                    gp => gp.id,
+                    gp => gp.id,
+                    onInput(_(gamepadChangedEvt))),
+                this.gpAxisLeftRight = makeGamepadAxisBinder("gpAxisLeftRight", "Left/Right axis:"),
+                this.gpAxisUpDown = makeGamepadAxisBinder("gpAxisUpDown", "Up/Down axis:"),
+                this.gpButtonUp = makeGamepadButtonBinder("gpButtonUp", "Up button: "),
+                this.gpButtonDown = makeGamepadButtonBinder("gpButtonDown", "Down button: "),
+                this.gpButtonLeft = makeGamepadButtonBinder("gpButtonLeft", "Left button: "),
+                this.gpButtonRight = makeGamepadButtonBinder("gpButtonRight", "Right button: "),
+                this.gpButtonEmote = makeGamepadButtonBinder("gpButtonEmote", "Emote button: "),
+                this.gpButtonToggleAudio = makeGamepadButtonBinder("gpButtonToggleAudio", "Toggle audio button: ")),
+
+            OptionPanel("devices", "Devices",
+                this.videoInputSelect = LabeledSelectBox(
+                    "videoInputDevices",
+                    "Video Input: ",
+                    "No video input",
+                    d => d.deviceId,
+                    d => d.label,
+                    onInput(_(videoInputChangedEvt))),
+                this.audioInputSelect = LabeledSelectBox(
+                    "audioInputDevices",
+                    "Audio Input: ",
+                    "No audio input",
+                    d => d.deviceId,
+                    d => d.label,
+                    onInput(_(audioInputChangedEvt))),
+                this.audioOutputSelect = LabeledSelectBox(
+                    "audioOutputDevices",
+                    "Audio Output: ",
+                    "No audio output",
+                    d => d.deviceId,
+                    d => d.label,
+                    onInput(_(audioOutputChangedEvt))))
         ];
 
         const cols = [];
         for (let i = 0; i < panels.length; ++i) {
             cols[i] = "1fr";
             panels[i].element.style.gridColumnStart = i + 1;
+            panels[i].button.style.fontSize = "24pt";
         }
 
         Object.assign(this.header.style, {
@@ -243,6 +234,12 @@ export class OptionsForm extends FormDialog {
 
         this.header.append(...panels.map(p => p.button));
         this.content.append(...panels.map(p => p.element));
+        style({
+            backgroundColor: "#ddd",
+            borderLeft: "solid 2px black",
+            borderRight: "solid 2px black",
+            borderBottom: "solid 2px black"
+        }).apply(this.content);
         this.footer.append(
             this.confirmButton = Button(
                 className("confirm"),
@@ -306,7 +303,6 @@ export class OptionsForm extends FormDialog {
         this.audioOutputDevices = [];
         this.videoInputDevices = [];
 
-        this._videoEnabled = false;
         this._drawHearing = false;
         this._avatarEmoji = null;
 
@@ -425,18 +421,6 @@ export class OptionsForm extends FormDialog {
 
     set currentVideoInputDevice(value) {
         this.videoInputSelect.selectedValue = value;
-    }
-
-
-    get videoEnabled() {
-        return this._videoEnabled;
-    }
-
-    set videoEnabled(value) {
-        this._videoEnabled = value;
-        this.enableVideo.innerHTML = value
-            ? "Disable video"
-            : "Enable video";
     }
 
     get gamepads() {
