@@ -1,6 +1,6 @@
 {
   "private": true,
     "scripts": {
-        "pkg": "rollup -c && minify bundle.js > bundle.min.js && minify jitsi-external-api-hax/jitsihax.js > jitsi-external-api-hax/jitsihax.min.js"
+        "pkg": "rollup -c && minify bundle.js > bundle.min.js"
     }
 }
