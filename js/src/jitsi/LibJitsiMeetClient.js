@@ -122,17 +122,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 }));
             });
 
-
-            let userJoinedEvent = null,
-                dataChannelOpen = false;
-
-            const checkUser = () => {
-                if (!!userJoinedEvent && dataChannelOpen) {
-                    this.dispatchEvent(userJoinedEvent);
-                }
-            },
-
-                onTrackMuteChanged = (track, muted) => {
+            const onTrackMuteChanged = (track, muted) => {
                     const userID = track.getParticipantId() || this.localUser,
                         trackKind = track.getType(),
                         muteChangedEvtName = trackKind + "MuteStatusChanged",
@@ -150,17 +140,12 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 };
 
             this.conference.addEventListener(USER_JOINED, (id, user) => {
-                userJoinedEvent = Object.assign(
+                const evt = Object.assign(
                     new Event("participantJoined"), {
                     id,
                     displayName: user.getDisplayName()
                 });
-                checkUser();
-            });
-
-            this.conference.addEventListener(DATA_CHANNEL_OPENED, () => {
-                dataChannelOpen = true;
-                checkUser();
+                this.dispatchEvent(evt);
             });
 
             this.conference.addEventListener(USER_LEFT, (id) => {

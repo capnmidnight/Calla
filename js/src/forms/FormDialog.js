@@ -48,6 +48,16 @@ export class FormDialog extends EventTarget {
         }).apply(this.footer);
     }
 
+    get isOpen() {
+        return this.element.isOpen();
+    }
+
+    set isOpen(v) {
+        if (v !== this.isOpen) {
+            this.toggleOpen();
+        }
+    }
+
     appendChild(child) {
         return this.element.appendChild(child);
     }

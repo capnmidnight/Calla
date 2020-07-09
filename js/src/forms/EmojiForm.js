@@ -158,8 +158,6 @@ export class EmojiForm extends FormDialog {
 
         this.confirmButton.lock();
 
-        this.isOpen = this.element.isOpen.bind(this.element);
-
         this.selectAsync = () => {
             return new Promise((resolve, reject) => {
                 let yes = null,

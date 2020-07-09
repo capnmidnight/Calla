@@ -1,4 +1,4 @@
-﻿import { door, gear, questionMark, squareFourCourners, downRightArrow } from "../emoji/emoji.js";
+﻿import { door, gear, questionMark, squareFourCourners, downRightArrow, speakingHead } from "../emoji/emoji.js";
 import { alt, grid, id, role, src, style, title } from "../html/attrs.js";
 import { onClick } from "../html/evts.js";
 import { Button, Div, Img, Span } from "../html/tags.js";
@@ -15,6 +15,7 @@ const toggleOptionsEvt = new Event("toggleOptions"),
     leaveEvt = new Event("leave"),
     toggleFullscreenEvt = new Event("toggleFullscreen"),
     toggleInstructionsEvt = new Event("toggleInstructions"),
+    toggleUserDirectoryEvt = new Event("toggleUserDirectory"),
     subelStyle = style({
         fontSize: "1.25em",
         width: "3em",
@@ -31,7 +32,7 @@ export class HeaderBar extends EventTarget {
         this.element = Div(
             id("headbar"),
             style({
-                gridTemplateColumns: "auto auto auto 1fr auto auto",
+                gridTemplateColumns: "auto auto auto auto 1fr auto auto",
                 display: "grid",
                 padding: "4px",
                 width: "100%",
@@ -68,12 +69,19 @@ export class HeaderBar extends EventTarget {
                         marginBottom: "-3px"
                     }))),
 
+            Button(
+                title("View user directory"),
+                onClick(_(toggleUserDirectoryEvt)),
+                subelStyle,
+                grid(4, 1),
+                Run(speakingHead.value)),
+
 
             this.fullscreenButton = Button(
                 title("Toggle fullscreen"),
                 onClick(_(toggleFullscreenEvt)),
                 subelStyle,
-                grid(5, 1),
+                grid(6, 1),
                 Run(squareFourCourners.value)),
 
 
@@ -81,7 +89,7 @@ export class HeaderBar extends EventTarget {
                 title("Leave the room"),
                 onClick(_(leaveEvt)),
                 subelStyle,
-                grid(6, 1),
+                grid(7, 1),
                 Run(door.value)));
 
         Object.seal(this);

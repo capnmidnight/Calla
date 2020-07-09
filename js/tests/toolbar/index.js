@@ -13,13 +13,6 @@ document.body.append(
     BR(),
     footbar.element);
 
-let muted = false;
-
-footbar.addEventListener("toggleAudio", (evt) => {
-    muted = !muted;
-    footbar.audioEnabled = !muted;
-});
-
 function echo(evt) {
     const label = P(evt.type);
     document.body.appendChild(label);
@@ -33,11 +26,23 @@ headbar.addEventListeners({
     tweet: echo,
     leave: echo,
     toggleOptions: echo,
-    toggleInstructions: echo
+    toggleInstructions: echo,
+    toggleUserDirectory: echo,
+    toggleFullscreen: echo
 });
 
 footbar.addEventListeners({
     toggleAudio: echo,
     emote: echo,
     selectEmoji: echo
+});
+
+footbar.addEventListeners({
+    toggleAudio: (evt) => {
+        footbar.audioEnabled = !footbar.audioEnabled;
+    },
+
+    toggleVideo: () => {
+        footbar.videoEnabled = !footbar.videoEnabled;
+    }
 });

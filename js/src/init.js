@@ -1,12 +1,13 @@
 ﻿import { EmojiForm } from "./forms/EmojiForm.js";
+import { FooterBar } from "./forms/FooterBar.js";
+import { HeaderBar } from "./forms/HeaderBar.js";
 import { LoginForm } from "./forms/LoginForm.js";
 import { OptionsForm } from "./forms/OptionsForm.js";
-import { HeaderBar } from "./forms/HeaderBar.js";
-import { FooterBar } from "./forms/FooterBar.js";
+import { UserDirectoryForm } from "./forms/UserDirectoryForm.js";
 import { Game } from "./Game.js";
-import { Settings } from "./Settings.js";
-import { BaseJitsiClient } from "./jitsi/BaseJitsiClient.js";
 import { grid } from "./html/attrs.js";
+import { BaseJitsiClient } from "./jitsi/BaseJitsiClient.js";
+import { Settings } from "./Settings.js";
 
 /**
  * 
@@ -17,6 +18,7 @@ export function init(host, client) {
     const settings = new Settings(),
         game = new Game(),
         login = new LoginForm(),
+        directory = new UserDirectoryForm(),
         headbar = new HeaderBar(),
         footbar = new FooterBar(),
         options = new OptionsForm(),
@@ -27,6 +29,7 @@ export function init(host, client) {
             client,
             game,
             login,
+            directory,
             headbar,
             footbar,
             options,
@@ -35,6 +38,7 @@ export function init(host, client) {
 
         forAppend = [
             game,
+            directory,
             options,
             emoji,
             headbar,
@@ -44,6 +48,7 @@ export function init(host, client) {
 
     function showLogin() {
         game.hide();
+        directory.hide();
         options.hide();
         emoji.hide();
         headbar.enabled = false;
@@ -52,7 +57,7 @@ export function init(host, client) {
     }
 
     async function withEmojiSelection(callback) {
-        if (!emoji.isOpen()) {
+        if (!emoji.isOpen) {
             headbar.optionsButton.lock();
             headbar.instructionsButton.lock();
             options.hide();
@@ -136,20 +141,20 @@ export function init(host, client) {
         }
     });
 
-    headbar.addEventListeners({
-        toggleOptions: () => {
-            if (!emoji.isOpen()) {
-                login.hide();
-                options.toggleOpen();
-            }
-        },
+    const showView = (view) => () => {
+        if (!emoji.isOpen) {
+            const isOpen = view.isOpen;
+            login.hide();
+            directory.hide();
+            options.hide();
+            view.isOpen = !isOpen;
+        }
+    };
 
-        toggleInstructions: () => {
-            if (!emoji.isOpen()) {
-                options.hide();
-                login.toggleOpen();
-            }
-        },
+    headbar.addEventListeners({
+        toggleOptions: showView(options),
+        toggleInstructions: showView(login),
+        toggleUserDirectory: showView(directory),
 
         toggleFullscreen: () => {
             headbar.isFullscreen = !headbar.isFullscreen;
@@ -295,6 +300,15 @@ export function init(host, client) {
         }
     });
 
+    directory.addEventListeners({
+        refreshUserDirectory: () => {
+            directory.clear();
+            for (let user of client.otherUsers.entries()) {
+                directory.set("Refresh", user[0], user[1]);
+            }
+        }
+    });
+
     client.addEventListeners({
         videoConferenceJoined: async (evt) => {
             login.connected = true;
@@ -326,6 +340,7 @@ export function init(host, client) {
 
         participantJoined: (evt) => {
             game.addUser(evt);
+            directory.set("Participant Joined", evt.id, evt.displayName);
         },
 
         videoAdded: (evt) => {
@@ -339,6 +354,7 @@ export function init(host, client) {
         participantLeft: (evt) => {
             game.removeUser(evt);
             client.removeUser(evt);
+            directory.delete(evt.id);
         },
 
         avatarChanged: (evt) => {
@@ -350,6 +366,7 @@ export function init(host, client) {
 
         displayNameChange: (evt) => {
             game.changeUserName(evt);
+            directory.set("Display Name Changed", evt.id, evt.displayName);
         },
 
         audioMuteStatusChanged: async (evt) => {
@@ -373,7 +390,7 @@ export function init(host, client) {
                 client.userInitResponse(evt.id, game.me.serialize());
             }
             else {
-                console.warn("Local user not initialized");
+                directory.warn("Local user not initialized");
             }
         },
 
@@ -382,6 +399,7 @@ export function init(host, client) {
                 const user = game.users.get(evt.id);
                 user.deserialize(evt);
                 client.setUserPosition(evt);
+                directory.set("User Init Response", evt.id, evt.displayName);
             }
         },
 

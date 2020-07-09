@@ -32,7 +32,8 @@ export class User extends EventTarget {
         super();
 
         this.id = evt.id;
-        this.displayName = evt.displayName || (isMe ? "(Me)" : `(${this.id})`);
+        this.displayName = evt.displayName;
+        this.label = isMe ? "(Me)" : `(${this.id})`;
 
         this.moveEvent = new UserMoveEvent(this.id);
         this.position = new InterpolatedPosition();
@@ -183,7 +184,7 @@ export class User extends EventTarget {
     }
 
     setDisplayName(name) {
-        this.displayName = name || this.id;
+        this.displayName = name;
     }
 
     moveTo(x, y, dt) {
@@ -318,7 +319,7 @@ export class User extends EventTarget {
                 g.fillStyle = "white";
                 g.textBaseline = "bottom";
                 g.font = `${fontSize * devicePixelRatio}pt sans-serif`;
-                g.fillText(this.displayName, 0, 0);
+                g.fillText(this.displayName || this.label, 0, 0);
             }
             g.restore();
         }
