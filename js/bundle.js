@@ -3488,12 +3488,12 @@ class FooterBar extends EventTarget {
                 backgroundColor: "transparent"
             }),
 
-            this.muteAudioButton = Button(
+            Button(
                 title("Toggle audio mute/unmute"),
                 onClick(_(toggleAudioEvt)),
                 grid(1, 1),
                 subelStyle,
-                Run(speakerHighVolume.value),
+                this.muteAudioButton = Run(speakerHighVolume.value),
                 Run(buttonLabelStyle, "Audio")),
 
             this.emojiControl = Span(
@@ -3516,12 +3516,12 @@ class FooterBar extends EventTarget {
                     Run(buttonLabelStyle, "Change"))),
 
 
-            this.muteVideoButton = Button(
+            Button(
                 title("Toggle video mute/unmute"),
                 onClick(_(toggleVideoEvt)),
                 grid(3, 1),
                 subelStyle,
-                Run(noMobilePhone.value),
+                this.muteVideoButton = Run(noMobilePhone.value),
                 Run(buttonLabelStyle, "Video")));
 
         this._audioEnabled = true;
@@ -5336,7 +5336,7 @@ class UserDirectoryForm extends FormDialog {
             this.table = Div(
                 style({
                     display: "grid",
-                    gridTemplateColumns: "auto auto auto 1fr",
+                    gridTemplateColumns: "auto auto auto auto 1fr",
                     gridTemplateRows: "min-content",
                     columnGap: "5px",
                     width: "100%"
@@ -5367,7 +5367,7 @@ class UserDirectoryForm extends FormDialog {
         this.delete(user.id);
         const row = this.rows.size + 2;
         const elem = Div(
-            grid(1, row, 4, 1),
+            grid(1, row, 5, 1),
             style({
                 backgroundColor: newRowColor,
                 zIndex: -1
@@ -5641,7 +5641,7 @@ class TileMap {
         return x < 0 || this.width <= x
             || y < 0 || this.height <= y
             || this.tileset.isClear(this.tiles[0][y][x])
-            || isSurfer(avatar.value);
+            || isSurfer(avatar);
     }
 
     // Use Bresenham's line algorithm (with integer error)
@@ -7143,9 +7143,7 @@ function init(host, client) {
     function refreshUser(userID) {
         if (game.users.has(userID)) {
             const user = game.users.get(userID);
-            if (!user.isMe) {
-                directory.set(user);
-            }
+            directory.set(user);
         }
     }
 
@@ -7228,6 +7226,7 @@ function init(host, client) {
         },
 
         leave: () => {
+            directory.clear();
             client.leave();
         }
     });
@@ -7347,6 +7346,7 @@ function init(host, client) {
             client.setLocalPosition(game.me.serialize());
             game.me.addEventListener("userMoved", (evt) => {
                 client.setLocalPosition(evt);
+                refreshUser(game.me.id);
             });
 
             if (settings.avatarEmoji !== null) {
@@ -7355,6 +7355,8 @@ function init(host, client) {
             settings.avatarEmoji
                 = options.avatarEmoji
                 = game.me.avatarEmoji;
+
+            refreshUser(game.me.id);
         },
 
         gameEnded: () => {
@@ -7372,9 +7374,7 @@ function init(host, client) {
         refreshUserDirectory: () => {
             directory.clear();
             for (let userID of game.users.keys()) {
-                if (userID !== client.localUser) {
-                    refreshUser(userID);
-                }
+                refreshUser(userID);
             }
         },
 
