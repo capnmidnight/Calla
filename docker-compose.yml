@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+    calla:
+        image: nginx:alpine
+        volumes:
+            - ./js:/usr/share/nginx/html
+        command: sh /usr/share/nginx/html/entrypoint.sh 
+
