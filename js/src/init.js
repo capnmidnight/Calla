@@ -94,9 +94,7 @@ export function init(host, client) {
     function refreshUser(userID) {
         if (game.users.has(userID)) {
             const user = game.users.get(userID);
-            if (!user.isMe) {
-                directory.set(user);
-            }
+            directory.set(user);
         }
     }
 
@@ -179,6 +177,7 @@ export function init(host, client) {
         },
 
         leave: () => {
+            directory.clear();
             client.leave();
         }
     });
@@ -298,6 +297,7 @@ export function init(host, client) {
             client.setLocalPosition(game.me.serialize());
             game.me.addEventListener("userMoved", (evt) => {
                 client.setLocalPosition(evt);
+                refreshUser(game.me.id);
             });
 
             if (settings.avatarEmoji !== null) {
@@ -306,6 +306,8 @@ export function init(host, client) {
             settings.avatarEmoji
                 = options.avatarEmoji
                 = game.me.avatarEmoji;
+
+            refreshUser(game.me.id);
         },
 
         gameEnded: () => {
@@ -323,9 +325,7 @@ export function init(host, client) {
         refreshUserDirectory: () => {
             directory.clear();
             for (let userID of game.users.keys()) {
-                if (userID !== client.localUser) {
-                    refreshUser(userID);
-                }
+                refreshUser(userID);
             }
         },
 
