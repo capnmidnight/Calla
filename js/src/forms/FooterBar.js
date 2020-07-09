@@ -1,4 +1,4 @@
-﻿import { upwardsButton, mutedSpeaker, speakerHighVolume, mobilePhone, mobilePhoneOff } from "../emoji/emoji.js";
+﻿import { upwardsButton, mutedSpeaker, speakerHighVolume, videoCamera, noMobilePhone } from "../emoji/emoji.js";
 import { grid, id, style, title } from "../html/attrs.js";
 import { onClick } from "../html/evts.js";
 import { Button, Div, KBD, Span } from "../html/tags.js";
@@ -74,7 +74,7 @@ export class FooterBar extends EventTarget {
                 onClick(_(toggleVideoEvt)),
                 grid(3, 1),
                 subelStyle,
-                Run(mobilePhoneOff.value)));
+                Run(noMobilePhone.value)));
 
         this._audioEnabled = true;
         this._videoEnabled = false;
@@ -112,8 +112,8 @@ export class FooterBar extends EventTarget {
         this._videoEnabled = value;
         this.muteVideoButton.updateLabel(
             value,
-            mobilePhone.value,
-            mobilePhoneOff.value);
+            videoCamera.value,
+            noMobilePhone.value);
     }
 
     setEmojiButton(key, emoji) {
