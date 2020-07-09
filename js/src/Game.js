@@ -96,6 +96,7 @@ export class Game extends EventTarget {
 
         this.lastGamepadIndex = -1;
         this.gamepadIndex = -1;
+        this.transitionSpeed = 0.125;
 
 
         // ============= KEYBOARD =================
@@ -322,7 +323,7 @@ export class Game extends EventTarget {
 
     moveMeBy(dx, dy) {
         const clearTile = this.map.getClearTile(this.me.position._tx, this.me.position._ty, dx, dy, this.me.avatarEmoji);
-        this.me.moveTo(clearTile.x, clearTile.y);
+        this.me.moveTo(clearTile.x, clearTile.y, this.transitionSpeed);
         this.targetOffsetCameraX = 0;
         this.targetOffsetCameraY = 0;
     }

@@ -9,7 +9,7 @@
         this.minDistance = 1;
         this.maxDistance = 10;
         this.rolloff = 1;
-        this.transitionTime = 0.125;
+        this.transitionTime = 0.5;
 
         /** @type {BasePosition} */
         this.position = position;

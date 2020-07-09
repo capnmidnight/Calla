@@ -10,7 +10,6 @@ import { InterpolatedPosition } from "./audio/positions/InterpolatedPosition.js"
 const POSITION_REQUEST_DEBOUNCE_TIME = 1,
     STACKED_USER_OFFSET_X = 5,
     STACKED_USER_OFFSET_Y = 5,
-    MOVE_TRANSITION_TIME = 0.5,
     eventNames = ["userMoved", "userPositionNeeded"];
 
 function resetAvatarMode(self) {
@@ -178,8 +177,7 @@ export class User extends EventTarget {
         this.displayName = name || this.id;
     }
 
-    moveTo(x, y) {
-        let dt = MOVE_TRANSITION_TIME;
+    moveTo(x, y, dt) {
         if (this.isMe) {
             if (x !== this.tx
                 || y !== this.ty) {

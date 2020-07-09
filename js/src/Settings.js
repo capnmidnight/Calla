@@ -6,6 +6,7 @@
         audioDistanceMax: 10,
         audioRolloff: 1,
         fontSize: 12,
+        transitionSpeed: 1,
         zoom: 1.5,
         roomName: "calla",
         userName: "",
@@ -51,6 +52,17 @@ export class Settings {
             self.roomName = window.location.hash.substring(1);
         }
         Object.seal(this);
+    }
+
+    get transitionSpeed() {
+        return selfs.get(this).transitionSpeed;
+    }
+
+    set transitionSpeed(value) {
+        if (value !== this.transitionSpeed) {
+            selfs.get(this).transitionSpeed = value;
+            commit(this);
+        }
     }
 
     get drawHearing() {

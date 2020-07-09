@@ -20,13 +20,16 @@ const audioActivityEvt = Object.assign(new Event("audioActivity"), {
 function logger(source, evtName) {
     const handler = (...rest) => {
         if (evtName === "conference.endpoint_message_received"
-            && rest[1].type === "e2e-ping-request") {
+            && rest.length >= 2
+            && (rest[1].type === "e2e-ping-request"
+                || rest[1].type === "e2e-ping-response"
+                || rest[1].type === "stats")) {
             return;
         }
         console.log(evtName, ...rest);
     };
 
-    if (window.location.host === "localhost") {
+    if (window.location.hostname === "localhost") {
         source.addEventListener(evtName, handler);
     }
 }

@@ -75,7 +75,7 @@ export function init(host, client) {
     function setAudioProperties() {
         client.setAudioProperties(
             window.location.origin,
-            0.125,
+            settings.transitionSpeed,
             settings.audioDistanceMin = game.audioDistanceMin = options.audioDistanceMin,
             settings.audioDistanceMax = game.audioDistanceMax = options.audioDistanceMax,
             settings.audioRolloff = options.audioRolloff);
@@ -121,6 +121,7 @@ export function init(host, client) {
     options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
     options.inputBinding = game.inputBinding = settings.inputBinding;
     game.cameraZ = game.targetCameraZ = settings.zoom;
+    game.transitionSpeed = settings.transitionSpeed = 0.5;
     login.userName = settings.userName;
     login.roomName = settings.roomName;
 
@@ -387,7 +388,7 @@ export function init(host, client) {
         userMoved: (evt) => {
             if (game.users.has(evt.id)) {
                 const user = game.users.get(evt.id);
-                user.moveTo(evt.x, evt.y);
+                user.moveTo(evt.x, evt.y, settings.transitionSpeed);
                 client.setUserPosition(evt);
             }
         },
