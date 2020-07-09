@@ -26,7 +26,9 @@ function logger(source, evtName) {
         console.log(evtName, ...rest);
     };
 
-    source.addEventListener(evtName, handler);
+    if (window.location.host === "localhost") {
+        source.addEventListener(evtName, handler);
+    }
 }
 
 function setLoggers(source, evtObj) {
@@ -108,11 +110,6 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                     roomName,
                     displayName: userName
                 }));
-
-                const tracks = await JitsiMeetJS.createLocalTracks({ devices: ["audio"] });
-                for (let track of tracks) {
-                    this.conference.addTrack(track);
-                }
             });
 
             this.conference.addEventListener(CONFERENCE_LEFT, () => {
@@ -341,7 +338,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     setAudioOutputDevice(device) {
-        //JitsiMeetJS.mediaDevices.setAudioOutputDevice(device.deviceId);
+        JitsiMeetJS.mediaDevices.setAudioOutputDevice(device.deviceId);
         this.audioClient.setAudioOutputDevice(device.deviceId);
     }
 

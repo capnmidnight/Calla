@@ -55,7 +55,6 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     dispatchEvent(evt) {
-        console.log(evt.type, evt);
         if (this.localUser !== null) {
             if (evt.id === null
                 || evt.id === undefined
@@ -123,6 +122,25 @@ export class BaseJitsiClient extends EventTarget {
             this.setDisplayName(userName);
         }
 
+
+        const audioOutputs = await this.getAudioOutputDevicesAsync();
+        const output = audioOutputs.scan(
+            (d) => d.deviceId === "communications",
+            (d) => d.deviceId === "default");
+
+        if (output) {
+            await this.setAudioOutputDevice(output);
+        }
+
+        const audioInputs = await this.getAudioInputDevicesAsync();
+        const input = audioInputs.scan(
+            (d) => d.deviceId === "communications",
+            (d) => d.deviceId === "default");
+
+        if (input) {
+            await this.setAudioInputDeviceAsync(input);
+        }
+
         return joinInfo;
     }
 
@@ -142,7 +160,7 @@ export class BaseJitsiClient extends EventTarget {
         const leaveTask = this.once("videoConferenceLeft", 5000);
         const maybeLeaveTask = this.leave();
         if (maybeLeaveTask instanceof Promise) {
-            console.trace("Leaving", await maybeLeaveTask);
+            await maybeLeaveTask;
         }
         return await leaveTask;
     }

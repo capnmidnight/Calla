@@ -308,6 +308,19 @@ Array.prototype.removeAt = function (idx) {
     this.splice(idx, 1);
 };
 
+Array.prototype.scan = function (...tests) {
+    const lastTest = (v) => !!v;
+    tests.push(lastTest);
+    for (let test of tests) {
+        const filtered = this.filter(test);
+        if (filtered.length > 0) {
+            return filtered[0];
+        }
+    }
+
+    return null;
+};
+
 String.prototype.firstLetterToUpper = function () {
     return this[0].toLocaleUpperCase()
         + this.substring(1);
