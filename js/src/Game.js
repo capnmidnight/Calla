@@ -235,8 +235,8 @@ export class Game extends EventTarget {
 
             if (!!this.me && pointer.dragDistance < 2) {
                 const tile = this.getTileAt(pointer),
-                    dx = tile.x - this.me.tx,
-                    dy = tile.y - this.me.ty;
+                    dx = tile.x - this.me.position._tx,
+                    dy = tile.y - this.me.position._ty;
 
                 if (dx === 0 && dy === 0) {
                     this.emote(this.me.id, this.currentEmoji);
@@ -300,7 +300,7 @@ export class Game extends EventTarget {
             }
 
             if (!!emoji) {
-                this.emotes.push(new Emote(emoji, user.tx + 0.5, user.ty));
+                this.emotes.push(new Emote(emoji, user.position._tx + 0.5, user.position._ty));
             }
         }
     }
@@ -321,7 +321,7 @@ export class Game extends EventTarget {
     }
 
     moveMeBy(dx, dy) {
-        const clearTile = this.map.getClearTile(this.me.tx, this.me.ty, dx, dy, this.me.avatarEmoji);
+        const clearTile = this.map.getClearTile(this.me.position._tx, this.me.position._ty, dx, dy, this.me.avatarEmoji);
         this.me.moveTo(clearTile.x, clearTile.y);
         this.targetOffsetCameraX = 0;
         this.targetOffsetCameraY = 0;
@@ -614,8 +614,8 @@ export class Game extends EventTarget {
     }
 
     render() {
-        const targetCameraX = -this.me.x * this.map.tileWidth,
-            targetCameraY = -this.me.y * this.map.tileHeight;
+        const targetCameraX = -this.me.position.x * this.map.tileWidth,
+            targetCameraY = -this.me.position.y * this.map.tileHeight;
 
         this.cameraZ = lerp(this.cameraZ, this.targetCameraZ, CAMERA_LERP * 10);
         this.cameraX = lerp(this.cameraX, targetCameraX, CAMERA_LERP * this.cameraZ);

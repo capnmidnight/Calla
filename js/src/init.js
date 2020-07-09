@@ -270,7 +270,7 @@ export function init(host, client) {
 
             setAudioProperties();
 
-            client.setLocalPosition(game.me);
+            client.setLocalPosition(game.me.serialize());
             game.me.addEventListener("userMoved", (evt) => {
                 client.setLocalPosition(evt);
             });
