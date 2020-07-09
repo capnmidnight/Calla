@@ -36,13 +36,24 @@ export class BaseJitsiClient extends EventTarget {
         /** @type {String} */
         this.localUser = null;
 
-        this.otherUsers = new Map();
-
         /** @type {BaseAudioClient} */
         this.audioClient = null;
 
         this.preInitEvtQ = [];
     }
+
+    userIDs() {
+        throw new Error("Not implemented in base class");
+    }
+
+    userExists(id) {
+        throw new Error("Not implemented in base class");
+    }
+
+    users() {
+        throw new Error("Not implemented in base class");
+    }
+
 
     /**
      * 
@@ -94,22 +105,6 @@ export class BaseJitsiClient extends EventTarget {
         const joinTask = this.once("videoConferenceJoined");
 
         await this.initializeAsync(host, roomName, userName);
-
-        this.addEventListener("participantJoined", (evt) => {
-            this.otherUsers.set(evt.id, evt.displayName);
-        });
-
-        this.addEventListener("participantLeft", (evt) => {
-            if (this.otherUsers.has(evt.id)) {
-                this.otherUsers.delete(evt.id);
-            }
-        });
-
-        this.addEventListener("displayNameChange", (evt) => {
-            if (evt.id !== this.localUser) {
-                this.otherUsers.set(evt.id, evt.displayname);
-            }
-        });
 
         window.addEventListener("unload", () => {
             this.dispose();
@@ -273,7 +268,7 @@ export class BaseJitsiClient extends EventTarget {
 
     setLocalPosition(evt) {
         this.audioClient.setLocalPosition(evt);
-        for (let toUserID of this.otherUsers.keys()) {
+        for (let toUserID of this.userIDs()) {
             this.sendMessageTo(toUserID, "userMoved", evt);
         }
     }
@@ -354,13 +349,13 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     setAvatarEmoji(emoji) {
-        for (let toUserID of this.otherUsers.keys()) {
+        for (let toUserID of this.userIDs()) {
             this.sendMessageTo(toUserID, "setAvatarEmoji", emoji);
         }
     }
 
     emote(emoji) {
-        for (let toUserID of this.otherUsers.keys()) {
+        for (let toUserID of this.userIDs()) {
             this.sendMessageTo(toUserID, "emote", emoji);
         }
     }

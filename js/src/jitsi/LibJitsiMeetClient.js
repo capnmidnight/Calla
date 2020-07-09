@@ -489,4 +489,17 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     startAudio() {
         this.audioClient.start();
     }
+
+    userIDs() {
+        return Object.keys(this.conference.participants);
+    }
+
+    userExists(id) {
+        return !!this.conference.participants[id];
+    }
+
+    users() {
+        return Object.keys(this.conference.participants)
+            .map(k => [k, this.conference.participants[k].getDisplayName()]);
+    }
 }

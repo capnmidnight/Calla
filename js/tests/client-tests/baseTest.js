@@ -28,19 +28,19 @@ export class TestBase extends TestCase {
     }
 
     async waitForJoin() {
-        if (this.client.otherUsers.size === 0) {
+        if (this.client.userIDs().length === 0) {
             await this.client.once("participantJoined", 5000);
         }
 
-        this.isGreaterThan(this.client.otherUsers.size, 0, "No users found");
-        for (let id of this.client.otherUsers.keys()) {
+        this.isGreaterThan(this.client.userIDs().length, 0, "No users found");
+        for (let id of this.client.userIDs()) {
             this.hasValue(id, "UserID");
         }
     }
 
     async initUsers() {
         const requests = [];
-        for (let id of this.client.otherUsers.keys()) {
+        for (let id of this.client.userIDs()) {
             requests.push(this.client.userInitRequestAsync(id));
         }
         const responses = await Promise.all(requests);
@@ -67,7 +67,7 @@ export class TestBase extends TestCase {
         this.hasValue(evt.id, "Other User ID");
         this.hasValue(evt.value, "Emoji value");
         this.hasValue(evt.desc, "Emoji description");
-        this.isTrue(this.client.otherUsers.has(evt.id), "User exists");
+        this.isTrue(this.client.userExists(evt.id), "User exists");
         this.isEqualTo(evt.value, bust.value, "Emoji value");
         this.isEqualTo(evt.desc, bust.desc, "Emoji desc");
     }
@@ -87,7 +87,7 @@ export class TestBase extends TestCase {
     async recvAudioMuted() {
         const evt = await this.taskOf("audioMuteStatusChanged");
         this.hasValue(evt.id, "UserID");
-        this.isTrue(this.client.otherUsers.has(evt.id), "Remote User");
+        this.isTrue(this.client.userExists(evt.id), "Remote User");
         this.isTrue(evt.muted, "Muted");
     }
 
@@ -102,7 +102,7 @@ export class TestBase extends TestCase {
     async recvAudioUnmuted() {
         const evt = await this.taskOf("audioMuteStatusChanged");
         this.hasValue(evt.id, "UserID");
-        this.isTrue(this.client.otherUsers.has(evt.id), "Remote User");
+        this.isTrue(this.client.userExists(evt.id), "Remote User");
         this.isFalse(evt.muted, "Muted");
     }
 
@@ -117,7 +117,7 @@ export class TestBase extends TestCase {
     async recvVideoUnmuted() {
         const evt = await this.taskOf("videoMuteStatusChanged");
         this.hasValue(evt.id, "UserID");
-        this.isTrue(this.client.otherUsers.has(evt.id), "Remote User");
+        this.isTrue(this.client.userExists(evt.id), "Remote User");
         this.isFalse(evt.muted, "Muted");
     }
 
@@ -132,7 +132,7 @@ export class TestBase extends TestCase {
     async recvVideoMuted() {
         const evt = await this.taskOf("videoMuteStatusChanged");
         this.hasValue(evt.id, "UserID");
-        this.isTrue(this.client.otherUsers.has(evt.id), "Remote User");
+        this.isTrue(this.client.userExists(evt.id), "Remote User");
         this.isTrue(evt.muted, "Muted");
     }
 
@@ -148,7 +148,7 @@ export class TestBase extends TestCase {
         const x = ((userNumber - 1) * 2 - 1) * -5;
         const evt = await this.client.once("userMoved", 5000);
         this.hasValue(evt.id, "UserID");
-        this.isTrue(this.client.otherUsers.has(evt.id), "Remote User");
+        this.isTrue(this.client.userExists(evt.id), "Remote User");
         this.isEqualTo(evt.x, x);
         this.isEqualTo(evt.y, 0);
     }

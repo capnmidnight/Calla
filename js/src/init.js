@@ -303,7 +303,7 @@ export function init(host, client) {
     directory.addEventListeners({
         refreshUserDirectory: () => {
             directory.clear();
-            for (let user of client.otherUsers.entries()) {
+            for (let user of client.users()) {
                 directory.set("Refresh", user[0], user[1]);
             }
         }

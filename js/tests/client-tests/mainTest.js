@@ -222,7 +222,7 @@ export class JitsiClient1_Tests extends TestBase {
     async test_998_participantLeft() {
         const evt = await this.client.once("participantLeft", 5000);
         this.hasValue(evt.id, "UserID");
-        this.isFalse(this.client.otherUsers.has(evt.id), "Remote User");
+        this.isFalse(this.client.userExists(evt.id), "Remote User");
     }
 
     async test_999_leaveConference() {
