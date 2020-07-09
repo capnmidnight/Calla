@@ -38,27 +38,34 @@ Make sure you keep the distinction between your Jitsi installation and your Call
 
 ### Docker-compose installation
 
-- Set up Jitsi Meet using docker-compose: [Jitsi Self-Hosting Guide - Docker](https://jitsi.github.io/handbook/docs/devops-guide/devops-guide-docker)
-- Use a reverse proxy (e.g. https://github.com/nginx-proxy/nginx-proxy) to have the Jitsi Meet frontend virtual hosted on `https://jitsi.<domain>`
-- Do the remaining steps from within the Jitsi base directory (where the Jitsi docker-compose.yml lives)
-- `git clone` this repository into the Calla folder
-- Edit the docker-compose.yml to add the following service section:
-```
-services:
-    # Calla
-    calla:
-        build: Calla
-        restart: ${RESTART_POLICY}
-```
-- Add the necessary reverse proxy configuration to the calla service have the Calla fronted virtual hosted on `https://calla.<domain>`, e.g.:
-```
-        environment:
-            - VIRTUAL_HOST=calla.<domain>
-            - LETSENCRYPT_HOST=calla.<domain>
-            - LETSENCRYPT_EMAIL=webmaster@<domain>
-        networks:
-            proxy:
-```
+- Set up Jitsi Meet using docker-compose: [Jitsi Self-Hosting Guide - Docker](https://jitsi.github.io/handbook/docs/devops-guide/devops-guide-docker).
+- Allow CORS access by adding the following two lines to the top of `${CONFIG}/prosody/config/conf.d/jitsi-meet.cfg.lua` (you may need to start jitsi once to generate the file):
+
+        consider_bosh_secure = true
+        cross_domain_bosh = true
+
+- `git clone` this repository into the Calla folder under the same `${CONFIG}` directory as jitsi.
+- Edit the jitsi `docker-compose.yml` to add the following service section:
+
+        services:
+            # Calla
+            calla:
+                image: nginx:alpine
+                volumes:
+                    - ${CONFIG}/Calla/js:/usr/share/nginx/html
+                command: sh /usr/share/nginx/html/entrypoint.sh
+
+- Add additional environment variables as necessary:
+
+                environment:
+                    - JITSI_HOST=jitsi.example.com
+                    - JVB_HOST=jitsi.meet
+                    - JVB_MUC=muc.jitsi.meet
+
+    - The default JITSI_HOST will be `jitsi.<domain>`, where calla is served at `<domain>`
+    - The default JVB_HOST will be `jitsi.meet`; this should be the name of the internal docker network you used in your `docker-compose.yml`
+    - Set JVB_MUC to be the value of `muc.${JVB_HOST}`
+- Add any additional reverse proxy configurations.
 - Start Jitsi and Calla: `$ docker-compose up -d`
 
 ## CONTRIBUTING
