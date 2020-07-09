@@ -36,8 +36,6 @@ function autoPlay(value) { return new HtmlAttr("autoplay", ["audio", "video"], v
 function className(value) { return new HtmlAttr("className", [], value); }
 // Describes elements which belongs to this one.
 function htmlFor(value) { return new HtmlAttr("htmlFor", ["label", "output"], value); }
-// Specifies the height of elements listed here. For all other elements, use the CSS height property.
-function height(value) { return new HtmlAttr("height", ["canvas", "embed", "iframe", "img", "input", "object", "video"], value); }
 // The URL of a linked resource.
 function href(value) { return new HtmlAttr("href", ["a", "area", "base", "link"], value); }
 // Often used with CSS to style a specific element. The value of this attribute must be unique.
@@ -70,12 +68,25 @@ function target(value) { return new HtmlAttr("target", ["a", "area", "base", "fo
 function type(value) { return new HtmlAttr("type", ["button", "input", "command", "embed", "object", "script", "source", "style", "menu"], value); }
 // Defines a default value which will be displayed in the element on page load.
 function value(value) { return new HtmlAttr("value", ["button", "data", "input", "li", "meter", "option", "progress", "param"], value); }
-// For the elements listed here, this establishes the element's width.
-function width(value) { return new HtmlAttr("width", ["canvas", "embed", "iframe", "img", "input", "object", "video"], value); }
 
 // A selection of fonts for preferred monospace rendering.
 const monospaceFamily = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
 const monospaceFont = style({ fontFamily: monospaceFamily });
+
+/**
+ * 
+ * @param {number} y
+ */
+function row(y, h) {
+    if (h === undefined) {
+        h = 1;
+    }
+
+    return style({
+        gridRowStart: y,
+        gridRowEnd: y + h
+    });
+}
 
 /**
  * 
@@ -482,8 +493,6 @@ Array.prototype.removeAt = function (idx) {
 };
 
 Array.prototype.scan = function (...tests) {
-    const lastTest = (v) => !!v;
-    tests.push(lastTest);
     for (let test of tests) {
         const filtered = this.filter(test);
         if (filtered.length > 0) {
@@ -3194,6 +3203,7 @@ class FormDialog extends EventTarget {
             || this.element.appendChild(Div(className("content")));
 
         style({
+            padding: "1em",
             overflowY: "scroll",
             gridArea: "3/1/4/4"
         }).apply(this.content);
@@ -4664,331 +4674,11 @@ class OptionsForm extends FormDialog {
     }
 }
 
-const refreshDirectoryEvt = new Event("refreshUserDirectory");
-
-class UserDirectoryForm extends FormDialog {
-
-    constructor() {
-        super("users", "Users");
-
-        const _ = (evt) => () => this.dispatchEvent(evt);
-
-        style({
-            gridTemplateColumns: "1fr 5fr",
-            columGap: "5px"
-        }).apply(this.content);
-
-        this.footer.append(
-            Button(
-                "Refresh",
-                onClick(_(refreshDirectoryEvt))),
-
-            this.confirmButton = Button(
-                "Close",
-                onClick(() => this.hide())));
-    }
-
-    /**
-     * 
-     * @param {string} from
-     * @param {string} userID
-     * @param {string} userName
-     */
-    set(from, userID, userName) {
-        this.delete(userID, true);
-        const elemID = `user_${userID}`;
-        const elem = Div(
-            id(elemID),
-            style({ backgroundColor: "lightgreen" }),
-            `${from.toLocaleUpperCase()}: ${userName} - (${userID})`);
-        this.content.append(elem);
-        setTimeout(() => {
-            elem.style.backgroundColor = "";
-        }, 3000);
-    }
-
-    delete(userID, now) {
-        const elemID = `user_${userID}`;
-        const elem = document.getElementById(elemID);
-        if (elem !== null) {
-            if (now) {
-                elem.parentElement.removeChild(elem);
-            }
-            else {
-                elem.style.backgroundColor = "red";
-                setTimeout(() => {
-                    elem.parentElement.removeChild(elem);
-                }, 3000);
-            }
-        }
-    }
-
-    clear() {
-        clear(this.content);
-    }
-
-    warn(...rest) {
-        const elem = Div(
-            style({ backgroundColor: "yellow" }),
-            ...rest.map(i => i.toString()));
-        this.content.append(elem);
-        setTimeout(() => {
-            elem.parentElement.removeChild(elem);
-        }, 5000);
-    }
-
-    async showAsync() {
-        this.show();
-        await this.confirmButton.once("click");
-        return false;
-    }
-}
-
-const EMOJI_LIFE = 5;
-
-class Emote {
-    constructor(emoji, x, y) {
-        this.emoji = emoji;
-        this.x = x;
-        this.y = y;
-        this.dx = Math.random() - 0.5;
-        this.dy = -Math.random() * 0.5 - 0.5;
-        this.life = 1;
-        this.width = -1;
-    }
-
-    isDead() {
-        return this.life <= 0;
-    }
-
-    update(dt) {
-        this.life -= dt / EMOJI_LIFE;
-        this.dx *= 0.99;
-        this.dy *= 0.99;
-        this.x += this.dx * dt;
-        this.y += this.dy * dt;
-    }
-
-    drawShadow(g, map, cameraZ) {
-        g.save();
-        {
-            g.shadowColor = "rgba(0, 0, 0, 0.5)";
-            g.shadowOffsetX = 3 * cameraZ;
-            g.shadowOffsetY = 3 * cameraZ;
-            g.shadowBlur = 3 * cameraZ;
-
-            this.drawEmote(g, map);
-        }
-        g.restore();
-    }
-
-    drawEmote(g, map) {
-        g.fillStyle = `rgba(0, 0, 0, ${this.life})`;
-        g.font = map.tileHeight / 2 + "px sans-serif";
-        if (this.width === -1) {
-            const metrics = g.measureText(this.emoji.value);
-            this.width = metrics.width;
-        }
-
-        g.fillText(
-            this.emoji.value,
-            this.x * map.tileWidth - this.width / 2,
-            this.y * map.tileHeight);
-    }
-}
-
-class TileSet {
-    constructor(url) {
-        this.url = url;
-        this.tileWidth = 0;
-        this.tileHeight = 0;
-        this.tilesPerRow = 0;
-        this.image = new Image();
-        this.collision = {};
-    }
-
-    async load() {
-        const response = await fetch(this.url),
-            tileset = await response.xml(),
-            imageLoad = new Promise((resolve, reject) => {
-                this.image.addEventListener("load", (evt) => {
-                    this.tilesPerRow = Math.floor(this.image.width / this.tileWidth);
-                    resolve();
-                });
-                this.image.addEventListener("error", reject);
-            }),
-            image = tileset.querySelector("image"),
-            imageSource = image.getAttribute("source"),
-            imageURL = new URL(imageSource, this.url),
-            tiles = tileset.querySelectorAll("tile");
-
-        for (let tile of tiles) {
-            const id = 1 * tile.getAttribute("id"),
-                collid = tile.querySelector("properties > property[name='Collision']"),
-                value = collid.getAttribute("value");
-            this.collision[id] = value === "true";
-        }
-
-        this.name = tileset.getAttribute("name");
-        this.tileWidth = 1 * tileset.getAttribute("tilewidth");
-        this.tileHeight = 1 * tileset.getAttribute("tileheight");
-        this.tileCount = 1 * tileset.getAttribute("tilecount");
-        this.image.src = imageURL.href;
-        await imageLoad;
-    }
-
-    isClear(tile) {
-        return !this.collision[tile - 1];
-    }
-
-    draw(g, tile, x, y) {
-        if (tile > 0) {
-            const idx = tile - 1,
-                sx = this.tileWidth * (idx % this.tilesPerRow),
-                sy = this.tileHeight * Math.floor(idx / this.tilesPerRow),
-                dx = x * this.tileWidth,
-                dy = y * this.tileHeight;
-
-            g.drawImage(this.image,
-                sx, sy, this.tileWidth, this.tileHeight,
-                dx, dy, this.tileWidth, this.tileHeight);
-        }
-    }
-}
-
-// TODO: move map data to requestable files
-class TileMap {
-    constructor(tilemapName) {
-        this.url = new URL(`/data/tilemaps/${tilemapName}.tmx`, document.location);
-        this.tileset = null;
-        this.tileWidth = 0;
-        this.tileHeight = 0;
-        this.layers = 0;
-        this.width = 0;
-        this.height = 0;
-        this.offsetX = 0;
-        this.offsetY = 0;
-        this.tiles = null;
-        this.collision = null;
-    }
-
-    async load() {
-        const response = await fetch(this.url.href),
-            map = await response.xml(),
-            width = 1 * map.getAttribute("width"),
-            height = 1 * map.getAttribute("height"),
-            tileWidth = 1 * map.getAttribute("tilewidth"),
-            tileHeight = 1 * map.getAttribute("tileheight"),
-            tileset = map.querySelector("tileset"),
-            tilesetSource = tileset.getAttribute("source"),
-            layers = map.querySelectorAll("layer > data");
-
-        this.layers = layers.length;
-        this.width = width;
-        this.height = height;
-        this.offsetX = -Math.floor(width / 2);
-        this.offsetY = -Math.floor(height / 2);
-        this.tileWidth = tileWidth;
-        this.tileHeight = tileHeight;
-
-        this.tiles = [];
-        for (let layer of layers) {
-            const tileIds = layer.innerHTML
-                    .replace(" ", "")
-                    .replace("\t", "")
-                    .replace("\n", "")
-                    .replace("\r", "")
-                    .split(","),
-                rows = [];
-            let row = [];
-            for (let tile of tileIds) {
-                row.push(tile);
-                if (row.length === width) {
-                    rows.push(row);
-                    row = [];
-                }
-            }
-            if (row.length > 0) {
-                rows.push(row);
-            }
-            this.tiles.push(rows);
-        }
-
-        this.tileset = new TileSet(new URL(tilesetSource, this.url));
-        await this.tileset.load();
-        this.tileWidth = this.tileset.tileWidth;
-        this.tileHeight = this.tileset.tileHeight;
-    }
-
-    draw(g) {
-        g.save();
-        {
-            g.translate(this.offsetX * this.tileWidth, this.offsetY * this.tileHeight);
-            for (let l = 0; l < this.layers; ++l) {
-                const layer = this.tiles[l];
-                for (let y = 0; y < this.height; ++y) {
-                    const row = layer[y];
-                    for (let x = 0; x < this.width; ++x) {
-                        const tile = row[x];
-                        this.tileset.draw(g, tile, x, y);
-                    }
-                }
-            }
-        }
-        g.restore();
-    }
-
-    isClear(x, y, avatar) {
-        x -= this.offsetX;
-        y -= this.offsetY;
-        return x < 0 || this.width <= x
-            || y < 0 || this.height <= y
-            || this.tileset.isClear(this.tiles[0][y][x])
-            || isSurfer(avatar.value);
-    }
-
-    // Use Bresenham's line algorithm (with integer error)
-    // to draw a line through the map, cutting it off if
-    // it hits a wall.
-    getClearTile(x, y, dx, dy, avatar) {
-        const x1 = x + dx,
-            y1 = y + dy,
-            sx = x < x1 ? 1 : -1,
-            sy = y < y1 ? 1 : -1;
-
-        dx = Math.abs(x1 - x);
-        dy = Math.abs(y1 - y);
-
-        let err = (dx > dy ? dx : -dy) / 2;
-
-        while (x !== x1
-            || y !== y1) {
-            const e2 = err;
-            if (e2 > -dx) {
-                if (this.isClear(x + sx, y, avatar)) {
-                    err -= dy;
-                    x += sx;
-                }
-                else {
-                    break;
-                }
-            }
-            if (e2 < dy) {
-                if (this.isClear(x, y + sy, avatar)) {
-                    err += dx;
-                    y += sy;
-                }
-                else {
-                    break;
-                }
-            }
-        }
-
-        return { x, y };
-    }
-}
-
 class BaseAvatar {
+
+    constructor(element) {
+        this.element = element;
+    }
 
     /** @type {boolean} */
     get canSwim() {
@@ -5017,7 +4707,9 @@ const selfs$2 = new Map();
 
 class EmojiAvatar extends BaseAvatar {
     constructor(emoji) {
-        super();
+        super(Span(
+            title(emoji.desc),
+            emoji.value));
 
         const self = {
             canSwim: isSurfer(emoji),
@@ -5072,17 +4764,16 @@ class PhotoAvatar extends BaseAvatar {
      * @param {(URL|string)} url
      */
     constructor(url) {
-        super();
+        super(Canvas());
 
         /** @type {HTMLCanvasElement} */
-        this.image = null;
+        this.element = null;
 
         const img = new Image();
         img.addEventListener("load", (evt) => {
-            this.image = Canvas(
-                width(img.width),
-                height(img.height));
-            const g = this.image.getContext("2d");
+            this.element.width = img.width;
+            this.element.height = img.height;
+            const g = this.element.getContext("2d");
             g.clearRect(0, 0, img.width, img.height);
             g.imageSmoothingEnabled = false;
             g.drawImage(img, 0, 0);
@@ -5101,18 +4792,16 @@ class PhotoAvatar extends BaseAvatar {
      * @param {any} height
      */
     draw(g, width, height) {
-        if (this.image !== null) {
-            const offset = (this.image.width - this.image.height) / 2,
-                sx = Math.max(0, offset),
-                sy = Math.max(0, -offset),
-                dim = Math.min(this.image.width, this.image.height);
-            g.drawImage(
-                this.image,
-                sx, sy,
-                dim, dim,
-                0, 0,
-                width, height);
-        }
+        const offset = (this.element.width - this.element.height) / 2,
+            sx = Math.max(0, offset),
+            sy = Math.max(0, -offset),
+            dim = Math.min(this.element.width, this.element.height);
+        g.drawImage(
+            this.element,
+            sx, sy,
+            dim, dim,
+            0, 0,
+            width, height);
     }
 }
 
@@ -5122,22 +4811,21 @@ class VideoAvatar extends BaseAvatar {
      * @param {HTMLVideoElement} video
      */
     constructor(video) {
-        super();
-        this.video = video;
-        this.video.play();
-        this.video
+        super(video);
+        this.element.play();
+        this.element
             .once("canplay")
-            .then(() => this.video.play());
+            .then(() => this.element.play());
     }
 
     draw(g, width, height) {
-        if (this.video !== null) {
-            const offset = (this.video.videoWidth - this.video.videoHeight) / 2,
+        if (this.element !== null) {
+            const offset = (this.element.videoWidth - this.element.videoHeight) / 2,
                 sx = Math.max(0, offset),
                 sy = Math.max(0, -offset),
-                dim = Math.min(this.video.videoWidth, this.video.videoHeight);
+                dim = Math.min(this.element.videoWidth, this.element.videoHeight);
             g.drawImage(
-                this.video,
+                this.element,
                 sx, sy,
                 dim, dim,
                 0, 0,
@@ -5610,6 +5298,400 @@ class UserPositionNeededEvent extends Event {
     }
 }
 
+const refreshDirectoryEvt = new Event("refreshUserDirectory");
+const newRowColor = "lightgreen";
+const avatarSize = style({ height: "32px" });
+const warpToEvt = Object.assign(
+    new Event("warpTo"),
+    {
+        id: null
+    });
+
+const ROW_TIMEOUT = 3000;
+class UserDirectoryForm extends FormDialog {
+
+    constructor() {
+        super("users", "Users");
+
+        const _ = (evt) => () => this.dispatchEvent(evt);
+
+        /** @type {Map.<string, Element[]>} */
+        this.rows = new Map();
+
+        this.content.append(
+            this.table = Div(
+                style({
+                    display: "grid",
+                    gridTemplateColumns: "auto auto auto 1fr",
+                    gridTemplateRows: "min-content",
+                    columnGap: "5px",
+                    width: "100%"
+                })));
+
+        this.table.append(
+            Div(grid(1, 1), ""),
+            Div(grid(2, 1), "ID"),
+            Div(grid(3, 1), "Location"),
+            Div(grid(4, 1), "Avatar"),
+            Div(grid(5, 1), "User Name"));
+
+        this.footer.append(
+            Button(
+                "Refresh",
+                onClick(_(refreshDirectoryEvt))),
+
+            this.confirmButton = Button(
+                "Close",
+                onClick(() => this.hide())));
+    }
+
+    /**
+     * 
+     * @param {User} user
+     */
+    set(user) {
+        this.delete(user.id);
+        const row = this.rows.size + 2;
+        const elem = Div(
+            grid(1, row, 4, 1),
+            style({
+                backgroundColor: newRowColor,
+                zIndex: -1
+            }));
+        setTimeout(() => {
+            this.table.removeChild(elem);
+        }, ROW_TIMEOUT);
+        this.table.append(elem);
+
+        let avatar = "N/A";
+        if (user.avatar && user.avatar.element) {
+            avatar = user.avatar.element;
+            avatarSize.apply(avatar);
+        }
+
+        const elems = [
+            Button(
+                grid(1, row),
+                onClick(() => {
+                    warpToEvt.id = user.id;
+                    this.dispatchEvent(warpToEvt);
+                }),
+                "Visit"),
+            Div(grid(2, row), user.id),
+            Div(grid(3, row), `<x: ${user.position._tx}, y: ${user.position._ty}>`),
+            Div(grid(4, row), avatar),
+            Div(grid(5, row), user.displayName)];
+
+        this.rows.set(user.id, elems);
+        this.table.append(...elems);
+    }
+
+    delete(userID) {
+        if (this.rows.has(userID)) {
+            const elems = this.rows.get(userID);
+            this.rows.delete(userID);
+            for (let elem of elems) {
+                this.table.removeChild(elem);
+            }
+
+            let rowCount = 2;
+            for (let elems of this.rows.values()) {
+                const r = row(rowCount++);
+                for (let elem of elems) {
+                    r.apply(elem);
+                }
+            }
+        }
+    }
+
+    clear() {
+        for (let id of this.rows.keys()) {
+            this.delete(id);
+        }
+    }
+
+    warn(...rest) {
+        const elem = Div(
+            style({ backgroundColor: "yellow" }),
+            ...rest.map(i => i.toString()));
+        this.table.append(elem);
+        setTimeout(() => {
+            this.table.removeChild(elem);
+        }, 5000);
+    }
+
+    async showAsync() {
+        this.show();
+        await this.confirmButton.once("click");
+        return false;
+    }
+}
+
+const EMOJI_LIFE = 5;
+
+class Emote {
+    constructor(emoji, x, y) {
+        this.emoji = emoji;
+        this.x = x;
+        this.y = y;
+        this.dx = Math.random() - 0.5;
+        this.dy = -Math.random() * 0.5 - 0.5;
+        this.life = 1;
+        this.width = -1;
+    }
+
+    isDead() {
+        return this.life <= 0;
+    }
+
+    update(dt) {
+        this.life -= dt / EMOJI_LIFE;
+        this.dx *= 0.99;
+        this.dy *= 0.99;
+        this.x += this.dx * dt;
+        this.y += this.dy * dt;
+    }
+
+    drawShadow(g, map, cameraZ) {
+        g.save();
+        {
+            g.shadowColor = "rgba(0, 0, 0, 0.5)";
+            g.shadowOffsetX = 3 * cameraZ;
+            g.shadowOffsetY = 3 * cameraZ;
+            g.shadowBlur = 3 * cameraZ;
+
+            this.drawEmote(g, map);
+        }
+        g.restore();
+    }
+
+    drawEmote(g, map) {
+        g.fillStyle = `rgba(0, 0, 0, ${this.life})`;
+        g.font = map.tileHeight / 2 + "px sans-serif";
+        if (this.width === -1) {
+            const metrics = g.measureText(this.emoji.value);
+            this.width = metrics.width;
+        }
+
+        g.fillText(
+            this.emoji.value,
+            this.x * map.tileWidth - this.width / 2,
+            this.y * map.tileHeight);
+    }
+}
+
+class TileSet {
+    constructor(url) {
+        this.url = url;
+        this.tileWidth = 0;
+        this.tileHeight = 0;
+        this.tilesPerRow = 0;
+        this.image = new Image();
+        this.collision = {};
+    }
+
+    async load() {
+        const response = await fetch(this.url),
+            tileset = await response.xml(),
+            imageLoad = new Promise((resolve, reject) => {
+                this.image.addEventListener("load", (evt) => {
+                    this.tilesPerRow = Math.floor(this.image.width / this.tileWidth);
+                    resolve();
+                });
+                this.image.addEventListener("error", reject);
+            }),
+            image = tileset.querySelector("image"),
+            imageSource = image.getAttribute("source"),
+            imageURL = new URL(imageSource, this.url),
+            tiles = tileset.querySelectorAll("tile");
+
+        for (let tile of tiles) {
+            const id = 1 * tile.getAttribute("id"),
+                collid = tile.querySelector("properties > property[name='Collision']"),
+                value = collid.getAttribute("value");
+            this.collision[id] = value === "true";
+        }
+
+        this.name = tileset.getAttribute("name");
+        this.tileWidth = 1 * tileset.getAttribute("tilewidth");
+        this.tileHeight = 1 * tileset.getAttribute("tileheight");
+        this.tileCount = 1 * tileset.getAttribute("tilecount");
+        this.image.src = imageURL.href;
+        await imageLoad;
+    }
+
+    isClear(tile) {
+        return !this.collision[tile - 1];
+    }
+
+    draw(g, tile, x, y) {
+        if (tile > 0) {
+            const idx = tile - 1,
+                sx = this.tileWidth * (idx % this.tilesPerRow),
+                sy = this.tileHeight * Math.floor(idx / this.tilesPerRow),
+                dx = x * this.tileWidth,
+                dy = y * this.tileHeight;
+
+            g.drawImage(this.image,
+                sx, sy, this.tileWidth, this.tileHeight,
+                dx, dy, this.tileWidth, this.tileHeight);
+        }
+    }
+}
+
+// TODO: move map data to requestable files
+class TileMap {
+    constructor(tilemapName) {
+        this.url = new URL(`/data/tilemaps/${tilemapName}.tmx`, document.location);
+        this.tileset = null;
+        this.tileWidth = 0;
+        this.tileHeight = 0;
+        this.layers = 0;
+        this.width = 0;
+        this.height = 0;
+        this.offsetX = 0;
+        this.offsetY = 0;
+        this.tiles = null;
+        this.collision = null;
+    }
+
+    async load() {
+        const response = await fetch(this.url.href),
+            map = await response.xml(),
+            width = 1 * map.getAttribute("width"),
+            height = 1 * map.getAttribute("height"),
+            tileWidth = 1 * map.getAttribute("tilewidth"),
+            tileHeight = 1 * map.getAttribute("tileheight"),
+            tileset = map.querySelector("tileset"),
+            tilesetSource = tileset.getAttribute("source"),
+            layers = map.querySelectorAll("layer > data");
+
+        this.layers = layers.length;
+        this.width = width;
+        this.height = height;
+        this.offsetX = -Math.floor(width / 2);
+        this.offsetY = -Math.floor(height / 2);
+        this.tileWidth = tileWidth;
+        this.tileHeight = tileHeight;
+
+        this.tiles = [];
+        for (let layer of layers) {
+            const tileIds = layer.innerHTML
+                    .replace(" ", "")
+                    .replace("\t", "")
+                    .replace("\n", "")
+                    .replace("\r", "")
+                    .split(","),
+                rows = [];
+            let row = [];
+            for (let tile of tileIds) {
+                row.push(tile);
+                if (row.length === width) {
+                    rows.push(row);
+                    row = [];
+                }
+            }
+            if (row.length > 0) {
+                rows.push(row);
+            }
+            this.tiles.push(rows);
+        }
+
+        this.tileset = new TileSet(new URL(tilesetSource, this.url));
+        await this.tileset.load();
+        this.tileWidth = this.tileset.tileWidth;
+        this.tileHeight = this.tileset.tileHeight;
+    }
+
+    draw(g) {
+        g.save();
+        {
+            g.translate(this.offsetX * this.tileWidth, this.offsetY * this.tileHeight);
+            for (let l = 0; l < this.layers; ++l) {
+                const layer = this.tiles[l];
+                for (let y = 0; y < this.height; ++y) {
+                    const row = layer[y];
+                    for (let x = 0; x < this.width; ++x) {
+                        const tile = row[x];
+                        this.tileset.draw(g, tile, x, y);
+                    }
+                }
+            }
+        }
+        g.restore();
+    }
+
+    isClear(x, y, avatar) {
+        x -= this.offsetX;
+        y -= this.offsetY;
+        return x < 0 || this.width <= x
+            || y < 0 || this.height <= y
+            || this.tileset.isClear(this.tiles[0][y][x])
+            || isSurfer(avatar.value);
+    }
+
+    // Use Bresenham's line algorithm (with integer error)
+    // to draw a line through the map, cutting it off if
+    // it hits a wall.
+    getClearTile(x, y, dx, dy, avatar) {
+        const x1 = x + dx,
+            y1 = y + dy,
+            sx = x < x1 ? 1 : -1,
+            sy = y < y1 ? 1 : -1;
+
+        dx = Math.abs(x1 - x);
+        dy = Math.abs(y1 - y);
+
+        let err = (dx > dy ? dx : -dy) / 2;
+
+        while (x !== x1
+            || y !== y1) {
+            const e2 = err;
+            if (e2 > -dx) {
+                if (this.isClear(x + sx, y, avatar)) {
+                    err -= dy;
+                    x += sx;
+                }
+                else {
+                    break;
+                }
+            }
+            if (e2 < dy) {
+                if (this.isClear(x, y + sy, avatar)) {
+                    err += dx;
+                    y += sy;
+                }
+                else {
+                    break;
+                }
+            }
+        }
+
+        return { x, y };
+    }
+
+    getClearTileNear(x, y, maxRadius, avatar) {
+        for (let r = 1; r <= maxRadius; ++r) {
+            for (let dx = -r; dx <= r; ++dx) {
+                const dy1 = r - Math.abs(dx);
+                const dy2 = -dy1;
+                const tx = x + dx;
+                const ty1 = y + dy1;
+                const ty2 = y + dy2;
+
+                if (this.isClear(tx, ty1, avatar)) {
+                    return { x: tx, y: ty1 };
+                }
+                else if (this.isClear(tx, ty2, avatar)) {
+                    return { x: tx, y: ty2 };
+                }
+            }
+        }
+
+        return { x, y };
+    }
+}
+
 const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_MAX = 8,
     CAMERA_ZOOM_MIN = 0.1,
@@ -5927,11 +6009,23 @@ class Game extends EventTarget {
         return tile;
     }
 
+    moveMeTo(x, y) {
+        if (this.map.isClear(x, y, this.me.avatarEmoji)) {
+            this.me.moveTo(x, y, this.transitionSpeed);
+            this.targetOffsetCameraX = 0;
+            this.targetOffsetCameraY = 0;
+        }
+    }
+
+
     moveMeBy(dx, dy) {
         const clearTile = this.map.getClearTile(this.me.position._tx, this.me.position._ty, dx, dy, this.me.avatarEmoji);
-        this.me.moveTo(clearTile.x, clearTile.y, this.transitionSpeed);
-        this.targetOffsetCameraX = 0;
-        this.targetOffsetCameraY = 0;
+        this.moveMeTo(clearTile.x, clearTile.y);
+    }
+
+    warpMeTo(x, y) {
+        const clearTile = this.map.getClearTileNear(x, y, 3, this.me.avatarEmoji);
+        this.moveMeTo(clearTile.x, clearTile.y);
     }
 
     zoom(deltaZ) {
@@ -6383,6 +6477,10 @@ class BaseJitsiClient extends EventTarget {
         this.audioClient = null;
 
         this.preInitEvtQ = [];
+
+        this.preferedAudioOutputID = null;
+        this.preferedAudioInputID = null;
+        this.preferedVideoInputID = null;
     }
 
     userIDs() {
@@ -6459,21 +6557,29 @@ class BaseJitsiClient extends EventTarget {
 
 
         const audioOutputs = await this.getAudioOutputDevicesAsync();
-        const output = audioOutputs.scan(
+        const audOut = audioOutputs.scan(
+            (d) => d.deviceId === this.preferedAudioOutputID,
             (d) => d.deviceId === "communications",
-            (d) => d.deviceId === "default");
-
-        if (output) {
-            await this.setAudioOutputDevice(output);
+            (d) => d.deviceId === "default",
+            (d) => !!d);
+        if (audOut) {
+            await this.setAudioOutputDevice(audOut);
         }
 
         const audioInputs = await this.getAudioInputDevicesAsync();
-        const input = audioInputs.scan(
+        const audIn = audioInputs.scan(
+            (d) => d.deviceId === this.preferedAudioInputID,
             (d) => d.deviceId === "communications",
-            (d) => d.deviceId === "default");
+            (d) => d.deviceId === "default",
+            (d) => !!d);
+        if (audIn) {
+            await this.setAudioInputDeviceAsync(audIn);
+        }
 
-        if (input) {
-            await this.setAudioInputDeviceAsync(input);
+        const videoInputs = await this.getVideoInputDevicesAsync();
+        const vidIn = videoInputs.scan((d) => d.deviceId === this.preferedVideoInputID);
+        if (vidIn) {
+            await this.setVideoInputDeviceAsync(vidIn);
         }
 
         return joinInfo;
@@ -6726,6 +6832,10 @@ const selfs$3 = new Map(),
         userName: "",
         avatarEmoji: null,
         gamepadIndex: 0,
+        preferedAudioOutputID: null,
+        preferedAudioInputID: null,
+        preferedVideoInputID: null,
+
         inputBinding: {
             keyButtonUp: "ArrowUp",
             keyButtonDown: "ArrowDown",
@@ -6766,6 +6876,39 @@ class Settings {
             self.roomName = window.location.hash.substring(1);
         }
         Object.seal(this);
+    }
+
+    get preferedAudioOutputID() {
+        return selfs$3.get(this).preferedAudioOutputID;
+    }
+
+    set preferedAudioOutputID(value) {
+        if (value !== this.preferedAudioOutputID) {
+            selfs$3.get(this).preferedAudioOutputID = value;
+            commit(this);
+        }
+    }
+
+    get preferedAudioInputID() {
+        return selfs$3.get(this).preferedAudioInputID;
+    }
+
+    set preferedAudioInputID(value) {
+        if (value !== this.preferedAudioInputID) {
+            selfs$3.get(this).preferedAudioInputID = value;
+            commit(this);
+        }
+    }
+
+    get preferedVideoInputID() {
+        return selfs$3.get(this).preferedVideoInputID;
+    }
+
+    set preferedVideoInputID(value) {
+        if (value !== this.preferedVideoInputID) {
+            selfs$3.get(this).preferedVideoInputID = value;
+            commit(this);
+        }
     }
 
     get transitionSpeed() {
@@ -6983,6 +7126,15 @@ function init(host, client) {
         options.gamepadIndex = game.gamepadIndex;
     }
 
+    function refreshUser(userID) {
+        if (game.users.has(userID)) {
+            const user = game.users.get(userID);
+            if (!user.isMe) {
+                directory.set(user);
+            }
+        }
+    }
+
     document.body.style.display = "grid";
     document.body.style.gridTemplateRows = "auto 1fr auto";
     let z = 0;
@@ -7021,6 +7173,9 @@ function init(host, client) {
     game.transitionSpeed = settings.transitionSpeed = 0.5;
     login.userName = settings.userName;
     login.roomName = settings.roomName;
+    client.preferedAudioOutputID = settings.preferedAudioOutputID;
+    client.preferedAudioInputID = settings.preferedAudioInputID;
+    client.preferedVideoInputID = settings.preferedVideoInputID;
 
     showLogin();
 
@@ -7119,15 +7274,21 @@ function init(host, client) {
         },
 
         audioInputChanged: () => {
-            client.setAudioInputDeviceAsync(options.currentAudioInputDevice);
+            const device = options.currentAudioInputDevice;
+            settings.preferedAudioInputID = device && device.deviceId || null;
+            client.setAudioInputDeviceAsync(device);
         },
 
         audioOutputChanged: () => {
-            client.setAudioOutputDevice(options.currentAudioOutputDevice);
+            const device = options.currentAudioOutputDevice;
+            settings.preferedAudioOutputID = device && device.deviceId || null;
+            client.setAudioOutputDevice(device);
         },
 
         videoInputChanged: () => {
-            client.setVideoInputDeviceAsync(options.currentVideoInputDevice);
+            const device = options.currentVideoInputDevice;
+            settings.preferedVideoInputID = device && device.deviceId || null;
+            client.setVideoInputDeviceAsync(device);
         },
 
         gamepadChanged: () => {
@@ -7150,6 +7311,7 @@ function init(host, client) {
             evt.user.addEventListener("userPositionNeeded", (evt2) => {
                 client.userInitRequest(evt2.id);
             });
+            refreshUser(evt.user.id);
         },
 
         toggleAudio: () => {
@@ -7195,8 +7357,18 @@ function init(host, client) {
     directory.addEventListeners({
         refreshUserDirectory: () => {
             directory.clear();
-            for (let user of client.users()) {
-                directory.set("Refresh", user[0], user[1]);
+            for (let userID of game.users.keys()) {
+                if (userID !== client.localUser) {
+                    refreshUser(userID);
+                }
+            }
+        },
+
+        warpTo: (evt) => {
+            if (game.users.has(evt.id)) {
+                const user = game.users.get(evt.id);
+                game.warpMeTo(user.position._tx, user.position._ty);
+                directory.hide();
             }
         }
     });
@@ -7232,15 +7404,16 @@ function init(host, client) {
 
         participantJoined: (evt) => {
             game.addUser(evt);
-            directory.set("Participant Joined", evt.id, evt.displayName);
         },
 
         videoAdded: (evt) => {
             game.setAvatarVideo(evt);
+            refreshUser(evt.id);
         },
 
         videoRemoved: (evt) => {
             game.setAvatarVideo(evt);
+            refreshUser(evt.id);
         },
 
         participantLeft: (evt) => {
@@ -7254,11 +7427,12 @@ function init(host, client) {
             if (evt.id === client.localUser) {
                 options.avatarURL = evt.avatarURL;
             }
+            refreshUser(evt.id);
         },
 
         displayNameChange: (evt) => {
             game.changeUserName(evt);
-            directory.set("Display Name Changed", evt.id, evt.displayName);
+            refreshUser(evt.id);
         },
 
         audioMuteStatusChanged: async (evt) => {
@@ -7291,7 +7465,7 @@ function init(host, client) {
                 const user = game.users.get(evt.id);
                 user.deserialize(evt);
                 client.setUserPosition(evt);
-                directory.set("User Init Response", evt.id, evt.displayName);
+                refreshUser(evt.id);
             }
         },
 
@@ -7301,6 +7475,7 @@ function init(host, client) {
                 user.moveTo(evt.x, evt.y, settings.transitionSpeed);
                 client.setUserPosition(evt);
             }
+            refreshUser(evt.id);
         },
 
         emote: (evt) => {
@@ -7309,6 +7484,7 @@ function init(host, client) {
 
         setAvatarEmoji: (evt) => {
             game.setAvatarEmoji(evt);
+            refreshUser(evt.id);
         },
 
         audioActivity: (evt) => {
@@ -7515,7 +7691,9 @@ class BaseSpatializer extends BaseAudioElement {
     }
 
     setAudioOutputDevice(deviceID) {
-        this.audio.setSinkId(deviceID);
+        if (this.audio.setSinkId) {
+            this.audio.setSinkId(deviceID);
+        }
     }
 
     get currentTime() {
