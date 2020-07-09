@@ -36,7 +36,9 @@ export class BaseSpatializer extends BaseAudioElement {
     }
 
     setAudioOutputDevice(deviceID) {
-        this.audio.setSinkId(deviceID);
+        if (this.audio.setSinkId) {
+            this.audio.setSinkId(deviceID);
+        }
     }
 
     get currentTime() {
