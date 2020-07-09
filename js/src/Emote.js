@@ -1,4 +1,4 @@
-﻿const EMOJI_LIFE = 2;
+﻿const EMOJI_LIFE = 5;
 
 export class Emote {
     constructor(emoji, x, y) {
