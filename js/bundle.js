@@ -1863,6 +1863,7 @@ const animals = [
     e("\u{1FAB3}", "Cockroach"),
     e("\u{1FAB6}", "Feather"),
 ];
+const whiteFlower = e("\u{1F4AE}", "White Flower");
 const plants = [
     e("\u{1F331}", "Seedling"),
     e("\u{1F332}", "Evergreen Tree"),
@@ -1883,11 +1884,12 @@ const plants = [
     e("\u{1F343}", "Leaf Fluttering in Wind"),
     e("\u{1F3F5}\u{FE0F}", "Rosette"),
     e("\u{1F490}", "Bouquet"),
-    e("\u{1F4AE}", "White Flower"),
+    whiteFlower,
     e("\u{1F940}", "Wilted Flower"),
     e("\u{1FAB4}", "Potted Plant"),
     e("\u{2618}\u{FE0F}", "Shamrock"),
 ];
+const banana = e("\u{1F34C}", "Banana");
 const food = [
     e("\u{1F32D}", "Hot Dog"),
     e("\u{1F32E}", "Taco"),
@@ -1903,7 +1905,7 @@ const food = [
     e("\u{1F349}", "Watermelon"),
     e("\u{1F34A}", "Tangerine"),
     e("\u{1F34B}", "Lemon"),
-    e("\u{1F34C}", "Banana"),
+    banana,
     e("\u{1F34D}", "Pineapple"),
     e("\u{1F34E}", "Red Apple"),
     e("\u{1F34F}", "Green Apple"),
@@ -3444,7 +3446,7 @@ class EmojiSelectedEvent extends Event {
 }
 
 function Run(...rest) {
-    return Span(
+    return Div(
         style({ margin: "auto" }),
         ...rest);
 }
@@ -3461,6 +3463,9 @@ const toggleAudioEvt = new Event("toggleAudio"),
     subButtonStyle = style({
         fontSize: "1.25em",
         height: "100%"
+    }),
+    buttonLabelStyle = style({
+        fontSize: "12px"
     });
 
 class FooterBar extends EventTarget {
@@ -3488,7 +3493,8 @@ class FooterBar extends EventTarget {
                 onClick(_(toggleAudioEvt)),
                 grid(1, 1),
                 subelStyle,
-                Run(speakerHighVolume.value)),
+                Run(speakerHighVolume.value),
+                Run(buttonLabelStyle, "Audio")),
 
             this.emojiControl = Span(
                 grid(2, 1),
@@ -3499,13 +3505,15 @@ class FooterBar extends EventTarget {
                     onClick(_(emoteEvt)),
                     subButtonStyle,
                     style({ borderRight: "none" }),
-                    this.emoteButton = Run("Emote")),
+                    this.emoteButton = Run(whiteFlower.value),
+                    Run(buttonLabelStyle, "Emote")),
                 Button(
                     title("Select Emoji"),
                     onClick(_(selectEmojiEvt)),
                     subButtonStyle,
                     style({ borderLeft: "none" }),
-                    Run(upwardsButton.value))),
+                    Run(upwardsButton.value),
+                    Run(buttonLabelStyle, "Change"))),
 
 
             this.muteVideoButton = Button(
@@ -3513,7 +3521,8 @@ class FooterBar extends EventTarget {
                 onClick(_(toggleVideoEvt)),
                 grid(3, 1),
                 subelStyle,
-                Run(noMobilePhone.value)));
+                Run(noMobilePhone.value),
+                Run(buttonLabelStyle, "Video")));
 
         this._audioEnabled = true;
         this._videoEnabled = false;
@@ -3561,7 +3570,7 @@ class FooterBar extends EventTarget {
 }
 
 function Run$1(...rest) {
-    return Span(
+    return Div(
         style({ margin: "auto" }),
         ...rest);
 }
@@ -3577,6 +3586,9 @@ const toggleOptionsEvt = new Event("toggleOptions"),
         width: "3em",
         height: "100%",
         pointerEvents: "all"
+    }),
+    buttonLabelStyle$1 = style({
+        fontSize: "12px"
     });
 
 class HeaderBar extends EventTarget {
@@ -3602,14 +3614,16 @@ class HeaderBar extends EventTarget {
                 onClick(_(toggleOptionsEvt)),
                 subelStyle$1,
                 grid(1, 1),
-                Run$1(gear.value)),
+                Run$1(gear.value),
+                Run$1(buttonLabelStyle$1, "Options")),
 
             this.instructionsButton = Button(
                 title("Show/hide instructions"),
                 onClick(_(toggleInstructionsEvt)),
                 subelStyle$1,
                 grid(2, 1),
-                Run$1(questionMark.value)),
+                Run$1(questionMark.value),
+                Run$1(buttonLabelStyle$1, "Info")),
 
             Button(
                 title("Share your current room to twitter"),
@@ -3619,18 +3633,16 @@ class HeaderBar extends EventTarget {
                 Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
                     alt("icon"),
                     role("presentation"),
-                    style({
-                        height: "1.75em",
-                        marginTop: "3px",
-                        marginBottom: "-3px"
-                    }))),
+                    style({ height: "25px" })),
+                Run$1(buttonLabelStyle$1, "Tweet")),
 
             Button(
                 title("View user directory"),
                 onClick(_(toggleUserDirectoryEvt)),
                 subelStyle$1,
                 grid(4, 1),
-                Run$1(speakingHead.value)),
+                Run$1(speakingHead.value),
+                Run$1(buttonLabelStyle$1, "Users")),
 
 
             this.fullscreenButton = Button(
@@ -3638,7 +3650,8 @@ class HeaderBar extends EventTarget {
                 onClick(_(toggleFullscreenEvt)),
                 subelStyle$1,
                 grid(6, 1),
-                Run$1(squareFourCourners.value)),
+                Run$1(squareFourCourners.value),
+                Run$1(buttonLabelStyle$1, "Expand")),
 
 
             Button(
@@ -3646,7 +3659,8 @@ class HeaderBar extends EventTarget {
                 onClick(_(leaveEvt)),
                 subelStyle$1,
                 grid(7, 1),
-                Run$1(door.value)));
+                Run$1(door.value),
+                Run$1(buttonLabelStyle$1, "Leave")));
 
         Object.seal(this);
     }

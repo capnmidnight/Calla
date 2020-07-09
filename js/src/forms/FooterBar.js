@@ -1,11 +1,11 @@
-﻿import { upwardsButton, mutedSpeaker, speakerHighVolume, videoCamera, noMobilePhone } from "../emoji/emoji.js";
+﻿import { mutedSpeaker, noMobilePhone, speakerHighVolume, upwardsButton, videoCamera, whiteFlower } from "../emoji/emoji.js";
 import { grid, id, style, title } from "../html/attrs.js";
 import { onClick } from "../html/evts.js";
-import { Button, Div, KBD, Span } from "../html/tags.js";
+import { Button, Div, Span } from "../html/tags.js";
 
 
 function Run(...rest) {
-    return Span(
+    return Div(
         style({ margin: "auto" }),
         ...rest);
 }
@@ -22,6 +22,9 @@ const toggleAudioEvt = new Event("toggleAudio"),
     subButtonStyle = style({
         fontSize: "1.25em",
         height: "100%"
+    }),
+    buttonLabelStyle = style({
+        fontSize: "12px"
     });
 
 export class FooterBar extends EventTarget {
@@ -49,7 +52,8 @@ export class FooterBar extends EventTarget {
                 onClick(_(toggleAudioEvt)),
                 grid(1, 1),
                 subelStyle,
-                Run(speakerHighVolume.value)),
+                Run(speakerHighVolume.value),
+                Run(buttonLabelStyle, "Audio")),
 
             this.emojiControl = Span(
                 grid(2, 1),
@@ -60,13 +64,15 @@ export class FooterBar extends EventTarget {
                     onClick(_(emoteEvt)),
                     subButtonStyle,
                     style({ borderRight: "none" }),
-                    this.emoteButton = Run("Emote")),
+                    this.emoteButton = Run(whiteFlower.value),
+                    Run(buttonLabelStyle, "Emote")),
                 Button(
                     title("Select Emoji"),
                     onClick(_(selectEmojiEvt)),
                     subButtonStyle,
                     style({ borderLeft: "none" }),
-                    Run(upwardsButton.value))),
+                    Run(upwardsButton.value),
+                    Run(buttonLabelStyle, "Change"))),
 
 
             this.muteVideoButton = Button(
@@ -74,7 +80,8 @@ export class FooterBar extends EventTarget {
                 onClick(_(toggleVideoEvt)),
                 grid(3, 1),
                 subelStyle,
-                Run(noMobilePhone.value)));
+                Run(noMobilePhone.value),
+                Run(buttonLabelStyle, "Video")));
 
         this._audioEnabled = true;
         this._videoEnabled = false;

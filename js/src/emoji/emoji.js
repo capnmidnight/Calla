@@ -979,6 +979,7 @@ export const animals = [
     e("\u{1FAB3}", "Cockroach"),
     e("\u{1FAB6}", "Feather"),
 ];
+export const whiteFlower = e("\u{1F4AE}", "White Flower");
 export const plants = [
     e("\u{1F331}", "Seedling"),
     e("\u{1F332}", "Evergreen Tree"),
@@ -999,11 +1000,12 @@ export const plants = [
     e("\u{1F343}", "Leaf Fluttering in Wind"),
     e("\u{1F3F5}\u{FE0F}", "Rosette"),
     e("\u{1F490}", "Bouquet"),
-    e("\u{1F4AE}", "White Flower"),
+    whiteFlower,
     e("\u{1F940}", "Wilted Flower"),
     e("\u{1FAB4}", "Potted Plant"),
     e("\u{2618}\u{FE0F}", "Shamrock"),
 ];
+export const banana = e("\u{1F34C}", "Banana");
 export const food = [
     e("\u{1F32D}", "Hot Dog"),
     e("\u{1F32E}", "Taco"),
@@ -1019,7 +1021,7 @@ export const food = [
     e("\u{1F349}", "Watermelon"),
     e("\u{1F34A}", "Tangerine"),
     e("\u{1F34B}", "Lemon"),
-    e("\u{1F34C}", "Banana"),
+    banana,
     e("\u{1F34D}", "Pineapple"),
     e("\u{1F34E}", "Red Apple"),
     e("\u{1F34F}", "Green Apple"),

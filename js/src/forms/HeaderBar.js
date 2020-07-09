@@ -5,7 +5,7 @@ import { Button, Div, Img, Span } from "../html/tags.js";
 
 
 function Run(...rest) {
-    return Span(
+    return Div(
         style({ margin: "auto" }),
         ...rest);
 }
@@ -21,6 +21,9 @@ const toggleOptionsEvt = new Event("toggleOptions"),
         width: "3em",
         height: "100%",
         pointerEvents: "all"
+    }),
+    buttonLabelStyle = style({
+        fontSize: "12px"
     });
 
 export class HeaderBar extends EventTarget {
@@ -46,14 +49,16 @@ export class HeaderBar extends EventTarget {
                 onClick(_(toggleOptionsEvt)),
                 subelStyle,
                 grid(1, 1),
-                Run(gear.value)),
+                Run(gear.value),
+                Run(buttonLabelStyle, "Options")),
 
             this.instructionsButton = Button(
                 title("Show/hide instructions"),
                 onClick(_(toggleInstructionsEvt)),
                 subelStyle,
                 grid(2, 1),
-                Run(questionMark.value)),
+                Run(questionMark.value),
+                Run(buttonLabelStyle, "Info")),
 
             Button(
                 title("Share your current room to twitter"),
@@ -63,18 +68,16 @@ export class HeaderBar extends EventTarget {
                 Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
                     alt("icon"),
                     role("presentation"),
-                    style({
-                        height: "1.75em",
-                        marginTop: "3px",
-                        marginBottom: "-3px"
-                    }))),
+                    style({ height: "25px" })),
+                Run(buttonLabelStyle, "Tweet")),
 
             Button(
                 title("View user directory"),
                 onClick(_(toggleUserDirectoryEvt)),
                 subelStyle,
                 grid(4, 1),
-                Run(speakingHead.value)),
+                Run(speakingHead.value),
+                Run(buttonLabelStyle, "Users")),
 
 
             this.fullscreenButton = Button(
@@ -82,7 +85,8 @@ export class HeaderBar extends EventTarget {
                 onClick(_(toggleFullscreenEvt)),
                 subelStyle,
                 grid(6, 1),
-                Run(squareFourCourners.value)),
+                Run(squareFourCourners.value),
+                Run(buttonLabelStyle, "Expand")),
 
 
             Button(
@@ -90,7 +94,8 @@ export class HeaderBar extends EventTarget {
                 onClick(_(leaveEvt)),
                 subelStyle,
                 grid(7, 1),
-                Run(door.value)));
+                Run(door.value),
+                Run(buttonLabelStyle, "Leave")));
 
         Object.seal(this);
     }
