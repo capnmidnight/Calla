@@ -40,6 +40,10 @@ export class BaseJitsiClient extends EventTarget {
         this.audioClient = null;
 
         this.preInitEvtQ = [];
+
+        this.preferedAudioOutputID = null;
+        this.preferedAudioInputID = null;
+        this.preferedVideoInputID = null;
     }
 
     userIDs() {
@@ -116,21 +120,29 @@ export class BaseJitsiClient extends EventTarget {
 
 
         const audioOutputs = await this.getAudioOutputDevicesAsync();
-        const output = audioOutputs.scan(
+        const audOut = audioOutputs.scan(
+            (d) => d.deviceId === this.preferedAudioOutputID,
             (d) => d.deviceId === "communications",
-            (d) => d.deviceId === "default");
-
-        if (output) {
-            await this.setAudioOutputDevice(output);
+            (d) => d.deviceId === "default",
+            (d) => !!d);
+        if (audOut) {
+            await this.setAudioOutputDevice(audOut);
         }
 
         const audioInputs = await this.getAudioInputDevicesAsync();
-        const input = audioInputs.scan(
+        const audIn = audioInputs.scan(
+            (d) => d.deviceId === this.preferedAudioInputID,
             (d) => d.deviceId === "communications",
-            (d) => d.deviceId === "default");
+            (d) => d.deviceId === "default",
+            (d) => !!d);
+        if (audIn) {
+            await this.setAudioInputDeviceAsync(audIn);
+        }
 
-        if (input) {
-            await this.setAudioInputDeviceAsync(input);
+        const videoInputs = await this.getVideoInputDevicesAsync();
+        const vidIn = videoInputs.scan((d) => d.deviceId === this.preferedVideoInputID)
+        if (vidIn) {
+            await this.setVideoInputDeviceAsync(vidIn);
         }
 
         return joinInfo;

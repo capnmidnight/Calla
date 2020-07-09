@@ -12,6 +12,10 @@
         userName: "",
         avatarEmoji: null,
         gamepadIndex: 0,
+        preferedAudioOutputID: null,
+        preferedAudioInputID: null,
+        preferedVideoInputID: null,
+
         inputBinding: {
             keyButtonUp: "ArrowUp",
             keyButtonDown: "ArrowDown",
@@ -52,6 +56,39 @@ export class Settings {
             self.roomName = window.location.hash.substring(1);
         }
         Object.seal(this);
+    }
+
+    get preferedAudioOutputID() {
+        return selfs.get(this).preferedAudioOutputID;
+    }
+
+    set preferedAudioOutputID(value) {
+        if (value !== this.preferedAudioOutputID) {
+            selfs.get(this).preferedAudioOutputID = value;
+            commit(this);
+        }
+    }
+
+    get preferedAudioInputID() {
+        return selfs.get(this).preferedAudioInputID;
+    }
+
+    set preferedAudioInputID(value) {
+        if (value !== this.preferedAudioInputID) {
+            selfs.get(this).preferedAudioInputID = value;
+            commit(this);
+        }
+    }
+
+    get preferedVideoInputID() {
+        return selfs.get(this).preferedVideoInputID;
+    }
+
+    set preferedVideoInputID(value) {
+        if (value !== this.preferedVideoInputID) {
+            selfs.get(this).preferedVideoInputID = value;
+            commit(this);
+        }
     }
 
     get transitionSpeed() {

@@ -309,8 +309,6 @@ Array.prototype.removeAt = function (idx) {
 };
 
 Array.prototype.scan = function (...tests) {
-    const lastTest = (v) => !!v;
-    tests.push(lastTest);
     for (let test of tests) {
         const filtered = this.filter(test);
         if (filtered.length > 0) {

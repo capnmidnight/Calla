@@ -138,6 +138,9 @@ export function init(host, client) {
     game.transitionSpeed = settings.transitionSpeed = 0.5;
     login.userName = settings.userName;
     login.roomName = settings.roomName;
+    client.preferedAudioOutputID = settings.preferedAudioOutputID;
+    client.preferedAudioInputID = settings.preferedAudioInputID;
+    client.preferedVideoInputID = settings.preferedVideoInputID;
 
     showLogin();
 
@@ -236,15 +239,21 @@ export function init(host, client) {
         },
 
         audioInputChanged: () => {
-            client.setAudioInputDeviceAsync(options.currentAudioInputDevice);
+            const device = options.currentAudioInputDevice;
+            settings.preferedAudioInputID = device && device.deviceId || null;
+            client.setAudioInputDeviceAsync(device);
         },
 
         audioOutputChanged: () => {
-            client.setAudioOutputDevice(options.currentAudioOutputDevice);
+            const device = options.currentAudioOutputDevice;
+            settings.preferedAudioOutputID = device && device.deviceId || null;
+            client.setAudioOutputDevice(device);
         },
 
         videoInputChanged: () => {
-            client.setVideoInputDeviceAsync(options.currentVideoInputDevice);
+            const device = options.currentVideoInputDevice;
+            settings.preferedVideoInputID = device && device.deviceId || null;
+            client.setVideoInputDeviceAsync(device);
         },
 
         gamepadChanged: () => {
