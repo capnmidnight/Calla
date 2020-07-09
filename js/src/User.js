@@ -28,10 +28,12 @@ function resetAvatarMode(self) {
 }
 
 export class User extends EventTarget {
-    constructor(id, displayName, isMe) {
+    constructor(evt, isMe) {
         super();
 
-        this.id = id;
+        this.id = evt.id;
+        this.displayName = evt.displayName || (isMe ? "(Me)" : `(${this.id})`);
+
         this.moveEvent = new UserMoveEvent(this.id);
         this.position = new InterpolatedPosition();
 
@@ -40,7 +42,6 @@ export class User extends EventTarget {
         this.avatarImage = null;
         this.avatarVideo = null;
 
-        this.displayName = displayName || id;
         this.audioMuted = false;
         this.videoMuted = true;
         this.isMe = isMe;
@@ -57,11 +58,19 @@ export class User extends EventTarget {
     }
 
     deserialize(evt) {
-        this.position.setTarget(evt, performance.now() / 1000, 0);
-        this.displayName = evt.displayName;
-        this.avatarMode = evt.avatarMode;
-        this.avatarID = evt.avatarID;
-        this.isInitialized = true;
+        if (evt.displayName !== undefined) {
+            this.displayName = evt.displayName;
+        }
+
+        if (evt.avatarMode !== undefined) {
+            this.avatarMode = evt.avatarMode;
+            this.avatarID = evt.avatarID;
+        }
+
+        if (evt.x !== undefined) {
+            this.position.setTarget(evt, performance.now() / 1000, 0);
+            this.isInitialized = true;
+        }
     }
 
     serialize() {
@@ -178,22 +187,17 @@ export class User extends EventTarget {
     }
 
     moveTo(x, y, dt) {
-        if (this.isMe) {
-            if (x !== this.tx
-                || y !== this.ty) {
+        if (this.isInitialized) {
+            if (this.isMe) {
                 this.moveEvent.set(x, y);
                 this.dispatchEvent(this.moveEvent);
             }
-        }
-        else if (!this.isInitialized) {
-            this.isInitialized = true;
-            dt = 0;
-        }
 
-        this.position.setTarget({ x, y }, performance.now() / 1000, dt);
+            this.position.setTarget({ x, y }, performance.now() / 1000, dt);
+        }
     }
 
-    update(dt, map, users) {
+    update(map, users) {
         const t = performance.now() / 1000;
 
         if (!this.isInitialized) {

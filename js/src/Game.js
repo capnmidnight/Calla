@@ -45,7 +45,7 @@ export class Game extends EventTarget {
             }));
         this.gFront = this.element.getContext("2d");
 
-        this.me = null
+        this.me = null;
         this.map = null;
         this.keys = {};
 
@@ -73,6 +73,8 @@ export class Game extends EventTarget {
         this.canClick = false;
 
         this.currentEmoji = null;
+
+        /** @type {Emote[]} */
         this.emotes = [];
 
         this.inputBinding = {
@@ -301,7 +303,7 @@ export class Game extends EventTarget {
             }
 
             if (!!emoji) {
-                this.emotes.push(new Emote(emoji, user.position._tx + 0.5, user.position._ty));
+                this.emotes.push(new Emote(emoji, user.position.x + 0.5, user.position.y));
             }
         }
     }
@@ -351,8 +353,9 @@ export class Game extends EventTarget {
             this.removeUser(evt);
         }
 
-        const user = new User(evt.id, evt.displayName, false);
+        const user = new User(evt, false);
         this.users.set(evt.id, user);
+
         userJoinedEvt.user = user;
         this.dispatchEvent(userJoinedEvt);
     }
@@ -468,8 +471,8 @@ export class Game extends EventTarget {
         //};
 
         this.currentRoomName = evt.roomName.toLowerCase();
-        this.me = new User(evt.id, evt.displayName, true);
-        this.users.set(this.me.id, this.me);
+        this.me = new User(evt, true);
+        this.users.set(evt.id, this.me);
 
         this.setAvatarURL(evt);
 
@@ -610,7 +613,7 @@ export class Game extends EventTarget {
         this.emotes = this.emotes.filter(e => !e.isDead());
 
         for (let user of this.users.values()) {
-            user.update(dt, this.map, this.users);
+            user.update(this.map, this.users);
         }
     }
 
