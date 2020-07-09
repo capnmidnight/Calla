@@ -70,8 +70,8 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
 
         this.connection = new JitsiMeetJS.JitsiConnection(null, null, {
             hosts: {
-                domain: 'meet.jitsi',
-                muc: 'muc.meet.jitsi'
+                domain: JVB_HOST,
+                muc: JVB_MUC
             },
             serviceUrl: `https://${host}/http-bind`,
             enableLipSync: true
