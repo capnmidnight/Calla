@@ -371,7 +371,7 @@ export class Game extends EventTarget {
         }
 
         if (!mutingUser) {
-            console.log("no user");
+            console.warn("No user found to mute audio, retrying in 1 second.");
             setTimeout(this.muteUserAudio.bind(this, evt), 1000);
         }
         else {
@@ -386,7 +386,7 @@ export class Game extends EventTarget {
         }
 
         if (!mutingUser) {
-            console.log("no user");
+            console.warn("No user found to mute video, retrying in 1 second.");
             setTimeout(this.muteUserVideo.bind(this, evt), 1000);
         }
         else {
@@ -404,11 +404,9 @@ export class Game extends EventTarget {
                 callback(user);
             }
             else {
-                console.log("No user, trying again in a quarter second");
+                console.warn("No user, trying again in a quarter second");
                 if (timeout > 0) {
-                    setTimeout(() => {
-                        this.withUser(id, callback, timeout - 250);
-                    }, 250);
+                    setTimeout(this.withUser.bind(this, id, callback, timeout - 250), 250);
                 }
             }
         }

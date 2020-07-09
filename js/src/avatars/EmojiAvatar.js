@@ -32,7 +32,6 @@ export class EmojiAvatar extends BaseAvatar {
             const size = 100;
             g.font = size + "px sans-serif";
             const metrics = g.measureText(this.value);
-            console.log(this.value, metrics);
             self.aspectRatio = metrics.width / size;
             self.x = (size - metrics.width) / 2;
             self.y = metrics.actualBoundingBoxAscent / 2;

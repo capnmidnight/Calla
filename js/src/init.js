@@ -42,46 +42,6 @@ export function init(host, client) {
             login
         ].filter(x => x.element);
 
-    document.body.style.display = "grid";
-    document.body.style.gridTemplateRows = "auto 1fr auto";
-    let z = 0;
-    for (let e of forAppend) {
-        if (e.element) {
-            let g = null;
-            if (e === headbar) {
-                g = grid(1, 1);
-            }
-            else if (e === footbar) {
-                g = grid(1, 3);
-            }
-            else if (e === game || e === login) {
-                g = grid(1, 1, 1, 3);
-            }
-            else {
-                g = grid(1, 2);
-            }
-            g.apply(e.element);
-            e.element.style.zIndex = (z++);
-            document.body.append(e.element);
-        }
-    }
-
-    refreshGamepads();
-    headbar.enabled = false;
-    footbar.enabled = false;
-    options.drawHearing = game.drawHearing = settings.drawHearing;
-    options.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
-    options.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;
-    options.audioRolloff = settings.audioRolloff;
-    options.fontSize = game.fontSize = settings.fontSize;
-    options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
-    options.inputBinding = game.inputBinding = settings.inputBinding;
-    game.cameraZ = game.targetCameraZ = settings.zoom;
-    login.userName = settings.userName;
-    login.roomName = settings.roomName;
-
-    showLogin();
-
     function showLogin() {
         game.hide();
         options.hide();
@@ -126,12 +86,53 @@ export function init(host, client) {
         options.gamepadIndex = game.gamepadIndex;
     }
 
+    document.body.style.display = "grid";
+    document.body.style.gridTemplateRows = "auto 1fr auto";
+    let z = 0;
+    for (let e of forAppend) {
+        if (e.element) {
+            let g = null;
+            if (e === headbar) {
+                g = grid(1, 1);
+            }
+            else if (e === footbar) {
+                g = grid(1, 3);
+            }
+            else if (e === game || e === login) {
+                g = grid(1, 1, 1, 3);
+            }
+            else {
+                g = grid(1, 2);
+            }
+            g.apply(e.element);
+            e.element.style.zIndex = (z++);
+            document.body.append(e.element);
+        }
+    }
+
+    refreshGamepads();
+    headbar.enabled = false;
+    footbar.enabled = false;
+    options.drawHearing = game.drawHearing = settings.drawHearing;
+    options.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
+    options.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;
+    options.audioRolloff = settings.audioRolloff;
+    options.fontSize = game.fontSize = settings.fontSize;
+    options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
+    options.inputBinding = game.inputBinding = settings.inputBinding;
+    game.cameraZ = game.targetCameraZ = settings.zoom;
+    login.userName = settings.userName;
+    login.roomName = settings.roomName;
+
+    showLogin();
+
     window.addEventListeners({
+        gamepadconnected: refreshGamepads,
+        gamepaddisconnected: refreshGamepads,
+
         resize: () => {
             game.resize();
-        },
-        gamepadconnected: refreshGamepads,
-        gamepaddisconnected: refreshGamepads
+        }
     });
 
     headbar.addEventListeners({
@@ -141,20 +142,24 @@ export function init(host, client) {
                 options.toggleOpen();
             }
         },
+
         toggleInstructions: () => {
             if (!emoji.isOpen()) {
                 options.hide();
                 login.toggleOpen();
             }
         },
+
         toggleFullscreen: () => {
             headbar.isFullscreen = !headbar.isFullscreen;
         },
+
         tweet: () => {
             const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
                 url = new URL("https://twitter.com/intent/tweet?text=" + message);
             open(url);
         },
+
         leave: () => {
             client.leave();
         }
@@ -162,12 +167,15 @@ export function init(host, client) {
 
     footbar.addEventListeners({
         selectEmoji: selectEmojiAsync,
+
         emote: () => {
             game.emote(client.localUser, game.currentEmoji);
         },
+
         toggleAudio: () => {
             client.toggleAudioAsync();
         },
+
         toggleVideo: () => {
             client.toggleVideoAsync();
         }
@@ -184,6 +192,8 @@ export function init(host, client) {
 
 
     options.addEventListeners({
+        audioPropertiesChanged: setAudioProperties,
+
         selectAvatar: async () => {
             withEmojiSelection((e) => {
                 settings.avatarEmoji
@@ -193,51 +203,65 @@ export function init(host, client) {
                 client.setAvatarEmoji(e);
             });
         },
+
         avatarURLChanged: () => {
             client.setAvatarURL(options.avatarURL);
         },
-        audioPropertiesChanged: setAudioProperties,
+
         toggleVideo: () => {
             client.toggleVideoAsync();
         },
+
         toggleDrawHearing: () => {
             settings.drawHearing = game.drawHearing = options.drawHearing;
         },
+
         fontSizeChanged: () => {
             settings.fontSize = game.fontSize = options.fontSize;
         },
+
         audioInputChanged: () => {
             client.setAudioInputDeviceAsync(options.currentAudioInputDevice);
         },
+
         audioOutputChanged: () => {
             client.setAudioOutputDevice(options.currentAudioOutputDevice);
         },
+
         videoInputChanged: () => {
             client.setVideoInputDeviceAsync(options.currentVideoInputDevice);
         },
+
         gamepadChanged: () => {
             settings.gamepadIndex = game.gamepadIndex = options.gamepadIndex;
         },
+
         inputBindingChanged: () => {
             settings.inputBinding = game.inputBinding = options.inputBinding;
         }
     });
 
     game.addEventListeners({
+        emojiNeeded: selectEmojiAsync,
+
         emote: (evt) => {
             client.emote(evt.emoji);
         },
+
         userJoined: (evt) => {
             evt.user.addEventListener("userPositionNeeded", (evt2) => {
                 client.userInitRequest(evt2.id);
             });
         },
+
         toggleAudio: () => {
             client.toggleAudioAsync();
         },
+
         toggleVideo: () => {
             client.toggleVideoAsync();
         },
+
         gameStarted: () => {
             grid(1, 2).apply(login.element);
             login.hide();
@@ -258,12 +282,13 @@ export function init(host, client) {
                 = options.avatarEmoji
                 = game.me.avatarEmoji;
         },
+
         gameEnded: () => {
             game.hide();
             login.connected = false;
             showLogin();
         },
-        emojiNeeded: selectEmojiAsync,
+
         zoomChanged: () => {
             settings.zoom = game.targetCameraZ;
         }
@@ -293,31 +318,39 @@ export function init(host, client) {
             game.muteUserVideo({ id: client.localUser, muted: videoMuted });
             footbar.videoEnabled = !videoMuted;
         },
+
         videoConferenceLeft: (evt) => {
             game.end();
         },
+
         participantJoined: (evt) => {
             game.addUser(evt);
         },
+
         videoAdded: (evt) => {
             game.setAvatarVideo(evt);
         },
+
         videoRemoved: (evt) => {
             game.setAvatarVideo(evt);
         },
+
         participantLeft: (evt) => {
             game.removeUser(evt);
             client.removeUser(evt);
         },
+
         avatarChanged: (evt) => {
             game.setAvatarURL(evt);
             if (evt.id === client.localUser) {
                 options.avatarURL = evt.avatarURL;
             }
         },
+
         displayNameChange: (evt) => {
             game.changeUserName(evt);
         },
+
         audioMuteStatusChanged: async (evt) => {
             game.muteUserAudio(evt);
             if (evt.id === client.localUser) {
@@ -325,6 +358,7 @@ export function init(host, client) {
                 options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
             }
         },
+
         videoMuteStatusChanged: async (evt) => {
             game.muteUserVideo(evt);
             if (evt.id === client.localUser) {
@@ -332,14 +366,16 @@ export function init(host, client) {
                 options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
             }
         },
+
         userInitRequest: (evt) => {
             if (game.me && game.me.id) {
                 client.userInitResponse(evt.id, game.me.serialize());
             }
             else {
-                console.log("Local user not initialized");
+                console.warn("Local user not initialized");
             }
         },
+
         userInitResponse: (evt) => {
             if (game.users.has(evt.id)) {
                 const user = game.users.get(evt.id);
@@ -347,6 +383,7 @@ export function init(host, client) {
                 client.setUserPosition(evt);
             }
         },
+
         userMoved: (evt) => {
             if (game.users.has(evt.id)) {
                 const user = game.users.get(evt.id);
@@ -354,17 +391,21 @@ export function init(host, client) {
                 client.setUserPosition(evt);
             }
         },
+
         emote: (evt) => {
             game.emote(evt.id, evt);
         },
+
         setAvatarEmoji: (evt) => {
             game.setAvatarEmoji(evt);
         },
+
         audioActivity: (evt) => {
             game.updateAudioActivity(evt);
         }
     });
 
     login.ready = true;
+
     return forExport;
 }
