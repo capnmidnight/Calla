@@ -27,15 +27,9 @@ export class FullSpatializer extends BaseWebAudioSpatializer {
         Object.seal(this);
     }
 
-    update() {
-        super.update();
-
-        if (this.inNode.refDistance !== this.destination.minDistance) {
-            this.inNode.refDistance = this.destination.minDistance;
-        }
-
-        if (this.inNode.rolloffFactor !== this.destination.rolloff) {
-            this.inNode.rolloffFactor = this.destination.rolloff;
-        }
+    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
+        super.setAudioOutputDevice(minDistance, maxDistance, rolloff, transitionTime);
+        this.inNode.refDistance = minDistance;
+        this.inNode.rolloffFactor = rolloff;
     }
 }

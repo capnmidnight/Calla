@@ -1,9 +1,10 @@
 ﻿import { clamp, project } from "../../math.js";
 import { Destination } from "../Destination.js";
 import { BasePosition } from "../positions/BasePosition.js";
+import { BaseAudioElement } from "../BaseAudioElement.js";
 
 /** Base class providing functionality for spatializers. */
-export class BaseSpatializer extends EventTarget {
+export class BaseSpatializer extends BaseAudioElement {
 
     /**
      * Creates a spatializer that keeps track of the relative position
@@ -14,20 +15,14 @@ export class BaseSpatializer extends EventTarget {
      * @param {BasePosition} position
      */
     constructor(userID, destination, audio, position) {
-        super();
+        super(position);
 
         this.id = userID;
         this.destination = destination;
         this.audio = audio;
-        this.position = position;
         this.volume = 1;
         this.pan = 0;
     }
-
-    setAudioOutputDevice(deviceID) {
-        this.audio.setSinkId(deviceID);
-    }
-
     /**
      * Discard values and make this instance useless.
      */
@@ -40,11 +35,19 @@ export class BaseSpatializer extends EventTarget {
         this.id = null;
     }
 
+    setAudioOutputDevice(deviceID) {
+        this.audio.setSinkId(deviceID);
+    }
+
+    get currentTime() {
+        return this.destination.currentTime;
+    }
+
     /**
      * Run the position interpolation
      */
     update() {
-        this.position.update(this.destination.audioContext.currentTime);
+        super.update();
 
         const lx = this.destination.position.x,
             ly = this.destination.position.y,
@@ -57,14 +60,5 @@ export class BaseSpatializer extends EventTarget {
         this.pan = dist > 0
             ? distX / dist
             : 0;
-    }
-
-    /**
-     * Set the target position
-     * @param {Point} evt
-     */
-    setTarget(evt) {
-        this.position.setTarget(evt, this.destination.audioContext.currentTime, this.destination.transitionTime);
-        this.update();
     }
 }

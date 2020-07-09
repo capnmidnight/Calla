@@ -9,6 +9,7 @@ import { FullSpatializer } from "./spatializers/FullSpatializer.js";
 import { StereoSpatializer } from "./spatializers/StereoSpatializer.js";
 import { GoogleResonanceAudioScene } from "./positions/GoogleResonanceAudioScene.js";
 import { GoogleResonanceAudioSpatializer } from "./spatializers/GoogleResonanceAudioSpatializer.js";
+import { BaseAudioElement } from "./BaseAudioElement.js";
 
 const forceInterpolatedPosition = false,
     contextDestroyingEvt = new Event("contextDestroying"),
@@ -19,21 +20,13 @@ let hasWebAudioAPI = window.hasOwnProperty("AudioListener"),
     isLatestWebAudioAPI = hasWebAudioAPI && AudioListener.prototype.hasOwnProperty("positionX"),
     attemptResonanceAPI = true;
 
-export class Destination extends EventTarget {
+export class Destination extends BaseAudioElement {
 
     constructor() {
-        super();
-
-        this.minDistance = 1;
-        this.maxDistance = 10;
-        this.rolloff = 1;
-        this.transitionTime = 0.125;
+        super(null);
 
         /** @type {AudioContext|MockAudioContext} */
         this.audioContext = null;
-
-        /** @type {BasePosition} */
-        this.position = null;
     }
 
     createContext() {
@@ -84,21 +77,10 @@ export class Destination extends EventTarget {
         }
     }
 
-    setTarget(evt) {
-        this.position.setTarget(evt, this.audioContext.currentTime, this.transitionTime);
-        this.update();
+    get currentTime() {
+        return this.audioContext.currentTime;
     }
 
-    setAudioProperties(evt) {
-        this.minDistance = evt.minDistance;
-        this.maxDistance = evt.maxDistance;
-        this.transitionTime = evt.transitionTime;
-        this.rolloff = evt.rolloff;
-    }
-
-    update() {
-        this.position.update(this.audioContext.currentTime);
-    }
 
     /**
      * 
@@ -108,6 +90,22 @@ export class Destination extends EventTarget {
      * @return {BaseSpatializer}
      */
     createSpatializer(userID, audio, bufferSize) {
+        const spatializer = this._createSpatializer(userID, audio, bufferSize);
+        if (spatializer) {
+            spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
+        }
+
+        return spatializer;
+    }
+
+    /**
+     * 
+     * @param {string} userID
+     * @param {HTMLAudioElement} audio
+     * @param {number} bufferSize
+     * @return {BaseSpatializer}
+     */
+    _createSpatializer(userID, audio, bufferSize) {
         try {
             if (hasWebAudioAPI) {
                 try {

@@ -22,9 +22,6 @@ export class AudioManager extends BaseAudioClient {
         /** @type {Map.<string, BaseSpatializer>} */
         this.sources = new Map();
 
-        /** @type {BaseSpatializer[]} */
-        this.sourceList = [];
-
         this.destination = new Destination();
 
         /** @type {Event[]} */
@@ -67,6 +64,13 @@ export class AudioManager extends BaseAudioClient {
         });
 
         Object.seal(this);
+    }
+
+    setAudioProperties(evt) {
+        this.destination.setAudioProperties(evt.minDistance, evt.maxDistance, evt.rolloff, evt.transitionTime);
+        for (let source of this.sources.values()) {
+            source.setAudioProperties(evt.minDistance, evt.maxDistance, evt.rolloff, evt.transitionTime);
+        }
     }
 
     start() {
@@ -114,9 +118,5 @@ export class AudioManager extends BaseAudioClient {
 
     setLocalPosition(evt) {
         this.destination.setTarget(evt);
-    }
-
-    setAudioProperties(evt) {
-        this.destination.setAudioProperties(evt);
     }
 }
