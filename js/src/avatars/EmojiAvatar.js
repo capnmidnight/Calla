@@ -1,11 +1,15 @@
 ﻿import { BaseAvatar } from "./BaseAvatar.js";
 import { isSurfer } from "../emoji/emoji.js";
+import { Span } from "../html/tags.js";
+import { title } from "../html/attrs.js";
 
 const selfs = new Map();
 
 export class EmojiAvatar extends BaseAvatar {
     constructor(emoji) {
-        super();
+        super(Span(
+            title(emoji.desc),
+            emoji.value));
 
         const self = {
             canSwim: isSurfer(emoji),

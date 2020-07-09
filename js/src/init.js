@@ -91,6 +91,15 @@ export function init(host, client) {
         options.gamepadIndex = game.gamepadIndex;
     }
 
+    function refreshUser(userID) {
+        if (game.users.has(userID)) {
+            const user = game.users.get(userID);
+            if (!user.isMe) {
+                directory.set(user);
+            }
+        }
+    }
+
     document.body.style.display = "grid";
     document.body.style.gridTemplateRows = "auto 1fr auto";
     let z = 0;
@@ -258,6 +267,7 @@ export function init(host, client) {
             evt.user.addEventListener("userPositionNeeded", (evt2) => {
                 client.userInitRequest(evt2.id);
             });
+            refreshUser(evt.user.id);
         },
 
         toggleAudio: () => {
@@ -303,8 +313,18 @@ export function init(host, client) {
     directory.addEventListeners({
         refreshUserDirectory: () => {
             directory.clear();
-            for (let user of client.users()) {
-                directory.set("Refresh", user[0], user[1]);
+            for (let userID of game.users.keys()) {
+                if (userID !== client.localUser) {
+                    refreshUser(userID);
+                }
+            }
+        },
+
+        warpTo: (evt) => {
+            if (game.users.has(evt.id)) {
+                const user = game.users.get(evt.id);
+                game.warpMeTo(user.position._tx, user.position._ty);
+                directory.hide();
             }
         }
     });
@@ -340,15 +360,16 @@ export function init(host, client) {
 
         participantJoined: (evt) => {
             game.addUser(evt);
-            directory.set("Participant Joined", evt.id, evt.displayName);
         },
 
         videoAdded: (evt) => {
             game.setAvatarVideo(evt);
+            refreshUser(evt.id);
         },
 
         videoRemoved: (evt) => {
             game.setAvatarVideo(evt);
+            refreshUser(evt.id);
         },
 
         participantLeft: (evt) => {
@@ -362,11 +383,12 @@ export function init(host, client) {
             if (evt.id === client.localUser) {
                 options.avatarURL = evt.avatarURL;
             }
+            refreshUser(evt.id);
         },
 
         displayNameChange: (evt) => {
             game.changeUserName(evt);
-            directory.set("Display Name Changed", evt.id, evt.displayName);
+            refreshUser(evt.id);
         },
 
         audioMuteStatusChanged: async (evt) => {
@@ -399,7 +421,7 @@ export function init(host, client) {
                 const user = game.users.get(evt.id);
                 user.deserialize(evt);
                 client.setUserPosition(evt);
-                directory.set("User Init Response", evt.id, evt.displayName);
+                refreshUser(evt.id);
             }
         },
 
@@ -409,6 +431,7 @@ export function init(host, client) {
                 user.moveTo(evt.x, evt.y, settings.transitionSpeed);
                 client.setUserPosition(evt);
             }
+            refreshUser(evt.id);
         },
 
         emote: (evt) => {
@@ -417,6 +440,7 @@ export function init(host, client) {
 
         setAvatarEmoji: (evt) => {
             game.setAvatarEmoji(evt);
+            refreshUser(evt.id);
         },
 
         audioActivity: (evt) => {

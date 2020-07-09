@@ -323,11 +323,23 @@ export class Game extends EventTarget {
         return tile;
     }
 
+    moveMeTo(x, y) {
+        if (this.map.isClear(x, y, this.me.avatarEmoji)) {
+            this.me.moveTo(x, y, this.transitionSpeed);
+            this.targetOffsetCameraX = 0;
+            this.targetOffsetCameraY = 0;
+        }
+    }
+
+
     moveMeBy(dx, dy) {
         const clearTile = this.map.getClearTile(this.me.position._tx, this.me.position._ty, dx, dy, this.me.avatarEmoji);
-        this.me.moveTo(clearTile.x, clearTile.y, this.transitionSpeed);
-        this.targetOffsetCameraX = 0;
-        this.targetOffsetCameraY = 0;
+        this.moveMeTo(clearTile.x, clearTile.y);
+    }
+
+    warpMeTo(x, y) {
+        const clearTile = this.map.getClearTileNear(x, y, 3, this.me.avatarEmoji);
+        this.moveMeTo(clearTile.x, clearTile.y);
     }
 
     zoom(deltaZ) {

@@ -9,17 +9,16 @@ export class PhotoAvatar extends BaseAvatar {
      * @param {(URL|string)} url
      */
     constructor(url) {
-        super();
+        super(Canvas());
 
         /** @type {HTMLCanvasElement} */
-        this.image = null;
+        this.element = null;
 
         const img = new Image();
         img.addEventListener("load", (evt) => {
-            this.image = Canvas(
-                width(img.width),
-                height(img.height));
-            const g = this.image.getContext("2d");
+            this.element.width = img.width;
+            this.element.height = img.height;
+            const g = this.element.getContext("2d");
             g.clearRect(0, 0, img.width, img.height);
             g.imageSmoothingEnabled = false;
             g.drawImage(img, 0, 0);
@@ -38,17 +37,15 @@ export class PhotoAvatar extends BaseAvatar {
      * @param {any} height
      */
     draw(g, width, height) {
-        if (this.image !== null) {
-            const offset = (this.image.width - this.image.height) / 2,
-                sx = Math.max(0, offset),
-                sy = Math.max(0, -offset),
-                dim = Math.min(this.image.width, this.image.height);
-            g.drawImage(
-                this.image,
-                sx, sy,
-                dim, dim,
-                0, 0,
-                width, height);
-        }
+        const offset = (this.element.width - this.element.height) / 2,
+            sx = Math.max(0, offset),
+            sy = Math.max(0, -offset),
+            dim = Math.min(this.element.width, this.element.height);
+        g.drawImage(
+            this.element,
+            sx, sy,
+            dim, dim,
+            0, 0,
+            width, height);
     }
 }

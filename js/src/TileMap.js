@@ -132,4 +132,25 @@ export class TileMap {
 
         return { x, y };
     }
+
+    getClearTileNear(x, y, maxRadius, avatar) {
+        for (let r = 1; r <= maxRadius; ++r) {
+            for (let dx = -r; dx <= r; ++dx) {
+                const dy1 = r - Math.abs(dx);
+                const dy2 = -dy1;
+                const tx = x + dx;
+                const ty1 = y + dy1;
+                const ty2 = y + dy2;
+
+                if (this.isClear(tx, ty1, avatar)) {
+                    return { x: tx, y: ty1 };
+                }
+                else if (this.isClear(tx, ty2, avatar)) {
+                    return { x: tx, y: ty2 };
+                }
+            }
+        }
+
+        return { x, y };
+    }
 }

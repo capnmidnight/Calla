@@ -34,6 +34,7 @@ export class FormDialog extends EventTarget {
             || this.element.appendChild(Div(className("content")));
 
         style({
+            padding: "1em",
             overflowY: "scroll",
             gridArea: "3/1/4/4"
         }).apply(this.content);

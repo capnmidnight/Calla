@@ -1,10 +1,19 @@
-﻿import { style, id } from "../html/attrs.js";
+﻿import { row, style, grid } from "../html/attrs.js";
 import { onClick } from "../html/evts.js";
-import { Button, clear, Div } from "../html/tags.js";
+import { Button, Div } from "../html/tags.js";
+import { User } from "../User.js";
 import { FormDialog } from "./FormDialog.js";
 
 const refreshDirectoryEvt = new Event("refreshUserDirectory");
+const newRowColor = "lightgreen";
+const avatarSize = style({ height: "32px" });
+const warpToEvt = Object.assign(
+    new Event("warpTo"),
+    {
+        id: null
+    });
 
+const ROW_TIMEOUT = 3000;
 export class UserDirectoryForm extends FormDialog {
 
     constructor() {
@@ -12,10 +21,25 @@ export class UserDirectoryForm extends FormDialog {
 
         const _ = (evt) => () => this.dispatchEvent(evt);
 
-        style({
-            gridTemplateColumns: "1fr 5fr",
-            columGap: "5px"
-        }).apply(this.content);
+        /** @type {Map.<string, Element[]>} */
+        this.rows = new Map();
+
+        this.content.append(
+            this.table = Div(
+                style({
+                    display: "grid",
+                    gridTemplateColumns: "auto auto auto 1fr",
+                    gridTemplateRows: "min-content",
+                    columnGap: "5px",
+                    width: "100%"
+                })));
+
+        this.table.append(
+            Div(grid(1, 1), ""),
+            Div(grid(2, 1), "ID"),
+            Div(grid(3, 1), "Location"),
+            Div(grid(4, 1), "Avatar"),
+            Div(grid(5, 1), "User Name"));
 
         this.footer.append(
             Button(
@@ -29,50 +53,76 @@ export class UserDirectoryForm extends FormDialog {
 
     /**
      * 
-     * @param {string} from
-     * @param {string} userID
-     * @param {string} userName
+     * @param {User} user
      */
-    set(from, userID, userName) {
-        this.delete(userID, true);
-        const elemID = `user_${userID}`;
+    set(user) {
+        this.delete(user.id);
+        const row = this.rows.size + 2;
         const elem = Div(
-            id(elemID),
-            style({ backgroundColor: "lightgreen" }),
-            `${from.toLocaleUpperCase()}: ${userName} - (${userID})`);
-        this.content.append(elem);
+            grid(1, row, 4, 1),
+            style({
+                backgroundColor: newRowColor,
+                zIndex: -1
+            }));
         setTimeout(() => {
-            elem.style.backgroundColor = "";
-        }, 3000);
+            this.table.removeChild(elem);
+        }, ROW_TIMEOUT);
+        this.table.append(elem);
+
+        let avatar = "N/A";
+        if (user.avatar && user.avatar.element) {
+            avatar = user.avatar.element;
+            avatarSize.apply(avatar);
+        }
+
+        const elems = [
+            Button(
+                grid(1, row),
+                onClick(() => {
+                    warpToEvt.id = user.id;
+                    this.dispatchEvent(warpToEvt);
+                }),
+                "Visit"),
+            Div(grid(2, row), user.id),
+            Div(grid(3, row), `<x: ${user.position._tx}, y: ${user.position._ty}>`),
+            Div(grid(4, row), avatar),
+            Div(grid(5, row), user.displayName)];
+
+        this.rows.set(user.id, elems);
+        this.table.append(...elems);
     }
 
-    delete(userID, now) {
-        const elemID = `user_${userID}`;
-        const elem = document.getElementById(elemID);
-        if (elem !== null) {
-            if (now) {
-                elem.parentElement.removeChild(elem);
+    delete(userID) {
+        if (this.rows.has(userID)) {
+            const elems = this.rows.get(userID);
+            this.rows.delete(userID);
+            for (let elem of elems) {
+                this.table.removeChild(elem);
             }
-            else {
-                elem.style.backgroundColor = "red";
-                setTimeout(() => {
-                    elem.parentElement.removeChild(elem);
-                }, 3000);
+
+            let rowCount = 2;
+            for (let elems of this.rows.values()) {
+                const r = row(rowCount++);
+                for (let elem of elems) {
+                    r.apply(elem);
+                }
             }
         }
     }
 
     clear() {
-        clear(this.content);
+        for (let id of this.rows.keys()) {
+            this.delete(id);
+        }
     }
 
     warn(...rest) {
         const elem = Div(
             style({ backgroundColor: "yellow" }),
             ...rest.map(i => i.toString()));
-        this.content.append(elem);
+        this.table.append(elem);
         setTimeout(() => {
-            elem.parentElement.removeChild(elem);
+            this.table.removeChild(elem);
         }, 5000);
     }
 

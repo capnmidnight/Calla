@@ -1,5 +1,9 @@
 ﻿export class BaseAvatar {
 
+    constructor(element) {
+        this.element = element;
+    }
+
     /** @type {boolean} */
     get canSwim() {
         return false;
