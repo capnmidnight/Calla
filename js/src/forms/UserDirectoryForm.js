@@ -28,7 +28,7 @@ export class UserDirectoryForm extends FormDialog {
             this.table = Div(
                 style({
                     display: "grid",
-                    gridTemplateColumns: "auto auto auto 1fr",
+                    gridTemplateColumns: "auto auto auto auto 1fr",
                     gridTemplateRows: "min-content",
                     columnGap: "5px",
                     width: "100%"
@@ -59,7 +59,7 @@ export class UserDirectoryForm extends FormDialog {
         this.delete(user.id);
         const row = this.rows.size + 2;
         const elem = Div(
-            grid(1, row, 4, 1),
+            grid(1, row, 5, 1),
             style({
                 backgroundColor: newRowColor,
                 zIndex: -1
