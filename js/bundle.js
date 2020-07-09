@@ -485,6 +485,19 @@ Array.prototype.removeAt = function (idx) {
     this.splice(idx, 1);
 };
 
+Array.prototype.scan = function (...tests) {
+    const lastTest = (v) => !!v;
+    tests.push(lastTest);
+    for (let test of tests) {
+        const filtered = this.filter(test);
+        if (filtered.length > 0) {
+            return filtered[0];
+        }
+    }
+
+    return null;
+};
+
 String.prototype.firstLetterToUpper = function () {
     return this[0].toLocaleUpperCase()
         + this.substring(1);
@@ -4944,7 +4957,6 @@ class EmojiAvatar extends BaseAvatar {
             const size = 100;
             g.font = size + "px sans-serif";
             const metrics = g.measureText(this.value);
-            console.log(this.value, metrics);
             self.aspectRatio = metrics.width / size;
             self.x = (size - metrics.width) / 2;
             self.y = metrics.actualBoundingBoxAscent / 2;
@@ -5832,7 +5844,7 @@ class Game extends EventTarget {
         }
 
         if (!mutingUser) {
-            console.log("no user");
+            console.warn("No user found to mute audio, retrying in 1 second.");
             setTimeout(this.muteUserAudio.bind(this, evt), 1000);
         }
         else {
@@ -5847,7 +5859,7 @@ class Game extends EventTarget {
         }
 
         if (!mutingUser) {
-            console.log("no user");
+            console.warn("No user found to mute video, retrying in 1 second.");
             setTimeout(this.muteUserVideo.bind(this, evt), 1000);
         }
         else {
@@ -5865,11 +5877,9 @@ class Game extends EventTarget {
                 callback(user);
             }
             else {
-                console.log("No user, trying again in a quarter second");
+                console.warn("No user, trying again in a quarter second");
                 if (timeout > 0) {
-                    setTimeout(() => {
-                        this.withUser(id, callback, timeout - 250);
-                    }, 250);
+                    setTimeout(this.withUser.bind(this, id, callback, timeout - 250), 250);
                 }
             }
         }
@@ -6430,7 +6440,6 @@ class BaseJitsiClient extends EventTarget {
     }
 
     dispatchEvent(evt) {
-        console.log(evt.type, evt);
         if (this.localUser !== null) {
             if (evt.id === null
                 || evt.id === undefined
@@ -6498,6 +6507,25 @@ class BaseJitsiClient extends EventTarget {
             this.setDisplayName(userName);
         }
 
+
+        const audioOutputs = await this.getAudioOutputDevicesAsync();
+        const output = audioOutputs.scan(
+            (d) => d.deviceId === "communications",
+            (d) => d.deviceId === "default");
+
+        if (output) {
+            await this.setAudioOutputDevice(output);
+        }
+
+        const audioInputs = await this.getAudioInputDevicesAsync();
+        const input = audioInputs.scan(
+            (d) => d.deviceId === "communications",
+            (d) => d.deviceId === "default");
+
+        if (input) {
+            await this.setAudioInputDeviceAsync(input);
+        }
+
         return joinInfo;
     }
 
@@ -6517,7 +6545,7 @@ class BaseJitsiClient extends EventTarget {
         const leaveTask = this.once("videoConferenceLeft", 5000);
         const maybeLeaveTask = this.leave();
         if (maybeLeaveTask instanceof Promise) {
-            console.trace("Leaving", await maybeLeaveTask);
+            await maybeLeaveTask;
         }
         return await leaveTask;
     }
@@ -6768,46 +6796,6 @@ function init(host, client) {
             login
         ].filter(x => x.element);
 
-    document.body.style.display = "grid";
-    document.body.style.gridTemplateRows = "auto 1fr auto";
-    let z = 0;
-    for (let e of forAppend) {
-        if (e.element) {
-            let g = null;
-            if (e === headbar) {
-                g = grid(1, 1);
-            }
-            else if (e === footbar) {
-                g = grid(1, 3);
-            }
-            else if (e === game || e === login) {
-                g = grid(1, 1, 1, 3);
-            }
-            else {
-                g = grid(1, 2);
-            }
-            g.apply(e.element);
-            e.element.style.zIndex = (z++);
-            document.body.append(e.element);
-        }
-    }
-
-    refreshGamepads();
-    headbar.enabled = false;
-    footbar.enabled = false;
-    options.drawHearing = game.drawHearing = settings.drawHearing;
-    options.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
-    options.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;
-    options.audioRolloff = settings.audioRolloff;
-    options.fontSize = game.fontSize = settings.fontSize;
-    options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
-    options.inputBinding = game.inputBinding = settings.inputBinding;
-    game.cameraZ = game.targetCameraZ = settings.zoom;
-    login.userName = settings.userName;
-    login.roomName = settings.roomName;
-
-    showLogin();
-
     function showLogin() {
         game.hide();
         options.hide();
@@ -6852,12 +6840,53 @@ function init(host, client) {
         options.gamepadIndex = game.gamepadIndex;
     }
 
+    document.body.style.display = "grid";
+    document.body.style.gridTemplateRows = "auto 1fr auto";
+    let z = 0;
+    for (let e of forAppend) {
+        if (e.element) {
+            let g = null;
+            if (e === headbar) {
+                g = grid(1, 1);
+            }
+            else if (e === footbar) {
+                g = grid(1, 3);
+            }
+            else if (e === game || e === login) {
+                g = grid(1, 1, 1, 3);
+            }
+            else {
+                g = grid(1, 2);
+            }
+            g.apply(e.element);
+            e.element.style.zIndex = (z++);
+            document.body.append(e.element);
+        }
+    }
+
+    refreshGamepads();
+    headbar.enabled = false;
+    footbar.enabled = false;
+    options.drawHearing = game.drawHearing = settings.drawHearing;
+    options.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
+    options.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;
+    options.audioRolloff = settings.audioRolloff;
+    options.fontSize = game.fontSize = settings.fontSize;
+    options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
+    options.inputBinding = game.inputBinding = settings.inputBinding;
+    game.cameraZ = game.targetCameraZ = settings.zoom;
+    login.userName = settings.userName;
+    login.roomName = settings.roomName;
+
+    showLogin();
+
     window.addEventListeners({
+        gamepadconnected: refreshGamepads,
+        gamepaddisconnected: refreshGamepads,
+
         resize: () => {
             game.resize();
-        },
-        gamepadconnected: refreshGamepads,
-        gamepaddisconnected: refreshGamepads
+        }
     });
 
     headbar.addEventListeners({
@@ -6867,20 +6896,24 @@ function init(host, client) {
                 options.toggleOpen();
             }
         },
+
         toggleInstructions: () => {
             if (!emoji.isOpen()) {
                 options.hide();
                 login.toggleOpen();
             }
         },
+
         toggleFullscreen: () => {
             headbar.isFullscreen = !headbar.isFullscreen;
         },
+
         tweet: () => {
             const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
                 url = new URL("https://twitter.com/intent/tweet?text=" + message);
             open(url);
         },
+
         leave: () => {
             client.leave();
         }
@@ -6888,12 +6921,15 @@ function init(host, client) {
 
     footbar.addEventListeners({
         selectEmoji: selectEmojiAsync,
+
         emote: () => {
             game.emote(client.localUser, game.currentEmoji);
         },
+
         toggleAudio: () => {
             client.toggleAudioAsync();
         },
+
         toggleVideo: () => {
             client.toggleVideoAsync();
         }
@@ -6910,6 +6946,8 @@ function init(host, client) {
 
 
     options.addEventListeners({
+        audioPropertiesChanged: setAudioProperties,
+
         selectAvatar: async () => {
             withEmojiSelection((e) => {
                 settings.avatarEmoji
@@ -6919,51 +6957,65 @@ function init(host, client) {
                 client.setAvatarEmoji(e);
             });
         },
+
         avatarURLChanged: () => {
             client.setAvatarURL(options.avatarURL);
         },
-        audioPropertiesChanged: setAudioProperties,
+
         toggleVideo: () => {
             client.toggleVideoAsync();
         },
+
         toggleDrawHearing: () => {
             settings.drawHearing = game.drawHearing = options.drawHearing;
         },
+
         fontSizeChanged: () => {
             settings.fontSize = game.fontSize = options.fontSize;
         },
+
         audioInputChanged: () => {
             client.setAudioInputDeviceAsync(options.currentAudioInputDevice);
         },
+
         audioOutputChanged: () => {
             client.setAudioOutputDevice(options.currentAudioOutputDevice);
         },
+
         videoInputChanged: () => {
             client.setVideoInputDeviceAsync(options.currentVideoInputDevice);
         },
+
         gamepadChanged: () => {
             settings.gamepadIndex = game.gamepadIndex = options.gamepadIndex;
         },
+
         inputBindingChanged: () => {
             settings.inputBinding = game.inputBinding = options.inputBinding;
         }
     });
 
     game.addEventListeners({
+        emojiNeeded: selectEmojiAsync,
+
         emote: (evt) => {
             client.emote(evt.emoji);
         },
+
         userJoined: (evt) => {
             evt.user.addEventListener("userPositionNeeded", (evt2) => {
                 client.userInitRequest(evt2.id);
             });
         },
+
         toggleAudio: () => {
             client.toggleAudioAsync();
         },
+
         toggleVideo: () => {
             client.toggleVideoAsync();
         },
+
         gameStarted: () => {
             grid(1, 2).apply(login.element);
             login.hide();
@@ -6984,12 +7036,13 @@ function init(host, client) {
                 = options.avatarEmoji
                 = game.me.avatarEmoji;
         },
+
         gameEnded: () => {
             game.hide();
             login.connected = false;
             showLogin();
         },
-        emojiNeeded: selectEmojiAsync,
+
         zoomChanged: () => {
             settings.zoom = game.targetCameraZ;
         }
@@ -7019,31 +7072,39 @@ function init(host, client) {
             game.muteUserVideo({ id: client.localUser, muted: videoMuted });
             footbar.videoEnabled = !videoMuted;
         },
+
         videoConferenceLeft: (evt) => {
             game.end();
         },
+
         participantJoined: (evt) => {
             game.addUser(evt);
         },
+
         videoAdded: (evt) => {
             game.setAvatarVideo(evt);
         },
+
         videoRemoved: (evt) => {
             game.setAvatarVideo(evt);
         },
+
         participantLeft: (evt) => {
             game.removeUser(evt);
             client.removeUser(evt);
         },
+
         avatarChanged: (evt) => {
             game.setAvatarURL(evt);
             if (evt.id === client.localUser) {
                 options.avatarURL = evt.avatarURL;
             }
         },
+
         displayNameChange: (evt) => {
             game.changeUserName(evt);
         },
+
         audioMuteStatusChanged: async (evt) => {
             game.muteUserAudio(evt);
             if (evt.id === client.localUser) {
@@ -7051,6 +7112,7 @@ function init(host, client) {
                 options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
             }
         },
+
         videoMuteStatusChanged: async (evt) => {
             game.muteUserVideo(evt);
             if (evt.id === client.localUser) {
@@ -7058,14 +7120,16 @@ function init(host, client) {
                 options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
             }
         },
+
         userInitRequest: (evt) => {
             if (game.me && game.me.id) {
                 client.userInitResponse(evt.id, game.me.serialize());
             }
             else {
-                console.log("Local user not initialized");
+                console.warn("Local user not initialized");
             }
         },
+
         userInitResponse: (evt) => {
             if (game.users.has(evt.id)) {
                 const user = game.users.get(evt.id);
@@ -7073,6 +7137,7 @@ function init(host, client) {
                 client.setUserPosition(evt);
             }
         },
+
         userMoved: (evt) => {
             if (game.users.has(evt.id)) {
                 const user = game.users.get(evt.id);
@@ -7080,18 +7145,22 @@ function init(host, client) {
                 client.setUserPosition(evt);
             }
         },
+
         emote: (evt) => {
             game.emote(evt.id, evt);
         },
+
         setAvatarEmoji: (evt) => {
             game.setAvatarEmoji(evt);
         },
+
         audioActivity: (evt) => {
             game.updateAudioActivity(evt);
         }
     });
 
     login.ready = true;
+
     return forExport;
 }
 
@@ -7299,8 +7368,54 @@ class WebAudioNewListenerPosition extends WebAudioNodePosition {
     }
 }
 
+class BaseAudioElement extends EventTarget {
+    /**
+     * 
+     * @param {BasePosition} position
+     */
+    constructor(position) {
+        super();
+
+        this.minDistance = 1;
+        this.maxDistance = 10;
+        this.rolloff = 1;
+        this.transitionTime = 0.125;
+
+        /** @type {BasePosition} */
+        this.position = position;
+    }
+
+    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
+        this.minDistance = minDistance;
+        this.maxDistance = maxDistance;
+        this.transitionTime = transitionTime;
+        this.rolloff = rolloff;
+    }
+
+    get currentTime() {
+        throw new Error("Not implemented in base class");
+    }
+
+    /**
+     * Set the target position
+     * @param {Point} evt
+     */
+    setTarget(evt) {
+        if (this.position) {
+            this.position.setTarget(evt, this.currentTime, this.transitionTime);
+            this.update();
+        }
+    }
+
+    update() {
+        if (this.position) {
+            this.position.update(this.currentTime);
+        }
+    }
+}
+
 /** Base class providing functionality for spatializers. */
-class BaseSpatializer extends EventTarget {
+class BaseSpatializer extends BaseAudioElement {
 
     /**
      * Creates a spatializer that keeps track of the relative position
@@ -7311,20 +7426,14 @@ class BaseSpatializer extends EventTarget {
      * @param {BasePosition} position
      */
     constructor(userID, destination, audio, position) {
-        super();
+        super(position);
 
         this.id = userID;
         this.destination = destination;
         this.audio = audio;
-        this.position = position;
         this.volume = 1;
         this.pan = 0;
     }
-
-    setAudioOutputDevice(deviceID) {
-        this.audio.setSinkId(deviceID);
-    }
-
     /**
      * Discard values and make this instance useless.
      */
@@ -7337,11 +7446,19 @@ class BaseSpatializer extends EventTarget {
         this.id = null;
     }
 
+    setAudioOutputDevice(deviceID) {
+        this.audio.setSinkId(deviceID);
+    }
+
+    get currentTime() {
+        return this.destination.currentTime;
+    }
+
     /**
      * Run the position interpolation
      */
     update() {
-        this.position.update(this.destination.audioContext.currentTime);
+        super.update();
 
         const lx = this.destination.position.x,
             ly = this.destination.position.y,
@@ -7354,15 +7471,6 @@ class BaseSpatializer extends EventTarget {
         this.pan = dist > 0
             ? distX / dist
             : 0;
-    }
-
-    /**
-     * Set the target position
-     * @param {Point} evt
-     */
-    setTarget(evt) {
-        this.position.setTarget(evt, this.destination.audioContext.currentTime, this.destination.transitionTime);
-        this.update();
     }
 }
 
@@ -7427,7 +7535,7 @@ function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz, bufferSiz
     return count === 0 ? 0 : (sum / count);
 }
 
-class BaseWebAudioSpatializer extends BaseSpatializer {
+class BaseAnalyzedSpatializer extends BaseSpatializer {
 
     /**
      * 
@@ -7437,9 +7545,8 @@ class BaseWebAudioSpatializer extends BaseSpatializer {
      * @param {BasePosition} position
      * @param {number} bufferSize
      * @param {PannerNode|StereoPannerNode} inNode
-     * @param {GainNode=} outNode
      */
-    constructor(userID, destination, audio, position, bufferSize, inNode, outNode) {
+    constructor(userID, destination, audio, position, bufferSize, inNode) {
         super(userID, destination, audio, position);
 
         this.audio.volume = 0;
@@ -7454,13 +7561,6 @@ class BaseWebAudioSpatializer extends BaseSpatializer {
 
         /** @type {PannerNode|StereoPannerNode} */
         this.inNode = inNode;
-
-        this.outNode = outNode || inNode;
-        this.outNode.connect(this.destination.audioContext.destination);
-
-        if (this.inNode !== this.outNode) {
-            this.inNode.connect(this.outNode);
-        }
 
         /** @type {boolean} */
         this.wasActive = false;
@@ -7522,18 +7622,46 @@ class BaseWebAudioSpatializer extends BaseSpatializer {
             this.source.disconnect(this.inNode);
         }
 
-        this.outNode.disconnect(this.destination.audioContext.destination);
+        this.source = null;
+        this.stream = null;
+        this.inNode = null;
+        this.analyser = null;
+        this.buffer = null;
 
+        super.dispose();
+    }
+}
+
+class BaseWebAudioSpatializer extends BaseAnalyzedSpatializer {
+
+    /**
+     * 
+     * @param {string} userID
+     * @param {Destination} destination
+     * @param {HTMLAudioElement} audio
+     * @param {BasePosition} position
+     * @param {number} bufferSize
+     * @param {PannerNode|StereoPannerNode} inNode
+     * @param {GainNode=} outNode
+     */
+    constructor(userID, destination, audio, position, bufferSize, inNode, outNode) {
+        super(userID, destination, audio, position, bufferSize, inNode);
+
+        this.outNode = outNode || inNode;
+        this.outNode.connect(this.destination.audioContext.destination);
+
+        if (this.inNode !== this.outNode) {
+            this.inNode.connect(this.outNode);
+        }
+    }
+
+    dispose() {
         if (this.inNode !== this.outNode) {
             this.inNode.disconnect(this.outNode);
         }
 
-        this.source = null;
-        this.stream = null;
+        this.outNode.disconnect(this.destination.audioContext.destination);
         this.outNode = null;
-        this.inNode = null;
-        this.analyser = null;
-        this.buffer = null;
 
         super.dispose();
     }
@@ -7565,16 +7693,10 @@ class FullSpatializer extends BaseWebAudioSpatializer {
         Object.seal(this);
     }
 
-    update() {
-        super.update();
-
-        if (this.inNode.refDistance !== this.destination.minDistance) {
-            this.inNode.refDistance = this.destination.minDistance;
-        }
-
-        if (this.inNode.rolloffFactor !== this.destination.rolloff) {
-            this.inNode.rolloffFactor = this.destination.rolloff;
-        }
+    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
+        super.setAudioOutputDevice(minDistance, maxDistance, rolloff, transitionTime);
+        this.inNode.refDistance = minDistance;
+        this.inNode.rolloffFactor = rolloff;
     }
 }
 
@@ -7637,47 +7759,7 @@ class GoogleResonanceAudioScene extends InterpolatedPosition {
     }
 }
 
-const audioActivityEvt$1 = Object.assign(new Event("audioActivity", {
-    id: null,
-    isActive: false
-})),
-    activityCounterMin$1 = 0,
-    activityCounterMax$1 = 60,
-    activityCounterThresh$1 = 5;
-
-/**
- * 
- * @param {number} frequency
- * @param {number} sampleRate
- * @param {number} bufferSize
- */
-function frequencyToIndex$1(frequency, sampleRate, bufferSize) {
-    var nyquist = sampleRate / 2;
-    var index = Math.round(frequency / nyquist * bufferSize);
-    return clamp(index, 0, bufferSize)
-}
-
-/**
- * 
- * @param {AnalyserNode} analyser
- * @param {Float32Array} frequencies
- * @param {number} minHz
- * @param {number} maxHz
- * @param {number} bufferSize
- */
-function analyserFrequencyAverage$1(analyser, frequencies, minHz, maxHz, bufferSize) {
-    const sampleRate = analyser.context.sampleRate,
-        start = frequencyToIndex$1(minHz, sampleRate, bufferSize),
-        end = frequencyToIndex$1(maxHz, sampleRate, bufferSize),
-        count = end - start;
-    let sum = 0;
-    for (let i = start; i < end; ++i) {
-        sum += frequencies[i];
-    }
-    return count === 0 ? 0 : (sum / count);
-}
-
-class GoogleResonanceAudioSpatializer extends BaseSpatializer {
+class GoogleResonanceAudioSpatializer extends BaseAnalyzedSpatializer {
 
     /**
      * 
@@ -7688,86 +7770,29 @@ class GoogleResonanceAudioSpatializer extends BaseSpatializer {
      */
     constructor(userID, destination, audio, bufferSize) {
         const position = new InterpolatedPosition();
-        super(userID, destination, audio, position);
+        const resNode = destination.position.scene.createSource({
+            minDistance: destination.minDistance,
+            maxDistance: destination.maxDistance
+        });
 
-        this.audio.volume = 0;
+        super(userID, destination, audio, position, bufferSize, resNode.input);
 
-        this.bufferSize = bufferSize;
-        this.buffer = new Float32Array(this.bufferSize);
+        this.resNode = resNode;
+    }
 
-        /** @type {AnalyserNode} */
-        this.analyser = this.destination.audioContext.createAnalyser();
-        this.analyser.fftSize = 2 * this.bufferSize;
-        this.analyser.smoothingTimeConstant = 0.2;
-
-        this.inNode = this.destination.position.scene.createSource();
-
-        /** @type {boolean} */
-        this.wasActive = false;
-        this.lastAudible = true;
-        this.activityCounter = 0;
-
-        /** @type {MediaStream} */
-        this.stream = null;
-
-        /** @type {MediaSource} */
-        this.source = null;
+    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
+        super.setAudioOutputDevice(minDistance, maxDistance, rolloff, transitionTime);
+        this.resNode.setMinDistance(minDistance);
+        this.resNode.setMaxDistance(maxDistance);
     }
 
     update() {
         super.update();
-
-        this.inNode.setPosition(this.position.x, 0, this.position.y);
-
-        if (!this.source) {
-            try {
-                if (!this.stream) {
-                    this.stream = !!this.audio.mozCaptureStream
-                        ? this.audio.mozCaptureStream()
-                        : this.audio.captureStream();
-                }
-
-                if (this.stream.active) {
-                    this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
-                    this.source.connect(this.inNode.input);
-                }
-            }
-            catch (exp) {
-                console.warn("Source isn't available yet. Will retry in a moment. Reason: ", exp);
-            }
-        }
-
-        if (!!this.source) {
-            this.analyser.getFloatFrequencyData(this.buffer);
-
-            const average = 1.1 + analyserFrequencyAverage$1(this.analyser, this.buffer, 85, 255, this.bufferSize) / 100;
-            if (average >= 0.5 && this.activityCounter < activityCounterMax$1) {
-                this.activityCounter++;
-            } else if (average < 0.5 && this.activityCounter > activityCounterMin$1) {
-                this.activityCounter--;
-            }
-
-            const isActive = this.activityCounter > activityCounterThresh$1;
-            if (this.wasActive !== isActive) {
-                this.wasActive = isActive;
-                audioActivityEvt$1.id = this.id;
-                audioActivityEvt$1.isActive = isActive;
-                this.dispatchEvent(audioActivityEvt$1);
-            }
-        }
+        this.resNode.setPosition(this.position.x, 0, this.position.y);
     }
 
     dispose() {
-        if (!!this.source) {
-            this.source.disconnect(this.inNode.input);
-        }
-
-        this.source = null;
-        this.stream = null;
-        this.inNode = null;
-        this.analyser = null;
-        this.buffer = null;
-
+        this.resNode = null;
         super.dispose();
     }
 }
@@ -7783,21 +7808,13 @@ let hasWebAudioAPI = window.hasOwnProperty("AudioListener"),
     isLatestWebAudioAPI = hasWebAudioAPI && AudioListener.prototype.hasOwnProperty("positionX"),
     attemptResonanceAPI = true;
 
-class Destination extends EventTarget {
+class Destination extends BaseAudioElement {
 
     constructor() {
-        super();
-
-        this.minDistance = 1;
-        this.maxDistance = 10;
-        this.rolloff = 1;
-        this.transitionTime = 0.125;
+        super(null);
 
         /** @type {AudioContext|MockAudioContext} */
         this.audioContext = null;
-
-        /** @type {BasePosition} */
-        this.position = null;
     }
 
     createContext() {
@@ -7848,21 +7865,10 @@ class Destination extends EventTarget {
         }
     }
 
-    setTarget(evt) {
-        this.position.setTarget(evt, this.audioContext.currentTime, this.transitionTime);
-        this.update();
+    get currentTime() {
+        return this.audioContext.currentTime;
     }
 
-    setAudioProperties(evt) {
-        this.minDistance = evt.minDistance;
-        this.maxDistance = evt.maxDistance;
-        this.transitionTime = evt.transitionTime;
-        this.rolloff = evt.rolloff;
-    }
-
-    update() {
-        this.position.update(this.audioContext.currentTime);
-    }
 
     /**
      * 
@@ -7872,6 +7878,22 @@ class Destination extends EventTarget {
      * @return {BaseSpatializer}
      */
     createSpatializer(userID, audio, bufferSize) {
+        const spatializer = this._createSpatializer(userID, audio, bufferSize);
+        if (spatializer) {
+            spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
+        }
+
+        return spatializer;
+    }
+
+    /**
+     * 
+     * @param {string} userID
+     * @param {HTMLAudioElement} audio
+     * @param {number} bufferSize
+     * @return {BaseSpatializer}
+     */
+    _createSpatializer(userID, audio, bufferSize) {
         try {
             if (hasWebAudioAPI) {
                 try {
@@ -7923,7 +7945,7 @@ class Destination extends EventTarget {
 }
 
 const BUFFER_SIZE = 1024,
-    audioActivityEvt$2 = Object.assign(new Event("audioActivity", {
+    audioActivityEvt$1 = Object.assign(new Event("audioActivity", {
         id: null,
         isActive: false
     }));
@@ -7934,16 +7956,13 @@ class AudioManager extends BaseAudioClient {
         super();
 
         this.onAudioActivity = (evt) => {
-            audioActivityEvt$2.id = evt.id;
-            audioActivityEvt$2.isActive = evt.isActive;
-            this.dispatchEvent(audioActivityEvt$2);
+            audioActivityEvt$1.id = evt.id;
+            audioActivityEvt$1.isActive = evt.isActive;
+            this.dispatchEvent(audioActivityEvt$1);
         };
 
         /** @type {Map.<string, BaseSpatializer>} */
         this.sources = new Map();
-
-        /** @type {BaseSpatializer[]} */
-        this.sourceList = [];
 
         this.destination = new Destination();
 
@@ -7987,6 +8006,13 @@ class AudioManager extends BaseAudioClient {
         });
 
         Object.seal(this);
+    }
+
+    setAudioProperties(evt) {
+        this.destination.setAudioProperties(evt.minDistance, evt.maxDistance, evt.rolloff, evt.transitionTime);
+        for (let source of this.sources.values()) {
+            source.setAudioProperties(evt.minDistance, evt.maxDistance, evt.rolloff, evt.transitionTime);
+        }
     }
 
     start() {
@@ -8035,10 +8061,6 @@ class AudioManager extends BaseAudioClient {
     setLocalPosition(evt) {
         this.destination.setTarget(evt);
     }
-
-    setAudioProperties(evt) {
-        this.destination.setAudioProperties(evt);
-    }
 }
 
 /** @typedef MediaElements
@@ -8049,7 +8071,7 @@ class AudioManager extends BaseAudioClient {
 /** @type {Map.<string, MediaElements>} */
 const userInputs = new Map();
 
-const audioActivityEvt$3 = Object.assign(new Event("audioActivity"), {
+const audioActivityEvt$2 = Object.assign(new Event("audioActivity"), {
     id: null,
     isActive: false
 });
@@ -8064,7 +8086,9 @@ function logger(source, evtName) {
         console.log(evtName, ...rest);
     };
 
-    source.addEventListener(evtName, handler);
+    if (window.location.host === "localhost") {
+        source.addEventListener(evtName, handler);
+    }
 }
 
 function setLoggers(source, evtObj) {
@@ -8084,9 +8108,9 @@ class LibJitsiMeetClient extends BaseJitsiClient {
         this.conference = null;
         this.audioClient = new AudioManager();
         this.audioClient.addEventListener("audioActivity", (evt) => {
-            audioActivityEvt$3.id = evt.id;
-            audioActivityEvt$3.isActive = evt.isActive;
-            this.dispatchEvent(audioActivityEvt$3);
+            audioActivityEvt$2.id = evt.id;
+            audioActivityEvt$2.isActive = evt.isActive;
+            this.dispatchEvent(audioActivityEvt$2);
         });
 
         Object.seal(this);
@@ -8146,11 +8170,6 @@ class LibJitsiMeetClient extends BaseJitsiClient {
                     roomName,
                     displayName: userName
                 }));
-
-                const tracks = await JitsiMeetJS.createLocalTracks({ devices: ["audio"] });
-                for (let track of tracks) {
-                    this.conference.addTrack(track);
-                }
             });
 
             this.conference.addEventListener(CONFERENCE_LEFT, () => {
@@ -8379,7 +8398,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     setAudioOutputDevice(device) {
-        //JitsiMeetJS.mediaDevices.setAudioOutputDevice(device.deviceId);
+        JitsiMeetJS.mediaDevices.setAudioOutputDevice(device.deviceId);
         this.audioClient.setAudioOutputDevice(device.deviceId);
     }
 
