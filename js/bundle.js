@@ -77,10 +77,6 @@ function width(value) { return new HtmlAttr("width", ["canvas", "embed", "iframe
 const monospaceFamily = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
 const monospaceFont = style({ fontFamily: monospaceFamily });
 
-// A selection of fonts that should match whatever the user's operating system normally uses.
-const systemFamily = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
-const systemFont = style({ fontFamily: systemFamily });
-
 /**
  * 
  * @param {number} x
@@ -905,74 +901,6 @@ function LabeledSelectBox(id, labelText, noSelectionText, makeID, makeLabel, ...
 
 function OptionPanel(id, name, ...rest) {
     return new OptionPanelTag(id, name, ...rest);
-}
-
-class FormDialog extends EventTarget {
-    constructor(name, ...rest) {
-        super();
-
-        const formStyle = style({
-            display: "grid",
-            width: "100%",
-            height: "100%",
-            gridTemplateColumns: "5fr 1fr 1fr",
-            gridTemplateRows: "auto auto 1fr auto auto",
-            overflowY: "hidden",
-            fontFamily: systemFamily
-        });
-
-        this.element = document.getElementById(name) ||
-            Div(
-                id(name),
-                className("dialog"),
-                H1(...rest));
-
-        formStyle.apply(this.element);
-
-        style({ gridArea: "1/1/2/4" }).apply(this.element.querySelector("h1"));
-
-        this.header = this.element.querySelector(".header")
-            || this.element.appendChild(Div(className("header")));
-
-        style({ gridArea: "2/1/3/4" }).apply(this.header);
-
-        this.content = this.element.querySelector(".content")
-            || this.element.appendChild(Div(className("content")));
-
-        style({
-            overflowY: "scroll",
-            gridArea: "3/1/4/4"
-        }).apply(this.content);
-
-        this.footer = this.element.querySelector(".footer")
-            || this.element.appendChild(Div(className("footer")));
-
-        style({
-            display: "flex",
-            flexDirection: "row-reverse",
-            gridArea: "4/1/5/4"
-        }).apply(this.footer);
-    }
-
-    appendChild(child) {
-        return this.element.appendChild(child);
-    }
-
-    append(...rest) {
-        this.element.append(...rest);
-    }
-
-    show() {
-        this.element.show("grid");
-    }
-
-    hide() {
-        this.element.hide();
-    }
-
-    toggleOpen() {
-        this.element.toggleOpen("grid");
-    }
 }
 
 class Emoji {
@@ -3234,6 +3162,83 @@ const allIcons = {
     medieval
 };
 
+class FormDialog extends EventTarget {
+    constructor(name, ...rest) {
+        super();
+
+        const formStyle = style({
+            display: "grid",
+            width: "100%",
+            height: "100%",
+            gridTemplateColumns: "5fr 1fr 1fr",
+            gridTemplateRows: "auto auto 1fr auto auto",
+            overflowY: "hidden"
+        });
+
+        this.element = document.getElementById(name) ||
+            Div(
+                id(name),
+                className("dialog"),
+                H1(...rest));
+
+        formStyle.apply(this.element);
+
+        style({ gridArea: "1/1/2/4" }).apply(this.element.querySelector("h1"));
+
+        this.header = this.element.querySelector(".header")
+            || this.element.appendChild(Div(className("header")));
+
+        style({ gridArea: "2/1/3/4" }).apply(this.header);
+
+        this.content = this.element.querySelector(".content")
+            || this.element.appendChild(Div(className("content")));
+
+        style({
+            overflowY: "scroll",
+            gridArea: "3/1/4/4"
+        }).apply(this.content);
+
+        this.footer = this.element.querySelector(".footer")
+            || this.element.appendChild(Div(className("footer")));
+
+        style({
+            display: "flex",
+            flexDirection: "row-reverse",
+            gridArea: "4/1/5/4"
+        }).apply(this.footer);
+    }
+
+    get isOpen() {
+        return this.element.isOpen();
+    }
+
+    set isOpen(v) {
+        if (v !== this.isOpen) {
+            this.toggleOpen();
+        }
+    }
+
+    appendChild(child) {
+        return this.element.appendChild(child);
+    }
+
+    append(...rest) {
+        this.element.append(...rest);
+    }
+
+    show() {
+        this.element.show("grid");
+    }
+
+    hide() {
+        this.element.hide();
+    }
+
+    toggleOpen() {
+        this.element.toggleOpen("grid");
+    }
+}
+
 const headerStyle = style({
     textDecoration: "none",
     color: "black",
@@ -3241,8 +3246,7 @@ const headerStyle = style({
 }),
     buttonStyle = style({
         fontSize: "200%",
-        width: "2em",
-        fontFamily: systemFamily
+        width: "2em"
     }),
     cancelEvt = new Event("emojiCanceled");
 
@@ -3362,7 +3366,6 @@ class EmojiForm extends FormDialog {
         this.footer.append(
 
             this.confirmButton = Button(className("confirm"),
-                systemFont,
                 "OK",
                 onClick(() => {
                     const idx = previousEmoji.indexOf(selectedEmoji);
@@ -3377,7 +3380,6 @@ class EmojiForm extends FormDialog {
                 })),
 
             Button(className("cancel"),
-                systemFont,
                 "Cancel",
                 onClick(() => {
                     this.confirmButton.lock();
@@ -3388,8 +3390,6 @@ class EmojiForm extends FormDialog {
             this.preview = Span(style({ gridArea: "4/1/5/4" })));
 
         this.confirmButton.lock();
-
-        this.isOpen = this.element.isOpen.bind(this.element);
 
         this.selectAsync = () => {
             return new Promise((resolve, reject) => {
@@ -3430,6 +3430,242 @@ class EmojiSelectedEvent extends Event {
     constructor(emoji) {
         super("emojiSelected");
         this.emoji = emoji;
+    }
+}
+
+function Run(...rest) {
+    return Span(
+        style({ margin: "auto" }),
+        ...rest);
+}
+
+const toggleAudioEvt = new Event("toggleAudio"),
+    toggleVideoEvt = new Event("toggleVideo"),
+    emoteEvt = new Event("emote"),
+    selectEmojiEvt = new Event("selectEmoji"),
+    subelStyle = style({
+        fontSize: "1.25em",
+        width: "3em",
+        height: "100%"
+    }),
+    subButtonStyle = style({
+        fontSize: "1.25em",
+        height: "100%"
+    });
+
+class FooterBar extends EventTarget {
+    constructor() {
+        super();
+
+        const _ = (evt) => () => this.dispatchEvent(evt);
+
+        /** @type {HTMLButtonElement} */
+        this.muteAudioButton = null;
+
+        this.element = Div(
+            id("footbar"),
+            style({
+                gridTemplateColumns: "auto 1fr auto",
+                display: "grid",
+                padding: "4px",
+                width: "100%",
+                columnGap: "5px",
+                backgroundColor: "transparent"
+            }),
+
+            this.muteAudioButton = Button(
+                title("Toggle audio mute/unmute"),
+                onClick(_(toggleAudioEvt)),
+                grid(1, 1),
+                subelStyle,
+                Run(speakerHighVolume.value)),
+
+            this.emojiControl = Span(
+                grid(2, 1),
+                style({ textAlign: "center" }),
+                subButtonStyle,
+                Button(
+                    title("Emote"),
+                    onClick(_(emoteEvt)),
+                    subButtonStyle,
+                    style({ borderRight: "none" }),
+                    this.emoteButton = Run("Emote")),
+                Button(
+                    title("Select Emoji"),
+                    onClick(_(selectEmojiEvt)),
+                    subButtonStyle,
+                    style({ borderLeft: "none" }),
+                    Run(upwardsButton.value))),
+
+
+            this.muteVideoButton = Button(
+                title("Toggle video mute/unmute"),
+                onClick(_(toggleVideoEvt)),
+                grid(3, 1),
+                subelStyle,
+                Run(noMobilePhone.value)));
+
+        this._audioEnabled = true;
+        this._videoEnabled = false;
+
+        Object.seal(this);
+    }
+
+    get enabled() {
+        return !this.muteAudioButton.disabled;
+    }
+
+    set enabled(v) {
+        for (let button of this.element.querySelectorAll("button")) {
+            button.disabled = !v;
+        }
+    }
+
+    get audioEnabled() {
+        return this._audioEnabled;
+    }
+
+    set audioEnabled(value) {
+        this._audioEnabled = value;
+        this.muteAudioButton.updateLabel(
+            value,
+            speakerHighVolume.value,
+            mutedSpeaker.value);
+    }
+
+    get videoEnabled() {
+        return this._videoEnabled;
+    }
+
+    set videoEnabled(value) {
+        this._videoEnabled = value;
+        this.muteVideoButton.updateLabel(
+            value,
+            videoCamera.value,
+            noMobilePhone.value);
+    }
+
+    setEmojiButton(key, emoji) {
+        this.emoteButton.innerHTML = emoji.value;
+    }
+}
+
+function Run$1(...rest) {
+    return Span(
+        style({ margin: "auto" }),
+        ...rest);
+}
+
+const toggleOptionsEvt = new Event("toggleOptions"),
+    tweetEvt = new Event("tweet"),
+    leaveEvt = new Event("leave"),
+    toggleFullscreenEvt = new Event("toggleFullscreen"),
+    toggleInstructionsEvt = new Event("toggleInstructions"),
+    toggleUserDirectoryEvt = new Event("toggleUserDirectory"),
+    subelStyle$1 = style({
+        fontSize: "1.25em",
+        width: "3em",
+        height: "100%",
+        pointerEvents: "all"
+    });
+
+class HeaderBar extends EventTarget {
+    constructor() {
+        super();
+
+        const _ = (evt) => () => this.dispatchEvent(evt);
+
+        this.element = Div(
+            id("headbar"),
+            style({
+                gridTemplateColumns: "auto auto auto auto 1fr auto auto",
+                display: "grid",
+                padding: "4px",
+                width: "100%",
+                columnGap: "5px",
+                backgroundColor: "transparent",
+                pointerEvents: "none"
+            }),
+
+            this.optionsButton = Button(
+                title("Show/hide options"),
+                onClick(_(toggleOptionsEvt)),
+                subelStyle$1,
+                grid(1, 1),
+                Run$1(gear.value)),
+
+            this.instructionsButton = Button(
+                title("Show/hide instructions"),
+                onClick(_(toggleInstructionsEvt)),
+                subelStyle$1,
+                grid(2, 1),
+                Run$1(questionMark.value)),
+
+            Button(
+                title("Share your current room to twitter"),
+                onClick(_(tweetEvt)),
+                subelStyle$1,
+                grid(3, 1),
+                Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
+                    alt("icon"),
+                    role("presentation"),
+                    style({
+                        height: "1.75em",
+                        marginTop: "3px",
+                        marginBottom: "-3px"
+                    }))),
+
+            Button(
+                title("View user directory"),
+                onClick(_(toggleUserDirectoryEvt)),
+                subelStyle$1,
+                grid(4, 1),
+                Run$1(speakingHead.value)),
+
+
+            this.fullscreenButton = Button(
+                title("Toggle fullscreen"),
+                onClick(_(toggleFullscreenEvt)),
+                subelStyle$1,
+                grid(6, 1),
+                Run$1(squareFourCourners.value)),
+
+
+            Button(
+                title("Leave the room"),
+                onClick(_(leaveEvt)),
+                subelStyle$1,
+                grid(7, 1),
+                Run$1(door.value)));
+
+        Object.seal(this);
+    }
+
+    get isFullscreen() {
+        return document.fullscreenElement !== null;
+    }
+
+    set isFullscreen(value) {
+        if (value) {
+            document.body.requestFullscreen();
+        }
+        else {
+            document.exitFullscreen();
+        }
+        this.fullscreenButton.updateLabel(
+            value,
+            downRightArrow.value,
+            squareFourCourners.value);
+    }
+
+    get enabled() {
+        return !this.instructionsButton.disabled;
+    }
+
+    set enabled(v) {
+        for (let button of this.element.querySelectorAll("button")) {
+            button.disabled = !v;
+        }
     }
 }
 
@@ -4139,7 +4375,6 @@ class OptionsForm extends FormDialog {
         this.footer.append(
             this.confirmButton = Button(
                 className("confirm"),
-                systemFont,
                 "Close",
                 onClick(() => this.hide())));
 
@@ -4429,235 +4664,87 @@ class OptionsForm extends FormDialog {
     }
 }
 
-function Run(...rest) {
-    return Span(
-        style({ margin: "auto" }),
-        ...rest);
-}
+const refreshDirectoryEvt = new Event("refreshUserDirectory");
 
-const toggleOptionsEvt = new Event("toggleOptions"),
-    tweetEvt = new Event("tweet"),
-    leaveEvt = new Event("leave"),
-    toggleFullscreenEvt = new Event("toggleFullscreen"),
-    toggleInstructionsEvt = new Event("toggleInstructions"),
-    subelStyle = style({
-        fontSize: "1.25em",
-        width: "3em",
-        height: "100%",
-        pointerEvents: "all"
-    });
+class UserDirectoryForm extends FormDialog {
 
-class HeaderBar extends EventTarget {
     constructor() {
-        super();
+        super("users", "Users");
 
         const _ = (evt) => () => this.dispatchEvent(evt);
 
-        this.element = Div(
-            id("headbar"),
-            style({
-                gridTemplateColumns: "auto auto auto 1fr auto auto",
-                display: "grid",
-                padding: "4px",
-                width: "100%",
-                columnGap: "5px",
-                backgroundColor: "transparent",
-                pointerEvents: "none"
-            }),
+        style({
+            gridTemplateColumns: "1fr 5fr",
+            columGap: "5px"
+        }).apply(this.content);
 
-            this.optionsButton = Button(
-                title("Show/hide options"),
-                onClick(_(toggleOptionsEvt)),
-                subelStyle,
-                grid(1, 1),
-                Run(gear.value)),
-
-            this.instructionsButton = Button(
-                title("Show/hide instructions"),
-                onClick(_(toggleInstructionsEvt)),
-                subelStyle,
-                grid(2, 1),
-                Run(questionMark.value)),
-
+        this.footer.append(
             Button(
-                title("Share your current room to twitter"),
-                onClick(_(tweetEvt)),
-                subelStyle,
-                grid(3, 1),
-                Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
-                    alt("icon"),
-                    role("presentation"),
-                    style({
-                        height: "1.75em",
-                        marginTop: "3px",
-                        marginBottom: "-3px"
-                    }))),
+                "Refresh",
+                onClick(_(refreshDirectoryEvt))),
 
-
-            this.fullscreenButton = Button(
-                title("Toggle fullscreen"),
-                onClick(_(toggleFullscreenEvt)),
-                subelStyle,
-                grid(5, 1),
-                Run(squareFourCourners.value)),
-
-
-            Button(
-                title("Leave the room"),
-                onClick(_(leaveEvt)),
-                subelStyle,
-                grid(6, 1),
-                Run(door.value)));
-
-        Object.seal(this);
+            this.confirmButton = Button(
+                "Close",
+                onClick(() => this.hide())));
     }
 
-    get isFullscreen() {
-        return document.fullscreenElement !== null;
+    /**
+     * 
+     * @param {string} from
+     * @param {string} userID
+     * @param {string} userName
+     */
+    set(from, userID, userName) {
+        this.delete(userID, true);
+        const elemID = `user_${userID}`;
+        const elem = Div(
+            id(elemID),
+            style({ backgroundColor: "lightgreen" }),
+            `${from.toLocaleUpperCase()}: ${userName} - (${userID})`);
+        this.content.append(elem);
+        setTimeout(() => {
+            elem.style.backgroundColor = "";
+        }, 3000);
     }
 
-    set isFullscreen(value) {
-        if (value) {
-            document.body.requestFullscreen();
+    delete(userID, now) {
+        const elemID = `user_${userID}`;
+        const elem = document.getElementById(elemID);
+        if (elem !== null) {
+            if (now) {
+                elem.parentElement.removeChild(elem);
+            }
+            else {
+                elem.style.backgroundColor = "red";
+                setTimeout(() => {
+                    elem.parentElement.removeChild(elem);
+                }, 3000);
+            }
         }
-        else {
-            document.exitFullscreen();
-        }
-        this.fullscreenButton.updateLabel(
-            value,
-            downRightArrow.value,
-            squareFourCourners.value);
     }
 
-    get enabled() {
-        return !this.instructionsButton.disabled;
+    clear() {
+        clear(this.content);
     }
 
-    set enabled(v) {
-        for (let button of this.element.querySelectorAll("button")) {
-            button.disabled = !v;
-        }
+    warn(...rest) {
+        const elem = Div(
+            style({ backgroundColor: "yellow" }),
+            ...rest.map(i => i.toString()));
+        this.content.append(elem);
+        setTimeout(() => {
+            elem.parentElement.removeChild(elem);
+        }, 5000);
+    }
+
+    async showAsync() {
+        this.show();
+        await this.confirmButton.once("click");
+        return false;
     }
 }
 
-function Run$1(...rest) {
-    return Span(
-        style({ margin: "auto" }),
-        ...rest);
-}
-
-const toggleAudioEvt = new Event("toggleAudio"),
-    toggleVideoEvt = new Event("toggleVideo"),
-    emoteEvt = new Event("emote"),
-    selectEmojiEvt = new Event("selectEmoji"),
-    subelStyle$1 = style({
-        fontSize: "1.25em",
-        width: "3em",
-        height: "100%"
-    }),
-    subButtonStyle = style({
-        fontSize: "1.25em",
-        height: "100%"
-    });
-
-class FooterBar extends EventTarget {
-    constructor() {
-        super();
-
-        const _ = (evt) => () => this.dispatchEvent(evt);
-
-        /** @type {HTMLButtonElement} */
-        this.muteAudioButton = null;
-
-        this.element = Div(
-            id("footbar"),
-            style({
-                gridTemplateColumns: "auto 1fr auto",
-                display: "grid",
-                padding: "4px",
-                width: "100%",
-                columnGap: "5px",
-                backgroundColor: "transparent"
-            }),
-
-            this.muteAudioButton = Button(
-                title("Toggle audio mute/unmute"),
-                onClick(_(toggleAudioEvt)),
-                grid(1, 1),
-                subelStyle$1,
-                Run$1(speakerHighVolume.value)),
-
-            this.emojiControl = Span(
-                grid(2, 1),
-                style({ textAlign: "center" }),
-                subButtonStyle,
-                Button(
-                    title("Emote"),
-                    onClick(_(emoteEvt)),
-                    subButtonStyle,
-                    style({ borderRight: "none" }),
-                    this.emoteButton = Run$1("Emote")),
-                Button(
-                    title("Select Emoji"),
-                    onClick(_(selectEmojiEvt)),
-                    subButtonStyle,
-                    style({ borderLeft: "none" }),
-                    Run$1(upwardsButton.value))),
-
-
-            this.muteVideoButton = Button(
-                title("Toggle video mute/unmute"),
-                onClick(_(toggleVideoEvt)),
-                grid(3, 1),
-                subelStyle$1,
-                Run$1(mobilePhoneOff.value)));
-
-        this._audioEnabled = true;
-        this._videoEnabled = false;
-
-        Object.seal(this);
-    }
-
-    get enabled() {
-        return !this.muteAudioButton.disabled;
-    }
-
-    set enabled(v) {
-        for (let button of this.element.querySelectorAll("button")) {
-            button.disabled = !v;
-        }
-    }
-
-    get audioEnabled() {
-        return this._audioEnabled;
-    }
-
-    set audioEnabled(value) {
-        this._audioEnabled = value;
-        this.muteAudioButton.updateLabel(
-            value,
-            speakerHighVolume.value,
-            mutedSpeaker.value);
-    }
-
-    get videoEnabled() {
-        return this._videoEnabled;
-    }
-
-    set videoEnabled(value) {
-        this._videoEnabled = value;
-        this.muteVideoButton.updateLabel(
-            value,
-            mobilePhone.value,
-            mobilePhoneOff.value);
-    }
-
-    setEmojiButton(key, emoji) {
-        this.emoteButton.innerHTML = emoji.value;
-    }
-}
-
-const EMOJI_LIFE = 2;
+const EMOJI_LIFE = 5;
 
 class Emote {
     constructor(emoji, x, y) {
@@ -5059,10 +5146,98 @@ class VideoAvatar extends BaseAvatar {
     }
 }
 
-const POSITION_REQUEST_DEBOUNCE_TIME = 1000,
+class BasePosition {
+    /** 
+     *  The horizontal component of the position.
+     *  @type {number} */
+    get x() {
+        throw new Error("Not implemented in base class.");
+    }
+
+    /** 
+     *  The vertical component of the position.
+     *  @type {number} */
+    get y() {
+        throw new Error("Not implemented in base class.");
+    }
+
+    /**
+     * Set the target position
+     * @param {Point} evt - the target position
+     * @param {number} t - the current time, in seconds
+     * @param {number} dt - the amount of time to take to transition, in seconds
+     */
+    setTarget(evt, t, dt) {
+        throw new Error("Not implemented in base class.");
+    }
+
+    /**
+     * Update the position.
+     * @param {number} t - the current time, in seconds
+     */
+    update(t) {
+    }
+}
+
+class InterpolatedPosition extends BasePosition {
+
+    constructor() {
+        super();
+
+        this._st
+            = this._et
+            = 0;
+        this._x
+            = this._tx
+            = this._sx
+            = 0;
+        this._y
+            = this._ty
+            = this._sy
+            = 0;
+    }
+
+    /** @type {number} */
+    get x() {
+        return this._x;
+    }
+
+    /** @type {number} */
+    get y() {
+        return this._y;
+    }
+
+    /**
+     * 
+     * @param {UserPosition} evt
+     * @param {number} t
+     * @param {number} dt
+     */
+    setTarget(evt, t, dt) {
+        this._st = t;
+        this._et = t + dt;
+        this._sx = this._x;
+        this._sy = this._y;
+        this._tx = evt.x;
+        this._ty = evt.y;
+    }
+
+    /**
+     * 
+     * @param {number} t
+     */
+    update(t) {
+        const p = project(t, this._st, this._et);
+        if (p <= 1) {
+            this._x = lerp(this._sx, this._tx, p);
+            this._y = lerp(this._sy, this._ty, p);
+        }
+    }
+}
+
+const POSITION_REQUEST_DEBOUNCE_TIME = 1,
     STACKED_USER_OFFSET_X = 5,
     STACKED_USER_OFFSET_Y = 5,
-    MOVE_TRANSITION_TIME = 0.5,
     eventNames = ["userMoved", "userPositionNeeded"];
 
 function resetAvatarMode(self) {
@@ -5081,32 +5256,23 @@ function resetAvatarMode(self) {
 }
 
 class User extends EventTarget {
-    constructor(id, displayName, isMe) {
+    constructor(evt, isMe) {
         super();
 
-        this.id = id;
+        this.id = evt.id;
+        this.displayName = evt.displayName;
+        this.label = isMe ? "(Me)" : `(${this.id})`;
 
-        this.x = 0;
-        this.y = 0;
+        this.moveEvent = new UserMoveEvent(this.id);
+        this.position = new InterpolatedPosition();
 
         this.avatarMode = AvatarMode.none;
         this.avatarEmoji = (isMe ? randomPerson() : bust);
         this.avatarImage = null;
         this.avatarVideo = null;
 
-        this.displayName = displayName || id;
         this.audioMuted = false;
         this.videoMuted = true;
-        this.sx = 0;
-        this.sy = 0;
-        this.tx = 0;
-        this.ty = 0;
-        this.dx = 0;
-        this.dy = 0;
-        this.dist = 0;
-        this.t = 0;
-        this.distXToMe = 0;
-        this.distYToMe = 0;
         this.isMe = isMe;
         this.isActive = false;
         this.stackUserCount = 1;
@@ -5116,33 +5282,31 @@ class User extends EventTarget {
         this.stackOffsetX = 0;
         this.stackOffsetY = 0;
         this.isInitialized = isMe;
-        this.lastPositionRequestTime = Date.now() - POSITION_REQUEST_DEBOUNCE_TIME;
-        this.moveEvent = new UserMoveEvent(this.id);
+        this.lastPositionRequestTime = performance.now() / 1000 - POSITION_REQUEST_DEBOUNCE_TIME;
         this.visible = true;
     }
 
     deserialize(evt) {
-        this.sx
-            = this.tx
-            = this.x
-            = evt.x;
-        this.sy
-            = this.ty
-            = this.y
-            = evt.y;
+        if (evt.displayName !== undefined) {
+            this.displayName = evt.displayName;
+        }
 
-        this.displayName = evt.displayName;
-        this.avatarMode = evt.avatarMode;
-        this.avatarID = evt.avatarID;
+        if (evt.avatarMode !== undefined) {
+            this.avatarMode = evt.avatarMode;
+            this.avatarID = evt.avatarID;
+        }
 
-        this.isInitialized = true;
+        if (evt.x !== undefined) {
+            this.position.setTarget(evt, performance.now() / 1000, 0);
+            this.isInitialized = true;
+        }
     }
 
     serialize() {
         return {
             id: this.id,
-            x: this.tx,
-            y: this.ty,
+            x: this.position._tx,
+            y: this.position._ty,
             displayName: this.displayName,
             avatarMode: this.avatarMode,
             avatarID: this.avatarID
@@ -5246,85 +5410,54 @@ class User extends EventTarget {
     }
 
     setDisplayName(name) {
-        this.displayName = name || this.id;
+        this.displayName = name;
     }
 
-    moveTo(x, y) {
-        if (this.isMe) {
-            if (x !== this.tx
-                || y !== this.ty) {
+    moveTo(x, y, dt) {
+        if (this.isInitialized) {
+            if (this.isMe) {
                 this.moveEvent.set(x, y);
                 this.dispatchEvent(this.moveEvent);
             }
-        }
-        else if (!this.isInitialized) {
-            this.isInitialized = true;
-            this.x = x;
-            this.y = y;
-        }
 
-        this.sx = this.x;
-        this.sy = this.y;
-        this.tx = x;
-        this.ty = y;
-
-        if (this.tx !== this.sx
-            || this.ty !== this.sy) {
-            this.dx = this.tx - this.sx;
-            this.dy = this.ty - this.sy;
-            this.dist = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
-            this.t = 0;
+            this.position.setTarget({ x, y }, performance.now() / 1000, dt);
         }
     }
 
-    update(dt, map, users) {
-        if (this.isInitialized) {
-            if (this.dist > 0) {
-                this.t += dt;
-                if (this.t >= MOVE_TRANSITION_TIME) {
-                    this.x = this.sx = this.tx;
-                    this.y = this.sy = this.ty;
-                    this.t = this.dx = this.dy = this.dist = 0;
-                }
-                else {
-                    const p = this.t / MOVE_TRANSITION_TIME,
-                        s = Math.sin(Math.PI * p / 2);
-                    this.x = this.sx + s * this.dx;
-                    this.y = this.sy + s * this.dy;
-                }
-            }
+    update(map, users) {
+        const t = performance.now() / 1000;
 
-            this.stackUserCount = 0;
-            this.stackIndex = 0;
-            for (let user of users.values()) {
-                if (user.isInitialized
-                    && user.tx === this.tx
-                    && user.ty === this.ty) {
-                    if (user.id === this.id) {
-                        this.stackIndex = this.stackUserCount;
-                    }
-                    ++this.stackUserCount;
-                }
-            }
-
-            this.stackAvatarWidth = map.tileWidth - (this.stackUserCount - 1) * STACKED_USER_OFFSET_X;
-            this.stackAvatarHeight = map.tileHeight - (this.stackUserCount - 1) * STACKED_USER_OFFSET_Y;
-            this.stackOffsetX = this.stackIndex * STACKED_USER_OFFSET_X;
-            this.stackOffsetY = this.stackIndex * STACKED_USER_OFFSET_Y;
-        }
-        else {
-            const now = Date.now(),
-                dt = now - this.lastPositionRequestTime;
+        if (!this.isInitialized) {
+            const dt = t - this.lastPositionRequestTime;
             if (dt >= POSITION_REQUEST_DEBOUNCE_TIME) {
-                this.lastPositionRequestTime = now;
+                this.lastPositionRequestTime = t;
                 this.dispatchEvent(new UserPositionNeededEvent(this.id));
             }
         }
+
+        this.position.update(t);
+
+        this.stackUserCount = 0;
+        this.stackIndex = 0;
+        for (let user of users.values()) {
+            if (user.position._tx === this.position._tx
+                && user.position._ty === this.position._ty) {
+                if (user.id === this.id) {
+                    this.stackIndex = this.stackUserCount;
+                }
+                ++this.stackUserCount;
+            }
+        }
+
+        this.stackAvatarWidth = map.tileWidth - (this.stackUserCount - 1) * STACKED_USER_OFFSET_X;
+        this.stackAvatarHeight = map.tileHeight - (this.stackUserCount - 1) * STACKED_USER_OFFSET_Y;
+        this.stackOffsetX = this.stackIndex * STACKED_USER_OFFSET_X;
+        this.stackOffsetY = this.stackIndex * STACKED_USER_OFFSET_Y;
     }
 
     drawShadow(g, map, cameraZ) {
-        const x = this.x * map.tileWidth,
-            y = this.y * map.tileHeight,
+        const x = this.position.x * map.tileWidth,
+            y = this.position.y * map.tileHeight,
             t = g.getTransform(),
             p = t.transformPoint({ x, y });
 
@@ -5368,8 +5501,8 @@ class User extends EventTarget {
 
     innerDraw(g, map) {
         g.translate(
-            this.x * map.tileWidth + this.stackOffsetX,
-            this.y * map.tileHeight + this.stackOffsetY);
+            this.position.x * map.tileWidth + this.stackOffsetX,
+            this.position.y * map.tileHeight + this.stackOffsetY);
         g.fillStyle = "black";
         g.textBaseline = "top";
 
@@ -5402,8 +5535,8 @@ class User extends EventTarget {
             g.save();
             {
                 g.translate(
-                    this.x * map.tileWidth + this.stackOffsetX,
-                    this.y * map.tileHeight + this.stackOffsetY);
+                    this.position.x * map.tileWidth + this.stackOffsetX,
+                    this.position.y * map.tileHeight + this.stackOffsetY);
                 g.shadowColor = "black";
                 g.shadowOffsetX = 3 * cameraZ;
                 g.shadowOffsetY = 3 * cameraZ;
@@ -5412,7 +5545,7 @@ class User extends EventTarget {
                 g.fillStyle = "white";
                 g.textBaseline = "bottom";
                 g.font = `${fontSize * devicePixelRatio}pt sans-serif`;
-                g.fillText(this.displayName, 0, 0);
+                g.fillText(this.displayName || this.label, 0, 0);
             }
             g.restore();
         }
@@ -5422,8 +5555,8 @@ class User extends EventTarget {
         g.save();
         {
             g.translate(
-                (this.tx + dx) * map.tileWidth,
-                (this.ty + dy) * map.tileHeight);
+                (this.position._tx + dx) * map.tileWidth,
+                (this.position._ty + dy) * map.tileHeight);
             g.strokeStyle = `rgba(0, 255, 0, ${(1 - p) / 2})`;
             g.strokeRect(0, 0, map.tileWidth, map.tileHeight);
         }
@@ -5431,25 +5564,23 @@ class User extends EventTarget {
     }
 
     drawHearingRange(g, map, cameraZ, minDist, maxDist) {
-        if (this.isInitialized) {
-            const tw = Math.min(maxDist, Math.ceil(g.canvas.width / (2 * map.tileWidth * cameraZ))),
-                th = Math.min(maxDist, Math.ceil(g.canvas.height / (2 * map.tileHeight * cameraZ)));
+        const tw = Math.min(maxDist, Math.ceil(g.canvas.width / (2 * map.tileWidth * cameraZ))),
+            th = Math.min(maxDist, Math.ceil(g.canvas.height / (2 * map.tileHeight * cameraZ)));
 
-            for (let dy = 0; dy < th; ++dy) {
-                for (let dx = 0; dx < tw; ++dx) {
-                    const dist = Math.sqrt(dx * dx + dy * dy),
-                        p = project(dist, minDist, maxDist);
-                    if (p <= 1) {
-                        this.drawHearingTile(g, map, dx, dy, p);
-                        if (dy != 0) {
-                            this.drawHearingTile(g, map, dx, -dy, p);
-                        }
-                        if (dx != 0) {
-                            this.drawHearingTile(g, map, -dx, dy, p);
-                        }
-                        if (dx != 0 && dy != 0) {
-                            this.drawHearingTile(g, map, -dx, -dy, p);
-                        }
+        for (let dy = 0; dy < th; ++dy) {
+            for (let dx = 0; dx < tw; ++dx) {
+                const dist = Math.sqrt(dx * dx + dy * dy),
+                    p = project(dist, minDist, maxDist);
+                if (p <= 1) {
+                    this.drawHearingTile(g, map, dx, dy, p);
+                    if (dy != 0) {
+                        this.drawHearingTile(g, map, dx, -dy, p);
+                    }
+                    if (dx != 0) {
+                        this.drawHearingTile(g, map, -dx, dy, p);
+                    }
+                    if (dx != 0 && dy != 0) {
+                        this.drawHearingTile(g, map, -dx, -dy, p);
                     }
                 }
             }
@@ -5546,6 +5677,8 @@ class Game extends EventTarget {
         this.canClick = false;
 
         this.currentEmoji = null;
+
+        /** @type {Emote[]} */
         this.emotes = [];
 
         this.inputBinding = {
@@ -5569,6 +5702,7 @@ class Game extends EventTarget {
 
         this.lastGamepadIndex = -1;
         this.gamepadIndex = -1;
+        this.transitionSpeed = 0.125;
 
 
         // ============= KEYBOARD =================
@@ -5708,8 +5842,8 @@ class Game extends EventTarget {
 
             if (!!this.me && pointer.dragDistance < 2) {
                 const tile = this.getTileAt(pointer),
-                    dx = tile.x - this.me.tx,
-                    dy = tile.y - this.me.ty;
+                    dx = tile.x - this.me.position._tx,
+                    dy = tile.y - this.me.position._ty;
 
                 if (dx === 0 && dy === 0) {
                     this.emote(this.me.id, this.currentEmoji);
@@ -5773,7 +5907,7 @@ class Game extends EventTarget {
             }
 
             if (!!emoji) {
-                this.emotes.push(new Emote(emoji, user.tx + 0.5, user.ty));
+                this.emotes.push(new Emote(emoji, user.position.x + 0.5, user.position.y));
             }
         }
     }
@@ -5794,8 +5928,8 @@ class Game extends EventTarget {
     }
 
     moveMeBy(dx, dy) {
-        const clearTile = this.map.getClearTile(this.me.tx, this.me.ty, dx, dy, this.me.avatarEmoji);
-        this.me.moveTo(clearTile.x, clearTile.y);
+        const clearTile = this.map.getClearTile(this.me.position._tx, this.me.position._ty, dx, dy, this.me.avatarEmoji);
+        this.me.moveTo(clearTile.x, clearTile.y, this.transitionSpeed);
         this.targetOffsetCameraX = 0;
         this.targetOffsetCameraY = 0;
     }
@@ -5823,8 +5957,9 @@ class Game extends EventTarget {
             this.removeUser(evt);
         }
 
-        const user = new User(evt.id, evt.displayName, false);
+        const user = new User(evt, false);
         this.users.set(evt.id, user);
+
         userJoinedEvt.user = user;
         this.dispatchEvent(userJoinedEvt);
     }
@@ -5940,8 +6075,8 @@ class Game extends EventTarget {
         //};
 
         this.currentRoomName = evt.roomName.toLowerCase();
-        this.me = new User(evt.id, evt.displayName, true);
-        this.users.set(this.me.id, this.me);
+        this.me = new User(evt, true);
+        this.users.set(evt.id, this.me);
 
         this.setAvatarURL(evt);
 
@@ -6082,13 +6217,13 @@ class Game extends EventTarget {
         this.emotes = this.emotes.filter(e => !e.isDead());
 
         for (let user of this.users.values()) {
-            user.update(dt, this.map, this.users);
+            user.update(this.map, this.users);
         }
     }
 
     render() {
-        const targetCameraX = -this.me.x * this.map.tileWidth,
-            targetCameraY = -this.me.y * this.map.tileHeight;
+        const targetCameraX = -this.me.position.x * this.map.tileWidth,
+            targetCameraY = -this.me.position.y * this.map.tileHeight;
 
         this.cameraZ = lerp(this.cameraZ, this.targetCameraZ, CAMERA_LERP * 10);
         this.cameraX = lerp(this.cameraX, targetCameraX, CAMERA_LERP * this.cameraZ);
@@ -6157,183 +6292,6 @@ class Game extends EventTarget {
                 tile.y * this.map.tileHeight,
                 this.map.tileWidth,
                 this.map.tileHeight);
-        }
-    }
-}
-
-const selfs$3 = new Map(),
-    KEY = "CallaSettings",
-    DEFAULT_SETTINGS = {
-        drawHearing: false,
-        audioDistanceMin: 1,
-        audioDistanceMax: 10,
-        audioRolloff: 1,
-        fontSize: 12,
-        zoom: 1.5,
-        roomName: "calla",
-        userName: "",
-        avatarEmoji: null,
-        gamepadIndex: 0,
-        inputBinding: {
-            keyButtonUp: "ArrowUp",
-            keyButtonDown: "ArrowDown",
-            keyButtonLeft: "ArrowLeft",
-            keyButtonRight: "ArrowRight",
-            keyButtonEmote: "e",
-            keyButtonToggleAudio: "a",
-
-            gpButtonUp: 12,
-            gpButtonDown: 13,
-            gpButtonLeft: 14,
-            gpButtonRight: 15,
-            gpButtonEmote: 0,
-            gpButtonToggleAudio: 1
-        }
-    };
-
-function commit(settings) {
-    const self = selfs$3.get(settings);
-    localStorage.setItem(KEY, JSON.stringify(self));
-}
-
-function load() {
-    const selfStr = localStorage.getItem(KEY);
-    if (!!selfStr) {
-        return Object.assign(
-            {},
-            DEFAULT_SETTINGS,
-            JSON.parse(selfStr));
-    }
-}
-
-class Settings {
-    constructor() {
-        const self = Object.seal(load() || DEFAULT_SETTINGS);
-        selfs$3.set(this, self);
-        if (window.location.hash.length > 0) {
-            self.roomName = window.location.hash.substring(1);
-        }
-        Object.seal(this);
-    }
-
-    get drawHearing() {
-        return selfs$3.get(this).drawHearing;
-    }
-
-    set drawHearing(value) {
-        if (value !== this.drawHearing) {
-            selfs$3.get(this).drawHearing = value;
-            commit(this);
-        }
-    }
-
-    get audioDistanceMin() {
-        return selfs$3.get(this).audioDistanceMin;
-    }
-
-    set audioDistanceMin(value) {
-        if (value !== this.audioDistanceMin) {
-            selfs$3.get(this).audioDistanceMin = value;
-            commit(this);
-        }
-    }
-
-    get audioDistanceMax() {
-        return selfs$3.get(this).audioDistanceMax;
-    }
-
-    set audioDistanceMax(value) {
-        if (value !== this.audioDistanceMax) {
-            selfs$3.get(this).audioDistanceMax = value;
-            commit(this);
-        }
-    }
-
-    get audioRolloff() {
-        return selfs$3.get(this).audioRolloff;
-    }
-
-    set audioRolloff(value) {
-        if (value !== this.audioRolloff) {
-            selfs$3.get(this).audioRolloff = value;
-            commit(this);
-        }
-    }
-
-    get fontSize() {
-        return selfs$3.get(this).fontSize;
-    }
-
-    set fontSize(value) {
-        if (value !== this.fontSize) {
-            selfs$3.get(this).fontSize = value;
-            commit(this);
-        }
-    }
-
-    get zoom() {
-        return selfs$3.get(this).zoom;
-    }
-
-    set zoom(value) {
-        if (value !== this.zoom) {
-            selfs$3.get(this).zoom = value;
-            commit(this);
-        }
-    }
-
-    get userName() {
-        return selfs$3.get(this).userName;
-    }
-
-    set userName(value) {
-        if (value !== this.userName) {
-            selfs$3.get(this).userName = value;
-            commit(this);
-        }
-    }
-
-    get avatarEmoji() {
-        return selfs$3.get(this).avatarEmoji;
-    }
-
-    set avatarEmoji(value) {
-        if (value !== this.avatarEmoji) {
-            selfs$3.get(this).avatarEmoji = value;
-            commit(this);
-        }
-    }
-
-    get roomName() {
-        return selfs$3.get(this).roomName;
-    }
-
-    set roomName(value) {
-        if (value !== this.roomName) {
-            selfs$3.get(this).roomName = value;
-            commit(this);
-        }
-    }
-
-    get gamepadIndex() {
-        return selfs$3.get(this).gamepadIndex;
-    }
-
-    set gamepadIndex(value) {
-        if (value !== this.gamepadIndex) {
-            selfs$3.get(this).gamepadIndex = value;
-            commit(this);
-        }
-    }
-
-    get inputBinding() {
-        return selfs$3.get(this).inputBinding;
-    }
-
-    set inputBinding(value) {
-        if (value !== this.inputBinding) {
-            selfs$3.get(this).inputBinding = value;
-            commit(this);
         }
     }
 }
@@ -6421,13 +6379,24 @@ class BaseJitsiClient extends EventTarget {
         /** @type {String} */
         this.localUser = null;
 
-        this.otherUsers = new Map();
-
         /** @type {BaseAudioClient} */
         this.audioClient = null;
 
         this.preInitEvtQ = [];
     }
+
+    userIDs() {
+        throw new Error("Not implemented in base class");
+    }
+
+    userExists(id) {
+        throw new Error("Not implemented in base class");
+    }
+
+    users() {
+        throw new Error("Not implemented in base class");
+    }
+
 
     /**
      * 
@@ -6480,32 +6449,13 @@ class BaseJitsiClient extends EventTarget {
 
         await this.initializeAsync(host, roomName, userName);
 
-        this.addEventListener("participantJoined", (evt) => {
-            this.otherUsers.set(evt.id, evt.displayName);
-        });
-
-        this.addEventListener("participantLeft", (evt) => {
-            if (this.otherUsers.has(evt.id)) {
-                this.otherUsers.delete(evt.id);
-            }
-        });
-
-        this.addEventListener("displayNameChange", (evt) => {
-            if (evt.id !== this.localUser) {
-                this.otherUsers.set(evt.id, evt.displayname);
-            }
-        });
-
         window.addEventListener("unload", () => {
             this.dispose();
         });
 
         const joinInfo = await joinTask;
 
-        if (joinInfo.displayName !== userName) {
-            joinInfo.displayName = userName;
-            this.setDisplayName(userName);
-        }
+        this.setDisplayName(userName);
 
 
         const audioOutputs = await this.getAudioOutputDevicesAsync();
@@ -6658,7 +6608,7 @@ class BaseJitsiClient extends EventTarget {
 
     setLocalPosition(evt) {
         this.audioClient.setLocalPosition(evt);
-        for (let toUserID of this.otherUsers.keys()) {
+        for (let toUserID of this.userIDs()) {
             this.sendMessageTo(toUserID, "userMoved", evt);
         }
     }
@@ -6739,13 +6689,13 @@ class BaseJitsiClient extends EventTarget {
     }
 
     setAvatarEmoji(emoji) {
-        for (let toUserID of this.otherUsers.keys()) {
+        for (let toUserID of this.userIDs()) {
             this.sendMessageTo(toUserID, "setAvatarEmoji", emoji);
         }
     }
 
     emote(emoji) {
-        for (let toUserID of this.otherUsers.keys()) {
+        for (let toUserID of this.userIDs()) {
             this.sendMessageTo(toUserID, "emote", emoji);
         }
     }
@@ -6762,6 +6712,195 @@ class JitsiClientEvent extends Event {
     }
 }
 
+const selfs$3 = new Map(),
+    KEY = "CallaSettings",
+    DEFAULT_SETTINGS = {
+        drawHearing: false,
+        audioDistanceMin: 1,
+        audioDistanceMax: 10,
+        audioRolloff: 1,
+        fontSize: 12,
+        transitionSpeed: 1,
+        zoom: 1.5,
+        roomName: "calla",
+        userName: "",
+        avatarEmoji: null,
+        gamepadIndex: 0,
+        inputBinding: {
+            keyButtonUp: "ArrowUp",
+            keyButtonDown: "ArrowDown",
+            keyButtonLeft: "ArrowLeft",
+            keyButtonRight: "ArrowRight",
+            keyButtonEmote: "e",
+            keyButtonToggleAudio: "a",
+
+            gpButtonUp: 12,
+            gpButtonDown: 13,
+            gpButtonLeft: 14,
+            gpButtonRight: 15,
+            gpButtonEmote: 0,
+            gpButtonToggleAudio: 1
+        }
+    };
+
+function commit(settings) {
+    const self = selfs$3.get(settings);
+    localStorage.setItem(KEY, JSON.stringify(self));
+}
+
+function load() {
+    const selfStr = localStorage.getItem(KEY);
+    if (!!selfStr) {
+        return Object.assign(
+            {},
+            DEFAULT_SETTINGS,
+            JSON.parse(selfStr));
+    }
+}
+
+class Settings {
+    constructor() {
+        const self = Object.seal(load() || DEFAULT_SETTINGS);
+        selfs$3.set(this, self);
+        if (window.location.hash.length > 0) {
+            self.roomName = window.location.hash.substring(1);
+        }
+        Object.seal(this);
+    }
+
+    get transitionSpeed() {
+        return selfs$3.get(this).transitionSpeed;
+    }
+
+    set transitionSpeed(value) {
+        if (value !== this.transitionSpeed) {
+            selfs$3.get(this).transitionSpeed = value;
+            commit(this);
+        }
+    }
+
+    get drawHearing() {
+        return selfs$3.get(this).drawHearing;
+    }
+
+    set drawHearing(value) {
+        if (value !== this.drawHearing) {
+            selfs$3.get(this).drawHearing = value;
+            commit(this);
+        }
+    }
+
+    get audioDistanceMin() {
+        return selfs$3.get(this).audioDistanceMin;
+    }
+
+    set audioDistanceMin(value) {
+        if (value !== this.audioDistanceMin) {
+            selfs$3.get(this).audioDistanceMin = value;
+            commit(this);
+        }
+    }
+
+    get audioDistanceMax() {
+        return selfs$3.get(this).audioDistanceMax;
+    }
+
+    set audioDistanceMax(value) {
+        if (value !== this.audioDistanceMax) {
+            selfs$3.get(this).audioDistanceMax = value;
+            commit(this);
+        }
+    }
+
+    get audioRolloff() {
+        return selfs$3.get(this).audioRolloff;
+    }
+
+    set audioRolloff(value) {
+        if (value !== this.audioRolloff) {
+            selfs$3.get(this).audioRolloff = value;
+            commit(this);
+        }
+    }
+
+    get fontSize() {
+        return selfs$3.get(this).fontSize;
+    }
+
+    set fontSize(value) {
+        if (value !== this.fontSize) {
+            selfs$3.get(this).fontSize = value;
+            commit(this);
+        }
+    }
+
+    get zoom() {
+        return selfs$3.get(this).zoom;
+    }
+
+    set zoom(value) {
+        if (value !== this.zoom) {
+            selfs$3.get(this).zoom = value;
+            commit(this);
+        }
+    }
+
+    get userName() {
+        return selfs$3.get(this).userName;
+    }
+
+    set userName(value) {
+        if (value !== this.userName) {
+            selfs$3.get(this).userName = value;
+            commit(this);
+        }
+    }
+
+    get avatarEmoji() {
+        return selfs$3.get(this).avatarEmoji;
+    }
+
+    set avatarEmoji(value) {
+        if (value !== this.avatarEmoji) {
+            selfs$3.get(this).avatarEmoji = value;
+            commit(this);
+        }
+    }
+
+    get roomName() {
+        return selfs$3.get(this).roomName;
+    }
+
+    set roomName(value) {
+        if (value !== this.roomName) {
+            selfs$3.get(this).roomName = value;
+            commit(this);
+        }
+    }
+
+    get gamepadIndex() {
+        return selfs$3.get(this).gamepadIndex;
+    }
+
+    set gamepadIndex(value) {
+        if (value !== this.gamepadIndex) {
+            selfs$3.get(this).gamepadIndex = value;
+            commit(this);
+        }
+    }
+
+    get inputBinding() {
+        return selfs$3.get(this).inputBinding;
+    }
+
+    set inputBinding(value) {
+        if (value !== this.inputBinding) {
+            selfs$3.get(this).inputBinding = value;
+            commit(this);
+        }
+    }
+}
+
 /**
  * 
  * @param {string} host
@@ -6771,6 +6910,7 @@ function init(host, client) {
     const settings = new Settings(),
         game = new Game(),
         login = new LoginForm(),
+        directory = new UserDirectoryForm(),
         headbar = new HeaderBar(),
         footbar = new FooterBar(),
         options = new OptionsForm(),
@@ -6781,6 +6921,7 @@ function init(host, client) {
             client,
             game,
             login,
+            directory,
             headbar,
             footbar,
             options,
@@ -6789,6 +6930,7 @@ function init(host, client) {
 
         forAppend = [
             game,
+            directory,
             options,
             emoji,
             headbar,
@@ -6798,6 +6940,7 @@ function init(host, client) {
 
     function showLogin() {
         game.hide();
+        directory.hide();
         options.hide();
         emoji.hide();
         headbar.enabled = false;
@@ -6806,7 +6949,7 @@ function init(host, client) {
     }
 
     async function withEmojiSelection(callback) {
-        if (!emoji.isOpen()) {
+        if (!emoji.isOpen) {
             headbar.optionsButton.lock();
             headbar.instructionsButton.lock();
             options.hide();
@@ -6829,7 +6972,7 @@ function init(host, client) {
     function setAudioProperties() {
         client.setAudioProperties(
             window.location.origin,
-            0.125,
+            settings.transitionSpeed,
             settings.audioDistanceMin = game.audioDistanceMin = options.audioDistanceMin,
             settings.audioDistanceMax = game.audioDistanceMax = options.audioDistanceMax,
             settings.audioRolloff = options.audioRolloff);
@@ -6875,6 +7018,7 @@ function init(host, client) {
     options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
     options.inputBinding = game.inputBinding = settings.inputBinding;
     game.cameraZ = game.targetCameraZ = settings.zoom;
+    game.transitionSpeed = settings.transitionSpeed = 0.5;
     login.userName = settings.userName;
     login.roomName = settings.roomName;
 
@@ -6889,20 +7033,20 @@ function init(host, client) {
         }
     });
 
-    headbar.addEventListeners({
-        toggleOptions: () => {
-            if (!emoji.isOpen()) {
-                login.hide();
-                options.toggleOpen();
-            }
-        },
+    const showView = (view) => () => {
+        if (!emoji.isOpen) {
+            const isOpen = view.isOpen;
+            login.hide();
+            directory.hide();
+            options.hide();
+            view.isOpen = !isOpen;
+        }
+    };
 
-        toggleInstructions: () => {
-            if (!emoji.isOpen()) {
-                options.hide();
-                login.toggleOpen();
-            }
-        },
+    headbar.addEventListeners({
+        toggleOptions: showView(options),
+        toggleInstructions: showView(login),
+        toggleUserDirectory: showView(directory),
 
         toggleFullscreen: () => {
             headbar.isFullscreen = !headbar.isFullscreen;
@@ -7024,7 +7168,7 @@ function init(host, client) {
 
             setAudioProperties();
 
-            client.setLocalPosition(game.me);
+            client.setLocalPosition(game.me.serialize());
             game.me.addEventListener("userMoved", (evt) => {
                 client.setLocalPosition(evt);
             });
@@ -7045,6 +7189,15 @@ function init(host, client) {
 
         zoomChanged: () => {
             settings.zoom = game.targetCameraZ;
+        }
+    });
+
+    directory.addEventListeners({
+        refreshUserDirectory: () => {
+            directory.clear();
+            for (let user of client.users()) {
+                directory.set("Refresh", user[0], user[1]);
+            }
         }
     });
 
@@ -7079,6 +7232,7 @@ function init(host, client) {
 
         participantJoined: (evt) => {
             game.addUser(evt);
+            directory.set("Participant Joined", evt.id, evt.displayName);
         },
 
         videoAdded: (evt) => {
@@ -7092,6 +7246,7 @@ function init(host, client) {
         participantLeft: (evt) => {
             game.removeUser(evt);
             client.removeUser(evt);
+            directory.delete(evt.id);
         },
 
         avatarChanged: (evt) => {
@@ -7103,6 +7258,7 @@ function init(host, client) {
 
         displayNameChange: (evt) => {
             game.changeUserName(evt);
+            directory.set("Display Name Changed", evt.id, evt.displayName);
         },
 
         audioMuteStatusChanged: async (evt) => {
@@ -7126,7 +7282,7 @@ function init(host, client) {
                 client.userInitResponse(evt.id, game.me.serialize());
             }
             else {
-                console.warn("Local user not initialized");
+                directory.warn("Local user not initialized");
             }
         },
 
@@ -7135,13 +7291,14 @@ function init(host, client) {
                 const user = game.users.get(evt.id);
                 user.deserialize(evt);
                 client.setUserPosition(evt);
+                directory.set("User Init Response", evt.id, evt.displayName);
             }
         },
 
         userMoved: (evt) => {
             if (game.users.has(evt.id)) {
                 const user = game.users.get(evt.id);
-                user.moveTo(evt.x, evt.y);
+                user.moveTo(evt.x, evt.y, settings.transitionSpeed);
                 client.setUserPosition(evt);
             }
         },
@@ -7176,95 +7333,6 @@ class MockAudioContext {
     /** @type {AudioDestinationNode} */
     get destination() {
         return null;
-    }
-}
-
-class BasePosition {
-    /** 
-     *  The horizontal component of the position.
-     *  @type {number} */
-    get x() {
-        throw new Error("Not implemented in base class.");
-    }
-
-    /** 
-     *  The vertical component of the position.
-     *  @type {number} */
-    get y() {
-        throw new Error("Not implemented in base class.");
-    }
-
-    /**
-     * Set the target position
-     * @param {Point} evt - the target position
-     * @param {number} t - the current time, in seconds
-     * @param {number} dt - the amount of time to take to transition, in seconds
-     */
-    setTarget(evt, t, dt) {
-        throw new Error("Not implemented in base class.");
-    }
-
-    /**
-     * Update the position.
-     * @param {number} t - the current time, in seconds
-     */
-    update(t) {
-    }
-}
-
-class InterpolatedPosition extends BasePosition {
-
-    constructor() {
-        super();
-
-        this._st
-            = this._et
-            = 0;
-        this._x
-            = this._tx
-            = this._sx
-            = 0;
-        this._y
-            = this._ty
-            = this._sy
-            = 0;
-    }
-
-    /** @type {number} */
-    get x() {
-        return this._x;
-    }
-
-    /** @type {number} */
-    get y() {
-        return this._y;
-    }
-
-    /**
-     * 
-     * @param {UserPosition} evt
-     * @param {number} t
-     * @param {number} dt
-     */
-    setTarget(evt, t, dt) {
-        this._st = t;
-        this._et = t + dt;
-        this._sx = this._x;
-        this._sy = this._y;
-        this._tx = evt.x;
-        this._ty = evt.y;
-    }
-
-    /**
-     * 
-     * @param {number} t
-     */
-    update(t) {
-        const p = project(t, this._st, this._et);
-        if (p <= 1) {
-            this._x = lerp(this._sx, this._tx, p);
-            this._y = lerp(this._sy, this._ty, p);
-        }
     }
 }
 
@@ -7379,7 +7447,7 @@ class BaseAudioElement extends EventTarget {
         this.minDistance = 1;
         this.maxDistance = 10;
         this.rolloff = 1;
-        this.transitionTime = 0.125;
+        this.transitionTime = 0.5;
 
         /** @type {BasePosition} */
         this.position = position;
@@ -8080,13 +8148,16 @@ const audioActivityEvt$2 = Object.assign(new Event("audioActivity"), {
 function logger(source, evtName) {
     const handler = (...rest) => {
         if (evtName === "conference.endpoint_message_received"
-            && rest[1].type === "e2e-ping-request") {
+            && rest.length >= 2
+            && (rest[1].type === "e2e-ping-request"
+                || rest[1].type === "e2e-ping-response"
+                || rest[1].type === "stats")) {
             return;
         }
         console.log(evtName, ...rest);
     };
 
-    if (window.location.host === "localhost") {
+    if (window.location.hostname === "localhost") {
         source.addEventListener(evtName, handler);
     }
 }
@@ -8179,17 +8250,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
                 }));
             });
 
-
-            let userJoinedEvent = null,
-                dataChannelOpen = false;
-
-            const checkUser = () => {
-                if (!!userJoinedEvent && dataChannelOpen) {
-                    this.dispatchEvent(userJoinedEvent);
-                }
-            },
-
-                onTrackMuteChanged = (track, muted) => {
+            const onTrackMuteChanged = (track, muted) => {
                     const userID = track.getParticipantId() || this.localUser,
                         trackKind = track.getType(),
                         muteChangedEvtName = trackKind + "MuteStatusChanged",
@@ -8207,17 +8268,12 @@ class LibJitsiMeetClient extends BaseJitsiClient {
                 };
 
             this.conference.addEventListener(USER_JOINED, (id, user) => {
-                userJoinedEvent = Object.assign(
+                const evt = Object.assign(
                     new Event("participantJoined"), {
                     id,
                     displayName: user.getDisplayName()
                 });
-                checkUser();
-            });
-
-            this.conference.addEventListener(DATA_CHANNEL_OPENED, () => {
-                dataChannelOpen = true;
-                checkUser();
+                this.dispatchEvent(evt);
             });
 
             this.conference.addEventListener(USER_LEFT, (id) => {
@@ -8560,6 +8616,19 @@ class LibJitsiMeetClient extends BaseJitsiClient {
 
     startAudio() {
         this.audioClient.start();
+    }
+
+    userIDs() {
+        return Object.keys(this.conference.participants);
+    }
+
+    userExists(id) {
+        return !!this.conference.participants[id];
+    }
+
+    users() {
+        return Object.keys(this.conference.participants)
+            .map(k => [k, this.conference.participants[k].getDisplayName()]);
     }
 }
 
