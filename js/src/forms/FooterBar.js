@@ -47,12 +47,12 @@ export class FooterBar extends EventTarget {
                 backgroundColor: "transparent"
             }),
 
-            this.muteAudioButton = Button(
+            Button(
                 title("Toggle audio mute/unmute"),
                 onClick(_(toggleAudioEvt)),
                 grid(1, 1),
                 subelStyle,
-                Run(speakerHighVolume.value),
+                this.muteAudioButton = Run(speakerHighVolume.value),
                 Run(buttonLabelStyle, "Audio")),
 
             this.emojiControl = Span(
@@ -75,12 +75,12 @@ export class FooterBar extends EventTarget {
                     Run(buttonLabelStyle, "Change"))),
 
 
-            this.muteVideoButton = Button(
+            Button(
                 title("Toggle video mute/unmute"),
                 onClick(_(toggleVideoEvt)),
                 grid(3, 1),
                 subelStyle,
-                Run(noMobilePhone.value),
+                this.muteVideoButton = Run(noMobilePhone.value),
                 Run(buttonLabelStyle, "Video")));
 
         this._audioEnabled = true;
