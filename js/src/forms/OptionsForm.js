@@ -1,14 +1,14 @@
-﻿import "../protos.js";
-
-import { bust } from "../emoji/emoji.js";
+﻿import { bust } from "../emoji/emoji.js";
 import { EventedGamepad } from "../gamepad/EventedGamepad.js";
-import { className, htmlFor, id, max, min, placeHolder, step, style, systemFont, title, value } from "../html/attrs.js";
+import { className, htmlFor, id, max, min, placeHolder, step, style, title, value } from "../html/attrs.js";
 import { onClick, onInput, onKeyUp } from "../html/evts.js";
 import { Button, clear, Div, Label, LabeledInput, LabeledSelectBox, OptionPanel, P, Span } from "../html/tags.js";
 import { isGoodNumber } from "../math.js";
+import "../protos.js";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 import { FormDialog } from "./FormDialog.js";
 import { InputBinding } from "./InputBinding.js";
+
 
 
 const keyWidthStyle = style({ width: "7em" }),
@@ -243,7 +243,6 @@ export class OptionsForm extends FormDialog {
         this.footer.append(
             this.confirmButton = Button(
                 className("confirm"),
-                systemFont,
                 "Close",
                 onClick(() => this.hide())));
 

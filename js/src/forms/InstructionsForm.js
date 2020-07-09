@@ -1,8 +1,8 @@
-﻿import { FormDialog } from "./FormDialog.js";
-import { instructions } from "./instructions.js";
-import { Button } from "../html/tags.js";
+﻿import { style } from "../html/attrs.js";
 import { onClick } from "../html/evts.js";
-import { style, systemFont } from "../html/attrs.js";
+import { Button } from "../html/tags.js";
+import { FormDialog } from "./FormDialog.js";
+import { instructions } from "./instructions.js";
 
 export class InstructionsForm extends FormDialog {
 
@@ -13,7 +13,6 @@ export class InstructionsForm extends FormDialog {
 
         this.footer.append(
             this.confirmButton = Button(
-                systemFont,
                 style({ gridArea: "4/2" }),
                 "Close",
                 onClick(() => this.hide())));

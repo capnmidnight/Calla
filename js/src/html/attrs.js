@@ -317,8 +317,6 @@ export const monospaceFont = style({ fontFamily: monospaceFamily });
 
 // A selection of fonts that should match whatever the user's operating system normally uses.
 export const systemFamily = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
-export const systemFont = style({ fontFamily: systemFamily });
-
 
 
 /**

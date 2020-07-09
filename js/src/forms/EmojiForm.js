@@ -1,37 +1,10 @@
-﻿import "../protos.js";
-
+﻿import { allIcons as icons, emojiStyle, textStyle } from "../emoji/emoji.js";
+import { className, href, htmlFor, style, title } from "../html/attrs.js";
+import { onClick } from "../html/evts.js";
+import { A, Button, Div, H1, H2, Label, LI, P, Span, UL } from "../html/tags.js";
+import "../protos.js";
 import { FormDialog } from "./FormDialog.js";
 
-import {
-    allIcons as icons,
-    emojiStyle,
-    textStyle
-} from "../emoji/emoji.js";
-
-import {
-    A,
-    Button,
-    Div,
-    H1,
-    H2,
-    LI,
-    Label,
-    P,
-    Span,
-    UL
-} from "../html/tags.js";
-
-import {
-    className,
-    href,
-    htmlFor,
-    style,
-    title,
-    systemFamily,
-    systemFont
-} from "../html/attrs.js";
-
-import { onClick } from "../html/evts.js";
 
 const headerStyle = style({
     textDecoration: "none",
@@ -40,8 +13,7 @@ const headerStyle = style({
 }),
     buttonStyle = style({
         fontSize: "200%",
-        width: "2em",
-        fontFamily: systemFamily
+        width: "2em"
     }),
     cancelEvt = new Event("emojiCanceled");
 
@@ -161,7 +133,6 @@ export class EmojiForm extends FormDialog {
         this.footer.append(
 
             this.confirmButton = Button(className("confirm"),
-                systemFont,
                 "OK",
                 onClick(() => {
                     const idx = previousEmoji.indexOf(selectedEmoji);
@@ -176,7 +147,6 @@ export class EmojiForm extends FormDialog {
                 })),
 
             Button(className("cancel"),
-                systemFont,
                 "Cancel",
                 onClick(() => {
                     this.confirmButton.lock();

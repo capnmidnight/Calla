@@ -1,4 +1,4 @@
-﻿import { className, id, style, systemFamily } from "../html/attrs.js";
+﻿import { className, id, style } from "../html/attrs.js";
 import { Div, H1 } from "../html/tags.js";
 import "../protos.js";
 
@@ -12,8 +12,7 @@ export class FormDialog extends EventTarget {
             height: "100%",
             gridTemplateColumns: "5fr 1fr 1fr",
             gridTemplateRows: "auto auto 1fr auto auto",
-            overflowY: "hidden",
-            fontFamily: systemFamily
+            overflowY: "hidden"
         });
 
         this.element = document.getElementById(name) ||
