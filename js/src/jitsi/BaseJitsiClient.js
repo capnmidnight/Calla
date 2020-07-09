@@ -112,10 +112,7 @@ export class BaseJitsiClient extends EventTarget {
 
         const joinInfo = await joinTask;
 
-        if (joinInfo.displayName !== userName) {
-            joinInfo.displayName = userName;
-            this.setDisplayName(userName);
-        }
+        this.setDisplayName(userName);
 
 
         const audioOutputs = await this.getAudioOutputDevicesAsync();
