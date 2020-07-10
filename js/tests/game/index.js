@@ -46,7 +46,6 @@ import { srcObject, autoPlay } from "../../src/html/attrs.js";
     });
 
     login.userName = "Sean";
-    login.connectButton.click();
 
     function spawnUsers() {
         if (testUsers.length > 0) {

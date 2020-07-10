@@ -66,7 +66,6 @@ export class LoginForm extends FormDialog {
         this.userNameInput.addEventListener("enter", () => {
             if (this.roomName.length > 0
                 && this.userName.length > 0) {
-                this.connectButton.click();
             }
             else if (this.userName.length === 0) {
                 this.userNameInput.focus();
