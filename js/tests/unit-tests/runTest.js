@@ -1,7 +1,7 @@
 ﻿import "../../src/protos.js";
 import { HtmlTestOutput as TestOutput } from "../../testing/HtmlTestOutput.js";
-import { JitsiClient1_Tests } from "./mainTest.js";
-import { JitsiClient2_Tests } from "./secondaryTest.js";
+import { JitsiClient1_Tests } from "./JitsiClient1_Tests.js";
+import { JitsiClient2_Tests } from "./JitsiClient2_Tests.js";
 import { userNumber } from "../../testing/userNumber.js";
 
 
@@ -15,7 +15,7 @@ function echoEvts(evt, ...evtNameList) {
     }
 }
 
-export async function RunTest(JitsiClient) {
+export async function runTest(JitsiClient) {
 
     const response = await fetch("../../index.html"),
         html = await response.text(),

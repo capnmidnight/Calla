@@ -1,4 +1,4 @@
-﻿import { TestBase } from "./baseTest.js";
+﻿import { TestBase } from "./TestBase.js";
 import { wait } from "../../src/wait.js";
 import { openSideTest } from "../../testing/windowing.js";
 
