@@ -6,7 +6,7 @@ import { onClick } from "../../src/html/evts.js";
 import { openSideTest } from "../../testing/windowing.js";
 import { userNumber } from "../../testing/userNumber.js";
 
-init("jitsi.calla.chat", new JitsiClient());
+const { login } = init("jitsi.calla.chat", new JitsiClient());
 
 if (userNumber === 1) {
     document.body.append(
@@ -20,3 +20,6 @@ if (userNumber === 1) {
             }),
             onClick(openSideTest)));
 }
+
+login.roomName = "TestRoom";
+login.userName = `TestUser${userNumber}`;
