@@ -303,9 +303,9 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         });
 
         return {
-            audioOutput: devices.filter(d => d.kind === "audiooutput"),
+            audioOutput: canChangeAudioOutput ? devices.filter(d => d.kind === "audiooutput") : [],
             audioInput: devices.filter(d => d.kind === "audioinput"),
-            videoInput: canChangeAudioOutput ? devices.filter(d => d.kind === "videoinput") : []
+            videoInput: devices.filter(d => d.kind === "videoinput")
         };
     }
 
