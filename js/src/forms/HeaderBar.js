@@ -68,7 +68,7 @@ export class HeaderBar extends EventTarget {
                 Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
                     alt("icon"),
                     role("presentation"),
-                    style({ height: "25px" })),
+                    style({ height: "25px", marginBottom: "-7px" })),
                 Run(buttonLabelStyle, "Tweet")),
 
             Button(
