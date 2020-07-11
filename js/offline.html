@@ -1,0 +1,72 @@
+﻿<!DOCTYPE html>
+<html lang="en-us">
+
+<head prefix="og: http://ogp.me/ns#">
+    <meta charset="utf-8">
+    <title>Calla: Offline</title>
+    <meta name="description" content="Voice chat with an RPG map. Volume scales with distance from other users. Walk around, talk to folks, have private conversations by huddling in a corner, or drop in on other conversations. Ideal for meetups!" />
+</head>
+
+<body>
+    <div style="font-size: max(75vw, 75vh);">🌆</div>
+    <div>☠️</div>
+    <div>💩</div>
+    <div>💥</div>
+    <div>💣</div>
+    <p style="position:absolute;font-family:cursive;top:50%;left:50%;margin-left:-25%;color:white;text-shadow: 10px 10px 20px black;font-size:min(20vw, 20vh)">OFFLINE</p>
+    <script>
+        const elems = [...document.querySelectorAll("div")].slice(1);
+        const data = new Map();
+
+        function x(p) {
+            return p * document.body.clientWidth;
+        }
+
+        function y(p) {
+            return p * document.body.clientHeight;
+        }
+
+        for (let elem of elems) {
+            const d = {
+                x: x(Math.random()),
+                y: y(Math.random()),
+                dx: x((Math.random() - 0.5) / 1000),
+                dy: y((Math.random() - 0.5) / 1000),
+                size: ((Math.random() + 1) * 300)
+            };
+
+            Object.assign(elem.style, {
+                fontSize: d.size + "px",
+                position: "absolute",
+                left: d.x + "px",
+                top: d.y + "px",
+            });
+
+            d.size /= 2;
+
+            data.set(elem, d);
+        }
+
+        let lt = performance.now();
+        requestAnimationFrame(function paint(t) {
+            requestAnimationFrame(paint);
+            const dt = t - lt;
+            lt = t;
+            for (let elem of elems) {
+                const d = data.get(elem);
+                d.x += d.dx * dt;
+                d.y += d.dy * dt;
+                if (d.x + d.size < 0 || d.x - d.size > document.body.clientWidth) {
+                    d.dx *= -1;
+                }
+                if (d.y + d.size < 0 || d.y - d.size > document.body.clientHeight) {
+                    d.dy *= -1;
+                }
+                elem.style.left = d.x + "px";
+                elem.style.top = d.y + "px";
+            }
+        });
+    </script>
+</body>
+
+</html>

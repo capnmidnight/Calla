@@ -40,6 +40,11 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
     <link rel="manifest" href="/manifest.json">
 
+    <script type="module">
+        import 'https://cdn.jsdelivr.net/npm/@pwabuilder/pwaupdate';
+        const el = document.createElement('pwa-update');
+        document.body.appendChild(el);
+    </script>
 
     <link type="text/css" rel="stylesheet" href="/stylesheets/general.css" />
     <link type="text/css" rel="stylesheet" href="/stylesheets/icons.css" />
