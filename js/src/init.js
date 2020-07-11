@@ -96,10 +96,10 @@ export function init(host, client) {
         options.gamepadIndex = game.gamepadIndex;
     }
 
-    function refreshUser(userID) {
+    function refreshUser(userID, isNew) {
         if (game.users.has(userID)) {
             const user = game.users.get(userID);
-            directory.set(user);
+            directory.set(user, isNew);
         }
     }
 
@@ -303,7 +303,7 @@ export function init(host, client) {
             evt.user.addEventListener("userPositionNeeded", (evt2) => {
                 client.userInitRequest(evt2.id);
             });
-            refreshUser(evt.user.id);
+            refreshUser(evt.user.id, true);
         },
 
         toggleAudio: async () => {
@@ -350,20 +350,11 @@ export function init(host, client) {
         }
     });
 
-    directory.addEventListeners({
-        refreshUserDirectory: () => {
-            directory.clear();
-            for (let userID of game.users.keys()) {
-                refreshUser(userID);
-            }
-        },
-
-        warpTo: (evt) => {
-            if (game.users.has(evt.id)) {
-                const user = game.users.get(evt.id);
-                game.warpMeTo(user.position._tx, user.position._ty);
-                directory.hide();
-            }
+    directory.addEventListener("warpTo", (evt) => {
+        if (game.users.has(evt.id)) {
+            const user = game.users.get(evt.id);
+            game.warpMeTo(user.position._tx, user.position._ty);
+            directory.hide();
         }
     });
 

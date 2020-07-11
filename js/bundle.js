@@ -530,6 +530,8 @@ class HtmlEvt {
 function onClick(callback) { return new HtmlEvt("click", callback); }
 function onInput(callback) { return new HtmlEvt("input", callback); }
 function onKeyUp(callback) { return new HtmlEvt("keyup", callback); }
+function onMouseOut(callback) { return new HtmlEvt("mouseout", callback); }
+function onMouseOver(callback) { return new HtmlEvt("mouseover", callback); }
 
 function tag(name, ...rest) {
     const elem = document.createElement(name);
@@ -5314,8 +5316,17 @@ class UserPositionNeededEvent extends Event {
     }
 }
 
-const refreshDirectoryEvt = new Event("refreshUserDirectory");
-const newRowColor = "lightgreen";
+function bg(backgroundColor) {
+    return style({ backgroundColor });
+}
+
+function z(zIndex) {
+    return style({ zIndex });
+}
+
+const newRowColor = bg("lightgreen");
+const hoveredColor = bg("rgba(65, 255, 202, 0.25)");
+const unhoveredColor = bg("transparent");
 const avatarSize = style({ height: "32px" });
 const warpToEvt = Object.assign(
     new Event("warpTo"),
@@ -5324,12 +5335,11 @@ const warpToEvt = Object.assign(
     });
 
 const ROW_TIMEOUT = 3000;
+
 class UserDirectoryForm extends FormDialog {
 
     constructor() {
         super("users", "Users");
-
-        const _ = (evt) => () => this.dispatchEvent(evt);
 
         /** @type {Map.<string, Element[]>} */
         this.rows = new Map();
@@ -5338,46 +5348,31 @@ class UserDirectoryForm extends FormDialog {
             this.table = Div(
                 style({
                     display: "grid",
-                    gridTemplateColumns: "auto auto auto auto 1fr",
+                    gridTemplateColumns: "auto 1fr",
                     gridTemplateRows: "min-content",
                     columnGap: "5px",
                     width: "100%"
                 })));
-
-        this.table.append(
-            Div(grid(1, 1), ""),
-            Div(grid(2, 1), "ID"),
-            Div(grid(3, 1), "Location"),
-            Div(grid(4, 1), "Avatar"),
-            Div(grid(5, 1), "User Name"));
-
-        this.footer.append(
-            Button(
-                "Refresh",
-                onClick(_(refreshDirectoryEvt))),
-
-            this.confirmButton = Button(
-                "Close",
-                onClick(() => this.hide())));
     }
 
     /**
      * 
      * @param {User} user
      */
-    set(user) {
+    set(user, isNew = false) {
         this.delete(user.id);
-        const row = this.rows.size + 2;
-        const elem = Div(
-            grid(1, row, 5, 1),
-            style({
-                backgroundColor: newRowColor,
-                zIndex: -1
-            }));
-        setTimeout(() => {
-            this.table.removeChild(elem);
-        }, ROW_TIMEOUT);
-        this.table.append(elem);
+        const row = this.rows.size + 1;
+
+        if (isNew) {
+            const elem = Div(
+                grid(1, row, 2, 1),
+                z(-1),
+                newRowColor);
+            setTimeout(() => {
+                this.table.removeChild(elem);
+            }, ROW_TIMEOUT);
+            this.table.append(elem);
+        }
 
         let avatar = "N/A";
         if (user.avatar && user.avatar.element) {
@@ -5386,17 +5381,21 @@ class UserDirectoryForm extends FormDialog {
         }
 
         const elems = [
-            Button(
-                grid(1, row),
+            Div(grid(1, row), z(0), avatar),
+            Div(grid(2, row), z(0), user.displayName),
+            Div(
+                grid(1, row, 2, 1), z(1),
+                unhoveredColor,
+                onMouseOver(function () {
+                    hoveredColor.apply(this);
+                }),
+                onMouseOut(function () {
+                    unhoveredColor.apply(this);
+                }),
                 onClick(() => {
                     warpToEvt.id = user.id;
                     this.dispatchEvent(warpToEvt);
-                }),
-                "Visit"),
-            Div(grid(2, row), user.id),
-            Div(grid(3, row), `<x: ${user.position._tx}, y: ${user.position._ty}>`),
-            Div(grid(4, row), avatar),
-            Div(grid(5, row), user.displayName)];
+                }))];
 
         this.rows.set(user.id, elems);
         this.table.append(...elems);
@@ -5410,7 +5409,7 @@ class UserDirectoryForm extends FormDialog {
                 this.table.removeChild(elem);
             }
 
-            let rowCount = 2;
+            let rowCount = 1;
             for (let elems of this.rows.values()) {
                 const r = row(rowCount++);
                 for (let elem of elems) {
@@ -5428,9 +5427,12 @@ class UserDirectoryForm extends FormDialog {
 
     warn(...rest) {
         const elem = Div(
-            style({ backgroundColor: "yellow" }),
+            grid(1, this.rows.size + 1, 2, 1),
+            bg("yellow"),
             ...rest.map(i => i.toString()));
+
         this.table.append(elem);
+
         setTimeout(() => {
             this.table.removeChild(elem);
         }, 5000);
@@ -7182,10 +7184,10 @@ function init(host, client) {
         options.gamepadIndex = game.gamepadIndex;
     }
 
-    function refreshUser(userID) {
+    function refreshUser(userID, isNew) {
         if (game.users.has(userID)) {
             const user = game.users.get(userID);
-            directory.set(user);
+            directory.set(user, isNew);
         }
     }
 
@@ -7389,7 +7391,7 @@ function init(host, client) {
             evt.user.addEventListener("userPositionNeeded", (evt2) => {
                 client.userInitRequest(evt2.id);
             });
-            refreshUser(evt.user.id);
+            refreshUser(evt.user.id, true);
         },
 
         toggleAudio: async () => {
@@ -7436,20 +7438,11 @@ function init(host, client) {
         }
     });
 
-    directory.addEventListeners({
-        refreshUserDirectory: () => {
-            directory.clear();
-            for (let userID of game.users.keys()) {
-                refreshUser(userID);
-            }
-        },
-
-        warpTo: (evt) => {
-            if (game.users.has(evt.id)) {
-                const user = game.users.get(evt.id);
-                game.warpMeTo(user.position._tx, user.position._ty);
-                directory.hide();
-            }
+    directory.addEventListener("warpTo", (evt) => {
+        if (game.users.has(evt.id)) {
+            const user = game.users.get(evt.id);
+            game.warpMeTo(user.position._tx, user.position._ty);
+            directory.hide();
         }
     });
 
