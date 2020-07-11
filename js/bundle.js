@@ -7381,6 +7381,7 @@ function init(host, client) {
         },
 
         gameEnded: () => {
+            grid(1, 1, 1, 3).apply(login.element);
             game.hide();
             login.connected = false;
             showLogin();
