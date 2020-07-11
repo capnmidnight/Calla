@@ -65,7 +65,7 @@ export class MockJitsiClient extends BaseJitsiClient {
         return this.currentDevices.audioOutput;
     }
 
-    setAudioOutputDevice(device) {
+    setAudioOutputDeviceAsync(device) {
         this.currentDevices.audioOutput = device;
     }
 
@@ -93,27 +93,29 @@ export class MockJitsiClient extends BaseJitsiClient {
         this.currentDevices.videoInput = device;
     }
 
-    async toggleAudioAsync() {
+    async toggleAudioMutedAsync() {
         this.audioMuted = !this.audioMuted;
         this.dispatchEvent(Object.assign(
             new Event("audioMuteStatusChanged"), {
             muted: this.audioMuted
         }));
+        return this.audioMuted;
     }
 
-    async toggleVideoAsync() {
+    async toggleVideoMutedAsync() {
         this.videoMuted = !this.videoMuted;
         this.dispatchEvent(Object.assign(
             new Event("videoMuteStatusChanged"), {
             muted: this.videoMuted
         }));
+        return this.videoMuted;
     }
 
-    async isAudioMutedAsync() {
+    get isAudioMuted() {
         return this.audioMuted;
     }
 
-    async isVideoMutedAsync() {
+    get isVideoMuted() {
         return this.videoMuted;
     }
 

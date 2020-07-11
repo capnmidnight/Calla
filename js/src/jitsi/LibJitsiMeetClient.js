@@ -325,9 +325,10 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         }
     }
 
-    setAudioOutputDevice(device) {
-        JitsiMeetJS.mediaDevices.setAudioOutputDevice(device.deviceId);
-        this.audioClient.setAudioOutputDevice(device.deviceId);
+    async setAudioOutputDeviceAsync(device) {
+        const id = device && device.deviceId || null;
+        this.audioClient.setAudioOutputDevice(id);
+        await JitsiMeetJS.mediaDevices.setAudioOutputDevice(id);
     }
 
     getCurrentMediaTrack(type) {
@@ -358,7 +359,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         return this.when(evt, (evt) => evt.id === this.localUser, 5000);
     }
 
-    async toggleAudioAsync() {
+    async toggleAudioMutedAsync() {
         const changeTask = this.taskOf("audioMuteStatusChanged");
         const cur = this.getCurrentMediaTrack("audio");
         if (cur) {
@@ -379,7 +380,29 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 await this.setAudioInputDeviceAsync(avail[0]);
             }
         }
-        return await changeTask;
+
+        const evt = await changeTask;
+        return evt.muted;
+    }
+
+    async toggleVideoMutedAsync() {
+        const changeTask = this.taskOf("videoMuteStatusChanged");
+        const cur = this.getCurrentMediaTrack("video");
+        if (cur) {
+            await this.setVideoInputDeviceAsync(null);
+        }
+        else {
+            const avail = await this.getVideoInputDevicesAsync();
+            if (avail.length === 0) {
+                throw new Error("No video input devices available");
+            }
+            else {
+                await this.setVideoInputDeviceAsync(avail[0]);
+            }
+        }
+
+        const evt = await changeTask;
+        return evt.muted;
     }
 
     async setAudioInputDeviceAsync(device) {
@@ -422,25 +445,6 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         }
     }
 
-    async toggleVideoAsync() {
-        const changeTask = this.when("videoMuteStatusChanged", (evt) => evt.id === this.this.localUser, 5000);
-        const cur = this.getCurrentMediaTrack("video");
-        if (cur) {
-            await this.setVideoInputDeviceAsync(null);
-        }
-        else {
-            const avail = await this.getVideoInputDevicesAsync();
-            if (avail.length === 0) {
-                throw new Error("No video input devices available");
-            }
-            else {
-                await this.setVideoInputDeviceAsync(avail[0]);
-            }
-        }
-
-        return await changeTask;
-    }
-
     async setVideoInputDeviceAsync(device) {
         const cur = this.getCurrentMediaTrack("video");
         if (cur) {
@@ -478,11 +482,11 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             || cur.isMuted();
     }
 
-    async isAudioMutedAsync() {
+    get isAudioMuted() {
         return this.isMediaMuted("audio");
     }
 
-    async isVideoMutedAsync() {
+    get isVideoMuted() {
         return this.isMediaMuted("video");
     }
 

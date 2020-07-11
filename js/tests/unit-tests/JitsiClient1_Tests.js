@@ -33,7 +33,7 @@ export class JitsiClient1_Tests extends TestBase {
         this.isGreaterThan(alt.length, 0, "Alternate devices");
 
         const next = alt[0];
-        this.client.setAudioOutputDevice(next);
+        this.client.setAudioOutputDeviceAsync(next);
 
         await wait(250);
         const now = await this.client.getCurrentAudioOutputDeviceAsync();
@@ -99,67 +99,56 @@ export class JitsiClient1_Tests extends TestBase {
         this.isEqualTo(now.label, next.label, "label");
     }
 
-    async test_066_resetDevices() {
-        const audioMuted = await this.client.isAudioMutedAsync(),
-            videoMuted = await this.client.isVideoMutedAsync();
+    async resetDevices() {
+        const audioMuted = await this.client.setAudioMutedAsync(false);
+        this.isFalse(audioMuted, "Audio muted");
 
-        if (audioMuted) {
-            await this.client.setAudioMutedAsync(false);
-        }
-
-        if (!videoMuted) {
-            await this.client.setVideoMutedAsync(true);
-        }
+        const videoMuted = await this.client.setVideoMutedAsync(true);
+        this.isTrue(videoMuted, "Video not muted");
 
         this.success();
     }
 
+    async test_066_resetDevices() {
+        await this.resetDevices();
+    }
+
     async test_070_toggleAudio() {
-        const evt = await this.client.toggleAudioAsync();
-        this.isTrue(evt.muted, "Muted");
+        const wasMuted = this.client.isAudioMuted;
+        const isMuted = await this.client.toggleAudioMutedAsync();
+        this.isNotEqualTo(isMuted, wasMuted, "Muted 1");
+        this.isEqualTo(isMuted, this.client.isAudioMuted, "Muted 2");
     }
 
     async test_080_isAudioMuted() {
-        let muted = await this.client.isAudioMutedAsync();
-        this.isTrue(muted, "Muted");
+        this.isTrue(this.client.isAudioMuted, "Muted");
     }
 
     async test_090_setAudioMuted() {
         await wait(1000);
-        const evt = await this.client.setAudioMutedAsync(false);
-        this.isFalse(evt.muted, "Muted");
+        const isMuted = await this.client.setAudioMutedAsync(false);
+        this.isFalse(isMuted, "Muted");
     }
 
     async test_100_toggleVideo() {
-        const isMuted = await this.client.isVideoMutedAsync();
-        const evt = await this.client.toggleVideoAsync();
-        this.isNotEqualTo(evt.muted, isMuted, "Muted");
+        const wasMuted = this.client.isVideoMuted;
+        const isMuted = await this.client.toggleVideoMutedAsync();
+        this.isNotEqualTo(isMuted, wasMuted, "Muted 1");
+        this.isEqualTo(isMuted, this.client.isVideoMuted, "Muted 2");
     }
 
     async test_110_isVideoMuted() {
-        let muted = await this.client.isVideoMutedAsync();
-        this.isFalse(muted, "Muted");
+        this.isFalse(this.client.isVideoMuted, "Muted");
     }
 
     async test_120_setVideoMuted() {
         await wait(1000);
-        const evt = await this.client.setVideoMutedAsync(true);
-        this.isTrue(evt.muted, "Muted");
+        const isMuted = await this.client.setVideoMutedAsync(true);
+        this.isTrue(isMuted, "Muted");
     }
 
     async test_125_resetDevices() {
-        const audioMuted = await this.client.isAudioMutedAsync(),
-            videoMuted = await this.client.isVideoMutedAsync();
-
-        if (audioMuted) {
-            await this.client.setAudioMutedAsync(false);
-        }
-
-        if (!videoMuted) {
-            await this.client.setVideoMutedAsync(true);
-        }
-
-        this.success();
+        await this.resetDevices();
     }
 
     async test_130_participantJoined() {

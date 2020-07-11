@@ -118,7 +118,6 @@ export class BaseJitsiClient extends EventTarget {
 
         this.setDisplayName(userName);
 
-
         const audioOutputs = await this.getAudioOutputDevicesAsync();
         const audOut = audioOutputs.scan(
             (d) => d.deviceId === this.preferedAudioOutputID,
@@ -126,7 +125,7 @@ export class BaseJitsiClient extends EventTarget {
             (d) => d.deviceId === "default",
             (d) => !!d);
         if (audOut) {
-            await this.setAudioOutputDevice(audOut);
+            await this.setAudioOutputDeviceAsync(audOut);
         }
 
         const audioInputs = await this.getAudioInputDevicesAsync();
@@ -188,7 +187,7 @@ export class BaseJitsiClient extends EventTarget {
      * 
      * @param {MediaDeviceInfo} device
      */
-    setAudioOutputDevice(device) {
+    async setAudioOutputDeviceAsync(device) {
         throw new Error("Not implemented in base class");
     }
 
@@ -216,11 +215,11 @@ export class BaseJitsiClient extends EventTarget {
         throw new Error("Not implemented in base class");
     }
 
-    async toggleAudioAsync() {
+    async toggleAudioMutedAsync() {
         throw new Error("Not implemented in base class");
     }
 
-    async toggleVideoAsync() {
+    async toggleVideoMutedAsync() {
         throw new Error("Not implemented in base class");
     }
 
@@ -231,14 +230,14 @@ export class BaseJitsiClient extends EventTarget {
     /**
      * @return {Promise.<boolean>}
      */
-    async isAudioMutedAsync() {
+    get isAudioMuted() {
         throw new Error("Not implemented in base class");
     }
 
     /**
      * @return {Promise.<boolean>}
      */
-    async isVideoMutedAsync() {
+    get isVideoMuted() {
         throw new Error("Not implemented in base class");
     }
 
@@ -295,9 +294,9 @@ export class BaseJitsiClient extends EventTarget {
      * @param {boolean} muted
      */
     async setAudioMutedAsync(muted) {
-        let isMuted = await this.isAudioMutedAsync();
+        let isMuted = this.isAudioMuted;
         if (muted !== isMuted) {
-            isMuted = await this.toggleAudioAsync();
+            isMuted = await this.toggleAudioMutedAsync();
         }
         return isMuted;
     }
@@ -307,9 +306,9 @@ export class BaseJitsiClient extends EventTarget {
      * @param {boolean} muted
      */
     async setVideoMutedAsync(muted) {
-        let isMuted = await this.isVideoMutedAsync();
+        let isMuted = this.isVideoMuted;
         if (muted !== isMuted) {
-            isMuted = await this.toggleVideoAsync();
+            isMuted = await this.toggleVideoMutedAsync();
         }
         return isMuted;
     }

@@ -190,17 +190,16 @@ export function init(host, client) {
             game.emote(client.localUser, game.currentEmoji);
         },
 
-        toggleAudio: () => {
-            client.toggleAudioAsync();
+        toggleAudio: async () => {
+            await client.toggleAudioMutedAsync();
         },
 
-        toggleVideo: () => {
-            client.toggleVideoAsync();
+        toggleVideo: async () => {
+            await client.toggleVideoMutedAsync();
         }
     });
 
 
-    login.addEventListener("login", () => {
     login.addEventListener("login", async () => {
         client.startAudio();
 
@@ -237,7 +236,7 @@ export function init(host, client) {
         audioPropertiesChanged: setAudioProperties,
 
         selectAvatar: async () => {
-            withEmojiSelection((e) => {
+            await withEmojiSelection((e) => {
                 settings.avatarEmoji
                     = options.avatarEmoji
                     = game.me.avatarEmoji
@@ -250,8 +249,8 @@ export function init(host, client) {
             client.setAvatarURL(options.avatarURL);
         },
 
-        toggleVideo: () => {
-            client.toggleVideoAsync();
+        toggleVideo: async () => {
+            await client.toggleVideoMutedAsync();
         },
 
         toggleDrawHearing: () => {
@@ -262,16 +261,16 @@ export function init(host, client) {
             settings.fontSize = game.fontSize = options.fontSize;
         },
 
-        audioInputChanged: () => {
+        audioInputChanged: async () => {
             const device = options.currentAudioInputDevice;
             settings.preferedAudioInputID = device && device.deviceId || null;
-            client.setAudioInputDeviceAsync(device);
+            await client.setAudioInputDeviceAsync(device);
         },
 
-        audioOutputChanged: () => {
+        audioOutputChanged: async () => {
             const device = options.currentAudioOutputDevice;
             settings.preferedAudioOutputID = device && device.deviceId || null;
-            client.setAudioOutputDevice(device);
+            await client.setAudioOutputDeviceAsync(device);
         },
 
         videoInputChanged: () => {
@@ -303,12 +302,12 @@ export function init(host, client) {
             refreshUser(evt.user.id);
         },
 
-        toggleAudio: () => {
-            client.toggleAudioAsync();
+        toggleAudio: async () => {
+            await client.toggleAudioMutedAsync();
         },
 
-        toggleVideo: () => {
-            client.toggleVideoAsync();
+        toggleVideo: async () => {
+            await client.toggleVideoMutedAsync();
         },
 
         gameStarted: () => {

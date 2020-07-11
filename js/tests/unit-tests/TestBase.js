@@ -74,10 +74,8 @@ export class TestBase extends TestCase {
 
     async sendAudioMuted() {
         await wait(1000);
-        const evt = await this.client.setAudioMutedAsync(true);
-        this.hasValue(evt.id, "UserID");
-        this.isEqualTo(evt.id, this.client.localUser, "Local User");
-        this.isTrue(evt.muted, "Muted");
+        const isMuted = await this.client.setAudioMutedAsync(true);
+        this.isTrue(isMuted, "Muted");
     }
 
     taskOf(evt) {
@@ -93,10 +91,8 @@ export class TestBase extends TestCase {
 
     async sendAudioUnmuted() {
         await wait(1000);
-        const evt = await this.client.setAudioMutedAsync(false);
-        this.hasValue(evt.id, "UserID");
-        this.isEqualTo(evt.id, this.client.localUser, "Local User");
-        this.isFalse(evt.muted, "Muted");
+        const isMuted = await this.client.setAudioMutedAsync(false);
+        this.isFalse(isMuted, "Muted");
     }
 
     async recvAudioUnmuted() {
@@ -108,10 +104,8 @@ export class TestBase extends TestCase {
 
     async sendVideoUnmuted() {
         await wait(1000);
-        const evt = await this.client.setVideoMutedAsync(false);
-        this.hasValue(evt.id, "UserID");
-        this.isEqualTo(evt.id, this.client.localUser, "Local User");
-        this.isFalse(evt.muted, "Muted");
+        const isMuted = await this.client.setVideoMutedAsync(false);
+        this.isFalse(isMuted, "Muted");
     }
 
     async recvVideoUnmuted() {
@@ -123,10 +117,8 @@ export class TestBase extends TestCase {
 
     async sendVideoMuted() {
         await wait(1000);
-        const evt = await this.client.setVideoMutedAsync(true);
-        this.hasValue(evt.id, "UserID");
-        this.isEqualTo(evt.id, this.client.localUser, "Local User");
-        this.isTrue(evt.muted, "Muted");
+        const isMuted = await this.client.setVideoMutedAsync(true);
+        this.isTrue(isMuted, "Muted");
     }
 
     async recvVideoMuted() {
