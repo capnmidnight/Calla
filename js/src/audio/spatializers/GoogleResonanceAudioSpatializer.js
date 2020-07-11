@@ -23,7 +23,7 @@ export class GoogleResonanceAudioSpatializer extends BaseAnalyzedSpatializer {
     }
 
     setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
-        super.setAudioOutputDevice(minDistance, maxDistance, rolloff, transitionTime);
+        super.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
         this.resNode.setMinDistance(minDistance);
         this.resNode.setMaxDistance(maxDistance);
     }
