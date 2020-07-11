@@ -1,8 +1,7 @@
 ﻿function hax(parent, name, label, creator) {
     parent[name] = function (...rest) {
         const value = creator(rest);
-        const params = rest.map(JSON.stringify).join(", ");
-        console.log("HAAAAX", label, "(", params, ") -> ", value);
+        console.log("HAAAAX", label, "(", ...rest, ") -> ", value);
         return value;
     };
 }
@@ -20,36 +19,54 @@ export function haxFunction(parent, name, label) {
         });
 }
 
+export function haxMethod(parent, name) {
+    const oldMethod = parent.prototype[name];
+    const label = `${parent.name}::${name}`;
+    parent.prototype[name] = function (...rest) {
+        const params = ["HAAAAX", "call", label, "(", ...rest, ")"],
+            success = (value) => console.log(...params, "->", value),
+            failure = (exp) => console.error(...params, "->", exp);
+        try {
+            const value = oldMethod.apply(this, rest);
+
+            if (value === undefined) {
+                console.log(...params);
+            }
+            else {
+                success(value);
+                if (value instanceof Promise) {
+                    value.then(success)
+                        .catch(failure);
+                }
+            }
+
+            return value;
+        }
+        catch (exp) {
+            failure(exp);
+            throw exp;
+        }
+    }
+}
+
 let haxCounter = 0;
 
 export function haxClass(parent, OldClass, methods) {
 
     const ctor = `constructor(...rest) {
         super(...rest);
-        const params = rest.map(JSON.stringify).join(", ");
-        console.log("HAAAAX", "create", "${OldClass.name}", "(", params, ")");
+        console.log("HAAAAX", "create", "${OldClass.name}", "(", ...rest, ")");
     }`;
-
-    const meths = [];
-
-    for (let method of methods) {
-        meths.push(`${method}(...rest) {
-        const value = super.${method}(...rest);
-        const params = rest.map(JSON.stringify).join(", ");
-        if(value === undefined) {
-            console.log("HAAAAX", "call", "${OldClass.name}::${method}", "(", params, ")");
-        }
-        else {
-            console.log("HAAAAX", "call", "${OldClass.name}::${method}", "(", params, ") -> ", value);
-        }
-        return value;
-    }`);
-    }
 
     const script = `return class Hax${Date.now()}${haxCounter++} extends ${OldClass.name} {
     ${ctor}
-    ${meths.join("\n    ")}
 }`;
 
     parent[OldClass.name] = (new Function(script))();
+
+    if (methods !== undefined) {
+        for (let method of methods) {
+            haxMethod(OldClass, method);
+        }
+    }
 }

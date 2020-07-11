@@ -1,36 +1,27 @@
 ﻿import { haxClass, haxFunction } from "../../testing/hax.js";
 
-haxFunction(navigator.mediaDevices, "getUserMedia");
-
-//haxClass(window, XMLHttpRequest, [
-//    "send",
-//    "open"]);
-
-haxClass(window, RTCPeerConnection, [
-    "addIceCandidate",
-    "addStream",
-    "addTrack",
-    "close",
-    "createAnswer",
-    "createDataChannel",
-    "createOffer",
-    "generateCertificate",
-    "getConfiguration",
-    "getIdentityAssertion",
-    "getReceivers",
-    "getSenders",
-    //"getStats",
-    "getStreamById",
-    "getTransceivers",
-    "removeStream",
-    "removeTrack",
-    "restartIce",
-    "setConfiguration",
-    "setIdentityProvider",
-    "setLocalDescription",
-    "setRemoteDescription"]);
+//haxClass(window, EventTarget, ["addEventListener", "dispatchEvent"]);
 
 
+const OldPromise = Promise;
+window.Promise = class NewPromise extends OldPromise {
+    constructor(callback, ...rest) {
+        console.log("Promise", callback, ...rest);
+        const injectedCallback = (resolve, reject) => {
+            console.log("Promise callback", resolve, reject);
+            try {
+                return callback(resolve, (exp) => {
+                    console.error("NEW PROMISE", exp);
+                    return reject(exp);
+                });
+            }
+            catch (exp) {
+                console.error("Promise callback", exp);
+            }
+        };
+        super(injectedCallback);
+    }
+};
 
 import { init } from "../../src/init.js";
 import { LibJitsiMeetClient as JitsiClient } from "../../src/jitsi/LibJitsiMeetClient.js";
