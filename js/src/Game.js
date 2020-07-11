@@ -474,7 +474,7 @@ export class Game extends EventTarget {
         });
     }
 
-    async start(evt) {
+    async startAsync(evt) {
         //evt = {
         //    roomName: "string", // the room name of the conference
         //    id: "string", // the id of the local participant

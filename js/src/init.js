@@ -57,6 +57,7 @@ export function init(host, client) {
     }
 
     async function withEmojiSelection(callback) {
+
         if (!emoji.isOpen) {
             headbar.optionsButton.lock();
             headbar.instructionsButton.lock();
@@ -200,11 +201,35 @@ export function init(host, client) {
 
 
     login.addEventListener("login", () => {
+    login.addEventListener("login", async () => {
         client.startAudio();
-        client.joinAsync(
+
+        const joinInfo = await client.joinAsync(
             host,
             settings.roomName = login.roomName,
             settings.userName = login.userName);
+
+        login.connected = true;
+
+        window.location.hash = login.roomName;
+
+        await game.startAsync(joinInfo);
+
+        options.audioInputDevices = await client.getAudioInputDevicesAsync();
+        options.audioOutputDevices = await client.getAudioOutputDevicesAsync();
+        options.videoInputDevices = await client.getVideoInputDevicesAsync();
+
+        options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
+        options.currentAudioOutputDevice = await client.getCurrentAudioOutputDeviceAsync();
+        options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
+
+        const audioMuted = client.isAudioMuted;
+        game.muteUserAudio({ id: client.localUser, muted: audioMuted });
+        footbar.audioEnabled = !audioMuted;
+
+        const videoMuted = client.isVideoMuted;
+        game.muteUserVideo({ id: client.localUser, muted: videoMuted });
+        footbar.videoEnabled = !videoMuted;
     });
 
 
@@ -339,29 +364,6 @@ export function init(host, client) {
     });
 
     client.addEventListeners({
-        videoConferenceJoined: async (evt) => {
-            login.connected = true;
-
-            window.location.hash = login.roomName;
-
-            game.start(evt);
-
-            options.audioInputDevices = await client.getAudioInputDevicesAsync();
-            options.audioOutputDevices = await client.getAudioOutputDevicesAsync();
-            options.videoInputDevices = await client.getVideoInputDevicesAsync();
-
-            options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
-            options.currentAudioOutputDevice = await client.getCurrentAudioOutputDeviceAsync();
-            options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
-
-            const audioMuted = await client.isAudioMutedAsync();
-            game.muteUserAudio({ id: client.localUser, muted: audioMuted });
-            footbar.audioEnabled = !audioMuted;
-
-            const videoMuted = await client.isVideoMutedAsync();
-            game.muteUserVideo({ id: client.localUser, muted: videoMuted });
-            footbar.videoEnabled = !videoMuted;
-        },
 
         videoConferenceLeft: (evt) => {
             game.end();
