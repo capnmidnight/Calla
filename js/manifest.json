@@ -1,5 +1,10 @@
 {
- "name": "Calla",
+ "name": "Calla.Chat",
+ "short_name": "Calla",
+ "start_url": ".",
+ "display": "standalone",
+ "background_color": "#fff",
+ "description": "Spatialized voice chat for meetups",
  "icons": [
   {
    "src": "\/icons\/android-icon-36x36.png",
