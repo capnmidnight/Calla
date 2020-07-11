@@ -3185,8 +3185,6 @@ class FormDialog extends EventTarget {
 
         const formStyle = style({
             display: "grid",
-            width: "100%",
-            height: "100%",
             gridTemplateColumns: "5fr 1fr 1fr",
             gridTemplateRows: "auto auto 1fr auto auto",
             overflowY: "hidden"

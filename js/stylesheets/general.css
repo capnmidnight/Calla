@@ -51,7 +51,7 @@ h2 {
 
 .dialog {
     background-color: white;
-    padding: 1em 1em 3em 1em;
+    padding: 1em 1em 0 1em;
 }
 
 @media (min-width: 600px) {

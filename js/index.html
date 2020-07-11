@@ -41,9 +41,9 @@
     <link rel="manifest" href="/manifest.json">
 
     <script type="module">
-        import 'https://cdn.jsdelivr.net/npm/@pwabuilder/pwaupdate';
         const el = document.createElement('pwa-update');
-        document.body.appendChild(el);
+        document.querySelector("#login .header").appendChild(el);
+        import('https://cdn.jsdelivr.net/npm/@pwabuilder/pwaupdate');
     </script>
 
     <link type="text/css" rel="stylesheet" href="/stylesheets/general.css" />
@@ -102,7 +102,7 @@
                 <li>You can <strong>roll your mouse wheel</strong> or <strong>pinch your touchscreen</strong> to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in their Avatar.</li>
             </ul>
         </div>
-        <div class="footer" style="grid-area: 4/1/5/4; height: 1em;"></div>
+        <div class="footer" style="grid-area: 4/1/5/4;"></div>
     </div>
 </body>
 
