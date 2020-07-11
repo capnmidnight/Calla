@@ -1,5 +1,5 @@
 {
-    "version": "0.1.1",
+    "version": "0.1.3",
     "private": true,
     "scripts": {
         "pkg": "npm version patch && node writeversion.js && rollup -c && minify bundle.js > bundle.min.js"

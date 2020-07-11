@@ -918,7 +918,7 @@ function OptionPanel(id, name, ...rest) {
     return new OptionPanelTag(id, name, ...rest);
 }
 
-const version = "0.1.1";
+const versionString = "Calla v0.1.3";
 
 class Emoji {
     /**
@@ -7098,7 +7098,15 @@ class SFX extends EventTarget {
     }
 }
 
-console.log(`Calla v${version}`);
+console.log(`${versionString}`);
+/** @type {Element} */
+const versionContainer = document.querySelector("#login h1");
+if (versionContainer) {
+    versionContainer.replaceChild(
+        document.createTextNode(versionString),
+        versionContainer.childNodes[0]);
+    versionContainer.childNodes[1].style.display = "inline-block";
+}
 
 
 
@@ -8365,6 +8373,8 @@ class AudioManager extends BaseAudioClient {
     }
 }
 
+const canChangeAudioOutput = HTMLAudioElement.prototype["setSinkId"] instanceof Function;
+
 /** @typedef MediaElements
  * @type {object}
  * @property {HTMLAudioElement} audio
@@ -8666,16 +8676,22 @@ class LibJitsiMeetClient extends BaseJitsiClient {
         return {
             audioOutput: devices.filter(d => d.kind === "audiooutput"),
             audioInput: devices.filter(d => d.kind === "audioinput"),
-            videoInput: devices.filter(d => d.kind === "videoinput")
+            videoInput: canChangeAudioOutput ? devices.filter(d => d.kind === "videoinput") : []
         };
     }
 
     async getAudioOutputDevicesAsync() {
+        if (!canChangeAudioOutput) {
+            return [];
+        }
         const devices = await this.getAvailableDevicesAsync();
         return devices && devices.audioOutput || [];
     }
 
     async getCurrentAudioOutputDeviceAsync() {
+        if (!canChangeAudioOutput) {
+            return null;
+        }
         const deviceId = JitsiMeetJS.mediaDevices.getAudioOutputDevice(),
             devices = await this.getAudioOutputDevicesAsync(),
             device = devices.filter((d) => d.deviceId === deviceId);
@@ -8688,6 +8704,9 @@ class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async setAudioOutputDeviceAsync(device) {
+        if (!canChangeAudioOutput) {
+            return;
+        }
         const id = device && device.deviceId || null;
         this.audioClient.setAudioOutputDevice(id);
         await JitsiMeetJS.mediaDevices.setAudioOutputDevice(id);

@@ -2,6 +2,7 @@
 import { BaseJitsiClient } from "./BaseJitsiClient.js";
 import { AudioManager as AudioClient } from '../audio/AudioManager.js';
 import { autoPlay, srcObject, muted } from '../html/attrs.js';
+import { canChangeAudioOutput } from "../audio/canChangeAudioOutput.js";
 
 /** @typedef MediaElements
  * @type {object}
@@ -304,16 +305,22 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         return {
             audioOutput: devices.filter(d => d.kind === "audiooutput"),
             audioInput: devices.filter(d => d.kind === "audioinput"),
-            videoInput: devices.filter(d => d.kind === "videoinput")
+            videoInput: canChangeAudioOutput ? devices.filter(d => d.kind === "videoinput") : []
         };
     }
 
     async getAudioOutputDevicesAsync() {
+        if (!canChangeAudioOutput) {
+            return [];
+        }
         const devices = await this.getAvailableDevicesAsync();
         return devices && devices.audioOutput || [];
     }
 
     async getCurrentAudioOutputDeviceAsync() {
+        if (!canChangeAudioOutput) {
+            return null;
+        }
         const deviceId = JitsiMeetJS.mediaDevices.getAudioOutputDevice(),
             devices = await this.getAudioOutputDevicesAsync(),
             device = devices.filter((d) => d.deviceId === deviceId);
@@ -326,6 +333,9 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async setAudioOutputDeviceAsync(device) {
+        if (!canChangeAudioOutput) {
+            return;
+        }
         const id = device && device.deviceId || null;
         this.audioClient.setAudioOutputDevice(id);
         await JitsiMeetJS.mediaDevices.setAudioOutputDevice(id);

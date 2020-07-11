@@ -1,0 +1,1 @@
+﻿export const canChangeAudioOutput = HTMLAudioElement.prototype["setSinkId"] instanceof Function;
