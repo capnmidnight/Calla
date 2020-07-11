@@ -3633,7 +3633,7 @@ class HeaderBar extends EventTarget {
                 Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
                     alt("icon"),
                     role("presentation"),
-                    style({ height: "25px" })),
+                    style({ height: "25px", marginBottom: "-7px" })),
                 Run$1(buttonLabelStyle$1, "Tweet")),
 
             Button(
@@ -3756,9 +3756,7 @@ class LoginForm extends FormDialog {
         this.userNameInput.addEventListener("input", self.validate);
         this.userNameInput.addEventListener("enter", () => {
             if (this.roomName.length > 0
-                && this.userName.length > 0) {
-                this.connectButton.click();
-            }
+                && this.userName.length > 0) ;
             else if (this.userName.length === 0) {
                 this.userNameInput.focus();
             }
@@ -6174,7 +6172,7 @@ class Game extends EventTarget {
         });
     }
 
-    async start(evt) {
+    async startAsync(evt) {
         //evt = {
         //    roomName: "string", // the room name of the conference
         //    id: "string", // the id of the local participant
@@ -6569,7 +6567,6 @@ class BaseJitsiClient extends EventTarget {
 
         this.setDisplayName(userName);
 
-
         const audioOutputs = await this.getAudioOutputDevicesAsync();
         const audOut = audioOutputs.scan(
             (d) => d.deviceId === this.preferedAudioOutputID,
@@ -6577,7 +6574,7 @@ class BaseJitsiClient extends EventTarget {
             (d) => d.deviceId === "default",
             (d) => !!d);
         if (audOut) {
-            await this.setAudioOutputDevice(audOut);
+            await this.setAudioOutputDeviceAsync(audOut);
         }
 
         const audioInputs = await this.getAudioInputDevicesAsync();
@@ -6639,7 +6636,7 @@ class BaseJitsiClient extends EventTarget {
      * 
      * @param {MediaDeviceInfo} device
      */
-    setAudioOutputDevice(device) {
+    async setAudioOutputDeviceAsync(device) {
         throw new Error("Not implemented in base class");
     }
 
@@ -6667,11 +6664,11 @@ class BaseJitsiClient extends EventTarget {
         throw new Error("Not implemented in base class");
     }
 
-    async toggleAudioAsync() {
+    async toggleAudioMutedAsync() {
         throw new Error("Not implemented in base class");
     }
 
-    async toggleVideoAsync() {
+    async toggleVideoMutedAsync() {
         throw new Error("Not implemented in base class");
     }
 
@@ -6682,14 +6679,14 @@ class BaseJitsiClient extends EventTarget {
     /**
      * @return {Promise.<boolean>}
      */
-    async isAudioMutedAsync() {
+    get isAudioMuted() {
         throw new Error("Not implemented in base class");
     }
 
     /**
      * @return {Promise.<boolean>}
      */
-    async isVideoMutedAsync() {
+    get isVideoMuted() {
         throw new Error("Not implemented in base class");
     }
 
@@ -6746,9 +6743,9 @@ class BaseJitsiClient extends EventTarget {
      * @param {boolean} muted
      */
     async setAudioMutedAsync(muted) {
-        let isMuted = await this.isAudioMutedAsync();
+        let isMuted = this.isAudioMuted;
         if (muted !== isMuted) {
-            isMuted = await this.toggleAudioAsync();
+            isMuted = await this.toggleAudioMutedAsync();
         }
         return isMuted;
     }
@@ -6758,9 +6755,9 @@ class BaseJitsiClient extends EventTarget {
      * @param {boolean} muted
      */
     async setVideoMutedAsync(muted) {
-        let isMuted = await this.isVideoMutedAsync();
+        let isMuted = this.isVideoMuted;
         if (muted !== isMuted) {
-            isMuted = await this.toggleVideoAsync();
+            isMuted = await this.toggleVideoMutedAsync();
         }
         return isMuted;
     }
@@ -7106,6 +7103,7 @@ function init(host, client) {
     }
 
     async function withEmojiSelection(callback) {
+
         if (!emoji.isOpen) {
             headbar.optionsButton.lock();
             headbar.instructionsButton.lock();
@@ -7238,22 +7236,45 @@ function init(host, client) {
             game.emote(client.localUser, game.currentEmoji);
         },
 
-        toggleAudio: () => {
-            client.toggleAudioAsync();
+        toggleAudio: async () => {
+            await client.toggleAudioMutedAsync();
         },
 
-        toggleVideo: () => {
-            client.toggleVideoAsync();
+        toggleVideo: async () => {
+            await client.toggleVideoMutedAsync();
         }
     });
 
 
-    login.addEventListener("login", () => {
+    login.addEventListener("login", async () => {
         client.startAudio();
-        client.joinAsync(
+
+        const joinInfo = await client.joinAsync(
             host,
             settings.roomName = login.roomName,
             settings.userName = login.userName);
+
+        login.connected = true;
+
+        window.location.hash = login.roomName;
+
+        await game.startAsync(joinInfo);
+
+        options.audioInputDevices = await client.getAudioInputDevicesAsync();
+        options.audioOutputDevices = await client.getAudioOutputDevicesAsync();
+        options.videoInputDevices = await client.getVideoInputDevicesAsync();
+
+        options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
+        options.currentAudioOutputDevice = await client.getCurrentAudioOutputDeviceAsync();
+        options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
+
+        const audioMuted = client.isAudioMuted;
+        game.muteUserAudio({ id: client.localUser, muted: audioMuted });
+        footbar.audioEnabled = !audioMuted;
+
+        const videoMuted = client.isVideoMuted;
+        game.muteUserVideo({ id: client.localUser, muted: videoMuted });
+        footbar.videoEnabled = !videoMuted;
     });
 
 
@@ -7261,7 +7282,7 @@ function init(host, client) {
         audioPropertiesChanged: setAudioProperties,
 
         selectAvatar: async () => {
-            withEmojiSelection((e) => {
+            await withEmojiSelection((e) => {
                 settings.avatarEmoji
                     = options.avatarEmoji
                     = game.me.avatarEmoji
@@ -7274,8 +7295,8 @@ function init(host, client) {
             client.setAvatarURL(options.avatarURL);
         },
 
-        toggleVideo: () => {
-            client.toggleVideoAsync();
+        toggleVideo: async () => {
+            await client.toggleVideoMutedAsync();
         },
 
         toggleDrawHearing: () => {
@@ -7286,16 +7307,16 @@ function init(host, client) {
             settings.fontSize = game.fontSize = options.fontSize;
         },
 
-        audioInputChanged: () => {
+        audioInputChanged: async () => {
             const device = options.currentAudioInputDevice;
             settings.preferedAudioInputID = device && device.deviceId || null;
-            client.setAudioInputDeviceAsync(device);
+            await client.setAudioInputDeviceAsync(device);
         },
 
-        audioOutputChanged: () => {
+        audioOutputChanged: async () => {
             const device = options.currentAudioOutputDevice;
             settings.preferedAudioOutputID = device && device.deviceId || null;
-            client.setAudioOutputDevice(device);
+            await client.setAudioOutputDeviceAsync(device);
         },
 
         videoInputChanged: () => {
@@ -7327,12 +7348,12 @@ function init(host, client) {
             refreshUser(evt.user.id);
         },
 
-        toggleAudio: () => {
-            client.toggleAudioAsync();
+        toggleAudio: async () => {
+            await client.toggleAudioMutedAsync();
         },
 
-        toggleVideo: () => {
-            client.toggleVideoAsync();
+        toggleVideo: async () => {
+            await client.toggleVideoMutedAsync();
         },
 
         gameStarted: () => {
@@ -7388,29 +7409,6 @@ function init(host, client) {
     });
 
     client.addEventListeners({
-        videoConferenceJoined: async (evt) => {
-            login.connected = true;
-
-            window.location.hash = login.roomName;
-
-            game.start(evt);
-
-            options.audioInputDevices = await client.getAudioInputDevicesAsync();
-            options.audioOutputDevices = await client.getAudioOutputDevicesAsync();
-            options.videoInputDevices = await client.getVideoInputDevicesAsync();
-
-            options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
-            options.currentAudioOutputDevice = await client.getCurrentAudioOutputDeviceAsync();
-            options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
-
-            const audioMuted = await client.isAudioMutedAsync();
-            game.muteUserAudio({ id: client.localUser, muted: audioMuted });
-            footbar.audioEnabled = !audioMuted;
-
-            const videoMuted = await client.isVideoMutedAsync();
-            game.muteUserVideo({ id: client.localUser, muted: videoMuted });
-            footbar.videoEnabled = !videoMuted;
-        },
 
         videoConferenceLeft: (evt) => {
             game.end();
@@ -8041,7 +8039,7 @@ class GoogleResonanceAudioSpatializer extends BaseAnalyzedSpatializer {
     }
 
     setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
-        super.setAudioOutputDevice(minDistance, maxDistance, rolloff, transitionTime);
+        super.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
         this.resNode.setMinDistance(minDistance);
         this.resNode.setMaxDistance(maxDistance);
     }
@@ -8390,8 +8388,8 @@ class LibJitsiMeetClient extends BaseJitsiClient {
 
         this.connection = new JitsiMeetJS.JitsiConnection(null, null, {
             hosts: {
-                domain: host,
-                muc: `conference.${host}`
+                domain: JVB_HOST,
+                muc: JVB_MUC
             },
             serviceUrl: `https://${host}/http-bind`,
             enableLipSync: true
@@ -8645,9 +8643,10 @@ class LibJitsiMeetClient extends BaseJitsiClient {
         }
     }
 
-    setAudioOutputDevice(device) {
-        JitsiMeetJS.mediaDevices.setAudioOutputDevice(device.deviceId);
-        this.audioClient.setAudioOutputDevice(device.deviceId);
+    async setAudioOutputDeviceAsync(device) {
+        const id = device && device.deviceId || null;
+        this.audioClient.setAudioOutputDevice(id);
+        await JitsiMeetJS.mediaDevices.setAudioOutputDevice(id);
     }
 
     getCurrentMediaTrack(type) {
@@ -8678,7 +8677,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
         return this.when(evt, (evt) => evt.id === this.localUser, 5000);
     }
 
-    async toggleAudioAsync() {
+    async toggleAudioMutedAsync() {
         const changeTask = this.taskOf("audioMuteStatusChanged");
         const cur = this.getCurrentMediaTrack("audio");
         if (cur) {
@@ -8699,7 +8698,29 @@ class LibJitsiMeetClient extends BaseJitsiClient {
                 await this.setAudioInputDeviceAsync(avail[0]);
             }
         }
-        return await changeTask;
+
+        const evt = await changeTask;
+        return evt.muted;
+    }
+
+    async toggleVideoMutedAsync() {
+        const changeTask = this.taskOf("videoMuteStatusChanged");
+        const cur = this.getCurrentMediaTrack("video");
+        if (cur) {
+            await this.setVideoInputDeviceAsync(null);
+        }
+        else {
+            const avail = await this.getVideoInputDevicesAsync();
+            if (avail.length === 0) {
+                throw new Error("No video input devices available");
+            }
+            else {
+                await this.setVideoInputDeviceAsync(avail[0]);
+            }
+        }
+
+        const evt = await changeTask;
+        return evt.muted;
     }
 
     async setAudioInputDeviceAsync(device) {
@@ -8742,25 +8763,6 @@ class LibJitsiMeetClient extends BaseJitsiClient {
         }
     }
 
-    async toggleVideoAsync() {
-        const changeTask = this.when("videoMuteStatusChanged", (evt) => evt.id === this.this.localUser, 5000);
-        const cur = this.getCurrentMediaTrack("video");
-        if (cur) {
-            await this.setVideoInputDeviceAsync(null);
-        }
-        else {
-            const avail = await this.getVideoInputDevicesAsync();
-            if (avail.length === 0) {
-                throw new Error("No video input devices available");
-            }
-            else {
-                await this.setVideoInputDeviceAsync(avail[0]);
-            }
-        }
-
-        return await changeTask;
-    }
-
     async setVideoInputDeviceAsync(device) {
         const cur = this.getCurrentMediaTrack("video");
         if (cur) {
@@ -8798,11 +8800,11 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             || cur.isMuted();
     }
 
-    async isAudioMutedAsync() {
+    get isAudioMuted() {
         return this.isMediaMuted("audio");
     }
 
-    async isVideoMutedAsync() {
+    get isVideoMuted() {
         return this.isMediaMuted("video");
     }
 
