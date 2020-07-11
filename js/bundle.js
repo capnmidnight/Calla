@@ -34,6 +34,8 @@ function ariaLabel(value) { return new HtmlAttr("ariaLabel", [], value); }
 function autoPlay(value) { return new HtmlAttr("autoplay", ["audio", "video"], value); }
 // Often used with CSS to style elements with common properties.
 function className(value) { return new HtmlAttr("className", [], value); }
+// Indicates whether the browser should show playback controls to the user.
+function controls(value) { return new HtmlAttr("controls", ["audio", "video"], value); }
 // Describes elements which belongs to this one.
 function htmlFor(value) { return new HtmlAttr("htmlFor", ["label", "output"], value); }
 // The URL of a linked resource.
@@ -881,6 +883,7 @@ function clear(elem) {
 }
 
 function A(...rest) { return tag("a", ...rest); }
+function Audio(...rest) { return tag("audio", ...rest); }
 function HtmlButton(...rest) { return tag("button", ...rest); }
 function Button(...rest) { return HtmlButton(...rest, type("button")); }
 function Canvas(...rest) { return tag("canvas", ...rest); }
@@ -893,6 +896,7 @@ function Label(...rest) { return tag("label", ...rest); }
 function LI(...rest) { return tag("li", ...rest); }
 function Option(...rest) { return tag("option", ...rest); }
 function P(...rest) { return tag("p", ...rest); }
+function Source(...rest) { return tag("source", ...rest); }
 function Span(...rest) { return tag("span", ...rest); }
 function UL(...rest) { return tag("ul", ...rest); }
 
@@ -7055,6 +7059,43 @@ class Settings {
     }
 }
 
+class SFX extends EventTarget {
+    constructor() {
+        super();
+
+        /** @type {Map.<string, Audio>} */
+        this.clips = new Map();
+    }
+
+    /**
+     * @param {string} name
+     * @param {string[]} paths
+     * @returns {SFX}
+     */
+    add(name, ...paths) {
+        const sources = paths
+            .map((p) => src(p))
+            .map((s) => Source(s));
+        const elem = Audio(
+            controls(false),
+            ...sources);
+
+        this.clips.set(name, elem);
+        return this;
+    }
+
+    /**
+     * @param {string} name
+     */
+    play(name, volume = 1) {
+        if (this.clips.has(name)) {
+            const clip = this.clips.get(name);
+            clip.volume = volume;
+            clip.play();
+        }
+    }
+}
+
 /**
  * 
  * @param {string} host
@@ -7062,6 +7103,9 @@ class Settings {
  */
 function init(host, client) {
     const settings = new Settings(),
+        sound = new SFX()
+            .add("join", "/audio/door-open.ogg", "/audio/door-open.mp3", "/audio/door-open.wav")
+            .add("leave", "/audio/door-close.ogg", "/audio/door-close.mp3", "/audio/door-close.wav"),
         game = new Game(),
         login = new LoginForm(),
         directory = new UserDirectoryForm(),
@@ -7416,6 +7460,7 @@ function init(host, client) {
         },
 
         participantJoined: (evt) => {
+            sound.play("join", 0.5);
             game.addUser(evt);
         },
 
@@ -7430,6 +7475,7 @@ function init(host, client) {
         },
 
         participantLeft: (evt) => {
+            sound.play("leave", 0.5);
             game.removeUser(evt);
             client.removeUser(evt);
             directory.delete(evt.id);

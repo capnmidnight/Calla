@@ -8,6 +8,7 @@ import { Game } from "./Game.js";
 import { grid } from "./html/attrs.js";
 import { BaseJitsiClient } from "./jitsi/BaseJitsiClient.js";
 import { Settings } from "./Settings.js";
+import { SFX } from "./audio/SFX.js";
 
 /**
  * 
@@ -16,6 +17,9 @@ import { Settings } from "./Settings.js";
  */
 export function init(host, client) {
     const settings = new Settings(),
+        sound = new SFX()
+            .add("join", "/audio/door-open.ogg", "/audio/door-open.mp3", "/audio/door-open.wav")
+            .add("leave", "/audio/door-close.ogg", "/audio/door-close.mp3", "/audio/door-close.wav"),
         game = new Game(),
         login = new LoginForm(),
         directory = new UserDirectoryForm(),
@@ -370,6 +374,7 @@ export function init(host, client) {
         },
 
         participantJoined: (evt) => {
+            sound.play("join", 0.5);
             game.addUser(evt);
         },
 
@@ -384,6 +389,7 @@ export function init(host, client) {
         },
 
         participantLeft: (evt) => {
+            sound.play("leave", 0.5);
             game.removeUser(evt);
             client.removeUser(evt);
             directory.delete(evt.id);
