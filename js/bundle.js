@@ -918,6 +918,8 @@ function OptionPanel(id, name, ...rest) {
     return new OptionPanelTag(id, name, ...rest);
 }
 
+const version = "0.1.1";
+
 class Emoji {
     /**
      * Unicode-standardized pictograms.
@@ -7095,6 +7097,10 @@ class SFX extends EventTarget {
         }
     }
 }
+
+console.log(`Calla v${version}`);
+
+
 
 /**
  * 

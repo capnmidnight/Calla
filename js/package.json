@@ -1,6 +1,7 @@
 {
-  "private": true,
+    "version": "0.1.1",
+    "private": true,
     "scripts": {
-        "pkg": "rollup -c && minify bundle.js > bundle.min.js"
+        "pkg": "npm version patch && node writeversion.js && rollup -c && minify bundle.js > bundle.min.js"
     }
 }

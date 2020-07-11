@@ -1,4 +1,7 @@
-﻿import { EmojiForm } from "./forms/EmojiForm.js";
+﻿import { version } from "./version.js";
+console.log(`Calla v${version}`);
+
+import { EmojiForm } from "./forms/EmojiForm.js";
 import { FooterBar } from "./forms/FooterBar.js";
 import { HeaderBar } from "./forms/HeaderBar.js";
 import { LoginForm } from "./forms/LoginForm.js";
@@ -9,6 +12,8 @@ import { grid } from "./html/attrs.js";
 import { BaseJitsiClient } from "./jitsi/BaseJitsiClient.js";
 import { Settings } from "./Settings.js";
 import { SFX } from "./audio/SFX.js";
+
+
 
 /**
  * 
