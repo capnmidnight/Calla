@@ -21,8 +21,7 @@ NOTE: __Jitsi Meet's web client doesn't work on iOS!__ Sorry :(
 - Movement:
   - __Click on the map__ to move your avatar to wherever you want. Movement is instantaneous, with a smooth animation over the transition. Your avatar will stop at walls.
   - Or, __use the arrow keys__ on your keyboard to move.
-  - __Click on yourself__ to open a list of Emoji. Select an Emoji to float it out into the map.
-  - __Hit the E key__ to re-emote with your last selected Emoji.
+  - __Click on yourself__ or __Hit the E key__ to spam emoji into the space as emote reactions.
   - You can __roll your mouse wheel__ or __pinch your touchscreen__ to zoom in and out of the map view. This is useful for groups of people standing close to each other to see the detail in ther Avatar.
 - Options:
   - You can change your Microphone and Speaker device in the Options view. Click the Gear icon (⚙️) in the toolbar. 
@@ -103,22 +102,8 @@ I'm pretty happy with how the client is working right now, but anyone is free to
 
 #### Server
 
-I'm currently running a VM on Azure with 2 virtual CPUs and 4 GiB of RAM. Operating System is Ubuntu 18.04. This will cost me about $200/mo.
+I'm currently running a VM on Azure with 2 virtual CPUs and 4 GiB of RAM. Operating System is Ubuntu 18.04. This will cost me about $100/mo.
 
 I set the server up using [the Jitsi quick-start instructions](https://github.com/jitsi/jitsi-meet/blob/master/doc/quick-install.md) (Actually, I followed [This video on YouTube](https://www.youtube.com/watch?v=8KR0AhDZF2A), but the directions are largely the same, I just found the video nice to see what to expect for results from each command). 
 
-This repository is a set of static Web resources that use my private Jitsi Meet server through [the Jitsi Meet Web API](https://github.com/jitsi/jitsi-meet/blob/master/doc/api.md).
-
-I'm a software hacker, not a server administrator. There is one file that needs to be copied to the Jitsi Meet install, and one of Jitsi Meet's files edited slightly. Ideally, I'd prefer to fork [the Jitsi-Meet repository](https://github.com/jitsi/jitsi-meet) and install from that, but that's beyond this old Windows developer's Linuxfu right now.
-
-## OTHER
-
-What else?
-
-### Why?
-
-[Cuz why not?](https://www.youtube.com/watch?v=YEwlW5sHQ4Q)
-
-### Name
-
-Calla is a type of Lily, and it sounds like "making a call". I name all of my projects after plants.
+There's no backend for Calla. All communication goes through Jitsi, even the data specific to the "game" is serialized through Jitsi. Eventually, I'd like to setup a backend, but for the basics of spatializing Jitsi, it's not necessary.
