@@ -1,2 +1,1 @@
-npm version major
-pkg
+pkg major 

@@ -1,3 +1,4 @@
+cmd /C "npm version %1"
 node writeversion.js
-rollup -c
+cmd /C rollup -c
 minify bundle.js > bundle.min.js

@@ -1,116 +1,4 @@
-class HtmlAttr {
-    constructor(key, tags, value) {
-        tags = tags.map(t => t.toLocaleUpperCase());
-
-        this.apply = (elem) => {
-            const isValid = tags.length === 0
-                || tags.indexOf(elem.tagName) > -1;
-
-            if (!isValid) {
-                console.warn(`Element ${elem.tagName} does not support Attribute ${key}`);
-            }
-            else if (key === "style") {
-                Object.assign(elem[key], value);
-            }
-            else if (!(typeof value === "boolean" || value instanceof Boolean)
-                || key === "muted") {
-                elem[key] = value;
-            }
-            else if (value) {
-                elem.setAttribute(key, "");
-            }
-            else {
-                elem.removeAttribute(key);
-            }
-        };
-
-        Object.freeze(this);
-    }
-}
-// Alternative text in case an image can't be displayed.
-function alt(value) { return new HtmlAttr("alt", ["applet", "area", "img", "input"], value); }
-function ariaLabel(value) { return new HtmlAttr("ariaLabel", [], value); }
-// The audio or video should play as soon as possible.
-function autoPlay(value) { return new HtmlAttr("autoplay", ["audio", "video"], value); }
-// Often used with CSS to style elements with common properties.
-function className(value) { return new HtmlAttr("className", [], value); }
-// Indicates whether the browser should show playback controls to the user.
-function controls(value) { return new HtmlAttr("controls", ["audio", "video"], value); }
-// Describes elements which belongs to this one.
-function htmlFor(value) { return new HtmlAttr("htmlFor", ["label", "output"], value); }
-// The URL of a linked resource.
-function href(value) { return new HtmlAttr("href", ["a", "area", "base", "link"], value); }
-// Often used with CSS to style a specific element. The value of this attribute must be unique.
-function id(value) { return new HtmlAttr("id", [], value); }
-// Indicates the maximum value allowed.
-function max(value) { return new HtmlAttr("max", ["input", "meter", "progress"], value); }
-// Indicates the minimum value allowed.
-function min(value) { return new HtmlAttr("min", ["input", "meter"], value); }
-// Indicates whether the audio will be initially silenced on page load.
-function muted(value) { return new HtmlAttr("muted", ["audio", "video"], value); }
-// Provides a hint to the user of what can be entered in the field.
-function placeHolder(value) { return new HtmlAttr("placeholder", ["input", "textarea"], value); }
-// Specifies the relationship of the target object to the link object.
-function rel(value) { return new HtmlAttr("rel", ["a", "area", "link"], value); }
-// Defines the number of rows in a text area.
-function role(value) { return new HtmlAttr("role", [], value); }
-// The URL of the embeddable content.
-function src(value) { return new HtmlAttr("src", ["audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"], value); }
-// A MediaStream object to use as a source for an HTML video or audio element
-function srcObject(value) { return new HtmlAttr("srcObject", ["audio", "video"], value); }
-// Defines CSS styles which will override styles previously set.
-function style(value) { return new HtmlAttr("style", [], value); }
-// ???
-function step(value) { return new HtmlAttr("step", ["input"], value); }
-// Text to be displayed in a tooltip when hovering over the element.
-function title(value) { return new HtmlAttr("title", [], value); }
-// ???
-function target(value) { return new HtmlAttr("target", ["a", "area", "base", "form"], value); }
-// Defines the type of the element.
-function type(value) { return new HtmlAttr("type", ["button", "input", "command", "embed", "object", "script", "source", "style", "menu"], value); }
-// Defines a default value which will be displayed in the element on page load.
-function value(value) { return new HtmlAttr("value", ["button", "data", "input", "li", "meter", "option", "progress", "param"], value); }
-
-// A selection of fonts for preferred monospace rendering.
-const monospaceFamily = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
-const monospaceFont = style({ fontFamily: monospaceFamily });
-
-/**
- * 
- * @param {number} y
- */
-function row(y, h) {
-    if (h === undefined) {
-        h = 1;
-    }
-
-    return style({
-        gridRowStart: y,
-        gridRowEnd: y + h
-    });
-}
-
-/**
- * 
- * @param {number} x
- * @param {number} y
- */
-function grid(x, y, w, h) {
-    if (w === undefined) {
-        w = 1;
-    }
-
-    if (h === undefined) {
-        h = 1;
-    }
-
-    return style({
-        gridRowStart: y,
-        gridRowEnd: y + h,
-        gridColumnStart: x,
-        gridColumnEnd: x + w
-    });
-}
+const versionString = "Calla v0.1.5";
 
 function t(o, s, c) {
     return typeof o === s || o instanceof c;
@@ -509,416 +397,6 @@ String.prototype.firstLetterToUpper = function () {
     return this[0].toLocaleUpperCase()
         + this.substring(1);
 };
-
-class HtmlEvt {
-    constructor(name, callback, opts) {
-        if (!isFunction(callback)) {
-            throw new Error("A function instance is required for this parameter");
-        }
-
-        this.add = (elem) => {
-            elem.addEventListener(name, callback, opts);
-        };
-
-        this.remove = (elem) => {
-            elem.removeEventListener(name, callback);
-        };
-
-        Object.freeze(this);
-    }
-}
-function onClick(callback) { return new HtmlEvt("click", callback); }
-function onInput(callback) { return new HtmlEvt("input", callback); }
-function onKeyUp(callback) { return new HtmlEvt("keyup", callback); }
-function onMouseOut(callback) { return new HtmlEvt("mouseout", callback); }
-function onMouseOver(callback) { return new HtmlEvt("mouseover", callback); }
-
-function tag(name, ...rest) {
-    const elem = document.createElement(name);
-
-    for (let i = 0; i < rest.length; ++i) {
-        if (isFunction(rest[i])) {
-            rest[i] = rest[i](true);
-        }
-    }
-
-    for (let x of rest) {
-        if (x !== null && x !== undefined) {
-            if (isString(x)
-                || isNumber(x)
-                || isBoolean(x)
-                || x instanceof Date) {
-                elem.appendChild(document.createTextNode(x));
-            }
-            else if (x instanceof Element) {
-                elem.appendChild(x);
-            }
-            else if (x instanceof HtmlCustomTag) {
-                elem.appendChild(x.element);
-            }
-            else if (x instanceof HtmlAttr) {
-                x.apply(elem);
-            }
-            else if (x instanceof HtmlEvt) {
-                x.add(elem);
-            }
-            else {
-                console.trace(`Skipping ${x}: unsupported value type.`);
-            }
-        }
-    }
-
-    return elem;
-}
-
-class HtmlCustomTag extends EventTarget {
-    constructor(tagName, ...rest) {
-        super();
-        if (rest.length === 1
-            && rest[0] instanceof Element) {
-            /** @type {Element} */
-            this.element = rest[0];
-        }
-        else {
-            /** @type {Element} */
-            this.element = tag(tagName, ...rest);
-        }
-    }
-
-    get id() {
-        return this.element.id;
-    }
-}
-
-class LabeledInputTag extends HtmlCustomTag {
-    constructor(id, inputType, labelText, ...rest) {
-        super("div");
-
-        this.label = Label(
-            htmlFor(id),
-            labelText);
-
-        this.input = Input(
-            type(inputType),
-            ...rest);
-
-        this.element.append(
-            this.label,
-            this.input);
-
-        Object.seal(this);
-    }
-
-    addEventListener(name, callback, opts) {
-        this.input.addEventListener(name, callback, opts);
-    }
-
-    removeEventListener(name, callback) {
-        this.input.removeEventListener(name, callback);
-    }
-
-    async once(resolveEvt, rejectEvt, timeout) {
-        return await this.input.once(resolveEvt, rejectEvt, timeout);
-    }
-
-    get value() {
-        return this.input.value;
-    }
-
-    set value(v) {
-        this.input.value = v;
-    }
-
-    get checked() {
-        return this.input.checked;
-    }
-
-    set checked(v) {
-        this.input.checked = v;
-    }
-
-    setLocked(value) {
-        this.input.setLocked(value);
-    }
-}
-
-class LabeledSelectBoxTag extends HtmlCustomTag {
-    constructor(tagId, labelText, noSelectionText, makeID, makeLabel, ...rest) {
-        super("div");
-
-        this.label = Label(
-            htmlFor(tagId),
-            labelText);
-
-        this.select = new SelectBox(noSelectionText, makeID, makeLabel, id(tagId), ...rest);
-
-        this.element.append(
-            this.label,
-            this.select.element);
-
-        Object.seal(this);
-    }
-
-    get emptySelectionEnabled() {
-        return this.select.emptySelectionEnabled;
-    }
-
-    set emptySelectionEnabled(value) {
-        this.select.emptySelectionEnabled = value;
-    }
-
-    get values() {
-        return this.select.values;
-    }
-
-    set values(values) {
-        this.select.values = values;
-    }
-
-    get options() {
-        return this.select.options;
-    }
-
-    get selectedIndex() {
-        return this.select.selectedIndex;
-    }
-
-    set selectedIndex(i) {
-        this.select.selectedIndex = i;
-    }
-
-    get selectedValue() {
-        return this.select.selectedValue;
-    }
-
-    set selectedValue(v) {
-        this.select.selectedValue = v;
-    }
-
-    indexOf(value) {
-        return this.select.indexOf(value);
-    }
-
-    contains(value) {
-        return this.select.contains(value);
-    }
-
-    addEventListener(name, callback, opts) {
-        this.select.addEventListener(name, callback, opts);
-    }
-
-    removeEventListener(name, callback) {
-        this.select.removeEventListener(name, callback);
-    }
-}
-
-const selectEvt = new Event("select");
-
-class OptionPanelTag extends HtmlCustomTag {
-    constructor(panelID, name, ...rest) {
-        super("div",
-            id(panelID),
-            style({ padding: "1em" }),
-            P(...rest));
-
-        this.button = Button(
-            id(panelID + "Btn"),
-            onClick(() => this.dispatchEvent(selectEvt)),
-            name);
-    }
-
-    get visible() {
-        return this.element.style.display !== null;
-    }
-
-    set visible(v) {
-        this.element.setOpen(v);
-        //this.button.setLocked(v);
-        style({
-            backgroundColor: v ? "#ddd" : "transparent",
-            borderTop: v ? "" : "none",
-            borderRight: v ? "" : "none",
-            borderBottom: v ? "none" : "",
-            borderLeft: v ? "" : "none",
-        }).apply(this.button);
-    }
-}
-
-const _values = new Map();
-
-class SelectBoxTag extends HtmlCustomTag {
-    constructor(noSelectionText, makeID, makeLabel, ...rest) {
-        super("select", ...rest);
-
-        if (!isFunction(makeID)) {
-            throw new Error("makeID parameter must be a Function");
-        }
-
-        if (!isFunction(makeLabel)) {
-            throw new Error("makeLabel parameter must be a Function");
-        }
-
-        _values.set(this, []);
-
-        this.noSelectionText = noSelectionText;
-        this.makeID = (v) => v !== null && makeID(v) || null;
-        this.makeLabel = (v) => v !== null && makeLabel(v) || "None";
-        this.emptySelectionEnabled = true;
-
-        Object.seal(this);
-    }
-
-    get emptySelectionEnabled() {
-        return this._emptySelectionEnabled;
-    }
-
-    set emptySelectionEnabled(value) {
-        this._emptySelectionEnabled = value;
-        this._render();
-    }
-
-    get values() {
-        return _values.get(this);
-    }
-
-    set values(newItems) {
-        const curValue = this.selectedValue;
-        const values = _values.get(this);
-        values.splice(0, values.length, ...newItems);
-        this._render();
-        this.selectedValue = curValue;
-    }
-
-    _render() {
-        clear(this.element);
-        if (this.values.length === 0) {
-            this.element.append(Option(this.noSelectionText));
-            this.element.lock();
-        }
-        else {
-            if (this.emptySelectionEnabled) {
-                this.element.append(Option(this.noSelectionText));
-            }
-            for (let v of this.values) {
-                this.element.append(
-                    Option(
-                        value(this.makeID(v)),
-                        this.makeLabel(v)));
-            }
-
-            this.element.unlock();
-        }
-    }
-
-    get options() {
-        return this.element.options;
-    }
-
-    get selectedIndex() {
-        let i = this.element.selectedIndex;
-        if (this.emptySelectionEnabled) {
-            --i;
-        }
-        return i;
-    }
-
-    set selectedIndex(i) {
-        if (this.emptySelectionEnabled) {
-            ++i;
-        }
-        this.element.selectedIndex = i;
-    }
-
-    get selectedValue() {
-        if (0 <= this.selectedIndex && this.selectedIndex < this.values.length) {
-            return this.values[this.selectedIndex];
-        }
-        else {
-            return null;
-        }
-    }
-
-    indexOf(value) {
-        return _values.get(this)
-            .findIndex(v =>
-                value !== null
-                && this.makeID(value) === this.makeID(v));
-    }
-
-    set selectedValue(value) {
-        this.selectedIndex = this.indexOf(value);
-    }
-
-    contains(value) {
-        return this.indexOf(value) >= 0.
-    }
-
-    addEventListener(name, callback, opts) {
-        this.element.addEventListener(name, callback, opts);
-    }
-
-    removeEventListener(name, callback) {
-        this.element.removeEventListener(name, callback);
-    }
-
-    setOpen(v) {
-        this.element.setOpen(v);
-    }
-
-    get style() {
-        return this.element.style;
-    }
-
-    focus() {
-        this.element.focus();
-    }
-
-    blur() {
-        this.element.blur();
-    }
-}
-
-function clear(elem) {
-    while (elem.lastChild) {
-        elem.lastChild.remove();
-    }
-}
-
-function A(...rest) { return tag("a", ...rest); }
-function Audio(...rest) { return tag("audio", ...rest); }
-function HtmlButton(...rest) { return tag("button", ...rest); }
-function Button(...rest) { return HtmlButton(...rest, type("button")); }
-function Canvas(...rest) { return tag("canvas", ...rest); }
-function Div(...rest) { return tag("div", ...rest); }
-function H1(...rest) { return tag("h1", ...rest); }
-function H2(...rest) { return tag("h2", ...rest); }
-function Img(...rest) { return tag("img", ...rest); }
-function Input(...rest) { return tag("input", ...rest); }
-function Label(...rest) { return tag("label", ...rest); }
-function LI(...rest) { return tag("li", ...rest); }
-function Option(...rest) { return tag("option", ...rest); }
-function P(...rest) { return tag("p", ...rest); }
-function Source(...rest) { return tag("source", ...rest); }
-function Span(...rest) { return tag("span", ...rest); }
-function UL(...rest) { return tag("ul", ...rest); }
-
-function LabeledInput(id, inputType, labelText, ...rest) {
-    return new LabeledInputTag(id, inputType, labelText, ...rest);
-}
-
-function SelectBox(noSelectionText, makeID, makeLabel, ...rest) {
-    return new SelectBoxTag(noSelectionText, makeID, makeLabel, ...rest);
-}
-
-function LabeledSelectBox(id, labelText, noSelectionText, makeID, makeLabel, ...rest) {
-    return new LabeledSelectBoxTag(id, labelText, noSelectionText, makeID, makeLabel, ...rest);
-}
-
-function OptionPanel(id, name, ...rest) {
-    return new OptionPanelTag(id, name, ...rest);
-}
-
-const versionString = "Calla v0.1.4";
 
 class Emoji {
     /**
@@ -3180,6 +2658,523 @@ const allIcons = {
     travel,
     medieval
 };
+
+class HtmlAttr {
+    constructor(key, tags, value) {
+        tags = tags.map(t => t.toLocaleUpperCase());
+
+        this.apply = (elem) => {
+            const isValid = tags.length === 0
+                || tags.indexOf(elem.tagName) > -1;
+
+            if (!isValid) {
+                console.warn(`Element ${elem.tagName} does not support Attribute ${key}`);
+            }
+            else if (key === "style") {
+                Object.assign(elem[key], value);
+            }
+            else if (!(typeof value === "boolean" || value instanceof Boolean)
+                || key === "muted") {
+                elem[key] = value;
+            }
+            else if (value) {
+                elem.setAttribute(key, "");
+            }
+            else {
+                elem.removeAttribute(key);
+            }
+        };
+
+        Object.freeze(this);
+    }
+}
+// Alternative text in case an image can't be displayed.
+function alt(value) { return new HtmlAttr("alt", ["applet", "area", "img", "input"], value); }
+// The audio or video should play as soon as possible.
+function autoPlay(value) { return new HtmlAttr("autoplay", ["audio", "video"], value); }
+// Often used with CSS to style elements with common properties.
+function className(value) { return new HtmlAttr("className", [], value); }
+// Indicates whether the browser should show playback controls to the user.
+function controls(value) { return new HtmlAttr("controls", ["audio", "video"], value); }
+// Describes elements which belongs to this one.
+function htmlFor(value) { return new HtmlAttr("htmlFor", ["label", "output"], value); }
+// The URL of a linked resource.
+function href(value) { return new HtmlAttr("href", ["a", "area", "base", "link"], value); }
+// Often used with CSS to style a specific element. The value of this attribute must be unique.
+function id(value) { return new HtmlAttr("id", [], value); }
+// Indicates the maximum value allowed.
+function max(value) { return new HtmlAttr("max", ["input", "meter", "progress"], value); }
+// Indicates the minimum value allowed.
+function min(value) { return new HtmlAttr("min", ["input", "meter"], value); }
+// Indicates whether the audio will be initially silenced on page load.
+function muted(value) { return new HtmlAttr("muted", ["audio", "video"], value); }
+// Provides a hint to the user of what can be entered in the field.
+function placeHolder(value) { return new HtmlAttr("placeholder", ["input", "textarea"], value); }
+// Defines the number of rows in a text area.
+function role(value) { return new HtmlAttr("role", [], value); }
+// The URL of the embeddable content.
+function src(value) { return new HtmlAttr("src", ["audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"], value); }
+// A MediaStream object to use as a source for an HTML video or audio element
+function srcObject(value) { return new HtmlAttr("srcObject", ["audio", "video"], value); }
+// Defines CSS styles which will override styles previously set.
+function style(value) { return new HtmlAttr("style", [], value); }
+// ???
+function step(value) { return new HtmlAttr("step", ["input"], value); }
+// Text to be displayed in a tooltip when hovering over the element.
+function title(value) { return new HtmlAttr("title", [], value); }
+// Defines the type of the element.
+function type(value) { return new HtmlAttr("type", ["button", "input", "command", "embed", "object", "script", "source", "style", "menu"], value); }
+// Defines a default value which will be displayed in the element on page load.
+function value(value) { return new HtmlAttr("value", ["button", "data", "input", "li", "meter", "option", "progress", "param"], value); }
+
+// A selection of fonts for preferred monospace rendering.
+const monospaceFamily = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
+const monospaceFont = style({ fontFamily: monospaceFamily });
+
+/**
+ * 
+ * @param {number} y
+ */
+function row(y, h) {
+    if (h === undefined) {
+        h = 1;
+    }
+
+    return style({
+        gridRowStart: y,
+        gridRowEnd: y + h
+    });
+}
+
+/**
+ * 
+ * @param {number} x
+ * @param {number} y
+ */
+function grid(x, y, w, h) {
+    if (w === undefined) {
+        w = 1;
+    }
+
+    if (h === undefined) {
+        h = 1;
+    }
+
+    return style({
+        gridRowStart: y,
+        gridRowEnd: y + h,
+        gridColumnStart: x,
+        gridColumnEnd: x + w
+    });
+}
+
+class HtmlEvt {
+    constructor(name, callback, opts) {
+        if (!isFunction(callback)) {
+            throw new Error("A function instance is required for this parameter");
+        }
+
+        this.add = (elem) => {
+            elem.addEventListener(name, callback, opts);
+        };
+
+        this.remove = (elem) => {
+            elem.removeEventListener(name, callback);
+        };
+
+        Object.freeze(this);
+    }
+}
+function onClick(callback) { return new HtmlEvt("click", callback); }
+function onInput(callback) { return new HtmlEvt("input", callback); }
+function onKeyUp(callback) { return new HtmlEvt("keyup", callback); }
+function onMouseOut(callback) { return new HtmlEvt("mouseout", callback); }
+function onMouseOver(callback) { return new HtmlEvt("mouseover", callback); }
+
+function tag(name, ...rest) {
+    const elem = document.createElement(name);
+
+    for (let i = 0; i < rest.length; ++i) {
+        if (isFunction(rest[i])) {
+            rest[i] = rest[i](true);
+        }
+    }
+
+    for (let x of rest) {
+        if (x !== null && x !== undefined) {
+            if (isString(x)
+                || isNumber(x)
+                || isBoolean(x)
+                || x instanceof Date) {
+                elem.appendChild(document.createTextNode(x));
+            }
+            else if (x instanceof Element) {
+                elem.appendChild(x);
+            }
+            else if (x instanceof HtmlCustomTag) {
+                elem.appendChild(x.element);
+            }
+            else if (x instanceof HtmlAttr) {
+                x.apply(elem);
+            }
+            else if (x instanceof HtmlEvt) {
+                x.add(elem);
+            }
+            else {
+                console.trace(`Skipping ${x}: unsupported value type.`);
+            }
+        }
+    }
+
+    return elem;
+}
+
+class HtmlCustomTag extends EventTarget {
+    constructor(tagName, ...rest) {
+        super();
+        if (rest.length === 1
+            && rest[0] instanceof Element) {
+            /** @type {Element} */
+            this.element = rest[0];
+        }
+        else {
+            /** @type {Element} */
+            this.element = tag(tagName, ...rest);
+        }
+    }
+
+    get id() {
+        return this.element.id;
+    }
+}
+
+class LabeledInputTag extends HtmlCustomTag {
+    constructor(id, inputType, labelText, ...rest) {
+        super("div");
+
+        this.label = Label(
+            htmlFor(id),
+            labelText);
+
+        this.input = Input(
+            type(inputType),
+            ...rest);
+
+        this.element.append(
+            this.label,
+            this.input);
+
+        Object.seal(this);
+    }
+
+    addEventListener(name, callback, opts) {
+        this.input.addEventListener(name, callback, opts);
+    }
+
+    removeEventListener(name, callback) {
+        this.input.removeEventListener(name, callback);
+    }
+
+    async once(resolveEvt, rejectEvt, timeout) {
+        return await this.input.once(resolveEvt, rejectEvt, timeout);
+    }
+
+    get value() {
+        return this.input.value;
+    }
+
+    set value(v) {
+        this.input.value = v;
+    }
+
+    get checked() {
+        return this.input.checked;
+    }
+
+    set checked(v) {
+        this.input.checked = v;
+    }
+
+    setLocked(value) {
+        this.input.setLocked(value);
+    }
+}
+
+class LabeledSelectBoxTag extends HtmlCustomTag {
+    constructor(tagId, labelText, noSelectionText, makeID, makeLabel, ...rest) {
+        super("div");
+
+        this.label = Label(
+            htmlFor(tagId),
+            labelText);
+
+        this.select = new SelectBox(noSelectionText, makeID, makeLabel, id(tagId), ...rest);
+
+        this.element.append(
+            this.label,
+            this.select.element);
+
+        Object.seal(this);
+    }
+
+    get emptySelectionEnabled() {
+        return this.select.emptySelectionEnabled;
+    }
+
+    set emptySelectionEnabled(value) {
+        this.select.emptySelectionEnabled = value;
+    }
+
+    get values() {
+        return this.select.values;
+    }
+
+    set values(values) {
+        this.select.values = values;
+    }
+
+    get options() {
+        return this.select.options;
+    }
+
+    get selectedIndex() {
+        return this.select.selectedIndex;
+    }
+
+    set selectedIndex(i) {
+        this.select.selectedIndex = i;
+    }
+
+    get selectedValue() {
+        return this.select.selectedValue;
+    }
+
+    set selectedValue(v) {
+        this.select.selectedValue = v;
+    }
+
+    indexOf(value) {
+        return this.select.indexOf(value);
+    }
+
+    contains(value) {
+        return this.select.contains(value);
+    }
+
+    addEventListener(name, callback, opts) {
+        this.select.addEventListener(name, callback, opts);
+    }
+
+    removeEventListener(name, callback) {
+        this.select.removeEventListener(name, callback);
+    }
+}
+
+const selectEvt = new Event("select");
+
+class OptionPanelTag extends HtmlCustomTag {
+    constructor(panelID, name, ...rest) {
+        super("div",
+            id(panelID),
+            style({ padding: "1em" }),
+            P(...rest));
+
+        this.button = Button(
+            id(panelID + "Btn"),
+            onClick(() => this.dispatchEvent(selectEvt)),
+            name);
+    }
+
+    get visible() {
+        return this.element.style.display !== null;
+    }
+
+    set visible(v) {
+        this.element.setOpen(v);
+        //this.button.setLocked(v);
+        style({
+            backgroundColor: v ? "#ddd" : "transparent",
+            borderTop: v ? "" : "none",
+            borderRight: v ? "" : "none",
+            borderBottom: v ? "none" : "",
+            borderLeft: v ? "" : "none",
+        }).apply(this.button);
+    }
+}
+
+const _values = new Map();
+
+class SelectBoxTag extends HtmlCustomTag {
+    constructor(noSelectionText, makeID, makeLabel, ...rest) {
+        super("select", ...rest);
+
+        if (!isFunction(makeID)) {
+            throw new Error("makeID parameter must be a Function");
+        }
+
+        if (!isFunction(makeLabel)) {
+            throw new Error("makeLabel parameter must be a Function");
+        }
+
+        _values.set(this, []);
+
+        this.noSelectionText = noSelectionText;
+        this.makeID = (v) => v !== null && makeID(v) || null;
+        this.makeLabel = (v) => v !== null && makeLabel(v) || "None";
+        this.emptySelectionEnabled = true;
+
+        Object.seal(this);
+    }
+
+    get emptySelectionEnabled() {
+        return this._emptySelectionEnabled;
+    }
+
+    set emptySelectionEnabled(value) {
+        this._emptySelectionEnabled = value;
+        this._render();
+    }
+
+    get values() {
+        return _values.get(this);
+    }
+
+    set values(newItems) {
+        const curValue = this.selectedValue;
+        const values = _values.get(this);
+        values.splice(0, values.length, ...newItems);
+        this._render();
+        this.selectedValue = curValue;
+    }
+
+    _render() {
+        clear(this.element);
+        if (this.values.length === 0) {
+            this.element.append(Option(this.noSelectionText));
+            this.element.lock();
+        }
+        else {
+            if (this.emptySelectionEnabled) {
+                this.element.append(Option(this.noSelectionText));
+            }
+            for (let v of this.values) {
+                this.element.append(
+                    Option(
+                        value(this.makeID(v)),
+                        this.makeLabel(v)));
+            }
+
+            this.element.unlock();
+        }
+    }
+
+    get options() {
+        return this.element.options;
+    }
+
+    get selectedIndex() {
+        let i = this.element.selectedIndex;
+        if (this.emptySelectionEnabled) {
+            --i;
+        }
+        return i;
+    }
+
+    set selectedIndex(i) {
+        if (this.emptySelectionEnabled) {
+            ++i;
+        }
+        this.element.selectedIndex = i;
+    }
+
+    get selectedValue() {
+        if (0 <= this.selectedIndex && this.selectedIndex < this.values.length) {
+            return this.values[this.selectedIndex];
+        }
+        else {
+            return null;
+        }
+    }
+
+    indexOf(value) {
+        return _values.get(this)
+            .findIndex(v =>
+                value !== null
+                && this.makeID(value) === this.makeID(v));
+    }
+
+    set selectedValue(value) {
+        this.selectedIndex = this.indexOf(value);
+    }
+
+    contains(value) {
+        return this.indexOf(value) >= 0.
+    }
+
+    addEventListener(name, callback, opts) {
+        this.element.addEventListener(name, callback, opts);
+    }
+
+    removeEventListener(name, callback) {
+        this.element.removeEventListener(name, callback);
+    }
+
+    setOpen(v) {
+        this.element.setOpen(v);
+    }
+
+    get style() {
+        return this.element.style;
+    }
+
+    focus() {
+        this.element.focus();
+    }
+
+    blur() {
+        this.element.blur();
+    }
+}
+
+function clear(elem) {
+    while (elem.lastChild) {
+        elem.lastChild.remove();
+    }
+}
+
+function A(...rest) { return tag("a", ...rest); }
+function Audio(...rest) { return tag("audio", ...rest); }
+function HtmlButton(...rest) { return tag("button", ...rest); }
+function Button(...rest) { return HtmlButton(...rest, type("button")); }
+function Canvas(...rest) { return tag("canvas", ...rest); }
+function Div(...rest) { return tag("div", ...rest); }
+function H1(...rest) { return tag("h1", ...rest); }
+function H2(...rest) { return tag("h2", ...rest); }
+function Img(...rest) { return tag("img", ...rest); }
+function Input(...rest) { return tag("input", ...rest); }
+function Label(...rest) { return tag("label", ...rest); }
+function LI(...rest) { return tag("li", ...rest); }
+function Option(...rest) { return tag("option", ...rest); }
+function P(...rest) { return tag("p", ...rest); }
+function Source(...rest) { return tag("source", ...rest); }
+function Span(...rest) { return tag("span", ...rest); }
+function UL(...rest) { return tag("ul", ...rest); }
+
+function LabeledInput(id, inputType, labelText, ...rest) {
+    return new LabeledInputTag(id, inputType, labelText, ...rest);
+}
+
+function SelectBox(noSelectionText, makeID, makeLabel, ...rest) {
+    return new SelectBoxTag(noSelectionText, makeID, makeLabel, ...rest);
+}
+
+function LabeledSelectBox(id, labelText, noSelectionText, makeID, makeLabel, ...rest) {
+    return new LabeledSelectBoxTag(id, labelText, noSelectionText, makeID, makeLabel, ...rest);
+}
+
+function OptionPanel(id, name, ...rest) {
+    return new OptionPanelTag(id, name, ...rest);
+}
 
 class FormDialog extends EventTarget {
     constructor(name, ...rest) {
@@ -8432,8 +8427,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async initializeAsync(host, roomName, userName) {
-        await import(`//${window.location.host}/lib/jquery.min.js`);
-        await import(`https://${host}/libs/lib-jitsi-meet.min.js`);
+        await import('../../../../../lib/lib-jitsi-meet.min.js');
 
         roomName = roomName.toLocaleLowerCase();
 
@@ -8890,28 +8884,4 @@ class LibJitsiMeetClient extends BaseJitsiClient {
 }
 
 /* global JITSI_HOST */
-
-const { login } = init(JITSI_HOST, new LibJitsiMeetClient());
-
-function adLink(url, label, icon) {
-    return A(
-        href(url),
-        target("_blank"),
-        rel("noopener"),
-        ariaLabel(label.replace("GitHub", "Git Hub")),
-        title(label),
-        Span(className(`icon icon-${icon}`),
-            role("presentation")));
-}
-
-login.content.append(
-    H2("Made by"),
-    P(adLink(
-        "https://www.seanmcbeth.com",
-        "Sean T. McBeth",
-        "shrink"),
-        "Sean T. McBeth"),
-    P(adLink("https://twitter.com/Sean_McBeth",
-        "Follow Sean on Twitter",
-        "twitter"),
-        "Follow @Sean_McBeth on Twitter"));
+init(JITSI_HOST, new LibJitsiMeetClient());

@@ -1,2 +1,1 @@
-npm version patch
-pkg
+pkg patch 

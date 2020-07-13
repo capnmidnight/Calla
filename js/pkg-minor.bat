@@ -1,2 +1,1 @@
-npm version minor
-pkg
+pkg minor 
