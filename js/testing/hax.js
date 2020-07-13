@@ -6,15 +6,41 @@
     };
 }
 
+function execFunction(parent, func, rest) {
+    if (this === undefined) {
+        return func.apply(parent, rest);
+    }
+    else {
+        return func.apply(this, rest);
+    }
+}
+
 export function haxFunction(parent, name, label) {
     const oldFunction = parent[name];
     hax(parent, name, "call " + (label || name),
         function (rest) {
-            if (this === undefined) {
-                return oldFunction.apply(parent, rest);
+            const params = ["HAAAAX", "call", label, "(", ...rest, ")"],
+                success = (value) => console.log(...params, "->", value),
+                failure = (exp) => console.error(...params, "->", exp);
+            try {
+                const value = execFunction(this, oldFunction, rest);
+
+                if (value === undefined) {
+                    console.log(...params);
+                }
+                else {
+                    success(value);
+                    if (value instanceof Promise) {
+                        value.then(success)
+                            .catch(failure);
+                    }
+                }
+
+                return value;
             }
-            else {
-                return oldFunction.apply(this, rest);
+            catch (exp) {
+                failure(exp);
+                throw exp;
             }
         });
 }
