@@ -1,0 +1,34 @@
+I went through and tried out a number of competitor products. The following notes are my take-aways for where each does something better or worse than Calla. The sites I tried are:
+
+- spatial.chat
+- hubs.mozilla.com
+- theonline.town
+- sococo.com
+- zonko.chat
+- mixaba.com
+
+# Spatial.Chat
+- (+) Signup is the only thing visible, making it very clear what to do to get started.
+- (-) Signup is the only thing visible, providing no preview on what would happen after starting.
+- (-/+) Email confirmation is required to get started, though that will help them market updates.
+- (+) The UI is a lot cleaner, with more succinct options and better layout. Mobile view is even more concise.
+- (+) Tutorial link
+- (+) Support linik
+- (+) There is an option to place images in the space.
+- (-) There's no background graphic, you just drag your avatar around in relation to other avatars.
+- (+) ToS and Privacy Policy readily available.
+- (+) User list shows count and max capacity.
+- (+) Sidebar for text chat
+
+# Mozilla Hubs
+- (+) Signup is less visually cluttered than Calla.
+- (-) Signup is more visually cluttered than Spatial.Chat.
+- (+) No email confirmation.
+- (+/-) "Waiting room" for new users to join, but the waiting room is kind of confusing.
+- (+) UI tour feature.
+- (-) The UI is kind of confusing. There are buttons all over everywhere and the menu has a lot of options in it.
+- (+/-) View is in 3D, which is visually stunning, but also kind of difficult to navigate. It is designed for VR, where a lot of this would be easier to do. But most people aren't VR users (yet :)). 
+- (+) Options to place images and videos (YouTube URLs) in the space, as well as 3D models.
+- (+) Tool to draw on surfaces.
+- (+) Share button triggers OS sharing interface (when available)
+- (+/-) Text chat bar, with option to attach media, but chat text appears right in the middle of the screen (again, a VR affordance)
