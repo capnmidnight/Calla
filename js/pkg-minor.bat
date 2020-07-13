@@ -1,1 +1,2 @@
-pkg minor 
+cmd /C "npm version minor"
+pkg
