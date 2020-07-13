@@ -40,9 +40,13 @@ h2 {
     text-shadow: 2px 2px 5px rgba(0,0,0,.66);
 }
 
-.dialog h1 {
-    font-size: 1em;
-}
+    #headbar button:hover, #footbar button:hover {
+        background-color: rgba(117, 117, 117, 0.50);
+    }
+
+    .dialog h1 {
+        font-size: 1em;
+    }
 
 .dialog h2 {
     font-size: 0.75em;
