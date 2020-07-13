@@ -1,5 +1,6 @@
-﻿import { InterpolatedPosition } from "../positions/InterpolatedPosition.js";
-import { BaseAnalyzedSpatializer } from "./BaseAnalyzedSpatializer.js";
+﻿import "../../../lib/resonance-audio.js";
+import { InterpolatedPosition } from "/src/audio/positions/InterpolatedPosition.js";
+import { BaseAnalyzedSpatializer } from "/src/audio/spatializers/BaseAnalyzedSpatializer.js";
 
 export class GoogleResonanceAudioSpatializer extends BaseAnalyzedSpatializer {
 

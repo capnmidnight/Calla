@@ -1,4 +1,5 @@
 ﻿import { InterpolatedPosition } from "./InterpolatedPosition.js";
+import "../../../lib/resonance-audio.js";
 
 export class GoogleResonanceAudioScene extends InterpolatedPosition {
     /**
