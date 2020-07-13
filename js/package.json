@@ -1,7 +1,4 @@
 {
-    "version": "0.1.4",
-    "private": true,
-    "scripts": {
-        "pkg": "node writeversion.js && rollup -c && minify bundle.js > bundle.min.js"
-    }
+    "version": "0.1.5",
+    "private": true
 }

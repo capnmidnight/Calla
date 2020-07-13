@@ -43,14 +43,14 @@
     <script type="module">
         const el = document.createElement('pwa-update');
         document.querySelector("#login .header").appendChild(el);
-        import('https://cdn.jsdelivr.net/npm/@pwabuilder/pwaupdate');
+        import('/lib/pwaupdate.min.js');
     </script>
 
     <link type="text/css" rel="stylesheet" href="/stylesheets/general.css" />
     <link type="text/css" rel="stylesheet" href="/stylesheets/icons.css" />
     <script src="/constants.js"></script>
     <script src="/lib/resonance-audio.min.js"></script>
-    <script type="module" src="index.js"></script>
+    <script type="module" src="bundle.min.js"></script>
 </head>
 
 <body>

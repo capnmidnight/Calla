@@ -61,8 +61,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async initializeAsync(host, roomName, userName) {
-        await import(`//${window.location.host}/lib/jquery.min.js`);
-        await import(`https://${host}/libs/lib-jitsi-meet.min.js`);
+        await import("/lib/lib-jitsi-meet.min.js");
 
         roomName = roomName.toLocaleLowerCase();
 
