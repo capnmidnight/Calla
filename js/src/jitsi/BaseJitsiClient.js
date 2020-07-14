@@ -376,6 +376,11 @@ class JitsiClientEvent extends Event {
     constructor(command, id, value) {
         super(command);
         this.id = id;
-        Event.clone(this, value);
+        for (let key in value) {
+            if (key !== "isTrusted"
+                && !Event.prototype.hasOwnProperty(key)) {
+                this[key] = value[key];
+            }
+        }
     }
 }
