@@ -1,4 +1,4 @@
-﻿import { allIcons as icons, emojiStyle, textStyle } from "../emoji/emoji.js";
+﻿import { allIcons as icons, EmojiGroup, emojiStyle, textStyle } from "../emoji/emoji.js";
 import { className, href, htmlFor, style, title } from "../html/attrs.js";
 import { onClick } from "../html/evts.js";
 import { A, Button, Div, H1, H2, Label, LI, P, Span, UL } from "../html/tags.js";
@@ -54,9 +54,14 @@ export class EmojiForm extends FormDialog {
             };
         }
 
+        /**
+         * 
+         * @param {EmojiGroup} group
+         * @param {HTMLElement} container
+         * @param {boolean} isAlts
+         */
         const addIconsToContainer = (group, container, isAlts) => {
-            group = group.alts || group;
-            for (let icon of group) {
+            for (let icon of group.alts) {
                 const btn = Button(
                         title(icon.desc),
                         buttonStyle,
@@ -92,7 +97,7 @@ export class EmojiForm extends FormDialog {
                 if (!!icon.alts) {
                     alts = Div();
                     allAlts.push(alts);
-                    addIconsToContainer(icon.alts, alts, true);
+                    addIconsToContainer(icon, alts, true);
                     alts.hide();
                     g.appendChild(alts);
                     btn.style.width = "3em";
@@ -111,20 +116,19 @@ export class EmojiForm extends FormDialog {
             }
         };
 
-        for (let key of Object.keys(icons)) {
-            if (key !== "combiners") {
+        for (let group of Object.values(icons)) {
+            if (group instanceof EmojiGroup) {
                 const header = H1(),
                     container = P(),
                     headerButton = A(
                         href("javascript:undefined"),
-                        title(key),
+                        title(group.desc),
                         headerStyle,
                         onClick(() => {
                             container.toggleOpen();
-                            headerButton.innerHTML = key + (container.isOpen() ? " -" : " +");
+                            headerButton.innerHTML = group.value  + (container.isOpen() ? " -" : " +");
                         }),
-                        key + " -"),
-                    group = icons[key];
+                        group.value + " -");
 
                 addIconsToContainer(group, container);
                 header.appendChild(headerButton);
