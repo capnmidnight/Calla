@@ -4,9 +4,42 @@ import { isFunction } from "../events.js";
 import { clear, Option } from "./tags.js";
 import { value } from "./attrs.js";
 
-const _values = new Map();
+/** @type {WeakMap<SelectBoxTag, any[]>} */
+const values = new WeakMap();
 
+function render(self) {
+    clear(self.element);
+    if (self.values.length === 0) {
+        self.element.append(Option(self.noSelectionText));
+        self.element.lock();
+    }
+    else {
+        if (self.emptySelectionEnabled) {
+            self.element.append(Option(self.noSelectionText));
+        }
+        for (let v of self.values) {
+            self.element.append(
+                Option(
+                    value(self.makeID(v)),
+                    self.makeLabel(v)));
+        }
+
+        self.element.unlock();
+    }
+}
+
+/**
+ * A select box that can be databound to collections.
+ **/
 export class SelectBoxTag extends HtmlCustomTag {
+
+    /**
+     * Creates a select box that can bind to collections
+     * @param {string} noSelectionText - the text to display when no items are available.
+     * @param {makeItemValueCallback} makeID
+     * @param {makeItemValueCallback} makeLabel
+     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+     */
     constructor(noSelectionText, makeID, makeLabel, ...rest) {
         super("select", ...rest);
 
@@ -18,8 +51,6 @@ export class SelectBoxTag extends HtmlCustomTag {
             throw new Error("makeLabel parameter must be a Function");
         }
 
-        _values.set(this, []);
-
         this.noSelectionText = noSelectionText;
         this.makeID = (v) => v !== null && makeID(v) || null;
         this.makeLabel = (v) => v !== null && makeLabel(v) || "None";
@@ -28,52 +59,59 @@ export class SelectBoxTag extends HtmlCustomTag {
         Object.seal(this);
     }
 
+    /**
+     * Gets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
+     * @type {boolean}
+     **/
     get emptySelectionEnabled() {
         return this._emptySelectionEnabled;
     }
 
+    /**
+     * Sets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
+     * @type {boolean}
+     **/
     set emptySelectionEnabled(value) {
         this._emptySelectionEnabled = value;
-        this._render();
+        render(this);
     }
 
+    /**
+     * Gets the collection to which the select box was databound
+     **/
     get values() {
-        return _values.get(this);
+        if (!values.has(this)) {
+            values.set(this, []);
+        }
+        return values.get(this);
     }
 
+    /**
+     * Sets the collection to which the select box will be databound
+     **/
     set values(newItems) {
         const curValue = this.selectedValue;
-        const values = _values.get(this);
+        const values = this.values;
         values.splice(0, values.length, ...newItems);
-        this._render();
+        render(this);
         this.selectedValue = curValue;
     }
 
-    _render() {
-        clear(this.element);
-        if (this.values.length === 0) {
-            this.element.append(Option(this.noSelectionText));
-            this.element.lock();
-        }
-        else {
-            if (this.emptySelectionEnabled) {
-                this.element.append(Option(this.noSelectionText));
-            }
-            for (let v of this.values) {
-                this.element.append(
-                    Option(
-                        value(this.makeID(v)),
-                        this.makeLabel(v)));
-            }
-
-            this.element.unlock();
-        }
-    }
-
+    /**
+     * Returns the collection of HTMLOptionElements that are stored in the select box
+     * @type {HTMLOptionsCollection}
+     */
     get options() {
         return this.element.options;
     }
 
+    /**
+     * Gets the index of the item that is currently selected in the select box.
+     * The index is offset by -1 if the select box has `emptySelectionEnabled`
+     * set to true, so that the indices returned are always in range of the collection
+     * to which the select box was databound
+     * @type {number}
+     */
     get selectedIndex() {
         let i = this.element.selectedIndex;
         if (this.emptySelectionEnabled) {
@@ -82,6 +120,13 @@ export class SelectBoxTag extends HtmlCustomTag {
         return i;
     }
 
+    /**
+     * Sets the index of the item that should be selected in the select box.
+     * The index is offset by -1 if the select box has `emptySelectionEnabled`
+     * set to true, so that the indices returned are always in range of the collection
+     * to which the select box was databound
+     * @type {number}
+     */
     set selectedIndex(i) {
         if (this.emptySelectionEnabled) {
             ++i;
@@ -89,6 +134,10 @@ export class SelectBoxTag extends HtmlCustomTag {
         this.element.selectedIndex = i;
     }
 
+    /**
+     * Gets the item at `selectedIndex` in the collection to which the select box was databound
+     * @type {any}
+     */
     get selectedValue() {
         if (0 <= this.selectedIndex && this.selectedIndex < this.values.length) {
             return this.values[this.selectedIndex];
@@ -98,42 +147,31 @@ export class SelectBoxTag extends HtmlCustomTag {
         }
     }
 
+    /**
+     * Gets the index of the given item in the select box's databound collection, then
+     * sets that index as the `selectedIndex`.
+     */
+    set selectedValue(value) {
+        this.selectedIndex = this.indexOf(value);
+    }
+
+    /**
+     * Returns the index of the given item in the select box's databound collection.
+     * @param {any} value
+     */
     indexOf(value) {
-        return _values.get(this)
+        return this.values
             .findIndex(v =>
                 value !== null
                 && this.makeID(value) === this.makeID(v));
     }
 
-    set selectedValue(value) {
-        this.selectedIndex = this.indexOf(value);
-    }
-
+    /**
+     * Checks to see if the value exists in the databound collection.
+     * @param {any} value
+     * @returns {boolean}
+     */
     contains(value) {
         return this.indexOf(value) >= 0.
-    }
-
-    addEventListener(name, callback, opts) {
-        this.element.addEventListener(name, callback, opts);
-    }
-
-    removeEventListener(name, callback) {
-        this.element.removeEventListener(name, callback);
-    }
-
-    setOpen(v) {
-        this.element.setOpen(v);
-    }
-
-    get style() {
-        return this.element.style;
-    }
-
-    focus() {
-        this.element.focus();
-    }
-
-    blur() {
-        this.element.blur();
     }
 }
