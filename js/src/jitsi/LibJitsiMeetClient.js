@@ -3,19 +3,38 @@ import { BaseJitsiClient } from "./BaseJitsiClient.js";
 import { AudioManager as AudioClient } from '../audio/AudioManager.js';
 import { autoPlay, srcObject, muted } from '../html/attrs.js';
 import { canChangeAudioOutput } from "../audio/canChangeAudioOutput.js";
+import { AudioActivityEvent } from "../audio/AudioActivityEvent.js";
 
-/** @typedef MediaElements
- * @type {object}
- * @property {HTMLAudioElement} audio
- * @property {HTMLVideoElement} video */
+/**
+ * @typedef {object} JitsiTrack
+ * @property {Function} getParticipantId
+ * @property {Function} getType
+ * @property {Function} isMuted
+ * @property {Function} isLocal
+ * @property {Function} addEventListener
+ * @property {Function} dispose
+ * @property {MediaStream} stream
+ **/
 
-/** @type {Map.<string, MediaElements>} */
+/**
+ * A paring of audio and video inputs for a user in the conference.
+ **/
+class MediaElements {
+    /**
+     * Creates a pairing of audio and video inputs for a user.
+     * @param {JitsiTrack} audio
+     * @param {JitsiTrack} video
+     */
+    constructor(audio = null, video = null) {
+        this.audio = audio;
+        this.video = video;
+    }
+}
+
+/** @type {Map<string, MediaElements>} */
 const userInputs = new Map();
 
-const audioActivityEvt = Object.assign(new Event("audioActivity"), {
-    id: null,
-    isActive: false
-});
+const audioActivityEvt = new AudioActivityEvent();
 
 
 function logger(source, evtName) {
@@ -52,8 +71,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         this.conference = null;
         this.audioClient = new AudioClient();
         this.audioClient.addEventListener("audioActivity", (evt) => {
-            audioActivityEvt.id = evt.id;
-            audioActivityEvt.isActive = evt.isActive;
+            audioActivityEvt.set(evt.id, evt.isActive);
             this.dispatchEvent(audioActivityEvt);
         });
 
@@ -98,8 +116,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 USER_JOINED,
                 USER_LEFT,
                 DISPLAY_NAME_CHANGED,
-                ENDPOINT_MESSAGE_RECEIVED,
-                DATA_CHANNEL_OPENED
+                ENDPOINT_MESSAGE_RECEIVED
             } = JitsiMeetJS.events.conference;
 
             setLoggers(this.conference, JitsiMeetJS.events.conference);
@@ -183,7 +200,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                     srcObject(track.stream));
 
                 if (!userInputs.has(userID)) {
-                    userInputs.set(userID, { audio: null, video: null });
+                    userInputs.set(userID, new MediaElements());
                 }
 
                 const inputs = userInputs.get(userID),

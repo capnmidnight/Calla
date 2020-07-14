@@ -2,6 +2,7 @@
 
 const emoji = new EmojiForm();
 document.body.appendChild(emoji.element);
+emoji.element.style.height = "100%";
 
 async function show() {
     const emote = await emoji.selectAsync();
