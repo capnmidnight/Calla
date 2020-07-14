@@ -1,8 +1,16 @@
 ﻿import { project, lerp } from "../../math.js";
 import { BasePosition } from "./BasePosition.js";
 
+/**
+ * A position value that is blended from the current position to
+ * a target position over time.
+ */
 export class InterpolatedPosition extends BasePosition {
 
+    /**
+     * Creates a new position value that is blended from the current position to
+     * a target position over time.
+     **/
     constructor() {
         super();
 
@@ -19,18 +27,22 @@ export class InterpolatedPosition extends BasePosition {
             = 0;
     }
 
-    /** @type {number} */
+    /**
+     *  The horizontal component of the position.
+     *  @type {number} */
     get x() {
         return this._x;
     }
 
-    /** @type {number} */
+    /**
+     *  The vertical component of the position.
+     *  @type {number} */
     get y() {
         return this._y;
     }
 
     /**
-     * 
+     * Set the target position for the time `t + dt`.
      * @param {UserPosition} evt
      * @param {number} t
      * @param {number} dt
@@ -45,7 +57,8 @@ export class InterpolatedPosition extends BasePosition {
     }
 
     /**
-     * 
+     * Calculates the new position for the given time.
+     * @protected
      * @param {number} t
      */
     update(t) {

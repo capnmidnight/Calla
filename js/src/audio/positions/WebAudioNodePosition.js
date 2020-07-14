@@ -1,11 +1,15 @@
 ﻿import { BasePosition } from "./BasePosition.js";
 import { InterpolatedPosition } from "./InterpolatedPosition.js";
 
+/**
+ * A positioner that uses WebAudio's playback dependent time progression.
+ **/
 export class WebAudioNodePosition extends BasePosition {
+
     /**
-     * 
-     * @param {PannerNode|AudioListener} node
-     * @param {boolean} forceInterpolation
+     * Creates a new positioner that uses WebAudio's playback dependent time progression.
+     * @param {PannerNode|AudioListener} node - the audio node that will receive the position value.
+     * @param {boolean} forceInterpolation - when set to true, circumvents WebAudio's time tracking and uses our own.
      */
     constructor(node, forceInterpolation) {
         super();
@@ -18,18 +22,22 @@ export class WebAudioNodePosition extends BasePosition {
         this.node.positionZ.setValueAtTime(0, 0);
     }
 
-    /** @type {number} */
+    /**
+     *  The horizontal component of the position.
+     *  @type {number} */
     get x() {
         return this.node.positionX.value;
     }
 
-    /** @type {number} */
+    /**
+     *  The vertical component of the position.
+     *  @type {number} */
     get y() {
         return this.node.positionZ.value;
     }
 
     /**
-     *
+     * Set the target position for the time `t + dt`.
      * @param {UserPosition} evt
      * @param {number} t
      * @param {number} dt
@@ -48,7 +56,8 @@ export class WebAudioNodePosition extends BasePosition {
     }
 
     /**
-     *
+     * Calculates the new position for the given time.
+     * @protected
      * @param {number} t
      */
     update(t) {

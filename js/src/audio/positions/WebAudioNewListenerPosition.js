@@ -1,10 +1,13 @@
 ﻿import { WebAudioNodePosition } from "./WebAudioNodePosition.js";
 
+/**
+ * A positioner that uses WebAudio's playback dependent time progression.
+ **/
 export class WebAudioNewListenerPosition extends WebAudioNodePosition {
     /**
-     * 
-     * @param {AudioListener} node
-     * @param {boolean} forceInterpolation
+     * Creates a new positioner that uses WebAudio's playback dependent time progression.
+     * @param {AudioListener} node - the audio node that will receive the position value.
+     * @param {boolean} forceInterpolation - when set to true, circumvents WebAudio's time tracking and uses our own.
      */
     constructor(node, forceInterpolation) {
         super(node, forceInterpolation);
