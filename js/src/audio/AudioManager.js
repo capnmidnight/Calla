@@ -1,18 +1,21 @@
 ﻿import { BaseAudioClient } from "./BaseAudioClient.js";
 import { Destination } from "./Destination.js";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
+import { AudioActivityEvent } from "./AudioActivityEvent.js";
 
 const BUFFER_SIZE = 1024,
-    audioActivityEvt = Object.assign(new Event("audioActivity", {
-        id: null,
-        isActive: false
-    }));
+    audioActivityEvt = new AudioActivityEvent;
 
 
 export class AudioManager extends BaseAudioClient {
     constructor() {
         super();
 
+        /**
+         * 
+         * @param {AudioActivityEvent} evt
+         * @fires AudioManager#audioActivity
+         */
         this.onAudioActivity = (evt) => {
             audioActivityEvt.id = evt.id;
             audioActivityEvt.isActive = evt.isActive;

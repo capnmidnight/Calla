@@ -2,9 +2,15 @@
 import { onClick } from "../src/html/evts.js";
 import { Button, clear, Div, Span } from "../src/html/tags.js";
 import { TestOutput } from "./TestOutput.js";
-import { TestState } from "./TestState.js";
+import { TestOutputResultsEvent } from "./TestOutputResultsEvent.js";
+import { TestStates } from "./TestStates.js";
 
 
+/**
+ * Creates a portion of a progress bar.
+ * @param {string} color - a CSS color value
+ * @param {string} width - a CSS size value
+ */
 function bar(color, width) {
     return style({
         backgroundColor: color,
@@ -13,6 +19,16 @@ function bar(color, width) {
     });
 }
 
+/**
+ * @callback onClickCallback
+ * @param {MouseEvent} evt
+ */
+
+/**
+ * 
+ * @param {onClickCallback} thunk
+ * @param {...any} rest
+ */
 function refresher(thunk, ...rest) {
     return Button(
         onClick(thunk),
@@ -22,15 +38,15 @@ function refresher(thunk, ...rest) {
 }
 
 function makeStatus(id) {
-    const complete = id & TestState.completed;
+    const complete = id & TestStates.completed;
 
-    if (id & TestState.failed) {
+    if (id & TestStates.failed) {
         return complete ? "Failure" : "Failing";
     }
-    else if (id & TestState.succeeded) {
+    else if (id & TestStates.succeeded) {
         return complete ? "Success" : "Succeeding";
     }
-    else if (id & TestState.started) {
+    else if (id & TestStates.started) {
         return complete ? "No test ran" : "Running";
     }
     else {
@@ -44,6 +60,10 @@ export class HtmlTestOutput extends TestOutput {
         this.element = Div(style({
             overflowY: "scroll"
         }));
+        /**
+         * 
+         * @param {TestOutputResultsEvent} evt
+         */
         const draw = (evt) => {
             const s = Math.round(100 * evt.stats.totalSucceeded / evt.stats.totalFound),
                 f = Math.round(100 * evt.stats.totalFailed / evt.stats.totalFound),
@@ -75,17 +95,16 @@ export class HtmlTestOutput extends TestOutput {
                     Div(col(1), "Rerun"),
                     Div(col(2), "Name"),
                     Div(col(3), "Status"));
-            for (let testCaseName in evt.table) {
+            for (let [testCaseName, testCase] of evt.results.entries()) {
                 table.append(
                     Div(col(2, 3), testCaseName),
                     refresher(() => this.run(testCaseName)));
-                for (let testName in evt.table[testCaseName]) {
-                    const e = evt.table[testCaseName][testName];
+                for (let [testName, test] of testCase.entries()) {
                     table.append(
                         refresher(() => this.run(testCaseName, testName)),
                         Div(col(2), testName),
-                        Div(col(3), makeStatus(e.state)),
-                        Div(col(4), e.messages.join(", ")));
+                        Div(col(3), makeStatus(test.state)),
+                        Div(col(4), test.messages.join(", ")));
                 }
             }
             clear(this.element);

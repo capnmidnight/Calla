@@ -57,8 +57,7 @@ export class EmojiForm extends FormDialog {
         const addIconsToContainer = (group, container, isAlts) => {
             group = group.alts || group;
             for (let icon of group) {
-                const g = isAlts ? UL() : Span(),
-                    btn = Button(
+                const btn = Button(
                         title(icon.desc),
                         buttonStyle,
                         onClick((evt) => {
@@ -76,14 +75,18 @@ export class EmojiForm extends FormDialog {
 
                 let alts = null;
 
+                /** @type {HTMLUListElement|HTMLSpanElement} */
+                let g = null;
+
                 if (isAlts) {
                     btn.id = `emoji-with-alt-${idCounter++}`;
-                    g.appendChild(LI(btn,
-                        Label(htmlFor(btn.id),
-                            icon.desc)));
+                    g = UL(
+                        LI(btn,
+                            Label(htmlFor(btn.id),
+                                icon.desc)));
                 }
                 else {
-                    g.appendChild(btn);
+                    g = Span(btn)
                 }
 
                 if (!!icon.alts) {

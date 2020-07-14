@@ -3,10 +3,25 @@ import { HtmlCustomTag } from "./HtmlCustomTag.js";
 import { HtmlEvt } from "./evts.js";
 import { isFunction, isString, isNumber, isBoolean } from "../events.js";
 
+/**
+ * @typedef {(Element|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
+ **/
+
+/**
+ * Creates an HTML element for a given tag name.
+ * 
+ * Boolean attributes that you want to default to true can be passed
+ * as just the attribute creating function, 
+ *   e.g. `Audio(autoPlay)` vs `Audio(autoPlay(true))`
+ * @param {string} name - the name of the tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLElement}
+ */
 export function tag(name, ...rest) {
     const elem = document.createElement(name);
 
     for (let i = 0; i < rest.length; ++i) {
+        // 
         if (isFunction(rest[i])) {
             rest[i] = rest[i](true);
         }

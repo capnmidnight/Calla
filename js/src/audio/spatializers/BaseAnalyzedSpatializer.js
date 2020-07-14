@@ -1,10 +1,8 @@
 ﻿import { BaseSpatializer } from "./BaseSpatializer.js";
 import { clamp } from "../../math.js";
+import { AudioActivityEvent } from "../AudioActivityEvent.js";
 
-const audioActivityEvt = Object.assign(new Event("audioActivity", {
-    id: null,
-    isActive: false
-})),
+const audioActivityEvt = new AudioActivityEvent(),
     activityCounterMin = 0,
     activityCounterMax = 60,
     activityCounterThresh = 5;
@@ -80,6 +78,9 @@ export class BaseAnalyzedSpatializer extends BaseSpatializer {
         this.source = null;
     }
 
+    /**
+     * @fires BaseAnalyzedSpatializer#audioActivity
+     **/
     update() {
         super.update();
 
@@ -115,8 +116,7 @@ export class BaseAnalyzedSpatializer extends BaseSpatializer {
             const isActive = this.activityCounter > activityCounterThresh;
             if (this.wasActive !== isActive) {
                 this.wasActive = isActive;
-                audioActivityEvt.id = this.id;
-                audioActivityEvt.isActive = isActive;
+                audioActivityEvt.set(this.id, isActive);
                 this.dispatchEvent(audioActivityEvt);
             }
         }

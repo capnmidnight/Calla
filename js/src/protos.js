@@ -74,11 +74,6 @@ Element.prototype.blinkBorder = function (times, color) {
     }, 125);
 };
 
-HTMLCanvasElement.prototype.resize = function () {
-    this.width = this.clientWidth * devicePixelRatio;
-    this.height = this.clientHeight * devicePixelRatio;
-};
-
 const oldAddEventListener = HTMLInputElement.prototype.addEventListener;
 
 HTMLInputElement.prototype.addEventListener = function (evtName, func, opts) {

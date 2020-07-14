@@ -1,23 +1,23 @@
-﻿import { TestState } from "./TestState.js";
+﻿import { TestStates } from "./TestStates.js";
 
 export class TestScore {
     constructor(name) {
         this.name = name;
-        this.state = TestState.found;
+        this.state = TestStates.found;
         this.messages = [];
     }
     start() {
-        this.state |= TestState.started;
+        this.state |= TestStates.started;
     }
     success() {
-        this.state |= TestState.succeeded;
+        this.state |= TestStates.succeeded;
     }
     fail(message) {
-        this.state |= TestState.failed;
+        this.state |= TestStates.failed;
         this.messages.push(message);
     }
     finish(value) {
-        this.state |= TestState.completed;
+        this.state |= TestStates.completed;
         if (!!value) {
             this.messages.push(value);
         }

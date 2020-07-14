@@ -1,10 +1,11 @@
 ﻿import { Emote } from "./Emote.js";
+import { EventedGamepad } from "./gamepad/EventedGamepad.js";
 import { id, style } from "./html/attrs.js";
+import { resizeCanvas } from "./html/canvas.js";
 import { Canvas } from "./html/tags.js";
 import { clamp, lerp, project, unproject } from "./math.js";
 import { TileMap } from "./TileMap.js";
 import { User } from "./User.js";
-import { EventedGamepad } from "./gamepad/EventedGamepad.js";
 
 const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_MAX = 8,
@@ -522,7 +523,7 @@ export class Game extends EventTarget {
     }
 
     resize() {
-        this.element.resize();
+        resizeCanvas(this.element, window.devicePixelRatio);
     }
 
     loop(time) {
