@@ -58,7 +58,7 @@ export async function runTest(JitsiClient) {
         client.userInitResponse(evt.id, { x: userNumber, y: userNumber });
     });
 
-
+    client.startAudio();
     cons.run();
 
     document.body.style.backgroundImage = "none";
