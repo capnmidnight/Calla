@@ -23,6 +23,9 @@ export class BaseWebAudioSpatializer extends BaseAnalyzedSpatializer {
         }
     }
 
+    /**
+     * Discard values and make this instance useless.
+     */
     dispose() {
         if (this.inNode !== this.outNode) {
             this.inNode.disconnect(this.outNode);

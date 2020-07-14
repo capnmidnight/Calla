@@ -15,6 +15,13 @@
         this.position = position;
     }
 
+    /**
+     * Sets parameters that alter spatialization.
+     * @param {number} minDistance
+     * @param {number} maxDistance
+     * @param {number} rolloff
+     * @param {number} transitionTime
+     */
     setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
         this.minDistance = minDistance;
         this.maxDistance = maxDistance;

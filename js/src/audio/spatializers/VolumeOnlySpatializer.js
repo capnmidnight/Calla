@@ -1,10 +1,13 @@
 ﻿import { BaseSpatializer } from "./BaseSpatializer.js";
 import { InterpolatedPosition } from "../positions/InterpolatedPosition.js";
 
+/**
+ * A spatializer that only modifies volume.
+ **/
 export class VolumeOnlySpatializer extends BaseSpatializer {
 
     /**
-     *
+     * Creates a new spatializer that only modifies volume.
      * @param {string} userID
      * @param {Destination} destination
      * @param {HTMLAudioElement} audio
@@ -16,6 +19,9 @@ export class VolumeOnlySpatializer extends BaseSpatializer {
         Object.seal(this);
     }
 
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     **/
     update() {
         super.update();
         this.audio.volume = this.volume;

@@ -2,6 +2,7 @@
 import { Destination } from "../Destination.js";
 import { BasePosition } from "../positions/BasePosition.js";
 import { BaseAudioElement } from "../BaseAudioElement.js";
+import { canChangeAudioOutput } from "../canChangeAudioOutput.js";
 
 /** Base class providing functionality for spatializers. */
 export class BaseSpatializer extends BaseAudioElement {
@@ -23,6 +24,7 @@ export class BaseSpatializer extends BaseAudioElement {
         this.volume = 1;
         this.pan = 0;
     }
+
     /**
      * Discard values and make this instance useless.
      */
@@ -35,19 +37,28 @@ export class BaseSpatializer extends BaseAudioElement {
         this.id = null;
     }
 
+    /**
+     * Changes the device to which audio will be output
+     * @param {string} deviceID
+     */
     setAudioOutputDevice(deviceID) {
-        if (this.audio.setSinkId) {
+        if (canChangeAudioOutput) {
             this.audio.setSinkId(deviceID);
         }
     }
 
+    /**
+     * Retrieves the current time from the audio context.
+     * @type {number}
+     */
     get currentTime() {
         return this.destination.currentTime;
     }
 
+
     /**
-     * Run the position interpolation
-     */
+     * Performs the spatialization operation for the audio source's latest location.
+     **/
     update() {
         super.update();
 
@@ -56,9 +67,9 @@ export class BaseSpatializer extends BaseAudioElement {
             distX = this.position.x - lx,
             distY = this.position.y - ly,
             dist = Math.sqrt(distX * distX + distY * distY),
-            projected = project(dist, this.destination.minDistance, this.destination.maxDistance);
+            distScale = project(dist, this.minDistance, this.maxDistance);
 
-        this.volume = 1 - clamp(projected, 0, 1);
+        this.volume = 1 - clamp(distScale, 0, 1);
         this.pan = dist > 0
             ? distX / dist
             : 0;

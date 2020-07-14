@@ -1,10 +1,13 @@
 ﻿import { BaseWebAudioSpatializer } from "./BaseWebAudioSpatializer.js";
 import { WebAudioNodePosition } from "../positions/WebAudioNodePosition.js";
 
+/**
+ * A spatializer that uses WebAudio's PannerNode
+ **/
 export class FullSpatializer extends BaseWebAudioSpatializer {
 
     /**
-     *
+     * Creates a new spatializer that uses WebAudio's PannerNode.
      * @param {string} userID
      * @param {Destination} destination
      * @param {HTMLAudioElement} audio
@@ -18,8 +21,6 @@ export class FullSpatializer extends BaseWebAudioSpatializer {
 
         this.inNode.panningModel = "HRTF";
         this.inNode.distanceModel = "inverse";
-        this.inNode.refDistance = destination.minDistance;
-        this.inNode.rolloffFactor = destination.rolloff;
         this.inNode.coneInnerAngle = 360;
         this.inNode.coneOuterAngle = 0;
         this.inNode.coneOuterGain = 0;
@@ -27,8 +28,15 @@ export class FullSpatializer extends BaseWebAudioSpatializer {
         Object.seal(this);
     }
 
+    /**
+     * Sets parameters that alter spatialization.
+     * @param {number} minDistance
+     * @param {number} maxDistance
+     * @param {number} rolloff
+     * @param {number} transitionTime
+     */
     setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
-        super.setAudioOutputDevice(minDistance, maxDistance, rolloff, transitionTime);
+        super.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
         this.inNode.refDistance = minDistance;
         this.inNode.rolloffFactor = rolloff;
     }

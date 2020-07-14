@@ -122,6 +122,9 @@ export class BaseAnalyzedSpatializer extends BaseSpatializer {
         }
     }
 
+    /**
+     * Discard values and make this instance useless.
+     */
     dispose() {
         if (!!this.source) {
             this.source.disconnect(this.analyser);

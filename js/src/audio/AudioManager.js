@@ -69,10 +69,17 @@ export class AudioManager extends BaseAudioClient {
         Object.seal(this);
     }
 
-    setAudioProperties(evt) {
-        this.destination.setAudioProperties(evt.minDistance, evt.maxDistance, evt.rolloff, evt.transitionTime);
+    /**
+     * Sets parameters that alter spatialization.
+     * @param {number} minDistance
+     * @param {number} maxDistance
+     * @param {number} rolloff
+     * @param {number} transitionTime
+     */
+    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
+        this.destination.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
         for (let source of this.sources.values()) {
-            source.setAudioProperties(evt.minDistance, evt.maxDistance, evt.rolloff, evt.transitionTime);
+            source.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
         }
     }
 

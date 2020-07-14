@@ -29,10 +29,13 @@
     }
 
     /**
-     * Set audio parameters for the listener.
-     * @param {any} evt
+     * Sets parameters that alter spatialization.
+     * @param {number} minDistance
+     * @param {number} maxDistance
+     * @param {number} rolloff
+     * @param {number} transitionTime
      */
-    setAudioProperties(evt) {
+    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
         throw new Error("Not implemented in base class");
     }
 

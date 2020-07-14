@@ -118,14 +118,16 @@ export class BaseJitsiClient extends EventTarget {
 
         this.setDisplayName(userName);
 
-        const audioOutputs = await this.getAudioOutputDevicesAsync();
-        const audOut = audioOutputs.scan(
-            (d) => d.deviceId === this.preferedAudioOutputID,
-            (d) => d.deviceId === "communications",
-            (d) => d.deviceId === "default",
-            (d) => !!d);
-        if (audOut) {
-            await this.setAudioOutputDeviceAsync(audOut);
+        if (canChangeAudioOutput) {
+            const audioOutputs = await this.getAudioOutputDevicesAsync();
+            const audOut = audioOutputs.scan(
+                (d) => d.deviceId === this.preferedAudioOutputID,
+                (d) => d.deviceId === "communications",
+                (d) => d.deviceId === "default",
+                (d) => !!d);
+            if (audOut) {
+                await this.setAudioOutputDeviceAsync(audOut);
+            }
         }
 
         const audioInputs = await this.getAudioInputDevicesAsync();
@@ -263,15 +265,15 @@ export class BaseJitsiClient extends EventTarget {
         this.dispatchEvent(evt);
     }
 
-    setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
-        const evt = {
-            origin,
-            transitionTime,
-            minDistance,
-            maxDistance,
-            rolloff
-        };
-        this.audioClient.setAudioProperties(evt);
+    /**
+     * Sets parameters that alter spatialization.
+     * @param {number} minDistance
+     * @param {number} maxDistance
+     * @param {number} rolloff
+     * @param {number} transitionTime
+     */
+    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
+        this.audioClient.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
     }
 
     setLocalPosition(evt) {
