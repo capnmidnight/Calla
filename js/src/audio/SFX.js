@@ -41,7 +41,7 @@ export class SFX extends EventTarget {
     /**
      * Plays a named sound effect.
      * @param {string} name - the name of the effect to play.
-     * @param {number=1} volume - the volume at which to play the effect.
+     * @param {number} [volume=1] - the volume at which to play the effect.
      */
     play(name, volume = 1) {
         if (this.clips.has(name)) {

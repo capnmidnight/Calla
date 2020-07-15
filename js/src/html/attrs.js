@@ -1003,7 +1003,7 @@ export const systemFamily = "-apple-system, '.SFNSText-Regular', 'San Francisco'
 /**
  * Constructs a CSS grid column definition
  * @param {number} x - the starting horizontal cell for the element.
- * @param {number=null} w - the number of cells wide the element should cover.
+ * @param {number} [w=null] - the number of cells wide the element should cover.
  */
 export function col(x, w = null) {
     if (w === null) {
@@ -1019,7 +1019,7 @@ export function col(x, w = null) {
 /**
  * Constructs a CSS grid row definition
  * @param {number} y - the starting vertical cell for the element.
- * @param {number=null} h - the number of cells tall the element should cover.
+ * @param {number} [h=null] - the number of cells tall the element should cover.
  */
 export function row(y, h = null) {
     if (h === null) {
@@ -1036,8 +1036,8 @@ export function row(y, h = null) {
  * Constructs a CSS grid area definition.
  * @param {number} x - the starting horizontal cell for the element.
  * @param {number} y - the starting vertical cell for the element.
- * @param {number=null} w - the number of cells wide the element should cover.
- * @param {number=null} h - the number of cells tall the element should cover.
+ * @param {number} [w=null] - the number of cells wide the element should cover.
+ * @param {number} [h=null] - the number of cells tall the element should cover.
  */
 export function grid(x, y, w = null, h = null) {
     if (w === null) {

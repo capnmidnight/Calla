@@ -5,8 +5,6 @@ import { SelectBoxTag } from "./SelectBoxTag.js";
 import { tag } from "./tag.js";
 import { type, width, height } from "./attrs.js";
 
-/** @typedef {import("./tag.js").TagChild} TagChild **/
-
 /**
  * Empty an element of all children. This is faster than
  * setting `innerHTML = ""`.

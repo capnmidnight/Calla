@@ -14,7 +14,7 @@ export function isCanvas(obj) {
  * @param {HTMLCanvasElement|OffscreenCanvas} canv
  * @param {number} w - the new width of the canvas
  * @param {number} h - the new height of the canvas
- * @param {number=1} superscale - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
  * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
  */
 export function setCanvasSize(canv, w, h, superscale = 1) {
@@ -39,7 +39,7 @@ export function setCanvasSize(canv, w, h, superscale = 1) {
  * @param {RenderingContext} ctx
  * @param {number} w - the new width of the canvas
  * @param {number} h - the new height of the canvas
- * @param {number=1} superscale - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
  * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
  */
 export function setContextSize(ctx, w, h, superscale = 1) {
@@ -66,7 +66,7 @@ export function setContextSize(ctx, w, h, superscale = 1) {
 /**
  * Resizes a canvas element to match the proportions of the size of the element in the DOM.
  * @param {HTMLCanvasElement} canv
- * @param {number=1} superscale - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
  * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
  */
 export function resizeCanvas(canv, superscale = 1) {
@@ -80,7 +80,7 @@ export function resizeCanvas(canv, superscale = 1) {
 /**
  * Resizes a canvas element of a given rendering context to match the proportions of the size of the element in the DOM.
  * @param {HTMLCanvasElement} canv
- * @param {number=1} superscale - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
  * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
  */
 export function resizeContext(ctx, superscale = 1) {

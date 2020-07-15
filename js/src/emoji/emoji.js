@@ -31,11 +31,11 @@ export class EmojiGroup extends Emoji {
      * Groupings of Unicode-standardized pictograms.
      * @param {string} value - a Unicode sequence.
      * @param {string} desc - an English text description of the pictogram.
-     * @param {(Emoji|EmojiGroup)[]} rest - Emojis in this group.
+     * @param {Emoji[]} rest - Emojis in this group.
      */
     constructor(value, desc, ...rest) {
         super(value, desc);
-        /** @type {(Emoji|EmojiGroup)[]} */
+        /** @type {Emoji[]} */
         this.alts = rest;
         /** @type {string} */
         this.width = null;
@@ -69,7 +69,7 @@ export class EmojiGroup extends Emoji {
  * Shorthand for `new Emoji`, which saves significantly on bundle size.
  * @param {string} v - a Unicode sequence.
  * @param {string} d - an English text description of the pictogram.
- * @param {any=null} o - an optional set of properties to set on the Emoji object.
+ * @param {any} [o=null] - an optional set of properties to set on the Emoji object.
  */
 function e(v, d, o = null) {
     return Object.assign(new Emoji(v, d), o);

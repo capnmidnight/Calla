@@ -1,8 +1,6 @@
 ﻿import "../protos.js";
 import { tag } from "./tag.js";
 
-/** @typedef {import("./tag.js").TagChild} TagChild **/
-
 /**
  * A pseudo-element that is made out of other elements.
  **/
@@ -79,6 +77,12 @@ export class HtmlCustomTag extends EventTarget {
         }
     }
 
+    /**
+     * Wait for a specific event, one time.
+     * @param {string} resolveEvt - the name of the event that will resolve the Promise this method creates.
+     * @param {string} rejectEvt - the name of the event that could reject the Promise this method creates.
+     * @param {number} timeout - the number of milliseconds to wait for the resolveEvt, before rejecting.
+     */
     async once(resolveEvt, rejectEvt, timeout) {
         return await this.eventTarget.once(resolveEvt, rejectEvt, timeout);
     }

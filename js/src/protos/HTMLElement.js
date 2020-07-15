@@ -7,7 +7,7 @@
  * when `v` is false, or `displayType` when `v` is true.
  * @memberof Element
  * @param {boolean} v
- * @param {string=""} displayType
+ * @param {string} [displayType=""]
  */
 HTMLElement.prototype.setOpen = function (v, displayType = "") {
     this.style.display = v
