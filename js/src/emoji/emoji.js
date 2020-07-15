@@ -2,9 +2,12 @@
 import { arrayRandom } from "../protos/Array.js";
 
 
+/**
+ * Unicode-standardized pictograms.
+ **/
 export class Emoji {
     /**
-     * Unicode-standardized pictograms.
+     * Creates a new Unicode-standardized pictograms.
      * @param {string} value - a Unicode sequence.
      * @param {string} desc - an English text description of the pictogram.
      */
@@ -14,16 +17,13 @@ export class Emoji {
     }
 
     /**
-     *
+     * Determines of the provided Emoji or EmojiGroup is a subset of
+     * this emoji.
      * @param {(Emoji|EmojiGroup)} e
      */
     contains(e) {
         return this.value.indexOf(e.value) >= 0;
     }
-}
-
-function e(v, d, o) {
-    return Object.assign(new Emoji(v, d), o);
 }
 
 export class EmojiGroup extends Emoji {
@@ -42,8 +42,9 @@ export class EmojiGroup extends Emoji {
     }
 
     /**
+     * Selects a random emoji out of the collection.
      * @returns {(Emoji|EmojiGroup)}
-     */
+     **/
     random() {
         const selection = arrayRandom(this.alts);
         if (selection instanceof EmojiGroup) {
@@ -64,16 +65,42 @@ export class EmojiGroup extends Emoji {
     }
 }
 
+/**
+ * Shorthand for `new Emoji`, which saves significantly on bundle size.
+ * @param {string} v - a Unicode sequence.
+ * @param {string} d - an English text description of the pictogram.
+ * @param {any=null} o - an optional set of properties to set on the Emoji object.
+ */
+function e(v, d, o = null) {
+    return Object.assign(new Emoji(v, d), o);
+}
+
+/**
+ * Shorthand for `new EmojiGroup`, which saves significantly on bundle size.
+ * @param {string} v - a Unicode sequence.
+ * @param {string} d - an English text description of the pictogram.
+ * @param {...(Emoji|EmojiGroup)} r - the emoji that are contained in this group.
+ * @returns {EmojiGroup}
+ */
 function g(v, d, ...r) {
     return new EmojiGroup(v, d, ...r);
 }
 
-function gg(v, d, o, ...rest) {
+/**
+ * A shorthand for `new EmojiGroup` that allows for setting optional properties
+ * on the EmojiGroup object.
+ * @param {string} v - a Unicode sequence.
+ * @param {string} d - an English text description of the pictogram.
+ * @param {any} o - a set of properties to set on the Emoji object.
+ * @param {...(Emoji|EmojiGroup)} r - the emoji that are contained in this group.
+ * @returns {EmojiGroup}
+ */
+function gg(v, d, o, ...r) {
     return Object.assign(
         g(
             v, d,
             ...Object.values(o).filter(v => v instanceof Emoji),
-            ...rest),
+            ...r),
         o);
 }
 
