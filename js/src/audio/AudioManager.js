@@ -6,13 +6,19 @@ import { AudioActivityEvent } from "./AudioActivityEvent.js";
 const BUFFER_SIZE = 1024,
     audioActivityEvt = new AudioActivityEvent;
 
-
+/**
+ * A manager of audio sources, destinations, and their spatialization.
+ **/
 export class AudioManager extends BaseAudioClient {
+
+    /**
+     * Creates a new manager of audio sources, destinations, and their spatialization.
+     **/
     constructor() {
         super();
 
         /**
-         * 
+         * Forwards on the audioActivity of an audio source.
          * @param {AudioActivityEvent} evt
          * @fires AudioManager#audioActivity
          */
@@ -52,7 +58,7 @@ export class AudioManager extends BaseAudioClient {
 
             for (let recreate of recreationQ) {
                 const source = this.createSource(recreate.id, recreate.audio);
-                source.setTarget(recreate);
+                source.setTarget(recreate.x, recreate.y);
             }
             recreationQ.clear();
             this.timer.start();
@@ -69,20 +75,7 @@ export class AudioManager extends BaseAudioClient {
         Object.seal(this);
     }
 
-    /**
-     * Sets parameters that alter spatialization.
-     * @param {number} minDistance
-     * @param {number} maxDistance
-     * @param {number} rolloff
-     * @param {number} transitionTime
-     */
-    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
-        this.destination.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
-        for (let source of this.sources.values()) {
-            source.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
-        }
-    }
-
+    /** Perform the audio system initialization, after a user gesture */
     start() {
         this.destination.createContext();
         this.timer.start();
@@ -101,6 +94,24 @@ export class AudioManager extends BaseAudioClient {
         return source;
     }
 
+    /**
+     * Sets parameters that alter spatialization.
+     * @param {number} minDistance
+     * @param {number} maxDistance
+     * @param {number} rolloff
+     * @param {number} transitionTime
+     */
+    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
+        this.destination.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
+        for (let source of this.sources.values()) {
+            source.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
+        }
+    }
+
+    /**
+     * Set the audio device used to play audio to the local user.
+     * @param {string} deviceID
+     */
     setAudioOutputDevice(deviceID) {
         for (let source of this.sources.values()) {
             source.setAudioOutputDevice(deviceID);
@@ -108,25 +119,36 @@ export class AudioManager extends BaseAudioClient {
     }
 
     /**
-     *
-     * @param {string} userID
+     * Remove a user from audio processing.
+     * @param {string} id - the id of the user to remove
      */
-    removeSource(userID) {
-        if (this.sources.has(userID)) {
-            const source = this.sources.get(userID);
+    removeSource(id) {
+        if (this.sources.has(id)) {
+            const source = this.sources.get(id);
             source.dispose();
-            this.sources.delete(userID);
+            this.sources.delete(id);
         }
     }
 
-    setUserPosition(evt) {
-        if (this.sources.has(evt.id)) {
-            const source = this.sources.get(evt.id);
-            source.setTarget(evt);
-        }
+    /**
+     * Set the position of the listener.
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
+     */
+    setLocalPosition(x, y) {
+        this.destination.setTarget(x, y);
     }
 
-    setLocalPosition(evt) {
-        this.destination.setTarget(evt);
+    /**
+     * Set the position of an audio source.
+     * @param {string} id - the id of the user for which to set the position.
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
+     */
+    setUserPosition(id, x, y) {
+        if (this.sources.has(id)) {
+            const source = this.sources.get(id);
+            source.setTarget(x, y);
+        }
     }
 }

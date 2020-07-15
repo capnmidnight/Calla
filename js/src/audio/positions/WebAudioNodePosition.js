@@ -38,20 +38,21 @@ export class WebAudioNodePosition extends BasePosition {
 
     /**
      * Set the target position for the time `t + dt`.
-     * @param {UserPosition} evt
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
      * @param {number} t
      * @param {number} dt
      */
-    setTarget(evt, t, dt) {
+    setTarget(x, y, t, dt) {
         if (this._p) {
-            this._p.setTarget(evt, t, dt);
+            this._p.setTarget(x, y, t, dt);
         }
         else {
             const time = t + dt;
             // our 2D position is in X/Y coords, but our 3D position
             // along the horizontal plane is X/Z coords.
-            this.node.positionX.linearRampToValueAtTime(evt.x, time);
-            this.node.positionZ.linearRampToValueAtTime(evt.y, time);
+            this.node.positionX.linearRampToValueAtTime(x, time);
+            this.node.positionZ.linearRampToValueAtTime(y, time);
         }
     }
 

@@ -1,13 +1,18 @@
-﻿export class BaseAudioElement extends EventTarget {
+﻿/**
+ * A base class for positioned audio elements.
+ **/
+export class BaseAudioElement extends EventTarget {
     /**
-     * 
+     * Creates a new positioned audio element.
      * @param {BasePosition} position
      */
     constructor(position) {
         super();
 
         this.minDistance = 1;
+        this.minDistanceSq = 1;
         this.maxDistance = 10;
+        this.maxDistanceSq = 100;
         this.rolloff = 1;
         this.transitionTime = 0.5;
 
@@ -29,21 +34,29 @@
         this.rolloff = rolloff;
     }
 
+    /**
+     * Gets the current playback time from the audio context.
+     * @returns {number}
+     */
     get currentTime() {
         throw new Error("Not implemented in base class");
     }
 
     /**
      * Set the target position
-     * @param {Point} evt
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
      */
-    setTarget(evt) {
+    setTarget(x, y) {
         if (this.position) {
-            this.position.setTarget(evt, this.currentTime, this.transitionTime);
+            this.position.setTarget(x, y, this.currentTime, this.transitionTime);
             this.update();
         }
     }
 
+    /**
+     * Performs position updates.
+     **/
     update() {
         if (this.position) {
             this.position.update(this.currentTime);

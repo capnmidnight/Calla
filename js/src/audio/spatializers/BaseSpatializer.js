@@ -66,10 +66,12 @@ export class BaseSpatializer extends BaseAudioElement {
             ly = this.destination.position.y,
             distX = this.position.x - lx,
             distY = this.position.y - ly,
-            dist = Math.sqrt(distX * distX + distY * distY),
+            distSqr = distX * distX + distY * distY,
+            dist = Math.sqrt(distSqr),
             distScale = project(dist, this.minDistance, this.maxDistance);
 
         this.volume = 1 - clamp(distScale, 0, 1);
+        this.volume = this.volume * this.volume;
         this.pan = dist > 0
             ? distX / dist
             : 0;

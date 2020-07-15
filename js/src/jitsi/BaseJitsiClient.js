@@ -1,4 +1,5 @@
 ﻿import { BaseAudioClient } from "../audio/BaseAudioClient.js";
+import { canChangeAudioOutput } from "../audio/canChangeAudioOutput.js";
 
 // helps us filter out data channel messages that don't belong to us
 const APP_FINGERPRINT
@@ -276,15 +277,26 @@ export class BaseJitsiClient extends EventTarget {
         this.audioClient.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
     }
 
-    setLocalPosition(evt) {
-        this.audioClient.setLocalPosition(evt);
+    /**
+     * Set the position of the listener.
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
+     */
+    setLocalPosition(x, y) {
+        this.audioClient.setLocalPosition(x, y);
         for (let toUserID of this.userIDs()) {
-            this.sendMessageTo(toUserID, "userMoved", evt);
+            this.sendMessageTo(toUserID, "userMoved", { x, y });
         }
     }
 
-    setUserPosition(evt) {
-        this.audioClient.setUserPosition(evt);
+    /**
+     * Set the position of an audio source.
+     * @param {string} id - the id of the user for which to set the position.
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
+     */
+    setUserPosition(id, x, y) {
+        this.audioClient.setUserPosition(id, x, y);
     }
 
     removeUser(evt) {

@@ -11,17 +11,23 @@ import { GoogleResonanceAudioScene } from "./positions/GoogleResonanceAudioScene
 import { GoogleResonanceAudioSpatializer } from "./spatializers/GoogleResonanceAudioSpatializer.js";
 import { BaseAudioElement } from "./BaseAudioElement.js";
 
-const forceInterpolatedPosition = false,
-    contextDestroyingEvt = new Event("contextDestroying"),
+const contextDestroyingEvt = new Event("contextDestroying"),
     contextDestroyedEvt = new Event("contextDestroyed");
 
 let hasWebAudioAPI = window.hasOwnProperty("AudioListener"),
     hasFullSpatializer = hasWebAudioAPI && window.hasOwnProperty("PannerNode"),
     isLatestWebAudioAPI = hasWebAudioAPI && AudioListener.prototype.hasOwnProperty("positionX"),
-    attemptResonanceAPI = true;
+    forceInterpolatedPosition = true,
+    attemptResonanceAPI = hasWebAudioAPI;
 
+/**
+ * A manager of the audio context and listener.
+ **/
 export class Destination extends BaseAudioElement {
 
+    /**
+     * Creates a new manager of the audio context and listener
+     **/
     constructor() {
         super(null);
 
@@ -29,6 +35,13 @@ export class Destination extends BaseAudioElement {
         this.audioContext = null;
     }
 
+    /**
+     * If no audio context is currently available, creates one, and initializes the
+     * spatialization of its listener.
+     * 
+     * If WebAudio isn't available, a mock audio context is created that provides
+     * ersatz playback timing.
+     **/
     createContext() {
         if (!this.audioContext) {
             try {
@@ -77,13 +90,17 @@ export class Destination extends BaseAudioElement {
         }
     }
 
+    /**
+     * Gets the current playback time.
+     * @type {number}
+     */
     get currentTime() {
         return this.audioContext.currentTime;
     }
 
 
     /**
-     * 
+     * Creates a spatializer for an audio source, and initializes its audio properties.
      * @param {string} userID
      * @param {HTMLAudioElement} audio
      * @param {number} bufferSize
@@ -99,20 +116,21 @@ export class Destination extends BaseAudioElement {
     }
 
     /**
-     * 
-     * @param {string} userID
-     * @param {HTMLAudioElement} audio
-     * @param {number} bufferSize
+     * Creates a spatialzer for an audio source.
+     * @private
+     * @param {string} id - the user for which the audio source is being created.
+     * @param {HTMLAudioElement} audio - the audio element that is being spatialized.
+     * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
      * @return {BaseSpatializer}
      */
-    _createSpatializer(userID, audio, bufferSize) {
+    _createSpatializer(id, audio, bufferSize) {
         try {
             if (hasWebAudioAPI) {
                 try {
                     if (hasFullSpatializer) {
                         try {
                             if (attemptResonanceAPI) {
-                                return new GoogleResonanceAudioSpatializer(userID, this, audio, bufferSize);
+                                return new GoogleResonanceAudioSpatializer(id, this, audio, bufferSize);
                             }
                         }
                         catch (exp3) {
@@ -121,7 +139,7 @@ export class Destination extends BaseAudioElement {
                         }
                         finally {
                             if (!attemptResonanceAPI) {
-                                return new FullSpatializer(userID, this, audio, bufferSize, forceInterpolatedPosition);
+                                return new FullSpatializer(id, this, audio, bufferSize, forceInterpolatedPosition);
                             }
                         }
                     }
@@ -132,7 +150,7 @@ export class Destination extends BaseAudioElement {
                 }
                 finally {
                     if (!hasFullSpatializer) {
-                        return new StereoSpatializer(userID, this, audio, bufferSize);
+                        return new StereoSpatializer(id, this, audio, bufferSize);
                     }
                 }
             }
@@ -150,7 +168,7 @@ export class Destination extends BaseAudioElement {
         }
         finally {
             if (!hasWebAudioAPI) {
-                return new VolumeOnlySpatializer(userID, this, audio);
+                return new VolumeOnlySpatializer(id, this, audio);
             }
         }
     }

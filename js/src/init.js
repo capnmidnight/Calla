@@ -98,11 +98,10 @@ export function init(host, client) {
 
     function setAudioProperties() {
         client.setAudioProperties(
-            window.location.origin,
-            settings.transitionSpeed,
             settings.audioDistanceMin = game.audioDistanceMin = options.audioDistanceMin,
             settings.audioDistanceMax = game.audioDistanceMax = options.audioDistanceMax,
-            settings.audioRolloff = options.audioRolloff);
+            settings.audioRolloff = options.audioRolloff,
+            settings.transitionSpeed);
     }
 
     function refreshGamepads() {
@@ -336,9 +335,9 @@ export function init(host, client) {
 
             setAudioProperties();
 
-            client.setLocalPosition(game.me.serialize());
+            client.setLocalPosition(game.me.position.x, game.me.position.y);
             game.me.addEventListener("userMoved", (evt) => {
-                client.setLocalPosition(evt);
+                client.setLocalPosition(evt.x, evt.y);
                 refreshUser(game.me.id);
             });
 
@@ -442,7 +441,7 @@ export function init(host, client) {
             if (game.users.has(evt.id)) {
                 const user = game.users.get(evt.id);
                 user.deserialize(evt);
-                client.setUserPosition(evt);
+                client.setUserPosition(evt.id, evt.x, evt.y);
                 refreshUser(evt.id);
             }
         },
@@ -451,7 +450,7 @@ export function init(host, client) {
             if (game.users.has(evt.id)) {
                 const user = game.users.get(evt.id);
                 user.moveTo(evt.x, evt.y, settings.transitionSpeed);
-                client.setUserPosition(evt);
+                client.setUserPosition(evt.id, evt.x, evt.y);
             }
             refreshUser(evt.id);
         },

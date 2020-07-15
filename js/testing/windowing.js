@@ -26,7 +26,10 @@ function openWindow(href, x, y, width, height) {
 export function openSideTest() {
     const loc = new URL(document.location.href);
     loc.searchParams.set("testUserNumber", userNumber + windows.length + 1);
-    const width = window.screen.availWidth / 2,
-        height = window.screen.availHeight;
-    openWindow(loc.href, width, 0, width, height);
+    openWindow(
+        loc.href,
+        window.screenLeft + window.outerWidth,
+        0,
+        window.outerWidth,
+        window.outerHeight);
 }

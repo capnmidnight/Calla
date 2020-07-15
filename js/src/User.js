@@ -69,7 +69,7 @@ export class User extends EventTarget {
         }
 
         if (evt.x !== undefined) {
-            this.position.setTarget(evt, performance.now() / 1000, 0);
+            this.position.setTarget(evt.x, evt.y, performance.now() / 1000, 0);
             this.isInitialized = true;
         }
     }
@@ -194,7 +194,7 @@ export class User extends EventTarget {
                 this.dispatchEvent(this.moveEvent);
             }
 
-            this.position.setTarget({ x, y }, performance.now() / 1000, dt);
+            this.position.setTarget(x, y, performance.now() / 1000, dt);
         }
     }
 

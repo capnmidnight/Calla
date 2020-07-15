@@ -13,13 +13,14 @@
         throw new Error("Not implemented in base class.");
     }
 
-/**
- * Set the target position for the time `t + dt`.
- * @param {UserPosition} evt
- * @param {number} t
- * @param {number} dt
- */
-    setTarget(evt, t, dt) {
+    /**
+     * Set the target position for the time `t + dt`.
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
+     * @param {number} t
+     * @param {number} dt
+     */
+    setTarget(x, y, t, dt) {
         throw new Error("Not implemented in base class.");
     }
 

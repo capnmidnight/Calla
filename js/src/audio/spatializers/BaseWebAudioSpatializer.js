@@ -1,9 +1,12 @@
 ﻿import { BaseAnalyzedSpatializer } from "./BaseAnalyzedSpatializer.js";
 
+/**
+ * A spatializer that uses the WebAudio API.
+ **/
 export class BaseWebAudioSpatializer extends BaseAnalyzedSpatializer {
 
     /**
-     * 
+     * Creates a new spatializer that uses the WebAudio API
      * @param {string} userID
      * @param {Destination} destination
      * @param {HTMLAudioElement} audio
