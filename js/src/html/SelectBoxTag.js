@@ -36,8 +36,8 @@ export class SelectBoxTag extends HtmlCustomTag {
     /**
      * Creates a select box that can bind to collections
      * @param {string} noSelectionText - the text to display when no items are available.
-     * @param {makeItemValueCallback} makeID
-     * @param {makeItemValueCallback} makeLabel
+     * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
+     * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
      * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
      */
     constructor(noSelectionText, makeID, makeLabel, ...rest) {
@@ -69,7 +69,7 @@ export class SelectBoxTag extends HtmlCustomTag {
 
     /**
      * Sets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
-     * @type {boolean}
+     * @param {boolean} value
      **/
     set emptySelectionEnabled(value) {
         this._emptySelectionEnabled = value;
@@ -125,7 +125,7 @@ export class SelectBoxTag extends HtmlCustomTag {
      * The index is offset by -1 if the select box has `emptySelectionEnabled`
      * set to true, so that the indices returned are always in range of the collection
      * to which the select box was databound
-     * @type {number}
+     * @param {number} i
      */
     set selectedIndex(i) {
         if (this.emptySelectionEnabled) {
@@ -150,6 +150,7 @@ export class SelectBoxTag extends HtmlCustomTag {
     /**
      * Gets the index of the given item in the select box's databound collection, then
      * sets that index as the `selectedIndex`.
+     * @param {any) value
      */
     set selectedValue(value) {
         this.selectedIndex = this.indexOf(value);
@@ -158,6 +159,7 @@ export class SelectBoxTag extends HtmlCustomTag {
     /**
      * Returns the index of the given item in the select box's databound collection.
      * @param {any} value
+     * @returns {number}
      */
     indexOf(value) {
         return this.values

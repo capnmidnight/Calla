@@ -910,8 +910,8 @@ export function LabeledInput(id, inputType, labelText, ...rest) {
 /**
  * Creates a select box that can bind to collections
  * @param {string} noSelectionText - the text to display when no items are available.
- * @param {makeItemValueCallback} makeID
- * @param {makeItemValueCallback} makeLabel
+ * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
+ * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
  * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
  * @returns {SelectBoxTag}
  */
@@ -924,8 +924,8 @@ export function SelectBox(noSelectionText, makeID, makeLabel, ...rest) {
  * @param {string} id - the ID to use for the input box
  * @param {string} labelText - the text to display in the label
  * @param {string} noSelectionText - the text to display when no items are available.
- * @param {makeItemValueCallback} makeID
- * @param {makeItemValueCallback} makeLabel
+ * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
+ * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
  * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
  * @returns {LabeledSelectBoxTag}
  */

@@ -224,7 +224,7 @@ export class OptionsForm extends FormDialog {
         for (let i = 0; i < panels.length; ++i) {
             cols[i] = "1fr";
             panels[i].element.style.gridColumnStart = i + 1;
-            panels[i].button.style.fontSize = "24pt";
+            panels[i].button.style.fontSize = "3.5vw";
         }
 
         Object.assign(this.header.style, {
@@ -429,6 +429,8 @@ export class OptionsForm extends FormDialog {
     set gamepads(values) {
         const disable = values.length === 0;
         this.gpSelect.values = values;
+        this.gpAxisLeftRight.setLocked(disable);
+        this.gpAxisUpDown.setLocked(disable);
         this.gpButtonUp.setLocked(disable);
         this.gpButtonDown.setLocked(disable);
         this.gpButtonLeft.setLocked(disable);
