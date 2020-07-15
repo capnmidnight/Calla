@@ -1,7 +1,8 @@
-﻿import { BaseAudioClient } from "./BaseAudioClient.js";
-import { Destination } from "./Destination.js";
-import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
+﻿import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 import { AudioActivityEvent } from "./AudioActivityEvent.js";
+import { BaseAudioClient } from "./BaseAudioClient.js";
+import { Destination } from "./Destination.js";
+import { arrayClear } from "../protos/Array.js";
 
 const BUFFER_SIZE = 1024,
     audioActivityEvt = new AudioActivityEvent;
@@ -60,7 +61,8 @@ export class AudioManager extends BaseAudioClient {
                 const source = this.createSource(recreate.id, recreate.audio);
                 source.setTarget(recreate.x, recreate.y);
             }
-            recreationQ.clear();
+
+            arrayClear(recreationQ);
             this.timer.start();
         });
 

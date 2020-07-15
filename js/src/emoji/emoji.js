@@ -550,21 +550,6 @@ export const allPeople = gg(
     fantasy
 });
 
-export function randomPerson() {
-    let value = allPeople.random(),
-        lastValue = null;
-    while (!!value.alts && lastValue !== value) {
-        lastValue = value;
-        if (value.value !== value.alts[0].value) {
-            value = value.alts.random(value);
-        }
-        else {
-            value = value.alts.random();
-        }
-    }
-    return value;
-}
-
 export const ogre = e("\u{1F479}", "Ogre");
 export const goblin = e("\u{1F47A}", "Goblin");
 export const ghost = e("\u{1F47B}", "Ghost");

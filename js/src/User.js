@@ -1,6 +1,6 @@
 ﻿import "./protos.js";
 import { project } from "./math.js";
-import { bust, mutedSpeaker, randomPerson, speakerMediumVolume, videoCamera } from "./emoji/emoji.js";
+import { bust, mutedSpeaker, allPeople as people, speakerMediumVolume, videoCamera } from "./emoji/emoji.js";
 import { EmojiAvatar } from "./avatars/EmojiAvatar.js";
 import { PhotoAvatar } from "./avatars/PhotoAvatar.js";
 import { VideoAvatar } from "./avatars/VideoAvatar.js";
@@ -39,7 +39,7 @@ export class User extends EventTarget {
         this.position = new InterpolatedPosition();
 
         this.avatarMode = AvatarMode.none;
-        this.avatarEmoji = (isMe ? randomPerson() : bust);
+        this.avatarEmoji = (isMe ? people.random() : bust);
         this.avatarImage = null;
         this.avatarVideo = null;
 

@@ -6,6 +6,7 @@ import { Canvas } from "./html/tags.js";
 import { clamp, lerp, project, unproject } from "./math.js";
 import { TileMap } from "./TileMap.js";
 import { User } from "./User.js";
+import { arrayRemoveAt } from "./protos/Array.js";
 
 const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_MAX = 8,
@@ -256,7 +257,7 @@ export class Game extends EventTarget {
                 idx = findPointer(pointer);
 
             if (idx >= 0) {
-                this.pointers.removeAt(idx);
+                arrayRemoveAt(this.pointers, idx);
             }
 
             return pointer;

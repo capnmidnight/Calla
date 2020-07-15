@@ -1,4 +1,4 @@
-﻿import { allIcons as icons, randomPerson } from "../../src/emoji/emoji.js";
+﻿import { allIcons as icons, allPeople as people } from "../../src/emoji/emoji.js";
 import { autoPlay, id, loop, src } from "../../src/html/attrs.js";
 import { Audio, Span } from "../../src/html/tags.js";
 import { AvatarMode } from "../../src/avatars/BaseAvatar.js";
@@ -11,7 +11,7 @@ export class MockUser {
         this.client = client;
         this.audio = null;
         this.displayName = id;
-        this._avatarEmoji = randomPerson();
+        this._avatarEmoji = people.random();
         this.emoteEvt = { id, value: null, desc: null };
     }
 
@@ -69,10 +69,7 @@ export class MockUser {
         this.client.receiveMessageFrom(this.id, "userMoved", { x, y });
 
         if (Math.random() <= 0.1) {
-            const groups = Object.values(icons),
-                group = groups.random(),
-                emoji = group.random();
-            this.client.receiveMessageFrom(this.id, "emote", emoji);
+            this.client.receiveMessageFrom(this.id, "emote", icons.random());
         }
 
         this.schedule();

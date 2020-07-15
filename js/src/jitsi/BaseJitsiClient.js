@@ -1,5 +1,6 @@
 ﻿import { BaseAudioClient } from "../audio/BaseAudioClient.js";
 import { canChangeAudioOutput } from "../audio/canChangeAudioOutput.js";
+import { arrayClear, arrayScan } from "../protos/Array.js";
 
 // helps us filter out data channel messages that don't belong to us
 const APP_FINGERPRINT
@@ -91,7 +92,7 @@ export class BaseJitsiClient extends EventTarget {
                 this.dispatchEvent(evt);
             }
 
-            this.preInitEvtQ.clear();
+            arrayClear(this.preInitEvtQ);
         }
         else {
             this.preInitEvtQ.push(evt);
@@ -121,7 +122,8 @@ export class BaseJitsiClient extends EventTarget {
 
         if (canChangeAudioOutput) {
             const audioOutputs = await this.getAudioOutputDevicesAsync();
-            const audOut = audioOutputs.scan(
+            const audOut = arrayScan(
+                audioOutputs,
                 (d) => d.deviceId === this.preferedAudioOutputID,
                 (d) => d.deviceId === "communications",
                 (d) => d.deviceId === "default",
@@ -132,7 +134,8 @@ export class BaseJitsiClient extends EventTarget {
         }
 
         const audioInputs = await this.getAudioInputDevicesAsync();
-        const audIn = audioInputs.scan(
+        const audIn = arrayScan(
+            audioInputs,
             (d) => d.deviceId === this.preferedAudioInputID,
             (d) => d.deviceId === "communications",
             (d) => d.deviceId === "default",
@@ -142,7 +145,9 @@ export class BaseJitsiClient extends EventTarget {
         }
 
         const videoInputs = await this.getVideoInputDevicesAsync();
-        const vidIn = videoInputs.scan((d) => d.deviceId === this.preferedVideoInputID)
+        const vidIn = arrayScan(
+            videoInputs,
+            (d) => d.deviceId === this.preferedVideoInputID);
         if (vidIn) {
             await this.setVideoInputDeviceAsync(vidIn);
         }
