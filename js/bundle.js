@@ -1,4 +1,4 @@
-const versionString = "Calla v0.1.5";
+const versionString = "Calla v0.1.7";
 
 function t(o, s, c) {
     return typeof o === s || o instanceof c;
@@ -75,150 +75,6 @@ function lerp(a, b, p) {
     return (1 - p) * a + p * b;
 }
 
-// A few convenience methods for HTML elements.
-
-Element.prototype.isOpen = function () {
-    return this.style.display !== "none";
-};
-
-Element.prototype.setOpen = function (v, displayType = "") {
-    this.style.display = v
-        ? displayType
-        : "none";
-};
-
-Element.prototype.setOpenWithLabel = function (v, label, enabledText, disabledText, bothText, displayType = "") {
-    this.setOpen(v, displayType);
-    label.updateLabel(this.isOpen(), enabledText, disabledText, bothText);
-};
-
-Element.prototype.updateLabel = function (isOpen, enabledText, disabledText, bothText) {
-    bothText = bothText || "";
-    if (this.accessKey) {
-        bothText += ` <kbd>(ALT+${this.accessKey.toUpperCase()})</kbd>`;
-    }
-    this.innerHTML = (isOpen ? enabledText : disabledText) + bothText;
-};
-
-Element.prototype.toggleOpen = function (displayType = "") {
-    this.setOpen(!this.isOpen(), displayType);
-};
-
-Element.prototype.toggleOpenWithLabel = function (label, enabledText, disabledText, bothText, displayType = "") {
-    this.setOpenWithLabel(!this.isOpen(), label, enabledText, disabledText, bothText, displayType);
-};
-
-Element.prototype.show = function (displayType = "") {
-    this.setOpen(true, displayType);
-};
-
-Element.prototype.hide = function () {
-    this.setOpen(false);
-};
-
-Element.prototype.setLocked = function (value) {
-    if (value) {
-        this.lock();
-    }
-    else {
-        this.unlock();
-    }
-};
-
-Element.prototype.lock = function () {
-    this.disabled = "disabled";
-};
-
-Element.prototype.unlock = function () {
-    this.disabled = "";
-};
-
-Element.prototype.blinkBorder = function (times, color) {
-    times = (times || 3) * 2;
-    color = color || "rgb(255, 127, 127)";
-
-    let state = false;
-    const interval = setInterval(() => {
-        state = !state;
-        this.style.backgroundColor = state ? color : "";
-        --times;
-        if (times === 0) {
-            clearInterval(interval);
-        }
-    }, 125);
-};
-
-HTMLCanvasElement.prototype.resize = function () {
-    this.width = this.clientWidth * devicePixelRatio;
-    this.height = this.clientHeight * devicePixelRatio;
-};
-
-const oldAddEventListener = HTMLInputElement.prototype.addEventListener;
-
-HTMLInputElement.prototype.addEventListener = function (evtName, func, opts) {
-    if (evtName === "enter") {
-        oldAddEventListener.call(this, "keypress", function (evt) {
-            if (evt.key === "Enter") {
-                func(evt);
-            }
-        }, opts);
-    }
-    else {
-        oldAddEventListener.call(this, evtName, func, opts);
-    }
-};
-
-Response.prototype.xml = async function () {
-    const text = await this.text(),
-        parser = new DOMParser(),
-        xml = parser.parseFromString(text, "text/xml");
-
-    return xml.documentElement;
-};
-
-Response.prototype.html = async function () {
-    const text = await this.text(),
-        parser = new DOMParser(),
-        xml = parser.parseFromString(text, "text/html");
-
-    return xml.documentElement;
-};
-
-Array.prototype.random = function (defaultValue) {
-    const offset = !!defaultValue ? 1 : 0,
-        idx = Math.floor(Math.random() * (this.length + offset)) - offset;
-    if (idx < 0) {
-        return defaultValue;
-    }
-    else {
-        return this[idx];
-    }
-};
-
-HTMLSelectElement.prototype.setSelectedValue = function (value) {
-    this.value = "";
-
-    if (value !== null
-        && value !== undefined) {
-        value = value.toString();
-        for (let option of this.options) {
-            if (option.value === value) {
-                this.value = value;
-                return;
-            }
-        }
-    }
-};
-
-Storage.prototype.getInt = function (name, defaultValue) {
-    const n = parseFloat(this.getItem(name));
-    if (!Number.isInteger(n)) {
-        return defaultValue;
-    }
-
-    return n;
-};
-
 function add(a, b) {
     return evt => {
         a(evt);
@@ -226,18 +82,6 @@ function add(a, b) {
     };
 }
 
-Event.clone = function (target, ...objs) {
-    for (let obj of objs) {
-        for (let key in obj) {
-            if (key !== "isTrusted"
-                && !Event.prototype.hasOwnProperty(key)) {
-                target[key] = obj[key];
-            }
-        }
-    }
-
-    return target;
-};
 
 EventTarget.prototype.once = function (resolveEvt, rejectEvt, timeout) {
 
@@ -374,23 +218,127 @@ EventTarget.prototype.addEventListeners = function (obj) {
     }
 };
 
-Array.prototype.clear = function () {
-    this.splice(0);
+HTMLElement.prototype.isOpen = function() {
+    return this.style.display !== "none";
 };
 
-Array.prototype.removeAt = function (idx) {
-    this.splice(idx, 1);
+/**
+ * Sets the element's style's display property to "none"
+ * when `v` is false, or `displayType` when `v` is true.
+ * @memberof Element
+ * @param {boolean} v
+ * @param {string=""} displayType
+ */
+HTMLElement.prototype.setOpen = function (v, displayType = "") {
+    this.style.display = v
+        ? displayType
+        : "none";
 };
 
-Array.prototype.scan = function (...tests) {
-    for (let test of tests) {
-        const filtered = this.filter(test);
-        if (filtered.length > 0) {
-            return filtered[0];
+HTMLElement.prototype.setOpenWithLabel = function (v, label, enabledText, disabledText, bothText, displayType = "") {
+    this.setOpen(v, displayType);
+    label.updateLabel(this.isOpen(), enabledText, disabledText, bothText);
+};
+
+HTMLElement.prototype.updateLabel = function (isOpen, enabledText, disabledText, bothText) {
+    bothText = bothText || "";
+    if (this.accessKey) {
+        bothText += ` <kbd>(ALT+${this.accessKey.toUpperCase()})</kbd>`;
+    }
+    this.innerHTML = (isOpen ? enabledText : disabledText) + bothText;
+};
+
+HTMLElement.prototype.toggleOpen = function (displayType = "") {
+    this.setOpen(!this.isOpen(), displayType);
+};
+
+HTMLElement.prototype.toggleOpenWithLabel = function (label, enabledText, disabledText, bothText, displayType = "") {
+    this.setOpenWithLabel(!this.isOpen(), label, enabledText, disabledText, bothText, displayType);
+};
+
+HTMLElement.prototype.show = function (displayType = "") {
+    this.setOpen(true, displayType);
+};
+
+HTMLElement.prototype.hide = function () {
+    this.setOpen(false);
+};
+
+HTMLElement.prototype.setLocked = function (value) {
+    if (value) {
+        this.lock();
+    }
+    else {
+        this.unlock();
+    }
+};
+
+HTMLElement.prototype.lock = function () {
+    this.disabled = "disabled";
+};
+
+HTMLElement.prototype.unlock = function () {
+    this.disabled = "";
+};
+
+HTMLElement.prototype.blinkBorder = function (times, color) {
+    times = (times || 3) * 2;
+    color = color || "rgb(255, 127, 127)";
+
+    let state = false;
+    const interval = setInterval(() => {
+        state = !state;
+        this.style.backgroundColor = state ? color : "";
+        --times;
+        if (times === 0) {
+            clearInterval(interval);
         }
+    }, 125);
+};
+
+const oldAddEventListener = HTMLInputElement.prototype.addEventListener;
+
+HTMLInputElement.prototype.addEventListener = function (evtName, func, opts) {
+    if (evtName === "enter") {
+        oldAddEventListener.call(this, "keypress", function (evt) {
+            if (evt.key === "Enter") {
+                func(evt);
+            }
+        }, opts);
+    }
+    else {
+        oldAddEventListener.call(this, evtName, func, opts);
+    }
+};
+
+Response.prototype.xml = async function () {
+    const text = await this.text(),
+        parser = new DOMParser(),
+        xml = parser.parseFromString(text, "text/xml");
+
+    return xml.documentElement;
+};
+
+Response.prototype.html = async function () {
+    const text = await this.text(),
+        parser = new DOMParser(),
+        xml = parser.parseFromString(text, "text/html");
+
+    return xml.documentElement;
+};
+
+Storage.prototype.getInt = function (name, defaultValue) {
+    const s = this.getItem(name);
+    if (s === null) {
+        return defaultValue;
     }
 
-    return null;
+    const n = parseInt(s, 10);
+    if (!Number.isInteger(n)) {
+        return defaultValue;
+    }
+
+    return n;
 };
 
 String.prototype.firstLetterToUpper = function () {
@@ -398,9 +346,94 @@ String.prototype.firstLetterToUpper = function () {
         + this.substring(1);
 };
 
+/**
+ * Returns a random item from an array of items.
+ * 
+ * Provides an option to consider an additional item as part of the collection
+ * for random selection.
+ * @param {any[]} arr
+ * @param {any} defaultValue
+ */
+function arrayRandom(arr, defaultValue) {
+    if (!(arr instanceof Array)) {
+        throw new Error("Must provide an array as the first parameter.");
+    }
+
+    const offset = !!defaultValue ? 1 : 0,
+        idx = Math.floor(Math.random() * (arr.length + offset)) - offset;
+    if (idx < 0) {
+        return defaultValue;
+    }
+    else {
+        return arr[idx];
+    }
+}
+
+/**
+ * Empties out an array
+ * @param {any[]} arr - the array to empty.
+ * @returns {any[]} - the items that were in the array.
+ */
+function arrayClear(arr) {
+    if (!(arr instanceof Array)) {
+        throw new Error("Must provide an array as the first parameter.");
+    }
+
+    return arr.splice(0);
+}
+
+/**
+ * Removes an item at the given index from an array.
+ * @param {any[]} arr
+ * @param {number} idx
+ * @returns {any} - the item that was removed.
+ */
+function arrayRemoveAt(arr, idx) {
+    if (!(arr instanceof Array)) {
+        throw new Error("Must provide an array as the first parameter.");
+    }
+
+    return arr.splice(idx, 1);
+}
+
+/**
+ * A test for filtering an array
+ * @callback scanArrayCallback
+ * @param {any} obj - an array item to check.
+ * @param {number} idx - the index of the item that is being checked.
+ * @param {any[]} arr - the full array that is being filtered.
+ * @returns {boolean} whether or not the item matches the test.
+ */
+
+/**
+ * Scans through a series of filters to find an item that matches
+ * any of the filters. The first item of the first filter that matches
+ * will be returned.
+ * @param {any[]} arr - the array to scan
+ * @param {...scanArrayCallback} tests - the filtering tests.
+ * @returns {any}
+ */
+function arrayScan(arr, ...tests) {
+    if (!(arr instanceof Array)) {
+        throw new Error("Must provide an array as the first parameter.");
+    }
+
+    for (let test of tests) {
+        const filtered = arr.filter(test);
+        if (filtered.length > 0) {
+            return filtered[0];
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Unicode-standardized pictograms.
+ **/
 class Emoji {
     /**
-     * Unicode-standardized pictograms.
+     * Creates a new Unicode-standardized pictograms.
      * @param {string} value - a Unicode sequence.
      * @param {string} desc - an English text description of the pictogram.
      */
@@ -410,16 +443,13 @@ class Emoji {
     }
 
     /**
-     *
+     * Determines of the provided Emoji or EmojiGroup is a subset of
+     * this emoji.
      * @param {(Emoji|EmojiGroup)} e
      */
     contains(e) {
         return this.value.indexOf(e.value) >= 0;
     }
-}
-
-function e(v, d) {
-    return new Emoji(v, d);
 }
 
 class EmojiGroup extends Emoji {
@@ -429,9 +459,8 @@ class EmojiGroup extends Emoji {
      * @param {string} desc - an English text description of the pictogram.
      * @param {(Emoji|EmojiGroup)[]} rest - Emojis in this group.
      */
-    constructor(...rest) {
-        const first = rest.splice(0, 1)[0];
-        super(first.value, first.desc);
+    constructor(value, desc, ...rest) {
+        super(value, desc);
         /** @type {(Emoji|EmojiGroup)[]} */
         this.alts = rest;
         /** @type {string} */
@@ -439,10 +468,17 @@ class EmojiGroup extends Emoji {
     }
 
     /**
+     * Selects a random emoji out of the collection.
      * @returns {(Emoji|EmojiGroup)}
-     */
+     **/
     random() {
-        return this.alts.random();
+        const selection = arrayRandom(this.alts);
+        if (selection instanceof EmojiGroup) {
+            return selection.random();
+        }
+        else {
+            return selection;
+        }
     }
 
     /**
@@ -455,13 +491,50 @@ class EmojiGroup extends Emoji {
     }
 }
 
-function g(...r) {
-    return new EmojiGroup(...r);
+/**
+ * Shorthand for `new Emoji`, which saves significantly on bundle size.
+ * @param {string} v - a Unicode sequence.
+ * @param {string} d - an English text description of the pictogram.
+ * @param {any=null} o - an optional set of properties to set on the Emoji object.
+ */
+function e(v, d, o = null) {
+    return Object.assign(new Emoji(v, d), o);
+}
+
+/**
+ * Shorthand for `new EmojiGroup`, which saves significantly on bundle size.
+ * @param {string} v - a Unicode sequence.
+ * @param {string} d - an English text description of the pictogram.
+ * @param {...(Emoji|EmojiGroup)} r - the emoji that are contained in this group.
+ * @returns {EmojiGroup}
+ */
+function g(v, d, ...r) {
+    return new EmojiGroup(v, d, ...r);
+}
+
+/**
+ * A shorthand for `new EmojiGroup` that allows for setting optional properties
+ * on the EmojiGroup object.
+ * @param {string} v - a Unicode sequence.
+ * @param {string} d - an English text description of the pictogram.
+ * @param {any} o - a set of properties to set on the Emoji object.
+ * @param {...(Emoji|EmojiGroup)} r - the emoji that are contained in this group.
+ * @returns {EmojiGroup}
+ */
+function gg(v, d, o, ...r) {
+    return Object.assign(
+        g(
+            v, d,
+            ...Object.values(o).filter(v => v instanceof Emoji),
+            ...r),
+        o);
 }
 
 const textStyle = e("\u{FE0E}", "Variation Selector-15: text style");
 const emojiStyle = e("\u{FE0F}", "Variation Selector-16: emoji style");
 const zeroWidthJoiner = e("\u{200D}", "Zero Width Joiner");
+const combiningEnclosingCircleBackslash = e("\u{20E3}", "Combining Enclosing Circle Backslash");
+const combiningEnclosingKeycap = e("\u{20E3}", "Combining Enclosing Keycap");
 
 const female = e("\u{2640}\u{FE0F}", "Female");
 const male = e("\u{2642}\u{FE0F}", "Male");
@@ -480,9 +553,8 @@ function combo(a, b) {
         return a.map(c => combo(c, b));
     }
     else if (a instanceof EmojiGroup) {
-        return g(
-            combo(e(a.value, a.desc), b),
-            ...combo(a.alts, b));
+        const { value, desc } = combo(e(a.value, a.desc), b);
+        return g(value, desc, ...combo(a.alts, b));
     }
     else if (b instanceof Array) {
         return b.map(c => combo(a, c));
@@ -497,9 +569,8 @@ function join(a, b) {
         return a.map(c => join(c, b));
     }
     else if (a instanceof EmojiGroup) {
-        return g(
-            join(e(a.value, a.desc), b),
-            ...join(a.alts, b));
+        const { value, desc } = join(e(a.value, a.desc), b);
+        return g(value, desc, ...join(a.alts, b));
     }
     else if (b instanceof Array) {
         return b.map(c => join(a, c));
@@ -526,8 +597,7 @@ function skin(v, d, ...rest) {
         medium = combo(person, skinM),
         mediumDark = combo(person, skinMD),
         dark = combo(person, skinD);
-    return Object.assign(
-        g(person, person, light, mediumLight, medium, mediumDark, dark, ...rest), {
+    return gg(person.value, person.desc, {
         default: person,
         light,
         mediumLight,
@@ -541,8 +611,7 @@ function sex(person) {
     const man = join(person, male),
         woman = join(person, female);
 
-    return Object.assign(
-        g(person, person, man, woman), {
+    return gg(person.value, person.desc, {
         default: person,
         man,
         woman
@@ -559,21 +628,20 @@ function skinAndHair(v, d, ...rest) {
         curly = join(people, hairCurly),
         white = join(people, hairWhite),
         bald = join(people, hairBald);
-    return Object.assign(
-        g(people, people, red, curly, white, bald, ...rest), {
+    return gg(people.value, people.desc, {
         default: people,
         red,
         curly,
         white,
         bald
-    });}
+    }, ...rest);
+}
 
 function sym(symbol, name) {
     const j = e(symbol.value, name),
         men = join(man.default, j),
         women = join(woman.default, j);
-    return Object.assign(
-        g(symbol, men, women), {
+    return gg(symbol.value, symbol.desc, {
         symbol,
         men,
         women
@@ -611,7 +679,7 @@ const kneeling = skinAndSex("\u{1F9CE}", "Kneeling");
 const runners = skinAndSex("\u{1F3C3}", "Running");
 
 const gestures = g(
-    e(gesturingOK.value, "Gestures"),
+    "Gestures", "Gestures",
     frowners,
     pouters,
     gesturingNo,
@@ -630,7 +698,11 @@ const baby = skin("\u{1F476}", "Baby");
 const child = skin("\u{1F9D2}", "Child");
 const boy = skin("\u{1F466}", "Boy");
 const girl = skin("\u{1F467}", "Girl");
-const children = g(child, child, boy, girl);
+const children = gg(child.value, child.desc, {
+    default: child,
+    male: boy,
+    female: girl
+});
 
 
 const blondes = skinAndSex("\u{1F471}", "Blond Person");
@@ -659,16 +731,22 @@ const woman = skinAndHair("\u{1F469}", "Woman",
     womanWithHeadscarf,
     wearingTurban.woman,
     brideWithVeil);
-const adults = g(
-    e(person.value, "Adult"),
-    person,
-    man,
-    woman);
+const adults = gg(
+    person.value, "Adult", {
+    default: person,
+    male: man,
+    female: woman
+});
 
 const olderPerson = skin("\u{1F9D3}", "Older Person");
 const oldMan = skin("\u{1F474}", "Old Man");
 const oldWoman = skin("\u{1F475}", "Old Woman");
-const olderPeople = g(olderPerson, olderPerson, oldMan, oldWoman);
+const elderly = gg(
+    olderPerson.value, olderPerson.desc, {
+    default: olderPerson,
+    male: oldMan,
+    female: oldWoman
+});
 
 const medical = e("\u{2695}\u{FE0F}", "Medical");
 const healthCareWorkers = sym(medical, "Health Care");
@@ -721,10 +799,15 @@ const scientists = sym(microscope, "Scientist");
 const crown = e("\u{1F451}", "Crown");
 const prince = skin("\u{1F934}", "Prince");
 const princess = skin("\u{1F478}", "Princess");
-const royalty = g(crown, prince, princess);
+const royalty = gg(
+    crown.value, crown.desc, {
+    symbol: crown,
+    male: prince,
+    female: princess
+});
 
-const roles = g(
-    e("Roles", "Roles"),
+const roles = gg(
+    "Roles", "Depictions of people working", {
     healthCareWorkers,
     students,
     teachers,
@@ -744,7 +827,8 @@ const roles = g(
     spies,
     guards,
     constructionWorkers,
-    royalty);
+    royalty
+});
 
 const cherub = skin("\u{1F47C}", "Cherub");
 const santaClaus = skin("\u{1F385}", "Santa Claus");
@@ -753,7 +837,8 @@ const mrsClaus = skin("\u{1F936}", "Mrs. Claus");
 const genies = sex(e("\u{1F9DE}", "Genie"));
 const zombies = sex(e("\u{1F9DF}", "Zombie"));
 
-const fantasy = [
+const fantasy = gg(
+    "Fantasy", "Depictions of fantasy characters", {
     cherub,
     santaClaus,
     mrsClaus,
@@ -766,7 +851,7 @@ const fantasy = [
     elves,
     genies,
     zombies
-];
+});
 
 const whiteCane = e("\u{1F9AF}", "Probing Cane");
 const withProbingCane = sym(whiteCane, "Probing");
@@ -780,7 +865,11 @@ const inManualWheelchair = sym(manualWheelchair, "In Manual Wheelchair");
 
 const manDancing = skin("\u{1F57A}", "Man Dancing");
 const womanDancing = skin("\u{1F483}", "Woman Dancing");
-const dancers = g(e(manDancing.value, "Dancing"), manDancing, womanDancing);
+const dancers = gg(
+    manDancing.value, "Dancing", {
+    male: manDancing,
+    female: womanDancing
+});
 
 const jugglers = skinAndSex("\u{1F939}", "Juggler");
 
@@ -802,7 +891,8 @@ const wrestlers = sex(e("\u{1F93C}", "Wrestler"));
 const waterPoloers = skinAndSex("\u{1F93D}", "Water Polo Player");
 const handBallers = skinAndSex("\u{1F93E}", "Hand Baller");
 
-const inMotion = [
+const inMotion = gg(
+    "In Motion", "Depictions of people in motion", {
     walking,
     standing,
     kneeling,
@@ -829,50 +919,38 @@ const inMotion = [
     wrestlers,
     waterPoloers,
     handBallers
-];
+});
 
 const inLotusPosition = skinAndSex("\u{1F9D8}", "In Lotus Position");
 const inBath = skin("\u{1F6C0}", "In Bath");
 const inBed = skin("\u{1F6CC}", "In Bed");
 const inSauna = skinAndSex("\u{1F9D6}", "In Sauna");
-const resting = [
+const resting = gg(
+    "Resting", "Depictions of people at rest", {
     inLotusPosition,
     inBath,
     inBed,
     inSauna
-];
+});
 
-const babies = g(baby, baby, cherub);
-const people = g(
-    e("People", "People"),
+const babies = g(baby.value, baby.desc, baby, cherub);
+const people = gg(
+    "People", "People", {
     babies,
     children,
     adults,
-    olderPeople);
+    elderly
+});
 
-const allPeople = [
+const allPeople = gg(
+    "All People", "All People", {
     people,
     gestures,
     inMotion,
     resting,
     roles,
     fantasy
-];
-
-function randomPerson() {
-    let value = allPeople.random().random(),
-        lastValue = null;
-    while (!!value.alts && lastValue !== value) {
-        lastValue = value;
-        if (value.value !== value.alts[0].value) {
-            value = value.alts.random(value);
-        }
-        else {
-            value = value.alts.random();
-        }
-    }
-    return value;
-}
+});
 
 const ogre = e("\u{1F479}", "Ogre");
 const goblin = e("\u{1F47A}", "Goblin");
@@ -992,7 +1070,8 @@ const frowningFace = e("\u{2639}\u{FE0F}", "Frowning Face");
 const fmilingFace = e("\u{263A}\u{FE0F}", "Smiling Face");
 const speakingHead = e("\u{1F5E3}\u{FE0F}", "Speaking Head");
 const bust = e("\u{1F464}", "Bust in Silhouette");
-const faces = [
+const faces = gg(
+    "Faces", "Round emoji faces", {
     ogre,
     goblin,
     ghost,
@@ -1111,7 +1190,7 @@ const faces = [
     fmilingFace,
     speakingHead,
     bust,
-];
+});
 
 const kissMark = e("\u{1F48B}", "Kiss Mark");
 const loveLetter = e("\u{1F48C}", "Love Letter");
@@ -1134,7 +1213,8 @@ const brownHeart = e("\u{1F90E}", "Brown Heart");
 const orangeHeart = e("\u{1F9E1}", "Orange Heart");
 const heartExclamation = e("\u{2763}\u{FE0F}", "Heart Exclamation");
 const redHeart = e("\u{2764}\u{FE0F}", "Red Heart");
-const love = [
+const love = gg(
+    "Love", "Hearts and kisses", {
     kissMark,
     loveLetter,
     beatingHeart,
@@ -1156,9 +1236,10 @@ const love = [
     orangeHeart,
     heartExclamation,
     redHeart,
-];
+});
 
-const cartoon = [
+const cartoon = g(
+    "Cartoon", "Cartoon symbols",
     e("\u{1F4A2}", "Anger Symbol"),
     e("\u{1F4A3}", "Bomb"),
     e("\u{1F4A4}", "Zzz"),
@@ -1171,10 +1252,10 @@ const cartoon = [
     e("\u{1F4AF}", "Hundred Points"),
     e("\u{1F573}\u{FE0F}", "Hole"),
     e("\u{1F5E8}\u{FE0F}", "Left Speech Bubble"),
-    e("\u{1F5EF}\u{FE0F}", "Right Anger Bubble"),
-];
+    e("\u{1F5EF}\u{FE0F}", "Right Anger Bubble"));
 
-const hands = [
+const hands = g(
+    "Hands", "Hands pointing at things",
     e("\u{1F446}", "Backhand Index Pointing Up"),
     e("\u{1F447}", "Backhand Index Pointing Down"),
     e("\u{1F448}", "Backhand Index Pointing Left"),
@@ -1207,9 +1288,10 @@ const hands = [
     e("\u{270A}", "Raised Fist"),
     e("\u{270B}", "Raised Hand"),
     e("\u{270C}\u{FE0F}", "Victory Hand"),
-    e("\u{270D}\u{FE0F}", "Writing Hand"),
-];
-const bodyParts = [
+    e("\u{270D}\u{FE0F}", "Writing Hand"));
+
+const bodyParts = g(
+    "Body Parts", "General body parts",
     e("\u{1F440}", "Eyes"),
     e("\u{1F441}\u{FE0F}", "Eye"),
     e("\u{1F441}\u{FE0F}\u{200D}\u{1F5E8}\u{FE0F}", "Eye in Speech Bubble"),
@@ -1228,9 +1310,10 @@ const bodyParts = [
     e("\u{1F9BF}", "Mechanical Leg"),
     e("\u{1F9E0}", "Brain"),
     e("\u{1FAC0}", "Anatomical Heart"),
-    e("\u{1FAC1}", "Lungs"),
-];
-const animals = [
+    e("\u{1FAC1}", "Lungs"));
+
+const animals = g(
+    "Animals", "Animals and insects",
     e("\u{1F400}", "Rat"),
     e("\u{1F401}", "Mouse"),
     e("\u{1F402}", "Ox"),
@@ -1347,10 +1430,11 @@ const animals = [
     e("\u{1FAB1}", "Worm"),
     e("\u{1FAB2}", "Beetle"),
     e("\u{1FAB3}", "Cockroach"),
-    e("\u{1FAB6}", "Feather"),
-];
+    e("\u{1FAB6}", "Feather"));
+
 const whiteFlower = e("\u{1F4AE}", "White Flower");
-const plants = [
+const plants = g(
+    "Plants", "Flowers, trees, and things",
     e("\u{1F331}", "Seedling"),
     e("\u{1F332}", "Evergreen Tree"),
     e("\u{1F333}", "Deciduous Tree"),
@@ -1373,10 +1457,11 @@ const plants = [
     whiteFlower,
     e("\u{1F940}", "Wilted Flower"),
     e("\u{1FAB4}", "Potted Plant"),
-    e("\u{2618}\u{FE0F}", "Shamrock"),
-];
+    e("\u{2618}\u{FE0F}", "Shamrock"));
+
 const banana = e("\u{1F34C}", "Banana");
-const food = [
+const food = g(
+    "Food", "Food, drink, and utensils",
     e("\u{1F32D}", "Hot Dog"),
     e("\u{1F32E}", "Taco"),
     e("\u{1F32F}", "Burrito"),
@@ -1467,8 +1552,6 @@ const food = [
     e("\u{1FAD3}", "Flatbread"),
     e("\u{1FAD4}", "Tamale"),
     e("\u{1FAD5}", "Fondue"),
-];
-const sweets = [
     e("\u{1F366}", "Soft Ice Cream"),
     e("\u{1F367}", "Shaved Ice"),
     e("\u{1F368}", "Ice Cream"),
@@ -1483,8 +1566,6 @@ const sweets = [
     e("\u{1F382}", "Birthday Cake"),
     e("\u{1F967}", "Pie"),
     e("\u{1F9C1}", "Cupcake"),
-];
-const drinks = [
     e("\u{1F375}", "Teacup Without Handle"),
     e("\u{1F376}", "Sake"),
     e("\u{1F377}", "Wine Glass"),
@@ -1504,16 +1585,276 @@ const drinks = [
     e("\u{1F9CB}", "Bubble Tea"),
     e("\u{1FAD6}", "Teapot"),
     e("\u{2615}", "Hot Beverage"),
-];
-const utensils = [
     e("\u{1F374}", "Fork and Knife"),
     e("\u{1F37D}\u{FE0F}", "Fork and Knife with Plate"),
     e("\u{1F3FA}", "Amphora"),
     e("\u{1F52A}", "Kitchen Knife"),
     e("\u{1F944}", "Spoon"),
-    e("\u{1F962}", "Chopsticks"),
-];
-const flags = [
+    e("\u{1F962}", "Chopsticks"));
+
+const nations = g(
+    "National Flags", "Flags of countries from around the world",
+    e("\u{1F1E6}\u{1F1E8}", "Flag: Ascension Island"),
+    e("\u{1F1E6}\u{1F1E9}", "Flag: Andorra"),
+    e("\u{1F1E6}\u{1F1EA}", "Flag: United Arab Emirates"),
+    e("\u{1F1E6}\u{1F1EB}", "Flag: Afghanistan"),
+    e("\u{1F1E6}\u{1F1EC}", "Flag: Antigua & Barbuda"),
+    e("\u{1F1E6}\u{1F1EE}", "Flag: Anguilla"),
+    e("\u{1F1E6}\u{1F1F1}", "Flag: Albania"),
+    e("\u{1F1E6}\u{1F1F2}", "Flag: Armenia"),
+    e("\u{1F1E6}\u{1F1F4}", "Flag: Angola"),
+    e("\u{1F1E6}\u{1F1F6}", "Flag: Antarctica"),
+    e("\u{1F1E6}\u{1F1F7}", "Flag: Argentina"),
+    e("\u{1F1E6}\u{1F1F8}", "Flag: American Samoa"),
+    e("\u{1F1E6}\u{1F1F9}", "Flag: Austria"),
+    e("\u{1F1E6}\u{1F1FA}", "Flag: Australia"),
+    e("\u{1F1E6}\u{1F1FC}", "Flag: Aruba"),
+    e("\u{1F1E6}\u{1F1FD}", "Flag: Åland Islands"),
+    e("\u{1F1E6}\u{1F1FF}", "Flag: Azerbaijan"),
+    e("\u{1F1E7}\u{1F1E6}", "Flag: Bosnia & Herzegovina"),
+    e("\u{1F1E7}\u{1F1E7}", "Flag: Barbados"),
+    e("\u{1F1E7}\u{1F1E9}", "Flag: Bangladesh"),
+    e("\u{1F1E7}\u{1F1EA}", "Flag: Belgium"),
+    e("\u{1F1E7}\u{1F1EB}", "Flag: Burkina Faso"),
+    e("\u{1F1E7}\u{1F1EC}", "Flag: Bulgaria"),
+    e("\u{1F1E7}\u{1F1ED}", "Flag: Bahrain"),
+    e("\u{1F1E7}\u{1F1EE}", "Flag: Burundi"),
+    e("\u{1F1E7}\u{1F1EF}", "Flag: Benin"),
+    e("\u{1F1E7}\u{1F1F1}", "Flag: St. Barthélemy"),
+    e("\u{1F1E7}\u{1F1F2}", "Flag: Bermuda"),
+    e("\u{1F1E7}\u{1F1F3}", "Flag: Brunei"),
+    e("\u{1F1E7}\u{1F1F4}", "Flag: Bolivia"),
+    e("\u{1F1E7}\u{1F1F6}", "Flag: Caribbean Netherlands"),
+    e("\u{1F1E7}\u{1F1F7}", "Flag: Brazil"),
+    e("\u{1F1E7}\u{1F1F8}", "Flag: Bahamas"),
+    e("\u{1F1E7}\u{1F1F9}", "Flag: Bhutan"),
+    e("\u{1F1E7}\u{1F1FB}", "Flag: Bouvet Island"),
+    e("\u{1F1E7}\u{1F1FC}", "Flag: Botswana"),
+    e("\u{1F1E7}\u{1F1FE}", "Flag: Belarus"),
+    e("\u{1F1E7}\u{1F1FF}", "Flag: Belize"),
+    e("\u{1F1E8}\u{1F1E6}", "Flag: Canada"),
+    e("\u{1F1E8}\u{1F1E8}", "Flag: Cocos (Keeling) Islands"),
+    e("\u{1F1E8}\u{1F1E9}", "Flag: Congo - Kinshasa"),
+    e("\u{1F1E8}\u{1F1EB}", "Flag: Central African Republic"),
+    e("\u{1F1E8}\u{1F1EC}", "Flag: Congo - Brazzaville"),
+    e("\u{1F1E8}\u{1F1ED}", "Flag: Switzerland"),
+    e("\u{1F1E8}\u{1F1EE}", "Flag: Côte d’Ivoire"),
+    e("\u{1F1E8}\u{1F1F0}", "Flag: Cook Islands"),
+    e("\u{1F1E8}\u{1F1F1}", "Flag: Chile"),
+    e("\u{1F1E8}\u{1F1F2}", "Flag: Cameroon"),
+    e("\u{1F1E8}\u{1F1F3}", "Flag: China"),
+    e("\u{1F1E8}\u{1F1F4}", "Flag: Colombia"),
+    e("\u{1F1E8}\u{1F1F5}", "Flag: Clipperton Island"),
+    e("\u{1F1E8}\u{1F1F7}", "Flag: Costa Rica"),
+    e("\u{1F1E8}\u{1F1FA}", "Flag: Cuba"),
+    e("\u{1F1E8}\u{1F1FB}", "Flag: Cape Verde"),
+    e("\u{1F1E8}\u{1F1FC}", "Flag: Curaçao"),
+    e("\u{1F1E8}\u{1F1FD}", "Flag: Christmas Island"),
+    e("\u{1F1E8}\u{1F1FE}", "Flag: Cyprus"),
+    e("\u{1F1E8}\u{1F1FF}", "Flag: Czechia"),
+    e("\u{1F1E9}\u{1F1EA}", "Flag: Germany"),
+    e("\u{1F1E9}\u{1F1EC}", "Flag: Diego Garcia"),
+    e("\u{1F1E9}\u{1F1EF}", "Flag: Djibouti"),
+    e("\u{1F1E9}\u{1F1F0}", "Flag: Denmark"),
+    e("\u{1F1E9}\u{1F1F2}", "Flag: Dominica"),
+    e("\u{1F1E9}\u{1F1F4}", "Flag: Dominican Republic"),
+    e("\u{1F1E9}\u{1F1FF}", "Flag: Algeria"),
+    e("\u{1F1EA}\u{1F1E6}", "Flag: Ceuta & Melilla"),
+    e("\u{1F1EA}\u{1F1E8}", "Flag: Ecuador"),
+    e("\u{1F1EA}\u{1F1EA}", "Flag: Estonia"),
+    e("\u{1F1EA}\u{1F1EC}", "Flag: Egypt"),
+    e("\u{1F1EA}\u{1F1ED}", "Flag: Western Sahara"),
+    e("\u{1F1EA}\u{1F1F7}", "Flag: Eritrea"),
+    e("\u{1F1EA}\u{1F1F8}", "Flag: Spain"),
+    e("\u{1F1EA}\u{1F1F9}", "Flag: Ethiopia"),
+    e("\u{1F1EA}\u{1F1FA}", "Flag: European Union"),
+    e("\u{1F1EB}\u{1F1EE}", "Flag: Finland"),
+    e("\u{1F1EB}\u{1F1EF}", "Flag: Fiji"),
+    e("\u{1F1EB}\u{1F1F0}", "Flag: Falkland Islands"),
+    e("\u{1F1EB}\u{1F1F2}", "Flag: Micronesia"),
+    e("\u{1F1EB}\u{1F1F4}", "Flag: Faroe Islands"),
+    e("\u{1F1EB}\u{1F1F7}", "Flag: France"),
+    e("\u{1F1EC}\u{1F1E6}", "Flag: Gabon"),
+    e("\u{1F1EC}\u{1F1E7}", "Flag: United Kingdom"),
+    e("\u{1F1EC}\u{1F1E9}", "Flag: Grenada"),
+    e("\u{1F1EC}\u{1F1EA}", "Flag: Georgia"),
+    e("\u{1F1EC}\u{1F1EB}", "Flag: French Guiana"),
+    e("\u{1F1EC}\u{1F1EC}", "Flag: Guernsey"),
+    e("\u{1F1EC}\u{1F1ED}", "Flag: Ghana"),
+    e("\u{1F1EC}\u{1F1EE}", "Flag: Gibraltar"),
+    e("\u{1F1EC}\u{1F1F1}", "Flag: Greenland"),
+    e("\u{1F1EC}\u{1F1F2}", "Flag: Gambia"),
+    e("\u{1F1EC}\u{1F1F3}", "Flag: Guinea"),
+    e("\u{1F1EC}\u{1F1F5}", "Flag: Guadeloupe"),
+    e("\u{1F1EC}\u{1F1F6}", "Flag: Equatorial Guinea"),
+    e("\u{1F1EC}\u{1F1F7}", "Flag: Greece"),
+    e("\u{1F1EC}\u{1F1F8}", "Flag: South Georgia & South Sandwich Islands"),
+    e("\u{1F1EC}\u{1F1F9}", "Flag: Guatemala"),
+    e("\u{1F1EC}\u{1F1FA}", "Flag: Guam"),
+    e("\u{1F1EC}\u{1F1FC}", "Flag: Guinea-Bissau"),
+    e("\u{1F1EC}\u{1F1FE}", "Flag: Guyana"),
+    e("\u{1F1ED}\u{1F1F0}", "Flag: Hong Kong SAR China"),
+    e("\u{1F1ED}\u{1F1F2}", "Flag: Heard & McDonald Islands"),
+    e("\u{1F1ED}\u{1F1F3}", "Flag: Honduras"),
+    e("\u{1F1ED}\u{1F1F7}", "Flag: Croatia"),
+    e("\u{1F1ED}\u{1F1F9}", "Flag: Haiti"),
+    e("\u{1F1ED}\u{1F1FA}", "Flag: Hungary"),
+    e("\u{1F1EE}\u{1F1E8}", "Flag: Canary Islands"),
+    e("\u{1F1EE}\u{1F1E9}", "Flag: Indonesia"),
+    e("\u{1F1EE}\u{1F1EA}", "Flag: Ireland"),
+    e("\u{1F1EE}\u{1F1F1}", "Flag: Israel"),
+    e("\u{1F1EE}\u{1F1F2}", "Flag: Isle of Man"),
+    e("\u{1F1EE}\u{1F1F3}", "Flag: India"),
+    e("\u{1F1EE}\u{1F1F4}", "Flag: British Indian Ocean Territory"),
+    e("\u{1F1EE}\u{1F1F6}", "Flag: Iraq"),
+    e("\u{1F1EE}\u{1F1F7}", "Flag: Iran"),
+    e("\u{1F1EE}\u{1F1F8}", "Flag: Iceland"),
+    e("\u{1F1EE}\u{1F1F9}", "Flag: Italy"),
+    e("\u{1F1EF}\u{1F1EA}", "Flag: Jersey"),
+    e("\u{1F1EF}\u{1F1F2}", "Flag: Jamaica"),
+    e("\u{1F1EF}\u{1F1F4}", "Flag: Jordan"),
+    e("\u{1F1EF}\u{1F1F5}", "Flag: Japan"),
+    e("\u{1F1F0}\u{1F1EA}", "Flag: Kenya"),
+    e("\u{1F1F0}\u{1F1EC}", "Flag: Kyrgyzstan"),
+    e("\u{1F1F0}\u{1F1ED}", "Flag: Cambodia"),
+    e("\u{1F1F0}\u{1F1EE}", "Flag: Kiribati"),
+    e("\u{1F1F0}\u{1F1F2}", "Flag: Comoros"),
+    e("\u{1F1F0}\u{1F1F3}", "Flag: St. Kitts & Nevis"),
+    e("\u{1F1F0}\u{1F1F5}", "Flag: North Korea"),
+    e("\u{1F1F0}\u{1F1F7}", "Flag: South Korea"),
+    e("\u{1F1F0}\u{1F1FC}", "Flag: Kuwait"),
+    e("\u{1F1F0}\u{1F1FE}", "Flag: Cayman Islands"),
+    e("\u{1F1F0}\u{1F1FF}", "Flag: Kazakhstan"),
+    e("\u{1F1F1}\u{1F1E6}", "Flag: Laos"),
+    e("\u{1F1F1}\u{1F1E7}", "Flag: Lebanon"),
+    e("\u{1F1F1}\u{1F1E8}", "Flag: St. Lucia"),
+    e("\u{1F1F1}\u{1F1EE}", "Flag: Liechtenstein"),
+    e("\u{1F1F1}\u{1F1F0}", "Flag: Sri Lanka"),
+    e("\u{1F1F1}\u{1F1F7}", "Flag: Liberia"),
+    e("\u{1F1F1}\u{1F1F8}", "Flag: Lesotho"),
+    e("\u{1F1F1}\u{1F1F9}", "Flag: Lithuania"),
+    e("\u{1F1F1}\u{1F1FA}", "Flag: Luxembourg"),
+    e("\u{1F1F1}\u{1F1FB}", "Flag: Latvia"),
+    e("\u{1F1F1}\u{1F1FE}", "Flag: Libya"),
+    e("\u{1F1F2}\u{1F1E6}", "Flag: Morocco"),
+    e("\u{1F1F2}\u{1F1E8}", "Flag: Monaco"),
+    e("\u{1F1F2}\u{1F1E9}", "Flag: Moldova"),
+    e("\u{1F1F2}\u{1F1EA}", "Flag: Montenegro"),
+    e("\u{1F1F2}\u{1F1EB}", "Flag: St. Martin"),
+    e("\u{1F1F2}\u{1F1EC}", "Flag: Madagascar"),
+    e("\u{1F1F2}\u{1F1ED}", "Flag: Marshall Islands"),
+    e("\u{1F1F2}\u{1F1F0}", "Flag: North Macedonia"),
+    e("\u{1F1F2}\u{1F1F1}", "Flag: Mali"),
+    e("\u{1F1F2}\u{1F1F2}", "Flag: Myanmar (Burma)"),
+    e("\u{1F1F2}\u{1F1F3}", "Flag: Mongolia"),
+    e("\u{1F1F2}\u{1F1F4}", "Flag: Macao Sar China"),
+    e("\u{1F1F2}\u{1F1F5}", "Flag: Northern Mariana Islands"),
+    e("\u{1F1F2}\u{1F1F6}", "Flag: Martinique"),
+    e("\u{1F1F2}\u{1F1F7}", "Flag: Mauritania"),
+    e("\u{1F1F2}\u{1F1F8}", "Flag: Montserrat"),
+    e("\u{1F1F2}\u{1F1F9}", "Flag: Malta"),
+    e("\u{1F1F2}\u{1F1FA}", "Flag: Mauritius"),
+    e("\u{1F1F2}\u{1F1FB}", "Flag: Maldives"),
+    e("\u{1F1F2}\u{1F1FC}", "Flag: Malawi"),
+    e("\u{1F1F2}\u{1F1FD}", "Flag: Mexico"),
+    e("\u{1F1F2}\u{1F1FE}", "Flag: Malaysia"),
+    e("\u{1F1F2}\u{1F1FF}", "Flag: Mozambique"),
+    e("\u{1F1F3}\u{1F1E6}", "Flag: Namibia"),
+    e("\u{1F1F3}\u{1F1E8}", "Flag: New Caledonia"),
+    e("\u{1F1F3}\u{1F1EA}", "Flag: Niger"),
+    e("\u{1F1F3}\u{1F1EB}", "Flag: Norfolk Island"),
+    e("\u{1F1F3}\u{1F1EC}", "Flag: Nigeria"),
+    e("\u{1F1F3}\u{1F1EE}", "Flag: Nicaragua"),
+    e("\u{1F1F3}\u{1F1F1}", "Flag: Netherlands"),
+    e("\u{1F1F3}\u{1F1F4}", "Flag: Norway"),
+    e("\u{1F1F3}\u{1F1F5}", "Flag: Nepal"),
+    e("\u{1F1F3}\u{1F1F7}", "Flag: Nauru"),
+    e("\u{1F1F3}\u{1F1FA}", "Flag: Niue"),
+    e("\u{1F1F3}\u{1F1FF}", "Flag: New Zealand"),
+    e("\u{1F1F4}\u{1F1F2}", "Flag: Oman"),
+    e("\u{1F1F5}\u{1F1E6}", "Flag: Panama"),
+    e("\u{1F1F5}\u{1F1EA}", "Flag: Peru"),
+    e("\u{1F1F5}\u{1F1EB}", "Flag: French Polynesia"),
+    e("\u{1F1F5}\u{1F1EC}", "Flag: Papua New Guinea"),
+    e("\u{1F1F5}\u{1F1ED}", "Flag: Philippines"),
+    e("\u{1F1F5}\u{1F1F0}", "Flag: Pakistan"),
+    e("\u{1F1F5}\u{1F1F1}", "Flag: Poland"),
+    e("\u{1F1F5}\u{1F1F2}", "Flag: St. Pierre & Miquelon"),
+    e("\u{1F1F5}\u{1F1F3}", "Flag: Pitcairn Islands"),
+    e("\u{1F1F5}\u{1F1F7}", "Flag: Puerto Rico"),
+    e("\u{1F1F5}\u{1F1F8}", "Flag: Palestinian Territories"),
+    e("\u{1F1F5}\u{1F1F9}", "Flag: Portugal"),
+    e("\u{1F1F5}\u{1F1FC}", "Flag: Palau"),
+    e("\u{1F1F5}\u{1F1FE}", "Flag: Paraguay"),
+    e("\u{1F1F6}\u{1F1E6}", "Flag: Qatar"),
+    e("\u{1F1F7}\u{1F1EA}", "Flag: Réunion"),
+    e("\u{1F1F7}\u{1F1F4}", "Flag: Romania"),
+    e("\u{1F1F7}\u{1F1F8}", "Flag: Serbia"),
+    e("\u{1F1F7}\u{1F1FA}", "Flag: Russia"),
+    e("\u{1F1F7}\u{1F1FC}", "Flag: Rwanda"),
+    e("\u{1F1F8}\u{1F1E6}", "Flag: Saudi Arabia"),
+    e("\u{1F1F8}\u{1F1E7}", "Flag: Solomon Islands"),
+    e("\u{1F1F8}\u{1F1E8}", "Flag: Seychelles"),
+    e("\u{1F1F8}\u{1F1E9}", "Flag: Sudan"),
+    e("\u{1F1F8}\u{1F1EA}", "Flag: Sweden"),
+    e("\u{1F1F8}\u{1F1EC}", "Flag: Singapore"),
+    e("\u{1F1F8}\u{1F1ED}", "Flag: St. Helena"),
+    e("\u{1F1F8}\u{1F1EE}", "Flag: Slovenia"),
+    e("\u{1F1F8}\u{1F1EF}", "Flag: Svalbard & Jan Mayen"),
+    e("\u{1F1F8}\u{1F1F0}", "Flag: Slovakia"),
+    e("\u{1F1F8}\u{1F1F1}", "Flag: Sierra Leone"),
+    e("\u{1F1F8}\u{1F1F2}", "Flag: San Marino"),
+    e("\u{1F1F8}\u{1F1F3}", "Flag: Senegal"),
+    e("\u{1F1F8}\u{1F1F4}", "Flag: Somalia"),
+    e("\u{1F1F8}\u{1F1F7}", "Flag: Suriname"),
+    e("\u{1F1F8}\u{1F1F8}", "Flag: South Sudan"),
+    e("\u{1F1F8}\u{1F1F9}", "Flag: São Tomé & Príncipe"),
+    e("\u{1F1F8}\u{1F1FB}", "Flag: El Salvador"),
+    e("\u{1F1F8}\u{1F1FD}", "Flag: Sint Maarten"),
+    e("\u{1F1F8}\u{1F1FE}", "Flag: Syria"),
+    e("\u{1F1F8}\u{1F1FF}", "Flag: Eswatini"),
+    e("\u{1F1F9}\u{1F1E6}", "Flag: Tristan Da Cunha"),
+    e("\u{1F1F9}\u{1F1E8}", "Flag: Turks & Caicos Islands"),
+    e("\u{1F1F9}\u{1F1E9}", "Flag: Chad"),
+    e("\u{1F1F9}\u{1F1EB}", "Flag: French Southern Territories"),
+    e("\u{1F1F9}\u{1F1EC}", "Flag: Togo"),
+    e("\u{1F1F9}\u{1F1ED}", "Flag: Thailand"),
+    e("\u{1F1F9}\u{1F1EF}", "Flag: Tajikistan"),
+    e("\u{1F1F9}\u{1F1F0}", "Flag: Tokelau"),
+    e("\u{1F1F9}\u{1F1F1}", "Flag: Timor-Leste"),
+    e("\u{1F1F9}\u{1F1F2}", "Flag: Turkmenistan"),
+    e("\u{1F1F9}\u{1F1F3}", "Flag: Tunisia"),
+    e("\u{1F1F9}\u{1F1F4}", "Flag: Tonga"),
+    e("\u{1F1F9}\u{1F1F7}", "Flag: Turkey"),
+    e("\u{1F1F9}\u{1F1F9}", "Flag: Trinidad & Tobago"),
+    e("\u{1F1F9}\u{1F1FB}", "Flag: Tuvalu"),
+    e("\u{1F1F9}\u{1F1FC}", "Flag: Taiwan"),
+    e("\u{1F1F9}\u{1F1FF}", "Flag: Tanzania"),
+    e("\u{1F1FA}\u{1F1E6}", "Flag: Ukraine"),
+    e("\u{1F1FA}\u{1F1EC}", "Flag: Uganda"),
+    e("\u{1F1FA}\u{1F1F2}", "Flag: U.S. Outlying Islands"),
+    e("\u{1F1FA}\u{1F1F3}", "Flag: United Nations"),
+    e("\u{1F1FA}\u{1F1F8}", "Flag: United States"),
+    e("\u{1F1FA}\u{1F1FE}", "Flag: Uruguay"),
+    e("\u{1F1FA}\u{1F1FF}", "Flag: Uzbekistan"),
+    e("\u{1F1FB}\u{1F1E6}", "Flag: Vatican City"),
+    e("\u{1F1FB}\u{1F1E8}", "Flag: St. Vincent & Grenadines"),
+    e("\u{1F1FB}\u{1F1EA}", "Flag: Venezuela"),
+    e("\u{1F1FB}\u{1F1EC}", "Flag: British Virgin Islands"),
+    e("\u{1F1FB}\u{1F1EE}", "Flag: U.S. Virgin Islands"),
+    e("\u{1F1FB}\u{1F1F3}", "Flag: Vietnam"),
+    e("\u{1F1FB}\u{1F1FA}", "Flag: Vanuatu"),
+    e("\u{1F1FC}\u{1F1EB}", "Flag: Wallis & Futuna"),
+    e("\u{1F1FC}\u{1F1F8}", "Flag: Samoa"),
+    e("\u{1F1FD}\u{1F1F0}", "Flag: Kosovo"),
+    e("\u{1F1FE}\u{1F1EA}", "Flag: Yemen"),
+    e("\u{1F1FE}\u{1F1F9}", "Flag: Mayotte"),
+    e("\u{1F1FF}\u{1F1E6}", "Flag: South Africa"),
+    e("\u{1F1FF}\u{1F1F2}", "Flag: Zambia"),
+    e("\u{1F1FF}\u{1F1FC}", "Flag: Zimbabwe"));
+
+const flags = g(
+    "Flags", "Basic flags",
     e("\u{1F38C}", "Crossed Flags"),
     e("\u{1F3C1}", "Chequered Flag"),
     e("\u{1F3F3}\u{FE0F}", "White Flag"),
@@ -1524,8 +1865,7 @@ const flags = [
     e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}", "Flag: England"),
     e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}", "Flag: Scotland"),
     e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}", "Flag: Wales"),
-    e("\u{1F6A9}", "Triangular Flag"),
-];
+    e("\u{1F6A9}", "Triangular Flag"));
 
 const motorcycle = e("\u{1F3CD}\u{FE0F}", "Motorcycle");
 const racingCar = e("\u{1F3CE}\u{FE0F}", "Racing Car");
@@ -1547,6 +1887,8 @@ const trolleyBus = e("\u{1F68E}", "Trolleybus");
 const busStop = e("\u{1F68F}", "Bus Stop");
 const miniBus = e("\u{1F690}", "Minibus");
 const ambulance = e("\u{1F691}", "Ambulance");
+const policeCar = e("\u{1F693}", "Police Car");
+const oncomingPoliceCar = e("\u{1F694}", "Oncoming Police Car");
 const taxi = e("\u{1F695}", "Taxi");
 const oncomingTaxi = e("\u{1F696}", "Oncoming Taxi");
 const automobile = e("\u{1F697}", "Automobile");
@@ -1565,6 +1907,7 @@ const speedBoat = e("\u{1F6A4}", "Speedboat");
 const horizontalTrafficLight = e("\u{1F6A5}", "Horizontal Traffic Light");
 const verticalTrafficLight = e("\u{1F6A6}", "Vertical Traffic Light");
 const construction = e("\u{1F6A7}", "Construction");
+const policeCarLight = e("\u{1F6A8}", "Police Car Light");
 const bicycle = e("\u{1F6B2}", "Bicycle");
 const stopSign = e("\u{1F6D1}", "Stop Sign");
 const oilDrum = e("\u{1F6E2}\u{FE0F}", "Oil Drum");
@@ -1589,7 +1932,8 @@ const anchor = e("\u{2693}", "Anchor");
 const ferry = e("\u{26F4}\u{FE0F}", "Ferry");
 const sailboat = e("\u{26F5}", "Sailboat");
 const fuelPump = e("\u{26FD}", "Fuel Pump");
-const vehicles = [
+const vehicles = g(
+    "Vehicles", "Things that go",
     motorcycle,
     racingCar,
     seat,
@@ -1656,15 +2000,46 @@ const vehicles = [
     ferry,
     sailboat,
     fuelPump,
-    airplane,
-];
-const bloodTypes = [
+    airplane);
+
+const bloodTypes = g(
+    "Blood Types", "Blood types",
     e("\u{1F170}", "A Button (Blood Type)"),
     e("\u{1F171}", "B Button (Blood Type)"),
     e("\u{1F17E}", "O Button (Blood Type)"),
-    e("\u{1F18E}", "AB Button (Blood Type)"),
-];
-const japanese = [
+    e("\u{1F18E}", "AB Button (Blood Type)"));
+
+const regionIndicators = g(
+    "Regions", "Region indicators",
+    e("\u{1F1E6}", "Regional Indicator Symbol Letter A"),
+    e("\u{1F1E7}", "Regional Indicator Symbol Letter B"),
+    e("\u{1F1E8}", "Regional Indicator Symbol Letter C"),
+    e("\u{1F1E9}", "Regional Indicator Symbol Letter D"),
+    e("\u{1F1EA}", "Regional Indicator Symbol Letter E"),
+    e("\u{1F1EB}", "Regional Indicator Symbol Letter F"),
+    e("\u{1F1EC}", "Regional Indicator Symbol Letter G"),
+    e("\u{1F1ED}", "Regional Indicator Symbol Letter H"),
+    e("\u{1F1EE}", "Regional Indicator Symbol Letter I"),
+    e("\u{1F1EF}", "Regional Indicator Symbol Letter J"),
+    e("\u{1F1F0}", "Regional Indicator Symbol Letter K"),
+    e("\u{1F1F1}", "Regional Indicator Symbol Letter L"),
+    e("\u{1F1F2}", "Regional Indicator Symbol Letter M"),
+    e("\u{1F1F3}", "Regional Indicator Symbol Letter N"),
+    e("\u{1F1F4}", "Regional Indicator Symbol Letter O"),
+    e("\u{1F1F5}", "Regional Indicator Symbol Letter P"),
+    e("\u{1F1F6}", "Regional Indicator Symbol Letter Q"),
+    e("\u{1F1F7}", "Regional Indicator Symbol Letter R"),
+    e("\u{1F1F8}", "Regional Indicator Symbol Letter S"),
+    e("\u{1F1F9}", "Regional Indicator Symbol Letter T"),
+    e("\u{1F1FA}", "Regional Indicator Symbol Letter U"),
+    e("\u{1F1FB}", "Regional Indicator Symbol Letter V"),
+    e("\u{1F1FC}", "Regional Indicator Symbol Letter W"),
+    e("\u{1F1FD}", "Regional Indicator Symbol Letter X"),
+    e("\u{1F1FE}", "Regional Indicator Symbol Letter Y"),
+    e("\u{1F1FF}", "Regional Indicator Symbol Letter Z"));
+
+const japanese = g(
+    "Japanese", "Japanse symbology",
     e("\u{1F530}", "Japanese Symbol for Beginner"),
     e("\u{1F201}", "Japanese “Here” Button"),
     e("\u{1F202}\u{FE0F}", "Japanese “Service Charge” Button"),
@@ -1682,9 +2057,10 @@ const japanese = [
     e("\u{1F250}", "Japanese “Bargain” Button"),
     e("\u{1F251}", "Japanese “Acceptable” Button"),
     e("\u{3297}\u{FE0F}", "Japanese “Congratulations” Button"),
-    e("\u{3299}\u{FE0F}", "Japanese “Secret” Button"),
-];
-const time = [
+    e("\u{3299}\u{FE0F}", "Japanese “Secret” Button"));
+
+const clocks = g(
+    "Clocks", "Time-keeping pieces",
     e("\u{1F550}", "One O’Clock"),
     e("\u{1F551}", "Two O’Clock"),
     e("\u{1F552}", "Three O’Clock"),
@@ -1709,19 +2085,19 @@ const time = [
     e("\u{1F565}", "Ten-Thirty"),
     e("\u{1F566}", "Eleven-Thirty"),
     e("\u{1F567}", "Twelve-Thirty"),
-];
-const clocks = [
     e("\u{1F570}\u{FE0F}", "Mantelpiece Clock"),
     e("\u{231A}", "Watch"),
     e("\u{23F0}", "Alarm Clock"),
     e("\u{23F1}\u{FE0F}", "Stopwatch"),
     e("\u{23F2}\u{FE0F}", "Timer Clock"),
     e("\u{231B}", "Hourglass Done"),
-    e("\u{23F3}", "Hourglass Not Done"),
-];
+    e("\u{23F3}", "Hourglass Not Done"));
+
 const downRightArrow = e("\u{2198}", "Down-Right Arrow");
+const downRightArrowText = e("\u{2198}\u{FE0E}", "Down-Right Arrow");
 const downRightArrowEmoji = e("\u{2198}\u{FE0F}", "Down-Right Arrow");
-const arrows = [
+const arrows = g(
+    "Arrows", "Arrows pointing in different directions",
     e("\u{1F503}\u{FE0F}", "Clockwise Vertical Arrows"),
     e("\u{1F504}\u{FE0F}", "Counterclockwise Arrows Button"),
     e("\u{2194}\u{FE0F}", "Left-Right Arrow"),
@@ -1737,9 +2113,10 @@ const arrows = [
     e("\u{2935}\u{FE0F}", "Right Arrow Curving Down"),
     e("\u{2B05}\u{FE0F}", "Left Arrow"),
     e("\u{2B06}\u{FE0F}", "Up Arrow"),
-    e("\u{2B07}\u{FE0F}", "Down Arrow"),
-];
-const shapes = [
+    e("\u{2B07}\u{FE0F}", "Down Arrow"));
+
+const shapes = g(
+    "Shapes", "Colored shapes",
     e("\u{1F534}", "Red Circle"),
     e("\u{1F535}", "Blue Circle"),
     e("\u{1F536}", "Large Orange Diamond"),
@@ -1774,13 +2151,14 @@ const shapes = [
     e("\u{2B1B}", "Black Large Square"),
     e("\u{2B1C}", "White Large Square"),
     e("\u{2B50}", "Star"),
-    e("\u{1F4A0}", "Diamond with a Dot")
-];
+    e("\u{1F4A0}", "Diamond with a Dot"));
+
 const shuffleTracksButton = e("\u{1F500}", "Shuffle Tracks Button");
 const repeatButton = e("\u{1F501}", "Repeat Button");
 const repeatSingleButton = e("\u{1F502}", "Repeat Single Button");
 const upwardsButton = e("\u{1F53C}", "Upwards Button");
 const downwardsButton = e("\u{1F53D}", "Downwards Button");
+const playButton = e("\u{25B6}\u{FE0F}", "Play Button");
 const reverseButton = e("\u{25C0}\u{FE0F}", "Reverse Button");
 const ejectButton = e("\u{23CF}\u{FE0F}", "Eject Button");
 const fastForwardButton = e("\u{23E9}", "Fast-Forward Button");
@@ -1793,7 +2171,32 @@ const playOrPauseButton = e("\u{23EF}\u{FE0F}", "Play or Pause Button");
 const pauseButton = e("\u{23F8}\u{FE0F}", "Pause Button");
 const stopButton = e("\u{23F9}\u{FE0F}", "Stop Button");
 const recordButton = e("\u{23FA}\u{FE0F}", "Record Button");
-const mediaPlayer = [
+
+
+const buttons = g(
+    "Buttons", "Buttons",
+    e("\u{1F191}", "CL Button"),
+    e("\u{1F192}", "Cool Button"),
+    e("\u{1F193}", "Free Button"),
+    e("\u{1F194}", "ID Button"),
+    e("\u{1F195}", "New Button"),
+    e("\u{1F196}", "NG Button"),
+    e("\u{1F197}", "OK Button"),
+    e("\u{1F198}", "SOS Button"),
+    e("\u{1F199}", "Up! Button"),
+    e("\u{1F19A}", "Vs Button"),
+    e("\u{1F518}", "Radio Button"),
+    e("\u{1F519}", "Back Arrow"),
+    e("\u{1F51A}", "End Arrow"),
+    e("\u{1F51B}", "On! Arrow"),
+    e("\u{1F51C}", "Soon Arrow"),
+    e("\u{1F51D}", "Top Arrow"),
+    e("\u{2611}\u{FE0F}", "Check Box with Check"),
+    e("\u{1F520}", "Input Latin Uppercase"),
+    e("\u{1F521}", "Input Latin Lowercase"),
+    e("\u{1F522}", "Input Numbers"),
+    e("\u{1F523}", "Input Symbols"),
+    e("\u{1F524}", "Input Latin Letters"),
     shuffleTracksButton,
     repeatButton,
     repeatSingleButton,
@@ -1811,9 +2214,10 @@ const mediaPlayer = [
     playOrPauseButton,
     pauseButton,
     stopButton,
-    recordButton,
-];
-const zodiac = [
+    recordButton);
+
+const zodiac = g(
+    "Zodiac", "The symbology of astrology",
     e("\u{2648}", "Aries"),
     e("\u{2649}", "Taurus"),
     e("\u{264A}", "Gemini"),
@@ -1826,19 +2230,148 @@ const zodiac = [
     e("\u{2651}", "Capricorn"),
     e("\u{2652}", "Aquarius"),
     e("\u{2653}", "Pisces"),
-    e("\u{26CE}", "Ophiuchus"),
-];
-const math = [
+    e("\u{26CE}", "Ophiuchus"));
+
+const numbers = g(
+    "Numbers", "Numbers",
+    e("\u{30}\u{FE0F}", "Digit Zero"),
+    e("\u{31}\u{FE0F}", "Digit One"),
+    e("\u{32}\u{FE0F}", "Digit Two"),
+    e("\u{33}\u{FE0F}", "Digit Three"),
+    e("\u{34}\u{FE0F}", "Digit Four"),
+    e("\u{35}\u{FE0F}", "Digit Five"),
+    e("\u{36}\u{FE0F}", "Digit Six"),
+    e("\u{37}\u{FE0F}", "Digit Seven"),
+    e("\u{38}\u{FE0F}", "Digit Eight"),
+    e("\u{39}\u{FE0F}", "Digit Nine"),
+    e("\u{2A}\u{FE0F}", "Asterisk"),
+    e("\u{23}\u{FE0F}", "Number Sign"),
+    e("\u{30}\u{FE0F}\u{20E3}", "Keycap Digit Zero"),
+    e("\u{31}\u{FE0F}\u{20E3}", "Keycap Digit One"),
+    e("\u{32}\u{FE0F}\u{20E3}", "Keycap Digit Two"),
+    e("\u{33}\u{FE0F}\u{20E3}", "Keycap Digit Three"),
+    e("\u{34}\u{FE0F}\u{20E3}", "Keycap Digit Four"),
+    e("\u{35}\u{FE0F}\u{20E3}", "Keycap Digit Five"),
+    e("\u{36}\u{FE0F}\u{20E3}", "Keycap Digit Six"),
+    e("\u{37}\u{FE0F}\u{20E3}", "Keycap Digit Seven"),
+    e("\u{38}\u{FE0F}\u{20E3}", "Keycap Digit Eight"),
+    e("\u{39}\u{FE0F}\u{20E3}", "Keycap Digit Nine"),
+    e("\u{2A}\u{FE0F}\u{20E3}", "Keycap Asterisk"),
+    e("\u{23}\u{FE0F}\u{20E3}", "Keycap Number Sign"),
+    e("\u{1F51F}", "Keycap: 10"));
+
+const tags = g(
+    "Tags", "Tags",
+    e("\u{E0020}", "Tag Space"),
+    e("\u{E0021}", "Tag Exclamation Mark"),
+    e("\u{E0022}", "Tag Quotation Mark"),
+    e("\u{E0023}", "Tag Number Sign"),
+    e("\u{E0024}", "Tag Dollar Sign"),
+    e("\u{E0025}", "Tag Percent Sign"),
+    e("\u{E0026}", "Tag Ampersand"),
+    e("\u{E0027}", "Tag Apostrophe"),
+    e("\u{E0028}", "Tag Left Parenthesis"),
+    e("\u{E0029}", "Tag Right Parenthesis"),
+    e("\u{E002A}", "Tag Asterisk"),
+    e("\u{E002B}", "Tag Plus Sign"),
+    e("\u{E002C}", "Tag Comma"),
+    e("\u{E002D}", "Tag Hyphen-Minus"),
+    e("\u{E002E}", "Tag Full Stop"),
+    e("\u{E002F}", "Tag Solidus"),
+    e("\u{E0030}", "Tag Digit Zero"),
+    e("\u{E0031}", "Tag Digit One"),
+    e("\u{E0032}", "Tag Digit Two"),
+    e("\u{E0033}", "Tag Digit Three"),
+    e("\u{E0034}", "Tag Digit Four"),
+    e("\u{E0035}", "Tag Digit Five"),
+    e("\u{E0036}", "Tag Digit Six"),
+    e("\u{E0037}", "Tag Digit Seven"),
+    e("\u{E0038}", "Tag Digit Eight"),
+    e("\u{E0039}", "Tag Digit Nine"),
+    e("\u{E003A}", "Tag Colon"),
+    e("\u{E003B}", "Tag Semicolon"),
+    e("\u{E003C}", "Tag Less-Than Sign"),
+    e("\u{E003D}", "Tag Equals Sign"),
+    e("\u{E003E}", "Tag Greater-Than Sign"),
+    e("\u{E003F}", "Tag Question Mark"),
+    e("\u{E0040}", "Tag Commercial at"),
+    e("\u{E0041}", "Tag Latin Capital Letter a"),
+    e("\u{E0042}", "Tag Latin Capital Letter B"),
+    e("\u{E0043}", "Tag Latin Capital Letter C"),
+    e("\u{E0044}", "Tag Latin Capital Letter D"),
+    e("\u{E0045}", "Tag Latin Capital Letter E"),
+    e("\u{E0046}", "Tag Latin Capital Letter F"),
+    e("\u{E0047}", "Tag Latin Capital Letter G"),
+    e("\u{E0048}", "Tag Latin Capital Letter H"),
+    e("\u{E0049}", "Tag Latin Capital Letter I"),
+    e("\u{E004A}", "Tag Latin Capital Letter J"),
+    e("\u{E004B}", "Tag Latin Capital Letter K"),
+    e("\u{E004C}", "Tag Latin Capital Letter L"),
+    e("\u{E004D}", "Tag Latin Capital Letter M"),
+    e("\u{E004E}", "Tag Latin Capital Letter N"),
+    e("\u{E004F}", "Tag Latin Capital Letter O"),
+    e("\u{E0050}", "Tag Latin Capital Letter P"),
+    e("\u{E0051}", "Tag Latin Capital Letter Q"),
+    e("\u{E0052}", "Tag Latin Capital Letter R"),
+    e("\u{E0053}", "Tag Latin Capital Letter S"),
+    e("\u{E0054}", "Tag Latin Capital Letter T"),
+    e("\u{E0055}", "Tag Latin Capital Letter U"),
+    e("\u{E0056}", "Tag Latin Capital Letter V"),
+    e("\u{E0057}", "Tag Latin Capital Letter W"),
+    e("\u{E0058}", "Tag Latin Capital Letter X"),
+    e("\u{E0059}", "Tag Latin Capital Letter Y"),
+    e("\u{E005A}", "Tag Latin Capital Letter Z"),
+    e("\u{E005B}", "Tag Left Square Bracket"),
+    e("\u{E005C}", "Tag Reverse Solidus"),
+    e("\u{E005D}", "Tag Right Square Bracket"),
+    e("\u{E005E}", "Tag Circumflex Accent"),
+    e("\u{E005F}", "Tag Low Line"),
+    e("\u{E0060}", "Tag Grave Accent"),
+    e("\u{E0061}", "Tag Latin Small Letter a"),
+    e("\u{E0062}", "Tag Latin Small Letter B"),
+    e("\u{E0063}", "Tag Latin Small Letter C"),
+    e("\u{E0064}", "Tag Latin Small Letter D"),
+    e("\u{E0065}", "Tag Latin Small Letter E"),
+    e("\u{E0066}", "Tag Latin Small Letter F"),
+    e("\u{E0067}", "Tag Latin Small Letter G"),
+    e("\u{E0068}", "Tag Latin Small Letter H"),
+    e("\u{E0069}", "Tag Latin Small Letter I"),
+    e("\u{E006A}", "Tag Latin Small Letter J"),
+    e("\u{E006B}", "Tag Latin Small Letter K"),
+    e("\u{E006C}", "Tag Latin Small Letter L"),
+    e("\u{E006D}", "Tag Latin Small Letter M"),
+    e("\u{E006E}", "Tag Latin Small Letter N"),
+    e("\u{E006F}", "Tag Latin Small Letter O"),
+    e("\u{E0070}", "Tag Latin Small Letter P"),
+    e("\u{E0071}", "Tag Latin Small Letter Q"),
+    e("\u{E0072}", "Tag Latin Small Letter R"),
+    e("\u{E0073}", "Tag Latin Small Letter S"),
+    e("\u{E0074}", "Tag Latin Small Letter T"),
+    e("\u{E0075}", "Tag Latin Small Letter U"),
+    e("\u{E0076}", "Tag Latin Small Letter V"),
+    e("\u{E0077}", "Tag Latin Small Letter W"),
+    e("\u{E0078}", "Tag Latin Small Letter X"),
+    e("\u{E0079}", "Tag Latin Small Letter Y"),
+    e("\u{E007A}", "Tag Latin Small Letter Z"),
+    e("\u{E007B}", "Tag Left Curly Bracket"),
+    e("\u{E007C}", "Tag Vertical Line"),
+    e("\u{E007D}", "Tag Right Curly Bracket"),
+    e("\u{E007E}", "Tag Tilde"),
+    e("\u{E007F}", "Cancel Tag"));
+
+const math = g(
+    "Math", "Math",
     e("\u{2716}\u{FE0F}", "Multiply"),
     e("\u{2795}", "Plus"),
     e("\u{2796}", "Minus"),
-    e("\u{2797}", "Divide"),
-];
-const games = [
+    e("\u{2797}", "Divide"));
+
+const games = g(
+    "Games", "Games",
     e("\u{2660}\u{FE0F}", "Spade Suit"),
     e("\u{2663}\u{FE0F}", "Club Suit"),
-    Object.assign(e("\u{2665}\u{FE0F}", "Heart Suit"), { color: "red" }),
-    Object.assign(e("\u{2666}\u{FE0F}", "Diamond Suit"), { color: "red" }),
+    e("\u{2665}\u{FE0F}", "Heart Suit", { color: "red" }),
+    e("\u{2666}\u{FE0F}", "Diamond Suit", { color: "red" }),
     e("\u{1F004}", "Mahjong Red Dragon"),
     e("\u{1F0CF}", "Joker"),
     e("\u{1F3AF}", "Direct Hit"),
@@ -1852,9 +2385,10 @@ const games = [
     e("\u{1FA80}", "Yo-Yo"),
     e("\u{1FA81}", "Kite"),
     e("\u{1FA83}", "Boomerang"),
-    e("\u{1FA86}", "Nesting Dolls"),
-];
-const sportsEquipment = [
+    e("\u{1FA86}", "Nesting Dolls"));
+
+const sportsEquipment = g(
+    "Sports Equipment", "Sports equipment",
     e("\u{1F3BD}", "Running Shirt"),
     e("\u{1F3BE}", "Tennis"),
     e("\u{1F3BF}", "Skis"),
@@ -1881,9 +2415,10 @@ const sportsEquipment = [
     e("\u{1F94F}", "Flying Disc"),
     e("\u{26BD}", "Soccer Ball"),
     e("\u{26BE}", "Baseball"),
-    e("\u{26F8}\u{FE0F}", "Ice Skate"),
-];
-const clothing = [
+    e("\u{26F8}\u{FE0F}", "Ice Skate"));
+
+const clothing = g(
+    "Clothing", "Clothing",
     e("\u{1F3A9}", "Top Hat"),
     e("\u{1F93F}", "Diving Mask"),
     e("\u{1F452}", "Woman’s Hat"),
@@ -1922,9 +2457,10 @@ const clothing = [
     e("\u{1FA71}", "One-Piece Swimsuit"),
     e("\u{1FA72}", "Briefs"),
     e("\u{1FA73}", "Shorts"),
-    e("\u{1FA74}", "Thong Sandal"),
-];
-const town = [
+    e("\u{1FA74}", "Thong Sandal"));
+
+const town = g(
+    "Town", "Town",
     e("\u{1F3D7}\u{FE0F}", "Building Construction"),
     e("\u{1F3D8}\u{FE0F}", "Houses"),
     e("\u{1F3D9}\u{FE0F}", "Cityscape"),
@@ -1957,33 +2493,10 @@ const town = [
     e("\u{1F492}", "Wedding"),
     e("\u{1F6D6}", "Hut"),
     e("\u{1F6D7}", "Elevator"),
-    e("\u{1F5F3}\u{FE0F}", "Ballot Box with Ballot")
-];
-const buttons = [
-    e("\u{1F191}", "CL Button"),
-    e("\u{1F192}", "Cool Button"),
-    e("\u{1F193}", "Free Button"),
-    e("\u{1F194}", "ID Button"),
-    e("\u{1F195}", "New Button"),
-    e("\u{1F196}", "NG Button"),
-    e("\u{1F197}", "OK Button"),
-    e("\u{1F198}", "SOS Button"),
-    e("\u{1F199}", "Up! Button"),
-    e("\u{1F19A}", "Vs Button"),
-    e("\u{1F518}", "Radio Button"),
-    e("\u{1F519}", "Back Arrow"),
-    e("\u{1F51A}", "End Arrow"),
-    e("\u{1F51B}", "On! Arrow"),
-    e("\u{1F51C}", "Soon Arrow"),
-    e("\u{1F51D}", "Top Arrow"),
-    e("\u{2611}\u{FE0F}", "Check Box with Check"),
-    e("\u{1F520}", "Input Latin Uppercase"),
-    e("\u{1F521}", "Input Latin Lowercase"),
-    e("\u{1F522}", "Input Numbers"),
-    e("\u{1F523}", "Input Symbols"),
-    e("\u{1F524}", "Input Latin Letters"),
-];
-const music = [
+    e("\u{1F5F3}\u{FE0F}", "Ballot Box with Ballot"));
+
+const music = g(
+    "Music", "Music",
     e("\u{1F3BC}", "Musical Score"),
     e("\u{1F3B6}", "Musical Notes"),
     e("\u{1F3B5}", "Musical Note"),
@@ -1995,9 +2508,10 @@ const music = [
     e("\u{1F941}", "Drum"),
     e("\u{1FA95}", "Banjo"),
     e("\u{1FA97}", "Accordion"),
-    e("\u{1FA98}", "Long Drum"),
-];
-const weather = [
+    e("\u{1FA98}", "Long Drum"));
+
+const weather = g(
+    "Weather", "Weather",
     e("\u{1F304}", "Sunrise Over Mountains"),
     e("\u{1F305}", "Sunrise"),
     e("\u{1F306}", "Cityscape at Dusk"),
@@ -2026,9 +2540,10 @@ const weather = [
     e("\u{1F32B}\u{FE0F}", "Fog"),
     e("\u{1F301}", "Foggy"),
     e("\u{1F308}", "Rainbow"),
-    e("\u{1F321}\u{FE0F}", "Thermometer"),
-];
-const astro = [
+    e("\u{1F321}\u{FE0F}", "Thermometer"));
+
+const astro = g(
+    "Astronomy", "Astronomy",
     e("\u{1F30C}", "Milky Way"),
     e("\u{1F30D}", "Globe Showing Europe-Africa"),
     e("\u{1F30E}", "Globe Showing Americas"),
@@ -2051,9 +2566,10 @@ const astro = [
     e("\u{1F31F}", "Glowing Star"),
     e("\u{1F320}", "Shooting Star"),
     e("\u{2604}\u{FE0F}", "Comet"),
-    e("\u{1FA90}", "Ringed Planet"),
-];
-const finance = [
+    e("\u{1FA90}", "Ringed Planet"));
+
+const finance = g(
+    "Finance", "Finance",
     e("\u{1F4B0}", "Money Bag"),
     e("\u{1F4B1}", "Currency Exchange"),
     e("\u{1F4B2}", "Heavy Dollar Sign"),
@@ -2064,16 +2580,17 @@ const finance = [
     e("\u{1F4B7}", "Pound Banknote"),
     e("\u{1F4B8}", "Money with Wings"),
     e("\u{1F4B9}", "Chart Increasing with Yen"),
-    e("\u{1FA99}", "Coin"),
-];
-const writing = [
+    e("\u{1FA99}", "Coin"));
+
+const writing = g(
+    "Writing", "Writing",
     e("\u{1F58A}\u{FE0F}", "Pen"),
     e("\u{1F58B}\u{FE0F}", "Fountain Pen"),
     e("\u{1F58C}\u{FE0F}", "Paintbrush"),
     e("\u{1F58D}\u{FE0F}", "Crayon"),
     e("\u{270F}\u{FE0F}", "Pencil"),
-    e("\u{2712}\u{FE0F}", "Black Nib"),
-];
+    e("\u{2712}\u{FE0F}", "Black Nib"));
+
 const droplet = e("\u{1F4A7}", "Droplet");
 const dropOfBlood = e("\u{1FA78}", "Drop of Blood");
 const adhesiveBandage = e("\u{1FA79}", "Adhesive Bandage");
@@ -2121,6 +2638,7 @@ const television = e("\u{1F4FA}", "Television");
 const radio = e("\u{1F4FB}", "Radio");
 const videocassette = e("\u{1F4FC}", "Videocassette");
 const filmProjector = e("\u{1F4FD}\u{FE0F}", "Film Projector");
+const portableStereo = e("\u{1F4FE}\u{FE0F}", "Portable Stereo");
 const dimButton = e("\u{1F505}", "Dim Button");
 const brightButton = e("\u{1F506}", "Bright Button");
 const mutedSpeaker = e("\u{1F507}", "Muted Speaker");
@@ -2145,9 +2663,39 @@ const desktopComputer = e("\u{1F5A5}\u{FE0F}", "Desktop Computer");
 const printer = e("\u{1F5A8}\u{FE0F}", "Printer");
 const computerMouse = e("\u{1F5B1}\u{FE0F}", "Computer Mouse");
 const trackball = e("\u{1F5B2}\u{FE0F}", "Trackball");
+const blackFolder = e("\u{1F5BF}", "Black Folder");
+const folder = e("\u{1F5C0}", "Folder");
+const openFolder = e("\u{1F5C1}", "Open Folder");
+const cardIndexDividers = e("\u{1F5C2}", "Card Index Dividers");
+const cardFileBox = e("\u{1F5C3}", "Card File Box");
+const fileCabinet = e("\u{1F5C4}", "File Cabinet");
+const emptyNote = e("\u{1F5C5}", "Empty Note");
+const emptyNotePage = e("\u{1F5C6}", "Empty Note Page");
+const emptyNotePad = e("\u{1F5C7}", "Empty Note Pad");
+const note = e("\u{1F5C8}", "Note");
+const notePage = e("\u{1F5C9}", "Note Page");
+const notePad = e("\u{1F5CA}", "Note Pad");
+const emptyDocument = e("\u{1F5CB}", "Empty Document");
+const emptyPage = e("\u{1F5CC}", "Empty Page");
+const emptyPages = e("\u{1F5CD}", "Empty Pages");
+const document$1 = e("\u{1F5CE}", "Document");
+const page = e("\u{1F5CF}", "Page");
+const pages = e("\u{1F5D0}", "Pages");
+const wastebasket = e("\u{1F5D1}", "Wastebasket");
+const spiralNotePad = e("\u{1F5D2}", "Spiral Note Pad");
+const spiralCalendar = e("\u{1F5D3}", "Spiral Calendar");
+const desktopWindow = e("\u{1F5D4}", "Desktop Window");
+const minimize = e("\u{1F5D5}", "Minimize");
+const maximize = e("\u{1F5D6}", "Maximize");
+const overlap = e("\u{1F5D7}", "Overlap");
+const reload = e("\u{1F5D8}", "Reload");
+const close = e("\u{1F5D9}", "Close");
+const increaseFontSize = e("\u{1F5DA}", "Increase Font Size");
+const decreaseFontSize = e("\u{1F5DB}", "Decrease Font Size");
 const clamp$1 = e("\u{1F5DC}", "Compression");
 const oldKey = e("\u{1F5DD}", "Old Key");
-const tech = [
+const tech = g(
+    "Technology", "Technology",
     joystick,
     videoGame,
     lightBulb,
@@ -2202,9 +2750,10 @@ const tech = [
     speakerMediumVolume,
     speakerHighVolume,
     battery,
-    electricPlug,
-];
-const mail = [
+    electricPlug);
+
+const mail = g(
+    "Mail", "Mail",
     e("\u{1F4E4}", "Outbox Tray"),
     e("\u{1F4E5}", "Inbox Tray"),
     e("\u{1F4E6}", "Package"),
@@ -2216,9 +2765,10 @@ const mail = [
     e("\u{1F4EC}", "Open Mailbox with Raised Flag"),
     e("\u{1F4ED}", "Open Mailbox with Lowered Flag"),
     e("\u{1F4EE}", "Postbox"),
-    e("\u{1F4EF}", "Postal Horn"),
-];
-const celebration = [
+    e("\u{1F4EF}", "Postal Horn"));
+
+const celebration = g(
+    "Celebration", "Celebration",
     e("\u{1FA85}", "Piñata"),
     e("\u{1F380}", "Ribbon"),
     e("\u{1F381}", "Wrapped Gift"),
@@ -2242,10 +2792,10 @@ const celebration = [
     graduationCap,
     e("\u{1F9E7}", "Red Envelope"),
     e("\u{1F3EE}", "Red Paper Lantern"),
-    e("\u{1F396}\u{FE0F}", "Military Medal"),
-];
+    e("\u{1F396}\u{FE0F}", "Military Medal"));
 
-const tools = [
+const tools = g(
+    "Tools", "Tools",
     e("\u{1F3A3}", "Fishing Pole"),
     e("\u{1F526}", "Flashlight"),
     wrench,
@@ -2265,9 +2815,10 @@ const tools = [
     e("\u{1FA9A}", "Carpentry Saw"),
     e("\u{1FA9B}", "Screwdriver"),
     e("\u{1FA9C}", "Ladder"),
-    e("\u{1FA9D}", "Hook"),
-];
-const office = [
+    e("\u{1FA9D}", "Hook"));
+
+const office = g(
+    "Office", "Office",
     e("\u{1F4C1}", "File Folder"),
     e("\u{1F4C2}", "Open File Folder"),
     e("\u{1F4C3}", "Page with Curl"),
@@ -2275,12 +2826,12 @@ const office = [
     e("\u{1F4C5}", "Calendar"),
     e("\u{1F4C6}", "Tear-Off Calendar"),
     e("\u{1F4C7}", "Card Index"),
-    e("\u{1F5C2}\u{FE0F}", "Card Index Dividers"),
-    e("\u{1F5C3}\u{FE0F}", "Card File Box"),
-    e("\u{1F5C4}\u{FE0F}", "File Cabinet"),
-    e("\u{1F5D1}\u{FE0F}", "Wastebasket"),
-    e("\u{1F5D2}\u{FE0F}", "Spiral Notepad"),
-    e("\u{1F5D3}\u{FE0F}", "Spiral Calendar"),
+    cardIndexDividers,
+    cardFileBox,
+    fileCabinet,
+    wastebasket,
+    spiralNotePad,
+    spiralCalendar,
     e("\u{1F4C8}", "Chart Increasing"),
     e("\u{1F4C9}", "Chart Decreasing"),
     e("\u{1F4CA}", "Bar Chart"),
@@ -2305,9 +2856,10 @@ const office = [
     e("\u{1F4DC}", "Scroll"),
     e("\u{1F4DD}", "Memo"),
     e("\u{2702}\u{FE0F}", "Scissors"),
-    e("\u{2709}\u{FE0F}", "Envelope"),
-];
-const signs = [
+    e("\u{2709}\u{FE0F}", "Envelope"));
+
+const signs = g(
+    "Signs", "Signs",
     e("\u{1F3A6}", "Cinema"),
     noMobilePhone,
     e("\u{1F51E}", "No One Under Eighteen"),
@@ -2338,11 +2890,12 @@ const signs = [
     e("\u{26A1}", "High Voltage"),
     e("\u{26D4}", "No Entry"),
     e("\u{267B}\u{FE0F}", "Recycling Symbol"),
-    e("\u{2640}\u{FE0F}", "Female Sign"),
-    e("\u{2642}\u{FE0F}", "Male Sign"),
-    e("\u{26A7}\u{FE0F}", "Transgender Symbol"),
-];
-const religion = [
+    female,
+    male,
+    e("\u{26A7}\u{FE0F}", "Transgender Symbol"));
+
+const religion = g(
+    "Religion", "Religion",
     e("\u{1F52F}", "Dotted Six-Pointed Star"),
     e("\u{2721}\u{FE0F}", "Star of David"),
     e("\u{1F549}\u{FE0F}", "Om"),
@@ -2363,10 +2916,11 @@ const religion = [
     e("\u{26E9}\u{FE0F}", "Shinto Shrine"),
     e("\u{26EA}", "Church"),
     e("\u{2734}\u{FE0F}", "Eight-Pointed Star"),
-    e("\u{1F4FF}", "Prayer Beads"),
-];
+    e("\u{1F4FF}", "Prayer Beads"));
+
 const door = e("\u{1F6AA}", "Door");
-const household = [
+const household = g(
+    "Household", "Household",
     e("\u{1F484}", "Lipstick"),
     e("\u{1F48D}", "Ring"),
     e("\u{1F48E}", "Gem Stone"),
@@ -2409,9 +2963,10 @@ const household = [
     e("\u{1FAA5}", "Toothbrush"),
     e("\u{1FAA6}", "Headstone"),
     e("\u{1FAA7}", "Placard"),
-    e("\u{1F397}\u{FE0F}", "Reminder Ribbon"),
-];
-const activities = [
+    e("\u{1F397}\u{FE0F}", "Reminder Ribbon"));
+
+const activities = g(
+    "Activities", "Activities",
     e("\u{1F39E}\u{FE0F}", "Film Frames"),
     e("\u{1F39F}\u{FE0F}", "Admission Tickets"),
     e("\u{1F3A0}", "Carousel Horse"),
@@ -2421,9 +2976,10 @@ const activities = [
     e("\u{1F3AA}", "Circus Tent"),
     e("\u{1F3AB}", "Ticket"),
     e("\u{1F3AC}", "Clapper Board"),
-    e("\u{1F3AD}", "Performing Arts"),
-];
-const travel = [
+    e("\u{1F3AD}", "Performing Arts"));
+
+const travel = g(
+    "Travel", "Travel",
     e("\u{1F3F7}\u{FE0F}", "Label"),
     e("\u{1F30B}", "Volcano"),
     e("\u{1F3D4}\u{FE0F}", "Snow-Capped Mountain"),
@@ -2442,9 +2998,10 @@ const travel = [
     e("\u{1F9F3}", "Luggage"),
     e("\u{26F3}", "Flag in Hole"),
     e("\u{26FA}", "Tent"),
-    e("\u{2668}\u{FE0F}", "Hot Springs"),
-];
-const medieval = [
+    e("\u{2668}\u{FE0F}", "Hot Springs"));
+
+const medieval = g(
+    "Medieval", "Medieval",
     e("\u{1F3F0}", "Castle"),
     e("\u{1F3F9}", "Bow and Arrow"),
     crown,
@@ -2455,10 +3012,53 @@ const medieval = [
     e("\u{1FA84}", "Magic Wand"),
     e("\u{2694}\u{FE0F}", "Crossed Swords"),
     e("\u{269C}\u{FE0F}", "Fleur-de-lis"),
-    e("\u{1FA96}", "Military Helmet")
-];
+    e("\u{1FA96}", "Military Helmet"));
+
+const doubleExclamationMark = e("\u{203C}\u{FE0F}", "Double Exclamation Mark");
+const interrobang = e("\u{2049}\u{FE0F}", "Exclamation Question Mark");
+const information = e("\u{2139}\u{FE0F}", "Information");
+const circledM = e("\u{24C2}\u{FE0F}", "Circled M");
+const checkMarkButton = e("\u{2705}", "Check Mark Button");
+const checkMark = e("\u{2714}\u{FE0F}", "Check Mark");
+const eightSpokedAsterisk = e("\u{2733}\u{FE0F}", "Eight-Spoked Asterisk");
+const crossMark = e("\u{274C}", "Cross Mark");
+const crossMarkButton = e("\u{274E}", "Cross Mark Button");
 const questionMark = e("\u{2753}", "Question Mark");
+const whiteQuestionMark = e("\u{2754}", "White Question Mark");
+const whiteExclamationMark = e("\u{2755}", "White Exclamation Mark");
+const exclamationMark = e("\u{2757}", "Exclamation Mark");
+const curlyLoop = e("\u{27B0}", "Curly Loop");
+const doubleCurlyLoop = e("\u{27BF}", "Double Curly Loop");
+const wavyDash = e("\u{3030}\u{FE0F}", "Wavy Dash");
+const partAlternationMark = e("\u{303D}\u{FE0F}", "Part Alternation Mark");
+const tradeMark = e("\u{2122}\u{FE0F}", "Trade Mark");
+const copyright = e("\u{A9}\u{FE0F}", "Copyright");
+const registered = e("\u{AE}\u{FE0F}", "Registered");
 const squareFourCourners = e("\u{26F6}\u{FE0F}", "Square: Four Corners");
+
+const marks = gg(
+    "Marks", "Marks", {
+    doubleExclamationMark,
+    interrobang,
+    information,
+    circledM,
+    checkMarkButton,
+    checkMark,
+    eightSpokedAsterisk,
+    crossMark,
+    crossMarkButton,
+    questionMark,
+    whiteQuestionMark,
+    whiteExclamationMark,
+    exclamationMark,
+    curlyLoop,
+    doubleCurlyLoop,
+    wavyDash,
+    partAlternationMark,
+    tradeMark,
+    copyright,
+    registered,
+});
 
 const dice1 = e("\u2680", "Dice: Side 1");
 const dice2 = e("\u2681", "Dice: Side 2");
@@ -2466,7 +3066,15 @@ const dice3 = e("\u2682", "Dice: Side 3");
 const dice4 = e("\u2683", "Dice: Side 4");
 const dice5 = e("\u2684", "Dice: Side 5");
 const dice6 = e("\u2685", "Dice: Side 6");
-const dice = g(e(dice3.value, "Dice"), dice1, dice2, dice3, dice4, dice5, dice6);
+const dice = gg(
+    "Dice", "Dice", {
+    dice1,
+    dice2,
+    dice3,
+    dice4,
+    dice5,
+    dice6
+});
 
 const whiteChessKing = e("\u{2654}", "White Chess King");
 const whiteChessQueen = e("\u{2655}", "White Chess Queen");
@@ -2474,14 +3082,9 @@ const whiteChessRook = e("\u{2656}", "White Chess Rook");
 const whiteChessBishop = e("\u{2657}", "White Chess Bishop");
 const whiteChessKnight = e("\u{2658}", "White Chess Knight");
 const whiteChessPawn = e("\u{2659}", "White Chess Pawn");
-const whiteChessPieces = Object.assign(g(
-    e(whiteChessKing.value + whiteChessQueen.value + whiteChessRook.value + whiteChessBishop.value + whiteChessKnight.value + whiteChessPawn.value, "White Chess Pieces"),
-    whiteChessKing,
-    whiteChessQueen,
-    whiteChessRook,
-    whiteChessBishop,
-    whiteChessKnight,
-    whiteChessPawn), {
+const whiteChessPieces = gg(
+    whiteChessKing.value + whiteChessQueen.value + whiteChessRook.value + whiteChessBishop.value + whiteChessKnight.value + whiteChessPawn.value,
+    "White Chess Pieces", {
     width: "auto",
     king: whiteChessKing,
     queen: whiteChessQueen,
@@ -2497,14 +3100,9 @@ const blackChessRook = e("\u{265C}", "Black Chess Rook");
 const blackChessBishop = e("\u{265D}", "Black Chess Bishop");
 const blackChessKnight = e("\u{265E}", "Black Chess Knight");
 const blackChessPawn = e("\u{265F}", "Black Chess Pawn");
-const blackChessPieces = Object.assign(g(
-    e(blackChessKing.value + blackChessQueen.value + blackChessRook.value + blackChessBishop.value + blackChessKnight.value + blackChessPawn.value, "Black Chess Pieces"),
-    blackChessKing,
-    blackChessQueen,
-    blackChessRook,
-    blackChessBishop,
-    blackChessKnight,
-    blackChessPawn), {
+const blackChessPieces = gg(
+    blackChessKing.value + blackChessQueen.value + blackChessRook.value + blackChessBishop.value + blackChessKnight.value + blackChessPawn.value,
+    "Black Chess Pieces", {
     width: "auto",
     king: blackChessKing,
     queen: blackChessQueen,
@@ -2513,64 +3111,50 @@ const blackChessPieces = Object.assign(g(
     knight: blackChessKnight,
     pawn: blackChessPawn
 });
-const chessPawns = Object.assign(g(
-    e(whiteChessPawn.value + blackChessPawn.value, "Chess Pawns"),
-    whiteChessPawn,
-    blackChessPawn), {
+const chessPawns = gg(
+    whiteChessPawn.value + blackChessPawn.value,
+    "Chess Pawns", {
     width: "auto",
     white: whiteChessPawn,
     black: blackChessPawn
 });
-const chessRooks = Object.assign(g(
-    e(whiteChessRook.value + blackChessRook.value, "Chess Rooks"),
-    whiteChessRook,
-    blackChessRook), {
+const chessRooks = gg(
+    whiteChessRook.value + blackChessRook.value,
+    "Chess Rooks", {
     width: "auto",
     white: whiteChessRook,
     black: blackChessRook
 });
-const chessBishops = Object.assign(g(
-    e(whiteChessBishop.value + blackChessBishop.value, "Chess Bishops"),
-    whiteChessBishop,
-    blackChessBishop), {
+const chessBishops = gg(
+    whiteChessBishop.value + blackChessBishop.value,
+    "Chess Bishops", {
     width: "auto",
     white: whiteChessBishop,
     black: blackChessBishop
 });
-const chessKnights = Object.assign(g(
-    e(whiteChessKnight.value + blackChessKnight.value, "Chess Knights"),
-    whiteChessKnight,
-    blackChessKnight), {
+const chessKnights = gg(
+    whiteChessKnight.value + blackChessKnight.value,
+    "Chess Knights", {
     width: "auto",
     white: whiteChessKnight,
     black: blackChessKnight
 });
-const chessQueens = Object.assign(g(
-    e(whiteChessQueen.value + blackChessQueen.value, "Chess Queens"),
-    whiteChessQueen,
-    blackChessQueen), {
+const chessQueens = gg(
+    whiteChessQueen.value + blackChessQueen.value,
+    "Chess Queens", {
     width: "auto",
     white: whiteChessQueen,
     black: blackChessQueen
 });
-const chessKings = Object.assign(g(
-    e(whiteChessKing.value + blackChessKing.value, "Chess Kings"),
-    whiteChessKing,
-    blackChessKing), {
+const chessKings = gg(
+    whiteChessKing.value + blackChessKing.value,
+    "Chess Kings", {
     width: "auto",
     white: whiteChessKing,
     black: blackChessKing
 });
-const chess = Object.assign(g(
-    e(chessKings.value, "Chess Pieces"),
-    whiteChessPieces,
-    blackChessPieces,
-    chessPawns,
-    chessRooks,
-    chessBishops,
-    chessKnights,
-    chessQueens,
-    chessKings), {
+const chess = gg(
+    "Chess Pieces", "Chess Pieces", {
     width: "auto",
     white: whiteChessPieces,
     black: blackChessPieces,
@@ -2582,7 +3166,8 @@ const chess = Object.assign(g(
     kings: chessKings
 });
 
-const science = [
+const science = gg(
+    "Science", "Science", {
     droplet,
     dropOfBlood,
     adhesiveBandage,
@@ -2603,9 +3188,10 @@ const science = [
     atomSymbol,
     magnifyingGlassTiltedLeft,
     magnifyingGlassTiltedRight,
-];
+});
 
-const allIcons = {
+const allIcons = gg(
+    "All Icons", "All Icons", {
     faces,
     love,
     cartoon,
@@ -2620,26 +3206,20 @@ const allIcons = {
     animals,
     plants,
     food,
-    sweets,
-    drinks,
-    utensils,
     flags,
     vehicles,
-    bloodTypes,
-    japanese,
-    time,
     clocks,
     arrows,
     shapes,
-    mediaPlayer,
+    buttons,
     zodiac,
     chess,
+    dice,
     math,
     games,
     sportsEquipment,
     clothing,
     town,
-    buttons,
     music,
     weather,
     astro,
@@ -2657,86 +3237,177 @@ const allIcons = {
     activities,
     travel,
     medieval
-};
+});
 
+/**
+ * A setter functor for HTML attributes.
+ **/
 class HtmlAttr {
-    constructor(key, tags, value) {
-        tags = tags.map(t => t.toLocaleUpperCase());
-
-        this.apply = (elem) => {
-            const isValid = tags.length === 0
-                || tags.indexOf(elem.tagName) > -1;
-
-            if (!isValid) {
-                console.warn(`Element ${elem.tagName} does not support Attribute ${key}`);
-            }
-            else if (key === "style") {
-                Object.assign(elem[key], value);
-            }
-            else if (!(typeof value === "boolean" || value instanceof Boolean)
-                || key === "muted") {
-                elem[key] = value;
-            }
-            else if (value) {
-                elem.setAttribute(key, "");
-            }
-            else {
-                elem.removeAttribute(key);
-            }
-        };
-
+    /**
+     * Creates a new setter functor for HTML Attributes
+     * @param {string} key - the attribute name.
+     * @param {any} value - the value to set for the attribute.
+     * @param {...string} tags - the HTML tags that support this attribute.
+     */
+    constructor(key, value, ...tags) {
+        this.key = key;
+        this.value = value;
+        this.tags = tags.map(t => t.toLocaleUpperCase());
         Object.freeze(this);
     }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        const isValid = this.tags.length === 0
+            || this.tags.indexOf(elem.tagName) > -1;
+
+        if (!isValid) {
+            console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
+        }
+        else if (this.key === "style") {
+            Object.assign(elem[this.key], this.value);
+        }
+        else if (!(typeof value === "boolean" || value instanceof Boolean)
+            || this.key === "muted") {
+            elem[this.key] = this.value;
+        }
+        else if (this.value) {
+            elem.setAttribute(this.key, "");
+        }
+        else {
+            elem.removeAttribute(this.key);
+        }
+    }
 }
-// Alternative text in case an image can't be displayed.
-function alt(value) { return new HtmlAttr("alt", ["applet", "area", "img", "input"], value); }
-// The audio or video should play as soon as possible.
-function autoPlay(value) { return new HtmlAttr("autoplay", ["audio", "video"], value); }
-// Often used with CSS to style elements with common properties.
-function className(value) { return new HtmlAttr("className", [], value); }
-// Indicates whether the browser should show playback controls to the user.
-function controls(value) { return new HtmlAttr("controls", ["audio", "video"], value); }
-// Describes elements which belongs to this one.
-function htmlFor(value) { return new HtmlAttr("htmlFor", ["label", "output"], value); }
-// The URL of a linked resource.
-function href(value) { return new HtmlAttr("href", ["a", "area", "base", "link"], value); }
-// Often used with CSS to style a specific element. The value of this attribute must be unique.
-function id(value) { return new HtmlAttr("id", [], value); }
-// Indicates the maximum value allowed.
-function max(value) { return new HtmlAttr("max", ["input", "meter", "progress"], value); }
-// Indicates the minimum value allowed.
-function min(value) { return new HtmlAttr("min", ["input", "meter"], value); }
-// Indicates whether the audio will be initially silenced on page load.
-function muted(value) { return new HtmlAttr("muted", ["audio", "video"], value); }
-// Provides a hint to the user of what can be entered in the field.
-function placeHolder(value) { return new HtmlAttr("placeholder", ["input", "textarea"], value); }
-// Defines the number of rows in a text area.
-function role(value) { return new HtmlAttr("role", [], value); }
-// The URL of the embeddable content.
-function src(value) { return new HtmlAttr("src", ["audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"], value); }
-// A MediaStream object to use as a source for an HTML video or audio element
-function srcObject(value) { return new HtmlAttr("srcObject", ["audio", "video"], value); }
-// Defines CSS styles which will override styles previously set.
-function style(value) { return new HtmlAttr("style", [], value); }
-// ???
-function step(value) { return new HtmlAttr("step", ["input"], value); }
-// Text to be displayed in a tooltip when hovering over the element.
-function title(value) { return new HtmlAttr("title", [], value); }
-// Defines the type of the element.
-function type(value) { return new HtmlAttr("type", ["button", "input", "command", "embed", "object", "script", "source", "style", "menu"], value); }
-// Defines a default value which will be displayed in the element on page load.
-function value(value) { return new HtmlAttr("value", ["button", "data", "input", "li", "meter", "option", "progress", "param"], value); }
+
+/**
+ * The alt attribute, Alternative text in case an image can't be displayed.
+ * @param {any} value - the value to set on the attribute.
+ **/
+function alt(value) { return new HtmlAttr("alt", value, "applet", "area", "img", "input"); }
+
+/**
+ * The autoplay attribute, The audio or video should play as soon as possible.
+ * @param {any} value - the value to set on the attribute.
+ **/
+function autoPlay(value) { return new HtmlAttr("autoplay", value, "audio", "video"); }
+
+/**
+ * The className attribute, Often used with CSS to style elements with common properties.
+ * @param {any} value - the value to set on the attribute.
+ **/
+function className(value) { return new HtmlAttr("className", value); }
+
+/**
+ * The controls attribute, Indicates whether the browser should show playback controls to the user.
+ * @param {any} value - the value to set on the attribute.
+ **/
+function controls(value) { return new HtmlAttr("controls", value, "audio", "video"); }
+
+/**
+ * The htmlFor attribute, Describes elements which belongs to this one.
+ * @param {any} value - the value to set on the attribute.
+ **/
+function htmlFor(value) { return new HtmlAttr("htmlFor", value, "label", "output"); }
+
+/**
+ * The href attribute, The URL of a linked resource.
+ * @param {any} value - the value to set on the attribute.
+ **/
+function href(value) { return new HtmlAttr("href", value, "a", "area", "base", "link"); }
+
+/**
+ * The id attribute, Often used with CSS to style a specific element. The value of this attribute must be unique.
+ * @param {any} value - the value to set on the attribute.
+ **/
+function id(value) { return new HtmlAttr("id", value); }
+
+/**
+ * The max attribute, Indicates the maximum value allowed.
+ * @param {any} value - the value to set on the attribute.
+ **/
+function max(value) { return new HtmlAttr("max", value, "input", "meter", "progress"); }
+
+/**
+ * The min attribute, Indicates the minimum value allowed.
+ * @param {any} value - the value to set on the attribute.
+ **/
+function min(value) { return new HtmlAttr("min", value, "input", "meter"); }
+
+/**
+ * The muted attribute, Indicates whether the audio will be initially silenced on page load.
+ * @param {any} value - the value to set on the attribute.
+ **/
+function muted(value) { return new HtmlAttr("muted", value, "audio", "video"); }
+
+/**
+ * The placeholder attribute, Provides a hint to the user of what can be entered in the field.
+ * @param {any} value - the value to set on the attribute.
+ **/
+function placeHolder(value) { return new HtmlAttr("placeholder", value, "input", "textarea"); }
+
+/**
+ * The role attribute, Defines the number of rows in a text area.
+ * @param {any} value - the value to set on the attribute.
+ **/
+function role(value) { return new HtmlAttr("role", value); }
+
+/**
+ * The src attribute, The URL of the embeddable content.
+ * @param {any} value - the value to set on the attribute.
+ **/
+function src(value) { return new HtmlAttr("src", value, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
+
+/**
+ * The srcObject attribute, A MediaStream object to use as a source for an HTML video or audio element
+ * @param {any} value - the value to set on the attribute.
+ **/
+function srcObject(value) { return new HtmlAttr("srcObject", value, "audio", "video"); }
+
+/**
+ * The style attribute, Defines CSS styles which will override styles previously set.
+ * @param {any} value - the value to set on the attribute.
+ **/
+function style(value) { return new HtmlAttr("style", value); }
+
+/**
+ * The step attribute
+ * @param {any} value - the value to set on the attribute.
+ **/
+function step(value) { return new HtmlAttr("step", value, "input"); }
+
+/**
+ * The title attribute, Text to be displayed in a tooltip when hovering over the element.
+ * @param {any} value - the value to set on the attribute.
+ **/
+function title(value) { return new HtmlAttr("title", value); }
+
+/**
+ * The type attribute, Defines the type of the element.
+ * @param {any} value - the value to set on the attribute.
+ **/
+function type(value) { return new HtmlAttr("type", value, "button", "input", "command", "embed", "object", "script", "source", "style", "menu"); }
+
+/**
+ * The value attribute, Defines a default value which will be displayed in the element on page load.
+ * @param {any} value - the value to set on the attribute.
+ **/
+function value(value) { return new HtmlAttr("value", value, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
 
 // A selection of fonts for preferred monospace rendering.
 const monospaceFamily = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
 const monospaceFont = style({ fontFamily: monospaceFamily });
 
 /**
- * 
- * @param {number} y
+ * Constructs a CSS grid row definition
+ * @param {number} y - the starting vertical cell for the element.
+ * @param {number=null} h - the number of cells tall the element should cover.
  */
-function row(y, h) {
-    if (h === undefined) {
+function row(y, h = null) {
+    if (h === null) {
         h = 1;
     }
 
@@ -2747,16 +3418,18 @@ function row(y, h) {
 }
 
 /**
- * 
- * @param {number} x
- * @param {number} y
+ * Constructs a CSS grid area definition.
+ * @param {number} x - the starting horizontal cell for the element.
+ * @param {number} y - the starting vertical cell for the element.
+ * @param {number=null} w - the number of cells wide the element should cover.
+ * @param {number=null} h - the number of cells tall the element should cover.
  */
-function grid(x, y, w, h) {
-    if (w === undefined) {
+function grid(x, y, w = null, h = null) {
+    if (w === null) {
         w = 1;
     }
 
-    if (h === undefined) {
+    if (h === null) {
         h = 1;
     }
 
@@ -2768,33 +3441,98 @@ function grid(x, y, w, h) {
     });
 }
 
+/**
+ * A setter functor for HTML element events.
+ **/
 class HtmlEvt {
+    /**
+     * Creates a new setter functor for an HTML element event.
+     * @param {string} name - the name of the event to attach to.
+     * @param {Function} callback - the callback function to use with the event handler.
+     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+     */
     constructor(name, callback, opts) {
         if (!isFunction(callback)) {
             throw new Error("A function instance is required for this parameter");
         }
 
-        this.add = (elem) => {
-            elem.addEventListener(name, callback, opts);
-        };
-
-        this.remove = (elem) => {
-            elem.removeEventListener(name, callback);
-        };
-
+        this.name = name;
+        this.callback = callback;
+        this.opts = opts;
         Object.freeze(this);
     }
-}
-function onClick(callback) { return new HtmlEvt("click", callback); }
-function onInput(callback) { return new HtmlEvt("input", callback); }
-function onKeyUp(callback) { return new HtmlEvt("keyup", callback); }
-function onMouseOut(callback) { return new HtmlEvt("mouseout", callback); }
-function onMouseOver(callback) { return new HtmlEvt("mouseover", callback); }
 
+    /**
+     * Add the encapsulate callback as an event listener to the give HTMLElement
+     * @param {HTMLElement} elem
+     */
+    add(elem) {
+        elem.addEventListener(this.name, this.callback, this.opts);
+    }
+
+    /**
+     * Remove the encapsulate callback as an event listener from the give HTMLElement
+     * @param {HTMLElement} elem
+     */
+    remove(elem) {
+        elem.removeEventListener(this.name, this.callback);
+    }
+}
+
+/**
+ * The click event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onClick(callback, opts) { return new HtmlEvt("click", callback, opts); }
+
+/**
+ * The input event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onInput(callback, opts) { return new HtmlEvt("input", callback, opts); }
+
+/**
+ * The keyup event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onKeyUp(callback, opts) { return new HtmlEvt("keyup", callback, opts); }
+
+/**
+ * The mouseout event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onMouseOut(callback, opts) { return new HtmlEvt("mouseout", callback, opts); }
+
+/**
+ * The mouseover event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onMouseOver(callback, opts) { return new HtmlEvt("mouseover", callback, opts); }
+
+/**
+ * @typedef {(Element|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
+ **/
+
+/**
+ * Creates an HTML element for a given tag name.
+ * 
+ * Boolean attributes that you want to default to true can be passed
+ * as just the attribute creating function, 
+ *   e.g. `Audio(autoPlay)` vs `Audio(autoPlay(true))`
+ * @param {string} name - the name of the tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLElement}
+ */
 function tag(name, ...rest) {
     const elem = document.createElement(name);
 
     for (let i = 0; i < rest.length; ++i) {
+        // 
         if (isFunction(rest[i])) {
             rest[i] = rest[i](true);
         }
@@ -2829,26 +3567,145 @@ function tag(name, ...rest) {
     return elem;
 }
 
+/** @typedef {import("./tag.js").TagChild} TagChild **/
+
+/**
+ * A pseudo-element that is made out of other elements.
+ **/
 class HtmlCustomTag extends EventTarget {
+    /**
+     * Creates a new pseudo-element
+     * @param {string} tagName - the type of tag that will contain the elements in the custom tag.
+     * @param {...TagChild} rest - optional attributes, child elements, and text
+     */
     constructor(tagName, ...rest) {
         super();
         if (rest.length === 1
             && rest[0] instanceof Element) {
-            /** @type {Element} */
+            /** @type {HTMLElement} */
             this.element = rest[0];
         }
         else {
-            /** @type {Element} */
+            /** @type {HTMLElement} */
             this.element = tag(tagName, ...rest);
         }
     }
 
+    /**
+     * Gets the ID attribute of the container element.
+     * @type {string}
+     **/
     get id() {
         return this.element.id;
     }
+
+    /**
+     * Retrieves the desired element for attaching events.
+     * @returns {HTMLElement}
+     **/
+    get eventTarget() {
+        return this.element;
+    }
+
+    /**
+     * Determine if an event type should be forwarded to the container element.
+     * @param {string} name
+     * @returns {boolean}
+     */
+    isForwardedEvent(name) {
+        return true;
+    }
+
+    /**
+     * Adds an event listener to the container element.
+     * @param {string} name - the name of the event to attach to.
+     * @param {Function} callback - the callback function to use with the event handler.
+     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+     */
+    addEventListener(name, callback, opts) {
+        if (this.isForwardedEvent(name)) {
+            this.eventTarget.addEventListener(name, callback, opts);
+        }
+        else {
+            super.addEventListener(name, callback, opts);
+        }
+    }
+
+    /**
+     * Removes an event listener from the container element.
+     * @param {string} name - the name of the event to attach to.
+     * @param {Function} callback - the callback function to use with the event handler.
+     */
+    removeEventListener(name, callback) {
+        if (this.isForwardedEvent(name)) {
+            this.eventTarget.removeEventListener(name, callback);
+        }
+        else {
+            super.removeEventListener(name, callback);
+        }
+    }
+
+    async once(resolveEvt, rejectEvt, timeout) {
+        return await this.eventTarget.once(resolveEvt, rejectEvt, timeout);
+    }
+
+    /**
+     * Set whether or not the container element is visible.
+     * @param {boolean} v
+     */
+    setOpen(v) {
+        this.element.setOpen(v);
+    }
+
+    /**
+     * Makes the container element visible, if it is not already.
+     **/
+    show() {
+        this.setOpen(true);
+    }
+
+    /**
+     * Makes the container element not visible, if it is not already.
+     **/
+    hide() {
+        this.setOpen(false);
+    }
+
+    /**
+     * Gets the style attribute of the underlying select box.
+     * @type {ElementCSSInlineStyle}
+     */
+    get style() {
+        return this.element.style;
+    }
+
+    /**
+     * Moves cursor focus to the underyling element.
+     **/
+    focus() {
+        this.element.focus();
+    }
+
+    /**
+     * Removes cursor focus from the underlying element.
+     **/
+    blur() {
+        this.element.blur();
+    }
 }
 
+/**
+ * An input box that has a label attached to it.
+ **/
 class LabeledInputTag extends HtmlCustomTag {
+    /**
+     * Creates an input box that has a label attached to it.
+     * @param {string} id - the ID to use for the input box
+     * @param {string} inputType - the type to use for the input box (number, text, etc.)
+     * @param {string} labelText - the text to display in the label
+     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+     * @returns {LabeledInputTag}
+     */
     constructor(id, inputType, labelText, ...rest) {
         super("div");
 
@@ -2867,40 +3724,65 @@ class LabeledInputTag extends HtmlCustomTag {
         Object.seal(this);
     }
 
-    addEventListener(name, callback, opts) {
-        this.input.addEventListener(name, callback, opts);
+    /**
+     * Retrieves the desired element for attaching events.
+     * @returns {HTMLElement}
+     **/
+    get eventTarget() {
+        return this.input;
     }
 
-    removeEventListener(name, callback) {
-        this.input.removeEventListener(name, callback);
-    }
-
-    async once(resolveEvt, rejectEvt, timeout) {
-        return await this.input.once(resolveEvt, rejectEvt, timeout);
-    }
-
+    /**
+     * Gets the value attribute of the input element
+     * @type {string}
+     */
     get value() {
         return this.input.value;
     }
 
+    /**
+     * Sets the value attribute of the input element
+     * @param {string} v
+     */
     set value(v) {
         this.input.value = v;
     }
 
+    /**
+     * Gets whether or not the input element is checked, if it's a checkbox or radio button.
+     * @type {boolean}
+     */
     get checked() {
         return this.input.checked;
     }
 
+    /**
+     * Sets whether or not the input element is checked, if it's a checkbox or radio button.
+     * @param {boolean} v
+     */
     set checked(v) {
         this.input.checked = v;
     }
 
+    /**
+     * Sets whether or not the input element should be disabled.
+     * @param {boolean} value
+     */
     setLocked(value) {
         this.input.setLocked(value);
     }
 }
 
 class LabeledSelectBoxTag extends HtmlCustomTag {
+    /**
+     * Creates a select box that can bind to collections, with a label set on the side.
+     * @param {string} tagId - the ID to use for the select box.
+     * @param {any} labelText - the text to put in the label.
+     * @param {string} noSelectionText - the text to display when no items are available.
+     * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
+     * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
+     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+     */
     constructor(tagId, labelText, noSelectionText, makeID, makeLabel, ...rest) {
         super("div");
 
@@ -2908,6 +3790,7 @@ class LabeledSelectBoxTag extends HtmlCustomTag {
             htmlFor(tagId),
             labelText);
 
+        /** @type {SelectBox} */
         this.select = new SelectBox(noSelectionText, makeID, makeLabel, id(tagId), ...rest);
 
         this.element.append(
@@ -2917,62 +3800,123 @@ class LabeledSelectBoxTag extends HtmlCustomTag {
         Object.seal(this);
     }
 
+    /**
+     * Retrieves the desired element for attaching events.
+     * @returns {HTMLElement}
+     **/
+    get eventTarget() {
+        return this.select;
+    }
+
+    /**
+     * Gets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
+     * @type {boolean}
+     **/
     get emptySelectionEnabled() {
         return this.select.emptySelectionEnabled;
     }
 
+    /**
+     * Sets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
+     * @param {boolean} value
+     **/
     set emptySelectionEnabled(value) {
         this.select.emptySelectionEnabled = value;
     }
 
+    /**
+     * Gets the collection to which the select box was databound
+     **/
     get values() {
         return this.select.values;
     }
 
+    /**
+     * Sets the collection to which the select box will be databound
+     **/
     set values(values) {
         this.select.values = values;
     }
 
+    /**
+     * Returns the collection of HTMLOptionElements that are stored in the select box
+     * @type {HTMLOptionsCollection}
+     */
     get options() {
         return this.select.options;
     }
 
+    /**
+     * Gets the index of the item that is currently selected in the select box.
+     * The index is offset by -1 if the select box has `emptySelectionEnabled`
+     * set to true, so that the indices returned are always in range of the collection
+     * to which the select box was databound
+     * @type {number}
+     */
     get selectedIndex() {
         return this.select.selectedIndex;
     }
-
+    /**
+    * Sets the index of the item that should be selected in the select box.
+    * The index is offset by -1 if the select box has `emptySelectionEnabled`
+    * set to true, so that the indices returned are always in range of the collection
+    * to which the select box was databound
+    * @param {number} i
+    */
     set selectedIndex(i) {
         this.select.selectedIndex = i;
     }
 
+    /**
+     * Gets the item at `selectedIndex` in the collection to which the select box was databound
+     * @type {any}
+     */
     get selectedValue() {
         return this.select.selectedValue;
     }
-
+    /**
+    * Gets the index of the given item in the select box's databound collection, then
+    * sets that index as the `selectedIndex`.
+     * @param {any) value
+    */
     set selectedValue(v) {
         this.select.selectedValue = v;
     }
 
+    /**
+     * Returns the index of the given item in the select box's databound collection.
+     * @param {any} value
+     * @returns {number}
+     */
     indexOf(value) {
         return this.select.indexOf(value);
     }
 
+    /**
+     * Checks to see if the value exists in the databound collection.
+     * @param {any} value
+     * @returns {boolean}
+     */
     contains(value) {
         return this.select.contains(value);
-    }
-
-    addEventListener(name, callback, opts) {
-        this.select.addEventListener(name, callback, opts);
-    }
-
-    removeEventListener(name, callback) {
-        this.select.removeEventListener(name, callback);
     }
 }
 
 const selectEvt = new Event("select");
 
+/**
+ * A panel and a button that opens it.
+ **/
 class OptionPanelTag extends HtmlCustomTag {
+
+    /**
+     * Creates a new panel that can be opened with a button click, 
+     * living in a collection of panels that will be hidden when
+     * this panel is opened.
+     * @param {string} panelID - the ID to use for the panel element.
+     * @param {string} name - the text to use on the button.
+     * @param {...any} rest
+     */
     constructor(panelID, name, ...rest) {
         super("div",
             id(panelID),
@@ -2985,26 +3929,72 @@ class OptionPanelTag extends HtmlCustomTag {
             name);
     }
 
+    isForwardedEvent(name) {
+        return name !== "select";
+    }
+
+    /**
+     * Gets whether or not the panel is visible
+     * @type {boolean}
+     **/
     get visible() {
         return this.element.style.display !== null;
     }
 
+    /**
+     * Sets whether or not the panel is visible
+     * @param {boolean} v
+     **/
     set visible(v) {
         this.element.setOpen(v);
-        //this.button.setLocked(v);
         style({
+            borderStyle: "solid",
+            borderSize: "2px",
             backgroundColor: v ? "#ddd" : "transparent",
             borderTop: v ? "" : "none",
             borderRight: v ? "" : "none",
-            borderBottom: v ? "none" : "",
+            borderBottomColor: v ? "#ddd" : "",
             borderLeft: v ? "" : "none",
         }).apply(this.button);
     }
 }
 
-const _values = new Map();
+/** @type {WeakMap<SelectBoxTag, any[]>} */
+const values = new WeakMap();
 
+function render(self) {
+    clear(self.element);
+    if (self.values.length === 0) {
+        self.element.append(Option(self.noSelectionText));
+        self.element.lock();
+    }
+    else {
+        if (self.emptySelectionEnabled) {
+            self.element.append(Option(self.noSelectionText));
+        }
+        for (let v of self.values) {
+            self.element.append(
+                Option(
+                    value(self.makeID(v)),
+                    self.makeLabel(v)));
+        }
+
+        self.element.unlock();
+    }
+}
+
+/**
+ * A select box that can be databound to collections.
+ **/
 class SelectBoxTag extends HtmlCustomTag {
+
+    /**
+     * Creates a select box that can bind to collections
+     * @param {string} noSelectionText - the text to display when no items are available.
+     * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
+     * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
+     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+     */
     constructor(noSelectionText, makeID, makeLabel, ...rest) {
         super("select", ...rest);
 
@@ -3016,8 +4006,6 @@ class SelectBoxTag extends HtmlCustomTag {
             throw new Error("makeLabel parameter must be a Function");
         }
 
-        _values.set(this, []);
-
         this.noSelectionText = noSelectionText;
         this.makeID = (v) => v !== null && makeID(v) || null;
         this.makeLabel = (v) => v !== null && makeLabel(v) || "None";
@@ -3026,52 +4014,59 @@ class SelectBoxTag extends HtmlCustomTag {
         Object.seal(this);
     }
 
+    /**
+     * Gets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
+     * @type {boolean}
+     **/
     get emptySelectionEnabled() {
         return this._emptySelectionEnabled;
     }
 
+    /**
+     * Sets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
+     * @param {boolean} value
+     **/
     set emptySelectionEnabled(value) {
         this._emptySelectionEnabled = value;
-        this._render();
+        render(this);
     }
 
+    /**
+     * Gets the collection to which the select box was databound
+     **/
     get values() {
-        return _values.get(this);
+        if (!values.has(this)) {
+            values.set(this, []);
+        }
+        return values.get(this);
     }
 
+    /**
+     * Sets the collection to which the select box will be databound
+     **/
     set values(newItems) {
         const curValue = this.selectedValue;
-        const values = _values.get(this);
+        const values = this.values;
         values.splice(0, values.length, ...newItems);
-        this._render();
+        render(this);
         this.selectedValue = curValue;
     }
 
-    _render() {
-        clear(this.element);
-        if (this.values.length === 0) {
-            this.element.append(Option(this.noSelectionText));
-            this.element.lock();
-        }
-        else {
-            if (this.emptySelectionEnabled) {
-                this.element.append(Option(this.noSelectionText));
-            }
-            for (let v of this.values) {
-                this.element.append(
-                    Option(
-                        value(this.makeID(v)),
-                        this.makeLabel(v)));
-            }
-
-            this.element.unlock();
-        }
-    }
-
+    /**
+     * Returns the collection of HTMLOptionElements that are stored in the select box
+     * @type {HTMLOptionsCollection}
+     */
     get options() {
         return this.element.options;
     }
 
+    /**
+     * Gets the index of the item that is currently selected in the select box.
+     * The index is offset by -1 if the select box has `emptySelectionEnabled`
+     * set to true, so that the indices returned are always in range of the collection
+     * to which the select box was databound
+     * @type {number}
+     */
     get selectedIndex() {
         let i = this.element.selectedIndex;
         if (this.emptySelectionEnabled) {
@@ -3080,6 +4075,13 @@ class SelectBoxTag extends HtmlCustomTag {
         return i;
     }
 
+    /**
+     * Sets the index of the item that should be selected in the select box.
+     * The index is offset by -1 if the select box has `emptySelectionEnabled`
+     * set to true, so that the indices returned are always in range of the collection
+     * to which the select box was databound
+     * @param {number} i
+     */
     set selectedIndex(i) {
         if (this.emptySelectionEnabled) {
             ++i;
@@ -3087,6 +4089,10 @@ class SelectBoxTag extends HtmlCustomTag {
         this.element.selectedIndex = i;
     }
 
+    /**
+     * Gets the item at `selectedIndex` in the collection to which the select box was databound
+     * @type {any}
+     */
     get selectedValue() {
         if (0 <= this.selectedIndex && this.selectedIndex < this.values.length) {
             return this.values[this.selectedIndex];
@@ -3096,82 +4102,220 @@ class SelectBoxTag extends HtmlCustomTag {
         }
     }
 
+    /**
+     * Gets the index of the given item in the select box's databound collection, then
+     * sets that index as the `selectedIndex`.
+     * @param {any) value
+     */
+    set selectedValue(value) {
+        this.selectedIndex = this.indexOf(value);
+    }
+
+    /**
+     * Returns the index of the given item in the select box's databound collection.
+     * @param {any} value
+     * @returns {number}
+     */
     indexOf(value) {
-        return _values.get(this)
+        return this.values
             .findIndex(v =>
                 value !== null
                 && this.makeID(value) === this.makeID(v));
     }
 
-    set selectedValue(value) {
-        this.selectedIndex = this.indexOf(value);
-    }
-
+    /**
+     * Checks to see if the value exists in the databound collection.
+     * @param {any} value
+     * @returns {boolean}
+     */
     contains(value) {
         return this.indexOf(value) >= 0.
     }
-
-    addEventListener(name, callback, opts) {
-        this.element.addEventListener(name, callback, opts);
-    }
-
-    removeEventListener(name, callback) {
-        this.element.removeEventListener(name, callback);
-    }
-
-    setOpen(v) {
-        this.element.setOpen(v);
-    }
-
-    get style() {
-        return this.element.style;
-    }
-
-    focus() {
-        this.element.focus();
-    }
-
-    blur() {
-        this.element.blur();
-    }
 }
 
+/** @typedef {import("./tag.js").TagChild} TagChild **/
+
+/**
+ * Empty an element of all children. This is faster than
+ * setting `innerHTML = ""`.
+ * @param {any} elem
+ */
 function clear(elem) {
     while (elem.lastChild) {
         elem.lastChild.remove();
     }
 }
 
+/**
+ * creates an HTML A tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLAnchorElement}
+ */
 function A(...rest) { return tag("a", ...rest); }
+
+/**
+ * creates an HTML Audio tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLAudioElement}
+ */
 function Audio(...rest) { return tag("audio", ...rest); }
-function HtmlButton(...rest) { return tag("button", ...rest); }
-function Button(...rest) { return HtmlButton(...rest, type("button")); }
+
+/**
+ * creates an HTML HtmlButton tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLButtonElement}
+ */
+function ButtonRaw(...rest) { return tag("button", ...rest); }
+
+/**
+ * creates an HTML Button tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLButtonElement}
+ */
+function Button(...rest) { return ButtonRaw(...rest, type("button")); }
+
+/**
+ * creates an HTML Canvas tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLCanvasElement}
+ */
 function Canvas(...rest) { return tag("canvas", ...rest); }
+
+/**
+ * creates an HTML Div tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLDivElement}
+ */
 function Div(...rest) { return tag("div", ...rest); }
+
+/**
+ * creates an HTML H1 tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLHeadingElement}
+ */
 function H1(...rest) { return tag("h1", ...rest); }
+
+/**
+ * creates an HTML H2 tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLHeadingElement}
+ */
 function H2(...rest) { return tag("h2", ...rest); }
+
+/**
+ * creates an HTML Img tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLImageElement}
+ */
 function Img(...rest) { return tag("img", ...rest); }
+
+/**
+ * creates an HTML Input tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
 function Input(...rest) { return tag("input", ...rest); }
+
+/**
+ * creates an HTML Label tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLLabelElement}
+ */
 function Label(...rest) { return tag("label", ...rest); }
+
+/**
+ * creates an HTML LI tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLLIElement}
+ */
 function LI(...rest) { return tag("li", ...rest); }
+
+/**
+ * creates an HTML Option tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLOptionElement}
+ */
 function Option(...rest) { return tag("option", ...rest); }
+
+/**
+ * creates an HTML P tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLParagraphElement}
+ */
 function P(...rest) { return tag("p", ...rest); }
+
+/**
+ * creates an HTML Source tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLSourceElement}
+ */
 function Source(...rest) { return tag("source", ...rest); }
+
+/**
+ * creates an HTML Span tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLSpanElement}
+ */
 function Span(...rest) { return tag("span", ...rest); }
+
+/**
+ * creates an HTML UL tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLUListElement}
+ */
 function UL(...rest) { return tag("ul", ...rest); }
 
+/**
+ * Creates an input box that has a label attached to it.
+ * @param {string} id - the ID to use for the input box
+ * @param {string} inputType - the type to use for the input box (number, text, etc.)
+ * @param {string} labelText - the text to display in the label
+ * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+ * @returns {LabeledInputTag}
+ */
 function LabeledInput(id, inputType, labelText, ...rest) {
     return new LabeledInputTag(id, inputType, labelText, ...rest);
 }
 
+/**
+ * Creates a string from a list item to use as the item's ID or label in a select box.
+ * @callback makeItemValueCallback
+ * @param {any} obj - the object
+ * @returns {string}
+ */
+
+/**
+ * Creates a select box that can bind to collections
+ * @param {string} noSelectionText - the text to display when no items are available.
+ * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
+ * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
+ * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+ * @returns {SelectBoxTag}
+ */
 function SelectBox(noSelectionText, makeID, makeLabel, ...rest) {
     return new SelectBoxTag(noSelectionText, makeID, makeLabel, ...rest);
 }
 
+/**
+ * Creates a select box, with a label attached to it, that can bind to collections
+ * @param {string} id - the ID to use for the input box
+ * @param {string} labelText - the text to display in the label
+ * @param {string} noSelectionText - the text to display when no items are available.
+ * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
+ * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
+ * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+ * @returns {LabeledSelectBoxTag}
+ */
 function LabeledSelectBox(id, labelText, noSelectionText, makeID, makeLabel, ...rest) {
     return new LabeledSelectBoxTag(id, labelText, noSelectionText, makeID, makeLabel, ...rest);
 }
 
+/**
+ * Creates an OptionPanelTag element
+ * @param {string} id - the ID to use for the content element of the option panel
+ * @param {string} name - the text to use in the button that triggers displaying the content element
+ * @param {...TagChild} rest - optional attributes, child elements, and text to use on the content element
+ */
 function OptionPanel(id, name, ...rest) {
     return new OptionPanelTag(id, name, ...rest);
 }
@@ -3300,11 +4444,15 @@ class EmojiForm extends FormDialog {
             };
         }
 
+        /**
+         * 
+         * @param {EmojiGroup} group
+         * @param {HTMLElement} container
+         * @param {boolean} isAlts
+         */
         const addIconsToContainer = (group, container, isAlts) => {
-            group = group.alts || group;
-            for (let icon of group) {
-                const g = isAlts ? UL() : Span(),
-                    btn = Button(
+            for (let icon of group.alts) {
+                const btn = Button(
                         title(icon.desc),
                         buttonStyle,
                         onClick((evt) => {
@@ -3322,20 +4470,24 @@ class EmojiForm extends FormDialog {
 
                 let alts = null;
 
+                /** @type {HTMLUListElement|HTMLSpanElement} */
+                let g = null;
+
                 if (isAlts) {
                     btn.id = `emoji-with-alt-${idCounter++}`;
-                    g.appendChild(LI(btn,
-                        Label(htmlFor(btn.id),
-                            icon.desc)));
+                    g = UL(
+                        LI(btn,
+                            Label(htmlFor(btn.id),
+                                icon.desc)));
                 }
                 else {
-                    g.appendChild(btn);
+                    g = Span(btn);
                 }
 
                 if (!!icon.alts) {
                     alts = Div();
                     allAlts.push(alts);
-                    addIconsToContainer(icon.alts, alts, true);
+                    addIconsToContainer(icon, alts, true);
                     alts.hide();
                     g.appendChild(alts);
                     btn.style.width = "3em";
@@ -3354,20 +4506,19 @@ class EmojiForm extends FormDialog {
             }
         };
 
-        for (let key of Object.keys(allIcons)) {
-            if (key !== "combiners") {
+        for (let group of Object.values(allIcons)) {
+            if (group instanceof EmojiGroup) {
                 const header = H1(),
                     container = P(),
                     headerButton = A(
                         href("javascript:undefined"),
-                        title(key),
+                        title(group.desc),
                         headerStyle,
                         onClick(() => {
                             container.toggleOpen();
-                            headerButton.innerHTML = key + (container.isOpen() ? " -" : " +");
+                            headerButton.innerHTML = group.value  + (container.isOpen() ? " -" : " +");
                         }),
-                        key + " -"),
-                    group = allIcons[key];
+                        group.value + " -");
 
                 addIconsToContainer(group, container);
                 header.appendChild(headerButton);
@@ -4379,7 +5530,7 @@ class OptionsForm extends FormDialog {
         for (let i = 0; i < panels.length; ++i) {
             cols[i] = "1fr";
             panels[i].element.style.gridColumnStart = i + 1;
-            panels[i].button.style.fontSize = "24pt";
+            panels[i].button.style.fontSize = "3.5vw";
         }
 
         Object.assign(this.header.style, {
@@ -4584,6 +5735,8 @@ class OptionsForm extends FormDialog {
     set gamepads(values) {
         const disable = values.length === 0;
         this.gpSelect.values = values;
+        this.gpAxisLeftRight.setLocked(disable);
+        this.gpAxisUpDown.setLocked(disable);
         this.gpButtonUp.setLocked(disable);
         this.gpButtonDown.setLocked(disable);
         this.gpButtonLeft.setLocked(disable);
@@ -4863,12 +6016,13 @@ class BasePosition {
     }
 
     /**
-     * Set the target position
-     * @param {Point} evt - the target position
-     * @param {number} t - the current time, in seconds
-     * @param {number} dt - the amount of time to take to transition, in seconds
+     * Set the target position for the time `t + dt`.
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
+     * @param {number} t
+     * @param {number} dt
      */
-    setTarget(evt, t, dt) {
+    setTarget(x, y, t, dt) {
         throw new Error("Not implemented in base class.");
     }
 
@@ -4880,8 +6034,16 @@ class BasePosition {
     }
 }
 
+/**
+ * A position value that is blended from the current position to
+ * a target position over time.
+ */
 class InterpolatedPosition extends BasePosition {
 
+    /**
+     * Creates a new position value that is blended from the current position to
+     * a target position over time.
+     **/
     constructor() {
         super();
 
@@ -4898,41 +6060,46 @@ class InterpolatedPosition extends BasePosition {
             = 0;
     }
 
-    /** @type {number} */
+    /**
+     *  The horizontal component of the position.
+     *  @type {number} */
     get x() {
         return this._x;
     }
 
-    /** @type {number} */
+    /**
+     *  The vertical component of the position.
+     *  @type {number} */
     get y() {
         return this._y;
     }
 
     /**
-     * 
-     * @param {UserPosition} evt
+     * Set the target position for the time `t + dt`.
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
      * @param {number} t
      * @param {number} dt
      */
-    setTarget(evt, t, dt) {
+    setTarget(x, y, t, dt) {
         this._st = t;
         this._et = t + dt;
         this._sx = this._x;
         this._sy = this._y;
-        this._tx = evt.x;
-        this._ty = evt.y;
+        this._tx = x;
+        this._ty = y;
     }
 
     /**
-     * 
+     * Calculates the new position for the given time.
+     * @protected
      * @param {number} t
      */
     update(t) {
         const p = project(t, this._st, this._et);
-        if (p <= 1) {
-            this._x = lerp(this._sx, this._tx, p);
-            this._y = lerp(this._sy, this._ty, p);
-        }
+        const q = clamp(p, 0, 1);
+        this._x = lerp(this._sx, this._tx, q);
+        this._y = lerp(this._sy, this._ty, q);
     }
 }
 
@@ -4968,7 +6135,7 @@ class User extends EventTarget {
         this.position = new InterpolatedPosition();
 
         this.avatarMode = AvatarMode.none;
-        this.avatarEmoji = (isMe ? randomPerson() : bust);
+        this.avatarEmoji = (isMe ? allPeople.random() : bust);
         this.avatarImage = null;
         this.avatarVideo = null;
 
@@ -4998,7 +6165,7 @@ class User extends EventTarget {
         }
 
         if (evt.x !== undefined) {
-            this.position.setTarget(evt, performance.now() / 1000, 0);
+            this.position.setTarget(evt.x, evt.y, performance.now() / 1000, 0);
             this.isInitialized = true;
         }
     }
@@ -5121,7 +6288,7 @@ class User extends EventTarget {
                 this.dispatchEvent(this.moveEvent);
             }
 
-            this.position.setTarget({ x, y }, performance.now() / 1000, dt);
+            this.position.setTarget(x, y, performance.now() / 1000, dt);
         }
     }
 
@@ -5491,6 +6658,46 @@ class Emote {
             this.x * map.tileWidth - this.width / 2,
             this.y * map.tileHeight);
     }
+}
+
+/**
+ * Returns true if the given object is either an HTMLCanvasElement or an OffscreenCanvas.
+ * @param {any} obj
+ * @returns {boolean}
+ */
+
+/**
+ * Resizes a canvas element
+ * @param {HTMLCanvasElement|OffscreenCanvas} canv
+ * @param {number} w - the new width of the canvas
+ * @param {number} h - the new height of the canvas
+ * @param {number=1} superscale - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function setCanvasSize(canv, w, h, superscale = 1) {
+    w = Math.floor(w * superscale);
+    h = Math.floor(h * superscale);
+    if (canv.width != w
+        || canv.height != h) {
+        canv.width = w;
+        canv.height = h;
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Resizes a canvas element to match the proportions of the size of the element in the DOM.
+ * @param {HTMLCanvasElement} canv
+ * @param {number=1} superscale - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function resizeCanvas(canv, superscale = 1) {
+    return setCanvasSize(
+        canv,
+        canv.clientWidth,
+        canv.clientHeight,
+        superscale);
 }
 
 class TileSet {
@@ -5954,7 +7161,7 @@ class Game extends EventTarget {
                 idx = findPointer(pointer);
 
             if (idx >= 0) {
-                this.pointers.removeAt(idx);
+                arrayRemoveAt(this.pointers, idx);
             }
 
             return pointer;
@@ -6221,7 +7428,7 @@ class Game extends EventTarget {
     }
 
     resize() {
-        this.element.resize();
+        resizeCanvas(this.element, window.devicePixelRatio);
     }
 
     loop(time) {
@@ -6403,14 +7610,35 @@ class Game extends EventTarget {
     }
 }
 
+/**
+ * A base class for managers of audio sources, destinations, and their spatialization.
+ **/
 class BaseAudioClient extends EventTarget {
 
+    /**
+     * Creates a new manager of audio sources, destinations, and their spatialization.
+     **/
     constructor() {
         super();
     }
 
+    /** Perform the audio system initialization, after a user gesture */
+    start() {
+    }
+
     /**
-     *
+     * Sets parameters that alter spatialization.
+     * @param {number} minDistance
+     * @param {number} maxDistance
+     * @param {number} rolloff
+     * @param {number} transitionTime
+     */
+    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
+        throw new Error("Not implemented in base class");
+    }
+
+    /**
+     * Set the audio device used to play audio to the local user.
      * @param {string} deviceID
      */
     setAudioOutputDevice(deviceID) {
@@ -6418,37 +7646,39 @@ class BaseAudioClient extends EventTarget {
     }
 
     /**
-     * Set the position of the listener.
-     * @param {Point} evt
+     * Remove a user from audio processing.
+     * @param {string} id - the id of the user to remove
      */
-    setLocalPosition(evt) {
+    removeSource(id) {
+        throw new Error("Not implemented in base class");
+    }
+
+    /**
+     * Set the position of the listener.
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
+     */
+    setLocalPosition(x, y) {
         throw new Error("Not implemented in base class");
     }
 
     /**
      * Set the position of an audio source.
-     * @param {UserPosition} evt
+     * @param {string} id - the id of the user for which to set the position.
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
      */
-    setUserPosition(evt) {
-        throw new Error("Not implemented in base class");
-    }
-
-    /**
-     * Set audio parameters for the listener.
-     * @param {any} evt
-     */
-    setAudioProperties(evt) {
-        throw new Error("Not implemented in base class");
-    }
-
-    /**
-     * 
-     * @param {string} userID
-     */
-    removeSource(userID) {
+    setUserPosition(id, x, y) {
         throw new Error("Not implemented in base class");
     }
 }
+
+/**
+ * Indicates whether or not the current browser can change the destination device for audio output.
+ * @constant
+ * @type {boolean}
+ **/
+const canChangeAudioOutput = HTMLAudioElement.prototype["setSinkId"] instanceof Function;
 
 // helps us filter out data channel messages that don't belong to us
 const APP_FINGERPRINT$1
@@ -6540,7 +7770,7 @@ class BaseJitsiClient extends EventTarget {
                 this.dispatchEvent(evt);
             }
 
-            this.preInitEvtQ.clear();
+            arrayClear(this.preInitEvtQ);
         }
         else {
             this.preInitEvtQ.push(evt);
@@ -6568,18 +7798,22 @@ class BaseJitsiClient extends EventTarget {
 
         this.setDisplayName(userName);
 
-        const audioOutputs = await this.getAudioOutputDevicesAsync();
-        const audOut = audioOutputs.scan(
-            (d) => d.deviceId === this.preferedAudioOutputID,
-            (d) => d.deviceId === "communications",
-            (d) => d.deviceId === "default",
-            (d) => !!d);
-        if (audOut) {
-            await this.setAudioOutputDeviceAsync(audOut);
+        if (canChangeAudioOutput) {
+            const audioOutputs = await this.getAudioOutputDevicesAsync();
+            const audOut = arrayScan(
+                audioOutputs,
+                (d) => d.deviceId === this.preferedAudioOutputID,
+                (d) => d.deviceId === "communications",
+                (d) => d.deviceId === "default",
+                (d) => !!d);
+            if (audOut) {
+                await this.setAudioOutputDeviceAsync(audOut);
+            }
         }
 
         const audioInputs = await this.getAudioInputDevicesAsync();
-        const audIn = audioInputs.scan(
+        const audIn = arrayScan(
+            audioInputs,
             (d) => d.deviceId === this.preferedAudioInputID,
             (d) => d.deviceId === "communications",
             (d) => d.deviceId === "default",
@@ -6589,7 +7823,9 @@ class BaseJitsiClient extends EventTarget {
         }
 
         const videoInputs = await this.getVideoInputDevicesAsync();
-        const vidIn = videoInputs.scan((d) => d.deviceId === this.preferedVideoInputID);
+        const vidIn = arrayScan(
+            videoInputs,
+            (d) => d.deviceId === this.preferedVideoInputID);
         if (vidIn) {
             await this.setVideoInputDeviceAsync(vidIn);
         }
@@ -6713,26 +7949,37 @@ class BaseJitsiClient extends EventTarget {
         this.dispatchEvent(evt);
     }
 
-    setAudioProperties(origin, transitionTime, minDistance, maxDistance, rolloff) {
-        const evt = {
-            origin,
-            transitionTime,
-            minDistance,
-            maxDistance,
-            rolloff
-        };
-        this.audioClient.setAudioProperties(evt);
+    /**
+     * Sets parameters that alter spatialization.
+     * @param {number} minDistance
+     * @param {number} maxDistance
+     * @param {number} rolloff
+     * @param {number} transitionTime
+     */
+    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
+        this.audioClient.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
     }
 
-    setLocalPosition(evt) {
-        this.audioClient.setLocalPosition(evt);
+    /**
+     * Set the position of the listener.
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
+     */
+    setLocalPosition(x, y) {
+        this.audioClient.setLocalPosition(x, y);
         for (let toUserID of this.userIDs()) {
-            this.sendMessageTo(toUserID, "userMoved", evt);
+            this.sendMessageTo(toUserID, "userMoved", { x, y });
         }
     }
 
-    setUserPosition(evt) {
-        this.audioClient.setUserPosition(evt);
+    /**
+     * Set the position of an audio source.
+     * @param {string} id - the id of the user for which to set the position.
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
+     */
+    setUserPosition(id, x, y) {
+        this.audioClient.setUserPosition(id, x, y);
     }
 
     removeUser(evt) {
@@ -6826,7 +8073,12 @@ class JitsiClientEvent extends Event {
     constructor(command, id, value) {
         super(command);
         this.id = id;
-        Event.clone(this, value);
+        for (let key in value) {
+            if (key !== "isTrusted"
+                && !Event.prototype.hasOwnProperty(key)) {
+                this[key] = value[key];
+            }
+        }
     }
 }
 
@@ -7056,7 +8308,16 @@ class Settings {
     }
 }
 
+/**
+ * A sound effects palette.
+ **/
 class SFX extends EventTarget {
+
+    /**
+     * Creates a new sound effects palette.
+     * 
+     * NOTE: sound effects are not spatialized.
+     **/
     constructor() {
         super();
 
@@ -7065,14 +8326,17 @@ class SFX extends EventTarget {
     }
 
     /**
-     * @param {string} name
-     * @param {string[]} paths
+     * Creates a new sound effect from a series of fallback paths
+     * for media files.
+     * @param {string} name - the name of the sound effect, to reference when executing playback.
+     * @param {string[]} paths - a series of fallback paths for loading the media of the sound effect.
      * @returns {SFX}
      */
     add(name, ...paths) {
         const sources = paths
             .map((p) => src(p))
             .map((s) => Source(s));
+
         const elem = Audio(
             controls(false),
             ...sources);
@@ -7082,7 +8346,9 @@ class SFX extends EventTarget {
     }
 
     /**
-     * @param {string} name
+     * Plays a named sound effect.
+     * @param {string} name - the name of the effect to play.
+     * @param {number=1} volume - the volume at which to play the effect.
      */
     play(name, volume = 1) {
         if (this.clips.has(name)) {
@@ -7179,11 +8445,10 @@ function init(host, client) {
 
     function setAudioProperties() {
         client.setAudioProperties(
-            window.location.origin,
-            settings.transitionSpeed,
             settings.audioDistanceMin = game.audioDistanceMin = options.audioDistanceMin,
             settings.audioDistanceMax = game.audioDistanceMax = options.audioDistanceMax,
-            settings.audioRolloff = options.audioRolloff);
+            settings.audioRolloff = options.audioRolloff,
+            settings.transitionSpeed);
     }
 
     function refreshGamepads() {
@@ -7417,9 +8682,9 @@ function init(host, client) {
 
             setAudioProperties();
 
-            client.setLocalPosition(game.me.serialize());
+            client.setLocalPosition(game.me.position.x, game.me.position.y);
             game.me.addEventListener("userMoved", (evt) => {
-                client.setLocalPosition(evt);
+                client.setLocalPosition(evt.x, evt.y);
                 refreshUser(game.me.id);
             });
 
@@ -7523,7 +8788,7 @@ function init(host, client) {
             if (game.users.has(evt.id)) {
                 const user = game.users.get(evt.id);
                 user.deserialize(evt);
-                client.setUserPosition(evt);
+                client.setUserPosition(evt.id, evt.x, evt.y);
                 refreshUser(evt.id);
             }
         },
@@ -7532,7 +8797,7 @@ function init(host, client) {
             if (game.users.has(evt.id)) {
                 const user = game.users.get(evt.id);
                 user.moveTo(evt.x, evt.y, settings.transitionSpeed);
-                client.setUserPosition(evt);
+                client.setUserPosition(evt.id, evt.x, evt.y);
             }
             refreshUser(evt.id);
         },
@@ -7556,37 +8821,76 @@ function init(host, client) {
     return forExport;
 }
 
+/**
+ * An Event class for tracking changes to audio activity.
+ **/
+class AudioActivityEvent extends Event {
+    /** Creates a new "audioActivity" event */
+    constructor() {
+        super("audioActivity");
+        /** @type {string} */
+        this.id = null;
+        this.isActive = false;
+    }
+
+    /**
+     * Sets the current state of the event
+     * @param {string} id - the user for which the activity changed
+     * @param {boolean} isActive - the new state of the activity
+     */
+    set(id, isActive) {
+        this.id = id;
+        this.isActive = isActive;
+    }
+}
+
+/**
+ * A mocking class for providing the playback timing needed to synchronize motion and audio.
+ **/
 class MockAudioContext {
+    /**
+     * Starts the timer at "now".
+     **/
     constructor() {
         this._t = performance.now() / 1000;
     }
 
+    /**
+     * Gets the current playback time.
+     * @type {number}
+     */
     get currentTime() {
         return performance.now() / 1000 - this._t;
     }
 
-    /** @type {AudioDestinationNode} */
+    /**
+     * Returns nothing.
+     * @type {AudioDestinationNode} */
     get destination() {
         return null;
     }
 }
 
+/**
+ * A positioner that uses the WebAudio API's old setPosition method.
+ **/
 class WebAudioOldListenerPosition extends InterpolatedPosition {
 
     /**
-     * 
-     * @param {AudioListener} listener
+     * Creates a new positioner that uses the WebAudio API's old setPosition method.
+     * @param {AudioListener} listener - the listener on the audio context.
      */
     constructor(listener) {
         super();
-        
+
         this.listener = listener;
         this.listener.setPosition(0, 0, 0);
         this.listener.setOrientation(0, 0, -1, 0, 1, 0);
     }
 
     /**
-     * 
+     * Calculates the new position for the given time.
+     * @protected
      * @param {number} t
      */
     update(t) {
@@ -7595,11 +8899,15 @@ class WebAudioOldListenerPosition extends InterpolatedPosition {
     }
 }
 
+/**
+ * A positioner that uses WebAudio's playback dependent time progression.
+ **/
 class WebAudioNodePosition extends BasePosition {
+
     /**
-     * 
-     * @param {PannerNode|AudioListener} node
-     * @param {boolean} forceInterpolation
+     * Creates a new positioner that uses WebAudio's playback dependent time progression.
+     * @param {PannerNode|AudioListener} node - the audio node that will receive the position value.
+     * @param {boolean} forceInterpolation - when set to true, circumvents WebAudio's time tracking and uses our own.
      */
     constructor(node, forceInterpolation) {
         super();
@@ -7612,37 +8920,43 @@ class WebAudioNodePosition extends BasePosition {
         this.node.positionZ.setValueAtTime(0, 0);
     }
 
-    /** @type {number} */
+    /**
+     *  The horizontal component of the position.
+     *  @type {number} */
     get x() {
         return this.node.positionX.value;
     }
 
-    /** @type {number} */
+    /**
+     *  The vertical component of the position.
+     *  @type {number} */
     get y() {
         return this.node.positionZ.value;
     }
 
     /**
-     *
-     * @param {UserPosition} evt
+     * Set the target position for the time `t + dt`.
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
      * @param {number} t
      * @param {number} dt
      */
-    setTarget(evt, t, dt) {
+    setTarget(x, y, t, dt) {
         if (this._p) {
-            this._p.setTarget(evt, t, dt);
+            this._p.setTarget(x, y, t, dt);
         }
         else {
             const time = t + dt;
             // our 2D position is in X/Y coords, but our 3D position
             // along the horizontal plane is X/Z coords.
-            this.node.positionX.linearRampToValueAtTime(evt.x, time);
-            this.node.positionZ.linearRampToValueAtTime(evt.y, time);
+            this.node.positionX.linearRampToValueAtTime(x, time);
+            this.node.positionZ.linearRampToValueAtTime(y, time);
         }
     }
 
     /**
-     *
+     * Calculates the new position for the given time.
+     * @protected
      * @param {number} t
      */
     update(t) {
@@ -7654,11 +8968,14 @@ class WebAudioNodePosition extends BasePosition {
     }
 }
 
+/**
+ * A positioner that uses WebAudio's playback dependent time progression.
+ **/
 class WebAudioNewListenerPosition extends WebAudioNodePosition {
     /**
-     * 
-     * @param {AudioListener} node
-     * @param {boolean} forceInterpolation
+     * Creates a new positioner that uses WebAudio's playback dependent time progression.
+     * @param {AudioListener} node - the audio node that will receive the position value.
+     * @param {boolean} forceInterpolation - when set to true, circumvents WebAudio's time tracking and uses our own.
      */
     constructor(node, forceInterpolation) {
         super(node, forceInterpolation);
@@ -7671,16 +8988,21 @@ class WebAudioNewListenerPosition extends WebAudioNodePosition {
     }
 }
 
+/**
+ * A base class for positioned audio elements.
+ **/
 class BaseAudioElement extends EventTarget {
     /**
-     * 
+     * Creates a new positioned audio element.
      * @param {BasePosition} position
      */
     constructor(position) {
         super();
 
         this.minDistance = 1;
+        this.minDistanceSq = 1;
         this.maxDistance = 10;
+        this.maxDistanceSq = 100;
         this.rolloff = 1;
         this.transitionTime = 0.5;
 
@@ -7688,6 +9010,13 @@ class BaseAudioElement extends EventTarget {
         this.position = position;
     }
 
+    /**
+     * Sets parameters that alter spatialization.
+     * @param {number} minDistance
+     * @param {number} maxDistance
+     * @param {number} rolloff
+     * @param {number} transitionTime
+     */
     setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
         this.minDistance = minDistance;
         this.maxDistance = maxDistance;
@@ -7695,21 +9024,29 @@ class BaseAudioElement extends EventTarget {
         this.rolloff = rolloff;
     }
 
+    /**
+     * Gets the current playback time from the audio context.
+     * @returns {number}
+     */
     get currentTime() {
         throw new Error("Not implemented in base class");
     }
 
     /**
      * Set the target position
-     * @param {Point} evt
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
      */
-    setTarget(evt) {
+    setTarget(x, y) {
         if (this.position) {
-            this.position.setTarget(evt, this.currentTime, this.transitionTime);
+            this.position.setTarget(x, y, this.currentTime, this.transitionTime);
             this.update();
         }
     }
 
+    /**
+     * Performs position updates.
+     **/
     update() {
         if (this.position) {
             this.position.update(this.currentTime);
@@ -7737,6 +9074,7 @@ class BaseSpatializer extends BaseAudioElement {
         this.volume = 1;
         this.pan = 0;
     }
+
     /**
      * Discard values and make this instance useless.
      */
@@ -7749,19 +9087,28 @@ class BaseSpatializer extends BaseAudioElement {
         this.id = null;
     }
 
+    /**
+     * Changes the device to which audio will be output
+     * @param {string} deviceID
+     */
     setAudioOutputDevice(deviceID) {
-        if (this.audio.setSinkId) {
+        if (canChangeAudioOutput) {
             this.audio.setSinkId(deviceID);
         }
     }
 
+    /**
+     * Retrieves the current time from the audio context.
+     * @type {number}
+     */
     get currentTime() {
         return this.destination.currentTime;
     }
 
+
     /**
-     * Run the position interpolation
-     */
+     * Performs the spatialization operation for the audio source's latest location.
+     **/
     update() {
         super.update();
 
@@ -7769,20 +9116,25 @@ class BaseSpatializer extends BaseAudioElement {
             ly = this.destination.position.y,
             distX = this.position.x - lx,
             distY = this.position.y - ly,
-            dist = Math.sqrt(distX * distX + distY * distY),
-            projected = project(dist, this.destination.minDistance, this.destination.maxDistance);
+            distSqr = distX * distX + distY * distY,
+            dist = Math.sqrt(distSqr),
+            distScale = project(dist, this.minDistance, this.maxDistance);
 
-        this.volume = 1 - clamp(projected, 0, 1);
+        this.volume = 1 - clamp(distScale, 0, 1);
+        this.volume = this.volume * this.volume;
         this.pan = dist > 0
             ? distX / dist
             : 0;
     }
 }
 
+/**
+ * A spatializer that only modifies volume.
+ **/
 class VolumeOnlySpatializer extends BaseSpatializer {
 
     /**
-     *
+     * Creates a new spatializer that only modifies volume.
      * @param {string} userID
      * @param {Destination} destination
      * @param {HTMLAudioElement} audio
@@ -7794,16 +9146,16 @@ class VolumeOnlySpatializer extends BaseSpatializer {
         Object.seal(this);
     }
 
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     **/
     update() {
         super.update();
         this.audio.volume = this.volume;
     }
 }
 
-const audioActivityEvt = Object.assign(new Event("audioActivity", {
-    id: null,
-    isActive: false
-})),
+const audioActivityEvt = new AudioActivityEvent(),
     activityCounterMin = 0,
     activityCounterMax = 60,
     activityCounterThresh = 5;
@@ -7879,6 +9231,9 @@ class BaseAnalyzedSpatializer extends BaseSpatializer {
         this.source = null;
     }
 
+    /**
+     * @fires BaseAnalyzedSpatializer#audioActivity
+     **/
     update() {
         super.update();
 
@@ -7914,13 +9269,15 @@ class BaseAnalyzedSpatializer extends BaseSpatializer {
             const isActive = this.activityCounter > activityCounterThresh;
             if (this.wasActive !== isActive) {
                 this.wasActive = isActive;
-                audioActivityEvt.id = this.id;
-                audioActivityEvt.isActive = isActive;
+                audioActivityEvt.set(this.id, isActive);
                 this.dispatchEvent(audioActivityEvt);
             }
         }
     }
 
+    /**
+     * Discard values and make this instance useless.
+     */
     dispose() {
         if (!!this.source) {
             this.source.disconnect(this.analyser);
@@ -7937,10 +9294,13 @@ class BaseAnalyzedSpatializer extends BaseSpatializer {
     }
 }
 
+/**
+ * A spatializer that uses the WebAudio API.
+ **/
 class BaseWebAudioSpatializer extends BaseAnalyzedSpatializer {
 
     /**
-     * 
+     * Creates a new spatializer that uses the WebAudio API
      * @param {string} userID
      * @param {Destination} destination
      * @param {HTMLAudioElement} audio
@@ -7960,6 +9320,9 @@ class BaseWebAudioSpatializer extends BaseAnalyzedSpatializer {
         }
     }
 
+    /**
+     * Discard values and make this instance useless.
+     */
     dispose() {
         if (this.inNode !== this.outNode) {
             this.inNode.disconnect(this.outNode);
@@ -7972,10 +9335,13 @@ class BaseWebAudioSpatializer extends BaseAnalyzedSpatializer {
     }
 }
 
+/**
+ * A spatializer that uses WebAudio's PannerNode
+ **/
 class FullSpatializer extends BaseWebAudioSpatializer {
 
     /**
-     *
+     * Creates a new spatializer that uses WebAudio's PannerNode.
      * @param {string} userID
      * @param {Destination} destination
      * @param {HTMLAudioElement} audio
@@ -7989,8 +9355,6 @@ class FullSpatializer extends BaseWebAudioSpatializer {
 
         this.inNode.panningModel = "HRTF";
         this.inNode.distanceModel = "inverse";
-        this.inNode.refDistance = destination.minDistance;
-        this.inNode.rolloffFactor = destination.rolloff;
         this.inNode.coneInnerAngle = 360;
         this.inNode.coneOuterAngle = 0;
         this.inNode.coneOuterGain = 0;
@@ -7998,17 +9362,27 @@ class FullSpatializer extends BaseWebAudioSpatializer {
         Object.seal(this);
     }
 
+    /**
+     * Sets parameters that alter spatialization.
+     * @param {number} minDistance
+     * @param {number} maxDistance
+     * @param {number} rolloff
+     * @param {number} transitionTime
+     */
     setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
-        super.setAudioOutputDevice(minDistance, maxDistance, rolloff, transitionTime);
+        super.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
         this.inNode.refDistance = minDistance;
         this.inNode.rolloffFactor = rolloff;
     }
 }
 
+/**
+ * A spatializer that performs stereo panning and volume scaling.
+ **/
 class StereoSpatializer extends BaseWebAudioSpatializer {
 
     /**
-     *
+     * Creates a new spatializer that performs stereo panning and volume scaling.
      * @param {string} userID
      * @param {Destination} destination
      * @param {HTMLAudioElement} audio
@@ -8022,6 +9396,9 @@ class StereoSpatializer extends BaseWebAudioSpatializer {
         Object.seal(this);
     }
 
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     **/
     update() {
         super.update();
         this.inNode.pan.value = this.pan;
@@ -8029,9 +9406,7193 @@ class StereoSpatializer extends BaseWebAudioSpatializer {
     }
 }
 
+(function webpackUniversalModuleDefinition(root, factory) {
+	if(typeof exports === 'object' && typeof module === 'object')
+		module.exports = factory();
+	else if(typeof define === 'function' && define.amd)
+		define([], factory);
+	else {
+		var a = factory();
+		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
+	}
+})(undefined || window, function() {
+return /******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
+/******/
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId]) {
+/******/ 			return installedModules[moduleId].exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			i: moduleId,
+/******/ 			l: false,
+/******/ 			exports: {}
+/******/ 		};
+/******/
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/
+/******/ 		// Flag the module as loaded
+/******/ 		module.l = true;
+/******/
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/
+/******/
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
+/******/
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
+/******/
+/******/ 	// define getter function for harmony exports
+/******/ 	__webpack_require__.d = function(exports, name, getter) {
+/******/ 		if(!__webpack_require__.o(exports, name)) {
+/******/ 			Object.defineProperty(exports, name, {
+/******/ 				configurable: false,
+/******/ 				enumerable: true,
+/******/ 				get: getter
+/******/ 			});
+/******/ 		}
+/******/ 	};
+/******/
+/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	__webpack_require__.n = function(module) {
+/******/ 		var getter = module && module.__esModule ?
+/******/ 			function getDefault() { return module['default']; } :
+/******/ 			function getModuleExports() { return module; };
+/******/ 		__webpack_require__.d(getter, 'a', getter);
+/******/ 		return getter;
+/******/ 	};
+/******/
+/******/ 	// Object.prototype.hasOwnProperty.call
+/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
+/******/
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "";
+/******/
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(__webpack_require__.s = 10);
+/******/ })
+/************************************************************************/
+/******/ ([
+/* 0 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * @license
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file ResonanceAudio library common utilities, mathematical constants,
+ * and default values.
+ * @author Andrew Allen <bitllama@google.com>
+ */
+
+
+
+
+/**
+ * @class Utils
+ * @description A set of defaults, constants and utility functions.
+ */
+function Utils() {}
+
+/**
+ * Default input gain (linear).
+ * @type {Number}
+ */
+Utils.DEFAULT_SOURCE_GAIN = 1;
+
+
+/**
+ * Maximum outside-the-room distance to attenuate far-field listener by.
+ * @type {Number}
+ */
+Utils.LISTENER_MAX_OUTSIDE_ROOM_DISTANCE = 1;
+
+
+/**
+ * Maximum outside-the-room distance to attenuate far-field sources by.
+ * @type {Number}
+ */
+Utils.SOURCE_MAX_OUTSIDE_ROOM_DISTANCE = 1;
+
+
+/**
+ * Default distance from listener when setting angle.
+ * @type {Number}
+ */
+Utils.DEFAULT_SOURCE_DISTANCE = 1;
+
+
+/** @type {Float32Array} */
+Utils.DEFAULT_POSITION = [0, 0, 0];
+
+
+/** @type {Float32Array} */
+Utils.DEFAULT_FORWARD = [0, 0, -1];
+
+
+/** @type {Float32Array} */
+Utils.DEFAULT_UP = [0, 1, 0];
+
+
+/** @type {Float32Array} */
+Utils.DEFAULT_RIGHT = [1, 0, 0];
+
+
+/**
+ * @type {Number}
+ */
+Utils.DEFAULT_SPEED_OF_SOUND = 343;
+
+
+/** Rolloff models (e.g. 'logarithmic', 'linear', or 'none').
+ * @type {Array}
+ */
+Utils.ATTENUATION_ROLLOFFS = ['logarithmic', 'linear', 'none'];
+
+
+/** Default rolloff model ('logarithmic').
+ * @type {string}
+ */
+Utils.DEFAULT_ATTENUATION_ROLLOFF = 'logarithmic';
+
+
+/** @type {Number} */
+Utils.DEFAULT_MIN_DISTANCE = 1;
+
+
+/** @type {Number} */
+Utils.DEFAULT_MAX_DISTANCE = 1000;
+
+
+/**
+ * The default alpha (i.e. microphone pattern).
+ * @type {Number}
+ */
+Utils.DEFAULT_DIRECTIVITY_ALPHA = 0;
+
+
+/**
+ * The default pattern sharpness (i.e. pattern exponent).
+ * @type {Number}
+ */
+Utils.DEFAULT_DIRECTIVITY_SHARPNESS = 1;
+
+
+/**
+ * Default azimuth (in degrees). Suitable range is 0 to 360.
+ * @type {Number}
+ */
+Utils.DEFAULT_AZIMUTH = 0;
+
+
+/**
+ * Default elevation (in degres).
+ * Suitable range is from -90 (below) to 90 (above).
+ * @type {Number}
+ */
+Utils.DEFAULT_ELEVATION = 0;
+
+
+/**
+ * The default ambisonic order.
+ * @type {Number}
+ */
+Utils.DEFAULT_AMBISONIC_ORDER = 1;
+
+
+/**
+ * The default source width.
+ * @type {Number}
+ */
+Utils.DEFAULT_SOURCE_WIDTH = 0;
+
+
+/**
+ * The maximum delay (in seconds) of a single wall reflection.
+ * @type {Number}
+ */
+Utils.DEFAULT_REFLECTION_MAX_DURATION = 0.5;
+
+
+/**
+ * The -12dB cutoff frequency (in Hertz) for the lowpass filter applied to
+ * all reflections.
+ * @type {Number}
+ */
+Utils.DEFAULT_REFLECTION_CUTOFF_FREQUENCY = 6400; // Uses -12dB cutoff.
+
+
+/**
+ * The default reflection coefficients (where 0 = no reflection, 1 = perfect
+ * reflection, -1 = mirrored reflection (180-degrees out of phase)).
+ * @type {Object}
+ */
+Utils.DEFAULT_REFLECTION_COEFFICIENTS = {
+  left: 0, right: 0, front: 0, back: 0, down: 0, up: 0,
+};
+
+
+/**
+ * The minimum distance we consider the listener to be to any given wall.
+ * @type {Number}
+ */
+Utils.DEFAULT_REFLECTION_MIN_DISTANCE = 1;
+
+
+/**
+ * Default room dimensions (in meters).
+ * @type {Object}
+ */
+Utils.DEFAULT_ROOM_DIMENSIONS = {
+  width: 0, height: 0, depth: 0,
+};
+
+
+/**
+ * The multiplier to apply to distances from the listener to each wall.
+ * @type {Number}
+ */
+Utils.DEFAULT_REFLECTION_MULTIPLIER = 1;
+
+
+/** The default bandwidth (in octaves) of the center frequencies.
+ * @type {Number}
+ */
+Utils.DEFAULT_REVERB_BANDWIDTH = 1;
+
+
+/** The default multiplier applied when computing tail lengths.
+ * @type {Number}
+ */
+Utils.DEFAULT_REVERB_DURATION_MULTIPLIER = 1;
+
+
+/**
+ * The late reflections pre-delay (in milliseconds).
+ * @type {Number}
+ */
+Utils.DEFAULT_REVERB_PREDELAY = 1.5;
+
+
+/**
+ * The length of the beginning of the impulse response to apply a
+ * half-Hann window to.
+ * @type {Number}
+ */
+Utils.DEFAULT_REVERB_TAIL_ONSET = 3.8;
+
+
+/**
+ * The default gain (linear).
+ * @type {Number}
+ */
+Utils.DEFAULT_REVERB_GAIN = 0.01;
+
+
+/**
+ * The maximum impulse response length (in seconds).
+ * @type {Number}
+ */
+Utils.DEFAULT_REVERB_MAX_DURATION = 3;
+
+
+/**
+ * Center frequencies of the multiband late reflections.
+ * Nine bands are computed by: 31.25 * 2^(0:8).
+ * @type {Array}
+ */
+Utils.DEFAULT_REVERB_FREQUENCY_BANDS = [
+  31.25, 62.5, 125, 250, 500, 1000, 2000, 4000, 8000,
+];
+
+
+/**
+ * The number of frequency bands.
+ */
+Utils.NUMBER_REVERB_FREQUENCY_BANDS =
+  Utils.DEFAULT_REVERB_FREQUENCY_BANDS.length;
+
+
+/**
+ * The default multiband RT60 durations (in seconds).
+ * @type {Float32Array}
+ */
+Utils.DEFAULT_REVERB_DURATIONS =
+  new Float32Array(Utils.NUMBER_REVERB_FREQUENCY_BANDS);
+
+
+/**
+ * Pre-defined frequency-dependent absorption coefficients for listed materials.
+ * Currently supported materials are:
+ * <ul>
+ * <li>'transparent'</li>
+ * <li>'acoustic-ceiling-tiles'</li>
+ * <li>'brick-bare'</li>
+ * <li>'brick-painted'</li>
+ * <li>'concrete-block-coarse'</li>
+ * <li>'concrete-block-painted'</li>
+ * <li>'curtain-heavy'</li>
+ * <li>'fiber-glass-insulation'</li>
+ * <li>'glass-thin'</li>
+ * <li>'glass-thick'</li>
+ * <li>'grass'</li>
+ * <li>'linoleum-on-concrete'</li>
+ * <li>'marble'</li>
+ * <li>'metal'</li>
+ * <li>'parquet-on-concrete'</li>
+ * <li>'plaster-smooth'</li>
+ * <li>'plywood-panel'</li>
+ * <li>'polished-concrete-or-tile'</li>
+ * <li>'sheetrock'</li>
+ * <li>'water-or-ice-surface'</li>
+ * <li>'wood-ceiling'</li>
+ * <li>'wood-panel'</li>
+ * <li>'uniform'</li>
+ * </ul>
+ * @type {Object}
+ */
+Utils.ROOM_MATERIAL_COEFFICIENTS = {
+  'transparent':
+  [1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000],
+  'acoustic-ceiling-tiles':
+  [0.672, 0.675, 0.700, 0.660, 0.720, 0.920, 0.880, 0.750, 1.000],
+  'brick-bare':
+  [0.030, 0.030, 0.030, 0.030, 0.030, 0.040, 0.050, 0.070, 0.140],
+  'brick-painted':
+  [0.006, 0.007, 0.010, 0.010, 0.020, 0.020, 0.020, 0.030, 0.060],
+  'concrete-block-coarse':
+  [0.360, 0.360, 0.360, 0.440, 0.310, 0.290, 0.390, 0.250, 0.500],
+  'concrete-block-painted':
+  [0.092, 0.090, 0.100, 0.050, 0.060, 0.070, 0.090, 0.080, 0.160],
+  'curtain-heavy':
+  [0.073, 0.106, 0.140, 0.350, 0.550, 0.720, 0.700, 0.650, 1.000],
+  'fiber-glass-insulation':
+  [0.193, 0.220, 0.220, 0.820, 0.990, 0.990, 0.990, 0.990, 1.000],
+  'glass-thin':
+  [0.180, 0.169, 0.180, 0.060, 0.040, 0.030, 0.020, 0.020, 0.040],
+  'glass-thick':
+  [0.350, 0.350, 0.350, 0.250, 0.180, 0.120, 0.070, 0.040, 0.080],
+  'grass':
+  [0.050, 0.050, 0.150, 0.250, 0.400, 0.550, 0.600, 0.600, 0.600],
+  'linoleum-on-concrete':
+  [0.020, 0.020, 0.020, 0.030, 0.030, 0.030, 0.030, 0.020, 0.040],
+  'marble':
+  [0.010, 0.010, 0.010, 0.010, 0.010, 0.010, 0.020, 0.020, 0.040],
+  'metal':
+  [0.030, 0.035, 0.040, 0.040, 0.050, 0.050, 0.050, 0.070, 0.090],
+  'parquet-on-concrete':
+  [0.028, 0.030, 0.040, 0.040, 0.070, 0.060, 0.060, 0.070, 0.140],
+  'plaster-rough':
+  [0.017, 0.018, 0.020, 0.030, 0.040, 0.050, 0.040, 0.030, 0.060],
+  'plaster-smooth':
+  [0.011, 0.012, 0.013, 0.015, 0.020, 0.030, 0.040, 0.050, 0.100],
+  'plywood-panel':
+  [0.400, 0.340, 0.280, 0.220, 0.170, 0.090, 0.100, 0.110, 0.220],
+  'polished-concrete-or-tile':
+  [0.008, 0.008, 0.010, 0.010, 0.015, 0.020, 0.020, 0.020, 0.040],
+  'sheet-rock':
+  [0.290, 0.279, 0.290, 0.100, 0.050, 0.040, 0.070, 0.090, 0.180],
+  'water-or-ice-surface':
+  [0.006, 0.006, 0.008, 0.008, 0.013, 0.015, 0.020, 0.025, 0.050],
+  'wood-ceiling':
+  [0.150, 0.147, 0.150, 0.110, 0.100, 0.070, 0.060, 0.070, 0.140],
+  'wood-panel':
+  [0.280, 0.280, 0.280, 0.220, 0.170, 0.090, 0.100, 0.110, 0.220],
+  'uniform':
+  [0.500, 0.500, 0.500, 0.500, 0.500, 0.500, 0.500, 0.500, 0.500],
+};
+
+
+/**
+ * Default materials that use strings from
+ * {@linkcode Utils.MATERIAL_COEFFICIENTS MATERIAL_COEFFICIENTS}
+ * @type {Object}
+ */
+Utils.DEFAULT_ROOM_MATERIALS = {
+  left: 'transparent', right: 'transparent', front: 'transparent',
+  back: 'transparent', down: 'transparent', up: 'transparent',
+};
+
+
+/**
+ * The number of bands to average over when computing reflection coefficients.
+ * @type {Number}
+ */
+Utils.NUMBER_REFLECTION_AVERAGING_BANDS = 3;
+
+
+/**
+ * The starting band to average over when computing reflection coefficients.
+ * @type {Number}
+ */
+Utils.ROOM_STARTING_AVERAGING_BAND = 4;
+
+
+/**
+ * The minimum threshold for room volume.
+ * Room model is disabled if volume is below this value.
+ * @type {Number} */
+Utils.ROOM_MIN_VOLUME = 1e-4;
+
+
+/**
+ * Air absorption coefficients per frequency band.
+ * @type {Float32Array}
+ */
+Utils.ROOM_AIR_ABSORPTION_COEFFICIENTS =
+  [0.0006, 0.0006, 0.0007, 0.0008, 0.0010, 0.0015, 0.0026, 0.0060, 0.0207];
+
+
+/**
+ * A scalar correction value to ensure Sabine and Eyring produce the same RT60
+ * value at the cross-over threshold.
+ * @type {Number}
+ */
+Utils.ROOM_EYRING_CORRECTION_COEFFICIENT = 1.38;
+
+
+/**
+ * @type {Number}
+ * @private
+ */
+Utils.TWO_PI = 6.28318530717959;
+
+
+/**
+ * @type {Number}
+ * @private
+ */
+Utils.TWENTY_FOUR_LOG10 = 55.2620422318571;
+
+
+/**
+ * @type {Number}
+ * @private
+ */
+Utils.LOG1000 = 6.90775527898214;
+
+
+/**
+ * @type {Number}
+ * @private
+ */
+Utils.LOG2_DIV2 = 0.346573590279973;
+
+
+/**
+ * @type {Number}
+ * @private
+ */
+Utils.DEGREES_TO_RADIANS = 0.017453292519943;
+
+
+/**
+ * @type {Number}
+ * @private
+ */
+Utils.RADIANS_TO_DEGREES = 57.295779513082323;
+
+
+/**
+ * @type {Number}
+ * @private
+ */
+Utils.EPSILON_FLOAT = 1e-8;
+
+
+/**
+ * ResonanceAudio library logging function.
+ * @type {Function}
+ * @param {any} Message to be printed out.
+ * @private
+ */
+Utils.log = function() {
+  window.console.log.apply(window.console, [
+    '%c[ResonanceAudio]%c '
+      + Array.prototype.slice.call(arguments).join(' ') + ' %c(@'
+      + performance.now().toFixed(2) + 'ms)',
+    'background: #BBDEFB; color: #FF5722; font-weight: 700',
+    'font-weight: 400',
+    'color: #AAA',
+  ]);
+};
+
+
+/**
+ * Normalize a 3-d vector.
+ * @param {Float32Array} v 3-element vector.
+ * @return {Float32Array} 3-element vector.
+ * @private
+ */
+Utils.normalizeVector = function(v) {
+  let n = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+  if (n > exports.EPSILON_FLOAT) {
+    n = 1 / n;
+    v[0] *= n;
+    v[1] *= n;
+    v[2] *= n;
+  }
+  return v;
+};
+
+
+/**
+ * Cross-product between two 3-d vectors.
+ * @param {Float32Array} a 3-element vector.
+ * @param {Float32Array} b 3-element vector.
+ * @return {Float32Array}
+ * @private
+ */
+Utils.crossProduct = function(a, b) {
+  return [
+    a[1] * b[2] - a[2] * b[1],
+    a[2] * b[0] - a[0] * b[2],
+    a[0] * b[1] - a[1] * b[0],
+  ];
+};
+
+module.exports = Utils;
+
+
+/***/ }),
+/* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * @license
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Spatially encodes input using weighted spherical harmonics.
+ * @author Andrew Allen <bitllama@google.com>
+ */
+
+
+
+// Internal dependencies.
+const Tables = __webpack_require__(3);
+const Utils = __webpack_require__(0);
+
+
+/**
+ * @class Encoder
+ * @description Spatially encodes input using weighted spherical harmonics.
+ * @param {AudioContext} context
+ * Associated {@link
+https://developer.mozilla.org/en-US/docs/Web/API/AudioContext AudioContext}.
+ * @param {Object} options
+ * @param {Number} options.ambisonicOrder
+ * Desired ambisonic order. Defaults to
+ * {@linkcode Utils.DEFAULT_AMBISONIC_ORDER DEFAULT_AMBISONIC_ORDER}.
+ * @param {Number} options.azimuth
+ * Azimuth (in degrees). Defaults to
+ * {@linkcode Utils.DEFAULT_AZIMUTH DEFAULT_AZIMUTH}.
+ * @param {Number} options.elevation
+ * Elevation (in degrees). Defaults to
+ * {@linkcode Utils.DEFAULT_ELEVATION DEFAULT_ELEVATION}.
+ * @param {Number} options.sourceWidth
+ * Source width (in degrees). Where 0 degrees is a point source and 360 degrees
+ * is an omnidirectional source. Defaults to
+ * {@linkcode Utils.DEFAULT_SOURCE_WIDTH DEFAULT_SOURCE_WIDTH}.
+ */
+function Encoder(context, options) {
+  // Public variables.
+  /**
+   * Mono (1-channel) input {@link
+   * https://developer.mozilla.org/en-US/docs/Web/API/AudioNode AudioNode}.
+   * @member {AudioNode} input
+   * @memberof Encoder
+   * @instance
+   */
+  /**
+   * Ambisonic (multichannel) output {@link
+   * https://developer.mozilla.org/en-US/docs/Web/API/AudioNode AudioNode}.
+   * @member {AudioNode} output
+   * @memberof Encoder
+   * @instance
+   */
+
+  // Use defaults for undefined arguments.
+  if (options == undefined) {
+    options = {};
+  }
+  if (options.ambisonicOrder == undefined) {
+    options.ambisonicOrder = Utils.DEFAULT_AMBISONIC_ORDER;
+  }
+  if (options.azimuth == undefined) {
+    options.azimuth = Utils.DEFAULT_AZIMUTH;
+  }
+  if (options.elevation == undefined) {
+    options.elevation = Utils.DEFAULT_ELEVATION;
+  }
+  if (options.sourceWidth == undefined) {
+    options.sourceWidth = Utils.DEFAULT_SOURCE_WIDTH;
+  }
+
+  this._context = context;
+
+  // Create I/O nodes.
+  this.input = context.createGain();
+  this._channelGain = [];
+  this._merger = undefined;
+  this.output = context.createGain();
+
+  // Set initial order, angle and source width.
+  this.setAmbisonicOrder(options.ambisonicOrder);
+  this._azimuth = options.azimuth;
+  this._elevation = options.elevation;
+  this.setSourceWidth(options.sourceWidth);
+}
+
+/**
+ * Set the desired ambisonic order.
+ * @param {Number} ambisonicOrder Desired ambisonic order.
+ */
+Encoder.prototype.setAmbisonicOrder = function(ambisonicOrder) {
+  this._ambisonicOrder = Encoder.validateAmbisonicOrder(ambisonicOrder);
+
+  this.input.disconnect();
+  for (let i = 0; i < this._channelGain.length; i++) {
+    this._channelGain[i].disconnect();
+  }
+  if (this._merger != undefined) {
+    this._merger.disconnect();
+  }
+  delete this._channelGain;
+  delete this._merger;
+
+  // Create audio graph.
+  let numChannels = (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
+  this._merger = this._context.createChannelMerger(numChannels);
+  this._channelGain = new Array(numChannels);
+  for (let i = 0; i < numChannels; i++) {
+    this._channelGain[i] = this._context.createGain();
+    this.input.connect(this._channelGain[i]);
+    this._channelGain[i].connect(this._merger, 0, i);
+  }
+  this._merger.connect(this.output);
+};
+
+
+/**
+ * Set the direction of the encoded source signal.
+ * @param {Number} azimuth
+ * Azimuth (in degrees). Defaults to
+ * {@linkcode Utils.DEFAULT_AZIMUTH DEFAULT_AZIMUTH}.
+ * @param {Number} elevation
+ * Elevation (in degrees). Defaults to
+ * {@linkcode Utils.DEFAULT_ELEVATION DEFAULT_ELEVATION}.
+ */
+Encoder.prototype.setDirection = function(azimuth, elevation) {
+  // Format input direction to nearest indices.
+  if (azimuth == undefined || isNaN(azimuth)) {
+    azimuth = Utils.DEFAULT_AZIMUTH;
+  }
+  if (elevation == undefined || isNaN(elevation)) {
+    elevation = Utils.DEFAULT_ELEVATION;
+  }
+
+  // Store the formatted input (for updating source width).
+  this._azimuth = azimuth;
+  this._elevation = elevation;
+
+  // Format direction for index lookups.
+  azimuth = Math.round(azimuth % 360);
+  if (azimuth < 0) {
+    azimuth += 360;
+  }
+  elevation = Math.round(Math.min(90, Math.max(-90, elevation))) + 90;
+
+  // Assign gains to each output.
+  this._channelGain[0].gain.value = Tables.MAX_RE_WEIGHTS[this._spreadIndex][0];
+  for (let i = 1; i <= this._ambisonicOrder; i++) {
+    let degreeWeight = Tables.MAX_RE_WEIGHTS[this._spreadIndex][i];
+    for (let j = -i; j <= i; j++) {
+      let acnChannel = (i * i) + i + j;
+      let elevationIndex = i * (i + 1) / 2 + Math.abs(j) - 1;
+      let val = Tables.SPHERICAL_HARMONICS[1][elevation][elevationIndex];
+      if (j != 0) {
+        let azimuthIndex = Tables.SPHERICAL_HARMONICS_MAX_ORDER + j - 1;
+        if (j < 0) {
+          azimuthIndex = Tables.SPHERICAL_HARMONICS_MAX_ORDER + j;
+        }
+        val *= Tables.SPHERICAL_HARMONICS[0][azimuth][azimuthIndex];
+      }
+      this._channelGain[acnChannel].gain.value = val * degreeWeight;
+    }
+  }
+};
+
+
+/**
+ * Set the source width (in degrees). Where 0 degrees is a point source and 360
+ * degrees is an omnidirectional source.
+ * @param {Number} sourceWidth (in degrees).
+ */
+Encoder.prototype.setSourceWidth = function(sourceWidth) {
+  // The MAX_RE_WEIGHTS is a 360 x (Tables.SPHERICAL_HARMONICS_MAX_ORDER+1)
+  // size table.
+  this._spreadIndex = Math.min(359, Math.max(0, Math.round(sourceWidth)));
+  this.setDirection(this._azimuth, this._elevation);
+};
+
+
+/**
+ * Validate the provided ambisonic order.
+ * @param {Number} ambisonicOrder Desired ambisonic order.
+ * @return {Number} Validated/adjusted ambisonic order.
+ * @private
+ */
+Encoder.validateAmbisonicOrder = function(ambisonicOrder) {
+  if (isNaN(ambisonicOrder) || ambisonicOrder == undefined) {
+    Utils.log('Error: Invalid ambisonic order',
+    options.ambisonicOrder, '\nUsing ambisonicOrder=1 instead.');
+    ambisonicOrder = 1;
+  } else if (ambisonicOrder < 1) {
+    Utils.log('Error: Unable to render ambisonic order',
+    options.ambisonicOrder, '(Min order is 1)',
+    '\nUsing min order instead.');
+    ambisonicOrder = 1;
+  } else if (ambisonicOrder > Tables.SPHERICAL_HARMONICS_MAX_ORDER) {
+    Utils.log('Error: Unable to render ambisonic order',
+    options.ambisonicOrder, '(Max order is',
+    Tables.SPHERICAL_HARMONICS_MAX_ORDER, ')\nUsing max order instead.');
+    options.ambisonicOrder = Tables.SPHERICAL_HARMONICS_MAX_ORDER;
+  }
+  return ambisonicOrder;
+};
+
+
+module.exports = Encoder;
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * @license
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Listener model to spatialize sources in an environment.
+ * @author Andrew Allen <bitllama@google.com>
+ */
+
+
+
+
+// Internal dependencies.
+const Omnitone = __webpack_require__(12);
+const Encoder = __webpack_require__(1);
+const Utils = __webpack_require__(0);
+
+
+/**
+ * @class Listener
+ * @description Listener model to spatialize sources in an environment.
+ * @param {AudioContext} context
+ * Associated {@link
+https://developer.mozilla.org/en-US/docs/Web/API/AudioContext AudioContext}.
+ * @param {Object} options
+ * @param {Number} options.ambisonicOrder
+ * Desired ambisonic order. Defaults to
+ * {@linkcode Utils.DEFAULT_AMBISONIC_ORDER DEFAULT_AMBISONIC_ORDER}.
+ * @param {Float32Array} options.position
+ * Initial position (in meters), where origin is the center of
+ * the room. Defaults to
+ * {@linkcode Utils.DEFAULT_POSITION DEFAULT_POSITION}.
+ * @param {Float32Array} options.forward
+ * The listener's initial forward vector. Defaults to
+ * {@linkcode Utils.DEFAULT_FORWARD DEFAULT_FORWARD}.
+ * @param {Float32Array} options.up
+ * The listener's initial up vector. Defaults to
+ * {@linkcode Utils.DEFAULT_UP DEFAULT_UP}.
+ */
+function Listener(context, options) {
+  // Public variables.
+  /**
+   * Position (in meters).
+   * @member {Float32Array} position
+   * @memberof Listener
+   * @instance
+   */
+  /**
+   * Ambisonic (multichannel) input {@link
+   * https://developer.mozilla.org/en-US/docs/Web/API/AudioNode AudioNode}.
+   * @member {AudioNode} input
+   * @memberof Listener
+   * @instance
+   */
+  /**
+   * Binaurally-rendered stereo (2-channel) output {@link
+   * https://developer.mozilla.org/en-US/docs/Web/API/AudioNode AudioNode}.
+   * @member {AudioNode} output
+   * @memberof Listener
+   * @instance
+   */
+  /**
+   * Ambisonic (multichannel) output {@link
+   * https://developer.mozilla.org/en-US/docs/Web/API/AudioNode AudioNode}.
+   * @member {AudioNode} ambisonicOutput
+   * @memberof Listener
+   * @instance
+   */
+  // Use defaults for undefined arguments.
+  if (options == undefined) {
+    options = {};
+  }
+  if (options.ambisonicOrder == undefined) {
+    options.ambisonicOrder = Utils.DEFAULT_AMBISONIC_ORDER;
+  }
+  if (options.position == undefined) {
+    options.position = Utils.DEFAULT_POSITION.slice();
+  }
+  if (options.forward == undefined) {
+    options.forward = Utils.DEFAULT_FORWARD.slice();
+  }
+  if (options.up == undefined) {
+    options.up = Utils.DEFAULT_UP.slice();
+  }
+
+  // Member variables.
+  this.position = new Float32Array(3);
+  this._tempMatrix3 = new Float32Array(9);
+
+  // Select the appropriate HRIR filters using 2-channel chunks since
+  // multichannel audio is not yet supported by a majority of browsers.
+  this._ambisonicOrder =
+    Encoder.validateAmbisonicOrder(options.ambisonicOrder);
+
+    // Create audio nodes.
+  this._context = context;
+  if (this._ambisonicOrder == 1) {
+    this._renderer = Omnitone.Omnitone.createFOARenderer(context, {});
+  } else if (this._ambisonicOrder > 1) {
+    this._renderer = Omnitone.Omnitone.createHOARenderer(context, {
+      ambisonicOrder: this._ambisonicOrder,
+    });
+  }
+
+  // These nodes are created in order to safely asynchronously load Omnitone
+  // while the rest of the scene is being created.
+  this.input = context.createGain();
+  this.output = context.createGain();
+  this.ambisonicOutput = context.createGain();
+
+  // Initialize Omnitone (async) and connect to audio graph when complete.
+  let that = this;
+  this._renderer.initialize().then(function() {
+    // Connect pre-rotated soundfield to renderer.
+    that.input.connect(that._renderer.input);
+
+    // Connect rotated soundfield to ambisonic output.
+    if (that._ambisonicOrder > 1) {
+      that._renderer._hoaRotator.output.connect(that.ambisonicOutput);
+    } else {
+      that._renderer._foaRotator.output.connect(that.ambisonicOutput);
+    }
+
+    // Connect binaurally-rendered soundfield to binaural output.
+    that._renderer.output.connect(that.output);
+  });
+
+  // Set orientation and update rotation matrix accordingly.
+  this.setOrientation(options.forward[0], options.forward[1],
+    options.forward[2], options.up[0], options.up[1], options.up[2]);
+}
+
+/**
+ * Set the source's orientation using forward and up vectors.
+ * @param {Number} forwardX
+ * @param {Number} forwardY
+ * @param {Number} forwardZ
+ * @param {Number} upX
+ * @param {Number} upY
+ * @param {Number} upZ
+ */
+Listener.prototype.setOrientation = function(forwardX, forwardY, forwardZ,
+  upX, upY, upZ) {
+  let right = Utils.crossProduct([forwardX, forwardY, forwardZ],
+    [upX, upY, upZ]);
+  this._tempMatrix3[0] = right[0];
+  this._tempMatrix3[1] = right[1];
+  this._tempMatrix3[2] = right[2];
+  this._tempMatrix3[3] = upX;
+  this._tempMatrix3[4] = upY;
+  this._tempMatrix3[5] = upZ;
+  this._tempMatrix3[6] = forwardX;
+  this._tempMatrix3[7] = forwardY;
+  this._tempMatrix3[8] = forwardZ;
+  this._renderer.setRotationMatrix3(this._tempMatrix3);
+};
+
+
+/**
+ * Set the listener's position and orientation using a Three.js Matrix4 object.
+ * @param {Object} matrix4
+ * The Three.js Matrix4 object representing the listener's world transform.
+ */
+Listener.prototype.setFromMatrix = function(matrix4) {
+  // Update ambisonic rotation matrix internally.
+  this._renderer.setRotationMatrix4(matrix4.elements);
+
+  // Extract position from matrix.
+  this.position[0] = matrix4.elements[12];
+  this.position[1] = matrix4.elements[13];
+  this.position[2] = matrix4.elements[14];
+};
+
+
+module.exports = Listener;
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Pre-computed lookup tables for encoding ambisonic sources.
+ * @author Andrew Allen <bitllama@google.com>
+ */
+
+
+
+
+/**
+ * Pre-computed Spherical Harmonics Coefficients.
+ *
+ * This function generates an efficient lookup table of SH coefficients. It
+ * exploits the way SHs are generated (i.e. Ylm = Nlm * Plm * Em). Since Nlm
+ * & Plm coefficients only depend on theta, and Em only depends on phi, we
+ * can separate the equation along these lines. Em does not depend on
+ * degree, so we only need to compute (2 * l) per azimuth Em total and
+ * Nlm * Plm is symmetrical across indexes, so only positive indexes are
+ * computed ((l + 1) * (l + 2) / 2 - 1) per elevation.
+ * @type {Float32Array}
+ */
+exports.SPHERICAL_HARMONICS =
+[
+  [
+    [0.000000, 0.000000, 0.000000, 1.000000, 1.000000, 1.000000],
+    [0.052336, 0.034899, 0.017452, 0.999848, 0.999391, 0.998630],
+    [0.104528, 0.069756, 0.034899, 0.999391, 0.997564, 0.994522],
+    [0.156434, 0.104528, 0.052336, 0.998630, 0.994522, 0.987688],
+    [0.207912, 0.139173, 0.069756, 0.997564, 0.990268, 0.978148],
+    [0.258819, 0.173648, 0.087156, 0.996195, 0.984808, 0.965926],
+    [0.309017, 0.207912, 0.104528, 0.994522, 0.978148, 0.951057],
+    [0.358368, 0.241922, 0.121869, 0.992546, 0.970296, 0.933580],
+    [0.406737, 0.275637, 0.139173, 0.990268, 0.961262, 0.913545],
+    [0.453990, 0.309017, 0.156434, 0.987688, 0.951057, 0.891007],
+    [0.500000, 0.342020, 0.173648, 0.984808, 0.939693, 0.866025],
+    [0.544639, 0.374607, 0.190809, 0.981627, 0.927184, 0.838671],
+    [0.587785, 0.406737, 0.207912, 0.978148, 0.913545, 0.809017],
+    [0.629320, 0.438371, 0.224951, 0.974370, 0.898794, 0.777146],
+    [0.669131, 0.469472, 0.241922, 0.970296, 0.882948, 0.743145],
+    [0.707107, 0.500000, 0.258819, 0.965926, 0.866025, 0.707107],
+    [0.743145, 0.529919, 0.275637, 0.961262, 0.848048, 0.669131],
+    [0.777146, 0.559193, 0.292372, 0.956305, 0.829038, 0.629320],
+    [0.809017, 0.587785, 0.309017, 0.951057, 0.809017, 0.587785],
+    [0.838671, 0.615661, 0.325568, 0.945519, 0.788011, 0.544639],
+    [0.866025, 0.642788, 0.342020, 0.939693, 0.766044, 0.500000],
+    [0.891007, 0.669131, 0.358368, 0.933580, 0.743145, 0.453990],
+    [0.913545, 0.694658, 0.374607, 0.927184, 0.719340, 0.406737],
+    [0.933580, 0.719340, 0.390731, 0.920505, 0.694658, 0.358368],
+    [0.951057, 0.743145, 0.406737, 0.913545, 0.669131, 0.309017],
+    [0.965926, 0.766044, 0.422618, 0.906308, 0.642788, 0.258819],
+    [0.978148, 0.788011, 0.438371, 0.898794, 0.615661, 0.207912],
+    [0.987688, 0.809017, 0.453990, 0.891007, 0.587785, 0.156434],
+    [0.994522, 0.829038, 0.469472, 0.882948, 0.559193, 0.104528],
+    [0.998630, 0.848048, 0.484810, 0.874620, 0.529919, 0.052336],
+    [1.000000, 0.866025, 0.500000, 0.866025, 0.500000, 0.000000],
+    [0.998630, 0.882948, 0.515038, 0.857167, 0.469472, -0.052336],
+    [0.994522, 0.898794, 0.529919, 0.848048, 0.438371, -0.104528],
+    [0.987688, 0.913545, 0.544639, 0.838671, 0.406737, -0.156434],
+    [0.978148, 0.927184, 0.559193, 0.829038, 0.374607, -0.207912],
+    [0.965926, 0.939693, 0.573576, 0.819152, 0.342020, -0.258819],
+    [0.951057, 0.951057, 0.587785, 0.809017, 0.309017, -0.309017],
+    [0.933580, 0.961262, 0.601815, 0.798636, 0.275637, -0.358368],
+    [0.913545, 0.970296, 0.615661, 0.788011, 0.241922, -0.406737],
+    [0.891007, 0.978148, 0.629320, 0.777146, 0.207912, -0.453990],
+    [0.866025, 0.984808, 0.642788, 0.766044, 0.173648, -0.500000],
+    [0.838671, 0.990268, 0.656059, 0.754710, 0.139173, -0.544639],
+    [0.809017, 0.994522, 0.669131, 0.743145, 0.104528, -0.587785],
+    [0.777146, 0.997564, 0.681998, 0.731354, 0.069756, -0.629320],
+    [0.743145, 0.999391, 0.694658, 0.719340, 0.034899, -0.669131],
+    [0.707107, 1.000000, 0.707107, 0.707107, 0.000000, -0.707107],
+    [0.669131, 0.999391, 0.719340, 0.694658, -0.034899, -0.743145],
+    [0.629320, 0.997564, 0.731354, 0.681998, -0.069756, -0.777146],
+    [0.587785, 0.994522, 0.743145, 0.669131, -0.104528, -0.809017],
+    [0.544639, 0.990268, 0.754710, 0.656059, -0.139173, -0.838671],
+    [0.500000, 0.984808, 0.766044, 0.642788, -0.173648, -0.866025],
+    [0.453990, 0.978148, 0.777146, 0.629320, -0.207912, -0.891007],
+    [0.406737, 0.970296, 0.788011, 0.615661, -0.241922, -0.913545],
+    [0.358368, 0.961262, 0.798636, 0.601815, -0.275637, -0.933580],
+    [0.309017, 0.951057, 0.809017, 0.587785, -0.309017, -0.951057],
+    [0.258819, 0.939693, 0.819152, 0.573576, -0.342020, -0.965926],
+    [0.207912, 0.927184, 0.829038, 0.559193, -0.374607, -0.978148],
+    [0.156434, 0.913545, 0.838671, 0.544639, -0.406737, -0.987688],
+    [0.104528, 0.898794, 0.848048, 0.529919, -0.438371, -0.994522],
+    [0.052336, 0.882948, 0.857167, 0.515038, -0.469472, -0.998630],
+    [0.000000, 0.866025, 0.866025, 0.500000, -0.500000, -1.000000],
+    [-0.052336, 0.848048, 0.874620, 0.484810, -0.529919, -0.998630],
+    [-0.104528, 0.829038, 0.882948, 0.469472, -0.559193, -0.994522],
+    [-0.156434, 0.809017, 0.891007, 0.453990, -0.587785, -0.987688],
+    [-0.207912, 0.788011, 0.898794, 0.438371, -0.615661, -0.978148],
+    [-0.258819, 0.766044, 0.906308, 0.422618, -0.642788, -0.965926],
+    [-0.309017, 0.743145, 0.913545, 0.406737, -0.669131, -0.951057],
+    [-0.358368, 0.719340, 0.920505, 0.390731, -0.694658, -0.933580],
+    [-0.406737, 0.694658, 0.927184, 0.374607, -0.719340, -0.913545],
+    [-0.453990, 0.669131, 0.933580, 0.358368, -0.743145, -0.891007],
+    [-0.500000, 0.642788, 0.939693, 0.342020, -0.766044, -0.866025],
+    [-0.544639, 0.615661, 0.945519, 0.325568, -0.788011, -0.838671],
+    [-0.587785, 0.587785, 0.951057, 0.309017, -0.809017, -0.809017],
+    [-0.629320, 0.559193, 0.956305, 0.292372, -0.829038, -0.777146],
+    [-0.669131, 0.529919, 0.961262, 0.275637, -0.848048, -0.743145],
+    [-0.707107, 0.500000, 0.965926, 0.258819, -0.866025, -0.707107],
+    [-0.743145, 0.469472, 0.970296, 0.241922, -0.882948, -0.669131],
+    [-0.777146, 0.438371, 0.974370, 0.224951, -0.898794, -0.629320],
+    [-0.809017, 0.406737, 0.978148, 0.207912, -0.913545, -0.587785],
+    [-0.838671, 0.374607, 0.981627, 0.190809, -0.927184, -0.544639],
+    [-0.866025, 0.342020, 0.984808, 0.173648, -0.939693, -0.500000],
+    [-0.891007, 0.309017, 0.987688, 0.156434, -0.951057, -0.453990],
+    [-0.913545, 0.275637, 0.990268, 0.139173, -0.961262, -0.406737],
+    [-0.933580, 0.241922, 0.992546, 0.121869, -0.970296, -0.358368],
+    [-0.951057, 0.207912, 0.994522, 0.104528, -0.978148, -0.309017],
+    [-0.965926, 0.173648, 0.996195, 0.087156, -0.984808, -0.258819],
+    [-0.978148, 0.139173, 0.997564, 0.069756, -0.990268, -0.207912],
+    [-0.987688, 0.104528, 0.998630, 0.052336, -0.994522, -0.156434],
+    [-0.994522, 0.069756, 0.999391, 0.034899, -0.997564, -0.104528],
+    [-0.998630, 0.034899, 0.999848, 0.017452, -0.999391, -0.052336],
+    [-1.000000, 0.000000, 1.000000, 0.000000, -1.000000, -0.000000],
+    [-0.998630, -0.034899, 0.999848, -0.017452, -0.999391, 0.052336],
+    [-0.994522, -0.069756, 0.999391, -0.034899, -0.997564, 0.104528],
+    [-0.987688, -0.104528, 0.998630, -0.052336, -0.994522, 0.156434],
+    [-0.978148, -0.139173, 0.997564, -0.069756, -0.990268, 0.207912],
+    [-0.965926, -0.173648, 0.996195, -0.087156, -0.984808, 0.258819],
+    [-0.951057, -0.207912, 0.994522, -0.104528, -0.978148, 0.309017],
+    [-0.933580, -0.241922, 0.992546, -0.121869, -0.970296, 0.358368],
+    [-0.913545, -0.275637, 0.990268, -0.139173, -0.961262, 0.406737],
+    [-0.891007, -0.309017, 0.987688, -0.156434, -0.951057, 0.453990],
+    [-0.866025, -0.342020, 0.984808, -0.173648, -0.939693, 0.500000],
+    [-0.838671, -0.374607, 0.981627, -0.190809, -0.927184, 0.544639],
+    [-0.809017, -0.406737, 0.978148, -0.207912, -0.913545, 0.587785],
+    [-0.777146, -0.438371, 0.974370, -0.224951, -0.898794, 0.629320],
+    [-0.743145, -0.469472, 0.970296, -0.241922, -0.882948, 0.669131],
+    [-0.707107, -0.500000, 0.965926, -0.258819, -0.866025, 0.707107],
+    [-0.669131, -0.529919, 0.961262, -0.275637, -0.848048, 0.743145],
+    [-0.629320, -0.559193, 0.956305, -0.292372, -0.829038, 0.777146],
+    [-0.587785, -0.587785, 0.951057, -0.309017, -0.809017, 0.809017],
+    [-0.544639, -0.615661, 0.945519, -0.325568, -0.788011, 0.838671],
+    [-0.500000, -0.642788, 0.939693, -0.342020, -0.766044, 0.866025],
+    [-0.453990, -0.669131, 0.933580, -0.358368, -0.743145, 0.891007],
+    [-0.406737, -0.694658, 0.927184, -0.374607, -0.719340, 0.913545],
+    [-0.358368, -0.719340, 0.920505, -0.390731, -0.694658, 0.933580],
+    [-0.309017, -0.743145, 0.913545, -0.406737, -0.669131, 0.951057],
+    [-0.258819, -0.766044, 0.906308, -0.422618, -0.642788, 0.965926],
+    [-0.207912, -0.788011, 0.898794, -0.438371, -0.615661, 0.978148],
+    [-0.156434, -0.809017, 0.891007, -0.453990, -0.587785, 0.987688],
+    [-0.104528, -0.829038, 0.882948, -0.469472, -0.559193, 0.994522],
+    [-0.052336, -0.848048, 0.874620, -0.484810, -0.529919, 0.998630],
+    [-0.000000, -0.866025, 0.866025, -0.500000, -0.500000, 1.000000],
+    [0.052336, -0.882948, 0.857167, -0.515038, -0.469472, 0.998630],
+    [0.104528, -0.898794, 0.848048, -0.529919, -0.438371, 0.994522],
+    [0.156434, -0.913545, 0.838671, -0.544639, -0.406737, 0.987688],
+    [0.207912, -0.927184, 0.829038, -0.559193, -0.374607, 0.978148],
+    [0.258819, -0.939693, 0.819152, -0.573576, -0.342020, 0.965926],
+    [0.309017, -0.951057, 0.809017, -0.587785, -0.309017, 0.951057],
+    [0.358368, -0.961262, 0.798636, -0.601815, -0.275637, 0.933580],
+    [0.406737, -0.970296, 0.788011, -0.615661, -0.241922, 0.913545],
+    [0.453990, -0.978148, 0.777146, -0.629320, -0.207912, 0.891007],
+    [0.500000, -0.984808, 0.766044, -0.642788, -0.173648, 0.866025],
+    [0.544639, -0.990268, 0.754710, -0.656059, -0.139173, 0.838671],
+    [0.587785, -0.994522, 0.743145, -0.669131, -0.104528, 0.809017],
+    [0.629320, -0.997564, 0.731354, -0.681998, -0.069756, 0.777146],
+    [0.669131, -0.999391, 0.719340, -0.694658, -0.034899, 0.743145],
+    [0.707107, -1.000000, 0.707107, -0.707107, -0.000000, 0.707107],
+    [0.743145, -0.999391, 0.694658, -0.719340, 0.034899, 0.669131],
+    [0.777146, -0.997564, 0.681998, -0.731354, 0.069756, 0.629320],
+    [0.809017, -0.994522, 0.669131, -0.743145, 0.104528, 0.587785],
+    [0.838671, -0.990268, 0.656059, -0.754710, 0.139173, 0.544639],
+    [0.866025, -0.984808, 0.642788, -0.766044, 0.173648, 0.500000],
+    [0.891007, -0.978148, 0.629320, -0.777146, 0.207912, 0.453990],
+    [0.913545, -0.970296, 0.615661, -0.788011, 0.241922, 0.406737],
+    [0.933580, -0.961262, 0.601815, -0.798636, 0.275637, 0.358368],
+    [0.951057, -0.951057, 0.587785, -0.809017, 0.309017, 0.309017],
+    [0.965926, -0.939693, 0.573576, -0.819152, 0.342020, 0.258819],
+    [0.978148, -0.927184, 0.559193, -0.829038, 0.374607, 0.207912],
+    [0.987688, -0.913545, 0.544639, -0.838671, 0.406737, 0.156434],
+    [0.994522, -0.898794, 0.529919, -0.848048, 0.438371, 0.104528],
+    [0.998630, -0.882948, 0.515038, -0.857167, 0.469472, 0.052336],
+    [1.000000, -0.866025, 0.500000, -0.866025, 0.500000, 0.000000],
+    [0.998630, -0.848048, 0.484810, -0.874620, 0.529919, -0.052336],
+    [0.994522, -0.829038, 0.469472, -0.882948, 0.559193, -0.104528],
+    [0.987688, -0.809017, 0.453990, -0.891007, 0.587785, -0.156434],
+    [0.978148, -0.788011, 0.438371, -0.898794, 0.615661, -0.207912],
+    [0.965926, -0.766044, 0.422618, -0.906308, 0.642788, -0.258819],
+    [0.951057, -0.743145, 0.406737, -0.913545, 0.669131, -0.309017],
+    [0.933580, -0.719340, 0.390731, -0.920505, 0.694658, -0.358368],
+    [0.913545, -0.694658, 0.374607, -0.927184, 0.719340, -0.406737],
+    [0.891007, -0.669131, 0.358368, -0.933580, 0.743145, -0.453990],
+    [0.866025, -0.642788, 0.342020, -0.939693, 0.766044, -0.500000],
+    [0.838671, -0.615661, 0.325568, -0.945519, 0.788011, -0.544639],
+    [0.809017, -0.587785, 0.309017, -0.951057, 0.809017, -0.587785],
+    [0.777146, -0.559193, 0.292372, -0.956305, 0.829038, -0.629320],
+    [0.743145, -0.529919, 0.275637, -0.961262, 0.848048, -0.669131],
+    [0.707107, -0.500000, 0.258819, -0.965926, 0.866025, -0.707107],
+    [0.669131, -0.469472, 0.241922, -0.970296, 0.882948, -0.743145],
+    [0.629320, -0.438371, 0.224951, -0.974370, 0.898794, -0.777146],
+    [0.587785, -0.406737, 0.207912, -0.978148, 0.913545, -0.809017],
+    [0.544639, -0.374607, 0.190809, -0.981627, 0.927184, -0.838671],
+    [0.500000, -0.342020, 0.173648, -0.984808, 0.939693, -0.866025],
+    [0.453990, -0.309017, 0.156434, -0.987688, 0.951057, -0.891007],
+    [0.406737, -0.275637, 0.139173, -0.990268, 0.961262, -0.913545],
+    [0.358368, -0.241922, 0.121869, -0.992546, 0.970296, -0.933580],
+    [0.309017, -0.207912, 0.104528, -0.994522, 0.978148, -0.951057],
+    [0.258819, -0.173648, 0.087156, -0.996195, 0.984808, -0.965926],
+    [0.207912, -0.139173, 0.069756, -0.997564, 0.990268, -0.978148],
+    [0.156434, -0.104528, 0.052336, -0.998630, 0.994522, -0.987688],
+    [0.104528, -0.069756, 0.034899, -0.999391, 0.997564, -0.994522],
+    [0.052336, -0.034899, 0.017452, -0.999848, 0.999391, -0.998630],
+    [0.000000, -0.000000, 0.000000, -1.000000, 1.000000, -1.000000],
+    [-0.052336, 0.034899, -0.017452, -0.999848, 0.999391, -0.998630],
+    [-0.104528, 0.069756, -0.034899, -0.999391, 0.997564, -0.994522],
+    [-0.156434, 0.104528, -0.052336, -0.998630, 0.994522, -0.987688],
+    [-0.207912, 0.139173, -0.069756, -0.997564, 0.990268, -0.978148],
+    [-0.258819, 0.173648, -0.087156, -0.996195, 0.984808, -0.965926],
+    [-0.309017, 0.207912, -0.104528, -0.994522, 0.978148, -0.951057],
+    [-0.358368, 0.241922, -0.121869, -0.992546, 0.970296, -0.933580],
+    [-0.406737, 0.275637, -0.139173, -0.990268, 0.961262, -0.913545],
+    [-0.453990, 0.309017, -0.156434, -0.987688, 0.951057, -0.891007],
+    [-0.500000, 0.342020, -0.173648, -0.984808, 0.939693, -0.866025],
+    [-0.544639, 0.374607, -0.190809, -0.981627, 0.927184, -0.838671],
+    [-0.587785, 0.406737, -0.207912, -0.978148, 0.913545, -0.809017],
+    [-0.629320, 0.438371, -0.224951, -0.974370, 0.898794, -0.777146],
+    [-0.669131, 0.469472, -0.241922, -0.970296, 0.882948, -0.743145],
+    [-0.707107, 0.500000, -0.258819, -0.965926, 0.866025, -0.707107],
+    [-0.743145, 0.529919, -0.275637, -0.961262, 0.848048, -0.669131],
+    [-0.777146, 0.559193, -0.292372, -0.956305, 0.829038, -0.629320],
+    [-0.809017, 0.587785, -0.309017, -0.951057, 0.809017, -0.587785],
+    [-0.838671, 0.615661, -0.325568, -0.945519, 0.788011, -0.544639],
+    [-0.866025, 0.642788, -0.342020, -0.939693, 0.766044, -0.500000],
+    [-0.891007, 0.669131, -0.358368, -0.933580, 0.743145, -0.453990],
+    [-0.913545, 0.694658, -0.374607, -0.927184, 0.719340, -0.406737],
+    [-0.933580, 0.719340, -0.390731, -0.920505, 0.694658, -0.358368],
+    [-0.951057, 0.743145, -0.406737, -0.913545, 0.669131, -0.309017],
+    [-0.965926, 0.766044, -0.422618, -0.906308, 0.642788, -0.258819],
+    [-0.978148, 0.788011, -0.438371, -0.898794, 0.615661, -0.207912],
+    [-0.987688, 0.809017, -0.453990, -0.891007, 0.587785, -0.156434],
+    [-0.994522, 0.829038, -0.469472, -0.882948, 0.559193, -0.104528],
+    [-0.998630, 0.848048, -0.484810, -0.874620, 0.529919, -0.052336],
+    [-1.000000, 0.866025, -0.500000, -0.866025, 0.500000, 0.000000],
+    [-0.998630, 0.882948, -0.515038, -0.857167, 0.469472, 0.052336],
+    [-0.994522, 0.898794, -0.529919, -0.848048, 0.438371, 0.104528],
+    [-0.987688, 0.913545, -0.544639, -0.838671, 0.406737, 0.156434],
+    [-0.978148, 0.927184, -0.559193, -0.829038, 0.374607, 0.207912],
+    [-0.965926, 0.939693, -0.573576, -0.819152, 0.342020, 0.258819],
+    [-0.951057, 0.951057, -0.587785, -0.809017, 0.309017, 0.309017],
+    [-0.933580, 0.961262, -0.601815, -0.798636, 0.275637, 0.358368],
+    [-0.913545, 0.970296, -0.615661, -0.788011, 0.241922, 0.406737],
+    [-0.891007, 0.978148, -0.629320, -0.777146, 0.207912, 0.453990],
+    [-0.866025, 0.984808, -0.642788, -0.766044, 0.173648, 0.500000],
+    [-0.838671, 0.990268, -0.656059, -0.754710, 0.139173, 0.544639],
+    [-0.809017, 0.994522, -0.669131, -0.743145, 0.104528, 0.587785],
+    [-0.777146, 0.997564, -0.681998, -0.731354, 0.069756, 0.629320],
+    [-0.743145, 0.999391, -0.694658, -0.719340, 0.034899, 0.669131],
+    [-0.707107, 1.000000, -0.707107, -0.707107, 0.000000, 0.707107],
+    [-0.669131, 0.999391, -0.719340, -0.694658, -0.034899, 0.743145],
+    [-0.629320, 0.997564, -0.731354, -0.681998, -0.069756, 0.777146],
+    [-0.587785, 0.994522, -0.743145, -0.669131, -0.104528, 0.809017],
+    [-0.544639, 0.990268, -0.754710, -0.656059, -0.139173, 0.838671],
+    [-0.500000, 0.984808, -0.766044, -0.642788, -0.173648, 0.866025],
+    [-0.453990, 0.978148, -0.777146, -0.629320, -0.207912, 0.891007],
+    [-0.406737, 0.970296, -0.788011, -0.615661, -0.241922, 0.913545],
+    [-0.358368, 0.961262, -0.798636, -0.601815, -0.275637, 0.933580],
+    [-0.309017, 0.951057, -0.809017, -0.587785, -0.309017, 0.951057],
+    [-0.258819, 0.939693, -0.819152, -0.573576, -0.342020, 0.965926],
+    [-0.207912, 0.927184, -0.829038, -0.559193, -0.374607, 0.978148],
+    [-0.156434, 0.913545, -0.838671, -0.544639, -0.406737, 0.987688],
+    [-0.104528, 0.898794, -0.848048, -0.529919, -0.438371, 0.994522],
+    [-0.052336, 0.882948, -0.857167, -0.515038, -0.469472, 0.998630],
+    [-0.000000, 0.866025, -0.866025, -0.500000, -0.500000, 1.000000],
+    [0.052336, 0.848048, -0.874620, -0.484810, -0.529919, 0.998630],
+    [0.104528, 0.829038, -0.882948, -0.469472, -0.559193, 0.994522],
+    [0.156434, 0.809017, -0.891007, -0.453990, -0.587785, 0.987688],
+    [0.207912, 0.788011, -0.898794, -0.438371, -0.615661, 0.978148],
+    [0.258819, 0.766044, -0.906308, -0.422618, -0.642788, 0.965926],
+    [0.309017, 0.743145, -0.913545, -0.406737, -0.669131, 0.951057],
+    [0.358368, 0.719340, -0.920505, -0.390731, -0.694658, 0.933580],
+    [0.406737, 0.694658, -0.927184, -0.374607, -0.719340, 0.913545],
+    [0.453990, 0.669131, -0.933580, -0.358368, -0.743145, 0.891007],
+    [0.500000, 0.642788, -0.939693, -0.342020, -0.766044, 0.866025],
+    [0.544639, 0.615661, -0.945519, -0.325568, -0.788011, 0.838671],
+    [0.587785, 0.587785, -0.951057, -0.309017, -0.809017, 0.809017],
+    [0.629320, 0.559193, -0.956305, -0.292372, -0.829038, 0.777146],
+    [0.669131, 0.529919, -0.961262, -0.275637, -0.848048, 0.743145],
+    [0.707107, 0.500000, -0.965926, -0.258819, -0.866025, 0.707107],
+    [0.743145, 0.469472, -0.970296, -0.241922, -0.882948, 0.669131],
+    [0.777146, 0.438371, -0.974370, -0.224951, -0.898794, 0.629320],
+    [0.809017, 0.406737, -0.978148, -0.207912, -0.913545, 0.587785],
+    [0.838671, 0.374607, -0.981627, -0.190809, -0.927184, 0.544639],
+    [0.866025, 0.342020, -0.984808, -0.173648, -0.939693, 0.500000],
+    [0.891007, 0.309017, -0.987688, -0.156434, -0.951057, 0.453990],
+    [0.913545, 0.275637, -0.990268, -0.139173, -0.961262, 0.406737],
+    [0.933580, 0.241922, -0.992546, -0.121869, -0.970296, 0.358368],
+    [0.951057, 0.207912, -0.994522, -0.104528, -0.978148, 0.309017],
+    [0.965926, 0.173648, -0.996195, -0.087156, -0.984808, 0.258819],
+    [0.978148, 0.139173, -0.997564, -0.069756, -0.990268, 0.207912],
+    [0.987688, 0.104528, -0.998630, -0.052336, -0.994522, 0.156434],
+    [0.994522, 0.069756, -0.999391, -0.034899, -0.997564, 0.104528],
+    [0.998630, 0.034899, -0.999848, -0.017452, -0.999391, 0.052336],
+    [1.000000, 0.000000, -1.000000, -0.000000, -1.000000, 0.000000],
+    [0.998630, -0.034899, -0.999848, 0.017452, -0.999391, -0.052336],
+    [0.994522, -0.069756, -0.999391, 0.034899, -0.997564, -0.104528],
+    [0.987688, -0.104528, -0.998630, 0.052336, -0.994522, -0.156434],
+    [0.978148, -0.139173, -0.997564, 0.069756, -0.990268, -0.207912],
+    [0.965926, -0.173648, -0.996195, 0.087156, -0.984808, -0.258819],
+    [0.951057, -0.207912, -0.994522, 0.104528, -0.978148, -0.309017],
+    [0.933580, -0.241922, -0.992546, 0.121869, -0.970296, -0.358368],
+    [0.913545, -0.275637, -0.990268, 0.139173, -0.961262, -0.406737],
+    [0.891007, -0.309017, -0.987688, 0.156434, -0.951057, -0.453990],
+    [0.866025, -0.342020, -0.984808, 0.173648, -0.939693, -0.500000],
+    [0.838671, -0.374607, -0.981627, 0.190809, -0.927184, -0.544639],
+    [0.809017, -0.406737, -0.978148, 0.207912, -0.913545, -0.587785],
+    [0.777146, -0.438371, -0.974370, 0.224951, -0.898794, -0.629320],
+    [0.743145, -0.469472, -0.970296, 0.241922, -0.882948, -0.669131],
+    [0.707107, -0.500000, -0.965926, 0.258819, -0.866025, -0.707107],
+    [0.669131, -0.529919, -0.961262, 0.275637, -0.848048, -0.743145],
+    [0.629320, -0.559193, -0.956305, 0.292372, -0.829038, -0.777146],
+    [0.587785, -0.587785, -0.951057, 0.309017, -0.809017, -0.809017],
+    [0.544639, -0.615661, -0.945519, 0.325568, -0.788011, -0.838671],
+    [0.500000, -0.642788, -0.939693, 0.342020, -0.766044, -0.866025],
+    [0.453990, -0.669131, -0.933580, 0.358368, -0.743145, -0.891007],
+    [0.406737, -0.694658, -0.927184, 0.374607, -0.719340, -0.913545],
+    [0.358368, -0.719340, -0.920505, 0.390731, -0.694658, -0.933580],
+    [0.309017, -0.743145, -0.913545, 0.406737, -0.669131, -0.951057],
+    [0.258819, -0.766044, -0.906308, 0.422618, -0.642788, -0.965926],
+    [0.207912, -0.788011, -0.898794, 0.438371, -0.615661, -0.978148],
+    [0.156434, -0.809017, -0.891007, 0.453990, -0.587785, -0.987688],
+    [0.104528, -0.829038, -0.882948, 0.469472, -0.559193, -0.994522],
+    [0.052336, -0.848048, -0.874620, 0.484810, -0.529919, -0.998630],
+    [0.000000, -0.866025, -0.866025, 0.500000, -0.500000, -1.000000],
+    [-0.052336, -0.882948, -0.857167, 0.515038, -0.469472, -0.998630],
+    [-0.104528, -0.898794, -0.848048, 0.529919, -0.438371, -0.994522],
+    [-0.156434, -0.913545, -0.838671, 0.544639, -0.406737, -0.987688],
+    [-0.207912, -0.927184, -0.829038, 0.559193, -0.374607, -0.978148],
+    [-0.258819, -0.939693, -0.819152, 0.573576, -0.342020, -0.965926],
+    [-0.309017, -0.951057, -0.809017, 0.587785, -0.309017, -0.951057],
+    [-0.358368, -0.961262, -0.798636, 0.601815, -0.275637, -0.933580],
+    [-0.406737, -0.970296, -0.788011, 0.615661, -0.241922, -0.913545],
+    [-0.453990, -0.978148, -0.777146, 0.629320, -0.207912, -0.891007],
+    [-0.500000, -0.984808, -0.766044, 0.642788, -0.173648, -0.866025],
+    [-0.544639, -0.990268, -0.754710, 0.656059, -0.139173, -0.838671],
+    [-0.587785, -0.994522, -0.743145, 0.669131, -0.104528, -0.809017],
+    [-0.629320, -0.997564, -0.731354, 0.681998, -0.069756, -0.777146],
+    [-0.669131, -0.999391, -0.719340, 0.694658, -0.034899, -0.743145],
+    [-0.707107, -1.000000, -0.707107, 0.707107, -0.000000, -0.707107],
+    [-0.743145, -0.999391, -0.694658, 0.719340, 0.034899, -0.669131],
+    [-0.777146, -0.997564, -0.681998, 0.731354, 0.069756, -0.629320],
+    [-0.809017, -0.994522, -0.669131, 0.743145, 0.104528, -0.587785],
+    [-0.838671, -0.990268, -0.656059, 0.754710, 0.139173, -0.544639],
+    [-0.866025, -0.984808, -0.642788, 0.766044, 0.173648, -0.500000],
+    [-0.891007, -0.978148, -0.629320, 0.777146, 0.207912, -0.453990],
+    [-0.913545, -0.970296, -0.615661, 0.788011, 0.241922, -0.406737],
+    [-0.933580, -0.961262, -0.601815, 0.798636, 0.275637, -0.358368],
+    [-0.951057, -0.951057, -0.587785, 0.809017, 0.309017, -0.309017],
+    [-0.965926, -0.939693, -0.573576, 0.819152, 0.342020, -0.258819],
+    [-0.978148, -0.927184, -0.559193, 0.829038, 0.374607, -0.207912],
+    [-0.987688, -0.913545, -0.544639, 0.838671, 0.406737, -0.156434],
+    [-0.994522, -0.898794, -0.529919, 0.848048, 0.438371, -0.104528],
+    [-0.998630, -0.882948, -0.515038, 0.857167, 0.469472, -0.052336],
+    [-1.000000, -0.866025, -0.500000, 0.866025, 0.500000, -0.000000],
+    [-0.998630, -0.848048, -0.484810, 0.874620, 0.529919, 0.052336],
+    [-0.994522, -0.829038, -0.469472, 0.882948, 0.559193, 0.104528],
+    [-0.987688, -0.809017, -0.453990, 0.891007, 0.587785, 0.156434],
+    [-0.978148, -0.788011, -0.438371, 0.898794, 0.615661, 0.207912],
+    [-0.965926, -0.766044, -0.422618, 0.906308, 0.642788, 0.258819],
+    [-0.951057, -0.743145, -0.406737, 0.913545, 0.669131, 0.309017],
+    [-0.933580, -0.719340, -0.390731, 0.920505, 0.694658, 0.358368],
+    [-0.913545, -0.694658, -0.374607, 0.927184, 0.719340, 0.406737],
+    [-0.891007, -0.669131, -0.358368, 0.933580, 0.743145, 0.453990],
+    [-0.866025, -0.642788, -0.342020, 0.939693, 0.766044, 0.500000],
+    [-0.838671, -0.615661, -0.325568, 0.945519, 0.788011, 0.544639],
+    [-0.809017, -0.587785, -0.309017, 0.951057, 0.809017, 0.587785],
+    [-0.777146, -0.559193, -0.292372, 0.956305, 0.829038, 0.629320],
+    [-0.743145, -0.529919, -0.275637, 0.961262, 0.848048, 0.669131],
+    [-0.707107, -0.500000, -0.258819, 0.965926, 0.866025, 0.707107],
+    [-0.669131, -0.469472, -0.241922, 0.970296, 0.882948, 0.743145],
+    [-0.629320, -0.438371, -0.224951, 0.974370, 0.898794, 0.777146],
+    [-0.587785, -0.406737, -0.207912, 0.978148, 0.913545, 0.809017],
+    [-0.544639, -0.374607, -0.190809, 0.981627, 0.927184, 0.838671],
+    [-0.500000, -0.342020, -0.173648, 0.984808, 0.939693, 0.866025],
+    [-0.453990, -0.309017, -0.156434, 0.987688, 0.951057, 0.891007],
+    [-0.406737, -0.275637, -0.139173, 0.990268, 0.961262, 0.913545],
+    [-0.358368, -0.241922, -0.121869, 0.992546, 0.970296, 0.933580],
+    [-0.309017, -0.207912, -0.104528, 0.994522, 0.978148, 0.951057],
+    [-0.258819, -0.173648, -0.087156, 0.996195, 0.984808, 0.965926],
+    [-0.207912, -0.139173, -0.069756, 0.997564, 0.990268, 0.978148],
+    [-0.156434, -0.104528, -0.052336, 0.998630, 0.994522, 0.987688],
+    [-0.104528, -0.069756, -0.034899, 0.999391, 0.997564, 0.994522],
+    [-0.052336, -0.034899, -0.017452, 0.999848, 0.999391, 0.998630],
+  ],
+  [
+    [-1.000000, -0.000000, 1.000000, -0.000000, 0.000000,
+     -1.000000, -0.000000, 0.000000, -0.000000],
+    [-0.999848, 0.017452, 0.999543, -0.030224, 0.000264,
+     -0.999086, 0.042733, -0.000590, 0.000004],
+    [-0.999391, 0.034899, 0.998173, -0.060411, 0.001055,
+     -0.996348, 0.085356, -0.002357, 0.000034],
+    [-0.998630, 0.052336, 0.995891, -0.090524, 0.002372,
+     -0.991791, 0.127757, -0.005297, 0.000113],
+    [-0.997564, 0.069756, 0.992701, -0.120527, 0.004214,
+     -0.985429, 0.169828, -0.009400, 0.000268],
+    [-0.996195, 0.087156, 0.988606, -0.150384, 0.006578,
+     -0.977277, 0.211460, -0.014654, 0.000523],
+    [-0.994522, 0.104528, 0.983611, -0.180057, 0.009462,
+     -0.967356, 0.252544, -0.021043, 0.000903],
+    [-0.992546, 0.121869, 0.977722, -0.209511, 0.012862,
+     -0.955693, 0.292976, -0.028547, 0.001431],
+    [-0.990268, 0.139173, 0.970946, -0.238709, 0.016774,
+     -0.942316, 0.332649, -0.037143, 0.002131],
+    [-0.987688, 0.156434, 0.963292, -0.267617, 0.021193,
+     -0.927262, 0.371463, -0.046806, 0.003026],
+    [-0.984808, 0.173648, 0.954769, -0.296198, 0.026114,
+     -0.910569, 0.409317, -0.057505, 0.004140],
+    [-0.981627, 0.190809, 0.945388, -0.324419, 0.031530,
+     -0.892279, 0.446114, -0.069209, 0.005492],
+    [-0.978148, 0.207912, 0.935159, -0.352244, 0.037436,
+     -0.872441, 0.481759, -0.081880, 0.007105],
+    [-0.974370, 0.224951, 0.924096, -0.379641, 0.043823,
+     -0.851105, 0.516162, -0.095481, 0.008999],
+    [-0.970296, 0.241922, 0.912211, -0.406574, 0.050685,
+     -0.828326, 0.549233, -0.109969, 0.011193],
+    [-0.965926, 0.258819, 0.899519, -0.433013, 0.058013,
+     -0.804164, 0.580889, -0.125300, 0.013707],
+    [-0.961262, 0.275637, 0.886036, -0.458924, 0.065797,
+     -0.778680, 0.611050, -0.141427, 0.016556],
+    [-0.956305, 0.292372, 0.871778, -0.484275, 0.074029,
+     -0.751940, 0.639639, -0.158301, 0.019758],
+    [-0.951057, 0.309017, 0.856763, -0.509037, 0.082698,
+     -0.724012, 0.666583, -0.175868, 0.023329],
+    [-0.945519, 0.325568, 0.841008, -0.533178, 0.091794,
+     -0.694969, 0.691816, -0.194075, 0.027281],
+    [-0.939693, 0.342020, 0.824533, -0.556670, 0.101306,
+     -0.664885, 0.715274, -0.212865, 0.031630],
+    [-0.933580, 0.358368, 0.807359, -0.579484, 0.111222,
+     -0.633837, 0.736898, -0.232180, 0.036385],
+    [-0.927184, 0.374607, 0.789505, -0.601592, 0.121529,
+     -0.601904, 0.756637, -0.251960, 0.041559],
+    [-0.920505, 0.390731, 0.770994, -0.622967, 0.132217,
+     -0.569169, 0.774442, -0.272143, 0.047160],
+    [-0.913545, 0.406737, 0.751848, -0.643582, 0.143271,
+     -0.535715, 0.790270, -0.292666, 0.053196],
+    [-0.906308, 0.422618, 0.732091, -0.663414, 0.154678,
+     -0.501627, 0.804083, -0.313464, 0.059674],
+    [-0.898794, 0.438371, 0.711746, -0.682437, 0.166423,
+     -0.466993, 0.815850, -0.334472, 0.066599],
+    [-0.891007, 0.453990, 0.690839, -0.700629, 0.178494,
+     -0.431899, 0.825544, -0.355623, 0.073974],
+    [-0.882948, 0.469472, 0.669395, -0.717968, 0.190875,
+     -0.396436, 0.833145, -0.376851, 0.081803],
+    [-0.874620, 0.484810, 0.647439, -0.734431, 0.203551,
+     -0.360692, 0.838638, -0.398086, 0.090085],
+    [-0.866025, 0.500000, 0.625000, -0.750000, 0.216506,
+     -0.324760, 0.842012, -0.419263, 0.098821],
+    [-0.857167, 0.515038, 0.602104, -0.764655, 0.229726,
+     -0.288728, 0.843265, -0.440311, 0.108009],
+    [-0.848048, 0.529919, 0.578778, -0.778378, 0.243192,
+     -0.252688, 0.842399, -0.461164, 0.117644],
+    [-0.838671, 0.544639, 0.555052, -0.791154, 0.256891,
+     -0.216730, 0.839422, -0.481753, 0.127722],
+    [-0.829038, 0.559193, 0.530955, -0.802965, 0.270803,
+     -0.180944, 0.834347, -0.502011, 0.138237],
+    [-0.819152, 0.573576, 0.506515, -0.813798, 0.284914,
+     -0.145420, 0.827194, -0.521871, 0.149181],
+    [-0.809017, 0.587785, 0.481763, -0.823639, 0.299204,
+     -0.110246, 0.817987, -0.541266, 0.160545],
+    [-0.798636, 0.601815, 0.456728, -0.832477, 0.313658,
+     -0.075508, 0.806757, -0.560132, 0.172317],
+    [-0.788011, 0.615661, 0.431441, -0.840301, 0.328257,
+     -0.041294, 0.793541, -0.578405, 0.184487],
+    [-0.777146, 0.629320, 0.405934, -0.847101, 0.342984,
+     -0.007686, 0.778379, -0.596021, 0.197040],
+    [-0.766044, 0.642788, 0.380236, -0.852869, 0.357821,
+     0.025233, 0.761319, -0.612921, 0.209963],
+    [-0.754710, 0.656059, 0.354380, -0.857597, 0.372749,
+     0.057383, 0.742412, -0.629044, 0.223238],
+    [-0.743145, 0.669131, 0.328396, -0.861281, 0.387751,
+     0.088686, 0.721714, -0.644334, 0.236850],
+    [-0.731354, 0.681998, 0.302317, -0.863916, 0.402807,
+     0.119068, 0.699288, -0.658734, 0.250778],
+    [-0.719340, 0.694658, 0.276175, -0.865498, 0.417901,
+     0.148454, 0.675199, -0.672190, 0.265005],
+    [-0.707107, 0.707107, 0.250000, -0.866025, 0.433013,
+     0.176777, 0.649519, -0.684653, 0.279508],
+    [-0.694658, 0.719340, 0.223825, -0.865498, 0.448125,
+     0.203969, 0.622322, -0.696073, 0.294267],
+    [-0.681998, 0.731354, 0.197683, -0.863916, 0.463218,
+     0.229967, 0.593688, -0.706405, 0.309259],
+    [-0.669131, 0.743145, 0.171604, -0.861281, 0.478275,
+     0.254712, 0.563700, -0.715605, 0.324459],
+    [-0.656059, 0.754710, 0.145620, -0.857597, 0.493276,
+     0.278147, 0.532443, -0.723633, 0.339844],
+    [-0.642788, 0.766044, 0.119764, -0.852869, 0.508205,
+     0.300221, 0.500009, -0.730451, 0.355387],
+    [-0.629320, 0.777146, 0.094066, -0.847101, 0.523041,
+     0.320884, 0.466490, -0.736025, 0.371063],
+    [-0.615661, 0.788011, 0.068559, -0.840301, 0.537768,
+     0.340093, 0.431982, -0.740324, 0.386845],
+    [-0.601815, 0.798636, 0.043272, -0.832477, 0.552367,
+     0.357807, 0.396584, -0.743320, 0.402704],
+    [-0.587785, 0.809017, 0.018237, -0.823639, 0.566821,
+     0.373991, 0.360397, -0.744989, 0.418613],
+    [-0.573576, 0.819152, -0.006515, -0.813798, 0.581112,
+     0.388612, 0.323524, -0.745308, 0.434544],
+    [-0.559193, 0.829038, -0.030955, -0.802965, 0.595222,
+     0.401645, 0.286069, -0.744262, 0.450467],
+    [-0.544639, 0.838671, -0.055052, -0.791154, 0.609135,
+     0.413066, 0.248140, -0.741835, 0.466352],
+    [-0.529919, 0.848048, -0.078778, -0.778378, 0.622833,
+     0.422856, 0.209843, -0.738017, 0.482171],
+    [-0.515038, 0.857167, -0.102104, -0.764655, 0.636300,
+     0.431004, 0.171288, -0.732801, 0.497894],
+    [-0.500000, 0.866025, -0.125000, -0.750000, 0.649519,
+     0.437500, 0.132583, -0.726184, 0.513490],
+    [-0.484810, 0.874620, -0.147439, -0.734431, 0.662474,
+     0.442340, 0.093837, -0.718167, 0.528929],
+    [-0.469472, 0.882948, -0.169395, -0.717968, 0.675150,
+     0.445524, 0.055160, -0.708753, 0.544183],
+    [-0.453990, 0.891007, -0.190839, -0.700629, 0.687531,
+     0.447059, 0.016662, -0.697950, 0.559220],
+    [-0.438371, 0.898794, -0.211746, -0.682437, 0.699602,
+     0.446953, -0.021550, -0.685769, 0.574011],
+    [-0.422618, 0.906308, -0.232091, -0.663414, 0.711348,
+     0.445222, -0.059368, -0.672226, 0.588528],
+    [-0.406737, 0.913545, -0.251848, -0.643582, 0.722755,
+     0.441884, -0.096684, -0.657339, 0.602741],
+    [-0.390731, 0.920505, -0.270994, -0.622967, 0.733809,
+     0.436964, -0.133395, -0.641130, 0.616621],
+    [-0.374607, 0.927184, -0.289505, -0.601592, 0.744496,
+     0.430488, -0.169397, -0.623624, 0.630141],
+    [-0.358368, 0.933580, -0.307359, -0.579484, 0.754804,
+     0.422491, -0.204589, -0.604851, 0.643273],
+    [-0.342020, 0.939693, -0.324533, -0.556670, 0.764720,
+     0.413008, -0.238872, -0.584843, 0.655990],
+    [-0.325568, 0.945519, -0.341008, -0.533178, 0.774231,
+     0.402081, -0.272150, -0.563635, 0.668267],
+    [-0.309017, 0.951057, -0.356763, -0.509037, 0.783327,
+     0.389754, -0.304329, -0.541266, 0.680078],
+    [-0.292372, 0.956305, -0.371778, -0.484275, 0.791997,
+     0.376077, -0.335319, -0.517778, 0.691399],
+    [-0.275637, 0.961262, -0.386036, -0.458924, 0.800228,
+     0.361102, -0.365034, -0.493216, 0.702207],
+    [-0.258819, 0.965926, -0.399519, -0.433013, 0.808013,
+     0.344885, -0.393389, -0.467627, 0.712478],
+    [-0.241922, 0.970296, -0.412211, -0.406574, 0.815340,
+     0.327486, -0.420306, -0.441061, 0.722191],
+    [-0.224951, 0.974370, -0.424096, -0.379641, 0.822202,
+     0.308969, -0.445709, -0.413572, 0.731327],
+    [-0.207912, 0.978148, -0.435159, -0.352244, 0.828589,
+     0.289399, -0.469527, -0.385215, 0.739866],
+    [-0.190809, 0.981627, -0.445388, -0.324419, 0.834495,
+     0.268846, -0.491693, -0.356047, 0.747790],
+    [-0.173648, 0.984808, -0.454769, -0.296198, 0.839912,
+     0.247382, -0.512145, -0.326129, 0.755082],
+    [-0.156434, 0.987688, -0.463292, -0.267617, 0.844832,
+     0.225081, -0.530827, -0.295521, 0.761728],
+    [-0.139173, 0.990268, -0.470946, -0.238709, 0.849251,
+     0.202020, -0.547684, -0.264287, 0.767712],
+    [-0.121869, 0.992546, -0.477722, -0.209511, 0.853163,
+     0.178279, -0.562672, -0.232494, 0.773023],
+    [-0.104528, 0.994522, -0.483611, -0.180057, 0.856563,
+     0.153937, -0.575747, -0.200207, 0.777648],
+    [-0.087156, 0.996195, -0.488606, -0.150384, 0.859447,
+     0.129078, -0.586872, -0.167494, 0.781579],
+    [-0.069756, 0.997564, -0.492701, -0.120527, 0.861811,
+     0.103786, -0.596018, -0.134426, 0.784806],
+    [-0.052336, 0.998630, -0.495891, -0.090524, 0.863653,
+     0.078146, -0.603158, -0.101071, 0.787324],
+    [-0.034899, 0.999391, -0.498173, -0.060411, 0.864971,
+     0.052243, -0.608272, -0.067500, 0.789126],
+    [-0.017452, 0.999848, -0.499543, -0.030224, 0.865762,
+     0.026165, -0.611347, -0.033786, 0.790208],
+    [0.000000, 1.000000, -0.500000, 0.000000, 0.866025,
+     -0.000000, -0.612372, 0.000000, 0.790569],
+    [0.017452, 0.999848, -0.499543, 0.030224, 0.865762,
+     -0.026165, -0.611347, 0.033786, 0.790208],
+    [0.034899, 0.999391, -0.498173, 0.060411, 0.864971,
+     -0.052243, -0.608272, 0.067500, 0.789126],
+    [0.052336, 0.998630, -0.495891, 0.090524, 0.863653,
+     -0.078146, -0.603158, 0.101071, 0.787324],
+    [0.069756, 0.997564, -0.492701, 0.120527, 0.861811,
+     -0.103786, -0.596018, 0.134426, 0.784806],
+    [0.087156, 0.996195, -0.488606, 0.150384, 0.859447,
+     -0.129078, -0.586872, 0.167494, 0.781579],
+    [0.104528, 0.994522, -0.483611, 0.180057, 0.856563,
+     -0.153937, -0.575747, 0.200207, 0.777648],
+    [0.121869, 0.992546, -0.477722, 0.209511, 0.853163,
+     -0.178279, -0.562672, 0.232494, 0.773023],
+    [0.139173, 0.990268, -0.470946, 0.238709, 0.849251,
+     -0.202020, -0.547684, 0.264287, 0.767712],
+    [0.156434, 0.987688, -0.463292, 0.267617, 0.844832,
+     -0.225081, -0.530827, 0.295521, 0.761728],
+    [0.173648, 0.984808, -0.454769, 0.296198, 0.839912,
+     -0.247382, -0.512145, 0.326129, 0.755082],
+    [0.190809, 0.981627, -0.445388, 0.324419, 0.834495,
+     -0.268846, -0.491693, 0.356047, 0.747790],
+    [0.207912, 0.978148, -0.435159, 0.352244, 0.828589,
+     -0.289399, -0.469527, 0.385215, 0.739866],
+    [0.224951, 0.974370, -0.424096, 0.379641, 0.822202,
+     -0.308969, -0.445709, 0.413572, 0.731327],
+    [0.241922, 0.970296, -0.412211, 0.406574, 0.815340,
+     -0.327486, -0.420306, 0.441061, 0.722191],
+    [0.258819, 0.965926, -0.399519, 0.433013, 0.808013,
+     -0.344885, -0.393389, 0.467627, 0.712478],
+    [0.275637, 0.961262, -0.386036, 0.458924, 0.800228,
+     -0.361102, -0.365034, 0.493216, 0.702207],
+    [0.292372, 0.956305, -0.371778, 0.484275, 0.791997,
+     -0.376077, -0.335319, 0.517778, 0.691399],
+    [0.309017, 0.951057, -0.356763, 0.509037, 0.783327,
+     -0.389754, -0.304329, 0.541266, 0.680078],
+    [0.325568, 0.945519, -0.341008, 0.533178, 0.774231,
+     -0.402081, -0.272150, 0.563635, 0.668267],
+    [0.342020, 0.939693, -0.324533, 0.556670, 0.764720,
+     -0.413008, -0.238872, 0.584843, 0.655990],
+    [0.358368, 0.933580, -0.307359, 0.579484, 0.754804,
+     -0.422491, -0.204589, 0.604851, 0.643273],
+    [0.374607, 0.927184, -0.289505, 0.601592, 0.744496,
+     -0.430488, -0.169397, 0.623624, 0.630141],
+    [0.390731, 0.920505, -0.270994, 0.622967, 0.733809,
+     -0.436964, -0.133395, 0.641130, 0.616621],
+    [0.406737, 0.913545, -0.251848, 0.643582, 0.722755,
+     -0.441884, -0.096684, 0.657339, 0.602741],
+    [0.422618, 0.906308, -0.232091, 0.663414, 0.711348,
+     -0.445222, -0.059368, 0.672226, 0.588528],
+    [0.438371, 0.898794, -0.211746, 0.682437, 0.699602,
+     -0.446953, -0.021550, 0.685769, 0.574011],
+    [0.453990, 0.891007, -0.190839, 0.700629, 0.687531,
+     -0.447059, 0.016662, 0.697950, 0.559220],
+    [0.469472, 0.882948, -0.169395, 0.717968, 0.675150,
+     -0.445524, 0.055160, 0.708753, 0.544183],
+    [0.484810, 0.874620, -0.147439, 0.734431, 0.662474,
+     -0.442340, 0.093837, 0.718167, 0.528929],
+    [0.500000, 0.866025, -0.125000, 0.750000, 0.649519,
+     -0.437500, 0.132583, 0.726184, 0.513490],
+    [0.515038, 0.857167, -0.102104, 0.764655, 0.636300,
+     -0.431004, 0.171288, 0.732801, 0.497894],
+    [0.529919, 0.848048, -0.078778, 0.778378, 0.622833,
+     -0.422856, 0.209843, 0.738017, 0.482171],
+    [0.544639, 0.838671, -0.055052, 0.791154, 0.609135,
+     -0.413066, 0.248140, 0.741835, 0.466352],
+    [0.559193, 0.829038, -0.030955, 0.802965, 0.595222,
+     -0.401645, 0.286069, 0.744262, 0.450467],
+    [0.573576, 0.819152, -0.006515, 0.813798, 0.581112,
+     -0.388612, 0.323524, 0.745308, 0.434544],
+    [0.587785, 0.809017, 0.018237, 0.823639, 0.566821,
+     -0.373991, 0.360397, 0.744989, 0.418613],
+    [0.601815, 0.798636, 0.043272, 0.832477, 0.552367,
+     -0.357807, 0.396584, 0.743320, 0.402704],
+    [0.615661, 0.788011, 0.068559, 0.840301, 0.537768,
+     -0.340093, 0.431982, 0.740324, 0.386845],
+    [0.629320, 0.777146, 0.094066, 0.847101, 0.523041,
+     -0.320884, 0.466490, 0.736025, 0.371063],
+    [0.642788, 0.766044, 0.119764, 0.852869, 0.508205,
+     -0.300221, 0.500009, 0.730451, 0.355387],
+    [0.656059, 0.754710, 0.145620, 0.857597, 0.493276,
+     -0.278147, 0.532443, 0.723633, 0.339844],
+    [0.669131, 0.743145, 0.171604, 0.861281, 0.478275,
+     -0.254712, 0.563700, 0.715605, 0.324459],
+    [0.681998, 0.731354, 0.197683, 0.863916, 0.463218,
+     -0.229967, 0.593688, 0.706405, 0.309259],
+    [0.694658, 0.719340, 0.223825, 0.865498, 0.448125,
+     -0.203969, 0.622322, 0.696073, 0.294267],
+    [0.707107, 0.707107, 0.250000, 0.866025, 0.433013,
+     -0.176777, 0.649519, 0.684653, 0.279508],
+    [0.719340, 0.694658, 0.276175, 0.865498, 0.417901,
+     -0.148454, 0.675199, 0.672190, 0.265005],
+    [0.731354, 0.681998, 0.302317, 0.863916, 0.402807,
+     -0.119068, 0.699288, 0.658734, 0.250778],
+    [0.743145, 0.669131, 0.328396, 0.861281, 0.387751,
+     -0.088686, 0.721714, 0.644334, 0.236850],
+    [0.754710, 0.656059, 0.354380, 0.857597, 0.372749,
+     -0.057383, 0.742412, 0.629044, 0.223238],
+    [0.766044, 0.642788, 0.380236, 0.852869, 0.357821,
+     -0.025233, 0.761319, 0.612921, 0.209963],
+    [0.777146, 0.629320, 0.405934, 0.847101, 0.342984,
+     0.007686, 0.778379, 0.596021, 0.197040],
+    [0.788011, 0.615661, 0.431441, 0.840301, 0.328257,
+     0.041294, 0.793541, 0.578405, 0.184487],
+    [0.798636, 0.601815, 0.456728, 0.832477, 0.313658,
+     0.075508, 0.806757, 0.560132, 0.172317],
+    [0.809017, 0.587785, 0.481763, 0.823639, 0.299204,
+     0.110246, 0.817987, 0.541266, 0.160545],
+    [0.819152, 0.573576, 0.506515, 0.813798, 0.284914,
+     0.145420, 0.827194, 0.521871, 0.149181],
+    [0.829038, 0.559193, 0.530955, 0.802965, 0.270803,
+     0.180944, 0.834347, 0.502011, 0.138237],
+    [0.838671, 0.544639, 0.555052, 0.791154, 0.256891,
+     0.216730, 0.839422, 0.481753, 0.127722],
+    [0.848048, 0.529919, 0.578778, 0.778378, 0.243192,
+     0.252688, 0.842399, 0.461164, 0.117644],
+    [0.857167, 0.515038, 0.602104, 0.764655, 0.229726,
+     0.288728, 0.843265, 0.440311, 0.108009],
+    [0.866025, 0.500000, 0.625000, 0.750000, 0.216506,
+     0.324760, 0.842012, 0.419263, 0.098821],
+    [0.874620, 0.484810, 0.647439, 0.734431, 0.203551,
+     0.360692, 0.838638, 0.398086, 0.090085],
+    [0.882948, 0.469472, 0.669395, 0.717968, 0.190875,
+     0.396436, 0.833145, 0.376851, 0.081803],
+    [0.891007, 0.453990, 0.690839, 0.700629, 0.178494,
+     0.431899, 0.825544, 0.355623, 0.073974],
+    [0.898794, 0.438371, 0.711746, 0.682437, 0.166423,
+     0.466993, 0.815850, 0.334472, 0.066599],
+    [0.906308, 0.422618, 0.732091, 0.663414, 0.154678,
+     0.501627, 0.804083, 0.313464, 0.059674],
+    [0.913545, 0.406737, 0.751848, 0.643582, 0.143271,
+     0.535715, 0.790270, 0.292666, 0.053196],
+    [0.920505, 0.390731, 0.770994, 0.622967, 0.132217,
+     0.569169, 0.774442, 0.272143, 0.047160],
+    [0.927184, 0.374607, 0.789505, 0.601592, 0.121529,
+     0.601904, 0.756637, 0.251960, 0.041559],
+    [0.933580, 0.358368, 0.807359, 0.579484, 0.111222,
+     0.633837, 0.736898, 0.232180, 0.036385],
+    [0.939693, 0.342020, 0.824533, 0.556670, 0.101306,
+     0.664885, 0.715274, 0.212865, 0.031630],
+    [0.945519, 0.325568, 0.841008, 0.533178, 0.091794,
+     0.694969, 0.691816, 0.194075, 0.027281],
+    [0.951057, 0.309017, 0.856763, 0.509037, 0.082698,
+     0.724012, 0.666583, 0.175868, 0.023329],
+    [0.956305, 0.292372, 0.871778, 0.484275, 0.074029,
+     0.751940, 0.639639, 0.158301, 0.019758],
+    [0.961262, 0.275637, 0.886036, 0.458924, 0.065797,
+     0.778680, 0.611050, 0.141427, 0.016556],
+    [0.965926, 0.258819, 0.899519, 0.433013, 0.058013,
+     0.804164, 0.580889, 0.125300, 0.013707],
+    [0.970296, 0.241922, 0.912211, 0.406574, 0.050685,
+     0.828326, 0.549233, 0.109969, 0.011193],
+    [0.974370, 0.224951, 0.924096, 0.379641, 0.043823,
+     0.851105, 0.516162, 0.095481, 0.008999],
+    [0.978148, 0.207912, 0.935159, 0.352244, 0.037436,
+     0.872441, 0.481759, 0.081880, 0.007105],
+    [0.981627, 0.190809, 0.945388, 0.324419, 0.031530,
+     0.892279, 0.446114, 0.069209, 0.005492],
+    [0.984808, 0.173648, 0.954769, 0.296198, 0.026114,
+     0.910569, 0.409317, 0.057505, 0.004140],
+    [0.987688, 0.156434, 0.963292, 0.267617, 0.021193,
+     0.927262, 0.371463, 0.046806, 0.003026],
+    [0.990268, 0.139173, 0.970946, 0.238709, 0.016774,
+     0.942316, 0.332649, 0.037143, 0.002131],
+    [0.992546, 0.121869, 0.977722, 0.209511, 0.012862,
+     0.955693, 0.292976, 0.028547, 0.001431],
+    [0.994522, 0.104528, 0.983611, 0.180057, 0.009462,
+     0.967356, 0.252544, 0.021043, 0.000903],
+    [0.996195, 0.087156, 0.988606, 0.150384, 0.006578,
+     0.977277, 0.211460, 0.014654, 0.000523],
+    [0.997564, 0.069756, 0.992701, 0.120527, 0.004214,
+     0.985429, 0.169828, 0.009400, 0.000268],
+    [0.998630, 0.052336, 0.995891, 0.090524, 0.002372,
+     0.991791, 0.127757, 0.005297, 0.000113],
+    [0.999391, 0.034899, 0.998173, 0.060411, 0.001055,
+     0.996348, 0.085356, 0.002357, 0.000034],
+    [0.999848, 0.017452, 0.999543, 0.030224, 0.000264,
+     0.999086, 0.042733, 0.000590, 0.000004],
+    [1.000000, -0.000000, 1.000000, -0.000000, 0.000000,
+     1.000000, -0.000000, 0.000000, -0.000000],
+  ],
+];
+
+
+/** @type {Number} */
+exports.SPHERICAL_HARMONICS_AZIMUTH_RESOLUTION =
+  exports.SPHERICAL_HARMONICS[0].length;
+
+
+/** @type {Number} */
+exports.SPHERICAL_HARMONICS_ELEVATION_RESOLUTION =
+  exports.SPHERICAL_HARMONICS[1].length;
+
+
+/**
+ * The maximum allowed ambisonic order.
+ * @type {Number}
+ */
+exports.SPHERICAL_HARMONICS_MAX_ORDER =
+  exports.SPHERICAL_HARMONICS[0][0].length / 2;
+
+
+/**
+ * Pre-computed per-band weighting coefficients for producing energy-preserving
+ * Max-Re sources.
+ */
+exports.MAX_RE_WEIGHTS =
+[
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.000000, 1.000000, 1.000000, 1.000000],
+  [1.003236, 1.002156, 0.999152, 0.990038],
+  [1.032370, 1.021194, 0.990433, 0.898572],
+  [1.062694, 1.040231, 0.979161, 0.799806],
+  [1.093999, 1.058954, 0.964976, 0.693603],
+  [1.126003, 1.077006, 0.947526, 0.579890],
+  [1.158345, 1.093982, 0.926474, 0.458690],
+  [1.190590, 1.109437, 0.901512, 0.330158],
+  [1.222228, 1.122890, 0.872370, 0.194621],
+  [1.252684, 1.133837, 0.838839, 0.052614],
+  [1.281987, 1.142358, 0.801199, 0.000000],
+  [1.312073, 1.150207, 0.760839, 0.000000],
+  [1.343011, 1.157424, 0.717799, 0.000000],
+  [1.374649, 1.163859, 0.671999, 0.000000],
+  [1.406809, 1.169354, 0.623371, 0.000000],
+  [1.439286, 1.173739, 0.571868, 0.000000],
+  [1.471846, 1.176837, 0.517465, 0.000000],
+  [1.504226, 1.178465, 0.460174, 0.000000],
+  [1.536133, 1.178438, 0.400043, 0.000000],
+  [1.567253, 1.176573, 0.337165, 0.000000],
+  [1.597247, 1.172695, 0.271688, 0.000000],
+  [1.625766, 1.166645, 0.203815, 0.000000],
+  [1.652455, 1.158285, 0.133806, 0.000000],
+  [1.676966, 1.147506, 0.061983, 0.000000],
+  [1.699006, 1.134261, 0.000000, 0.000000],
+  [1.720224, 1.119789, 0.000000, 0.000000],
+  [1.741631, 1.104810, 0.000000, 0.000000],
+  [1.763183, 1.089330, 0.000000, 0.000000],
+  [1.784837, 1.073356, 0.000000, 0.000000],
+  [1.806548, 1.056898, 0.000000, 0.000000],
+  [1.828269, 1.039968, 0.000000, 0.000000],
+  [1.849952, 1.022580, 0.000000, 0.000000],
+  [1.871552, 1.004752, 0.000000, 0.000000],
+  [1.893018, 0.986504, 0.000000, 0.000000],
+  [1.914305, 0.967857, 0.000000, 0.000000],
+  [1.935366, 0.948837, 0.000000, 0.000000],
+  [1.956154, 0.929471, 0.000000, 0.000000],
+  [1.976625, 0.909790, 0.000000, 0.000000],
+  [1.996736, 0.889823, 0.000000, 0.000000],
+  [2.016448, 0.869607, 0.000000, 0.000000],
+  [2.035721, 0.849175, 0.000000, 0.000000],
+  [2.054522, 0.828565, 0.000000, 0.000000],
+  [2.072818, 0.807816, 0.000000, 0.000000],
+  [2.090581, 0.786964, 0.000000, 0.000000],
+  [2.107785, 0.766051, 0.000000, 0.000000],
+  [2.124411, 0.745115, 0.000000, 0.000000],
+  [2.140439, 0.724196, 0.000000, 0.000000],
+  [2.155856, 0.703332, 0.000000, 0.000000],
+  [2.170653, 0.682561, 0.000000, 0.000000],
+  [2.184823, 0.661921, 0.000000, 0.000000],
+  [2.198364, 0.641445, 0.000000, 0.000000],
+  [2.211275, 0.621169, 0.000000, 0.000000],
+  [2.223562, 0.601125, 0.000000, 0.000000],
+  [2.235230, 0.581341, 0.000000, 0.000000],
+  [2.246289, 0.561847, 0.000000, 0.000000],
+  [2.256751, 0.542667, 0.000000, 0.000000],
+  [2.266631, 0.523826, 0.000000, 0.000000],
+  [2.275943, 0.505344, 0.000000, 0.000000],
+  [2.284707, 0.487239, 0.000000, 0.000000],
+  [2.292939, 0.469528, 0.000000, 0.000000],
+  [2.300661, 0.452225, 0.000000, 0.000000],
+  [2.307892, 0.435342, 0.000000, 0.000000],
+  [2.314654, 0.418888, 0.000000, 0.000000],
+  [2.320969, 0.402870, 0.000000, 0.000000],
+  [2.326858, 0.387294, 0.000000, 0.000000],
+  [2.332343, 0.372164, 0.000000, 0.000000],
+  [2.337445, 0.357481, 0.000000, 0.000000],
+  [2.342186, 0.343246, 0.000000, 0.000000],
+  [2.346585, 0.329458, 0.000000, 0.000000],
+  [2.350664, 0.316113, 0.000000, 0.000000],
+  [2.354442, 0.303208, 0.000000, 0.000000],
+  [2.357937, 0.290738, 0.000000, 0.000000],
+  [2.361168, 0.278698, 0.000000, 0.000000],
+  [2.364152, 0.267080, 0.000000, 0.000000],
+  [2.366906, 0.255878, 0.000000, 0.000000],
+  [2.369446, 0.245082, 0.000000, 0.000000],
+  [2.371786, 0.234685, 0.000000, 0.000000],
+  [2.373940, 0.224677, 0.000000, 0.000000],
+  [2.375923, 0.215048, 0.000000, 0.000000],
+  [2.377745, 0.205790, 0.000000, 0.000000],
+  [2.379421, 0.196891, 0.000000, 0.000000],
+  [2.380959, 0.188342, 0.000000, 0.000000],
+  [2.382372, 0.180132, 0.000000, 0.000000],
+  [2.383667, 0.172251, 0.000000, 0.000000],
+  [2.384856, 0.164689, 0.000000, 0.000000],
+  [2.385945, 0.157435, 0.000000, 0.000000],
+  [2.386943, 0.150479, 0.000000, 0.000000],
+  [2.387857, 0.143811, 0.000000, 0.000000],
+  [2.388694, 0.137421, 0.000000, 0.000000],
+  [2.389460, 0.131299, 0.000000, 0.000000],
+  [2.390160, 0.125435, 0.000000, 0.000000],
+  [2.390801, 0.119820, 0.000000, 0.000000],
+  [2.391386, 0.114445, 0.000000, 0.000000],
+  [2.391921, 0.109300, 0.000000, 0.000000],
+  [2.392410, 0.104376, 0.000000, 0.000000],
+  [2.392857, 0.099666, 0.000000, 0.000000],
+  [2.393265, 0.095160, 0.000000, 0.000000],
+  [2.393637, 0.090851, 0.000000, 0.000000],
+  [2.393977, 0.086731, 0.000000, 0.000000],
+  [2.394288, 0.082791, 0.000000, 0.000000],
+  [2.394571, 0.079025, 0.000000, 0.000000],
+  [2.394829, 0.075426, 0.000000, 0.000000],
+  [2.395064, 0.071986, 0.000000, 0.000000],
+  [2.395279, 0.068699, 0.000000, 0.000000],
+  [2.395475, 0.065558, 0.000000, 0.000000],
+  [2.395653, 0.062558, 0.000000, 0.000000],
+  [2.395816, 0.059693, 0.000000, 0.000000],
+  [2.395964, 0.056955, 0.000000, 0.000000],
+  [2.396099, 0.054341, 0.000000, 0.000000],
+  [2.396222, 0.051845, 0.000000, 0.000000],
+  [2.396334, 0.049462, 0.000000, 0.000000],
+  [2.396436, 0.047186, 0.000000, 0.000000],
+  [2.396529, 0.045013, 0.000000, 0.000000],
+  [2.396613, 0.042939, 0.000000, 0.000000],
+  [2.396691, 0.040959, 0.000000, 0.000000],
+  [2.396761, 0.039069, 0.000000, 0.000000],
+  [2.396825, 0.037266, 0.000000, 0.000000],
+  [2.396883, 0.035544, 0.000000, 0.000000],
+  [2.396936, 0.033901, 0.000000, 0.000000],
+  [2.396984, 0.032334, 0.000000, 0.000000],
+  [2.397028, 0.030838, 0.000000, 0.000000],
+  [2.397068, 0.029410, 0.000000, 0.000000],
+  [2.397104, 0.028048, 0.000000, 0.000000],
+  [2.397137, 0.026749, 0.000000, 0.000000],
+  [2.397167, 0.025509, 0.000000, 0.000000],
+  [2.397194, 0.024326, 0.000000, 0.000000],
+  [2.397219, 0.023198, 0.000000, 0.000000],
+  [2.397242, 0.022122, 0.000000, 0.000000],
+  [2.397262, 0.021095, 0.000000, 0.000000],
+  [2.397281, 0.020116, 0.000000, 0.000000],
+  [2.397298, 0.019181, 0.000000, 0.000000],
+  [2.397314, 0.018290, 0.000000, 0.000000],
+  [2.397328, 0.017441, 0.000000, 0.000000],
+  [2.397341, 0.016630, 0.000000, 0.000000],
+  [2.397352, 0.015857, 0.000000, 0.000000],
+  [2.397363, 0.015119, 0.000000, 0.000000],
+  [2.397372, 0.014416, 0.000000, 0.000000],
+  [2.397381, 0.013745, 0.000000, 0.000000],
+  [2.397389, 0.013106, 0.000000, 0.000000],
+  [2.397396, 0.012496, 0.000000, 0.000000],
+  [2.397403, 0.011914, 0.000000, 0.000000],
+  [2.397409, 0.011360, 0.000000, 0.000000],
+  [2.397414, 0.010831, 0.000000, 0.000000],
+  [2.397419, 0.010326, 0.000000, 0.000000],
+  [2.397424, 0.009845, 0.000000, 0.000000],
+  [2.397428, 0.009387, 0.000000, 0.000000],
+  [2.397432, 0.008949, 0.000000, 0.000000],
+  [2.397435, 0.008532, 0.000000, 0.000000],
+  [2.397438, 0.008135, 0.000000, 0.000000],
+  [2.397441, 0.007755, 0.000000, 0.000000],
+  [2.397443, 0.007394, 0.000000, 0.000000],
+  [2.397446, 0.007049, 0.000000, 0.000000],
+  [2.397448, 0.006721, 0.000000, 0.000000],
+  [2.397450, 0.006407, 0.000000, 0.000000],
+  [2.397451, 0.006108, 0.000000, 0.000000],
+  [2.397453, 0.005824, 0.000000, 0.000000],
+  [2.397454, 0.005552, 0.000000, 0.000000],
+  [2.397456, 0.005293, 0.000000, 0.000000],
+  [2.397457, 0.005046, 0.000000, 0.000000],
+  [2.397458, 0.004811, 0.000000, 0.000000],
+  [2.397459, 0.004586, 0.000000, 0.000000],
+  [2.397460, 0.004372, 0.000000, 0.000000],
+  [2.397461, 0.004168, 0.000000, 0.000000],
+  [2.397461, 0.003974, 0.000000, 0.000000],
+  [2.397462, 0.003788, 0.000000, 0.000000],
+  [2.397463, 0.003611, 0.000000, 0.000000],
+  [2.397463, 0.003443, 0.000000, 0.000000],
+  [2.397464, 0.003282, 0.000000, 0.000000],
+  [2.397464, 0.003129, 0.000000, 0.000000],
+  [2.397465, 0.002983, 0.000000, 0.000000],
+  [2.397465, 0.002844, 0.000000, 0.000000],
+  [2.397465, 0.002711, 0.000000, 0.000000],
+  [2.397466, 0.002584, 0.000000, 0.000000],
+  [2.397466, 0.002464, 0.000000, 0.000000],
+  [2.397466, 0.002349, 0.000000, 0.000000],
+  [2.397466, 0.002239, 0.000000, 0.000000],
+  [2.397467, 0.002135, 0.000000, 0.000000],
+  [2.397467, 0.002035, 0.000000, 0.000000],
+  [2.397467, 0.001940, 0.000000, 0.000000],
+  [2.397467, 0.001849, 0.000000, 0.000000],
+  [2.397467, 0.001763, 0.000000, 0.000000],
+  [2.397467, 0.001681, 0.000000, 0.000000],
+  [2.397468, 0.001602, 0.000000, 0.000000],
+  [2.397468, 0.001527, 0.000000, 0.000000],
+  [2.397468, 0.001456, 0.000000, 0.000000],
+  [2.397468, 0.001388, 0.000000, 0.000000],
+  [2.397468, 0.001323, 0.000000, 0.000000],
+  [2.397468, 0.001261, 0.000000, 0.000000],
+  [2.397468, 0.001202, 0.000000, 0.000000],
+  [2.397468, 0.001146, 0.000000, 0.000000],
+  [2.397468, 0.001093, 0.000000, 0.000000],
+  [2.397468, 0.001042, 0.000000, 0.000000],
+  [2.397468, 0.000993, 0.000000, 0.000000],
+  [2.397468, 0.000947, 0.000000, 0.000000],
+  [2.397468, 0.000902, 0.000000, 0.000000],
+  [2.397468, 0.000860, 0.000000, 0.000000],
+  [2.397468, 0.000820, 0.000000, 0.000000],
+  [2.397469, 0.000782, 0.000000, 0.000000],
+  [2.397469, 0.000745, 0.000000, 0.000000],
+  [2.397469, 0.000710, 0.000000, 0.000000],
+  [2.397469, 0.000677, 0.000000, 0.000000],
+  [2.397469, 0.000646, 0.000000, 0.000000],
+  [2.397469, 0.000616, 0.000000, 0.000000],
+  [2.397469, 0.000587, 0.000000, 0.000000],
+  [2.397469, 0.000559, 0.000000, 0.000000],
+  [2.397469, 0.000533, 0.000000, 0.000000],
+  [2.397469, 0.000508, 0.000000, 0.000000],
+  [2.397469, 0.000485, 0.000000, 0.000000],
+  [2.397469, 0.000462, 0.000000, 0.000000],
+  [2.397469, 0.000440, 0.000000, 0.000000],
+  [2.397469, 0.000420, 0.000000, 0.000000],
+  [2.397469, 0.000400, 0.000000, 0.000000],
+  [2.397469, 0.000381, 0.000000, 0.000000],
+  [2.397469, 0.000364, 0.000000, 0.000000],
+  [2.397469, 0.000347, 0.000000, 0.000000],
+  [2.397469, 0.000330, 0.000000, 0.000000],
+  [2.397469, 0.000315, 0.000000, 0.000000],
+  [2.397469, 0.000300, 0.000000, 0.000000],
+  [2.397469, 0.000286, 0.000000, 0.000000],
+  [2.397469, 0.000273, 0.000000, 0.000000],
+  [2.397469, 0.000260, 0.000000, 0.000000],
+  [2.397469, 0.000248, 0.000000, 0.000000],
+  [2.397469, 0.000236, 0.000000, 0.000000],
+  [2.397469, 0.000225, 0.000000, 0.000000],
+  [2.397469, 0.000215, 0.000000, 0.000000],
+  [2.397469, 0.000205, 0.000000, 0.000000],
+  [2.397469, 0.000195, 0.000000, 0.000000],
+  [2.397469, 0.000186, 0.000000, 0.000000],
+  [2.397469, 0.000177, 0.000000, 0.000000],
+  [2.397469, 0.000169, 0.000000, 0.000000],
+  [2.397469, 0.000161, 0.000000, 0.000000],
+  [2.397469, 0.000154, 0.000000, 0.000000],
+  [2.397469, 0.000147, 0.000000, 0.000000],
+  [2.397469, 0.000140, 0.000000, 0.000000],
+  [2.397469, 0.000133, 0.000000, 0.000000],
+  [2.397469, 0.000127, 0.000000, 0.000000],
+  [2.397469, 0.000121, 0.000000, 0.000000],
+  [2.397469, 0.000115, 0.000000, 0.000000],
+  [2.397469, 0.000110, 0.000000, 0.000000],
+  [2.397469, 0.000105, 0.000000, 0.000000],
+  [2.397469, 0.000100, 0.000000, 0.000000],
+  [2.397469, 0.000095, 0.000000, 0.000000],
+  [2.397469, 0.000091, 0.000000, 0.000000],
+  [2.397469, 0.000087, 0.000000, 0.000000],
+  [2.397469, 0.000083, 0.000000, 0.000000],
+  [2.397469, 0.000079, 0.000000, 0.000000],
+  [2.397469, 0.000075, 0.000000, 0.000000],
+  [2.397469, 0.000071, 0.000000, 0.000000],
+  [2.397469, 0.000068, 0.000000, 0.000000],
+  [2.397469, 0.000065, 0.000000, 0.000000],
+  [2.397469, 0.000062, 0.000000, 0.000000],
+  [2.397469, 0.000059, 0.000000, 0.000000],
+  [2.397469, 0.000056, 0.000000, 0.000000],
+  [2.397469, 0.000054, 0.000000, 0.000000],
+  [2.397469, 0.000051, 0.000000, 0.000000],
+  [2.397469, 0.000049, 0.000000, 0.000000],
+  [2.397469, 0.000046, 0.000000, 0.000000],
+  [2.397469, 0.000044, 0.000000, 0.000000],
+  [2.397469, 0.000042, 0.000000, 0.000000],
+  [2.397469, 0.000040, 0.000000, 0.000000],
+  [2.397469, 0.000038, 0.000000, 0.000000],
+  [2.397469, 0.000037, 0.000000, 0.000000],
+  [2.397469, 0.000035, 0.000000, 0.000000],
+  [2.397469, 0.000033, 0.000000, 0.000000],
+  [2.397469, 0.000032, 0.000000, 0.000000],
+  [2.397469, 0.000030, 0.000000, 0.000000],
+  [2.397469, 0.000029, 0.000000, 0.000000],
+  [2.397469, 0.000027, 0.000000, 0.000000],
+  [2.397469, 0.000026, 0.000000, 0.000000],
+  [2.397469, 0.000025, 0.000000, 0.000000],
+  [2.397469, 0.000024, 0.000000, 0.000000],
+  [2.397469, 0.000023, 0.000000, 0.000000],
+  [2.397469, 0.000022, 0.000000, 0.000000],
+  [2.397469, 0.000021, 0.000000, 0.000000],
+  [2.397469, 0.000020, 0.000000, 0.000000],
+  [2.397469, 0.000019, 0.000000, 0.000000],
+  [2.397469, 0.000018, 0.000000, 0.000000],
+  [2.397469, 0.000017, 0.000000, 0.000000],
+  [2.397469, 0.000016, 0.000000, 0.000000],
+  [2.397469, 0.000015, 0.000000, 0.000000],
+  [2.397469, 0.000015, 0.000000, 0.000000],
+  [2.397469, 0.000014, 0.000000, 0.000000],
+  [2.397469, 0.000013, 0.000000, 0.000000],
+  [2.397469, 0.000013, 0.000000, 0.000000],
+  [2.397469, 0.000012, 0.000000, 0.000000],
+  [2.397469, 0.000012, 0.000000, 0.000000],
+  [2.397469, 0.000011, 0.000000, 0.000000],
+  [2.397469, 0.000011, 0.000000, 0.000000],
+  [2.397469, 0.000010, 0.000000, 0.000000],
+  [2.397469, 0.000010, 0.000000, 0.000000],
+  [2.397469, 0.000009, 0.000000, 0.000000],
+  [2.397469, 0.000009, 0.000000, 0.000000],
+  [2.397469, 0.000008, 0.000000, 0.000000],
+  [2.397469, 0.000008, 0.000000, 0.000000],
+  [2.397469, 0.000008, 0.000000, 0.000000],
+  [2.397469, 0.000007, 0.000000, 0.000000],
+  [2.397469, 0.000007, 0.000000, 0.000000],
+  [2.397469, 0.000007, 0.000000, 0.000000],
+  [2.397469, 0.000006, 0.000000, 0.000000],
+  [2.397469, 0.000006, 0.000000, 0.000000],
+  [2.397469, 0.000006, 0.000000, 0.000000],
+  [2.397469, 0.000005, 0.000000, 0.000000],
+  [2.397469, 0.000005, 0.000000, 0.000000],
+  [2.397469, 0.000005, 0.000000, 0.000000],
+  [2.397469, 0.000005, 0.000000, 0.000000],
+  [2.397469, 0.000004, 0.000000, 0.000000],
+  [2.397469, 0.000004, 0.000000, 0.000000],
+  [2.397469, 0.000004, 0.000000, 0.000000],
+  [2.397469, 0.000004, 0.000000, 0.000000],
+  [2.397469, 0.000004, 0.000000, 0.000000],
+  [2.397469, 0.000004, 0.000000, 0.000000],
+  [2.397469, 0.000003, 0.000000, 0.000000],
+  [2.397469, 0.000003, 0.000000, 0.000000],
+  [2.397469, 0.000003, 0.000000, 0.000000],
+  [2.397469, 0.000003, 0.000000, 0.000000],
+  [2.397469, 0.000003, 0.000000, 0.000000],
+  [2.397469, 0.000003, 0.000000, 0.000000],
+  [2.397469, 0.000003, 0.000000, 0.000000],
+  [2.397469, 0.000002, 0.000000, 0.000000],
+  [2.397469, 0.000002, 0.000000, 0.000000],
+  [2.397469, 0.000002, 0.000000, 0.000000],
+  [2.397469, 0.000002, 0.000000, 0.000000],
+  [2.397469, 0.000002, 0.000000, 0.000000],
+  [2.397469, 0.000002, 0.000000, 0.000000],
+  [2.397469, 0.000002, 0.000000, 0.000000],
+  [2.397469, 0.000002, 0.000000, 0.000000],
+  [2.397469, 0.000002, 0.000000, 0.000000],
+  [2.397469, 0.000002, 0.000000, 0.000000],
+  [2.397469, 0.000001, 0.000000, 0.000000],
+  [2.397469, 0.000001, 0.000000, 0.000000],
+  [2.397469, 0.000001, 0.000000, 0.000000],
+];
+
+
+/** @type {Number} */
+exports.MAX_RE_WEIGHTS_RESOLUTION = exports.MAX_RE_WEIGHTS.length;
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * @license
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Source model to spatialize an audio buffer.
+ * @author Andrew Allen <bitllama@google.com>
+ */
+
+
+
+
+// Internal dependencies.
+const Directivity = __webpack_require__(5);
+const Attenuation = __webpack_require__(6);
+const Encoder = __webpack_require__(1);
+const Utils = __webpack_require__(0);
+
+
+/**
+ * @class Source
+ * @description Source model to spatialize an audio buffer.
+ * @param {ResonanceAudio} scene Associated {@link ResonanceAudio
+ * ResonanceAudio} instance.
+ * @param {Object} options
+ * @param {Float32Array} options.position
+ * The source's initial position (in meters), where origin is the center of
+ * the room. Defaults to {@linkcode Utils.DEFAULT_POSITION DEFAULT_POSITION}.
+ * @param {Float32Array} options.forward
+ * The source's initial forward vector. Defaults to
+ * {@linkcode Utils.DEFAULT_FORWARD DEFAULT_FORWARD}.
+ * @param {Float32Array} options.up
+ * The source's initial up vector. Defaults to
+ * {@linkcode Utils.DEFAULT_UP DEFAULT_UP}.
+ * @param {Number} options.minDistance
+ * Min. distance (in meters). Defaults to
+ * {@linkcode Utils.DEFAULT_MIN_DISTANCE DEFAULT_MIN_DISTANCE}.
+ * @param {Number} options.maxDistance
+ * Max. distance (in meters). Defaults to
+ * {@linkcode Utils.DEFAULT_MAX_DISTANCE DEFAULT_MAX_DISTANCE}.
+ * @param {string} options.rolloff
+ * Rolloff model to use, chosen from options in
+ * {@linkcode Utils.ATTENUATION_ROLLOFFS ATTENUATION_ROLLOFFS}. Defaults to
+ * {@linkcode Utils.DEFAULT_ATTENUATION_ROLLOFF DEFAULT_ATTENUATION_ROLLOFF}.
+ * @param {Number} options.gain Input gain (linear). Defaults to
+ * {@linkcode Utils.DEFAULT_SOURCE_GAIN DEFAULT_SOURCE_GAIN}.
+ * @param {Number} options.alpha Directivity alpha. Defaults to
+ * {@linkcode Utils.DEFAULT_DIRECTIVITY_ALPHA DEFAULT_DIRECTIVITY_ALPHA}.
+ * @param {Number} options.sharpness Directivity sharpness. Defaults to
+ * {@linkcode Utils.DEFAULT_DIRECTIVITY_SHARPNESS
+ * DEFAULT_DIRECTIVITY_SHARPNESS}.
+ * @param {Number} options.sourceWidth
+ * Source width (in degrees). Where 0 degrees is a point source and 360 degrees
+ * is an omnidirectional source. Defaults to
+ * {@linkcode Utils.DEFAULT_SOURCE_WIDTH DEFAULT_SOURCE_WIDTH}.
+ */
+function Source(scene, options) {
+  // Public variables.
+  /**
+   * Mono (1-channel) input {@link
+   * https://developer.mozilla.org/en-US/docs/Web/API/AudioNode AudioNode}.
+   * @member {AudioNode} input
+   * @memberof Source
+   * @instance
+   */
+  /**
+   *
+   */
+
+  // Use defaults for undefined arguments.
+  if (options == undefined) {
+    options = {};
+  }
+  if (options.position == undefined) {
+    options.position = Utils.DEFAULT_POSITION.slice();
+  }
+  if (options.forward == undefined) {
+    options.forward = Utils.DEFAULT_FORWARD.slice();
+  }
+  if (options.up == undefined) {
+    options.up = Utils.DEFAULT_UP.slice();
+  }
+  if (options.minDistance == undefined) {
+    options.minDistance = Utils.DEFAULT_MIN_DISTANCE;
+  }
+  if (options.maxDistance == undefined) {
+    options.maxDistance = Utils.DEFAULT_MAX_DISTANCE;
+  }
+  if (options.rolloff == undefined) {
+    options.rolloff = Utils.DEFAULT_ROLLOFF;
+  }
+  if (options.gain == undefined) {
+    options.gain = Utils.DEFAULT_SOURCE_GAIN;
+  }
+  if (options.alpha == undefined) {
+    options.alpha = Utils.DEFAULT_DIRECTIVITY_ALPHA;
+  }
+  if (options.sharpness == undefined) {
+    options.sharpness = Utils.DEFAULT_DIRECTIVITY_SHARPNESS;
+  }
+  if (options.sourceWidth == undefined) {
+    options.sourceWidth = Utils.DEFAULT_SOURCE_WIDTH;
+  }
+
+  // Member variables.
+  this._scene = scene;
+  this._position = options.position;
+  this._forward = options.forward;
+  this._up = options.up;
+  this._dx = new Float32Array(3);
+  this._right = Utils.crossProduct(this._forward, this._up);
+
+  // Create audio nodes.
+  let context = scene._context;
+  this.input = context.createGain();
+  this._directivity = new Directivity(context, {
+    alpha: options.alpha,
+    sharpness: options.sharpness,
+  });
+  this._toEarly = context.createGain();
+  this._toLate = context.createGain();
+  this._attenuation = new Attenuation(context, {
+    minDistance: options.minDistance,
+    maxDistance: options.maxDistance,
+    rolloff: options.rolloff,
+  });
+  this._encoder = new Encoder(context, {
+    ambisonicOrder: scene._ambisonicOrder,
+    sourceWidth: options.sourceWidth,
+  });
+
+  // Connect nodes.
+  this.input.connect(this._toLate);
+  this._toLate.connect(scene._room.late.input);
+
+  this.input.connect(this._attenuation.input);
+  this._attenuation.output.connect(this._toEarly);
+  this._toEarly.connect(scene._room.early.input);
+
+  this._attenuation.output.connect(this._directivity.input);
+  this._directivity.output.connect(this._encoder.input);
+
+  this._encoder.output.connect(scene._listener.input);
+
+  // Assign initial conditions.
+  this.setPosition(
+    options.position[0], options.position[1], options.position[2]);
+  this.input.gain.value = options.gain;
+}
+
+/**
+ * Set source's position (in meters), where origin is the center of
+ * the room.
+ * @param {Number} x
+ * @param {Number} y
+ * @param {Number} z
+ */
+Source.prototype.setPosition = function(x, y, z) {
+  // Assign new position.
+  this._position[0] = x;
+  this._position[1] = y;
+  this._position[2] = z;
+
+  // Handle far-field effect.
+  let distance = this._scene._room.getDistanceOutsideRoom(
+    this._position[0], this._position[1], this._position[2]);
+    let gain = _computeDistanceOutsideRoom(distance);
+  this._toLate.gain.value = gain;
+  this._toEarly.gain.value = gain;
+
+  this._update();
+};
+
+
+// Update the source when changing the listener's position.
+Source.prototype._update = function() {
+  // Compute distance to listener.
+  for (let i = 0; i < 3; i++) {
+    this._dx[i] = this._position[i] - this._scene._listener.position[i];
+  }
+  let distance = Math.sqrt(this._dx[0] * this._dx[0] +
+    this._dx[1] * this._dx[1] + this._dx[2] * this._dx[2]);
+  if (distance > 0) {
+    // Normalize direction vector.
+    this._dx[0] /= distance;
+    this._dx[1] /= distance;
+    this._dx[2] /= distance;
+  }
+
+  // Compuete angle of direction vector.
+  let azimuth = Math.atan2(-this._dx[0], this._dx[2]) *
+    Utils.RADIANS_TO_DEGREES;
+  let elevation = Math.atan2(this._dx[1], Math.sqrt(this._dx[0] * this._dx[0] +
+    this._dx[2] * this._dx[2])) * Utils.RADIANS_TO_DEGREES;
+
+  // Set distance/directivity/direction values.
+  this._attenuation.setDistance(distance);
+  this._directivity.computeAngle(this._forward, this._dx);
+  this._encoder.setDirection(azimuth, elevation);
+};
+
+
+/**
+ * Set source's rolloff.
+ * @param {string} rolloff
+ * Rolloff model to use, chosen from options in
+ * {@linkcode Utils.ATTENUATION_ROLLOFFS ATTENUATION_ROLLOFFS}.
+ */
+Source.prototype.setRolloff = function(rolloff) {
+  this._attenuation.setRolloff(rolloff);
+};
+
+
+/**
+ * Set source's minimum distance (in meters).
+ * @param {Number} minDistance
+ */
+Source.prototype.setMinDistance = function(minDistance) {
+  this._attenuation.minDistance = minDistance;
+};
+
+
+/**
+ * Set source's maximum distance (in meters).
+ * @param {Number} maxDistance
+ */
+Source.prototype.setMaxDistance = function(maxDistance) {
+  this._attenuation.maxDistance = maxDistance;
+};
+
+
+/**
+ * Set source's gain (linear).
+ * @param {Number} gain
+ */
+Source.prototype.setGain = function(gain) {
+  this.input.gain.value = gain;
+};
+
+
+/**
+ * Set the source's orientation using forward and up vectors.
+ * @param {Number} forwardX
+ * @param {Number} forwardY
+ * @param {Number} forwardZ
+ * @param {Number} upX
+ * @param {Number} upY
+ * @param {Number} upZ
+ */
+Source.prototype.setOrientation = function(forwardX, forwardY, forwardZ,
+    upX, upY, upZ) {
+  this._forward[0] = forwardX;
+  this._forward[1] = forwardY;
+  this._forward[2] = forwardZ;
+  this._up[0] = upX;
+  this._up[1] = upY;
+  this._up[2] = upZ;
+  this._right = Utils.crossProduct(this._forward, this._up);
+};
+
+
+// TODO(bitllama): Make sure this works with Three.js as intended.
+/**
+ * Set source's position and orientation using a
+ * Three.js modelViewMatrix object.
+ * @param {Float32Array} matrix4
+ * The Matrix4 representing the object position and rotation in world space.
+ */
+Source.prototype.setFromMatrix = function(matrix4) {
+  this._right[0] = matrix4.elements[0];
+  this._right[1] = matrix4.elements[1];
+  this._right[2] = matrix4.elements[2];
+  this._up[0] = matrix4.elements[4];
+  this._up[1] = matrix4.elements[5];
+  this._up[2] = matrix4.elements[6];
+  this._forward[0] = matrix4.elements[8];
+  this._forward[1] = matrix4.elements[9];
+  this._forward[2] = matrix4.elements[10];
+
+  // Normalize to remove scaling.
+  this._right = Utils.normalizeVector(this._right);
+  this._up = Utils.normalizeVector(this._up);
+  this._forward = Utils.normalizeVector(this._forward);
+
+  // Update position.
+  this.setPosition(
+    matrix4.elements[12], matrix4.elements[13], matrix4.elements[14]);
+};
+
+
+/**
+ * Set the source width (in degrees). Where 0 degrees is a point source and 360
+ * degrees is an omnidirectional source.
+ * @param {Number} sourceWidth (in degrees).
+ */
+Source.prototype.setSourceWidth = function(sourceWidth) {
+  this._encoder.setSourceWidth(sourceWidth);
+  this.setPosition(this._position[0], this._position[1], this._position[2]);
+};
+
+
+/**
+ * Set source's directivity pattern (defined by alpha), where 0 is an
+ * omnidirectional pattern, 1 is a bidirectional pattern, 0.5 is a cardiod
+ * pattern. The sharpness of the pattern is increased exponentially.
+ * @param {Number} alpha
+ * Determines directivity pattern (0 to 1).
+ * @param {Number} sharpness
+ * Determines the sharpness of the directivity pattern (1 to Inf).
+ */
+Source.prototype.setDirectivityPattern = function(alpha, sharpness) {
+  this._directivity.setPattern(alpha, sharpness);
+  this.setPosition(this._position[0], this._position[1], this._position[2]);
+};
+
+
+/**
+ * Determine the distance a source is outside of a room. Attenuate gain going
+ * to the reflections and reverb when the source is outside of the room.
+ * @param {Number} distance Distance in meters.
+ * @return {Number} Gain (linear) of source.
+ * @private
+ */
+function _computeDistanceOutsideRoom(distance) {
+  // We apply a linear ramp from 1 to 0 as the source is up to 1m outside.
+  let gain = 1;
+  if (distance > Utils.EPSILON_FLOAT) {
+    gain = 1 - distance / Utils.SOURCE_MAX_OUTSIDE_ROOM_DISTANCE;
+
+    // Clamp gain between 0 and 1.
+    gain = Math.max(0, Math.min(1, gain));
+  }
+  return gain;
+}
+
+
+module.exports = Source;
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * @license
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Directivity/occlusion filter.
+ * @author Andrew Allen <bitllama@google.com>
+ */
+
+
+
+// Internal dependencies.
+const Utils = __webpack_require__(0);
+
+
+/**
+ * @class Directivity
+ * @description Directivity/occlusion filter.
+ * @param {AudioContext} context
+ * Associated {@link
+https://developer.mozilla.org/en-US/docs/Web/API/AudioContext AudioContext}.
+ * @param {Object} options
+ * @param {Number} options.alpha
+ * Determines directivity pattern (0 to 1). See
+ * {@link Directivity#setPattern setPattern} for more details. Defaults to
+ * {@linkcode Utils.DEFAULT_DIRECTIVITY_ALPHA DEFAULT_DIRECTIVITY_ALPHA}.
+ * @param {Number} options.sharpness
+ * Determines the sharpness of the directivity pattern (1 to Inf). See
+ * {@link Directivity#setPattern setPattern} for more details. Defaults to
+ * {@linkcode Utils.DEFAULT_DIRECTIVITY_SHARPNESS
+ * DEFAULT_DIRECTIVITY_SHARPNESS}.
+ */
+function Directivity(context, options) {
+  // Public variables.
+  /**
+   * Mono (1-channel) input {@link
+   * https://developer.mozilla.org/en-US/docs/Web/API/AudioNode AudioNode}.
+   * @member {AudioNode} input
+   * @memberof Directivity
+   * @instance
+   */
+  /**
+   * Mono (1-channel) output {@link
+   * https://developer.mozilla.org/en-US/docs/Web/API/AudioNode AudioNode}.
+   * @member {AudioNode} output
+   * @memberof Directivity
+   * @instance
+   */
+
+  // Use defaults for undefined arguments.
+  if (options == undefined) {
+    options = {};
+  }
+  if (options.alpha == undefined) {
+    options.alpha = Utils.DEFAULT_DIRECTIVITY_ALPHA;
+  }
+  if (options.sharpness == undefined) {
+    options.sharpness = Utils.DEFAULT_DIRECTIVITY_SHARPNESS;
+  }
+
+  // Create audio node.
+  this._context = context;
+  this._lowpass = context.createBiquadFilter();
+
+  // Initialize filter coefficients.
+  this._lowpass.type = 'lowpass';
+  this._lowpass.Q.value = 0;
+  this._lowpass.frequency.value = context.sampleRate * 0.5;
+
+  this._cosTheta = 0;
+  this.setPattern(options.alpha, options.sharpness);
+
+  // Input/Output proxy.
+  this.input = this._lowpass;
+  this.output = this._lowpass;
+}
+
+
+/**
+ * Compute the filter using the source's forward orientation and the listener's
+ * position.
+ * @param {Float32Array} forward The source's forward vector.
+ * @param {Float32Array} direction The direction from the source to the
+ * listener.
+ */
+Directivity.prototype.computeAngle = function(forward, direction) {
+  let forwardNorm = Utils.normalizeVector(forward);
+  let directionNorm = Utils.normalizeVector(direction);
+  let coeff = 1;
+  if (this._alpha > Utils.EPSILON_FLOAT) {
+    let cosTheta = forwardNorm[0] * directionNorm[0] +
+      forwardNorm[1] * directionNorm[1] + forwardNorm[2] * directionNorm[2];
+    coeff = (1 - this._alpha) + this._alpha * cosTheta;
+    coeff = Math.pow(Math.abs(coeff), this._sharpness);
+  }
+  this._lowpass.frequency.value = this._context.sampleRate * 0.5 * coeff;
+};
+
+
+/**
+ * Set source's directivity pattern (defined by alpha), where 0 is an
+ * omnidirectional pattern, 1 is a bidirectional pattern, 0.5 is a cardiod
+ * pattern. The sharpness of the pattern is increased exponenentially.
+ * @param {Number} alpha
+ * Determines directivity pattern (0 to 1).
+ * @param {Number} sharpness
+ * Determines the sharpness of the directivity pattern (1 to Inf).
+ * DEFAULT_DIRECTIVITY_SHARPNESS}.
+ */
+Directivity.prototype.setPattern = function(alpha, sharpness) {
+  // Clamp and set values.
+  this._alpha = Math.min(1, Math.max(0, alpha));
+  this._sharpness = Math.max(1, sharpness);
+
+  // Update angle calculation using new values.
+  this.computeAngle([this._cosTheta * this._cosTheta, 0, 0], [1, 0, 0]);
+};
+
+
+module.exports = Directivity;
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * @license
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Distance-based attenuation filter.
+ * @author Andrew Allen <bitllama@google.com>
+ */
+
+
+
+
+// Internal dependencies.
+const Utils = __webpack_require__(0);
+
+
+/**
+ * @class Attenuation
+ * @description Distance-based attenuation filter.
+ * @param {AudioContext} context
+ * Associated {@link
+https://developer.mozilla.org/en-US/docs/Web/API/AudioContext AudioContext}.
+ * @param {Object} options
+ * @param {Number} options.minDistance
+ * Min. distance (in meters). Defaults to
+ * {@linkcode Utils.DEFAULT_MIN_DISTANCE DEFAULT_MIN_DISTANCE}.
+ * @param {Number} options.maxDistance
+ * Max. distance (in meters). Defaults to
+ * {@linkcode Utils.DEFAULT_MAX_DISTANCE DEFAULT_MAX_DISTANCE}.
+ * @param {string} options.rolloff
+ * Rolloff model to use, chosen from options in
+ * {@linkcode Utils.ATTENUATION_ROLLOFFS ATTENUATION_ROLLOFFS}. Defaults to
+ * {@linkcode Utils.DEFAULT_ATTENUATION_ROLLOFF DEFAULT_ATTENUATION_ROLLOFF}.
+ */
+function Attenuation(context, options) {
+  // Public variables.
+  /**
+   * Min. distance (in meters).
+   * @member {Number} minDistance
+   * @memberof Attenuation
+   * @instance
+   */
+  /**
+   * Max. distance (in meters).
+   * @member {Number} maxDistance
+   * @memberof Attenuation
+   * @instance
+   */
+  /**
+   * Mono (1-channel) input {@link
+   * https://developer.mozilla.org/en-US/docs/Web/API/AudioNode AudioNode}.
+   * @member {AudioNode} input
+   * @memberof Attenuation
+   * @instance
+   */
+  /**
+   * Mono (1-channel) output {@link
+   * https://developer.mozilla.org/en-US/docs/Web/API/AudioNode AudioNode}.
+   * @member {AudioNode} output
+   * @memberof Attenuation
+   * @instance
+   */
+
+  // Use defaults for undefined arguments.
+  if (options == undefined) {
+    options = {};
+  }
+  if (options.minDistance == undefined) {
+    options.minDistance = Utils.DEFAULT_MIN_DISTANCE;
+  }
+  if (options.maxDistance == undefined) {
+    options.maxDistance = Utils.DEFAULT_MAX_DISTANCE;
+  }
+  if (options.rolloff == undefined) {
+    options.rolloff = Utils.DEFAULT_ATTENUATION_ROLLOFF;
+  }
+
+  // Assign values.
+  this.minDistance = options.minDistance;
+  this.maxDistance = options.maxDistance;
+  this.setRolloff(options.rolloff);
+
+  // Create node.
+  this._gainNode = context.createGain();
+
+  // Initialize distance to max distance.
+  this.setDistance(options.maxDistance);
+
+  // Input/Output proxy.
+  this.input = this._gainNode;
+  this.output = this._gainNode;
+}
+
+
+/**
+ * Set distance from the listener.
+ * @param {Number} distance Distance (in meters).
+ */
+Attenuation.prototype.setDistance = function(distance) {
+  let gain = 1;
+  if (this._rolloff == 'logarithmic') {
+    if (distance > this.maxDistance) {
+      gain = 0;
+    } else if (distance > this.minDistance) {
+      let range = this.maxDistance - this.minDistance;
+      if (range > Utils.EPSILON_FLOAT) {
+        // Compute the distance attenuation value by the logarithmic curve
+        // "1 / (d + 1)" with an offset of |minDistance|.
+        let relativeDistance = distance - this.minDistance;
+        let attenuation = 1 / (relativeDistance + 1);
+        let attenuationMax = 1 / (range + 1);
+        gain = (attenuation - attenuationMax) / (1 - attenuationMax);
+      }
+    }
+  } else if (this._rolloff == 'linear') {
+    if (distance > this.maxDistance) {
+      gain = 0;
+    } else if (distance > this.minDistance) {
+      let range = this.maxDistance - this.minDistance;
+      if (range > Utils.EPSILON_FLOAT) {
+        gain = (this.maxDistance - distance) / range;
+      }
+    }
+  }
+  this._gainNode.gain.value = gain;
+};
+
+
+/**
+ * Set rolloff.
+ * @param {string} rolloff
+ * Rolloff model to use, chosen from options in
+ * {@linkcode Utils.ATTENUATION_ROLLOFFS ATTENUATION_ROLLOFFS}.
+ */
+Attenuation.prototype.setRolloff = function(rolloff) {
+  let isValidModel = ~Utils.ATTENUATION_ROLLOFFS.indexOf(rolloff);
+  if (rolloff == undefined || !isValidModel) {
+    if (!isValidModel) {
+      Utils.log('Invalid rolloff model (\"' + rolloff +
+        '\"). Using default: \"' + Utils.DEFAULT_ATTENUATION_ROLLOFF + '\".');
+    }
+    rolloff = Utils.DEFAULT_ATTENUATION_ROLLOFF;
+  } else {
+    rolloff = rolloff.toString().toLowerCase();
+  }
+  this._rolloff = rolloff;
+};
+
+
+module.exports = Attenuation;
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * @license
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Complete room model with early and late reflections.
+ * @author Andrew Allen <bitllama@google.com>
+ */
+
+
+
+
+// Internal dependencies.
+const LateReflections = __webpack_require__(8);
+const EarlyReflections = __webpack_require__(9);
+const Utils = __webpack_require__(0);
+
+
+/**
+ * Generate absorption coefficients from material names.
+ * @param {Object} materials
+ * @return {Object}
+ */
+function _getCoefficientsFromMaterials(materials) {
+  // Initialize coefficients to use defaults.
+  let coefficients = {};
+  for (let property in Utils.DEFAULT_ROOM_MATERIALS) {
+    if (Utils.DEFAULT_ROOM_MATERIALS.hasOwnProperty(property)) {
+      coefficients[property] = Utils.ROOM_MATERIAL_COEFFICIENTS[
+        Utils.DEFAULT_ROOM_MATERIALS[property]];
+    }
+  }
+
+  // Sanitize materials.
+  if (materials == undefined) {
+    materials = {};
+    Object.assign(materials, Utils.DEFAULT_ROOM_MATERIALS);
+  }
+
+  // Assign coefficients using provided materials.
+  for (let property in Utils.DEFAULT_ROOM_MATERIALS) {
+    if (Utils.DEFAULT_ROOM_MATERIALS.hasOwnProperty(property) &&
+        materials.hasOwnProperty(property)) {
+      if (materials[property] in Utils.ROOM_MATERIAL_COEFFICIENTS) {
+        coefficients[property] =
+          Utils.ROOM_MATERIAL_COEFFICIENTS[materials[property]];
+      } else {
+        Utils.log('Material \"' + materials[property] + '\" on wall \"' +
+          property + '\" not found. Using \"' +
+          Utils.DEFAULT_ROOM_MATERIALS[property] + '\".');
+      }
+    } else {
+      Utils.log('Wall \"' + property + '\" is not defined. Default used.');
+    }
+  }
+  return coefficients;
+}
+
+/**
+ * Sanitize coefficients.
+ * @param {Object} coefficients
+ * @return {Object}
+ */
+function _sanitizeCoefficients(coefficients) {
+  if (coefficients == undefined) {
+    coefficients = {};
+  }
+  for (let property in Utils.DEFAULT_ROOM_MATERIALS) {
+    if (!(coefficients.hasOwnProperty(property))) {
+      // If element is not present, use default coefficients.
+      coefficients[property] = Utils.ROOM_MATERIAL_COEFFICIENTS[
+        Utils.DEFAULT_ROOM_MATERIALS[property]];
+    }
+  }
+  return coefficients;
+}
+
+/**
+ * Sanitize dimensions.
+ * @param {Object} dimensions
+ * @return {Object}
+ */
+function _sanitizeDimensions(dimensions) {
+  if (dimensions == undefined) {
+    dimensions = {};
+  }
+  for (let property in Utils.DEFAULT_ROOM_DIMENSIONS) {
+    if (!(dimensions.hasOwnProperty(property))) {
+      dimensions[property] = Utils.DEFAULT_ROOM_DIMENSIONS[property];
+    }
+  }
+  return dimensions;
+}
+
+/**
+ * Compute frequency-dependent reverb durations.
+ * @param {Object} dimensions
+ * @param {Object} coefficients
+ * @param {Number} speedOfSound
+ * @return {Array}
+ */
+function _getDurationsFromProperties(dimensions, coefficients, speedOfSound) {
+  let durations = new Float32Array(Utils.NUMBER_REVERB_FREQUENCY_BANDS);
+
+  // Sanitize inputs.
+  dimensions = _sanitizeDimensions(dimensions);
+  coefficients = _sanitizeCoefficients(coefficients);
+  if (speedOfSound == undefined) {
+    speedOfSound = Utils.DEFAULT_SPEED_OF_SOUND;
+  }
+
+  // Acoustic constant.
+  let k = Utils.TWENTY_FOUR_LOG10 / speedOfSound;
+
+  // Compute volume, skip if room is not present.
+  let volume = dimensions.width * dimensions.height * dimensions.depth;
+  if (volume < Utils.ROOM_MIN_VOLUME) {
+    return durations;
+  }
+
+  // Room surface area.
+  let leftRightArea = dimensions.width * dimensions.height;
+  let floorCeilingArea = dimensions.width * dimensions.depth;
+  let frontBackArea = dimensions.depth * dimensions.height;
+  let totalArea = 2 * (leftRightArea + floorCeilingArea + frontBackArea);
+  for (let i = 0; i < Utils.NUMBER_REVERB_FREQUENCY_BANDS; i++) {
+    // Effective absorptive area.
+    let absorbtionArea =
+      (coefficients.left[i] + coefficients.right[i]) * leftRightArea +
+      (coefficients.down[i] + coefficients.up[i]) * floorCeilingArea +
+      (coefficients.front[i] + coefficients.back[i]) * frontBackArea;
+    let meanAbsorbtionArea = absorbtionArea / totalArea;
+
+    // Compute reverberation using Eyring equation [1].
+    // [1] Beranek, Leo L. "Analysis of Sabine and Eyring equations and their
+    //     application to concert hall audience and chair absorption." The
+    //     Journal of the Acoustical Society of America, Vol. 120, No. 3.
+    //     (2006), pp. 1399-1399.
+    durations[i] = Utils.ROOM_EYRING_CORRECTION_COEFFICIENT * k * volume /
+      (-totalArea * Math.log(1 - meanAbsorbtionArea) + 4 *
+      Utils.ROOM_AIR_ABSORPTION_COEFFICIENTS[i] * volume);
+  }
+  return durations;
+}
+
+
+/**
+ * Compute reflection coefficients from absorption coefficients.
+ * @param {Object} absorptionCoefficients
+ * @return {Object}
+ */
+function _computeReflectionCoefficients(absorptionCoefficients) {
+  let reflectionCoefficients = [];
+  for (let property in Utils.DEFAULT_REFLECTION_COEFFICIENTS) {
+    if (Utils.DEFAULT_REFLECTION_COEFFICIENTS
+        .hasOwnProperty(property)) {
+      // Compute average absorption coefficient (per wall).
+      reflectionCoefficients[property] = 0;
+      for (let j = 0; j < Utils.NUMBER_REFLECTION_AVERAGING_BANDS; j++) {
+        let bandIndex = j + Utils.ROOM_STARTING_AVERAGING_BAND;
+        reflectionCoefficients[property] +=
+          absorptionCoefficients[property][bandIndex];
+      }
+      reflectionCoefficients[property] /=
+        Utils.NUMBER_REFLECTION_AVERAGING_BANDS;
+
+      // Convert absorption coefficient to reflection coefficient.
+      reflectionCoefficients[property] =
+        Math.sqrt(1 - reflectionCoefficients[property]);
+    }
+  }
+  return reflectionCoefficients;
+}
+
+
+/**
+ * @class Room
+ * @description Model that manages early and late reflections using acoustic
+ * properties and listener position relative to a rectangular room.
+ * @param {AudioContext} context
+ * Associated {@link
+https://developer.mozilla.org/en-US/docs/Web/API/AudioContext AudioContext}.
+ * @param {Object} options
+ * @param {Float32Array} options.listenerPosition
+ * The listener's initial position (in meters), where origin is the center of
+ * the room. Defaults to {@linkcode Utils.DEFAULT_POSITION DEFAULT_POSITION}.
+ * @param {Object} options.dimensions Room dimensions (in meters). Defaults to
+ * {@linkcode Utils.DEFAULT_ROOM_DIMENSIONS DEFAULT_ROOM_DIMENSIONS}.
+ * @param {Object} options.materials Named acoustic materials per wall.
+ * Defaults to {@linkcode Utils.DEFAULT_ROOM_MATERIALS DEFAULT_ROOM_MATERIALS}.
+ * @param {Number} options.speedOfSound
+ * (in meters/second). Defaults to
+ * {@linkcode Utils.DEFAULT_SPEED_OF_SOUND DEFAULT_SPEED_OF_SOUND}.
+ */
+function Room(context, options) {
+  // Public variables.
+  /**
+   * EarlyReflections {@link EarlyReflections EarlyReflections} submodule.
+   * @member {AudioNode} early
+   * @memberof Room
+   * @instance
+   */
+  /**
+   * LateReflections {@link LateReflections LateReflections} submodule.
+   * @member {AudioNode} late
+   * @memberof Room
+   * @instance
+   */
+  /**
+   * Ambisonic (multichannel) output {@link
+   * https://developer.mozilla.org/en-US/docs/Web/API/AudioNode AudioNode}.
+   * @member {AudioNode} output
+   * @memberof Room
+   * @instance
+   */
+
+  // Use defaults for undefined arguments.
+  if (options == undefined) {
+    options = {};
+  }
+  if (options.listenerPosition == undefined) {
+    options.listenerPosition = Utils.DEFAULT_POSITION.slice();
+  }
+  if (options.dimensions == undefined) {
+    options.dimensions = {};
+    Object.assign(options.dimensions, Utils.DEFAULT_ROOM_DIMENSIONS);
+  }
+  if (options.materials == undefined) {
+    options.materials = {};
+    Object.assign(options.materials, Utils.DEFAULT_ROOM_MATERIALS);
+  }
+  if (options.speedOfSound == undefined) {
+    options.speedOfSound = Utils.DEFAULT_SPEED_OF_SOUND;
+  }
+
+  // Sanitize room-properties-related arguments.
+  options.dimensions = _sanitizeDimensions(options.dimensions);
+  let absorptionCoefficients = _getCoefficientsFromMaterials(options.materials);
+  let reflectionCoefficients =
+    _computeReflectionCoefficients(absorptionCoefficients);
+  let durations = _getDurationsFromProperties(options.dimensions,
+    absorptionCoefficients, options.speedOfSound);
+
+  // Construct submodules for early and late reflections.
+  this.early = new EarlyReflections(context, {
+    dimensions: options.dimensions,
+    coefficients: reflectionCoefficients,
+    speedOfSound: options.speedOfSound,
+    listenerPosition: options.listenerPosition,
+  });
+  this.late = new LateReflections(context, {
+    durations: durations,
+  });
+
+  this.speedOfSound = options.speedOfSound;
+
+  // Construct auxillary audio nodes.
+  this.output = context.createGain();
+  this.early.output.connect(this.output);
+  this._merger = context.createChannelMerger(4);
+
+  this.late.output.connect(this._merger, 0, 0);
+  this._merger.connect(this.output);
+}
+
+
+/**
+ * Set the room's dimensions and wall materials.
+ * @param {Object} dimensions Room dimensions (in meters). Defaults to
+ * {@linkcode Utils.DEFAULT_ROOM_DIMENSIONS DEFAULT_ROOM_DIMENSIONS}.
+ * @param {Object} materials Named acoustic materials per wall. Defaults to
+ * {@linkcode Utils.DEFAULT_ROOM_MATERIALS DEFAULT_ROOM_MATERIALS}.
+ */
+Room.prototype.setProperties = function(dimensions, materials) {
+  // Compute late response.
+  let absorptionCoefficients = _getCoefficientsFromMaterials(materials);
+  let durations = _getDurationsFromProperties(dimensions,
+    absorptionCoefficients, this.speedOfSound);
+  this.late.setDurations(durations);
+
+  // Compute early response.
+  this.early.speedOfSound = this.speedOfSound;
+  let reflectionCoefficients =
+    _computeReflectionCoefficients(absorptionCoefficients);
+  this.early.setRoomProperties(dimensions, reflectionCoefficients);
+};
+
+
+/**
+ * Set the listener's position (in meters), where origin is the center of
+ * the room.
+ * @param {Number} x
+ * @param {Number} y
+ * @param {Number} z
+ */
+Room.prototype.setListenerPosition = function(x, y, z) {
+  this.early.speedOfSound = this.speedOfSound;
+  this.early.setListenerPosition(x, y, z);
+
+  // Disable room effects if the listener is outside the room boundaries.
+  let distance = this.getDistanceOutsideRoom(x, y, z);
+  let gain = 1;
+  if (distance > Utils.EPSILON_FLOAT) {
+    gain = 1 - distance / Utils.LISTENER_MAX_OUTSIDE_ROOM_DISTANCE;
+
+    // Clamp gain between 0 and 1.
+    gain = Math.max(0, Math.min(1, gain));
+  }
+  this.output.gain.value = gain;
+};
+
+
+/**
+ * Compute distance outside room of provided position (in meters).
+ * @param {Number} x
+ * @param {Number} y
+ * @param {Number} z
+ * @return {Number}
+ * Distance outside room (in meters). Returns 0 if inside room.
+ */
+Room.prototype.getDistanceOutsideRoom = function(x, y, z) {
+  let dx = Math.max(0, -this.early._halfDimensions.width - x,
+    x - this.early._halfDimensions.width);
+    let dy = Math.max(0, -this.early._halfDimensions.height - y,
+    y - this.early._halfDimensions.height);
+    let dz = Math.max(0, -this.early._halfDimensions.depth - z,
+    z - this.early._halfDimensions.depth);
+  return Math.sqrt(dx * dx + dy * dy + dz * dz);
+};
+
+
+module.exports = Room;
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * @license
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Late reverberation filter for Ambisonic content.
+ * @author Andrew Allen <bitllama@google.com>
+ */
+
+
+
+// Internal dependencies.
+const Utils = __webpack_require__(0);
+
+
+/**
+ * @class LateReflections
+ * @description Late-reflections reverberation filter for Ambisonic content.
+ * @param {AudioContext} context
+ * Associated {@link
+https://developer.mozilla.org/en-US/docs/Web/API/AudioContext AudioContext}.
+ * @param {Object} options
+ * @param {Array} options.durations
+ * Multiband RT60 durations (in seconds) for each frequency band, listed as
+ * {@linkcode Utils.DEFAULT_REVERB_FREQUENCY_BANDS
+ * FREQUDEFAULT_REVERB_FREQUENCY_BANDSENCY_BANDS}. Defaults to
+ * {@linkcode Utils.DEFAULT_REVERB_DURATIONS DEFAULT_REVERB_DURATIONS}.
+ * @param {Number} options.predelay Pre-delay (in milliseconds). Defaults to
+ * {@linkcode Utils.DEFAULT_REVERB_PREDELAY DEFAULT_REVERB_PREDELAY}.
+ * @param {Number} options.gain Output gain (linear). Defaults to
+ * {@linkcode Utils.DEFAULT_REVERB_GAIN DEFAULT_REVERB_GAIN}.
+ * @param {Number} options.bandwidth Bandwidth (in octaves) for each frequency
+ * band. Defaults to
+ * {@linkcode Utils.DEFAULT_REVERB_BANDWIDTH DEFAULT_REVERB_BANDWIDTH}.
+ * @param {Number} options.tailonset Length (in milliseconds) of impulse
+ * response to apply a half-Hann window. Defaults to
+ * {@linkcode Utils.DEFAULT_REVERB_TAIL_ONSET DEFAULT_REVERB_TAIL_ONSET}.
+ */
+function LateReflections(context, options) {
+  // Public variables.
+  /**
+   * Mono (1-channel) input {@link
+   * https://developer.mozilla.org/en-US/docs/Web/API/AudioNode AudioNode}.
+   * @member {AudioNode} input
+   * @memberof LateReflections
+   * @instance
+   */
+  /**
+   * Mono (1-channel) output {@link
+   * https://developer.mozilla.org/en-US/docs/Web/API/AudioNode AudioNode}.
+   * @member {AudioNode} output
+   * @memberof LateReflections
+   * @instance
+   */
+
+  // Use defaults for undefined arguments.
+  if (options == undefined) {
+    options = {};
+  }
+  if (options.durations == undefined) {
+    options.durations = Utils.DEFAULT_REVERB_DURATIONS.slice();
+  }
+  if (options.predelay == undefined) {
+    options.predelay = Utils.DEFAULT_REVERB_PREDELAY;
+  }
+  if (options.gain == undefined) {
+    options.gain = Utils.DEFAULT_REVERB_GAIN;
+  }
+  if (options.bandwidth == undefined) {
+    options.bandwidth = Utils.DEFAULT_REVERB_BANDWIDTH;
+  }
+  if (options.tailonset == undefined) {
+    options.tailonset = Utils.DEFAULT_REVERB_TAIL_ONSET;
+  }
+
+  // Assign pre-computed variables.
+  let delaySecs = options.predelay / 1000;
+  this._bandwidthCoeff = options.bandwidth * Utils.LOG2_DIV2;
+  this._tailonsetSamples = options.tailonset / 1000;
+
+  // Create nodes.
+  this._context = context;
+  this.input = context.createGain();
+  this._predelay = context.createDelay(delaySecs);
+  this._convolver = context.createConvolver();
+  this.output = context.createGain();
+
+  // Set reverb attenuation.
+  this.output.gain.value = options.gain;
+
+  // Disable normalization.
+  this._convolver.normalize = false;
+
+  // Connect nodes.
+  this.input.connect(this._predelay);
+  this._predelay.connect(this._convolver);
+  this._convolver.connect(this.output);
+
+  // Compute IR using RT60 values.
+  this.setDurations(options.durations);
+}
+
+
+/**
+ * Re-compute a new impulse response by providing Multiband RT60 durations.
+ * @param {Array} durations
+ * Multiband RT60 durations (in seconds) for each frequency band, listed as
+ * {@linkcode Utils.DEFAULT_REVERB_FREQUENCY_BANDS
+ * DEFAULT_REVERB_FREQUENCY_BANDS}.
+ */
+LateReflections.prototype.setDurations = function(durations) {
+  if (durations.length !== Utils.NUMBER_REVERB_FREQUENCY_BANDS) {
+    Utils.log('Warning: invalid number of RT60 values provided to reverb.');
+    return;
+  }
+
+  // Compute impulse response.
+  let durationsSamples =
+    new Float32Array(Utils.NUMBER_REVERB_FREQUENCY_BANDS);
+    let sampleRate = this._context.sampleRate;
+
+  for (let i = 0; i < durations.length; i++) {
+    // Clamp within suitable range.
+    durations[i] =
+      Math.max(0, Math.min(Utils.DEFAULT_REVERB_MAX_DURATION, durations[i]));
+
+    // Convert seconds to samples.
+    durationsSamples[i] = Math.round(durations[i] * sampleRate *
+      Utils.DEFAULT_REVERB_DURATION_MULTIPLIER);
+  }
+  // Determine max RT60 length in samples.
+  let durationsSamplesMax = 0;
+  for (let i = 0; i < durationsSamples.length; i++) {
+    if (durationsSamples[i] > durationsSamplesMax) {
+      durationsSamplesMax = durationsSamples[i];
+    }
+  }
+
+  // Skip this step if there is no reverberation to compute.
+  if (durationsSamplesMax < 1) {
+    durationsSamplesMax = 1;
+  }
+
+  // Create impulse response buffer.
+  let buffer = this._context.createBuffer(1, durationsSamplesMax, sampleRate);
+  let bufferData = buffer.getChannelData(0);
+
+  // Create noise signal (computed once, referenced in each band's routine).
+  let noiseSignal = new Float32Array(durationsSamplesMax);
+  for (let i = 0; i < durationsSamplesMax; i++) {
+    noiseSignal[i] = Math.random() * 2 - 1;
+  }
+
+  // Compute the decay rate per-band and filter the decaying noise signal.
+  for (let i = 0; i < Utils.NUMBER_REVERB_FREQUENCY_BANDS; i++) {
+    // Compute decay rate.
+    let decayRate = -Utils.LOG1000 / durationsSamples[i];
+
+    // Construct a standard one-zero, two-pole bandpass filter:
+    // H(z) = (b0 * z^0 + b1 * z^-1 + b2 * z^-2) / (1 + a1 * z^-1 + a2 * z^-2)
+    let omega = Utils.TWO_PI *
+      Utils.DEFAULT_REVERB_FREQUENCY_BANDS[i] / sampleRate;
+    let sinOmega = Math.sin(omega);
+    let alpha = sinOmega * Math.sinh(this._bandwidthCoeff * omega / sinOmega);
+    let a0CoeffReciprocal = 1 / (1 + alpha);
+    let b0Coeff = alpha * a0CoeffReciprocal;
+    let a1Coeff = -2 * Math.cos(omega) * a0CoeffReciprocal;
+    let a2Coeff = (1 - alpha) * a0CoeffReciprocal;
+
+    // We optimize since b2 = -b0, b1 = 0.
+    // Update equation for two-pole bandpass filter:
+    //   u[n] = x[n] - a1 * x[n-1] - a2 * x[n-2]
+    //   y[n] = b0 * (u[n] - u[n-2])
+    let um1 = 0;
+    let um2 = 0;
+    for (let j = 0; j < durationsSamples[i]; j++) {
+      // Exponentially-decaying white noise.
+      let x = noiseSignal[j] * Math.exp(decayRate * j);
+
+      // Filter signal with bandpass filter and add to output.
+      let u = x - a1Coeff * um1 - a2Coeff * um2;
+      bufferData[j] += b0Coeff * (u - um2);
+
+      // Update coefficients.
+      um2 = um1;
+      um1 = u;
+    }
+  }
+
+  // Create and apply half of a Hann window to the beginning of the
+  // impulse response.
+  let halfHannLength =
+    Math.round(this._tailonsetSamples);
+  for (let i = 0; i < Math.min(bufferData.length, halfHannLength); i++) {
+    let halfHann =
+      0.5 * (1 - Math.cos(Utils.TWO_PI * i / (2 * halfHannLength - 1)));
+      bufferData[i] *= halfHann;
+  }
+  this._convolver.buffer = buffer;
+};
+
+
+module.exports = LateReflections;
+
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * @license
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Ray-tracing-based early reflections model.
+ * @author Andrew Allen <bitllama@google.com>
+ */
+
+
+
+// Internal dependencies.
+const Utils = __webpack_require__(0);
+
+
+/**
+ * @class EarlyReflections
+ * @description Ray-tracing-based early reflections model.
+ * @param {AudioContext} context
+ * Associated {@link
+https://developer.mozilla.org/en-US/docs/Web/API/AudioContext AudioContext}.
+ * @param {Object} options
+ * @param {Object} options.dimensions
+ * Room dimensions (in meters). Defaults to
+ * {@linkcode Utils.DEFAULT_ROOM_DIMENSIONS DEFAULT_ROOM_DIMENSIONS}.
+ * @param {Object} options.coefficients
+ * Frequency-independent reflection coeffs per wall. Defaults to
+ * {@linkcode Utils.DEFAULT_REFLECTION_COEFFICIENTS
+ * DEFAULT_REFLECTION_COEFFICIENTS}.
+ * @param {Number} options.speedOfSound
+ * (in meters / second). Defaults to {@linkcode Utils.DEFAULT_SPEED_OF_SOUND
+ * DEFAULT_SPEED_OF_SOUND}.
+ * @param {Float32Array} options.listenerPosition
+ * (in meters). Defaults to
+ * {@linkcode Utils.DEFAULT_POSITION DEFAULT_POSITION}.
+ */
+function EarlyReflections(context, options) {
+  // Public variables.
+  /**
+   * The room's speed of sound (in meters/second).
+   * @member {Number} speedOfSound
+   * @memberof EarlyReflections
+   * @instance
+   */
+  /**
+   * Mono (1-channel) input {@link
+   * https://developer.mozilla.org/en-US/docs/Web/API/AudioNode AudioNode}.
+   * @member {AudioNode} input
+   * @memberof EarlyReflections
+   * @instance
+   */
+  /**
+   * First-order ambisonic (4-channel) output {@link
+   * https://developer.mozilla.org/en-US/docs/Web/API/AudioNode AudioNode}.
+   * @member {AudioNode} output
+   * @memberof EarlyReflections
+   * @instance
+   */
+
+  // Use defaults for undefined arguments.
+  if (options == undefined) {
+    options = {};
+  }
+  if (options.speedOfSound == undefined) {
+    options.speedOfSound = Utils.DEFAULT_SPEED_OF_SOUND;
+  }
+  if (options.listenerPosition == undefined) {
+    options.listenerPosition = Utils.DEFAULT_POSITION.slice();
+  }
+  if (options.coefficients == undefined) {
+    options.coefficients = {};
+    Object.assign(options.coefficients, Utils.DEFAULT_REFLECTION_COEFFICIENTS);
+  }
+
+  // Assign room's speed of sound.
+  this.speedOfSound = options.speedOfSound;
+
+  // Create nodes.
+  this.input = context.createGain();
+  this.output = context.createGain();
+  this._lowpass = context.createBiquadFilter();
+  this._delays = {};
+  this._gains = {}; // gainPerWall = (ReflectionCoeff / Attenuation)
+  this._inverters = {}; // 3 of these are needed for right/back/down walls.
+  this._merger = context.createChannelMerger(4); // First-order encoding only.
+
+  // Connect audio graph for each wall reflection.
+  for (let property in Utils.DEFAULT_REFLECTION_COEFFICIENTS) {
+    if (Utils.DEFAULT_REFLECTION_COEFFICIENTS
+        .hasOwnProperty(property)) {
+      this._delays[property] =
+        context.createDelay(Utils.MAX_DURATION);
+      this._gains[property] = context.createGain();
+    }
+  }
+  this._inverters.right = context.createGain();
+  this._inverters.down = context.createGain();
+  this._inverters.back = context.createGain();
+
+  // Initialize lowpass filter.
+  this._lowpass.type = 'lowpass';
+  this._lowpass.frequency.value = Utils.DEFAULT_REFLECTION_CUTOFF_FREQUENCY;
+  this._lowpass.Q.value = 0;
+
+  // Initialize encoder directions, set delay times and gains to 0.
+  for (let property in Utils.DEFAULT_REFLECTION_COEFFICIENTS) {
+    if (Utils.DEFAULT_REFLECTION_COEFFICIENTS
+        .hasOwnProperty(property)) {
+      this._delays[property].delayTime.value = 0;
+      this._gains[property].gain.value = 0;
+    }
+  }
+
+  // Initialize inverters for opposite walls ('right', 'down', 'back' only).
+  this._inverters.right.gain.value = -1;
+  this._inverters.down.gain.value = -1;
+  this._inverters.back.gain.value = -1;
+
+  // Connect nodes.
+  this.input.connect(this._lowpass);
+  for (let property in Utils.DEFAULT_REFLECTION_COEFFICIENTS) {
+    if (Utils.DEFAULT_REFLECTION_COEFFICIENTS
+        .hasOwnProperty(property)) {
+      this._lowpass.connect(this._delays[property]);
+      this._delays[property].connect(this._gains[property]);
+      this._gains[property].connect(this._merger, 0, 0);
+    }
+  }
+
+  // Connect gains to ambisonic channel output.
+  // Left: [1 1 0 0]
+  // Right: [1 -1 0 0]
+  // Up: [1 0 1 0]
+  // Down: [1 0 -1 0]
+  // Front: [1 0 0 1]
+  // Back: [1 0 0 -1]
+  this._gains.left.connect(this._merger, 0, 1);
+
+  this._gains.right.connect(this._inverters.right);
+  this._inverters.right.connect(this._merger, 0, 1);
+
+  this._gains.up.connect(this._merger, 0, 2);
+
+  this._gains.down.connect(this._inverters.down);
+  this._inverters.down.connect(this._merger, 0, 2);
+
+  this._gains.front.connect(this._merger, 0, 3);
+
+  this._gains.back.connect(this._inverters.back);
+  this._inverters.back.connect(this._merger, 0, 3);
+  this._merger.connect(this.output);
+
+  // Initialize.
+  this._listenerPosition = options.listenerPosition;
+  this.setRoomProperties(options.dimensions, options.coefficients);
+}
+
+
+/**
+ * Set the listener's position (in meters),
+ * where [0,0,0] is the center of the room.
+ * @param {Number} x
+ * @param {Number} y
+ * @param {Number} z
+ */
+EarlyReflections.prototype.setListenerPosition = function(x, y, z) {
+  // Assign listener position.
+  this._listenerPosition = [x, y, z];
+
+  // Determine distances to each wall.
+  let distances = {
+    left: Utils.DEFAULT_REFLECTION_MULTIPLIER * Math.max(0,
+      this._halfDimensions.width + x) + Utils.DEFAULT_REFLECTION_MIN_DISTANCE,
+    right: Utils.DEFAULT_REFLECTION_MULTIPLIER * Math.max(0,
+      this._halfDimensions.width - x) + Utils.DEFAULT_REFLECTION_MIN_DISTANCE,
+    front: Utils.DEFAULT_REFLECTION_MULTIPLIER * Math.max(0,
+      this._halfDimensions.depth + z) + Utils.DEFAULT_REFLECTION_MIN_DISTANCE,
+    back: Utils.DEFAULT_REFLECTION_MULTIPLIER * Math.max(0,
+      this._halfDimensions.depth - z) + Utils.DEFAULT_REFLECTION_MIN_DISTANCE,
+    down: Utils.DEFAULT_REFLECTION_MULTIPLIER * Math.max(0,
+      this._halfDimensions.height + y) + Utils.DEFAULT_REFLECTION_MIN_DISTANCE,
+    up: Utils.DEFAULT_REFLECTION_MULTIPLIER * Math.max(0,
+      this._halfDimensions.height - y) + Utils.DEFAULT_REFLECTION_MIN_DISTANCE,
+  };
+
+  // Assign delay & attenuation values using distances.
+  for (let property in Utils.DEFAULT_REFLECTION_COEFFICIENTS) {
+    if (Utils.DEFAULT_REFLECTION_COEFFICIENTS
+        .hasOwnProperty(property)) {
+      // Compute and assign delay (in seconds).
+      let delayInSecs = distances[property] / this.speedOfSound;
+      this._delays[property].delayTime.value = delayInSecs;
+
+      // Compute and assign gain, uses logarithmic rolloff: "g = R / (d + 1)"
+      let attenuation = this._coefficients[property] / distances[property];
+      this._gains[property].gain.value = attenuation;
+    }
+  }
+};
+
+
+/**
+ * Set the room's properties which determines the characteristics of
+ * reflections.
+ * @param {Object} dimensions
+ * Room dimensions (in meters). Defaults to
+ * {@linkcode Utils.DEFAULT_ROOM_DIMENSIONS DEFAULT_ROOM_DIMENSIONS}.
+ * @param {Object} coefficients
+ * Frequency-independent reflection coeffs per wall. Defaults to
+ * {@linkcode Utils.DEFAULT_REFLECTION_COEFFICIENTS
+ * DEFAULT_REFLECTION_COEFFICIENTS}.
+ */
+EarlyReflections.prototype.setRoomProperties = function(dimensions,
+                                                        coefficients) {
+  if (dimensions == undefined) {
+    dimensions = {};
+    Object.assign(dimensions, Utils.DEFAULT_ROOM_DIMENSIONS);
+  }
+  if (coefficients == undefined) {
+    coefficients = {};
+    Object.assign(coefficients, Utils.DEFAULT_REFLECTION_COEFFICIENTS);
+  }
+  this._coefficients = coefficients;
+
+  // Sanitize dimensions and store half-dimensions.
+  this._halfDimensions = {};
+  this._halfDimensions.width = dimensions.width * 0.5;
+  this._halfDimensions.height = dimensions.height * 0.5;
+  this._halfDimensions.depth = dimensions.depth * 0.5;
+
+  // Update listener position with new room properties.
+  this.setListenerPosition(this._listenerPosition[0],
+    this._listenerPosition[1], this._listenerPosition[2]);
+};
+
+
+module.exports = EarlyReflections;
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * @license
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Primary namespace for ResonanceAudio library.
+ * @author Andrew Allen <bitllama@google.com>
+ */
+
+ 
+
+
+// Main module.
+exports.ResonanceAudio = __webpack_require__(11);
+
+
+// Testable Submodules.
+exports.ResonanceAudio.Attenuation = __webpack_require__(6);
+exports.ResonanceAudio.Directivity = __webpack_require__(5);
+exports.ResonanceAudio.EarlyReflections = __webpack_require__(9);
+exports.ResonanceAudio.Encoder = __webpack_require__(1);
+exports.ResonanceAudio.LateReflections = __webpack_require__(8);
+exports.ResonanceAudio.Listener = __webpack_require__(2);
+exports.ResonanceAudio.Room = __webpack_require__(7);
+exports.ResonanceAudio.Source = __webpack_require__(4);
+exports.ResonanceAudio.Tables = __webpack_require__(3);
+exports.ResonanceAudio.Utils = __webpack_require__(0);
+exports.ResonanceAudio.Version = __webpack_require__(13);
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * @license
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file ResonanceAudio library name space and common utilities.
+ * @author Andrew Allen <bitllama@google.com>
+ */
+
+
+
+
+// Internal dependencies.
+const Listener = __webpack_require__(2);
+const Source = __webpack_require__(4);
+const Room = __webpack_require__(7);
+const Encoder = __webpack_require__(1);
+const Utils = __webpack_require__(0);
+
+
+/**
+ * @class ResonanceAudio
+ * @description Main class for managing sources, room and listener models.
+ * @param {AudioContext} context
+ * Associated {@link
+https://developer.mozilla.org/en-US/docs/Web/API/AudioContext AudioContext}.
+ * @param {Object} options
+ * @param {Number} options.ambisonicOrder
+ * Desired ambisonic Order. Defaults to
+ * {@linkcode Utils.DEFAULT_AMBISONIC_ORDER DEFAULT_AMBISONIC_ORDER}.
+ * @param {Float32Array} options.listenerPosition
+ * The listener's initial position (in meters), where origin is the center of
+ * the room. Defaults to {@linkcode Utils.DEFAULT_POSITION DEFAULT_POSITION}.
+ * @param {Float32Array} options.listenerForward
+ * The listener's initial forward vector.
+ * Defaults to {@linkcode Utils.DEFAULT_FORWARD DEFAULT_FORWARD}.
+ * @param {Float32Array} options.listenerUp
+ * The listener's initial up vector.
+ * Defaults to {@linkcode Utils.DEFAULT_UP DEFAULT_UP}.
+ * @param {Object} options.dimensions Room dimensions (in meters). Defaults to
+ * {@linkcode Utils.DEFAULT_ROOM_DIMENSIONS DEFAULT_ROOM_DIMENSIONS}.
+ * @param {Object} options.materials Named acoustic materials per wall.
+ * Defaults to {@linkcode Utils.DEFAULT_ROOM_MATERIALS DEFAULT_ROOM_MATERIALS}.
+ * @param {Number} options.speedOfSound
+ * (in meters/second). Defaults to
+ * {@linkcode Utils.DEFAULT_SPEED_OF_SOUND DEFAULT_SPEED_OF_SOUND}.
+ */
+function ResonanceAudio(context, options) {
+  // Public variables.
+  /**
+   * Binaurally-rendered stereo (2-channel) output {@link
+   * https://developer.mozilla.org/en-US/docs/Web/API/AudioNode AudioNode}.
+   * @member {AudioNode} output
+   * @memberof ResonanceAudio
+   * @instance
+   */
+  /**
+   * Ambisonic (multichannel) input {@link
+   * https://developer.mozilla.org/en-US/docs/Web/API/AudioNode AudioNode}
+   * (For rendering input soundfields).
+   * @member {AudioNode} ambisonicInput
+   * @memberof ResonanceAudio
+   * @instance
+   */
+  /**
+   * Ambisonic (multichannel) output {@link
+   * https://developer.mozilla.org/en-US/docs/Web/API/AudioNode AudioNode}
+   * (For allowing external rendering / post-processing).
+   * @member {AudioNode} ambisonicOutput
+   * @memberof ResonanceAudio
+   * @instance
+   */
+
+  // Use defaults for undefined arguments.
+  if (options == undefined) {
+    options = {};
+  }
+  if (options.ambisonicOrder == undefined) {
+    options.ambisonicOrder = Utils.DEFAULT_AMBISONIC_ORDER;
+  }
+  if (options.listenerPosition == undefined) {
+    options.listenerPosition = Utils.DEFAULT_POSITION.slice();
+  }
+  if (options.listenerForward == undefined) {
+    options.listenerForward = Utils.DEFAULT_FORWARD.slice();
+  }
+  if (options.listenerUp == undefined) {
+    options.listenerUp = Utils.DEFAULT_UP.slice();
+  }
+  if (options.dimensions == undefined) {
+    options.dimensions = {};
+    Object.assign(options.dimensions, Utils.DEFAULT_ROOM_DIMENSIONS);
+  }
+  if (options.materials == undefined) {
+    options.materials = {};
+    Object.assign(options.materials, Utils.DEFAULT_ROOM_MATERIALS);
+  }
+  if (options.speedOfSound == undefined) {
+    options.speedOfSound = Utils.DEFAULT_SPEED_OF_SOUND;
+  }
+
+  // Create member submodules.
+  this._ambisonicOrder = Encoder.validateAmbisonicOrder(options.ambisonicOrder);
+  this._sources = [];
+  this._room = new Room(context, {
+    listenerPosition: options.listenerPosition,
+    dimensions: options.dimensions,
+    materials: options.materials,
+    speedOfSound: options.speedOfSound,
+  });
+  this._listener = new Listener(context, {
+    ambisonicOrder: options.ambisonicOrder,
+    position: options.listenerPosition,
+    forward: options.listenerForward,
+    up: options.listenerUp,
+  });
+
+  // Create auxillary audio nodes.
+  this._context = context;
+  this.output = context.createGain();
+  this.ambisonicOutput = context.createGain();
+  this.ambisonicInput = this._listener.input;
+
+  // Connect audio graph.
+  this._room.output.connect(this._listener.input);
+  this._listener.output.connect(this.output);
+  this._listener.ambisonicOutput.connect(this.ambisonicOutput);
+}
+
+
+/**
+ * Create a new source for the scene.
+ * @param {Object} options
+ * @param {Float32Array} options.position
+ * The source's initial position (in meters), where origin is the center of
+ * the room. Defaults to {@linkcode Utils.DEFAULT_POSITION DEFAULT_POSITION}.
+ * @param {Float32Array} options.forward
+ * The source's initial forward vector. Defaults to
+ * {@linkcode Utils.DEFAULT_FORWARD DEFAULT_FORWARD}.
+ * @param {Float32Array} options.up
+ * The source's initial up vector. Defaults to
+ * {@linkcode Utils.DEFAULT_UP DEFAULT_UP}.
+ * @param {Number} options.minDistance
+ * Min. distance (in meters). Defaults to
+ * {@linkcode Utils.DEFAULT_MIN_DISTANCE DEFAULT_MIN_DISTANCE}.
+ * @param {Number} options.maxDistance
+ * Max. distance (in meters). Defaults to
+ * {@linkcode Utils.DEFAULT_MAX_DISTANCE DEFAULT_MAX_DISTANCE}.
+ * @param {string} options.rolloff
+ * Rolloff model to use, chosen from options in
+ * {@linkcode Utils.ATTENUATION_ROLLOFFS ATTENUATION_ROLLOFFS}. Defaults to
+ * {@linkcode Utils.DEFAULT_ATTENUATION_ROLLOFF DEFAULT_ATTENUATION_ROLLOFF}.
+ * @param {Number} options.gain Input gain (linear). Defaults to
+ * {@linkcode Utils.DEFAULT_SOURCE_GAIN DEFAULT_SOURCE_GAIN}.
+ * @param {Number} options.alpha Directivity alpha. Defaults to
+ * {@linkcode Utils.DEFAULT_DIRECTIVITY_ALPHA DEFAULT_DIRECTIVITY_ALPHA}.
+ * @param {Number} options.sharpness Directivity sharpness. Defaults to
+ * {@linkcode Utils.DEFAULT_DIRECTIVITY_SHARPNESS
+ * DEFAULT_DIRECTIVITY_SHARPNESS}.
+ * @param {Number} options.sourceWidth
+ * Source width (in degrees). Where 0 degrees is a point source and 360 degrees
+ * is an omnidirectional source. Defaults to
+ * {@linkcode Utils.DEFAULT_SOURCE_WIDTH DEFAULT_SOURCE_WIDTH}.
+ * @return {Source}
+ */
+ResonanceAudio.prototype.createSource = function(options) {
+  // Create a source and push it to the internal sources array, returning
+  // the object's reference to the user.
+  let source = new Source(this, options);
+  this._sources[this._sources.length] = source;
+  return source;
+};
+
+
+/**
+ * Set the scene's desired ambisonic order.
+ * @param {Number} ambisonicOrder Desired ambisonic order.
+ */
+ResonanceAudio.prototype.setAmbisonicOrder = function(ambisonicOrder) {
+  this._ambisonicOrder = Encoder.validateAmbisonicOrder(ambisonicOrder);
+};
+
+
+/**
+ * Set the room's dimensions and wall materials.
+ * @param {Object} dimensions Room dimensions (in meters).
+ * @param {Object} materials Named acoustic materials per wall.
+ */
+ResonanceAudio.prototype.setRoomProperties = function(dimensions, materials) {
+  this._room.setProperties(dimensions, materials);
+};
+
+
+/**
+ * Set the listener's position (in meters), where origin is the center of
+ * the room.
+ * @param {Number} x
+ * @param {Number} y
+ * @param {Number} z
+ */
+ResonanceAudio.prototype.setListenerPosition = function(x, y, z) {
+  // Update listener position.
+  this._listener.position[0] = x;
+  this._listener.position[1] = y;
+  this._listener.position[2] = z;
+  this._room.setListenerPosition(x, y, z);
+
+  // Update sources with new listener position.
+  this._sources.forEach(function(element) {
+     element._update();
+  });
+};
+
+
+/**
+ * Set the source's orientation using forward and up vectors.
+ * @param {Number} forwardX
+ * @param {Number} forwardY
+ * @param {Number} forwardZ
+ * @param {Number} upX
+ * @param {Number} upY
+ * @param {Number} upZ
+ */
+ResonanceAudio.prototype.setListenerOrientation = function(forwardX, forwardY,
+  forwardZ, upX, upY, upZ) {
+  this._listener.setOrientation(forwardX, forwardY, forwardZ, upX, upY, upZ);
+};
+
+
+/**
+ * Set the listener's position and orientation using a Three.js Matrix4 object.
+ * @param {Object} matrix
+ * The Three.js Matrix4 object representing the listener's world transform.
+ */
+ResonanceAudio.prototype.setListenerFromMatrix = function(matrix) {
+  this._listener.setFromMatrix(matrix);
+
+  // Update the rest of the scene using new listener position.
+  this.setListenerPosition(this._listener.position[0],
+    this._listener.position[1], this._listener.position[2]);
+};
+
+
+/**
+ * Set the speed of sound.
+ * @param {Number} speedOfSound
+ */
+ResonanceAudio.prototype.setSpeedOfSound = function(speedOfSound) {
+  this._room.speedOfSound = speedOfSound;
+};
+
+
+module.exports = ResonanceAudio;
+
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+(function webpackUniversalModuleDefinition(root, factory) {
+	module.exports = factory();
+})(this, function() {
+return /******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
+/******/
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId]) {
+/******/ 			return installedModules[moduleId].exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			i: moduleId,
+/******/ 			l: false,
+/******/ 			exports: {}
+/******/ 		};
+/******/
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/
+/******/ 		// Flag the module as loaded
+/******/ 		module.l = true;
+/******/
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/
+/******/
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
+/******/
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
+/******/
+/******/ 	// define getter function for harmony exports
+/******/ 	__webpack_require__.d = function(exports, name, getter) {
+/******/ 		if(!__webpack_require__.o(exports, name)) {
+/******/ 			Object.defineProperty(exports, name, {
+/******/ 				configurable: false,
+/******/ 				enumerable: true,
+/******/ 				get: getter
+/******/ 			});
+/******/ 		}
+/******/ 	};
+/******/
+/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	__webpack_require__.n = function(module) {
+/******/ 		var getter = module && module.__esModule ?
+/******/ 			function getDefault() { return module['default']; } :
+/******/ 			function getModuleExports() { return module; };
+/******/ 		__webpack_require__.d(getter, 'a', getter);
+/******/ 		return getter;
+/******/ 	};
+/******/
+/******/ 	// Object.prototype.hasOwnProperty.call
+/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
+/******/
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "";
+/******/
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(__webpack_require__.s = 10);
+/******/ })
+/************************************************************************/
+/******/ ([
+/* 0 */
+/***/ (function(module, exports) {
+
+/**
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Omnitone library common utilities.
+ */
+
+
+/**
+ * Omnitone library logging function.
+ * @param {any} Message to be printed out.
+ */
+exports.log = function() {
+  window.console.log.apply(window.console, [
+    '%c[Omnitone]%c ' + Array.prototype.slice.call(arguments).join(' ') +
+        ' %c(@' + performance.now().toFixed(2) + 'ms)',
+    'background: #BBDEFB; color: #FF5722; font-weight: 500', 'font-weight: 300',
+    'color: #AAA',
+  ]);
+};
+
+
+/**
+ * Omnitone library error-throwing function.
+ * @param {any} Message to be printed out.
+ */
+exports.throw = function() {
+  window.console.error.apply(window.console, [
+    '%c[Omnitone]%c ' + Array.prototype.slice.call(arguments).join(' ') +
+        ' %c(@' + performance.now().toFixed(2) + 'ms)',
+    'background: #C62828; color: #FFEBEE; font-weight: 800', 'font-weight: 400',
+    'color: #AAA',
+  ]);
+
+  throw new Error(false);
+};
+
+
+// Static temp storage for matrix inversion.
+let a00;
+let a01;
+let a02;
+let a03;
+let a10;
+let a11;
+let a12;
+let a13;
+let a20;
+let a21;
+let a22;
+let a23;
+let a30;
+let a31;
+let a32;
+let a33;
+let b00;
+let b01;
+let b02;
+let b03;
+let b04;
+let b05;
+let b06;
+let b07;
+let b08;
+let b09;
+let b10;
+let b11;
+let det;
+
+
+/**
+ * A 4x4 matrix inversion utility. This does not handle the case when the
+ * arguments are not proper 4x4 matrices.
+ * @param {Float32Array} out   The inverted result.
+ * @param {Float32Array} a     The source matrix.
+ * @return {Float32Array} out
+ */
+exports.invertMatrix4 = function(out, a) {
+  a00 = a[0];
+  a01 = a[1];
+  a02 = a[2];
+  a03 = a[3];
+  a10 = a[4];
+  a11 = a[5];
+  a12 = a[6];
+  a13 = a[7];
+  a20 = a[8];
+  a21 = a[9];
+  a22 = a[10];
+  a23 = a[11];
+  a30 = a[12];
+  a31 = a[13];
+  a32 = a[14];
+  a33 = a[15];
+  b00 = a00 * a11 - a01 * a10;
+  b01 = a00 * a12 - a02 * a10;
+  b02 = a00 * a13 - a03 * a10;
+  b03 = a01 * a12 - a02 * a11;
+  b04 = a01 * a13 - a03 * a11;
+  b05 = a02 * a13 - a03 * a12;
+  b06 = a20 * a31 - a21 * a30;
+  b07 = a20 * a32 - a22 * a30;
+  b08 = a20 * a33 - a23 * a30;
+  b09 = a21 * a32 - a22 * a31;
+  b10 = a21 * a33 - a23 * a31;
+  b11 = a22 * a33 - a23 * a32;
+  det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+
+  if (!det) {
+    return null;
+  }
+
+  det = 1.0 / det;
+  out[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+  out[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+  out[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+  out[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+  out[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+  out[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+  out[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+  out[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+  out[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+  out[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+  out[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+  out[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+  out[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+  out[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+  out[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+  out[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+
+  return out;
+};
+
+
+/**
+ * Check if a value is defined in the ENUM dictionary.
+ * @param {Object} enumDictionary - ENUM dictionary.
+ * @param {Number|String} entryValue - a value to probe.
+ * @return {Boolean}
+ */
+exports.isDefinedENUMEntry = function(enumDictionary, entryValue) {
+  for (let enumKey in enumDictionary) {
+    if (entryValue === enumDictionary[enumKey]) {
+      return true;
+    }
+  }
+  return false;
+};
+
+
+/**
+ * Check if the given object is an instance of BaseAudioContext.
+ * @param {AudioContext} context - A context object to be checked.
+ * @return {Boolean}
+ */
+exports.isAudioContext = function(context) {
+  // TODO(hoch): Update this when BaseAudioContext is available for all
+  // browsers.
+  return context instanceof AudioContext ||
+    context instanceof OfflineAudioContext;
+};
+
+
+/**
+ * Check if the given object is a valid AudioBuffer.
+ * @param {Object} audioBuffer An AudioBuffer object to be checked.
+ * @return {Boolean}
+ */
+exports.isAudioBuffer = function(audioBuffer) {
+  return audioBuffer instanceof AudioBuffer;
+};
+
+
+/**
+ * Perform channel-wise merge on multiple AudioBuffers. The sample rate and
+ * the length of buffers to be merged must be identical.
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {AudioBuffer[]} bufferList - An array of AudioBuffers to be merged
+ * channel-wise.
+ * @return {AudioBuffer} - A single merged AudioBuffer.
+ */
+exports.mergeBufferListByChannel = function(context, bufferList) {
+  const bufferLength = bufferList[0].length;
+  const bufferSampleRate = bufferList[0].sampleRate;
+  let bufferNumberOfChannel = 0;
+
+  for (let i = 0; i < bufferList.length; ++i) {
+    if (bufferNumberOfChannel > 32) {
+      exports.throw('Utils.mergeBuffer: Number of channels cannot exceed 32.' +
+          '(got ' + bufferNumberOfChannel + ')');
+    }
+    if (bufferLength !== bufferList[i].length) {
+      exports.throw('Utils.mergeBuffer: AudioBuffer lengths are ' +
+          'inconsistent. (expected ' + bufferLength + ' but got ' +
+          bufferList[i].length + ')');
+    }
+    if (bufferSampleRate !== bufferList[i].sampleRate) {
+      exports.throw('Utils.mergeBuffer: AudioBuffer sample rates are ' +
+          'inconsistent. (expected ' + bufferSampleRate + ' but got ' +
+          bufferList[i].sampleRate + ')');
+    }
+    bufferNumberOfChannel += bufferList[i].numberOfChannels;
+  }
+
+  const buffer = context.createBuffer(bufferNumberOfChannel,
+                                      bufferLength,
+                                      bufferSampleRate);
+  let destinationChannelIndex = 0;
+  for (let i = 0; i < bufferList.length; ++i) {
+    for (let j = 0; j < bufferList[i].numberOfChannels; ++j) {
+      buffer.getChannelData(destinationChannelIndex++).set(
+          bufferList[i].getChannelData(j));
+    }
+  }
+
+  return buffer;
+};
+
+
+/**
+ * Perform channel-wise split by the given channel count. For example,
+ * 1 x AudioBuffer(8) -> splitBuffer(context, buffer, 2) -> 4 x AudioBuffer(2).
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {AudioBuffer} audioBuffer - An AudioBuffer to be splitted.
+ * @param {Number} splitBy - Number of channels to be splitted.
+ * @return {AudioBuffer[]} - An array of splitted AudioBuffers.
+ */
+exports.splitBufferbyChannel = function(context, audioBuffer, splitBy) {
+  if (audioBuffer.numberOfChannels <= splitBy) {
+    exports.throw('Utils.splitBuffer: Insufficient number of channels. (' +
+        audioBuffer.numberOfChannels + ' splitted by ' + splitBy + ')');
+  }
+  let sourceChannelIndex = 0;
+  const numberOfSplittedBuffer =
+      Math.ceil(audioBuffer.numberOfChannels / splitBy);
+  for (let i = 0; i < numberOfSplittedBuffer; ++i) {
+    let buffer = context.createBuffer(splitBy,
+                                      audioBuffer.length,
+                                      audioBuffer.sampleRate);
+    for (let j = 0; j < splitBy; ++j) {
+      if (sourceChannelIndex < audioBuffer.numberOfChannels) {
+        buffer.getChannelData(j).set(
+          audioBuffer.getChannelData(sourceChannelIndex++));
+      }
+    }
+  }
+
+  return bufferList;
+};
+
+
+/**
+ * Converts Base64-encoded string to ArrayBuffer.
+ * @param {string} base64String - Base64-encdoed string.
+ * @return {ArrayByuffer} Converted ArrayBuffer object.
+ */
+exports.getArrayBufferFromBase64String = function(base64String) {
+  let binaryString = window.atob(base64String);
+  let byteArray = new Uint8Array(binaryString.length);
+  byteArray.forEach(
+    (value, index) => byteArray[index] = binaryString.charCodeAt(index));
+  return byteArray.buffer;
+};
+
+
+/***/ }),
+/* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Streamlined AudioBuffer loader.
+ */
+
+
+
+
+const Utils = __webpack_require__(0);
+
+/**
+ * @typedef {string} BufferDataType
+ */
+
+/**
+ * Buffer data type for ENUM.
+ * @enum {BufferDataType}
+ */
+const BufferDataType = {
+  /** @type {string} The data contains Base64-encoded string.. */
+  BASE64: 'base64',
+  /** @type {string} The data is a URL for audio file. */
+  URL: 'url',
+};
+
+
+/**
+ * BufferList object mananges the async loading/decoding of multiple
+ * AudioBuffers from multiple URLs.
+ * @constructor
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {string[]} bufferData - An ordered list of URLs.
+ * @param {Object} options - Options
+ * @param {string} [options.dataType='base64'] - BufferDataType specifier.
+ * @param {Boolean} [options.verbose=false] - Log verbosity. |true| prints the
+ * individual message from each URL and AudioBuffer.
+ */
+function BufferList(context, bufferData, options) {
+  this._context = Utils.isAudioContext(context) ?
+      context :
+      Utils.throw('BufferList: Invalid BaseAudioContext.');
+
+  this._options = {
+    dataType: BufferDataType.BASE64,
+    verbose: false,
+  };
+
+  if (options) {
+    if (options.dataType &&
+        Utils.isDefinedENUMEntry(BufferDataType, options.dataType)) {
+      this._options.dataType = options.dataType;
+    }
+    if (options.verbose) {
+      this._options.verbose = Boolean(options.verbose);
+    }
+  }
+
+  this._bufferList = [];
+  this._bufferData = this._options.dataType === BufferDataType.BASE64
+      ? bufferData
+      : bufferData.slice(0);
+  this._numberOfTasks = this._bufferData.length;
+
+  this._resolveHandler = null;
+  this._rejectHandler = new Function();
+}
+
+
+/**
+ * Starts AudioBuffer loading tasks.
+ * @return {Promise<AudioBuffer[]>} The promise resolves with an array of
+ * AudioBuffer.
+ */
+BufferList.prototype.load = function() {
+  return new Promise(this._promiseGenerator.bind(this));
+};
+
+
+/**
+ * Promise argument generator. Internally starts multiple async loading tasks.
+ * @private
+ * @param {function} resolve Promise resolver.
+ * @param {function} reject Promise reject.
+ */
+BufferList.prototype._promiseGenerator = function(resolve, reject) {
+  if (typeof resolve !== 'function') {
+    Utils.throw('BufferList: Invalid Promise resolver.');
+  } else {
+    this._resolveHandler = resolve;
+  }
+
+  if (typeof reject === 'function') {
+    this._rejectHandler = reject;
+  }
+
+  for (let i = 0; i < this._bufferData.length; ++i) {
+    this._options.dataType === BufferDataType.BASE64
+        ? this._launchAsyncLoadTask(i)
+        : this._launchAsyncLoadTaskXHR(i);
+  }
+};
+
+
+/**
+ * Run async loading task for Base64-encoded string.
+ * @private
+ * @param {Number} taskId Task ID number from the ordered list |bufferData|.
+ */
+BufferList.prototype._launchAsyncLoadTask = function(taskId) {
+  const that = this;
+  this._context.decodeAudioData(
+      Utils.getArrayBufferFromBase64String(this._bufferData[taskId]),
+      function(audioBuffer) {
+        that._updateProgress(taskId, audioBuffer);
+      },
+      function(errorMessage) {
+        that._updateProgress(taskId, null);
+        const message = 'BufferList: decoding ArrayByffer("' + taskId +
+            '" from Base64-encoded data failed. (' + errorMessage + ')';
+        Utils.throw(message);
+        that._rejectHandler(message);
+      });
+};
+
+
+/**
+ * Run async loading task via XHR for audio file URLs.
+ * @private
+ * @param {Number} taskId Task ID number from the ordered list |bufferData|.
+ */
+BufferList.prototype._launchAsyncLoadTaskXHR = function(taskId) {
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', this._bufferData[taskId]);
+  xhr.responseType = 'arraybuffer';
+
+  const that = this;
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      that._context.decodeAudioData(
+          xhr.response,
+          function(audioBuffer) {
+            that._updateProgress(taskId, audioBuffer);
+          },
+          function(errorMessage) {
+            that._updateProgress(taskId, null);
+            const message = 'BufferList: decoding "' +
+                that._bufferData[taskId] + '" failed. (' + errorMessage + ')';
+            Utils.throw(message);
+            that._rejectHandler(message);
+          });
+    } else {
+      const message = 'BufferList: XHR error while loading "' +
+          that._bufferData[taskId] + '(' + xhr.statusText + ')';
+      Utils.throw(message);
+      that._rejectHandler(message);
+    }
+  };
+
+  xhr.onerror = function(event) {
+    Utils.throw(
+        'BufferList: XHR network failed on loading "' +
+        that._bufferData[taskId] + '".');
+    that._updateProgress(taskId, null);
+    that._rejectHandler();
+  };
+
+  xhr.send();
+};
+
+
+/**
+ * Updates the overall progress on loading tasks.
+ * @param {Number} taskId Task ID number.
+ * @param {AudioBuffer} audioBuffer Decoded AudioBuffer object.
+ */
+BufferList.prototype._updateProgress = function(taskId, audioBuffer) {
+  this._bufferList[taskId] = audioBuffer;
+
+  if (this._options.verbose) {
+    let messageString = this._options.dataType === BufferDataType.BASE64
+        ? 'ArrayBuffer(' + taskId + ') from Base64-encoded HRIR'
+        : '"' + this._bufferData[taskId] + '"';
+    Utils.log('BufferList: ' + messageString + ' successfully loaded.');
+  }
+
+  if (--this._numberOfTasks === 0) {
+    let messageString = this._options.dataType === BufferDataType.BASE64
+        ? this._bufferData.length + ' AudioBuffers from Base64-encoded HRIRs'
+        : this._bufferData.length + ' files via XHR';
+    Utils.log('BufferList: ' + messageString + ' loaded successfully.');
+    this._resolveHandler(this._bufferList);
+  }
+};
+
+
+module.exports = BufferList;
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file An audio channel router to resolve different channel layouts between
+ * browsers.
+ */
+
+
+
+
+/**
+ * @typedef {Number[]} ChannelMap
+ */
+
+/**
+ * Channel map dictionary ENUM.
+ * @enum {ChannelMap}
+ */
+const ChannelMap = {
+  /** @type {Number[]} - ACN channel map for Chrome and FireFox. (FFMPEG) */
+  DEFAULT: [0, 1, 2, 3],
+  /** @type {Number[]} - Safari's 4-channel map for AAC codec. */
+  SAFARI: [2, 0, 1, 3],
+  /** @type {Number[]} - ACN > FuMa conversion map. */
+  FUMA: [0, 3, 1, 2],
+};
+
+
+/**
+ * Channel router for FOA stream.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number[]} channelMap - Routing destination array.
+ */
+function FOARouter(context, channelMap) {
+  this._context = context;
+
+  this._splitter = this._context.createChannelSplitter(4);
+  this._merger = this._context.createChannelMerger(4);
+
+  // input/output proxy.
+  this.input = this._splitter;
+  this.output = this._merger;
+
+  this.setChannelMap(channelMap || ChannelMap.DEFAULT);
+}
+
+
+/**
+ * Sets channel map.
+ * @param {Number[]} channelMap - A new channel map for FOA stream.
+ */
+FOARouter.prototype.setChannelMap = function(channelMap) {
+  if (!Array.isArray(channelMap)) {
+    return;
+  }
+
+  this._channelMap = channelMap;
+  this._splitter.disconnect();
+  this._splitter.connect(this._merger, 0, this._channelMap[0]);
+  this._splitter.connect(this._merger, 1, this._channelMap[1]);
+  this._splitter.connect(this._merger, 2, this._channelMap[2]);
+  this._splitter.connect(this._merger, 3, this._channelMap[3]);
+};
+
+
+/**
+ * Static channel map ENUM.
+ * @static
+ * @type {ChannelMap}
+ */
+FOARouter.ChannelMap = ChannelMap;
+
+
+module.exports = FOARouter;
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Sound field rotator for first-order-ambisonics decoding.
+ */
+
+
+
+
+/**
+ * First-order-ambisonic decoder based on gain node network.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ */
+function FOARotator(context) {
+  this._context = context;
+
+  this._splitter = this._context.createChannelSplitter(4);
+  this._inY = this._context.createGain();
+  this._inZ = this._context.createGain();
+  this._inX = this._context.createGain();
+  this._m0 = this._context.createGain();
+  this._m1 = this._context.createGain();
+  this._m2 = this._context.createGain();
+  this._m3 = this._context.createGain();
+  this._m4 = this._context.createGain();
+  this._m5 = this._context.createGain();
+  this._m6 = this._context.createGain();
+  this._m7 = this._context.createGain();
+  this._m8 = this._context.createGain();
+  this._outY = this._context.createGain();
+  this._outZ = this._context.createGain();
+  this._outX = this._context.createGain();
+  this._merger = this._context.createChannelMerger(4);
+
+  // ACN channel ordering: [1, 2, 3] => [-Y, Z, -X]
+  // Y (from channel 1)
+  this._splitter.connect(this._inY, 1);
+  // Z (from channel 2)
+  this._splitter.connect(this._inZ, 2);
+  // X (from channel 3)
+  this._splitter.connect(this._inX, 3);
+  this._inY.gain.value = -1;
+  this._inX.gain.value = -1;
+
+  // Apply the rotation in the world space.
+  // |Y|   | m0  m3  m6 |   | Y * m0 + Z * m3 + X * m6 |   | Yr |
+  // |Z| * | m1  m4  m7 | = | Y * m1 + Z * m4 + X * m7 | = | Zr |
+  // |X|   | m2  m5  m8 |   | Y * m2 + Z * m5 + X * m8 |   | Xr |
+  this._inY.connect(this._m0);
+  this._inY.connect(this._m1);
+  this._inY.connect(this._m2);
+  this._inZ.connect(this._m3);
+  this._inZ.connect(this._m4);
+  this._inZ.connect(this._m5);
+  this._inX.connect(this._m6);
+  this._inX.connect(this._m7);
+  this._inX.connect(this._m8);
+  this._m0.connect(this._outY);
+  this._m1.connect(this._outZ);
+  this._m2.connect(this._outX);
+  this._m3.connect(this._outY);
+  this._m4.connect(this._outZ);
+  this._m5.connect(this._outX);
+  this._m6.connect(this._outY);
+  this._m7.connect(this._outZ);
+  this._m8.connect(this._outX);
+
+  // Transform 3: world space to audio space.
+  // W -> W (to channel 0)
+  this._splitter.connect(this._merger, 0, 0);
+  // Y (to channel 1)
+  this._outY.connect(this._merger, 0, 1);
+  // Z (to channel 2)
+  this._outZ.connect(this._merger, 0, 2);
+  // X (to channel 3)
+  this._outX.connect(this._merger, 0, 3);
+  this._outY.gain.value = -1;
+  this._outX.gain.value = -1;
+
+  this.setRotationMatrix3(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
+
+  // input/output proxy.
+  this.input = this._splitter;
+  this.output = this._merger;
+}
+
+
+/**
+ * Updates the rotation matrix with 3x3 matrix.
+ * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
+ */
+FOARotator.prototype.setRotationMatrix3 = function(rotationMatrix3) {
+  this._m0.gain.value = rotationMatrix3[0];
+  this._m1.gain.value = rotationMatrix3[1];
+  this._m2.gain.value = rotationMatrix3[2];
+  this._m3.gain.value = rotationMatrix3[3];
+  this._m4.gain.value = rotationMatrix3[4];
+  this._m5.gain.value = rotationMatrix3[5];
+  this._m6.gain.value = rotationMatrix3[6];
+  this._m7.gain.value = rotationMatrix3[7];
+  this._m8.gain.value = rotationMatrix3[8];
+};
+
+
+/**
+ * Updates the rotation matrix with 4x4 matrix.
+ * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
+ */
+FOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
+  this._m0.gain.value = rotationMatrix4[0];
+  this._m1.gain.value = rotationMatrix4[1];
+  this._m2.gain.value = rotationMatrix4[2];
+  this._m3.gain.value = rotationMatrix4[4];
+  this._m4.gain.value = rotationMatrix4[5];
+  this._m5.gain.value = rotationMatrix4[6];
+  this._m6.gain.value = rotationMatrix4[8];
+  this._m7.gain.value = rotationMatrix4[9];
+  this._m8.gain.value = rotationMatrix4[10];
+};
+
+
+/**
+ * Returns the current 3x3 rotation matrix.
+ * @return {Number[]} - A 3x3 rotation matrix. (column-major)
+ */
+FOARotator.prototype.getRotationMatrix3 = function() {
+  return [
+    this._m0.gain.value, this._m1.gain.value, this._m2.gain.value,
+    this._m3.gain.value, this._m4.gain.value, this._m5.gain.value,
+    this._m6.gain.value, this._m7.gain.value, this._m8.gain.value,
+  ];
+};
+
+
+/**
+ * Returns the current 4x4 rotation matrix.
+ * @return {Number[]} - A 4x4 rotation matrix. (column-major)
+ */
+FOARotator.prototype.getRotationMatrix4 = function() {
+  let rotationMatrix4 = new Float32Array(16);
+  rotationMatrix4[0] = this._m0.gain.value;
+  rotationMatrix4[1] = this._m1.gain.value;
+  rotationMatrix4[2] = this._m2.gain.value;
+  rotationMatrix4[4] = this._m3.gain.value;
+  rotationMatrix4[5] = this._m4.gain.value;
+  rotationMatrix4[6] = this._m5.gain.value;
+  rotationMatrix4[8] = this._m6.gain.value;
+  rotationMatrix4[9] = this._m7.gain.value;
+  rotationMatrix4[10] = this._m8.gain.value;
+  return rotationMatrix4;
+};
+
+
+module.exports = FOARotator;
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/**
+ * @file A collection of convolvers. Can be used for the optimized FOA binaural
+ * rendering. (e.g. SH-MaxRe HRTFs)
+ */
+
+
+
+
+/**
+ * FOAConvolver. A collection of 2 stereo convolvers for 4-channel FOA stream.
+ * @constructor
+ * @param {BaseAudioContext} context The associated AudioContext.
+ * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
+ * AudioBuffers for convolution. (i.e. 2 stereo AudioBuffers for FOA)
+ */
+function FOAConvolver(context, hrirBufferList) {
+  this._context = context;
+
+  this._active = false;
+  this._isBufferLoaded = false;
+
+  this._buildAudioGraph();
+
+  if (hrirBufferList) {
+    this.setHRIRBufferList(hrirBufferList);
+  }
+
+  this.enable();
+}
+
+
+/**
+ * Build the internal audio graph.
+ *
+ * @private
+ */
+FOAConvolver.prototype._buildAudioGraph = function() {
+  this._splitterWYZX = this._context.createChannelSplitter(4);
+  this._mergerWY = this._context.createChannelMerger(2);
+  this._mergerZX = this._context.createChannelMerger(2);
+  this._convolverWY = this._context.createConvolver();
+  this._convolverZX = this._context.createConvolver();
+  this._splitterWY = this._context.createChannelSplitter(2);
+  this._splitterZX = this._context.createChannelSplitter(2);
+  this._inverter = this._context.createGain();
+  this._mergerBinaural = this._context.createChannelMerger(2);
+  this._summingBus = this._context.createGain();
+
+  // Group W and Y, then Z and X.
+  this._splitterWYZX.connect(this._mergerWY, 0, 0);
+  this._splitterWYZX.connect(this._mergerWY, 1, 1);
+  this._splitterWYZX.connect(this._mergerZX, 2, 0);
+  this._splitterWYZX.connect(this._mergerZX, 3, 1);
+
+  // Create a network of convolvers using splitter/merger.
+  this._mergerWY.connect(this._convolverWY);
+  this._mergerZX.connect(this._convolverZX);
+  this._convolverWY.connect(this._splitterWY);
+  this._convolverZX.connect(this._splitterZX);
+  this._splitterWY.connect(this._mergerBinaural, 0, 0);
+  this._splitterWY.connect(this._mergerBinaural, 0, 1);
+  this._splitterWY.connect(this._mergerBinaural, 1, 0);
+  this._splitterWY.connect(this._inverter, 1, 0);
+  this._inverter.connect(this._mergerBinaural, 0, 1);
+  this._splitterZX.connect(this._mergerBinaural, 0, 0);
+  this._splitterZX.connect(this._mergerBinaural, 0, 1);
+  this._splitterZX.connect(this._mergerBinaural, 1, 0);
+  this._splitterZX.connect(this._mergerBinaural, 1, 1);
+
+  // By default, WebAudio's convolver does the normalization based on IR's
+  // energy. For the precise convolution, it must be disabled before the buffer
+  // assignment.
+  this._convolverWY.normalize = false;
+  this._convolverZX.normalize = false;
+
+  // For asymmetric degree.
+  this._inverter.gain.value = -1;
+
+  // Input/output proxy.
+  this.input = this._splitterWYZX;
+  this.output = this._summingBus;
+};
+
+
+/**
+ * Assigns 2 HRIR AudioBuffers to 2 convolvers: Note that we use 2 stereo
+ * convolutions for 4-channel direct convolution. Using mono convolver or
+ * 4-channel convolver is not viable because mono convolution wastefully
+ * produces the stereo outputs, and the 4-ch convolver does cross-channel
+ * convolution. (See Web Audio API spec)
+ * @param {AudioBuffer[]} hrirBufferList - An array of stereo AudioBuffers for
+ * convolvers.
+ */
+FOAConvolver.prototype.setHRIRBufferList = function(hrirBufferList) {
+  // After these assignments, the channel data in the buffer is immutable in
+  // FireFox. (i.e. neutered) So we should avoid re-assigning buffers, otherwise
+  // an exception will be thrown.
+  if (this._isBufferLoaded) {
+    return;
+  }
+
+  this._convolverWY.buffer = hrirBufferList[0];
+  this._convolverZX.buffer = hrirBufferList[1];
+  this._isBufferLoaded = true;
+};
+
+
+/**
+ * Enable FOAConvolver instance. The audio graph will be activated and pulled by
+ * the WebAudio engine. (i.e. consume CPU cycle)
+ */
+FOAConvolver.prototype.enable = function() {
+  this._mergerBinaural.connect(this._summingBus);
+  this._active = true;
+};
+
+
+/**
+ * Disable FOAConvolver instance. The inner graph will be disconnected from the
+ * audio destination, thus no CPU cycle will be consumed.
+ */
+FOAConvolver.prototype.disable = function() {
+  this._mergerBinaural.disconnect();
+  this._active = false;
+};
+
+
+module.exports = FOAConvolver;
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @fileOverview DEPRECATED at V1. Audio buffer loading utility.
+ */
+
+
+
+const Utils = __webpack_require__(0);
+
+/**
+ * Streamlined audio file loader supports Promise.
+ * @param {Object} context          AudioContext
+ * @param {Object} audioFileData    Audio file info as [{name, url}]
+ * @param {Function} resolve        Resolution handler for promise.
+ * @param {Function} reject         Rejection handler for promise.
+ * @param {Function} progress       Progress event handler.
+ */
+function AudioBufferManager(context, audioFileData, resolve, reject, progress) {
+  this._context = context;
+
+  this._buffers = new Map();
+  this._loadingTasks = {};
+
+  this._resolve = resolve;
+  this._reject = reject;
+  this._progress = progress;
+
+  // Iterating file loading.
+  for (let i = 0; i < audioFileData.length; i++) {
+    const fileInfo = audioFileData[i];
+
+    // Check for duplicates filename and quit if it happens.
+    if (this._loadingTasks.hasOwnProperty(fileInfo.name)) {
+      Utils.log('Duplicated filename when loading: ' + fileInfo.name);
+      return;
+    }
+
+    // Mark it as pending (0)
+    this._loadingTasks[fileInfo.name] = 0;
+    this._loadAudioFile(fileInfo);
+  }
+}
+
+AudioBufferManager.prototype._loadAudioFile = function(fileInfo) {
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', fileInfo.url);
+  xhr.responseType = 'arraybuffer';
+
+  const that = this;
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      that._context.decodeAudioData(xhr.response,
+        function(buffer) {
+          // Utils.log('File loaded: ' + fileInfo.url);
+          that._done(fileInfo.name, buffer);
+        },
+        function(message) {
+          Utils.log('Decoding failure: '
+            + fileInfo.url + ' (' + message + ')');
+          that._done(fileInfo.name, null);
+        });
+    } else {
+      Utils.log('XHR Error: ' + fileInfo.url + ' (' + xhr.statusText
+        + ')');
+      that._done(fileInfo.name, null);
+    }
+  };
+
+  // TODO: fetch local resources if XHR fails.
+  xhr.onerror = function(event) {
+    Utils.log('XHR Network failure: ' + fileInfo.url);
+    that._done(fileInfo.name, null);
+  };
+
+  xhr.send();
+};
+
+AudioBufferManager.prototype._done = function(filename, buffer) {
+  // Label the loading task.
+  this._loadingTasks[filename] = buffer !== null ? 'loaded' : 'failed';
+
+  // A failed task will be a null buffer.
+  this._buffers.set(filename, buffer);
+
+  this._updateProgress(filename);
+};
+
+AudioBufferManager.prototype._updateProgress = function(filename) {
+  let numberOfFinishedTasks = 0;
+  let numberOfFailedTask = 0;
+  let numberOfTasks = 0;
+
+  for (const task in this._loadingTasks) {
+    if (Object.prototype.hasOwnProperty.call(this._loadingTasks, task)) {
+      numberOfTasks++;
+      if (this._loadingTasks[task] === 'loaded') {
+        numberOfFinishedTasks++;
+      } else if (this._loadingTasks[task] === 'failed') {
+        numberOfFailedTask++;
+      }
+    }
+  }
+
+  if (typeof this._progress === 'function') {
+    this._progress(filename, numberOfFinishedTasks, numberOfTasks);
+    return;
+  }
+
+  if (numberOfFinishedTasks === numberOfTasks) {
+    this._resolve(this._buffers);
+    return;
+  }
+
+  if (numberOfFinishedTasks + numberOfFailedTask === numberOfTasks) {
+    this._reject(this._buffers);
+    return;
+  }
+};
+
+module.exports = AudioBufferManager;
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/**
+ * @file Phase matched filter for first-order-ambisonics decoding.
+ */
+
+
+
+const Utils = __webpack_require__(0);
+
+
+// Static parameters.
+const CROSSOVER_FREQUENCY = 690;
+const GAIN_COEFFICIENTS = [1.4142, 0.8166, 0.8166, 0.8166];
+
+
+/**
+ * Generate the coefficients for dual band filter.
+ * @param {Number} crossoverFrequency
+ * @param {Number} sampleRate
+ * @return {Object} Filter coefficients.
+ */
+function generateDualBandCoefficients(crossoverFrequency, sampleRate) {
+  const k = Math.tan(Math.PI * crossoverFrequency / sampleRate);
+  const k2 = k * k;
+  const denominator = k2 + 2 * k + 1;
+
+  return {
+    lowpassA: [1, 2 * (k2 - 1) / denominator, (k2 - 2 * k + 1) / denominator],
+    lowpassB: [k2 / denominator, 2 * k2 / denominator, k2 / denominator],
+    hipassA: [1, 2 * (k2 - 1) / denominator, (k2 - 2 * k + 1) / denominator],
+    hipassB: [1 / denominator, -2 * 1 / denominator, 1 / denominator],
+  };
+}
+
+
+/**
+ * FOAPhaseMatchedFilter: A set of filters (LP/HP) with a crossover frequency to
+ * compensate the gain of high frequency contents without a phase difference.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ */
+function FOAPhaseMatchedFilter(context) {
+  this._context = context;
+
+  this._input = this._context.createGain();
+
+  if (!this._context.createIIRFilter) {
+    Utils.log('IIR filter is missing. Using Biquad filter instead.');
+    this._lpf = this._context.createBiquadFilter();
+    this._hpf = this._context.createBiquadFilter();
+    this._lpf.frequency.value = CROSSOVER_FREQUENCY;
+    this._hpf.frequency.value = CROSSOVER_FREQUENCY;
+    this._hpf.type = 'highpass';
+  } else {
+    const coef = generateDualBandCoefficients(CROSSOVER_FREQUENCY,
+                                              this._context.sampleRate);
+    this._lpf = this._context.createIIRFilter(coef.lowpassB, coef.lowpassA);
+    this._hpf = this._context.createIIRFilter(coef.hipassB, coef.hipassA);
+  }
+
+  this._splitterLow = this._context.createChannelSplitter(4);
+  this._splitterHigh = this._context.createChannelSplitter(4);
+  this._gainHighW = this._context.createGain();
+  this._gainHighY = this._context.createGain();
+  this._gainHighZ = this._context.createGain();
+  this._gainHighX = this._context.createGain();
+  this._merger = this._context.createChannelMerger(4);
+
+  this._input.connect(this._hpf);
+  this._hpf.connect(this._splitterHigh);
+  this._splitterHigh.connect(this._gainHighW, 0);
+  this._splitterHigh.connect(this._gainHighY, 1);
+  this._splitterHigh.connect(this._gainHighZ, 2);
+  this._splitterHigh.connect(this._gainHighX, 3);
+  this._gainHighW.connect(this._merger, 0, 0);
+  this._gainHighY.connect(this._merger, 0, 1);
+  this._gainHighZ.connect(this._merger, 0, 2);
+  this._gainHighX.connect(this._merger, 0, 3);
+
+  this._input.connect(this._lpf);
+  this._lpf.connect(this._splitterLow);
+  this._splitterLow.connect(this._merger, 0, 0);
+  this._splitterLow.connect(this._merger, 1, 1);
+  this._splitterLow.connect(this._merger, 2, 2);
+  this._splitterLow.connect(this._merger, 3, 3);
+
+  // Apply gain correction to hi-passed pressure and velocity components:
+  // Inverting sign is necessary as the low-passed and high-passed portion are
+  // out-of-phase after the filtering.
+  const now = this._context.currentTime;
+  this._gainHighW.gain.setValueAtTime(-1 * GAIN_COEFFICIENTS[0], now);
+  this._gainHighY.gain.setValueAtTime(-1 * GAIN_COEFFICIENTS[1], now);
+  this._gainHighZ.gain.setValueAtTime(-1 * GAIN_COEFFICIENTS[2], now);
+  this._gainHighX.gain.setValueAtTime(-1 * GAIN_COEFFICIENTS[3], now);
+
+  // Input/output Proxy.
+  this.input = this._input;
+  this.output = this._merger;
+}
+
+
+module.exports = FOAPhaseMatchedFilter;
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/**
+ * @file Virtual speaker abstraction for first-order-ambisonics decoding.
+ */
+
+
+
+
+/**
+ * DEPRECATED at V1: A virtual speaker with ambisonic decoding gain coefficients
+ * and HRTF convolution for first-order-ambisonics stream. Note that the
+ * subgraph directly connects to context's destination.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} options - Options for speaker.
+ * @param {Number[]} options.coefficients - Decoding coefficients for (W,Y,Z,X).
+ * @param {AudioBuffer} options.IR - Stereo IR buffer for HRTF convolution.
+ * @param {Number} options.gain - Post-gain for the speaker.
+ */
+function FOAVirtualSpeaker(context, options) {
+  if (options.IR.numberOfChannels !== 2) {
+    throw new Error('IR does not have 2 channels. cannot proceed.');
+  }
+
+  this._active = false;
+  this._context = context;
+
+  this._input = this._context.createChannelSplitter(4);
+  this._cW = this._context.createGain();
+  this._cY = this._context.createGain();
+  this._cZ = this._context.createGain();
+  this._cX = this._context.createGain();
+  this._convolver = this._context.createConvolver();
+  this._gain = this._context.createGain();
+
+  this._input.connect(this._cW, 0);
+  this._input.connect(this._cY, 1);
+  this._input.connect(this._cZ, 2);
+  this._input.connect(this._cX, 3);
+  this._cW.connect(this._convolver);
+  this._cY.connect(this._convolver);
+  this._cZ.connect(this._convolver);
+  this._cX.connect(this._convolver);
+  this._convolver.connect(this._gain);
+  this._gain.connect(this._context.destination);
+
+  this.enable();
+
+  this._convolver.normalize = false;
+  this._convolver.buffer = options.IR;
+  this._gain.gain.value = options.gain;
+
+  // Set gain coefficients for FOA ambisonic streams.
+  this._cW.gain.value = options.coefficients[0];
+  this._cY.gain.value = options.coefficients[1];
+  this._cZ.gain.value = options.coefficients[2];
+  this._cX.gain.value = options.coefficients[3];
+
+  // Input proxy. Output directly connects to the destination.
+  this.input = this._input;
+}
+
+
+FOAVirtualSpeaker.prototype.enable = function() {
+  this._gain.connect(this._context.destination);
+  this._active = true;
+};
+
+
+FOAVirtualSpeaker.prototype.disable = function() {
+  this._gain.disconnect();
+  this._active = false;
+};
+
+
+module.exports = FOAVirtualSpeaker;
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/**
+ * @file A collection of convolvers. Can be used for the optimized HOA binaural
+ * rendering. (e.g. SH-MaxRe HRTFs)
+ */
+
+
+
+
+/**
+ * A convolver network for N-channel HOA stream.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number} ambisonicOrder - Ambisonic order. (2 or 3)
+ * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
+ * AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)
+ */
+function HOAConvolver(context, ambisonicOrder, hrirBufferList) {
+  this._context = context;
+
+  this._active = false;
+  this._isBufferLoaded = false;
+
+  // The number of channels K based on the ambisonic order N where K = (N+1)^2.
+  this._ambisonicOrder = ambisonicOrder;
+  this._numberOfChannels =
+      (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
+
+  this._buildAudioGraph();
+  if (hrirBufferList) {
+    this.setHRIRBufferList(hrirBufferList);
+  }
+
+  this.enable();
+}
+
+
+/**
+ * Build the internal audio graph.
+ * For TOA convolution:
+ *   input -> splitter(16) -[0,1]-> merger(2) -> convolver(2) -> splitter(2)
+ *                         -[2,3]-> merger(2) -> convolver(2) -> splitter(2)
+ *                         -[4,5]-> ... (6 more, 8 branches total)
+ * @private
+ */
+HOAConvolver.prototype._buildAudioGraph = function() {
+  const numberOfStereoChannels = Math.ceil(this._numberOfChannels / 2);
+
+  this._inputSplitter =
+      this._context.createChannelSplitter(this._numberOfChannels);
+  this._stereoMergers = [];
+  this._convolvers = [];
+  this._stereoSplitters = [];
+  this._positiveIndexSphericalHarmonics = this._context.createGain();
+  this._negativeIndexSphericalHarmonics = this._context.createGain();
+  this._inverter = this._context.createGain();
+  this._binauralMerger = this._context.createChannelMerger(2);
+  this._outputGain = this._context.createGain();
+
+  for (let i = 0; i < numberOfStereoChannels; ++i) {
+    this._stereoMergers[i] = this._context.createChannelMerger(2);
+    this._convolvers[i] = this._context.createConvolver();
+    this._stereoSplitters[i] = this._context.createChannelSplitter(2);
+    this._convolvers[i].normalize = false;
+  }
+
+  for (let l = 0; l <= this._ambisonicOrder; ++l) {
+    for (let m = -l; m <= l; m++) {
+      // We compute the ACN index (k) of ambisonics channel using the degree (l)
+      // and index (m): k = l^2 + l + m
+      const acnIndex = l * l + l + m;
+      const stereoIndex = Math.floor(acnIndex / 2);
+
+      // Split channels from input into array of stereo convolvers.
+      // Then create a network of mergers that produces the stereo output.
+      this._inputSplitter.connect(
+          this._stereoMergers[stereoIndex], acnIndex, acnIndex % 2);
+      this._stereoMergers[stereoIndex].connect(this._convolvers[stereoIndex]);
+      this._convolvers[stereoIndex].connect(this._stereoSplitters[stereoIndex]);
+
+      // Positive index (m >= 0) spherical harmonics are symmetrical around the
+      // front axis, while negative index (m < 0) spherical harmonics are
+      // anti-symmetrical around the front axis. We will exploit this symmetry
+      // to reduce the number of convolutions required when rendering to a
+      // symmetrical binaural renderer.
+      if (m >= 0) {
+        this._stereoSplitters[stereoIndex].connect(
+            this._positiveIndexSphericalHarmonics, acnIndex % 2);
+      } else {
+        this._stereoSplitters[stereoIndex].connect(
+            this._negativeIndexSphericalHarmonics, acnIndex % 2);
+      }
+    }
+  }
+
+  this._positiveIndexSphericalHarmonics.connect(this._binauralMerger, 0, 0);
+  this._positiveIndexSphericalHarmonics.connect(this._binauralMerger, 0, 1);
+  this._negativeIndexSphericalHarmonics.connect(this._binauralMerger, 0, 0);
+  this._negativeIndexSphericalHarmonics.connect(this._inverter);
+  this._inverter.connect(this._binauralMerger, 0, 1);
+
+  // For asymmetric index.
+  this._inverter.gain.value = -1;
+
+  // Input/Output proxy.
+  this.input = this._inputSplitter;
+  this.output = this._outputGain;
+};
+
+
+/**
+ * Assigns N HRIR AudioBuffers to N convolvers: Note that we use 2 stereo
+ * convolutions for 4-channel direct convolution. Using mono convolver or
+ * 4-channel convolver is not viable because mono convolution wastefully
+ * produces the stereo outputs, and the 4-ch convolver does cross-channel
+ * convolution. (See Web Audio API spec)
+ * @param {AudioBuffer[]} hrirBufferList - An array of stereo AudioBuffers for
+ * convolvers.
+ */
+HOAConvolver.prototype.setHRIRBufferList = function(hrirBufferList) {
+  // After these assignments, the channel data in the buffer is immutable in
+  // FireFox. (i.e. neutered) So we should avoid re-assigning buffers, otherwise
+  // an exception will be thrown.
+  if (this._isBufferLoaded) {
+    return;
+  }
+
+  for (let i = 0; i < hrirBufferList.length; ++i) {
+    this._convolvers[i].buffer = hrirBufferList[i];
+  }
+
+  this._isBufferLoaded = true;
+};
+
+
+/**
+ * Enable HOAConvolver instance. The audio graph will be activated and pulled by
+ * the WebAudio engine. (i.e. consume CPU cycle)
+ */
+HOAConvolver.prototype.enable = function() {
+  this._binauralMerger.connect(this._outputGain);
+  this._active = true;
+};
+
+
+/**
+ * Disable HOAConvolver instance. The inner graph will be disconnected from the
+ * audio destination, thus no CPU cycle will be consumed.
+ */
+HOAConvolver.prototype.disable = function() {
+  this._binauralMerger.disconnect();
+  this._active = false;
+};
+
+
+module.exports = HOAConvolver;
+
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Sound field rotator for higher-order-ambisonics decoding.
+ */
+
+
+
+
+/**
+ * Kronecker Delta function.
+ * @param {Number} i
+ * @param {Number} j
+ * @return {Number}
+ */
+function getKroneckerDelta(i, j) {
+  return i === j ? 1 : 0;
+}
+
+
+/**
+ * A helper function to allow us to access a matrix array in the same
+ * manner, assuming it is a (2l+1)x(2l+1) matrix. [2] uses an odd convention of
+ * referring to the rows and columns using centered indices, so the middle row
+ * and column are (0, 0) and the upper left would have negative coordinates.
+ * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
+ * @param {Number} l
+ * @param {Number} i
+ * @param {Number} j
+ * @param {Number} gainValue
+ */
+function setCenteredElement(matrix, l, i, j, gainValue) {
+  const index = (j + l) * (2 * l + 1) + (i + l);
+  // Row-wise indexing.
+  matrix[l - 1][index].gain.value = gainValue;
+}
+
+
+/**
+ * This is a helper function to allow us to access a matrix array in the same
+ * manner, assuming it is a (2l+1) x (2l+1) matrix.
+ * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
+ * @param {Number} l
+ * @param {Number} i
+ * @param {Number} j
+ * @return {Number}
+ */
+function getCenteredElement(matrix, l, i, j) {
+  // Row-wise indexing.
+  const index = (j + l) * (2 * l + 1) + (i + l);
+  return matrix[l - 1][index].gain.value;
+}
+
+
+/**
+ * Helper function defined in [2] that is used by the functions U, V, W.
+ * This should not be called on its own, as U, V, and W (and their coefficients)
+ * select the appropriate matrix elements to access arguments |a| and |b|.
+ * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
+ * @param {Number} i
+ * @param {Number} a
+ * @param {Number} b
+ * @param {Number} l
+ * @return {Number}
+ */
+function getP(matrix, i, a, b, l) {
+  if (b === l) {
+    return getCenteredElement(matrix, 1, i, 1) *
+        getCenteredElement(matrix, l - 1, a, l - 1) -
+        getCenteredElement(matrix, 1, i, -1) *
+        getCenteredElement(matrix, l - 1, a, -l + 1);
+  } else if (b === -l) {
+    return getCenteredElement(matrix, 1, i, 1) *
+        getCenteredElement(matrix, l - 1, a, -l + 1) +
+        getCenteredElement(matrix, 1, i, -1) *
+        getCenteredElement(matrix, l - 1, a, l - 1);
+  } else {
+    return getCenteredElement(matrix, 1, i, 0) *
+        getCenteredElement(matrix, l - 1, a, b);
+  }
+}
+
+
+/**
+ * The functions U, V, and W should only be called if the correspondingly
+ * named coefficient u, v, w from the function ComputeUVWCoeff() is non-zero.
+ * When the coefficient is 0, these would attempt to access matrix elements that
+ * are out of bounds. The vector of rotations, |r|, must have the |l - 1|
+ * previously completed band rotations. These functions are valid for |l >= 2|.
+ * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
+ * @param {Number} m
+ * @param {Number} n
+ * @param {Number} l
+ * @return {Number}
+ */
+function getU(matrix, m, n, l) {
+  // Although [1, 2] split U into three cases for m == 0, m < 0, m > 0
+  // the actual values are the same for all three cases.
+  return getP(matrix, 0, m, n, l);
+}
+
+
+/**
+ * The functions U, V, and W should only be called if the correspondingly
+ * named coefficient u, v, w from the function ComputeUVWCoeff() is non-zero.
+ * When the coefficient is 0, these would attempt to access matrix elements that
+ * are out of bounds. The vector of rotations, |r|, must have the |l - 1|
+ * previously completed band rotations. These functions are valid for |l >= 2|.
+ * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
+ * @param {Number} m
+ * @param {Number} n
+ * @param {Number} l
+ * @return {Number}
+ */
+function getV(matrix, m, n, l) {
+  if (m === 0) {
+    return getP(matrix, 1, 1, n, l) + getP(matrix, -1, -1, n, l);
+  } else if (m > 0) {
+    const d = getKroneckerDelta(m, 1);
+    return getP(matrix, 1, m - 1, n, l) * Math.sqrt(1 + d) -
+        getP(matrix, -1, -m + 1, n, l) * (1 - d);
+  } else {
+    // Note there is apparent errata in [1,2,2b] dealing with this particular
+    // case. [2b] writes it should be P*(1-d)+P*(1-d)^0.5
+    // [1] writes it as P*(1+d)+P*(1-d)^0.5, but going through the math by hand,
+    // you must have it as P*(1-d)+P*(1+d)^0.5 to form a 2^.5 term, which
+    // parallels the case where m > 0.
+    const d = getKroneckerDelta(m, -1);
+    return getP(matrix, 1, m + 1, n, l) * (1 - d) +
+        getP(matrix, -1, -m - 1, n, l) * Math.sqrt(1 + d);
+  }
+}
+
+
+/**
+ * The functions U, V, and W should only be called if the correspondingly
+ * named coefficient u, v, w from the function ComputeUVWCoeff() is non-zero.
+ * When the coefficient is 0, these would attempt to access matrix elements that
+ * are out of bounds. The vector of rotations, |r|, must have the |l - 1|
+ * previously completed band rotations. These functions are valid for |l >= 2|.
+ * @param {Number[]} matrix N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
+ * @param {Number} m
+ * @param {Number} n
+ * @param {Number} l
+ * @return {Number}
+ */
+function getW(matrix, m, n, l) {
+  // Whenever this happens, w is also 0 so W can be anything.
+  if (m === 0) {
+    return 0;
+  }
+
+  return m > 0 ? getP(matrix, 1, m + 1, n, l) + getP(matrix, -1, -m - 1, n, l) :
+                 getP(matrix, 1, m - 1, n, l) - getP(matrix, -1, -m + 1, n, l);
+}
+
+
+/**
+ * Calculates the coefficients applied to the U, V, and W functions. Because
+ * their equations share many common terms they are computed simultaneously.
+ * @param {Number} m
+ * @param {Number} n
+ * @param {Number} l
+ * @return {Array} 3 coefficients for U, V and W functions.
+ */
+function computeUVWCoeff(m, n, l) {
+  const d = getKroneckerDelta(m, 0);
+  const reciprocalDenominator =
+      Math.abs(n) === l ? 1 / (2 * l * (2 * l - 1)) : 1 / ((l + n) * (l - n));
+
+  return [
+    Math.sqrt((l + m) * (l - m) * reciprocalDenominator),
+    0.5 * (1 - 2 * d) * Math.sqrt((1 + d) *
+                                  (l + Math.abs(m) - 1) *
+                                  (l + Math.abs(m)) *
+                                  reciprocalDenominator),
+    -0.5 * (1 - d) * Math.sqrt((l - Math.abs(m) - 1) * (l - Math.abs(m))) *
+        reciprocalDenominator,
+  ];
+}
+
+
+/**
+ * Calculates the (2l+1) x (2l+1) rotation matrix for the band l.
+ * This uses the matrices computed for band 1 and band l-1 to compute the
+ * matrix for band l. |rotations| must contain the previously computed l-1
+ * rotation matrices.
+ * This implementation comes from p. 5 (6346), Table 1 and 2 in [2] taking
+ * into account the corrections from [2b].
+ * @param {Number[]} matrix - N matrices of gainNodes, each with where
+ * n=1,2,...,N.
+ * @param {Number} l
+ */
+function computeBandRotation(matrix, l) {
+  // The lth band rotation matrix has rows and columns equal to the number of
+  // coefficients within that band (-l <= m <= l implies 2l + 1 coefficients).
+  for (let m = -l; m <= l; m++) {
+    for (let n = -l; n <= l; n++) {
+      const uvwCoefficients = computeUVWCoeff(m, n, l);
+
+      // The functions U, V, W are only safe to call if the coefficients
+      // u, v, w are not zero.
+      if (Math.abs(uvwCoefficients[0]) > 0) {
+        uvwCoefficients[0] *= getU(matrix, m, n, l);
+      }
+      if (Math.abs(uvwCoefficients[1]) > 0) {
+        uvwCoefficients[1] *= getV(matrix, m, n, l);
+      }
+      if (Math.abs(uvwCoefficients[2]) > 0) {
+        uvwCoefficients[2] *= getW(matrix, m, n, l);
+      }
+
+      setCenteredElement(
+          matrix, l, m, n,
+          uvwCoefficients[0] + uvwCoefficients[1] + uvwCoefficients[2]);
+    }
+  }
+}
+
+
+/**
+ * Compute the HOA rotation matrix after setting the transform matrix.
+ * @param {Array} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
+ */
+function computeHOAMatrices(matrix) {
+  // We start by computing the 2nd-order matrix from the 1st-order matrix.
+  for (let i = 2; i <= matrix.length; i++) {
+    computeBandRotation(matrix, i);
+  }
+}
+
+
+/**
+ * Higher-order-ambisonic decoder based on gain node network. We expect
+ * the order of the channels to conform to ACN ordering. Below are the helper
+ * methods to compute SH rotation using recursion. The code uses maths described
+ * in the following papers:
+ *  [1] R. Green, "Spherical Harmonic Lighting: The Gritty Details", GDC 2003,
+ *      http://www.research.scea.com/gdc2003/spherical-harmonic-lighting.pdf
+ *  [2] J. Ivanic and K. Ruedenberg, "Rotation Matrices for Real
+ *      Spherical Harmonics. Direct Determination by Recursion", J. Phys.
+ *      Chem., vol. 100, no. 15, pp. 6342-6347, 1996.
+ *      http://pubs.acs.org/doi/pdf/10.1021/jp953350u
+ *  [2b] Corrections to initial publication:
+ *       http://pubs.acs.org/doi/pdf/10.1021/jp9833350
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number} ambisonicOrder - Ambisonic order.
+ */
+function HOARotator(context, ambisonicOrder) {
+  this._context = context;
+  this._ambisonicOrder = ambisonicOrder;
+
+  // We need to determine the number of channels K based on the ambisonic order
+  // N where K = (N + 1)^2.
+  const numberOfChannels = (ambisonicOrder + 1) * (ambisonicOrder + 1);
+
+  this._splitter = this._context.createChannelSplitter(numberOfChannels);
+  this._merger = this._context.createChannelMerger(numberOfChannels);
+
+  // Create a set of per-order rotation matrices using gain nodes.
+  this._gainNodeMatrix = [];
+  let orderOffset;
+  let rows;
+  let inputIndex;
+  let outputIndex;
+  let matrixIndex;
+  for (let i = 1; i <= ambisonicOrder; i++) {
+    // Each ambisonic order requires a separate (2l + 1) x (2l + 1) rotation
+    // matrix. We compute the offset value as the first channel index of the
+    // current order where
+    //   k_last = l^2 + l + m,
+    // and m = -l
+    //   k_last = l^2
+    orderOffset = i * i;
+
+    // Uses row-major indexing.
+    rows = (2 * i + 1);
+
+    this._gainNodeMatrix[i - 1] = [];
+    for (let j = 0; j < rows; j++) {
+      inputIndex = orderOffset + j;
+      for (let k = 0; k < rows; k++) {
+        outputIndex = orderOffset + k;
+        matrixIndex = j * rows + k;
+        this._gainNodeMatrix[i - 1][matrixIndex] = this._context.createGain();
+        this._splitter.connect(
+            this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
+        this._gainNodeMatrix[i - 1][matrixIndex].connect(
+            this._merger, 0, outputIndex);
+      }
+    }
+  }
+
+  // W-channel is not involved in rotation, skip straight to ouput.
+  this._splitter.connect(this._merger, 0, 0);
+
+  // Default Identity matrix.
+  this.setRotationMatrix3(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
+
+  // Input/Output proxy.
+  this.input = this._splitter;
+  this.output = this._merger;
+}
+
+
+/**
+ * Updates the rotation matrix with 3x3 matrix.
+ * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
+ */
+HOARotator.prototype.setRotationMatrix3 = function(rotationMatrix3) {
+  for (let i = 0; i < 9; ++i) {
+    this._gainNodeMatrix[0][i].gain.value = rotationMatrix3[i];
+  }
+  computeHOAMatrices(this._gainNodeMatrix);
+};
+
+
+/**
+ * Updates the rotation matrix with 4x4 matrix.
+ * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
+ */
+HOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
+  this._gainNodeMatrix[0][0].gain.value = rotationMatrix4[0];
+  this._gainNodeMatrix[0][1].gain.value = rotationMatrix4[1];
+  this._gainNodeMatrix[0][2].gain.value = rotationMatrix4[2];
+  this._gainNodeMatrix[0][3].gain.value = rotationMatrix4[4];
+  this._gainNodeMatrix[0][4].gain.value = rotationMatrix4[5];
+  this._gainNodeMatrix[0][5].gain.value = rotationMatrix4[6];
+  this._gainNodeMatrix[0][6].gain.value = rotationMatrix4[8];
+  this._gainNodeMatrix[0][7].gain.value = rotationMatrix4[9];
+  this._gainNodeMatrix[0][8].gain.value = rotationMatrix4[10];
+  computeHOAMatrices(this._gainNodeMatrix);
+};
+
+
+/**
+ * Returns the current 3x3 rotation matrix.
+ * @return {Number[]} - A 3x3 rotation matrix. (column-major)
+ */
+HOARotator.prototype.getRotationMatrix3 = function() {
+  let rotationMatrix3 = new Float32Array(9);
+  for (let i = 0; i < 9; ++i) {
+    rotationMatrix3[i] = this._gainNodeMatrix[0][i].gain.value;
+  }
+  return rotationMatrix3;
+};
+
+
+/**
+ * Returns the current 4x4 rotation matrix.
+ * @return {Number[]} - A 4x4 rotation matrix. (column-major)
+ */
+HOARotator.prototype.getRotationMatrix4 = function() {
+  let rotationMatrix4 = new Float32Array(16);
+  rotationMatrix4[0] = this._gainNodeMatrix[0][0].gain.value;
+  rotationMatrix4[1] = this._gainNodeMatrix[0][1].gain.value;
+  rotationMatrix4[2] = this._gainNodeMatrix[0][2].gain.value;
+  rotationMatrix4[4] = this._gainNodeMatrix[0][3].gain.value;
+  rotationMatrix4[5] = this._gainNodeMatrix[0][4].gain.value;
+  rotationMatrix4[6] = this._gainNodeMatrix[0][5].gain.value;
+  rotationMatrix4[8] = this._gainNodeMatrix[0][6].gain.value;
+  rotationMatrix4[9] = this._gainNodeMatrix[0][7].gain.value;
+  rotationMatrix4[10] = this._gainNodeMatrix[0][8].gain.value;
+  return rotationMatrix4;
+};
+
+
+/**
+ * Get the current ambisonic order.
+ * @return {Number}
+ */
+HOARotator.prototype.getAmbisonicOrder = function() {
+  return this._ambisonicOrder;
+};
+
+
+module.exports = HOARotator;
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * @license
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Namespace for Omnitone library.
+ */
+
+
+
+
+exports.Omnitone = __webpack_require__(11);
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Omnitone library name space and user-facing APIs.
+ */
+
+
+
+
+const BufferList = __webpack_require__(1);
+const FOAConvolver = __webpack_require__(4);
+const FOADecoder = __webpack_require__(12);
+const FOAPhaseMatchedFilter = __webpack_require__(6);
+const FOARenderer = __webpack_require__(14);
+const FOARotator = __webpack_require__(3);
+const FOARouter = __webpack_require__(2);
+const FOAVirtualSpeaker = __webpack_require__(7);
+const HOAConvolver = __webpack_require__(8);
+const HOARenderer = __webpack_require__(16);
+const HOARotator = __webpack_require__(9);
+const Polyfill = __webpack_require__(19);
+const Utils = __webpack_require__(0);
+const Version = __webpack_require__(20);
+
+// DEPRECATED in V1, in favor of BufferList.
+const AudioBufferManager = __webpack_require__(5);
+
+
+/**
+ * Omnitone namespace.
+ * @namespace
+ */
+let Omnitone = {};
+
+
+/**
+ * @typedef {Object} BrowserInfo
+ * @property {string} name - Browser name.
+ * @property {string} version - Browser version.
+ */
+
+/**
+ * An object contains the detected browser name and version.
+ * @memberOf Omnitone
+ * @static {BrowserInfo}
+ */
+Omnitone.browserInfo = Polyfill.getBrowserInfo();
+
+
+// DEPRECATED in V1. DO. NOT. USE.
+Omnitone.loadAudioBuffers = function(context, speakerData) {
+  return new Promise(function(resolve, reject) {
+    new AudioBufferManager(context, speakerData, function(buffers) {
+      resolve(buffers);
+    }, reject);
+  });
+};
+
+
+/**
+ * Performs the async loading/decoding of multiple AudioBuffers from multiple
+ * URLs.
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {string[]} bufferData - An ordered list of URLs.
+ * @param {Object} [options] - BufferList options.
+ * @param {String} [options.dataType='url'] - BufferList data type.
+ * @return {Promise<AudioBuffer[]>} - The promise resolves with an array of
+ * AudioBuffer.
+ */
+Omnitone.createBufferList = function(context, bufferData, options) {
+  const bufferList =
+      new BufferList(context, bufferData, options || {dataType: 'url'});
+  return bufferList.load();
+};
+
+
+/**
+ * Perform channel-wise merge on multiple AudioBuffers. The sample rate and
+ * the length of buffers to be merged must be identical.
+ * @static
+ * @function
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {AudioBuffer[]} bufferList - An array of AudioBuffers to be merged
+ * channel-wise.
+ * @return {AudioBuffer} - A single merged AudioBuffer.
+ */
+Omnitone.mergeBufferListByChannel = Utils.mergeBufferListByChannel;
+
+
+/**
+ * Perform channel-wise split by the given channel count. For example,
+ * 1 x AudioBuffer(8) -> splitBuffer(context, buffer, 2) -> 4 x AudioBuffer(2).
+ * @static
+ * @function
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {AudioBuffer} audioBuffer - An AudioBuffer to be splitted.
+ * @param {Number} splitBy - Number of channels to be splitted.
+ * @return {AudioBuffer[]} - An array of splitted AudioBuffers.
+ */
+Omnitone.splitBufferbyChannel = Utils.splitBufferbyChannel;
+
+
+/**
+ * Creates an instance of FOA Convolver.
+ * @see FOAConvolver
+ * @param {BaseAudioContext} context The associated AudioContext.
+ * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
+ * @return {FOAConvolver}
+ */
+Omnitone.createFOAConvolver = function(context, hrirBufferList) {
+  return new FOAConvolver(context, hrirBufferList);
+};
+
+
+/**
+ * Create an instance of FOA Router.
+ * @see FOARouter
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number[]} channelMap - Routing destination array.
+ * @return {FOARouter}
+ */
+Omnitone.createFOARouter = function(context, channelMap) {
+  return new FOARouter(context, channelMap);
+};
+
+
+/**
+ * Create an instance of FOA Rotator.
+ * @see FOARotator
+ * @param {AudioContext} context - Associated AudioContext.
+ * @return {FOARotator}
+ */
+Omnitone.createFOARotator = function(context) {
+  return new FOARotator(context);
+};
+
+
+/**
+ * Create an instance of FOAPhaseMatchedFilter.
+ * @ignore
+ * @see FOAPhaseMatchedFilter
+ * @param {AudioContext} context - Associated AudioContext.
+ * @return {FOAPhaseMatchedFilter}
+ */
+Omnitone.createFOAPhaseMatchedFilter = function(context) {
+  return new FOAPhaseMatchedFilter(context);
+};
+
+
+/**
+ * Create an instance of FOAVirtualSpeaker. For parameters, refer the
+ * definition of VirtualSpeaker class.
+ * @ignore
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} options - Options.
+ * @return {FOAVirtualSpeaker}
+ */
+Omnitone.createFOAVirtualSpeaker = function(context, options) {
+  return new FOAVirtualSpeaker(context, options);
+};
+
+
+/**
+ * DEPRECATED. Use FOARenderer instance.
+ * @see FOARenderer
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {DOMElement} videoElement - Video or Audio DOM element to be streamed.
+ * @param {Object} options - Options for FOA decoder.
+ * @param {String} options.baseResourceUrl - Base URL for resources.
+ * (base path for HRIR files)
+ * @param {Number} [options.postGain=26.0] - Post-decoding gain compensation.
+ * @param {Array} [options.routingDestination]  Custom channel layout.
+ * @return {FOADecoder}
+ */
+Omnitone.createFOADecoder = function(context, videoElement, options) {
+  Utils.log('WARNING: FOADecoder is deprecated in favor of FOARenderer.');
+  return new FOADecoder(context, videoElement, options);
+};
+
+
+/**
+ * Create a FOARenderer, the first-order ambisonic decoder and the optimized
+ * binaural renderer.
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} config
+ * @param {Array} [config.channelMap] - Custom channel routing map. Useful for
+ * handling the inconsistency in browser's multichannel audio decoding.
+ * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
+ * overrides the internal HRIR list if given.
+ * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
+ * @return {FOARenderer}
+ */
+Omnitone.createFOARenderer = function(context, config) {
+  return new FOARenderer(context, config);
+};
+
+
+/**
+ * Creates HOARotator for higher-order ambisonics rotation.
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number} ambisonicOrder - Ambisonic order.
+ * @return {HOARotator}
+ */
+Omnitone.createHOARotator = function(context, ambisonicOrder) {
+  return new HOARotator(context, ambisonicOrder);
+};
+
+
+/**
+ * Creates HOAConvolver performs the multi-channel convolution for the optmized
+ * binaural rendering.
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number} ambisonicOrder - Ambisonic order. (2 or 3)
+ * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
+ * AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)
+ * @return {HOAConvovler}
+ */
+Omnitone.createHOAConvolver = function(
+    context, ambisonicOrder, hrirBufferList) {
+  return new HOAConvolver(context, ambisonicOrder, hrirBufferList);
+};
+
+
+/**
+ * Creates HOARenderer for higher-order ambisonic decoding and the optimized
+ * binaural rendering.
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} config
+ * @param {Number} [config.ambisonicOrder=3] - Ambisonic order.
+ * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
+ * overrides the internal HRIR list if given.
+ * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
+ * @return {HOARenderer}
+ */
+Omnitone.createHOARenderer = function(context, config) {
+  return new HOARenderer(context, config);
+};
+
+
+// Handler Preload Tasks.
+// - Detects the browser information.
+// - Prints out the version number.
+(function() {
+  Utils.log('Version ' + Version + ' (running ' +
+      Omnitone.browserInfo.name + ' ' + Omnitone.browserInfo.version +
+      ' on ' + Omnitone.browserInfo.platform +')');
+  if (Omnitone.browserInfo.name.toLowerCase() === 'safari') {
+    Polyfill.patchSafari();
+    Utils.log(Omnitone.browserInfo.name + ' detected. Appliying polyfill...');
+  }
+})();
+
+
+module.exports = Omnitone;
+
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/**
+ * @file Omnitone FOA decoder, DEPRECATED in favor of FOARenderer.
+ */
+
+
+
+const AudioBufferManager = __webpack_require__(5);
+const FOARouter = __webpack_require__(2);
+const FOARotator = __webpack_require__(3);
+const FOAPhaseMatchedFilter = __webpack_require__(6);
+const FOAVirtualSpeaker = __webpack_require__(7);
+const FOASpeakerData = __webpack_require__(13);
+const Utils = __webpack_require__(0);
+
+// By default, Omnitone fetches IR from the spatial media repository.
+const HRTFSET_URL = 'https://raw.githubusercontent.com/GoogleChrome/omnitone/master/build/resources/';
+
+// Post gain compensation value.
+let POST_GAIN_DB = 0;
+
+
+/**
+ * Omnitone FOA decoder.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {VideoElement} videoElement - Target video (or audio) element for
+ * streaming.
+ * @param {Object} options
+ * @param {String} options.HRTFSetUrl - Base URL for the cube HRTF sets.
+ * @param {Number} options.postGainDB - Post-decoding gain compensation in dB.
+ * @param {Number[]} options.channelMap - Custom channel map.
+ */
+function FOADecoder(context, videoElement, options) {
+  this._isDecoderReady = false;
+  this._context = context;
+  this._videoElement = videoElement;
+  this._decodingMode = 'ambisonic';
+
+  this._postGainDB = POST_GAIN_DB;
+  this._HRTFSetUrl = HRTFSET_URL;
+  this._channelMap = FOARouter.ChannelMap.DEFAULT; // ACN
+
+  if (options) {
+    if (options.postGainDB) {
+      this._postGainDB = options.postGainDB;
+    }
+    if (options.HRTFSetUrl) {
+      this._HRTFSetUrl = options.HRTFSetUrl;
+    }
+    if (options.channelMap) {
+      this._channelMap = options.channelMap;
+    }
+  }
+
+  // Rearrange speaker data based on |options.HRTFSetUrl|.
+  this._speakerData = [];
+  for (let i = 0; i < FOASpeakerData.length; ++i) {
+    this._speakerData.push({
+      name: FOASpeakerData[i].name,
+      url: this._HRTFSetUrl + '/' + FOASpeakerData[i].url,
+      coef: FOASpeakerData[i].coef,
+    });
+  }
+
+  this._tempMatrix4 = new Float32Array(16);
+}
+
+
+/**
+ * Initialize and load the resources for the decode.
+ * @return {Promise}
+ */
+FOADecoder.prototype.initialize = function() {
+  Utils.log('Initializing... (mode: ' + this._decodingMode + ')');
+
+  // Rerouting channels if necessary.
+  let channelMapString = this._channelMap.toString();
+  let defaultChannelMapString = FOARouter.ChannelMap.DEFAULT.toString();
+  if (channelMapString !== defaultChannelMapString) {
+    Utils.log('Remapping channels ([' + defaultChannelMapString + '] -> ['
+      + channelMapString + '])');
+  }
+
+  this._audioElementSource =
+      this._context.createMediaElementSource(this._videoElement);
+  this._foaRouter = new FOARouter(this._context, this._channelMap);
+  this._foaRotator = new FOARotator(this._context);
+  this._foaPhaseMatchedFilter = new FOAPhaseMatchedFilter(this._context);
+
+  this._audioElementSource.connect(this._foaRouter.input);
+  this._foaRouter.output.connect(this._foaRotator.input);
+  this._foaRotator.output.connect(this._foaPhaseMatchedFilter.input);
+
+  this._foaVirtualSpeakers = [];
+
+  // Bypass signal path.
+  this._bypass = this._context.createGain();
+  this._audioElementSource.connect(this._bypass);
+
+  // Get the linear amplitude from the post gain option, which is in decibel.
+  const postGainLinear = Math.pow(10, this._postGainDB/20);
+  Utils.log('Gain compensation: ' + postGainLinear + ' (' + this._postGainDB
+    + 'dB)');
+
+  // This returns a promise so developers can use the decoder when it is ready.
+  const that = this;
+  return new Promise(function(resolve, reject) {
+    new AudioBufferManager(that._context, that._speakerData,
+      function(buffers) {
+        for (let i = 0; i < that._speakerData.length; ++i) {
+          that._foaVirtualSpeakers[i] = new FOAVirtualSpeaker(that._context, {
+            coefficients: that._speakerData[i].coef,
+            IR: buffers.get(that._speakerData[i].name),
+            gain: postGainLinear,
+          });
+
+          that._foaPhaseMatchedFilter.output.connect(
+            that._foaVirtualSpeakers[i].input);
+        }
+
+        // Set the decoding mode.
+        that.setMode(that._decodingMode);
+        that._isDecoderReady = true;
+        Utils.log('HRTF IRs are loaded successfully. The decoder is ready.');
+        resolve();
+      }, reject);
+  });
+};
+
+/**
+ * Set the rotation matrix for the sound field rotation.
+ * @param {Array} rotationMatrix      3x3 rotation matrix (row-major
+ *                                    representation)
+ */
+FOADecoder.prototype.setRotationMatrix = function(rotationMatrix) {
+  this._foaRotator.setRotationMatrix(rotationMatrix);
+};
+
+
+/**
+ * Update the rotation matrix from a Three.js camera object.
+ * @param  {Object} cameraMatrix      The Matrix4 obejct of Three.js the camera.
+ */
+FOADecoder.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
+  // Extract the inner array elements and inverse. (The actual view rotation is
+  // the opposite of the camera movement.)
+  Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
+  this._foaRotator.setRotationMatrix4(this._tempMatrix4);
+};
+
+/**
+ * Set the decoding mode.
+ * @param {String} mode               Decoding mode. When the mode is 'bypass'
+ *                                    the decoder is disabled and bypass the
+ *                                    input stream to the output. Setting the
+ *                                    mode to 'ambisonic' activates the decoder.
+ *                                    When the mode is 'off', all the
+ *                                    processing is completely turned off saving
+ *                                    the CPU power.
+ */
+FOADecoder.prototype.setMode = function(mode) {
+  if (mode === this._decodingMode) {
+    return;
+  }
+
+  switch (mode) {
+    case 'bypass':
+      this._decodingMode = 'bypass';
+      for (let i = 0; i < this._foaVirtualSpeakers.length; ++i) {
+        this._foaVirtualSpeakers[i].disable();
+      }
+      this._bypass.connect(this._context.destination);
+      break;
+
+    case 'ambisonic':
+      this._decodingMode = 'ambisonic';
+      for (let i = 0; i < this._foaVirtualSpeakers.length; ++i) {
+        this._foaVirtualSpeakers[i].enable();
+      }
+      this._bypass.disconnect();
+      break;
+
+    case 'off':
+      this._decodingMode = 'off';
+      for (let i = 0; i < this._foaVirtualSpeakers.length; ++i) {
+        this._foaVirtualSpeakers[i].disable();
+      }
+      this._bypass.disconnect();
+      break;
+  }
+
+  Utils.log('Decoding mode changed. (' + mode + ')');
+};
+
+module.exports = FOADecoder;
+
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports) {
+
+/**
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/**
+ * The data for FOAVirtualSpeaker. Each entry contains the URL for IR files and
+ * the gain coefficients for the associated IR files. Note that the order of
+ * coefficients follows the ACN channel ordering. (W,Y,Z,X)
+ * @type {Object[]}
+ */
+const FOASpeakerData = [{
+  name: 'E35_A135',
+  url: 'E35_A135.wav',
+  gainFactor: 1,
+  coef: [.1250, 0.216495, 0.21653, -0.216495],
+}, {
+  name: 'E35_A-135',
+  url: 'E35_A-135.wav',
+  gainFactor: 1,
+  coef: [.1250, -0.216495, 0.21653, -0.216495],
+}, {
+  name: 'E-35_A135',
+  url: 'E-35_A135.wav',
+  gainFactor: 1,
+  coef: [.1250, 0.216495, -0.21653, -0.216495],
+}, {
+  name: 'E-35_A-135',
+  url: 'E-35_A-135.wav',
+  gainFactor: 1,
+  coef: [.1250, -0.216495, -0.21653, -0.216495],
+}, {
+  name: 'E35_A45',
+  url: 'E35_A45.wav',
+  gainFactor: 1,
+  coef: [.1250, 0.216495, 0.21653, 0.216495],
+}, {
+  name: 'E35_A-45',
+  url: 'E35_A-45.wav',
+  gainFactor: 1,
+  coef: [.1250, -0.216495, 0.21653, 0.216495],
+}, {
+  name: 'E-35_A45',
+  url: 'E-35_A45.wav',
+  gainFactor: 1,
+  coef: [.1250, 0.216495, -0.21653, 0.216495],
+}, {
+  name: 'E-35_A-45',
+  url: 'E-35_A-45.wav',
+  gainFactor: 1,
+  coef: [.1250, -0.216495, -0.21653, 0.216495],
+}];
+
+
+module.exports = FOASpeakerData;
+
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/**
+ * @file Omnitone FOARenderer. This is user-facing API for the first-order
+ * ambisonic decoder and the optimized binaural renderer.
+ */
+
+
+
+const BufferList = __webpack_require__(1);
+const FOAConvolver = __webpack_require__(4);
+const FOAHrirBase64 = __webpack_require__(15);
+const FOARotator = __webpack_require__(3);
+const FOARouter = __webpack_require__(2);
+const Utils = __webpack_require__(0);
+
+
+/**
+ * @typedef {string} RenderingMode
+ */
+
+/**
+ * Rendering mode ENUM.
+ * @enum {RenderingMode}
+ */
+const RenderingMode = {
+  /** @type {string} Use ambisonic rendering. */
+  AMBISONIC: 'ambisonic',
+  /** @type {string} Bypass. No ambisonic rendering. */
+  BYPASS: 'bypass',
+  /** @type {string} Disable audio output. */
+  OFF: 'off',
+};
+
+
+/**
+ * Omnitone FOA renderer class. Uses the optimized convolution technique.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} config
+ * @param {Array} [config.channelMap] - Custom channel routing map. Useful for
+ * handling the inconsistency in browser's multichannel audio decoding.
+ * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
+ * overrides the internal HRIR list if given.
+ * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
+ */
+function FOARenderer(context, config) {
+  this._context = Utils.isAudioContext(context) ?
+      context :
+      Utils.throw('FOARenderer: Invalid BaseAudioContext.');
+
+  this._config = {
+    channelMap: FOARouter.ChannelMap.DEFAULT,
+    renderingMode: RenderingMode.AMBISONIC,
+  };
+
+  if (config) {
+    if (config.channelMap) {
+      if (Array.isArray(config.channelMap) && config.channelMap.length === 4) {
+        this._config.channelMap = config.channelMap;
+      } else {
+        Utils.throw(
+            'FOARenderer: Invalid channel map. (got ' + config.channelMap
+            + ')');
+      }
+    }
+
+    if (config.hrirPathList) {
+      if (Array.isArray(config.hrirPathList) &&
+          config.hrirPathList.length === 2) {
+        this._config.pathList = config.hrirPathList;
+      } else {
+        Utils.throw(
+            'FOARenderer: Invalid HRIR URLs. It must be an array with ' +
+            '2 URLs to HRIR files. (got ' + config.hrirPathList + ')');
+      }
+    }
+
+    if (config.renderingMode) {
+      if (Object.values(RenderingMode).includes(config.renderingMode)) {
+        this._config.renderingMode = config.renderingMode;
+      } else {
+        Utils.log(
+            'FOARenderer: Invalid rendering mode order. (got' +
+            config.renderingMode + ') Fallbacks to the mode "ambisonic".');
+      }
+    }
+  }
+
+  this._buildAudioGraph();
+
+  this._tempMatrix4 = new Float32Array(16);
+  this._isRendererReady = false;
+}
+
+
+/**
+ * Builds the internal audio graph.
+ * @private
+ */
+FOARenderer.prototype._buildAudioGraph = function() {
+  this.input = this._context.createGain();
+  this.output = this._context.createGain();
+  this._bypass = this._context.createGain();
+  this._foaRouter = new FOARouter(this._context, this._config.channelMap);
+  this._foaRotator = new FOARotator(this._context);
+  this._foaConvolver = new FOAConvolver(this._context);
+  this.input.connect(this._foaRouter.input);
+  this.input.connect(this._bypass);
+  this._foaRouter.output.connect(this._foaRotator.input);
+  this._foaRotator.output.connect(this._foaConvolver.input);
+  this._foaConvolver.output.connect(this.output);
+
+  this.input.channelCount = 4;
+  this.input.channelCountMode = 'explicit';
+  this.input.channelInterpretation = 'discrete';
+};
+
+
+/**
+ * Internal callback handler for |initialize| method.
+ * @private
+ * @param {function} resolve - Resolution handler.
+ * @param {function} reject - Rejection handler.
+ */
+FOARenderer.prototype._initializeCallback = function(resolve, reject) {
+  const bufferList = this._config.pathList
+      ? new BufferList(this._context, this._config.pathList, {dataType: 'url'})
+      : new BufferList(this._context, FOAHrirBase64);
+  bufferList.load().then(
+      function(hrirBufferList) {
+        this._foaConvolver.setHRIRBufferList(hrirBufferList);
+        this.setRenderingMode(this._config.renderingMode);
+        this._isRendererReady = true;
+        Utils.log('FOARenderer: HRIRs loaded successfully. Ready.');
+        resolve();
+      }.bind(this),
+      function() {
+        const errorMessage = 'FOARenderer: HRIR loading/decoding failed.';
+        Utils.throw(errorMessage);
+        reject(errorMessage);
+      });
+};
+
+
+/**
+ * Initializes and loads the resource for the renderer.
+ * @return {Promise}
+ */
+FOARenderer.prototype.initialize = function() {
+  Utils.log(
+      'FOARenderer: Initializing... (mode: ' + this._config.renderingMode +
+      ')');
+
+  return new Promise(this._initializeCallback.bind(this), function(error) {
+    Utils.throw('FOARenderer: Initialization failed. (' + error + ')');
+  });
+};
+
+
+/**
+ * Set the channel map.
+ * @param {Number[]} channelMap - Custom channel routing for FOA stream.
+ */
+FOARenderer.prototype.setChannelMap = function(channelMap) {
+  if (!this._isRendererReady) {
+    return;
+  }
+
+  if (channelMap.toString() !== this._config.channelMap.toString()) {
+    Utils.log(
+        'Remapping channels ([' + this._config.channelMap.toString() +
+        '] -> [' + channelMap.toString() + ']).');
+    this._config.channelMap = channelMap.slice();
+    this._foaRouter.setChannelMap(this._config.channelMap);
+  }
+};
+
+
+/**
+ * Updates the rotation matrix with 3x3 matrix.
+ * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
+ */
+FOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
+  if (!this._isRendererReady) {
+    return;
+  }
+
+  this._foaRotator.setRotationMatrix3(rotationMatrix3);
+};
+
+
+/**
+ * Updates the rotation matrix with 4x4 matrix.
+ * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
+ */
+FOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
+  if (!this._isRendererReady) {
+    return;
+  }
+
+  this._foaRotator.setRotationMatrix4(rotationMatrix4);
+};
+
+
+/**
+ * Set the rotation matrix from a Three.js camera object. Depreated in V1, and
+ * this exists only for the backward compatiblity. Instead, use
+ * |setRotatationMatrix4()| with Three.js |camera.worldMatrix.elements|.
+ * @deprecated
+ * @param {Object} cameraMatrix - Matrix4 from Three.js |camera.matrix|.
+ */
+FOARenderer.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
+  if (!this._isRendererReady) {
+    return;
+  }
+
+  // Extract the inner array elements and inverse. (The actual view rotation is
+  // the opposite of the camera movement.)
+  Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
+  this._foaRotator.setRotationMatrix4(this._tempMatrix4);
+};
+
+
+/**
+ * Set the rendering mode.
+ * @param {RenderingMode} mode - Rendering mode.
+ *  - 'ambisonic': activates the ambisonic decoding/binaurl rendering.
+ *  - 'bypass': bypasses the input stream directly to the output. No ambisonic
+ *    decoding or encoding.
+ *  - 'off': all the processing off saving the CPU power.
+ */
+FOARenderer.prototype.setRenderingMode = function(mode) {
+  if (mode === this._config.renderingMode) {
+    return;
+  }
+
+  switch (mode) {
+    case RenderingMode.AMBISONIC:
+      this._foaConvolver.enable();
+      this._bypass.disconnect();
+      break;
+    case RenderingMode.BYPASS:
+      this._foaConvolver.disable();
+      this._bypass.connect(this.output);
+      break;
+    case RenderingMode.OFF:
+      this._foaConvolver.disable();
+      this._bypass.disconnect();
+      break;
+    default:
+      Utils.log(
+          'FOARenderer: Rendering mode "' + mode + '" is not ' +
+          'supported.');
+      return;
+  }
+
+  this._config.renderingMode = mode;
+  Utils.log('FOARenderer: Rendering mode changed. (' + mode + ')');
+};
+
+
+module.exports = FOARenderer;
+
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports) {
+
+const OmnitoneFOAHrirBase64 = [
+"UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAD+/wIA9v8QAPv/CwD+/wcA/v8MAP//AQD7/wEACAAEAPj/+v8YABAA7v/n//v/9P/M/8D//f34/R38EvzxAfEBtA2lDTcBJQFJ9T71FP0D/cD1tfVo/Wv9uPTO9PPmOufc/U/+agL3Aisc/RxuGKEZBv3j/iYMzQ2gAzsEQQUABiQFrASzA5cB2QmyCy0AtgR4AeYGtfgAA2j5OQHP+scArPsMBJgEggIEBtz6+QVq/pj/aPg8BPP3gQEi+jEAof0fA1v9+/7S+8IBjvwd/xD4IADL/Pf9zvs+/l3+wgB7/+L+7fzFADH9kf6A+n3+DP6+/TP9xP68/pn+w/26/i39YgA0/u790Pt9/kD+7v1s/Wb+8f4C/1P+pf/x/cT+6/3p/Xz9ff5F/0f9G/4r/6v/4P5L/sL+ff7c/pj+Ov7X/UT+9P5G/oz+6v6A/2D+9/6P/8r/bP7m/ij+C//e/tj/Gf4e/9v+FwDP/lz/sP7F/2H+rv/G/s7/Hf7y/4P+NAD9/k0AK/6w/zP/hACh/sX/gf44AOP+dgCm/iUAk/5qAOD+PwC+/jEAWP4CAAr/bQBw/vv/zf5iACD/OgCS/uD/Cv9oAAb/CgDK/kwA//5tACH/TgCg/h4AHP9aABP/JADP/hEAYv9gAAj/3f8m/ysAYv8gACX/8/8k/ysAXv8bABH//v8j/ygAa/8qAAD/9f9g/1YAWf8JACH/AgB2/z4AXP/w/z3/FgB2/ykAX//9/z//EwCV/zUAS//n/1T/GACK/x4ATv/0/4P/QQB4//v/WP/2/3X/HAB8//P/V//3/2f/AQBh/9v/Tf/x/5P/IwCI/wMAf/8hAKP/JACZ/xUAiv8nAK//HgCr/yMAm/8uAMz/OACi/yQAqf87AMT/MwCY/yUAtP9FAMH/KgCu/ycAyP85AMv/IwCz/xoA1f8qAMn/FgC8/xQA4/8nAMX/CwDJ/xQA4f8ZAMH/BgDO/xQA4f8WAMP/BwDU/xQA4P8QAMH/AQDb/xQA3P8JAMP/AgDh/xIA2v8EAMj/AgDk/w0A1f/+/8v/AwDm/wwA0v/+/9H/BgDl/wkAzv/8/9T/BwDk/wcAzv/8/9r/CQDi/wQAzf/8/9//CADf////0P/9/+L/BwDd//7/0////+T/BgDb//z/1f8AAOf/BQDZ//v/2v8CAOb/AwDY//v/3v8EAOb/AgDY//3/4f8FAOX/AQDZ//7/5P8GAOP/AADb/wAA5/8GAOH////d/wIA5/8FAOD////f/wMA6P8FAOD////h/wQA6P8EAN7////h/wUA4v8DANv/AQDd/wQA3P8CANn/AgDb/wMA2/8CANv/AgDd/wIA3v8CAOH/AQDj/wEA",
+"UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAAAAAAA/f8CAP//AQD//wEA//8BAP3/AAACAP7/+f8AAAIA/P8FAAQA8/8AABoA+f/V/wQAHQDO/xoAQQBO/ocA0Px1/ucHW/4UCm8HLO6kAjv8/fCRDdAAYfPiBIgFXveUCM0GBvh6/nz7rf0J/QcQSRVdBgoBSgFR62r9NP8m+LoEAvriBVAAiAPmABEGMf2l+SwBjva6/G4A//8P/CYDMgXm/R0CKAE6/fcBBwAtAND+kQA0A5UDhwFs/8IB8fydAEP/A/8v/e7/mP8j/2YBIwE3Av0AYv+uAOD8lgAg/wwAIf/L/n0Ae//OAJMB3P/XAF//XwCM/08AB/8NAEf/rf4jAT3/lgAJAP4AHgDpAO8AUf9L/07/Qf8KAOD/x/+D/3sATQCDAMoA0f79/+L/EQDt/7EAqv+S/7IAuv/o/wgAc//X//H/SwCm/+3/Yf/B/yoAAADI/7X/AwBg/5EATgCX/xYA/P+q/00AVACY/6v/BADD/zwALQCN/8z/KQDu/ygAEgCZ/6f/VQDC//T/KQCs/7P/UgAfAO7/NgC8/57/awAZAPP/+P/V/8z/bQBBAL//DgD0/+T/TABBAMz/CwAxAPz/SQBqALn/BgALAPz/EAA7AIz/3/8iAAUA//8kALf/y/9VABQA+v81AOj/0P9cAB4A+f8WAOr/vv83ABgAw/8JAOj/4f8nACIAsf/y/w4A3v8gACQAxP/n/ycA7P8WAC0Ayf/U/ycA9v/7/yUA0P/P/zUABADc/xUA5P/J/zcACwDS/xUA9P/m/zAACQDX/+3/9v/2/yQACgDZ/+P/AwAKABYA///b/9j/EQALABkADgD6/+7/GwD4/w4A8P/w//j/EgAEAAUA9f/1/wQAGgD4/wAA5////wAAGQD1////7f8FAAUAFQDv/wAA6v8LAAcAFQDs/wEA9P8SAAYACwDr//7/AQASAAYABQDv/wIAAwAWAAIAAgDv/wAABgATAAEA/f/u/wQABgAQAPr/+P/z/wUACQALAPj/9//4/wgABwAKAPT/+f/5/w4ABwAIAPT/+//9/w4AAwADAPH//f///w8A//8BAPP///8BAA0A/f/+//X/AgACAA0A+//8//b/BAADAAoA+f/7//n/BgADAAcA+P/7//v/BwABAAQA+P/8//3/CQABAAIA9//9////CQD/////+P///wAACAD9//7/+f8AAAAABwD8//3/+v8CAAAABgD7//z//P8EAAAABAD6//3//P8FAP//AgD6//7//v8FAP7/AQD7//////8GAP7/AAD7/wEA//8EAP3/AAD9/wEA/v8DAP3/AAD9/wIA/v8CAP3/AQD9/wIA/v8CAP7/AQD+/wEA",
+];
+
+module.exports = OmnitoneFOAHrirBase64;
+
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/**
+ * @file Omnitone HOARenderer. This is user-facing API for the higher-order
+ * ambisonic decoder and the optimized binaural renderer.
+ */
+
+
+
+const BufferList = __webpack_require__(1);
+const HOAConvolver = __webpack_require__(8);
+const HOARotator = __webpack_require__(9);
+const TOAHrirBase64 = __webpack_require__(17);
+const SOAHrirBase64 = __webpack_require__(18);
+const Utils = __webpack_require__(0);
+
+
+/**
+ * @typedef {string} RenderingMode
+ */
+
+/**
+ * Rendering mode ENUM.
+ * @enum {RenderingMode}
+ */
+const RenderingMode = {
+  /** @type {string} Use ambisonic rendering. */
+  AMBISONIC: 'ambisonic',
+  /** @type {string} Bypass. No ambisonic rendering. */
+  BYPASS: 'bypass',
+  /** @type {string} Disable audio output. */
+  OFF: 'off',
+};
+
+
+// Currently SOA and TOA are only supported.
+const SupportedAmbisonicOrder = [2, 3];
+
+
+/**
+ * Omnitone HOA renderer class. Uses the optimized convolution technique.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} config
+ * @param {Number} [config.ambisonicOrder=3] - Ambisonic order.
+ * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
+ * overrides the internal HRIR list if given.
+ * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
+ */
+function HOARenderer(context, config) {
+  this._context = Utils.isAudioContext(context) ?
+      context :
+      Utils.throw('HOARenderer: Invalid BaseAudioContext.');
+
+  this._config = {
+    ambisonicOrder: 3,
+    renderingMode: RenderingMode.AMBISONIC,
+  };
+
+  if (config && config.ambisonicOrder) {
+    if (SupportedAmbisonicOrder.includes(config.ambisonicOrder)) {
+      this._config.ambisonicOrder = config.ambisonicOrder;
+    } else {
+      Utils.log(
+          'HOARenderer: Invalid ambisonic order. (got ' +
+          config.ambisonicOrder + ') Fallbacks to 3rd-order ambisonic.');
+    }
+  }
+
+  this._config.numberOfChannels =
+      (this._config.ambisonicOrder + 1) * (this._config.ambisonicOrder + 1);
+  this._config.numberOfStereoChannels =
+      Math.ceil(this._config.numberOfChannels / 2);
+
+  if (config && config.hrirPathList) {
+    if (Array.isArray(config.hrirPathList) &&
+        config.hrirPathList.length === this._config.numberOfStereoChannels) {
+      this._config.pathList = config.hrirPathList;
+    } else {
+      Utils.throw(
+          'HOARenderer: Invalid HRIR URLs. It must be an array with ' +
+          this._config.numberOfStereoChannels + ' URLs to HRIR files.' +
+          ' (got ' + config.hrirPathList + ')');
+    }
+  }
+
+  if (config && config.renderingMode) {
+    if (Object.values(RenderingMode).includes(config.renderingMode)) {
+      this._config.renderingMode = config.renderingMode;
+    } else {
+      Utils.log(
+          'HOARenderer: Invalid rendering mode. (got ' +
+          config.renderingMode + ') Fallbacks to "ambisonic".');
+    }
+  }
+
+  this._buildAudioGraph();
+
+  this._isRendererReady = false;
+}
+
+
+/**
+ * Builds the internal audio graph.
+ * @private
+ */
+HOARenderer.prototype._buildAudioGraph = function() {
+  this.input = this._context.createGain();
+  this.output = this._context.createGain();
+  this._bypass = this._context.createGain();
+  this._hoaRotator = new HOARotator(this._context, this._config.ambisonicOrder);
+  this._hoaConvolver =
+      new HOAConvolver(this._context, this._config.ambisonicOrder);
+  this.input.connect(this._hoaRotator.input);
+  this.input.connect(this._bypass);
+  this._hoaRotator.output.connect(this._hoaConvolver.input);
+  this._hoaConvolver.output.connect(this.output);
+
+  this.input.channelCount = this._config.numberOfChannels;
+  this.input.channelCountMode = 'explicit';
+  this.input.channelInterpretation = 'discrete';
+};
+
+
+/**
+ * Internal callback handler for |initialize| method.
+ * @private
+ * @param {function} resolve - Resolution handler.
+ * @param {function} reject - Rejection handler.
+ */
+HOARenderer.prototype._initializeCallback = function(resolve, reject) {
+  let bufferList;
+  if (this._config.pathList) {
+    bufferList =
+        new BufferList(this._context, this._config.pathList, {dataType: 'url'});
+  } else {
+    bufferList = this._config.ambisonicOrder === 2
+        ? new BufferList(this._context, SOAHrirBase64)
+        : new BufferList(this._context, TOAHrirBase64);
+  }
+
+  bufferList.load().then(
+      function(hrirBufferList) {
+        this._hoaConvolver.setHRIRBufferList(hrirBufferList);
+        this.setRenderingMode(this._config.renderingMode);
+        this._isRendererReady = true;
+        Utils.log('HOARenderer: HRIRs loaded successfully. Ready.');
+        resolve();
+      }.bind(this),
+      function() {
+        const errorMessage = 'HOARenderer: HRIR loading/decoding failed.';
+        Utils.throw(errorMessage);
+        reject(errorMessage);
+      });
+};
+
+
+/**
+ * Initializes and loads the resource for the renderer.
+ * @return {Promise}
+ */
+HOARenderer.prototype.initialize = function() {
+  Utils.log(
+      'HOARenderer: Initializing... (mode: ' + this._config.renderingMode +
+      ', ambisonic order: ' + this._config.ambisonicOrder + ')');
+
+  return new Promise(this._initializeCallback.bind(this), function(error) {
+    Utils.throw('HOARenderer: Initialization failed. (' + error + ')');
+  });
+};
+
+
+/**
+ * Updates the rotation matrix with 3x3 matrix.
+ * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
+ */
+HOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
+  if (!this._isRendererReady) {
+    return;
+  }
+
+  this._hoaRotator.setRotationMatrix3(rotationMatrix3);
+};
+
+
+/**
+ * Updates the rotation matrix with 4x4 matrix.
+ * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
+ */
+HOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
+  if (!this._isRendererReady) {
+    return;
+  }
+
+  this._hoaRotator.setRotationMatrix4(rotationMatrix4);
+};
+
+
+/**
+ * Set the decoding mode.
+ * @param {RenderingMode} mode - Decoding mode.
+ *  - 'ambisonic': activates the ambisonic decoding/binaurl rendering.
+ *  - 'bypass': bypasses the input stream directly to the output. No ambisonic
+ *    decoding or encoding.
+ *  - 'off': all the processing off saving the CPU power.
+ */
+HOARenderer.prototype.setRenderingMode = function(mode) {
+  if (mode === this._config.renderingMode) {
+    return;
+  }
+
+  switch (mode) {
+    case RenderingMode.AMBISONIC:
+      this._hoaConvolver.enable();
+      this._bypass.disconnect();
+      break;
+    case RenderingMode.BYPASS:
+      this._hoaConvolver.disable();
+      this._bypass.connect(this.output);
+      break;
+    case RenderingMode.OFF:
+      this._hoaConvolver.disable();
+      this._bypass.disconnect();
+      break;
+    default:
+      Utils.log(
+          'HOARenderer: Rendering mode "' + mode + '" is not ' +
+          'supported.');
+      return;
+  }
+
+  this._config.renderingMode = mode;
+  Utils.log('HOARenderer: Rendering mode changed. (' + mode + ')');
+};
+
+
+module.exports = HOARenderer;
+
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports) {
+
+const OmnitoneTOAHrirBase64 = [
+"UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAD+/wQA8/8YAP3/CgACAAAA//8CAAYA8/8AAPH/CgDv/97/e/+y/9P+UQDwAHUBEwV7/pP8P/y09bsDwAfNBGYIFf/Y+736+fP890Hv8AGcC3T/vwYy+S70AAICA3AD4AagBw0R4w3ZEAcN8RVYAV8Q8P2z+kECHwdK/jIG0QNKAYUElf8IClj7BgjX+/f8j/l3/5f/6fkK+xz8FP0v/nj/Mf/n/FcBPfvH/1H3+gBP/Hf8cfiCAR/54QBh+UQAcvkzAWL8TP13+iD/V/73+wv9Kv+Y/hv+xPz7/UL83//a/z/9AP6R/5L+jf26/P3+rP26/tD8nP7B/Pv+WP1V/sP9gv91/3P9xP3J/nv/GP5S/sb+IP8v/9j/dv7U/pr+6v+u/Z3/sv5cAOr9Q/83/+n/zP5x/57+2//k/nwA/v01//L+SACB/sD/Ff81AJT+TgDp/ocAm/5dAFT+MgD+/pMAW/7o/yH/xQDA/kkA9P6LAL3+pAC0/iQAz/5UALD+UwAt/3UAhf4UAA//pwC+/joAz/5aAAv/fwDY/iMAIf+uAPP+ZAAc/0QAy/4xAB7/TgDs/goADP8wAEL/NwDo/ub/Uf9BAC3/+v9F/y4ARP9HAFP/EQA3/xMATP81AG3/HQAu/wgAaP9FACb/9f9B/y0AUP8rAED/CwBV/z4AW/8TAGH/BQBK/xsAfv8eAFn/AgB3/zwAff8RAGj//v+E/yAAb//0/3n/FwBz/xcAiv8PAHn/FQCJ/xgAg//x/3j/EQCa/ycAff/w/47/HwCI//X/iv/7/43/JQCM/+n/kP8AAJb/JACj//7/oP8ZAML/SwCo/w4Atv8tAMb/PACr/xcAwP9HAMP/OADF/y4A0f9IANL/NwC//zEA0f9LAMb/MAC8/y4A3f9GAMH/FQDQ/yYA2/8sAMT/AwDX/xkA3v8SAM3/9v/c/w8A4f8LAMj/8f/h/xQA2P8CAMn/8//j/xQA0v/7/9H//P/i/xEA0v/1/9L//f/j/w0A0f/x/9f//v/k/wgAz//u/9z/AwDg/wMA0P/v/9//BQDf////0v/y/+D/CADc//3/0v/2/+L/CgDa//r/1v/5/+T/CgDY//j/2f/9/+T/CADY//f/3P8AAOT/BwDY//f/4P8EAOP/BADZ//j/4v8GAOL/AwDa//r/5f8IAOH/AQDc//3/5v8JAOD//v/f////5v8IAOD//v/h/wIA5/8HAOD//f/j/wMA5/8GAOD//f/l/wYA5v8EAOD//v/m/wYA5f8CAOL////n/wYA5P8BAOH/AADl/wUA4f///+H/AQDk/wMA4f///+T/AQDm/wEA5////+r/AADt/wAA7/////P/AAD1////",
+"UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAD//////v///wAAAAAAAAAAAQAAAAAA///9/wAABAD+//n/AgAJAAAA+v/+//f/DAAdAPv/+v+l/8L+jf/4/vgAdwVPAQACLQBo+Qj/Ev7o/N3/VgCbA08Bxf+L+yn9J/2HCU8FmgBvDe30Rv5h/LT09gi5CxkA5gOi8/30kwEM+4YJMf2nBmkJJAQQBLoFtvvv+m4A7PF6/R0Bif3qAuf8WARAAf4GyABG/BIAwvr4Acv8U//c/yIC8AEn/B8Daf2CAgMBAf3MAN38vgLK/UT/QwCyAPYClPyvAW/+pQAoASD+zP+R/IYC1f7C/nEBQP96AZb+1QAIAM//yQE7/tkAZ/7TAXL/w/8+AIsAtwB7/24A4v9a/z4A7v4iADb/dwCj/23/kgBOANUAIv8lAKEAxP9gAK7/BwCP/5kA7/9v/0wAzv9DAGT/3/9vAHv/6P+q/xUA7P8XAO//uv/g/2UAEgCV/wEATADM/+7/+//j/+D/9v/i//j/IgD+/xoAxf/6/z4A5/+8/9D/QwDq/+3/OQDT/zUAIgA/APP/PgAjAPD/BwAGACAADAC3//b/HAA3AN//RgDN/w8AIAACAN//GQBDACEAIwA+ACoAJQAeAPz/KgAYAPr/DgAEABYAIgAcAMT/7f8OAOL/5P/2//L/9P8GAPT/7v/8/+7/6v/t//z/AgAUAOL//P8VAAMA4/8IAPb/+P8MAAoA5v8NAAsA9v///wEAAAD9//n/9/8JAAYA7v/6/wMA+f8GAAEA7f/7/xgACAD4/w8A///3/w0A+f8BAAIA/P/5/xIA///9//r/7v/+/xYACQD///H/CwDz/wEADgAHAPP/FADn/+3/AQD5//f/AgD7/wEABwAMAAEADQD8//n/8f8OAPX/BAD+//X/+v8WAAQA+f8CAAEA7/8QAAEA/P8DAAUA9f8KAAwA9v8DAAUA+f8OAAoA9f/7/w0A+v8EAAgA8P/6/woA+//8/wkA+P/3/woA+//8/wcA9//1/woAAwD5/wcA/P/3/w0AAwD3/wEABAD2/wkABgD3/wEABQD3/wUABQD3//v/BwD3/wMABQD3//r/CQD7////BQD6//n/CQD9//3/BAD9//j/BwAAAPv/AwD///j/BwABAPn/AQABAPn/BQACAPn///8DAPr/AwADAPr//v8EAPv/AQADAPv//P8FAP3///8DAPz/+/8FAP7//f8CAP7/+/8EAP///P8BAP//+/8DAAEA+/8AAAEA+/8CAAIA+////wIA/f8AAAIA/P/+/wIA/f8AAAIA/f/9/wMA/////wEA///+/wIA/////wAAAAD+/wAAAAD/////AAD//wAA//8AAP//AAD//wAA",
+"UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAD////////+//////8AAP////8AAP//AAAAAPz//f8IAAMA9////w4AAQD6/wwA8//+/y8Afv/0/2H/UP5gAbH+2QG1B2cAVAIh/l32FPyM/nACPQDV/+UEo/Q6AQwCu/oLD9kF8QJA/Uz+Wf2KCOcC+wUKBsL5aQBQ97rwOPiPAvn5CAl8AHEDkQPcAA8Bn/lIAdz7HQF1+xz9cAM4/94E4gDKAun+cgPYAYr9JgJr/bf+ivxz/MoBgv5UA8EBSgAQAJ7/UgEk/cQB7f63/sD/vf4XAhT/BQFCADYAnQGI/9EBtv3hALD/vP+c/3H/TgIN/1sBpf8yAP3/4f8qABr+1f8OAJ3/dwAGADEBnv9JAPz/IQBwAIH/jgAS/4wAsACTAOn/DQDCALn/ZQCSAAIAAwD1/9//jv9aADQA/v9EAB0AfgA8AAQACgB9APr/IAARAPT/5v9xACAABAAHAGUAt/89AC4ACgAjAMP/+v/9/xYA7f/1/+D/7P87AC0Auv8RAAcA9/8FAC8A2//y/xIAEwAaADQAJADp/zoAAgAfABIA2f/e/zUA+P/6/w4A9//A/zcA4//P//T/5f/R////EwDb/w4A8/8BABkANADh/xEA+f/0/wIAHADc//j/GwD1//f/GADs/+v/EAAAAPz/EgD3/+r/FgAMAAkAGAD9/+z/IQAQAPH/GQD3//z/CgAfAOX/AgD8//H/BAATAOv/+v///wIABAAdAOj/BQAPAAcAAQATAOz/8/8JAAkA6f8VAOv/+f8QABUA/v8OAO3/+P8KABUA9f8FAPv/5/8TAA0A7f8XAAkAAQAJABYA4/8WAAcACgANABEA7v8EAP7/AAD+/wMA9//7/xAAAQD8/wQA+f/7/wMABgDq/wAA+v/3/wYACQD1//3/BAD9/wgADgDw//r/AgD6/wEACADv//j/BQD///X/BwDu//j/AgACAPP/BAD2//n/BAAGAPb/BAD8//3/BQAJAPL/AwD+//3/BAAIAPP//f8DAPz/AAAGAPP/+/8CAP7//f8FAPX/+f8DAAAA/P8EAPf/+v8GAAMA+/8EAPv/+/8GAAQA+v8CAP///P8EAAUA+f8AAP///f8CAAUA+P///wEA/v8BAAUA+f/+/wIAAAD//wUA+v/9/wMAAQD9/wQA+//9/wMAAgD8/wMA/P/9/wMAAwD7/wEA/v/+/wIAAwD6/wEA///+/wAABAD6/wAAAQD//wAAAwD7////AQAAAP//AwD8//7/AgABAP3/AgD9//7/AQABAP3/AQD+//7/AAACAPz/AAD+//////8BAP3/AAD//wAA//8BAP7/AAD//wAA/v8AAP7/AAD//wAA//8AAP//",
+"UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAD//////P/9//3//////wAAAAAAAAIAAgACAP//CAAEAEEA//+cAAUAb/8HAAH9+P9eARkAogQUAJn8BwCd/gX/+QQNAKoC9gFdAtb/b/vd/936TP/6AsD/nfqn/un1W/0dA8IEsQLvAJv2bP72+WMAkP8dAcX+nQO2AIr6bP/EABX+NgK/Bdj2IQv2AE4EUAiD/xQAnwIm/B0B/wGNAoH7sQaP/b8CiQakAqD+R/9xA477KQL//6r75v/O/pcCgQCtAiMCBQAkANAARwHf//39hgBl/kUAJgEtAUEATgA/AgoASADK/zUAJv29/vL+l/9c/0cAUwBBAE8A6QE5/87/Wv9NAOf+5v7P/5P/4/9BAKYAQwDD/zYB5v+r/zYATwAp/1v/WQAEAB0AhwA0AA0AIAA3AAEAzv/u/+//5v9m/zwAIADQ/8T/SABiANb/SwAbAFf/MQDX/7L/hP8TAPr/AgAMAAsAHwAZAI3/VgDC/9v/5//x/6P/AwBlAMv/yf82AB4A+P9WAPj/NwDi/1EA0v9JANj/JwAcAAEADABYANj/4f8MAEwAmP82AN//3P8UADYA7//6/wIACADU/ygAyv82AN7/9v/2/ygAxv/9/+3/5//n/zUA6//g/y4ADgD5/wsABwDv/xIADwAGACoAJQD3/zIA+/8FABsAFgDO/zAAHAAIABQALADp/xcACAAAAPH/GADs/wkACQAFAAgAFQDp/wIAHAD1//P/EQDw/+3/GAD9/+f/HAD8//T/DAAQAPH/HwD4//r/DwAPAOj/EQACAOn/DAAXAOX/BAAOANH/9/8MAO//9f8LANT/9f8EAO//6f8NANb/+P8KAOz/5v8MAOD/7f8UAO//7//+//7/9v8YAPj/9f/z/wsA+v8SAPD/+v/x/xYA+f8SAPb/9//3/xEABQACAPn/9//y/xQACQD///b//v/7/xIACQD9//H/AAD7/xEAAgD5//P/AwD9/w8AAgD3//D/BAD//wUA/v/0//D/BgADAAMA/P/2//f/BwAGAP7/+//2//j/CAAFAPv/+f/5//v/BwAHAPn/9//7//7/BQAFAPf/9//+/wEABAACAPf/+P8BAAIAAgAAAPj/9/8CAAMAAAD+//n/+f8EAAQA/v/8//r/+/8EAAMA/P/7//z//P8EAAIA/P/5//7//v8DAAEA+//5//////8CAAAA+//5/wEAAAABAP//+//6/wIAAQD///3//P/7/wMAAQD///3//f/9/wIAAQD9//3//v/9/wMAAQD9//z/AAD//wEAAAD9//z/AAAAAAAA///9//3/AAD//wAA/v////7/AAD//wAA////////AAD//wAA//8AAP//",
+"UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAD+////+f////v//v///wAA/////wUAAQAIAAIABwACAHkATAAOAaMAAf9C/9X6QvwhArAAtghABW37nv/y+0wAWQNcAE8JRwSOC6AEJe8P8S/zrPWaBI/+LQA/+0L+P/4K8AgAb/8uCh78BQtC614GaQWfAin5UfzN8Tf+GQizAZ4MCQMbGJ4BoRS7AvcHyQARA6n9ZwHZ/z4DvwAZAlAB6gbNAS4GFADFATL7E/2K+j37C/xp/SD9Uv0VAOsDs//WAd3+bv7F/f79mP2X/KH+FwC0/1n+VgFcATABHQGaAET+nf8Y/hoAovpqAXj9CQKW/lsCl/4RApj+bAHk/RcAlv4BAG/+DgDi//3/GwAOAEIAq/+y/3z/8v8+/7T/Tv8//27/mgDZ/1sA+P+cAAAA/P/i/yMAi/85AMP/KgDM/9MA9P+QABoA4QAiACwACwBdAP7/TQDb/y0Ayf+SAA0AZwDg/4wA+/8/AAMAgQDp/w0ADAAQAAoANgAgAA4AKABIAB4A4v/3/+f/+v/c/+n/EADn/wgAFAAqAOz/IwDc/9//3f8XAND/2v/a/w0A5v8BANb/9P/m/wAA8P8ZAN3/RwAGAEsABgB/AP7/NAASAEgABAA3AP3/KgD9/1sA8P8lAOr/FgD1/xAA4/8kAOv/AwD4/xEA5f8NAPT/+v/3/x8A7f8PAPj/IwD5/yAA9/8ZAAEAGgD4/xoA9f8HAAMACAD0/xgA+P8AAPr/IQDp/w4A8v8HAPX/IgD1/wYA+P8GAPX/GgD3/woABQASAAcAGQDw/+v/9P8bAP3/HADs/+f/7/8LAPr//v/0//T/AgD2/wsA6P///+P/CADY//7/5v/3/wQA/v8LAPD/GgD1/yMA/P8QAOv/LADw/yQA+P8XAO7/MQD9/yEAAQAcAPD/IgD9/xMA+/8OAO//FQABAAoA+/8PAPP/FQABAAQA9/8PAPX/CAADAAEA+P8NAPv/CAAGAAUA9/8JAP//AAAFAPz/+f8HAAQA/f8FAP3//P8FAAYA+P8DAP7/+/8AAAcA9/8BAP///f///wgA9//+/wAA/v/8/wUA9//8/wIA///7/wUA+v/7/wIAAAD6/wMA/P/6/wEAAQD6/wEA/v/7/wIAAgD6////AAD7/wEAAgD7//7/AQD8/wAAAwD8//3/AwD9/wAAAgD9//z/AwD/////AgD+//z/AwAAAP7/AQD///3/AgABAP3/AAAAAP3/AgACAPz///8BAP3/AQACAP3//v8BAP7/AAABAP3//v8CAP7///8BAP7//f8CAP////8AAAAA/v8CAAAAAAAAAAAA/v8BAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//",
+"UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAAAAP//AAD//wAA//8AAAAA/////wAAAQD+////AAAGAP3/OAABAIIAAwBv//f/E/0QAK0ADQCzA/7/8P4u/0cBDQCJA6ABbQDg/w7/z/9o+Vn/SPnL/1//Ef+2+jr9RfZgA5QFZwILDFj+PAb2/nEFKgKk/R0Dlv6b/FUDsP6YAoj9SgAT/iL/tAPwAv8A0P6zAr7/dwAnAf39uP22/skA2v///2YCoP4UAUsAZgF2AJH+4P70/rz9+f+U/Xv/8v7CAcb+TACS/kwAv/+x/tX9oP71/oL/1f8nAEUAZwGtAAgAIgC/AD4BaP8GAGH/dQDF/64Arf8nAakAhAH9/+kAQQD3AFb/q/8p/yIAR/8FAPD/ZAA/AIYA3v8tADQADQBp/3f/CwABAP3/Wf8OANj/WwDH/xoAe/8DAKz/zv96/z8A3f/J/5X/IAD5//j/q//c/+//RADq//D/vv8pADUAFQDI/y8ACAAbANb/OwD3/+3/9f/e/wcAIAAeAMH/8/8xAC0AEADW/+3/HAADAPv/8P8DAOL/OwD3/xcACQAHAM//5f8XAAcAz//T/9D/HgD9////yf/e//v/AgD//9H/6/////H/+/8hAAIA9//7/w0AFgAQAPL/2v/8/xsAGQABANz/9P8YAAQA/v/y/wMA5v8YAAkAAAAAAAMA7/8KABgADwDs//j/BwATABsA8P/1//z/BAAMAAAA9P/s/xAA/v8GAAkA/v/p/wMACwALAP7/9P/p/wcADQAFAPb/7//4/w0ACAD8//b//v/1/wMACwD1//T/8P/8/wAACQDz/+f/5P8GAAkABQD5//D/+v8FAA0AAwD///T/AgACABAA/v8CAPD/+/8FAAoA9f/3//f//v8GAP7/9v/t//z/+f8AAPj/+v/3/wEA+v8HAPr//P/5/wQA//8DAPr/+P/3/wYA///+//X/+//5/wQA/f/7//X/+//4/wMA/f/8//j//v/9/wYA///8//f/AgAAAAUA/f/6//n/AwACAAIA/f/7//z/AwACAAAA/f/6//3/AgADAP7//f/7/wAAAwAFAPz////8/wMAAgAEAPv//v/+/wMAAgADAPv//v///wMAAQABAPv//f8AAAIAAAD///v//f8BAAIA///+//z//v8CAAIA/v/9//3///8CAAEA/v/9//7/AAACAAAA/v/9////AAABAAAA/f/9/wAAAQABAP///f/+/wEAAQAAAP///v/+/wEAAQD///7//v///wEAAQD///7//v///wEAAAD+//7///8AAAAAAAD+//7///8AAAAA///+//7///8AAAAA////////AAAAAP////////////8AAP//////////",
+"UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAAAAAAAAAABAAAAAAD//////////////v////3/////////+//8////AQD9//z/9f8BAAIA+f8dACgAWQBxAJX/qv+Y/uz9aP9k/7UDUQQBAiQA4Pgi/AkB0gKaBsD/+fxp/vz9CQSp/I/+ywDO+vMD0fzK/PABcgBeBfoBv/+uAuH9Sf5gAy39awMmBWUBuP9fA9/9fgDj/2/+EACaACcCSv9Z/2j/rv7hAA0AWf55/7L84P7E/SIAT/67AMv/tf+FAA7/1v+7/gv/IP+E/sQA+P5aAXz/tP9XAFX/tP8o/4r/j//e/yQAMv9mAJT/rgCr/9X/EwCb//H/9f7F/6D/EAAoAK3//v+e/zsAh/+B/7r/if/C/2r/4P/z/6//HwCy/0IA7/9ZALT/y/80ACgA9v/J/9//DgA5ADUALQARADIACwAfAOf/NgArACMACQBBAEcAGAAjAC4AWQBUAHcAAAAfACEAIAAcAPj/CADk/yQA7v89AEEAFwD5/xYA6f8aAOX/AADF/zQADwAUAOT/BQDr/yUA6P8XAOf/HADR/0AA8P8nAAgACQDt/ycAKAAHAPH/IQDz/xsACADn//n/DgADAA4A8P///8z/GgDN/yMA/f8QANj/MwACAC0ACwAOAO3/JgAZAAUACgAAAA4AIgAaAAkADwACAAAAHQATAAUABQACAAgACwAjAO////8AAA8ABQAPAPL//f8GAAsABgAGAPD/8v8GAPz/CAD6//H/6v8PAAgABgD4//3/9v8aAAgABwD1//7//v8QAAoACAD//wUA9v8QAAoABAAFAAgAAgAJAAoAAwD//w0AAgD//wcA/v8DAAoABQAFABUABAAKAAYABwAHAA8ACgAGAAwADwAMAAkAEAAJAAgADwAMAAgADgAJAAUACQAPAAUACwAHAAEABgAIAAEABAAGAP//AgAJAAAAAgAEAP7///8IAAIA//8GAAEAAQAJAAIA/v8EAAMA//8JAAEA/v8DAAMA/v8HAAMA/f8BAAUA/v8FAAMA/v8BAAcA//8DAAMA/v8BAAYA//8CAAMA/////wcAAAAAAAMAAAD//wYAAQD+/wMAAQD//wUAAQD+/wIAAgD//wQAAgD+/wEAAwD//wMAAwD+/wEAAwD//wIAAwD//wEABAAAAAEABAD//wAABAABAAAAAwAAAAAABAABAP//AwABAAAAAwACAP//AgACAAAAAwACAP//AgACAAAAAgACAAAAAQADAAAAAQACAAAAAQADAAAAAQACAAAAAAACAAEAAAACAAEAAAACAAEAAAABAAEAAAABAAEAAAABAAEAAAABAAEAAAABAAEAAAABAAEAAAAAAAAAAAAAAAAA",
+"UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAAAAP//AAD//wAA//8AAAAA//8AAP//AAACAAAA+f8BAAYA///4/wIA//8AAA8A/v/V/wEAEwA9AAEBRwA2AF7/kfog/3gBwv99CDYBU/qtAUX/AP7OAfkAX/o9B38FSfwaAuT14/60BAr8CQAI/tfyIQTzAXP+egdUBBwBof7TBMT8bAWi/5EEWwBRAAAKyfxE/8b88vp6ACP+PAF4/qD8MQNM/ygCJ/2XAPD9kP5gAVT/iP9I/lEB4P8qAD0BFAGa/+7/DgB2AOP98gFm/u/+Vv5/AG8ASP9gAM//qv9w//oAcv+2/jIBHgA7/6D/oAAGAKH/lADT/wAAggC8AAYAkP9yAEcAkf8BAOD/RAAr/zUANwDt/xQAJQAkAMT/zwA/AOH/xv9zAGsANQBTAIcALAAvACIATACy/xMADADg/xcAWABvAJL/7f9VAPb/EgDt/wcA4f8kAPP/5P+h/wgACQDy//r/LgAQAMn/8/9CAOX/5v/S/9//3P8pABYAuP/s/w8AFgDt/+3/7v/w/9j/5/8GAOf/2P/2//P//v8kABMAuf/m/xoADADZ/+r/3P8KAAUAKwDe/wsA3P8VAAAADgAfAB0ACAAMAF4AGgAhAPL/MwDz/0kABAAKAPX/LwAbAAkA9v/s/+3/8/8CABAAAADm//n/BQALAAUAAQDj//n/JQAVAPX/9v/+/wIAEQABAPP/8P/1/wAABgD6/+3/7//o//j/DAD8/+b/8P8IAAkABgD4//D/8P8UAAoAAwD4/wAA+f8OAAcAAAAFAPX/9v8TAAkA8v8EAPb/9/8dAA0A7/8CAPn/+f8SAAQA8/8CAOf/+v8DAAgA9P////H//P8IAAUA8//0/wIAAQAGAAgA9//7/wAA+/8EAP//+P/+////AgACAAsA8v/+/wIABQD7/wgA9v/7/wMABAD5/wAA/P/3/wEAAQD7//7//P/1/wQA///3//r////3/wMAAwD1//r/AwD6////AgD4//n/AwD8//7/AgD4//n/AwD+//3/AQD4//n/BQD///n/AAD6//j/BAABAPj/AAD9//v/AwADAPj//v/+//z/AwAEAPj//v8BAP7/AQADAPj//f8CAP////8EAPr//P8DAAAA/v8CAPv//P8DAAEA/f8BAP3//f8DAAIA/P8AAP7//f8DAAIA/P///wAA/f8BAAIA+//+/wEA//8AAAEA+//+/wEA/////wEA/P/+/wEA///+/wAA/f/9/wEAAAD9/wAA/f/+/wEAAQD8/////v/+/wAAAQD8////////////AQD9////AAD/////AAD+////AAAAAP//AAD///////8AAP//AAD//wAA//8AAP//",
+];
+
+module.exports = OmnitoneTOAHrirBase64;
+
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports) {
+
+const OmnitoneSOAHrirBase64 = [
+"UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAD+/wQA8/8ZAPr/DAD+/wMA/v8KAAQA/f8DAAMABADs//z/8v/z/8f/R/90/ob+//zAAWsDAwY3DKn9//tu93DvkwI6An4CuwJ0/BH7VPux92X0Gu7N/EX9mgfqCkkIiRMgBd4NQQGL/c0G/xBxAKELZATUA/sIHRSx+fkCyAUmBNEJIARlAdHz2AjNACcIsAW4AlECsvtJ/P/7K/tf++n8aP4W+g0FXAElAMn8nQHn/sT+Zv7N+9X2xvzM/O3+EvpqBBD7SQLd+vb/sPlw/JD72/3n+Rr+L/wS/vz6UQGg/Nf+Av5L/5X9Gv2//SP+mf3j/lf+v/2B/ZH/5P05/iL9MP9F/uf9UP4v/qv9mv7o/Xn+wP2k/8L+uP5J/tD+Dv/Y/bL+mP72/n3+pP+7/hAA+/5zAGH+Z/+u/g8Azv2y/6L+//9o/iIADP8VACz/CwCN/pb/1v4yAFP+wf+4/jsAcf5VAP3+bADa/nMA6f4sAOT+IQBd/v7/7v6aAIL+QADe/nEA0P4yAKz+CQCo/moAuf5xAN7+mAC8/jcANf9eAPX+IAA1/1kAAP9hAMz+PQD5/m0A2/4gAPr+UQDh/jQAEv9BAPH+FABN/zkASv9DADP/BABe/1IAGf8oAE3/RQAw/zIAQf8mADn/GgBE/xIAR/8hAD7/BABy/zEAKP/0/07/GwBX/z4ARf8mAFr/QQBV/zUAVP8eAFz/JABt/0EAUP8MAHz/KgBr/ycAYv8EAH3/MABl/x8Agv8bAIj/GgBv//z/ff8AAJX/IABu/+T/jv/r/4z/9/9n/77/pP8JAJD/EQCJ//r/q/8WAJ//GQCU/xYAtv8qAKr/PQCW/ysAwf8+ALb/OgC3/ygAz/8uAM7/OgDH/ygAz/8kAMz/OgC//xsA1f8qAMn/LwDN/xcA1f8oAMv/JQDR/xMAzf8bAM//HgDU/wUA2v8ZANL/EwDW/wEA1f8ZAMz/BwDX/wIA0v8SANT/BQDW/wMA0/8PANT/AADY/wIA1f8MANX/+f/a/wUA0v8IANf/+//Y/wUA0/8DANr/+f/Y/wQA1v8BANr/+f/Z/wUA1//8/9z/+v/Y/wYA2f/8/93//v/Y/wUA2v/9/93////Z/wUA3P/8/97/AgDa/wMA3v/8/97/AwDb/wIA3//9/97/BADd/wEA4f///9//BQDf/wAA4v8AAN//BQDf/wAA4/8CAN//BADh/wAA4/8DAOD/BADi////4/8DAOH/AwDk/wAA5P8FAOL/AgDl/wEA5P8FAOL/AQDl/wEA4/8EAOL/AQDj/wIA4P8DAN//AADg/wIA3v8CAOD/AADh/wEA4v8AAOP/AADm/wAA6P8AAOz/AADu/wAA",
+"UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAD//////f/+//7///8AAP////8BAAEA/f8AAAEAAQAFAAUA9//6/x0A2f/9/xMA3P+jAE//of9HAKP//gCj/77/Z/vi/28D9/ywDJAJIvr6AsX0Xec4BhcGzf23DZP7yfZ6C1//nwBDBIHyYgob/Tf3sQ41ANoKRA/A+E7yffAa9gD5EQUBDMwMygiqAHMAqPqhAGUB2/gE+a78H/+4APT6DwIUAA0HNwMhBfL8E/90A5n7dP9cALIC+v5C/q0AOv9kAogBHv01/+3/qAQD/ub8T/4vAOUA5P6KATv+ywEYAeT+KP6i/3gCFP6h/hr/+P83ACL/VADn/8UARQJI/4MAu/8qAlj+wf4iAPb/LgFJ/8QAUABAAI4ABf+k/3X/YgFK/ij/j/9HADoAi/+WAA0BVwC/ACL/LACe//cARv9i/xgAUgA0ACj/FgBgAIj/5P9M/7z/zv8/AKz/gv8sAEQA6/+I/yYAawDL/7T/xf8qAOv/FQCu/5n/EgAyAO3/i/9LAE4A+//R//P/FgDe/8z/u/8DADIALAAZALL/TAA8ABwAo//1/xwA/P/L/z0A6P8jAN7/7v+a/zAAwf/7/3//KQAuACwA9v8RAGYAIwBNADgAKgASAF0ADgANACEAMQDH//H/LQACAB0Ay////x0APAABAAQA2v8iAAcAEgDE/+v/FQD+/+P/DAD1/97/6v/4//X/EwD4/+7/5P8cAA0ACQDH//7/CQAXAAEA/P/5//j/CwAWAAEABQD9//n/AQAWAB0A7v/k/wAACQAmAP//9/8AAPn/8/8aAO//6/8fAOv/5v8hAP//5/8PAOf/AAAGAPn/6v8JAAYABgABAOv/1//1//L/+P8DABcA6f/8/wMACgD7/xAA3v/2//z/DADu//z/5v/5/wEA/P/6//7/7v/x/wQABgD5/wAA8v/w/wkAEQD2//j/+v8EAAcAEAD3//v/+v8CAAAACQD3//v//v/9/wUADAD2//X/AgAHAAAABwD2//T/BgAKAP7/AQD4//r/BAAIAPn/AAD3//f/BQAHAPv//v/7//n/BQAJAPj/+v/9//7/AgAGAPj/+f8BAAEAAgAFAPn/+v8BAAIAAAAEAPn/+f8CAAQA/v8BAPr/+v8CAAQA/P////v//P8CAAQA+//+//3//f8CAAUA+v/9//////8AAAQA+v/8////AAD//wIA+//8/wAAAQD+/wEA+//8/wAAAgD9/////P/9/wEAAgD8//7//f/9/wAAAgD8//3//v/+////AQD8//z/////////AAD8//3///8AAP7/AAD9//7///8AAP7////+//////8AAP7////+////////////////////",
+"UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAD//////v8AAP///////wAAAAAAAP7/AQABAAAABwD///X/BQAjAPL/CQDb/9D/GAAb/7sAYwCW/z0BcP/X/7T/2QDW+wH8yANCCCUJ5QT++UXmhPwhA78FuAxH+p78ifudBlAG9vmu/lAK2fdlB///cfjoCa0E7Akn9Yb/zvba+AkAHPywBGEBFwUNAL8AXAAGA20DFvmR/kz+F/06Ag/+GwHl/5EEKgJd/q0AP/ym/9n6EfxY/2H+/QFtAC4C6QBDAaMCo/20/+3/3f/p/fL9rv9V/6cBhQHuAX4AcwJYAaH/IP/P/gsApP0LAe7/sQBuAI0AAgGDAE4BzACe/5X//v+v/+f+Zf+gAOv/5QBhAOIApAANASYAuP+h/8b/HQBr/9//bACWAGEAFAB5AD0AWQDU/+D/Yf/p//D/s/+R/4QAMQBvABEAkQBfABQAJgDW/wwA8/8XALz/vf8zAFAAKwD1/zEAPwDJ/x0A7/8LAOX/FwDR//H/EQAdAO//6P8QAFEA2f8WABEAMgDy/xIA+f/s/xAALgDv////HQAvAPT/+f8iAAYAEgAFABoAGgD//w0A+f/0/xsAHgDx/9f/GAACAPH/8f8JAPf/GwALABEA7/8cAPT/CgD2//j/BQD8/+3/OgAgAAYA9f8PAN7/DgD9/9r/1//3/+3/9//1//b/8//5//f/AgAJAOf/+v8OAAMACwD9/+7/5f8eAAEA9//q//7/8P8WAP7/+//4/wIA+f8TAAIA9f/5/wcA+P8iAAgA9v/n/xoA//8gAAUABwDj/wAA9v8BAAUAFQDn/wMA7v8QABAAEQDm/wwA8f8aAAAABwDu/wcACgASAAEA7//w//f/BgARAAkA6P/3/wcADgAKAAYA4f/4/wYADgAAAPr/8P/9/xQACgAHAPn/7//9/xEAAgD+//L/8v/8/xUAAwDw//H/9f8CAAsA/v/q//L/+f8FAAYA/P/r//j///8GAAkA+//o//j/AQAIAP//+v/o//v/CAAIAPv/+P/w/wEACQAHAPj/+f/0/wIACwAFAPb/+f/4/wQACwACAPP/+f/+/wYACAD///L/+/8BAAYABQD9//P//P8FAAUAAgD7//T//f8HAAQA///7//f///8IAAMA/P/6//r/AQAIAAEA+v/6//3/AgAHAAAA+f/7/wAAAwAFAP7/+P/8/wIAAgACAP3/+f/9/wMAAwAAAPz/+v/+/wQAAgD+//z/+/8AAAQAAQD8//z//f8BAAQAAAD7//3///8BAAMA///7//3/AAACAAEA/v/7//7/AQABAAAA/v/9////AQAAAP///v/+////AAD/////////////////////////////",
+"UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAD////////+//////8AAAAA/v/+/wAAAQD8//3/CQAJAP3/+v8PAAcApABlABkBkwCO/i//lfqa/HQAcf/3BdkCzwJcBCMC0wMN/9/9wgI7AaECYfxV/Tf83vhn/xrt8Owx/8n7cgHABYb43QcZDh4WugNrA7P74gHu/9z/zv0t/acCiQHY/iv4qQOl/ysCE/0//XT9Sf4O//j9xfupAn394gHO+rsCXAFIAxQC9wIXBgcD2AQuAnb/9gJh/6wAVfxEAI4Bvf7oAFv/bALsAMQBe/88/joAT/4dAH39/v9LAXn/gwDI//QBdABcAA0A7f4lAMn///+9/tv/iABp/13/pP/dALv/w/8MAHv//f+y/6////7U/5AAZP+Z/8r/nQDR/5r/DwDr/xAA4v+s/3z/+P9uAOv/t/82AGcAHgCb/yQAFQBGAM7/CgD3/xoAegAaAOz/CgBHAA8Adv8/AAAABQC2/xIAAAA7ABQAKgCj/z4AAQAXAJz/JAADAAcA8f/1/2AAAQAlAPD/NgDx/1wA7v/4/wMAZADv//3/HQAkAFoA8P9FAPv/FgBIAPf/WQAHAEUACQD0/xIAQwDu/wMAwP9VALn/XwCw/yEA5f8sAPj/FgDD/1YAyv8rAOX/HQDo//j/IQAQACAAHwD9/yQAHQBAABgABQAiAAUAKAD3/wkACwAKAAMABwAJAPb/+f8GAOr/JQAHABMA6P8TAA4AGgD//woA8/8ZAP//GADu/w0A9v8SAAMABwD4/wQA5P8XAAQACgDq/wUA+/8VAAcACADs/xIAAAATAPH/+v/1//T/7f///+z/+v/y/+//9/8KAAcACgAJAPT/BAAKAAAABgAIAPL/9v8KAAMABAACAPr/9v8OAAIA+P/x//v/+f8MAPb/+P/w/wQA9f8MAPn////7/woA/v8PAAEAAgD1/xAAAQAPAP//AwD//xQABwALAAAABgADABAAAgAHAAAACAABAA8ABQAFAAMABwAEAA4ABwADAAEACQAFAAoAAwD//wAACQADAAUAAQD/////CAABAAMAAAD/////BwACAAEAAAD/////BwACAP7///8BAAAABgABAP7///8CAAAABAAAAP7///8DAAAAAwAAAP3///8DAAAAAQAAAP3//v8EAAAAAAD+//////8EAP/////+/wAA/v8EAP/////+/wEA/v8EAP///v/+/wIA//8DAP///v/+/wIA//8BAP///v/+/wMA//8BAP/////+/wMA//8AAP//AAD+/wQA//8AAP7/AQD//wIA////////AQD//wIA////////AQAAAAEAAAAAAP//AQD//wEAAAAAAP//AQAAAAEAAAAAAAAA",
+"UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAD+/wAA+v8AAPz/AAD//wAA/f8AAAEAAAD+/wAACQAAAAQAAAAZAAAAtgAAAFsBAABW/gAAH/oAAGcBAABoBwAAlAAAAO3/AAARAQAA+wIAAEoEAACe/gAAiv4AALD0AADJ8wAAkQQAAF34AABi8QAAPQAAAAH2AAD19AAADAMAAJwGAACTEAAA0AwAAJkHAACOBwAAuQEAANcDAAC6AgAAHwUAAHEFAAB0AwAAbgEAADz+AADYAQAAGAAAAJwCAADgAAAA//0AAMn+AAAT/AAAwP8AAOn9AAAJAAAAewEAAOn+AACN/wAAOv0AAO3+AADN/gAAcP8AACj/AACq/gAA+f4AAML9AACa/wAA/f4AAN7/AABo/wAA6/4AAE//AAAC/wAAEQAAAHX/AAB0AAAA5f8AAEwAAAB3AAAA5/8AAMIAAABCAAAAzgAAAE8AAAB3AAAAKAAAADMAAACqAAAALwAAAK4AAAASAAAAVgAAACgAAAAtAAAATAAAAP3/AAA7AAAA2/8AACQAAADw/wAALQAAADEAAAAlAAAAbAAAADMAAABUAAAAEAAAACgAAAD1/wAA9v8AAPr/AADu/wAALgAAABIAAABUAAAARAAAAGUAAABGAAAAOAAAAGAAAAAuAAAARQAAACEAAAAfAAAAAAAAAAkAAAAQAAAAAwAAABIAAADs/wAAEAAAAAYAAAASAAAAIgAAABEAAAADAAAABAAAAA8AAAD4/wAAHQAAAAsAAAAIAAAADgAAAP//AAAcAAAADwAAAAYAAAASAAAAFwAAAAMAAAAYAAAAEgAAAPr/AAAQAAAADQAAAAoAAAD3/wAABgAAAPb/AADf/wAA/v8AAPL/AAD6/wAAFAAAAAQAAAAEAAAAGwAAAAEAAAAMAAAAIAAAAAIAAAAdAAAAGAAAAAIAAAAcAAAAEgAAAAcAAAAeAAAADwAAAAQAAAAeAAAABAAAAAYAAAAZAAAAAQAAAA4AAAATAAAA/v8AAAoAAAAOAAAA+/8AAAsAAAAJAAAA+f8AAAsAAAABAAAA+f8AAAoAAAD9/wAA+v8AAAcAAAD5/wAA+v8AAAUAAAD3/wAA/f8AAAQAAAD2/wAAAAAAAAEAAAD3/wAAAgAAAAAAAAD4/wAAAwAAAP7/AAD6/wAABAAAAP3/AAD8/wAABAAAAPv/AAD+/wAAAwAAAPv/AAD//wAAAQAAAPv/AAAAAAAAAAAAAPv/AAACAAAA//8AAPz/AAACAAAA/v8AAP3/AAACAAAA/f8AAP7/AAABAAAA/f8AAP//AAABAAAA/f8AAAAAAAAAAAAA/v8AAAEAAAAAAAAA//8AAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+];
+
+module.exports = OmnitoneSOAHrirBase64;
+
+
+/***/ }),
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Cross-browser support polyfill for Omnitone library.
+ */
+
+
+
+
+/**
+ * Detects browser type and version.
+ * @return {string[]} - An array contains the detected browser name and version.
+ */
+exports.getBrowserInfo = function() {
+  const ua = navigator.userAgent;
+  let M = ua.match(
+      /(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*([\d\.]+)/i) ||
+      [];
+  let tem;
+
+  if (/trident/i.test(M[1])) {
+    tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
+    return {name: 'IE', version: (tem[1] || '')};
+  }
+
+  if (M[1] === 'Chrome') {
+    tem = ua.match(/\bOPR|Edge\/(\d+)/);
+    if (tem != null) {
+      return {name: 'Opera', version: tem[1]};
+    }
+  }
+
+  M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
+  if ((tem = ua.match(/version\/([\d.]+)/i)) != null) {
+    M.splice(1, 1, tem[1]);
+  }
+
+  let platform = ua.match(/android|ipad|iphone/i);
+  if (!platform) {
+    platform = ua.match(/cros|linux|mac os x|windows/i);
+  }
+
+  return {
+    name: M[0],
+    version: M[1],
+    platform: platform ? platform[0] : 'unknown',
+  };
+};
+
+
+/**
+ * Patches AudioContext if the prefixed API is found.
+ */
+exports.patchSafari = function() {
+  if (window.webkitAudioContext && window.webkitOfflineAudioContext) {
+    window.AudioContext = window.webkitAudioContext;
+    window.OfflineAudioContext = window.webkitOfflineAudioContext;
+  }
+};
+
+
+/***/ }),
+/* 20 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Omnitone version.
+ */
+
+
+
+
+/**
+ * Omnitone library version
+ * @type {String}
+ */
+module.exports = '1.0.6';
+
+
+/***/ })
+/******/ ]);
+});
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+/**
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file ResonanceAudio version.
+ * @author Andrew Allen <bitllama@google.com>
+ */
+
+
+
+
+/**
+ * ResonanceAudio library version
+ * @type {String}
+ */
+module.exports = '0.0.4';
+
+
+/***/ })
+/******/ ]);
+});
+
+/**
+ * An audio positioner that uses Google's Resonance Audio library
+ **/
 class GoogleResonanceAudioScene extends InterpolatedPosition {
     /**
-     *
+     * Creates a new audio positioner that uses Google's Resonance Audio library
      * @param {AudioContext} audioContext
      */
     constructor(audioContext) {
@@ -8058,16 +16619,24 @@ class GoogleResonanceAudioScene extends InterpolatedPosition {
         });
     }
 
+    /**
+     * Updates the Resonance Audio scene with the latest position.
+     * @protected
+     * @param {number} t
+     */
     update(t) {
         super.update(t);
         this.scene.setListenerPosition(this.x, 0, this.y);
     }
 }
 
+/**
+ * A spatializer that uses Google's Resonance Audio library.
+ **/
 class GoogleResonanceAudioSpatializer extends BaseAnalyzedSpatializer {
 
     /**
-     * 
+     * Creates a new spatializer that uses Google's Resonance Audio library.
      * @param {string} userID
      * @param {Destination} destination
      * @param {HTMLAudioElement} audio
@@ -8075,27 +16644,37 @@ class GoogleResonanceAudioSpatializer extends BaseAnalyzedSpatializer {
      */
     constructor(userID, destination, audio, bufferSize) {
         const position = new InterpolatedPosition();
-        const resNode = destination.position.scene.createSource({
-            minDistance: destination.minDistance,
-            maxDistance: destination.maxDistance
-        });
+        const resNode = destination.position.scene.createSource();
 
         super(userID, destination, audio, position, bufferSize, resNode.input);
 
         this.resNode = resNode;
     }
 
+    /**
+     * Sets parameters that alter spatialization.
+     * @param {number} minDistance
+     * @param {number} maxDistance
+     * @param {number} rolloff
+     * @param {number} transitionTime
+     */
     setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
         super.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
         this.resNode.setMinDistance(minDistance);
         this.resNode.setMaxDistance(maxDistance);
     }
 
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     **/
     update() {
         super.update();
         this.resNode.setPosition(this.position.x, 0, this.position.y);
     }
 
+    /**
+     * Discard values and make this instance useless.
+     */
     dispose() {
         this.resNode = null;
         super.dispose();
@@ -8104,17 +16683,23 @@ class GoogleResonanceAudioSpatializer extends BaseAnalyzedSpatializer {
 
 /* global window, AudioListener, AudioContext, Event, EventTarget */
 
-const forceInterpolatedPosition = false,
-    contextDestroyingEvt = new Event("contextDestroying"),
+const contextDestroyingEvt = new Event("contextDestroying"),
     contextDestroyedEvt = new Event("contextDestroyed");
 
 let hasWebAudioAPI = window.hasOwnProperty("AudioListener"),
     hasFullSpatializer = hasWebAudioAPI && window.hasOwnProperty("PannerNode"),
     isLatestWebAudioAPI = hasWebAudioAPI && AudioListener.prototype.hasOwnProperty("positionX"),
-    attemptResonanceAPI = true;
+    forceInterpolatedPosition = true,
+    attemptResonanceAPI = hasWebAudioAPI;
 
+/**
+ * A manager of the audio context and listener.
+ **/
 class Destination extends BaseAudioElement {
 
+    /**
+     * Creates a new manager of the audio context and listener
+     **/
     constructor() {
         super(null);
 
@@ -8122,6 +16707,13 @@ class Destination extends BaseAudioElement {
         this.audioContext = null;
     }
 
+    /**
+     * If no audio context is currently available, creates one, and initializes the
+     * spatialization of its listener.
+     * 
+     * If WebAudio isn't available, a mock audio context is created that provides
+     * ersatz playback timing.
+     **/
     createContext() {
         if (!this.audioContext) {
             try {
@@ -8170,13 +16762,17 @@ class Destination extends BaseAudioElement {
         }
     }
 
+    /**
+     * Gets the current playback time.
+     * @type {number}
+     */
     get currentTime() {
         return this.audioContext.currentTime;
     }
 
 
     /**
-     * 
+     * Creates a spatializer for an audio source, and initializes its audio properties.
      * @param {string} userID
      * @param {HTMLAudioElement} audio
      * @param {number} bufferSize
@@ -8192,20 +16788,21 @@ class Destination extends BaseAudioElement {
     }
 
     /**
-     * 
-     * @param {string} userID
-     * @param {HTMLAudioElement} audio
-     * @param {number} bufferSize
+     * Creates a spatialzer for an audio source.
+     * @private
+     * @param {string} id - the user for which the audio source is being created.
+     * @param {HTMLAudioElement} audio - the audio element that is being spatialized.
+     * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
      * @return {BaseSpatializer}
      */
-    _createSpatializer(userID, audio, bufferSize) {
+    _createSpatializer(id, audio, bufferSize) {
         try {
             if (hasWebAudioAPI) {
                 try {
                     if (hasFullSpatializer) {
                         try {
                             if (attemptResonanceAPI) {
-                                return new GoogleResonanceAudioSpatializer(userID, this, audio, bufferSize);
+                                return new GoogleResonanceAudioSpatializer(id, this, audio, bufferSize);
                             }
                         }
                         catch (exp3) {
@@ -8214,7 +16811,7 @@ class Destination extends BaseAudioElement {
                         }
                         finally {
                             if (!attemptResonanceAPI) {
-                                return new FullSpatializer(userID, this, audio, bufferSize, forceInterpolatedPosition);
+                                return new FullSpatializer(id, this, audio, bufferSize, forceInterpolatedPosition);
                             }
                         }
                     }
@@ -8225,7 +16822,7 @@ class Destination extends BaseAudioElement {
                 }
                 finally {
                     if (!hasFullSpatializer) {
-                        return new StereoSpatializer(userID, this, audio, bufferSize);
+                        return new StereoSpatializer(id, this, audio, bufferSize);
                     }
                 }
             }
@@ -8243,23 +16840,31 @@ class Destination extends BaseAudioElement {
         }
         finally {
             if (!hasWebAudioAPI) {
-                return new VolumeOnlySpatializer(userID, this, audio);
+                return new VolumeOnlySpatializer(id, this, audio);
             }
         }
     }
 }
 
 const BUFFER_SIZE = 1024,
-    audioActivityEvt$1 = Object.assign(new Event("audioActivity", {
-        id: null,
-        isActive: false
-    }));
+    audioActivityEvt$1 = new AudioActivityEvent;
 
-
+/**
+ * A manager of audio sources, destinations, and their spatialization.
+ **/
 class AudioManager extends BaseAudioClient {
+
+    /**
+     * Creates a new manager of audio sources, destinations, and their spatialization.
+     **/
     constructor() {
         super();
 
+        /**
+         * Forwards on the audioActivity of an audio source.
+         * @param {AudioActivityEvent} evt
+         * @fires AudioManager#audioActivity
+         */
         this.onAudioActivity = (evt) => {
             audioActivityEvt$1.id = evt.id;
             audioActivityEvt$1.isActive = evt.isActive;
@@ -8296,9 +16901,10 @@ class AudioManager extends BaseAudioClient {
 
             for (let recreate of recreationQ) {
                 const source = this.createSource(recreate.id, recreate.audio);
-                source.setTarget(recreate);
+                source.setTarget(recreate.x, recreate.y);
             }
-            recreationQ.clear();
+
+            arrayClear(recreationQ);
             this.timer.start();
         });
 
@@ -8313,13 +16919,7 @@ class AudioManager extends BaseAudioClient {
         Object.seal(this);
     }
 
-    setAudioProperties(evt) {
-        this.destination.setAudioProperties(evt.minDistance, evt.maxDistance, evt.rolloff, evt.transitionTime);
-        for (let source of this.sources.values()) {
-            source.setAudioProperties(evt.minDistance, evt.maxDistance, evt.rolloff, evt.transitionTime);
-        }
-    }
-
+    /** Perform the audio system initialization, after a user gesture */
     start() {
         this.destination.createContext();
         this.timer.start();
@@ -8338,6 +16938,24 @@ class AudioManager extends BaseAudioClient {
         return source;
     }
 
+    /**
+     * Sets parameters that alter spatialization.
+     * @param {number} minDistance
+     * @param {number} maxDistance
+     * @param {number} rolloff
+     * @param {number} transitionTime
+     */
+    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
+        this.destination.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
+        for (let source of this.sources.values()) {
+            source.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
+        }
+    }
+
+    /**
+     * Set the audio device used to play audio to the local user.
+     * @param {string} deviceID
+     */
     setAudioOutputDevice(deviceID) {
         for (let source of this.sources.values()) {
             source.setAudioOutputDevice(deviceID);
@@ -8345,43 +16963,70 @@ class AudioManager extends BaseAudioClient {
     }
 
     /**
-     *
-     * @param {string} userID
+     * Remove a user from audio processing.
+     * @param {string} id - the id of the user to remove
      */
-    removeSource(userID) {
-        if (this.sources.has(userID)) {
-            const source = this.sources.get(userID);
+    removeSource(id) {
+        if (this.sources.has(id)) {
+            const source = this.sources.get(id);
             source.dispose();
-            this.sources.delete(userID);
+            this.sources.delete(id);
         }
     }
 
-    setUserPosition(evt) {
-        if (this.sources.has(evt.id)) {
-            const source = this.sources.get(evt.id);
-            source.setTarget(evt);
-        }
+    /**
+     * Set the position of the listener.
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
+     */
+    setLocalPosition(x, y) {
+        this.destination.setTarget(x, y);
     }
 
-    setLocalPosition(evt) {
-        this.destination.setTarget(evt);
+    /**
+     * Set the position of an audio source.
+     * @param {string} id - the id of the user for which to set the position.
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
+     */
+    setUserPosition(id, x, y) {
+        if (this.sources.has(id)) {
+            const source = this.sources.get(id);
+            source.setTarget(x, y);
+        }
     }
 }
 
-const canChangeAudioOutput = HTMLAudioElement.prototype["setSinkId"] instanceof Function;
+/**
+ * @typedef {object} JitsiTrack
+ * @property {Function} getParticipantId
+ * @property {Function} getType
+ * @property {Function} isMuted
+ * @property {Function} isLocal
+ * @property {Function} addEventListener
+ * @property {Function} dispose
+ * @property {MediaStream} stream
+ **/
 
-/** @typedef MediaElements
- * @type {object}
- * @property {HTMLAudioElement} audio
- * @property {HTMLVideoElement} video */
+/**
+ * A paring of audio and video inputs for a user in the conference.
+ **/
+class MediaElements {
+    /**
+     * Creates a pairing of audio and video inputs for a user.
+     * @param {JitsiTrack} audio
+     * @param {JitsiTrack} video
+     */
+    constructor(audio = null, video = null) {
+        this.audio = audio;
+        this.video = video;
+    }
+}
 
-/** @type {Map.<string, MediaElements>} */
+/** @type {Map<string, MediaElements>} */
 const userInputs = new Map();
 
-const audioActivityEvt$2 = Object.assign(new Event("audioActivity"), {
-    id: null,
-    isActive: false
-});
+const audioActivityEvt$2 = new AudioActivityEvent();
 
 
 function logger(source, evtName) {
@@ -8418,8 +17063,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
         this.conference = null;
         this.audioClient = new AudioManager();
         this.audioClient.addEventListener("audioActivity", (evt) => {
-            audioActivityEvt$2.id = evt.id;
-            audioActivityEvt$2.isActive = evt.isActive;
+            audioActivityEvt$2.set(evt.id, evt.isActive);
             this.dispatchEvent(audioActivityEvt$2);
         });
 
@@ -8464,8 +17108,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
                 USER_JOINED,
                 USER_LEFT,
                 DISPLAY_NAME_CHANGED,
-                ENDPOINT_MESSAGE_RECEIVED,
-                DATA_CHANNEL_OPENED
+                ENDPOINT_MESSAGE_RECEIVED
             } = JitsiMeetJS.events.conference;
 
             setLoggers(this.conference, JitsiMeetJS.events.conference);
@@ -8549,7 +17192,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
                     srcObject(track.stream));
 
                 if (!userInputs.has(userID)) {
-                    userInputs.set(userID, { audio: null, video: null });
+                    userInputs.set(userID, new MediaElements());
                 }
 
                 const inputs = userInputs.get(userID),

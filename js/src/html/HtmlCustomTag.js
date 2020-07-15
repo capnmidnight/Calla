@@ -14,7 +14,15 @@ export class HtmlCustomTag extends EventTarget {
      */
     constructor(tagName, ...rest) {
         super();
-        this.element = tag(tagName, ...rest);
+        if (rest.length === 1
+            && rest[0] instanceof Element) {
+            /** @type {HTMLElement} */
+            this.element = rest[0];
+        }
+        else {
+            /** @type {HTMLElement} */
+            this.element = tag(tagName, ...rest);
+        }
     }
 
     /**
@@ -39,7 +47,7 @@ export class HtmlCustomTag extends EventTarget {
      * @returns {boolean}
      */
     isForwardedEvent(name) {
-        return false;
+        return true;
     }
 
     /**
