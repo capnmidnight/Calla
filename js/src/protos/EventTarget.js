@@ -1,4 +1,4 @@
-﻿import { isFunction, isNumber, isString } from "../events.js";
+﻿import { isFunction, isNumber, isString } from "../typeChecks.js";
 import { isGoodNumber } from "../math.js";
 
 function add(a, b) {

@@ -1,4 +1,4 @@
-﻿import { isFunction, isString } from "./events.js";
+﻿import { isFunction, isString } from "./typeChecks.js";
 
 export function createWorker(script, stripFunc = true) {
     if (isFunction(script)) {

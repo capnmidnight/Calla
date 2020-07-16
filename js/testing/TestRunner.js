@@ -1,4 +1,4 @@
-﻿import { isFunction } from "../src/events.js";
+﻿import { isFunction } from "../src/typeChecks.js";
 import { TestCaseFailEvent } from "./TestCaseFailEvent.js";
 import { TestCaseMessageEvent } from "./TestCaseMessageEvent.js";
 import { TestRunnerResultsEvent } from "./TestRunnerResultsEvent.js";

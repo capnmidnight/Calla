@@ -1,4 +1,4 @@
-﻿import { isNumber } from "./events.js";
+﻿import { isNumber } from "./typeChecks.js";
 
 /**
  * Check a value to see if it is of a number type

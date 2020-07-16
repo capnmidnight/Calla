@@ -1,6 +1,6 @@
 ﻿import "../protos.js";
 import { HtmlCustomTag } from "./HtmlCustomTag.js";
-import { isFunction } from "../events.js";
+import { isFunction } from "../typeChecks.js";
 import { clear, Option } from "./tags.js";
 import { value } from "./attrs.js";
 

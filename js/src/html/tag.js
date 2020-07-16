@@ -1,7 +1,7 @@
 ﻿import { HtmlAttr } from "./attrs.js";
 import { HtmlCustomTag } from "./HtmlCustomTag.js";
 import { HtmlEvt } from "./evts.js";
-import { isFunction, isString, isNumber, isBoolean } from "../events.js";
+import { isFunction, isString, isNumber, isBoolean } from "../typeChecks.js";
 
 /**
  * @typedef {(Element|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild

@@ -1,7 +1,6 @@
-﻿import "./protos.js";
-
-function t(o, s, c) {
-    return typeof o === s || o instanceof c;
+﻿function t(o, s, c) {
+    return typeof o === s
+        || o instanceof c;
 }
 
 export function isFunction(obj) {

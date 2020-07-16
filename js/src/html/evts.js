@@ -1,4 +1,4 @@
-﻿import { isFunction } from "../events.js";
+﻿import { isFunction } from "../typeChecks.js";
 /**
  * A setter functor for HTML element events.
  **/
