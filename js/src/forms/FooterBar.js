@@ -19,6 +19,9 @@ const toggleAudioEvt = new Event("toggleAudio"),
         width: "3em",
         height: "100%"
     }),
+    pointerEventsAll = style({
+        pointerEvents: "all"
+    }),
     subButtonStyle = style({
         fontSize: "1.25em",
         height: "100%"
@@ -44,7 +47,8 @@ export class FooterBar extends EventTarget {
                 padding: "4px",
                 width: "100%",
                 columnGap: "5px",
-                backgroundColor: "transparent"
+                backgroundColor: "transparent",
+                pointerEvents: "none"
             }),
 
             Button(
@@ -52,6 +56,7 @@ export class FooterBar extends EventTarget {
                 onClick(_(toggleAudioEvt)),
                 grid(1, 1),
                 subelStyle,
+                pointerEventsAll,
                 this.muteAudioButton = Run(speakerHighVolume.value),
                 Run(buttonLabelStyle, "Audio")),
 
@@ -63,6 +68,7 @@ export class FooterBar extends EventTarget {
                     title("Emote"),
                     onClick(_(emoteEvt)),
                     subButtonStyle,
+                    pointerEventsAll,
                     style({ borderRight: "none" }),
                     this.emoteButton = Run(whiteFlower.value),
                     Run(buttonLabelStyle, "Emote")),
@@ -70,6 +76,7 @@ export class FooterBar extends EventTarget {
                     title("Select Emoji"),
                     onClick(_(selectEmojiEvt)),
                     subButtonStyle,
+                    pointerEventsAll,
                     style({ borderLeft: "none" }),
                     Run(upwardsButton.value),
                     Run(buttonLabelStyle, "Change"))),
