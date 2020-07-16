@@ -1,4 +1,4 @@
-const versionString = "Calla v0.1.9";
+const versionString = "Calla v0.1.10";
 
 function t(o, s, c) {
     return typeof o === s
@@ -4694,6 +4694,7 @@ class FooterBar extends EventTarget {
                 onClick(_(toggleVideoEvt)),
                 grid(3, 1),
                 subelStyle,
+                pointerEventsAll,
                 this.muteVideoButton = Run(noMobilePhone.value),
                 Run(buttonLabelStyle, "Video")));
 
