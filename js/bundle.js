@@ -1,7 +1,8 @@
-const versionString = "Calla v0.1.7";
+const versionString = "Calla v0.1.8";
 
 function t(o, s, c) {
-    return typeof o === s || o instanceof c;
+    return typeof o === s
+        || o instanceof c;
 }
 
 function isFunction(obj) {
@@ -227,7 +228,7 @@ HTMLElement.prototype.isOpen = function() {
  * when `v` is false, or `displayType` when `v` is true.
  * @memberof Element
  * @param {boolean} v
- * @param {string=""} displayType
+ * @param {string} [displayType=""]
  */
 HTMLElement.prototype.setOpen = function (v, displayType = "") {
     this.style.display = v
@@ -311,6 +312,11 @@ HTMLInputElement.prototype.addEventListener = function (evtName, func, opts) {
     }
 };
 
+/**
+ * Parse a request's response text as XML
+ * @returns {Promise<Document>}
+ * @memberof Response
+ **/
 Response.prototype.xml = async function () {
     const text = await this.text(),
         parser = new DOMParser(),
@@ -318,7 +324,11 @@ Response.prototype.xml = async function () {
 
     return xml.documentElement;
 };
-
+/**
+ * Parse a request's response text as HTML
+ * @returns {Promise<Document>}
+ * @memberof Response
+ **/
 Response.prototype.html = async function () {
     const text = await this.text(),
         parser = new DOMParser(),
@@ -457,11 +467,11 @@ class EmojiGroup extends Emoji {
      * Groupings of Unicode-standardized pictograms.
      * @param {string} value - a Unicode sequence.
      * @param {string} desc - an English text description of the pictogram.
-     * @param {(Emoji|EmojiGroup)[]} rest - Emojis in this group.
+     * @param {Emoji[]} rest - Emojis in this group.
      */
     constructor(value, desc, ...rest) {
         super(value, desc);
-        /** @type {(Emoji|EmojiGroup)[]} */
+        /** @type {Emoji[]} */
         this.alts = rest;
         /** @type {string} */
         this.width = null;
@@ -495,7 +505,7 @@ class EmojiGroup extends Emoji {
  * Shorthand for `new Emoji`, which saves significantly on bundle size.
  * @param {string} v - a Unicode sequence.
  * @param {string} d - an English text description of the pictogram.
- * @param {any=null} o - an optional set of properties to set on the Emoji object.
+ * @param {any} [o=null] - an optional set of properties to set on the Emoji object.
  */
 function e(v, d, o = null) {
     return Object.assign(new Emoji(v, d), o);
@@ -587,7 +597,8 @@ function join(a, b) {
 function isSurfer(e) {
     return surfers.contains(e)
         || rowers.contains(e)
-        || swimmers.contains(e);
+        || swimmers.contains(e)
+        || merpeople.contains(e);
 }
 
 function skin(v, d, ...rest) {
@@ -604,7 +615,7 @@ function skin(v, d, ...rest) {
         medium,
         mediumDark,
         dark
-    });
+    }, ...rest);
 }
 
 function sex(person) {
@@ -3404,7 +3415,7 @@ const monospaceFont = style({ fontFamily: monospaceFamily });
 /**
  * Constructs a CSS grid row definition
  * @param {number} y - the starting vertical cell for the element.
- * @param {number=null} h - the number of cells tall the element should cover.
+ * @param {number} [h=null] - the number of cells tall the element should cover.
  */
 function row(y, h = null) {
     if (h === null) {
@@ -3421,8 +3432,8 @@ function row(y, h = null) {
  * Constructs a CSS grid area definition.
  * @param {number} x - the starting horizontal cell for the element.
  * @param {number} y - the starting vertical cell for the element.
- * @param {number=null} w - the number of cells wide the element should cover.
- * @param {number=null} h - the number of cells tall the element should cover.
+ * @param {number} [w=null] - the number of cells wide the element should cover.
+ * @param {number} [h=null] - the number of cells tall the element should cover.
  */
 function grid(x, y, w = null, h = null) {
     if (w === null) {
@@ -3567,8 +3578,6 @@ function tag(name, ...rest) {
     return elem;
 }
 
-/** @typedef {import("./tag.js").TagChild} TagChild **/
-
 /**
  * A pseudo-element that is made out of other elements.
  **/
@@ -3645,6 +3654,12 @@ class HtmlCustomTag extends EventTarget {
         }
     }
 
+    /**
+     * Wait for a specific event, one time.
+     * @param {string} resolveEvt - the name of the event that will resolve the Promise this method creates.
+     * @param {string} rejectEvt - the name of the event that could reject the Promise this method creates.
+     * @param {number} timeout - the number of milliseconds to wait for the resolveEvt, before rejecting.
+     */
     async once(resolveEvt, rejectEvt, timeout) {
         return await this.eventTarget.once(resolveEvt, rejectEvt, timeout);
     }
@@ -4132,8 +4147,6 @@ class SelectBoxTag extends HtmlCustomTag {
         return this.indexOf(value) >= 0.
     }
 }
-
-/** @typedef {import("./tag.js").TagChild} TagChild **/
 
 /**
  * Empty an element of all children. This is faster than
@@ -5840,166 +5853,6 @@ class OptionsForm extends FormDialog {
     }
 }
 
-class BaseAvatar {
-
-    constructor(element) {
-        this.element = element;
-    }
-
-    /** @type {boolean} */
-    get canSwim() {
-        return false;
-    }
-
-    /**
-     * 
-     * @param {CanvasRenderingContext2D} g
-     * @param {number} width
-     * @param {number} height
-     */
-    draw(g, width, height) {
-        throw new Error("Not implemented in base class");
-    }
-}
-
-const AvatarMode = Object.freeze({
-    none: null,
-    emoji: "emoji",
-    photo: "photo",
-    video: "video"
-});
-
-const selfs$2 = new Map();
-
-class EmojiAvatar extends BaseAvatar {
-    constructor(emoji) {
-        super(Span(
-            title(emoji.desc),
-            emoji.value));
-
-        const self = {
-            canSwim: isSurfer(emoji),
-            x: 0,
-            y: 0,
-            aspectRatio: null
-        };
-
-        this.value = emoji.value;
-        this.desc = emoji.desc;
-
-        selfs$2.set(this, self);
-    }
-
-    get canSwim() {
-        return selfs$2.get(this).canSwim;
-    }
-
-    draw(g, width, height) {
-        const self = selfs$2.get(this);
-
-        if (self.aspectRatio === null) {
-            const oldFont = g.font;
-            const size = 100;
-            g.font = size + "px sans-serif";
-            const metrics = g.measureText(this.value);
-            self.aspectRatio = metrics.width / size;
-            self.x = (size - metrics.width) / 2;
-            self.y = metrics.actualBoundingBoxAscent / 2;
-
-            self.x /= size;
-            self.y /= size;
-
-            g.font = oldFont;
-        }
-
-        if (self.aspectRatio !== null) {
-            const fontHeight = self.aspectRatio <= 1
-                ? height
-                : width / self.aspectRatio;
-
-            g.font = fontHeight + "px sans-serif";
-            g.fillText(this.value, self.x * fontHeight, self.y * fontHeight);
-        }
-    }
-}
-
-class PhotoAvatar extends BaseAvatar {
-
-    /**
-     * 
-     * @param {(URL|string)} url
-     */
-    constructor(url) {
-        super(Canvas());
-
-        /** @type {HTMLCanvasElement} */
-        this.element = null;
-
-        const img = new Image();
-        img.addEventListener("load", (evt) => {
-            this.element.width = img.width;
-            this.element.height = img.height;
-            const g = this.element.getContext("2d");
-            g.clearRect(0, 0, img.width, img.height);
-            g.imageSmoothingEnabled = false;
-            g.drawImage(img, 0, 0);
-        });
-
-        /** @type {string} */
-        this.url
-            = img.src
-            = url && url.href || url;
-    }
-
-    /**
-     * 
-     * @param {CanvasRenderingContext2D} g
-     * @param {any} width
-     * @param {any} height
-     */
-    draw(g, width, height) {
-        const offset = (this.element.width - this.element.height) / 2,
-            sx = Math.max(0, offset),
-            sy = Math.max(0, -offset),
-            dim = Math.min(this.element.width, this.element.height);
-        g.drawImage(
-            this.element,
-            sx, sy,
-            dim, dim,
-            0, 0,
-            width, height);
-    }
-}
-
-class VideoAvatar extends BaseAvatar {
-    /**
-     * 
-     * @param {HTMLVideoElement} video
-     */
-    constructor(video) {
-        super(video);
-        this.element.play();
-        this.element
-            .once("canplay")
-            .then(() => this.element.play());
-    }
-
-    draw(g, width, height) {
-        if (this.element !== null) {
-            const offset = (this.element.videoWidth - this.element.videoHeight) / 2,
-                sx = Math.max(0, offset),
-                sy = Math.max(0, -offset),
-                dim = Math.min(this.element.videoWidth, this.element.videoHeight);
-            g.drawImage(
-                this.element,
-                sx, sy,
-                dim, dim,
-                0, 0,
-                width, height);
-        }
-    }
-}
-
 class BasePosition {
     /** 
      *  The horizontal component of the position.
@@ -6096,10 +5949,220 @@ class InterpolatedPosition extends BasePosition {
      * @param {number} t
      */
     update(t) {
-        const p = project(t, this._st, this._et);
-        const q = clamp(p, 0, 1);
-        this._x = lerp(this._sx, this._tx, q);
-        this._y = lerp(this._sy, this._ty, q);
+        if (this._st !== this._et) {
+            const p = project(t, this._st, this._et);
+            const q = clamp(p, 0, 1);
+            this._x = lerp(this._sx, this._tx, q);
+            this._y = lerp(this._sy, this._ty, q);
+        }
+        else {
+            this._x = this._sx = this._tx;
+            this._y = this._sy = this._ty;
+        }
+    }
+}
+
+/**
+ * A base class for different types of avatars.
+ **/
+class BaseAvatar {
+
+    /**
+     * Encapsulates a resource to use as an avatar.
+     * @param {Image|Video|Emoji} element
+     */
+    constructor(element) {
+        this.element = element;
+    }
+
+    /** 
+     *  Is the avatar able to run on water?
+     *  @type {boolean} 
+     **/
+    get canSwim() {
+        return false;
+    }
+
+    /**
+     * Render the avatar at a certain size.
+     * @param {CanvasRenderingContext2D} g
+     * @param {number} width
+     * @param {number} height
+     */
+    draw(g, width, height) {
+        throw new Error("Not implemented in base class");
+    }
+}
+
+/**
+ * Types of avatars.
+ * @enum {string}
+ **/
+const AvatarMode = Object.freeze({
+    none: null,
+    emoji: "emoji",
+    photo: "photo",
+    video: "video"
+});
+
+const selfs$2 = new Map();
+
+/**
+ * An avatar that uses a Unicode emoji as its representation
+ **/
+class EmojiAvatar extends BaseAvatar {
+
+    /**
+     * Creatse a new avatar that uses a Unicode emoji as its representation.
+     * @param {Emoji} emoji
+     */
+    constructor(emoji) {
+        super(Span(
+            title(emoji.desc),
+            emoji.value));
+
+        const self = {
+            canSwim: isSurfer(emoji),
+            x: 0,
+            y: 0,
+            aspectRatio: null
+        };
+
+        this.value = emoji.value;
+        this.desc = emoji.desc;
+
+        selfs$2.set(this, self);
+    }
+
+    /**
+     *  Is the avatar able to run on water?
+     *  @type {boolean}
+     **/
+    get canSwim() {
+        return selfs$2.get(this).canSwim;
+    }
+
+    /**
+     * Render the avatar at a certain size.
+     * @param {CanvasRenderingContext2D} g
+     * @param {number} width
+     * @param {number} height
+     */
+    draw(g, width, height) {
+        const self = selfs$2.get(this);
+
+        if (self.aspectRatio === null) {
+            const oldFont = g.font;
+            const size = 100;
+            g.font = size + "px sans-serif";
+            const metrics = g.measureText(this.value);
+            self.aspectRatio = metrics.width / size;
+            self.x = (size - metrics.width) / 2;
+            self.y = metrics.actualBoundingBoxAscent / 2;
+
+            self.x /= size;
+            self.y /= size;
+
+            g.font = oldFont;
+        }
+
+        if (self.aspectRatio !== null) {
+            const fontHeight = self.aspectRatio <= 1
+                ? height
+                : width / self.aspectRatio;
+
+            g.font = fontHeight + "px sans-serif";
+            g.fillText(this.value, self.x * fontHeight, self.y * fontHeight);
+        }
+    }
+}
+
+/**
+ * An avatar that uses an Image as its representation.
+ **/
+class PhotoAvatar extends BaseAvatar {
+
+    /**
+     * Creates a new avatar that uses an Image as its representation.
+     * @param {(URL|string)} url
+     */
+    constructor(url) {
+        super(Canvas());
+
+        /** @type {HTMLCanvasElement} */
+        this.element = null;
+
+        const img = new Image();
+        img.addEventListener("load", (evt) => {
+            this.element.width = img.width;
+            this.element.height = img.height;
+            const g = this.element.getContext("2d");
+            g.clearRect(0, 0, img.width, img.height);
+            g.imageSmoothingEnabled = false;
+            g.drawImage(img, 0, 0);
+        });
+
+        /** @type {string} */
+        this.url
+            = img.src
+            = url && url.href || url;
+    }
+
+    /**
+     * Render the avatar at a certain size.
+     * @param {CanvasRenderingContext2D} g
+     * @param {number} width
+     * @param {number} height
+     */
+    draw(g, width, height) {
+        const offset = (this.element.width - this.element.height) / 2,
+            sx = Math.max(0, offset),
+            sy = Math.max(0, -offset),
+            dim = Math.min(this.element.width, this.element.height);
+        g.drawImage(
+            this.element,
+            sx, sy,
+            dim, dim,
+            0, 0,
+            width, height);
+    }
+}
+
+/**
+ * An avatar that uses an HTML Video element as its representation.
+ **/
+class VideoAvatar extends BaseAvatar {
+    /**
+     * Creates a new avatar that uses an HTML Video element as its representation.
+     * @param {HTMLVideoElement} video
+     */
+    constructor(video) {
+        super(video);
+        this.element.play();
+        this.element
+            .once("canplay")
+            .then(() => this.element.play());
+    }
+
+    /**
+     * Render the avatar at a certain size.
+     * @param {CanvasRenderingContext2D} g
+     * @param {number} width
+     * @param {number} height
+     */
+    draw(g, width, height) {
+        if (this.element !== null) {
+            const offset = (this.element.videoWidth - this.element.videoHeight) / 2,
+                sx = Math.max(0, offset),
+                sy = Math.max(0, -offset),
+                dim = Math.min(this.element.videoWidth, this.element.videoHeight);
+            g.drawImage(
+                this.element,
+                sx, sy,
+                dim, dim,
+                0, 0,
+                width, height);
+        }
     }
 }
 
@@ -6107,21 +6170,6 @@ const POSITION_REQUEST_DEBOUNCE_TIME = 1,
     STACKED_USER_OFFSET_X = 5,
     STACKED_USER_OFFSET_Y = 5,
     eventNames = ["userMoved", "userPositionNeeded"];
-
-function resetAvatarMode(self) {
-    if (self.avatarVideo) {
-        self.avatarMode = AvatarMode.video;
-    }
-    else if (self.avatarPhoto) {
-        self.avatarMode = AvatarMode.photo;
-    }
-    else if (self.avatarEmoji) {
-        self.avatarMode = AvatarMode.emoji;
-    }
-    else {
-        self.avatarMode = AvatarMode.none;
-    }
-}
 
 class User extends EventTarget {
     constructor(evt, isMe) {
@@ -6134,10 +6182,10 @@ class User extends EventTarget {
         this.moveEvent = new UserMoveEvent(this.id);
         this.position = new InterpolatedPosition();
 
-        this.avatarMode = AvatarMode.none;
-        this.avatarEmoji = (isMe ? allPeople.random() : bust);
-        this.avatarImage = null;
-        this.avatarVideo = null;
+        /** @type {AvatarMode} */
+        this.setAvatarVideo(null);
+        this.setAvatarImage(null);
+        this.setAvatarEmoji(isMe ? allPeople.random() : bust);
 
         this.audioMuted = false;
         this.videoMuted = true;
@@ -6155,16 +6203,21 @@ class User extends EventTarget {
     }
 
     deserialize(evt) {
-        if (evt.displayName !== undefined) {
+        if (evt.displayName) {
             this.displayName = evt.displayName;
         }
 
-        if (evt.avatarMode !== undefined) {
-            this.avatarMode = evt.avatarMode;
-            this.avatarID = evt.avatarID;
+        switch (evt.avatarMode) {
+            case AvatarMode.emoji:
+                this.setAvatarEmoji(evt.avatarID);
+                break;
+            case AvatarMode.photo:
+                this.setAvatarImage(evt.avatarID);
+                break;
         }
 
-        if (evt.x !== undefined) {
+        if (isNumber(evt.x)
+            && isNumber(evt.y)) {
             this.position.setTarget(evt.x, evt.y, performance.now() / 1000, 0);
             this.isInitialized = true;
         }
@@ -6181,72 +6234,95 @@ class User extends EventTarget {
         };
     }
 
+    /**
+     * An avatar using a live video.
+     * @type {PhotoAvatar}
+     **/
     get avatarVideo() {
         return this._avatarVideo;
     }
 
-    set avatarVideo(video) {
-        if (video === null
-            || video === undefined) {
-            this._avatarVideo = null;
-            resetAvatarMode(this);
+    /**
+     * Set the current video element used as the avatar.
+     * @param {Video}
+     **/
+    setAvatarVideo(video) {
+        if (video instanceof HTMLVideoElement) {
+            this._avatarVideo = new VideoAvatar(video);
         }
         else {
-            this.avatarMode = AvatarMode.video;
-            this._avatarVideo = new VideoAvatar(video);
+            this._avatarVideo = null;
         }
     }
 
+    /**
+     * An avatar using a photo
+     * @type {PhotoAvatar}
+     **/
     get avatarImage() {
         return this._avatarImage;
     }
 
-    set avatarImage(url) {
-        this._avatarURL = url;
-        if (url === null
-            || url === undefined) {
-            this._avatarImage = null;
-            resetAvatarMode(this);
+    /**
+     * Set the URL of the photo to use as an avatar.
+     * @param {string} url
+     */
+    setAvatarImage(url) {
+        if (isString(url)) {
+            this._avatarImage = new PhotoAvatar(url);
         }
         else {
-            this.avatarMode = AvatarMode.photo;
-            this._avatarImage = new PhotoAvatar(url);
+            this._avatarImage = null;
         }
     }
 
+    /**
+     * An avatar using a Unicode emoji.
+     * @type {EmojiAvatar}
+     **/
     get avatarEmoji() {
         return this._avatarEmoji;
     }
 
-    set avatarEmoji(emoji) {
-        if (emoji === null
-            || emoji === undefined) {
-            this._avatarEmoji = null;
-            resetAvatarMode(this);
-        }
-        else {
-            this.avatarMode = AvatarMode.emoji;
+    /**
+     * Set the emoji to use as an avatar.
+     * @param {Emoji} emoji
+     */
+    setAvatarEmoji(emoji) {
+        if (emoji
+            && emoji.value
+            && emoji.desc) {
             this._avatarEmoji = new EmojiAvatar(emoji);
         }
-    }
-
-    get avatar() {
-        if (this.avatarMode === AvatarMode.none) {
-            resetAvatarMode(this);
-        }
-
-        switch (this.avatarMode) {
-            case AvatarMode.emoji:
-                return this.avatarEmoji;
-            case AvatarMode.photo:
-                return this.avatarImage;
-            case AvatarMode.video:
-                return this.avatarVideo;
-            default:
-                return null;
+        else {
+            this._avatarEmoji = null;
         }
     }
 
+    /**
+     * Returns the type of avatar that is currently active.
+     * @returns {AvatarMode}
+     **/
+    get avatarMode() {
+        if (this.avatarVideo) {
+            return AvatarMode.video;
+        }
+        else if (this.avatarPhoto) {
+            return AvatarMode.photo;
+        }
+        else if (this.avatarEmoji) {
+            return AvatarMode.emoji;
+        }
+        else {
+            return AvatarMode.none;
+        }
+    }
+
+    /**
+     * Returns a serialized representation of the current avatar,
+     * if such a representation exists.
+     * @returns {string}
+     **/
     get avatarID() {
         switch (this.avatarMode) {
             case AvatarMode.emoji:
@@ -6258,14 +6334,20 @@ class User extends EventTarget {
         }
     }
 
-    set avatarID(id) {
+    /**
+     * Returns the current avatar
+     * @returns {BaseAvatar}
+     **/
+    get avatar() {
         switch (this.avatarMode) {
             case AvatarMode.emoji:
-                this.avatarEmoji = id;
-                break;
+                return this.avatarEmoji;
             case AvatarMode.photo:
-                this.avatarImage = id;
-                break;
+                return this.avatarImage;
+            case AvatarMode.video:
+                return this.avatarVideo;
+            default:
+                return null;
         }
     }
 
@@ -6671,7 +6753,7 @@ class Emote {
  * @param {HTMLCanvasElement|OffscreenCanvas} canv
  * @param {number} w - the new width of the canvas
  * @param {number} h - the new height of the canvas
- * @param {number=1} superscale - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
  * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
  */
 function setCanvasSize(canv, w, h, superscale = 1) {
@@ -6689,7 +6771,7 @@ function setCanvasSize(canv, w, h, superscale = 1) {
 /**
  * Resizes a canvas element to match the proportions of the size of the element in the DOM.
  * @param {HTMLCanvasElement} canv
- * @param {number=1} superscale - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
  * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
  */
 function resizeCanvas(canv, superscale = 1) {
@@ -7230,7 +7312,7 @@ class Game extends EventTarget {
     }
 
     moveMeTo(x, y) {
-        if (this.map.isClear(x, y, this.me.avatarEmoji)) {
+        if (this.map.isClear(x, y, this.me.avatar)) {
             this.me.moveTo(x, y, this.transitionSpeed);
             this.targetOffsetCameraX = 0;
             this.targetOffsetCameraY = 0;
@@ -7239,12 +7321,12 @@ class Game extends EventTarget {
 
 
     moveMeBy(dx, dy) {
-        const clearTile = this.map.getClearTile(this.me.position._tx, this.me.position._ty, dx, dy, this.me.avatarEmoji);
+        const clearTile = this.map.getClearTile(this.me.position._tx, this.me.position._ty, dx, dy, this.me.avatar);
         this.moveMeTo(clearTile.x, clearTile.y);
     }
 
     warpMeTo(x, y) {
-        const clearTile = this.map.getClearTileNear(x, y, 3, this.me.avatarEmoji);
+        const clearTile = this.map.getClearTileNear(x, y, 3, this.me.avatar);
         this.moveMeTo(clearTile.x, clearTile.y);
     }
 
@@ -7355,7 +7437,7 @@ class Game extends EventTarget {
 
     setAvatarVideo(evt) {
         this.withUser(evt && evt.id, (user) => {
-            user.avatarVideo = evt.element;
+            user.setAvatarVideo(evt.element);
         });
     }
 
@@ -7365,7 +7447,7 @@ class Game extends EventTarget {
         //  avatarURL: string // the new avatar URL.
         //}
         this.withUser(evt && evt.id, (user) => {
-            user.avatarImage = evt.avatarURL;
+            user.setAvatarImage(evt.avatarURL);
         });
     }
 
@@ -7376,7 +7458,7 @@ class Game extends EventTarget {
         //  desc: string // a description of the emoji
         //}
         this.withUser(evt && evt.id, (user) => {
-            user.avatarEmoji = evt;
+            user.setAvatarEmoji(evt);
         });
     }
 
@@ -8348,7 +8430,7 @@ class SFX extends EventTarget {
     /**
      * Plays a named sound effect.
      * @param {string} name - the name of the effect to play.
-     * @param {number=1} volume - the volume at which to play the effect.
+     * @param {number} [volume=1] - the volume at which to play the effect.
      */
     play(name, volume = 1) {
         if (this.clips.has(name)) {
@@ -8603,8 +8685,8 @@ function init(host, client) {
             await withEmojiSelection((e) => {
                 settings.avatarEmoji
                     = options.avatarEmoji
-                    = game.me.avatarEmoji
                     = e;
+                game.me.setAvatarEmoji(e);
                 client.setAvatarEmoji(e);
             });
         },
@@ -8689,8 +8771,9 @@ function init(host, client) {
             });
 
             if (settings.avatarEmoji !== null) {
-                game.me.avatarEmoji = settings.avatarEmoji;
+                game.me.setAvatarEmoji(settings.avatarEmoji);
             }
+
             settings.avatarEmoji
                 = options.avatarEmoji
                 = game.me.avatarEmoji;
@@ -17071,7 +17154,8 @@ class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async initializeAsync(host, roomName, userName) {
-        await import('../../../../../lib/lib-jitsi-meet.min.js');
+        await import(`${window.location.origin}/lib/jquery.min.js`);
+        await import(`https://${host}/libs/lib-jitsi-meet.min.js`);
 
         roomName = roomName.toLocaleLowerCase();
 
