@@ -1,4 +1,4 @@
-const versionString = "Calla v0.1.8";
+const versionString = "Calla v0.1.9";
 
 function t(o, s, c) {
     return typeof o === s
@@ -4464,7 +4464,8 @@ class EmojiForm extends FormDialog {
          * @param {boolean} isAlts
          */
         const addIconsToContainer = (group, container, isAlts) => {
-            for (let icon of group.alts) {
+            const alts = group.alts || group;
+            for (let icon of alts) {
                 const btn = Button(
                         title(icon.desc),
                         buttonStyle,
@@ -4625,6 +4626,9 @@ const toggleAudioEvt = new Event("toggleAudio"),
         width: "3em",
         height: "100%"
     }),
+    pointerEventsAll = style({
+        pointerEvents: "all"
+    }),
     subButtonStyle = style({
         fontSize: "1.25em",
         height: "100%"
@@ -4650,7 +4654,8 @@ class FooterBar extends EventTarget {
                 padding: "4px",
                 width: "100%",
                 columnGap: "5px",
-                backgroundColor: "transparent"
+                backgroundColor: "transparent",
+                pointerEvents: "none"
             }),
 
             Button(
@@ -4658,6 +4663,7 @@ class FooterBar extends EventTarget {
                 onClick(_(toggleAudioEvt)),
                 grid(1, 1),
                 subelStyle,
+                pointerEventsAll,
                 this.muteAudioButton = Run(speakerHighVolume.value),
                 Run(buttonLabelStyle, "Audio")),
 
@@ -4669,6 +4675,7 @@ class FooterBar extends EventTarget {
                     title("Emote"),
                     onClick(_(emoteEvt)),
                     subButtonStyle,
+                    pointerEventsAll,
                     style({ borderRight: "none" }),
                     this.emoteButton = Run(whiteFlower.value),
                     Run(buttonLabelStyle, "Emote")),
@@ -4676,6 +4683,7 @@ class FooterBar extends EventTarget {
                     title("Select Emoji"),
                     onClick(_(selectEmojiEvt)),
                     subButtonStyle,
+                    pointerEventsAll,
                     style({ borderLeft: "none" }),
                     Run(upwardsButton.value),
                     Run(buttonLabelStyle, "Change"))),
@@ -8504,7 +8512,6 @@ function init(host, client) {
     }
 
     async function withEmojiSelection(callback) {
-
         if (!emoji.isOpen) {
             headbar.optionsButton.lock();
             headbar.instructionsButton.lock();
