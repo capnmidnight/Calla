@@ -203,7 +203,7 @@ function skin(v, d, ...rest) {
         medium,
         mediumDark,
         dark
-    });
+    }, ...rest);
 }
 
 function sex(person) {
