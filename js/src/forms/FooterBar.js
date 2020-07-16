@@ -87,6 +87,7 @@ export class FooterBar extends EventTarget {
                 onClick(_(toggleVideoEvt)),
                 grid(3, 1),
                 subelStyle,
+                pointerEventsAll,
                 this.muteVideoButton = Run(noMobilePhone.value),
                 Run(buttonLabelStyle, "Video")));
 
