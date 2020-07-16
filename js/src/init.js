@@ -75,7 +75,6 @@ export function init(host, client) {
     }
 
     async function withEmojiSelection(callback) {
-
         if (!emoji.isOpen) {
             headbar.optionsButton.lock();
             headbar.instructionsButton.lock();

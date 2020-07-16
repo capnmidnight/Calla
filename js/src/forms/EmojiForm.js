@@ -61,7 +61,8 @@ export class EmojiForm extends FormDialog {
          * @param {boolean} isAlts
          */
         const addIconsToContainer = (group, container, isAlts) => {
-            for (let icon of group.alts) {
+            const alts = group.alts || group;
+            for (let icon of alts) {
                 const btn = Button(
                         title(icon.desc),
                         buttonStyle,
