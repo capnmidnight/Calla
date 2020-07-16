@@ -63,10 +63,16 @@ export class InterpolatedPosition extends BasePosition {
      * @param {number} t
      */
     update(t) {
-        const p = project(t, this._st, this._et);
-        const q = clamp(p, 0, 1);
-        this._x = lerp(this._sx, this._tx, q);
-        this._y = lerp(this._sy, this._ty, q);
+        if (this._st !== this._et) {
+            const p = project(t, this._st, this._et);
+            const q = clamp(p, 0, 1);
+            this._x = lerp(this._sx, this._tx, q);
+            this._y = lerp(this._sy, this._ty, q);
+        }
+        else {
+            this._x = this._sx = this._tx;
+            this._y = this._sy = this._ty;
+        }
     }
 }
 
