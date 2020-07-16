@@ -185,7 +185,8 @@ function join(a, b) {
 export function isSurfer(e) {
     return surfers.contains(e)
         || rowers.contains(e)
-        || swimmers.contains(e);
+        || swimmers.contains(e)
+        || merpeople.contains(e);
 }
 
 function skin(v, d, ...rest) {
