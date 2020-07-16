@@ -326,7 +326,7 @@ export class Game extends EventTarget {
     }
 
     moveMeTo(x, y) {
-        if (this.map.isClear(x, y, this.me.avatarEmoji)) {
+        if (this.map.isClear(x, y, this.me.avatar)) {
             this.me.moveTo(x, y, this.transitionSpeed);
             this.targetOffsetCameraX = 0;
             this.targetOffsetCameraY = 0;
@@ -335,12 +335,12 @@ export class Game extends EventTarget {
 
 
     moveMeBy(dx, dy) {
-        const clearTile = this.map.getClearTile(this.me.position._tx, this.me.position._ty, dx, dy, this.me.avatarEmoji);
+        const clearTile = this.map.getClearTile(this.me.position._tx, this.me.position._ty, dx, dy, this.me.avatar);
         this.moveMeTo(clearTile.x, clearTile.y);
     }
 
     warpMeTo(x, y) {
-        const clearTile = this.map.getClearTileNear(x, y, 3, this.me.avatarEmoji);
+        const clearTile = this.map.getClearTileNear(x, y, 3, this.me.avatar);
         this.moveMeTo(clearTile.x, clearTile.y);
     }
 
@@ -451,7 +451,7 @@ export class Game extends EventTarget {
 
     setAvatarVideo(evt) {
         this.withUser(evt && evt.id, (user) => {
-            user.avatarVideo = evt.element;
+            user.setAvatarVideo(evt.element);
         });
     }
 
@@ -461,7 +461,7 @@ export class Game extends EventTarget {
         //  avatarURL: string // the new avatar URL.
         //}
         this.withUser(evt && evt.id, (user) => {
-            user.avatarImage = evt.avatarURL;
+            user.setAvatarImage(evt.avatarURL);
         });
     }
 
@@ -472,7 +472,7 @@ export class Game extends EventTarget {
         //  desc: string // a description of the emoji
         //}
         this.withUser(evt && evt.id, (user) => {
-            user.avatarEmoji = evt;
+            user.setAvatarEmoji(evt);
         });
     }
 

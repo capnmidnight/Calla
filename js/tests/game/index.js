@@ -35,7 +35,7 @@ import { srcObject, autoPlay } from "../../src/html/attrs.js";
         const video = Video(
             autoPlay,
             srcObject(stream));
-        game.me.avatarVideo = video;
+        game.me.setAvatarVideo(video);
     });
 
     headbar.addEventListener("leave", () => {

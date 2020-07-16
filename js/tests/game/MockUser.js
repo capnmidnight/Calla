@@ -11,7 +11,8 @@ export class MockUser {
         this.client = client;
         this.audio = null;
         this.displayName = id;
-        this._avatarEmoji = people.random();
+        this.avatarMode = AvatarMode.emoji;
+        this.avatarID = people.random();
         this.emoteEvt = { id, value: null, desc: null };
     }
 
@@ -21,8 +22,8 @@ export class MockUser {
             x: this.x,
             y: this.y,
             displayName: this.displayName,
-            avatarMode: AvatarMode.emoji,
-            avatarID: this._avatarEmoji
+            avatarMode: this.avatarMode,
+            avatarID: this.avatarID
         };
     }
 

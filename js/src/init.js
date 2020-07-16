@@ -256,8 +256,8 @@ export function init(host, client) {
             await withEmojiSelection((e) => {
                 settings.avatarEmoji
                     = options.avatarEmoji
-                    = game.me.avatarEmoji
                     = e;
+                game.me.setAvatarEmoji(e);
                 client.setAvatarEmoji(e);
             });
         },
@@ -342,8 +342,9 @@ export function init(host, client) {
             });
 
             if (settings.avatarEmoji !== null) {
-                game.me.avatarEmoji = settings.avatarEmoji
+                game.me.setAvatarEmoji(settings.avatarEmoji);
             }
+
             settings.avatarEmoji
                 = options.avatarEmoji
                 = game.me.avatarEmoji;

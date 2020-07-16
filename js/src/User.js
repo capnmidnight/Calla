@@ -1,31 +1,17 @@
-﻿import "./protos.js";
-import { project } from "./math.js";
-import { bust, mutedSpeaker, allPeople as people, speakerMediumVolume, videoCamera } from "./emoji/emoji.js";
+﻿import { InterpolatedPosition } from "./audio/positions/InterpolatedPosition.js";
+import { AvatarMode, BaseAvatar } from "./avatars/BaseAvatar.js";
 import { EmojiAvatar } from "./avatars/EmojiAvatar.js";
 import { PhotoAvatar } from "./avatars/PhotoAvatar.js";
 import { VideoAvatar } from "./avatars/VideoAvatar.js";
-import { AvatarMode } from "./avatars/BaseAvatar.js";
-import { InterpolatedPosition } from "./audio/positions/InterpolatedPosition.js";
+import { allPeople as people, bust, mutedSpeaker, speakerMediumVolume, videoCamera } from "./emoji/emoji.js";
+import { isString, isNumber } from "./typeChecks.js";
+import { project } from "./math.js";
+import "./protos.js";
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1,
     STACKED_USER_OFFSET_X = 5,
     STACKED_USER_OFFSET_Y = 5,
     eventNames = ["userMoved", "userPositionNeeded"];
-
-function resetAvatarMode(self) {
-    if (self.avatarVideo) {
-        self.avatarMode = AvatarMode.video;
-    }
-    else if (self.avatarPhoto) {
-        self.avatarMode = AvatarMode.photo;
-    }
-    else if (self.avatarEmoji) {
-        self.avatarMode = AvatarMode.emoji;
-    }
-    else {
-        self.avatarMode = AvatarMode.none;
-    }
-}
 
 export class User extends EventTarget {
     constructor(evt, isMe) {
@@ -38,10 +24,10 @@ export class User extends EventTarget {
         this.moveEvent = new UserMoveEvent(this.id);
         this.position = new InterpolatedPosition();
 
-        this.avatarMode = AvatarMode.none;
-        this.avatarEmoji = (isMe ? people.random() : bust);
-        this.avatarImage = null;
-        this.avatarVideo = null;
+        /** @type {AvatarMode} */
+        this.setAvatarVideo(null);
+        this.setAvatarImage(null);
+        this.setAvatarEmoji(isMe ? people.random() : bust);
 
         this.audioMuted = false;
         this.videoMuted = true;
@@ -59,16 +45,23 @@ export class User extends EventTarget {
     }
 
     deserialize(evt) {
-        if (evt.displayName !== undefined) {
+        if (evt.displayName) {
             this.displayName = evt.displayName;
         }
 
-        if (evt.avatarMode !== undefined) {
-            this.avatarMode = evt.avatarMode;
-            this.avatarID = evt.avatarID;
+        switch (evt.avatarMode) {
+            case AvatarMode.emoji:
+                this.setAvatarEmoji(evt.avatarID);
+                break;
+            case AvatarMode.photo:
+                this.setAvatarImage(evt.avatarID);
+                break;
+            default:
+                break;
         }
 
-        if (evt.x !== undefined) {
+        if (isNumber(evt.x)
+            && isNumber(evt.y)) {
             this.position.setTarget(evt.x, evt.y, performance.now() / 1000, 0);
             this.isInitialized = true;
         }
@@ -85,72 +78,95 @@ export class User extends EventTarget {
         };
     }
 
+    /**
+     * An avatar using a live video.
+     * @type {PhotoAvatar}
+     **/
     get avatarVideo() {
         return this._avatarVideo;
     }
 
-    set avatarVideo(video) {
-        if (video === null
-            || video === undefined) {
-            this._avatarVideo = null;
-            resetAvatarMode(this);
+    /**
+     * Set the current video element used as the avatar.
+     * @param {Video}
+     **/
+    setAvatarVideo(video) {
+        if (video instanceof HTMLVideoElement) {
+            this._avatarVideo = new VideoAvatar(video);
         }
         else {
-            this.avatarMode = AvatarMode.video;
-            this._avatarVideo = new VideoAvatar(video);
+            this._avatarVideo = null;
         }
     }
 
+    /**
+     * An avatar using a photo
+     * @type {PhotoAvatar}
+     **/
     get avatarImage() {
         return this._avatarImage;
     }
 
-    set avatarImage(url) {
-        this._avatarURL = url;
-        if (url === null
-            || url === undefined) {
-            this._avatarImage = null;
-            resetAvatarMode(this);
+    /**
+     * Set the URL of the photo to use as an avatar.
+     * @param {string} url
+     */
+    setAvatarImage(url) {
+        if (isString(url)) {
+            this._avatarImage = new PhotoAvatar(url);
         }
         else {
-            this.avatarMode = AvatarMode.photo;
-            this._avatarImage = new PhotoAvatar(url);
+            this._avatarImage = null;
         }
     }
 
+    /**
+     * An avatar using a Unicode emoji.
+     * @type {EmojiAvatar}
+     **/
     get avatarEmoji() {
         return this._avatarEmoji;
     }
 
-    set avatarEmoji(emoji) {
-        if (emoji === null
-            || emoji === undefined) {
-            this._avatarEmoji = null;
-            resetAvatarMode(this);
-        }
-        else {
-            this.avatarMode = AvatarMode.emoji;
+    /**
+     * Set the emoji to use as an avatar.
+     * @param {Emoji} emoji
+     */
+    setAvatarEmoji(emoji) {
+        if (emoji
+            && emoji.value
+            && emoji.desc) {
             this._avatarEmoji = new EmojiAvatar(emoji);
         }
-    }
-
-    get avatar() {
-        if (this.avatarMode === AvatarMode.none) {
-            resetAvatarMode(this);
-        }
-
-        switch (this.avatarMode) {
-            case AvatarMode.emoji:
-                return this.avatarEmoji;
-            case AvatarMode.photo:
-                return this.avatarImage;
-            case AvatarMode.video:
-                return this.avatarVideo;
-            default:
-                return null;
+        else {
+            this._avatarEmoji = null;
         }
     }
 
+    /**
+     * Returns the type of avatar that is currently active.
+     * @returns {AvatarMode}
+     **/
+    get avatarMode() {
+        if (this.avatarVideo) {
+            return AvatarMode.video;
+        }
+        else if (this.avatarPhoto) {
+            return AvatarMode.photo;
+        }
+        else if (this.avatarEmoji) {
+            return AvatarMode.emoji;
+        }
+        else {
+            return AvatarMode.none;
+        }
+    }
+
+    /**
+     * Returns a serialized representation of the current avatar,
+     * if such a representation exists.
+     * @returns {string}
+     **/
     get avatarID() {
         switch (this.avatarMode) {
             case AvatarMode.emoji:
@@ -162,16 +178,20 @@ export class User extends EventTarget {
         }
     }
 
-    set avatarID(id) {
+    /**
+     * Returns the current avatar
+     * @returns {BaseAvatar}
+     **/
+    get avatar() {
         switch (this.avatarMode) {
             case AvatarMode.emoji:
-                this.avatarEmoji = id;
-                break;
+                return this.avatarEmoji;
             case AvatarMode.photo:
-                this.avatarImage = id;
-                break;
+                return this.avatarImage;
+            case AvatarMode.video:
+                return this.avatarVideo;
             default:
-                break;
+                return null;
         }
     }
 
