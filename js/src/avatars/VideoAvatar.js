@@ -1,8 +1,11 @@
 ﻿import { BaseAvatar } from "./BaseAvatar.js";
 
+/**
+ * An avatar that uses an HTML Video element as its representation.
+ **/
 export class VideoAvatar extends BaseAvatar {
     /**
-     * 
+     * Creates a new avatar that uses an HTML Video element as its representation.
      * @param {HTMLVideoElement} video
      */
     constructor(video) {
@@ -13,6 +16,12 @@ export class VideoAvatar extends BaseAvatar {
             .then(() => this.element.play());
     }
 
+    /**
+     * Render the avatar at a certain size.
+     * @param {CanvasRenderingContext2D} g
+     * @param {number} width
+     * @param {number} height
+     */
     draw(g, width, height) {
         if (this.element !== null) {
             const offset = (this.element.videoWidth - this.element.videoHeight) / 2,

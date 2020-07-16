@@ -1,11 +1,19 @@
 ﻿import { BaseAvatar } from "./BaseAvatar.js";
-import { isSurfer } from "../emoji/emoji.js";
+import { Emoji, isSurfer } from "../emoji/emoji.js";
 import { Span } from "../html/tags.js";
 import { title } from "../html/attrs.js";
 
 const selfs = new Map();
 
+/**
+ * An avatar that uses a Unicode emoji as its representation
+ **/
 export class EmojiAvatar extends BaseAvatar {
+
+    /**
+     * Creatse a new avatar that uses a Unicode emoji as its representation.
+     * @param {Emoji} emoji
+     */
     constructor(emoji) {
         super(Span(
             title(emoji.desc),
@@ -24,10 +32,20 @@ export class EmojiAvatar extends BaseAvatar {
         selfs.set(this, self);
     }
 
+    /**
+     *  Is the avatar able to run on water?
+     *  @type {boolean}
+     **/
     get canSwim() {
         return selfs.get(this).canSwim;
     }
 
+    /**
+     * Render the avatar at a certain size.
+     * @param {CanvasRenderingContext2D} g
+     * @param {number} width
+     * @param {number} height
+     */
     draw(g, width, height) {
         const self = selfs.get(this);
 

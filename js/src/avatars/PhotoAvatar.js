@@ -1,11 +1,13 @@
 ﻿import { BaseAvatar } from "./BaseAvatar.js";
 import { Canvas } from "../html/tags.js";
-import { width, height } from "../html/attrs.js";
 
+/**
+ * An avatar that uses an Image as its representation.
+ **/
 export class PhotoAvatar extends BaseAvatar {
 
     /**
-     * 
+     * Creates a new avatar that uses an Image as its representation.
      * @param {(URL|string)} url
      */
     constructor(url) {
@@ -31,10 +33,10 @@ export class PhotoAvatar extends BaseAvatar {
     }
 
     /**
-     * 
+     * Render the avatar at a certain size.
      * @param {CanvasRenderingContext2D} g
-     * @param {any} width
-     * @param {any} height
+     * @param {number} width
+     * @param {number} height
      */
     draw(g, width, height) {
         const offset = (this.element.width - this.element.height) / 2,
