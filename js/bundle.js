@@ -1,4 +1,4 @@
-const versionString = "Calla v0.1.14";
+const versionString = "Calla v0.1.15";
 
 function t(o, s, c) {
     return typeof o === s
@@ -355,6 +355,45 @@ String.prototype.firstLetterToUpper = function () {
     return this[0].toLocaleUpperCase()
         + this.substring(1);
 };
+
+if (!CanvasRenderingContext2D.prototype.hasOwnProperty("getTransform")
+    && CanvasRenderingContext2D.prototype.hasOwnProperty("mozCurrentTransform")) {
+
+    class MockDOMMatrix {
+        constructor(trans) {
+            this.a = trans[0];
+            this.b = trans[1];
+            this.c = trans[2];
+            this.d = trans[3];
+            this.e = trans[4];
+            this.f = trans[5];
+        }
+
+        get is2D() {
+            return true;
+        }
+
+        get isIdentity() {
+            return this.a === 1
+                && this.b === 0
+                && this.c === 0
+                && this.d === 1
+                && this.e === 0
+                && this.f === 0;
+        }
+
+        transformPoint(p) {
+            return {
+                x: p.x * this.a + p.y * this.c + this.e,
+                y: p.x * this.b + p.y * this.d + this.f
+            }
+        }
+    }
+
+    CanvasRenderingContext2D.prototype.getTransform = function () {
+        return new MockDOMMatrix(this.mozCurrentTransform);
+    };
+}
 
 /**
  * Returns a random item from an array of items.
@@ -7830,9 +7869,9 @@ class BaseJitsiClient extends EventTarget {
 
         this.preInitEvtQ = [];
 
-        this.preferedAudioOutputID = null;
-        this.preferedAudioInputID = null;
-        this.preferedVideoInputID = null;
+        this.preferredAudioOutputID = null;
+        this.preferredAudioInputID = null;
+        this.preferredVideoInputID = null;
     }
 
     userIDs() {
@@ -7914,14 +7953,14 @@ class BaseJitsiClient extends EventTarget {
 
     async setPreferredDevicesAsync() {
         await this.setPreferredAudioOutputAsync(true);
-        await this.setPreferredAudioInputAsync(false);
+        await this.setPreferredAudioInputAsync(true);
         await this.setPreferredVideoInputAsync(false);
     }
 
     async setPreferredAudioOutputAsync(allowAny) {
         const devices = await this.getAudioOutputDevicesAsync();
         const device = arrayScan(devices,
-            (d) => d.deviceId === this.preferedAudioOutputID,
+            (d) => d.deviceId === this.preferredAudioOutputID,
             (d) => d.deviceId === "communications",
             (d) => d.deviceId === "default",
             (d) => allowAny && d && d.deviceId);
@@ -7933,12 +7972,12 @@ class BaseJitsiClient extends EventTarget {
     async setPreferredAudioInputAsync(allowAny) {
         const devices = await this.getAudioInputDevicesAsync();
         const device = arrayScan(devices,
-            (d) => d.deviceId === this.preferedAudioInputID,
+            (d) => d.deviceId === this.preferredAudioInputID,
             (d) => d.deviceId === "communications",
             (d) => d.deviceId === "default",
             (d) => allowAny && d && d.deviceId);
         if (device) {
-            this.preferedAudioInputID = device.deviceId;
+            this.preferredAudioInputID = device.deviceId;
             await this.setAudioInputDeviceAsync(device);
         }
     }
@@ -7946,10 +7985,10 @@ class BaseJitsiClient extends EventTarget {
     async setPreferredVideoInputAsync(allowAny) {
         const devices = await this.getVideoInputDevicesAsync();
         const device = arrayScan(devices,
-            (d) => d.deviceId === this.preferedVideoInputID,
+            (d) => d.deviceId === this.preferredVideoInputID,
             (d) => allowAny && d && d.deviceId);
         if (device) {
-            this.preferedVideoInputID = device.deviceId;
+            this.preferredVideoInputID = device.deviceId;
             await this.setVideoInputDeviceAsync(device);
         }
     }
@@ -8037,7 +8076,7 @@ class BaseJitsiClient extends EventTarget {
      * @param {MediaDeviceInfo} device
      */
     async setAudioOutputDeviceAsync(device) {
-        this.preferedAudioOutputID = device && device.deviceId || null;
+        this.preferredAudioOutputID = device && device.deviceId || null;
     }
 
     /**
@@ -8045,7 +8084,7 @@ class BaseJitsiClient extends EventTarget {
      * @param {MediaDeviceInfo} device
      */
     async setAudioInputDeviceAsync(device) {
-        this.preferedAudioInputID = device && device.deviceId || null;
+        this.preferredAudioInputID = device && device.deviceId || null;
     }
 
     /**
@@ -8053,7 +8092,7 @@ class BaseJitsiClient extends EventTarget {
      * @param {MediaDeviceInfo} device
      */
     async setVideoInputDeviceAsync(device) {
-        this.preferedVideoInputID = device && device.deviceId || null;
+        this.preferredVideoInputID = device && device.deviceId || null;
     }
 
     async getCurrentAudioInputDeviceAsync() {
@@ -8267,9 +8306,9 @@ const selfs$3 = new Map(),
         userName: "",
         avatarEmoji: null,
         gamepadIndex: 0,
-        preferedAudioOutputID: null,
-        preferedAudioInputID: null,
-        preferedVideoInputID: null,
+        preferredAudioOutputID: null,
+        preferredAudioInputID: null,
+        preferredVideoInputID: null,
 
         inputBinding: {
             keyButtonUp: "ArrowUp",
@@ -8313,35 +8352,35 @@ class Settings {
         Object.seal(this);
     }
 
-    get preferedAudioOutputID() {
-        return selfs$3.get(this).preferedAudioOutputID;
+    get preferredAudioOutputID() {
+        return selfs$3.get(this).preferredAudioOutputID;
     }
 
-    set preferedAudioOutputID(value) {
-        if (value !== this.preferedAudioOutputID) {
-            selfs$3.get(this).preferedAudioOutputID = value;
+    set preferredAudioOutputID(value) {
+        if (value !== this.preferredAudioOutputID) {
+            selfs$3.get(this).preferredAudioOutputID = value;
             commit(this);
         }
     }
 
-    get preferedAudioInputID() {
-        return selfs$3.get(this).preferedAudioInputID;
+    get preferredAudioInputID() {
+        return selfs$3.get(this).preferredAudioInputID;
     }
 
-    set preferedAudioInputID(value) {
-        if (value !== this.preferedAudioInputID) {
-            selfs$3.get(this).preferedAudioInputID = value;
+    set preferredAudioInputID(value) {
+        if (value !== this.preferredAudioInputID) {
+            selfs$3.get(this).preferredAudioInputID = value;
             commit(this);
         }
     }
 
-    get preferedVideoInputID() {
-        return selfs$3.get(this).preferedVideoInputID;
+    get preferredVideoInputID() {
+        return selfs$3.get(this).preferredVideoInputID;
     }
 
-    set preferedVideoInputID(value) {
-        if (value !== this.preferedVideoInputID) {
-            selfs$3.get(this).preferedVideoInputID = value;
+    set preferredVideoInputID(value) {
+        if (value !== this.preferredVideoInputID) {
+            selfs$3.get(this).preferredVideoInputID = value;
             commit(this);
         }
     }
@@ -8672,9 +8711,9 @@ function init(host, client) {
     login.userName = settings.userName;
     login.roomName = settings.roomName;
 
-    client.preferedAudioOutputID = settings.preferedAudioOutputID;
-    client.preferedAudioInputID = settings.preferedAudioInputID;
-    client.preferedVideoInputID = settings.preferedVideoInputID;
+    client.preferredAudioOutputID = settings.preferredAudioOutputID;
+    client.preferredAudioInputID = settings.preferredAudioInputID;
+    client.preferredVideoInputID = settings.preferredVideoInputID;
 
     showLogin();
 
@@ -8795,19 +8834,19 @@ function init(host, client) {
         audioInputChanged: async () => {
             const device = options.currentAudioInputDevice;
             await client.setAudioInputDeviceAsync(device);
-            settings.preferedAudioInputID = client.preferedAudioInputID;
+            settings.preferredAudioInputID = client.preferredAudioInputID;
         },
 
         audioOutputChanged: async () => {
             const device = options.currentAudioOutputDevice;
             await client.setAudioOutputDeviceAsync(device);
-            settings.preferedAudioOutputID = client.preferedAudioOutputID;
+            settings.preferredAudioOutputID = client.preferredAudioOutputID;
         },
 
         videoInputChanged: async () => {
             const device = options.currentVideoInputDevice;
             await client.setVideoInputDeviceAsync(device);
-            settings.preferedVideoInputID = client.preferedVideoInputID;
+            settings.preferredVideoInputID = client.preferredVideoInputID;
         },
 
         gamepadChanged: () => {
@@ -8835,12 +8874,12 @@ function init(host, client) {
 
         toggleAudio: async () => {
             await client.toggleAudioMutedAsync();
-            settings.preferedAudioInputID = client.preferedAudioInputID;
+            settings.preferredAudioInputID = client.preferredAudioInputID;
         },
 
         toggleVideo: async () => {
             await client.toggleVideoMutedAsync();
-            settings.preferedVideoInputID = client.preferedVideoInputID;
+            settings.preferredVideoInputID = client.preferredVideoInputID;
         },
 
         gameStarted: () => {
@@ -17491,8 +17530,8 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             return;
         }
         await super.setAudioOutputDeviceAsync(device);
-        this.audioClient.setAudioOutputDevice(this.preferedAudioOutputID);
-        await JitsiMeetJS.mediaDevices.setAudioOutputDevice(this.preferedAudioOutputID);
+        this.audioClient.setAudioOutputDevice(this.preferredAudioOutputID);
+        await JitsiMeetJS.mediaDevices.setAudioOutputDevice(this.preferredAudioOutputID);
     }
 
     getCurrentMediaTrack(type) {
@@ -17562,11 +17601,11 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             await removeTask;
         }
 
-        if (this.preferedAudioInputID) {
+        if (this.preferredAudioInputID) {
             const addTask = this.taskOf("audioAdded");
             const tracks = await JitsiMeetJS.createLocalTracks({
                 devices: ["audio"],
-                micDeviceId: this.preferedAudioInputID
+                micDeviceId: this.preferredAudioInputID
             });
 
             for (let track of tracks) {
@@ -17599,11 +17638,11 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             await removeTask;
         }
 
-        if (this.preferedVideoInputID) {
+        if (this.preferredVideoInputID) {
             const addTask = this.taskOf("videoAdded");
             const tracks = await JitsiMeetJS.createLocalTracks({
                 devices: ["video"],
-                cameraDeviceId: this.preferedVideoInputID
+                cameraDeviceId: this.preferredVideoInputID
             });
 
             for (let track of tracks) {
