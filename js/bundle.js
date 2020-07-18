@@ -1,4 +1,4 @@
-const versionString = "Calla v0.1.13";
+const versionString = "Calla v0.1.14";
 
 function t(o, s, c) {
     return typeof o === s
@@ -7913,32 +7913,44 @@ class BaseJitsiClient extends EventTarget {
     }
 
     async setPreferredDevicesAsync() {
-        await this.setPreferredAudioOutputAsync();
-        await this.setPreferredAudioInputAsync();
-        await this.setPreferredVideoInputAsync();
+        await this.setPreferredAudioOutputAsync(true);
+        await this.setPreferredAudioInputAsync(false);
+        await this.setPreferredVideoInputAsync(false);
     }
 
-    async setPreferredVideoInputAsync() {
-        const videoInput = await this.getVideoInputDevicesAsync();
-        const vidIn = arrayScan(videoInput, (d) => d.deviceId === this.preferedVideoInputID);
-        if (vidIn) {
-            await this.setVideoInputDeviceAsync(vidIn);
+    async setPreferredAudioOutputAsync(allowAny) {
+        const devices = await this.getAudioOutputDevicesAsync();
+        const device = arrayScan(devices,
+            (d) => d.deviceId === this.preferedAudioOutputID,
+            (d) => d.deviceId === "communications",
+            (d) => d.deviceId === "default",
+            (d) => allowAny && d && d.deviceId);
+        if (device) {
+            await this.setAudioOutputDeviceAsync(device);
         }
     }
 
-    async setPreferredAudioInputAsync() {
-        const audioInput = await this.getAudioInputDevicesAsync();
-        const audIn = arrayScan(audioInput, (d) => d.deviceId === this.preferedAudioInputID, (d) => d.deviceId === "communications", (d) => d.deviceId === "default", (d) => d && d.deviceId);
-        if (audIn) {
-            await this.setAudioInputDeviceAsync(audIn);
+    async setPreferredAudioInputAsync(allowAny) {
+        const devices = await this.getAudioInputDevicesAsync();
+        const device = arrayScan(devices,
+            (d) => d.deviceId === this.preferedAudioInputID,
+            (d) => d.deviceId === "communications",
+            (d) => d.deviceId === "default",
+            (d) => allowAny && d && d.deviceId);
+        if (device) {
+            this.preferedAudioInputID = device.deviceId;
+            await this.setAudioInputDeviceAsync(device);
         }
     }
 
-    async setPreferredAudioOutputAsync() {
-        const audioOutput = await this.getAudioOutputDevicesAsync();
-        const audOut = arrayScan(audioOutput, (d) => d.deviceId === this.preferedAudioOutputID, (d) => d.deviceId === "communications", (d) => d.deviceId === "default", (d) => d && d.deviceId);
-        if (audOut) {
-            await this.setAudioOutputDeviceAsync(audOut);
+    async setPreferredVideoInputAsync(allowAny) {
+        const devices = await this.getVideoInputDevicesAsync();
+        const device = arrayScan(devices,
+            (d) => d.deviceId === this.preferedVideoInputID,
+            (d) => allowAny && d && d.deviceId);
+        if (device) {
+            this.preferedVideoInputID = device.deviceId;
+            await this.setVideoInputDeviceAsync(device);
         }
     }
 
@@ -8020,11 +8032,31 @@ class BaseJitsiClient extends EventTarget {
         return devices && devices.videoInput || [];
     }
 
-    async getCurrentAudioInputDeviceAsync() {
-        throw new Error("Not implemented in base class");
+    /**
+     * 
+     * @param {MediaDeviceInfo} device
+     */
+    async setAudioOutputDeviceAsync(device) {
+        this.preferedAudioOutputID = device && device.deviceId || null;
     }
 
+    /**
+     *
+     * @param {MediaDeviceInfo} device
+     */
     async setAudioInputDeviceAsync(device) {
+        this.preferedAudioInputID = device && device.deviceId || null;
+    }
+
+    /**
+     *
+     * @param {MediaDeviceInfo} device
+     */
+    async setVideoInputDeviceAsync(device) {
+        this.preferedVideoInputID = device && device.deviceId || null;
+    }
+
+    async getCurrentAudioInputDeviceAsync() {
         throw new Error("Not implemented in base class");
     }
 
@@ -8034,19 +8066,7 @@ class BaseJitsiClient extends EventTarget {
         throw new Error("Not implemented in base class");
     }
 
-    /**
-     * 
-     * @param {MediaDeviceInfo} device
-     */
-    async setAudioOutputDeviceAsync(device) {
-        throw new Error("Not implemented in base class");
-    }
-
     async getCurrentVideoInputDeviceAsync() {
-        throw new Error("Not implemented in base class");
-    }
-
-    async setVideoInputDeviceAsync(device) {
         throw new Error("Not implemented in base class");
     }
 
@@ -8651,6 +8671,7 @@ function init(host, client) {
     game.transitionSpeed = settings.transitionSpeed = 0.5;
     login.userName = settings.userName;
     login.roomName = settings.roomName;
+
     client.preferedAudioOutputID = settings.preferedAudioOutputID;
     client.preferedAudioInputID = settings.preferedAudioInputID;
     client.preferedVideoInputID = settings.preferedVideoInputID;
@@ -8763,10 +8784,6 @@ function init(host, client) {
             client.setAvatarURL(options.avatarURL);
         },
 
-        toggleVideo: async () => {
-            await client.toggleVideoMutedAsync();
-        },
-
         toggleDrawHearing: () => {
             settings.drawHearing = game.drawHearing = options.drawHearing;
         },
@@ -8777,20 +8794,20 @@ function init(host, client) {
 
         audioInputChanged: async () => {
             const device = options.currentAudioInputDevice;
-            settings.preferedAudioInputID = device && device.deviceId || null;
             await client.setAudioInputDeviceAsync(device);
+            settings.preferedAudioInputID = client.preferedAudioInputID;
         },
 
         audioOutputChanged: async () => {
             const device = options.currentAudioOutputDevice;
-            settings.preferedAudioOutputID = device && device.deviceId || null;
             await client.setAudioOutputDeviceAsync(device);
+            settings.preferedAudioOutputID = client.preferedAudioOutputID;
         },
 
-        videoInputChanged: () => {
+        videoInputChanged: async () => {
             const device = options.currentVideoInputDevice;
-            settings.preferedVideoInputID = device && device.deviceId || null;
-            client.setVideoInputDeviceAsync(device);
+            await client.setVideoInputDeviceAsync(device);
+            settings.preferedVideoInputID = client.preferedVideoInputID;
         },
 
         gamepadChanged: () => {
@@ -8818,10 +8835,12 @@ function init(host, client) {
 
         toggleAudio: async () => {
             await client.toggleAudioMutedAsync();
+            settings.preferedAudioInputID = client.preferedAudioInputID;
         },
 
         toggleVideo: async () => {
             await client.toggleVideoMutedAsync();
+            settings.preferedVideoInputID = client.preferedVideoInputID;
         },
 
         gameStarted: () => {
@@ -17471,9 +17490,9 @@ class LibJitsiMeetClient extends BaseJitsiClient {
         if (!canChangeAudioOutput) {
             return;
         }
-        const id = device && device.deviceId || null;
-        this.audioClient.setAudioOutputDevice(id);
-        await JitsiMeetJS.mediaDevices.setAudioOutputDevice(id);
+        await super.setAudioOutputDeviceAsync(device);
+        this.audioClient.setAudioOutputDevice(this.preferedAudioOutputID);
+        await JitsiMeetJS.mediaDevices.setAudioOutputDevice(this.preferedAudioOutputID);
     }
 
     getCurrentMediaTrack(type) {
@@ -17512,7 +17531,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             }
         }
         else {
-            await this.setPreferredAudioInputAsync();
+            await this.setPreferredAudioInputAsync(true);
         }
 
         const evt = await changeTask;
@@ -17526,7 +17545,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             await this.setVideoInputDeviceAsync(null);
         }
         else {
-            await this.setPreferredVideoInputAsync();
+            await this.setPreferredVideoInputAsync(true);
         }
 
         const evt = await changeTask;
@@ -17534,6 +17553,8 @@ class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async setAudioInputDeviceAsync(device) {
+        await super.setAudioInputDeviceAsync(device);
+
         const cur = this.getCurrentMediaTrack("audio");
         if (cur) {
             const removeTask = this.taskOf("audioRemoved");
@@ -17541,11 +17562,11 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             await removeTask;
         }
 
-        if (device) {
+        if (this.preferedAudioInputID) {
             const addTask = this.taskOf("audioAdded");
             const tracks = await JitsiMeetJS.createLocalTracks({
                 devices: ["audio"],
-                micDeviceId: device.deviceId
+                micDeviceId: this.preferedAudioInputID
             });
 
             for (let track of tracks) {
@@ -17569,6 +17590,8 @@ class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async setVideoInputDeviceAsync(device) {
+        await super.setVideoInputDeviceAsync(device);
+
         const cur = this.getCurrentMediaTrack("video");
         if (cur) {
             const removeTask = this.taskOf("videoRemoved");
@@ -17576,11 +17599,11 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             await removeTask;
         }
 
-        if (device) {
+        if (this.preferedVideoInputID) {
             const addTask = this.taskOf("videoAdded");
             const tracks = await JitsiMeetJS.createLocalTracks({
                 devices: ["video"],
-                cameraDeviceId: device.deviceId
+                cameraDeviceId: this.preferedVideoInputID
             });
 
             for (let track of tracks) {
