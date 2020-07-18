@@ -1,4 +1,4 @@
-const versionString = "Calla v0.1.10";
+const versionString = "Calla v0.1.11";
 
 function t(o, s, c) {
     return typeof o === s
@@ -5994,11 +5994,12 @@ class BaseAvatar {
 
     /**
      * Render the avatar at a certain size.
-     * @param {CanvasRenderingContext2D} g
-     * @param {number} width
-     * @param {number} height
+     * @param {CanvasRenderingContext2D} g - the context to render to
+     * @param {number} width - the width the avatar should be rendered at
+     * @param {number} height - the height the avatar should be rendered at.
+     * @param {boolean} isMe - whether the avatar is the local user
      */
-    draw(g, width, height) {
+    draw(g, width, height, isMe) {
         throw new Error("Not implemented in base class");
     }
 }
@@ -6053,11 +6054,12 @@ class EmojiAvatar extends BaseAvatar {
 
     /**
      * Render the avatar at a certain size.
-     * @param {CanvasRenderingContext2D} g
-     * @param {number} width
-     * @param {number} height
+     * @param {CanvasRenderingContext2D} g - the context to render to
+     * @param {number} width - the width the avatar should be rendered at
+     * @param {number} height - the height the avatar should be rendered at.
+     * @param {boolean} isMe - whether the avatar is the local user
      */
-    draw(g, width, height) {
+    draw(g, width, height, isMe) {
         const self = selfs$2.get(this);
 
         if (self.aspectRatio === null) {
@@ -6119,11 +6121,12 @@ class PhotoAvatar extends BaseAvatar {
 
     /**
      * Render the avatar at a certain size.
-     * @param {CanvasRenderingContext2D} g
-     * @param {number} width
-     * @param {number} height
+     * @param {CanvasRenderingContext2D} g - the context to render to
+     * @param {number} width - the width the avatar should be rendered at
+     * @param {number} height - the height the avatar should be rendered at.
+     * @param {boolean} isMe - whether the avatar is the local user
      */
-    draw(g, width, height) {
+    draw(g, width, height, isMe) {
         const offset = (this.element.width - this.element.height) / 2,
             sx = Math.max(0, offset),
             sy = Math.max(0, -offset),
@@ -6155,22 +6158,33 @@ class VideoAvatar extends BaseAvatar {
 
     /**
      * Render the avatar at a certain size.
-     * @param {CanvasRenderingContext2D} g
-     * @param {number} width
-     * @param {number} height
+     * @param {CanvasRenderingContext2D} g - the context to render to
+     * @param {number} width - the width the avatar should be rendered at
+     * @param {number} height - the height the avatar should be rendered at.
+     * @param {boolean} isMe - whether the avatar is the local user
      */
-    draw(g, width, height) {
+    draw(g, width, height, isMe) {
         if (this.element !== null) {
             const offset = (this.element.videoWidth - this.element.videoHeight) / 2,
                 sx = Math.max(0, offset),
                 sy = Math.max(0, -offset),
-                dim = Math.min(this.element.videoWidth, this.element.videoHeight);
-            g.drawImage(
-                this.element,
-                sx, sy,
-                dim, dim,
-                0, 0,
-                width, height);
+                dim = Math.min(this.element.videoWidth, this.element.videoHeight),
+                hWidth = width / 2;
+
+            g.save();
+            {
+                g.translate(hWidth, 0);
+                if (isMe) {
+                    g.scale(-1, 1);
+                }
+                g.drawImage(
+                    this.element,
+                    sx, sy,
+                    dim, dim,
+                    -hWidth, 0,
+                    width, height);
+            }
+            g.restore();
         }
     }
 }
@@ -6466,7 +6480,7 @@ class User extends EventTarget {
         g.textBaseline = "top";
 
         if (this.avatar) {
-            this.avatar.draw(g, this.stackAvatarWidth, this.stackAvatarHeight);
+            this.avatar.draw(g, this.stackAvatarWidth, this.stackAvatarHeight, this.isMe);
         }
 
         if (this.audioMuted || !this.videoMuted) {
@@ -7896,7 +7910,7 @@ class BaseJitsiClient extends EventTarget {
                 (d) => d.deviceId === this.preferedAudioOutputID,
                 (d) => d.deviceId === "communications",
                 (d) => d.deviceId === "default",
-                (d) => !!d);
+                (d) => d && d.deviceId);
             if (audOut) {
                 await this.setAudioOutputDeviceAsync(audOut);
             }
@@ -7908,7 +7922,7 @@ class BaseJitsiClient extends EventTarget {
             (d) => d.deviceId === this.preferedAudioInputID,
             (d) => d.deviceId === "communications",
             (d) => d.deviceId === "default",
-            (d) => !!d);
+            (d) => d && d.deviceId);
         if (audIn) {
             await this.setAudioInputDeviceAsync(audIn);
         }
@@ -7949,8 +7963,52 @@ class BaseJitsiClient extends EventTarget {
         throw new Error("Not implemented in base class");
     }
 
+    async getAvailableDevicesAsync() {
+        let devices = await navigator.mediaDevices.enumerateDevices();
+        let hasAudioPermission = false;
+        let hasVideoPermission = false;
+        for (let device of devices) {
+            if (device.deviceId.length > 0) {
+                hasAudioPermission |= device.kind === "audioinput";
+                hasVideoPermission |= device.kind === "videoinput";
+            }
+        }
+
+        if (!hasAudioPermission || !hasVideoPermission) {
+            const _ = await navigator.mediaDevices.getUserMedia({ audio: !hasAudioPermission, video: !hasVideoPermission });
+            devices = await navigator.mediaDevices.enumerateDevices();
+        }
+
+        return {
+            audioOutput: canChangeAudioOutput ? devices.filter(d => d.kind === "audiooutput") : [],
+            audioInput: devices.filter(d => d.kind === "audioinput"),
+            videoInput: devices.filter(d => d.kind === "videoinput")
+        };
+    }
 
     async getAudioOutputDevicesAsync() {
+        if (!canChangeAudioOutput) {
+            return [];
+        }
+        const devices = await this.getAvailableDevicesAsync();
+        return devices && devices.audioOutput || [];
+    }
+
+    async getAudioInputDevicesAsync() {
+        const devices = await this.getAvailableDevicesAsync();
+        return devices && devices.audioInput || [];
+    }
+
+    async getVideoInputDevicesAsync() {
+        const devices = await this.getAvailableDevicesAsync();
+        return devices && devices.videoInput || [];
+    }
+
+    async getCurrentAudioInputDeviceAsync() {
+        throw new Error("Not implemented in base class");
+    }
+
+    async setAudioInputDeviceAsync(device) {
         throw new Error("Not implemented in base class");
     }
 
@@ -7968,22 +8026,6 @@ class BaseJitsiClient extends EventTarget {
         throw new Error("Not implemented in base class");
     }
 
-    async getAudioInputDevicesAsync() {
-        throw new Error("Not implemented in base class");
-    }
-
-    async getCurrentAudioInputDeviceAsync() {
-        throw new Error("Not implemented in base class");
-    }
-
-    async setAudioInputDeviceAsync(device) {
-        throw new Error("Not implemented in base class");
-    }
-
-    async getVideoInputDevicesAsync() {
-        throw new Error("Not implemented in base class");
-    }
-
     async getCurrentVideoInputDeviceAsync() {
         throw new Error("Not implemented in base class");
     }
@@ -7997,10 +8039,6 @@ class BaseJitsiClient extends EventTarget {
     }
 
     async toggleVideoMutedAsync() {
-        throw new Error("Not implemented in base class");
-    }
-
-    setAvatarURL(url) {
         throw new Error("Not implemented in base class");
     }
 
@@ -8147,6 +8185,12 @@ class BaseJitsiClient extends EventTarget {
     setAvatarEmoji(emoji) {
         for (let toUserID of this.userIDs()) {
             this.sendMessageTo(toUserID, "setAvatarEmoji", emoji);
+        }
+    }
+
+    setAvatarURL(url) {
+        for (let toUserID of this.userIDs()) {
+            this.sendMessageTo(toUserID, "setAvatarURL", url);
         }
     }
 
@@ -17224,17 +17268,17 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             });
 
             const onTrackMuteChanged = (track, muted) => {
-                    const userID = track.getParticipantId() || this.localUser,
-                        trackKind = track.getType(),
-                        muteChangedEvtName = trackKind + "MuteStatusChanged",
-                        evt = Object.assign(
-                            new Event(muteChangedEvtName), {
-                            id: userID,
-                            muted
-                        });
+                const userID = track.getParticipantId() || this.localUser,
+                    trackKind = track.getType(),
+                    muteChangedEvtName = trackKind + "MuteStatusChanged",
+                    evt = Object.assign(
+                        new Event(muteChangedEvtName), {
+                        id: userID,
+                        muted
+                    });
 
-                    this.dispatchEvent(evt);
-                },
+                this.dispatchEvent(evt);
+            },
 
                 onTrackChanged = (track) => {
                     onTrackMuteChanged(track, track.isMuted());
@@ -17392,31 +17436,6 @@ class LibJitsiMeetClient extends BaseJitsiClient {
         }
     }
 
-    async getAvailableDevicesAsync() {
-        const devices = await new Promise((resolve, reject) => {
-            try {
-                JitsiMeetJS.mediaDevices.enumerateDevices(resolve);
-            }
-            catch (exp) {
-                reject(exp);
-            }
-        });
-
-        return {
-            audioOutput: canChangeAudioOutput ? devices.filter(d => d.kind === "audiooutput") : [],
-            audioInput: devices.filter(d => d.kind === "audioinput"),
-            videoInput: devices.filter(d => d.kind === "videoinput")
-        };
-    }
-
-    async getAudioOutputDevicesAsync() {
-        if (!canChangeAudioOutput) {
-            return [];
-        }
-        const devices = await this.getAvailableDevicesAsync();
-        return devices && devices.audioOutput || [];
-    }
-
     async getCurrentAudioOutputDeviceAsync() {
         if (!canChangeAudioOutput) {
             return null;
@@ -17446,11 +17465,6 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             && userInputs.has(this.localUser)
             && userInputs.get(this.localUser)[type]
             || null;
-    }
-
-    async getAudioInputDevicesAsync() {
-        const devices = await this.getAvailableDevicesAsync();
-        return devices && devices.audioInput || [];
     }
 
     async getCurrentAudioInputDeviceAsync() {
@@ -17538,11 +17552,6 @@ class LibJitsiMeetClient extends BaseJitsiClient {
         }
     }
 
-    async getVideoInputDevicesAsync() {
-        const devices = await this.getAvailableDevicesAsync();
-        return devices && devices.videoInput || [];
-    }
-
     async getCurrentVideoInputDeviceAsync() {
         const cur = this.getCurrentMediaTrack("video"),
             devices = await this.getVideoInputDevicesAsync(),
@@ -17580,10 +17589,6 @@ class LibJitsiMeetClient extends BaseJitsiClient {
 
     setDisplayName(userName) {
         this.conference.setDisplayName(userName);
-    }
-
-    setAvatarURL(url) {
-        throw new Error("Not implemented in base class");
     }
 
     isMediaMuted(type) {
