@@ -1,4 +1,4 @@
-const versionString = "Calla v0.1.12";
+const versionString = "Calla v0.1.13";
 
 function t(o, s, c) {
     return typeof o === s
@@ -6150,10 +6150,11 @@ class VideoAvatar extends BaseAvatar {
      */
     constructor(video) {
         super(video);
-        this.element.play();
-        this.element
-            .once("canplay")
-            .then(() => this.element.play());
+        video.volume = 0;
+        video.muted = true;
+        video.play();
+        video.once("canplay")
+            .then(() => video.play());
     }
 
     /**
@@ -7894,8 +7895,6 @@ class BaseJitsiClient extends EventTarget {
     async joinAsync(host, roomName, userName) {
         this.dispose();
 
-        const { audioOutput, audioInput, videoInput } = await this.getAvailableDevicesAsync();
-
         const joinTask = this.once("videoConferenceJoined");
 
         await this.initializeAsync(host, roomName, userName);
@@ -7908,36 +7907,39 @@ class BaseJitsiClient extends EventTarget {
 
         this.setDisplayName(userName);
 
-        if (canChangeAudioOutput) {
-            const audOut = arrayScan(
-                audioOutput,
-                (d) => d.deviceId === this.preferedAudioOutputID,
-                (d) => d.deviceId === "communications",
-                (d) => d.deviceId === "default",
-                (d) => d && d.deviceId);
-            if (audOut) {
-                await this.setAudioOutputDeviceAsync(audOut);
-            }
-        }
+        await this.setPreferredDevicesAsync();
 
-        const audIn = arrayScan(
-            audioInput,
-            (d) => d.deviceId === this.preferedAudioInputID,
-            (d) => d.deviceId === "communications",
-            (d) => d.deviceId === "default",
-            (d) => d && d.deviceId);
-        if (audIn) {
-            await this.setAudioInputDeviceAsync(audIn);
-        }
+        return joinInfo;
+    }
 
-        const vidIn = arrayScan(
-            videoInput,
-            (d) => d.deviceId === this.preferedVideoInputID);
+    async setPreferredDevicesAsync() {
+        await this.setPreferredAudioOutputAsync();
+        await this.setPreferredAudioInputAsync();
+        await this.setPreferredVideoInputAsync();
+    }
+
+    async setPreferredVideoInputAsync() {
+        const videoInput = await this.getVideoInputDevicesAsync();
+        const vidIn = arrayScan(videoInput, (d) => d.deviceId === this.preferedVideoInputID);
         if (vidIn) {
             await this.setVideoInputDeviceAsync(vidIn);
         }
+    }
 
-        return joinInfo;
+    async setPreferredAudioInputAsync() {
+        const audioInput = await this.getAudioInputDevicesAsync();
+        const audIn = arrayScan(audioInput, (d) => d.deviceId === this.preferedAudioInputID, (d) => d.deviceId === "communications", (d) => d.deviceId === "default", (d) => d && d.deviceId);
+        if (audIn) {
+            await this.setAudioInputDeviceAsync(audIn);
+        }
+    }
+
+    async setPreferredAudioOutputAsync() {
+        const audioOutput = await this.getAudioOutputDevicesAsync();
+        const audOut = arrayScan(audioOutput, (d) => d.deviceId === this.preferedAudioOutputID, (d) => d.deviceId === "communications", (d) => d.deviceId === "default", (d) => d && d.deviceId);
+        if (audOut) {
+            await this.setAudioOutputDeviceAsync(audOut);
+        }
     }
 
     dispose() {
@@ -17510,13 +17512,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             }
         }
         else {
-            const avail = await this.getAudioInputDevicesAsync();
-            if (avail.length === 0) {
-                throw new Error("No audio input devices available");
-            }
-            else {
-                await this.setAudioInputDeviceAsync(avail[0]);
-            }
+            await this.setPreferredAudioInputAsync();
         }
 
         const evt = await changeTask;
@@ -17530,13 +17526,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             await this.setVideoInputDeviceAsync(null);
         }
         else {
-            const avail = await this.getVideoInputDevicesAsync();
-            if (avail.length === 0) {
-                throw new Error("No video input devices available");
-            }
-            else {
-                await this.setVideoInputDeviceAsync(avail[0]);
-            }
+            await this.setPreferredVideoInputAsync();
         }
 
         const evt = await changeTask;
