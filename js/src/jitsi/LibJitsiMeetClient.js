@@ -141,17 +141,17 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             });
 
             const onTrackMuteChanged = (track, muted) => {
-                    const userID = track.getParticipantId() || this.localUser,
-                        trackKind = track.getType(),
-                        muteChangedEvtName = trackKind + "MuteStatusChanged",
-                        evt = Object.assign(
-                            new Event(muteChangedEvtName), {
-                            id: userID,
-                            muted
-                        });
+                const userID = track.getParticipantId() || this.localUser,
+                    trackKind = track.getType(),
+                    muteChangedEvtName = trackKind + "MuteStatusChanged",
+                    evt = Object.assign(
+                        new Event(muteChangedEvtName), {
+                        id: userID,
+                        muted
+                    });
 
-                    this.dispatchEvent(evt);
-                },
+                this.dispatchEvent(evt);
+            },
 
                 onTrackChanged = (track) => {
                     onTrackMuteChanged(track, track.isMuted());
@@ -309,31 +309,6 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         }
     }
 
-    async getAvailableDevicesAsync() {
-        const devices = await new Promise((resolve, reject) => {
-            try {
-                JitsiMeetJS.mediaDevices.enumerateDevices(resolve);
-            }
-            catch (exp) {
-                reject(exp);
-            }
-        });
-
-        return {
-            audioOutput: canChangeAudioOutput ? devices.filter(d => d.kind === "audiooutput") : [],
-            audioInput: devices.filter(d => d.kind === "audioinput"),
-            videoInput: devices.filter(d => d.kind === "videoinput")
-        };
-    }
-
-    async getAudioOutputDevicesAsync() {
-        if (!canChangeAudioOutput) {
-            return [];
-        }
-        const devices = await this.getAvailableDevicesAsync();
-        return devices && devices.audioOutput || [];
-    }
-
     async getCurrentAudioOutputDeviceAsync() {
         if (!canChangeAudioOutput) {
             return null;
@@ -363,11 +338,6 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             && userInputs.has(this.localUser)
             && userInputs.get(this.localUser)[type]
             || null;
-    }
-
-    async getAudioInputDevicesAsync() {
-        const devices = await this.getAvailableDevicesAsync();
-        return devices && devices.audioInput || [];
     }
 
     async getCurrentAudioInputDeviceAsync() {
@@ -455,11 +425,6 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         }
     }
 
-    async getVideoInputDevicesAsync() {
-        const devices = await this.getAvailableDevicesAsync();
-        return devices && devices.videoInput || [];
-    }
-
     async getCurrentVideoInputDeviceAsync() {
         const cur = this.getCurrentMediaTrack("video"),
             devices = await this.getVideoInputDevicesAsync(),
@@ -497,10 +462,6 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
 
     setDisplayName(userName) {
         this.conference.setDisplayName(userName);
-    }
-
-    setAvatarURL(url) {
-        throw new Error("Not implemented in base class");
     }
 
     isMediaMuted(type) {

@@ -127,7 +127,7 @@ export class BaseJitsiClient extends EventTarget {
                 (d) => d.deviceId === this.preferedAudioOutputID,
                 (d) => d.deviceId === "communications",
                 (d) => d.deviceId === "default",
-                (d) => !!d);
+                (d) => d && d.deviceId);
             if (audOut) {
                 await this.setAudioOutputDeviceAsync(audOut);
             }
@@ -139,7 +139,7 @@ export class BaseJitsiClient extends EventTarget {
             (d) => d.deviceId === this.preferedAudioInputID,
             (d) => d.deviceId === "communications",
             (d) => d.deviceId === "default",
-            (d) => !!d);
+            (d) => d && d.deviceId);
         if (audIn) {
             await this.setAudioInputDeviceAsync(audIn);
         }
@@ -180,8 +180,52 @@ export class BaseJitsiClient extends EventTarget {
         throw new Error("Not implemented in base class");
     }
 
+    async getAvailableDevicesAsync() {
+        let devices = await navigator.mediaDevices.enumerateDevices();
+        let hasAudioPermission = false;
+        let hasVideoPermission = false;
+        for (let device of devices) {
+            if (device.deviceId.length > 0) {
+                hasAudioPermission |= device.kind === "audioinput";
+                hasVideoPermission |= device.kind === "videoinput";
+            }
+        }
+
+        if (!hasAudioPermission || !hasVideoPermission) {
+            const _ = await navigator.mediaDevices.getUserMedia({ audio: !hasAudioPermission, video: !hasVideoPermission });
+            devices = await navigator.mediaDevices.enumerateDevices();
+        }
+
+        return {
+            audioOutput: canChangeAudioOutput ? devices.filter(d => d.kind === "audiooutput") : [],
+            audioInput: devices.filter(d => d.kind === "audioinput"),
+            videoInput: devices.filter(d => d.kind === "videoinput")
+        };
+    }
 
     async getAudioOutputDevicesAsync() {
+        if (!canChangeAudioOutput) {
+            return [];
+        }
+        const devices = await this.getAvailableDevicesAsync();
+        return devices && devices.audioOutput || [];
+    }
+
+    async getAudioInputDevicesAsync() {
+        const devices = await this.getAvailableDevicesAsync();
+        return devices && devices.audioInput || [];
+    }
+
+    async getVideoInputDevicesAsync() {
+        const devices = await this.getAvailableDevicesAsync();
+        return devices && devices.videoInput || [];
+    }
+
+    async getCurrentAudioInputDeviceAsync() {
+        throw new Error("Not implemented in base class");
+    }
+
+    async setAudioInputDeviceAsync(device) {
         throw new Error("Not implemented in base class");
     }
 
@@ -199,22 +243,6 @@ export class BaseJitsiClient extends EventTarget {
         throw new Error("Not implemented in base class");
     }
 
-    async getAudioInputDevicesAsync() {
-        throw new Error("Not implemented in base class");
-    }
-
-    async getCurrentAudioInputDeviceAsync() {
-        throw new Error("Not implemented in base class");
-    }
-
-    async setAudioInputDeviceAsync(device) {
-        throw new Error("Not implemented in base class");
-    }
-
-    async getVideoInputDevicesAsync() {
-        throw new Error("Not implemented in base class");
-    }
-
     async getCurrentVideoInputDeviceAsync() {
         throw new Error("Not implemented in base class");
     }
@@ -228,10 +256,6 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     async toggleVideoMutedAsync() {
-        throw new Error("Not implemented in base class");
-    }
-
-    setAvatarURL(url) {
         throw new Error("Not implemented in base class");
     }
 
@@ -378,6 +402,12 @@ export class BaseJitsiClient extends EventTarget {
     setAvatarEmoji(emoji) {
         for (let toUserID of this.userIDs()) {
             this.sendMessageTo(toUserID, "setAvatarEmoji", emoji);
+        }
+    }
+
+    setAvatarURL(url) {
+        for (let toUserID of this.userIDs()) {
+            this.sendMessageTo(toUserID, "setAvatarURL", url);
         }
     }
 
