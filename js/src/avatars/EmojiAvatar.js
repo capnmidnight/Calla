@@ -42,11 +42,12 @@ export class EmojiAvatar extends BaseAvatar {
 
     /**
      * Render the avatar at a certain size.
-     * @param {CanvasRenderingContext2D} g
-     * @param {number} width
-     * @param {number} height
+     * @param {CanvasRenderingContext2D} g - the context to render to
+     * @param {number} width - the width the avatar should be rendered at
+     * @param {number} height - the height the avatar should be rendered at.
+     * @param {boolean} isMe - whether the avatar is the local user
      */
-    draw(g, width, height) {
+    draw(g, width, height, isMe) {
         const self = selfs.get(this);
 
         if (self.aspectRatio === null) {

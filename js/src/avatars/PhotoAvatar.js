@@ -34,11 +34,12 @@ export class PhotoAvatar extends BaseAvatar {
 
     /**
      * Render the avatar at a certain size.
-     * @param {CanvasRenderingContext2D} g
-     * @param {number} width
-     * @param {number} height
+     * @param {CanvasRenderingContext2D} g - the context to render to
+     * @param {number} width - the width the avatar should be rendered at
+     * @param {number} height - the height the avatar should be rendered at.
+     * @param {boolean} isMe - whether the avatar is the local user
      */
-    draw(g, width, height) {
+    draw(g, width, height, isMe) {
         const offset = (this.element.width - this.element.height) / 2,
             sx = Math.max(0, offset),
             sy = Math.max(0, -offset),

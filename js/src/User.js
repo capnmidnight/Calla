@@ -301,7 +301,7 @@ export class User extends EventTarget {
         g.textBaseline = "top";
 
         if (this.avatar) {
-            this.avatar.draw(g, this.stackAvatarWidth, this.stackAvatarHeight);
+            this.avatar.draw(g, this.stackAvatarWidth, this.stackAvatarHeight, this.isMe);
         }
 
         if (this.audioMuted || !this.videoMuted) {
