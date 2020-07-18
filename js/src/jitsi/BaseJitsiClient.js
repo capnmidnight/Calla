@@ -1,4 +1,4 @@
-﻿import { BaseAudioClient } from "../audio/BaseAudioClient.js";
+import { BaseAudioClient } from "../audio/BaseAudioClient.js";
 import { canChangeAudioOutput } from "../audio/canChangeAudioOutput.js";
 import { arrayClear, arrayScan } from "../protos/Array.js";
 
@@ -34,6 +34,9 @@ export class BaseJitsiClient extends EventTarget {
 
     constructor() {
         super();
+
+        this.hasAudioPermission = false;
+        this.hasVideoPermission = false;
 
         /** @type {String} */
         this.localUser = null;
@@ -108,6 +111,8 @@ export class BaseJitsiClient extends EventTarget {
     async joinAsync(host, roomName, userName) {
         this.dispose();
 
+        const { audioOutput, audioInput, videoInput } = await this.getAvailableDevicesAsync();
+
         const joinTask = this.once("videoConferenceJoined");
 
         await this.initializeAsync(host, roomName, userName);
@@ -121,9 +126,8 @@ export class BaseJitsiClient extends EventTarget {
         this.setDisplayName(userName);
 
         if (canChangeAudioOutput) {
-            const audioOutputs = await this.getAudioOutputDevicesAsync();
             const audOut = arrayScan(
-                audioOutputs,
+                audioOutput,
                 (d) => d.deviceId === this.preferedAudioOutputID,
                 (d) => d.deviceId === "communications",
                 (d) => d.deviceId === "default",
@@ -133,9 +137,8 @@ export class BaseJitsiClient extends EventTarget {
             }
         }
 
-        const audioInputs = await this.getAudioInputDevicesAsync();
         const audIn = arrayScan(
-            audioInputs,
+            audioInput,
             (d) => d.deviceId === this.preferedAudioInputID,
             (d) => d.deviceId === "communications",
             (d) => d.deviceId === "default",
@@ -144,9 +147,8 @@ export class BaseJitsiClient extends EventTarget {
             await this.setAudioInputDeviceAsync(audIn);
         }
 
-        const videoInputs = await this.getVideoInputDevicesAsync();
         const vidIn = arrayScan(
-            videoInputs,
+            videoInput,
             (d) => d.deviceId === this.preferedVideoInputID);
         if (vidIn) {
             await this.setVideoInputDeviceAsync(vidIn);
@@ -180,20 +182,32 @@ export class BaseJitsiClient extends EventTarget {
         throw new Error("Not implemented in base class");
     }
 
-    async getAvailableDevicesAsync() {
+    async _getDevicesAsync() {
         let devices = await navigator.mediaDevices.enumerateDevices();
-        let hasAudioPermission = false;
-        let hasVideoPermission = false;
+
         for (let device of devices) {
             if (device.deviceId.length > 0) {
-                hasAudioPermission |= device.kind === "audioinput";
-                hasVideoPermission |= device.kind === "videoinput";
+                this.hasAudioPermission |= device.kind === "audioinput";
+                this.hasVideoPermission |= device.kind === "videoinput";
             }
         }
 
-        if (!hasAudioPermission || !hasVideoPermission) {
-            const _ = await navigator.mediaDevices.getUserMedia({ audio: !hasAudioPermission, video: !hasVideoPermission });
-            devices = await navigator.mediaDevices.enumerateDevices();
+        return devices;
+    }
+
+    async getAvailableDevicesAsync() {
+        let devices = await this._getDevicesAsync();
+
+        for (let i = 0; i < 3 && !this.hasAudioPermission; ++i) {
+            devices = null;
+            try {
+                const _ = await navigator.mediaDevices.getUserMedia({ audio: !this.hasAudioPermission, video: !this.hasVideoPermission });
+            }
+            catch (exp) {
+                console.warn(exp);
+            }
+
+            devices = await this._getDevicesAsync();
         }
 
         return {
