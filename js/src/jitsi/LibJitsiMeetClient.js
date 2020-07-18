@@ -369,13 +369,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             }
         }
         else {
-            const avail = await this.getAudioInputDevicesAsync();
-            if (avail.length === 0) {
-                throw new Error("No audio input devices available");
-            }
-            else {
-                await this.setAudioInputDeviceAsync(avail[0]);
-            }
+            await this.setPreferredAudioInputAsync();
         }
 
         const evt = await changeTask;
@@ -389,13 +383,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             await this.setVideoInputDeviceAsync(null);
         }
         else {
-            const avail = await this.getVideoInputDevicesAsync();
-            if (avail.length === 0) {
-                throw new Error("No video input devices available");
-            }
-            else {
-                await this.setVideoInputDeviceAsync(avail[0]);
-            }
+            await this.setPreferredVideoInputAsync();
         }
 
         const evt = await changeTask;

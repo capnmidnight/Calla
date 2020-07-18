@@ -111,8 +111,6 @@ export class BaseJitsiClient extends EventTarget {
     async joinAsync(host, roomName, userName) {
         this.dispose();
 
-        const { audioOutput, audioInput, videoInput } = await this.getAvailableDevicesAsync();
-
         const joinTask = this.once("videoConferenceJoined");
 
         await this.initializeAsync(host, roomName, userName);
@@ -125,36 +123,39 @@ export class BaseJitsiClient extends EventTarget {
 
         this.setDisplayName(userName);
 
-        if (canChangeAudioOutput) {
-            const audOut = arrayScan(
-                audioOutput,
-                (d) => d.deviceId === this.preferedAudioOutputID,
-                (d) => d.deviceId === "communications",
-                (d) => d.deviceId === "default",
-                (d) => d && d.deviceId);
-            if (audOut) {
-                await this.setAudioOutputDeviceAsync(audOut);
-            }
-        }
+        await this.setPreferredDevicesAsync();
 
-        const audIn = arrayScan(
-            audioInput,
-            (d) => d.deviceId === this.preferedAudioInputID,
-            (d) => d.deviceId === "communications",
-            (d) => d.deviceId === "default",
-            (d) => d && d.deviceId);
-        if (audIn) {
-            await this.setAudioInputDeviceAsync(audIn);
-        }
+        return joinInfo;
+    }
 
-        const vidIn = arrayScan(
-            videoInput,
-            (d) => d.deviceId === this.preferedVideoInputID);
+    async setPreferredDevicesAsync() {
+        await this.setPreferredAudioOutputAsync();
+        await this.setPreferredAudioInputAsync();
+        await this.setPreferredVideoInputAsync();
+    }
+
+    async setPreferredVideoInputAsync() {
+        const videoInput = await this.getVideoInputDevicesAsync();
+        const vidIn = arrayScan(videoInput, (d) => d.deviceId === this.preferedVideoInputID);
         if (vidIn) {
             await this.setVideoInputDeviceAsync(vidIn);
         }
+    }
 
-        return joinInfo;
+    async setPreferredAudioInputAsync() {
+        const audioInput = await this.getAudioInputDevicesAsync();
+        const audIn = arrayScan(audioInput, (d) => d.deviceId === this.preferedAudioInputID, (d) => d.deviceId === "communications", (d) => d.deviceId === "default", (d) => d && d.deviceId);
+        if (audIn) {
+            await this.setAudioInputDeviceAsync(audIn);
+        }
+    }
+
+    async setPreferredAudioOutputAsync() {
+        const audioOutput = await this.getAudioOutputDevicesAsync();
+        const audOut = arrayScan(audioOutput, (d) => d.deviceId === this.preferedAudioOutputID, (d) => d.deviceId === "communications", (d) => d.deviceId === "default", (d) => d && d.deviceId);
+        if (audOut) {
+            await this.setAudioOutputDeviceAsync(audOut);
+        }
     }
 
     dispose() {
