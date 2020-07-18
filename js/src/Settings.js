@@ -12,9 +12,9 @@
         userName: "",
         avatarEmoji: null,
         gamepadIndex: 0,
-        preferedAudioOutputID: null,
-        preferedAudioInputID: null,
-        preferedVideoInputID: null,
+        preferredAudioOutputID: null,
+        preferredAudioInputID: null,
+        preferredVideoInputID: null,
 
         inputBinding: {
             keyButtonUp: "ArrowUp",
@@ -58,35 +58,35 @@ export class Settings {
         Object.seal(this);
     }
 
-    get preferedAudioOutputID() {
-        return selfs.get(this).preferedAudioOutputID;
+    get preferredAudioOutputID() {
+        return selfs.get(this).preferredAudioOutputID;
     }
 
-    set preferedAudioOutputID(value) {
-        if (value !== this.preferedAudioOutputID) {
-            selfs.get(this).preferedAudioOutputID = value;
+    set preferredAudioOutputID(value) {
+        if (value !== this.preferredAudioOutputID) {
+            selfs.get(this).preferredAudioOutputID = value;
             commit(this);
         }
     }
 
-    get preferedAudioInputID() {
-        return selfs.get(this).preferedAudioInputID;
+    get preferredAudioInputID() {
+        return selfs.get(this).preferredAudioInputID;
     }
 
-    set preferedAudioInputID(value) {
-        if (value !== this.preferedAudioInputID) {
-            selfs.get(this).preferedAudioInputID = value;
+    set preferredAudioInputID(value) {
+        if (value !== this.preferredAudioInputID) {
+            selfs.get(this).preferredAudioInputID = value;
             commit(this);
         }
     }
 
-    get preferedVideoInputID() {
-        return selfs.get(this).preferedVideoInputID;
+    get preferredVideoInputID() {
+        return selfs.get(this).preferredVideoInputID;
     }
 
-    set preferedVideoInputID(value) {
-        if (value !== this.preferedVideoInputID) {
-            selfs.get(this).preferedVideoInputID = value;
+    set preferredVideoInputID(value) {
+        if (value !== this.preferredVideoInputID) {
+            selfs.get(this).preferredVideoInputID = value;
             commit(this);
         }
     }

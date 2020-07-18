@@ -154,9 +154,9 @@ export function init(host, client) {
     login.userName = settings.userName;
     login.roomName = settings.roomName;
 
-    client.preferedAudioOutputID = settings.preferedAudioOutputID;
-    client.preferedAudioInputID = settings.preferedAudioInputID;
-    client.preferedVideoInputID = settings.preferedVideoInputID;
+    client.preferredAudioOutputID = settings.preferredAudioOutputID;
+    client.preferredAudioInputID = settings.preferredAudioInputID;
+    client.preferredVideoInputID = settings.preferredVideoInputID;
 
     showLogin();
 
@@ -277,19 +277,19 @@ export function init(host, client) {
         audioInputChanged: async () => {
             const device = options.currentAudioInputDevice;
             await client.setAudioInputDeviceAsync(device);
-            settings.preferedAudioInputID = client.preferedAudioInputID;
+            settings.preferredAudioInputID = client.preferredAudioInputID;
         },
 
         audioOutputChanged: async () => {
             const device = options.currentAudioOutputDevice;
             await client.setAudioOutputDeviceAsync(device);
-            settings.preferedAudioOutputID = client.preferedAudioOutputID;
+            settings.preferredAudioOutputID = client.preferredAudioOutputID;
         },
 
         videoInputChanged: async () => {
             const device = options.currentVideoInputDevice;
             await client.setVideoInputDeviceAsync(device);
-            settings.preferedVideoInputID = client.preferedVideoInputID;
+            settings.preferredVideoInputID = client.preferredVideoInputID;
         },
 
         gamepadChanged: () => {
@@ -317,12 +317,12 @@ export function init(host, client) {
 
         toggleAudio: async () => {
             await client.toggleAudioMutedAsync();
-            settings.preferedAudioInputID = client.preferedAudioInputID;
+            settings.preferredAudioInputID = client.preferredAudioInputID;
         },
 
         toggleVideo: async () => {
             await client.toggleVideoMutedAsync();
-            settings.preferedVideoInputID = client.preferedVideoInputID;
+            settings.preferredVideoInputID = client.preferredVideoInputID;
         },
 
         gameStarted: () => {

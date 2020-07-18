@@ -46,9 +46,9 @@ export class BaseJitsiClient extends EventTarget {
 
         this.preInitEvtQ = [];
 
-        this.preferedAudioOutputID = null;
-        this.preferedAudioInputID = null;
-        this.preferedVideoInputID = null;
+        this.preferredAudioOutputID = null;
+        this.preferredAudioInputID = null;
+        this.preferredVideoInputID = null;
     }
 
     userIDs() {
@@ -130,14 +130,14 @@ export class BaseJitsiClient extends EventTarget {
 
     async setPreferredDevicesAsync() {
         await this.setPreferredAudioOutputAsync(true);
-        await this.setPreferredAudioInputAsync(false);
+        await this.setPreferredAudioInputAsync(true);
         await this.setPreferredVideoInputAsync(false);
     }
 
     async setPreferredAudioOutputAsync(allowAny) {
         const devices = await this.getAudioOutputDevicesAsync();
         const device = arrayScan(devices,
-            (d) => d.deviceId === this.preferedAudioOutputID,
+            (d) => d.deviceId === this.preferredAudioOutputID,
             (d) => d.deviceId === "communications",
             (d) => d.deviceId === "default",
             (d) => allowAny && d && d.deviceId);
@@ -149,12 +149,12 @@ export class BaseJitsiClient extends EventTarget {
     async setPreferredAudioInputAsync(allowAny) {
         const devices = await this.getAudioInputDevicesAsync();
         const device = arrayScan(devices,
-            (d) => d.deviceId === this.preferedAudioInputID,
+            (d) => d.deviceId === this.preferredAudioInputID,
             (d) => d.deviceId === "communications",
             (d) => d.deviceId === "default",
             (d) => allowAny && d && d.deviceId);
         if (device) {
-            this.preferedAudioInputID = device.deviceId;
+            this.preferredAudioInputID = device.deviceId;
             await this.setAudioInputDeviceAsync(device);
         }
     }
@@ -162,10 +162,10 @@ export class BaseJitsiClient extends EventTarget {
     async setPreferredVideoInputAsync(allowAny) {
         const devices = await this.getVideoInputDevicesAsync();
         const device = arrayScan(devices,
-            (d) => d.deviceId === this.preferedVideoInputID,
+            (d) => d.deviceId === this.preferredVideoInputID,
             (d) => allowAny && d && d.deviceId);
         if (device) {
-            this.preferedVideoInputID = device.deviceId;
+            this.preferredVideoInputID = device.deviceId;
             await this.setVideoInputDeviceAsync(device);
         }
     }
@@ -253,7 +253,7 @@ export class BaseJitsiClient extends EventTarget {
      * @param {MediaDeviceInfo} device
      */
     async setAudioOutputDeviceAsync(device) {
-        this.preferedAudioOutputID = device && device.deviceId || null;
+        this.preferredAudioOutputID = device && device.deviceId || null;
     }
 
     /**
@@ -261,7 +261,7 @@ export class BaseJitsiClient extends EventTarget {
      * @param {MediaDeviceInfo} device
      */
     async setAudioInputDeviceAsync(device) {
-        this.preferedAudioInputID = device && device.deviceId || null;
+        this.preferredAudioInputID = device && device.deviceId || null;
     }
 
     /**
@@ -269,7 +269,7 @@ export class BaseJitsiClient extends EventTarget {
      * @param {MediaDeviceInfo} device
      */
     async setVideoInputDeviceAsync(device) {
-        this.preferedVideoInputID = device && device.deviceId || null;
+        this.preferredVideoInputID = device && device.deviceId || null;
     }
 
     async getCurrentAudioInputDeviceAsync() {

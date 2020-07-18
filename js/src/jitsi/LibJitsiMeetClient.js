@@ -329,8 +329,8 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             return;
         }
         await super.setAudioOutputDeviceAsync(device);
-        this.audioClient.setAudioOutputDevice(this.preferedAudioOutputID);
-        await JitsiMeetJS.mediaDevices.setAudioOutputDevice(this.preferedAudioOutputID);
+        this.audioClient.setAudioOutputDevice(this.preferredAudioOutputID);
+        await JitsiMeetJS.mediaDevices.setAudioOutputDevice(this.preferredAudioOutputID);
     }
 
     getCurrentMediaTrack(type) {
@@ -400,11 +400,11 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             await removeTask;
         }
 
-        if (this.preferedAudioInputID) {
+        if (this.preferredAudioInputID) {
             const addTask = this.taskOf("audioAdded");
             const tracks = await JitsiMeetJS.createLocalTracks({
                 devices: ["audio"],
-                micDeviceId: this.preferedAudioInputID
+                micDeviceId: this.preferredAudioInputID
             });
 
             for (let track of tracks) {
@@ -437,11 +437,11 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             await removeTask;
         }
 
-        if (this.preferedVideoInputID) {
+        if (this.preferredVideoInputID) {
             const addTask = this.taskOf("videoAdded");
             const tracks = await JitsiMeetJS.createLocalTracks({
                 devices: ["video"],
-                cameraDeviceId: this.preferedVideoInputID
+                cameraDeviceId: this.preferredVideoInputID
             });
 
             for (let track of tracks) {
