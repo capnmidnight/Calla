@@ -129,32 +129,44 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     async setPreferredDevicesAsync() {
-        await this.setPreferredAudioOutputAsync();
-        await this.setPreferredAudioInputAsync();
-        await this.setPreferredVideoInputAsync();
+        await this.setPreferredAudioOutputAsync(true);
+        await this.setPreferredAudioInputAsync(false);
+        await this.setPreferredVideoInputAsync(false);
     }
 
-    async setPreferredVideoInputAsync() {
-        const videoInput = await this.getVideoInputDevicesAsync();
-        const vidIn = arrayScan(videoInput, (d) => d.deviceId === this.preferedVideoInputID);
-        if (vidIn) {
-            await this.setVideoInputDeviceAsync(vidIn);
+    async setPreferredAudioOutputAsync(allowAny) {
+        const devices = await this.getAudioOutputDevicesAsync();
+        const device = arrayScan(devices,
+            (d) => d.deviceId === this.preferedAudioOutputID,
+            (d) => d.deviceId === "communications",
+            (d) => d.deviceId === "default",
+            (d) => allowAny && d && d.deviceId);
+        if (device) {
+            await this.setAudioOutputDeviceAsync(device);
         }
     }
 
-    async setPreferredAudioInputAsync() {
-        const audioInput = await this.getAudioInputDevicesAsync();
-        const audIn = arrayScan(audioInput, (d) => d.deviceId === this.preferedAudioInputID, (d) => d.deviceId === "communications", (d) => d.deviceId === "default", (d) => d && d.deviceId);
-        if (audIn) {
-            await this.setAudioInputDeviceAsync(audIn);
+    async setPreferredAudioInputAsync(allowAny) {
+        const devices = await this.getAudioInputDevicesAsync();
+        const device = arrayScan(devices,
+            (d) => d.deviceId === this.preferedAudioInputID,
+            (d) => d.deviceId === "communications",
+            (d) => d.deviceId === "default",
+            (d) => allowAny && d && d.deviceId);
+        if (device) {
+            this.preferedAudioInputID = device.deviceId;
+            await this.setAudioInputDeviceAsync(device);
         }
     }
 
-    async setPreferredAudioOutputAsync() {
-        const audioOutput = await this.getAudioOutputDevicesAsync();
-        const audOut = arrayScan(audioOutput, (d) => d.deviceId === this.preferedAudioOutputID, (d) => d.deviceId === "communications", (d) => d.deviceId === "default", (d) => d && d.deviceId);
-        if (audOut) {
-            await this.setAudioOutputDeviceAsync(audOut);
+    async setPreferredVideoInputAsync(allowAny) {
+        const devices = await this.getVideoInputDevicesAsync();
+        const device = arrayScan(devices,
+            (d) => d.deviceId === this.preferedVideoInputID,
+            (d) => allowAny && d && d.deviceId);
+        if (device) {
+            this.preferedVideoInputID = device.deviceId;
+            await this.setVideoInputDeviceAsync(device);
         }
     }
 
@@ -236,11 +248,31 @@ export class BaseJitsiClient extends EventTarget {
         return devices && devices.videoInput || [];
     }
 
-    async getCurrentAudioInputDeviceAsync() {
-        throw new Error("Not implemented in base class");
+    /**
+     * 
+     * @param {MediaDeviceInfo} device
+     */
+    async setAudioOutputDeviceAsync(device) {
+        this.preferedAudioOutputID = device && device.deviceId || null;
     }
 
+    /**
+     *
+     * @param {MediaDeviceInfo} device
+     */
     async setAudioInputDeviceAsync(device) {
+        this.preferedAudioInputID = device && device.deviceId || null;
+    }
+
+    /**
+     *
+     * @param {MediaDeviceInfo} device
+     */
+    async setVideoInputDeviceAsync(device) {
+        this.preferedVideoInputID = device && device.deviceId || null;
+    }
+
+    async getCurrentAudioInputDeviceAsync() {
         throw new Error("Not implemented in base class");
     }
 
@@ -250,19 +282,7 @@ export class BaseJitsiClient extends EventTarget {
         throw new Error("Not implemented in base class");
     }
 
-    /**
-     * 
-     * @param {MediaDeviceInfo} device
-     */
-    async setAudioOutputDeviceAsync(device) {
-        throw new Error("Not implemented in base class");
-    }
-
     async getCurrentVideoInputDeviceAsync() {
-        throw new Error("Not implemented in base class");
-    }
-
-    async setVideoInputDeviceAsync(device) {
         throw new Error("Not implemented in base class");
     }
 

@@ -153,6 +153,7 @@ export function init(host, client) {
     game.transitionSpeed = settings.transitionSpeed = 0.5;
     login.userName = settings.userName;
     login.roomName = settings.roomName;
+
     client.preferedAudioOutputID = settings.preferedAudioOutputID;
     client.preferedAudioInputID = settings.preferedAudioInputID;
     client.preferedVideoInputID = settings.preferedVideoInputID;
@@ -265,10 +266,6 @@ export function init(host, client) {
             client.setAvatarURL(options.avatarURL);
         },
 
-        toggleVideo: async () => {
-            await client.toggleVideoMutedAsync();
-        },
-
         toggleDrawHearing: () => {
             settings.drawHearing = game.drawHearing = options.drawHearing;
         },
@@ -279,20 +276,20 @@ export function init(host, client) {
 
         audioInputChanged: async () => {
             const device = options.currentAudioInputDevice;
-            settings.preferedAudioInputID = device && device.deviceId || null;
             await client.setAudioInputDeviceAsync(device);
+            settings.preferedAudioInputID = client.preferedAudioInputID;
         },
 
         audioOutputChanged: async () => {
             const device = options.currentAudioOutputDevice;
-            settings.preferedAudioOutputID = device && device.deviceId || null;
             await client.setAudioOutputDeviceAsync(device);
+            settings.preferedAudioOutputID = client.preferedAudioOutputID;
         },
 
-        videoInputChanged: () => {
+        videoInputChanged: async () => {
             const device = options.currentVideoInputDevice;
-            settings.preferedVideoInputID = device && device.deviceId || null;
-            client.setVideoInputDeviceAsync(device);
+            await client.setVideoInputDeviceAsync(device);
+            settings.preferedVideoInputID = client.preferedVideoInputID;
         },
 
         gamepadChanged: () => {
@@ -320,10 +317,12 @@ export function init(host, client) {
 
         toggleAudio: async () => {
             await client.toggleAudioMutedAsync();
+            settings.preferedAudioInputID = client.preferedAudioInputID;
         },
 
         toggleVideo: async () => {
             await client.toggleVideoMutedAsync();
+            settings.preferedVideoInputID = client.preferedVideoInputID;
         },
 
         gameStarted: () => {
