@@ -1,5 +1,5 @@
-﻿if (!CanvasRenderingContext2D.prototype.hasOwnProperty("getTransform")
-    && CanvasRenderingContext2D.prototype.hasOwnProperty("mozCurrentTransform")) {
+﻿if (!Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "getTransform")
+    && Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "mozCurrentTransform")) {
 
     class MockDOMMatrix {
         constructor(trans) {

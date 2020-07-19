@@ -463,7 +463,7 @@ class JitsiClientEvent extends Event {
         this.id = id;
         for (let key in value) {
             if (key !== "isTrusted"
-                && !Event.prototype.hasOwnProperty(key)) {
+                && !Object.prototype.hasOwnProperty.call(Event.prototype, key)) {
                 this[key] = value[key];
             }
         }

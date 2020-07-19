@@ -12,9 +12,9 @@ import { BaseAudioElement } from "./BaseAudioElement.js";
 const contextDestroyingEvt = new Event("contextDestroying"),
     contextDestroyedEvt = new Event("contextDestroyed");
 
-let hasWebAudioAPI = window.hasOwnProperty("AudioListener"),
-    hasFullSpatializer = hasWebAudioAPI && window.hasOwnProperty("PannerNode"),
-    isLatestWebAudioAPI = hasWebAudioAPI && AudioListener.prototype.hasOwnProperty("positionX"),
+let hasWebAudioAPI = Object.prototype.hasOwnProperty.call(window, "AudioListener"),
+    hasFullSpatializer = hasWebAudioAPI && Object.prototype.hasOwnProperty.call(window, "PannerNode"),
+    isLatestWebAudioAPI = hasWebAudioAPI && Object.prototype.hasOwnProperty.call(AudioListener.prototype, "positionX"),
     forceInterpolatedPosition = true,
     attemptResonanceAPI = hasWebAudioAPI;
 
@@ -122,52 +122,49 @@ export class Destination extends BaseAudioElement {
      * @return {BaseSpatializer}
      */
     _createSpatializer(id, audio, bufferSize) {
-        try {
-            if (hasWebAudioAPI) {
-                try {
-                    if (hasFullSpatializer) {
-                        try {
-                            if (attemptResonanceAPI) {
+        if (hasWebAudioAPI) {
+            try {
+                if (hasFullSpatializer) {
+                    try {
+                        if (attemptResonanceAPI) {
+                            try {
                                 return new GoogleResonanceAudioSpatializer(id, this, audio, bufferSize);
                             }
-                        }
-                        catch (exp3) {
-                            attemptResonanceAPI = false;
-                            console.warn("Resonance Audio API not available!", exp3);
-                        }
-                        finally {
-                            if (!attemptResonanceAPI) {
-                                return new FullSpatializer(id, this, audio, bufferSize, forceInterpolatedPosition);
+                            catch (exp3) {
+                                attemptResonanceAPI = false;
+                                console.warn("Resonance Audio API not available!", exp3);
                             }
                         }
+
+                        if (!attemptResonanceAPI) {
+                            return new FullSpatializer(id, this, audio, bufferSize, forceInterpolatedPosition);
+                        }
+                    }
+                    catch (exp2) {
+                        hasFullSpatializer = false;
+                        console.warn("No 360 spatializer support", exp2);
                     }
                 }
-                catch (exp2) {
-                    hasFullSpatializer = false;
-                    console.warn("No 360 spatializer support", exp2);
-                }
-                finally {
-                    if (!hasFullSpatializer) {
-                        return new StereoSpatializer(id, this, audio, bufferSize);
-                    }
+
+                if (!hasFullSpatializer) {
+                    return new StereoSpatializer(id, this, audio, bufferSize);
                 }
             }
-        }
-        catch (exp1) {
-            hasWebAudioAPI = false;
-            if (this.audioContext) {
-                this.dispatchEvent(contextDestroyingEvt);
-                this.audioContext.close();
-                this.audioContext = null;
-                this.position = null;
-                this.dispatchEvent(contextDestroyedEvt);
+            catch (exp1) {
+                hasWebAudioAPI = false;
+                if (this.audioContext) {
+                    this.dispatchEvent(contextDestroyingEvt);
+                    this.audioContext.close();
+                    this.audioContext = null;
+                    this.position = null;
+                    this.dispatchEvent(contextDestroyedEvt);
+                }
+                console.warn("No WebAudio API!", exp1);
             }
-            console.warn("No WebAudio API!", exp1);
         }
-        finally {
-            if (!hasWebAudioAPI) {
-                return new VolumeOnlySpatializer(id, this, audio);
-            }
+
+        if (!hasWebAudioAPI) {
+            return new VolumeOnlySpatializer(id, this, audio);
         }
     }
 }

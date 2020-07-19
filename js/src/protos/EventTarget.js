@@ -121,7 +121,7 @@ EventTarget.prototype.until = function (untilEvt, callback, test, repeatTimeout,
                 }, cancelTimeout);
             }
 
-            function repeater() {
+            const repeater = () => {
                 callback();
                 timer = setTimeout(repeater, repeatTimeout);
             }
