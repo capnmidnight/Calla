@@ -10,8 +10,6 @@ export class VideoAvatar extends BaseAvatar {
      */
     constructor(video) {
         super(video);
-        video.volume = 0;
-        video.muted = true;
         video.play();
         video.once("canplay")
             .then(() => video.play());

@@ -1,7 +1,7 @@
 ﻿import { tag } from "../html/tag.js";
 import { BaseJitsiClient } from "./BaseJitsiClient.js";
 import { AudioManager as AudioClient } from "../audio/AudioManager.js";
-import { autoPlay, srcObject, muted } from "../html/attrs.js";
+import { autoPlay, srcObject, muted, playsInline, volume } from "../html/attrs.js";
 import { canChangeAudioOutput } from "../audio/canChangeAudioOutput.js";
 import { AudioActivityEvent } from "../audio/AudioActivityEvent.js";
 
@@ -197,7 +197,9 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
 
                 const elem = tag(trackType,
                     autoPlay(!isLocal),
-                    muted(isLocal),
+                    playsInline(!isLocal),
+                    muted(isLocal || trackKind === "video"),
+                    volume(trackKind === "video" ? 1 : 0),
                     srcObject(track.stream));
 
                 if (!userInputs.has(userID)) {
