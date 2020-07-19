@@ -1,4 +1,5 @@
-﻿import { Emote } from "./Emote.js";
+﻿import "./astar.js";
+import { Emote } from "./Emote.js";
 import { EventedGamepad } from "./gamepad/EventedGamepad.js";
 import { id, style } from "./html/attrs.js";
 import { resizeCanvas } from "./html/canvas.js";
@@ -334,9 +335,28 @@ export class Game extends EventTarget {
     }
 
 
+    walkPath(self, waypoints) {
+        if (waypoints.length == 0) return;
+        self.moveMeTo(waypoints[0][0], waypoints[0][1]);
+        setTimeout(function() {self.walkPath(self, waypoints.slice(1));}, self.transitionSpeed * 500);
+    }
+
     moveMeBy(dx, dy) {
-        const clearTile = this.map.getClearTile(this.me.position._tx, this.me.position._ty, dx, dy, this.me.avatar);
-        this.moveMeTo(clearTile.x, clearTile.y);
+        // const clearTile = this.map.getClearTile(this.me.position._tx, this.me.position._ty, dx, dy, this.me.avatar);
+        // this.moveMeTo(clearTile.x, clearTile.y);
+
+        const sx = this.me.position.x-this.map.offsetX,
+              sy = this.me.position.y-this.map.offsetY,
+              start = this.map.graph.grid[sy][sx];
+        const tx = clamp(sx + dx, 0, this.map.width-1),
+              ty = clamp(sy + dy, 0, this.map.height-1),
+              end = this.map.graph.grid[ty][tx];
+        const result = astar.search(this.map.graph, start, end);
+        let waypoints = []
+        for (let pt of result) {
+            waypoints.push([pt.y + this.map.offsetX, pt.x + this.map.offsetY]);
+        }
+        this.walkPath(this, waypoints);
     }
 
     warpMeTo(x, y) {

@@ -1,4 +1,5 @@
 ﻿import "./protos.js";
+import "./astar.js";
 import { TileSet } from "./TileSet.js";
 import { isSurfer } from "./emoji/emoji.js";
 
@@ -64,6 +65,20 @@ export class TileMap {
         await this.tileset.load();
         this.tileWidth = this.tileset.tileWidth;
         this.tileHeight = this.tileset.tileHeight;
+
+        let grid = [];
+        for (let row of this.tiles[0]) {
+            let gridrow = [];
+            for (let tile of row) {
+                if (this.tileset.isClear(tile)) {
+                    gridrow.push(1);
+                } else {
+                    gridrow.push(0);
+                }
+            }
+            grid.push(gridrow);
+        }
+        this.graph = new Graph(grid, { diagonal: true });
     }
 
     draw(g) {
