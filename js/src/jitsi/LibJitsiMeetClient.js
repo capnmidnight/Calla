@@ -16,22 +16,7 @@ import { AudioActivityEvent } from "../audio/AudioActivityEvent.js";
  * @property {MediaStream} stream
  **/
 
-/**
- * A paring of audio and video inputs for a user in the conference.
- **/
-class MediaElements {
-    /**
-     * Creates a pairing of audio and video inputs for a user.
-     * @param {JitsiTrack} audio
-     * @param {JitsiTrack} video
-     */
-    constructor(audio = null, video = null) {
-        this.audio = audio;
-        this.video = video;
-    }
-}
-
-/** @type {Map<string, MediaElements>} */
+/** @type {Map<string, Map<string, JitsiTrack>>} */
 const userInputs = new Map();
 
 const audioActivityEvt = new AudioActivityEvent();
@@ -203,16 +188,16 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                     srcObject(track.stream));
 
                 if (!userInputs.has(userID)) {
-                    userInputs.set(userID, new MediaElements());
+                    userInputs.set(userID, new Map());
                 }
 
-                const inputs = userInputs.get(userID),
-                    hasCurrentTrack = !!inputs[trackKind];
-                if (hasCurrentTrack) {
-                    inputs[trackKind].dispose();
+                const inputs = userInputs.get(userID);
+                if (inputs.has(trackKind)) {
+                    inputs.get(trackKind).dispose();
+                    inputs.delete(trackKind);
                 }
 
-                inputs[trackKind] = track;
+                inputs.set(trackKind, track);
 
                 if (!isLocal && trackKind === "audio") {
                     this.audioClient.createSource(userID, elem);
@@ -234,8 +219,9 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
 
                 if (userInputs.has(userID)) {
                     const inputs = userInputs.get(userID);
-                    if (inputs[trackKind] === track) {
-                        inputs[trackKind] = null;
+                    if (inputs.has(trackKind)) {
+                        inputs.get(trackKind).dispose();
+                        inputs.delete(trackKind);
                     }
                 }
 
@@ -295,12 +281,12 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         if (this.conference) {
             if (this.localUser !== null && userInputs.has(this.localUser)) {
                 const inputs = userInputs.get(this.localUser);
-                if (inputs.audio) {
-                    this.conference.removeTrack(inputs.audio);
+                if (inputs.has("audio")) {
+                    this.conference.removeTrack(inputs.get("audio"));
                 }
 
-                if (inputs.video) {
-                    this.conference.removeTrack(inputs.video);
+                if (inputs.has("video")) {
+                    this.conference.removeTrack(inputs.get("video"));
                 }
             }
 
@@ -336,10 +322,20 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     getCurrentMediaTrack(type) {
-        return this.localUser !== null
-            && userInputs.has(this.localUser)
-            && userInputs.get(this.localUser)[type]
-            || null;
+        if (this.localUser === null) {
+            return null;
+        }
+
+        if (!userInputs.has(this.localUser)){
+            return null;
+        }
+
+        const inputs = userInputs.get(this.localUser);
+        if (!inputs.has(type)) {
+            return null;
+        }
+
+        return inputs.get(type);
     }
 
     async getCurrentAudioInputDeviceAsync() {
