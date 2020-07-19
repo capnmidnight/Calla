@@ -1,6 +1,4 @@
-﻿/* global window, AudioListener, AudioContext, Event, EventTarget */
-
-import { MockAudioContext } from "./MockAudioContext.js";
+﻿import { MockAudioContext } from "./MockAudioContext.js";
 import { WebAudioOldListenerPosition } from "./positions/WebAudioOldListenerPosition.js";
 import { WebAudioNewListenerPosition } from "./positions/WebAudioNewListenerPosition.js";
 import { InterpolatedPosition } from "./positions/InterpolatedPosition.js";

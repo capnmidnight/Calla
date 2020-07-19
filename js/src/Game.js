@@ -118,7 +118,7 @@ export class Game extends EventTarget {
         });
 
         addEventListener("keyup", (evt) => {
-            if (!!this.keys[evt.key]) {
+            if (this.keys[evt.key]) {
                 delete this.keys[evt.key];
             }
         });
@@ -304,7 +304,7 @@ export class Game extends EventTarget {
                 }
             }
 
-            if (!!emoji) {
+            if (emoji) {
                 this.emotes.push(new Emote(emoji, user.position.x + 0.5, user.position.y));
             }
         }
@@ -416,7 +416,7 @@ export class Game extends EventTarget {
         if (timeout === undefined) {
             timeout = 5000;
         }
-        if (!!id) {
+        if (id) {
             if (this.users.has(id)) {
                 const user = this.users.get(id)
                 callback(user);

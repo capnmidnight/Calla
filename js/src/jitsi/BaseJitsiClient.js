@@ -3,10 +3,7 @@ import { canChangeAudioOutput } from "../audio/canChangeAudioOutput.js";
 import { arrayClear, arrayScan } from "../protos/Array.js";
 
 // helps us filter out data channel messages that don't belong to us
-const APP_FINGERPRINT
-    = window.APP_FINGERPRINT
-    = "Calla",
-    eventNames = [
+const eventNames = [
         "userMoved",
         "emote",
         "userInitRequest",
@@ -49,6 +46,10 @@ export class BaseJitsiClient extends EventTarget {
         this.preferredAudioOutputID = null;
         this.preferredAudioInputID = null;
         this.preferredVideoInputID = null;
+    }
+
+    get appFingerPrint() {
+        return "Calla";
     }
 
     userIDs() {
@@ -319,7 +320,7 @@ export class BaseJitsiClient extends EventTarget {
     /// Send a Calla message through the Jitsi Meet data channel.
     sendMessageTo(toUserID, command, value) {
         this.txGameData(toUserID, {
-            hax: APP_FINGERPRINT,
+            hax: this.appFingerPrint,
             command,
             value
         });

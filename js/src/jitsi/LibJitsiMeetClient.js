@@ -1,4 +1,6 @@
-﻿import { tag } from "../html/tag.js";
+﻿/* global JitsiMeetJS, JVB_HOST, JVB_MUC */
+
+import { tag } from "../html/tag.js";
 import { BaseJitsiClient } from "./BaseJitsiClient.js";
 import { AudioManager as AudioClient } from "../audio/AudioManager.js";
 import { autoPlay, srcObject, muted, playsInline, volume } from "../html/attrs.js";
@@ -272,7 +274,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
     /// to receive Calla messages from the Jitsi Meet data channel.
     rxGameData(evt) {
-        if (evt.data.hax === APP_FINGERPRINT) {
+        if (evt.data.hax === this.appFingerPrint) {
             this.receiveMessageFrom(evt.user.getId(), evt.data.command, evt.data.value);
         }
     }

@@ -80,7 +80,7 @@ export function init(host, client) {
             headbar.instructionsButton.lock();
             options.hide();
             const e = await emoji.selectAsync();
-            if (!!e) {
+            if (e) {
                 callback(e);
             }
             headbar.optionsButton.unlock();

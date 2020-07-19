@@ -1,4 +1,7 @@
 {
     "version": "0.1.15",
-    "private": true
+    "private": true,
+    "devDependencies": {
+        "eslint": "^7.5.0"
+    }
 }

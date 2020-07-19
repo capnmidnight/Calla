@@ -11,7 +11,7 @@ export function arrayRandom(arr, defaultValue) {
         throw new Error("Must provide an array as the first parameter.");
     }
 
-    const offset = !!defaultValue ? 1 : 0,
+    const offset = defaultValue ? 1 : 0,
         idx = Math.floor(Math.random() * (arr.length + offset)) - offset;
     if (idx < 0) {
         return defaultValue;

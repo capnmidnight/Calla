@@ -64,17 +64,16 @@ export class LoginForm extends FormDialog {
         this.userNameInput = this.element.querySelector("#userName")
         this.userNameInput.addEventListener("input", self.validate);
         this.userNameInput.addEventListener("enter", () => {
-            if (this.roomName.length > 0
-                && this.userName.length > 0) {
-            }
-            else if (this.userName.length === 0) {
+            if (this.userName.length === 0) {
                 this.userNameInput.focus();
             }
-            else if (this.roomSelectMode) {
-                this.roomSelect.focus();
-            }
-            else {
-                this.roomInput.focus();
+            else if (this.roomName.length === 0) {
+                if (this.roomSelectMode) {
+                    this.roomSelect.focus();
+                }
+                else {
+                    this.roomInput.focus();
+                }
             }
         });
 

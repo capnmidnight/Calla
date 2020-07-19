@@ -73,7 +73,7 @@ export class EmojiForm extends FormDialog {
                             this.preview.innerHTML = `${selectedEmoji.value} - ${selectedEmoji.desc}`;
                             this.confirmButton.unlock();
 
-                            if (!!alts) {
+                            if (alts) {
                                 alts.toggleOpen();
                                 btn.innerHTML = icon.value + (alts.isOpen() ? "-" : "+");
                             }
@@ -95,7 +95,7 @@ export class EmojiForm extends FormDialog {
                     g = Span(btn)
                 }
 
-                if (!!icon.alts) {
+                if (icon.alts) {
                     alts = Div();
                     allAlts.push(alts);
                     addIconsToContainer(icon, alts, true);
@@ -105,11 +105,11 @@ export class EmojiForm extends FormDialog {
                     btn.innerHTML += "+";
                 }
 
-                if (!!icon.width) {
+                if (icon.width) {
                     btn.style.width = icon.width;
                 }
 
-                if (!!icon.color) {
+                if (icon.color) {
                     btn.style.color = icon.color;
                 }
 

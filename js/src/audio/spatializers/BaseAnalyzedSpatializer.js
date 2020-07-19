@@ -87,7 +87,7 @@ export class BaseAnalyzedSpatializer extends BaseSpatializer {
         if (!this.source) {
             try {
                 if (!this.stream) {
-                    this.stream = !!this.audio.mozCaptureStream
+                    this.stream = this.audio.mozCaptureStream
                         ? this.audio.mozCaptureStream()
                         : this.audio.captureStream();
                 }
@@ -103,7 +103,7 @@ export class BaseAnalyzedSpatializer extends BaseSpatializer {
             }
         }
 
-        if (!!this.source) {
+        if (this.source) {
             this.analyser.getFloatFrequencyData(this.buffer);
 
             const average = 1.1 + analyserFrequencyAverage(this.analyser, this.buffer, 85, 255, this.bufferSize) / 100;
@@ -126,7 +126,7 @@ export class BaseAnalyzedSpatializer extends BaseSpatializer {
      * Discard values and make this instance useless.
      */
     dispose() {
-        if (!!this.source) {
+        if (this.source) {
             this.source.disconnect(this.analyser);
             this.source.disconnect(this.inNode);
         }

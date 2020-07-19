@@ -40,7 +40,7 @@ function commit(settings) {
 
 function load() {
     const selfStr = localStorage.getItem(KEY);
-    if (!!selfStr) {
+    if (selfStr) {
         return Object.assign(
             {},
             DEFAULT_SETTINGS,
