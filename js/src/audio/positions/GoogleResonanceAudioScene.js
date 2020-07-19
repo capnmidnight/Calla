@@ -1,4 +1,6 @@
-﻿import { InterpolatedPosition } from "./InterpolatedPosition.js";
+﻿/* global ResonanceAudio */
+
+import { InterpolatedPosition } from "./InterpolatedPosition.js";
 import "../../../lib/resonance-audio.js";
 
 /**

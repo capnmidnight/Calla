@@ -356,7 +356,16 @@ export class OptionsForm extends FormDialog {
     }
 
     set gamepads(values) {
+        const disable = values.length === 0;
         this.gpSelect.values = values;
+        this.gpAxisLeftRight.setLocked(disable);
+        this.gpAxisUpDown.setLocked(disable);
+        this.gpButtonUp.setLocked(disable);
+        this.gpButtonDown.setLocked(disable);
+        this.gpButtonLeft.setLocked(disable);
+        this.gpButtonRight.setLocked(disable);
+        this.gpButtonEmote.setLocked(disable);
+        this.gpButtonToggleAudio.setLocked(disable);
     }
 
     get currentGamepadIndex() {
@@ -420,23 +429,6 @@ export class OptionsForm extends FormDialog {
 
     set currentVideoInputDevice(value) {
         this.videoInputSelect.selectedValue = value;
-    }
-
-    get gamepads() {
-        return this.gpSelect.getValues();
-    }
-
-    set gamepads(values) {
-        const disable = values.length === 0;
-        this.gpSelect.values = values;
-        this.gpAxisLeftRight.setLocked(disable);
-        this.gpAxisUpDown.setLocked(disable);
-        this.gpButtonUp.setLocked(disable);
-        this.gpButtonDown.setLocked(disable);
-        this.gpButtonLeft.setLocked(disable);
-        this.gpButtonRight.setLocked(disable);
-        this.gpButtonEmote.setLocked(disable);
-        this.gpButtonToggleAudio.setLocked(disable);
     }
 
     get gamepadIndex() {

@@ -9,5 +9,7 @@
         "sourceType": "module"
     },
     "rules": {
+        "no-unused-vars": "off",
+        "no-prototype-builtins": "off"
     }
 }
