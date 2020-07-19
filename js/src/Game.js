@@ -3,6 +3,7 @@ import { EventedGamepad } from "./gamepad/EventedGamepad.js";
 import { id, style } from "./html/attrs.js";
 import { resizeCanvas } from "./html/canvas.js";
 import { Canvas } from "./html/tags.js";
+import { isFirefox } from "./html/flags.js";
 import { clamp, lerp, project, unproject } from "./math.js";
 import { TileMap } from "./TileMap.js";
 import { User } from "./User.js";
@@ -15,7 +16,6 @@ const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_SPEED = 0.005,
     MAX_DRAG_DISTANCE = 5,
     MOVE_REPEAT = 0.125,
-    isFirefox = typeof InstallTrigger !== "undefined",
     gameStartedEvt = new Event("gameStarted"),
     gameEndedEvt = new Event("gameEnded"),
     zoomChangedEvt = new Event("zoomChanged"),
