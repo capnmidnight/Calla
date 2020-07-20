@@ -19,7 +19,7 @@ import { srcObject, autoPlay } from "../../src/html/attrs.js";
     const loginContent = document.querySelector("#login > .content")
     loginContent.parentElement.removeChild(loginContent);
 
-    const components = init("jitsi.calla.chat", new JitsiClient());
+    const components = init(new JitsiClient());
     const { game, login, client, headbar } = components;
     Object.assign(window, components);
 

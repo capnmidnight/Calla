@@ -31,7 +31,7 @@ import { onClick } from "../../src/html/evts.js";
 import { openSideTest } from "../../testing/windowing.js";
 import { userNumber } from "../../testing/userNumber.js";
 
-const { login } = init("jitsi.calla.chat", new JitsiClient());
+const { login } = init(new JitsiClient());
 
 if (userNumber === 1) {
     document.body.append(

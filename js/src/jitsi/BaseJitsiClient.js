@@ -66,12 +66,10 @@ export class BaseJitsiClient extends EventTarget {
 
 
     /**
-     * 
-     * @param {string} host
      * @param {string} roomName
      * @param {string} userName
      */
-    async initializeAsync(host, roomName, userName) {
+    async initializeAsync(roomName, userName) {
         throw new Error("Not implemented in base class.");
     }
 
@@ -104,17 +102,15 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     /**
-     * 
-     * @param {string} host
      * @param {string} roomName
      * @param {string} userName
      */
-    async joinAsync(host, roomName, userName) {
+    async joinAsync(roomName, userName) {
         this.dispose();
 
         const joinTask = this.once("videoConferenceJoined");
 
-        await this.initializeAsync(host, roomName, userName);
+        await this.initializeAsync(roomName, userName);
 
         window.addEventListener("unload", () => {
             this.dispose();

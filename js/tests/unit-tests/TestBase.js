@@ -19,7 +19,6 @@ export class TestBase extends TestCase {
     async joinChannel() {
         const testUserName = "TestUser" + userNumber,
             evt = await this.client.joinAsync(
-                "jitsi.calla.chat",
                 TEST_ROOM_NAME,
                 testUserName);
         this.isEqualTo(evt.displayName, testUserName);

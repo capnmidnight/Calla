@@ -1,5 +1,6 @@
-﻿/* global JitsiMeetJS, JVB_HOST, JVB_MUC */
+﻿/* global JitsiMeetJS */
 
+import { JVB_HOST, JVB_MUC } from "/constants.js";
 import { tag } from "../html/tag.js";
 import { BaseJitsiClient } from "./BaseJitsiClient.js";
 import { AudioManager as AudioClient } from "../audio/AudioManager.js";
@@ -65,9 +66,9 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         Object.seal(this);
     }
 
-    async initializeAsync(host, roomName, userName) {
+    async initializeAsync(roomName, userName) {
         await import(`${window.location.origin}/lib/jquery.min.js`);
-        await import(`https://${host}/libs/lib-jitsi-meet.min.js`);
+        await import(`https://${JVB_HOST}/libs/lib-jitsi-meet.min.js`);
 
         roomName = roomName.toLocaleLowerCase();
 
@@ -79,7 +80,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 domain: JVB_HOST,
                 muc: JVB_MUC
             },
-            serviceUrl: `https://${host}/http-bind`,
+            serviceUrl: `https://${JVB_HOST}/http-bind`,
             enableLipSync: true
         });
 

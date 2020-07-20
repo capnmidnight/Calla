@@ -5,7 +5,6 @@ import { AudioManager as AudioClient } from "../../src/audio/AudioManager.js";
 export class MockJitsiClient extends BaseJitsiClient {
     constructor() {
         super();
-        this.host;
         this.testUsers = null;
         this.roomName = null;
         this.userName = null;
@@ -36,8 +35,7 @@ export class MockJitsiClient extends BaseJitsiClient {
         this.audioClient = new AudioClient("jisti.calla.chat", window.location.origin, window);
     }
 
-    async initializeAsync(host, roomName, userName) {
-        this.host = host;
+    async initializeAsync(roomName, userName) {
         this.roomName = roomName;
         this.userName = userName;
 

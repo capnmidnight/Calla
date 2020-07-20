@@ -26,10 +26,9 @@ import { SFX } from "./audio/SFX.js";
 
 /**
  * 
- * @param {string} host
  * @param {BaseJitsiClient} client
  */
-export function init(host, client) {
+export function init(client) {
     const settings = new Settings(),
         sound = new SFX()
             .add("join", "/audio/door-open.ogg", "/audio/door-open.mp3", "/audio/door-open.wav")
@@ -221,7 +220,6 @@ export function init(host, client) {
         client.startAudio();
 
         const joinInfo = await client.joinAsync(
-            host,
             settings.roomName = login.roomName,
             settings.userName = login.userName);
 
