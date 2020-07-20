@@ -1,5 +1,5 @@
 ﻿import "./protos.js";
-import "./astar.js";
+import "../lib/astar.js";
 import { TileSet } from "./TileSet.js";
 import { isSurfer } from "./emoji/emoji.js";
 
