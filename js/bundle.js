@@ -1,4 +1,6 @@
-const versionString = "Calla v0.1.15";
+import { JVB_HOST, JVB_MUC } from '../../../../../constants.js';
+
+const versionString = "Calla v0.2.0";
 
 function t(o, s, c) {
     return typeof o === s
@@ -196,10 +198,10 @@ EventTarget.prototype.until = function (untilEvt, callback, test, repeatTimeout,
                 }, cancelTimeout);
             }
 
-            function repeater() {
+            const repeater = () => {
                 callback();
                 timer = setTimeout(repeater, repeatTimeout);
-            }
+            };
 
             timer = setTimeout(repeater, 0);
         }
@@ -356,8 +358,8 @@ String.prototype.firstLetterToUpper = function () {
         + this.substring(1);
 };
 
-if (!CanvasRenderingContext2D.prototype.hasOwnProperty("getTransform")
-    && CanvasRenderingContext2D.prototype.hasOwnProperty("mozCurrentTransform")) {
+if (!Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "getTransform")
+    && Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "mozCurrentTransform")) {
 
     class MockDOMMatrix {
         constructor(trans) {
@@ -408,7 +410,7 @@ function arrayRandom(arr, defaultValue) {
         throw new Error("Must provide an array as the first parameter.");
     }
 
-    const offset = !!defaultValue ? 1 : 0,
+    const offset = defaultValue ? 1 : 0,
         idx = Math.floor(Math.random() * (arr.length + offset)) - offset;
     if (idx < 0) {
         return defaultValue;
@@ -3296,7 +3298,7 @@ class HtmlAttr {
     /**
      * Creates a new setter functor for HTML Attributes
      * @param {string} key - the attribute name.
-     * @param {any} value - the value to set for the attribute.
+     * @param {string} value - the value to set for the attribute.
      * @param {...string} tags - the HTML tags that support this attribute.
      */
     constructor(key, value, ...tags) {
@@ -3334,118 +3336,142 @@ class HtmlAttr {
 }
 
 /**
- * The alt attribute, Alternative text in case an image can't be displayed.
- * @param {any} value - the value to set on the attribute.
+ * Alternative text in case an image can't be displayed.
+ * @param {string} value - the value to set on the attribute.
  **/
 function alt(value) { return new HtmlAttr("alt", value, "applet", "area", "img", "input"); }
 
 /**
- * The autoplay attribute, The audio or video should play as soon as possible.
- * @param {any} value - the value to set on the attribute.
+ * The audio or video should play as soon as possible.
+ * @param {boolean} value - the value to set on the attribute.
  **/
 function autoPlay(value) { return new HtmlAttr("autoplay", value, "audio", "video"); }
 
 /**
- * The className attribute, Often used with CSS to style elements with common properties.
- * @param {any} value - the value to set on the attribute.
+ * Often used with CSS to style elements with common properties.
+ * @param {string} value - the value to set on the attribute.
  **/
 function className(value) { return new HtmlAttr("className", value); }
 
 /**
- * The controls attribute, Indicates whether the browser should show playback controls to the user.
- * @param {any} value - the value to set on the attribute.
+ * Indicates whether the browser should show playback controls to the user.
+ * @param {boolean} value - the value to set on the attribute.
  **/
 function controls(value) { return new HtmlAttr("controls", value, "audio", "video"); }
 
 /**
- * The htmlFor attribute, Describes elements which belongs to this one.
- * @param {any} value - the value to set on the attribute.
+ * Describes elements which belongs to this one.
+ * @param {string} value - the value to set on the attribute.
  **/
 function htmlFor(value) { return new HtmlAttr("htmlFor", value, "label", "output"); }
 
 /**
- * The href attribute, The URL of a linked resource.
- * @param {any} value - the value to set on the attribute.
+ * Specifies the height of elements listed here. For all other elements, use the CSS height property.
+ * @param {number} value - the value to set on the attribute.
+ **/
+function height(value) { return new HtmlAttr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+
+/**
+ * The URL of a linked resource.
+ * @param {string} value - the value to set on the attribute.
  **/
 function href(value) { return new HtmlAttr("href", value, "a", "area", "base", "link"); }
 
 /**
- * The id attribute, Often used with CSS to style a specific element. The value of this attribute must be unique.
- * @param {any} value - the value to set on the attribute.
+ * Often used with CSS to style a specific element. The value of this attribute must be unique.
+ * @param {string} value - the value to set on the attribute.
  **/
 function id(value) { return new HtmlAttr("id", value); }
 
 /**
- * The max attribute, Indicates the maximum value allowed.
- * @param {any} value - the value to set on the attribute.
+ * Indicates the maximum value allowed.
+ * @param {number} value - the value to set on the attribute.
  **/
 function max(value) { return new HtmlAttr("max", value, "input", "meter", "progress"); }
 
 /**
- * The min attribute, Indicates the minimum value allowed.
- * @param {any} value - the value to set on the attribute.
+ * Indicates the minimum value allowed.
+ * @param {number} value - the value to set on the attribute.
  **/
 function min(value) { return new HtmlAttr("min", value, "input", "meter"); }
 
 /**
- * The muted attribute, Indicates whether the audio will be initially silenced on page load.
- * @param {any} value - the value to set on the attribute.
+ * Indicates whether the audio will be initially silenced on page load.
+ * @param {boolean} value - the value to set on the attribute.
  **/
 function muted(value) { return new HtmlAttr("muted", value, "audio", "video"); }
 
 /**
- * The placeholder attribute, Provides a hint to the user of what can be entered in the field.
- * @param {any} value - the value to set on the attribute.
+ * Provides a hint to the user of what can be entered in the field.
+ * @param {string} value - the value to set on the attribute.
  **/
 function placeHolder(value) { return new HtmlAttr("placeholder", value, "input", "textarea"); }
 
 /**
- * The role attribute, Defines the number of rows in a text area.
- * @param {any} value - the value to set on the attribute.
+ * Indicates that the media element should play automatically on iOS.
+ * @param {boolean} value - the value to set on the attribute.
+ **/
+function playsInline(value) { return new HtmlAttr("playsInline", value, "audio", "video"); }
+
+/**
+ * Defines the number of rows in a text area.
+ * @param {string} value - the value to set on the attribute.
  **/
 function role(value) { return new HtmlAttr("role", value); }
 
 /**
- * The src attribute, The URL of the embeddable content.
- * @param {any} value - the value to set on the attribute.
+ * The URL of the embeddable content.
+ * @param {string} value - the value to set on the attribute.
  **/
 function src(value) { return new HtmlAttr("src", value, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
 
 /**
- * The srcObject attribute, A MediaStream object to use as a source for an HTML video or audio element
- * @param {any} value - the value to set on the attribute.
+ * A MediaStream object to use as a source for an HTML video or audio element
+ * @param {string} value - the value to set on the attribute.
  **/
 function srcObject(value) { return new HtmlAttr("srcObject", value, "audio", "video"); }
 
 /**
- * The style attribute, Defines CSS styles which will override styles previously set.
- * @param {any} value - the value to set on the attribute.
+ * Defines CSS styles which will override styles previously set.
+ * @param {string} value - the value to set on the attribute.
  **/
 function style(value) { return new HtmlAttr("style", value); }
 
 /**
  * The step attribute
- * @param {any} value - the value to set on the attribute.
+ * @param {number} value - the value to set on the attribute.
  **/
 function step(value) { return new HtmlAttr("step", value, "input"); }
 
 /**
- * The title attribute, Text to be displayed in a tooltip when hovering over the element.
- * @param {any} value - the value to set on the attribute.
+ * Text to be displayed in a tooltip when hovering over the element.
+ * @param {string} value - the value to set on the attribute.
  **/
 function title(value) { return new HtmlAttr("title", value); }
 
 /**
- * The type attribute, Defines the type of the element.
- * @param {any} value - the value to set on the attribute.
+ * Defines the type of the element.
+ * @param {string} value - the value to set on the attribute.
  **/
 function type(value) { return new HtmlAttr("type", value, "button", "input", "command", "embed", "object", "script", "source", "style", "menu"); }
 
 /**
- * The value attribute, Defines a default value which will be displayed in the element on page load.
- * @param {any} value - the value to set on the attribute.
+ * Defines a default value which will be displayed in the element on page load.
+ * @param {string} value - the value to set on the attribute.
  **/
 function value(value) { return new HtmlAttr("value", value, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
+
+/**
+ * setting the volume at which a media element plays.
+ * @param {number} value - the value to set on the attribute.
+ **/
+function volume(value) { return new HtmlAttr("volume", value, "audio", "video"); }
+
+/**
+ * For the elements listed here, this establishes the element's width.
+ * @param {number} value - the value to set on the attribute.
+ **/
+function width(value) { return new HtmlAttr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
 
 // A selection of fonts for preferred monospace rendering.
 const monospaceFamily = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
@@ -4318,6 +4344,22 @@ function Span(...rest) { return tag("span", ...rest); }
 function UL(...rest) { return tag("ul", ...rest); }
 
 /**
+ * Creates an offscreen canvas element, if they are available. Otherwise, returns an HTMLCanvasElement.
+ * @param {number} w - the width of the canvas
+ * @param {number} h - the height of the canvas
+ * @param {...TagChild} rest - optional HTML attributes and child elements, to use in constructing the HTMLCanvasElement if OffscreenCanvas is not available.
+ * @returns {OffscreenCanvas|HTMLCanvasElement}
+ */
+function CanvasOffscreen(w, h, ...rest) {
+    if (window.OffscreenCanvas) {
+        return new OffscreenCanvas(w, h);
+    }
+    else {
+        return Canvas(...rest, width(w), height(h));
+    }
+}
+
+/**
  * Creates an input box that has a label attached to it.
  * @param {string} id - the ID to use for the input box
  * @param {string} inputType - the type to use for the input box (number, text, etc.)
@@ -4515,7 +4557,7 @@ class EmojiForm extends FormDialog {
                             this.preview.innerHTML = `${selectedEmoji.value} - ${selectedEmoji.desc}`;
                             this.confirmButton.unlock();
 
-                            if (!!alts) {
+                            if (alts) {
                                 alts.toggleOpen();
                                 btn.innerHTML = icon.value + (alts.isOpen() ? "-" : "+");
                             }
@@ -4537,7 +4579,7 @@ class EmojiForm extends FormDialog {
                     g = Span(btn);
                 }
 
-                if (!!icon.alts) {
+                if (icon.alts) {
                     alts = Div();
                     allAlts.push(alts);
                     addIconsToContainer(icon, alts, true);
@@ -4547,11 +4589,11 @@ class EmojiForm extends FormDialog {
                     btn.innerHTML += "+";
                 }
 
-                if (!!icon.width) {
+                if (icon.width) {
                     btn.style.width = icon.width;
                 }
 
-                if (!!icon.color) {
+                if (icon.color) {
                     btn.style.color = icon.color;
                 }
 
@@ -4968,16 +5010,16 @@ class LoginForm extends FormDialog {
         this.userNameInput = this.element.querySelector("#userName");
         this.userNameInput.addEventListener("input", self.validate);
         this.userNameInput.addEventListener("enter", () => {
-            if (this.roomName.length > 0
-                && this.userName.length > 0) ;
-            else if (this.userName.length === 0) {
+            if (this.userName.length === 0) {
                 this.userNameInput.focus();
             }
-            else if (this.roomSelectMode) {
-                this.roomSelect.focus();
-            }
-            else {
-                this.roomInput.focus();
+            else if (this.roomName.length === 0) {
+                if (this.roomSelectMode) {
+                    this.roomSelect.focus();
+                }
+                else {
+                    this.roomInput.focus();
+                }
             }
         });
 
@@ -5723,7 +5765,16 @@ class OptionsForm extends FormDialog {
     }
 
     set gamepads(values) {
+        const disable = values.length === 0;
         this.gpSelect.values = values;
+        this.gpAxisLeftRight.setLocked(disable);
+        this.gpAxisUpDown.setLocked(disable);
+        this.gpButtonUp.setLocked(disable);
+        this.gpButtonDown.setLocked(disable);
+        this.gpButtonLeft.setLocked(disable);
+        this.gpButtonRight.setLocked(disable);
+        this.gpButtonEmote.setLocked(disable);
+        this.gpButtonToggleAudio.setLocked(disable);
     }
 
     get currentGamepadIndex() {
@@ -5787,23 +5838,6 @@ class OptionsForm extends FormDialog {
 
     set currentVideoInputDevice(value) {
         this.videoInputSelect.selectedValue = value;
-    }
-
-    get gamepads() {
-        return this.gpSelect.getValues();
-    }
-
-    set gamepads(values) {
-        const disable = values.length === 0;
-        this.gpSelect.values = values;
-        this.gpAxisLeftRight.setLocked(disable);
-        this.gpAxisUpDown.setLocked(disable);
-        this.gpButtonUp.setLocked(disable);
-        this.gpButtonDown.setLocked(disable);
-        this.gpButtonLeft.setLocked(disable);
-        this.gpButtonRight.setLocked(disable);
-        this.gpButtonEmote.setLocked(disable);
-        this.gpButtonToggleAudio.setLocked(disable);
     }
 
     get gamepadIndex() {
@@ -6054,7 +6088,234 @@ const AvatarMode = Object.freeze({
     video: "video"
 });
 
-const selfs$2 = new Map();
+/**
+ * Returns true if the given object is either an HTMLCanvasElement or an OffscreenCanvas.
+ * @param {any} obj
+ * @returns {boolean}
+ */
+
+/**
+ * Resizes a canvas element
+ * @param {HTMLCanvasElement|OffscreenCanvas} canv
+ * @param {number} w - the new width of the canvas
+ * @param {number} h - the new height of the canvas
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function setCanvasSize(canv, w, h, superscale = 1) {
+    w = Math.floor(w * superscale);
+    h = Math.floor(h * superscale);
+    if (canv.width != w
+        || canv.height != h) {
+        canv.width = w;
+        canv.height = h;
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Resizes the canvas element of a given rendering context.
+ * 
+ * Note: the imageSmoothingEnabled, textBaseline, textAlign, and font 
+ * properties of the context will be restored after the context is resized,
+ * as these values are usually reset to their default values when a canvas
+ * is resized.
+ * @param {RenderingContext} ctx
+ * @param {number} w - the new width of the canvas
+ * @param {number} h - the new height of the canvas
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function setContextSize(ctx, w, h, superscale = 1) {
+    const oldImageSmoothingEnabled = ctx.imageSmoothingEnabled,
+        oldTextBaseline = ctx.textBaseline,
+        oldTextAlign = ctx.textAlign,
+        oldFont = ctx.font,
+        resized = setCanvasSize(
+            ctx.canvas,
+            w,
+            h,
+            superscale);
+
+    if (resized) {
+        ctx.imageSmoothingEnabled = oldImageSmoothingEnabled;
+        ctx.textBaseline = oldTextBaseline;
+        ctx.textAlign = oldTextAlign;
+        ctx.font = oldFont;
+    }
+
+    return resized;
+}
+
+/**
+ * Resizes a canvas element to match the proportions of the size of the element in the DOM.
+ * @param {HTMLCanvasElement} canv
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function resizeCanvas(canv, superscale = 1) {
+    return setCanvasSize(
+        canv,
+        canv.clientWidth,
+        canv.clientHeight,
+        superscale);
+}
+
+class TextImagePrivate {
+    /**
+     * @param {string} fontFamily
+     */
+    constructor(fontFamily) {
+        /** @type {string} */
+        this.fontFamily = fontFamily;
+
+        /** @type {string} */
+        this.color = "black";
+
+        /** @type {number} */
+        this.fontSize = null;
+
+        /** @type {number} */
+        this.scale = null;
+
+        /** @type {string} */
+        this.value = null;
+
+        this.canvas = CanvasOffscreen(10, 10);
+        this.g = this.canvas.getContext("2d");
+        this.g.textBaseline = "top";
+    }
+
+    redraw() {
+        this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        if (this.fontFamily
+            && this.fontSize
+            && this.color
+            && this.scale
+            && this.value) {
+            const fontHeight = this.fontSize * this.scale;
+            this.g.font = `${fontHeight}px ${this.fontFamily}`;
+
+            const metrics = this.g.measureText(this.value);
+            let dx = 0,
+                dy = 0,
+                trueWidth = metrics.width,
+                trueHeight = fontHeight;
+            if (metrics.actualBoundingBoxLeft) {
+                dx = metrics.actualBoundingBoxLeft;
+                dy = metrics.actualBoundingBoxAscent;
+                trueWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
+                trueHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+            }
+            setContextSize(this.g, trueWidth, trueHeight);
+            this.g.fillStyle = this.color;
+            this.g.fillText(this.value, dx, dy);
+        }
+    }
+}
+
+/**
+ * @type {WeakMap<TextImage, TextImagePrivate>}
+ **/
+const selfs$2 = new WeakMap();
+
+class TextImage {
+    /**
+     * @param {string} fontFamily
+     */
+    constructor(fontFamily) {
+        selfs$2.set(this, new TextImagePrivate(fontFamily));
+    }
+
+    get width() {
+        const self = selfs$2.get(this);
+        return self.canvas.width / self.scale;
+    }
+
+    get height() {
+        const self = selfs$2.get(this);
+        return self.canvas.height / self.scale;
+    }
+
+    get fontSize() {
+        return selfs$2.get(this).fontSize;
+    }
+
+    set fontSize(v) {
+        if (this.fontSize !== v) {
+            const self = selfs$2.get(this);
+            self.fontSize = v;
+            self.redraw();
+        }
+    }
+
+    get scale() {
+        return selfs$2.get(this).scale;
+    }
+
+    set scale(v) {
+        if (this.scale !== v) {
+            const self = selfs$2.get(this);
+            self.scale = v;
+            self.redraw();
+        }
+    }
+
+
+    get fontFamily() {
+        return selfs$2.get(this).fontFamily;
+    }
+
+    set fontFamily(v) {
+        if (this.fontFamily !== v) {
+            const self = selfs$2.get(this);
+            self.fontFamily = v;
+            self.redraw();
+        }
+    }
+
+    get color() {
+        return selfs$2.get(this).color;
+    }
+
+    set color(v) {
+        if (this.color !== v) {
+            const self = selfs$2.get(this);
+            self.color = v;
+            self.redraw();
+        }
+    }
+
+    get value() {
+        return selfs$2.get(this).value;
+    }
+
+    set value(v) {
+        if (this.value !== v) {
+            const self = selfs$2.get(this);
+            self.value = v;
+            self.redraw();
+        }
+    }
+
+    /**
+     *
+     * @param {CanvasRenderingContext2D} g - the canvas to which to render the text.
+     * @param {number} x
+     * @param {number} y
+     */
+    draw(g, x, y) {
+        const self = selfs$2.get(this);
+        if (self.canvas.width > 0
+            && self.canvas.height > 0) {
+            g.drawImage(self.canvas, x, y, this.width, this.height);
+        }
+    }
+}
+
+const selfs$3 = new WeakMap();
 
 /**
  * An avatar that uses a Unicode emoji as its representation
@@ -6079,8 +6340,10 @@ class EmojiAvatar extends BaseAvatar {
 
         this.value = emoji.value;
         this.desc = emoji.desc;
+        this.emojiText = new TextImage("sans-serif");
+        this.emojiText.color = emoji.color || "black";
 
-        selfs$2.set(this, self);
+        selfs$3.set(this, self);
     }
 
     /**
@@ -6088,7 +6351,7 @@ class EmojiAvatar extends BaseAvatar {
      *  @type {boolean}
      **/
     get canSwim() {
-        return selfs$2.get(this).canSwim;
+        return selfs$3.get(this).canSwim;
     }
 
     /**
@@ -6099,30 +6362,21 @@ class EmojiAvatar extends BaseAvatar {
      * @param {boolean} isMe - whether the avatar is the local user
      */
     draw(g, width, height, isMe) {
-        const self = selfs$2.get(this);
-
+        const self = selfs$3.get(this);
         if (self.aspectRatio === null) {
-            const oldFont = g.font;
-            const size = 100;
-            g.font = size + "px sans-serif";
-            const metrics = g.measureText(this.value);
-            self.aspectRatio = metrics.width / size;
-            self.x = (size - metrics.width) / 2;
-            self.y = metrics.actualBoundingBoxAscent / 2;
-
-            self.x /= size;
-            self.y /= size;
-
-            g.font = oldFont;
+            this.emojiText.fontSize = 100;
+            this.emojiText.scale = 1;
+            this.emojiText.value = this.value;
+            self.aspectRatio = this.emojiText.width / this.emojiText.height;
         }
 
         if (self.aspectRatio !== null) {
             const fontHeight = self.aspectRatio <= 1
                 ? height
                 : width / self.aspectRatio;
-
-            g.font = fontHeight + "px sans-serif";
-            g.fillText(this.value, self.x * fontHeight, self.y * fontHeight);
+            this.emojiText.fontSize = fontHeight;
+            this.emojiText.scale = g.getTransform().a;
+            this.emojiText.draw(g, 0, 0);
         }
     }
 }
@@ -6189,8 +6443,6 @@ class VideoAvatar extends BaseAvatar {
      */
     constructor(video) {
         super(video);
-        video.volume = 0;
-        video.muted = true;
         video.play();
         video.once("canplay")
             .then(() => video.play());
@@ -6232,14 +6484,18 @@ class VideoAvatar extends BaseAvatar {
 const POSITION_REQUEST_DEBOUNCE_TIME = 1,
     STACKED_USER_OFFSET_X = 5,
     STACKED_USER_OFFSET_Y = 5,
-    eventNames = ["userMoved", "userPositionNeeded"];
+    eventNames = ["userMoved", "userPositionNeeded"],
+    muteAudioIcon = new TextImage("sans-serif"),
+    speakerActivityIcon = new TextImage("sans-serif");
+
+muteAudioIcon.value = mutedSpeaker.value;
+speakerActivityIcon.value = speakerMediumVolume.value;
 
 class User extends EventTarget {
     constructor(evt, isMe) {
         super();
 
         this.id = evt.id;
-        this.displayName = evt.displayName;
         this.label = isMe ? "(Me)" : `(${this.id})`;
 
         this.moveEvent = new UserMoveEvent(this.id);
@@ -6263,6 +6519,11 @@ class User extends EventTarget {
         this.isInitialized = isMe;
         this.lastPositionRequestTime = performance.now() / 1000 - POSITION_REQUEST_DEBOUNCE_TIME;
         this.visible = true;
+        this.userNameText = new TextImage("sans-serif");
+        this.userNameText.color = "white";
+        this._displayName = null;
+        this.displayName = evt.displayName;
+        Object.seal(this);
     }
 
     deserialize(evt) {
@@ -6291,7 +6552,7 @@ class User extends EventTarget {
             id: this.id,
             x: this.position._tx,
             y: this.position._ty,
-            displayName: this.displayName,
+            displayName: this._displayName,
             avatarMode: this.avatarMode,
             avatarID: this.avatarID
         };
@@ -6422,8 +6683,13 @@ class User extends EventTarget {
         super.addEventListener(evtName, func, opts);
     }
 
-    setDisplayName(name) {
-        this.displayName = name;
+    get displayName() {
+        return this._displayName || this.label;
+    }
+
+    set displayName(name) {
+        this._displayName = name;
+        this.userNameText.value = this.displayName;
     }
 
     moveTo(x, y, dt) {
@@ -6468,8 +6734,9 @@ class User extends EventTarget {
         this.stackOffsetY = this.stackIndex * STACKED_USER_OFFSET_Y;
     }
 
-    drawShadow(g, map, cameraZ) {
-        const x = this.position.x * map.tileWidth,
+    drawShadow(g, map) {
+        const scale = g.getTransform().a,
+            x = this.position.x * map.tileWidth,
             y = this.position.y * map.tileHeight,
             t = g.getTransform(),
             p = t.transformPoint({ x, y });
@@ -6483,9 +6750,9 @@ class User extends EventTarget {
             g.save();
             {
                 g.shadowColor = "rgba(0, 0, 0, 0.5)";
-                g.shadowOffsetX = 3 * cameraZ;
-                g.shadowOffsetY = 3 * cameraZ;
-                g.shadowBlur = 3 * cameraZ;
+                g.shadowOffsetX = 3 * scale;
+                g.shadowOffsetY = 3 * scale;
+                g.shadowBlur = 3 * scale;
 
                 this.innerDraw(g, map);
             }
@@ -6499,13 +6766,11 @@ class User extends EventTarget {
             {
                 this.innerDraw(g, map);
                 if (this.isActive && !this.audioMuted) {
-                    const height = this.stackAvatarHeight / 2;
-                    g.font = height + "px sans-serif";
-                    const metrics = g.measureText(speakerMediumVolume.value);
-                    g.fillText(
-                        speakerMediumVolume.value,
-                        this.stackAvatarWidth - metrics.width,
-                        0);
+                    const height = this.stackAvatarHeight / 2,
+                        scale = g.getTransform().a;
+                    speakerActivityIcon.fontSize = height;
+                    speakerActivityIcon.scale = scale;
+                    speakerActivityIcon.draw(g, this.stackAvatarWidth - speakerActivityIcon.width, 0);
                 }
             }
             g.restore();
@@ -6524,41 +6789,34 @@ class User extends EventTarget {
         }
 
         if (this.audioMuted || !this.videoMuted) {
-            const height = this.stackAvatarHeight / 2;
-            g.font = height + "px sans-serif";
+
+            const height = this.stackAvatarHeight / 2,
+                scale = g.getTransform().a;
+
             if (this.audioMuted) {
-                const metrics = g.measureText(mutedSpeaker.value);
-                g.fillText(
-                    mutedSpeaker.value,
-                    this.stackAvatarWidth - metrics.width,
-                    0);
-            }
-            if (!this.videoMuted && !(this.avatar instanceof VideoAvatar)) {
-                const metrics = g.measureText(videoCamera.value);
-                g.fillText(
-                    videoCamera.value,
-                    this.stackAvatarWidth - metrics.width,
-                    height);
+                muteAudioIcon.fontSize = height;
+                muteAudioIcon.scale = scale;
+                muteAudioIcon.draw(g, this.stackAvatarWidth - muteAudioIcon.width, 0);
             }
         }
     }
 
-    drawName(g, map, cameraZ, fontSize) {
+    drawName(g, map, fontSize) {
         if (this.visible) {
+            const scale = g.getTransform().a;
             g.save();
             {
                 g.translate(
                     this.position.x * map.tileWidth + this.stackOffsetX,
                     this.position.y * map.tileHeight + this.stackOffsetY);
                 g.shadowColor = "black";
-                g.shadowOffsetX = 3 * cameraZ;
-                g.shadowOffsetY = 3 * cameraZ;
-                g.shadowBlur = 3 * cameraZ;
+                g.shadowOffsetX = 3 * scale;
+                g.shadowOffsetY = 3 * scale;
+                g.shadowBlur = 3 * scale;
 
-                g.fillStyle = "white";
-                g.textBaseline = "bottom";
-                g.font = `${fontSize * devicePixelRatio}pt sans-serif`;
-                g.fillText(this.displayName || this.label, 0, 0);
+                this.userNameText.fontSize = fontSize;
+                this.userNameText.scale = scale;
+                this.userNameText.draw(g, 0, -this.userNameText.height);
             }
             g.restore();
         }
@@ -6576,9 +6834,10 @@ class User extends EventTarget {
         g.restore();
     }
 
-    drawHearingRange(g, map, cameraZ, minDist, maxDist) {
-        const tw = Math.min(maxDist, Math.ceil(g.canvas.width / (2 * map.tileWidth * cameraZ))),
-            th = Math.min(maxDist, Math.ceil(g.canvas.height / (2 * map.tileHeight * cameraZ)));
+    drawHearingRange(g, map, minDist, maxDist) {
+        const scale = g.getTransform().a,
+            tw = Math.min(maxDist, Math.ceil(g.canvas.width / (2 * map.tileWidth * scale))),
+            th = Math.min(maxDist, Math.ceil(g.canvas.height / (2 * map.tileHeight * scale)));
 
         for (let dy = 0; dy < th; ++dy) {
             for (let dx = 0; dx < tw; ++dx) {
@@ -6752,7 +7011,7 @@ class UserDirectoryForm extends FormDialog {
     }
 }
 
-const EMOJI_LIFE = 5;
+const EMOJI_LIFE = 3;
 
 class Emote {
     constructor(emoji, x, y) {
@@ -6763,10 +7022,12 @@ class Emote {
         this.dy = -Math.random() * 0.5 - 0.5;
         this.life = 1;
         this.width = -1;
+        this.emoteText = new TextImage("sans-serif");
+        this.emoteText.value = emoji.value;
     }
 
     isDead() {
-        return this.life <= 0;
+        return this.life <= 0.01;
     }
 
     update(dt) {
@@ -6777,73 +7038,427 @@ class Emote {
         this.y += this.dy * dt;
     }
 
-    drawShadow(g, map, cameraZ) {
+    drawShadow(g, map) {
+        const scale = g.getTransform().a;
         g.save();
         {
             g.shadowColor = "rgba(0, 0, 0, 0.5)";
-            g.shadowOffsetX = 3 * cameraZ;
-            g.shadowOffsetY = 3 * cameraZ;
-            g.shadowBlur = 3 * cameraZ;
+            g.shadowOffsetX = 3 * scale;
+            g.shadowOffsetY = 3 * scale;
+            g.shadowBlur = 3 * scale;
 
             this.drawEmote(g, map);
         }
         g.restore();
     }
 
+    /**
+     * 
+     * @param {CanvasRenderingContext2D} g
+     * @param {any} map
+     */
     drawEmote(g, map) {
-        g.fillStyle = `rgba(0, 0, 0, ${this.life})`;
-        g.font = map.tileHeight / 2 + "px sans-serif";
-        if (this.width === -1) {
-            const metrics = g.measureText(this.emoji.value);
-            this.width = metrics.width;
-        }
-
-        g.fillText(
-            this.emoji.value,
+        const oldAlpha = g.globalAlpha,
+            scale = g.getTransform().a;
+        g.globalAlpha = this.life;
+        this.emoteText.fontSize = map.tileHeight / 2;
+        this.emoteText.scale = scale;
+        this.emoteText.draw(g,
             this.x * map.tileWidth - this.width / 2,
             this.y * map.tileHeight);
+        g.globalAlpha = oldAlpha;
     }
 }
 
-/**
- * Returns true if the given object is either an HTMLCanvasElement or an OffscreenCanvas.
- * @param {any} obj
- * @returns {boolean}
- */
+const isFirefox = typeof InstallTrigger !== "undefined";
 
-/**
- * Resizes a canvas element
- * @param {HTMLCanvasElement|OffscreenCanvas} canv
- * @param {number} w - the new width of the canvas
- * @param {number} h - the new height of the canvas
- * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
- * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
- */
-function setCanvasSize(canv, w, h, superscale = 1) {
-    w = Math.floor(w * superscale);
-    h = Math.floor(h * superscale);
-    if (canv.width != w
-        || canv.height != h) {
-        canv.width = w;
-        canv.height = h;
-        return true;
+// javascript-astar 0.4.1
+// http://github.com/bgrins/javascript-astar
+// Freely distributable under the MIT License.
+// Implements the astar search algorithm in javascript using a Binary Heap.
+// Includes Binary Heap (with modifications) from Marijn Haverbeke.
+// http://eloquentjavascript.net/appendix2.html
+
+// edits to work with JS modules by STM/capnmidnight 2020-07-20
+
+function pathTo(node) {
+  var curr = node;
+  var path = [];
+  while (curr.parent) {
+    path.unshift(curr);
+    curr = curr.parent;
+  }
+  return path;
+}
+
+function getHeap() {
+  return new BinaryHeap(function(node) {
+    return node.f;
+  });
+}
+
+var astar = {
+  /**
+  * Perform an A* Search on a graph given a start and end node.
+  * @param {Graph} graph
+  * @param {GridNode} start
+  * @param {GridNode} end
+  * @param {Object} [options]
+  * @param {bool} [options.closest] Specifies whether to return the
+             path to the closest node if the target is unreachable.
+  * @param {Function} [options.heuristic] Heuristic function (see
+  *          astar.heuristics).
+  */
+  search: function(graph, start, end, options) {
+    graph.cleanDirty();
+    options = options || {};
+    var heuristic = options.heuristic || astar.heuristics.manhattan;
+    var closest = options.closest || false;
+
+    var openHeap = getHeap();
+    var closestNode = start; // set the start node to be the closest if required
+
+    start.h = heuristic(start, end);
+    graph.markDirty(start);
+
+    openHeap.push(start);
+
+    while (openHeap.size() > 0) {
+
+      // Grab the lowest f(x) to process next.  Heap keeps this sorted for us.
+      var currentNode = openHeap.pop();
+
+      // End case -- result has been found, return the traced path.
+      if (currentNode === end) {
+        return pathTo(currentNode);
+      }
+
+      // Normal case -- move currentNode from open to closed, process each of its neighbors.
+      currentNode.closed = true;
+
+      // Find all neighbors for the current node.
+      var neighbors = graph.neighbors(currentNode);
+
+      for (var i = 0, il = neighbors.length; i < il; ++i) {
+        var neighbor = neighbors[i];
+
+        if (neighbor.closed || neighbor.isWall()) {
+          // Not a valid node to process, skip to next neighbor.
+          continue;
+        }
+
+        // The g score is the shortest distance from start to current node.
+        // We need to check if the path we have arrived at this neighbor is the shortest one we have seen yet.
+        var gScore = currentNode.g + neighbor.getCost(currentNode);
+        var beenVisited = neighbor.visited;
+
+        if (!beenVisited || gScore < neighbor.g) {
+
+          // Found an optimal (so far) path to this node.  Take score for node to see how good it is.
+          neighbor.visited = true;
+          neighbor.parent = currentNode;
+          neighbor.h = neighbor.h || heuristic(neighbor, end);
+          neighbor.g = gScore;
+          neighbor.f = neighbor.g + neighbor.h;
+          graph.markDirty(neighbor);
+          if (closest) {
+            // If the neighbour is closer than the current closestNode or if it's equally close but has
+            // a cheaper path than the current closest node then it becomes the closest node
+            if (neighbor.h < closestNode.h || (neighbor.h === closestNode.h && neighbor.g < closestNode.g)) {
+              closestNode = neighbor;
+            }
+          }
+
+          if (!beenVisited) {
+            // Pushing to heap will put it in proper place based on the 'f' value.
+            openHeap.push(neighbor);
+          } else {
+            // Already seen the node, but since it has been rescored we need to reorder it in the heap
+            openHeap.rescoreElement(neighbor);
+          }
+        }
+      }
     }
-    return false;
-}
+
+    if (closest) {
+      return pathTo(closestNode);
+    }
+
+    // No result was found - empty array signifies failure to find path.
+    return [];
+  },
+  // See list of heuristics: http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
+  heuristics: {
+    manhattan: function(pos0, pos1) {
+      var d1 = Math.abs(pos1.x - pos0.x);
+      var d2 = Math.abs(pos1.y - pos0.y);
+      return d1 + d2;
+    },
+    diagonal: function(pos0, pos1) {
+      var D = 1;
+      var D2 = Math.sqrt(2);
+      var d1 = Math.abs(pos1.x - pos0.x);
+      var d2 = Math.abs(pos1.y - pos0.y);
+      return (D * (d1 + d2)) + ((D2 - (2 * D)) * Math.min(d1, d2));
+    }
+  },
+  cleanNode: function(node) {
+    node.f = 0;
+    node.g = 0;
+    node.h = 0;
+    node.visited = false;
+    node.closed = false;
+    node.parent = null;
+  }
+};
 
 /**
- * Resizes a canvas element to match the proportions of the size of the element in the DOM.
- * @param {HTMLCanvasElement} canv
- * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
- * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ * A graph memory structure
+ * @param {Array} gridIn 2D array of input weights
+ * @param {Object} [options]
+ * @param {bool} [options.diagonal] Specifies whether diagonal moves are allowed
  */
-function resizeCanvas(canv, superscale = 1) {
-    return setCanvasSize(
-        canv,
-        canv.clientWidth,
-        canv.clientHeight,
-        superscale);
+function Graph(gridIn, options) {
+  options = options || {};
+  this.nodes = [];
+  this.diagonal = !!options.diagonal;
+  this.grid = [];
+  for (var x = 0; x < gridIn.length; x++) {
+    this.grid[x] = [];
+
+    for (var y = 0, row = gridIn[x]; y < row.length; y++) {
+      var node = new GridNode(x, y, row[y]);
+      this.grid[x][y] = node;
+      this.nodes.push(node);
+    }
+  }
+  this.init();
 }
+
+Graph.prototype.init = function() {
+  this.dirtyNodes = [];
+  for (var i = 0; i < this.nodes.length; i++) {
+    astar.cleanNode(this.nodes[i]);
+  }
+};
+
+Graph.prototype.cleanDirty = function() {
+  for (var i = 0; i < this.dirtyNodes.length; i++) {
+    astar.cleanNode(this.dirtyNodes[i]);
+  }
+  this.dirtyNodes = [];
+};
+
+Graph.prototype.markDirty = function(node) {
+  this.dirtyNodes.push(node);
+};
+
+Graph.prototype.neighbors = function(node) {
+  var ret = [];
+  var x = node.x;
+  var y = node.y;
+  var grid = this.grid;
+
+  // West
+  if (grid[x - 1] && grid[x - 1][y]) {
+    ret.push(grid[x - 1][y]);
+  }
+
+  // East
+  if (grid[x + 1] && grid[x + 1][y]) {
+    ret.push(grid[x + 1][y]);
+  }
+
+  // South
+  if (grid[x] && grid[x][y - 1]) {
+    ret.push(grid[x][y - 1]);
+  }
+
+  // North
+  if (grid[x] && grid[x][y + 1]) {
+    ret.push(grid[x][y + 1]);
+  }
+
+  if (this.diagonal) {
+    // Southwest
+    if (grid[x - 1] && grid[x - 1][y - 1]) {
+      ret.push(grid[x - 1][y - 1]);
+    }
+
+    // Southeast
+    if (grid[x + 1] && grid[x + 1][y - 1]) {
+      ret.push(grid[x + 1][y - 1]);
+    }
+
+    // Northwest
+    if (grid[x - 1] && grid[x - 1][y + 1]) {
+      ret.push(grid[x - 1][y + 1]);
+    }
+
+    // Northeast
+    if (grid[x + 1] && grid[x + 1][y + 1]) {
+      ret.push(grid[x + 1][y + 1]);
+    }
+  }
+
+  return ret;
+};
+
+Graph.prototype.toString = function() {
+  var graphString = [];
+  var nodes = this.grid;
+  for (var x = 0; x < nodes.length; x++) {
+    var rowDebug = [];
+    var row = nodes[x];
+    for (var y = 0; y < row.length; y++) {
+      rowDebug.push(row[y].weight);
+    }
+    graphString.push(rowDebug.join(" "));
+  }
+  return graphString.join("\n");
+};
+
+function GridNode(x, y, weight) {
+  this.x = x;
+  this.y = y;
+  this.weight = weight;
+}
+
+GridNode.prototype.toString = function() {
+  return "[" + this.x + " " + this.y + "]";
+};
+
+GridNode.prototype.getCost = function(fromNeighbor) {
+  // Take diagonal weight into consideration.
+  if (fromNeighbor && fromNeighbor.x != this.x && fromNeighbor.y != this.y) {
+    return this.weight * 1.41421;
+  }
+  return this.weight;
+};
+
+GridNode.prototype.isWall = function() {
+  return this.weight === 0;
+};
+
+function BinaryHeap(scoreFunction) {
+  this.content = [];
+  this.scoreFunction = scoreFunction;
+}
+
+BinaryHeap.prototype = {
+  push: function(element) {
+    // Add the new element to the end of the array.
+    this.content.push(element);
+
+    // Allow it to sink down.
+    this.sinkDown(this.content.length - 1);
+  },
+  pop: function() {
+    // Store the first element so we can return it later.
+    var result = this.content[0];
+    // Get the element at the end of the array.
+    var end = this.content.pop();
+    // If there are any elements left, put the end element at the
+    // start, and let it bubble up.
+    if (this.content.length > 0) {
+      this.content[0] = end;
+      this.bubbleUp(0);
+    }
+    return result;
+  },
+  remove: function(node) {
+    var i = this.content.indexOf(node);
+
+    // When it is found, the process seen in 'pop' is repeated
+    // to fill up the hole.
+    var end = this.content.pop();
+
+    if (i !== this.content.length - 1) {
+      this.content[i] = end;
+
+      if (this.scoreFunction(end) < this.scoreFunction(node)) {
+        this.sinkDown(i);
+      } else {
+        this.bubbleUp(i);
+      }
+    }
+  },
+  size: function() {
+    return this.content.length;
+  },
+  rescoreElement: function(node) {
+    this.sinkDown(this.content.indexOf(node));
+  },
+  sinkDown: function(n) {
+    // Fetch the element that has to be sunk.
+    var element = this.content[n];
+
+    // When at 0, an element can not sink any further.
+    while (n > 0) {
+
+      // Compute the parent element's index, and fetch it.
+      var parentN = ((n + 1) >> 1) - 1;
+      var parent = this.content[parentN];
+      // Swap the elements if the parent is greater.
+      if (this.scoreFunction(element) < this.scoreFunction(parent)) {
+        this.content[parentN] = element;
+        this.content[n] = parent;
+        // Update 'n' to continue at the new position.
+        n = parentN;
+      }
+      // Found a parent that is less, no need to sink any further.
+      else {
+        break;
+      }
+    }
+  },
+  bubbleUp: function(n) {
+    // Look up the target element and its score.
+    var length = this.content.length;
+    var element = this.content[n];
+    var elemScore = this.scoreFunction(element);
+
+    while (true) {
+      // Compute the indices of the child elements.
+      var child2N = (n + 1) << 1;
+      var child1N = child2N - 1;
+      // This is used to store the new position of the element, if any.
+      var swap = null;
+      var child1Score;
+      // If the first child exists (is inside the array)...
+      if (child1N < length) {
+        // Look it up and compute its score.
+        var child1 = this.content[child1N];
+        child1Score = this.scoreFunction(child1);
+
+        // If the score is less than our element's, we need to swap.
+        if (child1Score < elemScore) {
+          swap = child1N;
+        }
+      }
+
+      // Do the same checks for the other child.
+      if (child2N < length) {
+        var child2 = this.content[child2N];
+        var child2Score = this.scoreFunction(child2);
+        if (child2Score < (swap === null ? elemScore : child1Score)) {
+          swap = child2N;
+        }
+      }
+
+      // If the element needs to be moved, swap it, and continue.
+      if (swap !== null) {
+        this.content[n] = this.content[swap];
+        this.content[swap] = element;
+        n = swap;
+      }
+      // Otherwise, we are done.
+      else {
+        break;
+      }
+    }
+  }
+};
 
 class TileSet {
     constructor(url) {
@@ -6904,8 +7519,7 @@ class TileSet {
     }
 }
 
-// TODO: move map data to requestable files
-class TileMap {
+class TileMapPrivate {
     constructor(tilemapName) {
         this.url = new URL(`/data/tilemaps/${tilemapName}.tmx`, document.location);
         this.tileset = null;
@@ -6918,10 +7532,22 @@ class TileMap {
         this.offsetY = 0;
         this.tiles = null;
         this.collision = null;
+        this.graph = null;
+
+        Object.seal(this);
+    }
+}
+
+const selfs$4 = new WeakMap();
+
+class TileMap {
+    constructor(tilemapName) {
+        selfs$4.set(this, new TileMapPrivate(tilemapName));
     }
 
     async load() {
-        const response = await fetch(this.url.href),
+        const self = selfs$4.get(this),
+            response = await fetch(self.url.href),
             map = await response.xml(),
             width = 1 * map.getAttribute("width"),
             height = 1 * map.getAttribute("height"),
@@ -6931,22 +7557,22 @@ class TileMap {
             tilesetSource = tileset.getAttribute("source"),
             layers = map.querySelectorAll("layer > data");
 
-        this.layers = layers.length;
-        this.width = width;
-        this.height = height;
-        this.offsetX = -Math.floor(width / 2);
-        this.offsetY = -Math.floor(height / 2);
-        this.tileWidth = tileWidth;
-        this.tileHeight = tileHeight;
+        self.layers = layers.length;
+        self.width = width;
+        self.height = height;
+        self.offsetX = -Math.floor(width / 2);
+        self.offsetY = -Math.floor(height / 2);
+        self.tileWidth = tileWidth;
+        self.tileHeight = tileHeight;
 
-        this.tiles = [];
+        self.tiles = [];
         for (let layer of layers) {
             const tileIds = layer.innerHTML
-                    .replace(" ", "")
-                    .replace("\t", "")
-                    .replace("\n", "")
-                    .replace("\r", "")
-                    .split(","),
+                .replace(" ", "")
+                .replace("\t", "")
+                .replace("\n", "")
+                .replace("\r", "")
+                .split(","),
                 rows = [];
             let row = [];
             for (let tile of tileIds) {
@@ -6959,26 +7585,74 @@ class TileMap {
             if (row.length > 0) {
                 rows.push(row);
             }
-            this.tiles.push(rows);
+            self.tiles.push(rows);
         }
 
-        this.tileset = new TileSet(new URL(tilesetSource, this.url));
-        await this.tileset.load();
-        this.tileWidth = this.tileset.tileWidth;
-        this.tileHeight = this.tileset.tileHeight;
+        self.tileset = new TileSet(new URL(tilesetSource, self.url));
+        await self.tileset.load();
+        self.tileWidth = self.tileset.tileWidth;
+        self.tileHeight = self.tileset.tileHeight;
+
+        let grid = [];
+        for (let row of self.tiles[0]) {
+            let gridrow = [];
+            for (let tile of row) {
+                if (self.tileset.isClear(tile)) {
+                    gridrow.push(1);
+                } else {
+                    gridrow.push(0);
+                }
+            }
+            grid.push(gridrow);
+        }
+        self.graph = new Graph(grid, { diagonal: true });
+    }
+
+    get width() {
+        return selfs$4.get(this).width;
+    }
+
+    get height() {
+        return selfs$4.get(this).height;
+    }
+
+    get tileWidth() {
+        return selfs$4.get(this).tileWidth;
+    }
+
+    get tileHeight() {
+        return selfs$4.get(this).tileHeight;
+    }
+
+    isInBounds(x, y) {
+        return 0 <= x && x < this.width
+            && 0 <= y && y < this.height;
+    }
+
+    getGridNode(x, y) {
+        const self = selfs$4.get(this);
+        x -= self.offsetX;
+        y -= self.offsetY;
+        if (this.isInBounds(x, y)) {
+            return self.graph.grid[y][x];
+        }
+        else {
+            return null;
+        }
     }
 
     draw(g) {
+        const self = selfs$4.get(this);
         g.save();
         {
-            g.translate(this.offsetX * this.tileWidth, this.offsetY * this.tileHeight);
-            for (let l = 0; l < this.layers; ++l) {
-                const layer = this.tiles[l];
+            g.translate(self.offsetX * this.tileWidth, self.offsetY * this.tileHeight);
+            for (let l = 0; l < self.layers; ++l) {
+                const layer = self.tiles[l];
                 for (let y = 0; y < this.height; ++y) {
                     const row = layer[y];
                     for (let x = 0; x < this.width; ++x) {
                         const tile = row[x];
-                        this.tileset.draw(g, tile, x, y);
+                        self.tileset.draw(g, tile, x, y);
                     }
                 }
             }
@@ -6986,13 +7660,25 @@ class TileMap {
         g.restore();
     }
 
+    searchPath(start, end) {
+        const self = selfs$4.get(this);
+        return astar.search(self.graph, start, end)
+            .map(p => {
+                return {
+                    x: p.y + self.offsetX,
+                    y: p.x + self.offsetY
+                };
+            });
+    }
+
     isClear(x, y, avatar) {
-        x -= this.offsetX;
-        y -= this.offsetY;
+        const self = selfs$4.get(this);
+        x -= self.offsetX;
+        y -= self.offsetY;
         return x < 0 || this.width <= x
             || y < 0 || this.height <= y
-            || this.tileset.isClear(this.tiles[0][y][x])
-            || isSurfer(avatar);
+            || self.tileset.isClear(self.tiles[0][y][x])
+            || avatar && avatar.canSwim;
     }
 
     // Use Bresenham's line algorithm (with integer error)
@@ -7064,7 +7750,6 @@ const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_SPEED = 0.005,
     MAX_DRAG_DISTANCE = 5,
     MOVE_REPEAT = 0.125,
-    isFirefox = typeof InstallTrigger !== "undefined",
     gameStartedEvt = new Event("gameStarted"),
     gameEndedEvt = new Event("gameEnded"),
     zoomChangedEvt = new Event("zoomChanged"),
@@ -7098,6 +7783,8 @@ class Game extends EventTarget {
 
         this.me = null;
         this.map = null;
+        this.waypoints = [];
+        this.walker = null;
         this.keys = {};
 
         /** @type {Map.<string, User>} */
@@ -7167,7 +7854,7 @@ class Game extends EventTarget {
         });
 
         addEventListener("keyup", (evt) => {
-            if (!!this.keys[evt.key]) {
+            if (this.keys[evt.key]) {
                 delete this.keys[evt.key];
             }
         });
@@ -7296,7 +7983,7 @@ class Game extends EventTarget {
                     this.emote(this.me.id, this.currentEmoji);
                 }
                 else if (this.canClick) {
-                    this.moveMeBy(dx, dy);
+                    this.moveMeByPath(dx, dy);
                 }
             }
         });
@@ -7353,7 +8040,7 @@ class Game extends EventTarget {
                 }
             }
 
-            if (!!emoji) {
+            if (emoji) {
                 this.emotes.push(new Emote(emoji, user.position.x + 0.5, user.position.y));
             }
         }
@@ -7382,10 +8069,41 @@ class Game extends EventTarget {
         }
     }
 
+    walkPath() {
+        if (this.waypoints.length > 0) {
+            const waypoint = this.waypoints.shift();
+            this.moveMeTo(waypoint.x, waypoint.y);
+            this.walker = setTimeout(this.walkPath.bind(this), this.transitionSpeed * 500);
+        }
+    }
 
     moveMeBy(dx, dy) {
         const clearTile = this.map.getClearTile(this.me.position._tx, this.me.position._ty, dx, dy, this.me.avatar);
         this.moveMeTo(clearTile.x, clearTile.y);
+    }
+
+    moveMeByPath(dx, dy) {
+        clearTimeout(this.walker);
+        arrayClear(this.waypoints);
+
+        const x = this.me.position._tx,
+            y = this.me.position._ty,
+            start = this.map.getGridNode(x, y),
+            tx = x + dx,
+            ty = y + dy,
+            end = this.map.getGridNode(tx, ty);
+
+        if (!start || !end) {
+            this.waypoints.push({
+                x: x + dx,
+                y: y + dy
+            });
+        }
+        else {
+            const result = this.map.searchPath(start, end);
+            this.waypoints.push(...result);
+        }
+        this.walkPath();
     }
 
     warpMeTo(x, y) {
@@ -7465,7 +8183,7 @@ class Game extends EventTarget {
         if (timeout === undefined) {
             timeout = 5000;
         }
-        if (!!id) {
+        if (id) {
             if (this.users.has(id)) {
                 const user = this.users.get(id);
                 callback(user);
@@ -7706,11 +8424,11 @@ class Game extends EventTarget {
             this.map.draw(this.gFront);
 
             for (let user of this.users.values()) {
-                user.drawShadow(this.gFront, this.map, this.cameraZ);
+                user.drawShadow(this.gFront, this.map);
             }
 
             for (let emote of this.emotes) {
-                emote.drawShadow(this.gFront, this.map, this.cameraZ);
+                emote.drawShadow(this.gFront, this.map);
             }
 
             for (let user of this.users.values()) {
@@ -7720,14 +8438,13 @@ class Game extends EventTarget {
             this.drawCursor();
 
             for (let user of this.users.values()) {
-                user.drawName(this.gFront, this.map, this.cameraZ, this.fontSize);
+                user.drawName(this.gFront, this.map, this.fontSize);
             }
 
             if (this.drawHearing) {
                 this.me.drawHearingRange(
                     this.gFront,
                     this.map,
-                    this.cameraZ,
                     this.audioDistanceMin,
                     this.audioDistanceMax);
             }
@@ -7745,7 +8462,9 @@ class Game extends EventTarget {
         if (this.pointers.length === 1) {
             const pointer = this.pointers[0],
                 tile = this.getTileAt(pointer);
-            this.gFront.strokeStyle = "red";
+            this.gFront.strokeStyle = this.map.isClear(tile.x, tile.y, this.me.avatar)
+                ? "green"
+                : "red";
             this.gFront.strokeRect(
                 tile.x * this.map.tileWidth,
                 tile.y * this.map.tileHeight,
@@ -7826,31 +8545,28 @@ class BaseAudioClient extends EventTarget {
 const canChangeAudioOutput = HTMLAudioElement.prototype["setSinkId"] instanceof Function;
 
 // helps us filter out data channel messages that don't belong to us
-const APP_FINGERPRINT$1
-    = window.APP_FINGERPRINT
-    = "Calla",
-    eventNames$1 = [
-        "userMoved",
-        "emote",
-        "userInitRequest",
-        "userInitResponse",
-        "audioMuteStatusChanged",
-        "videoMuteStatusChanged",
-        "videoConferenceJoined",
-        "videoConferenceLeft",
-        "participantJoined",
-        "participantLeft",
-        "avatarChanged",
-        "displayNameChange",
-        "audioActivity",
-        "setAvatarEmoji",
-        "deviceListChanged",
-        "participantRoleChanged",
-        "audioAdded",
-        "videoAdded",
-        "audioRemoved",
-        "videoRemoved"
-    ];
+const eventNames$1 = [
+    "userMoved",
+    "emote",
+    "userInitRequest",
+    "userInitResponse",
+    "audioMuteStatusChanged",
+    "videoMuteStatusChanged",
+    "videoConferenceJoined",
+    "videoConferenceLeft",
+    "participantJoined",
+    "participantLeft",
+    "avatarChanged",
+    "displayNameChange",
+    "audioActivity",
+    "setAvatarEmoji",
+    "deviceListChanged",
+    "participantRoleChanged",
+    "audioAdded",
+    "videoAdded",
+    "audioRemoved",
+    "videoRemoved"
+];
 
 // Manages communication between Jitsi Meet and Calla
 class BaseJitsiClient extends EventTarget {
@@ -7874,6 +8590,10 @@ class BaseJitsiClient extends EventTarget {
         this.preferredVideoInputID = null;
     }
 
+    get appFingerPrint() {
+        return "Calla";
+    }
+
     userIDs() {
         throw new Error("Not implemented in base class");
     }
@@ -7888,12 +8608,10 @@ class BaseJitsiClient extends EventTarget {
 
 
     /**
-     * 
-     * @param {string} host
      * @param {string} roomName
      * @param {string} userName
      */
-    async initializeAsync(host, roomName, userName) {
+    async initializeAsync(roomName, userName) {
         throw new Error("Not implemented in base class.");
     }
 
@@ -7926,20 +8644,19 @@ class BaseJitsiClient extends EventTarget {
     }
 
     /**
-     * 
-     * @param {string} host
      * @param {string} roomName
      * @param {string} userName
      */
-    async joinAsync(host, roomName, userName) {
+    async joinAsync(roomName, userName) {
         this.dispose();
 
         const joinTask = this.once("videoConferenceJoined");
 
-        await this.initializeAsync(host, roomName, userName);
+        await this.initializeAsync(roomName, userName);
 
-        window.addEventListener("unload", () => {
-            this.dispose();
+        window.addEventListeners({
+            beforeunload: () => this.dispose(),
+            pagehide: () => this.dispose()
         });
 
         const joinInfo = await joinTask;
@@ -8142,7 +8859,7 @@ class BaseJitsiClient extends EventTarget {
     /// Send a Calla message through the Jitsi Meet data channel.
     sendMessageTo(toUserID, command, value) {
         this.txGameData(toUserID, {
-            hax: APP_FINGERPRINT$1,
+            hax: this.appFingerPrint,
             command,
             value
         });
@@ -8285,14 +9002,14 @@ class JitsiClientEvent extends Event {
         this.id = id;
         for (let key in value) {
             if (key !== "isTrusted"
-                && !Event.prototype.hasOwnProperty(key)) {
+                && !Object.prototype.hasOwnProperty.call(Event.prototype, key)) {
                 this[key] = value[key];
             }
         }
     }
 }
 
-const selfs$3 = new Map(),
+const selfs$5 = new Map(),
     KEY = "CallaSettings",
     DEFAULT_SETTINGS = {
         drawHearing: false,
@@ -8328,13 +9045,13 @@ const selfs$3 = new Map(),
     };
 
 function commit(settings) {
-    const self = selfs$3.get(settings);
+    const self = selfs$5.get(settings);
     localStorage.setItem(KEY, JSON.stringify(self));
 }
 
 function load() {
     const selfStr = localStorage.getItem(KEY);
-    if (!!selfStr) {
+    if (selfStr) {
         return Object.assign(
             {},
             DEFAULT_SETTINGS,
@@ -8345,7 +9062,7 @@ function load() {
 class Settings {
     constructor() {
         const self = Object.seal(load() || DEFAULT_SETTINGS);
-        selfs$3.set(this, self);
+        selfs$5.set(this, self);
         if (window.location.hash.length > 0) {
             self.roomName = window.location.hash.substring(1);
         }
@@ -8353,166 +9070,166 @@ class Settings {
     }
 
     get preferredAudioOutputID() {
-        return selfs$3.get(this).preferredAudioOutputID;
+        return selfs$5.get(this).preferredAudioOutputID;
     }
 
     set preferredAudioOutputID(value) {
         if (value !== this.preferredAudioOutputID) {
-            selfs$3.get(this).preferredAudioOutputID = value;
+            selfs$5.get(this).preferredAudioOutputID = value;
             commit(this);
         }
     }
 
     get preferredAudioInputID() {
-        return selfs$3.get(this).preferredAudioInputID;
+        return selfs$5.get(this).preferredAudioInputID;
     }
 
     set preferredAudioInputID(value) {
         if (value !== this.preferredAudioInputID) {
-            selfs$3.get(this).preferredAudioInputID = value;
+            selfs$5.get(this).preferredAudioInputID = value;
             commit(this);
         }
     }
 
     get preferredVideoInputID() {
-        return selfs$3.get(this).preferredVideoInputID;
+        return selfs$5.get(this).preferredVideoInputID;
     }
 
     set preferredVideoInputID(value) {
         if (value !== this.preferredVideoInputID) {
-            selfs$3.get(this).preferredVideoInputID = value;
+            selfs$5.get(this).preferredVideoInputID = value;
             commit(this);
         }
     }
 
     get transitionSpeed() {
-        return selfs$3.get(this).transitionSpeed;
+        return selfs$5.get(this).transitionSpeed;
     }
 
     set transitionSpeed(value) {
         if (value !== this.transitionSpeed) {
-            selfs$3.get(this).transitionSpeed = value;
+            selfs$5.get(this).transitionSpeed = value;
             commit(this);
         }
     }
 
     get drawHearing() {
-        return selfs$3.get(this).drawHearing;
+        return selfs$5.get(this).drawHearing;
     }
 
     set drawHearing(value) {
         if (value !== this.drawHearing) {
-            selfs$3.get(this).drawHearing = value;
+            selfs$5.get(this).drawHearing = value;
             commit(this);
         }
     }
 
     get audioDistanceMin() {
-        return selfs$3.get(this).audioDistanceMin;
+        return selfs$5.get(this).audioDistanceMin;
     }
 
     set audioDistanceMin(value) {
         if (value !== this.audioDistanceMin) {
-            selfs$3.get(this).audioDistanceMin = value;
+            selfs$5.get(this).audioDistanceMin = value;
             commit(this);
         }
     }
 
     get audioDistanceMax() {
-        return selfs$3.get(this).audioDistanceMax;
+        return selfs$5.get(this).audioDistanceMax;
     }
 
     set audioDistanceMax(value) {
         if (value !== this.audioDistanceMax) {
-            selfs$3.get(this).audioDistanceMax = value;
+            selfs$5.get(this).audioDistanceMax = value;
             commit(this);
         }
     }
 
     get audioRolloff() {
-        return selfs$3.get(this).audioRolloff;
+        return selfs$5.get(this).audioRolloff;
     }
 
     set audioRolloff(value) {
         if (value !== this.audioRolloff) {
-            selfs$3.get(this).audioRolloff = value;
+            selfs$5.get(this).audioRolloff = value;
             commit(this);
         }
     }
 
     get fontSize() {
-        return selfs$3.get(this).fontSize;
+        return selfs$5.get(this).fontSize;
     }
 
     set fontSize(value) {
         if (value !== this.fontSize) {
-            selfs$3.get(this).fontSize = value;
+            selfs$5.get(this).fontSize = value;
             commit(this);
         }
     }
 
     get zoom() {
-        return selfs$3.get(this).zoom;
+        return selfs$5.get(this).zoom;
     }
 
     set zoom(value) {
         if (value !== this.zoom) {
-            selfs$3.get(this).zoom = value;
+            selfs$5.get(this).zoom = value;
             commit(this);
         }
     }
 
     get userName() {
-        return selfs$3.get(this).userName;
+        return selfs$5.get(this).userName;
     }
 
     set userName(value) {
         if (value !== this.userName) {
-            selfs$3.get(this).userName = value;
+            selfs$5.get(this).userName = value;
             commit(this);
         }
     }
 
     get avatarEmoji() {
-        return selfs$3.get(this).avatarEmoji;
+        return selfs$5.get(this).avatarEmoji;
     }
 
     set avatarEmoji(value) {
         if (value !== this.avatarEmoji) {
-            selfs$3.get(this).avatarEmoji = value;
+            selfs$5.get(this).avatarEmoji = value;
             commit(this);
         }
     }
 
     get roomName() {
-        return selfs$3.get(this).roomName;
+        return selfs$5.get(this).roomName;
     }
 
     set roomName(value) {
         if (value !== this.roomName) {
-            selfs$3.get(this).roomName = value;
+            selfs$5.get(this).roomName = value;
             commit(this);
         }
     }
 
     get gamepadIndex() {
-        return selfs$3.get(this).gamepadIndex;
+        return selfs$5.get(this).gamepadIndex;
     }
 
     set gamepadIndex(value) {
         if (value !== this.gamepadIndex) {
-            selfs$3.get(this).gamepadIndex = value;
+            selfs$5.get(this).gamepadIndex = value;
             commit(this);
         }
     }
 
     get inputBinding() {
-        return selfs$3.get(this).inputBinding;
+        return selfs$5.get(this).inputBinding;
     }
 
     set inputBinding(value) {
         if (value !== this.inputBinding) {
-            selfs$3.get(this).inputBinding = value;
+            selfs$5.get(this).inputBinding = value;
             commit(this);
         }
     }
@@ -8583,10 +9300,9 @@ if (versionContainer) {
 
 /**
  * 
- * @param {string} host
  * @param {BaseJitsiClient} client
  */
-function init(host, client) {
+function init(client) {
     const settings = new Settings(),
         sound = new SFX()
             .add("join", "/audio/door-open.ogg", "/audio/door-open.mp3", "/audio/door-open.wav")
@@ -8637,7 +9353,7 @@ function init(host, client) {
             headbar.instructionsButton.lock();
             options.hide();
             const e = await emoji.selectAsync();
-            if (!!e) {
+            if (e) {
                 callback(e);
             }
             headbar.optionsButton.unlock();
@@ -8778,7 +9494,6 @@ function init(host, client) {
         client.startAudio();
 
         const joinInfo = await client.joinAsync(
-            host,
             settings.roomName = login.roomName,
             settings.userName = login.userName);
 
@@ -9449,7 +10164,7 @@ class BaseAnalyzedSpatializer extends BaseSpatializer {
         if (!this.source) {
             try {
                 if (!this.stream) {
-                    this.stream = !!this.audio.mozCaptureStream
+                    this.stream = this.audio.mozCaptureStream
                         ? this.audio.mozCaptureStream()
                         : this.audio.captureStream();
                 }
@@ -9465,7 +10180,7 @@ class BaseAnalyzedSpatializer extends BaseSpatializer {
             }
         }
 
-        if (!!this.source) {
+        if (this.source) {
             this.analyser.getFloatFrequencyData(this.buffer);
 
             const average = 1.1 + analyserFrequencyAverage(this.analyser, this.buffer, 85, 255, this.bufferSize) / 100;
@@ -9488,7 +10203,7 @@ class BaseAnalyzedSpatializer extends BaseSpatializer {
      * Discard values and make this instance useless.
      */
     dispose() {
-        if (!!this.source) {
+        if (this.source) {
             this.source.disconnect(this.analyser);
             this.source.disconnect(this.inNode);
         }
@@ -16796,6 +17511,8 @@ module.exports = '0.0.4';
 /******/ ]);
 });
 
+/* global ResonanceAudio */
+
 /**
  * An audio positioner that uses Google's Resonance Audio library
  **/
@@ -16890,14 +17607,12 @@ class GoogleResonanceAudioSpatializer extends BaseAnalyzedSpatializer {
     }
 }
 
-/* global window, AudioListener, AudioContext, Event, EventTarget */
-
 const contextDestroyingEvt = new Event("contextDestroying"),
     contextDestroyedEvt = new Event("contextDestroyed");
 
-let hasWebAudioAPI = window.hasOwnProperty("AudioListener"),
-    hasFullSpatializer = hasWebAudioAPI && window.hasOwnProperty("PannerNode"),
-    isLatestWebAudioAPI = hasWebAudioAPI && AudioListener.prototype.hasOwnProperty("positionX"),
+let hasWebAudioAPI = Object.prototype.hasOwnProperty.call(window, "AudioListener"),
+    hasFullSpatializer = hasWebAudioAPI && Object.prototype.hasOwnProperty.call(window, "PannerNode"),
+    isLatestWebAudioAPI = hasWebAudioAPI && Object.prototype.hasOwnProperty.call(AudioListener.prototype, "positionX"),
     forceInterpolatedPosition = true,
     attemptResonanceAPI = hasWebAudioAPI;
 
@@ -17005,52 +17720,49 @@ class Destination extends BaseAudioElement {
      * @return {BaseSpatializer}
      */
     _createSpatializer(id, audio, bufferSize) {
-        try {
-            if (hasWebAudioAPI) {
-                try {
-                    if (hasFullSpatializer) {
-                        try {
-                            if (attemptResonanceAPI) {
+        if (hasWebAudioAPI) {
+            try {
+                if (hasFullSpatializer) {
+                    try {
+                        if (attemptResonanceAPI) {
+                            try {
                                 return new GoogleResonanceAudioSpatializer(id, this, audio, bufferSize);
                             }
-                        }
-                        catch (exp3) {
-                            attemptResonanceAPI = false;
-                            console.warn("Resonance Audio API not available!", exp3);
-                        }
-                        finally {
-                            if (!attemptResonanceAPI) {
-                                return new FullSpatializer(id, this, audio, bufferSize, forceInterpolatedPosition);
+                            catch (exp3) {
+                                attemptResonanceAPI = false;
+                                console.warn("Resonance Audio API not available!", exp3);
                             }
                         }
+
+                        if (!attemptResonanceAPI) {
+                            return new FullSpatializer(id, this, audio, bufferSize, forceInterpolatedPosition);
+                        }
+                    }
+                    catch (exp2) {
+                        hasFullSpatializer = false;
+                        console.warn("No 360 spatializer support", exp2);
                     }
                 }
-                catch (exp2) {
-                    hasFullSpatializer = false;
-                    console.warn("No 360 spatializer support", exp2);
-                }
-                finally {
-                    if (!hasFullSpatializer) {
-                        return new StereoSpatializer(id, this, audio, bufferSize);
-                    }
+
+                if (!hasFullSpatializer) {
+                    return new StereoSpatializer(id, this, audio, bufferSize);
                 }
             }
-        }
-        catch (exp1) {
-            hasWebAudioAPI = false;
-            if (this.audioContext) {
-                this.dispatchEvent(contextDestroyingEvt);
-                this.audioContext.close();
-                this.audioContext = null;
-                this.position = null;
-                this.dispatchEvent(contextDestroyedEvt);
+            catch (exp1) {
+                hasWebAudioAPI = false;
+                if (this.audioContext) {
+                    this.dispatchEvent(contextDestroyingEvt);
+                    this.audioContext.close();
+                    this.audioContext = null;
+                    this.position = null;
+                    this.dispatchEvent(contextDestroyedEvt);
+                }
+                console.warn("No WebAudio API!", exp1);
             }
-            console.warn("No WebAudio API!", exp1);
         }
-        finally {
-            if (!hasWebAudioAPI) {
-                return new VolumeOnlySpatializer(id, this, audio);
-            }
+
+        if (!hasWebAudioAPI) {
+            return new VolumeOnlySpatializer(id, this, audio);
         }
     }
 }
@@ -17206,6 +17918,8 @@ class AudioManager extends BaseAudioClient {
     }
 }
 
+/* global JitsiMeetJS */
+
 /**
  * @typedef {object} JitsiTrack
  * @property {Function} getParticipantId
@@ -17217,22 +17931,7 @@ class AudioManager extends BaseAudioClient {
  * @property {MediaStream} stream
  **/
 
-/**
- * A paring of audio and video inputs for a user in the conference.
- **/
-class MediaElements {
-    /**
-     * Creates a pairing of audio and video inputs for a user.
-     * @param {JitsiTrack} audio
-     * @param {JitsiTrack} video
-     */
-    constructor(audio = null, video = null) {
-        this.audio = audio;
-        this.video = video;
-    }
-}
-
-/** @type {Map<string, MediaElements>} */
+/** @type {Map<string, Map<string, JitsiTrack>>} */
 const userInputs = new Map();
 
 const audioActivityEvt$2 = new AudioActivityEvent();
@@ -17279,9 +17978,9 @@ class LibJitsiMeetClient extends BaseJitsiClient {
         Object.seal(this);
     }
 
-    async initializeAsync(host, roomName, userName) {
+    async initializeAsync(roomName, userName) {
         await import(`${window.location.origin}/lib/jquery.min.js`);
-        await import(`https://${host}/libs/lib-jitsi-meet.min.js`);
+        await import(`https://${JVB_HOST}/libs/lib-jitsi-meet.min.js`);
 
         roomName = roomName.toLocaleLowerCase();
 
@@ -17293,7 +17992,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
                 domain: JVB_HOST,
                 muc: JVB_MUC
             },
-            serviceUrl: `https://${host}/http-bind`,
+            serviceUrl: `https://${JVB_HOST}/http-bind`,
             enableLipSync: true
         });
 
@@ -17398,20 +18097,22 @@ class LibJitsiMeetClient extends BaseJitsiClient {
 
                 const elem = tag(trackType,
                     autoPlay(!isLocal),
-                    muted(isLocal),
+                    playsInline(!isLocal),
+                    muted(isLocal || trackKind === "video"),
+                    volume(trackKind === "video" ? 1 : 0),
                     srcObject(track.stream));
 
                 if (!userInputs.has(userID)) {
-                    userInputs.set(userID, new MediaElements());
+                    userInputs.set(userID, new Map());
                 }
 
-                const inputs = userInputs.get(userID),
-                    hasCurrentTrack = !!inputs[trackKind];
-                if (hasCurrentTrack) {
-                    inputs[trackKind].dispose();
+                const inputs = userInputs.get(userID);
+                if (inputs.has(trackKind)) {
+                    inputs.get(trackKind).dispose();
+                    inputs.delete(trackKind);
                 }
 
-                inputs[trackKind] = track;
+                inputs.set(trackKind, track);
 
                 if (!isLocal && trackKind === "audio") {
                     this.audioClient.createSource(userID, elem);
@@ -17433,8 +18134,9 @@ class LibJitsiMeetClient extends BaseJitsiClient {
 
                 if (userInputs.has(userID)) {
                     const inputs = userInputs.get(userID);
-                    if (inputs[trackKind] === track) {
-                        inputs[trackKind] = null;
+                    if (inputs.has(trackKind)) {
+                        inputs.get(trackKind).dispose();
+                        inputs.delete(trackKind);
                     }
                 }
 
@@ -17485,7 +18187,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
     /// A listener to add to JitsiExternalAPI::endpointTextMessageReceived event
     /// to receive Calla messages from the Jitsi Meet data channel.
     rxGameData(evt) {
-        if (evt.data.hax === APP_FINGERPRINT) {
+        if (evt.data.hax === this.appFingerPrint) {
             this.receiveMessageFrom(evt.user.getId(), evt.data.command, evt.data.value);
         }
     }
@@ -17494,18 +18196,20 @@ class LibJitsiMeetClient extends BaseJitsiClient {
         if (this.conference) {
             if (this.localUser !== null && userInputs.has(this.localUser)) {
                 const inputs = userInputs.get(this.localUser);
-                if (inputs.audio) {
-                    this.conference.removeTrack(inputs.audio);
+                if (inputs.has("audio")) {
+                    this.conference.removeTrack(inputs.get("audio"));
                 }
 
-                if (inputs.video) {
-                    this.conference.removeTrack(inputs.video);
+                if (inputs.has("video")) {
+                    this.conference.removeTrack(inputs.get("video"));
                 }
             }
 
             const leaveTask = this.conference.leave();
-            leaveTask
-                .then(() => this.connection.disconnect());
+            leaveTask.then(() => {
+                    this.connection.disconnect();
+                    this.connection = null;
+                });
             return leaveTask;
         }
     }
@@ -17535,10 +18239,20 @@ class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     getCurrentMediaTrack(type) {
-        return this.localUser !== null
-            && userInputs.has(this.localUser)
-            && userInputs.get(this.localUser)[type]
-            || null;
+        if (this.localUser === null) {
+            return null;
+        }
+
+        if (!userInputs.has(this.localUser)){
+            return null;
+        }
+
+        const inputs = userInputs.get(this.localUser);
+        if (!inputs.has(type)) {
+            return null;
+        }
+
+        return inputs.get(type);
     }
 
     async getCurrentAudioInputDeviceAsync() {
@@ -17689,5 +18403,4 @@ class LibJitsiMeetClient extends BaseJitsiClient {
     }
 }
 
-/* global JITSI_HOST */
-init(JITSI_HOST, new LibJitsiMeetClient());
+init(new LibJitsiMeetClient());
