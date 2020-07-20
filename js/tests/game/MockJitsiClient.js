@@ -35,6 +35,23 @@ export class MockJitsiClient extends BaseJitsiClient {
         this.audioClient = new AudioClient("jisti.calla.chat", window.location.origin, window);
     }
 
+    userIDs() {
+        return this.testUsers
+            && this.testUsers.map(u => u.id)
+            || [];
+    }
+
+    userExists(id) {
+        return this.testUsers
+            && this.testUsers.find(u => u.id === id) !== null;
+    }
+
+    users() {
+        return this.testUsers
+            && this.testUsers.map(u => [u.id, u])
+            || [];
+    }
+
     async initializeAsync(roomName, userName) {
         this.roomName = roomName;
         this.userName = userName;

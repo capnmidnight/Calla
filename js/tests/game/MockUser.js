@@ -42,6 +42,8 @@ export class MockUser {
                 loop
             )));
 
+        this.client.audioClient.createSource(this.id, this.audio);
+
         this.client.dispatchEvent(Object.assign(
             new Event("participantJoined"), {
             id: this.id,
