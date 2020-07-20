@@ -4,21 +4,26 @@ import { EmojiAvatar } from "./avatars/EmojiAvatar.js";
 import { PhotoAvatar } from "./avatars/PhotoAvatar.js";
 import { VideoAvatar } from "./avatars/VideoAvatar.js";
 import { allPeople as people, bust, mutedSpeaker, speakerMediumVolume, videoCamera } from "./emoji/emoji.js";
-import { isString, isNumber } from "./typeChecks.js";
+import { TextImage } from "./graphics/TextImage.js";
 import { project } from "./math.js";
 import "./protos.js";
+import { isNumber, isString } from "./typeChecks.js";
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1,
     STACKED_USER_OFFSET_X = 5,
     STACKED_USER_OFFSET_Y = 5,
-    eventNames = ["userMoved", "userPositionNeeded"];
+    eventNames = ["userMoved", "userPositionNeeded"],
+    muteAudioIcon = new TextImage("sans-serif"),
+    speakerActivityIcon = new TextImage("sans-serif");
+
+muteAudioIcon.value = mutedSpeaker.value;
+speakerActivityIcon.value = speakerMediumVolume.value;
 
 export class User extends EventTarget {
     constructor(evt, isMe) {
         super();
 
         this.id = evt.id;
-        this.displayName = evt.displayName;
         this.label = isMe ? "(Me)" : `(${this.id})`;
 
         this.moveEvent = new UserMoveEvent(this.id);
@@ -42,6 +47,11 @@ export class User extends EventTarget {
         this.isInitialized = isMe;
         this.lastPositionRequestTime = performance.now() / 1000 - POSITION_REQUEST_DEBOUNCE_TIME;
         this.visible = true;
+        this.userNameText = new TextImage("sans-serif");
+        this.userNameText.color = "white";
+        this._displayName = null;
+        this.displayName = evt.displayName;
+        Object.seal(this);
     }
 
     deserialize(evt) {
@@ -72,7 +82,7 @@ export class User extends EventTarget {
             id: this.id,
             x: this.position._tx,
             y: this.position._ty,
-            displayName: this.displayName,
+            displayName: this._displayName,
             avatarMode: this.avatarMode,
             avatarID: this.avatarID
         };
@@ -203,8 +213,13 @@ export class User extends EventTarget {
         super.addEventListener(evtName, func, opts);
     }
 
-    setDisplayName(name) {
-        this.displayName = name;
+    get displayName() {
+        return this._displayName || this.label;
+    }
+
+    set displayName(name) {
+        this._displayName = name;
+        this.userNameText.value = this.displayName;
     }
 
     moveTo(x, y, dt) {
@@ -249,8 +264,9 @@ export class User extends EventTarget {
         this.stackOffsetY = this.stackIndex * STACKED_USER_OFFSET_Y;
     }
 
-    drawShadow(g, map, cameraZ) {
-        const x = this.position.x * map.tileWidth,
+    drawShadow(g, map) {
+        const scale = g.getTransform().a,
+            x = this.position.x * map.tileWidth,
             y = this.position.y * map.tileHeight,
             t = g.getTransform(),
             p = t.transformPoint({ x, y });
@@ -264,9 +280,9 @@ export class User extends EventTarget {
             g.save();
             {
                 g.shadowColor = "rgba(0, 0, 0, 0.5)";
-                g.shadowOffsetX = 3 * cameraZ;
-                g.shadowOffsetY = 3 * cameraZ;
-                g.shadowBlur = 3 * cameraZ;
+                g.shadowOffsetX = 3 * scale;
+                g.shadowOffsetY = 3 * scale;
+                g.shadowBlur = 3 * scale;
 
                 this.innerDraw(g, map);
             }
@@ -280,13 +296,11 @@ export class User extends EventTarget {
             {
                 this.innerDraw(g, map);
                 if (this.isActive && !this.audioMuted) {
-                    const height = this.stackAvatarHeight / 2;
-                    g.font = height + "px sans-serif";
-                    const metrics = g.measureText(speakerMediumVolume.value);
-                    g.fillText(
-                        speakerMediumVolume.value,
-                        this.stackAvatarWidth - metrics.width,
-                        0);
+                    const height = this.stackAvatarHeight / 2,
+                        scale = g.getTransform().a;
+                    speakerActivityIcon.fontSize = height;
+                    speakerActivityIcon.scale = scale;
+                    speakerActivityIcon.draw(g, this.stackAvatarWidth - speakerActivityIcon.width, 0);
                 }
             }
             g.restore();
@@ -305,41 +319,34 @@ export class User extends EventTarget {
         }
 
         if (this.audioMuted || !this.videoMuted) {
-            const height = this.stackAvatarHeight / 2;
-            g.font = height + "px sans-serif";
+
+            const height = this.stackAvatarHeight / 2,
+                scale = g.getTransform().a;
+
             if (this.audioMuted) {
-                const metrics = g.measureText(mutedSpeaker.value);
-                g.fillText(
-                    mutedSpeaker.value,
-                    this.stackAvatarWidth - metrics.width,
-                    0);
-            }
-            if (!this.videoMuted && !(this.avatar instanceof VideoAvatar)) {
-                const metrics = g.measureText(videoCamera.value);
-                g.fillText(
-                    videoCamera.value,
-                    this.stackAvatarWidth - metrics.width,
-                    height);
+                muteAudioIcon.fontSize = height;
+                muteAudioIcon.scale = scale;
+                muteAudioIcon.draw(g, this.stackAvatarWidth - muteAudioIcon.width, 0);
             }
         }
     }
 
-    drawName(g, map, cameraZ, fontSize) {
+    drawName(g, map, fontSize) {
         if (this.visible) {
+            const scale = g.getTransform().a;
             g.save();
             {
                 g.translate(
                     this.position.x * map.tileWidth + this.stackOffsetX,
                     this.position.y * map.tileHeight + this.stackOffsetY);
                 g.shadowColor = "black";
-                g.shadowOffsetX = 3 * cameraZ;
-                g.shadowOffsetY = 3 * cameraZ;
-                g.shadowBlur = 3 * cameraZ;
+                g.shadowOffsetX = 3 * scale;
+                g.shadowOffsetY = 3 * scale;
+                g.shadowBlur = 3 * scale;
 
-                g.fillStyle = "white";
-                g.textBaseline = "bottom";
-                g.font = `${fontSize * devicePixelRatio}pt sans-serif`;
-                g.fillText(this.displayName || this.label, 0, 0);
+                this.userNameText.fontSize = fontSize;
+                this.userNameText.scale = scale;
+                this.userNameText.draw(g, 0, -this.userNameText.height);
             }
             g.restore();
         }
@@ -357,9 +364,10 @@ export class User extends EventTarget {
         g.restore();
     }
 
-    drawHearingRange(g, map, cameraZ, minDist, maxDist) {
-        const tw = Math.min(maxDist, Math.ceil(g.canvas.width / (2 * map.tileWidth * cameraZ))),
-            th = Math.min(maxDist, Math.ceil(g.canvas.height / (2 * map.tileHeight * cameraZ)));
+    drawHearingRange(g, map, minDist, maxDist) {
+        const scale = g.getTransform().a,
+            tw = Math.min(maxDist, Math.ceil(g.canvas.width / (2 * map.tileWidth * scale))),
+            th = Math.min(maxDist, Math.ceil(g.canvas.height / (2 * map.tileHeight * scale)));
 
         for (let dy = 0; dy < th; ++dy) {
             for (let dx = 0; dx < tw; ++dx) {

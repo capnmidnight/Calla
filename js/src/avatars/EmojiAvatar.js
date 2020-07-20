@@ -2,6 +2,7 @@
 import { Emoji, isSurfer } from "../emoji/emoji.js";
 import { Span } from "../html/tags.js";
 import { title } from "../html/attrs.js";
+import { TextImage } from "../graphics/TextImage.js";
 
 const selfs = new WeakMap();
 
@@ -28,6 +29,8 @@ export class EmojiAvatar extends BaseAvatar {
 
         this.value = emoji.value;
         this.desc = emoji.desc;
+        this.emojiText = new TextImage("sans-serif");
+        this.emojiText.color = emoji.color || "black";
 
         selfs.set(this, self);
     }
@@ -49,29 +52,20 @@ export class EmojiAvatar extends BaseAvatar {
      */
     draw(g, width, height, isMe) {
         const self = selfs.get(this);
-
         if (self.aspectRatio === null) {
-            const oldFont = g.font;
-            const size = 100;
-            g.font = size + "px sans-serif";
-            const metrics = g.measureText(this.value);
-            self.aspectRatio = metrics.width / size;
-            self.x = (size - metrics.width) / 2;
-            self.y = metrics.actualBoundingBoxAscent / 2;
-
-            self.x /= size;
-            self.y /= size;
-
-            g.font = oldFont;
+            this.emojiText.fontSize = 100;
+            this.emojiText.scale = 1;
+            this.emojiText.value = this.value;
+            self.aspectRatio = this.emojiText.width / this.emojiText.height;
         }
 
         if (self.aspectRatio !== null) {
             const fontHeight = self.aspectRatio <= 1
                 ? height
                 : width / self.aspectRatio;
-
-            g.font = fontHeight + "px sans-serif";
-            g.fillText(this.value, self.x * fontHeight, self.y * fontHeight);
+            this.emojiText.fontSize = fontHeight;
+            this.emojiText.scale = g.getTransform().a;
+            this.emojiText.draw(g, 0, 0);
         }
     }
 }

@@ -690,11 +690,11 @@ export class Game extends EventTarget {
             this.map.draw(this.gFront);
 
             for (let user of this.users.values()) {
-                user.drawShadow(this.gFront, this.map, this.cameraZ);
+                user.drawShadow(this.gFront, this.map);
             }
 
             for (let emote of this.emotes) {
-                emote.drawShadow(this.gFront, this.map, this.cameraZ);
+                emote.drawShadow(this.gFront, this.map);
             }
 
             for (let user of this.users.values()) {
@@ -704,14 +704,13 @@ export class Game extends EventTarget {
             this.drawCursor();
 
             for (let user of this.users.values()) {
-                user.drawName(this.gFront, this.map, this.cameraZ, this.fontSize);
+                user.drawName(this.gFront, this.map, this.fontSize);
             }
 
             if (this.drawHearing) {
                 this.me.drawHearingRange(
                     this.gFront,
                     this.map,
-                    this.cameraZ,
                     this.audioDistanceMin,
                     this.audioDistanceMax);
             }
