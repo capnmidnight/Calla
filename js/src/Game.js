@@ -50,6 +50,8 @@ export class Game extends EventTarget {
 
         this.me = null;
         this.map = null;
+        this.waypoints = [];
+        this.walker = null;
         this.keys = {};
 
         /** @type {Map.<string, User>} */
@@ -334,29 +336,38 @@ export class Game extends EventTarget {
         }
     }
 
-
-    walkPath(self, waypoints) {
-        if (waypoints.length == 0) return;
-        self.moveMeTo(waypoints[0][0], waypoints[0][1]);
-        setTimeout(function() {self.walkPath(self, waypoints.slice(1));}, self.transitionSpeed * 500);
+    walkPath() {
+        this.waypoints = this.waypoints.slice(1);
+        if (this.waypoints.length == 0) return;
+        this.moveMeTo(this.waypoints[0][0], this.waypoints[0][1]);
+        this.walker = setTimeout(this.walkPath.bind(this), this.transitionSpeed * 500);
     }
 
     moveMeBy(dx, dy) {
         // const clearTile = this.map.getClearTile(this.me.position._tx, this.me.position._ty, dx, dy, this.me.avatar);
         // this.moveMeTo(clearTile.x, clearTile.y);
 
-        const sx = this.me.position.x-this.map.offsetX,
-              sy = this.me.position.y-this.map.offsetY,
+        if (this.waypoints && this.waypoints.length > 0) {
+            var x = this.waypoints[0][0], 
+                y = this.waypoints[0][1]; 
+        } else {
+            var x = this.me.position.x,
+                y = this.me.position.y;
+        }
+        const sx = x-this.map.offsetX,
+              sy = y-this.map.offsetY,
               start = this.map.graph.grid[sy][sx];
         const tx = clamp(sx + dx, 0, this.map.width-1),
               ty = clamp(sy + dy, 0, this.map.height-1),
               end = this.map.graph.grid[ty][tx];
         const result = astar.search(this.map.graph, start, end);
-        let waypoints = []
+        let waypoints = [[this.me.position.x, this.me.position.y]]
         for (let pt of result) {
             waypoints.push([pt.y + this.map.offsetX, pt.x + this.map.offsetY]);
         }
-        this.walkPath(this, waypoints);
+        this.waypoints = waypoints;
+        clearTimeout(this.walker);
+        this.walkPath.bind(this)();
     }
 
     warpMeTo(x, y) {
