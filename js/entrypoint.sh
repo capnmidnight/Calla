@@ -9,9 +9,9 @@ DEFAULT_JVB_HOST='meet.jitsi'
 DEFAULT_JVB_MUC='muc.meet.jitsi'
 
 cat > $DIRECTORY/constants.js <<- EOF
-const JITSI_HOST = $JITSI_HOST;
-const JVB_HOST = "${JVB_HOST:-$DEFAULT_JVB_HOST}";
-const JVB_MUC = "${JVB_MUC:-$DEFAULT_JVB_MUC}";
+export const JITSI_HOST = $JITSI_HOST;
+export const JVB_HOST = "${JVB_HOST:-$DEFAULT_JVB_HOST}";
+export const JVB_MUC = "${JVB_MUC:-$DEFAULT_JVB_MUC}";
 EOF
 
 exec nginx -g "daemon off;"
