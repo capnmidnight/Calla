@@ -1,10 +1,8 @@
 ﻿import "./protos.js";
-import "../lib/astar.js";
+import { Graph, astar } from "../lib/astar.js";
 import { TileSet } from "./TileSet.js";
-import { isSurfer } from "./emoji/emoji.js";
 
-// TODO: move map data to requestable files
-export class TileMap {
+class TileMapPrivate {
     constructor(tilemapName) {
         this.url = new URL(`/data/tilemaps/${tilemapName}.tmx`, document.location);
         this.tileset = null;
@@ -17,10 +15,22 @@ export class TileMap {
         this.offsetY = 0;
         this.tiles = null;
         this.collision = null;
+        this.graph = null;
+
+        Object.seal(this);
+    }
+}
+
+const selfs = new WeakMap();
+
+export class TileMap {
+    constructor(tilemapName) {
+        selfs.set(this, new TileMapPrivate(tilemapName));
     }
 
     async load() {
-        const response = await fetch(this.url.href),
+        const self = selfs.get(this),
+            response = await fetch(self.url.href),
             map = await response.xml(),
             width = 1 * map.getAttribute("width"),
             height = 1 * map.getAttribute("height"),
@@ -30,22 +40,22 @@ export class TileMap {
             tilesetSource = tileset.getAttribute("source"),
             layers = map.querySelectorAll("layer > data");
 
-        this.layers = layers.length;
-        this.width = width;
-        this.height = height;
-        this.offsetX = -Math.floor(width / 2);
-        this.offsetY = -Math.floor(height / 2);
-        this.tileWidth = tileWidth;
-        this.tileHeight = tileHeight;
+        self.layers = layers.length;
+        self.width = width;
+        self.height = height;
+        self.offsetX = -Math.floor(width / 2);
+        self.offsetY = -Math.floor(height / 2);
+        self.tileWidth = tileWidth;
+        self.tileHeight = tileHeight;
 
-        this.tiles = [];
+        self.tiles = [];
         for (let layer of layers) {
             const tileIds = layer.innerHTML
-                    .replace(" ", "")
-                    .replace("\t", "")
-                    .replace("\n", "")
-                    .replace("\r", "")
-                    .split(","),
+                .replace(" ", "")
+                .replace("\t", "")
+                .replace("\n", "")
+                .replace("\r", "")
+                .split(","),
                 rows = [];
             let row = [];
             for (let tile of tileIds) {
@@ -58,19 +68,19 @@ export class TileMap {
             if (row.length > 0) {
                 rows.push(row);
             }
-            this.tiles.push(rows);
+            self.tiles.push(rows);
         }
 
-        this.tileset = new TileSet(new URL(tilesetSource, this.url));
-        await this.tileset.load();
-        this.tileWidth = this.tileset.tileWidth;
-        this.tileHeight = this.tileset.tileHeight;
+        self.tileset = new TileSet(new URL(tilesetSource, self.url));
+        await self.tileset.load();
+        self.tileWidth = self.tileset.tileWidth;
+        self.tileHeight = self.tileset.tileHeight;
 
         let grid = [];
-        for (let row of this.tiles[0]) {
+        for (let row of self.tiles[0]) {
             let gridrow = [];
             for (let tile of row) {
-                if (this.tileset.isClear(tile)) {
+                if (self.tileset.isClear(tile)) {
                     gridrow.push(1);
                 } else {
                     gridrow.push(0);
@@ -78,20 +88,54 @@ export class TileMap {
             }
             grid.push(gridrow);
         }
-        this.graph = new Graph(grid, { diagonal: true });
+        self.graph = new Graph(grid, { diagonal: true });
+    }
+
+    get width() {
+        return selfs.get(this).width;
+    }
+
+    get height() {
+        return selfs.get(this).height;
+    }
+
+    get tileWidth() {
+        return selfs.get(this).tileWidth;
+    }
+
+    get tileHeight() {
+        return selfs.get(this).tileHeight;
+    }
+
+    isInBounds(x, y) {
+        return 0 <= x && x < this.width
+            && 0 <= y && y < this.height;
+    }
+
+    getGridNode(x, y) {
+        const self = selfs.get(this);
+        x -= self.offsetX;
+        y -= self.offsetY;
+        if (this.isInBounds(x, y)) {
+            return self.graph.grid[y][x];
+        }
+        else {
+            return null;
+        }
     }
 
     draw(g) {
+        const self = selfs.get(this);
         g.save();
         {
-            g.translate(this.offsetX * this.tileWidth, this.offsetY * this.tileHeight);
-            for (let l = 0; l < this.layers; ++l) {
-                const layer = this.tiles[l];
+            g.translate(self.offsetX * this.tileWidth, self.offsetY * this.tileHeight);
+            for (let l = 0; l < self.layers; ++l) {
+                const layer = self.tiles[l];
                 for (let y = 0; y < this.height; ++y) {
                     const row = layer[y];
                     for (let x = 0; x < this.width; ++x) {
                         const tile = row[x];
-                        this.tileset.draw(g, tile, x, y);
+                        self.tileset.draw(g, tile, x, y);
                     }
                 }
             }
@@ -99,13 +143,25 @@ export class TileMap {
         g.restore();
     }
 
+    searchPath(start, end) {
+        const self = selfs.get(this);
+        return astar.search(self.graph, start, end)
+            .map(p => {
+                return {
+                    x: p.y + self.offsetX,
+                    y: p.x + self.offsetY
+                };
+            });
+    }
+
     isClear(x, y, avatar) {
-        x -= this.offsetX;
-        y -= this.offsetY;
+        const self = selfs.get(this);
+        x -= self.offsetX;
+        y -= self.offsetY;
         return x < 0 || this.width <= x
             || y < 0 || this.height <= y
-            || this.tileset.isClear(this.tiles[0][y][x])
-            || isSurfer(avatar);
+            || self.tileset.isClear(self.tiles[0][y][x])
+            || avatar && avatar.canSwim;
     }
 
     // Use Bresenham's line algorithm (with integer error)

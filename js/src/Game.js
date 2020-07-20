@@ -1,5 +1,4 @@
-﻿import "../lib/astar.js";
-import { Emote } from "./Emote.js";
+﻿import { Emote } from "./Emote.js";
 import { EventedGamepad } from "./gamepad/EventedGamepad.js";
 import { id, style } from "./html/attrs.js";
 import { resizeCanvas } from "./html/canvas.js";
@@ -8,7 +7,7 @@ import { isFirefox } from "./html/flags.js";
 import { clamp, lerp, project, unproject } from "./math.js";
 import { TileMap } from "./TileMap.js";
 import { User } from "./User.js";
-import { arrayRemoveAt } from "./protos/Array.js";
+import { arrayRemoveAt, arrayClear } from "./protos/Array.js";
 
 const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_MAX = 8,
@@ -337,10 +336,11 @@ export class Game extends EventTarget {
     }
 
     walkPath() {
-        this.waypoints = this.waypoints.slice(1);
-        if (this.waypoints.length == 0) return;
-        this.moveMeTo(this.waypoints[0][0], this.waypoints[0][1]);
-        this.walker = setTimeout(this.walkPath.bind(this), this.transitionSpeed * 500);
+        if (this.waypoints.length > 0) {
+            const waypoint = this.waypoints.shift();
+            this.moveMeTo(waypoint.x, waypoint.y);
+            this.walker = setTimeout(this.walkPath.bind(this), this.transitionSpeed * 500);
+        }
     }
 
     moveMeBy(dx, dy) {
@@ -349,27 +349,27 @@ export class Game extends EventTarget {
     }
 
     moveMeByPath(dx, dy) {
-        if (this.waypoints && this.waypoints.length > 0) {
-            var x = this.waypoints[0][0], 
-                y = this.waypoints[0][1]; 
-        } else {
-            var x = this.me.position.x,
-                y = this.me.position.y;
-        }
-        const sx = x-this.map.offsetX,
-              sy = y-this.map.offsetY,
-              start = this.map.graph.grid[sy][sx];
-        const tx = clamp(sx + dx, 0, this.map.width-1),
-              ty = clamp(sy + dy, 0, this.map.height-1),
-              end = this.map.graph.grid[ty][tx];
-        const result = astar.search(this.map.graph, start, end);
-        let waypoints = [[this.me.position.x, this.me.position.y]]
-        for (let pt of result) {
-            waypoints.push([pt.y + this.map.offsetX, pt.x + this.map.offsetY]);
-        }
-        this.waypoints = waypoints;
         clearTimeout(this.walker);
-        this.walkPath.bind(this)();
+        arrayClear(this.waypoints);
+
+        const x = this.me.position._tx,
+            y = this.me.position._ty,
+            start = this.map.getGridNode(x, y),
+            tx = x + dx,
+            ty = y + dy,
+            end = this.map.getGridNode(tx, ty);
+
+        if (!start || !end) {
+            this.waypoints.push({
+                x: x + dx,
+                y: y + dy
+            });
+        }
+        else {
+            const result = this.map.searchPath(start, end);
+            this.waypoints.push(...result);
+        }
+        this.walkPath();
     }
 
     warpMeTo(x, y) {
@@ -729,7 +729,9 @@ export class Game extends EventTarget {
         if (this.pointers.length === 1) {
             const pointer = this.pointers[0],
                 tile = this.getTileAt(pointer);
-            this.gFront.strokeStyle = "red";
+            this.gFront.strokeStyle = this.map.isClear(tile.x, tile.y, this.me.avatar)
+                ? "green"
+                : "red";
             this.gFront.strokeRect(
                 tile.x * this.map.tileWidth,
                 tile.y * this.map.tileHeight,

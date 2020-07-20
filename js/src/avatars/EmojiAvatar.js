@@ -3,7 +3,7 @@ import { Emoji, isSurfer } from "../emoji/emoji.js";
 import { Span } from "../html/tags.js";
 import { title } from "../html/attrs.js";
 
-const selfs = new Map();
+const selfs = new WeakMap();
 
 /**
  * An avatar that uses a Unicode emoji as its representation
