@@ -4,27 +4,27 @@ import { arrayClear, arrayScan } from "../protos/Array.js";
 
 // helps us filter out data channel messages that don't belong to us
 const eventNames = [
-        "userMoved",
-        "emote",
-        "userInitRequest",
-        "userInitResponse",
-        "audioMuteStatusChanged",
-        "videoMuteStatusChanged",
-        "videoConferenceJoined",
-        "videoConferenceLeft",
-        "participantJoined",
-        "participantLeft",
-        "avatarChanged",
-        "displayNameChange",
-        "audioActivity",
-        "setAvatarEmoji",
-        "deviceListChanged",
-        "participantRoleChanged",
-        "audioAdded",
-        "videoAdded",
-        "audioRemoved",
-        "videoRemoved"
-    ];
+    "userMoved",
+    "emote",
+    "userInitRequest",
+    "userInitResponse",
+    "audioMuteStatusChanged",
+    "videoMuteStatusChanged",
+    "videoConferenceJoined",
+    "videoConferenceLeft",
+    "participantJoined",
+    "participantLeft",
+    "avatarChanged",
+    "displayNameChange",
+    "audioActivity",
+    "setAvatarEmoji",
+    "deviceListChanged",
+    "participantRoleChanged",
+    "audioAdded",
+    "videoAdded",
+    "audioRemoved",
+    "videoRemoved"
+];
 
 // Manages communication between Jitsi Meet and Calla
 export class BaseJitsiClient extends EventTarget {
@@ -112,8 +112,9 @@ export class BaseJitsiClient extends EventTarget {
 
         await this.initializeAsync(roomName, userName);
 
-        window.addEventListener("unload", () => {
-            this.dispose();
+        window.addEventListeners({
+            beforeunload: () => this.dispose(),
+            pagehide: () => this.dispose()
         });
 
         const joinInfo = await joinTask;
