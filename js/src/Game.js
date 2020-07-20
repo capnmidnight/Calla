@@ -1,4 +1,4 @@
-﻿import "./astar.js";
+﻿import "../lib/astar.js";
 import { Emote } from "./Emote.js";
 import { EventedGamepad } from "./gamepad/EventedGamepad.js";
 import { id, style } from "./html/attrs.js";
