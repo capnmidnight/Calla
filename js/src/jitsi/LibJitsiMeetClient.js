@@ -294,8 +294,10 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             }
 
             const leaveTask = this.conference.leave();
-            leaveTask
-                .then(() => this.connection.disconnect());
+            leaveTask.then(() => {
+                    this.connection.disconnect();
+                    this.connection = null;
+                });
             return leaveTask;
         }
     }
