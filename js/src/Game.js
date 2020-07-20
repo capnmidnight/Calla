@@ -250,7 +250,7 @@ export class Game extends EventTarget {
                     this.emote(this.me.id, this.currentEmoji);
                 }
                 else if (this.canClick) {
-                    this.moveMeBy(dx, dy);
+                    this.moveMeByPath(dx, dy);
                 }
             }
         });
@@ -344,9 +344,11 @@ export class Game extends EventTarget {
     }
 
     moveMeBy(dx, dy) {
-        // const clearTile = this.map.getClearTile(this.me.position._tx, this.me.position._ty, dx, dy, this.me.avatar);
-        // this.moveMeTo(clearTile.x, clearTile.y);
+        const clearTile = this.map.getClearTile(this.me.position._tx, this.me.position._ty, dx, dy, this.me.avatar);
+        this.moveMeTo(clearTile.x, clearTile.y);
+    }
 
+    moveMeByPath(dx, dy) {
         if (this.waypoints && this.waypoints.length > 0) {
             var x = this.waypoints[0][0], 
                 y = this.waypoints[0][1]; 
