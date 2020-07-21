@@ -1,6 +1,6 @@
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from '../../../../../constants.js';
 
-const versionString = "Calla v0.2.9";
+const versionString = "Calla v0.2.10";
 
 function t(o, s, c) {
     return typeof o === s
@@ -5451,7 +5451,6 @@ class RequestAnimationFrameTimer extends BaseTimer {
     }
 
     set targetFrameRate(fps) {
-        console.warn("You cannot change the target framerate for requestAnimationFrame");
     }
 }
 
@@ -9348,6 +9347,7 @@ class SFX extends EventTarget {
 
         const elem = Audio(
             controls(false),
+            playsInline,
             ...sources);
 
         this.clips.set(name, elem);
