@@ -360,16 +360,13 @@ export class Game extends EventTarget {
             end = this.map.getGridNode(tx, ty);
 
         if (!start || !end) {
-            this.waypoints.push({
-                x: x + dx,
-                y: y + dy
-            });
+            this.moveMeTo(x + dx, y + dy);
         }
         else {
             const result = this.map.searchPath(start, end);
             this.waypoints.push(...result);
+            this.walkPath();
         }
-        this.walkPath();
     }
 
     warpMeTo(x, y) {
