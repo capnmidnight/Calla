@@ -1,6 +1,6 @@
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from '../../../../../constants.js';
 
-const versionString = "Calla v0.2.2";
+const versionString = "Calla v0.2.3";
 
 function t(o, s, c) {
     return typeof o === s
@@ -167,10 +167,10 @@ function add(a, b) {
     };
 }
 
+let oldEventTarget = null;
 try {
     new window.EventTarget();
 } catch (exp) {
-
     /** @type {WeakMap<EventTarget, Map<string, Listener[]>> */
     const selfs = new WeakMap();
 
@@ -247,6 +247,7 @@ try {
         }
     }
 
+    oldEventTarget = window.EventTarget;
     window.EventTarget = EventTarget;
 }
 
@@ -385,6 +386,13 @@ EventTarget.prototype.addEventListeners = function (obj) {
         this.addEventListener(evtName, callback, opts);
     }
 };
+
+if (oldEventTarget) {
+    oldEventTarget.prototype.addEventListeners = EventTarget.prototype.addEventListeners;
+    oldEventTarget.prototype.until = EventTarget.prototype.until;
+    oldEventTarget.prototype.once = EventTarget.prototype.once;
+    oldEventTarget.prototype.when = EventTarget.prototype.when;
+}
 
 HTMLElement.prototype.isOpen = function() {
     return this.style.display !== "none";
