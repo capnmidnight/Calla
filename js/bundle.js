@@ -1,6 +1,6 @@
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from '../../../../../constants.js';
 
-const versionString = "Calla v0.2.6";
+const versionString = "Calla v0.2.7";
 
 function t(o, s, c) {
     return typeof o === s
@@ -6518,6 +6518,9 @@ class PhotoAvatar extends BaseAvatar {
     }
 }
 
+const isFirefox = typeof InstallTrigger !== "undefined";
+const isIOS = ["iPad", "iPhone", "iPod"].indexOf(navigator.platform) >= 0;
+
 /**
  * An avatar that uses an HTML Video element as its representation.
  **/
@@ -6528,9 +6531,11 @@ class VideoAvatar extends BaseAvatar {
      */
     constructor(video) {
         super(video);
-        video.play();
-        video.once("canplay")
-            .then(() => video.play());
+        if (!isIOS) {
+            video.play();
+            video.once("canplay")
+                .then(() => video.play());
+        }
     }
 
     /**
@@ -7150,8 +7155,6 @@ class Emote {
         g.globalAlpha = oldAlpha;
     }
 }
-
-const isFirefox = typeof InstallTrigger !== "undefined";
 
 // javascript-astar 0.4.1
 // http://github.com/bgrins/javascript-astar
@@ -17691,7 +17694,7 @@ const contextDestroyingEvt = new Event("contextDestroying"),
     contextDestroyedEvt = new Event("contextDestroyed");
 
 let hasWebAudioAPI = Object.prototype.hasOwnProperty.call(window, "AudioListener"),
-    hasFullSpatializer = hasWebAudioAPI && Object.prototype.hasOwnProperty.call(window, "PannerNode"),
+    hasFullSpatializer = hasWebAudioAPI && Object.prototype.hasOwnProperty.call(AudioContext.prototype, "createPanner"),
     isLatestWebAudioAPI = hasWebAudioAPI && Object.prototype.hasOwnProperty.call(AudioListener.prototype, "positionX"),
     forceInterpolatedPosition = true,
     attemptResonanceAPI = hasWebAudioAPI;
