@@ -1,6 +1,6 @@
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from '../../../../../constants.js';
 
-const versionString = "Calla v0.2.4";
+const versionString = "Calla v0.2.5";
 
 function t(o, s, c) {
     return typeof o === s
@@ -6780,7 +6780,8 @@ class User extends EventTarget {
     moveTo(x, y, dt) {
         if (this.isInitialized) {
             if (this.isMe) {
-                this.moveEvent.set(x, y);
+                this.moveEvent.x = x;
+                this.moveEvent.y = y;
                 this.dispatchEvent(this.moveEvent);
             }
 
@@ -6952,11 +6953,6 @@ class UserMoveEvent extends Event {
         this.id = id;
         this.x = 0;
         this.y = 0;
-    }
-
-    set(x, y) {
-        this.x = x;
-        this.y = y;
     }
 }
 
@@ -10271,7 +10267,8 @@ class BaseAnalyzedSpatializer extends BaseSpatializer {
             const isActive = this.activityCounter > activityCounterThresh;
             if (this.wasActive !== isActive) {
                 this.wasActive = isActive;
-                audioActivityEvt.set(this.id, isActive);
+                audioActivityEvt.id = this.id;
+                audioActivityEvt.isActive = isActive;
                 this.dispatchEvent(audioActivityEvt);
             }
         }
@@ -18049,7 +18046,8 @@ class LibJitsiMeetClient extends BaseJitsiClient {
         this.conference = null;
         this.audioClient = new AudioManager();
         this.audioClient.addEventListener("audioActivity", (evt) => {
-            audioActivityEvt$2.set(evt.id, evt.isActive);
+            audioActivityEvt$2.id = evt.id;
+            audioActivityEvt$2.isActive = evt.isActive;
             this.dispatchEvent(audioActivityEvt$2);
         });
 
