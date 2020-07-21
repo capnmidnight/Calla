@@ -13,7 +13,7 @@ const contextDestroyingEvt = new Event("contextDestroying"),
     contextDestroyedEvt = new Event("contextDestroyed");
 
 let hasWebAudioAPI = Object.prototype.hasOwnProperty.call(window, "AudioListener"),
-    hasFullSpatializer = hasWebAudioAPI && Object.prototype.hasOwnProperty.call(window, "PannerNode"),
+    hasFullSpatializer = hasWebAudioAPI && Object.prototype.hasOwnProperty.call(AudioContext.prototype, "createPanner"),
     isLatestWebAudioAPI = hasWebAudioAPI && Object.prototype.hasOwnProperty.call(AudioListener.prototype, "positionX"),
     forceInterpolatedPosition = true,
     attemptResonanceAPI = hasWebAudioAPI;
