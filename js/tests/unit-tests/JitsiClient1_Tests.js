@@ -160,6 +160,14 @@ export class JitsiClient1_Tests extends TestBase {
         await this.initUsers();
     }
 
+    async test_145_sendPhotoAvatar() {
+        await this.sendPhotoAvatar();
+    }
+
+    async test_146_recvPhotoAvatar() {
+        await this.recvPhotoAvatar();
+    }
+
     async test_150_sendEmoji() {
         await this.sendEmoji();
     }

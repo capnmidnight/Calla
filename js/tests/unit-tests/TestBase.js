@@ -143,4 +143,17 @@ export class TestBase extends TestCase {
         this.isEqualTo(evt.x, x);
         this.isEqualTo(evt.y, 0);
     }
+
+    async sendPhotoAvatar() {
+        await wait(1000);
+        this.client.avatarURL = "https://www.seanmcbeth.com/2015-05.min.jpg";
+        this.success();
+    }
+
+    async recvPhotoAvatar() {
+        const evt = await this.client.once("avatarChanged", 5000);
+        this.hasValue(evt.id, "UserID");
+        this.isTrue(this.client.userExists(evt.id), "Remote User");
+        this.isEqualTo(evt.url, "https://www.seanmcbeth.com/2015-05.min.jpg", "Avatar URL");
+    }
 }

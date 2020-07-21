@@ -432,15 +432,15 @@ export class BaseJitsiClient extends EventTarget {
         this.sendMessageTo(toUserID, "userInitResponse", fromUserState);
     }
 
-    setAvatarEmoji(emoji) {
+    set avatarEmoji(emoji) {
         for (let toUserID of this.userIDs()) {
             this.sendMessageTo(toUserID, "setAvatarEmoji", emoji);
         }
     }
 
-    setAvatarURL(url) {
+    set avatarURL(url) {
         for (let toUserID of this.userIDs()) {
-            this.sendMessageTo(toUserID, "setAvatarURL", url);
+            this.sendMessageTo(toUserID, "avatarChanged", { url });
         }
     }
 

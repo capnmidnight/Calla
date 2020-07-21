@@ -11,6 +11,7 @@
         roomName: "calla",
         userName: "",
         avatarEmoji: null,
+        avatarURL: null,
         gamepadIndex: 0,
         preferredAudioOutputID: null,
         preferredAudioInputID: null,
@@ -186,6 +187,17 @@ export class Settings {
     set avatarEmoji(value) {
         if (value !== this.avatarEmoji) {
             selfs.get(this).avatarEmoji = value;
+            commit(this);
+        }
+    }
+
+    get avatarURL() {
+        return selfs.get(this).avatarURL;
+    }
+
+    set avatarURL(value) {
+        if (value !== this.avatarURL) {
+            selfs.get(this).avatarURL = value;
             commit(this);
         }
     }

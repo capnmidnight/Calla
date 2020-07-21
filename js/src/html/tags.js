@@ -423,6 +423,153 @@ export function Img(...rest) { return tag("img", ...rest); }
 export function Input(...rest) { return tag("input", ...rest); }
 
 /**
+ * creates an HTML Input tag that is a button.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputButton(...rest) { return Input(type("button"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a checkbox.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputCheckbox(...rest) { return Input(type("checkbox"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a color picker.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputColor(...rest) { return Input(type("color"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a date picker.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputDate(...rest) { return Input(type("date"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a local date-time picker.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputDateTime(...rest) { return Input(type("datetime-local"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is an email entry field.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputEmail(...rest) { return Input(type("email"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a file picker.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputFile(...rest) { return Input(type("file"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a hidden field.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputHidden(...rest) { return Input(type("hidden"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a graphical submit button.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputImage(...rest) { return Input(type("image"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a month picker.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputMonth(...rest) { return Input(type("month"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a password entry field.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputPassword(...rest) { return Input(type("password"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a radio button.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputRadio(...rest) { return Input(type("radio"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a range selector.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputRange(...rest) { return Input(type("range"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a form reset button.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputReset(...rest) { return Input(type("reset"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a search entry field.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputSearch(...rest) { return Input(type("search"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a submit button.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputSubmit(...rest) { return Input(type("submit"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a telephone number entry field.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputTelephone(...rest) { return Input(type("tel"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a text entry field.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputText(...rest) { return Input(type("text"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a time picker.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputTime(...rest) { return Input(type("time"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a URL entry field.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputURL(...rest) { return Input(type("url"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a week picker.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+export function InputWeek(...rest) { return Input(type("week"), ...rest) }
+
+/**
  * creates an HTML Ins tag
  * @param {...TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLModElement}

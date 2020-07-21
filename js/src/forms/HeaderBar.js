@@ -1,7 +1,7 @@
-﻿import { door, gear, questionMark, squareFourCourners, downRightArrow, speakingHead } from "../emoji/emoji.js";
-import { alt, grid, id, role, src, style, title } from "../html/attrs.js";
+﻿import { door, downRightArrow, gear, questionMark, speakingHead, squareFourCourners } from "../emoji/emoji.js";
+import { alt, gridSpan, gridCols, id, role, src, style, title } from "../html/attrs.js";
 import { onClick } from "../html/evts.js";
-import { Button, Div, Img, Span } from "../html/tags.js";
+import { Button, Div, Img } from "../html/tags.js";
 
 
 function Run(...rest) {
@@ -34,9 +34,8 @@ export class HeaderBar extends EventTarget {
 
         this.element = Div(
             id("headbar"),
+            gridCols("auto", "auto", "auto", "auto", "1fr", "auto", "auto"),
             style({
-                gridTemplateColumns: "auto auto auto auto 1fr auto auto",
-                display: "grid",
                 padding: "4px",
                 width: "100%",
                 columnGap: "5px",
@@ -48,7 +47,7 @@ export class HeaderBar extends EventTarget {
                 title("Show/hide options"),
                 onClick(_(toggleOptionsEvt)),
                 subelStyle,
-                grid(1, 1),
+                gridSpan(1, 1),
                 Run(gear.value),
                 Run(buttonLabelStyle, "Options")),
 
@@ -56,7 +55,7 @@ export class HeaderBar extends EventTarget {
                 title("Show/hide instructions"),
                 onClick(_(toggleInstructionsEvt)),
                 subelStyle,
-                grid(2, 1),
+                gridSpan(2, 1),
                 Run(questionMark.value),
                 Run(buttonLabelStyle, "Info")),
 
@@ -64,7 +63,7 @@ export class HeaderBar extends EventTarget {
                 title("Share your current room to twitter"),
                 onClick(_(tweetEvt)),
                 subelStyle,
-                grid(3, 1),
+                gridSpan(3, 1),
                 Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
                     alt("icon"),
                     role("presentation"),
@@ -75,7 +74,7 @@ export class HeaderBar extends EventTarget {
                 title("View user directory"),
                 onClick(_(toggleUserDirectoryEvt)),
                 subelStyle,
-                grid(4, 1),
+                gridSpan(4, 1),
                 Run(speakingHead.value),
                 Run(buttonLabelStyle, "Users")),
 
@@ -84,7 +83,7 @@ export class HeaderBar extends EventTarget {
                 title("Toggle fullscreen"),
                 onClick(_(toggleFullscreenEvt)),
                 subelStyle,
-                grid(6, 1),
+                gridSpan(6, 1),
                 Run(squareFourCourners.value),
                 Run(buttonLabelStyle, "Expand")),
 
@@ -93,7 +92,7 @@ export class HeaderBar extends EventTarget {
                 title("Leave the room"),
                 onClick(_(leaveEvt)),
                 subelStyle,
-                grid(7, 1),
+                gridSpan(7, 1),
                 Run(door.value),
                 Run(buttonLabelStyle, "Leave")));
 

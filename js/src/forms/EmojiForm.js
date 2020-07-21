@@ -150,16 +150,16 @@ export class EmojiForm extends FormDialog {
                         addIconsToContainer(previousEmoji, this.recent);
                     }
 
-                    this.hide();
                     this.dispatchEvent(new EmojiSelectedEvent(selectedEmoji));
+                    this.hide();
                 })),
 
             Button(className("cancel"),
                 "Cancel",
                 onClick(() => {
                     this.confirmButton.lock();
-                    this.hide();
                     this.dispatchEvent(cancelEvt);
+                    this.hide();
                 })),
 
             this.preview = Span(style({ gridArea: "4/1/5/4" })));
@@ -174,6 +174,7 @@ export class EmojiForm extends FormDialog {
                 const done = () => {
                     this.removeEventListener("emojiSelected", yes);
                     this.removeEventListener("emojiCanceled", no);
+                    this.removeEventListener("hidden", no);
                 };
 
                 yes = (evt) => {
@@ -193,6 +194,7 @@ export class EmojiForm extends FormDialog {
 
                 this.addEventListener("emojiSelected", yes);
                 this.addEventListener("emojiCanceled", no);
+                this.addEventListener("hidden", no);
 
                 closeAll();
                 this.show();

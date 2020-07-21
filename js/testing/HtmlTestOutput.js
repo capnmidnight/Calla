@@ -1,4 +1,4 @@
-﻿import { col, monospaceFamily, style } from "../src/html/attrs.js";
+﻿import { gridCol, gridCols, monospaceFamily, style } from "../src/html/attrs.js";
 import { onClick } from "../src/html/evts.js";
 import { Button, clear, Div, Span } from "../src/html/tags.js";
 import { TestOutput } from "./TestOutput.js";
@@ -32,7 +32,7 @@ function bar(color, width) {
 function refresher(thunk, ...rest) {
     return Button(
         onClick(thunk),
-        col(1),
+        gridCol(1),
         "\u{1F504}\u{FE0F}",
         ...rest);
 }
@@ -74,16 +74,15 @@ export class HtmlTestOutput extends TestOutput {
                     height: "1em"
                 }),
                 table = Div(
+                    gridCols("auto", "auto", "auto", "1fr"),
                     style({
                         fontFamily: monospaceFamily,
                         width: "100%",
-                        display: "grid",
-                        gridTemplateColumns: "auto auto auto 1fr",
                         columnGap: "1em"
                     }),
                     refresher(() => this.run()),
                     Div(
-                        col(2, 3),
+                        gridCol(2, 3),
                         style({
                             height: "2em",
                             whiteSpace: "nowrap",
@@ -92,19 +91,19 @@ export class HtmlTestOutput extends TestOutput {
                         Span(basicStyle, bar("green", s + "%")),
                         Span(basicStyle, bar("red", f + "%")),
                         Span(basicStyle, bar("grey", t + "%"))),
-                    Div(col(1), "Rerun"),
-                    Div(col(2), "Name"),
-                    Div(col(3), "Status"));
+                    Div(gridCol(1), "Rerun"),
+                    Div(gridCol(2), "Name"),
+                    Div(gridCol(3), "Status"));
             for (let [testCaseName, testCase] of evt.results.entries()) {
                 table.append(
-                    Div(col(2, 3), testCaseName),
+                    Div(gridCol(2, 3), testCaseName),
                     refresher(() => this.run(testCaseName)));
                 for (let [testName, test] of testCase.entries()) {
                     table.append(
                         refresher(() => this.run(testCaseName, testName)),
-                        Div(col(2), testName),
-                        Div(col(3), makeStatus(test.state)),
-                        Div(col(4), test.messages.join(", ")));
+                        Div(gridCol(2), testName),
+                        Div(gridCol(3), makeStatus(test.state)),
+                        Div(gridCol(4), test.messages.join(", ")));
                 }
             }
             clear(this.element);

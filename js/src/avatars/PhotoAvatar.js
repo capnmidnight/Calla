@@ -13,9 +13,6 @@ export class PhotoAvatar extends BaseAvatar {
     constructor(url) {
         super(Canvas());
 
-        /** @type {HTMLCanvasElement} */
-        this.element = null;
-
         const img = new Image();
         img.addEventListener("load", (evt) => {
             this.element.width = img.width;

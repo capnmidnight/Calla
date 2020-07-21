@@ -31,8 +31,8 @@ export class User extends EventTarget {
 
         /** @type {AvatarMode} */
         this.setAvatarVideo(null);
-        this.setAvatarImage(null);
-        this.setAvatarEmoji(isMe ? people.random() : bust);
+        this.avatarImage = null;
+        this.avatarEmoji = isMe ? people.random() : bust;
 
         this.audioMuted = false;
         this.videoMuted = true;
@@ -61,10 +61,10 @@ export class User extends EventTarget {
 
         switch (evt.avatarMode) {
             case AvatarMode.emoji:
-                this.setAvatarEmoji(evt.avatarID);
+                this.avatarEmoji = evt.avatarID;
                 break;
             case AvatarMode.photo:
-                this.setAvatarImage(evt.avatarID);
+                this.avatarImage = evt.avatarID;
                 break;
             default:
                 break;
@@ -111,18 +111,21 @@ export class User extends EventTarget {
 
     /**
      * An avatar using a photo
-     * @type {PhotoAvatar}
+     * @type {string}
      **/
     get avatarImage() {
-        return this._avatarImage;
+        return this._avatarImage
+            && this._avatarImage.url
+            || null;
     }
 
     /**
      * Set the URL of the photo to use as an avatar.
      * @param {string} url
      */
-    setAvatarImage(url) {
-        if (isString(url)) {
+    set avatarImage(url) {
+        if (isString(url)
+            && url.length > 0) {
             this._avatarImage = new PhotoAvatar(url);
         }
         else {
@@ -142,7 +145,7 @@ export class User extends EventTarget {
      * Set the emoji to use as an avatar.
      * @param {Emoji} emoji
      */
-    setAvatarEmoji(emoji) {
+    set avatarEmoji(emoji) {
         if (emoji
             && emoji.value
             && emoji.desc) {
@@ -158,13 +161,13 @@ export class User extends EventTarget {
      * @returns {AvatarMode}
      **/
     get avatarMode() {
-        if (this.avatarVideo) {
+        if (this._avatarVideo) {
             return AvatarMode.video;
         }
-        else if (this.avatarPhoto) {
+        else if (this._avatarImage) {
             return AvatarMode.photo;
         }
-        else if (this.avatarEmoji) {
+        else if (this._avatarEmoji) {
             return AvatarMode.emoji;
         }
         else {
@@ -182,7 +185,7 @@ export class User extends EventTarget {
             case AvatarMode.emoji:
                 return { value: this.avatarEmoji.value, desc: this.avatarEmoji.desc };
             case AvatarMode.photo:
-                return this.avatarImage.url;
+                return this.avatarImage;
             default:
                 return null;
         }
@@ -195,11 +198,11 @@ export class User extends EventTarget {
     get avatar() {
         switch (this.avatarMode) {
             case AvatarMode.emoji:
-                return this.avatarEmoji;
+                return this._avatarEmoji;
             case AvatarMode.photo:
-                return this.avatarImage;
+                return this._avatarImage;
             case AvatarMode.video:
-                return this.avatarVideo;
+                return this._avatarVideo;
             default:
                 return null;
         }

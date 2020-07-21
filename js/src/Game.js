@@ -47,9 +47,14 @@ export class Game extends EventTarget {
             }));
         this.gFront = this.element.getContext("2d");
 
+        /** @type {User} */
         this.me = null;
+
+        /** @type {TileMap} */
         this.map = null;
+
         this.waypoints = [];
+
         this.keys = {};
 
         /** @type {Map.<string, User>} */
@@ -475,24 +480,24 @@ export class Game extends EventTarget {
         });
     }
 
-    setAvatarURL(evt) {
+    setAvatarURL(id, url) {
         //evt = {
         //  id: string, // the id of the participant that changed his avatar.
         //  avatarURL: string // the new avatar URL.
         //}
-        this.withUser(evt && evt.id, (user) => {
-            user.setAvatarImage(evt.avatarURL);
+        this.withUser(id, (user) => {
+            user.avatarImage = url;
         });
     }
 
-    setAvatarEmoji(evt) {
+    setAvatarEmoji(id, emoji) {
         //evt = {
         //  id: string, // the id of the participant that changed his avatar.
         //  value: string // the emoji text to use as the avatar.
         //  desc: string // a description of the emoji
         //}
-        this.withUser(evt && evt.id, (user) => {
-            user.setAvatarEmoji(evt);
+        this.withUser(id, (user) => {
+            user.avatarEmoji = emoji;
         });
     }
 
@@ -507,8 +512,6 @@ export class Game extends EventTarget {
         this.currentRoomName = evt.roomName.toLowerCase();
         this.me = new User(evt, true);
         this.users.set(evt.id, this.me);
-
-        this.setAvatarURL(evt);
 
         this.map = new TileMap(this.currentRoomName);
         let success = false;

@@ -20,11 +20,21 @@ window.addEventListeners({
     gamepaddisconnected: refreshGamepads
 });
 
-options.addEventListeners({
-    gamepadChanged: () => {
-        console.log(options.currentGamepadIndex);
-    }
-});
+for (let evtName of ["avatarURLChanged",
+    "gamepadChanged",
+    "selectAvatar",
+    "fontSizeChanged",
+    "inputBindingChanged",
+    "audioPropertiesChanged",
+    "toggleDrawHearing",
+    "audioInputChanged",
+    "audioOutputChanged",
+    "videoInputChanged",
+    "gamepadbuttonup",
+    "gamepadaxismaxed",
+    "toggleVideo"]) {
+    options.addEventListener(evtName, (evt) => console.log(evt));
+}
 
 
 (async function () {

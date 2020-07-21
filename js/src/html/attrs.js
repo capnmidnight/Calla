@@ -15,6 +15,11 @@ export class HtmlAttr {
         Object.freeze(this);
     }
 
+    appendStyle(key, value) {
+        this.value[key] = value;
+        return this;
+    }
+
     /**
      * Set the attribute value on an HTMLElement
      * @param {HTMLElement} elem - the element on which to set the attribute.
@@ -1088,13 +1093,38 @@ export const monospaceFont = style({ fontFamily: monospaceFamily });
 // A selection of fonts that should match whatever the user's operating system normally uses.
 export const systemFamily = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
 
+export function gridCols(...cols) {
+    return style({
+        display: "grid",
+        gridTemplateColumns: cols.join(" ")
+    });
+}
+
+export function gridRows(...rows) {
+    return style({
+        display: "grid",
+        gridTemplateRows: rows.join(" ")
+    });
+}
+
+export function gridArea(cols, rows, addStyles) {
+    const s = style({
+        display: "grid",
+        gridTemplateColumns: cols.join(" "),
+        gridTemplateRows: rows.join(" ")
+    });
+    for (let key in addStyles) {
+        s.appendStyle(key, addStyles[key]);
+    }
+    return s;
+}
 
 /**
  * Constructs a CSS grid column definition
  * @param {number} x - the starting horizontal cell for the element.
  * @param {number} [w=null] - the number of cells wide the element should cover.
  */
-export function col(x, w = null) {
+export function gridCol(x, w = null) {
     if (w === null) {
         w = 1;
     }
@@ -1110,7 +1140,7 @@ export function col(x, w = null) {
  * @param {number} y - the starting vertical cell for the element.
  * @param {number} [h=null] - the number of cells tall the element should cover.
  */
-export function row(y, h = null) {
+export function gridRow(y, h = null) {
     if (h === null) {
         h = 1;
     }
@@ -1128,7 +1158,7 @@ export function row(y, h = null) {
  * @param {number} [w=null] - the number of cells wide the element should cover.
  * @param {number} [h=null] - the number of cells tall the element should cover.
  */
-export function grid(x, y, w = null, h = null) {
+export function gridSpan(x, y, w = null, h = null) {
     if (w === null) {
         w = 1;
     }

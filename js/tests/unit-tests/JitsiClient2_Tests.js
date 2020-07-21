@@ -18,6 +18,14 @@ export class JitsiClient2_Tests extends TestBase {
         await this.initUsers();
     }
 
+    async test_145_recvPhotoAvatar() {
+        await this.recvPhotoAvatar();
+    }
+
+    async test_146_sendPhotoAvatar() {
+        await this.sendPhotoAvatar();
+    }
+
     async test_150_recvEmoji() {
         await this.recvEmoji();
     }

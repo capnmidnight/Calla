@@ -1,13 +1,14 @@
 ﻿import { bust } from "../emoji/emoji.js";
 import { EventedGamepad } from "../gamepad/EventedGamepad.js";
-import { className, htmlFor, id, max, min, placeHolder, step, style, title, value } from "../html/attrs.js";
+import { autoPlay, gridCols, htmlFor, id, max, min, muted, placeHolder, playsInline, srcObject, step, style, title, value, volume, src, disabled } from "../html/attrs.js";
 import { onClick, onInput, onKeyUp } from "../html/evts.js";
-import { Button, clear, Div, Label, LabeledInput, LabeledSelectBox, OptionPanel, P, Span } from "../html/tags.js";
+import { Button, clear, Div, InputURL, Label, LabeledInput, LabeledSelectBox, OptionPanel, P, Span, Video, Img } from "../html/tags.js";
 import { isGoodNumber } from "../math.js";
 import "../protos.js";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 import { FormDialog } from "./FormDialog.js";
 import { InputBinding } from "./InputBinding.js";
+import { isString } from "../typeChecks.js";
 
 
 
@@ -23,6 +24,7 @@ const keyWidthStyle = style({ width: "7em" }),
     audioInputChangedEvt = new Event("audioInputChanged"),
     audioOutputChangedEvt = new Event("audioOutputChanged"),
     videoInputChangedEvt = new Event("videoInputChanged"),
+    toggleVideoEvt = new Event("toggleVideo"),
     gamepadButtonUpEvt = Object.assign(new Event("gamepadbuttonup"), {
         button: 0
     }),
@@ -106,22 +108,46 @@ export class OptionsForm extends FormDialog {
 
         const panels = [
             OptionPanel("avatar", "Avatar",
-                this.avatarURLInput = LabeledInput(
-                    "avatarURL",
-                    "text",
-                    "Avatar URL: ",
-                    placeHolder("https://example.com/me.png"),
-                    onInput(_(avatarUrlChangedEvt))),
-                " or ",
-                this.avatarEmojiInput = Div(
+                Div(
                     Label(
                         htmlFor("selectAvatarEmoji"),
-                        "Avatar Emoji: "),
-                    this.avatarEmojiPreview = Span(bust.value),
+                        "Emoji: "),
                     Button(
                         id("selectAvatarEmoji"),
                         "Select",
-                        onClick(_(selectAvatarEvt))))),
+                        onClick(_(selectAvatarEvt)))),
+                " or ",
+                Div(
+                    Label(
+                        htmlFor("setAvatarURL"),
+                        "Photo: "),
+
+                    this.avatarURLInput = InputURL(
+                        placeHolder("https://example.com/me.png")),
+                    Button(
+                        id("setAvatarURL"),
+                        "Set",
+                        onClick(() => {
+                            this.avatarURL = this.avatarURLInput.value;
+                            this.dispatchEvent(avatarUrlChangedEvt);
+                        })),
+                    this.clearAvatarURLButton = Button(
+                        disabled,
+                        "Clear",
+                        onClick(() => {
+                            this.avatarURL = null;
+                            this.dispatchEvent(avatarUrlChangedEvt);
+                        }))),
+                " or ",
+                Div(
+                    Label(
+                        htmlFor("videoAvatarButton"),
+                        "Video: "),
+                    this.useVideoAvatarButton = Button(
+                        id("videoAvatarButton"),
+                        "Use video",
+                        onClick(_(toggleVideoEvt)))),
+                this.avatarPreview = Span(bust.value)),
 
             OptionPanel("interface", "Interface",
                 this.fontSizeInput = LabeledInput(
@@ -227,10 +253,7 @@ export class OptionsForm extends FormDialog {
             panels[i].button.style.fontSize = "3.5vw";
         }
 
-        Object.assign(this.header.style, {
-            display: "grid",
-            gridTemplateColumns: cols.join(" ")
-        });
+        gridCols(...cols).apply(this.header);
 
         this.header.append(...panels.map(p => p.button));
         this.content.append(...panels.map(p => p.element));
@@ -240,11 +263,6 @@ export class OptionsForm extends FormDialog {
             borderRight: "solid 2px black",
             borderBottom: "solid 2px black"
         }).apply(this.content);
-        this.footer.append(
-            this.confirmButton = Button(
-                className("confirm"),
-                "Close",
-                onClick(() => this.hide())));
 
         const showPanel = (p) =>
             () => {
@@ -314,23 +332,49 @@ export class OptionsForm extends FormDialog {
 
     set avatarEmoji(e) {
         this._avatarEmoji = e;
-        clear(this.avatarEmojiPreview);
-        this.avatarEmojiPreview.append(Span(
+        clear(this.avatarPreview);
+        this.avatarPreview.append(Span(
             title(e && e.desc || "(None)"),
             e && e.value || "N/A"));
     }
 
     get avatarURL() {
-        return this.avatarURLInput.value;
+        if (this.avatarURLInput.value.length === 0) {
+            return null;
+        }
+        else {
+            return this.avatarURLInput.value;
+        }
     }
 
-    set avatarURL(value) {
-        this.avatarURLInput.value = value;
+    set avatarURL(v) {
+        clear(this.avatarPreview);
+        if (isString(v)) {
+            this.avatarURLInput.value = v;
+            this.clearAvatarURLButton.unlock();
+            this.avatarPreview.append(Img(src(v)));
+        }
+        else {
+            this.avatarURLInput.value = "";
+            this.clearAvatarURLButton.lock();
+        }
     }
 
-    async showAsync() {
-        this.show();
-        await this.confirmButton.once("click");
+
+    setAvatarVideo(v) {
+        clear(this.avatarPreview);
+        if (v !== null) {
+            this.useVideoAvatarButton.innerHTML = "Remove video";
+            this.avatarPreview.append(Video(
+                autoPlay,
+                playsInline,
+                muted,
+                volume(0),
+                srcObject(v.srcObject)));
+        }
+        else {
+            this.useVideoAvatarButton.innerHTML = "Use video";
+        }
     }
 
     get inputBinding() {

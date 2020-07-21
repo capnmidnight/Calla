@@ -12,7 +12,7 @@ const loginEvt = new Event("login"),
 
 export class LoginForm extends FormDialog {
     constructor() {
-        super("login");
+        super("login", "Login");
 
         const self = Object.seal({
             ready: false,

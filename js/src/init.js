@@ -17,7 +17,7 @@ import { LoginForm } from "./forms/LoginForm.js";
 import { OptionsForm } from "./forms/OptionsForm.js";
 import { UserDirectoryForm } from "./forms/UserDirectoryForm.js";
 import { Game } from "./Game.js";
-import { grid } from "./html/attrs.js";
+import { gridSpan } from "./html/attrs.js";
 import { BaseJitsiClient } from "./jitsi/BaseJitsiClient.js";
 import { Settings } from "./Settings.js";
 import { SFX } from "./audio/SFX.js";
@@ -121,16 +121,16 @@ export function init(client) {
         if (e.element) {
             let g = null;
             if (e === headbar) {
-                g = grid(1, 1);
+                g = gridSpan(1, 1);
             }
             else if (e === footbar) {
-                g = grid(1, 3);
+                g = gridSpan(1, 3);
             }
             else if (e === game || e === login) {
-                g = grid(1, 1, 1, 3);
+                g = gridSpan(1, 1, 1, 3);
             }
             else {
-                g = grid(1, 2);
+                g = gridSpan(1, 2);
             }
             g.apply(e.element);
             e.element.style.zIndex = (z++);
@@ -148,6 +148,7 @@ export function init(client) {
     options.fontSize = game.fontSize = settings.fontSize;
     options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
     options.inputBinding = game.inputBinding = settings.inputBinding;
+
     game.cameraZ = game.targetCameraZ = settings.zoom;
     game.transitionSpeed = settings.transitionSpeed = 0.5;
     login.userName = settings.userName;
@@ -229,6 +230,11 @@ export function init(client) {
 
         await game.startAsync(joinInfo);
 
+        client.avatarURL
+            = game.me.avatarImage
+            = options.avatarURL
+            = settings.avatarURL;
+
         options.audioInputDevices = await client.getAudioInputDevicesAsync();
         options.audioOutputDevices = await client.getAudioOutputDevicesAsync();
         options.videoInputDevices = await client.getVideoInputDevicesAsync();
@@ -253,15 +259,20 @@ export function init(client) {
         selectAvatar: async () => {
             await withEmojiSelection((e) => {
                 settings.avatarEmoji
+                    = client.avatarEmoji
+                    = game.me.avatarEmoji
                     = options.avatarEmoji
                     = e;
-                game.me.setAvatarEmoji(e);
-                client.setAvatarEmoji(e);
+                refreshUser(game.me.id);
             });
         },
 
         avatarURLChanged: () => {
-            client.setAvatarURL(options.avatarURL);
+            settings.avatarURL
+                = client.avatarURL
+                = game.me.avatarImage
+                = options.avatarURL;
+            refreshUser(game.me.id);
         },
 
         toggleDrawHearing: () => {
@@ -288,6 +299,10 @@ export function init(client) {
             const device = options.currentVideoInputDevice;
             await client.setVideoInputDeviceAsync(device);
             settings.preferredVideoInputID = client.preferredVideoInputID;
+        },
+
+        toggleVideo: async () => {
+            await client.toggleVideoMutedAsync();
         },
 
         gamepadChanged: () => {
@@ -324,7 +339,7 @@ export function init(client) {
         },
 
         gameStarted: () => {
-            grid(1, 2).apply(login.element);
+            gridSpan(1, 2).apply(login.element);
             login.hide();
             headbar.enabled = true;
             footbar.enabled = true;
@@ -334,22 +349,18 @@ export function init(client) {
             client.setLocalPosition(game.me.position.x, game.me.position.y);
             game.me.addEventListener("userMoved", (evt) => {
                 client.setLocalPosition(evt.x, evt.y);
-                refreshUser(game.me.id);
             });
 
-            if (settings.avatarEmoji !== null) {
-                game.me.setAvatarEmoji(settings.avatarEmoji);
-            }
-
-            settings.avatarEmoji
+            client.avatarEmoji
                 = options.avatarEmoji
-                = game.me.avatarEmoji;
+                = game.me.avatarEmoji
+                = settings.avatarEmoji;
 
             refreshUser(game.me.id);
         },
 
         gameEnded: () => {
-            grid(1, 1, 1, 3).apply(login.element);
+            gridSpan(1, 1, 1, 3).apply(login.element);
             game.hide();
             login.connected = false;
             showLogin();
@@ -397,10 +408,7 @@ export function init(client) {
         },
 
         avatarChanged: (evt) => {
-            game.setAvatarURL(evt);
-            if (evt.id === client.localUser) {
-                options.avatarURL = evt.avatarURL;
-            }
+            game.setAvatarURL(evt.id, evt.url);
             refreshUser(evt.id);
         },
 
@@ -421,6 +429,12 @@ export function init(client) {
             game.muteUserVideo(evt);
             if (evt.id === client.localUser) {
                 footbar.videoEnabled = !evt.muted;
+                if (evt.muted) {
+                    options.setAvatarVideo(null);
+                }
+                else {
+                    options.setAvatarVideo(game.me.avatarVideo.element);
+                }
                 options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
             }
         },
@@ -457,7 +471,7 @@ export function init(client) {
         },
 
         setAvatarEmoji: (evt) => {
-            game.setAvatarEmoji(evt);
+            game.setAvatarEmoji(evt.id, evt);
             refreshUser(evt.id);
         },
 

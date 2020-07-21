@@ -134,7 +134,7 @@ export class MockJitsiClient extends BaseJitsiClient {
         return this.videoMuted;
     }
 
-    setAvatarURL(url) {
+    set avatarURL(url) {
         this.dispatchEvent(Object.assign(new Event("avatarChanged"), {
             avatarURL: url
         }));

@@ -1,4 +1,4 @@
-﻿import { grid, row, style } from "../html/attrs.js";
+﻿import { gridSpan, gridRow, style, gridArea } from "../html/attrs.js";
 import { onClick, onMouseOver, onMouseOut } from "../html/evts.js";
 import { Div } from "../html/tags.js";
 import { User } from "../User.js";
@@ -36,10 +36,9 @@ export class UserDirectoryForm extends FormDialog {
 
         this.content.append(
             this.table = Div(
-                style({
-                    display: "grid",
-                    gridTemplateColumns: "auto 1fr",
-                    gridTemplateRows: "min-content",
+                gridArea(
+                    ["auto", "1fr"],
+                    ["min-content"], {
                     columnGap: "5px",
                     width: "100%"
                 })));
@@ -55,7 +54,7 @@ export class UserDirectoryForm extends FormDialog {
 
         if (isNew) {
             const elem = Div(
-                grid(1, row, 2, 1),
+                gridSpan(1, row, 2, 1),
                 z(-1),
                 newRowColor);
             setTimeout(() => {
@@ -71,10 +70,10 @@ export class UserDirectoryForm extends FormDialog {
         }
 
         const elems = [
-            Div(grid(1, row), z(0), avatar),
-            Div(grid(2, row), z(0), user.displayName),
+            Div(gridSpan(1, row), z(0), avatar),
+            Div(gridSpan(2, row), z(0), user.displayName),
             Div(
-                grid(1, row, 2, 1), z(1),
+                gridSpan(1, row, 2, 1), z(1),
                 unhoveredColor,
                 onMouseOver(function () {
                     hoveredColor.apply(this);
@@ -101,7 +100,7 @@ export class UserDirectoryForm extends FormDialog {
 
             let rowCount = 1;
             for (let elems of this.rows.values()) {
-                const r = row(rowCount++);
+                const r = gridRow(rowCount++);
                 for (let elem of elems) {
                     r.apply(elem);
                 }
@@ -117,7 +116,7 @@ export class UserDirectoryForm extends FormDialog {
 
     warn(...rest) {
         const elem = Div(
-            grid(1, this.rows.size + 1, 2, 1),
+            gridSpan(1, this.rows.size + 1, 2, 1),
             bg("yellow"),
             ...rest.map(i => i.toString()));
 
@@ -126,11 +125,5 @@ export class UserDirectoryForm extends FormDialog {
         setTimeout(() => {
             this.table.removeChild(elem);
         }, 5000);
-    }
-
-    async showAsync() {
-        this.show();
-        await this.confirmButton.once("click");
-        return false;
     }
 }

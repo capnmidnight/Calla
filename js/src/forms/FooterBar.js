@@ -1,5 +1,5 @@
 ﻿import { mutedSpeaker, noMobilePhone, speakerHighVolume, upwardsButton, videoCamera, whiteFlower } from "../emoji/emoji.js";
-import { grid, id, style, title } from "../html/attrs.js";
+import { gridSpan, id, style, title, gridCols } from "../html/attrs.js";
 import { onClick } from "../html/evts.js";
 import { Button, Div, Span } from "../html/tags.js";
 
@@ -41,9 +41,8 @@ export class FooterBar extends EventTarget {
 
         this.element = Div(
             id("footbar"),
+            gridCols("auto", "1fr", "auto"),
             style({
-                gridTemplateColumns: "auto 1fr auto",
-                display: "grid",
                 padding: "4px",
                 width: "100%",
                 columnGap: "5px",
@@ -54,14 +53,14 @@ export class FooterBar extends EventTarget {
             Button(
                 title("Toggle audio mute/unmute"),
                 onClick(_(toggleAudioEvt)),
-                grid(1, 1),
+                gridSpan(1, 1),
                 subelStyle,
                 pointerEventsAll,
                 this.muteAudioButton = Run(speakerHighVolume.value),
                 Run(buttonLabelStyle, "Audio")),
 
             this.emojiControl = Span(
-                grid(2, 1),
+                gridSpan(2, 1),
                 style({ textAlign: "center" }),
                 subButtonStyle,
                 Button(
@@ -85,7 +84,7 @@ export class FooterBar extends EventTarget {
             Button(
                 title("Toggle video mute/unmute"),
                 onClick(_(toggleVideoEvt)),
-                grid(3, 1),
+                gridSpan(3, 1),
                 subelStyle,
                 pointerEventsAll,
                 this.muteVideoButton = Run(noMobilePhone.value),

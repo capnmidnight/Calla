@@ -1,15 +1,18 @@
-﻿import { className, id, style } from "../html/attrs.js";
-import { Div, H1 } from "../html/tags.js";
+﻿import { className, id, style, gridCol, gridCols, gridArea } from "../html/attrs.js";
+import { Div, H1, Button } from "../html/tags.js";
+import { close } from "../emoji/emoji.js";
 import "../protos.js";
+import { onClick } from "../html/evts.js";
+
+const hiddenEvt = new Event("hidden");
 
 export class FormDialog extends EventTarget {
-    constructor(name, ...rest) {
+    constructor(name, header) {
         super();
 
-        const formStyle = style({
-            display: "grid",
-            gridTemplateColumns: "5fr 1fr 1fr",
-            gridTemplateRows: "auto auto 1fr auto auto",
+        const formStyle = gridArea(
+            ["5fr", "1fr", "1fr"],
+            ["auto", "auto", "1fr", "auto", "auto"], {
             overflowY: "hidden"
         });
 
@@ -17,11 +20,21 @@ export class FormDialog extends EventTarget {
             Div(
                 id(name),
                 className("dialog"),
-                H1(...rest));
+                Div(
+                    gridCols("1fr", "auto"),
+                    gridCol(1, 3),
+                    H1(
+                        gridCol(1),
+                        style({ margin: "0" }),
+                        header),
+                    Button(
+                        gridCol(2),
+                        style({ padding: "1em" }),
+                        close.value,
+                        onClick(() =>
+                            this.hide()))));
 
         formStyle.apply(this.element);
-
-        style({ gridArea: "1/1/2/4" }).apply(this.element.querySelector("h1"));
 
         this.header = this.element.querySelector(".header")
             || this.element.appendChild(Div(className("header")));
@@ -32,7 +45,6 @@ export class FormDialog extends EventTarget {
             || this.element.appendChild(Div(className("content")));
 
         style({
-            padding: "1em",
             overflowY: "scroll",
             gridArea: "3/1/4/4"
         }).apply(this.content);
@@ -69,8 +81,14 @@ export class FormDialog extends EventTarget {
         this.element.show("grid");
     }
 
+    async showAsync() {
+        this.show();
+        await this.once("hidden");
+    }
+
     hide() {
         this.element.hide();
+        this.dispatchEvent(hiddenEvt);
     }
 
     toggleOpen() {
