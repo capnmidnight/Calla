@@ -1,6 +1,6 @@
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from '../../../../../constants.js';
 
-const versionString = "Calla v0.2.11";
+const versionString = "Calla v0.2.12";
 
 function t(o, s, c) {
     return typeof o === s
@@ -3662,6 +3662,13 @@ function onInput(callback, opts) { return new HtmlEvt("input", callback, opts); 
 function onKeyUp(callback, opts) { return new HtmlEvt("keyup", callback, opts); }
 
 /**
+ * The loadedmetadata event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onLoadedMetadata(callback, opts) { return new HtmlEvt("loadedmetadata", callback, opts); }
+
+/**
  * The mouseout event.
  * @param {Function} callback - the callback function to use with the event handler.
  * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
@@ -4427,6 +4434,13 @@ function Span(...rest) { return tag("span", ...rest); }
  * @returns {HTMLUListElement}
  */
 function UL(...rest) { return tag("ul", ...rest); }
+
+/**
+ * creates an HTML Video tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLVideoElement}
+ */
+function Video(...rest) { return tag("video", ...rest); }
 
 /**
  * Creates an offscreen canvas element, if they are available. Otherwise, returns an HTMLCanvasElement.
@@ -6525,10 +6539,16 @@ const isIOS = ["iPad", "iPhone", "iPod"].indexOf(navigator.platform) >= 0;
  **/
 class VideoAvatar extends BaseAvatar {
     /**
-     * Creates a new avatar that uses an HTML Video element as its representation.
-     * @param {HTMLVideoElement} video
+     * Creates a new avatar that uses a MediaStream as its representation.
+     * @param {MediaStream} stream
      */
-    constructor(video) {
+    constructor(stream) {
+        const video = Video(
+            autoPlay,
+            playsInline,
+            muted,
+            volume(0),
+            srcObject(stream));
         super(video);
         if (!isIOS) {
             video.play();
@@ -6657,11 +6677,11 @@ class User extends EventTarget {
 
     /**
      * Set the current video element used as the avatar.
-     * @param {Video}
+     * @param {MediaStream} stream
      **/
-    setAvatarVideo(video) {
-        if (video instanceof HTMLVideoElement) {
-            this._avatarVideo = new VideoAvatar(video);
+    setAvatarVideo(stream) {
+        if (stream instanceof MediaStream) {
+            this._avatarVideo = new VideoAvatar(stream);
         }
         else {
             this._avatarVideo = null;
@@ -8286,9 +8306,9 @@ class Game extends EventTarget {
         });
     }
 
-    setAvatarVideo(evt) {
-        this.withUser(evt && evt.id, (user) => {
-            user.setAvatarVideo(evt.element);
+    setAvatarVideo(id, stream) {
+        this.withUser(id, (user) => {
+            user.setAvatarVideo(stream);
         });
     }
 
@@ -9736,12 +9756,12 @@ function init(client) {
         },
 
         videoAdded: (evt) => {
-            game.setAvatarVideo(evt);
+            game.setAvatarVideo(evt.id, evt.stream);
             refreshUser(evt.id);
         },
 
         videoRemoved: (evt) => {
-            game.setAvatarVideo(evt);
+            game.setAvatarVideo(evt.id, null);
             refreshUser(evt.id);
         },
 
@@ -17294,17 +17314,24 @@ class BaseSpatializer extends BaseAudioElement {
      * of an audio element to the listener destination.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
+     * @param {MediaStream} stream
      * @param {BasePosition} position
      */
-    constructor(userID, destination, audio, position) {
+    constructor(userID, destination, stream, position) {
         super(position);
 
         this.id = userID;
         this.destination = destination;
-        this.audio = audio;
         this.volume = 1;
         this.pan = 0;
+
+        this.stream = stream;
+        this.audio = Audio(
+            srcObject(this.stream),
+            muted,
+            autoPlay,
+            playsInline,
+            onLoadedMetadata(() => this.audio.play()));
     }
 
     /**
@@ -17312,9 +17339,9 @@ class BaseSpatializer extends BaseAudioElement {
      */
     dispose() {
         this.audio.pause();
-
-        this.position = null;
         this.audio = null;
+        this.stream = null;
+        this.position = null;
         this.destination = null;
         this.id = null;
     }
@@ -17360,8 +17387,6 @@ class BaseSpatializer extends BaseAudioElement {
     }
 }
 
-let tryMediaStream = true;
-
 const audioActivityEvt = new AudioActivityEvent(),
     activityCounterMin = 0,
     activityCounterMax = 60,
@@ -17405,15 +17430,13 @@ class BaseAnalyzedSpatializer extends BaseSpatializer {
      * 
      * @param {string} userID
      * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
+     * @param {MediaStream} stream
      * @param {BasePosition} position
      * @param {number} bufferSize
      * @param {PannerNode|StereoPannerNode} inNode
      */
-    constructor(userID, destination, audio, position, bufferSize, inNode) {
-        super(userID, destination, audio, position);
-
-        this.audio.volume = 0;
+    constructor(userID, destination, stream, position, bufferSize, inNode) {
+        super(userID, destination, stream, position);
 
         this.bufferSize = bufferSize;
         this.buffer = new Float32Array(this.bufferSize);
@@ -17431,11 +17454,30 @@ class BaseAnalyzedSpatializer extends BaseSpatializer {
         this.lastAudible = true;
         this.activityCounter = 0;
 
-        /** @type {MediaStream} */
-        this.stream = null;
-
         /** @type {MediaSource} */
         this.source = null;
+
+        /** @type {HTMLAudioElement} */
+        this.audio = null;
+
+        /** @type {MediaStream} */
+        this.stream = stream;
+        this.checkStream();
+    }
+
+    checkStream() {
+        if (!this.source) {
+            try {
+                if (this.stream.active) {
+                    this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
+                    this.source.connect(this.analyser);
+                    this.source.connect(this.inNode);
+                }
+            }
+            catch (exp) {
+                console.warn("Creating the media stream failed. Reason: ", exp);
+            }
+        }
     }
 
     /**
@@ -17444,38 +17486,7 @@ class BaseAnalyzedSpatializer extends BaseSpatializer {
     update() {
         super.update();
 
-        if (!this.source) {
-            if (tryMediaStream) {
-                try {
-                    if (!this.stream) {
-                        this.stream = this.audio.mozCaptureStream
-                            ? this.audio.mozCaptureStream()
-                            : this.audio.captureStream();
-                    }
-
-                    if (this.stream.active) {
-                        this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
-                        this.source.connect(this.analyser);
-                        this.source.connect(this.inNode);
-                    }
-                }
-                catch (exp) {
-                    tryMediaStream = false;
-                    console.warn("Creating the media stream failed. Reason: ", exp);
-                }
-            }
-
-            if (!tryMediaStream) {
-                try {
-                    this.source = this.destination.audioContext.createMediaElementSource(this.audio);
-                    this.source.connect(this.analyser);
-                    this.source.connect(this.inNode);
-                }
-                catch (exp) {
-                    console.warn("Source isn't available yet. Will retry in a moment. Reason: ", exp);
-                }
-            }
-        }
+        this.checkStream();
 
         if (this.source) {
             this.analyser.getFloatFrequencyData(this.buffer);
@@ -17525,14 +17536,14 @@ class BaseWebAudioSpatializer extends BaseAnalyzedSpatializer {
      * Creates a new spatializer that uses the WebAudio API
      * @param {string} userID
      * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
+     * @param {MediaStream} stream
      * @param {BasePosition} position
      * @param {number} bufferSize
      * @param {PannerNode|StereoPannerNode} inNode
      * @param {GainNode=} outNode
      */
-    constructor(userID, destination, audio, position, bufferSize, inNode, outNode) {
-        super(userID, destination, audio, position, bufferSize, inNode);
+    constructor(userID, destination, stream, position, bufferSize, inNode, outNode) {
+        super(userID, destination, stream, position, bufferSize, inNode);
 
         this.outNode = outNode || inNode;
         this.outNode.connect(this.destination.audioContext.destination);
@@ -17566,14 +17577,14 @@ class BasePannerSpatializer extends BaseWebAudioSpatializer {
      * Creates a new spatializer that uses WebAudio's PannerNode.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
+     * @param {MediaStream} stream
      * @param {number} bufferSize
      * @param {Function} createPosition
      */
-    constructor(userID, destination, audio, bufferSize, createPosition) {
+    constructor(userID, destination, stream, bufferSize, createPosition) {
         const panner = destination.audioContext.createPanner(),
             position = createPosition(panner);
-        super(userID, destination, audio, position, bufferSize, panner);
+        super(userID, destination, stream, position, bufferSize, panner);
 
         this.inNode.panningModel = "HRTF";
         this.inNode.distanceModel = "inverse";
@@ -17605,12 +17616,12 @@ class NewPannerSpatializer extends BasePannerSpatializer {
      * Creates a new spatializer that uses WebAudio's PannerNode.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
+     * @param {MediaStream} stream
      * @param {number} bufferSize
      * @param {boolean} forceInterpolatedPosition
      */
-    constructor(userID, destination, audio, bufferSize, forceInterpolatedPosition) {
-        super(userID, destination, audio, position, bufferSize, panner => new WebAudioNewNodePosition(panner, forceInterpolatedPosition));
+    constructor(userID, destination, stream, bufferSize, forceInterpolatedPosition) {
+        super(userID, destination, stream, position, bufferSize, panner => new WebAudioNewNodePosition(panner, forceInterpolatedPosition));
         Object.seal(this);
     }
 }
@@ -17624,14 +17635,14 @@ class GoogleResonanceAudioSpatializer extends BaseAnalyzedSpatializer {
      * Creates a new spatializer that uses Google's Resonance Audio library.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
+     * @param {MediaStream} stream
      * @param {number} bufferSize
      */
-    constructor(userID, destination, audio, bufferSize) {
+    constructor(userID, destination, stream, bufferSize) {
         const position = new InterpolatedPosition();
         const resNode = destination.position.scene.createSource();
 
-        super(userID, destination, audio, position, bufferSize, resNode.input);
+        super(userID, destination, stream, position, bufferSize, resNode.input);
 
         this.resNode = resNode;
     }
@@ -17675,11 +17686,11 @@ class StereoSpatializer extends BaseWebAudioSpatializer {
      * Creates a new spatializer that performs stereo panning and volume scaling.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
+     * @param {MediaStream} stream
      * @param {number} bufferSize
      */
-    constructor(userID, destination, audio, bufferSize) {
-        super(userID, destination, audio, new InterpolatedPosition(), bufferSize,
+    constructor(userID, destination, stream, bufferSize) {
+        super(userID, destination, stream, new InterpolatedPosition(), bufferSize,
             destination.audioContext.createStereoPanner(),
             destination.audioContext.createGain());
 
@@ -17705,12 +17716,11 @@ class VolumeOnlySpatializer extends BaseSpatializer {
      * Creates a new spatializer that only modifies volume.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
+     * @param {MediaStream} stream
      */
-    constructor(userID, destination, audio) {
-        super(userID, destination, audio, new InterpolatedPosition());
-        this.audio.play();
-
+    constructor(userID, destination, stream) {
+        super(userID, destination, stream, new InterpolatedPosition());
+        this.audio.muted = false;
         Object.seal(this);
     }
 
@@ -17732,12 +17742,12 @@ class OldPannerSpatializer extends BasePannerSpatializer {
      * Creates a new spatializer that uses WebAudio's PannerNode.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
+     * @param {MediaStream} stream
      * @param {number} bufferSize
      * @param {boolean} forceInterpolatedPosition
      */
-    constructor(userID, destination, audio, bufferSize) {
-        super(userID, destination, audio, position, bufferSize, panner => new WebAudioOldNodePosition(panner));
+    constructor(userID, destination, stream, bufferSize) {
+        super(userID, destination, stream, position, bufferSize, panner => new WebAudioOldNodePosition(panner));
         Object.seal(this);
     }
 }
@@ -18232,13 +18242,6 @@ class LibJitsiMeetClient extends BaseJitsiClient {
 
                 track.addEventListener(JitsiMeetJS.events.track.TRACK_MUTE_CHANGED, onTrackChanged);
 
-                const elem = tag(trackType,
-                    autoPlay(!isLocal),
-                    playsInline(!isLocal),
-                    muted(isLocal || trackKind === "video"),
-                    volume(trackKind === "video" ? 1 : 0),
-                    srcObject(track.stream));
-
                 if (!userInputs.has(userID)) {
                     userInputs.set(userID, new Map());
                 }
@@ -18252,12 +18255,12 @@ class LibJitsiMeetClient extends BaseJitsiClient {
                 inputs.set(trackKind, track);
 
                 if (!isLocal && trackKind === "audio") {
-                    this.audioClient.createSource(userID, elem);
+                    this.audioClient.createSource(userID, track.stream);
                 }
 
                 this.dispatchEvent(Object.assign(new Event(trackKind + "Added"), {
                     id: userID,
-                    element: elem
+                    stream: track.stream
                 }));
 
                 onTrackMuteChanged(track, false);
