@@ -1,6 +1,6 @@
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from '../../../../../constants.js';
 
-const versionString = "Calla v0.2.13";
+const versionString = "Calla v0.2.14";
 
 function t(o, s, c) {
     return typeof o === s
@@ -3393,6 +3393,11 @@ class HtmlAttr {
         Object.freeze(this);
     }
 
+    appendStyle(key, value) {
+        this.value[key] = value;
+        return this;
+    }
+
     /**
      * Set the attribute value on an HTMLElement
      * @param {HTMLElement} elem - the element on which to set the attribute.
@@ -3443,6 +3448,12 @@ function className(value) { return new HtmlAttr("className", value); }
  * @param {boolean} value - the value to set on the attribute.
  **/
 function controls(value) { return new HtmlAttr("controls", value, "audio", "video"); }
+
+/**
+ * Indicates whether the user can interact with the element.
+ * @param {boolean} value - the value to set on the attribute.
+ **/
+function disabled(value) { return new HtmlAttr("disabled", value, "button", "command", "fieldset", "input", "keygen", "optgroup", "option", "select", "textarea"); }
 
 /**
  * Describes elements which belongs to this one.
@@ -3562,12 +3573,47 @@ function width(value) { return new HtmlAttr("width", value, "canvas", "embed", "
 const monospaceFamily = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
 const monospaceFont = style({ fontFamily: monospaceFamily });
 
+function gridCols(...cols) {
+    return style({
+        display: "grid",
+        gridTemplateColumns: cols.join(" ")
+    });
+}
+
+function gridArea(cols, rows, addStyles) {
+    const s = style({
+        display: "grid",
+        gridTemplateColumns: cols.join(" "),
+        gridTemplateRows: rows.join(" ")
+    });
+    for (let key in addStyles) {
+        s.appendStyle(key, addStyles[key]);
+    }
+    return s;
+}
+
+/**
+ * Constructs a CSS grid column definition
+ * @param {number} x - the starting horizontal cell for the element.
+ * @param {number} [w=null] - the number of cells wide the element should cover.
+ */
+function gridCol(x, w = null) {
+    if (w === null) {
+        w = 1;
+    }
+
+    return style({
+        gridColumnStart: x,
+        gridColumnEnd: x + w
+    });
+}
+
 /**
  * Constructs a CSS grid row definition
  * @param {number} y - the starting vertical cell for the element.
  * @param {number} [h=null] - the number of cells tall the element should cover.
  */
-function row(y, h = null) {
+function gridRow(y, h = null) {
     if (h === null) {
         h = 1;
     }
@@ -3585,7 +3631,7 @@ function row(y, h = null) {
  * @param {number} [w=null] - the number of cells wide the element should cover.
  * @param {number} [h=null] - the number of cells tall the element should cover.
  */
-function grid(x, y, w = null, h = null) {
+function gridSpan(x, y, w = null, h = null) {
     if (w === null) {
         w = 1;
     }
@@ -4387,6 +4433,13 @@ function Img(...rest) { return tag("img", ...rest); }
 function Input(...rest) { return tag("input", ...rest); }
 
 /**
+ * creates an HTML Input tag that is a URL entry field.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+function InputURL(...rest) { return Input(type("url"), ...rest) }
+
+/**
  * creates an HTML Label tag
  * @param {...TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLLabelElement}
@@ -4513,14 +4566,15 @@ function OptionPanel(id, name, ...rest) {
     return new OptionPanelTag(id, name, ...rest);
 }
 
+const hiddenEvt = new Event("hidden");
+
 class FormDialog extends EventTarget {
-    constructor(name, ...rest) {
+    constructor(name, header) {
         super();
 
-        const formStyle = style({
-            display: "grid",
-            gridTemplateColumns: "5fr 1fr 1fr",
-            gridTemplateRows: "auto auto 1fr auto auto",
+        const formStyle = gridArea(
+            ["5fr", "1fr", "1fr"],
+            ["auto", "auto", "1fr", "auto", "auto"], {
             overflowY: "hidden"
         });
 
@@ -4528,11 +4582,21 @@ class FormDialog extends EventTarget {
             Div(
                 id(name),
                 className("dialog"),
-                H1(...rest));
+                Div(
+                    gridCols("1fr", "auto"),
+                    gridCol(1, 3),
+                    H1(
+                        gridCol(1),
+                        style({ margin: "0" }),
+                        header),
+                    Button(
+                        gridCol(2),
+                        style({ padding: "1em" }),
+                        close.value,
+                        onClick(() =>
+                            this.hide()))));
 
         formStyle.apply(this.element);
-
-        style({ gridArea: "1/1/2/4" }).apply(this.element.querySelector("h1"));
 
         this.header = this.element.querySelector(".header")
             || this.element.appendChild(Div(className("header")));
@@ -4543,7 +4607,6 @@ class FormDialog extends EventTarget {
             || this.element.appendChild(Div(className("content")));
 
         style({
-            padding: "1em",
             overflowY: "scroll",
             gridArea: "3/1/4/4"
         }).apply(this.content);
@@ -4580,8 +4643,14 @@ class FormDialog extends EventTarget {
         this.element.show("grid");
     }
 
+    async showAsync() {
+        this.show();
+        await this.once("hidden");
+    }
+
     hide() {
         this.element.hide();
+        this.dispatchEvent(hiddenEvt);
     }
 
     toggleOpen() {
@@ -4733,16 +4802,16 @@ class EmojiForm extends FormDialog {
                         addIconsToContainer(previousEmoji, this.recent);
                     }
 
-                    this.hide();
                     this.dispatchEvent(new EmojiSelectedEvent(selectedEmoji));
+                    this.hide();
                 })),
 
             Button(className("cancel"),
                 "Cancel",
                 onClick(() => {
                     this.confirmButton.lock();
-                    this.hide();
                     this.dispatchEvent(cancelEvt);
+                    this.hide();
                 })),
 
             this.preview = Span(style({ gridArea: "4/1/5/4" })));
@@ -4757,6 +4826,7 @@ class EmojiForm extends FormDialog {
                 const done = () => {
                     this.removeEventListener("emojiSelected", yes);
                     this.removeEventListener("emojiCanceled", no);
+                    this.removeEventListener("hidden", no);
                 };
 
                 yes = (evt) => {
@@ -4776,6 +4846,7 @@ class EmojiForm extends FormDialog {
 
                 this.addEventListener("emojiSelected", yes);
                 this.addEventListener("emojiCanceled", no);
+                this.addEventListener("hidden", no);
 
                 closeAll();
                 this.show();
@@ -4828,9 +4899,8 @@ class FooterBar extends EventTarget {
 
         this.element = Div(
             id("footbar"),
+            gridCols("auto", "1fr", "auto"),
             style({
-                gridTemplateColumns: "auto 1fr auto",
-                display: "grid",
                 padding: "4px",
                 width: "100%",
                 columnGap: "5px",
@@ -4841,14 +4911,14 @@ class FooterBar extends EventTarget {
             Button(
                 title("Toggle audio mute/unmute"),
                 onClick(_(toggleAudioEvt)),
-                grid(1, 1),
+                gridSpan(1, 1),
                 subelStyle,
                 pointerEventsAll,
                 this.muteAudioButton = Run(speakerHighVolume.value),
                 Run(buttonLabelStyle, "Audio")),
 
             this.emojiControl = Span(
-                grid(2, 1),
+                gridSpan(2, 1),
                 style({ textAlign: "center" }),
                 subButtonStyle,
                 Button(
@@ -4872,7 +4942,7 @@ class FooterBar extends EventTarget {
             Button(
                 title("Toggle video mute/unmute"),
                 onClick(_(toggleVideoEvt)),
-                grid(3, 1),
+                gridSpan(3, 1),
                 subelStyle,
                 pointerEventsAll,
                 this.muteVideoButton = Run(noMobilePhone.value),
@@ -4953,9 +5023,8 @@ class HeaderBar extends EventTarget {
 
         this.element = Div(
             id("headbar"),
+            gridCols("auto", "auto", "auto", "auto", "1fr", "auto", "auto"),
             style({
-                gridTemplateColumns: "auto auto auto auto 1fr auto auto",
-                display: "grid",
                 padding: "4px",
                 width: "100%",
                 columnGap: "5px",
@@ -4967,7 +5036,7 @@ class HeaderBar extends EventTarget {
                 title("Show/hide options"),
                 onClick(_(toggleOptionsEvt)),
                 subelStyle$1,
-                grid(1, 1),
+                gridSpan(1, 1),
                 Run$1(gear.value),
                 Run$1(buttonLabelStyle$1, "Options")),
 
@@ -4975,7 +5044,7 @@ class HeaderBar extends EventTarget {
                 title("Show/hide instructions"),
                 onClick(_(toggleInstructionsEvt)),
                 subelStyle$1,
-                grid(2, 1),
+                gridSpan(2, 1),
                 Run$1(questionMark.value),
                 Run$1(buttonLabelStyle$1, "Info")),
 
@@ -4983,7 +5052,7 @@ class HeaderBar extends EventTarget {
                 title("Share your current room to twitter"),
                 onClick(_(tweetEvt)),
                 subelStyle$1,
-                grid(3, 1),
+                gridSpan(3, 1),
                 Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
                     alt("icon"),
                     role("presentation"),
@@ -4994,7 +5063,7 @@ class HeaderBar extends EventTarget {
                 title("View user directory"),
                 onClick(_(toggleUserDirectoryEvt)),
                 subelStyle$1,
-                grid(4, 1),
+                gridSpan(4, 1),
                 Run$1(speakingHead.value),
                 Run$1(buttonLabelStyle$1, "Users")),
 
@@ -5003,7 +5072,7 @@ class HeaderBar extends EventTarget {
                 title("Toggle fullscreen"),
                 onClick(_(toggleFullscreenEvt)),
                 subelStyle$1,
-                grid(6, 1),
+                gridSpan(6, 1),
                 Run$1(squareFourCourners.value),
                 Run$1(buttonLabelStyle$1, "Expand")),
 
@@ -5012,7 +5081,7 @@ class HeaderBar extends EventTarget {
                 title("Leave the room"),
                 onClick(_(leaveEvt)),
                 subelStyle$1,
-                grid(7, 1),
+                gridSpan(7, 1),
                 Run$1(door.value),
                 Run$1(buttonLabelStyle$1, "Leave")));
 
@@ -5057,7 +5126,7 @@ const loginEvt = new Event("login"),
 
 class LoginForm extends FormDialog {
     constructor() {
-        super("login");
+        super("login", "Login");
 
         const self = Object.seal({
             ready: false,
@@ -5530,6 +5599,7 @@ const keyWidthStyle = style({ width: "7em" }),
     audioInputChangedEvt = new Event("audioInputChanged"),
     audioOutputChangedEvt = new Event("audioOutputChanged"),
     videoInputChangedEvt = new Event("videoInputChanged"),
+    toggleVideoEvt$1 = new Event("toggleVideo"),
     gamepadButtonUpEvt = Object.assign(new Event("gamepadbuttonup"), {
         button: 0
     }),
@@ -5613,22 +5683,46 @@ class OptionsForm extends FormDialog {
 
         const panels = [
             OptionPanel("avatar", "Avatar",
-                this.avatarURLInput = LabeledInput(
-                    "avatarURL",
-                    "text",
-                    "Avatar URL: ",
-                    placeHolder("https://example.com/me.png"),
-                    onInput(_(avatarUrlChangedEvt))),
-                " or ",
-                this.avatarEmojiInput = Div(
+                Div(
                     Label(
                         htmlFor("selectAvatarEmoji"),
-                        "Avatar Emoji: "),
-                    this.avatarEmojiPreview = Span(bust.value),
+                        "Emoji: "),
                     Button(
                         id("selectAvatarEmoji"),
                         "Select",
-                        onClick(_(selectAvatarEvt))))),
+                        onClick(_(selectAvatarEvt)))),
+                " or ",
+                Div(
+                    Label(
+                        htmlFor("setAvatarURL"),
+                        "Photo: "),
+
+                    this.avatarURLInput = InputURL(
+                        placeHolder("https://example.com/me.png")),
+                    Button(
+                        id("setAvatarURL"),
+                        "Set",
+                        onClick(() => {
+                            this.avatarURL = this.avatarURLInput.value;
+                            this.dispatchEvent(avatarUrlChangedEvt);
+                        })),
+                    this.clearAvatarURLButton = Button(
+                        disabled,
+                        "Clear",
+                        onClick(() => {
+                            this.avatarURL = null;
+                            this.dispatchEvent(avatarUrlChangedEvt);
+                        }))),
+                " or ",
+                Div(
+                    Label(
+                        htmlFor("videoAvatarButton"),
+                        "Video: "),
+                    this.useVideoAvatarButton = Button(
+                        id("videoAvatarButton"),
+                        "Use video",
+                        onClick(_(toggleVideoEvt$1)))),
+                this.avatarPreview = Span(bust.value)),
 
             OptionPanel("interface", "Interface",
                 this.fontSizeInput = LabeledInput(
@@ -5734,10 +5828,7 @@ class OptionsForm extends FormDialog {
             panels[i].button.style.fontSize = "3.5vw";
         }
 
-        Object.assign(this.header.style, {
-            display: "grid",
-            gridTemplateColumns: cols.join(" ")
-        });
+        gridCols(...cols).apply(this.header);
 
         this.header.append(...panels.map(p => p.button));
         this.content.append(...panels.map(p => p.element));
@@ -5747,11 +5838,6 @@ class OptionsForm extends FormDialog {
             borderRight: "solid 2px black",
             borderBottom: "solid 2px black"
         }).apply(this.content);
-        this.footer.append(
-            this.confirmButton = Button(
-                className("confirm"),
-                "Close",
-                onClick(() => this.hide())));
 
         const showPanel = (p) =>
             () => {
@@ -5821,23 +5907,49 @@ class OptionsForm extends FormDialog {
 
     set avatarEmoji(e) {
         this._avatarEmoji = e;
-        clear(this.avatarEmojiPreview);
-        this.avatarEmojiPreview.append(Span(
+        clear(this.avatarPreview);
+        this.avatarPreview.append(Span(
             title(e && e.desc || "(None)"),
             e && e.value || "N/A"));
     }
 
     get avatarURL() {
-        return this.avatarURLInput.value;
+        if (this.avatarURLInput.value.length === 0) {
+            return null;
+        }
+        else {
+            return this.avatarURLInput.value;
+        }
     }
 
-    set avatarURL(value) {
-        this.avatarURLInput.value = value;
+    set avatarURL(v) {
+        clear(this.avatarPreview);
+        if (isString(v)) {
+            this.avatarURLInput.value = v;
+            this.clearAvatarURLButton.unlock();
+            this.avatarPreview.append(Img(src(v)));
+        }
+        else {
+            this.avatarURLInput.value = "";
+            this.clearAvatarURLButton.lock();
+        }
     }
 
-    async showAsync() {
-        this.show();
-        await this.confirmButton.once("click");
+
+    setAvatarVideo(v) {
+        clear(this.avatarPreview);
+        if (v !== null) {
+            this.useVideoAvatarButton.innerHTML = "Remove video";
+            this.avatarPreview.append(Video(
+                autoPlay,
+                playsInline,
+                muted,
+                volume(0),
+                srcObject(v.srcObject)));
+        }
+        else {
+            this.useVideoAvatarButton.innerHTML = "Use video";
+        }
     }
 
     get inputBinding() {
@@ -6491,9 +6603,6 @@ class PhotoAvatar extends BaseAvatar {
     constructor(url) {
         super(Canvas());
 
-        /** @type {HTMLCanvasElement} */
-        this.element = null;
-
         const img = new Image();
         img.addEventListener("load", (evt) => {
             this.element.width = img.width;
@@ -6612,8 +6721,8 @@ class User extends EventTarget {
 
         /** @type {AvatarMode} */
         this.setAvatarVideo(null);
-        this.setAvatarImage(null);
-        this.setAvatarEmoji(isMe ? allPeople.random() : bust);
+        this.avatarImage = null;
+        this.avatarEmoji = isMe ? allPeople.random() : bust;
 
         this.audioMuted = false;
         this.videoMuted = true;
@@ -6642,10 +6751,10 @@ class User extends EventTarget {
 
         switch (evt.avatarMode) {
             case AvatarMode.emoji:
-                this.setAvatarEmoji(evt.avatarID);
+                this.avatarEmoji = evt.avatarID;
                 break;
             case AvatarMode.photo:
-                this.setAvatarImage(evt.avatarID);
+                this.avatarImage = evt.avatarID;
                 break;
         }
 
@@ -6690,18 +6799,21 @@ class User extends EventTarget {
 
     /**
      * An avatar using a photo
-     * @type {PhotoAvatar}
+     * @type {string}
      **/
     get avatarImage() {
-        return this._avatarImage;
+        return this._avatarImage
+            && this._avatarImage.url
+            || null;
     }
 
     /**
      * Set the URL of the photo to use as an avatar.
      * @param {string} url
      */
-    setAvatarImage(url) {
-        if (isString(url)) {
+    set avatarImage(url) {
+        if (isString(url)
+            && url.length > 0) {
             this._avatarImage = new PhotoAvatar(url);
         }
         else {
@@ -6721,7 +6833,7 @@ class User extends EventTarget {
      * Set the emoji to use as an avatar.
      * @param {Emoji} emoji
      */
-    setAvatarEmoji(emoji) {
+    set avatarEmoji(emoji) {
         if (emoji
             && emoji.value
             && emoji.desc) {
@@ -6737,13 +6849,13 @@ class User extends EventTarget {
      * @returns {AvatarMode}
      **/
     get avatarMode() {
-        if (this.avatarVideo) {
+        if (this._avatarVideo) {
             return AvatarMode.video;
         }
-        else if (this.avatarPhoto) {
+        else if (this._avatarImage) {
             return AvatarMode.photo;
         }
-        else if (this.avatarEmoji) {
+        else if (this._avatarEmoji) {
             return AvatarMode.emoji;
         }
         else {
@@ -6761,7 +6873,7 @@ class User extends EventTarget {
             case AvatarMode.emoji:
                 return { value: this.avatarEmoji.value, desc: this.avatarEmoji.desc };
             case AvatarMode.photo:
-                return this.avatarImage.url;
+                return this.avatarImage;
             default:
                 return null;
         }
@@ -6774,11 +6886,11 @@ class User extends EventTarget {
     get avatar() {
         switch (this.avatarMode) {
             case AvatarMode.emoji:
-                return this.avatarEmoji;
+                return this._avatarEmoji;
             case AvatarMode.photo:
-                return this.avatarImage;
+                return this._avatarImage;
             case AvatarMode.video:
-                return this.avatarVideo;
+                return this._avatarVideo;
             default:
                 return null;
         }
@@ -7017,10 +7129,9 @@ class UserDirectoryForm extends FormDialog {
 
         this.content.append(
             this.table = Div(
-                style({
-                    display: "grid",
-                    gridTemplateColumns: "auto 1fr",
-                    gridTemplateRows: "min-content",
+                gridArea(
+                    ["auto", "1fr"],
+                    ["min-content"], {
                     columnGap: "5px",
                     width: "100%"
                 })));
@@ -7036,7 +7147,7 @@ class UserDirectoryForm extends FormDialog {
 
         if (isNew) {
             const elem = Div(
-                grid(1, row, 2, 1),
+                gridSpan(1, row, 2, 1),
                 z(-1),
                 newRowColor);
             setTimeout(() => {
@@ -7052,10 +7163,10 @@ class UserDirectoryForm extends FormDialog {
         }
 
         const elems = [
-            Div(grid(1, row), z(0), avatar),
-            Div(grid(2, row), z(0), user.displayName),
+            Div(gridSpan(1, row), z(0), avatar),
+            Div(gridSpan(2, row), z(0), user.displayName),
             Div(
-                grid(1, row, 2, 1), z(1),
+                gridSpan(1, row, 2, 1), z(1),
                 unhoveredColor,
                 onMouseOver(function () {
                     hoveredColor.apply(this);
@@ -7082,7 +7193,7 @@ class UserDirectoryForm extends FormDialog {
 
             let rowCount = 1;
             for (let elems of this.rows.values()) {
-                const r = row(rowCount++);
+                const r = gridRow(rowCount++);
                 for (let elem of elems) {
                     r.apply(elem);
                 }
@@ -7098,7 +7209,7 @@ class UserDirectoryForm extends FormDialog {
 
     warn(...rest) {
         const elem = Div(
-            grid(1, this.rows.size + 1, 2, 1),
+            gridSpan(1, this.rows.size + 1, 2, 1),
             bg("yellow"),
             ...rest.map(i => i.toString()));
 
@@ -7107,12 +7218,6 @@ class UserDirectoryForm extends FormDialog {
         setTimeout(() => {
             this.table.removeChild(elem);
         }, 5000);
-    }
-
-    async showAsync() {
-        this.show();
-        await this.confirmButton.once("click");
-        return false;
     }
 }
 
@@ -7858,7 +7963,7 @@ const CAMERA_LERP = 0.01,
     zoomChangedEvt = new Event("zoomChanged"),
     emojiNeededEvt = new Event("emojiNeeded"),
     toggleAudioEvt$1 = new Event("toggleAudio"),
-    toggleVideoEvt$1 = new Event("toggleVideo"),
+    toggleVideoEvt$2 = new Event("toggleVideo"),
     emoteEvt$1 = Object.assign(new Event("emote"), {
         id: null,
         emoji: null
@@ -7884,9 +7989,14 @@ class Game extends EventTarget {
             }));
         this.gFront = this.element.getContext("2d");
 
+        /** @type {User} */
         this.me = null;
+
+        /** @type {TileMap} */
         this.map = null;
+
         this.waypoints = [];
+
         this.keys = {};
 
         /** @type {Map.<string, User>} */
@@ -8236,7 +8346,7 @@ class Game extends EventTarget {
     }
 
     toggleMyVideo() {
-        this.dispatchEvent(toggleVideoEvt$1);
+        this.dispatchEvent(toggleVideoEvt$2);
     }
 
     muteUserAudio(evt) {
@@ -8312,24 +8422,24 @@ class Game extends EventTarget {
         });
     }
 
-    setAvatarURL(evt) {
+    setAvatarURL(id, url) {
         //evt = {
         //  id: string, // the id of the participant that changed his avatar.
         //  avatarURL: string // the new avatar URL.
         //}
-        this.withUser(evt && evt.id, (user) => {
-            user.setAvatarImage(evt.avatarURL);
+        this.withUser(id, (user) => {
+            user.avatarImage = url;
         });
     }
 
-    setAvatarEmoji(evt) {
+    setAvatarEmoji(id, emoji) {
         //evt = {
         //  id: string, // the id of the participant that changed his avatar.
         //  value: string // the emoji text to use as the avatar.
         //  desc: string // a description of the emoji
         //}
-        this.withUser(evt && evt.id, (user) => {
-            user.setAvatarEmoji(evt);
+        this.withUser(id, (user) => {
+            user.avatarEmoji = emoji;
         });
     }
 
@@ -8344,8 +8454,6 @@ class Game extends EventTarget {
         this.currentRoomName = evt.roomName.toLowerCase();
         this.me = new User(evt, true);
         this.users.set(evt.id, this.me);
-
-        this.setAvatarURL(evt);
 
         this.map = new TileMap(this.currentRoomName);
         let success = false;
@@ -9075,15 +9183,15 @@ class BaseJitsiClient extends EventTarget {
         this.sendMessageTo(toUserID, "userInitResponse", fromUserState);
     }
 
-    setAvatarEmoji(emoji) {
+    set avatarEmoji(emoji) {
         for (let toUserID of this.userIDs()) {
             this.sendMessageTo(toUserID, "setAvatarEmoji", emoji);
         }
     }
 
-    setAvatarURL(url) {
+    set avatarURL(url) {
         for (let toUserID of this.userIDs()) {
-            this.sendMessageTo(toUserID, "setAvatarURL", url);
+            this.sendMessageTo(toUserID, "avatarChanged", { url });
         }
     }
 
@@ -9123,6 +9231,7 @@ const selfs$5 = new Map(),
         roomName: "calla",
         userName: "",
         avatarEmoji: null,
+        avatarURL: null,
         gamepadIndex: 0,
         preferredAudioOutputID: null,
         preferredAudioInputID: null,
@@ -9298,6 +9407,17 @@ class Settings {
     set avatarEmoji(value) {
         if (value !== this.avatarEmoji) {
             selfs$5.get(this).avatarEmoji = value;
+            commit(this);
+        }
+    }
+
+    get avatarURL() {
+        return selfs$5.get(this).avatarURL;
+    }
+
+    set avatarURL(value) {
+        if (value !== this.avatarURL) {
+            selfs$5.get(this).avatarURL = value;
             commit(this);
         }
     }
@@ -9497,16 +9617,16 @@ function init(client) {
         if (e.element) {
             let g = null;
             if (e === headbar) {
-                g = grid(1, 1);
+                g = gridSpan(1, 1);
             }
             else if (e === footbar) {
-                g = grid(1, 3);
+                g = gridSpan(1, 3);
             }
             else if (e === game || e === login) {
-                g = grid(1, 1, 1, 3);
+                g = gridSpan(1, 1, 1, 3);
             }
             else {
-                g = grid(1, 2);
+                g = gridSpan(1, 2);
             }
             g.apply(e.element);
             e.element.style.zIndex = (z++);
@@ -9524,6 +9644,7 @@ function init(client) {
     options.fontSize = game.fontSize = settings.fontSize;
     options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
     options.inputBinding = game.inputBinding = settings.inputBinding;
+
     game.cameraZ = game.targetCameraZ = settings.zoom;
     game.transitionSpeed = settings.transitionSpeed = 0.5;
     login.userName = settings.userName;
@@ -9605,6 +9726,11 @@ function init(client) {
 
         await game.startAsync(joinInfo);
 
+        client.avatarURL
+            = game.me.avatarImage
+            = options.avatarURL
+            = settings.avatarURL;
+
         options.audioInputDevices = await client.getAudioInputDevicesAsync();
         options.audioOutputDevices = await client.getAudioOutputDevicesAsync();
         options.videoInputDevices = await client.getVideoInputDevicesAsync();
@@ -9629,15 +9755,20 @@ function init(client) {
         selectAvatar: async () => {
             await withEmojiSelection((e) => {
                 settings.avatarEmoji
+                    = client.avatarEmoji
+                    = game.me.avatarEmoji
                     = options.avatarEmoji
                     = e;
-                game.me.setAvatarEmoji(e);
-                client.setAvatarEmoji(e);
+                refreshUser(game.me.id);
             });
         },
 
         avatarURLChanged: () => {
-            client.setAvatarURL(options.avatarURL);
+            settings.avatarURL
+                = client.avatarURL
+                = game.me.avatarImage
+                = options.avatarURL;
+            refreshUser(game.me.id);
         },
 
         toggleDrawHearing: () => {
@@ -9664,6 +9795,10 @@ function init(client) {
             const device = options.currentVideoInputDevice;
             await client.setVideoInputDeviceAsync(device);
             settings.preferredVideoInputID = client.preferredVideoInputID;
+        },
+
+        toggleVideo: async () => {
+            await client.toggleVideoMutedAsync();
         },
 
         gamepadChanged: () => {
@@ -9700,7 +9835,7 @@ function init(client) {
         },
 
         gameStarted: () => {
-            grid(1, 2).apply(login.element);
+            gridSpan(1, 2).apply(login.element);
             login.hide();
             headbar.enabled = true;
             footbar.enabled = true;
@@ -9710,22 +9845,18 @@ function init(client) {
             client.setLocalPosition(game.me.position.x, game.me.position.y);
             game.me.addEventListener("userMoved", (evt) => {
                 client.setLocalPosition(evt.x, evt.y);
-                refreshUser(game.me.id);
             });
 
-            if (settings.avatarEmoji !== null) {
-                game.me.setAvatarEmoji(settings.avatarEmoji);
-            }
-
-            settings.avatarEmoji
+            client.avatarEmoji
                 = options.avatarEmoji
-                = game.me.avatarEmoji;
+                = game.me.avatarEmoji
+                = settings.avatarEmoji;
 
             refreshUser(game.me.id);
         },
 
         gameEnded: () => {
-            grid(1, 1, 1, 3).apply(login.element);
+            gridSpan(1, 1, 1, 3).apply(login.element);
             game.hide();
             login.connected = false;
             showLogin();
@@ -9773,10 +9904,7 @@ function init(client) {
         },
 
         avatarChanged: (evt) => {
-            game.setAvatarURL(evt);
-            if (evt.id === client.localUser) {
-                options.avatarURL = evt.avatarURL;
-            }
+            game.setAvatarURL(evt.id, evt.url);
             refreshUser(evt.id);
         },
 
@@ -9797,6 +9925,12 @@ function init(client) {
             game.muteUserVideo(evt);
             if (evt.id === client.localUser) {
                 footbar.videoEnabled = !evt.muted;
+                if (evt.muted) {
+                    options.setAvatarVideo(null);
+                }
+                else {
+                    options.setAvatarVideo(game.me.avatarVideo.element);
+                }
                 options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
             }
         },
@@ -9833,7 +9967,7 @@ function init(client) {
         },
 
         setAvatarEmoji: (evt) => {
-            game.setAvatarEmoji(evt);
+            game.setAvatarEmoji(evt.id, evt);
             refreshUser(evt.id);
         },
 
