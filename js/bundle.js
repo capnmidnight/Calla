@@ -1,6 +1,6 @@
-import { JVB_HOST, JVB_MUC } from '../../../../../constants.js';
+import { JITSI_HOST, JVB_HOST, JVB_MUC } from '../../../../../constants.js';
 
-const versionString = "Calla v0.2.0";
+const versionString = "Calla v0.2.1";
 
 function t(o, s, c) {
     return typeof o === s
@@ -78,11 +78,174 @@ function lerp(a, b, p) {
     return (1 - p) * a + p * b;
 }
 
+/**
+ * Returns a random item from an array of items.
+ * 
+ * Provides an option to consider an additional item as part of the collection
+ * for random selection.
+ * @param {any[]} arr
+ * @param {any} defaultValue
+ */
+function arrayRandom(arr, defaultValue) {
+    if (!(arr instanceof Array)) {
+        throw new Error("Must provide an array as the first parameter.");
+    }
+
+    const offset = defaultValue ? 1 : 0,
+        idx = Math.floor(Math.random() * (arr.length + offset)) - offset;
+    if (idx < 0) {
+        return defaultValue;
+    }
+    else {
+        return arr[idx];
+    }
+}
+
+/**
+ * Empties out an array
+ * @param {any[]} arr - the array to empty.
+ * @returns {any[]} - the items that were in the array.
+ */
+function arrayClear(arr) {
+    if (!(arr instanceof Array)) {
+        throw new Error("Must provide an array as the first parameter.");
+    }
+
+    return arr.splice(0);
+}
+
+/**
+ * Removes an item at the given index from an array.
+ * @param {any[]} arr
+ * @param {number} idx
+ * @returns {any} - the item that was removed.
+ */
+function arrayRemoveAt(arr, idx) {
+    if (!(arr instanceof Array)) {
+        throw new Error("Must provide an array as the first parameter.");
+    }
+
+    return arr.splice(idx, 1);
+}
+
+/**
+ * A test for filtering an array
+ * @callback scanArrayCallback
+ * @param {any} obj - an array item to check.
+ * @param {number} idx - the index of the item that is being checked.
+ * @param {any[]} arr - the full array that is being filtered.
+ * @returns {boolean} whether or not the item matches the test.
+ */
+
+/**
+ * Scans through a series of filters to find an item that matches
+ * any of the filters. The first item of the first filter that matches
+ * will be returned.
+ * @param {any[]} arr - the array to scan
+ * @param {...scanArrayCallback} tests - the filtering tests.
+ * @returns {any}
+ */
+function arrayScan(arr, ...tests) {
+    if (!(arr instanceof Array)) {
+        throw new Error("Must provide an array as the first parameter.");
+    }
+
+    for (let test of tests) {
+        const filtered = arr.filter(test);
+        if (filtered.length > 0) {
+            return filtered[0];
+        }
+    }
+
+    return null;
+}
+
 function add(a, b) {
     return evt => {
         a(evt);
         b(evt);
     };
+}
+
+try {
+    new window.EventTarget();
+} catch (exp) {
+
+    /** @type {WeakMap<EventTarget, Map<string, Listener[]>> */
+    const selfs = new WeakMap();
+
+    class EventTarget {
+        /**
+         * @param {string} type
+         * @param {Function} callback
+         * @param {any} options
+         */
+        addEventListener(type, callback, options) {
+            if (isFunction(callback)) {
+                const self = selfs.get(this);
+                if (!self.has(type)) {
+                    self.set(type, []);
+                }
+                const listeners = self.get(type);
+
+                for (let listener of listeners) {
+                    if (listener.callback === callback)
+                        return;
+                }
+
+                listeners.push({
+                    target: this,
+                    callback,
+                    options
+                });
+            }
+        }
+
+        /**
+         * @param {string} type
+         * @param {Function} callback
+         */
+        removeEventListener(type, callback) {
+            if (isFunction(callback)) {
+                const self = selfs.get(this);
+                if (self.has(type)) {
+                    const listeners = self.get(type),
+                        idx = listeners.findIndex(l => l.callback === callback);
+                    if (idx >= 0) {
+                        arrayRemoveAt(listeners, idx);
+                    }
+                }
+            }
+        }
+
+        /**
+         * @param {Event} evt
+         */
+        dispatchEvent(evt) {
+            const self = selfs.get(this);
+            if (!self.has(evt.type)) {
+                return true;
+            }
+            else {
+                const listeners = self.get(evt.type);
+                evt.target
+                    = evt.currentTarget
+                    = this;
+                for (let listener of listeners) {
+                    if (listener.options && listener.options.once) {
+                        this.removeEventListener(evt.type, listener.callback);
+                    }
+                    listener.callback.call(listener.target, evt);
+                }
+                evt.target
+                    = evt.currentTarget
+                    = null;
+                return !evt.defaultPrevented;
+            }
+        }
+    }
+
+    window.EventTarget = EventTarget;
 }
 
 
@@ -395,88 +558,6 @@ if (!Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "g
     CanvasRenderingContext2D.prototype.getTransform = function () {
         return new MockDOMMatrix(this.mozCurrentTransform);
     };
-}
-
-/**
- * Returns a random item from an array of items.
- * 
- * Provides an option to consider an additional item as part of the collection
- * for random selection.
- * @param {any[]} arr
- * @param {any} defaultValue
- */
-function arrayRandom(arr, defaultValue) {
-    if (!(arr instanceof Array)) {
-        throw new Error("Must provide an array as the first parameter.");
-    }
-
-    const offset = defaultValue ? 1 : 0,
-        idx = Math.floor(Math.random() * (arr.length + offset)) - offset;
-    if (idx < 0) {
-        return defaultValue;
-    }
-    else {
-        return arr[idx];
-    }
-}
-
-/**
- * Empties out an array
- * @param {any[]} arr - the array to empty.
- * @returns {any[]} - the items that were in the array.
- */
-function arrayClear(arr) {
-    if (!(arr instanceof Array)) {
-        throw new Error("Must provide an array as the first parameter.");
-    }
-
-    return arr.splice(0);
-}
-
-/**
- * Removes an item at the given index from an array.
- * @param {any[]} arr
- * @param {number} idx
- * @returns {any} - the item that was removed.
- */
-function arrayRemoveAt(arr, idx) {
-    if (!(arr instanceof Array)) {
-        throw new Error("Must provide an array as the first parameter.");
-    }
-
-    return arr.splice(idx, 1);
-}
-
-/**
- * A test for filtering an array
- * @callback scanArrayCallback
- * @param {any} obj - an array item to check.
- * @param {number} idx - the index of the item that is being checked.
- * @param {any[]} arr - the full array that is being filtered.
- * @returns {boolean} whether or not the item matches the test.
- */
-
-/**
- * Scans through a series of filters to find an item that matches
- * any of the filters. The first item of the first filter that matches
- * will be returned.
- * @param {any[]} arr - the array to scan
- * @param {...scanArrayCallback} tests - the filtering tests.
- * @returns {any}
- */
-function arrayScan(arr, ...tests) {
-    if (!(arr instanceof Array)) {
-        throw new Error("Must provide an array as the first parameter.");
-    }
-
-    for (let test of tests) {
-        const filtered = arr.filter(test);
-        if (filtered.length > 0) {
-            return filtered[0];
-        }
-    }
-
-    return null;
 }
 
 /**
@@ -7784,7 +7865,6 @@ class Game extends EventTarget {
         this.me = null;
         this.map = null;
         this.waypoints = [];
-        this.walker = null;
         this.keys = {};
 
         /** @type {Map.<string, User>} */
@@ -8069,21 +8149,12 @@ class Game extends EventTarget {
         }
     }
 
-    walkPath() {
-        if (this.waypoints.length > 0) {
-            const waypoint = this.waypoints.shift();
-            this.moveMeTo(waypoint.x, waypoint.y);
-            this.walker = setTimeout(this.walkPath.bind(this), this.transitionSpeed * 500);
-        }
-    }
-
     moveMeBy(dx, dy) {
         const clearTile = this.map.getClearTile(this.me.position._tx, this.me.position._ty, dx, dy, this.me.avatar);
         this.moveMeTo(clearTile.x, clearTile.y);
     }
 
     moveMeByPath(dx, dy) {
-        clearTimeout(this.walker);
         arrayClear(this.waypoints);
 
         const x = this.me.position._tx,
@@ -8094,16 +8165,12 @@ class Game extends EventTarget {
             end = this.map.getGridNode(tx, ty);
 
         if (!start || !end) {
-            this.waypoints.push({
-                x: x + dx,
-                y: y + dy
-            });
+            this.moveMeTo(x + dx, y + dy);
         }
         else {
             const result = this.map.searchPath(start, end);
             this.waypoints.push(...result);
         }
-        this.walkPath();
     }
 
     warpMeTo(x, y) {
@@ -8382,6 +8449,13 @@ class Game extends EventTarget {
             if (dx !== 0
                 || dy !== 0) {
                 this.moveMeBy(dx, dy);
+                arrayClear(this.waypoints);
+            }
+
+
+            if (this.waypoints.length > 0) {
+                const waypoint = this.waypoints.shift();
+                this.moveMeTo(waypoint.x, waypoint.y);
             }
 
             this.lastMove = 0;
@@ -17980,7 +18054,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
 
     async initializeAsync(roomName, userName) {
         await import(`${window.location.origin}/lib/jquery.min.js`);
-        await import(`https://${JVB_HOST}/libs/lib-jitsi-meet.min.js`);
+        await import(`https://${JITSI_HOST}/libs/lib-jitsi-meet.min.js`);
 
         roomName = roomName.toLocaleLowerCase();
 
@@ -17992,7 +18066,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
                 domain: JVB_HOST,
                 muc: JVB_MUC
             },
-            serviceUrl: `https://${JVB_HOST}/http-bind`,
+            serviceUrl: `https://${JITSI_HOST}/http-bind`,
             enableLipSync: true
         });
 
