@@ -1,6 +1,6 @@
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from '../../../../../constants.js';
 
-const versionString = "Calla v0.2.7";
+const versionString = "Calla v0.2.8";
 
 function t(o, s, c) {
     return typeof o === s
@@ -9851,150 +9851,6 @@ class AudioActivityEvent extends Event {
 }
 
 /**
- * A mocking class for providing the playback timing needed to synchronize motion and audio.
- **/
-class MockAudioContext {
-    /**
-     * Starts the timer at "now".
-     **/
-    constructor() {
-        this._t = performance.now() / 1000;
-    }
-
-    /**
-     * Gets the current playback time.
-     * @type {number}
-     */
-    get currentTime() {
-        return performance.now() / 1000 - this._t;
-    }
-
-    /**
-     * Returns nothing.
-     * @type {AudioDestinationNode} */
-    get destination() {
-        return null;
-    }
-}
-
-/**
- * A positioner that uses the WebAudio API's old setPosition method.
- **/
-class WebAudioOldListenerPosition extends InterpolatedPosition {
-
-    /**
-     * Creates a new positioner that uses the WebAudio API's old setPosition method.
-     * @param {AudioListener} listener - the listener on the audio context.
-     */
-    constructor(listener) {
-        super();
-
-        this.listener = listener;
-        this.listener.setPosition(0, 0, 0);
-        this.listener.setOrientation(0, 0, -1, 0, 1, 0);
-    }
-
-    /**
-     * Calculates the new position for the given time.
-     * @protected
-     * @param {number} t
-     */
-    update(t) {
-        super.update(t);
-        this.listener.setPosition(this.x, 0, this.y);
-    }
-}
-
-/**
- * A positioner that uses WebAudio's playback dependent time progression.
- **/
-class WebAudioNodePosition extends BasePosition {
-
-    /**
-     * Creates a new positioner that uses WebAudio's playback dependent time progression.
-     * @param {PannerNode|AudioListener} node - the audio node that will receive the position value.
-     * @param {boolean} forceInterpolation - when set to true, circumvents WebAudio's time tracking and uses our own.
-     */
-    constructor(node, forceInterpolation) {
-        super();
-
-        /** @type {BasePosition} */
-        this._p = forceInterpolation ? new InterpolatedPosition() : null;
-        this.node = node;
-        this.node.positionX.setValueAtTime(0, 0);
-        this.node.positionY.setValueAtTime(0, 0);
-        this.node.positionZ.setValueAtTime(0, 0);
-    }
-
-    /**
-     *  The horizontal component of the position.
-     *  @type {number} */
-    get x() {
-        return this.node.positionX.value;
-    }
-
-    /**
-     *  The vertical component of the position.
-     *  @type {number} */
-    get y() {
-        return this.node.positionZ.value;
-    }
-
-    /**
-     * Set the target position for the time `t + dt`.
-     * @param {number} x - the horizontal component of the position.
-     * @param {number} y - the vertical component of the position.
-     * @param {number} t
-     * @param {number} dt
-     */
-    setTarget(x, y, t, dt) {
-        if (this._p) {
-            this._p.setTarget(x, y, t, dt);
-        }
-        else {
-            const time = t + dt;
-            // our 2D position is in X/Y coords, but our 3D position
-            // along the horizontal plane is X/Z coords.
-            this.node.positionX.linearRampToValueAtTime(x, time);
-            this.node.positionZ.linearRampToValueAtTime(y, time);
-        }
-    }
-
-    /**
-     * Calculates the new position for the given time.
-     * @protected
-     * @param {number} t
-     */
-    update(t) {
-        if (this._p) {
-            this._p.update(t);
-            this.node.positionX.linearRampToValueAtTime(this._p.x, 0);
-            this.node.positionZ.linearRampToValueAtTime(this._p.y, 0);
-        }
-    }
-}
-
-/**
- * A positioner that uses WebAudio's playback dependent time progression.
- **/
-class WebAudioNewListenerPosition extends WebAudioNodePosition {
-    /**
-     * Creates a new positioner that uses WebAudio's playback dependent time progression.
-     * @param {AudioListener} node - the audio node that will receive the position value.
-     * @param {boolean} forceInterpolation - when set to true, circumvents WebAudio's time tracking and uses our own.
-     */
-    constructor(node, forceInterpolation) {
-        super(node, forceInterpolation);
-        this.node.forwardX.setValueAtTime(0, 0);
-        this.node.forwardY.setValueAtTime(0, 0);
-        this.node.forwardZ.setValueAtTime(-1, 0);
-        this.node.upX.setValueAtTime(0, 0);
-        this.node.upY.setValueAtTime(1, 0);
-        this.node.upZ.setValueAtTime(0, 0);
-    }
-}
-
-/**
  * A base class for positioned audio elements.
  **/
 class BaseAudioElement extends EventTarget {
@@ -10060,356 +9916,30 @@ class BaseAudioElement extends EventTarget {
     }
 }
 
-/** Base class providing functionality for spatializers. */
-class BaseSpatializer extends BaseAudioElement {
-
+/**
+ * A mocking class for providing the playback timing needed to synchronize motion and audio.
+ **/
+class MockAudioContext {
     /**
-     * Creates a spatializer that keeps track of the relative position
-     * of an audio element to the listener destination.
-     * @param {string} userID
-     * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
-     * @param {BasePosition} position
-     */
-    constructor(userID, destination, audio, position) {
-        super(position);
-
-        this.id = userID;
-        this.destination = destination;
-        this.audio = audio;
-        this.volume = 1;
-        this.pan = 0;
+     * Starts the timer at "now".
+     **/
+    constructor() {
+        this._t = performance.now() / 1000;
     }
 
     /**
-     * Discard values and make this instance useless.
-     */
-    dispose() {
-        this.audio.pause();
-
-        this.position = null;
-        this.audio = null;
-        this.destination = null;
-        this.id = null;
-    }
-
-    /**
-     * Changes the device to which audio will be output
-     * @param {string} deviceID
-     */
-    setAudioOutputDevice(deviceID) {
-        if (canChangeAudioOutput) {
-            this.audio.setSinkId(deviceID);
-        }
-    }
-
-    /**
-     * Retrieves the current time from the audio context.
+     * Gets the current playback time.
      * @type {number}
      */
     get currentTime() {
-        return this.destination.currentTime;
-    }
-
-
-    /**
-     * Performs the spatialization operation for the audio source's latest location.
-     **/
-    update() {
-        super.update();
-
-        const lx = this.destination.position.x,
-            ly = this.destination.position.y,
-            distX = this.position.x - lx,
-            distY = this.position.y - ly,
-            distSqr = distX * distX + distY * distY,
-            dist = Math.sqrt(distSqr),
-            distScale = project(dist, this.minDistance, this.maxDistance);
-
-        this.volume = 1 - clamp(distScale, 0, 1);
-        this.volume = this.volume * this.volume;
-        this.pan = dist > 0
-            ? distX / dist
-            : 0;
-    }
-}
-
-/**
- * A spatializer that only modifies volume.
- **/
-class VolumeOnlySpatializer extends BaseSpatializer {
-
-    /**
-     * Creates a new spatializer that only modifies volume.
-     * @param {string} userID
-     * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
-     */
-    constructor(userID, destination, audio) {
-        super(userID, destination, audio, new InterpolatedPosition());
-        this.audio.play();
-
-        Object.seal(this);
+        return performance.now() / 1000 - this._t;
     }
 
     /**
-     * Performs the spatialization operation for the audio source's latest location.
-     **/
-    update() {
-        super.update();
-        this.audio.volume = this.volume;
-    }
-}
-
-const audioActivityEvt = new AudioActivityEvent(),
-    activityCounterMin = 0,
-    activityCounterMax = 60,
-    activityCounterThresh = 5;
-
-/**
- * 
- * @param {number} frequency
- * @param {number} sampleRate
- * @param {number} bufferSize
- */
-function frequencyToIndex(frequency, sampleRate, bufferSize) {
-    var nyquist = sampleRate / 2;
-    var index = Math.round(frequency / nyquist * bufferSize);
-    return clamp(index, 0, bufferSize)
-}
-
-/**
- * 
- * @param {AnalyserNode} analyser
- * @param {Float32Array} frequencies
- * @param {number} minHz
- * @param {number} maxHz
- * @param {number} bufferSize
- */
-function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz, bufferSize) {
-    const sampleRate = analyser.context.sampleRate,
-        start = frequencyToIndex(minHz, sampleRate, bufferSize),
-        end = frequencyToIndex(maxHz, sampleRate, bufferSize),
-        count = end - start;
-    let sum = 0;
-    for (let i = start; i < end; ++i) {
-        sum += frequencies[i];
-    }
-    return count === 0 ? 0 : (sum / count);
-}
-
-class BaseAnalyzedSpatializer extends BaseSpatializer {
-
-    /**
-     * 
-     * @param {string} userID
-     * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
-     * @param {BasePosition} position
-     * @param {number} bufferSize
-     * @param {PannerNode|StereoPannerNode} inNode
-     */
-    constructor(userID, destination, audio, position, bufferSize, inNode) {
-        super(userID, destination, audio, position);
-
-        this.audio.volume = 0;
-
-        this.bufferSize = bufferSize;
-        this.buffer = new Float32Array(this.bufferSize);
-
-        /** @type {AnalyserNode} */
-        this.analyser = this.destination.audioContext.createAnalyser();
-        this.analyser.fftSize = 2 * this.bufferSize;
-        this.analyser.smoothingTimeConstant = 0.2;
-
-        /** @type {PannerNode|StereoPannerNode} */
-        this.inNode = inNode;
-
-        /** @type {boolean} */
-        this.wasActive = false;
-        this.lastAudible = true;
-        this.activityCounter = 0;
-
-        /** @type {MediaStream} */
-        this.stream = null;
-
-        /** @type {MediaSource} */
-        this.source = null;
-    }
-
-    /**
-     * @fires BaseAnalyzedSpatializer#audioActivity
-     **/
-    update() {
-        super.update();
-
-        if (!this.source) {
-            try {
-                if (!this.stream) {
-                    this.stream = this.audio.mozCaptureStream
-                        ? this.audio.mozCaptureStream()
-                        : this.audio.captureStream();
-                }
-
-                if (this.stream.active) {
-                    this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
-                    this.source.connect(this.analyser);
-                    this.source.connect(this.inNode);
-                }
-            }
-            catch (exp) {
-                console.warn("Source isn't available yet. Will retry in a moment. Reason: ", exp);
-            }
-        }
-
-        if (this.source) {
-            this.analyser.getFloatFrequencyData(this.buffer);
-
-            const average = 1.1 + analyserFrequencyAverage(this.analyser, this.buffer, 85, 255, this.bufferSize) / 100;
-            if (average >= 0.5 && this.activityCounter < activityCounterMax) {
-                this.activityCounter++;
-            } else if (average < 0.5 && this.activityCounter > activityCounterMin) {
-                this.activityCounter--;
-            }
-
-            const isActive = this.activityCounter > activityCounterThresh;
-            if (this.wasActive !== isActive) {
-                this.wasActive = isActive;
-                audioActivityEvt.id = this.id;
-                audioActivityEvt.isActive = isActive;
-                this.dispatchEvent(audioActivityEvt);
-            }
-        }
-    }
-
-    /**
-     * Discard values and make this instance useless.
-     */
-    dispose() {
-        if (this.source) {
-            this.source.disconnect(this.analyser);
-            this.source.disconnect(this.inNode);
-        }
-
-        this.source = null;
-        this.stream = null;
-        this.inNode = null;
-        this.analyser = null;
-        this.buffer = null;
-
-        super.dispose();
-    }
-}
-
-/**
- * A spatializer that uses the WebAudio API.
- **/
-class BaseWebAudioSpatializer extends BaseAnalyzedSpatializer {
-
-    /**
-     * Creates a new spatializer that uses the WebAudio API
-     * @param {string} userID
-     * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
-     * @param {BasePosition} position
-     * @param {number} bufferSize
-     * @param {PannerNode|StereoPannerNode} inNode
-     * @param {GainNode=} outNode
-     */
-    constructor(userID, destination, audio, position, bufferSize, inNode, outNode) {
-        super(userID, destination, audio, position, bufferSize, inNode);
-
-        this.outNode = outNode || inNode;
-        this.outNode.connect(this.destination.audioContext.destination);
-
-        if (this.inNode !== this.outNode) {
-            this.inNode.connect(this.outNode);
-        }
-    }
-
-    /**
-     * Discard values and make this instance useless.
-     */
-    dispose() {
-        if (this.inNode !== this.outNode) {
-            this.inNode.disconnect(this.outNode);
-        }
-
-        this.outNode.disconnect(this.destination.audioContext.destination);
-        this.outNode = null;
-
-        super.dispose();
-    }
-}
-
-/**
- * A spatializer that uses WebAudio's PannerNode
- **/
-class FullSpatializer extends BaseWebAudioSpatializer {
-
-    /**
-     * Creates a new spatializer that uses WebAudio's PannerNode.
-     * @param {string} userID
-     * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
-     * @param {number} bufferSize
-     * @param {boolean} forceInterpolatedPosition
-     */
-    constructor(userID, destination, audio, bufferSize, forceInterpolatedPosition) {
-        const panner = destination.audioContext.createPanner(),
-            position = new WebAudioNodePosition(panner, forceInterpolatedPosition);
-        super(userID, destination, audio, position, bufferSize, panner);
-
-        this.inNode.panningModel = "HRTF";
-        this.inNode.distanceModel = "inverse";
-        this.inNode.coneInnerAngle = 360;
-        this.inNode.coneOuterAngle = 0;
-        this.inNode.coneOuterGain = 0;
-
-        Object.seal(this);
-    }
-
-    /**
-     * Sets parameters that alter spatialization.
-     * @param {number} minDistance
-     * @param {number} maxDistance
-     * @param {number} rolloff
-     * @param {number} transitionTime
-     */
-    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
-        super.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
-        this.inNode.refDistance = minDistance;
-        this.inNode.rolloffFactor = rolloff;
-    }
-}
-
-/**
- * A spatializer that performs stereo panning and volume scaling.
- **/
-class StereoSpatializer extends BaseWebAudioSpatializer {
-
-    /**
-     * Creates a new spatializer that performs stereo panning and volume scaling.
-     * @param {string} userID
-     * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
-     * @param {number} bufferSize
-     */
-    constructor(userID, destination, audio, bufferSize) {
-        super(userID, destination, audio, new InterpolatedPosition(), bufferSize,
-            destination.audioContext.createStereoPanner(),
-            destination.audioContext.createGain());
-
-        Object.seal(this);
-    }
-
-    /**
-     * Performs the spatialization operation for the audio source's latest location.
-     **/
-    update() {
-        super.update();
-        this.inNode.pan.value = this.pan;
-        this.outNode.gain.value = this.volume;
+     * Returns nothing.
+     * @type {AudioDestinationNode} */
+    get destination() {
+        return null;
     }
 }
 
@@ -17640,6 +17170,436 @@ class GoogleResonanceAudioScene extends InterpolatedPosition {
 }
 
 /**
+ * A positioner that uses WebAudio's playback dependent time progression.
+ **/
+class WebAudioNewNodePosition extends BasePosition {
+
+    /**
+     * Creates a new positioner that uses WebAudio's playback dependent time progression.
+     * @param {PannerNode|AudioListener} node - the audio node that will receive the position value.
+     * @param {boolean} forceInterpolation - when set to true, circumvents WebAudio's time tracking and uses our own.
+     */
+    constructor(node, forceInterpolation) {
+        super();
+
+        /** @type {BasePosition} */
+        this._p = forceInterpolation ? new InterpolatedPosition() : null;
+        this.node = node;
+        this.node.positionX.setValueAtTime(0, 0);
+        this.node.positionY.setValueAtTime(0, 0);
+        this.node.positionZ.setValueAtTime(0, 0);
+    }
+
+    /**
+     *  The horizontal component of the position.
+     *  @type {number} */
+    get x() {
+        return this.node.positionX.value;
+    }
+
+    /**
+     *  The vertical component of the position.
+     *  @type {number} */
+    get y() {
+        return this.node.positionZ.value;
+    }
+
+    /**
+     * Set the target position for the time `t + dt`.
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
+     * @param {number} t
+     * @param {number} dt
+     */
+    setTarget(x, y, t, dt) {
+        if (this._p) {
+            this._p.setTarget(x, y, t, dt);
+        }
+        else {
+            const time = t + dt;
+            // our 2D position is in X/Y coords, but our 3D position
+            // along the horizontal plane is X/Z coords.
+            this.node.positionX.linearRampToValueAtTime(x, time);
+            this.node.positionZ.linearRampToValueAtTime(y, time);
+        }
+    }
+
+    /**
+     * Calculates the new position for the given time.
+     * @protected
+     * @param {number} t
+     */
+    update(t) {
+        if (this._p) {
+            this._p.update(t);
+            this.node.positionX.linearRampToValueAtTime(this._p.x, 0);
+            this.node.positionZ.linearRampToValueAtTime(this._p.y, 0);
+        }
+    }
+}
+
+/**
+ * A positioner that uses WebAudio's playback dependent time progression.
+ **/
+class WebAudioNewListenerPosition extends WebAudioNewNodePosition {
+    /**
+     * Creates a new positioner that uses WebAudio's playback dependent time progression.
+     * @param {AudioListener} node - the audio node that will receive the position value.
+     * @param {boolean} forceInterpolation - when set to true, circumvents WebAudio's time tracking and uses our own.
+     */
+    constructor(node, forceInterpolation) {
+        super(node, forceInterpolation);
+        this.node.forwardX.setValueAtTime(0, 0);
+        this.node.forwardY.setValueAtTime(0, 0);
+        this.node.forwardZ.setValueAtTime(-1, 0);
+        this.node.upX.setValueAtTime(0, 0);
+        this.node.upY.setValueAtTime(1, 0);
+        this.node.upZ.setValueAtTime(0, 0);
+    }
+}
+
+/**
+ * A positioner that uses the WebAudio API's old setPosition method.
+ **/
+class WebAudioOldNodePosition extends InterpolatedPosition {
+
+    /**
+     * Creates a new positioner that uses the WebAudio API's old setPosition method.
+     * @param {PannerNode|AudioListener} node - the listener on the audio context.
+     */
+    constructor(node) {
+        super();
+
+        this.node = node;
+        this.node.setPosition(0, 0, 0);
+        this.node.setOrientation(0, 0, -1, 0, 1, 0);
+    }
+
+    /**
+     * Calculates the new position for the given time.
+     * @protected
+     * @param {number} t
+     */
+    update(t) {
+        super.update(t);
+        this.node.setPosition(this.x, 0, this.y);
+    }
+}
+
+/** Base class providing functionality for spatializers. */
+class BaseSpatializer extends BaseAudioElement {
+
+    /**
+     * Creates a spatializer that keeps track of the relative position
+     * of an audio element to the listener destination.
+     * @param {string} userID
+     * @param {Destination} destination
+     * @param {HTMLAudioElement} audio
+     * @param {BasePosition} position
+     */
+    constructor(userID, destination, audio, position) {
+        super(position);
+
+        this.id = userID;
+        this.destination = destination;
+        this.audio = audio;
+        this.volume = 1;
+        this.pan = 0;
+    }
+
+    /**
+     * Discard values and make this instance useless.
+     */
+    dispose() {
+        this.audio.pause();
+
+        this.position = null;
+        this.audio = null;
+        this.destination = null;
+        this.id = null;
+    }
+
+    /**
+     * Changes the device to which audio will be output
+     * @param {string} deviceID
+     */
+    setAudioOutputDevice(deviceID) {
+        if (canChangeAudioOutput) {
+            this.audio.setSinkId(deviceID);
+        }
+    }
+
+    /**
+     * Retrieves the current time from the audio context.
+     * @type {number}
+     */
+    get currentTime() {
+        return this.destination.currentTime;
+    }
+
+
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     **/
+    update() {
+        super.update();
+
+        const lx = this.destination.position.x,
+            ly = this.destination.position.y,
+            distX = this.position.x - lx,
+            distY = this.position.y - ly,
+            distSqr = distX * distX + distY * distY,
+            dist = Math.sqrt(distSqr),
+            distScale = project(dist, this.minDistance, this.maxDistance);
+
+        this.volume = 1 - clamp(distScale, 0, 1);
+        this.volume = this.volume * this.volume;
+        this.pan = dist > 0
+            ? distX / dist
+            : 0;
+    }
+}
+
+const audioActivityEvt = new AudioActivityEvent(),
+    activityCounterMin = 0,
+    activityCounterMax = 60,
+    activityCounterThresh = 5;
+
+/**
+ * 
+ * @param {number} frequency
+ * @param {number} sampleRate
+ * @param {number} bufferSize
+ */
+function frequencyToIndex(frequency, sampleRate, bufferSize) {
+    var nyquist = sampleRate / 2;
+    var index = Math.round(frequency / nyquist * bufferSize);
+    return clamp(index, 0, bufferSize)
+}
+
+/**
+ * 
+ * @param {AnalyserNode} analyser
+ * @param {Float32Array} frequencies
+ * @param {number} minHz
+ * @param {number} maxHz
+ * @param {number} bufferSize
+ */
+function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz, bufferSize) {
+    const sampleRate = analyser.context.sampleRate,
+        start = frequencyToIndex(minHz, sampleRate, bufferSize),
+        end = frequencyToIndex(maxHz, sampleRate, bufferSize),
+        count = end - start;
+    let sum = 0;
+    for (let i = start; i < end; ++i) {
+        sum += frequencies[i];
+    }
+    return count === 0 ? 0 : (sum / count);
+}
+
+class BaseAnalyzedSpatializer extends BaseSpatializer {
+
+    /**
+     * 
+     * @param {string} userID
+     * @param {Destination} destination
+     * @param {HTMLAudioElement} audio
+     * @param {BasePosition} position
+     * @param {number} bufferSize
+     * @param {PannerNode|StereoPannerNode} inNode
+     */
+    constructor(userID, destination, audio, position, bufferSize, inNode) {
+        super(userID, destination, audio, position);
+
+        this.audio.volume = 0;
+
+        this.bufferSize = bufferSize;
+        this.buffer = new Float32Array(this.bufferSize);
+
+        /** @type {AnalyserNode} */
+        this.analyser = this.destination.audioContext.createAnalyser();
+        this.analyser.fftSize = 2 * this.bufferSize;
+        this.analyser.smoothingTimeConstant = 0.2;
+
+        /** @type {PannerNode|StereoPannerNode} */
+        this.inNode = inNode;
+
+        /** @type {boolean} */
+        this.wasActive = false;
+        this.lastAudible = true;
+        this.activityCounter = 0;
+
+        /** @type {MediaStream} */
+        this.stream = null;
+
+        /** @type {MediaSource} */
+        this.source = null;
+    }
+
+    /**
+     * @fires BaseAnalyzedSpatializer#audioActivity
+     **/
+    update() {
+        super.update();
+
+        if (!this.source) {
+            try {
+                if (!this.stream) {
+                    this.stream = this.audio.mozCaptureStream
+                        ? this.audio.mozCaptureStream()
+                        : this.audio.captureStream();
+                }
+
+                if (this.stream.active) {
+                    this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
+                    this.source.connect(this.analyser);
+                    this.source.connect(this.inNode);
+                }
+            }
+            catch (exp) {
+                console.warn("Source isn't available yet. Will retry in a moment. Reason: ", exp);
+            }
+        }
+
+        if (this.source) {
+            this.analyser.getFloatFrequencyData(this.buffer);
+
+            const average = 1.1 + analyserFrequencyAverage(this.analyser, this.buffer, 85, 255, this.bufferSize) / 100;
+            if (average >= 0.5 && this.activityCounter < activityCounterMax) {
+                this.activityCounter++;
+            } else if (average < 0.5 && this.activityCounter > activityCounterMin) {
+                this.activityCounter--;
+            }
+
+            const isActive = this.activityCounter > activityCounterThresh;
+            if (this.wasActive !== isActive) {
+                this.wasActive = isActive;
+                audioActivityEvt.id = this.id;
+                audioActivityEvt.isActive = isActive;
+                this.dispatchEvent(audioActivityEvt);
+            }
+        }
+    }
+
+    /**
+     * Discard values and make this instance useless.
+     */
+    dispose() {
+        if (this.source) {
+            this.source.disconnect(this.analyser);
+            this.source.disconnect(this.inNode);
+        }
+
+        this.source = null;
+        this.stream = null;
+        this.inNode = null;
+        this.analyser = null;
+        this.buffer = null;
+
+        super.dispose();
+    }
+}
+
+/**
+ * A spatializer that uses the WebAudio API.
+ **/
+class BaseWebAudioSpatializer extends BaseAnalyzedSpatializer {
+
+    /**
+     * Creates a new spatializer that uses the WebAudio API
+     * @param {string} userID
+     * @param {Destination} destination
+     * @param {HTMLAudioElement} audio
+     * @param {BasePosition} position
+     * @param {number} bufferSize
+     * @param {PannerNode|StereoPannerNode} inNode
+     * @param {GainNode=} outNode
+     */
+    constructor(userID, destination, audio, position, bufferSize, inNode, outNode) {
+        super(userID, destination, audio, position, bufferSize, inNode);
+
+        this.outNode = outNode || inNode;
+        this.outNode.connect(this.destination.audioContext.destination);
+
+        if (this.inNode !== this.outNode) {
+            this.inNode.connect(this.outNode);
+        }
+    }
+
+    /**
+     * Discard values and make this instance useless.
+     */
+    dispose() {
+        if (this.inNode !== this.outNode) {
+            this.inNode.disconnect(this.outNode);
+        }
+
+        this.outNode.disconnect(this.destination.audioContext.destination);
+        this.outNode = null;
+
+        super.dispose();
+    }
+}
+
+/**
+ * A spatializer that uses WebAudio's PannerNode
+ **/
+class BasePannerSpatializer extends BaseWebAudioSpatializer {
+
+    /**
+     * Creates a new spatializer that uses WebAudio's PannerNode.
+     * @param {string} userID
+     * @param {Destination} destination
+     * @param {HTMLAudioElement} audio
+     * @param {number} bufferSize
+     * @param {Function} createPosition
+     */
+    constructor(userID, destination, audio, bufferSize, createPosition) {
+        const panner = destination.audioContext.createPanner(),
+            position = createPosition(panner);
+        super(userID, destination, audio, position, bufferSize, panner);
+
+        this.inNode.panningModel = "HRTF";
+        this.inNode.distanceModel = "inverse";
+        this.inNode.coneInnerAngle = 360;
+        this.inNode.coneOuterAngle = 0;
+        this.inNode.coneOuterGain = 0;
+    }
+
+    /**
+     * Sets parameters that alter spatialization.
+     * @param {number} minDistance
+     * @param {number} maxDistance
+     * @param {number} rolloff
+     * @param {number} transitionTime
+     */
+    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
+        super.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
+        this.inNode.refDistance = minDistance;
+        this.inNode.rolloffFactor = rolloff;
+    }
+}
+
+/**
+ * A spatializer that uses WebAudio's PannerNode
+ **/
+class NewPannerSpatializer extends BasePannerSpatializer {
+
+    /**
+     * Creates a new spatializer that uses WebAudio's PannerNode.
+     * @param {string} userID
+     * @param {Destination} destination
+     * @param {HTMLAudioElement} audio
+     * @param {number} bufferSize
+     * @param {boolean} forceInterpolatedPosition
+     */
+    constructor(userID, destination, audio, bufferSize, forceInterpolatedPosition) {
+        super(userID, destination, audio, position, bufferSize, panner => new WebAudioNewNodePosition(panner, forceInterpolatedPosition));
+        Object.seal(this);
+    }
+}
+
+/**
  * A spatializer that uses Google's Resonance Audio library.
  **/
 class GoogleResonanceAudioSpatializer extends BaseAnalyzedSpatializer {
@@ -17690,6 +17650,82 @@ class GoogleResonanceAudioSpatializer extends BaseAnalyzedSpatializer {
     }
 }
 
+/**
+ * A spatializer that performs stereo panning and volume scaling.
+ **/
+class StereoSpatializer extends BaseWebAudioSpatializer {
+
+    /**
+     * Creates a new spatializer that performs stereo panning and volume scaling.
+     * @param {string} userID
+     * @param {Destination} destination
+     * @param {HTMLAudioElement} audio
+     * @param {number} bufferSize
+     */
+    constructor(userID, destination, audio, bufferSize) {
+        super(userID, destination, audio, new InterpolatedPosition(), bufferSize,
+            destination.audioContext.createStereoPanner(),
+            destination.audioContext.createGain());
+
+        Object.seal(this);
+    }
+
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     **/
+    update() {
+        super.update();
+        this.inNode.pan.value = this.pan;
+        this.outNode.gain.value = this.volume;
+    }
+}
+
+/**
+ * A spatializer that only modifies volume.
+ **/
+class VolumeOnlySpatializer extends BaseSpatializer {
+
+    /**
+     * Creates a new spatializer that only modifies volume.
+     * @param {string} userID
+     * @param {Destination} destination
+     * @param {HTMLAudioElement} audio
+     */
+    constructor(userID, destination, audio) {
+        super(userID, destination, audio, new InterpolatedPosition());
+        this.audio.play();
+
+        Object.seal(this);
+    }
+
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     **/
+    update() {
+        super.update();
+        this.audio.volume = this.volume;
+    }
+}
+
+/**
+ * A spatializer that uses WebAudio's PannerNode
+ **/
+class OldPannerSpatializer extends BasePannerSpatializer {
+
+    /**
+     * Creates a new spatializer that uses WebAudio's PannerNode.
+     * @param {string} userID
+     * @param {Destination} destination
+     * @param {HTMLAudioElement} audio
+     * @param {number} bufferSize
+     * @param {boolean} forceInterpolatedPosition
+     */
+    constructor(userID, destination, audio, bufferSize) {
+        super(userID, destination, audio, position, bufferSize, panner => new WebAudioOldNodePosition(panner));
+        Object.seal(this);
+    }
+}
+
 const contextDestroyingEvt = new Event("contextDestroying"),
     contextDestroyedEvt = new Event("contextDestroyed");
 
@@ -17715,6 +17751,14 @@ class Destination extends BaseAudioElement {
     }
 
     /**
+     * Gets the current playback time.
+     * @type {number}
+     */
+    get currentTime() {
+        return this.audioContext.currentTime;
+    }
+
+    /**
      * If no audio context is currently available, creates one, and initializes the
      * spatialization of its listener.
      * 
@@ -17723,58 +17767,43 @@ class Destination extends BaseAudioElement {
      **/
     createContext() {
         if (!this.audioContext) {
-            try {
-                if (hasWebAudioAPI) {
-                    this.audioContext = new AudioContext();
+            this.audioContext = new AudioContext();
 
-                    try {
-                        if (isLatestWebAudioAPI) {
-                            try {
-                                if (attemptResonanceAPI) {
-                                    this.position = new GoogleResonanceAudioScene(this.audioContext);
-                                }
-                            }
-                            catch (exp3) {
-                                attemptResonanceAPI = false;
-                                console.warn("Resonance Audio API not available!", exp3);
-                            }
-                            finally {
-                                if (!attemptResonanceAPI) {
-                                    this.position = new WebAudioNewListenerPosition(this.audioContext.listener, forceInterpolatedPosition);
-                                }
-                            }
-                        }
-                    }
-                    catch (exp2) {
-                        isLatestWebAudioAPI = false;
-                        console.warn("No AudioListener.positionX property!", exp2);
-                    }
-                    finally {
-                        if (!isLatestWebAudioAPI) {
-                            this.position = new WebAudioOldListenerPosition(this.audioContext.listener);
-                        }
-                    }
+            if (attemptResonanceAPI) {
+                try {
+                    this.position = new GoogleResonanceAudioScene(this.audioContext);
+                }
+                catch (exp) {
+                    attemptResonanceAPI = false;
+                    console.warn("Resonance Audio API not available!", exp);
                 }
             }
-            catch (exp1) {
-                hasWebAudioAPI = false;
-                console.warn("No WebAudio API!", exp1);
-            }
-            finally {
-                if (!hasWebAudioAPI) {
-                    this.audioContext = new MockAudioContext();
-                    this.position = new InterpolatedPosition();
+
+            if (!attemptResonanceAPI && isLatestWebAudioAPI) {
+                try {
+                    this.position = new WebAudioNewListenerPosition(this.audioContext.listener, forceInterpolatedPosition);
                 }
+                catch (exp) {
+                    isLatestWebAudioAPI = false;
+                    console.warn("No AudioListener.positionX property!", exp);
+                }
+            }
+
+            if (!attemptResonanceAPI && !isLatestWebAudioAPI && hasWebAudioAPI) {
+                try {
+                    this.position = new WebAudioOldNodePosition(this.audioContext.listener);
+                }
+                catch (exp) {
+                    hasWebAudioAPI = false;
+                    console.warn("No WebAudio API!", exp);
+                }
+            }
+
+            if (!attemptResonanceAPI && !isLatestWebAudioAPI && !hasWebAudioAPI) {
+                this.audioContext = new MockAudioContext();
+                this.position = new InterpolatedPosition();
             }
         }
-    }
-
-    /**
-     * Gets the current playback time.
-     * @type {number}
-     */
-    get currentTime() {
-        return this.audioContext.currentTime;
     }
 
 
@@ -17803,35 +17832,43 @@ class Destination extends BaseAudioElement {
      * @return {BaseSpatializer}
      */
     _createSpatializer(id, audio, bufferSize) {
-        if (hasWebAudioAPI) {
+        if (attemptResonanceAPI) {
             try {
-                if (hasFullSpatializer) {
-                    try {
-                        if (attemptResonanceAPI) {
-                            try {
-                                return new GoogleResonanceAudioSpatializer(id, this, audio, bufferSize);
-                            }
-                            catch (exp3) {
-                                attemptResonanceAPI = false;
-                                console.warn("Resonance Audio API not available!", exp3);
-                            }
-                        }
+                return new GoogleResonanceAudioSpatializer(id, this, audio, bufferSize);
+            }
+            catch (exp) {
+                attemptResonanceAPI = false;
+                console.warn("Resonance Audio API not available!", exp);
+            }
+        }
 
-                        if (!attemptResonanceAPI) {
-                            return new FullSpatializer(id, this, audio, bufferSize, forceInterpolatedPosition);
-                        }
-                    }
-                    catch (exp2) {
-                        hasFullSpatializer = false;
-                        console.warn("No 360 spatializer support", exp2);
-                    }
+        if (!attemptResonanceAPI && hasFullSpatializer) {
+            if (isLatestWebAudioAPI) {
+                try {
+                    return new NewPannerSpatializer(id, this, audio, bufferSize, forceInterpolatedPosition);
                 }
-
-                if (!hasFullSpatializer) {
-                    return new StereoSpatializer(id, this, audio, bufferSize);
+                catch (exp) {
+                    isLatestWebAudioAPI = false;
+                    console.warn("No 360 spatializer support", exp);
                 }
             }
-            catch (exp1) {
+
+            if (!isLatestWebAudioAPI) {
+                try {
+                    return new OldPannerSpatializer(id, this, audio, bufferSize);
+                }
+                catch (exp) {
+                    hasFullSpatializer = false;
+                    console.warn("Not even the old 360 spatializer", exp);
+                }
+            }
+        }
+
+        if (!attemptResonanceAPI && !hasFullSpatializer && hasWebAudioAPI) {
+            try {
+                return new StereoSpatializer(id, this, audio, bufferSize);
+            }
+            catch (exp) {
                 hasWebAudioAPI = false;
                 if (this.audioContext) {
                     this.dispatchEvent(contextDestroyingEvt);
@@ -17840,11 +17877,11 @@ class Destination extends BaseAudioElement {
                     this.position = null;
                     this.dispatchEvent(contextDestroyedEvt);
                 }
-                console.warn("No WebAudio API!", exp1);
+                console.warn("No WebAudio API!", exp);
             }
         }
 
-        if (!hasWebAudioAPI) {
+        if (!attemptResonanceAPI && !hasFullSpatializer && !hasWebAudioAPI) {
             return new VolumeOnlySpatializer(id, this, audio);
         }
     }
