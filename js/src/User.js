@@ -225,7 +225,8 @@ export class User extends EventTarget {
     moveTo(x, y, dt) {
         if (this.isInitialized) {
             if (this.isMe) {
-                this.moveEvent.set(x, y);
+                this.moveEvent.x = x;
+                this.moveEvent.y = y;
                 this.dispatchEvent(this.moveEvent);
             }
 
@@ -397,11 +398,6 @@ class UserMoveEvent extends Event {
         this.id = id;
         this.x = 0;
         this.y = 0;
-    }
-
-    set(x, y) {
-        this.x = x;
-        this.y = y;
     }
 }
 

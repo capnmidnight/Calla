@@ -59,7 +59,8 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
         this.conference = null;
         this.audioClient = new AudioClient();
         this.audioClient.addEventListener("audioActivity", (evt) => {
-            audioActivityEvt.set(evt.id, evt.isActive);
+            audioActivityEvt.id = evt.id;
+            audioActivityEvt.isActive = evt.isActive;
             this.dispatchEvent(audioActivityEvt);
         });
 

@@ -116,7 +116,8 @@ export class BaseAnalyzedSpatializer extends BaseSpatializer {
             const isActive = this.activityCounter > activityCounterThresh;
             if (this.wasActive !== isActive) {
                 this.wasActive = isActive;
-                audioActivityEvt.set(this.id, isActive);
+                audioActivityEvt.id = this.id;
+                audioActivityEvt.isActive = isActive;
                 this.dispatchEvent(audioActivityEvt);
             }
         }
