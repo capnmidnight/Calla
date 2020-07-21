@@ -4,7 +4,7 @@ import { InterpolatedPosition } from "./InterpolatedPosition.js";
 /**
  * A positioner that uses WebAudio's playback dependent time progression.
  **/
-export class WebAudioNodePosition extends BasePosition {
+export class WebAudioNewNodePosition extends BasePosition {
 
     /**
      * Creates a new positioner that uses WebAudio's playback dependent time progression.

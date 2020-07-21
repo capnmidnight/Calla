@@ -3,18 +3,18 @@
 /**
  * A positioner that uses the WebAudio API's old setPosition method.
  **/
-export class WebAudioOldListenerPosition extends InterpolatedPosition {
+export class WebAudioOldNodePosition extends InterpolatedPosition {
 
     /**
      * Creates a new positioner that uses the WebAudio API's old setPosition method.
-     * @param {AudioListener} listener - the listener on the audio context.
+     * @param {PannerNode|AudioListener} node - the listener on the audio context.
      */
-    constructor(listener) {
+    constructor(node) {
         super();
 
-        this.listener = listener;
-        this.listener.setPosition(0, 0, 0);
-        this.listener.setOrientation(0, 0, -1, 0, 1, 0);
+        this.node = node;
+        this.node.setPosition(0, 0, 0);
+        this.node.setOrientation(0, 0, -1, 0, 1, 0);
     }
 
     /**
@@ -24,6 +24,6 @@ export class WebAudioOldListenerPosition extends InterpolatedPosition {
      */
     update(t) {
         super.update(t);
-        this.listener.setPosition(this.x, 0, this.y);
+        this.node.setPosition(this.x, 0, this.y);
     }
 }

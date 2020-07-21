@@ -1,9 +1,9 @@
-﻿import { WebAudioNodePosition } from "./WebAudioNodePosition.js";
+﻿import { WebAudioNewNodePosition } from "./WebAudioNewNodePosition.js";
 
 /**
  * A positioner that uses WebAudio's playback dependent time progression.
  **/
-export class WebAudioNewListenerPosition extends WebAudioNodePosition {
+export class WebAudioNewListenerPosition extends WebAudioNewNodePosition {
     /**
      * Creates a new positioner that uses WebAudio's playback dependent time progression.
      * @param {AudioListener} node - the audio node that will receive the position value.

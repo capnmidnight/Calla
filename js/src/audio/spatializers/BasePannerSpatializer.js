@@ -1,10 +1,9 @@
 ﻿import { BaseWebAudioSpatializer } from "./BaseWebAudioSpatializer.js";
-import { WebAudioNodePosition } from "../positions/WebAudioNodePosition.js";
 
 /**
  * A spatializer that uses WebAudio's PannerNode
  **/
-export class FullSpatializer extends BaseWebAudioSpatializer {
+export class BasePannerSpatializer extends BaseWebAudioSpatializer {
 
     /**
      * Creates a new spatializer that uses WebAudio's PannerNode.
@@ -12,11 +11,11 @@ export class FullSpatializer extends BaseWebAudioSpatializer {
      * @param {Destination} destination
      * @param {HTMLAudioElement} audio
      * @param {number} bufferSize
-     * @param {boolean} forceInterpolatedPosition
+     * @param {Function} createPosition
      */
-    constructor(userID, destination, audio, bufferSize, forceInterpolatedPosition) {
+    constructor(userID, destination, audio, bufferSize, createPosition) {
         const panner = destination.audioContext.createPanner(),
-            position = new WebAudioNodePosition(panner, forceInterpolatedPosition);
+            position = createPosition(panner);
         super(userID, destination, audio, position, bufferSize, panner);
 
         this.inNode.panningModel = "HRTF";
@@ -24,8 +23,6 @@ export class FullSpatializer extends BaseWebAudioSpatializer {
         this.inNode.coneInnerAngle = 360;
         this.inNode.coneOuterAngle = 0;
         this.inNode.coneOuterGain = 0;
-
-        Object.seal(this);
     }
 
     /**
