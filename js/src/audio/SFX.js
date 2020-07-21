@@ -1,5 +1,5 @@
 ﻿import { Audio, Source } from "../html/tags.js";
-import { controls, src } from "../html/attrs.js";
+import { controls, src, playsInline } from "../html/attrs.js";
 
 /**
  * A sound effects palette.
@@ -32,6 +32,7 @@ export class SFX extends EventTarget {
 
         const elem = Audio(
             controls(false),
+            playsInline,
             ...sources);
 
         this.clips.set(name, elem);

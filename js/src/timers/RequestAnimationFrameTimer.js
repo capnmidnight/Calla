@@ -28,6 +28,5 @@ export class RequestAnimationFrameTimer extends BaseTimer {
     }
 
     set targetFrameRate(fps) {
-        console.warn("You cannot change the target framerate for requestAnimationFrame");
     }
 }
