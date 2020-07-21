@@ -1,11 +1,106 @@
-﻿import { isFunction, isNumber, isString } from "../typeChecks.js";
-import { isGoodNumber } from "../math.js";
+﻿import { isGoodNumber } from "../math.js";
+import { isFunction, isNumber, isString } from "../typeChecks.js";
+import { arrayRemoveAt } from "./Array.js";
 
 function add(a, b) {
     return evt => {
         a(evt);
         b(evt);
     };
+}
+
+try {
+    new window.EventTarget();
+} catch (exp) {
+
+    /** @type {WeakMap<EventTarget, Map<string, Listener[]>> */
+    const selfs = new WeakMap();
+
+    class Listener {
+        /**
+         * @param {EventTarget} target
+         * @param {Function} listener
+         * @param {any} options
+         */
+        constructor(target, listener, options) {
+            this.target = target;
+            this.callback = listener;
+            this.options = options;
+        }
+    }
+
+    class EventTarget {
+        /**
+         * @param {string} type
+         * @param {Function} callback
+         * @param {any} options
+         */
+        addEventListener(type, callback, options) {
+            if (isFunction(callback)) {
+                const self = selfs.get(this);
+                if (!self.has(type)) {
+                    self.set(type, []);
+                }
+                const listeners = self.get(type);
+
+                for (let callback of listeners) {
+                    if (listeners[i].callback === callback)
+                        return;
+                }
+
+                listeners.push({
+                    target: this,
+                    callback,
+                    options
+                });
+            }
+        }
+
+        /**
+         * @param {string} type
+         * @param {Function} callback
+         */
+        removeEventListener(type, callback) {
+            if (isFunction(callback)) {
+                const self = selfs.get(this);
+                if (self.has(type)) {
+                    const listeners = self.get(type),
+                        idx = listeners.findIndex(l => l.callback === callback);
+                    if (idx >= 0) {
+                        arrayRemoveAt(listeners, idx);
+                    }
+                }
+            }
+        }
+
+        /**
+         * @param {Event} evt
+         */
+        dispatchEvent(evt) {
+            const self = selfs.get(this);
+            if (!self.has(evt.type)) {
+                return true;
+            }
+            else {
+                const listeners = self.get(type);
+                evt.target
+                    = evt.currentTarget
+                    = this;
+                for (let listener of listeners) {
+                    if (listener.options && listener.options.once) {
+                        this.removeEventListener(evt.type, listener.callback);
+                    }
+                    listener.callback.call(listener.target, evt);
+                }
+                evt.target
+                    = evt.currentTarget
+                    = null;
+                return !evt.defaultPrevented;
+            }
+        }
+    }
+
+    window.EventTarget = EventTarget;
 }
 
 
