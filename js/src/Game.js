@@ -50,7 +50,6 @@ export class Game extends EventTarget {
         this.me = null;
         this.map = null;
         this.waypoints = [];
-        this.walker = null;
         this.keys = {};
 
         /** @type {Map.<string, User>} */
@@ -335,21 +334,12 @@ export class Game extends EventTarget {
         }
     }
 
-    walkPath() {
-        if (this.waypoints.length > 0) {
-            const waypoint = this.waypoints.shift();
-            this.moveMeTo(waypoint.x, waypoint.y);
-            this.walker = setTimeout(this.walkPath.bind(this), this.transitionSpeed * 500);
-        }
-    }
-
     moveMeBy(dx, dy) {
         const clearTile = this.map.getClearTile(this.me.position._tx, this.me.position._ty, dx, dy, this.me.avatar);
         this.moveMeTo(clearTile.x, clearTile.y);
     }
 
     moveMeByPath(dx, dy) {
-        clearTimeout(this.walker);
         arrayClear(this.waypoints);
 
         const x = this.me.position._tx,
@@ -365,7 +355,6 @@ export class Game extends EventTarget {
         else {
             const result = this.map.searchPath(start, end);
             this.waypoints.push(...result);
-            this.walkPath();
         }
     }
 
@@ -645,6 +634,13 @@ export class Game extends EventTarget {
             if (dx !== 0
                 || dy !== 0) {
                 this.moveMeBy(dx, dy);
+                arrayClear(this.waypoints);
+            }
+
+
+            if (this.waypoints.length > 0) {
+                const waypoint = this.waypoints.shift();
+                this.moveMeTo(waypoint.x, waypoint.y);
             }
 
             this.lastMove = 0;
