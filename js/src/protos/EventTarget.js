@@ -43,8 +43,8 @@ try {
                 }
                 const listeners = self.get(type);
 
-                for (let callback of listeners) {
-                    if (listeners[i].callback === callback)
+                for (let listener of listeners) {
+                    if (listener.callback === callback)
                         return;
                 }
 
@@ -82,7 +82,7 @@ try {
                 return true;
             }
             else {
-                const listeners = self.get(type);
+                const listeners = self.get(evt.type);
                 evt.target
                     = evt.currentTarget
                     = this;
