@@ -1,6 +1,6 @@
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from '../../../../../constants.js';
 
-const versionString = "Calla v0.2.3";
+const versionString = "Calla v0.2.4";
 
 function t(o, s, c) {
     return typeof o === s
@@ -230,18 +230,12 @@ try {
             }
             else {
                 const listeners = self.get(evt.type);
-                evt.target
-                    = evt.currentTarget
-                    = this;
                 for (let listener of listeners) {
                     if (listener.options && listener.options.once) {
                         this.removeEventListener(evt.type, listener.callback);
                     }
                     listener.callback.call(listener.target, evt);
                 }
-                evt.target
-                    = evt.currentTarget
-                    = null;
                 return !evt.defaultPrevented;
             }
         }
