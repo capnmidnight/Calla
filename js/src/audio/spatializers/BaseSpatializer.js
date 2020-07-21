@@ -32,7 +32,8 @@ export class BaseSpatializer extends BaseAudioElement {
             muted,
             autoPlay,
             playsInline,
-            onLoadedMetadata(() => this.audio.play()));
+            onLoadedMetadata(() =>
+                this.audio.play()));
     }
 
     /**

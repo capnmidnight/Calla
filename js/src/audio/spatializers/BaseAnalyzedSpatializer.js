@@ -72,9 +72,6 @@ export class BaseAnalyzedSpatializer extends BaseSpatializer {
         /** @type {MediaSource} */
         this.source = null;
 
-        /** @type {HTMLAudioElement} */
-        this.audio = null;
-
         /** @type {MediaStream} */
         this.stream = stream;
         this.checkStream();
