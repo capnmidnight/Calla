@@ -456,7 +456,7 @@ export class Game extends EventTarget {
         //    displayName: string // the new display name
         //};
         this.withUser(evt && evt.id, (user) => {
-            user.setDisplayName(evt.displayName);
+            user.displayName = evt.displayName;
         });
     }
 
