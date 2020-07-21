@@ -1,6 +1,6 @@
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from '../../../../../constants.js';
 
-const versionString = "Calla v0.2.8";
+const versionString = "Calla v0.2.9";
 
 function t(o, s, c) {
     return typeof o === s
@@ -17360,6 +17360,8 @@ class BaseSpatializer extends BaseAudioElement {
     }
 }
 
+let tryMediaStream = true;
+
 const audioActivityEvt = new AudioActivityEvent(),
     activityCounterMin = 0,
     activityCounterMax = 60,
@@ -17443,21 +17445,35 @@ class BaseAnalyzedSpatializer extends BaseSpatializer {
         super.update();
 
         if (!this.source) {
-            try {
-                if (!this.stream) {
-                    this.stream = this.audio.mozCaptureStream
-                        ? this.audio.mozCaptureStream()
-                        : this.audio.captureStream();
-                }
+            if (tryMediaStream) {
+                try {
+                    if (!this.stream) {
+                        this.stream = this.audio.mozCaptureStream
+                            ? this.audio.mozCaptureStream()
+                            : this.audio.captureStream();
+                    }
 
-                if (this.stream.active) {
-                    this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
+                    if (this.stream.active) {
+                        this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
+                        this.source.connect(this.analyser);
+                        this.source.connect(this.inNode);
+                    }
+                }
+                catch (exp) {
+                    tryMediaStream = false;
+                    console.warn("Creating the media stream failed. Reason: ", exp);
+                }
+            }
+
+            if (!tryMediaStream) {
+                try {
+                    this.source = this.destination.audioContext.createMediaElementSource(this.audio);
                     this.source.connect(this.analyser);
                     this.source.connect(this.inNode);
                 }
-            }
-            catch (exp) {
-                console.warn("Source isn't available yet. Will retry in a moment. Reason: ", exp);
+                catch (exp) {
+                    console.warn("Source isn't available yet. Will retry in a moment. Reason: ", exp);
+                }
             }
         }
 
