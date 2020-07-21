@@ -1,6 +1,6 @@
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from '../../../../../constants.js';
 
-const versionString = "Calla v0.2.12";
+const versionString = "Calla v0.2.13";
 
 function t(o, s, c) {
     return typeof o === s
@@ -17331,7 +17331,8 @@ class BaseSpatializer extends BaseAudioElement {
             muted,
             autoPlay,
             playsInline,
-            onLoadedMetadata(() => this.audio.play()));
+            onLoadedMetadata(() =>
+                this.audio.play()));
     }
 
     /**
@@ -17456,9 +17457,6 @@ class BaseAnalyzedSpatializer extends BaseSpatializer {
 
         /** @type {MediaSource} */
         this.source = null;
-
-        /** @type {HTMLAudioElement} */
-        this.audio = null;
 
         /** @type {MediaStream} */
         this.stream = stream;
@@ -18113,6 +18111,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
 
     constructor() {
         super();
+        this.joined = false;
         this.connection = null;
         this.conference = null;
         this.audioClient = new AudioManager();
@@ -18171,7 +18170,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
 
             this.conference.addEventListener(CONFERENCE_JOINED, async () => {
                 const id = this.conference.myUserId();
-
+                this.joined = true;
                 this.dispatchEvent(Object.assign(
                     new Event("videoConferenceJoined"), {
                     id,
@@ -18185,6 +18184,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
                     new Event("videoConferenceLeft"), {
                     roomName
                 }));
+                this.joined = false;
             });
 
             const onTrackMuteChanged = (track, muted) => {
@@ -18235,8 +18235,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             this.conference.addEventListener(TRACK_ADDED, (track) => {
                 const userID = track.getParticipantId() || this.localUser,
                     isLocal = track.isLocal(),
-                    trackKind = track.getType(),
-                    trackType = trackKind.firstLetterToUpper();
+                    trackKind = track.getType();
 
                 setLoggers(track, JitsiMeetJS.events.track);
 
@@ -18309,6 +18308,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             this.connection.removeEventListener(CONNECTION_ESTABLISHED, onConnect);
             this.connection.removeEventListener(CONNECTION_FAILED, onFailed);
             this.connection.removeEventListener(CONNECTION_DISCONNECTED, onDisconnect);
+            this.connection = null;
         };
 
         this.connection.addEventListener(CONNECTION_ESTABLISHED, onConnect);
@@ -18333,7 +18333,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     leave() {
-        if (this.conference) {
+        if (this.conference && this.joined) {
             if (this.localUser !== null && userInputs.has(this.localUser)) {
                 const inputs = userInputs.get(this.localUser);
                 if (inputs.has("audio")) {
@@ -18345,11 +18345,11 @@ class LibJitsiMeetClient extends BaseJitsiClient {
                 }
             }
 
-            const leaveTask = this.conference.leave();
+            const leaveTask = this.once("videoConferenceLeft", 3000);
+            this.conference.leave();
             leaveTask.then(() => {
-                    this.connection.disconnect();
-                    this.connection = null;
-                });
+                this.connection.disconnect();
+            });
             return leaveTask;
         }
     }
@@ -18383,7 +18383,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             return null;
         }
 
-        if (!userInputs.has(this.localUser)){
+        if (!userInputs.has(this.localUser)) {
             return null;
         }
 
