@@ -1,1 +1,1 @@
-export const versionString = "Calla v0.2.10";
+export const versionString = "Calla v0.2.11";

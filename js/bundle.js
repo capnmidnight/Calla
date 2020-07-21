@@ -1,6 +1,6 @@
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from '../../../../../constants.js';
 
-const versionString = "Calla v0.2.10";
+const versionString = "Calla v0.2.11";
 
 function t(o, s, c) {
     return typeof o === s
@@ -8273,7 +8273,7 @@ class Game extends EventTarget {
         //    displayName: string // the new display name
         //};
         this.withUser(evt && evt.id, (user) => {
-            user.setDisplayName(evt.displayName);
+            user.displayName = evt.displayName;
         });
     }
 
