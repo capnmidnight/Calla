@@ -1,6 +1,6 @@
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from '../../../../../constants.js';
 
-const versionString = "Calla v0.2.5";
+const versionString = "Calla v0.2.6";
 
 function t(o, s, c) {
     return typeof o === s
@@ -7873,6 +7873,7 @@ class Game extends EventTarget {
         this._loop = this.loop.bind(this);
         this.lastTime = 0;
         this.lastMove = Number.MAX_VALUE;
+        this.lastWalk = Number.MAX_VALUE;
         this.gridOffsetX = 0;
         this.gridOffsetY = 0;
         this.cameraX = this.offsetCameraX = this.targetOffsetCameraX = 0;
@@ -8452,13 +8453,17 @@ class Game extends EventTarget {
                 arrayClear(this.waypoints);
             }
 
+            this.lastMove = 0;
+        }
 
+        this.lastWalk += dt;
+        if (this.lastWalk >= this.transitionSpeed) {
             if (this.waypoints.length > 0) {
                 const waypoint = this.waypoints.shift();
                 this.moveMeTo(waypoint.x, waypoint.y);
             }
 
-            this.lastMove = 0;
+            this.lastWalk = 0;
         }
 
         for (let emote of this.emotes) {
