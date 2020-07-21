@@ -380,12 +380,12 @@ export function init(client) {
         },
 
         videoAdded: (evt) => {
-            game.setAvatarVideo(evt);
+            game.setAvatarVideo(evt.id, evt.stream);
             refreshUser(evt.id);
         },
 
         videoRemoved: (evt) => {
-            game.setAvatarVideo(evt);
+            game.setAvatarVideo(evt.id, null);
             refreshUser(evt.id);
         },
 

@@ -2,12 +2,12 @@
 import { EventedGamepad } from "./gamepad/EventedGamepad.js";
 import { id, style } from "./html/attrs.js";
 import { resizeCanvas } from "./html/canvas.js";
-import { Canvas } from "./html/tags.js";
 import { isFirefox } from "./html/flags.js";
+import { Canvas } from "./html/tags.js";
 import { clamp, lerp, project, unproject } from "./math.js";
+import { arrayClear, arrayRemoveAt } from "./protos/Array.js";
 import { TileMap } from "./TileMap.js";
 import { User } from "./User.js";
-import { arrayRemoveAt, arrayClear } from "./protos/Array.js";
 
 const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_MAX = 8,
@@ -469,9 +469,9 @@ export class Game extends EventTarget {
         });
     }
 
-    setAvatarVideo(evt) {
-        this.withUser(evt && evt.id, (user) => {
-            user.setAvatarVideo(evt.element);
+    setAvatarVideo(id, stream) {
+        this.withUser(id, (user) => {
+            user.setAvatarVideo(stream);
         });
     }
 

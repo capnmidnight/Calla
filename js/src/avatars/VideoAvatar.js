@@ -1,15 +1,23 @@
-﻿import { BaseAvatar } from "./BaseAvatar.js";
+﻿import { autoPlay, muted, playsInline, srcObject, volume } from "../html/attrs.js";
 import { isIOS } from "../html/flags.js";
+import { Video } from "../html/tags.js";
+import { BaseAvatar } from "./BaseAvatar.js";
 
 /**
  * An avatar that uses an HTML Video element as its representation.
  **/
 export class VideoAvatar extends BaseAvatar {
     /**
-     * Creates a new avatar that uses an HTML Video element as its representation.
-     * @param {HTMLVideoElement} video
+     * Creates a new avatar that uses a MediaStream as its representation.
+     * @param {MediaStream} stream
      */
-    constructor(video) {
+    constructor(stream) {
+        const video = Video(
+            autoPlay,
+            playsInline,
+            muted,
+            volume(0),
+            srcObject(stream));
         super(video);
         if (!isIOS) {
             video.play();

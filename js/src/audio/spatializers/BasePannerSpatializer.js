@@ -9,14 +9,14 @@ export class BasePannerSpatializer extends BaseWebAudioSpatializer {
      * Creates a new spatializer that uses WebAudio's PannerNode.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
+     * @param {MediaStream} stream
      * @param {number} bufferSize
      * @param {Function} createPosition
      */
-    constructor(userID, destination, audio, bufferSize, createPosition) {
+    constructor(userID, destination, stream, bufferSize, createPosition) {
         const panner = destination.audioContext.createPanner(),
             position = createPosition(panner);
-        super(userID, destination, audio, position, bufferSize, panner);
+        super(userID, destination, stream, position, bufferSize, panner);
 
         this.inNode.panningModel = "HRTF";
         this.inNode.distanceModel = "inverse";

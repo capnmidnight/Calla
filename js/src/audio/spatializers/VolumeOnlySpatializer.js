@@ -1,5 +1,5 @@
-﻿import { BaseSpatializer } from "./BaseSpatializer.js";
-import { InterpolatedPosition } from "../positions/InterpolatedPosition.js";
+﻿import { InterpolatedPosition } from "../positions/InterpolatedPosition.js";
+import { BaseSpatializer } from "./BaseSpatializer.js";
 
 /**
  * A spatializer that only modifies volume.
@@ -10,12 +10,11 @@ export class VolumeOnlySpatializer extends BaseSpatializer {
      * Creates a new spatializer that only modifies volume.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
+     * @param {MediaStream} stream
      */
-    constructor(userID, destination, audio) {
-        super(userID, destination, audio, new InterpolatedPosition());
-        this.audio.play();
-
+    constructor(userID, destination, stream) {
+        super(userID, destination, stream, new InterpolatedPosition());
+        this.audio.muted = false;
         Object.seal(this);
     }
 

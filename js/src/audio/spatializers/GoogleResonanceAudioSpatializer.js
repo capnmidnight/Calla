@@ -11,14 +11,14 @@ export class GoogleResonanceAudioSpatializer extends BaseAnalyzedSpatializer {
      * Creates a new spatializer that uses Google's Resonance Audio library.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
+     * @param {MediaStream} stream
      * @param {number} bufferSize
      */
-    constructor(userID, destination, audio, bufferSize) {
+    constructor(userID, destination, stream, bufferSize) {
         const position = new InterpolatedPosition();
         const resNode = destination.position.scene.createSource();
 
-        super(userID, destination, audio, position, bufferSize, resNode.input);
+        super(userID, destination, stream, position, bufferSize, resNode.input);
 
         this.resNode = resNode;
     }

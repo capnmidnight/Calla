@@ -10,12 +10,12 @@ export class NewPannerSpatializer extends BasePannerSpatializer {
      * Creates a new spatializer that uses WebAudio's PannerNode.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
+     * @param {MediaStream} stream
      * @param {number} bufferSize
      * @param {boolean} forceInterpolatedPosition
      */
-    constructor(userID, destination, audio, bufferSize, forceInterpolatedPosition) {
-        super(userID, destination, audio, position, bufferSize, panner => new WebAudioNewNodePosition(panner, forceInterpolatedPosition));
+    constructor(userID, destination, stream, bufferSize, forceInterpolatedPosition) {
+        super(userID, destination, stream, position, bufferSize, panner => new WebAudioNewNodePosition(panner, forceInterpolatedPosition));
         Object.seal(this);
     }
 }

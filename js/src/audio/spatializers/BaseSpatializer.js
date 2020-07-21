@@ -1,8 +1,11 @@
-﻿import { clamp, project } from "../../math.js";
-import { Destination } from "../Destination.js";
-import { BasePosition } from "../positions/BasePosition.js";
+﻿import { autoPlay, muted, playsInline, srcObject } from "../../html/attrs.js";
+import { onLoadedMetadata } from "../../html/evts.js";
+import { Audio } from "../../html/tags.js";
+import { clamp, project } from "../../math.js";
 import { BaseAudioElement } from "../BaseAudioElement.js";
 import { canChangeAudioOutput } from "../canChangeAudioOutput.js";
+import { Destination } from "../Destination.js";
+import { BasePosition } from "../positions/BasePosition.js";
 
 /** Base class providing functionality for spatializers. */
 export class BaseSpatializer extends BaseAudioElement {
@@ -12,17 +15,24 @@ export class BaseSpatializer extends BaseAudioElement {
      * of an audio element to the listener destination.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
+     * @param {MediaStream} stream
      * @param {BasePosition} position
      */
-    constructor(userID, destination, audio, position) {
+    constructor(userID, destination, stream, position) {
         super(position);
 
         this.id = userID;
         this.destination = destination;
-        this.audio = audio;
         this.volume = 1;
         this.pan = 0;
+
+        this.stream = stream;
+        this.audio = Audio(
+            srcObject(this.stream),
+            muted,
+            autoPlay,
+            playsInline,
+            onLoadedMetadata(() => this.audio.play()));
     }
 
     /**
@@ -30,9 +40,9 @@ export class BaseSpatializer extends BaseAudioElement {
      */
     dispose() {
         this.audio.pause();
-
-        this.position = null;
         this.audio = null;
+        this.stream = null;
+        this.position = null;
         this.destination = null;
         this.id = null;
     }

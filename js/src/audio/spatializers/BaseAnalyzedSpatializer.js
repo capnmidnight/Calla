@@ -1,8 +1,6 @@
-﻿import { BaseSpatializer } from "./BaseSpatializer.js";
-import { clamp } from "../../math.js";
+﻿import { clamp } from "../../math.js";
 import { AudioActivityEvent } from "../AudioActivityEvent.js";
-
-let tryMediaStream = true;
+import { BaseSpatializer } from "./BaseSpatializer.js";
 
 const audioActivityEvt = new AudioActivityEvent(),
     activityCounterMin = 0,
@@ -47,15 +45,13 @@ export class BaseAnalyzedSpatializer extends BaseSpatializer {
      * 
      * @param {string} userID
      * @param {Destination} destination
-     * @param {HTMLAudioElement} audio
+     * @param {MediaStream} stream
      * @param {BasePosition} position
      * @param {number} bufferSize
      * @param {PannerNode|StereoPannerNode} inNode
      */
-    constructor(userID, destination, audio, position, bufferSize, inNode) {
-        super(userID, destination, audio, position);
-
-        this.audio.volume = 0;
+    constructor(userID, destination, stream, position, bufferSize, inNode) {
+        super(userID, destination, stream, position);
 
         this.bufferSize = bufferSize;
         this.buffer = new Float32Array(this.bufferSize);
@@ -73,11 +69,30 @@ export class BaseAnalyzedSpatializer extends BaseSpatializer {
         this.lastAudible = true;
         this.activityCounter = 0;
 
-        /** @type {MediaStream} */
-        this.stream = null;
-
         /** @type {MediaSource} */
         this.source = null;
+
+        /** @type {HTMLAudioElement} */
+        this.audio = null;
+
+        /** @type {MediaStream} */
+        this.stream = stream;
+        this.checkStream();
+    }
+
+    checkStream() {
+        if (!this.source) {
+            try {
+                if (this.stream.active) {
+                    this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
+                    this.source.connect(this.analyser);
+                    this.source.connect(this.inNode);
+                }
+            }
+            catch (exp) {
+                console.warn("Creating the media stream failed. Reason: ", exp);
+            }
+        }
     }
 
     /**
@@ -86,38 +101,7 @@ export class BaseAnalyzedSpatializer extends BaseSpatializer {
     update() {
         super.update();
 
-        if (!this.source) {
-            if (tryMediaStream) {
-                try {
-                    if (!this.stream) {
-                        this.stream = this.audio.mozCaptureStream
-                            ? this.audio.mozCaptureStream()
-                            : this.audio.captureStream();
-                    }
-
-                    if (this.stream.active) {
-                        this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
-                        this.source.connect(this.analyser);
-                        this.source.connect(this.inNode);
-                    }
-                }
-                catch (exp) {
-                    tryMediaStream = false;
-                    console.warn("Creating the media stream failed. Reason: ", exp);
-                }
-            }
-
-            if (!tryMediaStream) {
-                try {
-                    this.source = this.destination.audioContext.createMediaElementSource(this.audio);
-                    this.source.connect(this.analyser);
-                    this.source.connect(this.inNode);
-                }
-                catch (exp) {
-                    console.warn("Source isn't available yet. Will retry in a moment. Reason: ", exp);
-                }
-            }
-        }
+        this.checkStream();
 
         if (this.source) {
             this.analyser.getFloatFrequencyData(this.buffer);

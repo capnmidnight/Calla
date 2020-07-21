@@ -1,12 +1,10 @@
 ﻿/* global JitsiMeetJS */
 
-import { JITSI_HOST, JVB_HOST, JVB_MUC } from "/constants.js";
-import { tag } from "../html/tag.js";
-import { BaseJitsiClient } from "./BaseJitsiClient.js";
-import { AudioManager as AudioClient } from "../audio/AudioManager.js";
-import { autoPlay, srcObject, muted, playsInline, volume } from "../html/attrs.js";
-import { canChangeAudioOutput } from "../audio/canChangeAudioOutput.js";
 import { AudioActivityEvent } from "../audio/AudioActivityEvent.js";
+import { AudioManager as AudioClient } from "../audio/AudioManager.js";
+import { canChangeAudioOutput } from "../audio/canChangeAudioOutput.js";
+import { BaseJitsiClient } from "./BaseJitsiClient.js";
+import { JITSI_HOST, JVB_HOST, JVB_MUC } from "/constants.js";
 
 /**
  * @typedef {object} JitsiTrack
@@ -184,13 +182,6 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
 
                 track.addEventListener(JitsiMeetJS.events.track.TRACK_MUTE_CHANGED, onTrackChanged);
 
-                const elem = tag(trackType,
-                    autoPlay(!isLocal),
-                    playsInline(!isLocal),
-                    muted(isLocal || trackKind === "video"),
-                    volume(trackKind === "video" ? 1 : 0),
-                    srcObject(track.stream));
-
                 if (!userInputs.has(userID)) {
                     userInputs.set(userID, new Map());
                 }
@@ -204,12 +195,12 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 inputs.set(trackKind, track);
 
                 if (!isLocal && trackKind === "audio") {
-                    this.audioClient.createSource(userID, elem);
+                    this.audioClient.createSource(userID, track.stream);
                 }
 
                 this.dispatchEvent(Object.assign(new Event(trackKind + "Added"), {
                     id: userID,
-                    element: elem
+                    stream: track.stream
                 }));
 
                 onTrackMuteChanged(track, false);

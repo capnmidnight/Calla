@@ -3,7 +3,7 @@ import { AvatarMode, BaseAvatar } from "./avatars/BaseAvatar.js";
 import { EmojiAvatar } from "./avatars/EmojiAvatar.js";
 import { PhotoAvatar } from "./avatars/PhotoAvatar.js";
 import { VideoAvatar } from "./avatars/VideoAvatar.js";
-import { allPeople as people, bust, mutedSpeaker, speakerMediumVolume, videoCamera } from "./emoji/emoji.js";
+import { allPeople as people, bust, mutedSpeaker, speakerMediumVolume } from "./emoji/emoji.js";
 import { TextImage } from "./graphics/TextImage.js";
 import { project } from "./math.js";
 import "./protos.js";
@@ -98,11 +98,11 @@ export class User extends EventTarget {
 
     /**
      * Set the current video element used as the avatar.
-     * @param {Video}
+     * @param {MediaStream} stream
      **/
-    setAvatarVideo(video) {
-        if (video instanceof HTMLVideoElement) {
-            this._avatarVideo = new VideoAvatar(video);
+    setAvatarVideo(stream) {
+        if (stream instanceof MediaStream) {
+            this._avatarVideo = new VideoAvatar(stream);
         }
         else {
             this._avatarVideo = null;
