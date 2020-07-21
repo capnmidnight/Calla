@@ -30,6 +30,11 @@ try {
     }
 
     class EventTarget {
+
+        constructor() {
+            selfs.set(this, new Map());
+        }
+
         /**
          * @param {string} type
          * @param {Function} callback
@@ -41,18 +46,15 @@ try {
                 if (!self.has(type)) {
                     self.set(type, []);
                 }
+
                 const listeners = self.get(type);
-
-                for (let listener of listeners) {
-                    if (listener.callback === callback)
-                        return;
+                if (!listeners.find(l => l.callback === callback)) {
+                    listeners.push({
+                        target: this,
+                        callback,
+                        options
+                    });
                 }
-
-                listeners.push({
-                    target: this,
-                    callback,
-                    options
-                });
             }
         }
 
