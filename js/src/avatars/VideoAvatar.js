@@ -1,4 +1,5 @@
 ﻿import { BaseAvatar } from "./BaseAvatar.js";
+import { isIOS } from "../html/flags.js";
 
 /**
  * An avatar that uses an HTML Video element as its representation.
@@ -10,9 +11,11 @@ export class VideoAvatar extends BaseAvatar {
      */
     constructor(video) {
         super(video);
-        video.play();
-        video.once("canplay")
-            .then(() => video.play());
+        if (!isIOS) {
+            video.play();
+            video.once("canplay")
+                .then(() => video.play());
+        }
     }
 
     /**
