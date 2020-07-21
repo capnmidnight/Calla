@@ -9,10 +9,10 @@ function add(a, b) {
     };
 }
 
+let oldEventTarget = null;
 try {
     new window.EventTarget();
 } catch (exp) {
-
     /** @type {WeakMap<EventTarget, Map<string, Listener[]>> */
     const selfs = new WeakMap();
 
@@ -85,23 +85,18 @@ try {
             }
             else {
                 const listeners = self.get(evt.type);
-                evt.target
-                    = evt.currentTarget
-                    = this;
                 for (let listener of listeners) {
                     if (listener.options && listener.options.once) {
                         this.removeEventListener(evt.type, listener.callback);
                     }
                     listener.callback.call(listener.target, evt);
                 }
-                evt.target
-                    = evt.currentTarget
-                    = null;
                 return !evt.defaultPrevented;
             }
         }
     }
 
+    oldEventTarget = window.EventTarget;
     window.EventTarget = EventTarget;
 }
 
@@ -240,3 +235,10 @@ EventTarget.prototype.addEventListeners = function (obj) {
         this.addEventListener(evtName, callback, opts);
     }
 };
+
+if (oldEventTarget) {
+    oldEventTarget.prototype.addEventListeners = EventTarget.prototype.addEventListeners;
+    oldEventTarget.prototype.until = EventTarget.prototype.until;
+    oldEventTarget.prototype.once = EventTarget.prototype.once;
+    oldEventTarget.prototype.when = EventTarget.prototype.when;
+}
