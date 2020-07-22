@@ -1,6 +1,6 @@
 ﻿import { mutedSpeaker, noMobilePhone, speakerHighVolume, upwardsButton, videoCamera, whiteFlower } from "../emoji/emoji.js";
 import { id, title } from "../html/attrs.js";
-import { bgColor, borderLeft, borderRight, columnGap, cssHeight, cssWidth, fontSize, gridArea, gridTemplateColumns, padding, pointerEvents, styles, textAlign } from "../html/css.js";
+import { bgColor, borderLeft, borderRight, columnGap, cssHeight, cssWidth, fontSize, gridArea, gridColsDef, padding, pointerEvents, styles, textAlign } from "../html/css.js";
 import { onClick } from "../html/evts.js";
 import { Button, Div, Run, Span } from "../html/tags.js";
 
@@ -29,7 +29,7 @@ export class FooterBar extends EventTarget {
 
         this.element = Div(
             id("footbar"),
-            gridTemplateColumns("auto", "1fr", "auto"),
+            gridColsDef("auto", "1fr", "auto"),
             padding("4px"),
             cssWidth("100%"),
             columnGap("5px"),

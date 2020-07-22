@@ -1,7 +1,7 @@
 ﻿import { bust } from "../emoji/emoji.js";
 import { EventedGamepad } from "../gamepad/EventedGamepad.js";
 import { autoPlay, disabled, htmlFor, id, max, min, muted, placeHolder, playsInline, src, srcObject, step, title, value, volume } from "../html/attrs.js";
-import { bgColor, borderBottom, borderLeft, borderRight, cssWidth, gridTemplateColumns, styles } from "../html/css.js";
+import { bgColor, borderBottom, borderLeft, borderRight, cssWidth, gridColsDef, styles } from "../html/css.js";
 import { onClick, onInput, onKeyUp } from "../html/evts.js";
 import { Button, clear, Div, Img, InputURL, Label, LabeledInput, LabeledSelectBox, OptionPanel, P, Span, Video } from "../html/tags.js";
 import { isGoodNumber } from "../math.js";
@@ -254,7 +254,7 @@ export class OptionsForm extends FormDialog {
             panels[i].button.style.fontSize = "3.5vw";
         }
 
-        gridTemplateColumns(...cols).apply(this.header);
+        gridColsDef(...cols).apply(this.header);
 
         this.header.append(...panels.map(p => p.button));
         this.content.append(...panels.map(p => p.element));

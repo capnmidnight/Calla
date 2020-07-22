@@ -1,4 +1,4 @@
-﻿import { bgColor, cssHeight, gridArea, gridRow, gridTemplate, zIndex } from "../html/css.js";
+﻿import { bgColor, cssHeight, gridArea, row, gridTemplate, zIndex } from "../html/css.js";
 import { onClick, onMouseOut, onMouseOver } from "../html/evts.js";
 import { Div } from "../html/tags.js";
 import { User } from "../User.js";
@@ -93,7 +93,7 @@ export class UserDirectoryForm extends FormDialog {
 
             let rowCount = 1;
             for (let elems of this.rows.values()) {
-                const r = gridRow(rowCount++);
+                const r = row(rowCount++);
                 for (let elem of elems) {
                     r.apply(elem);
                 }

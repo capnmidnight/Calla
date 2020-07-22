@@ -2,6 +2,7 @@
 import { HtmlCustomTag } from "./HtmlCustomTag.js";
 import { HtmlEvt } from "./evts.js";
 import { isFunction, isString, isNumber, isBoolean } from "../typeChecks.js";
+import { CssProp } from "./css.js";
 
 /**
  * @typedef {(Element|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
@@ -41,14 +42,15 @@ export function tag(name, ...rest) {
             else if (x instanceof HtmlCustomTag) {
                 elem.appendChild(x.element);
             }
-            else if (x instanceof HtmlAttr) {
+            else if (x instanceof HtmlAttr
+                || x instanceof CssProp) {
                 x.apply(elem);
             }
             else if (x instanceof HtmlEvt) {
                 x.add(elem);
             }
             else {
-                console.trace(`Skipping ${x}: unsupported value type.`);
+                console.trace(`Skipping ${x}: unsupported value type.`, x);
             }
         }
     }

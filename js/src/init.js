@@ -17,7 +17,7 @@ import { LoginForm } from "./forms/LoginForm.js";
 import { OptionsForm } from "./forms/OptionsForm.js";
 import { UserDirectoryForm } from "./forms/UserDirectoryForm.js";
 import { Game } from "./Game.js";
-import { gridArea } from "./html/css.js";
+import { gridArea, gridRowsDef } from "./html/css.js";
 import { BaseJitsiClient } from "./jitsi/BaseJitsiClient.js";
 import { Settings } from "./Settings.js";
 import { SFX } from "./audio/SFX.js";
@@ -114,8 +114,8 @@ export function init(client) {
         }
     }
 
-    document.body.style.display = "grid";
-    document.body.style.gridTemplateRows = "auto 1fr auto";
+    gridRowsDef("auto", "1fr", "auto").apply(document.body);
+
     let z = 0;
     for (let e of forAppend) {
         if (e.element) {

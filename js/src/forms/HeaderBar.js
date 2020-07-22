@@ -1,6 +1,6 @@
 ﻿import { door, downRightArrow, gear, questionMark, speakingHead, squareFourCourners } from "../emoji/emoji.js";
 import { alt, id, role, src, title } from "../html/attrs.js";
-import { bgColor, cssHeight, cssWidth, columnGap, fontSize, gridArea, gridTemplateColumns, marginBottom, padding, pointerEvents, styles } from "../html/css.js";
+import { bgColor, cssHeight, cssWidth, columnGap, fontSize, gridArea, gridColsDef, marginBottom, padding, pointerEvents, styles } from "../html/css.js";
 import { onClick } from "../html/evts.js";
 import { Button, Div, Img, Run } from "../html/tags.js";
 
@@ -25,7 +25,7 @@ export class HeaderBar extends EventTarget {
 
         this.element = Div(
             id("headbar"),
-            gridTemplateColumns("auto", "auto", "auto", "auto", "1fr", "auto", "auto"),
+            gridColsDef("auto", "auto", "auto", "auto", "1fr", "auto", "auto"),
             padding("4px"),
             cssWidth("100%"),
             columnGap("5px"),

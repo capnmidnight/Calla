@@ -1,6 +1,6 @@
 ﻿import { close } from "../emoji/emoji.js";
 import { className, id } from "../html/attrs.js";
-import { gridArea, gridColumn, gridTemplate, gridTemplateColumns, margin, padding } from "../html/css.js";
+import { gridArea, col, gridTemplate, gridColsDef, margin, padding } from "../html/css.js";
 import { onClick } from "../html/evts.js";
 import { Button, Div, H1 } from "../html/tags.js";
 import "../protos.js";
@@ -22,14 +22,14 @@ export class FormDialog extends EventTarget {
                 id(name),
                 className("dialog"),
                 Div(
-                    gridTemplateColumns("1fr", "auto"),
-                    gridColumn(1, 3),
+                    gridColsDef("1fr", "auto"),
+                    col(1, 3),
                     H1(
-                        gridColumn(1),
+                        col(1),
                         margin("0"),
                         header),
                     Button(
-                        gridColumn(2),
+                        col(2),
                         padding("1em"),
                         close.value,
                         onClick(() =>
