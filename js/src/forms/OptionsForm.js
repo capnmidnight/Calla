@@ -1,19 +1,20 @@
 ﻿import { bust } from "../emoji/emoji.js";
 import { EventedGamepad } from "../gamepad/EventedGamepad.js";
-import { autoPlay, gridCols, htmlFor, id, max, min, muted, placeHolder, playsInline, srcObject, step, style, title, value, volume, src, disabled } from "../html/attrs.js";
+import { autoPlay, disabled, htmlFor, id, max, min, muted, placeHolder, playsInline, src, srcObject, step, title, value, volume } from "../html/attrs.js";
+import { bgColor, borderBottom, borderLeft, borderRight, cssWidth, gridTemplateColumns, styles } from "../html/css.js";
 import { onClick, onInput, onKeyUp } from "../html/evts.js";
-import { Button, clear, Div, InputURL, Label, LabeledInput, LabeledSelectBox, OptionPanel, P, Span, Video, Img } from "../html/tags.js";
+import { Button, clear, Div, Img, InputURL, Label, LabeledInput, LabeledSelectBox, OptionPanel, P, Span, Video } from "../html/tags.js";
 import { isGoodNumber } from "../math.js";
 import "../protos.js";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
+import { isString } from "../typeChecks.js";
 import { FormDialog } from "./FormDialog.js";
 import { InputBinding } from "./InputBinding.js";
-import { isString } from "../typeChecks.js";
 
 
 
-const keyWidthStyle = style({ width: "7em" }),
-    numberWidthStyle = style({ width: "3em" }),
+const keyWidthStyle = cssWidth("7em"),
+    numberWidthStyle = cssWidth("3em"),
     avatarUrlChangedEvt = new Event("avatarURLChanged"),
     gamepadChangedEvt = new Event("gamepadChanged"),
     selectAvatarEvt = new Event("selectAvatar"),
@@ -157,7 +158,7 @@ export class OptionsForm extends FormDialog {
                     value(10),
                     min(5),
                     max(32),
-                    style({ width: "3em" }),
+                    numberWidthStyle,
                     onInput(_(fontSizeChangedEvt))),
                 P(
                     this.drawHearingCheck = LabeledInput(
@@ -253,16 +254,16 @@ export class OptionsForm extends FormDialog {
             panels[i].button.style.fontSize = "3.5vw";
         }
 
-        gridCols(...cols).apply(this.header);
+        gridTemplateColumns(...cols).apply(this.header);
 
         this.header.append(...panels.map(p => p.button));
         this.content.append(...panels.map(p => p.element));
-        style({
-            backgroundColor: "#ddd",
-            borderLeft: "solid 2px black",
-            borderRight: "solid 2px black",
-            borderBottom: "solid 2px black"
-        }).apply(this.content);
+        styles(
+            bgColor("#ddd"),
+            borderLeft("solid 2px black"),
+            borderRight("solid 2px black"),
+            borderBottom("solid 2px black"))
+            .apply(this.content);
 
         const showPanel = (p) =>
             () => {

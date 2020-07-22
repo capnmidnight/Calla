@@ -1,8 +1,9 @@
-﻿import { className, id, style, gridCol, gridCols, gridArea, gridSpan } from "../html/attrs.js";
-import { Div, H1, Button } from "../html/tags.js";
-import { close } from "../emoji/emoji.js";
-import "../protos.js";
+﻿import { close } from "../emoji/emoji.js";
+import { className, id } from "../html/attrs.js";
+import { gridArea, gridColumn, gridTemplate, gridTemplateColumns, margin, padding } from "../html/css.js";
 import { onClick } from "../html/evts.js";
+import { Button, Div, H1 } from "../html/tags.js";
+import "../protos.js";
 
 const hiddenEvt = new Event("hidden");
 
@@ -10,7 +11,7 @@ export class FormDialog extends EventTarget {
     constructor(name, header) {
         super();
 
-        const formStyle = gridArea(
+        const formStyle = gridTemplate(
             ["5fr", "1fr", "1fr"],
             ["auto", "auto", "1fr", "auto", "auto"], {
             overflowY: "hidden"
@@ -21,15 +22,15 @@ export class FormDialog extends EventTarget {
                 id(name),
                 className("dialog"),
                 Div(
-                    gridCols("1fr", "auto"),
-                    gridCol(1, 3),
+                    gridTemplateColumns("1fr", "auto"),
+                    gridColumn(1, 3),
                     H1(
-                        gridCol(1),
-                        style({ margin: "0" }),
+                        gridColumn(1),
+                        margin("0"),
                         header),
                     Button(
-                        gridCol(2),
-                        style({ padding: "1em" }),
+                        gridColumn(2),
+                        padding("1em"),
                         close.value,
                         onClick(() =>
                             this.hide()))));
@@ -39,19 +40,19 @@ export class FormDialog extends EventTarget {
         this.header = this.element.querySelector(".header")
             || this.element.appendChild(Div(className("header")));
 
-        gridSpan(1, 2, 3, 1).apply(this.header);
+        gridArea(1, 2, 3, 1).apply(this.header);
 
         this.content = this.element.querySelector(".content")
             || this.element.appendChild(Div(className("content")));
 
-        gridSpan(1, 3, 3, 1, {
+        gridArea(1, 3, 3, 1, {
             overflowY: "scroll"
         }).apply(this.content);
 
         this.footer = this.element.querySelector(".footer")
             || this.element.appendChild(Div(className("footer")));
 
-        gridSpan(1, 4, 3, 1, {
+        gridArea(1, 4, 3, 1, {
             display: "flex",
             flexDirection: "row-reverse"
         }).apply(this.footer);

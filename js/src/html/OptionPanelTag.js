@@ -1,4 +1,5 @@
-﻿import { id, style } from "./attrs.js";
+﻿import { id } from "./attrs.js";
+import { bgColor, borderBottomColor, borderLeft, borderRight, borderSize, borderStyle, borderTop, padding, styles } from "./css.js";
 import { onClick } from "./evts.js";
 import { HtmlCustomTag } from "./HtmlCustomTag.js";
 import { Button, P } from "./tags.js";
@@ -21,7 +22,7 @@ export class OptionPanelTag extends HtmlCustomTag {
     constructor(panelID, name, ...rest) {
         super("div",
             id(panelID),
-            style({ padding: "1em" }),
+            padding("1em"),
             P(...rest));
 
         this.button = Button(
@@ -48,14 +49,14 @@ export class OptionPanelTag extends HtmlCustomTag {
      **/
     set visible(v) {
         this.element.setOpen(v);
-        style({
-            borderStyle: "solid",
-            borderSize: "2px",
-            backgroundColor: v ? "#ddd" : "transparent",
-            borderTop: v ? "" : "none",
-            borderRight: v ? "" : "none",
-            borderBottomColor: v ? "#ddd" : "",
-            borderLeft: v ? "" : "none",
-        }).apply(this.button);
+        styles(
+            borderStyle("solid"),
+            borderSize("2px"),
+            bgColor(v ? "#ddd" : "transparent"),
+            borderTop(v ? "" : "none"),
+            borderRight(v ? "" : "none"),
+            borderBottomColor(v ? "#ddd" : ""),
+            borderLeft(v ? "" : "none"))
+            .apply(this.button);
     }
 }

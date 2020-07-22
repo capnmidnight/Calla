@@ -1,7 +1,8 @@
 ﻿import { Emote } from "./Emote.js";
 import { EventedGamepad } from "./gamepad/EventedGamepad.js";
-import { id, style } from "./html/attrs.js";
+import { id } from "./html/attrs.js";
 import { resizeCanvas } from "./html/canvas.js";
+import { cssHeight, cssWidth, touchAction } from "./html/css.js";
 import { isFirefox } from "./html/flags.js";
 import { Canvas } from "./html/tags.js";
 import { clamp, lerp, project, unproject } from "./math.js";
@@ -40,11 +41,9 @@ export class Game extends EventTarget {
 
         this.element = Canvas(
             id("frontBuffer"),
-            style({
-                width: "100%",
-                height: "100%",
-                touchAction: "none"
-            }));
+            cssWidth("100%"),
+            cssHeight("100%"),
+            touchAction("none"));
         this.gFront = this.element.getContext("2d");
 
         /** @type {User} */

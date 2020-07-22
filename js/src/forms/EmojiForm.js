@@ -1,21 +1,20 @@
 ﻿import { allIcons as icons, EmojiGroup, emojiStyle, textStyle } from "../emoji/emoji.js";
-import { className, href, htmlFor, style, title, gridSpan } from "../html/attrs.js";
+import { className, href, htmlFor, title } from "../html/attrs.js";
+import { cssWidth, fgColor, fontSize, gridArea, styles, textDecoration, textTransform } from "../html/css.js";
 import { onClick } from "../html/evts.js";
 import { A, Button, Div, H1, H2, Label, LI, P, Span, UL } from "../html/tags.js";
 import "../protos.js";
 import { FormDialog } from "./FormDialog.js";
 
 
-const headerStyle = style({
-    textDecoration: "none",
-    color: "black",
-    textTransform: "capitalize"
-}),
-    buttonStyle = style({
-        fontSize: "200%",
-        width: "2em"
-    }),
-    cancelEvt = new Event("emojiCanceled");
+const headerStyle = styles(
+    textDecoration("none"),
+    fgColor("black"),
+    textTransform("capitalize"));
+const buttonStyle = styles(
+    fontSize("200%"),
+    cssWidth("2em"));
+const cancelEvt = new Event("emojiCanceled");
 
 export class EmojiForm extends FormDialog {
     constructor() {
@@ -64,20 +63,20 @@ export class EmojiForm extends FormDialog {
             const alts = group.alts || group;
             for (let icon of alts) {
                 const btn = Button(
-                        title(icon.desc),
-                        buttonStyle,
-                        onClick((evt) => {
-                            selectedEmoji = selectedEmoji && evt.ctrlKey
-                                ? combine(selectedEmoji, icon)
-                                : icon;
-                            this.preview.innerHTML = `${selectedEmoji.value} - ${selectedEmoji.desc}`;
-                            this.confirmButton.unlock();
+                    title(icon.desc),
+                    buttonStyle,
+                    onClick((evt) => {
+                        selectedEmoji = selectedEmoji && evt.ctrlKey
+                            ? combine(selectedEmoji, icon)
+                            : icon;
+                        this.preview.innerHTML = `${selectedEmoji.value} - ${selectedEmoji.desc}`;
+                        this.confirmButton.unlock();
 
-                            if (alts) {
-                                alts.toggleOpen();
-                                btn.innerHTML = icon.value + (alts.isOpen() ? "-" : "+");
-                            }
-                        }), icon.value);
+                        if (alts) {
+                            alts.toggleOpen();
+                            btn.innerHTML = icon.value + (alts.isOpen() ? "-" : "+");
+                        }
+                    }), icon.value);
 
                 let alts = null;
 
@@ -127,7 +126,7 @@ export class EmojiForm extends FormDialog {
                         headerStyle,
                         onClick(() => {
                             container.toggleOpen();
-                            headerButton.innerHTML = group.value  + (container.isOpen() ? " -" : " +");
+                            headerButton.innerHTML = group.value + (container.isOpen() ? " -" : " +");
                         }),
                         group.value + " -");
 
@@ -162,7 +161,7 @@ export class EmojiForm extends FormDialog {
                     this.hide();
                 })),
 
-            this.preview = Span(gridSpan(1, 4, 3, 1)));
+            this.preview = Span(gridArea(1, 4, 3, 1)));
 
         this.confirmButton.lock();
 

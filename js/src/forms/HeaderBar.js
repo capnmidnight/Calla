@@ -1,14 +1,8 @@
 ﻿import { door, downRightArrow, gear, questionMark, speakingHead, squareFourCourners } from "../emoji/emoji.js";
-import { alt, gridSpan, gridCols, id, role, src, style, title } from "../html/attrs.js";
+import { alt, id, role, src, title } from "../html/attrs.js";
+import { bgColor, cssHeight, cssWidth, columnGap, fontSize, gridArea, gridTemplateColumns, marginBottom, padding, pointerEvents, styles } from "../html/css.js";
 import { onClick } from "../html/evts.js";
-import { Button, Div, Img } from "../html/tags.js";
-
-
-function Run(...rest) {
-    return Div(
-        style({ margin: "auto" }),
-        ...rest);
-}
+import { Button, Div, Img, Run } from "../html/tags.js";
 
 const toggleOptionsEvt = new Event("toggleOptions"),
     tweetEvt = new Event("tweet"),
@@ -16,15 +10,12 @@ const toggleOptionsEvt = new Event("toggleOptions"),
     toggleFullscreenEvt = new Event("toggleFullscreen"),
     toggleInstructionsEvt = new Event("toggleInstructions"),
     toggleUserDirectoryEvt = new Event("toggleUserDirectory"),
-    subelStyle = style({
-        fontSize: "1.25em",
-        width: "3em",
-        height: "100%",
-        pointerEvents: "all"
-    }),
-    buttonLabelStyle = style({
-        fontSize: "12px"
-    });
+    subelStyle = styles(
+        pointerEvents("all"),
+        fontSize("1.25em"),
+        cssWidth("3em"),
+        cssHeight("100%")),
+    buttonLabelStyle = fontSize("12px");
 
 export class HeaderBar extends EventTarget {
     constructor() {
@@ -34,20 +25,18 @@ export class HeaderBar extends EventTarget {
 
         this.element = Div(
             id("headbar"),
-            gridCols("auto", "auto", "auto", "auto", "1fr", "auto", "auto"),
-            style({
-                padding: "4px",
-                width: "100%",
-                columnGap: "5px",
-                backgroundColor: "transparent",
-                pointerEvents: "none"
-            }),
+            gridTemplateColumns("auto", "auto", "auto", "auto", "1fr", "auto", "auto"),
+            padding("4px"),
+            cssWidth("100%"),
+            columnGap("5px"),
+            bgColor("transparent"),
+            pointerEvents("none"),
 
             this.optionsButton = Button(
                 title("Show/hide options"),
                 onClick(_(toggleOptionsEvt)),
                 subelStyle,
-                gridSpan(1, 1),
+                gridArea(1, 1),
                 Run(gear.value),
                 Run(buttonLabelStyle, "Options")),
 
@@ -55,7 +44,7 @@ export class HeaderBar extends EventTarget {
                 title("Show/hide instructions"),
                 onClick(_(toggleInstructionsEvt)),
                 subelStyle,
-                gridSpan(2, 1),
+                gridArea(2, 1),
                 Run(questionMark.value),
                 Run(buttonLabelStyle, "Info")),
 
@@ -63,18 +52,19 @@ export class HeaderBar extends EventTarget {
                 title("Share your current room to twitter"),
                 onClick(_(tweetEvt)),
                 subelStyle,
-                gridSpan(3, 1),
+                gridArea(3, 1),
                 Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
                     alt("icon"),
                     role("presentation"),
-                    style({ height: "25px", marginBottom: "-7px" })),
+                    cssHeight("25px"),
+                    marginBottom("-7px")),
                 Run(buttonLabelStyle, "Tweet")),
 
             Button(
                 title("View user directory"),
                 onClick(_(toggleUserDirectoryEvt)),
                 subelStyle,
-                gridSpan(4, 1),
+                gridArea(4, 1),
                 Run(speakingHead.value),
                 Run(buttonLabelStyle, "Users")),
 
@@ -84,7 +74,7 @@ export class HeaderBar extends EventTarget {
                 onClick(_(toggleFullscreenEvt)),
                 onClick(() => this.isFullscreen = !this.isFullscreen),
                 subelStyle,
-                gridSpan(6, 1),
+                gridArea(6, 1),
                 Run(squareFourCourners.value),
                 Run(buttonLabelStyle, "Expand")),
 
@@ -93,7 +83,7 @@ export class HeaderBar extends EventTarget {
                 title("Leave the room"),
                 onClick(_(leaveEvt)),
                 subelStyle,
-                gridSpan(7, 1),
+                gridArea(7, 1),
                 Run(door.value),
                 Run(buttonLabelStyle, "Leave")));
 

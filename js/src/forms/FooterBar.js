@@ -1,34 +1,22 @@
 ﻿import { mutedSpeaker, noMobilePhone, speakerHighVolume, upwardsButton, videoCamera, whiteFlower } from "../emoji/emoji.js";
-import { gridSpan, id, style, title, gridCols } from "../html/attrs.js";
+import { id, title } from "../html/attrs.js";
+import { bgColor, borderLeft, borderRight, columnGap, cssHeight, cssWidth, fontSize, gridArea, gridTemplateColumns, padding, pointerEvents, styles, textAlign } from "../html/css.js";
 import { onClick } from "../html/evts.js";
-import { Button, Div, Span } from "../html/tags.js";
-
-
-function Run(...rest) {
-    return Div(
-        style({ margin: "auto" }),
-        ...rest);
-}
+import { Button, Div, Run, Span } from "../html/tags.js";
 
 const toggleAudioEvt = new Event("toggleAudio"),
     toggleVideoEvt = new Event("toggleVideo"),
     emoteEvt = new Event("emote"),
     selectEmojiEvt = new Event("selectEmoji"),
-    subelStyle = style({
-        fontSize: "1.25em",
-        width: "3em",
-        height: "100%"
-    }),
-    pointerEventsAll = style({
-        pointerEvents: "all"
-    }),
-    subButtonStyle = style({
-        fontSize: "1.25em",
-        height: "100%"
-    }),
-    buttonLabelStyle = style({
-        fontSize: "12px"
-    });
+    subelStyle = styles(
+        fontSize("1.25em"),
+        cssWidth("3em"),
+        cssHeight("100%")),
+    pointerEventsAll = pointerEvents("all"),
+    subButtonStyle = styles(
+        fontSize("1.25em"),
+        cssHeight("100%")),
+    buttonLabelStyle = fontSize("12px");
 
 export class FooterBar extends EventTarget {
     constructor() {
@@ -41,34 +29,32 @@ export class FooterBar extends EventTarget {
 
         this.element = Div(
             id("footbar"),
-            gridCols("auto", "1fr", "auto"),
-            style({
-                padding: "4px",
-                width: "100%",
-                columnGap: "5px",
-                backgroundColor: "transparent",
-                pointerEvents: "none"
-            }),
+            gridTemplateColumns("auto", "1fr", "auto"),
+            padding("4px"),
+            cssWidth("100%"),
+            columnGap("5px"),
+            bgColor("transparent"),
+            pointerEvents("none"),
 
             Button(
                 title("Toggle audio mute/unmute"),
                 onClick(_(toggleAudioEvt)),
-                gridSpan(1, 1),
+                gridArea(1, 1),
                 subelStyle,
                 pointerEventsAll,
                 this.muteAudioButton = Run(speakerHighVolume.value),
                 Run(buttonLabelStyle, "Audio")),
 
             this.emojiControl = Span(
-                gridSpan(2, 1),
-                style({ textAlign: "center" }),
+                gridArea(2, 1),
+                textAlign("center"),
                 subButtonStyle,
                 Button(
                     title("Emote"),
                     onClick(_(emoteEvt)),
                     subButtonStyle,
                     pointerEventsAll,
-                    style({ borderRight: "none" }),
+                    borderRight("none"),
                     this.emoteButton = Run(whiteFlower.value),
                     Run(buttonLabelStyle, "Emote")),
                 Button(
@@ -76,7 +62,7 @@ export class FooterBar extends EventTarget {
                     onClick(_(selectEmojiEvt)),
                     subButtonStyle,
                     pointerEventsAll,
-                    style({ borderLeft: "none" }),
+                    borderLeft("none"),
                     Run(upwardsButton.value),
                     Run(buttonLabelStyle, "Change"))),
 
@@ -84,7 +70,7 @@ export class FooterBar extends EventTarget {
             Button(
                 title("Toggle video mute/unmute"),
                 onClick(_(toggleVideoEvt)),
-                gridSpan(3, 1),
+                gridArea(3, 1),
                 subelStyle,
                 pointerEventsAll,
                 this.muteVideoButton = Run(noMobilePhone.value),

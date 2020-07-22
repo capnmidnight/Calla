@@ -1,21 +1,13 @@
-﻿import { gridSpan, gridRow, style, gridArea } from "../html/attrs.js";
-import { onClick, onMouseOver, onMouseOut } from "../html/evts.js";
+﻿import { bgColor, cssHeight, gridArea, gridRow, gridTemplate, zIndex } from "../html/css.js";
+import { onClick, onMouseOut, onMouseOver } from "../html/evts.js";
 import { Div } from "../html/tags.js";
 import { User } from "../User.js";
 import { FormDialog } from "./FormDialog.js";
 
-function bg(backgroundColor) {
-    return style({ backgroundColor });
-}
-
-function z(zIndex) {
-    return style({ zIndex });
-}
-
-const newRowColor = bg("lightgreen");
-const hoveredColor = bg("rgba(65, 255, 202, 0.25)");
-const unhoveredColor = bg("transparent");
-const avatarSize = style({ height: "32px" });
+const newRowColor = bgColor("lightgreen");
+const hoveredColor = bgColor("rgba(65, 255, 202, 0.25)");
+const unhoveredColor = bgColor("transparent");
+const avatarSize = cssHeight("32px");
 const warpToEvt = Object.assign(
     new Event("warpTo"),
     {
@@ -36,7 +28,7 @@ export class UserDirectoryForm extends FormDialog {
 
         this.content.append(
             this.table = Div(
-                gridArea(
+                gridTemplate(
                     ["auto", "1fr"],
                     ["min-content"], {
                     columnGap: "5px",
@@ -54,8 +46,8 @@ export class UserDirectoryForm extends FormDialog {
 
         if (isNew) {
             const elem = Div(
-                gridSpan(1, row, 2, 1),
-                z(-1),
+                gridArea(1, row, 2, 1),
+                zIndex(-1),
                 newRowColor);
             setTimeout(() => {
                 this.table.removeChild(elem);
@@ -70,10 +62,10 @@ export class UserDirectoryForm extends FormDialog {
         }
 
         const elems = [
-            Div(gridSpan(1, row), z(0), avatar),
-            Div(gridSpan(2, row), z(0), user.displayName),
+            Div(gridArea(1, row), zIndex(0), avatar),
+            Div(gridArea(2, row), zIndex(0), user.displayName),
             Div(
-                gridSpan(1, row, 2, 1), z(1),
+                gridArea(1, row, 2, 1), zIndex(1),
                 unhoveredColor,
                 onMouseOver(function () {
                     hoveredColor.apply(this);
@@ -117,8 +109,8 @@ export class UserDirectoryForm extends FormDialog {
 
     warn(...rest) {
         const elem = Div(
-            gridSpan(1, this.rows.size + 1, 2, 1),
-            bg("yellow"),
+            gridArea(1, this.rows.size + 1, 2, 1),
+            bgColor("yellow"),
             ...rest.map(i => i.toString()));
 
         this.table.append(elem);

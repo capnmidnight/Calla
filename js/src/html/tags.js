@@ -4,6 +4,7 @@ import { OptionPanelTag } from "./OptionPanelTag.js";
 import { SelectBoxTag } from "./SelectBoxTag.js";
 import { tag } from "./tag.js";
 import { type, width, height } from "./attrs.js";
+import { margin } from "./css.js";
 
 /**
  * Empty an element of all children. This is faster than
@@ -1086,4 +1087,15 @@ export function LabeledSelectBox(id, labelText, noSelectionText, makeID, makeLab
  */
 export function OptionPanel(id, name, ...rest) {
     return new OptionPanelTag(id, name, ...rest);
+}
+
+/**
+ * Creates a Div element with margin: auto.
+ * @param {...any} rest
+ * @returns {HTMLDivElement}
+ */
+export function Run(...rest) {
+    return Div(
+        margin("auto"),
+        ...rest);
 }
