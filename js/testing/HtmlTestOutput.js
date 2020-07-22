@@ -1,4 +1,4 @@
-﻿import { bgColor, columnGap, cssWidth, cssHeight, display, fgColor, monospaceFamily, overflow, overflowY, styles, whiteSpace } from "../src/html/css.js";
+﻿import { backgroundColor, columnGap, width, height, display, color, monospaceFamily, overflow, overflowY, styles, whiteSpace } from "../src/html/css.js";
 import { col, gridColsDef } from "../src/html/grid.js";
 import { onClick } from "../src/html/evts.js";
 import { Button, clear, Div, Span } from "../src/html/tags.js";
@@ -9,14 +9,14 @@ import { TestStates } from "./TestStates.js";
 
 /**
  * Creates a portion of a progress bar.
- * @param {string} color - a CSS color value
- * @param {string} width - a CSS size value
+ * @param {string} c - a CSS color value
+ * @param {string} w - a CSS size value
  */
-function bar(color, width) {
+function bar(c, w) {
     return styles(
-        bgColor(color),
-        fgColor(color),
-        cssWidth(width));
+        backgroundColor(c),
+        color(c),
+        width(w));
 }
 
 /**
@@ -69,16 +69,16 @@ export class HtmlTestOutput extends TestOutput {
                 basicStyle = styles(
                     display("inline-block"),
                     overflow("hidden"),
-                    cssHeight("1em")),
+                    height("1em")),
                 table = Div(
                     gridColsDef("auto", "auto", "auto", "1fr"),
                     monospaceFamily,
-                    cssWidth("100%"),
+                    width("100%"),
                     columnGap("1em"),
                     refresher(() => this.run()),
                     Div(
                         col(2, 3),
-                        cssHeight("2em"),
+                        height("2em"),
                         whiteSpace("nowrap"),
                         overflow("hidden"),
                         Span(basicStyle, bar("green", s + "%")),

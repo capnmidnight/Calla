@@ -1,14 +1,14 @@
-﻿import { bgColor, cssHeight, zIndex, columnGap, cssWidth } from "../html/css.js";
+﻿import { backgroundColor, height, zIndex, columnGap, width } from "../html/css.js";
 import { gridPos, row, gridDef } from "../html/grid.js";
 import { onClick, onMouseOut, onMouseOver } from "../html/evts.js";
 import { Div } from "../html/tags.js";
 import { User } from "../User.js";
 import { FormDialog } from "./FormDialog.js";
 
-const newRowColor = bgColor("lightgreen");
-const hoveredColor = bgColor("rgba(65, 255, 202, 0.25)");
-const unhoveredColor = bgColor("transparent");
-const avatarSize = cssHeight("32px");
+const newRowColor = backgroundColor("lightgreen");
+const hoveredColor = backgroundColor("rgba(65, 255, 202, 0.25)");
+const unhoveredColor = backgroundColor("transparent");
+const avatarSize = height("32px");
 const warpToEvt = Object.assign(
     new Event("warpTo"),
     {
@@ -33,7 +33,7 @@ export class UserDirectoryForm extends FormDialog {
                     ["auto", "1fr"],
                     ["min-content"]),
                 columnGap("5px"),
-                cssWidth("100%")));
+                width("100%")));
     }
 
     /**
@@ -110,7 +110,7 @@ export class UserDirectoryForm extends FormDialog {
     warn(...rest) {
         const elem = Div(
             gridPos(1, this.rows.size + 1, 2, 1),
-            bgColor("yellow"),
+            backgroundColor("yellow"),
             ...rest.map(i => i.toString()));
 
         this.table.append(elem);

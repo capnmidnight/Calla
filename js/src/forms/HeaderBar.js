@@ -1,6 +1,6 @@
 ﻿import { door, downRightArrow, gear, questionMark, speakingHead, squareFourCourners } from "../emoji/emoji.js";
 import { alt, id, role, src, title } from "../html/attrs.js";
-import { bgColor, columnGap, cssHeight, cssWidth, fontSize, marginBottom, padding, pointerEvents, styles } from "../html/css.js";
+import { backgroundColor, columnGap, height, width, fontSize, marginBottom, padding, pointerEvents, styles } from "../html/css.js";
 import { onClick } from "../html/evts.js";
 import { gridColsDef, gridPos } from "../html/grid.js";
 import { Button, Div, Img, Run } from "../html/tags.js";
@@ -14,8 +14,8 @@ const toggleOptionsEvt = new Event("toggleOptions"),
     subelStyle = styles(
         pointerEvents("all"),
         fontSize("1.25em"),
-        cssWidth("3em"),
-        cssHeight("100%")),
+        width("3em"),
+        height("100%")),
     buttonLabelStyle = fontSize("12px");
 
 export class HeaderBar extends EventTarget {
@@ -28,9 +28,9 @@ export class HeaderBar extends EventTarget {
             id("headbar"),
             gridColsDef("auto", "auto", "auto", "auto", "1fr", "auto", "auto"),
             padding("4px"),
-            cssWidth("100%"),
+            width("100%"),
             columnGap("5px"),
-            bgColor("transparent"),
+            backgroundColor("transparent"),
             pointerEvents("none"),
 
             this.optionsButton = Button(
@@ -57,7 +57,7 @@ export class HeaderBar extends EventTarget {
                 Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
                     alt("icon"),
                     role("presentation"),
-                    cssHeight("25px"),
+                    height("25px"),
                     marginBottom("-7px")),
                 Run(buttonLabelStyle, "Tweet")),
 

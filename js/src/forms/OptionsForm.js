@@ -1,7 +1,7 @@
 ﻿import { bust } from "../emoji/emoji.js";
 import { EventedGamepad } from "../gamepad/EventedGamepad.js";
 import { autoPlay, disabled, htmlFor, id, max, min, muted, placeHolder, playsInline, src, srcObject, step, title, value, volume } from "../html/attrs.js";
-import { bgColor, borderBottom, borderLeft, borderRight, cssWidth, styles } from "../html/css.js";
+import { backgroundColor, borderBottom, borderLeft, borderRight, width, styles } from "../html/css.js";
 import { onClick, onInput, onKeyUp } from "../html/evts.js";
 import { gridColsDef } from "../html/grid.js";
 import { Button, clear, Div, Img, InputURL, Label, LabeledInput, LabeledSelectBox, OptionPanel, P, Span, Video } from "../html/tags.js";
@@ -14,8 +14,8 @@ import { InputBinding } from "./InputBinding.js";
 
 
 
-const keyWidthStyle = cssWidth("7em"),
-    numberWidthStyle = cssWidth("3em"),
+const keyWidthStyle = width("7em"),
+    numberWidthStyle = width("3em"),
     avatarUrlChangedEvt = new Event("avatarURLChanged"),
     gamepadChangedEvt = new Event("gamepadChanged"),
     selectAvatarEvt = new Event("selectAvatar"),
@@ -260,7 +260,7 @@ export class OptionsForm extends FormDialog {
         this.header.append(...panels.map(p => p.button));
         this.content.append(...panels.map(p => p.element));
         styles(
-            bgColor("#ddd"),
+            backgroundColor("#ddd"),
             borderLeft("solid 2px black"),
             borderRight("solid 2px black"),
             borderBottom("solid 2px black"))

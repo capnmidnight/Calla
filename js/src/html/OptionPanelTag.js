@@ -1,5 +1,5 @@
 ﻿import { id } from "./attrs.js";
-import { bgColor, borderBottomColor, borderLeft, borderRight, borderSize, borderStyle, borderTop, padding, styles } from "./css.js";
+import { backgroundColor, borderBottomColor, borderLeft, borderRight, borderWidth, borderStyle, borderTop, padding, styles } from "./css.js";
 import { onClick } from "./evts.js";
 import { HtmlCustomTag } from "./HtmlCustomTag.js";
 import { Button, P } from "./tags.js";
@@ -51,8 +51,8 @@ export class OptionPanelTag extends HtmlCustomTag {
         this.element.setOpen(v);
         styles(
             borderStyle("solid"),
-            borderSize("2px"),
-            bgColor(v ? "#ddd" : "transparent"),
+            borderWidth("2px"),
+            backgroundColor(v ? "#ddd" : "transparent"),
             borderTop(v ? "" : "none"),
             borderRight(v ? "" : "none"),
             borderBottomColor(v ? "#ddd" : ""),

@@ -1,6 +1,6 @@
 ﻿import { allIcons as icons, EmojiGroup, emojiStyle, textStyle } from "../emoji/emoji.js";
 import { className, href, htmlFor, title } from "../html/attrs.js";
-import { cssWidth, fgColor, fontSize, styles, textDecoration, textTransform } from "../html/css.js";
+import { width, color, fontSize, styles, textDecoration, textTransform } from "../html/css.js";
 import { gridPos } from "../html/grid.js";
 import { onClick } from "../html/evts.js";
 import { A, Button, Div, H1, H2, Label, LI, P, Span, UL } from "../html/tags.js";
@@ -10,11 +10,11 @@ import { FormDialog } from "./FormDialog.js";
 
 const headerStyle = styles(
     textDecoration("none"),
-    fgColor("black"),
+    color("black"),
     textTransform("capitalize"));
 const buttonStyle = styles(
     fontSize("200%"),
-    cssWidth("2em"));
+    width("2em"));
 const cancelEvt = new Event("emojiCanceled");
 
 export class EmojiForm extends FormDialog {

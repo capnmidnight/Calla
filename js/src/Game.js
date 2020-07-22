@@ -2,7 +2,7 @@
 import { EventedGamepad } from "./gamepad/EventedGamepad.js";
 import { id } from "./html/attrs.js";
 import { resizeCanvas } from "./html/canvas.js";
-import { cssHeight, cssWidth, touchAction } from "./html/css.js";
+import { height, width, touchAction } from "./html/css.js";
 import { isFirefox } from "./html/flags.js";
 import { Canvas } from "./html/tags.js";
 import { clamp, lerp, project, unproject } from "./math.js";
@@ -41,8 +41,8 @@ export class Game extends EventTarget {
 
         this.element = Canvas(
             id("frontBuffer"),
-            cssWidth("100%"),
-            cssHeight("100%"),
+            width("100%"),
+            height("100%"),
             touchAction("none"));
         this.gFront = this.element.getContext("2d");
 
