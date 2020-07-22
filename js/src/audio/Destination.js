@@ -94,12 +94,12 @@ export class Destination extends BaseAudioElement {
     /**
      * Creates a spatializer for an audio source, and initializes its audio properties.
      * @param {string} userID
-     * @param {HTMLAudioElement} audio
+     * @param {MediaStream|HTMLAudioElement} stream
      * @param {number} bufferSize
      * @return {BaseSpatializer}
      */
-    createSpatializer(userID, audio, bufferSize) {
-        const spatializer = this._createSpatializer(userID, audio, bufferSize);
+    createSpatializer(userID, stream, bufferSize) {
+        const spatializer = this._createSpatializer(userID, stream, bufferSize);
         if (spatializer) {
             spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
         }
@@ -111,14 +111,14 @@ export class Destination extends BaseAudioElement {
      * Creates a spatialzer for an audio source.
      * @private
      * @param {string} id - the user for which the audio source is being created.
-     * @param {HTMLAudioElement} audio - the audio element that is being spatialized.
+     * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
      * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
      * @return {BaseSpatializer}
      */
-    _createSpatializer(id, audio, bufferSize) {
+    _createSpatializer(id, stream, bufferSize) {
         if (attemptResonanceAPI) {
             try {
-                return new GoogleResonanceAudioSpatializer(id, this, audio, bufferSize);
+                return new GoogleResonanceAudioSpatializer(id, this, stream, bufferSize);
             }
             catch (exp) {
                 attemptResonanceAPI = false;
@@ -129,7 +129,7 @@ export class Destination extends BaseAudioElement {
         if (!attemptResonanceAPI && hasFullSpatializer) {
             if (isLatestWebAudioAPI) {
                 try {
-                    return new NewPannerSpatializer(id, this, audio, bufferSize, forceInterpolatedPosition);
+                    return new NewPannerSpatializer(id, this, stream, bufferSize, forceInterpolatedPosition);
                 }
                 catch (exp) {
                     isLatestWebAudioAPI = false;
@@ -139,7 +139,7 @@ export class Destination extends BaseAudioElement {
 
             if (!isLatestWebAudioAPI) {
                 try {
-                    return new OldPannerSpatializer(id, this, audio, bufferSize);
+                    return new OldPannerSpatializer(id, this, stream, bufferSize);
                 }
                 catch (exp) {
                     hasFullSpatializer = false;
@@ -150,7 +150,7 @@ export class Destination extends BaseAudioElement {
 
         if (!attemptResonanceAPI && !hasFullSpatializer && hasWebAudioAPI) {
             try {
-                return new StereoSpatializer(id, this, audio, bufferSize);
+                return new StereoSpatializer(id, this, stream, bufferSize);
             }
             catch (exp) {
                 hasWebAudioAPI = false;
@@ -166,7 +166,7 @@ export class Destination extends BaseAudioElement {
         }
 
         if (!attemptResonanceAPI && !hasFullSpatializer && !hasWebAudioAPI) {
-            return new VolumeOnlySpatializer(id, this, audio);
+            return new VolumeOnlySpatializer(id, this, stream);
         }
     }
 }

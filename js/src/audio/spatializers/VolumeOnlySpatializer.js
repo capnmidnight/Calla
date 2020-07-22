@@ -10,7 +10,7 @@ export class VolumeOnlySpatializer extends BaseSpatializer {
      * Creates a new spatializer that only modifies volume.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {MediaStream} stream
+     * @param {MediaStream|HTMLAudioElement} stream
      */
     constructor(userID, destination, stream) {
         super(userID, destination, stream, new InterpolatedPosition());

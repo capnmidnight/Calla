@@ -10,7 +10,7 @@ export class StereoSpatializer extends BaseWebAudioSpatializer {
      * Creates a new spatializer that performs stereo panning and volume scaling.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {MediaStream} stream
+     * @param {MediaStream|HTMLAudioElement} stream
      * @param {number} bufferSize
      */
     constructor(userID, destination, stream, bufferSize) {

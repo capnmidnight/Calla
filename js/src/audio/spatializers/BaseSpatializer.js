@@ -1,5 +1,4 @@
-﻿import { autoPlay, muted, playsInline, srcObject } from "../../html/attrs.js";
-import { onLoadedMetadata } from "../../html/evts.js";
+﻿import { muted, srcObject } from "../../html/attrs.js";
 import { Audio } from "../../html/tags.js";
 import { clamp, project } from "../../math.js";
 import { BaseAudioElement } from "../BaseAudioElement.js";
@@ -15,7 +14,7 @@ export class BaseSpatializer extends BaseAudioElement {
      * of an audio element to the listener destination.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {MediaStream} stream
+     * @param {MediaStream|HTMLAudioElement} stream
      * @param {BasePosition} position
      */
     constructor(userID, destination, stream, position) {
@@ -26,14 +25,23 @@ export class BaseSpatializer extends BaseAudioElement {
         this.volume = 1;
         this.pan = 0;
 
-        this.stream = stream;
-        this.audio = Audio(
-            srcObject(this.stream),
-            muted,
-            autoPlay,
-            playsInline,
-            onLoadedMetadata(() =>
-                this.audio.play()));
+        if (stream instanceof HTMLAudioElement) {
+            this.audio = stream;
+        }
+        else if (stream instanceof MediaStream) {
+            this.stream = stream;
+            this.audio = Audio(
+                srcObject(this.stream),
+                muted);
+        }
+        else {
+            throw new Error("Can't create a node from the given stream. Expected type HTMLAudioElement or MediaStream.");
+        }
+
+        this.audio.autoPlay = true;
+        this.audio.playsInline = true;
+        this.audio.addEventListener("onloadedmetadata", () =>
+            this.audio.play());
     }
 
     /**

@@ -87,11 +87,11 @@ export class AudioManager extends BaseAudioClient {
 
     /**
      * @param {string} userID
-     * @param {HTMLAudioElement} audio
+     * @param {MediaStream|HTMLAudioElement} stream
      * @return {BaseSpatializer}
      **/
-    createSource(userID, audio) {
-        const source = this.destination.createSpatializer(userID, audio, BUFFER_SIZE);
+    createSource(userID, stream) {
+        const source = this.destination.createSpatializer(userID, stream, BUFFER_SIZE);
         source.addEventListener("audioActivity", this.onAudioActivity);
         this.sources.set(userID, source);
         return source;

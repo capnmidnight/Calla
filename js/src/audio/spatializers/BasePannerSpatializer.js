@@ -9,7 +9,7 @@ export class BasePannerSpatializer extends BaseWebAudioSpatializer {
      * Creates a new spatializer that uses WebAudio's PannerNode.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {MediaStream} stream
+     * @param {MediaStream|HTMLAudioElement} stream
      * @param {number} bufferSize
      * @param {Function} createPosition
      */

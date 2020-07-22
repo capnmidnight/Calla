@@ -9,7 +9,7 @@ export class BaseWebAudioSpatializer extends BaseAnalyzedSpatializer {
      * Creates a new spatializer that uses the WebAudio API
      * @param {string} userID
      * @param {Destination} destination
-     * @param {MediaStream} stream
+     * @param {MediaStream|HTMLAudioElement} stream
      * @param {BasePosition} position
      * @param {number} bufferSize
      * @param {PannerNode|StereoPannerNode} inNode

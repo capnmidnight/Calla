@@ -45,7 +45,7 @@ export class BaseAnalyzedSpatializer extends BaseSpatializer {
      * 
      * @param {string} userID
      * @param {Destination} destination
-     * @param {MediaStream} stream
+     * @param {MediaStream|HTMLAudioElement} stream
      * @param {BasePosition} position
      * @param {number} bufferSize
      * @param {PannerNode|StereoPannerNode} inNode
@@ -72,22 +72,32 @@ export class BaseAnalyzedSpatializer extends BaseSpatializer {
         /** @type {MediaSource} */
         this.source = null;
 
-        /** @type {MediaStream} */
-        this.stream = stream;
         this.checkStream();
     }
 
     checkStream() {
         if (!this.source) {
-            try {
-                if (this.stream.active) {
-                    this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
+            if (this.stream) {
+                try {
+                    if (this.stream.active) {
+                        this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
+                        this.source.connect(this.analyser);
+                        this.source.connect(this.inNode);
+                    }
+                }
+                catch (exp) {
+                    console.warn("Creating the media stream failed. Reason: ", exp);
+                }
+            }
+            else if (this.audio) {
+                try {
+                    this.source = this.destination.audioContext.createMediaElementSource(this.audio);
                     this.source.connect(this.analyser);
                     this.source.connect(this.inNode);
                 }
-            }
-            catch (exp) {
-                console.warn("Creating the media stream failed. Reason: ", exp);
+                catch (exp) {
+                    console.warn("Creating the media stream failed. Reason: ", exp);
+                }
             }
         }
     }
@@ -130,7 +140,6 @@ export class BaseAnalyzedSpatializer extends BaseSpatializer {
         }
 
         this.source = null;
-        this.stream = null;
         this.inNode = null;
         this.analyser = null;
         this.buffer = null;
