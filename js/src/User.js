@@ -20,10 +20,10 @@ muteAudioIcon.value = mutedSpeaker.value;
 speakerActivityIcon.value = speakerMediumVolume.value;
 
 export class User extends EventTarget {
-    constructor(evt, isMe) {
+    constructor(id, displayName, isMe) {
         super();
 
-        this.id = evt.id;
+        this.id = id;
         this.label = isMe ? "(Me)" : `(${this.id})`;
 
         this.moveEvent = new UserMoveEvent(this.id);
@@ -50,7 +50,7 @@ export class User extends EventTarget {
         this.userNameText = new TextImage("sans-serif");
         this.userNameText.color = "white";
         this._displayName = null;
-        this.displayName = evt.displayName;
+        this.displayName = displayName;
         Object.seal(this);
     }
 

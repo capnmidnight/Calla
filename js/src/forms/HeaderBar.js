@@ -82,6 +82,7 @@ export class HeaderBar extends EventTarget {
             this.fullscreenButton = Button(
                 title("Toggle fullscreen"),
                 onClick(_(toggleFullscreenEvt)),
+                onClick(() => this.isFullscreen = !this.isFullscreen),
                 subelStyle,
                 gridSpan(6, 1),
                 Run(squareFourCourners.value),

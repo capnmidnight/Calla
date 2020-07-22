@@ -287,10 +287,10 @@ export class Game extends EventTarget {
         this.element.setOpen(v);
     }
 
-    updateAudioActivity(evt) {
-        if (this.users.has(evt.id)) {
-            const user = this.users.get(evt.id);
-            user.isActive = evt.isActive;
+    updateAudioActivity(id, isActive) {
+        if (this.users.has(id)) {
+            const user = this.users.get(id);
+            user.isActive = isActive;
         }
     }
 
@@ -383,17 +383,13 @@ export class Game extends EventTarget {
         }
     }
 
-    addUser(evt) {
-        //evt = {
-        //    id: "string", // the id of the participant
-        //    displayName: "string" // the display name of the participant
-        //};
-        if (this.users.has(evt.id)) {
-            this.removeUser(evt);
+    addUser(id, displayName) {
+        if (this.users.has(id)) {
+            this.removeUser(id);
         }
 
-        const user = new User(evt, false);
-        this.users.set(evt.id, user);
+        const user = new User(id, displayName, false);
+        this.users.set(id, user);
 
         userJoinedEvt.user = user;
         this.dispatchEvent(userJoinedEvt);
@@ -407,33 +403,33 @@ export class Game extends EventTarget {
         this.dispatchEvent(toggleVideoEvt);
     }
 
-    muteUserAudio(evt) {
+    muteUserAudio(id, muted) {
         let mutingUser = this.me;
-        if (!!evt.id && this.users.has(evt.id)) {
-            mutingUser = this.users.get(evt.id);
+        if (id && this.users.has(id)) {
+            mutingUser = this.users.get(id);
         }
 
         if (!mutingUser) {
             console.warn("No user found to mute audio, retrying in 1 second.");
-            setTimeout(this.muteUserAudio.bind(this, evt), 1000);
+            setTimeout(this.muteUserAudio.bind(this, id, muted), 1000);
         }
         else {
-            mutingUser.audioMuted = evt.muted;
+            mutingUser.audioMuted = muted;
         }
     }
 
-    muteUserVideo(evt) {
+    muteUserVideo(id, muted) {
         let mutingUser = this.me;
-        if (!!evt.id && this.users.has(evt.id)) {
-            mutingUser = this.users.get(evt.id);
+        if (!!id && this.users.has(id)) {
+            mutingUser = this.users.get(id);
         }
 
         if (!mutingUser) {
             console.warn("No user found to mute video, retrying in 1 second.");
-            setTimeout(this.muteUserVideo.bind(this, evt), 1000);
+            setTimeout(this.muteUserVideo.bind(this, id, muted), 1000);
         }
         else {
-            mutingUser.videoMuted = evt.muted;
+            mutingUser.videoMuted = muted;
         }
     }
 
@@ -455,23 +451,16 @@ export class Game extends EventTarget {
         }
     }
 
-    changeUserName(evt) {
-        //evt = {
-        //    id: string, // the id of the participant that changed his display name
-        //    displayName: string // the new display name
-        //};
-        this.withUser(evt && evt.id, (user) => {
-            user.displayName = evt.displayName;
+    changeUserName(id, displayName) {
+        this.withUser(id, (user) => {
+            user.displayName = displayName;
         });
     }
 
-    removeUser(evt) {
-        //evt = {
-        //    id: "string" // the id of the participant
-        //};
-        this.withUser(evt && evt.id, (user) => {
-            this.users.delete(user.id);
-        });
+    removeUser(id) {
+        if (this.users.has(id)) {
+            this.users.delete(id);
+        }
     }
 
     setAvatarVideo(id, stream) {
@@ -481,37 +470,24 @@ export class Game extends EventTarget {
     }
 
     setAvatarURL(id, url) {
-        //evt = {
-        //  id: string, // the id of the participant that changed his avatar.
-        //  avatarURL: string // the new avatar URL.
-        //}
         this.withUser(id, (user) => {
             user.avatarImage = url;
         });
     }
 
     setAvatarEmoji(id, emoji) {
-        //evt = {
-        //  id: string, // the id of the participant that changed his avatar.
-        //  value: string // the emoji text to use as the avatar.
-        //  desc: string // a description of the emoji
-        //}
         this.withUser(id, (user) => {
             user.avatarEmoji = emoji;
         });
     }
 
-    async startAsync(evt) {
-        //evt = {
-        //    roomName: "string", // the room name of the conference
-        //    id: "string", // the id of the local participant
-        //    displayName: "string", // the display name of the local participant
-        //    avatarURL: "string" // the avatar URL of the local participant
-        //};
-
-        this.currentRoomName = evt.roomName.toLowerCase();
-        this.me = new User(evt, true);
-        this.users.set(evt.id, this.me);
+    async startAsync(id, displayName, avatarURL, roomName) {
+        this.currentRoomName = roomName.toLowerCase();
+        this.me = new User(id, displayName, true);
+        if (!!avatarURL) {
+            this.me.avatarImage = avatarURL;
+        }
+        this.users.set(id, this.me);
 
         this.map = new TileMap(this.currentRoomName);
         let success = false;

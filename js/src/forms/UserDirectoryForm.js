@@ -82,6 +82,7 @@ export class UserDirectoryForm extends FormDialog {
                     unhoveredColor.apply(this);
                 }),
                 onClick(() => {
+                    this.hide();
                     warpToEvt.id = user.id;
                     this.dispatchEvent(warpToEvt);
                 }))];

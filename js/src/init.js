@@ -184,14 +184,10 @@ export function init(client) {
         toggleInstructions: showView(login),
         toggleUserDirectory: showView(directory),
 
-        toggleFullscreen: () => {
-            headbar.isFullscreen = !headbar.isFullscreen;
-        },
-
         tweet: () => {
             const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
                 url = new URL("https://twitter.com/intent/tweet?text=" + message);
-            open(url);
+            window.open(url);
         },
 
         leave: () => {
@@ -228,7 +224,7 @@ export function init(client) {
 
         window.location.hash = login.roomName;
 
-        await game.startAsync(joinInfo);
+        await game.startAsync(joinInfo.id, joinInfo.displayName, joinInfo.avatarURL, joinInfo.roomName);
 
         client.avatarURL
             = game.me.avatarImage
@@ -244,11 +240,11 @@ export function init(client) {
         options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
 
         const audioMuted = client.isAudioMuted;
-        game.muteUserAudio({ id: client.localUser, muted: audioMuted });
+        game.muteUserAudio(client.localUser, audioMuted);
         footbar.audioEnabled = !audioMuted;
 
         const videoMuted = client.isVideoMuted;
-        game.muteUserVideo({ id: client.localUser, muted: videoMuted });
+        game.muteUserVideo(client.localUser, videoMuted);
         footbar.videoEnabled = !videoMuted;
     });
 
@@ -276,11 +272,27 @@ export function init(client) {
         },
 
         toggleDrawHearing: () => {
-            settings.drawHearing = game.drawHearing = options.drawHearing;
+            settings.drawHearing
+                = game.drawHearing
+                = options.drawHearing;
         },
 
         fontSizeChanged: () => {
-            settings.fontSize = game.fontSize = options.fontSize;
+            settings.fontSize
+                = game.fontSize
+                = options.fontSize;
+        },
+
+        gamepadChanged: () => {
+            settings.gamepadIndex
+                = game.gamepadIndex
+                = options.gamepadIndex;
+        },
+
+        inputBindingChanged: () => {
+            settings.inputBinding
+                = game.inputBinding
+                = options.inputBinding;
         },
 
         audioInputChanged: async () => {
@@ -303,14 +315,6 @@ export function init(client) {
 
         toggleVideo: async () => {
             await client.toggleVideoMutedAsync();
-        },
-
-        gamepadChanged: () => {
-            settings.gamepadIndex = game.gamepadIndex = options.gamepadIndex;
-        },
-
-        inputBindingChanged: () => {
-            settings.inputBinding = game.inputBinding = options.inputBinding;
         }
     });
 
@@ -375,7 +379,6 @@ export function init(client) {
         if (game.users.has(evt.id)) {
             const user = game.users.get(evt.id);
             game.warpMeTo(user.position._tx, user.position._ty);
-            directory.hide();
         }
     });
 
@@ -387,7 +390,7 @@ export function init(client) {
 
         participantJoined: (evt) => {
             sound.play("join", 0.5);
-            game.addUser(evt);
+            game.addUser(evt.id, evt.displayName);
         },
 
         videoAdded: (evt) => {
@@ -402,8 +405,8 @@ export function init(client) {
 
         participantLeft: (evt) => {
             sound.play("leave", 0.5);
-            game.removeUser(evt);
-            client.removeUser(evt);
+            game.removeUser(evt.id);
+            client.removeUser(evt.id);
             directory.delete(evt.id);
         },
 
@@ -413,12 +416,12 @@ export function init(client) {
         },
 
         displayNameChange: (evt) => {
-            game.changeUserName(evt);
+            game.changeUserName(evt.id, evt.displayName);
             refreshUser(evt.id);
         },
 
         audioMuteStatusChanged: async (evt) => {
-            game.muteUserAudio(evt);
+            game.muteUserAudio(evt.id, evt.muted);
             if (evt.id === client.localUser) {
                 footbar.audioEnabled = !evt.muted;
                 options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
@@ -426,7 +429,7 @@ export function init(client) {
         },
 
         videoMuteStatusChanged: async (evt) => {
-            game.muteUserVideo(evt);
+            game.muteUserVideo(evt.id, evt.muted);
             if (evt.id === client.localUser) {
                 footbar.videoEnabled = !evt.muted;
                 if (evt.muted) {
@@ -476,7 +479,7 @@ export function init(client) {
         },
 
         audioActivity: (evt) => {
-            game.updateAudioActivity(evt);
+            game.updateAudioActivity(evt.id, evt.isActive);
         }
     });
 
