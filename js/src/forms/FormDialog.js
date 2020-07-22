@@ -1,4 +1,4 @@
-﻿import { className, id, style, gridCol, gridCols, gridArea } from "../html/attrs.js";
+﻿import { className, id, style, gridCol, gridCols, gridArea, gridSpan } from "../html/attrs.js";
 import { Div, H1, Button } from "../html/tags.js";
 import { close } from "../emoji/emoji.js";
 import "../protos.js";
@@ -39,23 +39,21 @@ export class FormDialog extends EventTarget {
         this.header = this.element.querySelector(".header")
             || this.element.appendChild(Div(className("header")));
 
-        style({ gridArea: "2/1/3/4" }).apply(this.header);
+        gridSpan(1, 2, 3, 1).apply(this.header);
 
         this.content = this.element.querySelector(".content")
             || this.element.appendChild(Div(className("content")));
 
-        style({
-            overflowY: "scroll",
-            gridArea: "3/1/4/4"
+        gridSpan(1, 3, 3, 1, {
+            overflowY: "scroll"
         }).apply(this.content);
 
         this.footer = this.element.querySelector(".footer")
             || this.element.appendChild(Div(className("footer")));
 
-        style({
+        gridSpan(1, 4, 3, 1, {
             display: "flex",
-            flexDirection: "row-reverse",
-            gridArea: "4/1/5/4"
+            flexDirection: "row-reverse"
         }).apply(this.footer);
     }
 

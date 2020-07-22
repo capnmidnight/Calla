@@ -1093,30 +1093,20 @@ export const monospaceFont = style({ fontFamily: monospaceFamily });
 // A selection of fonts that should match whatever the user's operating system normally uses.
 export const systemFamily = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
 
+export function combineStyles(a, ...rest) {
+    for (let b of rest) {
+        for (let key in b) {
+            a.appendStyle(key, b[key]);
+        }
+    }
+    return a;
+}
+
 export function gridCols(...cols) {
     return style({
         display: "grid",
         gridTemplateColumns: cols.join(" ")
     });
-}
-
-export function gridRows(...rows) {
-    return style({
-        display: "grid",
-        gridTemplateRows: rows.join(" ")
-    });
-}
-
-export function gridArea(cols, rows, addStyles) {
-    const s = style({
-        display: "grid",
-        gridTemplateColumns: cols.join(" "),
-        gridTemplateRows: rows.join(" ")
-    });
-    for (let key in addStyles) {
-        s.appendStyle(key, addStyles[key]);
-    }
-    return s;
 }
 
 /**
@@ -1132,6 +1122,13 @@ export function gridCol(x, w = null) {
     return style({
         gridColumnStart: x,
         gridColumnEnd: x + w
+    });
+}
+
+export function gridRows(...rows) {
+    return style({
+        display: "grid",
+        gridTemplateRows: rows.join(" ")
     });
 }
 
@@ -1151,6 +1148,14 @@ export function gridRow(y, h = null) {
     });
 }
 
+export function gridArea(cols, rows, addStyles) {
+    return combineStyles(style({
+        display: "grid",
+        gridTemplateColumns: cols.join(" "),
+        gridTemplateRows: rows.join(" ")
+    }), addStyles);
+}
+
 /**
  * Constructs a CSS grid area definition.
  * @param {number} x - the starting horizontal cell for the element.
@@ -1158,7 +1163,7 @@ export function gridRow(y, h = null) {
  * @param {number} [w=null] - the number of cells wide the element should cover.
  * @param {number} [h=null] - the number of cells tall the element should cover.
  */
-export function gridSpan(x, y, w = null, h = null) {
+export function gridSpan(x, y, w = null, h = null, addStyles = null) {
     if (w === null) {
         w = 1;
     }
@@ -1167,10 +1172,10 @@ export function gridSpan(x, y, w = null, h = null) {
         h = 1;
     }
 
-    return style({
+    return combineStyles(style({
         gridRowStart: y,
         gridRowEnd: y + h,
         gridColumnStart: x,
         gridColumnEnd: x + w
-    });
+    }), addStyles);
 }

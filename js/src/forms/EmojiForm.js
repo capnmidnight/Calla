@@ -1,5 +1,5 @@
 ﻿import { allIcons as icons, EmojiGroup, emojiStyle, textStyle } from "../emoji/emoji.js";
-import { className, href, htmlFor, style, title } from "../html/attrs.js";
+import { className, href, htmlFor, style, title, gridSpan } from "../html/attrs.js";
 import { onClick } from "../html/evts.js";
 import { A, Button, Div, H1, H2, Label, LI, P, Span, UL } from "../html/tags.js";
 import "../protos.js";
@@ -162,7 +162,7 @@ export class EmojiForm extends FormDialog {
                     this.hide();
                 })),
 
-            this.preview = Span(style({ gridArea: "4/1/5/4" })));
+            this.preview = Span(gridSpan(1, 4, 3, 1)));
 
         this.confirmButton.lock();
 
