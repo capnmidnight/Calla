@@ -1,4 +1,5 @@
-﻿import { bgColor, cssHeight, gridArea, row, gridTemplate, zIndex } from "../html/css.js";
+﻿import { bgColor, cssHeight, zIndex, columnGap, cssWidth } from "../html/css.js";
+import { gridPos, row, gridDef } from "../html/grid.js";
 import { onClick, onMouseOut, onMouseOver } from "../html/evts.js";
 import { Div } from "../html/tags.js";
 import { User } from "../User.js";
@@ -28,12 +29,11 @@ export class UserDirectoryForm extends FormDialog {
 
         this.content.append(
             this.table = Div(
-                gridTemplate(
+                gridDef(
                     ["auto", "1fr"],
-                    ["min-content"], {
-                    columnGap: "5px",
-                    width: "100%"
-                })));
+                    ["min-content"]),
+                columnGap("5px"),
+                cssWidth("100%")));
     }
 
     /**
@@ -46,7 +46,7 @@ export class UserDirectoryForm extends FormDialog {
 
         if (isNew) {
             const elem = Div(
-                gridArea(1, row, 2, 1),
+                gridPos(1, row, 2, 1),
                 zIndex(-1),
                 newRowColor);
             setTimeout(() => {
@@ -62,10 +62,10 @@ export class UserDirectoryForm extends FormDialog {
         }
 
         const elems = [
-            Div(gridArea(1, row), zIndex(0), avatar),
-            Div(gridArea(2, row), zIndex(0), user.displayName),
+            Div(gridPos(1, row), zIndex(0), avatar),
+            Div(gridPos(2, row), zIndex(0), user.displayName),
             Div(
-                gridArea(1, row, 2, 1), zIndex(1),
+                gridPos(1, row, 2, 1), zIndex(1),
                 unhoveredColor,
                 onMouseOver(function () {
                     hoveredColor.apply(this);
@@ -109,7 +109,7 @@ export class UserDirectoryForm extends FormDialog {
 
     warn(...rest) {
         const elem = Div(
-            gridArea(1, this.rows.size + 1, 2, 1),
+            gridPos(1, this.rows.size + 1, 2, 1),
             bgColor("yellow"),
             ...rest.map(i => i.toString()));
 

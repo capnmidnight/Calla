@@ -1,8 +1,9 @@
 ﻿import { bust } from "../emoji/emoji.js";
 import { EventedGamepad } from "../gamepad/EventedGamepad.js";
 import { autoPlay, disabled, htmlFor, id, max, min, muted, placeHolder, playsInline, src, srcObject, step, title, value, volume } from "../html/attrs.js";
-import { bgColor, borderBottom, borderLeft, borderRight, cssWidth, gridColsDef, styles } from "../html/css.js";
+import { bgColor, borderBottom, borderLeft, borderRight, cssWidth, styles } from "../html/css.js";
 import { onClick, onInput, onKeyUp } from "../html/evts.js";
+import { gridColsDef } from "../html/grid.js";
 import { Button, clear, Div, Img, InputURL, Label, LabeledInput, LabeledSelectBox, OptionPanel, P, Span, Video } from "../html/tags.js";
 import { isGoodNumber } from "../math.js";
 import "../protos.js";

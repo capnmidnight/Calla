@@ -17,7 +17,7 @@ import { LoginForm } from "./forms/LoginForm.js";
 import { OptionsForm } from "./forms/OptionsForm.js";
 import { UserDirectoryForm } from "./forms/UserDirectoryForm.js";
 import { Game } from "./Game.js";
-import { gridArea, gridRowsDef } from "./html/css.js";
+import { gridPos, gridRowsDef } from "./html/grid.js";
 import { BaseJitsiClient } from "./jitsi/BaseJitsiClient.js";
 import { Settings } from "./Settings.js";
 import { SFX } from "./audio/SFX.js";
@@ -121,16 +121,16 @@ export function init(client) {
         if (e.element) {
             let g = null;
             if (e === headbar) {
-                g = gridArea(1, 1);
+                g = gridPos(1, 1);
             }
             else if (e === footbar) {
-                g = gridArea(1, 3);
+                g = gridPos(1, 3);
             }
             else if (e === game || e === login) {
-                g = gridArea(1, 1, 1, 3);
+                g = gridPos(1, 1, 1, 3);
             }
             else {
-                g = gridArea(1, 2);
+                g = gridPos(1, 2);
             }
             g.apply(e.element);
             e.element.style.zIndex = (z++);
@@ -343,7 +343,7 @@ export function init(client) {
         },
 
         gameStarted: () => {
-            gridArea(1, 2).apply(login.element);
+            gridPos(1, 2).apply(login.element);
             login.hide();
             headbar.enabled = true;
             footbar.enabled = true;
@@ -364,7 +364,7 @@ export function init(client) {
         },
 
         gameEnded: () => {
-            gridArea(1, 1, 1, 3).apply(login.element);
+            gridPos(1, 1, 1, 3).apply(login.element);
             game.hide();
             login.connected = false;
             showLogin();

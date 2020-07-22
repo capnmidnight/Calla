@@ -1,4 +1,5 @@
-﻿import { bgColor, columnGap, cssWidth, cssHeight, display, fgColor, col, gridColsDef, monospaceFamily, overflow, overflowY, styles, whiteSpace } from "../src/html/css.js";
+﻿import { bgColor, columnGap, cssWidth, cssHeight, display, fgColor, monospaceFamily, overflow, overflowY, styles, whiteSpace } from "../src/html/css.js";
+import { col, gridColsDef } from "../src/html/grid.js";
 import { onClick } from "../src/html/evts.js";
 import { Button, clear, Div, Span } from "../src/html/tags.js";
 import { TestOutput } from "./TestOutput.js";

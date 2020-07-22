@@ -1,8 +1,8 @@
-﻿import { HtmlAttr } from "./attrs.js";
-import { HtmlCustomTag } from "./HtmlCustomTag.js";
+﻿import { isBoolean, isFunction, isNumber, isString } from "../typeChecks.js";
+import { HtmlAttr } from "./attrs.js";
+import { CssProp, CssPropSet } from "./css.js";
 import { HtmlEvt } from "./evts.js";
-import { isFunction, isString, isNumber, isBoolean } from "../typeChecks.js";
-import { CssProp } from "./css.js";
+import { HtmlCustomTag } from "./HtmlCustomTag.js";
 
 /**
  * @typedef {(Element|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
@@ -43,7 +43,8 @@ export function tag(name, ...rest) {
                 elem.appendChild(x.element);
             }
             else if (x instanceof HtmlAttr
-                || x instanceof CssProp) {
+                || x instanceof CssProp
+                || x instanceof CssPropSet) {
                 x.apply(elem);
             }
             else if (x instanceof HtmlEvt) {

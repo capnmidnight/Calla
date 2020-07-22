@@ -1,7 +1,8 @@
 ﻿import { mutedSpeaker, noMobilePhone, speakerHighVolume, upwardsButton, videoCamera, whiteFlower } from "../emoji/emoji.js";
 import { id, title } from "../html/attrs.js";
-import { bgColor, borderLeft, borderRight, columnGap, cssHeight, cssWidth, fontSize, gridArea, gridColsDef, padding, pointerEvents, styles, textAlign } from "../html/css.js";
+import { bgColor, borderLeft, borderRight, columnGap, cssHeight, cssWidth, fontSize, padding, pointerEvents, styles, textAlign } from "../html/css.js";
 import { onClick } from "../html/evts.js";
+import { gridColsDef, gridPos } from "../html/grid.js";
 import { Button, Div, Run, Span } from "../html/tags.js";
 
 const toggleAudioEvt = new Event("toggleAudio"),
@@ -39,14 +40,14 @@ export class FooterBar extends EventTarget {
             Button(
                 title("Toggle audio mute/unmute"),
                 onClick(_(toggleAudioEvt)),
-                gridArea(1, 1),
+                gridPos(1, 1),
                 subelStyle,
                 pointerEventsAll,
                 this.muteAudioButton = Run(speakerHighVolume.value),
                 Run(buttonLabelStyle, "Audio")),
 
             this.emojiControl = Span(
-                gridArea(2, 1),
+                gridPos(2, 1),
                 textAlign("center"),
                 subButtonStyle,
                 Button(
@@ -70,7 +71,7 @@ export class FooterBar extends EventTarget {
             Button(
                 title("Toggle video mute/unmute"),
                 onClick(_(toggleVideoEvt)),
-                gridArea(3, 1),
+                gridPos(3, 1),
                 subelStyle,
                 pointerEventsAll,
                 this.muteVideoButton = Run(noMobilePhone.value),

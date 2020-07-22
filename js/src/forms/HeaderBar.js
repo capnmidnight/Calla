@@ -1,7 +1,8 @@
 ﻿import { door, downRightArrow, gear, questionMark, speakingHead, squareFourCourners } from "../emoji/emoji.js";
 import { alt, id, role, src, title } from "../html/attrs.js";
-import { bgColor, cssHeight, cssWidth, columnGap, fontSize, gridArea, gridColsDef, marginBottom, padding, pointerEvents, styles } from "../html/css.js";
+import { bgColor, columnGap, cssHeight, cssWidth, fontSize, marginBottom, padding, pointerEvents, styles } from "../html/css.js";
 import { onClick } from "../html/evts.js";
+import { gridColsDef, gridPos } from "../html/grid.js";
 import { Button, Div, Img, Run } from "../html/tags.js";
 
 const toggleOptionsEvt = new Event("toggleOptions"),
@@ -36,7 +37,7 @@ export class HeaderBar extends EventTarget {
                 title("Show/hide options"),
                 onClick(_(toggleOptionsEvt)),
                 subelStyle,
-                gridArea(1, 1),
+                gridPos(1, 1),
                 Run(gear.value),
                 Run(buttonLabelStyle, "Options")),
 
@@ -44,7 +45,7 @@ export class HeaderBar extends EventTarget {
                 title("Show/hide instructions"),
                 onClick(_(toggleInstructionsEvt)),
                 subelStyle,
-                gridArea(2, 1),
+                gridPos(2, 1),
                 Run(questionMark.value),
                 Run(buttonLabelStyle, "Info")),
 
@@ -52,7 +53,7 @@ export class HeaderBar extends EventTarget {
                 title("Share your current room to twitter"),
                 onClick(_(tweetEvt)),
                 subelStyle,
-                gridArea(3, 1),
+                gridPos(3, 1),
                 Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
                     alt("icon"),
                     role("presentation"),
@@ -64,7 +65,7 @@ export class HeaderBar extends EventTarget {
                 title("View user directory"),
                 onClick(_(toggleUserDirectoryEvt)),
                 subelStyle,
-                gridArea(4, 1),
+                gridPos(4, 1),
                 Run(speakingHead.value),
                 Run(buttonLabelStyle, "Users")),
 
@@ -74,7 +75,7 @@ export class HeaderBar extends EventTarget {
                 onClick(_(toggleFullscreenEvt)),
                 onClick(() => this.isFullscreen = !this.isFullscreen),
                 subelStyle,
-                gridArea(6, 1),
+                gridPos(6, 1),
                 Run(squareFourCourners.value),
                 Run(buttonLabelStyle, "Expand")),
 
@@ -83,7 +84,7 @@ export class HeaderBar extends EventTarget {
                 title("Leave the room"),
                 onClick(_(leaveEvt)),
                 subelStyle,
-                gridArea(7, 1),
+                gridPos(7, 1),
                 Run(door.value),
                 Run(buttonLabelStyle, "Leave")));
 

@@ -1,5 +1,4 @@
 ﻿import { isBoolean } from "../typeChecks.js";
-import { HtmlAttr, style } from "./attrs.js";
 
 /**
  * A CSS property that will be applied to an element's style attribute.
@@ -25,33 +24,53 @@ export class CssProp {
     }
 }
 
-/**
- * Combine style properties.
-  * @param {...CssProp} rest
- * @returns {HtmlAttr}
- */
-export function styles(...rest) {
-    const obj = {};
-    const set = (key, value) => {
-        if (value || isBoolean(value)) {
-            obj[key] = value;
+export class CssPropSet {
+    /**
+     * @param {...(CssProp|CssPropSet)} rest
+     */
+    constructor(...rest) {
+        this.set = new Map();
+        const set = (key, value) => {
+            if (value || isBoolean(value)) {
+                this.set.set(key, value);
+            }
+            else if (this.set.has(key)) {
+                this.set.delete(key);
+            }
         }
-        else if (obj[key] || isBoolean(obj[key])) {
-            delete obj[key];
-        }
-    };
-
-    for (let prop of rest) {
-        if (prop instanceof CssProp) {
-            set(prop.key, prop.value);
-        }
-        else if (prop instanceof HtmlAttr) {
-            for (let key in prop.value) {
-                set(key, prop.value[key]);
+        for (let prop of rest) {
+            if (prop instanceof CssProp) {
+                const { key, value } = prop;
+                set(key, value);
+            }
+            else if (prop instanceof CssPropSet) {
+                for (let subProp of prop.set.entries()) {
+                    const [key, value] = subProp;
+                    set(key, value);
+                }
             }
         }
     }
-    return style(obj);
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        for (let prop of this.set.entries()) {
+            const [key, value] = prop;
+            elem.style[key] = value;
+        }
+    }
+}
+
+/**
+ * Combine style properties.
+ * @param {...CssProp} rest
+ * @returns {CssPropSet}
+ */
+export function styles(...rest) {
+    return new CssPropSet(...rest);
 }
 
 /**
@@ -183,7 +202,6 @@ export function borderTop(v) { return new CssProp("borderTop", v); }
  **/
 export function borderTopColor(v) { return new CssProp("borderTopColor", v); }
 
-
 /**
  * Creates a style attribute with a borderTopSize property.
  * @param {string} v
@@ -234,6 +252,13 @@ export function display(v) { return new CssProp("display", v); }
 export function fgColor(c) { return new CssProp("color", c); }
 
 /**
+ * Creates a style attribute with a flexDirection property.
+ * @param {string} v
+ * @returns {CssProp}
+ */
+export function flexDirection(v) { return new CssProp("flexDirection", v); }
+
+/**
  * Creates a style attribute with a fontFamily property.
  * @param {string} v
  * @returns {CssProp}
@@ -248,108 +273,116 @@ export function fontFamily(v) { return new CssProp("fontFamily", v); }
 export function fontSize(v) { return new CssProp("fontSize", v); }
 
 /**
- * Constructs a CSS grid area definition.
- * @param {number} x - the starting horizontal cell for the element.
- * @param {number} y - the starting vertical cell for the element.
- * @param {number} [w=null] - the number of cells wide the element should cover.
- * @param {number} [h=null] - the number of cells tall the element should cover.
- * @returns {HtmlAttr}
- */
-export function gridArea(x, y, w = null, h = null, addStyles = null) {
-    if (w === null) {
-        w = 1;
-    }
-    if (h === null) {
-        h = 1;
-    }
-    return styles(
-        col(x, w),
-        row(y, h),
-        addStyles);
-}
+ * Creates a style attribute with a grid property.
+ * @param {string} v
+ * @returns {CssProp}
+ **/
+export function grid(v) { return new CssProp("grid", v); }
 
 /**
- * Constructs a CSS grid column definition
- * @param {number} x - the starting horizontal cell for the element.
- * @param {number} [w=null] - the number of cells wide the element should cover.
- * @returns {HtmlAttr}
- */
-export function col(x, w = null) {
-    if (w === null) {
-        w = 1;
-    }
-    return styles(
-        gridColumnStart(x),
-        gridColumnEnd(x + w));
-}
+ * Creates a style attribute with a gridArea property.
+ * @param {string} v
+ * @returns {CssProp}
+ **/
+export function gridArea(v) { return new CssProp("gridArea", v); }
+
+/**
+ * Creates a style attribute with a gridAutoColumns property.
+ * @param {string} v
+ * @returns {CssProp}
+ **/
+export function gridAutoColumns(v) { return new CssProp("gridAutoColumns", v); }
+
+/**
+ * Creates a style attribute with a gridAutoFlow property.
+ * @param {string} v
+ * @returns {CssProp}
+ **/
+export function gridAutoFlow(v) { return new CssProp("gridAutoFlow", v); }
+
+/**
+ * Creates a style attribute with a gridAutoRows property.
+ * @param {string} v
+ * @returns {CssProp}
+ **/
+export function gridAutoRows(v) { return new CssProp("gridAutoRows", v); }
+
+/**
+ * Creates a style attribute with a gridColumn property.
+ * @param {string} v
+ * @returns {CssProp}
+ **/
+export function gridColumn(v) { return new CssProp("gridColumn", v); }
 
 /**
  * Creates a style attribute with a gridColumnEnd property.
  * @param {string} v
- * @returns {HtmlAttr}
+ * @returns {CssProp}
  **/
 export function gridColumnEnd(v) { return new CssProp("gridColumnEnd", v); }
 
 /**
+ * Creates a style attribute with a gridColumnGap property.
+ * @param {string} v
+ * @returns {CssProp}
+ **/
+export function gridColumnGap(v) { return new CssProp("gridColumnGap", v); }
+
+/**
  * Creates a style attribute with a gridColumnStart property.
  * @param {string} v
- * @returns {HtmlAttr}
+ * @returns {CssProp}
  **/
 export function gridColumnStart(v) { return new CssProp("gridColumnStart", v); }
 
 /**
- * Constructs a CSS grid row definition
- * @param {number} y - the starting vertical cell for the element.
- * @param {number} [h=null] - the number of cells tall the element should cover.
- * @returns {HtmlAttr}
- */
-export function row(y, h = null) {
-    if (h === null) {
-        h = 1;
-    }
-    return styles(
-        gridRowStart(y),
-        gridRowEnd(y + h));
-}
+ * Creates a style attribute with a gridGap property.
+ * @param {string} v
+ * @returns {CssProp}
+ **/
+export function gridGap(v) { return new CssProp("gridGap", v); }
+
+/**
+ * Creates a style attribute with a gridRow property.
+ * @param {string} v
+ * @returns {CssProp}
+ **/
+export function gridRow(v) { return new CssProp("gridRow", v); }
 
 /**
  * Creates a style attribute with a gridRowEnd property.
  * @param {string} v
- * @returns {HtmlAttr}
+ * @returns {CssProp}
  **/
 export function gridRowEnd(v) { return new CssProp("gridRowEnd", v); }
 
 /**
+ * Creates a style attribute with a gridRowGap property.
+ * @param {string} v
+ * @returns {CssProp}
+ **/
+export function gridRowGap(v) { return new CssProp("gridRowGap", v); }
+
+/**
  * Creates a style attribute with a gridRowStart property.
  * @param {string} v
- * @returns {HtmlAttr}
+ * @returns {CssProp}
  **/
 export function gridRowStart(v) { return new CssProp("gridRowStart", v); }
 
 /**
- * Create the gridTemplateColumns and gridTemplateRows styles.
- * @param {string[]} cols
- * @param {string[]} rows
- * @param {any} addStyles
- * @returns {HtmlAttr}
- */
-export function gridTemplate(cols, rows, addStyles) {
-    return styles(
-        gridColsDef(...cols),
-        gridRowsDef(...rows),
-        addStyles);
-}
+ * Creates a style attribute with a gridTemplate property.
+ * @param {string} v
+ * @returns {CssProp}
+ **/
+export function gridTemplate(v) { return new CssProp("gridTemplate", v); }
 
 /**
- * Create the gridTemplateColumns style attribute, with display set to grid.
- * @param {...string} cols
- * @returns {HtmlAttr}
- */
-export function gridColsDef(...cols) {
-    return styles(
-        display("grid"),
-        gridTemplateColumns(cols.join(" ")));
-}
+ * Creates a style attribute with a gridTemplateAreas property.
+ * @param {string} v
+ * @returns {CssProp}
+ **/
+export function gridTemplateAreas(v) { return new CssProp("gridTemplateAreas", v); }
 
 /**
  * Creates a style attribute with a gridTemplateColumns property.
@@ -357,17 +390,6 @@ export function gridColsDef(...cols) {
  * @returns {CssProp}
  **/
 export function gridTemplateColumns(v) { return new CssProp("gridTemplateColumns", v); }
-
-/**
- * Create the gridTemplateRows style attribute, with display set to grid.
- * @param {...string} rows
- * @returns {HtmlAttr}
- */
-export function gridRowsDef(...rows) {
-    return styles(
-        display("grid"),
-        gridTemplateRows(rows.join(" ")));
-}
 
 /**
  * Creates a style attribute with a gridTemplateRows property.
