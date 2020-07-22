@@ -1,4 +1,5 @@
 ﻿import { HtmlAttr, style } from "./attrs.js";
+import { isBoolean, isString } from "../typeChecks.js";
 /**
  * Add additional fields to a style attribute.
  * @param {HtmlAttr} a
@@ -11,7 +12,15 @@ export function styles(a, ...rest) {
             b = b.value;
         }
         for (let key in b) {
-            a.appendStyle(key, b[key]);
+            const value = b[key];
+            if (isString(key)) {
+                if (value || isBoolean(value)) {
+                    a.value[key] = value;
+                }
+                else {
+                    delete a.value[key];
+                }
+            }
         }
     }
     return a;

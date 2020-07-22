@@ -1,4 +1,4 @@
-﻿import { isString, isBoolean } from "../typeChecks.js";
+﻿import { isBoolean } from "../typeChecks.js";
 
 /**
  * A setter functor for HTML attributes.
@@ -13,27 +13,8 @@ export class HtmlAttr {
     constructor(key, value, ...tags) {
         this.key = key;
         this.value = value;
-        if (key === "style") {
-            for (let k in this.value) {
-                if (!this.value[k] && !isBoolean(this.value[k])) {
-                    delete this.value[k];
-                }
-            }
-        }
         this.tags = tags.map(t => t.toLocaleUpperCase());
         Object.freeze(this);
-    }
-
-    appendStyle(key, value) {
-        if (isString(key)) {
-            if (value || isBoolean(value)) {
-                this.value[key] = value;
-            }
-            else {
-                delete this.value[key];
-            }
-        }
-        return this;
     }
 
     /**
@@ -50,8 +31,7 @@ export class HtmlAttr {
         else if (this.key === "style") {
             Object.assign(elem[this.key], this.value);
         }
-        else if (!(typeof value === "boolean" || value instanceof Boolean)
-            || this.key === "muted") {
+        else if (!isBoolean(value)) {
             elem[this.key] = this.value;
         }
         else if (this.value) {
@@ -1188,7 +1168,14 @@ export function start(value) { return new HtmlAttr("start", value, "ol"); }
  * @param {string} value - the value to set on the attribute.
  * @returns {HtmlAttr}
  **/
-export function style(value) { return new HtmlAttr("style", value); }
+export function style(value) {
+    for (let k in value) {
+        if (!value[k] && !isBoolean(value[k])) {
+            delete value[k];
+        }
+    }
+    return new HtmlAttr("style", value);
+}
 
 /**
  * The step attribute
