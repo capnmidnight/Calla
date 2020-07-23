@@ -161,6 +161,7 @@ export class BaseJitsiClient extends EventTarget {
         const devices = await this.getVideoInputDevicesAsync();
         const device = arrayScan(devices,
             (d) => d.deviceId === this.preferredVideoInputID,
+            (d) => allowAny && d && /front/i.test(d.label),
             (d) => allowAny && d && d.deviceId);
         if (device) {
             this.preferredVideoInputID = device.deviceId;
