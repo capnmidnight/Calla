@@ -1,7 +1,5 @@
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from '../../../../../constants.js';
 
-const versionString = "Calla v0.2.14";
-
 function t(o, s, c) {
     return typeof o === s
         || o instanceof c;
@@ -562,6 +560,1484 @@ if (!Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "g
     CanvasRenderingContext2D.prototype.getTransform = function () {
         return new MockDOMMatrix(this.mozCurrentTransform);
     };
+}
+
+/**
+ * A setter functor for HTML attributes.
+ **/
+class HtmlAttr {
+    /**
+     * Creates a new setter functor for HTML Attributes
+     * @param {string} key - the attribute name.
+     * @param {string} value - the value to set for the attribute.
+     * @param {...string} tags - the HTML tags that support this attribute.
+     */
+    constructor(key, value, ...tags) {
+        this.key = key;
+        this.value = value;
+        this.tags = tags.map(t => t.toLocaleUpperCase());
+        Object.freeze(this);
+    }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        const isValid = this.tags.length === 0
+            || this.tags.indexOf(elem.tagName) > -1;
+
+        if (!isValid) {
+            console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
+        }
+        else if (this.key === "style") {
+            Object.assign(elem[this.key], this.value);
+        }
+        else if (!isBoolean(value)) {
+            elem[this.key] = this.value;
+        }
+        else if (this.value) {
+            elem.setAttribute(this.key, "");
+        }
+        else {
+            elem.removeAttribute(this.key);
+        }
+    }
+}
+
+/**
+ * Alternative text in case an image can't be displayed.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function alt(value) { return new HtmlAttr("alt", value, "applet", "area", "img", "input"); }
+
+/**
+ * The audio or video should play as soon as possible.
+ * @param {boolean} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function autoPlay(value) { return new HtmlAttr("autoplay", value, "audio", "video"); }
+
+/**
+ * Often used with CSS to style elements with common properties.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function className(value) { return new HtmlAttr("className", value); }
+
+/**
+ * Indicates whether the browser should show playback controls to the user.
+ * @param {boolean} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function controls(value) { return new HtmlAttr("controls", value, "audio", "video"); }
+
+/**
+ * Indicates whether the user can interact with the element.
+ * @param {boolean} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function disabled(value) { return new HtmlAttr("disabled", value, "button", "command", "fieldset", "input", "keygen", "optgroup", "option", "select", "textarea"); }
+
+/**
+ * Describes elements which belongs to this one.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function htmlFor(value) { return new HtmlAttr("htmlFor", value, "label", "output"); }
+
+/**
+ * Specifies the height of elements listed here. For all other elements, use the CSS height property.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function height(value) { return new HtmlAttr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+
+/**
+ * The URL of a linked resource.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function href(value) { return new HtmlAttr("href", value, "a", "area", "base", "link"); }
+
+/**
+ * Often used with CSS to style a specific element. The value of this attribute must be unique.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function id(value) { return new HtmlAttr("id", value); }
+
+/**
+ * Indicates the maximum value allowed.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function max(value) { return new HtmlAttr("max", value, "input", "meter", "progress"); }
+
+/**
+ * Indicates the minimum value allowed.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function min(value) { return new HtmlAttr("min", value, "input", "meter"); }
+
+/**
+ * Indicates whether the audio will be initially silenced on page load.
+ * @param {boolean} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function muted(value) { return new HtmlAttr("muted", value, "audio", "video"); }
+
+/**
+ * Provides a hint to the user of what can be entered in the field.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function placeHolder(value) { return new HtmlAttr("placeholder", value, "input", "textarea"); }
+
+/**
+ * Indicates that the media element should play automatically on iOS.
+ * @param {boolean} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function playsInline(value) { return new HtmlAttr("playsInline", value, "audio", "video"); }
+
+/**
+ * Defines the number of rows in a text area.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function role(value) { return new HtmlAttr("role", value); }
+
+/**
+ * The URL of the embeddable content.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function src(value) { return new HtmlAttr("src", value, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
+
+/**
+ * A MediaStream object to use as a source for an HTML video or audio element
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function srcObject(value) { return new HtmlAttr("srcObject", value, "audio", "video"); }
+
+/**
+ * The step attribute
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function step(value) { return new HtmlAttr("step", value, "input"); }
+
+/**
+ * Text to be displayed in a tooltip when hovering over the element.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function title(value) { return new HtmlAttr("title", value); }
+
+/**
+ * Defines the type of the element.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function type(value) { return new HtmlAttr("type", value, "button", "input", "command", "embed", "object", "script", "source", "style", "menu"); }
+
+/**
+ * Defines a default value which will be displayed in the element on page load.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function value(value) { return new HtmlAttr("value", value, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
+
+/**
+ * setting the volume at which a media element plays.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function volume(value) { return new HtmlAttr("volume", value, "audio", "video"); }
+
+/**
+ * For the elements listed here, this establishes the element's width.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function width(value) { return new HtmlAttr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+
+/**
+ * A CSS property that will be applied to an element's style attribute.
+ **/
+class CssProp {
+    /**
+     * Creates a new CSS property that will be applied to an element's style attribute.
+     * @param {string} key - the property name.
+     * @param {string} value - the value to set for the property.
+     */
+    constructor(key, value) {
+        this.key = key;
+        this.value = value;
+        Object.freeze(this);
+    }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        elem.style[this.key] = this.value;
+    }
+}
+
+class CssPropSet {
+    /**
+     * @param {...(CssProp|CssPropSet)} rest
+     */
+    constructor(...rest) {
+        this.set = new Map();
+        const set = (key, value) => {
+            if (value || isBoolean(value)) {
+                this.set.set(key, value);
+            }
+            else if (this.set.has(key)) {
+                this.set.delete(key);
+            }
+        };
+        for (let prop of rest) {
+            if (prop instanceof CssProp) {
+                const { key, value } = prop;
+                set(key, value);
+            }
+            else if (prop instanceof CssPropSet) {
+                for (let subProp of prop.set.entries()) {
+                    const [key, value] = subProp;
+                    set(key, value);
+                }
+            }
+        }
+    }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        for (let prop of this.set.entries()) {
+            const [key, value] = prop;
+            elem.style[key] = value;
+        }
+    }
+}
+
+/**
+ * Combine style properties.
+ * @param {...CssProp} rest
+ * @returns {CssPropSet}
+ */
+function styles(...rest) {
+    return new CssPropSet(...rest);
+}
+
+/**
+ * Creates a style attribute with a backgroundColor property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function backgroundColor(v) { return new CssProp("backgroundColor", v); }
+
+/**
+ * Creates a style attribute with a borderBottom property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function borderBottom(v) { return new CssProp("borderBottom", v); }
+
+/**
+ * Creates a style attribute with a borderBottomColor property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function borderBottomColor(v) { return new CssProp("borderBottomColor", v); }
+
+/**
+ * Creates a style attribute with a borderLeft property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function borderLeft(v) { return new CssProp("borderLeft", v); }
+
+/**
+ * Creates a style attribute with a borderRight property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function borderRight(v) { return new CssProp("borderRight", v); }
+
+/**
+ * Creates a style attribute with a borderStyle property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function borderStyle(v) { return new CssProp("borderStyle", v); }
+
+/**
+ * Creates a style attribute with a borderTop property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function borderTop(v) { return new CssProp("borderTop", v); }
+
+/**
+ * Creates a style attribute with a borderWidth property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function borderWidth(v) { return new CssProp("borderWidth", v); }
+
+/**
+ * Creates a style attribute with a color property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function color(v) { return new CssProp("color", v); }
+
+/**
+ * Creates a style attribute with a columnGap property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function columnGap(v) { return new CssProp("columnGap", v); }
+
+/**
+ * Creates a style attribute with a display property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function display(v) { return new CssProp("display", v); }
+
+/**
+ * Creates a style attribute with a flexDirection property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function flexDirection(v) { return new CssProp("flexDirection", v); }
+
+/**
+ * Creates a style attribute with a fontFamily property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function fontFamily(v) { return new CssProp("fontFamily", v); }
+
+/**
+ * Creates a style attribute with a fontSize property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function fontSize(v) { return new CssProp("fontSize", v); }
+
+/**
+ * Creates a style attribute with a gridArea property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function gridArea(v) { return new CssProp("gridArea", v); }
+
+/**
+ * Creates a style attribute with a gridColumn property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function gridColumn(v) { return new CssProp("gridColumn", v); }
+
+/**
+ * Creates a style attribute with a gridRow property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function gridRow(v) { return new CssProp("gridRow", v); }
+
+/**
+ * Creates a style attribute with a gridTemplateColumns property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function gridTemplateColumns(v) { return new CssProp("gridTemplateColumns", v); }
+
+/**
+ * Creates a style attribute with a gridTemplateRows property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function gridTemplateRows(v) { return new CssProp("gridTemplateRows", v); }
+
+/**
+ * Creates a style attribute with a height property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function height$1(v) { return new CssProp("height", v); }
+
+/**
+ * Creates a style attribute with a margin property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function margin(v) { return new CssProp("margin", v); }
+
+/**
+ * Creates a style attribute with a marginBottom property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function marginBottom(v) { return new CssProp("marginBottom", v); }
+
+/**
+ * Creates a style attribute with a overflowY property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function overflowY(v) { return new CssProp("overflowY", v); }
+
+/**
+ * Creates a style attribute with a padding property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function padding(v) { return new CssProp("padding", v); }
+
+/**
+ * Creates a style attribute with a pointerEvents property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function pointerEvents(v) { return new CssProp("pointerEvents", v); }
+
+/**
+ * Creates a style attribute with a textAlign property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function textAlign(v) { return new CssProp("textAlign", v); }
+
+/**
+ * Creates a style attribute with a textDecoration property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function textDecoration(v) { return new CssProp("textDecoration", v); }
+
+/**
+ * Creates a style attribute with a textTransform property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function textTransform(v) { return new CssProp("textTransform", v); }
+
+/**
+ * Creates a style attribute with a touchAction property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function touchAction(v) { return new CssProp("touchAction", v); }
+
+/**
+ * Creates a style attribute with a width property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function width$1(v) { return new CssProp("width", v); }
+
+/**
+ * Creates a style attribute with a zIndex property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function zIndex(v) { return new CssProp("zIndex", v); }
+
+
+// A selection of fonts for preferred monospace rendering.
+const monospaceFonts = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
+const monospaceFamily = fontFamily(monospaceFonts);
+// A selection of fonts that should match whatever the user's operating system normally uses.
+const systemFonts = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
+const systemFamily = fontFamily(systemFonts);
+
+/**
+ * A setter functor for HTML element events.
+ **/
+class HtmlEvt {
+    /**
+     * Creates a new setter functor for an HTML element event.
+     * @param {string} name - the name of the event to attach to.
+     * @param {Function} callback - the callback function to use with the event handler.
+     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+     */
+    constructor(name, callback, opts) {
+        if (!isFunction(callback)) {
+            throw new Error("A function instance is required for this parameter");
+        }
+
+        this.name = name;
+        this.callback = callback;
+        this.opts = opts;
+        Object.freeze(this);
+    }
+
+    /**
+     * Add the encapsulate callback as an event listener to the give HTMLElement
+     * @param {HTMLElement} elem
+     */
+    add(elem) {
+        elem.addEventListener(this.name, this.callback, this.opts);
+    }
+
+    /**
+     * Remove the encapsulate callback as an event listener from the give HTMLElement
+     * @param {HTMLElement} elem
+     */
+    remove(elem) {
+        elem.removeEventListener(this.name, this.callback);
+    }
+}
+
+/**
+ * The click event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onClick(callback, opts) { return new HtmlEvt("click", callback, opts); }
+
+/**
+ * The input event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onInput(callback, opts) { return new HtmlEvt("input", callback, opts); }
+
+/**
+ * The keyup event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onKeyUp(callback, opts) { return new HtmlEvt("keyup", callback, opts); }
+
+/**
+ * The mouseout event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onMouseOut(callback, opts) { return new HtmlEvt("mouseout", callback, opts); }
+
+/**
+ * The mouseover event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onMouseOver(callback, opts) { return new HtmlEvt("mouseover", callback, opts); }
+
+/**
+ * @typedef {(Element|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
+ **/
+
+/**
+ * Creates an HTML element for a given tag name.
+ * 
+ * Boolean attributes that you want to default to true can be passed
+ * as just the attribute creating function, 
+ *   e.g. `Audio(autoPlay)` vs `Audio(autoPlay(true))`
+ * @param {string} name - the name of the tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLElement}
+ */
+function tag(name, ...rest) {
+    const elem = document.createElement(name);
+
+    for (let i = 0; i < rest.length; ++i) {
+        // 
+        if (isFunction(rest[i])) {
+            rest[i] = rest[i](true);
+        }
+    }
+
+    for (let x of rest) {
+        if (x !== null && x !== undefined) {
+            if (isString(x)
+                || isNumber(x)
+                || isBoolean(x)
+                || x instanceof Date) {
+                elem.appendChild(document.createTextNode(x));
+            }
+            else if (x instanceof Element) {
+                elem.appendChild(x);
+            }
+            else if (x instanceof HtmlCustomTag) {
+                elem.appendChild(x.element);
+            }
+            else if (x instanceof HtmlAttr
+                || x instanceof CssProp
+                || x instanceof CssPropSet) {
+                x.apply(elem);
+            }
+            else if (x instanceof HtmlEvt) {
+                x.add(elem);
+            }
+            else {
+                console.trace(`Skipping ${x}: unsupported value type.`, x);
+            }
+        }
+    }
+
+    return elem;
+}
+
+/**
+ * A pseudo-element that is made out of other elements.
+ **/
+class HtmlCustomTag extends EventTarget {
+    /**
+     * Creates a new pseudo-element
+     * @param {string} tagName - the type of tag that will contain the elements in the custom tag.
+     * @param {...TagChild} rest - optional attributes, child elements, and text
+     */
+    constructor(tagName, ...rest) {
+        super();
+        if (rest.length === 1
+            && rest[0] instanceof Element) {
+            /** @type {HTMLElement} */
+            this.element = rest[0];
+        }
+        else {
+            /** @type {HTMLElement} */
+            this.element = tag(tagName, ...rest);
+        }
+    }
+
+    /**
+     * Gets the ID attribute of the container element.
+     * @type {string}
+     **/
+    get id() {
+        return this.element.id;
+    }
+
+    /**
+     * Retrieves the desired element for attaching events.
+     * @returns {HTMLElement}
+     **/
+    get eventTarget() {
+        return this.element;
+    }
+
+    /**
+     * Determine if an event type should be forwarded to the container element.
+     * @param {string} name
+     * @returns {boolean}
+     */
+    isForwardedEvent(name) {
+        return true;
+    }
+
+    /**
+     * Adds an event listener to the container element.
+     * @param {string} name - the name of the event to attach to.
+     * @param {Function} callback - the callback function to use with the event handler.
+     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+     */
+    addEventListener(name, callback, opts) {
+        if (this.isForwardedEvent(name)) {
+            this.eventTarget.addEventListener(name, callback, opts);
+        }
+        else {
+            super.addEventListener(name, callback, opts);
+        }
+    }
+
+    /**
+     * Removes an event listener from the container element.
+     * @param {string} name - the name of the event to attach to.
+     * @param {Function} callback - the callback function to use with the event handler.
+     */
+    removeEventListener(name, callback) {
+        if (this.isForwardedEvent(name)) {
+            this.eventTarget.removeEventListener(name, callback);
+        }
+        else {
+            super.removeEventListener(name, callback);
+        }
+    }
+
+    /**
+     * Wait for a specific event, one time.
+     * @param {string} resolveEvt - the name of the event that will resolve the Promise this method creates.
+     * @param {string} rejectEvt - the name of the event that could reject the Promise this method creates.
+     * @param {number} timeout - the number of milliseconds to wait for the resolveEvt, before rejecting.
+     */
+    async once(resolveEvt, rejectEvt, timeout) {
+        return await this.eventTarget.once(resolveEvt, rejectEvt, timeout);
+    }
+
+    /**
+     * Set whether or not the container element is visible.
+     * @param {boolean} v
+     */
+    setOpen(v) {
+        this.element.setOpen(v);
+    }
+
+    /**
+     * Makes the container element visible, if it is not already.
+     **/
+    show() {
+        this.setOpen(true);
+    }
+
+    /**
+     * Makes the container element not visible, if it is not already.
+     **/
+    hide() {
+        this.setOpen(false);
+    }
+
+    /**
+     * Gets the style attribute of the underlying select box.
+     * @type {ElementCSSInlineStyle}
+     */
+    get style() {
+        return this.element.style;
+    }
+
+    /**
+     * Moves cursor focus to the underyling element.
+     **/
+    focus() {
+        this.element.focus();
+    }
+
+    /**
+     * Removes cursor focus from the underlying element.
+     **/
+    blur() {
+        this.element.blur();
+    }
+}
+
+/**
+ * An input box that has a label attached to it.
+ **/
+class LabeledInputTag extends HtmlCustomTag {
+    /**
+     * Creates an input box that has a label attached to it.
+     * @param {string} id - the ID to use for the input box
+     * @param {string} inputType - the type to use for the input box (number, text, etc.)
+     * @param {string} labelText - the text to display in the label
+     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+     * @returns {LabeledInputTag}
+     */
+    constructor(id, inputType, labelText, ...rest) {
+        super("div");
+
+        this.label = Label(
+            htmlFor(id),
+            labelText);
+
+        this.input = Input(
+            type(inputType),
+            ...rest);
+
+        this.element.append(
+            this.label,
+            this.input);
+
+        Object.seal(this);
+    }
+
+    /**
+     * Retrieves the desired element for attaching events.
+     * @returns {HTMLElement}
+     **/
+    get eventTarget() {
+        return this.input;
+    }
+
+    /**
+     * Gets the value attribute of the input element
+     * @type {string}
+     */
+    get value() {
+        return this.input.value;
+    }
+
+    /**
+     * Sets the value attribute of the input element
+     * @param {string} v
+     */
+    set value(v) {
+        this.input.value = v;
+    }
+
+    /**
+     * Gets whether or not the input element is checked, if it's a checkbox or radio button.
+     * @type {boolean}
+     */
+    get checked() {
+        return this.input.checked;
+    }
+
+    /**
+     * Sets whether or not the input element is checked, if it's a checkbox or radio button.
+     * @param {boolean} v
+     */
+    set checked(v) {
+        this.input.checked = v;
+    }
+
+    /**
+     * Sets whether or not the input element should be disabled.
+     * @param {boolean} value
+     */
+    setLocked(value) {
+        this.input.setLocked(value);
+    }
+}
+
+class LabeledSelectBoxTag extends HtmlCustomTag {
+    /**
+     * Creates a select box that can bind to collections, with a label set on the side.
+     * @param {string} tagId - the ID to use for the select box.
+     * @param {any} labelText - the text to put in the label.
+     * @param {string} noSelectionText - the text to display when no items are available.
+     * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
+     * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
+     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+     */
+    constructor(tagId, labelText, noSelectionText, makeID, makeLabel, ...rest) {
+        super("div");
+
+        this.label = Label(
+            htmlFor(tagId),
+            labelText);
+
+        /** @type {SelectBox} */
+        this.select = new SelectBox(noSelectionText, makeID, makeLabel, id(tagId), ...rest);
+
+        this.element.append(
+            this.label,
+            this.select.element);
+
+        Object.seal(this);
+    }
+
+    /**
+     * Retrieves the desired element for attaching events.
+     * @returns {HTMLElement}
+     **/
+    get eventTarget() {
+        return this.select;
+    }
+
+    /**
+     * Gets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
+     * @type {boolean}
+     **/
+    get emptySelectionEnabled() {
+        return this.select.emptySelectionEnabled;
+    }
+
+    /**
+     * Sets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
+     * @param {boolean} value
+     **/
+    set emptySelectionEnabled(value) {
+        this.select.emptySelectionEnabled = value;
+    }
+
+    /**
+     * Gets the collection to which the select box was databound
+     **/
+    get values() {
+        return this.select.values;
+    }
+
+    /**
+     * Sets the collection to which the select box will be databound
+     **/
+    set values(values) {
+        this.select.values = values;
+    }
+
+    /**
+     * Returns the collection of HTMLOptionElements that are stored in the select box
+     * @type {HTMLOptionsCollection}
+     */
+    get options() {
+        return this.select.options;
+    }
+
+    /**
+     * Gets the index of the item that is currently selected in the select box.
+     * The index is offset by -1 if the select box has `emptySelectionEnabled`
+     * set to true, so that the indices returned are always in range of the collection
+     * to which the select box was databound
+     * @type {number}
+     */
+    get selectedIndex() {
+        return this.select.selectedIndex;
+    }
+    /**
+    * Sets the index of the item that should be selected in the select box.
+    * The index is offset by -1 if the select box has `emptySelectionEnabled`
+    * set to true, so that the indices returned are always in range of the collection
+    * to which the select box was databound
+    * @param {number} i
+    */
+    set selectedIndex(i) {
+        this.select.selectedIndex = i;
+    }
+
+    /**
+     * Gets the item at `selectedIndex` in the collection to which the select box was databound
+     * @type {any}
+     */
+    get selectedValue() {
+        return this.select.selectedValue;
+    }
+    /**
+    * Gets the index of the given item in the select box's databound collection, then
+    * sets that index as the `selectedIndex`.
+     * @param {any) value
+    */
+    set selectedValue(v) {
+        this.select.selectedValue = v;
+    }
+
+    /**
+     * Returns the index of the given item in the select box's databound collection.
+     * @param {any} value
+     * @returns {number}
+     */
+    indexOf(value) {
+        return this.select.indexOf(value);
+    }
+
+    /**
+     * Checks to see if the value exists in the databound collection.
+     * @param {any} value
+     * @returns {boolean}
+     */
+    contains(value) {
+        return this.select.contains(value);
+    }
+}
+
+const selectEvt = new Event("select");
+
+/**
+ * A panel and a button that opens it.
+ **/
+class OptionPanelTag extends HtmlCustomTag {
+
+    /**
+     * Creates a new panel that can be opened with a button click, 
+     * living in a collection of panels that will be hidden when
+     * this panel is opened.
+     * @param {string} panelID - the ID to use for the panel element.
+     * @param {string} name - the text to use on the button.
+     * @param {...any} rest
+     */
+    constructor(panelID, name, ...rest) {
+        super("div",
+            id(panelID),
+            padding("1em"),
+            P(...rest));
+
+        this.button = Button(
+            id(panelID + "Btn"),
+            onClick(() => this.dispatchEvent(selectEvt)),
+            name);
+    }
+
+    isForwardedEvent(name) {
+        return name !== "select";
+    }
+
+    /**
+     * Gets whether or not the panel is visible
+     * @type {boolean}
+     **/
+    get visible() {
+        return this.element.style.display !== null;
+    }
+
+    /**
+     * Sets whether or not the panel is visible
+     * @param {boolean} v
+     **/
+    set visible(v) {
+        this.element.setOpen(v);
+        styles(
+            borderStyle("solid"),
+            borderWidth("2px"),
+            backgroundColor(v ? "#ddd" : "transparent"),
+            borderTop(v ? "" : "none"),
+            borderRight(v ? "" : "none"),
+            borderBottomColor(v ? "#ddd" : ""),
+            borderLeft(v ? "" : "none"))
+            .apply(this.button);
+    }
+}
+
+/** @type {WeakMap<SelectBoxTag, any[]>} */
+const values = new WeakMap();
+
+function render(self) {
+    clear(self.element);
+    if (self.values.length === 0) {
+        self.element.append(Option(self.noSelectionText));
+        self.element.lock();
+    }
+    else {
+        if (self.emptySelectionEnabled) {
+            self.element.append(Option(self.noSelectionText));
+        }
+        for (let v of self.values) {
+            self.element.append(
+                Option(
+                    value(self.makeID(v)),
+                    self.makeLabel(v)));
+        }
+
+        self.element.unlock();
+    }
+}
+
+/**
+ * A select box that can be databound to collections.
+ **/
+class SelectBoxTag extends HtmlCustomTag {
+
+    /**
+     * Creates a select box that can bind to collections
+     * @param {string} noSelectionText - the text to display when no items are available.
+     * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
+     * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
+     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+     */
+    constructor(noSelectionText, makeID, makeLabel, ...rest) {
+        super("select", ...rest);
+
+        if (!isFunction(makeID)) {
+            throw new Error("makeID parameter must be a Function");
+        }
+
+        if (!isFunction(makeLabel)) {
+            throw new Error("makeLabel parameter must be a Function");
+        }
+
+        this.noSelectionText = noSelectionText;
+        this.makeID = (v) => v !== null && makeID(v) || null;
+        this.makeLabel = (v) => v !== null && makeLabel(v) || "None";
+        this.emptySelectionEnabled = true;
+
+        Object.seal(this);
+    }
+
+    /**
+     * Gets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
+     * @type {boolean}
+     **/
+    get emptySelectionEnabled() {
+        return this._emptySelectionEnabled;
+    }
+
+    /**
+     * Sets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
+     * @param {boolean} value
+     **/
+    set emptySelectionEnabled(value) {
+        this._emptySelectionEnabled = value;
+        render(this);
+    }
+
+    /**
+     * Gets the collection to which the select box was databound
+     **/
+    get values() {
+        if (!values.has(this)) {
+            values.set(this, []);
+        }
+        return values.get(this);
+    }
+
+    /**
+     * Sets the collection to which the select box will be databound
+     **/
+    set values(newItems) {
+        const curValue = this.selectedValue;
+        const values = this.values;
+        values.splice(0, values.length, ...newItems);
+        render(this);
+        this.selectedValue = curValue;
+    }
+
+    /**
+     * Returns the collection of HTMLOptionElements that are stored in the select box
+     * @type {HTMLOptionsCollection}
+     */
+    get options() {
+        return this.element.options;
+    }
+
+    /**
+     * Gets the index of the item that is currently selected in the select box.
+     * The index is offset by -1 if the select box has `emptySelectionEnabled`
+     * set to true, so that the indices returned are always in range of the collection
+     * to which the select box was databound
+     * @type {number}
+     */
+    get selectedIndex() {
+        let i = this.element.selectedIndex;
+        if (this.emptySelectionEnabled) {
+            --i;
+        }
+        return i;
+    }
+
+    /**
+     * Sets the index of the item that should be selected in the select box.
+     * The index is offset by -1 if the select box has `emptySelectionEnabled`
+     * set to true, so that the indices returned are always in range of the collection
+     * to which the select box was databound
+     * @param {number} i
+     */
+    set selectedIndex(i) {
+        if (this.emptySelectionEnabled) {
+            ++i;
+        }
+        this.element.selectedIndex = i;
+    }
+
+    /**
+     * Gets the item at `selectedIndex` in the collection to which the select box was databound
+     * @type {any}
+     */
+    get selectedValue() {
+        if (0 <= this.selectedIndex && this.selectedIndex < this.values.length) {
+            return this.values[this.selectedIndex];
+        }
+        else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the index of the given item in the select box's databound collection, then
+     * sets that index as the `selectedIndex`.
+     * @param {any) value
+     */
+    set selectedValue(value) {
+        this.selectedIndex = this.indexOf(value);
+    }
+
+    /**
+     * Returns the index of the given item in the select box's databound collection.
+     * @param {any} value
+     * @returns {number}
+     */
+    indexOf(value) {
+        return this.values
+            .findIndex(v =>
+                value !== null
+                && this.makeID(value) === this.makeID(v));
+    }
+
+    /**
+     * Checks to see if the value exists in the databound collection.
+     * @param {any} value
+     * @returns {boolean}
+     */
+    contains(value) {
+        return this.indexOf(value) >= 0.
+    }
+}
+
+/**
+ * Empty an element of all children. This is faster than
+ * setting `innerHTML = ""`.
+ * @param {any} elem
+ */
+function clear(elem) {
+    while (elem.lastChild) {
+        elem.lastChild.remove();
+    }
+}
+
+/**
+ * creates an HTML A tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLAnchorElement}
+ */
+function A(...rest) { return tag("a", ...rest); }
+
+/**
+ * creates an HTML Audio tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLAudioElement}
+ */
+function Audio(...rest) { return tag("audio", ...rest); }
+
+/**
+ * creates an HTML HtmlButton tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLButtonElement}
+ */
+function ButtonRaw(...rest) { return tag("button", ...rest); }
+
+/**
+ * creates an HTML Button tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLButtonElement}
+ */
+function Button(...rest) { return ButtonRaw(...rest, type("button")); }
+
+/**
+ * creates an HTML Canvas tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLCanvasElement}
+ */
+function Canvas(...rest) { return tag("canvas", ...rest); }
+
+/**
+ * creates an HTML Div tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLDivElement}
+ */
+function Div(...rest) { return tag("div", ...rest); }
+
+/**
+ * creates an HTML H1 tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLHeadingElement}
+ */
+function H1(...rest) { return tag("h1", ...rest); }
+
+/**
+ * creates an HTML H2 tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLHeadingElement}
+ */
+function H2(...rest) { return tag("h2", ...rest); }
+
+/**
+ * creates an HTML Img tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLImageElement}
+ */
+function Img(...rest) { return tag("img", ...rest); }
+
+/**
+ * creates an HTML Input tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+function Input(...rest) { return tag("input", ...rest); }
+
+/**
+ * creates an HTML Input tag that is a URL entry field.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+function InputURL(...rest) { return Input(type("url"), ...rest) }
+
+/**
+ * creates an HTML Label tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLLabelElement}
+ */
+function Label(...rest) { return tag("label", ...rest); }
+
+/**
+ * creates an HTML LI tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLLIElement}
+ */
+function LI(...rest) { return tag("li", ...rest); }
+
+/**
+ * creates an HTML Option tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLOptionElement}
+ */
+function Option(...rest) { return tag("option", ...rest); }
+
+/**
+ * creates an HTML P tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLParagraphElement}
+ */
+function P(...rest) { return tag("p", ...rest); }
+
+/**
+ * creates an HTML Source tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLSourceElement}
+ */
+function Source(...rest) { return tag("source", ...rest); }
+
+/**
+ * creates an HTML Span tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLSpanElement}
+ */
+function Span(...rest) { return tag("span", ...rest); }
+
+/**
+ * creates an HTML UL tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLUListElement}
+ */
+function UL(...rest) { return tag("ul", ...rest); }
+
+/**
+ * creates an HTML Video tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLVideoElement}
+ */
+function Video(...rest) { return tag("video", ...rest); }
+
+/**
+ * Creates an offscreen canvas element, if they are available. Otherwise, returns an HTMLCanvasElement.
+ * @param {number} w - the width of the canvas
+ * @param {number} h - the height of the canvas
+ * @param {...TagChild} rest - optional HTML attributes and child elements, to use in constructing the HTMLCanvasElement if OffscreenCanvas is not available.
+ * @returns {OffscreenCanvas|HTMLCanvasElement}
+ */
+function CanvasOffscreen(w, h, ...rest) {
+    if (window.OffscreenCanvas) {
+        return new OffscreenCanvas(w, h);
+    }
+    else {
+        return Canvas(...rest, width(w), height(h));
+    }
+}
+
+/**
+ * Creates an input box that has a label attached to it.
+ * @param {string} id - the ID to use for the input box
+ * @param {string} inputType - the type to use for the input box (number, text, etc.)
+ * @param {string} labelText - the text to display in the label
+ * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+ * @returns {LabeledInputTag}
+ */
+function LabeledInput(id, inputType, labelText, ...rest) {
+    return new LabeledInputTag(id, inputType, labelText, ...rest);
+}
+
+/**
+ * Creates a string from a list item to use as the item's ID or label in a select box.
+ * @callback makeItemValueCallback
+ * @param {any} obj - the object
+ * @returns {string}
+ */
+
+/**
+ * Creates a select box that can bind to collections
+ * @param {string} noSelectionText - the text to display when no items are available.
+ * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
+ * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
+ * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+ * @returns {SelectBoxTag}
+ */
+function SelectBox(noSelectionText, makeID, makeLabel, ...rest) {
+    return new SelectBoxTag(noSelectionText, makeID, makeLabel, ...rest);
+}
+
+/**
+ * Creates a select box, with a label attached to it, that can bind to collections
+ * @param {string} id - the ID to use for the input box
+ * @param {string} labelText - the text to display in the label
+ * @param {string} noSelectionText - the text to display when no items are available.
+ * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
+ * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
+ * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+ * @returns {LabeledSelectBoxTag}
+ */
+function LabeledSelectBox(id, labelText, noSelectionText, makeID, makeLabel, ...rest) {
+    return new LabeledSelectBoxTag(id, labelText, noSelectionText, makeID, makeLabel, ...rest);
+}
+
+/**
+ * Creates an OptionPanelTag element
+ * @param {string} id - the ID to use for the content element of the option panel
+ * @param {string} name - the text to use in the button that triggers displaying the content element
+ * @param {...TagChild} rest - optional attributes, child elements, and text to use on the content element
+ */
+function OptionPanel(id, name, ...rest) {
+    return new OptionPanelTag(id, name, ...rest);
+}
+
+/**
+ * Creates a Div element with margin: auto.
+ * @param {...any} rest
+ * @returns {HTMLDivElement}
+ */
+function Run(...rest) {
+    return Div(
+        margin("auto"),
+        ...rest);
+}
+
+/**
+ * A sound effects palette.
+ **/
+class SFX extends EventTarget {
+
+    /**
+     * Creates a new sound effects palette.
+     * 
+     * NOTE: sound effects are not spatialized.
+     **/
+    constructor() {
+        super();
+
+        /** @type {Map.<string, Audio>} */
+        this.clips = new Map();
+    }
+
+    /**
+     * Creates a new sound effect from a series of fallback paths
+     * for media files.
+     * @param {string} name - the name of the sound effect, to reference when executing playback.
+     * @param {string[]} paths - a series of fallback paths for loading the media of the sound effect.
+     * @returns {SFX}
+     */
+    add(name, ...paths) {
+        const sources = paths
+            .map((p) => src(p))
+            .map((s) => Source(s));
+
+        const elem = Audio(
+            controls(false),
+            playsInline,
+            ...sources);
+
+        this.clips.set(name, elem);
+        return this;
+    }
+
+    /**
+     * Plays a named sound effect.
+     * @param {string} name - the name of the effect to play.
+     * @param {number} [volume=1] - the volume at which to play the effect.
+     */
+    play(name, volume = 1) {
+        if (this.clips.has(name)) {
+            const clip = this.clips.get(name);
+            clip.volume = volume;
+            clip.play();
+        }
+    }
 }
 
 /**
@@ -3377,1193 +4853,79 @@ const allIcons = gg(
 });
 
 /**
- * A setter functor for HTML attributes.
- **/
-class HtmlAttr {
-    /**
-     * Creates a new setter functor for HTML Attributes
-     * @param {string} key - the attribute name.
-     * @param {string} value - the value to set for the attribute.
-     * @param {...string} tags - the HTML tags that support this attribute.
-     */
-    constructor(key, value, ...tags) {
-        this.key = key;
-        this.value = value;
-        this.tags = tags.map(t => t.toLocaleUpperCase());
-        Object.freeze(this);
-    }
-
-    appendStyle(key, value) {
-        this.value[key] = value;
-        return this;
-    }
-
-    /**
-     * Set the attribute value on an HTMLElement
-     * @param {HTMLElement} elem - the element on which to set the attribute.
-     */
-    apply(elem) {
-        const isValid = this.tags.length === 0
-            || this.tags.indexOf(elem.tagName) > -1;
-
-        if (!isValid) {
-            console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
-        }
-        else if (this.key === "style") {
-            Object.assign(elem[this.key], this.value);
-        }
-        else if (!(typeof value === "boolean" || value instanceof Boolean)
-            || this.key === "muted") {
-            elem[this.key] = this.value;
-        }
-        else if (this.value) {
-            elem.setAttribute(this.key, "");
-        }
-        else {
-            elem.removeAttribute(this.key);
-        }
-    }
-}
-
-/**
- * Alternative text in case an image can't be displayed.
- * @param {string} value - the value to set on the attribute.
- **/
-function alt(value) { return new HtmlAttr("alt", value, "applet", "area", "img", "input"); }
-
-/**
- * The audio or video should play as soon as possible.
- * @param {boolean} value - the value to set on the attribute.
- **/
-function autoPlay(value) { return new HtmlAttr("autoplay", value, "audio", "video"); }
-
-/**
- * Often used with CSS to style elements with common properties.
- * @param {string} value - the value to set on the attribute.
- **/
-function className(value) { return new HtmlAttr("className", value); }
-
-/**
- * Indicates whether the browser should show playback controls to the user.
- * @param {boolean} value - the value to set on the attribute.
- **/
-function controls(value) { return new HtmlAttr("controls", value, "audio", "video"); }
-
-/**
- * Indicates whether the user can interact with the element.
- * @param {boolean} value - the value to set on the attribute.
- **/
-function disabled(value) { return new HtmlAttr("disabled", value, "button", "command", "fieldset", "input", "keygen", "optgroup", "option", "select", "textarea"); }
-
-/**
- * Describes elements which belongs to this one.
- * @param {string} value - the value to set on the attribute.
- **/
-function htmlFor(value) { return new HtmlAttr("htmlFor", value, "label", "output"); }
-
-/**
- * Specifies the height of elements listed here. For all other elements, use the CSS height property.
- * @param {number} value - the value to set on the attribute.
- **/
-function height(value) { return new HtmlAttr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
-
-/**
- * The URL of a linked resource.
- * @param {string} value - the value to set on the attribute.
- **/
-function href(value) { return new HtmlAttr("href", value, "a", "area", "base", "link"); }
-
-/**
- * Often used with CSS to style a specific element. The value of this attribute must be unique.
- * @param {string} value - the value to set on the attribute.
- **/
-function id(value) { return new HtmlAttr("id", value); }
-
-/**
- * Indicates the maximum value allowed.
- * @param {number} value - the value to set on the attribute.
- **/
-function max(value) { return new HtmlAttr("max", value, "input", "meter", "progress"); }
-
-/**
- * Indicates the minimum value allowed.
- * @param {number} value - the value to set on the attribute.
- **/
-function min(value) { return new HtmlAttr("min", value, "input", "meter"); }
-
-/**
- * Indicates whether the audio will be initially silenced on page load.
- * @param {boolean} value - the value to set on the attribute.
- **/
-function muted(value) { return new HtmlAttr("muted", value, "audio", "video"); }
-
-/**
- * Provides a hint to the user of what can be entered in the field.
- * @param {string} value - the value to set on the attribute.
- **/
-function placeHolder(value) { return new HtmlAttr("placeholder", value, "input", "textarea"); }
-
-/**
- * Indicates that the media element should play automatically on iOS.
- * @param {boolean} value - the value to set on the attribute.
- **/
-function playsInline(value) { return new HtmlAttr("playsInline", value, "audio", "video"); }
-
-/**
- * Defines the number of rows in a text area.
- * @param {string} value - the value to set on the attribute.
- **/
-function role(value) { return new HtmlAttr("role", value); }
-
-/**
- * The URL of the embeddable content.
- * @param {string} value - the value to set on the attribute.
- **/
-function src(value) { return new HtmlAttr("src", value, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
-
-/**
- * A MediaStream object to use as a source for an HTML video or audio element
- * @param {string} value - the value to set on the attribute.
- **/
-function srcObject(value) { return new HtmlAttr("srcObject", value, "audio", "video"); }
-
-/**
- * Defines CSS styles which will override styles previously set.
- * @param {string} value - the value to set on the attribute.
- **/
-function style(value) { return new HtmlAttr("style", value); }
-
-/**
- * The step attribute
- * @param {number} value - the value to set on the attribute.
- **/
-function step(value) { return new HtmlAttr("step", value, "input"); }
-
-/**
- * Text to be displayed in a tooltip when hovering over the element.
- * @param {string} value - the value to set on the attribute.
- **/
-function title(value) { return new HtmlAttr("title", value); }
-
-/**
- * Defines the type of the element.
- * @param {string} value - the value to set on the attribute.
- **/
-function type(value) { return new HtmlAttr("type", value, "button", "input", "command", "embed", "object", "script", "source", "style", "menu"); }
-
-/**
- * Defines a default value which will be displayed in the element on page load.
- * @param {string} value - the value to set on the attribute.
- **/
-function value(value) { return new HtmlAttr("value", value, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
-
-/**
- * setting the volume at which a media element plays.
- * @param {number} value - the value to set on the attribute.
- **/
-function volume(value) { return new HtmlAttr("volume", value, "audio", "video"); }
-
-/**
- * For the elements listed here, this establishes the element's width.
- * @param {number} value - the value to set on the attribute.
- **/
-function width(value) { return new HtmlAttr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
-
-// A selection of fonts for preferred monospace rendering.
-const monospaceFamily = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
-const monospaceFont = style({ fontFamily: monospaceFamily });
-
-function gridCols(...cols) {
-    return style({
-        display: "grid",
-        gridTemplateColumns: cols.join(" ")
-    });
-}
-
-function gridArea(cols, rows, addStyles) {
-    const s = style({
-        display: "grid",
-        gridTemplateColumns: cols.join(" "),
-        gridTemplateRows: rows.join(" ")
-    });
-    for (let key in addStyles) {
-        s.appendStyle(key, addStyles[key]);
-    }
-    return s;
-}
-
-/**
- * Constructs a CSS grid column definition
- * @param {number} x - the starting horizontal cell for the element.
- * @param {number} [w=null] - the number of cells wide the element should cover.
- */
-function gridCol(x, w = null) {
-    if (w === null) {
-        w = 1;
-    }
-
-    return style({
-        gridColumnStart: x,
-        gridColumnEnd: x + w
-    });
-}
-
-/**
- * Constructs a CSS grid row definition
- * @param {number} y - the starting vertical cell for the element.
- * @param {number} [h=null] - the number of cells tall the element should cover.
- */
-function gridRow(y, h = null) {
-    if (h === null) {
-        h = 1;
-    }
-
-    return style({
-        gridRowStart: y,
-        gridRowEnd: y + h
-    });
-}
-
-/**
  * Constructs a CSS grid area definition.
  * @param {number} x - the starting horizontal cell for the element.
  * @param {number} y - the starting vertical cell for the element.
  * @param {number} [w=null] - the number of cells wide the element should cover.
  * @param {number} [h=null] - the number of cells tall the element should cover.
+ * @returns {CssProp}
  */
-function gridSpan(x, y, w = null, h = null) {
+function gridPos(x, y, w = null, h = null) {
     if (w === null) {
         w = 1;
     }
-
     if (h === null) {
         h = 1;
     }
-
-    return style({
-        gridRowStart: y,
-        gridRowEnd: y + h,
-        gridColumnStart: x,
-        gridColumnEnd: x + w
-    });
+    return gridArea(`${y}/${x}/${y + h}/${x + w}`);
+}
+/**
+ * Constructs a CSS grid column definition
+ * @param {number} x - the starting horizontal cell for the element.
+ * @param {number} [w=null] - the number of cells wide the element should cover.
+ * @returns {CssProp}
+ */
+function col(x, w = null) {
+    if (w === null) {
+        w = 1;
+    }
+    return gridColumn(`${x}/${x + w}`);
+}
+/**
+ * Constructs a CSS grid row definition
+ * @param {number} y - the starting vertical cell for the element.
+ * @param {number} [h=null] - the number of cells tall the element should cover.
+ * @returns {CssProp}
+ */
+function row(y, h = null) {
+    if (h === null) {
+        h = 1;
+    }
+    return gridRow(`${y}/${y + h}`);
+}
+/**
+ * Create the gridTemplateColumns and gridTemplateRows styles.
+ * @param {string[]} cols
+ * @param {string[]} rows
+ * @returns {CssPropSet}
+ */
+function gridDef(cols, rows) {
+    return styles(
+        gridColsDef(...cols),
+        gridRowsDef(...rows));
 }
 
+const displayGrid = display("grid");
+
 /**
- * A setter functor for HTML element events.
- **/
-class HtmlEvt {
-    /**
-     * Creates a new setter functor for an HTML element event.
-     * @param {string} name - the name of the event to attach to.
-     * @param {Function} callback - the callback function to use with the event handler.
-     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
-     */
-    constructor(name, callback, opts) {
-        if (!isFunction(callback)) {
-            throw new Error("A function instance is required for this parameter");
-        }
-
-        this.name = name;
-        this.callback = callback;
-        this.opts = opts;
-        Object.freeze(this);
-    }
-
-    /**
-     * Add the encapsulate callback as an event listener to the give HTMLElement
-     * @param {HTMLElement} elem
-     */
-    add(elem) {
-        elem.addEventListener(this.name, this.callback, this.opts);
-    }
-
-    /**
-     * Remove the encapsulate callback as an event listener from the give HTMLElement
-     * @param {HTMLElement} elem
-     */
-    remove(elem) {
-        elem.removeEventListener(this.name, this.callback);
-    }
+ * Create the gridTemplateColumns style attribute, with display set to grid.
+ * @param {...string} cols
+ * @returns {CssPropSet}
+ */
+function gridColsDef(...cols) {
+    return styles(
+        displayGrid,
+        gridTemplateColumns(cols.join(" ")));
 }
-
 /**
- * The click event.
- * @param {Function} callback - the callback function to use with the event handler.
- * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
- **/
-function onClick(callback, opts) { return new HtmlEvt("click", callback, opts); }
-
-/**
- * The input event.
- * @param {Function} callback - the callback function to use with the event handler.
- * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
- **/
-function onInput(callback, opts) { return new HtmlEvt("input", callback, opts); }
-
-/**
- * The keyup event.
- * @param {Function} callback - the callback function to use with the event handler.
- * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
- **/
-function onKeyUp(callback, opts) { return new HtmlEvt("keyup", callback, opts); }
-
-/**
- * The loadedmetadata event.
- * @param {Function} callback - the callback function to use with the event handler.
- * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
- **/
-function onLoadedMetadata(callback, opts) { return new HtmlEvt("loadedmetadata", callback, opts); }
-
-/**
- * The mouseout event.
- * @param {Function} callback - the callback function to use with the event handler.
- * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
- **/
-function onMouseOut(callback, opts) { return new HtmlEvt("mouseout", callback, opts); }
-
-/**
- * The mouseover event.
- * @param {Function} callback - the callback function to use with the event handler.
- * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
- **/
-function onMouseOver(callback, opts) { return new HtmlEvt("mouseover", callback, opts); }
-
-/**
- * @typedef {(Element|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
- **/
-
-/**
- * Creates an HTML element for a given tag name.
- * 
- * Boolean attributes that you want to default to true can be passed
- * as just the attribute creating function, 
- *   e.g. `Audio(autoPlay)` vs `Audio(autoPlay(true))`
- * @param {string} name - the name of the tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLElement}
+ * Create the gridTemplateRows style attribute, with display set to grid.
+ * @param {...string} rows
+ * @returns {CssPropSet}
  */
-function tag(name, ...rest) {
-    const elem = document.createElement(name);
-
-    for (let i = 0; i < rest.length; ++i) {
-        // 
-        if (isFunction(rest[i])) {
-            rest[i] = rest[i](true);
-        }
-    }
-
-    for (let x of rest) {
-        if (x !== null && x !== undefined) {
-            if (isString(x)
-                || isNumber(x)
-                || isBoolean(x)
-                || x instanceof Date) {
-                elem.appendChild(document.createTextNode(x));
-            }
-            else if (x instanceof Element) {
-                elem.appendChild(x);
-            }
-            else if (x instanceof HtmlCustomTag) {
-                elem.appendChild(x.element);
-            }
-            else if (x instanceof HtmlAttr) {
-                x.apply(elem);
-            }
-            else if (x instanceof HtmlEvt) {
-                x.add(elem);
-            }
-            else {
-                console.trace(`Skipping ${x}: unsupported value type.`);
-            }
-        }
-    }
-
-    return elem;
-}
-
-/**
- * A pseudo-element that is made out of other elements.
- **/
-class HtmlCustomTag extends EventTarget {
-    /**
-     * Creates a new pseudo-element
-     * @param {string} tagName - the type of tag that will contain the elements in the custom tag.
-     * @param {...TagChild} rest - optional attributes, child elements, and text
-     */
-    constructor(tagName, ...rest) {
-        super();
-        if (rest.length === 1
-            && rest[0] instanceof Element) {
-            /** @type {HTMLElement} */
-            this.element = rest[0];
-        }
-        else {
-            /** @type {HTMLElement} */
-            this.element = tag(tagName, ...rest);
-        }
-    }
-
-    /**
-     * Gets the ID attribute of the container element.
-     * @type {string}
-     **/
-    get id() {
-        return this.element.id;
-    }
-
-    /**
-     * Retrieves the desired element for attaching events.
-     * @returns {HTMLElement}
-     **/
-    get eventTarget() {
-        return this.element;
-    }
-
-    /**
-     * Determine if an event type should be forwarded to the container element.
-     * @param {string} name
-     * @returns {boolean}
-     */
-    isForwardedEvent(name) {
-        return true;
-    }
-
-    /**
-     * Adds an event listener to the container element.
-     * @param {string} name - the name of the event to attach to.
-     * @param {Function} callback - the callback function to use with the event handler.
-     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
-     */
-    addEventListener(name, callback, opts) {
-        if (this.isForwardedEvent(name)) {
-            this.eventTarget.addEventListener(name, callback, opts);
-        }
-        else {
-            super.addEventListener(name, callback, opts);
-        }
-    }
-
-    /**
-     * Removes an event listener from the container element.
-     * @param {string} name - the name of the event to attach to.
-     * @param {Function} callback - the callback function to use with the event handler.
-     */
-    removeEventListener(name, callback) {
-        if (this.isForwardedEvent(name)) {
-            this.eventTarget.removeEventListener(name, callback);
-        }
-        else {
-            super.removeEventListener(name, callback);
-        }
-    }
-
-    /**
-     * Wait for a specific event, one time.
-     * @param {string} resolveEvt - the name of the event that will resolve the Promise this method creates.
-     * @param {string} rejectEvt - the name of the event that could reject the Promise this method creates.
-     * @param {number} timeout - the number of milliseconds to wait for the resolveEvt, before rejecting.
-     */
-    async once(resolveEvt, rejectEvt, timeout) {
-        return await this.eventTarget.once(resolveEvt, rejectEvt, timeout);
-    }
-
-    /**
-     * Set whether or not the container element is visible.
-     * @param {boolean} v
-     */
-    setOpen(v) {
-        this.element.setOpen(v);
-    }
-
-    /**
-     * Makes the container element visible, if it is not already.
-     **/
-    show() {
-        this.setOpen(true);
-    }
-
-    /**
-     * Makes the container element not visible, if it is not already.
-     **/
-    hide() {
-        this.setOpen(false);
-    }
-
-    /**
-     * Gets the style attribute of the underlying select box.
-     * @type {ElementCSSInlineStyle}
-     */
-    get style() {
-        return this.element.style;
-    }
-
-    /**
-     * Moves cursor focus to the underyling element.
-     **/
-    focus() {
-        this.element.focus();
-    }
-
-    /**
-     * Removes cursor focus from the underlying element.
-     **/
-    blur() {
-        this.element.blur();
-    }
-}
-
-/**
- * An input box that has a label attached to it.
- **/
-class LabeledInputTag extends HtmlCustomTag {
-    /**
-     * Creates an input box that has a label attached to it.
-     * @param {string} id - the ID to use for the input box
-     * @param {string} inputType - the type to use for the input box (number, text, etc.)
-     * @param {string} labelText - the text to display in the label
-     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
-     * @returns {LabeledInputTag}
-     */
-    constructor(id, inputType, labelText, ...rest) {
-        super("div");
-
-        this.label = Label(
-            htmlFor(id),
-            labelText);
-
-        this.input = Input(
-            type(inputType),
-            ...rest);
-
-        this.element.append(
-            this.label,
-            this.input);
-
-        Object.seal(this);
-    }
-
-    /**
-     * Retrieves the desired element for attaching events.
-     * @returns {HTMLElement}
-     **/
-    get eventTarget() {
-        return this.input;
-    }
-
-    /**
-     * Gets the value attribute of the input element
-     * @type {string}
-     */
-    get value() {
-        return this.input.value;
-    }
-
-    /**
-     * Sets the value attribute of the input element
-     * @param {string} v
-     */
-    set value(v) {
-        this.input.value = v;
-    }
-
-    /**
-     * Gets whether or not the input element is checked, if it's a checkbox or radio button.
-     * @type {boolean}
-     */
-    get checked() {
-        return this.input.checked;
-    }
-
-    /**
-     * Sets whether or not the input element is checked, if it's a checkbox or radio button.
-     * @param {boolean} v
-     */
-    set checked(v) {
-        this.input.checked = v;
-    }
-
-    /**
-     * Sets whether or not the input element should be disabled.
-     * @param {boolean} value
-     */
-    setLocked(value) {
-        this.input.setLocked(value);
-    }
-}
-
-class LabeledSelectBoxTag extends HtmlCustomTag {
-    /**
-     * Creates a select box that can bind to collections, with a label set on the side.
-     * @param {string} tagId - the ID to use for the select box.
-     * @param {any} labelText - the text to put in the label.
-     * @param {string} noSelectionText - the text to display when no items are available.
-     * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
-     * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
-     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
-     */
-    constructor(tagId, labelText, noSelectionText, makeID, makeLabel, ...rest) {
-        super("div");
-
-        this.label = Label(
-            htmlFor(tagId),
-            labelText);
-
-        /** @type {SelectBox} */
-        this.select = new SelectBox(noSelectionText, makeID, makeLabel, id(tagId), ...rest);
-
-        this.element.append(
-            this.label,
-            this.select.element);
-
-        Object.seal(this);
-    }
-
-    /**
-     * Retrieves the desired element for attaching events.
-     * @returns {HTMLElement}
-     **/
-    get eventTarget() {
-        return this.select;
-    }
-
-    /**
-     * Gets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
-     * @type {boolean}
-     **/
-    get emptySelectionEnabled() {
-        return this.select.emptySelectionEnabled;
-    }
-
-    /**
-     * Sets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
-     * @param {boolean} value
-     **/
-    set emptySelectionEnabled(value) {
-        this.select.emptySelectionEnabled = value;
-    }
-
-    /**
-     * Gets the collection to which the select box was databound
-     **/
-    get values() {
-        return this.select.values;
-    }
-
-    /**
-     * Sets the collection to which the select box will be databound
-     **/
-    set values(values) {
-        this.select.values = values;
-    }
-
-    /**
-     * Returns the collection of HTMLOptionElements that are stored in the select box
-     * @type {HTMLOptionsCollection}
-     */
-    get options() {
-        return this.select.options;
-    }
-
-    /**
-     * Gets the index of the item that is currently selected in the select box.
-     * The index is offset by -1 if the select box has `emptySelectionEnabled`
-     * set to true, so that the indices returned are always in range of the collection
-     * to which the select box was databound
-     * @type {number}
-     */
-    get selectedIndex() {
-        return this.select.selectedIndex;
-    }
-    /**
-    * Sets the index of the item that should be selected in the select box.
-    * The index is offset by -1 if the select box has `emptySelectionEnabled`
-    * set to true, so that the indices returned are always in range of the collection
-    * to which the select box was databound
-    * @param {number} i
-    */
-    set selectedIndex(i) {
-        this.select.selectedIndex = i;
-    }
-
-    /**
-     * Gets the item at `selectedIndex` in the collection to which the select box was databound
-     * @type {any}
-     */
-    get selectedValue() {
-        return this.select.selectedValue;
-    }
-    /**
-    * Gets the index of the given item in the select box's databound collection, then
-    * sets that index as the `selectedIndex`.
-     * @param {any) value
-    */
-    set selectedValue(v) {
-        this.select.selectedValue = v;
-    }
-
-    /**
-     * Returns the index of the given item in the select box's databound collection.
-     * @param {any} value
-     * @returns {number}
-     */
-    indexOf(value) {
-        return this.select.indexOf(value);
-    }
-
-    /**
-     * Checks to see if the value exists in the databound collection.
-     * @param {any} value
-     * @returns {boolean}
-     */
-    contains(value) {
-        return this.select.contains(value);
-    }
-}
-
-const selectEvt = new Event("select");
-
-/**
- * A panel and a button that opens it.
- **/
-class OptionPanelTag extends HtmlCustomTag {
-
-    /**
-     * Creates a new panel that can be opened with a button click, 
-     * living in a collection of panels that will be hidden when
-     * this panel is opened.
-     * @param {string} panelID - the ID to use for the panel element.
-     * @param {string} name - the text to use on the button.
-     * @param {...any} rest
-     */
-    constructor(panelID, name, ...rest) {
-        super("div",
-            id(panelID),
-            style({ padding: "1em" }),
-            P(...rest));
-
-        this.button = Button(
-            id(panelID + "Btn"),
-            onClick(() => this.dispatchEvent(selectEvt)),
-            name);
-    }
-
-    isForwardedEvent(name) {
-        return name !== "select";
-    }
-
-    /**
-     * Gets whether or not the panel is visible
-     * @type {boolean}
-     **/
-    get visible() {
-        return this.element.style.display !== null;
-    }
-
-    /**
-     * Sets whether or not the panel is visible
-     * @param {boolean} v
-     **/
-    set visible(v) {
-        this.element.setOpen(v);
-        style({
-            borderStyle: "solid",
-            borderSize: "2px",
-            backgroundColor: v ? "#ddd" : "transparent",
-            borderTop: v ? "" : "none",
-            borderRight: v ? "" : "none",
-            borderBottomColor: v ? "#ddd" : "",
-            borderLeft: v ? "" : "none",
-        }).apply(this.button);
-    }
-}
-
-/** @type {WeakMap<SelectBoxTag, any[]>} */
-const values = new WeakMap();
-
-function render(self) {
-    clear(self.element);
-    if (self.values.length === 0) {
-        self.element.append(Option(self.noSelectionText));
-        self.element.lock();
-    }
-    else {
-        if (self.emptySelectionEnabled) {
-            self.element.append(Option(self.noSelectionText));
-        }
-        for (let v of self.values) {
-            self.element.append(
-                Option(
-                    value(self.makeID(v)),
-                    self.makeLabel(v)));
-        }
-
-        self.element.unlock();
-    }
-}
-
-/**
- * A select box that can be databound to collections.
- **/
-class SelectBoxTag extends HtmlCustomTag {
-
-    /**
-     * Creates a select box that can bind to collections
-     * @param {string} noSelectionText - the text to display when no items are available.
-     * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
-     * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
-     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
-     */
-    constructor(noSelectionText, makeID, makeLabel, ...rest) {
-        super("select", ...rest);
-
-        if (!isFunction(makeID)) {
-            throw new Error("makeID parameter must be a Function");
-        }
-
-        if (!isFunction(makeLabel)) {
-            throw new Error("makeLabel parameter must be a Function");
-        }
-
-        this.noSelectionText = noSelectionText;
-        this.makeID = (v) => v !== null && makeID(v) || null;
-        this.makeLabel = (v) => v !== null && makeLabel(v) || "None";
-        this.emptySelectionEnabled = true;
-
-        Object.seal(this);
-    }
-
-    /**
-     * Gets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
-     * @type {boolean}
-     **/
-    get emptySelectionEnabled() {
-        return this._emptySelectionEnabled;
-    }
-
-    /**
-     * Sets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
-     * @param {boolean} value
-     **/
-    set emptySelectionEnabled(value) {
-        this._emptySelectionEnabled = value;
-        render(this);
-    }
-
-    /**
-     * Gets the collection to which the select box was databound
-     **/
-    get values() {
-        if (!values.has(this)) {
-            values.set(this, []);
-        }
-        return values.get(this);
-    }
-
-    /**
-     * Sets the collection to which the select box will be databound
-     **/
-    set values(newItems) {
-        const curValue = this.selectedValue;
-        const values = this.values;
-        values.splice(0, values.length, ...newItems);
-        render(this);
-        this.selectedValue = curValue;
-    }
-
-    /**
-     * Returns the collection of HTMLOptionElements that are stored in the select box
-     * @type {HTMLOptionsCollection}
-     */
-    get options() {
-        return this.element.options;
-    }
-
-    /**
-     * Gets the index of the item that is currently selected in the select box.
-     * The index is offset by -1 if the select box has `emptySelectionEnabled`
-     * set to true, so that the indices returned are always in range of the collection
-     * to which the select box was databound
-     * @type {number}
-     */
-    get selectedIndex() {
-        let i = this.element.selectedIndex;
-        if (this.emptySelectionEnabled) {
-            --i;
-        }
-        return i;
-    }
-
-    /**
-     * Sets the index of the item that should be selected in the select box.
-     * The index is offset by -1 if the select box has `emptySelectionEnabled`
-     * set to true, so that the indices returned are always in range of the collection
-     * to which the select box was databound
-     * @param {number} i
-     */
-    set selectedIndex(i) {
-        if (this.emptySelectionEnabled) {
-            ++i;
-        }
-        this.element.selectedIndex = i;
-    }
-
-    /**
-     * Gets the item at `selectedIndex` in the collection to which the select box was databound
-     * @type {any}
-     */
-    get selectedValue() {
-        if (0 <= this.selectedIndex && this.selectedIndex < this.values.length) {
-            return this.values[this.selectedIndex];
-        }
-        else {
-            return null;
-        }
-    }
-
-    /**
-     * Gets the index of the given item in the select box's databound collection, then
-     * sets that index as the `selectedIndex`.
-     * @param {any) value
-     */
-    set selectedValue(value) {
-        this.selectedIndex = this.indexOf(value);
-    }
-
-    /**
-     * Returns the index of the given item in the select box's databound collection.
-     * @param {any} value
-     * @returns {number}
-     */
-    indexOf(value) {
-        return this.values
-            .findIndex(v =>
-                value !== null
-                && this.makeID(value) === this.makeID(v));
-    }
-
-    /**
-     * Checks to see if the value exists in the databound collection.
-     * @param {any} value
-     * @returns {boolean}
-     */
-    contains(value) {
-        return this.indexOf(value) >= 0.
-    }
-}
-
-/**
- * Empty an element of all children. This is faster than
- * setting `innerHTML = ""`.
- * @param {any} elem
- */
-function clear(elem) {
-    while (elem.lastChild) {
-        elem.lastChild.remove();
-    }
-}
-
-/**
- * creates an HTML A tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLAnchorElement}
- */
-function A(...rest) { return tag("a", ...rest); }
-
-/**
- * creates an HTML Audio tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLAudioElement}
- */
-function Audio(...rest) { return tag("audio", ...rest); }
-
-/**
- * creates an HTML HtmlButton tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLButtonElement}
- */
-function ButtonRaw(...rest) { return tag("button", ...rest); }
-
-/**
- * creates an HTML Button tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLButtonElement}
- */
-function Button(...rest) { return ButtonRaw(...rest, type("button")); }
-
-/**
- * creates an HTML Canvas tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLCanvasElement}
- */
-function Canvas(...rest) { return tag("canvas", ...rest); }
-
-/**
- * creates an HTML Div tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLDivElement}
- */
-function Div(...rest) { return tag("div", ...rest); }
-
-/**
- * creates an HTML H1 tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLHeadingElement}
- */
-function H1(...rest) { return tag("h1", ...rest); }
-
-/**
- * creates an HTML H2 tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLHeadingElement}
- */
-function H2(...rest) { return tag("h2", ...rest); }
-
-/**
- * creates an HTML Img tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLImageElement}
- */
-function Img(...rest) { return tag("img", ...rest); }
-
-/**
- * creates an HTML Input tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLInputElement}
- */
-function Input(...rest) { return tag("input", ...rest); }
-
-/**
- * creates an HTML Input tag that is a URL entry field.
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLInputElement}
- */
-function InputURL(...rest) { return Input(type("url"), ...rest) }
-
-/**
- * creates an HTML Label tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLLabelElement}
- */
-function Label(...rest) { return tag("label", ...rest); }
-
-/**
- * creates an HTML LI tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLLIElement}
- */
-function LI(...rest) { return tag("li", ...rest); }
-
-/**
- * creates an HTML Option tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLOptionElement}
- */
-function Option(...rest) { return tag("option", ...rest); }
-
-/**
- * creates an HTML P tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLParagraphElement}
- */
-function P(...rest) { return tag("p", ...rest); }
-
-/**
- * creates an HTML Source tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLSourceElement}
- */
-function Source(...rest) { return tag("source", ...rest); }
-
-/**
- * creates an HTML Span tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLSpanElement}
- */
-function Span(...rest) { return tag("span", ...rest); }
-
-/**
- * creates an HTML UL tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLUListElement}
- */
-function UL(...rest) { return tag("ul", ...rest); }
-
-/**
- * creates an HTML Video tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLVideoElement}
- */
-function Video(...rest) { return tag("video", ...rest); }
-
-/**
- * Creates an offscreen canvas element, if they are available. Otherwise, returns an HTMLCanvasElement.
- * @param {number} w - the width of the canvas
- * @param {number} h - the height of the canvas
- * @param {...TagChild} rest - optional HTML attributes and child elements, to use in constructing the HTMLCanvasElement if OffscreenCanvas is not available.
- * @returns {OffscreenCanvas|HTMLCanvasElement}
- */
-function CanvasOffscreen(w, h, ...rest) {
-    if (window.OffscreenCanvas) {
-        return new OffscreenCanvas(w, h);
-    }
-    else {
-        return Canvas(...rest, width(w), height(h));
-    }
-}
-
-/**
- * Creates an input box that has a label attached to it.
- * @param {string} id - the ID to use for the input box
- * @param {string} inputType - the type to use for the input box (number, text, etc.)
- * @param {string} labelText - the text to display in the label
- * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
- * @returns {LabeledInputTag}
- */
-function LabeledInput(id, inputType, labelText, ...rest) {
-    return new LabeledInputTag(id, inputType, labelText, ...rest);
-}
-
-/**
- * Creates a string from a list item to use as the item's ID or label in a select box.
- * @callback makeItemValueCallback
- * @param {any} obj - the object
- * @returns {string}
- */
-
-/**
- * Creates a select box that can bind to collections
- * @param {string} noSelectionText - the text to display when no items are available.
- * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
- * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
- * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
- * @returns {SelectBoxTag}
- */
-function SelectBox(noSelectionText, makeID, makeLabel, ...rest) {
-    return new SelectBoxTag(noSelectionText, makeID, makeLabel, ...rest);
-}
-
-/**
- * Creates a select box, with a label attached to it, that can bind to collections
- * @param {string} id - the ID to use for the input box
- * @param {string} labelText - the text to display in the label
- * @param {string} noSelectionText - the text to display when no items are available.
- * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
- * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
- * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
- * @returns {LabeledSelectBoxTag}
- */
-function LabeledSelectBox(id, labelText, noSelectionText, makeID, makeLabel, ...rest) {
-    return new LabeledSelectBoxTag(id, labelText, noSelectionText, makeID, makeLabel, ...rest);
-}
-
-/**
- * Creates an OptionPanelTag element
- * @param {string} id - the ID to use for the content element of the option panel
- * @param {string} name - the text to use in the button that triggers displaying the content element
- * @param {...TagChild} rest - optional attributes, child elements, and text to use on the content element
- */
-function OptionPanel(id, name, ...rest) {
-    return new OptionPanelTag(id, name, ...rest);
+function gridRowsDef(...rows) {
+    return styles(
+        displayGrid,
+        gridTemplateRows(rows.join(" ")));
 }
 
 const hiddenEvt = new Event("hidden");
@@ -4572,26 +4934,26 @@ class FormDialog extends EventTarget {
     constructor(name, header) {
         super();
 
-        const formStyle = gridArea(
-            ["5fr", "1fr", "1fr"],
-            ["auto", "auto", "1fr", "auto", "auto"], {
-            overflowY: "hidden"
-        });
+        const formStyle = styles(
+            gridDef(
+                ["5fr", "1fr", "1fr"],
+                ["auto", "auto", "1fr", "auto", "auto"]),
+            overflowY("hidden"));
 
         this.element = document.getElementById(name) ||
             Div(
                 id(name),
                 className("dialog"),
                 Div(
-                    gridCols("1fr", "auto"),
-                    gridCol(1, 3),
+                    gridColsDef("1fr", "auto"),
+                    col(1, 3),
                     H1(
-                        gridCol(1),
-                        style({ margin: "0" }),
+                        col(1),
+                        margin("0"),
                         header),
                     Button(
-                        gridCol(2),
-                        style({ padding: "1em" }),
+                        col(2),
+                        padding("1em"),
                         close.value,
                         onClick(() =>
                             this.hide()))));
@@ -4601,24 +4963,24 @@ class FormDialog extends EventTarget {
         this.header = this.element.querySelector(".header")
             || this.element.appendChild(Div(className("header")));
 
-        style({ gridArea: "2/1/3/4" }).apply(this.header);
+        gridPos(1, 2, 3, 1).apply(this.header);
 
         this.content = this.element.querySelector(".content")
             || this.element.appendChild(Div(className("content")));
 
-        style({
-            overflowY: "scroll",
-            gridArea: "3/1/4/4"
-        }).apply(this.content);
+        styles(
+            gridPos(1, 3, 3, 1),
+            overflowY("scroll"))
+            .apply(this.content);
 
         this.footer = this.element.querySelector(".footer")
             || this.element.appendChild(Div(className("footer")));
 
-        style({
-            display: "flex",
-            flexDirection: "row-reverse",
-            gridArea: "4/1/5/4"
-        }).apply(this.footer);
+        styles(
+            gridPos(1, 4, 3, 1),
+            display("flex"),
+            flexDirection("row-reverse"))
+            .apply(this.footer);
     }
 
     get isOpen() {
@@ -4658,16 +5020,14 @@ class FormDialog extends EventTarget {
     }
 }
 
-const headerStyle = style({
-    textDecoration: "none",
-    color: "black",
-    textTransform: "capitalize"
-}),
-    buttonStyle = style({
-        fontSize: "200%",
-        width: "2em"
-    }),
-    cancelEvt = new Event("emojiCanceled");
+const headerStyle = styles(
+    textDecoration("none"),
+    color("black"),
+    textTransform("capitalize"));
+const buttonStyle = styles(
+    fontSize("200%"),
+    width$1("2em"));
+const cancelEvt = new Event("emojiCanceled");
 
 class EmojiForm extends FormDialog {
     constructor() {
@@ -4716,20 +5076,20 @@ class EmojiForm extends FormDialog {
             const alts = group.alts || group;
             for (let icon of alts) {
                 const btn = Button(
-                        title(icon.desc),
-                        buttonStyle,
-                        onClick((evt) => {
-                            selectedEmoji = selectedEmoji && evt.ctrlKey
-                                ? combine(selectedEmoji, icon)
-                                : icon;
-                            this.preview.innerHTML = `${selectedEmoji.value} - ${selectedEmoji.desc}`;
-                            this.confirmButton.unlock();
+                    title(icon.desc),
+                    buttonStyle,
+                    onClick((evt) => {
+                        selectedEmoji = selectedEmoji && evt.ctrlKey
+                            ? combine(selectedEmoji, icon)
+                            : icon;
+                        this.preview.innerHTML = `${selectedEmoji.value} - ${selectedEmoji.desc}`;
+                        this.confirmButton.unlock();
 
-                            if (alts) {
-                                alts.toggleOpen();
-                                btn.innerHTML = icon.value + (alts.isOpen() ? "-" : "+");
-                            }
-                        }), icon.value);
+                        if (alts) {
+                            alts.toggleOpen();
+                            btn.innerHTML = icon.value + (alts.isOpen() ? "-" : "+");
+                        }
+                    }), icon.value);
 
                 let alts = null;
 
@@ -4779,7 +5139,7 @@ class EmojiForm extends FormDialog {
                         headerStyle,
                         onClick(() => {
                             container.toggleOpen();
-                            headerButton.innerHTML = group.value  + (container.isOpen() ? " -" : " +");
+                            headerButton.innerHTML = group.value + (container.isOpen() ? " -" : " +");
                         }),
                         group.value + " -");
 
@@ -4814,7 +5174,7 @@ class EmojiForm extends FormDialog {
                     this.hide();
                 })),
 
-            this.preview = Span(style({ gridArea: "4/1/5/4" })));
+            this.preview = Span(gridPos(1, 4, 3, 1)));
 
         this.confirmButton.lock();
 
@@ -4862,31 +5222,19 @@ class EmojiSelectedEvent extends Event {
     }
 }
 
-function Run(...rest) {
-    return Div(
-        style({ margin: "auto" }),
-        ...rest);
-}
-
 const toggleAudioEvt = new Event("toggleAudio"),
     toggleVideoEvt = new Event("toggleVideo"),
     emoteEvt = new Event("emote"),
     selectEmojiEvt = new Event("selectEmoji"),
-    subelStyle = style({
-        fontSize: "1.25em",
-        width: "3em",
-        height: "100%"
-    }),
-    pointerEventsAll = style({
-        pointerEvents: "all"
-    }),
-    subButtonStyle = style({
-        fontSize: "1.25em",
-        height: "100%"
-    }),
-    buttonLabelStyle = style({
-        fontSize: "12px"
-    });
+    subelStyle = styles(
+        fontSize("1.25em"),
+        width$1("3em"),
+        height$1("100%")),
+    pointerEventsAll = pointerEvents("all"),
+    subButtonStyle = styles(
+        fontSize("1.25em"),
+        height$1("100%")),
+    buttonLabelStyle = fontSize("12px");
 
 class FooterBar extends EventTarget {
     constructor() {
@@ -4899,34 +5247,32 @@ class FooterBar extends EventTarget {
 
         this.element = Div(
             id("footbar"),
-            gridCols("auto", "1fr", "auto"),
-            style({
-                padding: "4px",
-                width: "100%",
-                columnGap: "5px",
-                backgroundColor: "transparent",
-                pointerEvents: "none"
-            }),
+            gridColsDef("auto", "1fr", "auto"),
+            padding("4px"),
+            width$1("100%"),
+            columnGap("5px"),
+            backgroundColor("transparent"),
+            pointerEvents("none"),
 
             Button(
                 title("Toggle audio mute/unmute"),
                 onClick(_(toggleAudioEvt)),
-                gridSpan(1, 1),
+                gridPos(1, 1),
                 subelStyle,
                 pointerEventsAll,
                 this.muteAudioButton = Run(speakerHighVolume.value),
                 Run(buttonLabelStyle, "Audio")),
 
             this.emojiControl = Span(
-                gridSpan(2, 1),
-                style({ textAlign: "center" }),
+                gridPos(2, 1),
+                textAlign("center"),
                 subButtonStyle,
                 Button(
                     title("Emote"),
                     onClick(_(emoteEvt)),
                     subButtonStyle,
                     pointerEventsAll,
-                    style({ borderRight: "none" }),
+                    borderRight("none"),
                     this.emoteButton = Run(whiteFlower.value),
                     Run(buttonLabelStyle, "Emote")),
                 Button(
@@ -4934,7 +5280,7 @@ class FooterBar extends EventTarget {
                     onClick(_(selectEmojiEvt)),
                     subButtonStyle,
                     pointerEventsAll,
-                    style({ borderLeft: "none" }),
+                    borderLeft("none"),
                     Run(upwardsButton.value),
                     Run(buttonLabelStyle, "Change"))),
 
@@ -4942,7 +5288,7 @@ class FooterBar extends EventTarget {
             Button(
                 title("Toggle video mute/unmute"),
                 onClick(_(toggleVideoEvt)),
-                gridSpan(3, 1),
+                gridPos(3, 1),
                 subelStyle,
                 pointerEventsAll,
                 this.muteVideoButton = Run(noMobilePhone.value),
@@ -4993,27 +5339,18 @@ class FooterBar extends EventTarget {
     }
 }
 
-function Run$1(...rest) {
-    return Div(
-        style({ margin: "auto" }),
-        ...rest);
-}
-
 const toggleOptionsEvt = new Event("toggleOptions"),
     tweetEvt = new Event("tweet"),
     leaveEvt = new Event("leave"),
     toggleFullscreenEvt = new Event("toggleFullscreen"),
     toggleInstructionsEvt = new Event("toggleInstructions"),
     toggleUserDirectoryEvt = new Event("toggleUserDirectory"),
-    subelStyle$1 = style({
-        fontSize: "1.25em",
-        width: "3em",
-        height: "100%",
-        pointerEvents: "all"
-    }),
-    buttonLabelStyle$1 = style({
-        fontSize: "12px"
-    });
+    subelStyle$1 = styles(
+        pointerEvents("all"),
+        fontSize("1.25em"),
+        width$1("3em"),
+        height$1("100%")),
+    buttonLabelStyle$1 = fontSize("12px");
 
 class HeaderBar extends EventTarget {
     constructor() {
@@ -5023,67 +5360,67 @@ class HeaderBar extends EventTarget {
 
         this.element = Div(
             id("headbar"),
-            gridCols("auto", "auto", "auto", "auto", "1fr", "auto", "auto"),
-            style({
-                padding: "4px",
-                width: "100%",
-                columnGap: "5px",
-                backgroundColor: "transparent",
-                pointerEvents: "none"
-            }),
+            gridColsDef("auto", "auto", "auto", "auto", "1fr", "auto", "auto"),
+            padding("4px"),
+            width$1("100%"),
+            columnGap("5px"),
+            backgroundColor("transparent"),
+            pointerEvents("none"),
 
             this.optionsButton = Button(
                 title("Show/hide options"),
                 onClick(_(toggleOptionsEvt)),
                 subelStyle$1,
-                gridSpan(1, 1),
-                Run$1(gear.value),
-                Run$1(buttonLabelStyle$1, "Options")),
+                gridPos(1, 1),
+                Run(gear.value),
+                Run(buttonLabelStyle$1, "Options")),
 
             this.instructionsButton = Button(
                 title("Show/hide instructions"),
                 onClick(_(toggleInstructionsEvt)),
                 subelStyle$1,
-                gridSpan(2, 1),
-                Run$1(questionMark.value),
-                Run$1(buttonLabelStyle$1, "Info")),
+                gridPos(2, 1),
+                Run(questionMark.value),
+                Run(buttonLabelStyle$1, "Info")),
 
             Button(
                 title("Share your current room to twitter"),
                 onClick(_(tweetEvt)),
                 subelStyle$1,
-                gridSpan(3, 1),
+                gridPos(3, 1),
                 Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
                     alt("icon"),
                     role("presentation"),
-                    style({ height: "25px", marginBottom: "-7px" })),
-                Run$1(buttonLabelStyle$1, "Tweet")),
+                    height$1("25px"),
+                    marginBottom("-7px")),
+                Run(buttonLabelStyle$1, "Tweet")),
 
             Button(
                 title("View user directory"),
                 onClick(_(toggleUserDirectoryEvt)),
                 subelStyle$1,
-                gridSpan(4, 1),
-                Run$1(speakingHead.value),
-                Run$1(buttonLabelStyle$1, "Users")),
+                gridPos(4, 1),
+                Run(speakingHead.value),
+                Run(buttonLabelStyle$1, "Users")),
 
 
             this.fullscreenButton = Button(
                 title("Toggle fullscreen"),
                 onClick(_(toggleFullscreenEvt)),
+                onClick(() => this.isFullscreen = !this.isFullscreen),
                 subelStyle$1,
-                gridSpan(6, 1),
-                Run$1(squareFourCourners.value),
-                Run$1(buttonLabelStyle$1, "Expand")),
+                gridPos(6, 1),
+                Run(squareFourCourners.value),
+                Run(buttonLabelStyle$1, "Expand")),
 
 
             Button(
                 title("Leave the room"),
                 onClick(_(leaveEvt)),
                 subelStyle$1,
-                gridSpan(7, 1),
-                Run$1(door.value),
-                Run$1(buttonLabelStyle$1, "Leave")));
+                gridPos(7, 1),
+                Run(door.value),
+                Run(buttonLabelStyle$1, "Leave")));
 
         Object.seal(this);
     }
@@ -5587,8 +5924,8 @@ class InputBinding extends EventTarget {
     }
 }
 
-const keyWidthStyle = style({ width: "7em" }),
-    numberWidthStyle = style({ width: "3em" }),
+const keyWidthStyle = width$1("7em"),
+    numberWidthStyle = width$1("3em"),
     avatarUrlChangedEvt = new Event("avatarURLChanged"),
     gamepadChangedEvt = new Event("gamepadChanged"),
     selectAvatarEvt = new Event("selectAvatar"),
@@ -5732,7 +6069,7 @@ class OptionsForm extends FormDialog {
                     value(10),
                     min(5),
                     max(32),
-                    style({ width: "3em" }),
+                    numberWidthStyle,
                     onInput(_(fontSizeChangedEvt))),
                 P(
                     this.drawHearingCheck = LabeledInput(
@@ -5828,16 +6165,16 @@ class OptionsForm extends FormDialog {
             panels[i].button.style.fontSize = "3.5vw";
         }
 
-        gridCols(...cols).apply(this.header);
+        gridColsDef(...cols).apply(this.header);
 
         this.header.append(...panels.map(p => p.button));
         this.content.append(...panels.map(p => p.element));
-        style({
-            backgroundColor: "#ddd",
-            borderLeft: "solid 2px black",
-            borderRight: "solid 2px black",
-            borderBottom: "solid 2px black"
-        }).apply(this.content);
+        styles(
+            backgroundColor("#ddd"),
+            borderLeft("solid 2px black"),
+            borderRight("solid 2px black"),
+            borderBottom("solid 2px black"))
+            .apply(this.content);
 
         const showPanel = (p) =>
             () => {
@@ -6710,10 +7047,10 @@ muteAudioIcon.value = mutedSpeaker.value;
 speakerActivityIcon.value = speakerMediumVolume.value;
 
 class User extends EventTarget {
-    constructor(evt, isMe) {
+    constructor(id, displayName, isMe) {
         super();
 
-        this.id = evt.id;
+        this.id = id;
         this.label = isMe ? "(Me)" : `(${this.id})`;
 
         this.moveEvent = new UserMoveEvent(this.id);
@@ -6722,7 +7059,7 @@ class User extends EventTarget {
         /** @type {AvatarMode} */
         this.setAvatarVideo(null);
         this.avatarImage = null;
-        this.avatarEmoji = isMe ? allPeople.random() : bust;
+        this.avatarEmoji = bust;
 
         this.audioMuted = false;
         this.videoMuted = true;
@@ -6740,7 +7077,7 @@ class User extends EventTarget {
         this.userNameText = new TextImage("sans-serif");
         this.userNameText.color = "white";
         this._displayName = null;
-        this.displayName = evt.displayName;
+        this.displayName = displayName;
         Object.seal(this);
     }
 
@@ -7099,18 +7436,10 @@ class UserPositionNeededEvent extends Event {
     }
 }
 
-function bg(backgroundColor) {
-    return style({ backgroundColor });
-}
-
-function z(zIndex) {
-    return style({ zIndex });
-}
-
-const newRowColor = bg("lightgreen");
-const hoveredColor = bg("rgba(65, 255, 202, 0.25)");
-const unhoveredColor = bg("transparent");
-const avatarSize = style({ height: "32px" });
+const newRowColor = backgroundColor("lightgreen");
+const hoveredColor = backgroundColor("rgba(65, 255, 202, 0.25)");
+const unhoveredColor = backgroundColor("transparent");
+const avatarSize = height$1("32px");
 const warpToEvt = Object.assign(
     new Event("warpTo"),
     {
@@ -7129,12 +7458,11 @@ class UserDirectoryForm extends FormDialog {
 
         this.content.append(
             this.table = Div(
-                gridArea(
+                gridDef(
                     ["auto", "1fr"],
-                    ["min-content"], {
-                    columnGap: "5px",
-                    width: "100%"
-                })));
+                    ["min-content"]),
+                columnGap("5px"),
+                width$1("100%")));
     }
 
     /**
@@ -7147,8 +7475,8 @@ class UserDirectoryForm extends FormDialog {
 
         if (isNew) {
             const elem = Div(
-                gridSpan(1, row, 2, 1),
-                z(-1),
+                gridPos(1, row, 2, 1),
+                zIndex(-1),
                 newRowColor);
             setTimeout(() => {
                 this.table.removeChild(elem);
@@ -7163,10 +7491,10 @@ class UserDirectoryForm extends FormDialog {
         }
 
         const elems = [
-            Div(gridSpan(1, row), z(0), avatar),
-            Div(gridSpan(2, row), z(0), user.displayName),
+            Div(gridPos(1, row), zIndex(0), avatar),
+            Div(gridPos(2, row), zIndex(0), user.displayName),
             Div(
-                gridSpan(1, row, 2, 1), z(1),
+                gridPos(1, row, 2, 1), zIndex(1),
                 unhoveredColor,
                 onMouseOver(function () {
                     hoveredColor.apply(this);
@@ -7175,6 +7503,7 @@ class UserDirectoryForm extends FormDialog {
                     unhoveredColor.apply(this);
                 }),
                 onClick(() => {
+                    this.hide();
                     warpToEvt.id = user.id;
                     this.dispatchEvent(warpToEvt);
                 }))];
@@ -7193,7 +7522,7 @@ class UserDirectoryForm extends FormDialog {
 
             let rowCount = 1;
             for (let elems of this.rows.values()) {
-                const r = gridRow(rowCount++);
+                const r = row(rowCount++);
                 for (let elem of elems) {
                     r.apply(elem);
                 }
@@ -7209,8 +7538,8 @@ class UserDirectoryForm extends FormDialog {
 
     warn(...rest) {
         const elem = Div(
-            gridSpan(1, this.rows.size + 1, 2, 1),
-            bg("yellow"),
+            gridPos(1, this.rows.size + 1, 2, 1),
+            backgroundColor("yellow"),
             ...rest.map(i => i.toString()));
 
         this.table.append(elem);
@@ -7982,11 +8311,9 @@ class Game extends EventTarget {
 
         this.element = Canvas(
             id("frontBuffer"),
-            style({
-                width: "100%",
-                height: "100%",
-                touchAction: "none"
-            }));
+            width$1("100%"),
+            height$1("100%"),
+            touchAction("none"));
         this.gFront = this.element.getContext("2d");
 
         /** @type {User} */
@@ -8229,10 +8556,10 @@ class Game extends EventTarget {
         this.element.setOpen(v);
     }
 
-    updateAudioActivity(evt) {
-        if (this.users.has(evt.id)) {
-            const user = this.users.get(evt.id);
-            user.isActive = evt.isActive;
+    updateAudioActivity(id, isActive) {
+        if (this.users.has(id)) {
+            const user = this.users.get(id);
+            user.isActive = isActive;
         }
     }
 
@@ -8325,17 +8652,13 @@ class Game extends EventTarget {
         }
     }
 
-    addUser(evt) {
-        //evt = {
-        //    id: "string", // the id of the participant
-        //    displayName: "string" // the display name of the participant
-        //};
-        if (this.users.has(evt.id)) {
-            this.removeUser(evt);
+    addUser(id, displayName) {
+        if (this.users.has(id)) {
+            this.removeUser(id);
         }
 
-        const user = new User(evt, false);
-        this.users.set(evt.id, user);
+        const user = new User(id, displayName, false);
+        this.users.set(id, user);
 
         userJoinedEvt.user = user;
         this.dispatchEvent(userJoinedEvt);
@@ -8349,33 +8672,33 @@ class Game extends EventTarget {
         this.dispatchEvent(toggleVideoEvt$2);
     }
 
-    muteUserAudio(evt) {
+    muteUserAudio(id, muted) {
         let mutingUser = this.me;
-        if (!!evt.id && this.users.has(evt.id)) {
-            mutingUser = this.users.get(evt.id);
+        if (id && this.users.has(id)) {
+            mutingUser = this.users.get(id);
         }
 
         if (!mutingUser) {
             console.warn("No user found to mute audio, retrying in 1 second.");
-            setTimeout(this.muteUserAudio.bind(this, evt), 1000);
+            setTimeout(this.muteUserAudio.bind(this, id, muted), 1000);
         }
         else {
-            mutingUser.audioMuted = evt.muted;
+            mutingUser.audioMuted = muted;
         }
     }
 
-    muteUserVideo(evt) {
+    muteUserVideo(id, muted) {
         let mutingUser = this.me;
-        if (!!evt.id && this.users.has(evt.id)) {
-            mutingUser = this.users.get(evt.id);
+        if (!!id && this.users.has(id)) {
+            mutingUser = this.users.get(id);
         }
 
         if (!mutingUser) {
             console.warn("No user found to mute video, retrying in 1 second.");
-            setTimeout(this.muteUserVideo.bind(this, evt), 1000);
+            setTimeout(this.muteUserVideo.bind(this, id, muted), 1000);
         }
         else {
-            mutingUser.videoMuted = evt.muted;
+            mutingUser.videoMuted = muted;
         }
     }
 
@@ -8397,23 +8720,16 @@ class Game extends EventTarget {
         }
     }
 
-    changeUserName(evt) {
-        //evt = {
-        //    id: string, // the id of the participant that changed his display name
-        //    displayName: string // the new display name
-        //};
-        this.withUser(evt && evt.id, (user) => {
-            user.displayName = evt.displayName;
+    changeUserName(id, displayName) {
+        this.withUser(id, (user) => {
+            user.displayName = displayName;
         });
     }
 
-    removeUser(evt) {
-        //evt = {
-        //    id: "string" // the id of the participant
-        //};
-        this.withUser(evt && evt.id, (user) => {
-            this.users.delete(user.id);
-        });
+    removeUser(id) {
+        if (this.users.has(id)) {
+            this.users.delete(id);
+        }
     }
 
     setAvatarVideo(id, stream) {
@@ -8423,37 +8739,24 @@ class Game extends EventTarget {
     }
 
     setAvatarURL(id, url) {
-        //evt = {
-        //  id: string, // the id of the participant that changed his avatar.
-        //  avatarURL: string // the new avatar URL.
-        //}
         this.withUser(id, (user) => {
             user.avatarImage = url;
         });
     }
 
     setAvatarEmoji(id, emoji) {
-        //evt = {
-        //  id: string, // the id of the participant that changed his avatar.
-        //  value: string // the emoji text to use as the avatar.
-        //  desc: string // a description of the emoji
-        //}
         this.withUser(id, (user) => {
             user.avatarEmoji = emoji;
         });
     }
 
-    async startAsync(evt) {
-        //evt = {
-        //    roomName: "string", // the room name of the conference
-        //    id: "string", // the id of the local participant
-        //    displayName: "string", // the display name of the local participant
-        //    avatarURL: "string" // the avatar URL of the local participant
-        //};
-
-        this.currentRoomName = evt.roomName.toLowerCase();
-        this.me = new User(evt, true);
-        this.users.set(evt.id, this.me);
+    async startAsync(id, displayName, avatarURL, roomName) {
+        this.currentRoomName = roomName.toLowerCase();
+        this.me = new User(id, displayName, true);
+        if (!!avatarURL) {
+            this.me.avatarImage = avatarURL;
+        }
+        this.users.set(id, this.me);
 
         this.map = new TileMap(this.currentRoomName);
         let success = false;
@@ -9456,57 +9759,7 @@ class Settings {
     }
 }
 
-/**
- * A sound effects palette.
- **/
-class SFX extends EventTarget {
-
-    /**
-     * Creates a new sound effects palette.
-     * 
-     * NOTE: sound effects are not spatialized.
-     **/
-    constructor() {
-        super();
-
-        /** @type {Map.<string, Audio>} */
-        this.clips = new Map();
-    }
-
-    /**
-     * Creates a new sound effect from a series of fallback paths
-     * for media files.
-     * @param {string} name - the name of the sound effect, to reference when executing playback.
-     * @param {string[]} paths - a series of fallback paths for loading the media of the sound effect.
-     * @returns {SFX}
-     */
-    add(name, ...paths) {
-        const sources = paths
-            .map((p) => src(p))
-            .map((s) => Source(s));
-
-        const elem = Audio(
-            controls(false),
-            playsInline,
-            ...sources);
-
-        this.clips.set(name, elem);
-        return this;
-    }
-
-    /**
-     * Plays a named sound effect.
-     * @param {string} name - the name of the effect to play.
-     * @param {number} [volume=1] - the volume at which to play the effect.
-     */
-    play(name, volume = 1) {
-        if (this.clips.has(name)) {
-            const clip = this.clips.get(name);
-            clip.volume = volume;
-            clip.play();
-        }
-    }
-}
+const versionString = "Calla v0.2.15";
 
 console.log(`${versionString}`);
 /** @type {Element} */
@@ -9517,7 +9770,6 @@ if (versionContainer) {
         versionContainer.childNodes[0]);
     versionContainer.childNodes[1].style.display = "inline-block";
 }
-
 
 
 /**
@@ -9610,23 +9862,23 @@ function init(client) {
         }
     }
 
-    document.body.style.display = "grid";
-    document.body.style.gridTemplateRows = "auto 1fr auto";
+    gridRowsDef("auto", "1fr", "auto").apply(document.body);
+
     let z = 0;
     for (let e of forAppend) {
         if (e.element) {
             let g = null;
             if (e === headbar) {
-                g = gridSpan(1, 1);
+                g = gridPos(1, 1);
             }
             else if (e === footbar) {
-                g = gridSpan(1, 3);
+                g = gridPos(1, 3);
             }
             else if (e === game || e === login) {
-                g = gridSpan(1, 1, 1, 3);
+                g = gridPos(1, 1, 1, 3);
             }
             else {
-                g = gridSpan(1, 2);
+                g = gridPos(1, 2);
             }
             g.apply(e.element);
             e.element.style.zIndex = (z++);
@@ -9680,14 +9932,10 @@ function init(client) {
         toggleInstructions: showView(login),
         toggleUserDirectory: showView(directory),
 
-        toggleFullscreen: () => {
-            headbar.isFullscreen = !headbar.isFullscreen;
-        },
-
         tweet: () => {
             const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
                 url = new URL("https://twitter.com/intent/tweet?text=" + message);
-            open(url);
+            window.open(url);
         },
 
         leave: () => {
@@ -9724,7 +9972,7 @@ function init(client) {
 
         window.location.hash = login.roomName;
 
-        await game.startAsync(joinInfo);
+        await game.startAsync(joinInfo.id, joinInfo.displayName, joinInfo.avatarURL, joinInfo.roomName);
 
         client.avatarURL
             = game.me.avatarImage
@@ -9740,11 +9988,11 @@ function init(client) {
         options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
 
         const audioMuted = client.isAudioMuted;
-        game.muteUserAudio({ id: client.localUser, muted: audioMuted });
+        game.muteUserAudio(client.localUser, audioMuted);
         footbar.audioEnabled = !audioMuted;
 
         const videoMuted = client.isVideoMuted;
-        game.muteUserVideo({ id: client.localUser, muted: videoMuted });
+        game.muteUserVideo(client.localUser, videoMuted);
         footbar.videoEnabled = !videoMuted;
     });
 
@@ -9772,11 +10020,27 @@ function init(client) {
         },
 
         toggleDrawHearing: () => {
-            settings.drawHearing = game.drawHearing = options.drawHearing;
+            settings.drawHearing
+                = game.drawHearing
+                = options.drawHearing;
         },
 
         fontSizeChanged: () => {
-            settings.fontSize = game.fontSize = options.fontSize;
+            settings.fontSize
+                = game.fontSize
+                = options.fontSize;
+        },
+
+        gamepadChanged: () => {
+            settings.gamepadIndex
+                = game.gamepadIndex
+                = options.gamepadIndex;
+        },
+
+        inputBindingChanged: () => {
+            settings.inputBinding
+                = game.inputBinding
+                = options.inputBinding;
         },
 
         audioInputChanged: async () => {
@@ -9799,14 +10063,6 @@ function init(client) {
 
         toggleVideo: async () => {
             await client.toggleVideoMutedAsync();
-        },
-
-        gamepadChanged: () => {
-            settings.gamepadIndex = game.gamepadIndex = options.gamepadIndex;
-        },
-
-        inputBindingChanged: () => {
-            settings.inputBinding = game.inputBinding = options.inputBinding;
         }
     });
 
@@ -9835,7 +10091,7 @@ function init(client) {
         },
 
         gameStarted: () => {
-            gridSpan(1, 2).apply(login.element);
+            gridPos(1, 2).apply(login.element);
             login.hide();
             headbar.enabled = true;
             footbar.enabled = true;
@@ -9847,16 +10103,17 @@ function init(client) {
                 client.setLocalPosition(evt.x, evt.y);
             });
 
-            client.avatarEmoji
+            settings.avatarEmoji
+                = client.avatarEmoji
                 = options.avatarEmoji
                 = game.me.avatarEmoji
-                = settings.avatarEmoji;
+                = settings.avatarEmoji || allPeople.random();
 
             refreshUser(game.me.id);
         },
 
         gameEnded: () => {
-            gridSpan(1, 1, 1, 3).apply(login.element);
+            gridPos(1, 1, 1, 3).apply(login.element);
             game.hide();
             login.connected = false;
             showLogin();
@@ -9871,7 +10128,6 @@ function init(client) {
         if (game.users.has(evt.id)) {
             const user = game.users.get(evt.id);
             game.warpMeTo(user.position._tx, user.position._ty);
-            directory.hide();
         }
     });
 
@@ -9883,7 +10139,7 @@ function init(client) {
 
         participantJoined: (evt) => {
             sound.play("join", 0.5);
-            game.addUser(evt);
+            game.addUser(evt.id, evt.displayName);
         },
 
         videoAdded: (evt) => {
@@ -9898,8 +10154,8 @@ function init(client) {
 
         participantLeft: (evt) => {
             sound.play("leave", 0.5);
-            game.removeUser(evt);
-            client.removeUser(evt);
+            game.removeUser(evt.id);
+            client.removeUser(evt.id);
             directory.delete(evt.id);
         },
 
@@ -9909,12 +10165,12 @@ function init(client) {
         },
 
         displayNameChange: (evt) => {
-            game.changeUserName(evt);
+            game.changeUserName(evt.id, evt.displayName);
             refreshUser(evt.id);
         },
 
         audioMuteStatusChanged: async (evt) => {
-            game.muteUserAudio(evt);
+            game.muteUserAudio(evt.id, evt.muted);
             if (evt.id === client.localUser) {
                 footbar.audioEnabled = !evt.muted;
                 options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
@@ -9922,7 +10178,7 @@ function init(client) {
         },
 
         videoMuteStatusChanged: async (evt) => {
-            game.muteUserVideo(evt);
+            game.muteUserVideo(evt.id, evt.muted);
             if (evt.id === client.localUser) {
                 footbar.videoEnabled = !evt.muted;
                 if (evt.muted) {
@@ -9972,7 +10228,7 @@ function init(client) {
         },
 
         audioActivity: (evt) => {
-            game.updateAudioActivity(evt);
+            game.updateAudioActivity(evt.id, evt.isActive);
         }
     });
 
@@ -17448,7 +17704,7 @@ class BaseSpatializer extends BaseAudioElement {
      * of an audio element to the listener destination.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {MediaStream} stream
+     * @param {MediaStream|HTMLAudioElement} stream
      * @param {BasePosition} position
      */
     constructor(userID, destination, stream, position) {
@@ -17459,14 +17715,23 @@ class BaseSpatializer extends BaseAudioElement {
         this.volume = 1;
         this.pan = 0;
 
-        this.stream = stream;
-        this.audio = Audio(
-            srcObject(this.stream),
-            muted,
-            autoPlay,
-            playsInline,
-            onLoadedMetadata(() =>
-                this.audio.play()));
+        if (stream instanceof HTMLAudioElement) {
+            this.audio = stream;
+        }
+        else if (stream instanceof MediaStream) {
+            this.stream = stream;
+            this.audio = Audio(
+                srcObject(this.stream),
+                muted);
+        }
+        else {
+            throw new Error("Can't create a node from the given stream. Expected type HTMLAudioElement or MediaStream.");
+        }
+
+        this.audio.autoPlay = true;
+        this.audio.playsInline = true;
+        this.audio.addEventListener("onloadedmetadata", () =>
+            this.audio.play());
     }
 
     /**
@@ -17565,7 +17830,7 @@ class BaseAnalyzedSpatializer extends BaseSpatializer {
      * 
      * @param {string} userID
      * @param {Destination} destination
-     * @param {MediaStream} stream
+     * @param {MediaStream|HTMLAudioElement} stream
      * @param {BasePosition} position
      * @param {number} bufferSize
      * @param {PannerNode|StereoPannerNode} inNode
@@ -17592,22 +17857,32 @@ class BaseAnalyzedSpatializer extends BaseSpatializer {
         /** @type {MediaSource} */
         this.source = null;
 
-        /** @type {MediaStream} */
-        this.stream = stream;
         this.checkStream();
     }
 
     checkStream() {
         if (!this.source) {
-            try {
-                if (this.stream.active) {
-                    this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
+            if (this.stream) {
+                try {
+                    if (this.stream.active) {
+                        this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
+                        this.source.connect(this.analyser);
+                        this.source.connect(this.inNode);
+                    }
+                }
+                catch (exp) {
+                    console.warn("Creating the media stream failed. Reason: ", exp);
+                }
+            }
+            else if (this.audio) {
+                try {
+                    this.source = this.destination.audioContext.createMediaElementSource(this.audio);
                     this.source.connect(this.analyser);
                     this.source.connect(this.inNode);
                 }
-            }
-            catch (exp) {
-                console.warn("Creating the media stream failed. Reason: ", exp);
+                catch (exp) {
+                    console.warn("Creating the media stream failed. Reason: ", exp);
+                }
             }
         }
     }
@@ -17650,7 +17925,6 @@ class BaseAnalyzedSpatializer extends BaseSpatializer {
         }
 
         this.source = null;
-        this.stream = null;
         this.inNode = null;
         this.analyser = null;
         this.buffer = null;
@@ -17668,7 +17942,7 @@ class BaseWebAudioSpatializer extends BaseAnalyzedSpatializer {
      * Creates a new spatializer that uses the WebAudio API
      * @param {string} userID
      * @param {Destination} destination
-     * @param {MediaStream} stream
+     * @param {MediaStream|HTMLAudioElement} stream
      * @param {BasePosition} position
      * @param {number} bufferSize
      * @param {PannerNode|StereoPannerNode} inNode
@@ -17709,7 +17983,7 @@ class BasePannerSpatializer extends BaseWebAudioSpatializer {
      * Creates a new spatializer that uses WebAudio's PannerNode.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {MediaStream} stream
+     * @param {MediaStream|HTMLAudioElement} stream
      * @param {number} bufferSize
      * @param {Function} createPosition
      */
@@ -17748,7 +18022,7 @@ class NewPannerSpatializer extends BasePannerSpatializer {
      * Creates a new spatializer that uses WebAudio's PannerNode.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {MediaStream} stream
+     * @param {MediaStream|HTMLAudioElement} stream
      * @param {number} bufferSize
      * @param {boolean} forceInterpolatedPosition
      */
@@ -17767,7 +18041,7 @@ class GoogleResonanceAudioSpatializer extends BaseAnalyzedSpatializer {
      * Creates a new spatializer that uses Google's Resonance Audio library.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {MediaStream} stream
+     * @param {MediaStream|HTMLAudioElement} stream
      * @param {number} bufferSize
      */
     constructor(userID, destination, stream, bufferSize) {
@@ -17818,7 +18092,7 @@ class StereoSpatializer extends BaseWebAudioSpatializer {
      * Creates a new spatializer that performs stereo panning and volume scaling.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {MediaStream} stream
+     * @param {MediaStream|HTMLAudioElement} stream
      * @param {number} bufferSize
      */
     constructor(userID, destination, stream, bufferSize) {
@@ -17848,7 +18122,7 @@ class VolumeOnlySpatializer extends BaseSpatializer {
      * Creates a new spatializer that only modifies volume.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {MediaStream} stream
+     * @param {MediaStream|HTMLAudioElement} stream
      */
     constructor(userID, destination, stream) {
         super(userID, destination, stream, new InterpolatedPosition());
@@ -17874,7 +18148,7 @@ class OldPannerSpatializer extends BasePannerSpatializer {
      * Creates a new spatializer that uses WebAudio's PannerNode.
      * @param {string} userID
      * @param {Destination} destination
-     * @param {MediaStream} stream
+     * @param {MediaStream|HTMLAudioElement} stream
      * @param {number} bufferSize
      * @param {boolean} forceInterpolatedPosition
      */
@@ -17968,12 +18242,12 @@ class Destination extends BaseAudioElement {
     /**
      * Creates a spatializer for an audio source, and initializes its audio properties.
      * @param {string} userID
-     * @param {HTMLAudioElement} audio
+     * @param {MediaStream|HTMLAudioElement} stream
      * @param {number} bufferSize
      * @return {BaseSpatializer}
      */
-    createSpatializer(userID, audio, bufferSize) {
-        const spatializer = this._createSpatializer(userID, audio, bufferSize);
+    createSpatializer(userID, stream, bufferSize) {
+        const spatializer = this._createSpatializer(userID, stream, bufferSize);
         if (spatializer) {
             spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
         }
@@ -17985,14 +18259,14 @@ class Destination extends BaseAudioElement {
      * Creates a spatialzer for an audio source.
      * @private
      * @param {string} id - the user for which the audio source is being created.
-     * @param {HTMLAudioElement} audio - the audio element that is being spatialized.
+     * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
      * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
      * @return {BaseSpatializer}
      */
-    _createSpatializer(id, audio, bufferSize) {
+    _createSpatializer(id, stream, bufferSize) {
         if (attemptResonanceAPI) {
             try {
-                return new GoogleResonanceAudioSpatializer(id, this, audio, bufferSize);
+                return new GoogleResonanceAudioSpatializer(id, this, stream, bufferSize);
             }
             catch (exp) {
                 attemptResonanceAPI = false;
@@ -18003,7 +18277,7 @@ class Destination extends BaseAudioElement {
         if (!attemptResonanceAPI && hasFullSpatializer) {
             if (isLatestWebAudioAPI) {
                 try {
-                    return new NewPannerSpatializer(id, this, audio, bufferSize, forceInterpolatedPosition);
+                    return new NewPannerSpatializer(id, this, stream, bufferSize, forceInterpolatedPosition);
                 }
                 catch (exp) {
                     isLatestWebAudioAPI = false;
@@ -18013,7 +18287,7 @@ class Destination extends BaseAudioElement {
 
             if (!isLatestWebAudioAPI) {
                 try {
-                    return new OldPannerSpatializer(id, this, audio, bufferSize);
+                    return new OldPannerSpatializer(id, this, stream, bufferSize);
                 }
                 catch (exp) {
                     hasFullSpatializer = false;
@@ -18024,7 +18298,7 @@ class Destination extends BaseAudioElement {
 
         if (!attemptResonanceAPI && !hasFullSpatializer && hasWebAudioAPI) {
             try {
-                return new StereoSpatializer(id, this, audio, bufferSize);
+                return new StereoSpatializer(id, this, stream, bufferSize);
             }
             catch (exp) {
                 hasWebAudioAPI = false;
@@ -18040,7 +18314,7 @@ class Destination extends BaseAudioElement {
         }
 
         if (!attemptResonanceAPI && !hasFullSpatializer && !hasWebAudioAPI) {
-            return new VolumeOnlySpatializer(id, this, audio);
+            return new VolumeOnlySpatializer(id, this, stream);
         }
     }
 }
@@ -18118,20 +18392,21 @@ class AudioManager extends BaseAudioClient {
         Object.seal(this);
     }
 
-    /** Perform the audio system initialization, after a user gesture */
+    /** 
+     * Perform the audio system initialization, after a user gesture 
+     **/
     start() {
         this.destination.createContext();
         this.timer.start();
     }
 
     /**
-     *
      * @param {string} userID
-     * @param {HTMLAudioElement} audio
+     * @param {MediaStream|HTMLAudioElement} stream
      * @return {BaseSpatializer}
-     */
-    createSource(userID, audio) {
-        const source = this.destination.createSpatializer(userID, audio, BUFFER_SIZE);
+     **/
+    createSource(userID, stream) {
+        const source = this.destination.createSpatializer(userID, stream, BUFFER_SIZE);
         source.addEventListener("audioActivity", this.onAudioActivity);
         this.sources.set(userID, source);
         return source;
@@ -18143,7 +18418,7 @@ class AudioManager extends BaseAudioClient {
      * @param {number} maxDistance
      * @param {number} rolloff
      * @param {number} transitionTime
-     */
+     **/
     setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
         this.destination.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
         for (let source of this.sources.values()) {
@@ -18154,7 +18429,7 @@ class AudioManager extends BaseAudioClient {
     /**
      * Set the audio device used to play audio to the local user.
      * @param {string} deviceID
-     */
+     **/
     setAudioOutputDevice(deviceID) {
         for (let source of this.sources.values()) {
             source.setAudioOutputDevice(deviceID);
@@ -18164,7 +18439,7 @@ class AudioManager extends BaseAudioClient {
     /**
      * Remove a user from audio processing.
      * @param {string} id - the id of the user to remove
-     */
+     **/
     removeSource(id) {
         if (this.sources.has(id)) {
             const source = this.sources.get(id);
@@ -18177,7 +18452,7 @@ class AudioManager extends BaseAudioClient {
      * Set the position of the listener.
      * @param {number} x - the horizontal component of the position.
      * @param {number} y - the vertical component of the position.
-     */
+     **/
     setLocalPosition(x, y) {
         this.destination.setTarget(x, y);
     }
@@ -18187,7 +18462,7 @@ class AudioManager extends BaseAudioClient {
      * @param {string} id - the id of the user for which to set the position.
      * @param {number} x - the horizontal component of the position.
      * @param {number} y - the vertical component of the position.
-     */
+     **/
     setUserPosition(id, x, y) {
         if (this.sources.has(id)) {
             const source = this.sources.get(id);
