@@ -13,14 +13,6 @@ import { Settings } from "./Settings.js";
 import { versionString } from "./version.js";
 
 console.log(`${versionString}`);
-/** @type {Element} */
-const versionContainer = document.querySelector("#login h1");
-if (versionContainer) {
-    versionContainer.replaceChild(
-        document.createTextNode(versionString),
-        versionContainer.childNodes[0]);
-    versionContainer.childNodes[1].style.display = "inline-block";
-}
 
 
 /**

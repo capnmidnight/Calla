@@ -1,3 +1,4 @@
-node writeversion.js
+cmd /C node writeversion.js
 cmd /C rollup -c
-minify bundle.js > bundle.min.js
+cmd /C minify bundle.js > bundle.min.js
+cmd /C minify version.js > version.min.js
