@@ -3,7 +3,7 @@ import { AvatarMode, BaseAvatar } from "./avatars/BaseAvatar.js";
 import { EmojiAvatar } from "./avatars/EmojiAvatar.js";
 import { PhotoAvatar } from "./avatars/PhotoAvatar.js";
 import { VideoAvatar } from "./avatars/VideoAvatar.js";
-import { allPeople as people, bust, mutedSpeaker, speakerMediumVolume } from "./emoji/emoji.js";
+import { bust, mutedSpeaker, speakerMediumVolume } from "./emoji/emoji.js";
 import { TextImage } from "./graphics/TextImage.js";
 import { project } from "./math.js";
 import "./protos.js";
@@ -32,7 +32,7 @@ export class User extends EventTarget {
         /** @type {AvatarMode} */
         this.setAvatarVideo(null);
         this.avatarImage = null;
-        this.avatarEmoji = isMe ? people.random() : bust;
+        this.avatarEmoji = bust;
 
         this.audioMuted = false;
         this.videoMuted = true;

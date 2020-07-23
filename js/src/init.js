@@ -1,15 +1,5 @@
-﻿import { versionString } from "./version.js";
-console.log(`${versionString}`);
-/** @type {Element} */
-const versionContainer = document.querySelector("#login h1");
-if (versionContainer) {
-    versionContainer.replaceChild(
-        document.createTextNode(versionString),
-        versionContainer.childNodes[0]);
-    versionContainer.childNodes[1].style.display = "inline-block";
-}
-
-
+﻿import { SFX } from "./audio/SFX.js";
+import { allPeople as people } from "./emoji/emoji.js";
 import { EmojiForm } from "./forms/EmojiForm.js";
 import { FooterBar } from "./forms/FooterBar.js";
 import { HeaderBar } from "./forms/HeaderBar.js";
@@ -20,8 +10,17 @@ import { Game } from "./Game.js";
 import { gridPos, gridRowsDef } from "./html/grid.js";
 import { BaseJitsiClient } from "./jitsi/BaseJitsiClient.js";
 import { Settings } from "./Settings.js";
-import { SFX } from "./audio/SFX.js";
+import { versionString } from "./version.js";
 
+console.log(`${versionString}`);
+/** @type {Element} */
+const versionContainer = document.querySelector("#login h1");
+if (versionContainer) {
+    versionContainer.replaceChild(
+        document.createTextNode(versionString),
+        versionContainer.childNodes[0]);
+    versionContainer.childNodes[1].style.display = "inline-block";
+}
 
 
 /**
@@ -355,10 +354,11 @@ export function init(client) {
                 client.setLocalPosition(evt.x, evt.y);
             });
 
-            client.avatarEmoji
+            settings.avatarEmoji
+                = client.avatarEmoji
                 = options.avatarEmoji
                 = game.me.avatarEmoji
-                = settings.avatarEmoji;
+                = settings.avatarEmoji || people.random();
 
             refreshUser(game.me.id);
         },
