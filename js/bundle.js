@@ -9759,17 +9759,9 @@ class Settings {
     }
 }
 
-const versionString = "Calla v0.2.15";
+const versionString = "Calla v0.2.16";
 
 console.log(`${versionString}`);
-/** @type {Element} */
-const versionContainer = document.querySelector("#login h1");
-if (versionContainer) {
-    versionContainer.replaceChild(
-        document.createTextNode(versionString),
-        versionContainer.childNodes[0]);
-    versionContainer.childNodes[1].style.display = "inline-block";
-}
 
 
 /**
@@ -10362,7 +10354,7 @@ class MockAudioContext {
 		var a = factory();
 		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
 	}
-})(undefined || window, function() {
+})(window, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
