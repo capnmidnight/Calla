@@ -9215,6 +9215,7 @@ class BaseJitsiClient extends EventTarget {
         const devices = await this.getVideoInputDevicesAsync();
         const device = arrayScan(devices,
             (d) => d.deviceId === this.preferredVideoInputID,
+            (d) => allowAny && d && /front/i.test(d.label),
             (d) => allowAny && d && d.deviceId);
         if (device) {
             this.preferredVideoInputID = device.deviceId;
@@ -9759,7 +9760,7 @@ class Settings {
     }
 }
 
-const versionString = "Calla v0.2.16";
+const versionString = "Calla v0.2.17";
 
 console.log(`${versionString}`);
 
