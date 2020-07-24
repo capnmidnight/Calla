@@ -1,6 +1,11 @@
 ﻿import { setContextSize } from "../html/canvas.js";
 import { CanvasOffscreen } from "../html/tags.js";
 
+/**
+ * @type {WeakMap<TextImage, TextImagePrivate>}
+ **/
+const selfs = new WeakMap();
+
 class TextImagePrivate {
     /**
      * @param {string} fontFamily
@@ -54,11 +59,6 @@ class TextImagePrivate {
         }
     }
 }
-
-/**
- * @type {WeakMap<TextImage, TextImagePrivate>}
- **/
-const selfs = new WeakMap();
 
 export class TextImage {
     /**

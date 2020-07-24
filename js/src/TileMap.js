@@ -2,6 +2,9 @@
 import { Graph, astar } from "../lib/astar.js";
 import { TileSet } from "./TileSet.js";
 
+/** @type {WeakMap<TileMap, TileMapPrivate>} */
+const selfs = new WeakMap();
+
 class TileMapPrivate {
     constructor(tilemapName) {
         this.url = new URL(`/data/tilemaps/${tilemapName}.tmx`, document.location);
@@ -20,8 +23,6 @@ class TileMapPrivate {
         Object.seal(this);
     }
 }
-
-const selfs = new WeakMap();
 
 export class TileMap {
     constructor(tilemapName) {

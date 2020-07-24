@@ -3,39 +3,46 @@ import { SelectBox } from "../html/tags.js";
 import { FormDialog } from "./FormDialog.js";
 
 const defaultRooms = new Map([
-        ["calla", "Calla"],
-        ["island", "Island"],
-        ["alxcc", "Alexandria Code & Coffee"],
-        ["vurv", "Vurv"]]),
-    selfs = new WeakMap();
+    ["calla", "Calla"],
+    ["island", "Island"],
+    ["alxcc", "Alexandria Code & Coffee"],
+    ["vurv", "Vurv"]]);
+
+/** @type {WeakMap<LoginForm, LoginFormPrivate>} */
+const selfs = new WeakMap();
+
+class LoginFormPrivate {
+    constructor(parent) {
+        this.ready = false;
+        this.connecting = false;
+        this.connected = false;
+
+        this.parent = parent;
+    }
+
+    validate() {
+        const canConnect = this.parent.roomName.length > 0
+            && this.parent.userName.length > 0;
+
+        this.parent.connectButton.setLocked(!this.ready
+            || this.connecting
+            || this.connected
+            || !canConnect);
+        this.parent.connectButton.innerHTML =
+            this.connected
+                ? "Connected"
+                : this.connecting
+                    ? "Connecting..."
+                    : this.ready
+                        ? "Connect"
+                        : "Loading...";
+    }
+}
 
 export class LoginForm extends FormDialog {
     constructor() {
         super("login", "Login");
-
-        const self = Object.seal({
-            ready: false,
-            connecting: false,
-            connected: false,
-            validate: () => {
-                const canConnect = this.roomName.length > 0
-                    && this.userName.length > 0;
-
-                this.connectButton.setLocked(!this.ready
-                    || this.connecting
-                    || this.connected
-                    || !canConnect);
-                this.connectButton.innerHTML =
-                    this.connected
-                        ? "Connected"
-                        : this.connecting
-                            ? "Connecting..."
-                            : this.ready
-                                ? "Connect"
-                                : "Loading...";
-            }
-        });
-
+        const self = new LoginFormPrivate(this);
         selfs.set(this, self);
 
         this.roomLabel = this.element.querySelector("label[for='roomSelector']");

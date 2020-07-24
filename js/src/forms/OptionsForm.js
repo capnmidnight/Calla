@@ -32,8 +32,20 @@ const keyWidthStyle = width("7em"),
     }),
     gamepadAxisMaxedEvt = Object.assign(new Event("gamepadaxismaxed"), {
         axis: 0
-    }),
-    selfs = new WeakMap();
+    });
+
+/** @type {WeakMap<OptionsForm, OptionsFormPrivate>} */
+const selfs = new WeakMap();
+
+class OptionsFormPrivate {
+    constructor() {
+        this.inputBinding = new InputBinding();
+        this.timer = new RequestAnimationFrameTimer();
+
+        /** @type {EventedGamepad} */
+        this.pad = null;
+    }
+}
 
 export class OptionsForm extends FormDialog {
     constructor() {
@@ -41,14 +53,7 @@ export class OptionsForm extends FormDialog {
 
         const _ = (evt) => () => this.dispatchEvent(evt);
 
-        const self = {
-            inputBinding: new InputBinding(),
-            timer: new RequestAnimationFrameTimer(),
-
-            /** @type {EventedGamepad} */
-            pad: null
-        };
-
+        const self = new OptionsFormPrivate();
         selfs.set(this, self);
 
         const audioPropsChanged = onInput(_(audioPropsChangedEvt));

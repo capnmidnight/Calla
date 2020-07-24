@@ -4,7 +4,17 @@ import { Span } from "../html/tags.js";
 import { title } from "../html/attrs.js";
 import { TextImage } from "../graphics/TextImage.js";
 
+/** @type {WeakMap<EmojiAvatar, EmojiAvatarPrivate>} */
 const selfs = new WeakMap();
+
+class EmojiAvatarPrivate {
+    constructor(emoji) {
+        this.canSwim = isSurfer(emoji);
+        this.x = 0;
+        this.y = 0;
+        this.aspectRatio = null;
+    }
+}
 
 /**
  * An avatar that uses a Unicode emoji as its representation
@@ -20,19 +30,13 @@ export class EmojiAvatar extends BaseAvatar {
             title(emoji.desc),
             emoji.value));
 
-        const self = {
-            canSwim: isSurfer(emoji),
-            x: 0,
-            y: 0,
-            aspectRatio: null
-        }
+        const self = new EmojiAvatarPrivate(emoji);
+        selfs.set(this, self);
 
         this.value = emoji.value;
         this.desc = emoji.desc;
         this.emojiText = new TextImage("sans-serif");
         this.emojiText.color = emoji.color || "black";
-
-        selfs.set(this, self);
     }
 
     /**

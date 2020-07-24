@@ -1,23 +1,35 @@
-﻿const selfs = new WeakMap(),
-    KEY = "CallaSettings",
-    DEFAULT_SETTINGS = {
-        drawHearing: false,
-        audioDistanceMin: 1,
-        audioDistanceMax: 10,
-        audioRolloff: 1,
-        fontSize: 12,
-        transitionSpeed: 1,
-        zoom: 1.5,
-        roomName: "calla",
-        userName: "",
-        avatarEmoji: null,
-        avatarURL: null,
-        gamepadIndex: 0,
-        preferredAudioOutputID: null,
-        preferredAudioInputID: null,
-        preferredVideoInputID: null,
+﻿const KEY = "CallaSettings";
 
-        inputBinding: {
+/** @type {WeakMap<Settings, SettingsPrivate>} */
+const selfs = new WeakMap();
+
+class SettingsPrivate {
+    constructor() {
+        this.drawHearing = false;
+        this.audioDistanceMin = 1;
+        this.audioDistanceMax = 10;
+        this.audioRolloff = 1;
+        this.fontSize = 12;
+        this.transitionSpeed = 1;
+        this.zoom = 1.5;
+        this.roomName = "calla";
+        this.userName = "";
+        this.avatarEmoji = null;
+
+        /** @type {string} */
+        this.avatarURL = null;
+        this.gamepadIndex = 0;
+
+        /** @type {string} */
+        this.preferredAudioOutputID = null;
+
+        /** @type {string} */
+        this.preferredAudioInputID = null;
+
+        /** @type {string} */
+        this.preferredVideoInputID = null;
+
+        this.inputBinding = {
             keyButtonUp: "ArrowUp",
             keyButtonDown: "ArrowDown",
             keyButtonLeft: "ArrowLeft",
@@ -31,28 +43,28 @@
             gpButtonRight: 15,
             gpButtonEmote: 0,
             gpButtonToggleAudio: 1
+        };
+
+        const selfStr = localStorage.getItem(KEY);
+        if (selfStr) {
+            Object.assign(
+                this,
+                JSON.parse(selfStr));
         }
-    };
 
-function commit(settings) {
-    const self = selfs.get(settings);
-    localStorage.setItem(KEY, JSON.stringify(self));
-}
+        Object.seal(this);
+    }
 
-function load() {
-    const selfStr = localStorage.getItem(KEY);
-    if (selfStr) {
-        return Object.assign(
-            {},
-            DEFAULT_SETTINGS,
-            JSON.parse(selfStr));
+    commit() {
+        localStorage.setItem(KEY, JSON.stringify(this));
     }
 }
 
 export class Settings {
     constructor() {
-        const self = Object.seal(load() || DEFAULT_SETTINGS);
+        const self = new SettingsPrivate();
         selfs.set(this, self);
+
         if (window.location.hash.length > 0) {
             self.roomName = window.location.hash.substring(1);
         }
@@ -65,8 +77,9 @@ export class Settings {
 
     set preferredAudioOutputID(value) {
         if (value !== this.preferredAudioOutputID) {
-            selfs.get(this).preferredAudioOutputID = value;
-            commit(this);
+            const self = selfs.get(this);
+            self.preferredAudioOutputID = value;
+            self.commit();
         }
     }
 
@@ -76,8 +89,9 @@ export class Settings {
 
     set preferredAudioInputID(value) {
         if (value !== this.preferredAudioInputID) {
-            selfs.get(this).preferredAudioInputID = value;
-            commit(this);
+            const self = selfs.get(this);
+            self.preferredAudioInputID = value;
+            self.commit();
         }
     }
 
@@ -87,8 +101,9 @@ export class Settings {
 
     set preferredVideoInputID(value) {
         if (value !== this.preferredVideoInputID) {
-            selfs.get(this).preferredVideoInputID = value;
-            commit(this);
+            const self = selfs.get(this);
+            self.preferredVideoInputID = value;
+            self.commit();
         }
     }
 
@@ -98,8 +113,9 @@ export class Settings {
 
     set transitionSpeed(value) {
         if (value !== this.transitionSpeed) {
-            selfs.get(this).transitionSpeed = value;
-            commit(this);
+            const self = selfs.get(this);
+            self.transitionSpeed = value;
+            self.commit();
         }
     }
 
@@ -109,8 +125,9 @@ export class Settings {
 
     set drawHearing(value) {
         if (value !== this.drawHearing) {
-            selfs.get(this).drawHearing = value;
-            commit(this);
+            const self = selfs.get(this);
+            self.drawHearing = value;
+            self.commit();
         }
     }
 
@@ -120,8 +137,9 @@ export class Settings {
 
     set audioDistanceMin(value) {
         if (value !== this.audioDistanceMin) {
-            selfs.get(this).audioDistanceMin = value;
-            commit(this);
+            const self = selfs.get(this);
+            self.audioDistanceMin = value;
+            self.commit();
         }
     }
 
@@ -131,8 +149,9 @@ export class Settings {
 
     set audioDistanceMax(value) {
         if (value !== this.audioDistanceMax) {
-            selfs.get(this).audioDistanceMax = value;
-            commit(this);
+            const self = selfs.get(this);
+            self.audioDistanceMax = value;
+            self.commit();
         }
     }
 
@@ -142,8 +161,9 @@ export class Settings {
 
     set audioRolloff(value) {
         if (value !== this.audioRolloff) {
-            selfs.get(this).audioRolloff = value;
-            commit(this);
+            const self = selfs.get(this);
+            self.audioRolloff = value;
+            self.commit();
         }
     }
 
@@ -153,8 +173,9 @@ export class Settings {
 
     set fontSize(value) {
         if (value !== this.fontSize) {
-            selfs.get(this).fontSize = value;
-            commit(this);
+            const self = selfs.get(this);
+            self.fontSize = value;
+            self.commit();
         }
     }
 
@@ -164,8 +185,9 @@ export class Settings {
 
     set zoom(value) {
         if (value !== this.zoom) {
-            selfs.get(this).zoom = value;
-            commit(this);
+            const self = selfs.get(this);
+            self.zoom = value;
+            self.commit();
         }
     }
 
@@ -175,8 +197,9 @@ export class Settings {
 
     set userName(value) {
         if (value !== this.userName) {
-            selfs.get(this).userName = value;
-            commit(this);
+            const self = selfs.get(this);
+            self.userName = value;
+            self.commit();
         }
     }
 
@@ -186,8 +209,9 @@ export class Settings {
 
     set avatarEmoji(value) {
         if (value !== this.avatarEmoji) {
-            selfs.get(this).avatarEmoji = value;
-            commit(this);
+            const self = selfs.get(this);
+            self.avatarEmoji = value;
+            self.commit();
         }
     }
 
@@ -197,8 +221,9 @@ export class Settings {
 
     set avatarURL(value) {
         if (value !== this.avatarURL) {
-            selfs.get(this).avatarURL = value;
-            commit(this);
+            const self = selfs.get(this);
+            self.avatarURL = value;
+            self.commit();
         }
     }
 
@@ -208,8 +233,9 @@ export class Settings {
 
     set roomName(value) {
         if (value !== this.roomName) {
-            selfs.get(this).roomName = value;
-            commit(this);
+            const self = selfs.get(this);
+            self.roomName = value;
+            self.commit();
         }
     }
 
@@ -219,8 +245,9 @@ export class Settings {
 
     set gamepadIndex(value) {
         if (value !== this.gamepadIndex) {
-            selfs.get(this).gamepadIndex = value;
-            commit(this);
+            const self = selfs.get(this);
+            self.gamepadIndex = value;
+            self.commit();
         }
     }
 
@@ -230,8 +257,11 @@ export class Settings {
 
     set inputBinding(value) {
         if (value !== this.inputBinding) {
-            selfs.get(this).inputBinding = value;
-            commit(this);
+            const self = selfs.get(this);
+            for (let key in value) {
+                self.inputBinding[key] = value[key];
+            }
+            self.commit();
         }
     }
 }
