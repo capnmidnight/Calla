@@ -2,13 +2,12 @@
 import { SelectBox } from "../html/tags.js";
 import { FormDialog } from "./FormDialog.js";
 
-const loginEvt = new Event("login"),
-    defaultRooms = new Map([
+const defaultRooms = new Map([
         ["calla", "Calla"],
         ["island", "Island"],
         ["alxcc", "Alexandria Code & Coffee"],
         ["vurv", "Vurv"]]),
-    selfs = new Map();
+    selfs = new WeakMap();
 
 export class LoginForm extends FormDialog {
     constructor() {

@@ -1,4 +1,4 @@
-﻿const selfs = new Map(),
+﻿const selfs = new WeakMap(),
     KEY = "CallaSettings",
     DEFAULT_SETTINGS = {
         drawHearing: false,

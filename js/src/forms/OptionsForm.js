@@ -33,7 +33,7 @@ const keyWidthStyle = width("7em"),
     gamepadAxisMaxedEvt = Object.assign(new Event("gamepadaxismaxed"), {
         axis: 0
     }),
-    selfs = new Map();
+    selfs = new WeakMap();
 
 export class OptionsForm extends FormDialog {
     constructor() {
