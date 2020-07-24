@@ -311,7 +311,7 @@ export class Game extends EventTarget {
             }
 
             if (emoji) {
-                this.emotes.push(new Emote(emoji, user.position.x + 0.5, user.position.y));
+                this.emotes.push(new Emote(emoji, user.position.x, user.position.y));
             }
         }
     }
