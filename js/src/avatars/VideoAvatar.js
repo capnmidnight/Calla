@@ -9,15 +9,25 @@ import { BaseAvatar } from "./BaseAvatar.js";
 export class VideoAvatar extends BaseAvatar {
     /**
      * Creates a new avatar that uses a MediaStream as its representation.
-     * @param {MediaStream} stream
+     * @param {MediaStream|HTMLVideoElement} stream
      */
     constructor(stream) {
-        const video = Video(
-            autoPlay,
-            playsInline,
-            muted,
-            volume(0),
-            srcObject(stream));
+        let video = null;
+        if (stream instanceof HTMLVideoElement) {
+            video = stream;
+        }
+        else if (stream instanceof MediaStream) {
+            video = Video(
+                autoPlay,
+                playsInline,
+                muted,
+                volume(0),
+                srcObject(stream));
+        }
+        else {
+            throw new Error("Can only create a video avatar from an HTMLVideoElement or MediaStream.");
+        }
+
         super(video);
         if (!isIOS) {
             video.play();
