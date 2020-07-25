@@ -341,9 +341,9 @@ export function init(client) {
 
             setAudioProperties();
 
-            client.setLocalPosition(game.me.position.x, game.me.position.y);
+            client.setLocalPosition(game.me.gridX, 0, game.me.gridY);
             game.me.addEventListener("userMoved", (evt) => {
-                client.setLocalPosition(evt.x, evt.y);
+                client.setLocalPosition(evt.x, 0, evt.y);
             });
 
             settings.avatarEmoji
@@ -370,7 +370,7 @@ export function init(client) {
     directory.addEventListener("warpTo", (evt) => {
         if (game.users.has(evt.id)) {
             const user = game.users.get(evt.id);
-            game.warpMeTo(user.position._tx, user.position._ty);
+            game.warpMeTo(user.gridX, user.gridY);
         }
     });
 
@@ -398,7 +398,6 @@ export function init(client) {
         participantLeft: (evt) => {
             sound.play("leave", 0.5);
             game.removeUser(evt.id);
-            client.removeUser(evt.id);
             directory.delete(evt.id);
         },
 
@@ -447,7 +446,6 @@ export function init(client) {
             if (game.users.has(evt.id)) {
                 const user = game.users.get(evt.id);
                 user.deserialize(evt);
-                client.setUserPosition(evt.id, evt.x, evt.y);
                 refreshUser(evt.id);
             }
         },
@@ -455,8 +453,7 @@ export function init(client) {
         userMoved: (evt) => {
             if (game.users.has(evt.id)) {
                 const user = game.users.get(evt.id);
-                user.moveTo(evt.x, evt.y, settings.transitionSpeed);
-                client.setUserPosition(evt.id, evt.x, evt.y);
+                user.moveTo(evt.x, evt.z, settings.transitionSpeed);
             }
             refreshUser(evt.id);
         },

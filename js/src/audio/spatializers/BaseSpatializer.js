@@ -83,9 +83,11 @@ export class BaseSpatializer extends BaseAudioElement {
 
         const lx = this.destination.position.x,
             ly = this.destination.position.y,
+            lz = this.destination.position.z,
             distX = this.position.x - lx,
             distY = this.position.y - ly,
-            distSqr = distX * distX + distY * distY,
+            distZ = this.position.z - lz,
+            distSqr = distX * distX + distY * distY + distZ * distZ,
             dist = Math.sqrt(distSqr),
             distScale = project(dist, this.minDistance, this.maxDistance);
 

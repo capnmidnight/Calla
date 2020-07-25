@@ -33,6 +33,13 @@ export class WebAudioNewNodePosition extends BasePosition {
      *  The vertical component of the position.
      *  @type {number} */
     get y() {
+        return this.node.positionY.value;
+    }
+
+    /**
+     *  The lateral component of the position.
+     *  @type {number} */
+    get z() {
         return this.node.positionZ.value;
     }
 
@@ -40,19 +47,21 @@ export class WebAudioNewNodePosition extends BasePosition {
      * Set the target position for the time `t + dt`.
      * @param {number} x - the horizontal component of the position.
      * @param {number} y - the vertical component of the position.
-     * @param {number} t
-     * @param {number} dt
+     * @param {number} z - the lateral component of the position.
+     * @param {number} t - the time at which to start the transition.
+     * @param {number} dt - the amount of time to take making the transition.
      */
-    setTarget(x, y, t, dt) {
+    setTarget(x, y, z, t, dt) {
         if (this._p) {
-            this._p.setTarget(x, y, t, dt);
+            this._p.setTarget(x, y, z, t, dt);
         }
         else {
             const time = t + dt;
             // our 2D position is in X/Y coords, but our 3D position
             // along the horizontal plane is X/Z coords.
             this.node.positionX.linearRampToValueAtTime(x, time);
-            this.node.positionZ.linearRampToValueAtTime(y, time);
+            this.node.positionY.linearRampToValueAtTime(y, time);
+            this.node.positionZ.linearRampToValueAtTime(z, time);
         }
     }
 
@@ -65,7 +74,8 @@ export class WebAudioNewNodePosition extends BasePosition {
         if (this._p) {
             this._p.update(t);
             this.node.positionX.linearRampToValueAtTime(this._p.x, 0);
-            this.node.positionZ.linearRampToValueAtTime(this._p.y, 0);
+            this.node.positionY.linearRampToValueAtTime(this._p.y, 0);
+            this.node.positionZ.linearRampToValueAtTime(this._p.z, 0);
         }
     }
 }

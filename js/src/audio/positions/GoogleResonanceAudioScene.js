@@ -42,6 +42,6 @@ export class GoogleResonanceAudioScene extends InterpolatedPosition {
      */
     update(t) {
         super.update(t);
-        this.scene.setListenerPosition(this.x, 0, this.y);
+        this.scene.setListenerPosition(this.x, this.y, this.z);
     }
 }

@@ -3,6 +3,7 @@ import { AudioActivityEvent } from "./AudioActivityEvent.js";
 import { BaseAudioClient } from "./BaseAudioClient.js";
 import { Destination } from "./Destination.js";
 import { arrayClear } from "../protos/Array.js";
+import { BaseSpatializer } from "./spatializers/BaseSpatializer.js";
 
 const BUFFER_SIZE = 1024,
     audioActivityEvt = new AudioActivityEvent;
@@ -44,6 +45,7 @@ export class AudioManager extends BaseAudioClient {
                     id: source.id,
                     x: source.position.x,
                     y: source.position.y,
+                    z: source.position.z,
                     audio: source.audio
                 });
 
@@ -59,7 +61,7 @@ export class AudioManager extends BaseAudioClient {
 
             for (let recreate of recreationQ) {
                 const source = this.createSource(recreate.id, recreate.audio);
-                source.setTarget(recreate.x, recreate.y);
+                source.setPosition(recreate.x, recreate.y, recreate.z);
             }
 
             arrayClear(recreationQ);
@@ -137,9 +139,10 @@ export class AudioManager extends BaseAudioClient {
      * Set the position of the listener.
      * @param {number} x - the horizontal component of the position.
      * @param {number} y - the vertical component of the position.
-     **/
-    setLocalPosition(x, y) {
-        this.destination.setTarget(x, y);
+     * @param {number} z - the lateral component of the position.
+     */
+    setLocalPosition(x, y, z) {
+        this.destination.setPosition(x, y, z);
     }
 
     /**
@@ -147,11 +150,12 @@ export class AudioManager extends BaseAudioClient {
      * @param {string} id - the id of the user for which to set the position.
      * @param {number} x - the horizontal component of the position.
      * @param {number} y - the vertical component of the position.
+     * @param {number} z - the lateral component of the position.
      **/
-    setUserPosition(id, x, y) {
+    setUserPosition(id, x, y, z) {
         if (this.sources.has(id)) {
             const source = this.sources.get(id);
-            source.setTarget(x, y);
+            source.setPosition(x, y, z);
         }
     }
 }

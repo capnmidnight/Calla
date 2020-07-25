@@ -46,6 +46,18 @@ export class BaseJitsiClient extends EventTarget {
         this.preferredAudioOutputID = null;
         this.preferredAudioInputID = null;
         this.preferredVideoInputID = null;
+
+        this.addEventListener("userInitResponse", (evt) => {
+            this.setUserPosition(evt.id, evt.x, evt.y, evt.z);
+        });
+
+        this.addEventListener("userMoved", (evt) => {
+            this.setUserPosition(evt.id, evt.x, evt.y, evt.z);
+        });
+
+        this.addEventListener("participantLeft", (evt) => {
+            this.removeUser(evt.id);
+        });
     }
 
     get appFingerPrint() {
@@ -345,10 +357,10 @@ export class BaseJitsiClient extends EventTarget {
      * @param {number} x - the horizontal component of the position.
      * @param {number} y - the vertical component of the position.
      */
-    setLocalPosition(x, y) {
-        this.audioClient.setLocalPosition(x, y);
+    setLocalPosition(x, y, z) {
+        this.audioClient.setLocalPosition(x, y, z);
         for (let toUserID of this.userIDs()) {
-            this.sendMessageTo(toUserID, "userMoved", { x, y });
+            this.sendMessageTo(toUserID, "userMoved", { x, y, z });
         }
     }
 
@@ -357,13 +369,14 @@ export class BaseJitsiClient extends EventTarget {
      * @param {string} id - the id of the user for which to set the position.
      * @param {number} x - the horizontal component of the position.
      * @param {number} y - the vertical component of the position.
+     * @param {number} z - the lateral component of the position.
      */
-    setUserPosition(id, x, y) {
-        this.audioClient.setUserPosition(id, x, y);
+    setUserPosition(id, x, y, z) {
+        this.audioClient.setUserPosition(id, x, y, z);
     }
 
-    removeUser(evt) {
-        this.audioClient.removeSource(evt.id);
+    removeUser(id) {
+        this.audioClient.removeSource(id);
     }
 
     /**

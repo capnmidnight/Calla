@@ -41,7 +41,7 @@ export class GoogleResonanceAudioSpatializer extends BaseAnalyzedSpatializer {
      **/
     update() {
         super.update();
-        this.resNode.setPosition(this.position.x, 0, this.position.y);
+        this.resNode.setPosition(this.position.x, this.position.y, this.position.z);
     }
 
     /**

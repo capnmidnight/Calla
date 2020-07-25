@@ -54,6 +54,33 @@ export class User extends EventTarget {
         Object.seal(this);
     }
 
+    get x() {
+        return this.position.x;
+    }
+
+    get y() {
+        return this.position.z;
+    }
+
+    get gridX() {
+        return this.position._tx;
+    }
+
+    get gridY() {
+        return this.position._tz;
+    }
+
+    /**
+     * Set the position to which the user should move.
+     * @param {any} x - the horizontal component of the position.
+     * @param {any} y - the lateral component of the position.
+     * @param {any} t - the time at which to start the transition.
+     * @param {any} dt - the amount of time to take to perform the transition.
+     */
+    setTarget(x, y, t, dt) {
+        this.position.setTarget(x, 0, y, t, dt);
+    }
+
     deserialize(evt) {
         if (evt.displayName) {
             this.displayName = evt.displayName;
@@ -72,16 +99,17 @@ export class User extends EventTarget {
 
         if (isNumber(evt.x)
             && isNumber(evt.y)) {
-            this.position.setTarget(evt.x, evt.y, performance.now() / 1000, 0);
             this.isInitialized = true;
+            this.moveTo(evt.x, evt.z, 0);
         }
     }
 
     serialize() {
         return {
             id: this.id,
-            x: this.position._tx,
-            y: this.position._ty,
+            x: this.gridX,
+            y: 0,
+            z: this.gridY,
             displayName: this._displayName,
             avatarMode: this.avatarMode,
             avatarID: this.avatarID
@@ -233,7 +261,7 @@ export class User extends EventTarget {
                 this.dispatchEvent(this.moveEvent);
             }
 
-            this.position.setTarget(x, y, performance.now() / 1000, dt);
+            this.setTarget(x, y, performance.now() / 1000, dt);
         }
     }
 
@@ -253,8 +281,8 @@ export class User extends EventTarget {
         this.stackUserCount = 0;
         this.stackIndex = 0;
         for (let user of users.values()) {
-            if (user.position._tx === this.position._tx
-                && user.position._ty === this.position._ty) {
+            if (user.gridX === this.gridX
+                && user.gridY === this.gridY) {
                 if (user.id === this.id) {
                     this.stackIndex = this.stackUserCount;
                 }
@@ -270,8 +298,8 @@ export class User extends EventTarget {
 
     drawShadow(g, map) {
         const scale = g.getTransform().a,
-            x = this.position.x * map.tileWidth,
-            y = this.position.y * map.tileHeight,
+            x = this.x * map.tileWidth,
+            y = this.y * map.tileHeight,
             t = g.getTransform(),
             p = t.transformPoint({ x, y });
 
@@ -313,8 +341,8 @@ export class User extends EventTarget {
 
     innerDraw(g, map) {
         g.translate(
-            this.position.x * map.tileWidth + this.stackOffsetX,
-            this.position.y * map.tileHeight + this.stackOffsetY);
+            this.x * map.tileWidth + this.stackOffsetX,
+            this.y * map.tileHeight + this.stackOffsetY);
         g.fillStyle = "black";
         g.textBaseline = "top";
 
@@ -341,8 +369,8 @@ export class User extends EventTarget {
             g.save();
             {
                 g.translate(
-                    this.position.x * map.tileWidth + this.stackOffsetX,
-                    this.position.y * map.tileHeight + this.stackOffsetY);
+                    this.x * map.tileWidth + this.stackOffsetX,
+                    this.y * map.tileHeight + this.stackOffsetY);
                 g.shadowColor = "black";
                 g.shadowOffsetX = 3 * scale;
                 g.shadowOffsetY = 3 * scale;
@@ -360,8 +388,8 @@ export class User extends EventTarget {
         g.save();
         {
             g.translate(
-                (this.position._tx + dx) * map.tileWidth,
-                (this.position._ty + dy) * map.tileHeight);
+                (this.gridX + dx) * map.tileWidth,
+                (this.gridY + dy) * map.tileHeight);
             g.strokeStyle = `rgba(0, 255, 0, ${(1 - p) / 2})`;
             g.strokeRect(0, 0, map.tileWidth, map.tileHeight);
         }

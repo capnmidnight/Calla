@@ -45,8 +45,9 @@ export class BaseAudioClient extends EventTarget {
      * Set the position of the listener.
      * @param {number} x - the horizontal component of the position.
      * @param {number} y - the vertical component of the position.
+     * @param {number} z - the lateral component of the position.
      */
-    setLocalPosition(x, y) {
+    setLocalPosition(x, y, z) {
         throw new Error("Not implemented in base class");
     }
 
@@ -55,8 +56,9 @@ export class BaseAudioClient extends EventTarget {
      * @param {string} id - the id of the user for which to set the position.
      * @param {number} x - the horizontal component of the position.
      * @param {number} y - the vertical component of the position.
+     * @param {number} z - the lateral component of the position.
      */
-    setUserPosition(id, x, y) {
+    setUserPosition(id, x, y, z) {
         throw new Error("Not implemented in base class");
     }
 }

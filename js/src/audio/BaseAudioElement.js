@@ -1,4 +1,6 @@
-﻿/**
+﻿import { BasePosition } from "./positions/BasePosition.js";
+
+/**
  * A base class for positioned audio elements.
  **/
 export class BaseAudioElement extends EventTarget {
@@ -46,10 +48,11 @@ export class BaseAudioElement extends EventTarget {
      * Set the target position
      * @param {number} x - the horizontal component of the position.
      * @param {number} y - the vertical component of the position.
+     * @param {number} z - the lateral component of the position.
      */
-    setTarget(x, y) {
+    setPosition(x, y, z) {
         if (this.position) {
-            this.position.setTarget(x, y, this.currentTime, this.transitionTime);
+            this.position.setTarget(x, y, z, this.currentTime, this.transitionTime);
             this.update();
         }
     }

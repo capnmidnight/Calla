@@ -24,6 +24,6 @@ export class WebAudioOldNodePosition extends InterpolatedPosition {
      */
     update(t) {
         super.update(t);
-        this.node.setPosition(this.x, 0, this.y);
+        this.node.setPosition(this.x, this.y, this.z);
     }
 }

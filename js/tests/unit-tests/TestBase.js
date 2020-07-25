@@ -131,7 +131,7 @@ export class TestBase extends TestCase {
         await wait(1000);
         this.client.startAudio();
         const x = ((userNumber - 1) * 2 - 1) * 5;
-        this.client.setLocalPosition(x, 0);
+        this.client.setLocalPosition(x, 0, 0);
         this.success();
     }
 

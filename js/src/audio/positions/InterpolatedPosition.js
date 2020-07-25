@@ -14,47 +14,81 @@ export class InterpolatedPosition extends BasePosition {
     constructor() {
         super();
 
-        this._st
-            = this._et
-            = 0;
-        this._x
-            = this._tx
-            = this._sx
-            = 0;
-        this._y
-            = this._ty
-            = this._sy
-            = 0;
+        /** @type {number} */
+        this._st = 0;
+
+        /** @type {number} */
+        this._et = 0;
+
+        /** @type {number} */
+        this._x = 0;
+
+        /** @type {number} */
+        this._tx = 0;
+
+        /** @type {number} */
+        this._sx = 0;
+
+        /** @type {number} */
+        this._y = 0;
+
+        /** @type {number} */
+        this._ty = 0;
+
+        /** @type {number} */
+        this._sy = 0;
+
+        /** @type {number} */
+        this._z = 0;
+
+        /** @type {number} */
+        this._tz = 0;
+
+        /** @type {number} */
+        this._sz = 0;
     }
 
     /**
      *  The horizontal component of the position.
-     *  @type {number} */
+     *  @type {number}
+     **/
     get x() {
         return this._x;
     }
 
     /**
      *  The vertical component of the position.
-     *  @type {number} */
+     *  @type {number}
+     **/
     get y() {
         return this._y;
+    }
+
+    /**
+     * The lateral component of the position.
+     * @type {number}
+     **/
+    get z() {
+        return this._z;
     }
 
     /**
      * Set the target position for the time `t + dt`.
      * @param {number} x - the horizontal component of the position.
      * @param {number} y - the vertical component of the position.
-     * @param {number} t
-     * @param {number} dt
+     * @param {number} z - the lateral component of the position.
+     * @param {number} t - the time at which to start the transition.
+     * @param {number} dt - the amount of time to take making the transition.
      */
-    setTarget(x, y, t, dt) {
+    setTarget(x, y, z, t, dt) {
         this._st = t;
         this._et = t + dt;
         this._sx = this._x;
         this._sy = this._y;
+        this._sz = this._z;
         this._tx = x;
         this._ty = y;
+        this._tz = z;
     }
 
     /**
@@ -68,10 +102,12 @@ export class InterpolatedPosition extends BasePosition {
             const q = clamp(p, 0, 1);
             this._x = lerp(this._sx, this._tx, q);
             this._y = lerp(this._sy, this._ty, q);
+            this._z = lerp(this._sz, this._tz, q);
         }
         else {
             this._x = this._sx = this._tx;
             this._y = this._sy = this._ty;
+            this._z = this._sz = this._tz;
         }
     }
 }
