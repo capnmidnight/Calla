@@ -250,7 +250,7 @@ export function init(client) {
                     = game.me.avatarEmoji
                     = options.avatarEmoji
                     = e;
-                refreshUser(game.me.id);
+                refreshUser(client.localUser);
             });
         },
 
@@ -259,7 +259,7 @@ export function init(client) {
                 = client.avatarURL
                 = game.me.avatarImage
                 = options.avatarURL;
-            refreshUser(game.me.id);
+            refreshUser(client.localUser);
         },
 
         toggleDrawHearing: () => {
@@ -352,12 +352,11 @@ export function init(client) {
                 = game.me.avatarEmoji
                 = settings.avatarEmoji || people.random();
 
-            refreshUser(game.me.id);
+            refreshUser(client.localUser);
         },
 
         gameEnded: () => {
             gridPos(1, 1, 1, 3).apply(login.element);
-            game.hide();
             login.connected = false;
             showLogin();
         },
@@ -434,12 +433,7 @@ export function init(client) {
         },
 
         userInitRequest: (evt) => {
-            if (game.me && game.me.id) {
-                client.userInitResponse(evt.id, game.me.serialize());
-            }
-            else {
-                directory.warn("Local user not initialized");
-            }
+            client.userInitResponse(evt.id, game.me.serialize());
         },
 
         userInitResponse: (evt) => {

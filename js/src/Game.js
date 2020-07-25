@@ -540,6 +540,7 @@ export class Game extends EventTarget {
         this.map = null;
         this.users.clear();
         this.me = null;
+        this.hide();
         this.dispatchEvent(gameEndedEvt);
     }
 
