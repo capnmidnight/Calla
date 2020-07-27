@@ -220,7 +220,8 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                     isLocal = track.isLocal(),
                     trackKind = track.getType(),
                     trackRemovedEvt = Object.assign(new Event(trackKind + "Removed"), {
-                        id: userID
+                        id: userID,
+                        stream: null
                     });
 
                 if (userInputs.has(userID)) {

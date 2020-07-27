@@ -379,21 +379,13 @@ export function init(client) {
             game.addUser(evt.id, evt.displayName, evt.audioElement);
         },
 
-        audioAdded: (evt) => {
+        audioChanged: (evt) => {
             game.setAudioElement(evt.id, evt.audioElement);
-        },
-
-        audioRemoved: (evt) => {
-            game.setAudioElement(evt.id, evt.audioElement);
-        },
-
-        videoAdded: (evt) => {
-            game.setAvatarVideo(evt.id, evt.stream);
             refreshUser(evt.id);
         },
 
-        videoRemoved: (evt) => {
-            game.setAvatarVideo(evt.id, null);
+        videoChanged: (evt) => {
+            game.setAvatarVideo(evt.id, evt.stream);
             refreshUser(evt.id);
         },
 

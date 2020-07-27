@@ -24,7 +24,9 @@ const eventNames = [
     "audioAdded",
     "videoAdded",
     "audioRemoved",
-    "videoRemoved"
+    "videoRemoved",
+    "audioChanged",
+    "videoChanged"
 ];
 
 // Manages communication between Jitsi Meet and Calla
@@ -77,6 +79,28 @@ export class BaseJitsiClient extends EventTarget {
         this.addEventListener("participantLeft", (evt) => {
             this.removeUser(evt.id);
         });
+
+        const onAudioChange = (evt) => {
+            const evt2 = Object.assign(new Event("audioChanged"), {
+                id: evt.id,
+                stream: evt.stream,
+                audioElement: evt.audioElement
+            });
+            this.dispatchEvent(evt2);
+        };
+
+        const onVideoChange = (evt) => {
+            const evt2 = Object.assign(new Event("videoChanged"), {
+                id: evt.id,
+                stream: evt.stream
+            });
+            this.dispatchEvent(evt2);
+        };
+
+        this.addEventListener("audioAdded", onAudioChange);
+        this.addEventListener("audioRemoved", onAudioChange);
+        this.addEventListener("videoAdded", onVideoChange);
+        this.addEventListener("videoRemoved", onVideoChange);
     }
 
     get appFingerPrint() {
