@@ -61,16 +61,6 @@ export class FormDialog extends EventTarget {
             .apply(this.footer);
     }
 
-    get isOpen() {
-        return this.element.isOpen();
-    }
-
-    set isOpen(v) {
-        if (v !== this.isOpen) {
-            this.toggleOpen();
-        }
-    }
-
     appendChild(child) {
         return this.element.appendChild(child);
     }
@@ -94,6 +84,21 @@ export class FormDialog extends EventTarget {
     }
 
     toggleOpen() {
-        this.element.toggleOpen("grid");
+        if (this.isOpen) {
+            this.hide();
+        }
+        else {
+            this.show();
+        }
+    }
+
+    get isOpen() {
+        return this.element.isOpen();
+    }
+
+    set isOpen(v) {
+        if (v !== this.isOpen) {
+            this.toggleOpen();
+        }
     }
 }

@@ -1,21 +1,21 @@
-﻿import { bust } from "../emoji/emoji.js";
-import { EventedGamepad } from "../gamepad/EventedGamepad.js";
-import { autoPlay, disabled, htmlFor, id, max, min, muted, placeHolder, playsInline, src, srcObject, step, title, value, volume } from "../html/attrs.js";
-import { backgroundColor, borderBottom, borderLeft, borderRight, width, styles } from "../html/css.js";
+﻿import { EventedGamepad } from "../gamepad/EventedGamepad.js";
+import { disabled, height, htmlFor, id, max, min, placeHolder, step, value, width } from "../html/attrs.js";
+import { backgroundColor, borderBottom, borderLeft, borderRight, styles, width as cssWidth } from "../html/css.js";
 import { onClick, onInput, onKeyUp } from "../html/evts.js";
 import { gridColsDef } from "../html/grid.js";
-import { Button, clear, Div, Img, InputURL, Label, LabeledInput, LabeledSelectBox, OptionPanel, P, Span, Video } from "../html/tags.js";
+import { Button, Canvas, Div, InputURL, Label, LabeledInput, LabeledSelectBox, OptionPanel, P } from "../html/tags.js";
 import { isGoodNumber } from "../math.js";
 import "../protos.js";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 import { isString } from "../typeChecks.js";
+import { User } from "../User.js";
 import { FormDialog } from "./FormDialog.js";
 import { InputBinding } from "./InputBinding.js";
 
 
 
-const keyWidthStyle = width("7em"),
-    numberWidthStyle = width("3em"),
+const keyWidthStyle = cssWidth("7em"),
+    numberWidthStyle = cssWidth("3em"),
     avatarUrlChangedEvt = new Event("avatarURLChanged"),
     gamepadChangedEvt = new Event("gamepadChanged"),
     selectAvatarEvt = new Event("selectAvatar"),
@@ -154,7 +154,9 @@ export class OptionsForm extends FormDialog {
                         id("videoAvatarButton"),
                         "Use video",
                         onClick(_(toggleVideoEvt)))),
-                this.avatarPreview = Span(bust.value)),
+                this.avatarPreview = Canvas(
+                    width(256),
+                    height(256))),
 
             OptionPanel("interface", "Interface",
                 this.fontSizeInput = LabeledInput(
@@ -276,16 +278,6 @@ export class OptionsForm extends FormDialog {
                 for (let i = 0; i < panels.length; ++i) {
                     panels[i].visible = i === p;
                 }
-
-                const isGamepad = panels[p].id === "gamepad";
-                if (self.timer.isRunning !== isGamepad) {
-                    if (isGamepad) {
-                        self.timer.start();
-                    }
-                    else {
-                        self.timer.stop();
-                    }
-                }
             };
 
         for (let i = 0; i < panels.length; ++i) {
@@ -320,6 +312,11 @@ export class OptionsForm extends FormDialog {
                     });
                 }
             }
+
+            if (this.user && this.user.avatar) {
+                this._avatarG.clearRect(0, 0, this.avatarPreview.width, this.avatarPreview.height);
+                this.user.avatar.draw(this._avatarG, this.avatarPreview.width, this.avatarPreview.height, true);
+            }
         });
 
         this.gamepads = [];
@@ -328,21 +325,22 @@ export class OptionsForm extends FormDialog {
         this.videoInputDevices = [];
 
         this._drawHearing = false;
-        this._avatarEmoji = null;
+
+        /** @type {User} */
+        this.user = null;
+        this._avatarG = this.avatarPreview.getContext("2d");
 
         Object.seal(this);
     }
 
-    get avatarEmoji() {
-        return this._avatarEmoji;
+    show() {
+        super.show();
+        selfs.get(this).timer.start();
     }
 
-    set avatarEmoji(e) {
-        this._avatarEmoji = e;
-        clear(this.avatarPreview);
-        this.avatarPreview.append(Span(
-            title(e && e.desc || "(None)"),
-            e && e.value || "N/A"));
+    hide() {
+        super.hide();
+        selfs.get(this).timer.stop();
     }
 
     get avatarURL() {
@@ -355,11 +353,9 @@ export class OptionsForm extends FormDialog {
     }
 
     set avatarURL(v) {
-        clear(this.avatarPreview);
         if (isString(v)) {
             this.avatarURLInput.value = v;
             this.clearAvatarURLButton.unlock();
-            this.avatarPreview.append(Img(src(v)));
         }
         else {
             this.avatarURLInput.value = "";
@@ -369,15 +365,8 @@ export class OptionsForm extends FormDialog {
 
 
     setAvatarVideo(v) {
-        clear(this.avatarPreview);
         if (v !== null) {
             this.useVideoAvatarButton.innerHTML = "Remove video";
-            this.avatarPreview.append(Video(
-                autoPlay,
-                playsInline,
-                muted,
-                volume(0),
-                srcObject(v.srcObject)));
         }
         else {
             this.useVideoAvatarButton.innerHTML = "Use video";

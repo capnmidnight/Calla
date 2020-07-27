@@ -2,6 +2,7 @@
 import { allPeople as people } from "./emoji/emoji.js";
 import { EmojiForm } from "./forms/EmojiForm.js";
 import { FooterBar } from "./forms/FooterBar.js";
+import { FormDialog } from "./forms/FormDialog.js";
 import { HeaderBar } from "./forms/HeaderBar.js";
 import { LoginForm } from "./forms/LoginForm.js";
 import { OptionsForm } from "./forms/OptionsForm.js";
@@ -157,6 +158,15 @@ export function init(client) {
         }
     });
 
+    /**
+     * @callback showViewCallback
+     * @returns {void}
+     */
+
+    /**
+     * @param {FormDialog} view
+     * @returns {showViewCallback}
+     */
     const showView = (view) => () => {
         if (!emoji.isOpen) {
             const isOpen = view.isOpen;
@@ -246,7 +256,6 @@ export function init(client) {
                 settings.avatarEmoji
                     = client.avatarEmoji
                     = game.me.avatarEmoji
-                    = options.avatarEmoji
                     = e;
                 refreshUser(client.localUser);
             });
@@ -331,12 +340,14 @@ export function init(client) {
         gameStarted: () => {
             gridPos(1, 2).apply(login.element);
             login.hide();
+
+            options.user = game.me;
+
             headbar.enabled = true;
             footbar.enabled = true;
 
             settings.avatarEmoji
                 = client.avatarEmoji
-                = options.avatarEmoji
                 = game.me.avatarEmoji
                 = settings.avatarEmoji
                 || people.random();
