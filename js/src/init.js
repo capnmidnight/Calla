@@ -98,10 +98,10 @@ export function init(client) {
         options.gamepadIndex = game.gamepadIndex;
     }
 
-    function refreshUser(userID, isNew) {
+    function refreshUser(userID) {
         if (game.users.has(userID)) {
             const user = game.users.get(userID);
-            directory.set(user, isNew);
+            directory.set(user);
         }
     }
 
@@ -318,7 +318,7 @@ export function init(client) {
         },
 
         userJoined: (evt) => {
-            refreshUser(evt.user.id, true);
+            refreshUser(evt.user.id);
         },
 
         toggleAudio: async () => {

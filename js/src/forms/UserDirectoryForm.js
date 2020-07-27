@@ -40,7 +40,8 @@ export class UserDirectoryForm extends FormDialog {
      * 
      * @param {User} user
      */
-    set(user, isNew = false) {
+    set(user) {
+        const isNew = !this.rows.has(user.id);
         this.delete(user.id);
         const row = this.rows.size + 1;
 
