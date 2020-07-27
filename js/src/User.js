@@ -83,10 +83,6 @@ export class User extends EventTarget {
     }
 
     deserialize(evt) {
-        if (evt.displayName) {
-            this.displayName = evt.displayName;
-        }
-
         switch (evt.avatarMode) {
             case AvatarMode.emoji:
                 this.avatarEmoji = evt.avatarID;
@@ -111,7 +107,6 @@ export class User extends EventTarget {
             x: this.gridX,
             y: 0,
             z: this.gridY,
-            displayName: this._displayName,
             avatarMode: this.avatarMode,
             avatarID: this.avatarID
         };
