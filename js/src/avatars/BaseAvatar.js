@@ -1,4 +1,4 @@
-﻿import { Emoji } from "../emoji/emoji.js";
+﻿import { Canvas } from "../html/tags.js";
 
 /**
  * A base class for different types of avatars.
@@ -7,18 +7,12 @@ export class BaseAvatar {
 
     /**
      * Encapsulates a resource to use as an avatar.
-     * @param {Image|Video|Emoji} element
+     * @param {boolean} canSwim
      */
-    constructor(element) {
-        this.element = element;
-    }
-
-    /** 
-     *  Is the avatar able to run on water?
-     *  @type {boolean} 
-     **/
-    get canSwim() {
-        return false;
+    constructor(canSwim) {
+        this.canSwim = canSwim;
+        this.element = Canvas(128, 128);
+        this.g = this.element.getContext("2d");
     }
 
     /**
@@ -29,7 +23,15 @@ export class BaseAvatar {
      * @param {boolean} isMe - whether the avatar is the local user
      */
     draw(g, width, height, isMe) {
-        throw new Error("Not implemented in base class");
+        const aspectRatio = this.element.width / this.element.height,
+            w = aspectRatio > 1 ? width : aspectRatio * height,
+            h = aspectRatio > 1 ? width / aspectRatio : height,
+            dx = (width - w) / 2,
+            dy = (height - h) / 2;
+        g.drawImage(
+            this.element,
+            dx, dy,
+            w, h);
     }
 }
 

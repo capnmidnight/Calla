@@ -49,6 +49,7 @@ export class User extends EventTarget {
         this.visible = true;
         this.userNameText = new TextImage("sans-serif");
         this.userNameText.color = "white";
+        this.userNameText.fontSize = 128;
         this._displayName = null;
         this.displayName = displayName;
         Object.seal(this);
@@ -376,8 +377,8 @@ export class User extends EventTarget {
                 g.shadowOffsetY = 3 * scale;
                 g.shadowBlur = 3 * scale;
 
-                this.userNameText.fontSize = fontSize;
-                this.userNameText.scale = scale;
+                const textScale = fontSize / this.userNameText.fontSize;
+                g.scale(textScale, textScale);
                 this.userNameText.draw(g, 0, -this.userNameText.height);
             }
             g.restore();

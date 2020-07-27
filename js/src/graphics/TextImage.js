@@ -21,7 +21,7 @@ class TextImagePrivate {
         this.fontSize = null;
 
         /** @type {number} */
-        this.scale = null;
+        this.scale = 1;
 
         /** @type {string} */
         this.value = null;
@@ -48,7 +48,6 @@ class TextImagePrivate {
                 trueWidth = metrics.width,
                 trueHeight = fontHeight;
             if (metrics.actualBoundingBoxLeft) {
-                dx = metrics.actualBoundingBoxLeft;
                 dy = metrics.actualBoundingBoxAscent;
                 trueWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
                 trueHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
