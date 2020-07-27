@@ -99,10 +99,7 @@ export function init(client) {
     }
 
     function refreshUser(userID) {
-        if (game.users.has(userID)) {
-            const user = game.users.get(userID);
-            directory.set(user);
-        }
+        game.withUser(userID, (user) => directory.set(user));
     }
 
     gridRowsDef("auto", "1fr", "auto").apply(document.body);
@@ -341,7 +338,8 @@ export function init(client) {
                 = client.avatarEmoji
                 = options.avatarEmoji
                 = game.me.avatarEmoji
-                = settings.avatarEmoji || people.random();
+                = settings.avatarEmoji
+                || people.random();
 
             refreshUser(client.localUser);
         },
@@ -362,10 +360,7 @@ export function init(client) {
     });
 
     directory.addEventListener("warpTo", (evt) => {
-        if (game.users.has(evt.id)) {
-            const user = game.users.get(evt.id);
-            game.warpMeTo(user.gridX, user.gridY);
-        }
+        game.visit(evt.id);
     });
 
     client.addEventListeners({
@@ -379,6 +374,12 @@ export function init(client) {
             game.addUser(evt.id, evt.displayName, evt.audioElement);
         },
 
+        participantLeft: (evt) => {
+            sound.play("leave", 0.5);
+            game.removeUser(evt.id);
+            directory.delete(evt.id);
+        },
+
         audioChanged: (evt) => {
             game.setAudioElement(evt.id, evt.audioElement);
             refreshUser(evt.id);
@@ -387,12 +388,6 @@ export function init(client) {
         videoChanged: (evt) => {
             game.setAvatarVideo(evt.id, evt.stream);
             refreshUser(evt.id);
-        },
-
-        participantLeft: (evt) => {
-            sound.play("leave", 0.5);
-            game.removeUser(evt.id);
-            directory.delete(evt.id);
         },
 
         avatarChanged: (evt) => {
@@ -407,24 +402,26 @@ export function init(client) {
 
         audioMuteStatusChanged: async (evt) => {
             game.muteUserAudio(evt.id, evt.muted);
-            if (evt.id === client.localUser) {
-                footbar.audioEnabled = !evt.muted;
-                options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
-            }
+        },
+
+        localAudioMuteStatusChanged: async (evt) => {
+            footbar.audioEnabled = !evt.muted;
+            options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
         },
 
         videoMuteStatusChanged: async (evt) => {
             game.muteUserVideo(evt.id, evt.muted);
-            if (evt.id === client.localUser) {
-                footbar.videoEnabled = !evt.muted;
-                if (evt.muted) {
-                    options.setAvatarVideo(null);
-                }
-                else {
-                    options.setAvatarVideo(game.me.avatarVideo.element);
-                }
-                options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
+        },
+
+        localVideoMuteStatusChanged: async (evt) => {
+            footbar.videoEnabled = !evt.muted;
+            if (evt.muted) {
+                options.setAvatarVideo(null);
             }
+            else {
+                options.setAvatarVideo(game.me.avatarVideo.element);
+            }
+            options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
         },
 
         userInitRequest: (evt) => {
@@ -432,11 +429,8 @@ export function init(client) {
         },
 
         userInitResponse: (evt) => {
-            if (game.users.has(evt.id)) {
-                const user = game.users.get(evt.id);
-                user.deserialize(evt);
-                refreshUser(evt.id);
-            }
+            game.initializeUser(evt.id, evt);
+            refreshUser(evt.id);
         },
 
         emote: (evt) => {

@@ -290,6 +290,12 @@ export class Game extends EventTarget {
         this.element.setOpen(v);
     }
 
+    initializeUser(id, evt) {
+        this.withUser(id, (user) => {
+            user.deserialize(evt);
+        });
+    }
+
     updateAudioActivity(id, isActive) {
         if (this.users.has(id)) {
             const user = this.users.get(id);
@@ -374,6 +380,12 @@ export class Game extends EventTarget {
         this.moveMeTo(clearTile.x, clearTile.y);
     }
 
+    visit(id) {
+        this.withUser(id, (user) => {
+            this.warpMeTo(user.gridX, user.gridY);
+        });
+    }
+
     zoom(deltaZ) {
         const mag = Math.abs(deltaZ);
         if (0 < mag && mag <= 50) {
@@ -444,6 +456,19 @@ export class Game extends EventTarget {
         }
     }
 
+    /**
+    * Used to perform on operation when a valid user object is found.
+    * @callback withUserCallback
+    * @param {User} user
+    * @returns {void}
+    */
+
+    /**
+     * Find a user by id, then perform an operation on it.
+     * @param {string} id
+     * @param {withUserCallback} callback
+     * @param {number} timeout
+     */
     withUser(id, callback, timeout) {
         if (timeout === undefined) {
             timeout = 5000;

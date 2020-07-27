@@ -11,6 +11,8 @@ const eventNames = [
     "userInitResponse",
     "audioMuteStatusChanged",
     "videoMuteStatusChanged",
+    "localAudioMuteStatusChanged",
+    "localVideoMuteStatusChanged",
     "videoConferenceJoined",
     "videoConferenceLeft",
     "participantJoined",
@@ -101,6 +103,24 @@ export class BaseJitsiClient extends EventTarget {
         this.addEventListener("audioRemoved", onAudioChange);
         this.addEventListener("videoAdded", onVideoChange);
         this.addEventListener("videoRemoved", onVideoChange);
+
+        this.addEventListener("audioMuteStatusChanged", (evt) => {
+            if (evt.id === this.localUser) {
+                const evt2 = Object.assign(new Event("localAudioMuteStatusChanged"), {
+                    muted: evt.muted
+                })
+                this.dispatchEvent(evt2);
+            }
+        });
+
+        this.addEventListener("videoMuteStatusChanged", (evt) => {
+            if (evt.id === this.localUser) {
+                const evt2 = Object.assign(new Event("localVideoMuteStatusChanged"), {
+                    muted: evt.muted
+                })
+                this.dispatchEvent(evt2);
+            }
+        });
     }
 
     get appFingerPrint() {
