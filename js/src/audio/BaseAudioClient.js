@@ -1,4 +1,6 @@
-﻿/**
+﻿import { BaseAudioElement } from "./BaseAudioElement.js";
+
+/**
  * A base class for managers of audio sources, destinations, and their spatialization.
  **/
 export class BaseAudioClient extends EventTarget {
@@ -50,6 +52,14 @@ export class BaseAudioClient extends EventTarget {
     setLocalPosition(x, y, z) {
         throw new Error("Not implemented in base class");
     }
+
+    /**
+     * @returns {BaseAudioElement}
+     **/
+    getLocalPosition() {
+        throw new Error("Not implemented in base class");
+    }
+
 
     /**
      * Set the position of an audio source.

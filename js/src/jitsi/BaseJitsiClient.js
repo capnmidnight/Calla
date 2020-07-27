@@ -1,6 +1,7 @@
 import { BaseAudioClient } from "../audio/BaseAudioClient.js";
 import { canChangeAudioOutput } from "../audio/canChangeAudioOutput.js";
 import { arrayClear, arrayScan } from "../protos/Array.js";
+import { isNumber } from "../typeChecks.js";
 
 // helps us filter out data channel messages that don't belong to us
 const eventNames = [
@@ -47,8 +48,26 @@ export class BaseJitsiClient extends EventTarget {
         this.preferredAudioInputID = null;
         this.preferredVideoInputID = null;
 
+        this.addEventListener("participantJoined", (evt) => {
+            this.userInitRequest(evt.id);
+        });
+
+        this.addEventListener("userInitRequest", (evt) => {
+            const pos = this.audioClient.getLocalPosition();
+            this.userInitResponse(evt.id, {
+                id: this.localUser,
+                x: pos.x,
+                y: pos.y,
+                z: pos.z
+            });
+        });
+
         this.addEventListener("userInitResponse", (evt) => {
-            this.setUserPosition(evt.id, evt.x, evt.y, evt.z);
+            if (isNumber(evt.x)
+                && isNumber(evt.y)
+                && isNumber(evt.z)) {
+                this.setUserPosition(evt.id, evt.x, evt.y, evt.z);
+            }
         });
 
         this.addEventListener("userMoved", (evt) => {

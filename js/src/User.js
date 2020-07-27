@@ -1,4 +1,4 @@
-﻿import { InterpolatedPosition } from "./audio/positions/InterpolatedPosition.js";
+﻿import { BaseAudioElement } from "./audio/BaseAudioElement.js";
 import { AvatarMode, BaseAvatar } from "./avatars/BaseAvatar.js";
 import { EmojiAvatar } from "./avatars/EmojiAvatar.js";
 import { PhotoAvatar } from "./avatars/PhotoAvatar.js";
@@ -7,7 +7,7 @@ import { bust, mutedSpeaker, speakerMediumVolume } from "./emoji/emoji.js";
 import { TextImage } from "./graphics/TextImage.js";
 import { project } from "./math.js";
 import "./protos.js";
-import { isNumber, isString } from "./typeChecks.js";
+import { isString } from "./typeChecks.js";
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1,
     STACKED_USER_OFFSET_X = 5,
@@ -20,14 +20,20 @@ muteAudioIcon.value = mutedSpeaker.value;
 speakerActivityIcon.value = speakerMediumVolume.value;
 
 export class User extends EventTarget {
-    constructor(id, displayName, isMe) {
+    /**
+     * 
+     * @param {string} id
+     * @param {string} displayName
+     * @param {BaseAudioElement} audioElement
+     * @param {boolean} isMe
+     */
+    constructor(id, displayName, audioElement, isMe) {
         super();
 
         this.id = id;
         this.label = isMe ? "(Me)" : `(${this.id})`;
 
-        this.moveEvent = new UserMoveEvent(this.id);
-        this.position = new InterpolatedPosition();
+        this.audioElement = audioElement;
 
         /** @type {AvatarMode} */
         this.setAvatarVideo(null);
@@ -44,7 +50,6 @@ export class User extends EventTarget {
         this.stackAvatarWidth = 0;
         this.stackOffsetX = 0;
         this.stackOffsetY = 0;
-        this.isInitialized = isMe;
         this.lastPositionRequestTime = performance.now() / 1000 - POSITION_REQUEST_DEBOUNCE_TIME;
         this.visible = true;
         this.userNameText = new TextImage("sans-serif");
@@ -56,30 +61,19 @@ export class User extends EventTarget {
     }
 
     get x() {
-        return this.position.x;
+        return this.audioElement.x;
     }
 
     get y() {
-        return this.position.z;
+        return this.audioElement.z;
     }
 
     get gridX() {
-        return this.position._tx;
+        return this.audioElement.tx;
     }
 
     get gridY() {
-        return this.position._tz;
-    }
-
-    /**
-     * Set the position to which the user should move.
-     * @param {any} x - the horizontal component of the position.
-     * @param {any} y - the lateral component of the position.
-     * @param {any} t - the time at which to start the transition.
-     * @param {any} dt - the amount of time to take to perform the transition.
-     */
-    setTarget(x, y, t, dt) {
-        this.position.setTarget(x, 0, y, t, dt);
+        return this.audioElement.tz;
     }
 
     deserialize(evt) {
@@ -93,20 +87,11 @@ export class User extends EventTarget {
             default:
                 break;
         }
-
-        if (isNumber(evt.x)
-            && isNumber(evt.y)) {
-            this.isInitialized = true;
-            this.moveTo(evt.x, evt.z, 0);
-        }
     }
 
     serialize() {
         return {
             id: this.id,
-            x: this.gridX,
-            y: 0,
-            z: this.gridY,
             avatarMode: this.avatarMode,
             avatarID: this.avatarID
         };
@@ -249,30 +234,16 @@ export class User extends EventTarget {
         this.userNameText.value = this.displayName;
     }
 
-    moveTo(x, y, dt) {
-        if (this.isInitialized) {
-            if (this.isMe) {
-                this.moveEvent.x = x;
-                this.moveEvent.y = y;
-                this.dispatchEvent(this.moveEvent);
-            }
-
-            this.setTarget(x, y, performance.now() / 1000, dt);
+    moveTo(x, y) {
+        if (this.isMe) {
+            this.moveEvent.x = x;
+            this.moveEvent.y = y;
+            this.dispatchEvent(this.moveEvent);
         }
     }
 
     update(map, users) {
         const t = performance.now() / 1000;
-
-        if (!this.isInitialized) {
-            const dt = t - this.lastPositionRequestTime;
-            if (dt >= POSITION_REQUEST_DEBOUNCE_TIME) {
-                this.lastPositionRequestTime = t;
-                this.dispatchEvent(new UserPositionNeededEvent(this.id));
-            }
-        }
-
-        this.position.update(t);
 
         this.stackUserCount = 0;
         this.stackIndex = 0;
@@ -415,22 +386,5 @@ export class User extends EventTarget {
                 }
             }
         }
-    }
-}
-
-
-class UserMoveEvent extends Event {
-    constructor(id) {
-        super("userMoved");
-        this.id = id;
-        this.x = 0;
-        this.y = 0;
-    }
-}
-
-class UserPositionNeededEvent extends Event {
-    constructor(id) {
-        super("userPositionNeeded");
-        this.id = id;
     }
 }

@@ -25,6 +25,12 @@ export class BaseSpatializer extends BaseAudioElement {
         this.volume = 1;
         this.pan = 0;
 
+        /** @type {HTMLAudioElement} */
+        this.audio = null;
+
+        /** @type {MediaStream} */
+        this.stream = null;
+
         if (stream instanceof HTMLAudioElement) {
             this.audio = stream;
         }
@@ -34,22 +40,26 @@ export class BaseSpatializer extends BaseAudioElement {
                 srcObject(this.stream),
                 muted);
         }
-        else {
+        else if(stream !== null) {
             throw new Error("Can't create a node from the given stream. Expected type HTMLAudioElement or MediaStream.");
         }
 
-        this.audio.autoPlay = true;
-        this.audio.playsInline = true;
-        this.audio.addEventListener("onloadedmetadata", () =>
-            this.audio.play());
+        if (this.audio) {
+            this.audio.autoPlay = true;
+            this.audio.playsInline = true;
+            this.audio.addEventListener("onloadedmetadata", () =>
+                this.audio.play());
+        }
     }
 
     /**
      * Discard values and make this instance useless.
      */
     dispose() {
-        this.audio.pause();
-        this.audio = null;
+        if (this.audio) {
+            this.audio.pause();
+            this.audio = null;
+        }
         this.stream = null;
         this.position = null;
         this.destination = null;
@@ -61,7 +71,7 @@ export class BaseSpatializer extends BaseAudioElement {
      * @param {string} deviceID
      */
     setAudioOutputDevice(deviceID) {
-        if (canChangeAudioOutput) {
+        if (this.audio && canChangeAudioOutput) {
             this.audio.setSinkId(deviceID);
         }
     }

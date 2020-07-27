@@ -206,6 +206,7 @@ export function init(client) {
 
     login.addEventListener("login", async () => {
         client.startAudio();
+        setAudioProperties();
 
         const joinInfo = await client.joinAsync(
             settings.roomName = login.roomName,
@@ -215,7 +216,7 @@ export function init(client) {
 
         window.location.hash = login.roomName;
 
-        await game.startAsync(joinInfo.id, joinInfo.displayName, joinInfo.avatarURL, joinInfo.roomName);
+        await game.startAsync(joinInfo.id, joinInfo.displayName, client.audioClient.destination, joinInfo.avatarURL, joinInfo.roomName);
 
         client.avatarURL
             = game.me.avatarImage
@@ -317,9 +318,6 @@ export function init(client) {
         },
 
         userJoined: (evt) => {
-            evt.user.addEventListener("userPositionNeeded", (evt2) => {
-                client.userInitRequest(evt2.id);
-            });
             refreshUser(evt.user.id, true);
         },
 
@@ -339,13 +337,6 @@ export function init(client) {
             headbar.enabled = true;
             footbar.enabled = true;
 
-            setAudioProperties();
-
-            client.setLocalPosition(game.me.gridX, 0, game.me.gridY);
-            game.me.addEventListener("userMoved", (evt) => {
-                client.setLocalPosition(evt.x, 0, evt.y);
-            });
-
             settings.avatarEmoji
                 = client.avatarEmoji
                 = options.avatarEmoji
@@ -353,6 +344,10 @@ export function init(client) {
                 = settings.avatarEmoji || people.random();
 
             refreshUser(client.localUser);
+        },
+
+        userMoved: (evt) => {
+            client.setLocalPosition(evt.x, 0, evt.y);
         },
 
         gameEnded: () => {
@@ -381,7 +376,15 @@ export function init(client) {
 
         participantJoined: (evt) => {
             sound.play("join", 0.5);
-            game.addUser(evt.id, evt.displayName);
+            game.addUser(evt.id, evt.displayName, evt.audioElement);
+        },
+
+        audioAdded: (evt) => {
+            game.setAudioElement(evt.id, evt.audioElement);
+        },
+
+        audioRemoved: (evt) => {
+            game.setAudioElement(evt.id, evt.audioElement);
         },
 
         videoAdded: (evt) => {
@@ -442,14 +445,6 @@ export function init(client) {
                 user.deserialize(evt);
                 refreshUser(evt.id);
             }
-        },
-
-        userMoved: (evt) => {
-            if (game.users.has(evt.id)) {
-                const user = game.users.get(evt.id);
-                user.moveTo(evt.x, evt.z, settings.transitionSpeed);
-            }
-            refreshUser(evt.id);
         },
 
         emote: (evt) => {

@@ -1,8 +1,9 @@
-﻿import { Emote } from "./Emote.js";
+﻿import { BaseAudioElement } from "./audio/BaseAudioElement.js";
+import { Emote } from "./Emote.js";
 import { EventedGamepad } from "./gamepad/EventedGamepad.js";
 import { id } from "./html/attrs.js";
 import { resizeCanvas } from "./html/canvas.js";
-import { height, width, touchAction } from "./html/css.js";
+import { height, touchAction, width } from "./html/css.js";
 import { isFirefox } from "./html/flags.js";
 import { Canvas } from "./html/tags.js";
 import { clamp, lerp, project, unproject } from "./math.js";
@@ -23,8 +24,11 @@ const CAMERA_LERP = 0.01,
     emojiNeededEvt = new Event("emojiNeeded"),
     toggleAudioEvt = new Event("toggleAudio"),
     toggleVideoEvt = new Event("toggleVideo"),
+    moveEvent = Object.assign(new Event("userMoved"), {
+        x: 0,
+        y: 0
+    }),
     emoteEvt = Object.assign(new Event("emote"), {
-        id: null,
         emoji: null
     }),
     userJoinedEvt = Object.assign(new Event("userJoined", {
@@ -333,9 +337,11 @@ export class Game extends EventTarget {
 
     moveMeTo(x, y) {
         if (this.map.isClear(x, y, this.me.avatar)) {
-            this.me.moveTo(x, y, this.transitionSpeed);
             this.targetOffsetCameraX = 0;
             this.targetOffsetCameraY = 0;
+            moveEvent.x = x;
+            moveEvent.y = y;
+            this.dispatchEvent(moveEvent);
         }
     }
 
@@ -382,12 +388,18 @@ export class Game extends EventTarget {
         }
     }
 
-    addUser(id, displayName) {
+    /**
+     * 
+     * @param {string} id
+     * @param {string} displayName
+     * @param {BaseAudioElement} audioElement
+     */
+    addUser(id, displayName, audioElement) {
         if (this.users.has(id)) {
             this.removeUser(id);
         }
 
-        const user = new User(id, displayName, false);
+        const user = new User(id, displayName, audioElement, false);
         this.users.set(id, user);
 
         userJoinedEvt.user = user;
@@ -480,9 +492,28 @@ export class Game extends EventTarget {
         });
     }
 
-    async startAsync(id, displayName, avatarURL, roomName) {
+    /**
+     * 
+     * @param {string} id
+     * @param {BaseAudioElement} audioElement
+     */
+    setAudioElement(id, audioElement) {
+        this.withUser(id, (user) => {
+            user.audioElement = audioElement;
+        });
+    }
+
+    /**
+     * 
+     * @param {string} id
+     * @param {string} displayName
+     * @param {BaseAudioElement} audioElement
+     * @param {string} avatarURL
+     * @param {string} roomName
+     */
+    async startAsync(id, displayName, audioElement, avatarURL, roomName) {
         this.currentRoomName = roomName.toLowerCase();
-        this.me = new User(id, displayName, true);
+        this.me = new User(id, displayName, audioElement, true);
         if (!!avatarURL) {
             this.me.avatarImage = avatarURL;
         }

@@ -1,4 +1,4 @@
-﻿import { project, lerp, clamp } from "../../math.js";
+﻿import { clamp, lerp, project } from "../../math.js";
 import { BasePosition } from "./BasePosition.js";
 
 /**
@@ -24,25 +24,16 @@ export class InterpolatedPosition extends BasePosition {
         this._x = 0;
 
         /** @type {number} */
-        this._tx = 0;
-
-        /** @type {number} */
         this._sx = 0;
 
         /** @type {number} */
         this._y = 0;
 
         /** @type {number} */
-        this._ty = 0;
-
-        /** @type {number} */
         this._sy = 0;
 
         /** @type {number} */
         this._z = 0;
-
-        /** @type {number} */
-        this._tz = 0;
 
         /** @type {number} */
         this._sz = 0;
@@ -72,6 +63,13 @@ export class InterpolatedPosition extends BasePosition {
         return this._z;
     }
 
+    copy(other) {
+        super.copy(other);
+        this._x = other.x;
+        this._y = other.y;
+        this._z = other.z;
+    }
+
     /**
      * Set the target position for the time `t + dt`.
      * @param {number} x - the horizontal component of the position.
@@ -81,14 +79,12 @@ export class InterpolatedPosition extends BasePosition {
      * @param {number} dt - the amount of time to take making the transition.
      */
     setTarget(x, y, z, t, dt) {
+        super.setTarget(x, y, z, t, dt);
         this._st = t;
         this._et = t + dt;
         this._sx = this._x;
         this._sy = this._y;
         this._sz = this._z;
-        this._tx = x;
-        this._ty = y;
-        this._tz = z;
     }
 
     /**
@@ -100,14 +96,14 @@ export class InterpolatedPosition extends BasePosition {
         if (this._st !== this._et) {
             const p = project(t, this._st, this._et);
             const q = clamp(p, 0, 1);
-            this._x = lerp(this._sx, this._tx, q);
-            this._y = lerp(this._sy, this._ty, q);
-            this._z = lerp(this._sz, this._tz, q);
+            this._x = lerp(this._sx, this.tx, q);
+            this._y = lerp(this._sy, this.ty, q);
+            this._z = lerp(this._sz, this.tz, q);
         }
         else {
-            this._x = this._sx = this._tx;
-            this._y = this._sy = this._ty;
-            this._z = this._sz = this._tz;
+            this._x = this._sx = this.tx;
+            this._y = this._sy = this.ty;
+            this._z = this._sz = this.tz;
         }
     }
 }

@@ -4,11 +4,13 @@ import { GoogleResonanceAudioScene } from "./positions/GoogleResonanceAudioScene
 import { InterpolatedPosition } from "./positions/InterpolatedPosition.js";
 import { WebAudioNewListenerPosition } from "./positions/WebAudioNewListenerPosition.js";
 import { WebAudioOldNodePosition } from "./positions/WebAudioOldNodePosition.js";
-import { NewPannerSpatializer } from "./spatializers/NewPannerSpatializer.js";
+import { BaseSpatializer } from "./spatializers/BaseSpatializer.js";
 import { GoogleResonanceAudioSpatializer } from "./spatializers/GoogleResonanceAudioSpatializer.js";
+import { NewPannerSpatializer } from "./spatializers/NewPannerSpatializer.js";
+import { NoAudioSpatializer } from "./spatializers/NoAudioSpatializer.js";
+import { OldPannerSpatializer } from "./spatializers/OldPannerSpatializer.js";
 import { StereoSpatializer } from "./spatializers/StereoSpatializer.js";
 import { VolumeOnlySpatializer } from "./spatializers/VolumeOnlySpatializer.js";
-import { OldPannerSpatializer } from "./spatializers/OldPannerSpatializer.js";
 
 const contextDestroyingEvt = new Event("contextDestroying"),
     contextDestroyedEvt = new Event("contextDestroyed");
@@ -96,7 +98,7 @@ export class Destination extends BaseAudioElement {
      * @param {string} userID
      * @param {MediaStream|HTMLAudioElement} stream
      * @param {number} bufferSize
-     * @return {BaseSpatializer}
+     * @returns {BaseSpatializer}
      */
     createSpatializer(userID, stream, bufferSize) {
         const spatializer = this._createSpatializer(userID, stream, bufferSize);
@@ -116,6 +118,10 @@ export class Destination extends BaseAudioElement {
      * @return {BaseSpatializer}
      */
     _createSpatializer(id, stream, bufferSize) {
+        if (stream === null) {
+            return new NoAudioSpatializer(id, this);
+        }
+
         if (attemptResonanceAPI) {
             try {
                 return new GoogleResonanceAudioSpatializer(id, this, stream, bufferSize);

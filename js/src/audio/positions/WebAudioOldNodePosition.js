@@ -13,6 +13,7 @@ export class WebAudioOldNodePosition extends InterpolatedPosition {
         super();
 
         this.node = node;
+
         this.node.setPosition(0, 0, 0);
         this.node.setOrientation(0, 0, -1, 0, 1, 0);
     }

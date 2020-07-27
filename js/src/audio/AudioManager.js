@@ -1,8 +1,8 @@
-﻿import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
+﻿import { arrayClear } from "../protos/Array.js";
+import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 import { AudioActivityEvent } from "./AudioActivityEvent.js";
 import { BaseAudioClient } from "./BaseAudioClient.js";
 import { Destination } from "./Destination.js";
-import { arrayClear } from "../protos/Array.js";
 import { BaseSpatializer } from "./spatializers/BaseSpatializer.js";
 
 const BUFFER_SIZE = 1024,
@@ -43,9 +43,9 @@ export class AudioManager extends BaseAudioClient {
                 source.removeEventListener("audioActivity", this.onAudioActivity);
                 recreationQ.push({
                     id: source.id,
-                    x: source.position.x,
-                    y: source.position.y,
-                    z: source.position.z,
+                    x: source.x,
+                    y: source.y,
+                    z: source.z,
                     audio: source.audio
                 });
 
@@ -95,6 +95,15 @@ export class AudioManager extends BaseAudioClient {
     createSource(userID, stream) {
         const source = this.destination.createSpatializer(userID, stream, BUFFER_SIZE);
         source.addEventListener("audioActivity", this.onAudioActivity);
+        if (this.sources.has(userID)) {
+            const oldSource = this.sources.get(userID);
+            source.copy(oldSource);
+            oldSource.dispose();
+        }
+        else {
+            source.setPosition(0, 0, 0);
+        }
+
         this.sources.set(userID, source);
         return source;
     }
@@ -143,6 +152,13 @@ export class AudioManager extends BaseAudioClient {
      */
     setLocalPosition(x, y, z) {
         this.destination.setPosition(x, y, z);
+    }
+
+    /**
+     * @returns {BaseAudioElement}
+     **/
+    getLocalPosition() {
+        return this.destination;
     }
 
     /**

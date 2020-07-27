@@ -150,7 +150,8 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                 const evt = Object.assign(
                     new Event("participantJoined"), {
                     id,
-                    displayName: user.getDisplayName()
+                    displayName: user.getDisplayName(),
+                    audioElement: this.audioClient.createSource(id, null)
                 });
                 this.dispatchEvent(evt);
             });
@@ -177,7 +178,11 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             this.conference.addEventListener(TRACK_ADDED, (track) => {
                 const userID = track.getParticipantId() || this.localUser,
                     isLocal = track.isLocal(),
-                    trackKind = track.getType();
+                    trackKind = track.getType(),
+                    trackAddedEvt = Object.assign(new Event(trackKind + "Added"), {
+                        id: userID,
+                        stream: track.stream
+                    });
 
                 setLoggers(track, JitsiMeetJS.events.track);
 
@@ -195,14 +200,16 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
 
                 inputs.set(trackKind, track);
 
-                if (!isLocal && trackKind === "audio") {
-                    this.audioClient.createSource(userID, track.stream);
+                if (trackKind === "audio") {
+                    if (isLocal) {
+                        trackAddedEvt.audioElement = this.audioClient.destination;
+                    }
+                    else {
+                        trackAddedEvt.audioElement = this.audioClient.createSource(userID, track.stream);
+                    }
                 }
 
-                this.dispatchEvent(Object.assign(new Event(trackKind + "Added"), {
-                    id: userID,
-                    stream: track.stream
-                }));
+                this.dispatchEvent(trackAddedEvt);
 
                 onTrackMuteChanged(track, false);
             });
@@ -211,7 +218,10 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
 
                 const userID = track.getParticipantId() || this.localUser,
                     isLocal = track.isLocal(),
-                    trackKind = track.getType();
+                    trackKind = track.getType(),
+                    trackRemovedEvt = Object.assign(new Event(trackKind + "Removed"), {
+                        id: userID
+                    });
 
                 if (userInputs.has(userID)) {
                     const inputs = userInputs.get(userID);
@@ -221,17 +231,19 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                     }
                 }
 
-                if (!isLocal && trackKind === "audio") {
-                    this.audioClient.removeSource(userID);
+                if (trackKind === "audio") {
+                    if (isLocal) {
+                        trackRemovedEvt.audioElement = this.audioClient.destination;
+                    }
+                    else {
+                        trackRemovedEvt.audioElement = this.audioClient.createSource(userID, null);
+                    }
                 }
 
                 track.dispose();
 
                 onTrackMuteChanged(track, true);
-
-                this.dispatchEvent(Object.assign(new Event(trackKind + "Removed"), {
-                    id: userID
-                }));
+                this.dispatchEvent(trackRemovedEvt);
             });
 
             this.conference.addEventListener(ENDPOINT_MESSAGE_RECEIVED, (user, data) => {

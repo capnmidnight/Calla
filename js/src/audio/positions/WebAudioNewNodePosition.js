@@ -43,6 +43,14 @@ export class WebAudioNewNodePosition extends BasePosition {
         return this.node.positionZ.value;
     }
 
+    copy(other) {
+        super.copy(other);
+
+        this.node.positionX.setValueAtTime(other.x, 0);
+        this.node.positionY.setValueAtTime(other.y, 0);
+        this.node.positionZ.setValueAtTime(other.z, 0);
+    }
+
     /**
      * Set the target position for the time `t + dt`.
      * @param {number} x - the horizontal component of the position.
@@ -52,6 +60,7 @@ export class WebAudioNewNodePosition extends BasePosition {
      * @param {number} dt - the amount of time to take making the transition.
      */
     setTarget(x, y, z, t, dt) {
+        super.setTarget(x, y, z, t, dt);
         if (this._p) {
             this._p.setTarget(x, y, z, t, dt);
         }

@@ -57,6 +57,39 @@ export class BaseAudioElement extends EventTarget {
         }
     }
 
+    get x() {
+        return this.position.x;
+    }
+
+    get y() {
+        return this.position.y;
+    }
+
+    get z() {
+        return this.position.z;
+    }
+
+    get tx() {
+        return this.position.tx;
+    }
+
+    get ty() {
+        return this.position.ty;
+    }
+
+    get tz() {
+        return this.position.tz;
+    }
+
+    /**
+     * 
+     * @param {BaseAudioElement} other
+     */
+    copy(other) {
+        this.setAudioProperties(other.minDistance, other.maxDistance, other.rolloff, other.transitionTime);
+        this.position.copy(other.position);
+    }
+
     /**
      * Performs position updates.
      **/
