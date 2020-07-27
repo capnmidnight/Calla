@@ -1,14 +1,15 @@
-﻿import { backgroundColor, height, zIndex, columnGap, width } from "../html/css.js";
-import { gridPos, row, gridDef } from "../html/grid.js";
+﻿import { height, width } from "../html/attrs.js";
+import { backgroundColor, columnGap, width as cssWidth, zIndex } from "../html/css.js";
 import { onClick, onMouseOut, onMouseOver } from "../html/evts.js";
-import { Div } from "../html/tags.js";
+import { gridDef, gridPos, row } from "../html/grid.js";
+import { Canvas, Div } from "../html/tags.js";
+import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 import { User } from "../User.js";
 import { FormDialog } from "./FormDialog.js";
 
 const newRowColor = backgroundColor("lightgreen");
 const hoveredColor = backgroundColor("rgba(65, 255, 202, 0.25)");
 const unhoveredColor = backgroundColor("transparent");
-const avatarSize = height("32px");
 const warpToEvt = Object.assign(
     new Event("warpTo"),
     {
@@ -24,8 +25,26 @@ export class UserDirectoryForm extends FormDialog {
 
         const _ = (evt) => () => this.dispatchEvent(evt);
 
+        this.timer = new RequestAnimationFrameTimer();
+        this.timer.addEventListener("tick", () => {
+            for (let entries of this.users.entries()) {
+                const [id, user] = entries;
+                if (this.avatarGs.has(id) && user.avatar) {
+                    const g = this.avatarGs.get(id);
+                    g.clearRect(0, 0, g.canvas.width, g.canvas.height);
+                    user.avatar.draw(g, g.canvas.width, g.canvas.height);
+                }
+            }
+        });
+
         /** @type {Map.<string, Element[]>} */
         this.rows = new Map();
+
+        /** @type {Map<string, User>} */
+        this.users = new Map();
+
+        /** @type {Map<string, CanvasRenderingContext2D>} */
+        this.avatarGs = new Map();
 
         this.content.append(
             this.table = Div(
@@ -33,7 +52,17 @@ export class UserDirectoryForm extends FormDialog {
                     ["auto", "1fr"],
                     ["min-content"]),
                 columnGap("5px"),
-                width("100%")));
+                cssWidth("100%")));
+    }
+
+    show() {
+        super.show();
+        this.timer.start();
+    }
+
+    hide() {
+        super.hide();
+        this.timer.stop();
     }
 
     /**
@@ -54,13 +83,16 @@ export class UserDirectoryForm extends FormDialog {
                 this.table.removeChild(elem);
             }, ROW_TIMEOUT);
             this.table.append(elem);
+            this.users.set(user.id, user);
+            this.avatarGs.set(
+                user.id,
+                Canvas(
+                    width(32),
+                    height(32))
+                    .getContext("2d"));
         }
 
-        let avatar = "N/A";
-        if (user.avatar && user.avatar.element) {
-            avatar = user.avatar.element;
-            avatarSize.apply(avatar);
-        }
+        const avatar = this.avatarGs.get(user.id).canvas;
 
         const elems = [
             Div(gridPos(1, row), zIndex(0), avatar),

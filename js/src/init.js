@@ -376,7 +376,7 @@ export function init(client) {
 
     client.addEventListeners({
 
-        videoConferenceLeft: (evt) => {
+        videoConferenceLeft: () => {
             game.end();
         },
 
