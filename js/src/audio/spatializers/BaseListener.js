@@ -1,7 +1,8 @@
 ﻿import { BaseSpatializer } from "./BaseSpatializer.js";
 import { ManualVolume } from "./ManualVolume.js";
 
-let tryStereo = true;
+let hasAudioContext = Object.prototype.hasOwnProperty.call(window, "AudioContext"),
+    hasStereoPanner = hasAudioContext && Object.prototype.hasOwnProperty.call(AudioContext.prototype, "createStereoPanner");
 
 export class BaseListener extends BaseSpatializer {
     /**
@@ -21,16 +22,16 @@ export class BaseListener extends BaseSpatializer {
      * @return {BaseSource}
      */
     createSource(id, stream, bufferSize) {
-        if (tryStereo) {
+        if (hasStereoPanner) {
             try {
                 return new ManualStereo(id, this, stream, bufferSize);
             }
             catch (exp) {
-                tryStereo = false;
+                hasStereoPanner = false;
             }
         }
 
-        if (!tryStereo) {
+        if (!hasStereoPanner) {
             return new ManualVolume(id, this.destination, stream);
         }
     }
