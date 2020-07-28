@@ -5,6 +5,7 @@ import { AudioManager as AudioClient } from "../audio/AudioManager.js";
 import { canChangeAudioOutput } from "../audio/canChangeAudioOutput.js";
 import { BaseJitsiClient } from "./BaseJitsiClient.js";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "/constants.js";
+import { InterpolatedPose } from "../audio/positions/InterpolatedPose.js";
 
 /**
  * @typedef {object} JitsiTrack
@@ -117,7 +118,8 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                     new Event("videoConferenceJoined"), {
                     id,
                     roomName,
-                    displayName: userName
+                    displayName: userName,
+                    pose: this.audioClient.destination.pose
                 }));
             });
 
@@ -151,7 +153,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                     new Event("participantJoined"), {
                     id,
                     displayName: user.getDisplayName(),
-                    audioElement: this.audioClient.createSource(id, null)
+                    pose: this.audioClient.createUser(id)
                 });
                 this.dispatchEvent(evt);
             });
@@ -200,13 +202,8 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
 
                 inputs.set(trackKind, track);
 
-                if (trackKind === "audio") {
-                    if (isLocal) {
-                        trackAddedEvt.audioElement = this.audioClient.destination;
-                    }
-                    else {
-                        trackAddedEvt.audioElement = this.audioClient.createSource(userID, track.stream);
-                    }
+                if (trackKind === "audio" && !isLocal) {
+                    this.audioClient.setSource(userID, track.stream);
                 }
 
                 this.dispatchEvent(trackAddedEvt);
@@ -232,13 +229,8 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                     }
                 }
 
-                if (trackKind === "audio") {
-                    if (isLocal) {
-                        trackRemovedEvt.audioElement = this.audioClient.destination;
-                    }
-                    else {
-                        trackRemovedEvt.audioElement = this.audioClient.createSource(userID, null);
-                    }
+                if (trackKind === "audio" && !isLocal) {
+                    this.audioClient.setSource(userID, null);
                 }
 
                 track.dispose();
@@ -329,7 +321,6 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
             return;
         }
         await super.setAudioOutputDeviceAsync(device);
-        this.audioClient.setAudioOutputDevice(this.preferredAudioOutputID);
         await JitsiMeetJS.mediaDevices.setAudioOutputDevice(this.preferredAudioOutputID);
     }
 

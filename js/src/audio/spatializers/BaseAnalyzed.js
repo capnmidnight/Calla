@@ -1,6 +1,6 @@
 ﻿import { clamp } from "../../math.js";
 import { AudioActivityEvent } from "../AudioActivityEvent.js";
-import { BaseSpatializer } from "./BaseSpatializer.js";
+import { BaseSource } from "./BaseSource.js";
 
 const audioActivityEvt = new AudioActivityEvent(),
     activityCounterMin = 0,
@@ -39,19 +39,16 @@ function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz, bufferSiz
     return count === 0 ? 0 : (sum / count);
 }
 
-export class BaseAnalyzedSpatializer extends BaseSpatializer {
+export class BaseAnalyzed extends BaseSource {
 
     /**
-     * 
-     * @param {string} userID
      * @param {Destination} destination
      * @param {MediaStream|HTMLAudioElement} stream
-     * @param {BasePosition} position
      * @param {number} bufferSize
      * @param {PannerNode|StereoPannerNode} inNode
      */
-    constructor(userID, destination, stream, position, bufferSize, inNode) {
-        super(userID, destination, stream, position);
+    constructor(destination, stream, bufferSize, inNode) {
+        super(destination, stream);
 
         this.bufferSize = bufferSize;
         this.buffer = new Float32Array(this.bufferSize);
@@ -71,11 +68,15 @@ export class BaseAnalyzedSpatializer extends BaseSpatializer {
 
         /** @type {MediaSource} */
         this.source = null;
-
-        this.checkStream();
     }
 
-    checkStream() {
+    /**
+     * @param {InterpolatedPose} pose
+     * @fires BaseAnalyzedSpatializer#audioActivity
+     **/
+    update(pose) {
+        super.update(pose);
+
         if (!this.source) {
             if (this.stream) {
                 try {
@@ -100,15 +101,6 @@ export class BaseAnalyzedSpatializer extends BaseSpatializer {
                 }
             }
         }
-    }
-
-    /**
-     * @fires BaseAnalyzedSpatializer#audioActivity
-     **/
-    update() {
-        super.update();
-
-        this.checkStream();
 
         if (this.source) {
             this.analyser.getFloatFrequencyData(this.buffer);

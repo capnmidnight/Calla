@@ -223,7 +223,7 @@ export function init(client) {
 
         window.location.hash = login.roomName;
 
-        await game.startAsync(joinInfo.id, joinInfo.displayName, client.audioClient.destination, joinInfo.avatarURL, joinInfo.roomName);
+        await game.startAsync(joinInfo.id, joinInfo.displayName, joinInfo.pose, joinInfo.avatarURL, joinInfo.roomName);
 
         client.avatarURL
             = game.me.avatarImage
@@ -382,7 +382,7 @@ export function init(client) {
 
         participantJoined: (evt) => {
             sound.play("join", 0.5);
-            game.addUser(evt.id, evt.displayName, evt.audioElement);
+            game.addUser(evt.id, evt.displayName, evt.pose);
         },
 
         participantLeft: (evt) => {
@@ -392,7 +392,6 @@ export function init(client) {
         },
 
         audioChanged: (evt) => {
-            game.setAudioElement(evt.id, evt.audioElement);
             refreshUser(evt.id);
         },
 

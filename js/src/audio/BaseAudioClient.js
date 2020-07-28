@@ -1,4 +1,5 @@
-﻿import { BaseAudioElement } from "./BaseAudioElement.js";
+﻿import { Pose } from "./positions/Pose.js";
+import { InterpolatedPose } from "./positions/InterpolatedPose.js";
 
 /**
  * A base class for managers of audio sources, destinations, and their spatialization.
@@ -28,10 +29,11 @@ export class BaseAudioClient extends EventTarget {
     }
 
     /**
-     * Set the audio device used to play audio to the local user.
-     * @param {string} deviceID
+     * Create a new user for audio processing.
+     * @param {string} id
+     * @returns {InterpolatedPose}
      */
-    setAudioOutputDevice(deviceID) {
+    createUser(id) {
         throw new Error("Not implemented in base class");
     }
 
@@ -39,7 +41,7 @@ export class BaseAudioClient extends EventTarget {
      * Remove a user from audio processing.
      * @param {string} id - the id of the user to remove
      */
-    removeSource(id) {
+    removeUser(id) {
         throw new Error("Not implemented in base class");
     }
 
@@ -54,9 +56,9 @@ export class BaseAudioClient extends EventTarget {
     }
 
     /**
-     * @returns {BaseAudioElement}
+     * @returns {Pose}
      **/
-    getLocalPosition() {
+    getLocalPose() {
         throw new Error("Not implemented in base class");
     }
 

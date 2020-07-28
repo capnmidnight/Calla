@@ -57,12 +57,13 @@ export class BaseJitsiClient extends EventTarget {
         });
 
         this.addEventListener("userInitRequest", (evt) => {
-            const pos = this.audioClient.getLocalPosition();
+            const pose = this.audioClient.getLocalPose();
+            const { p } = pose;
             this.userInitResponse(evt.id, {
                 id: this.localUser,
-                x: pos.x,
-                y: pos.y,
-                z: pos.z
+                x: p.x,
+                y: p.y,
+                z: p.z
             });
         });
 
@@ -85,8 +86,7 @@ export class BaseJitsiClient extends EventTarget {
         const onAudioChange = (evt) => {
             const evt2 = Object.assign(new Event("audioChanged"), {
                 id: evt.id,
-                stream: evt.stream,
-                audioElement: evt.audioElement
+                stream: evt.stream
             });
             this.dispatchEvent(evt2);
         };
@@ -439,7 +439,7 @@ export class BaseJitsiClient extends EventTarget {
     }
 
     removeUser(id) {
-        this.audioClient.removeSource(id);
+        this.audioClient.removeUser(id);
     }
 
     /**

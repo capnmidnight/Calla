@@ -1,4 +1,4 @@
-﻿import { BaseAudioElement } from "./audio/BaseAudioElement.js";
+﻿import { Pose } from "./audio/positions/Pose.js";
 import { Emote } from "./Emote.js";
 import { EventedGamepad } from "./gamepad/EventedGamepad.js";
 import { id } from "./html/attrs.js";
@@ -10,6 +10,7 @@ import { clamp, lerp, project, unproject } from "./math.js";
 import { arrayClear, arrayRemoveAt } from "./protos/Array.js";
 import { TileMap } from "./TileMap.js";
 import { User } from "./User.js";
+import { isString } from "./typeChecks.js";
 
 const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_MAX = 8,
@@ -404,14 +405,14 @@ export class Game extends EventTarget {
      * 
      * @param {string} id
      * @param {string} displayName
-     * @param {BaseAudioElement} audioElement
+     * @param {Pose} pose
      */
-    addUser(id, displayName, audioElement) {
+    addUser(id, displayName, pose) {
         if (this.users.has(id)) {
             this.removeUser(id);
         }
 
-        const user = new User(id, displayName, audioElement, false);
+        const user = new User(id, displayName, pose, false);
         this.users.set(id, user);
 
         userJoinedEvt.user = user;
@@ -520,26 +521,15 @@ export class Game extends EventTarget {
     /**
      * 
      * @param {string} id
-     * @param {BaseAudioElement} audioElement
-     */
-    setAudioElement(id, audioElement) {
-        this.withUser(id, (user) => {
-            user.audioElement = audioElement;
-        });
-    }
-
-    /**
-     * 
-     * @param {string} id
      * @param {string} displayName
-     * @param {BaseAudioElement} audioElement
+     * @param {Pose} pose
      * @param {string} avatarURL
      * @param {string} roomName
      */
-    async startAsync(id, displayName, audioElement, avatarURL, roomName) {
+    async startAsync(id, displayName, pose, avatarURL, roomName) {
         this.currentRoomName = roomName.toLowerCase();
-        this.me = new User(id, displayName, audioElement, true);
-        if (!!avatarURL) {
+        this.me = new User(id, displayName, pose, true);
+        if (isString(avatarURL)) {
             this.me.avatarImage = avatarURL;
         }
         this.users.set(id, this.me);

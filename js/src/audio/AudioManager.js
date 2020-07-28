@@ -1,9 +1,8 @@
-﻿import { arrayClear } from "../protos/Array.js";
-import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
+﻿import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 import { AudioActivityEvent } from "./AudioActivityEvent.js";
 import { BaseAudioClient } from "./BaseAudioClient.js";
 import { Destination } from "./Destination.js";
-import { BaseSpatializer } from "./spatializers/BaseSpatializer.js";
+import { InterpolatedPose } from "./positions/InterpolatedPose.js";
 
 const BUFFER_SIZE = 1024,
     audioActivityEvt = new AudioActivityEvent;
@@ -30,49 +29,16 @@ export class AudioManager extends BaseAudioClient {
             this.dispatchEvent(audioActivityEvt);
         };
 
-        /** @type {Map.<string, BaseSpatializer>} */
+        /** @type {Map.<string, InterpolatedPose>} */
         this.sources = new Map();
 
         this.destination = new Destination();
-
-        /** @type {Event[]} */
-        const recreationQ = [];
-
-        this.destination.addEventListener("contextDestroying", () => {
-            for (let source of this.sources.values()) {
-                source.removeEventListener("audioActivity", this.onAudioActivity);
-                recreationQ.push({
-                    id: source.id,
-                    x: source.x,
-                    y: source.y,
-                    z: source.z,
-                    audio: source.audio
-                });
-
-                source.dispose();
-            }
-
-            this.sources.clear();
-        });
-
-        this.destination.addEventListener("contextDestroyed", () => {
-            this.timer.stop();
-            this.destination.createContext();
-
-            for (let recreate of recreationQ) {
-                const source = this.createSource(recreate.id, recreate.audio);
-                source.setPosition(recreate.x, recreate.y, recreate.z);
-            }
-
-            arrayClear(recreationQ);
-            this.timer.start();
-        });
 
         this.timer = new RequestAnimationFrameTimer();
         this.timer.addEventListener("tick", () => {
             this.destination.update();
             for (let source of this.sources.values()) {
-                source.update();
+                source.update(this.destination.currentTime);
             }
         });
 
@@ -88,24 +54,45 @@ export class AudioManager extends BaseAudioClient {
     }
 
     /**
+     * @param {string} id
+     * @returns {InterpolatedPose}
+     */
+    createUser(id) {
+        if (!this.sources.has(id)) {
+            this.sources.set(id, new InterpolatedPose());
+        }
+        return this.sources.get(id);
+    }
+
+    /**
+     * Remove a user from audio processing.
+     * @param {string} id - the id of the user to remove
+     **/
+    removeUser(id) {
+        if (this.sources.has(id)) {
+            const pose = this.sources.get(id);
+            pose.dispose();
+            this.sources.delete(id);
+        }
+    }
+
+    /**
      * @param {string} userID
      * @param {MediaStream|HTMLAudioElement} stream
-     * @return {BaseSpatializer}
      **/
-    createSource(userID, stream) {
-        const source = this.destination.createSpatializer(userID, stream, BUFFER_SIZE);
-        source.addEventListener("audioActivity", this.onAudioActivity);
+    setSource(userID, stream) {
         if (this.sources.has(userID)) {
-            const oldSource = this.sources.get(userID);
-            source.copy(oldSource);
-            oldSource.dispose();
-        }
-        else {
-            source.setPosition(0, 0, 0);
-        }
+            const pose = this.sources.get(userID);
+            if (pose.spatializer) {
+                pose.spatializer.removeEventListener("audioActivity", this.onAudioActivity);
+            }
 
-        this.sources.set(userID, source);
-        return source;
+            pose.spatializer = this.destination.createSpatializer(stream, BUFFER_SIZE);
+
+            if (pose.spatializer) {
+                pose.spatializer.addEventListener("audioActivity", this.onAudioActivity);
+            }
+        }
     }
 
     /**
@@ -117,31 +104,6 @@ export class AudioManager extends BaseAudioClient {
      **/
     setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
         this.destination.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
-        for (let source of this.sources.values()) {
-            source.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
-        }
-    }
-
-    /**
-     * Set the audio device used to play audio to the local user.
-     * @param {string} deviceID
-     **/
-    setAudioOutputDevice(deviceID) {
-        for (let source of this.sources.values()) {
-            source.setAudioOutputDevice(deviceID);
-        }
-    }
-
-    /**
-     * Remove a user from audio processing.
-     * @param {string} id - the id of the user to remove
-     **/
-    removeSource(id) {
-        if (this.sources.has(id)) {
-            const source = this.sources.get(id);
-            source.dispose();
-            this.sources.delete(id);
-        }
     }
 
     /**
@@ -151,14 +113,14 @@ export class AudioManager extends BaseAudioClient {
      * @param {number} z - the lateral component of the position.
      */
     setLocalPosition(x, y, z) {
-        this.destination.setPosition(x, y, z);
+        this.destination.pose.setTarget(x, y, z, 0, 0, 1, 0, 1, 0, this.destination.currentTime, this.destination.transitionTime);
     }
 
     /**
      * @returns {BaseAudioElement}
      **/
-    getLocalPosition() {
-        return this.destination;
+    getLocalPose() {
+        return this.destination.pose.end;
     }
 
     /**
@@ -170,8 +132,8 @@ export class AudioManager extends BaseAudioClient {
      **/
     setUserPosition(id, x, y, z) {
         if (this.sources.has(id)) {
-            const source = this.sources.get(id);
-            source.setPosition(x, y, z);
+            const pose = this.sources.get(id);
+            pose.setTarget(x, y, z, 0, 0, 1, 0, 1, 0, this.destination.currentTime, this.destination.transitionTime);
         }
     }
 }

@@ -1,22 +1,20 @@
-﻿import { BaseAnalyzedSpatializer } from "./BaseAnalyzedSpatializer.js";
+﻿import { BaseAnalyzed } from "./BaseAnalyzed.js";
 
 /**
  * A spatializer that uses the WebAudio API.
  **/
-export class BaseWebAudioSpatializer extends BaseAnalyzedSpatializer {
+export class BaseWebAudio extends BaseAnalyzed {
 
     /**
      * Creates a new spatializer that uses the WebAudio API
-     * @param {string} userID
      * @param {Destination} destination
      * @param {MediaStream|HTMLAudioElement} stream
-     * @param {BasePosition} position
      * @param {number} bufferSize
      * @param {PannerNode|StereoPannerNode} inNode
      * @param {GainNode=} outNode
      */
-    constructor(userID, destination, stream, position, bufferSize, inNode, outNode) {
-        super(userID, destination, stream, position, bufferSize, inNode);
+    constructor(destination, stream, bufferSize, inNode, outNode = null) {
+        super(destination, stream, bufferSize, inNode);
 
         this.outNode = outNode || inNode;
         this.outNode.connect(this.destination.audioContext.destination);

@@ -1,39 +1,57 @@
-﻿import { BaseAudioElement } from "./BaseAudioElement.js";
-import { MockAudioContext } from "./MockAudioContext.js";
-import { GoogleResonanceAudioScene } from "./positions/GoogleResonanceAudioScene.js";
-import { InterpolatedPosition } from "./positions/InterpolatedPosition.js";
-import { WebAudioNewListenerPosition } from "./positions/WebAudioNewListenerPosition.js";
-import { WebAudioOldNodePosition } from "./positions/WebAudioOldNodePosition.js";
-import { BaseSpatializer } from "./spatializers/BaseSpatializer.js";
-import { GoogleResonanceAudioSpatializer } from "./spatializers/GoogleResonanceAudioSpatializer.js";
-import { NewPannerSpatializer } from "./spatializers/NewPannerSpatializer.js";
-import { NoAudioSpatializer } from "./spatializers/NoAudioSpatializer.js";
-import { OldPannerSpatializer } from "./spatializers/OldPannerSpatializer.js";
-import { StereoSpatializer } from "./spatializers/StereoSpatializer.js";
-import { VolumeOnlySpatializer } from "./spatializers/VolumeOnlySpatializer.js";
+﻿import { MockAudioContext } from "./MockAudioContext.js";
+import { InterpolatedPose } from "./positions/InterpolatedPose.js";
+import { BaseListener } from "./spatializers/BaseListener.js";
+import { BaseSource } from "./spatializers/BaseSource.js";
+import { ListenerNew } from "./spatializers/ListenerNew.js";
+import { ListenerOld } from "./spatializers/ListenerOld.js";
+import { ResonanceScene } from "./spatializers/ResonanceScene.js";
 
-const contextDestroyingEvt = new Event("contextDestroying"),
-    contextDestroyedEvt = new Event("contextDestroyed");
-
-let hasWebAudioAPI = Object.prototype.hasOwnProperty.call(window, "AudioListener"),
-    hasFullSpatializer = hasWebAudioAPI && Object.prototype.hasOwnProperty.call(AudioContext.prototype, "createPanner"),
-    isLatestWebAudioAPI = hasWebAudioAPI && Object.prototype.hasOwnProperty.call(AudioListener.prototype, "positionX"),
-    forceInterpolatedPosition = true,
-    attemptResonanceAPI = hasWebAudioAPI;
+let hasAudioContext = Object.prototype.hasOwnProperty.call(window, "AudioContext"),
+    hasAudioListener = hasAudioContext && Object.prototype.hasOwnProperty.call(window, "AudioListener"),
+    hasOldAudioListener = hasAudioListener && Object.prototype.hasOwnProperty.call(AudioListener.prototype, "setPosition"),
+    hasNewAudioListener = hasAudioListener && Object.prototype.hasOwnProperty.call(AudioListener.prototype, "positionX"),
+    attemptResonanceAPI = hasAudioListener;
 
 /**
  * A manager of the audio context and listener.
  **/
-export class Destination extends BaseAudioElement {
+export class Destination extends EventTarget {
 
     /**
      * Creates a new manager of the audio context and listener
      **/
     constructor() {
-        super(null);
+        super();
 
-        /** @type {AudioContext|MockAudioContext} */
+        this.minDistance = 1;
+        this.minDistanceSq = 1;
+        this.maxDistance = 10;
+        this.maxDistanceSq = 100;
+        this.rolloff = 1;
+        this.transitionTime = 0.5;
+
+        /** @type {AudioContext} */
         this.audioContext = null;
+
+        /** @type {InterpolatedPose} */
+        this.pose = new InterpolatedPose();
+
+        /** @type {BaseListener} */
+        this.listener = null;
+    }
+
+    /**
+     * Sets parameters that alter spatialization.
+     * @param {number} minDistance
+     * @param {number} maxDistance
+     * @param {number} rolloff
+     * @param {number} transitionTime
+     */
+    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
+        this.minDistance = minDistance;
+        this.maxDistance = maxDistance;
+        this.transitionTime = transitionTime;
+        this.rolloff = rolloff;
     }
 
     /**
@@ -42,6 +60,10 @@ export class Destination extends BaseAudioElement {
      */
     get currentTime() {
         return this.audioContext.currentTime;
+    }
+
+    update() {
+        this.pose.update(this.currentTime);
     }
 
     /**
@@ -53,11 +75,23 @@ export class Destination extends BaseAudioElement {
      **/
     createContext() {
         if (!this.audioContext) {
-            this.audioContext = new AudioContext();
-
-            if (attemptResonanceAPI) {
+            if (hasAudioContext) {
                 try {
-                    this.position = new GoogleResonanceAudioScene(this.audioContext);
+                    this.audioContext = new AudioContext();
+                }
+                catch (exp) {
+                    hasAudioContext = false;
+                    console.warn("Could not create WebAudio AudioContext", exp);
+                }
+            }
+
+            if (!hasAudioContext) {
+                this.audioContext = new MockAudioContext();
+            }
+
+            if (hasAudioContext && attemptResonanceAPI) {
+                try {
+                    this.listener = new ResonanceScene(this);
                 }
                 catch (exp) {
                     attemptResonanceAPI = false;
@@ -65,114 +99,46 @@ export class Destination extends BaseAudioElement {
                 }
             }
 
-            if (!attemptResonanceAPI && isLatestWebAudioAPI) {
+            if (hasAudioContext && !attemptResonanceAPI && hasNewAudioListener) {
                 try {
-                    this.position = new WebAudioNewListenerPosition(this.audioContext.listener, forceInterpolatedPosition);
+                    this.listener = new ListenerNew(this);
                 }
                 catch (exp) {
-                    isLatestWebAudioAPI = false;
+                    hasNewAudioListener = false;
                     console.warn("No AudioListener.positionX property!", exp);
                 }
             }
 
-            if (!attemptResonanceAPI && !isLatestWebAudioAPI && hasWebAudioAPI) {
+            if (hasAudioContext && !attemptResonanceAPI && !hasNewAudioListener && hasOldAudioListener) {
                 try {
-                    this.position = new WebAudioOldNodePosition(this.audioContext.listener);
+                    this.listener = new ListenerOld(this);
                 }
                 catch (exp) {
-                    hasWebAudioAPI = false;
+                    hasOldAudioListener = false;
                     console.warn("No WebAudio API!", exp);
                 }
             }
 
-            if (!attemptResonanceAPI && !isLatestWebAudioAPI && !hasWebAudioAPI) {
-                this.audioContext = new MockAudioContext();
-                this.position = new InterpolatedPosition();
+            if (!hasOldAudioListener || !hasAudioContext) {
+                this.listener = new BaseListener(this);
             }
+
+            this.pose.spatializer = this.listener;
         }
-    }
-
-
-    /**
-     * Creates a spatializer for an audio source, and initializes its audio properties.
-     * @param {string} userID
-     * @param {MediaStream|HTMLAudioElement} stream
-     * @param {number} bufferSize
-     * @returns {BaseSpatializer}
-     */
-    createSpatializer(userID, stream, bufferSize) {
-        const spatializer = this._createSpatializer(userID, stream, bufferSize);
-        if (spatializer) {
-            spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
-        }
-
-        return spatializer;
     }
 
     /**
      * Creates a spatialzer for an audio source.
      * @private
-     * @param {string} id - the user for which the audio source is being created.
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
      * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
-     * @return {BaseSpatializer}
+     * @return {BaseSource}
      */
-    _createSpatializer(id, stream, bufferSize) {
-        if (stream === null) {
-            return new NoAudioSpatializer(id, this);
+    createSpatializer(stream, bufferSize) {
+        if (!stream || !this.listener) {
+            return null;
         }
 
-        if (attemptResonanceAPI) {
-            try {
-                return new GoogleResonanceAudioSpatializer(id, this, stream, bufferSize);
-            }
-            catch (exp) {
-                attemptResonanceAPI = false;
-                console.warn("Resonance Audio API not available!", exp);
-            }
-        }
-
-        if (!attemptResonanceAPI && hasFullSpatializer) {
-            if (isLatestWebAudioAPI) {
-                try {
-                    return new NewPannerSpatializer(id, this, stream, bufferSize, forceInterpolatedPosition);
-                }
-                catch (exp) {
-                    isLatestWebAudioAPI = false;
-                    console.warn("No 360 spatializer support", exp);
-                }
-            }
-
-            if (!isLatestWebAudioAPI) {
-                try {
-                    return new OldPannerSpatializer(id, this, stream, bufferSize);
-                }
-                catch (exp) {
-                    hasFullSpatializer = false;
-                    console.warn("Not even the old 360 spatializer", exp);
-                }
-            }
-        }
-
-        if (!attemptResonanceAPI && !hasFullSpatializer && hasWebAudioAPI) {
-            try {
-                return new StereoSpatializer(id, this, stream, bufferSize);
-            }
-            catch (exp) {
-                hasWebAudioAPI = false;
-                if (this.audioContext) {
-                    this.dispatchEvent(contextDestroyingEvt);
-                    this.audioContext.close();
-                    this.audioContext = null;
-                    this.position = null;
-                    this.dispatchEvent(contextDestroyedEvt);
-                }
-                console.warn("No WebAudio API!", exp);
-            }
-        }
-
-        if (!attemptResonanceAPI && !hasFullSpatializer && !hasWebAudioAPI) {
-            return new VolumeOnlySpatializer(id, this, stream);
-        }
+        return this.listener.createSource(stream, bufferSize);
     }
 }

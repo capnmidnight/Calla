@@ -1,4 +1,4 @@
-﻿import { BaseAudioElement } from "./audio/BaseAudioElement.js";
+﻿import { Pose } from "./audio/positions/Pose.js";
 import { AvatarMode, BaseAvatar } from "./avatars/BaseAvatar.js";
 import { EmojiAvatar } from "./avatars/EmojiAvatar.js";
 import { PhotoAvatar } from "./avatars/PhotoAvatar.js";
@@ -24,16 +24,16 @@ export class User extends EventTarget {
      * 
      * @param {string} id
      * @param {string} displayName
-     * @param {BaseAudioElement} audioElement
+     * @param {Pose} pose
      * @param {boolean} isMe
      */
-    constructor(id, displayName, audioElement, isMe) {
+    constructor(id, displayName, pose, isMe) {
         super();
 
         this.id = id;
+        this.pose = pose;
+        this._displayName = displayName;
         this.label = isMe ? "(Me)" : `(${this.id})`;
-
-        this.audioElement = audioElement;
 
         /** @type {AvatarMode} */
         this.setAvatarVideo(null);
@@ -55,25 +55,23 @@ export class User extends EventTarget {
         this.userNameText = new TextImage("sans-serif");
         this.userNameText.color = "white";
         this.userNameText.fontSize = 128;
-        this._displayName = null;
-        this.displayName = displayName;
         Object.seal(this);
     }
 
     get x() {
-        return this.audioElement.x;
+        return this.pose.current.p.x;
     }
 
     get y() {
-        return this.audioElement.z;
+        return this.pose.current.p.z;
     }
 
     get gridX() {
-        return this.audioElement.tx;
+        return this.pose.end.p.x;
     }
 
     get gridY() {
-        return this.audioElement.tz;
+        return this.pose.end.p.z;
     }
 
     deserialize(evt) {
