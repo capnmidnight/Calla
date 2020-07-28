@@ -107,6 +107,7 @@ export class BaseJitsiClient extends EventTarget {
         this.addEventListener("audioMuteStatusChanged", (evt) => {
             if (evt.id === this.localUser) {
                 const evt2 = Object.assign(new Event("localAudioMuteStatusChanged"), {
+                    id: evt.id,
                     muted: evt.muted
                 })
                 this.dispatchEvent(evt2);
@@ -116,6 +117,7 @@ export class BaseJitsiClient extends EventTarget {
         this.addEventListener("videoMuteStatusChanged", (evt) => {
             if (evt.id === this.localUser) {
                 const evt2 = Object.assign(new Event("localVideoMuteStatusChanged"), {
+                    id: evt.id,
                     muted: evt.muted
                 })
                 this.dispatchEvent(evt2);

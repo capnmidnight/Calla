@@ -49,11 +49,12 @@ export class ResonanceScene extends BaseListener {
     /**
      * Creates a spatialzer for an audio source.
      * @private
+     * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
      * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
      * @return {BaseSource}
      */
-    createSource(stream, bufferSize) {
-        return new ResonanceSource(this.destination, stream, bufferSize);
+    createSource(id, stream, bufferSize) {
+        return new ResonanceSource(id, this.destination, stream, bufferSize);
     }
 }

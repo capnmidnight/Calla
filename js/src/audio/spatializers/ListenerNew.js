@@ -36,11 +36,12 @@ export class ListenerNew extends ListenerBase {
     /**
      * Creates a spatialzer for an audio source.
      * @private
+     * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
      * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
      * @return {BaseSource}
      */
-    createSource(stream, bufferSize) {
-        return new PannerNew(this.destination, stream, bufferSize);
+    createSource(id, stream, bufferSize) {
+        return new PannerNew(id, this.destination, stream, bufferSize);
     }
 }

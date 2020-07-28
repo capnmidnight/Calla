@@ -10,11 +10,14 @@ export class BaseSource extends BaseSpatializer {
     /**
      * Creates a spatializer that keeps track of the relative position
      * of an audio element to the listener destination.
+     * @param {string} id
      * @param {Destination} destination
      * @param {MediaStream|HTMLAudioElement} stream
      */
-    constructor(destination, stream) {
+    constructor(id, destination, stream) {
         super(destination);
+
+        this.id = id;
 
         /** @type {HTMLAudioElement} */
         this.audio = null;

@@ -42,13 +42,14 @@ function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz, bufferSiz
 export class BaseAnalyzed extends BaseSource {
 
     /**
+     * @param {string} id
      * @param {Destination} destination
      * @param {MediaStream|HTMLAudioElement} stream
      * @param {number} bufferSize
      * @param {PannerNode|StereoPannerNode} inNode
      */
-    constructor(destination, stream, bufferSize, inNode) {
-        super(destination, stream);
+    constructor(id, destination, stream, bufferSize, inNode) {
+        super(id, destination, stream);
 
         this.bufferSize = bufferSize;
         this.buffer = new Float32Array(this.bufferSize);

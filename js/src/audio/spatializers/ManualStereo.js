@@ -17,7 +17,7 @@ export class ManualStereo extends BaseWebAudio {
         super(destination, stream, bufferSize,
             destination.audioContext.createStereoPanner(),
             destination.audioContext.createGain());
-        this.manual = new ManualBase(destination);
+        this.manual = new ManualBase(id, destination);
         Object.seal(this);
     }
 

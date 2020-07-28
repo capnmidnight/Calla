@@ -130,15 +130,16 @@ export class Destination extends EventTarget {
     /**
      * Creates a spatialzer for an audio source.
      * @private
+     * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
      * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
      * @return {BaseSource}
      */
-    createSpatializer(stream, bufferSize) {
+    createSpatializer(id, stream, bufferSize) {
         if (!stream || !this.listener) {
             return null;
         }
 
-        return this.listener.createSource(stream, bufferSize);
+        return this.listener.createSource(id, stream, bufferSize);
     }
 }

@@ -15,7 +15,7 @@ export class ManualVolume extends BaseSource {
     constructor(destination, stream) {
         super(destination, stream);
         this.audio.muted = false;
-        this.manual = new ManualBase(destination);
+        this.manual = new ManualBase(id, destination);
         Object.seal(this);
     }
 

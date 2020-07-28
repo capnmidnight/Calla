@@ -15,14 +15,15 @@ export class BaseListener extends BaseSpatializer {
     /**
      * Creates a spatialzer for an audio source.
      * @private
+     * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
      * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
      * @return {BaseSource}
      */
-    createSource(stream, bufferSize) {
+    createSource(id, stream, bufferSize) {
         if (tryStereo) {
             try {
-                return new ManualStereo(this, stream, bufferSize);
+                return new ManualStereo(id, this, stream, bufferSize);
             }
             catch (exp) {
                 tryStereo = false;
@@ -30,7 +31,7 @@ export class BaseListener extends BaseSpatializer {
         }
 
         if (!tryStereo) {
-            return new ManualVolume(this.destination, stream);
+            return new ManualVolume(id, this.destination, stream);
         }
     }
 }

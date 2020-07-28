@@ -7,14 +7,15 @@ export class BaseWebAudio extends BaseAnalyzed {
 
     /**
      * Creates a new spatializer that uses the WebAudio API
+     * @param {string} id
      * @param {Destination} destination
      * @param {MediaStream|HTMLAudioElement} stream
      * @param {number} bufferSize
      * @param {PannerNode|StereoPannerNode} inNode
      * @param {GainNode=} outNode
      */
-    constructor(destination, stream, bufferSize, inNode, outNode = null) {
-        super(destination, stream, bufferSize, inNode);
+    constructor(id, destination, stream, bufferSize, inNode, outNode = null) {
+        super(id, destination, stream, bufferSize, inNode);
 
         this.outNode = outNode || inNode;
         this.outNode.connect(this.destination.audioContext.destination);

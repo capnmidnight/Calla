@@ -5,7 +5,7 @@ import { Destination } from "./Destination.js";
 import { InterpolatedPose } from "./positions/InterpolatedPose.js";
 
 const BUFFER_SIZE = 1024,
-    audioActivityEvt = new AudioActivityEvent;
+    audioActivityEvt = new AudioActivityEvent();
 
 /**
  * A manager of audio sources, destinations, and their spatialization.
@@ -77,17 +77,17 @@ export class AudioManager extends BaseAudioClient {
     }
 
     /**
-     * @param {string} userID
+     * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream
      **/
-    setSource(userID, stream) {
-        if (this.sources.has(userID)) {
-            const pose = this.sources.get(userID);
+    setSource(id, stream) {
+        if (this.sources.has(id)) {
+            const pose = this.sources.get(id);
             if (pose.spatializer) {
                 pose.spatializer.removeEventListener("audioActivity", this.onAudioActivity);
             }
 
-            pose.spatializer = this.destination.createSpatializer(stream, BUFFER_SIZE);
+            pose.spatializer = this.destination.createSpatializer(id, stream, BUFFER_SIZE);
 
             if (pose.spatializer) {
                 pose.spatializer.addEventListener("audioActivity", this.onAudioActivity);

@@ -298,10 +298,9 @@ export class Game extends EventTarget {
     }
 
     updateAudioActivity(id, isActive) {
-        if (this.users.has(id)) {
-            const user = this.users.get(id);
+        this.withUser(id, (user) => {
             user.isActive = isActive;
-        }
+        });
     }
 
     emote(id, emoji) {
