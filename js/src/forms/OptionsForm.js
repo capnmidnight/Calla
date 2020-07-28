@@ -1,4 +1,4 @@
-﻿import { EventedGamepad } from "../gamepad/EventedGamepad.js";
+﻿import { EventedGamepad } from "../input/EventedGamepad.js";
 import { disabled, height, htmlFor, id, max, min, placeHolder, step, value, width } from "../html/attrs.js";
 import { backgroundColor, borderBottom, borderLeft, borderRight, styles, width as cssWidth } from "../html/css.js";
 import { onClick, onInput, onKeyUp } from "../html/evts.js";

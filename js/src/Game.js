@@ -1,6 +1,6 @@
 ﻿import { Pose } from "./audio/positions/Pose.js";
 import { Emote } from "./Emote.js";
-import { EventedGamepad } from "./gamepad/EventedGamepad.js";
+import { EventedGamepad } from "./input/EventedGamepad.js";
 import { id } from "./html/attrs.js";
 import { resizeCanvas } from "./html/canvas.js";
 import { height, touchAction, width } from "./html/css.js";
