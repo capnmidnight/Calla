@@ -32,7 +32,6 @@ export class User extends EventTarget {
 
         this.id = id;
         this.pose = pose;
-        this._displayName = displayName;
         this.label = isMe ? "(Me)" : `(${this.id})`;
 
         /** @type {AvatarMode} */
@@ -55,6 +54,8 @@ export class User extends EventTarget {
         this.userNameText = new TextImage("sans-serif");
         this.userNameText.color = "white";
         this.userNameText.fontSize = 128;
+        this._displayName = null;
+        this.displayName = displayName;
         Object.seal(this);
     }
 
