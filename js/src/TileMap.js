@@ -9,8 +9,6 @@ const selfs = new WeakMap();
 class TileMapPrivate {
     constructor(tilemapName) {
         this.url = new URL(`/data/tilemaps/${tilemapName}.tmx`, document.location);
-        /** @type {TileSet} */
-        this.tileset = null;
         this.tileWidth = 0;
         this.tileHeight = 0;
         this.layers = 0;
@@ -18,10 +16,16 @@ class TileMapPrivate {
         this.height = 0;
         this.offsetX = 0;
         this.offsetY = 0;
+
+        /** @type {TileSet} */
+        this.tileset = null;
+
         /** @type {number[][][]} */
         this.tiles = null;
-        this.collision = null;
+
+        /** @type {Graph} */
         this.graph = null;
+
         /** @type {OffscreenCanvas[]} */
         this.layerImages = [];
 
@@ -222,11 +226,10 @@ export class TileMap {
     getClearTileNear(x, y, maxRadius, avatar) {
         for (let r = 1; r <= maxRadius; ++r) {
             for (let dx = -r; dx <= r; ++dx) {
-                const dy1 = r - Math.abs(dx);
-                const dy2 = -dy1;
+                const dy = r - Math.abs(dx);
                 const tx = x + dx;
-                const ty1 = y + dy1;
-                const ty2 = y + dy2;
+                const ty1 = y + dy;
+                const ty2 = y - dy;
 
                 if (this.isClear(tx, ty1, avatar)) {
                     return { x: tx, y: ty1 };
