@@ -1,5 +1,6 @@
-﻿import "./protos.js";
-import { Graph, astar } from "../lib/astar.js";
+﻿import { astar, Graph } from "../lib/astar.js";
+import { CanvasOffscreen } from "./html/tags.js";
+import "./protos.js";
 import { TileSet } from "./TileSet.js";
 
 /** @type {WeakMap<TileMap, TileMapPrivate>} */
@@ -8,6 +9,7 @@ const selfs = new WeakMap();
 class TileMapPrivate {
     constructor(tilemapName) {
         this.url = new URL(`/data/tilemaps/${tilemapName}.tmx`, document.location);
+        /** @type {TileSet} */
         this.tileset = null;
         this.tileWidth = 0;
         this.tileHeight = 0;
@@ -16,9 +18,12 @@ class TileMapPrivate {
         this.height = 0;
         this.offsetX = 0;
         this.offsetY = 0;
+        /** @type {number[][][]} */
         this.tiles = null;
         this.collision = null;
         this.graph = null;
+        /** @type {OffscreenCanvas[]} */
+        this.layerImages = [];
 
         Object.seal(this);
     }
@@ -56,7 +61,8 @@ export class TileMap {
                 .replace("\t", "")
                 .replace("\n", "")
                 .replace("\r", "")
-                .split(","),
+                .split(",")
+                .map(s => parseInt(s, 10)),
                 rows = [];
             let row = [];
             for (let tile of tileIds) {
@@ -69,6 +75,7 @@ export class TileMap {
             if (row.length > 0) {
                 rows.push(row);
             }
+
             self.tiles.push(rows);
         }
 
@@ -76,6 +83,20 @@ export class TileMap {
         await self.tileset.load();
         self.tileWidth = self.tileset.tileWidth;
         self.tileHeight = self.tileset.tileHeight;
+
+        for (let l = 0; l < self.layers; ++l) {
+            const img = CanvasOffscreen(this.width * this.tileWidth, this.height * this.tileHeight);
+            self.layerImages.push(img);
+            const context = img.getContext("2d");
+            const layer = self.tiles[l];
+            for (let y = 0; y < this.height; ++y) {
+                const row = layer[y];
+                for (let x = 0; x < this.width; ++x) {
+                    const tile = row[x];
+                    self.tileset.draw(context, tile, x, y);
+                }
+            }
+        }
 
         let grid = [];
         for (let row of self.tiles[0]) {
@@ -130,15 +151,8 @@ export class TileMap {
         g.save();
         {
             g.translate(self.offsetX * this.tileWidth, self.offsetY * this.tileHeight);
-            for (let l = 0; l < self.layers; ++l) {
-                const layer = self.tiles[l];
-                for (let y = 0; y < this.height; ++y) {
-                    const row = layer[y];
-                    for (let x = 0; x < this.width; ++x) {
-                        const tile = row[x];
-                        self.tileset.draw(g, tile, x, y);
-                    }
-                }
+            for (let img of self.layerImages) {
+                g.drawImage(img, 0, 0);
             }
         }
         g.restore();
