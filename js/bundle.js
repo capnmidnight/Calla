@@ -50,7 +50,13 @@ function clamp(v, min, max) {
  * @param {number} max
  */
 function project(v, min, max) {
-    return (v - min) / (max - min);
+    const delta = max - min;
+    if (delta === 0) {
+        return 0;
+    }
+    else {
+        return (v - min) / delta;
+    }
 }
 
 /**
@@ -2003,6 +2009,8 @@ class SFX extends EventTarget {
 
         /** @type {Map.<string, Audio>} */
         this.clips = new Map();
+
+        Object.seal(this);
     }
 
     /**
@@ -4983,16 +4991,6 @@ class FormDialog extends EventTarget {
             .apply(this.footer);
     }
 
-    get isOpen() {
-        return this.element.isOpen();
-    }
-
-    set isOpen(v) {
-        if (v !== this.isOpen) {
-            this.toggleOpen();
-        }
-    }
-
     appendChild(child) {
         return this.element.appendChild(child);
     }
@@ -5016,7 +5014,22 @@ class FormDialog extends EventTarget {
     }
 
     toggleOpen() {
-        this.element.toggleOpen("grid");
+        if (this.isOpen) {
+            this.hide();
+        }
+        else {
+            this.show();
+        }
+    }
+
+    get isOpen() {
+        return this.element.isOpen();
+    }
+
+    set isOpen(v) {
+        if (v !== this.isOpen) {
+            this.toggleOpen();
+        }
     }
 }
 
@@ -5453,41 +5466,47 @@ class HeaderBar extends EventTarget {
     }
 }
 
-const loginEvt = new Event("login"),
-    defaultRooms = new Map([
-        ["calla", "Calla"],
-        ["island", "Island"],
-        ["alxcc", "Alexandria Code & Coffee"],
-        ["vurv", "Vurv"]]),
-    selfs = new Map();
+const defaultRooms = new Map([
+    ["calla", "Calla"],
+    ["island", "Island"],
+    ["alxcc", "Alexandria Code & Coffee"],
+    ["vurv", "Vurv"]]);
+
+/** @type {WeakMap<LoginForm, LoginFormPrivate>} */
+const selfs = new WeakMap();
+
+class LoginFormPrivate {
+    constructor(parent) {
+        this.ready = false;
+        this.connecting = false;
+        this.connected = false;
+
+        this.parent = parent;
+    }
+
+    validate() {
+        const canConnect = this.parent.roomName.length > 0
+            && this.parent.userName.length > 0;
+
+        this.parent.connectButton.setLocked(!this.ready
+            || this.connecting
+            || this.connected
+            || !canConnect);
+        this.parent.connectButton.innerHTML =
+            this.connected
+                ? "Connected"
+                : this.connecting
+                    ? "Connecting..."
+                    : this.ready
+                        ? "Connect"
+                        : "Loading...";
+    }
+}
 
 class LoginForm extends FormDialog {
     constructor() {
         super("login", "Login");
-
-        const self = Object.seal({
-            ready: false,
-            connecting: false,
-            connected: false,
-            validate: () => {
-                const canConnect = this.roomName.length > 0
-                    && this.userName.length > 0;
-
-                this.connectButton.setLocked(!this.ready
-                    || this.connecting
-                    || this.connected
-                    || !canConnect);
-                this.connectButton.innerHTML =
-                    this.connected
-                        ? "Connected"
-                        : this.connecting
-                            ? "Connecting..."
-                            : this.ready
-                                ? "Connect"
-                                : "Loading...";
-            }
-        });
-
+        const self = new LoginFormPrivate(this);
         selfs.set(this, self);
 
         this.roomLabel = this.element.querySelector("label[for='roomSelector']");
@@ -5874,6 +5893,972 @@ class RequestAnimationFrameTimer extends BaseTimer {
     }
 }
 
+/**
+ * A 3D point.
+ **/
+class Vector {
+    /**
+     * Creates a new 3D point.
+     **/
+    constructor() {
+        this.x = 0;
+        this.y = 0;
+        this.z = 0;
+
+        Object.seal(this);
+    }
+
+    /**
+     * Sets the components of this vector.
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     */
+    set(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+
+    /**
+     * Copies another vector into this vector.
+     * @param {Vector} other
+     */
+    copy(other) {
+        this.x = other.x;
+        this.y = other.y;
+        this.z = other.z;
+    }
+
+    /**
+     * Performs a linear interpolation between two vectors,
+     * storing the result in this vector.
+     * @param {Vector} a
+     * @param {Vector} b
+     * @param {number} p
+     */
+    lerp(a, b, p) {
+        this.x = lerp(a.x, b.x, p);
+        this.y = lerp(a.y, b.y, p);
+        this.z = lerp(a.z, b.z, p);
+    }
+
+    /**
+     * Computes the dot product of this vector with another vector
+     * @param {Vector} other
+     */
+    dot(other) {
+        return this.x * other.x + this.y * other.y + this.z * other.z;
+    }
+
+    /**
+     * Subtracts two vectors and stores the result in this vector.
+     * @param {Vector} a
+     * @param {Vector} b
+     */
+    sub(a, b) {
+        this.x = a.x - b.x;
+        this.y = a.y - b.y;
+        this.z = a.z - b.z;
+    }
+
+    /**
+     * Performs a spherical linear interpolation between two vectors,
+     * storing the result in this vector.
+     * @param {Vector} a
+     * @param {Vector} b
+     * @param {number} p
+     */
+    slerp(a, b, p) {
+        const dot = a.dot(b);
+        const angle = Math.acos(dot);
+        if (angle !== 0) {
+            const c = Math.sin(angle);
+            const pA = Math.sin((1 - p) * angle) / c;
+            const pB = Math.sin(p * angle) / c;
+            this.x = pA * a.x + pB * b.x;
+            this.y = pA * a.y + pB * b.y;
+            this.x = pA * a.z + pB * b.z;
+        }
+    }
+
+    /**
+     * Gets the squared length of the vector
+     **/
+    get lenSq() {
+        return this.dot(this);
+    }
+
+    /**
+     * Gets the length of the vector
+     **/
+    get len() {
+        return Math.sqrt(this.lenSq);
+    }
+
+    /**
+     * Makes this vector a unit vector
+     **/
+    normalize() {
+        const len = this.len;
+        if (len !== 0) {
+            this.x /= len;
+            this.y /= len;
+            this.z /= len;
+        }
+    }
+}
+
+/**
+ * A position and orientation, at a given time.
+ **/
+class Pose {
+    /**
+     * Creates a new position and orientation, at a given time.
+     **/
+    constructor() {
+        this.t = 0;
+        this.p = new Vector();
+        this.f = new Vector();
+        this.f.set(0, 0, 1);
+        this.u = new Vector();
+        this.u.set(0, 1, 0);
+
+        Object.seal(this);
+    }
+
+
+    /**
+     * Sets the components of the pose.
+     * @param {number} px
+     * @param {number} py
+     * @param {number} pz
+     * @param {number} fx
+     * @param {number} fy
+     * @param {number} fz
+     * @param {number} ux
+     * @param {number} uy
+     * @param {number} uz
+     */
+    set(px, py, pz, fx, fy, fz, ux, uy, uz) {
+        this.p.set(px, py, pz);
+        this.f.set(fx, fy, fz);
+        this.u.set(ux, uy, uz);
+    }
+
+    /**
+     * Copies the components of another pose into this pose.
+     * @param {Pose} other
+     */
+    copy(other) {
+        this.p.copy(other.p);
+        this.f.copy(other.f);
+        this.u.copy(other.u);
+    }
+
+    /**
+     * Performs a lerp between two positions and a slerp between to orientations
+     * and stores the result in this pose.
+     * @param {Pose} a
+     * @param {Pose} b
+     * @param {number} p
+     */
+    interpolate(start, end, t) {
+        if (t <= start.t) {
+            this.copy(start);
+        }
+        else if (end.t <= t) {
+            this.copy(end);
+        }
+        else if (start.t < t) {
+            const p = project(t, start.t, end.t);
+            this.p.lerp(start.p, end.p, p);
+            this.f.slerp(start.f, end.f, p);
+            this.u.slerp(start.u, end.u, p);
+            this.t = t;
+        }
+    }
+}
+
+/**
+ * A base class for different types of avatars.
+ **/
+class BaseAvatar {
+
+    /**
+     * Encapsulates a resource to use as an avatar.
+     * @param {boolean} canSwim
+     */
+    constructor(canSwim) {
+        this.canSwim = canSwim;
+        this.element = Canvas(128, 128);
+        this.g = this.element.getContext("2d");
+    }
+
+    /**
+     * Render the avatar at a certain size.
+     * @param {CanvasRenderingContext2D} g - the context to render to
+     * @param {number} width - the width the avatar should be rendered at
+     * @param {number} height - the height the avatar should be rendered at.
+     * @param {boolean} isMe - whether the avatar is the local user
+     */
+    draw(g, width, height, isMe) {
+        const aspectRatio = this.element.width / this.element.height,
+            w = aspectRatio > 1 ? width : aspectRatio * height,
+            h = aspectRatio > 1 ? width / aspectRatio : height,
+            dx = (width - w) / 2,
+            dy = (height - h) / 2;
+        g.drawImage(
+            this.element,
+            dx, dy,
+            w, h);
+    }
+}
+
+/**
+ * Types of avatars.
+ * @enum {string}
+ **/
+const AvatarMode = Object.freeze({
+    none: null,
+    emoji: "emoji",
+    photo: "photo",
+    video: "video"
+});
+
+/**
+ * Returns true if the given object is either an HTMLCanvasElement or an OffscreenCanvas.
+ * @param {any} obj
+ * @returns {boolean}
+ */
+
+/**
+ * Resizes a canvas element
+ * @param {HTMLCanvasElement|OffscreenCanvas} canv
+ * @param {number} w - the new width of the canvas
+ * @param {number} h - the new height of the canvas
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function setCanvasSize(canv, w, h, superscale = 1) {
+    w = Math.floor(w * superscale);
+    h = Math.floor(h * superscale);
+    if (canv.width != w
+        || canv.height != h) {
+        canv.width = w;
+        canv.height = h;
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Resizes the canvas element of a given rendering context.
+ * 
+ * Note: the imageSmoothingEnabled, textBaseline, textAlign, and font 
+ * properties of the context will be restored after the context is resized,
+ * as these values are usually reset to their default values when a canvas
+ * is resized.
+ * @param {RenderingContext} ctx
+ * @param {number} w - the new width of the canvas
+ * @param {number} h - the new height of the canvas
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function setContextSize(ctx, w, h, superscale = 1) {
+    const oldImageSmoothingEnabled = ctx.imageSmoothingEnabled,
+        oldTextBaseline = ctx.textBaseline,
+        oldTextAlign = ctx.textAlign,
+        oldFont = ctx.font,
+        resized = setCanvasSize(
+            ctx.canvas,
+            w,
+            h,
+            superscale);
+
+    if (resized) {
+        ctx.imageSmoothingEnabled = oldImageSmoothingEnabled;
+        ctx.textBaseline = oldTextBaseline;
+        ctx.textAlign = oldTextAlign;
+        ctx.font = oldFont;
+    }
+
+    return resized;
+}
+
+/**
+ * Resizes a canvas element to match the proportions of the size of the element in the DOM.
+ * @param {HTMLCanvasElement} canv
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function resizeCanvas(canv, superscale = 1) {
+    return setCanvasSize(
+        canv,
+        canv.clientWidth,
+        canv.clientHeight,
+        superscale);
+}
+
+/**
+ * @type {WeakMap<TextImage, TextImagePrivate>}
+ **/
+const selfs$1 = new WeakMap();
+
+class TextImagePrivate {
+    /**
+     * @param {string} fontFamily
+     */
+    constructor(fontFamily) {
+        /** @type {string} */
+        this.fontFamily = fontFamily;
+
+        /** @type {string} */
+        this.color = "black";
+
+        /** @type {number} */
+        this.fontSize = null;
+
+        /** @type {number} */
+        this.scale = 1;
+
+        /** @type {string} */
+        this.value = null;
+
+        this.canvas = CanvasOffscreen(10, 10);
+        this.g = this.canvas.getContext("2d");
+        this.g.textBaseline = "top";
+    }
+
+    redraw() {
+        this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        if (this.fontFamily
+            && this.fontSize
+            && this.color
+            && this.scale
+            && this.value) {
+            const fontHeight = this.fontSize * this.scale;
+            this.g.font = `${fontHeight}px ${this.fontFamily}`;
+
+            const metrics = this.g.measureText(this.value);
+            let dx = 0,
+                dy = 0,
+                trueWidth = metrics.width,
+                trueHeight = fontHeight;
+            if (metrics.actualBoundingBoxLeft) {
+                dy = metrics.actualBoundingBoxAscent;
+                trueWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
+                trueHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+            }
+            setContextSize(this.g, trueWidth, trueHeight);
+            this.g.fillStyle = this.color;
+            this.g.fillText(this.value, dx, dy);
+        }
+    }
+}
+
+class TextImage {
+    /**
+     * @param {string} fontFamily
+     */
+    constructor(fontFamily) {
+        selfs$1.set(this, new TextImagePrivate(fontFamily));
+    }
+
+    get width() {
+        const self = selfs$1.get(this);
+        return self.canvas.width / self.scale;
+    }
+
+    get height() {
+        const self = selfs$1.get(this);
+        return self.canvas.height / self.scale;
+    }
+
+    get fontSize() {
+        return selfs$1.get(this).fontSize;
+    }
+
+    set fontSize(v) {
+        if (this.fontSize !== v) {
+            const self = selfs$1.get(this);
+            self.fontSize = v;
+            self.redraw();
+        }
+    }
+
+    get scale() {
+        return selfs$1.get(this).scale;
+    }
+
+    set scale(v) {
+        if (this.scale !== v) {
+            const self = selfs$1.get(this);
+            self.scale = v;
+            self.redraw();
+        }
+    }
+
+
+    get fontFamily() {
+        return selfs$1.get(this).fontFamily;
+    }
+
+    set fontFamily(v) {
+        if (this.fontFamily !== v) {
+            const self = selfs$1.get(this);
+            self.fontFamily = v;
+            self.redraw();
+        }
+    }
+
+    get color() {
+        return selfs$1.get(this).color;
+    }
+
+    set color(v) {
+        if (this.color !== v) {
+            const self = selfs$1.get(this);
+            self.color = v;
+            self.redraw();
+        }
+    }
+
+    get value() {
+        return selfs$1.get(this).value;
+    }
+
+    set value(v) {
+        if (this.value !== v) {
+            const self = selfs$1.get(this);
+            self.value = v;
+            self.redraw();
+        }
+    }
+
+    /**
+     *
+     * @param {CanvasRenderingContext2D} g - the canvas to which to render the text.
+     * @param {number} x
+     * @param {number} y
+     */
+    draw(g, x, y) {
+        const self = selfs$1.get(this);
+        if (self.canvas.width > 0
+            && self.canvas.height > 0) {
+            g.drawImage(self.canvas, x, y, this.width, this.height);
+        }
+    }
+}
+
+/**
+ * An avatar that uses a Unicode emoji as its representation
+ **/
+class EmojiAvatar extends BaseAvatar {
+
+    /**
+     * Creatse a new avatar that uses a Unicode emoji as its representation.
+     * @param {Emoji} emoji
+     */
+    constructor(emoji) {
+        super(isSurfer(emoji));
+
+        this.value = emoji.value;
+        this.desc = emoji.desc;
+
+        const emojiText = new TextImage("sans-serif");
+
+        emojiText.color = emoji.color || "black";
+        emojiText.fontSize = 256;
+        emojiText.value = this.value;
+        setContextSize(this.g, emojiText.width, emojiText.height);
+        emojiText.draw(this.g, 0, 0);
+    }
+}
+
+/**
+ * An avatar that uses an Image as its representation.
+ **/
+class PhotoAvatar extends BaseAvatar {
+
+    /**
+     * Creates a new avatar that uses an Image as its representation.
+     * @param {(URL|string)} url
+     */
+    constructor(url) {
+        super(false);
+
+        const img = new Image();
+        img.addEventListener("load", () => {
+            const offset = (img.width - img.height) / 2,
+                sx = Math.max(0, offset),
+                sy = Math.max(0, -offset),
+                dim = Math.min(img.width, img.height);
+            setContextSize(this.g, dim, dim);
+            this.g.drawImage(img,
+                sx, sy,
+                dim, dim,
+                0, 0,
+                dim, dim);
+        });
+
+        /** @type {string} */
+        this.url
+            = img.src
+            = url && url.href || url;
+    }
+}
+
+const isFirefox = typeof InstallTrigger !== "undefined";
+const isIOS = ["iPad", "iPhone", "iPod"].indexOf(navigator.platform) >= 0;
+
+/**
+ * An avatar that uses an HTML Video element as its representation.
+ **/
+class VideoAvatar extends BaseAvatar {
+    /**
+     * Creates a new avatar that uses a MediaStream as its representation.
+     * @param {MediaStream|HTMLVideoElement} stream
+     */
+    constructor(stream) {
+        super(false);
+
+        let video = null;
+        if (stream instanceof HTMLVideoElement) {
+            video = stream;
+        }
+        else if (stream instanceof MediaStream) {
+            video = Video(
+                autoPlay,
+                playsInline,
+                muted,
+                volume(0),
+                srcObject(stream));
+        }
+        else {
+            throw new Error("Can only create a video avatar from an HTMLVideoElement or MediaStream.");
+        }
+
+        this.video = video;
+
+        if (!isIOS) {
+            video.play();
+            video.once("canplay")
+                .then(() => video.play());
+        }
+    }
+
+    /**
+     * Render the avatar at a certain size.
+     * @param {CanvasRenderingContext2D} g - the context to render to
+     * @param {number} width - the width the avatar should be rendered at
+     * @param {number} height - the height the avatar should be rendered at.
+     * @param {boolean} isMe - whether the avatar is the local user
+     */
+    draw(g, width, height, isMe) {
+        if (this.video.videoWidth > 0
+            && this.video.videoHeight > 0) {
+            const offset = (this.video.videoWidth - this.video.videoHeight) / 2,
+                sx = Math.max(0, offset),
+                sy = Math.max(0, -offset),
+                dim = Math.min(this.video.videoWidth, this.video.videoHeight);
+            setContextSize(this.g, dim, dim);
+            this.g.save();
+            if (isMe) {
+                this.g.translate(dim, 0);
+                this.g.scale(-1, 1);
+            }
+            this.g.drawImage(
+                this.video,
+                sx, sy,
+                dim, dim,
+                0, 0,
+                dim, dim);
+            this.g.restore();
+        }
+
+        super.draw(g, width, height, isMe);
+    }
+}
+
+const POSITION_REQUEST_DEBOUNCE_TIME = 1,
+    STACKED_USER_OFFSET_X = 5,
+    STACKED_USER_OFFSET_Y = 5,
+    eventNames = ["userMoved", "userPositionNeeded"],
+    muteAudioIcon = new TextImage("sans-serif"),
+    speakerActivityIcon = new TextImage("sans-serif");
+
+muteAudioIcon.value = mutedSpeaker.value;
+speakerActivityIcon.value = speakerMediumVolume.value;
+
+class User extends EventTarget {
+    /**
+     * 
+     * @param {string} id
+     * @param {string} displayName
+     * @param {Pose} pose
+     * @param {boolean} isMe
+     */
+    constructor(id, displayName, pose, isMe) {
+        super();
+
+        this.id = id;
+        this.pose = pose;
+        this.label = isMe ? "(Me)" : `(${this.id})`;
+
+        /** @type {AvatarMode} */
+        this.setAvatarVideo(null);
+        this.avatarImage = null;
+        this.avatarEmoji = bust;
+
+        this.audioMuted = false;
+        this.videoMuted = true;
+        this.isMe = isMe;
+        this.isActive = false;
+        this.stackUserCount = 1;
+        this.stackIndex = 0;
+        this.stackAvatarHeight = 0;
+        this.stackAvatarWidth = 0;
+        this.stackOffsetX = 0;
+        this.stackOffsetY = 0;
+        this.lastPositionRequestTime = performance.now() / 1000 - POSITION_REQUEST_DEBOUNCE_TIME;
+        this.visible = true;
+        this.userNameText = new TextImage("sans-serif");
+        this.userNameText.color = "white";
+        this.userNameText.fontSize = 128;
+        this._displayName = null;
+        this.displayName = displayName;
+        Object.seal(this);
+    }
+
+    get x() {
+        return this.pose.current.p.x;
+    }
+
+    get y() {
+        return this.pose.current.p.z;
+    }
+
+    get gridX() {
+        return this.pose.end.p.x;
+    }
+
+    get gridY() {
+        return this.pose.end.p.z;
+    }
+
+    deserialize(evt) {
+        switch (evt.avatarMode) {
+            case AvatarMode.emoji:
+                this.avatarEmoji = evt.avatarID;
+                break;
+            case AvatarMode.photo:
+                this.avatarImage = evt.avatarID;
+                break;
+        }
+    }
+
+    serialize() {
+        return {
+            id: this.id,
+            avatarMode: this.avatarMode,
+            avatarID: this.avatarID
+        };
+    }
+
+    /**
+     * An avatar using a live video.
+     * @type {PhotoAvatar}
+     **/
+    get avatarVideo() {
+        return this._avatarVideo;
+    }
+
+    /**
+     * Set the current video element used as the avatar.
+     * @param {MediaStream} stream
+     **/
+    setAvatarVideo(stream) {
+        if (stream instanceof MediaStream) {
+            this._avatarVideo = new VideoAvatar(stream);
+        }
+        else {
+            this._avatarVideo = null;
+        }
+    }
+
+    /**
+     * An avatar using a photo
+     * @type {string}
+     **/
+    get avatarImage() {
+        return this._avatarImage
+            && this._avatarImage.url
+            || null;
+    }
+
+    /**
+     * Set the URL of the photo to use as an avatar.
+     * @param {string} url
+     */
+    set avatarImage(url) {
+        if (isString(url)
+            && url.length > 0) {
+            this._avatarImage = new PhotoAvatar(url);
+        }
+        else {
+            this._avatarImage = null;
+        }
+    }
+
+    /**
+     * An avatar using a Unicode emoji.
+     * @type {EmojiAvatar}
+     **/
+    get avatarEmoji() {
+        return this._avatarEmoji;
+    }
+
+    /**
+     * Set the emoji to use as an avatar.
+     * @param {Emoji} emoji
+     */
+    set avatarEmoji(emoji) {
+        if (emoji
+            && emoji.value
+            && emoji.desc) {
+            this._avatarEmoji = new EmojiAvatar(emoji);
+        }
+        else {
+            this._avatarEmoji = null;
+        }
+    }
+
+    /**
+     * Returns the type of avatar that is currently active.
+     * @returns {AvatarMode}
+     **/
+    get avatarMode() {
+        if (this._avatarVideo) {
+            return AvatarMode.video;
+        }
+        else if (this._avatarImage) {
+            return AvatarMode.photo;
+        }
+        else if (this._avatarEmoji) {
+            return AvatarMode.emoji;
+        }
+        else {
+            return AvatarMode.none;
+        }
+    }
+
+    /**
+     * Returns a serialized representation of the current avatar,
+     * if such a representation exists.
+     * @returns {string}
+     **/
+    get avatarID() {
+        switch (this.avatarMode) {
+            case AvatarMode.emoji:
+                return { value: this.avatarEmoji.value, desc: this.avatarEmoji.desc };
+            case AvatarMode.photo:
+                return this.avatarImage;
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * Returns the current avatar
+     * @returns {BaseAvatar}
+     **/
+    get avatar() {
+        switch (this.avatarMode) {
+            case AvatarMode.emoji:
+                return this._avatarEmoji;
+            case AvatarMode.photo:
+                return this._avatarImage;
+            case AvatarMode.video:
+                return this._avatarVideo;
+            default:
+                return null;
+        }
+    }
+
+    addEventListener(evtName, func, opts) {
+        if (eventNames.indexOf(evtName) === -1) {
+            throw new Error(`Unrecognized event type: ${evtName}`);
+        }
+
+        super.addEventListener(evtName, func, opts);
+    }
+
+    get displayName() {
+        return this._displayName || this.label;
+    }
+
+    set displayName(name) {
+        this._displayName = name;
+        this.userNameText.value = this.displayName;
+    }
+
+    moveTo(x, y) {
+        if (this.isMe) {
+            this.moveEvent.x = x;
+            this.moveEvent.y = y;
+            this.dispatchEvent(this.moveEvent);
+        }
+    }
+
+    update(map, users) {
+        const t = performance.now() / 1000;
+
+        this.stackUserCount = 0;
+        this.stackIndex = 0;
+        for (let user of users.values()) {
+            if (user.gridX === this.gridX
+                && user.gridY === this.gridY) {
+                if (user.id === this.id) {
+                    this.stackIndex = this.stackUserCount;
+                }
+                ++this.stackUserCount;
+            }
+        }
+
+        this.stackAvatarWidth = map.tileWidth - (this.stackUserCount - 1) * STACKED_USER_OFFSET_X;
+        this.stackAvatarHeight = map.tileHeight - (this.stackUserCount - 1) * STACKED_USER_OFFSET_Y;
+        this.stackOffsetX = this.stackIndex * STACKED_USER_OFFSET_X;
+        this.stackOffsetY = this.stackIndex * STACKED_USER_OFFSET_Y;
+    }
+
+    drawShadow(g, map) {
+        const scale = g.getTransform().a,
+            x = this.x * map.tileWidth,
+            y = this.y * map.tileHeight,
+            t = g.getTransform(),
+            p = t.transformPoint({ x, y });
+
+        this.visible = -map.tileWidth <= p.x
+            && p.x < g.canvas.width
+            && -map.tileHeight <= p.y
+            && p.y < g.canvas.height;
+
+        if (this.visible) {
+            g.save();
+            {
+                g.shadowColor = "rgba(0, 0, 0, 0.5)";
+                g.shadowOffsetX = 3 * scale;
+                g.shadowOffsetY = 3 * scale;
+                g.shadowBlur = 3 * scale;
+
+                this.innerDraw(g, map);
+            }
+            g.restore();
+        }
+    }
+
+    drawAvatar(g, map) {
+        if (this.visible) {
+            g.save();
+            {
+                this.innerDraw(g, map);
+                if (this.isActive && !this.audioMuted) {
+                    const height = this.stackAvatarHeight / 2,
+                        scale = g.getTransform().a;
+                    speakerActivityIcon.fontSize = height;
+                    speakerActivityIcon.scale = scale;
+                    speakerActivityIcon.draw(g, this.stackAvatarWidth - speakerActivityIcon.width, 0);
+                }
+            }
+            g.restore();
+        }
+    }
+
+    innerDraw(g, map) {
+        g.translate(
+            this.x * map.tileWidth + this.stackOffsetX,
+            this.y * map.tileHeight + this.stackOffsetY);
+        g.fillStyle = "black";
+        g.textBaseline = "top";
+
+        if (this.avatar) {
+            this.avatar.draw(g, this.stackAvatarWidth, this.stackAvatarHeight, this.isMe);
+        }
+
+        if (this.audioMuted || !this.videoMuted) {
+
+            const height = this.stackAvatarHeight / 2,
+                scale = g.getTransform().a;
+
+            if (this.audioMuted) {
+                muteAudioIcon.fontSize = height;
+                muteAudioIcon.scale = scale;
+                muteAudioIcon.draw(g, this.stackAvatarWidth - muteAudioIcon.width, 0);
+            }
+        }
+    }
+
+    drawName(g, map, fontSize) {
+        if (this.visible) {
+            const scale = g.getTransform().a;
+            g.save();
+            {
+                g.translate(
+                    this.x * map.tileWidth + this.stackOffsetX,
+                    this.y * map.tileHeight + this.stackOffsetY);
+                g.shadowColor = "black";
+                g.shadowOffsetX = 3 * scale;
+                g.shadowOffsetY = 3 * scale;
+                g.shadowBlur = 3 * scale;
+
+                const textScale = fontSize / this.userNameText.fontSize;
+                g.scale(textScale, textScale);
+                this.userNameText.draw(g, 0, -this.userNameText.height);
+            }
+            g.restore();
+        }
+    }
+
+    drawHearingTile(g, map, dx, dy, p) {
+        g.save();
+        {
+            g.translate(
+                (this.gridX + dx) * map.tileWidth,
+                (this.gridY + dy) * map.tileHeight);
+            g.strokeStyle = `rgba(0, 255, 0, ${(1 - p) / 2})`;
+            g.strokeRect(0, 0, map.tileWidth, map.tileHeight);
+        }
+        g.restore();
+    }
+
+    drawHearingRange(g, map, minDist, maxDist) {
+        const scale = g.getTransform().a,
+            tw = Math.min(maxDist, Math.ceil(g.canvas.width / (2 * map.tileWidth * scale))),
+            th = Math.min(maxDist, Math.ceil(g.canvas.height / (2 * map.tileHeight * scale)));
+
+        for (let dy = 0; dy < th; ++dy) {
+            for (let dx = 0; dx < tw; ++dx) {
+                const dist = Math.sqrt(dx * dx + dy * dy),
+                    p = project(dist, minDist, maxDist);
+                if (p <= 1) {
+                    this.drawHearingTile(g, map, dx, dy, p);
+                    if (dy != 0) {
+                        this.drawHearingTile(g, map, dx, -dy, p);
+                    }
+                    if (dx != 0) {
+                        this.drawHearingTile(g, map, -dx, dy, p);
+                    }
+                    if (dx != 0 && dy != 0) {
+                        this.drawHearingTile(g, map, -dx, -dy, p);
+                    }
+                }
+            }
+        }
+    }
+}
+
 const inputBindingChangedEvt = new Event("inputBindingChanged");
 
 class InputBinding extends EventTarget {
@@ -5942,8 +6927,20 @@ const keyWidthStyle = width$1("7em"),
     }),
     gamepadAxisMaxedEvt = Object.assign(new Event("gamepadaxismaxed"), {
         axis: 0
-    }),
-    selfs$1 = new Map();
+    });
+
+/** @type {WeakMap<OptionsForm, OptionsFormPrivate>} */
+const selfs$2 = new WeakMap();
+
+class OptionsFormPrivate {
+    constructor() {
+        this.inputBinding = new InputBinding();
+        this.timer = new RequestAnimationFrameTimer();
+
+        /** @type {EventedGamepad} */
+        this.pad = null;
+    }
+}
 
 class OptionsForm extends FormDialog {
     constructor() {
@@ -5951,15 +6948,8 @@ class OptionsForm extends FormDialog {
 
         const _ = (evt) => () => this.dispatchEvent(evt);
 
-        const self = {
-            inputBinding: new InputBinding(),
-            timer: new RequestAnimationFrameTimer(),
-
-            /** @type {EventedGamepad} */
-            pad: null
-        };
-
-        selfs$1.set(this, self);
+        const self = new OptionsFormPrivate();
+        selfs$2.set(this, self);
 
         const audioPropsChanged = onInput(_(audioPropsChangedEvt));
 
@@ -6059,7 +7049,9 @@ class OptionsForm extends FormDialog {
                         id("videoAvatarButton"),
                         "Use video",
                         onClick(_(toggleVideoEvt$1)))),
-                this.avatarPreview = Span(bust.value)),
+                this.avatarPreview = Canvas(
+                    width(256),
+                    height(256))),
 
             OptionPanel("interface", "Interface",
                 this.fontSizeInput = LabeledInput(
@@ -6181,16 +7173,6 @@ class OptionsForm extends FormDialog {
                 for (let i = 0; i < panels.length; ++i) {
                     panels[i].visible = i === p;
                 }
-
-                const isGamepad = panels[p].id === "gamepad";
-                if (self.timer.isRunning !== isGamepad) {
-                    if (isGamepad) {
-                        self.timer.start();
-                    }
-                    else {
-                        self.timer.stop();
-                    }
-                }
             };
 
         for (let i = 0; i < panels.length; ++i) {
@@ -6225,6 +7207,11 @@ class OptionsForm extends FormDialog {
                     });
                 }
             }
+
+            if (this.user && this.user.avatar) {
+                this._avatarG.clearRect(0, 0, this.avatarPreview.width, this.avatarPreview.height);
+                this.user.avatar.draw(this._avatarG, this.avatarPreview.width, this.avatarPreview.height, true);
+            }
         });
 
         this.gamepads = [];
@@ -6233,21 +7220,22 @@ class OptionsForm extends FormDialog {
         this.videoInputDevices = [];
 
         this._drawHearing = false;
-        this._avatarEmoji = null;
+
+        /** @type {User} */
+        this.user = null;
+        this._avatarG = this.avatarPreview.getContext("2d");
 
         Object.seal(this);
     }
 
-    get avatarEmoji() {
-        return this._avatarEmoji;
+    show() {
+        super.show();
+        selfs$2.get(this).timer.start();
     }
 
-    set avatarEmoji(e) {
-        this._avatarEmoji = e;
-        clear(this.avatarPreview);
-        this.avatarPreview.append(Span(
-            title(e && e.desc || "(None)"),
-            e && e.value || "N/A"));
+    hide() {
+        super.hide();
+        selfs$2.get(this).timer.stop();
     }
 
     get avatarURL() {
@@ -6260,11 +7248,9 @@ class OptionsForm extends FormDialog {
     }
 
     set avatarURL(v) {
-        clear(this.avatarPreview);
         if (isString(v)) {
             this.avatarURLInput.value = v;
             this.clearAvatarURLButton.unlock();
-            this.avatarPreview.append(Img(src(v)));
         }
         else {
             this.avatarURLInput.value = "";
@@ -6274,15 +7260,8 @@ class OptionsForm extends FormDialog {
 
 
     setAvatarVideo(v) {
-        clear(this.avatarPreview);
         if (v !== null) {
             this.useVideoAvatarButton.innerHTML = "Remove video";
-            this.avatarPreview.append(Video(
-                autoPlay,
-                playsInline,
-                muted,
-                volume(0),
-                srcObject(v.srcObject)));
         }
         else {
             this.useVideoAvatarButton.innerHTML = "Use video";
@@ -6290,12 +7269,12 @@ class OptionsForm extends FormDialog {
     }
 
     get inputBinding() {
-        const self = selfs$1.get(this);
+        const self = selfs$2.get(this);
         return self.inputBinding.clone();
     }
 
     set inputBinding(value) {
-        const self = selfs$1.get(this);
+        const self = selfs$2.get(this);
         for (let id of Object.getOwnPropertyNames(value)) {
             if (self.inputBinding[id] !== undefined
                 && value[id] !== undefined
@@ -6482,964 +7461,9 @@ class OptionsForm extends FormDialog {
     }
 }
 
-class BasePosition {
-    /** 
-     *  The horizontal component of the position.
-     *  @type {number} */
-    get x() {
-        throw new Error("Not implemented in base class.");
-    }
-
-    /** 
-     *  The vertical component of the position.
-     *  @type {number} */
-    get y() {
-        throw new Error("Not implemented in base class.");
-    }
-
-    /**
-     * Set the target position for the time `t + dt`.
-     * @param {number} x - the horizontal component of the position.
-     * @param {number} y - the vertical component of the position.
-     * @param {number} t
-     * @param {number} dt
-     */
-    setTarget(x, y, t, dt) {
-        throw new Error("Not implemented in base class.");
-    }
-
-    /**
-     * Update the position.
-     * @param {number} t - the current time, in seconds
-     */
-    update(t) {
-    }
-}
-
-/**
- * A position value that is blended from the current position to
- * a target position over time.
- */
-class InterpolatedPosition extends BasePosition {
-
-    /**
-     * Creates a new position value that is blended from the current position to
-     * a target position over time.
-     **/
-    constructor() {
-        super();
-
-        this._st
-            = this._et
-            = 0;
-        this._x
-            = this._tx
-            = this._sx
-            = 0;
-        this._y
-            = this._ty
-            = this._sy
-            = 0;
-    }
-
-    /**
-     *  The horizontal component of the position.
-     *  @type {number} */
-    get x() {
-        return this._x;
-    }
-
-    /**
-     *  The vertical component of the position.
-     *  @type {number} */
-    get y() {
-        return this._y;
-    }
-
-    /**
-     * Set the target position for the time `t + dt`.
-     * @param {number} x - the horizontal component of the position.
-     * @param {number} y - the vertical component of the position.
-     * @param {number} t
-     * @param {number} dt
-     */
-    setTarget(x, y, t, dt) {
-        this._st = t;
-        this._et = t + dt;
-        this._sx = this._x;
-        this._sy = this._y;
-        this._tx = x;
-        this._ty = y;
-    }
-
-    /**
-     * Calculates the new position for the given time.
-     * @protected
-     * @param {number} t
-     */
-    update(t) {
-        if (this._st !== this._et) {
-            const p = project(t, this._st, this._et);
-            const q = clamp(p, 0, 1);
-            this._x = lerp(this._sx, this._tx, q);
-            this._y = lerp(this._sy, this._ty, q);
-        }
-        else {
-            this._x = this._sx = this._tx;
-            this._y = this._sy = this._ty;
-        }
-    }
-}
-
-/**
- * A base class for different types of avatars.
- **/
-class BaseAvatar {
-
-    /**
-     * Encapsulates a resource to use as an avatar.
-     * @param {Image|Video|Emoji} element
-     */
-    constructor(element) {
-        this.element = element;
-    }
-
-    /** 
-     *  Is the avatar able to run on water?
-     *  @type {boolean} 
-     **/
-    get canSwim() {
-        return false;
-    }
-
-    /**
-     * Render the avatar at a certain size.
-     * @param {CanvasRenderingContext2D} g - the context to render to
-     * @param {number} width - the width the avatar should be rendered at
-     * @param {number} height - the height the avatar should be rendered at.
-     * @param {boolean} isMe - whether the avatar is the local user
-     */
-    draw(g, width, height, isMe) {
-        throw new Error("Not implemented in base class");
-    }
-}
-
-/**
- * Types of avatars.
- * @enum {string}
- **/
-const AvatarMode = Object.freeze({
-    none: null,
-    emoji: "emoji",
-    photo: "photo",
-    video: "video"
-});
-
-/**
- * Returns true if the given object is either an HTMLCanvasElement or an OffscreenCanvas.
- * @param {any} obj
- * @returns {boolean}
- */
-
-/**
- * Resizes a canvas element
- * @param {HTMLCanvasElement|OffscreenCanvas} canv
- * @param {number} w - the new width of the canvas
- * @param {number} h - the new height of the canvas
- * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
- * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
- */
-function setCanvasSize(canv, w, h, superscale = 1) {
-    w = Math.floor(w * superscale);
-    h = Math.floor(h * superscale);
-    if (canv.width != w
-        || canv.height != h) {
-        canv.width = w;
-        canv.height = h;
-        return true;
-    }
-    return false;
-}
-
-/**
- * Resizes the canvas element of a given rendering context.
- * 
- * Note: the imageSmoothingEnabled, textBaseline, textAlign, and font 
- * properties of the context will be restored after the context is resized,
- * as these values are usually reset to their default values when a canvas
- * is resized.
- * @param {RenderingContext} ctx
- * @param {number} w - the new width of the canvas
- * @param {number} h - the new height of the canvas
- * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
- * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
- */
-function setContextSize(ctx, w, h, superscale = 1) {
-    const oldImageSmoothingEnabled = ctx.imageSmoothingEnabled,
-        oldTextBaseline = ctx.textBaseline,
-        oldTextAlign = ctx.textAlign,
-        oldFont = ctx.font,
-        resized = setCanvasSize(
-            ctx.canvas,
-            w,
-            h,
-            superscale);
-
-    if (resized) {
-        ctx.imageSmoothingEnabled = oldImageSmoothingEnabled;
-        ctx.textBaseline = oldTextBaseline;
-        ctx.textAlign = oldTextAlign;
-        ctx.font = oldFont;
-    }
-
-    return resized;
-}
-
-/**
- * Resizes a canvas element to match the proportions of the size of the element in the DOM.
- * @param {HTMLCanvasElement} canv
- * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
- * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
- */
-function resizeCanvas(canv, superscale = 1) {
-    return setCanvasSize(
-        canv,
-        canv.clientWidth,
-        canv.clientHeight,
-        superscale);
-}
-
-class TextImagePrivate {
-    /**
-     * @param {string} fontFamily
-     */
-    constructor(fontFamily) {
-        /** @type {string} */
-        this.fontFamily = fontFamily;
-
-        /** @type {string} */
-        this.color = "black";
-
-        /** @type {number} */
-        this.fontSize = null;
-
-        /** @type {number} */
-        this.scale = null;
-
-        /** @type {string} */
-        this.value = null;
-
-        this.canvas = CanvasOffscreen(10, 10);
-        this.g = this.canvas.getContext("2d");
-        this.g.textBaseline = "top";
-    }
-
-    redraw() {
-        this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        if (this.fontFamily
-            && this.fontSize
-            && this.color
-            && this.scale
-            && this.value) {
-            const fontHeight = this.fontSize * this.scale;
-            this.g.font = `${fontHeight}px ${this.fontFamily}`;
-
-            const metrics = this.g.measureText(this.value);
-            let dx = 0,
-                dy = 0,
-                trueWidth = metrics.width,
-                trueHeight = fontHeight;
-            if (metrics.actualBoundingBoxLeft) {
-                dx = metrics.actualBoundingBoxLeft;
-                dy = metrics.actualBoundingBoxAscent;
-                trueWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
-                trueHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
-            }
-            setContextSize(this.g, trueWidth, trueHeight);
-            this.g.fillStyle = this.color;
-            this.g.fillText(this.value, dx, dy);
-        }
-    }
-}
-
-/**
- * @type {WeakMap<TextImage, TextImagePrivate>}
- **/
-const selfs$2 = new WeakMap();
-
-class TextImage {
-    /**
-     * @param {string} fontFamily
-     */
-    constructor(fontFamily) {
-        selfs$2.set(this, new TextImagePrivate(fontFamily));
-    }
-
-    get width() {
-        const self = selfs$2.get(this);
-        return self.canvas.width / self.scale;
-    }
-
-    get height() {
-        const self = selfs$2.get(this);
-        return self.canvas.height / self.scale;
-    }
-
-    get fontSize() {
-        return selfs$2.get(this).fontSize;
-    }
-
-    set fontSize(v) {
-        if (this.fontSize !== v) {
-            const self = selfs$2.get(this);
-            self.fontSize = v;
-            self.redraw();
-        }
-    }
-
-    get scale() {
-        return selfs$2.get(this).scale;
-    }
-
-    set scale(v) {
-        if (this.scale !== v) {
-            const self = selfs$2.get(this);
-            self.scale = v;
-            self.redraw();
-        }
-    }
-
-
-    get fontFamily() {
-        return selfs$2.get(this).fontFamily;
-    }
-
-    set fontFamily(v) {
-        if (this.fontFamily !== v) {
-            const self = selfs$2.get(this);
-            self.fontFamily = v;
-            self.redraw();
-        }
-    }
-
-    get color() {
-        return selfs$2.get(this).color;
-    }
-
-    set color(v) {
-        if (this.color !== v) {
-            const self = selfs$2.get(this);
-            self.color = v;
-            self.redraw();
-        }
-    }
-
-    get value() {
-        return selfs$2.get(this).value;
-    }
-
-    set value(v) {
-        if (this.value !== v) {
-            const self = selfs$2.get(this);
-            self.value = v;
-            self.redraw();
-        }
-    }
-
-    /**
-     *
-     * @param {CanvasRenderingContext2D} g - the canvas to which to render the text.
-     * @param {number} x
-     * @param {number} y
-     */
-    draw(g, x, y) {
-        const self = selfs$2.get(this);
-        if (self.canvas.width > 0
-            && self.canvas.height > 0) {
-            g.drawImage(self.canvas, x, y, this.width, this.height);
-        }
-    }
-}
-
-const selfs$3 = new WeakMap();
-
-/**
- * An avatar that uses a Unicode emoji as its representation
- **/
-class EmojiAvatar extends BaseAvatar {
-
-    /**
-     * Creatse a new avatar that uses a Unicode emoji as its representation.
-     * @param {Emoji} emoji
-     */
-    constructor(emoji) {
-        super(Span(
-            title(emoji.desc),
-            emoji.value));
-
-        const self = {
-            canSwim: isSurfer(emoji),
-            x: 0,
-            y: 0,
-            aspectRatio: null
-        };
-
-        this.value = emoji.value;
-        this.desc = emoji.desc;
-        this.emojiText = new TextImage("sans-serif");
-        this.emojiText.color = emoji.color || "black";
-
-        selfs$3.set(this, self);
-    }
-
-    /**
-     *  Is the avatar able to run on water?
-     *  @type {boolean}
-     **/
-    get canSwim() {
-        return selfs$3.get(this).canSwim;
-    }
-
-    /**
-     * Render the avatar at a certain size.
-     * @param {CanvasRenderingContext2D} g - the context to render to
-     * @param {number} width - the width the avatar should be rendered at
-     * @param {number} height - the height the avatar should be rendered at.
-     * @param {boolean} isMe - whether the avatar is the local user
-     */
-    draw(g, width, height, isMe) {
-        const self = selfs$3.get(this);
-        if (self.aspectRatio === null) {
-            this.emojiText.fontSize = 100;
-            this.emojiText.scale = 1;
-            this.emojiText.value = this.value;
-            self.aspectRatio = this.emojiText.width / this.emojiText.height;
-        }
-
-        if (self.aspectRatio !== null) {
-            const fontHeight = self.aspectRatio <= 1
-                ? height
-                : width / self.aspectRatio;
-            this.emojiText.fontSize = fontHeight;
-            this.emojiText.scale = g.getTransform().a;
-            this.emojiText.draw(g, 0, 0);
-        }
-    }
-}
-
-/**
- * An avatar that uses an Image as its representation.
- **/
-class PhotoAvatar extends BaseAvatar {
-
-    /**
-     * Creates a new avatar that uses an Image as its representation.
-     * @param {(URL|string)} url
-     */
-    constructor(url) {
-        super(Canvas());
-
-        const img = new Image();
-        img.addEventListener("load", (evt) => {
-            this.element.width = img.width;
-            this.element.height = img.height;
-            const g = this.element.getContext("2d");
-            g.clearRect(0, 0, img.width, img.height);
-            g.imageSmoothingEnabled = false;
-            g.drawImage(img, 0, 0);
-        });
-
-        /** @type {string} */
-        this.url
-            = img.src
-            = url && url.href || url;
-    }
-
-    /**
-     * Render the avatar at a certain size.
-     * @param {CanvasRenderingContext2D} g - the context to render to
-     * @param {number} width - the width the avatar should be rendered at
-     * @param {number} height - the height the avatar should be rendered at.
-     * @param {boolean} isMe - whether the avatar is the local user
-     */
-    draw(g, width, height, isMe) {
-        const offset = (this.element.width - this.element.height) / 2,
-            sx = Math.max(0, offset),
-            sy = Math.max(0, -offset),
-            dim = Math.min(this.element.width, this.element.height);
-        g.drawImage(
-            this.element,
-            sx, sy,
-            dim, dim,
-            0, 0,
-            width, height);
-    }
-}
-
-const isFirefox = typeof InstallTrigger !== "undefined";
-const isIOS = ["iPad", "iPhone", "iPod"].indexOf(navigator.platform) >= 0;
-
-/**
- * An avatar that uses an HTML Video element as its representation.
- **/
-class VideoAvatar extends BaseAvatar {
-    /**
-     * Creates a new avatar that uses a MediaStream as its representation.
-     * @param {MediaStream} stream
-     */
-    constructor(stream) {
-        const video = Video(
-            autoPlay,
-            playsInline,
-            muted,
-            volume(0),
-            srcObject(stream));
-        super(video);
-        if (!isIOS) {
-            video.play();
-            video.once("canplay")
-                .then(() => video.play());
-        }
-    }
-
-    /**
-     * Render the avatar at a certain size.
-     * @param {CanvasRenderingContext2D} g - the context to render to
-     * @param {number} width - the width the avatar should be rendered at
-     * @param {number} height - the height the avatar should be rendered at.
-     * @param {boolean} isMe - whether the avatar is the local user
-     */
-    draw(g, width, height, isMe) {
-        if (this.element !== null) {
-            const offset = (this.element.videoWidth - this.element.videoHeight) / 2,
-                sx = Math.max(0, offset),
-                sy = Math.max(0, -offset),
-                dim = Math.min(this.element.videoWidth, this.element.videoHeight),
-                hWidth = width / 2;
-
-            g.save();
-            {
-                g.translate(hWidth, 0);
-                if (isMe) {
-                    g.scale(-1, 1);
-                }
-                g.drawImage(
-                    this.element,
-                    sx, sy,
-                    dim, dim,
-                    -hWidth, 0,
-                    width, height);
-            }
-            g.restore();
-        }
-    }
-}
-
-const POSITION_REQUEST_DEBOUNCE_TIME = 1,
-    STACKED_USER_OFFSET_X = 5,
-    STACKED_USER_OFFSET_Y = 5,
-    eventNames = ["userMoved", "userPositionNeeded"],
-    muteAudioIcon = new TextImage("sans-serif"),
-    speakerActivityIcon = new TextImage("sans-serif");
-
-muteAudioIcon.value = mutedSpeaker.value;
-speakerActivityIcon.value = speakerMediumVolume.value;
-
-class User extends EventTarget {
-    constructor(id, displayName, isMe) {
-        super();
-
-        this.id = id;
-        this.label = isMe ? "(Me)" : `(${this.id})`;
-
-        this.moveEvent = new UserMoveEvent(this.id);
-        this.position = new InterpolatedPosition();
-
-        /** @type {AvatarMode} */
-        this.setAvatarVideo(null);
-        this.avatarImage = null;
-        this.avatarEmoji = bust;
-
-        this.audioMuted = false;
-        this.videoMuted = true;
-        this.isMe = isMe;
-        this.isActive = false;
-        this.stackUserCount = 1;
-        this.stackIndex = 0;
-        this.stackAvatarHeight = 0;
-        this.stackAvatarWidth = 0;
-        this.stackOffsetX = 0;
-        this.stackOffsetY = 0;
-        this.isInitialized = isMe;
-        this.lastPositionRequestTime = performance.now() / 1000 - POSITION_REQUEST_DEBOUNCE_TIME;
-        this.visible = true;
-        this.userNameText = new TextImage("sans-serif");
-        this.userNameText.color = "white";
-        this._displayName = null;
-        this.displayName = displayName;
-        Object.seal(this);
-    }
-
-    deserialize(evt) {
-        if (evt.displayName) {
-            this.displayName = evt.displayName;
-        }
-
-        switch (evt.avatarMode) {
-            case AvatarMode.emoji:
-                this.avatarEmoji = evt.avatarID;
-                break;
-            case AvatarMode.photo:
-                this.avatarImage = evt.avatarID;
-                break;
-        }
-
-        if (isNumber(evt.x)
-            && isNumber(evt.y)) {
-            this.position.setTarget(evt.x, evt.y, performance.now() / 1000, 0);
-            this.isInitialized = true;
-        }
-    }
-
-    serialize() {
-        return {
-            id: this.id,
-            x: this.position._tx,
-            y: this.position._ty,
-            displayName: this._displayName,
-            avatarMode: this.avatarMode,
-            avatarID: this.avatarID
-        };
-    }
-
-    /**
-     * An avatar using a live video.
-     * @type {PhotoAvatar}
-     **/
-    get avatarVideo() {
-        return this._avatarVideo;
-    }
-
-    /**
-     * Set the current video element used as the avatar.
-     * @param {MediaStream} stream
-     **/
-    setAvatarVideo(stream) {
-        if (stream instanceof MediaStream) {
-            this._avatarVideo = new VideoAvatar(stream);
-        }
-        else {
-            this._avatarVideo = null;
-        }
-    }
-
-    /**
-     * An avatar using a photo
-     * @type {string}
-     **/
-    get avatarImage() {
-        return this._avatarImage
-            && this._avatarImage.url
-            || null;
-    }
-
-    /**
-     * Set the URL of the photo to use as an avatar.
-     * @param {string} url
-     */
-    set avatarImage(url) {
-        if (isString(url)
-            && url.length > 0) {
-            this._avatarImage = new PhotoAvatar(url);
-        }
-        else {
-            this._avatarImage = null;
-        }
-    }
-
-    /**
-     * An avatar using a Unicode emoji.
-     * @type {EmojiAvatar}
-     **/
-    get avatarEmoji() {
-        return this._avatarEmoji;
-    }
-
-    /**
-     * Set the emoji to use as an avatar.
-     * @param {Emoji} emoji
-     */
-    set avatarEmoji(emoji) {
-        if (emoji
-            && emoji.value
-            && emoji.desc) {
-            this._avatarEmoji = new EmojiAvatar(emoji);
-        }
-        else {
-            this._avatarEmoji = null;
-        }
-    }
-
-    /**
-     * Returns the type of avatar that is currently active.
-     * @returns {AvatarMode}
-     **/
-    get avatarMode() {
-        if (this._avatarVideo) {
-            return AvatarMode.video;
-        }
-        else if (this._avatarImage) {
-            return AvatarMode.photo;
-        }
-        else if (this._avatarEmoji) {
-            return AvatarMode.emoji;
-        }
-        else {
-            return AvatarMode.none;
-        }
-    }
-
-    /**
-     * Returns a serialized representation of the current avatar,
-     * if such a representation exists.
-     * @returns {string}
-     **/
-    get avatarID() {
-        switch (this.avatarMode) {
-            case AvatarMode.emoji:
-                return { value: this.avatarEmoji.value, desc: this.avatarEmoji.desc };
-            case AvatarMode.photo:
-                return this.avatarImage;
-            default:
-                return null;
-        }
-    }
-
-    /**
-     * Returns the current avatar
-     * @returns {BaseAvatar}
-     **/
-    get avatar() {
-        switch (this.avatarMode) {
-            case AvatarMode.emoji:
-                return this._avatarEmoji;
-            case AvatarMode.photo:
-                return this._avatarImage;
-            case AvatarMode.video:
-                return this._avatarVideo;
-            default:
-                return null;
-        }
-    }
-
-    addEventListener(evtName, func, opts) {
-        if (eventNames.indexOf(evtName) === -1) {
-            throw new Error(`Unrecognized event type: ${evtName}`);
-        }
-
-        super.addEventListener(evtName, func, opts);
-    }
-
-    get displayName() {
-        return this._displayName || this.label;
-    }
-
-    set displayName(name) {
-        this._displayName = name;
-        this.userNameText.value = this.displayName;
-    }
-
-    moveTo(x, y, dt) {
-        if (this.isInitialized) {
-            if (this.isMe) {
-                this.moveEvent.x = x;
-                this.moveEvent.y = y;
-                this.dispatchEvent(this.moveEvent);
-            }
-
-            this.position.setTarget(x, y, performance.now() / 1000, dt);
-        }
-    }
-
-    update(map, users) {
-        const t = performance.now() / 1000;
-
-        if (!this.isInitialized) {
-            const dt = t - this.lastPositionRequestTime;
-            if (dt >= POSITION_REQUEST_DEBOUNCE_TIME) {
-                this.lastPositionRequestTime = t;
-                this.dispatchEvent(new UserPositionNeededEvent(this.id));
-            }
-        }
-
-        this.position.update(t);
-
-        this.stackUserCount = 0;
-        this.stackIndex = 0;
-        for (let user of users.values()) {
-            if (user.position._tx === this.position._tx
-                && user.position._ty === this.position._ty) {
-                if (user.id === this.id) {
-                    this.stackIndex = this.stackUserCount;
-                }
-                ++this.stackUserCount;
-            }
-        }
-
-        this.stackAvatarWidth = map.tileWidth - (this.stackUserCount - 1) * STACKED_USER_OFFSET_X;
-        this.stackAvatarHeight = map.tileHeight - (this.stackUserCount - 1) * STACKED_USER_OFFSET_Y;
-        this.stackOffsetX = this.stackIndex * STACKED_USER_OFFSET_X;
-        this.stackOffsetY = this.stackIndex * STACKED_USER_OFFSET_Y;
-    }
-
-    drawShadow(g, map) {
-        const scale = g.getTransform().a,
-            x = this.position.x * map.tileWidth,
-            y = this.position.y * map.tileHeight,
-            t = g.getTransform(),
-            p = t.transformPoint({ x, y });
-
-        this.visible = -map.tileWidth <= p.x
-            && p.x < g.canvas.width
-            && -map.tileHeight <= p.y
-            && p.y < g.canvas.height;
-
-        if (this.visible) {
-            g.save();
-            {
-                g.shadowColor = "rgba(0, 0, 0, 0.5)";
-                g.shadowOffsetX = 3 * scale;
-                g.shadowOffsetY = 3 * scale;
-                g.shadowBlur = 3 * scale;
-
-                this.innerDraw(g, map);
-            }
-            g.restore();
-        }
-    }
-
-    drawAvatar(g, map) {
-        if (this.visible) {
-            g.save();
-            {
-                this.innerDraw(g, map);
-                if (this.isActive && !this.audioMuted) {
-                    const height = this.stackAvatarHeight / 2,
-                        scale = g.getTransform().a;
-                    speakerActivityIcon.fontSize = height;
-                    speakerActivityIcon.scale = scale;
-                    speakerActivityIcon.draw(g, this.stackAvatarWidth - speakerActivityIcon.width, 0);
-                }
-            }
-            g.restore();
-        }
-    }
-
-    innerDraw(g, map) {
-        g.translate(
-            this.position.x * map.tileWidth + this.stackOffsetX,
-            this.position.y * map.tileHeight + this.stackOffsetY);
-        g.fillStyle = "black";
-        g.textBaseline = "top";
-
-        if (this.avatar) {
-            this.avatar.draw(g, this.stackAvatarWidth, this.stackAvatarHeight, this.isMe);
-        }
-
-        if (this.audioMuted || !this.videoMuted) {
-
-            const height = this.stackAvatarHeight / 2,
-                scale = g.getTransform().a;
-
-            if (this.audioMuted) {
-                muteAudioIcon.fontSize = height;
-                muteAudioIcon.scale = scale;
-                muteAudioIcon.draw(g, this.stackAvatarWidth - muteAudioIcon.width, 0);
-            }
-        }
-    }
-
-    drawName(g, map, fontSize) {
-        if (this.visible) {
-            const scale = g.getTransform().a;
-            g.save();
-            {
-                g.translate(
-                    this.position.x * map.tileWidth + this.stackOffsetX,
-                    this.position.y * map.tileHeight + this.stackOffsetY);
-                g.shadowColor = "black";
-                g.shadowOffsetX = 3 * scale;
-                g.shadowOffsetY = 3 * scale;
-                g.shadowBlur = 3 * scale;
-
-                this.userNameText.fontSize = fontSize;
-                this.userNameText.scale = scale;
-                this.userNameText.draw(g, 0, -this.userNameText.height);
-            }
-            g.restore();
-        }
-    }
-
-    drawHearingTile(g, map, dx, dy, p) {
-        g.save();
-        {
-            g.translate(
-                (this.position._tx + dx) * map.tileWidth,
-                (this.position._ty + dy) * map.tileHeight);
-            g.strokeStyle = `rgba(0, 255, 0, ${(1 - p) / 2})`;
-            g.strokeRect(0, 0, map.tileWidth, map.tileHeight);
-        }
-        g.restore();
-    }
-
-    drawHearingRange(g, map, minDist, maxDist) {
-        const scale = g.getTransform().a,
-            tw = Math.min(maxDist, Math.ceil(g.canvas.width / (2 * map.tileWidth * scale))),
-            th = Math.min(maxDist, Math.ceil(g.canvas.height / (2 * map.tileHeight * scale)));
-
-        for (let dy = 0; dy < th; ++dy) {
-            for (let dx = 0; dx < tw; ++dx) {
-                const dist = Math.sqrt(dx * dx + dy * dy),
-                    p = project(dist, minDist, maxDist);
-                if (p <= 1) {
-                    this.drawHearingTile(g, map, dx, dy, p);
-                    if (dy != 0) {
-                        this.drawHearingTile(g, map, dx, -dy, p);
-                    }
-                    if (dx != 0) {
-                        this.drawHearingTile(g, map, -dx, dy, p);
-                    }
-                    if (dx != 0 && dy != 0) {
-                        this.drawHearingTile(g, map, -dx, -dy, p);
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-class UserMoveEvent extends Event {
-    constructor(id) {
-        super("userMoved");
-        this.id = id;
-        this.x = 0;
-        this.y = 0;
-    }
-}
-
-class UserPositionNeededEvent extends Event {
-    constructor(id) {
-        super("userPositionNeeded");
-        this.id = id;
-    }
-}
-
 const newRowColor = backgroundColor("lightgreen");
 const hoveredColor = backgroundColor("rgba(65, 255, 202, 0.25)");
 const unhoveredColor = backgroundColor("transparent");
-const avatarSize = height$1("32px");
 const warpToEvt = Object.assign(
     new Event("warpTo"),
     {
@@ -7453,8 +7477,26 @@ class UserDirectoryForm extends FormDialog {
     constructor() {
         super("users", "Users");
 
+        this.timer = new RequestAnimationFrameTimer();
+        this.timer.addEventListener("tick", () => {
+            for (let entries of this.users.entries()) {
+                const [id, user] = entries;
+                if (this.avatarGs.has(id) && user.avatar) {
+                    const g = this.avatarGs.get(id);
+                    g.clearRect(0, 0, g.canvas.width, g.canvas.height);
+                    user.avatar.draw(g, g.canvas.width, g.canvas.height);
+                }
+            }
+        });
+
         /** @type {Map.<string, Element[]>} */
         this.rows = new Map();
+
+        /** @type {Map<string, User>} */
+        this.users = new Map();
+
+        /** @type {Map<string, CanvasRenderingContext2D>} */
+        this.avatarGs = new Map();
 
         this.content.append(
             this.table = Div(
@@ -7465,11 +7507,22 @@ class UserDirectoryForm extends FormDialog {
                 width$1("100%")));
     }
 
+    show() {
+        super.show();
+        this.timer.start();
+    }
+
+    hide() {
+        super.hide();
+        this.timer.stop();
+    }
+
     /**
      * 
      * @param {User} user
      */
-    set(user, isNew = false) {
+    set(user) {
+        const isNew = !this.rows.has(user.id);
         this.delete(user.id);
         const row = this.rows.size + 1;
 
@@ -7482,13 +7535,16 @@ class UserDirectoryForm extends FormDialog {
                 this.table.removeChild(elem);
             }, ROW_TIMEOUT);
             this.table.append(elem);
+            this.users.set(user.id, user);
+            this.avatarGs.set(
+                user.id,
+                Canvas(
+                    width(32),
+                    height(32))
+                    .getContext("2d"));
         }
 
-        let avatar = "N/A";
-        if (user.avatar && user.avatar.element) {
-            avatar = user.avatar.element;
-            avatarSize.apply(avatar);
-        }
+        const avatar = this.avatarGs.get(user.id).canvas;
 
         const elems = [
             Div(gridPos(1, row), zIndex(0), avatar),
@@ -8056,10 +8112,12 @@ class TileSet {
     }
 }
 
+/** @type {WeakMap<TileMap, TileMapPrivate>} */
+const selfs$3 = new WeakMap();
+
 class TileMapPrivate {
     constructor(tilemapName) {
         this.url = new URL(`/data/tilemaps/${tilemapName}.tmx`, document.location);
-        this.tileset = null;
         this.tileWidth = 0;
         this.tileHeight = 0;
         this.layers = 0;
@@ -8067,23 +8125,30 @@ class TileMapPrivate {
         this.height = 0;
         this.offsetX = 0;
         this.offsetY = 0;
+
+        /** @type {TileSet} */
+        this.tileset = null;
+
+        /** @type {number[][][]} */
         this.tiles = null;
-        this.collision = null;
+
+        /** @type {Graph} */
         this.graph = null;
+
+        /** @type {OffscreenCanvas[]} */
+        this.layerImages = [];
 
         Object.seal(this);
     }
 }
 
-const selfs$4 = new WeakMap();
-
 class TileMap {
     constructor(tilemapName) {
-        selfs$4.set(this, new TileMapPrivate(tilemapName));
+        selfs$3.set(this, new TileMapPrivate(tilemapName));
     }
 
     async load() {
-        const self = selfs$4.get(this),
+        const self = selfs$3.get(this),
             response = await fetch(self.url.href),
             map = await response.xml(),
             width = 1 * map.getAttribute("width"),
@@ -8109,7 +8174,8 @@ class TileMap {
                 .replace("\t", "")
                 .replace("\n", "")
                 .replace("\r", "")
-                .split(","),
+                .split(",")
+                .map(s => parseInt(s, 10)),
                 rows = [];
             let row = [];
             for (let tile of tileIds) {
@@ -8122,6 +8188,7 @@ class TileMap {
             if (row.length > 0) {
                 rows.push(row);
             }
+
             self.tiles.push(rows);
         }
 
@@ -8129,6 +8196,20 @@ class TileMap {
         await self.tileset.load();
         self.tileWidth = self.tileset.tileWidth;
         self.tileHeight = self.tileset.tileHeight;
+
+        for (let l = 0; l < self.layers; ++l) {
+            const img = CanvasOffscreen(this.width * this.tileWidth, this.height * this.tileHeight);
+            self.layerImages.push(img);
+            const context = img.getContext("2d");
+            const layer = self.tiles[l];
+            for (let y = 0; y < this.height; ++y) {
+                const row = layer[y];
+                for (let x = 0; x < this.width; ++x) {
+                    const tile = row[x];
+                    self.tileset.draw(context, tile, x, y);
+                }
+            }
+        }
 
         let grid = [];
         for (let row of self.tiles[0]) {
@@ -8146,19 +8227,19 @@ class TileMap {
     }
 
     get width() {
-        return selfs$4.get(this).width;
+        return selfs$3.get(this).width;
     }
 
     get height() {
-        return selfs$4.get(this).height;
+        return selfs$3.get(this).height;
     }
 
     get tileWidth() {
-        return selfs$4.get(this).tileWidth;
+        return selfs$3.get(this).tileWidth;
     }
 
     get tileHeight() {
-        return selfs$4.get(this).tileHeight;
+        return selfs$3.get(this).tileHeight;
     }
 
     isInBounds(x, y) {
@@ -8167,7 +8248,7 @@ class TileMap {
     }
 
     getGridNode(x, y) {
-        const self = selfs$4.get(this);
+        const self = selfs$3.get(this);
         x -= self.offsetX;
         y -= self.offsetY;
         if (this.isInBounds(x, y)) {
@@ -8179,26 +8260,19 @@ class TileMap {
     }
 
     draw(g) {
-        const self = selfs$4.get(this);
+        const self = selfs$3.get(this);
         g.save();
         {
             g.translate(self.offsetX * this.tileWidth, self.offsetY * this.tileHeight);
-            for (let l = 0; l < self.layers; ++l) {
-                const layer = self.tiles[l];
-                for (let y = 0; y < this.height; ++y) {
-                    const row = layer[y];
-                    for (let x = 0; x < this.width; ++x) {
-                        const tile = row[x];
-                        self.tileset.draw(g, tile, x, y);
-                    }
-                }
+            for (let img of self.layerImages) {
+                g.drawImage(img, 0, 0);
             }
         }
         g.restore();
     }
 
     searchPath(start, end) {
-        const self = selfs$4.get(this);
+        const self = selfs$3.get(this);
         return astar.search(self.graph, start, end)
             .map(p => {
                 return {
@@ -8209,7 +8283,7 @@ class TileMap {
     }
 
     isClear(x, y, avatar) {
-        const self = selfs$4.get(this);
+        const self = selfs$3.get(this);
         x -= self.offsetX;
         y -= self.offsetY;
         return x < 0 || this.width <= x
@@ -8261,11 +8335,10 @@ class TileMap {
     getClearTileNear(x, y, maxRadius, avatar) {
         for (let r = 1; r <= maxRadius; ++r) {
             for (let dx = -r; dx <= r; ++dx) {
-                const dy1 = r - Math.abs(dx);
-                const dy2 = -dy1;
+                const dy = r - Math.abs(dx);
                 const tx = x + dx;
-                const ty1 = y + dy1;
-                const ty2 = y + dy2;
+                const ty1 = y + dy;
+                const ty2 = y - dy;
 
                 if (this.isClear(tx, ty1, avatar)) {
                     return { x: tx, y: ty1 };
@@ -8293,8 +8366,11 @@ const CAMERA_LERP = 0.01,
     emojiNeededEvt = new Event("emojiNeeded"),
     toggleAudioEvt$1 = new Event("toggleAudio"),
     toggleVideoEvt$2 = new Event("toggleVideo"),
+    moveEvent = Object.assign(new Event("userMoved"), {
+        x: 0,
+        y: 0
+    }),
     emoteEvt$1 = Object.assign(new Event("emote"), {
-        id: null,
         emoji: null
     }),
     userJoinedEvt = Object.assign(new Event("userJoined", {
@@ -8516,8 +8592,8 @@ class Game extends EventTarget {
 
             if (!!this.me && pointer.dragDistance < 2) {
                 const tile = this.getTileAt(pointer),
-                    dx = tile.x - this.me.position._tx,
-                    dy = tile.y - this.me.position._ty;
+                    dx = tile.x - this.me.gridX,
+                    dy = tile.y - this.me.gridY;
 
                 if (dx === 0 && dy === 0) {
                     this.emote(this.me.id, this.currentEmoji);
@@ -8556,11 +8632,16 @@ class Game extends EventTarget {
         this.element.setOpen(v);
     }
 
+    initializeUser(id, evt) {
+        this.withUser("initialize user", id, (user) => {
+            user.deserialize(evt);
+        });
+    }
+
     updateAudioActivity(id, isActive) {
-        if (this.users.has(id)) {
-            const user = this.users.get(id);
+        this.withUser("update audio activity", id, (user) => {
             user.isActive = isActive;
-        }
+        });
     }
 
     emote(id, emoji) {
@@ -8581,7 +8662,7 @@ class Game extends EventTarget {
             }
 
             if (emoji) {
-                this.emotes.push(new Emote(emoji, user.position.x + 0.5, user.position.y));
+                this.emotes.push(new Emote(emoji, user.x, user.y));
             }
         }
     }
@@ -8603,22 +8684,24 @@ class Game extends EventTarget {
 
     moveMeTo(x, y) {
         if (this.map.isClear(x, y, this.me.avatar)) {
-            this.me.moveTo(x, y, this.transitionSpeed);
             this.targetOffsetCameraX = 0;
             this.targetOffsetCameraY = 0;
+            moveEvent.x = x;
+            moveEvent.y = y;
+            this.dispatchEvent(moveEvent);
         }
     }
 
     moveMeBy(dx, dy) {
-        const clearTile = this.map.getClearTile(this.me.position._tx, this.me.position._ty, dx, dy, this.me.avatar);
+        const clearTile = this.map.getClearTile(this.me.gridX, this.me.gridY, dx, dy, this.me.avatar);
         this.moveMeTo(clearTile.x, clearTile.y);
     }
 
     moveMeByPath(dx, dy) {
         arrayClear(this.waypoints);
 
-        const x = this.me.position._tx,
-            y = this.me.position._ty,
+        const x = this.me.gridX,
+            y = this.me.gridY,
             start = this.map.getGridNode(x, y),
             tx = x + dx,
             ty = y + dy,
@@ -8638,6 +8721,12 @@ class Game extends EventTarget {
         this.moveMeTo(clearTile.x, clearTile.y);
     }
 
+    visit(id) {
+        this.withUser("visit", id, (user) => {
+            this.warpMeTo(user.gridX, user.gridY);
+        });
+    }
+
     zoom(deltaZ) {
         const mag = Math.abs(deltaZ);
         if (0 < mag && mag <= 50) {
@@ -8652,12 +8741,18 @@ class Game extends EventTarget {
         }
     }
 
-    addUser(id, displayName) {
+    /**
+     * 
+     * @param {string} id
+     * @param {string} displayName
+     * @param {Pose} pose
+     */
+    addUser(id, displayName, pose) {
         if (this.users.has(id)) {
             this.removeUser(id);
         }
 
-        const user = new User(id, displayName, false);
+        const user = new User(id, displayName, pose, false);
         this.users.set(id, user);
 
         userJoinedEvt.user = user;
@@ -8673,36 +8768,32 @@ class Game extends EventTarget {
     }
 
     muteUserAudio(id, muted) {
-        let mutingUser = this.me;
-        if (id && this.users.has(id)) {
-            mutingUser = this.users.get(id);
-        }
-
-        if (!mutingUser) {
-            console.warn("No user found to mute audio, retrying in 1 second.");
-            setTimeout(this.muteUserAudio.bind(this, id, muted), 1000);
-        }
-        else {
-            mutingUser.audioMuted = muted;
-        }
+        this.withUser("mute audio", id, (user) => {
+            user.audioMuted = muted;
+        });
     }
 
     muteUserVideo(id, muted) {
-        let mutingUser = this.me;
-        if (!!id && this.users.has(id)) {
-            mutingUser = this.users.get(id);
-        }
-
-        if (!mutingUser) {
-            console.warn("No user found to mute video, retrying in 1 second.");
-            setTimeout(this.muteUserVideo.bind(this, id, muted), 1000);
-        }
-        else {
-            mutingUser.videoMuted = muted;
-        }
+        this.withUser("mute video", id, (user) => {
+            user.videoMuted = muted;
+        });
     }
 
-    withUser(id, callback, timeout) {
+    /**
+    * Used to perform on operation when a valid user object is found.
+    * @callback withUserCallback
+    * @param {User} user
+    * @returns {void}
+    */
+
+    /**
+     * Find a user by id, then perform an operation on it.
+     * @param {string} msg
+     * @param {string} id
+     * @param {withUserCallback} callback
+     * @param {number} timeout
+     */
+    withUser(msg, id, callback, timeout) {
         if (timeout === undefined) {
             timeout = 5000;
         }
@@ -8712,16 +8803,16 @@ class Game extends EventTarget {
                 callback(user);
             }
             else {
-                console.warn("No user, trying again in a quarter second");
+                console.warn(`No user "${id}" found to ${msg}. Trying again in a quarter second.`);
                 if (timeout > 0) {
-                    setTimeout(this.withUser.bind(this, id, callback, timeout - 250), 250);
+                    setTimeout(this.withUser.bind(this, msg, id, callback, timeout - 250), 250);
                 }
             }
         }
     }
 
     changeUserName(id, displayName) {
-        this.withUser(id, (user) => {
+        this.withUser("change user name", id, (user) => {
             user.displayName = displayName;
         });
     }
@@ -8733,27 +8824,35 @@ class Game extends EventTarget {
     }
 
     setAvatarVideo(id, stream) {
-        this.withUser(id, (user) => {
+        this.withUser("set avatar video", id, (user) => {
             user.setAvatarVideo(stream);
         });
     }
 
     setAvatarURL(id, url) {
-        this.withUser(id, (user) => {
+        this.withUser("set avatar image", id, (user) => {
             user.avatarImage = url;
         });
     }
 
     setAvatarEmoji(id, emoji) {
-        this.withUser(id, (user) => {
+        this.withUser("set avatar emoji", id, (user) => {
             user.avatarEmoji = emoji;
         });
     }
 
-    async startAsync(id, displayName, avatarURL, roomName) {
+    /**
+     * 
+     * @param {string} id
+     * @param {string} displayName
+     * @param {Pose} pose
+     * @param {string} avatarURL
+     * @param {string} roomName
+     */
+    async startAsync(id, displayName, pose, avatarURL, roomName) {
         this.currentRoomName = roomName.toLowerCase();
-        this.me = new User(id, displayName, true);
-        if (!!avatarURL) {
+        this.me = new User(id, displayName, pose, true);
+        if (isString(avatarURL)) {
             this.me.avatarImage = avatarURL;
         }
         this.users.set(id, this.me);
@@ -8810,6 +8909,7 @@ class Game extends EventTarget {
         this.map = null;
         this.users.clear();
         this.me = null;
+        this.hide();
         this.dispatchEvent(gameEndedEvt);
     }
 
@@ -8911,8 +9011,8 @@ class Game extends EventTarget {
     }
 
     render() {
-        const targetCameraX = -this.me.position.x * this.map.tileWidth,
-            targetCameraY = -this.me.position.y * this.map.tileHeight;
+        const targetCameraX = -this.me.x * this.map.tileWidth,
+            targetCameraY = -this.me.y * this.map.tileHeight;
 
         this.cameraZ = lerp(this.cameraZ, this.targetCameraZ, CAMERA_LERP * 10);
         this.cameraX = lerp(this.cameraX, targetCameraX, CAMERA_LERP * this.cameraZ);
@@ -8986,6 +9086,123 @@ class Game extends EventTarget {
     }
 }
 
+/** Base class providing functionality for spatializers. */
+class BaseSpatializer extends EventTarget {
+
+    /**
+     * Creates a spatializer that keeps track of position
+     */
+    constructor() {
+        super();
+
+        this.minDistance = 1;
+        this.minDistanceSq = 1;
+        this.maxDistance = 10;
+        this.maxDistanceSq = 100;
+        this.rolloff = 1;
+        this.transitionTime = 0.5;
+    }
+
+    /**
+     * Sets parameters that alter spatialization.
+     * @param {number} minDistance
+     * @param {number} maxDistance
+     * @param {number} rolloff
+     * @param {number} transitionTime
+     **/
+    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
+        this.minDistance = minDistance;
+        this.maxDistance = maxDistance;
+        this.transitionTime = transitionTime;
+        this.rolloff = rolloff;
+    }
+
+    /**
+     * Discard values and make this instance useless.
+     */
+    dispose() {
+    }
+
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     * @param {Pose} loc
+     */
+    update(loc) {
+    }
+}
+
+/**
+ * A position value that is blended from the current position to
+ * a target position over time.
+ */
+class InterpolatedPose {
+
+    /**
+     * Creates a new position value that is blended from the current position to
+     * a target position over time.
+     **/
+    constructor() {
+        this.start = new Pose();
+        this.current = new Pose();
+        this.end = new Pose();
+
+        /** @type {BaseSpatializer} */
+        this._spatializer = null;
+
+        Object.seal(this);
+    }
+
+    get spatializer() {
+        return this._spatializer;
+    }
+
+    set spatializer(v) {
+        if (this.spatializer !== v) {
+            if (this._spatializer) {
+                this._spatializer.dispose();
+            }
+            this._spatializer = v;
+        }
+    }
+
+    dispose() {
+        this.spatializer = null;
+    }
+
+    /**
+     * Set the target position for the time `t + dt`.
+     * @param {number} px - the horizontal component of the position.
+     * @param {number} py - the vertical component of the position.
+     * @param {number} pz - the lateral component of the position.
+     * @param {number} fx - the horizontal component of the position.
+     * @param {number} fy - the vertical component of the position.
+     * @param {number} fz - the lateral component of the position.
+     * @param {number} ux - the horizontal component of the position.
+     * @param {number} uy - the vertical component of the position.
+     * @param {number} uz - the lateral component of the position.
+     * @param {number} t - the time at which to start the transition.
+     * @param {number} dt - the amount of time to take making the transition.
+     */
+    setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, t, dt) {
+        this.start.copy(this.current);
+        this.start.t = t;
+        this.end.set(px, py, pz, fx, fy, fz, ux, uy, uz);
+        this.end.t = t + dt;
+    }
+
+    /**
+     * Calculates the new position for the given time.
+     * @protected
+     * @param {number} t
+     */
+    update(t) {
+        this.current.interpolate(this.start, this.end, t);
+        if (this.spatializer) {
+            this.spatializer.update(this.current);
+        }
+    }
+}
+
 /**
  * A base class for managers of audio sources, destinations, and their spatialization.
  **/
@@ -9014,10 +9231,11 @@ class BaseAudioClient extends EventTarget {
     }
 
     /**
-     * Set the audio device used to play audio to the local user.
-     * @param {string} deviceID
+     * Create a new user for audio processing.
+     * @param {string} id
+     * @returns {InterpolatedPose}
      */
-    setAudioOutputDevice(deviceID) {
+    createUser(id) {
         throw new Error("Not implemented in base class");
     }
 
@@ -9025,7 +9243,7 @@ class BaseAudioClient extends EventTarget {
      * Remove a user from audio processing.
      * @param {string} id - the id of the user to remove
      */
-    removeSource(id) {
+    removeUser(id) {
         throw new Error("Not implemented in base class");
     }
 
@@ -9033,18 +9251,28 @@ class BaseAudioClient extends EventTarget {
      * Set the position of the listener.
      * @param {number} x - the horizontal component of the position.
      * @param {number} y - the vertical component of the position.
+     * @param {number} z - the lateral component of the position.
      */
-    setLocalPosition(x, y) {
+    setLocalPosition(x, y, z) {
         throw new Error("Not implemented in base class");
     }
+
+    /**
+     * @returns {Pose}
+     **/
+    getLocalPose() {
+        throw new Error("Not implemented in base class");
+    }
+
 
     /**
      * Set the position of an audio source.
      * @param {string} id - the id of the user for which to set the position.
      * @param {number} x - the horizontal component of the position.
      * @param {number} y - the vertical component of the position.
+     * @param {number} z - the lateral component of the position.
      */
-    setUserPosition(id, x, y) {
+    setUserPosition(id, x, y, z) {
         throw new Error("Not implemented in base class");
     }
 }
@@ -9064,6 +9292,8 @@ const eventNames$1 = [
     "userInitResponse",
     "audioMuteStatusChanged",
     "videoMuteStatusChanged",
+    "localAudioMuteStatusChanged",
+    "localVideoMuteStatusChanged",
     "videoConferenceJoined",
     "videoConferenceLeft",
     "participantJoined",
@@ -9077,7 +9307,9 @@ const eventNames$1 = [
     "audioAdded",
     "videoAdded",
     "audioRemoved",
-    "videoRemoved"
+    "videoRemoved",
+    "audioChanged",
+    "videoChanged"
 ];
 
 // Manages communication between Jitsi Meet and Calla
@@ -9100,6 +9332,78 @@ class BaseJitsiClient extends EventTarget {
         this.preferredAudioOutputID = null;
         this.preferredAudioInputID = null;
         this.preferredVideoInputID = null;
+
+        this.addEventListener("participantJoined", (evt) => {
+            this.userInitRequest(evt.id);
+        });
+
+        this.addEventListener("userInitRequest", (evt) => {
+            const pose = this.audioClient.getLocalPose();
+            const { p } = pose;
+            this.userInitResponse(evt.id, {
+                id: this.localUser,
+                x: p.x,
+                y: p.y,
+                z: p.z
+            });
+        });
+
+        this.addEventListener("userInitResponse", (evt) => {
+            if (isNumber(evt.x)
+                && isNumber(evt.y)
+                && isNumber(evt.z)) {
+                this.setUserPosition(evt.id, evt.x, evt.y, evt.z);
+            }
+        });
+
+        this.addEventListener("userMoved", (evt) => {
+            this.setUserPosition(evt.id, evt.x, evt.y, evt.z);
+        });
+
+        this.addEventListener("participantLeft", (evt) => {
+            this.removeUser(evt.id);
+        });
+
+        const onAudioChange = (evt) => {
+            const evt2 = Object.assign(new Event("audioChanged"), {
+                id: evt.id,
+                stream: evt.stream
+            });
+            this.dispatchEvent(evt2);
+        };
+
+        const onVideoChange = (evt) => {
+            const evt2 = Object.assign(new Event("videoChanged"), {
+                id: evt.id,
+                stream: evt.stream
+            });
+            this.dispatchEvent(evt2);
+        };
+
+        this.addEventListener("audioAdded", onAudioChange);
+        this.addEventListener("audioRemoved", onAudioChange);
+        this.addEventListener("videoAdded", onVideoChange);
+        this.addEventListener("videoRemoved", onVideoChange);
+
+        this.addEventListener("audioMuteStatusChanged", (evt) => {
+            if (evt.id === this.localUser) {
+                const evt2 = Object.assign(new Event("localAudioMuteStatusChanged"), {
+                    id: evt.id,
+                    muted: evt.muted
+                });
+                this.dispatchEvent(evt2);
+            }
+        });
+
+        this.addEventListener("videoMuteStatusChanged", (evt) => {
+            if (evt.id === this.localUser) {
+                const evt2 = Object.assign(new Event("localVideoMuteStatusChanged"), {
+                    id: evt.id,
+                    muted: evt.muted
+                });
+                this.dispatchEvent(evt2);
+            }
+        });
     }
 
     get appFingerPrint() {
@@ -9399,10 +9703,10 @@ class BaseJitsiClient extends EventTarget {
      * @param {number} x - the horizontal component of the position.
      * @param {number} y - the vertical component of the position.
      */
-    setLocalPosition(x, y) {
-        this.audioClient.setLocalPosition(x, y);
+    setLocalPosition(x, y, z) {
+        this.audioClient.setLocalPosition(x, y, z);
         for (let toUserID of this.userIDs()) {
-            this.sendMessageTo(toUserID, "userMoved", { x, y });
+            this.sendMessageTo(toUserID, "userMoved", { x, y, z });
         }
     }
 
@@ -9411,13 +9715,14 @@ class BaseJitsiClient extends EventTarget {
      * @param {string} id - the id of the user for which to set the position.
      * @param {number} x - the horizontal component of the position.
      * @param {number} y - the vertical component of the position.
+     * @param {number} z - the lateral component of the position.
      */
-    setUserPosition(id, x, y) {
-        this.audioClient.setUserPosition(id, x, y);
+    setUserPosition(id, x, y, z) {
+        this.audioClient.setUserPosition(id, x, y, z);
     }
 
-    removeUser(evt) {
-        this.audioClient.removeSource(evt.id);
+    removeUser(id) {
+        this.audioClient.removeUser(id);
     }
 
     /**
@@ -9522,26 +9827,38 @@ class JitsiClientEvent extends Event {
     }
 }
 
-const selfs$5 = new Map(),
-    KEY = "CallaSettings",
-    DEFAULT_SETTINGS = {
-        drawHearing: false,
-        audioDistanceMin: 1,
-        audioDistanceMax: 10,
-        audioRolloff: 1,
-        fontSize: 12,
-        transitionSpeed: 1,
-        zoom: 1.5,
-        roomName: "calla",
-        userName: "",
-        avatarEmoji: null,
-        avatarURL: null,
-        gamepadIndex: 0,
-        preferredAudioOutputID: null,
-        preferredAudioInputID: null,
-        preferredVideoInputID: null,
+const KEY = "CallaSettings";
 
-        inputBinding: {
+/** @type {WeakMap<Settings, SettingsPrivate>} */
+const selfs$4 = new WeakMap();
+
+class SettingsPrivate {
+    constructor() {
+        this.drawHearing = false;
+        this.audioDistanceMin = 1;
+        this.audioDistanceMax = 10;
+        this.audioRolloff = 1;
+        this.fontSize = 12;
+        this.transitionSpeed = 1;
+        this.zoom = 1.5;
+        this.roomName = "calla";
+        this.userName = "";
+        this.avatarEmoji = null;
+
+        /** @type {string} */
+        this.avatarURL = null;
+        this.gamepadIndex = 0;
+
+        /** @type {string} */
+        this.preferredAudioOutputID = null;
+
+        /** @type {string} */
+        this.preferredAudioInputID = null;
+
+        /** @type {string} */
+        this.preferredVideoInputID = null;
+
+        this.inputBinding = {
             keyButtonUp: "ArrowUp",
             keyButtonDown: "ArrowDown",
             keyButtonLeft: "ArrowLeft",
@@ -9555,28 +9872,28 @@ const selfs$5 = new Map(),
             gpButtonRight: 15,
             gpButtonEmote: 0,
             gpButtonToggleAudio: 1
+        };
+
+        const selfStr = localStorage.getItem(KEY);
+        if (selfStr) {
+            Object.assign(
+                this,
+                JSON.parse(selfStr));
         }
-    };
 
-function commit(settings) {
-    const self = selfs$5.get(settings);
-    localStorage.setItem(KEY, JSON.stringify(self));
-}
+        Object.seal(this);
+    }
 
-function load() {
-    const selfStr = localStorage.getItem(KEY);
-    if (selfStr) {
-        return Object.assign(
-            {},
-            DEFAULT_SETTINGS,
-            JSON.parse(selfStr));
+    commit() {
+        localStorage.setItem(KEY, JSON.stringify(this));
     }
 }
 
 class Settings {
     constructor() {
-        const self = Object.seal(load() || DEFAULT_SETTINGS);
-        selfs$5.set(this, self);
+        const self = new SettingsPrivate();
+        selfs$4.set(this, self);
+
         if (window.location.hash.length > 0) {
             self.roomName = window.location.hash.substring(1);
         }
@@ -9584,183 +9901,201 @@ class Settings {
     }
 
     get preferredAudioOutputID() {
-        return selfs$5.get(this).preferredAudioOutputID;
+        return selfs$4.get(this).preferredAudioOutputID;
     }
 
     set preferredAudioOutputID(value) {
         if (value !== this.preferredAudioOutputID) {
-            selfs$5.get(this).preferredAudioOutputID = value;
-            commit(this);
+            const self = selfs$4.get(this);
+            self.preferredAudioOutputID = value;
+            self.commit();
         }
     }
 
     get preferredAudioInputID() {
-        return selfs$5.get(this).preferredAudioInputID;
+        return selfs$4.get(this).preferredAudioInputID;
     }
 
     set preferredAudioInputID(value) {
         if (value !== this.preferredAudioInputID) {
-            selfs$5.get(this).preferredAudioInputID = value;
-            commit(this);
+            const self = selfs$4.get(this);
+            self.preferredAudioInputID = value;
+            self.commit();
         }
     }
 
     get preferredVideoInputID() {
-        return selfs$5.get(this).preferredVideoInputID;
+        return selfs$4.get(this).preferredVideoInputID;
     }
 
     set preferredVideoInputID(value) {
         if (value !== this.preferredVideoInputID) {
-            selfs$5.get(this).preferredVideoInputID = value;
-            commit(this);
+            const self = selfs$4.get(this);
+            self.preferredVideoInputID = value;
+            self.commit();
         }
     }
 
     get transitionSpeed() {
-        return selfs$5.get(this).transitionSpeed;
+        return selfs$4.get(this).transitionSpeed;
     }
 
     set transitionSpeed(value) {
         if (value !== this.transitionSpeed) {
-            selfs$5.get(this).transitionSpeed = value;
-            commit(this);
+            const self = selfs$4.get(this);
+            self.transitionSpeed = value;
+            self.commit();
         }
     }
 
     get drawHearing() {
-        return selfs$5.get(this).drawHearing;
+        return selfs$4.get(this).drawHearing;
     }
 
     set drawHearing(value) {
         if (value !== this.drawHearing) {
-            selfs$5.get(this).drawHearing = value;
-            commit(this);
+            const self = selfs$4.get(this);
+            self.drawHearing = value;
+            self.commit();
         }
     }
 
     get audioDistanceMin() {
-        return selfs$5.get(this).audioDistanceMin;
+        return selfs$4.get(this).audioDistanceMin;
     }
 
     set audioDistanceMin(value) {
         if (value !== this.audioDistanceMin) {
-            selfs$5.get(this).audioDistanceMin = value;
-            commit(this);
+            const self = selfs$4.get(this);
+            self.audioDistanceMin = value;
+            self.commit();
         }
     }
 
     get audioDistanceMax() {
-        return selfs$5.get(this).audioDistanceMax;
+        return selfs$4.get(this).audioDistanceMax;
     }
 
     set audioDistanceMax(value) {
         if (value !== this.audioDistanceMax) {
-            selfs$5.get(this).audioDistanceMax = value;
-            commit(this);
+            const self = selfs$4.get(this);
+            self.audioDistanceMax = value;
+            self.commit();
         }
     }
 
     get audioRolloff() {
-        return selfs$5.get(this).audioRolloff;
+        return selfs$4.get(this).audioRolloff;
     }
 
     set audioRolloff(value) {
         if (value !== this.audioRolloff) {
-            selfs$5.get(this).audioRolloff = value;
-            commit(this);
+            const self = selfs$4.get(this);
+            self.audioRolloff = value;
+            self.commit();
         }
     }
 
     get fontSize() {
-        return selfs$5.get(this).fontSize;
+        return selfs$4.get(this).fontSize;
     }
 
     set fontSize(value) {
         if (value !== this.fontSize) {
-            selfs$5.get(this).fontSize = value;
-            commit(this);
+            const self = selfs$4.get(this);
+            self.fontSize = value;
+            self.commit();
         }
     }
 
     get zoom() {
-        return selfs$5.get(this).zoom;
+        return selfs$4.get(this).zoom;
     }
 
     set zoom(value) {
         if (value !== this.zoom) {
-            selfs$5.get(this).zoom = value;
-            commit(this);
+            const self = selfs$4.get(this);
+            self.zoom = value;
+            self.commit();
         }
     }
 
     get userName() {
-        return selfs$5.get(this).userName;
+        return selfs$4.get(this).userName;
     }
 
     set userName(value) {
         if (value !== this.userName) {
-            selfs$5.get(this).userName = value;
-            commit(this);
+            const self = selfs$4.get(this);
+            self.userName = value;
+            self.commit();
         }
     }
 
     get avatarEmoji() {
-        return selfs$5.get(this).avatarEmoji;
+        return selfs$4.get(this).avatarEmoji;
     }
 
     set avatarEmoji(value) {
         if (value !== this.avatarEmoji) {
-            selfs$5.get(this).avatarEmoji = value;
-            commit(this);
+            const self = selfs$4.get(this);
+            self.avatarEmoji = value;
+            self.commit();
         }
     }
 
     get avatarURL() {
-        return selfs$5.get(this).avatarURL;
+        return selfs$4.get(this).avatarURL;
     }
 
     set avatarURL(value) {
         if (value !== this.avatarURL) {
-            selfs$5.get(this).avatarURL = value;
-            commit(this);
+            const self = selfs$4.get(this);
+            self.avatarURL = value;
+            self.commit();
         }
     }
 
     get roomName() {
-        return selfs$5.get(this).roomName;
+        return selfs$4.get(this).roomName;
     }
 
     set roomName(value) {
         if (value !== this.roomName) {
-            selfs$5.get(this).roomName = value;
-            commit(this);
+            const self = selfs$4.get(this);
+            self.roomName = value;
+            self.commit();
         }
     }
 
     get gamepadIndex() {
-        return selfs$5.get(this).gamepadIndex;
+        return selfs$4.get(this).gamepadIndex;
     }
 
     set gamepadIndex(value) {
         if (value !== this.gamepadIndex) {
-            selfs$5.get(this).gamepadIndex = value;
-            commit(this);
+            const self = selfs$4.get(this);
+            self.gamepadIndex = value;
+            self.commit();
         }
     }
 
     get inputBinding() {
-        return selfs$5.get(this).inputBinding;
+        return selfs$4.get(this).inputBinding;
     }
 
     set inputBinding(value) {
         if (value !== this.inputBinding) {
-            selfs$5.get(this).inputBinding = value;
-            commit(this);
+            const self = selfs$4.get(this);
+            for (let key in value) {
+                self.inputBinding[key] = value[key];
+            }
+            self.commit();
         }
     }
 }
 
-const versionString = "Calla v0.2.17";
+const versionString = "Calla v0.3.0";
 
 console.log(`${versionString}`);
 
@@ -9848,11 +10183,8 @@ function init(client) {
         options.gamepadIndex = game.gamepadIndex;
     }
 
-    function refreshUser(userID, isNew) {
-        if (game.users.has(userID)) {
-            const user = game.users.get(userID);
-            directory.set(user, isNew);
-        }
+    function refreshUser(userID) {
+        game.withUser("list user in directory", userID, (user) => directory.set(user));
     }
 
     gridRowsDef("auto", "1fr", "auto").apply(document.body);
@@ -9910,6 +10242,15 @@ function init(client) {
         }
     });
 
+    /**
+     * @callback showViewCallback
+     * @returns {void}
+     */
+
+    /**
+     * @param {FormDialog} view
+     * @returns {showViewCallback}
+     */
     const showView = (view) => () => {
         if (!emoji.isOpen) {
             const isOpen = view.isOpen;
@@ -9956,6 +10297,7 @@ function init(client) {
 
     login.addEventListener("login", async () => {
         client.startAudio();
+        setAudioProperties();
 
         const joinInfo = await client.joinAsync(
             settings.roomName = login.roomName,
@@ -9965,7 +10307,7 @@ function init(client) {
 
         window.location.hash = login.roomName;
 
-        await game.startAsync(joinInfo.id, joinInfo.displayName, joinInfo.avatarURL, joinInfo.roomName);
+        await game.startAsync(joinInfo.id, joinInfo.displayName, joinInfo.pose, joinInfo.avatarURL, joinInfo.roomName);
 
         client.avatarURL
             = game.me.avatarImage
@@ -9998,9 +10340,8 @@ function init(client) {
                 settings.avatarEmoji
                     = client.avatarEmoji
                     = game.me.avatarEmoji
-                    = options.avatarEmoji
                     = e;
-                refreshUser(game.me.id);
+                refreshUser(client.localUser);
             });
         },
 
@@ -10009,7 +10350,7 @@ function init(client) {
                 = client.avatarURL
                 = game.me.avatarImage
                 = options.avatarURL;
-            refreshUser(game.me.id);
+            refreshUser(client.localUser);
         },
 
         toggleDrawHearing: () => {
@@ -10067,10 +10408,7 @@ function init(client) {
         },
 
         userJoined: (evt) => {
-            evt.user.addEventListener("userPositionNeeded", (evt2) => {
-                client.userInitRequest(evt2.id);
-            });
-            refreshUser(evt.user.id, true);
+            refreshUser(evt.user.id);
         },
 
         toggleAudio: async () => {
@@ -10086,28 +10424,27 @@ function init(client) {
         gameStarted: () => {
             gridPos(1, 2).apply(login.element);
             login.hide();
+
+            options.user = game.me;
+
             headbar.enabled = true;
             footbar.enabled = true;
 
-            setAudioProperties();
-
-            client.setLocalPosition(game.me.position.x, game.me.position.y);
-            game.me.addEventListener("userMoved", (evt) => {
-                client.setLocalPosition(evt.x, evt.y);
-            });
-
             settings.avatarEmoji
                 = client.avatarEmoji
-                = options.avatarEmoji
                 = game.me.avatarEmoji
-                = settings.avatarEmoji || allPeople.random();
+                = settings.avatarEmoji
+                || allPeople.random();
 
-            refreshUser(game.me.id);
+            refreshUser(client.localUser);
+        },
+
+        userMoved: (evt) => {
+            client.setLocalPosition(evt.x, 0, evt.y);
         },
 
         gameEnded: () => {
             gridPos(1, 1, 1, 3).apply(login.element);
-            game.hide();
             login.connected = false;
             showLogin();
         },
@@ -10118,38 +10455,33 @@ function init(client) {
     });
 
     directory.addEventListener("warpTo", (evt) => {
-        if (game.users.has(evt.id)) {
-            const user = game.users.get(evt.id);
-            game.warpMeTo(user.position._tx, user.position._ty);
-        }
+        game.visit(evt.id);
     });
 
     client.addEventListeners({
 
-        videoConferenceLeft: (evt) => {
+        videoConferenceLeft: () => {
             game.end();
         },
 
         participantJoined: (evt) => {
             sound.play("join", 0.5);
-            game.addUser(evt.id, evt.displayName);
-        },
-
-        videoAdded: (evt) => {
-            game.setAvatarVideo(evt.id, evt.stream);
-            refreshUser(evt.id);
-        },
-
-        videoRemoved: (evt) => {
-            game.setAvatarVideo(evt.id, null);
-            refreshUser(evt.id);
+            game.addUser(evt.id, evt.displayName, evt.pose);
         },
 
         participantLeft: (evt) => {
             sound.play("leave", 0.5);
             game.removeUser(evt.id);
-            client.removeUser(evt.id);
             directory.delete(evt.id);
+        },
+
+        audioChanged: (evt) => {
+            refreshUser(evt.id);
+        },
+
+        videoChanged: (evt) => {
+            game.setAvatarVideo(evt.id, evt.stream);
+            refreshUser(evt.id);
         },
 
         avatarChanged: (evt) => {
@@ -10164,50 +10496,34 @@ function init(client) {
 
         audioMuteStatusChanged: async (evt) => {
             game.muteUserAudio(evt.id, evt.muted);
-            if (evt.id === client.localUser) {
-                footbar.audioEnabled = !evt.muted;
-                options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
-            }
+        },
+
+        localAudioMuteStatusChanged: async (evt) => {
+            footbar.audioEnabled = !evt.muted;
+            options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
         },
 
         videoMuteStatusChanged: async (evt) => {
             game.muteUserVideo(evt.id, evt.muted);
-            if (evt.id === client.localUser) {
-                footbar.videoEnabled = !evt.muted;
-                if (evt.muted) {
-                    options.setAvatarVideo(null);
-                }
-                else {
-                    options.setAvatarVideo(game.me.avatarVideo.element);
-                }
-                options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
+        },
+
+        localVideoMuteStatusChanged: async (evt) => {
+            footbar.videoEnabled = !evt.muted;
+            if (evt.muted) {
+                options.setAvatarVideo(null);
             }
+            else {
+                options.setAvatarVideo(game.me.avatarVideo.element);
+            }
+            options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
         },
 
         userInitRequest: (evt) => {
-            if (game.me && game.me.id) {
-                client.userInitResponse(evt.id, game.me.serialize());
-            }
-            else {
-                directory.warn("Local user not initialized");
-            }
+            client.userInitResponse(evt.id, game.me.serialize());
         },
 
         userInitResponse: (evt) => {
-            if (game.users.has(evt.id)) {
-                const user = game.users.get(evt.id);
-                user.deserialize(evt);
-                client.setUserPosition(evt.id, evt.x, evt.y);
-                refreshUser(evt.id);
-            }
-        },
-
-        userMoved: (evt) => {
-            if (game.users.has(evt.id)) {
-                const user = game.users.get(evt.id);
-                user.moveTo(evt.x, evt.y, settings.transitionSpeed);
-                client.setUserPosition(evt.id, evt.x, evt.y);
-            }
+            game.initializeUser(evt.id, evt);
             refreshUser(evt.id);
         },
 
@@ -10240,6 +10556,8 @@ class AudioActivityEvent extends Event {
         /** @type {string} */
         this.id = null;
         this.isActive = false;
+
+        Object.seal(this);
     }
 
     /**
@@ -10254,72 +10572,6 @@ class AudioActivityEvent extends Event {
 }
 
 /**
- * A base class for positioned audio elements.
- **/
-class BaseAudioElement extends EventTarget {
-    /**
-     * Creates a new positioned audio element.
-     * @param {BasePosition} position
-     */
-    constructor(position) {
-        super();
-
-        this.minDistance = 1;
-        this.minDistanceSq = 1;
-        this.maxDistance = 10;
-        this.maxDistanceSq = 100;
-        this.rolloff = 1;
-        this.transitionTime = 0.5;
-
-        /** @type {BasePosition} */
-        this.position = position;
-    }
-
-    /**
-     * Sets parameters that alter spatialization.
-     * @param {number} minDistance
-     * @param {number} maxDistance
-     * @param {number} rolloff
-     * @param {number} transitionTime
-     */
-    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
-        this.minDistance = minDistance;
-        this.maxDistance = maxDistance;
-        this.transitionTime = transitionTime;
-        this.rolloff = rolloff;
-    }
-
-    /**
-     * Gets the current playback time from the audio context.
-     * @returns {number}
-     */
-    get currentTime() {
-        throw new Error("Not implemented in base class");
-    }
-
-    /**
-     * Set the target position
-     * @param {number} x - the horizontal component of the position.
-     * @param {number} y - the vertical component of the position.
-     */
-    setTarget(x, y) {
-        if (this.position) {
-            this.position.setTarget(x, y, this.currentTime, this.transitionTime);
-            this.update();
-        }
-    }
-
-    /**
-     * Performs position updates.
-     **/
-    update() {
-        if (this.position) {
-            this.position.update(this.currentTime);
-        }
-    }
-}
-
-/**
  * A mocking class for providing the playback timing needed to synchronize motion and audio.
  **/
 class MockAudioContext {
@@ -10328,6 +10580,8 @@ class MockAudioContext {
      **/
     constructor() {
         this._t = performance.now() / 1000;
+
+        Object.seal(this);
     }
 
     /**
@@ -10343,6 +10597,605 @@ class MockAudioContext {
      * @type {AudioDestinationNode} */
     get destination() {
         return null;
+    }
+}
+
+/** Base class providing functionality for spatializers. */
+class BaseSource extends BaseSpatializer {
+
+    /**
+     * Creates a spatializer that keeps track of the relative position
+     * of an audio element to the listener destination.
+     * @param {string} id
+     * @param {MediaStream|HTMLAudioElement} stream
+     */
+    constructor(id, stream) {
+        super();
+
+        this.id = id;
+
+        /** @type {HTMLAudioElement} */
+        this.audio = null;
+
+        /** @type {MediaStream} */
+        this.stream = null;
+
+        if (stream instanceof HTMLAudioElement) {
+            this.audio = stream;
+        }
+        else if (stream instanceof MediaStream) {
+            this.stream = stream;
+            this.audio = Audio(
+                srcObject(this.stream),
+                muted);
+        }
+        else if (stream !== null) {
+            throw new Error("Can't create a node from the given stream. Expected type HTMLAudioElement or MediaStream.");
+        }
+
+        if (this.audio) {
+            this.audio.autoPlay = true;
+            this.audio.playsInline = true;
+            this.audio.addEventListener("onloadedmetadata", () =>
+                this.audio.play());
+        }
+    }
+
+    /**
+     * Discard values and make this instance useless.
+     */
+    dispose() {
+        if (this.audio) {
+            this.audio.pause();
+            this.audio = null;
+        }
+        this.stream = null;
+        super.dispose();
+    }
+
+    /**
+     * Changes the device to which audio will be output
+     * @param {string} deviceID
+     */
+    setAudioOutputDevice(deviceID) {
+        if (this.audio && canChangeAudioOutput) {
+            this.audio.setSinkId(deviceID);
+        }
+    }
+}
+
+const audioActivityEvt = new AudioActivityEvent(),
+    activityCounterMin = 0,
+    activityCounterMax = 60,
+    activityCounterThresh = 5;
+
+/**
+ * 
+ * @param {number} frequency
+ * @param {number} sampleRate
+ * @param {number} bufferSize
+ */
+function frequencyToIndex(frequency, sampleRate, bufferSize) {
+    var nyquist = sampleRate / 2;
+    var index = Math.round(frequency / nyquist * bufferSize);
+    return clamp(index, 0, bufferSize)
+}
+
+/**
+ * 
+ * @param {AnalyserNode} analyser
+ * @param {Float32Array} frequencies
+ * @param {number} minHz
+ * @param {number} maxHz
+ * @param {number} bufferSize
+ */
+function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz, bufferSize) {
+    const sampleRate = analyser.context.sampleRate,
+        start = frequencyToIndex(minHz, sampleRate, bufferSize),
+        end = frequencyToIndex(maxHz, sampleRate, bufferSize),
+        count = end - start;
+    let sum = 0;
+    for (let i = start; i < end; ++i) {
+        sum += frequencies[i];
+    }
+    return count === 0 ? 0 : (sum / count);
+}
+
+class BaseAnalyzed extends BaseSource {
+
+    /**
+     * @param {string} id
+     * @param {MediaStream|HTMLAudioElement} stream
+     * @param {number} bufferSize
+     * @param {AudioContext} audioContext
+     * @param {PannerNode|StereoPannerNode} inNode
+     */
+    constructor(id, stream, bufferSize, audioContext, inNode) {
+        super(id, stream);
+
+        this.bufferSize = bufferSize;
+        this.buffer = new Float32Array(this.bufferSize);
+
+        /** @type {AnalyserNode} */
+        this.analyser = audioContext.createAnalyser();
+        this.analyser.fftSize = 2 * this.bufferSize;
+        this.analyser.smoothingTimeConstant = 0.2;
+
+        /** @type {PannerNode|StereoPannerNode} */
+        this.inNode = inNode;
+
+        /** @type {boolean} */
+        this.wasActive = false;
+        this.lastAudible = true;
+        this.activityCounter = 0;
+
+        /** @type {MediaSource} */
+        this.source = null;
+
+        const checkSource = () => {
+            if (!this.source) {
+                if (this.stream) {
+                    try {
+                        if (this.stream.active) {
+                            this.source = audioContext.createMediaStreamSource(this.stream);
+                            this.source.connect(this.analyser);
+                            this.source.connect(this.inNode);
+                            setTimeout(checkSource, 0);
+                        }
+                    }
+                    catch (exp) {
+                        console.warn("Creating the media stream failed. Reason: ", exp);
+                    }
+                }
+                else if (this.audio) {
+                    try {
+                        this.source = audioContext.createMediaElementSource(this.audio);
+                        this.source.connect(this.analyser);
+                        this.source.connect(this.inNode);
+                    }
+                    catch (exp) {
+                        console.warn("Creating the media stream failed. Reason: ", exp);
+                    }
+                }
+            }
+        };
+
+        checkSource();
+    }
+
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     * @param {Pose} loc
+     * @fires BaseAnalyzedSpatializer#audioActivity
+     */
+    update(loc) {
+        super.update(loc);
+
+        if (this.source) {
+            this.analyser.getFloatFrequencyData(this.buffer);
+
+            const average = 1.1 + analyserFrequencyAverage(this.analyser, this.buffer, 85, 255, this.bufferSize) / 100;
+            if (average >= 0.5 && this.activityCounter < activityCounterMax) {
+                this.activityCounter++;
+            } else if (average < 0.5 && this.activityCounter > activityCounterMin) {
+                this.activityCounter--;
+            }
+
+            const isActive = this.activityCounter > activityCounterThresh;
+            if (this.wasActive !== isActive) {
+                this.wasActive = isActive;
+                audioActivityEvt.id = this.id;
+                audioActivityEvt.isActive = isActive;
+                this.dispatchEvent(audioActivityEvt);
+            }
+        }
+    }
+
+    /**
+     * Discard values and make this instance useless.
+     */
+    dispose() {
+        if (this.source) {
+            this.source.disconnect(this.analyser);
+            this.source.disconnect(this.inNode);
+        }
+
+        this.source = null;
+        this.inNode = null;
+        this.analyser = null;
+        this.buffer = null;
+
+        super.dispose();
+    }
+}
+
+/**
+ * A spatializer that uses the WebAudio API.
+ **/
+class BaseWebAudio extends BaseAnalyzed {
+
+    /**
+     * Creates a new spatializer that uses the WebAudio API
+     * @param {string} id
+     * @param {MediaStream|HTMLAudioElement} stream
+     * @param {number} bufferSize
+     * @param {AudioContext} audioContext
+     * @param {PannerNode|StereoPannerNode} inNode
+     * @param {GainNode=} outNode
+     */
+    constructor(id, stream, bufferSize, audioContext, inNode, outNode = null) {
+        super(id, stream, bufferSize, audioContext, inNode);
+
+        this.outNode = outNode || inNode;
+        this.outNode.connect(audioContext.destination);
+
+        if (this.inNode !== this.outNode) {
+            this.inNode.connect(this.outNode);
+        }
+    }
+
+    /**
+     * Discard values and make this instance useless.
+     */
+    dispose() {
+        if (this.inNode !== this.outNode) {
+            this.inNode.disconnect(this.outNode);
+        }
+
+        this.outNode.disconnect(this.outNode.context.destination);
+        this.outNode = null;
+
+        super.dispose();
+    }
+}
+
+/**
+ * A spatializer that uses WebAudio's PannerNode
+ **/
+class PannerBase extends BaseWebAudio {
+
+    /**
+     * Creates a new spatializer that uses WebAudio's PannerNode.
+     * @param {string} id
+     * @param {MediaStream|HTMLAudioElement} stream
+     * @param {number} bufferSize
+     * @param {AudioContext} audioContext
+     */
+    constructor(id, stream, bufferSize, audioContext) {
+        const panner = audioContext.createPanner();
+        super(id, stream, bufferSize, audioContext, panner);
+
+        this.inNode.panningModel = "HRTF";
+        this.inNode.distanceModel = "inverse";
+        this.inNode.coneInnerAngle = 360;
+        this.inNode.coneOuterAngle = 0;
+        this.inNode.coneOuterGain = 0;
+    }
+
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     * @param {Pose} loc
+     */
+    update(loc) {
+        super.update(loc);
+        this.inNode.refDistance = this.minDistance;
+        this.inNode.rolloffFactor = this.rolloff;
+    }
+}
+
+/**
+ * A positioner that uses WebAudio's playback dependent time progression.
+ **/
+class PannerNew extends PannerBase {
+
+    /**
+     * Creates a new positioner that uses WebAudio's playback dependent time progression.
+     * @param {string} id
+     * @param {MediaStream|HTMLAudioElement} stream
+     * @param {number} bufferSize
+     * @param {AudioContext} audioContext
+     */
+    constructor(id, stream, bufferSize, audioContext) {
+        super(id, stream, bufferSize, audioContext);
+
+        Object.seal(this);
+    }
+
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     * @param {Pose} loc
+     */
+    update(loc) {
+        super.update(loc);
+        const { p, f } = loc;
+        this.inNode.positionX.setValueAtTime(p.x, 0);
+        this.inNode.positionY.setValueAtTime(p.y, 0);
+        this.inNode.positionZ.setValueAtTime(p.z, 0);
+        this.inNode.orientationX.setValueAtTime(f.x, 0);
+        this.inNode.orientationY.setValueAtTime(f.y, 0);
+        this.inNode.orientationZ.setValueAtTime(f.z, 0);
+    }
+}
+
+class ManualBase extends BaseSpatializer {
+    /**
+     * @param {Pose} dest
+     */
+    constructor(dest) {
+        super(dest);
+        this.dest = dest;
+        this.delta = new Vector();
+        this.volume = 1;
+        this.pan = 0;
+
+        Object.seal(this);
+    }
+
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     * @param {Pose} loc
+     */
+    update(loc) {
+        super.update(loc);
+
+        this.delta.sub(loc.p, this.dest.p);
+
+        const dist = this.delta.len,
+            distScale = project(dist, this.minDistance, this.maxDistance);
+        this.volume = 1 - clamp(distScale, 0, 1);
+        this.volume = Math.round(100 * this.volume * this.volume) / 100;
+        this.pan = dist > 0
+            ? this.delta.x / dist
+            : 0;
+    }
+}
+
+/**
+ * A spatializer that only modifies volume.
+ **/
+class ManualVolume extends BaseSource {
+
+    /**
+     * Creates a new spatializer that only modifies volume.
+     * @param {string} id
+     * @param {MediaStream|HTMLAudioElement} stream
+     * @param {Pose} dest
+     */
+    constructor(id, stream, dest) {
+        super(id, stream);
+        this.audio.muted = false;
+        this.audio.play();
+        this.manual = new ManualBase(dest);
+
+        /** @type {number} */
+        this._lastVolume = null;
+
+        Object.seal(this);
+    }
+
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     * @param {Pose} loc
+     */
+    update(loc) {
+        super.update(loc);
+        this.manual.update(loc);
+        if (this._lastVolume !== this.manual.volume) {
+            this._lastVolume
+                = this.audio.volume
+                = this.manual.volume;
+        }
+    }
+}
+
+/**
+ * A spatializer that performs stereo panning and volume scaling.
+ **/
+class ManualStereo extends BaseWebAudio {
+
+    /**
+     * Creates a new spatializer that performs stereo panning and volume scaling.
+     * @param {string} id
+     * @param {MediaStream|HTMLAudioElement} stream
+     * @param {number} bufferSize
+     * @param {AudioContext} audioContext
+     * @param {Pose} dest
+     */
+    constructor(id, stream, bufferSize, audioContext, dest) {
+        super(id, stream, bufferSize,
+            audioContext,
+            audioContext.createStereoPanner(),
+            audioContext.createGain());
+        this.manual = new ManualBase(dest);
+
+        Object.seal(this);
+    }
+
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     * @param {Pose} loc
+     */
+    update(loc) {
+        super.update(loc);
+        this.manual.update(loc);
+        this.inNode.pan.value = this.manual.pan;
+        this.outNode.gain.value = this.manual.volume;
+    }
+}
+
+let hasAudioContext = Object.prototype.hasOwnProperty.call(window, "AudioContext"),
+    hasStereoPanner = hasAudioContext && Object.prototype.hasOwnProperty.call(window, "StereoPannerNode");
+
+class BaseListener extends BaseSpatializer {
+    /**
+     * Creates a spatializer that keeps track of position
+     */
+    constructor() {
+        super();
+    }
+
+    /**
+     * Creates a spatialzer for an audio source.
+     * @private
+     * @param {string} id
+     * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
+     * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
+     * @param {AudioContext} audioContext
+     * @param {Pose} dest
+     * @return {BaseSource}
+     */
+    createSource(id, stream, bufferSize, audioContext, dest) {
+        if (hasStereoPanner) {
+            try {
+                return new ManualStereo(id, stream, bufferSize, audioContext, dest);
+            }
+            catch (exp) {
+                hasStereoPanner = false;
+                console.warn("Couldn't create a stereo panner. Reason:", exp);
+            }
+        }
+
+        if (!hasStereoPanner) {
+            return new ManualVolume(id, stream, dest);
+        }
+    }
+}
+
+/**
+ * A spatializer that uses WebAudio's AudioListener
+ **/
+class AudioListenerBase extends BaseListener {
+
+    /**
+     * Creates a new spatializer that uses WebAudio's PannerNode.
+     * @param {AudioListener} listener
+     */
+    constructor(listener) {
+        super();
+        this.node = listener;
+    }
+
+    dispose() {
+        this.node = null;
+        super.dispose();
+    }
+}
+
+/**
+ * A positioner that uses WebAudio's playback dependent time progression.
+ **/
+class AudioListenerNew extends AudioListenerBase {
+    /**
+     * Creates a new positioner that uses WebAudio's playback dependent time progression.
+     * @param {AudioListener} listener
+     */
+    constructor(listener) {
+        super(listener);
+
+        Object.seal(this);
+    }
+
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     * @param {Pose} loc
+     */
+    update(loc) {
+        super.update(loc);
+        const { p, f, u } = loc;
+        this.node.positionX.setValueAtTime(p.x, 0);
+        this.node.positionY.setValueAtTime(p.y, 0);
+        this.node.positionZ.setValueAtTime(p.z, 0);
+        this.node.forwardX.setValueAtTime(f.x, 0);
+        this.node.forwardY.setValueAtTime(f.y, 0);
+        this.node.forwardZ.setValueAtTime(f.z, 0);
+        this.node.upX.setValueAtTime(u.x, 0);
+        this.node.upY.setValueAtTime(u.y, 0);
+        this.node.upZ.setValueAtTime(u.z, 0);
+    }
+
+
+    /**
+     * Creates a spatialzer for an audio source.
+     * @private
+     * @param {string} id
+     * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
+     * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
+     * @param {AudioContext} audioContext
+     * @param {Pose} dest
+     * @return {BaseSource}
+     */
+    createSource(id, stream, bufferSize, audioContext, dest) {
+        return new PannerNew(id, stream, bufferSize, audioContext);
+    }
+}
+
+/**
+ * A positioner that uses the WebAudio API's old setPosition method.
+ **/
+class PannerOld extends PannerBase {
+
+    /**
+     * Creates a new positioner that uses the WebAudio API's old setPosition method.
+     * @param {string} id
+     * @param {MediaStream|HTMLAudioElement} stream
+     * @param {number} bufferSize
+     * @param {AudioContext} audioContext
+     */
+    constructor(id, stream, bufferSize, audioContext) {
+        super(id, stream, bufferSize, audioContext);
+
+        Object.seal(this);
+    }
+
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     * @param {Pose} loc
+     */
+    update(loc) {
+        super.update(loc);
+        const { p, f } = loc;
+        this.inNode.setPosition(p.x, p.y, p.z);
+        this.inNode.setOrientation(f.x, f.y, f.z);
+    }
+}
+
+/**
+ * A positioner that uses WebAudio's playback dependent time progression.
+ **/
+class AudioListenerOld extends AudioListenerBase {
+    /**
+     * Creates a new positioner that uses WebAudio's playback dependent time progression.
+     * @param {AudioListener} listener
+     */
+    constructor(listener) {
+        super(listener);
+
+        Object.seal(this);
+    }
+
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     * @param {Pose} loc
+     */
+    update(loc) {
+        super.update(loc);
+        const { p, f, u } = loc;
+        this.node.setPosition(p.x, p.y, p.z);
+        this.node.setOrientation(f.x, f.y, f.z, u.x, u.y, u.z);
+    }
+
+    /**
+     * Creates a spatialzer for an audio source.
+     * @private
+     * @param {string} id
+     * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
+     * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
+     * @param {AudioContext} audioContext
+     * @param {Pose} dest
+     * @return {BaseSource}
+     */
+    createSource(id, stream, bufferSize, audioContext, dest) {
+        return new PannerOld(id, stream, bufferSize, audioContext);
     }
 }
 
@@ -17527,12 +18380,56 @@ module.exports = '0.0.4';
 /******/ ]);
 });
 
+/**
+ * A spatializer that uses Google's Resonance Audio library.
+ **/
+class ResonanceSource extends BaseAnalyzed {
+
+    /**
+     * Creates a new spatializer that uses Google's Resonance Audio library.
+     * @param {string} id
+     * @param {MediaStream|HTMLAudioElement} stream
+     * @param {number} bufferSize
+     * @param {AudioContext} audioContext
+     * @param {ResonanceAudio} res
+     */
+    constructor(id, stream, bufferSize, audioContext, res) {
+        const resNode = res.createSource();
+        super(id, stream, bufferSize, audioContext, resNode.input);
+
+        this.resNode = resNode;
+
+        Object.seal(this);
+    }
+
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     * @param {Pose} loc
+     */
+    update(loc) {
+        super.update(loc);
+        const { p, f, u } = loc;
+        this.resNode.setMinDistance(this.minDistance);
+        this.resNode.setMaxDistance(this.maxDistance);
+        this.resNode.setPosition(p.x, p.y, p.z);
+        this.resNode.setOrientation(f.x, f.y, f.z, u.x, u.y, u.z);
+    }
+
+    /**
+     * Discard values and make this instance useless.
+     */
+    dispose() {
+        this.resNode = null;
+        super.dispose();
+    }
+}
+
 /* global ResonanceAudio */
 
 /**
  * An audio positioner that uses Google's Resonance Audio library
  **/
-class GoogleResonanceAudioScene extends InterpolatedPosition {
+class ResonanceScene extends BaseListener {
     /**
      * Creates a new audio positioner that uses Google's Resonance Audio library
      * @param {AudioContext} audioContext
@@ -17544,8 +18441,6 @@ class GoogleResonanceAudioScene extends InterpolatedPosition {
             ambisonicOrder: 3
         });
         this.scene.output.connect(audioContext.destination);
-
-        this.position = new InterpolatedPosition();
 
         this.scene.setRoomProperties({
             width: 10,
@@ -17559,761 +18454,44 @@ class GoogleResonanceAudioScene extends InterpolatedPosition {
             down: "grass",
             up: "transparent",
         });
-    }
-
-    /**
-     * Updates the Resonance Audio scene with the latest position.
-     * @protected
-     * @param {number} t
-     */
-    update(t) {
-        super.update(t);
-        this.scene.setListenerPosition(this.x, 0, this.y);
-    }
-}
-
-/**
- * A positioner that uses WebAudio's playback dependent time progression.
- **/
-class WebAudioNewNodePosition extends BasePosition {
-
-    /**
-     * Creates a new positioner that uses WebAudio's playback dependent time progression.
-     * @param {PannerNode|AudioListener} node - the audio node that will receive the position value.
-     * @param {boolean} forceInterpolation - when set to true, circumvents WebAudio's time tracking and uses our own.
-     */
-    constructor(node, forceInterpolation) {
-        super();
-
-        /** @type {BasePosition} */
-        this._p = forceInterpolation ? new InterpolatedPosition() : null;
-        this.node = node;
-        this.node.positionX.setValueAtTime(0, 0);
-        this.node.positionY.setValueAtTime(0, 0);
-        this.node.positionZ.setValueAtTime(0, 0);
-    }
-
-    /**
-     *  The horizontal component of the position.
-     *  @type {number} */
-    get x() {
-        return this.node.positionX.value;
-    }
-
-    /**
-     *  The vertical component of the position.
-     *  @type {number} */
-    get y() {
-        return this.node.positionZ.value;
-    }
-
-    /**
-     * Set the target position for the time `t + dt`.
-     * @param {number} x - the horizontal component of the position.
-     * @param {number} y - the vertical component of the position.
-     * @param {number} t
-     * @param {number} dt
-     */
-    setTarget(x, y, t, dt) {
-        if (this._p) {
-            this._p.setTarget(x, y, t, dt);
-        }
-        else {
-            const time = t + dt;
-            // our 2D position is in X/Y coords, but our 3D position
-            // along the horizontal plane is X/Z coords.
-            this.node.positionX.linearRampToValueAtTime(x, time);
-            this.node.positionZ.linearRampToValueAtTime(y, time);
-        }
-    }
-
-    /**
-     * Calculates the new position for the given time.
-     * @protected
-     * @param {number} t
-     */
-    update(t) {
-        if (this._p) {
-            this._p.update(t);
-            this.node.positionX.linearRampToValueAtTime(this._p.x, 0);
-            this.node.positionZ.linearRampToValueAtTime(this._p.y, 0);
-        }
-    }
-}
-
-/**
- * A positioner that uses WebAudio's playback dependent time progression.
- **/
-class WebAudioNewListenerPosition extends WebAudioNewNodePosition {
-    /**
-     * Creates a new positioner that uses WebAudio's playback dependent time progression.
-     * @param {AudioListener} node - the audio node that will receive the position value.
-     * @param {boolean} forceInterpolation - when set to true, circumvents WebAudio's time tracking and uses our own.
-     */
-    constructor(node, forceInterpolation) {
-        super(node, forceInterpolation);
-        this.node.forwardX.setValueAtTime(0, 0);
-        this.node.forwardY.setValueAtTime(0, 0);
-        this.node.forwardZ.setValueAtTime(-1, 0);
-        this.node.upX.setValueAtTime(0, 0);
-        this.node.upY.setValueAtTime(1, 0);
-        this.node.upZ.setValueAtTime(0, 0);
-    }
-}
-
-/**
- * A positioner that uses the WebAudio API's old setPosition method.
- **/
-class WebAudioOldNodePosition extends InterpolatedPosition {
-
-    /**
-     * Creates a new positioner that uses the WebAudio API's old setPosition method.
-     * @param {PannerNode|AudioListener} node - the listener on the audio context.
-     */
-    constructor(node) {
-        super();
-
-        this.node = node;
-        this.node.setPosition(0, 0, 0);
-        this.node.setOrientation(0, 0, -1, 0, 1, 0);
-    }
-
-    /**
-     * Calculates the new position for the given time.
-     * @protected
-     * @param {number} t
-     */
-    update(t) {
-        super.update(t);
-        this.node.setPosition(this.x, 0, this.y);
-    }
-}
-
-/** Base class providing functionality for spatializers. */
-class BaseSpatializer extends BaseAudioElement {
-
-    /**
-     * Creates a spatializer that keeps track of the relative position
-     * of an audio element to the listener destination.
-     * @param {string} userID
-     * @param {Destination} destination
-     * @param {MediaStream|HTMLAudioElement} stream
-     * @param {BasePosition} position
-     */
-    constructor(userID, destination, stream, position) {
-        super(position);
-
-        this.id = userID;
-        this.destination = destination;
-        this.volume = 1;
-        this.pan = 0;
-
-        if (stream instanceof HTMLAudioElement) {
-            this.audio = stream;
-        }
-        else if (stream instanceof MediaStream) {
-            this.stream = stream;
-            this.audio = Audio(
-                srcObject(this.stream),
-                muted);
-        }
-        else {
-            throw new Error("Can't create a node from the given stream. Expected type HTMLAudioElement or MediaStream.");
-        }
-
-        this.audio.autoPlay = true;
-        this.audio.playsInline = true;
-        this.audio.addEventListener("onloadedmetadata", () =>
-            this.audio.play());
-    }
-
-    /**
-     * Discard values and make this instance useless.
-     */
-    dispose() {
-        this.audio.pause();
-        this.audio = null;
-        this.stream = null;
-        this.position = null;
-        this.destination = null;
-        this.id = null;
-    }
-
-    /**
-     * Changes the device to which audio will be output
-     * @param {string} deviceID
-     */
-    setAudioOutputDevice(deviceID) {
-        if (canChangeAudioOutput) {
-            this.audio.setSinkId(deviceID);
-        }
-    }
-
-    /**
-     * Retrieves the current time from the audio context.
-     * @type {number}
-     */
-    get currentTime() {
-        return this.destination.currentTime;
-    }
-
-
-    /**
-     * Performs the spatialization operation for the audio source's latest location.
-     **/
-    update() {
-        super.update();
-
-        const lx = this.destination.position.x,
-            ly = this.destination.position.y,
-            distX = this.position.x - lx,
-            distY = this.position.y - ly,
-            distSqr = distX * distX + distY * distY,
-            dist = Math.sqrt(distSqr),
-            distScale = project(dist, this.minDistance, this.maxDistance);
-
-        this.volume = 1 - clamp(distScale, 0, 1);
-        this.volume = this.volume * this.volume;
-        this.pan = dist > 0
-            ? distX / dist
-            : 0;
-    }
-}
-
-const audioActivityEvt = new AudioActivityEvent(),
-    activityCounterMin = 0,
-    activityCounterMax = 60,
-    activityCounterThresh = 5;
-
-/**
- * 
- * @param {number} frequency
- * @param {number} sampleRate
- * @param {number} bufferSize
- */
-function frequencyToIndex(frequency, sampleRate, bufferSize) {
-    var nyquist = sampleRate / 2;
-    var index = Math.round(frequency / nyquist * bufferSize);
-    return clamp(index, 0, bufferSize)
-}
-
-/**
- * 
- * @param {AnalyserNode} analyser
- * @param {Float32Array} frequencies
- * @param {number} minHz
- * @param {number} maxHz
- * @param {number} bufferSize
- */
-function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz, bufferSize) {
-    const sampleRate = analyser.context.sampleRate,
-        start = frequencyToIndex(minHz, sampleRate, bufferSize),
-        end = frequencyToIndex(maxHz, sampleRate, bufferSize),
-        count = end - start;
-    let sum = 0;
-    for (let i = start; i < end; ++i) {
-        sum += frequencies[i];
-    }
-    return count === 0 ? 0 : (sum / count);
-}
-
-class BaseAnalyzedSpatializer extends BaseSpatializer {
-
-    /**
-     * 
-     * @param {string} userID
-     * @param {Destination} destination
-     * @param {MediaStream|HTMLAudioElement} stream
-     * @param {BasePosition} position
-     * @param {number} bufferSize
-     * @param {PannerNode|StereoPannerNode} inNode
-     */
-    constructor(userID, destination, stream, position, bufferSize, inNode) {
-        super(userID, destination, stream, position);
-
-        this.bufferSize = bufferSize;
-        this.buffer = new Float32Array(this.bufferSize);
-
-        /** @type {AnalyserNode} */
-        this.analyser = this.destination.audioContext.createAnalyser();
-        this.analyser.fftSize = 2 * this.bufferSize;
-        this.analyser.smoothingTimeConstant = 0.2;
-
-        /** @type {PannerNode|StereoPannerNode} */
-        this.inNode = inNode;
-
-        /** @type {boolean} */
-        this.wasActive = false;
-        this.lastAudible = true;
-        this.activityCounter = 0;
-
-        /** @type {MediaSource} */
-        this.source = null;
-
-        this.checkStream();
-    }
-
-    checkStream() {
-        if (!this.source) {
-            if (this.stream) {
-                try {
-                    if (this.stream.active) {
-                        this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
-                        this.source.connect(this.analyser);
-                        this.source.connect(this.inNode);
-                    }
-                }
-                catch (exp) {
-                    console.warn("Creating the media stream failed. Reason: ", exp);
-                }
-            }
-            else if (this.audio) {
-                try {
-                    this.source = this.destination.audioContext.createMediaElementSource(this.audio);
-                    this.source.connect(this.analyser);
-                    this.source.connect(this.inNode);
-                }
-                catch (exp) {
-                    console.warn("Creating the media stream failed. Reason: ", exp);
-                }
-            }
-        }
-    }
-
-    /**
-     * @fires BaseAnalyzedSpatializer#audioActivity
-     **/
-    update() {
-        super.update();
-
-        this.checkStream();
-
-        if (this.source) {
-            this.analyser.getFloatFrequencyData(this.buffer);
-
-            const average = 1.1 + analyserFrequencyAverage(this.analyser, this.buffer, 85, 255, this.bufferSize) / 100;
-            if (average >= 0.5 && this.activityCounter < activityCounterMax) {
-                this.activityCounter++;
-            } else if (average < 0.5 && this.activityCounter > activityCounterMin) {
-                this.activityCounter--;
-            }
-
-            const isActive = this.activityCounter > activityCounterThresh;
-            if (this.wasActive !== isActive) {
-                this.wasActive = isActive;
-                audioActivityEvt.id = this.id;
-                audioActivityEvt.isActive = isActive;
-                this.dispatchEvent(audioActivityEvt);
-            }
-        }
-    }
-
-    /**
-     * Discard values and make this instance useless.
-     */
-    dispose() {
-        if (this.source) {
-            this.source.disconnect(this.analyser);
-            this.source.disconnect(this.inNode);
-        }
-
-        this.source = null;
-        this.inNode = null;
-        this.analyser = null;
-        this.buffer = null;
-
-        super.dispose();
-    }
-}
-
-/**
- * A spatializer that uses the WebAudio API.
- **/
-class BaseWebAudioSpatializer extends BaseAnalyzedSpatializer {
-
-    /**
-     * Creates a new spatializer that uses the WebAudio API
-     * @param {string} userID
-     * @param {Destination} destination
-     * @param {MediaStream|HTMLAudioElement} stream
-     * @param {BasePosition} position
-     * @param {number} bufferSize
-     * @param {PannerNode|StereoPannerNode} inNode
-     * @param {GainNode=} outNode
-     */
-    constructor(userID, destination, stream, position, bufferSize, inNode, outNode) {
-        super(userID, destination, stream, position, bufferSize, inNode);
-
-        this.outNode = outNode || inNode;
-        this.outNode.connect(this.destination.audioContext.destination);
-
-        if (this.inNode !== this.outNode) {
-            this.inNode.connect(this.outNode);
-        }
-    }
-
-    /**
-     * Discard values and make this instance useless.
-     */
-    dispose() {
-        if (this.inNode !== this.outNode) {
-            this.inNode.disconnect(this.outNode);
-        }
-
-        this.outNode.disconnect(this.destination.audioContext.destination);
-        this.outNode = null;
-
-        super.dispose();
-    }
-}
-
-/**
- * A spatializer that uses WebAudio's PannerNode
- **/
-class BasePannerSpatializer extends BaseWebAudioSpatializer {
-
-    /**
-     * Creates a new spatializer that uses WebAudio's PannerNode.
-     * @param {string} userID
-     * @param {Destination} destination
-     * @param {MediaStream|HTMLAudioElement} stream
-     * @param {number} bufferSize
-     * @param {Function} createPosition
-     */
-    constructor(userID, destination, stream, bufferSize, createPosition) {
-        const panner = destination.audioContext.createPanner(),
-            position = createPosition(panner);
-        super(userID, destination, stream, position, bufferSize, panner);
-
-        this.inNode.panningModel = "HRTF";
-        this.inNode.distanceModel = "inverse";
-        this.inNode.coneInnerAngle = 360;
-        this.inNode.coneOuterAngle = 0;
-        this.inNode.coneOuterGain = 0;
-    }
-
-    /**
-     * Sets parameters that alter spatialization.
-     * @param {number} minDistance
-     * @param {number} maxDistance
-     * @param {number} rolloff
-     * @param {number} transitionTime
-     */
-    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
-        super.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
-        this.inNode.refDistance = minDistance;
-        this.inNode.rolloffFactor = rolloff;
-    }
-}
-
-/**
- * A spatializer that uses WebAudio's PannerNode
- **/
-class NewPannerSpatializer extends BasePannerSpatializer {
-
-    /**
-     * Creates a new spatializer that uses WebAudio's PannerNode.
-     * @param {string} userID
-     * @param {Destination} destination
-     * @param {MediaStream|HTMLAudioElement} stream
-     * @param {number} bufferSize
-     * @param {boolean} forceInterpolatedPosition
-     */
-    constructor(userID, destination, stream, bufferSize, forceInterpolatedPosition) {
-        super(userID, destination, stream, position, bufferSize, panner => new WebAudioNewNodePosition(panner, forceInterpolatedPosition));
-        Object.seal(this);
-    }
-}
-
-/**
- * A spatializer that uses Google's Resonance Audio library.
- **/
-class GoogleResonanceAudioSpatializer extends BaseAnalyzedSpatializer {
-
-    /**
-     * Creates a new spatializer that uses Google's Resonance Audio library.
-     * @param {string} userID
-     * @param {Destination} destination
-     * @param {MediaStream|HTMLAudioElement} stream
-     * @param {number} bufferSize
-     */
-    constructor(userID, destination, stream, bufferSize) {
-        const position = new InterpolatedPosition();
-        const resNode = destination.position.scene.createSource();
-
-        super(userID, destination, stream, position, bufferSize, resNode.input);
-
-        this.resNode = resNode;
-    }
-
-    /**
-     * Sets parameters that alter spatialization.
-     * @param {number} minDistance
-     * @param {number} maxDistance
-     * @param {number} rolloff
-     * @param {number} transitionTime
-     */
-    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
-        super.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
-        this.resNode.setMinDistance(minDistance);
-        this.resNode.setMaxDistance(maxDistance);
-    }
-
-    /**
-     * Performs the spatialization operation for the audio source's latest location.
-     **/
-    update() {
-        super.update();
-        this.resNode.setPosition(this.position.x, 0, this.position.y);
-    }
-
-    /**
-     * Discard values and make this instance useless.
-     */
-    dispose() {
-        this.resNode = null;
-        super.dispose();
-    }
-}
-
-/**
- * A spatializer that performs stereo panning and volume scaling.
- **/
-class StereoSpatializer extends BaseWebAudioSpatializer {
-
-    /**
-     * Creates a new spatializer that performs stereo panning and volume scaling.
-     * @param {string} userID
-     * @param {Destination} destination
-     * @param {MediaStream|HTMLAudioElement} stream
-     * @param {number} bufferSize
-     */
-    constructor(userID, destination, stream, bufferSize) {
-        super(userID, destination, stream, new InterpolatedPosition(), bufferSize,
-            destination.audioContext.createStereoPanner(),
-            destination.audioContext.createGain());
 
         Object.seal(this);
     }
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     **/
-    update() {
-        super.update();
-        this.inNode.pan.value = this.pan;
-        this.outNode.gain.value = this.volume;
-    }
-}
-
-/**
- * A spatializer that only modifies volume.
- **/
-class VolumeOnlySpatializer extends BaseSpatializer {
-
-    /**
-     * Creates a new spatializer that only modifies volume.
-     * @param {string} userID
-     * @param {Destination} destination
-     * @param {MediaStream|HTMLAudioElement} stream
+     * @param {Pose} loc
      */
-    constructor(userID, destination, stream) {
-        super(userID, destination, stream, new InterpolatedPosition());
-        this.audio.muted = false;
-        Object.seal(this);
-    }
-
-    /**
-     * Performs the spatialization operation for the audio source's latest location.
-     **/
-    update() {
-        super.update();
-        this.audio.volume = this.volume;
-    }
-}
-
-/**
- * A spatializer that uses WebAudio's PannerNode
- **/
-class OldPannerSpatializer extends BasePannerSpatializer {
-
-    /**
-     * Creates a new spatializer that uses WebAudio's PannerNode.
-     * @param {string} userID
-     * @param {Destination} destination
-     * @param {MediaStream|HTMLAudioElement} stream
-     * @param {number} bufferSize
-     * @param {boolean} forceInterpolatedPosition
-     */
-    constructor(userID, destination, stream, bufferSize) {
-        super(userID, destination, stream, position, bufferSize, panner => new WebAudioOldNodePosition(panner));
-        Object.seal(this);
-    }
-}
-
-const contextDestroyingEvt = new Event("contextDestroying"),
-    contextDestroyedEvt = new Event("contextDestroyed");
-
-let hasWebAudioAPI = Object.prototype.hasOwnProperty.call(window, "AudioListener"),
-    hasFullSpatializer = hasWebAudioAPI && Object.prototype.hasOwnProperty.call(AudioContext.prototype, "createPanner"),
-    isLatestWebAudioAPI = hasWebAudioAPI && Object.prototype.hasOwnProperty.call(AudioListener.prototype, "positionX"),
-    forceInterpolatedPosition = true,
-    attemptResonanceAPI = hasWebAudioAPI;
-
-/**
- * A manager of the audio context and listener.
- **/
-class Destination extends BaseAudioElement {
-
-    /**
-     * Creates a new manager of the audio context and listener
-     **/
-    constructor() {
-        super(null);
-
-        /** @type {AudioContext|MockAudioContext} */
-        this.audioContext = null;
-    }
-
-    /**
-     * Gets the current playback time.
-     * @type {number}
-     */
-    get currentTime() {
-        return this.audioContext.currentTime;
-    }
-
-    /**
-     * If no audio context is currently available, creates one, and initializes the
-     * spatialization of its listener.
-     * 
-     * If WebAudio isn't available, a mock audio context is created that provides
-     * ersatz playback timing.
-     **/
-    createContext() {
-        if (!this.audioContext) {
-            this.audioContext = new AudioContext();
-
-            if (attemptResonanceAPI) {
-                try {
-                    this.position = new GoogleResonanceAudioScene(this.audioContext);
-                }
-                catch (exp) {
-                    attemptResonanceAPI = false;
-                    console.warn("Resonance Audio API not available!", exp);
-                }
-            }
-
-            if (!attemptResonanceAPI && isLatestWebAudioAPI) {
-                try {
-                    this.position = new WebAudioNewListenerPosition(this.audioContext.listener, forceInterpolatedPosition);
-                }
-                catch (exp) {
-                    isLatestWebAudioAPI = false;
-                    console.warn("No AudioListener.positionX property!", exp);
-                }
-            }
-
-            if (!attemptResonanceAPI && !isLatestWebAudioAPI && hasWebAudioAPI) {
-                try {
-                    this.position = new WebAudioOldNodePosition(this.audioContext.listener);
-                }
-                catch (exp) {
-                    hasWebAudioAPI = false;
-                    console.warn("No WebAudio API!", exp);
-                }
-            }
-
-            if (!attemptResonanceAPI && !isLatestWebAudioAPI && !hasWebAudioAPI) {
-                this.audioContext = new MockAudioContext();
-                this.position = new InterpolatedPosition();
-            }
-        }
-    }
-
-
-    /**
-     * Creates a spatializer for an audio source, and initializes its audio properties.
-     * @param {string} userID
-     * @param {MediaStream|HTMLAudioElement} stream
-     * @param {number} bufferSize
-     * @return {BaseSpatializer}
-     */
-    createSpatializer(userID, stream, bufferSize) {
-        const spatializer = this._createSpatializer(userID, stream, bufferSize);
-        if (spatializer) {
-            spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
-        }
-
-        return spatializer;
+    update(loc) {
+        super.update(loc);
+        const { p, f, u } = loc;
+        this.scene.setListenerPosition(p.x, p.y, p.z);
+        this.scene.setListenerOrientation(f.x, f.y, f.z, u.x, u.y, u.z);
     }
 
     /**
      * Creates a spatialzer for an audio source.
      * @private
-     * @param {string} id - the user for which the audio source is being created.
+     * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
      * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
-     * @return {BaseSpatializer}
+     * @param {AudioContext} audioContext
+     * @param {Pose} dest
+     * @return {BaseSource}
      */
-    _createSpatializer(id, stream, bufferSize) {
-        if (attemptResonanceAPI) {
-            try {
-                return new GoogleResonanceAudioSpatializer(id, this, stream, bufferSize);
-            }
-            catch (exp) {
-                attemptResonanceAPI = false;
-                console.warn("Resonance Audio API not available!", exp);
-            }
-        }
-
-        if (!attemptResonanceAPI && hasFullSpatializer) {
-            if (isLatestWebAudioAPI) {
-                try {
-                    return new NewPannerSpatializer(id, this, stream, bufferSize, forceInterpolatedPosition);
-                }
-                catch (exp) {
-                    isLatestWebAudioAPI = false;
-                    console.warn("No 360 spatializer support", exp);
-                }
-            }
-
-            if (!isLatestWebAudioAPI) {
-                try {
-                    return new OldPannerSpatializer(id, this, stream, bufferSize);
-                }
-                catch (exp) {
-                    hasFullSpatializer = false;
-                    console.warn("Not even the old 360 spatializer", exp);
-                }
-            }
-        }
-
-        if (!attemptResonanceAPI && !hasFullSpatializer && hasWebAudioAPI) {
-            try {
-                return new StereoSpatializer(id, this, stream, bufferSize);
-            }
-            catch (exp) {
-                hasWebAudioAPI = false;
-                if (this.audioContext) {
-                    this.dispatchEvent(contextDestroyingEvt);
-                    this.audioContext.close();
-                    this.audioContext = null;
-                    this.position = null;
-                    this.dispatchEvent(contextDestroyedEvt);
-                }
-                console.warn("No WebAudio API!", exp);
-            }
-        }
-
-        if (!attemptResonanceAPI && !hasFullSpatializer && !hasWebAudioAPI) {
-            return new VolumeOnlySpatializer(id, this, stream);
-        }
+    createSource(id, stream, bufferSize, audioContext, dest) {
+        return new ResonanceSource(id, stream, bufferSize, audioContext, this.scene);
     }
 }
 
 const BUFFER_SIZE = 1024,
-    audioActivityEvt$1 = new AudioActivityEvent;
+    audioActivityEvt$1 = new AudioActivityEvent();
+
+let hasAudioContext$1 = Object.prototype.hasOwnProperty.call(window, "AudioContext"),
+    hasAudioListener = hasAudioContext$1 && Object.prototype.hasOwnProperty.call(window, "AudioListener"),
+    hasOldAudioListener = hasAudioListener && Object.prototype.hasOwnProperty.call(AudioListener.prototype, "setPosition"),
+    hasNewAudioListener = hasAudioListener && Object.prototype.hasOwnProperty.call(AudioListener.prototype, "positionX"),
+    attemptResonanceAPI = hasAudioListener;
 
 /**
  * A manager of audio sources, destinations, and their spatialization.
@@ -18326,6 +18504,22 @@ class AudioManager extends BaseAudioClient {
     constructor() {
         super();
 
+        this.minDistance = 1;
+        this.minDistanceSq = 1;
+        this.maxDistance = 10;
+        this.maxDistanceSq = 100;
+        this.rolloff = 1;
+        this.transitionTime = 0.5;
+
+        /** @type {AudioContext} */
+        this.audioContext = null;
+
+        /** @type {InterpolatedPose} */
+        this.pose = new InterpolatedPose();
+
+        /** @type {BaseListener} */
+        this.listener = null;
+
         /**
          * Forwards on the audioActivity of an audio source.
          * @param {AudioActivityEvent} evt
@@ -18337,48 +18531,14 @@ class AudioManager extends BaseAudioClient {
             this.dispatchEvent(audioActivityEvt$1);
         };
 
-        /** @type {Map.<string, BaseSpatializer>} */
-        this.sources = new Map();
-
-        this.destination = new Destination();
-
-        /** @type {Event[]} */
-        const recreationQ = [];
-
-        this.destination.addEventListener("contextDestroying", () => {
-            for (let source of this.sources.values()) {
-                source.removeEventListener("audioActivity", this.onAudioActivity);
-                recreationQ.push({
-                    id: source.id,
-                    x: source.position.x,
-                    y: source.position.y,
-                    audio: source.audio
-                });
-
-                source.dispose();
-            }
-
-            this.sources.clear();
-        });
-
-        this.destination.addEventListener("contextDestroyed", () => {
-            this.timer.stop();
-            this.destination.createContext();
-
-            for (let recreate of recreationQ) {
-                const source = this.createSource(recreate.id, recreate.audio);
-                source.setTarget(recreate.x, recreate.y);
-            }
-
-            arrayClear(recreationQ);
-            this.timer.start();
-        });
+        /** @type {Map.<string, InterpolatedPose>} */
+        this.poses = new Map();
 
         this.timer = new RequestAnimationFrameTimer();
         this.timer.addEventListener("tick", () => {
-            this.destination.update();
-            for (let source of this.sources.values()) {
-                source.update();
+            this.pose.update(this.currentTime);
+            for (let pose of this.poses.values()) {
+                pose.update(this.currentTime);
             }
         });
 
@@ -18389,20 +18549,136 @@ class AudioManager extends BaseAudioClient {
      * Perform the audio system initialization, after a user gesture 
      **/
     start() {
-        this.destination.createContext();
+        this.createContext();
         this.timer.start();
     }
 
     /**
-     * @param {string} userID
-     * @param {MediaStream|HTMLAudioElement} stream
-     * @return {BaseSpatializer}
+     * If no audio context is currently available, creates one, and initializes the
+     * spatialization of its listener.
+     * 
+     * If WebAudio isn't available, a mock audio context is created that provides
+     * ersatz playback timing.
      **/
-    createSource(userID, stream) {
-        const source = this.destination.createSpatializer(userID, stream, BUFFER_SIZE);
-        source.addEventListener("audioActivity", this.onAudioActivity);
-        this.sources.set(userID, source);
-        return source;
+    createContext() {
+        if (!this.audioContext) {
+            if (hasAudioContext$1) {
+                try {
+                    this.audioContext = new AudioContext();
+                }
+                catch (exp) {
+                    hasAudioContext$1 = false;
+                    console.warn("Could not create WebAudio AudioContext", exp);
+                }
+            }
+
+            if (!hasAudioContext$1) {
+                this.audioContext = new MockAudioContext();
+            }
+
+            if (hasAudioContext$1 && attemptResonanceAPI) {
+                try {
+                    this.listener = new ResonanceScene(this.audioContext);
+                }
+                catch (exp) {
+                    attemptResonanceAPI = false;
+                    console.warn("Resonance Audio API not available!", exp);
+                }
+            }
+
+            if (hasAudioContext$1 && !attemptResonanceAPI && hasNewAudioListener) {
+                try {
+                    this.listener = new AudioListenerNew(this.audioContext.listener);
+                }
+                catch (exp) {
+                    hasNewAudioListener = false;
+                    console.warn("No AudioListener.positionX property!", exp);
+                }
+            }
+
+            if (hasAudioContext$1 && !attemptResonanceAPI && !hasNewAudioListener && hasOldAudioListener) {
+                try {
+                    this.listener = new AudioListenerOld(this.audioContext.listener);
+                }
+                catch (exp) {
+                    hasOldAudioListener = false;
+                    console.warn("No WebAudio API!", exp);
+                }
+            }
+
+            if (!hasOldAudioListener || !hasAudioContext$1) {
+                this.listener = new BaseListener();
+            }
+
+            this.pose.spatializer = this.listener;
+        }
+    }
+
+    /**
+     * Creates a spatialzer for an audio source.
+     * @private
+     * @param {string} id
+     * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
+     * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
+     * @return {BaseSource}
+     */
+    createSpatializer(id, stream, bufferSize) {
+        if (!stream || !this.listener) {
+            return null;
+        }
+
+        return this.listener.createSource(id, stream, bufferSize, this.audioContext, this.pose.current);
+    }
+
+    /**
+     * Gets the current playback time.
+     * @type {number}
+     */
+    get currentTime() {
+        return this.audioContext.currentTime;
+    }
+
+    /**
+     * @param {string} id
+     * @returns {InterpolatedPose}
+     */
+    createUser(id) {
+        if (!this.poses.has(id)) {
+            this.poses.set(id, new InterpolatedPose());
+        }
+        return this.poses.get(id);
+    }
+
+    /**
+     * Remove a user from audio processing.
+     * @param {string} id - the id of the user to remove
+     **/
+    removeUser(id) {
+        if (this.poses.has(id)) {
+            const pose = this.poses.get(id);
+            pose.dispose();
+            this.poses.delete(id);
+        }
+    }
+
+    /**
+     * @param {string} id
+     * @param {MediaStream|HTMLAudioElement} stream
+     **/
+    setSource(id, stream) {
+        if (this.poses.has(id)) {
+            const pose = this.poses.get(id);
+            if (pose.spatializer) {
+                pose.spatializer.removeEventListener("audioActivity", this.onAudioActivity);
+            }
+
+            pose.spatializer = this.createSpatializer(id, stream, BUFFER_SIZE);
+
+            if (pose.spatializer) {
+                pose.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
+                pose.spatializer.addEventListener("audioActivity", this.onAudioActivity);
+            }
+        }
     }
 
     /**
@@ -18413,31 +18689,15 @@ class AudioManager extends BaseAudioClient {
      * @param {number} transitionTime
      **/
     setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
-        this.destination.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
-        for (let source of this.sources.values()) {
-            source.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
-        }
-    }
+        this.minDistance = minDistance;
+        this.maxDistance = maxDistance;
+        this.transitionTime = transitionTime;
+        this.rolloff = rolloff;
 
-    /**
-     * Set the audio device used to play audio to the local user.
-     * @param {string} deviceID
-     **/
-    setAudioOutputDevice(deviceID) {
-        for (let source of this.sources.values()) {
-            source.setAudioOutputDevice(deviceID);
-        }
-    }
-
-    /**
-     * Remove a user from audio processing.
-     * @param {string} id - the id of the user to remove
-     **/
-    removeSource(id) {
-        if (this.sources.has(id)) {
-            const source = this.sources.get(id);
-            source.dispose();
-            this.sources.delete(id);
+        for (let pose of this.poses.values()) {
+            if (pose.spatializer) {
+                pose.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
+            }
         }
     }
 
@@ -18445,9 +18705,17 @@ class AudioManager extends BaseAudioClient {
      * Set the position of the listener.
      * @param {number} x - the horizontal component of the position.
      * @param {number} y - the vertical component of the position.
+     * @param {number} z - the lateral component of the position.
+     */
+    setLocalPosition(x, y, z) {
+        this.pose.setTarget(x, y, z, 0, 0, 1, 0, 1, 0, this.currentTime, this.transitionTime);
+    }
+
+    /**
+     * @returns {BaseAudioElement}
      **/
-    setLocalPosition(x, y) {
-        this.destination.setTarget(x, y);
+    getLocalPose() {
+        return this.pose.end;
     }
 
     /**
@@ -18455,11 +18723,12 @@ class AudioManager extends BaseAudioClient {
      * @param {string} id - the id of the user for which to set the position.
      * @param {number} x - the horizontal component of the position.
      * @param {number} y - the vertical component of the position.
+     * @param {number} z - the lateral component of the position.
      **/
-    setUserPosition(id, x, y) {
-        if (this.sources.has(id)) {
-            const source = this.sources.get(id);
-            source.setTarget(x, y);
+    setUserPosition(id, x, y, z) {
+        if (this.poses.has(id)) {
+            const pose = this.poses.get(id);
+            pose.setTarget(x, y, z, 0, 0, 1, 0, 1, 0, this.currentTime, this.transitionTime);
         }
     }
 }
@@ -18577,7 +18846,8 @@ class LibJitsiMeetClient extends BaseJitsiClient {
                     new Event("videoConferenceJoined"), {
                     id,
                     roomName,
-                    displayName: userName
+                    displayName: userName,
+                    pose: this.audioClient.pose
                 }));
             });
 
@@ -18610,7 +18880,8 @@ class LibJitsiMeetClient extends BaseJitsiClient {
                 const evt = Object.assign(
                     new Event("participantJoined"), {
                     id,
-                    displayName: user.getDisplayName()
+                    displayName: user.getDisplayName(),
+                    pose: this.audioClient.createUser(id)
                 });
                 this.dispatchEvent(evt);
             });
@@ -18637,7 +18908,11 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             this.conference.addEventListener(TRACK_ADDED, (track) => {
                 const userID = track.getParticipantId() || this.localUser,
                     isLocal = track.isLocal(),
-                    trackKind = track.getType();
+                    trackKind = track.getType(),
+                    trackAddedEvt = Object.assign(new Event(trackKind + "Added"), {
+                        id: userID,
+                        stream: track.stream
+                    });
 
                 setLoggers(track, JitsiMeetJS.events.track);
 
@@ -18655,14 +18930,11 @@ class LibJitsiMeetClient extends BaseJitsiClient {
 
                 inputs.set(trackKind, track);
 
-                if (!isLocal && trackKind === "audio") {
-                    this.audioClient.createSource(userID, track.stream);
+                if (trackKind === "audio" && !isLocal) {
+                    this.audioClient.setSource(userID, track.stream);
                 }
 
-                this.dispatchEvent(Object.assign(new Event(trackKind + "Added"), {
-                    id: userID,
-                    stream: track.stream
-                }));
+                this.dispatchEvent(trackAddedEvt);
 
                 onTrackMuteChanged(track, false);
             });
@@ -18671,7 +18943,11 @@ class LibJitsiMeetClient extends BaseJitsiClient {
 
                 const userID = track.getParticipantId() || this.localUser,
                     isLocal = track.isLocal(),
-                    trackKind = track.getType();
+                    trackKind = track.getType(),
+                    trackRemovedEvt = Object.assign(new Event(trackKind + "Removed"), {
+                        id: userID,
+                        stream: null
+                    });
 
                 if (userInputs.has(userID)) {
                     const inputs = userInputs.get(userID);
@@ -18681,17 +18957,14 @@ class LibJitsiMeetClient extends BaseJitsiClient {
                     }
                 }
 
-                if (!isLocal && trackKind === "audio") {
-                    this.audioClient.removeSource(userID);
+                if (trackKind === "audio" && !isLocal) {
+                    this.audioClient.setSource(userID, null);
                 }
 
                 track.dispose();
 
                 onTrackMuteChanged(track, true);
-
-                this.dispatchEvent(Object.assign(new Event(trackKind + "Removed"), {
-                    id: userID
-                }));
+                this.dispatchEvent(trackRemovedEvt);
             });
 
             this.conference.addEventListener(ENDPOINT_MESSAGE_RECEIVED, (user, data) => {
@@ -18776,7 +19049,6 @@ class LibJitsiMeetClient extends BaseJitsiClient {
             return;
         }
         await super.setAudioOutputDeviceAsync(device);
-        this.audioClient.setAudioOutputDevice(this.preferredAudioOutputID);
         await JitsiMeetJS.mediaDevices.setAudioOutputDevice(this.preferredAudioOutputID);
     }
 
