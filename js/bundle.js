@@ -1,4 +1,4 @@
-import { JITSI_HOST, JVB_HOST, JVB_MUC } from '../../../../../constants.js';
+import { JITSI_HOST, JVB_HOST, JVB_MUC } from '../../../../../../constants.js';
 
 function t(o, s, c) {
     return typeof o === s
@@ -5509,6 +5509,8 @@ class LoginForm extends FormDialog {
         const self = new LoginFormPrivate(this);
         selfs.set(this, self);
 
+        const validate = () => self.validate();
+
         this.roomLabel = this.element.querySelector("label[for='roomSelector']");
 
         this.roomSelect = SelectBox(
@@ -5516,23 +5518,19 @@ class LoginForm extends FormDialog {
             v => v,
             k => defaultRooms.get(k),
             this.element.querySelector("#roomSelector"));
-
-        this.roomSelect.addEventListener("input", () => {
-            self.validate();
-        });
-
+        this.roomSelect.addEventListener("input", validate);
         this.roomSelect.emptySelectionEnabled = false;
         this.roomSelect.values = defaultRooms.keys();
         this.roomSelect.selectedIndex = 0;
 
         this.roomInput = this.element.querySelector("#roomName");
-        this.roomInput.addEventListener("input", self.validate);
+        this.roomInput.addEventListener("input", validate);
         this.roomInput.addEventListener("enter", () => {
             this.userNameInput.focus();
         });
 
         this.userNameInput = this.element.querySelector("#userName");
-        this.userNameInput.addEventListener("input", self.validate);
+        this.userNameInput.addEventListener("input", validate);
         this.userNameInput.addEventListener("enter", () => {
             if (this.userName.length === 0) {
                 this.userNameInput.focus();
@@ -10095,7 +10093,7 @@ class Settings {
     }
 }
 
-const versionString = "Calla v0.3.0";
+const versionString = "Calla v0.3.1";
 
 console.log(`${versionString}`);
 
@@ -18796,6 +18794,7 @@ class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async initializeAsync(roomName, userName) {
+        console.info("Connecting to:", JITSI_HOST);
         await import(`${window.location.origin}/lib/jquery.min.js`);
         await import(`https://${JITSI_HOST}/libs/lib-jitsi-meet.min.js`);
 
