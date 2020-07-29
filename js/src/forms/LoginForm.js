@@ -45,6 +45,8 @@ export class LoginForm extends FormDialog {
         const self = new LoginFormPrivate(this);
         selfs.set(this, self);
 
+        const validate = () => self.validate();
+
         this.roomLabel = this.element.querySelector("label[for='roomSelector']");
 
         this.roomSelect = SelectBox(
@@ -52,23 +54,19 @@ export class LoginForm extends FormDialog {
             v => v,
             k => defaultRooms.get(k),
             this.element.querySelector("#roomSelector"));
-
-        this.roomSelect.addEventListener("input", () => {
-            self.validate();
-        });
-
+        this.roomSelect.addEventListener("input", validate);
         this.roomSelect.emptySelectionEnabled = false;
         this.roomSelect.values = defaultRooms.keys();
         this.roomSelect.selectedIndex = 0;
 
         this.roomInput = this.element.querySelector("#roomName");
-        this.roomInput.addEventListener("input", self.validate);
+        this.roomInput.addEventListener("input", validate);
         this.roomInput.addEventListener("enter", () => {
             this.userNameInput.focus();
         });
 
         this.userNameInput = this.element.querySelector("#userName")
-        this.userNameInput.addEventListener("input", self.validate);
+        this.userNameInput.addEventListener("input", validate);
         this.userNameInput.addEventListener("enter", () => {
             if (this.userName.length === 0) {
                 this.userNameInput.focus();
