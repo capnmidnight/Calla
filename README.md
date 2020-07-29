@@ -28,7 +28,7 @@ NOTE: __Jitsi Meet's web client doesn't work on iOS!__ Sorry :(
 
 ## INSTALLATION
 
-- First, setup Jitsi Meet on a server of your choice: [Jitsi quick-start instructions](https://github.com/jitsi/jitsi-meet/blob/master/doc/quick-install.md).
+- First, setup Jitsi Meet on a server of your choice: [Jitsi quick-start instructions](https://jitsi.github.io/handbook/docs/devops-guide/devops-guide-quickstart).
 - Install the Calla front-end (basically the rest of this repository) onto another server of your choice.
   - Modify "JITSI_HOST" in `index.html` scripts to point to your Jitsi Meet server.
 - You may also want to edit `index.html` to change/remove the link(s) to this repository and/or my Twitter profile.
