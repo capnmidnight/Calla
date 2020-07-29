@@ -1,5 +1,5 @@
-﻿import { BaseSpatializer } from "./BaseSpatializer.js";
-import { ManualVolume } from "./ManualVolume.js";
+﻿import { BaseSpatializer } from "../BaseSpatializer.js";
+import { ManualVolume } from "../sources/ManualVolume.js";
 
 let hasAudioContext = Object.prototype.hasOwnProperty.call(window, "AudioContext"),
     hasStereoPanner = hasAudioContext && Object.prototype.hasOwnProperty.call(AudioContext.prototype, "createStereoPanner");

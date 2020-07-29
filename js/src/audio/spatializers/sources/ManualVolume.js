@@ -1,4 +1,4 @@
-﻿import { InterpolatedPose } from "../positions/InterpolatedPose.js";
+﻿import { InterpolatedPose } from "../../positions/InterpolatedPose.js";
 import { BaseSource } from "./BaseSource.js";
 import { ManualBase } from "./ManualBase.js";
 

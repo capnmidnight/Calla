@@ -1,10 +1,9 @@
 ﻿import { MockAudioContext } from "./MockAudioContext.js";
 import { InterpolatedPose } from "./positions/InterpolatedPose.js";
-import { BaseListener } from "./spatializers/BaseListener.js";
-import { BaseSource } from "./spatializers/BaseSource.js";
-import { ListenerNew } from "./spatializers/ListenerNew.js";
-import { ListenerOld } from "./spatializers/ListenerOld.js";
-import { ResonanceScene } from "./spatializers/ResonanceScene.js";
+import { AudioListenerNew } from "./spatializers/listeners/AudioListenerNew.js";
+import { BaseListener } from "./spatializers/listeners/BaseListener.js";
+import { ResonanceScene } from "./spatializers/listeners/ResonanceScene.js";
+import { BaseSource } from "./spatializers/sources/BaseSource.js";
 
 let hasAudioContext = Object.prototype.hasOwnProperty.call(window, "AudioContext"),
     hasAudioListener = hasAudioContext && Object.prototype.hasOwnProperty.call(window, "AudioListener"),
@@ -101,7 +100,7 @@ export class Destination extends EventTarget {
 
             if (hasAudioContext && !attemptResonanceAPI && hasNewAudioListener) {
                 try {
-                    this.listener = new ListenerNew(this);
+                    this.listener = new AudioListenerNew(this);
                 }
                 catch (exp) {
                     hasNewAudioListener = false;
@@ -111,7 +110,7 @@ export class Destination extends EventTarget {
 
             if (hasAudioContext && !attemptResonanceAPI && !hasNewAudioListener && hasOldAudioListener) {
                 try {
-                    this.listener = new ListenerOld(this);
+                    this.listener = new AudioListenerOld(this);
                 }
                 catch (exp) {
                     hasOldAudioListener = false;

@@ -1,11 +1,12 @@
-﻿import { InterpolatedPose } from "../positions/InterpolatedPose.js";
-import { ListenerBase } from "./ListenerBase.js";
-import { PannerOld } from "./PannerOld.js";
+﻿import { Destination } from "../../Destination.js";
+import { InterpolatedPose } from "../../positions/InterpolatedPose.js";
+import { PannerNew } from "../sources/PannerNew.js";
+import { AudioListenerBase } from "./AudioListenerBase.js";
 
 /**
  * A positioner that uses WebAudio's playback dependent time progression.
  **/
-export class ListenerOld extends ListenerBase {
+export class AudioListenerNew extends AudioListenerBase {
     /**
      * Creates a new positioner that uses WebAudio's playback dependent time progression.
      * @param {Destination} destination - the audio node that will receive the position value.
@@ -20,8 +21,15 @@ export class ListenerOld extends ListenerBase {
     update(pose) {
         super.update(pose);
         const { p, f, u } = pose.current;
-        this.node.setPosition(p.x, p.y, p.z);
-        this.node.setOrientation(f.x, f.y, f.z, u.x, u.y, u.z);
+        this.node.positionX.setValueAtTime(p.x, 0);
+        this.node.positionY.setValueAtTime(p.y, 0);
+        this.node.positionZ.setValueAtTime(p.z, 0);
+        this.node.forwardX.setValueAtTime(f.x, 0);
+        this.node.forwardY.setValueAtTime(f.y, 0);
+        this.node.forwardZ.setValueAtTime(f.z, 0);
+        this.node.upX.setValueAtTime(u.x, 0);
+        this.node.upY.setValueAtTime(u.y, 0);
+        this.node.upZ.setValueAtTime(u.z, 0);
     }
 
 
@@ -34,7 +42,6 @@ export class ListenerOld extends ListenerBase {
      * @return {BaseSource}
      */
     createSource(id, stream, bufferSize) {
-        return new PannerOld(id, this.destination, stream, bufferSize);
+        return new PannerNew(id, this.destination, stream, bufferSize);
     }
 }
-

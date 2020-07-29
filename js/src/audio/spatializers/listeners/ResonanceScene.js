@@ -1,10 +1,10 @@
 ﻿/* global ResonanceAudio */
 
-import "../../../lib/resonance-audio.js";
-import { Destination } from "../Destination.js";
-import { InterpolatedPose } from "../positions/InterpolatedPose.js";
+import "../../../../lib/resonance-audio.js";
+import { Destination } from "../../Destination.js";
+import { InterpolatedPose } from "../../positions/InterpolatedPose.js";
 import { BaseListener } from "./BaseListener.js";
-import { ResonanceSource } from "./ResonanceSource.js";
+import { ResonanceSource } from "../sources/ResonanceSource.js";
 
 /**
  * An audio positioner that uses Google's Resonance Audio library

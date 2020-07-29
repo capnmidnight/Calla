@@ -1,7 +1,7 @@
-import "../../../lib/resonance-audio.js";
-import { InterpolatedPose } from "../positions/InterpolatedPose.js";
+import "../../../../lib/resonance-audio.js";
+import { InterpolatedPose } from "../../positions/InterpolatedPose.js";
 import { BaseAnalyzed } from "./BaseAnalyzed.js";
-import { Destination } from "../Destination.js";
+import { Destination } from "../../Destination.js";
 
 /**
  * A spatializer that uses Google's Resonance Audio library.

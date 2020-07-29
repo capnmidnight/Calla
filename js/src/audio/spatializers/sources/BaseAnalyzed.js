@@ -1,5 +1,5 @@
-﻿import { clamp } from "../../math.js";
-import { AudioActivityEvent } from "../AudioActivityEvent.js";
+﻿import { clamp } from "../../../math.js";
+import { AudioActivityEvent } from "../../AudioActivityEvent.js";
 import { BaseSource } from "./BaseSource.js";
 
 const audioActivityEvt = new AudioActivityEvent(),

@@ -1,8 +1,8 @@
-﻿import { muted, srcObject } from "../../html/attrs.js";
-import { Audio } from "../../html/tags.js";
-import { canChangeAudioOutput } from "../canChangeAudioOutput.js";
-import { Destination } from "../Destination.js";
-import { BaseSpatializer } from "./BaseSpatializer.js";
+﻿import { muted, srcObject } from "../../../html/attrs.js";
+import { Audio } from "../../../html/tags.js";
+import { canChangeAudioOutput } from "../../canChangeAudioOutput.js";
+import { Destination } from "../../Destination.js";
+import { BaseSpatializer } from "../BaseSpatializer.js";
 
 /** Base class providing functionality for spatializers. */
 export class BaseSource extends BaseSpatializer {

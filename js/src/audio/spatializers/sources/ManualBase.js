@@ -1,6 +1,6 @@
-﻿import { clamp, project } from "../../math.js";
-import { BaseSpatializer } from "./BaseSpatializer.js";
-import { Vector } from "../positions/Vector.js";
+﻿import { clamp, project } from "../../../math.js";
+import { Vector } from "../../positions/Vector.js";
+import { BaseSpatializer } from "../BaseSpatializer.js";
 
 export class ManualBase extends BaseSpatializer {
     /**

@@ -1,6 +1,6 @@
-﻿import { InterpolatedPose } from "../positions/InterpolatedPose.js";
+﻿import { InterpolatedPose } from "../../positions/InterpolatedPose.js";
+import { Destination } from "../../Destination.js";
 import { BaseWebAudio } from "./BaseWebAudio.js";
-import { Destination } from "../Destination.js";
 
 /**
  * A spatializer that uses WebAudio's PannerNode
