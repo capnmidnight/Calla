@@ -1,5 +1,4 @@
-﻿import { Destination } from "../../Destination.js";
-import { InterpolatedPose } from "../../positions/InterpolatedPose.js";
+﻿import { Pose } from "../../positions/Pose.js";
 import { PannerNew } from "../sources/PannerNew.js";
 import { AudioListenerBase } from "./AudioListenerBase.js";
 
@@ -9,20 +8,21 @@ import { AudioListenerBase } from "./AudioListenerBase.js";
 export class AudioListenerNew extends AudioListenerBase {
     /**
      * Creates a new positioner that uses WebAudio's playback dependent time progression.
-     * @param {Destination} destination - the audio node that will receive the position value.
+     * @param {AudioListener} listener
      */
-    constructor(destination) {
-        super(destination);
+    constructor(listener) {
+        super(listener);
 
         Object.seal(this);
     }
 
     /**
-     * @param {InterpolatedPose} pose
+     * Performs the spatialization operation for the audio source's latest location.
+     * @param {Pose} loc
      */
-    update(pose) {
-        super.update(pose);
-        const { p, f, u } = pose.current;
+    update(loc) {
+        super.update(loc);
+        const { p, f, u } = loc;
         this.node.positionX.setValueAtTime(p.x, 0);
         this.node.positionY.setValueAtTime(p.y, 0);
         this.node.positionZ.setValueAtTime(p.z, 0);
@@ -41,9 +41,11 @@ export class AudioListenerNew extends AudioListenerBase {
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
      * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
+     * @param {AudioContext} audioContext
+     * @param {Pose} dest
      * @return {BaseSource}
      */
-    createSource(id, stream, bufferSize) {
-        return new PannerNew(id, this.destination, stream, bufferSize);
+    createSource(id, stream, bufferSize, audioContext, dest) {
+        return new PannerNew(id, stream, bufferSize, audioContext);
     }
 }

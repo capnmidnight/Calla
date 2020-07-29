@@ -1,7 +1,6 @@
 import "../../../../lib/resonance-audio.js";
-import { InterpolatedPose } from "../../positions/InterpolatedPose.js";
+import { Pose } from "../../positions/Pose.js";
 import { BaseAnalyzed } from "./BaseAnalyzed.js";
-import { Destination } from "../../Destination.js";
 
 /**
  * A spatializer that uses Google's Resonance Audio library.
@@ -11,13 +10,14 @@ export class ResonanceSource extends BaseAnalyzed {
     /**
      * Creates a new spatializer that uses Google's Resonance Audio library.
      * @param {string} id
-     * @param {Destination} destination
      * @param {MediaStream|HTMLAudioElement} stream
      * @param {number} bufferSize
+     * @param {AudioContext} audioContext
+     * @param {ResonanceAudio} res
      */
-    constructor(id, destination, stream, bufferSize) {
-        const resNode = destination.pose.spatializer.scene.createSource();
-        super(id, destination, stream, bufferSize, resNode.input);
+    constructor(id, stream, bufferSize, audioContext, res) {
+        const resNode = res.createSource();
+        super(id, stream, bufferSize, audioContext, resNode.input);
 
         this.resNode = resNode;
 
@@ -26,13 +26,13 @@ export class ResonanceSource extends BaseAnalyzed {
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     * @param {InterpolatedPose} pose
-     **/
-    update(pose) {
-        super.update(pose);
-        const { p, f, u } = pose.current;
-        this.resNode.setMinDistance(this.destination.minDistance);
-        this.resNode.setMaxDistance(this.destination.maxDistance);
+     * @param {Pose} loc
+     */
+    update(loc) {
+        super.update(loc);
+        const { p, f, u } = loc;
+        this.resNode.setMinDistance(this.minDistance);
+        this.resNode.setMaxDistance(this.maxDistance);
         this.resNode.setPosition(p.x, p.y, p.z);
         this.resNode.setOrientation(f.x, f.y, f.z, u.x, u.y, u.z);
     }

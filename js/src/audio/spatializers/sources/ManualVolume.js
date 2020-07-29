@@ -1,4 +1,4 @@
-﻿import { InterpolatedPose } from "../../positions/InterpolatedPose.js";
+﻿import { Pose } from "../../positions/Pose.js";
 import { BaseSource } from "./BaseSource.js";
 import { ManualBase } from "./ManualBase.js";
 
@@ -9,23 +9,33 @@ export class ManualVolume extends BaseSource {
 
     /**
      * Creates a new spatializer that only modifies volume.
-     * @param {Destination} destination
+     * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream
+     * @param {Pose} dest
      */
-    constructor(destination, stream) {
-        super(destination, stream);
+    constructor(id, stream, dest) {
+        super(id, stream);
         this.audio.muted = false;
-        this.manual = new ManualBase(id, destination);
+        this.audio.play();
+        this.manual = new ManualBase(dest);
+
+        /** @type {number} */
+        this._lastVolume = null;
+
         Object.seal(this);
     }
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     * @param {InterpolatedPose} pose
-     **/
-    update(pose) {
-        super.update(pose);
-        this.manual.update(pose);
-        this.audio.volume = this.manual.volume;
+     * @param {Pose} loc
+     */
+    update(loc) {
+        super.update(loc);
+        this.manual.update(loc);
+        if (this._lastVolume !== this.manual.volume) {
+            this._lastVolume
+                = this.audio.volume
+                = this.manual.volume;
+        }
     }
 }

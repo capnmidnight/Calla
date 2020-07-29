@@ -1,4 +1,4 @@
-﻿import { InterpolatedPose } from "../positions/InterpolatedPose.js";
+﻿import { Pose } from "../../positions/Pose.js";
 import { BaseWebAudio } from "./BaseWebAudio.js";
 import { ManualBase } from "./ManualBase.js";
 
@@ -9,25 +9,29 @@ export class ManualStereo extends BaseWebAudio {
 
     /**
      * Creates a new spatializer that performs stereo panning and volume scaling.
-     * @param {Destination} destination
+     * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream
      * @param {number} bufferSize
+     * @param {AudioContext} audioContext
+     * @param {Pose} dest
      */
-    constructor(destination, stream, bufferSize) {
-        super(destination, stream, bufferSize,
-            destination.audioContext.createStereoPanner(),
-            destination.audioContext.createGain());
-        this.manual = new ManualBase(id, destination);
+    constructor(id, stream, bufferSize, audioContext, dest) {
+        super(id, stream, bufferSize,
+            audioContext,
+            audioContext.createStereoPanner(),
+            audioContext.createGain());
+        this.manual = new ManualBase(dest);
+
         Object.seal(this);
     }
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     * @param {InterpolatedPose} pose
-     **/
-    update(pose) {
-        super.update(pose);
-        this.manual.update(pose);
+     * @param {Pose} loc
+     */
+    update(loc) {
+        super.update(loc);
+        this.manual.update(loc);
         this.inNode.pan.value = this.manual.pan;
         this.outNode.gain.value = this.manual.volume;
     }

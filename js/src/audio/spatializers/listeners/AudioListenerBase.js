@@ -1,5 +1,4 @@
-﻿import { Destination } from "../../Destination.js";
-import { BaseListener } from "./BaseListener.js";
+﻿import { BaseListener } from "./BaseListener.js";
 
 /**
  * A spatializer that uses WebAudio's AudioListener
@@ -8,11 +7,11 @@ export class AudioListenerBase extends BaseListener {
 
     /**
      * Creates a new spatializer that uses WebAudio's PannerNode.
-     * @param {Destination} destination
+     * @param {AudioListener} listener
      */
-    constructor(destination) {
-        super(destination);
-        this.node = destination.audioContext.listener;
+    constructor(listener) {
+        super();
+        this.node = listener;
     }
 
     dispose() {

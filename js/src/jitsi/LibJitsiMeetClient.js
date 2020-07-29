@@ -119,7 +119,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
                     id,
                     roomName,
                     displayName: userName,
-                    pose: this.audioClient.destination.pose
+                    pose: this.audioClient.pose
                 }));
             });
 

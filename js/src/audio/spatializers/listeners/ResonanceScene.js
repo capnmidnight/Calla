@@ -1,10 +1,9 @@
 ﻿/* global ResonanceAudio */
 
 import "../../../../lib/resonance-audio.js";
-import { Destination } from "../../Destination.js";
-import { InterpolatedPose } from "../../positions/InterpolatedPose.js";
-import { BaseListener } from "./BaseListener.js";
+import { Pose } from "../../positions/Pose.js";
 import { ResonanceSource } from "../sources/ResonanceSource.js";
+import { BaseListener } from "./BaseListener.js";
 
 /**
  * An audio positioner that uses Google's Resonance Audio library
@@ -12,15 +11,15 @@ import { ResonanceSource } from "../sources/ResonanceSource.js";
 export class ResonanceScene extends BaseListener {
     /**
      * Creates a new audio positioner that uses Google's Resonance Audio library
-     * @param {Destination} destination
+     * @param {AudioContext} audioContext
      */
-    constructor(destination) {
-        super(destination);
+    constructor(audioContext) {
+        super();
 
-        this.scene = new ResonanceAudio(destination.audioContext, {
+        this.scene = new ResonanceAudio(audioContext, {
             ambisonicOrder: 3
         });
-        this.scene.output.connect(destination.audioContext.destination);
+        this.scene.output.connect(audioContext.destination);
 
         this.scene.setRoomProperties({
             width: 10,
@@ -39,11 +38,12 @@ export class ResonanceScene extends BaseListener {
     }
 
     /**
-     * @param {InterpolatedPose} pose
+     * Performs the spatialization operation for the audio source's latest location.
+     * @param {Pose} loc
      */
-    update(pose) {
-        super.update(pose);
-        const { p, f, u } = pose.current;
+    update(loc) {
+        super.update(loc);
+        const { p, f, u } = loc;
         this.scene.setListenerPosition(p.x, p.y, p.z);
         this.scene.setListenerOrientation(f.x, f.y, f.z, u.x, u.y, u.z);
     }
@@ -54,9 +54,11 @@ export class ResonanceScene extends BaseListener {
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
      * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
+     * @param {AudioContext} audioContext
+     * @param {Pose} dest
      * @return {BaseSource}
      */
-    createSource(id, stream, bufferSize) {
-        return new ResonanceSource(id, this.destination, stream, bufferSize);
+    createSource(id, stream, bufferSize, audioContext, dest) {
+        return new ResonanceSource(id, stream, bufferSize, audioContext, this.scene);
     }
 }

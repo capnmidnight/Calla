@@ -1,5 +1,6 @@
 ﻿import { clamp } from "../../../math.js";
 import { AudioActivityEvent } from "../../AudioActivityEvent.js";
+import { Pose } from "../../positions/Pose.js";
 import { BaseSource } from "./BaseSource.js";
 
 const audioActivityEvt = new AudioActivityEvent(),
@@ -43,19 +44,19 @@ export class BaseAnalyzed extends BaseSource {
 
     /**
      * @param {string} id
-     * @param {Destination} destination
      * @param {MediaStream|HTMLAudioElement} stream
      * @param {number} bufferSize
+     * @param {AudioContext} audioContext
      * @param {PannerNode|StereoPannerNode} inNode
      */
-    constructor(id, destination, stream, bufferSize, inNode) {
-        super(id, destination, stream);
+    constructor(id, stream, bufferSize, audioContext, inNode) {
+        super(id, stream);
 
         this.bufferSize = bufferSize;
         this.buffer = new Float32Array(this.bufferSize);
 
         /** @type {AnalyserNode} */
-        this.analyser = this.destination.audioContext.createAnalyser();
+        this.analyser = audioContext.createAnalyser();
         this.analyser.fftSize = 2 * this.bufferSize;
         this.analyser.smoothingTimeConstant = 0.2;
 
@@ -69,39 +70,45 @@ export class BaseAnalyzed extends BaseSource {
 
         /** @type {MediaSource} */
         this.source = null;
-    }
 
-    /**
-     * @param {InterpolatedPose} pose
-     * @fires BaseAnalyzedSpatializer#audioActivity
-     **/
-    update(pose) {
-        super.update(pose);
-
-        if (!this.source) {
-            if (this.stream) {
-                try {
-                    if (this.stream.active) {
-                        this.source = this.destination.audioContext.createMediaStreamSource(this.stream);
+        const checkSource = () => {
+            if (!this.source) {
+                if (this.stream) {
+                    try {
+                        if (this.stream.active) {
+                            this.source = audioContext.createMediaStreamSource(this.stream);
+                            this.source.connect(this.analyser);
+                            this.source.connect(this.inNode);
+                            setTimeout(checkSource, 0);
+                        }
+                    }
+                    catch (exp) {
+                        console.warn("Creating the media stream failed. Reason: ", exp);
+                    }
+                }
+                else if (this.audio) {
+                    try {
+                        this.source = audioContext.createMediaElementSource(this.audio);
                         this.source.connect(this.analyser);
                         this.source.connect(this.inNode);
                     }
-                }
-                catch (exp) {
-                    console.warn("Creating the media stream failed. Reason: ", exp);
-                }
-            }
-            else if (this.audio) {
-                try {
-                    this.source = this.destination.audioContext.createMediaElementSource(this.audio);
-                    this.source.connect(this.analyser);
-                    this.source.connect(this.inNode);
-                }
-                catch (exp) {
-                    console.warn("Creating the media stream failed. Reason: ", exp);
+                    catch (exp) {
+                        console.warn("Creating the media stream failed. Reason: ", exp);
+                    }
                 }
             }
-        }
+        };
+
+        checkSource();
+    }
+
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     * @param {Pose} loc
+     * @fires BaseAnalyzedSpatializer#audioActivity
+     */
+    update(loc) {
+        super.update(loc);
 
         if (this.source) {
             this.analyser.getFloatFrequencyData(this.buffer);

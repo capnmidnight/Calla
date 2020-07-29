@@ -1,11 +1,22 @@
 ﻿import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 import { AudioActivityEvent } from "./AudioActivityEvent.js";
 import { BaseAudioClient } from "./BaseAudioClient.js";
-import { Destination } from "./Destination.js";
+import { MockAudioContext } from "./MockAudioContext.js";
 import { InterpolatedPose } from "./positions/InterpolatedPose.js";
+import { AudioListenerNew } from "./spatializers/listeners/AudioListenerNew.js";
+import { AudioListenerOld } from "./spatializers/listeners/AudioListenerOld.js";
+import { BaseListener } from "./spatializers/listeners/BaseListener.js";
+import { ResonanceScene } from "./spatializers/listeners/ResonanceScene.js";
+import { BaseSource } from "./spatializers/sources/BaseSource.js";
 
 const BUFFER_SIZE = 1024,
     audioActivityEvt = new AudioActivityEvent();
+
+let hasAudioContext = Object.prototype.hasOwnProperty.call(window, "AudioContext"),
+    hasAudioListener = hasAudioContext && Object.prototype.hasOwnProperty.call(window, "AudioListener"),
+    hasOldAudioListener = hasAudioListener && Object.prototype.hasOwnProperty.call(AudioListener.prototype, "setPosition"),
+    hasNewAudioListener = hasAudioListener && Object.prototype.hasOwnProperty.call(AudioListener.prototype, "positionX"),
+    attemptResonanceAPI = hasAudioListener;
 
 /**
  * A manager of audio sources, destinations, and their spatialization.
@@ -17,6 +28,22 @@ export class AudioManager extends BaseAudioClient {
      **/
     constructor() {
         super();
+
+        this.minDistance = 1;
+        this.minDistanceSq = 1;
+        this.maxDistance = 10;
+        this.maxDistanceSq = 100;
+        this.rolloff = 1;
+        this.transitionTime = 0.5;
+
+        /** @type {AudioContext} */
+        this.audioContext = null;
+
+        /** @type {InterpolatedPose} */
+        this.pose = new InterpolatedPose();
+
+        /** @type {BaseListener} */
+        this.listener = null;
 
         /**
          * Forwards on the audioActivity of an audio source.
@@ -30,15 +57,13 @@ export class AudioManager extends BaseAudioClient {
         };
 
         /** @type {Map.<string, InterpolatedPose>} */
-        this.sources = new Map();
-
-        this.destination = new Destination();
+        this.poses = new Map();
 
         this.timer = new RequestAnimationFrameTimer();
         this.timer.addEventListener("tick", () => {
-            this.destination.update();
-            for (let source of this.sources.values()) {
-                source.update(this.destination.currentTime);
+            this.pose.update(this.currentTime);
+            for (let pose of this.poses.values()) {
+                pose.update(this.currentTime);
             }
         });
 
@@ -49,8 +74,93 @@ export class AudioManager extends BaseAudioClient {
      * Perform the audio system initialization, after a user gesture 
      **/
     start() {
-        this.destination.createContext();
+        this.createContext();
         this.timer.start();
+    }
+
+    /**
+     * If no audio context is currently available, creates one, and initializes the
+     * spatialization of its listener.
+     * 
+     * If WebAudio isn't available, a mock audio context is created that provides
+     * ersatz playback timing.
+     **/
+    createContext() {
+        if (!this.audioContext) {
+            if (hasAudioContext) {
+                try {
+                    this.audioContext = new AudioContext();
+                }
+                catch (exp) {
+                    hasAudioContext = false;
+                    console.warn("Could not create WebAudio AudioContext", exp);
+                }
+            }
+
+            if (!hasAudioContext) {
+                this.audioContext = new MockAudioContext();
+            }
+
+            if (hasAudioContext && attemptResonanceAPI) {
+                try {
+                    this.listener = new ResonanceScene(this.audioContext);
+                }
+                catch (exp) {
+                    attemptResonanceAPI = false;
+                    console.warn("Resonance Audio API not available!", exp);
+                }
+            }
+
+            if (hasAudioContext && !attemptResonanceAPI && hasNewAudioListener) {
+                try {
+                    this.listener = new AudioListenerNew(this.audioContext.listener);
+                }
+                catch (exp) {
+                    hasNewAudioListener = false;
+                    console.warn("No AudioListener.positionX property!", exp);
+                }
+            }
+
+            if (hasAudioContext && !attemptResonanceAPI && !hasNewAudioListener && hasOldAudioListener) {
+                try {
+                    this.listener = new AudioListenerOld(this.audioContext.listener);
+                }
+                catch (exp) {
+                    hasOldAudioListener = false;
+                    console.warn("No WebAudio API!", exp);
+                }
+            }
+
+            if (!hasOldAudioListener || !hasAudioContext) {
+                this.listener = new BaseListener();
+            }
+
+            this.pose.spatializer = this.listener;
+        }
+    }
+
+    /**
+     * Creates a spatialzer for an audio source.
+     * @private
+     * @param {string} id
+     * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
+     * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
+     * @return {BaseSource}
+     */
+    createSpatializer(id, stream, bufferSize) {
+        if (!stream || !this.listener) {
+            return null;
+        }
+
+        return this.listener.createSource(id, stream, bufferSize, this.audioContext, this.pose.current);
+    }
+
+    /**
+     * Gets the current playback time.
+     * @type {number}
+     */
+    get currentTime() {
+        return this.audioContext.currentTime;
     }
 
     /**
@@ -58,10 +168,10 @@ export class AudioManager extends BaseAudioClient {
      * @returns {InterpolatedPose}
      */
     createUser(id) {
-        if (!this.sources.has(id)) {
-            this.sources.set(id, new InterpolatedPose());
+        if (!this.poses.has(id)) {
+            this.poses.set(id, new InterpolatedPose());
         }
-        return this.sources.get(id);
+        return this.poses.get(id);
     }
 
     /**
@@ -69,10 +179,10 @@ export class AudioManager extends BaseAudioClient {
      * @param {string} id - the id of the user to remove
      **/
     removeUser(id) {
-        if (this.sources.has(id)) {
-            const pose = this.sources.get(id);
+        if (this.poses.has(id)) {
+            const pose = this.poses.get(id);
             pose.dispose();
-            this.sources.delete(id);
+            this.poses.delete(id);
         }
     }
 
@@ -81,15 +191,16 @@ export class AudioManager extends BaseAudioClient {
      * @param {MediaStream|HTMLAudioElement} stream
      **/
     setSource(id, stream) {
-        if (this.sources.has(id)) {
-            const pose = this.sources.get(id);
+        if (this.poses.has(id)) {
+            const pose = this.poses.get(id);
             if (pose.spatializer) {
                 pose.spatializer.removeEventListener("audioActivity", this.onAudioActivity);
             }
 
-            pose.spatializer = this.destination.createSpatializer(id, stream, BUFFER_SIZE);
+            pose.spatializer = this.createSpatializer(id, stream, BUFFER_SIZE);
 
             if (pose.spatializer) {
+                pose.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
                 pose.spatializer.addEventListener("audioActivity", this.onAudioActivity);
             }
         }
@@ -103,7 +214,16 @@ export class AudioManager extends BaseAudioClient {
      * @param {number} transitionTime
      **/
     setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
-        this.destination.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
+        this.minDistance = minDistance;
+        this.maxDistance = maxDistance;
+        this.transitionTime = transitionTime;
+        this.rolloff = rolloff;
+
+        for (let pose of this.poses.values()) {
+            if (pose.spatializer) {
+                pose.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
+            }
+        }
     }
 
     /**
@@ -113,14 +233,14 @@ export class AudioManager extends BaseAudioClient {
      * @param {number} z - the lateral component of the position.
      */
     setLocalPosition(x, y, z) {
-        this.destination.pose.setTarget(x, y, z, 0, 0, 1, 0, 1, 0, this.destination.currentTime, this.destination.transitionTime);
+        this.pose.setTarget(x, y, z, 0, 0, 1, 0, 1, 0, this.currentTime, this.transitionTime);
     }
 
     /**
      * @returns {BaseAudioElement}
      **/
     getLocalPose() {
-        return this.destination.pose.end;
+        return this.pose.end;
     }
 
     /**
@@ -131,9 +251,9 @@ export class AudioManager extends BaseAudioClient {
      * @param {number} z - the lateral component of the position.
      **/
     setUserPosition(id, x, y, z) {
-        if (this.sources.has(id)) {
-            const pose = this.sources.get(id);
-            pose.setTarget(x, y, z, 0, 0, 1, 0, 1, 0, this.destination.currentTime, this.destination.transitionTime);
+        if (this.poses.has(id)) {
+            const pose = this.poses.get(id);
+            pose.setTarget(x, y, z, 0, 0, 1, 0, 1, 0, this.currentTime, this.transitionTime);
         }
     }
 }

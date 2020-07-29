@@ -1,4 +1,4 @@
-﻿import { InterpolatedPose } from "../../positions/InterpolatedPose.js";
+﻿import { Pose } from "../../positions/Pose.js";
 import { PannerBase } from "./PannerBase.js";
 
 /**
@@ -9,24 +9,23 @@ export class PannerNew extends PannerBase {
     /**
      * Creates a new positioner that uses WebAudio's playback dependent time progression.
      * @param {string} id
-     * @param {Destination} destination
      * @param {MediaStream|HTMLAudioElement} stream
      * @param {number} bufferSize
+     * @param {AudioContext} audioContext
      */
-    constructor(id, destination, stream, bufferSize) {
-        super(id, destination, stream, bufferSize);
+    constructor(id, stream, bufferSize, audioContext) {
+        super(id, stream, bufferSize, audioContext);
 
         Object.seal(this);
     }
 
     /**
-     * Calculates the new position for the given time.
-     * @protected
-     * @param {InterpolatedPose} pose
+     * Performs the spatialization operation for the audio source's latest location.
+     * @param {Pose} loc
      */
-    update(pose) {
-        super.update(pose);
-        const { p, f } = pose.current;
+    update(loc) {
+        super.update(loc);
+        const { p, f } = loc;
         this.inNode.positionX.setValueAtTime(p.x, 0);
         this.inNode.positionY.setValueAtTime(p.y, 0);
         this.inNode.positionZ.setValueAtTime(p.z, 0);
