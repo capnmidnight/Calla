@@ -34,6 +34,8 @@ export class ResonanceScene extends BaseListener {
             down: "grass",
             up: "transparent",
         });
+
+        Object.seal(this);
     }
 
     /**

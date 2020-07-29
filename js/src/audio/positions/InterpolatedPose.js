@@ -18,6 +18,8 @@ export class InterpolatedPose {
 
         /** @type {BaseSpatializer} */
         this._spatializer = null;
+
+        Object.seal(this);
     }
 
     get spatializer() {

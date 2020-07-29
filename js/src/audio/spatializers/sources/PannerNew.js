@@ -15,6 +15,8 @@ export class PannerNew extends PannerBase {
      */
     constructor(id, destination, stream, bufferSize) {
         super(id, destination, stream, bufferSize);
+
+        Object.seal(this);
     }
 
     /**

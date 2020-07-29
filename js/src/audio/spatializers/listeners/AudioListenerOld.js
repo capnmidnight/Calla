@@ -12,6 +12,8 @@ export class AudioListenerOld extends AudioListenerBase {
      */
     constructor(destination) {
         super(destination);
+
+        Object.seal(this);
     }
 
     /**

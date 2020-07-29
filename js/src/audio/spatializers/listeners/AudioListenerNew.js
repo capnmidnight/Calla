@@ -13,6 +13,8 @@ export class AudioListenerNew extends AudioListenerBase {
      */
     constructor(destination) {
         super(destination);
+
+        Object.seal(this);
     }
 
     /**

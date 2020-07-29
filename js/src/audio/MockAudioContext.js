@@ -7,6 +7,8 @@ export class MockAudioContext {
      **/
     constructor() {
         this._t = performance.now() / 1000;
+
+        Object.seal(this);
     }
 
     /**

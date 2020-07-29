@@ -8,6 +8,8 @@ export class AudioActivityEvent extends Event {
         /** @type {string} */
         this.id = null;
         this.isActive = false;
+
+        Object.seal(this);
     }
 
     /**

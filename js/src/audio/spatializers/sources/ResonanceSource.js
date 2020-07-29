@@ -20,6 +20,8 @@ export class ResonanceSource extends BaseAnalyzed {
         super(id, destination, stream, bufferSize, resNode.input);
 
         this.resNode = resNode;
+
+        Object.seal(this);
     }
 
     /**

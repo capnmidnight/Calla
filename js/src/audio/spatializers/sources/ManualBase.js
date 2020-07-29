@@ -11,6 +11,8 @@ export class ManualBase extends BaseSpatializer {
         this.delta = new Vector();
         this.volume = 1;
         this.pan = 0;
+
+        Object.seal(this);
     }
 
     /**

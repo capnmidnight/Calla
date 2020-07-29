@@ -16,6 +16,8 @@ export class SFX extends EventTarget {
 
         /** @type {Map.<string, Audio>} */
         this.clips = new Map();
+
+        Object.seal(this);
     }
 
     /**
