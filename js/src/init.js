@@ -100,7 +100,7 @@ export function init(client) {
     }
 
     function refreshUser(userID) {
-        game.withUser(userID, (user) => directory.set(user));
+        game.withUser("list user in directory", userID, (user) => directory.set(user));
     }
 
     gridRowsDef("auto", "1fr", "auto").apply(document.body);

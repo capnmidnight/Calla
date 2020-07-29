@@ -1,4 +1,4 @@
-﻿import { Pose } from "./audio/positions/Pose.js";
+import { Pose } from "./audio/positions/Pose.js";
 import { Emote } from "./Emote.js";
 import { EventedGamepad } from "./input/EventedGamepad.js";
 import { id } from "./html/attrs.js";
@@ -292,13 +292,13 @@ export class Game extends EventTarget {
     }
 
     initializeUser(id, evt) {
-        this.withUser(id, (user) => {
+        this.withUser("initialize user", id, (user) => {
             user.deserialize(evt);
         });
     }
 
     updateAudioActivity(id, isActive) {
-        this.withUser(id, (user) => {
+        this.withUser("update audio activity", id, (user) => {
             user.isActive = isActive;
         });
     }
@@ -381,7 +381,7 @@ export class Game extends EventTarget {
     }
 
     visit(id) {
-        this.withUser(id, (user) => {
+        this.withUser("visit", id, (user) => {
             this.warpMeTo(user.gridX, user.gridY);
         });
     }
@@ -427,33 +427,15 @@ export class Game extends EventTarget {
     }
 
     muteUserAudio(id, muted) {
-        let mutingUser = this.me;
-        if (id && this.users.has(id)) {
-            mutingUser = this.users.get(id);
-        }
-
-        if (!mutingUser) {
-            console.warn("No user found to mute audio, retrying in 1 second.");
-            setTimeout(this.muteUserAudio.bind(this, id, muted), 1000);
-        }
-        else {
-            mutingUser.audioMuted = muted;
-        }
+        this.withUser("mute audio", id, (user) => {
+            user.audioMuted = muted;
+        });
     }
 
     muteUserVideo(id, muted) {
-        let mutingUser = this.me;
-        if (!!id && this.users.has(id)) {
-            mutingUser = this.users.get(id);
-        }
-
-        if (!mutingUser) {
-            console.warn("No user found to mute video, retrying in 1 second.");
-            setTimeout(this.muteUserVideo.bind(this, id, muted), 1000);
-        }
-        else {
-            mutingUser.videoMuted = muted;
-        }
+        this.withUser("mute video", id, (user) => {
+            user.videoMuted = muted;
+        });
     }
 
     /**
@@ -465,11 +447,12 @@ export class Game extends EventTarget {
 
     /**
      * Find a user by id, then perform an operation on it.
+     * @param {string} msg
      * @param {string} id
      * @param {withUserCallback} callback
      * @param {number} timeout
      */
-    withUser(id, callback, timeout) {
+    withUser(msg, id, callback, timeout) {
         if (timeout === undefined) {
             timeout = 5000;
         }
@@ -479,16 +462,16 @@ export class Game extends EventTarget {
                 callback(user);
             }
             else {
-                console.warn("No user, trying again in a quarter second");
+                console.warn(`No user "${id}" found to ${msg}. Trying again in a quarter second.`);
                 if (timeout > 0) {
-                    setTimeout(this.withUser.bind(this, id, callback, timeout - 250), 250);
+                    setTimeout(this.withUser.bind(this, msg, id, callback, timeout - 250), 250);
                 }
             }
         }
     }
 
     changeUserName(id, displayName) {
-        this.withUser(id, (user) => {
+        this.withUser("change user name", id, (user) => {
             user.displayName = displayName;
         });
     }
@@ -500,19 +483,19 @@ export class Game extends EventTarget {
     }
 
     setAvatarVideo(id, stream) {
-        this.withUser(id, (user) => {
+        this.withUser("set avatar video", id, (user) => {
             user.setAvatarVideo(stream);
         });
     }
 
     setAvatarURL(id, url) {
-        this.withUser(id, (user) => {
+        this.withUser("set avatar image", id, (user) => {
             user.avatarImage = url;
         });
     }
 
     setAvatarEmoji(id, emoji) {
-        this.withUser(id, (user) => {
+        this.withUser("set avatar emoji", id, (user) => {
             user.avatarEmoji = emoji;
         });
     }
