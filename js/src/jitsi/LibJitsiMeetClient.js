@@ -5,7 +5,6 @@ import { AudioManager as AudioClient } from "../audio/AudioManager.js";
 import { canChangeAudioOutput } from "../audio/canChangeAudioOutput.js";
 import { BaseJitsiClient } from "./BaseJitsiClient.js";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "/constants.js";
-import { InterpolatedPose } from "../audio/positions/InterpolatedPose.js";
 
 /**
  * @typedef {object} JitsiTrack
@@ -68,6 +67,7 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async initializeAsync(roomName, userName) {
+        console.info("Connecting to:", JITSI_HOST);
         await import(`${window.location.origin}/lib/jquery.min.js`);
         await import(`https://${JITSI_HOST}/libs/lib-jitsi-meet.min.js`);
 

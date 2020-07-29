@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Calla", "js\", "{B5927401-9E70-4C41-9D49-876BA7561BE8}"
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "js", "js\", "{B5927401-9E70-4C41-9D49-876BA7561BE8}"
 	ProjectSection(WebsiteProperties) = preProject
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
 		Debug.AspNetCompiler.VirtualPath = "/localhost_55518"
@@ -31,6 +31,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{CD75547F-4
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Calla-Site", "..\Calla-Site\Calla-Site.csproj", "{34A10170-4A6B-4893-9C4D-98F1AAAD75D3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,10 @@ Global
 		{B5927401-9E70-4C41-9D49-876BA7561BE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B5927401-9E70-4C41-9D49-876BA7561BE8}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{B5927401-9E70-4C41-9D49-876BA7561BE8}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{34A10170-4A6B-4893-9C4D-98F1AAAD75D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34A10170-4A6B-4893-9C4D-98F1AAAD75D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34A10170-4A6B-4893-9C4D-98F1AAAD75D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34A10170-4A6B-4893-9C4D-98F1AAAD75D3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
