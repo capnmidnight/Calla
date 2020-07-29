@@ -41,9 +41,9 @@
     <link rel="manifest" href="/manifest.json">
 
     <script type="module">
-        const el = document.createElement('pwa-update');
+        import "/lib/pwaupdate.min.js";
+        const el = document.createElement("pwa-update");
         document.querySelector("#login .header").appendChild(el);
-        import('/lib/pwaupdate.min.js');
     </script>
 
     <link type="text/css" rel="stylesheet" href="/stylesheets/general.css" />
