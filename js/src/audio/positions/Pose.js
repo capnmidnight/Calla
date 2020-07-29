@@ -12,7 +12,9 @@ export class Pose {
         this.t = 0;
         this.p = new Vector();
         this.f = new Vector();
+        this.f.set(0, 0, 1);
         this.u = new Vector();
+        this.u.set(0, 1, 0);
     }
 
 
@@ -52,15 +54,18 @@ export class Pose {
      * @param {number} p
      */
     interpolate(start, end, t) {
-
-        if (end.t < t) {
+        if (t <= start.t) {
+            this.copy(start);
+        }
+        else if (end.t <= t) {
             this.copy(end);
         }
-        else if (t >= start.t) {
+        else if (start.t < t) {
             const p = project(t, start.t, end.t);
             this.p.lerp(start.p, end.p, p);
             this.f.slerp(start.f, end.f, p);
             this.u.slerp(start.u, end.u, p);
+            this.t = t;
         }
     }
 }

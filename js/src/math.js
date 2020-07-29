@@ -30,7 +30,13 @@ export function clamp(v, min, max) {
  * @param {number} max
  */
 export function project(v, min, max) {
-    return (v - min) / (max - min);
+    const delta = max - min;
+    if (delta === 0) {
+        return 0;
+    }
+    else {
+        return (v - min) / delta;
+    }
 }
 
 /**
