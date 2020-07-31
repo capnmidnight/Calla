@@ -1289,7 +1289,7 @@ export function gridTemplateRows(v) { return new CssProp("gridTemplateRows", v);
  * @param {string} v
  * @returns {HtmlAttr}
  **/
-export function height(v) { return new CssProp("height", v); }
+export function cssHeight(v) { return new CssProp("height", v); }
 
 /**
  * Creates a style attribute with a hyphens property.
@@ -2542,7 +2542,7 @@ export function widows(v) { return new CssProp("widows", v); }
  * @param {string} v
  * @returns {HtmlAttr}
  **/
-export function width(v) { return new CssProp("width", v); }
+export function cssWidth(v) { return new CssProp("width", v); }
 
 /**
  * Creates a style attribute with a willChange property.

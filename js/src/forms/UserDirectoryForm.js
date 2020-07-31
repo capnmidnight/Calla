@@ -1,5 +1,5 @@
 ﻿import { height, width } from "../html/attrs.js";
-import { backgroundColor, columnGap, width as cssWidth, zIndex } from "../html/css.js";
+import { backgroundColor, columnGap, cssWidth, zIndex } from "../html/css.js";
 import { onClick, onMouseOut, onMouseOver } from "../html/evts.js";
 import { gridDef, gridPos, row } from "../html/grid.js";
 import { Canvas, Div } from "../html/tags.js";

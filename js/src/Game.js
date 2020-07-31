@@ -3,12 +3,12 @@ import { Emote } from "./Emote.js";
 import { EventedGamepad } from "./input/EventedGamepad.js";
 import { id } from "./html/attrs.js";
 import { resizeCanvas } from "./html/canvas.js";
-import { height, touchAction, width } from "./html/css.js";
+import { cssHeight, touchAction, cssWidth } from "./html/css.js";
 import { isFirefox } from "./html/flags.js";
 import { Canvas } from "./html/tags.js";
 import { clamp, lerp, project, unproject } from "./math.js";
 import { arrayClear, arrayRemoveAt } from "./protos/Array.js";
-import { TileMap } from "./TileMap.js";
+import { TileMap } from "./graphics/TileMap.js";
 import { User } from "./User.js";
 import { isString } from "./typeChecks.js";
 
@@ -46,8 +46,8 @@ export class Game extends EventTarget {
 
         this.element = Canvas(
             id("frontBuffer"),
-            width("100%"),
-            height("100%"),
+            cssWidth("100%"),
+            cssHeight("100%"),
             touchAction("none"));
         this.gFront = this.element.getContext("2d");
 

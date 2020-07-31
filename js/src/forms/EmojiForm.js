@@ -1,10 +1,12 @@
-﻿import { allIcons as icons, EmojiGroup, emojiStyle, textStyle } from "../emoji/emoji.js";
+﻿import { allIcons as icons } from "../emoji/emojis.js";
+import { EmojiGroup } from "../emoji/EmojiGroup.js";
+import { emojiStyle, textStyle } from "../emoji/emojis.js";
 import { className, href, htmlFor, title } from "../html/attrs.js";
-import { width, color, fontSize, styles, textDecoration, textTransform } from "../html/css.js";
-import { gridPos } from "../html/grid.js";
+import { color, cssWidth, fontSize, styles, textDecoration, textTransform } from "../html/css.js";
 import { onClick } from "../html/evts.js";
+import { gridPos } from "../html/grid.js";
 import { A, Button, Div, H1, H2, Label, LI, P, Span, UL } from "../html/tags.js";
-import "../protos.js";
+import "../protos/index.js";
 import { FormDialog } from "./FormDialog.js";
 
 
@@ -14,7 +16,7 @@ const headerStyle = styles(
     textTransform("capitalize"));
 const buttonStyle = styles(
     fontSize("200%"),
-    width("2em"));
+    cssWidth("2em"));
 const cancelEvt = new Event("emojiCanceled");
 
 export class EmojiForm extends FormDialog {

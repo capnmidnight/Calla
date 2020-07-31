@@ -1,5 +1,5 @@
 ﻿import { SFX } from "./audio/SFX.js";
-import { allPeople as people } from "./emoji/emoji.js";
+import { allPeople as people } from "./emoji/emojis.js";
 import { EmojiForm } from "./forms/EmojiForm.js";
 import { FooterBar } from "./forms/FooterBar.js";
 import { FormDialog } from "./forms/FormDialog.js";
@@ -23,8 +23,8 @@ console.log(`${versionString}`);
 export function init(client) {
     const settings = new Settings(),
         sound = new SFX()
-            .add("join", "/audio/door-open.ogg", "/audio/door-open.mp3", "/audio/door-open.wav")
-            .add("leave", "/audio/door-close.ogg", "/audio/door-close.mp3", "/audio/door-close.wav"),
+            .add("join", "audio/door-open.ogg", "audio/door-open.mp3", "audio/door-open.wav")
+            .add("leave", "audio/door-close.ogg", "audio/door-close.mp3", "audio/door-close.wav"),
         game = new Game(),
         login = new LoginForm(),
         directory = new UserDirectoryForm(),

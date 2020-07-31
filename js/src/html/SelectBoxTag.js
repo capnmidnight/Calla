@@ -1,4 +1,4 @@
-﻿import "../protos.js";
+﻿import "../protos/index.js";
 import { HtmlCustomTag } from "./HtmlCustomTag.js";
 import { isFunction } from "../typeChecks.js";
 import { clear, Option } from "./tags.js";

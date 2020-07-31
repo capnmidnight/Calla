@@ -1,4 +1,4 @@
-﻿import "../protos.js";
+﻿import "../protos/index.js";
 import { Input, Label } from "./tags.js";
 import { htmlFor, type } from "./attrs.js";
 import { HtmlCustomTag } from "./HtmlCustomTag.js";

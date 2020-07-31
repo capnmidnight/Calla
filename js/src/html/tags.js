@@ -624,7 +624,7 @@ export function Main(...rest) { return tag("main", ...rest); }
  * @param {...TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLMapElement}
  */
-export function Map(...rest) { return tag("map", ...rest); }
+export function HtmlMap(...rest) { return tag("map", ...rest); }
 
 /**
  * creates an HTML Mark tag

@@ -1,11 +1,11 @@
 ﻿import { EventedGamepad } from "../input/EventedGamepad.js";
 import { disabled, height, htmlFor, id, max, min, placeHolder, step, value, width } from "../html/attrs.js";
-import { backgroundColor, borderBottom, borderLeft, borderRight, styles, width as cssWidth } from "../html/css.js";
+import { backgroundColor, borderBottom, borderLeft, borderRight, styles, cssWidth } from "../html/css.js";
 import { onClick, onInput, onKeyUp } from "../html/evts.js";
 import { gridColsDef } from "../html/grid.js";
 import { Button, Canvas, Div, InputURL, Label, LabeledInput, LabeledSelectBox, OptionPanel, P } from "../html/tags.js";
 import { isGoodNumber } from "../math.js";
-import "../protos.js";
+import "../protos/index.js";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 import { isString } from "../typeChecks.js";
 import { User } from "../User.js";

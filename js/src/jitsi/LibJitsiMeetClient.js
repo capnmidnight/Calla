@@ -4,7 +4,7 @@ import { AudioActivityEvent } from "../audio/AudioActivityEvent.js";
 import { AudioManager as AudioClient } from "../audio/AudioManager.js";
 import { canChangeAudioOutput } from "../audio/canChangeAudioOutput.js";
 import { BaseJitsiClient } from "./BaseJitsiClient.js";
-import { JITSI_HOST, JVB_HOST, JVB_MUC } from "/constants.js";
+import "../../lib/jquery.min.js";
 
 /**
  * @typedef {object} JitsiTrack
@@ -51,8 +51,18 @@ function setLoggers(source, evtObj) {
 // Manages communication between Jitsi Meet and Calla
 export class LibJitsiMeetClient extends BaseJitsiClient {
 
-    constructor() {
+    /**
+     * @param {string} JITSI_HOST
+     * @param {string} JVB_HOST
+     * @param {string} JVB_MUC
+     */
+    constructor(JITSI_HOST, JVB_HOST, JVB_MUC) {
         super();
+
+        this.host = JITSI_HOST;
+        this.bridgeHost = JVB_HOST;
+        this.bridgeMUC = JVB_MUC;
+
         this.joined = false;
         this.connection = null;
         this.conference = null;
@@ -67,9 +77,8 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
     }
 
     async initializeAsync(roomName, userName) {
-        console.info("Connecting to:", JITSI_HOST);
-        await import(`${window.location.origin}/lib/jquery.min.js`);
-        await import(`https://${JITSI_HOST}/libs/lib-jitsi-meet.min.js`);
+        console.info("Connecting to:", this.host);
+        await import(`https://${this.host}/libs/lib-jitsi-meet.min.js`);
 
         roomName = roomName.toLocaleLowerCase();
 
@@ -78,10 +87,10 @@ export class LibJitsiMeetClient extends BaseJitsiClient {
 
         this.connection = new JitsiMeetJS.JitsiConnection(null, null, {
             hosts: {
-                domain: JVB_HOST,
-                muc: JVB_MUC
+                domain: this.bridgeHost,
+                muc: this.bridgeMUC
             },
-            serviceUrl: `https://${JITSI_HOST}/http-bind`,
+            serviceUrl: `https://${this.host}/http-bind`,
             enableLipSync: true
         });
 

@@ -1,6 +1,6 @@
-﻿import { mutedSpeaker, noMobilePhone, speakerHighVolume, upwardsButton, videoCamera, whiteFlower } from "../emoji/emoji.js";
+﻿import { mutedSpeaker, noMobilePhone, speakerHighVolume, upwardsButton, videoCamera, whiteFlower } from "../emoji/emojis.js";
 import { id, title } from "../html/attrs.js";
-import { backgroundColor, borderLeft, borderRight, columnGap, height, width, fontSize, padding, pointerEvents, styles, textAlign } from "../html/css.js";
+import { backgroundColor, borderLeft, borderRight, columnGap, cssHeight, cssWidth, fontSize, padding, pointerEvents, styles, textAlign } from "../html/css.js";
 import { onClick } from "../html/evts.js";
 import { gridColsDef, gridPos } from "../html/grid.js";
 import { Button, Div, Run, Span } from "../html/tags.js";
@@ -11,12 +11,12 @@ const toggleAudioEvt = new Event("toggleAudio"),
     selectEmojiEvt = new Event("selectEmoji"),
     subelStyle = styles(
         fontSize("1.25em"),
-        width("3em"),
-        height("100%")),
+        cssWidth("3em"),
+        cssHeight("100%")),
     pointerEventsAll = pointerEvents("all"),
     subButtonStyle = styles(
         fontSize("1.25em"),
-        height("100%")),
+        cssHeight("100%")),
     buttonLabelStyle = fontSize("12px");
 
 export class FooterBar extends EventTarget {
@@ -32,7 +32,7 @@ export class FooterBar extends EventTarget {
             id("footbar"),
             gridColsDef("auto", "1fr", "auto"),
             padding("4px"),
-            width("100%"),
+            cssWidth("100%"),
             columnGap("5px"),
             backgroundColor("transparent"),
             pointerEvents("none"),

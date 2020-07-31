@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html>
+<html lang="en-us">
+<head prefix="og: http://ogp.me/ns#">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, shrink-to-fit=0, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>Minimum Calla Setup</title>
+    <script type="module" src="index.js"></script>
+    <base href="../../" />
+    <link type="text/css" rel="stylesheet" href="stylesheets/general.css" />
+</head>
+<body>
+    <div id="login" class="dialog">
+        <h1>
+            Calla
+            <a href="https://github.com/capnmidnight/Calla" target="_blank" rel="noopener">
+                <span class="icon icon-github" title="Follow Calla on Github" aria-label="Follow Calla on Git Hub"></span>
+            </a>
+        </h1>
+        <div class="header">
+            <form autocomplete="on" style="display: grid; grid-template-rows: auto; grid-template-columns: 2fr 4fr 2fr;margin-right:2em">
+                <label for="roomSelector" style="grid-area: 1/1/auto/auto;">Room:</label>
+                <select id="roomSelector" style="grid-area: 1/2/auto/auto;">
+                    <option>Calla</option>
+                    <option>Island</option>
+                    <option>Alexandria Code &amp; Coffee</option>
+                    <option>Vurv</option>
+                </select>
+                <input id="roomName" type="text" autocomplete="off" placeholder="(Required)" style="display: none; grid-area: 1/2/auto/auto;">
+                <button id="createNewRoom" title="Create a new, temporary room" type="button" style="grid-area: 1/3/auto/auto;">New</button>
+                <label for="userName" style="grid-area: 2/1/auto/auto;">User:</label>
+                <input id="userName" placeholder="(Required)" type="text" style="grid-area: 2/2/auto/auto;">
+                <button id="connect" title="Create a new, temporary room" disabled="" type="button" style="grid-area: 2/3/auto/auto;">Loading...</button>
+            </form>
+        </div>
+        <div class="content"></div>
+        <div class="footer"></div>
+    </div>
+</body>
+</html>

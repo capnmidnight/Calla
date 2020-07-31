@@ -1,13 +1,7 @@
 export default [{
-    input: "index.js",
+    input: "src/index.js",
     output: {
-        file: "bundle.js",
+        file: "Calla.js",
         format: "es"
     }
-}, {
-	input: "versionIndex.js",
-	output: {
-		file: "version.js",
-		format: "es"
-	}
 }];

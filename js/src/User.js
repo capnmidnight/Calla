@@ -3,10 +3,10 @@ import { AvatarMode, BaseAvatar } from "./avatars/BaseAvatar.js";
 import { EmojiAvatar } from "./avatars/EmojiAvatar.js";
 import { PhotoAvatar } from "./avatars/PhotoAvatar.js";
 import { VideoAvatar } from "./avatars/VideoAvatar.js";
-import { bust, mutedSpeaker, speakerMediumVolume } from "./emoji/emoji.js";
+import { bust, mutedSpeaker, speakerMediumVolume } from "./emoji/emojis.js";
 import { TextImage } from "./graphics/TextImage.js";
 import { project } from "./math.js";
-import "./protos.js";
+import "./protos/index.js";
 import { isString } from "./typeChecks.js";
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1,

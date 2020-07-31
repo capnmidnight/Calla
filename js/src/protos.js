@@ -1,1 +1,0 @@
-﻿import "./protos/index.js";

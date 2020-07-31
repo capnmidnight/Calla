@@ -1,2 +1,2 @@
-cmd /C "npm version major"
+cmd /C npm version major
 pkg

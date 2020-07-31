@@ -1,10 +1,10 @@
-﻿import { close } from "../emoji/emoji.js";
+﻿import { close } from "../emoji/emojis.js";
 import { className, id } from "../html/attrs.js";
 import { display, flexDirection, margin, overflowY, padding, styles } from "../html/css.js";
 import { onClick } from "../html/evts.js";
 import { col, gridColsDef, gridDef, gridPos } from "../html/grid.js";
 import { Button, Div, H1 } from "../html/tags.js";
-import "../protos.js";
+import "../protos/index.js";
 
 const hiddenEvt = new Event("hidden");
 

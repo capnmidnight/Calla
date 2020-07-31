@@ -1,2 +1,2 @@
-cmd /C "npm version minor"
+cmd /C npm version minor
 pkg

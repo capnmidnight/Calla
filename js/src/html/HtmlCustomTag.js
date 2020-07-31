@@ -1,4 +1,4 @@
-﻿import "../protos.js";
+﻿import "../protos/index.js";
 import { tag } from "./tag.js";
 
 /**
