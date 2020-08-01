@@ -1,4 +1,4 @@
-﻿import { arrayRandom } from "../protos/Array.js";
+﻿import { arrayRandom } from "../arrays.js";
 import { Emoji } from "./Emoji.js";
 
 export class EmojiGroup extends Emoji {

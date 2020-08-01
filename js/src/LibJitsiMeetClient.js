@@ -4,7 +4,7 @@ import "../lib/jquery.min.js";
 import { AudioActivityEvent } from "./audio/AudioActivityEvent.js";
 import { AudioManager } from "./audio/AudioManager.js";
 import { canChangeAudioOutput } from "./audio/canChangeAudioOutput.js";
-import { arrayClear, arrayScan } from "./protos/Array.js";
+import { arrayClear, arrayScan } from "./arrays.js";
 import { isNumber } from "./typeChecks.js";
 
 class JitsiClientEvent extends Event {

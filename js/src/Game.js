@@ -7,7 +7,7 @@ import { cssHeight, touchAction, cssWidth } from "./html/css.js";
 import { isFirefox } from "./html/flags.js";
 import { Canvas } from "./html/tags.js";
 import { clamp, lerp, project, unproject } from "./math.js";
-import { arrayClear, arrayRemoveAt } from "./protos/Array.js";
+import { arrayClear, arrayRemoveAt } from "./arrays.js";
 import { TileMap } from "./graphics/TileMap.js";
 import { User } from "./User.js";
 import { isString } from "./typeChecks.js";
