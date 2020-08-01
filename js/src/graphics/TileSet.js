@@ -10,7 +10,10 @@
 
     async load() {
         const response = await fetch(this.url),
-            tileset = await response.xml(),
+            text = await response.text(),
+            parser = new DOMParser(),
+            xml = parser.parseFromString(text, "text/xml"),
+            tileset = xml.documentElement,
             imageLoad = new Promise((resolve, reject) => {
                 this.image.addEventListener("load", (evt) => {
                     this.tilesPerRow = Math.floor(this.image.width / this.tileWidth);

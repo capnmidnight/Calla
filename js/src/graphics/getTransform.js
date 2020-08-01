@@ -46,7 +46,7 @@ else {
      * @param {CanvasRenderingContext2D} g
      */
     _getTransform = (g) => {
-        return getTransform(g);
+        return g.getTransform();
     }
 }
 

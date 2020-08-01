@@ -41,7 +41,10 @@ export class TileMap {
     async load() {
         const self = selfs.get(this),
             response = await fetch(self.url.href),
-            map = await response.xml(),
+            text = await response.text(),
+            parser = new DOMParser(),
+            xml = parser.parseFromString(text, "text/xml"),
+            map = xml.documentElement,
             width = 1 * map.getAttribute("width"),
             height = 1 * map.getAttribute("height"),
             tileWidth = 1 * map.getAttribute("tilewidth"),

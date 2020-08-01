@@ -1,6 +1,6 @@
-﻿import { isGoodNumber } from "../math.js";
+﻿import { arrayRemoveAt } from "../arrays.js";
+import { isGoodNumber } from "../math.js";
 import { isFunction, isNumber, isString } from "../typeChecks.js";
-import { arrayRemoveAt } from "./Array.js";
 
 function add(a, b) {
     return evt => {
