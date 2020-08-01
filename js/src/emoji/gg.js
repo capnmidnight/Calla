@@ -1,5 +1,5 @@
-﻿import { Emoji } from "./Emoji";
-import { EmojiGroup, g } from "./EmojiGroup";
+﻿import { Emoji } from "./Emoji.js";
+import { EmojiGroup, g } from "./EmojiGroup.js";
 
 /**
  * A shorthand for `new EmojiGroup` that allows for setting optional properties

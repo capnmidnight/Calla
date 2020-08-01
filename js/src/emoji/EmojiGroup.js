@@ -1,5 +1,5 @@
 ﻿import { arrayRandom } from "../protos/Array.js";
-import { Emoji } from "./Emoji";
+import { Emoji } from "./Emoji.js";
 
 export class EmojiGroup extends Emoji {
     /**

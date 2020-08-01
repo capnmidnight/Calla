@@ -1,7 +1,7 @@
 ﻿import "../protos/index.js";
-import { e } from "./Emoji";
-import { EmojiGroup, g } from "./EmojiGroup";
-import { gg } from "./gg";
+import { e } from "./Emoji.js";
+import { EmojiGroup, g } from "./EmojiGroup.js";
+import { gg } from "./gg.js";
 
 
 export const textStyle = e("\u{FE0E}", "Variation Selector-15: text style");
