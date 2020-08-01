@@ -2,8 +2,7 @@
 
 import "../lib/jquery.min.js";
 import { AudioActivityEvent } from "./audio/AudioActivityEvent.js";
-import { AudioManager as AudioClient } from "./audio/AudioManager.js";
-import { BaseAudioClient } from "./audio/BaseAudioClient.js";
+import { AudioManager } from "./audio/AudioManager.js";
 import { canChangeAudioOutput } from "./audio/canChangeAudioOutput.js";
 import { arrayClear, arrayScan } from "./protos/Array.js";
 import { isNumber } from "./typeChecks.js";
@@ -111,8 +110,8 @@ export class LibJitsiMeetClient extends EventTarget {
         this.joined = false;
         this.connection = null;
         this.conference = null;
-        this.audioClient = new AudioClient();
-        this.audioClient.addEventListener("audioActivity", (evt) => {
+        this.audio = new AudioManager();
+        this.audio.addEventListener("audioActivity", (evt) => {
             audioActivityEvt.id = evt.id;
             audioActivityEvt.isActive = evt.isActive;
             this.dispatchEvent(audioActivityEvt);
@@ -123,9 +122,6 @@ export class LibJitsiMeetClient extends EventTarget {
 
         /** @type {String} */
         this.localUser = null;
-
-        /** @type {BaseAudioClient} */
-        this.audioClient = null;
 
         this.preInitEvtQ = [];
 
@@ -138,7 +134,7 @@ export class LibJitsiMeetClient extends EventTarget {
         });
 
         this.addEventListener("userInitRequest", (evt) => {
-            const pose = this.audioClient.getLocalPose();
+            const pose = this.audio.getLocalPose();
             const { p } = pose;
             this.userInitResponse(evt.id, {
                 id: this.localUser,
@@ -283,7 +279,7 @@ export class LibJitsiMeetClient extends EventTarget {
                     id,
                     roomName,
                     displayName: userName,
-                    pose: this.audioClient.pose
+                    pose: this.audio.pose
                 }));
             });
 
@@ -317,7 +313,7 @@ export class LibJitsiMeetClient extends EventTarget {
                     new Event("participantJoined"), {
                     id,
                     displayName: user.getDisplayName(),
-                    pose: this.audioClient.createUser(id)
+                    pose: this.audio.createUser(id)
                 });
                 this.dispatchEvent(evt);
             });
@@ -367,7 +363,7 @@ export class LibJitsiMeetClient extends EventTarget {
                 inputs.set(trackKind, track);
 
                 if (trackKind === "audio" && !isLocal) {
-                    this.audioClient.setSource(userID, track.stream);
+                    this.audio.setSource(userID, track.stream);
                 }
 
                 this.dispatchEvent(trackAddedEvt);
@@ -394,7 +390,7 @@ export class LibJitsiMeetClient extends EventTarget {
                 }
 
                 if (trackKind === "audio" && !isLocal) {
-                    this.audioClient.setSource(userID, null);
+                    this.audio.setSource(userID, null);
                 }
 
                 track.dispose();
@@ -837,7 +833,7 @@ export class LibJitsiMeetClient extends EventTarget {
      * @param {number} transitionTime
      */
     setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
-        this.audioClient.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
+        this.audio.setAudioProperties(minDistance, maxDistance, rolloff, transitionTime);
     }
 
     /**
@@ -846,7 +842,7 @@ export class LibJitsiMeetClient extends EventTarget {
      * @param {number} y - the vertical component of the position.
      */
     setLocalPosition(x, y, z) {
-        this.audioClient.setLocalPosition(x, y, z);
+        this.audio.setLocalPosition(x, y, z);
         for (let toUserID of this.userIDs()) {
             this.sendMessageTo(toUserID, "userMoved", { x, y, z });
         }
@@ -860,11 +856,11 @@ export class LibJitsiMeetClient extends EventTarget {
      * @param {number} z - the lateral component of the position.
      */
     setUserPosition(id, x, y, z) {
-        this.audioClient.setUserPosition(id, x, y, z);
+        this.audio.setUserPosition(id, x, y, z);
     }
 
     removeUser(id) {
-        this.audioClient.removeUser(id);
+        this.audio.removeUser(id);
     }
 
     /**
@@ -953,6 +949,6 @@ export class LibJitsiMeetClient extends EventTarget {
     }
 
     startAudio() {
-        this.audioClient.start();
+        this.audio.start();
     }
 }

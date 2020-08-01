@@ -1,8 +1,8 @@
 ﻿import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 import { AudioActivityEvent } from "./AudioActivityEvent.js";
-import { BaseAudioClient } from "./BaseAudioClient.js";
 import { MockAudioContext } from "./MockAudioContext.js";
 import { InterpolatedPose } from "./positions/InterpolatedPose.js";
+import { Pose } from "./positions/Pose.js";
 import { AudioListenerNew } from "./spatializers/listeners/AudioListenerNew.js";
 import { AudioListenerOld } from "./spatializers/listeners/AudioListenerOld.js";
 import { BaseListener } from "./spatializers/listeners/BaseListener.js";
@@ -21,7 +21,7 @@ let hasAudioContext = Object.prototype.hasOwnProperty.call(window, "AudioContext
 /**
  * A manager of audio sources, destinations, and their spatialization.
  **/
-export class AudioManager extends BaseAudioClient {
+export class AudioManager extends EventTarget {
 
     /**
      * Creates a new manager of audio sources, destinations, and their spatialization.
@@ -164,6 +164,7 @@ export class AudioManager extends BaseAudioClient {
     }
 
     /**
+     * Create a new user for audio processing.
      * @param {string} id
      * @returns {InterpolatedPose}
      */
@@ -236,8 +237,9 @@ export class AudioManager extends BaseAudioClient {
         this.pose.setTarget(x, y, z, 0, 0, 1, 0, 1, 0, this.currentTime, this.transitionTime);
     }
 
+
     /**
-     * @returns {BaseAudioElement}
+     * @returns {Pose}
      **/
     getLocalPose() {
         return this.pose.end;
