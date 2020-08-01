@@ -1,4 +1,4 @@
-﻿import { init } from "../js/src/init.js";
+﻿import * as Calla from "../js/src/init.js";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "./constants.js";
 
-init(JITSI_HOST, JVB_HOST, JVB_MUC);
+Calla.init(JITSI_HOST, JVB_HOST, JVB_MUC);
