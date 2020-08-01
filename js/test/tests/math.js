@@ -1,4 +1,5 @@
-﻿import { lerp } from "../../src/math.js";
+﻿import { once } from "../../src/events/once.js";
+import { lerp } from "../../src/math.js";
 import "../../src/protos/index.js";
 import { TestCase } from "../testing/TestCase.js";
 
@@ -114,7 +115,7 @@ export class MathTests extends TestCase {
 
     async test_Mouse() {
         this.message("Move the mouse");
-        const evt = await window.once("mousemove", 5000);
+        const evt = await once(window, "mousemove", 5000);
         this.hasValue(evt);
     }
 }

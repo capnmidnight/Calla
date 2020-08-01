@@ -1,4 +1,5 @@
 ﻿import { bust } from "../../../src/emoji/index.js";
+import { once } from "../../../src/events/once.js";
 import { LibJitsiMeetClient } from "../../../src/LibJitsiMeetClient";
 import { wait } from "../../../src/wait.js";
 import { TestCase } from "../../testing/TestCase.js";
@@ -28,7 +29,7 @@ export class TestBase extends TestCase {
 
     async waitForJoin() {
         if (this.client.userIDs().length === 0) {
-            await this.client.once("participantJoined", 5000);
+            await once(this.client, "participantJoined", 5000);
         }
 
         this.isGreaterThan(this.client.userIDs().length, 0, "No users found");
@@ -62,7 +63,7 @@ export class TestBase extends TestCase {
     }
 
     async recvEmoji() {
-        const evt = await this.client.once("emote", 5000);
+        const evt = await once(this.client, "emote", 5000);
         this.hasValue(evt.id, "Other User ID");
         this.hasValue(evt.value, "Emoji value");
         this.hasValue(evt.desc, "Emoji description");
@@ -137,7 +138,7 @@ export class TestBase extends TestCase {
 
     async recvPosition() {
         const x = ((userNumber - 1) * 2 - 1) * -5;
-        const evt = await this.client.once("userMoved", 5000);
+        const evt = await once(this.client, "userMoved", 5000);
         this.hasValue(evt.id, "UserID");
         this.isTrue(this.client.userExists(evt.id), "Remote User");
         this.isEqualTo(evt.x, x);
@@ -151,7 +152,7 @@ export class TestBase extends TestCase {
     }
 
     async recvPhotoAvatar() {
-        const evt = await this.client.once("avatarChanged", 5000);
+        const evt = await once(this.client, "avatarChanged", 5000);
         this.hasValue(evt.id, "UserID");
         this.isTrue(this.client.userExists(evt.id), "Remote User");
         this.isEqualTo(evt.url, "https://www.seanmcbeth.com/2015-05.min.jpg", "Avatar URL");

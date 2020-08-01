@@ -1,5 +1,4 @@
 ﻿import { arrayRemoveAt } from "../arrays.js";
-import { isGoodNumber } from "../math.js";
 import { isFunction, isNumber, isString } from "../typeChecks.js";
 
 function add(a, b) {
@@ -100,56 +99,6 @@ try {
     window.EventTarget = EventTarget;
 }
 
-
-EventTarget.prototype.once = function (resolveEvt, rejectEvt, timeout) {
-
-    if (timeout === undefined
-        && isGoodNumber(rejectEvt)) {
-        timeout = rejectEvt;
-        rejectEvt = undefined;
-    }
-
-    return new Promise((resolve, reject) => {
-        const hasResolveEvt = isString(resolveEvt);
-        if (hasResolveEvt) {
-            const oldResolve = resolve;
-            const remove = () => {
-                this.removeEventListener(resolveEvt, oldResolve);
-            };
-            resolve = add(remove, resolve);
-            reject = add(remove, reject);
-        }
-
-        const hasRejectEvt = isString(rejectEvt);
-        if (hasRejectEvt) {
-            const oldReject = reject;
-            const remove = () => {
-                this.removeEventListener(rejectEvt, oldReject);
-            };
-
-            resolve = add(remove, resolve);
-            reject = add(remove, reject);
-        }
-
-        if (isNumber(timeout)) {
-            const timer = setTimeout(reject, timeout, `'${resolveEvt}' has timed out.`),
-                cancel = () => clearTimeout(timer);
-            resolve = add(cancel, resolve);
-            reject = add(cancel, reject);
-        }
-
-        if (hasResolveEvt) {
-            this.addEventListener(resolveEvt, resolve);
-        }
-
-        if (hasRejectEvt) {
-            this.addEventListener(rejectEvt, () => {
-                reject("Rejection event found");
-            });
-        }
-    });
-};
-
 EventTarget.prototype.when = function (resolveEvt, filterTest, timeout) {
 
     if (!isString(resolveEvt)) {
@@ -239,6 +188,5 @@ EventTarget.prototype.addEventListeners = function (obj) {
 if (oldEventTarget) {
     oldEventTarget.prototype.addEventListeners = EventTarget.prototype.addEventListeners;
     oldEventTarget.prototype.until = EventTarget.prototype.until;
-    oldEventTarget.prototype.once = EventTarget.prototype.once;
     oldEventTarget.prototype.when = EventTarget.prototype.when;
 }

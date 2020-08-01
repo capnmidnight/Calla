@@ -1,10 +1,11 @@
 ﻿/* global JitsiMeetJS */
 
 import "../lib/jquery.min.js";
+import { arrayClear, arrayScan } from "./arrays.js";
 import { AudioActivityEvent } from "./audio/AudioActivityEvent.js";
 import { AudioManager } from "./audio/AudioManager.js";
 import { canChangeAudioOutput } from "./audio/canChangeAudioOutput.js";
-import { arrayClear, arrayScan } from "./arrays.js";
+import { once } from "./events/once.js";
 import { isNumber } from "./typeChecks.js";
 
 class JitsiClientEvent extends Event {
@@ -462,7 +463,7 @@ export class LibJitsiMeetClient extends EventTarget {
     async joinAsync(roomName, userName) {
         this.dispose();
 
-        const joinTask = this.once("videoConferenceJoined");
+        const joinTask = once(this, "videoConferenceJoined");
 
         await this.initializeAsync(roomName, userName);
 
@@ -536,7 +537,7 @@ export class LibJitsiMeetClient extends EventTarget {
     }
 
     async leaveAsync() {
-        const leaveTask = this.once("videoConferenceLeft", 5000);
+        const leaveTask = once(this, "videoConferenceLeft", 5000);
         const maybeLeaveTask = this.leave();
         if (maybeLeaveTask instanceof Promise) {
             await maybeLeaveTask;
@@ -557,7 +558,7 @@ export class LibJitsiMeetClient extends EventTarget {
                 }
             }
 
-            const leaveTask = this.once("videoConferenceLeft", 3000);
+            const leaveTask = once(this, "videoConferenceLeft", 3000);
             this.conference.leave();
             leaveTask.then(() => {
                 this.connection.disconnect();

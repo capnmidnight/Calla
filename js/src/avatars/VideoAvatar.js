@@ -1,8 +1,9 @@
-﻿import { autoPlay, muted, playsInline, srcObject, volume } from "../html/attrs.js";
+﻿import { once } from "../events/once.js";
+import { autoPlay, muted, playsInline, srcObject, volume } from "../html/attrs.js";
+import { setContextSize } from "../html/canvas.js";
 import { isIOS } from "../html/flags.js";
 import { Video } from "../html/tags.js";
 import { BaseAvatar } from "./BaseAvatar.js";
-import { setContextSize } from "../html/canvas.js";
 
 /**
  * An avatar that uses an HTML Video element as its representation.
@@ -35,7 +36,7 @@ export class VideoAvatar extends BaseAvatar {
 
         if (!isIOS) {
             video.play();
-            video.once("canplay")
+            once(video, "canplay")
                 .then(() => video.play());
         }
     }

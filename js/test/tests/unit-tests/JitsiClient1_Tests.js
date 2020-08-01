@@ -1,6 +1,7 @@
-﻿import { TestBase } from "./TestBase.js";
+﻿import { once } from "../../../src/events/once.js";
 import { wait } from "../../../src/wait.js";
 import { openSideTest } from "../../testing/windowing.js";
+import { TestBase } from "./TestBase.js";
 
 const TEST_ROOM_NAME = "testroom";
 
@@ -217,7 +218,7 @@ export class JitsiClient1_Tests extends TestBase {
     }
 
     async test_998_participantLeft() {
-        const evt = await this.client.once("participantLeft", 5000);
+        const evt = await once(this.client, "participantLeft", 5000);
         this.hasValue(evt.id, "UserID");
         this.isFalse(this.client.userExists(evt.id), "Remote User");
     }

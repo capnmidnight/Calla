@@ -1,4 +1,5 @@
 ﻿import { close } from "../emoji/emojis.js";
+import { once } from "../events/once.js";
 import { className, id } from "../html/attrs.js";
 import { display, flexDirection, margin, overflowY, padding, styles } from "../html/css.js";
 import { onClick } from "../html/evts.js";
@@ -75,7 +76,7 @@ export class FormDialog extends EventTarget {
 
     async showAsync() {
         this.show();
-        await this.once("hidden");
+        await once(this, "hidden");
     }
 
     hide() {

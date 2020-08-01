@@ -1,4 +1,5 @@
-﻿import "../protos/index.js";
+﻿import { once } from "../events/once.js";
+import "../protos/index.js";
 import { tag } from "./tag.js";
 
 /**
@@ -84,7 +85,7 @@ export class HtmlCustomTag extends EventTarget {
      * @param {number} timeout - the number of milliseconds to wait for the resolveEvt, before rejecting.
      */
     async once(resolveEvt, rejectEvt, timeout) {
-        return await this.eventTarget.once(resolveEvt, rejectEvt, timeout);
+        return await once(this.eventTarget, resolveEvt, rejectEvt, timeout);
     }
 
     /**
