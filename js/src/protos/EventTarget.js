@@ -1,12 +1,6 @@
-﻿import { arrayRemoveAt } from "../arrays.js";
+﻿import { arrayRemoveAt } from "../arrays/arrayRemoveAt.js";
 import { isFunction, isNumber, isString } from "../typeChecks.js";
-
-function add(a, b) {
-    return evt => {
-        a(evt);
-        b(evt);
-    };
-}
+import { add } from "../events/add.js";
 
 let oldEventTarget = null;
 try {
@@ -172,21 +166,7 @@ EventTarget.prototype.until = function (untilEvt, callback, test, repeatTimeout,
     });
 };
 
-EventTarget.prototype.addEventListeners = function (obj) {
-    for (let evtName in obj) {
-        let callback = obj[evtName];
-        let opts = undefined;
-        if (callback instanceof Array) {
-            opts = callback[1];
-            callback = callback[0];
-        }
-
-        this.addEventListener(evtName, callback, opts);
-    }
-};
-
 if (oldEventTarget) {
-    oldEventTarget.prototype.addEventListeners = EventTarget.prototype.addEventListeners;
     oldEventTarget.prototype.until = EventTarget.prototype.until;
     oldEventTarget.prototype.when = EventTarget.prototype.when;
 }

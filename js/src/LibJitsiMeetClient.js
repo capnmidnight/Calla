@@ -1,10 +1,12 @@
 ﻿/* global JitsiMeetJS */
 
 import "../lib/jquery.min.js";
-import { arrayClear, arrayScan } from "./arrays.js";
+import { arrayClear } from "./arrays/arrayClear.js";
+import { arrayScan } from "./arrays/arrayScan.js";
 import { AudioActivityEvent } from "./audio/AudioActivityEvent.js";
 import { AudioManager } from "./audio/AudioManager.js";
 import { canChangeAudioOutput } from "./audio/canChangeAudioOutput.js";
+import { addEventListeners } from "./events/addEventListeners.js";
 import { once } from "./events/once.js";
 import { isNumber } from "./typeChecks.js";
 
@@ -467,7 +469,7 @@ export class LibJitsiMeetClient extends EventTarget {
 
         await this.initializeAsync(roomName, userName);
 
-        window.addEventListeners({
+        addEventListeners(window, {
             beforeunload: () => this.dispose(),
             pagehide: () => this.dispose()
         });

@@ -1,4 +1,5 @@
 ﻿import { OptionsForm } from "../../../src/forms/OptionsForm.js";
+import { addEventListeners } from "../../../src/events/addEventListeners.js";
 
 const options = new OptionsForm();
 document.body.appendChild(options.element);
@@ -15,7 +16,7 @@ function refreshGamepads() {
     options.gamepads = navigator.getGamepads();
 }
 
-window.addEventListeners({
+addEventListeners(window, {
     gamepadconnected: refreshGamepads,
     gamepaddisconnected: refreshGamepads
 });

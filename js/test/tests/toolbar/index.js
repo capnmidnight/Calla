@@ -1,6 +1,7 @@
 ﻿import { FooterBar } from "../../../src/forms/FooterBar.js";
 import { HeaderBar } from "../../../src/forms/HeaderBar.js";
 import { BR, P } from "../../../src/html/tags.js";
+import { addEventListeners } from "../../../src/events/addEventListeners.js";
 
 const headbar = new HeaderBar();
 const footbar = new FooterBar();
@@ -21,7 +22,7 @@ function echo(evt) {
     }, 3000);
 }
 
-headbar.addEventListeners({
+addEventListeners(headbar, {
     options: echo,
     tweet: echo,
     leave: echo,
@@ -31,13 +32,13 @@ headbar.addEventListeners({
     toggleFullscreen: echo
 });
 
-footbar.addEventListeners({
+addEventListeners(footbar, {
     toggleAudio: echo,
     emote: echo,
     selectEmoji: echo
 });
 
-footbar.addEventListeners({
+addEventListeners(footbar, {
     toggleAudio: (evt) => {
         footbar.audioEnabled = !footbar.audioEnabled;
     },

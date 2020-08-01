@@ -1,5 +1,6 @@
 ﻿import { SFX } from "./audio/SFX.js";
 import { allPeople as people } from "./emoji/emojis.js";
+import { addEventListeners } from "./events/addEventListeners.js";
 import { EmojiForm } from "./forms/EmojiForm.js";
 import { FooterBar } from "./forms/FooterBar.js";
 import { FormDialog } from "./forms/FormDialog.js";
@@ -151,7 +152,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
 
     showLogin();
 
-    window.addEventListeners({
+    addEventListeners(window, {
         gamepadconnected: refreshGamepads,
         gamepaddisconnected: refreshGamepads,
 
@@ -179,7 +180,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         }
     };
 
-    headbar.addEventListeners({
+    addEventListeners(headbar, {
         toggleOptions: showView(options),
         toggleInstructions: showView(login),
         toggleUserDirectory: showView(directory),
@@ -196,7 +197,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         }
     });
 
-    footbar.addEventListeners({
+    addEventListeners(footbar, {
         selectEmoji: selectEmojiAsync,
 
         emote: () => {
@@ -250,7 +251,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
     });
 
 
-    options.addEventListeners({
+    addEventListeners(options, {
         audioPropertiesChanged: setAudioProperties,
 
         selectAvatar: async () => {
@@ -318,7 +319,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         }
     });
 
-    game.addEventListeners({
+    addEventListeners(game, {
         emojiNeeded: selectEmojiAsync,
 
         emote: (evt) => {
@@ -376,7 +377,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         game.visit(evt.id);
     });
 
-    client.addEventListeners({
+    addEventListeners(client, {
 
         videoConferenceLeft: () => {
             game.end();

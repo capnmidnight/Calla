@@ -1,4 +1,6 @@
 ﻿import { isGoodNumber } from "../math.js";
+import { isString, isNumber } from "../typeChecks.js";
+import { add } from "./add.js";
 
 /**
  * 

@@ -1,4 +1,4 @@
-﻿export * from "./arrays.js";
+﻿export * from "./arrays/index.js";
 export * from "./audio/index.js";
 export * from "./avatars/index.js";
 export * from "./BaseUser.js";
