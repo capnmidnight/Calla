@@ -1,17 +1,18 @@
-import { Pose } from "./audio/positions/Pose.js";
-import { Emote } from "./Emote.js";
-import { EventedGamepad } from "./input/EventedGamepad.js";
-import { id } from "./html/attrs.js";
-import { resizeCanvas } from "./html/canvas.js";
-import { cssHeight, touchAction, cssWidth } from "./html/css.js";
-import { isFirefox } from "./html/flags.js";
-import { Canvas } from "./html/tags.js";
-import { clamp, lerp, project, unproject } from "./math.js";
 import { arrayClear } from "./arrays/arrayClear.js";
 import { arrayRemoveAt } from "./arrays/arrayRemoveAt.js";
+import { Pose } from "./audio/positions/Pose.js";
+import { Emote } from "./Emote.js";
+import { EventBase } from "./events/EventBase.js";
 import { TileMap } from "./graphics/TileMap.js";
-import { User } from "./User.js";
+import { id } from "./html/attrs.js";
+import { resizeCanvas } from "./html/canvas.js";
+import { cssHeight, cssWidth, touchAction } from "./html/css.js";
+import { isFirefox } from "./html/flags.js";
+import { Canvas } from "./html/tags.js";
+import { EventedGamepad } from "./input/EventedGamepad.js";
+import { clamp, lerp, project, unproject } from "./math.js";
 import { isString } from "./typeChecks.js";
+import { User } from "./User.js";
 
 const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_MAX = 8,
@@ -40,7 +41,7 @@ const CAMERA_LERP = 0.01,
 /** @type {Map.<Game, EventedGamepad>} */
 const gamepads = new Map();
 
-export class Game extends EventTarget {
+export class Game extends EventBase {
 
     constructor() {
         super();

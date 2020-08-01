@@ -1,9 +1,10 @@
-﻿import { TestOutputResultsEvent } from "./TestOutputResultsEvent.js";
-import { TestStates } from "./TestStates.js";
+﻿import { EventBase } from "../../src/events/EventBase.js";
+import { TestOutputResultsEvent } from "./TestOutputResultsEvent.js";
 import { TestRunner } from "./TestRunner.js";
 import { TestRunnerResultsEvent } from "./TestRunnerResultsEvent.js";
+import { TestStates } from "./TestStates.js";
 
-export class TestOutput extends EventTarget {
+export class TestOutput extends EventBase {
     constructor(...rest) {
         super();
         this.rest = rest;

@@ -1,10 +1,11 @@
-﻿import { Audio, Source } from "../html/tags.js";
-import { controls, src, playsInline } from "../html/attrs.js";
+﻿import { EventBase } from "../events/EventBase.js";
+import { controls, playsInline, src } from "../html/attrs.js";
+import { Audio, Source } from "../html/tags.js";
 
 /**
  * A sound effects palette.
  **/
-export class SFX extends EventTarget {
+export class SFX extends EventBase {
 
     /**
      * Creates a new sound effects palette.

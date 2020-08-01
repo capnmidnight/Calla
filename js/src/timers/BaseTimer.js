@@ -1,8 +1,10 @@
-﻿const tickEvt = Object.assign(new Event("tick"), {
+﻿import { EventBase } from "../events/EventBase.js";
+
+const tickEvt = Object.assign(new Event("tick"), {
     dt: 0
 });
 
-export class BaseTimer extends EventTarget {
+export class BaseTimer extends EventBase {
 
     /**
      * 

@@ -1,11 +1,12 @@
-﻿import { once } from "../events/once.js";
+﻿import { EventBase } from "../events/EventBase.js";
+import { once } from "../events/once.js";
 import "../protos/index.js";
 import { tag } from "./tag.js";
 
 /**
  * A pseudo-element that is made out of other elements.
  **/
-export class HtmlCustomTag extends EventTarget {
+export class HtmlCustomTag extends EventBase {
     /**
      * Creates a new pseudo-element
      * @param {string} tagName - the type of tag that will contain the elements in the custom tag.

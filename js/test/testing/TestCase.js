@@ -1,8 +1,9 @@
-﻿import { TestCaseMessageEvent } from "./TestCaseMessageEvent.js";
-import { TestCaseSuccessEvent } from "./TestCaseSuccessEvent.js";
+﻿import { EventBase } from "../../src/events/EventBase.js";
 import { TestCaseFailEvent } from "./TestCaseFailEvent.js";
+import { TestCaseMessageEvent } from "./TestCaseMessageEvent.js";
+import { TestCaseSuccessEvent } from "./TestCaseSuccessEvent.js";
 
-export class TestCase extends EventTarget {
+export class TestCase extends EventBase {
     setup() { }
     teardown() { }
     message(msg) {

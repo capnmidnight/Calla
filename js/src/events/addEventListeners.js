@@ -1,4 +1,5 @@
-﻿/**
+﻿
+/**
  * 
  * @param {EventBase|EventTarget} target
  * @param {any} obj

@@ -1,4 +1,5 @@
-﻿import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
+﻿import { EventBase } from "../events/EventBase.js";
+import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 import { AudioActivityEvent } from "./AudioActivityEvent.js";
 import { MockAudioContext } from "./MockAudioContext.js";
 import { InterpolatedPose } from "./positions/InterpolatedPose.js";
@@ -21,7 +22,7 @@ let hasAudioContext = Object.prototype.hasOwnProperty.call(window, "AudioContext
 /**
  * A manager of audio sources, destinations, and their spatialization.
  **/
-export class AudioManager extends EventTarget {
+export class AudioManager extends EventBase {
 
     /**
      * Creates a new manager of audio sources, destinations, and their spatialization.

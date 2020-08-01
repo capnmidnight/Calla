@@ -1,4 +1,5 @@
 ﻿import { door, downRightArrow, gear, questionMark, speakingHead, squareFourCourners } from "../emoji/emojis.js";
+import { EventBase } from "../events/EventBase.js";
 import { alt, id, role, src, title } from "../html/attrs.js";
 import { backgroundColor, columnGap, cssHeight, cssWidth, fontSize, marginBottom, padding, pointerEvents, styles } from "../html/css.js";
 import { onClick } from "../html/evts.js";
@@ -18,7 +19,7 @@ const toggleOptionsEvt = new Event("toggleOptions"),
         cssHeight("100%")),
     buttonLabelStyle = fontSize("12px");
 
-export class HeaderBar extends EventTarget {
+export class HeaderBar extends EventBase {
     constructor() {
         super();
 

@@ -1,7 +1,8 @@
-﻿import { Pose } from "../positions/Pose.js";
+﻿import { EventBase } from "../../events/EventBase.js";
+import { Pose } from "../positions/Pose.js";
 
 /** Base class providing functionality for spatializers. */
-export class BaseSpatializer extends EventTarget {
+export class BaseSpatializer extends EventBase {
 
     /**
      * Creates a spatializer that keeps track of position

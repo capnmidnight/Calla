@@ -1,4 +1,5 @@
 ﻿import { mutedSpeaker, noMobilePhone, speakerHighVolume, upwardsButton, videoCamera, whiteFlower } from "../emoji/emojis.js";
+import { EventBase } from "../events/EventBase.js";
 import { id, title } from "../html/attrs.js";
 import { backgroundColor, borderLeft, borderRight, columnGap, cssHeight, cssWidth, fontSize, padding, pointerEvents, styles, textAlign } from "../html/css.js";
 import { onClick } from "../html/evts.js";
@@ -19,7 +20,7 @@ const toggleAudioEvt = new Event("toggleAudio"),
         cssHeight("100%")),
     buttonLabelStyle = fontSize("12px");
 
-export class FooterBar extends EventTarget {
+export class FooterBar extends EventBase {
     constructor() {
         super();
 

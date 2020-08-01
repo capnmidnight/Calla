@@ -1,4 +1,5 @@
 ﻿import { close } from "../emoji/emojis.js";
+import { EventBase } from "../events/EventBase.js";
 import { once } from "../events/once.js";
 import { className, id } from "../html/attrs.js";
 import { display, flexDirection, margin, overflowY, padding, styles } from "../html/css.js";
@@ -9,7 +10,7 @@ import "../protos/index.js";
 
 const hiddenEvt = new Event("hidden");
 
-export class FormDialog extends EventTarget {
+export class FormDialog extends EventBase {
     constructor(name, header) {
         super();
 

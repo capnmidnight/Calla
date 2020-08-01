@@ -1,4 +1,5 @@
-﻿import { isFunction } from "../../src/typeChecks.js";
+﻿import { EventBase } from "../../../js/src/events/EventBase.js";
+import { isFunction } from "../../src/typeChecks.js";
 import { TestCaseFailEvent } from "./TestCaseFailEvent.js";
 import { TestCaseMessageEvent } from "./TestCaseMessageEvent.js";
 import { TestRunnerResultsEvent } from "./TestRunnerResultsEvent.js";
@@ -17,7 +18,7 @@ function isTest(testCase, name, testName) {
         && testCase[name] instanceof Function;
 }
 
-export class TestRunner extends EventTarget {
+export class TestRunner extends EventBase {
 
     constructor(...rest) {
         super();

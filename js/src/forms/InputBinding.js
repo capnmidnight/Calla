@@ -1,6 +1,7 @@
 ﻿const inputBindingChangedEvt = new Event("inputBindingChanged");
+import { EventBase } from "../events/EventBase.js";
 
-export class InputBinding extends EventTarget {
+export class InputBinding extends EventBase {
     constructor() {
         super();
 

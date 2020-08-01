@@ -4,6 +4,7 @@ import { EmojiAvatar } from "./avatars/EmojiAvatar.js";
 import { PhotoAvatar } from "./avatars/PhotoAvatar.js";
 import { VideoAvatar } from "./avatars/VideoAvatar.js";
 import { bust, mutedSpeaker, speakerMediumVolume } from "./emoji/emojis.js";
+import { EventBase } from "./events/EventBase.js";
 import { getTransform } from "./graphics/getTransform.js";
 import { TextImage } from "./graphics/TextImage.js";
 import { project } from "./math.js";
@@ -20,7 +21,7 @@ const POSITION_REQUEST_DEBOUNCE_TIME = 1,
 muteAudioIcon.value = mutedSpeaker.value;
 speakerActivityIcon.value = speakerMediumVolume.value;
 
-export class User extends EventTarget {
+export class User extends EventBase {
     /**
      * 
      * @param {string} id

@@ -1,6 +1,8 @@
-﻿const gamepadStates = new Map();
+﻿import { EventBase } from "../events/EventBase.js";
 
-export class EventedGamepad extends EventTarget {
+const gamepadStates = new Map();
+
+export class EventedGamepad extends EventBase {
     constructor(pad) {
         super();
         if (!(pad instanceof Gamepad)) {

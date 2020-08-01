@@ -1,6 +1,7 @@
 ﻿import { isGoodNumber } from "../math.js";
-import { isString, isNumber } from "../typeChecks.js";
+import { isNumber, isString } from "../typeChecks.js";
 import { add } from "./add.js";
+import { EventBase } from "./EventBase.js";
 
 /**
  * 

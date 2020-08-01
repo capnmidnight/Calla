@@ -7,7 +7,11 @@ import { AudioActivityEvent } from "./audio/AudioActivityEvent.js";
 import { AudioManager } from "./audio/AudioManager.js";
 import { canChangeAudioOutput } from "./audio/canChangeAudioOutput.js";
 import { addEventListeners } from "./events/addEventListeners.js";
+import { EventBase } from "./events/EventBase.js";
 import { once } from "./events/once.js";
+import { until } from "./events/until.js";
+import { when } from "./events/when.js";
+import { isGoodNumber } from "./math.js";
 import { isNumber } from "./typeChecks.js";
 
 class JitsiClientEvent extends Event {
@@ -96,7 +100,7 @@ function setLoggers(source, evtObj) {
 }
 
 // Manages communication between Jitsi Meet and Calla
-export class LibJitsiMeetClient extends EventTarget {
+export class LibJitsiMeetClient extends EventBase {
 
     /**
      * @param {string} JITSI_HOST
@@ -635,7 +639,7 @@ export class LibJitsiMeetClient extends EventTarget {
     }
 
     taskOf(evt) {
-        return this.when(evt, (evt) => evt.id === this.localUser, 5000);
+        return when(this, evt, (evt) => evt.id === this.localUser, 5000);
     }
 
     getCurrentMediaTrack(type) {
@@ -918,9 +922,12 @@ export class LibJitsiMeetClient extends EventTarget {
      * @param {string} toUserID
      */
     async userInitRequestAsync(toUserID) {
-        return await this.until("userInitResponse",
+        return await until(this, "userInitResponse",
             () => this.userInitRequest(toUserID),
-            (evt) => evt.id === toUserID,
+            (evt) => evt.id === toUserID
+                && isGoodNumber(evt.x)
+                && isGoodNumber(evt.y)
+                && isGoodNumber(evt.z),
             1000);
     }
 

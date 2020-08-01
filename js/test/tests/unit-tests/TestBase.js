@@ -1,5 +1,6 @@
 ﻿import { bust } from "../../../src/emoji/index.js";
 import { once } from "../../../src/events/once.js";
+import { when } from "../../../src/events/when.js";
 import { LibJitsiMeetClient } from "../../../src/LibJitsiMeetClient";
 import { wait } from "../../../src/wait.js";
 import { TestCase } from "../../testing/TestCase.js";
@@ -78,8 +79,8 @@ export class TestBase extends TestCase {
         this.isTrue(isMuted, "Muted");
     }
 
-    taskOf(evt) {
-        return this.client.when(evt, (evt) => evt.id !== this.client.localUser, 5000);
+    taskOf(evtName) {
+        return when(this.client, evtName, (evt) => evt.id !== this.client.localUser, 5000);
     }
 
     async recvAudioMuted() {
