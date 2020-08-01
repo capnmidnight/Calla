@@ -1,4 +1,6 @@
-﻿if (!Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "getTransform")
+﻿let _getTransform = null;
+
+if (!Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "getTransform")
     && Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "mozCurrentTransform")) {
 
     class MockDOMMatrix {
@@ -32,7 +34,22 @@
         }
     }
 
-    CanvasRenderingContext2D.prototype.getTransform = function () {
-        return new MockDOMMatrix(this.mozCurrentTransform);
-    };
+    /**
+     * @param {CanvasRenderingContext2D} g
+     */
+    _getTransform = (g) => {
+        return new MockDOMMatrix(g.mozCurrentTransform);
+    }
+}
+else {
+    /**
+     * @param {CanvasRenderingContext2D} g
+     */
+    _getTransform = (g) => {
+        return getTransform(g);
+    }
+}
+
+export function getTransform(g) {
+    return _getTransform(g);
 }

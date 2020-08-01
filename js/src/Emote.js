@@ -1,4 +1,5 @@
 ﻿import { TextImage } from "./graphics/TextImage.js";
+import { getTransform } from "./graphics/getTransform.js";
 
 const EMOJI_LIFE = 3;
 
@@ -28,7 +29,7 @@ export class Emote {
     }
 
     drawShadow(g, map) {
-        const scale = g.getTransform().a;
+        const scale = getTransform(g).a;
         g.save();
         {
             g.shadowColor = "rgba(0, 0, 0, 0.5)";
@@ -48,7 +49,7 @@ export class Emote {
      */
     drawEmote(g, map) {
         const oldAlpha = g.globalAlpha,
-            scale = g.getTransform().a;
+            scale = getTransform(g).a;
         g.globalAlpha = this.life;
         this.emoteText.fontSize = map.tileHeight / 2;
         this.emoteText.scale = scale;

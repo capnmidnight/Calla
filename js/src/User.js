@@ -4,6 +4,7 @@ import { EmojiAvatar } from "./avatars/EmojiAvatar.js";
 import { PhotoAvatar } from "./avatars/PhotoAvatar.js";
 import { VideoAvatar } from "./avatars/VideoAvatar.js";
 import { bust, mutedSpeaker, speakerMediumVolume } from "./emoji/emojis.js";
+import { getTransform } from "./graphics/getTransform.js";
 import { TextImage } from "./graphics/TextImage.js";
 import { project } from "./math.js";
 import "./protos/index.js";
@@ -263,10 +264,10 @@ export class User extends EventTarget {
     }
 
     drawShadow(g, map) {
-        const scale = g.getTransform().a,
+        const scale = getTransform(g).a,
             x = this.x * map.tileWidth,
             y = this.y * map.tileHeight,
-            t = g.getTransform(),
+            t = getTransform(g),
             p = t.transformPoint({ x, y });
 
         this.visible = -map.tileWidth <= p.x
@@ -295,7 +296,7 @@ export class User extends EventTarget {
                 this.innerDraw(g, map);
                 if (this.isActive && !this.audioMuted) {
                     const height = this.stackAvatarHeight / 2,
-                        scale = g.getTransform().a;
+                        scale = getTransform(g).a;
                     speakerActivityIcon.fontSize = height;
                     speakerActivityIcon.scale = scale;
                     speakerActivityIcon.draw(g, this.stackAvatarWidth - speakerActivityIcon.width, 0);
@@ -319,7 +320,7 @@ export class User extends EventTarget {
         if (this.audioMuted || !this.videoMuted) {
 
             const height = this.stackAvatarHeight / 2,
-                scale = g.getTransform().a;
+                scale = getTransform(g).a;
 
             if (this.audioMuted) {
                 muteAudioIcon.fontSize = height;
@@ -331,7 +332,7 @@ export class User extends EventTarget {
 
     drawName(g, map, fontSize) {
         if (this.visible) {
-            const scale = g.getTransform().a;
+            const scale = getTransform(g).a;
             g.save();
             {
                 g.translate(
@@ -363,7 +364,7 @@ export class User extends EventTarget {
     }
 
     drawHearingRange(g, map, minDist, maxDist) {
-        const scale = g.getTransform().a,
+        const scale = getTransform(g).a,
             tw = Math.min(maxDist, Math.ceil(g.canvas.width / (2 * map.tileWidth * scale))),
             th = Math.min(maxDist, Math.ceil(g.canvas.height / (2 * map.tileHeight * scale)));
 
