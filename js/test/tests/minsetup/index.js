@@ -2,12 +2,11 @@
 import { onClick } from "../../../src/html/evts.js";
 import { Button } from "../../../src/html/tags.js";
 import { init } from "../../../src/init.js";
-import { LibJitsiMeetClient as JitsiClient } from "../../../src/jitsi/LibJitsiMeetClient.js";
 import { userNumber } from "../../testing/userNumber.js";
 import { openSideTest } from "../../testing/windowing.js";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../../constants.js";
 
-const { login } = init(new JitsiClient(JITSI_HOST, JVB_HOST, JVB_MUC));
+const { login } = init(JITSI_HOST, JVB_HOST, JVB_MUC);
 
 if (userNumber === 1) {
     document.body.append(

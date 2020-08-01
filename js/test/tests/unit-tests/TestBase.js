@@ -1,5 +1,5 @@
 ﻿import { bust } from "../../../src/emoji/index.js";
-import { BaseJitsiClient } from "../../../src/jitsi/BaseJitsiClient.js";
+import { LibJitsiMeetClient } from "../../../src/LibJitsiMeetClient";
 import { wait } from "../../../src/wait.js";
 import { TestCase } from "../../testing/TestCase.js";
 import { userNumber } from "../../testing/userNumber.js";
@@ -11,7 +11,7 @@ export class TestBase extends TestCase {
     constructor() {
         super();
 
-        /** @type {BaseJitsiClient} */
+        /** @type {LibJitsiMeetClient} */
         this.client = null;
     }
 

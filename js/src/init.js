@@ -9,7 +9,7 @@ import { OptionsForm } from "./forms/OptionsForm.js";
 import { UserDirectoryForm } from "./forms/UserDirectoryForm.js";
 import { Game } from "./Game.js";
 import { gridPos, gridRowsDef } from "./html/grid.js";
-import { BaseJitsiClient } from "./jitsi/BaseJitsiClient.js";
+import { LibJitsiMeetClient } from "./LibJitsiMeetClient.js";
 import { Settings } from "./Settings.js";
 import { versionString } from "./version.js";
 
@@ -17,10 +17,11 @@ console.log(`${versionString}`);
 
 
 /**
- * 
- * @param {BaseJitsiClient} client
+ * @param {string} JITSI_HOST
+ * @param {string} JVB_HOST
+ * @param {string} JVB_MUC
  */
-export function init(client) {
+export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
     const settings = new Settings(),
         sound = new SFX()
             .add("join", "audio/door-open.ogg", "audio/door-open.mp3", "audio/door-open.wav")
@@ -32,6 +33,7 @@ export function init(client) {
         footbar = new FooterBar(),
         options = new OptionsForm(),
         emoji = new EmojiForm(),
+        client = new LibJitsiMeetClient(JITSI_HOST, JVB_HOST, JVB_MUC),
 
         forExport = {
             settings,

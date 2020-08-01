@@ -10,7 +10,7 @@ export * from "./graphics/index.js";
 export * from "./html/index.js";
 export * from "./init.js";
 export * from "./input/index.js";
-export * from "./jitsi/index.js";
+export * from "./LibJitsiMeetClient.js";
 export * from "./math.js";
 export * from "./Point.js";
 export * from "./protos/index.js";
