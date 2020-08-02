@@ -1,5 +1,5 @@
-﻿import { TextImage } from "./graphics/TextImage.js";
-import { getTransform } from "./graphics/getTransform.js";
+﻿import { TextImage } from "./TextImage.js";
+import { getTransform } from "./getTransform.js";
 
 const EMOJI_LIFE = 3;
 

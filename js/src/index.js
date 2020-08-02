@@ -3,7 +3,6 @@ export * from "./audio/index.js";
 export * from "./avatars/index.js";
 export * from "./createWorker.js";
 export * from "./emoji/index.js";
-export * from "./Emote.js";
 export * from "./events/index.js";
 export * from "./forms/index.js";
 export * from "./Game.js";

@@ -1,7 +1,7 @@
 import { arrayClear } from "./arrays/arrayClear.js";
 import { arrayRemoveAt } from "./arrays/arrayRemoveAt.js";
 import { Pose } from "./audio/positions/Pose.js";
-import { Emote } from "./Emote.js";
+import { Emote } from "./graphics/Emote.js";
 import { EventBase } from "./events/EventBase.js";
 import { TileMap } from "./graphics/TileMap.js";
 import { id } from "./html/attrs.js";
