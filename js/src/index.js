@@ -1,7 +1,6 @@
 ﻿export * from "./arrays/index.js";
 export * from "./audio/index.js";
 export * from "./avatars/index.js";
-export * from "./BaseUser.js";
 export * from "./createWorker.js";
 export * from "./emoji/index.js";
 export * from "./Emote.js";
@@ -14,7 +13,6 @@ export * from "./init.js";
 export * from "./input/index.js";
 export * from "./LibJitsiMeetClient.js";
 export * from "./math.js";
-export * from "./Point.js";
 export * from "./Settings.js";
 export * from "./timers/index.js";
 export * from "./typeChecks.js";
