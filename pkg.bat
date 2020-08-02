@@ -1,3 +1,3 @@
-cmd /C "cd web && rollup -c"
-cmd /C "cd web && minify bundle.js > bundle.min.js"
-cmd /C "cd web && minify version.js > version.min.js"
+cmd /C "rollup -c"
+cmd /C "minify bundle.js > web\bundle.min.js"
+cmd /C "minify version.js > web\version.min.js"
