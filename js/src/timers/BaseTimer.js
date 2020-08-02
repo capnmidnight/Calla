@@ -1,8 +1,13 @@
 ﻿import { EventBase } from "../events/EventBase.js";
 
-const tickEvt = Object.assign(new Event("tick"), {
-    dt: 0
-});
+class TimerTickEvent extends Event {
+    constructor() {
+        super("tick");
+        this.dt = 0;
+        this.t = 0;
+        Object.seal(this);
+    }
+}
 
 export class BaseTimer extends EventBase {
 
@@ -12,18 +17,26 @@ export class BaseTimer extends EventBase {
      */
     constructor(targetFrameRate) {
         super();
-        this._lt = 0;
+
         this._timer = null;
         this.targetFrameRate = targetFrameRate;
-    }
 
-    /**
-     * 
-     * @param {number} dt
-     */
-    _onTick(dt) {
-        tickEvt.dt = dt;
-        this.dispatchEvent(tickEvt);
+        /**
+         * @param {number} t
+         */
+        this._onTick = (t) => {
+            const tickEvt = new TimerTickEvent();
+            let lt = t;
+            /**
+             * @param {number} t
+             */
+            this._onTick = (t) => {
+                tickEvt.t = t;
+                tickEvt.dt = t - lt;
+                lt = t;
+                this.dispatchEvent(tickEvt);
+            }
+        };
     }
 
     restart() {

@@ -2,9 +2,8 @@
 import { backgroundColor, columnGap, cssWidth, zIndex } from "../html/css.js";
 import { onClick, onMouseOut, onMouseOver } from "../html/evts.js";
 import { gridDef, gridPos, row } from "../html/grid.js";
-import { hide } from "../html/ops.js";
+import { hide, isOpen } from "../html/ops.js";
 import { Canvas, Div } from "../html/tags.js";
-import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 import { User } from "../User.js";
 import { FormDialog } from "./FormDialog.js";
 
@@ -26,18 +25,6 @@ export class UserDirectoryForm extends FormDialog {
 
         const _ = (evt) => () => this.dispatchEvent(evt);
 
-        this.timer = new RequestAnimationFrameTimer();
-        this.timer.addEventListener("tick", () => {
-            for (let entries of this.users.entries()) {
-                const [id, user] = entries;
-                if (this.avatarGs.has(id) && user.avatar) {
-                    const g = this.avatarGs.get(id);
-                    g.clearRect(0, 0, g.canvas.width, g.canvas.height);
-                    user.avatar.draw(g, g.canvas.width, g.canvas.height);
-                }
-            }
-        });
-
         /** @type {Map.<string, Element[]>} */
         this.rows = new Map();
 
@@ -54,9 +41,19 @@ export class UserDirectoryForm extends FormDialog {
                     ["min-content"]),
                 columnGap("5px"),
                 cssWidth("100%")));
+    }
 
-        this.addEventListener("hidden", () => this.timer.stop());
-        this.addEventListener("shown", () => this.timer.start());
+    update() {
+        if (isOpen(this)) {
+            for (let entries of this.users.entries()) {
+                const [id, user] = entries;
+                if (this.avatarGs.has(id) && user.avatar) {
+                    const g = this.avatarGs.get(id);
+                    g.clearRect(0, 0, g.canvas.width, g.canvas.height);
+                    user.avatar.draw(g, g.canvas.width, g.canvas.height);
+                }
+            }
+        }
     }
 
     /**

@@ -37,12 +37,7 @@ export class WorkerTimer extends BaseTimer {
             }
         });
 
-        this._timer.onmessage = () => {
-            const t = performance.now(),
-                dt = t - this._lt;
-            this._lt = t;
-            this._onTick(dt);
-        };
+        this._timer.onmessage = () => this._onTick(performance.now());
     }
 
     get targetFrameRate() {

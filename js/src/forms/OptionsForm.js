@@ -2,11 +2,10 @@
 import { backgroundColor, borderBottom, borderLeft, borderRight, cssWidth, styles } from "../html/css.js";
 import { onClick, onInput, onKeyUp } from "../html/evts.js";
 import { gridColsDef } from "../html/grid.js";
-import { setLocked } from "../html/ops.js";
+import { isOpen, setLocked } from "../html/ops.js";
 import { Button, Canvas, Div, InputURL, Label, LabeledInput, LabeledSelectBox, OptionPanel, P } from "../html/tags.js";
 import { EventedGamepad } from "../input/EventedGamepad.js";
 import { isGoodNumber } from "../math.js";
-import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 import { isString } from "../typeChecks.js";
 import { User } from "../User.js";
 import { FormDialog } from "./FormDialog.js";
@@ -43,8 +42,6 @@ const selfs = new WeakMap();
 class OptionsFormPrivate {
     constructor() {
         this.inputBinding = new InputBinding();
-        this.timer = new RequestAnimationFrameTimer();
-
         /** @type {EventedGamepad} */
         this.pad = null;
     }
@@ -297,7 +294,22 @@ export class OptionsForm extends FormDialog {
             }
         });
 
-        self.timer.addEventListener("tick", () => {
+        this.gamepads = [];
+        this.audioInputDevices = [];
+        this.audioOutputDevices = [];
+        this.videoInputDevices = [];
+
+        this._drawHearing = false;
+
+        /** @type {User} */
+        this.user = null;
+        this._avatarG = this.avatarPreview.getContext("2d");
+
+        Object.seal(this);
+    }
+
+    update() {
+        if (isOpen(this)) {
             const pad = this.currentGamepad;
             if (pad) {
                 if (self.pad) {
@@ -320,26 +332,7 @@ export class OptionsForm extends FormDialog {
                 this._avatarG.clearRect(0, 0, this.avatarPreview.width, this.avatarPreview.height);
                 this.user.avatar.draw(this._avatarG, this.avatarPreview.width, this.avatarPreview.height, true);
             }
-        });
-
-        this.gamepads = [];
-        this.audioInputDevices = [];
-        this.audioOutputDevices = [];
-        this.videoInputDevices = [];
-
-        this._drawHearing = false;
-
-        /** @type {User} */
-        this.user = null;
-        this._avatarG = this.avatarPreview.getContext("2d");
-
-        this.addEventListener("shown", () =>
-            selfs.get(this).timer.start());
-
-        this.addEventListener("hidden", () =>
-            selfs.get(this).timer.stop());
-
-        Object.seal(this);
+        }
     }
 
     get avatarURL() {

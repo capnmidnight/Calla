@@ -7,12 +7,9 @@ export class SetIntervalTimer extends BaseTimer {
     }
 
     start() {
-        this._lt = performance.now();
-        this._timer = setInterval(() => {
-            const t = performance.now(), dt = t - this._lt;
-            this._lt = t;
-            this._onTick(dt);
-        }, this._frameTime);
+        this._timer = setInterval(
+            () => this._onTick(performance.now()),
+            this._frameTime);
     }
 
     stop() {

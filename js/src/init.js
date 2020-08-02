@@ -14,6 +14,7 @@ import { hide, isOpen, setOpen, show } from "./html/ops.js";
 import { LibJitsiMeetClient } from "./LibJitsiMeetClient.js";
 import { Settings } from "./Settings.js";
 import { versionString } from "./version.js";
+import { RequestAnimationFrameTimer } from "./timers/index.js";
 
 console.log(`${versionString}`);
 
@@ -36,6 +37,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         options = new OptionsForm(),
         emoji = new EmojiForm(),
         client = new LibJitsiMeetClient(JITSI_HOST, JVB_HOST, JVB_MUC),
+        timer = new RequestAnimationFrameTimer(),
 
         forExport = {
             settings,
@@ -465,7 +467,15 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         }
     });
 
+    timer.addEventListener("tick", (evt) => {
+        client.audio.update();
+        options.update();
+        directory.update();
+        game.update(evt.dt);
+    });
+
     login.ready = true;
+    timer.start();
 
     return forExport;
 }

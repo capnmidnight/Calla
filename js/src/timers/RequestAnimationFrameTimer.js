@@ -7,12 +7,9 @@ export class RequestAnimationFrameTimer extends BaseTimer {
 
     start() {
         const updater = (t) => {
-            const dt = t - this._lt;
-            this._lt = t;
             this._timer = requestAnimationFrame(updater);
-            this._onTick(dt);
+            this._onTick(t);
         };
-        this._lt = performance.now();
         this._timer = requestAnimationFrame(updater);
     }
 

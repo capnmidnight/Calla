@@ -10,9 +10,7 @@ export class SetTimeoutTimer extends BaseTimer {
         this._lt = performance.now();
         const updater = () => {
             this._timer = setTimeout(updater, this._frameTime);
-            const t = performance.now(), dt = t - this._lt;
-            this._lt = t;
-            this._onTick(dt);
+            this._onTick(performance.now());
         };
         this._timer = setTimeout(updater, this._frameTime);
     }

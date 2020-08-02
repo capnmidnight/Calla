@@ -1,7 +1,6 @@
 ﻿import { EventBase } from "../events/EventBase.js";
 import { controls, playsInline, src } from "../html/attrs.js";
 import { Audio, Source } from "../html/tags.js";
-import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 import { AudioActivityEvent } from "./AudioActivityEvent.js";
 import { MockAudioContext } from "./MockAudioContext.js";
 import { InterpolatedPose } from "./positions/InterpolatedPose.js";
@@ -60,14 +59,6 @@ export class AudioManager extends EventBase {
             this.dispatchEvent(audioActivityEvt);
         };
 
-        this.timer = new RequestAnimationFrameTimer();
-        this.timer.addEventListener("tick", () => {
-            this.pose.update(this.currentTime);
-            for (let pose of this.users.values()) {
-                pose.update(this.currentTime);
-            }
-        });
-
         /** @type {AudioContext} */
         this.audioContext = null;
 
@@ -82,7 +73,18 @@ export class AudioManager extends EventBase {
      **/
     start() {
         this.createContext();
-        this.timer.start();
+    }
+
+    update() {
+        if (this.audioContext) {
+            this.pose.update(this.currentTime);
+            for (let pose of this.users.values()) {
+                pose.update(this.currentTime);
+            }
+            for (let pose of this.clips.values()) {
+                pose.update(this.currentTime);
+            }
+        }
     }
 
     /**

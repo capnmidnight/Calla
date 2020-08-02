@@ -1,8 +1,8 @@
 import { arrayClear } from "./arrays/arrayClear.js";
 import { arrayRemoveAt } from "./arrays/arrayRemoveAt.js";
 import { Pose } from "./audio/positions/Pose.js";
-import { Emote } from "./graphics/Emote.js";
 import { EventBase } from "./events/EventBase.js";
+import { Emote } from "./graphics/Emote.js";
 import { TileMap } from "./graphics/TileMap.js";
 import { id } from "./html/attrs.js";
 import { resizeCanvas } from "./html/canvas.js";
@@ -67,8 +67,6 @@ export class Game extends EventBase {
         /** @type {Map.<string, User>} */
         this.users = new Map();
 
-        this._loop = this.loop.bind(this);
-        this.lastTime = 0;
         this.lastMove = Number.MAX_VALUE;
         this.lastWalk = Number.MAX_VALUE;
         this.gridOffsetX = 0;
@@ -537,25 +535,10 @@ export class Game extends EventBase {
         show(this);
         this.resize();
         this.element.focus();
-
-        requestAnimationFrame((time) => {
-            this.lastTime = time;
-            requestAnimationFrame(this._loop);
-        });
     }
 
     resize() {
         resizeCanvas(this.element, window.devicePixelRatio);
-    }
-
-    loop(time) {
-        if (this.currentRoomName !== null) {
-            requestAnimationFrame(this._loop);
-            const dt = time - this.lastTime;
-            this.lastTime = time;
-            this.update(dt / 1000);
-            this.render();
-        }
     }
 
     end() {
@@ -568,99 +551,104 @@ export class Game extends EventBase {
     }
 
     update(dt) {
-        this.gridOffsetX = Math.floor(0.5 * this.element.width / this.map.tileWidth) * this.map.tileWidth;
-        this.gridOffsetY = Math.floor(0.5 * this.element.height / this.map.tileHeight) * this.map.tileHeight;
+        if (this.currentRoomName !== null) {
+            dt /= 1000;
+            this.gridOffsetX = Math.floor(0.5 * this.element.width / this.map.tileWidth) * this.map.tileWidth;
+            this.gridOffsetY = Math.floor(0.5 * this.element.height / this.map.tileHeight) * this.map.tileHeight;
 
-        this.lastMove += dt;
-        if (this.lastMove >= MOVE_REPEAT) {
-            let dx = 0,
-                dy = 0;
+            this.lastMove += dt;
+            if (this.lastMove >= MOVE_REPEAT) {
+                let dx = 0,
+                    dy = 0;
 
-            for (let evt of Object.values(this.keys)) {
-                if (!evt.altKey
-                    && !evt.shiftKey
-                    && !evt.ctrlKey
-                    && !evt.metaKey) {
-                    switch (evt.key) {
-                        case this.inputBinding.keyButtonUp: dy--; break;
-                        case this.inputBinding.keyButtonDown: dy++; break;
-                        case this.inputBinding.keyButtonLeft: dx--; break;
-                        case this.inputBinding.keyButtonRight: dx++; break;
-                        case this.inputBinding.keyButtonEmote: this.emote(this.me.id, this.currentEmoji); break;
+                for (let evt of Object.values(this.keys)) {
+                    if (!evt.altKey
+                        && !evt.shiftKey
+                        && !evt.ctrlKey
+                        && !evt.metaKey) {
+                        switch (evt.key) {
+                            case this.inputBinding.keyButtonUp: dy--; break;
+                            case this.inputBinding.keyButtonDown: dy++; break;
+                            case this.inputBinding.keyButtonLeft: dx--; break;
+                            case this.inputBinding.keyButtonRight: dx++; break;
+                            case this.inputBinding.keyButtonEmote: this.emote(this.me.id, this.currentEmoji); break;
+                        }
                     }
                 }
+
+                const gp = navigator.getGamepads()[this.gamepadIndex];
+                if (gp) {
+                    if (!gamepads.has(this)) {
+                        gamepads.set(this, new EventedGamepad(gp));
+                    }
+
+                    const pad = gamepads.get(this);
+                    pad.update(gp);
+
+                    if (pad.buttons[this.inputBinding.gpButtonEmote].pressed) {
+                        this.emote(this.me.id, this.currentEmoji);
+                    }
+
+                    if (!pad.lastButtons[this.inputBinding.gpButtonToggleAudio].pressed
+                        && pad.buttons[this.inputBinding.gpButtonToggleAudio].pressed) {
+                        this.toggleMyAudio();
+                    }
+
+                    if (pad.buttons[this.inputBinding.gpButtonUp].pressed) {
+                        --dy;
+                    }
+                    else if (pad.buttons[this.inputBinding.gpButtonDown].pressed) {
+                        ++dy;
+                    }
+
+                    if (pad.buttons[this.inputBinding.gpButtonLeft].pressed) {
+                        --dx;
+                    }
+                    else if (pad.buttons[this.inputBinding.gpButtonRight].pressed) {
+                        ++dx;
+                    }
+
+                    dx += Math.round(pad.axes[this.inputBinding.gpAxisLeftRight]);
+                    dy += Math.round(pad.axes[this.inputBinding.gpAxisUpDown]);
+
+                    this.targetOffsetCameraX += -50 * Math.round(2 * pad.axes[2]);
+                    this.targetOffsetCameraY += -50 * Math.round(2 * pad.axes[3]);
+                    this.zoom(2 * (pad.buttons[6].value - pad.buttons[7].value));
+                }
+
+                dx = clamp(dx, -1, 1);
+                dy = clamp(dy, -1, 1);
+
+                if (dx !== 0
+                    || dy !== 0) {
+                    this.moveMeBy(dx, dy);
+                    arrayClear(this.waypoints);
+                }
+
+                this.lastMove = 0;
             }
 
-            const gp = navigator.getGamepads()[this.gamepadIndex];
-            if (gp) {
-                if (!gamepads.has(this)) {
-                    gamepads.set(this, new EventedGamepad(gp));
+            this.lastWalk += dt;
+            if (this.lastWalk >= this.transitionSpeed) {
+                if (this.waypoints.length > 0) {
+                    const waypoint = this.waypoints.shift();
+                    this.moveMeTo(waypoint.x, waypoint.y);
                 }
 
-                const pad = gamepads.get(this);
-                pad.update(gp);
-
-                if (pad.buttons[this.inputBinding.gpButtonEmote].pressed) {
-                    this.emote(this.me.id, this.currentEmoji);
-                }
-
-                if (!pad.lastButtons[this.inputBinding.gpButtonToggleAudio].pressed
-                    && pad.buttons[this.inputBinding.gpButtonToggleAudio].pressed) {
-                    this.toggleMyAudio();
-                }
-
-                if (pad.buttons[this.inputBinding.gpButtonUp].pressed) {
-                    --dy;
-                }
-                else if (pad.buttons[this.inputBinding.gpButtonDown].pressed) {
-                    ++dy;
-                }
-
-                if (pad.buttons[this.inputBinding.gpButtonLeft].pressed) {
-                    --dx;
-                }
-                else if (pad.buttons[this.inputBinding.gpButtonRight].pressed) {
-                    ++dx;
-                }
-
-                dx += Math.round(pad.axes[this.inputBinding.gpAxisLeftRight]);
-                dy += Math.round(pad.axes[this.inputBinding.gpAxisUpDown]);
-
-                this.targetOffsetCameraX += -50 * Math.round(2 * pad.axes[2]);
-                this.targetOffsetCameraY += -50 * Math.round(2 * pad.axes[3]);
-                this.zoom(2 * (pad.buttons[6].value - pad.buttons[7].value));
+                this.lastWalk = 0;
             }
 
-            dx = clamp(dx, -1, 1);
-            dy = clamp(dy, -1, 1);
-
-            if (dx !== 0
-                || dy !== 0) {
-                this.moveMeBy(dx, dy);
-                arrayClear(this.waypoints);
+            for (let emote of this.emotes) {
+                emote.update(dt);
             }
 
-            this.lastMove = 0;
-        }
+            this.emotes = this.emotes.filter(e => !e.isDead());
 
-        this.lastWalk += dt;
-        if (this.lastWalk >= this.transitionSpeed) {
-            if (this.waypoints.length > 0) {
-                const waypoint = this.waypoints.shift();
-                this.moveMeTo(waypoint.x, waypoint.y);
+            for (let user of this.users.values()) {
+                user.update(this.map, this.users);
             }
 
-            this.lastWalk = 0;
-        }
-
-        for (let emote of this.emotes) {
-            emote.update(dt);
-        }
-
-        this.emotes = this.emotes.filter(e => !e.isDead());
-
-        for (let user of this.users.values()) {
-            user.update(this.map, this.users);
+            this.render();
         }
     }
 
