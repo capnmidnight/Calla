@@ -1,4 +1,4 @@
-﻿import { muted, srcObject } from "../../../html/attrs.js";
+﻿import { srcObject } from "../../../html/attrs.js";
 import { Audio } from "../../../html/tags.js";
 import { canChangeAudioOutput } from "../../canChangeAudioOutput.js";
 import { BaseSpatializer } from "../BaseSpatializer.js";
@@ -23,24 +23,25 @@ export class BaseSource extends BaseSpatializer {
         /** @type {MediaStream} */
         this.stream = null;
 
+        this.volume = 1;
+
         if (stream instanceof HTMLAudioElement) {
             this.audio = stream;
         }
         else if (stream instanceof MediaStream) {
             this.stream = stream;
-            this.audio = Audio(
-                srcObject(this.stream),
-                muted);
+            this.audio = Audio(srcObject(this.stream));
         }
         else if (stream !== null) {
             throw new Error("Can't create a node from the given stream. Expected type HTMLAudioElement or MediaStream.");
         }
 
+        this.audio.playsInline = true;
+    }
+
+    play() {
         if (this.audio) {
-            this.audio.autoPlay = true;
-            this.audio.playsInline = true;
-            this.audio.addEventListener("onloadedmetadata", () =>
-                this.audio.play());
+            this.audio.play();
         }
     }
 

@@ -389,12 +389,12 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         },
 
         participantJoined: (evt) => {
-            client.audio.play("join", 0.5);
+            client.audio.playClip("join", 0.5);
             game.addUser(evt.id, evt.displayName, evt.pose);
         },
 
         participantLeft: (evt) => {
-            client.audio.play("leave", 0.5);
+            client.audio.playClip("leave", 0.5);
             game.removeUser(evt.id);
             directory.delete(evt.id);
         },

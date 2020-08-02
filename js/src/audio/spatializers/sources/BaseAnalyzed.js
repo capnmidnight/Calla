@@ -1,4 +1,4 @@
-﻿import { clamp } from "../../../math.js";
+﻿import { clamp, isGoodNumber } from "../../../math.js";
 import { AudioActivityEvent } from "../../AudioActivityEvent.js";
 import { Pose } from "../../positions/Pose.js";
 import { BaseSource } from "./BaseSource.js";
@@ -53,12 +53,19 @@ export class BaseAnalyzed extends BaseSource {
         super(id, stream);
 
         this.bufferSize = bufferSize;
-        this.buffer = new Float32Array(this.bufferSize);
+        if (!isGoodNumber(this.bufferSize)
+            || this.bufferSize <= 0) {
+            this.buffer = null;
+            this.analyser = null;
+        }
+        else {
+            this.buffer = new Float32Array(this.bufferSize);
 
-        /** @type {AnalyserNode} */
-        this.analyser = audioContext.createAnalyser();
-        this.analyser.fftSize = 2 * this.bufferSize;
-        this.analyser.smoothingTimeConstant = 0.2;
+            /** @type {AnalyserNode} */
+            this.analyser = audioContext.createAnalyser();
+            this.analyser.fftSize = 2 * this.bufferSize;
+            this.analyser.smoothingTimeConstant = 0.2;
+        }
 
         /** @type {PannerNode|StereoPannerNode} */
         this.inNode = inNode;
@@ -89,8 +96,10 @@ export class BaseAnalyzed extends BaseSource {
                 else if (this.audio) {
                     try {
                         this.source = audioContext.createMediaElementSource(this.audio);
-                        this.source.connect(this.analyser);
                         this.source.connect(this.inNode);
+                        if (this.analyser) {
+                            this.source.connect(this.analyser);
+                        }
                     }
                     catch (exp) {
                         console.warn("Creating the media stream failed. Reason: ", exp);
@@ -110,7 +119,7 @@ export class BaseAnalyzed extends BaseSource {
     update(loc) {
         super.update(loc);
 
-        if (this.source) {
+        if (this.analyser && this.source) {
             this.analyser.getFloatFrequencyData(this.buffer);
 
             const average = 1.1 + analyserFrequencyAverage(this.analyser, this.buffer, 85, 255, this.bufferSize) / 100;
@@ -135,7 +144,9 @@ export class BaseAnalyzed extends BaseSource {
      */
     dispose() {
         if (this.source) {
-            this.source.disconnect(this.analyser);
+            if (this.analyser) {
+                this.source.disconnect(this.analyser);
+            }
             this.source.disconnect(this.inNode);
         }
 
