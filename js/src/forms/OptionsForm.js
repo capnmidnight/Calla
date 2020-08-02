@@ -1,11 +1,11 @@
-﻿import { EventedGamepad } from "../input/EventedGamepad.js";
-import { disabled, height, htmlFor, id, max, min, placeHolder, step, value, width } from "../html/attrs.js";
-import { backgroundColor, borderBottom, borderLeft, borderRight, styles, cssWidth } from "../html/css.js";
+﻿import { disabled, height, htmlFor, id, max, min, placeHolder, step, value, width } from "../html/attrs.js";
+import { backgroundColor, borderBottom, borderLeft, borderRight, cssWidth, styles } from "../html/css.js";
 import { onClick, onInput, onKeyUp } from "../html/evts.js";
 import { gridColsDef } from "../html/grid.js";
+import { setLocked } from "../html/ops.js";
 import { Button, Canvas, Div, InputURL, Label, LabeledInput, LabeledSelectBox, OptionPanel, P } from "../html/tags.js";
+import { EventedGamepad } from "../input/EventedGamepad.js";
 import { isGoodNumber } from "../math.js";
-import "../protos/index.js";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 import { isString } from "../typeChecks.js";
 import { User } from "../User.js";
@@ -33,6 +33,9 @@ const keyWidthStyle = cssWidth("7em"),
     gamepadAxisMaxedEvt = Object.assign(new Event("gamepadaxismaxed"), {
         axis: 0
     });
+
+const disabler = disabled(true),
+    enabler = disabled(false);
 
 /** @type {WeakMap<OptionsForm, OptionsFormPrivate>} */
 const selfs = new WeakMap();
@@ -330,17 +333,13 @@ export class OptionsForm extends FormDialog {
         this.user = null;
         this._avatarG = this.avatarPreview.getContext("2d");
 
+        this.addEventListener("shown", () =>
+            selfs.get(this).timer.start());
+
+        this.addEventListener("hidden", () =>
+            selfs.get(this).timer.stop());
+
         Object.seal(this);
-    }
-
-    show() {
-        super.show();
-        selfs.get(this).timer.start();
-    }
-
-    hide() {
-        super.hide();
-        selfs.get(this).timer.stop();
     }
 
     get avatarURL() {
@@ -355,11 +354,11 @@ export class OptionsForm extends FormDialog {
     set avatarURL(v) {
         if (isString(v)) {
             this.avatarURLInput.value = v;
-            this.clearAvatarURLButton.unlock();
+            enabler.apply(this.clearAvatarURLButton);
         }
         else {
             this.avatarURLInput.value = "";
-            this.clearAvatarURLButton.lock();
+            disabler.apply(this.clearAvatarURLButton);
         }
     }
 
@@ -398,14 +397,14 @@ export class OptionsForm extends FormDialog {
     set gamepads(values) {
         const disable = values.length === 0;
         this.gpSelect.values = values;
-        this.gpAxisLeftRight.setLocked(disable);
-        this.gpAxisUpDown.setLocked(disable);
-        this.gpButtonUp.setLocked(disable);
-        this.gpButtonDown.setLocked(disable);
-        this.gpButtonLeft.setLocked(disable);
-        this.gpButtonRight.setLocked(disable);
-        this.gpButtonEmote.setLocked(disable);
-        this.gpButtonToggleAudio.setLocked(disable);
+        setLocked(this.gpAxisLeftRight, disable);
+        setLocked(this.gpAxisUpDown, disable);
+        setLocked(this.gpButtonUp, disable);
+        setLocked(this.gpButtonDown, disable);
+        setLocked(this.gpButtonLeft, disable);
+        setLocked(this.gpButtonRight, disable);
+        setLocked(this.gpButtonEmote, disable);
+        setLocked(this.gpButtonToggleAudio, disable);
     }
 
     get currentGamepadIndex() {

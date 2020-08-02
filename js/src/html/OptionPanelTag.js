@@ -1,7 +1,8 @@
 ﻿import { id } from "./attrs.js";
-import { backgroundColor, borderBottomColor, borderLeft, borderRight, borderWidth, borderStyle, borderTop, padding, styles } from "./css.js";
+import { backgroundColor, borderBottomColor, borderLeft, borderRight, borderStyle, borderTop, borderWidth, padding, styles } from "./css.js";
 import { onClick } from "./evts.js";
 import { HtmlCustomTag } from "./HtmlCustomTag.js";
+import { setOpen } from "./ops.js";
 import { Button, P } from "./tags.js";
 
 const selectEvt = new Event("select");
@@ -48,7 +49,7 @@ export class OptionPanelTag extends HtmlCustomTag {
      * @param {boolean} v
      **/
     set visible(v) {
-        this.element.setOpen(v);
+        setOpen(this.element, v);
         styles(
             borderStyle("solid"),
             borderWidth("2px"),

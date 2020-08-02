@@ -9,12 +9,17 @@ import { LoginForm } from "./forms/LoginForm.js";
 import { OptionsForm } from "./forms/OptionsForm.js";
 import { UserDirectoryForm } from "./forms/UserDirectoryForm.js";
 import { Game } from "./Game.js";
+import { disabled } from "./html/attrs.js";
 import { gridPos, gridRowsDef } from "./html/grid.js";
+import { hide, isOpen, setOpen, show } from "./html/ops.js";
 import { LibJitsiMeetClient } from "./LibJitsiMeetClient.js";
 import { Settings } from "./Settings.js";
 import { versionString } from "./version.js";
 
 console.log(`${versionString}`);
+
+const disabler = disabled(true),
+    enabler = disabled(false);
 
 
 /**
@@ -59,26 +64,26 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         ].filter(x => x.element);
 
     function showLogin() {
-        game.hide();
-        directory.hide();
-        options.hide();
-        emoji.hide();
+        hide(game);
+        hide(directory);
+        hide(options);
+        hide(emoji);
         headbar.enabled = false;
         footbar.enabled = false;
-        login.show();
+        show(login);
     }
 
     async function withEmojiSelection(callback) {
-        if (!emoji.isOpen) {
-            headbar.optionsButton.lock();
-            headbar.instructionsButton.lock();
-            options.hide();
+        if (!isOpen(emoji)) {
+            disabler.apply(headbar.optionsButton);
+            disabler.apply(headbar.instructionsButton);
+            hide(options);
             const e = await emoji.selectAsync();
             if (e) {
                 callback(e);
             }
-            headbar.optionsButton.unlock();
-            headbar.instructionsButton.unlock();
+            enabler.apply(headbar.optionsButton);
+            enabler.apply(headbar.instructionsButton);
         }
     }
 
@@ -171,12 +176,12 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
      * @returns {showViewCallback}
      */
     const showView = (view) => () => {
-        if (!emoji.isOpen) {
-            const isOpen = view.isOpen;
-            login.hide();
-            directory.hide();
-            options.hide();
-            view.isOpen = !isOpen;
+        if (!isOpen(emoji)) {
+            const open = isOpen(view);
+            hide(login);
+            hide(directory);
+            hide(options);
+            setOpen(view, !open);
         }
     };
 
@@ -342,7 +347,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
 
         gameStarted: () => {
             gridPos(1, 2).apply(login.element);
-            login.hide();
+            hide(login);
 
             options.user = game.me;
 

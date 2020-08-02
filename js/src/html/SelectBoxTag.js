@@ -1,8 +1,10 @@
-﻿import "../protos/index.js";
-import { HtmlCustomTag } from "./HtmlCustomTag.js";
+﻿import { HtmlCustomTag } from "./HtmlCustomTag.js";
 import { isFunction } from "../typeChecks.js";
 import { clear, Option } from "./tags.js";
-import { value } from "./attrs.js";
+import { value, disabled } from "./attrs.js";
+
+const disabler = disabled(true),
+    enabler = disabled(false);
 
 /** @type {WeakMap<SelectBoxTag, any[]>} */
 const values = new WeakMap();
@@ -11,7 +13,7 @@ function render(self) {
     clear(self.element);
     if (self.values.length === 0) {
         self.element.append(Option(self.noSelectionText));
-        self.element.lock();
+        disabler.apply(self.element);
     }
     else {
         if (self.emptySelectionEnabled) {
@@ -24,7 +26,7 @@ function render(self) {
                     self.makeLabel(v)));
         }
 
-        self.element.unlock();
+        enabler.apply(self.element);
     }
 }
 

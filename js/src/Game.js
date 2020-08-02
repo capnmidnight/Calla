@@ -8,6 +8,7 @@ import { id } from "./html/attrs.js";
 import { resizeCanvas } from "./html/canvas.js";
 import { cssHeight, cssWidth, touchAction } from "./html/css.js";
 import { isFirefox } from "./html/flags.js";
+import { hide, show } from "./html/ops.js";
 import { Canvas } from "./html/tags.js";
 import { EventedGamepad } from "./input/EventedGamepad.js";
 import { clamp, lerp, project, unproject } from "./math.js";
@@ -281,16 +282,8 @@ export class Game extends EventBase {
         // ============= ACTION ==================
     }
 
-    hide() {
-        this.element.hide();
-    }
-
-    show() {
-        this.element.show();
-    }
-
-    setOpen(v) {
-        this.element.setOpen(v);
+    get style() {
+        return this.element.style;
     }
 
     initializeUser(id, evt) {
@@ -541,7 +534,7 @@ export class Game extends EventBase {
     }
 
     startLoop() {
-        this.show();
+        show(this);
         this.resize();
         this.element.focus();
 
@@ -570,7 +563,7 @@ export class Game extends EventBase {
         this.map = null;
         this.users.clear();
         this.me = null;
-        this.hide();
+        hide(this);
         this.dispatchEvent(gameEndedEvt);
     }
 

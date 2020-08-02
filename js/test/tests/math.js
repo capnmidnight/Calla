@@ -1,6 +1,5 @@
 ﻿import { once } from "../../src/events/once.js";
 import { lerp } from "../../src/math.js";
-import "../../src/protos/index.js";
 import { TestCase } from "../testing/TestCase.js";
 
 export class MathTests extends TestCase {

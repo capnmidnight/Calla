@@ -1,4 +1,4 @@
-﻿import { EventBase } from "../../../js/src/events/EventBase.js";
+﻿import { EventBase } from "../../src/events/EventBase.js";
 import { isFunction } from "../../src/typeChecks.js";
 import { TestCaseFailEvent } from "./TestCaseFailEvent.js";
 import { TestCaseMessageEvent } from "./TestCaseMessageEvent.js";

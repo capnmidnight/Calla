@@ -1,5 +1,4 @@
-﻿import "../protos/index.js";
-import { e } from "./Emoji.js";
+﻿import { e } from "./Emoji.js";
 import { EmojiGroup, g } from "./EmojiGroup.js";
 import { gg } from "./gg.js";
 

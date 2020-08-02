@@ -1,6 +1,7 @@
 ﻿import { once } from "../../../src/events/once.js";
 import { LoginForm } from "../../../src/forms/LoginForm.js";
 import { href } from "../../../src/html/attrs.js";
+import { show } from "../../../src/html/ops.js";
 import { Base } from "../../../src/html/tags.js";
 
 (async function () {
@@ -30,12 +31,12 @@ import { Base } from "../../../src/html/tags.js";
         }, 1000);
     });
 
-    async function show() {
-        login.show();
+    async function showLogin() {
+        show(login);
         const evt = await once(login, "login");
         console.log(evt);
-        setTimeout(show, 1000);
+        setTimeout(showLogin, 1000);
     }
 
-    show();
+    showLogin();
 })();

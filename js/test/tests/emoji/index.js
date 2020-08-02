@@ -4,10 +4,10 @@ const emoji = new EmojiForm();
 document.body.appendChild(emoji.element);
 emoji.element.style.height = "100%";
 
-async function show() {
+async function showEmoji() {
     const emote = await emoji.selectAsync();
     console.log(emote);
-    setTimeout(show, 1000);
+    setTimeout(showEmoji, 1000);
 }
 
-show();
+showEmoji();

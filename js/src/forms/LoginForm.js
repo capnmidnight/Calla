@@ -1,4 +1,4 @@
-﻿import "../protos/index.js";
+﻿import { setLocked, setOpen } from "../html/ops.js";
 import { SelectBox } from "../html/tags.js";
 import { FormDialog } from "./FormDialog.js";
 
@@ -24,7 +24,9 @@ class LoginFormPrivate {
         const canConnect = this.parent.roomName.length > 0
             && this.parent.userName.length > 0;
 
-        this.parent.connectButton.setLocked(!this.ready
+        setLocked(
+            this.parent.connectButton,
+            !this.ready
             || this.connecting
             || this.connected
             || !canConnect);
@@ -47,6 +49,8 @@ export class LoginForm extends FormDialog {
 
         const validate = () => self.validate();
 
+        this.addEventListener("shown", () => self.ready = true);
+
         this.roomLabel = this.element.querySelector("label[for='roomSelector']");
 
         this.roomSelect = SelectBox(
@@ -61,22 +65,26 @@ export class LoginForm extends FormDialog {
 
         this.roomInput = this.element.querySelector("#roomName");
         this.roomInput.addEventListener("input", validate);
-        this.roomInput.addEventListener("enter", () => {
-            this.userNameInput.focus();
+        this.roomInput.addEventListener("keypress", (evt) => {
+            if (evt.key === "Enter") {
+                this.userNameInput.focus();
+            }
         });
 
         this.userNameInput = this.element.querySelector("#userName")
         this.userNameInput.addEventListener("input", validate);
-        this.userNameInput.addEventListener("enter", () => {
-            if (this.userName.length === 0) {
-                this.userNameInput.focus();
-            }
-            else if (this.roomName.length === 0) {
-                if (this.roomSelectMode) {
-                    this.roomSelect.focus();
+        this.userNameInput.addEventListener("keypress", (evt) => {
+            if (evt.key === "Enter") {
+                if (this.userName.length === 0) {
+                    this.userNameInput.focus();
                 }
-                else {
-                    this.roomInput.focus();
+                else if (this.roomName.length === 0) {
+                    if (this.roomSelectMode) {
+                        this.roomSelect.focus();
+                    }
+                    else {
+                        this.roomInput.focus();
+                    }
                 }
             }
         });
@@ -120,8 +128,8 @@ export class LoginForm extends FormDialog {
 
     set roomSelectMode(value) {
         const self = selfs.get(this);
-        this.roomSelect.setOpen(value);
-        this.roomInput.setOpen(!value);
+        setOpen(this.roomSelect, value);
+        setOpen(this.roomInput, !value);
         this.createRoomButton.innerHTML = value
             ? "New"
             : "Cancel";
@@ -208,10 +216,5 @@ export class LoginForm extends FormDialog {
         const self = selfs.get(this);
         self.connected = v;
         this.connecting = false;
-    }
-
-    show() {
-        this.ready = true;
-        super.show();
     }
 }

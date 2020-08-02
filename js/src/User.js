@@ -8,7 +8,6 @@ import { EventBase } from "./events/EventBase.js";
 import { getTransform } from "./graphics/getTransform.js";
 import { TextImage } from "./graphics/TextImage.js";
 import { project } from "./math.js";
-import "./protos/index.js";
 import { isString } from "./typeChecks.js";
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1,

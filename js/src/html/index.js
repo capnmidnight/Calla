@@ -7,6 +7,7 @@ export * from "./grid.js";
 export * from "./HtmlCustomTag.js";
 export * from "./LabeledInputTag.js";
 export * from "./LabeledSelectBoxTag.js";
+export * from "./ops.js";
 export * from "./OptionPanelTag.js";
 export * from "./SelectBoxTag.js";
 export * from "./tag.js";

@@ -4,6 +4,7 @@ import { alt, id, role, src, title } from "../html/attrs.js";
 import { backgroundColor, columnGap, cssHeight, cssWidth, fontSize, marginBottom, padding, pointerEvents, styles } from "../html/css.js";
 import { onClick } from "../html/evts.js";
 import { gridColsDef, gridPos } from "../html/grid.js";
+import { updateLabel } from "../html/ops.js";
 import { Button, Div, Img, Run } from "../html/tags.js";
 
 const toggleOptionsEvt = new Event("toggleOptions"),
@@ -103,7 +104,8 @@ export class HeaderBar extends EventBase {
         else {
             document.exitFullscreen();
         }
-        this.fullscreenButton.updateLabel(
+        updateLabel(
+            this.fullscreenButton,
             value,
             downRightArrow.value,
             squareFourCourners.value);

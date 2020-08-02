@@ -4,6 +4,7 @@ import { id, title } from "../html/attrs.js";
 import { backgroundColor, borderLeft, borderRight, columnGap, cssHeight, cssWidth, fontSize, padding, pointerEvents, styles, textAlign } from "../html/css.js";
 import { onClick } from "../html/evts.js";
 import { gridColsDef, gridPos } from "../html/grid.js";
+import { updateLabel } from "../html/ops.js";
 import { Button, Div, Run, Span } from "../html/tags.js";
 
 const toggleAudioEvt = new Event("toggleAudio"),
@@ -100,7 +101,8 @@ export class FooterBar extends EventBase {
 
     set audioEnabled(value) {
         this._audioEnabled = value;
-        this.muteAudioButton.updateLabel(
+        updateLabel(
+            this.muteAudioButton,
             value,
             speakerHighVolume.value,
             mutedSpeaker.value);
@@ -112,7 +114,8 @@ export class FooterBar extends EventBase {
 
     set videoEnabled(value) {
         this._videoEnabled = value;
-        this.muteVideoButton.updateLabel(
+        updateLabel(
+            this.muteVideoButton,
             value,
             videoCamera.value,
             noMobilePhone.value);

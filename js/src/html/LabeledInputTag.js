@@ -1,7 +1,7 @@
-﻿import "../protos/index.js";
-import { Input, Label } from "./tags.js";
-import { htmlFor, type } from "./attrs.js";
+﻿import { htmlFor, type } from "./attrs.js";
 import { HtmlCustomTag } from "./HtmlCustomTag.js";
+import { setLocked } from "./ops.js";
+import { Input, Label } from "./tags.js";
 
 /**
  * An input box that has a label attached to it.
@@ -78,6 +78,6 @@ export class LabeledInputTag extends HtmlCustomTag {
      * @param {boolean} value
      */
     setLocked(value) {
-        this.input.setLocked(value);
+        setLocked(this.input, value);
     }
 }

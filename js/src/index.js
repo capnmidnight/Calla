@@ -15,7 +15,6 @@ export * from "./input/index.js";
 export * from "./LibJitsiMeetClient.js";
 export * from "./math.js";
 export * from "./Point.js";
-export * from "./protos/index.js";
 export * from "./Settings.js";
 export * from "./timers/index.js";
 export * from "./typeChecks.js";

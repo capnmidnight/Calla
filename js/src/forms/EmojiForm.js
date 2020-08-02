@@ -1,12 +1,11 @@
-﻿import { allIcons as icons } from "../emoji/emojis.js";
-import { EmojiGroup } from "../emoji/EmojiGroup.js";
-import { emojiStyle, textStyle } from "../emoji/emojis.js";
-import { className, href, htmlFor, title } from "../html/attrs.js";
+﻿import { EmojiGroup } from "../emoji/EmojiGroup.js";
+import { allIcons as icons, emojiStyle, textStyle } from "../emoji/emojis.js";
+import { className, disabled, href, htmlFor, title } from "../html/attrs.js";
 import { color, cssWidth, fontSize, styles, textDecoration, textTransform } from "../html/css.js";
 import { onClick } from "../html/evts.js";
 import { gridPos } from "../html/grid.js";
+import { isOpen, toggleOpen, hide, show } from "../html/ops.js";
 import { A, Button, Div, H1, H2, Label, LI, P, Span, UL } from "../html/tags.js";
-import "../protos/index.js";
 import { FormDialog } from "./FormDialog.js";
 
 
@@ -17,6 +16,10 @@ const headerStyle = styles(
 const buttonStyle = styles(
     fontSize("200%"),
     cssWidth("2em"));
+
+const disabler = disabled(true),
+    enabler = disabled(false);
+
 const cancelEvt = new Event("emojiCanceled");
 
 export class EmojiForm extends FormDialog {
@@ -35,7 +38,7 @@ export class EmojiForm extends FormDialog {
 
         const closeAll = () => {
             for (let alt of allAlts) {
-                alt.hide();
+                hide(alt);
             }
         }
 
@@ -73,11 +76,11 @@ export class EmojiForm extends FormDialog {
                             ? combine(selectedEmoji, icon)
                             : icon;
                         this.preview.innerHTML = `${selectedEmoji.value} - ${selectedEmoji.desc}`;
-                        this.confirmButton.unlock();
+                        enabler.apply(this.confirmButton);
 
                         if (alts) {
-                            alts.toggleOpen();
-                            btn.innerHTML = icon.value + (alts.isOpen() ? "-" : "+");
+                            toggleOpen(alts);
+                            btn.innerHTML = icon.value + (isOpen(alts) ? "-" : "+");
                         }
                     }), icon.value);
 
@@ -101,7 +104,7 @@ export class EmojiForm extends FormDialog {
                     alts = Div();
                     allAlts.push(alts);
                     addIconsToContainer(icon, alts, true);
-                    alts.hide();
+                    hide(alts);
                     g.appendChild(alts);
                     btn.style.width = "3em";
                     btn.innerHTML += "+";
@@ -128,8 +131,8 @@ export class EmojiForm extends FormDialog {
                         title(group.desc),
                         headerStyle,
                         onClick(() => {
-                            container.toggleOpen();
-                            headerButton.innerHTML = group.value + (container.isOpen() ? " -" : " +");
+                            toggleOpen(container);
+                            headerButton.innerHTML = group.value + (isOpen(container) ? " -" : " +");
                         }),
                         group.value + " -");
 
@@ -153,20 +156,20 @@ export class EmojiForm extends FormDialog {
                     }
 
                     this.dispatchEvent(new EmojiSelectedEvent(selectedEmoji));
-                    this.hide();
+                    hide(this);
                 })),
 
             Button(className("cancel"),
                 "Cancel",
                 onClick(() => {
-                    this.confirmButton.lock();
+                    disabler.apply(this.confirmButton);
                     this.dispatchEvent(cancelEvt);
-                    this.hide();
+                    hide(this);
                 })),
 
             this.preview = Span(gridPos(1, 4, 3, 1)));
 
-        this.confirmButton.lock();
+        disabler.apply(this.confirmButton)
 
         this.selectAsync = () => {
             return new Promise((resolve, reject) => {
@@ -199,7 +202,7 @@ export class EmojiForm extends FormDialog {
                 this.addEventListener("hidden", no);
 
                 closeAll();
-                this.show();
+                show(this);
             });
         };
     }

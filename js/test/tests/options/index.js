@@ -1,5 +1,5 @@
-﻿import { OptionsForm } from "../../../src/forms/OptionsForm.js";
-import { addEventListeners } from "../../../src/events/addEventListeners.js";
+﻿import { addEventListeners } from "../../../src/events/addEventListeners.js";
+import { OptionsForm } from "../../../src/forms/OptionsForm.js";
 
 const options = new OptionsForm();
 document.body.appendChild(options.element);
@@ -45,9 +45,9 @@ for (let evtName of ["avatarURLChanged",
     options.videoInputDevices = devices.filter(d => d.kind === "videoinput");
 });
 
-async function show() {
+async function showOptions() {
     await options.showAsync();
-    setTimeout(show, 1000);
+    setTimeout(showOptions, 1000);
 }
 
-show();
+showOptions();

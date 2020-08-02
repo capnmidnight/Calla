@@ -1,5 +1,4 @@
-﻿import "../../../src/protos/index.js";
-import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../../constants.js";
+﻿import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../../constants.js";
 import { HtmlTestOutput as TestOutput } from "../../testing/HtmlTestOutput.js";
 import { userNumber } from "../../testing/userNumber.js";
 import { JitsiClient1_Tests } from "./JitsiClient1_Tests.js";

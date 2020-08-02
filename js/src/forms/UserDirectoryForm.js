@@ -2,6 +2,7 @@
 import { backgroundColor, columnGap, cssWidth, zIndex } from "../html/css.js";
 import { onClick, onMouseOut, onMouseOver } from "../html/evts.js";
 import { gridDef, gridPos, row } from "../html/grid.js";
+import { hide } from "../html/ops.js";
 import { Canvas, Div } from "../html/tags.js";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 import { User } from "../User.js";
@@ -53,16 +54,9 @@ export class UserDirectoryForm extends FormDialog {
                     ["min-content"]),
                 columnGap("5px"),
                 cssWidth("100%")));
-    }
 
-    show() {
-        super.show();
-        this.timer.start();
-    }
-
-    hide() {
-        super.hide();
-        this.timer.stop();
+        this.addEventListener("hidden", () => this.timer.stop());
+        this.addEventListener("shown", () => this.timer.start());
     }
 
     /**
@@ -107,7 +101,7 @@ export class UserDirectoryForm extends FormDialog {
                     unhoveredColor.apply(this);
                 }),
                 onClick(() => {
-                    this.hide();
+                    hide(this);
                     warpToEvt.id = user.id;
                     this.dispatchEvent(warpToEvt);
                 }))];

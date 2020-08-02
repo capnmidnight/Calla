@@ -4,11 +4,11 @@ import { add } from "./add.js";
 import { EventBase } from "./EventBase.js";
 
 /**
- * 
- * @param {EventBase|EventTarget} target
- * @param {string} resolveEvt
- * @param {string?} rejectEvt
- * @param {number?} timeout
+ * Wait for a specific event, one time.
+ * @param {EventBase|EventTarget} target - the event target.
+ * @param {string} resolveEvt - the name of the event that will resolve the Promise this method creates.
+ * @param {string} rejectEvt - the name of the event that could reject the Promise this method creates.
+ * @param {number} timeout - the number of milliseconds to wait for the resolveEvt, before rejecting.
  */
 export function once(target, resolveEvt, rejectEvt, timeout) {
 

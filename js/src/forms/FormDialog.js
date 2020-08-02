@@ -5,10 +5,11 @@ import { className, id } from "../html/attrs.js";
 import { display, flexDirection, margin, overflowY, padding, styles } from "../html/css.js";
 import { onClick } from "../html/evts.js";
 import { col, gridColsDef, gridDef, gridPos } from "../html/grid.js";
+import { hide, show } from "../html/ops.js";
 import { Button, Div, H1 } from "../html/tags.js";
-import "../protos/index.js";
 
-const hiddenEvt = new Event("hidden");
+const hiddenEvt = new Event("hidden"),
+    shownEvt = new Event("shown");
 
 export class FormDialog extends EventBase {
     constructor(name, header) {
@@ -36,7 +37,7 @@ export class FormDialog extends EventBase {
                         padding("1em"),
                         close.value,
                         onClick(() =>
-                            this.hide()))));
+                            hide(this)))));
 
         formStyle.apply(this.element);
 
@@ -63,6 +64,22 @@ export class FormDialog extends EventBase {
             .apply(this.footer);
     }
 
+    get tagName() {
+        return this.element.tagName;
+    }
+
+    get disabled() {
+        return this.element.disabled;
+    }
+
+    set disabled(v) {
+        this.element.disabled = v;
+    }
+
+    get style() {
+        return this.element.style;
+    }
+
     appendChild(child) {
         return this.element.appendChild(child);
     }
@@ -72,35 +89,17 @@ export class FormDialog extends EventBase {
     }
 
     show() {
-        this.element.show("grid");
+        show(this.element, "grid");
+        this.dispatchEvent(shownEvt);
     }
 
     async showAsync() {
-        this.show();
+        show(this);
         await once(this, "hidden");
     }
 
     hide() {
-        this.element.hide();
+        hide(this.element);
         this.dispatchEvent(hiddenEvt);
-    }
-
-    toggleOpen() {
-        if (this.isOpen) {
-            this.hide();
-        }
-        else {
-            this.show();
-        }
-    }
-
-    get isOpen() {
-        return this.element.isOpen();
-    }
-
-    set isOpen(v) {
-        if (v !== this.isOpen) {
-            this.toggleOpen();
-        }
     }
 }

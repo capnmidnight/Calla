@@ -1,6 +1,4 @@
 ﻿import { EventBase } from "../events/EventBase.js";
-import { once } from "../events/once.js";
-import "../protos/index.js";
 import { tag } from "./tag.js";
 
 /**
@@ -80,43 +78,23 @@ export class HtmlCustomTag extends EventBase {
     }
 
     /**
-     * Wait for a specific event, one time.
-     * @param {string} resolveEvt - the name of the event that will resolve the Promise this method creates.
-     * @param {string} rejectEvt - the name of the event that could reject the Promise this method creates.
-     * @param {number} timeout - the number of milliseconds to wait for the resolveEvt, before rejecting.
-     */
-    async once(resolveEvt, rejectEvt, timeout) {
-        return await once(this.eventTarget, resolveEvt, rejectEvt, timeout);
-    }
-
-    /**
-     * Set whether or not the container element is visible.
-     * @param {boolean} v
-     */
-    setOpen(v) {
-        this.element.setOpen(v);
-    }
-
-    /**
-     * Makes the container element visible, if it is not already.
-     **/
-    show() {
-        this.setOpen(true);
-    }
-
-    /**
-     * Makes the container element not visible, if it is not already.
-     **/
-    hide() {
-        this.setOpen(false);
-    }
-
-    /**
      * Gets the style attribute of the underlying select box.
      * @type {ElementCSSInlineStyle}
      */
     get style() {
         return this.element.style;
+    }
+
+    get tagName() {
+        return this.element.tagName;
+    }
+
+    get disabled() {
+        return this.element.disabled;
+    }
+
+    set disabled(v) {
+        this.element.disabled = v;
     }
 
     /**
