@@ -1,4 +1,6 @@
 ﻿import { EventBase } from "../events/EventBase.js";
+import { controls, playsInline, src } from "../html/attrs.js";
+import { Audio, Source } from "../html/tags.js";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 import { AudioActivityEvent } from "./AudioActivityEvent.js";
 import { MockAudioContext } from "./MockAudioContext.js";
@@ -37,14 +39,14 @@ export class AudioManager extends EventBase {
         this.rolloff = 1;
         this.transitionTime = 0.5;
 
-        /** @type {AudioContext} */
-        this.audioContext = null;
-
         /** @type {InterpolatedPose} */
         this.pose = new InterpolatedPose();
 
-        /** @type {BaseListener} */
-        this.listener = null;
+        /** @type {Map.<string, InterpolatedPose>} */
+        this.poses = new Map();
+
+        /** @type {Map.<string, Audio>} */
+        this.clips = new Map();
 
         /**
          * Forwards on the audioActivity of an audio source.
@@ -57,9 +59,6 @@ export class AudioManager extends EventBase {
             this.dispatchEvent(audioActivityEvt);
         };
 
-        /** @type {Map.<string, InterpolatedPose>} */
-        this.poses = new Map();
-
         this.timer = new RequestAnimationFrameTimer();
         this.timer.addEventListener("tick", () => {
             this.pose.update(this.currentTime);
@@ -67,6 +66,12 @@ export class AudioManager extends EventBase {
                 pose.update(this.currentTime);
             }
         });
+
+        /** @type {AudioContext} */
+        this.audioContext = null;
+
+        /** @type {BaseListener} */
+        this.listener = null;
 
         Object.seal(this);
     }
@@ -154,6 +159,40 @@ export class AudioManager extends EventBase {
         }
 
         return this.listener.createSource(id, stream, bufferSize, this.audioContext, this.pose.current);
+    }
+
+    /**
+     * Creates a new sound effect from a series of fallback paths
+     * for media files.
+     * @param {string} name - the name of the sound effect, to reference when executing playback.
+     * @param {string[]} paths - a series of fallback paths for loading the media of the sound effect.
+     * @returns {AudioManager}
+     */
+    addClip(name, ...paths) {
+        const sources = paths
+            .map((p) => src(p))
+            .map((s) => Source(s));
+
+        const elem = Audio(
+            controls(false),
+            playsInline,
+            ...sources);
+
+        this.clips.set(name, elem);
+        return this;
+    }
+
+    /**
+     * Plays a named sound effect.
+     * @param {string} name - the name of the effect to play.
+     * @param {number} [volume=1] - the volume at which to play the effect.
+     */
+    playClip(name, volume = 1) {
+        if (this.clips.has(name)) {
+            const clip = this.clips.get(name);
+            clip.volume = volume;
+            clip.play();
+        }
     }
 
     /**

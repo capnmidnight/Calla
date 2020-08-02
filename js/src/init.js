@@ -1,5 +1,4 @@
-﻿import { SFX } from "./audio/SFX.js";
-import { allPeople as people } from "./emoji/emojis.js";
+﻿import { allPeople as people } from "./emoji/emojis.js";
 import { addEventListeners } from "./events/addEventListeners.js";
 import { EmojiForm } from "./forms/EmojiForm.js";
 import { FooterBar } from "./forms/FooterBar.js";
@@ -29,9 +28,6 @@ const disabler = disabled(true),
  */
 export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
     const settings = new Settings(),
-        sound = new SFX()
-            .add("join", "audio/door-open.ogg", "audio/door-open.mp3", "audio/door-open.wav")
-            .add("leave", "audio/door-close.ogg", "audio/door-close.mp3", "audio/door-close.wav"),
         game = new Game(),
         login = new LoginForm(),
         directory = new UserDirectoryForm(),
@@ -154,6 +150,10 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
     client.preferredAudioOutputID = settings.preferredAudioOutputID;
     client.preferredAudioInputID = settings.preferredAudioInputID;
     client.preferredVideoInputID = settings.preferredVideoInputID;
+
+    client.audio
+        .addClip("join", "audio/door-open.ogg", "audio/door-open.mp3", "audio/door-open.wav")
+        .addClip("leave", "audio/door-close.ogg", "audio/door-close.mp3", "audio/door-close.wav");
 
     showLogin();
 
@@ -389,12 +389,12 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         },
 
         participantJoined: (evt) => {
-            sound.play("join", 0.5);
+            client.audio.play("join", 0.5);
             game.addUser(evt.id, evt.displayName, evt.pose);
         },
 
         participantLeft: (evt) => {
-            sound.play("leave", 0.5);
+            client.audio.play("leave", 0.5);
             game.removeUser(evt.id);
             directory.delete(evt.id);
         },
