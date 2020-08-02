@@ -17,4 +17,3 @@ export * from "./timers/index.js";
 export * from "./typeChecks.js";
 export * from "./User.js";
 export * from "./version.js";
-export * from "./wait.js";
