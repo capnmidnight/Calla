@@ -3,7 +3,7 @@ import { HtmlTestOutput as TestOutput } from "../../testing/HtmlTestOutput.js";
 import { userNumber } from "../../testing/userNumber.js";
 import { JitsiClient1_Tests } from "./JitsiClient1_Tests.js";
 import { JitsiClient2_Tests } from "./JitsiClient2_Tests.js";
-import { LibJitsiMeetClient } from "../../../src/jitsi/LibJitsiMeetClient.js";
+import { LibJitsiMeetClient } from "../../../src/LibJitsiMeetClient.js";
 
 function echoEvt(evt) {
     console.log(evt.type, evt.id, evt);

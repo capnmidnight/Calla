@@ -2,7 +2,7 @@
 import { once } from "../../../src/events/once.js";
 import { wait } from "../../../src/events/wait.js";
 import { when } from "../../../src/events/when.js";
-import { LibJitsiMeetClient } from "../../../src/LibJitsiMeetClient";
+import { LibJitsiMeetClient } from "../../../src/LibJitsiMeetClient.js";
 import { TestCase } from "../../testing/TestCase.js";
 import { userNumber } from "../../testing/userNumber.js";
 
