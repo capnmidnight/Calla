@@ -1,16 +1,14 @@
 ﻿import { EventBase } from "../events/EventBase.js";
-import { controls, playsInline, src } from "../html/attrs.js";
-import { Audio, Source } from "../html/tags.js";
 import { AudioActivityEvent } from "./AudioActivityEvent.js";
 import { MockAudioContext } from "./MockAudioContext.js";
 import { InterpolatedPose } from "./positions/InterpolatedPose.js";
 import { Pose } from "./positions/Pose.js";
+import { ManualVolume } from "./spatializers/index.js";
 import { AudioListenerNew } from "./spatializers/listeners/AudioListenerNew.js";
 import { AudioListenerOld } from "./spatializers/listeners/AudioListenerOld.js";
 import { BaseListener } from "./spatializers/listeners/BaseListener.js";
 import { ResonanceScene } from "./spatializers/listeners/ResonanceScene.js";
 import { BaseSource } from "./spatializers/sources/BaseSource.js";
-import { ManualVolume } from "./spatializers/index.js";
 
 const BUFFER_SIZE = 1024,
     audioActivityEvt = new AudioActivityEvent();
@@ -184,13 +182,16 @@ export class AudioManager extends EventBase {
         const pose = new InterpolatedPose();
 
         const sources = paths
-            .map((p) => src(p))
-            .map((s) => Source(s));
+            .map((p) => {
+                const s = document.createElement("source");
+                s.src = p;
+                return s;
+            });
 
-        const elem = Audio(
-            controls(false),
-            playsInline,
-            ...sources);
+        const elem = document.createElement("audio");
+        elem.controls = false;
+        elem.playsInline = true;
+        elem.append(...sources);
 
         this.createSpatializer(name, elem)
             .then((source) => pose.spatializer = source);

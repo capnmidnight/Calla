@@ -1,6 +1,4 @@
-﻿import { srcObject } from "../../../html/attrs.js";
-import { Audio } from "../../../html/tags.js";
-import { canChangeAudioOutput } from "../../canChangeAudioOutput.js";
+﻿import { canChangeAudioOutput } from "../../canChangeAudioOutput.js";
 import { BaseSpatializer } from "../BaseSpatializer.js";
 
 /** Base class providing functionality for spatializers. */
@@ -30,7 +28,8 @@ export class BaseSource extends BaseSpatializer {
         }
         else if (stream instanceof MediaStream) {
             this.stream = stream;
-            this.audio = Audio(srcObject(this.stream));
+            this.audio = document.createElement("audio");
+            this.audio.srcObject = this.stream;
         }
         else if (stream !== null) {
             throw new Error("Can't create a node from the given stream. Expected type HTMLAudioElement or MediaStream.");
