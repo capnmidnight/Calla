@@ -1,2 +1,2 @@
-cmd /C npm version patch
+cmd /C "npm version patch"
 pkg

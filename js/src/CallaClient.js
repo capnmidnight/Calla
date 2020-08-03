@@ -6,7 +6,6 @@ import { arrayScan } from "./arrays/arrayScan.js";
 import { AudioActivityEvent } from "./audio/AudioActivityEvent.js";
 import { AudioManager } from "./audio/AudioManager.js";
 import { canChangeAudioOutput } from "./audio/canChangeAudioOutput.js";
-import { addEventListeners } from "./events/addEventListeners.js";
 import { EventBase } from "./events/EventBase.js";
 import { once } from "./events/once.js";
 import { until } from "./events/until.js";
@@ -76,6 +75,11 @@ const userInputs = new Map();
 
 const audioActivityEvt = new AudioActivityEvent();
 
+let prepareTask = null;
+async function prepare(host) {
+    console.info("Connecting to:", host);
+    prepareTask = import(`https://${host}/libs/lib-jitsi-meet.min.js`);
+}
 
 function logger(source, evtName) {
     if (window.location.hostname === "localhost") {
@@ -113,11 +117,12 @@ export class CallaClient extends EventBase {
     constructor(JITSI_HOST, JVB_HOST, JVB_MUC) {
         super();
 
+        prepare(JITSI_HOST);
+
         this.host = JITSI_HOST;
         this.bridgeHost = JVB_HOST;
         this.bridgeMUC = JVB_MUC;
 
-        this.prepared = false;
         this.joined = false;
         this.connection = null;
         this.conference = null;
@@ -217,6 +222,8 @@ export class CallaClient extends EventBase {
             }
         });
 
+        window.addEventListener("beforeunload", () => this.dispose());
+        window.addEventListener("pagehide", () => this.dispose());
 
         Object.seal(this);
     }
@@ -238,21 +245,14 @@ export class CallaClient extends EventBase {
             .map(k => [k, this.conference.participants[k].getDisplayName()]);
     }
 
-    async prepareAsync() {
-        if (!this.prepared) {
-            console.info("Connecting to:", this.host);
-            await import(`https://${this.host}/libs/lib-jitsi-meet.min.js`);
-            this.prepared = true;
-        }
-    }
-
-
     /**
      * @param {string} roomName
      * @param {string} userName
      */
-    async initializeAsync(roomName, userName) {
-        await this.prepareAsync();
+    async join(roomName, userName) {
+        this.dispose();
+
+        await prepareTask;
 
         roomName = roomName.toLocaleLowerCase();
 
@@ -297,6 +297,7 @@ export class CallaClient extends EventBase {
             this.conference.addEventListener(CONFERENCE_JOINED, async () => {
                 const id = this.conference.myUserId();
                 this.joined = true;
+                this.setDisplayName(userName);
                 this.dispatchEvent(Object.assign(
                     new Event("videoConferenceJoined"), {
                     id,
@@ -478,31 +479,6 @@ export class CallaClient extends EventBase {
         }
     }
 
-    /**
-     * @param {string} roomName
-     * @param {string} userName
-     */
-    async joinAsync(roomName, userName) {
-        this.dispose();
-
-        const joinTask = once(this, "videoConferenceJoined");
-
-        await this.initializeAsync(roomName, userName);
-
-        addEventListeners(window, {
-            beforeunload: () => this.dispose(),
-            pagehide: () => this.dispose()
-        });
-
-        const joinInfo = await joinTask;
-
-        this.setDisplayName(userName);
-
-        await this.setPreferredDevicesAsync();
-
-        return joinInfo;
-    }
-
     async setPreferredDevicesAsync() {
         await this.setPreferredAudioOutputAsync(true);
         await this.setPreferredAudioInputAsync(true);
@@ -623,6 +599,7 @@ export class CallaClient extends EventBase {
     }
 
     async _getDevicesAsync() {
+        await prepareTask;
         let devices = await navigator.mediaDevices.enumerateDevices();
 
         for (let device of devices) {

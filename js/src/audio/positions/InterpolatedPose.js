@@ -40,7 +40,7 @@ export class InterpolatedPose {
     }
 
     /**
-     * Set the target position for the time `t + dt`.
+     * Set the target position and orientation for the time `t + dt`.
      * @param {number} px - the horizontal component of the position.
      * @param {number} py - the vertical component of the position.
      * @param {number} pz - the lateral component of the position.
@@ -58,6 +58,41 @@ export class InterpolatedPose {
         this.start.t = t;
         this.end.set(px, py, pz, fx, fy, fz, ux, uy, uz);
         this.end.t = t + dt;
+    }
+
+    /**
+     * Set the target position for the time `t + dt`.
+     * @param {number} px - the horizontal component of the position.
+     * @param {number} py - the vertical component of the position.
+     * @param {number} pz - the lateral component of the position.
+     * @param {number} t - the time at which to start the transition.
+     * @param {number} dt - the amount of time to take making the transition.
+     */
+    setTargetPosition(px, py, pz, t, dt) {
+        this.setTarget(
+            px, py, pz,
+            this.end.f.x, this.end.f.y, this.end.f.z,
+            this.end.u.x, this.end.u.y, this.end.u.z,
+            t, dt);
+    }
+
+    /**
+     * Set the target orientation for the time `t + dt`.
+     * @param {number} fx - the horizontal component of the position.
+     * @param {number} fy - the vertical component of the position.
+     * @param {number} fz - the lateral component of the position.
+     * @param {number} ux - the horizontal component of the position.
+     * @param {number} uy - the vertical component of the position.
+     * @param {number} uz - the lateral component of the position.
+     * @param {number} t - the time at which to start the transition.
+     * @param {number} dt - the amount of time to take making the transition.
+     */
+    setTargetOrientation(fx, fy, fz, ux, uy, uz, t, dt) {
+        this.setTarget(
+            this.end.p.x, this.end.p.y, this.end.p.z,
+            fx, fy, fz,
+            ux, uy, uz,
+            t, dt);
     }
 
     /**

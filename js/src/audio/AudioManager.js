@@ -305,7 +305,7 @@ export class AudioManager extends EventBase {
      * @param {number} z - the lateral component of the position.
      */
     setLocalPosition(x, y, z) {
-        this.pose.setTarget(x, y, z, 0, 0, 1, 0, 1, 0, this.currentTime, this.transitionTime);
+        this.pose.setTarget(x, y, z, 0, 0, -1, 0, 1, 0, this.currentTime, this.transitionTime);
     }
 
 
@@ -326,7 +326,7 @@ export class AudioManager extends EventBase {
     setUserPosition(id, x, y, z) {
         if (this.users.has(id)) {
             const pose = this.users.get(id);
-            pose.setTarget(x, y, z, 0, 0, 1, 0, 1, 0, this.currentTime, this.transitionTime);
+            pose.setTarget(x, y, z, 0, 0, -1, 0, 1, 0, this.currentTime, this.transitionTime);
         }
     }
 }
