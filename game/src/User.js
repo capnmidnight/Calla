@@ -1,5 +1,6 @@
 ﻿import { EventBase, isString, Pose, project } from "../../js/src/index.js";
-import { AvatarMode, BaseAvatar } from "./avatars/BaseAvatar.js";
+import { AvatarMode } from "./avatars/AvatarMode.js";
+import { BaseAvatar } from "./avatars/BaseAvatar.js";
 import { EmojiAvatar } from "./avatars/EmojiAvatar.js";
 import { PhotoAvatar } from "./avatars/PhotoAvatar.js";
 import { VideoAvatar } from "./avatars/VideoAvatar.js";
