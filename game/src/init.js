@@ -1,4 +1,4 @@
-﻿import { addEventListeners, CallaClient } from "../lib/Calla.js";
+﻿import { addEventListeners, CallaClient } from "../../js/src/index.js";
 import { allPeople as people } from "./emoji/emojis.js";
 import { EmojiForm } from "./forms/EmojiForm.js";
 import { FooterBar } from "./forms/FooterBar.js";

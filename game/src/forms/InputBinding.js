@@ -1,4 +1,4 @@
-﻿import { EventBase } from "../../lib/Calla.js";
+﻿import { EventBase } from "../../../js/src/index.js";
 
 const inputBindingChangedEvt = new Event("inputBindingChanged");
 

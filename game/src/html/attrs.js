@@ -1,4 +1,4 @@
-﻿import { isBoolean } from "../../lib/Calla.js";
+﻿import { isBoolean } from "../../../js/src/index.js";
 
 /**
  * A setter functor for HTML attributes.

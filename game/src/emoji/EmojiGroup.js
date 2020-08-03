@@ -1,4 +1,4 @@
-﻿import { arrayRandom } from "../../lib/Calla.js";
+﻿import { arrayRandom } from "../../../js/src/index.js";
 import { Emoji } from "./Emoji.js";
 
 export class EmojiGroup extends Emoji {

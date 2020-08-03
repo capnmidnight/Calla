@@ -1,8 +1,5 @@
 ﻿import { bust } from "../../../game/src/emoji/emojis.js";
-import { CallaClient } from "../../../js/src/CallaClient.js";
-import { once } from "../../../js/src/events/once.js";
-import { wait } from "../../../js/src/events/wait.js";
-import { when } from "../../../js/src/events/when.js";
+import { CallaClient, once, wait, when } from "../../../js/src/index.js";
 import { TestCase } from "../../testing/TestCase.js";
 import { userNumber } from "../../testing/userNumber.js";
 

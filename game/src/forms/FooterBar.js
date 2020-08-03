@@ -1,4 +1,4 @@
-﻿import { EventBase } from "../../lib/Calla.js";
+﻿import { EventBase } from "../../../js/src/index.js";
 import { mutedSpeaker, noMobilePhone, speakerHighVolume, upwardsButton, videoCamera, whiteFlower } from "../emoji/emojis.js";
 import { id, title } from "../html/attrs.js";
 import { backgroundColor, borderLeft, borderRight, columnGap, cssHeight, cssWidth, fontSize, padding, pointerEvents, styles, textAlign } from "../html/css.js";

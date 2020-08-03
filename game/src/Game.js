@@ -1,4 +1,4 @@
-import { arrayClear, arrayRemoveAt, clamp, EventBase, isString, lerp, Pose, project, unproject } from "../lib/Calla.js";
+import { arrayClear, arrayRemoveAt, clamp, EventBase, isString, lerp, Pose, project, unproject } from "../../js/src/index.js";
 import { Emote } from "./graphics/Emote.js";
 import { TileMap } from "./graphics/TileMap.js";
 import { id } from "./html/attrs.js";

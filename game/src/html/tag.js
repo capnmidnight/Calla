@@ -1,4 +1,4 @@
-﻿import { isBoolean, isFunction, isNumber, isString } from "../../lib/Calla.js";
+﻿import { isBoolean, isFunction, isNumber, isString } from "../../../js/src/index.js";
 import { HtmlAttr } from "./attrs.js";
 import { CssProp, CssPropSet } from "./css.js";
 import { HtmlEvt } from "./evts.js";

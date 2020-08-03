@@ -1,9 +1,9 @@
 ﻿import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../../../constants.js";
+import { CallaClient } from "../../../js/src/index.js";
 import { HtmlTestOutput as TestOutput } from "../../testing/HtmlTestOutput.js";
 import { userNumber } from "../../testing/userNumber.js";
 import { JitsiClient1_Tests } from "./JitsiClient1_Tests.js";
 import { JitsiClient2_Tests } from "./JitsiClient2_Tests.js";
-import { CallaClient } from "../../../js/src/CallaClient.js";
 
 function echoEvt(evt) {
     console.log(evt.type, evt.id, evt);

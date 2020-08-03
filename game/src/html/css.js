@@ -1,4 +1,4 @@
-﻿import { isBoolean } from "../../lib/Calla.js";
+﻿import { isBoolean } from "../../../js/src/index.js";
 
 /**
  * A CSS property that will be applied to an element's style attribute.

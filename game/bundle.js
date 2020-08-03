@@ -1,3 +1,7 @@
+const JITSI_HOST = "tele.calla.chat";
+const JVB_HOST = JITSI_HOST;
+const JVB_MUC = "conference." + JITSI_HOST;
+
 /**
  * Empties out an array
  * @param {any[]} arr - the array to empty.
@@ -8860,26 +8864,6 @@ class AudioManager extends EventBase {
     }
 }
 
-function createWorker(script, stripFunc = true) {
-    if (isFunction(script)) {
-        script = script.toString();
-        stripFunc = true;
-    }
-    else if (!isString(script)) {
-        throw new Error("Script parameter must be either a string or function");
-    }
-
-    if (stripFunc) {
-        script = script.trim();
-        const start = script.indexOf('{');
-        script = script.substring(start + 1, script.length - 1);
-    }
-
-    const blob = new Blob([script], { type: "text/javascript" }),
-        dataURI = URL.createObjectURL(blob);
-    return new Worker(dataURI);
-}
-
 /**
  * 
  * @param {Function} a
@@ -9016,17 +9000,6 @@ function until(target, untilEvt, callback, test, repeatTimeout, cancelTimeout) {
 
             timer = setTimeout(repeater, 0);
         }
-    });
-}
-
-/**
- * Wait a number of milliseconds
- * @param {number} ms - the number of milliseconds to wait
- * @return {Promise} - resolves when the time is up
- */
-function wait(ms) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, ms);
     });
 }
 
@@ -10048,4 +10021,9094 @@ class CallaClient extends EventBase {
     }
 }
 
-export { AudioActivityEvent, AudioListenerBase, AudioListenerNew, AudioListenerOld, AudioManager, BaseAnalyzed, BaseListener, BaseSource, BaseSpatializer, BaseWebAudio, CallaClient, EventBase, InterpolatedPose, ManualBase, ManualStereo, ManualVolume, MockAudioContext, PannerBase, PannerNew, PannerOld, Pose, ResonanceScene, ResonanceSource, Vector, add, addEventListeners, arrayClear, arrayRandom, arrayRemoveAt, arrayScan, canChangeAudioOutput, clamp, createWorker, isBoolean, isFunction, isGoodNumber, isNumber, isString, lerp, once, project, unproject, until, versionString, wait, when };
+/**
+ * Unicode-standardized pictograms.
+ **/
+class Emoji {
+    /**
+     * Creates a new Unicode-standardized pictograms.
+     * @param {string} value - a Unicode sequence.
+     * @param {string} desc - an English text description of the pictogram.
+     */
+    constructor(value, desc) {
+        this.value = value;
+        this.desc = desc;
+    }
+
+    /**
+     * Determines of the provided Emoji or EmojiGroup is a subset of
+     * this emoji.
+     * @param {(Emoji|EmojiGroup)} e
+     */
+    contains(e) {
+        return this.value.indexOf(e.value) >= 0;
+    }
+}
+
+/**
+ * Shorthand for `new Emoji`, which saves significantly on bundle size.
+ * @param {string} v - a Unicode sequence.
+ * @param {string} d - an English text description of the pictogram.
+ * @param {any} [o=null] - an optional set of properties to set on the Emoji object.
+ */
+function e(v, d, o = null) {
+    return Object.assign(new Emoji(v, d), o);
+}
+
+class EmojiGroup extends Emoji {
+    /**
+     * Groupings of Unicode-standardized pictograms.
+     * @param {string} value - a Unicode sequence.
+     * @param {string} desc - an English text description of the pictogram.
+     * @param {Emoji[]} rest - Emojis in this group.
+     */
+    constructor(value, desc, ...rest) {
+        super(value, desc);
+        /** @type {Emoji[]} */
+        this.alts = rest;
+        /** @type {string} */
+        this.width = null;
+    }
+
+    /**
+     * Selects a random emoji out of the collection.
+     * @returns {(Emoji|EmojiGroup)}
+     **/
+    random() {
+        const selection = arrayRandom(this.alts);
+        if (selection instanceof EmojiGroup) {
+            return selection.random();
+        }
+        else {
+            return selection;
+        }
+    }
+
+    /**
+     *
+     * @param {(Emoji|EmojiGroup)} e
+     */
+    contains(e) {
+        return super.contains(e)
+            || this.alts.reduce((a, b) => a || b.contains(e), false);
+    }
+}
+
+
+/**
+ * Shorthand for `new EmojiGroup`, which saves significantly on bundle size.
+ * @param {string} v - a Unicode sequence.
+ * @param {string} d - an English text description of the pictogram.
+ * @param {...(Emoji|EmojiGroup)} r - the emoji that are contained in this group.
+ * @returns {EmojiGroup}
+ */
+function g(v, d, ...r) {
+    return new EmojiGroup(v, d, ...r);
+}
+
+/**
+ * A shorthand for `new EmojiGroup` that allows for setting optional properties
+ * on the EmojiGroup object.
+ * @param {string} v - a Unicode sequence.
+ * @param {string} d - an English text description of the pictogram.
+ * @param {any} o - a set of properties to set on the Emoji object.
+ * @param {...(Emoji|EmojiGroup)} r - the emoji that are contained in this group.
+ * @returns {EmojiGroup}
+ */
+function gg(v, d, o, ...r) {
+    return Object.assign(
+        g(
+            v,
+            d,
+            ...Object
+                .values(o)
+                .filter(v => v instanceof Emoji),
+            ...r),
+        o);
+}
+
+const textStyle = e("\u{FE0E}", "Variation Selector-15: text style");
+const emojiStyle = e("\u{FE0F}", "Variation Selector-16: emoji style");
+const zeroWidthJoiner = e("\u{200D}", "Zero Width Joiner");
+const combiningEnclosingCircleBackslash = e("\u{20E3}", "Combining Enclosing Circle Backslash");
+const combiningEnclosingKeycap = e("\u{20E3}", "Combining Enclosing Keycap");
+
+const female = e("\u{2640}\u{FE0F}", "Female");
+const male = e("\u{2642}\u{FE0F}", "Male");
+const skinL = e("\u{1F3FB}", "Light Skin Tone");
+const skinML = e("\u{1F3FC}", "Medium-Light Skin Tone");
+const skinM = e("\u{1F3FD}", "Medium Skin Tone");
+const skinMD = e("\u{1F3FE}", "Medium-Dark Skin Tone");
+const skinD = e("\u{1F3FF}", "Dark Skin Tone");
+const hairRed = e("\u{1F9B0}", "Red Hair");
+const hairCurly = e("\u{1F9B1}", "Curly Hair");
+const hairWhite = e("\u{1F9B3}", "White Hair");
+const hairBald = e("\u{1F9B2}", "Bald");
+
+function combo(a, b) {
+    if (a instanceof Array) {
+        return a.map(c => combo(c, b));
+    }
+    else if (a instanceof EmojiGroup) {
+        const { value, desc } = combo(e(a.value, a.desc), b);
+        return g(value, desc, ...combo(a.alts, b));
+    }
+    else if (b instanceof Array) {
+        return b.map(c => combo(a, c));
+    }
+    else {
+        return e(a.value + b.value, a.desc + ": " + b.desc);
+    }
+}
+
+function join(a, b) {
+    if (a instanceof Array) {
+        return a.map(c => join(c, b));
+    }
+    else if (a instanceof EmojiGroup) {
+        const { value, desc } = join(e(a.value, a.desc), b);
+        return g(value, desc, ...join(a.alts, b));
+    }
+    else if (b instanceof Array) {
+        return b.map(c => join(a, c));
+    }
+    else {
+        return e(a.value + zeroWidthJoiner.value + b.value, a.desc + ": " + b.desc);
+    }
+}
+
+/**
+ * Check to see if a given Emoji walks on water.
+ * @param {Emoji} e
+ */
+function isSurfer(e) {
+    return surfers.contains(e)
+        || rowers.contains(e)
+        || swimmers.contains(e)
+        || merpeople.contains(e);
+}
+
+function skin(v, d, ...rest) {
+    const person = e(v, d),
+        light = combo(person, skinL),
+        mediumLight = combo(person, skinML),
+        medium = combo(person, skinM),
+        mediumDark = combo(person, skinMD),
+        dark = combo(person, skinD);
+    return gg(person.value, person.desc, {
+        default: person,
+        light,
+        mediumLight,
+        medium,
+        mediumDark,
+        dark
+    }, ...rest);
+}
+
+function sex(person) {
+    const man = join(person, male),
+        woman = join(person, female);
+
+    return gg(person.value, person.desc, {
+        default: person,
+        man,
+        woman
+    });
+}
+
+function skinAndSex(v, d) {
+    return sex(skin(v, d));
+}
+
+function skinAndHair(v, d, ...rest) {
+    const people = skin(v, d),
+        red = join(people, hairRed),
+        curly = join(people, hairCurly),
+        white = join(people, hairWhite),
+        bald = join(people, hairBald);
+    return gg(people.value, people.desc, {
+        default: people,
+        red,
+        curly,
+        white,
+        bald
+    }, ...rest);
+}
+
+function sym(symbol, name) {
+    const j = e(symbol.value, name),
+        men = join(man.default, j),
+        women = join(woman.default, j);
+    return gg(symbol.value, symbol.desc, {
+        symbol,
+        men,
+        women
+    });
+}
+
+const frowners = skinAndSex("\u{1F64D}", "Frowning");
+const pouters = skinAndSex("\u{1F64E}", "Pouting");
+const gesturingNo = skinAndSex("\u{1F645}", "Gesturing NO");
+const gesturingOK = skinAndSex("\u{1F646}", "Gesturing OK");
+const tippingHand = skinAndSex("\u{1F481}", "Tipping Hand");
+const raisingHand = skinAndSex("\u{1F64B}", "Raising Hand");
+const bowing = skinAndSex("\u{1F647}", "Bowing");
+const facePalming = skinAndSex("\u{1F926}", "Facepalming");
+const shrugging = skinAndSex("\u{1F937}", "Shrugging");
+const cantHear = skinAndSex("\u{1F9CF}", "Can't Hear");
+const gettingMassage = skinAndSex("\u{1F486}", "Getting Massage");
+const gettingHaircut = skinAndSex("\u{1F487}", "Getting Haircut");
+
+const constructionWorkers = skinAndSex("\u{1F477}", "Construction Worker");
+const guards = skinAndSex("\u{1F482}", "Guard");
+const spies = skinAndSex("\u{1F575}", "Spy");
+const police = skinAndSex("\u{1F46E}", "Police");
+const wearingTurban = skinAndSex("\u{1F473}", "Wearing Turban");
+const superheroes = skinAndSex("\u{1F9B8}", "Superhero");
+const supervillains = skinAndSex("\u{1F9B9}", "Supervillain");
+const mages = skinAndSex("\u{1F9D9}", "Mage");
+const fairies = skinAndSex("\u{1F9DA}", "Fairy");
+const vampires = skinAndSex("\u{1F9DB}", "Vampire");
+const merpeople = skinAndSex("\u{1F9DC}", "Merperson");
+const elves = skinAndSex("\u{1F9DD}", "Elf");
+const walking = skinAndSex("\u{1F6B6}", "Walking");
+const standing = skinAndSex("\u{1F9CD}", "Standing");
+const kneeling = skinAndSex("\u{1F9CE}", "Kneeling");
+const runners = skinAndSex("\u{1F3C3}", "Running");
+
+const gestures = g(
+    "Gestures", "Gestures",
+    frowners,
+    pouters,
+    gesturingNo,
+    gesturingOK,
+    tippingHand,
+    raisingHand,
+    bowing,
+    facePalming,
+    shrugging,
+    cantHear,
+    gettingMassage,
+    gettingHaircut);
+
+
+const baby = skin("\u{1F476}", "Baby");
+const child = skin("\u{1F9D2}", "Child");
+const boy = skin("\u{1F466}", "Boy");
+const girl = skin("\u{1F467}", "Girl");
+const children = gg(child.value, child.desc, {
+    default: child,
+    male: boy,
+    female: girl
+});
+
+
+const blondes = skinAndSex("\u{1F471}", "Blond Person");
+const person = skin("\u{1F9D1}", "Person", blondes.default, wearingTurban.default);
+
+const beardedMan = skin("\u{1F9D4}", "Bearded Man");
+const manInSuitLevitating = e("\u{1F574}\u{FE0F}", "Man in Suit, Levitating");
+const manWithChineseCap = skin("\u{1F472}", "Man With Chinese Cap");
+const manInTuxedo = skin("\u{1F935}", "Man in Tuxedo");
+const man = skinAndHair("\u{1F468}", "Man",
+    blondes.man,
+    beardedMan,
+    manInSuitLevitating,
+    manWithChineseCap,
+    wearingTurban.man,
+    manInTuxedo);
+
+const pregnantWoman = skin("\u{1F930}", "Pregnant Woman");
+const breastFeeding = skin("\u{1F931}", "Breast-Feeding");
+const womanWithHeadscarf = skin("\u{1F9D5}", "Woman With Headscarf");
+const brideWithVeil = skin("\u{1F470}", "Bride With Veil");
+const woman = skinAndHair("\u{1F469}", "Woman",
+    blondes.woman,
+    pregnantWoman,
+    breastFeeding,
+    womanWithHeadscarf,
+    wearingTurban.woman,
+    brideWithVeil);
+const adults = gg(
+    person.value, "Adult", {
+    default: person,
+    male: man,
+    female: woman
+});
+
+const olderPerson = skin("\u{1F9D3}", "Older Person");
+const oldMan = skin("\u{1F474}", "Old Man");
+const oldWoman = skin("\u{1F475}", "Old Woman");
+const elderly = gg(
+    olderPerson.value, olderPerson.desc, {
+    default: olderPerson,
+    male: oldMan,
+    female: oldWoman
+});
+
+const medical = e("\u{2695}\u{FE0F}", "Medical");
+const healthCareWorkers = sym(medical, "Health Care");
+
+const graduationCap = e("\u{1F393}", "Graduation Cap");
+const students = sym(graduationCap, "Student");
+
+const school = e("\u{1F3EB}", "School");
+const teachers = sym(school, "Teacher");
+
+const balanceScale = e("\u{2696}\u{FE0F}", "Balance Scale");
+const judges = sym(balanceScale, "Judge");
+
+const sheafOfRice = e("\u{1F33E}", "Sheaf of Rice");
+const farmers = sym(sheafOfRice, "Farmer");
+
+const cooking = e("\u{1F373}", "Cooking");
+const cooks = sym(cooking, "Cook");
+
+const wrench = e("\u{1F527}", "Wrench");
+const mechanics = sym(wrench, "Mechanic");
+
+const factory = e("\u{1F3ED}", "Factory");
+const factoryWorkers = sym(factory, "Factory Worker");
+
+const briefcase = e("\u{1F4BC}", "Briefcase");
+const officeWorkers = sym(briefcase, "Office Worker");
+
+const fireEngine = e("\u{1F692}", "Fire Engine");
+const fireFighters = sym(fireEngine, "Fire Fighter");
+
+const rocket = e("\u{1F680}", "Rocket");
+const astronauts = sym(rocket, "Astronaut");
+
+const airplane = e("\u{2708}\u{FE0F}", "Airplane");
+const pilots = sym(airplane, "Pilot");
+
+const artistPalette = e("\u{1F3A8}", "Artist Palette");
+const artists = sym(artistPalette, "Artist");
+
+const microphone = e("\u{1F3A4}", "Microphone");
+const singers = sym(microphone, "Singer");
+
+const laptop = e("\u{1F4BB}", "Laptop");
+const technologists = sym(laptop, "Technologist");
+
+const microscope = e("\u{1F52C}", "Microscope");
+const scientists = sym(microscope, "Scientist");
+
+const crown = e("\u{1F451}", "Crown");
+const prince = skin("\u{1F934}", "Prince");
+const princess = skin("\u{1F478}", "Princess");
+const royalty = gg(
+    crown.value, crown.desc, {
+    symbol: crown,
+    male: prince,
+    female: princess
+});
+
+const roles = gg(
+    "Roles", "Depictions of people working", {
+    healthCareWorkers,
+    students,
+    teachers,
+    judges,
+    farmers,
+    cooks,
+    mechanics,
+    factoryWorkers,
+    officeWorkers,
+    scientists,
+    technologists,
+    singers,
+    artists,
+    pilots,
+    astronauts,
+    fireFighters,
+    spies,
+    guards,
+    constructionWorkers,
+    royalty
+});
+
+const cherub = skin("\u{1F47C}", "Cherub");
+const santaClaus = skin("\u{1F385}", "Santa Claus");
+const mrsClaus = skin("\u{1F936}", "Mrs. Claus");
+
+const genies = sex(e("\u{1F9DE}", "Genie"));
+const zombies = sex(e("\u{1F9DF}", "Zombie"));
+
+const fantasy = gg(
+    "Fantasy", "Depictions of fantasy characters", {
+    cherub,
+    santaClaus,
+    mrsClaus,
+    superheroes,
+    supervillains,
+    mages,
+    fairies,
+    vampires,
+    merpeople,
+    elves,
+    genies,
+    zombies
+});
+
+const whiteCane = e("\u{1F9AF}", "Probing Cane");
+const withProbingCane = sym(whiteCane, "Probing");
+
+const motorizedWheelchair = e("\u{1F9BC}", "Motorized Wheelchair");
+const inMotorizedWheelchair = sym(motorizedWheelchair, "In Motorized Wheelchair");
+
+const manualWheelchair = e("\u{1F9BD}", "Manual Wheelchair");
+const inManualWheelchair = sym(manualWheelchair, "In Manual Wheelchair");
+
+
+const manDancing = skin("\u{1F57A}", "Man Dancing");
+const womanDancing = skin("\u{1F483}", "Woman Dancing");
+const dancers = gg(
+    manDancing.value, "Dancing", {
+    male: manDancing,
+    female: womanDancing
+});
+
+const jugglers = skinAndSex("\u{1F939}", "Juggler");
+
+const climbers = skinAndSex("\u{1F9D7}", "Climber");
+const fencer = e("\u{1F93A}", "Fencer");
+const jockeys = skin("\u{1F3C7}", "Jockey");
+const skier = e("\u{26F7}\u{FE0F}", "Skier");
+const snowboarders = skin("\u{1F3C2}", "Snowboarder");
+const golfers = skinAndSex("\u{1F3CC}\u{FE0F}", "Golfer");
+const surfers = skinAndSex("\u{1F3C4}", "Surfing");
+const rowers = skinAndSex("\u{1F6A3}", "Rowing Boat");
+const swimmers = skinAndSex("\u{1F3CA}", "Swimming");
+const basketballers = skinAndSex("\u{26F9}\u{FE0F}", "Basket Baller");
+const weightLifters = skinAndSex("\u{1F3CB}\u{FE0F}", "Weight Lifter");
+const bikers = skinAndSex("\u{1F6B4}", "Biker");
+const mountainBikers = skinAndSex("\u{1F6B5}", "Mountain Biker");
+const cartwheelers = skinAndSex("\u{1F938}", "Cartwheeler");
+const wrestlers = sex(e("\u{1F93C}", "Wrestler"));
+const waterPoloers = skinAndSex("\u{1F93D}", "Water Polo Player");
+const handBallers = skinAndSex("\u{1F93E}", "Hand Baller");
+
+const inMotion = gg(
+    "In Motion", "Depictions of people in motion", {
+    walking,
+    standing,
+    kneeling,
+    withProbingCane,
+    inMotorizedWheelchair,
+    inManualWheelchair,
+    dancers,
+    jugglers,
+    climbers,
+    fencer,
+    jockeys,
+    skier,
+    snowboarders,
+    golfers,
+    surfers,
+    rowers,
+    swimmers,
+    runners,
+    basketballers,
+    weightLifters,
+    bikers,
+    mountainBikers,
+    cartwheelers,
+    wrestlers,
+    waterPoloers,
+    handBallers
+});
+
+const inLotusPosition = skinAndSex("\u{1F9D8}", "In Lotus Position");
+const inBath = skin("\u{1F6C0}", "In Bath");
+const inBed = skin("\u{1F6CC}", "In Bed");
+const inSauna = skinAndSex("\u{1F9D6}", "In Sauna");
+const resting = gg(
+    "Resting", "Depictions of people at rest", {
+    inLotusPosition,
+    inBath,
+    inBed,
+    inSauna
+});
+
+const babies = g(baby.value, baby.desc, baby, cherub);
+const people = gg(
+    "People", "People", {
+    babies,
+    children,
+    adults,
+    elderly
+});
+
+const allPeople = gg(
+    "All People", "All People", {
+    people,
+    gestures,
+    inMotion,
+    resting,
+    roles,
+    fantasy
+});
+
+const ogre = e("\u{1F479}", "Ogre");
+const goblin = e("\u{1F47A}", "Goblin");
+const ghost = e("\u{1F47B}", "Ghost");
+const alien = e("\u{1F47D}", "Alien");
+const alienMonster = e("\u{1F47E}", "Alien Monster");
+const angryFaceWithHorns = e("\u{1F47F}", "Angry Face with Horns");
+const skull = e("\u{1F480}", "Skull");
+const pileOfPoo = e("\u{1F4A9}", "Pile of Poo");
+const grinningFace = e("\u{1F600}", "Grinning Face");
+const beamingFaceWithSmilingEyes = e("\u{1F601}", "Beaming Face with Smiling Eyes");
+const faceWithTearsOfJoy = e("\u{1F602}", "Face with Tears of Joy");
+const grinningFaceWithBigEyes = e("\u{1F603}", "Grinning Face with Big Eyes");
+const grinningFaceWithSmilingEyes = e("\u{1F604}", "Grinning Face with Smiling Eyes");
+const grinningFaceWithSweat = e("\u{1F605}", "Grinning Face with Sweat");
+const grinningSquitingFace = e("\u{1F606}", "Grinning Squinting Face");
+const smillingFaceWithHalo = e("\u{1F607}", "Smiling Face with Halo");
+const smilingFaceWithHorns = e("\u{1F608}", "Smiling Face with Horns");
+const winkingFace = e("\u{1F609}", "Winking Face");
+const smilingFaceWithSmilingEyes = e("\u{1F60A}", "Smiling Face with Smiling Eyes");
+const faceSavoringFood = e("\u{1F60B}", "Face Savoring Food");
+const relievedFace = e("\u{1F60C}", "Relieved Face");
+const smilingFaceWithHeartEyes = e("\u{1F60D}", "Smiling Face with Heart-Eyes");
+const smilingFaceWithSunglasses = e("\u{1F60E}", "Smiling Face with Sunglasses");
+const smirkingFace = e("\u{1F60F}", "Smirking Face");
+const neutralFace = e("\u{1F610}", "Neutral Face");
+const expressionlessFace = e("\u{1F611}", "Expressionless Face");
+const unamusedFace = e("\u{1F612}", "Unamused Face");
+const downcastFaceWithSweat = e("\u{1F613}", "Downcast Face with Sweat");
+const pensiveFace = e("\u{1F614}", "Pensive Face");
+const confusedFace = e("\u{1F615}", "Confused Face");
+const confoundedFace = e("\u{1F616}", "Confounded Face");
+const kissingFace = e("\u{1F617}", "Kissing Face");
+const faceBlowingAKiss = e("\u{1F618}", "Face Blowing a Kiss");
+const kissingFaceWithSmilingEyes = e("\u{1F619}", "Kissing Face with Smiling Eyes");
+const kissingFaceWithClosedEyes = e("\u{1F61A}", "Kissing Face with Closed Eyes");
+const faceWithTongue = e("\u{1F61B}", "Face with Tongue");
+const winkingFaceWithTongue = e("\u{1F61C}", "Winking Face with Tongue");
+const squintingFaceWithTongue = e("\u{1F61D}", "Squinting Face with Tongue");
+const disappointedFace = e("\u{1F61E}", "Disappointed Face");
+const worriedFace = e("\u{1F61F}", "Worried Face");
+const angryFace = e("\u{1F620}", "Angry Face");
+const poutingFace = e("\u{1F621}", "Pouting Face");
+const cryingFace = e("\u{1F622}", "Crying Face");
+const perseveringFace = e("\u{1F623}", "Persevering Face");
+const faceWithSteamFromNose = e("\u{1F624}", "Face with Steam From Nose");
+const sadButRelievedFace = e("\u{1F625}", "Sad but Relieved Face");
+const frowningFaceWithOpenMouth = e("\u{1F626}", "Frowning Face with Open Mouth");
+const anguishedFace = e("\u{1F627}", "Anguished Face");
+const fearfulFace = e("\u{1F628}", "Fearful Face");
+const wearyFace = e("\u{1F629}", "Weary Face");
+const sleepyFace = e("\u{1F62A}", "Sleepy Face");
+const tiredFace = e("\u{1F62B}", "Tired Face");
+const grimacingFace = e("\u{1F62C}", "Grimacing Face");
+const loudlyCryingFace = e("\u{1F62D}", "Loudly Crying Face");
+const faceWithOpenMouth = e("\u{1F62E}", "Face with Open Mouth");
+const hushedFace = e("\u{1F62F}", "Hushed Face");
+const anxiousFaceWithSweat = e("\u{1F630}", "Anxious Face with Sweat");
+const faceScreamingInFear = e("\u{1F631}", "Face Screaming in Fear");
+const astonishedFace = e("\u{1F632}", "Astonished Face");
+const flushedFace = e("\u{1F633}", "Flushed Face");
+const sleepingFace = e("\u{1F634}", "Sleeping Face");
+const dizzyFace = e("\u{1F635}", "Dizzy Face");
+const faceWithoutMouth = e("\u{1F636}", "Face Without Mouth");
+const faceWithMedicalMask = e("\u{1F637}", "Face with Medical Mask");
+const grinningCatWithSmilingEyes = e("\u{1F638}", "Grinning Cat with Smiling Eyes");
+const catWithTearsOfJoy = e("\u{1F639}", "Cat with Tears of Joy");
+const grinningCat = e("\u{1F63A}", "Grinning Cat");
+const smilingCatWithHeartEyes = e("\u{1F63B}", "Smiling Cat with Heart-Eyes");
+const catWithWrySmile = e("\u{1F63C}", "Cat with Wry Smile");
+const kissingCat = e("\u{1F63D}", "Kissing Cat");
+const poutingCat = e("\u{1F63E}", "Pouting Cat");
+const cryingCat = e("\u{1F63F}", "Crying Cat");
+const wearyCat = e("\u{1F640}", "Weary Cat");
+const slightlyFrowningFace = e("\u{1F641}", "Slightly Frowning Face");
+const slightlySmilingFace = e("\u{1F642}", "Slightly Smiling Face");
+const updisdeDownFace = e("\u{1F643}", "Upside-Down Face");
+const faceWithRollingEyes = e("\u{1F644}", "Face with Rolling Eyes");
+const seeNoEvilMonkey = e("\u{1F648}", "See-No-Evil Monkey");
+const hearNoEvilMonkey = e("\u{1F649}", "Hear-No-Evil Monkey");
+const speakNoEvilMonkey = e("\u{1F64A}", "Speak-No-Evil Monkey");
+const zipperMouthFace = e("\u{1F910}", "Zipper-Mouth Face");
+const moneyMouthFace = e("\u{1F911}", "Money-Mouth Face");
+const faceWithThermometer = e("\u{1F912}", "Face with Thermometer");
+const nerdFace = e("\u{1F913}", "Nerd Face");
+const thinkingFace = e("\u{1F914}", "Thinking Face");
+const faceWithHeadBandage = e("\u{1F915}", "Face with Head-Bandage");
+const robot = e("\u{1F916}", "Robot");
+const huggingFace = e("\u{1F917}", "Hugging Face");
+const cowboyHatFace = e("\u{1F920}", "Cowboy Hat Face");
+const clownFace = e("\u{1F921}", "Clown Face");
+const nauseatedFace = e("\u{1F922}", "Nauseated Face");
+const rollingOnTheFloorLaughing = e("\u{1F923}", "Rolling on the Floor Laughing");
+const droolingFace = e("\u{1F924}", "Drooling Face");
+const lyingFace = e("\u{1F925}", "Lying Face");
+const sneezingFace = e("\u{1F927}", "Sneezing Face");
+const faceWithRaisedEyebrow = e("\u{1F928}", "Face with Raised Eyebrow");
+const starStruck = e("\u{1F929}", "Star-Struck");
+const zanyFace = e("\u{1F92A}", "Zany Face");
+const shushingFace = e("\u{1F92B}", "Shushing Face");
+const faceWithSymbolsOnMouth = e("\u{1F92C}", "Face with Symbols on Mouth");
+const faceWithHandOverMouth = e("\u{1F92D}", "Face with Hand Over Mouth");
+const faceVomitting = e("\u{1F92E}", "Face Vomiting");
+const explodingHead = e("\u{1F92F}", "Exploding Head");
+const smilingFaceWithHearts = e("\u{1F970}", "Smiling Face with Hearts");
+const yawningFace = e("\u{1F971}", "Yawning Face");
+const smilingFaceWithTear = e("\u{1F972}", "Smiling Face with Tear");
+const partyingFace = e("\u{1F973}", "Partying Face");
+const woozyFace = e("\u{1F974}", "Woozy Face");
+const hotFace = e("\u{1F975}", "Hot Face");
+const coldFace = e("\u{1F976}", "Cold Face");
+const disguisedFace = e("\u{1F978}", "Disguised Face");
+const pleadingFace = e("\u{1F97A}", "Pleading Face");
+const faceWithMonocle = e("\u{1F9D0}", "Face with Monocle");
+const skullAndCrossbones = e("\u{2620}\u{FE0F}", "Skull and Crossbones");
+const frowningFace = e("\u{2639}\u{FE0F}", "Frowning Face");
+const fmilingFace = e("\u{263A}\u{FE0F}", "Smiling Face");
+const speakingHead = e("\u{1F5E3}\u{FE0F}", "Speaking Head");
+const bust = e("\u{1F464}", "Bust in Silhouette");
+const faces = gg(
+    "Faces", "Round emoji faces", {
+    ogre,
+    goblin,
+    ghost,
+    alien,
+    alienMonster,
+    angryFaceWithHorns,
+    skull,
+    pileOfPoo,
+    grinningFace,
+    beamingFaceWithSmilingEyes,
+    faceWithTearsOfJoy,
+    grinningFaceWithBigEyes,
+    grinningFaceWithSmilingEyes,
+    grinningFaceWithSweat,
+    grinningSquitingFace,
+    smillingFaceWithHalo,
+    smilingFaceWithHorns,
+    winkingFace,
+    smilingFaceWithSmilingEyes,
+    faceSavoringFood,
+    relievedFace,
+    smilingFaceWithHeartEyes,
+    smilingFaceWithSunglasses,
+    smirkingFace,
+    neutralFace,
+    expressionlessFace,
+    unamusedFace,
+    downcastFaceWithSweat,
+    pensiveFace,
+    confusedFace,
+    confoundedFace,
+    kissingFace,
+    faceBlowingAKiss,
+    kissingFaceWithSmilingEyes,
+    kissingFaceWithClosedEyes,
+    faceWithTongue,
+    winkingFaceWithTongue,
+    squintingFaceWithTongue,
+    disappointedFace,
+    worriedFace,
+    angryFace,
+    poutingFace,
+    cryingFace,
+    perseveringFace,
+    faceWithSteamFromNose,
+    sadButRelievedFace,
+    frowningFaceWithOpenMouth,
+    anguishedFace,
+    fearfulFace,
+    wearyFace,
+    sleepyFace,
+    tiredFace,
+    grimacingFace,
+    loudlyCryingFace,
+    faceWithOpenMouth,
+    hushedFace,
+    anxiousFaceWithSweat,
+    faceScreamingInFear,
+    astonishedFace,
+    flushedFace,
+    sleepingFace,
+    dizzyFace,
+    faceWithoutMouth,
+    faceWithMedicalMask,
+    grinningCatWithSmilingEyes,
+    catWithTearsOfJoy,
+    grinningCat,
+    smilingCatWithHeartEyes,
+    catWithWrySmile,
+    kissingCat,
+    poutingCat,
+    cryingCat,
+    wearyCat,
+    slightlyFrowningFace,
+    slightlySmilingFace,
+    updisdeDownFace,
+    faceWithRollingEyes,
+    seeNoEvilMonkey,
+    hearNoEvilMonkey,
+    speakNoEvilMonkey,
+    zipperMouthFace,
+    moneyMouthFace,
+    faceWithThermometer,
+    nerdFace,
+    thinkingFace,
+    faceWithHeadBandage,
+    robot,
+    huggingFace,
+    cowboyHatFace,
+    clownFace,
+    nauseatedFace,
+    rollingOnTheFloorLaughing,
+    droolingFace,
+    lyingFace,
+    sneezingFace,
+    faceWithRaisedEyebrow,
+    starStruck,
+    zanyFace,
+    shushingFace,
+    faceWithSymbolsOnMouth,
+    faceWithHandOverMouth,
+    faceVomitting,
+    explodingHead,
+    smilingFaceWithHearts,
+    yawningFace,
+    smilingFaceWithTear,
+    partyingFace,
+    woozyFace,
+    hotFace,
+    coldFace,
+    disguisedFace,
+    pleadingFace,
+    faceWithMonocle,
+    skullAndCrossbones,
+    frowningFace,
+    fmilingFace,
+    speakingHead,
+    bust,
+});
+
+const kissMark = e("\u{1F48B}", "Kiss Mark");
+const loveLetter = e("\u{1F48C}", "Love Letter");
+const beatingHeart = e("\u{1F493}", "Beating Heart");
+const brokenHeart = e("\u{1F494}", "Broken Heart");
+const twoHearts = e("\u{1F495}", "Two Hearts");
+const sparklingHeart = e("\u{1F496}", "Sparkling Heart");
+const growingHeart = e("\u{1F497}", "Growing Heart");
+const heartWithArrow = e("\u{1F498}", "Heart with Arrow");
+const blueHeart = e("\u{1F499}", "Blue Heart");
+const greenHeart = e("\u{1F49A}", "Green Heart");
+const yellowHeart = e("\u{1F49B}", "Yellow Heart");
+const purpleHeart = e("\u{1F49C}", "Purple Heart");
+const heartWithRibbon = e("\u{1F49D}", "Heart with Ribbon");
+const revolvingHearts = e("\u{1F49E}", "Revolving Hearts");
+const heartDecoration = e("\u{1F49F}", "Heart Decoration");
+const blackHeart = e("\u{1F5A4}", "Black Heart");
+const whiteHeart = e("\u{1F90D}", "White Heart");
+const brownHeart = e("\u{1F90E}", "Brown Heart");
+const orangeHeart = e("\u{1F9E1}", "Orange Heart");
+const heartExclamation = e("\u{2763}\u{FE0F}", "Heart Exclamation");
+const redHeart = e("\u{2764}\u{FE0F}", "Red Heart");
+const love = gg(
+    "Love", "Hearts and kisses", {
+    kissMark,
+    loveLetter,
+    beatingHeart,
+    brokenHeart,
+    twoHearts,
+    sparklingHeart,
+    growingHeart,
+    heartWithArrow,
+    blueHeart,
+    greenHeart,
+    yellowHeart,
+    purpleHeart,
+    heartWithRibbon,
+    revolvingHearts,
+    heartDecoration,
+    blackHeart,
+    whiteHeart,
+    brownHeart,
+    orangeHeart,
+    heartExclamation,
+    redHeart,
+});
+
+const cartoon = g(
+    "Cartoon", "Cartoon symbols",
+    e("\u{1F4A2}", "Anger Symbol"),
+    e("\u{1F4A3}", "Bomb"),
+    e("\u{1F4A4}", "Zzz"),
+    e("\u{1F4A5}", "Collision"),
+    e("\u{1F4A6}", "Sweat Droplets"),
+    e("\u{1F4A8}", "Dashing Away"),
+    e("\u{1F4AB}", "Dizzy"),
+    e("\u{1F4AC}", "Speech Balloon"),
+    e("\u{1F4AD}", "Thought Balloon"),
+    e("\u{1F4AF}", "Hundred Points"),
+    e("\u{1F573}\u{FE0F}", "Hole"),
+    e("\u{1F5E8}\u{FE0F}", "Left Speech Bubble"),
+    e("\u{1F5EF}\u{FE0F}", "Right Anger Bubble"));
+
+const hands = g(
+    "Hands", "Hands pointing at things",
+    e("\u{1F446}", "Backhand Index Pointing Up"),
+    e("\u{1F447}", "Backhand Index Pointing Down"),
+    e("\u{1F448}", "Backhand Index Pointing Left"),
+    e("\u{1F449}", "Backhand Index Pointing Right"),
+    e("\u{1F44A}", "Oncoming Fist"),
+    e("\u{1F44B}", "Waving Hand"),
+    e("\u{1F44C}", "OK Hand"),
+    e("\u{1F44D}", "Thumbs Up"),
+    e("\u{1F44E}", "Thumbs Down"),
+    e("\u{1F44F}", "Clapping Hands"),
+    e("\u{1F450}", "Open Hands"),
+    e("\u{1F485}", "Nail Polish"),
+    e("\u{1F590}\u{FE0F}", "Hand with Fingers Splayed"),
+    e("\u{1F595}", "Middle Finger"),
+    e("\u{1F596}", "Vulcan Salute"),
+    e("\u{1F64C}", "Raising Hands"),
+    e("\u{1F64F}", "Folded Hands"),
+    e("\u{1F90C}", "Pinched Fingers"),
+    e("\u{1F90F}", "Pinching Hand"),
+    e("\u{1F918}", "Sign of the Horns"),
+    e("\u{1F919}", "Call Me Hand"),
+    e("\u{1F91A}", "Raised Back of Hand"),
+    e("\u{1F91B}", "Left-Facing Fist"),
+    e("\u{1F91C}", "Right-Facing Fist"),
+    e("\u{1F91D}", "Handshake"),
+    e("\u{1F91E}", "Crossed Fingers"),
+    e("\u{1F91F}", "Love-You Gesture"),
+    e("\u{1F932}", "Palms Up Together"),
+    e("\u{261D}\u{FE0F}", "Index Pointing Up"),
+    e("\u{270A}", "Raised Fist"),
+    e("\u{270B}", "Raised Hand"),
+    e("\u{270C}\u{FE0F}", "Victory Hand"),
+    e("\u{270D}\u{FE0F}", "Writing Hand"));
+
+const bodyParts = g(
+    "Body Parts", "General body parts",
+    e("\u{1F440}", "Eyes"),
+    e("\u{1F441}\u{FE0F}", "Eye"),
+    e("\u{1F441}\u{FE0F}\u{200D}\u{1F5E8}\u{FE0F}", "Eye in Speech Bubble"),
+    e("\u{1F442}", "Ear"),
+    e("\u{1F443}", "Nose"),
+    e("\u{1F444}", "Mouth"),
+    e("\u{1F445}", "Tongue"),
+    e("\u{1F4AA}", "Flexed Biceps"),
+    e("\u{1F933}", "Selfie"),
+    e("\u{1F9B4}", "Bone"),
+    e("\u{1F9B5}", "Leg"),
+    e("\u{1F9B6}", "Foot"),
+    e("\u{1F9B7}", "Tooth"),
+    e("\u{1F9BB}", "Ear with Hearing Aid"),
+    e("\u{1F9BE}", "Mechanical Arm"),
+    e("\u{1F9BF}", "Mechanical Leg"),
+    e("\u{1F9E0}", "Brain"),
+    e("\u{1FAC0}", "Anatomical Heart"),
+    e("\u{1FAC1}", "Lungs"));
+
+const animals = g(
+    "Animals", "Animals and insects",
+    e("\u{1F400}", "Rat"),
+    e("\u{1F401}", "Mouse"),
+    e("\u{1F402}", "Ox"),
+    e("\u{1F403}", "Water Buffalo"),
+    e("\u{1F404}", "Cow"),
+    e("\u{1F405}", "Tiger"),
+    e("\u{1F406}", "Leopard"),
+    e("\u{1F407}", "Rabbit"),
+    e("\u{1F408}", "Cat"),
+    e("\u{1F408}\u{200D}\u{2B1B}", "Black Cat"),
+    e("\u{1F409}", "Dragon"),
+    e("\u{1F40A}", "Crocodile"),
+    e("\u{1F40B}", "Whale"),
+    e("\u{1F40C}", "Snail"),
+    e("\u{1F40D}", "Snake"),
+    e("\u{1F40E}", "Horse"),
+    e("\u{1F40F}", "Ram"),
+    e("\u{1F410}", "Goat"),
+    e("\u{1F411}", "Ewe"),
+    e("\u{1F412}", "Monkey"),
+    e("\u{1F413}", "Rooster"),
+    e("\u{1F414}", "Chicken"),
+    e("\u{1F415}", "Dog"),
+    e("\u{1F415}\u{200D}\u{1F9BA}", "Service Dog"),
+    e("\u{1F416}", "Pig"),
+    e("\u{1F417}", "Boar"),
+    e("\u{1F418}", "Elephant"),
+    e("\u{1F419}", "Octopus"),
+    e("\u{1F41A}", "Spiral Shell"),
+    e("\u{1F41B}", "Bug"),
+    e("\u{1F41C}", "Ant"),
+    e("\u{1F41D}", "Honeybee"),
+    e("\u{1F41E}", "Lady Beetle"),
+    e("\u{1F41F}", "Fish"),
+    e("\u{1F420}", "Tropical Fish"),
+    e("\u{1F421}", "Blowfish"),
+    e("\u{1F422}", "Turtle"),
+    e("\u{1F423}", "Hatching Chick"),
+    e("\u{1F424}", "Baby Chick"),
+    e("\u{1F425}", "Front-Facing Baby Chick"),
+    e("\u{1F426}", "Bird"),
+    e("\u{1F427}", "Penguin"),
+    e("\u{1F428}", "Koala"),
+    e("\u{1F429}", "Poodle"),
+    e("\u{1F42A}", "Camel"),
+    e("\u{1F42B}", "Two-Hump Camel"),
+    e("\u{1F42C}", "Dolphin"),
+    e("\u{1F42D}", "Mouse Face"),
+    e("\u{1F42E}", "Cow Face"),
+    e("\u{1F42F}", "Tiger Face"),
+    e("\u{1F430}", "Rabbit Face"),
+    e("\u{1F431}", "Cat Face"),
+    e("\u{1F432}", "Dragon Face"),
+    e("\u{1F433}", "Spouting Whale"),
+    e("\u{1F434}", "Horse Face"),
+    e("\u{1F435}", "Monkey Face"),
+    e("\u{1F436}", "Dog Face"),
+    e("\u{1F437}", "Pig Face"),
+    e("\u{1F438}", "Frog"),
+    e("\u{1F439}", "Hamster"),
+    e("\u{1F43A}", "Wolf"),
+    e("\u{1F43B}", "Bear"),
+    e("\u{1F43B}\u{200D}\u{2744}\u{FE0F}", "Polar Bear"),
+    e("\u{1F43C}", "Panda"),
+    e("\u{1F43D}", "Pig Nose"),
+    e("\u{1F43E}", "Paw Prints"),
+    e("\u{1F43F}\u{FE0F}", "Chipmunk"),
+    e("\u{1F54A}\u{FE0F}", "Dove"),
+    e("\u{1F577}\u{FE0F}", "Spider"),
+    e("\u{1F578}\u{FE0F}", "Spider Web"),
+    e("\u{1F981}", "Lion"),
+    e("\u{1F982}", "Scorpion"),
+    e("\u{1F983}", "Turkey"),
+    e("\u{1F984}", "Unicorn"),
+    e("\u{1F985}", "Eagle"),
+    e("\u{1F986}", "Duck"),
+    e("\u{1F987}", "Bat"),
+    e("\u{1F988}", "Shark"),
+    e("\u{1F989}", "Owl"),
+    e("\u{1F98A}", "Fox"),
+    e("\u{1F98B}", "Butterfly"),
+    e("\u{1F98C}", "Deer"),
+    e("\u{1F98D}", "Gorilla"),
+    e("\u{1F98E}", "Lizard"),
+    e("\u{1F98F}", "Rhinoceros"),
+    e("\u{1F992}", "Giraffe"),
+    e("\u{1F993}", "Zebra"),
+    e("\u{1F994}", "Hedgehog"),
+    e("\u{1F995}", "Sauropod"),
+    e("\u{1F996}", "T-Rex"),
+    e("\u{1F997}", "Cricket"),
+    e("\u{1F998}", "Kangaroo"),
+    e("\u{1F999}", "Llama"),
+    e("\u{1F99A}", "Peacock"),
+    e("\u{1F99B}", "Hippopotamus"),
+    e("\u{1F99C}", "Parrot"),
+    e("\u{1F99D}", "Raccoon"),
+    e("\u{1F99F}", "Mosquito"),
+    e("\u{1F9A0}", "Microbe"),
+    e("\u{1F9A1}", "Badger"),
+    e("\u{1F9A2}", "Swan"),
+    e("\u{1F9A3}", "Mammoth"),
+    e("\u{1F9A4}", "Dodo"),
+    e("\u{1F9A5}", "Sloth"),
+    e("\u{1F9A6}", "Otter"),
+    e("\u{1F9A7}", "Orangutan"),
+    e("\u{1F9A8}", "Skunk"),
+    e("\u{1F9A9}", "Flamingo"),
+    e("\u{1F9AB}", "Beaver"),
+    e("\u{1F9AC}", "Bison"),
+    e("\u{1F9AD}", "Seal"),
+    e("\u{1F9AE}", "Guide Dog"),
+    e("\u{1FAB0}", "Fly"),
+    e("\u{1FAB1}", "Worm"),
+    e("\u{1FAB2}", "Beetle"),
+    e("\u{1FAB3}", "Cockroach"),
+    e("\u{1FAB6}", "Feather"));
+
+const whiteFlower = e("\u{1F4AE}", "White Flower");
+const plants = g(
+    "Plants", "Flowers, trees, and things",
+    e("\u{1F331}", "Seedling"),
+    e("\u{1F332}", "Evergreen Tree"),
+    e("\u{1F333}", "Deciduous Tree"),
+    e("\u{1F334}", "Palm Tree"),
+    e("\u{1F335}", "Cactus"),
+    e("\u{1F337}", "Tulip"),
+    e("\u{1F338}", "Cherry Blossom"),
+    e("\u{1F339}", "Rose"),
+    e("\u{1F33A}", "Hibiscus"),
+    e("\u{1F33B}", "Sunflower"),
+    e("\u{1F33C}", "Blossom"),
+    sheafOfRice,
+    e("\u{1F33F}", "Herb"),
+    e("\u{1F340}", "Four Leaf Clover"),
+    e("\u{1F341}", "Maple Leaf"),
+    e("\u{1F342}", "Fallen Leaf"),
+    e("\u{1F343}", "Leaf Fluttering in Wind"),
+    e("\u{1F3F5}\u{FE0F}", "Rosette"),
+    e("\u{1F490}", "Bouquet"),
+    whiteFlower,
+    e("\u{1F940}", "Wilted Flower"),
+    e("\u{1FAB4}", "Potted Plant"),
+    e("\u{2618}\u{FE0F}", "Shamrock"));
+
+const banana = e("\u{1F34C}", "Banana");
+const food = g(
+    "Food", "Food, drink, and utensils",
+    e("\u{1F32D}", "Hot Dog"),
+    e("\u{1F32E}", "Taco"),
+    e("\u{1F32F}", "Burrito"),
+    e("\u{1F330}", "Chestnut"),
+    e("\u{1F336}\u{FE0F}", "Hot Pepper"),
+    e("\u{1F33D}", "Ear of Corn"),
+    e("\u{1F344}", "Mushroom"),
+    e("\u{1F345}", "Tomato"),
+    e("\u{1F346}", "Eggplant"),
+    e("\u{1F347}", "Grapes"),
+    e("\u{1F348}", "Melon"),
+    e("\u{1F349}", "Watermelon"),
+    e("\u{1F34A}", "Tangerine"),
+    e("\u{1F34B}", "Lemon"),
+    banana,
+    e("\u{1F34D}", "Pineapple"),
+    e("\u{1F34E}", "Red Apple"),
+    e("\u{1F34F}", "Green Apple"),
+    e("\u{1F350}", "Pear"),
+    e("\u{1F351}", "Peach"),
+    e("\u{1F352}", "Cherries"),
+    e("\u{1F353}", "Strawberry"),
+    e("\u{1F354}", "Hamburger"),
+    e("\u{1F355}", "Pizza"),
+    e("\u{1F356}", "Meat on Bone"),
+    e("\u{1F357}", "Poultry Leg"),
+    e("\u{1F358}", "Rice Cracker"),
+    e("\u{1F359}", "Rice Ball"),
+    e("\u{1F35A}", "Cooked Rice"),
+    e("\u{1F35B}", "Curry Rice"),
+    e("\u{1F35C}", "Steaming Bowl"),
+    e("\u{1F35D}", "Spaghetti"),
+    e("\u{1F35E}", "Bread"),
+    e("\u{1F35F}", "French Fries"),
+    e("\u{1F360}", "Roasted Sweet Potato"),
+    e("\u{1F361}", "Dango"),
+    e("\u{1F362}", "Oden"),
+    e("\u{1F363}", "Sushi"),
+    e("\u{1F364}", "Fried Shrimp"),
+    e("\u{1F365}", "Fish Cake with Swirl"),
+    e("\u{1F371}", "Bento Box"),
+    e("\u{1F372}", "Pot of Food"),
+    cooking,
+    e("\u{1F37F}", "Popcorn"),
+    e("\u{1F950}", "Croissant"),
+    e("\u{1F951}", "Avocado"),
+    e("\u{1F952}", "Cucumber"),
+    e("\u{1F953}", "Bacon"),
+    e("\u{1F954}", "Potato"),
+    e("\u{1F955}", "Carrot"),
+    e("\u{1F956}", "Baguette Bread"),
+    e("\u{1F957}", "Green Salad"),
+    e("\u{1F958}", "Shallow Pan of Food"),
+    e("\u{1F959}", "Stuffed Flatbread"),
+    e("\u{1F95A}", "Egg"),
+    e("\u{1F95C}", "Peanuts"),
+    e("\u{1F95D}", "Kiwi Fruit"),
+    e("\u{1F95E}", "Pancakes"),
+    e("\u{1F95F}", "Dumpling"),
+    e("\u{1F960}", "Fortune Cookie"),
+    e("\u{1F961}", "Takeout Box"),
+    e("\u{1F963}", "Bowl with Spoon"),
+    e("\u{1F965}", "Coconut"),
+    e("\u{1F966}", "Broccoli"),
+    e("\u{1F968}", "Pretzel"),
+    e("\u{1F969}", "Cut of Meat"),
+    e("\u{1F96A}", "Sandwich"),
+    e("\u{1F96B}", "Canned Food"),
+    e("\u{1F96C}", "Leafy Green"),
+    e("\u{1F96D}", "Mango"),
+    e("\u{1F96E}", "Moon Cake"),
+    e("\u{1F96F}", "Bagel"),
+    e("\u{1F980}", "Crab"),
+    e("\u{1F990}", "Shrimp"),
+    e("\u{1F991}", "Squid"),
+    e("\u{1F99E}", "Lobster"),
+    e("\u{1F9AA}", "Oyster"),
+    e("\u{1F9C0}", "Cheese Wedge"),
+    e("\u{1F9C2}", "Salt"),
+    e("\u{1F9C4}", "Garlic"),
+    e("\u{1F9C5}", "Onion"),
+    e("\u{1F9C6}", "Falafel"),
+    e("\u{1F9C7}", "Waffle"),
+    e("\u{1F9C8}", "Butter"),
+    e("\u{1FAD0}", "Blueberries"),
+    e("\u{1FAD1}", "Bell Pepper"),
+    e("\u{1FAD2}", "Olive"),
+    e("\u{1FAD3}", "Flatbread"),
+    e("\u{1FAD4}", "Tamale"),
+    e("\u{1FAD5}", "Fondue"),
+    e("\u{1F366}", "Soft Ice Cream"),
+    e("\u{1F367}", "Shaved Ice"),
+    e("\u{1F368}", "Ice Cream"),
+    e("\u{1F369}", "Doughnut"),
+    e("\u{1F36A}", "Cookie"),
+    e("\u{1F36B}", "Chocolate Bar"),
+    e("\u{1F36C}", "Candy"),
+    e("\u{1F36D}", "Lollipop"),
+    e("\u{1F36E}", "Custard"),
+    e("\u{1F36F}", "Honey Pot"),
+    e("\u{1F370}", "Shortcake"),
+    e("\u{1F382}", "Birthday Cake"),
+    e("\u{1F967}", "Pie"),
+    e("\u{1F9C1}", "Cupcake"),
+    e("\u{1F375}", "Teacup Without Handle"),
+    e("\u{1F376}", "Sake"),
+    e("\u{1F377}", "Wine Glass"),
+    e("\u{1F378}", "Cocktail Glass"),
+    e("\u{1F379}", "Tropical Drink"),
+    e("\u{1F37A}", "Beer Mug"),
+    e("\u{1F37B}", "Clinking Beer Mugs"),
+    e("\u{1F37C}", "Baby Bottle"),
+    e("\u{1F37E}", "Bottle with Popping Cork"),
+    e("\u{1F942}", "Clinking Glasses"),
+    e("\u{1F943}", "Tumbler Glass"),
+    e("\u{1F95B}", "Glass of Milk"),
+    e("\u{1F964}", "Cup with Straw"),
+    e("\u{1F9C3}", "Beverage Box"),
+    e("\u{1F9C9}", "Mate"),
+    e("\u{1F9CA}", "Ice"),
+    e("\u{1F9CB}", "Bubble Tea"),
+    e("\u{1FAD6}", "Teapot"),
+    e("\u{2615}", "Hot Beverage"),
+    e("\u{1F374}", "Fork and Knife"),
+    e("\u{1F37D}\u{FE0F}", "Fork and Knife with Plate"),
+    e("\u{1F3FA}", "Amphora"),
+    e("\u{1F52A}", "Kitchen Knife"),
+    e("\u{1F944}", "Spoon"),
+    e("\u{1F962}", "Chopsticks"));
+
+const nations = g(
+    "National Flags", "Flags of countries from around the world",
+    e("\u{1F1E6}\u{1F1E8}", "Flag: Ascension Island"),
+    e("\u{1F1E6}\u{1F1E9}", "Flag: Andorra"),
+    e("\u{1F1E6}\u{1F1EA}", "Flag: United Arab Emirates"),
+    e("\u{1F1E6}\u{1F1EB}", "Flag: Afghanistan"),
+    e("\u{1F1E6}\u{1F1EC}", "Flag: Antigua & Barbuda"),
+    e("\u{1F1E6}\u{1F1EE}", "Flag: Anguilla"),
+    e("\u{1F1E6}\u{1F1F1}", "Flag: Albania"),
+    e("\u{1F1E6}\u{1F1F2}", "Flag: Armenia"),
+    e("\u{1F1E6}\u{1F1F4}", "Flag: Angola"),
+    e("\u{1F1E6}\u{1F1F6}", "Flag: Antarctica"),
+    e("\u{1F1E6}\u{1F1F7}", "Flag: Argentina"),
+    e("\u{1F1E6}\u{1F1F8}", "Flag: American Samoa"),
+    e("\u{1F1E6}\u{1F1F9}", "Flag: Austria"),
+    e("\u{1F1E6}\u{1F1FA}", "Flag: Australia"),
+    e("\u{1F1E6}\u{1F1FC}", "Flag: Aruba"),
+    e("\u{1F1E6}\u{1F1FD}", "Flag: Åland Islands"),
+    e("\u{1F1E6}\u{1F1FF}", "Flag: Azerbaijan"),
+    e("\u{1F1E7}\u{1F1E6}", "Flag: Bosnia & Herzegovina"),
+    e("\u{1F1E7}\u{1F1E7}", "Flag: Barbados"),
+    e("\u{1F1E7}\u{1F1E9}", "Flag: Bangladesh"),
+    e("\u{1F1E7}\u{1F1EA}", "Flag: Belgium"),
+    e("\u{1F1E7}\u{1F1EB}", "Flag: Burkina Faso"),
+    e("\u{1F1E7}\u{1F1EC}", "Flag: Bulgaria"),
+    e("\u{1F1E7}\u{1F1ED}", "Flag: Bahrain"),
+    e("\u{1F1E7}\u{1F1EE}", "Flag: Burundi"),
+    e("\u{1F1E7}\u{1F1EF}", "Flag: Benin"),
+    e("\u{1F1E7}\u{1F1F1}", "Flag: St. Barthélemy"),
+    e("\u{1F1E7}\u{1F1F2}", "Flag: Bermuda"),
+    e("\u{1F1E7}\u{1F1F3}", "Flag: Brunei"),
+    e("\u{1F1E7}\u{1F1F4}", "Flag: Bolivia"),
+    e("\u{1F1E7}\u{1F1F6}", "Flag: Caribbean Netherlands"),
+    e("\u{1F1E7}\u{1F1F7}", "Flag: Brazil"),
+    e("\u{1F1E7}\u{1F1F8}", "Flag: Bahamas"),
+    e("\u{1F1E7}\u{1F1F9}", "Flag: Bhutan"),
+    e("\u{1F1E7}\u{1F1FB}", "Flag: Bouvet Island"),
+    e("\u{1F1E7}\u{1F1FC}", "Flag: Botswana"),
+    e("\u{1F1E7}\u{1F1FE}", "Flag: Belarus"),
+    e("\u{1F1E7}\u{1F1FF}", "Flag: Belize"),
+    e("\u{1F1E8}\u{1F1E6}", "Flag: Canada"),
+    e("\u{1F1E8}\u{1F1E8}", "Flag: Cocos (Keeling) Islands"),
+    e("\u{1F1E8}\u{1F1E9}", "Flag: Congo - Kinshasa"),
+    e("\u{1F1E8}\u{1F1EB}", "Flag: Central African Republic"),
+    e("\u{1F1E8}\u{1F1EC}", "Flag: Congo - Brazzaville"),
+    e("\u{1F1E8}\u{1F1ED}", "Flag: Switzerland"),
+    e("\u{1F1E8}\u{1F1EE}", "Flag: Côte d’Ivoire"),
+    e("\u{1F1E8}\u{1F1F0}", "Flag: Cook Islands"),
+    e("\u{1F1E8}\u{1F1F1}", "Flag: Chile"),
+    e("\u{1F1E8}\u{1F1F2}", "Flag: Cameroon"),
+    e("\u{1F1E8}\u{1F1F3}", "Flag: China"),
+    e("\u{1F1E8}\u{1F1F4}", "Flag: Colombia"),
+    e("\u{1F1E8}\u{1F1F5}", "Flag: Clipperton Island"),
+    e("\u{1F1E8}\u{1F1F7}", "Flag: Costa Rica"),
+    e("\u{1F1E8}\u{1F1FA}", "Flag: Cuba"),
+    e("\u{1F1E8}\u{1F1FB}", "Flag: Cape Verde"),
+    e("\u{1F1E8}\u{1F1FC}", "Flag: Curaçao"),
+    e("\u{1F1E8}\u{1F1FD}", "Flag: Christmas Island"),
+    e("\u{1F1E8}\u{1F1FE}", "Flag: Cyprus"),
+    e("\u{1F1E8}\u{1F1FF}", "Flag: Czechia"),
+    e("\u{1F1E9}\u{1F1EA}", "Flag: Germany"),
+    e("\u{1F1E9}\u{1F1EC}", "Flag: Diego Garcia"),
+    e("\u{1F1E9}\u{1F1EF}", "Flag: Djibouti"),
+    e("\u{1F1E9}\u{1F1F0}", "Flag: Denmark"),
+    e("\u{1F1E9}\u{1F1F2}", "Flag: Dominica"),
+    e("\u{1F1E9}\u{1F1F4}", "Flag: Dominican Republic"),
+    e("\u{1F1E9}\u{1F1FF}", "Flag: Algeria"),
+    e("\u{1F1EA}\u{1F1E6}", "Flag: Ceuta & Melilla"),
+    e("\u{1F1EA}\u{1F1E8}", "Flag: Ecuador"),
+    e("\u{1F1EA}\u{1F1EA}", "Flag: Estonia"),
+    e("\u{1F1EA}\u{1F1EC}", "Flag: Egypt"),
+    e("\u{1F1EA}\u{1F1ED}", "Flag: Western Sahara"),
+    e("\u{1F1EA}\u{1F1F7}", "Flag: Eritrea"),
+    e("\u{1F1EA}\u{1F1F8}", "Flag: Spain"),
+    e("\u{1F1EA}\u{1F1F9}", "Flag: Ethiopia"),
+    e("\u{1F1EA}\u{1F1FA}", "Flag: European Union"),
+    e("\u{1F1EB}\u{1F1EE}", "Flag: Finland"),
+    e("\u{1F1EB}\u{1F1EF}", "Flag: Fiji"),
+    e("\u{1F1EB}\u{1F1F0}", "Flag: Falkland Islands"),
+    e("\u{1F1EB}\u{1F1F2}", "Flag: Micronesia"),
+    e("\u{1F1EB}\u{1F1F4}", "Flag: Faroe Islands"),
+    e("\u{1F1EB}\u{1F1F7}", "Flag: France"),
+    e("\u{1F1EC}\u{1F1E6}", "Flag: Gabon"),
+    e("\u{1F1EC}\u{1F1E7}", "Flag: United Kingdom"),
+    e("\u{1F1EC}\u{1F1E9}", "Flag: Grenada"),
+    e("\u{1F1EC}\u{1F1EA}", "Flag: Georgia"),
+    e("\u{1F1EC}\u{1F1EB}", "Flag: French Guiana"),
+    e("\u{1F1EC}\u{1F1EC}", "Flag: Guernsey"),
+    e("\u{1F1EC}\u{1F1ED}", "Flag: Ghana"),
+    e("\u{1F1EC}\u{1F1EE}", "Flag: Gibraltar"),
+    e("\u{1F1EC}\u{1F1F1}", "Flag: Greenland"),
+    e("\u{1F1EC}\u{1F1F2}", "Flag: Gambia"),
+    e("\u{1F1EC}\u{1F1F3}", "Flag: Guinea"),
+    e("\u{1F1EC}\u{1F1F5}", "Flag: Guadeloupe"),
+    e("\u{1F1EC}\u{1F1F6}", "Flag: Equatorial Guinea"),
+    e("\u{1F1EC}\u{1F1F7}", "Flag: Greece"),
+    e("\u{1F1EC}\u{1F1F8}", "Flag: South Georgia & South Sandwich Islands"),
+    e("\u{1F1EC}\u{1F1F9}", "Flag: Guatemala"),
+    e("\u{1F1EC}\u{1F1FA}", "Flag: Guam"),
+    e("\u{1F1EC}\u{1F1FC}", "Flag: Guinea-Bissau"),
+    e("\u{1F1EC}\u{1F1FE}", "Flag: Guyana"),
+    e("\u{1F1ED}\u{1F1F0}", "Flag: Hong Kong SAR China"),
+    e("\u{1F1ED}\u{1F1F2}", "Flag: Heard & McDonald Islands"),
+    e("\u{1F1ED}\u{1F1F3}", "Flag: Honduras"),
+    e("\u{1F1ED}\u{1F1F7}", "Flag: Croatia"),
+    e("\u{1F1ED}\u{1F1F9}", "Flag: Haiti"),
+    e("\u{1F1ED}\u{1F1FA}", "Flag: Hungary"),
+    e("\u{1F1EE}\u{1F1E8}", "Flag: Canary Islands"),
+    e("\u{1F1EE}\u{1F1E9}", "Flag: Indonesia"),
+    e("\u{1F1EE}\u{1F1EA}", "Flag: Ireland"),
+    e("\u{1F1EE}\u{1F1F1}", "Flag: Israel"),
+    e("\u{1F1EE}\u{1F1F2}", "Flag: Isle of Man"),
+    e("\u{1F1EE}\u{1F1F3}", "Flag: India"),
+    e("\u{1F1EE}\u{1F1F4}", "Flag: British Indian Ocean Territory"),
+    e("\u{1F1EE}\u{1F1F6}", "Flag: Iraq"),
+    e("\u{1F1EE}\u{1F1F7}", "Flag: Iran"),
+    e("\u{1F1EE}\u{1F1F8}", "Flag: Iceland"),
+    e("\u{1F1EE}\u{1F1F9}", "Flag: Italy"),
+    e("\u{1F1EF}\u{1F1EA}", "Flag: Jersey"),
+    e("\u{1F1EF}\u{1F1F2}", "Flag: Jamaica"),
+    e("\u{1F1EF}\u{1F1F4}", "Flag: Jordan"),
+    e("\u{1F1EF}\u{1F1F5}", "Flag: Japan"),
+    e("\u{1F1F0}\u{1F1EA}", "Flag: Kenya"),
+    e("\u{1F1F0}\u{1F1EC}", "Flag: Kyrgyzstan"),
+    e("\u{1F1F0}\u{1F1ED}", "Flag: Cambodia"),
+    e("\u{1F1F0}\u{1F1EE}", "Flag: Kiribati"),
+    e("\u{1F1F0}\u{1F1F2}", "Flag: Comoros"),
+    e("\u{1F1F0}\u{1F1F3}", "Flag: St. Kitts & Nevis"),
+    e("\u{1F1F0}\u{1F1F5}", "Flag: North Korea"),
+    e("\u{1F1F0}\u{1F1F7}", "Flag: South Korea"),
+    e("\u{1F1F0}\u{1F1FC}", "Flag: Kuwait"),
+    e("\u{1F1F0}\u{1F1FE}", "Flag: Cayman Islands"),
+    e("\u{1F1F0}\u{1F1FF}", "Flag: Kazakhstan"),
+    e("\u{1F1F1}\u{1F1E6}", "Flag: Laos"),
+    e("\u{1F1F1}\u{1F1E7}", "Flag: Lebanon"),
+    e("\u{1F1F1}\u{1F1E8}", "Flag: St. Lucia"),
+    e("\u{1F1F1}\u{1F1EE}", "Flag: Liechtenstein"),
+    e("\u{1F1F1}\u{1F1F0}", "Flag: Sri Lanka"),
+    e("\u{1F1F1}\u{1F1F7}", "Flag: Liberia"),
+    e("\u{1F1F1}\u{1F1F8}", "Flag: Lesotho"),
+    e("\u{1F1F1}\u{1F1F9}", "Flag: Lithuania"),
+    e("\u{1F1F1}\u{1F1FA}", "Flag: Luxembourg"),
+    e("\u{1F1F1}\u{1F1FB}", "Flag: Latvia"),
+    e("\u{1F1F1}\u{1F1FE}", "Flag: Libya"),
+    e("\u{1F1F2}\u{1F1E6}", "Flag: Morocco"),
+    e("\u{1F1F2}\u{1F1E8}", "Flag: Monaco"),
+    e("\u{1F1F2}\u{1F1E9}", "Flag: Moldova"),
+    e("\u{1F1F2}\u{1F1EA}", "Flag: Montenegro"),
+    e("\u{1F1F2}\u{1F1EB}", "Flag: St. Martin"),
+    e("\u{1F1F2}\u{1F1EC}", "Flag: Madagascar"),
+    e("\u{1F1F2}\u{1F1ED}", "Flag: Marshall Islands"),
+    e("\u{1F1F2}\u{1F1F0}", "Flag: North Macedonia"),
+    e("\u{1F1F2}\u{1F1F1}", "Flag: Mali"),
+    e("\u{1F1F2}\u{1F1F2}", "Flag: Myanmar (Burma)"),
+    e("\u{1F1F2}\u{1F1F3}", "Flag: Mongolia"),
+    e("\u{1F1F2}\u{1F1F4}", "Flag: Macao Sar China"),
+    e("\u{1F1F2}\u{1F1F5}", "Flag: Northern Mariana Islands"),
+    e("\u{1F1F2}\u{1F1F6}", "Flag: Martinique"),
+    e("\u{1F1F2}\u{1F1F7}", "Flag: Mauritania"),
+    e("\u{1F1F2}\u{1F1F8}", "Flag: Montserrat"),
+    e("\u{1F1F2}\u{1F1F9}", "Flag: Malta"),
+    e("\u{1F1F2}\u{1F1FA}", "Flag: Mauritius"),
+    e("\u{1F1F2}\u{1F1FB}", "Flag: Maldives"),
+    e("\u{1F1F2}\u{1F1FC}", "Flag: Malawi"),
+    e("\u{1F1F2}\u{1F1FD}", "Flag: Mexico"),
+    e("\u{1F1F2}\u{1F1FE}", "Flag: Malaysia"),
+    e("\u{1F1F2}\u{1F1FF}", "Flag: Mozambique"),
+    e("\u{1F1F3}\u{1F1E6}", "Flag: Namibia"),
+    e("\u{1F1F3}\u{1F1E8}", "Flag: New Caledonia"),
+    e("\u{1F1F3}\u{1F1EA}", "Flag: Niger"),
+    e("\u{1F1F3}\u{1F1EB}", "Flag: Norfolk Island"),
+    e("\u{1F1F3}\u{1F1EC}", "Flag: Nigeria"),
+    e("\u{1F1F3}\u{1F1EE}", "Flag: Nicaragua"),
+    e("\u{1F1F3}\u{1F1F1}", "Flag: Netherlands"),
+    e("\u{1F1F3}\u{1F1F4}", "Flag: Norway"),
+    e("\u{1F1F3}\u{1F1F5}", "Flag: Nepal"),
+    e("\u{1F1F3}\u{1F1F7}", "Flag: Nauru"),
+    e("\u{1F1F3}\u{1F1FA}", "Flag: Niue"),
+    e("\u{1F1F3}\u{1F1FF}", "Flag: New Zealand"),
+    e("\u{1F1F4}\u{1F1F2}", "Flag: Oman"),
+    e("\u{1F1F5}\u{1F1E6}", "Flag: Panama"),
+    e("\u{1F1F5}\u{1F1EA}", "Flag: Peru"),
+    e("\u{1F1F5}\u{1F1EB}", "Flag: French Polynesia"),
+    e("\u{1F1F5}\u{1F1EC}", "Flag: Papua New Guinea"),
+    e("\u{1F1F5}\u{1F1ED}", "Flag: Philippines"),
+    e("\u{1F1F5}\u{1F1F0}", "Flag: Pakistan"),
+    e("\u{1F1F5}\u{1F1F1}", "Flag: Poland"),
+    e("\u{1F1F5}\u{1F1F2}", "Flag: St. Pierre & Miquelon"),
+    e("\u{1F1F5}\u{1F1F3}", "Flag: Pitcairn Islands"),
+    e("\u{1F1F5}\u{1F1F7}", "Flag: Puerto Rico"),
+    e("\u{1F1F5}\u{1F1F8}", "Flag: Palestinian Territories"),
+    e("\u{1F1F5}\u{1F1F9}", "Flag: Portugal"),
+    e("\u{1F1F5}\u{1F1FC}", "Flag: Palau"),
+    e("\u{1F1F5}\u{1F1FE}", "Flag: Paraguay"),
+    e("\u{1F1F6}\u{1F1E6}", "Flag: Qatar"),
+    e("\u{1F1F7}\u{1F1EA}", "Flag: Réunion"),
+    e("\u{1F1F7}\u{1F1F4}", "Flag: Romania"),
+    e("\u{1F1F7}\u{1F1F8}", "Flag: Serbia"),
+    e("\u{1F1F7}\u{1F1FA}", "Flag: Russia"),
+    e("\u{1F1F7}\u{1F1FC}", "Flag: Rwanda"),
+    e("\u{1F1F8}\u{1F1E6}", "Flag: Saudi Arabia"),
+    e("\u{1F1F8}\u{1F1E7}", "Flag: Solomon Islands"),
+    e("\u{1F1F8}\u{1F1E8}", "Flag: Seychelles"),
+    e("\u{1F1F8}\u{1F1E9}", "Flag: Sudan"),
+    e("\u{1F1F8}\u{1F1EA}", "Flag: Sweden"),
+    e("\u{1F1F8}\u{1F1EC}", "Flag: Singapore"),
+    e("\u{1F1F8}\u{1F1ED}", "Flag: St. Helena"),
+    e("\u{1F1F8}\u{1F1EE}", "Flag: Slovenia"),
+    e("\u{1F1F8}\u{1F1EF}", "Flag: Svalbard & Jan Mayen"),
+    e("\u{1F1F8}\u{1F1F0}", "Flag: Slovakia"),
+    e("\u{1F1F8}\u{1F1F1}", "Flag: Sierra Leone"),
+    e("\u{1F1F8}\u{1F1F2}", "Flag: San Marino"),
+    e("\u{1F1F8}\u{1F1F3}", "Flag: Senegal"),
+    e("\u{1F1F8}\u{1F1F4}", "Flag: Somalia"),
+    e("\u{1F1F8}\u{1F1F7}", "Flag: Suriname"),
+    e("\u{1F1F8}\u{1F1F8}", "Flag: South Sudan"),
+    e("\u{1F1F8}\u{1F1F9}", "Flag: São Tomé & Príncipe"),
+    e("\u{1F1F8}\u{1F1FB}", "Flag: El Salvador"),
+    e("\u{1F1F8}\u{1F1FD}", "Flag: Sint Maarten"),
+    e("\u{1F1F8}\u{1F1FE}", "Flag: Syria"),
+    e("\u{1F1F8}\u{1F1FF}", "Flag: Eswatini"),
+    e("\u{1F1F9}\u{1F1E6}", "Flag: Tristan Da Cunha"),
+    e("\u{1F1F9}\u{1F1E8}", "Flag: Turks & Caicos Islands"),
+    e("\u{1F1F9}\u{1F1E9}", "Flag: Chad"),
+    e("\u{1F1F9}\u{1F1EB}", "Flag: French Southern Territories"),
+    e("\u{1F1F9}\u{1F1EC}", "Flag: Togo"),
+    e("\u{1F1F9}\u{1F1ED}", "Flag: Thailand"),
+    e("\u{1F1F9}\u{1F1EF}", "Flag: Tajikistan"),
+    e("\u{1F1F9}\u{1F1F0}", "Flag: Tokelau"),
+    e("\u{1F1F9}\u{1F1F1}", "Flag: Timor-Leste"),
+    e("\u{1F1F9}\u{1F1F2}", "Flag: Turkmenistan"),
+    e("\u{1F1F9}\u{1F1F3}", "Flag: Tunisia"),
+    e("\u{1F1F9}\u{1F1F4}", "Flag: Tonga"),
+    e("\u{1F1F9}\u{1F1F7}", "Flag: Turkey"),
+    e("\u{1F1F9}\u{1F1F9}", "Flag: Trinidad & Tobago"),
+    e("\u{1F1F9}\u{1F1FB}", "Flag: Tuvalu"),
+    e("\u{1F1F9}\u{1F1FC}", "Flag: Taiwan"),
+    e("\u{1F1F9}\u{1F1FF}", "Flag: Tanzania"),
+    e("\u{1F1FA}\u{1F1E6}", "Flag: Ukraine"),
+    e("\u{1F1FA}\u{1F1EC}", "Flag: Uganda"),
+    e("\u{1F1FA}\u{1F1F2}", "Flag: U.S. Outlying Islands"),
+    e("\u{1F1FA}\u{1F1F3}", "Flag: United Nations"),
+    e("\u{1F1FA}\u{1F1F8}", "Flag: United States"),
+    e("\u{1F1FA}\u{1F1FE}", "Flag: Uruguay"),
+    e("\u{1F1FA}\u{1F1FF}", "Flag: Uzbekistan"),
+    e("\u{1F1FB}\u{1F1E6}", "Flag: Vatican City"),
+    e("\u{1F1FB}\u{1F1E8}", "Flag: St. Vincent & Grenadines"),
+    e("\u{1F1FB}\u{1F1EA}", "Flag: Venezuela"),
+    e("\u{1F1FB}\u{1F1EC}", "Flag: British Virgin Islands"),
+    e("\u{1F1FB}\u{1F1EE}", "Flag: U.S. Virgin Islands"),
+    e("\u{1F1FB}\u{1F1F3}", "Flag: Vietnam"),
+    e("\u{1F1FB}\u{1F1FA}", "Flag: Vanuatu"),
+    e("\u{1F1FC}\u{1F1EB}", "Flag: Wallis & Futuna"),
+    e("\u{1F1FC}\u{1F1F8}", "Flag: Samoa"),
+    e("\u{1F1FD}\u{1F1F0}", "Flag: Kosovo"),
+    e("\u{1F1FE}\u{1F1EA}", "Flag: Yemen"),
+    e("\u{1F1FE}\u{1F1F9}", "Flag: Mayotte"),
+    e("\u{1F1FF}\u{1F1E6}", "Flag: South Africa"),
+    e("\u{1F1FF}\u{1F1F2}", "Flag: Zambia"),
+    e("\u{1F1FF}\u{1F1FC}", "Flag: Zimbabwe"));
+
+const flags = g(
+    "Flags", "Basic flags",
+    e("\u{1F38C}", "Crossed Flags"),
+    e("\u{1F3C1}", "Chequered Flag"),
+    e("\u{1F3F3}\u{FE0F}", "White Flag"),
+    e("\u{1F3F3}\u{FE0F}\u{200D}\u{1F308}", "Rainbow Flag"),
+    e("\u{1F3F3}\u{FE0F}\u{200D}\u{26A7}\u{FE0F}", "Transgender Flag"),
+    e("\u{1F3F4}", "Black Flag"),
+    e("\u{1F3F4}\u{200D}\u{2620}\u{FE0F}", "Pirate Flag"),
+    e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}", "Flag: England"),
+    e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}", "Flag: Scotland"),
+    e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}", "Flag: Wales"),
+    e("\u{1F6A9}", "Triangular Flag"));
+
+const motorcycle = e("\u{1F3CD}\u{FE0F}", "Motorcycle");
+const racingCar = e("\u{1F3CE}\u{FE0F}", "Racing Car");
+const seat = e("\u{1F4BA}", "Seat");
+const helicopter = e("\u{1F681}", "Helicopter");
+const locomotive = e("\u{1F682}", "Locomotive");
+const railwayCar = e("\u{1F683}", "Railway Car");
+const highspeedTrain = e("\u{1F684}", "High-Speed Train");
+const bulletTrain = e("\u{1F685}", "Bullet Train");
+const train = e("\u{1F686}", "Train");
+const metro = e("\u{1F687}", "Metro");
+const lightRail = e("\u{1F688}", "Light Rail");
+const station = e("\u{1F689}", "Station");
+const tram = e("\u{1F68A}", "Tram");
+const tramCar = e("\u{1F68B}", "Tram Car");
+const bus = e("\u{1F68C}", "Bus");
+const oncomingBus = e("\u{1F68D}", "Oncoming Bus");
+const trolleyBus = e("\u{1F68E}", "Trolleybus");
+const busStop = e("\u{1F68F}", "Bus Stop");
+const miniBus = e("\u{1F690}", "Minibus");
+const ambulance = e("\u{1F691}", "Ambulance");
+const policeCar = e("\u{1F693}", "Police Car");
+const oncomingPoliceCar = e("\u{1F694}", "Oncoming Police Car");
+const taxi = e("\u{1F695}", "Taxi");
+const oncomingTaxi = e("\u{1F696}", "Oncoming Taxi");
+const automobile = e("\u{1F697}", "Automobile");
+const oncomingAutomobile = e("\u{1F698}", "Oncoming Automobile");
+const sportUtilityVehicle = e("\u{1F699}", "Sport Utility Vehicle");
+const deliveryTruck = e("\u{1F69A}", "Delivery Truck");
+const articulatedLorry = e("\u{1F69B}", "Articulated Lorry");
+const tractor = e("\u{1F69C}", "Tractor");
+const monorail = e("\u{1F69D}", "Monorail");
+const mountainRailway = e("\u{1F69E}", "Mountain Railway");
+const suspensionRailway = e("\u{1F69F}", "Suspension Railway");
+const mountainCableway = e("\u{1F6A0}", "Mountain Cableway");
+const aerialTramway = e("\u{1F6A1}", "Aerial Tramway");
+const ship = e("\u{1F6A2}", "Ship");
+const speedBoat = e("\u{1F6A4}", "Speedboat");
+const horizontalTrafficLight = e("\u{1F6A5}", "Horizontal Traffic Light");
+const verticalTrafficLight = e("\u{1F6A6}", "Vertical Traffic Light");
+const construction = e("\u{1F6A7}", "Construction");
+const policeCarLight = e("\u{1F6A8}", "Police Car Light");
+const bicycle = e("\u{1F6B2}", "Bicycle");
+const stopSign = e("\u{1F6D1}", "Stop Sign");
+const oilDrum = e("\u{1F6E2}\u{FE0F}", "Oil Drum");
+const motorway = e("\u{1F6E3}\u{FE0F}", "Motorway");
+const railwayTrack = e("\u{1F6E4}\u{FE0F}", "Railway Track");
+const motorBoat = e("\u{1F6E5}\u{FE0F}", "Motor Boat");
+const smallAirplane = e("\u{1F6E9}\u{FE0F}", "Small Airplane");
+const airplaneDeparture = e("\u{1F6EB}", "Airplane Departure");
+const airplaneArrival = e("\u{1F6EC}", "Airplane Arrival");
+const satellite = e("\u{1F6F0}\u{FE0F}", "Satellite");
+const passengerShip = e("\u{1F6F3}\u{FE0F}", "Passenger Ship");
+const kickScooter = e("\u{1F6F4}", "Kick Scooter");
+const motorScooter = e("\u{1F6F5}", "Motor Scooter");
+const canoe = e("\u{1F6F6}", "Canoe");
+const flyingSaucer = e("\u{1F6F8}", "Flying Saucer");
+const skateboard = e("\u{1F6F9}", "Skateboard");
+const autoRickshaw = e("\u{1F6FA}", "Auto Rickshaw");
+const pickupTruck = e("\u{1F6FB}", "Pickup Truck");
+const rollerSkate = e("\u{1F6FC}", "Roller Skate");
+const parachute = e("\u{1FA82}", "Parachute");
+const anchor = e("\u{2693}", "Anchor");
+const ferry = e("\u{26F4}\u{FE0F}", "Ferry");
+const sailboat = e("\u{26F5}", "Sailboat");
+const fuelPump = e("\u{26FD}", "Fuel Pump");
+const vehicles = g(
+    "Vehicles", "Things that go",
+    motorcycle,
+    racingCar,
+    seat,
+    rocket,
+    helicopter,
+    locomotive,
+    railwayCar,
+    highspeedTrain,
+    bulletTrain,
+    train,
+    metro,
+    lightRail,
+    station,
+    tram,
+    tramCar,
+    bus,
+    oncomingBus,
+    trolleyBus,
+    busStop,
+    miniBus,
+    ambulance,
+    fireEngine,
+    taxi,
+    oncomingTaxi,
+    automobile,
+    oncomingAutomobile,
+    sportUtilityVehicle,
+    deliveryTruck,
+    articulatedLorry,
+    tractor,
+    monorail,
+    mountainRailway,
+    suspensionRailway,
+    mountainCableway,
+    aerialTramway,
+    ship,
+    speedBoat,
+    horizontalTrafficLight,
+    verticalTrafficLight,
+    construction,
+    bicycle,
+    stopSign,
+    oilDrum,
+    motorway,
+    railwayTrack,
+    motorBoat,
+    smallAirplane,
+    airplaneDeparture,
+    airplaneArrival,
+    satellite,
+    passengerShip,
+    kickScooter,
+    motorScooter,
+    canoe,
+    flyingSaucer,
+    skateboard,
+    autoRickshaw,
+    pickupTruck,
+    rollerSkate,
+    motorizedWheelchair,
+    manualWheelchair,
+    parachute,
+    anchor,
+    ferry,
+    sailboat,
+    fuelPump,
+    airplane);
+
+const bloodTypes = g(
+    "Blood Types", "Blood types",
+    e("\u{1F170}", "A Button (Blood Type)"),
+    e("\u{1F171}", "B Button (Blood Type)"),
+    e("\u{1F17E}", "O Button (Blood Type)"),
+    e("\u{1F18E}", "AB Button (Blood Type)"));
+
+const regionIndicators = g(
+    "Regions", "Region indicators",
+    e("\u{1F1E6}", "Regional Indicator Symbol Letter A"),
+    e("\u{1F1E7}", "Regional Indicator Symbol Letter B"),
+    e("\u{1F1E8}", "Regional Indicator Symbol Letter C"),
+    e("\u{1F1E9}", "Regional Indicator Symbol Letter D"),
+    e("\u{1F1EA}", "Regional Indicator Symbol Letter E"),
+    e("\u{1F1EB}", "Regional Indicator Symbol Letter F"),
+    e("\u{1F1EC}", "Regional Indicator Symbol Letter G"),
+    e("\u{1F1ED}", "Regional Indicator Symbol Letter H"),
+    e("\u{1F1EE}", "Regional Indicator Symbol Letter I"),
+    e("\u{1F1EF}", "Regional Indicator Symbol Letter J"),
+    e("\u{1F1F0}", "Regional Indicator Symbol Letter K"),
+    e("\u{1F1F1}", "Regional Indicator Symbol Letter L"),
+    e("\u{1F1F2}", "Regional Indicator Symbol Letter M"),
+    e("\u{1F1F3}", "Regional Indicator Symbol Letter N"),
+    e("\u{1F1F4}", "Regional Indicator Symbol Letter O"),
+    e("\u{1F1F5}", "Regional Indicator Symbol Letter P"),
+    e("\u{1F1F6}", "Regional Indicator Symbol Letter Q"),
+    e("\u{1F1F7}", "Regional Indicator Symbol Letter R"),
+    e("\u{1F1F8}", "Regional Indicator Symbol Letter S"),
+    e("\u{1F1F9}", "Regional Indicator Symbol Letter T"),
+    e("\u{1F1FA}", "Regional Indicator Symbol Letter U"),
+    e("\u{1F1FB}", "Regional Indicator Symbol Letter V"),
+    e("\u{1F1FC}", "Regional Indicator Symbol Letter W"),
+    e("\u{1F1FD}", "Regional Indicator Symbol Letter X"),
+    e("\u{1F1FE}", "Regional Indicator Symbol Letter Y"),
+    e("\u{1F1FF}", "Regional Indicator Symbol Letter Z"));
+
+const japanese = g(
+    "Japanese", "Japanse symbology",
+    e("\u{1F530}", "Japanese Symbol for Beginner"),
+    e("\u{1F201}", "Japanese “Here” Button"),
+    e("\u{1F202}\u{FE0F}", "Japanese “Service Charge” Button"),
+    e("\u{1F21A}", "Japanese “Free of Charge” Button"),
+    e("\u{1F22F}", "Japanese “Reserved” Button"),
+    e("\u{1F232}", "Japanese “Prohibited” Button"),
+    e("\u{1F233}", "Japanese “Vacancy” Button"),
+    e("\u{1F234}", "Japanese “Passing Grade” Button"),
+    e("\u{1F235}", "Japanese “No Vacancy” Button"),
+    e("\u{1F236}", "Japanese “Not Free of Charge” Button"),
+    e("\u{1F237}\u{FE0F}", "Japanese “Monthly Amount” Button"),
+    e("\u{1F238}", "Japanese “Application” Button"),
+    e("\u{1F239}", "Japanese “Discount” Button"),
+    e("\u{1F23A}", "Japanese “Open for Business” Button"),
+    e("\u{1F250}", "Japanese “Bargain” Button"),
+    e("\u{1F251}", "Japanese “Acceptable” Button"),
+    e("\u{3297}\u{FE0F}", "Japanese “Congratulations” Button"),
+    e("\u{3299}\u{FE0F}", "Japanese “Secret” Button"));
+
+const clocks = g(
+    "Clocks", "Time-keeping pieces",
+    e("\u{1F550}", "One O’Clock"),
+    e("\u{1F551}", "Two O’Clock"),
+    e("\u{1F552}", "Three O’Clock"),
+    e("\u{1F553}", "Four O’Clock"),
+    e("\u{1F554}", "Five O’Clock"),
+    e("\u{1F555}", "Six O’Clock"),
+    e("\u{1F556}", "Seven O’Clock"),
+    e("\u{1F557}", "Eight O’Clock"),
+    e("\u{1F558}", "Nine O’Clock"),
+    e("\u{1F559}", "Ten O’Clock"),
+    e("\u{1F55A}", "Eleven O’Clock"),
+    e("\u{1F55B}", "Twelve O’Clock"),
+    e("\u{1F55C}", "One-Thirty"),
+    e("\u{1F55D}", "Two-Thirty"),
+    e("\u{1F55E}", "Three-Thirty"),
+    e("\u{1F55F}", "Four-Thirty"),
+    e("\u{1F560}", "Five-Thirty"),
+    e("\u{1F561}", "Six-Thirty"),
+    e("\u{1F562}", "Seven-Thirty"),
+    e("\u{1F563}", "Eight-Thirty"),
+    e("\u{1F564}", "Nine-Thirty"),
+    e("\u{1F565}", "Ten-Thirty"),
+    e("\u{1F566}", "Eleven-Thirty"),
+    e("\u{1F567}", "Twelve-Thirty"),
+    e("\u{1F570}\u{FE0F}", "Mantelpiece Clock"),
+    e("\u{231A}", "Watch"),
+    e("\u{23F0}", "Alarm Clock"),
+    e("\u{23F1}\u{FE0F}", "Stopwatch"),
+    e("\u{23F2}\u{FE0F}", "Timer Clock"),
+    e("\u{231B}", "Hourglass Done"),
+    e("\u{23F3}", "Hourglass Not Done"));
+
+const downRightArrow = e("\u{2198}", "Down-Right Arrow");
+const downRightArrowText = e("\u{2198}\u{FE0E}", "Down-Right Arrow");
+const downRightArrowEmoji = e("\u{2198}\u{FE0F}", "Down-Right Arrow");
+const arrows = g(
+    "Arrows", "Arrows pointing in different directions",
+    e("\u{1F503}\u{FE0F}", "Clockwise Vertical Arrows"),
+    e("\u{1F504}\u{FE0F}", "Counterclockwise Arrows Button"),
+    e("\u{2194}\u{FE0F}", "Left-Right Arrow"),
+    e("\u{2195}\u{FE0F}", "Up-Down Arrow"),
+    e("\u{2196}\u{FE0F}", "Up-Left Arrow"),
+    e("\u{2197}\u{FE0F}", "Up-Right Arrow"),
+    downRightArrowEmoji,
+    e("\u{2199}\u{FE0F}", "Down-Left Arrow"),
+    e("\u{21A9}\u{FE0F}", "Right Arrow Curving Left"),
+    e("\u{21AA}\u{FE0F}", "Left Arrow Curving Right"),
+    e("\u{27A1}\u{FE0F}", "Right Arrow"),
+    e("\u{2934}\u{FE0F}", "Right Arrow Curving Up"),
+    e("\u{2935}\u{FE0F}", "Right Arrow Curving Down"),
+    e("\u{2B05}\u{FE0F}", "Left Arrow"),
+    e("\u{2B06}\u{FE0F}", "Up Arrow"),
+    e("\u{2B07}\u{FE0F}", "Down Arrow"));
+
+const shapes = g(
+    "Shapes", "Colored shapes",
+    e("\u{1F534}", "Red Circle"),
+    e("\u{1F535}", "Blue Circle"),
+    e("\u{1F536}", "Large Orange Diamond"),
+    e("\u{1F537}", "Large Blue Diamond"),
+    e("\u{1F538}", "Small Orange Diamond"),
+    e("\u{1F539}", "Small Blue Diamond"),
+    e("\u{1F53A}", "Red Triangle Pointed Up"),
+    e("\u{1F53B}", "Red Triangle Pointed Down"),
+    e("\u{1F7E0}", "Orange Circle"),
+    e("\u{1F7E1}", "Yellow Circle"),
+    e("\u{1F7E2}", "Green Circle"),
+    e("\u{1F7E3}", "Purple Circle"),
+    e("\u{1F7E4}", "Brown Circle"),
+    e("\u{2B55}", "Hollow Red Circle"),
+    e("\u{26AA}", "White Circle"),
+    e("\u{26AB}", "Black Circle"),
+    e("\u{1F7E5}", "Red Square"),
+    e("\u{1F7E6}", "Blue Square"),
+    e("\u{1F7E7}", "Orange Square"),
+    e("\u{1F7E8}", "Yellow Square"),
+    e("\u{1F7E9}", "Green Square"),
+    e("\u{1F7EA}", "Purple Square"),
+    e("\u{1F7EB}", "Brown Square"),
+    e("\u{1F532}", "Black Square Button"),
+    e("\u{1F533}", "White Square Button"),
+    e("\u{25AA}\u{FE0F}", "Black Small Square"),
+    e("\u{25AB}\u{FE0F}", "White Small Square"),
+    e("\u{25FD}", "White Medium-Small Square"),
+    e("\u{25FE}", "Black Medium-Small Square"),
+    e("\u{25FB}\u{FE0F}", "White Medium Square"),
+    e("\u{25FC}\u{FE0F}", "Black Medium Square"),
+    e("\u{2B1B}", "Black Large Square"),
+    e("\u{2B1C}", "White Large Square"),
+    e("\u{2B50}", "Star"),
+    e("\u{1F4A0}", "Diamond with a Dot"));
+
+const shuffleTracksButton = e("\u{1F500}", "Shuffle Tracks Button");
+const repeatButton = e("\u{1F501}", "Repeat Button");
+const repeatSingleButton = e("\u{1F502}", "Repeat Single Button");
+const upwardsButton = e("\u{1F53C}", "Upwards Button");
+const downwardsButton = e("\u{1F53D}", "Downwards Button");
+const playButton = e("\u{25B6}\u{FE0F}", "Play Button");
+const reverseButton = e("\u{25C0}\u{FE0F}", "Reverse Button");
+const ejectButton = e("\u{23CF}\u{FE0F}", "Eject Button");
+const fastForwardButton = e("\u{23E9}", "Fast-Forward Button");
+const fastReverseButton = e("\u{23EA}", "Fast Reverse Button");
+const fastUpButton = e("\u{23EB}", "Fast Up Button");
+const fastDownButton = e("\u{23EC}", "Fast Down Button");
+const nextTrackButton = e("\u{23ED}\u{FE0F}", "Next Track Button");
+const lastTrackButton = e("\u{23EE}\u{FE0F}", "Last Track Button");
+const playOrPauseButton = e("\u{23EF}\u{FE0F}", "Play or Pause Button");
+const pauseButton = e("\u{23F8}\u{FE0F}", "Pause Button");
+const stopButton = e("\u{23F9}\u{FE0F}", "Stop Button");
+const recordButton = e("\u{23FA}\u{FE0F}", "Record Button");
+
+
+const buttons = g(
+    "Buttons", "Buttons",
+    e("\u{1F191}", "CL Button"),
+    e("\u{1F192}", "Cool Button"),
+    e("\u{1F193}", "Free Button"),
+    e("\u{1F194}", "ID Button"),
+    e("\u{1F195}", "New Button"),
+    e("\u{1F196}", "NG Button"),
+    e("\u{1F197}", "OK Button"),
+    e("\u{1F198}", "SOS Button"),
+    e("\u{1F199}", "Up! Button"),
+    e("\u{1F19A}", "Vs Button"),
+    e("\u{1F518}", "Radio Button"),
+    e("\u{1F519}", "Back Arrow"),
+    e("\u{1F51A}", "End Arrow"),
+    e("\u{1F51B}", "On! Arrow"),
+    e("\u{1F51C}", "Soon Arrow"),
+    e("\u{1F51D}", "Top Arrow"),
+    e("\u{2611}\u{FE0F}", "Check Box with Check"),
+    e("\u{1F520}", "Input Latin Uppercase"),
+    e("\u{1F521}", "Input Latin Lowercase"),
+    e("\u{1F522}", "Input Numbers"),
+    e("\u{1F523}", "Input Symbols"),
+    e("\u{1F524}", "Input Latin Letters"),
+    shuffleTracksButton,
+    repeatButton,
+    repeatSingleButton,
+    upwardsButton,
+    downwardsButton,
+    pauseButton,
+    reverseButton,
+    ejectButton,
+    fastForwardButton,
+    fastReverseButton,
+    fastUpButton,
+    fastDownButton,
+    nextTrackButton,
+    lastTrackButton,
+    playOrPauseButton,
+    pauseButton,
+    stopButton,
+    recordButton);
+
+const zodiac = g(
+    "Zodiac", "The symbology of astrology",
+    e("\u{2648}", "Aries"),
+    e("\u{2649}", "Taurus"),
+    e("\u{264A}", "Gemini"),
+    e("\u{264B}", "Cancer"),
+    e("\u{264C}", "Leo"),
+    e("\u{264D}", "Virgo"),
+    e("\u{264E}", "Libra"),
+    e("\u{264F}", "Scorpio"),
+    e("\u{2650}", "Sagittarius"),
+    e("\u{2651}", "Capricorn"),
+    e("\u{2652}", "Aquarius"),
+    e("\u{2653}", "Pisces"),
+    e("\u{26CE}", "Ophiuchus"));
+
+const numbers = g(
+    "Numbers", "Numbers",
+    e("\u{30}\u{FE0F}", "Digit Zero"),
+    e("\u{31}\u{FE0F}", "Digit One"),
+    e("\u{32}\u{FE0F}", "Digit Two"),
+    e("\u{33}\u{FE0F}", "Digit Three"),
+    e("\u{34}\u{FE0F}", "Digit Four"),
+    e("\u{35}\u{FE0F}", "Digit Five"),
+    e("\u{36}\u{FE0F}", "Digit Six"),
+    e("\u{37}\u{FE0F}", "Digit Seven"),
+    e("\u{38}\u{FE0F}", "Digit Eight"),
+    e("\u{39}\u{FE0F}", "Digit Nine"),
+    e("\u{2A}\u{FE0F}", "Asterisk"),
+    e("\u{23}\u{FE0F}", "Number Sign"),
+    e("\u{30}\u{FE0F}\u{20E3}", "Keycap Digit Zero"),
+    e("\u{31}\u{FE0F}\u{20E3}", "Keycap Digit One"),
+    e("\u{32}\u{FE0F}\u{20E3}", "Keycap Digit Two"),
+    e("\u{33}\u{FE0F}\u{20E3}", "Keycap Digit Three"),
+    e("\u{34}\u{FE0F}\u{20E3}", "Keycap Digit Four"),
+    e("\u{35}\u{FE0F}\u{20E3}", "Keycap Digit Five"),
+    e("\u{36}\u{FE0F}\u{20E3}", "Keycap Digit Six"),
+    e("\u{37}\u{FE0F}\u{20E3}", "Keycap Digit Seven"),
+    e("\u{38}\u{FE0F}\u{20E3}", "Keycap Digit Eight"),
+    e("\u{39}\u{FE0F}\u{20E3}", "Keycap Digit Nine"),
+    e("\u{2A}\u{FE0F}\u{20E3}", "Keycap Asterisk"),
+    e("\u{23}\u{FE0F}\u{20E3}", "Keycap Number Sign"),
+    e("\u{1F51F}", "Keycap: 10"));
+
+const tags = g(
+    "Tags", "Tags",
+    e("\u{E0020}", "Tag Space"),
+    e("\u{E0021}", "Tag Exclamation Mark"),
+    e("\u{E0022}", "Tag Quotation Mark"),
+    e("\u{E0023}", "Tag Number Sign"),
+    e("\u{E0024}", "Tag Dollar Sign"),
+    e("\u{E0025}", "Tag Percent Sign"),
+    e("\u{E0026}", "Tag Ampersand"),
+    e("\u{E0027}", "Tag Apostrophe"),
+    e("\u{E0028}", "Tag Left Parenthesis"),
+    e("\u{E0029}", "Tag Right Parenthesis"),
+    e("\u{E002A}", "Tag Asterisk"),
+    e("\u{E002B}", "Tag Plus Sign"),
+    e("\u{E002C}", "Tag Comma"),
+    e("\u{E002D}", "Tag Hyphen-Minus"),
+    e("\u{E002E}", "Tag Full Stop"),
+    e("\u{E002F}", "Tag Solidus"),
+    e("\u{E0030}", "Tag Digit Zero"),
+    e("\u{E0031}", "Tag Digit One"),
+    e("\u{E0032}", "Tag Digit Two"),
+    e("\u{E0033}", "Tag Digit Three"),
+    e("\u{E0034}", "Tag Digit Four"),
+    e("\u{E0035}", "Tag Digit Five"),
+    e("\u{E0036}", "Tag Digit Six"),
+    e("\u{E0037}", "Tag Digit Seven"),
+    e("\u{E0038}", "Tag Digit Eight"),
+    e("\u{E0039}", "Tag Digit Nine"),
+    e("\u{E003A}", "Tag Colon"),
+    e("\u{E003B}", "Tag Semicolon"),
+    e("\u{E003C}", "Tag Less-Than Sign"),
+    e("\u{E003D}", "Tag Equals Sign"),
+    e("\u{E003E}", "Tag Greater-Than Sign"),
+    e("\u{E003F}", "Tag Question Mark"),
+    e("\u{E0040}", "Tag Commercial at"),
+    e("\u{E0041}", "Tag Latin Capital Letter a"),
+    e("\u{E0042}", "Tag Latin Capital Letter B"),
+    e("\u{E0043}", "Tag Latin Capital Letter C"),
+    e("\u{E0044}", "Tag Latin Capital Letter D"),
+    e("\u{E0045}", "Tag Latin Capital Letter E"),
+    e("\u{E0046}", "Tag Latin Capital Letter F"),
+    e("\u{E0047}", "Tag Latin Capital Letter G"),
+    e("\u{E0048}", "Tag Latin Capital Letter H"),
+    e("\u{E0049}", "Tag Latin Capital Letter I"),
+    e("\u{E004A}", "Tag Latin Capital Letter J"),
+    e("\u{E004B}", "Tag Latin Capital Letter K"),
+    e("\u{E004C}", "Tag Latin Capital Letter L"),
+    e("\u{E004D}", "Tag Latin Capital Letter M"),
+    e("\u{E004E}", "Tag Latin Capital Letter N"),
+    e("\u{E004F}", "Tag Latin Capital Letter O"),
+    e("\u{E0050}", "Tag Latin Capital Letter P"),
+    e("\u{E0051}", "Tag Latin Capital Letter Q"),
+    e("\u{E0052}", "Tag Latin Capital Letter R"),
+    e("\u{E0053}", "Tag Latin Capital Letter S"),
+    e("\u{E0054}", "Tag Latin Capital Letter T"),
+    e("\u{E0055}", "Tag Latin Capital Letter U"),
+    e("\u{E0056}", "Tag Latin Capital Letter V"),
+    e("\u{E0057}", "Tag Latin Capital Letter W"),
+    e("\u{E0058}", "Tag Latin Capital Letter X"),
+    e("\u{E0059}", "Tag Latin Capital Letter Y"),
+    e("\u{E005A}", "Tag Latin Capital Letter Z"),
+    e("\u{E005B}", "Tag Left Square Bracket"),
+    e("\u{E005C}", "Tag Reverse Solidus"),
+    e("\u{E005D}", "Tag Right Square Bracket"),
+    e("\u{E005E}", "Tag Circumflex Accent"),
+    e("\u{E005F}", "Tag Low Line"),
+    e("\u{E0060}", "Tag Grave Accent"),
+    e("\u{E0061}", "Tag Latin Small Letter a"),
+    e("\u{E0062}", "Tag Latin Small Letter B"),
+    e("\u{E0063}", "Tag Latin Small Letter C"),
+    e("\u{E0064}", "Tag Latin Small Letter D"),
+    e("\u{E0065}", "Tag Latin Small Letter E"),
+    e("\u{E0066}", "Tag Latin Small Letter F"),
+    e("\u{E0067}", "Tag Latin Small Letter G"),
+    e("\u{E0068}", "Tag Latin Small Letter H"),
+    e("\u{E0069}", "Tag Latin Small Letter I"),
+    e("\u{E006A}", "Tag Latin Small Letter J"),
+    e("\u{E006B}", "Tag Latin Small Letter K"),
+    e("\u{E006C}", "Tag Latin Small Letter L"),
+    e("\u{E006D}", "Tag Latin Small Letter M"),
+    e("\u{E006E}", "Tag Latin Small Letter N"),
+    e("\u{E006F}", "Tag Latin Small Letter O"),
+    e("\u{E0070}", "Tag Latin Small Letter P"),
+    e("\u{E0071}", "Tag Latin Small Letter Q"),
+    e("\u{E0072}", "Tag Latin Small Letter R"),
+    e("\u{E0073}", "Tag Latin Small Letter S"),
+    e("\u{E0074}", "Tag Latin Small Letter T"),
+    e("\u{E0075}", "Tag Latin Small Letter U"),
+    e("\u{E0076}", "Tag Latin Small Letter V"),
+    e("\u{E0077}", "Tag Latin Small Letter W"),
+    e("\u{E0078}", "Tag Latin Small Letter X"),
+    e("\u{E0079}", "Tag Latin Small Letter Y"),
+    e("\u{E007A}", "Tag Latin Small Letter Z"),
+    e("\u{E007B}", "Tag Left Curly Bracket"),
+    e("\u{E007C}", "Tag Vertical Line"),
+    e("\u{E007D}", "Tag Right Curly Bracket"),
+    e("\u{E007E}", "Tag Tilde"),
+    e("\u{E007F}", "Cancel Tag"));
+
+const math = g(
+    "Math", "Math",
+    e("\u{2716}\u{FE0F}", "Multiply"),
+    e("\u{2795}", "Plus"),
+    e("\u{2796}", "Minus"),
+    e("\u{2797}", "Divide"));
+
+const games = g(
+    "Games", "Games",
+    e("\u{2660}\u{FE0F}", "Spade Suit"),
+    e("\u{2663}\u{FE0F}", "Club Suit"),
+    e("\u{2665}\u{FE0F}", "Heart Suit", { color: "red" }),
+    e("\u{2666}\u{FE0F}", "Diamond Suit", { color: "red" }),
+    e("\u{1F004}", "Mahjong Red Dragon"),
+    e("\u{1F0CF}", "Joker"),
+    e("\u{1F3AF}", "Direct Hit"),
+    e("\u{1F3B0}", "Slot Machine"),
+    e("\u{1F3B1}", "Pool 8 Ball"),
+    e("\u{1F3B2}", "Game Die"),
+    e("\u{1F3B3}", "Bowling"),
+    e("\u{1F3B4}", "Flower Playing Cards"),
+    e("\u{1F9E9}", "Puzzle Piece"),
+    e("\u{265F}\u{FE0F}", "Chess Pawn"),
+    e("\u{1FA80}", "Yo-Yo"),
+    e("\u{1FA81}", "Kite"),
+    e("\u{1FA83}", "Boomerang"),
+    e("\u{1FA86}", "Nesting Dolls"));
+
+const sportsEquipment = g(
+    "Sports Equipment", "Sports equipment",
+    e("\u{1F3BD}", "Running Shirt"),
+    e("\u{1F3BE}", "Tennis"),
+    e("\u{1F3BF}", "Skis"),
+    e("\u{1F3C0}", "Basketball"),
+    e("\u{1F3C5}", "Sports Medal"),
+    e("\u{1F3C6}", "Trophy"),
+    e("\u{1F3C8}", "American Football"),
+    e("\u{1F3C9}", "Rugby Football"),
+    e("\u{1F3CF}", "Cricket Game"),
+    e("\u{1F3D0}", "Volleyball"),
+    e("\u{1F3D1}", "Field Hockey"),
+    e("\u{1F3D2}", "Ice Hockey"),
+    e("\u{1F3D3}", "Ping Pong"),
+    e("\u{1F3F8}", "Badminton"),
+    e("\u{1F6F7}", "Sled"),
+    e("\u{1F945}", "Goal Net"),
+    e("\u{1F947}", "1st Place Medal"),
+    e("\u{1F948}", "2nd Place Medal"),
+    e("\u{1F949}", "3rd Place Medal"),
+    e("\u{1F94A}", "Boxing Glove"),
+    e("\u{1F94C}", "Curling Stone"),
+    e("\u{1F94D}", "Lacrosse"),
+    e("\u{1F94E}", "Softball"),
+    e("\u{1F94F}", "Flying Disc"),
+    e("\u{26BD}", "Soccer Ball"),
+    e("\u{26BE}", "Baseball"),
+    e("\u{26F8}\u{FE0F}", "Ice Skate"));
+
+const clothing = g(
+    "Clothing", "Clothing",
+    e("\u{1F3A9}", "Top Hat"),
+    e("\u{1F93F}", "Diving Mask"),
+    e("\u{1F452}", "Woman’s Hat"),
+    e("\u{1F453}", "Glasses"),
+    e("\u{1F576}\u{FE0F}", "Sunglasses"),
+    e("\u{1F454}", "Necktie"),
+    e("\u{1F455}", "T-Shirt"),
+    e("\u{1F456}", "Jeans"),
+    e("\u{1F457}", "Dress"),
+    e("\u{1F458}", "Kimono"),
+    e("\u{1F459}", "Bikini"),
+    e("\u{1F45A}", "Woman’s Clothes"),
+    e("\u{1F45B}", "Purse"),
+    e("\u{1F45C}", "Handbag"),
+    e("\u{1F45D}", "Clutch Bag"),
+    e("\u{1F45E}", "Man’s Shoe"),
+    e("\u{1F45F}", "Running Shoe"),
+    e("\u{1F460}", "High-Heeled Shoe"),
+    e("\u{1F461}", "Woman’s Sandal"),
+    e("\u{1F462}", "Woman’s Boot"),
+    e("\u{1F94B}", "Martial Arts Uniform"),
+    e("\u{1F97B}", "Sari"),
+    e("\u{1F97C}", "Lab Coat"),
+    e("\u{1F97D}", "Goggles"),
+    e("\u{1F97E}", "Hiking Boot"),
+    e("\u{1F97F}", "Flat Shoe"),
+    whiteCane,
+    e("\u{1F9BA}", "Safety Vest"),
+    e("\u{1F9E2}", "Billed Cap"),
+    e("\u{1F9E3}", "Scarf"),
+    e("\u{1F9E4}", "Gloves"),
+    e("\u{1F9E5}", "Coat"),
+    e("\u{1F9E6}", "Socks"),
+    e("\u{1F9FF}", "Nazar Amulet"),
+    e("\u{1FA70}", "Ballet Shoes"),
+    e("\u{1FA71}", "One-Piece Swimsuit"),
+    e("\u{1FA72}", "Briefs"),
+    e("\u{1FA73}", "Shorts"),
+    e("\u{1FA74}", "Thong Sandal"));
+
+const town = g(
+    "Town", "Town",
+    e("\u{1F3D7}\u{FE0F}", "Building Construction"),
+    e("\u{1F3D8}\u{FE0F}", "Houses"),
+    e("\u{1F3D9}\u{FE0F}", "Cityscape"),
+    e("\u{1F3DA}\u{FE0F}", "Derelict House"),
+    e("\u{1F3DB}\u{FE0F}", "Classical Building"),
+    e("\u{1F3DC}\u{FE0F}", "Desert"),
+    e("\u{1F3DD}\u{FE0F}", "Desert Island"),
+    e("\u{1F3DE}\u{FE0F}", "National Park"),
+    e("\u{1F3DF}\u{FE0F}", "Stadium"),
+    e("\u{1F3E0}", "House"),
+    e("\u{1F3E1}", "House with Garden"),
+    e("\u{1F3E2}", "Office Building"),
+    e("\u{1F3E3}", "Japanese Post Office"),
+    e("\u{1F3E4}", "Post Office"),
+    e("\u{1F3E5}", "Hospital"),
+    e("\u{1F3E6}", "Bank"),
+    e("\u{1F3E7}", "ATM Sign"),
+    e("\u{1F3E8}", "Hotel"),
+    e("\u{1F3E9}", "Love Hotel"),
+    e("\u{1F3EA}", "Convenience Store"),
+    school,
+    e("\u{1F3EC}", "Department Store"),
+    factory,
+    e("\u{1F309}", "Bridge at Night"),
+    e("\u{26F2}", "Fountain"),
+    e("\u{1F6CD}\u{FE0F}", "Shopping Bags"),
+    e("\u{1F9FE}", "Receipt"),
+    e("\u{1F6D2}", "Shopping Cart"),
+    e("\u{1F488}", "Barber Pole"),
+    e("\u{1F492}", "Wedding"),
+    e("\u{1F6D6}", "Hut"),
+    e("\u{1F6D7}", "Elevator"),
+    e("\u{1F5F3}\u{FE0F}", "Ballot Box with Ballot"));
+
+const music = g(
+    "Music", "Music",
+    e("\u{1F3BC}", "Musical Score"),
+    e("\u{1F3B6}", "Musical Notes"),
+    e("\u{1F3B5}", "Musical Note"),
+    e("\u{1F3B7}", "Saxophone"),
+    e("\u{1F3B8}", "Guitar"),
+    e("\u{1F3B9}", "Musical Keyboard"),
+    e("\u{1F3BA}", "Trumpet"),
+    e("\u{1F3BB}", "Violin"),
+    e("\u{1F941}", "Drum"),
+    e("\u{1FA95}", "Banjo"),
+    e("\u{1FA97}", "Accordion"),
+    e("\u{1FA98}", "Long Drum"));
+
+const weather = g(
+    "Weather", "Weather",
+    e("\u{1F304}", "Sunrise Over Mountains"),
+    e("\u{1F305}", "Sunrise"),
+    e("\u{1F306}", "Cityscape at Dusk"),
+    e("\u{1F307}", "Sunset"),
+    e("\u{1F303}", "Night with Stars"),
+    e("\u{1F302}", "Closed Umbrella"),
+    e("\u{2602}\u{FE0F}", "Umbrella"),
+    e("\u{2614}\u{FE0F}", "Umbrella with Rain Drops"),
+    e("\u{2603}\u{FE0F}", "Snowman"),
+    e("\u{26C4}", "Snowman Without Snow"),
+    e("\u{2600}\u{FE0F}", "Sun"),
+    e("\u{2601}\u{FE0F}", "Cloud"),
+    e("\u{1F324}\u{FE0F}", "Sun Behind Small Cloud"),
+    e("\u{26C5}", "Sun Behind Cloud"),
+    e("\u{1F325}\u{FE0F}", "Sun Behind Large Cloud"),
+    e("\u{1F326}\u{FE0F}", "Sun Behind Rain Cloud"),
+    e("\u{1F327}\u{FE0F}", "Cloud with Rain"),
+    e("\u{1F328}\u{FE0F}", "Cloud with Snow"),
+    e("\u{1F329}\u{FE0F}", "Cloud with Lightning"),
+    e("\u{26C8}\u{FE0F}", "Cloud with Lightning and Rain"),
+    e("\u{2744}\u{FE0F}", "Snowflake"),
+    e("\u{1F300}", "Cyclone"),
+    e("\u{1F32A}\u{FE0F}", "Tornado"),
+    e("\u{1F32C}\u{FE0F}", "Wind Face"),
+    e("\u{1F30A}", "Water Wave"),
+    e("\u{1F32B}\u{FE0F}", "Fog"),
+    e("\u{1F301}", "Foggy"),
+    e("\u{1F308}", "Rainbow"),
+    e("\u{1F321}\u{FE0F}", "Thermometer"));
+
+const astro = g(
+    "Astronomy", "Astronomy",
+    e("\u{1F30C}", "Milky Way"),
+    e("\u{1F30D}", "Globe Showing Europe-Africa"),
+    e("\u{1F30E}", "Globe Showing Americas"),
+    e("\u{1F30F}", "Globe Showing Asia-Australia"),
+    e("\u{1F310}", "Globe with Meridians"),
+    e("\u{1F311}", "New Moon"),
+    e("\u{1F312}", "Waxing Crescent Moon"),
+    e("\u{1F313}", "First Quarter Moon"),
+    e("\u{1F314}", "Waxing Gibbous Moon"),
+    e("\u{1F315}", "Full Moon"),
+    e("\u{1F316}", "Waning Gibbous Moon"),
+    e("\u{1F317}", "Last Quarter Moon"),
+    e("\u{1F318}", "Waning Crescent Moon"),
+    e("\u{1F319}", "Crescent Moon"),
+    e("\u{1F31A}", "New Moon Face"),
+    e("\u{1F31B}", "First Quarter Moon Face"),
+    e("\u{1F31C}", "Last Quarter Moon Face"),
+    e("\u{1F31D}", "Full Moon Face"),
+    e("\u{1F31E}", "Sun with Face"),
+    e("\u{1F31F}", "Glowing Star"),
+    e("\u{1F320}", "Shooting Star"),
+    e("\u{2604}\u{FE0F}", "Comet"),
+    e("\u{1FA90}", "Ringed Planet"));
+
+const finance = g(
+    "Finance", "Finance",
+    e("\u{1F4B0}", "Money Bag"),
+    e("\u{1F4B1}", "Currency Exchange"),
+    e("\u{1F4B2}", "Heavy Dollar Sign"),
+    e("\u{1F4B3}", "Credit Card"),
+    e("\u{1F4B4}", "Yen Banknote"),
+    e("\u{1F4B5}", "Dollar Banknote"),
+    e("\u{1F4B6}", "Euro Banknote"),
+    e("\u{1F4B7}", "Pound Banknote"),
+    e("\u{1F4B8}", "Money with Wings"),
+    e("\u{1F4B9}", "Chart Increasing with Yen"),
+    e("\u{1FA99}", "Coin"));
+
+const writing = g(
+    "Writing", "Writing",
+    e("\u{1F58A}\u{FE0F}", "Pen"),
+    e("\u{1F58B}\u{FE0F}", "Fountain Pen"),
+    e("\u{1F58C}\u{FE0F}", "Paintbrush"),
+    e("\u{1F58D}\u{FE0F}", "Crayon"),
+    e("\u{270F}\u{FE0F}", "Pencil"),
+    e("\u{2712}\u{FE0F}", "Black Nib"));
+
+const alembic = e("\u{2697}\u{FE0F}", "Alembic");
+const gear = e("\u{2699}\u{FE0F}", "Gear");
+const atomSymbol = e("\u{269B}\u{FE0F}", "Atom Symbol");
+const keyboard = e("\u{2328}\u{FE0F}", "Keyboard");
+const telephone = e("\u{260E}\u{FE0F}", "Telephone");
+const studioMicrophone = e("\u{1F399}\u{FE0F}", "Studio Microphone");
+const levelSlider = e("\u{1F39A}\u{FE0F}", "Level Slider");
+const controlKnobs = e("\u{1F39B}\u{FE0F}", "Control Knobs");
+const movieCamera = e("\u{1F3A5}", "Movie Camera");
+const headphone = e("\u{1F3A7}", "Headphone");
+const videoGame = e("\u{1F3AE}", "Video Game");
+const lightBulb = e("\u{1F4A1}", "Light Bulb");
+const computerDisk = e("\u{1F4BD}", "Computer Disk");
+const floppyDisk = e("\u{1F4BE}", "Floppy Disk");
+const opticalDisk = e("\u{1F4BF}", "Optical Disk");
+const dvd = e("\u{1F4C0}", "DVD");
+const telephoneReceiver = e("\u{1F4DE}", "Telephone Receiver");
+const pager = e("\u{1F4DF}", "Pager");
+const faxMachine = e("\u{1F4E0}", "Fax Machine");
+const satelliteAntenna = e("\u{1F4E1}", "Satellite Antenna");
+const loudspeaker = e("\u{1F4E2}", "Loudspeaker");
+const megaphone = e("\u{1F4E3}", "Megaphone");
+const mobilePhone = e("\u{1F4F1}", "Mobile Phone");
+const mobilePhoneWithArrow = e("\u{1F4F2}", "Mobile Phone with Arrow");
+const mobilePhoneVibrating = e("\u{1F4F3}", "Mobile Phone Vibrating");
+const mobilePhoneOff = e("\u{1F4F4}", "Mobile Phone Off");
+const noMobilePhone = e("\u{1F4F5}", "No Mobile Phone");
+const antennaBars = e("\u{1F4F6}", "Antenna Bars");
+const camera = e("\u{1F4F7}", "Camera");
+const cameraWithFlash = e("\u{1F4F8}", "Camera with Flash");
+const videoCamera = e("\u{1F4F9}", "Video Camera");
+const television = e("\u{1F4FA}", "Television");
+const radio = e("\u{1F4FB}", "Radio");
+const videocassette = e("\u{1F4FC}", "Videocassette");
+const filmProjector = e("\u{1F4FD}\u{FE0F}", "Film Projector");
+const portableStereo = e("\u{1F4FE}\u{FE0F}", "Portable Stereo");
+const dimButton = e("\u{1F505}", "Dim Button");
+const brightButton = e("\u{1F506}", "Bright Button");
+const mutedSpeaker = e("\u{1F507}", "Muted Speaker");
+const speakerLowVolume = e("\u{1F508}", "Speaker Low Volume");
+const speakerMediumVolume = e("\u{1F509}", "Speaker Medium Volume");
+const speakerHighVolume = e("\u{1F50A}", "Speaker High Volume");
+const battery = e("\u{1F50B}", "Battery");
+const electricPlug = e("\u{1F50C}", "Electric Plug");
+const magnifyingGlassTiltedLeft = e("\u{1F50D}", "Magnifying Glass Tilted Left");
+const magnifyingGlassTiltedRight = e("\u{1F50E}", "Magnifying Glass Tilted Right");
+const lockedWithPen = e("\u{1F50F}", "Locked with Pen");
+const lockedWithKey = e("\u{1F510}", "Locked with Key");
+const key = e("\u{1F511}", "Key");
+const locked = e("\u{1F512}", "Locked");
+const unlocked = e("\u{1F513}", "Unlocked");
+const bell = e("\u{1F514}", "Bell");
+const bellWithSlash = e("\u{1F515}", "Bell with Slash");
+const bookmark = e("\u{1F516}", "Bookmark");
+const link = e("\u{1F517}", "Link");
+const joystick = e("\u{1F579}\u{FE0F}", "Joystick");
+const desktopComputer = e("\u{1F5A5}\u{FE0F}", "Desktop Computer");
+const printer = e("\u{1F5A8}\u{FE0F}", "Printer");
+const computerMouse = e("\u{1F5B1}\u{FE0F}", "Computer Mouse");
+const trackball = e("\u{1F5B2}\u{FE0F}", "Trackball");
+const blackFolder = e("\u{1F5BF}", "Black Folder");
+const folder = e("\u{1F5C0}", "Folder");
+const openFolder = e("\u{1F5C1}", "Open Folder");
+const cardIndexDividers = e("\u{1F5C2}", "Card Index Dividers");
+const cardFileBox = e("\u{1F5C3}", "Card File Box");
+const fileCabinet = e("\u{1F5C4}", "File Cabinet");
+const emptyNote = e("\u{1F5C5}", "Empty Note");
+const emptyNotePage = e("\u{1F5C6}", "Empty Note Page");
+const emptyNotePad = e("\u{1F5C7}", "Empty Note Pad");
+const note = e("\u{1F5C8}", "Note");
+const notePage = e("\u{1F5C9}", "Note Page");
+const notePad = e("\u{1F5CA}", "Note Pad");
+const emptyDocument = e("\u{1F5CB}", "Empty Document");
+const emptyPage = e("\u{1F5CC}", "Empty Page");
+const emptyPages = e("\u{1F5CD}", "Empty Pages");
+const documentIcon = e("\u{1F5CE}", "Document");
+const page = e("\u{1F5CF}", "Page");
+const pages = e("\u{1F5D0}", "Pages");
+const wastebasket = e("\u{1F5D1}", "Wastebasket");
+const spiralNotePad = e("\u{1F5D2}", "Spiral Note Pad");
+const spiralCalendar = e("\u{1F5D3}", "Spiral Calendar");
+const desktopWindow = e("\u{1F5D4}", "Desktop Window");
+const minimize = e("\u{1F5D5}", "Minimize");
+const maximize = e("\u{1F5D6}", "Maximize");
+const overlap = e("\u{1F5D7}", "Overlap");
+const reload = e("\u{1F5D8}", "Reload");
+const close = e("\u{1F5D9}", "Close");
+const increaseFontSize = e("\u{1F5DA}", "Increase Font Size");
+const decreaseFontSize = e("\u{1F5DB}", "Decrease Font Size");
+const compression = e("\u{1F5DC}", "Compression");
+const oldKey = e("\u{1F5DD}", "Old Key");
+const tech = g(
+    "Technology", "Technology",
+    joystick,
+    videoGame,
+    lightBulb,
+    laptop,
+    briefcase,
+    computerDisk,
+    floppyDisk,
+    opticalDisk,
+    dvd,
+    desktopComputer,
+    keyboard,
+    printer,
+    computerMouse,
+    trackball,
+    telephone,
+    telephoneReceiver,
+    pager,
+    faxMachine,
+    satelliteAntenna,
+    loudspeaker,
+    megaphone,
+    television,
+    radio,
+    videocassette,
+    filmProjector,
+    studioMicrophone,
+    levelSlider,
+    controlKnobs,
+    microphone,
+    movieCamera,
+    headphone,
+    camera,
+    cameraWithFlash,
+    videoCamera,
+    mobilePhone,
+    mobilePhoneOff,
+    mobilePhoneWithArrow,
+    lockedWithPen,
+    lockedWithKey,
+    locked,
+    unlocked,
+    bell,
+    bellWithSlash,
+    bookmark,
+    link,
+    mobilePhoneVibrating,
+    antennaBars,
+    dimButton,
+    brightButton,
+    mutedSpeaker,
+    speakerLowVolume,
+    speakerMediumVolume,
+    speakerHighVolume,
+    battery,
+    electricPlug);
+
+const mail = g(
+    "Mail", "Mail",
+    e("\u{1F4E4}", "Outbox Tray"),
+    e("\u{1F4E5}", "Inbox Tray"),
+    e("\u{1F4E6}", "Package"),
+    e("\u{1F4E7}", "E-Mail"),
+    e("\u{1F4E8}", "Incoming Envelope"),
+    e("\u{1F4E9}", "Envelope with Arrow"),
+    e("\u{1F4EA}", "Closed Mailbox with Lowered Flag"),
+    e("\u{1F4EB}", "Closed Mailbox with Raised Flag"),
+    e("\u{1F4EC}", "Open Mailbox with Raised Flag"),
+    e("\u{1F4ED}", "Open Mailbox with Lowered Flag"),
+    e("\u{1F4EE}", "Postbox"),
+    e("\u{1F4EF}", "Postal Horn"));
+
+const celebration = g(
+    "Celebration", "Celebration",
+    e("\u{1FA85}", "Piñata"),
+    e("\u{1F380}", "Ribbon"),
+    e("\u{1F381}", "Wrapped Gift"),
+    e("\u{1F383}", "Jack-O-Lantern"),
+    e("\u{1F384}", "Christmas Tree"),
+    e("\u{1F9E8}", "Firecracker"),
+    e("\u{1F386}", "Fireworks"),
+    e("\u{1F387}", "Sparkler"),
+    e("\u{2728}", "Sparkles"),
+    e("\u{2747}\u{FE0F}", "Sparkle"),
+    e("\u{1F388}", "Balloon"),
+    e("\u{1F389}", "Party Popper"),
+    e("\u{1F38A}", "Confetti Ball"),
+    e("\u{1F38B}", "Tanabata Tree"),
+    e("\u{1F38D}", "Pine Decoration"),
+    e("\u{1F38E}", "Japanese Dolls"),
+    e("\u{1F38F}", "Carp Streamer"),
+    e("\u{1F390}", "Wind Chime"),
+    e("\u{1F391}", "Moon Viewing Ceremony"),
+    e("\u{1F392}", "Backpack"),
+    graduationCap,
+    e("\u{1F9E7}", "Red Envelope"),
+    e("\u{1F3EE}", "Red Paper Lantern"),
+    e("\u{1F396}\u{FE0F}", "Military Medal"));
+
+const tools = g(
+    "Tools", "Tools",
+    e("\u{1F3A3}", "Fishing Pole"),
+    e("\u{1F526}", "Flashlight"),
+    wrench,
+    e("\u{1F528}", "Hammer"),
+    e("\u{1F529}", "Nut and Bolt"),
+    e("\u{1F6E0}\u{FE0F}", "Hammer and Wrench"),
+    e("\u{1F9ED}", "Compass"),
+    e("\u{1F9EF}", "Fire Extinguisher"),
+    e("\u{1F9F0}", "Toolbox"),
+    e("\u{1F9F1}", "Brick"),
+    e("\u{1FA93}", "Axe"),
+    e("\u{2692}\u{FE0F}", "Hammer and Pick"),
+    e("\u{26CF}\u{FE0F}", "Pick"),
+    e("\u{26D1}\u{FE0F}", "Rescue Worker’s Helmet"),
+    e("\u{26D3}\u{FE0F}", "Chains"),
+    compression,
+    e("\u{1FA9A}", "Carpentry Saw"),
+    e("\u{1FA9B}", "Screwdriver"),
+    e("\u{1FA9C}", "Ladder"),
+    e("\u{1FA9D}", "Hook"));
+
+const office = g(
+    "Office", "Office",
+    e("\u{1F4C1}", "File Folder"),
+    e("\u{1F4C2}", "Open File Folder"),
+    e("\u{1F4C3}", "Page with Curl"),
+    e("\u{1F4C4}", "Page Facing Up"),
+    e("\u{1F4C5}", "Calendar"),
+    e("\u{1F4C6}", "Tear-Off Calendar"),
+    e("\u{1F4C7}", "Card Index"),
+    cardIndexDividers,
+    cardFileBox,
+    fileCabinet,
+    wastebasket,
+    spiralNotePad,
+    spiralCalendar,
+    e("\u{1F4C8}", "Chart Increasing"),
+    e("\u{1F4C9}", "Chart Decreasing"),
+    e("\u{1F4CA}", "Bar Chart"),
+    e("\u{1F4CB}", "Clipboard"),
+    e("\u{1F4CC}", "Pushpin"),
+    e("\u{1F4CD}", "Round Pushpin"),
+    e("\u{1F4CE}", "Paperclip"),
+    e("\u{1F587}\u{FE0F}", "Linked Paperclips"),
+    e("\u{1F4CF}", "Straight Ruler"),
+    e("\u{1F4D0}", "Triangular Ruler"),
+    e("\u{1F4D1}", "Bookmark Tabs"),
+    e("\u{1F4D2}", "Ledger"),
+    e("\u{1F4D3}", "Notebook"),
+    e("\u{1F4D4}", "Notebook with Decorative Cover"),
+    e("\u{1F4D5}", "Closed Book"),
+    e("\u{1F4D6}", "Open Book"),
+    e("\u{1F4D7}", "Green Book"),
+    e("\u{1F4D8}", "Blue Book"),
+    e("\u{1F4D9}", "Orange Book"),
+    e("\u{1F4DA}", "Books"),
+    e("\u{1F4DB}", "Name Badge"),
+    e("\u{1F4DC}", "Scroll"),
+    e("\u{1F4DD}", "Memo"),
+    e("\u{2702}\u{FE0F}", "Scissors"),
+    e("\u{2709}\u{FE0F}", "Envelope"));
+
+const signs = g(
+    "Signs", "Signs",
+    e("\u{1F3A6}", "Cinema"),
+    noMobilePhone,
+    e("\u{1F51E}", "No One Under Eighteen"),
+    e("\u{1F6AB}", "Prohibited"),
+    e("\u{1F6AC}", "Cigarette"),
+    e("\u{1F6AD}", "No Smoking"),
+    e("\u{1F6AE}", "Litter in Bin Sign"),
+    e("\u{1F6AF}", "No Littering"),
+    e("\u{1F6B0}", "Potable Water"),
+    e("\u{1F6B1}", "Non-Potable Water"),
+    e("\u{1F6B3}", "No Bicycles"),
+    e("\u{1F6B7}", "No Pedestrians"),
+    e("\u{1F6B8}", "Children Crossing"),
+    e("\u{1F6B9}", "Men’s Room"),
+    e("\u{1F6BA}", "Women’s Room"),
+    e("\u{1F6BB}", "Restroom"),
+    e("\u{1F6BC}", "Baby Symbol"),
+    e("\u{1F6BE}", "Water Closet"),
+    e("\u{1F6C2}", "Passport Control"),
+    e("\u{1F6C3}", "Customs"),
+    e("\u{1F6C4}", "Baggage Claim"),
+    e("\u{1F6C5}", "Left Luggage"),
+    e("\u{1F17F}\u{FE0F}", "Parking Button"),
+    e("\u{267F}", "Wheelchair Symbol"),
+    e("\u{2622}\u{FE0F}", "Radioactive"),
+    e("\u{2623}\u{FE0F}", "Biohazard"),
+    e("\u{26A0}\u{FE0F}", "Warning"),
+    e("\u{26A1}", "High Voltage"),
+    e("\u{26D4}", "No Entry"),
+    e("\u{267B}\u{FE0F}", "Recycling Symbol"),
+    female,
+    male,
+    e("\u{26A7}\u{FE0F}", "Transgender Symbol"));
+
+const religion = g(
+    "Religion", "Religion",
+    e("\u{1F52F}", "Dotted Six-Pointed Star"),
+    e("\u{2721}\u{FE0F}", "Star of David"),
+    e("\u{1F549}\u{FE0F}", "Om"),
+    e("\u{1F54B}", "Kaaba"),
+    e("\u{1F54C}", "Mosque"),
+    e("\u{1F54D}", "Synagogue"),
+    e("\u{1F54E}", "Menorah"),
+    e("\u{1F6D0}", "Place of Worship"),
+    e("\u{1F6D5}", "Hindu Temple"),
+    e("\u{2626}\u{FE0F}", "Orthodox Cross"),
+    e("\u{271D}\u{FE0F}", "Latin Cross"),
+    e("\u{262A}\u{FE0F}", "Star and Crescent"),
+    e("\u{262E}\u{FE0F}", "Peace Symbol"),
+    e("\u{262F}\u{FE0F}", "Yin Yang"),
+    e("\u{2638}\u{FE0F}", "Wheel of Dharma"),
+    e("\u{267E}\u{FE0F}", "Infinity"),
+    e("\u{1FA94}", "Diya Lamp"),
+    e("\u{26E9}\u{FE0F}", "Shinto Shrine"),
+    e("\u{26EA}", "Church"),
+    e("\u{2734}\u{FE0F}", "Eight-Pointed Star"),
+    e("\u{1F4FF}", "Prayer Beads"));
+
+const door = e("\u{1F6AA}", "Door");
+const household = g(
+    "Household", "Household",
+    e("\u{1F484}", "Lipstick"),
+    e("\u{1F48D}", "Ring"),
+    e("\u{1F48E}", "Gem Stone"),
+    e("\u{1F4F0}", "Newspaper"),
+    key,
+    e("\u{1F525}", "Fire"),
+    e("\u{1FAA8}", "Rock"),
+    e("\u{1FAB5}", "Wood"),
+    e("\u{1F52B}", "Pistol"),
+    e("\u{1F56F}\u{FE0F}", "Candle"),
+    e("\u{1F5BC}\u{FE0F}", "Framed Picture"),
+    oldKey,
+    e("\u{1F5DE}\u{FE0F}", "Rolled-Up Newspaper"),
+    e("\u{1F5FA}\u{FE0F}", "World Map"),
+    door,
+    e("\u{1F6BD}", "Toilet"),
+    e("\u{1F6BF}", "Shower"),
+    e("\u{1F6C1}", "Bathtub"),
+    e("\u{1F6CB}\u{FE0F}", "Couch and Lamp"),
+    e("\u{1F6CF}\u{FE0F}", "Bed"),
+    e("\u{1F9F4}", "Lotion Bottle"),
+    e("\u{1F9F5}", "Thread"),
+    e("\u{1F9F6}", "Yarn"),
+    e("\u{1F9F7}", "Safety Pin"),
+    e("\u{1F9F8}", "Teddy Bear"),
+    e("\u{1F9F9}", "Broom"),
+    e("\u{1F9FA}", "Basket"),
+    e("\u{1F9FB}", "Roll of Paper"),
+    e("\u{1F9FC}", "Soap"),
+    e("\u{1F9FD}", "Sponge"),
+    e("\u{1FA91}", "Chair"),
+    e("\u{1FA92}", "Razor"),
+    e("\u{1FA9E}", "Mirror"),
+    e("\u{1FA9F}", "Window"),
+    e("\u{1FAA0}", "Plunger"),
+    e("\u{1FAA1}", "Sewing Needle"),
+    e("\u{1FAA2}", "Knot"),
+    e("\u{1FAA3}", "Bucket"),
+    e("\u{1FAA4}", "Mouse Trap"),
+    e("\u{1FAA5}", "Toothbrush"),
+    e("\u{1FAA6}", "Headstone"),
+    e("\u{1FAA7}", "Placard"),
+    e("\u{1F397}\u{FE0F}", "Reminder Ribbon"));
+
+const activities = g(
+    "Activities", "Activities",
+    e("\u{1F39E}\u{FE0F}", "Film Frames"),
+    e("\u{1F39F}\u{FE0F}", "Admission Tickets"),
+    e("\u{1F3A0}", "Carousel Horse"),
+    e("\u{1F3A1}", "Ferris Wheel"),
+    e("\u{1F3A2}", "Roller Coaster"),
+    artistPalette,
+    e("\u{1F3AA}", "Circus Tent"),
+    e("\u{1F3AB}", "Ticket"),
+    e("\u{1F3AC}", "Clapper Board"),
+    e("\u{1F3AD}", "Performing Arts"));
+
+const travel = g(
+    "Travel", "Travel",
+    e("\u{1F3F7}\u{FE0F}", "Label"),
+    e("\u{1F30B}", "Volcano"),
+    e("\u{1F3D4}\u{FE0F}", "Snow-Capped Mountain"),
+    e("\u{26F0}\u{FE0F}", "Mountain"),
+    e("\u{1F3D5}\u{FE0F}", "Camping"),
+    e("\u{1F3D6}\u{FE0F}", "Beach with Umbrella"),
+    e("\u{26F1}\u{FE0F}", "Umbrella on Ground"),
+    e("\u{1F3EF}", "Japanese Castle"),
+    e("\u{1F463}", "Footprints"),
+    e("\u{1F5FB}", "Mount Fuji"),
+    e("\u{1F5FC}", "Tokyo Tower"),
+    e("\u{1F5FD}", "Statue of Liberty"),
+    e("\u{1F5FE}", "Map of Japan"),
+    e("\u{1F5FF}", "Moai"),
+    e("\u{1F6CE}\u{FE0F}", "Bellhop Bell"),
+    e("\u{1F9F3}", "Luggage"),
+    e("\u{26F3}", "Flag in Hole"),
+    e("\u{26FA}", "Tent"),
+    e("\u{2668}\u{FE0F}", "Hot Springs"));
+
+const medieval = g(
+    "Medieval", "Medieval",
+    e("\u{1F3F0}", "Castle"),
+    e("\u{1F3F9}", "Bow and Arrow"),
+    crown,
+    e("\u{1F531}", "Trident Emblem"),
+    e("\u{1F5E1}\u{FE0F}", "Dagger"),
+    e("\u{1F6E1}\u{FE0F}", "Shield"),
+    e("\u{1F52E}", "Crystal Ball"),
+    e("\u{1FA84}", "Magic Wand"),
+    e("\u{2694}\u{FE0F}", "Crossed Swords"),
+    e("\u{269C}\u{FE0F}", "Fleur-de-lis"),
+    e("\u{1FA96}", "Military Helmet"));
+
+const doubleExclamationMark = e("\u{203C}\u{FE0F}", "Double Exclamation Mark");
+const interrobang = e("\u{2049}\u{FE0F}", "Exclamation Question Mark");
+const information = e("\u{2139}\u{FE0F}", "Information");
+const circledM = e("\u{24C2}\u{FE0F}", "Circled M");
+const checkMarkButton = e("\u{2705}", "Check Mark Button");
+const checkMark = e("\u{2714}\u{FE0F}", "Check Mark");
+const eightSpokedAsterisk = e("\u{2733}\u{FE0F}", "Eight-Spoked Asterisk");
+const crossMark = e("\u{274C}", "Cross Mark");
+const crossMarkButton = e("\u{274E}", "Cross Mark Button");
+const questionMark = e("\u{2753}", "Question Mark");
+const whiteQuestionMark = e("\u{2754}", "White Question Mark");
+const whiteExclamationMark = e("\u{2755}", "White Exclamation Mark");
+const exclamationMark = e("\u{2757}", "Exclamation Mark");
+const curlyLoop = e("\u{27B0}", "Curly Loop");
+const doubleCurlyLoop = e("\u{27BF}", "Double Curly Loop");
+const wavyDash = e("\u{3030}\u{FE0F}", "Wavy Dash");
+const partAlternationMark = e("\u{303D}\u{FE0F}", "Part Alternation Mark");
+const tradeMark = e("\u{2122}\u{FE0F}", "Trade Mark");
+const copyright = e("\u{A9}\u{FE0F}", "Copyright");
+const registered = e("\u{AE}\u{FE0F}", "Registered");
+const squareFourCourners = e("\u{26F6}\u{FE0F}", "Square: Four Corners");
+
+const marks = gg(
+    "Marks", "Marks", {
+    doubleExclamationMark,
+    interrobang,
+    information,
+    circledM,
+    checkMarkButton,
+    checkMark,
+    eightSpokedAsterisk,
+    crossMark,
+    crossMarkButton,
+    questionMark,
+    whiteQuestionMark,
+    whiteExclamationMark,
+    exclamationMark,
+    curlyLoop,
+    doubleCurlyLoop,
+    wavyDash,
+    partAlternationMark,
+    tradeMark,
+    copyright,
+    registered,
+});
+
+const droplet = e("\u{1F4A7}", "Droplet");
+const dropOfBlood = e("\u{1FA78}", "Drop of Blood");
+const adhesiveBandage = e("\u{1FA79}", "Adhesive Bandage");
+const stethoscope = e("\u{1FA7A}", "Stethoscope");
+const syringe = e("\u{1F489}", "Syringe");
+const pill = e("\u{1F48A}", "Pill");
+const testTube = e("\u{1F9EA}", "Test Tube");
+const petriDish = e("\u{1F9EB}", "Petri Dish");
+const dna = e("\u{1F9EC}", "DNA");
+const abacus = e("\u{1F9EE}", "Abacus");
+const magnet = e("\u{1F9F2}", "Magnet");
+const telescope = e("\u{1F52D}", "Telescope");
+
+const science = gg(
+    "Science", "Science", {
+    droplet,
+    dropOfBlood,
+    adhesiveBandage,
+    stethoscope,
+    syringe,
+    pill,
+    microscope,
+    testTube,
+    petriDish,
+    dna,
+    abacus,
+    magnet,
+    telescope,
+    medical,
+    balanceScale,
+    alembic,
+    gear,
+    atomSymbol,
+    magnifyingGlassTiltedLeft,
+    magnifyingGlassTiltedRight,
+});
+const whiteChessKing = e("\u{2654}", "White Chess King");
+const whiteChessQueen = e("\u{2655}", "White Chess Queen");
+const whiteChessRook = e("\u{2656}", "White Chess Rook");
+const whiteChessBishop = e("\u{2657}", "White Chess Bishop");
+const whiteChessKnight = e("\u{2658}", "White Chess Knight");
+const whiteChessPawn = e("\u{2659}", "White Chess Pawn");
+const whiteChessPieces = gg(whiteChessKing.value + whiteChessQueen.value + whiteChessRook.value + whiteChessBishop.value + whiteChessKnight.value + whiteChessPawn.value, "White Chess Pieces", {
+    width: "auto",
+    king: whiteChessKing,
+    queen: whiteChessQueen,
+    rook: whiteChessRook,
+    bishop: whiteChessBishop,
+    knight: whiteChessKnight,
+    pawn: whiteChessPawn
+});
+const blackChessKing = e("\u{265A}", "Black Chess King");
+const blackChessQueen = e("\u{265B}", "Black Chess Queen");
+const blackChessRook = e("\u{265C}", "Black Chess Rook");
+const blackChessBishop = e("\u{265D}", "Black Chess Bishop");
+const blackChessKnight = e("\u{265E}", "Black Chess Knight");
+const blackChessPawn = e("\u{265F}", "Black Chess Pawn");
+const blackChessPieces = gg(blackChessKing.value + blackChessQueen.value + blackChessRook.value + blackChessBishop.value + blackChessKnight.value + blackChessPawn.value, "Black Chess Pieces", {
+    width: "auto",
+    king: blackChessKing,
+    queen: blackChessQueen,
+    rook: blackChessRook,
+    bishop: blackChessBishop,
+    knight: blackChessKnight,
+    pawn: blackChessPawn
+});
+const chessPawns = gg(whiteChessPawn.value + blackChessPawn.value, "Chess Pawns", {
+    width: "auto",
+    white: whiteChessPawn,
+    black: blackChessPawn
+});
+const chessRooks = gg(whiteChessRook.value + blackChessRook.value, "Chess Rooks", {
+    width: "auto",
+    white: whiteChessRook,
+    black: blackChessRook
+});
+const chessBishops = gg(whiteChessBishop.value + blackChessBishop.value, "Chess Bishops", {
+    width: "auto",
+    white: whiteChessBishop,
+    black: blackChessBishop
+});
+const chessKnights = gg(whiteChessKnight.value + blackChessKnight.value, "Chess Knights", {
+    width: "auto",
+    white: whiteChessKnight,
+    black: blackChessKnight
+});
+const chessQueens = gg(whiteChessQueen.value + blackChessQueen.value, "Chess Queens", {
+    width: "auto",
+    white: whiteChessQueen,
+    black: blackChessQueen
+});
+const chessKings = gg(whiteChessKing.value + blackChessKing.value, "Chess Kings", {
+    width: "auto",
+    white: whiteChessKing,
+    black: blackChessKing
+});
+
+const chess = gg("Chess Pieces", "Chess Pieces", {
+    width: "auto",
+    white: whiteChessPieces,
+    black: blackChessPieces,
+    pawns: chessPawns,
+    rooks: chessRooks,
+    bishops: chessBishops,
+    knights: chessKnights,
+    queens: chessQueens,
+    kings: chessKings
+});
+
+const dice1 = e("\u2680", "Dice: Side 1");
+const dice2 = e("\u2681", "Dice: Side 2");
+const dice3 = e("\u2682", "Dice: Side 3");
+const dice4 = e("\u2683", "Dice: Side 4");
+const dice5 = e("\u2684", "Dice: Side 5");
+const dice6 = e("\u2685", "Dice: Side 6");
+const dice = gg("Dice", "Dice", {
+    dice1,
+    dice2,
+    dice3,
+    dice4,
+    dice5,
+    dice6
+});
+
+const allIcons = gg(
+    "All Icons", "All Icons", {
+    faces,
+    love,
+    cartoon,
+    hands,
+    bodyParts,
+    people,
+    gestures,
+    inMotion,
+    resting,
+    roles,
+    fantasy,
+    animals,
+    plants,
+    food,
+    flags,
+    vehicles,
+    clocks,
+    arrows,
+    shapes,
+    buttons,
+    zodiac,
+    chess,
+    dice,
+    math,
+    games,
+    sportsEquipment,
+    clothing,
+    town,
+    music,
+    weather,
+    astro,
+    finance,
+    writing,
+    science,
+    tech,
+    mail,
+    celebration,
+    tools,
+    office,
+    signs,
+    religion,
+    household,
+    activities,
+    travel,
+    medieval
+});
+
+/**
+ * A setter functor for HTML attributes.
+ **/
+class HtmlAttr {
+    /**
+     * Creates a new setter functor for HTML Attributes
+     * @param {string} key - the attribute name.
+     * @param {string} value - the value to set for the attribute.
+     * @param {...string} tags - the HTML tags that support this attribute.
+     */
+    constructor(key, value, ...tags) {
+        this.key = key;
+        this.value = value;
+        this.tags = tags.map(t => t.toLocaleUpperCase());
+        Object.freeze(this);
+    }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        const isValid = this.tags.length === 0
+            || this.tags.indexOf(elem.tagName) > -1;
+
+        if (!isValid) {
+            console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
+        }
+        else if (this.key === "style") {
+            Object.assign(elem[this.key], this.value);
+        }
+        else if (!isBoolean(value)) {
+            elem[this.key] = this.value;
+        }
+        else if (this.value) {
+            elem.setAttribute(this.key, "");
+        }
+        else {
+            elem.removeAttribute(this.key);
+        }
+    }
+}
+
+/**
+ * Alternative text in case an image can't be displayed.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function alt(value) { return new HtmlAttr("alt", value, "applet", "area", "img", "input"); }
+
+/**
+ * The audio or video should play as soon as possible.
+ * @param {boolean} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function autoPlay(value) { return new HtmlAttr("autoplay", value, "audio", "video"); }
+
+/**
+ * Often used with CSS to style elements with common properties.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function className(value) { return new HtmlAttr("className", value); }
+
+/**
+ * Indicates whether the user can interact with the element.
+ * @param {boolean} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function disabled(value) { return new HtmlAttr("disabled", value, "button", "command", "fieldset", "input", "keygen", "optgroup", "option", "select", "textarea"); }
+
+/**
+ * Describes elements which belongs to this one.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function htmlFor(value) { return new HtmlAttr("htmlFor", value, "label", "output"); }
+
+/**
+ * Specifies the height of elements listed here. For all other elements, use the CSS height property.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function height(value) { return new HtmlAttr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+
+/**
+ * The URL of a linked resource.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function href(value) { return new HtmlAttr("href", value, "a", "area", "base", "link"); }
+
+/**
+ * Often used with CSS to style a specific element. The value of this attribute must be unique.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function id(value) { return new HtmlAttr("id", value); }
+
+/**
+ * Indicates the maximum value allowed.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function max(value) { return new HtmlAttr("max", value, "input", "meter", "progress"); }
+
+/**
+ * Indicates the minimum value allowed.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function min(value) { return new HtmlAttr("min", value, "input", "meter"); }
+
+/**
+ * Indicates whether the audio will be initially silenced on page load.
+ * @param {boolean} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function muted(value) { return new HtmlAttr("muted", value, "audio", "video"); }
+
+/**
+ * Provides a hint to the user of what can be entered in the field.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function placeHolder(value) { return new HtmlAttr("placeholder", value, "input", "textarea"); }
+
+/**
+ * Indicates that the media element should play automatically on iOS.
+ * @param {boolean} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function playsInline(value) { return new HtmlAttr("playsInline", value, "audio", "video"); }
+
+/**
+ * Defines the number of rows in a text area.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function role(value) { return new HtmlAttr("role", value); }
+
+/**
+ * The URL of the embeddable content.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function src(value) { return new HtmlAttr("src", value, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
+
+/**
+ * A MediaStream object to use as a source for an HTML video or audio element
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function srcObject(value) { return new HtmlAttr("srcObject", value, "audio", "video"); }
+
+/**
+ * The step attribute
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function step(value) { return new HtmlAttr("step", value, "input"); }
+
+/**
+ * Text to be displayed in a tooltip when hovering over the element.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function title(value) { return new HtmlAttr("title", value); }
+
+/**
+ * Defines the type of the element.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function type(value) { return new HtmlAttr("type", value, "button", "input", "command", "embed", "object", "script", "source", "style", "menu"); }
+
+/**
+ * Defines a default value which will be displayed in the element on page load.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function value(value) { return new HtmlAttr("value", value, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
+
+/**
+ * setting the volume at which a media element plays.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function volume(value) { return new HtmlAttr("volume", value, "audio", "video"); }
+
+/**
+ * For the elements listed here, this establishes the element's width.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function width(value) { return new HtmlAttr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+
+/**
+ * A CSS property that will be applied to an element's style attribute.
+ **/
+class CssProp {
+    /**
+     * Creates a new CSS property that will be applied to an element's style attribute.
+     * @param {string} key - the property name.
+     * @param {string} value - the value to set for the property.
+     */
+    constructor(key, value) {
+        this.key = key;
+        this.value = value;
+        Object.freeze(this);
+    }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        elem.style[this.key] = this.value;
+    }
+}
+
+class CssPropSet {
+    /**
+     * @param {...(CssProp|CssPropSet)} rest
+     */
+    constructor(...rest) {
+        this.set = new Map();
+        const set = (key, value) => {
+            if (value || isBoolean(value)) {
+                this.set.set(key, value);
+            }
+            else if (this.set.has(key)) {
+                this.set.delete(key);
+            }
+        };
+        for (let prop of rest) {
+            if (prop instanceof CssProp) {
+                const { key, value } = prop;
+                set(key, value);
+            }
+            else if (prop instanceof CssPropSet) {
+                for (let subProp of prop.set.entries()) {
+                    const [key, value] = subProp;
+                    set(key, value);
+                }
+            }
+        }
+    }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        for (let prop of this.set.entries()) {
+            const [key, value] = prop;
+            elem.style[key] = value;
+        }
+    }
+}
+
+/**
+ * Combine style properties.
+ * @param {...CssProp} rest
+ * @returns {CssPropSet}
+ */
+function styles(...rest) {
+    return new CssPropSet(...rest);
+}
+
+/**
+ * Creates a style attribute with a backgroundColor property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function backgroundColor(v) { return new CssProp("backgroundColor", v); }
+
+/**
+ * Creates a style attribute with a borderBottom property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function borderBottom(v) { return new CssProp("borderBottom", v); }
+
+/**
+ * Creates a style attribute with a borderBottomColor property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function borderBottomColor(v) { return new CssProp("borderBottomColor", v); }
+
+/**
+ * Creates a style attribute with a borderLeft property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function borderLeft(v) { return new CssProp("borderLeft", v); }
+
+/**
+ * Creates a style attribute with a borderRight property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function borderRight(v) { return new CssProp("borderRight", v); }
+
+/**
+ * Creates a style attribute with a borderStyle property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function borderStyle(v) { return new CssProp("borderStyle", v); }
+
+/**
+ * Creates a style attribute with a borderTop property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function borderTop(v) { return new CssProp("borderTop", v); }
+
+/**
+ * Creates a style attribute with a borderWidth property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function borderWidth(v) { return new CssProp("borderWidth", v); }
+
+/**
+ * Creates a style attribute with a color property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function color(v) { return new CssProp("color", v); }
+
+/**
+ * Creates a style attribute with a columnGap property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function columnGap(v) { return new CssProp("columnGap", v); }
+
+/**
+ * Creates a style attribute with a display property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function display(v) { return new CssProp("display", v); }
+
+/**
+ * Creates a style attribute with a flexDirection property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function flexDirection(v) { return new CssProp("flexDirection", v); }
+
+/**
+ * Creates a style attribute with a fontFamily property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function fontFamily(v) { return new CssProp("fontFamily", v); }
+
+/**
+ * Creates a style attribute with a fontSize property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function fontSize(v) { return new CssProp("fontSize", v); }
+
+/**
+ * Creates a style attribute with a gridArea property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function gridArea(v) { return new CssProp("gridArea", v); }
+
+/**
+ * Creates a style attribute with a gridColumn property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function gridColumn(v) { return new CssProp("gridColumn", v); }
+
+/**
+ * Creates a style attribute with a gridRow property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function gridRow(v) { return new CssProp("gridRow", v); }
+
+/**
+ * Creates a style attribute with a gridTemplateColumns property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function gridTemplateColumns(v) { return new CssProp("gridTemplateColumns", v); }
+
+/**
+ * Creates a style attribute with a gridTemplateRows property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function gridTemplateRows(v) { return new CssProp("gridTemplateRows", v); }
+
+/**
+ * Creates a style attribute with a height property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function cssHeight(v) { return new CssProp("height", v); }
+
+/**
+ * Creates a style attribute with a margin property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function margin(v) { return new CssProp("margin", v); }
+
+/**
+ * Creates a style attribute with a marginBottom property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function marginBottom(v) { return new CssProp("marginBottom", v); }
+
+/**
+ * Creates a style attribute with a overflowY property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function overflowY(v) { return new CssProp("overflowY", v); }
+
+/**
+ * Creates a style attribute with a padding property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function padding(v) { return new CssProp("padding", v); }
+
+/**
+ * Creates a style attribute with a pointerEvents property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function pointerEvents(v) { return new CssProp("pointerEvents", v); }
+
+/**
+ * Creates a style attribute with a textAlign property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function textAlign(v) { return new CssProp("textAlign", v); }
+
+/**
+ * Creates a style attribute with a textDecoration property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function textDecoration(v) { return new CssProp("textDecoration", v); }
+
+/**
+ * Creates a style attribute with a textTransform property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function textTransform(v) { return new CssProp("textTransform", v); }
+
+/**
+ * Creates a style attribute with a touchAction property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function touchAction(v) { return new CssProp("touchAction", v); }
+
+/**
+ * Creates a style attribute with a width property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function cssWidth(v) { return new CssProp("width", v); }
+
+/**
+ * Creates a style attribute with a zIndex property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function zIndex(v) { return new CssProp("zIndex", v); }
+
+
+// A selection of fonts for preferred monospace rendering.
+const monospaceFonts = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
+const monospaceFamily = fontFamily(monospaceFonts);
+// A selection of fonts that should match whatever the user's operating system normally uses.
+const systemFonts = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
+const systemFamily = fontFamily(systemFonts);
+
+/**
+ * A setter functor for HTML element events.
+ **/
+class HtmlEvt {
+    /**
+     * Creates a new setter functor for an HTML element event.
+     * @param {string} name - the name of the event to attach to.
+     * @param {Function} callback - the callback function to use with the event handler.
+     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+     */
+    constructor(name, callback, opts) {
+        if (!isFunction(callback)) {
+            throw new Error("A function instance is required for this parameter");
+        }
+
+        this.name = name;
+        this.callback = callback;
+        this.opts = opts;
+        Object.freeze(this);
+    }
+
+    /**
+     * Add the encapsulate callback as an event listener to the give HTMLElement
+     * @param {HTMLElement} elem
+     */
+    add(elem) {
+        elem.addEventListener(this.name, this.callback, this.opts);
+    }
+
+    /**
+     * Remove the encapsulate callback as an event listener from the give HTMLElement
+     * @param {HTMLElement} elem
+     */
+    remove(elem) {
+        elem.removeEventListener(this.name, this.callback);
+    }
+}
+
+/**
+ * The click event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onClick(callback, opts) { return new HtmlEvt("click", callback, opts); }
+
+/**
+ * The input event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onInput(callback, opts) { return new HtmlEvt("input", callback, opts); }
+
+/**
+ * The keyup event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onKeyUp(callback, opts) { return new HtmlEvt("keyup", callback, opts); }
+
+/**
+ * The mouseout event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onMouseOut(callback, opts) { return new HtmlEvt("mouseout", callback, opts); }
+
+/**
+ * The mouseover event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onMouseOver(callback, opts) { return new HtmlEvt("mouseover", callback, opts); }
+
+/**
+ * Constructs a CSS grid area definition.
+ * @param {number} x - the starting horizontal cell for the element.
+ * @param {number} y - the starting vertical cell for the element.
+ * @param {number} [w=null] - the number of cells wide the element should cover.
+ * @param {number} [h=null] - the number of cells tall the element should cover.
+ * @returns {CssProp}
+ */
+function gridPos(x, y, w = null, h = null) {
+    if (w === null) {
+        w = 1;
+    }
+    if (h === null) {
+        h = 1;
+    }
+    return gridArea(`${y}/${x}/${y + h}/${x + w}`);
+}
+/**
+ * Constructs a CSS grid column definition
+ * @param {number} x - the starting horizontal cell for the element.
+ * @param {number} [w=null] - the number of cells wide the element should cover.
+ * @returns {CssProp}
+ */
+function col(x, w = null) {
+    if (w === null) {
+        w = 1;
+    }
+    return gridColumn(`${x}/${x + w}`);
+}
+/**
+ * Constructs a CSS grid row definition
+ * @param {number} y - the starting vertical cell for the element.
+ * @param {number} [h=null] - the number of cells tall the element should cover.
+ * @returns {CssProp}
+ */
+function row(y, h = null) {
+    if (h === null) {
+        h = 1;
+    }
+    return gridRow(`${y}/${y + h}`);
+}
+/**
+ * Create the gridTemplateColumns and gridTemplateRows styles.
+ * @param {string[]} cols
+ * @param {string[]} rows
+ * @returns {CssPropSet}
+ */
+function gridDef(cols, rows) {
+    return styles(
+        gridColsDef(...cols),
+        gridRowsDef(...rows));
+}
+
+const displayGrid = display("grid");
+
+/**
+ * Create the gridTemplateColumns style attribute, with display set to grid.
+ * @param {...string} cols
+ * @returns {CssPropSet}
+ */
+function gridColsDef(...cols) {
+    return styles(
+        displayGrid,
+        gridTemplateColumns(cols.join(" ")));
+}
+/**
+ * Create the gridTemplateRows style attribute, with display set to grid.
+ * @param {...string} rows
+ * @returns {CssPropSet}
+ */
+function gridRowsDef(...rows) {
+    return styles(
+        displayGrid,
+        gridTemplateRows(rows.join(" ")));
+}
+
+function isOpen(target) {
+    if (target.isOpen) {
+        return target.isOpen();
+    }
+    else {
+        return target.style.display !== "none";
+    }
+}
+
+/**
+ * Sets the element's style's display property to "none"
+ * when `v` is false, or `displayType` when `v` is true.
+ * @memberof Element
+ * @param {boolean} v
+ * @param {string} [displayType=""]
+ */
+function setOpen(target, v, displayType = "") {
+    if (target.setOpen) {
+        target.setOpen(v, displayType);
+    }
+    else if (v) {
+        show(target, displayType);
+    }
+    else {
+        hide(target);
+    }
+}
+
+function updateLabel(target, open, enabledText, disabledText, bothText) {
+    bothText = bothText || "";
+    if (target.accessKey) {
+        bothText += ` <kbd>(ALT+${target.accessKey.toUpperCase()})</kbd>`;
+    }
+    if (target.updateLabel) {
+        target.updateLabel(open, enabledText, disabledText, bothText);
+    }
+    else {
+        target.innerHTML = (open ? enabledText : disabledText) + bothText;
+    }
+}
+
+function toggleOpen(target, displayType = "") {
+    if (target.toggleOpen) {
+        target.toggleOpen(displayType);
+    }
+    else if (isOpen(target)) {
+        hide(target);
+    }
+    else {
+        show(target);
+    }
+}
+
+function show(target, displayType = "") {
+    if (target.show) {
+        target.show();
+    }
+    else {
+        target.style.display = displayType;
+    }
+}
+
+function hide(target) {
+    if (target.hide) {
+        target.hide();
+    }
+    else {
+        target.style.display = "none";
+    }
+}
+const disabler = disabled(true),
+    enabler = disabled(false);
+
+function setLocked(target, value) {
+    if (target.setLocked) {
+        target.setLocked(value);
+    }
+    else if (value) {
+        disabler.apply(target);
+    }
+    else {
+        enabler.apply(target);
+    }
+}
+
+/**
+ * @typedef {(Element|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
+ **/
+
+/**
+ * Creates an HTML element for a given tag name.
+ * 
+ * Boolean attributes that you want to default to true can be passed
+ * as just the attribute creating function, 
+ *   e.g. `Audio(autoPlay)` vs `Audio(autoPlay(true))`
+ * @param {string} name - the name of the tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLElement}
+ */
+function tag(name, ...rest) {
+    const elem = document.createElement(name);
+
+    for (let i = 0; i < rest.length; ++i) {
+        // 
+        if (isFunction(rest[i])) {
+            rest[i] = rest[i](true);
+        }
+    }
+
+    for (let x of rest) {
+        if (x !== null && x !== undefined) {
+            if (isString(x)
+                || isNumber(x)
+                || isBoolean(x)
+                || x instanceof Date) {
+                elem.appendChild(document.createTextNode(x));
+            }
+            else if (x instanceof Element) {
+                elem.appendChild(x);
+            }
+            else if (x instanceof HtmlCustomTag) {
+                elem.appendChild(x.element);
+            }
+            else if (x instanceof HtmlAttr
+                || x instanceof CssProp
+                || x instanceof CssPropSet) {
+                x.apply(elem);
+            }
+            else if (x instanceof HtmlEvt) {
+                x.add(elem);
+            }
+            else {
+                console.trace(`Skipping ${x}: unsupported value type.`, x);
+            }
+        }
+    }
+
+    return elem;
+}
+
+/**
+ * A pseudo-element that is made out of other elements.
+ **/
+class HtmlCustomTag extends EventBase {
+    /**
+     * Creates a new pseudo-element
+     * @param {string} tagName - the type of tag that will contain the elements in the custom tag.
+     * @param {...TagChild} rest - optional attributes, child elements, and text
+     */
+    constructor(tagName, ...rest) {
+        super();
+        if (rest.length === 1
+            && rest[0] instanceof Element) {
+            /** @type {HTMLElement} */
+            this.element = rest[0];
+        }
+        else {
+            /** @type {HTMLElement} */
+            this.element = tag(tagName, ...rest);
+        }
+    }
+
+    /**
+     * Gets the ID attribute of the container element.
+     * @type {string}
+     **/
+    get id() {
+        return this.element.id;
+    }
+
+    /**
+     * Retrieves the desired element for attaching events.
+     * @returns {HTMLElement}
+     **/
+    get eventTarget() {
+        return this.element;
+    }
+
+    /**
+     * Determine if an event type should be forwarded to the container element.
+     * @param {string} name
+     * @returns {boolean}
+     */
+    isForwardedEvent(name) {
+        return true;
+    }
+
+    /**
+     * Adds an event listener to the container element.
+     * @param {string} name - the name of the event to attach to.
+     * @param {Function} callback - the callback function to use with the event handler.
+     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+     */
+    addEventListener(name, callback, opts) {
+        if (this.isForwardedEvent(name)) {
+            this.eventTarget.addEventListener(name, callback, opts);
+        }
+        else {
+            super.addEventListener(name, callback, opts);
+        }
+    }
+
+    /**
+     * Removes an event listener from the container element.
+     * @param {string} name - the name of the event to attach to.
+     * @param {Function} callback - the callback function to use with the event handler.
+     */
+    removeEventListener(name, callback) {
+        if (this.isForwardedEvent(name)) {
+            this.eventTarget.removeEventListener(name, callback);
+        }
+        else {
+            super.removeEventListener(name, callback);
+        }
+    }
+
+    /**
+     * Gets the style attribute of the underlying select box.
+     * @type {ElementCSSInlineStyle}
+     */
+    get style() {
+        return this.element.style;
+    }
+
+    get tagName() {
+        return this.element.tagName;
+    }
+
+    get disabled() {
+        return this.element.disabled;
+    }
+
+    set disabled(v) {
+        this.element.disabled = v;
+    }
+
+    /**
+     * Moves cursor focus to the underyling element.
+     **/
+    focus() {
+        this.element.focus();
+    }
+
+    /**
+     * Removes cursor focus from the underlying element.
+     **/
+    blur() {
+        this.element.blur();
+    }
+}
+
+/**
+ * An input box that has a label attached to it.
+ **/
+class LabeledInputTag extends HtmlCustomTag {
+    /**
+     * Creates an input box that has a label attached to it.
+     * @param {string} id - the ID to use for the input box
+     * @param {string} inputType - the type to use for the input box (number, text, etc.)
+     * @param {string} labelText - the text to display in the label
+     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+     * @returns {LabeledInputTag}
+     */
+    constructor(id, inputType, labelText, ...rest) {
+        super("div");
+
+        this.label = Label(
+            htmlFor(id),
+            labelText);
+
+        this.input = Input(
+            type(inputType),
+            ...rest);
+
+        this.element.append(
+            this.label,
+            this.input);
+
+        Object.seal(this);
+    }
+
+    /**
+     * Retrieves the desired element for attaching events.
+     * @returns {HTMLElement}
+     **/
+    get eventTarget() {
+        return this.input;
+    }
+
+    /**
+     * Gets the value attribute of the input element
+     * @type {string}
+     */
+    get value() {
+        return this.input.value;
+    }
+
+    /**
+     * Sets the value attribute of the input element
+     * @param {string} v
+     */
+    set value(v) {
+        this.input.value = v;
+    }
+
+    /**
+     * Gets whether or not the input element is checked, if it's a checkbox or radio button.
+     * @type {boolean}
+     */
+    get checked() {
+        return this.input.checked;
+    }
+
+    /**
+     * Sets whether or not the input element is checked, if it's a checkbox or radio button.
+     * @param {boolean} v
+     */
+    set checked(v) {
+        this.input.checked = v;
+    }
+
+    /**
+     * Sets whether or not the input element should be disabled.
+     * @param {boolean} value
+     */
+    setLocked(value) {
+        setLocked(this.input, value);
+    }
+}
+
+class LabeledSelectBoxTag extends HtmlCustomTag {
+    /**
+     * Creates a select box that can bind to collections, with a label set on the side.
+     * @param {string} tagId - the ID to use for the select box.
+     * @param {any} labelText - the text to put in the label.
+     * @param {string} noSelectionText - the text to display when no items are available.
+     * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
+     * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
+     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+     */
+    constructor(tagId, labelText, noSelectionText, makeID, makeLabel, ...rest) {
+        super("div");
+
+        this.label = Label(
+            htmlFor(tagId),
+            labelText);
+
+        /** @type {SelectBox} */
+        this.select = new SelectBox(noSelectionText, makeID, makeLabel, id(tagId), ...rest);
+
+        this.element.append(
+            this.label,
+            this.select.element);
+
+        Object.seal(this);
+    }
+
+    /**
+     * Retrieves the desired element for attaching events.
+     * @returns {HTMLElement}
+     **/
+    get eventTarget() {
+        return this.select;
+    }
+
+    /**
+     * Gets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
+     * @type {boolean}
+     **/
+    get emptySelectionEnabled() {
+        return this.select.emptySelectionEnabled;
+    }
+
+    /**
+     * Sets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
+     * @param {boolean} value
+     **/
+    set emptySelectionEnabled(value) {
+        this.select.emptySelectionEnabled = value;
+    }
+
+    /**
+     * Gets the collection to which the select box was databound
+     **/
+    get values() {
+        return this.select.values;
+    }
+
+    /**
+     * Sets the collection to which the select box will be databound
+     **/
+    set values(values) {
+        this.select.values = values;
+    }
+
+    /**
+     * Returns the collection of HTMLOptionElements that are stored in the select box
+     * @type {HTMLOptionsCollection}
+     */
+    get options() {
+        return this.select.options;
+    }
+
+    /**
+     * Gets the index of the item that is currently selected in the select box.
+     * The index is offset by -1 if the select box has `emptySelectionEnabled`
+     * set to true, so that the indices returned are always in range of the collection
+     * to which the select box was databound
+     * @type {number}
+     */
+    get selectedIndex() {
+        return this.select.selectedIndex;
+    }
+    /**
+    * Sets the index of the item that should be selected in the select box.
+    * The index is offset by -1 if the select box has `emptySelectionEnabled`
+    * set to true, so that the indices returned are always in range of the collection
+    * to which the select box was databound
+    * @param {number} i
+    */
+    set selectedIndex(i) {
+        this.select.selectedIndex = i;
+    }
+
+    /**
+     * Gets the item at `selectedIndex` in the collection to which the select box was databound
+     * @type {any}
+     */
+    get selectedValue() {
+        return this.select.selectedValue;
+    }
+    /**
+    * Gets the index of the given item in the select box's databound collection, then
+    * sets that index as the `selectedIndex`.
+     * @param {any) value
+    */
+    set selectedValue(v) {
+        this.select.selectedValue = v;
+    }
+
+    /**
+     * Returns the index of the given item in the select box's databound collection.
+     * @param {any} value
+     * @returns {number}
+     */
+    indexOf(value) {
+        return this.select.indexOf(value);
+    }
+
+    /**
+     * Checks to see if the value exists in the databound collection.
+     * @param {any} value
+     * @returns {boolean}
+     */
+    contains(value) {
+        return this.select.contains(value);
+    }
+}
+
+const selectEvt = new Event("select");
+
+/**
+ * A panel and a button that opens it.
+ **/
+class OptionPanelTag extends HtmlCustomTag {
+
+    /**
+     * Creates a new panel that can be opened with a button click, 
+     * living in a collection of panels that will be hidden when
+     * this panel is opened.
+     * @param {string} panelID - the ID to use for the panel element.
+     * @param {string} name - the text to use on the button.
+     * @param {...any} rest
+     */
+    constructor(panelID, name, ...rest) {
+        super("div",
+            id(panelID),
+            padding("1em"),
+            P(...rest));
+
+        this.button = Button(
+            id(panelID + "Btn"),
+            onClick(() => this.dispatchEvent(selectEvt)),
+            name);
+    }
+
+    isForwardedEvent(name) {
+        return name !== "select";
+    }
+
+    /**
+     * Gets whether or not the panel is visible
+     * @type {boolean}
+     **/
+    get visible() {
+        return this.element.style.display !== null;
+    }
+
+    /**
+     * Sets whether or not the panel is visible
+     * @param {boolean} v
+     **/
+    set visible(v) {
+        setOpen(this.element, v);
+        styles(
+            borderStyle("solid"),
+            borderWidth("2px"),
+            backgroundColor(v ? "#ddd" : "transparent"),
+            borderTop(v ? "" : "none"),
+            borderRight(v ? "" : "none"),
+            borderBottomColor(v ? "#ddd" : ""),
+            borderLeft(v ? "" : "none"))
+            .apply(this.button);
+    }
+}
+
+const disabler$1 = disabled(true),
+    enabler$1 = disabled(false);
+
+/** @type {WeakMap<SelectBoxTag, any[]>} */
+const values = new WeakMap();
+
+function render(self) {
+    clear(self.element);
+    if (self.values.length === 0) {
+        self.element.append(Option(self.noSelectionText));
+        disabler$1.apply(self.element);
+    }
+    else {
+        if (self.emptySelectionEnabled) {
+            self.element.append(Option(self.noSelectionText));
+        }
+        for (let v of self.values) {
+            self.element.append(
+                Option(
+                    value(self.makeID(v)),
+                    self.makeLabel(v)));
+        }
+
+        enabler$1.apply(self.element);
+    }
+}
+
+/**
+ * A select box that can be databound to collections.
+ **/
+class SelectBoxTag extends HtmlCustomTag {
+
+    /**
+     * Creates a select box that can bind to collections
+     * @param {string} noSelectionText - the text to display when no items are available.
+     * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
+     * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
+     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+     */
+    constructor(noSelectionText, makeID, makeLabel, ...rest) {
+        super("select", ...rest);
+
+        if (!isFunction(makeID)) {
+            throw new Error("makeID parameter must be a Function");
+        }
+
+        if (!isFunction(makeLabel)) {
+            throw new Error("makeLabel parameter must be a Function");
+        }
+
+        this.noSelectionText = noSelectionText;
+        this.makeID = (v) => v !== null && makeID(v) || null;
+        this.makeLabel = (v) => v !== null && makeLabel(v) || "None";
+        this.emptySelectionEnabled = true;
+
+        Object.seal(this);
+    }
+
+    /**
+     * Gets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
+     * @type {boolean}
+     **/
+    get emptySelectionEnabled() {
+        return this._emptySelectionEnabled;
+    }
+
+    /**
+     * Sets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
+     * @param {boolean} value
+     **/
+    set emptySelectionEnabled(value) {
+        this._emptySelectionEnabled = value;
+        render(this);
+    }
+
+    /**
+     * Gets the collection to which the select box was databound
+     **/
+    get values() {
+        if (!values.has(this)) {
+            values.set(this, []);
+        }
+        return values.get(this);
+    }
+
+    /**
+     * Sets the collection to which the select box will be databound
+     **/
+    set values(newItems) {
+        const curValue = this.selectedValue;
+        const values = this.values;
+        values.splice(0, values.length, ...newItems);
+        render(this);
+        this.selectedValue = curValue;
+    }
+
+    /**
+     * Returns the collection of HTMLOptionElements that are stored in the select box
+     * @type {HTMLOptionsCollection}
+     */
+    get options() {
+        return this.element.options;
+    }
+
+    /**
+     * Gets the index of the item that is currently selected in the select box.
+     * The index is offset by -1 if the select box has `emptySelectionEnabled`
+     * set to true, so that the indices returned are always in range of the collection
+     * to which the select box was databound
+     * @type {number}
+     */
+    get selectedIndex() {
+        let i = this.element.selectedIndex;
+        if (this.emptySelectionEnabled) {
+            --i;
+        }
+        return i;
+    }
+
+    /**
+     * Sets the index of the item that should be selected in the select box.
+     * The index is offset by -1 if the select box has `emptySelectionEnabled`
+     * set to true, so that the indices returned are always in range of the collection
+     * to which the select box was databound
+     * @param {number} i
+     */
+    set selectedIndex(i) {
+        if (this.emptySelectionEnabled) {
+            ++i;
+        }
+        this.element.selectedIndex = i;
+    }
+
+    /**
+     * Gets the item at `selectedIndex` in the collection to which the select box was databound
+     * @type {any}
+     */
+    get selectedValue() {
+        if (0 <= this.selectedIndex && this.selectedIndex < this.values.length) {
+            return this.values[this.selectedIndex];
+        }
+        else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the index of the given item in the select box's databound collection, then
+     * sets that index as the `selectedIndex`.
+     * @param {any) value
+     */
+    set selectedValue(value) {
+        this.selectedIndex = this.indexOf(value);
+    }
+
+    /**
+     * Returns the index of the given item in the select box's databound collection.
+     * @param {any} value
+     * @returns {number}
+     */
+    indexOf(value) {
+        return this.values
+            .findIndex(v =>
+                value !== null
+                && this.makeID(value) === this.makeID(v));
+    }
+
+    /**
+     * Checks to see if the value exists in the databound collection.
+     * @param {any} value
+     * @returns {boolean}
+     */
+    contains(value) {
+        return this.indexOf(value) >= 0.
+    }
+}
+
+/**
+ * Empty an element of all children. This is faster than
+ * setting `innerHTML = ""`.
+ * @param {any} elem
+ */
+function clear(elem) {
+    while (elem.lastChild) {
+        elem.lastChild.remove();
+    }
+}
+
+/**
+ * creates an HTML A tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLAnchorElement}
+ */
+function A(...rest) { return tag("a", ...rest); }
+
+/**
+ * creates an HTML HtmlButton tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLButtonElement}
+ */
+function ButtonRaw(...rest) { return tag("button", ...rest); }
+
+/**
+ * creates an HTML Button tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLButtonElement}
+ */
+function Button(...rest) { return ButtonRaw(...rest, type("button")); }
+
+/**
+ * creates an HTML Canvas tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLCanvasElement}
+ */
+function Canvas(...rest) { return tag("canvas", ...rest); }
+
+/**
+ * creates an HTML Div tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLDivElement}
+ */
+function Div(...rest) { return tag("div", ...rest); }
+
+/**
+ * creates an HTML H1 tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLHeadingElement}
+ */
+function H1(...rest) { return tag("h1", ...rest); }
+
+/**
+ * creates an HTML H2 tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLHeadingElement}
+ */
+function H2(...rest) { return tag("h2", ...rest); }
+
+/**
+ * creates an HTML Img tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLImageElement}
+ */
+function Img(...rest) { return tag("img", ...rest); }
+
+/**
+ * creates an HTML Input tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+function Input(...rest) { return tag("input", ...rest); }
+
+/**
+ * creates an HTML Input tag that is a URL entry field.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+function InputURL(...rest) { return Input(type("url"), ...rest) }
+
+/**
+ * creates an HTML Label tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLLabelElement}
+ */
+function Label(...rest) { return tag("label", ...rest); }
+
+/**
+ * creates an HTML LI tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLLIElement}
+ */
+function LI(...rest) { return tag("li", ...rest); }
+
+/**
+ * creates an HTML Option tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLOptionElement}
+ */
+function Option(...rest) { return tag("option", ...rest); }
+
+/**
+ * creates an HTML P tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLParagraphElement}
+ */
+function P(...rest) { return tag("p", ...rest); }
+
+/**
+ * creates an HTML Span tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLSpanElement}
+ */
+function Span(...rest) { return tag("span", ...rest); }
+
+/**
+ * creates an HTML UL tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLUListElement}
+ */
+function UL(...rest) { return tag("ul", ...rest); }
+
+/**
+ * creates an HTML Video tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLVideoElement}
+ */
+function Video(...rest) { return tag("video", ...rest); }
+
+/**
+ * Creates an offscreen canvas element, if they are available. Otherwise, returns an HTMLCanvasElement.
+ * @param {number} w - the width of the canvas
+ * @param {number} h - the height of the canvas
+ * @param {...TagChild} rest - optional HTML attributes and child elements, to use in constructing the HTMLCanvasElement if OffscreenCanvas is not available.
+ * @returns {OffscreenCanvas|HTMLCanvasElement}
+ */
+function CanvasOffscreen(w, h, ...rest) {
+    if (window.OffscreenCanvas) {
+        return new OffscreenCanvas(w, h);
+    }
+    else {
+        return Canvas(...rest, width(w), height(h));
+    }
+}
+
+/**
+ * Creates an input box that has a label attached to it.
+ * @param {string} id - the ID to use for the input box
+ * @param {string} inputType - the type to use for the input box (number, text, etc.)
+ * @param {string} labelText - the text to display in the label
+ * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+ * @returns {LabeledInputTag}
+ */
+function LabeledInput(id, inputType, labelText, ...rest) {
+    return new LabeledInputTag(id, inputType, labelText, ...rest);
+}
+
+/**
+ * Creates a string from a list item to use as the item's ID or label in a select box.
+ * @callback makeItemValueCallback
+ * @param {any} obj - the object
+ * @returns {string}
+ */
+
+/**
+ * Creates a select box that can bind to collections
+ * @param {string} noSelectionText - the text to display when no items are available.
+ * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
+ * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
+ * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+ * @returns {SelectBoxTag}
+ */
+function SelectBox(noSelectionText, makeID, makeLabel, ...rest) {
+    return new SelectBoxTag(noSelectionText, makeID, makeLabel, ...rest);
+}
+
+/**
+ * Creates a select box, with a label attached to it, that can bind to collections
+ * @param {string} id - the ID to use for the input box
+ * @param {string} labelText - the text to display in the label
+ * @param {string} noSelectionText - the text to display when no items are available.
+ * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
+ * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
+ * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+ * @returns {LabeledSelectBoxTag}
+ */
+function LabeledSelectBox(id, labelText, noSelectionText, makeID, makeLabel, ...rest) {
+    return new LabeledSelectBoxTag(id, labelText, noSelectionText, makeID, makeLabel, ...rest);
+}
+
+/**
+ * Creates an OptionPanelTag element
+ * @param {string} id - the ID to use for the content element of the option panel
+ * @param {string} name - the text to use in the button that triggers displaying the content element
+ * @param {...TagChild} rest - optional attributes, child elements, and text to use on the content element
+ */
+function OptionPanel(id, name, ...rest) {
+    return new OptionPanelTag(id, name, ...rest);
+}
+
+/**
+ * Creates a Div element with margin: auto.
+ * @param {...any} rest
+ * @returns {HTMLDivElement}
+ */
+function Run(...rest) {
+    return Div(
+        margin("auto"),
+        ...rest);
+}
+
+const hiddenEvt = new Event("hidden"),
+    shownEvt = new Event("shown");
+
+class FormDialog extends EventBase {
+    constructor(name, header) {
+        super();
+
+        const formStyle = styles(
+            gridDef(
+                ["5fr", "1fr", "1fr"],
+                ["auto", "auto", "1fr", "auto", "auto"]),
+            overflowY("hidden"));
+
+        this.element = document.getElementById(name) ||
+            Div(
+                id(name),
+                className("dialog"),
+                Div(
+                    gridColsDef("1fr", "auto"),
+                    col(1, 3),
+                    H1(
+                        col(1),
+                        margin("0"),
+                        header),
+                    Button(
+                        col(2),
+                        padding("1em"),
+                        close.value,
+                        onClick(() =>
+                            hide(this)))));
+
+        formStyle.apply(this.element);
+
+        this.header = this.element.querySelector(".header")
+            || this.element.appendChild(Div(className("header")));
+
+        gridPos(1, 2, 3, 1).apply(this.header);
+
+        this.content = this.element.querySelector(".content")
+            || this.element.appendChild(Div(className("content")));
+
+        styles(
+            gridPos(1, 3, 3, 1),
+            overflowY("scroll"))
+            .apply(this.content);
+
+        this.footer = this.element.querySelector(".footer")
+            || this.element.appendChild(Div(className("footer")));
+
+        styles(
+            gridPos(1, 4, 3, 1),
+            display("flex"),
+            flexDirection("row-reverse"))
+            .apply(this.footer);
+    }
+
+    get tagName() {
+        return this.element.tagName;
+    }
+
+    get disabled() {
+        return this.element.disabled;
+    }
+
+    set disabled(v) {
+        this.element.disabled = v;
+    }
+
+    get style() {
+        return this.element.style;
+    }
+
+    appendChild(child) {
+        return this.element.appendChild(child);
+    }
+
+    append(...rest) {
+        this.element.append(...rest);
+    }
+
+    show() {
+        show(this.element, "grid");
+        this.dispatchEvent(shownEvt);
+    }
+
+    async showAsync() {
+        show(this);
+        await once(this, "hidden");
+    }
+
+    hide() {
+        hide(this.element);
+        this.dispatchEvent(hiddenEvt);
+    }
+}
+
+const headerStyle = styles(
+    textDecoration("none"),
+    color("black"),
+    textTransform("capitalize"));
+const buttonStyle = styles(
+    fontSize("200%"),
+    cssWidth("2em"));
+
+const disabler$2 = disabled(true),
+    enabler$2 = disabled(false);
+
+const cancelEvt = new Event("emojiCanceled");
+
+class EmojiForm extends FormDialog {
+    constructor() {
+        super("emoji", "Emoji");
+
+        this.header.append(
+            H2("Recent"),
+            this.recent = P("(None)"));
+
+        const previousEmoji = [],
+            allAlts = [];
+
+        let selectedEmoji = null,
+            idCounter = 0;
+
+        const closeAll = () => {
+            for (let alt of allAlts) {
+                hide(alt);
+            }
+        };
+
+        function combine(a, b) {
+            let left = a.value;
+
+            let idx = left.indexOf(emojiStyle.value);
+            if (idx === -1) {
+                idx = left.indexOf(textStyle.value);
+            }
+            if (idx >= 0) {
+                left = left.substring(0, idx);
+            }
+
+            return {
+                value: left + b.value,
+                desc: a.desc + "/" + b.desc
+            };
+        }
+
+        /**
+         * 
+         * @param {EmojiGroup} group
+         * @param {HTMLElement} container
+         * @param {boolean} isAlts
+         */
+        const addIconsToContainer = (group, container, isAlts) => {
+            const alts = group.alts || group;
+            for (let icon of alts) {
+                const btn = Button(
+                    title(icon.desc),
+                    buttonStyle,
+                    onClick((evt) => {
+                        selectedEmoji = selectedEmoji && evt.ctrlKey
+                            ? combine(selectedEmoji, icon)
+                            : icon;
+                        this.preview.innerHTML = `${selectedEmoji.value} - ${selectedEmoji.desc}`;
+                        enabler$2.apply(this.confirmButton);
+
+                        if (alts) {
+                            toggleOpen(alts);
+                            btn.innerHTML = icon.value + (isOpen(alts) ? "-" : "+");
+                        }
+                    }), icon.value);
+
+                let alts = null;
+
+                /** @type {HTMLUListElement|HTMLSpanElement} */
+                let g = null;
+
+                if (isAlts) {
+                    btn.id = `emoji-with-alt-${idCounter++}`;
+                    g = UL(
+                        LI(btn,
+                            Label(htmlFor(btn.id),
+                                icon.desc)));
+                }
+                else {
+                    g = Span(btn);
+                }
+
+                if (icon.alts) {
+                    alts = Div();
+                    allAlts.push(alts);
+                    addIconsToContainer(icon, alts, true);
+                    hide(alts);
+                    g.appendChild(alts);
+                    btn.style.width = "3em";
+                    btn.innerHTML += "+";
+                }
+
+                if (icon.width) {
+                    btn.style.width = icon.width;
+                }
+
+                if (icon.color) {
+                    btn.style.color = icon.color;
+                }
+
+                container.appendChild(g);
+            }
+        };
+
+        for (let group of Object.values(allIcons)) {
+            if (group instanceof EmojiGroup) {
+                const header = H1(),
+                    container = P(),
+                    headerButton = A(
+                        href("javascript:undefined"),
+                        title(group.desc),
+                        headerStyle,
+                        onClick(() => {
+                            toggleOpen(container);
+                            headerButton.innerHTML = group.value + (isOpen(container) ? " -" : " +");
+                        }),
+                        group.value + " -");
+
+                addIconsToContainer(group, container);
+                header.appendChild(headerButton);
+                this.content.appendChild(header);
+                this.content.appendChild(container);
+            }
+        }
+
+        this.footer.append(
+
+            this.confirmButton = Button(className("confirm"),
+                "OK",
+                onClick(() => {
+                    const idx = previousEmoji.indexOf(selectedEmoji);
+                    if (idx === -1) {
+                        previousEmoji.push(selectedEmoji);
+                        this.recent.innerHTML = "";
+                        addIconsToContainer(previousEmoji, this.recent);
+                    }
+
+                    this.dispatchEvent(new EmojiSelectedEvent(selectedEmoji));
+                    hide(this);
+                })),
+
+            Button(className("cancel"),
+                "Cancel",
+                onClick(() => {
+                    disabler$2.apply(this.confirmButton);
+                    this.dispatchEvent(cancelEvt);
+                    hide(this);
+                })),
+
+            this.preview = Span(gridPos(1, 4, 3, 1)));
+
+        disabler$2.apply(this.confirmButton);
+
+        this.selectAsync = () => {
+            return new Promise((resolve, reject) => {
+                let yes = null,
+                    no = null;
+
+                const done = () => {
+                    this.removeEventListener("emojiSelected", yes);
+                    this.removeEventListener("emojiCanceled", no);
+                    this.removeEventListener("hidden", no);
+                };
+
+                yes = (evt) => {
+                    done();
+                    try {
+                        resolve(evt.emoji);
+                    }
+                    catch (exp) {
+                        reject(exp);
+                    }
+                };
+
+                no = () => {
+                    done();
+                    resolve(null);
+                };
+
+                this.addEventListener("emojiSelected", yes);
+                this.addEventListener("emojiCanceled", no);
+                this.addEventListener("hidden", no);
+
+                closeAll();
+                show(this);
+            });
+        };
+    }
+}
+
+class EmojiSelectedEvent extends Event {
+    constructor(emoji) {
+        super("emojiSelected");
+        this.emoji = emoji;
+    }
+}
+
+const toggleAudioEvt = new Event("toggleAudio"),
+    toggleVideoEvt = new Event("toggleVideo"),
+    emoteEvt = new Event("emote"),
+    selectEmojiEvt = new Event("selectEmoji"),
+    subelStyle = styles(
+        fontSize("1.25em"),
+        cssWidth("3em"),
+        cssHeight("100%")),
+    pointerEventsAll = pointerEvents("all"),
+    subButtonStyle = styles(
+        fontSize("1.25em"),
+        cssHeight("100%")),
+    buttonLabelStyle = fontSize("12px");
+
+class FooterBar extends EventBase {
+    constructor() {
+        super();
+
+        const _ = (evt) => () => this.dispatchEvent(evt);
+
+        /** @type {HTMLButtonElement} */
+        this.muteAudioButton = null;
+
+        this.element = Div(
+            id("footbar"),
+            gridColsDef("auto", "1fr", "auto"),
+            padding("4px"),
+            cssWidth("100%"),
+            columnGap("5px"),
+            backgroundColor("transparent"),
+            pointerEvents("none"),
+
+            Button(
+                title("Toggle audio mute/unmute"),
+                onClick(_(toggleAudioEvt)),
+                gridPos(1, 1),
+                subelStyle,
+                pointerEventsAll,
+                this.muteAudioButton = Run(speakerHighVolume.value),
+                Run(buttonLabelStyle, "Audio")),
+
+            this.emojiControl = Span(
+                gridPos(2, 1),
+                textAlign("center"),
+                subButtonStyle,
+                Button(
+                    title("Emote"),
+                    onClick(_(emoteEvt)),
+                    subButtonStyle,
+                    pointerEventsAll,
+                    borderRight("none"),
+                    this.emoteButton = Run(whiteFlower.value),
+                    Run(buttonLabelStyle, "Emote")),
+                Button(
+                    title("Select Emoji"),
+                    onClick(_(selectEmojiEvt)),
+                    subButtonStyle,
+                    pointerEventsAll,
+                    borderLeft("none"),
+                    Run(upwardsButton.value),
+                    Run(buttonLabelStyle, "Change"))),
+
+
+            Button(
+                title("Toggle video mute/unmute"),
+                onClick(_(toggleVideoEvt)),
+                gridPos(3, 1),
+                subelStyle,
+                pointerEventsAll,
+                this.muteVideoButton = Run(noMobilePhone.value),
+                Run(buttonLabelStyle, "Video")));
+
+        this._audioEnabled = true;
+        this._videoEnabled = false;
+
+        Object.seal(this);
+    }
+
+    get enabled() {
+        return !this.muteAudioButton.disabled;
+    }
+
+    set enabled(v) {
+        for (let button of this.element.querySelectorAll("button")) {
+            button.disabled = !v;
+        }
+    }
+
+    get audioEnabled() {
+        return this._audioEnabled;
+    }
+
+    set audioEnabled(value) {
+        this._audioEnabled = value;
+        updateLabel(
+            this.muteAudioButton,
+            value,
+            speakerHighVolume.value,
+            mutedSpeaker.value);
+    }
+
+    get videoEnabled() {
+        return this._videoEnabled;
+    }
+
+    set videoEnabled(value) {
+        this._videoEnabled = value;
+        updateLabel(
+            this.muteVideoButton,
+            value,
+            videoCamera.value,
+            noMobilePhone.value);
+    }
+
+    setEmojiButton(key, emoji) {
+        this.emoteButton.innerHTML = emoji.value;
+    }
+}
+
+const toggleOptionsEvt = new Event("toggleOptions"),
+    tweetEvt = new Event("tweet"),
+    leaveEvt = new Event("leave"),
+    toggleFullscreenEvt = new Event("toggleFullscreen"),
+    toggleInstructionsEvt = new Event("toggleInstructions"),
+    toggleUserDirectoryEvt = new Event("toggleUserDirectory"),
+    subelStyle$1 = styles(
+        pointerEvents("all"),
+        fontSize("1.25em"),
+        cssWidth("3em"),
+        cssHeight("100%")),
+    buttonLabelStyle$1 = fontSize("12px");
+
+class HeaderBar extends EventBase {
+    constructor() {
+        super();
+
+        const _ = (evt) => () => this.dispatchEvent(evt);
+
+        this.element = Div(
+            id("headbar"),
+            gridColsDef("auto", "auto", "auto", "auto", "1fr", "auto", "auto"),
+            padding("4px"),
+            cssWidth("100%"),
+            columnGap("5px"),
+            backgroundColor("transparent"),
+            pointerEvents("none"),
+
+            this.optionsButton = Button(
+                title("Show/hide options"),
+                onClick(_(toggleOptionsEvt)),
+                subelStyle$1,
+                gridPos(1, 1),
+                Run(gear.value),
+                Run(buttonLabelStyle$1, "Options")),
+
+            this.instructionsButton = Button(
+                title("Show/hide instructions"),
+                onClick(_(toggleInstructionsEvt)),
+                subelStyle$1,
+                gridPos(2, 1),
+                Run(questionMark.value),
+                Run(buttonLabelStyle$1, "Info")),
+
+            Button(
+                title("Share your current room to twitter"),
+                onClick(_(tweetEvt)),
+                subelStyle$1,
+                gridPos(3, 1),
+                Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
+                    alt("icon"),
+                    role("presentation"),
+                    cssHeight("25px"),
+                    marginBottom("-7px")),
+                Run(buttonLabelStyle$1, "Tweet")),
+
+            Button(
+                title("View user directory"),
+                onClick(_(toggleUserDirectoryEvt)),
+                subelStyle$1,
+                gridPos(4, 1),
+                Run(speakingHead.value),
+                Run(buttonLabelStyle$1, "Users")),
+
+
+            this.fullscreenButton = Button(
+                title("Toggle fullscreen"),
+                onClick(_(toggleFullscreenEvt)),
+                onClick(() => this.isFullscreen = !this.isFullscreen),
+                subelStyle$1,
+                gridPos(6, 1),
+                Run(squareFourCourners.value),
+                Run(buttonLabelStyle$1, "Expand")),
+
+
+            Button(
+                title("Leave the room"),
+                onClick(_(leaveEvt)),
+                subelStyle$1,
+                gridPos(7, 1),
+                Run(door.value),
+                Run(buttonLabelStyle$1, "Leave")));
+
+        Object.seal(this);
+    }
+
+    get isFullscreen() {
+        return document.fullscreenElement !== null;
+    }
+
+    set isFullscreen(value) {
+        if (value) {
+            document.body.requestFullscreen();
+        }
+        else {
+            document.exitFullscreen();
+        }
+        updateLabel(
+            this.fullscreenButton,
+            value,
+            downRightArrow.value,
+            squareFourCourners.value);
+    }
+
+    get enabled() {
+        return !this.instructionsButton.disabled;
+    }
+
+    set enabled(v) {
+        for (let button of this.element.querySelectorAll("button")) {
+            button.disabled = !v;
+        }
+    }
+}
+
+const defaultRooms = new Map([
+    ["calla", "Calla"],
+    ["island", "Island"],
+    ["alxcc", "Alexandria Code & Coffee"],
+    ["vurv", "Vurv"]]);
+
+/** @type {WeakMap<LoginForm, LoginFormPrivate>} */
+const selfs = new WeakMap();
+
+class LoginFormPrivate {
+    constructor(parent) {
+        this.ready = false;
+        this.connecting = false;
+        this.connected = false;
+
+        this.parent = parent;
+    }
+
+    validate() {
+        const canConnect = this.parent.roomName.length > 0
+            && this.parent.userName.length > 0;
+
+        setLocked(
+            this.parent.connectButton,
+            !this.ready
+            || this.connecting
+            || this.connected
+            || !canConnect);
+        this.parent.connectButton.innerHTML =
+            this.connected
+                ? "Connected"
+                : this.connecting
+                    ? "Connecting..."
+                    : this.ready
+                        ? "Connect"
+                        : "Loading...";
+    }
+}
+
+class LoginForm extends FormDialog {
+    constructor() {
+        super("login", "Login");
+        const self = new LoginFormPrivate(this);
+        selfs.set(this, self);
+
+        const validate = () => self.validate();
+
+        this.addEventListener("shown", () => self.ready = true);
+
+        this.roomLabel = this.element.querySelector("label[for='roomSelector']");
+
+        this.roomSelect = SelectBox(
+            "No rooms available",
+            v => v,
+            k => defaultRooms.get(k),
+            this.element.querySelector("#roomSelector"));
+        this.roomSelect.addEventListener("input", validate);
+        this.roomSelect.emptySelectionEnabled = false;
+        this.roomSelect.values = defaultRooms.keys();
+        this.roomSelect.selectedIndex = 0;
+
+        this.roomInput = this.element.querySelector("#roomName");
+        this.roomInput.addEventListener("input", validate);
+        this.roomInput.addEventListener("keypress", (evt) => {
+            if (evt.key === "Enter") {
+                this.userNameInput.focus();
+            }
+        });
+
+        this.userNameInput = this.element.querySelector("#userName");
+        this.userNameInput.addEventListener("input", validate);
+        this.userNameInput.addEventListener("keypress", (evt) => {
+            if (evt.key === "Enter") {
+                if (this.userName.length === 0) {
+                    this.userNameInput.focus();
+                }
+                else if (this.roomName.length === 0) {
+                    if (this.roomSelectMode) {
+                        this.roomSelect.focus();
+                    }
+                    else {
+                        this.roomInput.focus();
+                    }
+                }
+            }
+        });
+
+        this.createRoomButton = this.element.querySelector("#createNewRoom");
+        this.createRoomButton.addEventListener("click", () => {
+            this.roomSelectMode = !this.roomSelectMode;
+        });
+
+        this.connectButton = this.element.querySelector("#connect");
+        this.addEventListener("login", () => {
+            this.connecting = true;
+        });
+
+        this.roomSelectMode = true;
+
+        self.validate();
+    }
+
+    addEventListener(evtName, callback, options) {
+        if (evtName === "login") {
+            this.connectButton.addEventListener("click", callback, options);
+        }
+        else {
+            super.addEventListener(evtName, callback, options);
+        }
+    }
+
+    removeEventListener(evtName, callback) {
+        if (evtName === "login") {
+            this.connectButton.removeEventListener("click", callback);
+        }
+        else {
+            super.removeEventListener(evtName, callback);
+        }
+    }
+
+    get roomSelectMode() {
+        return this.roomSelect.style.display !== "none";
+    }
+
+    set roomSelectMode(value) {
+        const self = selfs.get(this);
+        setOpen(this.roomSelect, value);
+        setOpen(this.roomInput, !value);
+        this.createRoomButton.innerHTML = value
+            ? "New"
+            : "Cancel";
+
+        if (value) {
+            this.roomLabel.htmlFor = this.roomSelect.id;
+            this.roomSelect.selectedValue = this.roomInput.value.toLocaleLowerCase();
+        }
+        else if (this.roomSelect.selectedIndex >= 0) {
+            this.roomLabel.htmlFor = this.roomInput.id;
+            this.roomInput.value = this.roomSelect.selectedValue;
+        }
+
+        self.validate();
+    }
+
+    get roomName() {
+        const room = this.roomSelectMode
+            ? this.roomSelect.selectedValue
+            : this.roomInput.value;
+
+        return room && room.toLocaleLowerCase() || "";
+    }
+
+    set roomName(v) {
+        if (v === null
+            || v === undefined
+            || v.length === 0) {
+            v = defaultRooms.keys().next();
+        }
+
+        this.roomInput.value = v;
+        this.roomSelect.selectedValue = v;
+        this.roomSelectMode = this.roomSelect.contains(v);
+        selfs.get(this).validate();
+    }
+
+    set userName(value) {
+        this.userNameInput.value = value;
+        selfs.get(this).validate();
+    }
+
+    get userName() {
+        return this.userNameInput.value;
+    }
+
+    get connectButtonText() {
+        return this.connectButton.innerText
+            || this.connectButton.textContent;
+    }
+
+    set connectButtonText(str) {
+        this.connectButton.innerHTML = str;
+    }
+
+    get ready() {
+        const self = selfs.get(this);
+        return self.ready;
+    }
+
+    set ready(v) {
+        const self = selfs.get(this);
+        self.ready = v;
+        self.validate();
+    }
+
+    get connecting() {
+        const self = selfs.get(this);
+        return self.connecting;
+    }
+
+    set connecting(v) {
+        const self = selfs.get(this);
+        self.connecting = v;
+        self.validate();
+    }
+
+    get connected() {
+        const self = selfs.get(this);
+        return self.connected;
+    }
+
+    set connected(v) {
+        const self = selfs.get(this);
+        self.connected = v;
+        this.connecting = false;
+    }
+}
+
+const gamepadStates = new Map();
+
+class EventedGamepad extends EventBase {
+    constructor(pad) {
+        super();
+        if (!(pad instanceof Gamepad)) {
+            throw new Error("Value must be a Gamepad");
+        }
+
+        this.id = pad.id;
+        this.displayId = pad.displayId;
+
+        this.connected = pad.connected;
+        this.hand = pad.hand;
+        this.pose = pad.pose;
+
+        const self = {
+            btnDownEvts: [],
+            btnUpEvts: [],
+            btnState: [],
+            axisMaxed: [],
+            axisMaxEvts: [],
+            sticks: []
+        };
+
+        this.lastButtons = [];
+        this.buttons = [];
+        this.axes = [];
+        this.hapticActuators = [];
+        this.axisThresholdMax = 0.9;
+        this.axisThresholdMin = 0.1;
+
+        this._isStick = (a) => a % 2 === 0 && a < pad.axes.length - 1;
+
+        for (let b = 0; b < pad.buttons.length; ++b) {
+            self.btnDownEvts[b] = Object.assign(new Event("gamepadbuttondown"), {
+                button: b
+            });
+            self.btnUpEvts[b] = Object.assign(new Event("gamepadbuttonup"), {
+                button: b
+            });
+            self.btnState[b] = false;
+
+            this.lastButtons[b] = null;
+            this.buttons[b] = pad.buttons[b];
+        }
+
+        for (let a = 0; a < pad.axes.length; ++a) {
+            self.axisMaxEvts[a] = Object.assign(new Event("gamepadaxismaxed"), {
+                axis: a
+            });
+            self.axisMaxed[a] = false;
+            if (this._isStick(a)) {
+                self.sticks[a / 2] = { x: 0, y: 0 };
+            }
+
+            this.axes[a] = pad.axes[a];
+        }
+
+        if (pad.hapticActuators !== undefined) {
+            for (let h = 0; h < pad.hapticActuators.length; ++h) {
+                this.hapticActuators[h] = pad.hapticActuators[h];
+            }
+        }
+
+        Object.seal(this);
+        gamepadStates.set(this, self);
+    }
+
+    dispose() {
+        gamepadStates.delete(this);
+    }
+
+    update(pad) {
+        if (!(pad instanceof Gamepad)) {
+            throw new Error("Value must be a Gamepad");
+        }
+
+        this.connected = pad.connected;
+        this.hand = pad.hand;
+        this.pose = pad.pose;
+
+        const self = gamepadStates.get(this);
+
+        for (let b = 0; b < pad.buttons.length; ++b) {
+            const wasPressed = self.btnState[b],
+                pressed = pad.buttons[b].pressed;
+            if (pressed !== wasPressed) {
+                self.btnState[b] = pressed;
+                this.dispatchEvent((pressed
+                    ? self.btnDownEvts
+                    : self.btnUpEvts)[b]);
+            }
+
+            this.lastButtons[b] = this.buttons[b];
+            this.buttons[b] = pad.buttons[b];
+        }
+
+        for (let a = 0; a < pad.axes.length; ++a) {
+            const wasMaxed = self.axisMaxed[a],
+                val = pad.axes[a],
+                dir = Math.sign(val),
+                mag = Math.abs(val),
+                maxed = mag >= this.axisThresholdMax,
+                mined = mag <= this.axisThresholdMin;
+            if (maxed && !wasMaxed) {
+                this.dispatchEvent(self.axisMaxEvts[a]);
+            }
+
+            this.axes[a] = dir * (maxed ? 1 : (mined ? 0 : mag));
+        }
+
+        for (let a = 0; a < this.axes.length - 1; a += 2) {
+            const stick = self.sticks[a / 2];
+            stick.x = this.axes[a];
+            stick.y = this.axes[a + 1];
+        }
+
+        if (pad.hapticActuators !== undefined) {
+            for (let h = 0; h < pad.hapticActuators.length; ++h) {
+                this.hapticActuators[h] = pad.hapticActuators[h];
+            }
+        }
+    }
+}
+
+/**
+ * A base class for different types of avatars.
+ **/
+class BaseAvatar {
+
+    /**
+     * Encapsulates a resource to use as an avatar.
+     * @param {boolean} canSwim
+     */
+    constructor(canSwim) {
+        this.canSwim = canSwim;
+        this.element = Canvas(128, 128);
+        this.g = this.element.getContext("2d");
+    }
+
+    /**
+     * Render the avatar at a certain size.
+     * @param {CanvasRenderingContext2D} g - the context to render to
+     * @param {number} width - the width the avatar should be rendered at
+     * @param {number} height - the height the avatar should be rendered at.
+     * @param {boolean} isMe - whether the avatar is the local user
+     */
+    draw(g, width, height, isMe) {
+        const aspectRatio = this.element.width / this.element.height,
+            w = aspectRatio > 1 ? width : aspectRatio * height,
+            h = aspectRatio > 1 ? width / aspectRatio : height,
+            dx = (width - w) / 2,
+            dy = (height - h) / 2;
+        g.drawImage(
+            this.element,
+            dx, dy,
+            w, h);
+    }
+}
+
+/**
+ * Types of avatars.
+ * @enum {string}
+ **/
+const AvatarMode = Object.freeze({
+    none: null,
+    emoji: "emoji",
+    photo: "photo",
+    video: "video"
+});
+
+/**
+ * Returns true if the given object is either an HTMLCanvasElement or an OffscreenCanvas.
+ * @param {any} obj
+ * @returns {boolean}
+ */
+
+/**
+ * Resizes a canvas element
+ * @param {HTMLCanvasElement|OffscreenCanvas} canv
+ * @param {number} w - the new width of the canvas
+ * @param {number} h - the new height of the canvas
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function setCanvasSize(canv, w, h, superscale = 1) {
+    w = Math.floor(w * superscale);
+    h = Math.floor(h * superscale);
+    if (canv.width != w
+        || canv.height != h) {
+        canv.width = w;
+        canv.height = h;
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Resizes the canvas element of a given rendering context.
+ * 
+ * Note: the imageSmoothingEnabled, textBaseline, textAlign, and font 
+ * properties of the context will be restored after the context is resized,
+ * as these values are usually reset to their default values when a canvas
+ * is resized.
+ * @param {RenderingContext} ctx
+ * @param {number} w - the new width of the canvas
+ * @param {number} h - the new height of the canvas
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function setContextSize(ctx, w, h, superscale = 1) {
+    const oldImageSmoothingEnabled = ctx.imageSmoothingEnabled,
+        oldTextBaseline = ctx.textBaseline,
+        oldTextAlign = ctx.textAlign,
+        oldFont = ctx.font,
+        resized = setCanvasSize(
+            ctx.canvas,
+            w,
+            h,
+            superscale);
+
+    if (resized) {
+        ctx.imageSmoothingEnabled = oldImageSmoothingEnabled;
+        ctx.textBaseline = oldTextBaseline;
+        ctx.textAlign = oldTextAlign;
+        ctx.font = oldFont;
+    }
+
+    return resized;
+}
+
+/**
+ * Resizes a canvas element to match the proportions of the size of the element in the DOM.
+ * @param {HTMLCanvasElement} canv
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function resizeCanvas(canv, superscale = 1) {
+    return setCanvasSize(
+        canv,
+        canv.clientWidth,
+        canv.clientHeight,
+        superscale);
+}
+
+/**
+ * @type {WeakMap<TextImage, TextImagePrivate>}
+ **/
+const selfs$1 = new WeakMap();
+
+class TextImagePrivate {
+    /**
+     * @param {string} fontFamily
+     */
+    constructor(fontFamily) {
+        /** @type {string} */
+        this.fontFamily = fontFamily;
+
+        /** @type {string} */
+        this.color = "black";
+
+        /** @type {number} */
+        this.fontSize = null;
+
+        /** @type {number} */
+        this.scale = 1;
+
+        /** @type {string} */
+        this.value = null;
+
+        this.canvas = CanvasOffscreen(10, 10);
+        this.g = this.canvas.getContext("2d");
+        this.g.textBaseline = "top";
+    }
+
+    redraw() {
+        this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        if (this.fontFamily
+            && this.fontSize
+            && this.color
+            && this.scale
+            && this.value) {
+            const fontHeight = this.fontSize * this.scale;
+            this.g.font = `${fontHeight}px ${this.fontFamily}`;
+
+            const metrics = this.g.measureText(this.value);
+            let dx = 0,
+                dy = 0,
+                trueWidth = metrics.width,
+                trueHeight = fontHeight;
+            if (metrics.actualBoundingBoxLeft) {
+                dy = metrics.actualBoundingBoxAscent;
+                trueWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
+                trueHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+            }
+            setContextSize(this.g, trueWidth, trueHeight);
+            this.g.fillStyle = this.color;
+            this.g.fillText(this.value, dx, dy);
+        }
+    }
+}
+
+class TextImage {
+    /**
+     * @param {string} fontFamily
+     */
+    constructor(fontFamily) {
+        selfs$1.set(this, new TextImagePrivate(fontFamily));
+    }
+
+    get width() {
+        const self = selfs$1.get(this);
+        return self.canvas.width / self.scale;
+    }
+
+    get height() {
+        const self = selfs$1.get(this);
+        return self.canvas.height / self.scale;
+    }
+
+    get fontSize() {
+        return selfs$1.get(this).fontSize;
+    }
+
+    set fontSize(v) {
+        if (this.fontSize !== v) {
+            const self = selfs$1.get(this);
+            self.fontSize = v;
+            self.redraw();
+        }
+    }
+
+    get scale() {
+        return selfs$1.get(this).scale;
+    }
+
+    set scale(v) {
+        if (this.scale !== v) {
+            const self = selfs$1.get(this);
+            self.scale = v;
+            self.redraw();
+        }
+    }
+
+
+    get fontFamily() {
+        return selfs$1.get(this).fontFamily;
+    }
+
+    set fontFamily(v) {
+        if (this.fontFamily !== v) {
+            const self = selfs$1.get(this);
+            self.fontFamily = v;
+            self.redraw();
+        }
+    }
+
+    get color() {
+        return selfs$1.get(this).color;
+    }
+
+    set color(v) {
+        if (this.color !== v) {
+            const self = selfs$1.get(this);
+            self.color = v;
+            self.redraw();
+        }
+    }
+
+    get value() {
+        return selfs$1.get(this).value;
+    }
+
+    set value(v) {
+        if (this.value !== v) {
+            const self = selfs$1.get(this);
+            self.value = v;
+            self.redraw();
+        }
+    }
+
+    /**
+     *
+     * @param {CanvasRenderingContext2D} g - the canvas to which to render the text.
+     * @param {number} x
+     * @param {number} y
+     */
+    draw(g, x, y) {
+        const self = selfs$1.get(this);
+        if (self.canvas.width > 0
+            && self.canvas.height > 0) {
+            g.drawImage(self.canvas, x, y, this.width, this.height);
+        }
+    }
+}
+
+/**
+ * An avatar that uses a Unicode emoji as its representation
+ **/
+class EmojiAvatar extends BaseAvatar {
+
+    /**
+     * Creatse a new avatar that uses a Unicode emoji as its representation.
+     * @param {Emoji} emoji
+     */
+    constructor(emoji) {
+        super(isSurfer(emoji));
+
+        this.value = emoji.value;
+        this.desc = emoji.desc;
+
+        const emojiText = new TextImage("sans-serif");
+
+        emojiText.color = emoji.color || "black";
+        emojiText.fontSize = 256;
+        emojiText.value = this.value;
+        setContextSize(this.g, emojiText.width, emojiText.height);
+        emojiText.draw(this.g, 0, 0);
+    }
+}
+
+/**
+ * An avatar that uses an Image as its representation.
+ **/
+class PhotoAvatar extends BaseAvatar {
+
+    /**
+     * Creates a new avatar that uses an Image as its representation.
+     * @param {(URL|string)} url
+     */
+    constructor(url) {
+        super(false);
+
+        const img = new Image();
+        img.addEventListener("load", () => {
+            const offset = (img.width - img.height) / 2,
+                sx = Math.max(0, offset),
+                sy = Math.max(0, -offset),
+                dim = Math.min(img.width, img.height);
+            setContextSize(this.g, dim, dim);
+            this.g.drawImage(img,
+                sx, sy,
+                dim, dim,
+                0, 0,
+                dim, dim);
+        });
+
+        /** @type {string} */
+        this.url
+            = img.src
+            = url && url.href || url;
+    }
+}
+
+const isFirefox = typeof InstallTrigger !== "undefined";
+const isIOS = ["iPad", "iPhone", "iPod"].indexOf(navigator.platform) >= 0;
+
+/**
+ * An avatar that uses an HTML Video element as its representation.
+ **/
+class VideoAvatar extends BaseAvatar {
+    /**
+     * Creates a new avatar that uses a MediaStream as its representation.
+     * @param {MediaStream|HTMLVideoElement} stream
+     */
+    constructor(stream) {
+        super(false);
+
+        let video = null;
+        if (stream instanceof HTMLVideoElement) {
+            video = stream;
+        }
+        else if (stream instanceof MediaStream) {
+            video = Video(
+                autoPlay,
+                playsInline,
+                muted,
+                volume(0),
+                srcObject(stream));
+        }
+        else {
+            throw new Error("Can only create a video avatar from an HTMLVideoElement or MediaStream.");
+        }
+
+        this.video = video;
+
+        if (!isIOS) {
+            video.play();
+            once(video, "canplay")
+                .then(() => video.play());
+        }
+    }
+
+    /**
+     * Render the avatar at a certain size.
+     * @param {CanvasRenderingContext2D} g - the context to render to
+     * @param {number} width - the width the avatar should be rendered at
+     * @param {number} height - the height the avatar should be rendered at.
+     * @param {boolean} isMe - whether the avatar is the local user
+     */
+    draw(g, width, height, isMe) {
+        if (this.video.videoWidth > 0
+            && this.video.videoHeight > 0) {
+            const offset = (this.video.videoWidth - this.video.videoHeight) / 2,
+                sx = Math.max(0, offset),
+                sy = Math.max(0, -offset),
+                dim = Math.min(this.video.videoWidth, this.video.videoHeight);
+            setContextSize(this.g, dim, dim);
+            this.g.save();
+            if (isMe) {
+                this.g.translate(dim, 0);
+                this.g.scale(-1, 1);
+            }
+            this.g.drawImage(
+                this.video,
+                sx, sy,
+                dim, dim,
+                0, 0,
+                dim, dim);
+            this.g.restore();
+        }
+
+        super.draw(g, width, height, isMe);
+    }
+}
+
+let _getTransform = null;
+
+if (!Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "getTransform")
+    && Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "mozCurrentTransform")) {
+
+    class MockDOMMatrix {
+        constructor(trans) {
+            this.a = trans[0];
+            this.b = trans[1];
+            this.c = trans[2];
+            this.d = trans[3];
+            this.e = trans[4];
+            this.f = trans[5];
+        }
+
+        get is2D() {
+            return true;
+        }
+
+        get isIdentity() {
+            return this.a === 1
+                && this.b === 0
+                && this.c === 0
+                && this.d === 1
+                && this.e === 0
+                && this.f === 0;
+        }
+
+        transformPoint(p) {
+            return {
+                x: p.x * this.a + p.y * this.c + this.e,
+                y: p.x * this.b + p.y * this.d + this.f
+            }
+        }
+    }
+
+    /**
+     * @param {CanvasRenderingContext2D} g
+     */
+    _getTransform = (g) => {
+        return new MockDOMMatrix(g.mozCurrentTransform);
+    };
+}
+else {
+    /**
+     * @param {CanvasRenderingContext2D} g
+     */
+    _getTransform = (g) => {
+        return g.getTransform();
+    };
+}
+
+function getTransform(g) {
+    return _getTransform(g);
+}
+
+const POSITION_REQUEST_DEBOUNCE_TIME = 1,
+    STACKED_USER_OFFSET_X = 5,
+    STACKED_USER_OFFSET_Y = 5,
+    eventNames$1 = ["userMoved", "userPositionNeeded"],
+    muteAudioIcon = new TextImage("sans-serif"),
+    speakerActivityIcon = new TextImage("sans-serif");
+
+muteAudioIcon.value = mutedSpeaker.value;
+speakerActivityIcon.value = speakerMediumVolume.value;
+
+class User extends EventBase {
+    /**
+     * 
+     * @param {string} id
+     * @param {string} displayName
+     * @param {Pose} pose
+     * @param {boolean} isMe
+     */
+    constructor(id, displayName, pose, isMe) {
+        super();
+
+        this.id = id;
+        this.pose = pose;
+        this.label = isMe ? "(Me)" : `(${this.id})`;
+
+        /** @type {AvatarMode} */
+        this.setAvatarVideo(null);
+        this.avatarImage = null;
+        this.avatarEmoji = bust;
+
+        this.audioMuted = false;
+        this.videoMuted = true;
+        this.isMe = isMe;
+        this.isActive = false;
+        this.stackUserCount = 1;
+        this.stackIndex = 0;
+        this.stackAvatarHeight = 0;
+        this.stackAvatarWidth = 0;
+        this.stackOffsetX = 0;
+        this.stackOffsetY = 0;
+        this.lastPositionRequestTime = performance.now() / 1000 - POSITION_REQUEST_DEBOUNCE_TIME;
+        this.visible = true;
+        this.userNameText = new TextImage("sans-serif");
+        this.userNameText.color = "white";
+        this.userNameText.fontSize = 128;
+        this._displayName = null;
+        this.displayName = displayName;
+        Object.seal(this);
+    }
+
+    get x() {
+        return this.pose.current.p.x;
+    }
+
+    get y() {
+        return this.pose.current.p.z;
+    }
+
+    get gridX() {
+        return this.pose.end.p.x;
+    }
+
+    get gridY() {
+        return this.pose.end.p.z;
+    }
+
+    deserialize(evt) {
+        switch (evt.avatarMode) {
+            case AvatarMode.emoji:
+                this.avatarEmoji = evt.avatarID;
+                break;
+            case AvatarMode.photo:
+                this.avatarImage = evt.avatarID;
+                break;
+        }
+    }
+
+    serialize() {
+        return {
+            id: this.id,
+            avatarMode: this.avatarMode,
+            avatarID: this.avatarID
+        };
+    }
+
+    /**
+     * An avatar using a live video.
+     * @type {PhotoAvatar}
+     **/
+    get avatarVideo() {
+        return this._avatarVideo;
+    }
+
+    /**
+     * Set the current video element used as the avatar.
+     * @param {MediaStream} stream
+     **/
+    setAvatarVideo(stream) {
+        if (stream instanceof MediaStream) {
+            this._avatarVideo = new VideoAvatar(stream);
+        }
+        else {
+            this._avatarVideo = null;
+        }
+    }
+
+    /**
+     * An avatar using a photo
+     * @type {string}
+     **/
+    get avatarImage() {
+        return this._avatarImage
+            && this._avatarImage.url
+            || null;
+    }
+
+    /**
+     * Set the URL of the photo to use as an avatar.
+     * @param {string} url
+     */
+    set avatarImage(url) {
+        if (isString(url)
+            && url.length > 0) {
+            this._avatarImage = new PhotoAvatar(url);
+        }
+        else {
+            this._avatarImage = null;
+        }
+    }
+
+    /**
+     * An avatar using a Unicode emoji.
+     * @type {EmojiAvatar}
+     **/
+    get avatarEmoji() {
+        return this._avatarEmoji;
+    }
+
+    /**
+     * Set the emoji to use as an avatar.
+     * @param {Emoji} emoji
+     */
+    set avatarEmoji(emoji) {
+        if (emoji
+            && emoji.value
+            && emoji.desc) {
+            this._avatarEmoji = new EmojiAvatar(emoji);
+        }
+        else {
+            this._avatarEmoji = null;
+        }
+    }
+
+    /**
+     * Returns the type of avatar that is currently active.
+     * @returns {AvatarMode}
+     **/
+    get avatarMode() {
+        if (this._avatarVideo) {
+            return AvatarMode.video;
+        }
+        else if (this._avatarImage) {
+            return AvatarMode.photo;
+        }
+        else if (this._avatarEmoji) {
+            return AvatarMode.emoji;
+        }
+        else {
+            return AvatarMode.none;
+        }
+    }
+
+    /**
+     * Returns a serialized representation of the current avatar,
+     * if such a representation exists.
+     * @returns {string}
+     **/
+    get avatarID() {
+        switch (this.avatarMode) {
+            case AvatarMode.emoji:
+                return { value: this.avatarEmoji.value, desc: this.avatarEmoji.desc };
+            case AvatarMode.photo:
+                return this.avatarImage;
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * Returns the current avatar
+     * @returns {BaseAvatar}
+     **/
+    get avatar() {
+        switch (this.avatarMode) {
+            case AvatarMode.emoji:
+                return this._avatarEmoji;
+            case AvatarMode.photo:
+                return this._avatarImage;
+            case AvatarMode.video:
+                return this._avatarVideo;
+            default:
+                return null;
+        }
+    }
+
+    addEventListener(evtName, func, opts) {
+        if (eventNames$1.indexOf(evtName) === -1) {
+            throw new Error(`Unrecognized event type: ${evtName}`);
+        }
+
+        super.addEventListener(evtName, func, opts);
+    }
+
+    get displayName() {
+        return this._displayName || this.label;
+    }
+
+    set displayName(name) {
+        this._displayName = name;
+        this.userNameText.value = this.displayName;
+    }
+
+    moveTo(x, y) {
+        if (this.isMe) {
+            this.moveEvent.x = x;
+            this.moveEvent.y = y;
+            this.dispatchEvent(this.moveEvent);
+        }
+    }
+
+    update(map, users) {
+        const t = performance.now() / 1000;
+
+        this.stackUserCount = 0;
+        this.stackIndex = 0;
+        for (let user of users.values()) {
+            if (user.gridX === this.gridX
+                && user.gridY === this.gridY) {
+                if (user.id === this.id) {
+                    this.stackIndex = this.stackUserCount;
+                }
+                ++this.stackUserCount;
+            }
+        }
+
+        this.stackAvatarWidth = map.tileWidth - (this.stackUserCount - 1) * STACKED_USER_OFFSET_X;
+        this.stackAvatarHeight = map.tileHeight - (this.stackUserCount - 1) * STACKED_USER_OFFSET_Y;
+        this.stackOffsetX = this.stackIndex * STACKED_USER_OFFSET_X;
+        this.stackOffsetY = this.stackIndex * STACKED_USER_OFFSET_Y;
+    }
+
+    drawShadow(g, map) {
+        const scale = getTransform(g).a,
+            x = this.x * map.tileWidth,
+            y = this.y * map.tileHeight,
+            t = getTransform(g),
+            p = t.transformPoint({ x, y });
+
+        this.visible = -map.tileWidth <= p.x
+            && p.x < g.canvas.width
+            && -map.tileHeight <= p.y
+            && p.y < g.canvas.height;
+
+        if (this.visible) {
+            g.save();
+            {
+                g.shadowColor = "rgba(0, 0, 0, 0.5)";
+                g.shadowOffsetX = 3 * scale;
+                g.shadowOffsetY = 3 * scale;
+                g.shadowBlur = 3 * scale;
+
+                this.innerDraw(g, map);
+            }
+            g.restore();
+        }
+    }
+
+    drawAvatar(g, map) {
+        if (this.visible) {
+            g.save();
+            {
+                this.innerDraw(g, map);
+                if (this.isActive && !this.audioMuted) {
+                    const height = this.stackAvatarHeight / 2,
+                        scale = getTransform(g).a;
+                    speakerActivityIcon.fontSize = height;
+                    speakerActivityIcon.scale = scale;
+                    speakerActivityIcon.draw(g, this.stackAvatarWidth - speakerActivityIcon.width, 0);
+                }
+            }
+            g.restore();
+        }
+    }
+
+    innerDraw(g, map) {
+        g.translate(
+            this.x * map.tileWidth + this.stackOffsetX,
+            this.y * map.tileHeight + this.stackOffsetY);
+        g.fillStyle = "black";
+        g.textBaseline = "top";
+
+        if (this.avatar) {
+            this.avatar.draw(g, this.stackAvatarWidth, this.stackAvatarHeight, this.isMe);
+        }
+
+        if (this.audioMuted || !this.videoMuted) {
+
+            const height = this.stackAvatarHeight / 2,
+                scale = getTransform(g).a;
+
+            if (this.audioMuted) {
+                muteAudioIcon.fontSize = height;
+                muteAudioIcon.scale = scale;
+                muteAudioIcon.draw(g, this.stackAvatarWidth - muteAudioIcon.width, 0);
+            }
+        }
+    }
+
+    drawName(g, map, fontSize) {
+        if (this.visible) {
+            const scale = getTransform(g).a;
+            g.save();
+            {
+                g.translate(
+                    this.x * map.tileWidth + this.stackOffsetX,
+                    this.y * map.tileHeight + this.stackOffsetY);
+                g.shadowColor = "black";
+                g.shadowOffsetX = 3 * scale;
+                g.shadowOffsetY = 3 * scale;
+                g.shadowBlur = 3 * scale;
+
+                const textScale = fontSize / this.userNameText.fontSize;
+                g.scale(textScale, textScale);
+                this.userNameText.draw(g, 0, -this.userNameText.height);
+            }
+            g.restore();
+        }
+    }
+
+    drawHearingTile(g, map, dx, dy, p) {
+        g.save();
+        {
+            g.translate(
+                (this.gridX + dx) * map.tileWidth,
+                (this.gridY + dy) * map.tileHeight);
+            g.strokeStyle = `rgba(0, 255, 0, ${(1 - p) / 2})`;
+            g.strokeRect(0, 0, map.tileWidth, map.tileHeight);
+        }
+        g.restore();
+    }
+
+    drawHearingRange(g, map, minDist, maxDist) {
+        const scale = getTransform(g).a,
+            tw = Math.min(maxDist, Math.ceil(g.canvas.width / (2 * map.tileWidth * scale))),
+            th = Math.min(maxDist, Math.ceil(g.canvas.height / (2 * map.tileHeight * scale)));
+
+        for (let dy = 0; dy < th; ++dy) {
+            for (let dx = 0; dx < tw; ++dx) {
+                const dist = Math.sqrt(dx * dx + dy * dy),
+                    p = project(dist, minDist, maxDist);
+                if (p <= 1) {
+                    this.drawHearingTile(g, map, dx, dy, p);
+                    if (dy != 0) {
+                        this.drawHearingTile(g, map, dx, -dy, p);
+                    }
+                    if (dx != 0) {
+                        this.drawHearingTile(g, map, -dx, dy, p);
+                    }
+                    if (dx != 0 && dy != 0) {
+                        this.drawHearingTile(g, map, -dx, -dy, p);
+                    }
+                }
+            }
+        }
+    }
+}
+
+const inputBindingChangedEvt = new Event("inputBindingChanged");
+
+class InputBinding extends EventBase {
+    constructor() {
+        super();
+
+        const bindings = new Map([
+            ["keyButtonUp", "ArrowUp"],
+            ["keyButtonDown", "ArrowDown"],
+            ["keyButtonLeft", "ArrowLeft"],
+            ["keyButtonRight", "ArrowRight"],
+            ["keyButtonEmote", "e"],
+            ["keyButtonToggleAudio", "a"],
+
+            ["gpAxisLeftRight", 0],
+            ["gpAxisUpDown", 1],
+
+            ["gpButtonUp", 12],
+            ["gpButtonDown", 13],
+            ["gpButtonLeft", 14],
+            ["gpButtonRight", 15],
+            ["gpButtonEmote", 0],
+            ["gpButtonToggleAudio", 1]
+        ]);
+
+        for (let id of bindings.keys()) {
+            Object.defineProperty(this, id, {
+                get: () => bindings.get(id),
+                set: (v) => {
+                    if (bindings.has(id)
+                        && v !== bindings.get(id)) {
+                        bindings.set(id, v);
+                        this.dispatchEvent(inputBindingChangedEvt);
+                    }
+                }
+            });
+        }
+
+        this.clone = () => {
+            const c = {};
+            for (let kp of bindings.entries()) {
+                c[kp[0]] = kp[1];
+            }
+            return c;
+        };
+
+        Object.freeze(this);
+    }
+}
+
+const keyWidthStyle = cssWidth("7em"),
+    numberWidthStyle = cssWidth("3em"),
+    avatarUrlChangedEvt = new Event("avatarURLChanged"),
+    gamepadChangedEvt = new Event("gamepadChanged"),
+    selectAvatarEvt = new Event("selectAvatar"),
+    fontSizeChangedEvt = new Event("fontSizeChanged"),
+    inputBindingChangedEvt$1 = new Event("inputBindingChanged"),
+    audioPropsChangedEvt = new Event("audioPropertiesChanged"),
+    toggleDrawHearingEvt = new Event("toggleDrawHearing"),
+    audioInputChangedEvt = new Event("audioInputChanged"),
+    audioOutputChangedEvt = new Event("audioOutputChanged"),
+    videoInputChangedEvt = new Event("videoInputChanged"),
+    toggleVideoEvt$1 = new Event("toggleVideo"),
+    gamepadButtonUpEvt = Object.assign(new Event("gamepadbuttonup"), {
+        button: 0
+    }),
+    gamepadAxisMaxedEvt = Object.assign(new Event("gamepadaxismaxed"), {
+        axis: 0
+    });
+
+const disabler$3 = disabled(true),
+    enabler$3 = disabled(false);
+
+/** @type {WeakMap<OptionsForm, OptionsFormPrivate>} */
+const selfs$2 = new WeakMap();
+
+class OptionsFormPrivate {
+    constructor() {
+        this.inputBinding = new InputBinding();
+        /** @type {EventedGamepad} */
+        this.pad = null;
+    }
+}
+
+class OptionsForm extends FormDialog {
+    constructor() {
+        super("options", "Options");
+
+        const _ = (evt) => () => this.dispatchEvent(evt);
+
+        const self = new OptionsFormPrivate();
+        selfs$2.set(this, self);
+
+        const audioPropsChanged = onInput(_(audioPropsChangedEvt));
+
+        const makeKeyboardBinder = (id, label) => {
+            const key = LabeledInput(
+                id,
+                "text",
+                label,
+                keyWidthStyle,
+                onKeyUp((evt) => {
+                    if (evt.key !== "Tab"
+                        && evt.key !== "Shift") {
+                        key.value
+                            = self.inputBinding[id]
+                            = evt.key;
+                        this.dispatchEvent(inputBindingChangedEvt$1);
+                    }
+                }));
+            key.value = self.inputBinding[id];
+            return key;
+        };
+
+        const makeGamepadButtonBinder = (id, label) => {
+            const gp = LabeledInput(
+                id,
+                "text",
+                label,
+                numberWidthStyle);
+            this.addEventListener("gamepadbuttonup", (evt) => {
+                if (document.activeElement === gp.input) {
+                    gp.value
+                        = self.inputBinding[id]
+                        = evt.button;
+                    this.dispatchEvent(inputBindingChangedEvt$1);
+                }
+            });
+            gp.value = self.inputBinding[id];
+            return gp;
+        };
+
+        const makeGamepadAxisBinder = (id, label) => {
+            const gp = LabeledInput(
+                id,
+                "text",
+                label,
+                numberWidthStyle);
+            this.addEventListener("gamepadaxismaxed", (evt) => {
+                if (document.activeElement === gp.input) {
+                    gp.value
+                        = self.inputBinding[id]
+                        = evt.axis;
+                    this.dispatchEvent(inputBindingChangedEvt$1);
+                }
+            });
+            gp.value = self.inputBinding[id];
+            return gp;
+        };
+
+        const panels = [
+            OptionPanel("avatar", "Avatar",
+                Div(
+                    Label(
+                        htmlFor("selectAvatarEmoji"),
+                        "Emoji: "),
+                    Button(
+                        id("selectAvatarEmoji"),
+                        "Select",
+                        onClick(_(selectAvatarEvt)))),
+                " or ",
+                Div(
+                    Label(
+                        htmlFor("setAvatarURL"),
+                        "Photo: "),
+
+                    this.avatarURLInput = InputURL(
+                        placeHolder("https://example.com/me.png")),
+                    Button(
+                        id("setAvatarURL"),
+                        "Set",
+                        onClick(() => {
+                            this.avatarURL = this.avatarURLInput.value;
+                            this.dispatchEvent(avatarUrlChangedEvt);
+                        })),
+                    this.clearAvatarURLButton = Button(
+                        disabled,
+                        "Clear",
+                        onClick(() => {
+                            this.avatarURL = null;
+                            this.dispatchEvent(avatarUrlChangedEvt);
+                        }))),
+                " or ",
+                Div(
+                    Label(
+                        htmlFor("videoAvatarButton"),
+                        "Video: "),
+                    this.useVideoAvatarButton = Button(
+                        id("videoAvatarButton"),
+                        "Use video",
+                        onClick(_(toggleVideoEvt$1)))),
+                this.avatarPreview = Canvas(
+                    width(256),
+                    height(256))),
+
+            OptionPanel("interface", "Interface",
+                this.fontSizeInput = LabeledInput(
+                    "fontSize",
+                    "number",
+                    "Font size: ",
+                    value(10),
+                    min(5),
+                    max(32),
+                    numberWidthStyle,
+                    onInput(_(fontSizeChangedEvt))),
+                P(
+                    this.drawHearingCheck = LabeledInput(
+                        "drawHearing",
+                        "checkbox",
+                        "Draw hearing range: ",
+                        onInput(() => {
+                            this.drawHearing = !this.drawHearing;
+                            this.dispatchEvent(toggleDrawHearingEvt);
+                        })),
+                    this.audioMinInput = LabeledInput(
+                        "minAudio",
+                        "number",
+                        "Min: ",
+                        value(1),
+                        min(0),
+                        max(100),
+                        numberWidthStyle,
+                        audioPropsChanged),
+                    this.audioMaxInput = LabeledInput(
+                        "maxAudio",
+                        "number",
+                        "Min: ",
+                        value(10),
+                        min(0),
+                        max(100),
+                        numberWidthStyle,
+                        audioPropsChanged),
+                    this.audioRolloffInput = LabeledInput(
+                        "rollof",
+                        "number",
+                        "Rollof: ",
+                        value(1),
+                        min(0.1),
+                        max(10),
+                        step(0.1),
+                        numberWidthStyle,
+                        audioPropsChanged))),
+
+            OptionPanel("keyboard", "Keyboard",
+                this.keyButtonUp = makeKeyboardBinder("keyButtonUp", "Up: "),
+                this.keyButtonDown = makeKeyboardBinder("keyButtonDown", "Down: "),
+                this.keyButtonLeft = makeKeyboardBinder("keyButtonLeft", "Left: "),
+                this.keyButtonRight = makeKeyboardBinder("keyButtonRight", "Right: "),
+                this.keyButtonEmote = makeKeyboardBinder("keyButtonEmote", "Emote: "),
+                this.keyButtonToggleAudio = makeKeyboardBinder("keyButtonToggleAudio", "Toggle audio: ")),
+
+            OptionPanel("gamepad", "Gamepad",
+                this.gpSelect = LabeledSelectBox(
+                    "gamepads",
+                    "Use gamepad: ",
+                    "No gamepad",
+                    gp => gp.id,
+                    gp => gp.id,
+                    onInput(_(gamepadChangedEvt))),
+                this.gpAxisLeftRight = makeGamepadAxisBinder("gpAxisLeftRight", "Left/Right axis:"),
+                this.gpAxisUpDown = makeGamepadAxisBinder("gpAxisUpDown", "Up/Down axis:"),
+                this.gpButtonUp = makeGamepadButtonBinder("gpButtonUp", "Up button: "),
+                this.gpButtonDown = makeGamepadButtonBinder("gpButtonDown", "Down button: "),
+                this.gpButtonLeft = makeGamepadButtonBinder("gpButtonLeft", "Left button: "),
+                this.gpButtonRight = makeGamepadButtonBinder("gpButtonRight", "Right button: "),
+                this.gpButtonEmote = makeGamepadButtonBinder("gpButtonEmote", "Emote button: "),
+                this.gpButtonToggleAudio = makeGamepadButtonBinder("gpButtonToggleAudio", "Toggle audio button: ")),
+
+            OptionPanel("devices", "Devices",
+                this.videoInputSelect = LabeledSelectBox(
+                    "videoInputDevices",
+                    "Video Input: ",
+                    "No video input",
+                    d => d.deviceId,
+                    d => d.label,
+                    onInput(_(videoInputChangedEvt))),
+                this.audioInputSelect = LabeledSelectBox(
+                    "audioInputDevices",
+                    "Audio Input: ",
+                    "No audio input",
+                    d => d.deviceId,
+                    d => d.label,
+                    onInput(_(audioInputChangedEvt))),
+                this.audioOutputSelect = LabeledSelectBox(
+                    "audioOutputDevices",
+                    "Audio Output: ",
+                    "No audio output",
+                    d => d.deviceId,
+                    d => d.label,
+                    onInput(_(audioOutputChangedEvt))))
+        ];
+
+        const cols = [];
+        for (let i = 0; i < panels.length; ++i) {
+            cols[i] = "1fr";
+            panels[i].element.style.gridColumnStart = i + 1;
+            panels[i].button.style.fontSize = "3.5vw";
+        }
+
+        gridColsDef(...cols).apply(this.header);
+
+        this.header.append(...panels.map(p => p.button));
+        this.content.append(...panels.map(p => p.element));
+        styles(
+            backgroundColor("#ddd"),
+            borderLeft("solid 2px black"),
+            borderRight("solid 2px black"),
+            borderBottom("solid 2px black"))
+            .apply(this.content);
+
+        const showPanel = (p) =>
+            () => {
+                for (let i = 0; i < panels.length; ++i) {
+                    panels[i].visible = i === p;
+                }
+            };
+
+        for (let i = 0; i < panels.length; ++i) {
+            panels[i].visible = i === 0;
+            panels[i].addEventListener("select", showPanel(i));
+        }
+
+        self.inputBinding.addEventListener("inputBindingChanged", () => {
+            for (let id of Object.getOwnPropertyNames(self.inputBinding)) {
+                if (value[id] !== undefined
+                    && this[id] != undefined) {
+                    this[id].value = value[id];
+                }
+            }
+        });
+
+        this.gamepads = [];
+        this.audioInputDevices = [];
+        this.audioOutputDevices = [];
+        this.videoInputDevices = [];
+
+        this._drawHearing = false;
+
+        /** @type {User} */
+        this.user = null;
+        this._avatarG = this.avatarPreview.getContext("2d");
+
+        Object.seal(this);
+    }
+
+    update() {
+        if (isOpen(this)) {
+            const pad = this.currentGamepad;
+            if (pad) {
+                if (self.pad) {
+                    self.pad.update(pad);
+                }
+                else {
+                    self.pad = new EventedGamepad(pad);
+                    self.pad.addEventListener("gamepadbuttonup", (evt) => {
+                        gamepadButtonUpEvt.button = evt.button;
+                        this.dispatchEvent(gamepadButtonUpEvt);
+                    });
+                    self.pad.addEventListener("gamepadaxismaxed", (evt) => {
+                        gamepadAxisMaxedEvt.axis = evt.axis;
+                        this.dispatchEvent(gamepadAxisMaxedEvt);
+                    });
+                }
+            }
+
+            if (this.user && this.user.avatar) {
+                this._avatarG.clearRect(0, 0, this.avatarPreview.width, this.avatarPreview.height);
+                this.user.avatar.draw(this._avatarG, this.avatarPreview.width, this.avatarPreview.height, true);
+            }
+        }
+    }
+
+    get avatarURL() {
+        if (this.avatarURLInput.value.length === 0) {
+            return null;
+        }
+        else {
+            return this.avatarURLInput.value;
+        }
+    }
+
+    set avatarURL(v) {
+        if (isString(v)) {
+            this.avatarURLInput.value = v;
+            enabler$3.apply(this.clearAvatarURLButton);
+        }
+        else {
+            this.avatarURLInput.value = "";
+            disabler$3.apply(this.clearAvatarURLButton);
+        }
+    }
+
+
+    setAvatarVideo(v) {
+        if (v !== null) {
+            this.useVideoAvatarButton.innerHTML = "Remove video";
+        }
+        else {
+            this.useVideoAvatarButton.innerHTML = "Use video";
+        }
+    }
+
+    get inputBinding() {
+        const self = selfs$2.get(this);
+        return self.inputBinding.clone();
+    }
+
+    set inputBinding(value) {
+        const self = selfs$2.get(this);
+        for (let id of Object.getOwnPropertyNames(value)) {
+            if (self.inputBinding[id] !== undefined
+                && value[id] !== undefined
+                && this[id] != undefined) {
+                self.inputBinding[id]
+                    = this[id].value
+                    = value[id];
+            }
+        }
+    }
+
+    get gamepads() {
+        return this.gpSelect.values;
+    }
+
+    set gamepads(values) {
+        const disable = values.length === 0;
+        this.gpSelect.values = values;
+        setLocked(this.gpAxisLeftRight, disable);
+        setLocked(this.gpAxisUpDown, disable);
+        setLocked(this.gpButtonUp, disable);
+        setLocked(this.gpButtonDown, disable);
+        setLocked(this.gpButtonLeft, disable);
+        setLocked(this.gpButtonRight, disable);
+        setLocked(this.gpButtonEmote, disable);
+        setLocked(this.gpButtonToggleAudio, disable);
+    }
+
+    get currentGamepadIndex() {
+        return this.gpSelect.selectedIndex;
+    }
+
+    get currentGamepad() {
+        if (this.currentGamepadIndex < 0) {
+            return null;
+        }
+        else {
+            return navigator.getGamepads()[this.currentGamepadIndex];
+        }
+    }
+
+    get audioInputDevices() {
+        return this.audioInputSelect.values;
+    }
+
+    set audioInputDevices(values) {
+        this.audioInputSelect.values = values;
+    }
+
+    get currentAudioInputDevice() {
+        return this.audioInputSelect.selectedValue;
+    }
+
+    set currentAudioInputDevice(value) {
+        this.audioInputSelect.selectedValue = value;
+    }
+
+
+    get audioOutputDevices() {
+        return this.audioOutputSelect.values;
+    }
+
+    set audioOutputDevices(values) {
+        this.audioOutputSelect.values = values;
+    }
+
+    get currentAudioOutputDevice() {
+        return this.audioOutputSelect.selectedValue;
+    }
+
+    set currentAudioOutputDevice(value) {
+        this.audioOutputSelect.selectedValue = value;
+    }
+
+
+    get videoInputDevices() {
+        return this.videoInputSelect.values;
+    }
+
+    set videoInputDevices(values) {
+        this.videoInputSelect.values = values;
+    }
+
+    get currentVideoInputDevice() {
+        return this.videoInputSelect.selectedValue;
+    }
+
+    set currentVideoInputDevice(value) {
+        this.videoInputSelect.selectedValue = value;
+    }
+
+    get gamepadIndex() {
+        return this.gpSelect.selectedIndex;
+    }
+
+    set gamepadIndex(value) {
+        this.gpSelect.selectedIndex = value;
+    }
+
+    get drawHearing() {
+        return this._drawHearing;
+    }
+
+    set drawHearing(value) {
+        this._drawHearing = value;
+        this.drawHearingCheck.checked = value;
+    }
+
+    get audioDistanceMin() {
+        const value = parseFloat(this.audioMinInput.value);
+        if (isGoodNumber(value)) {
+            return value;
+        }
+        else {
+            return 1;
+        }
+    }
+
+    set audioDistanceMin(value) {
+        if (isGoodNumber(value)
+            && value > 0) {
+            this.audioMinInput.value = value;
+            if (this.audioDistanceMin > this.audioDistanceMax) {
+                this.audioDistanceMax = this.audioDistanceMin;
+            }
+        }
+    }
+
+
+    get audioDistanceMax() {
+        const value = parseFloat(this.audioMaxInput.value);
+        if (isGoodNumber(value)) {
+            return value;
+        }
+        else {
+            return 10;
+        }
+    }
+
+    set audioDistanceMax(value) {
+        if (isGoodNumber(value)
+            && value > 0) {
+            this.audioMaxInput.value = value;
+            if (this.audioDistanceMin > this.audioDistanceMax) {
+                this.audioDistanceMin = this.audioDistanceMax;
+            }
+        }
+    }
+
+
+    get audioRolloff() {
+        const value = parseFloat(this.audioRolloffInput.value);
+        if (isGoodNumber(value)) {
+            return value;
+        }
+        else {
+            return 1;
+        }
+    }
+
+    set audioRolloff(value) {
+        if (isGoodNumber(value)
+            && value > 0) {
+            this.audioRolloffInput.value = value;
+        }
+    }
+
+
+    get fontSize() {
+        const value = parseFloat(this.fontSizeInput.value);
+        if (isGoodNumber(value)) {
+            return value;
+        }
+        else {
+            return 16;
+        }
+    }
+
+    set fontSize(value) {
+        if (isGoodNumber(value)
+            && value > 0) {
+            this.fontSizeInput.value = value;
+        }
+    }
+}
+
+const newRowColor = backgroundColor("lightgreen");
+const hoveredColor = backgroundColor("rgba(65, 255, 202, 0.25)");
+const unhoveredColor = backgroundColor("transparent");
+const warpToEvt = Object.assign(
+    new Event("warpTo"),
+    {
+        id: null
+    });
+
+const ROW_TIMEOUT = 3000;
+
+class UserDirectoryForm extends FormDialog {
+
+    constructor() {
+        super("users", "Users");
+
+        /** @type {Map.<string, Element[]>} */
+        this.rows = new Map();
+
+        /** @type {Map<string, User>} */
+        this.users = new Map();
+
+        /** @type {Map<string, CanvasRenderingContext2D>} */
+        this.avatarGs = new Map();
+
+        this.content.append(
+            this.table = Div(
+                gridDef(
+                    ["auto", "1fr"],
+                    ["min-content"]),
+                columnGap("5px"),
+                cssWidth("100%")));
+    }
+
+    update() {
+        if (isOpen(this)) {
+            for (let entries of this.users.entries()) {
+                const [id, user] = entries;
+                if (this.avatarGs.has(id) && user.avatar) {
+                    const g = this.avatarGs.get(id);
+                    g.clearRect(0, 0, g.canvas.width, g.canvas.height);
+                    user.avatar.draw(g, g.canvas.width, g.canvas.height);
+                }
+            }
+        }
+    }
+
+    /**
+     * 
+     * @param {User} user
+     */
+    set(user) {
+        const isNew = !this.rows.has(user.id);
+        this.delete(user.id);
+        const row = this.rows.size + 1;
+
+        if (isNew) {
+            const elem = Div(
+                gridPos(1, row, 2, 1),
+                zIndex(-1),
+                newRowColor);
+            setTimeout(() => {
+                this.table.removeChild(elem);
+            }, ROW_TIMEOUT);
+            this.table.append(elem);
+            this.users.set(user.id, user);
+            this.avatarGs.set(
+                user.id,
+                Canvas(
+                    width(32),
+                    height(32))
+                    .getContext("2d"));
+        }
+
+        const avatar = this.avatarGs.get(user.id).canvas;
+
+        const elems = [
+            Div(gridPos(1, row), zIndex(0), avatar),
+            Div(gridPos(2, row), zIndex(0), user.displayName),
+            Div(
+                gridPos(1, row, 2, 1), zIndex(1),
+                unhoveredColor,
+                onMouseOver(function () {
+                    hoveredColor.apply(this);
+                }),
+                onMouseOut(function () {
+                    unhoveredColor.apply(this);
+                }),
+                onClick(() => {
+                    hide(this);
+                    warpToEvt.id = user.id;
+                    this.dispatchEvent(warpToEvt);
+                }))];
+
+        this.rows.set(user.id, elems);
+        this.table.append(...elems);
+    }
+
+    delete(userID) {
+        if (this.rows.has(userID)) {
+            const elems = this.rows.get(userID);
+            this.rows.delete(userID);
+            for (let elem of elems) {
+                this.table.removeChild(elem);
+            }
+
+            let rowCount = 1;
+            for (let elems of this.rows.values()) {
+                const r = row(rowCount++);
+                for (let elem of elems) {
+                    r.apply(elem);
+                }
+            }
+        }
+    }
+
+    clear() {
+        for (let id of this.rows.keys()) {
+            this.delete(id);
+        }
+    }
+
+    warn(...rest) {
+        const elem = Div(
+            gridPos(1, this.rows.size + 1, 2, 1),
+            backgroundColor("yellow"),
+            ...rest.map(i => i.toString()));
+
+        this.table.append(elem);
+
+        setTimeout(() => {
+            this.table.removeChild(elem);
+        }, 5000);
+    }
+}
+
+const EMOJI_LIFE = 3;
+
+class Emote {
+    constructor(emoji, x, y) {
+        this.emoji = emoji;
+        this.x = x;
+        this.y = y;
+        this.dx = Math.random() - 0.5;
+        this.dy = -Math.random() * 0.5 - 0.5;
+        this.life = 1;
+        this.width = -1;
+        this.emoteText = new TextImage("sans-serif");
+        this.emoteText.value = emoji.value;
+    }
+
+    isDead() {
+        return this.life <= 0.01;
+    }
+
+    update(dt) {
+        this.life -= dt / EMOJI_LIFE;
+        this.dx *= 0.99;
+        this.dy *= 0.99;
+        this.x += this.dx * dt;
+        this.y += this.dy * dt;
+    }
+
+    drawShadow(g, map) {
+        const scale = getTransform(g).a;
+        g.save();
+        {
+            g.shadowColor = "rgba(0, 0, 0, 0.5)";
+            g.shadowOffsetX = 3 * scale;
+            g.shadowOffsetY = 3 * scale;
+            g.shadowBlur = 3 * scale;
+
+            this.drawEmote(g, map);
+        }
+        g.restore();
+    }
+
+    /**
+     * 
+     * @param {CanvasRenderingContext2D} g
+     * @param {any} map
+     */
+    drawEmote(g, map) {
+        const oldAlpha = g.globalAlpha,
+            scale = getTransform(g).a;
+        g.globalAlpha = this.life;
+        this.emoteText.fontSize = map.tileHeight / 2;
+        this.emoteText.scale = scale;
+        this.emoteText.draw(g,
+            this.x * map.tileWidth - this.width / 2,
+            this.y * map.tileHeight);
+        g.globalAlpha = oldAlpha;
+    }
+}
+
+// javascript-astar 0.4.1
+// http://github.com/bgrins/javascript-astar
+// Freely distributable under the MIT License.
+// Implements the astar search algorithm in javascript using a Binary Heap.
+// Includes Binary Heap (with modifications) from Marijn Haverbeke.
+// http://eloquentjavascript.net/appendix2.html
+
+// edits to work with JS modules by STM/capnmidnight 2020-07-20
+
+function pathTo(node) {
+  var curr = node;
+  var path = [];
+  while (curr.parent) {
+    path.unshift(curr);
+    curr = curr.parent;
+  }
+  return path;
+}
+
+function getHeap() {
+  return new BinaryHeap(function(node) {
+    return node.f;
+  });
+}
+
+var astar = {
+  /**
+  * Perform an A* Search on a graph given a start and end node.
+  * @param {Graph} graph
+  * @param {GridNode} start
+  * @param {GridNode} end
+  * @param {Object} [options]
+  * @param {bool} [options.closest] Specifies whether to return the
+             path to the closest node if the target is unreachable.
+  * @param {Function} [options.heuristic] Heuristic function (see
+  *          astar.heuristics).
+  */
+  search: function(graph, start, end, options) {
+    graph.cleanDirty();
+    options = options || {};
+    var heuristic = options.heuristic || astar.heuristics.manhattan;
+    var closest = options.closest || false;
+
+    var openHeap = getHeap();
+    var closestNode = start; // set the start node to be the closest if required
+
+    start.h = heuristic(start, end);
+    graph.markDirty(start);
+
+    openHeap.push(start);
+
+    while (openHeap.size() > 0) {
+
+      // Grab the lowest f(x) to process next.  Heap keeps this sorted for us.
+      var currentNode = openHeap.pop();
+
+      // End case -- result has been found, return the traced path.
+      if (currentNode === end) {
+        return pathTo(currentNode);
+      }
+
+      // Normal case -- move currentNode from open to closed, process each of its neighbors.
+      currentNode.closed = true;
+
+      // Find all neighbors for the current node.
+      var neighbors = graph.neighbors(currentNode);
+
+      for (var i = 0, il = neighbors.length; i < il; ++i) {
+        var neighbor = neighbors[i];
+
+        if (neighbor.closed || neighbor.isWall()) {
+          // Not a valid node to process, skip to next neighbor.
+          continue;
+        }
+
+        // The g score is the shortest distance from start to current node.
+        // We need to check if the path we have arrived at this neighbor is the shortest one we have seen yet.
+        var gScore = currentNode.g + neighbor.getCost(currentNode);
+        var beenVisited = neighbor.visited;
+
+        if (!beenVisited || gScore < neighbor.g) {
+
+          // Found an optimal (so far) path to this node.  Take score for node to see how good it is.
+          neighbor.visited = true;
+          neighbor.parent = currentNode;
+          neighbor.h = neighbor.h || heuristic(neighbor, end);
+          neighbor.g = gScore;
+          neighbor.f = neighbor.g + neighbor.h;
+          graph.markDirty(neighbor);
+          if (closest) {
+            // If the neighbour is closer than the current closestNode or if it's equally close but has
+            // a cheaper path than the current closest node then it becomes the closest node
+            if (neighbor.h < closestNode.h || (neighbor.h === closestNode.h && neighbor.g < closestNode.g)) {
+              closestNode = neighbor;
+            }
+          }
+
+          if (!beenVisited) {
+            // Pushing to heap will put it in proper place based on the 'f' value.
+            openHeap.push(neighbor);
+          } else {
+            // Already seen the node, but since it has been rescored we need to reorder it in the heap
+            openHeap.rescoreElement(neighbor);
+          }
+        }
+      }
+    }
+
+    if (closest) {
+      return pathTo(closestNode);
+    }
+
+    // No result was found - empty array signifies failure to find path.
+    return [];
+  },
+  // See list of heuristics: http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
+  heuristics: {
+    manhattan: function(pos0, pos1) {
+      var d1 = Math.abs(pos1.x - pos0.x);
+      var d2 = Math.abs(pos1.y - pos0.y);
+      return d1 + d2;
+    },
+    diagonal: function(pos0, pos1) {
+      var D = 1;
+      var D2 = Math.sqrt(2);
+      var d1 = Math.abs(pos1.x - pos0.x);
+      var d2 = Math.abs(pos1.y - pos0.y);
+      return (D * (d1 + d2)) + ((D2 - (2 * D)) * Math.min(d1, d2));
+    }
+  },
+  cleanNode: function(node) {
+    node.f = 0;
+    node.g = 0;
+    node.h = 0;
+    node.visited = false;
+    node.closed = false;
+    node.parent = null;
+  }
+};
+
+/**
+ * A graph memory structure
+ * @param {Array} gridIn 2D array of input weights
+ * @param {Object} [options]
+ * @param {bool} [options.diagonal] Specifies whether diagonal moves are allowed
+ */
+function Graph(gridIn, options) {
+  options = options || {};
+  this.nodes = [];
+  this.diagonal = !!options.diagonal;
+  this.grid = [];
+  for (var x = 0; x < gridIn.length; x++) {
+    this.grid[x] = [];
+
+    for (var y = 0, row = gridIn[x]; y < row.length; y++) {
+      var node = new GridNode(x, y, row[y]);
+      this.grid[x][y] = node;
+      this.nodes.push(node);
+    }
+  }
+  this.init();
+}
+
+Graph.prototype.init = function() {
+  this.dirtyNodes = [];
+  for (var i = 0; i < this.nodes.length; i++) {
+    astar.cleanNode(this.nodes[i]);
+  }
+};
+
+Graph.prototype.cleanDirty = function() {
+  for (var i = 0; i < this.dirtyNodes.length; i++) {
+    astar.cleanNode(this.dirtyNodes[i]);
+  }
+  this.dirtyNodes = [];
+};
+
+Graph.prototype.markDirty = function(node) {
+  this.dirtyNodes.push(node);
+};
+
+Graph.prototype.neighbors = function(node) {
+  var ret = [];
+  var x = node.x;
+  var y = node.y;
+  var grid = this.grid;
+
+  // West
+  if (grid[x - 1] && grid[x - 1][y]) {
+    ret.push(grid[x - 1][y]);
+  }
+
+  // East
+  if (grid[x + 1] && grid[x + 1][y]) {
+    ret.push(grid[x + 1][y]);
+  }
+
+  // South
+  if (grid[x] && grid[x][y - 1]) {
+    ret.push(grid[x][y - 1]);
+  }
+
+  // North
+  if (grid[x] && grid[x][y + 1]) {
+    ret.push(grid[x][y + 1]);
+  }
+
+  if (this.diagonal) {
+    // Southwest
+    if (grid[x - 1] && grid[x - 1][y - 1]) {
+      ret.push(grid[x - 1][y - 1]);
+    }
+
+    // Southeast
+    if (grid[x + 1] && grid[x + 1][y - 1]) {
+      ret.push(grid[x + 1][y - 1]);
+    }
+
+    // Northwest
+    if (grid[x - 1] && grid[x - 1][y + 1]) {
+      ret.push(grid[x - 1][y + 1]);
+    }
+
+    // Northeast
+    if (grid[x + 1] && grid[x + 1][y + 1]) {
+      ret.push(grid[x + 1][y + 1]);
+    }
+  }
+
+  return ret;
+};
+
+Graph.prototype.toString = function() {
+  var graphString = [];
+  var nodes = this.grid;
+  for (var x = 0; x < nodes.length; x++) {
+    var rowDebug = [];
+    var row = nodes[x];
+    for (var y = 0; y < row.length; y++) {
+      rowDebug.push(row[y].weight);
+    }
+    graphString.push(rowDebug.join(" "));
+  }
+  return graphString.join("\n");
+};
+
+function GridNode(x, y, weight) {
+  this.x = x;
+  this.y = y;
+  this.weight = weight;
+}
+
+GridNode.prototype.toString = function() {
+  return "[" + this.x + " " + this.y + "]";
+};
+
+GridNode.prototype.getCost = function(fromNeighbor) {
+  // Take diagonal weight into consideration.
+  if (fromNeighbor && fromNeighbor.x != this.x && fromNeighbor.y != this.y) {
+    return this.weight * 1.41421;
+  }
+  return this.weight;
+};
+
+GridNode.prototype.isWall = function() {
+  return this.weight === 0;
+};
+
+function BinaryHeap(scoreFunction) {
+  this.content = [];
+  this.scoreFunction = scoreFunction;
+}
+
+BinaryHeap.prototype = {
+  push: function(element) {
+    // Add the new element to the end of the array.
+    this.content.push(element);
+
+    // Allow it to sink down.
+    this.sinkDown(this.content.length - 1);
+  },
+  pop: function() {
+    // Store the first element so we can return it later.
+    var result = this.content[0];
+    // Get the element at the end of the array.
+    var end = this.content.pop();
+    // If there are any elements left, put the end element at the
+    // start, and let it bubble up.
+    if (this.content.length > 0) {
+      this.content[0] = end;
+      this.bubbleUp(0);
+    }
+    return result;
+  },
+  remove: function(node) {
+    var i = this.content.indexOf(node);
+
+    // When it is found, the process seen in 'pop' is repeated
+    // to fill up the hole.
+    var end = this.content.pop();
+
+    if (i !== this.content.length - 1) {
+      this.content[i] = end;
+
+      if (this.scoreFunction(end) < this.scoreFunction(node)) {
+        this.sinkDown(i);
+      } else {
+        this.bubbleUp(i);
+      }
+    }
+  },
+  size: function() {
+    return this.content.length;
+  },
+  rescoreElement: function(node) {
+    this.sinkDown(this.content.indexOf(node));
+  },
+  sinkDown: function(n) {
+    // Fetch the element that has to be sunk.
+    var element = this.content[n];
+
+    // When at 0, an element can not sink any further.
+    while (n > 0) {
+
+      // Compute the parent element's index, and fetch it.
+      var parentN = ((n + 1) >> 1) - 1;
+      var parent = this.content[parentN];
+      // Swap the elements if the parent is greater.
+      if (this.scoreFunction(element) < this.scoreFunction(parent)) {
+        this.content[parentN] = element;
+        this.content[n] = parent;
+        // Update 'n' to continue at the new position.
+        n = parentN;
+      }
+      // Found a parent that is less, no need to sink any further.
+      else {
+        break;
+      }
+    }
+  },
+  bubbleUp: function(n) {
+    // Look up the target element and its score.
+    var length = this.content.length;
+    var element = this.content[n];
+    var elemScore = this.scoreFunction(element);
+
+    while (true) {
+      // Compute the indices of the child elements.
+      var child2N = (n + 1) << 1;
+      var child1N = child2N - 1;
+      // This is used to store the new position of the element, if any.
+      var swap = null;
+      var child1Score;
+      // If the first child exists (is inside the array)...
+      if (child1N < length) {
+        // Look it up and compute its score.
+        var child1 = this.content[child1N];
+        child1Score = this.scoreFunction(child1);
+
+        // If the score is less than our element's, we need to swap.
+        if (child1Score < elemScore) {
+          swap = child1N;
+        }
+      }
+
+      // Do the same checks for the other child.
+      if (child2N < length) {
+        var child2 = this.content[child2N];
+        var child2Score = this.scoreFunction(child2);
+        if (child2Score < (swap === null ? elemScore : child1Score)) {
+          swap = child2N;
+        }
+      }
+
+      // If the element needs to be moved, swap it, and continue.
+      if (swap !== null) {
+        this.content[n] = this.content[swap];
+        this.content[swap] = element;
+        n = swap;
+      }
+      // Otherwise, we are done.
+      else {
+        break;
+      }
+    }
+  }
+};
+
+class TileSet {
+    constructor(url) {
+        this.url = url;
+        this.tileWidth = 0;
+        this.tileHeight = 0;
+        this.tilesPerRow = 0;
+        this.image = new Image();
+        this.collision = {};
+    }
+
+    async load() {
+        const response = await fetch(this.url),
+            text = await response.text(),
+            parser = new DOMParser(),
+            xml = parser.parseFromString(text, "text/xml"),
+            tileset = xml.documentElement,
+            imageLoad = new Promise((resolve, reject) => {
+                this.image.addEventListener("load", (evt) => {
+                    this.tilesPerRow = Math.floor(this.image.width / this.tileWidth);
+                    resolve();
+                });
+                this.image.addEventListener("error", reject);
+            }),
+            image = tileset.querySelector("image"),
+            imageSource = image.getAttribute("source"),
+            imageURL = new URL(imageSource, this.url),
+            tiles = tileset.querySelectorAll("tile");
+
+        for (let tile of tiles) {
+            const id = 1 * tile.getAttribute("id"),
+                collid = tile.querySelector("properties > property[name='Collision']"),
+                value = collid.getAttribute("value");
+            this.collision[id] = value === "true";
+        }
+
+        this.name = tileset.getAttribute("name");
+        this.tileWidth = 1 * tileset.getAttribute("tilewidth");
+        this.tileHeight = 1 * tileset.getAttribute("tileheight");
+        this.tileCount = 1 * tileset.getAttribute("tilecount");
+        this.image.src = imageURL.href;
+        await imageLoad;
+    }
+
+    isClear(tile) {
+        return !this.collision[tile - 1];
+    }
+
+    draw(g, tile, x, y) {
+        if (tile > 0) {
+            const idx = tile - 1,
+                sx = this.tileWidth * (idx % this.tilesPerRow),
+                sy = this.tileHeight * Math.floor(idx / this.tilesPerRow),
+                dx = x * this.tileWidth,
+                dy = y * this.tileHeight;
+
+            g.drawImage(this.image,
+                sx, sy, this.tileWidth, this.tileHeight,
+                dx, dy, this.tileWidth, this.tileHeight);
+        }
+    }
+}
+
+/** @type {WeakMap<TileMap, TileMapPrivate>} */
+const selfs$3 = new WeakMap();
+
+class TileMapPrivate {
+    constructor(tilemapName) {
+        this.url = new URL(`data/tilemaps/${tilemapName}.tmx`, document.baseURI);
+        this.tileWidth = 0;
+        this.tileHeight = 0;
+        this.layers = 0;
+        this.width = 0;
+        this.height = 0;
+        this.offsetX = 0;
+        this.offsetY = 0;
+
+        /** @type {TileSet} */
+        this.tileset = null;
+
+        /** @type {number[][][]} */
+        this.tiles = null;
+
+        /** @type {Graph} */
+        this.graph = null;
+
+        /** @type {OffscreenCanvas[]} */
+        this.layerImages = [];
+
+        Object.seal(this);
+    }
+}
+
+class TileMap {
+    constructor(tilemapName) {
+        selfs$3.set(this, new TileMapPrivate(tilemapName));
+    }
+
+    async load() {
+        const self = selfs$3.get(this),
+            response = await fetch(self.url.href),
+            text = await response.text(),
+            parser = new DOMParser(),
+            xml = parser.parseFromString(text, "text/xml"),
+            map = xml.documentElement,
+            width = 1 * map.getAttribute("width"),
+            height = 1 * map.getAttribute("height"),
+            tileWidth = 1 * map.getAttribute("tilewidth"),
+            tileHeight = 1 * map.getAttribute("tileheight"),
+            tileset = map.querySelector("tileset"),
+            tilesetSource = tileset.getAttribute("source"),
+            layers = map.querySelectorAll("layer > data");
+
+        self.layers = layers.length;
+        self.width = width;
+        self.height = height;
+        self.offsetX = -Math.floor(width / 2);
+        self.offsetY = -Math.floor(height / 2);
+        self.tileWidth = tileWidth;
+        self.tileHeight = tileHeight;
+
+        self.tiles = [];
+        for (let layer of layers) {
+            const tileIds = layer.innerHTML
+                .replace(" ", "")
+                .replace("\t", "")
+                .replace("\n", "")
+                .replace("\r", "")
+                .split(",")
+                .map(s => parseInt(s, 10)),
+                rows = [];
+            let row = [];
+            for (let tile of tileIds) {
+                row.push(tile);
+                if (row.length === width) {
+                    rows.push(row);
+                    row = [];
+                }
+            }
+            if (row.length > 0) {
+                rows.push(row);
+            }
+
+            self.tiles.push(rows);
+        }
+
+        self.tileset = new TileSet(new URL(tilesetSource, self.url));
+        await self.tileset.load();
+        self.tileWidth = self.tileset.tileWidth;
+        self.tileHeight = self.tileset.tileHeight;
+
+        for (let l = 0; l < self.layers; ++l) {
+            const img = CanvasOffscreen(this.width * this.tileWidth, this.height * this.tileHeight);
+            self.layerImages.push(img);
+            const context = img.getContext("2d");
+            const layer = self.tiles[l];
+            for (let y = 0; y < this.height; ++y) {
+                const row = layer[y];
+                for (let x = 0; x < this.width; ++x) {
+                    const tile = row[x];
+                    self.tileset.draw(context, tile, x, y);
+                }
+            }
+        }
+
+        let grid = [];
+        for (let row of self.tiles[0]) {
+            let gridrow = [];
+            for (let tile of row) {
+                if (self.tileset.isClear(tile)) {
+                    gridrow.push(1);
+                } else {
+                    gridrow.push(0);
+                }
+            }
+            grid.push(gridrow);
+        }
+        self.graph = new Graph(grid, { diagonal: true });
+    }
+
+    get width() {
+        return selfs$3.get(this).width;
+    }
+
+    get height() {
+        return selfs$3.get(this).height;
+    }
+
+    get tileWidth() {
+        return selfs$3.get(this).tileWidth;
+    }
+
+    get tileHeight() {
+        return selfs$3.get(this).tileHeight;
+    }
+
+    isInBounds(x, y) {
+        return 0 <= x && x < this.width
+            && 0 <= y && y < this.height;
+    }
+
+    getGridNode(x, y) {
+        const self = selfs$3.get(this);
+        x -= self.offsetX;
+        y -= self.offsetY;
+        if (this.isInBounds(x, y)) {
+            return self.graph.grid[y][x];
+        }
+        else {
+            return null;
+        }
+    }
+
+    draw(g) {
+        const self = selfs$3.get(this);
+        g.save();
+        {
+            g.translate(self.offsetX * this.tileWidth, self.offsetY * this.tileHeight);
+            for (let img of self.layerImages) {
+                g.drawImage(img, 0, 0);
+            }
+        }
+        g.restore();
+    }
+
+    searchPath(start, end) {
+        const self = selfs$3.get(this);
+        return astar.search(self.graph, start, end)
+            .map(p => {
+                return {
+                    x: p.y + self.offsetX,
+                    y: p.x + self.offsetY
+                };
+            });
+    }
+
+    isClear(x, y, avatar) {
+        const self = selfs$3.get(this);
+        x -= self.offsetX;
+        y -= self.offsetY;
+        return x < 0 || this.width <= x
+            || y < 0 || this.height <= y
+            || self.tileset && self.tileset.isClear(self.tiles[0][y][x])
+            || avatar && avatar.canSwim;
+    }
+
+    // Use Bresenham's line algorithm (with integer error)
+    // to draw a line through the map, cutting it off if
+    // it hits a wall.
+    getClearTile(x, y, dx, dy, avatar) {
+        const x1 = x + dx,
+            y1 = y + dy,
+            sx = x < x1 ? 1 : -1,
+            sy = y < y1 ? 1 : -1;
+
+        dx = Math.abs(x1 - x);
+        dy = Math.abs(y1 - y);
+
+        let err = (dx > dy ? dx : -dy) / 2;
+
+        while (x !== x1
+            || y !== y1) {
+            const e2 = err;
+            if (e2 > -dx) {
+                if (this.isClear(x + sx, y, avatar)) {
+                    err -= dy;
+                    x += sx;
+                }
+                else {
+                    break;
+                }
+            }
+            if (e2 < dy) {
+                if (this.isClear(x, y + sy, avatar)) {
+                    err += dx;
+                    y += sy;
+                }
+                else {
+                    break;
+                }
+            }
+        }
+
+        return { x, y };
+    }
+
+    getClearTileNear(x, y, maxRadius, avatar) {
+        for (let r = 1; r <= maxRadius; ++r) {
+            for (let dx = -r; dx <= r; ++dx) {
+                const dy = r - Math.abs(dx);
+                const tx = x + dx;
+                const ty1 = y + dy;
+                const ty2 = y - dy;
+
+                if (this.isClear(tx, ty1, avatar)) {
+                    return { x: tx, y: ty1 };
+                }
+                else if (this.isClear(tx, ty2, avatar)) {
+                    return { x: tx, y: ty2 };
+                }
+            }
+        }
+
+        return { x, y };
+    }
+}
+
+const CAMERA_LERP = 0.01,
+    CAMERA_ZOOM_MAX = 8,
+    CAMERA_ZOOM_MIN = 0.1,
+    CAMERA_ZOOM_SHAPE = 1 / 4,
+    CAMERA_ZOOM_SPEED = 0.005,
+    MAX_DRAG_DISTANCE = 5,
+    MOVE_REPEAT = 0.125,
+    gameStartedEvt = new Event("gameStarted"),
+    gameEndedEvt = new Event("gameEnded"),
+    zoomChangedEvt = new Event("zoomChanged"),
+    emojiNeededEvt = new Event("emojiNeeded"),
+    toggleAudioEvt$1 = new Event("toggleAudio"),
+    toggleVideoEvt$2 = new Event("toggleVideo"),
+    moveEvent = Object.assign(new Event("userMoved"), {
+        x: 0,
+        y: 0
+    }),
+    emoteEvt$1 = Object.assign(new Event("emote"), {
+        emoji: null
+    }),
+    userJoinedEvt = Object.assign(new Event("userJoined", {
+        user: null
+    }));
+
+/** @type {Map.<Game, EventedGamepad>} */
+const gamepads = new Map();
+
+class Game extends EventBase {
+
+    constructor() {
+        super();
+
+        this.element = Canvas(
+            id("frontBuffer"),
+            cssWidth("100%"),
+            cssHeight("100%"),
+            touchAction("none"));
+        this.gFront = this.element.getContext("2d");
+
+        /** @type {User} */
+        this.me = null;
+
+        /** @type {TileMap} */
+        this.map = null;
+
+        this.waypoints = [];
+
+        this.keys = {};
+
+        /** @type {Map.<string, User>} */
+        this.users = new Map();
+
+        this.lastMove = Number.MAX_VALUE;
+        this.lastWalk = Number.MAX_VALUE;
+        this.gridOffsetX = 0;
+        this.gridOffsetY = 0;
+        this.cameraX = this.offsetCameraX = this.targetOffsetCameraX = 0;
+        this.cameraY = this.offsetCameraY = this.targetOffsetCameraY = 0;
+        this.cameraZ = this.targetCameraZ = 1.5;
+        this.currentRoomName = null;
+        this.fontSize = 10;
+
+        this.drawHearing = false;
+        this.audioDistanceMin = 2;
+        this.audioDistanceMax = 10;
+        this.rolloff = 5;
+
+        this.pointers = [];
+        this.lastPinchDistance = 0;
+        this.canClick = false;
+
+        this.currentEmoji = null;
+
+        /** @type {Emote[]} */
+        this.emotes = [];
+
+        this.inputBinding = {
+            keyButtonUp: "ArrowUp",
+            keyButtonDown: "ArrowDown",
+            keyButtonLeft: "ArrowLeft",
+            keyButtonRight: "ArrowRight",
+            keyButtonEmote: "e",
+            keyButtonToggleAudio: "a",
+
+            gpAxisLeftRight: 0,
+            gpAxisUpDown: 1,
+
+            gpButtonUp: 12,
+            gpButtonDown: 13,
+            gpButtonLeft: 14,
+            gpButtonRight: 15,
+            gpButtonEmote: 0,
+            gpButtonToggleAudio: 1
+        };
+
+        this.lastGamepadIndex = -1;
+        this.gamepadIndex = -1;
+        this.transitionSpeed = 0.125;
+
+
+        // ============= KEYBOARD =================
+
+        addEventListener("keydown", (evt) => {
+            this.keys[evt.key] = evt;
+            if (!evt.ctrlKey
+                && !evt.altKey
+                && !evt.shiftKey
+                && !evt.metaKey
+                && evt.key === this.inputBinding.keyButtonToggleAudio
+                && !!this.me) {
+                this.toggleMyAudio();
+            }
+        });
+
+        addEventListener("keyup", (evt) => {
+            if (this.keys[evt.key]) {
+                delete this.keys[evt.key];
+            }
+        });
+
+        // ============= KEYBOARD =================
+
+        // ============= POINTERS =================
+
+        this.element.addEventListener("wheel", (evt) => {
+            if (!evt.shiftKey
+                && !evt.altKey
+                && !evt.ctrlKey
+                && !evt.metaKey) {
+                // Chrome and Firefox report scroll values in completely different ranges.
+                const deltaZ = evt.deltaY * (isFirefox ? 1 : 0.02);
+                this.zoom(deltaZ);
+            }
+        }, { passive: true });
+
+        function readPointer(evt) {
+            return {
+                id: evt.pointerId,
+                buttons: evt.buttons,
+                dragDistance: 0,
+                x: evt.offsetX * devicePixelRatio,
+                y: evt.offsetY * devicePixelRatio
+            }
+        }
+
+        const findPointer = (pointer) => {
+            return this.pointers.findIndex(p => p.id === pointer.id);
+        };
+
+        const replacePointer = (pointer) => {
+            const idx = findPointer(pointer);
+            if (idx > -1) {
+                const last = this.pointers[idx];
+                this.pointers[idx] = pointer;
+                return last;
+            }
+            else {
+                this.pointers.push(pointer);
+                return null;
+            }
+        };
+
+        const getPressCount = () => {
+            let count = 0;
+            for (let pointer of this.pointers) {
+                if (pointer.buttons === 1) {
+                    ++count;
+                }
+            }
+            return count;
+        };
+
+        this.element.addEventListener("pointerdown", (evt) => {
+            const oldCount = getPressCount(),
+                pointer = readPointer(evt),
+                _ = replacePointer(pointer),
+                newCount = getPressCount();
+
+            this.canClick = oldCount === 0
+                && newCount === 1;
+        });
+
+        const getPinchDistance = () => {
+            const count = getPressCount();
+            if (count !== 2) {
+                return null;
+            }
+
+            const pressed = this.pointers.filter(p => p.buttons === 1),
+                a = pressed[0],
+                b = pressed[1],
+                dx = b.x - a.x,
+                dy = b.y - a.y;
+
+            return Math.sqrt(dx * dx + dy * dy);
+        };
+
+        this.element.addEventListener("pointermove", (evt) => {
+            const oldPinchDistance = getPinchDistance(),
+                pointer = readPointer(evt),
+                last = replacePointer(pointer),
+                count = getPressCount(),
+                newPinchDistance = getPinchDistance();
+
+            if (count === 1) {
+
+                if (!!last
+                    && pointer.buttons === 1
+                    && last.buttons === pointer.buttons) {
+                    const dx = pointer.x - last.x,
+                        dy = pointer.y - last.y,
+                        dist = Math.sqrt(dx * dx + dy * dy);
+                    pointer.dragDistance = last.dragDistance + dist;
+
+                    if (pointer.dragDistance > MAX_DRAG_DISTANCE) {
+                        this.targetOffsetCameraX = this.offsetCameraX += dx;
+                        this.targetOffsetCameraY = this.offsetCameraY += dy;
+                        this.canClick = false;
+                    }
+                }
+
+            }
+
+            if (oldPinchDistance !== null
+                && newPinchDistance !== null) {
+                const ddist = oldPinchDistance - newPinchDistance;
+                this.zoom(ddist / 5);
+                this.canClick = false;
+            }
+        });
+
+        this.element.addEventListener("pointerup", (evt) => {
+            const pointer = readPointer(evt),
+                _ = replacePointer(pointer);
+
+            if (!!this.me && pointer.dragDistance < 2) {
+                const tile = this.getTileAt(pointer),
+                    dx = tile.x - this.me.gridX,
+                    dy = tile.y - this.me.gridY;
+
+                if (dx === 0 && dy === 0) {
+                    this.emote(this.me.id, this.currentEmoji);
+                }
+                else if (this.canClick) {
+                    this.moveMeByPath(dx, dy);
+                }
+            }
+        });
+
+        this.element.addEventListener("pointercancel", (evt) => {
+            const pointer = readPointer(evt),
+                idx = findPointer(pointer);
+
+            if (idx >= 0) {
+                arrayRemoveAt(this.pointers, idx);
+            }
+
+            return pointer;
+        });
+
+        // ============= POINTERS =================
+
+        // ============= ACTION ==================
+    }
+
+    get style() {
+        return this.element.style;
+    }
+
+    initializeUser(id, evt) {
+        this.withUser("initialize user", id, (user) => {
+            user.deserialize(evt);
+        });
+    }
+
+    updateAudioActivity(id, isActive) {
+        this.withUser("update audio activity", id, (user) => {
+            user.isActive = isActive;
+        });
+    }
+
+    emote(id, emoji) {
+        if (this.users.has(id)) {
+            const user = this.users.get(id);
+            if (user.isMe) {
+
+                emoji = emoji
+                    || this.currentEmoji;
+
+                if (!emoji) {
+                    this.dispatchEvent(emojiNeededEvt);
+                }
+                else {
+                    emoteEvt$1.emoji = this.currentEmoji = emoji;
+                    this.dispatchEvent(emoteEvt$1);
+                }
+            }
+
+            if (emoji) {
+                this.emotes.push(new Emote(emoji, user.x, user.y));
+            }
+        }
+    }
+
+    getTileAt(cursor) {
+        const imageX = cursor.x - this.gridOffsetX - this.offsetCameraX,
+            imageY = cursor.y - this.gridOffsetY - this.offsetCameraY,
+            zoomX = imageX / this.cameraZ,
+            zoomY = imageY / this.cameraZ,
+            mapX = zoomX - this.cameraX,
+            mapY = zoomY - this.cameraY,
+            mapWidth = this.map.tileWidth,
+            mapHeight = this.map.tileHeight,
+            gridX = Math.floor(mapX / mapWidth),
+            gridY = Math.floor(mapY / mapHeight),
+            tile = { x: gridX, y: gridY };
+        return tile;
+    }
+
+    moveMeTo(x, y) {
+        if (this.map.isClear(x, y, this.me.avatar)) {
+            this.targetOffsetCameraX = 0;
+            this.targetOffsetCameraY = 0;
+            moveEvent.x = x;
+            moveEvent.y = y;
+            this.dispatchEvent(moveEvent);
+        }
+    }
+
+    moveMeBy(dx, dy) {
+        const clearTile = this.map.getClearTile(this.me.gridX, this.me.gridY, dx, dy, this.me.avatar);
+        this.moveMeTo(clearTile.x, clearTile.y);
+    }
+
+    moveMeByPath(dx, dy) {
+        arrayClear(this.waypoints);
+
+        const x = this.me.gridX,
+            y = this.me.gridY,
+            start = this.map.getGridNode(x, y),
+            tx = x + dx,
+            ty = y + dy,
+            end = this.map.getGridNode(tx, ty);
+
+        if (!start || !end) {
+            this.moveMeTo(x + dx, y + dy);
+        }
+        else {
+            const result = this.map.searchPath(start, end);
+            this.waypoints.push(...result);
+        }
+    }
+
+    warpMeTo(x, y) {
+        const clearTile = this.map.getClearTileNear(x, y, 3, this.me.avatar);
+        this.moveMeTo(clearTile.x, clearTile.y);
+    }
+
+    visit(id) {
+        this.withUser("visit", id, (user) => {
+            this.warpMeTo(user.gridX, user.gridY);
+        });
+    }
+
+    zoom(deltaZ) {
+        const mag = Math.abs(deltaZ);
+        if (0 < mag && mag <= 50) {
+            const a = project(this.targetCameraZ, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
+                b = Math.pow(a, CAMERA_ZOOM_SHAPE),
+                c = b - deltaZ * CAMERA_ZOOM_SPEED,
+                d = clamp(c, 0, 1),
+                e = Math.pow(d, 1 / CAMERA_ZOOM_SHAPE);
+
+            this.targetCameraZ = unproject(e, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX);
+            this.dispatchEvent(zoomChangedEvt);
+        }
+    }
+
+    /**
+     * 
+     * @param {string} id
+     * @param {string} displayName
+     * @param {Pose} pose
+     */
+    addUser(id, displayName, pose) {
+        if (this.users.has(id)) {
+            this.removeUser(id);
+        }
+
+        const user = new User(id, displayName, pose, false);
+        this.users.set(id, user);
+
+        userJoinedEvt.user = user;
+        this.dispatchEvent(userJoinedEvt);
+    }
+
+    toggleMyAudio() {
+        this.dispatchEvent(toggleAudioEvt$1);
+    }
+
+    toggleMyVideo() {
+        this.dispatchEvent(toggleVideoEvt$2);
+    }
+
+    muteUserAudio(id, muted) {
+        this.withUser("mute audio", id, (user) => {
+            user.audioMuted = muted;
+        });
+    }
+
+    muteUserVideo(id, muted) {
+        this.withUser("mute video", id, (user) => {
+            user.videoMuted = muted;
+        });
+    }
+
+    /**
+    * Used to perform on operation when a valid user object is found.
+    * @callback withUserCallback
+    * @param {User} user
+    * @returns {void}
+    */
+
+    /**
+     * Find a user by id, then perform an operation on it.
+     * @param {string} msg
+     * @param {string} id
+     * @param {withUserCallback} callback
+     * @param {number} timeout
+     */
+    withUser(msg, id, callback, timeout) {
+        if (timeout === undefined) {
+            timeout = 5000;
+        }
+        if (id) {
+            if (this.users.has(id)) {
+                const user = this.users.get(id);
+                callback(user);
+            }
+            else {
+                console.warn(`No user "${id}" found to ${msg}. Trying again in a quarter second.`);
+                if (timeout > 0) {
+                    setTimeout(this.withUser.bind(this, msg, id, callback, timeout - 250), 250);
+                }
+            }
+        }
+    }
+
+    changeUserName(id, displayName) {
+        this.withUser("change user name", id, (user) => {
+            user.displayName = displayName;
+        });
+    }
+
+    removeUser(id) {
+        if (this.users.has(id)) {
+            this.users.delete(id);
+        }
+    }
+
+    setAvatarVideo(id, stream) {
+        this.withUser("set avatar video", id, (user) => {
+            user.setAvatarVideo(stream);
+        });
+    }
+
+    setAvatarURL(id, url) {
+        this.withUser("set avatar image", id, (user) => {
+            user.avatarImage = url;
+        });
+    }
+
+    setAvatarEmoji(id, emoji) {
+        this.withUser("set avatar emoji", id, (user) => {
+            user.avatarEmoji = emoji;
+        });
+    }
+
+    /**
+     * 
+     * @param {string} id
+     * @param {string} displayName
+     * @param {Pose} pose
+     * @param {string} avatarURL
+     * @param {string} roomName
+     */
+    async startAsync(id, displayName, pose, avatarURL, roomName) {
+        this.currentRoomName = roomName.toLowerCase();
+        this.me = new User(id, displayName, pose, true);
+        if (isString(avatarURL)) {
+            this.me.avatarImage = avatarURL;
+        }
+        this.users.set(id, this.me);
+
+        this.map = new TileMap(this.currentRoomName);
+        let success = false;
+        for (let retryCount = 0; retryCount < 2; ++retryCount) {
+            try {
+                await this.map.load();
+                success = true;
+            }
+            catch (exp) {
+                console.warn(exp);
+                this.map = new TileMap("default");
+            }
+        }
+
+        if (!success) {
+            console.error("Couldn't load any maps!");
+        }
+
+        this.startLoop();
+        this.dispatchEvent(zoomChangedEvt);
+        this.dispatchEvent(gameStartedEvt);
+    }
+
+    startLoop() {
+        show(this);
+        this.resize();
+        this.element.focus();
+    }
+
+    resize() {
+        resizeCanvas(this.element, window.devicePixelRatio);
+    }
+
+    end() {
+        this.currentRoomName = null;
+        this.map = null;
+        this.users.clear();
+        this.me = null;
+        hide(this);
+        this.dispatchEvent(gameEndedEvt);
+    }
+
+    update(dt) {
+        if (this.currentRoomName !== null) {
+            dt /= 1000;
+            this.gridOffsetX = Math.floor(0.5 * this.element.width / this.map.tileWidth) * this.map.tileWidth;
+            this.gridOffsetY = Math.floor(0.5 * this.element.height / this.map.tileHeight) * this.map.tileHeight;
+
+            this.lastMove += dt;
+            if (this.lastMove >= MOVE_REPEAT) {
+                let dx = 0,
+                    dy = 0;
+
+                for (let evt of Object.values(this.keys)) {
+                    if (!evt.altKey
+                        && !evt.shiftKey
+                        && !evt.ctrlKey
+                        && !evt.metaKey) {
+                        switch (evt.key) {
+                            case this.inputBinding.keyButtonUp: dy--; break;
+                            case this.inputBinding.keyButtonDown: dy++; break;
+                            case this.inputBinding.keyButtonLeft: dx--; break;
+                            case this.inputBinding.keyButtonRight: dx++; break;
+                            case this.inputBinding.keyButtonEmote: this.emote(this.me.id, this.currentEmoji); break;
+                        }
+                    }
+                }
+
+                const gp = navigator.getGamepads()[this.gamepadIndex];
+                if (gp) {
+                    if (!gamepads.has(this)) {
+                        gamepads.set(this, new EventedGamepad(gp));
+                    }
+
+                    const pad = gamepads.get(this);
+                    pad.update(gp);
+
+                    if (pad.buttons[this.inputBinding.gpButtonEmote].pressed) {
+                        this.emote(this.me.id, this.currentEmoji);
+                    }
+
+                    if (!pad.lastButtons[this.inputBinding.gpButtonToggleAudio].pressed
+                        && pad.buttons[this.inputBinding.gpButtonToggleAudio].pressed) {
+                        this.toggleMyAudio();
+                    }
+
+                    if (pad.buttons[this.inputBinding.gpButtonUp].pressed) {
+                        --dy;
+                    }
+                    else if (pad.buttons[this.inputBinding.gpButtonDown].pressed) {
+                        ++dy;
+                    }
+
+                    if (pad.buttons[this.inputBinding.gpButtonLeft].pressed) {
+                        --dx;
+                    }
+                    else if (pad.buttons[this.inputBinding.gpButtonRight].pressed) {
+                        ++dx;
+                    }
+
+                    dx += Math.round(pad.axes[this.inputBinding.gpAxisLeftRight]);
+                    dy += Math.round(pad.axes[this.inputBinding.gpAxisUpDown]);
+
+                    this.targetOffsetCameraX += -50 * Math.round(2 * pad.axes[2]);
+                    this.targetOffsetCameraY += -50 * Math.round(2 * pad.axes[3]);
+                    this.zoom(2 * (pad.buttons[6].value - pad.buttons[7].value));
+                }
+
+                dx = clamp(dx, -1, 1);
+                dy = clamp(dy, -1, 1);
+
+                if (dx !== 0
+                    || dy !== 0) {
+                    this.moveMeBy(dx, dy);
+                    arrayClear(this.waypoints);
+                }
+
+                this.lastMove = 0;
+            }
+
+            this.lastWalk += dt;
+            if (this.lastWalk >= this.transitionSpeed) {
+                if (this.waypoints.length > 0) {
+                    const waypoint = this.waypoints.shift();
+                    this.moveMeTo(waypoint.x, waypoint.y);
+                }
+
+                this.lastWalk = 0;
+            }
+
+            for (let emote of this.emotes) {
+                emote.update(dt);
+            }
+
+            this.emotes = this.emotes.filter(e => !e.isDead());
+
+            for (let user of this.users.values()) {
+                user.update(this.map, this.users);
+            }
+
+            this.render();
+        }
+    }
+
+    render() {
+        const targetCameraX = -this.me.x * this.map.tileWidth,
+            targetCameraY = -this.me.y * this.map.tileHeight;
+
+        this.cameraZ = lerp(this.cameraZ, this.targetCameraZ, CAMERA_LERP * 10);
+        this.cameraX = lerp(this.cameraX, targetCameraX, CAMERA_LERP * this.cameraZ);
+        this.cameraY = lerp(this.cameraY, targetCameraY, CAMERA_LERP * this.cameraZ);
+
+        this.offsetCameraX = lerp(this.offsetCameraX, this.targetOffsetCameraX, CAMERA_LERP);
+        this.offsetCameraY = lerp(this.offsetCameraY, this.targetOffsetCameraY, CAMERA_LERP);
+
+        this.gFront.resetTransform();
+        this.gFront.imageSmoothingEnabled = false;
+        this.gFront.clearRect(0, 0, this.element.width, this.element.height);
+
+        this.gFront.save();
+        {
+            this.gFront.translate(
+                this.gridOffsetX + this.offsetCameraX,
+                this.gridOffsetY + this.offsetCameraY);
+            this.gFront.scale(this.cameraZ, this.cameraZ);
+            this.gFront.translate(this.cameraX, this.cameraY);
+
+            this.map.draw(this.gFront);
+
+            for (let user of this.users.values()) {
+                user.drawShadow(this.gFront, this.map);
+            }
+
+            for (let emote of this.emotes) {
+                emote.drawShadow(this.gFront, this.map);
+            }
+
+            for (let user of this.users.values()) {
+                user.drawAvatar(this.gFront, this.map);
+            }
+
+            this.drawCursor();
+
+            for (let user of this.users.values()) {
+                user.drawName(this.gFront, this.map, this.fontSize);
+            }
+
+            if (this.drawHearing) {
+                this.me.drawHearingRange(
+                    this.gFront,
+                    this.map,
+                    this.audioDistanceMin,
+                    this.audioDistanceMax);
+            }
+
+            for (let emote of this.emotes) {
+                emote.drawEmote(this.gFront, this.map);
+            }
+
+        }
+        this.gFront.restore();
+    }
+
+
+    drawCursor() {
+        if (this.pointers.length === 1) {
+            const pointer = this.pointers[0],
+                tile = this.getTileAt(pointer);
+            this.gFront.strokeStyle = this.map.isClear(tile.x, tile.y, this.me.avatar)
+                ? "green"
+                : "red";
+            this.gFront.strokeRect(
+                tile.x * this.map.tileWidth,
+                tile.y * this.map.tileHeight,
+                this.map.tileWidth,
+                this.map.tileHeight);
+        }
+    }
+}
+
+const KEY = "CallaSettings";
+
+/** @type {WeakMap<Settings, SettingsPrivate>} */
+const selfs$4 = new WeakMap();
+
+class SettingsPrivate {
+    constructor() {
+        this.drawHearing = false;
+        this.audioDistanceMin = 1;
+        this.audioDistanceMax = 10;
+        this.audioRolloff = 1;
+        this.fontSize = 12;
+        this.transitionSpeed = 1;
+        this.zoom = 1.5;
+        this.roomName = "calla";
+        this.userName = "";
+        this.avatarEmoji = null;
+
+        /** @type {string} */
+        this.avatarURL = null;
+        this.gamepadIndex = 0;
+
+        /** @type {string} */
+        this.preferredAudioOutputID = null;
+
+        /** @type {string} */
+        this.preferredAudioInputID = null;
+
+        /** @type {string} */
+        this.preferredVideoInputID = null;
+
+        this.inputBinding = {
+            keyButtonUp: "ArrowUp",
+            keyButtonDown: "ArrowDown",
+            keyButtonLeft: "ArrowLeft",
+            keyButtonRight: "ArrowRight",
+            keyButtonEmote: "e",
+            keyButtonToggleAudio: "a",
+
+            gpButtonUp: 12,
+            gpButtonDown: 13,
+            gpButtonLeft: 14,
+            gpButtonRight: 15,
+            gpButtonEmote: 0,
+            gpButtonToggleAudio: 1
+        };
+
+        const selfStr = localStorage.getItem(KEY);
+        if (selfStr) {
+            Object.assign(
+                this,
+                JSON.parse(selfStr));
+        }
+
+        Object.seal(this);
+    }
+
+    commit() {
+        localStorage.setItem(KEY, JSON.stringify(this));
+    }
+}
+
+class Settings {
+    constructor() {
+        const self = new SettingsPrivate();
+        selfs$4.set(this, self);
+
+        if (window.location.hash.length > 0) {
+            self.roomName = window.location.hash.substring(1);
+        }
+        Object.seal(this);
+    }
+
+    get preferredAudioOutputID() {
+        return selfs$4.get(this).preferredAudioOutputID;
+    }
+
+    set preferredAudioOutputID(value) {
+        if (value !== this.preferredAudioOutputID) {
+            const self = selfs$4.get(this);
+            self.preferredAudioOutputID = value;
+            self.commit();
+        }
+    }
+
+    get preferredAudioInputID() {
+        return selfs$4.get(this).preferredAudioInputID;
+    }
+
+    set preferredAudioInputID(value) {
+        if (value !== this.preferredAudioInputID) {
+            const self = selfs$4.get(this);
+            self.preferredAudioInputID = value;
+            self.commit();
+        }
+    }
+
+    get preferredVideoInputID() {
+        return selfs$4.get(this).preferredVideoInputID;
+    }
+
+    set preferredVideoInputID(value) {
+        if (value !== this.preferredVideoInputID) {
+            const self = selfs$4.get(this);
+            self.preferredVideoInputID = value;
+            self.commit();
+        }
+    }
+
+    get transitionSpeed() {
+        return selfs$4.get(this).transitionSpeed;
+    }
+
+    set transitionSpeed(value) {
+        if (value !== this.transitionSpeed) {
+            const self = selfs$4.get(this);
+            self.transitionSpeed = value;
+            self.commit();
+        }
+    }
+
+    get drawHearing() {
+        return selfs$4.get(this).drawHearing;
+    }
+
+    set drawHearing(value) {
+        if (value !== this.drawHearing) {
+            const self = selfs$4.get(this);
+            self.drawHearing = value;
+            self.commit();
+        }
+    }
+
+    get audioDistanceMin() {
+        return selfs$4.get(this).audioDistanceMin;
+    }
+
+    set audioDistanceMin(value) {
+        if (value !== this.audioDistanceMin) {
+            const self = selfs$4.get(this);
+            self.audioDistanceMin = value;
+            self.commit();
+        }
+    }
+
+    get audioDistanceMax() {
+        return selfs$4.get(this).audioDistanceMax;
+    }
+
+    set audioDistanceMax(value) {
+        if (value !== this.audioDistanceMax) {
+            const self = selfs$4.get(this);
+            self.audioDistanceMax = value;
+            self.commit();
+        }
+    }
+
+    get audioRolloff() {
+        return selfs$4.get(this).audioRolloff;
+    }
+
+    set audioRolloff(value) {
+        if (value !== this.audioRolloff) {
+            const self = selfs$4.get(this);
+            self.audioRolloff = value;
+            self.commit();
+        }
+    }
+
+    get fontSize() {
+        return selfs$4.get(this).fontSize;
+    }
+
+    set fontSize(value) {
+        if (value !== this.fontSize) {
+            const self = selfs$4.get(this);
+            self.fontSize = value;
+            self.commit();
+        }
+    }
+
+    get zoom() {
+        return selfs$4.get(this).zoom;
+    }
+
+    set zoom(value) {
+        if (value !== this.zoom) {
+            const self = selfs$4.get(this);
+            self.zoom = value;
+            self.commit();
+        }
+    }
+
+    get userName() {
+        return selfs$4.get(this).userName;
+    }
+
+    set userName(value) {
+        if (value !== this.userName) {
+            const self = selfs$4.get(this);
+            self.userName = value;
+            self.commit();
+        }
+    }
+
+    get avatarEmoji() {
+        return selfs$4.get(this).avatarEmoji;
+    }
+
+    set avatarEmoji(value) {
+        if (value !== this.avatarEmoji) {
+            const self = selfs$4.get(this);
+            self.avatarEmoji = value;
+            self.commit();
+        }
+    }
+
+    get avatarURL() {
+        return selfs$4.get(this).avatarURL;
+    }
+
+    set avatarURL(value) {
+        if (value !== this.avatarURL) {
+            const self = selfs$4.get(this);
+            self.avatarURL = value;
+            self.commit();
+        }
+    }
+
+    get roomName() {
+        return selfs$4.get(this).roomName;
+    }
+
+    set roomName(value) {
+        if (value !== this.roomName) {
+            const self = selfs$4.get(this);
+            self.roomName = value;
+            self.commit();
+        }
+    }
+
+    get gamepadIndex() {
+        return selfs$4.get(this).gamepadIndex;
+    }
+
+    set gamepadIndex(value) {
+        if (value !== this.gamepadIndex) {
+            const self = selfs$4.get(this);
+            self.gamepadIndex = value;
+            self.commit();
+        }
+    }
+
+    get inputBinding() {
+        return selfs$4.get(this).inputBinding;
+    }
+
+    set inputBinding(value) {
+        if (value !== this.inputBinding) {
+            const self = selfs$4.get(this);
+            for (let key in value) {
+                self.inputBinding[key] = value[key];
+            }
+            self.commit();
+        }
+    }
+}
+
+class TimerTickEvent extends Event {
+    constructor() {
+        super("tick");
+        this.dt = 0;
+        this.t = 0;
+        Object.seal(this);
+    }
+}
+
+class BaseTimer extends EventBase {
+
+    /**
+     * 
+     * @param {number} targetFrameRate
+     */
+    constructor(targetFrameRate) {
+        super();
+
+        this._timer = null;
+        this.targetFrameRate = targetFrameRate;
+
+        /**
+         * @param {number} t
+         */
+        this._onTick = (t) => {
+            const tickEvt = new TimerTickEvent();
+            let lt = t;
+            /**
+             * @param {number} t
+             */
+            this._onTick = (t) => {
+                tickEvt.t = t;
+                tickEvt.dt = t - lt;
+                lt = t;
+                this.dispatchEvent(tickEvt);
+            };
+        };
+    }
+
+    restart() {
+        this.stop();
+        this.start();
+    }
+
+    get isRunning() {
+        return this._timer !== null;
+    }
+
+    start() {
+        throw new Error("Not implemented in base class");
+    }
+
+    stop() {
+        this._timer = null;
+    }
+
+    /** @type {number} */
+    get targetFrameRate() {
+        return this._targetFPS;
+    }
+
+    set targetFrameRate(fps) {
+        this._targetFPS = fps;
+        this._frameTime = 1000 / fps;
+    }
+}
+
+class RequestAnimationFrameTimer extends BaseTimer {
+    constructor() {
+        super(60);
+    }
+
+    start() {
+        const updater = (t) => {
+            this._timer = requestAnimationFrame(updater);
+            this._onTick(t);
+        };
+        this._timer = requestAnimationFrame(updater);
+    }
+
+    stop() {
+        if (this.isRunning) {
+            cancelAnimationFrame(this._timer);
+            super.stop();
+        }
+    }
+
+    get targetFrameRate() {
+        return super.targetFrameRate;
+    }
+
+    set targetFrameRate(fps) {
+    }
+}
+
+const disabler$4 = disabled(true),
+    enabler$4 = disabled(false);
+
+/**
+ * @param {string} JITSI_HOST
+ * @param {string} JVB_HOST
+ * @param {string} JVB_MUC
+ */
+function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
+    const settings = new Settings(),
+        game = new Game(),
+        login = new LoginForm(),
+        directory = new UserDirectoryForm(),
+        headbar = new HeaderBar(),
+        footbar = new FooterBar(),
+        options = new OptionsForm(),
+        emoji = new EmojiForm(),
+        client = new CallaClient(JITSI_HOST, JVB_HOST, JVB_MUC),
+        timer = new RequestAnimationFrameTimer(),
+
+        forExport = {
+            settings,
+            client,
+            game,
+            login,
+            directory,
+            headbar,
+            footbar,
+            options,
+            emoji
+        },
+
+        forAppend = [
+            game,
+            directory,
+            options,
+            emoji,
+            headbar,
+            footbar,
+            login
+        ].filter(x => x.element);
+
+    function showLogin() {
+        hide(game);
+        hide(directory);
+        hide(options);
+        hide(emoji);
+        headbar.enabled = false;
+        footbar.enabled = false;
+        show(login);
+    }
+
+    async function withEmojiSelection(callback) {
+        if (!isOpen(emoji)) {
+            disabler$4.apply(headbar.optionsButton);
+            disabler$4.apply(headbar.instructionsButton);
+            hide(options);
+            const e = await emoji.selectAsync();
+            if (e) {
+                callback(e);
+            }
+            enabler$4.apply(headbar.optionsButton);
+            enabler$4.apply(headbar.instructionsButton);
+        }
+    }
+
+    async function selectEmojiAsync() {
+        await withEmojiSelection((e) => {
+            game.emote(client.localUser, e);
+            footbar.setEmojiButton(settings.inputBinding.keyButtonEmote, e);
+        });
+    }
+
+    function setAudioProperties() {
+        client.setAudioProperties(
+            settings.audioDistanceMin = game.audioDistanceMin = options.audioDistanceMin,
+            settings.audioDistanceMax = game.audioDistanceMax = options.audioDistanceMax,
+            settings.audioRolloff = options.audioRolloff,
+            settings.transitionSpeed);
+    }
+
+    function refreshGamepads() {
+        options.gamepads = navigator.getGamepads();
+        options.gamepadIndex = game.gamepadIndex;
+    }
+
+    function refreshUser(userID) {
+        game.withUser("list user in directory", userID, (user) => directory.set(user));
+    }
+
+    gridRowsDef("auto", "1fr", "auto").apply(document.body);
+
+    let z = 0;
+    for (let e of forAppend) {
+        if (e.element) {
+            let g = null;
+            if (e === headbar) {
+                g = gridPos(1, 1);
+            }
+            else if (e === footbar) {
+                g = gridPos(1, 3);
+            }
+            else if (e === game || e === login) {
+                g = gridPos(1, 1, 1, 3);
+            }
+            else {
+                g = gridPos(1, 2);
+            }
+            g.apply(e.element);
+            e.element.style.zIndex = (z++);
+            document.body.append(e.element);
+        }
+    }
+
+    refreshGamepads();
+    headbar.enabled = false;
+    footbar.enabled = false;
+    options.drawHearing = game.drawHearing = settings.drawHearing;
+    options.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
+    options.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;
+    options.audioRolloff = settings.audioRolloff;
+    options.fontSize = game.fontSize = settings.fontSize;
+    options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
+    options.inputBinding = game.inputBinding = settings.inputBinding;
+
+    game.cameraZ = game.targetCameraZ = settings.zoom;
+    game.transitionSpeed = settings.transitionSpeed = 0.5;
+    login.userName = settings.userName;
+    login.roomName = settings.roomName;
+
+    client.audio
+        .addClip("join", "audio/door-open.ogg", "audio/door-open.mp3", "audio/door-open.wav")
+        .addClip("leave", "audio/door-close.ogg", "audio/door-close.mp3", "audio/door-close.wav");
+
+    showLogin();
+
+    addEventListeners(window, {
+        gamepadconnected: refreshGamepads,
+        gamepaddisconnected: refreshGamepads,
+
+        resize: () => {
+            game.resize();
+        }
+    });
+
+    /**
+     * @callback showViewCallback
+     * @returns {void}
+     */
+
+    /**
+     * @param {FormDialog} view
+     * @returns {showViewCallback}
+     */
+    const showView = (view) => () => {
+        if (!isOpen(emoji)) {
+            const open = isOpen(view);
+            hide(login);
+            hide(directory);
+            hide(options);
+            setOpen(view, !open);
+        }
+    };
+
+    addEventListeners(headbar, {
+        toggleOptions: showView(options),
+        toggleInstructions: showView(login),
+        toggleUserDirectory: showView(directory),
+
+        tweet: () => {
+            const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
+                url = new URL("https://twitter.com/intent/tweet?text=" + message);
+            window.open(url);
+        },
+
+        leave: () => {
+            directory.clear();
+            client.leave();
+        }
+    });
+
+    addEventListeners(footbar, {
+        selectEmoji: selectEmojiAsync,
+
+        emote: () => {
+            game.emote(client.localUser, game.currentEmoji);
+        },
+
+        toggleAudio: async () => {
+            await client.toggleAudioMutedAsync();
+        },
+
+        toggleVideo: async () => {
+            await client.toggleVideoMutedAsync();
+        }
+    });
+
+
+    login.addEventListener("login", () => {
+        client.startAudio();
+        setAudioProperties();
+        window.history.replaceState(undefined, undefined, "#" + login.roomName);
+
+        client.join(
+            settings.roomName = login.roomName,
+            settings.userName = login.userName);
+    });
+
+
+    addEventListeners(options, {
+        audioPropertiesChanged: setAudioProperties,
+
+        selectAvatar: async () => {
+            await withEmojiSelection((e) => {
+                settings.avatarEmoji
+                    = client.avatarEmoji
+                    = game.me.avatarEmoji
+                    = e;
+                refreshUser(client.localUser);
+            });
+        },
+
+        avatarURLChanged: () => {
+            settings.avatarURL
+                = client.avatarURL
+                = game.me.avatarImage
+                = options.avatarURL;
+            refreshUser(client.localUser);
+        },
+
+        toggleDrawHearing: () => {
+            settings.drawHearing
+                = game.drawHearing
+                = options.drawHearing;
+        },
+
+        fontSizeChanged: () => {
+            settings.fontSize
+                = game.fontSize
+                = options.fontSize;
+        },
+
+        gamepadChanged: () => {
+            settings.gamepadIndex
+                = game.gamepadIndex
+                = options.gamepadIndex;
+        },
+
+        inputBindingChanged: () => {
+            settings.inputBinding
+                = game.inputBinding
+                = options.inputBinding;
+        },
+
+        audioInputChanged: async () => {
+            const device = options.currentAudioInputDevice;
+            await client.setAudioInputDeviceAsync(device);
+            settings.preferredAudioInputID = client.preferredAudioInputID;
+        },
+
+        audioOutputChanged: async () => {
+            const device = options.currentAudioOutputDevice;
+            await client.setAudioOutputDeviceAsync(device);
+            settings.preferredAudioOutputID = client.preferredAudioOutputID;
+        },
+
+        videoInputChanged: async () => {
+            const device = options.currentVideoInputDevice;
+            await client.setVideoInputDeviceAsync(device);
+            settings.preferredVideoInputID = client.preferredVideoInputID;
+        },
+
+        toggleVideo: async () => {
+            await client.toggleVideoMutedAsync();
+        }
+    });
+
+    addEventListeners(game, {
+        emojiNeeded: selectEmojiAsync,
+
+        emote: (evt) => {
+            client.emote(evt.emoji);
+        },
+
+        userJoined: (evt) => {
+            refreshUser(evt.user.id);
+        },
+
+        toggleAudio: async () => {
+            await client.toggleAudioMutedAsync();
+            settings.preferredAudioInputID = client.preferredAudioInputID;
+        },
+
+        toggleVideo: async () => {
+            await client.toggleVideoMutedAsync();
+            settings.preferredVideoInputID = client.preferredVideoInputID;
+        },
+
+        gameStarted: () => {
+            gridPos(1, 2).apply(login.element);
+            hide(login);
+
+            options.user = game.me;
+
+            headbar.enabled = true;
+            footbar.enabled = true;
+
+            settings.avatarEmoji
+                = client.avatarEmoji
+                = game.me.avatarEmoji
+                = settings.avatarEmoji
+                || allPeople.random();
+
+            refreshUser(client.localUser);
+        },
+
+        userMoved: (evt) => {
+            client.setLocalPosition(evt.x, 0, evt.y);
+        },
+
+        gameEnded: () => {
+            gridPos(1, 1, 1, 3).apply(login.element);
+            login.connected = false;
+            showLogin();
+        },
+
+        zoomChanged: () => {
+            settings.zoom = game.targetCameraZ;
+        }
+    });
+
+    directory.addEventListener("warpTo", (evt) => {
+        game.visit(evt.id);
+    });
+
+    addEventListeners(client, {
+
+        videoConferenceJoined: async (evt) => {
+            login.connected = true;
+
+            await game.startAsync(evt.id, evt.displayName, evt.pose, evt.avatarURL, evt.roomName);
+
+            client.avatarURL
+                = game.me.avatarImage
+                = options.avatarURL
+                = settings.avatarURL;
+
+            options.audioInputDevices = await client.getAudioInputDevicesAsync();
+            options.audioOutputDevices = await client.getAudioOutputDevicesAsync();
+            options.videoInputDevices = await client.getVideoInputDevicesAsync();
+
+            client.preferredAudioInputID = settings.preferredAudioInputID;
+            client.preferredAudioOutputID = settings.preferredAudioOutputID;
+            client.preferredVideoInputID = settings.preferredVideoInputID;
+            await client.setPreferredDevicesAsync();
+
+            settings.preferredAudioInputID = client.preferredAudioInputID;
+            settings.preferredAudioOutputID = client.preferredAudioOutputID;
+            settings.preferredVideoInputID = client.preferredVideoInputID;
+
+            options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
+            options.currentAudioOutputDevice = await client.getCurrentAudioOutputDeviceAsync();
+            options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
+
+            const audioMuted = client.isAudioMuted;
+            game.muteUserAudio(client.localUser, audioMuted);
+            footbar.audioEnabled = !audioMuted;
+
+            const videoMuted = client.isVideoMuted;
+            game.muteUserVideo(client.localUser, videoMuted);
+            footbar.videoEnabled = !videoMuted;
+        },
+
+        videoConferenceLeft: () => {
+            game.end();
+        },
+
+        participantJoined: (evt) => {
+            client.audio.playClip("join", 0.5);
+            game.addUser(evt.id, evt.displayName, evt.pose);
+        },
+
+        participantLeft: (evt) => {
+            client.audio.playClip("leave", 0.5);
+            game.removeUser(evt.id);
+            directory.delete(evt.id);
+        },
+
+        audioChanged: (evt) => {
+            refreshUser(evt.id);
+        },
+
+        videoChanged: (evt) => {
+            game.setAvatarVideo(evt.id, evt.stream);
+            refreshUser(evt.id);
+        },
+
+        avatarChanged: (evt) => {
+            game.setAvatarURL(evt.id, evt.url);
+            refreshUser(evt.id);
+        },
+
+        displayNameChange: (evt) => {
+            game.changeUserName(evt.id, evt.displayName);
+            refreshUser(evt.id);
+        },
+
+        audioMuteStatusChanged: async (evt) => {
+            game.muteUserAudio(evt.id, evt.muted);
+        },
+
+        localAudioMuteStatusChanged: async (evt) => {
+            footbar.audioEnabled = !evt.muted;
+            options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
+            settings.preferredAudioInputID = client.preferredAudioInputID;
+        },
+
+        videoMuteStatusChanged: async (evt) => {
+            game.muteUserVideo(evt.id, evt.muted);
+            settings.preferredVideoInputID = client.preferredVideoInputID;
+        },
+
+        localVideoMuteStatusChanged: async (evt) => {
+            footbar.videoEnabled = !evt.muted;
+            if (evt.muted) {
+                options.setAvatarVideo(null);
+            }
+            else {
+                options.setAvatarVideo(game.me.avatarVideo.element);
+            }
+            options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
+        },
+
+        userInitRequest: (evt) => {
+            client.userInitResponse(evt.id, game.me.serialize());
+        },
+
+        userInitResponse: (evt) => {
+            game.initializeUser(evt.id, evt);
+            refreshUser(evt.id);
+        },
+
+        emote: (evt) => {
+            game.emote(evt.id, evt);
+        },
+
+        setAvatarEmoji: (evt) => {
+            game.setAvatarEmoji(evt.id, evt);
+            refreshUser(evt.id);
+        },
+
+        audioActivity: (evt) => {
+            game.updateAudioActivity(evt.id, evt.isActive);
+        }
+    });
+
+    timer.addEventListener("tick", (evt) => {
+        client.audio.update();
+        options.update();
+        directory.update();
+        game.update(evt.dt);
+    });
+
+    login.ready = true;
+    timer.start();
+
+    return forExport;
+}
+
+init(JITSI_HOST, JVB_HOST, JVB_MUC);

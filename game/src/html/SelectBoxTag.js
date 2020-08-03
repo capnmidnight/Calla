@@ -1,4 +1,4 @@
-﻿import { isFunction } from "../../lib/Calla.js";
+﻿import { isFunction } from "../../../js/src/index.js";
 import { disabled, value } from "./attrs.js";
 import { HtmlCustomTag } from "./HtmlCustomTag.js";
 import { clear, Option } from "./tags.js";

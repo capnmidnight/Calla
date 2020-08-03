@@ -1,5 +1,4 @@
-﻿import { once } from "../../../js/src/events/once.js";
-import { wait } from "../../../js/src/events/wait.js";
+﻿import { once, wait } from "../../../js/src/index.js";
 import { openSideTest } from "../../testing/windowing.js";
 import { TestBase } from "./TestBase.js";
 

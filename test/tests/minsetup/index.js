@@ -247,7 +247,7 @@ controls.space.addEventListener("click", (evt) => {
 
     deviceSelector(
         true,
-        controls.videoInputDevices,
+        controls.cams,
         await client.getVideoInputDevicesAsync(),
         camPref,
         async (device) => {
@@ -256,7 +256,7 @@ controls.space.addEventListener("click", (evt) => {
         });
     deviceSelector(
         true,
-        controls.audioInputDevices,
+        controls.mics,
         await client.getAudioInputDevicesAsync(),
         micPref,
         async (device) => {
@@ -267,7 +267,7 @@ controls.space.addEventListener("click", (evt) => {
     controls.audioOutputDevices.disabled = !canChangeAudioOutput;
     deviceSelector(
         false,
-        controls.audioOutputDevices,
+        controls.speakers,
         await client.getAudioOutputDevicesAsync(),
         speakersPref,
         async (device) => {

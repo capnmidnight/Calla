@@ -1,4 +1,4 @@
-﻿import { createWorker } from "../../lib/Calla.js";
+﻿import { createWorker } from "../../../js/src/index.js";
 import { BaseTimer } from "./BaseTimer.js";
 
 export class WorkerTimer extends BaseTimer {

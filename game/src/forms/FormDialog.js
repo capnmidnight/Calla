@@ -1,4 +1,4 @@
-﻿import { EventBase, once } from "../../lib/Calla.js";
+﻿import { EventBase, once } from "../../../js/src/index.js";
 import { close } from "../emoji/emojis.js";
 import { className, id } from "../html/attrs.js";
 import { display, flexDirection, margin, overflowY, padding, styles } from "../html/css.js";

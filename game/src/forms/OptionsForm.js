@@ -1,4 +1,4 @@
-﻿import { isGoodNumber, isString } from "../../lib/Calla.js";
+﻿import { isGoodNumber, isString } from "../../../js/src/index.js";
 import { disabled, height, htmlFor, id, max, min, placeHolder, step, value, width } from "../html/attrs.js";
 import { backgroundColor, borderBottom, borderLeft, borderRight, cssWidth, styles } from "../html/css.js";
 import { onClick, onInput, onKeyUp } from "../html/evts.js";

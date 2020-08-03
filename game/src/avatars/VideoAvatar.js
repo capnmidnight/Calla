@@ -1,4 +1,4 @@
-﻿import { once } from "../../lib/Calla.js";
+﻿import { once } from "../../../js/src/index.js";
 import { autoPlay, muted, playsInline, srcObject, volume } from "../html/attrs.js";
 import { setContextSize } from "../html/canvas.js";
 import { isIOS } from "../html/flags.js";

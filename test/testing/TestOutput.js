@@ -1,4 +1,4 @@
-﻿import { EventBase } from "../../js/src/events/EventBase.js";
+﻿import { EventBase } from "../../js/src/index.js";
 import { TestOutputResultsEvent } from "./TestOutputResultsEvent.js";
 import { TestRunner } from "./TestRunner.js";
 import { TestRunnerResultsEvent } from "./TestRunnerResultsEvent.js";

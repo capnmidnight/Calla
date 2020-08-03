@@ -1,4 +1,4 @@
-﻿import { EventBase } from "../../lib/Calla.js";
+﻿import { EventBase } from "../../../js/src/index.js";
 import { door, downRightArrow, gear, questionMark, speakingHead, squareFourCourners } from "../emoji/emojis.js";
 import { alt, id, role, src, title } from "../html/attrs.js";
 import { backgroundColor, columnGap, cssHeight, cssWidth, fontSize, marginBottom, padding, pointerEvents, styles } from "../html/css.js";

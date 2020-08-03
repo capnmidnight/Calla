@@ -39,443 +39,360 @@ import { versionString } from "./version.js";
 console.log(`${versionString}`);
 
 ```javascript
+import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../../../constants.js";
+import { CallaClient, canChangeAudioOutput, InterpolatedPose } from "../../../js/Calla.js";
+import { userNumber } from "../../testing/userNumber.js";
+import { openSideTest } from "../../testing/windowing.js";
+
+// Find all the named elements
+const controls = findNamedElements();
+
+/** 
+ *  Keep track of who "we" are.
+ *  @type {string} */
+let localUserId = null;
+
+/** 
+ *  Keep track of the user's preferred device.
+ *  @type {MediaDeviceInfo} */
+let camPref = null;
+
+/**
+ *  Keep track of the user's preferred device.
+ *  @type {MediaDeviceInfo} */
+let micPref = null;
+
+/**
+ *  Keep track of the user's preferred device.
+ *  @type {MediaDeviceInfo} */
+let speakersPref = null;
+
+/** 
+ *  The animation timer handle, used for later stopping animation.
+ *  @type {number} */
+let timer = null;
+
+const client = new CallaClient(JITSI_HOST, JVB_HOST, JVB_MUC);
+/** @type {Map<string, User>} */
+const users = new Map();
+class User {
+    /**
+     * @param {string} id
+     * @param {string} name
+     * @param {InterpolatedPose} pose
+     */
+    constructor(id, name, pose) {
+        /** @type {string} */
+        this._name = null;
+
+        /** @type {HTMLDivElement} */
+        this._nameEl = null;
+
+        /** @type {MediaStream} */
+        this._videoStream = null;
+
+        /** @type {HTMLVideoElement} */
+        this._video = null;
+
+        this.container = document.createElement("div");
+        this.container.className = "user";
+        if (id === localUserId) {
+            this.container.className += " localUser";
+            name += " (Me)";
+        }
+
+        this.id = id;
+        this.name = name;
+        this.pose = pose;
+    }
+
+    dispose() {
+        this.container.parentElement.removeChild(this.container);
+    }
+
+    get name() {
+        return this._name;
+    }
+
+    set name(v) {
+        if (this._nameEl) {
+            this.container.removeChild(this._nameEl);
+            this._nameEl = null;
+        }
+        this._name = v;
+        this._nameEl = document.createElement("div");
+        this._nameEl.className = "userName";
+        this._nameEl.append(document.createTextNode(this.name));
+        this.container.append(this._nameEl);
+    }
+
+    get videoStream() {
+        return this._videoStream;
+    }
+
+    set videoStream(v) {
+        if (this._video) {
+            this.container.removeChild(this._video);
+            this._video = null;
+        }
+        this._videoStream = v;
+        if (this._videoStream) {
+            this._video = document.createElement("video");
+            this._video.playsInline = true;
+            this._video.autoplay = true;
+            this._video.controls = false;
+            this._video.muted = true;
+            this._video.volume = 0;
+            this._video.srcObject = this._videoStream;
+            this._video.className = "userVideo";
+            this.container.append(this._video);
+            this._video.play();
+        }
+    }
+
+    update() {
+        this.container.style.left = (this.container.parentElement.clientLeft + 100 * this.pose.current.p.x) + "px";
+        this.container.style.zIndex = this.pose.current.p.y;
+        this.container.style.top = (this.container.parentElement.clientTop + 100 * this.pose.current.p.z) + "px";
+    }
+}
+
+controls.connect.addEventListener("click", async () => {
+    client.startAudio();
+
+    const roomName = controls.roomName.value;
+    const userName = controls.userName.value;
+
+    let message = "";
+    if (roomName.length === 0) {
+        message += "\n   Room name is required";
+    }
+    if (userName.length === 0) {
+        message += "\n   User name is required";
+    }
+
+    if (message.length > 0) {
+        message = "Required fields missing:" + message;
+        alert(message);
+    }
+    else {
+        controls.roomName.disabled = true;
+        controls.userName.disabled = true;
+        controls.connect.disabled = true;
+
+        await client.join(roomName, userName);
+        await client.setVideoInputDeviceAsync(camPref);
+        await client.setAudioInputDeviceAsync(micPref);
+        await client.setAudioOutputDeviceAsync(speakersPref);
+    }
+});
+
+controls.leave.addEventListener("click", async () => {
+    await client.leaveAsync();
+});
+
+client.addEventListener("videoConferenceJoined", async (evt) => await startGame(evt.id, evt.displayName, evt.pose));
 /**
  * 
- * @param {BaseJitsiClient} client
+ * @param {string} id
+ * @param {string} name
+ * @param {InterpolatedPose} pose
  */
-export function init(client) {
-    const settings = new Settings(),
-        sound = new SFX()
-            .add("join", "audio/door-open.ogg", "audio/door-open.mp3", "audio/door-open.wav")
-            .add("leave", "audio/door-close.ogg", "audio/door-close.mp3", "audio/door-close.wav"),
-        game = new Game(),
-        login = new LoginForm(),
-        directory = new UserDirectoryForm(),
-        headbar = new HeaderBar(),
-        footbar = new FooterBar(),
-        options = new OptionsForm(),
-        emoji = new EmojiForm(),
+async function startGame(id, name, pose) {
+    console.log("startGame", id, name, pose);
+    controls.leave.disabled = false;
+    localUserId = id;
+    addUser(id, name, pose);
+    setPosition(
+        Math.random() * controls.space.clientWidth,
+        Math.random() * controls.space.clientHeight);
+    timer = requestAnimationFrame(update);
+}
 
-        forExport = {
-            settings,
-            client,
-            game,
-            login,
-            directory,
-            headbar,
-            footbar,
-            options,
-            emoji
-        },
-
-        forAppend = [
-            game,
-            directory,
-            options,
-            emoji,
-            headbar,
-            footbar,
-            login
-        ].filter(x => x.element);
-
-    function showLogin() {
-        game.hide();
-        directory.hide();
-        options.hide();
-        emoji.hide();
-        headbar.enabled = false;
-        footbar.enabled = false;
-        login.show();
+function setPosition(x, y) {
+    if (users.has(localUserId)) {
+        const user = users.get(localUserId);
+        x -= user.container.clientWidth / 2;
+        y -= user.container.clientHeight / 2;
+        x /= 100;
+        y /= 100;
+        client.setLocalPosition(x, 0, y);
     }
+}
 
-    async function withEmojiSelection(callback) {
-        if (!emoji.isOpen) {
-            headbar.optionsButton.lock();
-            headbar.instructionsButton.lock();
-            options.hide();
-            const e = await emoji.selectAsync();
-            if (e) {
-                callback(e);
-            }
-            headbar.optionsButton.unlock();
-            headbar.instructionsButton.unlock();
-        }
+function update() {
+    timer = requestAnimationFrame(update);
+    client.audio.update();
+    for (let user of users.values()) {
+        user.update();
     }
+}
 
-    async function selectEmojiAsync() {
-        await withEmojiSelection((e) => {
-            game.emote(client.localUser, e);
-            footbar.setEmojiButton(settings.inputBinding.keyButtonEmote, e);
-        });
+client.addEventListener("videoConferenceLeft", stopGame);
+function stopGame() {
+    console.log("stopGame");
+    cancelAnimationFrame(timer);
+    removeUser(localUserId);
+    controls.leave.disabled = true;
+    controls.connect.disabled = false;
+}
+
+client.addEventListener("participantJoined", (evt) => addUser(evt.id, evt.displayName, evt.pose));
+function addUser(id, name, pose) {
+    console.log("addUser", id, name, pose);
+    const user = new User(id, name, pose);
+    if (users.has(id)) {
+        users.get(id).dispose();
     }
+    users.set(id, user);
+    controls.space.append(user.container);
+}
 
-    function setAudioProperties() {
-        client.setAudioProperties(
-            settings.audioDistanceMin = game.audioDistanceMin = options.audioDistanceMin,
-            settings.audioDistanceMax = game.audioDistanceMax = options.audioDistanceMax,
-            settings.audioRolloff = options.audioRolloff,
-            settings.transitionSpeed);
+client.addEventListener("participantLeft", (evt) => removeUser(evt.id));
+function removeUser(id) {
+    console.log("removeUser", id);
+    if (users.has(id)) {
+        const user = users.get(id);
+        user.dispose();
+        users.delete(id);
     }
+}
 
-    function refreshGamepads() {
-        options.gamepads = navigator.getGamepads();
-        options.gamepadIndex = game.gamepadIndex;
+client.addEventListener("videoChanged", (evt) => setUserVideo(evt.id, evt.stream));
+function setUserVideo(id, stream) {
+    console.log("setUserVideo", id, stream);
+    if (users.has(id)) {
+        const user = users.get(id);
+        user.videoStream = stream;
     }
+}
 
-    function refreshUser(userID) {
-        game.withUser("list user in directory", userID, (user) => directory.set(user));
+client.addEventListener("displayNameChange", (evt) => setUserName(evt.id, evt.displayName));
+function setUserName(id, name) {
+    if (users.has(id)) {
+        const user = users.get(id);
+        user.name = name;
     }
+}
 
-    gridRowsDef("auto", "1fr", "auto").apply(document.body);
+controls.space.addEventListener("click", (evt) => {
+    setPosition(
+        evt.clientX,
+        evt.clientY);
+});
 
-    let z = 0;
-    for (let e of forAppend) {
-        if (e.element) {
-            let g = null;
-            if (e === headbar) {
-                g = gridPos(1, 1);
-            }
-            else if (e === footbar) {
-                g = gridPos(1, 3);
-            }
-            else if (e === game || e === login) {
-                g = gridPos(1, 1, 1, 3);
-            }
-            else {
-                g = gridPos(1, 2);
-            }
-            g.apply(e.element);
-            e.element.style.zIndex = (z++);
-            document.body.append(e.element);
-        }
-    }
+(async function () {
+    await client.prepareAsync();
 
-    refreshGamepads();
-    headbar.enabled = false;
-    footbar.enabled = false;
-    options.drawHearing = game.drawHearing = settings.drawHearing;
-    options.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
-    options.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;
-    options.audioRolloff = settings.audioRolloff;
-    options.fontSize = game.fontSize = settings.fontSize;
-    options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
-    options.inputBinding = game.inputBinding = settings.inputBinding;
+    camPref = await client.getPreferredVideoInputAsync(true);
+    micPref = await client.getPreferredAudioInputAsync(true);
+    speakersPref = await client.getPreferredAudioOutputAsync(true);
 
-    game.cameraZ = game.targetCameraZ = settings.zoom;
-    game.transitionSpeed = settings.transitionSpeed = 0.5;
-    login.userName = settings.userName;
-    login.roomName = settings.roomName;
-
-    client.preferredAudioOutputID = settings.preferredAudioOutputID;
-    client.preferredAudioInputID = settings.preferredAudioInputID;
-    client.preferredVideoInputID = settings.preferredVideoInputID;
-
-    showLogin();
-
-    window.addEventListeners({
-        gamepadconnected: refreshGamepads,
-        gamepaddisconnected: refreshGamepads,
-
-        resize: () => {
-            game.resize();
-        }
-    });
-
-    /**
-     * @callback showViewCallback
-     * @returns {void}
-     */
-
-    /**
-     * @param {FormDialog} view
-     * @returns {showViewCallback}
-     */
-    const showView = (view) => () => {
-        if (!emoji.isOpen) {
-            const isOpen = view.isOpen;
-            login.hide();
-            directory.hide();
-            options.hide();
-            view.isOpen = !isOpen;
-        }
-    };
-
-    headbar.addEventListeners({
-        toggleOptions: showView(options),
-        toggleInstructions: showView(login),
-        toggleUserDirectory: showView(directory),
-
-        leave: () => {
-            directory.clear();
-            client.leave();
-        }
-    });
-
-    footbar.addEventListeners({
-        selectEmoji: selectEmojiAsync,
-
-        emote: () => {
-            game.emote(client.localUser, game.currentEmoji);
-        },
-
-        toggleAudio: async () => {
-            await client.toggleAudioMutedAsync();
-        },
-
-        toggleVideo: async () => {
-            await client.toggleVideoMutedAsync();
-        }
-    });
-
-
-    login.addEventListener("login", async () => {
-        client.startAudio();
-        setAudioProperties();
-
-        const joinInfo = await client.joinAsync(
-            settings.roomName = login.roomName,
-            settings.userName = login.userName);
-
-        login.connected = true;
-
-        window.location.hash = login.roomName;
-
-        await game.startAsync(joinInfo.id, joinInfo.displayName, joinInfo.pose, joinInfo.avatarURL, joinInfo.roomName);
-
-        client.avatarURL
-            = game.me.avatarImage
-            = options.avatarURL
-            = settings.avatarURL;
-
-        options.audioInputDevices = await client.getAudioInputDevicesAsync();
-        options.audioOutputDevices = await client.getAudioOutputDevicesAsync();
-        options.videoInputDevices = await client.getVideoInputDevicesAsync();
-
-        options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
-        options.currentAudioOutputDevice = await client.getCurrentAudioOutputDeviceAsync();
-        options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
-
-        const audioMuted = client.isAudioMuted;
-        game.muteUserAudio(client.localUser, audioMuted);
-        footbar.audioEnabled = !audioMuted;
-
-        const videoMuted = client.isVideoMuted;
-        game.muteUserVideo(client.localUser, videoMuted);
-        footbar.videoEnabled = !videoMuted;
-    });
-
-
-    options.addEventListeners({
-        audioPropertiesChanged: setAudioProperties,
-
-        selectAvatar: async () => {
-            await withEmojiSelection((e) => {
-                settings.avatarEmoji
-                    = client.avatarEmoji
-                    = game.me.avatarEmoji
-                    = e;
-                refreshUser(client.localUser);
-            });
-        },
-
-        avatarURLChanged: () => {
-            settings.avatarURL
-                = client.avatarURL
-                = game.me.avatarImage
-                = options.avatarURL;
-            refreshUser(client.localUser);
-        },
-
-        toggleDrawHearing: () => {
-            settings.drawHearing
-                = game.drawHearing
-                = options.drawHearing;
-        },
-
-        fontSizeChanged: () => {
-            settings.fontSize
-                = game.fontSize
-                = options.fontSize;
-        },
-
-        gamepadChanged: () => {
-            settings.gamepadIndex
-                = game.gamepadIndex
-                = options.gamepadIndex;
-        },
-
-        inputBindingChanged: () => {
-            settings.inputBinding
-                = game.inputBinding
-                = options.inputBinding;
-        },
-
-        audioInputChanged: async () => {
-            const device = options.currentAudioInputDevice;
-            await client.setAudioInputDeviceAsync(device);
-            settings.preferredAudioInputID = client.preferredAudioInputID;
-        },
-
-        audioOutputChanged: async () => {
-            const device = options.currentAudioOutputDevice;
-            await client.setAudioOutputDeviceAsync(device);
-            settings.preferredAudioOutputID = client.preferredAudioOutputID;
-        },
-
-        videoInputChanged: async () => {
-            const device = options.currentVideoInputDevice;
+    deviceSelector(
+        true,
+        controls.videoInputDevices,
+        await client.getVideoInputDevicesAsync(),
+        camPref,
+        async (device) => {
+            camPref = device;
             await client.setVideoInputDeviceAsync(device);
-            settings.preferredVideoInputID = client.preferredVideoInputID;
-        },
+        });
+    deviceSelector(
+        true,
+        controls.audioInputDevices,
+        await client.getAudioInputDevicesAsync(),
+        micPref,
+        async (device) => {
+            micPref = device;
+            await client.setAudioInputDeviceAsync(device);
+        });
 
-        toggleVideo: async () => {
-            await client.toggleVideoMutedAsync();
+    controls.audioOutputDevices.disabled = !canChangeAudioOutput;
+    deviceSelector(
+        false,
+        controls.audioOutputDevices,
+        await client.getAudioOutputDevicesAsync(),
+        speakersPref,
+        async (device) => {
+            speakersPref = device;
+            await client.setAudioOutputDeviceAsync(device);
+        });
+
+    controls.connect.disabled = false;
+
+})().catch((exp) => {
+    console.error(exp);
+});
+
+
+/**
+ * @callback mediaDeviceSelectCallback
+ * @param {MediaDeviceInfo} device
+ * @returns {void}
+ */
+
+/**
+ * @param {boolean} addNone
+ * @param {HTMLSelectElement} select
+ * @param {MediaDeviceInfo[]} values
+ * @param {MediaDeviceInfo} preferredDevice
+ * @param {mediaDeviceSelectCallback} onSelect
+ */
+function deviceSelector(addNone, select, values, preferredDevice, onSelect) {
+    if (addNone) {
+        const none = document.createElement("option");
+        none.text = "None";
+        select.append(none);
+    }
+    select.append(...values.map((value) => {
+        const opt = document.createElement("option");
+        opt.value = value.deviceId;
+        opt.text = value.label;
+        if (preferredDevice && preferredDevice.deviceId === value.deviceId) {
+            opt.selected = true;
+        }
+        return opt;
+    }));
+    select.addEventListener("input", () => {
+        let idx = select.selectedIndex;
+        if (addNone) {
+            --idx;
+        }
+        if (0 <= idx && idx < values.length) {
+            const value = values[idx];
+            onSelect(value);
+        }
+        else {
+            onSelect(null);
         }
     });
+}
 
-    game.addEventListeners({
-        emojiNeeded: selectEmojiAsync,
+/**
+ * Gets all the named elements in the document so we can
+ * setup event handlers on them.
+ * @returns {object}
+ **/
+function findNamedElements() {
+    const controls = Array.prototype.reduce.call(
+        document.querySelectorAll("[id]"),
+        (ctrls, elem) => {
+            ctrls[elem.id] = elem;
+            return ctrls;
+        }, {});
 
-        emote: (evt) => {
-            client.emote(evt.emoji);
-        },
+    setupTestControl(controls);
+}
 
-        userJoined: (evt) => {
-            refreshUser(evt.user.id);
-        },
-
-        toggleAudio: async () => {
-            await client.toggleAudioMutedAsync();
-            settings.preferredAudioInputID = client.preferredAudioInputID;
-        },
-
-        toggleVideo: async () => {
-            await client.toggleVideoMutedAsync();
-            settings.preferredVideoInputID = client.preferredVideoInputID;
-        },
-
-        gameStarted: () => {
-            gridPos(1, 2).apply(login.element);
-            login.hide();
-
-            options.user = game.me;
-
-            headbar.enabled = true;
-            footbar.enabled = true;
-
-            settings.avatarEmoji
-                = client.avatarEmoji
-                = game.me.avatarEmoji
-                = settings.avatarEmoji
-                || people.random();
-
-            refreshUser(client.localUser);
-        },
-
-        userMoved: (evt) => {
-            client.setLocalPosition(evt.x, 0, evt.y);
-        },
-
-        gameEnded: () => {
-            gridPos(1, 1, 1, 3).apply(login.element);
-            login.connected = false;
-            showLogin();
-        },
-
-        zoomChanged: () => {
-            settings.zoom = game.targetCameraZ;
-        }
-    });
-
-    directory.addEventListener("warpTo", (evt) => {
-        game.visit(evt.id);
-    });
-
-    client.addEventListeners({
-
-        videoConferenceLeft: () => {
-            game.end();
-        },
-
-        participantJoined: (evt) => {
-            sound.play("join", 0.5);
-            game.addUser(evt.id, evt.displayName, evt.pose);
-        },
-
-        participantLeft: (evt) => {
-            sound.play("leave", 0.5);
-            game.removeUser(evt.id);
-            directory.delete(evt.id);
-        },
-
-        audioChanged: (evt) => {
-            refreshUser(evt.id);
-        },
-
-        videoChanged: (evt) => {
-            game.setAvatarVideo(evt.id, evt.stream);
-            refreshUser(evt.id);
-        },
-
-        avatarChanged: (evt) => {
-            game.setAvatarURL(evt.id, evt.url);
-            refreshUser(evt.id);
-        },
-
-        displayNameChange: (evt) => {
-            game.changeUserName(evt.id, evt.displayName);
-            refreshUser(evt.id);
-        },
-
-        audioMuteStatusChanged: async (evt) => {
-            game.muteUserAudio(evt.id, evt.muted);
-        },
-
-        localAudioMuteStatusChanged: async (evt) => {
-            footbar.audioEnabled = !evt.muted;
-            options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
-        },
-
-        videoMuteStatusChanged: async (evt) => {
-            game.muteUserVideo(evt.id, evt.muted);
-        },
-
-        localVideoMuteStatusChanged: async (evt) => {
-            footbar.videoEnabled = !evt.muted;
-            if (evt.muted) {
-                options.setAvatarVideo(null);
-            }
-            else {
-                options.setAvatarVideo(game.me.avatarVideo.element);
-            }
-            options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
-        },
-
-        userInitRequest: (evt) => {
-            client.userInitResponse(evt.id, game.me.serialize());
-        },
-
-        userInitResponse: (evt) => {
-            game.initializeUser(evt.id, evt);
-            refreshUser(evt.id);
-        },
-
-        emote: (evt) => {
-            game.emote(evt.id, evt);
-        },
-
-        setAvatarEmoji: (evt) => {
-            game.setAvatarEmoji(evt.id, evt);
-            refreshUser(evt.id);
-        },
-
-        audioActivity: (evt) => {
-            game.updateAudioActivity(evt.id, evt.isActive);
-        }
-    });
-
-    login.ready = true;
-
-    return forExport;
+/**
+ * Sets up testing windows.
+ * @param {any} controls
+ */
+function setupTestControl(controls) {
+    if (userNumber === 1) {
+        controls.sideTest.addEventListener("click", openSideTest);
+    }
+    controls.roomName.value = "TestRoom";
+    controls.userName.value = `TestUser${userNumber}`;
 }
 ```

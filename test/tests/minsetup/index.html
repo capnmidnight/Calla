@@ -10,13 +10,15 @@
             box-sizing: border-box;
             font-family: -apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif;
         }
-        html, body{
+
+        html, body {
             position: absolute;
             width: 100%;
             height: 100%;
             margin: 0;
             padding: 0;
         }
+
         .user {
             position: absolute;
             width: 10em;
@@ -28,44 +30,45 @@
             display: grid;
             grid-template-rows: auto 1fr;
         }
+
         .localUser {
             border-color: #383;
             background-color: #8e8;
         }
-        .userName{
+
+        .userName {
             grid-row: 1;
             text-align: center;
         }
-        .userVideo{
+
+        .userVideo {
             grid-row: 2;
             max-width: 100%;
         }
 
-        .localUser > .userVideo{
+        .localUser > .userVideo {
             transform: scaleX(-1);
         }
     </style>
 </head>
 <body style="display: grid;grid-template-rows: auto auto 1fr">
-    <div id="login" style="grid-row: 1">
-        <form autocomplete="on">
-            <label for="roomName">Room:</label>
-            <input id="roomName" type="text" placeholder="(Required)" value="TestRoom">
-            <label for="userName">User:</label>
-            <input id="userName" placeholder="(Required)" type="text" value="TestUser">
-            <button type="button" id="connect" disabled>Connect</button>
-            <button type="button" id="leave" disabled>Leave</button>
-            <button type="button" id="sideTest">Open side test</button>
-        </form>
-    </div>
+    <form autocomplete="on" style="grid-row: 1">
+        <label for="roomName">Room:</label>
+        <input id="roomName" type="text" placeholder="(Required)" value="TestRoom">
+        <label for="userName">User:</label>
+        <input id="userName" placeholder="(Required)" type="text" value="TestUser">
+        <button type="button" id="connect" disabled>Connect</button>
+        <button type="button" id="leave" disabled>Leave</button>
+        <button type="button" id="sideTest">Open side test</button>
+    </form>
     <div id="options" style="grid-row: 2">
         <div id="controls" style="display:grid;max-width:500px">
-            <label for="videoInputDevices" style="grid-column:1">Video:</label>
-            <select id="videoInputDevices" style="grid-column:2"></select>
-            <label for="audioInputDevices" style="grid-column:1">Microphone:</label>
-            <select id="audioInputDevices" style="grid-column:2"></select>
-            <label for="audioOutputDevices" style="grid-column:1">Speakers:</label>
-            <select id="audioOutputDevices" style="grid-column:2"></select>
+            <label for="cams" style="grid-column:1">Video:</label>
+            <select id="cams" style="grid-column:2"></select>
+            <label for="mics" style="grid-column:1">Microphone:</label>
+            <select id="mics" style="grid-column:2"></select>
+            <label for="speakers" style="grid-column:1">Speakers:</label>
+            <select id="speakers" style="grid-column:2"></select>
         </div>
     </div>
     <div id="space" style="grid-row: 3"></div>

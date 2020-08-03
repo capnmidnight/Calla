@@ -1,5 +1,4 @@
-﻿import { once } from "../../js/src/events/once.js";
-import { lerp } from "../../js/src/math.js";
+﻿import { lerp, once } from "../../js/src/index.js";
 import { TestCase } from "../testing/TestCase.js";
 
 export class MathTests extends TestCase {

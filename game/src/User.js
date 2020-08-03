@@ -1,4 +1,4 @@
-﻿import { EventBase, isString, Pose, project } from "../lib/Calla.js";
+﻿import { EventBase, isString, Pose, project } from "../../js/src/index.js";
 import { AvatarMode, BaseAvatar } from "./avatars/BaseAvatar.js";
 import { EmojiAvatar } from "./avatars/EmojiAvatar.js";
 import { PhotoAvatar } from "./avatars/PhotoAvatar.js";
