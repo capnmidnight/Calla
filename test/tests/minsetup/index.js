@@ -1,4 +1,4 @@
-﻿import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../../../constants.js";
+import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../../../constants.js";
 import { CallaClient, canChangeAudioOutput, InterpolatedPose } from "../../../js/Calla.js";
 import { userNumber } from "../../testing/userNumber.js";
 import { openSideTest } from "../../testing/windowing.js";
@@ -264,7 +264,7 @@ controls.space.addEventListener("click", (evt) => {
             await client.setAudioInputDeviceAsync(device);
         });
 
-    controls.audioOutputDevices.disabled = !canChangeAudioOutput;
+    controls.speakers.disabled = !canChangeAudioOutput;
     deviceSelector(
         false,
         controls.speakers,
