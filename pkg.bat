@@ -1,4 +1,4 @@
-cmd /C "cd js && rollup -c"
+cmd /C "cd js && pkg"
 cmd /C "cd game && rollup -c"
 cmd /C "cd test\tests\minsetup && rollup -c"
 cmd /C "minify game\bundle.js > web\bundle.min.js"
