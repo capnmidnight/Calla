@@ -75,12 +75,6 @@ const userInputs = new Map();
 
 const audioActivityEvt = new AudioActivityEvent();
 
-let prepareTask = null;
-async function prepare(host) {
-    console.info("Connecting to:", host);
-    prepareTask = import(`https://${host}/libs/lib-jitsi-meet.min.js`);
-}
-
 function logger(source, evtName) {
     if (window.location.hostname === "localhost") {
         const handler = (...rest) => {
@@ -117,12 +111,11 @@ export class CallaClient extends EventBase {
     constructor(JITSI_HOST, JVB_HOST, JVB_MUC) {
         super();
 
-        prepare(JITSI_HOST);
-
         this.host = JITSI_HOST;
         this.bridgeHost = JVB_HOST;
         this.bridgeMUC = JVB_MUC;
 
+        this._prepTask = null;
         this.joined = false;
         this.connection = null;
         this.conference = null;
@@ -251,6 +244,14 @@ export class CallaClient extends EventBase {
         this.audio.update();
     }
 
+    _prepareAsync() {
+        if(!this._prepTask) {
+            console.info("Connecting to:", this.host);
+            this._prepTask = import(`https://${this.host}/libs/lib-jitsi-meet.min.js`);
+        }
+        return this._prepTask;
+    }
+
     /**
      * @param {string} roomName
      * @param {string} userName
@@ -258,7 +259,7 @@ export class CallaClient extends EventBase {
     async join(roomName, userName) {
         await this.leaveAsync();
 
-        await prepareTask;
+        await this._prepareAsync();
 
         roomName = roomName.toLocaleLowerCase();
 
@@ -488,9 +489,9 @@ export class CallaClient extends EventBase {
     }
 
     async setPreferredDevicesAsync() {
-        await this.setPreferredAudioOutputAsync(true);
         await this.setPreferredAudioInputAsync(true);
         await this.setPreferredVideoInputAsync(false);
+        await this.setPreferredAudioOutputAsync(true);
     }
 
     /**
@@ -604,13 +605,12 @@ export class CallaClient extends EventBase {
     }
 
     async _getDevicesAsync() {
-        await prepareTask;
-        let devices = await navigator.mediaDevices.enumerateDevices();
-
+        await this._prepareAsync();
+        const devices = await navigator.mediaDevices.enumerateDevices();
         for (let device of devices) {
             if (device.deviceId.length > 0) {
-                this.hasAudioPermission |= device.kind === "audioinput";
-                this.hasVideoPermission |= device.kind === "videoinput";
+                this.hasAudioPermission |= device.kind === "audioinput" && device.label.length > 0;
+                this.hasVideoPermission |= device.kind === "videoinput" && device.label.length > 0;
             }
         }
 
