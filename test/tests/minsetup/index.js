@@ -1,61 +1,79 @@
+// Import the configuration parameters.
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../../../constants.js";
-import { CallaClient, canChangeAudioOutput, InterpolatedPose } from "../../../js/Calla.js";
-import { userNumber } from "../../testing/userNumber.js";
-import { openSideTest } from "../../testing/windowing.js";
 
-// Find all the named elements
-const controls = findNamedElements();
+// 
+import { CallaClient, canChangeAudioOutput, InterpolatedPose } from "../../../js/src/index.js";
 
-/** 
- *  Keep track of who "we" are.
- *  @type {string} */
-let localUserId = null;
-
-/** 
- *  Keep track of the user's preferred device.
- *  @type {MediaDeviceInfo} */
-let camPref = null;
+// Gets all the named elements in the document so we can
+// setup event handlers on them.
+const controls = Array.prototype.reduce.call(
+    document.querySelectorAll("[id]"),
+    (ctrls, elem) => {
+        ctrls[elem.id] = elem;
+        return ctrls;
+    }, {});
 
 /**
- *  Keep track of the user's preferred device.
- *  @type {MediaDeviceInfo} */
-let micPref = null;
-
-/**
- *  Keep track of the user's preferred device.
- *  @type {MediaDeviceInfo} */
-let speakersPref = null;
-
-/** 
- *  The animation timer handle, used for later stopping animation.
- *  @type {number} */
+ * The animation timer handle, used for later stopping animation.
+ * @type {number} */
 let timer = null;
 
+/**
+ * The Calla interface, through which teleconferencing sessions and
+ * user audio positioning is managed.
+ **/
 const client = new CallaClient(JITSI_HOST, JVB_HOST, JVB_MUC);
-/** @type {Map<string, User>} */
+
+/**
+ * A place to stow references to our users.
+ * @type {Map<string, User>}
+ **/
 const users = new Map();
+
+/**
+ * Calla will provide a managed object for the user's position, but we
+ * are responsible in our application code for displaying that position
+ * in some way. This User class helps encapsulate that representation.
+ **/
 class User {
     /**
+     * Creates a new User object.
      * @param {string} id
      * @param {string} name
      * @param {InterpolatedPose} pose
+     * @param {boolean} isLocal
      */
-    constructor(id, name, pose) {
-        /** @type {string} */
+    constructor(id, name, pose, isLocal) {
+        /**
+         * The user's name.
+         * @type {string} 
+         **/
         this._name = null;
 
-        /** @type {HTMLDivElement} */
+        /**
+         * An HTML element to display the user's name.
+         * @type {HTMLDivElement} 
+         **/
         this._nameEl = null;
 
-        /** @type {MediaStream} */
+        /**
+         * Calla will eventually give us a video stream for the user.
+         * @type {MediaStream}
+         **/
         this._videoStream = null;
 
-        /** @type {HTMLVideoElement} */
+        /**
+         * An HTML element for displaying the user's video.
+         * @type {HTMLVideoElement}
+         **/
         this._video = null;
 
+        /**
+         * An HTML element for showing the user name and video together.
+         **/
         this.container = document.createElement("div");
         this.container.className = "user";
-        if (id === localUserId) {
+        if (isLocal) {
             this.container.className += " localUser";
             name += " (Me)";
         }
@@ -65,14 +83,23 @@ class User {
         this.pose = pose;
     }
 
+    /**
+     * Removes the user from the page.
+     **/
     dispose() {
         this.container.parentElement.removeChild(this.container);
     }
 
+    /**
+     * Gets the user's name.
+     **/
     get name() {
         return this._name;
     }
 
+    /**
+     * Sets the user's name, and updates the display of it.
+     **/
     set name(v) {
         if (this._nameEl) {
             this.container.removeChild(this._nameEl);
@@ -85,10 +112,17 @@ class User {
         this.container.append(this._nameEl);
     }
 
+    /**
+     * Gets the user's video stream.
+     **/
     get videoStream() {
         return this._videoStream;
     }
 
+    /**
+     * Sets the user's video stream, deleting any previous stream that may have existed,
+     * and updates the display of the user to have the new video stream.
+     **/
     set videoStream(v) {
         if (this._video) {
             this.container.removeChild(this._video);
@@ -109,6 +143,10 @@ class User {
         }
     }
 
+    /**
+     * Moves the user's graphics element to the latest position that Calla has
+     * calculated for it.
+     **/
     update() {
         const dx = this.container.parentElement.clientLeft - this.container.clientWidth / 2;
         const dy = this.container.parentElement.clientTop - this.container.clientHeight / 2;
@@ -118,12 +156,19 @@ class User {
     }
 }
 
-controls.connect.addEventListener("click", async () => {
+/**
+ * We need a "user gesture" to create AudioContext objects. The user clicking
+ * on the login button is the most natural place for that.
+ **/
+async function connect() {
+
+    // initialize the audio
     client.startAudio();
 
     const roomName = controls.roomName.value;
     const userName = controls.userName.value;
 
+    // Validate the user input values...
     let message = "";
     if (roomName.length === 0) {
         message += "\n   Room name is required";
@@ -135,71 +180,49 @@ controls.connect.addEventListener("click", async () => {
     if (message.length > 0) {
         message = "Required fields missing:" + message;
         alert(message);
+        return;
     }
-    else {
-        controls.roomName.disabled = true;
-        controls.userName.disabled = true;
-        controls.connect.disabled = true;
 
-        client.join(roomName, userName);
-    }
-});
+    controls.roomName.disabled = true;
+    controls.userName.disabled = true;
+    controls.connect.disabled = true;
 
-controls.leave.addEventListener("click", async () => {
-    await client.leaveAsync();
-});
+    client.join(roomName, userName);
+}
 
-client.addEventListener("videoConferenceJoined", async (evt) => await startGame(evt.id, evt.displayName, evt.pose));
 /**
- * 
+ * When the video conference has started, we can start 
+ * displaying content.
  * @param {string} id
- * @param {string} name
+ * @param {string} displayName
  * @param {InterpolatedPose} pose
  */
-async function startGame(id, name, pose) {
-    console.log("startGame", id, name, pose);
-    timer = requestAnimationFrame(update);
+function startGame(id, displayName, pose) {
+    // Enable the leave button once the user has connected
+    // to a conference.
     controls.leave.disabled = false;
-    localUserId = id;
-    addUser(id, name, pose);
-    setPosition(
-        Math.random() * controls.space.clientWidth,
-        Math.random() * controls.space.clientHeight);
-    client.preferredVideoInputID = camPref && camPref.deviceId || client.preferredVideoInputID;
-    client.preferredAudioInputID = micPref && micPref.deviceId || client.preferredAudioInputID;
-    client.preferredAudioInputID = speakersPref && speakersPref.deviceId || client.preferredAudioOutputID;
-    await client.setPreferredDevicesAsync();
-}
 
-function setPosition(x, y) {
-    if (localUserId) {
-        x /= 100;
-        y /= 100;
-        client.setLocalPosition(x, 0, y);
-    }
-}
-
-function update() {
+    // Start the renderer
     timer = requestAnimationFrame(update);
-    client.audio.update();
-    for (let user of users.values()) {
-        user.update();
-    }
+
+    // Create a user graphic for the local user.
+    addUser(id, displayName, pose, true);
+
+    // For testing purposes, we place the user at a random location 
+    // on the page. Ideally, you'd have a starting location for users
+    // so you could design a predictable onboarding path for them.
+    setPosition(Math.random() * (controls.space.clientWidth - 100) + 50, Math.random() * (controls.space.clientHeight - 100) + 50);
 }
 
-client.addEventListener("videoConferenceLeft", stopGame);
-function stopGame() {
-    console.log("stopGame");
-    cancelAnimationFrame(timer);
-    removeUser(localUserId);
-    controls.leave.disabled = true;
-    controls.connect.disabled = false;
-}
-
-client.addEventListener("participantJoined", (evt) => addUser(evt.id, evt.displayName, evt.pose));
-function addUser(id, name, pose) {
-    console.log("addUser", id, name, pose);
-    const user = new User(id, name, pose);
+/**
+ * Create the graphic for a new user.
+ * @param {string} id
+ * @param {string} displayName
+ * @param {InterpolatedPose} pose
+ * @param {boolean} isLocal
+ */
+function addUser(id, name, pose, isLocal) {
+    const user = new User(id, name, pose, isLocal);
     if (users.has(id)) {
         users.get(id).dispose();
     }
@@ -207,9 +230,11 @@ function addUser(id, name, pose) {
     controls.space.append(user.container);
 }
 
-client.addEventListener("participantLeft", (evt) => removeUser(evt.id));
+/**
+ * Remove the graphic for a user that has left.
+ * @param {string} id
+ */
 function removeUser(id) {
-    console.log("removeUser", id);
     if (users.has(id)) {
         const user = users.get(id);
         user.dispose();
@@ -217,70 +242,163 @@ function removeUser(id) {
     }
 }
 
-client.addEventListener("videoChanged", (evt) => setUserVideo(evt.id, evt.stream));
-function setUserVideo(id, stream) {
-    console.log("setUserVideo", id, stream);
+/**
+ * Give Calla the local user's position. Calla will
+ * transmit the new value to all the other users, and will
+ * perform a smooth transition of the value so users
+ * don't pop around.
+ * @param {any} x
+ * @param {any} y
+ */
+function setPosition(x, y) {
+    if (client.localUser) {
+        x /= 100;
+        y /= 100;
+        client.setLocalPosition(x, 0, y);
+    }
+}
+
+/**
+ * In Jitsi, users may not have names right away. They need to
+ * join a conference before they can set their name, so we need
+ * to wait for change notifications and update the display of the
+ * user names.
+ * @param {string} id
+ * @param {string} displayName
+ */
+function changeName(id, displayName) {
+    if (users.has(id)) {
+        const user = users.get(id);
+        user.name = displayName;
+    }
+}
+
+/**
+ * When a user enables or disables video, Calla will give us a
+ * notification. Users that add video will have a stream available
+ * to then create an HTML Video element. Users that remove video
+ * will send `null` as their video stream.
+ * @param {string} id
+ * @param {MediaStream} stream
+ */
+function changeVideo(id, stream) {
     if (users.has(id)) {
         const user = users.get(id);
         user.videoStream = stream;
     }
 }
 
-client.addEventListener("displayNameChange", (evt) => setUserName(evt.id, evt.displayName));
-function setUserName(id, name) {
-    if (users.has(id)) {
-        const user = users.get(id);
-        user.name = name;
+/**
+ * Calla's audio processing system needs an animation pump,
+ * which we need also because the user graphics need to 
+ * be moved.
+ **/
+function update() {
+    timer = requestAnimationFrame(update);
+    client.update();
+    for (let user of users.values()) {
+        user.update();
     }
 }
 
+/**
+ * Calla needs to cleanup the audio and video tracks if
+ * the user decides they want to leave the conference.
+ * 
+ * NOTE: Don't call the leave function on page unload,
+ * as it leads to ghost users being left in the conference.
+ * This appears to be a bug in Jitsi.
+ **/
+async function leave() {
+    await client.leaveAsync();
+}
+
+/**
+ * If the user has left the conference (or been kicked
+ * by a moderator), we need to shut down the rendering.
+ **/
+function left() {
+    removeUser(client.localUser);
+    cancelAnimationFrame(timer);
+    controls.leave.disabled = true;
+    controls.connect.disabled = false;
+}
+
+// =========== BEGIN Wire up events ================
+controls.connect.addEventListener("click", connect);
+controls.leave.addEventListener("click", leave);
 controls.space.addEventListener("click", (evt) => {
-    setPosition(
-        evt.clientX,
-        evt.clientY);
+    const x = evt.clientX - controls.space.offsetLeft;
+    const y = evt.clientY - controls.space.offsetTop;
+    setPosition(x, y);
 });
 
-(async function () {
-    camPref = await client.getPreferredVideoInputAsync(true);
-    micPref = await client.getPreferredAudioInputAsync(true);
-    speakersPref = await client.getPreferredAudioOutputAsync(true);
+client.addEventListener("videoConferenceJoined", async (evt) => {
+    const { id, displayName, pose } = evt;
+    startGame(id, displayName, pose);
+});
 
+client.addEventListener("videoConferenceLeft", left);
+
+client.addEventListener("participantJoined", (evt) => {
+    const { id, displayName, pose } = evt;
+    addUser(id, displayName, pose, false);
+});
+
+client.addEventListener("participantLeft", (evt) =>
+    removeUser(evt.id));
+
+client.addEventListener("videoChanged", (evt) => {
+    const { id, stream } = evt;
+    changeVideo(id, stream);
+});
+
+client.addEventListener("displayNameChange", (evt) => {
+    const { id, displayName } = evt;
+    changeName(id, displayName);
+});
+
+// =========== END Wire up events ================
+
+// Setup the device lists.
+(async function () {
+
+    // If we want to create sessions that default to having 
+    // no video enabled, we can change`getPreferredVideoInputAsync(true)`
+    // to `getPreferredVideoInputAsync(false)`.
     deviceSelector(
         true,
         controls.cams,
         await client.getVideoInputDevicesAsync(),
-        camPref,
-        async (device) => {
-            camPref = device;
-            await client.setVideoInputDeviceAsync(device);
-        });
+        await client.getPreferredVideoInputAsync(true),
+        (device) => client.setVideoInputDeviceAsync(device));
+
+    // If we want to create sessions that default to having 
+    // no video enabled, we can change`getPreferredVideoInputAsync(true)`
+    // to `getPreferredVideoInputAsync(false)`.
     deviceSelector(
         true,
         controls.mics,
         await client.getAudioInputDevicesAsync(),
-        micPref,
-        async (device) => {
-            micPref = device;
-            await client.setAudioInputDeviceAsync(device);
-        });
+        await client.getPreferredAudioInputAsync(true),
+        (device) => client.setAudioInputDeviceAsync(device));
 
-    controls.speakers.disabled = !canChangeAudioOutput;
+    // There is no way to set "no" audio output, so we don't
+    // allow a selection of "none" here. Also, it's a good idea
+    // to always start off with an audio output device, so always
+    // call `getPreferredAudioOutputAsync(true)`.
     deviceSelector(
         false,
         controls.speakers,
         await client.getAudioOutputDevicesAsync(),
-        speakersPref,
-        async (device) => {
-            speakersPref = device;
-            await client.setAudioOutputDeviceAsync(device);
-        });
+        await client.getPreferredAudioOutputAsync(true),
+        (device) => client.setAudioOutputDeviceAsync(device));
 
-    controls.connect.disabled = false;
-
-})().catch((exp) => {
-    console.error(exp);
-});
-
+    // Chromium is pretty much the only browser that can change
+    // audio outputs at this time, so disable the control if we
+    // detect there is no option to change outputs.
+    controls.speakers.disabled = !canChangeAudioOutput;
+})();
 
 /**
  * @callback mediaDeviceSelectCallback
@@ -289,67 +407,74 @@ controls.space.addEventListener("click", (evt) => {
  */
 
 /**
- * @param {boolean} addNone
- * @param {HTMLSelectElement} select
- * @param {MediaDeviceInfo[]} values
- * @param {MediaDeviceInfo} preferredDevice
+ * Binds a device list to a select box.
+ * @param {boolean} addNone - whether a vestigial "none" item should be added to the front of the list.
+ * @param {HTMLSelectElement} select - the select box to add items to.
+ * @param {MediaDeviceInfo[]} values - the list of devices to control.
+ * @param {string} preferredDeviceID - 
  * @param {mediaDeviceSelectCallback} onSelect
  */
-function deviceSelector(addNone, select, values, preferredDevice, onSelect) {
+function deviceSelector(addNone, select, values, preferredDeviceID, onSelect) {
+
+    // Add a vestigial "none" item?
     if (addNone) {
         const none = document.createElement("option");
         none.text = "None";
         select.append(none);
     }
+
+    // Create the select box options.
     select.append(...values.map((value) => {
         const opt = document.createElement("option");
         opt.value = value.deviceId;
         opt.text = value.label;
-        if (preferredDevice && preferredDevice.deviceId === value.deviceId) {
+        if (preferredDeviceID === value.deviceId) {
             opt.selected = true;
         }
         return opt;
     }));
+
+    // Respond to a user selection. We use "input" instead
+    // of "change" because "change" events don't fire if the
+    // user clicks an option that is already selected.
     select.addEventListener("input", () => {
         let idx = select.selectedIndex;
+
+        // Skip the vestigial "none" item.
         if (addNone) {
             --idx;
         }
-        if (0 <= idx && idx < values.length) {
-            const value = values[idx];
-            onSelect(value);
-        }
-        else {
-            onSelect(null);
-        }
+
+        const value = values[idx];
+        onSelect(value || null);
     });
-}
 
-/**
- * Gets all the named elements in the document so we can
- * setup event handlers on them.
- * @returns {object}
- **/
-function findNamedElements() {
-    const controls = Array.prototype.reduce.call(
-        document.querySelectorAll("[id]"),
-        (ctrls, elem) => {
-            ctrls[elem.id] = elem;
-            return ctrls;
-        }, {});
-
-    setupTestControl(controls);
-    return controls;
-}
-
-/**
- * Sets up testing windows.
- * @param {any} controls
- */
-function setupTestControl(controls) {
-    if (userNumber === 1) {
-        controls.sideTest.addEventListener("click", openSideTest);
+    // If the user preferrence is valid, fire the selection
+    // so that the event handler will set the device.
+    const preferredDevice = values.find((device) => device.deviceId === preferredDeviceID);
+    if (preferredDevice) {
+        onSelect(preferredDeviceID);
     }
-    controls.roomName.value = "TestRoom";
-    controls.userName.value = `TestUser${userNumber}`;
 }
+
+// At this point, everything is ready, so we can let 
+// the user attempt to connect to the conference now.
+controls.connect.disabled = false;
+
+
+
+
+
+
+
+
+
+// Sets up a convenient button for opening multiple
+// windows for testing.
+import { userNumber } from "../../testing/userNumber.js";
+import { openSideTest } from "../../testing/windowing.js";
+if (userNumber === 1) {
+    controls.sideTest.addEventListener("click", openSideTest);
+}
+controls.roomName.value = "TestRoom";
+controls.userName.value = `TestUser${userNumber}`;

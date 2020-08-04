@@ -247,6 +247,10 @@ export class CallaClient extends EventBase {
             .map(k => [k, this.conference.participants[k].getDisplayName()]);
     }
 
+    update() {
+        this.audio.update();
+    }
+
     /**
      * @param {string} roomName
      * @param {string} userName
