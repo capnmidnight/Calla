@@ -1,7 +1,8 @@
 {
     "name": "Calla.Chat",
     "short_name": "Calla",
-    "start_url": "https://www.calla.chat/",
+    "start_url": "./",
+    "scope": ".",
     "display": "standalone",
     "background_color": "#6564c4",
     "description": "Spatialized voice chat for meetups",
