@@ -2,7 +2,7 @@
 
 Calla is a library that encapsulates using [Jitsi Meet](https://meet.jit.si/) for custom teleconferencing apps that experiment in audio process and visual representation.
 
-The following tutorial describes how to use Calla, by walking through Calla's own application initialization process.
+The following tutorial describes how to use Calla, by walking through Calla's own application initialization process. [View a live version of this tutorial app](https://www.calla.chat/basic/).
 
 ## Overview
 
