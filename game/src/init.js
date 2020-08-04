@@ -365,11 +365,6 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
             options.audioOutputDevices = await client.getAudioOutputDevicesAsync();
             options.videoInputDevices = await client.getVideoInputDevicesAsync();
 
-            client.preferredAudioInputID = settings.preferredAudioInputID;
-            client.preferredAudioOutputID = settings.preferredAudioOutputID;
-            client.preferredVideoInputID = settings.preferredVideoInputID;
-            await client.setPreferredDevicesAsync();
-
             settings.preferredAudioInputID = client.preferredAudioInputID;
             settings.preferredAudioOutputID = client.preferredAudioOutputID;
             settings.preferredVideoInputID = client.preferredVideoInputID;
