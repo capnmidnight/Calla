@@ -1,6 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="en-us">
-<head prefix="og: http://ogp.me/ns#">
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, shrink-to-fit=0, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <title>Minimum Calla Setup</title>
@@ -37,8 +37,6 @@
             border-color: #888;
             background-color: #eee;
             padding: 5px;
-            display: grid;
-            grid-template-rows: auto 1fr;
             box-shadow: rgba(0,0,0,0.5) 5px 5px 10px;
         }
 
@@ -48,12 +46,10 @@
         }
 
         .userName {
-            grid-row: 1;
             text-align: center;
         }
 
         .userVideo {
-            grid-row: 2;
             max-width: 100%;
         }
 
@@ -91,7 +87,7 @@
 </head>
 <body>
     <div id="space"></div>
-    <div id="controls">
+    <form id="controls" autocomplete="on">
         <label for="roomName">Room:</label>
         <input id="roomName" type="text" placeholder="(Required)" value="TestRoom">
 
@@ -106,12 +102,12 @@
 
         <label for="speakers">Speakers:</label>
         <select id="speakers"></select>
-    </div>
-    <form autocomplete="on">
+    </form>
+    <div>
         <button type="button" id="connect" disabled>Connect</button>
         <button type="button" id="leave" disabled>Leave</button>
         <button type="button" id="sideTest">Open side test</button>
-    </form>
+    </div>
     <footer>
         <a href="https://www.calla.chat">Calla</a> is made with glue and tenacity at <a href="https://www.dlsdc.com">Diplomatic Language Services</a>.
     </footer>
