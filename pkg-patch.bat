@@ -1,2 +1,2 @@
-cmd /C "cd js && pkg-patch"
+cmd /C "cd js && npm version patch"
 pkg

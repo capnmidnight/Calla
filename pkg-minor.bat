@@ -1,2 +1,2 @@
-cmd /C "cd js && pkg-minor"
+cmd /C "cd js && npm version minor"
 pkg

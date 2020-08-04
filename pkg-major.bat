@@ -1,2 +1,2 @@
-cmd /C "cd js && pkg-major"
+cmd /C "cd js && npm version major"
 pkg
