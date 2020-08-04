@@ -222,8 +222,10 @@ export class CallaClient extends EventBase {
             }
         });
 
-        window.addEventListener("beforeunload", () => this.dispose());
-        window.addEventListener("pagehide", () => this.dispose());
+        const dispose = () => this.dispose();
+        window.addEventListener("beforeunload", dispose);
+        window.addEventListener("unload", dispose);
+        window.addEventListener("pagehide", dispose);
 
         Object.seal(this);
     }
@@ -250,7 +252,7 @@ export class CallaClient extends EventBase {
      * @param {string} userName
      */
     async join(roomName, userName) {
-        this.dispose();
+        await this.leaveAsync();
 
         await prepareTask;
 
@@ -305,6 +307,7 @@ export class CallaClient extends EventBase {
                     displayName: userName,
                     pose: this.audio.pose
                 }));
+                await this.setPreferredDevicesAsync();
             });
 
             this.conference.addEventListener(CONFERENCE_LEFT, () => {
@@ -312,6 +315,7 @@ export class CallaClient extends EventBase {
                     new Event("videoConferenceLeft"), {
                     roomName
                 }));
+                this.conference = null;
                 this.joined = false;
             });
 
@@ -326,11 +330,11 @@ export class CallaClient extends EventBase {
                     });
 
                 this.dispatchEvent(evt);
-            },
+            };
 
-                onTrackChanged = (track) => {
-                    onTrackMuteChanged(track, track.isMuted());
-                };
+            const onTrackChanged = (track) => {
+                onTrackMuteChanged(track, track.isMuted());
+            };
 
             this.conference.addEventListener(USER_JOINED, (id, user) => {
                 const evt = Object.assign(
@@ -556,7 +560,12 @@ export class CallaClient extends EventBase {
     }
 
     dispose() {
-        this.leave();
+        if (this.localUser && userInputs.has(this.localUser)) {
+            const tracks = userInputs.get(this.localUser);
+            for (const track of tracks.values()) {
+                track.dispose();
+            }
+        }
     }
 
     /**
@@ -568,33 +577,25 @@ export class CallaClient extends EventBase {
     }
 
     async leaveAsync() {
-        const leaveTask = once(this, "videoConferenceLeft", 5000);
-        const maybeLeaveTask = this.leave();
-        if (maybeLeaveTask instanceof Promise) {
-            await maybeLeaveTask;
-        }
-        return await leaveTask;
-    }
-
-    leave() {
-        if (this.conference && this.joined) {
+        if (this.conference) {
             if (this.localUser !== null && userInputs.has(this.localUser)) {
                 const inputs = userInputs.get(this.localUser);
-                if (inputs.has("audio")) {
-                    this.conference.removeTrack(inputs.get("audio"));
-                }
 
                 if (inputs.has("video")) {
+                    const removeTrackTask = once(this, "videoRemoved");
                     this.conference.removeTrack(inputs.get("video"));
+                    await removeTrackTask;
+                }
+
+                if (inputs.has("audio")) {
+                    const removeTrackTask = once(this, "audioRemoved");
+                    this.conference.removeTrack(inputs.get("audio"));
+                    await removeTrackTask;
                 }
             }
 
-            const leaveTask = once(this, "videoConferenceLeft", 3000);
-            this.conference.leave();
-            leaveTask.then(() => {
-                this.connection.disconnect();
-            });
-            return leaveTask;
+            await this.conference.leave();
+            await this.connection.disconnect();
         }
     }
 
@@ -699,7 +700,7 @@ export class CallaClient extends EventBase {
             await removeTask;
         }
 
-        if (this.preferredAudioInputID) {
+        if (this.joined && this.preferredAudioInputID) {
             const addTask = this.taskOf("audioAdded");
             const tracks = await JitsiMeetJS.createLocalTracks({
                 devices: ["audio"],
@@ -728,7 +729,7 @@ export class CallaClient extends EventBase {
             await removeTask;
         }
 
-        if (this.preferredVideoInputID) {
+        if (this.joined && this.preferredVideoInputID) {
             const addTask = this.taskOf("videoAdded");
             const tracks = await JitsiMeetJS.createLocalTracks({
                 devices: ["video"],
