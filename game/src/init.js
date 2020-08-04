@@ -189,9 +189,9 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
             window.open(url);
         },
 
-        leave: () => {
+        async leave: () => {
             directory.clear();
-            client.leave();
+            await client.leaveAsync();
         }
     });
 
