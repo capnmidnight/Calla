@@ -12,7 +12,7 @@ import { EventBase } from "./EventBase.js";
 export function when(target, resolveEvt, filterTest, timeout) {
 
     if (!isString(resolveEvt)) {
-        throw new Error("Filtering tests function is required. Otherwise, use `once`.");
+        throw new Error("Need an event name on which to resolve the operation.");
     }
 
     if (!isFunction(filterTest)) {
