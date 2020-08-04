@@ -160,11 +160,7 @@ class User {
  * We need a "user gesture" to create AudioContext objects. The user clicking
  * on the login button is the most natural place for that.
  **/
-async function connect() {
-
-    // initialize the audio
-    client.startAudio();
-
+function connect() {
     const roomName = controls.roomName.value;
     const userName = controls.userName.value;
 
@@ -187,6 +183,10 @@ async function connect() {
     controls.userName.disabled = true;
     controls.connect.disabled = true;
 
+    // initialize the audio.
+    client.startAudio();
+
+    // and start the connection.
     client.join(roomName, userName);
 }
 
@@ -333,7 +333,7 @@ controls.space.addEventListener("click", (evt) => {
     setPosition(x, y);
 });
 
-client.addEventListener("videoConferenceJoined", async (evt) => {
+client.addEventListener("videoConferenceJoined", (evt) => {
     const { id, displayName, pose } = evt;
     startGame(id, displayName, pose);
 });
@@ -411,10 +411,10 @@ client.addEventListener("displayNameChange", (evt) => {
  * @param {boolean} addNone - whether a vestigial "none" item should be added to the front of the list.
  * @param {HTMLSelectElement} select - the select box to add items to.
  * @param {MediaDeviceInfo[]} values - the list of devices to control.
- * @param {string} preferredDeviceID - 
+ * @param {MediaDeviceInfo} preferredDevice - 
  * @param {mediaDeviceSelectCallback} onSelect
  */
-function deviceSelector(addNone, select, values, preferredDeviceID, onSelect) {
+function deviceSelector(addNone, select, values, preferredDevice, onSelect) {
 
     // Add a vestigial "none" item?
     if (addNone) {
@@ -428,7 +428,7 @@ function deviceSelector(addNone, select, values, preferredDeviceID, onSelect) {
         const opt = document.createElement("option");
         opt.value = value.deviceId;
         opt.text = value.label;
-        if (preferredDeviceID === value.deviceId) {
+        if (preferredDevice && preferredDevice.deviceId === value.deviceId) {
             opt.selected = true;
         }
         return opt;
@@ -449,12 +449,7 @@ function deviceSelector(addNone, select, values, preferredDeviceID, onSelect) {
         onSelect(value || null);
     });
 
-    // If the user preferrence is valid, fire the selection
-    // so that the event handler will set the device.
-    const preferredDevice = values.find((device) => device.deviceId === preferredDeviceID);
-    if (preferredDevice) {
-        onSelect(preferredDeviceID);
-    }
+    onSelect(preferredDevice);
 }
 
 // At this point, everything is ready, so we can let 
