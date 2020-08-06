@@ -215,7 +215,9 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
     login.addEventListener("login", () => {
         client.startAudio();
         setAudioProperties();
-        window.history.replaceState(undefined, undefined, "#" + login.roomName);
+        if (window.location.hostname !== "localhost") {
+            window.history.replaceState(undefined, undefined, "#" + login.roomName);
+        }
 
         client.join(
             settings.roomName = login.roomName,
