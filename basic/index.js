@@ -1,8 +1,8 @@
 // Import the configuration parameters.
-import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../../../constants.js";
+import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants.js";
 
 // 
-import { CallaClient, canChangeAudioOutput, InterpolatedPose } from "../../../js/src/index.js";
+import { CallaClient, canChangeAudioOutput, InterpolatedPose } from "../js/src/index.js";
 
 // Gets all the named elements in the document so we can
 // setup event handlers on them.
@@ -466,8 +466,8 @@ controls.connect.disabled = false;
 
 // Sets up a convenient button for opening multiple
 // windows for testing.
-import { userNumber } from "../../testing/userNumber.js";
-import { openSideTest } from "../../testing/windowing.js";
+import { userNumber } from "../test/testing/userNumber.js";
+import { openSideTest } from "../test/testing/windowing.js";
 if (userNumber === 1) {
     controls.sideTest.addEventListener("click", openSideTest);
 }

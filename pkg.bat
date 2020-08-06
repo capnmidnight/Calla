@@ -1,6 +1,6 @@
 cmd /C "cd js && pkg"
 cmd /C "cd game && rollup -c"
-cmd /C "cd test\tests\minsetup && rollup -c"
+cmd /C "cd basic && rollup -c"
 cmd /C "minify game\bundle.js > web\bundle.min.js"
 cmd /C "minify game\version.js > web\version.min.js"
-cmd /C "minify test\tests\minsetup\basic.js > web\basic\basic.min.js"
+cmd /C "minify basic\bundle.js > web\basic\bundle.min.js"

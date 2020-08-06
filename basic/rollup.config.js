@@ -1,7 +1,7 @@
 export default [{
     input: "index.js",
     output: {
-        file: "basic.js",
+        file: "bundle.js",
         format: "es"
     }
 }];
