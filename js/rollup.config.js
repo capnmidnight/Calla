@@ -4,4 +4,10 @@ export default [{
         file: "Calla.js",
         format: "es"
     }
+}, {
+    input: "src/index.js",
+    output: {
+        file: "Calla.CJS.js",
+        format: "cjs"
+    }
 }];
