@@ -12,7 +12,7 @@ export class Pose {
         this.t = 0;
         this.p = new Vector();
         this.f = new Vector();
-        this.f.set(0, 0, 1);
+        this.f.set(0, 0, -1);
         this.u = new Vector();
         this.u.set(0, 1, 0);
 
