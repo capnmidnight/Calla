@@ -1,6 +1,6 @@
 ﻿/* global ResonanceAudio */
 
-import "../../../../lib/resonance-audio.js";
+import { ResonanceAudio } from "../../../../../resonance-audio/src/resonance-audio.js";
 import { Pose } from "../../positions/Pose.js";
 import { ResonanceSource } from "../sources/ResonanceSource.js";
 import { BaseListener } from "./BaseListener.js";
