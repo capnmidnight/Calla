@@ -32,6 +32,8 @@ class CallaClientEvent extends Event {
 // helps us filter out data channel messages that don't belong to us
 const eventNames = [
     "userMoved",
+    "userTurned",
+    "userPosed",
     "emote",
     "userInitRequest",
     "userInitResponse",
@@ -149,12 +151,18 @@ export class CallaClient extends EventBase {
 
         this.addEventListener("userInitRequest", (evt) => {
             const pose = this.audio.getLocalPose();
-            const { p } = pose;
+            const { p, f, u } = pose;
             this.userInitResponse(evt.id, {
                 id: this.localUser,
-                x: p.x,
-                y: p.y,
-                z: p.z
+                px: p.x,
+                py: p.y,
+                pz: p.z,
+                fx: f.x,
+                fy: f.y,
+                fz: f.z,
+                ux: u.x,
+                uy: u.y,
+                uz: u.z
             });
         });
 
@@ -162,12 +170,35 @@ export class CallaClient extends EventBase {
             if (isNumber(evt.x)
                 && isNumber(evt.y)
                 && isNumber(evt.z)) {
-                this.setUserPosition(evt.id, evt.x, evt.y, evt.z);
+                this.audio.setUserPosition(evt.id, evt.x, evt.y, evt.z);
+            }
+            else if (isNumber(evt.fx)
+                && isNumber(evt.fy)
+                && isNumber(evt.fz)
+                && isNumber(evt.ux)
+                && isNumber(evt.uy)
+                && isNumber(evt.uz)) {
+                if (isNumber(evt.px)
+                    && isNumber(evt.py)
+                    && isNumber(evt.pz)) {
+                    this.audio.setUserPose(evt.id, evt.px, evt.py, evt.pz, evt.fx, evt.fy, evt.fz, evt.ux, evt.uy, evt.uz);
+                }
+                else {
+                    this.audio.setUserOrientation(evt.id, evt.fx, evt.fy, evt.fz, evt.ux, evt.uy, evt.uz);
+                }
             }
         });
 
         this.addEventListener("userMoved", (evt) => {
-            this.setUserPosition(evt.id, evt.x, evt.y, evt.z);
+            this.audio.setUserPosition(evt.id, evt.x, evt.y, evt.z);
+        });
+
+        this.addEventListener("userTurned", (evt) => {
+            this.audio.setUserOrientation(evt.id, evt.fx, evt.fy, evt.fz, evt.ux, evt.uy, evt.uz);
+        });
+
+        this.addEventListener("userPosed", (evt) => {
+            this.audio.setUserPose(evt.id, evt.px, evt.py, evt.pz, evt.fx, evt.fy, evt.fz, evt.ux, evt.uy, evt.uz);
         });
 
         this.addEventListener("participantLeft", (evt) => {
@@ -245,7 +276,7 @@ export class CallaClient extends EventBase {
     }
 
     _prepareAsync() {
-        if(!this._prepTask) {
+        if (!this._prepTask) {
             console.info("Connecting to:", this.host);
             this._prepTask = import(`https://${this.host}/libs/lib-jitsi-meet.min.js`);
         }
@@ -878,6 +909,7 @@ export class CallaClient extends EventBase {
      * Set the position of the listener.
      * @param {number} x - the horizontal component of the position.
      * @param {number} y - the vertical component of the position.
+     * @param {number} z - the lateral component of the position.
      */
     setLocalPosition(x, y, z) {
         this.audio.setLocalPosition(x, y, z);
@@ -887,14 +919,38 @@ export class CallaClient extends EventBase {
     }
 
     /**
-     * Set the position of an audio source.
-     * @param {string} id - the id of the user for which to set the position.
-     * @param {number} x - the horizontal component of the position.
-     * @param {number} y - the vertical component of the position.
-     * @param {number} z - the lateral component of the position.
+     * Set the position of the listener.
+     * @param {number} fx - the horizontal component of the forward vector.
+     * @param {number} fy - the vertical component of the forward vector.
+     * @param {number} fz - the lateral component of the forward vector.
+     * @param {number} ux - the horizontal component of the up vector.
+     * @param {number} uy - the vertical component of the up vector.
+     * @param {number} uz - the lateral component of the up vector.
      */
-    setUserPosition(id, x, y, z) {
-        this.audio.setUserPosition(id, x, y, z);
+    setLocalOrientation(fx, fy, fz, ux, uy, uz) {
+        this.audio.setLocalOrientation(fx, fy, fz, ux, uy, uz);
+        for (let toUserID of this.userIDs()) {
+            this.sendMessageTo(toUserID, "userTurned", { x, y, z });
+        }
+    }
+
+    /**
+     * Set the position of the listener.
+     * @param {number} px - the horizontal component of the position.
+     * @param {number} py - the vertical component of the position.
+     * @param {number} pz - the lateral component of the position.
+     * @param {number} fx - the horizontal component of the forward vector.
+     * @param {number} fy - the vertical component of the forward vector.
+     * @param {number} fz - the lateral component of the forward vector.
+     * @param {number} ux - the horizontal component of the up vector.
+     * @param {number} uy - the vertical component of the up vector.
+     * @param {number} uz - the lateral component of the up vector.
+     */
+    setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz) {
+        this.audio.setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz);
+        for (let toUserID of this.userIDs()) {
+            this.sendMessageTo(toUserID, "userPosed", { px, py, pz, fx, fy, fz, ux, uy, uz });
+        }
     }
 
     removeUser(id) {

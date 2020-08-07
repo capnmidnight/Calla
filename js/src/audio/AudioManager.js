@@ -308,6 +308,35 @@ export class AudioManager extends EventBase {
         this.pose.setTargetPosition(x, y, z, this.currentTime, this.transitionTime);
     }
 
+    /**
+     * Set the orientation of the listener.
+     * @param {number} fx - the horizontal component of the forward vector.
+     * @param {number} fy - the vertical component of the forward vector.
+     * @param {number} fz - the lateral component of the forward vector.
+     * @param {number} ux - the horizontal component of the up vector.
+     * @param {number} uy - the vertical component of the up vector.
+     * @param {number} uz - the lateral component of the up vector.
+     */
+    setLocalOrientation(fx, fy, fz, ux, uy, uz) {
+        this.pose.setTargetOrientation(fx, fy, fz, ux, uy, uz, this.currentTime, this.transitionTime);
+    }
+
+    /**
+     * Set the position and orientation of the listener.
+     * @param {number} px - the horizontal component of the position.
+     * @param {number} py - the vertical component of the position.
+     * @param {number} pz - the lateral component of the position.
+     * @param {number} fx - the horizontal component of the forward vector.
+     * @param {number} fy - the vertical component of the forward vector.
+     * @param {number} fz - the lateral component of the forward vector.
+     * @param {number} ux - the horizontal component of the up vector.
+     * @param {number} uy - the vertical component of the up vector.
+     * @param {number} uz - the lateral component of the up vector.
+     */
+    setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz) {
+        this.pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, this.transitionTime);
+    }
+
 
     /**
      * @returns {Pose}
@@ -327,6 +356,43 @@ export class AudioManager extends EventBase {
         if (this.users.has(id)) {
             const pose = this.users.get(id);
             pose.setTargetPosition(x, y, z, this.currentTime, this.transitionTime);
+        }
+    }
+
+    /**
+     * Set the position of an audio source.
+     * @param {string} id - the id of the user for which to set the position.
+     * @param {number} fx - the horizontal component of the forward vector.
+     * @param {number} fy - the vertical component of the forward vector.
+     * @param {number} fz - the lateral component of the forward vector.
+     * @param {number} ux - the horizontal component of the up vector.
+     * @param {number} uy - the vertical component of the up vector.
+     * @param {number} uz - the lateral component of the up vector.
+     **/
+    setUserOrientation(id, fx, fy, fz, ux, uy, uz) {
+        if (this.users.has(id)) {
+            const pose = this.users.get(id);
+            pose.setTargetOrientation(fx, fy, fz, ux, uy, uz, this.currentTime, this.transitionTime);
+        }
+    }
+
+    /**
+     * Set the position of an audio source.
+     * @param {string} id - the id of the user for which to set the position.
+     * @param {number} px - the horizontal component of the position.
+     * @param {number} py - the vertical component of the position.
+     * @param {number} pz - the lateral component of the position.
+     * @param {number} fx - the horizontal component of the forward vector.
+     * @param {number} fy - the vertical component of the forward vector.
+     * @param {number} fz - the lateral component of the forward vector.
+     * @param {number} ux - the horizontal component of the up vector.
+     * @param {number} uy - the vertical component of the up vector.
+     * @param {number} uz - the lateral component of the up vector.
+     **/
+    setUserPose(id, px, py, pz, fx, fy, fz, ux, uy, uz) {
+        if (this.users.has(id)) {
+            const pose = this.users.get(id);
+            pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, this.transitionTime);
         }
     }
 }
