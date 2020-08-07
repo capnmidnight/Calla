@@ -567,7 +567,7 @@ export class CallaClient extends EventBase {
     dispose() {
         if (this.localUser && userInputs.has(this.localUser)) {
             const tracks = userInputs.get(this.localUser);
-            for (const track of tracks.values()) {
+            for (let track of tracks.values()) {
                 track.dispose();
             }
         }
