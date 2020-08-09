@@ -1,4 +1,4 @@
-﻿/* global JitsiMeetJS */
+/* global JitsiMeetJS */
 
 import "../lib/jquery.min.js";
 import { arrayClear } from "./arrays/arrayClear.js";
@@ -14,7 +14,7 @@ import { isGoodNumber } from "./math.js";
 import { isNumber } from "./typeChecks.js";
 import { versionString } from "./version.js";
 
-console.info(versionString);
+console.info("Calla", versionString);
 
 class CallaClientEvent extends Event {
     constructor(command, id, value) {
