@@ -1,4 +1,4 @@
-﻿import { addEventListeners, CallaClient } from "../../js/src/index.js";
+import { addEventListeners, CallaClient } from "../../js/src/index.js";
 import { allPeople as people } from "./emoji/emojis.js";
 import { EmojiForm } from "./forms/EmojiForm.js";
 import { FooterBar } from "./forms/FooterBar.js";
@@ -468,7 +468,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
     });
 
     timer.addEventListener("tick", (evt) => {
-        client.audio.update();
+        client.update();
         options.update();
         directory.update();
         game.update(evt.dt);

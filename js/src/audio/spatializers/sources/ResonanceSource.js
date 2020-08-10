@@ -19,6 +19,7 @@ export class ResonanceSource extends BaseAnalyzed {
         const resNode = res.createSource();
         super(id, stream, bufferSize, audioContext, resNode.input);
 
+        this.resScene = res;
         this.resNode = resNode;
 
         Object.seal(this);
@@ -41,6 +42,7 @@ export class ResonanceSource extends BaseAnalyzed {
      * Discard values and make this instance useless.
      */
     dispose() {
+        this.resScene.removeSource(this.resNode);
         this.resNode = null;
         super.dispose();
     }
