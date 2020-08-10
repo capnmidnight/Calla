@@ -1,4 +1,4 @@
-const versionString = "Calla v0.5.11";
+const versionString = "v0.5.12";
 
 const c = document.querySelector("#version");
 if (c) {
