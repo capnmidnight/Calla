@@ -132,7 +132,7 @@ export class CallaClient extends EventBase {
         this.hasVideoPermission = false;
 
         /** @type {String} */
-        this.localUser = null;
+        this.localUserID = null;
 
         this.preInitEvtQ = [];
 
@@ -153,7 +153,7 @@ export class CallaClient extends EventBase {
             const pose = this.audio.getLocalPose();
             const { p, f, u } = pose;
             this.userInitResponse(evt.id, {
-                id: this.localUser,
+                id: this.localUserID,
                 px: p.x,
                 py: p.y,
                 pz: p.z,
@@ -227,7 +227,7 @@ export class CallaClient extends EventBase {
         this.addEventListener("videoRemoved", onVideoChange);
 
         this.addEventListener("audioMuteStatusChanged", (evt) => {
-            if (evt.id === this.localUser) {
+            if (evt.id === this.localUserID) {
                 const evt2 = Object.assign(new Event("localAudioMuteStatusChanged"), {
                     id: evt.id,
                     muted: evt.muted
@@ -237,7 +237,7 @@ export class CallaClient extends EventBase {
         });
 
         this.addEventListener("videoMuteStatusChanged", (evt) => {
-            if (evt.id === this.localUser) {
+            if (evt.id === this.localUserID) {
                 const evt2 = Object.assign(new Event("localVideoMuteStatusChanged"), {
                     id: evt.id,
                     muted: evt.muted
@@ -356,7 +356,7 @@ export class CallaClient extends EventBase {
             });
 
             const onTrackMuteChanged = (track, muted) => {
-                const userID = track.getParticipantId() || this.localUser,
+                const userID = track.getParticipantId() || this.localUserID,
                     trackKind = track.getType(),
                     muteChangedEvtName = trackKind + "MuteStatusChanged",
                     evt = Object.assign(
@@ -402,7 +402,7 @@ export class CallaClient extends EventBase {
             });
 
             this.conference.addEventListener(TRACK_ADDED, (track) => {
-                const userID = track.getParticipantId() || this.localUser,
+                const userID = track.getParticipantId() || this.localUserID,
                     isLocal = track.isLocal(),
                     trackKind = track.getType(),
                     trackAddedEvt = Object.assign(new Event(trackKind + "Added"), {
@@ -437,7 +437,7 @@ export class CallaClient extends EventBase {
 
             this.conference.addEventListener(TRACK_REMOVED, (track) => {
 
-                const userID = track.getParticipantId() || this.localUser,
+                const userID = track.getParticipantId() || this.localUserID,
                     isLocal = track.isLocal(),
                     trackKind = track.getType(),
                     trackRemovedEvt = Object.assign(new Event(trackKind + "Removed"), {
@@ -492,20 +492,20 @@ export class CallaClient extends EventBase {
     }
 
     dispatchEvent(evt) {
-        if (this.localUser !== null) {
+        if (this.localUserID !== null) {
             if (evt.id === null
                 || evt.id === undefined
                 || evt.id === "local") {
-                evt.id = this.localUser;
+                evt.id = this.localUserID;
             }
 
             super.dispatchEvent(evt);
             if (evt.type === "videoConferenceLeft") {
-                this.localUser = null;
+                this.localUserID = null;
             }
         }
         else if (evt.type === "videoConferenceJoined") {
-            this.localUser = evt.id;
+            this.localUserID = evt.id;
 
             this.dispatchEvent(evt);
             for (evt of this.preInitEvtQ) {
@@ -596,8 +596,8 @@ export class CallaClient extends EventBase {
     }
 
     dispose() {
-        if (this.localUser && userInputs.has(this.localUser)) {
-            const tracks = userInputs.get(this.localUser);
+        if (this.localUserID && userInputs.has(this.localUserID)) {
+            const tracks = userInputs.get(this.localUserID);
             for (let track of tracks.values()) {
                 track.dispose();
             }
@@ -614,8 +614,8 @@ export class CallaClient extends EventBase {
 
     async leaveAsync() {
         if (this.conference) {
-            if (this.localUser !== null && userInputs.has(this.localUser)) {
-                const inputs = userInputs.get(this.localUser);
+            if (this.localUserID !== null && userInputs.has(this.localUserID)) {
+                const inputs = userInputs.get(this.localUserID);
 
                 if (inputs.has("video")) {
                     const removeTrackTask = once(this, "videoRemoved");
@@ -701,19 +701,19 @@ export class CallaClient extends EventBase {
     }
 
     taskOf(evt) {
-        return when(this, evt, (evt) => evt.id === this.localUser, 5000);
+        return when(this, evt, (evt) => evt.id === this.localUserID, 5000);
     }
 
     getCurrentMediaTrack(type) {
-        if (this.localUser === null) {
+        if (this.localUserID === null) {
             return null;
         }
 
-        if (!userInputs.has(this.localUser)) {
+        if (!userInputs.has(this.localUserID)) {
             return null;
         }
 
-        const inputs = userInputs.get(this.localUser);
+        const inputs = userInputs.get(this.localUserID);
         if (!inputs.has(type)) {
             return null;
         }

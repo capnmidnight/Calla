@@ -251,7 +251,7 @@ function removeUser(id) {
  * @param {any} y
  */
 function setPosition(x, y) {
-    if (client.localUser) {
+    if (client.localUserID) {
         x /= 100;
         y /= 100;
         client.setLocalPosition(x, 0, y);
@@ -318,7 +318,7 @@ async function leave() {
  * by a moderator), we need to shut down the rendering.
  **/
 function left() {
-    removeUser(client.localUser);
+    removeUser(client.localUserID);
     cancelAnimationFrame(timer);
     controls.leave.disabled = true;
     controls.connect.disabled = false;

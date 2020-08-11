@@ -1,4 +1,4 @@
-﻿import { bust } from "../../../game/src/emoji/emojis.js";
+import { bust } from "../../../game/src/emoji/emojis.js";
 import { CallaClient, once, wait, when } from "../../../js/src/index.js";
 import { TestCase } from "../../testing/TestCase.js";
 import { userNumber } from "../../testing/userNumber.js";
@@ -22,7 +22,7 @@ export class TestBase extends TestCase {
         const joinInfo = await joinTask;
         this.isEqualTo(joinInfo.displayName, testUserName);
         this.isEqualTo(joinInfo.roomName, TEST_ROOM_NAME, "RoomName");
-        this.isEqualTo(joinInfo.id, this.client.localUser, "UserID");
+        this.isEqualTo(joinInfo.id, this.client.localUserID, "UserID");
     }
 
     async waitForJoin() {
@@ -47,7 +47,7 @@ export class TestBase extends TestCase {
 
         for (let response of responses) {
             this.hasValue(response.id, "UserID");
-            this.isNotEqualTo(response.id, this.client.localUser, "other user ID overlaps local user ID");
+            this.isNotEqualTo(response.id, this.client.localUserID, "other user ID overlaps local user ID");
 
             this.hasValue(response.x, "User parameter");
             this.isNotEqualTo(response.x, userNumber, "Wrong user parameter");
@@ -77,7 +77,7 @@ export class TestBase extends TestCase {
     }
 
     taskOf(evtName) {
-        return when(this.client, evtName, (evt) => evt.id !== this.client.localUser, 5000);
+        return when(this.client, evtName, (evt) => evt.id !== this.client.localUserID, 5000);
     }
 
     async recvAudioMuted() {

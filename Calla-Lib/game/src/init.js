@@ -82,7 +82,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
 
     async function selectEmojiAsync() {
         await withEmojiSelection((e) => {
-            game.emote(client.localUser, e);
+            game.emote(client.localUserID, e);
             footbar.setEmojiButton(settings.inputBinding.keyButtonEmote, e);
         });
     }
@@ -199,7 +199,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         selectEmoji: selectEmojiAsync,
 
         emote: () => {
-            game.emote(client.localUser, game.currentEmoji);
+            game.emote(client.localUserID, game.currentEmoji);
         },
 
         toggleAudio: async () => {
@@ -234,7 +234,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
                     = client.avatarEmoji
                     = game.me.avatarEmoji
                     = e;
-                refreshUser(client.localUser);
+                refreshUser(client.localUserID);
             });
         },
 
@@ -243,7 +243,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
                 = client.avatarURL
                 = game.me.avatarImage
                 = options.avatarURL;
-            refreshUser(client.localUser);
+            refreshUser(client.localUserID);
         },
 
         toggleDrawHearing: () => {
@@ -329,7 +329,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
                 = settings.avatarEmoji
                 || people.random();
 
-            refreshUser(client.localUser);
+            refreshUser(client.localUserID);
         },
 
         userMoved: (evt) => {
@@ -376,11 +376,11 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
             options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
 
             const audioMuted = client.isAudioMuted;
-            game.muteUserAudio(client.localUser, audioMuted);
+            game.muteUserAudio(client.localUserID, audioMuted);
             footbar.audioEnabled = !audioMuted;
 
             const videoMuted = client.isVideoMuted;
-            game.muteUserVideo(client.localUser, videoMuted);
+            game.muteUserVideo(client.localUserID, videoMuted);
             footbar.videoEnabled = !videoMuted;
         },
 
