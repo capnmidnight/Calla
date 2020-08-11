@@ -144,10 +144,6 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
     login.userName = settings.userName;
     login.roomName = settings.roomName;
 
-    client.audio
-        .addClip("join", "audio/door-open.ogg", "audio/door-open.mp3", "audio/door-open.wav")
-        .addClip("leave", "audio/door-close.ogg", "audio/door-close.mp3", "audio/door-close.wav");
-
     showLogin();
 
     addEventListeners(window, {
@@ -214,6 +210,8 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
 
     login.addEventListener("login", () => {
         client.startAudio();
+        client.audio.addClip("join", "audio/door-open.ogg", "audio/door-open.mp3", "audio/door-open.wav");
+        client.audio.addClip("leave", "audio/door-close.ogg", "audio/door-close.mp3", "audio/door-close.wav");
         setAudioProperties();
         if (window.location.hostname !== "localhost") {
             window.history.replaceState(undefined, undefined, "#" + login.roomName);
