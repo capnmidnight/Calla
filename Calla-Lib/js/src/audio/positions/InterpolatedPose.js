@@ -1,4 +1,3 @@
-﻿import { BaseSpatializer } from "../spatializers/BaseSpatializer.js";
 import { Pose } from "./Pose.js";
 
 /**
@@ -16,27 +15,7 @@ export class InterpolatedPose {
         this.current = new Pose();
         this.end = new Pose();
 
-        /** @type {BaseSpatializer} */
-        this._spatializer = null;
-
         Object.seal(this);
-    }
-
-    get spatializer() {
-        return this._spatializer;
-    }
-
-    set spatializer(v) {
-        if (this.spatializer !== v) {
-            if (this._spatializer) {
-                this._spatializer.dispose();
-            }
-            this._spatializer = v;
-        }
-    }
-
-    dispose() {
-        this.spatializer = null;
     }
 
     /**

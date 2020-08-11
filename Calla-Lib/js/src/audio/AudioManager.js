@@ -1,9 +1,7 @@
-﻿import { EventBase } from "../events/EventBase.js";
+import { EventBase } from "../events/EventBase.js";
 import { AudioActivityEvent } from "./AudioActivityEvent.js";
+import { AudioSource } from "./AudioSource.js";
 import { MockAudioContext } from "./MockAudioContext.js";
-import { InterpolatedPose } from "./positions/InterpolatedPose.js";
-import { Pose } from "./positions/Pose.js";
-import { ManualVolume } from "./spatializers/index.js";
 import { AudioListenerNew } from "./spatializers/listeners/AudioListenerNew.js";
 import { AudioListenerOld } from "./spatializers/listeners/AudioListenerOld.js";
 import { BaseListener } from "./spatializers/listeners/BaseListener.js";
@@ -37,13 +35,10 @@ export class AudioManager extends EventBase {
         this.rolloff = 1;
         this.transitionTime = 0.5;
 
-        /** @type {InterpolatedPose} */
-        this.pose = new InterpolatedPose();
+        /** @type {Map<string, AudioSource>} */
+        this.sources = new Map();
 
-        /** @type {Map.<string, InterpolatedPose>} */
-        this.users = new Map();
-
-        /** @type {Map.<string, InterpolatedPose>} */
+        /** @type {Map<string, AudioSource>} */
         this.clips = new Map();
 
         /**
@@ -75,12 +70,13 @@ export class AudioManager extends EventBase {
 
     update() {
         if (this.audioContext) {
-            this.pose.update(this.currentTime);
-            for (let pose of this.users.values()) {
-                pose.update(this.currentTime);
+            const t = this.currentTime;
+            for (let source of this.sources.values()) {
+                source.update(t);
             }
-            for (let pose of this.clips.values()) {
-                pose.update(this.currentTime);
+
+            for (let clip of this.clips.values()) {
+                clip.update(t);
             }
         }
     }
@@ -141,8 +137,6 @@ export class AudioManager extends EventBase {
             if (!hasOldAudioListener || !hasAudioContext) {
                 this.listener = new BaseListener();
             }
-
-            this.pose.spatializer = this.listener;
         }
     }
 
@@ -155,20 +149,15 @@ export class AudioManager extends EventBase {
      * @return {BaseSource}
      */
     createSpatializer(id, stream, bufferSize) {
+        if (!this.listener) {
+            throw new Error("Audio context isn't ready");
+        }
+
         if (!stream) {
-            return Promise.reject("No stream or audio element given.");
+            throw new Error("No stream or audio element given.");
         }
-        else {
-            const creator = (resolve) => {
-                if (this.listener) {
-                    resolve(this.listener.createSource(id, stream, bufferSize, this.audioContext, this.pose.current));
-                }
-                else {
-                    setTimeout(creator, 0, resolve);
-                }
-            }
-            return new Promise(creator);
-        }
+
+        return this.listener.createSource(id, stream, bufferSize, this.audioContext);
     }
 
     /**
@@ -176,10 +165,9 @@ export class AudioManager extends EventBase {
      * for media files.
      * @param {string} name - the name of the sound effect, to reference when executing playback.
      * @param {string[]} paths - a series of fallback paths for loading the media of the sound effect.
-     * @returns {AudioManager}
      */
     addClip(name, ...paths) {
-        const pose = new InterpolatedPose();
+        const source = new AudioSource();
 
         const sources = paths
             .map((p) => {
@@ -193,11 +181,9 @@ export class AudioManager extends EventBase {
         elem.playsInline = true;
         elem.append(...sources);
 
-        this.createSpatializer(name, elem)
-            .then((source) => pose.spatializer = source);
+        source.spatializer = this.createSpatializer(name, elem);
 
-        this.clips.set(name, pose);
-        return this;
+        this.clips.set(name, source);
     }
 
     /**
@@ -207,10 +193,9 @@ export class AudioManager extends EventBase {
      */
     playClip(name, volume = 1) {
         if (this.clips.has(name)) {
-            const pose = this.clips.get(name);
-            const clip = pose.spatializer;
+            const clip = this.clips.get(name);
             clip.volume = volume;
-            clip.play();
+            clip.spatializer.play();
         }
     }
 
@@ -225,24 +210,34 @@ export class AudioManager extends EventBase {
     /**
      * Create a new user for audio processing.
      * @param {string} id
-     * @returns {InterpolatedPose}
+     * @returns {AudioSource}
      */
-    createUser(id) {
-        if (!this.users.has(id)) {
-            this.users.set(id, new InterpolatedPose());
+    createSource(id) {
+        if (!this.sources.has(id)) {
+            this.sources.set(id, new AudioSource());
         }
-        return this.users.get(id);
+
+        return this.sources.get(id);
+    }
+
+    /**
+     * Get an existing audio source.
+     * @param {string} id
+     * @returns {AudioSource}
+     */
+    getSource(id) {
+        return this.sources.get(id) || null;
     }
 
     /**
      * Remove a user from audio processing.
      * @param {string} id - the id of the user to remove
      **/
-    removeUser(id) {
-        if (this.users.has(id)) {
-            const pose = this.users.get(id);
-            pose.dispose();
-            this.users.delete(id);
+    removeSource(id) {
+        if (this.sources.has(id)) {
+            const source = this.sources.get(id);
+            this.sources.delete(id);
+            source.dispose();
         }
     }
 
@@ -250,30 +245,27 @@ export class AudioManager extends EventBase {
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream
      **/
-    setSource(id, stream) {
-        if (this.users.has(id)) {
-            const pose = this.users.get(id);
-            if (pose.spatializer) {
-                pose.spatializer.removeEventListener("audioActivity", this.onAudioActivity);
-                pose.spatializer = null;
+    setSourceStream(id, stream) {
+        if (this.sources.has(id)) {
+            const source = this.sources.get(id);
+            if (source.spatializer) {
+                source.spatializer.removeEventListener("audioActivity", this.onAudioActivity);
+                source.spatializer = null;
             }
 
             if (stream) {
-                this.createSpatializer(id, stream, BUFFER_SIZE)
-                    .then((source) => {
-                        pose.spatializer = source;
-                        if (source) {
-                            if (source.audio) {
-                                source.audio.autoPlay = true;
-                                source.audio.muted = !(source instanceof ManualVolume);
-                                source.audio.addEventListener("onloadedmetadata", () =>
-                                    source.audio.play());
-                                source.audio.play();
-                            }
-                            source.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
-                            source.addEventListener("audioActivity", this.onAudioActivity);
-                        }
-                    });
+                source.spatializer = this.createSpatializer(id, stream, BUFFER_SIZE);
+                if (source.spatializer) {
+                    if (source.spatializer.audio) {
+                        source.spatializer.audio.autoPlay = true;
+                        source.spatializer.audio.muted = true;
+                        source.spatializer.audio.addEventListener("onloadedmetadata", () =>
+                            source.spatializer.audio.play());
+                        source.spatializer.audio.play();
+                    }
+                    source.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
+                    source.spatializer.addEventListener("audioActivity", this.onAudioActivity);
+                }
             }
         }
     }
@@ -291,58 +283,17 @@ export class AudioManager extends EventBase {
         this.transitionTime = transitionTime;
         this.rolloff = rolloff;
 
-        for (let pose of this.users.values()) {
-            if (pose.spatializer) {
-                pose.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
+        for (let source of this.sources.values()) {
+            if (source.spatializer) {
+                source.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
             }
         }
-    }
 
-    /**
-     * Set the position of the listener.
-     * @param {number} x - the horizontal component of the position.
-     * @param {number} y - the vertical component of the position.
-     * @param {number} z - the lateral component of the position.
-     */
-    setLocalPosition(x, y, z) {
-        this.pose.setTargetPosition(x, y, z, this.currentTime, this.transitionTime);
-    }
-
-    /**
-     * Set the orientation of the listener.
-     * @param {number} fx - the horizontal component of the forward vector.
-     * @param {number} fy - the vertical component of the forward vector.
-     * @param {number} fz - the lateral component of the forward vector.
-     * @param {number} ux - the horizontal component of the up vector.
-     * @param {number} uy - the vertical component of the up vector.
-     * @param {number} uz - the lateral component of the up vector.
-     */
-    setLocalOrientation(fx, fy, fz, ux, uy, uz) {
-        this.pose.setTargetOrientation(fx, fy, fz, ux, uy, uz, this.currentTime, this.transitionTime);
-    }
-
-    /**
-     * Set the position and orientation of the listener.
-     * @param {number} px - the horizontal component of the position.
-     * @param {number} py - the vertical component of the position.
-     * @param {number} pz - the lateral component of the position.
-     * @param {number} fx - the horizontal component of the forward vector.
-     * @param {number} fy - the vertical component of the forward vector.
-     * @param {number} fz - the lateral component of the forward vector.
-     * @param {number} ux - the horizontal component of the up vector.
-     * @param {number} uy - the vertical component of the up vector.
-     * @param {number} uz - the lateral component of the up vector.
-     */
-    setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz) {
-        this.pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, this.transitionTime);
-    }
-
-
-    /**
-     * @returns {Pose}
-     **/
-    getLocalPose() {
-        return this.pose.end;
+        for (let clip of this.clips.values()) {
+            if (clip.spatializer) {
+                clip.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
+            }
+        }
     }
 
     /**
@@ -353,8 +304,9 @@ export class AudioManager extends EventBase {
      * @param {number} z - the lateral component of the position.
      **/
     setUserPosition(id, x, y, z) {
-        if (this.users.has(id)) {
-            const pose = this.users.get(id);
+        if (this.sources.has(id)) {
+            const source = this.sources.get(id);
+            const pose = source.pose;
             pose.setTargetPosition(x, y, z, this.currentTime, this.transitionTime);
         }
     }
@@ -370,8 +322,9 @@ export class AudioManager extends EventBase {
      * @param {number} uz - the lateral component of the up vector.
      **/
     setUserOrientation(id, fx, fy, fz, ux, uy, uz) {
-        if (this.users.has(id)) {
-            const pose = this.users.get(id);
+        if (this.sources.has(id)) {
+            const source = this.sources.get(id);
+            const pose = source.pose;
             pose.setTargetOrientation(fx, fy, fz, ux, uy, uz, this.currentTime, this.transitionTime);
         }
     }
@@ -390,8 +343,9 @@ export class AudioManager extends EventBase {
      * @param {number} uz - the lateral component of the up vector.
      **/
     setUserPose(id, px, py, pz, fx, fy, fz, ux, uy, uz) {
-        if (this.users.has(id)) {
-            const pose = this.users.get(id);
+        if (this.sources.has(id)) {
+            const source = this.sources.get(id);
+            const pose = source.pose;
             pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, this.transitionTime);
         }
     }
