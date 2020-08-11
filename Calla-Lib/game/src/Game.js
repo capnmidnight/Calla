@@ -512,8 +512,14 @@ export class Game extends EventBase {
                 success = true;
             }
             catch (exp) {
-                console.warn(exp);
-                this.map = new TileMap("default");
+                if (retryCount === 0) {
+                    console.warn(exp);
+                    console.warn("Retrying with default map.");
+                    this.map = new TileMap("default");
+                }
+                else {
+                    console.error(exp);
+                }
             }
         }
 

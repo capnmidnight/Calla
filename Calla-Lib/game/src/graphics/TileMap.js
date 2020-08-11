@@ -39,8 +39,12 @@ export class TileMap {
 
     async load() {
         const self = selfs.get(this),
-            response = await fetch(self.url.href),
-            text = await response.text(),
+            response = await fetch(self.url.href);
+        if (!response.ok) {
+            throw new Error(`Failed to load TileMap from ${self.url.href}. Reason: [${response.status}] ${response.statusText}`);
+        }
+
+        const text = await response.text(),
             parser = new DOMParser(),
             xml = parser.parseFromString(text, "text/xml"),
             map = xml.documentElement,
