@@ -1,4 +1,4 @@
-import { ResonanceAudio } from "../../../../../resonance-audio/src/resonance-audio.js";
+import { ResonanceAudio } from "../../../../lib/resonance-audio/src/resonance-audio.js";
 import { Pose } from "../../positions/Pose.js";
 import { BaseAnalyzed } from "./BaseAnalyzed.js";
 
