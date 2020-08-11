@@ -1,4 +1,4 @@
-import { arrayClear, arrayRemoveAt, clamp, EventBase, isString, lerp, Pose, project, unproject } from "../../js/src/index.js";
+import { arrayClear, arrayRemoveAt, clamp, EventBase, InterpolatedPose, isString, lerp, project, unproject } from "../../js/src/index.js";
 import { Emote } from "./graphics/Emote.js";
 import { TileMap } from "./graphics/TileMap.js";
 import { id } from "./html/attrs.js";
@@ -392,7 +392,7 @@ export class Game extends EventBase {
      * 
      * @param {string} id
      * @param {string} displayName
-     * @param {Pose} pose
+     * @param {InterpolatedPose} pose
      */
     addUser(id, displayName, pose) {
         if (this.users.has(id)) {
@@ -492,7 +492,7 @@ export class Game extends EventBase {
      * 
      * @param {string} id
      * @param {string} displayName
-     * @param {Pose} pose
+     * @param {InterpolatedPose} pose
      * @param {string} avatarURL
      * @param {string} roomName
      */

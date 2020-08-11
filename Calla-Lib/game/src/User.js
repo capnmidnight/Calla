@@ -1,4 +1,4 @@
-﻿import { EventBase, isString, Pose, project } from "../../js/src/index.js";
+import { EventBase, InterpolatedPose, isString, project } from "../../js/src/index.js";
 import { AvatarMode } from "./avatars/AvatarMode.js";
 import { BaseAvatar } from "./avatars/BaseAvatar.js";
 import { EmojiAvatar } from "./avatars/EmojiAvatar.js";
@@ -23,7 +23,7 @@ export class User extends EventBase {
      * 
      * @param {string} id
      * @param {string} displayName
-     * @param {Pose} pose
+     * @param {InterpolatedPose} pose
      * @param {boolean} isMe
      */
     constructor(id, displayName, pose, isMe) {
