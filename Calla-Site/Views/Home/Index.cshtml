@@ -4,13 +4,8 @@
 }
 
 @section HeadScripts{
-    <environment include="Development">
-        <script type="module" src="~/game/versionIndex.js"></script>
-    </environment>
-    <environment include="Production">
-        <link rel="preload" href="~/bundle.min.js" />
-        <script type="module" src="~/version.min.js"></script>
-    </environment>
+    <link rel="preload" href="~/bundle.min.js" />
+    <script type="module" src="~/version.min.js"></script>
     <link rel="stylesheet" type="text/css" href="~/stylesheets/intro.css" />
 }
 
