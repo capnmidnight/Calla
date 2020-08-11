@@ -1,4 +1,4 @@
-﻿.icon {
+.icon {
     display: inline-block;
     background-image: url("../icons/buttons.png");
     background-repeat: no-repeat;
@@ -9,10 +9,9 @@
     vertical-align: middle;
 }
 
-    .icon:hover {
-        margin: -1px 1px 1px 6px;
-        box-shadow: 1px 1px 7px #000;
-    }
+.icon-none {
+    background-image: none;
+}
 
 .icon-linkedin {
     background-position: 0 -75px;

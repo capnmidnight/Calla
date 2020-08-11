@@ -1,11 +1,11 @@
-﻿* {
+* {
     box-sizing: border-box;
     font-family: -apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif;
 }
 
 html,
 body {
-    position: fixed;
+    position: absolute;
     margin: 0;
     padding: 0;
     border: 0;
@@ -14,10 +14,63 @@ body {
 }
 
 body {
-    font-size: 12pt;
-    line-height: 1.5;
-    background-size: cover;
+    display: flex;
+    flex-direction: column;
 }
+
+header, footer {
+    padding: 0.5em 1em;
+    background-color: #6684F1;
+    color: #FFF;
+}
+
+header {
+    font-size: 14pt;
+}
+
+main {
+    position: relative;
+    height: 100%;
+    overflow-y: scroll;
+    padding: 2em;
+    flex: 1;
+}
+
+footer {
+    font-size: 10pt;
+    text-align: right;
+}
+
+    header a, header a:visited, header a:hover, footer a, footer a:visited, footer a:hover {
+        color: #fff;
+    }
+
+header, footer, .link-button {
+    text-shadow: rgba(0, 0, 0, .25) 3px 3px 3px;
+}
+
+.link-button {
+    display: inline-block;
+    color: white;
+    text-decoration: none;
+    padding: 15px 30px;
+    border-radius: 4px;
+    font-style: italic;
+    font-weight: bold;
+    background-color: #6684f1;
+    box-shadow: rgba(0, 0, 0, .25) 3px 3px 3px;
+}
+
+    .link-button:hover {
+        text-decoration: underline;
+        margin: -1px 1px 1px -1px;
+        box-shadow: rgba(0, 0, 0, .25) 4px 4px 4px;
+    }
+
+    .link-button:active {
+        margin: 1px -1px -1px 1px;
+        box-shadow: rgba(0, 0, 0, .25) 2px 2px 2px inset;
+    }
 
 #frontBuffer {
     background-image: url("../starfield.jpg");
@@ -25,7 +78,6 @@ body {
 
 h1 {
     font-size: 2em;
-    text-transform: capitalize;
 }
 
 h2 {
@@ -44,9 +96,9 @@ h2 {
         background-color: rgba(117, 117, 117, 0.50);
     }
 
-    .dialog h1 {
-        font-size: 1em;
-    }
+.dialog h1 {
+    font-size: 1em;
+}
 
 .dialog h2 {
     font-size: 0.75em;
@@ -56,6 +108,13 @@ h2 {
 .dialog {
     background-color: white;
     padding: 1em 1em 0 1em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #314074;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-variant: small-caps;
+    margin: 0;
 }
 
 @media (min-width: 600px) {

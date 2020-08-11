@@ -1,0 +1,32 @@
+@{
+    Layout = "_Layout";
+}
+
+@section Meta {
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    @RenderSection("Meta", required: false)
+}
+
+@section HeadScripts {
+    @RenderSection("HeadScripts", required: false)
+}
+
+<header style="display:flex;text-align:center">
+    <a href="https://www.calla.chat"><img src="~/icons/icon028-shadow32.png" /></a>
+    <span style="flex:1"><strong>Calla</strong>: @(ViewData["PageTitle"]?? ViewData["Title"])</span>
+    @RenderSection("HeaderTools", required: false)
+</header>
+
+<main>
+    @RenderBody()
+</main>
+
+<footer>
+    Calla <span id="version"><span style="color:#ddd">v0.4.x</span></span>
+    &copy; 2020
+    - <a href="https://www.dlsdc.com">Diplomatic Language Services</a>
+    - <a asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+    - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    - <a asp-area="" asp-controller="Home" asp-action="ToS">Terms of Service</a>
+    - <a asp-area="" asp-controller="Home" asp-action="About">About</a>
+</footer>

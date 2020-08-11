@@ -1,0 +1,39 @@
+@{
+    Layout = "_PWA";
+    ViewData["Title"] = "Chat";
+    ViewData["Description"] = "Voice chat with an RPG map. Volume scales with distance from other users. Walk around, talk to folks, have private conversations by huddling in a corner, or drop in on other conversations. Ideal for meetups!";
+}
+
+@section HeadScripts {
+    <link rel="stylesheet" type="text/css" href="~/stylesheets/game.css" />
+
+    <environment include="Development">
+        <script type="module" src="~/game/bundleIndex.js"></script>
+    </environment>
+    <environment include="Production">
+        <script type="module" src="~/bundle.min.js"></script>
+    </environment>
+}
+
+<div id="login" class="dialog">
+    <div class="header">
+        <form autocomplete="on">
+            <label for="roomSelector" style="grid-area: 1/1/auto/auto;">Room:</label>
+            <select id="roomSelector" style="grid-area: 1/2/auto/auto;">
+                <option>Calla</option>
+                <option>Island</option>
+                <option>Alexandria Code &amp; Coffee</option>
+                <option>Vurv</option>
+            </select>
+            <input id="roomName" type="text" autocomplete="off" placeholder="(Required)" style="display: none; grid-area: 1/2/auto/auto;">
+            <button id="createNewRoom" title="Create a new, temporary room" type="button" style="grid-area: 1/3/auto/auto;">New</button>
+            <label for="userName" style="grid-area: 2/1/auto/auto;">User:</label>
+            <input id="userName" placeholder="(Required)" type="text" style="grid-area: 2/2/auto/auto;">
+            <button id="connect" title="Create a new, temporary room" disabled="" type="button" style="grid-area: 2/3/auto/auto;">Loading...</button>
+        </form>
+    </div>
+    <div class="content" style="grid-area: 3/1/4/4;padding-top:1em">
+        <partial name="Instructions" />
+    </div>
+    <div class="footer" style="grid-area: 4/1/5/4;"></div>
+</div>

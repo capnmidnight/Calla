@@ -1,0 +1,101 @@
+@{
+    ViewData["Title"] = "Welcome";
+    ViewData["PageTitle"] = "Next-gen Voice and Video Chat";
+}
+
+@section HeadScripts{
+    <environment include="Development">
+        <script type="module" src="~/game/versionIndex.js"></script>
+    </environment>
+    <environment include="Production">
+        <link rel="preload" href="~/bundle.min.js" />
+        <script type="module" src="~/version.min.js"></script>
+    </environment>
+    <link rel="stylesheet" type="text/css" href="~/stylesheets/intro.css" />
+}
+
+@section HeaderTools {
+
+    <a href="https://github.com/capnmidnight/Calla" target="_blank" rel="noopener" style="display:inline-block;filter:invert();">
+        <span class="icon icon-github" title="Follow Calla on Github" aria-label="Follow Calla on Git Hub" style="box-shadow: rgba(255, 255, 255, .25) 3px 3px 3px;"></span>
+    </a>
+    <a href="https://www.npmjs.com/package/calla" target="_blank" rel="noopener" title="Follow Calla on NPM">
+        <svg viewBox="140 -25 475 325" class="icon icon-none" style="width:75px">
+            <defs>
+                <filter id="shadow">
+                    <feDropShadow dx="25" dy="25" stdDeviation="25" flood-color="black" flood-opacity="0.25" />
+                </filter>
+            </defs>
+            <path d="M240,250h100v-50h100V0H240V250z M340,50h50v100h-50V50z M480,0v200h100V50h50v150h50V50h50v150h50V0H480z M0,200h100V50h50v150h50V0H0V200z" style="fill:white;filter:url(#shadow)"></path>
+        </svg>
+    </a>
+}
+
+<div id="mainContent">
+    <div id="mainDescription">
+        <div id="mainLogo">
+            <img src="~/icons/icon120-shadow124.png" id="largeIcon" />
+        </div>
+        <div id="versionInfo">
+            <h1>
+                Calla
+            </h1>
+            <h2>
+                Natural Conversations
+            </h2>
+        </div>
+        <div id="descriptionText">
+            <p>
+                Voice and video chat that simulates natural conversation. Volume scales with distance from other users. Walk around, talk to folks, have private conversations by huddling in a corner, or drop in on other conversations. Ideal for meetups!
+            </p>
+            <a asp-area="" asp-controller="Game" asp-action="Index" class="link-button">Try it out!</a>
+        </div>
+    </div>
+
+    <div>
+        <h3>Break out of the box</h3>
+        <p>
+            Traditional "grid of faces" teleconferencing is designed for presentations, not conversations. The presentation and audio processing prioritize one speaker over all others. All participant voices sound like they are coming from the same, disembodied location. Everyone is lined up in a rigid grid, like you're facing down a tribunal interrogation.
+        </p>
+        <img src="~/images/bad-tele-demo.png" title="Zoom bad" />
+        <img src="~/images/good-tele-demo.png" title="Calla good" />
+    </div>
+
+    <div>
+        <h3>Give form to voice</h3>
+        <p>
+            Stereo audio channels pan as users move left/right of each other. This makes it easy to differentiate voices and makes conversations feel more natural and fluid.
+        </p>
+        <img src="~/images/orientation-demo.png" title="Use orientation to differentiate people" />
+    </div>
+
+    <div>
+        <h3>Group up</h3>
+        <p>
+            As you get further away from other users, their volume decreases naturally. You can use this to group up with other people in the space, having a side bar conversation between yourselves, while still maintaining awareness of the larger group.
+        </p>
+        <img src="~/images/distance-demo.png" title="Use distance to create groups" />
+    </div>
+
+    <div>
+        <h3>Customize</h3>
+        <p>
+            Calla is <a href="https://github.com/capnmidnight/Calla" target="_blank">open source software</a>. Following the instructions in the README, you can install your own copy of Calla on your own server and create your own, custom maps for rooms. Or, create your own interface entirely.
+        </p>
+        <img src="~/images/customize-demo.png" title="Custom maps and interfaces" />
+    </div>
+
+    <div>
+        <a asp-area="" asp-controller="Game" asp-action="Index" class="link-button">Try it out!</a>
+    </div>
+
+    <div>
+        <h3>Made by</h3>
+        <p>
+            <a href="https://www.seanmcbeth.com" target="_blank" rel="noopener" aria-label="Sean T. McBeth" title="Sean T. McBeth"><span class="icon icon-shrink"></span> Sean T. McBeth</a>
+        </p>
+        <p>
+            <a href="https://twitter.com/Sean_McBeth" target="_blank" rel="noopener" aria-label="Follow @@Sean_McBeth on Twitter" title="Follow @@Sean_McBeth on Twitter"><span class="icon icon-twitter"></span> Follow @@Sean_McBeth on Twitter</a>
+        </p>
+    </div>
+</div>

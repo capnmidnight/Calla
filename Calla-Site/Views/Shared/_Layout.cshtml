@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head prefix="og: http://ogp.me/ns#">
+    <meta charset="utf-8" />
+    @RenderSection("Meta", required: false)
+
+    <title>@ViewData["Title"] - Calla</title>
+
+    <link rel="stylesheet" type="text/css" href="~/stylesheets/general.css" />
+    <link rel="stylesheet" type="text/css" href="~/stylesheets/icons.css" />
+
+    @RenderSection("HeadScripts", required: false)
+</head>
+<body>
+    @RenderBody()
+</body>
+</html>
