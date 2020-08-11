@@ -1,2 +1,2 @@
-cmd /C "cd js && npm version major"
+cmd /C "cd ..\Calla-Lib\js && npm version major"
 pkg

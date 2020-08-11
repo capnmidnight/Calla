@@ -1,2 +1,2 @@
-cmd /C "cd js && npm version patch"
+cmd /C "cd ..\Calla-Lib\js && npm version patch"
 pkg
