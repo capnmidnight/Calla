@@ -1,4 +1,4 @@
-﻿import { Pose } from "../../positions/Pose.js";
+import { Pose } from "../../positions/Pose.js";
 import { PannerNew } from "../sources/PannerNew.js";
 import { AudioListenerBase } from "./AudioListenerBase.js";
 
@@ -42,10 +42,9 @@ export class AudioListenerNew extends AudioListenerBase {
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
      * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
      * @param {AudioContext} audioContext
-     * @param {Pose} dest
      * @return {BaseSource}
      */
-    createSource(id, stream, bufferSize, audioContext, dest) {
+    createSource(id, stream, bufferSize, audioContext) {
         return new PannerNew(id, stream, bufferSize, audioContext);
     }
 }
