@@ -7,6 +7,21 @@
     <link type="text/css" rel="stylesheet" href="stylesheets/icons.css" />
     <script type="module" src="versionIndex.js"></script>
     <script type="module" src="bundleIndex.js"></script>
+    <script type="module">
+        import { userNumber } from "../test/testing/userNumber.js";
+        import { openSideTest } from "../test/testing/windowing.js";
+
+        if (window.location.hostname === "localhost") {
+            const userName = document.getElementById("userName");
+            userName.value = "TestUser" + userNumber;
+            if (userNumber === 1) {
+                const button = document.createElement("button");
+                button.append(document.createTextNode("Open side test"));
+                button.addEventListener("click", openSideTest);
+                document.body.append(button);
+            }
+        }
+    </script>
 </head>
 
 <body>
