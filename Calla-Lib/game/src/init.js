@@ -13,6 +13,7 @@ import { gridPos, gridRowsDef } from "./html/grid.js";
 import { hide, isOpen, setOpen, show } from "./html/ops.js";
 import { Settings } from "./Settings.js";
 import { RequestAnimationFrameTimer } from "./timers/RequestAnimationFrameTimer.js";
+import { RightBar } from "./forms/RightBar.js";
 
 const disabler = disabled(true),
     enabler = disabled(false);
@@ -28,6 +29,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         login = new LoginForm(),
         directory = new UserDirectoryForm(),
         headbar = new HeaderBar(),
+        rightbar = new RightBar(),
         footbar = new FooterBar(),
         options = new OptionsForm(),
         emoji = new EmojiForm(),
@@ -41,6 +43,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
             login,
             directory,
             headbar,
+            rightbar,
             footbar,
             options,
             emoji
@@ -52,6 +55,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
             options,
             emoji,
             headbar,
+            rightbar,
             footbar,
             login
         ].filter(x => x.element);
@@ -139,7 +143,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
     options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
     options.inputBinding = game.inputBinding = settings.inputBinding;
 
-    game.cameraZ = game.targetCameraZ = settings.zoom;
+    rightbar.zoom = game.cameraZ = game.targetCameraZ = settings.zoom;
     game.transitionSpeed = settings.transitionSpeed = 0.5;
     login.userName = settings.userName;
     login.roomName = settings.roomName;
@@ -341,8 +345,12 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         },
 
         zoomChanged: () => {
-            settings.zoom = game.targetCameraZ;
+            settings.zoom = rightbar.zoom = game.targetCameraZ;
         }
+    });
+
+    rightbar.addEventListener("zoomChanged", () => {
+        settings.zoom = game.targetCameraZ = rightbar.zoom;
     });
 
     directory.addEventListener("warpTo", (evt) => {

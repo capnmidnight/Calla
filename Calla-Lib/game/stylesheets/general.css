@@ -84,7 +84,7 @@ h2 {
     font-size: 1.5em;
 }
 
-#headbar button, #footbar button {
+#headbar button, #footbar button, #rightbar button {
     border: solid 1px rgba(255, 255, 255, 0.5);
     background-color: rgba(0, 0, 0, 0.25);
     color: white;
@@ -92,7 +92,7 @@ h2 {
     text-shadow: 2px 2px 5px rgba(0,0,0,.66);
 }
 
-    #headbar button:hover, #footbar button:hover {
+    #headbar button:hover, #footbar button:hover, #rightbar button:hover {
         background-color: rgba(117, 117, 117, 0.50);
     }
 

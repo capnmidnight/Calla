@@ -1758,6 +1758,8 @@ export const numbers = g(
     e("\u{23}\u{FE0F}\u{20E3}", "Keycap Number Sign"),
     e("\u{1F51F}", "Keycap: 10"));
 
+export const tagPlusSign = e("\u{E002B}", "Tag Plus Sign");
+export const tagMinusHyphen = e("\u{E002D}", "Tag Hyphen-Minus");
 export const tags = g(
     "Tags", "Tags",
     e("\u{E0020}", "Tag Space"),
@@ -1771,9 +1773,9 @@ export const tags = g(
     e("\u{E0028}", "Tag Left Parenthesis"),
     e("\u{E0029}", "Tag Right Parenthesis"),
     e("\u{E002A}", "Tag Asterisk"),
-    e("\u{E002B}", "Tag Plus Sign"),
+    tagPlusSign,
     e("\u{E002C}", "Tag Comma"),
-    e("\u{E002D}", "Tag Hyphen-Minus"),
+    tagMinusHyphen,
     e("\u{E002E}", "Tag Full Stop"),
     e("\u{E002F}", "Tag Solidus"),
     e("\u{E0030}", "Tag Digit Zero"),
