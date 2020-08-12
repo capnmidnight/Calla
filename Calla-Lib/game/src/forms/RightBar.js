@@ -1,4 +1,4 @@
-﻿import { EventBase } from "../../../js/src/index.js";
+import { EventBase } from "../../../js/src/index.js";
 import { magnifyingGlassTiltedLeft, magnifyingGlassTiltedRight } from "../emoji/emojis.js";
 import { id, max, min, step, title, value } from "../html/attrs.js";
 import { backgroundColor, columnGap, cssHeight, cssWidth, fontSize, left, padding, pointerEvents, position, styles, textAlign, transform } from "../html/css.js";
@@ -48,7 +48,8 @@ export class RightBar extends EventBase {
                 value(0),
                 onInput(_(zoomChangedEvt)),
                 buttonStyle,
-                transform("rotate(-90deg)"),
+                cssWidth("9em"),
+                transform("translateX(-50%) rotate(-90deg) translateY(1.5em)"),
                 gridPos(1, 2)),
 
 

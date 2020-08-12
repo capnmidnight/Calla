@@ -21,3 +21,38 @@
         #login > .header > form > label {
             padding-top: 0.5em;
         }
+
+
+#frontBuffer {
+    background-image: url("../starfield.jpg");
+}
+
+#headbar button,
+#footbar button,
+#rightbar button {
+    border: solid 1px rgba(255, 255, 255, 0.5);
+    background-color: rgba(0, 0, 0, 0.25);
+    color: white;
+    border-radius: 0;
+    text-shadow: 2px 2px 5px rgba(0,0,0,.66);
+}
+
+    #headbar button:hover,
+    #footbar button:hover,
+    #rightbar button:hover {
+        background-color: rgba(117, 117, 117, 0.50);
+    }
+
+.dialog h1 {
+    font-size: 1em;
+}
+
+.dialog h2 {
+    font-size: 0.75em;
+}
+
+
+.dialog {
+    background-color: white;
+    padding: 1em 1em 0 1em;
+}
