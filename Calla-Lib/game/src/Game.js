@@ -142,8 +142,9 @@ export class Game extends EventBase {
                 // Chrome and Firefox report scroll values in completely different ranges.
                 const deltaZ = evt.deltaY * (isFirefox ? 1 : 0.02);
                 this.zoom(deltaZ);
+                evt.preventDefault();
             }
-        }, { passive: true });
+        }, { passive: false });
 
         function readPointer(evt) {
             return {
