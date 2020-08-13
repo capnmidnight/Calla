@@ -1,4 +1,24 @@
-﻿const KEY = "CallaSettings";
+const KEY = "CallaSettings";
+
+const DEFAULT_INPUT_BINDING = Object.freeze({
+    keyButtonUp: "ArrowUp",
+    keyButtonDown: "ArrowDown",
+    keyButtonLeft: "ArrowLeft",
+    keyButtonRight: "ArrowRight",
+    keyButtonEmote: "e",
+    keyButtonToggleAudio: "a",
+    keyButtonZoomOut: "[",
+    keyButtonZoomIn: "]",
+
+    gpButtonEmote: 0,
+    gpButtonToggleAudio: 1,
+    gpButtonZoomIn: 6,
+    gpButtonZoomOut: 7,
+    gpButtonUp: 12,
+    gpButtonDown: 13,
+    gpButtonLeft: 14,
+    gpButtonRight: 15
+});
 
 /** @type {WeakMap<Settings, SettingsPrivate>} */
 const selfs = new WeakMap();
@@ -29,27 +49,19 @@ class SettingsPrivate {
         /** @type {string} */
         this.preferredVideoInputID = null;
 
-        this.inputBinding = {
-            keyButtonUp: "ArrowUp",
-            keyButtonDown: "ArrowDown",
-            keyButtonLeft: "ArrowLeft",
-            keyButtonRight: "ArrowRight",
-            keyButtonEmote: "e",
-            keyButtonToggleAudio: "a",
-
-            gpButtonUp: 12,
-            gpButtonDown: 13,
-            gpButtonLeft: 14,
-            gpButtonRight: 15,
-            gpButtonEmote: 0,
-            gpButtonToggleAudio: 1
-        };
+        this.inputBinding = DEFAULT_INPUT_BINDING;
 
         const selfStr = localStorage.getItem(KEY);
         if (selfStr) {
             Object.assign(
                 this,
                 JSON.parse(selfStr));
+        }
+
+        for (var key in DEFAULT_INPUT_BINDING) {
+            if (this.inputBinding[key] === undefined) {
+                this.inputBinding[key] = DEFAULT_INPUT_BINDING[key];
+            }
         }
 
         Object.seal(this);

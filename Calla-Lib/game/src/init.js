@@ -16,7 +16,9 @@ import { RequestAnimationFrameTimer } from "./timers/RequestAnimationFrameTimer.
 import { RightBar } from "./forms/RightBar.js";
 
 const disabler = disabled(true),
-    enabler = disabled(false);
+    enabler = disabled(false),
+    CAMERA_ZOOM_MIN = 0.5,
+    CAMERA_ZOOM_MAX = 20;
 
 /**
  * @param {string} JITSI_HOST
@@ -25,11 +27,11 @@ const disabler = disabled(true),
  */
 export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
     const settings = new Settings(),
-        game = new Game(),
+        game = new Game(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
         login = new LoginForm(),
         directory = new UserDirectoryForm(),
         headbar = new HeaderBar(),
-        rightbar = new RightBar(),
+        rightbar = new RightBar(game.element, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
         footbar = new FooterBar(),
         options = new OptionsForm(),
         emoji = new EmojiForm(),
@@ -67,6 +69,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         hide(emoji);
         headbar.enabled = false;
         footbar.enabled = false;
+        rightbar.enabled = false;
         show(login);
     }
 
@@ -135,6 +138,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
     refreshGamepads();
     headbar.enabled = false;
     footbar.enabled = false;
+    rightbar.enabled = false;
     options.drawHearing = game.drawHearing = settings.drawHearing;
     options.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
     options.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;
@@ -143,7 +147,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
     options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
     options.inputBinding = game.inputBinding = settings.inputBinding;
 
-    rightbar.zoom = game.cameraZ = game.targetCameraZ = settings.zoom;
+    rightbar.zoom = game.cameraZ = game.zoom = settings.zoom;
     game.transitionSpeed = settings.transitionSpeed = 0.5;
     login.userName = settings.userName;
     login.roomName = settings.roomName;
@@ -324,6 +328,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
 
             headbar.enabled = true;
             footbar.enabled = true;
+            rightbar.enabled = true;
 
             settings.avatarEmoji
                 = client.avatarEmoji
@@ -345,12 +350,12 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         },
 
         zoomChanged: () => {
-            settings.zoom = rightbar.zoom = game.targetCameraZ;
+            settings.zoom = rightbar.zoom = game.zoom;
         }
     });
 
     rightbar.addEventListener("zoomChanged", () => {
-        settings.zoom = game.targetCameraZ = rightbar.zoom;
+        settings.zoom = game.zoom = rightbar.zoom;
     });
 
     directory.addEventListener("warpTo", (evt) => {

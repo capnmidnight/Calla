@@ -1,7 +1,7 @@
 import { EventBase } from "../../../js/src/index.js";
 import { magnifyingGlassTiltedLeft, magnifyingGlassTiltedRight } from "../emoji/emojis.js";
 import { id, max, min, step, title, value } from "../html/attrs.js";
-import { backgroundColor, columnGap, cssHeight, cssWidth, fontSize, left, padding, pointerEvents, position, styles, textAlign, transform } from "../html/css.js";
+import { backgroundColor, columnGap, cssHeight, cssWidth, fontSize, left, marginRight, padding, pointerEvents, position, styles, textAlign, transform } from "../html/css.js";
 import { onClick, onInput } from "../html/evts.js";
 import { gridPos, gridRowsDef } from "../html/grid.js";
 import { Button, Div, InputRange, Run } from "../html/tags.js";
@@ -17,14 +17,19 @@ const zoomChangedEvt = new Event("zoomChanged"),
     buttonLabelStyle = fontSize("12px");
 
 export class RightBar extends EventBase {
-    constructor() {
+    constructor(targetCanvas, zoomMin, zoomMax) {
         super();
 
-        const _ = (evt) => () => this.dispatchEvent(evt);
+        const changeZoom = (dz) => {
+            this.zoom += dz;
+            this.dispatchEvent(zoomChangedEvt);
+        };
+
+        this.enabled = false;
 
         this.element = Div(
             id("rightbar"),
-            gridRowsDef("auto", "1fr", "auto", "3fr"),
+            gridRowsDef("auto", "9.5em", "auto", "1fr"),
             padding("4px"),
             columnGap("5px"),
             textAlign("right"),
@@ -33,30 +38,31 @@ export class RightBar extends EventBase {
 
             this.zoomInButton = Button(
                 title("Zoom in"),
-                onClick(() => this.zoom += 0.5),
-                onClick(_(zoomChangedEvt)),
+                onClick(() => changeZoom(0.5)),
                 buttonStyle,
                 gridPos(1, 1),
                 Run(magnifyingGlassTiltedLeft.value),
                 Run(buttonLabelStyle, "Zoom in")),
 
-            this.slider = InputRange(
-                title("Zoom"),
-                min(0.1),
-                max(8),
-                step(0.1),
-                value(0),
-                onInput(_(zoomChangedEvt)),
+            Div(
                 buttonStyle,
-                cssWidth("9em"),
-                transform("translateX(-50%) rotate(-90deg) translateY(1.5em)"),
-                gridPos(1, 2)),
+                cssHeight("8em"),
+                gridPos(1, 2),
+                this.slider = InputRange(
+                    title("Zoom"),
+                    min(zoomMin),
+                    max(zoomMax),
+                    step(0.1),
+                    value(0),
+                    onInput(() => this.dispatchEvent(zoomChangedEvt)),
+                    cssWidth("8em"),
+                    marginRight("-5em"),
+                    transform("translateX(-3em) rotate(270deg) translateX(-5em)"))),
 
 
             this.zoomOutButton = Button(
                 title("Zoom out"),
-                onClick(() => this.zoom -= 0.5),
-                onClick(_(zoomChangedEvt)),
+                onClick(() => changeZoom(-0.5)),
                 buttonStyle,
                 gridPos(1, 3),
                 Run(magnifyingGlassTiltedRight.value),

@@ -1,4 +1,4 @@
-﻿import { EventBase } from "../../../js/src/index.js";
+import { EventBase } from "../../../js/src/index.js";
 
 const inputBindingChangedEvt = new Event("inputBindingChanged");
 
@@ -13,16 +13,20 @@ export class InputBinding extends EventBase {
             ["keyButtonRight", "ArrowRight"],
             ["keyButtonEmote", "e"],
             ["keyButtonToggleAudio", "a"],
+            ["keyButtonZoomOut", "["],
+            ["keyButtonZoomIn", "]"],
 
             ["gpAxisLeftRight", 0],
             ["gpAxisUpDown", 1],
 
+            ["gpButtonEmote", 0],
+            ["gpButtonToggleAudio", 1],
+            ["gpButtonZoomIn", 6],
+            ["gpButtonZoomOut", 7],
             ["gpButtonUp", 12],
             ["gpButtonDown", 13],
             ["gpButtonLeft", 14],
-            ["gpButtonRight", 15],
-            ["gpButtonEmote", 0],
-            ["gpButtonToggleAudio", 1]
+            ["gpButtonRight", 15]
         ]);
 
         for (let id of bindings.keys()) {

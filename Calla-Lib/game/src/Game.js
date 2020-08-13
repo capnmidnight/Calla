@@ -10,11 +10,9 @@ import { Canvas } from "./html/tags.js";
 import { EventedGamepad } from "./input/EventedGamepad.js";
 import { User } from "./User.js";
 
+
 const CAMERA_LERP = 0.01,
-    CAMERA_ZOOM_MAX = 8,
-    CAMERA_ZOOM_MIN = 0.1,
-    CAMERA_ZOOM_SHAPE = 1 / 4,
-    CAMERA_ZOOM_SPEED = 0.005,
+    CAMERA_ZOOM_SHAPE = 2,
     MAX_DRAG_DISTANCE = 5,
     MOVE_REPEAT = 0.125,
     gameStartedEvt = new Event("gameStarted"),
@@ -39,8 +37,11 @@ const gamepads = new Map();
 
 export class Game extends EventBase {
 
-    constructor() {
+    constructor(zoomMin, zoomMax) {
         super();
+
+        this.zoomMin = zoomMin;
+        this.zoomMax = zoomMax;
 
         this.element = Canvas(
             id("frontBuffer"),
@@ -93,16 +94,20 @@ export class Game extends EventBase {
             keyButtonRight: "ArrowRight",
             keyButtonEmote: "e",
             keyButtonToggleAudio: "a",
+            keyButtonZoomOut: "[",
+            keyButtonZoomIn: "]",
 
             gpAxisLeftRight: 0,
             gpAxisUpDown: 1,
 
+            gpButtonEmote: 0,
+            gpButtonToggleAudio: 1,
+            gpButtonZoomIn: 6,
+            gpButtonZoomOut: 7,
             gpButtonUp: 12,
             gpButtonDown: 13,
             gpButtonLeft: 14,
-            gpButtonRight: 15,
-            gpButtonEmote: 0,
-            gpButtonToggleAudio: 1
+            gpButtonRight: 15
         };
 
         this.lastGamepadIndex = -1;
@@ -139,10 +144,11 @@ export class Game extends EventBase {
                 && !evt.altKey
                 && !evt.ctrlKey
                 && !evt.metaKey) {
-                // Chrome and Firefox report scroll values in completely different ranges.
-                const deltaZ = evt.deltaY * (isFirefox ? 1 : 0.02);
-                this.zoom(deltaZ);
                 evt.preventDefault();
+                // Chrome and Firefox report scroll values in completely different ranges.
+                const deltaZ = -evt.deltaY * (isFirefox ? 1 : 0.02);
+                this.zoom += deltaZ;
+                this.dispatchEvent(zoomChangedEvt);
             }
         }, { passive: false });
 
@@ -236,9 +242,10 @@ export class Game extends EventBase {
 
             if (oldPinchDistance !== null
                 && newPinchDistance !== null) {
-                const ddist = oldPinchDistance - newPinchDistance;
-                this.zoom(ddist / 5);
                 this.canClick = false;
+                const ddist = newPinchDistance - oldPinchDistance;
+                this.zoom += ddist / 100;
+                this.dispatchEvent(zoomChangedEvt);
             }
         });
 
@@ -375,18 +382,20 @@ export class Game extends EventBase {
         });
     }
 
-    zoom(deltaZ) {
-        const mag = Math.abs(deltaZ);
-        if (0 < mag && mag <= 50) {
-            const a = project(this.targetCameraZ, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
-                b = Math.pow(a, CAMERA_ZOOM_SHAPE),
-                c = b - deltaZ * CAMERA_ZOOM_SPEED,
-                d = clamp(c, 0, 1),
-                e = Math.pow(d, 1 / CAMERA_ZOOM_SHAPE);
+    get zoom() {
+        const a = project(this.targetCameraZ, this.zoomMin, this.zoomMax),
+            b = Math.pow(a, 1 / CAMERA_ZOOM_SHAPE),
+            c = unproject(b, this.zoomMin, this.zoomMax);
+        return c;
+    }
 
-            this.targetCameraZ = unproject(e, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX);
-            this.dispatchEvent(zoomChangedEvt);
-        }
+    set zoom(v) {
+        v = clamp(v, this.zoomMin, this.zoomMax);
+
+        const a = project(v, this.zoomMin, this.zoomMax),
+            b = Math.pow(a, CAMERA_ZOOM_SHAPE),
+            c = unproject(b, this.zoomMin, this.zoomMax);
+        this.targetCameraZ = c;
     }
 
     /**
@@ -561,7 +570,8 @@ export class Game extends EventBase {
             this.lastMove += dt;
             if (this.lastMove >= MOVE_REPEAT) {
                 let dx = 0,
-                    dy = 0;
+                    dy = 0,
+                    dz = 0;
 
                 for (let evt of Object.values(this.keys)) {
                     if (!evt.altKey
@@ -573,6 +583,8 @@ export class Game extends EventBase {
                             case this.inputBinding.keyButtonDown: dy++; break;
                             case this.inputBinding.keyButtonLeft: dx--; break;
                             case this.inputBinding.keyButtonRight: dx++; break;
+                            case this.inputBinding.keyButtonZoomIn: dz++; break;
+                            case this.inputBinding.keyButtonZoomOut: dz--; break;
                             case this.inputBinding.keyButtonEmote: this.emote(this.me.id, this.currentEmoji); break;
                         }
                     }
@@ -612,10 +624,11 @@ export class Game extends EventBase {
 
                     dx += Math.round(pad.axes[this.inputBinding.gpAxisLeftRight]);
                     dy += Math.round(pad.axes[this.inputBinding.gpAxisUpDown]);
+                    dz += 2 * (pad.buttons[this.inputBinding.gpButtonZoomIn].value - pad.buttons[this.inputBinding.gpButtonZoomOut].value);
 
                     this.targetOffsetCameraX += -50 * Math.round(2 * pad.axes[2]);
                     this.targetOffsetCameraY += -50 * Math.round(2 * pad.axes[3]);
-                    this.zoom(2 * (pad.buttons[6].value - pad.buttons[7].value));
+                    this.dispatchEvent(zoomChangedEvt);
                 }
 
                 dx = clamp(dx, -1, 1);
@@ -625,6 +638,11 @@ export class Game extends EventBase {
                     || dy !== 0) {
                     this.moveMeBy(dx, dy);
                     arrayClear(this.waypoints);
+                }
+
+                if (dz !== 0) {
+                    this.zoom += dz;
+                    this.dispatchEvent(zoomChangedEvt);
                 }
 
                 this.lastMove = 0;
