@@ -18,8 +18,6 @@ const footer = `
     TraceKit.report(exp);
 }`;
 
-console.log(traceKit);
-
 export default [{
     input: "bundleIndex.js",
     output: {

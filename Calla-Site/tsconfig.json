@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "noImplicitAny": true,
+    "noImplicitAny": false,
     "alwaysStrict": true,
     "noEmitOnError": true,
     "removeComments": false,
@@ -10,11 +10,9 @@
     "allowJs": true,
     "checkJs": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "skipLibCheck": true
   },
   "compileOnSave": true,
-  "include": [ "scripts/**/*" ],
   "exclude": [
     "node_modules",
     "wwwroot"
