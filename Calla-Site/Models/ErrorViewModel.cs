@@ -1,5 +1,3 @@
-using System;
-
 namespace Calla.Models
 {
     public class ErrorViewModel

@@ -1,4 +1,4 @@
-﻿using Calla.Models;
+using Calla.Models;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
