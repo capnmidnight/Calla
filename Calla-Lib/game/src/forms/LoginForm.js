@@ -1,4 +1,4 @@
-﻿import { setLocked, setOpen } from "../html/ops.js";
+import { setLocked, setOpen } from "../html/ops.js";
 import { SelectBox } from "../html/tags.js";
 import { FormDialog } from "./FormDialog.js";
 
@@ -104,9 +104,27 @@ export class LoginForm extends FormDialog {
         self.validate();
     }
 
+    /**
+     * @param {KeyboardEvent} evt
+     * @param {Function} callback
+     */
+    _checkInput(evt, callback) {
+        if (!evt.shiftKey
+            && !evt.ctrlKey
+            && !evt.altKey
+            && !evt.metaKey
+            && evt.key === "Enter"
+            && this.userName.length > 0
+            && this.roomName.length > 0) {
+            callback(evt);
+        }
+    }
+
     addEventListener(evtName, callback, options) {
         if (evtName === "login") {
             this.connectButton.addEventListener("click", callback, options);
+            this.roomInput.addEventListener("keypress", (evt) => this._checkInput(evt, callback));
+            this.userNameInput.addEventListener("keypress", (evt) => this._checkInput(evt, callback));
         }
         else {
             super.addEventListener(evtName, callback, options);
