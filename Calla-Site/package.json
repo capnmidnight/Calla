@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "name": "calla-site",
+  "private": true,
+  "scripts": {
+    "minify": "node minifyOutputs.js"
+  },
+  "devDependencies": {
+    "terser": "^5.1.0"
+  }
+}
