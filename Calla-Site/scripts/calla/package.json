@@ -1,0 +1,45 @@
+{
+  "name": "calla",
+  "version": "0.6.1",
+  "description": "Teleconferencing through Jitsi with audio spatialization",
+  "module": "index.js",
+  "main": "calla.cjs.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/capnmidnight/Calla.git"
+  },
+  "keywords": [
+    "WebRTC",
+    "Jitsi",
+    "teleconferencing",
+    "meeting",
+    "communication",
+    "WebXR",
+    "WebVR",
+    "WebAudio",
+    "Web Audio",
+    "WebAudio API",
+    "Web Audio API",
+    "VR audio",
+    "360 audio",
+    "interactive audio",
+    "spatialized audio",
+    "spatial audio",
+    "spatial",
+    "spatialization",
+    "ambisonic",
+    "audio"
+  ],
+  "author": "Sean T. McBeth <sean.mcbeth@gmail.com> (https://github.com/capnmidnight)",
+  "contributors": [
+    "Sean T. McBeth <sean.mcbeth@gmail.com> (https://github.com/capnmidnight)",
+    "mooomooo (https://github.com/mooomooo)",
+    "heinzlotto (https://github.com/heinzelotto)"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/capnmidnight/Calla/issues"
+  },
+  "homepage": "https://github.com/capnmidnight/Calla#README"
+}

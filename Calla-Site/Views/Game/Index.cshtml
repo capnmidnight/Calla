@@ -6,7 +6,12 @@
 
 @section HeadScripts {
     <link rel="stylesheet" type="text/css" href="~/stylesheets/game.css" />
-    <script type="module" src="~/bundle.min.js"></script>
+    <environment names="Staging,Production">
+        <script type="module" src="~/scripts/game.min.js"></script>
+    </environment>
+    <environment names="Development">
+        <script type="module" src="~/scripts/game.js"></script>
+    </environment>
 }
 
 <div id="login" class="dialog">

@@ -22,6 +22,12 @@ namespace Calla.Controllers
             return View();
         }
 
+        [Route("/Basic")]
+        public IActionResult Basic()
+        {
+            return View();
+        }
+
         [Route("/Privacy")]
         public IActionResult Privacy()
         {
@@ -36,6 +42,12 @@ namespace Calla.Controllers
 
         [Route("/About")]
         public IActionResult About()
+        {
+            return View();
+        }
+
+        [Route("/Tests")]
+        public IActionResult Tests()
         {
             return View();
         }

@@ -4,8 +4,15 @@
 }
 
 @section HeadScripts{
-    <link rel="preload" href="~/bundle.min.js" as="script" />
-    <script type="module" src="~/version.min.js"></script>
+    <environment names="Staging,Production">
+        <link rel="preload" href="~/scripts/game.min.js" as="script" />
+        <script type="module" src="~/scripts/version.min.js"></script>
+    </environment>
+    <environment names="Development">
+        <link rel="preload" href="~/scripts/game.js" as="script" />
+        <script type="module" src="~/scripts/version.js"></script>
+    </environment>
+
     <link rel="stylesheet" type="text/css" href="~/stylesheets/intro.css" />
 }
 

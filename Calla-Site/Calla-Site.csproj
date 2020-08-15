@@ -16,6 +16,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <TypeScriptCompile Remove="node_modules\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <TypeScriptCompile Remove="wwwroot\data\tilesets\nature\nature.tsx" />
     <TypeScriptCompile Remove="wwwroot\data\tilesets\room\room.tsx" />
     <TypeScriptCompile Remove="wwwroot\data\tilesets\TileTest\TileTest.tsx" />
@@ -36,13 +40,5 @@
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.4" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="wwwroot\scripts\game\" />
-  </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="npm run minify" />
-  </Target>
 
 </Project>
