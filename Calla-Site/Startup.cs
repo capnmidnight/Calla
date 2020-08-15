@@ -63,14 +63,6 @@ namespace Calla_Site
             app.UseDefaultFiles(DefaultFileOpts)
                 .UseStaticFiles(StaticFileOpts);
 
-            if (Environment.IsDevelopment())
-            {
-                app.UseStaticFiles(new StaticFileOptions
-                {
-                    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "..", "Calla-Lib"))
-                });
-            }
-
             app.UseWebSockets();
         }
 
