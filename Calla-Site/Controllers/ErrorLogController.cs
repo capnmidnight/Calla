@@ -75,8 +75,7 @@ namespace Calla.Controllers
             }
 
             var error = db.Errors
-                .Where(err => err.Id == id)
-                .FirstOrDefault();
+                .SingleOrDefault(err => err.Id == id);
             if (error is null)
             {
                 return NotFound();
