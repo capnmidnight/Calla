@@ -1,4 +1,5 @@
-﻿using Calla.Models;
+using Calla.ActionFilters;
+using Calla.Models;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -17,6 +18,7 @@ namespace Calla.Controllers
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        [ServiceFilter(typeof(LogHitsAttribute))]
         public IActionResult Index()
         {
             return View();

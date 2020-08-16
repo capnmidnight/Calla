@@ -28,38 +28,35 @@ namespace Calla.Controllers
         }
 
         [HttpGet]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public ActionResult Index()
         {
             if (!env.IsDevelopment())
             {
-                return StatusCode(StatusCodes.Status401Unauthorized);
+                return NotFound();
             }
 
-            if (Request.ContentType == "application/json")
-            {
-                return Json(db.Errors
-                    .OrderBy(err => err.Id)
-                    .ToArray());
-            }
-            else
-            {
-                return View(db.Errors.ToArray());
-            }
+            var errors = db.Errors
+                .OrderBy(err => err.Id)
+                .ToArray();
+
+            return View(errors);
         }
 
         [HttpPost]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public async Task<ActionResult> Index([FromBody] TraceKitErrorModel err)
         {
             if (err != null)
             {
                 logger.LogError(err.message, err);
-                _ = db.Add(new Errors
+                _ = await db.Errors.AddAsync(new Errors
                 {
                     From = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
                     On = Request.Headers["Referer"].FirstOrDefault() ?? "N/A",
                     Message = err.message,
                     ErrorObject = JsonConvert.SerializeObject(err)
-                });
+                }).ConfigureAwait(false);
                 await db.SaveChangesAsync().ConfigureAwait(false);
             }
 
@@ -67,6 +64,7 @@ namespace Calla.Controllers
         }
 
         [HttpDelete]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public async Task<ActionResult> Index([FromBody] int id)
         {
             if (!env.IsDevelopment())

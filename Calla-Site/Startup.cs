@@ -1,3 +1,5 @@
+using Calla.ActionFilters;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Routing;
@@ -32,10 +34,11 @@ namespace Calla
                 services.AddRazorPages()
                     .AddRazorRuntimeCompilation();
             }
-            services.AddControllersWithViews();
             services.AddAuthentication();
             services.AddAuthorization();
             services.AddDbContext<Data.CallaContext>();
+            services.AddScoped<LogHitsAttribute>();
+            services.AddControllersWithViews();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -1,0 +1,67 @@
+@{
+    ViewData["Title"] = "Page Views";
+}
+
+@model Calla.Data.PageViews[]
+
+@section HeadScripts
+{
+    <style type="text/css">
+        #output {
+            grid-column-gap: 0;
+            column-gap: 0;
+            grid-row-gap: 0;
+            row-gap: 0;
+            width: 100%;
+        }
+
+            #output > thead > tr {
+                text-align: left;
+                background-color: #6684F1;
+                color: white;
+            }
+
+            #output > thead > tr > th {
+                padding: 0.5em;
+            }
+
+            #output > tbody > tr:nth-child(even) {
+                background-color: #eee;
+            }
+
+            #output > tbody > tr > td {
+                padding: 0.5em;
+            }
+    </style>
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (Model.Length == 0)
+{
+    <p>No Views</p>
+}
+else
+{
+    <table id="output" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Referrer</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+                <tr id="row-@row.Id">
+                    <td>@row.Timestamp</td>
+                    <td>@row.From</td>
+                    <td>@row.To</td>
+                    <td>@row.Referrer</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
