@@ -1,0 +1,102 @@
+@{
+    ViewData["Title"] = "Error Log";
+}
+
+@model Calla.Data.Errors[]
+
+@section HeadScripts
+{
+    <script>
+        async function deleteError(id) {
+            const tableRow = document.getElementById("row-" + id);
+            tableRow.style.color = "red";
+
+            const tableBody = tableRow.parentElement;
+
+            const request = fetch("/ErrorLog", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(id)
+            });
+            const response = await request;
+            if (response.ok) {
+                tableBody.removeChild(tableRow);
+
+                if (tableBody.children.length === 0) {
+                    const table = tableBody.parentElement;
+                    const tableParent = table.parentElement;
+                    tableParent.removeChild(table);
+                    tableParent.appendChild(document.createTextNode("No Errors"));
+                }
+            }
+        }
+    </script>
+    <style type="text/css">
+        #output {
+            grid-column-gap: 0;
+            column-gap: 0;
+            grid-row-gap: 0;
+            row-gap: 0;
+            width: 100%;
+        }
+
+            #output > thead > tr {
+                text-align: left;
+                background-color: #6684F1;
+                color: white;
+            }
+
+            #output > thead > tr > th {
+                padding: 0.5em;
+            }
+
+            #output > tbody > tr:nth-child(even) {
+                background-color: #eee;
+            }
+
+            #output > tbody > tr > td {
+                padding: 0.5em;
+            }
+    </style>
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (Model.Length == 0)
+{
+    <p>No Errors</p>
+}
+else
+{
+    <table id="output" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>From</th>
+                <th>On</th>
+                <th>Message</th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+                <tr id="row-@row.Id">
+                    <td>@row.Timestamp</td>
+                    <td>@row.From</td>
+                    <td>@row.On</td>
+                    <td>@row.Message</td>
+                    <td>
+                        <button type="button" onclick='console.log(@row.ErrorObject)'>Log object</button>
+                    </td>
+                    <td>
+                        <button type="button" onclick="deleteError(@row.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

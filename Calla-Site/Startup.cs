@@ -35,6 +35,7 @@ namespace Calla
             services.AddControllersWithViews();
             services.AddAuthentication();
             services.AddAuthorization();
+            services.AddDbContext<Data.CallaContext>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
