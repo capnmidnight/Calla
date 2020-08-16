@@ -4,12 +4,9 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 
-using System.IO;
-
-namespace Calla_Site
+namespace Calla
 {
     public class Startup
     {
