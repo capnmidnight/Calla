@@ -4,7 +4,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Calla
 {
-    public class Program
+    public static class Program
     {
         public static void Main(string[] args)
         {
