@@ -43,5 +43,20 @@ namespace Calla.Controllers
 
             return View(views);
         }
+
+        [HttpDelete]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public async Task<ActionResult> Index([FromBody] int id)
+        {
+            if (!env.IsDevelopment())
+            {
+                return NotFound();
+            }
+
+            var pvs = db.PageViews.Where(v => v.Id == id);
+            db.PageViews.RemoveRange(pvs);
+            await db.SaveChangesAsync().ConfigureAwait(false);
+            return Ok();
+        }
     }
 }
