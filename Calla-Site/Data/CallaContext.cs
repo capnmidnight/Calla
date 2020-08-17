@@ -20,7 +20,7 @@ namespace Calla.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            if (!optionsBuilder.IsConfigured)
+            if (optionsBuilder?.IsConfigured == false)
             {
                 optionsBuilder.UseNpgsql("Name=Calla");
             }
@@ -28,12 +28,12 @@ namespace Calla.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Errors>(entity =>
+            modelBuilder?.Entity<Errors>(entity =>
             {
                 entity.Property(e => e.Timestamp).HasDefaultValueSql("now()");
             });
 
-            modelBuilder.Entity<PageViews>(entity =>
+            modelBuilder?.Entity<PageViews>(entity =>
             {
                 entity.Property(e => e.Timestamp).HasDefaultValueSql("now()");
             });

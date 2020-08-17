@@ -6,7 +6,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Calla.ActionFilters
@@ -30,13 +29,9 @@ namespace Calla.ActionFilters
             {
                 try
                 {
-                    await db.PageViews.AddAsync(new PageViews
-                    {
-                        From = context.HttpContext.Connection.RemoteIpAddress.ToString(),
-                        To = context.HttpContext.Request.Path.Value,
-                        Referrer = context.HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "N/A",
-                        UserAgent = context.HttpContext.Request.Headers["User-Agent"].FirstOrDefault() ?? "N/A"
-                    }).ConfigureAwait(false);
+                    await db.PageViews
+                        .AddAsync(new PageViews(context.HttpContext))
+                        .ConfigureAwait(false);
 
                     await db.SaveChangesAsync()
                         .ConfigureAwait(false);
@@ -46,6 +41,7 @@ namespace Calla.ActionFilters
                     logger.LogError(exp, "Error while logging page view");
                 }
             }
+
             await base.OnResultExecutionAsync(context, next)
                 .ConfigureAwait(false);
         }
