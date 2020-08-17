@@ -72,18 +72,10 @@ namespace Calla.Controllers
                 return NotFound();
             }
 
-            var error = db.Errors
-                .SingleOrDefault(err => err.Id == id);
-            if (error is null)
-            {
-                return NotFound();
-            }
-            else
-            {
-                db.Errors.Remove(error);
+            var errs = db.Errors.Where(err => err.Id == id);
+            db.Errors.RemoveRange(errs);
             await db.SaveChangesAsync().ConfigureAwait(false);
             return Ok();
         }
     }
-}
 }
