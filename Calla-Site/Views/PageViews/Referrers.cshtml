@@ -1,0 +1,23 @@
+@{
+    Layout = "_AdminPage";
+    ViewData["Title"] = "Referrers";
+}
+
+@model Calla.Data.StringCount[]
+
+
+@if (Model.Length == 0)
+{
+    <p>No Content</p>
+}
+else
+{
+    <ul>
+        @foreach(var row in Model)
+        {
+            <li>
+                [@row.Count] <a href="@row.Value" target="_blank" rel="noreferrer nofollow">@row.Value</a>
+            </li>
+        }
+    </ul>
+}

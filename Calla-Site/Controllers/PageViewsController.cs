@@ -1,19 +1,35 @@
 using Calla.Data;
-using Calla.Models;
 
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-using Newtonsoft.Json;
-
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Calla.Controllers
 {
+    static class PageViewsExt
+    {
+        public static StringCount[] ValueCount<T>(this DbSet<T> set, Func<T, string> select)
+            where T : class
+        {
+            return set.Select(select)
+                .GroupBy(v => v)
+                .Select(g => new StringCount
+                {
+                    Value = g.Key,
+                    Count = g.Count()
+                })
+                .OrderByDescending(c => c.Count)
+                .ThenBy(c => c.Value)
+                .ToArray();
+        }
+    }
+
     public class PageViewsController : Controller
     {
         private readonly ILogger<PageViewsController> logger;
@@ -42,6 +58,30 @@ namespace Calla.Controllers
                 .ToArray();
 
             return View(views);
+        }
+
+        [HttpGet]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public ActionResult Referrers()
+        {
+            if (!env.IsDevelopment())
+            {
+                return NotFound();
+            }
+
+            return View(db.PageViews.ValueCount(pv => pv.Referrer));
+        }
+
+        [HttpGet]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public ActionResult UserAgents()
+        {
+            if (!env.IsDevelopment())
+            {
+                return NotFound();
+            }
+
+            return View(db.PageViews.ValueCount(pv => pv.UserAgent));
         }
 
         [HttpDelete]
