@@ -8,6 +8,12 @@
 }
 
 @section HeadScripts {
+    <environment names="Staging,Production">
+        <script type="module" src="~/scripts/version.min.js"></script>
+    </environment>
+    <environment names="Development">
+        <script type="module" src="~/scripts/version.js"></script>
+    </environment>
     @RenderSection("HeadScripts", required: false)
 }
 
@@ -29,9 +35,9 @@
     - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
     - <a asp-area="" asp-controller="Home" asp-action="ToS">Terms of Service</a>
     - <a asp-area="" asp-controller="Home" asp-action="About">About</a>
-      <environment names="Development">
-          -- <a asp-area="" asp-controller="Home" asp-action="Tests">Tests</a>
-          -- <a asp-area="" asp-controller="ErrorLog" asp-action="Index">Error Log</a>
-          -- <a asp-area="" asp-controller="PageViews" asp-action="Index">Page Views</a>
-      </environment>
+    <environment names="Development">
+        -- <a asp-area="" asp-controller="Home" asp-action="Tests">Tests</a>
+        -- <a asp-area="" asp-controller="ErrorLog" asp-action="Index">Error Log</a>
+        -- <a asp-area="" asp-controller="PageViews" asp-action="Index">Page Views</a>
+    </environment>
 </footer>
