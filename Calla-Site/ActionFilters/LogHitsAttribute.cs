@@ -26,7 +26,7 @@ namespace Calla.ActionFilters
 
         public override async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
         {
-            if (env.IsProduction())
+            if (context is object && env.IsProduction())
             {
                 try
                 {
@@ -34,7 +34,8 @@ namespace Calla.ActionFilters
                     {
                         From = context.HttpContext.Connection.RemoteIpAddress.ToString(),
                         To = context.HttpContext.Request.Path.Value,
-                        Referrer = context.HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "N/A"
+                        Referrer = context.HttpContext.Request.Headers["Referer"].FirstOrDefault() ?? "N/A",
+                        UserAgent = context.HttpContext.Request.Headers["User-Agent"].FirstOrDefault() ?? "N/A"
                     }).ConfigureAwait(false);
 
                     await db.SaveChangesAsync()

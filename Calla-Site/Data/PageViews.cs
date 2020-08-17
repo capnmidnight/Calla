@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -16,6 +15,8 @@ namespace Calla.Data
         public string To { get; set; }
         [Required]
         public string Referrer { get; set; }
+        [Required]
+        public string UserAgent { get; set; }
         [Column(TypeName = "timestamp with time zone")]
         public DateTime Timestamp { get; set; }
     }
