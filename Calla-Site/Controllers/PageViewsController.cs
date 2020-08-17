@@ -1,4 +1,5 @@
 using Calla.Data;
+using Calla.Models;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -32,13 +33,11 @@ namespace Calla.Controllers
 
     public class PageViewsController : Controller
     {
-        private readonly ILogger<PageViewsController> logger;
         private readonly IWebHostEnvironment env;
         private readonly CallaContext db;
 
-        public PageViewsController(ILogger<PageViewsController> logger, IWebHostEnvironment env, CallaContext db)
+        public PageViewsController(IWebHostEnvironment env, CallaContext db)
         {
-            this.logger = logger;
             this.env = env;
             this.db = db;
         }
