@@ -1,4 +1,4 @@
-namespace Calla.Data
+namespace Calla.Models
 {
     public class StringCount
     {
