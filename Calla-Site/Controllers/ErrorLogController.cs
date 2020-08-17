@@ -69,7 +69,7 @@ namespace Calla.Controllers
         {
             if (!env.IsDevelopment())
             {
-                return StatusCode(StatusCodes.Status401Unauthorized);
+                return NotFound();
             }
 
             var error = db.Errors
@@ -81,9 +81,9 @@ namespace Calla.Controllers
             else
             {
                 db.Errors.Remove(error);
-                await db.SaveChangesAsync().ConfigureAwait(false);
-                return Ok();
-            }
+            await db.SaveChangesAsync().ConfigureAwait(false);
+            return Ok();
         }
     }
+}
 }
