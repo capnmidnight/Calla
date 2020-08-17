@@ -36,14 +36,6 @@ namespace Calla.ActionFilters
             {
                 try
                 {
-                    foreach (var pv2 in db.PageViews)
-                    {
-                        if (pv2.From.StartsWith("::ffff", StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            pv2.From = PageViews.SaltAddr(pv2.From, salt);
-                        }
-                    }
-
                     await db.PageViews
                         .AddAsync(new PageViews(context.HttpContext, salt))
                         .ConfigureAwait(false);
