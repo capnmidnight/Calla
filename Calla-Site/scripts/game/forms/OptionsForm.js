@@ -1,10 +1,13 @@
 import { isGoodNumber, isString } from "../../calla/index.js";
 import { disabled, height, htmlFor, id, max, min, placeHolder, step, value, width } from "../html/attrs.js";
-import { backgroundColor, borderBottom, borderLeft, borderRight, cssWidth, styles } from "../html/css.js";
+import { cssWidth } from "../html/css.js";
 import { onClick, onInput, onKeyUp } from "../html/evts.js";
 import { gridColsDef } from "../html/grid.js";
+import { LabeledInput } from "../html/LabeledInputTag.js";
 import { isOpen, setLocked } from "../html/ops.js";
-import { Button, Canvas, Div, InputURL, Label, LabeledInput, LabeledSelectBox, OptionPanel, P } from "../html/tags.js";
+import { OptionPanel } from "../html/OptionPanelTag.js";
+import { SelectBox } from "../html/SelectBoxTag.js";
+import { Button, Canvas, Div, InputURL, Label, P } from "../html/tags.js";
 import { EventedGamepad } from "../input/EventedGamepad.js";
 import { User } from "../User.js";
 import { FormDialog } from "./FormDialog.js";
@@ -21,9 +24,6 @@ const keyWidthStyle = cssWidth("7em"),
     inputBindingChangedEvt = new Event("inputBindingChanged"),
     audioPropsChangedEvt = new Event("audioPropertiesChanged"),
     toggleDrawHearingEvt = new Event("toggleDrawHearing"),
-    audioInputChangedEvt = new Event("audioInputChanged"),
-    audioOutputChangedEvt = new Event("audioOutputChanged"),
-    videoInputChangedEvt = new Event("videoInputChanged"),
     toggleVideoEvt = new Event("toggleVideo"),
     gamepadButtonUpEvt = Object.assign(new Event("gamepadbuttonup"), {
         button: 0
@@ -214,13 +214,16 @@ export class OptionsForm extends FormDialog {
                 this.keyButtonToggleAudio = makeKeyboardBinder("keyButtonToggleAudio", "Toggle audio: ")),
 
             OptionPanel("gamepad", "Gamepad",
-                this.gpSelect = LabeledSelectBox(
-                    "gamepads",
-                    "Use gamepad: ",
-                    "No gamepad",
-                    gp => gp.id,
-                    gp => gp.id,
-                    onInput(_(gamepadChangedEvt))),
+                Div(
+                    Label(htmlFor("gamepads"),
+
+                        "Use gamepad: "),
+                    this.gpSelect = SelectBox(
+                        "gamepads",
+                        "No gamepad",
+                        gp => gp.id,
+                        gp => gp.id,
+                        onInput(_(gamepadChangedEvt)))),
                 this.gpAxisLeftRight = makeGamepadAxisBinder("gpAxisLeftRight", "Left/Right axis:"),
                 this.gpAxisUpDown = makeGamepadAxisBinder("gpAxisUpDown", "Up/Down axis:"),
                 this.gpButtonUp = makeGamepadButtonBinder("gpButtonUp", "Up button: "),
@@ -228,49 +231,19 @@ export class OptionsForm extends FormDialog {
                 this.gpButtonLeft = makeGamepadButtonBinder("gpButtonLeft", "Left button: "),
                 this.gpButtonRight = makeGamepadButtonBinder("gpButtonRight", "Right button: "),
                 this.gpButtonEmote = makeGamepadButtonBinder("gpButtonEmote", "Emote button: "),
-                this.gpButtonToggleAudio = makeGamepadButtonBinder("gpButtonToggleAudio", "Toggle audio button: ")),
-
-            OptionPanel("devices", "Devices",
-                this.videoInputSelect = LabeledSelectBox(
-                    "videoInputDevices",
-                    "Video Input: ",
-                    "No video input",
-                    d => d.deviceId,
-                    d => d.label,
-                    onInput(_(videoInputChangedEvt))),
-                this.audioInputSelect = LabeledSelectBox(
-                    "audioInputDevices",
-                    "Audio Input: ",
-                    "No audio input",
-                    d => d.deviceId,
-                    d => d.label,
-                    onInput(_(audioInputChangedEvt))),
-                this.audioOutputSelect = LabeledSelectBox(
-                    "audioOutputDevices",
-                    "Audio Output: ",
-                    "No audio output",
-                    d => d.deviceId,
-                    d => d.label,
-                    onInput(_(audioOutputChangedEvt))))
+                this.gpButtonToggleAudio = makeGamepadButtonBinder("gpButtonToggleAudio", "Toggle audio button: "))
         ];
 
         const cols = [];
         for (let i = 0; i < panels.length; ++i) {
             cols[i] = "1fr";
             panels[i].element.style.gridColumnStart = i + 1;
-            panels[i].button.style.fontSize = "3.5vw";
         }
 
         gridColsDef(...cols).apply(this.header);
 
         this.header.append(...panels.map(p => p.button));
         this.content.append(...panels.map(p => p.element));
-        styles(
-            backgroundColor("#ddd"),
-            borderLeft("solid 2px black"),
-            borderRight("solid 2px black"),
-            borderBottom("solid 2px black"))
-            .apply(this.content);
 
         const showPanel = (p) =>
             () => {
@@ -294,9 +267,6 @@ export class OptionsForm extends FormDialog {
         });
 
         this.gamepads = [];
-        this.audioInputDevices = [];
-        this.audioOutputDevices = [];
-        this.videoInputDevices = [];
 
         this._drawHearing = false;
 
@@ -410,56 +380,6 @@ export class OptionsForm extends FormDialog {
         else {
             return navigator.getGamepads()[this.currentGamepadIndex];
         }
-    }
-
-    get audioInputDevices() {
-        return this.audioInputSelect.values;
-    }
-
-    set audioInputDevices(values) {
-        this.audioInputSelect.values = values;
-    }
-
-    get currentAudioInputDevice() {
-        return this.audioInputSelect.selectedValue;
-    }
-
-    set currentAudioInputDevice(value) {
-        this.audioInputSelect.selectedValue = value;
-    }
-
-
-    get audioOutputDevices() {
-        return this.audioOutputSelect.values;
-    }
-
-    set audioOutputDevices(values) {
-        this.audioOutputSelect.values = values;
-    }
-
-    get currentAudioOutputDevice() {
-        return this.audioOutputSelect.selectedValue;
-    }
-
-    set currentAudioOutputDevice(value) {
-        this.audioOutputSelect.selectedValue = value;
-    }
-
-
-    get videoInputDevices() {
-        return this.videoInputSelect.values;
-    }
-
-    set videoInputDevices(values) {
-        this.videoInputSelect.values = values;
-    }
-
-    get currentVideoInputDevice() {
-        return this.videoInputSelect.selectedValue;
-    }
-
-    set currentVideoInputDevice(value) {
-        this.videoInputSelect.selectedValue = value;
     }
 
     get gamepadIndex() {

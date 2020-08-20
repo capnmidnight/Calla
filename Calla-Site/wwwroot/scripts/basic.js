@@ -7695,7 +7695,7 @@ function when(target, resolveEvt, filterTest, timeout) {
 	}
 
 // Pass this if window is not defined yet
-} )( typeof window !== "undefined" ? window : undefined, function( window, noGlobal ) {
+} )( window, function( window, noGlobal ) {
 
 var arr = [];
 

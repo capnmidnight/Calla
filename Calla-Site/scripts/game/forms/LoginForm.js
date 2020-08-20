@@ -1,6 +1,6 @@
 import { setLocked, setOpen } from "../html/ops.js";
-import { SelectBox } from "../html/tags.js";
 import { FormDialog } from "./FormDialog.js";
+import { SelectBox } from "../html/SelectBoxTag.js";
 
 const defaultRooms = new Map([
     ["calla", "Calla"],
@@ -54,10 +54,10 @@ export class LoginForm extends FormDialog {
         this.roomLabel = this.element.querySelector("label[for='roomSelector']");
 
         this.roomSelect = SelectBox(
+            "roomSelector",
             "No rooms available",
             v => v,
-            k => defaultRooms.get(k),
-            this.element.querySelector("#roomSelector"));
+            k => defaultRooms.get(k));
         this.roomSelect.addEventListener("input", validate);
         this.roomSelect.emptySelectionEnabled = false;
         this.roomSelect.values = defaultRooms.keys();

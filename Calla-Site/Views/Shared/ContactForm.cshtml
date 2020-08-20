@@ -1,0 +1,23 @@
+@{
+    Layout = null;
+}
+
+<style type="text/css">
+    #contactForm > input {
+        display: block;
+        width: calc(100% - 1em);
+        border-radius: 5px;
+        padding: 0.5em;
+        margin: 0.5em;
+    }
+</style>
+<script>
+    function submitContact() {
+
+    }
+</script>
+<div id="contactForm">
+    <input type="text" id="name" placeholder="<your name>" />
+    <input type="email" id="email" placeholder="<your email address>" />
+    <button type="button" onclick="submitContact()">Register for Updates</button>
+</div>

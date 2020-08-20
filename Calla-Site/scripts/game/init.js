@@ -1,19 +1,17 @@
 import { addEventListeners, CallaClient } from "../calla/index.js";
 import { allPeople as people } from "./emoji/emojis.js";
+import { ButtonLayer } from "./forms/ButtonLayer.js";
+import { DevicesDialog } from "./forms/DevicesDialog.js";
 import { EmojiForm } from "./forms/EmojiForm.js";
-import { FooterBar } from "./forms/FooterBar.js";
 import { FormDialog } from "./forms/FormDialog.js";
-import { HeaderBar } from "./forms/HeaderBar.js";
 import { LoginForm } from "./forms/LoginForm.js";
 import { OptionsForm } from "./forms/OptionsForm.js";
 import { UserDirectoryForm } from "./forms/UserDirectoryForm.js";
 import { Game } from "./Game.js";
 import { disabled } from "./html/attrs.js";
-import { gridPos, gridRowsDef } from "./html/grid.js";
 import { hide, isOpen, setOpen, show } from "./html/ops.js";
 import { Settings } from "./Settings.js";
 import { RequestAnimationFrameTimer } from "./timers/RequestAnimationFrameTimer.js";
-import { RightBar } from "./forms/RightBar.js";
 
 const disabler = disabled(true),
     enabler = disabled(false),
@@ -30,9 +28,8 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         game = new Game(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
         login = new LoginForm(),
         directory = new UserDirectoryForm(),
-        headbar = new HeaderBar(),
-        rightbar = new RightBar(game.element, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
-        footbar = new FooterBar(),
+        controls = new ButtonLayer(game.element, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
+        devices = new DevicesDialog(),
         options = new OptionsForm(),
         emoji = new EmojiForm(),
         client = new CallaClient(JITSI_HOST, JVB_HOST, JVB_MUC),
@@ -44,53 +41,59 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
             game,
             login,
             directory,
-            headbar,
-            rightbar,
-            footbar,
+            controls,
+            devices,
             options,
             emoji
-        },
+        };
 
-        forAppend = [
-            game,
-            directory,
-            options,
-            emoji,
-            headbar,
-            rightbar,
-            footbar,
-            login
-        ].filter(x => x.element);
+    /**
+     * @callback showViewCallback
+     * @returns {void}
+     */
 
-    function showLogin() {
-        hide(game);
-        hide(directory);
-        hide(options);
-        hide(emoji);
-        headbar.enabled = false;
-        footbar.enabled = false;
-        rightbar.enabled = false;
-        show(login);
+    let waitingForEmoji = false;
+
+    /**
+     * @param {FormDialog} view
+     * @returns {showViewCallback}
+     */
+    const _showView = (view) =>
+        () => showView(view);
+
+    function showView(view) {
+        if (!waitingForEmoji) {
+            hide(login);
+            hide(directory);
+            hide(options);
+            hide(devices);
+            hide(emoji);
+            show(view);
+        }
     }
 
     async function withEmojiSelection(callback) {
         if (!isOpen(emoji)) {
-            disabler.apply(headbar.optionsButton);
-            disabler.apply(headbar.instructionsButton);
+            waitingForEmoji = true;
+            disabler.apply(controls.optionsButton);
+            disabler.apply(controls.instructionsButton);
+            disabler.apply(controls.changeDevicesButton);
             hide(options);
             const e = await emoji.selectAsync();
             if (e) {
                 callback(e);
             }
-            enabler.apply(headbar.optionsButton);
-            enabler.apply(headbar.instructionsButton);
+            enabler.apply(controls.optionsButton);
+            enabler.apply(controls.instructionsButton);
+            enabler.apply(controls.changeDevicesButton);
+            waitingForEmoji = false;
         }
     }
 
     async function selectEmojiAsync() {
         await withEmojiSelection((e) => {
             game.emote(client.localUserID, e);
-            footbar.setEmojiButton(settings.inputBinding.keyButtonEmote, e);
+            controls.setEmojiButton(settings.inputBinding.keyButtonEmote, e);
         });
     }
 
@@ -111,34 +114,8 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         game.withUser("list user in directory", userID, (user) => directory.set(user));
     }
 
-    gridRowsDef("auto", "1fr", "auto").apply(document.body);
-
-    let z = 0;
-    for (let e of forAppend) {
-        if (e.element) {
-            let g = null;
-            if (e === headbar) {
-                g = gridPos(1, 1);
-            }
-            else if (e === footbar) {
-                g = gridPos(1, 3);
-            }
-            else if (e === game || e === login) {
-                g = gridPos(1, 1, 1, 3);
-            }
-            else {
-                g = gridPos(1, 2);
-            }
-            g.apply(e.element);
-            e.element.style.zIndex = (z++);
-            document.body.append(e.element);
-        }
-    }
-
     refreshGamepads();
-    headbar.enabled = false;
-    footbar.enabled = false;
-    rightbar.enabled = false;
+    controls.enabled = false;
     options.drawHearing = game.drawHearing = settings.drawHearing;
     options.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
     options.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;
@@ -147,12 +124,12 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
     options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
     options.inputBinding = game.inputBinding = settings.inputBinding;
 
-    rightbar.zoom = game.cameraZ = game.zoom = settings.zoom;
+    controls.zoom = game.cameraZ = game.zoom = settings.zoom;
     game.transitionSpeed = settings.transitionSpeed = 0.5;
     login.userName = settings.userName;
     login.roomName = settings.roomName;
 
-    showLogin();
+    showView(login);
 
     addEventListeners(window, {
         gamepadconnected: refreshGamepads,
@@ -163,29 +140,11 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         }
     });
 
-    /**
-     * @callback showViewCallback
-     * @returns {void}
-     */
-
-    /**
-     * @param {FormDialog} view
-     * @returns {showViewCallback}
-     */
-    const showView = (view) => () => {
-        if (!isOpen(emoji)) {
-            const open = isOpen(view);
-            hide(login);
-            hide(directory);
-            hide(options);
-            setOpen(view, !open);
-        }
-    };
-
-    addEventListeners(headbar, {
-        toggleOptions: showView(options),
-        toggleInstructions: showView(login),
-        toggleUserDirectory: showView(directory),
+    addEventListeners(controls, {
+        toggleOptions: _showView(options),
+        toggleInstructions: _showView(login),
+        toggleUserDirectory: _showView(directory),
+        changeDevices: _showView(devices),
 
         tweet: () => {
             const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
@@ -196,10 +155,8 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         leave: async () => {
             directory.clear();
             await client.leaveAsync();
-        }
-    });
+        },
 
-    addEventListeners(footbar, {
         selectEmoji: selectEmojiAsync,
 
         emote: () => {
@@ -212,6 +169,10 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
 
         toggleVideo: async () => {
             await client.toggleVideoMutedAsync();
+        },
+
+        zoomChanged: () => {
+            settings.zoom = game.zoom = controls.zoom;
         }
     });
 
@@ -276,26 +237,29 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
                 = options.inputBinding;
         },
 
+        toggleVideo: async () => {
+            await client.toggleVideoMutedAsync();
+        }
+    });
+
+    addEventListeners(devices, {
+
         audioInputChanged: async () => {
-            const device = options.currentAudioInputDevice;
+            const device = devices.currentAudioInputDevice;
             await client.setAudioInputDeviceAsync(device);
             settings.preferredAudioInputID = client.preferredAudioInputID;
         },
 
         audioOutputChanged: async () => {
-            const device = options.currentAudioOutputDevice;
+            const device = devices.currentAudioOutputDevice;
             await client.setAudioOutputDeviceAsync(device);
             settings.preferredAudioOutputID = client.preferredAudioOutputID;
         },
 
         videoInputChanged: async () => {
-            const device = options.currentVideoInputDevice;
+            const device = devices.currentVideoInputDevice;
             await client.setVideoInputDeviceAsync(device);
             settings.preferredVideoInputID = client.preferredVideoInputID;
-        },
-
-        toggleVideo: async () => {
-            await client.toggleVideoMutedAsync();
         }
     });
 
@@ -321,14 +285,13 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         },
 
         gameStarted: () => {
-            gridPos(1, 2).apply(login.element);
+            game.resize();
             hide(login);
+            show(controls);
 
             options.user = game.me;
 
-            headbar.enabled = true;
-            footbar.enabled = true;
-            rightbar.enabled = true;
+            controls.enabled = true;
 
             settings.avatarEmoji
                 = client.avatarEmoji
@@ -344,18 +307,13 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         },
 
         gameEnded: () => {
-            gridPos(1, 1, 1, 3).apply(login.element);
             login.connected = false;
-            showLogin();
+            showView(login);
         },
 
         zoomChanged: () => {
-            settings.zoom = rightbar.zoom = game.zoom;
+            settings.zoom = controls.zoom = game.zoom;
         }
-    });
-
-    rightbar.addEventListener("zoomChanged", () => {
-        settings.zoom = game.zoom = rightbar.zoom;
     });
 
     directory.addEventListener("warpTo", (evt) => {
@@ -374,25 +332,25 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
                 = options.avatarURL
                 = settings.avatarURL;
 
-            options.audioInputDevices = await client.getAudioInputDevicesAsync();
-            options.audioOutputDevices = await client.getAudioOutputDevicesAsync();
-            options.videoInputDevices = await client.getVideoInputDevicesAsync();
+            devices.audioInputDevices = await client.getAudioInputDevicesAsync();
+            devices.audioOutputDevices = await client.getAudioOutputDevicesAsync();
+            devices.videoInputDevices = await client.getVideoInputDevicesAsync();
 
             settings.preferredAudioInputID = client.preferredAudioInputID;
             settings.preferredAudioOutputID = client.preferredAudioOutputID;
             settings.preferredVideoInputID = client.preferredVideoInputID;
 
-            options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
-            options.currentAudioOutputDevice = await client.getCurrentAudioOutputDeviceAsync();
-            options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
+            devices.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
+            devices.currentAudioOutputDevice = await client.getCurrentAudioOutputDeviceAsync();
+            devices.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
 
             const audioMuted = client.isAudioMuted;
             game.muteUserAudio(client.localUserID, audioMuted);
-            footbar.audioEnabled = !audioMuted;
+            controls.audioEnabled = !audioMuted;
 
             const videoMuted = client.isVideoMuted;
             game.muteUserVideo(client.localUserID, videoMuted);
-            footbar.videoEnabled = !videoMuted;
+            controls.videoEnabled = !videoMuted;
         },
 
         videoConferenceLeft: () => {
@@ -434,8 +392,8 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         },
 
         localAudioMuteStatusChanged: async (evt) => {
-            footbar.audioEnabled = !evt.muted;
-            options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
+            controls.audioEnabled = !evt.muted;
+            devices.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
             settings.preferredAudioInputID = client.preferredAudioInputID;
         },
 
@@ -445,14 +403,14 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         },
 
         localVideoMuteStatusChanged: async (evt) => {
-            footbar.videoEnabled = !evt.muted;
+            controls.videoEnabled = !evt.muted;
             if (evt.muted) {
                 options.setAvatarVideo(null);
             }
             else {
                 options.setAvatarVideo(game.me.avatarVideo.element);
             }
-            options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
+            devices.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
         },
 
         userInitRequest: (evt) => {

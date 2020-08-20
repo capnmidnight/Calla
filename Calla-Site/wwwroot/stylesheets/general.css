@@ -41,15 +41,26 @@ footer {
     text-align: right;
 }
 
-    header a, header a:visited, header a:hover, footer a, footer a:visited, footer a:hover {
+    header a,
+    header a:visited,
+    header a:hover,
+    footer a,
+    footer a:visited,
+    footer a:hover {
         color: #fff;
     }
 
-header, footer, .link-button, button {
+header,
+footer,
+.link-button,
+button,
+.comboButton {
     text-shadow: rgba(0, 0, 0, .25) 3px 3px 3px;
 }
 
-.link-button, button {
+.link-button,
+button,
+.comboButton {
     display: inline-block;
     color: white;
     text-decoration: none;
@@ -62,13 +73,26 @@ header, footer, .link-button, button {
     box-shadow: rgba(0, 0, 0, .25) 3px 3px 3px;
 }
 
-    .link-button:hover, button:hover {
+    .comboButton > button,
+    .comboButton > button:hover,
+    .comboButton > button:active {
+        padding: unset;
+        border-radius: unset;
+        box-shadow: unset;
+        margin: unset;
+    }
+
+    .link-button:hover,
+    button:hover,
+    .comboButton:hover {
         text-decoration: underline;
         margin: -1px 1px 1px -1px;
         box-shadow: rgba(0, 0, 0, .25) 4px 4px 4px;
     }
 
-    .link-button:active, button:active {
+    .link-button:active,
+    button:active,
+    .comboButton:active {
         margin: 1px -1px -1px 1px;
         box-shadow: rgba(0, 0, 0, .25) 2px 2px 2px inset;
     }
@@ -86,14 +110,4 @@ h1, h2, h3, h4, h5, h6 {
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
     font-variant: small-caps;
     margin: 0;
-}
-
-@media (min-width: 600px) {
-    .dialog h1 {
-        font-size: 2em;
-    }
-
-    .dialog h2 {
-        font-size: 1.5em;
-    }
 }

@@ -1,7 +1,7 @@
-﻿import { height, width } from "../html/attrs.js";
-import { backgroundColor, columnGap, cssWidth, zIndex } from "../html/css.js";
+import { height, width } from "../html/attrs.js";
+import { backgroundColor, zIndex } from "../html/css.js";
 import { onClick, onMouseOut, onMouseOver } from "../html/evts.js";
-import { gridDef, gridPos, row } from "../html/grid.js";
+import { gridPos, row } from "../html/grid.js";
 import { hide, isOpen } from "../html/ops.js";
 import { Canvas, Div } from "../html/tags.js";
 import { User } from "../User.js";
@@ -33,14 +33,6 @@ export class UserDirectoryForm extends FormDialog {
 
         /** @type {Map<string, CanvasRenderingContext2D>} */
         this.avatarGs = new Map();
-
-        this.content.append(
-            this.table = Div(
-                gridDef(
-                    ["auto", "1fr"],
-                    ["min-content"]),
-                columnGap("5px"),
-                cssWidth("100%")));
     }
 
     update() {
@@ -71,9 +63,9 @@ export class UserDirectoryForm extends FormDialog {
                 zIndex(-1),
                 newRowColor);
             setTimeout(() => {
-                this.table.removeChild(elem);
+                this.content.removeChild(elem);
             }, ROW_TIMEOUT);
-            this.table.append(elem);
+            this.content.append(elem);
             this.users.set(user.id, user);
             this.avatarGs.set(
                 user.id,
@@ -104,7 +96,7 @@ export class UserDirectoryForm extends FormDialog {
                 }))];
 
         this.rows.set(user.id, elems);
-        this.table.append(...elems);
+        this.content.append(...elems);
     }
 
     delete(userID) {
@@ -112,7 +104,7 @@ export class UserDirectoryForm extends FormDialog {
             const elems = this.rows.get(userID);
             this.rows.delete(userID);
             for (let elem of elems) {
-                this.table.removeChild(elem);
+                this.content.removeChild(elem);
             }
 
             let rowCount = 1;
@@ -137,10 +129,10 @@ export class UserDirectoryForm extends FormDialog {
             backgroundColor("yellow"),
             ...rest.map(i => i.toString()));
 
-        this.table.append(elem);
+        this.content.append(elem);
 
         setTimeout(() => {
-            this.table.removeChild(elem);
+            this.content.removeChild(elem);
         }, 5000);
     }
 }

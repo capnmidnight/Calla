@@ -9050,7 +9050,7 @@ function when(target, resolveEvt, filterTest, timeout) {
 	}
 
 // Pass this if window is not defined yet
-} )( typeof window !== "undefined" ? window : undefined, function( window, noGlobal ) {
+} )( window, function( window, noGlobal ) {
 
 var arr = [];
 
@@ -23976,55 +23976,6 @@ function styles(...rest) {
 function backgroundColor(v) { return new CssProp("backgroundColor", v); }
 
 /**
- * Creates a style attribute with a borderBottom property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function borderBottom(v) { return new CssProp("borderBottom", v); }
-
-/**
- * Creates a style attribute with a borderBottomColor property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function borderBottomColor(v) { return new CssProp("borderBottomColor", v); }
-
-/**
- * Creates a style attribute with a borderLeft property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function borderLeft(v) { return new CssProp("borderLeft", v); }
-
-/**
- * Creates a style attribute with a borderRight property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function borderRight(v) { return new CssProp("borderRight", v); }
-
-/**
- * Creates a style attribute with a borderStyle property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function borderStyle(v) { return new CssProp("borderStyle", v); }
-
-/**
- * Creates a style attribute with a borderTop property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function borderTop(v) { return new CssProp("borderTop", v); }
-
-/**
- * Creates a style attribute with a borderWidth property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function borderWidth(v) { return new CssProp("borderWidth", v); }
-
-/**
  * Creates a style attribute with a color property.
  * @param {string} v
  * @returns {HtmlAttr}
@@ -24032,25 +23983,11 @@ function borderWidth(v) { return new CssProp("borderWidth", v); }
 function color(v) { return new CssProp("color", v); }
 
 /**
- * Creates a style attribute with a columnGap property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function columnGap(v) { return new CssProp("columnGap", v); }
-
-/**
  * Creates a style attribute with a display property.
  * @param {string} v
  * @returns {HtmlAttr}
  **/
 function display(v) { return new CssProp("display", v); }
-
-/**
- * Creates a style attribute with a flexDirection property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function flexDirection(v) { return new CssProp("flexDirection", v); }
 
 /**
  * Creates a style attribute with a fontFamily property.
@@ -24074,13 +24011,6 @@ function fontSize(v) { return new CssProp("fontSize", v); }
 function gridArea(v) { return new CssProp("gridArea", v); }
 
 /**
- * Creates a style attribute with a gridColumn property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function gridColumn(v) { return new CssProp("gridColumn", v); }
-
-/**
  * Creates a style attribute with a gridRow property.
  * @param {string} v
  * @returns {HtmlAttr}
@@ -24095,13 +24025,6 @@ function gridRow(v) { return new CssProp("gridRow", v); }
 function gridTemplateColumns(v) { return new CssProp("gridTemplateColumns", v); }
 
 /**
- * Creates a style attribute with a gridTemplateRows property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function gridTemplateRows(v) { return new CssProp("gridTemplateRows", v); }
-
-/**
  * Creates a style attribute with a height property.
  * @param {string} v
  * @returns {HtmlAttr}
@@ -24109,60 +24032,11 @@ function gridTemplateRows(v) { return new CssProp("gridTemplateRows", v); }
 function cssHeight(v) { return new CssProp("height", v); }
 
 /**
- * Creates a style attribute with a left property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function left(v) { return new CssProp("left", v); }
-
-/**
  * Creates a style attribute with a margin property.
  * @param {string} v
  * @returns {HtmlAttr}
  **/
 function margin(v) { return new CssProp("margin", v); }
-
-/**
- * Creates a style attribute with a marginBottom property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function marginBottom(v) { return new CssProp("marginBottom", v); }
-
-/**
- * Creates a style attribute with a marginRight property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function marginRight(v) { return new CssProp("marginRight", v); }
-
-/**
- * Creates a style attribute with a overflowY property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function overflowY(v) { return new CssProp("overflowY", v); }
-
-/**
- * Creates a style attribute with a padding property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function padding(v) { return new CssProp("padding", v); }
-
-/**
- * Creates a style attribute with a pointerEvents property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function pointerEvents(v) { return new CssProp("pointerEvents", v); }
-
-/**
- * Creates a style attribute with a position property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function position(v) { return new CssProp("position", v); }
 
 /**
  * Creates a style attribute with a textAlign property.
@@ -24184,20 +24058,6 @@ function textDecoration(v) { return new CssProp("textDecoration", v); }
  * @returns {HtmlAttr}
  **/
 function textTransform(v) { return new CssProp("textTransform", v); }
-
-/**
- * Creates a style attribute with a touchAction property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function touchAction(v) { return new CssProp("touchAction", v); }
-
-/**
- * Creates a style attribute with a transform property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function transform(v) { return new CssProp("transform", v); }
 
 /**
  * Creates a style attribute with a width property.
@@ -24293,82 +24153,6 @@ function onMouseOut(callback, opts) { return new HtmlEvt("mouseout", callback, o
  * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
  **/
 function onMouseOver(callback, opts) { return new HtmlEvt("mouseover", callback, opts); }
-
-/**
- * Constructs a CSS grid area definition.
- * @param {number} x - the starting horizontal cell for the element.
- * @param {number} y - the starting vertical cell for the element.
- * @param {number} [w=null] - the number of cells wide the element should cover.
- * @param {number} [h=null] - the number of cells tall the element should cover.
- * @returns {CssProp}
- */
-function gridPos(x, y, w = null, h = null) {
-    if (w === null) {
-        w = 1;
-    }
-    if (h === null) {
-        h = 1;
-    }
-    return gridArea(`${y}/${x}/${y + h}/${x + w}`);
-}
-/**
- * Constructs a CSS grid column definition
- * @param {number} x - the starting horizontal cell for the element.
- * @param {number} [w=null] - the number of cells wide the element should cover.
- * @returns {CssProp}
- */
-function col(x, w = null) {
-    if (w === null) {
-        w = 1;
-    }
-    return gridColumn(`${x}/${x + w}`);
-}
-/**
- * Constructs a CSS grid row definition
- * @param {number} y - the starting vertical cell for the element.
- * @param {number} [h=null] - the number of cells tall the element should cover.
- * @returns {CssProp}
- */
-function row(y, h = null) {
-    if (h === null) {
-        h = 1;
-    }
-    return gridRow(`${y}/${y + h}`);
-}
-/**
- * Create the gridTemplateColumns and gridTemplateRows styles.
- * @param {string[]} cols
- * @param {string[]} rows
- * @returns {CssPropSet}
- */
-function gridDef(cols, rows) {
-    return styles(
-        gridColsDef(...cols),
-        gridRowsDef(...rows));
-}
-
-const displayGrid = display("grid");
-
-/**
- * Create the gridTemplateColumns style attribute, with display set to grid.
- * @param {...string} cols
- * @returns {CssPropSet}
- */
-function gridColsDef(...cols) {
-    return styles(
-        displayGrid,
-        gridTemplateColumns(cols.join(" ")));
-}
-/**
- * Create the gridTemplateRows style attribute, with display set to grid.
- * @param {...string} rows
- * @returns {CssPropSet}
- */
-function gridRowsDef(...rows) {
-    return styles(
-        displayGrid,
-        gridTemplateRows(rows.join(" ")));
-}
 
 function isOpen(target) {
     if (target.isOpen) {
@@ -24490,7 +24274,7 @@ function tag(name, ...rest) {
             else if (x instanceof Element) {
                 elem.appendChild(x);
             }
-            else if (x instanceof HtmlCustomTag) {
+            else if (x.element instanceof Element) {
                 elem.appendChild(x.element);
             }
             else if (x instanceof HtmlAttr
@@ -24508,559 +24292,6 @@ function tag(name, ...rest) {
     }
 
     return elem;
-}
-
-/**
- * A pseudo-element that is made out of other elements.
- **/
-class HtmlCustomTag extends EventBase {
-    /**
-     * Creates a new pseudo-element
-     * @param {string} tagName - the type of tag that will contain the elements in the custom tag.
-     * @param {...TagChild} rest - optional attributes, child elements, and text
-     */
-    constructor(tagName, ...rest) {
-        super();
-        if (rest.length === 1
-            && rest[0] instanceof Element) {
-            /** @type {HTMLElement} */
-            this.element = rest[0];
-        }
-        else {
-            /** @type {HTMLElement} */
-            this.element = tag(tagName, ...rest);
-        }
-    }
-
-    /**
-     * Gets the ID attribute of the container element.
-     * @type {string}
-     **/
-    get id() {
-        return this.element.id;
-    }
-
-    /**
-     * Retrieves the desired element for attaching events.
-     * @returns {HTMLElement}
-     **/
-    get eventTarget() {
-        return this.element;
-    }
-
-    /**
-     * Determine if an event type should be forwarded to the container element.
-     * @param {string} name
-     * @returns {boolean}
-     */
-    isForwardedEvent(name) {
-        return true;
-    }
-
-    /**
-     * Adds an event listener to the container element.
-     * @param {string} name - the name of the event to attach to.
-     * @param {Function} callback - the callback function to use with the event handler.
-     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
-     */
-    addEventListener(name, callback, opts) {
-        if (this.isForwardedEvent(name)) {
-            this.eventTarget.addEventListener(name, callback, opts);
-        }
-        else {
-            super.addEventListener(name, callback, opts);
-        }
-    }
-
-    /**
-     * Removes an event listener from the container element.
-     * @param {string} name - the name of the event to attach to.
-     * @param {Function} callback - the callback function to use with the event handler.
-     */
-    removeEventListener(name, callback) {
-        if (this.isForwardedEvent(name)) {
-            this.eventTarget.removeEventListener(name, callback);
-        }
-        else {
-            super.removeEventListener(name, callback);
-        }
-    }
-
-    /**
-     * Gets the style attribute of the underlying select box.
-     * @type {ElementCSSInlineStyle}
-     */
-    get style() {
-        return this.element.style;
-    }
-
-    get tagName() {
-        return this.element.tagName;
-    }
-
-    get disabled() {
-        return this.element.disabled;
-    }
-
-    set disabled(v) {
-        this.element.disabled = v;
-    }
-
-    /**
-     * Moves cursor focus to the underyling element.
-     **/
-    focus() {
-        this.element.focus();
-    }
-
-    /**
-     * Removes cursor focus from the underlying element.
-     **/
-    blur() {
-        this.element.blur();
-    }
-}
-
-/**
- * An input box that has a label attached to it.
- **/
-class LabeledInputTag extends HtmlCustomTag {
-    /**
-     * Creates an input box that has a label attached to it.
-     * @param {string} id - the ID to use for the input box
-     * @param {string} inputType - the type to use for the input box (number, text, etc.)
-     * @param {string} labelText - the text to display in the label
-     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
-     * @returns {LabeledInputTag}
-     */
-    constructor(id, inputType, labelText, ...rest) {
-        super("div");
-
-        this.label = Label(
-            htmlFor(id),
-            labelText);
-
-        this.input = Input(
-            type(inputType),
-            ...rest);
-
-        this.element.append(
-            this.label,
-            this.input);
-
-        Object.seal(this);
-    }
-
-    /**
-     * Retrieves the desired element for attaching events.
-     * @returns {HTMLElement}
-     **/
-    get eventTarget() {
-        return this.input;
-    }
-
-    /**
-     * Gets the value attribute of the input element
-     * @type {string}
-     */
-    get value() {
-        return this.input.value;
-    }
-
-    /**
-     * Sets the value attribute of the input element
-     * @param {string} v
-     */
-    set value(v) {
-        this.input.value = v;
-    }
-
-    /**
-     * Gets whether or not the input element is checked, if it's a checkbox or radio button.
-     * @type {boolean}
-     */
-    get checked() {
-        return this.input.checked;
-    }
-
-    /**
-     * Sets whether or not the input element is checked, if it's a checkbox or radio button.
-     * @param {boolean} v
-     */
-    set checked(v) {
-        this.input.checked = v;
-    }
-
-    /**
-     * Sets whether or not the input element should be disabled.
-     * @param {boolean} value
-     */
-    setLocked(value) {
-        setLocked(this.input, value);
-    }
-}
-
-class LabeledSelectBoxTag extends HtmlCustomTag {
-    /**
-     * Creates a select box that can bind to collections, with a label set on the side.
-     * @param {string} tagId - the ID to use for the select box.
-     * @param {any} labelText - the text to put in the label.
-     * @param {string} noSelectionText - the text to display when no items are available.
-     * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
-     * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
-     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
-     */
-    constructor(tagId, labelText, noSelectionText, makeID, makeLabel, ...rest) {
-        super("div");
-
-        this.label = Label(
-            htmlFor(tagId),
-            labelText);
-
-        /** @type {SelectBox} */
-        this.select = new SelectBox(noSelectionText, makeID, makeLabel, id(tagId), ...rest);
-
-        this.element.append(
-            this.label,
-            this.select.element);
-
-        Object.seal(this);
-    }
-
-    /**
-     * Retrieves the desired element for attaching events.
-     * @returns {HTMLElement}
-     **/
-    get eventTarget() {
-        return this.select;
-    }
-
-    /**
-     * Gets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
-     * @type {boolean}
-     **/
-    get emptySelectionEnabled() {
-        return this.select.emptySelectionEnabled;
-    }
-
-    /**
-     * Sets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
-     * @param {boolean} value
-     **/
-    set emptySelectionEnabled(value) {
-        this.select.emptySelectionEnabled = value;
-    }
-
-    /**
-     * Gets the collection to which the select box was databound
-     **/
-    get values() {
-        return this.select.values;
-    }
-
-    /**
-     * Sets the collection to which the select box will be databound
-     **/
-    set values(values) {
-        this.select.values = values;
-    }
-
-    /**
-     * Returns the collection of HTMLOptionElements that are stored in the select box
-     * @type {HTMLOptionsCollection}
-     */
-    get options() {
-        return this.select.options;
-    }
-
-    /**
-     * Gets the index of the item that is currently selected in the select box.
-     * The index is offset by -1 if the select box has `emptySelectionEnabled`
-     * set to true, so that the indices returned are always in range of the collection
-     * to which the select box was databound
-     * @type {number}
-     */
-    get selectedIndex() {
-        return this.select.selectedIndex;
-    }
-    /**
-    * Sets the index of the item that should be selected in the select box.
-    * The index is offset by -1 if the select box has `emptySelectionEnabled`
-    * set to true, so that the indices returned are always in range of the collection
-    * to which the select box was databound
-    * @param {number} i
-    */
-    set selectedIndex(i) {
-        this.select.selectedIndex = i;
-    }
-
-    /**
-     * Gets the item at `selectedIndex` in the collection to which the select box was databound
-     * @type {any}
-     */
-    get selectedValue() {
-        return this.select.selectedValue;
-    }
-    /**
-    * Gets the index of the given item in the select box's databound collection, then
-    * sets that index as the `selectedIndex`.
-     * @param {any) value
-    */
-    set selectedValue(v) {
-        this.select.selectedValue = v;
-    }
-
-    /**
-     * Returns the index of the given item in the select box's databound collection.
-     * @param {any} value
-     * @returns {number}
-     */
-    indexOf(value) {
-        return this.select.indexOf(value);
-    }
-
-    /**
-     * Checks to see if the value exists in the databound collection.
-     * @param {any} value
-     * @returns {boolean}
-     */
-    contains(value) {
-        return this.select.contains(value);
-    }
-}
-
-const selectEvt = new Event("select");
-
-/**
- * A panel and a button that opens it.
- **/
-class OptionPanelTag extends HtmlCustomTag {
-
-    /**
-     * Creates a new panel that can be opened with a button click, 
-     * living in a collection of panels that will be hidden when
-     * this panel is opened.
-     * @param {string} panelID - the ID to use for the panel element.
-     * @param {string} name - the text to use on the button.
-     * @param {...any} rest
-     */
-    constructor(panelID, name, ...rest) {
-        super("div",
-            id(panelID),
-            padding("1em"),
-            P(...rest));
-
-        this.button = Button(
-            id(panelID + "Btn"),
-            onClick(() => this.dispatchEvent(selectEvt)),
-            name);
-    }
-
-    isForwardedEvent(name) {
-        return name !== "select";
-    }
-
-    /**
-     * Gets whether or not the panel is visible
-     * @type {boolean}
-     **/
-    get visible() {
-        return this.element.style.display !== null;
-    }
-
-    /**
-     * Sets whether or not the panel is visible
-     * @param {boolean} v
-     **/
-    set visible(v) {
-        setOpen(this.element, v);
-        styles(
-            borderStyle("solid"),
-            borderWidth("2px"),
-            backgroundColor(v ? "#ddd" : "transparent"),
-            borderTop(v ? "" : "none"),
-            borderRight(v ? "" : "none"),
-            borderBottomColor(v ? "#ddd" : ""),
-            borderLeft(v ? "" : "none"))
-            .apply(this.button);
-    }
-}
-
-const disabler$1 = disabled(true),
-    enabler$1 = disabled(false);
-
-/** @type {WeakMap<SelectBoxTag, any[]>} */
-const values = new WeakMap();
-
-function render(self) {
-    clear(self.element);
-    if (self.values.length === 0) {
-        self.element.append(Option(self.noSelectionText));
-        disabler$1.apply(self.element);
-    }
-    else {
-        if (self.emptySelectionEnabled) {
-            self.element.append(Option(self.noSelectionText));
-        }
-        for (let v of self.values) {
-            self.element.append(
-                Option(
-                    value(self.makeID(v)),
-                    self.makeLabel(v)));
-        }
-
-        enabler$1.apply(self.element);
-    }
-}
-
-/**
- * A select box that can be databound to collections.
- **/
-class SelectBoxTag extends HtmlCustomTag {
-
-    /**
-     * Creates a select box that can bind to collections
-     * @param {string} noSelectionText - the text to display when no items are available.
-     * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
-     * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
-     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
-     */
-    constructor(noSelectionText, makeID, makeLabel, ...rest) {
-        super("select", ...rest);
-
-        if (!isFunction(makeID)) {
-            throw new Error("makeID parameter must be a Function");
-        }
-
-        if (!isFunction(makeLabel)) {
-            throw new Error("makeLabel parameter must be a Function");
-        }
-
-        this.noSelectionText = noSelectionText;
-        this.makeID = (v) => v !== null && makeID(v) || null;
-        this.makeLabel = (v) => v !== null && makeLabel(v) || "None";
-        this.emptySelectionEnabled = true;
-
-        Object.seal(this);
-    }
-
-    /**
-     * Gets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
-     * @type {boolean}
-     **/
-    get emptySelectionEnabled() {
-        return this._emptySelectionEnabled;
-    }
-
-    /**
-     * Sets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
-     * @param {boolean} value
-     **/
-    set emptySelectionEnabled(value) {
-        this._emptySelectionEnabled = value;
-        render(this);
-    }
-
-    /**
-     * Gets the collection to which the select box was databound
-     **/
-    get values() {
-        if (!values.has(this)) {
-            values.set(this, []);
-        }
-        return values.get(this);
-    }
-
-    /**
-     * Sets the collection to which the select box will be databound
-     **/
-    set values(newItems) {
-        const curValue = this.selectedValue;
-        const values = this.values;
-        values.splice(0, values.length, ...newItems);
-        render(this);
-        this.selectedValue = curValue;
-    }
-
-    /**
-     * Returns the collection of HTMLOptionElements that are stored in the select box
-     * @type {HTMLOptionsCollection}
-     */
-    get options() {
-        return this.element.options;
-    }
-
-    /**
-     * Gets the index of the item that is currently selected in the select box.
-     * The index is offset by -1 if the select box has `emptySelectionEnabled`
-     * set to true, so that the indices returned are always in range of the collection
-     * to which the select box was databound
-     * @type {number}
-     */
-    get selectedIndex() {
-        let i = this.element.selectedIndex;
-        if (this.emptySelectionEnabled) {
-            --i;
-        }
-        return i;
-    }
-
-    /**
-     * Sets the index of the item that should be selected in the select box.
-     * The index is offset by -1 if the select box has `emptySelectionEnabled`
-     * set to true, so that the indices returned are always in range of the collection
-     * to which the select box was databound
-     * @param {number} i
-     */
-    set selectedIndex(i) {
-        if (this.emptySelectionEnabled) {
-            ++i;
-        }
-        this.element.selectedIndex = i;
-    }
-
-    /**
-     * Gets the item at `selectedIndex` in the collection to which the select box was databound
-     * @type {any}
-     */
-    get selectedValue() {
-        if (0 <= this.selectedIndex && this.selectedIndex < this.values.length) {
-            return this.values[this.selectedIndex];
-        }
-        else {
-            return null;
-        }
-    }
-
-    /**
-     * Gets the index of the given item in the select box's databound collection, then
-     * sets that index as the `selectedIndex`.
-     * @param {any) value
-     */
-    set selectedValue(value) {
-        this.selectedIndex = this.indexOf(value);
-    }
-
-    /**
-     * Returns the index of the given item in the select box's databound collection.
-     * @param {any} value
-     * @returns {number}
-     */
-    indexOf(value) {
-        return this.values
-            .findIndex(v =>
-                value !== null
-                && this.makeID(value) === this.makeID(v));
-    }
-
-    /**
-     * Checks to see if the value exists in the databound collection.
-     * @param {any} value
-     * @returns {boolean}
-     */
-    contains(value) {
-        return this.indexOf(value) >= 0.
-    }
 }
 
 /**
@@ -25217,59 +24448,11 @@ function CanvasOffscreen(w, h, ...rest) {
 }
 
 /**
- * Creates an input box that has a label attached to it.
- * @param {string} id - the ID to use for the input box
- * @param {string} inputType - the type to use for the input box (number, text, etc.)
- * @param {string} labelText - the text to display in the label
- * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
- * @returns {LabeledInputTag}
- */
-function LabeledInput(id, inputType, labelText, ...rest) {
-    return new LabeledInputTag(id, inputType, labelText, ...rest);
-}
-
-/**
  * Creates a string from a list item to use as the item's ID or label in a select box.
  * @callback makeItemValueCallback
  * @param {any} obj - the object
  * @returns {string}
  */
-
-/**
- * Creates a select box that can bind to collections
- * @param {string} noSelectionText - the text to display when no items are available.
- * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
- * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
- * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
- * @returns {SelectBoxTag}
- */
-function SelectBox(noSelectionText, makeID, makeLabel, ...rest) {
-    return new SelectBoxTag(noSelectionText, makeID, makeLabel, ...rest);
-}
-
-/**
- * Creates a select box, with a label attached to it, that can bind to collections
- * @param {string} id - the ID to use for the input box
- * @param {string} labelText - the text to display in the label
- * @param {string} noSelectionText - the text to display when no items are available.
- * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
- * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
- * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
- * @returns {LabeledSelectBoxTag}
- */
-function LabeledSelectBox(id, labelText, noSelectionText, makeID, makeLabel, ...rest) {
-    return new LabeledSelectBoxTag(id, labelText, noSelectionText, makeID, makeLabel, ...rest);
-}
-
-/**
- * Creates an OptionPanelTag element
- * @param {string} id - the ID to use for the content element of the option panel
- * @param {string} name - the text to use in the button that triggers displaying the content element
- * @param {...TagChild} rest - optional attributes, child elements, and text to use on the content element
- */
-function OptionPanel(id, name, ...rest) {
-    return new OptionPanelTag(id, name, ...rest);
-}
 
 /**
  * Creates a Div element with margin: auto.
@@ -25282,6 +24465,543 @@ function Run(...rest) {
         ...rest);
 }
 
+const toggleOptionsEvt = new Event("toggleOptions"),
+    tweetEvt = new Event("tweet"),
+    leaveEvt = new Event("leave"),
+    toggleFullscreenEvt = new Event("toggleFullscreen"),
+    toggleInstructionsEvt = new Event("toggleInstructions"),
+    toggleUserDirectoryEvt = new Event("toggleUserDirectory"),
+    toggleAudioEvt = new Event("toggleAudio"),
+    toggleVideoEvt = new Event("toggleVideo"),
+    changeDevicesEvt = new Event("changeDevices"),
+    emoteEvt = new Event("emote"),
+    selectEmojiEvt = new Event("selectEmoji"),
+    zoomChangedEvt = new Event("zoomChanged");
+
+class ButtonLayer extends EventBase {
+    constructor(targetCanvas, zoomMin, zoomMax) {
+        super();
+
+        const _ = (evt) => () => this.dispatchEvent(evt);
+
+        const changeZoom = (dz) => {
+            this.zoom += dz;
+            this.dispatchEvent(zoomChangedEvt);
+        };
+
+        this.element = document.getElementById("controls")
+            || Div(id("controls"));
+
+        this.element.append(
+
+            this.optionsButton = Button(
+                id("optionsButton"),
+                title("Show/hide options"),
+                onClick(_(toggleOptionsEvt)),
+                Run(gear.value),
+                Run("Options")),
+
+            this.instructionsButton = Button(
+                id("instructionsButton"),
+                title("Show/hide instructions"),
+                onClick(_(toggleInstructionsEvt)),
+                Run(questionMark.value),
+                Run("Info")),
+
+            this.shareButton = Button(
+                id("shareButton"),
+                title("Share your current room to twitter"),
+                onClick(_(tweetEvt)),
+                Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
+                    alt("icon"),
+                    role("presentation"),
+                    cssHeight("25px"),
+                    margin("2px auto -2px auto")),
+                Run("Tweet")),
+
+            this.showUsersButton = Button(
+                id("showUsersButton"),
+                title("View user directory"),
+                onClick(_(toggleUserDirectoryEvt)),
+                Run(speakingHead.value),
+                Run("Users")),
+
+
+            this.fullscreenButton = Button(
+                id("fullscreenButton"),
+                title("Toggle fullscreen"),
+                onClick(_(toggleFullscreenEvt)),
+                onClick(() => this.isFullscreen = !this.isFullscreen),
+                Run(squareFourCourners.value),
+                Run("Expand")),
+
+
+            this.leaveButton = Button(
+                id("leaveButton"),
+                title("Leave the room"),
+                onClick(_(leaveEvt)),
+                Run(door.value),
+                Run("Leave")),
+
+            Div(
+                id("toggleAudioControl"),
+                className("comboButton"),
+                this.toggleAudioButton = Button(
+                    id("toggleAudioButton"),
+                    title("Toggle audio mute/unmute"),
+                    onClick(_(toggleAudioEvt)),
+                    this.toggleAudioLabel = Run(speakerHighVolume.value),
+                    Run("Audio")),
+                this.toggleVideoButton = Button(
+                    id("toggleVideoButton"),
+                    title("Toggle video mute/unmute"),
+                    onClick(_(toggleVideoEvt)),
+                    this.toggleVideoLabel = Run(noMobilePhone.value),
+                    Run("Video")),
+                this.changeDevicesButton = Button(
+                    id("changeDevicesButton"),
+                    title("Change devices"),
+                    onClick(_(changeDevicesEvt)),
+                    Run(upwardsButton.value),
+                    Run("Change"))),
+
+            Div(
+                id("emojiControl"),
+                className("comboButton"),
+                textAlign("center"),
+                Button(
+                    id("emoteButton"),
+                    title("Emote"),
+                    onClick(_(emoteEvt)),
+                    this.emoteButton = Run(whiteFlower.value),
+                    Run("Emote")),
+                Button(
+                    id("selectEmoteButton"),
+                    title("Select Emoji"),
+                    onClick(_(selectEmojiEvt)),
+                    Run(upwardsButton.value),
+                    Run("Change"))),
+
+            this.zoomInButton = Button(
+                id("zoomInButton"),
+                title("Zoom in"),
+                onClick(() => changeZoom(0.5)),
+                Run(magnifyingGlassTiltedLeft.value),
+                Run("+")),
+
+            Div(id("zoomSliderContainer"),
+                this.slider = InputRange(
+                    id("zoomSlider"),
+                    title("Zoom"),
+                    min(zoomMin),
+                    max(zoomMax),
+                    step(0.1),
+                    value(0),
+                    onInput(() => this.dispatchEvent(zoomChangedEvt)))),
+
+
+            this.zoomOutButton = Button(
+                id("zoomOutButton"),
+                title("Zoom out"),
+                onClick(() => changeZoom(-0.5)),
+                Run(magnifyingGlassTiltedRight.value),
+                Run("-")));
+
+        this._audioEnabled = true;
+        this._videoEnabled = false;
+
+        Object.seal(this);
+    }
+
+    get isFullscreen() {
+        return document.fullscreenElement !== null;
+    }
+
+    set isFullscreen(value) {
+        if (value) {
+            document.body.requestFullscreen();
+        }
+        else {
+            document.exitFullscreen();
+        }
+        updateLabel(
+            this.fullscreenButton,
+            value,
+            downRightArrow.value,
+            squareFourCourners.value);
+    }
+
+    hide() {
+        this.element.style.display = "none";
+    }
+
+    show() {
+        this.element.style.display = "";
+    }
+
+    get enabled() {
+        return !this.instructionsButton.disabled;
+    }
+
+    set enabled(v) {
+        for (let button of this.element.querySelectorAll("button")) {
+            button.disabled = !v;
+        }
+    }
+
+    get audioEnabled() {
+        return this._audioEnabled;
+    }
+
+    set audioEnabled(value) {
+        this._audioEnabled = value;
+        updateLabel(
+            this.toggleAudioLabel,
+            value,
+            speakerHighVolume.value,
+            mutedSpeaker.value);
+    }
+
+    get videoEnabled() {
+        return this._videoEnabled;
+    }
+
+    set videoEnabled(value) {
+        this._videoEnabled = value;
+        updateLabel(
+            this.toggleVideoLabel,
+            value,
+            videoCamera.value,
+            noMobilePhone.value);
+    }
+
+    setEmojiButton(key, emoji) {
+        this.emoteButton.innerHTML = emoji.value;
+    }
+
+    get zoom() {
+        return parseFloat(this.slider.value);
+    }
+
+    /** @type {number} */
+    set zoom(v) {
+        this.slider.value = v;
+    }
+}
+
+/**
+ * A pseudo-element that is made out of other elements.
+ **/
+class HtmlCustomTag extends EventBase {
+    /**
+     * Creates a new pseudo-element
+     * @param {string} tagName - the type of tag that will contain the elements in the custom tag.
+     * @param {...TagChild} rest - optional attributes, child elements, and text
+     */
+    constructor(tagName, ...rest) {
+        super();
+
+        /** @type {HTMLElement} */
+        this.element = null;
+
+        for (let attr of rest) {
+            if (attr.key === "id") {
+                this.element = document.getElementById(attr.value);
+            }
+            else if (attr instanceof Element) {
+                this.element = attr;
+            }
+
+            if (this.element) {
+                break;
+            }
+        }
+
+        if (!this.element) {
+            this.element = tag(tagName, ...rest);
+        }
+    }
+
+    /**
+     * Gets the ID attribute of the container element.
+     * @type {string}
+     **/
+    get id() {
+        return this.element.id;
+    }
+
+    /**
+     * Retrieves the desired element for attaching events.
+     * @returns {HTMLElement}
+     **/
+    get eventTarget() {
+        return this.element;
+    }
+
+    /**
+     * Determine if an event type should be forwarded to the container element.
+     * @param {string} name
+     * @returns {boolean}
+     */
+    isForwardedEvent(name) {
+        return true;
+    }
+
+    /**
+     * Adds an event listener to the container element.
+     * @param {string} name - the name of the event to attach to.
+     * @param {Function} callback - the callback function to use with the event handler.
+     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+     */
+    addEventListener(name, callback, opts) {
+        if (this.isForwardedEvent(name)) {
+            this.eventTarget.addEventListener(name, callback, opts);
+        }
+        else {
+            super.addEventListener(name, callback, opts);
+        }
+    }
+
+    /**
+     * Removes an event listener from the container element.
+     * @param {string} name - the name of the event to attach to.
+     * @param {Function} callback - the callback function to use with the event handler.
+     */
+    removeEventListener(name, callback) {
+        if (this.isForwardedEvent(name)) {
+            this.eventTarget.removeEventListener(name, callback);
+        }
+        else {
+            super.removeEventListener(name, callback);
+        }
+    }
+
+    /**
+     * Gets the style attribute of the underlying select box.
+     * @type {ElementCSSInlineStyle}
+     */
+    get style() {
+        return this.element.style;
+    }
+
+    get tagName() {
+        return this.element.tagName;
+    }
+
+    get disabled() {
+        return this.element.disabled;
+    }
+
+    set disabled(v) {
+        this.element.disabled = v;
+    }
+
+    /**
+     * Moves cursor focus to the underyling element.
+     **/
+    focus() {
+        this.element.focus();
+    }
+
+    /**
+     * Removes cursor focus from the underlying element.
+     **/
+    blur() {
+        this.element.blur();
+    }
+}
+
+const disabler$1 = disabled(true),
+    enabler$1 = disabled(false);
+
+/** @type {WeakMap<SelectBoxTag, any[]>} */
+const values = new WeakMap();
+
+function render(self) {
+    clear(self.element);
+    if (self.values.length === 0) {
+        self.element.append(Option(self.noSelectionText));
+        disabler$1.apply(self.element);
+    }
+    else {
+        if (self.emptySelectionEnabled) {
+            self.element.append(Option(self.noSelectionText));
+        }
+        for (let v of self.values) {
+            self.element.append(
+                Option(
+                    value(self.makeID(v)),
+                    self.makeLabel(v)));
+        }
+
+        enabler$1.apply(self.element);
+    }
+}
+
+/**
+ * Creates a select box that can bind to collections
+ * @param {string} id - the ID to use for the select box
+ * @param {string} noSelectionText - the text to display when no items are available.
+ * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
+ * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
+ * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+ * @returns {SelectBoxTag}
+ */
+function SelectBox(id, noSelectionText, makeID, makeLabel, ...rest) {
+    return new SelectBoxTag(id, noSelectionText, makeID, makeLabel, ...rest);
+}
+
+/**
+ * A select box that can be databound to collections.
+ **/
+class SelectBoxTag extends HtmlCustomTag {
+
+    /**
+     * Creates a select box that can bind to collections
+     * @param {string} tagId - the ID to use for the select box.
+     * @param {string} noSelectionText - the text to display when no items are available.
+     * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
+     * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
+     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+     */
+    constructor(tagId, noSelectionText, makeID, makeLabel, ...rest) {
+        super("select", id(tagId), ...rest);
+
+        if (!isFunction(makeID)) {
+            throw new Error("makeID parameter must be a Function");
+        }
+
+        if (!isFunction(makeLabel)) {
+            throw new Error("makeLabel parameter must be a Function");
+        }
+
+        this.noSelectionText = noSelectionText;
+        this.makeID = (v) => v !== null && makeID(v) || null;
+        this.makeLabel = (v) => v !== null && makeLabel(v) || "None";
+        this.emptySelectionEnabled = true;
+
+        Object.seal(this);
+    }
+
+    /**
+     * Gets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
+     * @type {boolean}
+     **/
+    get emptySelectionEnabled() {
+        return this._emptySelectionEnabled;
+    }
+
+    /**
+     * Sets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
+     * @param {boolean} value
+     **/
+    set emptySelectionEnabled(value) {
+        this._emptySelectionEnabled = value;
+        render(this);
+    }
+
+    /**
+     * Gets the collection to which the select box was databound
+     **/
+    get values() {
+        if (!values.has(this)) {
+            values.set(this, []);
+        }
+        return values.get(this);
+    }
+
+    /**
+     * Sets the collection to which the select box will be databound
+     **/
+    set values(newItems) {
+        const curValue = this.selectedValue;
+        const values = this.values;
+        values.splice(0, values.length, ...newItems);
+        render(this);
+        this.selectedValue = curValue;
+    }
+
+    /**
+     * Returns the collection of HTMLOptionElements that are stored in the select box
+     * @type {HTMLOptionsCollection}
+     */
+    get options() {
+        return this.element.options;
+    }
+
+    /**
+     * Gets the index of the item that is currently selected in the select box.
+     * The index is offset by -1 if the select box has `emptySelectionEnabled`
+     * set to true, so that the indices returned are always in range of the collection
+     * to which the select box was databound
+     * @type {number}
+     */
+    get selectedIndex() {
+        let i = this.element.selectedIndex;
+        if (this.emptySelectionEnabled) {
+            --i;
+        }
+        return i;
+    }
+
+    /**
+     * Sets the index of the item that should be selected in the select box.
+     * The index is offset by -1 if the select box has `emptySelectionEnabled`
+     * set to true, so that the indices returned are always in range of the collection
+     * to which the select box was databound
+     * @param {number} i
+     */
+    set selectedIndex(i) {
+        if (this.emptySelectionEnabled) {
+            ++i;
+        }
+        this.element.selectedIndex = i;
+    }
+
+    /**
+     * Gets the item at `selectedIndex` in the collection to which the select box was databound
+     * @type {any}
+     */
+    get selectedValue() {
+        if (0 <= this.selectedIndex && this.selectedIndex < this.values.length) {
+            return this.values[this.selectedIndex];
+        }
+        else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the index of the given item in the select box's databound collection, then
+     * sets that index as the `selectedIndex`.
+     * @param {any) value
+     */
+    set selectedValue(value) {
+        this.selectedIndex = this.indexOf(value);
+    }
+
+    /**
+     * Returns the index of the given item in the select box's databound collection.
+     * @param {any} value
+     * @returns {number}
+     */
+    indexOf(value) {
+        return this.values
+            .findIndex(v =>
+                value !== null
+                && this.makeID(value) === this.makeID(v));
+    }
+
+    /**
+     * Checks to see if the value exists in the databound collection.
+     * @param {any} value
+     * @returns {boolean}
+     */
+    contains(value) {
+        return this.indexOf(value) >= 0.
+    }
+}
+
 const hiddenEvt = new Event("hidden"),
     shownEvt = new Event("shown");
 
@@ -25289,53 +25009,15 @@ class FormDialog extends EventBase {
     constructor(name, header) {
         super();
 
-        const formStyle = styles(
-            gridDef(
-                ["5fr", "1fr", "1fr"],
-                ["auto", "auto", "1fr", "auto", "auto"]),
-            overflowY("hidden"));
+        this.element = document.getElementById(name);
+        this.header = this.element.querySelector(".header");
+        this.content = this.element.querySelector(".content");
+        this.footer = this.element.querySelector(".footer");
 
-        this.element = document.getElementById(name) ||
-            Div(
-                id(name),
-                className("dialog"),
-                Div(
-                    gridColsDef("1fr", "auto"),
-                    col(1, 3),
-                    H1(
-                        col(1),
-                        margin("0"),
-                        header),
-                    Button(
-                        col(2),
-                        padding("1em"),
-                        close.value,
-                        onClick(() =>
-                            hide(this)))));
-
-        formStyle.apply(this.element);
-
-        this.header = this.element.querySelector(".header")
-            || this.element.appendChild(Div(className("header")));
-
-        gridPos(1, 2, 3, 1).apply(this.header);
-
-        this.content = this.element.querySelector(".content")
-            || this.element.appendChild(Div(className("content")));
-
-        styles(
-            gridPos(1, 3, 3, 1),
-            overflowY("scroll"))
-            .apply(this.content);
-
-        this.footer = this.element.querySelector(".footer")
-            || this.element.appendChild(Div(className("footer")));
-
-        styles(
-            gridPos(1, 4, 3, 1),
-            display("flex"),
-            flexDirection("row-reverse"))
-            .apply(this.footer);
+        const closeButton = this.element.querySelector(".dialogTitle > button.closeButton");
+        if (closeButton) {
+            closeButton.addEventListener("click", () => hide(this));
+        }
     }
 
     get tagName() {
@@ -25363,7 +25045,7 @@ class FormDialog extends EventBase {
     }
 
     show() {
-        show(this.element, "grid");
+        show(this.element);
         this.dispatchEvent(shownEvt);
     }
 
@@ -25376,6 +25058,138 @@ class FormDialog extends EventBase {
         hide(this.element);
         this.dispatchEvent(hiddenEvt);
     }
+}
+
+const audioInputChangedEvt = new Event("audioInputChanged"),
+    audioOutputChangedEvt = new Event("audioOutputChanged"),
+    videoInputChangedEvt = new Event("videoInputChanged");
+
+class DevicesDialog extends FormDialog {
+    constructor() {
+        super("devices", "Devices");
+
+        const _ = (evt) => () => this.dispatchEvent(evt);
+
+        this.videoInputSelect = SelectBox(
+            "videoInputDevices",
+            "No video input",
+            d => d.deviceId,
+            d => d.label,
+            onInput(_(videoInputChangedEvt)));
+
+        this.audioInputSelect = SelectBox(
+            "audioInputDevices",
+            "No audio input",
+            d => d.deviceId,
+            d => d.label,
+            onInput(_(audioInputChangedEvt)));
+
+        this.audioOutputSelect = SelectBox(
+            "audioOutputDevices",
+            "No audio output",
+            d => d.deviceId,
+            d => d.label,
+            onInput(_(audioOutputChangedEvt)));
+
+        this.audioInputDevices = [];
+        this.audioOutputDevices = [];
+        this.videoInputDevices = [];
+
+        Object.seal(this);
+    }
+
+    get audioInputDevices() {
+        return this.audioInputSelect.values;
+    }
+
+    set audioInputDevices(values) {
+        this.audioInputSelect.values = values;
+    }
+
+    get currentAudioInputDevice() {
+        return this.audioInputSelect.selectedValue;
+    }
+
+    set currentAudioInputDevice(value) {
+        this.audioInputSelect.selectedValue = value;
+    }
+
+
+    get audioOutputDevices() {
+        return this.audioOutputSelect.values;
+    }
+
+    set audioOutputDevices(values) {
+        this.audioOutputSelect.values = values;
+    }
+
+    get currentAudioOutputDevice() {
+        return this.audioOutputSelect.selectedValue;
+    }
+
+    set currentAudioOutputDevice(value) {
+        this.audioOutputSelect.selectedValue = value;
+    }
+
+
+    get videoInputDevices() {
+        return this.videoInputSelect.values;
+    }
+
+    set videoInputDevices(values) {
+        this.videoInputSelect.values = values;
+    }
+
+    get currentVideoInputDevice() {
+        return this.videoInputSelect.selectedValue;
+    }
+
+    set currentVideoInputDevice(value) {
+        this.videoInputSelect.selectedValue = value;
+    }
+}
+
+/**
+ * Constructs a CSS grid area definition.
+ * @param {number} x - the starting horizontal cell for the element.
+ * @param {number} y - the starting vertical cell for the element.
+ * @param {number} [w=null] - the number of cells wide the element should cover.
+ * @param {number} [h=null] - the number of cells tall the element should cover.
+ * @returns {CssProp}
+ */
+function gridPos(x, y, w = null, h = null) {
+    if (w === null) {
+        w = 1;
+    }
+    if (h === null) {
+        h = 1;
+    }
+    return gridArea(`${y}/${x}/${y + h}/${x + w}`);
+}
+/**
+ * Constructs a CSS grid row definition
+ * @param {number} y - the starting vertical cell for the element.
+ * @param {number} [h=null] - the number of cells tall the element should cover.
+ * @returns {CssProp}
+ */
+function row(y, h = null) {
+    if (h === null) {
+        h = 1;
+    }
+    return gridRow(`${y}/${y + h}`);
+}
+
+const displayGrid = display("grid");
+
+/**
+ * Create the gridTemplateColumns style attribute, with display set to grid.
+ * @param {...string} cols
+ * @returns {CssPropSet}
+ */
+function gridColsDef(...cols) {
+    return styles(
+        displayGrid,
+        gridTemplateColumns(cols.join(" ")));
 }
 
 const headerStyle = styles(
@@ -25584,240 +25398,6 @@ class EmojiSelectedEvent extends Event {
     }
 }
 
-const toggleAudioEvt = new Event("toggleAudio"),
-    toggleVideoEvt = new Event("toggleVideo"),
-    emoteEvt = new Event("emote"),
-    selectEmojiEvt = new Event("selectEmoji"),
-    subelStyle = styles(
-        fontSize("1.25em"),
-        cssWidth("3em"),
-        cssHeight("100%")),
-    pointerEventsAll = pointerEvents("all"),
-    subButtonStyle = styles(
-        fontSize("1.25em"),
-        cssHeight("100%")),
-    buttonLabelStyle = fontSize("12px");
-
-class FooterBar extends EventBase {
-    constructor() {
-        super();
-
-        const _ = (evt) => () => this.dispatchEvent(evt);
-
-        /** @type {HTMLButtonElement} */
-        this.muteAudioButton = null;
-
-        this.element = Div(
-            id("footbar"),
-            gridColsDef("auto", "1fr", "auto"),
-            padding("4px"),
-            cssWidth("100%"),
-            columnGap("5px"),
-            backgroundColor("transparent"),
-            pointerEvents("none"),
-
-            Button(
-                title("Toggle audio mute/unmute"),
-                onClick(_(toggleAudioEvt)),
-                gridPos(1, 1),
-                subelStyle,
-                pointerEventsAll,
-                this.muteAudioButton = Run(speakerHighVolume.value),
-                Run(buttonLabelStyle, "Audio")),
-
-            this.emojiControl = Span(
-                gridPos(2, 1),
-                textAlign("center"),
-                subButtonStyle,
-                Button(
-                    title("Emote"),
-                    onClick(_(emoteEvt)),
-                    subButtonStyle,
-                    pointerEventsAll,
-                    borderRight("none"),
-                    this.emoteButton = Run(whiteFlower.value),
-                    Run(buttonLabelStyle, "Emote")),
-                Button(
-                    title("Select Emoji"),
-                    onClick(_(selectEmojiEvt)),
-                    subButtonStyle,
-                    pointerEventsAll,
-                    borderLeft("none"),
-                    Run(upwardsButton.value),
-                    Run(buttonLabelStyle, "Change"))),
-
-
-            Button(
-                title("Toggle video mute/unmute"),
-                onClick(_(toggleVideoEvt)),
-                gridPos(3, 1),
-                subelStyle,
-                pointerEventsAll,
-                this.muteVideoButton = Run(noMobilePhone.value),
-                Run(buttonLabelStyle, "Video")));
-
-        this._audioEnabled = true;
-        this._videoEnabled = false;
-
-        Object.seal(this);
-    }
-
-    get enabled() {
-        return !this.muteAudioButton.disabled;
-    }
-
-    set enabled(v) {
-        for (let button of this.element.querySelectorAll("button")) {
-            button.disabled = !v;
-        }
-    }
-
-    get audioEnabled() {
-        return this._audioEnabled;
-    }
-
-    set audioEnabled(value) {
-        this._audioEnabled = value;
-        updateLabel(
-            this.muteAudioButton,
-            value,
-            speakerHighVolume.value,
-            mutedSpeaker.value);
-    }
-
-    get videoEnabled() {
-        return this._videoEnabled;
-    }
-
-    set videoEnabled(value) {
-        this._videoEnabled = value;
-        updateLabel(
-            this.muteVideoButton,
-            value,
-            videoCamera.value,
-            noMobilePhone.value);
-    }
-
-    setEmojiButton(key, emoji) {
-        this.emoteButton.innerHTML = emoji.value;
-    }
-}
-
-const toggleOptionsEvt = new Event("toggleOptions"),
-    tweetEvt = new Event("tweet"),
-    leaveEvt = new Event("leave"),
-    toggleFullscreenEvt = new Event("toggleFullscreen"),
-    toggleInstructionsEvt = new Event("toggleInstructions"),
-    toggleUserDirectoryEvt = new Event("toggleUserDirectory"),
-    subelStyle$1 = styles(
-        pointerEvents("all"),
-        fontSize("1.25em"),
-        cssWidth("3em"),
-        cssHeight("100%")),
-    buttonLabelStyle$1 = fontSize("12px");
-
-class HeaderBar extends EventBase {
-    constructor() {
-        super();
-
-        const _ = (evt) => () => this.dispatchEvent(evt);
-
-        this.element = Div(
-            id("headbar"),
-            gridColsDef("auto", "auto", "auto", "auto", "1fr", "auto", "auto"),
-            padding("4px"),
-            cssWidth("100%"),
-            columnGap("5px"),
-            backgroundColor("transparent"),
-            pointerEvents("none"),
-
-            this.optionsButton = Button(
-                title("Show/hide options"),
-                onClick(_(toggleOptionsEvt)),
-                subelStyle$1,
-                gridPos(1, 1),
-                Run(gear.value),
-                Run(buttonLabelStyle$1, "Options")),
-
-            this.instructionsButton = Button(
-                title("Show/hide instructions"),
-                onClick(_(toggleInstructionsEvt)),
-                subelStyle$1,
-                gridPos(2, 1),
-                Run(questionMark.value),
-                Run(buttonLabelStyle$1, "Info")),
-
-            Button(
-                title("Share your current room to twitter"),
-                onClick(_(tweetEvt)),
-                subelStyle$1,
-                gridPos(3, 1),
-                Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
-                    alt("icon"),
-                    role("presentation"),
-                    cssHeight("25px"),
-                    marginBottom("-7px")),
-                Run(buttonLabelStyle$1, "Tweet")),
-
-            Button(
-                title("View user directory"),
-                onClick(_(toggleUserDirectoryEvt)),
-                subelStyle$1,
-                gridPos(4, 1),
-                Run(speakingHead.value),
-                Run(buttonLabelStyle$1, "Users")),
-
-
-            this.fullscreenButton = Button(
-                title("Toggle fullscreen"),
-                onClick(_(toggleFullscreenEvt)),
-                onClick(() => this.isFullscreen = !this.isFullscreen),
-                subelStyle$1,
-                gridPos(6, 1),
-                Run(squareFourCourners.value),
-                Run(buttonLabelStyle$1, "Expand")),
-
-
-            Button(
-                title("Leave the room"),
-                onClick(_(leaveEvt)),
-                subelStyle$1,
-                gridPos(7, 1),
-                Run(door.value),
-                Run(buttonLabelStyle$1, "Leave")));
-
-        Object.seal(this);
-    }
-
-    get isFullscreen() {
-        return document.fullscreenElement !== null;
-    }
-
-    set isFullscreen(value) {
-        if (value) {
-            document.body.requestFullscreen();
-        }
-        else {
-            document.exitFullscreen();
-        }
-        updateLabel(
-            this.fullscreenButton,
-            value,
-            downRightArrow.value,
-            squareFourCourners.value);
-    }
-
-    get enabled() {
-        return !this.instructionsButton.disabled;
-    }
-
-    set enabled(v) {
-        for (let button of this.element.querySelectorAll("button")) {
-            button.disabled = !v;
-        }
-    }
-}
-
 const defaultRooms = new Map([
     ["calla", "Calla"],
     ["island", "Island"],
@@ -25870,10 +25450,10 @@ class LoginForm extends FormDialog {
         this.roomLabel = this.element.querySelector("label[for='roomSelector']");
 
         this.roomSelect = SelectBox(
+            "roomSelector",
             "No rooms available",
             v => v,
-            k => defaultRooms.get(k),
-            this.element.querySelector("#roomSelector"));
+            k => defaultRooms.get(k));
         this.roomSelect.addEventListener("input", validate);
         this.roomSelect.emptySelectionEnabled = false;
         this.roomSelect.values = defaultRooms.keys();
@@ -26050,6 +25630,159 @@ class LoginForm extends FormDialog {
         const self = selfs.get(this);
         self.connected = v;
         this.connecting = false;
+    }
+}
+
+/**
+ * Creates an input box that has a label attached to it.
+ * @param {string} id - the ID to use for the input box
+ * @param {string} inputType - the type to use for the input box (number, text, etc.)
+ * @param {string} labelText - the text to display in the label
+ * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+ * @returns {LabeledInputTag}
+ */
+function LabeledInput(id, inputType, labelText, ...rest) {
+    return new LabeledInputTag(id, inputType, labelText, ...rest);
+}
+
+/**
+ * An input box that has a label attached to it.
+ **/
+class LabeledInputTag extends HtmlCustomTag {
+    /**
+     * Creates an input box that has a label attached to it.
+     * @param {string} id - the ID to use for the input box
+     * @param {string} inputType - the type to use for the input box (number, text, etc.)
+     * @param {string} labelText - the text to display in the label
+     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+     * @returns {LabeledInputTag}
+     */
+    constructor(id, inputType, labelText, ...rest) {
+        super("div");
+
+        this.label = Label(
+            htmlFor(id),
+            labelText);
+
+        this.input = Input(
+            type(inputType),
+            ...rest);
+
+        this.element.append(
+            this.label,
+            this.input);
+
+        this.element.style.display = "grid";
+
+
+        Object.seal(this);
+    }
+
+    /**
+     * Retrieves the desired element for attaching events.
+     * @returns {HTMLElement}
+     **/
+    get eventTarget() {
+        return this.input;
+    }
+
+    /**
+     * Gets the value attribute of the input element
+     * @type {string}
+     */
+    get value() {
+        return this.input.value;
+    }
+
+    /**
+     * Sets the value attribute of the input element
+     * @param {string} v
+     */
+    set value(v) {
+        this.input.value = v;
+    }
+
+    /**
+     * Gets whether or not the input element is checked, if it's a checkbox or radio button.
+     * @type {boolean}
+     */
+    get checked() {
+        return this.input.checked;
+    }
+
+    /**
+     * Sets whether or not the input element is checked, if it's a checkbox or radio button.
+     * @param {boolean} v
+     */
+    set checked(v) {
+        this.input.checked = v;
+    }
+
+    /**
+     * Sets whether or not the input element should be disabled.
+     * @param {boolean} value
+     */
+    setLocked(value) {
+        setLocked(this.input, value);
+    }
+}
+
+const selectEvt = new Event("select");
+
+/**
+ * Creates an OptionPanelTag element
+ * @param {string} id - the ID to use for the content element of the option panel
+ * @param {string} name - the text to use in the button that triggers displaying the content element
+ * @param {...TagChild} rest - optional attributes, child elements, and text to use on the content element
+ */
+function OptionPanel(id, name, ...rest) {
+    return new OptionPanelTag(id, name, ...rest);
+}
+
+/**
+ * A panel and a button that opens it.
+ **/
+class OptionPanelTag extends HtmlCustomTag {
+
+    /**
+     * Creates a new panel that can be opened with a button click, 
+     * living in a collection of panels that will be hidden when
+     * this panel is opened.
+     * @param {string} panelID - the ID to use for the panel element.
+     * @param {string} name - the text to use on the button.
+     * @param {...any} rest
+     */
+    constructor(panelID, name, ...rest) {
+        super("div",
+            id(panelID),
+            P(...rest));
+
+        this.button = Button(
+            id(panelID + "Btn"),
+            onClick(() => this.dispatchEvent(selectEvt)),
+            name);
+    }
+
+    isForwardedEvent(name) {
+        return name !== "select";
+    }
+
+    /**
+     * Gets whether or not the panel is visible
+     * @type {boolean}
+     **/
+    get visible() {
+        return this.element.style.display !== null;
+    }
+
+    /**
+     * Sets whether or not the panel is visible
+     * @param {boolean} v
+     **/
+    set visible(v) {
+        setOpen(this.element, v);
+        this.button.className = v ? "tabSelected" : "tabUnselected";
+        this.element.className = v ? "tabSelected" : "tabUnselected";
     }
 }
 
@@ -27074,9 +26807,6 @@ const keyWidthStyle = cssWidth("7em"),
     inputBindingChangedEvt$1 = new Event("inputBindingChanged"),
     audioPropsChangedEvt = new Event("audioPropertiesChanged"),
     toggleDrawHearingEvt = new Event("toggleDrawHearing"),
-    audioInputChangedEvt = new Event("audioInputChanged"),
-    audioOutputChangedEvt = new Event("audioOutputChanged"),
-    videoInputChangedEvt = new Event("videoInputChanged"),
     toggleVideoEvt$1 = new Event("toggleVideo"),
     gamepadButtonUpEvt = Object.assign(new Event("gamepadbuttonup"), {
         button: 0
@@ -27267,13 +26997,16 @@ class OptionsForm extends FormDialog {
                 this.keyButtonToggleAudio = makeKeyboardBinder("keyButtonToggleAudio", "Toggle audio: ")),
 
             OptionPanel("gamepad", "Gamepad",
-                this.gpSelect = LabeledSelectBox(
-                    "gamepads",
-                    "Use gamepad: ",
-                    "No gamepad",
-                    gp => gp.id,
-                    gp => gp.id,
-                    onInput(_(gamepadChangedEvt))),
+                Div(
+                    Label(htmlFor("gamepads"),
+
+                        "Use gamepad: "),
+                    this.gpSelect = SelectBox(
+                        "gamepads",
+                        "No gamepad",
+                        gp => gp.id,
+                        gp => gp.id,
+                        onInput(_(gamepadChangedEvt)))),
                 this.gpAxisLeftRight = makeGamepadAxisBinder("gpAxisLeftRight", "Left/Right axis:"),
                 this.gpAxisUpDown = makeGamepadAxisBinder("gpAxisUpDown", "Up/Down axis:"),
                 this.gpButtonUp = makeGamepadButtonBinder("gpButtonUp", "Up button: "),
@@ -27281,49 +27014,19 @@ class OptionsForm extends FormDialog {
                 this.gpButtonLeft = makeGamepadButtonBinder("gpButtonLeft", "Left button: "),
                 this.gpButtonRight = makeGamepadButtonBinder("gpButtonRight", "Right button: "),
                 this.gpButtonEmote = makeGamepadButtonBinder("gpButtonEmote", "Emote button: "),
-                this.gpButtonToggleAudio = makeGamepadButtonBinder("gpButtonToggleAudio", "Toggle audio button: ")),
-
-            OptionPanel("devices", "Devices",
-                this.videoInputSelect = LabeledSelectBox(
-                    "videoInputDevices",
-                    "Video Input: ",
-                    "No video input",
-                    d => d.deviceId,
-                    d => d.label,
-                    onInput(_(videoInputChangedEvt))),
-                this.audioInputSelect = LabeledSelectBox(
-                    "audioInputDevices",
-                    "Audio Input: ",
-                    "No audio input",
-                    d => d.deviceId,
-                    d => d.label,
-                    onInput(_(audioInputChangedEvt))),
-                this.audioOutputSelect = LabeledSelectBox(
-                    "audioOutputDevices",
-                    "Audio Output: ",
-                    "No audio output",
-                    d => d.deviceId,
-                    d => d.label,
-                    onInput(_(audioOutputChangedEvt))))
+                this.gpButtonToggleAudio = makeGamepadButtonBinder("gpButtonToggleAudio", "Toggle audio button: "))
         ];
 
         const cols = [];
         for (let i = 0; i < panels.length; ++i) {
             cols[i] = "1fr";
             panels[i].element.style.gridColumnStart = i + 1;
-            panels[i].button.style.fontSize = "3.5vw";
         }
 
         gridColsDef(...cols).apply(this.header);
 
         this.header.append(...panels.map(p => p.button));
         this.content.append(...panels.map(p => p.element));
-        styles(
-            backgroundColor("#ddd"),
-            borderLeft("solid 2px black"),
-            borderRight("solid 2px black"),
-            borderBottom("solid 2px black"))
-            .apply(this.content);
 
         const showPanel = (p) =>
             () => {
@@ -27347,9 +27050,6 @@ class OptionsForm extends FormDialog {
         });
 
         this.gamepads = [];
-        this.audioInputDevices = [];
-        this.audioOutputDevices = [];
-        this.videoInputDevices = [];
 
         this._drawHearing = false;
 
@@ -27463,56 +27163,6 @@ class OptionsForm extends FormDialog {
         else {
             return navigator.getGamepads()[this.currentGamepadIndex];
         }
-    }
-
-    get audioInputDevices() {
-        return this.audioInputSelect.values;
-    }
-
-    set audioInputDevices(values) {
-        this.audioInputSelect.values = values;
-    }
-
-    get currentAudioInputDevice() {
-        return this.audioInputSelect.selectedValue;
-    }
-
-    set currentAudioInputDevice(value) {
-        this.audioInputSelect.selectedValue = value;
-    }
-
-
-    get audioOutputDevices() {
-        return this.audioOutputSelect.values;
-    }
-
-    set audioOutputDevices(values) {
-        this.audioOutputSelect.values = values;
-    }
-
-    get currentAudioOutputDevice() {
-        return this.audioOutputSelect.selectedValue;
-    }
-
-    set currentAudioOutputDevice(value) {
-        this.audioOutputSelect.selectedValue = value;
-    }
-
-
-    get videoInputDevices() {
-        return this.videoInputSelect.values;
-    }
-
-    set videoInputDevices(values) {
-        this.videoInputSelect.values = values;
-    }
-
-    get currentVideoInputDevice() {
-        return this.videoInputSelect.selectedValue;
-    }
-
-    set currentVideoInputDevice(value) {
-        this.videoInputSelect.selectedValue = value;
     }
 
     get gamepadIndex() {
@@ -27634,14 +27284,6 @@ class UserDirectoryForm extends FormDialog {
 
         /** @type {Map<string, CanvasRenderingContext2D>} */
         this.avatarGs = new Map();
-
-        this.content.append(
-            this.table = Div(
-                gridDef(
-                    ["auto", "1fr"],
-                    ["min-content"]),
-                columnGap("5px"),
-                cssWidth("100%")));
     }
 
     update() {
@@ -27672,9 +27314,9 @@ class UserDirectoryForm extends FormDialog {
                 zIndex(-1),
                 newRowColor);
             setTimeout(() => {
-                this.table.removeChild(elem);
+                this.content.removeChild(elem);
             }, ROW_TIMEOUT);
-            this.table.append(elem);
+            this.content.append(elem);
             this.users.set(user.id, user);
             this.avatarGs.set(
                 user.id,
@@ -27705,7 +27347,7 @@ class UserDirectoryForm extends FormDialog {
                 }))];
 
         this.rows.set(user.id, elems);
-        this.table.append(...elems);
+        this.content.append(...elems);
     }
 
     delete(userID) {
@@ -27713,7 +27355,7 @@ class UserDirectoryForm extends FormDialog {
             const elems = this.rows.get(userID);
             this.rows.delete(userID);
             for (let elem of elems) {
-                this.table.removeChild(elem);
+                this.content.removeChild(elem);
             }
 
             let rowCount = 1;
@@ -27738,10 +27380,10 @@ class UserDirectoryForm extends FormDialog {
             backgroundColor("yellow"),
             ...rest.map(i => i.toString()));
 
-        this.table.append(elem);
+        this.content.append(elem);
 
         setTimeout(() => {
-            this.table.removeChild(elem);
+            this.content.removeChild(elem);
         }, 5000);
     }
 }
@@ -28509,7 +28151,7 @@ const CAMERA_LERP = 0.01,
     MOVE_REPEAT = 0.125,
     gameStartedEvt = new Event("gameStarted"),
     gameEndedEvt = new Event("gameEnded"),
-    zoomChangedEvt = new Event("zoomChanged"),
+    zoomChangedEvt$1 = new Event("zoomChanged"),
     emojiNeededEvt = new Event("emojiNeeded"),
     toggleAudioEvt$1 = new Event("toggleAudio"),
     toggleVideoEvt$2 = new Event("toggleVideo"),
@@ -28535,11 +28177,8 @@ class Game extends EventBase {
         this.zoomMin = zoomMin;
         this.zoomMax = zoomMax;
 
-        this.element = Canvas(
-            id("frontBuffer"),
-            cssWidth("100%"),
-            cssHeight("100%"),
-            touchAction("none"));
+        this.element = document.getElementById("frontBuffer")
+            || Canvas(id("frontBuffer"));
         this.gFront = this.element.getContext("2d");
 
         /** @type {User} */
@@ -28640,7 +28279,7 @@ class Game extends EventBase {
                 // Chrome and Firefox report scroll values in completely different ranges.
                 const deltaZ = -evt.deltaY * (isFirefox ? 1 : 0.02);
                 this.zoom += deltaZ;
-                this.dispatchEvent(zoomChangedEvt);
+                this.dispatchEvent(zoomChangedEvt$1);
             }
         }, { passive: false });
 
@@ -28737,7 +28376,7 @@ class Game extends EventBase {
                 this.canClick = false;
                 const ddist = newPinchDistance - oldPinchDistance;
                 this.zoom += ddist / 100;
-                this.dispatchEvent(zoomChangedEvt);
+                this.dispatchEvent(zoomChangedEvt$1);
             }
         });
 
@@ -29030,7 +28669,7 @@ class Game extends EventBase {
         }
 
         this.startLoop();
-        this.dispatchEvent(zoomChangedEvt);
+        this.dispatchEvent(zoomChangedEvt$1);
         this.dispatchEvent(gameStartedEvt);
     }
 
@@ -29120,7 +28759,7 @@ class Game extends EventBase {
 
                     this.targetOffsetCameraX += -50 * Math.round(2 * pad.axes[2]);
                     this.targetOffsetCameraY += -50 * Math.round(2 * pad.axes[3]);
-                    this.dispatchEvent(zoomChangedEvt);
+                    this.dispatchEvent(zoomChangedEvt$1);
                 }
 
                 dx = clamp(dx, -1, 1);
@@ -29134,7 +28773,7 @@ class Game extends EventBase {
 
                 if (dz !== 0) {
                     this.zoom += dz;
-                    this.dispatchEvent(zoomChangedEvt);
+                    this.dispatchEvent(zoomChangedEvt$1);
                 }
 
                 this.lastMove = 0;
@@ -29615,81 +29254,6 @@ class RequestAnimationFrameTimer extends BaseTimer {
     }
 }
 
-const zoomChangedEvt$1 = new Event("zoomChanged"),
-    buttonStyle$1 = styles(
-        pointerEvents("all"),
-        fontSize("1.25em"),
-        position("relative"),
-        left("calc(100% - 3em)"),
-        cssWidth("3em"),
-        cssHeight("100%")),
-    buttonLabelStyle$2 = fontSize("12px");
-
-class RightBar extends EventBase {
-    constructor(targetCanvas, zoomMin, zoomMax) {
-        super();
-
-        const changeZoom = (dz) => {
-            this.zoom += dz;
-            this.dispatchEvent(zoomChangedEvt$1);
-        };
-
-        this.enabled = false;
-
-        this.element = Div(
-            id("rightbar"),
-            gridRowsDef("auto", "9.5em", "auto", "1fr"),
-            padding("4px"),
-            columnGap("5px"),
-            textAlign("right"),
-            backgroundColor("transparent"),
-            pointerEvents("none"),
-
-            this.zoomInButton = Button(
-                title("Zoom in"),
-                onClick(() => changeZoom(0.5)),
-                buttonStyle$1,
-                gridPos(1, 1),
-                Run(magnifyingGlassTiltedLeft.value),
-                Run(buttonLabelStyle$2, "Zoom in")),
-
-            Div(
-                buttonStyle$1,
-                cssHeight("8em"),
-                gridPos(1, 2),
-                this.slider = InputRange(
-                    title("Zoom"),
-                    min(zoomMin),
-                    max(zoomMax),
-                    step(0.1),
-                    value(0),
-                    onInput(() => this.dispatchEvent(zoomChangedEvt$1)),
-                    cssWidth("8em"),
-                    marginRight("-5em"),
-                    transform("translateX(-3em) rotate(270deg) translateX(-5em)"))),
-
-
-            this.zoomOutButton = Button(
-                title("Zoom out"),
-                onClick(() => changeZoom(-0.5)),
-                buttonStyle$1,
-                gridPos(1, 3),
-                Run(magnifyingGlassTiltedRight.value),
-                Run(buttonLabelStyle$2, "Zoom out")));
-
-        Object.seal(this);
-    }
-
-    get zoom() {
-        return parseFloat(this.slider.value);
-    }
-
-    /** @type {number} */
-    set zoom(v) {
-        this.slider.value = v;
-    }
-}
-
 const disabler$4 = disabled(true),
     enabler$4 = disabled(false),
     CAMERA_ZOOM_MIN = 0.5,
@@ -29705,9 +29269,8 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         game = new Game(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
         login = new LoginForm(),
         directory = new UserDirectoryForm(),
-        headbar = new HeaderBar(),
-        rightbar = new RightBar(game.element, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
-        footbar = new FooterBar(),
+        controls = new ButtonLayer(game.element, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
+        devices = new DevicesDialog(),
         options = new OptionsForm(),
         emoji = new EmojiForm(),
         client = new CallaClient(JITSI_HOST, JVB_HOST, JVB_MUC),
@@ -29719,53 +29282,59 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
             game,
             login,
             directory,
-            headbar,
-            rightbar,
-            footbar,
+            controls,
+            devices,
             options,
             emoji
-        },
+        };
 
-        forAppend = [
-            game,
-            directory,
-            options,
-            emoji,
-            headbar,
-            rightbar,
-            footbar,
-            login
-        ].filter(x => x.element);
+    /**
+     * @callback showViewCallback
+     * @returns {void}
+     */
 
-    function showLogin() {
-        hide(game);
-        hide(directory);
-        hide(options);
-        hide(emoji);
-        headbar.enabled = false;
-        footbar.enabled = false;
-        rightbar.enabled = false;
-        show(login);
+    let waitingForEmoji = false;
+
+    /**
+     * @param {FormDialog} view
+     * @returns {showViewCallback}
+     */
+    const _showView = (view) =>
+        () => showView(view);
+
+    function showView(view) {
+        if (!waitingForEmoji) {
+            hide(login);
+            hide(directory);
+            hide(options);
+            hide(devices);
+            hide(emoji);
+            show(view);
+        }
     }
 
     async function withEmojiSelection(callback) {
         if (!isOpen(emoji)) {
-            disabler$4.apply(headbar.optionsButton);
-            disabler$4.apply(headbar.instructionsButton);
+            waitingForEmoji = true;
+            disabler$4.apply(controls.optionsButton);
+            disabler$4.apply(controls.instructionsButton);
+            disabler$4.apply(controls.changeDevicesButton);
             hide(options);
             const e = await emoji.selectAsync();
             if (e) {
                 callback(e);
             }
-            enabler$4.apply(headbar.optionsButton);
-            enabler$4.apply(headbar.instructionsButton);
+            enabler$4.apply(controls.optionsButton);
+            enabler$4.apply(controls.instructionsButton);
+            enabler$4.apply(controls.changeDevicesButton);
+            waitingForEmoji = false;
         }
     }
 
     async function selectEmojiAsync() {
         await withEmojiSelection((e) => {
             game.emote(client.localUserID, e);
-            footbar.setEmojiButton(settings.inputBinding.keyButtonEmote, e);
+            controls.setEmojiButton(settings.inputBinding.keyButtonEmote, e);
         });
     }
 
@@ -29786,34 +29355,8 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         game.withUser("list user in directory", userID, (user) => directory.set(user));
     }
 
-    gridRowsDef("auto", "1fr", "auto").apply(document.body);
-
-    let z = 0;
-    for (let e of forAppend) {
-        if (e.element) {
-            let g = null;
-            if (e === headbar) {
-                g = gridPos(1, 1);
-            }
-            else if (e === footbar) {
-                g = gridPos(1, 3);
-            }
-            else if (e === game || e === login) {
-                g = gridPos(1, 1, 1, 3);
-            }
-            else {
-                g = gridPos(1, 2);
-            }
-            g.apply(e.element);
-            e.element.style.zIndex = (z++);
-            document.body.append(e.element);
-        }
-    }
-
     refreshGamepads();
-    headbar.enabled = false;
-    footbar.enabled = false;
-    rightbar.enabled = false;
+    controls.enabled = false;
     options.drawHearing = game.drawHearing = settings.drawHearing;
     options.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
     options.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;
@@ -29822,12 +29365,12 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
     options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
     options.inputBinding = game.inputBinding = settings.inputBinding;
 
-    rightbar.zoom = game.cameraZ = game.zoom = settings.zoom;
+    controls.zoom = game.cameraZ = game.zoom = settings.zoom;
     game.transitionSpeed = settings.transitionSpeed = 0.5;
     login.userName = settings.userName;
     login.roomName = settings.roomName;
 
-    showLogin();
+    showView(login);
 
     addEventListeners(window, {
         gamepadconnected: refreshGamepads,
@@ -29838,29 +29381,11 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         }
     });
 
-    /**
-     * @callback showViewCallback
-     * @returns {void}
-     */
-
-    /**
-     * @param {FormDialog} view
-     * @returns {showViewCallback}
-     */
-    const showView = (view) => () => {
-        if (!isOpen(emoji)) {
-            const open = isOpen(view);
-            hide(login);
-            hide(directory);
-            hide(options);
-            setOpen(view, !open);
-        }
-    };
-
-    addEventListeners(headbar, {
-        toggleOptions: showView(options),
-        toggleInstructions: showView(login),
-        toggleUserDirectory: showView(directory),
+    addEventListeners(controls, {
+        toggleOptions: _showView(options),
+        toggleInstructions: _showView(login),
+        toggleUserDirectory: _showView(directory),
+        changeDevices: _showView(devices),
 
         tweet: () => {
             const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
@@ -29871,10 +29396,8 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         leave: async () => {
             directory.clear();
             await client.leaveAsync();
-        }
-    });
+        },
 
-    addEventListeners(footbar, {
         selectEmoji: selectEmojiAsync,
 
         emote: () => {
@@ -29887,6 +29410,10 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
 
         toggleVideo: async () => {
             await client.toggleVideoMutedAsync();
+        },
+
+        zoomChanged: () => {
+            settings.zoom = game.zoom = controls.zoom;
         }
     });
 
@@ -29951,26 +29478,29 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
                 = options.inputBinding;
         },
 
+        toggleVideo: async () => {
+            await client.toggleVideoMutedAsync();
+        }
+    });
+
+    addEventListeners(devices, {
+
         audioInputChanged: async () => {
-            const device = options.currentAudioInputDevice;
+            const device = devices.currentAudioInputDevice;
             await client.setAudioInputDeviceAsync(device);
             settings.preferredAudioInputID = client.preferredAudioInputID;
         },
 
         audioOutputChanged: async () => {
-            const device = options.currentAudioOutputDevice;
+            const device = devices.currentAudioOutputDevice;
             await client.setAudioOutputDeviceAsync(device);
             settings.preferredAudioOutputID = client.preferredAudioOutputID;
         },
 
         videoInputChanged: async () => {
-            const device = options.currentVideoInputDevice;
+            const device = devices.currentVideoInputDevice;
             await client.setVideoInputDeviceAsync(device);
             settings.preferredVideoInputID = client.preferredVideoInputID;
-        },
-
-        toggleVideo: async () => {
-            await client.toggleVideoMutedAsync();
         }
     });
 
@@ -29996,14 +29526,13 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         },
 
         gameStarted: () => {
-            gridPos(1, 2).apply(login.element);
+            game.resize();
             hide(login);
+            show(controls);
 
             options.user = game.me;
 
-            headbar.enabled = true;
-            footbar.enabled = true;
-            rightbar.enabled = true;
+            controls.enabled = true;
 
             settings.avatarEmoji
                 = client.avatarEmoji
@@ -30019,18 +29548,13 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         },
 
         gameEnded: () => {
-            gridPos(1, 1, 1, 3).apply(login.element);
             login.connected = false;
-            showLogin();
+            showView(login);
         },
 
         zoomChanged: () => {
-            settings.zoom = rightbar.zoom = game.zoom;
+            settings.zoom = controls.zoom = game.zoom;
         }
-    });
-
-    rightbar.addEventListener("zoomChanged", () => {
-        settings.zoom = game.zoom = rightbar.zoom;
     });
 
     directory.addEventListener("warpTo", (evt) => {
@@ -30049,25 +29573,25 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
                 = options.avatarURL
                 = settings.avatarURL;
 
-            options.audioInputDevices = await client.getAudioInputDevicesAsync();
-            options.audioOutputDevices = await client.getAudioOutputDevicesAsync();
-            options.videoInputDevices = await client.getVideoInputDevicesAsync();
+            devices.audioInputDevices = await client.getAudioInputDevicesAsync();
+            devices.audioOutputDevices = await client.getAudioOutputDevicesAsync();
+            devices.videoInputDevices = await client.getVideoInputDevicesAsync();
 
             settings.preferredAudioInputID = client.preferredAudioInputID;
             settings.preferredAudioOutputID = client.preferredAudioOutputID;
             settings.preferredVideoInputID = client.preferredVideoInputID;
 
-            options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
-            options.currentAudioOutputDevice = await client.getCurrentAudioOutputDeviceAsync();
-            options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
+            devices.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
+            devices.currentAudioOutputDevice = await client.getCurrentAudioOutputDeviceAsync();
+            devices.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
 
             const audioMuted = client.isAudioMuted;
             game.muteUserAudio(client.localUserID, audioMuted);
-            footbar.audioEnabled = !audioMuted;
+            controls.audioEnabled = !audioMuted;
 
             const videoMuted = client.isVideoMuted;
             game.muteUserVideo(client.localUserID, videoMuted);
-            footbar.videoEnabled = !videoMuted;
+            controls.videoEnabled = !videoMuted;
         },
 
         videoConferenceLeft: () => {
@@ -30109,8 +29633,8 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         },
 
         localAudioMuteStatusChanged: async (evt) => {
-            footbar.audioEnabled = !evt.muted;
-            options.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
+            controls.audioEnabled = !evt.muted;
+            devices.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
             settings.preferredAudioInputID = client.preferredAudioInputID;
         },
 
@@ -30120,14 +29644,14 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         },
 
         localVideoMuteStatusChanged: async (evt) => {
-            footbar.videoEnabled = !evt.muted;
+            controls.videoEnabled = !evt.muted;
             if (evt.muted) {
                 options.setAvatarVideo(null);
             }
             else {
                 options.setAvatarVideo(game.me.avatarVideo.element);
             }
-            options.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
+            devices.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
         },
 
         userInitRequest: (evt) => {
