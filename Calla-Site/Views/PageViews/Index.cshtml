@@ -5,10 +5,11 @@
 
 @model Calla.Data.PageViews[]
 
-    <ul>
-        <li><a asp-area="" asp-controller="PageViews" asp-action="Referrers">Referrers</a></li>
-        <li><a asp-area="" asp-controller="PageViews" asp-action="UserAgents">User Agents</a></li>
-    </ul>
+<ul>
+    <li><a asp-area="" asp-controller="PageViews" asp-action="Referrers">Referrers</a></li>
+    <li><a asp-area="" asp-controller="PageViews" asp-action="Domains">Domains</a></li>
+    <li><a asp-area="" asp-controller="PageViews" asp-action="UserAgents">User Agents</a></li>
+</ul>
 
     @if (Model.Length == 0)
     {

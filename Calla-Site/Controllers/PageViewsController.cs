@@ -73,6 +73,31 @@ namespace Calla.Controllers
 
         [HttpGet]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public ActionResult Domains()
+        {
+            if (!env.IsDevelopment())
+            {
+                return NotFound();
+            }
+
+            return View(db.PageViews
+                .Where(pv => pv.Referrer != "N/A")
+                .AsEnumerable()
+                .Select(pv => new Uri(pv.Referrer))
+                .Select(uri => uri.Host.StartsWith("www.", StringComparison.InvariantCultureIgnoreCase)
+                    ? uri.Host.Substring(4)
+                    : uri.Host)
+                .GroupBy(host => host)
+                .Select(g => new StringCount
+                {
+                    Value = g.Key,
+                    Count = g.Count()
+                })
+                .ToArray());
+        }
+
+        [HttpGet]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public ActionResult UserAgents()
         {
             if (!env.IsDevelopment())
