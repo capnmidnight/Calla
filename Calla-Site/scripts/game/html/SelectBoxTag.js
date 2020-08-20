@@ -1,5 +1,5 @@
 import { isFunction } from "../../calla/index.js";
-import { disabled, value } from "./attrs.js";
+import { disabled, value, id } from "./attrs.js";
 import { HtmlCustomTag } from "./HtmlCustomTag.js";
 import { clear, Option } from "./tags.js";
 
@@ -31,19 +31,33 @@ function render(self) {
 }
 
 /**
+ * Creates a select box that can bind to collections
+ * @param {string} id - the ID to use for the select box
+ * @param {string} noSelectionText - the text to display when no items are available.
+ * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
+ * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
+ * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+ * @returns {SelectBoxTag}
+ */
+export function SelectBox(id, noSelectionText, makeID, makeLabel, ...rest) {
+    return new SelectBoxTag(id, noSelectionText, makeID, makeLabel, ...rest);
+}
+
+/**
  * A select box that can be databound to collections.
  **/
 export class SelectBoxTag extends HtmlCustomTag {
 
     /**
      * Creates a select box that can bind to collections
+     * @param {string} tagId - the ID to use for the select box.
      * @param {string} noSelectionText - the text to display when no items are available.
      * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
      * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
      * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
      */
-    constructor(noSelectionText, makeID, makeLabel, ...rest) {
-        super("select", ...rest);
+    constructor(tagId, noSelectionText, makeID, makeLabel, ...rest) {
+        super("select", id(tagId), ...rest);
 
         if (!isFunction(makeID)) {
             throw new Error("makeID parameter must be a Function");

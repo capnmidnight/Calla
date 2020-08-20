@@ -1,7 +1,19 @@
-﻿import { htmlFor, type } from "./attrs.js";
+import { htmlFor, type } from "./attrs.js";
 import { HtmlCustomTag } from "./HtmlCustomTag.js";
 import { setLocked } from "./ops.js";
 import { Input, Label } from "./tags.js";
+
+/**
+ * Creates an input box that has a label attached to it.
+ * @param {string} id - the ID to use for the input box
+ * @param {string} inputType - the type to use for the input box (number, text, etc.)
+ * @param {string} labelText - the text to display in the label
+ * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+ * @returns {LabeledInputTag}
+ */
+export function LabeledInput(id, inputType, labelText, ...rest) {
+    return new LabeledInputTag(id, inputType, labelText, ...rest);
+}
 
 /**
  * An input box that has a label attached to it.
@@ -29,6 +41,9 @@ export class LabeledInputTag extends HtmlCustomTag {
         this.element.append(
             this.label,
             this.input);
+
+        this.element.style.display = "grid";
+
 
         Object.seal(this);
     }

@@ -45,29 +45,30 @@ footer {
         color: #fff;
     }
 
-header, footer, .link-button {
+header, footer, .link-button, button {
     text-shadow: rgba(0, 0, 0, .25) 3px 3px 3px;
 }
 
-.link-button {
+.link-button, button {
     display: inline-block;
     color: white;
     text-decoration: none;
     padding: 15px 30px;
     border-radius: 4px;
+    border-style: none;
     font-style: italic;
     font-weight: bold;
     background-color: #6684f1;
     box-shadow: rgba(0, 0, 0, .25) 3px 3px 3px;
 }
 
-    .link-button:hover {
+    .link-button:hover, button:hover {
         text-decoration: underline;
         margin: -1px 1px 1px -1px;
         box-shadow: rgba(0, 0, 0, .25) 4px 4px 4px;
     }
 
-    .link-button:active {
+    .link-button:active, button:active {
         margin: 1px -1px -1px 1px;
         box-shadow: rgba(0, 0, 0, .25) 2px 2px 2px inset;
     }

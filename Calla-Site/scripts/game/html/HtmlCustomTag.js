@@ -12,13 +12,24 @@ export class HtmlCustomTag extends EventBase {
      */
     constructor(tagName, ...rest) {
         super();
-        if (rest.length === 1
-            && rest[0] instanceof Element) {
-            /** @type {HTMLElement} */
-            this.element = rest[0];
+
+        /** @type {HTMLElement} */
+        this.element = null;
+
+        for (let attr of rest) {
+            if (attr.key === "id") {
+                this.element = document.getElementById(attr.value);
+            }
+            else if (attr instanceof Element) {
+                this.element = attr;
+            }
+
+            if (this.element) {
+                break;
+            }
         }
-        else {
-            /** @type {HTMLElement} */
+
+        if (!this.element) {
             this.element = tag(tagName, ...rest);
         }
     }

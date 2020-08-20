@@ -1,11 +1,20 @@
-﻿import { id } from "./attrs.js";
-import { backgroundColor, borderBottomColor, borderLeft, borderRight, borderStyle, borderTop, borderWidth, padding, styles } from "./css.js";
+import { id } from "./attrs.js";
 import { onClick } from "./evts.js";
 import { HtmlCustomTag } from "./HtmlCustomTag.js";
 import { setOpen } from "./ops.js";
 import { Button, P } from "./tags.js";
 
 const selectEvt = new Event("select");
+
+/**
+ * Creates an OptionPanelTag element
+ * @param {string} id - the ID to use for the content element of the option panel
+ * @param {string} name - the text to use in the button that triggers displaying the content element
+ * @param {...TagChild} rest - optional attributes, child elements, and text to use on the content element
+ */
+export function OptionPanel(id, name, ...rest) {
+    return new OptionPanelTag(id, name, ...rest);
+}
 
 /**
  * A panel and a button that opens it.
@@ -23,7 +32,6 @@ export class OptionPanelTag extends HtmlCustomTag {
     constructor(panelID, name, ...rest) {
         super("div",
             id(panelID),
-            padding("1em"),
             P(...rest));
 
         this.button = Button(
@@ -50,14 +58,7 @@ export class OptionPanelTag extends HtmlCustomTag {
      **/
     set visible(v) {
         setOpen(this.element, v);
-        styles(
-            borderStyle("solid"),
-            borderWidth("2px"),
-            backgroundColor(v ? "#ddd" : "transparent"),
-            borderTop(v ? "" : "none"),
-            borderRight(v ? "" : "none"),
-            borderBottomColor(v ? "#ddd" : ""),
-            borderLeft(v ? "" : "none"))
-            .apply(this.button);
+        this.button.className = v ? "tabSelected" : "tabUnselected";
+        this.element.className = v ? "tabSelected" : "tabUnselected";
     }
 }

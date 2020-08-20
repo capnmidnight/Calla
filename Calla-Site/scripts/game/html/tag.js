@@ -2,7 +2,6 @@ import { isBoolean, isFunction, isNumber, isString } from "../../calla/index.js"
 import { HtmlAttr } from "./attrs.js";
 import { CssProp, CssPropSet } from "./css.js";
 import { HtmlEvt } from "./evts.js";
-import { HtmlCustomTag } from "./HtmlCustomTag.js";
 
 /**
  * @typedef {(Element|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
@@ -39,7 +38,7 @@ export function tag(name, ...rest) {
             else if (x instanceof Element) {
                 elem.appendChild(x);
             }
-            else if (x instanceof HtmlCustomTag) {
+            else if (x.element instanceof Element) {
                 elem.appendChild(x.element);
             }
             else if (x instanceof HtmlAttr

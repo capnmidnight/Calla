@@ -1,10 +1,6 @@
-﻿import { LabeledInputTag } from "./LabeledInputTag.js";
-import { LabeledSelectBoxTag } from "./LabeledSelectBoxTag.js";
-import { OptionPanelTag } from "./OptionPanelTag.js";
-import { SelectBoxTag } from "./SelectBoxTag.js";
-import { tag } from "./tag.js";
-import { type, width, height } from "./attrs.js";
+import { height, type, width } from "./attrs.js";
 import { margin } from "./css.js";
+import { tag } from "./tag.js";
 
 /**
  * Empty an element of all children. This is faster than
@@ -1035,59 +1031,11 @@ export function CanvasOffscreen(w, h, ...rest) {
 }
 
 /**
- * Creates an input box that has a label attached to it.
- * @param {string} id - the ID to use for the input box
- * @param {string} inputType - the type to use for the input box (number, text, etc.)
- * @param {string} labelText - the text to display in the label
- * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
- * @returns {LabeledInputTag}
- */
-export function LabeledInput(id, inputType, labelText, ...rest) {
-    return new LabeledInputTag(id, inputType, labelText, ...rest);
-}
-
-/**
  * Creates a string from a list item to use as the item's ID or label in a select box.
  * @callback makeItemValueCallback
  * @param {any} obj - the object
  * @returns {string}
  */
-
-/**
- * Creates a select box that can bind to collections
- * @param {string} noSelectionText - the text to display when no items are available.
- * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
- * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
- * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
- * @returns {SelectBoxTag}
- */
-export function SelectBox(noSelectionText, makeID, makeLabel, ...rest) {
-    return new SelectBoxTag(noSelectionText, makeID, makeLabel, ...rest);
-}
-
-/**
- * Creates a select box, with a label attached to it, that can bind to collections
- * @param {string} id - the ID to use for the input box
- * @param {string} labelText - the text to display in the label
- * @param {string} noSelectionText - the text to display when no items are available.
- * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
- * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
- * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
- * @returns {LabeledSelectBoxTag}
- */
-export function LabeledSelectBox(id, labelText, noSelectionText, makeID, makeLabel, ...rest) {
-    return new LabeledSelectBoxTag(id, labelText, noSelectionText, makeID, makeLabel, ...rest);
-}
-
-/**
- * Creates an OptionPanelTag element
- * @param {string} id - the ID to use for the content element of the option panel
- * @param {string} name - the text to use in the button that triggers displaying the content element
- * @param {...TagChild} rest - optional attributes, child elements, and text to use on the content element
- */
-export function OptionPanel(id, name, ...rest) {
-    return new OptionPanelTag(id, name, ...rest);
-}
 
 /**
  * Creates a Div element with margin: auto.

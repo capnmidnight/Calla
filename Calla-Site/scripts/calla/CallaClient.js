@@ -1,6 +1,6 @@
 /* global JitsiMeetJS */
 
-import "jquery";
+import "../lib/jquery.js";
 import { arrayScan } from "./arrays/arrayScan.js";
 import { AudioActivityEvent } from "./audio/AudioActivityEvent.js";
 import { AudioManager } from "./audio/AudioManager.js";
