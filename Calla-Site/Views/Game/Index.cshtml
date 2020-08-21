@@ -32,6 +32,6 @@
 <partial name="UserDirectory" />
 <partial name="Instructions" />
 <partial name="Emoji" />
-@Html.Partial("Login", Model);
+@await Html.PartialAsync("Login", Model)
 
 <div id="controls"></div>
