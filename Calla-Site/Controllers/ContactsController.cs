@@ -40,8 +40,7 @@ namespace Calla.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public async Task<ActionResult> Index([FromBody] Contacts contact)
         {
-            if (contact != null
-                && !db.Contacts.Any(c => c.Email == contact.Email))
+            if (contact != null)
             {
                 _ = await db.Contacts.AddAsync(contact).ConfigureAwait(false);
                 await db.SaveChangesAsync().ConfigureAwait(false);

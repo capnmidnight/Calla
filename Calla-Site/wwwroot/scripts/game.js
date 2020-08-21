@@ -29366,8 +29366,8 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         return response;
     }
 
-    async function recordEmail(Name, Email) {
-        await postObj("/Contacts", { Name, Email });
+    async function recordJoin(Name, Email, Room) {
+        await postObj("/Contacts", { Name, Email, Room });
     }
 
     async function recordRoom(roomName) {
@@ -29518,22 +29518,17 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
             window.history.replaceState(undefined, undefined, "#" + login.roomName);
         }
 
-        if (login.email.length > 0
-            && /^[^@]+@[^@]+/.test(login.email)) {
-            await recordEmail(login.userName, login.email);
-        }
-
         let roomName = login.roomName;
         if (!login.roomSelectMode) {
             roomName = await recordRoom(roomName);
         }
 
-        console.log(roomName);
-        client.join(roomName, login.userName);
+        await recordJoin(
+            settings.userName = login.userName,
+            settings.email = login.email,
+            settings.roomName = roomName);
 
-        settings.userName = login.userName;
-        settings.email = login.email;
-        settings.roomName = roomName;
+        client.join(roomName, login.userName);
     });
 
 

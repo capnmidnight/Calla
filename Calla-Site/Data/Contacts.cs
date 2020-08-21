@@ -16,6 +16,9 @@ namespace Calla.Data
         [Required]
         public string Email { get; set; }
 
+        [Required]
+        public string Room { get; set; }
+
         [Column(TypeName = "timestamp with time zone")]
         public DateTime Timestamp { get; set; }
     }

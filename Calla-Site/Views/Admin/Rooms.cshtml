@@ -15,6 +15,7 @@
         <table id="output" cellspacing="0">
             <thead>
                 <tr>
+                    <th></th>
                     <th>Name</th>
                     <th>ShortName</th>
                     <th>Visible</th>
@@ -26,6 +27,9 @@
                 @foreach (var row in Model)
                 {
                     <tr id="row-@row.Id">
+                        <td>
+                            <button type="button" onclick="document.location='/Game#@row.ShortName'">Join</button>
+                        </td>
                         <td>@row.Name</td>
                         <td>@row.ShortName</td>
                         <td>
