@@ -16,6 +16,7 @@ else
             <tr>
                 <th>Name</th>
                 <th>Email</th>
+                <th>Room</th>
                 <th>Created</th>
                 <th></th>
             </tr>
@@ -23,14 +24,15 @@ else
         <tbody>
             @foreach (var row in Model)
             {
-                <tr id="row-@row.Id">
-                    <td>@row.Name</td>
-                    <td>@row.Email</td>
-                    <td>@row.Timestamp</td>
-                    <td>
-                        <button type="button" onclick="deleteItem(@row.Id)">Delete</button>
-                    </td>
-                </tr>
+            <tr id="row-@row.Id">
+                <td>@row.Name</td>
+                <td>@row.Email</td>
+                <td>@row.Room</td>
+                <td>@row.Timestamp</td>
+                <td>
+                    <button type="button" onclick="deleteItem(@row.Id)">Delete</button>
+                </td>
+            </tr>
             }
         </tbody>
     </table>
