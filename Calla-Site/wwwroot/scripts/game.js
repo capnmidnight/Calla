@@ -1828,9 +1828,6 @@ class InterpolatedPose {
      */
     update(t) {
         this.current.interpolate(this.start, this.end, t);
-        if (this.spatializer) {
-            this.spatializer.update(this.current);
-        }
     }
 }
 
@@ -1924,6 +1921,9 @@ class AudioSource {
      */
     update(t) {
         this.pose.update(t);
+        if (this.spatializer) {
+            this.spatializer.update(this.pose.current);
+        }
     }
 }
 
@@ -19877,7 +19877,7 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-const versionString = "v0.6.2";
+const versionString = "v0.6.3";
 
 /* global JitsiMeetJS */
 
@@ -29789,7 +29789,7 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
     return forExport;
 }
 
-init(JITSI_HOST, JVB_HOST, JVB_MUC);
+Object.assign(window, init(JITSI_HOST, JVB_HOST, JVB_MUC));
 
 } catch(exp) {
     TraceKit.report(exp);

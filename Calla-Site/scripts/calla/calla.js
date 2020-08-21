@@ -535,9 +535,6 @@ class InterpolatedPose {
      */
     update(t) {
         this.current.interpolate(this.start, this.end, t);
-        if (this.spatializer) {
-            this.spatializer.update(this.current);
-        }
     }
 }
 
@@ -631,6 +628,9 @@ class AudioSource {
      */
     update(t) {
         this.pose.update(t);
+        if (this.spatializer) {
+            this.spatializer.update(this.pose.current);
+        }
     }
 }
 
@@ -18595,7 +18595,7 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-const versionString = "v0.6.2";
+const versionString = "v0.6.3";
 
 /* global JitsiMeetJS */
 
