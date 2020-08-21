@@ -214,9 +214,6 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         client.audio.addClip("join", "audio/door-open.ogg", "audio/door-open.mp3", "audio/door-open.wav");
         client.audio.addClip("leave", "audio/door-close.ogg", "audio/door-close.mp3", "audio/door-close.wav");
         setAudioProperties();
-        if (window.location.hostname !== "localhost") {
-            window.history.replaceState(undefined, undefined, "#" + login.roomName);
-        }
 
         let roomName = login.roomName;
         if (!login.roomSelectMode) {
@@ -227,6 +224,10 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
             settings.userName = login.userName,
             settings.email = login.email,
             settings.roomName = roomName);
+
+        const title = `Calla - chatting in ${roomName}`;
+        const path = `${window.location.pathname}#${roomName}`;
+        window.history.replaceState({}, title, path);
 
         client.join(roomName, login.userName);
     });
