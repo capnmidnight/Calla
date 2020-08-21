@@ -81,9 +81,6 @@ export class InterpolatedPose {
      */
     update(t) {
         this.current.interpolate(this.start, this.end, t);
-        if (this.spatializer) {
-            this.spatializer.update(this.current);
-        }
     }
 }
 

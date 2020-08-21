@@ -47,5 +47,8 @@ export class AudioSource {
      */
     update(t) {
         this.pose.update(t);
+        if (this.spatializer) {
+            this.spatializer.update(this.pose.current);
+        }
     }
 }
