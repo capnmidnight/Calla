@@ -48,7 +48,7 @@ class OptionsFormPrivate {
 
 export class OptionsForm extends FormDialog {
     constructor() {
-        super("options", "Options");
+        super("options");
 
         const _ = (evt) => () => this.dispatchEvent(evt);
 

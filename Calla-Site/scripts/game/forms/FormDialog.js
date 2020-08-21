@@ -1,14 +1,16 @@
 import { EventBase, once } from "../../calla/index.js";
 import { hide, show } from "../html/ops.js";
+import { id } from "../html/attrs.js";
+import { Div } from "../html/tags.js";
 
 const hiddenEvt = new Event("hidden"),
     shownEvt = new Event("shown");
 
 export class FormDialog extends EventBase {
-    constructor(name, header) {
+    constructor(tagId) {
         super();
 
-        this.element = document.getElementById(name);
+        this.element = Div(id(tagId));
         this.header = this.element.querySelector(".header");
         this.content = this.element.querySelector(".content");
         this.footer = this.element.querySelector(".footer");

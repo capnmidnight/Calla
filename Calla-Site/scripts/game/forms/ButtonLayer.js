@@ -30,8 +30,7 @@ export class ButtonLayer extends EventBase {
             this.dispatchEvent(zoomChangedEvt);
         };
 
-        this.element = document.getElementById("controls")
-            || Div(id("controls"))
+        this.element = Div(id("controls"))
 
         this.element.append(
 

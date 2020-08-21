@@ -34,6 +34,7 @@ class SettingsPrivate {
         this.zoom = 1.5;
         this.roomName = "calla";
         this.userName = "";
+        this.email = "";
         this.avatarEmoji = null;
 
         /** @type {string} */
@@ -211,6 +212,18 @@ export class Settings {
         if (value !== this.userName) {
             const self = selfs.get(this);
             self.userName = value;
+            self.commit();
+        }
+    }
+
+    get email() {
+        return selfs.get(this).email;
+    }
+
+    set email(value) {
+        if (value !== this.email) {
+            const self = selfs.get(this);
+            self.email = value;
             self.commit();
         }
     }

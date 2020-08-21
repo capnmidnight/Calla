@@ -19880,13 +19880,22 @@ function value(value) { return new HtmlAttr("value", value, "button", "data", "i
  * @returns {HTMLElement}
  */
 function tag(name, ...rest) {
-    const elem = document.createElement(name);
+    let elem = null;
 
     for (let i = 0; i < rest.length; ++i) {
-        // 
-        if (isFunction(rest[i])) {
-            rest[i] = rest[i](true);
+        const attr = rest[i];
+        if (isFunction(attr)) {
+            rest[i] = attr(true);
         }
+
+        if (attr instanceof HtmlAttr
+            && attr.key === "id") {
+            elem = document.getElementById(attr.value);
+        }
+    }
+
+    if (elem === null) {
+        elem = document.createElement(name);
     }
 
     for (let x of rest) {
@@ -20289,7 +20298,7 @@ function makeStatus(id) {
 class HtmlTestOutput extends TestOutput {
     constructor(...CaseClasses) {
         super(...CaseClasses);
-        this.element = document.getElementById("testOutput") || Div();
+        this.element = Div(id("testOutput"));
         /**
          * 
          * @param {TestOutputResultsEvent} evt

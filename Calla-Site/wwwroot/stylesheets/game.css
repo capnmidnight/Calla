@@ -1,30 +1,19 @@
-#login > .header {
-    grid-area: 2/1/3/4;
+#login form > div {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    margin-bottom: 0.5em;
 }
 
-    #login > .header > form {
-        display: grid;
-        grid-template-rows: auto;
-        column-gap: 1em;
-        grid-row-gap: 1em;
-        row-gap: 1em;
-        grid-template-columns: 2fr 4fr 2fr;
-        margin-right: 2em;
+    #login form > div > * {
+        grid-column: 1/4;
     }
 
-        #login > .header > form > select,
-        #login > .header > form > input[type=text],
-        #login > .header > form > button {
-            padding: 0.5em;
-        }
-
-        #login > .header > form > label {
-            padding-top: 0.5em;
-        }
-
-
+body,
 #frontBuffer {
     background-image: url("../starfield.jpg");
+}
+
+#frontBuffer {
     position: fixed;
     top: 0;
     left: 0;
@@ -32,6 +21,26 @@
     height: 100%;
     touch-action: none;
 }
+
+#emailControl > *:last-child {
+    opacity: 0.5;
+    font-size: 80%;
+    padding-left: 2em;
+    font-style: italic;
+    text-align: right;
+}
+
+#roomSelectorControl > select,
+#roomEntryControl > input {
+    grid-column: 1/3 !important;
+}
+
+#roomSelectorControl > button,
+#roomEntryControl > button {
+    grid-column: 3/4 !important;
+}
+
+
 
 #controls {
     position: fixed;
@@ -48,23 +57,23 @@
     padding: 5px;
 }
 
-    #controls button,
-    #controls input,
+    button,
+    input,
     #controls .comboButton {
         pointer-events: all;
     }
 
-    #controls button,
+    button,
     #controls .comboButton {
         font-style: normal;
-        padding: unset;
         text-decoration: none;
-        margin: auto;
         height: 100%;
     }
 
     #controls .comboButton {
+        margin: auto;
         background-color: unset;
+        padding: unset;
     }
 
     #controls > button {
@@ -75,14 +84,15 @@
         display: inline-grid;
         padding: 5px;
         grid-template-rows: 1fr 1fr;
+        font-size: 14pt;
     }
 
         #controls button > div:first-child {
-            font-size: 14pt;
+            font-size: 100%;
         }
 
         #controls button > div:last-child {
-            font-size: 7pt;
+            font-size: 50%;
         }
 
     #controls .comboButton > button {
@@ -152,16 +162,14 @@
 
 
 
-#controls button:hover,
-.dialogTitle > button:hover {
+button:hover {
     background-color: rgba(117, 117, 117, 0.50);
     text-decoration: none;
 }
 
-#controls button,
+button,
 #controls .comboButton,
-.dialog,
-.dialogTitle > button {
+.dialog {
     border: solid 1px rgba(255, 255, 255, 0.5);
     color: white;
     border-radius: 0;
@@ -172,9 +180,8 @@
     backdrop-filter: blur(10px);
 }
 
-    #controls button,
+    button,
     .dialog,
-    .dialogTitle > button,
     .dialog > .header > button.tabSelected,
     .dialog > .content {
         background-color: rgba(0, 0, 0, 0.25);
@@ -195,7 +202,6 @@
         .dialog select,
         .dialog input {
             padding: 0.5em;
-            margin-bottom: 0.5em;
             background-color: rgba(0,0,0,0.25);
             color: white;
         }

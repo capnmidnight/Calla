@@ -9,7 +9,7 @@ import { OptionsForm } from "./forms/OptionsForm.js";
 import { UserDirectoryForm } from "./forms/UserDirectoryForm.js";
 import { Game } from "./Game.js";
 import { disabled } from "./html/attrs.js";
-import { hide, isOpen, setOpen, show } from "./html/ops.js";
+import { hide, isOpen, show } from "./html/ops.js";
 import { Settings } from "./Settings.js";
 import { RequestAnimationFrameTimer } from "./timers/RequestAnimationFrameTimer.js";
 
@@ -31,6 +31,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         controls = new ButtonLayer(game.element, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
         devices = new DevicesDialog(),
         options = new OptionsForm(),
+        instructions = new FormDialog("instructions"),
         emoji = new EmojiForm(),
         client = new CallaClient(JITSI_HOST, JVB_HOST, JVB_MUC),
         timer = new RequestAnimationFrameTimer(),
@@ -44,8 +45,37 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
             controls,
             devices,
             options,
-            emoji
+            emoji,
+            instructions
         };
+
+    async function postObj(path, obj) {
+        const request = fetch(path, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(obj)
+        });
+
+        const response = await request;
+        if (response.ok) {
+            console.log("Thanks!");
+        }
+
+        return response;
+    }
+
+    async function recordEmail(Name, Email) {
+        await postObj("/Contacts", { Name, Email });
+    }
+
+    async function recordRoom(roomName) {
+        const response = await postObj("/Game/Rooms", roomName);
+        const shortName = await response.text();
+        return shortName;
+    }
+
 
     /**
      * @callback showViewCallback
@@ -68,6 +98,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
             hide(options);
             hide(devices);
             hide(emoji);
+            hide(instructions);
             show(view);
         }
     }
@@ -128,6 +159,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
     game.transitionSpeed = settings.transitionSpeed = 0.5;
     login.userName = settings.userName;
     login.roomName = settings.roomName;
+    login.email = settings.email;
 
     showView(login);
 
@@ -142,7 +174,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
 
     addEventListeners(controls, {
         toggleOptions: _showView(options),
-        toggleInstructions: _showView(login),
+        toggleInstructions: _showView(instructions),
         toggleUserDirectory: _showView(directory),
         changeDevices: _showView(devices),
 
@@ -177,7 +209,7 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
     });
 
 
-    login.addEventListener("login", () => {
+    login.addEventListener("login", async () => {
         client.startAudio();
         client.audio.addClip("join", "audio/door-open.ogg", "audio/door-open.mp3", "audio/door-open.wav");
         client.audio.addClip("leave", "audio/door-close.ogg", "audio/door-close.mp3", "audio/door-close.wav");
@@ -186,9 +218,22 @@ export function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
             window.history.replaceState(undefined, undefined, "#" + login.roomName);
         }
 
-        client.join(
-            settings.roomName = login.roomName,
-            settings.userName = login.userName);
+        if (login.email.length > 0
+            && /^[^@]+@[^@]+/.test(login.email)) {
+            await recordEmail(login.userName, login.email);
+        }
+
+        let roomName = login.roomName;
+        if (!login.roomSelectMode) {
+            roomName = await recordRoom(roomName);
+        }
+
+        console.log(roomName);
+        client.join(roomName, login.userName);
+
+        settings.userName = login.userName;
+        settings.email = login.email;
+        settings.roomName = roomName;
     });
 
 

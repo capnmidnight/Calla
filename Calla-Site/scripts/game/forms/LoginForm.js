@@ -1,12 +1,8 @@
+import { id } from "../html/attrs.js";
 import { setLocked, setOpen } from "../html/ops.js";
-import { FormDialog } from "./FormDialog.js";
 import { SelectBox } from "../html/SelectBoxTag.js";
-
-const defaultRooms = new Map([
-    ["calla", "Calla"],
-    ["island", "Island"],
-    ["alxcc", "Alexandria Code & Coffee"],
-    ["vurv", "Vurv"]]);
+import { Button, Div, InputEmail, InputText } from "../html/tags.js";
+import { FormDialog } from "./FormDialog.js";
 
 /** @type {WeakMap<LoginForm, LoginFormPrivate>} */
 const selfs = new WeakMap();
@@ -43,7 +39,7 @@ class LoginFormPrivate {
 
 export class LoginForm extends FormDialog {
     constructor() {
-        super("login", "Login");
+        super("login");
         const self = new LoginFormPrivate(this);
         selfs.set(this, self);
 
@@ -51,27 +47,38 @@ export class LoginForm extends FormDialog {
 
         this.addEventListener("shown", () => self.ready = true);
 
-        this.roomLabel = this.element.querySelector("label[for='roomSelector']");
+        this.roomSelectControl = Div(id("roomSelectorControl"));
+        this.roomEntryControl = Div(id("roomEntryControl"));
 
+
+        const curRooms = Array.prototype.map.call(this.element.querySelectorAll("#roomSelector option"), (opt) => {
+            return {
+                Name: opt.textContent || opt.innerText,
+                ShortName: opt.value
+            };
+        });
         this.roomSelect = SelectBox(
             "roomSelector",
             "No rooms available",
-            v => v,
-            k => defaultRooms.get(k));
+            v => v.ShortName,
+            v => v.Name);
         this.roomSelect.addEventListener("input", validate);
         this.roomSelect.emptySelectionEnabled = false;
-        this.roomSelect.values = defaultRooms.keys();
+        this.roomSelect.values = curRooms;
         this.roomSelect.selectedIndex = 0;
 
-        this.roomInput = this.element.querySelector("#roomName");
+        this.roomInput = InputText(id("roomName"));
         this.roomInput.addEventListener("input", validate);
         this.roomInput.addEventListener("keypress", (evt) => {
-            if (evt.key === "Enter") {
+            if (this.userName.length === 0) {
                 this.userNameInput.focus();
+            }
+            else if (this.email.length === 0) {
+                this.emailInput.focuse();
             }
         });
 
-        this.userNameInput = this.element.querySelector("#userName")
+        this.userNameInput = InputText(id("userName"));
         this.userNameInput.addEventListener("input", validate);
         this.userNameInput.addEventListener("keypress", (evt) => {
             if (evt.key === "Enter") {
@@ -89,12 +96,35 @@ export class LoginForm extends FormDialog {
             }
         });
 
-        this.createRoomButton = this.element.querySelector("#createNewRoom");
-        this.createRoomButton.addEventListener("click", () => {
-            this.roomSelectMode = !this.roomSelectMode;
+        /** @type {HTMLInputElement} */
+        this.emailInput = InputEmail(id("email"));
+        this.emailInput.addEventListener("keypress", (evt) => {
+            if (evt.key === "Enter") {
+                if (this.userName.length === 0) {
+                    this.userNameInput.focus();
+                }
+                else if (this.roomName.length === 0) {
+                    if (this.roomSelectMode) {
+                        this.roomSelect.focus();
+                    }
+                    else {
+                        this.roomInput.focus();
+                    }
+                }
+            }
         });
 
-        this.connectButton = this.element.querySelector("#connect");
+        const createRoomButton = Button(id("createNewRoom"));
+        createRoomButton.addEventListener("click", () => {
+            this.roomSelectMode = false;
+        });
+
+        const selectRoomButton = Button(id("selectRoom"));
+        selectRoomButton.addEventListener("click", () => {
+            this.roomSelectMode = true;
+        });
+
+        this.connectButton = Button(id("connect"));
         this.addEventListener("login", () => {
             this.connecting = true;
         });
@@ -141,24 +171,19 @@ export class LoginForm extends FormDialog {
     }
 
     get roomSelectMode() {
-        return this.roomSelect.style.display !== "none";
+        return this.roomSelectControl.style.display !== "none";
     }
 
     set roomSelectMode(value) {
         const self = selfs.get(this);
-        setOpen(this.roomSelect, value);
-        setOpen(this.roomInput, !value);
-        this.createRoomButton.innerHTML = value
-            ? "New"
-            : "Cancel";
+        setOpen(this.roomSelectControl, value);
+        setOpen(this.roomEntryControl, !value);
 
         if (value) {
-            this.roomLabel.htmlFor = this.roomSelect.id;
-            this.roomSelect.selectedValue = this.roomInput.value.toLocaleLowerCase();
+            this.roomSelect.selectedValue = { ShortName: this.roomInput.value };
         }
         else if (this.roomSelect.selectedIndex >= 0) {
-            this.roomLabel.htmlFor = this.roomInput.id;
-            this.roomInput.value = this.roomSelect.selectedValue;
+            this.roomInput.value = this.roomSelect.selectedValue.ShortName;
         }
 
         self.validate();
@@ -166,22 +191,22 @@ export class LoginForm extends FormDialog {
 
     get roomName() {
         const room = this.roomSelectMode
-            ? this.roomSelect.selectedValue
+            ? this.roomSelect.selectedValue && this.roomSelect.selectedValue.ShortName
             : this.roomInput.value;
 
-        return room && room.toLocaleLowerCase() || "";
+        return room || "";
     }
 
     set roomName(v) {
         if (v === null
             || v === undefined
             || v.length === 0) {
-            v = defaultRooms.keys().next();
+            v = this.roomSelect.values[0].ShortName;
         }
 
         this.roomInput.value = v;
-        this.roomSelect.selectedValue = v;
-        this.roomSelectMode = this.roomSelect.contains(v);
+        this.roomSelect.selectedValue = { ShortName: v };
+        this.roomSelectMode = this.roomSelect.selectedIndex > -1;
         selfs.get(this).validate();
     }
 
@@ -192,6 +217,14 @@ export class LoginForm extends FormDialog {
 
     get userName() {
         return this.userNameInput.value;
+    }
+
+    set email(value) {
+        this.emailInput.value = value;
+    }
+
+    get email() {
+        return this.emailInput.value;
     }
 
     get connectButtonText() {

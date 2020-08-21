@@ -43,8 +43,7 @@ export class Game extends EventBase {
         this.zoomMin = zoomMin;
         this.zoomMax = zoomMax;
 
-        this.element = document.getElementById("frontBuffer")
-            || Canvas(id("frontBuffer"));
+        this.element = Canvas(id("frontBuffer"));
         this.gFront = this.element.getContext("2d");
 
         /** @type {User} */

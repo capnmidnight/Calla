@@ -172,6 +172,19 @@ export class SelectBoxTag extends HtmlCustomTag {
         this.selectedIndex = this.indexOf(value);
     }
 
+    get selectedText() {
+        const opts = this.element.selectedOptions;
+        if (opts.length === 1) {
+            return opts[0].textContent || opts[0].innerText;
+        }
+    }
+
+    set selectedText(value) {
+        const idx = this.values.findIndex(v =>
+            value !== null && this.makeLabel(v) === value);
+        this.selectedIndex = idx;
+    }
+
     /**
      * Returns the index of the given item in the select box's databound collection.
      * @param {any} value

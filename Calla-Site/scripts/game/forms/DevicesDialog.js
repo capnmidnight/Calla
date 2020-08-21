@@ -8,7 +8,7 @@ const audioInputChangedEvt = new Event("audioInputChanged"),
 
 export class DevicesDialog extends FormDialog {
     constructor() {
-        super("devices", "Devices");
+        super("devices");
 
         const _ = (evt) => () => this.dispatchEvent(evt);
 

@@ -21,7 +21,7 @@ const ROW_TIMEOUT = 3000;
 export class UserDirectoryForm extends FormDialog {
 
     constructor() {
-        super("users", "Users");
+        super("users");
 
         const _ = (evt) => () => this.dispatchEvent(evt);
 

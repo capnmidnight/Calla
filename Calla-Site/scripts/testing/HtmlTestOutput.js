@@ -57,7 +57,7 @@ function makeStatus(id) {
 export class HtmlTestOutput extends TestOutput {
     constructor(...CaseClasses) {
         super(...CaseClasses);
-        this.element = document.getElementById("testOutput") || Div();
+        this.element = Div(id("testOutput"));
         /**
          * 
          * @param {TestOutputResultsEvent} evt

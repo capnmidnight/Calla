@@ -4,6 +4,8 @@
     ViewData["Description"] = "Voice chat with an RPG map. Volume scales with distance from other users. Walk around, talk to folks, have private conversations by huddling in a corner, or drop in on other conversations. Ideal for meetups!";
 }
 
+@model Rooms[]
+
 @section HeadScripts {
     <link rel="stylesheet" type="text/css" href="~/stylesheets/game.css" />
     <environment names="Staging,Production">
@@ -16,19 +18,20 @@
 
 <canvas id="frontBuffer"></canvas>
 
-<partial name="Devices" />
-<partial name="UserDirectory" />
 <partial name="Options" />
 
-<menu id="optionsMenu">
-    <menuitem>Profile</menuitem>
-    <menuitem>Interface</menuitem>
-    <menuitem>Input</menuitem>
-    <menuitem>Help</menuitem>
-    <menuitem>Share</menuitem>
-</menu>
+@*<menu id="optionsMenu">
+        <menuitem>Profile</menuitem>
+        <menuitem>Interface</menuitem>
+        <menuitem>Input</menuitem>
+        <menuitem>Help</menuitem>
+        <menuitem>Share</menuitem>
+    </menu>*@
 
+<partial name="Devices" />
+<partial name="UserDirectory" />
+<partial name="Instructions" />
 <partial name="Emoji" />
-<partial name="Login" />
+@Html.Partial("Login", Model);
 
 <div id="controls"></div>

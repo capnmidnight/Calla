@@ -1,0 +1,42 @@
+@{
+    Layout = "_AdminPage";
+    ViewData["Title"] = "Page Views";
+}
+
+@model PageViews[]
+
+
+@if (Model.Length == 0)
+{
+    <p>No Content</p>
+}
+else
+{
+    <table id="output" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Referrer</th>
+                <th>User Agent</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+                <tr id="row-@row.Id">
+                    <td>@row.Timestamp</td>
+                    <td>@row.From</td>
+                    <td>@row.To</td>
+                    <td>@row.Referrer</td>
+                    <td>@row.UserAgent</td>
+                    <td>
+                        <button type="button" onclick="deleteItem(@row.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

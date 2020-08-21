@@ -5,20 +5,29 @@
 @section HeadScripts
 {
     <script>
+        function req(method, obj) {
+            return fetch(document.location.href, {
+                method,
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(obj)
+            });
+        }
+        async function updateItem(obj) {
+            const request = req("POST", obj);
+            const response = await request;
+            if (!response.ok) {
+                alert("Error! " + response.status + " " + response.statusText);
+            }
+        }
+
         async function deleteItem(id) {
             const tableRow = document.getElementById("row-" + id);
             tableRow.style.color = "red";
 
             const tableBody = tableRow.parentElement;
-
-            const request = fetch(document.location.href, {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(id)
-            });
-
+            const request = req("DELETE", id);
             const response = await request;
             if (response.ok) {
                 tableBody.removeChild(tableRow);
@@ -61,5 +70,16 @@
             }
     </style>
 }
+
+
+<a asp-area="" asp-controller="Admin" asp-action="Index">Admin</a>
+<ul style="list-style:none">
+    <li><a asp-area="" asp-controller="Admin" asp-action="Contacts">Contacts</a></li>
+    <li><a asp-area="" asp-controller="Admin" asp-action="Domains">Domains</a></li>
+    <li><a asp-area="" asp-controller="Admin" asp-action="PageViews">Page Views</a></li>
+    <li><a asp-area="" asp-controller="Admin" asp-action="Referrers">Referrers</a></li>
+    <li><a asp-area="" asp-controller="Admin" asp-action="Rooms">Rooms</a></li>
+    <li><a asp-area="" asp-controller="Admin" asp-action="UserAgents">User Agents</a></li>
+</ul>
 
 @RenderBody()

@@ -18,13 +18,22 @@ import { HtmlEvt } from "./evts.js";
  * @returns {HTMLElement}
  */
 export function tag(name, ...rest) {
-    const elem = document.createElement(name);
+    let elem = null;
 
     for (let i = 0; i < rest.length; ++i) {
-        // 
-        if (isFunction(rest[i])) {
-            rest[i] = rest[i](true);
+        const attr = rest[i];
+        if (isFunction(attr)) {
+            rest[i] = attr(true);
         }
+
+        if (attr instanceof HtmlAttr
+            && attr.key === "id") {
+            elem = document.getElementById(attr.value);
+        }
+    }
+
+    if (elem === null) {
+        elem = document.createElement(name);
     }
 
     for (let x of rest) {

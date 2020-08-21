@@ -24254,13 +24254,22 @@ function setLocked(target, value) {
  * @returns {HTMLElement}
  */
 function tag(name, ...rest) {
-    const elem = document.createElement(name);
+    let elem = null;
 
     for (let i = 0; i < rest.length; ++i) {
-        // 
-        if (isFunction(rest[i])) {
-            rest[i] = rest[i](true);
+        const attr = rest[i];
+        if (isFunction(attr)) {
+            rest[i] = attr(true);
         }
+
+        if (attr instanceof HtmlAttr
+            && attr.key === "id") {
+            elem = document.getElementById(attr.value);
+        }
+    }
+
+    if (elem === null) {
+        elem = document.createElement(name);
     }
 
     for (let x of rest) {
@@ -24369,11 +24378,25 @@ function Img(...rest) { return tag("img", ...rest); }
 function Input(...rest) { return tag("input", ...rest); }
 
 /**
+ * creates an HTML Input tag that is an email entry field.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+function InputEmail(...rest) { return Input(type("email"), ...rest) }
+
+/**
  * creates an HTML Input tag that is a range selector.
  * @param {...TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLInputElement}
  */
 function InputRange(...rest) { return Input(type("range"), ...rest) }
+
+/**
+ * creates an HTML Input tag that is a text entry field.
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLInputElement}
+ */
+function InputText(...rest) { return Input(type("text"), ...rest) }
 
 /**
  * creates an HTML Input tag that is a URL entry field.
@@ -24489,8 +24512,7 @@ class ButtonLayer extends EventBase {
             this.dispatchEvent(zoomChangedEvt);
         };
 
-        this.element = document.getElementById("controls")
-            || Div(id("controls"));
+        this.element = Div(id("controls"));
 
         this.element.append(
 
@@ -24700,26 +24722,7 @@ class HtmlCustomTag extends EventBase {
      */
     constructor(tagName, ...rest) {
         super();
-
-        /** @type {HTMLElement} */
-        this.element = null;
-
-        for (let attr of rest) {
-            if (attr.key === "id") {
-                this.element = document.getElementById(attr.value);
-            }
-            else if (attr instanceof Element) {
-                this.element = attr;
-            }
-
-            if (this.element) {
-                break;
-            }
-        }
-
-        if (!this.element) {
-            this.element = tag(tagName, ...rest);
-        }
+        this.element = tag(tagName, ...rest);
     }
 
     /**
@@ -24980,6 +24983,19 @@ class SelectBoxTag extends HtmlCustomTag {
         this.selectedIndex = this.indexOf(value);
     }
 
+    get selectedText() {
+        const opts = this.element.selectedOptions;
+        if (opts.length === 1) {
+            return opts[0].textContent || opts[0].innerText;
+        }
+    }
+
+    set selectedText(value) {
+        const idx = this.values.findIndex(v =>
+            value !== null && this.makeLabel(v) === value);
+        this.selectedIndex = idx;
+    }
+
     /**
      * Returns the index of the given item in the select box's databound collection.
      * @param {any} value
@@ -25006,10 +25022,10 @@ const hiddenEvt = new Event("hidden"),
     shownEvt = new Event("shown");
 
 class FormDialog extends EventBase {
-    constructor(name, header) {
+    constructor(tagId) {
         super();
 
-        this.element = document.getElementById(name);
+        this.element = Div(id(tagId));
         this.header = this.element.querySelector(".header");
         this.content = this.element.querySelector(".content");
         this.footer = this.element.querySelector(".footer");
@@ -25066,7 +25082,7 @@ const audioInputChangedEvt = new Event("audioInputChanged"),
 
 class DevicesDialog extends FormDialog {
     constructor() {
-        super("devices", "Devices");
+        super("devices");
 
         const _ = (evt) => () => this.dispatchEvent(evt);
 
@@ -25207,7 +25223,7 @@ const cancelEvt = new Event("emojiCanceled");
 
 class EmojiForm extends FormDialog {
     constructor() {
-        super("emoji", "Emoji");
+        super("emoji");
 
         this.header.append(
             H2("Recent"),
@@ -25398,12 +25414,6 @@ class EmojiSelectedEvent extends Event {
     }
 }
 
-const defaultRooms = new Map([
-    ["calla", "Calla"],
-    ["island", "Island"],
-    ["alxcc", "Alexandria Code & Coffee"],
-    ["vurv", "Vurv"]]);
-
 /** @type {WeakMap<LoginForm, LoginFormPrivate>} */
 const selfs = new WeakMap();
 
@@ -25439,7 +25449,7 @@ class LoginFormPrivate {
 
 class LoginForm extends FormDialog {
     constructor() {
-        super("login", "Login");
+        super("login");
         const self = new LoginFormPrivate(this);
         selfs.set(this, self);
 
@@ -25447,27 +25457,38 @@ class LoginForm extends FormDialog {
 
         this.addEventListener("shown", () => self.ready = true);
 
-        this.roomLabel = this.element.querySelector("label[for='roomSelector']");
+        this.roomSelectControl = Div(id("roomSelectorControl"));
+        this.roomEntryControl = Div(id("roomEntryControl"));
 
+
+        const curRooms = Array.prototype.map.call(this.element.querySelectorAll("#roomSelector option"), (opt) => {
+            return {
+                Name: opt.textContent || opt.innerText,
+                ShortName: opt.value
+            };
+        });
         this.roomSelect = SelectBox(
             "roomSelector",
             "No rooms available",
-            v => v,
-            k => defaultRooms.get(k));
+            v => v.ShortName,
+            v => v.Name);
         this.roomSelect.addEventListener("input", validate);
         this.roomSelect.emptySelectionEnabled = false;
-        this.roomSelect.values = defaultRooms.keys();
+        this.roomSelect.values = curRooms;
         this.roomSelect.selectedIndex = 0;
 
-        this.roomInput = this.element.querySelector("#roomName");
+        this.roomInput = InputText(id("roomName"));
         this.roomInput.addEventListener("input", validate);
         this.roomInput.addEventListener("keypress", (evt) => {
-            if (evt.key === "Enter") {
+            if (this.userName.length === 0) {
                 this.userNameInput.focus();
+            }
+            else if (this.email.length === 0) {
+                this.emailInput.focuse();
             }
         });
 
-        this.userNameInput = this.element.querySelector("#userName");
+        this.userNameInput = InputText(id("userName"));
         this.userNameInput.addEventListener("input", validate);
         this.userNameInput.addEventListener("keypress", (evt) => {
             if (evt.key === "Enter") {
@@ -25485,12 +25506,35 @@ class LoginForm extends FormDialog {
             }
         });
 
-        this.createRoomButton = this.element.querySelector("#createNewRoom");
-        this.createRoomButton.addEventListener("click", () => {
-            this.roomSelectMode = !this.roomSelectMode;
+        /** @type {HTMLInputElement} */
+        this.emailInput = InputEmail(id("email"));
+        this.emailInput.addEventListener("keypress", (evt) => {
+            if (evt.key === "Enter") {
+                if (this.userName.length === 0) {
+                    this.userNameInput.focus();
+                }
+                else if (this.roomName.length === 0) {
+                    if (this.roomSelectMode) {
+                        this.roomSelect.focus();
+                    }
+                    else {
+                        this.roomInput.focus();
+                    }
+                }
+            }
         });
 
-        this.connectButton = this.element.querySelector("#connect");
+        const createRoomButton = Button(id("createNewRoom"));
+        createRoomButton.addEventListener("click", () => {
+            this.roomSelectMode = false;
+        });
+
+        const selectRoomButton = Button(id("selectRoom"));
+        selectRoomButton.addEventListener("click", () => {
+            this.roomSelectMode = true;
+        });
+
+        this.connectButton = Button(id("connect"));
         this.addEventListener("login", () => {
             this.connecting = true;
         });
@@ -25537,24 +25581,19 @@ class LoginForm extends FormDialog {
     }
 
     get roomSelectMode() {
-        return this.roomSelect.style.display !== "none";
+        return this.roomSelectControl.style.display !== "none";
     }
 
     set roomSelectMode(value) {
         const self = selfs.get(this);
-        setOpen(this.roomSelect, value);
-        setOpen(this.roomInput, !value);
-        this.createRoomButton.innerHTML = value
-            ? "New"
-            : "Cancel";
+        setOpen(this.roomSelectControl, value);
+        setOpen(this.roomEntryControl, !value);
 
         if (value) {
-            this.roomLabel.htmlFor = this.roomSelect.id;
-            this.roomSelect.selectedValue = this.roomInput.value.toLocaleLowerCase();
+            this.roomSelect.selectedValue = { ShortName: this.roomInput.value };
         }
         else if (this.roomSelect.selectedIndex >= 0) {
-            this.roomLabel.htmlFor = this.roomInput.id;
-            this.roomInput.value = this.roomSelect.selectedValue;
+            this.roomInput.value = this.roomSelect.selectedValue.ShortName;
         }
 
         self.validate();
@@ -25562,22 +25601,22 @@ class LoginForm extends FormDialog {
 
     get roomName() {
         const room = this.roomSelectMode
-            ? this.roomSelect.selectedValue
+            ? this.roomSelect.selectedValue && this.roomSelect.selectedValue.ShortName
             : this.roomInput.value;
 
-        return room && room.toLocaleLowerCase() || "";
+        return room || "";
     }
 
     set roomName(v) {
         if (v === null
             || v === undefined
             || v.length === 0) {
-            v = defaultRooms.keys().next();
+            v = this.roomSelect.values[0].ShortName;
         }
 
         this.roomInput.value = v;
-        this.roomSelect.selectedValue = v;
-        this.roomSelectMode = this.roomSelect.contains(v);
+        this.roomSelect.selectedValue = { ShortName: v };
+        this.roomSelectMode = this.roomSelect.selectedIndex > -1;
         selfs.get(this).validate();
     }
 
@@ -25588,6 +25627,14 @@ class LoginForm extends FormDialog {
 
     get userName() {
         return this.userNameInput.value;
+    }
+
+    set email(value) {
+        this.emailInput.value = value;
+    }
+
+    get email() {
+        return this.emailInput.value;
     }
 
     get connectButtonText() {
@@ -26831,7 +26878,7 @@ class OptionsFormPrivate {
 
 class OptionsForm extends FormDialog {
     constructor() {
-        super("options", "Options");
+        super("options");
 
         const _ = (evt) => () => this.dispatchEvent(evt);
 
@@ -27274,7 +27321,7 @@ const ROW_TIMEOUT = 3000;
 class UserDirectoryForm extends FormDialog {
 
     constructor() {
-        super("users", "Users");
+        super("users");
 
         /** @type {Map.<string, Element[]>} */
         this.rows = new Map();
@@ -28177,8 +28224,7 @@ class Game extends EventBase {
         this.zoomMin = zoomMin;
         this.zoomMax = zoomMax;
 
-        this.element = document.getElementById("frontBuffer")
-            || Canvas(id("frontBuffer"));
+        this.element = Canvas(id("frontBuffer"));
         this.gFront = this.element.getContext("2d");
 
         /** @type {User} */
@@ -28915,6 +28961,7 @@ class SettingsPrivate {
         this.zoom = 1.5;
         this.roomName = "calla";
         this.userName = "";
+        this.email = "";
         this.avatarEmoji = null;
 
         /** @type {string} */
@@ -29096,6 +29143,18 @@ class Settings {
         }
     }
 
+    get email() {
+        return selfs$4.get(this).email;
+    }
+
+    set email(value) {
+        if (value !== this.email) {
+            const self = selfs$4.get(this);
+            self.email = value;
+            self.commit();
+        }
+    }
+
     get avatarEmoji() {
         return selfs$4.get(this).avatarEmoji;
     }
@@ -29272,6 +29331,7 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         controls = new ButtonLayer(game.element, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
         devices = new DevicesDialog(),
         options = new OptionsForm(),
+        instructions = new FormDialog("instructions"),
         emoji = new EmojiForm(),
         client = new CallaClient(JITSI_HOST, JVB_HOST, JVB_MUC),
         timer = new RequestAnimationFrameTimer(),
@@ -29285,8 +29345,37 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
             controls,
             devices,
             options,
-            emoji
+            emoji,
+            instructions
         };
+
+    async function postObj(path, obj) {
+        const request = fetch(path, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(obj)
+        });
+
+        const response = await request;
+        if (response.ok) {
+            console.log("Thanks!");
+        }
+
+        return response;
+    }
+
+    async function recordEmail(Name, Email) {
+        await postObj("/Contacts", { Name, Email });
+    }
+
+    async function recordRoom(roomName) {
+        const response = await postObj("/Game/Rooms", roomName);
+        const shortName = await response.text();
+        return shortName;
+    }
+
 
     /**
      * @callback showViewCallback
@@ -29309,6 +29398,7 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
             hide(options);
             hide(devices);
             hide(emoji);
+            hide(instructions);
             show(view);
         }
     }
@@ -29369,6 +29459,7 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
     game.transitionSpeed = settings.transitionSpeed = 0.5;
     login.userName = settings.userName;
     login.roomName = settings.roomName;
+    login.email = settings.email;
 
     showView(login);
 
@@ -29383,7 +29474,7 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
 
     addEventListeners(controls, {
         toggleOptions: _showView(options),
-        toggleInstructions: _showView(login),
+        toggleInstructions: _showView(instructions),
         toggleUserDirectory: _showView(directory),
         changeDevices: _showView(devices),
 
@@ -29418,7 +29509,7 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
     });
 
 
-    login.addEventListener("login", () => {
+    login.addEventListener("login", async () => {
         client.startAudio();
         client.audio.addClip("join", "audio/door-open.ogg", "audio/door-open.mp3", "audio/door-open.wav");
         client.audio.addClip("leave", "audio/door-close.ogg", "audio/door-close.mp3", "audio/door-close.wav");
@@ -29427,9 +29518,22 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
             window.history.replaceState(undefined, undefined, "#" + login.roomName);
         }
 
-        client.join(
-            settings.roomName = login.roomName,
-            settings.userName = login.userName);
+        if (login.email.length > 0
+            && /^[^@]+@[^@]+/.test(login.email)) {
+            await recordEmail(login.userName, login.email);
+        }
+
+        let roomName = login.roomName;
+        if (!login.roomSelectMode) {
+            roomName = await recordRoom(roomName);
+        }
+
+        console.log(roomName);
+        client.join(roomName, login.userName);
+
+        settings.userName = login.userName;
+        settings.email = login.email;
+        settings.roomName = roomName;
     });
 
 

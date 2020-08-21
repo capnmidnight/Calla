@@ -1,4 +1,4 @@
-﻿import { EmojiGroup } from "../emoji/EmojiGroup.js";
+import { EmojiGroup } from "../emoji/EmojiGroup.js";
 import { allIcons as icons, emojiStyle, textStyle } from "../emoji/emojis.js";
 import { className, disabled, href, htmlFor, title } from "../html/attrs.js";
 import { color, cssWidth, fontSize, styles, textDecoration, textTransform } from "../html/css.js";
@@ -24,7 +24,7 @@ const cancelEvt = new Event("emojiCanceled");
 
 export class EmojiForm extends FormDialog {
     constructor() {
-        super("emoji", "Emoji");
+        super("emoji");
 
         this.header.append(
             H2("Recent"),
