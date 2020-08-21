@@ -18522,7 +18522,7 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-const versionString = "v0.6.1";
+const versionString = "v0.6.2";
 
 /* global JitsiMeetJS */
 

@@ -7791,7 +7791,7 @@ function when(target, resolveEvt, filterTest, timeout) {
 	}
 
 // Pass this if window is not defined yet
-} )( typeof window !== "undefined" ? window : undefined, function( window, noGlobal ) {
+} )( window, function( window, noGlobal ) {
 
 var arr = [];
 
@@ -18618,7 +18618,7 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-const versionString = "v0.6.1";
+const versionString = "v0.6.2";
 
 /* global JitsiMeetJS */
 
@@ -18904,6 +18904,30 @@ class CallaClient extends EventBase {
 
         setLoggers(this.connection, JitsiMeetJS.events.connection);
 
+        const onConferenceLeft = () => {
+            this.dispatchEvent(Object.assign(
+                new Event("videoConferenceLeft"), {
+                roomName
+            }));
+            this.localUserID = null;
+            this.conference = null;
+            this.joined = false;
+        };
+
+        const onFailed = (evt) => {
+            console.error("Connection failed", evt);
+            this.dispose();
+            onConferenceLeft();
+            onDisconnect();
+        };
+
+        const onDisconnect = () => {
+            this.connection.removeEventListener(CONNECTION_ESTABLISHED, onConnect);
+            this.connection.removeEventListener(CONNECTION_FAILED, onFailed);
+            this.connection.removeEventListener(CONNECTION_DISCONNECTED, onDisconnect);
+            this.connection = null;
+        };
+
         const onConnect = (connectionID) => {
             this.conference = this.connection.initJitsiConference(roomName, {
                 openBridgeChannel: true
@@ -18917,7 +18941,8 @@ class CallaClient extends EventBase {
                 USER_JOINED,
                 USER_LEFT,
                 DISPLAY_NAME_CHANGED,
-                ENDPOINT_MESSAGE_RECEIVED
+                ENDPOINT_MESSAGE_RECEIVED,
+                CONNECTION_INTERRUPTED
             } = JitsiMeetJS.events.conference;
 
             setLoggers(this.conference, JitsiMeetJS.events.conference);
@@ -18939,15 +18964,7 @@ class CallaClient extends EventBase {
                 await this.setPreferredDevicesAsync();
             });
 
-            this.conference.addEventListener(CONFERENCE_LEFT, () => {
-                this.dispatchEvent(Object.assign(
-                    new Event("videoConferenceLeft"), {
-                    roomName
-                }));
-                this.localUserID = null;
-                this.conference = null;
-                this.joined = false;
-            });
+            this.conference.addEventListener(CONFERENCE_LEFT, onConferenceLeft);
 
             const onTrackMuteChanged = (track, muted) => {
                 const userID = track.getParticipantId() || this.localUserID,
@@ -19057,19 +19074,12 @@ class CallaClient extends EventBase {
                 this.rxGameData({ user, data });
             });
 
+            this.conference.addEventListener(CONNECTION_INTERRUPTED, (...rest) => {
+                console.log("CONNECTION_INTERRUPTED");
+                onFailed(rest);
+            });
+
             this.conference.join();
-        };
-
-        const onFailed = (evt) => {
-            console.error("Connection failed", evt);
-            onDisconnect();
-        };
-
-        const onDisconnect = () => {
-            this.connection.removeEventListener(CONNECTION_ESTABLISHED, onConnect);
-            this.connection.removeEventListener(CONNECTION_FAILED, onFailed);
-            this.connection.removeEventListener(CONNECTION_DISCONNECTED, onDisconnect);
-            this.connection = null;
         };
 
         this.connection.addEventListener(CONNECTION_ESTABLISHED, onConnect);
