@@ -45,22 +45,15 @@ export class UserDirectoryForm extends FormDialog {
 
         this.chat = new HubConnectionBuilder().withUrl("/Chat").build();
 
-        let lastUser = null,
-            lastRoom = null;
+        let lastUser = null;
 
         this.chat.on("ReceiveMessage", (room, user, message) => {
-            let from = null
-            if (user !== lastUser
-                || room !== lastRoom) {
+            if (user !== lastUser) {
                 lastUser = user;
-                lastRoom = room;
-                from = Div(user, Sub(Em(`(${room})`)));
-            }
-            else {
-                from = Div("");
+                user = "";
             }
 
-            this.messages.append(from, Div(message));
+            this.messages.append(Div(user), Div(message));
             this.messages.lastChild.scrollIntoView();
         });
 
@@ -110,6 +103,7 @@ export class UserDirectoryForm extends FormDialog {
         this.roomName = roomName;
         this.userName = userName;
         await this.chat.start();
+        await this.chat.invoke("Join", this.roomName);
         this.entry.disabled
             = this.send.disabled
             = false;
