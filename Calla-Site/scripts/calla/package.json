@@ -1,6 +1,6 @@
 {
   "name": "calla",
-  "version": "0.6.7",
+  "version": "0.7.0",
   "description": "Teleconferencing through Jitsi with audio spatialization",
   "module": "index.js",
   "main": "calla.cjs.js",
