@@ -325,11 +325,9 @@ export class Game extends EventBase {
             zoomY = imageY / this.cameraZ,
             mapX = zoomX - this.cameraX,
             mapY = zoomY - this.cameraY,
-            mapWidth = this.map.tileWidth,
-            mapHeight = this.map.tileHeight,
-            gridX = Math.floor(mapX / mapWidth),
-            gridY = Math.floor(mapY / mapHeight),
-            tile = { x: gridX, y: gridY };
+            gridX = mapX / this.map.tileWidth,
+            gridY = mapY / this.map.tileHeight,
+            tile = { x: gridX - 0.5, y: gridY - 0.5 };
         return tile;
     }
 
@@ -356,14 +354,27 @@ export class Game extends EventBase {
             start = this.map.getGridNode(x, y),
             tx = x + dx,
             ty = y + dy,
+            gx = Math.round(tx),
+            gy = Math.round(ty),
+            ox = tx - gx,
+            oy = ty - gy,
             end = this.map.getGridNode(tx, ty);
 
         if (!start || !end) {
-            this.moveMeTo(x + dx, y + dy);
+            this.moveMeTo(tx, ty);
         }
         else {
             const result = this.map.searchPath(start, end);
-            this.waypoints.push(...result);
+            if (result.length === 0) {
+                this.moveMeTo(tx, ty);
+            }
+            else {
+                for (let point of result) {
+                    point.x += ox;
+                    point.y += oy;
+                }
+                this.waypoints.push(...result);
+            }
         }
     }
 
@@ -672,7 +683,7 @@ export class Game extends EventBase {
         const targetCameraX = -this.me.x * this.map.tileWidth,
             targetCameraY = -this.me.y * this.map.tileHeight;
 
-        this.cameraZ = lerp(this.cameraZ, this.targetCameraZ, CAMERA_LERP * 10);
+        this.cameraZ = lerp(this.cameraZ, this.targetCameraZ, CAMERA_LERP * this.cameraZ);
         this.cameraX = lerp(this.cameraX, targetCameraX, CAMERA_LERP * this.cameraZ);
         this.cameraY = lerp(this.cameraY, targetCameraY, CAMERA_LERP * this.cameraZ);
 

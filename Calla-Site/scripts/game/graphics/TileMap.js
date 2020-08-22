@@ -148,6 +148,8 @@ export class TileMap {
         const self = selfs.get(this);
         x -= self.offsetX;
         y -= self.offsetY;
+        x = Math.round(x);
+        y = Math.round(y);
         if (this.isInBounds(x, y)) {
             return self.graph.grid[y][x];
         }
@@ -183,6 +185,8 @@ export class TileMap {
         const self = selfs.get(this);
         x -= self.offsetX;
         y -= self.offsetY;
+        x = Math.round(x);
+        y = Math.round(y);
         return x < 0 || this.width <= x
             || y < 0 || this.height <= y
             || self.tileset && self.tileset.isClear(self.tiles[0][y][x])
