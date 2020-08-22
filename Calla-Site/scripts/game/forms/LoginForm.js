@@ -74,7 +74,7 @@ export class LoginForm extends FormDialog {
                 this.userNameInput.focus();
             }
             else if (this.email.length === 0) {
-                this.emailInput.focuse();
+                this.emailInput.focus();
             }
         });
 
