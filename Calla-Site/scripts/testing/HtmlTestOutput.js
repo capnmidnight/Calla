@@ -5,6 +5,7 @@ import { Button, clear, Div, Span } from "../game/html/tags.js";
 import { TestOutput } from "./TestOutput.js";
 import { TestOutputResultsEvent } from "./TestOutputResultsEvent.js";
 import { TestStates } from "./TestStates.js";
+import { id } from "../game/html/attrs.js";
 
 
 /**
