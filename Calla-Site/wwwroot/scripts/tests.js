@@ -18558,7 +18558,7 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-const versionString = "v0.6.6";
+const versionString = "v0.6.7";
 
 /* global JitsiMeetJS */
 
@@ -19850,6 +19850,13 @@ class HtmlAttr {
         }
     }
 }
+
+/**
+ * Often used with CSS to style a specific element. The value of this attribute must be unique.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function id(value) { return new HtmlAttr("id", value); }
 
 /**
  * Defines the type of the element.

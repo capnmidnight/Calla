@@ -19873,7 +19873,7 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-const versionString = "v0.6.6";
+const versionString = "v0.6.7";
 
 /* global JitsiMeetJS */
 
@@ -25446,7 +25446,7 @@ class LoginForm extends FormDialog {
                 this.userNameInput.focus();
             }
             else if (this.email.length === 0) {
-                this.emailInput.focuse();
+                this.emailInput.focus();
             }
         });
 
