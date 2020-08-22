@@ -72,14 +72,12 @@
 }
 
 
-<a asp-area="" asp-controller="Admin" asp-action="Index">Admin</a>
-<ul style="list-style:none">
-    <li><a asp-area="" asp-controller="Admin" asp-action="Contacts">Contacts</a></li>
-    <li><a asp-area="" asp-controller="Admin" asp-action="Domains">Domains</a></li>
-    <li><a asp-area="" asp-controller="Admin" asp-action="PageViews">Page Views</a></li>
-    <li><a asp-area="" asp-controller="Admin" asp-action="Referrers">Referrers</a></li>
-    <li><a asp-area="" asp-controller="Admin" asp-action="Rooms">Rooms</a></li>
-    <li><a asp-area="" asp-controller="Admin" asp-action="UserAgents">User Agents</a></li>
-</ul>
+<a href="~/Admin/Contacts">Contacts</a>
+-- <a href="~/Admin/Domains">Domains</a>
+-- <a href="~/Admin/ErrorLog">Error Log</a>
+-- <a href="~/Admin/PageViews">Page Views</a>
+-- <a href="~/Admin/Referrers">Referrers</a>
+-- <a href="~/Admin/Rooms">Rooms</a>
+-- <a href="~/Admin/UserAgents">User Agents</a>
 
 @RenderBody()
