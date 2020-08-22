@@ -1,0 +1,1 @@
+dotnet ef dbcontext scaffold Name=ConnectionStrings:Calla Npgsql.EntityFrameworkCore.PostgreSQL -o .\Data\ --context CallaContext --data-annotations --force
