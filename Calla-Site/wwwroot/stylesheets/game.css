@@ -152,14 +152,6 @@ body,
     transform: rotate(270deg) translate(-8.5em, 1.5em);
 }
 
-.dialog h1 {
-    font-size: 1em;
-}
-
-.dialog h2 {
-    font-size: 0.75em;
-}
-
 
 
 button:hover {
@@ -238,8 +230,22 @@ button,
     grid-row: 4/1/5/2;
 }
 
-.dialogTitle > h1 {
+.dialog h1,
+.dialog h1 a,
+.dialog h2,
+.dialog h2 a,
+.dialog h3,
+.dialog h3 a,
+.dialog h4,
+.dialog h4 a,
+.dialog h5,
+.dialog h5 a,
+.dialog h6,
+.dialog h6 a {
     color: white;
+}
+
+.dialogTitle > h1 {
     display: inline-block;
     font-size: 150%;
     grid-area: 1/1/2/2;
@@ -278,6 +284,25 @@ menu {
 
 menuitem {
     display: block;
+}
+
+#emoji > .content button {
+    padding: 0;
+    font-size: 200%;
+    width: 2em;
+}
+
+#emoji > .content > h1 > a {
+    text-decoration: none;
+    text-transform: capitalize;
+}
+
+.dialog h1 {
+    font-size: 1em;
+}
+
+.dialog h2 {
+    font-size: 0.75em;
 }
 
 @media (min-width: 600px) {

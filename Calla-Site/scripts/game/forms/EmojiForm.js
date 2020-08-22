@@ -1,21 +1,11 @@
 import { EmojiGroup } from "../emoji/EmojiGroup.js";
 import { allIcons as icons, emojiStyle, textStyle } from "../emoji/emojis.js";
 import { className, disabled, href, htmlFor, title } from "../html/attrs.js";
-import { color, cssWidth, fontSize, styles, textDecoration, textTransform } from "../html/css.js";
 import { onClick } from "../html/evts.js";
 import { gridPos } from "../html/grid.js";
 import { hide, isOpen, show, toggleOpen } from "../html/ops.js";
 import { A, Button, Div, H1, H2, Label, LI, P, Span, UL } from "../html/tags.js";
 import { FormDialog } from "./FormDialog.js";
-
-
-const headerStyle = styles(
-    textDecoration("none"),
-    color("black"),
-    textTransform("capitalize"));
-const buttonStyle = styles(
-    fontSize("200%"),
-    cssWidth("2em"));
 
 const disabler = disabled(true),
     enabler = disabled(false);
@@ -70,7 +60,6 @@ export class EmojiForm extends FormDialog {
             for (let icon of alts) {
                 const btn = Button(
                     title(icon.desc),
-                    buttonStyle,
                     onClick((evt) => {
                         selectedEmoji = selectedEmoji && evt.ctrlKey
                             ? combine(selectedEmoji, icon)
@@ -129,7 +118,6 @@ export class EmojiForm extends FormDialog {
                     headerButton = A(
                         href("javascript:undefined"),
                         title(group.desc),
-                        headerStyle,
                         onClick(() => {
                             toggleOpen(container);
                             headerButton.innerHTML = group.value + (isOpen(container) ? " -" : " +");
