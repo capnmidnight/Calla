@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+using Newtonsoft.Json;
 
 using System;
 using System.Linq;
@@ -32,11 +35,13 @@ namespace Calla.Controllers
 
     public class AdminController : Controller
     {
+        private readonly ILogger<AdminController> logger;
         private readonly IWebHostEnvironment env;
         private readonly CallaContext db;
 
-        public AdminController(IWebHostEnvironment env, CallaContext db)
+        public AdminController(ILogger<AdminController> logger, IWebHostEnvironment env, CallaContext db)
         {
+            this.logger = logger;
             this.env = env;
             this.db = db;
         }
@@ -214,6 +219,58 @@ namespace Calla.Controllers
 
             var cs = db.Rooms.Where(v => v.Id == id);
             db.Rooms.RemoveRange(cs);
+            await db.SaveChangesAsync().ConfigureAwait(false);
+            return Ok();
+        }
+
+        [HttpPost, Route("/ErrorLog")]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public async Task<ActionResult> ErrorLog([FromBody] TraceKitErrorModel err)
+        {
+            if (err != null)
+            {
+                logger.LogError(err.message, err);
+                _ = await db.Errors.AddAsync(new Errors
+                {
+                    From = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
+                    On = Request.Headers["Referer"].FirstOrDefault() ?? "N/A",
+                    Message = err.message,
+                    ErrorObject = JsonConvert.SerializeObject(err)
+                }).ConfigureAwait(false);
+                await db.SaveChangesAsync().ConfigureAwait(false);
+            }
+
+            return Ok();
+        }
+
+
+        [HttpGet]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public ActionResult ErrorLog()
+        {
+            if (!env.IsDevelopment())
+            {
+                return NotFound();
+            }
+
+            var errors = db.Errors
+                .OrderBy(err => err.Id)
+                .ToArray();
+
+            return View(errors);
+        }
+
+        [HttpDelete]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public async Task<ActionResult> ErrorLog([FromBody] int id)
+        {
+            if (!env.IsDevelopment())
+            {
+                return NotFound();
+            }
+
+            var errs = db.Errors.Where(err => err.Id == id);
+            db.Errors.RemoveRange(errs);
             await db.SaveChangesAsync().ConfigureAwait(false);
             return Ok();
         }
