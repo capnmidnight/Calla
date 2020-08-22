@@ -31,6 +31,13 @@ function render(self) {
 }
 
 /**
+ * Creates a string from a list item to use as the item's ID or label in a select box.
+ * @callback makeItemValueCallback
+ * @param {any} obj - the object
+ * @returns {string}
+ */
+
+/**
  * Creates a select box that can bind to collections
  * @param {string} id - the ID to use for the select box
  * @param {string} noSelectionText - the text to display when no items are available.

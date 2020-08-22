@@ -1031,11 +1031,12 @@ export function CanvasOffscreen(w, h, ...rest) {
 }
 
 /**
- * Creates a string from a list item to use as the item's ID or label in a select box.
- * @callback makeItemValueCallback
- * @param {any} obj - the object
- * @returns {string}
+ * Creates a text node out of the give input.
+ * @param {any} txt
  */
+export function TextNode(txt) {
+    return document.createTextNode(txt);
+}
 
 /**
  * Creates a Div element with margin: auto.

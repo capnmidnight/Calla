@@ -1,4 +1,5 @@
 using Calla.ActionFilters;
+using Calla.Hubs;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -39,6 +40,7 @@ namespace Calla
             services.AddDbContext<Data.CallaContext>();
             services.AddScoped<LogHitsAttribute>();
             services.AddControllersWithViews();
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -109,6 +111,8 @@ namespace Calla
             endpoints.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}");
+
+            endpoints.MapHub<ChatHub>("/Chat");
         }
     }
 }

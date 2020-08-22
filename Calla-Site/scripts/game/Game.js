@@ -109,13 +109,15 @@ export class Game extends EventBase {
         this.lastGamepadIndex = -1;
         this.gamepadIndex = -1;
         this.transitionSpeed = 0.125;
+        this.keyboardEnabled = true;
 
 
         // ============= KEYBOARD =================
 
         addEventListener("keydown", (evt) => {
             this.keys[evt.key] = evt;
-            if (!evt.ctrlKey
+            if (this.keyboardEnabled
+                && !evt.ctrlKey
                 && !evt.altKey
                 && !evt.shiftKey
                 && !evt.metaKey
@@ -580,19 +582,21 @@ export class Game extends EventBase {
                     dy = 0,
                     dz = 0;
 
-                for (let evt of Object.values(this.keys)) {
-                    if (!evt.altKey
-                        && !evt.shiftKey
-                        && !evt.ctrlKey
-                        && !evt.metaKey) {
-                        switch (evt.key) {
-                            case this.inputBinding.keyButtonUp: dy--; break;
-                            case this.inputBinding.keyButtonDown: dy++; break;
-                            case this.inputBinding.keyButtonLeft: dx--; break;
-                            case this.inputBinding.keyButtonRight: dx++; break;
-                            case this.inputBinding.keyButtonZoomIn: dz++; break;
-                            case this.inputBinding.keyButtonZoomOut: dz--; break;
-                            case this.inputBinding.keyButtonEmote: this.emote(this.me.id, this.currentEmoji); break;
+                if (this.keyboardEnabled) {
+                    for (let evt of Object.values(this.keys)) {
+                        if (!evt.altKey
+                            && !evt.shiftKey
+                            && !evt.ctrlKey
+                            && !evt.metaKey) {
+                            switch (evt.key) {
+                                case this.inputBinding.keyButtonUp: dy--; break;
+                                case this.inputBinding.keyButtonDown: dy++; break;
+                                case this.inputBinding.keyButtonLeft: dx--; break;
+                                case this.inputBinding.keyButtonRight: dx++; break;
+                                case this.inputBinding.keyButtonZoomIn: dz++; break;
+                                case this.inputBinding.keyButtonZoomOut: dz--; break;
+                                case this.inputBinding.keyButtonEmote: this.emote(this.me.id, this.currentEmoji); break;
+                            }
                         }
                     }
                 }

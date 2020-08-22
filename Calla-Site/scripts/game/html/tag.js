@@ -44,10 +44,10 @@ export function tag(name, ...rest) {
                 || x instanceof Date) {
                 elem.appendChild(document.createTextNode(x));
             }
-            else if (x instanceof Element) {
+            else if (x instanceof Node) {
                 elem.appendChild(x);
             }
-            else if (x.element instanceof Element) {
+            else if (x.element instanceof Node) {
                 elem.appendChild(x.element);
             }
             else if (x instanceof HtmlAttr

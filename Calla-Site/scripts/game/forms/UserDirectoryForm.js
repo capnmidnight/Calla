@@ -1,9 +1,10 @@
-import { height, width } from "../html/attrs.js";
+import { HubConnectionBuilder } from "../../lib/signalr/dist/esm/index.js";
+import { disabled, height, id, width } from "../html/attrs.js";
 import { backgroundColor, zIndex } from "../html/css.js";
-import { onClick, onMouseOut, onMouseOver } from "../html/evts.js";
+import { onBlur, onClick, onFocus, onKeyPress, onMouseOut, onMouseOver } from "../html/evts.js";
 import { gridPos, row } from "../html/grid.js";
 import { hide, isOpen } from "../html/ops.js";
-import { Canvas, Div } from "../html/tags.js";
+import { Button, Canvas, Div, InputText, Sub, Em } from "../html/tags.js";
 import { User } from "../User.js";
 import { FormDialog } from "./FormDialog.js";
 
@@ -16,6 +17,8 @@ const warpToEvt = Object.assign(
         id: null
     });
 
+const chatFocusChanged = new Event("chatFocusChanged");
+
 const ROW_TIMEOUT = 3000;
 
 export class UserDirectoryForm extends FormDialog {
@@ -25,6 +28,12 @@ export class UserDirectoryForm extends FormDialog {
 
         const _ = (evt) => () => this.dispatchEvent(evt);
 
+        this.roomName = null;
+        this.userName = null;
+        this.chatFocused = false;
+        this.usersList = Div(id("chatUsers"));
+        this.messages = Div(id("chatMessages"));
+
         /** @type {Map.<string, Element[]>} */
         this.rows = new Map();
 
@@ -33,6 +42,77 @@ export class UserDirectoryForm extends FormDialog {
 
         /** @type {Map<string, CanvasRenderingContext2D>} */
         this.avatarGs = new Map();
+
+        this.chat = new HubConnectionBuilder().withUrl("/Chat").build();
+
+        let lastUser = null,
+            lastRoom = null;
+
+        this.chat.on("ReceiveMessage", (room, user, message) => {
+            let from = null
+            if (user !== lastUser
+                || room !== lastRoom) {
+                lastUser = user;
+                lastRoom = room;
+                from = Div(user, Sub(Em(`(${room})`)));
+            }
+            else {
+                from = Div("");
+            }
+
+            this.messages.append(from, Div(message));
+            this.messages.lastChild.scrollIntoView();
+        });
+
+        const sendMessage = async () => {
+            if (this.entry.value.length > 0) {
+                this.send.disabled
+                    = this.entry.disabled
+                    = true;
+                await this.chat.invoke("SendMessage", this.roomName, this.userName, this.entry.value);
+                this.entry.value = "";
+                this.entry.disabled
+                    = this.send.disabled
+                    = false;
+                this.entry.focus();
+            }
+        };
+
+        const onFocusChanged = () => this.dispatchEvent(chatFocusChanged);
+
+        this.entry = InputText(
+            id("chatEntry"),
+            disabled,
+            onFocus(() => this.chatFocused = true),
+            onFocus(onFocusChanged),
+            onBlur(() => this.chatFocused = false),
+            onBlur(onFocusChanged),
+            onKeyPress((evt) => {
+                if (evt.key === "Enter") {
+                    sendMessage();
+                }
+            }));
+
+        this.send = Button(
+            id("chatSend"),
+            disabled,
+            onClick(sendMessage));
+
+        Object.seal(this);
+    }
+
+    /**
+     *
+     * @param {string} roomName
+     * @param {string} userName
+     */
+    async startAsync(roomName, userName) {
+        this.roomName = roomName;
+        this.userName = userName;
+        await this.chat.start();
+        this.entry.disabled
+            = this.send.disabled
+            = false;
     }
 
     update() {
@@ -63,9 +143,9 @@ export class UserDirectoryForm extends FormDialog {
                 zIndex(-1),
                 newRowColor);
             setTimeout(() => {
-                this.content.removeChild(elem);
+                this.usersList.removeChild(elem);
             }, ROW_TIMEOUT);
-            this.content.append(elem);
+            this.usersList.append(elem);
             this.users.set(user.id, user);
             this.avatarGs.set(
                 user.id,
@@ -96,7 +176,7 @@ export class UserDirectoryForm extends FormDialog {
                 }))];
 
         this.rows.set(user.id, elems);
-        this.content.append(...elems);
+        this.usersList.append(...elems);
     }
 
     delete(userID) {
@@ -104,7 +184,7 @@ export class UserDirectoryForm extends FormDialog {
             const elems = this.rows.get(userID);
             this.rows.delete(userID);
             for (let elem of elems) {
-                this.content.removeChild(elem);
+                this.usersList.removeChild(elem);
             }
 
             let rowCount = 1;
@@ -129,10 +209,10 @@ export class UserDirectoryForm extends FormDialog {
             backgroundColor("yellow"),
             ...rest.map(i => i.toString()));
 
-        this.content.append(elem);
+        this.usersList.append(elem);
 
         setTimeout(() => {
-            this.content.removeChild(elem);
+            this.usersList.removeChild(elem);
         }, 5000);
     }
 }

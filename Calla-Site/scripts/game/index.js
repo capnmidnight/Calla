@@ -205,7 +205,8 @@ addEventListeners(login, {
         const path = `${window.location.pathname}#${roomName}`;
         window.history.replaceState({}, title, path);
 
-        client.join(roomName, login.userName);
+        await directory.startAsync(roomName, login.userName);
+        await client.join(roomName, login.userName);
     }
 });
 
@@ -336,6 +337,9 @@ addEventListeners(game, {
 addEventListeners(directory, {
     warpTo: (evt) => {
         game.visit(evt.id);
+    },
+    chatFocusChanged: () => {
+        game.keyboardEnabled = !directory.chatFocused;
     }
 });
 
