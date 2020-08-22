@@ -141,7 +141,9 @@ namespace Calla.Controllers
                 return NotFound();
             }
 
-            return View(db.Contacts.ToArray());
+            return View(db.Contacts
+                .OrderByDescending(c => c.Timestamp)
+                .ToArray());
         }
 
         [HttpDelete]
@@ -168,7 +170,9 @@ namespace Calla.Controllers
                 return NotFound();
             }
 
-            return View(db.Rooms.ToArray());
+            return View(db.Rooms
+                .OrderBy(r => r.Timestamp)
+                .ToArray());
         }
 
         [HttpPost]
