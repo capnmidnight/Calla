@@ -19,19 +19,10 @@
 <canvas id="frontBuffer"></canvas>
 
 <partial name="Options" />
-
-@*<menu id="optionsMenu">
-        <menuitem>Profile</menuitem>
-        <menuitem>Interface</menuitem>
-        <menuitem>Input</menuitem>
-        <menuitem>Help</menuitem>
-        <menuitem>Share</menuitem>
-    </menu>*@
-
 <partial name="Devices" />
 <partial name="UserDirectory" />
 <partial name="Instructions" />
 <partial name="Emoji" />
-@await Html.PartialAsync("Login", Model)
+<partial name="Login" model="Model" />
 
 <div id="controls"></div>
