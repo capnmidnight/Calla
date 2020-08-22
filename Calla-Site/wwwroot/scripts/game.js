@@ -1287,10 +1287,6 @@ TraceKit.report.subscribe((err) => {
 
 try{
 
-const JITSI_HOST = "tele.calla.chat";
-const JVB_HOST = JITSI_HOST;
-const JVB_MUC = "conference." + JITSI_HOST;
-
 /**
  * Empties out an array
  * @param {any[]} arr - the array to empty.
@@ -19877,7 +19873,7 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-const versionString = "v0.6.4";
+const versionString = "v0.6.5";
 
 /* global JitsiMeetJS */
 
@@ -20897,6 +20893,10 @@ class CallaClient extends EventBase {
         this.audio.start();
     }
 }
+
+const JITSI_HOST = "tele.calla.chat";
+const JVB_HOST = JITSI_HOST;
+const JVB_MUC = "conference." + JITSI_HOST;
 
 /**
  * Unicode-standardized pictograms.
@@ -28090,6 +28090,8 @@ class TileMap {
         const self = selfs$3.get(this);
         x -= self.offsetX;
         y -= self.offsetY;
+        x = Math.round(x);
+        y = Math.round(y);
         if (this.isInBounds(x, y)) {
             return self.graph.grid[y][x];
         }
@@ -28125,6 +28127,8 @@ class TileMap {
         const self = selfs$3.get(this);
         x -= self.offsetX;
         y -= self.offsetY;
+        x = Math.round(x);
+        y = Math.round(y);
         return x < 0 || this.width <= x
             || y < 0 || this.height <= y
             || self.tileset && self.tileset.isClear(self.tiles[0][y][x])
@@ -28506,11 +28510,9 @@ class Game extends EventBase {
             zoomY = imageY / this.cameraZ,
             mapX = zoomX - this.cameraX,
             mapY = zoomY - this.cameraY,
-            mapWidth = this.map.tileWidth,
-            mapHeight = this.map.tileHeight,
-            gridX = Math.floor(mapX / mapWidth),
-            gridY = Math.floor(mapY / mapHeight),
-            tile = { x: gridX, y: gridY };
+            gridX = mapX / this.map.tileWidth,
+            gridY = mapY / this.map.tileHeight,
+            tile = { x: gridX - 0.5, y: gridY - 0.5 };
         return tile;
     }
 
@@ -28537,14 +28539,27 @@ class Game extends EventBase {
             start = this.map.getGridNode(x, y),
             tx = x + dx,
             ty = y + dy,
+            gx = Math.round(tx),
+            gy = Math.round(ty),
+            ox = tx - gx,
+            oy = ty - gy,
             end = this.map.getGridNode(tx, ty);
 
         if (!start || !end) {
-            this.moveMeTo(x + dx, y + dy);
+            this.moveMeTo(tx, ty);
         }
         else {
             const result = this.map.searchPath(start, end);
-            this.waypoints.push(...result);
+            if (result.length === 0) {
+                this.moveMeTo(tx, ty);
+            }
+            else {
+                for (let point of result) {
+                    point.x += ox;
+                    point.y += oy;
+                }
+                this.waypoints.push(...result);
+            }
         }
     }
 
@@ -28853,7 +28868,7 @@ class Game extends EventBase {
         const targetCameraX = -this.me.x * this.map.tileWidth,
             targetCameraY = -this.me.y * this.map.tileHeight;
 
-        this.cameraZ = lerp(this.cameraZ, this.targetCameraZ, CAMERA_LERP * 10);
+        this.cameraZ = lerp(this.cameraZ, this.targetCameraZ, CAMERA_LERP * this.cameraZ);
         this.cameraX = lerp(this.cameraX, targetCameraX, CAMERA_LERP * this.cameraZ);
         this.cameraY = lerp(this.cameraY, targetCameraY, CAMERA_LERP * this.cameraZ);
 
@@ -29313,203 +29328,178 @@ class RequestAnimationFrameTimer extends BaseTimer {
     }
 }
 
-const disabler$4 = disabled(true),
-    enabler$4 = disabled(false),
-    CAMERA_ZOOM_MIN = 0.5,
-    CAMERA_ZOOM_MAX = 20;
+const CAMERA_ZOOM_MIN = 0.5,
+    CAMERA_ZOOM_MAX = 20,
+    settings = new Settings(),
+    game = new Game(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
+    login = new LoginForm(),
+    directory = new UserDirectoryForm(),
+    controls = new ButtonLayer(game.element, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
+    devices = new DevicesDialog(),
+    options$1 = new OptionsForm(),
+    instructions = new FormDialog("instructions"),
+    emoji = new EmojiForm(),
+    client = new CallaClient(JITSI_HOST, JVB_HOST, JVB_MUC),
+    timer = new RequestAnimationFrameTimer(),
+    disabler$4 = disabled(true),
+    enabler$4 = disabled(false);
+
+let waitingForEmoji = false;
+
+Object.assign(window, {
+    settings,
+    client,
+    game,
+    login,
+    directory,
+    controls,
+    devices,
+    options: options$1,
+    emoji,
+    instructions
+});
+
+async function postObj(path, obj) {
+    const request = fetch(path, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(obj)
+    });
+
+    const response = await request;
+    if (response.ok) {
+        console.log("Thanks!");
+    }
+
+    return response;
+}
+
+async function recordJoin(Name, Email, Room) {
+    await postObj("/Contacts", { Name, Email, Room });
+}
+
+async function recordRoom(roomName) {
+    const response = await postObj("/Game/Rooms", roomName);
+    const shortName = await response.text();
+    return shortName;
+}
+
 
 /**
- * @param {string} JITSI_HOST
- * @param {string} JVB_HOST
- * @param {string} JVB_MUC
+ * @callback showViewCallback
+ * @returns {void}
  */
-function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
-    const settings = new Settings(),
-        game = new Game(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
-        login = new LoginForm(),
-        directory = new UserDirectoryForm(),
-        controls = new ButtonLayer(game.element, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
-        devices = new DevicesDialog(),
-        options = new OptionsForm(),
-        instructions = new FormDialog("instructions"),
-        emoji = new EmojiForm(),
-        client = new CallaClient(JITSI_HOST, JVB_HOST, JVB_MUC),
-        timer = new RequestAnimationFrameTimer(),
 
-        forExport = {
-            settings,
-            client,
-            game,
-            login,
-            directory,
-            controls,
-            devices,
-            options,
-            emoji,
-            instructions
-        };
+/**
+ * @param {FormDialog} view
+ * @returns {showViewCallback}
+ */
+const _showView = (view) =>
+    () => showView(view);
 
-    async function postObj(path, obj) {
-        const request = fetch(path, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(obj)
-        });
+function showView(view) {
+    if (!waitingForEmoji) {
+        hide(login);
+        hide(directory);
+        hide(options$1);
+        hide(devices);
+        hide(emoji);
+        hide(instructions);
+        show(view);
+    }
+}
 
-        const response = await request;
-        if (response.ok) {
-            console.log("Thanks!");
+async function withEmojiSelection(callback) {
+    if (!isOpen(emoji)) {
+        waitingForEmoji = true;
+        disabler$4.apply(controls.optionsButton);
+        disabler$4.apply(controls.instructionsButton);
+        disabler$4.apply(controls.changeDevicesButton);
+        hide(options$1);
+        const e = await emoji.selectAsync();
+        if (e) {
+            callback(e);
         }
-
-        return response;
+        enabler$4.apply(controls.optionsButton);
+        enabler$4.apply(controls.instructionsButton);
+        enabler$4.apply(controls.changeDevicesButton);
+        waitingForEmoji = false;
     }
+}
 
-    async function recordJoin(Name, Email, Room) {
-        await postObj("/Contacts", { Name, Email, Room });
-    }
-
-    async function recordRoom(roomName) {
-        const response = await postObj("/Game/Rooms", roomName);
-        const shortName = await response.text();
-        return shortName;
-    }
-
-
-    /**
-     * @callback showViewCallback
-     * @returns {void}
-     */
-
-    let waitingForEmoji = false;
-
-    /**
-     * @param {FormDialog} view
-     * @returns {showViewCallback}
-     */
-    const _showView = (view) =>
-        () => showView(view);
-
-    function showView(view) {
-        if (!waitingForEmoji) {
-            hide(login);
-            hide(directory);
-            hide(options);
-            hide(devices);
-            hide(emoji);
-            hide(instructions);
-            show(view);
-        }
-    }
-
-    async function withEmojiSelection(callback) {
-        if (!isOpen(emoji)) {
-            waitingForEmoji = true;
-            disabler$4.apply(controls.optionsButton);
-            disabler$4.apply(controls.instructionsButton);
-            disabler$4.apply(controls.changeDevicesButton);
-            hide(options);
-            const e = await emoji.selectAsync();
-            if (e) {
-                callback(e);
-            }
-            enabler$4.apply(controls.optionsButton);
-            enabler$4.apply(controls.instructionsButton);
-            enabler$4.apply(controls.changeDevicesButton);
-            waitingForEmoji = false;
-        }
-    }
-
-    async function selectEmojiAsync() {
-        await withEmojiSelection((e) => {
-            game.emote(client.localUserID, e);
-            controls.setEmojiButton(settings.inputBinding.keyButtonEmote, e);
-        });
-    }
-
-    function setAudioProperties() {
-        client.setAudioProperties(
-            settings.audioDistanceMin = game.audioDistanceMin = options.audioDistanceMin,
-            settings.audioDistanceMax = game.audioDistanceMax = options.audioDistanceMax,
-            settings.audioRolloff = options.audioRolloff,
-            settings.transitionSpeed);
-    }
-
-    function refreshGamepads() {
-        options.gamepads = navigator.getGamepads();
-        options.gamepadIndex = game.gamepadIndex;
-    }
-
-    function refreshUser(userID) {
-        game.withUser("list user in directory", userID, (user) => directory.set(user));
-    }
-
-    refreshGamepads();
-    controls.enabled = false;
-    options.drawHearing = game.drawHearing = settings.drawHearing;
-    options.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
-    options.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;
-    options.audioRolloff = settings.audioRolloff;
-    options.fontSize = game.fontSize = settings.fontSize;
-    options.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
-    options.inputBinding = game.inputBinding = settings.inputBinding;
-
-    controls.zoom = game.cameraZ = game.zoom = settings.zoom;
-    game.transitionSpeed = settings.transitionSpeed = 0.5;
-    login.userName = settings.userName;
-    login.roomName = settings.roomName;
-    login.email = settings.email;
-
-    showView(login);
-
-    addEventListeners(window, {
-        gamepadconnected: refreshGamepads,
-        gamepaddisconnected: refreshGamepads,
-
-        resize: () => {
-            game.resize();
-        }
+async function selectEmojiAsync() {
+    await withEmojiSelection((e) => {
+        game.emote(client.localUserID, e);
+        controls.setEmojiButton(settings.inputBinding.keyButtonEmote, e);
     });
+}
 
-    addEventListeners(controls, {
-        toggleOptions: _showView(options),
-        toggleInstructions: _showView(instructions),
-        toggleUserDirectory: _showView(directory),
-        changeDevices: _showView(devices),
+function setAudioProperties() {
+    client.setAudioProperties(
+        settings.audioDistanceMin = game.audioDistanceMin = options$1.audioDistanceMin,
+        settings.audioDistanceMax = game.audioDistanceMax = options$1.audioDistanceMax,
+        settings.audioRolloff = options$1.audioRolloff,
+        settings.transitionSpeed);
+}
 
-        tweet: () => {
-            const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
-                url = new URL("https://twitter.com/intent/tweet?text=" + message);
-            window.open(url);
-        },
+function refreshGamepads() {
+    options$1.gamepads = navigator.getGamepads();
+    options$1.gamepadIndex = game.gamepadIndex;
+}
 
-        leave: async () => {
-            directory.clear();
-            await client.leaveAsync();
-        },
+function refreshUser(userID) {
+    game.withUser("list user in directory", userID, (user) => directory.set(user));
+}
 
-        selectEmoji: selectEmojiAsync,
+addEventListeners(window, {
+    gamepadconnected: refreshGamepads,
+    gamepaddisconnected: refreshGamepads,
 
-        emote: () => {
-            game.emote(client.localUserID, game.currentEmoji);
-        },
+    resize: () => {
+        game.resize();
+    }
+});
 
-        toggleAudio: async () => {
-            await client.toggleAudioMutedAsync();
-        },
+addEventListeners(controls, {
+    toggleOptions: _showView(options$1),
+    toggleInstructions: _showView(instructions),
+    toggleUserDirectory: _showView(directory),
+    changeDevices: _showView(devices),
 
-        toggleVideo: async () => {
-            await client.toggleVideoMutedAsync();
-        },
+    tweet: () => {
+        const message = encodeURIComponent(`Join my #TeleParty ${document.location.href}`),
+            url = new URL("https://twitter.com/intent/tweet?text=" + message);
+        window.open(url);
+    },
 
-        zoomChanged: () => {
-            settings.zoom = game.zoom = controls.zoom;
-        }
-    });
+    leave: async () => {
+        directory.clear();
+        await client.leaveAsync();
+    },
 
+    selectEmoji: selectEmojiAsync,
 
-    login.addEventListener("login", async () => {
+    emote: () => {
+        game.emote(client.localUserID, game.currentEmoji);
+    },
+
+    toggleAudio: async () => {
+        await client.toggleAudioMutedAsync();
+    },
+
+    toggleVideo: async () => {
+        await client.toggleVideoMutedAsync();
+    },
+
+    zoomChanged: () => {
+        settings.zoom = game.zoom = controls.zoom;
+    }
+});
+
+addEventListeners(login, {
+    login: async () => {
         client.startAudio();
         client.audio.addClip("join", "audio/door-open.ogg", "audio/door-open.mp3", "audio/door-open.wav");
         client.audio.addClip("leave", "audio/door-close.ogg", "audio/door-close.mp3", "audio/door-close.wav");
@@ -29530,267 +29520,285 @@ function init(JITSI_HOST, JVB_HOST, JVB_MUC) {
         window.history.replaceState({}, title, path);
 
         client.join(roomName, login.userName);
-    });
+    }
+});
 
+addEventListeners(options$1, {
+    audioPropertiesChanged: setAudioProperties,
 
-    addEventListeners(options, {
-        audioPropertiesChanged: setAudioProperties,
-
-        selectAvatar: async () => {
-            await withEmojiSelection((e) => {
-                settings.avatarEmoji
-                    = client.avatarEmoji
-                    = game.me.avatarEmoji
-                    = e;
-                refreshUser(client.localUserID);
-            });
-        },
-
-        avatarURLChanged: () => {
-            settings.avatarURL
-                = client.avatarURL
-                = game.me.avatarImage
-                = options.avatarURL;
-            refreshUser(client.localUserID);
-        },
-
-        toggleDrawHearing: () => {
-            settings.drawHearing
-                = game.drawHearing
-                = options.drawHearing;
-        },
-
-        fontSizeChanged: () => {
-            settings.fontSize
-                = game.fontSize
-                = options.fontSize;
-        },
-
-        gamepadChanged: () => {
-            settings.gamepadIndex
-                = game.gamepadIndex
-                = options.gamepadIndex;
-        },
-
-        inputBindingChanged: () => {
-            settings.inputBinding
-                = game.inputBinding
-                = options.inputBinding;
-        },
-
-        toggleVideo: async () => {
-            await client.toggleVideoMutedAsync();
-        }
-    });
-
-    addEventListeners(devices, {
-
-        audioInputChanged: async () => {
-            const device = devices.currentAudioInputDevice;
-            await client.setAudioInputDeviceAsync(device);
-            settings.preferredAudioInputID = client.preferredAudioInputID;
-        },
-
-        audioOutputChanged: async () => {
-            const device = devices.currentAudioOutputDevice;
-            await client.setAudioOutputDeviceAsync(device);
-            settings.preferredAudioOutputID = client.preferredAudioOutputID;
-        },
-
-        videoInputChanged: async () => {
-            const device = devices.currentVideoInputDevice;
-            await client.setVideoInputDeviceAsync(device);
-            settings.preferredVideoInputID = client.preferredVideoInputID;
-        }
-    });
-
-    addEventListeners(game, {
-        emojiNeeded: selectEmojiAsync,
-
-        emote: (evt) => {
-            client.emote(evt.emoji);
-        },
-
-        userJoined: (evt) => {
-            refreshUser(evt.user.id);
-        },
-
-        toggleAudio: async () => {
-            await client.toggleAudioMutedAsync();
-            settings.preferredAudioInputID = client.preferredAudioInputID;
-        },
-
-        toggleVideo: async () => {
-            await client.toggleVideoMutedAsync();
-            settings.preferredVideoInputID = client.preferredVideoInputID;
-        },
-
-        gameStarted: () => {
-            game.resize();
-            hide(login);
-            show(controls);
-
-            options.user = game.me;
-
-            controls.enabled = true;
-
+    selectAvatar: async () => {
+        await withEmojiSelection((e) => {
             settings.avatarEmoji
                 = client.avatarEmoji
                 = game.me.avatarEmoji
-                = settings.avatarEmoji
-                || allPeople.random();
-
+                = e;
             refreshUser(client.localUserID);
-        },
+        });
+    },
 
-        userMoved: (evt) => {
-            client.setLocalPosition(evt.x, 0, evt.y);
-        },
+    avatarURLChanged: () => {
+        settings.avatarURL
+            = client.avatarURL
+            = game.me.avatarImage
+            = options$1.avatarURL;
+        refreshUser(client.localUserID);
+    },
 
-        gameEnded: () => {
-            login.connected = false;
-            showView(login);
-        },
+    toggleDrawHearing: () => {
+        settings.drawHearing
+            = game.drawHearing
+            = options$1.drawHearing;
+    },
 
-        zoomChanged: () => {
-            settings.zoom = controls.zoom = game.zoom;
-        }
-    });
+    fontSizeChanged: () => {
+        settings.fontSize
+            = game.fontSize
+            = options$1.fontSize;
+    },
 
-    directory.addEventListener("warpTo", (evt) => {
+    gamepadChanged: () => {
+        settings.gamepadIndex
+            = game.gamepadIndex
+            = options$1.gamepadIndex;
+    },
+
+    inputBindingChanged: () => {
+        settings.inputBinding
+            = game.inputBinding
+            = options$1.inputBinding;
+    },
+
+    toggleVideo: async () => {
+        await client.toggleVideoMutedAsync();
+    }
+});
+
+addEventListeners(devices, {
+
+    audioInputChanged: async () => {
+        const device = devices.currentAudioInputDevice;
+        await client.setAudioInputDeviceAsync(device);
+        settings.preferredAudioInputID = client.preferredAudioInputID;
+    },
+
+    audioOutputChanged: async () => {
+        const device = devices.currentAudioOutputDevice;
+        await client.setAudioOutputDeviceAsync(device);
+        settings.preferredAudioOutputID = client.preferredAudioOutputID;
+    },
+
+    videoInputChanged: async () => {
+        const device = devices.currentVideoInputDevice;
+        await client.setVideoInputDeviceAsync(device);
+        settings.preferredVideoInputID = client.preferredVideoInputID;
+    }
+});
+
+addEventListeners(game, {
+    emojiNeeded: selectEmojiAsync,
+
+    emote: (evt) => {
+        client.emote(evt.emoji);
+    },
+
+    userJoined: (evt) => {
+        refreshUser(evt.user.id);
+    },
+
+    toggleAudio: async () => {
+        await client.toggleAudioMutedAsync();
+        settings.preferredAudioInputID = client.preferredAudioInputID;
+    },
+
+    toggleVideo: async () => {
+        await client.toggleVideoMutedAsync();
+        settings.preferredVideoInputID = client.preferredVideoInputID;
+    },
+
+    gameStarted: () => {
+        game.resize();
+        hide(login);
+        show(controls);
+
+        options$1.user = game.me;
+
+        controls.enabled = true;
+
+        settings.avatarEmoji
+            = client.avatarEmoji
+            = game.me.avatarEmoji
+            = settings.avatarEmoji
+            || allPeople.random();
+
+        refreshUser(client.localUserID);
+    },
+
+    userMoved: (evt) => {
+        client.setLocalPosition(evt.x, 0, evt.y);
+    },
+
+    gameEnded: () => {
+        login.connected = false;
+        showView(login);
+    },
+
+    zoomChanged: () => {
+        settings.zoom = controls.zoom = game.zoom;
+    }
+});
+
+addEventListeners(directory, {
+    warpTo: (evt) => {
         game.visit(evt.id);
-    });
+    }
+});
 
-    addEventListeners(client, {
+addEventListeners(client, {
 
-        videoConferenceJoined: async (evt) => {
-            login.connected = true;
+    videoConferenceJoined: async (evt) => {
+        login.connected = true;
 
-            await game.startAsync(evt.id, evt.displayName, evt.pose, evt.avatarURL, evt.roomName);
+        await game.startAsync(evt.id, evt.displayName, evt.pose, evt.avatarURL, evt.roomName);
 
-            client.avatarURL
-                = game.me.avatarImage
-                = options.avatarURL
-                = settings.avatarURL;
+        client.avatarURL
+            = game.me.avatarImage
+            = options$1.avatarURL
+            = settings.avatarURL;
 
-            devices.audioInputDevices = await client.getAudioInputDevicesAsync();
-            devices.audioOutputDevices = await client.getAudioOutputDevicesAsync();
-            devices.videoInputDevices = await client.getVideoInputDevicesAsync();
+        devices.audioInputDevices = await client.getAudioInputDevicesAsync();
+        devices.audioOutputDevices = await client.getAudioOutputDevicesAsync();
+        devices.videoInputDevices = await client.getVideoInputDevicesAsync();
 
-            settings.preferredAudioInputID = client.preferredAudioInputID;
-            settings.preferredAudioOutputID = client.preferredAudioOutputID;
-            settings.preferredVideoInputID = client.preferredVideoInputID;
+        settings.preferredAudioInputID = client.preferredAudioInputID;
+        settings.preferredAudioOutputID = client.preferredAudioOutputID;
+        settings.preferredVideoInputID = client.preferredVideoInputID;
 
-            devices.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
-            devices.currentAudioOutputDevice = await client.getCurrentAudioOutputDeviceAsync();
-            devices.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
+        devices.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
+        devices.currentAudioOutputDevice = await client.getCurrentAudioOutputDeviceAsync();
+        devices.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
 
-            const audioMuted = client.isAudioMuted;
-            game.muteUserAudio(client.localUserID, audioMuted);
-            controls.audioEnabled = !audioMuted;
+        const audioMuted = client.isAudioMuted;
+        game.muteUserAudio(client.localUserID, audioMuted);
+        controls.audioEnabled = !audioMuted;
 
-            const videoMuted = client.isVideoMuted;
-            game.muteUserVideo(client.localUserID, videoMuted);
-            controls.videoEnabled = !videoMuted;
-        },
+        const videoMuted = client.isVideoMuted;
+        game.muteUserVideo(client.localUserID, videoMuted);
+        controls.videoEnabled = !videoMuted;
+    },
 
-        videoConferenceLeft: () => {
-            game.end();
-        },
+    videoConferenceLeft: () => {
+        game.end();
+    },
 
-        participantJoined: (evt) => {
-            client.audio.playClip("join", 0.5);
-            game.addUser(evt.id, evt.displayName, evt.pose);
-        },
+    participantJoined: (evt) => {
+        client.audio.playClip("join", 0.5);
+        game.addUser(evt.id, evt.displayName, evt.pose);
+    },
 
-        participantLeft: (evt) => {
-            client.audio.playClip("leave", 0.5);
-            game.removeUser(evt.id);
-            directory.delete(evt.id);
-        },
+    participantLeft: (evt) => {
+        client.audio.playClip("leave", 0.5);
+        game.removeUser(evt.id);
+        directory.delete(evt.id);
+    },
 
-        audioChanged: (evt) => {
-            refreshUser(evt.id);
-        },
+    audioChanged: (evt) => {
+        refreshUser(evt.id);
+    },
 
-        videoChanged: (evt) => {
-            game.setAvatarVideo(evt.id, evt.stream);
-            refreshUser(evt.id);
-        },
+    videoChanged: (evt) => {
+        game.setAvatarVideo(evt.id, evt.stream);
+        refreshUser(evt.id);
+    },
 
-        avatarChanged: (evt) => {
-            game.setAvatarURL(evt.id, evt.url);
-            refreshUser(evt.id);
-        },
+    avatarChanged: (evt) => {
+        game.setAvatarURL(evt.id, evt.url);
+        refreshUser(evt.id);
+    },
 
-        displayNameChange: (evt) => {
-            game.changeUserName(evt.id, evt.displayName);
-            refreshUser(evt.id);
-        },
+    displayNameChange: (evt) => {
+        game.changeUserName(evt.id, evt.displayName);
+        refreshUser(evt.id);
+    },
 
-        audioMuteStatusChanged: async (evt) => {
-            game.muteUserAudio(evt.id, evt.muted);
-        },
+    audioMuteStatusChanged: async (evt) => {
+        game.muteUserAudio(evt.id, evt.muted);
+    },
 
-        localAudioMuteStatusChanged: async (evt) => {
-            controls.audioEnabled = !evt.muted;
-            devices.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
-            settings.preferredAudioInputID = client.preferredAudioInputID;
-        },
+    localAudioMuteStatusChanged: async (evt) => {
+        controls.audioEnabled = !evt.muted;
+        devices.currentAudioInputDevice = await client.getCurrentAudioInputDeviceAsync();
+        settings.preferredAudioInputID = client.preferredAudioInputID;
+    },
 
-        videoMuteStatusChanged: async (evt) => {
-            game.muteUserVideo(evt.id, evt.muted);
-            settings.preferredVideoInputID = client.preferredVideoInputID;
-        },
+    videoMuteStatusChanged: async (evt) => {
+        game.muteUserVideo(evt.id, evt.muted);
+        settings.preferredVideoInputID = client.preferredVideoInputID;
+    },
 
-        localVideoMuteStatusChanged: async (evt) => {
-            controls.videoEnabled = !evt.muted;
-            if (evt.muted) {
-                options.setAvatarVideo(null);
-            }
-            else {
-                options.setAvatarVideo(game.me.avatarVideo.element);
-            }
-            devices.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
-        },
-
-        userInitRequest: (evt) => {
-            client.userInitResponse(evt.id, game.me.serialize());
-        },
-
-        userInitResponse: (evt) => {
-            game.initializeUser(evt.id, evt);
-            refreshUser(evt.id);
-        },
-
-        emote: (evt) => {
-            game.emote(evt.id, evt);
-        },
-
-        setAvatarEmoji: (evt) => {
-            game.setAvatarEmoji(evt.id, evt);
-            refreshUser(evt.id);
-        },
-
-        audioActivity: (evt) => {
-            game.updateAudioActivity(evt.id, evt.isActive);
+    localVideoMuteStatusChanged: async (evt) => {
+        controls.videoEnabled = !evt.muted;
+        if (evt.muted) {
+            options$1.setAvatarVideo(null);
         }
-    });
+        else {
+            options$1.setAvatarVideo(game.me.avatarVideo.element);
+        }
+        devices.currentVideoInputDevice = await client.getCurrentVideoInputDeviceAsync();
+    },
 
-    timer.addEventListener("tick", (evt) => {
+    userInitRequest: (evt) => {
+        client.userInitResponse(evt.id, game.me.serialize());
+    },
+
+    userInitResponse: (evt) => {
+        game.initializeUser(evt.id, evt);
+        refreshUser(evt.id);
+    },
+
+    emote: (evt) => {
+        game.emote(evt.id, evt);
+    },
+
+    setAvatarEmoji: (evt) => {
+        game.setAvatarEmoji(evt.id, evt);
+        refreshUser(evt.id);
+    },
+
+    audioActivity: (evt) => {
+        game.updateAudioActivity(evt.id, evt.isActive);
+    }
+});
+
+addEventListeners(timer, {
+    tick: (evt) => {
         client.update();
-        options.update();
+        options$1.update();
         directory.update();
         game.update(evt.dt);
-    });
+    }
+});
 
-    login.ready = true;
-    timer.start();
+options$1.drawHearing = game.drawHearing = settings.drawHearing;
+options$1.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
+options$1.audioDistanceMax = game.audioDistanceMax = settings.audioDistanceMax;
+options$1.audioRolloff = settings.audioRolloff;
+options$1.fontSize = game.fontSize = settings.fontSize;
+options$1.gamepads = navigator.getGamepads();
+options$1.gamepadIndex = game.gamepadIndex = settings.gamepadIndex;
+options$1.inputBinding = game.inputBinding = settings.inputBinding;
 
-    return forExport;
-}
+controls.zoom = game.zoom = settings.zoom;
+game.cameraZ = game.targetCameraZ;
+game.transitionSpeed = settings.transitionSpeed = 0.5;
+login.userName = settings.userName;
+login.roomName = settings.roomName;
+login.email = settings.email;
 
-Object.assign(window, init(JITSI_HOST, JVB_HOST, JVB_MUC));
+controls.enabled = false;
+showView(login);
+
+login.ready = true;
+timer.start();
 
 } catch(exp) {
     TraceKit.report(exp);
