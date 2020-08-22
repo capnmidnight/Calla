@@ -19873,7 +19873,7 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-const versionString = "v0.6.5";
+const versionString = "v0.6.6";
 
 /* global JitsiMeetJS */
 
@@ -23976,13 +23976,6 @@ function styles(...rest) {
 function backgroundColor(v) { return new CssProp("backgroundColor", v); }
 
 /**
- * Creates a style attribute with a color property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function color(v) { return new CssProp("color", v); }
-
-/**
  * Creates a style attribute with a display property.
  * @param {string} v
  * @returns {HtmlAttr}
@@ -23995,13 +23988,6 @@ function display(v) { return new CssProp("display", v); }
  * @returns {HtmlAttr}
  **/
 function fontFamily(v) { return new CssProp("fontFamily", v); }
-
-/**
- * Creates a style attribute with a fontSize property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function fontSize(v) { return new CssProp("fontSize", v); }
 
 /**
  * Creates a style attribute with a gridArea property.
@@ -24044,20 +24030,6 @@ function margin(v) { return new CssProp("margin", v); }
  * @returns {HtmlAttr}
  **/
 function textAlign(v) { return new CssProp("textAlign", v); }
-
-/**
- * Creates a style attribute with a textDecoration property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function textDecoration(v) { return new CssProp("textDecoration", v); }
-
-/**
- * Creates a style attribute with a textTransform property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function textTransform(v) { return new CssProp("textTransform", v); }
 
 /**
  * Creates a style attribute with a width property.
@@ -25208,14 +25180,6 @@ function gridColsDef(...cols) {
         gridTemplateColumns(cols.join(" ")));
 }
 
-const headerStyle = styles(
-    textDecoration("none"),
-    color("black"),
-    textTransform("capitalize"));
-const buttonStyle = styles(
-    fontSize("200%"),
-    cssWidth("2em"));
-
 const disabler$2 = disabled(true),
     enabler$2 = disabled(false);
 
@@ -25269,7 +25233,6 @@ class EmojiForm extends FormDialog {
             for (let icon of alts) {
                 const btn = Button(
                     title(icon.desc),
-                    buttonStyle,
                     onClick((evt) => {
                         selectedEmoji = selectedEmoji && evt.ctrlKey
                             ? combine(selectedEmoji, icon)
@@ -25328,7 +25291,6 @@ class EmojiForm extends FormDialog {
                     headerButton = A(
                         href("javascript:undefined"),
                         title(group.desc),
-                        headerStyle,
                         onClick(() => {
                             toggleOpen(container);
                             headerButton.innerHTML = group.value + (isOpen(container) ? " -" : " +");
