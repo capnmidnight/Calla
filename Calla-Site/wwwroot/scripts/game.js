@@ -4174,7 +4174,7 @@ class HOARotator {
      * Get the current ambisonic order.
      * @return {Number}
      */
-    getAmbisonicOrder = function () {
+    getAmbisonicOrder() {
         return this._ambisonicOrder;
     }
 }
@@ -4523,7 +4523,7 @@ function patchSafari() {
  * Omnitone library version
  * @type {String}
  */
-const Version = '1.3.0';
+const Version = '1.4.2';
 
 /**
  * @license
@@ -19873,7 +19873,7 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-const versionString = "v0.7.0";
+const versionString = "v0.7.1";
 
 /* global JitsiMeetJS */
 
@@ -24343,13 +24343,6 @@ function Canvas(...rest) { return tag("canvas", ...rest); }
 function Div(...rest) { return tag("div", ...rest); }
 
 /**
- * creates an HTML Em tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLElement}
- */
-function Em(...rest) { return tag("em", ...rest); }
-
-/**
  * creates an HTML H1 tag
  * @param {...TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLHeadingElement}
@@ -24439,13 +24432,6 @@ function P(...rest) { return tag("p", ...rest); }
  * @returns {HTMLSpanElement}
  */
 function Span(...rest) { return tag("span", ...rest); }
-
-/**
- * creates an HTML Sub tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLElement}
- */
-function Sub(...rest) { return tag("sub", ...rest); }
 
 /**
  * creates an HTML UL tag
@@ -30548,22 +30534,15 @@ class UserDirectoryForm extends FormDialog {
 
         this.chat = new HubConnectionBuilder().withUrl("/Chat").build();
 
-        let lastUser = null,
-            lastRoom = null;
+        let lastUser = null;
 
         this.chat.on("ReceiveMessage", (room, user, message) => {
-            let from = null;
-            if (user !== lastUser
-                || room !== lastRoom) {
+            if (user !== lastUser) {
                 lastUser = user;
-                lastRoom = room;
-                from = Div(user, Sub(Em(`(${room})`)));
-            }
-            else {
-                from = Div("");
+                user = "";
             }
 
-            this.messages.append(from, Div(message));
+            this.messages.append(Div(user), Div(message));
             this.messages.lastChild.scrollIntoView();
         });
 
@@ -30613,6 +30592,7 @@ class UserDirectoryForm extends FormDialog {
         this.roomName = roomName;
         this.userName = userName;
         await this.chat.start();
+        await this.chat.invoke("Join", this.roomName);
         this.entry.disabled
             = this.send.disabled
             = false;

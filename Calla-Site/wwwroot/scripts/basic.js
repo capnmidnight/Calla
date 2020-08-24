@@ -2841,7 +2841,7 @@ class HOARotator {
      * Get the current ambisonic order.
      * @return {Number}
      */
-    getAmbisonicOrder = function () {
+    getAmbisonicOrder() {
         return this._ambisonicOrder;
     }
 }
@@ -3190,7 +3190,7 @@ function patchSafari() {
  * Omnitone library version
  * @type {String}
  */
-const Version = '1.3.0';
+const Version = '1.4.2';
 
 /**
  * @license
@@ -18522,7 +18522,7 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-const versionString = "v0.7.0";
+const versionString = "v0.7.1";
 
 /* global JitsiMeetJS */
 
