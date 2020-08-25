@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
@@ -32,22 +32,66 @@ namespace Calla.Data
         {
             modelBuilder.Entity<Contacts>(entity =>
             {
-                entity.Property(e => e.Timestamp).HasDefaultValueSql("now()");
+                entity.Property(e => e.Id).HasColumnName("ID");
+
+                entity.Property(e => e.Email).IsRequired();
+
+                entity.Property(e => e.Name).IsRequired();
+
+                entity.Property(e => e.Room).IsRequired();
+
+                entity.Property(e => e.Timestamp)
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("now()");
             });
 
             modelBuilder.Entity<Errors>(entity =>
             {
-                entity.Property(e => e.Timestamp).HasDefaultValueSql("now()");
+                entity.Property(e => e.Id).HasColumnName("ID");
+
+                entity.Property(e => e.ErrorObject)
+                    .IsRequired()
+                    .HasColumnType("json");
+
+                entity.Property(e => e.From).IsRequired();
+
+                entity.Property(e => e.Message).IsRequired();
+
+                entity.Property(e => e.On).IsRequired();
+
+                entity.Property(e => e.Timestamp)
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("now()");
             });
 
             modelBuilder.Entity<PageViews>(entity =>
             {
-                entity.Property(e => e.Timestamp).HasDefaultValueSql("now()");
+                entity.Property(e => e.Id).HasColumnName("ID");
+
+                entity.Property(e => e.From).IsRequired();
+
+                entity.Property(e => e.Referrer).IsRequired();
+
+                entity.Property(e => e.Timestamp)
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("now()");
+
+                entity.Property(e => e.To).IsRequired();
+
+                entity.Property(e => e.UserAgent).IsRequired();
             });
 
             modelBuilder.Entity<Rooms>(entity =>
             {
-                entity.Property(e => e.Timestamp).HasDefaultValueSql("now()");
+                entity.Property(e => e.Id).HasColumnName("ID");
+
+                entity.Property(e => e.Name).IsRequired();
+
+                entity.Property(e => e.ShortName).IsRequired();
+
+                entity.Property(e => e.Timestamp)
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("now()");
             });
 
             OnModelCreatingPartial(modelBuilder);

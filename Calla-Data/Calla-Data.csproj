@@ -4,6 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <OutputType>Library</OutputType>
     <RootNamespace>Calla.Data</RootNamespace>
+    <UserSecretsId>34c1c714-f375-4263-8293-fa64831533cd</UserSecretsId>
   </PropertyGroup>
   
   <ItemGroup>
