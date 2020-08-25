@@ -40,13 +40,12 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" Version="3.1.4" />
-    <PackageReference Include="Npgsql.NetTopologySuite" Version="4.1.4" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Juniper\src\Juniper.Root\Juniper.Root.csproj" />
     <ProjectReference Include="..\..\Juniper\src\Juniper.Server\Juniper.Server.csproj" />
     <ProjectReference Include="..\..\src\Yarrow.Data\Yarrow.Data.csproj" />
+    <ProjectReference Include="..\..\src\Yarrow.Model\Yarrow.Model.csproj" />
     <ProjectReference Include="..\Calla-Data\Calla-Data.csproj" />
   </ItemGroup>
 </Project>
