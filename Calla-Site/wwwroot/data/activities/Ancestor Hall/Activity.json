@@ -604,6 +604,13 @@
       }
     ]
   },
+  "Origin": {
+    "Type": "Vector3",
+    "X": 504568.531,
+    "Y": 0.0,
+    "Z": 2723039.25
+  },
+  "StartingStation": "u52NtzBbOqkAAAQY__AKdA",
   "Stations": [
     {
       "SceneGraphPath": "/Ancestor Hall/O7bP13pd2ykAAAQ7LvHLNA",
@@ -1024,7 +1031,6 @@
       ]
     }
   ],
-  "StartingStation": "u52NtzBbOqkAAAQY__AKdA",
   "AudioTracks": [
     {
       "SceneGraphPath": "/Ancestor Hall/Audio Tracks/Crowd",

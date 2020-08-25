@@ -2004,6 +2004,13 @@
       }
     ]
   },
+  "Origin": {
+    "Type": "Vector3",
+    "X": 504242.156,
+    "Y": 0.0,
+    "Z": 2719964.0
+  },
+  "StartingStation": "YC-3MaATOTMAAAQ7LuJ0qg",
   "Stations": [
     {
       "SceneGraphPath": "/Tulou Building/2SXygydpD8QAAAQ7LuylPw",
@@ -2017,7 +2024,7 @@
       "Date": "11/1/2016",
       "PanoID": "2SXygydpD8QAAAQ7LuylPw",
       "CorrectedLocation": {
-        "Latitude": 24.5937748,
+        "Latitude": 24.5937729,
         "Longitude": 117.041771,
         "Altitude": 0.0
       },
@@ -2045,7 +2052,7 @@
       "Date": "11/1/2016",
       "PanoID": "Km_1vy4BwwoAAAQ7LvHGPQ",
       "CorrectedLocation": {
-        "Latitude": 24.5937958,
+        "Latitude": 24.5937939,
         "Longitude": 117.0418,
         "Altitude": 0.0
       },
@@ -2073,7 +2080,7 @@
       "Date": "11/1/2016",
       "PanoID": "EC5XaVJ_0pUAAAQ7Lu3Law",
       "CorrectedLocation": {
-        "Latitude": 24.5937386,
+        "Latitude": 24.5937366,
         "Longitude": 117.041756,
         "Altitude": 0.0
       },
@@ -2101,7 +2108,7 @@
       "Date": "11/1/2016",
       "PanoID": "7OpTzt9OBy8AAAQ7LuXbog",
       "CorrectedLocation": {
-        "Latitude": 24.5938244,
+        "Latitude": 24.5938225,
         "Longitude": 117.041893,
         "Altitude": 0.0
       },
@@ -2129,7 +2136,7 @@
       "Date": "11/1/2016",
       "PanoID": "nm6u2sMOUFwAAAQ7Luo7nQ",
       "CorrectedLocation": {
-        "Latitude": 24.5936356,
+        "Latitude": 24.5936337,
         "Longitude": 117.041817,
         "Altitude": 0.0
       },
@@ -2157,7 +2164,7 @@
       "Date": "11/1/2016",
       "PanoID": "6Yjb-mBYtqgAAAQ7LuJ4Ig",
       "CorrectedLocation": {
-        "Latitude": 24.5936146,
+        "Latitude": 24.5936127,
         "Longitude": 117.04187,
         "Altitude": 0.0
       },
@@ -2185,7 +2192,7 @@
       "Date": "11/1/2016",
       "PanoID": "mSfdoLBXHawAAAQ7LuJkww",
       "CorrectedLocation": {
-        "Latitude": 24.5937614,
+        "Latitude": 24.59376,
         "Longitude": 117.041992,
         "Altitude": 0.0
       },
@@ -2214,7 +2221,7 @@
       "Date": "8/1/2017",
       "PanoID": "CAoSLEFGMVFpcE0xSVM0Y2pBNkpzLTJMS3R0bUN1empBOHo2S1EzRnFfRjFWbTU5",
       "CorrectedLocation": {
-        "Latitude": 24.5936489,
+        "Latitude": 24.593647,
         "Longitude": 117.041985,
         "Altitude": -0.6
       },
@@ -2242,7 +2249,7 @@
       "Date": "11/1/2016",
       "PanoID": "YC-3MaATOTMAAAQ7LuJ0qg",
       "CorrectedLocation": {
-        "Latitude": 24.5937977,
+        "Latitude": 24.5937958,
         "Longitude": 117.042122,
         "Altitude": 0.0
       },
@@ -2269,7 +2276,7 @@
       "Date": "2/1/2014",
       "PanoID": "CAoSLEFGMVFpcE9tS0lmUGVuSV9sMHJIV2ZaWlJMNlNUQWlFc2ptNEozWHR6UFdU",
       "CorrectedLocation": {
-        "Latitude": 24.59372,
+        "Latitude": 24.5937176,
         "Longitude": 117.042,
         "Altitude": 0.0
       },
@@ -2286,7 +2293,6 @@
       ]
     }
   ],
-  "StartingStation": "YC-3MaATOTMAAAQ7LuJ0qg",
   "AudioTracks": [
     {
       "SceneGraphPath": "/Tulou Building/Global Audio/Crowd (1)",

@@ -1852,6 +1852,13 @@
       }
     ]
   },
+  "Origin": {
+    "Type": "Vector3",
+    "X": 504595.344,
+    "Y": 0.0,
+    "Z": 2722939.0
+  },
+  "StartingStation": "CAoSLEFGMVFpcE1rTU16ZVhTalBqMlBZMzd6c3hUaGl4dXN4elBHM1Z4QXh0ZmJm",
   "Stations": [
     {
       "SceneGraphPath": "/Taxia Village - Demo/ve91n9ThX8IAAAQY__G9Fw",
@@ -3506,7 +3513,6 @@
       ]
     }
   ],
-  "StartingStation": "CAoSLEFGMVFpcE1rTU16ZVhTalBqMlBZMzd6c3hUaGl4dXN4elBHM1Z4QXh0ZmJm",
   "AudioTracks": [
     {
       "SceneGraphPath": "/Taxia Village - Demo/Audio Tracks/Birds (1)",

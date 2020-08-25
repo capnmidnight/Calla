@@ -900,6 +900,13 @@
       }
     ]
   },
+  "Origin": {
+    "Type": "Vector3",
+    "X": 509626.9,
+    "Y": 0.0,
+    "Z": 2727956.25
+  },
+  "StartingStation": "pzA0iiNTOYUAAAQvwsGang",
   "Stations": [
     {
       "SceneGraphPath": "/Shopping Street/_GkcOHJhIKgAAAQvwsMZLg",
@@ -913,7 +920,7 @@
       "Date": "12/1/2016",
       "PanoID": "_GkcOHJhIKgAAAQvwsMZLg",
       "CorrectedLocation": {
-        "Latitude": 24.66577,
+        "Latitude": 24.6657734,
         "Longitude": 117.094849,
         "Altitude": 0.0
       },
@@ -941,7 +948,7 @@
       "Date": "12/1/2016",
       "PanoID": "_Qa1rodsFpEAAAQvwsU1JA",
       "CorrectedLocation": {
-        "Latitude": 24.66579,
+        "Latitude": 24.6657925,
         "Longitude": 117.094925,
         "Altitude": 0.0
       },
@@ -997,7 +1004,7 @@
       "Date": "12/1/2016",
       "PanoID": "4fyzBreNqYoAAAQvwsJOZA",
       "CorrectedLocation": {
-        "Latitude": 24.6658382,
+        "Latitude": 24.66584,
         "Longitude": 117.095062,
         "Altitude": 0.0
       },
@@ -1025,7 +1032,7 @@
       "Date": "12/1/2016",
       "PanoID": "19E_IdPplT0AAAQvwsP_xg",
       "CorrectedLocation": {
-        "Latitude": 24.66574,
+        "Latitude": 24.665741,
         "Longitude": 117.094742,
         "Altitude": 0.0
       },
@@ -1053,7 +1060,7 @@
       "Date": "12/1/2016",
       "PanoID": "hNhJntHM81oAAAQrBeqbeQ",
       "CorrectedLocation": {
-        "Latitude": 24.6658516,
+        "Latitude": 24.6658535,
         "Longitude": 117.095108,
         "Altitude": 0.0
       },
@@ -1081,7 +1088,7 @@
       "Date": "12/1/2016",
       "PanoID": "arR2MXEeTIEAAAQvwsIkAg",
       "CorrectedLocation": {
-        "Latitude": 24.66593,
+        "Latitude": 24.6659317,
         "Longitude": 117.095085,
         "Altitude": 0.0
       },
@@ -1108,7 +1115,7 @@
       "Date": "12/1/2016",
       "PanoID": "jL1iea4KdB4AAAQvwsGV8w",
       "CorrectedLocation": {
-        "Latitude": 24.6659088,
+        "Latitude": 24.66591,
         "Longitude": 117.095146,
         "Altitude": 0.0
       },
@@ -1136,7 +1143,7 @@
       "Date": "12/1/2016",
       "PanoID": "pzA0iiNTOYUAAAQvwsGang",
       "CorrectedLocation": {
-        "Latitude": 24.6657352,
+        "Latitude": 24.66574,
         "Longitude": 117.094673,
         "Altitude": 0.0
       },
@@ -1163,7 +1170,7 @@
       "Date": "12/1/2016",
       "PanoID": "0YAAf-PPXp8AAAQvwsQB9Q",
       "CorrectedLocation": {
-        "Latitude": 24.6659737,
+        "Latitude": 24.6659756,
         "Longitude": 117.095093,
         "Altitude": 0.0
       },
@@ -1190,7 +1197,7 @@
       "Date": "12/1/2016",
       "PanoID": "s6railyBg-4AAAQvwsKo5Q",
       "CorrectedLocation": {
-        "Latitude": 24.6659222,
+        "Latitude": 24.6659241,
         "Longitude": 117.0952,
         "Altitude": 0.0
       },
@@ -1215,7 +1222,7 @@
       "Date": "12/1/2016",
       "PanoID": "qbewxPk8eMMAAAQvwsI47w",
       "CorrectedLocation": {
-        "Latitude": 24.665741,
+        "Latitude": 24.6657429,
         "Longitude": 117.0946,
         "Altitude": 0.0
       },
@@ -1240,7 +1247,7 @@
       "Date": "12/1/2016",
       "PanoID": "9Y8ywV2ZKcoAAAQvwsR7ew",
       "CorrectedLocation": {
-        "Latitude": 24.6656857,
+        "Latitude": 24.6656876,
         "Longitude": 117.094505,
         "Altitude": 0.0
       },
@@ -1268,7 +1275,7 @@
       "Date": "12/1/2016",
       "PanoID": "tnhMesi968MAAAQvwsQP1Q",
       "CorrectedLocation": {
-        "Latitude": 24.6656761,
+        "Latitude": 24.665678,
         "Longitude": 117.094467,
         "Altitude": 0.0
       },
@@ -1296,7 +1303,7 @@
       "Date": "12/1/2016",
       "PanoID": "otOhZc5BExcAAAQvwsSMgQ",
       "CorrectedLocation": {
-        "Latitude": 24.6657619,
+        "Latitude": 24.6657639,
         "Longitude": 117.094437,
         "Altitude": 0.0
       },
@@ -1324,7 +1331,7 @@
       "Date": "12/1/2016",
       "PanoID": "ZWPBzAVcU54AAAQvwsR8fA",
       "CorrectedLocation": {
-        "Latitude": 24.66566,
+        "Latitude": 24.6656628,
         "Longitude": 117.094414,
         "Altitude": 0.0
       },
@@ -1352,7 +1359,7 @@
       "Date": "12/1/2016",
       "PanoID": "fJFwijbNF5EAAAQvwsP_1g",
       "CorrectedLocation": {
-        "Latitude": 24.6657143,
+        "Latitude": 24.6657181,
         "Longitude": 117.094391,
         "Altitude": 0.0
       },
@@ -1380,7 +1387,7 @@
       "Date": "12/1/2016",
       "PanoID": "wdGCHcFKPTYAAAQvwsR7aw",
       "CorrectedLocation": {
-        "Latitude": 24.6659527,
+        "Latitude": 24.6659546,
         "Longitude": 117.095253,
         "Altitude": 0.0
       },
@@ -1407,7 +1414,7 @@
       "Date": "12/1/2016",
       "PanoID": "d7fK27Ye5nwAAAQvwsWa_w",
       "CorrectedLocation": {
-        "Latitude": 24.6660061,
+        "Latitude": 24.666008,
         "Longitude": 117.09523,
         "Altitude": 0.0
       },
@@ -1434,7 +1441,7 @@
       "Date": "12/1/2016",
       "PanoID": "9reoGWkhJG8AAAQvwsExMQ",
       "CorrectedLocation": {
-        "Latitude": 24.6659584,
+        "Latitude": 24.66596,
         "Longitude": 117.095329,
         "Altitude": 0.0
       },
@@ -1463,7 +1470,7 @@
       "Date": "12/1/2016",
       "PanoID": "Ny0BkU1UhMoAAAQvwsLW8A",
       "CorrectedLocation": {
-        "Latitude": 24.6660213,
+        "Latitude": 24.6660233,
         "Longitude": 117.0953,
         "Altitude": 0.0
       },
@@ -1491,7 +1498,7 @@
       "Date": "2/1/2014",
       "PanoID": "CAoSLEFGMVFpcFBLLTZpcnYtVms1VVV6dnljbTNXd1dhMzJQMk1xNmd4Um1JTkUz",
       "CorrectedLocation": {
-        "Latitude": 24.66582,
+        "Latitude": 24.6658211,
         "Longitude": 117.095314,
         "Altitude": 0.0
       },
@@ -1518,7 +1525,7 @@
       "Date": "12/1/2016",
       "PanoID": "KnqquZJ69JYAAAQvwsMTiw",
       "CorrectedLocation": {
-        "Latitude": 24.6659584,
+        "Latitude": 24.66596,
         "Longitude": 117.09539,
         "Altitude": 0.0
       },
@@ -1547,7 +1554,7 @@
       "Date": "12/1/2016",
       "PanoID": "LoOWMTcczWQAAAQvwsQaRw",
       "CorrectedLocation": {
-        "Latitude": 24.6659317,
+        "Latitude": 24.6659336,
         "Longitude": 117.095451,
         "Altitude": 0.0
       },
@@ -1576,7 +1583,7 @@
       "Date": "12/1/2016",
       "PanoID": "z1XB8MxoSRYAAAQrBeqVog",
       "CorrectedLocation": {
-        "Latitude": 24.66591,
+        "Latitude": 24.6659126,
         "Longitude": 117.095505,
         "Altitude": 0.0
       },
@@ -1604,7 +1611,7 @@
       "Date": "12/1/2016",
       "PanoID": "BblLcSakYCMAAAQvwsFY3A",
       "CorrectedLocation": {
-        "Latitude": 24.6659946,
+        "Latitude": 24.6659966,
         "Longitude": 117.095436,
         "Altitude": 0.0
       },
@@ -1633,7 +1640,7 @@
       "Date": "12/1/2016",
       "PanoID": "BPH6_DlMiEUAAAQrBeqzEg",
       "CorrectedLocation": {
-        "Latitude": 24.665926,
+        "Latitude": 24.6659279,
         "Longitude": 117.095535,
         "Altitude": 0.0
       },
@@ -1661,7 +1668,7 @@
       "Date": "12/1/2016",
       "PanoID": "4rsUu0XpdjoAAAQvwsIqag",
       "CorrectedLocation": {
-        "Latitude": 24.66594,
+        "Latitude": 24.6659412,
         "Longitude": 117.095558,
         "Altitude": 0.0
       },
@@ -1689,7 +1696,7 @@
       "Date": "12/1/2016",
       "PanoID": "rNkE2mZ9G5QAAAQvwsKrFg",
       "CorrectedLocation": {
-        "Latitude": 24.6659527,
+        "Latitude": 24.6659546,
         "Longitude": 117.095589,
         "Altitude": 0.0
       },
@@ -1717,7 +1724,7 @@
       "Date": "12/1/2016",
       "PanoID": "EXhlCzhUEaQAAAQrBeqrAQ",
       "CorrectedLocation": {
-        "Latitude": 24.66606,
+        "Latitude": 24.6660614,
         "Longitude": 117.095421,
         "Altitude": 0.0
       },
@@ -1745,7 +1752,7 @@
       "Date": "2/1/2014",
       "PanoID": "CAoSLEFGMVFpcE9JQVAxX2Mzc1UxQzdubXRYVmZVT3lFQk1iXzZCZFhCZENhYzdw",
       "CorrectedLocation": {
-        "Latitude": 24.6659737,
+        "Latitude": 24.6659756,
         "Longitude": 117.095619,
         "Altitude": 0.0
       },
@@ -1773,7 +1780,7 @@
       "Date": "12/1/2016",
       "PanoID": "fKknZOgVfZAAAAQvwsKplA",
       "CorrectedLocation": {
-        "Latitude": 24.6659889,
+        "Latitude": 24.66599,
         "Longitude": 117.095619,
         "Altitude": 0.0
       },
@@ -1801,7 +1808,7 @@
       "Date": "12/1/2016",
       "PanoID": "LwR0tsmkoxMAAAQvwsWctA",
       "CorrectedLocation": {
-        "Latitude": 24.6661053,
+        "Latitude": 24.6661072,
         "Longitude": 117.095459,
         "Altitude": 0.0
       },
@@ -1828,7 +1835,7 @@
       "Date": "12/1/2016",
       "PanoID": "sPH09eb7T7UAAAQvwsIkIw",
       "CorrectedLocation": {
-        "Latitude": 24.6660233,
+        "Latitude": 24.6660252,
         "Longitude": 117.095665,
         "Altitude": 0.0
       },
@@ -1856,7 +1863,7 @@
       "Date": "12/1/2016",
       "PanoID": "2stjAsNiSV0AAAQvwsQObA",
       "CorrectedLocation": {
-        "Latitude": 24.6660461,
+        "Latitude": 24.66605,
         "Longitude": 117.095764,
         "Altitude": 0.0
       },
@@ -1872,7 +1879,6 @@
       ]
     }
   ],
-  "StartingStation": "pzA0iiNTOYUAAAQvwsGang",
   "AudioTracks": [],
   "Zones": [],
   "PlaybackControls": [],
