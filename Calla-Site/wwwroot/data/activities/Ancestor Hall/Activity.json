@@ -606,11 +606,11 @@
   },
   "Origin": {
     "Type": "Vector3",
-    "X": 504568.531,
+    "X": 504568.5,
     "Y": 0.0,
     "Z": 2723039.25
   },
-  "StartingStation": "u52NtzBbOqkAAAQY__AKdA",
+  "StartingStation": "/Ancestor Hall/u52NtzBbOqkAAAQY__AKdA",
   "Stations": [
     {
       "SceneGraphPath": "/Ancestor Hall/O7bP13pd2ykAAAQ7LvHLNA",
