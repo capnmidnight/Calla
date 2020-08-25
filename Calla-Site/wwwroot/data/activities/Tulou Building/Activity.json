@@ -2,6 +2,7 @@
   "Scene": {
     "Name": "Tulou Building",
     "Transform": {
+      "Type": "Matrix4x4",
       "values": [
         1.0,
         0.0,
@@ -25,6 +26,7 @@
       {
         "Name": "Global Audio",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -48,6 +50,7 @@
           {
             "Name": "Crowd (1)",
             "Transform": {
+              "Type": "Matrix4x4",
               "values": [
                 1.0,
                 0.0,
@@ -72,6 +75,7 @@
           {
             "Name": "Crowd (2)",
             "Transform": {
+              "Type": "Matrix4x4",
               "values": [
                 1.0,
                 0.0,
@@ -96,6 +100,7 @@
           {
             "Name": "Crowd (3)",
             "Transform": {
+              "Type": "Matrix4x4",
               "values": [
                 1.0,
                 0.0,
@@ -120,6 +125,7 @@
           {
             "Name": "Crowd (4)",
             "Transform": {
+              "Type": "Matrix4x4",
               "values": [
                 1.0,
                 0.0,
@@ -146,6 +152,7 @@
       {
         "Name": "2SXygydpD8QAAAQ7LuylPw",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -170,6 +177,7 @@
       {
         "Name": "Km_1vy4BwwoAAAQ7LvHGPQ",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -193,6 +201,7 @@
           {
             "Name": "Voiceover",
             "Transform": {
+              "Type": "Matrix4x4",
               "values": [
                 1.0,
                 0.0,
@@ -216,6 +225,7 @@
               {
                 "Name": "Playback",
                 "Transform": {
+                  "Type": "Matrix4x4",
                   "values": [
                     0.6799536,
                     0.0,
@@ -239,6 +249,7 @@
                   {
                     "Name": "Play Button",
                     "Transform": {
+                      "Type": "Matrix4x4",
                       "values": [
                         0.6799536,
                         0.0,
@@ -262,6 +273,7 @@
                       {
                         "Name": "Icon",
                         "Transform": {
+                          "Type": "Matrix4x4",
                           "values": [
                             0.1699884,
                             -0.00733255455,
@@ -285,6 +297,7 @@
                           {
                             "Name": "Normal",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 0.1699884,
                                 -0.00733255455,
@@ -309,6 +322,7 @@
                           {
                             "Name": "Hovered",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 0.186987236,
                                 -0.00806581,
@@ -333,6 +347,7 @@
                           {
                             "Name": "Pressed",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 0.152989551,
                                 -0.00659929868,
@@ -357,6 +372,7 @@
                           {
                             "Name": "Disabled",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 0.1699884,
                                 -0.00733255455,
@@ -383,6 +399,7 @@
                       {
                         "Name": "Tooltip",
                         "Transform": {
+                          "Type": "Matrix4x4",
                           "values": [
                             -0.00135990721,
                             0.0,
@@ -406,6 +423,7 @@
                           {
                             "Name": "Background",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.00135990721,
                                 0.0,
@@ -430,6 +448,7 @@
                           {
                             "Name": "Text (TMP)",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.00135990721,
                                 0.0,
@@ -458,6 +477,7 @@
                   {
                     "Name": "Pause Button",
                     "Transform": {
+                      "Type": "Matrix4x4",
                       "values": [
                         0.6799536,
                         0.0,
@@ -481,6 +501,7 @@
                       {
                         "Name": "Icon",
                         "Transform": {
+                          "Type": "Matrix4x4",
                           "values": [
                             0.1699884,
                             -0.00733255455,
@@ -504,6 +525,7 @@
                           {
                             "Name": "Normal",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 0.1699884,
                                 -0.00733255455,
@@ -528,6 +550,7 @@
                           {
                             "Name": "Hovered",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 0.186987236,
                                 -0.00806581,
@@ -552,6 +575,7 @@
                           {
                             "Name": "Pressed",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 0.152989551,
                                 -0.00659929868,
@@ -576,6 +600,7 @@
                           {
                             "Name": "Disabled",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 0.1699884,
                                 -0.00733255455,
@@ -602,6 +627,7 @@
                       {
                         "Name": "Tooltip",
                         "Transform": {
+                          "Type": "Matrix4x4",
                           "values": [
                             -0.00135990721,
                             0.0,
@@ -625,6 +651,7 @@
                           {
                             "Name": "Background",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.00135990721,
                                 0.0,
@@ -649,6 +676,7 @@
                           {
                             "Name": "Text (TMP)",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.00135990721,
                                 0.0,
@@ -681,6 +709,7 @@
           {
             "Name": "Menu",
             "Transform": {
+              "Type": "Matrix4x4",
               "values": [
                 -0.929968953,
                 0.0,
@@ -705,6 +734,7 @@
           {
             "Name": "BeverageMenu",
             "Transform": {
+              "Type": "Matrix4x4",
               "values": [
                 -0.679704964,
                 0.0,
@@ -731,6 +761,7 @@
       {
         "Name": "EC5XaVJ_0pUAAAQ7Lu3Law",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -754,6 +785,7 @@
           {
             "Name": "Voiceover",
             "Transform": {
+              "Type": "Matrix4x4",
               "values": [
                 1.0,
                 0.0,
@@ -777,6 +809,7 @@
               {
                 "Name": "Playback",
                 "Transform": {
+                  "Type": "Matrix4x4",
                   "values": [
                     -0.51289463,
                     0.427637815,
@@ -800,6 +833,7 @@
                   {
                     "Name": "Play Button",
                     "Transform": {
+                      "Type": "Matrix4x4",
                       "values": [
                         -0.51289463,
                         0.427637815,
@@ -823,6 +857,7 @@
                       {
                         "Name": "Icon",
                         "Transform": {
+                          "Type": "Matrix4x4",
                           "values": [
                             -0.128223658,
                             -0.007443559,
@@ -846,6 +881,7 @@
                           {
                             "Name": "Normal",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.128223658,
                                 -0.007443559,
@@ -870,6 +906,7 @@
                           {
                             "Name": "Hovered",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.141046032,
                                 -0.008187915,
@@ -894,6 +931,7 @@
                           {
                             "Name": "Pressed",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.11540129,
                                 -0.00669920258,
@@ -918,6 +956,7 @@
                           {
                             "Name": "Disabled",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.128223658,
                                 -0.007443559,
@@ -944,6 +983,7 @@
                       {
                         "Name": "Tooltip",
                         "Transform": {
+                          "Type": "Matrix4x4",
                           "values": [
                             0.0010257893,
                             0.000855275663,
@@ -967,6 +1007,7 @@
                           {
                             "Name": "Background",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 0.0010257893,
                                 0.000855275663,
@@ -991,6 +1032,7 @@
                           {
                             "Name": "Text (TMP)",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 0.0010257893,
                                 0.000855275663,
@@ -1019,6 +1061,7 @@
                   {
                     "Name": "Pause Button",
                     "Transform": {
+                      "Type": "Matrix4x4",
                       "values": [
                         -0.51289463,
                         0.427637815,
@@ -1042,6 +1085,7 @@
                       {
                         "Name": "Icon",
                         "Transform": {
+                          "Type": "Matrix4x4",
                           "values": [
                             -0.128223658,
                             -0.007443559,
@@ -1065,6 +1109,7 @@
                           {
                             "Name": "Normal",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.128223658,
                                 -0.007443559,
@@ -1089,6 +1134,7 @@
                           {
                             "Name": "Hovered",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.141046032,
                                 -0.008187915,
@@ -1113,6 +1159,7 @@
                           {
                             "Name": "Pressed",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.11540129,
                                 -0.00669920258,
@@ -1137,6 +1184,7 @@
                           {
                             "Name": "Disabled",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.128223658,
                                 -0.007443559,
@@ -1163,6 +1211,7 @@
                       {
                         "Name": "Tooltip",
                         "Transform": {
+                          "Type": "Matrix4x4",
                           "values": [
                             0.0010257893,
                             0.000855275663,
@@ -1186,6 +1235,7 @@
                           {
                             "Name": "Background",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 0.0010257893,
                                 0.000855275663,
@@ -1210,6 +1260,7 @@
                           {
                             "Name": "Text (TMP)",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 0.0010257893,
                                 0.000855275663,
@@ -1244,6 +1295,7 @@
       {
         "Name": "7OpTzt9OBy8AAAQ7LuXbog",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -1268,6 +1320,7 @@
       {
         "Name": "nm6u2sMOUFwAAAQ7Luo7nQ",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -1292,6 +1345,7 @@
       {
         "Name": "6Yjb-mBYtqgAAAQ7LuJ4Ig",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -1316,6 +1370,7 @@
       {
         "Name": "mSfdoLBXHawAAAQ7LuJkww",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -1339,6 +1394,7 @@
           {
             "Name": "Voiceover",
             "Transform": {
+              "Type": "Matrix4x4",
               "values": [
                 1.0,
                 0.0,
@@ -1362,6 +1418,7 @@
               {
                 "Name": "Playback",
                 "Transform": {
+                  "Type": "Matrix4x4",
                   "values": [
                     -0.138136029,
                     0.0,
@@ -1385,6 +1442,7 @@
                   {
                     "Name": "Play Button",
                     "Transform": {
+                      "Type": "Matrix4x4",
                       "values": [
                         -0.138136029,
                         0.0,
@@ -1408,6 +1466,7 @@
                       {
                         "Name": "Icon",
                         "Transform": {
+                          "Type": "Matrix4x4",
                           "values": [
                             -0.0345340073,
                             0.009904137,
@@ -1431,6 +1490,7 @@
                           {
                             "Name": "Normal",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.0345340073,
                                 0.009904137,
@@ -1455,6 +1515,7 @@
                           {
                             "Name": "Hovered",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.0379874073,
                                 0.0108945509,
@@ -1479,6 +1540,7 @@
                           {
                             "Name": "Pressed",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.0310806055,
                                 0.008913723,
@@ -1503,6 +1565,7 @@
                           {
                             "Name": "Disabled",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.0345340073,
                                 0.009904137,
@@ -1529,6 +1592,7 @@
                       {
                         "Name": "Tooltip",
                         "Transform": {
+                          "Type": "Matrix4x4",
                           "values": [
                             0.000276272069,
                             0.0,
@@ -1552,6 +1616,7 @@
                           {
                             "Name": "Background",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 0.000276272069,
                                 0.0,
@@ -1576,6 +1641,7 @@
                           {
                             "Name": "Text (TMP)",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 0.000276272069,
                                 0.0,
@@ -1604,6 +1670,7 @@
                   {
                     "Name": "Pause Button",
                     "Transform": {
+                      "Type": "Matrix4x4",
                       "values": [
                         -0.138136029,
                         0.0,
@@ -1627,6 +1694,7 @@
                       {
                         "Name": "Icon",
                         "Transform": {
+                          "Type": "Matrix4x4",
                           "values": [
                             -0.0345340073,
                             0.009904137,
@@ -1650,6 +1718,7 @@
                           {
                             "Name": "Normal",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.0345340073,
                                 0.009904137,
@@ -1674,6 +1743,7 @@
                           {
                             "Name": "Hovered",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.0379874073,
                                 0.0108945509,
@@ -1698,6 +1768,7 @@
                           {
                             "Name": "Pressed",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.0310806055,
                                 0.008913723,
@@ -1722,6 +1793,7 @@
                           {
                             "Name": "Disabled",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 -0.0345340073,
                                 0.009904137,
@@ -1748,6 +1820,7 @@
                       {
                         "Name": "Tooltip",
                         "Transform": {
+                          "Type": "Matrix4x4",
                           "values": [
                             0.000276272069,
                             0.0,
@@ -1771,6 +1844,7 @@
                           {
                             "Name": "Background",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 0.000276272069,
                                 0.0,
@@ -1795,6 +1869,7 @@
                           {
                             "Name": "Text (TMP)",
                             "Transform": {
+                              "Type": "Matrix4x4",
                               "values": [
                                 0.000276272069,
                                 0.0,
@@ -1829,6 +1904,7 @@
       {
         "Name": "CAoSLEFGMVFpcE0xSVM0Y2pBNkpzLTJMS3R0bUN1empBOHo2S1EzRnFfRjFWbTU5",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -1853,6 +1929,7 @@
       {
         "Name": "YC-3MaATOTMAAAQ7LuJ0qg",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -1876,6 +1953,7 @@
           {
             "Name": "BuildingSign",
             "Transform": {
+              "Type": "Matrix4x4",
               "values": [
                 -0.988281965,
                 0.0,
@@ -1902,6 +1980,7 @@
       {
         "Name": "CAoSLEFGMVFpcE9tS0lmUGVuSV9sMHJIV2ZaWlJMNlNUQWlFc2ptNEozWHR6UFdU",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -1938,19 +2017,20 @@
       "Date": "11/1/2016",
       "PanoID": "2SXygydpD8QAAAQ7LuylPw",
       "CorrectedLocation": {
-        "Latitude": 24.5937672,
-        "Longitude": 117.041779,
+        "Latitude": 24.5937748,
+        "Longitude": 117.041771,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "Km_1vy4BwwoAAAQ7LvHGPQ",
-        "EC5XaVJ_0pUAAAQ7Lu3Law"
+        "/Tulou Building/Km_1vy4BwwoAAAQ7LvHGPQ",
+        "/Tulou Building/EC5XaVJ_0pUAAAQ7Lu3Law"
       ]
     },
     {
@@ -1965,19 +2045,20 @@
       "Date": "11/1/2016",
       "PanoID": "Km_1vy4BwwoAAAQ7LvHGPQ",
       "CorrectedLocation": {
-        "Latitude": 24.5937862,
-        "Longitude": 117.041809,
+        "Latitude": 24.5937958,
+        "Longitude": 117.0418,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "2SXygydpD8QAAAQ7LuylPw",
-        "7OpTzt9OBy8AAAQ7LuXbog"
+        "/Tulou Building/2SXygydpD8QAAAQ7LuylPw",
+        "/Tulou Building/7OpTzt9OBy8AAAQ7LuXbog"
       ]
     },
     {
@@ -1992,19 +2073,20 @@
       "Date": "11/1/2016",
       "PanoID": "EC5XaVJ_0pUAAAQ7Lu3Law",
       "CorrectedLocation": {
-        "Latitude": 24.59373,
-        "Longitude": 117.041763,
+        "Latitude": 24.5937386,
+        "Longitude": 117.041756,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "2SXygydpD8QAAAQ7LuylPw",
-        "nm6u2sMOUFwAAAQ7Luo7nQ"
+        "/Tulou Building/2SXygydpD8QAAAQ7LuylPw",
+        "/Tulou Building/nm6u2sMOUFwAAAQ7Luo7nQ"
       ]
     },
     {
@@ -2019,19 +2101,20 @@
       "Date": "11/1/2016",
       "PanoID": "7OpTzt9OBy8AAAQ7LuXbog",
       "CorrectedLocation": {
-        "Latitude": 24.5938168,
-        "Longitude": 117.0419,
+        "Latitude": 24.5938244,
+        "Longitude": 117.041893,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "Km_1vy4BwwoAAAQ7LvHGPQ",
-        "mSfdoLBXHawAAAQ7LuJkww"
+        "/Tulou Building/Km_1vy4BwwoAAAQ7LvHGPQ",
+        "/Tulou Building/mSfdoLBXHawAAAQ7LuJkww"
       ]
     },
     {
@@ -2046,19 +2129,20 @@
       "Date": "11/1/2016",
       "PanoID": "nm6u2sMOUFwAAAQ7Luo7nQ",
       "CorrectedLocation": {
-        "Latitude": 24.593626,
-        "Longitude": 117.041824,
+        "Latitude": 24.5936356,
+        "Longitude": 117.041817,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "EC5XaVJ_0pUAAAQ7Lu3Law",
-        "6Yjb-mBYtqgAAAQ7LuJ4Ig"
+        "/Tulou Building/EC5XaVJ_0pUAAAQ7Lu3Law",
+        "/Tulou Building/6Yjb-mBYtqgAAAQ7LuJ4Ig"
       ]
     },
     {
@@ -2073,19 +2157,20 @@
       "Date": "11/1/2016",
       "PanoID": "6Yjb-mBYtqgAAAQ7LuJ4Ig",
       "CorrectedLocation": {
-        "Latitude": 24.5936069,
-        "Longitude": 117.041878,
+        "Latitude": 24.5936146,
+        "Longitude": 117.04187,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "nm6u2sMOUFwAAAQ7Luo7nQ",
-        "CAoSLEFGMVFpcE0xSVM0Y2pBNkpzLTJMS3R0bUN1empBOHo2S1EzRnFfRjFWbTU5"
+        "/Tulou Building/nm6u2sMOUFwAAAQ7Luo7nQ",
+        "/Tulou Building/CAoSLEFGMVFpcE0xSVM0Y2pBNkpzLTJMS3R0bUN1empBOHo2S1EzRnFfRjFWbTU5"
       ]
     },
     {
@@ -2100,20 +2185,21 @@
       "Date": "11/1/2016",
       "PanoID": "mSfdoLBXHawAAAQ7LuJkww",
       "CorrectedLocation": {
-        "Latitude": 24.5937538,
-        "Longitude": 117.042,
+        "Latitude": 24.5937614,
+        "Longitude": 117.041992,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "7OpTzt9OBy8AAAQ7LuXbog",
-        "CAoSLEFGMVFpcE9tS0lmUGVuSV9sMHJIV2ZaWlJMNlNUQWlFc2ptNEozWHR6UFdU",
-        "YC-3MaATOTMAAAQ7LuJ0qg"
+        "/Tulou Building/7OpTzt9OBy8AAAQ7LuXbog",
+        "/Tulou Building/CAoSLEFGMVFpcE9tS0lmUGVuSV9sMHJIV2ZaWlJMNlNUQWlFc2ptNEozWHR6UFdU",
+        "/Tulou Building/YC-3MaATOTMAAAQ7LuJ0qg"
       ]
     },
     {
@@ -2128,19 +2214,20 @@
       "Date": "8/1/2017",
       "PanoID": "CAoSLEFGMVFpcE0xSVM0Y2pBNkpzLTJMS3R0bUN1empBOHo2S1EzRnFfRjFWbTU5",
       "CorrectedLocation": {
-        "Latitude": 24.59364,
-        "Longitude": 117.041992,
+        "Latitude": 24.5936489,
+        "Longitude": 117.041985,
         "Altitude": -0.6
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.464842051,
         "Z": 0.0,
         "W": 0.8853936
       },
       "Exits": [
-        "6Yjb-mBYtqgAAAQ7LuJ4Ig",
-        "CAoSLEFGMVFpcE9tS0lmUGVuSV9sMHJIV2ZaWlJMNlNUQWlFc2ptNEozWHR6UFdU"
+        "/Tulou Building/6Yjb-mBYtqgAAAQ7LuJ4Ig",
+        "/Tulou Building/CAoSLEFGMVFpcE9tS0lmUGVuSV9sMHJIV2ZaWlJMNlNUQWlFc2ptNEozWHR6UFdU"
       ]
     },
     {
@@ -2155,18 +2242,19 @@
       "Date": "11/1/2016",
       "PanoID": "YC-3MaATOTMAAAQ7LuJ0qg",
       "CorrectedLocation": {
-        "Latitude": 24.5937881,
-        "Longitude": 117.04213,
+        "Latitude": 24.5937977,
+        "Longitude": 117.042122,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "mSfdoLBXHawAAAQ7LuJkww"
+        "/Tulou Building/mSfdoLBXHawAAAQ7LuJkww"
       ]
     },
     {
@@ -2181,19 +2269,20 @@
       "Date": "2/1/2014",
       "PanoID": "CAoSLEFGMVFpcE9tS0lmUGVuSV9sMHJIV2ZaWlJMNlNUQWlFc2ptNEozWHR6UFdU",
       "CorrectedLocation": {
-        "Latitude": 24.5937119,
-        "Longitude": 117.042007,
+        "Latitude": 24.59372,
+        "Longitude": 117.042,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.6501114,
         "Z": 0.0,
         "W": 0.759838939
       },
       "Exits": [
-        "mSfdoLBXHawAAAQ7LuJkww",
-        "CAoSLEFGMVFpcE0xSVM0Y2pBNkpzLTJMS3R0bUN1empBOHo2S1EzRnFfRjFWbTU5"
+        "/Tulou Building/mSfdoLBXHawAAAQ7LuJkww",
+        "/Tulou Building/CAoSLEFGMVFpcE0xSVM0Y2pBNkpzLTJMS3R0bUN1empBOHo2S1EzRnFfRjFWbTU5"
       ]
     }
   ],

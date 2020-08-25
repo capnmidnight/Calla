@@ -2,6 +2,7 @@
   "Scene": {
     "Name": "Shopping Street",
     "Transform": {
+      "Type": "Matrix4x4",
       "values": [
         1.0,
         0.0,
@@ -25,6 +26,7 @@
       {
         "Name": "_GkcOHJhIKgAAAQvwsMZLg",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -49,6 +51,7 @@
       {
         "Name": "_Qa1rodsFpEAAAQvwsU1JA",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -73,6 +76,7 @@
       {
         "Name": "C5MmT_hOWJsAAAQvwsYLdg",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -97,6 +101,7 @@
       {
         "Name": "4fyzBreNqYoAAAQvwsJOZA",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -121,6 +126,7 @@
       {
         "Name": "19E_IdPplT0AAAQvwsP_xg",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -145,6 +151,7 @@
       {
         "Name": "hNhJntHM81oAAAQrBeqbeQ",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -169,6 +176,7 @@
       {
         "Name": "arR2MXEeTIEAAAQvwsIkAg",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -193,6 +201,7 @@
       {
         "Name": "jL1iea4KdB4AAAQvwsGV8w",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -217,6 +226,7 @@
       {
         "Name": "pzA0iiNTOYUAAAQvwsGang",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -241,6 +251,7 @@
       {
         "Name": "0YAAf-PPXp8AAAQvwsQB9Q",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -265,6 +276,7 @@
       {
         "Name": "s6railyBg-4AAAQvwsKo5Q",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -289,6 +301,7 @@
       {
         "Name": "qbewxPk8eMMAAAQvwsI47w",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -313,6 +326,7 @@
       {
         "Name": "9Y8ywV2ZKcoAAAQvwsR7ew",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -337,6 +351,7 @@
       {
         "Name": "tnhMesi968MAAAQvwsQP1Q",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -361,6 +376,7 @@
       {
         "Name": "otOhZc5BExcAAAQvwsSMgQ",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -385,6 +401,7 @@
       {
         "Name": "ZWPBzAVcU54AAAQvwsR8fA",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -409,6 +426,7 @@
       {
         "Name": "fJFwijbNF5EAAAQvwsP_1g",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -433,6 +451,7 @@
       {
         "Name": "wdGCHcFKPTYAAAQvwsR7aw",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -457,6 +476,7 @@
       {
         "Name": "d7fK27Ye5nwAAAQvwsWa_w",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -481,6 +501,7 @@
       {
         "Name": "9reoGWkhJG8AAAQvwsExMQ",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -505,6 +526,7 @@
       {
         "Name": "Ny0BkU1UhMoAAAQvwsLW8A",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -529,6 +551,7 @@
       {
         "Name": "CAoSLEFGMVFpcFBLLTZpcnYtVms1VVV6dnljbTNXd1dhMzJQMk1xNmd4Um1JTkUz",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -553,6 +576,7 @@
       {
         "Name": "KnqquZJ69JYAAAQvwsMTiw",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -577,6 +601,7 @@
       {
         "Name": "LoOWMTcczWQAAAQvwsQaRw",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -601,6 +626,7 @@
       {
         "Name": "z1XB8MxoSRYAAAQrBeqVog",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -625,6 +651,7 @@
       {
         "Name": "BblLcSakYCMAAAQvwsFY3A",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -649,6 +676,7 @@
       {
         "Name": "BPH6_DlMiEUAAAQrBeqzEg",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -673,6 +701,7 @@
       {
         "Name": "4rsUu0XpdjoAAAQvwsIqag",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -697,6 +726,7 @@
       {
         "Name": "rNkE2mZ9G5QAAAQvwsKrFg",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -721,6 +751,7 @@
       {
         "Name": "EXhlCzhUEaQAAAQrBeqrAQ",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -745,6 +776,7 @@
       {
         "Name": "CAoSLEFGMVFpcE9JQVAxX2Mzc1UxQzdubXRYVmZVT3lFQk1iXzZCZFhCZENhYzdw",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -769,6 +801,7 @@
       {
         "Name": "fKknZOgVfZAAAAQvwsKplA",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -793,6 +826,7 @@
       {
         "Name": "LwR0tsmkoxMAAAQvwsWctA",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -817,6 +851,7 @@
       {
         "Name": "sPH09eb7T7UAAAQvwsIkIw",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -841,6 +876,7 @@
       {
         "Name": "2stjAsNiSV0AAAQvwsQObA",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -878,18 +914,19 @@
       "PanoID": "_GkcOHJhIKgAAAQvwsMZLg",
       "CorrectedLocation": {
         "Latitude": 24.66577,
-        "Longitude": 117.094833,
+        "Longitude": 117.094849,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "19E_IdPplT0AAAQvwsP_xg",
-        "_Qa1rodsFpEAAAQvwsU1JA"
+        "/Shopping Street/19E_IdPplT0AAAQvwsP_xg",
+        "/Shopping Street/_Qa1rodsFpEAAAQvwsU1JA"
       ]
     },
     {
@@ -905,18 +942,19 @@
       "PanoID": "_Qa1rodsFpEAAAQvwsU1JA",
       "CorrectedLocation": {
         "Latitude": 24.66579,
-        "Longitude": 117.09491,
+        "Longitude": 117.094925,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "_GkcOHJhIKgAAAQvwsMZLg",
-        "C5MmT_hOWJsAAAQvwsYLdg"
+        "/Shopping Street/_GkcOHJhIKgAAAQvwsMZLg",
+        "/Shopping Street/C5MmT_hOWJsAAAQvwsYLdg"
       ]
     },
     {
@@ -931,19 +969,20 @@
       "Date": "12/1/2016",
       "PanoID": "C5MmT_hOWJsAAAQvwsYLdg",
       "CorrectedLocation": {
-        "Latitude": 24.6658154,
-        "Longitude": 117.094978,
+        "Latitude": 24.6658173,
+        "Longitude": 117.094994,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "_Qa1rodsFpEAAAQvwsU1JA",
-        "4fyzBreNqYoAAAQvwsJOZA"
+        "/Shopping Street/_Qa1rodsFpEAAAQvwsU1JA",
+        "/Shopping Street/4fyzBreNqYoAAAQvwsJOZA"
       ]
     },
     {
@@ -958,19 +997,20 @@
       "Date": "12/1/2016",
       "PanoID": "4fyzBreNqYoAAAQvwsJOZA",
       "CorrectedLocation": {
-        "Latitude": 24.6658363,
-        "Longitude": 117.095047,
+        "Latitude": 24.6658382,
+        "Longitude": 117.095062,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "C5MmT_hOWJsAAAQvwsYLdg",
-        "hNhJntHM81oAAAQrBeqbeQ"
+        "/Shopping Street/C5MmT_hOWJsAAAQvwsYLdg",
+        "/Shopping Street/hNhJntHM81oAAAQrBeqbeQ"
       ]
     },
     {
@@ -985,19 +1025,20 @@
       "Date": "12/1/2016",
       "PanoID": "19E_IdPplT0AAAQvwsP_xg",
       "CorrectedLocation": {
-        "Latitude": 24.6657372,
-        "Longitude": 117.094727,
+        "Latitude": 24.66574,
+        "Longitude": 117.094742,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "pzA0iiNTOYUAAAQvwsGang",
-        "_GkcOHJhIKgAAAQvwsMZLg"
+        "/Shopping Street/pzA0iiNTOYUAAAQvwsGang",
+        "/Shopping Street/_GkcOHJhIKgAAAQvwsMZLg"
       ]
     },
     {
@@ -1012,19 +1053,20 @@
       "Date": "12/1/2016",
       "PanoID": "hNhJntHM81oAAAQrBeqbeQ",
       "CorrectedLocation": {
-        "Latitude": 24.66585,
-        "Longitude": 117.095093,
+        "Latitude": 24.6658516,
+        "Longitude": 117.095108,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "4fyzBreNqYoAAAQvwsJOZA",
-        "jL1iea4KdB4AAAQvwsGV8w"
+        "/Shopping Street/4fyzBreNqYoAAAQvwsJOZA",
+        "/Shopping Street/jL1iea4KdB4AAAQvwsGV8w"
       ]
     },
     {
@@ -1039,18 +1081,19 @@
       "Date": "12/1/2016",
       "PanoID": "arR2MXEeTIEAAAQvwsIkAg",
       "CorrectedLocation": {
-        "Latitude": 24.6659279,
-        "Longitude": 117.09507,
+        "Latitude": 24.66593,
+        "Longitude": 117.095085,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "0YAAf-PPXp8AAAQvwsQB9Q"
+        "/Shopping Street/0YAAf-PPXp8AAAQvwsQB9Q"
       ]
     },
     {
@@ -1065,19 +1108,20 @@
       "Date": "12/1/2016",
       "PanoID": "jL1iea4KdB4AAAQvwsGV8w",
       "CorrectedLocation": {
-        "Latitude": 24.6659069,
-        "Longitude": 117.095131,
+        "Latitude": 24.6659088,
+        "Longitude": 117.095146,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "hNhJntHM81oAAAQrBeqbeQ",
-        "wdGCHcFKPTYAAAQvwsR7aw"
+        "/Shopping Street/hNhJntHM81oAAAQrBeqbeQ",
+        "/Shopping Street/wdGCHcFKPTYAAAQvwsR7aw"
       ]
     },
     {
@@ -1093,17 +1137,18 @@
       "PanoID": "pzA0iiNTOYUAAAQvwsGang",
       "CorrectedLocation": {
         "Latitude": 24.6657352,
-        "Longitude": 117.094658,
+        "Longitude": 117.094673,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "19E_IdPplT0AAAQvwsP_xg"
+        "/Shopping Street/19E_IdPplT0AAAQvwsP_xg"
       ]
     },
     {
@@ -1119,17 +1164,18 @@
       "PanoID": "0YAAf-PPXp8AAAQvwsQB9Q",
       "CorrectedLocation": {
         "Latitude": 24.6659737,
-        "Longitude": 117.095078,
+        "Longitude": 117.095093,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "arR2MXEeTIEAAAQvwsIkAg"
+        "/Shopping Street/arR2MXEeTIEAAAQvwsIkAg"
       ]
     },
     {
@@ -1144,11 +1190,12 @@
       "Date": "12/1/2016",
       "PanoID": "s6railyBg-4AAAQvwsKo5Q",
       "CorrectedLocation": {
-        "Latitude": 24.66592,
-        "Longitude": 117.095184,
+        "Latitude": 24.6659222,
+        "Longitude": 117.0952,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
@@ -1169,10 +1216,11 @@
       "PanoID": "qbewxPk8eMMAAAQvwsI47w",
       "CorrectedLocation": {
         "Latitude": 24.665741,
-        "Longitude": 117.094582,
+        "Longitude": 117.0946,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
@@ -1192,19 +1240,20 @@
       "Date": "12/1/2016",
       "PanoID": "9Y8ywV2ZKcoAAAQvwsR7ew",
       "CorrectedLocation": {
-        "Latitude": 24.6656837,
-        "Longitude": 117.09449,
+        "Latitude": 24.6656857,
+        "Longitude": 117.094505,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "otOhZc5BExcAAAQvwsSMgQ",
-        "tnhMesi968MAAAQvwsQP1Q"
+        "/Shopping Street/otOhZc5BExcAAAQvwsSMgQ",
+        "/Shopping Street/tnhMesi968MAAAQvwsQP1Q"
       ]
     },
     {
@@ -1219,19 +1268,20 @@
       "Date": "12/1/2016",
       "PanoID": "tnhMesi968MAAAQvwsQP1Q",
       "CorrectedLocation": {
-        "Latitude": 24.6656742,
-        "Longitude": 117.094452,
+        "Latitude": 24.6656761,
+        "Longitude": 117.094467,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "ZWPBzAVcU54AAAQvwsR8fA",
-        "9Y8ywV2ZKcoAAAQvwsR7ew"
+        "/Shopping Street/ZWPBzAVcU54AAAQvwsR8fA",
+        "/Shopping Street/9Y8ywV2ZKcoAAAQvwsR7ew"
       ]
     },
     {
@@ -1246,19 +1296,20 @@
       "Date": "12/1/2016",
       "PanoID": "otOhZc5BExcAAAQvwsSMgQ",
       "CorrectedLocation": {
-        "Latitude": 24.66576,
-        "Longitude": 117.094421,
+        "Latitude": 24.6657619,
+        "Longitude": 117.094437,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "fJFwijbNF5EAAAQvwsP_1g",
-        "9Y8ywV2ZKcoAAAQvwsR7ew"
+        "/Shopping Street/fJFwijbNF5EAAAQvwsP_1g",
+        "/Shopping Street/9Y8ywV2ZKcoAAAQvwsR7ew"
       ]
     },
     {
@@ -1273,19 +1324,20 @@
       "Date": "12/1/2016",
       "PanoID": "ZWPBzAVcU54AAAQvwsR8fA",
       "CorrectedLocation": {
-        "Latitude": 24.665659,
-        "Longitude": 117.0944,
+        "Latitude": 24.66566,
+        "Longitude": 117.094414,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "fJFwijbNF5EAAAQvwsP_1g",
-        "tnhMesi968MAAAQvwsQP1Q"
+        "/Shopping Street/fJFwijbNF5EAAAQvwsP_1g",
+        "/Shopping Street/tnhMesi968MAAAQvwsQP1Q"
       ]
     },
     {
@@ -1301,18 +1353,19 @@
       "PanoID": "fJFwijbNF5EAAAQvwsP_1g",
       "CorrectedLocation": {
         "Latitude": 24.6657143,
-        "Longitude": 117.094376,
+        "Longitude": 117.094391,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "ZWPBzAVcU54AAAQvwsR8fA",
-        "otOhZc5BExcAAAQvwsSMgQ"
+        "/Shopping Street/ZWPBzAVcU54AAAQvwsR8fA",
+        "/Shopping Street/otOhZc5BExcAAAQvwsSMgQ"
       ]
     },
     {
@@ -1327,18 +1380,19 @@
       "Date": "12/1/2016",
       "PanoID": "wdGCHcFKPTYAAAQvwsR7aw",
       "CorrectedLocation": {
-        "Latitude": 24.66595,
-        "Longitude": 117.095238,
+        "Latitude": 24.6659527,
+        "Longitude": 117.095253,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "jL1iea4KdB4AAAQvwsGV8w"
+        "/Shopping Street/jL1iea4KdB4AAAQvwsGV8w"
       ]
     },
     {
@@ -1353,18 +1407,19 @@
       "Date": "12/1/2016",
       "PanoID": "d7fK27Ye5nwAAAQvwsWa_w",
       "CorrectedLocation": {
-        "Latitude": 24.6660042,
-        "Longitude": 117.095215,
+        "Latitude": 24.6660061,
+        "Longitude": 117.09523,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "Ny0BkU1UhMoAAAQvwsLW8A"
+        "/Shopping Street/Ny0BkU1UhMoAAAQvwsLW8A"
       ]
     },
     {
@@ -1379,20 +1434,21 @@
       "Date": "12/1/2016",
       "PanoID": "9reoGWkhJG8AAAQvwsExMQ",
       "CorrectedLocation": {
-        "Latitude": 24.6659565,
-        "Longitude": 117.095314,
+        "Latitude": 24.6659584,
+        "Longitude": 117.095329,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "Ny0BkU1UhMoAAAQvwsLW8A",
-        "CAoSLEFGMVFpcFBLLTZpcnYtVms1VVV6dnljbTNXd1dhMzJQMk1xNmd4Um1JTkUz",
-        "KnqquZJ69JYAAAQvwsMTiw"
+        "/Shopping Street/Ny0BkU1UhMoAAAQvwsLW8A",
+        "/Shopping Street/CAoSLEFGMVFpcFBLLTZpcnYtVms1VVV6dnljbTNXd1dhMzJQMk1xNmd4Um1JTkUz",
+        "/Shopping Street/KnqquZJ69JYAAAQvwsMTiw"
       ]
     },
     {
@@ -1407,19 +1463,20 @@
       "Date": "12/1/2016",
       "PanoID": "Ny0BkU1UhMoAAAQvwsLW8A",
       "CorrectedLocation": {
-        "Latitude": 24.66602,
-        "Longitude": 117.095284,
+        "Latitude": 24.6660213,
+        "Longitude": 117.0953,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "d7fK27Ye5nwAAAQvwsWa_w",
-        "9reoGWkhJG8AAAQvwsExMQ"
+        "/Shopping Street/d7fK27Ye5nwAAAQvwsWa_w",
+        "/Shopping Street/9reoGWkhJG8AAAQvwsExMQ"
       ]
     },
     {
@@ -1434,18 +1491,19 @@
       "Date": "2/1/2014",
       "PanoID": "CAoSLEFGMVFpcFBLLTZpcnYtVms1VVV6dnljbTNXd1dhMzJQMk1xNmd4Um1JTkUz",
       "CorrectedLocation": {
-        "Latitude": 24.6658173,
-        "Longitude": 117.0953,
+        "Latitude": 24.66582,
+        "Longitude": 117.095314,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "9reoGWkhJG8AAAQvwsExMQ"
+        "/Shopping Street/9reoGWkhJG8AAAQvwsExMQ"
       ]
     },
     {
@@ -1460,20 +1518,21 @@
       "Date": "12/1/2016",
       "PanoID": "KnqquZJ69JYAAAQvwsMTiw",
       "CorrectedLocation": {
-        "Latitude": 24.6659565,
-        "Longitude": 117.095375,
+        "Latitude": 24.6659584,
+        "Longitude": 117.09539,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "9reoGWkhJG8AAAQvwsExMQ",
-        "BblLcSakYCMAAAQvwsFY3A",
-        "LoOWMTcczWQAAAQvwsQaRw"
+        "/Shopping Street/9reoGWkhJG8AAAQvwsExMQ",
+        "/Shopping Street/BblLcSakYCMAAAQvwsFY3A",
+        "/Shopping Street/LoOWMTcczWQAAAQvwsQaRw"
       ]
     },
     {
@@ -1489,19 +1548,20 @@
       "PanoID": "LoOWMTcczWQAAAQvwsQaRw",
       "CorrectedLocation": {
         "Latitude": 24.6659317,
-        "Longitude": 117.095436,
+        "Longitude": 117.095451,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "KnqquZJ69JYAAAQvwsMTiw",
-        "BblLcSakYCMAAAQvwsFY3A",
-        "z1XB8MxoSRYAAAQrBeqVog"
+        "/Shopping Street/KnqquZJ69JYAAAQvwsMTiw",
+        "/Shopping Street/BblLcSakYCMAAAQvwsFY3A",
+        "/Shopping Street/z1XB8MxoSRYAAAQrBeqVog"
       ]
     },
     {
@@ -1517,18 +1577,19 @@
       "PanoID": "z1XB8MxoSRYAAAQrBeqVog",
       "CorrectedLocation": {
         "Latitude": 24.66591,
-        "Longitude": 117.09549,
+        "Longitude": 117.095505,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "LoOWMTcczWQAAAQvwsQaRw",
-        "BPH6_DlMiEUAAAQrBeqzEg"
+        "/Shopping Street/LoOWMTcczWQAAAQvwsQaRw",
+        "/Shopping Street/BPH6_DlMiEUAAAQrBeqzEg"
       ]
     },
     {
@@ -1543,20 +1604,21 @@
       "Date": "12/1/2016",
       "PanoID": "BblLcSakYCMAAAQvwsFY3A",
       "CorrectedLocation": {
-        "Latitude": 24.6659927,
-        "Longitude": 117.095421,
+        "Latitude": 24.6659946,
+        "Longitude": 117.095436,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "KnqquZJ69JYAAAQvwsMTiw",
-        "LoOWMTcczWQAAAQvwsQaRw",
-        "EXhlCzhUEaQAAAQrBeqrAQ"
+        "/Shopping Street/KnqquZJ69JYAAAQvwsMTiw",
+        "/Shopping Street/LoOWMTcczWQAAAQvwsQaRw",
+        "/Shopping Street/EXhlCzhUEaQAAAQrBeqrAQ"
       ]
     },
     {
@@ -1571,19 +1633,20 @@
       "Date": "12/1/2016",
       "PanoID": "BPH6_DlMiEUAAAQrBeqzEg",
       "CorrectedLocation": {
-        "Latitude": 24.6659241,
-        "Longitude": 117.09552,
+        "Latitude": 24.665926,
+        "Longitude": 117.095535,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "z1XB8MxoSRYAAAQrBeqVog",
-        "4rsUu0XpdjoAAAQvwsIqag"
+        "/Shopping Street/z1XB8MxoSRYAAAQrBeqVog",
+        "/Shopping Street/4rsUu0XpdjoAAAQvwsIqag"
       ]
     },
     {
@@ -1599,18 +1662,19 @@
       "PanoID": "4rsUu0XpdjoAAAQvwsIqag",
       "CorrectedLocation": {
         "Latitude": 24.66594,
-        "Longitude": 117.095543,
+        "Longitude": 117.095558,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "BPH6_DlMiEUAAAQrBeqzEg",
-        "rNkE2mZ9G5QAAAQvwsKrFg"
+        "/Shopping Street/BPH6_DlMiEUAAAQrBeqzEg",
+        "/Shopping Street/rNkE2mZ9G5QAAAQvwsKrFg"
       ]
     },
     {
@@ -1626,18 +1690,19 @@
       "PanoID": "rNkE2mZ9G5QAAAQvwsKrFg",
       "CorrectedLocation": {
         "Latitude": 24.6659527,
-        "Longitude": 117.095573,
+        "Longitude": 117.095589,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "4rsUu0XpdjoAAAQvwsIqag",
-        "CAoSLEFGMVFpcE9JQVAxX2Mzc1UxQzdubXRYVmZVT3lFQk1iXzZCZFhCZENhYzdw"
+        "/Shopping Street/4rsUu0XpdjoAAAQvwsIqag",
+        "/Shopping Street/CAoSLEFGMVFpcE9JQVAxX2Mzc1UxQzdubXRYVmZVT3lFQk1iXzZCZFhCZENhYzdw"
       ]
     },
     {
@@ -1653,18 +1718,19 @@
       "PanoID": "EXhlCzhUEaQAAAQrBeqrAQ",
       "CorrectedLocation": {
         "Latitude": 24.66606,
-        "Longitude": 117.095406,
+        "Longitude": 117.095421,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "BblLcSakYCMAAAQvwsFY3A",
-        "LwR0tsmkoxMAAAQvwsWctA"
+        "/Shopping Street/BblLcSakYCMAAAQvwsFY3A",
+        "/Shopping Street/LwR0tsmkoxMAAAQvwsWctA"
       ]
     },
     {
@@ -1679,19 +1745,20 @@
       "Date": "2/1/2014",
       "PanoID": "CAoSLEFGMVFpcE9JQVAxX2Mzc1UxQzdubXRYVmZVT3lFQk1iXzZCZFhCZENhYzdw",
       "CorrectedLocation": {
-        "Latitude": 24.6659718,
-        "Longitude": 117.095604,
+        "Latitude": 24.6659737,
+        "Longitude": 117.095619,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "rNkE2mZ9G5QAAAQvwsKrFg",
-        "fKknZOgVfZAAAAQvwsKplA"
+        "/Shopping Street/rNkE2mZ9G5QAAAQvwsKrFg",
+        "/Shopping Street/fKknZOgVfZAAAAQvwsKplA"
       ]
     },
     {
@@ -1706,19 +1773,20 @@
       "Date": "12/1/2016",
       "PanoID": "fKknZOgVfZAAAAQvwsKplA",
       "CorrectedLocation": {
-        "Latitude": 24.665987,
-        "Longitude": 117.095604,
+        "Latitude": 24.6659889,
+        "Longitude": 117.095619,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "CAoSLEFGMVFpcE9JQVAxX2Mzc1UxQzdubXRYVmZVT3lFQk1iXzZCZFhCZENhYzdw",
-        "sPH09eb7T7UAAAQvwsIkIw"
+        "/Shopping Street/CAoSLEFGMVFpcE9JQVAxX2Mzc1UxQzdubXRYVmZVT3lFQk1iXzZCZFhCZENhYzdw",
+        "/Shopping Street/sPH09eb7T7UAAAQvwsIkIw"
       ]
     },
     {
@@ -1733,18 +1801,19 @@
       "Date": "12/1/2016",
       "PanoID": "LwR0tsmkoxMAAAQvwsWctA",
       "CorrectedLocation": {
-        "Latitude": 24.6661034,
-        "Longitude": 117.095444,
+        "Latitude": 24.6661053,
+        "Longitude": 117.095459,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "EXhlCzhUEaQAAAQrBeqrAQ"
+        "/Shopping Street/EXhlCzhUEaQAAAQrBeqrAQ"
       ]
     },
     {
@@ -1759,19 +1828,20 @@
       "Date": "12/1/2016",
       "PanoID": "sPH09eb7T7UAAAQvwsIkIw",
       "CorrectedLocation": {
-        "Latitude": 24.6660213,
-        "Longitude": 117.09565,
+        "Latitude": 24.6660233,
+        "Longitude": 117.095665,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "fKknZOgVfZAAAAQvwsKplA",
-        "2stjAsNiSV0AAAQvwsQObA"
+        "/Shopping Street/fKknZOgVfZAAAAQvwsKplA",
+        "/Shopping Street/2stjAsNiSV0AAAQvwsQObA"
       ]
     },
     {
@@ -1787,17 +1857,18 @@
       "PanoID": "2stjAsNiSV0AAAQvwsQObA",
       "CorrectedLocation": {
         "Latitude": 24.6660461,
-        "Longitude": 117.095749,
+        "Longitude": 117.095764,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "sPH09eb7T7UAAAQvwsIkIw"
+        "/Shopping Street/sPH09eb7T7UAAAQvwsIkIw"
       ]
     }
   ],

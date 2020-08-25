@@ -2,6 +2,7 @@
   "Scene": {
     "Name": "Ancestor Hall",
     "Transform": {
+      "Type": "Matrix4x4",
       "values": [
         1.0,
         0.0,
@@ -25,6 +26,7 @@
       {
         "Name": "Audio Tracks",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -48,6 +50,7 @@
           {
             "Name": "Crowd",
             "Transform": {
+              "Type": "Matrix4x4",
               "values": [
                 1.0,
                 0.0,
@@ -74,6 +77,7 @@
       {
         "Name": "O7bP13pd2ykAAAQ7LvHLNA",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -98,6 +102,7 @@
       {
         "Name": "RayP7l8kjjQAAAQY_y72Xg",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -122,6 +127,7 @@
       {
         "Name": "UFftCvaxsskAAAQY__Nj_Q",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -146,6 +152,7 @@
       {
         "Name": "_qZgLFsWV5cAAAQ7Lu3N2A",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -170,6 +177,7 @@
       {
         "Name": "d__7WK-ngDEAAAQZA4PsYw",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -194,6 +202,7 @@
       {
         "Name": "WSp4WUTphYMAAAQ7LtwFuQ",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -218,6 +227,7 @@
       {
         "Name": "TPRxc4rH-OMAAAQ7LuvFWg",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -242,6 +252,7 @@
       {
         "Name": "CAoSLEFGMVFpcE9yUWwyVXhnTWNPTGt6YlE2OTRjbTkyWTlEdVkwSzFWTm9KODVX",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -266,6 +277,7 @@
       {
         "Name": "CAoSLEFGMVFpcE5zc2JyWTlvTmtqbUlXRkpHOUdENjlFTUx0eU1qZDJQRU1XbGdv",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -290,6 +302,7 @@
       {
         "Name": "nDe7GujTy78AAAQY_zEITQ",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -314,6 +327,7 @@
       {
         "Name": "_KA1JgDM7mEAAAQY_-0Ehg",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -338,6 +352,7 @@
       {
         "Name": "ZWE2jDgn2pAAAAQZA4PsYQ",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -361,6 +376,7 @@
           {
             "Name": "InterestingSign",
             "Transform": {
+              "Type": "Matrix4x4",
               "values": [
                 -1.44277811,
                 0.0,
@@ -385,6 +401,7 @@
           {
             "Name": "LongevitySign",
             "Transform": {
+              "Type": "Matrix4x4",
               "values": [
                 -1.44277811,
                 0.0,
@@ -411,6 +428,7 @@
       {
         "Name": "u52NtzBbOqkAAAQY__AKdA",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -435,6 +453,7 @@
       {
         "Name": "YBnUu4DbqiEAAAQY__AKgw",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -458,6 +477,7 @@
           {
             "Name": "ArchitectureSign",
             "Transform": {
+              "Type": "Matrix4x4",
               "values": [
                 -2.017044,
                 0.0151450234,
@@ -482,6 +502,7 @@
           {
             "Name": "HeritageSign",
             "Transform": {
+              "Type": "Matrix4x4",
               "values": [
                 -1.906055,
                 0.0240876619,
@@ -508,6 +529,7 @@
       {
         "Name": "O6Uk1-yEPpsAAAQZAQPRoA",
         "Transform": {
+          "Type": "Matrix4x4",
           "values": [
             1.0,
             0.0,
@@ -531,6 +553,7 @@
           {
             "Name": "ArchitectureSign",
             "Transform": {
+              "Type": "Matrix4x4",
               "values": [
                 -1.98386908,
                 0.0434538424,
@@ -555,6 +578,7 @@
           {
             "Name": "HeritageSign",
             "Transform": {
+              "Type": "Matrix4x4",
               "values": [
                 -1.86991811,
                 0.0518096946,
@@ -593,19 +617,20 @@
       "Date": "11/1/2016",
       "PanoID": "O7bP13pd2ykAAAQ7LvHLNA",
       "CorrectedLocation": {
-        "Latitude": 24.6214123,
+        "Latitude": 24.6214161,
         "Longitude": 117.045212,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "UFftCvaxsskAAAQY__Nj_Q",
-        "RayP7l8kjjQAAAQY_y72Xg"
+        "/Ancestor Hall/UFftCvaxsskAAAQY__Nj_Q",
+        "/Ancestor Hall/RayP7l8kjjQAAAQY_y72Xg"
       ]
     },
     {
@@ -620,19 +645,20 @@
       "Date": "12/1/2014",
       "PanoID": "RayP7l8kjjQAAAQY_y72Xg",
       "CorrectedLocation": {
-        "Latitude": 24.62148,
+        "Latitude": 24.6214867,
         "Longitude": 117.045219,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "O7bP13pd2ykAAAQ7LvHLNA",
-        "_qZgLFsWV5cAAAQ7Lu3N2A"
+        "/Ancestor Hall/O7bP13pd2ykAAAQ7LvHLNA",
+        "/Ancestor Hall/_qZgLFsWV5cAAAQ7Lu3N2A"
       ]
     },
     {
@@ -647,19 +673,20 @@
       "Date": "12/1/2014",
       "PanoID": "UFftCvaxsskAAAQY__Nj_Q",
       "CorrectedLocation": {
-        "Latitude": 24.62139,
+        "Latitude": 24.6213932,
         "Longitude": 117.0451,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "TPRxc4rH-OMAAAQ7LuvFWg",
-        "O7bP13pd2ykAAAQ7LvHLNA"
+        "/Ancestor Hall/TPRxc4rH-OMAAAQ7LuvFWg",
+        "/Ancestor Hall/O7bP13pd2ykAAAQ7LvHLNA"
       ]
     },
     {
@@ -674,19 +701,20 @@
       "Date": "11/1/2016",
       "PanoID": "_qZgLFsWV5cAAAQ7Lu3N2A",
       "CorrectedLocation": {
-        "Latitude": 24.6215687,
+        "Latitude": 24.6215744,
         "Longitude": 117.045181,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "RayP7l8kjjQAAAQY_y72Xg",
-        "d__7WK-ngDEAAAQZA4PsYw"
+        "/Ancestor Hall/RayP7l8kjjQAAAQY_y72Xg",
+        "/Ancestor Hall/d__7WK-ngDEAAAQZA4PsYw"
       ]
     },
     {
@@ -701,19 +729,20 @@
       "Date": "12/1/2014",
       "PanoID": "d__7WK-ngDEAAAQZA4PsYw",
       "CorrectedLocation": {
-        "Latitude": 24.6215878,
+        "Latitude": 24.6215935,
         "Longitude": 117.045227,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "_qZgLFsWV5cAAAQ7Lu3N2A",
-        "WSp4WUTphYMAAAQ7LtwFuQ"
+        "/Ancestor Hall/_qZgLFsWV5cAAAQ7Lu3N2A",
+        "/Ancestor Hall/WSp4WUTphYMAAAQ7LtwFuQ"
       ]
     },
     {
@@ -728,19 +757,20 @@
       "Date": "11/1/2016",
       "PanoID": "WSp4WUTphYMAAAQ7LtwFuQ",
       "CorrectedLocation": {
-        "Latitude": 24.6216011,
+        "Latitude": 24.6216068,
         "Longitude": 117.045288,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "d__7WK-ngDEAAAQZA4PsYw",
-        "CAoSLEFGMVFpcE9yUWwyVXhnTWNPTGt6YlE2OTRjbTkyWTlEdVkwSzFWTm9KODVX"
+        "/Ancestor Hall/d__7WK-ngDEAAAQZA4PsYw",
+        "/Ancestor Hall/CAoSLEFGMVFpcE9yUWwyVXhnTWNPTGt6YlE2OTRjbTkyWTlEdVkwSzFWTm9KODVX"
       ]
     },
     {
@@ -755,19 +785,20 @@
       "Date": "11/1/2016",
       "PanoID": "TPRxc4rH-OMAAAQ7LuvFWg",
       "CorrectedLocation": {
-        "Latitude": 24.6216927,
+        "Latitude": 24.6217,
         "Longitude": 117.045074,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "UFftCvaxsskAAAQY__Nj_Q",
-        "nDe7GujTy78AAAQY_zEITQ"
+        "/Ancestor Hall/UFftCvaxsskAAAQY__Nj_Q",
+        "/Ancestor Hall/nDe7GujTy78AAAQY_zEITQ"
       ]
     },
     {
@@ -782,19 +813,20 @@
       "Date": "2/1/2014",
       "PanoID": "CAoSLEFGMVFpcE9yUWwyVXhnTWNPTGt6YlE2OTRjbTkyWTlEdVkwSzFWTm9KODVX",
       "CorrectedLocation": {
-        "Latitude": 24.6217117,
+        "Latitude": 24.6217175,
         "Longitude": 117.045296,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "WSp4WUTphYMAAAQ7LtwFuQ",
-        "CAoSLEFGMVFpcE5zc2JyWTlvTmtqbUlXRkpHOUdENjlFTUx0eU1qZDJQRU1XbGdv"
+        "/Ancestor Hall/WSp4WUTphYMAAAQ7LtwFuQ",
+        "/Ancestor Hall/CAoSLEFGMVFpcE5zc2JyWTlvTmtqbUlXRkpHOUdENjlFTUx0eU1qZDJQRU1XbGdv"
       ]
     },
     {
@@ -809,18 +841,19 @@
       "Date": "2/1/2014",
       "PanoID": "CAoSLEFGMVFpcE5zc2JyWTlvTmtqbUlXRkpHOUdENjlFTUx0eU1qZDJQRU1XbGdv",
       "CorrectedLocation": {
-        "Latitude": 24.6216545,
+        "Latitude": 24.6216583,
         "Longitude": 117.045509,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.707106769,
         "Z": 0.0,
         "W": 0.707106769
       },
       "Exits": [
-        "CAoSLEFGMVFpcE9yUWwyVXhnTWNPTGt6YlE2OTRjbTkyWTlEdVkwSzFWTm9KODVX"
+        "/Ancestor Hall/CAoSLEFGMVFpcE9yUWwyVXhnTWNPTGt6YlE2OTRjbTkyWTlEdVkwSzFWTm9KODVX"
       ]
     },
     {
@@ -835,19 +868,20 @@
       "Date": "12/1/2014",
       "PanoID": "nDe7GujTy78AAAQY_zEITQ",
       "CorrectedLocation": {
-        "Latitude": 24.6217,
+        "Latitude": 24.6217079,
         "Longitude": 117.0449,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "TPRxc4rH-OMAAAQ7LuvFWg",
-        "_KA1JgDM7mEAAAQY_-0Ehg"
+        "/Ancestor Hall/TPRxc4rH-OMAAAQ7LuvFWg",
+        "/Ancestor Hall/_KA1JgDM7mEAAAQY_-0Ehg"
       ]
     },
     {
@@ -862,19 +896,20 @@
       "Date": "12/1/2014",
       "PanoID": "_KA1JgDM7mEAAAQY_-0Ehg",
       "CorrectedLocation": {
-        "Latitude": 24.62148,
+        "Latitude": 24.6214867,
         "Longitude": 117.044907,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "nDe7GujTy78AAAQY_zEITQ",
-        "ZWE2jDgn2pAAAAQZA4PsYQ"
+        "/Ancestor Hall/nDe7GujTy78AAAQY_zEITQ",
+        "/Ancestor Hall/ZWE2jDgn2pAAAAQZA4PsYQ"
       ]
     },
     {
@@ -889,19 +924,20 @@
       "Date": "12/1/2014",
       "PanoID": "ZWE2jDgn2pAAAAQZA4PsYQ",
       "CorrectedLocation": {
-        "Latitude": 24.62137,
+        "Latitude": 24.6213779,
         "Longitude": 117.044937,
         "Altitude": -0.08
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "_KA1JgDM7mEAAAQY_-0Ehg",
-        "YBnUu4DbqiEAAAQY__AKgw"
+        "/Ancestor Hall/_KA1JgDM7mEAAAQY_-0Ehg",
+        "/Ancestor Hall/YBnUu4DbqiEAAAQY__AKgw"
       ]
     },
     {
@@ -916,18 +952,19 @@
       "Date": "12/1/2014",
       "PanoID": "u52NtzBbOqkAAAQY__AKdA",
       "CorrectedLocation": {
-        "Latitude": 24.62127,
+        "Latitude": 24.621273,
         "Longitude": 117.045113,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "O6Uk1-yEPpsAAAQZAQPRoA"
+        "/Ancestor Hall/O6Uk1-yEPpsAAAQZAQPRoA"
       ]
     },
     {
@@ -942,19 +979,20 @@
       "Date": "12/1/2014",
       "PanoID": "YBnUu4DbqiEAAAQY__AKgw",
       "CorrectedLocation": {
-        "Latitude": 24.6212826,
+        "Latitude": 24.6212883,
         "Longitude": 117.045021,
         "Altitude": 0.068
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "ZWE2jDgn2pAAAAQZA4PsYQ",
-        "O6Uk1-yEPpsAAAQZAQPRoA"
+        "/Ancestor Hall/ZWE2jDgn2pAAAAQZA4PsYQ",
+        "/Ancestor Hall/O6Uk1-yEPpsAAAQZAQPRoA"
       ]
     },
     {
@@ -969,19 +1007,20 @@
       "Date": "12/1/2014",
       "PanoID": "O6Uk1-yEPpsAAAQZAQPRoA",
       "CorrectedLocation": {
-        "Latitude": 24.62126,
+        "Latitude": 24.6212673,
         "Longitude": 117.045067,
         "Altitude": 0.0
       },
       "CorrectedRotation": {
+        "Type": "Quaternion",
         "X": 0.0,
         "Y": 0.0,
         "Z": 0.0,
         "W": 1.0
       },
       "Exits": [
-        "YBnUu4DbqiEAAAQY__AKgw",
-        "u52NtzBbOqkAAAQY__AKdA"
+        "/Ancestor Hall/YBnUu4DbqiEAAAQY__AKgw",
+        "/Ancestor Hall/u52NtzBbOqkAAAQY__AKdA"
       ]
     }
   ],
