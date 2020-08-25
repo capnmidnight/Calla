@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
@@ -30,8 +30,6 @@ namespace Calla.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.HasPostgresExtension("postgis");
-
             modelBuilder.Entity<Contacts>(entity =>
             {
                 entity.Property(e => e.Timestamp).HasDefaultValueSql("now()");
