@@ -1,0 +1,32 @@
+@{
+    Layout = "_Page";
+}
+
+@section HeadScripts
+{
+    <style type="text/css">
+        #output {
+            width: 100%;
+        }
+
+            #output > thead > tr {
+                text-align: left;
+                background-color: #6684F1;
+                color: white;
+            }
+
+                #output > thead > tr > th {
+                    padding: 0.5em;
+                }
+
+            #output > tbody > tr:nth-child(even) {
+                background-color: #eee;
+            }
+
+            #output > tbody > tr > td {
+                padding: 0.5em;
+            }
+    </style>
+}
+
+@RenderBody()

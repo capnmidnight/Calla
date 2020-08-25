@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -37,7 +38,9 @@ namespace Calla
             }
             services.AddAuthentication();
             services.AddAuthorization();
+            services.AddEntityFrameworkNpgsql();
             services.AddDbContext<Data.CallaContext>();
+            services.AddDbContext<Yarrow.Data.YarrowContext>();
             services.AddScoped<LogHitsAttribute>();
             services.AddControllersWithViews();
             services.AddSignalR();

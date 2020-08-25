@@ -1,0 +1,36 @@
+@{
+    Layout = "_YarrowVRAdminPage";
+    ViewData["Title"] = "VR Admin";
+}
+
+@model Yarrow.V2.Data.Activity[]
+
+
+@if (Model == null || Model.Length == 0)
+{
+    <p>No Content</p>
+}
+else
+{
+    <table id="output" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+                <tr>
+                    <td>@row.Name</td>
+                    <td>
+                        <form method="post" action="@row.Name">
+                            <button type="submit">Upload</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
