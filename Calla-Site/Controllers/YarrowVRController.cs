@@ -1,14 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-
+using Juniper;
 using Juniper.IO;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
+
+using System.IO;
 
 using Yarrow.Data;
 using Yarrow.V2.Data;
@@ -17,6 +14,11 @@ namespace Calla.Controllers
 {
     public class YarrowVRController : Controller
     {
+        private static readonly DirectoryInfo activitiesRoot = new DirectoryInfo(".")
+                .CD("wwwroot")
+                .CD("data")
+                .CD("activities");
+
         private readonly YarrowContext db;
         private readonly IWebHostEnvironment env;
 
@@ -34,19 +36,10 @@ namespace Calla.Controllers
                 return NotFound();
             }
 
-            var activitiesRoot = new DirectoryInfo(".")
-                .CD("wwwroot")
-                .CD("data")
-                .CD("activities");
-
-            var activitySerializer = new JsonFactory<Activity>();
-
             var activities = from dir in activitiesRoot.GetDirectories()
                              let file = dir.Touch("Activity.json")
                              where file.Exists
-                             select activitySerializer.Deserialize(file, null);
-
-            var otherActivities = db.Activities.ToArray();
+                             select file.Directory.Name;
 
             return View(activities.ToArray());
         }

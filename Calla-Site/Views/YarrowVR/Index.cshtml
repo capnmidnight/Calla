@@ -3,7 +3,7 @@
     ViewData["Title"] = "VR Admin";
 }
 
-@model Yarrow.V2.Data.Activity[]
+@model string[]
 
 
 @if (Model == null || Model.Length == 0)
@@ -23,9 +23,9 @@ else
             @foreach (var row in Model)
             {
                 <tr>
-                    <td>@row.Name</td>
+                    <td>@row</td>
                     <td>
-                        <form method="post" action="@row.Name">
+                        <form method="post" action="@row">
                             <button type="submit">Upload</button>
                         </form>
                     </td>
