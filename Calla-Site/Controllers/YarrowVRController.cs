@@ -41,7 +41,7 @@ namespace Calla.Controllers
 
             var activities = from dir in activitiesRoot.GetDirectories()
                              let file = dir.Touch("Activity.json")
-                             where file.Exists
+                             where file.Exists && !db.Activities.Any(at => at.Name == dir.Name)
                              select file.Directory.Name;
 
             return View(activities.ToArray());
