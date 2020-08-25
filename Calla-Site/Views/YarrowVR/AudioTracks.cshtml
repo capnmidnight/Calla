@@ -1,0 +1,46 @@
+@{
+    Layout = "_YarrowVRAdminPage";
+    ViewData["Title"] = "Audio Tracks";
+}
+
+@model System.Collections.Generic.IEnumerable<Yarrow.Data.AudioTracks>
+
+
+@if (Model == null || Model.Empty())
+{
+    <p>No Content</p>
+}
+else
+{
+    <table id="output" cellspacing="0">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Transform</th>
+                <th>File</th>
+                <th>Volume</th>
+                <th>MinDistance</th>
+                <th>MaxDistance</th>
+                <th>AutoPlay</th>
+                <th>Loop</th>
+                <th>Spatialize</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+            <tr>
+                <td><a href="~/YarrowVR/AudioTrack/@row.Id">@row.Id</a></td>
+                <td><a href="~/YarrowVR/Transform/@row.TransformId">@row.TransformId</a></td>
+                <td><a href="~/YarrowVR/File/@row.FileId">@row.FileId</a></td>
+                <td>@row.Volume</td>
+                <td>@row.MinDistance</td>
+                <td>@row.MaxDistance</td>
+                <td>@row.AutoPlay</td>
+                <td>@row.Loop</td>
+                <td>@row.Spatialize</td>
+            </tr>
+            }
+        </tbody>
+    </table>
+}

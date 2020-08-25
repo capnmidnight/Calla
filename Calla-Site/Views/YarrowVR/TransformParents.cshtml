@@ -1,0 +1,32 @@
+@{
+    Layout = "_YarrowVRAdminPage";
+    ViewData["Title"] = "Transform Parents";
+}
+
+@model System.Collections.Generic.IEnumerable<Yarrow.Data.TransformParents>
+
+
+@if (Model == null || Model.Empty())
+{
+    <p>No Content</p>
+}
+else
+{
+    <table id="output" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Parent</th>
+                <th>Child</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+                <tr>
+                    <td><a href="~/YarrowVR/Transform/@row.ParentTransformId">@row.ParentTransformId</a></td>
+                    <td><a href="~/YarrowVR/Transform/@row.ChildTransformId">@row.ChildTransformId</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

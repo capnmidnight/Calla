@@ -2,35 +2,3 @@
     Layout = "_YarrowVRAdminPage";
     ViewData["Title"] = "VR Admin";
 }
-
-@model string[]
-
-
-@if (Model == null || Model.Length == 0)
-{
-    <p>No Content</p>
-}
-else
-{
-    <table id="output" cellspacing="0">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var row in Model)
-            {
-                <tr>
-                    <td>@row</td>
-                    <td>
-                        <form method="post" action="@row">
-                            <button type="submit">Upload</button>
-                        </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}

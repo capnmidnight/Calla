@@ -1,0 +1,18 @@
+@{
+    Layout = "_YarrowVRAdminPage";
+    ViewData["Title"] = "Activity";
+}
+
+@model Yarrow.Data.Activities
+
+
+@if (Model == null)
+{
+    <p>No Content</p>
+}
+else
+{
+    <h2> [@Model.Id] - @Model.Name</h2>
+    <form method="post">
+    </form>
+}
