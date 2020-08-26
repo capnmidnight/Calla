@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
+
 using System.Linq;
 
 using Yarrow.Data;
@@ -43,7 +44,7 @@ namespace Calla.Controllers
             return View(db.Activities);
         }
 
-        [HttpGet("YarrowVR/Activity/{id}")]
+        [HttpGet("YarrowVRAdmin/Activity/{id}")]
         public IActionResult Activity(int id)
         {
             if (!env.IsDevelopment())
@@ -52,24 +53,7 @@ namespace Calla.Controllers
             }
 
             return View(db.Activities
-                .Include(at => at.ActivityStartPoints)
-                    .ThenInclude(asp => asp.Station)
-                        .ThenInclude(st => st.Transform)
                 .SingleOrDefault(act => act.Id == id));
-        }
-
-        [HttpGet]
-        public IActionResult ActivityStartPoints()
-        {
-            if (!env.IsDevelopment())
-            {
-                return NotFound();
-            }
-
-            return View(db.ActivityStartPoints
-                .Include(asp => asp.Activity)
-                .Include(asp => asp.Station)
-                    .ThenInclude(st => st.Transform));
         }
 
         [HttpGet]
@@ -94,7 +78,7 @@ namespace Calla.Controllers
             return View(db.Files);
         }
 
-        [HttpGet("YarrowVR/File/{id}")]
+        [HttpGet("YarrowVRAdmin/File/{id}")]
         public IActionResult File(int id)
         {
             var file = db.Files
@@ -157,28 +141,6 @@ namespace Calla.Controllers
         }
 
         [HttpGet]
-        public IActionResult TransformInZone()
-        {
-            if (!env.IsDevelopment())
-            {
-                return NotFound();
-            }
-
-            return View(db.TransformInZone);
-        }
-
-        [HttpGet]
-        public IActionResult TransformParents()
-        {
-            if (!env.IsDevelopment())
-            {
-                return NotFound();
-            }
-
-            return View(db.TransformParents);
-        }
-
-        [HttpGet]
         public IActionResult Transforms()
         {
             if (!env.IsDevelopment())
@@ -187,17 +149,6 @@ namespace Calla.Controllers
             }
 
             return View(db.Transforms);
-        }
-
-        [HttpGet]
-        public IActionResult Zones()
-        {
-            if (!env.IsDevelopment())
-            {
-                return NotFound();
-            }
-
-            return View(db.Zones);
         }
     }
 }

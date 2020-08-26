@@ -56,10 +56,35 @@ addEventListeners(screenPointer, {
             if (match && match.length >= 2) {
                 const actID = parseInt(match[1], 10);
                 skybox.setImage(document.querySelector(`#${lastObj.name}>img`));
+                loadActivity(actID);
             }
         }
     }
 });
+
+
+async function gett(path) {
+    const request = fetch(path),
+        response = await request;
+    if (!response.ok) {
+        throw new Error(`[${response.status}] - ${response.statusText}`);
+    }
+
+    return await response.json();
+}
+
+/**
+ * @param {number} actID
+ */
+async function loadActivity(actID) {
+    const activity = `/VR/Activity/${actID}`,
+        transforms = await gett(`${activity}/Transforms`),
+        stations = await gett(`${activity}/Stations`),
+        audio = await gett(`${activity}/Audio`),
+        signs = await gett(`${activity}/Signs`);
+
+    console.log(activity, transforms, stations, audio, signs);
+}
 
 const controls = Object.assign(new OrbitControls(camera, renderer.domElement), {
     enableDamping: true,

@@ -2,7 +2,7 @@
     Layout = "_PWA";
 }
 
-@model IEnumerable<Yarrow.Data.Activities>
+@model IEnumerable<Yarrow.Models.Activity>
 
 @section HeadScripts {
     <link rel="stylesheet" type="text/css" href="~/stylesheets/vr.css" />
@@ -19,9 +19,9 @@
 <div id="startupData">
     @foreach (var activity in Model)
     {
-        <section id="act-@activity.Id">
+        <section id="act-@activity.ID">
             <h2>@activity.Name</h2>
-            <img src="~/VR/File/@activity.ActivityStartPoints.Station.FileId" />
+            <img src="~/VR/File/@activity.StartStationFileID" />
         </section>
     }
 </div>
