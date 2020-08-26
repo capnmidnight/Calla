@@ -70,7 +70,8 @@ const bundles = [
     def("tests", false, false),
     def("version", false, true),
     def("basic", false, true),
-    def("game", true, true)
+    def("game", true, true),
+    def("vr", true, true)
 ];
 
 if (process.env.BUILD === "production") {

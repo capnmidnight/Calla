@@ -1,0 +1,29 @@
+@{
+    Layout = "_PWA";
+}
+
+@model IEnumerable<Yarrow.Data.Activities>
+
+@section HeadScripts {
+    <link rel="stylesheet" type="text/css" href="~/stylesheets/vr.css" />
+    <environment names="Staging,Production">
+        <script type="module" src="~/scripts/vr.min.js"></script>
+    </environment>
+    <environment names="Development">
+        <script type="module" src="~/scripts/vr.js"></script>
+    </environment>
+}
+
+<canvas id="frontBuffer"></canvas>
+
+<div id="startupData">
+    @foreach (var activity in Model)
+    {
+        <section id="act-@activity.Id">
+            <h2>@activity.Name</h2>
+            <img src="~/VR/File/@activity.ActivityStartPoints.Station.FileId" />
+        </section>
+    }
+</div>
+
+<div id="controls"></div>
