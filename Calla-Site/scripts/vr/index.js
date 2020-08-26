@@ -5,6 +5,7 @@ import { ScreenPointerControls } from "../input/ScreenPointerControls";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
 import { setGeometryUVsForCubemaps } from "./setGeometryUVsForCubemaps";
 import { Skybox } from "./Skybox";
+import { addEventListeners } from "../calla";
 
 
 const renderer = new WebGLRenderer({
@@ -45,8 +46,19 @@ scene.add(foreground);
 
 const raycaster = new Raycaster();
 const screenPointer = new ScreenPointerControls(renderer.domElement);
-screenPointer.addEventListener("move", (evt) => {
-    raycaster.setFromCamera({ x: evt.u, y: evt.v }, camera);
+addEventListeners(screenPointer, {
+    move: (evt) => {
+        raycaster.setFromCamera({ x: evt.u, y: evt.v }, camera);
+    },
+    click: (evt) => {
+        if (lastObj) {
+            const match = lastObj.name.match(/^act-(\d+)/);
+            if (match && match.length >= 2) {
+                const actID = parseInt(match[1], 10);
+                skybox.setImage(document.querySelector(`#${lastObj.name}>img`));
+            }
+        }
+    }
 });
 
 const controls = Object.assign(new OrbitControls(camera, renderer.domElement), {
