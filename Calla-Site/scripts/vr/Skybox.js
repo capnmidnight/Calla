@@ -28,11 +28,16 @@ export class Skybox extends Mesh {
             img = Img(src(img));
         }
 
-        if (img instanceof HTMLImageElement) {
-            img.addEventListener("load", () => this.updateTexture());
-        }
-
         this.material.map = new Texture(img);
+
+        if (img instanceof HTMLImageElement) {
+            if (img.complete) {
+                this.updateTexture();
+            }
+            else {
+                img.addEventListener("load", () => this.updateTexture(), { once: true });
+            }
+        }
     }
 
     updateTexture() {
