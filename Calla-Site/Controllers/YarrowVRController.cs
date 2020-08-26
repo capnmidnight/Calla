@@ -36,13 +36,20 @@ namespace Calla.Controllers
         [HttpGet("YarrowVR/Activity/{id}")]
         public IActionResult Activity(int id)
         {
-            return View(db.Activities.SingleOrDefault(act => act.Id == id));
+            return View(db.Activities
+                .Include(at => at.ActivityStartPoints)
+                    .ThenInclude(asp => asp.Station)
+                        .ThenInclude(st => st.Transform)
+                .SingleOrDefault(act => act.Id == id));
         }
 
         [HttpGet]
         public IActionResult ActivityStartPoints()
         {
-            return View(db.ActivityStartPoints);
+            return View(db.ActivityStartPoints
+                .Include(asp => asp.Activity)
+                .Include(asp => asp.Station)
+                    .ThenInclude(st => st.Transform));
         }
 
         [HttpGet]
