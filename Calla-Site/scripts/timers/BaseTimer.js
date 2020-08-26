@@ -1,4 +1,4 @@
-import { EventBase } from "../../calla/index.js";
+import { EventBase } from "../calla";
 
 class TimerTickEvent extends Event {
     constructor() {

@@ -1,13 +1,11 @@
 import { arrayClear, arrayRemoveAt, clamp, EventBase, InterpolatedPose, isString, lerp, project, unproject } from "../calla/index.js";
+import { id } from "../html/attrs.js";
+import { resizeCanvas } from "../html/canvas.js";
+import { hide, show } from "../html/ops.js";
+import { Canvas } from "../html/tags.js";
+import { EventedGamepad } from "../input/EventedGamepad.js";
 import { Emote } from "./graphics/Emote.js";
 import { TileMap } from "./graphics/TileMap.js";
-import { id } from "./html/attrs.js";
-import { resizeCanvas } from "./html/canvas.js";
-import { cssHeight, cssWidth, touchAction } from "./html/css.js";
-import { isFirefox } from "./html/flags.js";
-import { hide, show } from "./html/ops.js";
-import { Canvas } from "./html/tags.js";
-import { EventedGamepad } from "./input/EventedGamepad.js";
 import { User } from "./User.js";
 
 

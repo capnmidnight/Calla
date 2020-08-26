@@ -1,7 +1,7 @@
-﻿import { isSurfer } from "../emoji/emojis.js";
+import { setContextSize } from "../../html/canvas.js";
 import { Emoji } from "../emoji/Emoji.js";
+import { isSurfer } from "../emoji/emojis.js";
 import { TextImage } from "../graphics/TextImage.js";
-import { setContextSize } from "../html/canvas.js";
 import { BaseAvatar } from "./BaseAvatar.js";
 
 /**

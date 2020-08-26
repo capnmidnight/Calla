@@ -1,10 +1,10 @@
+import { className, disabled, href, htmlFor, title } from "../../html/attrs.js";
+import { onClick } from "../../html/evts.js";
+import { gridPos } from "../../html/grid.js";
+import { hide, isOpen, show, toggleOpen } from "../../html/ops.js";
+import { A, Button, Div, H1, H2, Label, LI, P, Span, UL } from "../../html/tags.js";
 import { EmojiGroup } from "../emoji/EmojiGroup.js";
 import { allIcons as icons, emojiStyle, textStyle } from "../emoji/emojis.js";
-import { className, disabled, href, htmlFor, title } from "../html/attrs.js";
-import { onClick } from "../html/evts.js";
-import { gridPos } from "../html/grid.js";
-import { hide, isOpen, show, toggleOpen } from "../html/ops.js";
-import { A, Button, Div, H1, H2, Label, LI, P, Span, UL } from "../html/tags.js";
 import { FormDialog } from "./FormDialog.js";
 
 const disabler = disabled(true),

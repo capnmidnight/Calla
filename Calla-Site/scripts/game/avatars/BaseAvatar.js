@@ -1,4 +1,4 @@
-﻿import { Canvas } from "../html/tags.js";
+import { Canvas } from "../../html/tags.js";
 
 /**
  * A base class for different types of avatars.

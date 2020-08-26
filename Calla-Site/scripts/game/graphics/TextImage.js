@@ -1,5 +1,5 @@
-﻿import { setContextSize } from "../html/canvas.js";
-import { CanvasOffscreen } from "../html/tags.js";
+import { setContextSize } from "../../html/canvas.js";
+import { CanvasOffscreen } from "../../html/tags.js";
 
 /**
  * @type {WeakMap<TextImage, TextImagePrivate>}

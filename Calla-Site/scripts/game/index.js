@@ -1,5 +1,7 @@
 import { addEventListeners, CallaClient } from "../calla/index.js";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants.js";
+import { disabled } from "../html/attrs.js";
+import { hide, isOpen, show } from "../html/ops.js";
 import { allPeople as people } from "./emoji/emojis.js";
 import { ButtonLayer } from "./forms/ButtonLayer.js";
 import { DevicesDialog } from "./forms/DevicesDialog.js";
@@ -9,10 +11,8 @@ import { LoginForm } from "./forms/LoginForm.js";
 import { OptionsForm } from "./forms/OptionsForm.js";
 import { UserDirectoryForm } from "./forms/UserDirectoryForm.js";
 import { Game } from "./Game.js";
-import { disabled } from "./html/attrs.js";
-import { hide, isOpen, show } from "./html/ops.js";
 import { Settings } from "./Settings.js";
-import { RequestAnimationFrameTimer } from "./timers/RequestAnimationFrameTimer.js";
+import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
 
 const CAMERA_ZOOM_MIN = 0.5,
     CAMERA_ZOOM_MAX = 20,

@@ -1,11 +1,11 @@
-import { backgroundColor, columnGap, cssWidth, cssHeight, display, color, monospaceFamily, overflow, overflowY, styles, whiteSpace } from "../game/html/css.js";
-import { col, gridColsDef } from "../game/html/grid.js";
-import { onClick } from "../game/html/evts.js";
-import { Button, clear, Div, Span } from "../game/html/tags.js";
+import { id } from "../html/attrs.js";
+import { backgroundColor, color, columnGap, cssHeight, cssWidth, display, monospaceFamily, overflow, styles, whiteSpace } from "../html/css.js";
+import { onClick } from "../html/evts.js";
+import { col, gridColsDef } from "../html/grid.js";
+import { Button, clear, Div, Span } from "../html/tags.js";
 import { TestOutput } from "./TestOutput.js";
 import { TestOutputResultsEvent } from "./TestOutputResultsEvent.js";
 import { TestStates } from "./TestStates.js";
-import { id } from "../game/html/attrs.js";
 
 
 /**

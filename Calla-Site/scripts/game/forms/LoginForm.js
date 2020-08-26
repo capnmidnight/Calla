@@ -1,7 +1,7 @@
-import { id } from "../html/attrs.js";
-import { setLocked, setOpen } from "../html/ops.js";
-import { SelectBox } from "../html/SelectBoxTag.js";
-import { Button, Div, InputEmail, InputText } from "../html/tags.js";
+import { id } from "../../html/attrs.js";
+import { setLocked, setOpen } from "../../html/ops.js";
+import { SelectBox } from "../../html/SelectBoxTag.js";
+import { Button, Div, InputEmail, InputText } from "../../html/tags.js";
 import { FormDialog } from "./FormDialog.js";
 
 /** @type {WeakMap<LoginForm, LoginFormPrivate>} */

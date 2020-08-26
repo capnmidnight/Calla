@@ -1,4 +1,4 @@
-﻿import { setContextSize } from "../html/canvas.js";
+import { setContextSize } from "../../html/canvas.js";
 import { BaseAvatar } from "./BaseAvatar.js";
 
 /**

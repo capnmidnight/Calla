@@ -1,5 +1,5 @@
-import { onInput } from "../html/evts.js";
-import { SelectBox } from "../html/SelectBoxTag.js";
+import { onInput } from "../../html/evts.js";
+import { SelectBox } from "../../html/SelectBoxTag.js";
 import { FormDialog } from "./FormDialog.js";
 
 const audioInputChangedEvt = new Event("audioInputChanged"),

@@ -1,4 +1,4 @@
-﻿import { createWorker } from "../createWorker.js";
+import { createWorker } from "./createWorker.js";
 import { BaseTimer } from "./BaseTimer.js";
 
 export class WorkerTimer extends BaseTimer {

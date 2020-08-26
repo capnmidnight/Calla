@@ -1,5 +1,5 @@
-﻿import { HtmlTestOutput as TestOutput } from "./test/testing/HtmlTestOutput.js";
-import { MathTests } from "./test/tests/math.js";
+import { HtmlTestOutput as TestOutput } from "./test/testing/HtmlTestOutput";
+import { MathTests } from "./test/tests/math";
 
 const cons = new TestOutput(MathTests);
 document.body.append(cons.element);

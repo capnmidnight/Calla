@@ -1,4 +1,4 @@
-import { isFunction } from "../../calla/index.js";
+import { isFunction } from "../calla/index.js";
 /**
  * A setter functor for HTML element events.
  **/

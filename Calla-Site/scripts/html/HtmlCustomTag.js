@@ -1,4 +1,4 @@
-import { EventBase } from "../../calla/index.js";
+import { EventBase } from "../calla/index.js";
 import { tag } from "./tag.js";
 
 /**

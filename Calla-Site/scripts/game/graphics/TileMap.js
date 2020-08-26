@@ -1,5 +1,5 @@
+import { CanvasOffscreen } from "../../html/tags.js";
 import { astar, Graph } from "../../lib/astar.js";
-import { CanvasOffscreen } from "../html/tags.js";
 import { TileSet } from "./TileSet.js";
 
 /** @type {WeakMap<TileMap, TileMapPrivate>} */

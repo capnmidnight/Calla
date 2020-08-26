@@ -1,8 +1,8 @@
 import { once } from "../../calla/index.js";
-import { autoPlay, muted, playsInline, srcObject, volume } from "../html/attrs.js";
-import { setContextSize } from "../html/canvas.js";
-import { isIOS } from "../html/flags.js";
-import { Video } from "../html/tags.js";
+import { autoPlay, muted, playsInline, srcObject, volume } from "../../html/attrs.js";
+import { setContextSize } from "../../html/canvas.js";
+import { isIOS } from "../../html/flags.js";
+import { Video } from "../../html/tags.js";
 import { BaseAvatar } from "./BaseAvatar.js";
 
 /**
