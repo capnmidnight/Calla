@@ -40,7 +40,7 @@ namespace Calla.Controllers
             return View(activities.ToArray());
         }
 
-        [HttpPost("{activityName}")]
+        [HttpPost("YarrowVR/Upload/{activityName}")]
         public IActionResult Upload(string activityName)
         {
             var activityRoot = activitiesRoot.CD(activityName);

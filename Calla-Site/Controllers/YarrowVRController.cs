@@ -2,6 +2,7 @@ using Juniper;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 using System.Linq;
 
@@ -32,7 +33,7 @@ namespace Calla.Controllers
             return View(db.Activities);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("YarrowVR/Activity/{id}")]
         public IActionResult Activity(int id)
         {
             return View(db.Activities.SingleOrDefault(act => act.Id == id));
