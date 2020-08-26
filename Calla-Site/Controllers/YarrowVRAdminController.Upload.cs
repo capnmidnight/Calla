@@ -16,7 +16,7 @@ using Yarrow.V2.Data;
 
 namespace Calla.Controllers
 {
-    public partial class YarrowVRController : Controller
+    public partial class YarrowVRAdminController : Controller
     {
         private static readonly DirectoryInfo activitiesRoot = new DirectoryInfo(".")
                 .CD("wwwroot")

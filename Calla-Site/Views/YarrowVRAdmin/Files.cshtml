@@ -1,9 +1,9 @@
 @{
     Layout = "_YarrowVRAdminPage";
-    ViewData["Title"] = "Transforms";
+    ViewData["Title"] = "Files";
 }
 
-@model System.Collections.Generic.IEnumerable<Yarrow.Data.Transforms>
+@model System.Collections.Generic.IEnumerable<Yarrow.Data.Files>
 
 
 @if (Model == null || Model.Empty())
@@ -16,21 +16,21 @@ else
         <thead>
             <tr>
                 <th></th>
-                <th>Activity</th>
                 <th>Name</th>
-                <th>FullPath</th>
-                <th>Matrix</th>
+                <th>MIME Type</th>
+                <th>Size</th>
+                <th>Created</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var row in Model)
             {
                 <tr>
-                    <td><a href="~/YarrowVR/Transform/@row.Id">@row.Id</a></td>
-                    <td>@row.ActivityId</td>
+                    <td><a href="~/YarrowVRAdmin/File/@row.Id">@row.Id</a></td>
                     <td>@row.Name</td>
-                    <td>@row.FullPath</td>
-                    <td>@row.Matrix</td>
+                    <td>@row.Mime</td>
+                    <td>@Juniper.Units.FileSize.Format((ulong)row.Size)</td>
+                    <td>@row.Timestamp</td>
                 </tr>
             }
         </tbody>
