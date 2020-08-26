@@ -56,6 +56,24 @@ namespace Calla.Controllers
             return View(db.Files);
         }
 
+        [HttpGet("YarrowVR/File/{id}")]
+        public IActionResult File(int id)
+        {
+            var file = db.Files
+                .Include(f => f.FileContents)
+                .SingleOrDefault(f => f.Id == id);
+            if (file is null
+                || !MediaType.TryParse(file.Mime, out var type))
+            {
+                return NotFound();
+            }
+            else
+            {
+                var fileName = type.AddExtension(file.Name);
+                return base.File(file.FileContents.Data, file.Mime, fileName);
+            }
+        }
+
         [HttpGet]
         public IActionResult PlaybackControls()
         {
