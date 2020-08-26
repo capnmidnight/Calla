@@ -1,9 +1,10 @@
-import { arrayClear, arrayRemoveAt, clamp, EventBase, InterpolatedPose, isString, lerp, project, unproject } from "../calla/index.js";
+import { addEventListeners, arrayClear, clamp, EventBase, InterpolatedPose, isString, lerp, project, unproject } from "../calla/index.js";
 import { id } from "../html/attrs.js";
 import { resizeCanvas } from "../html/canvas.js";
 import { hide, show } from "../html/ops.js";
 import { Canvas } from "../html/tags.js";
 import { EventedGamepad } from "../input/EventedGamepad.js";
+import { ScreenPointerControls } from "../input/ScreenPointerControls.js";
 import { Emote } from "./graphics/Emote.js";
 import { TileMap } from "./graphics/TileMap.js";
 import { User } from "./User.js";
@@ -11,7 +12,6 @@ import { User } from "./User.js";
 
 const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_SHAPE = 2,
-    MAX_DRAG_DISTANCE = 5,
     MOVE_REPEAT = 0.125,
     gameStartedEvt = new Event("gameStarted"),
     gameEndedEvt = new Event("gameEnded"),
@@ -72,10 +72,6 @@ export class Game extends EventBase {
         this.audioDistanceMax = 10;
         this.rolloff = 5;
 
-        this.pointers = [];
-        this.lastPinchDistance = 0;
-        this.canClick = false;
-
         this.currentEmoji = null;
 
         /** @type {Emote[]} */
@@ -134,146 +130,26 @@ export class Game extends EventBase {
         // ============= KEYBOARD =================
 
         // ============= POINTERS =================
-
-        this.element.addEventListener("wheel", (evt) => {
-            if (!evt.shiftKey
-                && !evt.altKey
-                && !evt.ctrlKey
-                && !evt.metaKey) {
-                evt.preventDefault();
-                // Chrome and Firefox report scroll values in completely different ranges.
-                const deltaZ = -evt.deltaY * (isFirefox ? 1 : 0.02);
-                this.zoom += deltaZ;
+        this.screenControls = new ScreenPointerControls(this.element);
+        addEventListeners(this.screenControls, {
+            wheel: (evt) => {
+                this.zoom += evt.dz;
                 this.dispatchEvent(zoomChangedEvt);
-            }
-        }, { passive: false });
+            },
+            drag: (evt) => {
+                this.targetOffsetCameraX = this.offsetCameraX += evt.dx;
+                this.targetOffsetCameraY = this.offsetCameraY += evt.dy;
+            },
+            click: (evt) => {
+                if (!!this.me) {
+                    const tile = this.getTileAt(evt),
+                        dx = tile.x - this.me.gridX,
+                        dy = tile.y - this.me.gridY;
 
-        function readPointer(evt) {
-            return {
-                id: evt.pointerId,
-                buttons: evt.buttons,
-                dragDistance: 0,
-                x: evt.offsetX * devicePixelRatio,
-                y: evt.offsetY * devicePixelRatio
-            }
-        }
-
-        const findPointer = (pointer) => {
-            return this.pointers.findIndex(p => p.id === pointer.id);
-        };
-
-        const replacePointer = (pointer) => {
-            const idx = findPointer(pointer);
-            if (idx > -1) {
-                const last = this.pointers[idx];
-                this.pointers[idx] = pointer;
-                return last;
-            }
-            else {
-                this.pointers.push(pointer);
-                return null;
-            }
-        };
-
-        const getPressCount = () => {
-            let count = 0;
-            for (let pointer of this.pointers) {
-                if (pointer.buttons === 1) {
-                    ++count;
-                }
-            }
-            return count;
-        }
-
-        this.element.addEventListener("pointerdown", (evt) => {
-            const oldCount = getPressCount(),
-                pointer = readPointer(evt),
-                _ = replacePointer(pointer),
-                newCount = getPressCount();
-
-            this.canClick = oldCount === 0
-                && newCount === 1;
-        });
-
-        const getPinchDistance = () => {
-            const count = getPressCount();
-            if (count !== 2) {
-                return null;
-            }
-
-            const pressed = this.pointers.filter(p => p.buttons === 1),
-                a = pressed[0],
-                b = pressed[1],
-                dx = b.x - a.x,
-                dy = b.y - a.y;
-
-            return Math.sqrt(dx * dx + dy * dy);
-        };
-
-        this.element.addEventListener("pointermove", (evt) => {
-            const oldPinchDistance = getPinchDistance(),
-                pointer = readPointer(evt),
-                last = replacePointer(pointer),
-                count = getPressCount(),
-                newPinchDistance = getPinchDistance();
-
-            if (count === 1) {
-
-                if (!!last
-                    && pointer.buttons === 1
-                    && last.buttons === pointer.buttons) {
-                    const dx = pointer.x - last.x,
-                        dy = pointer.y - last.y,
-                        dist = Math.sqrt(dx * dx + dy * dy);
-                    pointer.dragDistance = last.dragDistance + dist;
-
-                    if (pointer.dragDistance > MAX_DRAG_DISTANCE) {
-                        this.targetOffsetCameraX = this.offsetCameraX += dx;
-                        this.targetOffsetCameraY = this.offsetCameraY += dy;
-                        this.canClick = false;
-                    }
-                }
-
-            }
-
-            if (oldPinchDistance !== null
-                && newPinchDistance !== null) {
-                this.canClick = false;
-                const ddist = newPinchDistance - oldPinchDistance;
-                this.zoom += ddist / 100;
-                this.dispatchEvent(zoomChangedEvt);
-            }
-        });
-
-        this.element.addEventListener("pointerup", (evt) => {
-            const pointer = readPointer(evt),
-                _ = replacePointer(pointer);
-
-            if (!!this.me && pointer.dragDistance < 2) {
-                const tile = this.getTileAt(pointer),
-                    dx = tile.x - this.me.gridX,
-                    dy = tile.y - this.me.gridY;
-
-                if (dx === 0 && dy === 0) {
-                    this.emote(this.me.id, this.currentEmoji);
-                }
-                else if (this.canClick) {
                     this.moveMeByPath(dx, dy);
                 }
             }
         });
-
-        this.element.addEventListener("pointercancel", (evt) => {
-            const pointer = readPointer(evt),
-                idx = findPointer(pointer);
-
-            if (idx >= 0) {
-                arrayRemoveAt(this.pointers, idx);
-            }
-
-            return pointer;
-        });
-
         // ============= POINTERS =================
 
         // ============= ACTION ==================
@@ -742,9 +618,9 @@ export class Game extends EventBase {
 
 
     drawCursor() {
-        if (this.pointers.length === 1) {
-            const pointer = this.pointers[0],
-                tile = this.getTileAt(pointer);
+        const pointer = this.screenControls.primaryPointer;
+        if (pointer) {
+            const tile = this.getTileAt(pointer);
             this.gFront.strokeStyle = this.map.isClear(tile.x, tile.y, this.me.avatar)
                 ? "green"
                 : "red";
