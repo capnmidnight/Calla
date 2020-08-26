@@ -1,17 +1,26 @@
 import { EventBase } from "../calla";
 import { isFirefox } from "../html/flags";
 
+class ScreenPointerEvent extends Event {
+    constructor(type) {
+        super(type);
+
+        this.x = 0;
+        this.y = 0;
+        this.dx = 0;
+        this.dy = 0;
+        this.u = 0;
+        this.v = 0;
+        this.du = 0;
+        this.dv = 0;
+        this.button = 0;
+    }
+}
 
 const MAX_DRAG_DISTANCE = 5,
-    clickEvt = Object.assign(new Event("click"), {
-        x: 0,
-        y: 0,
-        button: 0
-    }),
-    dragEvt = Object.assign(new Event("drag"), {
-        dx: 0,
-        dy: 0
-    }),
+    clickEvt = new ScreenPointerEvent("click"),
+    moveEvt = new ScreenPointerEvent("move"),
+    dragEvt = new ScreenPointerEvent("drag"),
     wheelEvt = Object.assign(new Event("wheel"), {
         dz: 0
     });
@@ -45,13 +54,31 @@ export class ScreenPointerControls extends EventBase {
             }
         }, { passive: false });
 
+        function setEvt(evt, pointer) {
+            evt.x = pointer.x;
+            evt.y = pointer.y;
+            evt.dx = pointer.dx;
+            evt.dy = pointer.dy;
+
+            evt.u = 2 * evt.x / (window.devicePixelRatio * element.clientWidth) - 1;
+            evt.v = -2 * evt.y / (window.devicePixelRatio * element.clientHeight) + 1;
+            evt.du = 2 * evt.dx / (window.devicePixelRatio * element.clientWidth);
+            evt.dy = -2 * evt.dy / (window.devicePixelRatio * element.clientHeight);
+        }
+
         function readPointer(evt) {
+            const x = evt.offsetX * devicePixelRatio,
+                y = evt.offsetY * devicePixelRatio,
+                dx = evt.movementX,
+                dy = evt.movementY;
+
             return {
                 id: evt.pointerId,
                 buttons: evt.buttons,
+                moveDistance: 0,
                 dragDistance: 0,
-                x: evt.offsetX * devicePixelRatio,
-                y: evt.offsetY * devicePixelRatio
+                x, y,
+                dx, dy
             }
         }
 
@@ -64,6 +91,23 @@ export class ScreenPointerControls extends EventBase {
             if (idx > -1) {
                 const last = pointers[idx];
                 pointers[idx] = pointer;
+
+                if (pointer.x === last.x
+                    && pointer.y === last.y
+                    && (pointer.dx !== 0
+                        || pointer.dy !== 0)) {
+                    pointer.x = last.x + pointer.dx;
+                    pointer.y = last.y + pointer.dy;
+                }
+                else {
+                    pointer.dx = pointer.x - last.x;
+                    pointer.dy = pointer.y - last.y;
+                }
+
+                pointer.moveDistance = Math.sqrt(
+                    pointer.dx * pointer.dx
+                    + pointer.dy * pointer.dy);
+
                 return last;
             }
             else {
@@ -114,24 +158,18 @@ export class ScreenPointerControls extends EventBase {
                 count = getPressCount(),
                 newPinchDistance = getPinchDistance();
 
-            if (count === 1) {
+            setEvt(moveEvt, pointer);
+            this.dispatchEvent(moveEvt);
 
-                if (!!last
-                    && pointer.buttons === 1
-                    && last.buttons === pointer.buttons) {
-                    const dx = pointer.x - last.x,
-                        dy = pointer.y - last.y,
-                        dist = Math.sqrt(dx * dx + dy * dy);
-                    pointer.dragDistance = last.dragDistance + dist;
-
-                    if (pointer.dragDistance > MAX_DRAG_DISTANCE) {
-                        canClick = false;
-                        dragEvt.dx = dx;
-                        dragEvt.dy = dy;
-                        this.dispatchEvent(dragEvt);
-                    }
+            if (count === 1
+                && pointer.buttons === 1
+                && last && last.buttons === pointer.buttons) {
+                pointer.dragDistance = last.dragDistance + pointer.moveDistance;
+                if (pointer.dragDistance > MAX_DRAG_DISTANCE) {
+                    canClick = false;
+                    setEvt(dragEvt, pointer);
+                    this.dispatchEvent(dragEvt);
                 }
-
             }
 
             if (oldPinchDistance !== null
@@ -148,8 +186,7 @@ export class ScreenPointerControls extends EventBase {
                 _ = replacePointer(pointer);
 
             if (canClick) {
-                clickEvt.x = pointer.x;
-                clickEvt.y = pointer.y;
+                setEvt(clickEvt, pointer);
                 this.dispatchEvent(clickEvt);
             }
         });

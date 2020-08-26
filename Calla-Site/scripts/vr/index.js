@@ -1,5 +1,7 @@
-import { AmbientLight, BackSide, Color, GridHelper, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SphereBufferGeometry, Texture, Vector3, WebGLRenderer, Raycaster } from "three";
+import { AmbientLight, BackSide, Color, GridHelper, Mesh, MeshBasicMaterial, Object3D, PerspectiveCamera, Raycaster, Scene, SphereBufferGeometry, Texture, Vector3, WebGLRenderer } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { arrayClear } from "../calla";
+import { ScreenPointerControls } from "../input/ScreenPointerControls";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
 import { setGeometryUVsForCubemaps } from "./setGeometryUVsForCubemaps";
 import { Skybox } from "./Skybox";
@@ -19,25 +21,33 @@ const renderer = new WebGLRenderer({
 });
 renderer.setPixelRatio(window.devicePixelRatio);
 
-const scene = new Scene();
-scene.background = new Color(0x606060);
-
-const light = new AmbientLight(0xffffff, 1);
-scene.add(light);
-
-const gridColor = new Color(0x808080);
-const grid = new GridHelper(20, 40, gridColor, gridColor);
-scene.add(grid);
-
 const camera = new PerspectiveCamera(50, 1, 0.01, 1000);
 camera.position.set(0, 1.6, 1);
 
-const skybox = new Skybox(camera);
-scene.add(skybox);
+const scene = new Scene();
+scene.background = new Color(0x606060);
 
-const cameraForward = new Vector3();
-camera.getWorldDirection(cameraForward);
-const raycaster = new Raycaster(camera.position, cameraForward, camera.near, camera.far);
+const background = new Object3D();
+scene.add(background);
+
+const light = new AmbientLight(0xffffff, 1);
+background.add(light);
+
+const gridColor = new Color(0x808080);
+const grid = new GridHelper(20, 40, gridColor, gridColor);
+background.add(grid);
+
+const skybox = new Skybox(camera);
+background.add(skybox);
+
+const foreground = new Object3D();
+scene.add(foreground);
+
+const raycaster = new Raycaster();
+const screenPointer = new ScreenPointerControls(renderer.domElement);
+screenPointer.addEventListener("move", (evt) => {
+    raycaster.setFromCamera({ x: evt.u, y: evt.v }, camera);
+});
 
 const controls = Object.assign(new OrbitControls(camera, renderer.domElement), {
     enableDamping: true,
@@ -50,13 +60,25 @@ const controls = Object.assign(new OrbitControls(camera, renderer.domElement), {
     center: new Vector3(0, 1, 0)
 });
 
-renderer.domElement.addEventListener("mousemove", (evt) => {
-    
-});
+const hits = [];
+/** @type {Object3D} */
+let lastObj = null;
 
 function update() {
+    if (lastObj) {
+        lastObj.scale.set(1, 1, 1);
+        lastObj = null;
+    }
     controls.update();
     skybox.update();
+    arrayClear(hits);
+    raycaster.intersectObject(foreground, true, hits);
+    for (let hit of hits) {
+        lastObj = hit.object;
+    }
+    if (lastObj) {
+        lastObj.scale.set(1.1, 1.1, 1.1);
+    }
     renderer.render(scene, camera);
 }
 const timer = new RequestAnimationFrameTimer();
@@ -88,11 +110,12 @@ for (let activity of activities) {
 
     const mat = new MeshBasicMaterial({ map, side: BackSide });
     const mesh = new Mesh(geom, mat);
+    mesh.name = activity.id;
     mesh.position.set(
         1 * Math.cos(2 * i * Math.PI / count),
         1,
         1 * Math.sin(2 * i * Math.PI / count));
-    scene.add(mesh);
+    foreground.add(mesh);
 
     if (i == 0) {
         skybox.setImage(img);
