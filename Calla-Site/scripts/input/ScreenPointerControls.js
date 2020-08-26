@@ -27,19 +27,105 @@ const MAX_DRAG_DISTANCE = 5,
 
 export class ScreenPointerControls extends EventBase {
     /**
-     * @param {Element} element
+     * @param {Element} element the element from which to receive pointer events
+     * @param {boolean} clampCursor whether or not to clamp the pointer to the edges of the element
      */
-    constructor(element) {
+    constructor(element, clampCursor = false) {
         super();
 
-        const pointers = [];
+        const pointers = new Map();
         let canClick = true;
 
         Object.defineProperty(this, "primaryPointer", {
             get: () => {
-                return pointers[0];
+                for (let pointer of pointers.values()) {
+                    return pointer;
+                }
             }
         });
+
+        function setEvt(evt, pointer) {
+            evt.x = pointer.x;
+            evt.y = pointer.y;
+            evt.dx = pointer.dx;
+            evt.dy = pointer.dy;
+
+            evt.u = 2 * evt.x / element.clientWidth - 1;
+            evt.v = -2 * evt.y / element.clientHeight + 1;
+            evt.du = 2 * evt.dx / element.clientWidth;
+            evt.dv = -2 * evt.dy / element.clientHeight;
+        }
+
+        function readPointer(evt) {
+            return {
+                id: evt.pointerId,
+                buttons: evt.buttons,
+                moveDistance: 0,
+                dragDistance: 0,
+                x: evt.offsetX,
+                y: evt.offsetY,
+                dx: evt.movementX,
+                dy: evt.movementY
+            }
+        }
+
+        const replacePointer = (pointer) => {
+            const last = pointers.get(pointer.id);
+
+            if (last && document.pointerLockElement) {
+                pointer.x = last.x + pointer.dx;
+                pointer.y = last.y + pointer.dy;
+                if (clampCursor) {
+                    pointer.x = Math.max(0, Math.min(element.clientWidth, pointer.x));
+                    pointer.y = Math.max(0, Math.min(element.clientHeight, pointer.y));
+                }
+            }
+
+            pointer.moveDistance = Math.sqrt(
+                pointer.dx * pointer.dx
+                + pointer.dy * pointer.dy);
+
+            pointers.set(pointer.id, pointer);
+
+            return last;
+        };
+
+        const getPressCount = () => {
+            let count = 0;
+            for (let pointer of pointers.values()) {
+                if (pointer.buttons === 1) {
+                    ++count;
+                }
+            }
+            return count;
+        };
+
+        const getPinchDistance = () => {
+            const count = getPressCount();
+            if (count !== 2) {
+                return null;
+            }
+
+            let a, b;
+            for (let pointer of pointers.values()) {
+                if (pointer.buttons === 1) {
+                    if (!a) {
+                        a = pointer;
+                    }
+                    else if (!b) {
+                        b = pointer;
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
+
+            const dx = b.x - a.x,
+                dy = b.y - a.y;
+
+            return Math.sqrt(dx * dx + dy * dy);
+        };
 
         element.addEventListener("wheel", (evt) => {
             if (!evt.shiftKey
@@ -54,78 +140,6 @@ export class ScreenPointerControls extends EventBase {
             }
         }, { passive: false });
 
-        function setEvt(evt, pointer) {
-            evt.x = pointer.x;
-            evt.y = pointer.y;
-            evt.dx = pointer.dx;
-            evt.dy = pointer.dy;
-
-            evt.u = 2 * evt.x / (window.devicePixelRatio * element.clientWidth) - 1;
-            evt.v = -2 * evt.y / (window.devicePixelRatio * element.clientHeight) + 1;
-            evt.du = 2 * evt.dx / (window.devicePixelRatio * element.clientWidth);
-            evt.dy = -2 * evt.dy / (window.devicePixelRatio * element.clientHeight);
-        }
-
-        function readPointer(evt) {
-            const x = evt.offsetX * devicePixelRatio,
-                y = evt.offsetY * devicePixelRatio,
-                dx = evt.movementX,
-                dy = evt.movementY;
-
-            return {
-                id: evt.pointerId,
-                buttons: evt.buttons,
-                moveDistance: 0,
-                dragDistance: 0,
-                x, y,
-                dx, dy
-            }
-        }
-
-        const findPointer = (pointer) => {
-            return pointers.findIndex(p => p.id === pointer.id);
-        };
-
-        const replacePointer = (pointer) => {
-            const idx = findPointer(pointer);
-            if (idx > -1) {
-                const last = pointers[idx];
-                pointers[idx] = pointer;
-
-                if (pointer.x === last.x
-                    && pointer.y === last.y
-                    && (pointer.dx !== 0
-                        || pointer.dy !== 0)) {
-                    pointer.x = last.x + pointer.dx;
-                    pointer.y = last.y + pointer.dy;
-                }
-                else {
-                    pointer.dx = pointer.x - last.x;
-                    pointer.dy = pointer.y - last.y;
-                }
-
-                pointer.moveDistance = Math.sqrt(
-                    pointer.dx * pointer.dx
-                    + pointer.dy * pointer.dy);
-
-                return last;
-            }
-            else {
-                pointers.push(pointer);
-                return null;
-            }
-        };
-
-        const getPressCount = () => {
-            let count = 0;
-            for (let pointer of pointers) {
-                if (pointer.buttons === 1) {
-                    ++count;
-                }
-            }
-            return count;
-        }
-
         element.addEventListener("pointerdown", (evt) => {
             const oldCount = getPressCount(),
                 pointer = readPointer(evt),
@@ -135,21 +149,6 @@ export class ScreenPointerControls extends EventBase {
             canClick = oldCount === 0
                 && newCount === 1;
         });
-
-        const getPinchDistance = () => {
-            const count = getPressCount();
-            if (count !== 2) {
-                return null;
-            }
-
-            const pressed = pointers.filter(p => p.buttons === 1),
-                a = pressed[0],
-                b = pressed[1],
-                dx = b.x - a.x,
-                dy = b.y - a.y;
-
-            return Math.sqrt(dx * dx + dy * dy);
-        };
 
         element.addEventListener("pointermove", (evt) => {
             const oldPinchDistance = getPinchDistance(),
@@ -192,11 +191,9 @@ export class ScreenPointerControls extends EventBase {
         });
 
         element.addEventListener("pointercancel", (evt) => {
-            const pointer = readPointer(evt),
-                idx = findPointer(pointer);
-
-            if (idx >= 0) {
-                arrayRemoveAt(pointers, idx);
+            const pointer = readPointer(evt);
+            if (pointers.has(pointer.id)) {
+                pointers.delete(pointer.id);
             }
 
             return pointer;
