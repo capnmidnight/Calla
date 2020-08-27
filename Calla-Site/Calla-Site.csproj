@@ -43,9 +43,5 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Juniper\src\Juniper.Root\Juniper.Root.csproj" />
-    <ProjectReference Include="..\..\Juniper\src\Juniper.Server\Juniper.Server.csproj" />
-    <ProjectReference Include="..\..\src\Yarrow.Data\Yarrow.Data.csproj" />
-    <ProjectReference Include="..\..\src\Yarrow.Model\Yarrow.Model.csproj" />
-    <ProjectReference Include="..\Calla-Data\Calla-Data.csproj" />
   </ItemGroup>
 </Project>
