@@ -1,7 +1,7 @@
-import { BackSide, Mesh, MeshBasicMaterial, Texture, CanvasTexture } from "three";
+import { BackSide, Mesh, MeshBasicMaterial, Texture } from "three";
 import { isString, once } from "../calla";
-import { src, height, width } from "../html/attrs";
-import { Img, Canvas } from "../html/tags";
+import { height, src, width } from "../html/attrs";
+import { Canvas, Img } from "../html/tags";
 
 export class AbstractCubeMapView extends Mesh {
     /**
@@ -27,6 +27,7 @@ export class AbstractCubeMapView extends Mesh {
                 await once(img, "load", "error", 10000);
             }
 
+            // Force the image to be power-of-2 dimensioned.
             const w = Math.pow(2, Math.floor(Math.log2(img.width))),
                 h = Math.pow(2, Math.floor(Math.log2(img.height))),
                 canv = Canvas(
@@ -35,9 +36,10 @@ export class AbstractCubeMapView extends Mesh {
                 g = canv.getContext("2d");
             g.drawImage(img, 0, 0, img.width, img.height, 0, 0, w, h);
 
-            img = new CanvasTexture(canv);
+            img = canv;
         }
-        else if (!(img instanceof Texture)) {
+
+        if (!(img instanceof Texture)) {
             img = new Texture(img);
         }
 
