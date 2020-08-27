@@ -195,8 +195,8 @@ export class Game extends EventBase {
     }
 
     getTileAt(cursor) {
-        const imageX = cursor.x - this.gridOffsetX - this.offsetCameraX,
-            imageY = cursor.y - this.gridOffsetY - this.offsetCameraY,
+        const imageX = cursor.x * devicePixelRatio - this.gridOffsetX - this.offsetCameraX,
+            imageY = cursor.y * devicePixelRatio - this.gridOffsetY - this.offsetCameraY,
             zoomX = imageX / this.cameraZ,
             zoomY = imageY / this.cameraZ,
             mapX = zoomX - this.cameraX,
