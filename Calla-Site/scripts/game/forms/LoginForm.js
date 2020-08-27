@@ -70,11 +70,13 @@ export class LoginForm extends FormDialog {
         this.roomInput = InputText(id("roomName"));
         this.roomInput.addEventListener("input", validate);
         this.roomInput.addEventListener("keypress", (evt) => {
-            if (this.userName.length === 0) {
-                this.userNameInput.focus();
-            }
-            else if (this.email.length === 0) {
-                this.emailInput.focus();
+            if (evt.key === "Enter") {
+                if (this.userName.length === 0) {
+                    this.userNameInput.focus();
+                }
+                else if (this.email.length === 0) {
+                    this.emailInput.focus();
+                }
             }
         });
 
