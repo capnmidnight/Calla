@@ -183,7 +183,8 @@ resize();
 
 (async function () {
     const activities = document.querySelectorAll("section"),
-        count = activities.length;
+        count = activities.length,
+        tasks = [];
     for (let i = 0; i < activities.length; ++i) {
         const activity = activities[i],
             match = activity.id.match(/^act-(\d+)/),
@@ -192,12 +193,14 @@ resize();
             icon = new StationIcon(),
             a = 2 * i * Math.PI / count;
 
-        await icon.setImage(img);
-
         curIcons.push(icon);
         icon.name = activity.id;
         icon.position.set(Math.cos(a), 1, Math.sin(a));
-        foreground.add(icon);
         objectClicks.set(icon, () => loadActivity(actID));
+
+        tasks.push(icon.setImage(img)
+            .then(() => foreground.add(icon)));
     }
+
+    await Promise.all(tasks);
 })();
