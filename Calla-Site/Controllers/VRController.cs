@@ -1,5 +1,4 @@
 using Juniper;
-using Juniper.Mathematics;
 using Juniper.World.GIS;
 
 using Microsoft.AspNetCore.Hosting;
@@ -58,6 +57,17 @@ namespace Calla.Controllers
             return View(activities);
         }
 
+        private static float[] Flip(float[] m)
+        {
+            return new float[]
+            {
+                m[0], m[4], m[8], m[12],
+                m[1], m[5], m[9], m[13],
+                m[2], m[6], m[10],m[14],
+                m[3], m[7], m[11],m[15]
+            };
+        }
+
         [HttpGet("VR/Activity/{id}/Transforms")]
         public IActionResult Activity(int id)
         {
@@ -68,7 +78,7 @@ namespace Calla.Controllers
                     ID = t.Id,
                     ParentID = t.ParentTransformId ?? 0,
                     Name = t.Name,
-                    Matrix = new Matrix4x4Serializable(t.Matrix)
+                    Matrix = Flip(t.Matrix)
                 });
             return base.Json(transforms);
         }
@@ -78,14 +88,16 @@ namespace Calla.Controllers
         {
             var stations = db.Stations
                 .Include(st => st.Transform)
+                    .ThenInclude(t => t.Activity)
                 .Include(st => st.StationConnectionsFromStation)
                 .Where(st => st.Transform.ActivityId == id)
                 .Select(st => new Station
                 {
-                    ID = st.TransformId,
+                    TransformID = st.TransformId,
                     Location = new LatLngPoint(st.Latitude, st.Longitude, st.Altitude),
-                    Rotation = new QuaternionSerializable(st.Rotation),
+                    Rotation = st.Rotation,
                     FileID = st.FileId,
+                    IsStart = st.TransformId == st.Transform.Activity.StartStationId,
                     Zone = st.Zone
                 });
             return Json(stations);

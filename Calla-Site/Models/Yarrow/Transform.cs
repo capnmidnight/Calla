@@ -7,6 +7,6 @@ namespace Yarrow.Models
         public int ID { get; set; }
         public int ParentID { get; set; }
         public string Name { get; set; }
-        public Matrix4x4Serializable Matrix { get; set; }
+        public float[] Matrix { get; set; }
     }
 }
