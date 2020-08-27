@@ -1,3 +1,6 @@
 [submodule "resonance-audio"]
 	path = Calla-Site/scripts/lib/resonance-audio
 	url = https://github.com/capnmidnight/resonance-audio-web-sdk.git
+[submodule "Juniper"]
+	path = Juniper
+	url = https://github.com/capnmidnight/Juniper.git
