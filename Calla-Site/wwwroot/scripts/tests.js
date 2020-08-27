@@ -18558,7 +18558,7 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-const versionString = "v0.7.1";
+const versionString = "v0.7.2";
 
 /* global JitsiMeetJS */
 
@@ -19580,6 +19580,70 @@ class CallaClient extends EventBase {
 }
 
 /**
+ * A setter functor for HTML attributes.
+ **/
+class HtmlAttr {
+    /**
+     * Creates a new setter functor for HTML Attributes
+     * @param {string} key - the attribute name.
+     * @param {string} value - the value to set for the attribute.
+     * @param {...string} tags - the HTML tags that support this attribute.
+     */
+    constructor(key, value, ...tags) {
+        this.key = key;
+        this.value = value;
+        this.tags = tags.map(t => t.toLocaleUpperCase());
+        Object.freeze(this);
+    }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        const isValid = this.tags.length === 0
+            || this.tags.indexOf(elem.tagName) > -1;
+
+        if (!isValid) {
+            console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
+        }
+        else if (this.key === "style") {
+            Object.assign(elem[this.key], this.value);
+        }
+        else if (!isBoolean(value)) {
+            elem[this.key] = this.value;
+        }
+        else if (this.value) {
+            elem.setAttribute(this.key, "");
+        }
+        else {
+            elem.removeAttribute(this.key);
+        }
+    }
+}
+
+/**
+ * Often used with CSS to style a specific element. The value of this attribute must be unique.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function id(value) { return new HtmlAttr("id", value); }
+
+/**
+ * Defines the type of the element.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function type(value) { return new HtmlAttr("type", value, "button", "input", "command", "embed", "object", "script", "source", "style", "menu"); }
+
+/**
+ * Defines a default value which will be displayed in the element on page load.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function value(value) { return new HtmlAttr("value", value, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
+
+/**
  * A CSS property that will be applied to an element's style attribute.
  **/
 class CssProp {
@@ -19738,32 +19802,6 @@ const systemFonts = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Robot
 const systemFamily = fontFamily(systemFonts);
 
 /**
- * Constructs a CSS grid column definition
- * @param {number} x - the starting horizontal cell for the element.
- * @param {number} [w=null] - the number of cells wide the element should cover.
- * @returns {CssProp}
- */
-function col(x, w = null) {
-    if (w === null) {
-        w = 1;
-    }
-    return gridColumn(`${x}/${x + w}`);
-}
-
-const displayGrid = display("grid");
-
-/**
- * Create the gridTemplateColumns style attribute, with display set to grid.
- * @param {...string} cols
- * @returns {CssPropSet}
- */
-function gridColsDef(...cols) {
-    return styles(
-        displayGrid,
-        gridTemplateColumns(cols.join(" ")));
-}
-
-/**
  * A setter functor for HTML element events.
  **/
 class HtmlEvt {
@@ -19809,68 +19847,30 @@ class HtmlEvt {
 function onClick(callback, opts) { return new HtmlEvt("click", callback, opts); }
 
 /**
- * A setter functor for HTML attributes.
- **/
-class HtmlAttr {
-    /**
-     * Creates a new setter functor for HTML Attributes
-     * @param {string} key - the attribute name.
-     * @param {string} value - the value to set for the attribute.
-     * @param {...string} tags - the HTML tags that support this attribute.
-     */
-    constructor(key, value, ...tags) {
-        this.key = key;
-        this.value = value;
-        this.tags = tags.map(t => t.toLocaleUpperCase());
-        Object.freeze(this);
+ * Constructs a CSS grid column definition
+ * @param {number} x - the starting horizontal cell for the element.
+ * @param {number} [w=null] - the number of cells wide the element should cover.
+ * @returns {CssProp}
+ */
+function col(x, w = null) {
+    if (w === null) {
+        w = 1;
     }
-
-    /**
-     * Set the attribute value on an HTMLElement
-     * @param {HTMLElement} elem - the element on which to set the attribute.
-     */
-    apply(elem) {
-        const isValid = this.tags.length === 0
-            || this.tags.indexOf(elem.tagName) > -1;
-
-        if (!isValid) {
-            console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
-        }
-        else if (this.key === "style") {
-            Object.assign(elem[this.key], this.value);
-        }
-        else if (!isBoolean(value)) {
-            elem[this.key] = this.value;
-        }
-        else if (this.value) {
-            elem.setAttribute(this.key, "");
-        }
-        else {
-            elem.removeAttribute(this.key);
-        }
-    }
+    return gridColumn(`${x}/${x + w}`);
 }
 
-/**
- * Often used with CSS to style a specific element. The value of this attribute must be unique.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function id(value) { return new HtmlAttr("id", value); }
+const displayGrid = display("grid");
 
 /**
- * Defines the type of the element.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function type(value) { return new HtmlAttr("type", value, "button", "input", "command", "embed", "object", "script", "source", "style", "menu"); }
-
-/**
- * Defines a default value which will be displayed in the element on page load.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function value(value) { return new HtmlAttr("value", value, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
+ * Create the gridTemplateColumns style attribute, with display set to grid.
+ * @param {...string} cols
+ * @returns {CssPropSet}
+ */
+function gridColsDef(...cols) {
+    return styles(
+        displayGrid,
+        gridTemplateColumns(cols.join(" ")));
+}
 
 /**
  * @typedef {(Element|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild

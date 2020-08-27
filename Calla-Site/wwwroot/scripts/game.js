@@ -19873,7 +19873,7 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-const versionString = "v0.7.1";
+const versionString = "v0.7.2";
 
 /* global JitsiMeetJS */
 
@@ -20897,6 +20897,288 @@ class CallaClient extends EventBase {
 const JITSI_HOST = "tele.calla.chat";
 const JVB_HOST = JITSI_HOST;
 const JVB_MUC = "conference." + JITSI_HOST;
+
+/**
+ * A setter functor for HTML attributes.
+ **/
+class HtmlAttr {
+    /**
+     * Creates a new setter functor for HTML Attributes
+     * @param {string} key - the attribute name.
+     * @param {string} value - the value to set for the attribute.
+     * @param {...string} tags - the HTML tags that support this attribute.
+     */
+    constructor(key, value, ...tags) {
+        this.key = key;
+        this.value = value;
+        this.tags = tags.map(t => t.toLocaleUpperCase());
+        Object.freeze(this);
+    }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        const isValid = this.tags.length === 0
+            || this.tags.indexOf(elem.tagName) > -1;
+
+        if (!isValid) {
+            console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
+        }
+        else if (this.key === "style") {
+            Object.assign(elem[this.key], this.value);
+        }
+        else if (!isBoolean(value)) {
+            elem[this.key] = this.value;
+        }
+        else if (this.value) {
+            elem.setAttribute(this.key, "");
+        }
+        else {
+            elem.removeAttribute(this.key);
+        }
+    }
+}
+
+/**
+ * Alternative text in case an image can't be displayed.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function alt(value) { return new HtmlAttr("alt", value, "applet", "area", "img", "input"); }
+
+/**
+ * The audio or video should play as soon as possible.
+ * @param {boolean} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function autoPlay(value) { return new HtmlAttr("autoplay", value, "audio", "video"); }
+
+/**
+ * Often used with CSS to style elements with common properties.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function className(value) { return new HtmlAttr("className", value); }
+
+/**
+ * Indicates whether the user can interact with the element.
+ * @param {boolean} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function disabled(value) { return new HtmlAttr("disabled", value, "button", "command", "fieldset", "input", "keygen", "optgroup", "option", "select", "textarea"); }
+
+/**
+ * Describes elements which belongs to this one.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function htmlFor(value) { return new HtmlAttr("htmlFor", value, "label", "output"); }
+
+/**
+ * Specifies the height of elements listed here. For all other elements, use the CSS height property.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function height(value) { return new HtmlAttr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+
+/**
+ * The URL of a linked resource.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function href(value) { return new HtmlAttr("href", value, "a", "area", "base", "link"); }
+
+/**
+ * Often used with CSS to style a specific element. The value of this attribute must be unique.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function id(value) { return new HtmlAttr("id", value); }
+
+/**
+ * Indicates the maximum value allowed.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function max(value) { return new HtmlAttr("max", value, "input", "meter", "progress"); }
+
+/**
+ * Indicates the minimum value allowed.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function min(value) { return new HtmlAttr("min", value, "input", "meter"); }
+
+/**
+ * Indicates whether the audio will be initially silenced on page load.
+ * @param {boolean} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function muted(value) { return new HtmlAttr("muted", value, "audio", "video"); }
+
+/**
+ * Provides a hint to the user of what can be entered in the field.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function placeHolder(value) { return new HtmlAttr("placeholder", value, "input", "textarea"); }
+
+/**
+ * Indicates that the media element should play automatically on iOS.
+ * @param {boolean} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function playsInline(value) { return new HtmlAttr("playsInline", value, "audio", "video"); }
+
+/**
+ * Defines the number of rows in a text area.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function role(value) { return new HtmlAttr("role", value); }
+
+/**
+ * The URL of the embeddable content.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function src(value) { return new HtmlAttr("src", value, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
+
+/**
+ * A MediaStream object to use as a source for an HTML video or audio element
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function srcObject(value) { return new HtmlAttr("srcObject", value, "audio", "video"); }
+
+/**
+ * The step attribute
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function step(value) { return new HtmlAttr("step", value, "input"); }
+
+/**
+ * Text to be displayed in a tooltip when hovering over the element.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function title(value) { return new HtmlAttr("title", value); }
+
+/**
+ * Defines the type of the element.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function type(value) { return new HtmlAttr("type", value, "button", "input", "command", "embed", "object", "script", "source", "style", "menu"); }
+
+/**
+ * Defines a default value which will be displayed in the element on page load.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function value(value) { return new HtmlAttr("value", value, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
+
+/**
+ * setting the volume at which a media element plays.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function volume(value) { return new HtmlAttr("volume", value, "audio", "video"); }
+
+/**
+ * For the elements listed here, this establishes the element's width.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function width(value) { return new HtmlAttr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+
+function isOpen(target) {
+    if (target.isOpen) {
+        return target.isOpen();
+    }
+    else {
+        return target.style.display !== "none";
+    }
+}
+
+/**
+ * Sets the element's style's display property to "none"
+ * when `v` is false, or `displayType` when `v` is true.
+ * @memberof Element
+ * @param {boolean} v
+ * @param {string} [displayType=""]
+ */
+function setOpen(target, v, displayType = "") {
+    if (target.setOpen) {
+        target.setOpen(v, displayType);
+    }
+    else if (v) {
+        show(target, displayType);
+    }
+    else {
+        hide(target);
+    }
+}
+
+function updateLabel(target, open, enabledText, disabledText, bothText) {
+    bothText = bothText || "";
+    if (target.accessKey) {
+        bothText += ` <kbd>(ALT+${target.accessKey.toUpperCase()})</kbd>`;
+    }
+    if (target.updateLabel) {
+        target.updateLabel(open, enabledText, disabledText, bothText);
+    }
+    else {
+        target.innerHTML = (open ? enabledText : disabledText) + bothText;
+    }
+}
+
+function toggleOpen(target, displayType = "") {
+    if (target.toggleOpen) {
+        target.toggleOpen(displayType);
+    }
+    else if (isOpen(target)) {
+        hide(target);
+    }
+    else {
+        show(target);
+    }
+}
+
+function show(target, displayType = "") {
+    if (target.show) {
+        target.show();
+    }
+    else {
+        target.style.display = displayType;
+    }
+}
+
+function hide(target) {
+    if (target.hide) {
+        target.hide();
+    }
+    else {
+        target.style.display = "none";
+    }
+}
+const disabler = disabled(true),
+    enabler = disabled(false);
+
+function setLocked(target, value) {
+    if (target.setLocked) {
+        target.setLocked(value);
+    }
+    else if (value) {
+        disabler.apply(target);
+    }
+    else {
+        enabler.apply(target);
+    }
+}
 
 /**
  * Unicode-standardized pictograms.
@@ -23699,203 +23981,6 @@ const allIcons = gg(
 });
 
 /**
- * A setter functor for HTML attributes.
- **/
-class HtmlAttr {
-    /**
-     * Creates a new setter functor for HTML Attributes
-     * @param {string} key - the attribute name.
-     * @param {string} value - the value to set for the attribute.
-     * @param {...string} tags - the HTML tags that support this attribute.
-     */
-    constructor(key, value, ...tags) {
-        this.key = key;
-        this.value = value;
-        this.tags = tags.map(t => t.toLocaleUpperCase());
-        Object.freeze(this);
-    }
-
-    /**
-     * Set the attribute value on an HTMLElement
-     * @param {HTMLElement} elem - the element on which to set the attribute.
-     */
-    apply(elem) {
-        const isValid = this.tags.length === 0
-            || this.tags.indexOf(elem.tagName) > -1;
-
-        if (!isValid) {
-            console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
-        }
-        else if (this.key === "style") {
-            Object.assign(elem[this.key], this.value);
-        }
-        else if (!isBoolean(value)) {
-            elem[this.key] = this.value;
-        }
-        else if (this.value) {
-            elem.setAttribute(this.key, "");
-        }
-        else {
-            elem.removeAttribute(this.key);
-        }
-    }
-}
-
-/**
- * Alternative text in case an image can't be displayed.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function alt(value) { return new HtmlAttr("alt", value, "applet", "area", "img", "input"); }
-
-/**
- * The audio or video should play as soon as possible.
- * @param {boolean} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function autoPlay(value) { return new HtmlAttr("autoplay", value, "audio", "video"); }
-
-/**
- * Often used with CSS to style elements with common properties.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function className(value) { return new HtmlAttr("className", value); }
-
-/**
- * Indicates whether the user can interact with the element.
- * @param {boolean} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function disabled(value) { return new HtmlAttr("disabled", value, "button", "command", "fieldset", "input", "keygen", "optgroup", "option", "select", "textarea"); }
-
-/**
- * Describes elements which belongs to this one.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function htmlFor(value) { return new HtmlAttr("htmlFor", value, "label", "output"); }
-
-/**
- * Specifies the height of elements listed here. For all other elements, use the CSS height property.
- * @param {number} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function height(value) { return new HtmlAttr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
-
-/**
- * The URL of a linked resource.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function href(value) { return new HtmlAttr("href", value, "a", "area", "base", "link"); }
-
-/**
- * Often used with CSS to style a specific element. The value of this attribute must be unique.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function id(value) { return new HtmlAttr("id", value); }
-
-/**
- * Indicates the maximum value allowed.
- * @param {number} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function max(value) { return new HtmlAttr("max", value, "input", "meter", "progress"); }
-
-/**
- * Indicates the minimum value allowed.
- * @param {number} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function min(value) { return new HtmlAttr("min", value, "input", "meter"); }
-
-/**
- * Indicates whether the audio will be initially silenced on page load.
- * @param {boolean} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function muted(value) { return new HtmlAttr("muted", value, "audio", "video"); }
-
-/**
- * Provides a hint to the user of what can be entered in the field.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function placeHolder(value) { return new HtmlAttr("placeholder", value, "input", "textarea"); }
-
-/**
- * Indicates that the media element should play automatically on iOS.
- * @param {boolean} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function playsInline(value) { return new HtmlAttr("playsInline", value, "audio", "video"); }
-
-/**
- * Defines the number of rows in a text area.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function role(value) { return new HtmlAttr("role", value); }
-
-/**
- * The URL of the embeddable content.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function src(value) { return new HtmlAttr("src", value, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
-
-/**
- * A MediaStream object to use as a source for an HTML video or audio element
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function srcObject(value) { return new HtmlAttr("srcObject", value, "audio", "video"); }
-
-/**
- * The step attribute
- * @param {number} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function step(value) { return new HtmlAttr("step", value, "input"); }
-
-/**
- * Text to be displayed in a tooltip when hovering over the element.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function title(value) { return new HtmlAttr("title", value); }
-
-/**
- * Defines the type of the element.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function type(value) { return new HtmlAttr("type", value, "button", "input", "command", "embed", "object", "script", "source", "style", "menu"); }
-
-/**
- * Defines a default value which will be displayed in the element on page load.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function value(value) { return new HtmlAttr("value", value, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
-
-/**
- * setting the volume at which a media element plays.
- * @param {number} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function volume(value) { return new HtmlAttr("volume", value, "audio", "video"); }
-
-/**
- * For the elements listed here, this establishes the element's width.
- * @param {number} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function width(value) { return new HtmlAttr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
-
-/**
  * A CSS property that will be applied to an element's style attribute.
  **/
 class CssProp {
@@ -24146,91 +24231,6 @@ function onMouseOut(callback, opts) { return new HtmlEvt("mouseout", callback, o
  * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
  **/
 function onMouseOver(callback, opts) { return new HtmlEvt("mouseover", callback, opts); }
-
-function isOpen(target) {
-    if (target.isOpen) {
-        return target.isOpen();
-    }
-    else {
-        return target.style.display !== "none";
-    }
-}
-
-/**
- * Sets the element's style's display property to "none"
- * when `v` is false, or `displayType` when `v` is true.
- * @memberof Element
- * @param {boolean} v
- * @param {string} [displayType=""]
- */
-function setOpen(target, v, displayType = "") {
-    if (target.setOpen) {
-        target.setOpen(v, displayType);
-    }
-    else if (v) {
-        show(target, displayType);
-    }
-    else {
-        hide(target);
-    }
-}
-
-function updateLabel(target, open, enabledText, disabledText, bothText) {
-    bothText = bothText || "";
-    if (target.accessKey) {
-        bothText += ` <kbd>(ALT+${target.accessKey.toUpperCase()})</kbd>`;
-    }
-    if (target.updateLabel) {
-        target.updateLabel(open, enabledText, disabledText, bothText);
-    }
-    else {
-        target.innerHTML = (open ? enabledText : disabledText) + bothText;
-    }
-}
-
-function toggleOpen(target, displayType = "") {
-    if (target.toggleOpen) {
-        target.toggleOpen(displayType);
-    }
-    else if (isOpen(target)) {
-        hide(target);
-    }
-    else {
-        show(target);
-    }
-}
-
-function show(target, displayType = "") {
-    if (target.show) {
-        target.show();
-    }
-    else {
-        target.style.display = displayType;
-    }
-}
-
-function hide(target) {
-    if (target.hide) {
-        target.hide();
-    }
-    else {
-        target.style.display = "none";
-    }
-}
-const disabler = disabled(true),
-    enabler = disabled(false);
-
-function setLocked(target, value) {
-    if (target.setLocked) {
-        target.setLocked(value);
-    }
-    else if (value) {
-        disabler.apply(target);
-    }
-    else {
-        enabler.apply(target);
-    }
-}
 
 /**
  * @typedef {(Element|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
@@ -30700,6 +30700,206 @@ class UserDirectoryForm extends FormDialog {
     }
 }
 
+class ScreenPointerEvent extends Event {
+    constructor(type) {
+        super(type);
+
+        this.x = 0;
+        this.y = 0;
+        this.dx = 0;
+        this.dy = 0;
+        this.u = 0;
+        this.v = 0;
+        this.du = 0;
+        this.dv = 0;
+        this.button = 0;
+    }
+}
+
+const MAX_DRAG_DISTANCE = 5,
+    clickEvt = new ScreenPointerEvent("click"),
+    moveEvt = new ScreenPointerEvent("move"),
+    dragEvt = new ScreenPointerEvent("drag"),
+    wheelEvt = Object.assign(new Event("wheel"), {
+        dz: 0
+    });
+
+class ScreenPointerControls extends EventBase {
+    /**
+     * @param {Element} element the element from which to receive pointer events
+     * @param {boolean} clampCursor whether or not to clamp the pointer to the edges of the element
+     */
+    constructor(element, clampCursor = false) {
+        super();
+
+        const pointers = new Map();
+        let canClick = true;
+
+        Object.defineProperty(this, "primaryPointer", {
+            get: () => {
+                for (let pointer of pointers.values()) {
+                    return pointer;
+                }
+            }
+        });
+
+        function setEvt(evt, pointer) {
+            evt.x = pointer.x;
+            evt.y = pointer.y;
+            evt.dx = pointer.dx;
+            evt.dy = pointer.dy;
+
+            evt.u = 2 * evt.x / element.clientWidth - 1;
+            evt.v = -2 * evt.y / element.clientHeight + 1;
+            evt.du = 2 * evt.dx / element.clientWidth;
+            evt.dv = -2 * evt.dy / element.clientHeight;
+        }
+
+        function readPointer(evt) {
+            return {
+                id: evt.pointerId,
+                buttons: evt.buttons,
+                moveDistance: 0,
+                dragDistance: 0,
+                x: evt.offsetX,
+                y: evt.offsetY,
+                dx: evt.movementX,
+                dy: evt.movementY
+            }
+        }
+
+        const replacePointer = (pointer) => {
+            const last = pointers.get(pointer.id);
+
+            if (last && document.pointerLockElement) {
+                pointer.x = last.x + pointer.dx;
+                pointer.y = last.y + pointer.dy;
+                if (clampCursor) {
+                    pointer.x = Math.max(0, Math.min(element.clientWidth, pointer.x));
+                    pointer.y = Math.max(0, Math.min(element.clientHeight, pointer.y));
+                }
+            }
+
+            pointer.moveDistance = Math.sqrt(
+                pointer.dx * pointer.dx
+                + pointer.dy * pointer.dy);
+
+            pointers.set(pointer.id, pointer);
+
+            return last;
+        };
+
+        const getPressCount = () => {
+            let count = 0;
+            for (let pointer of pointers.values()) {
+                if (pointer.buttons === 1) {
+                    ++count;
+                }
+            }
+            return count;
+        };
+
+        const getPinchDistance = () => {
+            const count = getPressCount();
+            if (count !== 2) {
+                return null;
+            }
+
+            let a, b;
+            for (let pointer of pointers.values()) {
+                if (pointer.buttons === 1) {
+                    if (!a) {
+                        a = pointer;
+                    }
+                    else if (!b) {
+                        b = pointer;
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
+
+            const dx = b.x - a.x,
+                dy = b.y - a.y;
+
+            return Math.sqrt(dx * dx + dy * dy);
+        };
+
+        element.addEventListener("wheel", (evt) => {
+            if (!evt.shiftKey
+                && !evt.altKey
+                && !evt.ctrlKey
+                && !evt.metaKey) {
+                evt.preventDefault();
+                // Chrome and Firefox report scroll values in completely different ranges.
+                const deltaZ = -evt.deltaY * (isFirefox ? 1 : 0.02);
+                wheelEvt.dz = deltaZ;
+                this.dispatchEvent(wheelEvt);
+            }
+        }, { passive: false });
+
+        element.addEventListener("pointerdown", (evt) => {
+            const oldCount = getPressCount(),
+                pointer = readPointer(evt),
+                _ = replacePointer(pointer),
+                newCount = getPressCount();
+
+            canClick = oldCount === 0
+                && newCount === 1;
+        });
+
+        element.addEventListener("pointermove", (evt) => {
+            const oldPinchDistance = getPinchDistance(),
+                pointer = readPointer(evt),
+                last = replacePointer(pointer),
+                count = getPressCount(),
+                newPinchDistance = getPinchDistance();
+
+            setEvt(moveEvt, pointer);
+            this.dispatchEvent(moveEvt);
+
+            if (count === 1
+                && pointer.buttons === 1
+                && last && last.buttons === pointer.buttons) {
+                pointer.dragDistance = last.dragDistance + pointer.moveDistance;
+                if (pointer.dragDistance > MAX_DRAG_DISTANCE) {
+                    canClick = false;
+                    setEvt(dragEvt, pointer);
+                    this.dispatchEvent(dragEvt);
+                }
+            }
+
+            if (oldPinchDistance !== null
+                && newPinchDistance !== null) {
+                canClick = false;
+                const ddist = newPinchDistance - oldPinchDistance;
+                wheelEvt.dz = ddist / 100;
+                this.dispatchEvent(wheelEvt);
+            }
+        });
+
+        element.addEventListener("pointerup", (evt) => {
+            const pointer = readPointer(evt),
+                _ = replacePointer(pointer);
+
+            if (canClick) {
+                setEvt(clickEvt, pointer);
+                this.dispatchEvent(clickEvt);
+            }
+        });
+
+        element.addEventListener("pointercancel", (evt) => {
+            const pointer = readPointer(evt);
+            if (pointers.has(pointer.id)) {
+                pointers.delete(pointer.id);
+            }
+
+            return pointer;
+        });
+    }
+}
+
 const EMOJI_LIFE = 3;
 
 class Emote {
@@ -31463,7 +31663,6 @@ class TileMap {
 
 const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_SHAPE = 2,
-    MAX_DRAG_DISTANCE = 5,
     MOVE_REPEAT = 0.125,
     gameStartedEvt = new Event("gameStarted"),
     gameEndedEvt = new Event("gameEnded"),
@@ -31524,10 +31723,6 @@ class Game extends EventBase {
         this.audioDistanceMax = 10;
         this.rolloff = 5;
 
-        this.pointers = [];
-        this.lastPinchDistance = 0;
-        this.canClick = false;
-
         this.currentEmoji = null;
 
         /** @type {Emote[]} */
@@ -31586,146 +31781,26 @@ class Game extends EventBase {
         // ============= KEYBOARD =================
 
         // ============= POINTERS =================
-
-        this.element.addEventListener("wheel", (evt) => {
-            if (!evt.shiftKey
-                && !evt.altKey
-                && !evt.ctrlKey
-                && !evt.metaKey) {
-                evt.preventDefault();
-                // Chrome and Firefox report scroll values in completely different ranges.
-                const deltaZ = -evt.deltaY * (isFirefox ? 1 : 0.02);
-                this.zoom += deltaZ;
+        this.screenControls = new ScreenPointerControls(this.element);
+        addEventListeners(this.screenControls, {
+            wheel: (evt) => {
+                this.zoom += evt.dz;
                 this.dispatchEvent(zoomChangedEvt$1);
-            }
-        }, { passive: false });
+            },
+            drag: (evt) => {
+                this.targetOffsetCameraX = this.offsetCameraX += evt.dx;
+                this.targetOffsetCameraY = this.offsetCameraY += evt.dy;
+            },
+            click: (evt) => {
+                if (!!this.me) {
+                    const tile = this.getTileAt(evt),
+                        dx = tile.x - this.me.gridX,
+                        dy = tile.y - this.me.gridY;
 
-        function readPointer(evt) {
-            return {
-                id: evt.pointerId,
-                buttons: evt.buttons,
-                dragDistance: 0,
-                x: evt.offsetX * devicePixelRatio,
-                y: evt.offsetY * devicePixelRatio
-            }
-        }
-
-        const findPointer = (pointer) => {
-            return this.pointers.findIndex(p => p.id === pointer.id);
-        };
-
-        const replacePointer = (pointer) => {
-            const idx = findPointer(pointer);
-            if (idx > -1) {
-                const last = this.pointers[idx];
-                this.pointers[idx] = pointer;
-                return last;
-            }
-            else {
-                this.pointers.push(pointer);
-                return null;
-            }
-        };
-
-        const getPressCount = () => {
-            let count = 0;
-            for (let pointer of this.pointers) {
-                if (pointer.buttons === 1) {
-                    ++count;
-                }
-            }
-            return count;
-        };
-
-        this.element.addEventListener("pointerdown", (evt) => {
-            const oldCount = getPressCount(),
-                pointer = readPointer(evt),
-                _ = replacePointer(pointer),
-                newCount = getPressCount();
-
-            this.canClick = oldCount === 0
-                && newCount === 1;
-        });
-
-        const getPinchDistance = () => {
-            const count = getPressCount();
-            if (count !== 2) {
-                return null;
-            }
-
-            const pressed = this.pointers.filter(p => p.buttons === 1),
-                a = pressed[0],
-                b = pressed[1],
-                dx = b.x - a.x,
-                dy = b.y - a.y;
-
-            return Math.sqrt(dx * dx + dy * dy);
-        };
-
-        this.element.addEventListener("pointermove", (evt) => {
-            const oldPinchDistance = getPinchDistance(),
-                pointer = readPointer(evt),
-                last = replacePointer(pointer),
-                count = getPressCount(),
-                newPinchDistance = getPinchDistance();
-
-            if (count === 1) {
-
-                if (!!last
-                    && pointer.buttons === 1
-                    && last.buttons === pointer.buttons) {
-                    const dx = pointer.x - last.x,
-                        dy = pointer.y - last.y,
-                        dist = Math.sqrt(dx * dx + dy * dy);
-                    pointer.dragDistance = last.dragDistance + dist;
-
-                    if (pointer.dragDistance > MAX_DRAG_DISTANCE) {
-                        this.targetOffsetCameraX = this.offsetCameraX += dx;
-                        this.targetOffsetCameraY = this.offsetCameraY += dy;
-                        this.canClick = false;
-                    }
-                }
-
-            }
-
-            if (oldPinchDistance !== null
-                && newPinchDistance !== null) {
-                this.canClick = false;
-                const ddist = newPinchDistance - oldPinchDistance;
-                this.zoom += ddist / 100;
-                this.dispatchEvent(zoomChangedEvt$1);
-            }
-        });
-
-        this.element.addEventListener("pointerup", (evt) => {
-            const pointer = readPointer(evt),
-                _ = replacePointer(pointer);
-
-            if (!!this.me && pointer.dragDistance < 2) {
-                const tile = this.getTileAt(pointer),
-                    dx = tile.x - this.me.gridX,
-                    dy = tile.y - this.me.gridY;
-
-                if (dx === 0 && dy === 0) {
-                    this.emote(this.me.id, this.currentEmoji);
-                }
-                else if (this.canClick) {
                     this.moveMeByPath(dx, dy);
                 }
             }
         });
-
-        this.element.addEventListener("pointercancel", (evt) => {
-            const pointer = readPointer(evt),
-                idx = findPointer(pointer);
-
-            if (idx >= 0) {
-                arrayRemoveAt(this.pointers, idx);
-            }
-
-            return pointer;
-        });
-
         // ============= POINTERS =================
 
         // ============= ACTION ==================
@@ -32194,9 +32269,9 @@ class Game extends EventBase {
 
 
     drawCursor() {
-        if (this.pointers.length === 1) {
-            const pointer = this.pointers[0],
-                tile = this.getTileAt(pointer);
+        const pointer = this.screenControls.primaryPointer;
+        if (pointer) {
+            const tile = this.getTileAt(pointer);
             this.gFront.strokeStyle = this.map.isClear(tile.x, tile.y, this.me.avatar)
                 ? "green"
                 : "red";

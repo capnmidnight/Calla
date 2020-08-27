@@ -31962,8 +31962,8 @@ function middleInside( a, b ) {
 // if one belongs to the outer ring and another to a hole, it merges it into a single ring
 function splitPolygon( a, b ) {
 
-	let a2 = new Node( a.i, a.x, a.y ),
-		b2 = new Node( b.i, b.x, b.y ),
+	let a2 = new Node$1( a.i, a.x, a.y ),
+		b2 = new Node$1( b.i, b.x, b.y ),
 		an = a.next,
 		bp = b.prev;
 
@@ -31986,7 +31986,7 @@ function splitPolygon( a, b ) {
 // create a node and optionally link it with previous one (in a circular doubly linked list)
 function insertNode( i, x, y, last ) {
 
-	const p = new Node( i, x, y );
+	const p = new Node$1( i, x, y );
 
 	if ( ! last ) {
 
@@ -32016,7 +32016,7 @@ function removeNode( p ) {
 
 }
 
-function Node( i, x, y ) {
+function Node$1( i, x, y ) {
 
 	// vertex index in coordinates array
 	this.i = i;
@@ -52027,6 +52027,18 @@ MapControls.prototype = Object.create( EventDispatcher.prototype );
 MapControls.prototype.constructor = MapControls;
 
 /**
+ * Empties out an array
+ * @param {any[]} arr - the array to empty.
+ * @returns {any[]} - the items that were in the array.
+ */
+function arrayClear(arr) {
+    if (!(arr instanceof Array)) {
+        throw new Error("Must provide an array as the first parameter.");
+    }
+    return arr.splice(0);
+}
+
+/**
  * Removes an item at the given index from an array.
  * @param {any[]} arr
  * @param {number} idx
@@ -52071,6 +52083,17 @@ function t(o, s, c) {
 
 function isFunction(obj) {
     return t(obj, "function", Function);
+}
+
+function isString(obj) {
+    return t(obj, "string", String);
+}
+
+function isNumber(obj) {
+    return t(obj, "number", Number);
+}
+function isBoolean(obj) {
+    return t(obj, "boolean", Boolean);
 }
 
 const EventBase = (function () {
@@ -52155,6 +52178,17 @@ const EventBase = (function () {
     }
 
 })();
+
+/**
+ * Check a value to see if it is of a number type
+ * and is not the special NaN value.
+ * 
+ * @param {any} v
+ */
+function isGoodNumber(v) {
+    return isNumber(v)
+        && !Number.isNaN(v);
+}
 
 const audioActivityEvt = new AudioActivityEvent();
 
@@ -53125,6 +53159,92 @@ let hasAudioContext = Object.prototype.hasOwnProperty.call(window, "AudioContext
     hasAudioListener = hasAudioContext && Object.prototype.hasOwnProperty.call(window, "AudioListener"),
     hasOldAudioListener = hasAudioListener && Object.prototype.hasOwnProperty.call(AudioListener.prototype, "setPosition"),
     hasNewAudioListener = hasAudioListener && Object.prototype.hasOwnProperty.call(AudioListener.prototype, "positionX");
+
+/**
+ * 
+ * @param {Function} a
+ * @param {Function} b
+ */
+function add(a, b) {
+    return evt => {
+        a(evt);
+        b(evt);
+    };
+}
+
+/**
+ * 
+ * @param {EventBase|EventTarget} target
+ * @param {any} obj
+ */
+function addEventListeners(target, obj) {
+    for (let evtName in obj) {
+        let callback = obj[evtName];
+        let opts = undefined;
+        if (callback instanceof Array) {
+            opts = callback[1];
+            callback = callback[0];
+        }
+
+        target.addEventListener(evtName, callback, opts);
+    }
+}
+
+/**
+ * Wait for a specific event, one time.
+ * @param {EventBase|EventTarget} target - the event target.
+ * @param {string} resolveEvt - the name of the event that will resolve the Promise this method creates.
+ * @param {string} rejectEvt - the name of the event that could reject the Promise this method creates.
+ * @param {number} timeout - the number of milliseconds to wait for the resolveEvt, before rejecting.
+ */
+function once(target, resolveEvt, rejectEvt, timeout) {
+
+    if (timeout === undefined
+        && isGoodNumber(rejectEvt)) {
+        timeout = rejectEvt;
+        rejectEvt = undefined;
+    }
+
+    return new Promise((resolve, reject) => {
+        const hasResolveEvt = isString(resolveEvt);
+        if (hasResolveEvt) {
+            const oldResolve = resolve;
+            const remove = () => {
+                target.removeEventListener(resolveEvt, oldResolve);
+            };
+            resolve = add(remove, resolve);
+            reject = add(remove, reject);
+        }
+
+        const hasRejectEvt = isString(rejectEvt);
+        if (hasRejectEvt) {
+            const oldReject = reject;
+            const remove = () => {
+                target.removeEventListener(rejectEvt, oldReject);
+            };
+
+            resolve = add(remove, resolve);
+            reject = add(remove, reject);
+        }
+
+        if (isNumber(timeout)) {
+            const timer = setTimeout(reject, timeout, `'${resolveEvt}' has timed out.`),
+                cancel = () => clearTimeout(timer);
+            resolve = add(cancel, resolve);
+            reject = add(cancel, reject);
+        }
+
+        if (hasResolveEvt) {
+            target.addEventListener(resolveEvt, resolve);
+        }
+
+        if (hasRejectEvt) {
+            target.addEventListener(rejectEvt, () => {
+                reject("Rejection event found");
+            });
+        }
+    });
+}
 
 /*!
  * jQuery JavaScript Library v3.5.1
@@ -63990,13 +64110,215 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-const versionString = "v0.7.1";
+const versionString = "v0.7.2";
 
 /* global JitsiMeetJS */
 
 console.info("Calla", versionString);
 
 const audioActivityEvt$2 = new AudioActivityEvent();
+
+const isFirefox = typeof InstallTrigger !== "undefined";
+
+class ScreenPointerEvent extends Event {
+    constructor(type) {
+        super(type);
+
+        this.x = 0;
+        this.y = 0;
+        this.dx = 0;
+        this.dy = 0;
+        this.u = 0;
+        this.v = 0;
+        this.du = 0;
+        this.dv = 0;
+        this.button = 0;
+    }
+}
+
+const MAX_DRAG_DISTANCE = 5,
+    clickEvt = new ScreenPointerEvent("click"),
+    moveEvt = new ScreenPointerEvent("move"),
+    dragEvt = new ScreenPointerEvent("drag"),
+    wheelEvt = Object.assign(new Event("wheel"), {
+        dz: 0
+    });
+
+class ScreenPointerControls extends EventBase {
+    /**
+     * @param {Element} element the element from which to receive pointer events
+     * @param {boolean} clampCursor whether or not to clamp the pointer to the edges of the element
+     */
+    constructor(element, clampCursor = false) {
+        super();
+
+        const pointers = new Map();
+        let canClick = true;
+
+        Object.defineProperty(this, "primaryPointer", {
+            get: () => {
+                for (let pointer of pointers.values()) {
+                    return pointer;
+                }
+            }
+        });
+
+        function setEvt(evt, pointer) {
+            evt.x = pointer.x;
+            evt.y = pointer.y;
+            evt.dx = pointer.dx;
+            evt.dy = pointer.dy;
+
+            evt.u = 2 * evt.x / element.clientWidth - 1;
+            evt.v = -2 * evt.y / element.clientHeight + 1;
+            evt.du = 2 * evt.dx / element.clientWidth;
+            evt.dv = -2 * evt.dy / element.clientHeight;
+        }
+
+        function readPointer(evt) {
+            return {
+                id: evt.pointerId,
+                buttons: evt.buttons,
+                moveDistance: 0,
+                dragDistance: 0,
+                x: evt.offsetX,
+                y: evt.offsetY,
+                dx: evt.movementX,
+                dy: evt.movementY
+            }
+        }
+
+        const replacePointer = (pointer) => {
+            const last = pointers.get(pointer.id);
+
+            if (last && document.pointerLockElement) {
+                pointer.x = last.x + pointer.dx;
+                pointer.y = last.y + pointer.dy;
+                if (clampCursor) {
+                    pointer.x = Math.max(0, Math.min(element.clientWidth, pointer.x));
+                    pointer.y = Math.max(0, Math.min(element.clientHeight, pointer.y));
+                }
+            }
+
+            pointer.moveDistance = Math.sqrt(
+                pointer.dx * pointer.dx
+                + pointer.dy * pointer.dy);
+
+            pointers.set(pointer.id, pointer);
+
+            return last;
+        };
+
+        const getPressCount = () => {
+            let count = 0;
+            for (let pointer of pointers.values()) {
+                if (pointer.buttons === 1) {
+                    ++count;
+                }
+            }
+            return count;
+        };
+
+        const getPinchDistance = () => {
+            const count = getPressCount();
+            if (count !== 2) {
+                return null;
+            }
+
+            let a, b;
+            for (let pointer of pointers.values()) {
+                if (pointer.buttons === 1) {
+                    if (!a) {
+                        a = pointer;
+                    }
+                    else if (!b) {
+                        b = pointer;
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
+
+            const dx = b.x - a.x,
+                dy = b.y - a.y;
+
+            return Math.sqrt(dx * dx + dy * dy);
+        };
+
+        element.addEventListener("wheel", (evt) => {
+            if (!evt.shiftKey
+                && !evt.altKey
+                && !evt.ctrlKey
+                && !evt.metaKey) {
+                evt.preventDefault();
+                // Chrome and Firefox report scroll values in completely different ranges.
+                const deltaZ = -evt.deltaY * (isFirefox ? 1 : 0.02);
+                wheelEvt.dz = deltaZ;
+                this.dispatchEvent(wheelEvt);
+            }
+        }, { passive: false });
+
+        element.addEventListener("pointerdown", (evt) => {
+            const oldCount = getPressCount(),
+                pointer = readPointer(evt),
+                _ = replacePointer(pointer),
+                newCount = getPressCount();
+
+            canClick = oldCount === 0
+                && newCount === 1;
+        });
+
+        element.addEventListener("pointermove", (evt) => {
+            const oldPinchDistance = getPinchDistance(),
+                pointer = readPointer(evt),
+                last = replacePointer(pointer),
+                count = getPressCount(),
+                newPinchDistance = getPinchDistance();
+
+            setEvt(moveEvt, pointer);
+            this.dispatchEvent(moveEvt);
+
+            if (count === 1
+                && pointer.buttons === 1
+                && last && last.buttons === pointer.buttons) {
+                pointer.dragDistance = last.dragDistance + pointer.moveDistance;
+                if (pointer.dragDistance > MAX_DRAG_DISTANCE) {
+                    canClick = false;
+                    setEvt(dragEvt, pointer);
+                    this.dispatchEvent(dragEvt);
+                }
+            }
+
+            if (oldPinchDistance !== null
+                && newPinchDistance !== null) {
+                canClick = false;
+                const ddist = newPinchDistance - oldPinchDistance;
+                wheelEvt.dz = ddist / 100;
+                this.dispatchEvent(wheelEvt);
+            }
+        });
+
+        element.addEventListener("pointerup", (evt) => {
+            const pointer = readPointer(evt),
+                _ = replacePointer(pointer);
+
+            if (canClick) {
+                setEvt(clickEvt, pointer);
+                this.dispatchEvent(clickEvt);
+            }
+        });
+
+        element.addEventListener("pointercancel", (evt) => {
+            const pointer = readPointer(evt);
+            if (pointers.has(pointer.id)) {
+                pointers.delete(pointer.id);
+            }
+
+            return pointer;
+        });
+    }
+}
 
 class TimerTickEvent extends Event {
     constructor() {
@@ -64093,58 +64415,319 @@ class RequestAnimationFrameTimer extends BaseTimer {
     }
 }
 
-const renderer = new WebGLRenderer({
-    canvas: document.getElementById("frontBuffer"),
-    powerPreference: "high-performance",
-    precision: "highp",
-    antialias: true,
-    depth: true,
-    stencil: true,
-    premultipliedAlpha: true,
-    logarithmicDepthBuffer: true,
-    alpha: false,
-    preserveDrawingBuffer: false
-});
-renderer.setPixelRatio(window.devicePixelRatio);
+/**
+ * @param {string} path
+ * @returns {Promise<any>}
+ */
+async function getObject(path) {
+    const request = fetch(path),
+        response = await request;
+    if (!response.ok) {
+        throw new Error(`[${response.status}] - ${response.statusText}`);
+    }
 
-const scene = new Scene();
-scene.background = new Color(0x606060);
-
-const light = new AmbientLight(0xffffff, 1);
-scene.add(light);
-
-const gridColor = new Color(0x808080);
-const grid = new GridHelper(20, 40, gridColor, gridColor);
-scene.add(grid);
-
-const camera = new PerspectiveCamera(50, 1, 0.01, 1000);
-camera.position.set(0, 1.6, 0);
-
-const controls = new OrbitControls(camera, renderer.domElement);
-
-function update() {
-    controls.update();
-    renderer.render(scene, camera);
+    return await response.json();
 }
-const timer = new RequestAnimationFrameTimer();
-timer.addEventListener("tick", update);
-timer.start();
 
+/**
+ * A setter functor for HTML attributes.
+ **/
+class HtmlAttr {
+    /**
+     * Creates a new setter functor for HTML Attributes
+     * @param {string} key - the attribute name.
+     * @param {string} value - the value to set for the attribute.
+     * @param {...string} tags - the HTML tags that support this attribute.
+     */
+    constructor(key, value, ...tags) {
+        this.key = key;
+        this.value = value;
+        this.tags = tags.map(t => t.toLocaleUpperCase());
+        Object.freeze(this);
+    }
 
-function resize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        const isValid = this.tags.length === 0
+            || this.tags.indexOf(elem.tagName) > -1;
+
+        if (!isValid) {
+            console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
+        }
+        else if (this.key === "style") {
+            Object.assign(elem[this.key], this.value);
+        }
+        else if (!isBoolean(value)) {
+            elem[this.key] = this.value;
+        }
+        else if (this.value) {
+            elem.setAttribute(this.key, "");
+        }
+        else {
+            elem.removeAttribute(this.key);
+        }
+    }
 }
-window.addEventListener("resize", resize);
-resize();
 
-const activities = document.querySelectorAll("section");
-const count = activities.length;
-let i = 0;
-for (let activity of activities) {
-    // Use a Cube for the Skybox
-    const geom = new SphereBufferGeometry(0.5, 100, 50);
+/**
+ * The URL of the embeddable content.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function src(value) { return new HtmlAttr("src", value, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
+
+/**
+ * Defines a default value which will be displayed in the element on page load.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function value(value) { return new HtmlAttr("value", value, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
+
+/**
+ * A CSS property that will be applied to an element's style attribute.
+ **/
+class CssProp {
+    /**
+     * Creates a new CSS property that will be applied to an element's style attribute.
+     * @param {string} key - the property name.
+     * @param {string} value - the value to set for the property.
+     */
+    constructor(key, value) {
+        this.key = key;
+        this.value = value;
+        Object.freeze(this);
+    }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        elem.style[this.key] = this.value;
+    }
+}
+
+class CssPropSet {
+    /**
+     * @param {...(CssProp|CssPropSet)} rest
+     */
+    constructor(...rest) {
+        this.set = new Map();
+        const set = (key, value) => {
+            if (value || isBoolean(value)) {
+                this.set.set(key, value);
+            }
+            else if (this.set.has(key)) {
+                this.set.delete(key);
+            }
+        };
+        for (let prop of rest) {
+            if (prop instanceof CssProp) {
+                const { key, value } = prop;
+                set(key, value);
+            }
+            else if (prop instanceof CssPropSet) {
+                for (let subProp of prop.set.entries()) {
+                    const [key, value] = subProp;
+                    set(key, value);
+                }
+            }
+        }
+    }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        for (let prop of this.set.entries()) {
+            const [key, value] = prop;
+            elem.style[key] = value;
+        }
+    }
+}
+
+/**
+ * Creates a style attribute with a fontFamily property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function fontFamily(v) { return new CssProp("fontFamily", v); }
+
+
+// A selection of fonts for preferred monospace rendering.
+const monospaceFonts = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
+const monospaceFamily = fontFamily(monospaceFonts);
+// A selection of fonts that should match whatever the user's operating system normally uses.
+const systemFonts = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
+const systemFamily = fontFamily(systemFonts);
+
+/**
+ * A setter functor for HTML element events.
+ **/
+class HtmlEvt {
+    /**
+     * Creates a new setter functor for an HTML element event.
+     * @param {string} name - the name of the event to attach to.
+     * @param {Function} callback - the callback function to use with the event handler.
+     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+     */
+    constructor(name, callback, opts) {
+        if (!isFunction(callback)) {
+            throw new Error("A function instance is required for this parameter");
+        }
+
+        this.name = name;
+        this.callback = callback;
+        this.opts = opts;
+        Object.freeze(this);
+    }
+
+    /**
+     * Add the encapsulate callback as an event listener to the give HTMLElement
+     * @param {HTMLElement} elem
+     */
+    add(elem) {
+        elem.addEventListener(this.name, this.callback, this.opts);
+    }
+
+    /**
+     * Remove the encapsulate callback as an event listener from the give HTMLElement
+     * @param {HTMLElement} elem
+     */
+    remove(elem) {
+        elem.removeEventListener(this.name, this.callback);
+    }
+}
+
+/**
+ * @typedef {(Element|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
+ **/
+
+/**
+ * Creates an HTML element for a given tag name.
+ * 
+ * Boolean attributes that you want to default to true can be passed
+ * as just the attribute creating function, 
+ *   e.g. `Audio(autoPlay)` vs `Audio(autoPlay(true))`
+ * @param {string} name - the name of the tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLElement}
+ */
+function tag(name, ...rest) {
+    let elem = null;
+
+    for (let i = 0; i < rest.length; ++i) {
+        const attr = rest[i];
+        if (isFunction(attr)) {
+            rest[i] = attr(true);
+        }
+
+        if (attr instanceof HtmlAttr
+            && attr.key === "id") {
+            elem = document.getElementById(attr.value);
+        }
+    }
+
+    if (elem === null) {
+        elem = document.createElement(name);
+    }
+
+    for (let x of rest) {
+        if (x !== null && x !== undefined) {
+            if (isString(x)
+                || isNumber(x)
+                || isBoolean(x)
+                || x instanceof Date) {
+                elem.appendChild(document.createTextNode(x));
+            }
+            else if (x instanceof Node) {
+                elem.appendChild(x);
+            }
+            else if (x.element instanceof Node) {
+                elem.appendChild(x.element);
+            }
+            else if (x instanceof HtmlAttr
+                || x instanceof CssProp
+                || x instanceof CssPropSet) {
+                x.apply(elem);
+            }
+            else if (x instanceof HtmlEvt) {
+                x.add(elem);
+            }
+            else {
+                console.trace(`Skipping ${x}: unsupported value type.`, x);
+            }
+        }
+    }
+
+    return elem;
+}
+
+/**
+ * creates an HTML Img tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLImageElement}
+ */
+function Img(...rest) { return tag("img", ...rest); }
+
+class AbstractCubeMapView extends Mesh {
+    /**
+     * @param {BoxBufferGeometry|SphereBufferGeometry} geom
+     */
+    constructor(geom) {
+        const mat = new MeshBasicMaterial({ side: BackSide });
+        super(geom, mat);
+        this.isVideo = false;
+    }
+
+    /**
+     *
+     * @param {HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|string|Texture} img
+     */
+    async setImage(img) {
+        if (isString(img)) {
+            img = Img(src(img));
+        }
+
+        if (img instanceof HTMLImageElement && !img.complete) {
+            await once(img, "load", "error", 10000);
+        }
+
+        if (!(img instanceof Texture)) {
+            img = new Texture(img);
+        }
+
+        this.material.map = img;
+        img = this.material.map.image;
+        console.log(img);
+        this.isVideo = img instanceof HTMLVideoElement;
+        this.updateTexture();
+    }
+
+    updateTexture() {
+        if (this.material && this.material.map) {
+            this.material.map.needsUpdate = true;
+        }
+    }
+
+    update() {
+        if (this.isVideo) {
+            this.updateTexture();
+        }
+    }
+}
+
+/**
+ * Recalculates the UV coordinates for a BufferGeometry
+ * object to be able to map to a Cubemap that is packed as
+ * a cross-configuration in a single image.
+ * @param {BufferGeometry} geom
+ */
+function setGeometryUVsForCubemaps(geom) {
     const positions = geom.attributes.position;
     const normals = geom.attributes.normal;
     const uvs = geom.attributes.uv;
@@ -64222,8 +64805,8 @@ for (let activity of activities) {
             }
         }
 
-        u = 0.5 * (u / max + 1) * 0.25;
-        v = 0.5 * (v / max + 1) * 0.333333;
+        u = (u / max + 1) / 8;
+        v = (v / max + 1) / 6;
 
         if (largest === 0) {
             if (px < 0) {
@@ -64265,18 +64848,229 @@ for (let activity of activities) {
         uvs.array[_u] = u;
         uvs.array[_v] = v;
     }
+}
 
-    const img = activity.querySelector("img");
-    const map = new Texture(img);
-    const mat = new MeshBasicMaterial({ map, side: BackSide });
-    const mesh = new Mesh(geom, mat);
-    mesh.position.set(2 * Math.cos(2 * i * Math.PI / count), 1, 2 * Math.sin(2 * i * Math.PI / count) - 5);
-    ++i;
-    scene.add(mesh);
+class Skybox extends AbstractCubeMapView {
+    /**
+     * @param {PerspectiveCamera} camera
+     */
+    constructor(camera) {
+        const dim = Math.sqrt(camera.far * camera.far / 3);
+        const geom = new BoxBufferGeometry(dim, dim, dim, 1, 1, 1);
+        setGeometryUVsForCubemaps(geom);
+        super(geom);
 
-    img.addEventListener("load", () => {
-        map.needsUpdate = true;
-    }, { once: true });
+        this.camera = camera;
+    }
+
+    update() {
+        super.update();
+        this.position.copy(this.camera.position);
+    }
+}
+
+class StationIcon extends AbstractCubeMapView {
+    /**
+     * @param {PerspectiveCamera} camera
+     */
+    constructor() {
+        const geom = new SphereBufferGeometry(0.25, 50, 25);
+        setGeometryUVsForCubemaps(geom);
+        super(geom);
+    }
+}
+
+const renderer = new WebGLRenderer({
+    canvas: document.getElementById("frontBuffer"),
+    powerPreference: "high-performance",
+    precision: "highp",
+    antialias: true,
+    depth: true,
+    stencil: true,
+    premultipliedAlpha: true,
+    logarithmicDepthBuffer: true,
+    alpha: false,
+    preserveDrawingBuffer: false
+});
+renderer.setPixelRatio(window.devicePixelRatio);
+
+const camera = new PerspectiveCamera(50, 1, 0.01, 1000);
+camera.position.set(0, 1.6, 1);
+
+const scene = new Scene();
+scene.background = new Color(0x606060);
+window.scene = scene;
+
+const background = new Object3D();
+scene.add(background);
+
+const light = new AmbientLight(0xffffff, 1);
+background.add(light);
+
+const skybox = new Skybox(camera);
+skybox.visible = false;
+background.add(skybox);
+
+const foreground = new Object3D();
+scene.add(foreground);
+
+/** @type {Map<Object3D, function>} */
+const objectClicks = new Map();
+const raycaster = new Raycaster();
+const screenPointer = new ScreenPointerControls(renderer.domElement);
+addEventListeners(screenPointer, {
+    move: (evt) => {
+        raycaster.setFromCamera({ x: evt.u, y: evt.v }, camera);
+    },
+    click: (evt) => {
+        if (objectClicks.has(lastObj)) {
+            objectClicks.get(lastObj)();
+        }
+    }
+});
+
+const cube = new BoxBufferGeometry(0.1, 0.1, 0.1, 1, 1, 1);
+const mube = new MeshBasicMaterial({ color: 0xff0000 });
+function D() {
+    return new Mesh(cube, mube);
+}
+
+const curIcons = [];
+/** @type {Map<number, Object3D>} */
+const curTransforms = new Map();
+/** @type {Map<number, any>} */
+const curStations = new Map();
+
+/**
+ * @param {number} actID
+ */
+async function loadActivity(actID) {
+    const activity = `/VR/Activity/${actID}`,
+        transforms = await getObject(`${activity}/Transforms`),
+        stations = await getObject(`${activity}/Stations`),
+        audio = await getObject(`${activity}/Audio`),
+        signs = await getObject(`${activity}/Signs`);
+
+    console.log(activity);
+    console.log(transforms);
+    console.log(stations);
+    console.log(audio);
+    console.log(signs);
+
+    foreground.remove(...foreground.children);
+    arrayClear(curIcons);
+    objectClicks.clear();
+    curTransforms.clear();
+    curStations.clear();
+
+    const matrix = new Matrix4();
+    for (let transform of transforms) {
+        const obj = new Object3D();
+        obj.name = transform.name;
+        obj.userData.id = transform.id;
+        matrix.fromArray(transform.matrix);
+        matrix.decompose(obj.position, obj.quaternion, obj.scale);
+        obj.updateMatrix();
+        curTransforms.set(transform.id, obj);
+    }
+
+    for (let transform of transforms) {
+        const child = curTransforms.get(transform.id);
+        if (transform.parentID === 0) {
+            foreground.add(child);
+        }
+        else {
+            const parent = curTransforms.get(transform.parentID);
+            parent.attach(child);
+        }
+    }
+
+    for (let station of stations) {
+        const parent = curTransforms.get(station.transformID),
+            icon = D(),
+            imgPath = `/VR/File/${station.fileID}`,
+            jump = () => {
+                skybox.setImage(imgPath);
+                skybox.visible = true;
+                camera.position.copy(parent.position);
+            };
+
+        parent.add(icon);
+        objectClicks.set(icon, jump);
+        curStations.set(station.transformID, station);
+        if (station.isStart) {
+            jump();
+        }
+    }
+}
+
+const controls = Object.assign(new OrbitControls(camera, renderer.domElement), {
+    enableDamping: true,
+    dampingFactor: 0.05,
+    screenSpacePanning: false,
+    minDistance: 1,
+    maxDistance: 5,
+    minPolarAngle: Math.PI / 6,
+    maxPolarAngle: 5 * Math.PI / 8,
+    center: new Vector3(0, 1, 0)
+});
+
+const hits = [];
+/** @type {Object3D} */
+let lastObj = null;
+
+function update() {
+    if (lastObj) {
+        lastObj.scale.set(1, 1, 1);
+        lastObj = null;
+    }
+    controls.update();
+    skybox.update();
+    for (let icon of curIcons) {
+        icon.update();
+    }
+
+    arrayClear(hits);
+    raycaster.intersectObject(foreground, true, hits);
+    for (let hit of hits) {
+        lastObj = hit.object;
+    }
+    if (lastObj) {
+        lastObj.scale.set(1.1, 1.1, 1.1);
+    }
+    renderer.render(scene, camera);
+}
+const timer = new RequestAnimationFrameTimer();
+timer.addEventListener("tick", update);
+timer.start();
+
+
+function resize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+window.addEventListener("resize", resize);
+resize();
+
+const activities = document.querySelectorAll("section"),
+    count = activities.length;
+for (let i = 0; i < activities.length; ++i) {
+    const activity = activities[i],
+        match = activity.id.match(/^act-(\d+)/),
+        actID = parseInt(match[1], 10),
+        img = activity.querySelector("img"),
+        icon = new StationIcon(),
+        a = 2 * i * Math.PI / count;
+
+    curIcons.push(icon);
+    icon.setImage(img);
+    icon.name = activity.id;
+    icon.position.set(Math.cos(a), 1, Math.sin(a));
+
+    foreground.add(icon);
+
+    objectClicks.set(icon, () => loadActivity(actID));
 }
 
 } catch(exp) {
