@@ -52190,6 +52190,18 @@ function isGoodNumber(v) {
         && !Number.isNaN(v);
 }
 
+/**
+ * Pick a value that is proportionally between two values.
+ * 
+ * @param {number} a
+ * @param {number} b
+ * @param {number} p
+ * @returns {number}
+ */
+function lerp(a, b, p) {
+    return (1 - p) * a + p * b;
+}
+
 const audioActivityEvt = new AudioActivityEvent();
 
 /**
@@ -64325,6 +64337,7 @@ class TimerTickEvent extends Event {
         super("tick");
         this.dt = 0;
         this.t = 0;
+        this.sdt = 0;
         Object.seal(this);
     }
 }
@@ -64353,8 +64366,18 @@ class BaseTimer extends EventBase {
             this._onTick = (t) => {
                 tickEvt.t = t;
                 tickEvt.dt = t - lt;
+                tickEvt.sdt = tickEvt.dt;
                 lt = t;
-                this.dispatchEvent(tickEvt);
+                /**
+                 * @param {number} t
+                 */
+                this._onTick = (t) => {
+                    tickEvt.t = t;
+                    tickEvt.dt = t - lt;
+                    tickEvt.sdt = lerp(tickEvt.sdt, tickEvt.dt, 0.01);
+                    lt = t;
+                    this.dispatchEvent(tickEvt);
+                };
             };
         };
     }
@@ -64719,6 +64742,7 @@ class AbstractCubeMapView extends Mesh {
                 await once(img, "load", "error", 10000);
             }
 
+            // Force the image to be power-of-2 dimensioned.
             const w = Math.pow(2, Math.floor(Math.log2(img.width))),
                 h = Math.pow(2, Math.floor(Math.log2(img.height))),
                 canv = Canvas(
@@ -64727,9 +64751,10 @@ class AbstractCubeMapView extends Mesh {
                 g = canv.getContext("2d");
             g.drawImage(img, 0, 0, img.width, img.height, 0, 0, w, h);
 
-            img = new CanvasTexture(canv);
+            img = canv;
         }
-        else if (!(img instanceof Texture)) {
+
+        if (!(img instanceof Texture)) {
             img = new Texture(img);
         }
 
@@ -64911,6 +64936,64 @@ class StationIcon extends AbstractCubeMapView {
     }
 }
 
+const completeEvt = { type: "fadeComplete" };
+
+class Fader extends Mesh {
+    /**
+     * 
+     * @param {PerspectiveCamera} camera
+     * @param {number} t
+     * @param {Color|number} color
+     */
+    constructor(camera, t = 0.25, color = 0x000000) {
+        const geom = new PlaneBufferGeometry(1, 1, 1, 1);
+        const mat = new MeshBasicMaterial({ color, opacity: 1, transparent: true });
+        super(geom, mat);
+
+        this.material = mat;
+
+        this.speed = 1 / t;
+        this.direction = 0;
+
+        camera.add(this);
+        this.position.set(0, 0, -0.1);
+    }
+
+    get opacity() {
+        return this.material.opacity;
+    }
+
+    set opacity(v) {
+        this.material.opacity = v;
+    }
+
+    async fadeOut() {
+        this.direction = 1;
+        await once(this, "fadeComplete");
+    }
+
+    async fadeIn() {
+        this.direction = -1;
+        await once(this, "fadeComplete");
+    }
+
+    update(dt) {
+        if (this.direction !== 0) {
+            const dOpacity = this.direction * this.speed * dt / 1000;
+            if (0 <= this.opacity && this.opacity <= 1) {
+                this.opacity += dOpacity;
+            }
+
+            if (this.direction === 1 && this.opacity > 1
+                || this.direction === -1 && this.opacity < 0) {
+                this.opacity = (1 + this.direction) / 2;
+                this.direction = 0;
+                this.dispatchEvent(completeEvt);
+            }
+        }
+    }
+}
+
 const renderer = new WebGLRenderer({
     canvas: document.getElementById("frontBuffer"),
     powerPreference: "high-performance",
@@ -64928,12 +65011,15 @@ renderer.setPixelRatio(window.devicePixelRatio);
 const camera = new PerspectiveCamera(50, 1, 0.01, 1000);
 camera.position.set(0, 1.6, 1);
 
+const fader = new Fader(camera);
+
 const scene = new Scene();
 scene.background = new Color(0x606060);
 window.scene = scene;
 
 const background = new Object3D();
 scene.add(background);
+background.add(camera);
 
 const light = new AmbientLight(0xffffff, 1);
 background.add(light);
@@ -65021,9 +65107,11 @@ async function loadActivity(actID) {
             icon = D(),
             imgPath = `/VR/File/${station.fileID}`,
             jump = async () => {
+                await fader.fadeOut();
                 await skybox.setImage(imgPath);
                 skybox.visible = true;
                 camera.position.copy(parent.position);
+                await fader.fadeIn();
             };
 
         parent.add(icon);
@@ -65050,7 +65138,7 @@ const hits = [];
 /** @type {Object3D} */
 let lastObj = null;
 
-function update() {
+function update(evt) {
     if (lastObj) {
         lastObj.scale.set(1, 1, 1);
         lastObj = null;
@@ -65069,6 +65157,8 @@ function update() {
     if (lastObj) {
         lastObj.scale.set(1.1, 1.1, 1.1);
     }
+
+    fader.update(evt.sdt);
     renderer.render(scene, camera);
 }
 const timer = new RequestAnimationFrameTimer();
@@ -65086,7 +65176,8 @@ resize();
 
 (async function () {
     const activities = document.querySelectorAll("section"),
-        count = activities.length;
+        count = activities.length,
+        tasks = [];
     for (let i = 0; i < activities.length; ++i) {
         const activity = activities[i],
             match = activity.id.match(/^act-(\d+)/),
@@ -65095,14 +65186,17 @@ resize();
             icon = new StationIcon(),
             a = 2 * i * Math.PI / count;
 
-        await icon.setImage(img);
-
         curIcons.push(icon);
         icon.name = activity.id;
         icon.position.set(Math.cos(a), 1, Math.sin(a));
-        foreground.add(icon);
         objectClicks.set(icon, () => loadActivity(actID));
+
+        tasks.push(icon.setImage(img)
+            .then(() => foreground.add(icon)));
     }
+
+    await Promise.all(tasks);
+    await fader.fadeIn();
 })();
 
 } catch(exp) {

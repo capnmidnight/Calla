@@ -32582,6 +32582,7 @@ class TimerTickEvent extends Event {
         super("tick");
         this.dt = 0;
         this.t = 0;
+        this.sdt = 0;
         Object.seal(this);
     }
 }
@@ -32610,8 +32611,18 @@ class BaseTimer extends EventBase {
             this._onTick = (t) => {
                 tickEvt.t = t;
                 tickEvt.dt = t - lt;
+                tickEvt.sdt = tickEvt.dt;
                 lt = t;
-                this.dispatchEvent(tickEvt);
+                /**
+                 * @param {number} t
+                 */
+                this._onTick = (t) => {
+                    tickEvt.t = t;
+                    tickEvt.dt = t - lt;
+                    tickEvt.sdt = lerp(tickEvt.sdt, tickEvt.dt, 0.01);
+                    lt = t;
+                    this.dispatchEvent(tickEvt);
+                };
             };
         };
     }
