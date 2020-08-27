@@ -42,6 +42,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Juniper\src\Juniper.Root\Juniper.Root.csproj" />
+    <ProjectReference Include="..\Juniper\src\Juniper.Root\Juniper.Root.csproj" />
   </ItemGroup>
 </Project>
