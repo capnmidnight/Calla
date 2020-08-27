@@ -6,6 +6,7 @@ import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer
 import { getObject } from "./getObject";
 import { Skybox } from "./Skybox";
 import { StationIcon } from "./StationIcon";
+import { Fader } from "./Fader";
 
 
 const renderer = new WebGLRenderer({
@@ -25,12 +26,15 @@ renderer.setPixelRatio(window.devicePixelRatio);
 const camera = new PerspectiveCamera(50, 1, 0.01, 1000);
 camera.position.set(0, 1.6, 1);
 
+const fader = new Fader(camera);
+
 const scene = new Scene();
 scene.background = new Color(0x606060);
 window.scene = scene;
 
 const background = new Object3D();
 scene.add(background);
+background.add(camera);
 
 const light = new AmbientLight(0xffffff, 1);
 background.add(light);
@@ -118,9 +122,11 @@ async function loadActivity(actID) {
             icon = D(),
             imgPath = `/VR/File/${station.fileID}`,
             jump = async () => {
+                await fader.fadeOut();
                 await skybox.setImage(imgPath);
                 skybox.visible = true;
                 camera.position.copy(parent.position);
+                await fader.fadeIn();
             };
 
         parent.add(icon);
@@ -147,7 +153,7 @@ const hits = [];
 /** @type {Object3D} */
 let lastObj = null;
 
-function update() {
+function update(evt) {
     if (lastObj) {
         lastObj.scale.set(1, 1, 1);
         lastObj = null;
@@ -166,6 +172,8 @@ function update() {
     if (lastObj) {
         lastObj.scale.set(1.1, 1.1, 1.1);
     }
+
+    fader.update(evt.sdt);
     renderer.render(scene, camera);
 }
 const timer = new RequestAnimationFrameTimer();
@@ -203,4 +211,5 @@ resize();
     }
 
     await Promise.all(tasks);
+    await fader.fadeIn();
 })();
