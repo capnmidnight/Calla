@@ -4,6 +4,8 @@ using Juniper.World.GIS;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,12 +18,14 @@ namespace Calla.Controllers
     public class VRController : Controller
     {
         private readonly YarrowContext db;
+        private readonly ILogger<VRController> logger;
         private readonly IWebHostEnvironment env;
 
-        public VRController(IWebHostEnvironment env, YarrowContext db)
+        public VRController(IWebHostEnvironment env, YarrowContext db, ILogger<VRController> logger)
         {
             this.env = env;
             this.db = db;
+            this.logger = logger;
         }
 
         [HttpGet("VR/File/{id}")]
@@ -39,6 +43,10 @@ namespace Calla.Controllers
             else
             {
                 var fileName = type.AddExtension(file.Name);
+                if (env.IsDevelopment())
+                {
+                    logger.LogInformation(fileName);
+                }
                 return File(file.FileContents.Data, file.Mime, fileName);
             }
         }
