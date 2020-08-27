@@ -58,7 +58,7 @@ namespace Calla.Controllers
             return View(activities);
         }
 
-        private static float[] Flip(float[] m)
+        private static float[] Transpose(float[] m)
         {
             return new float[]
             {
@@ -79,9 +79,9 @@ namespace Calla.Controllers
                     ID = t.Id,
                     ParentID = t.ParentTransformId ?? 0,
                     Name = t.Name,
-                    Matrix = Flip(t.Matrix)
+                    Matrix = Transpose(t.Matrix)
                 });
-            return base.Json(transforms);
+            return Json(transforms);
         }
 
         [HttpGet("VR/Activity/{id}/Stations")]
