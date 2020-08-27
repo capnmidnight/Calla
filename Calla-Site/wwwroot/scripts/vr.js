@@ -65080,27 +65080,7 @@ async function loadActivity(actID) {
     curTransforms.clear();
     curStations.clear();
 
-    const matrix = new Matrix4();
-    for (let transform of transforms) {
-        const obj = new Object3D();
-        obj.name = transform.name;
-        obj.userData.id = transform.id;
-        matrix.fromArray(transform.matrix);
-        matrix.decompose(obj.position, obj.quaternion, obj.scale);
-        obj.updateMatrix();
-        curTransforms.set(transform.id, obj);
-    }
-
-    for (let transform of transforms) {
-        const child = curTransforms.get(transform.id);
-        if (transform.parentID === 0) {
-            foreground.add(child);
-        }
-        else {
-            const parent = curTransforms.get(transform.parentID);
-            parent.attach(child);
-        }
-    }
+    buildScene(foreground, transforms);
 
     for (let station of stations) {
         const parent = curTransforms.get(station.transformID),
@@ -65123,6 +65103,30 @@ async function loadActivity(actID) {
     }
 }
 
+function buildScene(root, transforms) {
+    const matrix = new Matrix4();
+    for (let transform of transforms) {
+        const obj = new Object3D();
+        obj.name = transform.name;
+        obj.userData.id = transform.id;
+        matrix.fromArray(transform.matrix);
+        matrix.decompose(obj.position, obj.quaternion, obj.scale);
+        obj.updateMatrix();
+        curTransforms.set(transform.id, obj);
+    }
+
+    for (let transform of transforms) {
+        const child = curTransforms.get(transform.id);
+        if (transform.parentID === 0) {
+            root.add(child);
+        }
+        else {
+            const parent = curTransforms.get(transform.parentID);
+            parent.attach(child);
+        }
+    }
+}
+
 const controls = Object.assign(new OrbitControls(camera, renderer.domElement), {
     enableDamping: true,
     dampingFactor: 0.05,
@@ -65134,10 +65138,10 @@ const controls = Object.assign(new OrbitControls(camera, renderer.domElement), {
     center: new Vector3(0, 1, 0)
 });
 
+
 const hits = [];
 /** @type {Object3D} */
 let lastObj = null;
-
 function update(evt) {
     if (lastObj) {
         lastObj.scale.set(1, 1, 1);
@@ -65180,24 +65184,28 @@ resize();
         tasks = [];
     for (let i = 0; i < activities.length; ++i) {
         const activity = activities[i],
-            match = activity.id.match(/^act-(\d+)/),
-            actID = parseInt(match[1], 10),
-            img = activity.querySelector("img"),
-            icon = new StationIcon(),
             a = 2 * i * Math.PI / count;
 
-        curIcons.push(icon);
-        icon.name = activity.id;
-        icon.position.set(Math.cos(a), 1, Math.sin(a));
-        objectClicks.set(icon, () => loadActivity(actID));
-
-        tasks.push(icon.setImage(img)
-            .then(() => foreground.add(icon)));
+        tasks.push(addActivity(activity, a));
     }
 
     await Promise.all(tasks);
     await fader.fadeIn();
 })();
+
+async function addActivity(activity, a) {
+    const match = activity.id.match(/^act-(\d+)/),
+        actID = parseInt(match[1], 10),
+        img = activity.querySelector("img"),
+        icon = new StationIcon();
+
+    curIcons.push(icon);
+    icon.name = activity.id;
+    icon.position.set(Math.cos(a), 1, Math.sin(a));
+    objectClicks.set(icon, () => loadActivity(actID));
+    await icon.setImage(img);
+    foreground.add(icon);
+}
 
 } catch(exp) {
     TraceKit.report(exp);
