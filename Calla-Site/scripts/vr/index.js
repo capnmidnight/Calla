@@ -117,8 +117,8 @@ async function loadActivity(actID) {
         const parent = curTransforms.get(station.transformID),
             icon = D(),
             imgPath = `/VR/File/${station.fileID}`,
-            jump = () => {
-                skybox.setImage(imgPath);
+            jump = async () => {
+                await skybox.setImage(imgPath);
                 skybox.visible = true;
                 camera.position.copy(parent.position);
             };
@@ -181,23 +181,23 @@ function resize() {
 window.addEventListener("resize", resize);
 resize();
 
-const activities = document.querySelectorAll("section"),
-    count = activities.length;
-for (let i = 0; i < activities.length; ++i) {
-    const activity = activities[i],
-        match = activity.id.match(/^act-(\d+)/),
-        actID = parseInt(match[1], 10),
-        img = activity.querySelector("img"),
-        icon = new StationIcon(),
-        a = 2 * i * Math.PI / count;
+(async function () {
+    const activities = document.querySelectorAll("section"),
+        count = activities.length;
+    for (let i = 0; i < activities.length; ++i) {
+        const activity = activities[i],
+            match = activity.id.match(/^act-(\d+)/),
+            actID = parseInt(match[1], 10),
+            img = activity.querySelector("img"),
+            icon = new StationIcon(),
+            a = 2 * i * Math.PI / count;
 
-    curIcons.push(icon);
-    icon.setImage(img);
-    icon.name = activity.id;
-    icon.position.set(Math.cos(a), 1, Math.sin(a));
+        await icon.setImage(img);
 
-    foreground.add(icon);
-
-    objectClicks.set(icon, () => loadActivity(actID));
-}
-
+        curIcons.push(icon);
+        icon.name = activity.id;
+        icon.position.set(Math.cos(a), 1, Math.sin(a));
+        foreground.add(icon);
+        objectClicks.set(icon, () => loadActivity(actID));
+    }
+})();

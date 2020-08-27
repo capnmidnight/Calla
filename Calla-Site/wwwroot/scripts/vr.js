@@ -64473,6 +64473,13 @@ class HtmlAttr {
 }
 
 /**
+ * Specifies the height of elements listed here. For all other elements, use the CSS height property.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function height(value) { return new HtmlAttr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+
+/**
  * The URL of the embeddable content.
  * @param {string} value - the value to set on the attribute.
  * @returns {HtmlAttr}
@@ -64485,6 +64492,13 @@ function src(value) { return new HtmlAttr("src", value, "audio", "embed", "ifram
  * @returns {HtmlAttr}
  **/
 function value(value) { return new HtmlAttr("value", value, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
+
+/**
+ * For the elements listed here, this establishes the element's width.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function width(value) { return new HtmlAttr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
 
 /**
  * A CSS property that will be applied to an element's style attribute.
@@ -64668,6 +64682,13 @@ function tag(name, ...rest) {
 }
 
 /**
+ * creates an HTML Canvas tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLCanvasElement}
+ */
+function Canvas(...rest) { return tag("canvas", ...rest); }
+
+/**
  * creates an HTML Img tag
  * @param {...TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLImageElement}
@@ -64693,17 +64714,27 @@ class AbstractCubeMapView extends Mesh {
             img = Img(src(img));
         }
 
-        if (img instanceof HTMLImageElement && !img.complete) {
-            await once(img, "load", "error", 10000);
-        }
+        if (img instanceof HTMLImageElement) {
+            if (!img.complete) {
+                await once(img, "load", "error", 10000);
+            }
 
-        if (!(img instanceof Texture)) {
+            const w = Math.pow(2, Math.floor(Math.log2(img.width))),
+                h = Math.pow(2, Math.floor(Math.log2(img.height))),
+                canv = Canvas(
+                    width(w),
+                    height(h)),
+                g = canv.getContext("2d");
+            g.drawImage(img, 0, 0, img.width, img.height, 0, 0, w, h);
+
+            img = new CanvasTexture(canv);
+        }
+        else if (!(img instanceof Texture)) {
             img = new Texture(img);
         }
 
         this.material.map = img;
         img = this.material.map.image;
-        console.log(img);
         this.isVideo = img instanceof HTMLVideoElement;
         this.updateTexture();
     }
@@ -64869,13 +64900,13 @@ class Skybox extends AbstractCubeMapView {
     }
 }
 
+const geom = new SphereBufferGeometry(0.25, 50, 25);
+setGeometryUVsForCubemaps(geom);
 class StationIcon extends AbstractCubeMapView {
     /**
      * @param {PerspectiveCamera} camera
      */
     constructor() {
-        const geom = new SphereBufferGeometry(0.25, 50, 25);
-        setGeometryUVsForCubemaps(geom);
         super(geom);
     }
 }
@@ -64989,8 +65020,8 @@ async function loadActivity(actID) {
         const parent = curTransforms.get(station.transformID),
             icon = D(),
             imgPath = `/VR/File/${station.fileID}`,
-            jump = () => {
-                skybox.setImage(imgPath);
+            jump = async () => {
+                await skybox.setImage(imgPath);
                 skybox.visible = true;
                 camera.position.copy(parent.position);
             };
@@ -65053,25 +65084,26 @@ function resize() {
 window.addEventListener("resize", resize);
 resize();
 
-const activities = document.querySelectorAll("section"),
-    count = activities.length;
-for (let i = 0; i < activities.length; ++i) {
-    const activity = activities[i],
-        match = activity.id.match(/^act-(\d+)/),
-        actID = parseInt(match[1], 10),
-        img = activity.querySelector("img"),
-        icon = new StationIcon(),
-        a = 2 * i * Math.PI / count;
+(async function () {
+    const activities = document.querySelectorAll("section"),
+        count = activities.length;
+    for (let i = 0; i < activities.length; ++i) {
+        const activity = activities[i],
+            match = activity.id.match(/^act-(\d+)/),
+            actID = parseInt(match[1], 10),
+            img = activity.querySelector("img"),
+            icon = new StationIcon(),
+            a = 2 * i * Math.PI / count;
 
-    curIcons.push(icon);
-    icon.setImage(img);
-    icon.name = activity.id;
-    icon.position.set(Math.cos(a), 1, Math.sin(a));
+        await icon.setImage(img);
 
-    foreground.add(icon);
-
-    objectClicks.set(icon, () => loadActivity(actID));
-}
+        curIcons.push(icon);
+        icon.name = activity.id;
+        icon.position.set(Math.cos(a), 1, Math.sin(a));
+        foreground.add(icon);
+        objectClicks.set(icon, () => loadActivity(actID));
+    }
+})();
 
 } catch(exp) {
     TraceKit.report(exp);

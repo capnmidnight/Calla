@@ -29,26 +29,19 @@ namespace Calla.Controllers
         }
 
         [HttpGet("VR/File/{id}")]
-        public async Task<IActionResult> File(int id)
+        public IActionResult File(int id)
         {
-            var file = await db.Files
+            var file = db.Files
                 .Include(f => f.FileContents)
-                .SingleOrDefaultAsync(f => f.Id == id)
-                .ConfigureAwait(false);
-            if (file is null
-                || !MediaType.TryParse(file.Mime, out var type))
+                .SingleOrDefault(f => f.Id == id);
+            if(file is null)
             {
                 return NotFound();
             }
-            else
-            {
-                var fileName = type.AddExtension(file.Name);
-                if (env.IsDevelopment())
-                {
-                    logger.LogInformation(fileName);
-                }
-                return File(file.FileContents.Data, file.Mime, fileName);
-            }
+
+            var type = MediaType.Parse(file.Mime);
+            var fileName = type.AddExtension(file.Name);
+            return File(file.FileContents.Data, file.Mime, fileName);
         }
 
         [HttpGet]

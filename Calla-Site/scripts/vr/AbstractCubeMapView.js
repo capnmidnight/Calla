@@ -1,7 +1,7 @@
-import { BackSide, Mesh, MeshBasicMaterial, Texture } from "three";
+import { BackSide, Mesh, MeshBasicMaterial, Texture, CanvasTexture } from "three";
 import { isString, once } from "../calla";
-import { src } from "../html/attrs";
-import { Img } from "../html/tags";
+import { src, height, width } from "../html/attrs";
+import { Img, Canvas } from "../html/tags";
 
 export class AbstractCubeMapView extends Mesh {
     /**
@@ -22,17 +22,27 @@ export class AbstractCubeMapView extends Mesh {
             img = Img(src(img));
         }
 
-        if (img instanceof HTMLImageElement && !img.complete) {
-            await once(img, "load", "error", 10000);
-        }
+        if (img instanceof HTMLImageElement) {
+            if (!img.complete) {
+                await once(img, "load", "error", 10000);
+            }
 
-        if (!(img instanceof Texture)) {
+            const w = Math.pow(2, Math.floor(Math.log2(img.width))),
+                h = Math.pow(2, Math.floor(Math.log2(img.height))),
+                canv = Canvas(
+                    width(w),
+                    height(h)),
+                g = canv.getContext("2d");
+            g.drawImage(img, 0, 0, img.width, img.height, 0, 0, w, h);
+
+            img = new CanvasTexture(canv);
+        }
+        else if (!(img instanceof Texture)) {
             img = new Texture(img);
         }
 
         this.material.map = img;
         img = this.material.map.image;
-        console.log(img);
         this.isVideo = img instanceof HTMLVideoElement;
         this.updateTexture();
     }
