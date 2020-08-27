@@ -1,5 +1,3 @@
-using Juniper.Mathematics;
-
 namespace Yarrow.Models
 {
     public class Transform
