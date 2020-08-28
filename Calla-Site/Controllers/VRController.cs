@@ -4,11 +4,11 @@ using Juniper.World.GIS;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
+using System;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Numerics;
 
 using Yarrow.Data;
 using Yarrow.Models;
@@ -34,7 +34,7 @@ namespace Calla.Controllers
             var file = db.Files
                 .Include(f => f.FileContents)
                 .SingleOrDefault(f => f.Id == id);
-            if(file is null)
+            if (file is null)
             {
                 return NotFound();
             }
@@ -44,33 +44,78 @@ namespace Calla.Controllers
             return File(file.FileContents.Data, file.Mime, fileName);
         }
 
+        private static readonly Lesson DemoLesson = new Lesson
+        {
+            ID = 1,
+            Name = "Demo"
+        };
+
+        private static readonly Language DemoChinese = new Language
+        {
+            ID = 1,
+            Name = "Chinese",
+            Enabled = true,
+            Lessons = new Lesson[]
+            {
+                DemoLesson
+            }
+        };
+
+        private static readonly Language DemoRussian = new Language
+        {
+            ID = 2,
+            Name = "Russian",
+            Enabled = false,
+            Lessons = Array.Empty<Lesson>()
+        };
+
+        private static readonly Language[] DemoLanguages = new Language[] { DemoChinese, DemoRussian };
+
         [HttpGet]
         public IActionResult Index()
         {
-            var activities = db.Activities
-                .Include(act => act.StartStation)
-                .Select(act => new Activity
-                {
-                    ID = act.Id,
-                    Name = act.Name,
-                    StartStationFileID = act.StartStation.FileId
-                });
-            return View(activities);
+            return View();
         }
 
-        private static float[] Transpose(float[] m)
+        [HttpGet("VR/Languages")]
+        public IActionResult Languages()
         {
-            return new float[]
-            {
-                m[0], m[4], m[8], m[12],
-                m[1], m[5], m[9], m[13],
-                m[2], m[6], m[10],m[14],
-                m[3], m[7], m[11],m[15]
-            };
+            return Json(DemoLanguages);
         }
 
-        [HttpGet("VR/Activity/{id}/Transforms")]
-        public IActionResult Activity(int id)
+        [HttpGet("VR/Language/{id}/Lessons")]
+        public IActionResult Language(int id)
+        {
+            if (id != 1)
+            {
+                return NotFound();
+            }
+
+            return Json(DemoChinese.Lessons);
+        }
+
+        [HttpGet("VR/Lesson/{id}/Activities")]
+        public IActionResult Activities(int lessonID)
+        {
+            if (lessonID != 1)
+            {
+                return NotFound();
+            }
+
+            var activities = db.Activities
+               .Include(act => act.StartStation)
+               .Select(act => new Activity
+               {
+                   ID = act.Id,
+                   Name = act.Name,
+                   StartStationFileID = act.StartStation.FileId
+               });
+
+            return Json(activities);
+        }
+
+        [HttpGet("VR/Activity/{id}/Scene")]
+        public IActionResult Scene(int id)
         {
             var transforms = db.Transforms
                 .Where(t => t.ActivityId == id)
@@ -79,7 +124,7 @@ namespace Calla.Controllers
                     ID = t.Id,
                     ParentID = t.ParentTransformId ?? 0,
                     Name = t.Name,
-                    Matrix = Transpose(t.Matrix)
+                    Matrix = Matrix4x4.Transpose(t.Matrix.ToSystemMatrix4x4()).ToArray()
                 });
             return Json(transforms);
         }
@@ -90,7 +135,6 @@ namespace Calla.Controllers
             var stations = db.Stations
                 .Include(st => st.Transform)
                     .ThenInclude(t => t.Activity)
-                .Include(st => st.StationConnectionsFromStation)
                 .Where(st => st.Transform.ActivityId == id)
                 .Select(st => new Station
                 {
@@ -102,6 +146,21 @@ namespace Calla.Controllers
                     Zone = st.Zone
                 });
             return Json(stations);
+        }
+
+        [HttpGet("VR/Activity/{id}/Map")]
+        public IActionResult ActivityStationConnections(int id)
+        {
+            var edges = db.StationConnections
+                .Include(stc => stc.FromStation)
+                    .ThenInclude(st => st.Transform)
+                .Where(stc => stc.FromStation.Transform.ActivityId == id)
+                .Select(stc => new GraphEdge
+                {
+                    FromStationID = stc.FromStationId,
+                    ToStationID = stc.ToStationId
+                });
+            return Json(edges);
         }
 
         [HttpGet("VR/Activity/{id}/Audio")]

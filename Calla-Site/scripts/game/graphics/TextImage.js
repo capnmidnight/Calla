@@ -17,11 +17,17 @@ class TextImagePrivate {
         /** @type {string} */
         this.color = "black";
 
+        /** @type {string} */
+        this.bgColor = null;
+
         /** @type {number} */
         this.fontSize = null;
 
         /** @type {number} */
         this.scale = 1;
+
+        /** @type {number} */
+        this.padding = 0;
 
         /** @type {string} */
         this.value = null;
@@ -52,7 +58,22 @@ class TextImagePrivate {
                 trueWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
                 trueHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
             }
+
+            dx += this.padding;
+            dy += this.padding;
+            trueWidth += this.padding * 2;
+            trueHeight += this.padding * 2;
+
             setContextSize(this.g, trueWidth, trueHeight);
+
+            if (this.bgColor) {
+                this.g.fillStyle = this.bgColor;
+                this.g.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+            else {
+                this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+
             this.g.fillStyle = this.color;
             this.g.fillText(this.value, dx, dy);
         }
@@ -65,6 +86,10 @@ export class TextImage {
      */
     constructor(fontFamily) {
         selfs.set(this, new TextImagePrivate(fontFamily));
+    }
+
+    get canvas() {
+        return selfs.get(this).canvas;
     }
 
     get width() {
@@ -101,6 +126,18 @@ export class TextImage {
         }
     }
 
+    get adding() {
+        return selfs.get(this).padding;
+    }
+
+    set padding(v) {
+        if (this.padding !== v) {
+            const self = selfs.get(this);
+            self.padding = v;
+            self.redraw();
+        }
+    }
+
 
     get fontFamily() {
         return selfs.get(this).fontFamily;
@@ -122,6 +159,18 @@ export class TextImage {
         if (this.color !== v) {
             const self = selfs.get(this);
             self.color = v;
+            self.redraw();
+        }
+    }
+
+    get bgColor() {
+        return selfs.get(this).bgColor;
+    }
+
+    set bgColor(v) {
+        if (this.bgColor !== v) {
+            const self = selfs.get(this);
+            self.bgColor = v;
             self.redraw();
         }
     }

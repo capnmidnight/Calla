@@ -1,4 +1,4 @@
-import { AmbientLight, Color, Matrix4, Object3D, PerspectiveCamera, Raycaster, Scene, Vector3, WebGLRenderer } from "three";
+import { AmbientLight, Color, Matrix4, Object3D, PerspectiveCamera, Raycaster, Scene, Vector3, WebGLRenderer, PlaneBufferGeometry, MeshBasicMaterial } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { addEventListeners, arrayClear } from "../calla";
 import { ScreenPointerControls } from "../input/ScreenPointerControls";
@@ -8,6 +8,8 @@ import { Fader } from "./Fader";
 import { getObject } from "./getObject";
 import { Skybox } from "./Skybox";
 import { StationIcon } from "./StationIcon";
+import { TextImage } from "../game/graphics/TextImage";
+import { TexturedMesh } from "./TexturedMesh";
 
 const renderer = new WebGLRenderer({
     canvas: document.getElementById("frontBuffer"),
@@ -70,31 +72,140 @@ scene.background = new Color(0x606060);
 window.scene = scene;
 scene.add(background);
 scene.add(foreground);
+background.name = "Background";
 background.add(camera);
 background.add(light);
 background.add(skybox);
+foreground.name = "Foreground";
 resize();
+timer.start();
+showLanguagesMenu();
+
+function clearScene() {
+    foreground.remove(...foreground.children);
+    arrayClear(curIcons);
+    objectClicks.clear();
+    curTransforms.clear();
+    curStations.clear();
+}
+
+const scales = new Map();
+function update(evt) {
+    controls.update();
+    skybox.update();
+    for (let icon of curIcons) {
+        icon.update();
+    }
+
+    arrayClear(hits);
+    raycaster.intersectObject(foreground, true, hits);
+
+    let curObj = null;
+    for (let hit of hits) {
+        if (objectClicks.has(hit.object)) {
+            curObj = hit.object;
+        }
+    }
+
+    if (curObj !== lastObj) {
+
+        if (lastObj && scales.has(lastObj)) {
+            lastObj.scale.fromArray(scales.get(lastObj));
+        }
+
+        if (curObj) {
+            if (!scales.has(curObj)) {
+                scales.set(curObj, curObj.scale.toArray());
+            }
+            curObj.scale.multiplyScalar(1.1);
+        }
+
+        lastObj = curObj;
+    }
+
+    fader.update(evt.sdt);
+    renderer.render(scene, camera);
+}
+
+function resize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+async function showLanguagesMenu() {
+    const languages = await getObject("VR/Languages");
+    const tasks = [];
+    for (let i = 0; i < languages.length; ++i) {
+        const language = languages[i];
+        const y = ((languages.length - 1) / 2 - i) / 2;
+        tasks.push(addLanguageMenuItem(language, y));
+    }
+    await Promise.all(tasks);
+    await fader.fadeIn();
+}
+
+const buttonGeom = new PlaneBufferGeometry(1, 1, 1, 1);
+async function addLanguageMenuItem(language, y) {
+    const lbl = new TextImage("sans-serif");
+    lbl.bgColor = language.enabled
+        ? "#ffffff"
+        : "#a0a0a0";
+    lbl.color = language.enabled
+        ? "#000000"
+        : "#505050";
+    lbl.fontSize = 100;
+    lbl.padding = 20;
+    lbl.value = language.name;
+
+    const mat = new MeshBasicMaterial({ transparent: true });
+    const mesh = new TexturedMesh(buttonGeom, mat);
+    mesh.name = language.name;
+    mesh.position.set(0, y, -2);
+    mesh.scale.set(lbl.width / 300, lbl.height / 300, 1);
+    await mesh.setImage(lbl.canvas);
+
+    foreground.add(mesh);
+    if (language.enabled) {
+        objectClicks.set(mesh, () => showLanguageLessons(language.id));
+    }
+}
+
+async function showLanguageLessons(languageID) {
+    console.log(languageID);
+}
+
+async function addActivity(activity, a) {
+    const match = activity.id.match(/^act-(\d+)/),
+        actID = parseInt(match[1], 10),
+        img = activity.querySelector("img"),
+        icon = new StationIcon();
+
+    curIcons.push(icon);
+    icon.name = activity.id;
+    icon.position.set(Math.cos(a), 1, Math.sin(a));
+    objectClicks.set(icon, () => loadActivity(actID));
+    await icon.setImage(img);
+    foreground.add(icon);
+}
+
 
 async function loadActivity(actID) {
     const activity = `/VR/Activity/${actID}`,
-        transforms = await getObject(`${activity}/Transforms`),
+        transforms = await getObject(`${activity}/Scene`),
         stations = await getObject(`${activity}/Stations`),
-        //stationConnections = await getObject(`${activity}/StationConnections`),
+        connections = await getObject(`${activity}/Map`),
         audio = await getObject(`${activity}/Audio`),
         signs = await getObject(`${activity}/Signs`);
 
     console.log(activity);
     console.log(transforms);
     console.log(stations);
-    //console.log(stationConnections);
+    console.log(connections);
     console.log(audio);
     console.log(signs);
 
-    foreground.remove(...foreground.children);
-    arrayClear(curIcons);
-    objectClicks.clear();
-    curTransforms.clear();
-    curStations.clear();
+    clearScene();
 
     buildScene(foreground, transforms);
 
@@ -142,63 +253,3 @@ function buildScene(root, transforms) {
         }
     }
 }
-
-function update(evt) {
-    if (lastObj) {
-        lastObj.scale.set(1, 1, 1);
-        lastObj = null;
-    }
-    controls.update();
-    skybox.update();
-    for (let icon of curIcons) {
-        icon.update();
-    }
-
-    arrayClear(hits);
-    raycaster.intersectObject(foreground, true, hits);
-    for (let hit of hits) {
-        lastObj = hit.object;
-    }
-    if (lastObj) {
-        lastObj.scale.set(1.1, 1.1, 1.1);
-    }
-
-    fader.update(evt.sdt);
-    renderer.render(scene, camera);
-}
-
-function resize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
-async function addActivity(activity, a) {
-    const match = activity.id.match(/^act-(\d+)/),
-        actID = parseInt(match[1], 10),
-        img = activity.querySelector("img"),
-        icon = new StationIcon();
-
-    curIcons.push(icon);
-    icon.name = activity.id;
-    icon.position.set(Math.cos(a), 1, Math.sin(a));
-    objectClicks.set(icon, () => loadActivity(actID));
-    await icon.setImage(img);
-    foreground.add(icon);
-}
-
-(async function () {
-    const activities = document.querySelectorAll("section"),
-        count = activities.length,
-        tasks = [];
-    for (let i = 0; i < activities.length; ++i) {
-        const activity = activities[i],
-            a = 2 * i * Math.PI / count;
-
-        tasks.push(addActivity(activity, a));
-    }
-
-    await Promise.all(tasks);
-    timer.start();
-    await fader.fadeIn();
-})();

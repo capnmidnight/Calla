@@ -2,8 +2,6 @@
     Layout = "_PWA";
 }
 
-@model IEnumerable<Yarrow.Models.Activity>
-
 @section HeadScripts {
     <link rel="stylesheet" type="text/css" href="~/stylesheets/vr.css" />
     <environment names="Staging,Production">
@@ -15,15 +13,5 @@
 }
 
 <canvas id="frontBuffer"></canvas>
-
-<div id="startupData">
-    @foreach (var activity in Model)
-    {
-        <section id="act-@activity.ID">
-            <h2>@activity.Name</h2>
-            <img src="~/VR/File/@activity.StartStationFileID" />
-        </section>
-    }
-</div>
 
 <div id="controls"></div>
