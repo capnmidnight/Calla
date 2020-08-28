@@ -133,46 +133,57 @@ function resize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-async function showLanguagesMenu() {
-    const languages = await getObject("VR/Languages");
+async function showMenu(items, onClick) {
+    await fader.fadeOut();
+    clearScene();
     const tasks = [];
-    for (let i = 0; i < languages.length; ++i) {
-        const language = languages[i];
-        const y = ((languages.length - 1) / 2 - i) / 2;
-        tasks.push(addLanguageMenuItem(language, y));
+    for (let i = 0; i < items.length; ++i) {
+        const item = items[i];
+        const y = ((items.length - 1) / 2 - i) / 2;
+        tasks.push(addMenuItem(item, y, onClick));
     }
     await Promise.all(tasks);
     await fader.fadeIn();
 }
 
 const buttonGeom = new PlaneBufferGeometry(1, 1, 1, 1);
-async function addLanguageMenuItem(language, y) {
+async function addMenuItem(item, y, onClick) {
     const lbl = new TextImage("sans-serif");
-    lbl.bgColor = language.enabled
+    lbl.bgColor = item.enabled !== false
         ? "#ffffff"
         : "#a0a0a0";
-    lbl.color = language.enabled
+    lbl.color = item.enabled !== false
         ? "#000000"
         : "#505050";
     lbl.fontSize = 100;
     lbl.padding = 20;
-    lbl.value = language.name;
+    lbl.value = item.name;
 
     const mat = new MeshBasicMaterial({ transparent: true });
     const mesh = new TexturedMesh(buttonGeom, mat);
-    mesh.name = language.name;
+    mesh.name = item.name;
     mesh.position.set(0, y, -2);
     mesh.scale.set(lbl.width / 300, lbl.height / 300, 1);
     await mesh.setImage(lbl.canvas);
 
     foreground.add(mesh);
-    if (language.enabled) {
-        objectClicks.set(mesh, () => showLanguageLessons(language.id));
+    if (item.enabled !== false) {
+        objectClicks.set(mesh, () => onClick(item));
     }
 }
 
+async function showLanguagesMenu() {
+    const languages = await getObject("VR/Languages");
+    await showMenu(languages, (language) => showLanguageLessons(language.id));
+}
+
 async function showLanguageLessons(languageID) {
-    console.log(languageID);
+    const lessons = await getObject(`VR/Language/${languageID}/Lessons`);
+    await showMenu(lessons, (lesson) => showLessonActivities(lesson.id));
+}
+
+async function showLessonActivities(lessonID) {
+    console.log(lessonID);
 }
 
 async function addActivity(activity, a) {
@@ -204,8 +215,6 @@ async function loadActivity(actID) {
     console.log(connections);
     console.log(audio);
     console.log(signs);
-
-    clearScene();
 
     buildScene(foreground, transforms);
 
