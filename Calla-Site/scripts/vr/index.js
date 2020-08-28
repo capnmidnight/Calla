@@ -156,7 +156,7 @@ async function addMenuItem(item, y, onClick) {
         ? "#000000"
         : "#505050";
     lbl.fontSize = 100;
-    lbl.padding = 20;
+    lbl.padding = [20, 50];
     lbl.value = item.name;
 
     const mat = new MeshBasicMaterial({ transparent: true });

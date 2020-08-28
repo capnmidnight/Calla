@@ -1,5 +1,6 @@
-import { setContextSize } from "../../html/canvas.js";
-import { CanvasOffscreen } from "../../html/tags.js";
+import { setContextSize } from "../../html/canvas";
+import { CanvasOffscreen } from "../../html/tags";
+import { isNumber } from "../../calla";
 
 /**
  * @type {WeakMap<TextImage, TextImagePrivate>}
@@ -27,7 +28,12 @@ class TextImagePrivate {
         this.scale = 1;
 
         /** @type {number} */
-        this.padding = 0;
+        this.padding = {
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0
+        };
 
         /** @type {string} */
         this.value = null;
@@ -59,10 +65,10 @@ class TextImagePrivate {
                 trueHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
             }
 
-            dx += this.padding;
-            dy += this.padding;
-            trueWidth += this.padding * 2;
-            trueHeight += this.padding * 2;
+            dx += this.padding.left;
+            dy += this.padding.top;
+            trueWidth += this.padding.right + this.padding.left;
+            trueHeight += this.padding.top + this.padding.bottom;
 
             setContextSize(this.g, trueWidth, trueHeight);
 
@@ -126,12 +132,55 @@ export class TextImage {
         }
     }
 
-    get adding() {
+    get padding() {
         return selfs.get(this).padding;
     }
 
     set padding(v) {
-        if (this.padding !== v) {
+
+        if (v instanceof Array) {
+            if (v.length === 1) {
+                v = {
+                    top: v[0],
+                    right: v[0],
+                    bottom: v[0],
+                    left: v[0]
+                };
+            }
+            else if (v.length === 2) {
+                v = {
+                    top: v[0],
+                    right: v[1],
+                    bottom: v[0],
+                    left: v[1]
+                };
+            }
+            else if (v.length === 4) {
+                v = {
+                    top: v[0],
+                    right: v[1],
+                    bottom: v[2],
+                    left: v[3]
+                };
+            }
+            else {
+                return;
+            }
+        }
+        else if (isNumber(v)) {
+            v = {
+                top: v,
+                right: v,
+                bottom: v,
+                left: v
+            }
+        }
+
+
+        if (this.padding.top !== v.top
+            || this.padding.right != v.right
+            || this.padding.bottom != v.bottom
+            || this.padding.left != v.left) {
             const self = selfs.get(this);
             self.padding = v;
             self.redraw();
