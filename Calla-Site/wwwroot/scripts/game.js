@@ -26077,11 +26077,22 @@ class TextImagePrivate {
         /** @type {string} */
         this.color = "black";
 
+        /** @type {string} */
+        this.bgColor = null;
+
         /** @type {number} */
         this.fontSize = null;
 
         /** @type {number} */
         this.scale = 1;
+
+        /** @type {number} */
+        this.padding = {
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0
+        };
 
         /** @type {string} */
         this.value = null;
@@ -26112,7 +26123,22 @@ class TextImagePrivate {
                 trueWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
                 trueHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
             }
+
+            dx += this.padding.left;
+            dy += this.padding.top;
+            trueWidth += this.padding.right + this.padding.left;
+            trueHeight += this.padding.top + this.padding.bottom;
+
             setContextSize(this.g, trueWidth, trueHeight);
+
+            if (this.bgColor) {
+                this.g.fillStyle = this.bgColor;
+                this.g.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+            else {
+                this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+
             this.g.fillStyle = this.color;
             this.g.fillText(this.value, dx, dy);
         }
@@ -26125,6 +26151,10 @@ class TextImage {
      */
     constructor(fontFamily) {
         selfs$1.set(this, new TextImagePrivate(fontFamily));
+    }
+
+    get canvas() {
+        return selfs$1.get(this).canvas;
     }
 
     get width() {
@@ -26161,6 +26191,61 @@ class TextImage {
         }
     }
 
+    get padding() {
+        return selfs$1.get(this).padding;
+    }
+
+    set padding(v) {
+
+        if (v instanceof Array) {
+            if (v.length === 1) {
+                v = {
+                    top: v[0],
+                    right: v[0],
+                    bottom: v[0],
+                    left: v[0]
+                };
+            }
+            else if (v.length === 2) {
+                v = {
+                    top: v[0],
+                    right: v[1],
+                    bottom: v[0],
+                    left: v[1]
+                };
+            }
+            else if (v.length === 4) {
+                v = {
+                    top: v[0],
+                    right: v[1],
+                    bottom: v[2],
+                    left: v[3]
+                };
+            }
+            else {
+                return;
+            }
+        }
+        else if (isNumber(v)) {
+            v = {
+                top: v,
+                right: v,
+                bottom: v,
+                left: v
+            };
+        }
+
+
+        if (this.padding.top !== v.top
+            || this.padding.right != v.right
+            || this.padding.bottom != v.bottom
+            || this.padding.left != v.left) {
+            const self = selfs$1.get(this);
+            self.padding = v;
+            self.redraw();
+        }
+    }
+
 
     get fontFamily() {
         return selfs$1.get(this).fontFamily;
@@ -26182,6 +26267,18 @@ class TextImage {
         if (this.color !== v) {
             const self = selfs$1.get(this);
             self.color = v;
+            self.redraw();
+        }
+    }
+
+    get bgColor() {
+        return selfs$1.get(this).bgColor;
+    }
+
+    set bgColor(v) {
+        if (this.bgColor !== v) {
+            const self = selfs$1.get(this);
+            self.bgColor = v;
             self.redraw();
         }
     }

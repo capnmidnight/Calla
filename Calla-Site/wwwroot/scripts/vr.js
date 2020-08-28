@@ -64476,13 +64476,17 @@ class Fader extends Mesh {
     }
 
     async fadeOut() {
-        this.direction = 1;
-        await once(this, "fadeComplete");
+        if (this.opacity < 1) {
+            this.direction = 1;
+            await once(this, "fadeComplete");
+        }
     }
 
     async fadeIn() {
-        this.direction = -1;
-        await once(this, "fadeComplete");
+        if (this.opacity > 0) {
+            this.direction = -1;
+            await once(this, "fadeComplete");
+        }
     }
 
     update(dt) {
@@ -64782,12 +64786,24 @@ function Canvas(...rest) { return tag("canvas", ...rest); }
  */
 function Img(...rest) { return tag("img", ...rest); }
 
-class AbstractCubeMapView extends Mesh {
-    /**
-     * @param {BoxBufferGeometry|SphereBufferGeometry} geom
-     */
-    constructor(geom) {
-        const mat = new MeshBasicMaterial({ side: BackSide });
+/**
+ * Creates an offscreen canvas element, if they are available. Otherwise, returns an HTMLCanvasElement.
+ * @param {number} w - the width of the canvas
+ * @param {number} h - the height of the canvas
+ * @param {...TagChild} rest - optional HTML attributes and child elements, to use in constructing the HTMLCanvasElement if OffscreenCanvas is not available.
+ * @returns {OffscreenCanvas|HTMLCanvasElement}
+ */
+function CanvasOffscreen(w, h, ...rest) {
+    if (window.OffscreenCanvas) {
+        return new OffscreenCanvas(w, h);
+    }
+    else {
+        return Canvas(...rest, width(w), height(h));
+    }
+}
+
+class TexturedMesh extends Mesh {
+    constructor(geom, mat) {
         super(geom, mat);
         this.isVideo = false;
     }
@@ -64796,6 +64812,7 @@ class AbstractCubeMapView extends Mesh {
      *
      * @param {HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|string|Texture} img
      */
+
     async setImage(img) {
         if (isString(img)) {
             img = Img(src(img));
@@ -64838,6 +64855,16 @@ class AbstractCubeMapView extends Mesh {
         if (this.isVideo) {
             this.updateTexture();
         }
+    }
+}
+
+class AbstractCubeMapView extends TexturedMesh {
+    /**
+     * @param {BoxBufferGeometry|SphereBufferGeometry} geom
+     */
+    constructor(geom) {
+        const mat = new MeshBasicMaterial({ side: BackSide });
+        super(geom, mat);
     }
 }
 
@@ -64991,12 +65018,313 @@ class Skybox extends AbstractCubeMapView {
 
 const geom = new SphereBufferGeometry(0.25, 50, 25);
 setGeometryUVsForCubemaps(geom);
-class StationIcon extends AbstractCubeMapView {
+
+/**
+ * Returns true if the given object is either an HTMLCanvasElement or an OffscreenCanvas.
+ * @param {any} obj
+ * @returns {boolean}
+ */
+
+/**
+ * Resizes a canvas element
+ * @param {HTMLCanvasElement|OffscreenCanvas} canv
+ * @param {number} w - the new width of the canvas
+ * @param {number} h - the new height of the canvas
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function setCanvasSize(canv, w, h, superscale = 1) {
+    w = Math.floor(w * superscale);
+    h = Math.floor(h * superscale);
+    if (canv.width != w
+        || canv.height != h) {
+        canv.width = w;
+        canv.height = h;
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Resizes the canvas element of a given rendering context.
+ * 
+ * Note: the imageSmoothingEnabled, textBaseline, textAlign, and font 
+ * properties of the context will be restored after the context is resized,
+ * as these values are usually reset to their default values when a canvas
+ * is resized.
+ * @param {RenderingContext} ctx
+ * @param {number} w - the new width of the canvas
+ * @param {number} h - the new height of the canvas
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function setContextSize(ctx, w, h, superscale = 1) {
+    const oldImageSmoothingEnabled = ctx.imageSmoothingEnabled,
+        oldTextBaseline = ctx.textBaseline,
+        oldTextAlign = ctx.textAlign,
+        oldFont = ctx.font,
+        resized = setCanvasSize(
+            ctx.canvas,
+            w,
+            h,
+            superscale);
+
+    if (resized) {
+        ctx.imageSmoothingEnabled = oldImageSmoothingEnabled;
+        ctx.textBaseline = oldTextBaseline;
+        ctx.textAlign = oldTextAlign;
+        ctx.font = oldFont;
+    }
+
+    return resized;
+}
+
+/**
+ * @type {WeakMap<TextImage, TextImagePrivate>}
+ **/
+const selfs = new WeakMap();
+
+class TextImagePrivate {
     /**
-     * @param {PerspectiveCamera} camera
+     * @param {string} fontFamily
      */
-    constructor() {
-        super(geom);
+    constructor(fontFamily) {
+        /** @type {string} */
+        this.fontFamily = fontFamily;
+
+        /** @type {string} */
+        this.color = "black";
+
+        /** @type {string} */
+        this.bgColor = null;
+
+        /** @type {number} */
+        this.fontSize = null;
+
+        /** @type {number} */
+        this.scale = 1;
+
+        /** @type {number} */
+        this.padding = {
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0
+        };
+
+        /** @type {string} */
+        this.value = null;
+
+        this.canvas = CanvasOffscreen(10, 10);
+        this.g = this.canvas.getContext("2d");
+        this.g.textBaseline = "top";
+    }
+
+    redraw() {
+        this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        if (this.fontFamily
+            && this.fontSize
+            && this.color
+            && this.scale
+            && this.value) {
+            const fontHeight = this.fontSize * this.scale;
+            this.g.font = `${fontHeight}px ${this.fontFamily}`;
+
+            const metrics = this.g.measureText(this.value);
+            let dx = 0,
+                dy = 0,
+                trueWidth = metrics.width,
+                trueHeight = fontHeight;
+            if (metrics.actualBoundingBoxLeft) {
+                dy = metrics.actualBoundingBoxAscent;
+                trueWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
+                trueHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+            }
+
+            dx += this.padding.left;
+            dy += this.padding.top;
+            trueWidth += this.padding.right + this.padding.left;
+            trueHeight += this.padding.top + this.padding.bottom;
+
+            setContextSize(this.g, trueWidth, trueHeight);
+
+            if (this.bgColor) {
+                this.g.fillStyle = this.bgColor;
+                this.g.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+            else {
+                this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+
+            this.g.fillStyle = this.color;
+            this.g.fillText(this.value, dx, dy);
+        }
+    }
+}
+
+class TextImage {
+    /**
+     * @param {string} fontFamily
+     */
+    constructor(fontFamily) {
+        selfs.set(this, new TextImagePrivate(fontFamily));
+    }
+
+    get canvas() {
+        return selfs.get(this).canvas;
+    }
+
+    get width() {
+        const self = selfs.get(this);
+        return self.canvas.width / self.scale;
+    }
+
+    get height() {
+        const self = selfs.get(this);
+        return self.canvas.height / self.scale;
+    }
+
+    get fontSize() {
+        return selfs.get(this).fontSize;
+    }
+
+    set fontSize(v) {
+        if (this.fontSize !== v) {
+            const self = selfs.get(this);
+            self.fontSize = v;
+            self.redraw();
+        }
+    }
+
+    get scale() {
+        return selfs.get(this).scale;
+    }
+
+    set scale(v) {
+        if (this.scale !== v) {
+            const self = selfs.get(this);
+            self.scale = v;
+            self.redraw();
+        }
+    }
+
+    get padding() {
+        return selfs.get(this).padding;
+    }
+
+    set padding(v) {
+
+        if (v instanceof Array) {
+            if (v.length === 1) {
+                v = {
+                    top: v[0],
+                    right: v[0],
+                    bottom: v[0],
+                    left: v[0]
+                };
+            }
+            else if (v.length === 2) {
+                v = {
+                    top: v[0],
+                    right: v[1],
+                    bottom: v[0],
+                    left: v[1]
+                };
+            }
+            else if (v.length === 4) {
+                v = {
+                    top: v[0],
+                    right: v[1],
+                    bottom: v[2],
+                    left: v[3]
+                };
+            }
+            else {
+                return;
+            }
+        }
+        else if (isNumber(v)) {
+            v = {
+                top: v,
+                right: v,
+                bottom: v,
+                left: v
+            };
+        }
+
+
+        if (this.padding.top !== v.top
+            || this.padding.right != v.right
+            || this.padding.bottom != v.bottom
+            || this.padding.left != v.left) {
+            const self = selfs.get(this);
+            self.padding = v;
+            self.redraw();
+        }
+    }
+
+
+    get fontFamily() {
+        return selfs.get(this).fontFamily;
+    }
+
+    set fontFamily(v) {
+        if (this.fontFamily !== v) {
+            const self = selfs.get(this);
+            self.fontFamily = v;
+            self.redraw();
+        }
+    }
+
+    get color() {
+        return selfs.get(this).color;
+    }
+
+    set color(v) {
+        if (this.color !== v) {
+            const self = selfs.get(this);
+            self.color = v;
+            self.redraw();
+        }
+    }
+
+    get bgColor() {
+        return selfs.get(this).bgColor;
+    }
+
+    set bgColor(v) {
+        if (this.bgColor !== v) {
+            const self = selfs.get(this);
+            self.bgColor = v;
+            self.redraw();
+        }
+    }
+
+    get value() {
+        return selfs.get(this).value;
+    }
+
+    set value(v) {
+        if (this.value !== v) {
+            const self = selfs.get(this);
+            self.value = v;
+            self.redraw();
+        }
+    }
+
+    /**
+     *
+     * @param {CanvasRenderingContext2D} g - the canvas to which to render the text.
+     * @param {number} x
+     * @param {number} y
+     */
+    draw(g, x, y) {
+        const self = selfs.get(this);
+        if (self.canvas.width > 0
+            && self.canvas.height > 0) {
+            g.drawImage(self.canvas, x, y, this.width, this.height);
+        }
     }
 }
 
@@ -65061,32 +65389,137 @@ scene.background = new Color(0x606060);
 window.scene = scene;
 scene.add(background);
 scene.add(foreground);
+background.name = "Background";
 background.add(camera);
 background.add(light);
 background.add(skybox);
+foreground.name = "Foreground";
 resize();
+timer.start();
+showLanguagesMenu();
 
-async function loadActivity(actID) {
-    const activity = `/VR/Activity/${actID}`,
-        transforms = await getObject(`${activity}/Transforms`),
+function clearScene() {
+    foreground.remove(...foreground.children);
+    arrayClear(curIcons);
+    objectClicks.clear();
+    curTransforms.clear();
+    curStations.clear();
+}
+
+const scales = new Map();
+function update(evt) {
+    controls.update();
+    skybox.update();
+    for (let icon of curIcons) {
+        icon.update();
+    }
+
+    arrayClear(hits);
+    raycaster.intersectObject(foreground, true, hits);
+
+    let curObj = null;
+    for (let hit of hits) {
+        if (objectClicks.has(hit.object)) {
+            curObj = hit.object;
+        }
+    }
+
+    if (curObj !== lastObj) {
+
+        if (lastObj && scales.has(lastObj)) {
+            lastObj.scale.fromArray(scales.get(lastObj));
+        }
+
+        if (curObj) {
+            if (!scales.has(curObj)) {
+                scales.set(curObj, curObj.scale.toArray());
+            }
+            curObj.scale.multiplyScalar(1.1);
+        }
+
+        lastObj = curObj;
+    }
+
+    fader.update(evt.sdt);
+    renderer.render(scene, camera);
+}
+
+function resize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+async function showMenu(path, onClick) {
+    await fader.fadeOut();
+    const items = await await getObject(path);
+    clearScene();
+    const tasks = [];
+    for (let i = 0; i < items.length; ++i) {
+        const item = items[i];
+        const y = ((items.length - 1) / 2 - i) / 2;
+        tasks.push(addMenuItem(item, y, onClick));
+    }
+    await Promise.all(tasks);
+    await fader.fadeIn();
+}
+
+const buttonGeom = new PlaneBufferGeometry(1, 1, 1, 1);
+async function addMenuItem(item, y, onClick) {
+    const lbl = new TextImage("sans-serif");
+    lbl.bgColor = item.enabled !== false
+        ? "#ffffff"
+        : "#a0a0a0";
+    lbl.color = item.enabled !== false
+        ? "#000000"
+        : "#505050";
+    lbl.fontSize = 100;
+    lbl.padding = [20, 50];
+    lbl.value = item.name;
+
+    const mat = new MeshBasicMaterial({ transparent: true });
+    const mesh = new TexturedMesh(buttonGeom, mat);
+    mesh.name = item.name;
+    mesh.position.set(0, y, -3);
+    mesh.scale.set(lbl.width / 300, lbl.height / 300, 1);
+    await mesh.setImage(lbl.canvas);
+
+    foreground.add(mesh);
+    if (item.enabled !== false) {
+        objectClicks.set(mesh, () => onClick(item));
+    }
+}
+
+async function showLanguagesMenu() {
+    await showMenu("VR/Languages", (language) => showLanguageLessons(language.id));
+}
+
+async function showLanguageLessons(languageID) {
+    await showMenu(`VR/Language/${languageID}/Lessons`, (lesson) => showLessonActivities(lesson.id));
+}
+
+async function showLessonActivities(lessonID) {
+    await showMenu(`VR/Lesson/${lessonID}/Activities`, (activity) => showActivity(activity.id));
+}
+
+async function showActivity(activityID) {
+    await fader.fadeOut();
+
+    const activity = `/VR/Activity/${activityID}`,
+        transforms = await getObject(`${activity}/Scene`),
         stations = await getObject(`${activity}/Stations`),
-        //stationConnections = await getObject(`${activity}/StationConnections`),
+        connections = await getObject(`${activity}/Map`),
         audio = await getObject(`${activity}/Audio`),
         signs = await getObject(`${activity}/Signs`);
 
     console.log(activity);
     console.log(transforms);
     console.log(stations);
-    //console.log(stationConnections);
+    console.log(connections);
     console.log(audio);
     console.log(signs);
 
-    foreground.remove(...foreground.children);
-    arrayClear(curIcons);
-    objectClicks.clear();
-    curTransforms.clear();
-    curStations.clear();
-
+    clearScene();
     buildScene(foreground, transforms);
 
     for (let station of stations) {
@@ -65133,66 +65566,6 @@ function buildScene(root, transforms) {
         }
     }
 }
-
-function update(evt) {
-    if (lastObj) {
-        lastObj.scale.set(1, 1, 1);
-        lastObj = null;
-    }
-    controls.update();
-    skybox.update();
-    for (let icon of curIcons) {
-        icon.update();
-    }
-
-    arrayClear(hits);
-    raycaster.intersectObject(foreground, true, hits);
-    for (let hit of hits) {
-        lastObj = hit.object;
-    }
-    if (lastObj) {
-        lastObj.scale.set(1.1, 1.1, 1.1);
-    }
-
-    fader.update(evt.sdt);
-    renderer.render(scene, camera);
-}
-
-function resize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
-async function addActivity(activity, a) {
-    const match = activity.id.match(/^act-(\d+)/),
-        actID = parseInt(match[1], 10),
-        img = activity.querySelector("img"),
-        icon = new StationIcon();
-
-    curIcons.push(icon);
-    icon.name = activity.id;
-    icon.position.set(Math.cos(a), 1, Math.sin(a));
-    objectClicks.set(icon, () => loadActivity(actID));
-    await icon.setImage(img);
-    foreground.add(icon);
-}
-
-(async function () {
-    const activities = document.querySelectorAll("section"),
-        count = activities.length,
-        tasks = [];
-    for (let i = 0; i < activities.length; ++i) {
-        const activity = activities[i],
-            a = 2 * i * Math.PI / count;
-
-        tasks.push(addActivity(activity, a));
-    }
-
-    await Promise.all(tasks);
-    timer.start();
-    await fader.fadeIn();
-})();
 
 } catch(exp) {
     TraceKit.report(exp);
