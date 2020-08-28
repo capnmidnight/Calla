@@ -95,9 +95,9 @@ namespace Calla.Controllers
         }
 
         [HttpGet("VR/Lesson/{id}/Activities")]
-        public IActionResult Activities(int lessonID)
+        public IActionResult Activities(int id)
         {
-            if (lessonID != 1)
+            if (id != 1)
             {
                 return NotFound();
             }
