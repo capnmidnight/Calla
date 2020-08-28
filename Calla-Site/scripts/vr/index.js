@@ -133,8 +133,9 @@ function resize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-async function showMenu(items, onClick) {
+async function showMenu(path, onClick) {
     await fader.fadeOut();
+    const items = await await getObject(path);
     clearScene();
     const tasks = [];
     for (let i = 0; i < items.length; ++i) {
@@ -162,7 +163,7 @@ async function addMenuItem(item, y, onClick) {
     const mat = new MeshBasicMaterial({ transparent: true });
     const mesh = new TexturedMesh(buttonGeom, mat);
     mesh.name = item.name;
-    mesh.position.set(0, y, -2);
+    mesh.position.set(0, y, -3);
     mesh.scale.set(lbl.width / 300, lbl.height / 300, 1);
     await mesh.setImage(lbl.canvas);
 
@@ -173,36 +174,21 @@ async function addMenuItem(item, y, onClick) {
 }
 
 async function showLanguagesMenu() {
-    const languages = await getObject("VR/Languages");
-    await showMenu(languages, (language) => showLanguageLessons(language.id));
+    await showMenu("VR/Languages", (language) => showLanguageLessons(language.id));
 }
 
 async function showLanguageLessons(languageID) {
-    const lessons = await getObject(`VR/Language/${languageID}/Lessons`);
-    await showMenu(lessons, (lesson) => showLessonActivities(lesson.id));
+    await showMenu(`VR/Language/${languageID}/Lessons`, (lesson) => showLessonActivities(lesson.id));
 }
 
 async function showLessonActivities(lessonID) {
-    console.log(lessonID);
+    await showMenu(`VR/Lesson/${lessonID}/Activities`, (activity) => showActivity(activity.id));
 }
 
-async function addActivity(activity, a) {
-    const match = activity.id.match(/^act-(\d+)/),
-        actID = parseInt(match[1], 10),
-        img = activity.querySelector("img"),
-        icon = new StationIcon();
+async function showActivity(activityID) {
+    await fader.fadeOut();
 
-    curIcons.push(icon);
-    icon.name = activity.id;
-    icon.position.set(Math.cos(a), 1, Math.sin(a));
-    objectClicks.set(icon, () => loadActivity(actID));
-    await icon.setImage(img);
-    foreground.add(icon);
-}
-
-
-async function loadActivity(actID) {
-    const activity = `/VR/Activity/${actID}`,
+    const activity = `/VR/Activity/${activityID}`,
         transforms = await getObject(`${activity}/Scene`),
         stations = await getObject(`${activity}/Stations`),
         connections = await getObject(`${activity}/Map`),
@@ -216,6 +202,7 @@ async function loadActivity(actID) {
     console.log(audio);
     console.log(signs);
 
+    clearScene();
     buildScene(foreground, transforms);
 
     for (let station of stations) {
