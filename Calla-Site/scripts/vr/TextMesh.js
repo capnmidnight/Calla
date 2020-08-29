@@ -12,12 +12,14 @@ export class TextMesh extends TexturedMesh {
         super(geom, mat);
         this.textImage = new TextImage();
         this.setImage(this.textImage.canvas);
-        this.textImage.addEventListener("redrawn", () => this.updateTexture());
+        this.textImage.addEventListener("redrawn", () => {
+            this.scale.set(this.textImage.width / 300, this.textImage.height / 300, 1);
+            this.updateTexture();
+        });
     }
 
     async loadFontAndSetText(value = null) {
         await this.textImage.loadFontAndSetText(value);
-        this.scale.set(this.textImage.width / 300, this.textImage.height / 300, 1);
     }
 
     get textWidth() {
