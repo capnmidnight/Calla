@@ -1,12 +1,13 @@
+import { EventBase, isNumber } from "../../calla";
 import { setContextSize } from "../../html/canvas";
 import { CanvasOffscreen } from "../../html/tags";
-import { isNumber } from "../../calla";
 
 /**
  * @type {WeakMap<TextImage, TextImagePrivate>}
  **/
 const selfs = new WeakMap();
 const DEFAULT_TEST_TEXT = "The quick brown fox jumps over the lazy dog";
+const redrawnEvt = new Event("redrawn");
 
 function makeFont(style) {
     const fontParts = [];
@@ -70,7 +71,7 @@ class TextImagePrivate {
         this.g.textBaseline = "top";
     }
 
-    redraw() {
+    redraw(parent) {
         this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         if (this.fontFamily
@@ -110,15 +111,17 @@ class TextImagePrivate {
 
             this.g.fillStyle = this.color;
             this.g.fillText(this.value, dx, dy);
+            parent.dispatchEvent(redrawnEvt);
         }
     }
 }
 
-export class TextImage {
+export class TextImage extends EventBase {
     /**
      * @param {string} fontFamily
      */
     constructor() {
+        super();
         selfs.set(this, new TextImagePrivate());
     }
 
@@ -155,7 +158,7 @@ export class TextImage {
         if (this.scale !== v) {
             const self = selfs.get(this);
             self.scale = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
@@ -210,7 +213,7 @@ export class TextImage {
             || this.padding.left != v.left) {
             const self = selfs.get(this);
             self.padding = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
@@ -222,7 +225,7 @@ export class TextImage {
         if (this.fontStyle !== v) {
             const self = selfs.get(this);
             self.fontStyle = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
@@ -234,7 +237,7 @@ export class TextImage {
         if (this.fontVariant !== v) {
             const self = selfs.get(this);
             self.fontVariant = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
@@ -246,7 +249,7 @@ export class TextImage {
         if (this.fontWeight !== v) {
             const self = selfs.get(this);
             self.fontWeight = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
@@ -258,7 +261,7 @@ export class TextImage {
         if (this.fontSize !== v) {
             const self = selfs.get(this);
             self.fontSize = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
@@ -270,7 +273,7 @@ export class TextImage {
         if (this.fontFamily !== v) {
             const self = selfs.get(this);
             self.fontFamily = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
@@ -282,7 +285,7 @@ export class TextImage {
         if (this.color !== v) {
             const self = selfs.get(this);
             self.color = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
@@ -294,7 +297,7 @@ export class TextImage {
         if (this.bgColor !== v) {
             const self = selfs.get(this);
             self.bgColor = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
@@ -306,7 +309,7 @@ export class TextImage {
         if (this.value !== v) {
             const self = selfs.get(this);
             self.value = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 

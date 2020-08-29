@@ -1,14 +1,13 @@
-import { AmbientLight, Color, Matrix4, MeshBasicMaterial, Object3D, PerspectiveCamera, PlaneBufferGeometry, Raycaster, Scene, Vector3, WebGLRenderer } from "three";
+import { AmbientLight, Color, Matrix4, Object3D, PerspectiveCamera, Raycaster, Scene, Vector3, WebGLRenderer } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { addEventListeners, arrayClear } from "../calla";
-import { TextImage } from "../game/graphics/TextImage";
 import { ScreenPointerControls } from "../input/ScreenPointerControls";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
 import { DebugObject } from "./DebugObject";
 import { Fader } from "./Fader";
 import { getObject } from "./getObject";
 import { Skybox } from "./Skybox";
-import { TexturedMesh } from "./TexturedMesh";
+import { TextMesh } from "./TextMesh";
 
 const renderer = new WebGLRenderer({
     canvas: document.getElementById("frontBuffer"),
@@ -146,28 +145,23 @@ async function showMenu(path, onClick) {
     await fader.fadeIn();
 }
 
-const buttonGeom = new PlaneBufferGeometry(1, 1, 1, 1);
 async function addMenuItem(item, y, onClick) {
-    const lbl = Object.assign(new TextImage(), {
-        bgColor: item.enabled !== false
+    const mesh = Object.assign(new TextMesh(), {
+        textBgColor: item.enabled !== false
             ? "#ffffff"
             : "#a0a0a0",
-        color: item.enabled !== false
+        textColor: item.enabled !== false
             ? "#000000"
             : "#505050",
-        padding: [15, 30],
+        textPadding: [15, 30],
         fontFamily: "Roboto",
         fontSize: 100
     });
 
-    await lbl.loadFontAndSetText(item.name);
-
-    const mat = new MeshBasicMaterial({ transparent: true });
-    const mesh = new TexturedMesh(buttonGeom, mat);
     mesh.name = item.name;
     mesh.position.set(0, y, -2);
-    mesh.scale.set(lbl.width / 300, lbl.height / 300, 1);
-    await mesh.setImage(lbl.canvas);
+
+    await mesh.loadFontAndSetText(item.name);
 
     foreground.add(mesh);
     if (item.enabled !== false) {
