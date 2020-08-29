@@ -1,4 +1,4 @@
-﻿/**
+/**
  * A test for filtering an array
  * @callback scanArrayCallback
  * @param {any} obj - an array item to check.
@@ -16,14 +16,15 @@
  * @returns {any}
  */
 export function arrayScan(arr, ...tests) {
-    if (!(arr instanceof Array)) {
+    if (!arr || arr.length === undefined) {
         throw new Error("Must provide an array as the first parameter.");
     }
 
     for (let test of tests) {
-        const filtered = arr.filter(test);
-        if (filtered.length > 0) {
-            return filtered[0];
+        for (let item of arr) {
+            if (test(item)) {
+                return item;
+            }
         }
     }
 
