@@ -26190,7 +26190,7 @@ class TextImage extends EventBase {
         const font = makeFont(this);
         const fonts = await document.fonts.load(font, testString);
         if (fonts.length === 0) {
-            throw new Error("Couldn't load the font");
+            console.warn(`Failed to load font "${font}". If this is a system font, just set the object's \`value\` property, instead of calling \`loadFontAndSetText\`.`);
         }
 
         this.value = value;

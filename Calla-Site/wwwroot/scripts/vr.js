@@ -65204,7 +65204,7 @@ class TextImage extends EventBase {
         const font = makeFont(this);
         const fonts = await document.fonts.load(font, testString);
         if (fonts.length === 0) {
-            throw new Error("Couldn't load the font");
+            console.warn(`Failed to load font "${font}". If this is a system font, just set the object's \`value\` property, instead of calling \`loadFontAndSetText\`.`);
         }
 
         this.value = value;
@@ -65412,12 +65412,14 @@ class TextMesh extends TexturedMesh {
         super(geom, mat);
         this.textImage = new TextImage();
         this.setImage(this.textImage.canvas);
-        this.textImage.addEventListener("redrawn", () => this.updateTexture());
+        this.textImage.addEventListener("redrawn", () => {
+            this.scale.set(this.textImage.width / 300, this.textImage.height / 300, 1);
+            this.updateTexture();
+        });
     }
 
     async loadFontAndSetText(value = null) {
         await this.textImage.loadFontAndSetText(value);
-        this.scale.set(this.textImage.width / 300, this.textImage.height / 300, 1);
     }
 
     get textWidth() {
