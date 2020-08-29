@@ -33,14 +33,15 @@ function arrayRemoveAt(arr, idx) {
  * @returns {any}
  */
 function arrayScan(arr, ...tests) {
-    if (!(arr instanceof Array)) {
+    if (!arr || arr.length === undefined) {
         throw new Error("Must provide an array as the first parameter.");
     }
 
     for (let test of tests) {
-        const filtered = arr.filter(test);
-        if (filtered.length > 0) {
-            return filtered[0];
+        for (let item of arr) {
+            if (test(item)) {
+                return item;
+            }
         }
     }
 
@@ -18522,7 +18523,7 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-const versionString = "v0.7.2";
+const versionString = "v0.7.3";
 
 /* global JitsiMeetJS */
 

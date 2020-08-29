@@ -1352,14 +1352,15 @@ function arrayRemoveAt(arr, idx) {
  * @returns {any}
  */
 function arrayScan(arr, ...tests) {
-    if (!(arr instanceof Array)) {
+    if (!arr || arr.length === undefined) {
         throw new Error("Must provide an array as the first parameter.");
     }
 
     for (let test of tests) {
-        const filtered = arr.filter(test);
-        if (filtered.length > 0) {
-            return filtered[0];
+        for (let item of arr) {
+            if (test(item)) {
+                return item;
+            }
         }
     }
 
@@ -19873,7 +19874,7 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-const versionString = "v0.7.2";
+const versionString = "v0.7.3";
 
 /* global JitsiMeetJS */
 
@@ -26065,23 +26066,51 @@ function resizeCanvas(canv, superscale = 1) {
  * @type {WeakMap<TextImage, TextImagePrivate>}
  **/
 const selfs$1 = new WeakMap();
+const DEFAULT_TEST_TEXT = "The quick brown fox jumps over the lazy dog";
+const redrawnEvt = new Event("redrawn");
+
+function makeFont(style) {
+    const fontParts = [];
+    if (style.fontStyle && style.fontStyle !== "normal") {
+        fontParts.push(style.fontStyle);
+    }
+
+    if (style.fontVariant && style.fontVariant !== "normal") {
+        fontParts.push(style.fontVariant);
+    }
+
+    if (style.fontWeight && style.fontWeight !== "normal") {
+        fontParts.push(style.fontWeight);
+    }
+
+    fontParts.push(style.fontSize + "px");
+    fontParts.push(style.fontFamily);
+
+    return fontParts.join(" ");
+}
 
 class TextImagePrivate {
-    /**
-     * @param {string} fontFamily
-     */
-    constructor(fontFamily) {
-        /** @type {string} */
-        this.fontFamily = fontFamily;
-
+    constructor() {
         /** @type {string} */
         this.color = "black";
 
         /** @type {string} */
         this.bgColor = null;
 
+        /** @type {string} */
+        this.fontStyle = "normal";
+
+        /** @type {string} */
+        this.fontVariant = "normal";
+
+        /** @type {string} */
+        this.fontWeight = "normal";
+
+        /** @type {string} */
+        this.fontFamily = "sans-serif";
+
         /** @type {number} */
-        this.fontSize = null;
+        this.fontSize = 20;
 
         /** @type {number} */
         this.scale = 1;
@@ -26102,7 +26131,7 @@ class TextImagePrivate {
         this.g.textBaseline = "top";
     }
 
-    redraw() {
+    redraw(parent) {
         this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         if (this.fontFamily
@@ -26111,14 +26140,15 @@ class TextImagePrivate {
             && this.scale
             && this.value) {
             const fontHeight = this.fontSize * this.scale;
-            this.g.font = `${fontHeight}px ${this.fontFamily}`;
+            const font = makeFont(this);
+            this.g.font = font;
 
             const metrics = this.g.measureText(this.value);
             let dx = 0,
                 dy = 0,
                 trueWidth = metrics.width,
                 trueHeight = fontHeight;
-            if (metrics.actualBoundingBoxLeft) {
+            if (metrics.actualBoundingBoxLeft !== undefined) {
                 dy = metrics.actualBoundingBoxAscent;
                 trueWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
                 trueHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
@@ -26141,16 +26171,29 @@ class TextImagePrivate {
 
             this.g.fillStyle = this.color;
             this.g.fillText(this.value, dx, dy);
+            parent.dispatchEvent(redrawnEvt);
         }
     }
 }
 
-class TextImage {
+class TextImage extends EventBase {
     /**
      * @param {string} fontFamily
      */
-    constructor(fontFamily) {
-        selfs$1.set(this, new TextImagePrivate(fontFamily));
+    constructor() {
+        super();
+        selfs$1.set(this, new TextImagePrivate());
+    }
+
+    async loadFontAndSetText(value = null) {
+        const testString = value || DEFAULT_TEST_TEXT;
+        const font = makeFont(this);
+        const fonts = await document.fonts.load(font, testString);
+        if (fonts.length === 0) {
+            throw new Error("Couldn't load the font");
+        }
+
+        this.value = value;
     }
 
     get canvas() {
@@ -26167,18 +26210,6 @@ class TextImage {
         return self.canvas.height / self.scale;
     }
 
-    get fontSize() {
-        return selfs$1.get(this).fontSize;
-    }
-
-    set fontSize(v) {
-        if (this.fontSize !== v) {
-            const self = selfs$1.get(this);
-            self.fontSize = v;
-            self.redraw();
-        }
-    }
-
     get scale() {
         return selfs$1.get(this).scale;
     }
@@ -26187,7 +26218,7 @@ class TextImage {
         if (this.scale !== v) {
             const self = selfs$1.get(this);
             self.scale = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
@@ -26242,10 +26273,57 @@ class TextImage {
             || this.padding.left != v.left) {
             const self = selfs$1.get(this);
             self.padding = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
+    get fontStyle() {
+        return selfs$1.get(this).fontStyle;
+    }
+
+    set fontStyle(v) {
+        if (this.fontStyle !== v) {
+            const self = selfs$1.get(this);
+            self.fontStyle = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontVariant() {
+        return selfs$1.get(this).fontVariant;
+    }
+
+    set fontVariant(v) {
+        if (this.fontVariant !== v) {
+            const self = selfs$1.get(this);
+            self.fontVariant = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontWeight() {
+        return selfs$1.get(this).fontWeight;
+    }
+
+    set fontWeight(v) {
+        if (this.fontWeight !== v) {
+            const self = selfs$1.get(this);
+            self.fontWeight = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontSize() {
+        return selfs$1.get(this).fontSize;
+    }
+
+    set fontSize(v) {
+        if (this.fontSize !== v) {
+            const self = selfs$1.get(this);
+            self.fontSize = v;
+            self.redraw(this);
+        }
+    }
 
     get fontFamily() {
         return selfs$1.get(this).fontFamily;
@@ -26255,7 +26333,7 @@ class TextImage {
         if (this.fontFamily !== v) {
             const self = selfs$1.get(this);
             self.fontFamily = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
@@ -26267,7 +26345,7 @@ class TextImage {
         if (this.color !== v) {
             const self = selfs$1.get(this);
             self.color = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
@@ -26279,7 +26357,7 @@ class TextImage {
         if (this.bgColor !== v) {
             const self = selfs$1.get(this);
             self.bgColor = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
@@ -26291,7 +26369,7 @@ class TextImage {
         if (this.value !== v) {
             const self = selfs$1.get(this);
             self.value = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
@@ -26325,7 +26403,7 @@ class EmojiAvatar extends BaseAvatar {
         this.value = emoji.value;
         this.desc = emoji.desc;
 
-        const emojiText = new TextImage("sans-serif");
+        const emojiText = new TextImage();
 
         emojiText.color = emoji.color || "black";
         emojiText.fontSize = 256;
@@ -26500,8 +26578,8 @@ const POSITION_REQUEST_DEBOUNCE_TIME = 1,
     STACKED_USER_OFFSET_X = 5,
     STACKED_USER_OFFSET_Y = 5,
     eventNames$1 = ["userMoved", "userPositionNeeded"],
-    muteAudioIcon = new TextImage("sans-serif"),
-    speakerActivityIcon = new TextImage("sans-serif");
+    muteAudioIcon = new TextImage(),
+    speakerActivityIcon = new TextImage();
 
 muteAudioIcon.value = mutedSpeaker.value;
 speakerActivityIcon.value = speakerMediumVolume.value;
@@ -26538,7 +26616,7 @@ class User extends EventBase {
         this.stackOffsetY = 0;
         this.lastPositionRequestTime = performance.now() / 1000 - POSITION_REQUEST_DEBOUNCE_TIME;
         this.visible = true;
-        this.userNameText = new TextImage("sans-serif");
+        this.userNameText = new TextImage();
         this.userNameText.color = "white";
         this.userNameText.fontSize = 128;
         this._displayName = null;
@@ -31010,7 +31088,7 @@ class Emote {
         this.dy = -Math.random() * 0.5 - 0.5;
         this.life = 1;
         this.width = -1;
-        this.emoteText = new TextImage("sans-serif");
+        this.emoteText = new TextImage();
         this.emoteText.value = emoji.value;
     }
 

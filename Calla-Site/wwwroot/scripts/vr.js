@@ -64122,7 +64122,7 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-const versionString = "v0.7.2";
+const versionString = "v0.7.3";
 
 /* global JitsiMeetJS */
 
@@ -65016,9 +65016,6 @@ class Skybox extends AbstractCubeMapView {
     }
 }
 
-const geom = new SphereBufferGeometry(0.25, 50, 25);
-setGeometryUVsForCubemaps(geom);
-
 /**
  * Returns true if the given object is either an HTMLCanvasElement or an OffscreenCanvas.
  * @param {any} obj
@@ -65083,23 +65080,51 @@ function setContextSize(ctx, w, h, superscale = 1) {
  * @type {WeakMap<TextImage, TextImagePrivate>}
  **/
 const selfs = new WeakMap();
+const DEFAULT_TEST_TEXT = "The quick brown fox jumps over the lazy dog";
+const redrawnEvt = new Event("redrawn");
+
+function makeFont(style) {
+    const fontParts = [];
+    if (style.fontStyle && style.fontStyle !== "normal") {
+        fontParts.push(style.fontStyle);
+    }
+
+    if (style.fontVariant && style.fontVariant !== "normal") {
+        fontParts.push(style.fontVariant);
+    }
+
+    if (style.fontWeight && style.fontWeight !== "normal") {
+        fontParts.push(style.fontWeight);
+    }
+
+    fontParts.push(style.fontSize + "px");
+    fontParts.push(style.fontFamily);
+
+    return fontParts.join(" ");
+}
 
 class TextImagePrivate {
-    /**
-     * @param {string} fontFamily
-     */
-    constructor(fontFamily) {
-        /** @type {string} */
-        this.fontFamily = fontFamily;
-
+    constructor() {
         /** @type {string} */
         this.color = "black";
 
         /** @type {string} */
         this.bgColor = null;
 
+        /** @type {string} */
+        this.fontStyle = "normal";
+
+        /** @type {string} */
+        this.fontVariant = "normal";
+
+        /** @type {string} */
+        this.fontWeight = "normal";
+
+        /** @type {string} */
+        this.fontFamily = "sans-serif";
+
         /** @type {number} */
-        this.fontSize = null;
+        this.fontSize = 20;
 
         /** @type {number} */
         this.scale = 1;
@@ -65120,7 +65145,7 @@ class TextImagePrivate {
         this.g.textBaseline = "top";
     }
 
-    redraw() {
+    redraw(parent) {
         this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         if (this.fontFamily
@@ -65129,14 +65154,15 @@ class TextImagePrivate {
             && this.scale
             && this.value) {
             const fontHeight = this.fontSize * this.scale;
-            this.g.font = `${fontHeight}px ${this.fontFamily}`;
+            const font = makeFont(this);
+            this.g.font = font;
 
             const metrics = this.g.measureText(this.value);
             let dx = 0,
                 dy = 0,
                 trueWidth = metrics.width,
                 trueHeight = fontHeight;
-            if (metrics.actualBoundingBoxLeft) {
+            if (metrics.actualBoundingBoxLeft !== undefined) {
                 dy = metrics.actualBoundingBoxAscent;
                 trueWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
                 trueHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
@@ -65159,16 +65185,29 @@ class TextImagePrivate {
 
             this.g.fillStyle = this.color;
             this.g.fillText(this.value, dx, dy);
+            parent.dispatchEvent(redrawnEvt);
         }
     }
 }
 
-class TextImage {
+class TextImage extends EventBase {
     /**
      * @param {string} fontFamily
      */
-    constructor(fontFamily) {
-        selfs.set(this, new TextImagePrivate(fontFamily));
+    constructor() {
+        super();
+        selfs.set(this, new TextImagePrivate());
+    }
+
+    async loadFontAndSetText(value = null) {
+        const testString = value || DEFAULT_TEST_TEXT;
+        const font = makeFont(this);
+        const fonts = await document.fonts.load(font, testString);
+        if (fonts.length === 0) {
+            throw new Error("Couldn't load the font");
+        }
+
+        this.value = value;
     }
 
     get canvas() {
@@ -65185,18 +65224,6 @@ class TextImage {
         return self.canvas.height / self.scale;
     }
 
-    get fontSize() {
-        return selfs.get(this).fontSize;
-    }
-
-    set fontSize(v) {
-        if (this.fontSize !== v) {
-            const self = selfs.get(this);
-            self.fontSize = v;
-            self.redraw();
-        }
-    }
-
     get scale() {
         return selfs.get(this).scale;
     }
@@ -65205,7 +65232,7 @@ class TextImage {
         if (this.scale !== v) {
             const self = selfs.get(this);
             self.scale = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
@@ -65260,10 +65287,57 @@ class TextImage {
             || this.padding.left != v.left) {
             const self = selfs.get(this);
             self.padding = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
+    get fontStyle() {
+        return selfs.get(this).fontStyle;
+    }
+
+    set fontStyle(v) {
+        if (this.fontStyle !== v) {
+            const self = selfs.get(this);
+            self.fontStyle = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontVariant() {
+        return selfs.get(this).fontVariant;
+    }
+
+    set fontVariant(v) {
+        if (this.fontVariant !== v) {
+            const self = selfs.get(this);
+            self.fontVariant = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontWeight() {
+        return selfs.get(this).fontWeight;
+    }
+
+    set fontWeight(v) {
+        if (this.fontWeight !== v) {
+            const self = selfs.get(this);
+            self.fontWeight = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontSize() {
+        return selfs.get(this).fontSize;
+    }
+
+    set fontSize(v) {
+        if (this.fontSize !== v) {
+            const self = selfs.get(this);
+            self.fontSize = v;
+            self.redraw(this);
+        }
+    }
 
     get fontFamily() {
         return selfs.get(this).fontFamily;
@@ -65273,7 +65347,7 @@ class TextImage {
         if (this.fontFamily !== v) {
             const self = selfs.get(this);
             self.fontFamily = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
@@ -65285,7 +65359,7 @@ class TextImage {
         if (this.color !== v) {
             const self = selfs.get(this);
             self.color = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
@@ -65297,7 +65371,7 @@ class TextImage {
         if (this.bgColor !== v) {
             const self = selfs.get(this);
             self.bgColor = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
@@ -65309,7 +65383,7 @@ class TextImage {
         if (this.value !== v) {
             const self = selfs.get(this);
             self.value = v;
-            self.redraw();
+            self.redraw(this);
         }
     }
 
@@ -65325,6 +65399,113 @@ class TextImage {
             && self.canvas.height > 0) {
             g.drawImage(self.canvas, x, y, this.width, this.height);
         }
+    }
+}
+
+const geom = new PlaneBufferGeometry(1, 1, 1, 1);
+class TextMesh extends TexturedMesh {
+    /**
+     * @param {string} fontFamily
+     */
+    constructor() {
+        const mat = new MeshBasicMaterial({ transparent: true });
+        super(geom, mat);
+        this.textImage = new TextImage();
+        this.setImage(this.textImage.canvas);
+        this.textImage.addEventListener("redrawn", () => this.updateTexture());
+    }
+
+    async loadFontAndSetText(value = null) {
+        await this.textImage.loadFontAndSetText(value);
+        this.scale.set(this.textImage.width / 300, this.textImage.height / 300, 1);
+    }
+
+    get textWidth() {
+        this.textImage.width;
+    }
+
+    get textHeight() {
+        return this.textImage.height;
+    }
+
+    get textScale() {
+        return this.textImage.scale;
+    }
+
+    set textScale(v) {
+        this.textImage.scale = v;
+    }
+
+    get textPadding() {
+        return this.textImage.padding;
+    }
+
+    set textPadding(v) {
+        this.textImage.padding = v;
+    }
+
+    get fontStyle() {
+        return this.textImage.fontStyle;
+    }
+
+    set fontStyle(v) {
+        this.textImage.fontStyle = v;
+    }
+
+    get fontVariant() {
+        return this.textImage.fontVariant;
+    }
+
+    set fontVariant(v) {
+        this.textImage.fontVariant = v;
+    }
+
+    get fontWeight() {
+        return this.textImage.fontWeight;
+    }
+
+    set fontWeight(v) {
+        this.textImage.fontWeight = v;
+    }
+
+    get fontSize() {
+        return this.textImage.fontSize;
+    }
+
+    set fontSize(v) {
+        this.textImage.fontSize = v;
+    }
+
+    get fontFamily() {
+        return this.textImage.fontFamily;
+    }
+
+    set fontFamily(v) {
+        this.textImage.fontFamily = v;
+    }
+
+    get textColor() {
+        return this.textImage.color;
+    }
+
+    set textColor(v) {
+        this.textImage.color = v;
+    }
+
+    get textBgColor() {
+        return this.textImage.bgColor;
+    }
+
+    set textBgColor(v) {
+        this.textImage.bgColor = v;
+    }
+
+    get value() {
+        return this.textImage.value;
+    }
+
+    set value(v) {
+        this.textImage.value = v;
     }
 }
 
@@ -65396,7 +65577,7 @@ background.add(skybox);
 foreground.name = "Foreground";
 resize();
 timer.start();
-showLanguagesMenu();
+startup();
 
 function clearScene() {
     foreground.remove(...foreground.children);
@@ -65464,30 +65645,32 @@ async function showMenu(path, onClick) {
     await fader.fadeIn();
 }
 
-const buttonGeom = new PlaneBufferGeometry(1, 1, 1, 1);
 async function addMenuItem(item, y, onClick) {
-    const lbl = new TextImage("sans-serif");
-    lbl.bgColor = item.enabled !== false
-        ? "#ffffff"
-        : "#a0a0a0";
-    lbl.color = item.enabled !== false
-        ? "#000000"
-        : "#505050";
-    lbl.fontSize = 100;
-    lbl.padding = [20, 50];
-    lbl.value = item.name;
+    const mesh = Object.assign(new TextMesh(), {
+        textBgColor: item.enabled !== false
+            ? "#ffffff"
+            : "#a0a0a0",
+        textColor: item.enabled !== false
+            ? "#000000"
+            : "#505050",
+        textPadding: [15, 30],
+        fontFamily: "Roboto",
+        fontSize: 100
+    });
 
-    const mat = new MeshBasicMaterial({ transparent: true });
-    const mesh = new TexturedMesh(buttonGeom, mat);
     mesh.name = item.name;
-    mesh.position.set(0, y, -3);
-    mesh.scale.set(lbl.width / 300, lbl.height / 300, 1);
-    await mesh.setImage(lbl.canvas);
+    mesh.position.set(0, y, -2);
+
+    await mesh.loadFontAndSetText(item.name);
 
     foreground.add(mesh);
     if (item.enabled !== false) {
         objectClicks.set(mesh, () => onClick(item));
     }
+}
+
+async function startup() {
+    await showLanguagesMenu();
 }
 
 async function showLanguagesMenu() {
