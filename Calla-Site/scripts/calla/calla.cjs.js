@@ -86,7 +86,7 @@ function arrayRemoveAt(arr, idx) {
  * @returns {any}
  */
 function arrayScan(arr, ...tests) {
-    if (!(arr instanceof Array)) {
+    if (arr.length === undefined) {
         throw new Error("Must provide an array as the first parameter.");
     }
 

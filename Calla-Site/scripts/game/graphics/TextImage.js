@@ -8,21 +8,27 @@ import { isNumber } from "../../calla";
 const selfs = new WeakMap();
 
 class TextImagePrivate {
-    /**
-     * @param {string} fontFamily
-     */
-    constructor(fontFamily) {
-        /** @type {string} */
-        this.fontFamily = fontFamily;
-
+    constructor() {
         /** @type {string} */
         this.color = "black";
 
         /** @type {string} */
         this.bgColor = null;
 
+        /** @type {string} */
+        this.fontStyle = "normal";
+
+        /** @type {string} */
+        this.fontVariant = "normal";
+
+        /** @type {string} */
+        this.fontWeight = "normal";
+
+        /** @type {string} */
+        this.fontFamily = "sans-serif";
+
         /** @type {number} */
-        this.fontSize = null;
+        this.fontSize = 20;
 
         /** @type {number} */
         this.scale = 1;
@@ -52,14 +58,36 @@ class TextImagePrivate {
             && this.scale
             && this.value) {
             const fontHeight = this.fontSize * this.scale;
-            this.g.font = `${fontHeight}px ${this.fontFamily}`;
+
+            const fontParts = [];
+            if (this.fontStyle && this.fontStyle !== "normal") {
+                fontParts.push(this.fontStyle);
+            }
+
+            if (this.fontVariant && this.fontVariant !== "normal") {
+                fontParts.push(this.fontVariant);
+            }
+
+            if (this.fontWeight && this.fontWeight !== "normal") {
+                fontParts.push(this.fontWeight);
+            }
+
+            fontParts.push(this.fontSize + "px");
+            fontParts.push(this.fontFamily);
+
+            const font = fontParts.join(" ");
+            this.g.font = font;
+
+            if (this.g.font !== font) {
+                console.log(font, this.g.font, "before measure");
+            }
 
             const metrics = this.g.measureText(this.value);
             let dx = 0,
                 dy = 0,
                 trueWidth = metrics.width,
                 trueHeight = fontHeight;
-            if (metrics.actualBoundingBoxLeft) {
+            if (metrics.actualBoundingBoxLeft !== undefined) {
                 dy = metrics.actualBoundingBoxAscent;
                 trueWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
                 trueHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
@@ -71,6 +99,10 @@ class TextImagePrivate {
             trueHeight += this.padding.top + this.padding.bottom;
 
             setContextSize(this.g, trueWidth, trueHeight);
+
+            if (this.g.font !== font) {
+                console.log(font, this.g.font, "after resize");
+            }
 
             if (this.bgColor) {
                 this.g.fillStyle = this.bgColor;
@@ -90,8 +122,8 @@ export class TextImage {
     /**
      * @param {string} fontFamily
      */
-    constructor(fontFamily) {
-        selfs.set(this, new TextImagePrivate(fontFamily));
+    constructor() {
+        selfs.set(this, new TextImagePrivate());
     }
 
     get canvas() {
@@ -106,18 +138,6 @@ export class TextImage {
     get height() {
         const self = selfs.get(this);
         return self.canvas.height / self.scale;
-    }
-
-    get fontSize() {
-        return selfs.get(this).fontSize;
-    }
-
-    set fontSize(v) {
-        if (this.fontSize !== v) {
-            const self = selfs.get(this);
-            self.fontSize = v;
-            self.redraw();
-        }
     }
 
     get scale() {
@@ -187,6 +207,53 @@ export class TextImage {
         }
     }
 
+    get fontStyle() {
+        return selfs.get(this).fontStyle;
+    }
+
+    set fontStyle(v) {
+        if (this.fontStyle !== v) {
+            const self = selfs.get(this);
+            self.fontStyle = v;
+            self.redraw();
+        }
+    }
+
+    get fontVariant() {
+        return selfs.get(this).fontVariant;
+    }
+
+    set fontVariant(v) {
+        if (this.fontVariant !== v) {
+            const self = selfs.get(this);
+            self.fontVariant = v;
+            self.redraw();
+        }
+    }
+
+    get fontWeight() {
+        return selfs.get(this).fontWeight;
+    }
+
+    set fontWeight(v) {
+        if (this.fontWeight !== v) {
+            const self = selfs.get(this);
+            self.fontWeight = v;
+            self.redraw();
+        }
+    }
+
+    get fontSize() {
+        return selfs.get(this).fontSize;
+    }
+
+    set fontSize(v) {
+        if (this.fontSize !== v) {
+            const self = selfs.get(this);
+            self.fontSize = v;
+            self.redraw();
+        }
+    }
 
     get fontFamily() {
         return selfs.get(this).fontFamily;
