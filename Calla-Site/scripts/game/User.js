@@ -12,8 +12,8 @@ const POSITION_REQUEST_DEBOUNCE_TIME = 1,
     STACKED_USER_OFFSET_X = 5,
     STACKED_USER_OFFSET_Y = 5,
     eventNames = ["userMoved", "userPositionNeeded"],
-    muteAudioIcon = new TextImage("sans-serif"),
-    speakerActivityIcon = new TextImage("sans-serif");
+    muteAudioIcon = new TextImage(),
+    speakerActivityIcon = new TextImage();
 
 muteAudioIcon.value = mutedSpeaker.value;
 speakerActivityIcon.value = speakerMediumVolume.value;
@@ -50,7 +50,7 @@ export class User extends EventBase {
         this.stackOffsetY = 0;
         this.lastPositionRequestTime = performance.now() / 1000 - POSITION_REQUEST_DEBOUNCE_TIME;
         this.visible = true;
-        this.userNameText = new TextImage("sans-serif");
+        this.userNameText = new TextImage();
         this.userNameText.color = "white";
         this.userNameText.fontSize = 128;
         this._displayName = null;

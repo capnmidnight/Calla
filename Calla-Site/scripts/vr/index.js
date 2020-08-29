@@ -1,14 +1,13 @@
-import { AmbientLight, Color, Matrix4, Object3D, PerspectiveCamera, Raycaster, Scene, Vector3, WebGLRenderer, PlaneBufferGeometry, MeshBasicMaterial } from "three";
+import { AmbientLight, Color, Matrix4, MeshBasicMaterial, Object3D, PerspectiveCamera, PlaneBufferGeometry, Raycaster, Scene, Vector3, WebGLRenderer } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { addEventListeners, arrayClear } from "../calla";
+import { TextImage } from "../game/graphics/TextImage";
 import { ScreenPointerControls } from "../input/ScreenPointerControls";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
 import { DebugObject } from "./DebugObject";
 import { Fader } from "./Fader";
 import { getObject } from "./getObject";
 import { Skybox } from "./Skybox";
-import { StationIcon } from "./StationIcon";
-import { TextImage } from "../game/graphics/TextImage";
 import { TexturedMesh } from "./TexturedMesh";
 
 const renderer = new WebGLRenderer({
@@ -79,7 +78,7 @@ background.add(skybox);
 foreground.name = "Foreground";
 resize();
 timer.start();
-showLanguagesMenu();
+startup();
 
 function clearScene() {
     foreground.remove(...foreground.children);
@@ -149,21 +148,24 @@ async function showMenu(path, onClick) {
 
 const buttonGeom = new PlaneBufferGeometry(1, 1, 1, 1);
 async function addMenuItem(item, y, onClick) {
-    const lbl = new TextImage("sans-serif");
-    lbl.bgColor = item.enabled !== false
-        ? "#ffffff"
-        : "#a0a0a0";
-    lbl.color = item.enabled !== false
-        ? "#000000"
-        : "#505050";
-    lbl.fontSize = 100;
-    lbl.padding = [20, 50];
-    lbl.value = item.name;
+    const lbl = Object.assign(new TextImage(), {
+        bgColor: item.enabled !== false
+            ? "#ffffff"
+            : "#a0a0a0",
+        color: item.enabled !== false
+            ? "#000000"
+            : "#505050",
+        padding: [15, 30],
+        fontFamily: "Roboto",
+        fontSize: 100
+    });
+
+    await lbl.loadFontAndSetText(item.name);
 
     const mat = new MeshBasicMaterial({ transparent: true });
     const mesh = new TexturedMesh(buttonGeom, mat);
     mesh.name = item.name;
-    mesh.position.set(0, y, -3);
+    mesh.position.set(0, y, -2);
     mesh.scale.set(lbl.width / 300, lbl.height / 300, 1);
     await mesh.setImage(lbl.canvas);
 
@@ -171,6 +173,10 @@ async function addMenuItem(item, y, onClick) {
     if (item.enabled !== false) {
         objectClicks.set(mesh, () => onClick(item));
     }
+}
+
+async function startup() {
+    await showLanguagesMenu();
 }
 
 async function showLanguagesMenu() {

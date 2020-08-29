@@ -19,7 +19,7 @@ export class EmojiAvatar extends BaseAvatar {
         this.value = emoji.value;
         this.desc = emoji.desc;
 
-        const emojiText = new TextImage("sans-serif");
+        const emojiText = new TextImage();
 
         emojiText.color = emoji.color || "black";
         emojiText.fontSize = 256;

@@ -1,4 +1,4 @@
-﻿import { TextImage } from "./TextImage.js";
+import { TextImage } from "./TextImage.js";
 import { getTransform } from "./getTransform.js";
 
 const EMOJI_LIFE = 3;
@@ -12,7 +12,7 @@ export class Emote {
         this.dy = -Math.random() * 0.5 - 0.5;
         this.life = 1;
         this.width = -1;
-        this.emoteText = new TextImage("sans-serif");
+        this.emoteText = new TextImage();
         this.emoteText.value = emoji.value;
     }
 

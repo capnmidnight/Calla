@@ -6,6 +6,27 @@ import { isNumber } from "../../calla";
  * @type {WeakMap<TextImage, TextImagePrivate>}
  **/
 const selfs = new WeakMap();
+const DEFAULT_TEST_TEXT = "The quick brown fox jumps over the lazy dog";
+
+function makeFont(style) {
+    const fontParts = [];
+    if (style.fontStyle && style.fontStyle !== "normal") {
+        fontParts.push(style.fontStyle);
+    }
+
+    if (style.fontVariant && style.fontVariant !== "normal") {
+        fontParts.push(style.fontVariant);
+    }
+
+    if (style.fontWeight && style.fontWeight !== "normal") {
+        fontParts.push(style.fontWeight);
+    }
+
+    fontParts.push(style.fontSize + "px");
+    fontParts.push(style.fontFamily);
+
+    return fontParts.join(" ");
+}
 
 class TextImagePrivate {
     constructor() {
@@ -58,29 +79,8 @@ class TextImagePrivate {
             && this.scale
             && this.value) {
             const fontHeight = this.fontSize * this.scale;
-
-            const fontParts = [];
-            if (this.fontStyle && this.fontStyle !== "normal") {
-                fontParts.push(this.fontStyle);
-            }
-
-            if (this.fontVariant && this.fontVariant !== "normal") {
-                fontParts.push(this.fontVariant);
-            }
-
-            if (this.fontWeight && this.fontWeight !== "normal") {
-                fontParts.push(this.fontWeight);
-            }
-
-            fontParts.push(this.fontSize + "px");
-            fontParts.push(this.fontFamily);
-
-            const font = fontParts.join(" ");
+            const font = makeFont(this);
             this.g.font = font;
-
-            if (this.g.font !== font) {
-                console.log(font, this.g.font, "before measure");
-            }
 
             const metrics = this.g.measureText(this.value);
             let dx = 0,
@@ -99,10 +99,6 @@ class TextImagePrivate {
             trueHeight += this.padding.top + this.padding.bottom;
 
             setContextSize(this.g, trueWidth, trueHeight);
-
-            if (this.g.font !== font) {
-                console.log(font, this.g.font, "after resize");
-            }
 
             if (this.bgColor) {
                 this.g.fillStyle = this.bgColor;
@@ -124,6 +120,17 @@ export class TextImage {
      */
     constructor() {
         selfs.set(this, new TextImagePrivate());
+    }
+
+    async loadFontAndSetText(value = null) {
+        const testString = value || DEFAULT_TEST_TEXT;
+        const font = makeFont(this);
+        const fonts = await document.fonts.load(font, testString);
+        if (fonts.length === 0) {
+            throw new Error("Couldn't load the font");
+        }
+
+        this.value = value;
     }
 
     get canvas() {
