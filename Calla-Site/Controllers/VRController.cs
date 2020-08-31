@@ -124,7 +124,7 @@ namespace Calla.Controllers
                     ID = t.Id,
                     ParentID = t.ParentTransformId ?? 0,
                     Name = t.Name,
-                    Matrix = Matrix4x4.Transpose(t.Matrix.ToSystemMatrix4x4()).ToArray()
+                    Matrix = t.Matrix
                 });
             return Json(transforms);
         }
