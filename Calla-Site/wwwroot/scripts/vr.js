@@ -65530,7 +65530,6 @@ const renderer = new WebGLRenderer({
     light = new AmbientLight(0xffffff, 1),
     skybox = new Skybox(camera),
     foreground = new Object3D(),
-    objectClicks = new Map(),
     raycaster = new Raycaster(),
     screenPointer = new ScreenPointerControls(renderer.domElement),
     curIcons = [],
@@ -65558,9 +65557,9 @@ addEventListeners(screenPointer, {
     move: (evt) => {
         raycaster.setFromCamera({ x: evt.u, y: evt.v }, camera);
     },
-    click: (evt) => {
-        if (objectClicks.has(lastObj)) {
-            objectClicks.get(lastObj)();
+    click: () => {
+        if (lastObj) {
+            lastObj.dispatchEvent({ type: "click" });
         }
     }
 });
@@ -65584,7 +65583,6 @@ startup();
 function clearScene() {
     foreground.remove(...foreground.children);
     arrayClear(curIcons);
-    objectClicks.clear();
     curTransforms.clear();
     curStations.clear();
 }
@@ -65602,7 +65600,10 @@ function update(evt) {
 
     let curObj = null;
     for (let hit of hits) {
-        if (objectClicks.has(hit.object)) {
+        if (hit.object
+            && hit.object._listeners
+            && hit.object._listeners.click
+            && hit.object._listeners.click.length) {
             curObj = hit.object;
         }
     }
@@ -65628,9 +65629,9 @@ function update(evt) {
 }
 
 function resize() {
+    renderer.setSize(window.innerWidth, window.innerHeight);
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 async function showMenu(path, onClick) {
@@ -65667,7 +65668,7 @@ async function addMenuItem(item, y, onClick) {
 
     foreground.add(mesh);
     if (item.enabled !== false) {
-        objectClicks.set(mesh, () => onClick(item));
+        mesh.addEventListener("click", () => onClick(item));
     }
 }
 
@@ -65720,7 +65721,7 @@ async function showActivity(activityID) {
             };
 
         parent.add(icon);
-        objectClicks.set(icon, jump);
+        icon.addEventListener("click", jump);
         curStations.set(station.transformID, station);
         if (station.isStart) {
             jump();
