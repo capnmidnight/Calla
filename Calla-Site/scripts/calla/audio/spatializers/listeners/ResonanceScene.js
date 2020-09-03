@@ -17,8 +17,10 @@ export class ResonanceScene extends BaseListener {
         super();
 
         this.scene = new ResonanceAudio(audioContext, {
-            ambisonicOrder: 3
+            ambisonicOrder: 3,
+            renderingMode: "bypass"
         });
+        
         this.scene.output.connect(audioContext.destination);
 
         this.scene.setRoomProperties({
