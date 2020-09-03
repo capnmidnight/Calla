@@ -1,7 +1,8 @@
-import { AmbientLight, Color, Matrix4, Object3D, PerspectiveCamera, Raycaster, Scene, Vector3, WebGLRenderer } from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { AmbientLight, Color, Matrix4, Object3D, PerspectiveCamera, Raycaster, Scene, WebGLRenderer } from "three";
 import { addEventListeners, arrayClear } from "../calla";
+import { CameraControl } from "../input/CameraControl";
 import { ScreenPointerControls } from "../input/ScreenPointerControls";
+import { Stage } from "../input/Stage";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
 import { DebugObject } from "./DebugObject";
 import { Fader } from "./Fader";
@@ -29,31 +30,35 @@ const renderer = new WebGLRenderer({
     skybox = new Skybox(camera),
     foreground = new Object3D(),
     raycaster = new Raycaster(),
-    screenPointer = new ScreenPointerControls(renderer.domElement),
     curIcons = [],
     curTransforms = new Map(),
     curStations = new Map(),
-    controls = Object.assign(new OrbitControls(camera, renderer.domElement), {
-        enableDamping: true,
-        dampingFactor: 0.05,
-        screenSpacePanning: false,
-        minDistance: 1,
-        maxDistance: 5,
-        minPolarAngle: Math.PI / 6,
-        maxPolarAngle: 5 * Math.PI / 8,
-        center: new Vector3(0, 1, 0)
-    }),
     hits = [],
-    timer = new RequestAnimationFrameTimer();
+    timer = new RequestAnimationFrameTimer(),
+    stage = new Stage(camera),
+    controls = new ScreenPointerControls(renderer.domElement),
+    cameraControl = new CameraControl(renderer, camera, stage, controls);
 
 let lastObj = null;
+
+window.scene = scene;
+window.stage = stage;
 
 timer.addEventListener("tick", update);
 window.addEventListener("resize", resize);
 
-addEventListeners(screenPointer, {
+addEventListeners(controls, {
     move: (evt) => {
-        raycaster.setFromCamera({ x: evt.u, y: evt.v }, camera);
+        let pointer = null;
+
+        if (document.pointerLockElement) {
+            pointer = { x: 0, y: 0 };
+        }
+        else {
+            pointer = { x: evt.u, y: evt.v };
+        }
+
+        raycaster.setFromCamera(pointer, camera);
     },
     click: () => {
         if (lastObj) {
@@ -63,17 +68,17 @@ addEventListeners(screenPointer, {
 });
 
 renderer.setPixelRatio(window.devicePixelRatio);
-camera.position.set(0, 1.6, 1);
+stage.position.set(0, 0, 3);
 skybox.visible = false;
 scene.background = new Color(0x606060);
-window.scene = scene;
 scene.add(background);
 scene.add(foreground);
 background.name = "Background";
-background.add(camera);
 background.add(light);
 background.add(skybox);
+background.add(stage);
 foreground.name = "Foreground";
+cameraControl.controlMode = CameraControl.Mode.MouseLocked;
 resize();
 timer.start();
 startup();
@@ -87,8 +92,8 @@ function clearScene() {
 
 const scales = new Map();
 function update(evt) {
-    controls.update();
     skybox.update();
+
     for (let icon of curIcons) {
         icon.update();
     }
