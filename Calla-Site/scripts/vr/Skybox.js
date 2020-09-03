@@ -1,4 +1,4 @@
-import { BoxBufferGeometry } from "three";
+import { BoxBufferGeometry, PerspectiveCamera } from "three";
 import { AbstractCubeMapView } from "./AbstractCubeMapView";
 import { setGeometryUVsForCubemaps } from "./setGeometryUVsForCubemaps";
 
@@ -17,6 +17,6 @@ export class Skybox extends AbstractCubeMapView {
 
     update() {
         super.update();
-        this.position.copy(this.camera.position);
+        this.camera.getWorldPosition(this.position);
     }
 }

@@ -82,6 +82,9 @@ export class CameraControl extends EventBase {
         /** @type {Boolean} */
         this.showCustomCursor = false;
 
+        /** @type {Boolean} */
+        this.allowCursorLock = false;
+
         /** @type {Number} */
         this.requiredTouchCount = 1;
 
@@ -134,8 +137,8 @@ export class CameraControl extends EventBase {
         this.edgeFactor = 1 / 3;
         this.accelerationX = 2;
         this.accelerationY = 2;
-        this.speedX = 3;
-        this.speedY = 4;
+        this.speedX = 4;
+        this.speedY = 3;
 
 
         for (const mode of Object.values(Mode)) {
@@ -198,13 +201,10 @@ export class CameraControl extends EventBase {
 
                 if (this.controlMode == Mode.MouseScreenEdge
                     && evt.pointerType === "mouse"
-                    && !this.isCursorLocked) {
+                    && !this.isCursorLocked
+                    && this.allowCursorLock) {
                     this.renderer.domElement.requestPointerLock();
                 }
-
-                this.renderer.domElement.style.cursor = this.isCursorLocked || this.showCustomCursor
-                    ? "none"
-                    : "";
 
                 update(evt);
             },
@@ -273,30 +273,14 @@ export class CameraControl extends EventBase {
 
     getAxialMovement(evt) {
         const viewport = new Vector2(
-            MOUSE_SENSITIVITY_SCALE * -evt.dv,
-            MOUSE_SENSITIVITY_SCALE * -evt.du);
-
-        if (this.invertVertical) {
-            viewport.x *= -1;
-        }
-
-        if (this.invertHorizontal) {
-            viewport.y *= -1;
-        }
+            MOUSE_SENSITIVITY_SCALE * evt.du,
+            MOUSE_SENSITIVITY_SCALE * evt.dv);
 
         return viewport;
     }
 
     getRadiusMovement(evt) {
-        const viewport = new Vector2(-evt.v, -evt.u);
-        if (this.invertVertical) {
-            viewport.x *= -1;
-        }
-
-        if (this.invertHorizontal) {
-            viewport.y *= -1;
-        }
-
+        const viewport = new Vector2(evt.u, evt.v);
         const absX = Math.abs(viewport.x);
         const absY = Math.abs(viewport.y);
 
@@ -338,16 +322,23 @@ export class CameraControl extends EventBase {
         }
         else {
             var move = this.pointerMovement(mode, evt);
+
             if (disableVertical) {
                 move.x = 0;
+            }
+            else if (this.invertVertical) {
+                move.x *= -1;
             }
 
             if (this.disableHorizontal) {
                 move.y = 0;
             }
+            else if (this.invertHorizontal) {
+                move.y *= -1;
+            }
 
             move.multiplyScalar(dt);
-            deltaEuler.set(move.x, move.y, 0, "YXZ");
+            deltaEuler.set(move.y, move.x, 0, "YXZ");
             deltaQuat.setFromEuler(deltaEuler);
             return deltaQuat;
         }

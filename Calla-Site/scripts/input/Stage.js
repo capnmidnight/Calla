@@ -1,4 +1,4 @@
-﻿import { PerspectiveCamera, Object3D, Vector3, Quaternion, Euler } from "three";
+﻿import { Euler, Object3D, PerspectiveCamera, Quaternion } from "three";
 
 /**
  * When running on systems that do not understand the relationship between the camera and 
@@ -56,11 +56,10 @@ export class Stage extends Object3D {
      * @param {Number} maxX
      */
     rotateView(dQuat, minX = -Math.PI, maxX = Math.PI) {
-        viewEuler.setFromQuaternion(dQuat, "YXZ");
-        const { x, y } = viewEuler;
+        const x = this.pivot.rotation.x;
+        const y = this.avatar.rotation.y;
 
-        this.pivot.getWorldQuaternion(viewQuat);
-        viewEuler.setFromQuaternion(viewQuat, "YXZ");
+        viewEuler.setFromQuaternion(dQuat, "YXZ");
         viewEuler.x += x;
         viewEuler.y += y;
         viewQuat.setFromEuler(viewEuler);
@@ -80,8 +79,8 @@ export class Stage extends Object3D {
         }
         viewEuler.x = Math.max(minX, Math.min(maxX, viewEuler.x));
 
-        quat.setFromEuler(viewEuler);
-        this.pivot.quaternion.copy(quat);
+        this.pivot.rotation.x = viewEuler.x;
+        this.avatar.rotation.y = viewEuler.y;
     }
 
     /**

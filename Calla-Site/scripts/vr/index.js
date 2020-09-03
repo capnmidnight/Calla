@@ -1,4 +1,4 @@
-import { AmbientLight, Color, Matrix4, Object3D, PerspectiveCamera, Raycaster, Scene, WebGLRenderer } from "three";
+import { AmbientLight, Color, Matrix4, Object3D, PerspectiveCamera, Raycaster, Scene, WebGLRenderer, Euler, Quaternion, Vector3 } from "three";
 import { addEventListeners, arrayClear } from "../calla";
 import { CameraControl } from "../input/CameraControl";
 import { ScreenPointerControls } from "../input/ScreenPointerControls";
@@ -30,9 +30,9 @@ const renderer = new WebGLRenderer({
     skybox = new Skybox(camera),
     foreground = new Object3D(),
     raycaster = new Raycaster(),
-    curIcons = [],
     curTransforms = new Map(),
     curStations = new Map(),
+    curConnections = new Map(),
     hits = [],
     timer = new RequestAnimationFrameTimer(),
     stage = new Stage(camera),
@@ -85,18 +85,14 @@ startup();
 
 function clearScene() {
     foreground.remove(...foreground.children);
-    arrayClear(curIcons);
     curTransforms.clear();
     curStations.clear();
+    curConnections.clear();
 }
 
 const scales = new Map();
 function update(evt) {
     skybox.update();
-
-    for (let icon of curIcons) {
-        icon.update();
-    }
 
     arrayClear(hits);
     raycaster.intersectObject(foreground, true, hits);
@@ -144,7 +140,7 @@ async function showMenu(path, onClick) {
     const tasks = [];
     for (let i = 0; i < items.length; ++i) {
         const item = items[i];
-        const y = ((items.length - 1) / 2 - i) / 2;
+        const y = ((items.length - 1) / 2 - i) / 2 + 1.5;
         tasks.push(addMenuItem(item, y, onClick));
     }
     await Promise.all(tasks);
@@ -191,6 +187,7 @@ async function showLessonActivities(lessonID) {
     await showMenu(`VR/Lesson/${lessonID}/Activities`, (activity) => showActivity(activity.id));
 }
 
+const deltaPos = new Vector3();
 async function showActivity(activityID) {
     await fader.fadeOut();
 
@@ -201,35 +198,66 @@ async function showActivity(activityID) {
         audio = await getObject(`${activity}/Audio`),
         signs = await getObject(`${activity}/Signs`);
 
-    console.log(activity);
-    console.log(transforms);
-    console.log(stations);
-    console.log(connections);
     console.log(audio);
     console.log(signs);
 
     clearScene();
+
     buildScene(foreground, transforms);
 
+    let startID = null;
     for (let station of stations) {
-        const parent = curTransforms.get(station.transformID),
-            icon = DebugObject(),
-            imgPath = `/VR/File/${station.fileID}`,
-            jump = async () => {
-                await fader.fadeOut();
-                await skybox.setImage(imgPath);
-                skybox.visible = true;
-                camera.position.copy(parent.position);
-                await fader.fadeIn();
-            };
-
-        parent.add(icon);
-        icon.addEventListener("click", jump);
         curStations.set(station.transformID, station);
         if (station.isStart) {
-            jump();
+            startID = station.transformID;
         }
     }
+
+    for (let connection of connections) {
+        if (!curConnections.has(connection.fromStationID)) {
+            curConnections.set(connection.fromStationID, []);
+        }
+
+        const arr = curConnections.get(connection.fromStationID);
+        arr.push(connection.toStationID);
+    }
+
+    if (startID !== null) {
+        await showStation(startID);
+    }
+}
+
+async function showStation(stationID) {
+    await fader.fadeOut();
+
+    const station = curStations.get(stationID),
+        here = curTransforms.get(stationID),
+        exits = curConnections.get(stationID),
+        imgPath = `/VR/File/${station.fileID}`;
+
+    await skybox.setImage(imgPath);
+    skybox.visible = true;
+
+    skybox.quaternion.fromArray(station.rotation);
+    here.getWorldPosition(stage.position);
+
+    for (let exit of exits) {
+        const to = curTransforms.get(exit),
+            icon = DebugObject();
+        deltaPos.copy(to.position);
+        deltaPos.sub(here.position);
+        deltaPos.y = 0;
+        deltaPos.z *= -1;
+        deltaPos.normalize();
+        deltaPos.multiplyScalar(1.5);
+        deltaPos.y += 1;
+        deltaPos.add(here.position);
+        icon.position.copy(deltaPos);
+        foreground.add(icon);
+        icon.addEventListener("click", () => showStation(exit));
+    }
+
+    await fader.fadeIn();
 }
 
 function buildScene(root, transforms) {
