@@ -397,17 +397,11 @@ export class CameraControl extends EventBase {
             }
 
             if (this.dragSatisfied(mode)) {
-                if (mode == Mode.NetworkView) {
-                    Quaternion.slerp(this.stage.camera.getWorldQuaternion(), this.target, tempQuat, 0.25);
-                    this.stage.setViewRotation(tempQuat);
-                }
-                else {
-                    const dQuat = this.orientationDelta(mode, disableVertical, evt, dt);
-                    this.stage.rotateView(
-                        dQuat,
-                        this.minimumX,
-                        this.maximumX);
-                }
+                const dQuat = this.orientationDelta(mode, disableVertical, evt, dt);
+                this.stage.rotateView(
+                    dQuat,
+                    this.minimumX,
+                    this.maximumX);
             }
         }
 
