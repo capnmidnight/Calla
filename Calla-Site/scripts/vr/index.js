@@ -1,17 +1,15 @@
 import { Object3D } from "three";
 import { DebugObject } from "./DebugObject";
 import { getObject } from "./getObject";
+import { Image2DMesh } from "./Image2DMesh";
 import { TextMesh } from "./TextMesh";
 import { ThreeJSApplication } from "./ThreeJSApplication";
 
 
 const app = new ThreeJSApplication();
-
+const curTransforms = new Map();
 const curStations = new Map();
 const curConnections = new Map();
-
-/** @type {Map<Number, Object3D>} */
-const curTransforms = new Map();
 
 app.addEventListener("sceneclearing", () => {
     curTransforms.clear();
@@ -50,8 +48,8 @@ async function showActivity(activityID, skipHistory = false) {
         transforms = await getObject(`${activity}/Scene`),
         stations = await getObject(`${activity}/Stations`),
         connections = await getObject(`${activity}/Map`),
-        audio = await getObject(`${activity}/Audio`),
-        signs = await getObject(`${activity}/Signs`);
+        signs = await getObject(`${activity}/Signs`),
+        audio = await getObject(`${activity}/Audio`);
 
     let startID = null;
     for (let station of stations) {
@@ -77,6 +75,7 @@ async function showActivity(activityID, skipHistory = false) {
         obj.matrix.fromArray(transform.matrix);
         obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
         obj.position.z *= -1;
+        obj.rotation.y *= -1;
         obj.updateMatrix();
         curTransforms.set(transform.id, obj);
     }
@@ -109,6 +108,17 @@ async function showActivity(activityID, skipHistory = false) {
             from.add(icon);
             icon.addEventListener("click", () => showStation(toStationID));
         }
+    }
+
+    for (let sign of signs) {
+        const transform = curTransforms.get(sign.transformID);
+        const img = new Image2DMesh();
+        img.name = "sign-" + sign.imageFileID;
+        if (sign.isCallout) {
+            img.addEventListener("click", () => console.log(img.name));
+        }
+        await img.setImage(`VR/File/${sign.imageFileID}`);
+        transform.add(img);
     }
 
     if (startID !== null) {

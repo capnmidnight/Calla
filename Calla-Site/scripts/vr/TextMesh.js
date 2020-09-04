@@ -1,15 +1,9 @@
-import { TexturedMesh } from "./TexturedMesh";
 import { TextImage } from "../game/graphics/TextImage";
-import { PlaneBufferGeometry, MeshBasicMaterial } from "three";
+import { Image2DMesh } from "./Image2DMesh";
 
-const geom = new PlaneBufferGeometry(1, 1, 1, 1);
-export class TextMesh extends TexturedMesh {
-    /**
-     * @param {string} fontFamily
-     */
+export class TextMesh extends Image2DMesh {
     constructor() {
-        const mat = new MeshBasicMaterial({ transparent: true });
-        super(geom, mat);
+        super();
         this.textImage = new TextImage();
         this.setImage(this.textImage.canvas);
         this.textImage.addEventListener("redrawn", () => {
