@@ -1,142 +1,144 @@
-import { AmbientLight, Color, Matrix4, Object3D, PerspectiveCamera, Raycaster, Scene, WebGLRenderer, Euler, Quaternion, Vector3 } from "three";
-import { addEventListeners, arrayClear } from "../calla";
-import { CameraControl } from "../input/CameraControl";
-import { ScreenPointerControls } from "../input/ScreenPointerControls";
-import { Stage } from "../input/Stage";
-import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
+import { Object3D } from "three";
 import { DebugObject } from "./DebugObject";
-import { Fader } from "./Fader";
 import { getObject } from "./getObject";
-import { Skybox } from "./Skybox";
 import { TextMesh } from "./TextMesh";
+import { ThreeJSApplication } from "./ThreeJSApplication";
 
-const renderer = new WebGLRenderer({
-    canvas: document.getElementById("frontBuffer"),
-    powerPreference: "high-performance",
-    precision: "highp",
-    antialias: true,
-    depth: true,
-    stencil: true,
-    premultipliedAlpha: true,
-    logarithmicDepthBuffer: true,
-    alpha: false,
-    preserveDrawingBuffer: false
-}),
-    camera = new PerspectiveCamera(50, 1, 0.01, 1000),
-    fader = new Fader(camera),
-    scene = new Scene(),
-    background = new Object3D(),
-    light = new AmbientLight(0xffffff, 1),
-    skybox = new Skybox(camera),
-    foreground = new Object3D(),
-    raycaster = new Raycaster(),
-    curTransforms = new Map(),
-    curStations = new Map(),
-    curConnections = new Map(),
-    hits = [],
-    timer = new RequestAnimationFrameTimer(),
-    stage = new Stage(camera),
-    controls = new ScreenPointerControls(renderer.domElement),
-    cameraControl = new CameraControl(renderer, camera, stage, controls);
 
-let lastObj = null;
+const app = new ThreeJSApplication();
 
-window.scene = scene;
-window.stage = stage;
+const curStations = new Map();
+const curConnections = new Map();
 
-timer.addEventListener("tick", update);
-window.addEventListener("resize", resize);
+/** @type {Map<Number, Object3D>} */
+const curTransforms = new Map();
 
-addEventListeners(controls, {
-    move: (evt) => {
-        let pointer = null;
-
-        if (document.pointerLockElement) {
-            pointer = { x: 0, y: 0 };
-        }
-        else {
-            pointer = { x: evt.u, y: evt.v };
-        }
-
-        raycaster.setFromCamera(pointer, camera);
-    },
-    click: () => {
-        if (lastObj) {
-            lastObj.dispatchEvent({ type: "click" });
-        }
-    }
-});
-
-renderer.setPixelRatio(window.devicePixelRatio);
-stage.position.set(0, 0, 3);
-skybox.visible = false;
-scene.background = new Color(0x606060);
-scene.add(background);
-scene.add(foreground);
-background.name = "Background";
-background.add(light);
-background.add(skybox);
-background.add(stage);
-foreground.name = "Foreground";
-cameraControl.controlMode = CameraControl.Mode.MouseLocked;
-resize();
-timer.start();
-startup();
-
-function clearScene() {
-    foreground.remove(...foreground.children);
+app.addEventListener("sceneclearing", () => {
     curTransforms.clear();
     curStations.clear();
     curConnections.clear();
+});
+
+app.addEventListener("started", () => {
+    showLanguagesMenu();
+});
+
+app.start();
+
+async function showLanguagesMenu() {
+    await showMenu("VR/Languages", (language) => showLanguageLessons(language.id));
 }
 
-const scales = new Map();
-function update(evt) {
-    skybox.update();
+async function showLanguageLessons(languageID) {
+    await showMenu(`VR/Language/${languageID}/Lessons`, (lesson) => showLessonActivities(lesson.id));
+}
 
-    arrayClear(hits);
-    raycaster.intersectObject(foreground, true, hits);
+async function showLessonActivities(lessonID) {
+    await showMenu(`VR/Lesson/${lessonID}/Activities`, (activity) => showActivity(activity.id));
+}
 
-    let curObj = null;
-    for (let hit of hits) {
-        if (hit.object
-            && hit.object._listeners
-            && hit.object._listeners.click
-            && hit.object._listeners.click.length) {
-            curObj = hit.object;
+async function showActivity(activityID) {
+    await app.fader.fadeOut();
+
+    const activity = `/VR/Activity/${activityID}`,
+        transforms = await getObject(`${activity}/Scene`),
+        stations = await getObject(`${activity}/Stations`),
+        connections = await getObject(`${activity}/Map`),
+        audio = await getObject(`${activity}/Audio`),
+        signs = await getObject(`${activity}/Signs`);
+
+    console.log(audio);
+    console.log(signs);
+
+    app.clearScene();
+
+    let startID = null;
+    for (let station of stations) {
+        curStations.set(station.transformID, station);
+        if (station.isStart) {
+            startID = station.transformID;
         }
     }
 
-    if (curObj !== lastObj) {
-
-        if (lastObj && scales.has(lastObj)) {
-            lastObj.scale.fromArray(scales.get(lastObj));
+    for (let connection of connections) {
+        if (!curConnections.has(connection.fromStationID)) {
+            curConnections.set(connection.fromStationID, []);
         }
 
-        if (curObj) {
-            if (!scales.has(curObj)) {
-                scales.set(curObj, curObj.scale.toArray());
-            }
-            curObj.scale.multiplyScalar(1.1);
-        }
-
-        lastObj = curObj;
+        const arr = curConnections.get(connection.fromStationID);
+        arr.push(connection.toStationID);
     }
 
-    fader.update(evt.sdt);
-    renderer.render(scene, camera);
+    for (let transform of transforms) {
+        const obj = new Object3D();
+        obj.name = transform.name;
+        obj.userData.id = transform.id;
+        obj.matrix.fromArray(transform.matrix);
+        obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
+        obj.position.z *= -1;
+        obj.updateMatrix();
+        curTransforms.set(transform.id, obj);
+    }
+
+    for (let transform of transforms) {
+        const child = curTransforms.get(transform.id);
+        if (transform.parentID === 0) {
+            app.foreground.add(child);
+        }
+        else {
+            const parent = curTransforms.get(transform.parentID);
+            parent.attach(child);
+        }
+    }
+
+    for (let fromStationID of curConnections.keys()) {
+        const from = curTransforms.get(fromStationID),
+            exits = curConnections.get(fromStationID);
+
+        for (let toStationID of exits) {
+            const to = curTransforms.get(toStationID),
+                icon = DebugObject();
+            icon.position.copy(to.position);
+            icon.position.sub(from.position);
+            icon.position.y = 0;
+            icon.position.normalize();
+            icon.position.multiplyScalar(1.5);
+            icon.position.y += 1;
+
+            from.add(icon);
+            icon.addEventListener("click", () => showStation(toStationID));
+        }
+    }
+
+    if (startID !== null) {
+        await showStation(startID);
+    }
 }
 
-function resize() {
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-}
+async function showStation(stationID) {
+    await app.fader.fadeOut();
 
+    const station = curStations.get(stationID),
+        here = curTransforms.get(stationID),
+        imgPath = `/VR/File/${station.fileID}`;
+
+    await app.skybox.setImage(imgPath);
+    app.skybox.visible = true;
+    app.skybox.quaternion.fromArray(station.rotation);
+
+    here.getWorldPosition(app.stage.position);
+
+    for (let otherStationID of curStations.keys()) {
+        const there = curTransforms.get(otherStationID);
+        there.visible = otherStationID === stationID;
+    }
+
+    await app.fader.fadeIn();
+}
 async function showMenu(path, onClick) {
-    await fader.fadeOut();
+    await app.fader.fadeOut();
     const items = await await getObject(path);
-    clearScene();
+    app.clearScene();
     const tasks = [];
     for (let i = 0; i < items.length; ++i) {
         const item = items[i];
@@ -144,7 +146,7 @@ async function showMenu(path, onClick) {
         tasks.push(addMenuItem(item, y, onClick));
     }
     await Promise.all(tasks);
-    await fader.fadeIn();
+    await app.fader.fadeIn();
 }
 
 async function addMenuItem(item, y, onClick) {
@@ -165,121 +167,8 @@ async function addMenuItem(item, y, onClick) {
 
     await mesh.loadFontAndSetText(item.name);
 
-    foreground.add(mesh);
+    app.foreground.add(mesh);
     if (item.enabled !== false) {
         mesh.addEventListener("click", () => onClick(item));
-    }
-}
-
-async function startup() {
-    await showLanguagesMenu();
-}
-
-async function showLanguagesMenu() {
-    await showMenu("VR/Languages", (language) => showLanguageLessons(language.id));
-}
-
-async function showLanguageLessons(languageID) {
-    await showMenu(`VR/Language/${languageID}/Lessons`, (lesson) => showLessonActivities(lesson.id));
-}
-
-async function showLessonActivities(lessonID) {
-    await showMenu(`VR/Lesson/${lessonID}/Activities`, (activity) => showActivity(activity.id));
-}
-
-const deltaPos = new Vector3();
-async function showActivity(activityID) {
-    await fader.fadeOut();
-
-    const activity = `/VR/Activity/${activityID}`,
-        transforms = await getObject(`${activity}/Scene`),
-        stations = await getObject(`${activity}/Stations`),
-        connections = await getObject(`${activity}/Map`),
-        audio = await getObject(`${activity}/Audio`),
-        signs = await getObject(`${activity}/Signs`);
-
-    console.log(audio);
-    console.log(signs);
-
-    clearScene();
-
-    buildScene(foreground, transforms);
-
-    let startID = null;
-    for (let station of stations) {
-        curStations.set(station.transformID, station);
-        if (station.isStart) {
-            startID = station.transformID;
-        }
-    }
-
-    for (let connection of connections) {
-        if (!curConnections.has(connection.fromStationID)) {
-            curConnections.set(connection.fromStationID, []);
-        }
-
-        const arr = curConnections.get(connection.fromStationID);
-        arr.push(connection.toStationID);
-    }
-
-    if (startID !== null) {
-        await showStation(startID);
-    }
-}
-
-async function showStation(stationID) {
-    await fader.fadeOut();
-
-    const station = curStations.get(stationID),
-        here = curTransforms.get(stationID),
-        exits = curConnections.get(stationID),
-        imgPath = `/VR/File/${station.fileID}`;
-
-    await skybox.setImage(imgPath);
-    skybox.visible = true;
-
-    skybox.quaternion.fromArray(station.rotation);
-    here.getWorldPosition(stage.position);
-
-    for (let exit of exits) {
-        const to = curTransforms.get(exit),
-            icon = DebugObject();
-        deltaPos.copy(to.position);
-        deltaPos.sub(here.position);
-        deltaPos.y = 0;
-        deltaPos.z *= -1;
-        deltaPos.normalize();
-        deltaPos.multiplyScalar(1.5);
-        deltaPos.y += 1;
-        deltaPos.add(here.position);
-        icon.position.copy(deltaPos);
-        foreground.add(icon);
-        icon.addEventListener("click", () => showStation(exit));
-    }
-
-    await fader.fadeIn();
-}
-
-function buildScene(root, transforms) {
-    const matrix = new Matrix4();
-    for (let transform of transforms) {
-        const obj = new Object3D();
-        obj.name = transform.name;
-        obj.userData.id = transform.id;
-        matrix.fromArray(transform.matrix);
-        matrix.decompose(obj.position, obj.quaternion, obj.scale);
-        obj.updateMatrix();
-        curTransforms.set(transform.id, obj);
-    }
-
-    for (let transform of transforms) {
-        const child = curTransforms.get(transform.id);
-        if (transform.parentID === 0) {
-            root.add(child);
-        }
-        else {
-            const parent = curTransforms.get(transform.parentID);
-            parent.attach(child);
-        }
     }
 }
