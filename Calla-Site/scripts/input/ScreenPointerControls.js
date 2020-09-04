@@ -66,6 +66,8 @@ export class ScreenPointerControls extends EventBase {
     constructor(element) {
         super();
 
+        this.pointerLockElement = element;
+
         /** @type {Map<Number, Pointer>} */
         this.pointers = new Map();
 
@@ -245,5 +247,13 @@ export class ScreenPointerControls extends EventBase {
             dy = b.y - a.y;
 
         return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    lockPointer() {
+        this.pointerLockElement.requestPointerLock();
+    }
+
+    get isPointerLocked() {
+        return document.pointerLockElement !== null;
     }
 }

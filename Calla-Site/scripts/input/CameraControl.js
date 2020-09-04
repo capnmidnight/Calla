@@ -57,15 +57,13 @@ class ModeChangeEvent extends Event {
 export class CameraControl extends EventBase {
 
     /**
-     * @param {WebGLRenderer} renderer
      * @param {PerspectiveCamera} camera
      * @param {Stage} stage
      * @param {ScreenPointerControls} controls
      */
-    constructor(renderer, camera, stage, controls) {
+    constructor(camera, stage, controls) {
         super();
 
-        this.renderer = renderer;
         this.camera = camera;
         this.stage = stage;
         this.controls = controls;
@@ -83,7 +81,7 @@ export class CameraControl extends EventBase {
         this.showCustomCursor = false;
 
         /** @type {Boolean} */
-        this.allowCursorLock = false;
+        this.allowPointerLock = false;
 
         /** @type {Number} */
         this.requiredTouchCount = 1;
@@ -157,7 +155,7 @@ export class CameraControl extends EventBase {
             lastEvt = evt;
 
             if (evt.pointerType === "mouse") {
-                if (this.isCursorLocked) {
+                if (this.controls.isPointerLocked) {
                     this.controlMode = Mode.MouseLocked;
                 }
                 else {
@@ -201,9 +199,9 @@ export class CameraControl extends EventBase {
 
                 if (this.controlMode == Mode.MouseScreenEdge
                     && evt.pointerType === "mouse"
-                    && !this.isCursorLocked
-                    && this.allowCursorLock) {
-                    this.renderer.domElement.requestPointerLock();
+                    && !this.controls.isPointerLocked
+                    && this.allowPointerLock) {
+                    this.controls.lockPointer();
                 }
 
                 update(evt);
@@ -211,10 +209,6 @@ export class CameraControl extends EventBase {
 
             move: update
         });
-    }
-
-    get isCursorLocked() {
-        return document.pointerLockElement !== null;
     }
 
     get networkPose() {
@@ -247,7 +241,7 @@ export class CameraControl extends EventBase {
         else {
             const pressed = this.requiredMouseButton == MouseButtons.None || evt.buttons === this.requiredMouseButton;
             const down = this.requiredMouseButton != MouseButtons.None && evt.buttons === this.requiredMouseButton;
-            return pressed && !down && (mode != Mode.MouseLocked || this.isCursorLocked);
+            return pressed && !down && (mode != Mode.MouseLocked || this.controls.isPointerLocked);
         }
     }
 
