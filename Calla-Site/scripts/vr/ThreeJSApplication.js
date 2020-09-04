@@ -33,7 +33,7 @@ export class ThreeJSApplication extends EventBase {
         this.skybox.visible = false;
 
         this.stage = new Stage(this.camera);
-        this.stage.position.set(0, 0, 3);
+        this.stage.position.set(0, 0, 0);
 
         this.light = new AmbientLight(0xffffff, 1);
 

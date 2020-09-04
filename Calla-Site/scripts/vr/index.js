@@ -163,7 +163,7 @@ async function addMenuItem(item, y, onClick) {
     });
 
     mesh.name = item.name;
-    mesh.position.set(0, y, -2);
+    mesh.position.set(0, y, -5);
 
     await mesh.loadFontAndSetText(item.name);
 
