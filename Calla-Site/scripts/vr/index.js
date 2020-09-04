@@ -20,25 +20,31 @@ app.addEventListener("sceneclearing", () => {
 });
 
 app.addEventListener("started", () => {
-    showLanguagesMenu();
+    showMainMenu();
 });
 
 app.start();
 
-async function showLanguagesMenu() {
-    await showMenu("VR/Languages", (language) => showLanguageLessons(language.id));
+async function showMainMenu(_, skipHistory = false) {
+    setHistory(0, null, skipHistory, "Main");
+    await showMenu("VR/Languages", (language) => showLanguage(language.id));
 }
 
-async function showLanguageLessons(languageID) {
-    await showMenu(`VR/Language/${languageID}/Lessons`, (lesson) => showLessonActivities(lesson.id));
+async function showLanguage(languageID, skipHistory = false) {
+    setHistory(1, languageID, skipHistory, "Language");
+    await showMenu(`VR/Language/${languageID}/Lessons`, (lesson) => showLesson(lesson.id));
 }
 
-async function showLessonActivities(lessonID) {
+async function showLesson(lessonID, skipHistory = false) {
+    setHistory(2, lessonID, skipHistory, "Lesson");
     await showMenu(`VR/Lesson/${lessonID}/Activities`, (activity) => showActivity(activity.id));
 }
 
-async function showActivity(activityID) {
+async function showActivity(activityID, skipHistory = false) {
+    setHistory(3, activityID, skipHistory, "Activity");
+
     await app.fader.fadeOut();
+    app.clearScene();
 
     const activity = `/VR/Activity/${activityID}`,
         transforms = await getObject(`${activity}/Scene`),
@@ -46,11 +52,6 @@ async function showActivity(activityID) {
         connections = await getObject(`${activity}/Map`),
         audio = await getObject(`${activity}/Audio`),
         signs = await getObject(`${activity}/Signs`);
-
-    console.log(audio);
-    console.log(signs);
-
-    app.clearScene();
 
     let startID = null;
     for (let station of stations) {
@@ -111,11 +112,14 @@ async function showActivity(activityID) {
     }
 
     if (startID !== null) {
-        await showStation(startID);
+        await showStation(startID, true);
     }
+    await app.fader.fadeIn();
 }
 
-async function showStation(stationID) {
+async function showStation(stationID, skipHistory = false) {
+    setHistory(4, stationID, skipHistory, "Station");
+
     await app.fader.fadeOut();
 
     const station = curStations.get(stationID),
@@ -135,10 +139,41 @@ async function showStation(stationID) {
 
     await app.fader.fadeIn();
 }
+
+const functs = [
+    showMainMenu,
+    showLanguage,
+    showLesson,
+    showActivity,
+    showStation
+];
+
+window.addEventListener("popstate", (evt) => {
+    const state = evt.state;
+    const func = functs[state.step];
+    func(state.id, true);
+});
+
+function setHistory(step, id, skipHistory, name) {
+    if (!skipHistory) {
+        if (id !== null) {
+            const stub = `?${name}=${id}`;
+            history.pushState({ step, id }, name, stub);
+        }
+        else {
+            history.replaceState({ step }, name, "");
+        }
+    }
+}
+
 async function showMenu(path, onClick) {
     await app.fader.fadeOut();
-    const items = await await getObject(path);
+
     app.clearScene();
+    app.skybox.visible = false;
+    app.stage.position.set(0, 0, 0);
+
+    const items = await await getObject(path);
     const tasks = [];
     for (let i = 0; i < items.length; ++i) {
         const item = items[i];
