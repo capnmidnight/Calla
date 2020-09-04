@@ -55,16 +55,19 @@ export class Stage extends Object3D {
      * @param {Number} minX
      * @param {Number} maxX
      */
-    rotateView(dQuat, minX = -Math.PI, maxX = Math.PI) {
+    rotateView(dQuat, minX = -Math.PI, maxX = Math.PI, minFOV = 25, maxFOV = 100) {
         const x = this.pivot.rotation.x;
         const y = this.avatar.rotation.y;
+        const z = this.camera.fov / 100;
 
         viewEuler.setFromQuaternion(dQuat, "YXZ");
         viewEuler.x += x;
         viewEuler.y += y;
+        viewEuler.z += z;
+
         viewQuat.setFromEuler(viewEuler);
 
-        this.setViewRotation(viewQuat, minX, maxX);
+        this.setViewRotation(viewQuat, minX, maxX, minFOV, maxFOV);
     }
 
     /**
@@ -72,15 +75,25 @@ export class Stage extends Object3D {
      * @param {Number} minX
      * @param {Number} maxX
      */
-    setViewRotation(quat, minX = -Math.PI, maxX = Math.PI) {
+    setViewRotation(quat, minX = -Math.PI, maxX = Math.PI, minFOV = 25, maxFOV = 100) {
         viewEuler.setFromQuaternion(quat, "YXZ");
-        if (viewEuler.x > Math.PI) {
-            viewEuler.x -= 2 * Math.PI;
-        }
-        viewEuler.x = Math.max(minX, Math.min(maxX, viewEuler.x));
 
-        this.pivot.rotation.x = viewEuler.x;
-        this.avatar.rotation.y = viewEuler.y;
+        let { x, y, z } = viewEuler;
+
+        if (x > Math.PI) {
+            x -= 2 * Math.PI;
+        }
+        x = Math.max(minX, Math.min(maxX, x));
+
+        z = Math.max(minFOV, Math.min(maxFOV, z * 100));
+
+        this.pivot.rotation.x = x;
+        this.avatar.rotation.y = y;
+
+        if (z !== this.camera.fov) {
+            this.camera.fov = z;
+            this.camera.updateProjectionMatrix();
+        }
     }
 
     /**

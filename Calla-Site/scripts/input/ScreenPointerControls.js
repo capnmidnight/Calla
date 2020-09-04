@@ -10,11 +10,12 @@ export class ScreenPointerEvent extends Event {
         this.y = 0;
         this.dx = 0;
         this.dy = 0;
+        this.dz = 0;
         this.u = 0;
         this.v = 0;
         this.du = 0;
         this.dv = 0;
-        this.button = 0;
+        this.buttons = 0;
 
         Object.seal(this);
     }
@@ -54,10 +55,7 @@ export class Pointer {
 const MAX_DRAG_DISTANCE = 5,
     clickEvt = new ScreenPointerEvent("click"),
     moveEvt = new ScreenPointerEvent("move"),
-    dragEvt = new ScreenPointerEvent("drag"),
-    wheelEvt = Object.assign(new Event("wheel"), {
-        dz: 0
-    });
+    dragEvt = new ScreenPointerEvent("drag");
 
 export class ScreenPointerControls extends EventBase {
     /**
@@ -83,14 +81,17 @@ export class ScreenPointerControls extends EventBase {
          * @param {ScreenPointerEvent} evt
          * @param {Pointer} pointer
          */
-        function setEvt(evt, pointer) {
+        function setHorizontal(evt, pointer) {
 
             evt.pointerType = pointer.type;
+
+            evt.buttons = pointer.buttons;
 
             evt.x = pointer.x;
             evt.y = pointer.y;
             evt.dx = pointer.dx;
             evt.dy = pointer.dy;
+            evt.dz = 0;
 
             evt.u = 2 * evt.x / element.clientWidth - 1;
             evt.v = -2 * evt.y / element.clientHeight + 1;
@@ -105,7 +106,7 @@ export class ScreenPointerControls extends EventBase {
         const replacePointer = (pointer) => {
             const last = this.pointers.get(pointer.id);
 
-            if (last && document.pointerLockElement) {
+            if (last && this.isPointerLocked) {
                 pointer.x = last.x + pointer.dx;
                 pointer.y = last.y + pointer.dy;
             }
@@ -127,8 +128,10 @@ export class ScreenPointerControls extends EventBase {
                 evt.preventDefault();
                 // Chrome and Firefox report scroll values in completely different ranges.
                 const deltaZ = -evt.deltaY * (isFirefox ? 1 : 0.02);
-                wheelEvt.dz = deltaZ;
-                this.dispatchEvent(wheelEvt);
+                moveEvt.pointerType = "mouse";
+                moveEvt.buttons = evt.buttons;
+                moveEvt.dz = deltaZ;
+                this.dispatchEvent(moveEvt);
             }
         }, { passive: false });
 
@@ -156,7 +159,15 @@ export class ScreenPointerControls extends EventBase {
                 count = this.pressCount,
                 newPinchDistance = this.pinchDistance;
 
-            setEvt(moveEvt, pointer);
+            setHorizontal(moveEvt, pointer);
+
+            if (oldPinchDistance !== null
+                && newPinchDistance !== null) {
+                canClick = false;
+                const ddist = newPinchDistance - oldPinchDistance;
+                moveEvt.dz = ddist / 100;
+            }
+
             this.dispatchEvent(moveEvt);
 
             if (count === 1
@@ -166,17 +177,9 @@ export class ScreenPointerControls extends EventBase {
                 if (pointer.dragDistance > MAX_DRAG_DISTANCE) {
                     canClick = false;
                     this.isDragging = true;
-                    setEvt(dragEvt, pointer);
+                    setHorizontal(dragEvt, pointer);
                     this.dispatchEvent(dragEvt);
                 }
-            }
-
-            if (oldPinchDistance !== null
-                && newPinchDistance !== null) {
-                canClick = false;
-                const ddist = newPinchDistance - oldPinchDistance;
-                wheelEvt.dz = ddist / 100;
-                this.dispatchEvent(wheelEvt);
             }
         });
 
@@ -185,7 +188,7 @@ export class ScreenPointerControls extends EventBase {
                 _ = replacePointer(pointer);
 
             if (canClick) {
-                setEvt(clickEvt, pointer);
+                setHorizontal(clickEvt, pointer);
                 this.dispatchEvent(clickEvt);
             }
 

@@ -266,15 +266,16 @@ export class CameraControl extends EventBase {
     }
 
     getAxialMovement(evt) {
-        const viewport = new Vector2(
+        const viewport = new Vector3(
             MOUSE_SENSITIVITY_SCALE * evt.du,
-            MOUSE_SENSITIVITY_SCALE * evt.dv);
+            MOUSE_SENSITIVITY_SCALE * evt.dv,
+            evt.dz);
 
         return viewport;
     }
 
     getRadiusMovement(evt) {
-        const viewport = new Vector2(evt.u, evt.v);
+        const viewport = new Vector3(evt.u, evt.v, evt.dz);
         const absX = Math.abs(viewport.x);
         const absY = Math.abs(viewport.y);
 
@@ -332,8 +333,9 @@ export class CameraControl extends EventBase {
             }
 
             move.multiplyScalar(dt);
-            deltaEuler.set(move.y, move.x, 0, "YXZ");
+            deltaEuler.set(move.y, move.x, move.z, "YXZ");
             deltaQuat.setFromEuler(deltaEuler);
+
             return deltaQuat;
         }
     }

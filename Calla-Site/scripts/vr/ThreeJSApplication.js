@@ -7,7 +7,6 @@ import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer
 import { Fader } from "./Fader";
 import { Skybox } from "./Skybox";
 
-
 export class ThreeJSApplication extends EventBase {
     constructor() {
         super();
@@ -24,15 +23,33 @@ export class ThreeJSApplication extends EventBase {
             alpha: false,
             preserveDrawingBuffer: false
         });
+        this.renderer.setPixelRatio(window.devicePixelRatio);
 
         this.camera = new PerspectiveCamera(50, 1, 0.01, 1000);
+
         this.fader = new Fader(this.camera);
+
         this.skybox = new Skybox(this.camera);
+        this.skybox.visible = false;
+
         this.stage = new Stage(this.camera);
-        this.scene = new Scene();
-        this.background = new Object3D();
-        this.foreground = new Object3D();
+        this.stage.position.set(0, 0, 3);
+
         this.light = new AmbientLight(0xffffff, 1);
+
+        this.background = new Object3D();
+        this.background.name = "Background";
+        this.background.add(this.light);
+        this.background.add(this.skybox);
+        this.background.add(this.stage);
+
+        this.foreground = new Object3D();
+        this.foreground.name = "Foreground";
+
+        this.scene = new Scene();
+        this.scene.background = new Color(0x606060);
+        this.scene.add(this.background);
+        this.scene.add(this.foreground);
 
         const resize = () => {
             this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -42,13 +59,14 @@ export class ThreeJSApplication extends EventBase {
         window.addEventListener("resize", resize);
         resize();
 
-        let lastObj = null;
-        this.raycaster = new Raycaster();
         this.controls = new ScreenPointerControls(this.renderer.domElement);
+
+        this.raycaster = new Raycaster();
+        let lastObj = null;
         this.controls.addEventListener("move", (evt) => {
             let pointer = null;
 
-            if (document.pointerLockElement) {
+            if (this.controls.isPointerLocked) {
                 pointer = { x: 0, y: 0 };
             }
             else {
@@ -65,18 +83,6 @@ export class ThreeJSApplication extends EventBase {
         });
 
         this.cameraControl = new CameraControl(this.camera, this.stage, this.controls);
-
-        this.renderer.setPixelRatio(window.devicePixelRatio);
-        this.stage.position.set(0, 0, 3);
-        this.skybox.visible = false;
-        this.scene.background = new Color(0x606060);
-        this.scene.add(this.background);
-        this.scene.add(this.foreground);
-        this.background.name = "Background";
-        this.background.add(this.light);
-        this.background.add(this.skybox);
-        this.background.add(this.stage);
-        this.foreground.name = "Foreground";
         this.cameraControl.controlMode = CameraControl.Mode.MouseLocked;
 
         const scales = new Map();
