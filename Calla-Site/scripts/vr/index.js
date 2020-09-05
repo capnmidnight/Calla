@@ -125,8 +125,6 @@ async function showActivity(activityID, skipHistory = false) {
 }
 
 async function showStation(stationID, skipHistory = false) {
-    setHistory(4, stationID, skipHistory, "Station");
-
     await app.fader.fadeOut();
 
     const station = curStations.get(stationID),
@@ -151,8 +149,7 @@ const functs = [
     showMainMenu,
     showLanguage,
     showLesson,
-    showActivity,
-    showStation
+    showActivity
 ];
 
 window.addEventListener("popstate", (evt) => {
