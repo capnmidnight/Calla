@@ -123,7 +123,8 @@ namespace Calla.Controllers
                     ID = t.Id,
                     ParentID = t.ParentTransformId ?? 0,
                     Name = t.Name,
-                    Matrix = t.Matrix
+                    Matrix = t.Matrix,
+                    IsRightHanded = t.MatrixKind == "right-handed"
                 });
             return Json(transforms);
         }

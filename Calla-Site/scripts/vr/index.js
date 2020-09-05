@@ -74,8 +74,10 @@ async function showActivity(activityID, skipHistory = false) {
         obj.userData.id = transform.id;
         obj.matrix.fromArray(transform.matrix);
         obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
-        obj.position.z *= -1;
-        obj.rotation.y *= -1;
+        if (transform.isRightHanded) {
+            obj.position.z *= -1;
+            obj.rotation.y *= -1;
+        }
         obj.updateMatrix();
         curTransforms.set(transform.id, obj);
     }
