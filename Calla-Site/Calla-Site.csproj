@@ -43,5 +43,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Juniper\src\Juniper.Root\Juniper.Root.csproj" />
+    <ProjectReference Include="..\Juniper\src\Juniper.Server\Juniper.Server.csproj" />
   </ItemGroup>
 </Project>

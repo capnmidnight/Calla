@@ -1,4 +1,5 @@
 using Juniper;
+using Juniper.HTTP.Server;
 using Juniper.World.GIS;
 
 using Microsoft.AspNetCore.Hosting;
@@ -26,17 +27,24 @@ namespace Calla.Controllers
         [HttpGet("VR/File/{id}")]
         public IActionResult File(int id)
         {
-            var file = db.Files
-                .Include(f => f.FileContents)
+            var fileInfo = db.Files
                 .SingleOrDefault(f => f.Id == id);
-            if (file is null)
+            if (fileInfo is null)
             {
                 return NotFound();
             }
 
-            var type = MediaType.Parse(file.Mime);
-            var fileName = type.AddExtension(file.Name);
-            return File(file.FileContents.Data, file.Mime, fileName);
+            var type = MediaType.Parse(fileInfo.Mime);
+            var fileName = type.AddExtension(fileInfo.Name);
+            return new DbFileResult(db, fileInfo.Size, fileInfo.Mime, fileName, (cmd) =>
+            {
+                cmd.CommandType = System.Data.CommandType.Text;
+                cmd.CommandText = "select \"Data\" from \"FileContents\" where \"FileID\" = @FileID";
+                var pFileID = cmd.CreateParameter();
+                pFileID.ParameterName = "FileID";
+                pFileID.Value = id;
+                cmd.Parameters.Add(pFileID);
+            });
         }
 
         private static readonly Lesson DemoLesson = new Lesson
