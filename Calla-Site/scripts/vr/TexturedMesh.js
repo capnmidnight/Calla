@@ -2,10 +2,10 @@ import { Mesh, Texture } from "three";
 import { isString, once } from "../calla";
 import { height, src, width } from "../html/attrs";
 import { Canvas, Img } from "../html/tags";
+import { getFile } from "./fetching";
 
 export class TexturedMesh extends Mesh {
     /**
-     * 
      * @param {import("three").BufferGeometry} geom
      * @param {import("three").Material} mat
      */
@@ -21,6 +21,7 @@ export class TexturedMesh extends Mesh {
 
     async setImage(img) {
         if (isString(img)) {
+            img = await getFile(img);
             img = Img(src(img));
         }
 
