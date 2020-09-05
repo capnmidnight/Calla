@@ -14,9 +14,8 @@ namespace Calla
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .UseSystemd()
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
+                .ConfigureWebHostDefaults(webBuilder => webBuilder
+                    .ConfigureKestrel(kestrel => kestrel.AddServerHeader = false)
+                    .UseStartup<Startup>());
     }
 }
