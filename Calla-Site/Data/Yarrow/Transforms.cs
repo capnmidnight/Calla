@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Yarrow.Data
@@ -19,6 +19,7 @@ namespace Yarrow.Data
         public string FullPath { get; set; }
         public int ActivityId { get; set; }
         public int? ParentTransformId { get; set; }
+        public string MatrixKind { get; set; }
 
         public virtual Activities Activity { get; set; }
         public virtual Transforms ParentTransform { get; set; }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
@@ -222,6 +222,8 @@ namespace Yarrow.Data
                 entity.Property(e => e.Name).IsRequired();
 
                 entity.Property(e => e.ParentTransformId).HasColumnName("ParentTransformID");
+
+                entity.Property(e => e.MatrixKind).IsRequired();
 
                 entity.HasOne(d => d.Activity)
                     .WithMany(p => p.Transforms)
