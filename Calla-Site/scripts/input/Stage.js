@@ -1,4 +1,5 @@
-﻿import { Euler, Object3D, PerspectiveCamera, Quaternion } from "three";
+import { Euler, Object3D, PerspectiveCamera, Quaternion } from "three";
+import { clamp } from "../calla";
 
 /**
  * When running on systems that do not understand the relationship between the camera and 
@@ -55,19 +56,17 @@ export class Stage extends Object3D {
      * @param {Number} minX
      * @param {Number} maxX
      */
-    rotateView(dQuat, minX = -Math.PI, maxX = Math.PI, minFOV = 25, maxFOV = 100) {
+    rotateView(dQuat, minX = -Math.PI, maxX = Math.PI) {
         const x = this.pivot.rotation.x;
         const y = this.avatar.rotation.y;
-        const z = this.camera.fov / 100;
 
         viewEuler.setFromQuaternion(dQuat, "YXZ");
         viewEuler.x += x;
         viewEuler.y += y;
-        viewEuler.z += z;
 
         viewQuat.setFromEuler(viewEuler);
 
-        this.setViewRotation(viewQuat, minX, maxX, minFOV, maxFOV);
+        this.setViewRotation(viewQuat, minX, maxX);
     }
 
     /**
@@ -75,25 +74,18 @@ export class Stage extends Object3D {
      * @param {Number} minX
      * @param {Number} maxX
      */
-    setViewRotation(quat, minX = -Math.PI, maxX = Math.PI, minFOV = 25, maxFOV = 100) {
+    setViewRotation(quat, minX = -Math.PI, maxX = Math.PI) {
         viewEuler.setFromQuaternion(quat, "YXZ");
 
-        let { x, y, z } = viewEuler;
+        let { x, y } = viewEuler;
 
         if (x > Math.PI) {
             x -= 2 * Math.PI;
         }
-        x = Math.max(minX, Math.min(maxX, x));
-
-        z = Math.max(minFOV, Math.min(maxFOV, z * 100));
+        x = clamp(x, minX, maxX);
 
         this.pivot.rotation.x = x;
         this.avatar.rotation.y = y;
-
-        if (z !== this.camera.fov) {
-            this.camera.fov = z;
-            this.camera.updateProjectionMatrix();
-        }
     }
 
     /**

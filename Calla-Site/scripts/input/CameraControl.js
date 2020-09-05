@@ -1,5 +1,5 @@
 import { Euler, Quaternion, Vector2, Vector3 } from "three";
-import { EventBase } from "../calla";
+import { clamp, EventBase } from "../calla";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
 import { MouseButtons } from "./MouseButton";
 
@@ -127,6 +127,10 @@ export class CameraControl extends EventBase {
         this.speedX = 4;
         this.speedY = 3;
 
+        this.fovZoomEnabled = true;
+        this.minFOV = 25;
+        this.maxFOV = 100;
+
         let lastT = performance.now();
         let lastEvt = null;
         const update = (evt) => {
@@ -163,6 +167,15 @@ export class CameraControl extends EventBase {
                     this.controlMode === Mode.MagicWindow || this.disableVertical,
                     evt,
                     dt);
+            }
+
+            if (this.fovZoomEnabled
+                && Math.abs(evt.dz) > 0) {
+                const fov = clamp(this.camera.fov - evt.dz, this.minFOV, this.maxFOV);
+                if (fov !== this.camera.fov) {
+                    this.camera.fov = fov;
+                    this.camera.updateProjectionMatrix();
+                }
             }
         };
 
@@ -228,10 +241,9 @@ export class CameraControl extends EventBase {
      * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
      */
     getAxialMovement(evt) {
-        const viewport = new Vector3(
+        const viewport = new Vector2(
             MOUSE_SENSITIVITY_SCALE * evt.du,
-            MOUSE_SENSITIVITY_SCALE * evt.dv,
-            evt.dz);
+            MOUSE_SENSITIVITY_SCALE * evt.dv);
 
         return viewport;
     }
@@ -240,7 +252,7 @@ export class CameraControl extends EventBase {
      * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
      */
     getRadiusMovement(evt) {
-        const viewport = new Vector3(evt.u, evt.v, evt.dz);
+        const viewport = new Vector2(evt.u, evt.v);
         const absX = Math.abs(viewport.x);
         const absY = Math.abs(viewport.y);
 
@@ -298,10 +310,8 @@ export class CameraControl extends EventBase {
                 move.y *= -1;
             }
 
-            move.z *= 0.125;
-
             move.multiplyScalar(dt);
-            deltaEuler.set(move.y, move.x, move.z, "YXZ");
+            deltaEuler.set(move.y, move.x, 0, "YXZ");
             deltaQuat.setFromEuler(deltaEuler);
 
             return deltaQuat;
