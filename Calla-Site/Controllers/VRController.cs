@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 
 using System;
 using System.Linq;
-using System.Numerics;
 
 using Yarrow.Data;
 using Yarrow.Models;
@@ -18,14 +17,10 @@ namespace Calla.Controllers
     public class VRController : Controller
     {
         private readonly YarrowContext db;
-        private readonly ILogger<VRController> logger;
-        private readonly IWebHostEnvironment env;
 
-        public VRController(IWebHostEnvironment env, YarrowContext db, ILogger<VRController> logger)
+        public VRController(YarrowContext db)
         {
-            this.env = env;
             this.db = db;
-            this.logger = logger;
         }
 
         [HttpGet("VR/File/{id}")]
