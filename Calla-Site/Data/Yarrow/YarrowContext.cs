@@ -223,8 +223,6 @@ namespace Yarrow.Data
 
                 entity.Property(e => e.ParentTransformId).HasColumnName("ParentTransformID");
 
-                entity.Property(e => e.MatrixKind).IsRequired();
-
                 entity.HasOne(d => d.Activity)
                     .WithMany(p => p.Transforms)
                     .HasForeignKey(d => d.ActivityId)

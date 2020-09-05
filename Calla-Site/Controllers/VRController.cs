@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 
 using System;
 using System.Linq;
+using System.Numerics;
 
 using Yarrow.Data;
 using Yarrow.Models;
@@ -123,8 +124,7 @@ namespace Calla.Controllers
                     ID = t.Id,
                     ParentID = t.ParentTransformId ?? 0,
                     Name = t.Name,
-                    Matrix = t.Matrix,
-                    IsRightHanded = t.MatrixKind == "right-handed"
+                    Matrix = t.Matrix
                 });
             return Json(transforms);
         }
