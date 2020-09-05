@@ -30,19 +30,22 @@ namespace Calla
             {
                 services.AddLettuceEncrypt();
             }
-            else
-            {
-                services.AddRazorPages()
-                    .AddRazorRuntimeCompilation();
-            }
+
             services.AddAuthentication();
             services.AddAuthorization();
             services.AddEntityFrameworkNpgsql();
             services.AddDbContext<Data.CallaContext>();
             services.AddDbContext<Yarrow.Data.YarrowContext>();
             services.AddScoped<LogHitsAttribute>();
-            services.AddControllersWithViews();
             services.AddSignalR();
+
+            var controllersWithViews = services.AddControllersWithViews();
+            var razorPages = services.AddRazorPages();
+            if (Environment.IsDevelopment())
+            {
+                controllersWithViews.AddRazorRuntimeCompilation();
+                razorPages.AddRazorRuntimeCompilation();
+            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -113,6 +116,8 @@ namespace Calla
             endpoints.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}");
+
+            endpoints.MapRazorPages();
 
             endpoints.MapHub<ChatHub>("/Chat");
         }
