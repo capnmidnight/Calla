@@ -1,9 +1,10 @@
-import { AmbientLight, Color, Object3D, PerspectiveCamera, Raycaster, Scene, WebGLRenderer } from "three";
-import { arrayClear, EventBase } from "../calla";
+import { AmbientLight, Color, Object3D, PerspectiveCamera, Scene, WebGLRenderer } from "three";
+import { EventBase } from "../calla";
 import { CameraControl } from "../input/CameraControl";
 import { ScreenPointerControls } from "../input/ScreenPointerControls";
 import { Stage } from "../input/Stage";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
+import { EventSystem } from "./EventSystem";
 import { Fader } from "./Fader";
 import { Skybox } from "./Skybox";
 
@@ -60,78 +61,20 @@ export class ThreeJSApplication extends EventBase {
         resize();
 
         this.controls = new ScreenPointerControls(this.renderer.domElement);
-
-        this.raycaster = new Raycaster();
-        let hoveredObj = null;
-        const scales = new Map();
-        const hits = [];
-        const raycast = (evt) => {
-            let pointer = null;
-
-            if (this.controls.isPointerLocked) {
-                pointer = { x: 0, y: 0 };
-            }
-            else {
-                pointer = { x: evt.u, y: evt.v };
-            }
-
-            this.raycaster.setFromCamera(pointer, this.camera);
-
-            arrayClear(hits);
-            this.raycaster.intersectObject(this.foreground, true, hits);
-
-            let curObj = null;
-            for (let hit of hits) {
-                if (hit.object
-                    && hit.object._listeners
-                    && hit.object._listeners.click
-                    && hit.object._listeners.click.length) {
-                    curObj = hit.object;
-                }
-            }
-
-            if (curObj !== hoveredObj) {
-
-                if (hoveredObj && scales.has(hoveredObj)) {
-                    hoveredObj.scale.fromArray(scales.get(hoveredObj));
-                }
-
-                if (curObj) {
-                    if (!scales.has(curObj)) {
-                        scales.set(curObj, curObj.scale.toArray());
-                    }
-                    curObj.scale.multiplyScalar(1.1);
-                }
-
-                hoveredObj = curObj;
-            }
-
-            return curObj;
-        };
-
-        this.controls.addEventListener("move", (evt) => {
-            const lastObj = hoveredObj;
-            const curObj = raycast(evt);
-            if (curObj != lastObj) {
-                if (lastObj) {
-                    lastObj.dispatchEvent({ type: "exit" });
-                }
-
-                if (curObj) {
-                    curObj.dispatchEvent({ type: "enter" });
-                }
-            }
-        });
-
-        this.controls.addEventListener("click", (evt) => {
-            const curObj = raycast(evt);
-            if (curObj) {
-                curObj.dispatchEvent({ type: "click" });
-            }
-        });
-
         this.cameraControl = new CameraControl(this.camera, this.stage, this.controls);
-        this.cameraControl.controlMode = CameraControl.Mode.MouseLocked;
+
+        const scales = new Map();
+        this.eventSystem = new EventSystem(this.camera, this.foreground, this.controls);
+        this.eventSystem.addEventListener("enter", (evt) => {
+            if (!scales.has(evt.object)) {
+                scales.set(evt.object, evt.object.scale.clone());
+            }
+            evt.object.scale.multiplyScalar(1.1);
+        });
+
+        this.eventSystem.addEventListener("exit", (evt) => {
+            evt.object.scale.copy(scales.get(evt.object));
+        });
 
         const update = (evt) => {
             this.skybox.update();
