@@ -3266,6 +3266,20 @@ class FOARouter {
 FOARouter.ChannelMap = ChannelMap;
 
 /**
+ * Rendering mode ENUM.
+ * @readonly
+ * @enum {string}
+ */
+var RenderingMode = Object.freeze({
+    /** Use ambisonic rendering. */
+    AMBISONIC: 'ambisonic',
+    /** Bypass. No ambisonic rendering. */
+    BYPASS: 'bypass',
+    /** Disable audio output. */
+    OFF: 'off',
+});
+
+/**
  * @license
  * Copyright 2017 Google Inc. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -3280,20 +3294,6 @@ FOARouter.ChannelMap = ChannelMap;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-/**
- * Rendering mode ENUM.
- * @readonly
- * @enum {string}
- */
-const RenderingMode = {
-    /** Use ambisonic rendering. */
-    AMBISONIC: 'ambisonic',
-    /** Bypass. No ambisonic rendering. */
-    BYPASS: 'bypass',
-    /** Disable audio output. */
-    OFF: 'off',
-};
 
 /**
  * Configuration for the FAORenderer class
@@ -3476,6 +3476,9 @@ class FOARenderer {
         this._foaRotator.setRotationMatrix4(this._tempMatrix4);
     }
 
+    getRenderingMode() {
+        return this._config.renderingMode;
+    }
 
     /**
      * Set the rendering mode.
@@ -4216,24 +4219,6 @@ const OmnitoneSOAHrirBase64 = [
  */
 
 
-/**
- * @typedef {string} RenderingMode
- */
-
-/**
- * Rendering mode ENUM.
- * @enum {RenderingMode}
- */
-const RenderingMode$1 = {
-    /** @type {string} Use ambisonic rendering. */
-    AMBISONIC: 'ambisonic',
-    /** @type {string} Bypass. No ambisonic rendering. */
-    BYPASS: 'bypass',
-    /** @type {string} Disable audio output. */
-    OFF: 'off',
-};
-
-
 // Currently SOA and TOA are only supported.
 const SupportedAmbisonicOrder = [2, 3];
 
@@ -4260,7 +4245,7 @@ class HOARenderer {
 
         this._config = {
             ambisonicOrder: 3,
-            renderingMode: RenderingMode$1.AMBISONIC,
+            renderingMode: RenderingMode.AMBISONIC,
         };
 
         if (config && config.ambisonicOrder) {
@@ -4291,7 +4276,7 @@ class HOARenderer {
         }
 
         if (config && config.renderingMode) {
-            if (Object.values(RenderingMode$1).includes(config.renderingMode)) {
+            if (Object.values(RenderingMode).includes(config.renderingMode)) {
                 this._config.renderingMode = config.renderingMode;
             } else {
                 log(
@@ -4326,7 +4311,7 @@ class HOARenderer {
     }
 
     dispose() {
-        if (mode === RenderingMode$1.BYPASS) {
+        if (mode === RenderingMode.BYPASS) {
             this._bypass.connect(this.output);
         }
 
@@ -4389,6 +4374,9 @@ class HOARenderer {
         this._hoaRotator.setRotationMatrix4(rotationMatrix4);
     }
 
+    getRenderingMode() {
+        return this._config.renderingMode;
+    }
 
     /**
      * Set the decoding mode.
@@ -4404,15 +4392,15 @@ class HOARenderer {
         }
 
         switch (mode) {
-            case RenderingMode$1.AMBISONIC:
+            case RenderingMode.AMBISONIC:
                 this._hoaConvolver.enable();
                 this._bypass.disconnect();
                 break;
-            case RenderingMode$1.BYPASS:
+            case RenderingMode.BYPASS:
                 this._hoaConvolver.disable();
                 this._bypass.connect(this.output);
                 break;
-            case RenderingMode$1.OFF:
+            case RenderingMode.OFF:
                 this._hoaConvolver.disable();
                 this._bypass.disconnect();
                 break;
@@ -5830,6 +5818,11 @@ const ATTENUATION_ROLLOFFS = ['logarithmic', 'linear', 'none'];
  */
 const DEFAULT_ATTENUATION_ROLLOFF = 'logarithmic';
 
+/** Default mode for rendering ambisonics.
+ * @type {string}
+ */
+const DEFAULT_RENDERING_MODE = 'ambisonic';
+
 
 /** @type {Number} */
 const DEFAULT_MIN_DISTANCE = 1;
@@ -6544,6 +6537,9 @@ class Listener {
         if (options.up == undefined) {
             options.up = DEFAULT_UP.slice();
         }
+        if (options.renderingMode == undefined) {
+            options.renderingMode = DEFAULT_RENDERING_MODE;
+        }
 
         // Member variables.
         this.position = new Float32Array(3);
@@ -6557,10 +6553,13 @@ class Listener {
         // Create audio nodes.
         this._context = context;
         if (this._ambisonicOrder == 1) {
-            this._renderer = createFOARenderer(context, {});
+            this._renderer = createFOARenderer(context, {
+                renderingMode: options.renderingMode
+            });
         } else if (this._ambisonicOrder > 1) {
             this._renderer = createHOARenderer(context, {
                 ambisonicOrder: this._ambisonicOrder,
+                renderingMode: options.renderingMode
             });
         }
 
@@ -6590,6 +6589,15 @@ class Listener {
         this.setOrientation(
             options.forward[0], options.forward[1], options.forward[2],
             options.up[0], options.up[1], options.up[2]);
+    }
+
+    getRenderingMode() {
+        return this._renderer.getRenderingMode();
+    }
+
+    /** @type {String} */
+    setRenderingMode(mode) {
+        this._renderer.setRenderingMode(mode);
     }
 
     dispose() {
@@ -8242,6 +8250,9 @@ class ResonanceAudio {
         if (options.speedOfSound == undefined) {
             options.speedOfSound = DEFAULT_SPEED_OF_SOUND;
         }
+        if (options.renderingMode == undefined) {
+            options.renderingMode = DEFAULT_RENDERING_MODE;
+        }
 
         // Create member submodules.
         this._ambisonicOrder = Encoder.validateAmbisonicOrder(options.ambisonicOrder);
@@ -8259,6 +8270,7 @@ class ResonanceAudio {
             position: options.listenerPosition,
             forward: options.listenerForward,
             up: options.listenerUp,
+            renderingMode: options.renderingMode
         });
 
         // Create auxillary audio nodes.
@@ -8271,6 +8283,15 @@ class ResonanceAudio {
         this._room.output.connect(this._listener.input);
         this._listener.output.connect(this.output);
         this._listener.ambisonicOutput.connect(this.ambisonicOutput);
+    }
+
+    getRenderingMode() {
+        return this._listener.getRenderingMode();
+    }
+
+    /** @type {String} */
+    setRenderingMode(mode) {
+        this._listener.setRenderingMode(mode);
     }
 
     dispose() {
@@ -8447,8 +8468,10 @@ class ResonanceScene extends BaseListener {
         super();
 
         this.scene = new ResonanceAudio(audioContext, {
-            ambisonicOrder: 3
+            ambisonicOrder: 3,
+            renderingMode: "bypass"
         });
+        
         this.scene.output.connect(audioContext.destination);
 
         this.scene.setRoomProperties({
@@ -30881,50 +30904,93 @@ class ScreenPointerEvent extends Event {
     constructor(type) {
         super(type);
 
+        this.pointerType = null;
         this.x = 0;
         this.y = 0;
         this.dx = 0;
         this.dy = 0;
+        this.dz = 0;
         this.u = 0;
         this.v = 0;
         this.du = 0;
         this.dv = 0;
-        this.button = 0;
+        this.buttons = 0;
+
+        Object.seal(this);
+    }
+}
+
+class InputTypeChangingEvent extends Event {
+    /**
+     * @param {String} inputType
+     */
+    constructor(inputType) {
+        super("inputtypechanging");
+        this.newInputType = inputType;
+
+        Object.freeze(this);
+    }
+}
+
+class Pointer {
+    /**
+     * @param {PointerEvent} evt
+     */
+    constructor(evt) {
+        this.type = evt.pointerType;
+        this.id = evt.pointerId;
+        this.buttons = evt.buttons;
+        this.moveDistance = 0;
+        this.dragDistance = 0;
+        this.x = evt.offsetX;
+        this.y = evt.offsetY;
+        this.dx = evt.movementX;
+        this.dy = evt.movementY;
+
+        Object.seal(this);
     }
 }
 
 const MAX_DRAG_DISTANCE = 5,
     clickEvt = new ScreenPointerEvent("click"),
     moveEvt = new ScreenPointerEvent("move"),
-    dragEvt = new ScreenPointerEvent("drag"),
-    wheelEvt = Object.assign(new Event("wheel"), {
-        dz: 0
-    });
+    dragEvt = new ScreenPointerEvent("drag");
 
 class ScreenPointerControls extends EventBase {
     /**
      * @param {Element} element the element from which to receive pointer events
-     * @param {boolean} clampCursor whether or not to clamp the pointer to the edges of the element
      */
-    constructor(element, clampCursor = false) {
+    constructor(element) {
         super();
 
-        const pointers = new Map();
+        this.pointerLockElement = element;
+
+        /** @type {Map<Number, Pointer>} */
+        this.pointers = new Map();
+
+        /** @type {String} */
+        this.currentInputType = null;
+
+        /** @type {Boolean} */
+        this.isDragging = false;
+
         let canClick = true;
 
-        Object.defineProperty(this, "primaryPointer", {
-            get: () => {
-                for (let pointer of pointers.values()) {
-                    return pointer;
-                }
-            }
-        });
+        /**
+         * @param {ScreenPointerEvent} evt
+         * @param {Pointer} pointer
+         */
+        function setHorizontal(evt, pointer) {
 
-        function setEvt(evt, pointer) {
+            evt.pointerType = pointer.type;
+
+            evt.buttons = pointer.buttons;
+
             evt.x = pointer.x;
             evt.y = pointer.y;
             evt.dx = pointer.dx;
             evt.dy = pointer.dy;
+            evt.dz = 0;
 
             evt.u = 2 * evt.x / element.clientWidth - 1;
             evt.v = -2 * evt.y / element.clientHeight + 1;
@@ -30932,75 +30998,25 @@ class ScreenPointerControls extends EventBase {
             evt.dv = -2 * evt.dy / element.clientHeight;
         }
 
-        function readPointer(evt) {
-            return {
-                id: evt.pointerId,
-                buttons: evt.buttons,
-                moveDistance: 0,
-                dragDistance: 0,
-                x: evt.offsetX,
-                y: evt.offsetY,
-                dx: evt.movementX,
-                dy: evt.movementY
-            }
-        }
-
+        /**
+         * @param {Pointer} pointer - the newest state of the pointer.
+         * @returns {Pointer} - the pointer state that was replaced, if any.
+         */
         const replacePointer = (pointer) => {
-            const last = pointers.get(pointer.id);
+            const last = this.pointers.get(pointer.id);
 
-            if (last && document.pointerLockElement) {
+            if (last && this.isPointerLocked) {
                 pointer.x = last.x + pointer.dx;
                 pointer.y = last.y + pointer.dy;
-                if (clampCursor) {
-                    pointer.x = Math.max(0, Math.min(element.clientWidth, pointer.x));
-                    pointer.y = Math.max(0, Math.min(element.clientHeight, pointer.y));
-                }
             }
 
             pointer.moveDistance = Math.sqrt(
                 pointer.dx * pointer.dx
                 + pointer.dy * pointer.dy);
 
-            pointers.set(pointer.id, pointer);
+            this.pointers.set(pointer.id, pointer);
 
             return last;
-        };
-
-        const getPressCount = () => {
-            let count = 0;
-            for (let pointer of pointers.values()) {
-                if (pointer.buttons === 1) {
-                    ++count;
-                }
-            }
-            return count;
-        };
-
-        const getPinchDistance = () => {
-            const count = getPressCount();
-            if (count !== 2) {
-                return null;
-            }
-
-            let a, b;
-            for (let pointer of pointers.values()) {
-                if (pointer.buttons === 1) {
-                    if (!a) {
-                        a = pointer;
-                    }
-                    else if (!b) {
-                        b = pointer;
-                    }
-                    else {
-                        break;
-                    }
-                }
-            }
-
-            const dx = b.x - a.x,
-                dy = b.y - a.y;
-
-            return Math.sqrt(dx * dx + dy * dy);
         };
 
         element.addEventListener("wheel", (evt) => {
@@ -31011,29 +31027,46 @@ class ScreenPointerControls extends EventBase {
                 evt.preventDefault();
                 // Chrome and Firefox report scroll values in completely different ranges.
                 const deltaZ = -evt.deltaY * (isFirefox ? 1 : 0.02);
-                wheelEvt.dz = deltaZ;
-                this.dispatchEvent(wheelEvt);
+                moveEvt.pointerType = "mouse";
+                moveEvt.buttons = evt.buttons;
+                moveEvt.dz = deltaZ;
+                this.dispatchEvent(moveEvt);
             }
         }, { passive: false });
 
         element.addEventListener("pointerdown", (evt) => {
-            const oldCount = getPressCount(),
-                pointer = readPointer(evt),
+            const oldCount = this.pressCount,
+                pointer = new Pointer(evt),
                 _ = replacePointer(pointer),
-                newCount = getPressCount();
+                newCount = this.pressCount;
+
+            if (pointer.type !== this.currentInputType) {
+                this.dispatchEvent(new InputTypeChangingEvent(pointer.type));
+                this.currentInputType = pointer.type;
+            }
 
             canClick = oldCount === 0
                 && newCount === 1;
+
+            this.isDragging = false;
         });
 
         element.addEventListener("pointermove", (evt) => {
-            const oldPinchDistance = getPinchDistance(),
-                pointer = readPointer(evt),
+            const oldPinchDistance = this.pinchDistance,
+                pointer = new Pointer(evt),
                 last = replacePointer(pointer),
-                count = getPressCount(),
-                newPinchDistance = getPinchDistance();
+                count = this.pressCount,
+                newPinchDistance = this.pinchDistance;
 
-            setEvt(moveEvt, pointer);
+            setHorizontal(moveEvt, pointer);
+
+            if (oldPinchDistance !== null
+                && newPinchDistance !== null) {
+                canClick = false;
+                const ddist = newPinchDistance - oldPinchDistance;
+                moveEvt.dz = ddist / 100;
+            }
+
             this.dispatchEvent(moveEvt);
 
             if (count === 1
@@ -31042,38 +31075,88 @@ class ScreenPointerControls extends EventBase {
                 pointer.dragDistance = last.dragDistance + pointer.moveDistance;
                 if (pointer.dragDistance > MAX_DRAG_DISTANCE) {
                     canClick = false;
-                    setEvt(dragEvt, pointer);
+                    this.isDragging = true;
+                    setHorizontal(dragEvt, pointer);
                     this.dispatchEvent(dragEvt);
                 }
-            }
-
-            if (oldPinchDistance !== null
-                && newPinchDistance !== null) {
-                canClick = false;
-                const ddist = newPinchDistance - oldPinchDistance;
-                wheelEvt.dz = ddist / 100;
-                this.dispatchEvent(wheelEvt);
             }
         });
 
         element.addEventListener("pointerup", (evt) => {
-            const pointer = readPointer(evt),
+            const pointer = new Pointer(evt),
                 _ = replacePointer(pointer);
 
             if (canClick) {
-                setEvt(clickEvt, pointer);
+                setHorizontal(clickEvt, pointer);
                 this.dispatchEvent(clickEvt);
             }
+
+            this.isDragging = false;
         });
 
         element.addEventListener("pointercancel", (evt) => {
-            const pointer = readPointer(evt);
-            if (pointers.has(pointer.id)) {
-                pointers.delete(pointer.id);
+            const pointer = new Pointer(evt);
+            if (this.pointers.has(pointer.id)) {
+                this.pointers.delete(pointer.id);
             }
 
-            return pointer;
+            this.isDragging = false;
         });
+    }
+
+    get primaryPointer() {
+        for (let pointer of this.pointers.values()) {
+            return pointer;
+        }
+    }
+
+    get pointerCount() {
+        return this.pointers.size;
+    }
+
+    get pressCount() {
+        let count = 0;
+        for (let pointer of this.pointers.values()) {
+            if (pointer.buttons === 1) {
+                ++count;
+            }
+        }
+        return count;
+    }
+
+    get pinchDistance() {
+        const count = this.pressCount;
+        if (count !== 2) {
+            return null;
+        }
+
+        let a, b;
+        for (let pointer of this.pointers.values()) {
+            if (pointer.buttons === 1) {
+                if (!a) {
+                    a = pointer;
+                }
+                else if (!b) {
+                    b = pointer;
+                }
+                else {
+                    break;
+                }
+            }
+        }
+
+        const dx = b.x - a.x,
+            dy = b.y - a.y;
+
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    lockPointer() {
+        this.pointerLockElement.requestPointerLock();
+    }
+
+    get isPointerLocked() {
+        return document.pointerLockElement !== null;
     }
 }
 

@@ -1958,6 +1958,20 @@ class FOARouter {
 FOARouter.ChannelMap = ChannelMap;
 
 /**
+ * Rendering mode ENUM.
+ * @readonly
+ * @enum {string}
+ */
+var RenderingMode = Object.freeze({
+    /** Use ambisonic rendering. */
+    AMBISONIC: 'ambisonic',
+    /** Bypass. No ambisonic rendering. */
+    BYPASS: 'bypass',
+    /** Disable audio output. */
+    OFF: 'off',
+});
+
+/**
  * @license
  * Copyright 2017 Google Inc. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -1972,20 +1986,6 @@ FOARouter.ChannelMap = ChannelMap;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-/**
- * Rendering mode ENUM.
- * @readonly
- * @enum {string}
- */
-const RenderingMode = {
-    /** Use ambisonic rendering. */
-    AMBISONIC: 'ambisonic',
-    /** Bypass. No ambisonic rendering. */
-    BYPASS: 'bypass',
-    /** Disable audio output. */
-    OFF: 'off',
-};
 
 /**
  * Configuration for the FAORenderer class
@@ -2168,6 +2168,9 @@ class FOARenderer {
         this._foaRotator.setRotationMatrix4(this._tempMatrix4);
     }
 
+    getRenderingMode() {
+        return this._config.renderingMode;
+    }
 
     /**
      * Set the rendering mode.
@@ -2908,24 +2911,6 @@ const OmnitoneSOAHrirBase64 = [
  */
 
 
-/**
- * @typedef {string} RenderingMode
- */
-
-/**
- * Rendering mode ENUM.
- * @enum {RenderingMode}
- */
-const RenderingMode$1 = {
-    /** @type {string} Use ambisonic rendering. */
-    AMBISONIC: 'ambisonic',
-    /** @type {string} Bypass. No ambisonic rendering. */
-    BYPASS: 'bypass',
-    /** @type {string} Disable audio output. */
-    OFF: 'off',
-};
-
-
 // Currently SOA and TOA are only supported.
 const SupportedAmbisonicOrder = [2, 3];
 
@@ -2952,7 +2937,7 @@ class HOARenderer {
 
         this._config = {
             ambisonicOrder: 3,
-            renderingMode: RenderingMode$1.AMBISONIC,
+            renderingMode: RenderingMode.AMBISONIC,
         };
 
         if (config && config.ambisonicOrder) {
@@ -2983,7 +2968,7 @@ class HOARenderer {
         }
 
         if (config && config.renderingMode) {
-            if (Object.values(RenderingMode$1).includes(config.renderingMode)) {
+            if (Object.values(RenderingMode).includes(config.renderingMode)) {
                 this._config.renderingMode = config.renderingMode;
             } else {
                 log(
@@ -3018,7 +3003,7 @@ class HOARenderer {
     }
 
     dispose() {
-        if (mode === RenderingMode$1.BYPASS) {
+        if (mode === RenderingMode.BYPASS) {
             this._bypass.connect(this.output);
         }
 
@@ -3081,6 +3066,9 @@ class HOARenderer {
         this._hoaRotator.setRotationMatrix4(rotationMatrix4);
     }
 
+    getRenderingMode() {
+        return this._config.renderingMode;
+    }
 
     /**
      * Set the decoding mode.
@@ -3096,15 +3084,15 @@ class HOARenderer {
         }
 
         switch (mode) {
-            case RenderingMode$1.AMBISONIC:
+            case RenderingMode.AMBISONIC:
                 this._hoaConvolver.enable();
                 this._bypass.disconnect();
                 break;
-            case RenderingMode$1.BYPASS:
+            case RenderingMode.BYPASS:
                 this._hoaConvolver.disable();
                 this._bypass.connect(this.output);
                 break;
-            case RenderingMode$1.OFF:
+            case RenderingMode.OFF:
                 this._hoaConvolver.disable();
                 this._bypass.disconnect();
                 break;
@@ -4522,6 +4510,11 @@ const ATTENUATION_ROLLOFFS = ['logarithmic', 'linear', 'none'];
  */
 const DEFAULT_ATTENUATION_ROLLOFF = 'logarithmic';
 
+/** Default mode for rendering ambisonics.
+ * @type {string}
+ */
+const DEFAULT_RENDERING_MODE = 'ambisonic';
+
 
 /** @type {Number} */
 const DEFAULT_MIN_DISTANCE = 1;
@@ -5236,6 +5229,9 @@ class Listener {
         if (options.up == undefined) {
             options.up = DEFAULT_UP.slice();
         }
+        if (options.renderingMode == undefined) {
+            options.renderingMode = DEFAULT_RENDERING_MODE;
+        }
 
         // Member variables.
         this.position = new Float32Array(3);
@@ -5249,10 +5245,13 @@ class Listener {
         // Create audio nodes.
         this._context = context;
         if (this._ambisonicOrder == 1) {
-            this._renderer = createFOARenderer(context, {});
+            this._renderer = createFOARenderer(context, {
+                renderingMode: options.renderingMode
+            });
         } else if (this._ambisonicOrder > 1) {
             this._renderer = createHOARenderer(context, {
                 ambisonicOrder: this._ambisonicOrder,
+                renderingMode: options.renderingMode
             });
         }
 
@@ -5282,6 +5281,15 @@ class Listener {
         this.setOrientation(
             options.forward[0], options.forward[1], options.forward[2],
             options.up[0], options.up[1], options.up[2]);
+    }
+
+    getRenderingMode() {
+        return this._renderer.getRenderingMode();
+    }
+
+    /** @type {String} */
+    setRenderingMode(mode) {
+        this._renderer.setRenderingMode(mode);
     }
 
     dispose() {
@@ -6934,6 +6942,9 @@ class ResonanceAudio {
         if (options.speedOfSound == undefined) {
             options.speedOfSound = DEFAULT_SPEED_OF_SOUND;
         }
+        if (options.renderingMode == undefined) {
+            options.renderingMode = DEFAULT_RENDERING_MODE;
+        }
 
         // Create member submodules.
         this._ambisonicOrder = Encoder.validateAmbisonicOrder(options.ambisonicOrder);
@@ -6951,6 +6962,7 @@ class ResonanceAudio {
             position: options.listenerPosition,
             forward: options.listenerForward,
             up: options.listenerUp,
+            renderingMode: options.renderingMode
         });
 
         // Create auxillary audio nodes.
@@ -6963,6 +6975,15 @@ class ResonanceAudio {
         this._room.output.connect(this._listener.input);
         this._listener.output.connect(this.output);
         this._listener.ambisonicOutput.connect(this.ambisonicOutput);
+    }
+
+    getRenderingMode() {
+        return this._listener.getRenderingMode();
+    }
+
+    /** @type {String} */
+    setRenderingMode(mode) {
+        this._listener.setRenderingMode(mode);
     }
 
     dispose() {
@@ -7139,8 +7160,10 @@ class ResonanceScene extends BaseListener {
         super();
 
         this.scene = new ResonanceAudio(audioContext, {
-            ambisonicOrder: 3
+            ambisonicOrder: 3,
+            renderingMode: "bypass"
         });
+        
         this.scene.output.connect(audioContext.destination);
 
         this.scene.setRoomProperties({
