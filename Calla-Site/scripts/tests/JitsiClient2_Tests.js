@@ -1,4 +1,4 @@
-﻿import { TestBase } from "./TestBase.js";
+import { TestBase } from "./TestBase";
 
 export class JitsiClient2_Tests extends TestBase {
 

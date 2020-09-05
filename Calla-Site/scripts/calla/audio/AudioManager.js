@@ -1,12 +1,11 @@
-import { EventBase } from "../events/EventBase.js";
-import { AudioActivityEvent } from "./AudioActivityEvent.js";
-import { AudioSource } from "./AudioSource.js";
-import { MockAudioContext } from "./MockAudioContext.js";
-import { AudioListenerNew } from "./spatializers/listeners/AudioListenerNew.js";
-import { AudioListenerOld } from "./spatializers/listeners/AudioListenerOld.js";
-import { BaseListener } from "./spatializers/listeners/BaseListener.js";
-import { ResonanceScene } from "./spatializers/listeners/ResonanceScene.js";
-import { BaseSource } from "./spatializers/sources/BaseSource.js";
+import { EventBase } from "../events/EventBase";
+import { AudioActivityEvent } from "./AudioActivityEvent";
+import { AudioSource } from "./AudioSource";
+import { MockAudioContext } from "./MockAudioContext";
+import { AudioListenerNew } from "./spatializers/listeners/AudioListenerNew";
+import { AudioListenerOld } from "./spatializers/listeners/AudioListenerOld";
+import { BaseListener } from "./spatializers/listeners/BaseListener";
+import { ResonanceScene } from "./spatializers/listeners/ResonanceScene";
 
 const BUFFER_SIZE = 1024,
     audioActivityEvt = new AudioActivityEvent();
@@ -146,7 +145,7 @@ export class AudioManager extends EventBase {
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
      * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
-     * @return {BaseSource}
+     * @return {import("./spatializers/sources/BaseSource").BaseSource}
      */
     createSpatializer(id, stream, bufferSize) {
         if (!this.listener) {

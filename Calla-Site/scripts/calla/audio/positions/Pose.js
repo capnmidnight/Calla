@@ -1,5 +1,5 @@
-﻿import { Vector } from "./Vector.js";
-import { project } from "../../math.js";
+import { Vector } from "./Vector";
+import { project } from "../../math";
 
 /**
  * A position and orientation, at a given time.

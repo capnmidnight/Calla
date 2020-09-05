@@ -1,4 +1,4 @@
-﻿import { BaseListener } from "./BaseListener.js";
+import { BaseListener } from "./BaseListener";
 
 /**
  * A spatializer that uses WebAudio's AudioListener

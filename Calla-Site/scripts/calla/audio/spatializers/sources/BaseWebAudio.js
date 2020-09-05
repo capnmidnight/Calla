@@ -1,4 +1,4 @@
-﻿import { BaseAnalyzed } from "./BaseAnalyzed.js";
+import { BaseAnalyzed } from "./BaseAnalyzed";
 
 /**
  * A spatializer that uses the WebAudio API.

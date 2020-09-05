@@ -1,7 +1,6 @@
-﻿import { clamp, isGoodNumber } from "../../../math.js";
-import { AudioActivityEvent } from "../../AudioActivityEvent.js";
-import { Pose } from "../../positions/Pose.js";
-import { BaseSource } from "./BaseSource.js";
+import { clamp, isGoodNumber } from "../../../math";
+import { AudioActivityEvent } from "../../AudioActivityEvent";
+import { BaseSource } from "./BaseSource";
 
 const audioActivityEvt = new AudioActivityEvent(),
     activityCounterMin = 0,
@@ -113,7 +112,7 @@ export class BaseAnalyzed extends BaseSource {
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     * @param {Pose} loc
+     * @param {import("../../positions/Pose").Pose} loc
      * @fires BaseAnalyzedSpatializer#audioActivity
      */
     update(loc) {

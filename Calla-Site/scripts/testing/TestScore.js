@@ -1,4 +1,4 @@
-﻿import { TestStates } from "./TestStates.js";
+import { TestStates } from "./TestStates";
 
 export class TestScore {
     constructor(name) {

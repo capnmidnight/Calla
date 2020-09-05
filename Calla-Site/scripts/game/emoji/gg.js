@@ -1,5 +1,4 @@
-﻿import { Emoji } from "./Emoji.js";
-import { EmojiGroup, g } from "./EmojiGroup.js";
+import { g } from "./EmojiGroup";
 
 /**
  * A shorthand for `new EmojiGroup` that allows for setting optional properties
@@ -7,8 +6,8 @@ import { EmojiGroup, g } from "./EmojiGroup.js";
  * @param {string} v - a Unicode sequence.
  * @param {string} d - an English text description of the pictogram.
  * @param {any} o - a set of properties to set on the Emoji object.
- * @param {...(Emoji|EmojiGroup)} r - the emoji that are contained in this group.
- * @returns {EmojiGroup}
+ * @param {...(import("./Emoji").Emoji|import("./EmojiGroup").EmojiGroup)} r - the emoji that are contained in this group.
+ * @returns {import("./EmojiGroup").EmojiGroup}
  */
 export function gg(v, d, o, ...r) {
     return Object.assign(

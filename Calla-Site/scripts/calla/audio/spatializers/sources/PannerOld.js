@@ -1,5 +1,4 @@
-﻿import { Pose } from "../../positions/Pose.js";
-import { PannerBase } from "./PannerBase.js";
+import { PannerBase } from "./PannerBase";
 
 /**
  * A positioner that uses the WebAudio API's old setPosition method.
@@ -21,7 +20,7 @@ export class PannerOld extends PannerBase {
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     * @param {Pose} loc
+     * @param {import("../../positions/Pose").Pose} loc
      */
     update(loc) {
         super.update(loc);

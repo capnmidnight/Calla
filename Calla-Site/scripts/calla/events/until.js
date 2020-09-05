@@ -1,8 +1,6 @@
-﻿import { EventBase } from "./EventBase.js";
-
 /**
  * 
- * @param {EventBase|EventTarget} target
+ * @param {import("./EventBase").EventBase|EventTarget} target
  * @param {string} untilEvt
  * @param {Function} callback
  * @param {Function} test

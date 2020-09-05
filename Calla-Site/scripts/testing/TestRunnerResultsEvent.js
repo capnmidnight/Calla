@@ -1,4 +1,4 @@
-﻿import { TestScore } from "./TestScore.js";
+import { TestScore } from "./TestScore";
 
 /**
  * @typedef {Map<string, Map<string, TestScore>>} TestResults*/

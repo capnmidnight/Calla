@@ -1,5 +1,4 @@
-﻿import { Pose } from "../../positions/Pose.js";
-import { BaseWebAudio } from "./BaseWebAudio.js";
+import { BaseWebAudio } from "./BaseWebAudio";
 
 /**
  * A spatializer that uses WebAudio's PannerNode
@@ -26,7 +25,7 @@ export class PannerBase extends BaseWebAudio {
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     * @param {Pose} loc
+     * @param {import("../../positions/Pose").Pose} loc
      */
     update(loc) {
         super.update(loc);

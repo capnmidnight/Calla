@@ -1,3 +1,3 @@
-﻿export * from "./BaseSpatializer.js";
-export * from "./listeners/index.js";
-export * from "./sources/index.js";
+export * from "./BaseSpatializer";
+export * from "./listeners";
+export * from "./sources";

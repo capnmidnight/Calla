@@ -1,17 +1,17 @@
 /* global JitsiMeetJS */
 
-import "../lib/jquery.js";
-import { arrayScan } from "./arrays/arrayScan.js";
-import { AudioActivityEvent } from "./audio/AudioActivityEvent.js";
-import { AudioManager } from "./audio/AudioManager.js";
-import { canChangeAudioOutput } from "./audio/canChangeAudioOutput.js";
-import { EventBase } from "./events/EventBase.js";
-import { once } from "./events/once.js";
-import { until } from "./events/until.js";
-import { when } from "./events/when.js";
-import { isGoodNumber } from "./math.js";
-import { isNumber } from "./typeChecks.js";
-import { versionString } from "./version.js";
+import "../lib/jquery";
+import { arrayScan } from "./arrays/arrayScan";
+import { AudioActivityEvent } from "./audio/AudioActivityEvent";
+import { AudioManager } from "./audio/AudioManager";
+import { canChangeAudioOutput } from "./audio/canChangeAudioOutput";
+import { EventBase } from "./events/EventBase";
+import { once } from "./events/once";
+import { until } from "./events/until";
+import { when } from "./events/when";
+import { isGoodNumber } from "./math";
+import { isNumber } from "./typeChecks";
+import { versionString } from "./version";
 
 console.info("Calla", versionString);
 
@@ -772,7 +772,7 @@ export class CallaClient extends EventBase {
     }
 
     /**
-     * @return {Promise.<MediaDeviceInfo>} */
+     * @return {Promise<MediaDeviceInfo>} */
     async getCurrentAudioOutputDeviceAsync() {
         if (!canChangeAudioOutput) {
             return null;
@@ -999,26 +999,34 @@ export class CallaClient extends EventBase {
     }
 
     /**
-     * 
      * @param {string} toUserID
-     * @param {User} fromUserState
+     * @param {import("../game/User").User} fromUserState
      */
     userInitResponse(toUserID, fromUserState) {
         this.sendMessageTo(toUserID, "userInitResponse", fromUserState);
     }
 
+    /**
+     * @param {import("../game/emoji/Emoji").Emoji} emoji
+     **/
     set avatarEmoji(emoji) {
         for (let toUserID of this.userIDs()) {
             this.sendMessageTo(toUserID, "setAvatarEmoji", emoji);
         }
     }
 
+    /**
+     * @param {string} url
+     **/
     set avatarURL(url) {
         for (let toUserID of this.userIDs()) {
             this.sendMessageTo(toUserID, "avatarChanged", { url });
         }
     }
 
+    /**
+     * @param {import("../game/emoji/Emoji").Emoji} emoji
+     **/
     emote(emoji) {
         for (let toUserID of this.userIDs()) {
             this.sendMessageTo(toUserID, "emote", emoji);

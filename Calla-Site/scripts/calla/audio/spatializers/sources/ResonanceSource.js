@@ -1,6 +1,4 @@
-import { ResonanceAudio } from "../../../../lib/resonance-audio/src/resonance-audio.js";
-import { Pose } from "../../positions/Pose.js";
-import { BaseAnalyzed } from "./BaseAnalyzed.js";
+import { BaseAnalyzed } from "./BaseAnalyzed";
 
 /**
  * A spatializer that uses Google's Resonance Audio library.
@@ -13,7 +11,7 @@ export class ResonanceSource extends BaseAnalyzed {
      * @param {MediaStream|HTMLAudioElement} stream
      * @param {number} bufferSize
      * @param {AudioContext} audioContext
-     * @param {ResonanceAudio} res
+     * @param {import("../../../../lib/resonance-audio/src/resonance-audio").ResonanceAudio} res
      */
     constructor(id, stream, bufferSize, audioContext, res) {
         const resNode = res.createSource();
@@ -27,7 +25,7 @@ export class ResonanceSource extends BaseAnalyzed {
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     * @param {Pose} loc
+     * @param {import("../../positions/Pose").Pose} loc
      */
     update(loc) {
         super.update(loc);

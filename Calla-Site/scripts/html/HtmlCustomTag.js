@@ -1,5 +1,5 @@
-import { EventBase } from "../calla/index.js";
-import { tag } from "./tag.js";
+import { EventBase } from "../calla";
+import { tag } from "./tag";
 
 /**
  * A pseudo-element that is made out of other elements.

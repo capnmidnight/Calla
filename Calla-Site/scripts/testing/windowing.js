@@ -1,4 +1,4 @@
-﻿import { userNumber } from "./userNumber.js";
+import { userNumber } from "./userNumber";
 
 /** @type {Window[]} */
 const windows = [];

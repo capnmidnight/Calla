@@ -1,4 +1,4 @@
-﻿import { BaseTimer } from "./BaseTimer.js";
+import { BaseTimer } from "./BaseTimer";
 
 export class RequestAnimationFrameTimer extends BaseTimer {
     constructor() {

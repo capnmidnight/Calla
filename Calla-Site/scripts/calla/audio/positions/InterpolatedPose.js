@@ -1,4 +1,4 @@
-import { Pose } from "./Pose.js";
+import { Pose } from "./Pose";
 
 /**
  * A position value that is blended from the current position to

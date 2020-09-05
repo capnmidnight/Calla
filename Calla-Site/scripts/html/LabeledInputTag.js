@@ -1,7 +1,7 @@
-import { htmlFor, type } from "./attrs.js";
-import { HtmlCustomTag } from "./HtmlCustomTag.js";
-import { setLocked } from "./ops.js";
-import { Input, Label } from "./tags.js";
+import { htmlFor, type } from "./attrs";
+import { HtmlCustomTag } from "./HtmlCustomTag";
+import { setLocked } from "./ops";
+import { Input, Label } from "./tags";
 
 /**
  * Creates an input box that has a label attached to it.

@@ -1,8 +1,7 @@
-import { setContextSize } from "../../html/canvas.js";
-import { Emoji } from "../emoji/Emoji.js";
-import { isSurfer } from "../emoji/emojis.js";
-import { TextImage } from "../graphics/TextImage.js";
-import { BaseAvatar } from "./BaseAvatar.js";
+import { setContextSize } from "../../html/canvas";
+import { isSurfer } from "../emoji/emojis";
+import { TextImage } from "../graphics/TextImage";
+import { BaseAvatar } from "./BaseAvatar";
 
 /**
  * An avatar that uses a Unicode emoji as its representation
@@ -11,7 +10,7 @@ export class EmojiAvatar extends BaseAvatar {
 
     /**
      * Creatse a new avatar that uses a Unicode emoji as its representation.
-     * @param {Emoji} emoji
+     * @param {import("../emoji/Emoji").Emoji} emoji
      */
     constructor(emoji) {
         super(isSurfer(emoji));

@@ -1,4 +1,4 @@
-﻿import { disabled } from "./attrs.js";
+import { disabled } from "./attrs";
 
 export function isOpen(target) {
     if (target.isOpen) {

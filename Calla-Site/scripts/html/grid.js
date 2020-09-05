@@ -1,4 +1,4 @@
-﻿import { display, gridArea, gridColumn, gridRow, gridTemplateColumns, gridTemplateRows, styles } from "./css.js";
+import { display, gridArea, gridColumn, gridRow, gridTemplateColumns, gridTemplateRows, styles } from "./css";
 /**
  * Constructs a CSS grid area definition.
  * @param {number} x - the starting horizontal cell for the element.

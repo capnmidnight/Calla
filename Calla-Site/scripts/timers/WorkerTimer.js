@@ -1,5 +1,5 @@
-import { createWorker } from "./createWorker.js";
-import { BaseTimer } from "./BaseTimer.js";
+import { createWorker } from "./createWorker";
+import { BaseTimer } from "./BaseTimer";
 
 export class WorkerTimer extends BaseTimer {
 

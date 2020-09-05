@@ -1,9 +1,6 @@
-/* global ResonanceAudio */
-
-import { ResonanceAudio } from "../../../../lib/resonance-audio/src/resonance-audio.js";
-import { Pose } from "../../positions/Pose.js";
-import { ResonanceSource } from "../sources/ResonanceSource.js";
-import { BaseListener } from "./BaseListener.js";
+import { ResonanceAudio } from "../../../../lib/resonance-audio/src/resonance-audio";
+import { ResonanceSource } from "../sources/ResonanceSource";
+import { BaseListener } from "./BaseListener";
 
 /**
  * An audio positioner that uses Google's Resonance Audio library
@@ -41,7 +38,7 @@ export class ResonanceScene extends BaseListener {
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     * @param {Pose} loc
+     * @param {import("../../positions/Pose").Pose} loc
      */
     update(loc) {
         super.update(loc);
@@ -57,7 +54,7 @@ export class ResonanceScene extends BaseListener {
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
      * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
      * @param {AudioContext} audioContext
-     * @return {BaseSource}
+     * @return {import("../sources/BaseSource").BaseSource}
      */
     createSource(id, stream, bufferSize, audioContext) {
         return new ResonanceSource(id, stream, bufferSize, audioContext, this.scene);

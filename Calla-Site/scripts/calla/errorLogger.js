@@ -1,4 +1,4 @@
-import { isFunction } from "./typeChecks.js";
+import { isFunction } from "./typeChecks";
 
 export function errorLogger(err) {
     if (window.TraceKit && isFunction(window.TraceKit.report)) {

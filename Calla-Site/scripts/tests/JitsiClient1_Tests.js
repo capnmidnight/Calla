@@ -1,6 +1,6 @@
-import { once, wait } from "../calla/index.js";
-import { openSideTest } from "../testing/windowing.js";
-import { TestBase } from "./TestBase.js";
+import { once, wait } from "../calla";
+import { openSideTest } from "../testing/windowing";
+import { TestBase } from "./TestBase";
 
 const TEST_ROOM_NAME = "testroom";
 

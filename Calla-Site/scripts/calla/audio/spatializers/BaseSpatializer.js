@@ -1,5 +1,4 @@
-﻿import { EventBase } from "../../events/EventBase.js";
-import { Pose } from "../positions/Pose.js";
+import { EventBase } from "../../events/EventBase";
 
 /** Base class providing functionality for spatializers. */
 export class BaseSpatializer extends EventBase {
@@ -40,7 +39,7 @@ export class BaseSpatializer extends EventBase {
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     * @param {Pose} loc
+     * @param {import("../positions/Pose").Pose} loc
      */
     update(loc) {
     }

@@ -1,7 +1,7 @@
-import { bust } from "../game/emoji/emojis.js";
-import { CallaClient, once, wait, when } from "../calla/index.js";
-import { TestCase } from "../testing/TestCase.js";
-import { userNumber } from "../testing/userNumber.js";
+import { bust } from "../game/emoji/emojis";
+import { CallaClient, once, wait, when } from "../calla";
+import { TestCase } from "../testing/TestCase";
+import { userNumber } from "../testing/userNumber";
 
 const TEST_ROOM_NAME = "testroom";
 

@@ -1,10 +1,9 @@
-﻿import { isFunction, isNumber, isString } from "../typeChecks.js";
-import { add } from "./add.js";
-import { EventBase } from "./EventBase.js";
+import { isFunction, isNumber, isString } from "../typeChecks";
+import { add } from "./add";
 
 /**
  * 
- * @param {EventBase|EventTarget} target
+ * @param {import("./EventBase").EventBase|EventTarget} target
  * @param {string} resolveEvt
  * @param {Function} filterTest
  * @param {number?} timeout

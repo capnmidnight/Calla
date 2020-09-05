@@ -1,5 +1,5 @@
-import { setContextSize } from "../../html/canvas.js";
-import { BaseAvatar } from "./BaseAvatar.js";
+import { setContextSize } from "../../html/canvas";
+import { BaseAvatar } from "./BaseAvatar";
 
 /**
  * An avatar that uses an Image as its representation.

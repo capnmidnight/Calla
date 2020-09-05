@@ -1,3 +1,3 @@
-﻿export * from "./InterpolatedPose.js";
-export * from "./Pose.js";
-export * from "./Vector.js";
+export * from "./InterpolatedPose";
+export * from "./Pose";
+export * from "./Vector";

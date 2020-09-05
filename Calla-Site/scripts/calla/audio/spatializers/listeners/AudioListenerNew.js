@@ -1,6 +1,5 @@
-import { Pose } from "../../positions/Pose.js";
-import { PannerNew } from "../sources/PannerNew.js";
-import { AudioListenerBase } from "./AudioListenerBase.js";
+import { PannerNew } from "../sources/PannerNew";
+import { AudioListenerBase } from "./AudioListenerBase";
 
 /**
  * A positioner that uses WebAudio's playback dependent time progression.
@@ -18,7 +17,7 @@ export class AudioListenerNew extends AudioListenerBase {
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     * @param {Pose} loc
+     * @param {import("../../positions/Pose").Pose} loc
      */
     update(loc) {
         super.update(loc);

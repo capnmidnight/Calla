@@ -1,9 +1,7 @@
-import { Euler, PerspectiveCamera, Quaternion, Vector2, Vector3, WebGLRenderer } from "three";
-import { addEventListeners, EventBase } from "../calla";
+import { Euler, Quaternion, Vector2, Vector3 } from "three";
+import { EventBase } from "../calla";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
 import { MouseButtons } from "./MouseButton";
-import { ScreenPointerControls, ScreenPointerEvent } from "./ScreenPointerControls";
-import { Stage } from "./Stage";
 
 
 const NEUTRAL_POSITION_RESET_QUAT = new Quaternion().setFromEuler(new Euler(Math.PI / 2, 0, 0));
@@ -35,7 +33,6 @@ const Mode = Object.freeze({
     WebXR: "xr"
 });
 
-const tempQuat = new Quaternion();
 const deltaEuler = new Euler();
 const deltaQuat = new Quaternion();
 
@@ -57,9 +54,9 @@ class ModeChangeEvent extends Event {
 export class CameraControl extends EventBase {
 
     /**
-     * @param {PerspectiveCamera} camera
-     * @param {Stage} stage
-     * @param {ScreenPointerControls} controls
+     * @param {import("three").PerspectiveCamera} camera
+     * @param {import("./Stage").Stage} stage
+     * @param {import("./ScreenPointerControls").ScreenPointerControls} controls
      */
     constructor(camera, stage, controls) {
         super();
@@ -204,7 +201,7 @@ export class CameraControl extends EventBase {
 
     /**
      * @param {Mode} mode
-     * @param {ScreenPointerEvent} evt
+     * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
      */
     pointerMovement(mode, evt) {
         switch (mode) {
@@ -222,7 +219,7 @@ export class CameraControl extends EventBase {
     }
 
     /**
-     * @param {ScreenPointerEvent} evt
+     * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
      */
     getAxialMovement(evt) {
         const viewport = new Vector3(
@@ -234,7 +231,7 @@ export class CameraControl extends EventBase {
     }
 
     /**
-     * @param {ScreenPointerEvent} evt
+     * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
      */
     getRadiusMovement(evt) {
         const viewport = new Vector3(evt.u, evt.v, evt.dz);
@@ -268,7 +265,7 @@ export class CameraControl extends EventBase {
     /**
      * @param {Mode} mode
      * @param {Boolean} disableVertical
-     * @param {ScreenPointerEvent} evt
+     * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
      * @param {Number} dt
      */
     orientationDelta(mode, disableVertical, evt, dt) {
@@ -322,7 +319,7 @@ export class CameraControl extends EventBase {
 
     /**
      * @param {Mode} mode
-     * @param {ScreenPointerEvent} evt
+     * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
      */
     gestureSatisfied(mode, evt) {
         if (mode == Mode.Touch) {
@@ -365,7 +362,7 @@ export class CameraControl extends EventBase {
     /**
      * @param {Mode} mode
      * @param {Boolean} disableVertical
-     * @param {ScreenPointerEvent} evt
+     * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
      * @param {Number} dt
      */
     checkMode(mode, disableVertical, evt, dt) {

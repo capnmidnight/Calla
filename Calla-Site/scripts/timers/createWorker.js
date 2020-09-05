@@ -1,4 +1,4 @@
-import { isFunction, isString } from "../calla/index.js";
+import { isFunction, isString } from "../calla";
 
 export function createWorker(script, stripFunc = true) {
     if (isFunction(script)) {

@@ -1,13 +1,13 @@
-import { addEventListeners, arrayClear, clamp, EventBase, InterpolatedPose, isString, lerp, project, unproject } from "../calla/index.js";
-import { id } from "../html/attrs.js";
-import { resizeCanvas } from "../html/canvas.js";
-import { hide, show } from "../html/ops.js";
-import { Canvas } from "../html/tags.js";
-import { EventedGamepad } from "../input/EventedGamepad.js";
-import { ScreenPointerControls } from "../input/ScreenPointerControls.js";
-import { Emote } from "./graphics/Emote.js";
-import { TileMap } from "./graphics/TileMap.js";
-import { User } from "./User.js";
+import { addEventListeners, arrayClear, clamp, EventBase, InterpolatedPose, isString, lerp, project, unproject } from "../calla";
+import { id } from "../html/attrs";
+import { resizeCanvas } from "../html/canvas";
+import { hide, show } from "../html/ops";
+import { Canvas } from "../html/tags";
+import { EventedGamepad } from "../input/EventedGamepad";
+import { ScreenPointerControls } from "../input/ScreenPointerControls";
+import { Emote } from "./graphics/Emote";
+import { TileMap } from "./graphics/TileMap";
+import { User } from "./User";
 
 
 const CAMERA_LERP = 0.01,

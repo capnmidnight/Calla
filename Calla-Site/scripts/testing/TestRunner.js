@@ -1,8 +1,8 @@
-import { EventBase, isFunction } from "../calla/index.js";
-import { TestCaseFailEvent } from "./TestCaseFailEvent.js";
-import { TestCaseMessageEvent } from "./TestCaseMessageEvent.js";
-import { TestRunnerResultsEvent } from "./TestRunnerResultsEvent.js";
-import { TestScore } from "./TestScore.js";
+import { EventBase, isFunction } from "../calla";
+import { TestCaseFailEvent } from "./TestCaseFailEvent";
+import { TestCaseMessageEvent } from "./TestCaseMessageEvent";
+import { TestRunnerResultsEvent } from "./TestRunnerResultsEvent";
+import { TestScore } from "./TestScore";
 
 function testNames(TestClass) {
     const names = Object.getOwnPropertyNames(TestClass);
@@ -26,7 +26,7 @@ export class TestRunner extends EventBase {
     }
 
     async run(testCaseName, testName) {
-        /** @type {import("./TestRunnerResultsEvent.js").TestResults} */
+        /** @type {import("./TestRunnerResultsEvent").TestResults} */
         const results = new Map();
         const onUpdate = () => this.dispatchEvent(new TestRunnerResultsEvent(results));
         for (let CaseClass of this.CaseClasses) {

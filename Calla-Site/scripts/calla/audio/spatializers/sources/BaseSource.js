@@ -1,5 +1,5 @@
-﻿import { canChangeAudioOutput } from "../../canChangeAudioOutput.js";
-import { BaseSpatializer } from "../BaseSpatializer.js";
+import { canChangeAudioOutput } from "../../canChangeAudioOutput";
+import { BaseSpatializer } from "../BaseSpatializer";
 
 /** Base class providing functionality for spatializers. */
 export class BaseSource extends BaseSpatializer {

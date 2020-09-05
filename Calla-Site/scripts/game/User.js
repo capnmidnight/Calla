@@ -1,12 +1,12 @@
-import { EventBase, InterpolatedPose, isString, project } from "../calla/index.js";
-import { AvatarMode } from "./avatars/AvatarMode.js";
-import { BaseAvatar } from "./avatars/BaseAvatar.js";
-import { EmojiAvatar } from "./avatars/EmojiAvatar.js";
-import { PhotoAvatar } from "./avatars/PhotoAvatar.js";
-import { VideoAvatar } from "./avatars/VideoAvatar.js";
-import { bust, mutedSpeaker, speakerMediumVolume } from "./emoji/emojis.js";
-import { getTransform } from "./graphics/getTransform.js";
-import { TextImage } from "./graphics/TextImage.js";
+import { EventBase, InterpolatedPose, isString, project } from "../calla";
+import { AvatarMode } from "./avatars/AvatarMode";
+import { BaseAvatar } from "./avatars/BaseAvatar";
+import { EmojiAvatar } from "./avatars/EmojiAvatar";
+import { PhotoAvatar } from "./avatars/PhotoAvatar";
+import { VideoAvatar } from "./avatars/VideoAvatar";
+import { bust, mutedSpeaker, speakerMediumVolume } from "./emoji/emojis";
+import { getTransform } from "./graphics/getTransform";
+import { TextImage } from "./graphics/TextImage";
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1,
     STACKED_USER_OFFSET_X = 5,

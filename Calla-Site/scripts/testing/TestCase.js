@@ -1,7 +1,7 @@
-import { EventBase } from "../calla/index.js";
-import { TestCaseFailEvent } from "./TestCaseFailEvent.js";
-import { TestCaseMessageEvent } from "./TestCaseMessageEvent.js";
-import { TestCaseSuccessEvent } from "./TestCaseSuccessEvent.js";
+import { EventBase } from "../calla";
+import { TestCaseFailEvent } from "./TestCaseFailEvent";
+import { TestCaseMessageEvent } from "./TestCaseMessageEvent";
+import { TestCaseSuccessEvent } from "./TestCaseSuccessEvent";
 
 export class TestCase extends EventBase {
     setup() { }

@@ -1,7 +1,7 @@
-import { EventBase, once } from "../../calla/index.js";
-import { id } from "../../html/attrs.js";
-import { hide, show } from "../../html/ops.js";
-import { Div } from "../../html/tags.js";
+import { EventBase, once } from "../../calla";
+import { id } from "../../html/attrs";
+import { hide, show } from "../../html/ops";
+import { Div } from "../../html/tags";
 
 const hiddenEvt = new Event("hidden"),
     shownEvt = new Event("shown");

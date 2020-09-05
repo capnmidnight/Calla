@@ -1,5 +1,5 @@
-﻿import { arrayRemoveAt } from "../arrays/arrayRemoveAt.js";
-import { isFunction } from "../typeChecks.js";
+import { arrayRemoveAt } from "../arrays/arrayRemoveAt";
+import { isFunction } from "../typeChecks";
 
 export const EventBase = (function () {
     try {

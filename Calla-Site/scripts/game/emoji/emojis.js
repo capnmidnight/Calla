@@ -1,6 +1,6 @@
-﻿import { e } from "./Emoji.js";
-import { EmojiGroup, g } from "./EmojiGroup.js";
-import { gg } from "./gg.js";
+import { e } from "./Emoji";
+import { EmojiGroup, g } from "./EmojiGroup";
+import { gg } from "./gg";
 
 
 export const textStyle = e("\u{FE0E}", "Variation Selector-15: text style");

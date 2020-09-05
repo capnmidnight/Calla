@@ -1,17 +1,17 @@
-import { isGoodNumber, isString } from "../../calla/index.js";
-import { disabled, height, htmlFor, id, max, min, placeHolder, step, value, width } from "../../html/attrs.js";
-import { cssWidth } from "../../html/css.js";
-import { onClick, onInput, onKeyUp } from "../../html/evts.js";
-import { gridColsDef } from "../../html/grid.js";
-import { LabeledInput } from "../../html/LabeledInputTag.js";
-import { isOpen, setLocked } from "../../html/ops.js";
-import { OptionPanel } from "../../html/OptionPanelTag.js";
-import { SelectBox } from "../../html/SelectBoxTag.js";
-import { Button, Canvas, Div, InputURL, Label, P } from "../../html/tags.js";
-import { EventedGamepad } from "../../input/EventedGamepad.js";
-import { User } from "../User.js";
-import { FormDialog } from "./FormDialog.js";
-import { InputBinding } from "./InputBinding.js";
+import { isGoodNumber, isString } from "../../calla";
+import { disabled, height, htmlFor, id, max, min, placeHolder, step, value, width } from "../../html/attrs";
+import { cssWidth } from "../../html/css";
+import { onClick, onInput, onKeyUp } from "../../html/evts";
+import { gridColsDef } from "../../html/grid";
+import { LabeledInput } from "../../html/LabeledInputTag";
+import { isOpen, setLocked } from "../../html/ops";
+import { OptionPanel } from "../../html/OptionPanelTag";
+import { SelectBox } from "../../html/SelectBoxTag";
+import { Button, Canvas, Div, InputURL, Label, P } from "../../html/tags";
+import { EventedGamepad } from "../../input/EventedGamepad";
+import { User } from "../User";
+import { FormDialog } from "./FormDialog";
+import { InputBinding } from "./InputBinding";
 
 
 

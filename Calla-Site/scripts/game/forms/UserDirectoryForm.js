@@ -1,12 +1,12 @@
-import { disabled, height, id, width } from "../../html/attrs.js";
-import { backgroundColor, zIndex } from "../../html/css.js";
-import { onBlur, onClick, onFocus, onKeyPress, onMouseOut, onMouseOver } from "../../html/evts.js";
-import { gridPos, row } from "../../html/grid.js";
-import { hide, isOpen } from "../../html/ops.js";
-import { Button, Canvas, Div, InputText } from "../../html/tags.js";
-import { HubConnectionBuilder } from "../../lib/signalr/dist/esm/index.js";
-import { User } from "../User.js";
-import { FormDialog } from "./FormDialog.js";
+import { disabled, height, id, width } from "../../html/attrs";
+import { backgroundColor, zIndex } from "../../html/css";
+import { onBlur, onClick, onFocus, onKeyPress, onMouseOut, onMouseOver } from "../../html/evts";
+import { gridPos, row } from "../../html/grid";
+import { hide, isOpen } from "../../html/ops";
+import { Button, Canvas, Div, InputText } from "../../html/tags";
+import { HubConnectionBuilder } from "../../lib/signalr";
+import { User } from "../User";
+import { FormDialog } from "./FormDialog";
 
 const newRowColor = backgroundColor("lightgreen");
 const hoveredColor = backgroundColor("rgba(65, 255, 202, 0.25)");

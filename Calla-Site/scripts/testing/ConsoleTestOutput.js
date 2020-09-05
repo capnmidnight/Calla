@@ -1,5 +1,5 @@
-﻿import { TestOutput } from "./TestOutput.js";
-import { TestOutputResultsEvent } from "./TestOutputResultsEvent.js";
+import { TestOutput } from "./TestOutput";
+import { TestOutputResultsEvent } from "./TestOutputResultsEvent";
 
 /**
  * A test outputer that runs in the console.

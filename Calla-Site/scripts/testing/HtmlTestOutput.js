@@ -1,11 +1,11 @@
-import { id } from "../html/attrs.js";
-import { backgroundColor, color, columnGap, cssHeight, cssWidth, display, monospaceFamily, overflow, styles, whiteSpace } from "../html/css.js";
-import { onClick } from "../html/evts.js";
-import { col, gridColsDef } from "../html/grid.js";
-import { Button, clear, Div, Span } from "../html/tags.js";
-import { TestOutput } from "./TestOutput.js";
-import { TestOutputResultsEvent } from "./TestOutputResultsEvent.js";
-import { TestStates } from "./TestStates.js";
+import { id } from "../html/attrs";
+import { backgroundColor, color, columnGap, cssHeight, cssWidth, display, monospaceFamily, overflow, styles, whiteSpace } from "../html/css";
+import { onClick } from "../html/evts";
+import { col, gridColsDef } from "../html/grid";
+import { Button, clear, Div, Span } from "../html/tags";
+import { TestOutput } from "./TestOutput";
+import { TestOutputResultsEvent } from "./TestOutputResultsEvent";
+import { TestStates } from "./TestStates";
 
 
 /**

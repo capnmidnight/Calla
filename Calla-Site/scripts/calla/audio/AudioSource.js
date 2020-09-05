@@ -1,5 +1,4 @@
-import { InterpolatedPose } from "./positions/InterpolatedPose.js";
-import { BaseSpatializer } from "./spatializers/BaseSpatializer.js";
+import { InterpolatedPose } from "./positions/InterpolatedPose";
 
 
 /**
@@ -20,7 +19,7 @@ export class AudioSource {
         /** @type {Map<string, JitsiTrack>} */
         this.tracks = new Map();
 
-        /** @type {BaseSpatializer} */
+        /** @type {import("./spatializers/BaseSpatializer").BaseSpatializer} */
         this._spatializer = null;
     }
 

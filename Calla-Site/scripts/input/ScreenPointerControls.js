@@ -6,6 +6,7 @@ export class ScreenPointerEvent extends Event {
         super(type);
 
         this.pointerType = null;
+        this.pointerID = null;
         this.x = 0;
         this.y = 0;
         this.dx = 0;
@@ -82,6 +83,7 @@ export class ScreenPointerControls extends EventBase {
         function setHorizontal(evt, pointer) {
 
             evt.pointerType = pointer.type;
+            evt.pointerID = pointer.id;
 
             evt.buttons = pointer.buttons;
 

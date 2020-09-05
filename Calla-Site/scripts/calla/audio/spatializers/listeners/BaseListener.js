@@ -1,4 +1,4 @@
-import { BaseSpatializer } from "../BaseSpatializer.js";
+import { BaseSpatializer } from "../BaseSpatializer";
 
 export class BaseListener extends BaseSpatializer {
     /**

@@ -1,11 +1,10 @@
-﻿import { isGoodNumber } from "../math.js";
-import { isNumber, isString } from "../typeChecks.js";
-import { add } from "./add.js";
-import { EventBase } from "./EventBase.js";
+import { isGoodNumber } from "../math";
+import { isNumber, isString } from "../typeChecks";
+import { add } from "./add";
 
 /**
  * Wait for a specific event, one time.
- * @param {EventBase|EventTarget} target - the event target.
+ * @param {import("./EventBase").EventBase|EventTarget} target - the event target.
  * @param {string} resolveEvt - the name of the event that will resolve the Promise this method creates.
  * @param {string} rejectEvt - the name of the event that could reject the Promise this method creates.
  * @param {number} timeout - the number of milliseconds to wait for the resolveEvt, before rejecting.

@@ -1,4 +1,4 @@
-﻿import { isNumber } from "./typeChecks.js";
+import { isNumber } from "./typeChecks";
 
 /**
  * Check a value to see if it is of a number type

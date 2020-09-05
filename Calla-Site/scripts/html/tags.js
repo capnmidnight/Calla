@@ -1,6 +1,6 @@
-import { height, type, width } from "./attrs.js";
-import { margin } from "./css.js";
-import { tag } from "./tag.js";
+import { height, type, width } from "./attrs";
+import { margin } from "./css";
+import { tag } from "./tag";
 
 /**
  * Empty an element of all children. This is faster than

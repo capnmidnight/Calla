@@ -1,7 +1,7 @@
-import { isFunction } from "../calla/index.js";
-import { disabled, value, id } from "./attrs.js";
-import { HtmlCustomTag } from "./HtmlCustomTag.js";
-import { clear, Option } from "./tags.js";
+import { isFunction } from "../calla";
+import { disabled, value, id } from "./attrs";
+import { HtmlCustomTag } from "./HtmlCustomTag";
+import { clear, Option } from "./tags";
 
 const disabler = disabled(true),
     enabler = disabled(false);

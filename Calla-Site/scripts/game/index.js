@@ -1,18 +1,18 @@
-import { addEventListeners, CallaClient } from "../calla/index.js";
-import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants.js";
-import { disabled } from "../html/attrs.js";
-import { hide, isOpen, show } from "../html/ops.js";
-import { allPeople as people } from "./emoji/emojis.js";
-import { ButtonLayer } from "./forms/ButtonLayer.js";
-import { DevicesDialog } from "./forms/DevicesDialog.js";
-import { EmojiForm } from "./forms/EmojiForm.js";
-import { FormDialog } from "./forms/FormDialog.js";
-import { LoginForm } from "./forms/LoginForm.js";
-import { OptionsForm } from "./forms/OptionsForm.js";
-import { UserDirectoryForm } from "./forms/UserDirectoryForm.js";
-import { Game } from "./Game.js";
-import { Settings } from "./Settings.js";
-import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer.js";
+import { addEventListeners, CallaClient } from "../calla";
+import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
+import { disabled } from "../html/attrs";
+import { hide, isOpen, show } from "../html/ops";
+import { allPeople as people } from "./emoji/emojis";
+import { ButtonLayer } from "./forms/ButtonLayer";
+import { DevicesDialog } from "./forms/DevicesDialog";
+import { EmojiForm } from "./forms/EmojiForm";
+import { FormDialog } from "./forms/FormDialog";
+import { LoginForm } from "./forms/LoginForm";
+import { OptionsForm } from "./forms/OptionsForm";
+import { UserDirectoryForm } from "./forms/UserDirectoryForm";
+import { Game } from "./Game";
+import { Settings } from "./Settings";
+import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
 
 const CAMERA_ZOOM_MIN = 0.5,
     CAMERA_ZOOM_MAX = 20,

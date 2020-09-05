@@ -1,8 +1,8 @@
-import { id } from "./attrs.js";
-import { onClick } from "./evts.js";
-import { HtmlCustomTag } from "./HtmlCustomTag.js";
-import { setOpen } from "./ops.js";
-import { Button, P } from "./tags.js";
+import { id } from "./attrs";
+import { onClick } from "./evts";
+import { HtmlCustomTag } from "./HtmlCustomTag";
+import { setOpen } from "./ops";
+import { Button, P } from "./tags";
 
 const selectEvt = new Event("select");
 

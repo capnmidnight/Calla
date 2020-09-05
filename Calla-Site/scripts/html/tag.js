@@ -1,7 +1,7 @@
-import { isBoolean, isFunction, isNumber, isString } from "../calla/index.js";
-import { HtmlAttr } from "./attrs.js";
-import { CssProp, CssPropSet } from "./css.js";
-import { HtmlEvt } from "./evts.js";
+import { isBoolean, isFunction, isNumber, isString } from "../calla";
+import { HtmlAttr } from "./attrs";
+import { CssProp, CssPropSet } from "./css";
+import { HtmlEvt } from "./evts";
 
 /**
  * @typedef {(Element|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild

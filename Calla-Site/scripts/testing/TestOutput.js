@@ -1,8 +1,8 @@
-import { EventBase } from "../calla/index.js";
-import { TestOutputResultsEvent } from "./TestOutputResultsEvent.js";
-import { TestRunner } from "./TestRunner.js";
-import { TestRunnerResultsEvent } from "./TestRunnerResultsEvent.js";
-import { TestStates } from "./TestStates.js";
+import { EventBase } from "../calla";
+import { TestOutputResultsEvent } from "./TestOutputResultsEvent";
+import { TestRunner } from "./TestRunner";
+import { TestRunnerResultsEvent } from "./TestRunnerResultsEvent";
+import { TestStates } from "./TestStates";
 
 export class TestOutput extends EventBase {
     constructor(...rest) {

@@ -1,7 +1,5 @@
-import { Pose } from "../../positions/Pose.js";
-import { PannerOld } from "../sources/PannerOld.js";
-import { AudioListenerBase } from "./AudioListenerBase.js";
-import { BaseSource } from "../sources/BaseSource.js";
+import { PannerOld } from "../sources/PannerOld";
+import { AudioListenerBase } from "./AudioListenerBase";
 
 /**
  * A positioner that uses WebAudio's playback dependent time progression.
@@ -19,7 +17,7 @@ export class AudioListenerOld extends AudioListenerBase {
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     * @param {Pose} loc
+     * @param {import("../../positions/Pose").Pose} loc
      */
     update(loc) {
         super.update(loc);
@@ -35,7 +33,7 @@ export class AudioListenerOld extends AudioListenerBase {
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
      * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
      * @param {AudioContext} audioContext
-     * @return {BaseSource}
+     * @return {import("../sources/BaseSource").BaseSource}
      */
     createSource(id, stream, bufferSize, audioContext) {
         return new PannerOld(id, stream, bufferSize, audioContext);
