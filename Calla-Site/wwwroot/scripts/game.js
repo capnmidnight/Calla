@@ -1828,51 +1828,6 @@ class InterpolatedPose {
     }
 }
 
-/** Base class providing functionality for spatializers. */
-class BaseSpatializer extends EventBase {
-
-    /**
-     * Creates a spatializer that keeps track of position
-     */
-    constructor() {
-        super();
-
-        this.minDistance = 1;
-        this.minDistanceSq = 1;
-        this.maxDistance = 10;
-        this.maxDistanceSq = 100;
-        this.rolloff = 1;
-        this.transitionTime = 0.5;
-    }
-
-    /**
-     * Sets parameters that alter spatialization.
-     * @param {number} minDistance
-     * @param {number} maxDistance
-     * @param {number} rolloff
-     * @param {number} transitionTime
-     **/
-    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
-        this.minDistance = minDistance;
-        this.maxDistance = maxDistance;
-        this.transitionTime = transitionTime;
-        this.rolloff = rolloff;
-    }
-
-    /**
-     * Discard values and make this instance useless.
-     */
-    dispose() {
-    }
-
-    /**
-     * Performs the spatialization operation for the audio source's latest location.
-     * @param {Pose} loc
-     */
-    update(loc) {
-    }
-}
-
 /**
  * @typedef {object} JitsiTrack
  * @property {Function} getParticipantId
@@ -1891,7 +1846,7 @@ class AudioSource {
         /** @type {Map<string, JitsiTrack>} */
         this.tracks = new Map();
 
-        /** @type {BaseSpatializer} */
+        /** @type {import("./spatializers/BaseSpatializer").BaseSpatializer} */
         this._spatializer = null;
     }
 
@@ -1959,6 +1914,51 @@ class MockAudioContext {
  * @type {boolean}
  **/
 const canChangeAudioOutput = HTMLAudioElement.prototype["setSinkId"] instanceof Function;
+
+/** Base class providing functionality for spatializers. */
+class BaseSpatializer extends EventBase {
+
+    /**
+     * Creates a spatializer that keeps track of position
+     */
+    constructor() {
+        super();
+
+        this.minDistance = 1;
+        this.minDistanceSq = 1;
+        this.maxDistance = 10;
+        this.maxDistanceSq = 100;
+        this.rolloff = 1;
+        this.transitionTime = 0.5;
+    }
+
+    /**
+     * Sets parameters that alter spatialization.
+     * @param {number} minDistance
+     * @param {number} maxDistance
+     * @param {number} rolloff
+     * @param {number} transitionTime
+     **/
+    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
+        this.minDistance = minDistance;
+        this.maxDistance = maxDistance;
+        this.transitionTime = transitionTime;
+        this.rolloff = rolloff;
+    }
+
+    /**
+     * Discard values and make this instance useless.
+     */
+    dispose() {
+    }
+
+    /**
+     * Performs the spatialization operation for the audio source's latest location.
+     * @param {import("../positions/Pose").Pose} loc
+     */
+    update(loc) {
+    }
+}
 
 /** Base class providing functionality for spatializers. */
 class BaseSource extends BaseSpatializer {
@@ -2136,7 +2136,7 @@ class BaseAnalyzed extends BaseSource {
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     * @param {Pose} loc
+     * @param {import("../../positions/Pose").Pose} loc
      * @fires BaseAnalyzedSpatializer#audioActivity
      */
     update(loc) {
@@ -2247,7 +2247,7 @@ class PannerBase extends BaseWebAudio {
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     * @param {Pose} loc
+     * @param {import("../../positions/Pose").Pose} loc
      */
     update(loc) {
         super.update(loc);
@@ -2276,7 +2276,7 @@ class PannerNew extends PannerBase {
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     * @param {Pose} loc
+     * @param {import("../../positions/Pose").Pose} loc
      */
     update(loc) {
         super.update(loc);
@@ -2348,7 +2348,7 @@ class AudioListenerNew extends AudioListenerBase {
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     * @param {Pose} loc
+     * @param {import("../../positions/Pose").Pose} loc
      */
     update(loc) {
         super.update(loc);
@@ -2399,7 +2399,7 @@ class PannerOld extends PannerBase {
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     * @param {Pose} loc
+     * @param {import("../../positions/Pose").Pose} loc
      */
     update(loc) {
         super.update(loc);
@@ -2425,7 +2425,7 @@ class AudioListenerOld extends AudioListenerBase {
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     * @param {Pose} loc
+     * @param {import("../../positions/Pose").Pose} loc
      */
     update(loc) {
         super.update(loc);
@@ -2441,7 +2441,7 @@ class AudioListenerOld extends AudioListenerBase {
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
      * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
      * @param {AudioContext} audioContext
-     * @return {BaseSource}
+     * @return {import("../sources/BaseSource").BaseSource}
      */
     createSource(id, stream, bufferSize, audioContext) {
         return new PannerOld(id, stream, bufferSize, audioContext);
@@ -8419,7 +8419,7 @@ class ResonanceSource extends BaseAnalyzed {
      * @param {MediaStream|HTMLAudioElement} stream
      * @param {number} bufferSize
      * @param {AudioContext} audioContext
-     * @param {ResonanceAudio} res
+     * @param {import("../../../../lib/resonance-audio/src/resonance-audio").ResonanceAudio} res
      */
     constructor(id, stream, bufferSize, audioContext, res) {
         const resNode = res.createSource();
@@ -8433,7 +8433,7 @@ class ResonanceSource extends BaseAnalyzed {
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     * @param {Pose} loc
+     * @param {import("../../positions/Pose").Pose} loc
      */
     update(loc) {
         super.update(loc);
@@ -8453,8 +8453,6 @@ class ResonanceSource extends BaseAnalyzed {
         super.dispose();
     }
 }
-
-/* global ResonanceAudio */
 
 /**
  * An audio positioner that uses Google's Resonance Audio library
@@ -8492,7 +8490,7 @@ class ResonanceScene extends BaseListener {
 
     /**
      * Performs the spatialization operation for the audio source's latest location.
-     * @param {Pose} loc
+     * @param {import("../../positions/Pose").Pose} loc
      */
     update(loc) {
         super.update(loc);
@@ -8508,7 +8506,7 @@ class ResonanceScene extends BaseListener {
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
      * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
      * @param {AudioContext} audioContext
-     * @return {BaseSource}
+     * @return {import("../sources/BaseSource").BaseSource}
      */
     createSource(id, stream, bufferSize, audioContext) {
         return new ResonanceSource(id, stream, bufferSize, audioContext, this.scene);
@@ -8653,7 +8651,7 @@ class AudioManager extends EventBase {
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
      * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
-     * @return {BaseSource}
+     * @return {import("./spatializers/sources/BaseSource").BaseSource}
      */
     createSpatializer(id, stream, bufferSize) {
         if (!this.listener) {
@@ -8890,7 +8888,7 @@ function addEventListeners(target, obj) {
 
 /**
  * Wait for a specific event, one time.
- * @param {EventBase|EventTarget} target - the event target.
+ * @param {import("./EventBase").EventBase|EventTarget} target - the event target.
  * @param {string} resolveEvt - the name of the event that will resolve the Promise this method creates.
  * @param {string} rejectEvt - the name of the event that could reject the Promise this method creates.
  * @param {number} timeout - the number of milliseconds to wait for the resolveEvt, before rejecting.
@@ -8946,7 +8944,7 @@ function once(target, resolveEvt, rejectEvt, timeout) {
 
 /**
  * 
- * @param {EventBase|EventTarget} target
+ * @param {import("./EventBase").EventBase|EventTarget} target
  * @param {string} untilEvt
  * @param {Function} callback
  * @param {Function} test
@@ -8999,7 +8997,7 @@ function until(target, untilEvt, callback, test, repeatTimeout, cancelTimeout) {
 
 /**
  * 
- * @param {EventBase|EventTarget} target
+ * @param {import("./EventBase").EventBase|EventTarget} target
  * @param {string} resolveEvt
  * @param {Function} filterTest
  * @param {number?} timeout
@@ -20660,7 +20658,7 @@ class CallaClient extends EventBase {
     }
 
     /**
-     * @return {Promise.<MediaDeviceInfo>} */
+     * @return {Promise<MediaDeviceInfo>} */
     async getCurrentAudioOutputDeviceAsync() {
         if (!canChangeAudioOutput) {
             return null;
@@ -20887,26 +20885,34 @@ class CallaClient extends EventBase {
     }
 
     /**
-     * 
      * @param {string} toUserID
-     * @param {User} fromUserState
+     * @param {import("../game/User").User} fromUserState
      */
     userInitResponse(toUserID, fromUserState) {
         this.sendMessageTo(toUserID, "userInitResponse", fromUserState);
     }
 
+    /**
+     * @param {import("../game/emoji/Emoji").Emoji} emoji
+     **/
     set avatarEmoji(emoji) {
         for (let toUserID of this.userIDs()) {
             this.sendMessageTo(toUserID, "setAvatarEmoji", emoji);
         }
     }
 
+    /**
+     * @param {string} url
+     **/
     set avatarURL(url) {
         for (let toUserID of this.userIDs()) {
             this.sendMessageTo(toUserID, "avatarChanged", { url });
         }
     }
 
+    /**
+     * @param {import("../game/emoji/Emoji").Emoji} emoji
+     **/
     emote(emoji) {
         for (let toUserID of this.userIDs()) {
             this.sendMessageTo(toUserID, "emote", emoji);
@@ -21207,7 +21213,7 @@ function setLocked(target, value) {
 /**
  * Unicode-standardized pictograms.
  **/
-class Emoji {
+class Emoji$1 {
     /**
      * Creates a new Unicode-standardized pictograms.
      * @param {string} value - a Unicode sequence.
@@ -21235,10 +21241,10 @@ class Emoji {
  * @param {any} [o=null] - an optional set of properties to set on the Emoji object.
  */
 function e(v, d, o = null) {
-    return Object.assign(new Emoji(v, d), o);
+    return Object.assign(new Emoji$1(v, d), o);
 }
 
-class EmojiGroup extends Emoji {
+class EmojiGroup extends Emoji$1 {
     /**
      * Groupings of Unicode-standardized pictograms.
      * @param {string} value - a Unicode sequence.
@@ -21295,8 +21301,8 @@ function g(v, d, ...r) {
  * @param {string} v - a Unicode sequence.
  * @param {string} d - an English text description of the pictogram.
  * @param {any} o - a set of properties to set on the Emoji object.
- * @param {...(Emoji|EmojiGroup)} r - the emoji that are contained in this group.
- * @returns {EmojiGroup}
+ * @param {...(import("./Emoji").Emoji|import("./EmojiGroup").EmojiGroup)} r - the emoji that are contained in this group.
+ * @returns {import("./EmojiGroup").EmojiGroup}
  */
 function gg(v, d, o, ...r) {
     return Object.assign(
@@ -24257,7 +24263,7 @@ function onMouseOut(callback, opts) { return new HtmlEvt("mouseout", callback, o
 function onMouseOver(callback, opts) { return new HtmlEvt("mouseover", callback, opts); }
 
 /**
- * @typedef {(Element|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
+ * @typedef {(Node|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
  **/
 
 /**
@@ -24333,140 +24339,140 @@ function clear(elem) {
 
 /**
  * creates an HTML A tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLAnchorElement}
  */
 function A(...rest) { return tag("a", ...rest); }
 
 /**
  * creates an HTML HtmlButton tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLButtonElement}
  */
 function ButtonRaw(...rest) { return tag("button", ...rest); }
 
 /**
  * creates an HTML Button tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLButtonElement}
  */
 function Button(...rest) { return ButtonRaw(...rest, type("button")); }
 
 /**
  * creates an HTML Canvas tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLCanvasElement}
  */
 function Canvas(...rest) { return tag("canvas", ...rest); }
 
 /**
  * creates an HTML Div tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLDivElement}
  */
 function Div(...rest) { return tag("div", ...rest); }
 
 /**
  * creates an HTML H1 tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLHeadingElement}
  */
 function H1(...rest) { return tag("h1", ...rest); }
 
 /**
  * creates an HTML H2 tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLHeadingElement}
  */
 function H2(...rest) { return tag("h2", ...rest); }
 
 /**
  * creates an HTML Img tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLImageElement}
  */
 function Img(...rest) { return tag("img", ...rest); }
 
 /**
  * creates an HTML Input tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLInputElement}
  */
 function Input(...rest) { return tag("input", ...rest); }
 
 /**
  * creates an HTML Input tag that is an email entry field.
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLInputElement}
  */
 function InputEmail(...rest) { return Input(type("email"), ...rest) }
 
 /**
  * creates an HTML Input tag that is a range selector.
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLInputElement}
  */
 function InputRange(...rest) { return Input(type("range"), ...rest) }
 
 /**
  * creates an HTML Input tag that is a text entry field.
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLInputElement}
  */
 function InputText(...rest) { return Input(type("text"), ...rest) }
 
 /**
  * creates an HTML Input tag that is a URL entry field.
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLInputElement}
  */
 function InputURL(...rest) { return Input(type("url"), ...rest) }
 
 /**
  * creates an HTML Label tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLLabelElement}
  */
 function Label(...rest) { return tag("label", ...rest); }
 
 /**
  * creates an HTML LI tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLLIElement}
  */
 function LI(...rest) { return tag("li", ...rest); }
 
 /**
  * creates an HTML Option tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLOptionElement}
  */
 function Option(...rest) { return tag("option", ...rest); }
 
 /**
  * creates an HTML P tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLParagraphElement}
  */
 function P(...rest) { return tag("p", ...rest); }
 
 /**
  * creates an HTML Span tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLSpanElement}
  */
 function Span(...rest) { return tag("span", ...rest); }
 
 /**
  * creates an HTML UL tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLUListElement}
  */
 function UL(...rest) { return tag("ul", ...rest); }
 
 /**
  * creates an HTML Video tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLVideoElement}
  */
 function Video(...rest) { return tag("video", ...rest); }
@@ -24475,7 +24481,7 @@ function Video(...rest) { return tag("video", ...rest); }
  * Creates an offscreen canvas element, if they are available. Otherwise, returns an HTMLCanvasElement.
  * @param {number} w - the width of the canvas
  * @param {number} h - the height of the canvas
- * @param {...TagChild} rest - optional HTML attributes and child elements, to use in constructing the HTMLCanvasElement if OffscreenCanvas is not available.
+ * @param {...import("./tag").TagChild} rest - optional HTML attributes and child elements, to use in constructing the HTMLCanvasElement if OffscreenCanvas is not available.
  * @returns {OffscreenCanvas|HTMLCanvasElement}
  */
 function CanvasOffscreen(w, h, ...rest) {
@@ -24728,7 +24734,7 @@ class HtmlCustomTag extends EventBase {
     /**
      * Creates a new pseudo-element
      * @param {string} tagName - the type of tag that will contain the elements in the custom tag.
-     * @param {...TagChild} rest - optional attributes, child elements, and text
+     * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
      */
     constructor(tagName, ...rest) {
         super();
@@ -24864,7 +24870,7 @@ function render(self) {
  * @param {string} noSelectionText - the text to display when no items are available.
  * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
  * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
- * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text to use on the select element
  * @returns {SelectBoxTag}
  */
 function SelectBox(id, noSelectionText, makeID, makeLabel, ...rest) {
@@ -24882,7 +24888,7 @@ class SelectBoxTag extends HtmlCustomTag {
      * @param {string} noSelectionText - the text to display when no items are available.
      * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
      * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
-     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+     * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text to use on the select element
      */
     constructor(tagId, noSelectionText, makeID, makeLabel, ...rest) {
         super("select", id(tagId), ...rest);
@@ -25694,7 +25700,7 @@ class LoginForm extends FormDialog {
  * @param {string} id - the ID to use for the input box
  * @param {string} inputType - the type to use for the input box (number, text, etc.)
  * @param {string} labelText - the text to display in the label
- * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text to use on the select element
  * @returns {LabeledInputTag}
  */
 function LabeledInput(id, inputType, labelText, ...rest) {
@@ -25710,8 +25716,7 @@ class LabeledInputTag extends HtmlCustomTag {
      * @param {string} id - the ID to use for the input box
      * @param {string} inputType - the type to use for the input box (number, text, etc.)
      * @param {string} labelText - the text to display in the label
-     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
-     * @returns {LabeledInputTag}
+     * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text to use on the select element
      */
     constructor(id, inputType, labelText, ...rest) {
         super("div");
@@ -25789,7 +25794,7 @@ const selectEvt = new Event("select");
  * Creates an OptionPanelTag element
  * @param {string} id - the ID to use for the content element of the option panel
  * @param {string} name - the text to use in the button that triggers displaying the content element
- * @param {...TagChild} rest - optional attributes, child elements, and text to use on the content element
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text to use on the content element
  */
 function OptionPanel(id, name, ...rest) {
     return new OptionPanelTag(id, name, ...rest);
@@ -25975,41 +25980,6 @@ const AvatarMode = Object.freeze({
     photo: "photo",
     video: "video"
 });
-
-/**
- * A base class for different types of avatars.
- **/
-class BaseAvatar {
-
-    /**
-     * Encapsulates a resource to use as an avatar.
-     * @param {boolean} canSwim
-     */
-    constructor(canSwim) {
-        this.canSwim = canSwim;
-        this.element = Canvas(128, 128);
-        this.g = this.element.getContext("2d");
-    }
-
-    /**
-     * Render the avatar at a certain size.
-     * @param {CanvasRenderingContext2D} g - the context to render to
-     * @param {number} width - the width the avatar should be rendered at
-     * @param {number} height - the height the avatar should be rendered at.
-     * @param {boolean} isMe - whether the avatar is the local user
-     */
-    draw(g, width, height, isMe) {
-        const aspectRatio = this.element.width / this.element.height,
-            w = aspectRatio > 1 ? width : aspectRatio * height,
-            h = aspectRatio > 1 ? width / aspectRatio : height,
-            dx = (width - w) / 2,
-            dy = (height - h) / 2;
-        g.drawImage(
-            this.element,
-            dx, dy,
-            w, h);
-    }
-}
 
 /**
  * Returns true if the given object is either an HTMLCanvasElement or an OffscreenCanvas.
@@ -26412,13 +26382,48 @@ class TextImage extends EventBase {
 }
 
 /**
+ * A base class for different types of avatars.
+ **/
+class BaseAvatar {
+
+    /**
+     * Encapsulates a resource to use as an avatar.
+     * @param {boolean} canSwim
+     */
+    constructor(canSwim) {
+        this.canSwim = canSwim;
+        this.element = Canvas(128, 128);
+        this.g = this.element.getContext("2d");
+    }
+
+    /**
+     * Render the avatar at a certain size.
+     * @param {CanvasRenderingContext2D} g - the context to render to
+     * @param {number} width - the width the avatar should be rendered at
+     * @param {number} height - the height the avatar should be rendered at.
+     * @param {boolean} isMe - whether the avatar is the local user
+     */
+    draw(g, width, height, isMe) {
+        const aspectRatio = this.element.width / this.element.height,
+            w = aspectRatio > 1 ? width : aspectRatio * height,
+            h = aspectRatio > 1 ? width / aspectRatio : height,
+            dx = (width - w) / 2,
+            dy = (height - h) / 2;
+        g.drawImage(
+            this.element,
+            dx, dy,
+            w, h);
+    }
+}
+
+/**
  * An avatar that uses a Unicode emoji as its representation
  **/
 class EmojiAvatar extends BaseAvatar {
 
     /**
      * Creatse a new avatar that uses a Unicode emoji as its representation.
-     * @param {Emoji} emoji
+     * @param {import("../emoji/Emoji").Emoji} emoji
      */
     constructor(emoji) {
         super(isSurfer(emoji));
@@ -26612,7 +26617,7 @@ class User extends EventBase {
      * 
      * @param {string} id
      * @param {string} displayName
-     * @param {InterpolatedPose} pose
+     * @param {import("../calla").InterpolatedPose} pose
      * @param {boolean} isMe
      */
     constructor(id, displayName, pose, isMe) {
@@ -26684,7 +26689,7 @@ class User extends EventBase {
 
     /**
      * An avatar using a live video.
-     * @type {PhotoAvatar}
+     * @type {VideoAvatar}
      **/
     get avatarVideo() {
         return this._avatarVideo;
@@ -26737,7 +26742,7 @@ class User extends EventBase {
 
     /**
      * Set the emoji to use as an avatar.
-     * @param {Emoji} emoji
+     * @param {import("./emoji/Emoji").Emoji} emoji
      */
     set avatarEmoji(emoji) {
         if (emoji
@@ -26787,7 +26792,7 @@ class User extends EventBase {
 
     /**
      * Returns the current avatar
-     * @returns {BaseAvatar}
+     * @returns {import("./avatars/BaseAvatar").BaseAvatar}
      **/
     get avatar() {
         switch (this.avatarMode) {
@@ -30905,6 +30910,7 @@ class ScreenPointerEvent extends Event {
         super(type);
 
         this.pointerType = null;
+        this.pointerID = null;
         this.x = 0;
         this.y = 0;
         this.dx = 0;
@@ -30981,6 +30987,7 @@ class ScreenPointerControls extends EventBase {
         function setHorizontal(evt, pointer) {
 
             evt.pointerType = pointer.type;
+            evt.pointerID = pointer.id;
 
             evt.buttons = pointer.buttons;
 
@@ -31948,7 +31955,7 @@ const CAMERA_LERP = 0.01,
         user: null
     }));
 
-/** @type {Map.<Game, EventedGamepad>} */
+/** @type {Map<Game, EventedGamepad>} */
 const gamepads = new Map();
 
 class Game extends EventBase {
@@ -32203,7 +32210,7 @@ class Game extends EventBase {
      * 
      * @param {string} id
      * @param {string} displayName
-     * @param {InterpolatedPose} pose
+     * @param {import("../calla").InterpolatedPose} pose
      */
     addUser(id, displayName, pose) {
         if (this.users.has(id)) {
@@ -32303,7 +32310,7 @@ class Game extends EventBase {
      * 
      * @param {string} id
      * @param {string} displayName
-     * @param {InterpolatedPose} pose
+     * @param {import("../calla").InterpolatedPose} pose
      * @param {string} avatarURL
      * @param {string} roomName
      */

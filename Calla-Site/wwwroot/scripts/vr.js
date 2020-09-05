@@ -50810,6 +50810,50 @@ async function getObject(path) {
 }
 
 /**
+ * @param {string} path
+ * @returns {Promise<string>}
+ */
+async function getFile(path) {
+    const request = fetch(path),
+        response = await request;
+
+    if (!response.ok) {
+        throw new Error(`[${response.status}] - ${response.statusText}`);
+    }
+
+    const contentLength = parseInt(response.headers.get("Content-Length"), 10);
+    if (!contentLength) {
+        throw new Error("Server did not provide a content length header.");
+    }
+
+    const contentType = response.headers.get("Content-Type");
+    if (!contentType) {
+        throw new Error("Server did not provide a content type");
+    }
+
+    const reader = response.body.getReader();
+    const parts = [];
+    let receivedLength = 0;
+    while(true) {
+        const { done, value } = await reader.read();
+        if (done) {
+            break;
+        }
+
+        receivedLength += value.length;
+        if (receivedLength > contentLength) {
+            throw new Error("Whoa! Recieved content exceeded expected amount");
+        }
+
+        parts.push(value);
+    }
+
+    const blob = new Blob(parts, { type: contentType });
+    const blobUrl = URL.createObjectURL(blob);
+    return blobUrl;
+}
+
+/**
  * Empties out an array
  * @param {any[]} arr - the array to empty.
  * @returns {any[]} - the items that were in the array.
@@ -50971,6 +51015,17 @@ const EventBase = (function () {
 function isGoodNumber(v) {
     return isNumber(v)
         && !Number.isNaN(v);
+}
+
+/**
+ * Force a value onto a range
+ * 
+ * @param {number} v
+ * @param {number} min
+ * @param {number} max
+ */
+function clamp(v, min, max) {
+    return Math.min(max, Math.max(min, v));
 }
 
 /**
@@ -51983,7 +52038,7 @@ function add(a, b) {
 
 /**
  * Wait for a specific event, one time.
- * @param {EventBase|EventTarget} target - the event target.
+ * @param {import("./EventBase").EventBase|EventTarget} target - the event target.
  * @param {string} resolveEvt - the name of the event that will resolve the Promise this method creates.
  * @param {string} rejectEvt - the name of the event that could reject the Promise this method creates.
  * @param {number} timeout - the number of milliseconds to wait for the resolveEvt, before rejecting.
@@ -63098,7 +63153,7 @@ class HtmlEvt {
 }
 
 /**
- * @typedef {(Element|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
+ * @typedef {(Node|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
  **/
 
 /**
@@ -63163,14 +63218,14 @@ function tag(name, ...rest) {
 
 /**
  * creates an HTML Canvas tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLCanvasElement}
  */
 function Canvas(...rest) { return tag("canvas", ...rest); }
 
 /**
  * creates an HTML Img tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLImageElement}
  */
 function Img(...rest) { return tag("img", ...rest); }
@@ -63179,7 +63234,7 @@ function Img(...rest) { return tag("img", ...rest); }
  * Creates an offscreen canvas element, if they are available. Otherwise, returns an HTMLCanvasElement.
  * @param {number} w - the width of the canvas
  * @param {number} h - the height of the canvas
- * @param {...TagChild} rest - optional HTML attributes and child elements, to use in constructing the HTMLCanvasElement if OffscreenCanvas is not available.
+ * @param {...import("./tag").TagChild} rest - optional HTML attributes and child elements, to use in constructing the HTMLCanvasElement if OffscreenCanvas is not available.
  * @returns {OffscreenCanvas|HTMLCanvasElement}
  */
 function CanvasOffscreen(w, h, ...rest) {
@@ -63192,6 +63247,10 @@ function CanvasOffscreen(w, h, ...rest) {
 }
 
 class TexturedMesh extends Mesh {
+    /**
+     * @param {import("three").BufferGeometry} geom
+     * @param {import("three").Material} mat
+     */
     constructor(geom, mat) {
         super(geom, mat);
         this.isVideo = false;
@@ -63204,6 +63263,7 @@ class TexturedMesh extends Mesh {
 
     async setImage(img) {
         if (isString(img)) {
+            img = await getFile(img);
             img = Img(src(img));
         }
 
@@ -63869,6 +63929,473 @@ const MouseButtons = Object.freeze({
     Mouse4: 1 << MouseButton.Mouse4
 });
 
+const NEUTRAL_POSITION_RESET_QUAT = new Quaternion().setFromEuler(new Euler(Math.PI / 2, 0, 0));
+const FLIP_IMAGE_QUAT = new Quaternion().setFromEuler(new Euler(0, 0, Math.PI));
+
+/// <summary>
+/// The mouse is not as sensitive as the motion controllers, so we have to bump up the
+/// sensitivity quite a bit.
+/// </summary>
+/** @type {number} */
+const MOUSE_SENSITIVITY_SCALE = 100;
+
+/// <summary>
+/// The mouse is not as sensitive as the motion controllers, so we have to bump up the
+/// sensitivity quite a bit.
+/// </summary>
+/** @type {Number} */
+const TOUCH_SENSITIVITY_SCALE = 0.5;
+
+const Mode = Object.freeze({
+    None: "none",
+    Auto: "auto",
+    MouseLocked: "mouselocked",
+    MouseUnlocked: "mouseunlocked",
+    MouseScreenEdge: "mouseedge",
+    Touch: "touchswipe",
+    Gamepad: "gamepad",
+    MagicWindow: "magicwindow",
+    NetworkView: "net",
+    WebXR: "xr"
+});
+
+const deltaEuler = new Euler();
+const deltaQuat = new Quaternion();
+
+class ModeChangeEvent extends Event {
+    /**
+     * @param {Mode} newMode
+     * @param {Mode} oldMode
+     */
+    constructor(newMode, oldMode) {
+        super("modechanged");
+
+        this.newMode = newMode;
+        this.oldMode = oldMode;
+
+        Object.freeze(this);
+    }
+}
+
+class CameraControl extends EventBase {
+
+    /**
+     * @param {import("three").PerspectiveCamera} camera
+     * @param {import("./Stage").Stage} stage
+     * @param {import("./ScreenPointerControls").ScreenPointerControls} controls
+     */
+    constructor(camera, stage, controls) {
+        super();
+
+        this.camera = camera;
+        this.stage = stage;
+        this.controls = controls;
+
+        /** @type {Mode} */
+        this.controlMode = Mode.Auto;
+
+        /** @type {Mode} */
+        this.lastMode = Mode.None;
+
+        /** @type {Map<Mode, MouseButtons>} */
+        this.requiredMouseButton = new Map([
+            [Mode.MouseLocked, MouseButtons.None],
+            [Mode.MouseUnlocked, MouseButtons.Mouse0],
+            [Mode.MouseScreenEdge, MouseButtons.None]
+        ]);
+
+        /** @type {Boolean} */
+        this.allowPointerLock = false;
+
+        /** @type {Number} */
+        this.requiredTouchCount = 1;
+
+        /** @type {Number} */
+        this.dragThreshold = 2;
+
+        /** @type {Boolean} */
+        this.disableHorizontal = false;
+
+        /** @type {Boolean} */
+        this.disableVertical = false;
+
+        /** @type {Boolean} */
+        this.invertHorizontal = false;
+
+        /** @type {Boolean} */
+        this.invertVertical = true;
+
+        /// <summary>
+        /// Minimum vertical value
+        /// </summary>
+        /** @type {Number} */
+        this.minimumX = -85 * Math.PI / 180;
+
+        /// <summary>
+        /// Maximum vertical value
+        /// </summary>
+        /** @type {Number} */
+        this.maximumX = 85 * Math.PI / 180;
+
+        /** @type {Quaternion} */
+        this.target = new Quaternion(0, 0, 0, 1);
+
+        /** @type {PoseSerializable} */
+        this._networkPose = null;
+
+        /** @type {Quaternion} */
+        this.lastGyro = new Quaternion(0, 0, 0, 1);
+
+        this.edgeFactor = 1 / 3;
+        this.accelerationX = 2;
+        this.accelerationY = 2;
+        this.speedX = 4;
+        this.speedY = 3;
+
+        this.fovZoomEnabled = true;
+        this.minFOV = 25;
+        this.maxFOV = 100;
+
+        let lastT = performance.now();
+        let lastEvt = null;
+        const update = (evt) => {
+
+            const t = performance.now();
+            const dt = (t - lastT) / 1000;
+            lastT = t;
+            lastEvt = evt;
+
+            if (evt.pointerType === "mouse"
+                && this.controlMode !== Mode.MouseScreenEdge) {
+                if (this.controls.isPointerLocked) {
+                    this.controlMode = Mode.MouseLocked;
+                }
+                else {
+                    this.controlMode = Mode.MouseUnlocked;
+                }
+            }
+            else if (evt.pointerType === "touch") {
+                this.controlMode = Mode.Touch;
+            }
+            else if (evt.pointerType === "gamepad") {
+                this.controlMode = Mode.Gamepad;
+            }
+
+            if (this.controlMode != this.lastMode) {
+                this.dispatchEvent(new ModeChangeEvent(this.controlMode, this.lastMode));
+                this.lastMode = this.controlMode;
+            }
+
+            if (this.controlMode != Mode.None) {
+                this.checkMode(
+                    this.controlMode,
+                    this.controlMode === Mode.MagicWindow || this.disableVertical,
+                    evt,
+                    dt);
+            }
+
+            if (this.fovZoomEnabled
+                && Math.abs(evt.dz) > 0) {
+                const fov = clamp(this.camera.fov - evt.dz, this.minFOV, this.maxFOV);
+                if (fov !== this.camera.fov) {
+                    this.camera.fov = fov;
+                    this.camera.updateProjectionMatrix();
+                }
+            }
+        };
+
+        const timer = new RequestAnimationFrameTimer();
+        timer.addEventListener("tick", () => {
+            if (lastEvt
+                && (this.controlMode === Mode.MouseScreenEdge
+                    || this.controlMode === Mode.Gamepad)) {
+                update(lastEvt);
+            }
+            else {
+                lastT = performance.now();
+            }
+        });
+        timer.start();
+
+        this.controls.addEventListener("click", (evt) => {
+            if (this.allowPointerLock
+                && this.controlMode == Mode.MouseUnlocked
+                && evt.pointerType === "mouse"
+                && !this.controls.isPointerLocked) {
+                this.controls.lockPointer();
+            }
+
+            update(evt);
+        });
+
+        this.controls.addEventListener("move", update);
+    }
+
+    get networkPose() {
+        return this._networkPose;
+    }
+
+    set networkPose(value) {
+        this._networkPose = value;
+        if (this._networkPose) {
+            this.target = this._networkPose.Orientation;
+        }
+    }
+
+    /**
+     * @param {Mode} mode
+     * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
+     */
+    pointerMovement(mode, evt) {
+        switch (mode) {
+            case Mode.MouseLocked:
+            case Mode.MouseUnlocked:
+            case Mode.Gamepad:
+            case Mode.Touch:
+                return this.getAxialMovement(evt);
+
+            case Mode.MouseScreenEdge:
+                return this.getRadiusMovement(evt);
+
+            default:
+                return new Vector3(0, 0, 0);
+        }
+    }
+
+    /**
+     * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
+     */
+    getAxialMovement(evt) {
+        const viewport = new Vector2(
+            MOUSE_SENSITIVITY_SCALE * evt.du,
+            MOUSE_SENSITIVITY_SCALE * evt.dv);
+
+        return viewport;
+    }
+
+    /**
+     * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
+     */
+    getRadiusMovement(evt) {
+        const viewport = new Vector2(evt.u, evt.v);
+        const absX = Math.abs(viewport.x);
+        const absY = Math.abs(viewport.y);
+
+        viewport.x = Math.sign(viewport.x) * Math.pow(Math.max(0, absX - this.edgeFactor) / (1 - this.edgeFactor), this.accelerationX) * this.speedX;
+        viewport.y = Math.sign(viewport.y) * Math.pow(Math.max(0, absY - this.edgeFactor) / (1 - this.edgeFactor), this.accelerationY) * this.speedY;
+
+        return viewport;
+    }
+
+    get meanTouchPointMovement() {
+        const delta = new Vector2(0, 0);
+        let count = 0;
+        for (const pointer of this.controls.pointers.values()) {
+            if (pointer.type === "touch") {
+                delta.x += pointer.x;
+                delta.y += pointer.y;
+                ++count;
+            }
+        }
+
+        delta.set(
+            TOUCH_SENSITIVITY_SCALE * delta.y / count,
+            -TOUCH_SENSITIVITY_SCALE * delta.x / count);
+        return delta;
+    }
+
+    /**
+     * @param {Mode} mode
+     * @param {Boolean} disableVertical
+     * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
+     * @param {Number} dt
+     */
+    orientationDelta(mode, disableVertical, evt, dt) {
+        if (mode == Mode.MagicWindow
+            || mode == Mode.NetworkView) {
+            const endQuat = this.absoluteOrientation;
+            const dRot = this.lastGyro.inverse().multiply(endQuat);
+            this.lastGyro = endQuat;
+            return dRot;
+        }
+        else {
+            var move = this.pointerMovement(mode, evt);
+
+            if (disableVertical) {
+                move.x = 0;
+            }
+            else if (this.invertVertical) {
+                move.x *= -1;
+            }
+
+            if (this.disableHorizontal) {
+                move.y = 0;
+            }
+            else if (this.invertHorizontal) {
+                move.y *= -1;
+            }
+
+            move.multiplyScalar(dt);
+            deltaEuler.set(move.y, move.x, 0, "YXZ");
+            deltaQuat.setFromEuler(deltaEuler);
+
+            return deltaQuat;
+        }
+    }
+
+    get absoluteOrientation() {
+        if (this.controlMode == Mode.MagicWindow) {
+            return NEUTRAL_POSITION_RESET_QUAT
+                .multiply(UnityInput.gyro.attitude)
+                .multiply(FLIP_IMAGE_QUAT);
+        }
+        else if (this.controlMode == Mode.NetworkView) {
+            return new Quaternion().fromArray(this.networkPose.Orientation);
+        }
+        else {
+            return new Quaternion(0, 0, 0, 1);
+        }
+    }
+
+    /**
+     * @param {Mode} mode
+     * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
+     */
+    gestureSatisfied(mode, evt) {
+        if (mode == Mode.Touch) {
+            return this.controls.getPointerCount("touch") === this.requiredTouchCount;
+        }
+        else if (mode == Mode.NetworkView) {
+            return this.networkPose !== null;
+        }
+        else if (this.requiredMouseButton.has(mode)) {
+            return evt.buttons === this.requiredMouseButton.get(mode);
+        }
+        else {
+            return mode == Mode.Gamepad
+                || mode == Mode.MagicWindow
+                || mode == Mode.WebXR;
+        }
+    }
+
+    /**
+     * @param {Mode} mode
+     */
+    dragRequired(mode) {
+        return mode == Mode.Touch
+            || !this.requiredMouseButton.has(mode)
+            || this.requiredMouseButton.get(mode) != MouseButtons.None;
+    }
+
+    /**
+     * @param {Mode} mode
+     */
+    dragSatisfied(mode, evt) {
+        return !this.dragRequired(mode)
+            || evt.dragDistance > this.dragThreshold;
+    }
+
+    /**
+     * @param {Mode} mode
+     * @param {Boolean} disableVertical
+     * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
+     * @param {Number} dt
+     */
+    checkMode(mode, disableVertical, evt, dt) {
+        if (this.gestureSatisfied(mode, evt)
+            && this.dragSatisfied(mode, evt)) {
+            const dQuat = this.orientationDelta(mode, disableVertical, evt, dt);
+            this.stage.rotateView(
+                dQuat,
+                this.minimumX,
+                this.maximumX);
+        }
+    }
+}
+
+CameraControl.Mode = Mode;
+
+class EventSystemEvent extends Event {
+    /**
+     * @param {String} type
+     * @param {import("three").Object3D} obj
+     */
+    constructor(type, obj) {
+        super(type);
+        this.object = obj;
+    }
+}
+
+class EventSystem extends EventBase {
+    /**
+     * @param {import("three").PerspectiveCamera} camera
+     * @param {import("three").Object3D} inputLayer
+     * @param {import("./ScreenPointerControls").ScreenPointerControls} screenPointers
+     */
+    constructor(camera, inputLayer, screenPointers) {
+        super();
+
+        const raycaster = new Raycaster();
+        /** @type {import("three").Intersection[]} */
+        const hits = [];
+        const raycast = (evt) => {
+            let pointer = null;
+
+            if (screenPointers.isPointerLocked
+                && evt.pointerType === "mouse") {
+                pointer = { x: 0, y: 0 };
+            }
+            else {
+                pointer = { x: evt.u, y: evt.v };
+            }
+
+            raycaster.setFromCamera(pointer, camera);
+
+            arrayClear(hits);
+            raycaster.intersectObject(inputLayer, true, hits);
+
+            let curObj = null;
+            for (let hit of hits) {
+                if (hit.object
+                    && hit.object._listeners
+                    && hit.object._listeners.click
+                    && hit.object._listeners.click.length) {
+                    curObj = hit.object;
+                }
+            }
+
+            return curObj;
+        };
+
+        /** @type {Map<Number, import("three").Object3D>} */
+        const hovers = new Map();
+        screenPointers.addEventListener("move", (evt) => {
+            const lastObj = hovers.get(evt.pointerID);
+            const curObj = raycast(evt);
+            if (curObj != lastObj) {
+                if (lastObj) {
+                    hovers.delete(evt.pointerID);
+                    lastObj.dispatchEvent({ type: "exit" });
+                    this.dispatchEvent(new EventSystemEvent("exit", lastObj));
+                }
+
+                if (curObj) {
+                    hovers.set(evt.pointerID, curObj);
+                    curObj.dispatchEvent({ type: "enter" });
+                    this.dispatchEvent(new EventSystemEvent("enter", curObj));
+                }
+            }
+        });
+
+        screenPointers.addEventListener("click", (evt) => {
+            const curObj = raycast(evt);
+            if (curObj) {
+                curObj.dispatchEvent({ type: "click" });
+            }
+        });
+    }
+}
+
 const isFirefox = typeof InstallTrigger !== "undefined";
 
 class ScreenPointerEvent extends Event {
@@ -63876,6 +64403,7 @@ class ScreenPointerEvent extends Event {
         super(type);
 
         this.pointerType = null;
+        this.pointerID = null;
         this.x = 0;
         this.y = 0;
         this.dx = 0;
@@ -63952,6 +64480,7 @@ class ScreenPointerControls extends EventBase {
         function setHorizontal(evt, pointer) {
 
             evt.pointerType = pointer.type;
+            evt.pointerID = pointer.id;
 
             evt.buttons = pointer.buttons;
 
@@ -64149,7 +64678,7 @@ const defaultAvatarHeight = 1.75,
 
 class Stage extends Object3D {
     /**
-     * @param {PerspectiveCamera} camera
+     * @param {import("three").PerspectiveCamera} camera
      */
     constructor(camera) {
         super();
@@ -64193,19 +64722,17 @@ class Stage extends Object3D {
      * @param {Number} minX
      * @param {Number} maxX
      */
-    rotateView(dQuat, minX = -Math.PI, maxX = Math.PI, minFOV = 25, maxFOV = 100) {
+    rotateView(dQuat, minX = -Math.PI, maxX = Math.PI) {
         const x = this.pivot.rotation.x;
         const y = this.avatar.rotation.y;
-        const z = this.camera.fov / 100;
 
         viewEuler.setFromQuaternion(dQuat, "YXZ");
         viewEuler.x += x;
         viewEuler.y += y;
-        viewEuler.z += z;
 
         viewQuat.setFromEuler(viewEuler);
 
-        this.setViewRotation(viewQuat, minX, maxX, minFOV, maxFOV);
+        this.setViewRotation(viewQuat, minX, maxX);
     }
 
     /**
@@ -64213,25 +64740,18 @@ class Stage extends Object3D {
      * @param {Number} minX
      * @param {Number} maxX
      */
-    setViewRotation(quat, minX = -Math.PI, maxX = Math.PI, minFOV = 25, maxFOV = 100) {
+    setViewRotation(quat, minX = -Math.PI, maxX = Math.PI) {
         viewEuler.setFromQuaternion(quat, "YXZ");
 
-        let { x, y, z } = viewEuler;
+        let { x, y } = viewEuler;
 
         if (x > Math.PI) {
             x -= 2 * Math.PI;
         }
-        x = Math.max(minX, Math.min(maxX, x));
-
-        z = Math.max(minFOV, Math.min(maxFOV, z * 100));
+        x = clamp(x, minX, maxX);
 
         this.pivot.rotation.x = x;
         this.avatar.rotation.y = y;
-
-        if (z !== this.camera.fov) {
-            this.camera.fov = z;
-            this.camera.updateProjectionMatrix();
-        }
     }
 
     /**
@@ -64242,388 +64762,14 @@ class Stage extends Object3D {
     }
 }
 
-const NEUTRAL_POSITION_RESET_QUAT = new Quaternion().setFromEuler(new Euler(Math.PI / 2, 0, 0));
-const FLIP_IMAGE_QUAT = new Quaternion().setFromEuler(new Euler(0, 0, Math.PI));
-
-/// <summary>
-/// The mouse is not as sensitive as the motion controllers, so we have to bump up the
-/// sensitivity quite a bit.
-/// </summary>
-/** @type {number} */
-const MOUSE_SENSITIVITY_SCALE = 100;
-
-/// <summary>
-/// The mouse is not as sensitive as the motion controllers, so we have to bump up the
-/// sensitivity quite a bit.
-/// </summary>
-/** @type {Number} */
-const TOUCH_SENSITIVITY_SCALE = 0.5;
-
-const Mode = Object.freeze({
-    None: "none",
-    Auto: "auto",
-    MouseLocked: "mouselocked",
-    MouseScreenEdge: "mouseedge",
-    Touch: "touchswipe",
-    Gamepad: "gamepad",
-    MagicWindow: "magicwindow",
-    NetworkView: "net",
-    WebXR: "xr"
-});
-const deltaEuler = new Euler();
-const deltaQuat = new Quaternion();
-
-class ModeChangeEvent extends Event {
-    /**
-     * @param {Mode} newMode
-     * @param {Mode} oldMode
-     */
-    constructor(newMode, oldMode) {
-        super("modechanged");
-
-        this.newMode = newMode;
-        this.oldMode = oldMode;
-
-        Object.freeze(this);
-    }
-}
-
-class CameraControl extends EventBase {
-
-    /**
-     * @param {PerspectiveCamera} camera
-     * @param {Stage} stage
-     * @param {ScreenPointerControls} controls
-     */
-    constructor(camera, stage, controls) {
-        super();
-
-        this.camera = camera;
-        this.stage = stage;
-        this.controls = controls;
-
-        /** @type {Mode} */
-        this.controlMode = Mode.Auto;
-
-        /** @type {Mode} */
-        this.lastMode = Mode.None;
-
-        /** @type {MouseButtons} */
-        this.requiredMouseButton = MouseButtons.None;
-
-        /** @type {Boolean} */
-        this.showCustomCursor = false;
-
-        /** @type {Boolean} */
-        this.allowPointerLock = false;
-
-        /** @type {Number} */
-        this.requiredTouchCount = 1;
-
-        /** @type {Number} */
-        this.dragThreshold = 2;
-
-        /** @type {Boolean} */
-        this.disableHorizontal = false;
-
-        /** @type {Boolean} */
-        this.disableVertical = false;
-
-        /** @type {Boolean} */
-        this.invertHorizontal = false;
-
-        /** @type {Boolean} */
-        this.invertVertical = true;
-
-        /// <summary>
-        /// Minimum vertical value
-        /// </summary>
-        /** @type {Number} */
-        this.minimumX = -85 * Math.PI / 180;
-
-        /// <summary>
-        /// Maximum vertical value
-        /// </summary>
-        /** @type {Number} */
-        this.maximumX = 85 * Math.PI / 180;
-
-        /** @type {Quaternion} */
-        this.target = new Quaternion(0, 0, 0, 1);
-
-        /** @type {PoseSerializable} */
-        this._networkPose = null;
-
-        /** @type {Quaternion} */
-        this.lastGyro = new Quaternion(0, 0, 0, 1);
-
-        this.edgeFactor = 1 / 3;
-        this.accelerationX = 2;
-        this.accelerationY = 2;
-        this.speedX = 4;
-        this.speedY = 3;
-
-        let lastT = performance.now();
-        let lastEvt = null;
-        const update = (evt) => {
-
-            const t = performance.now();
-            const dt = (t - lastT) / 1000;
-            lastT = t;
-            lastEvt = evt;
-
-            if (evt.pointerType === "mouse") {
-                if (this.controls.isPointerLocked) {
-                    this.controlMode = Mode.MouseLocked;
-                }
-                else {
-                    this.controlMode = Mode.MouseScreenEdge;
-                }
-            }
-            else if (evt.pointerType === "touch") {
-                this.controlMode = Mode.Touch;
-            }
-            else if (evt.pointerType === "gamepad") {
-                this.controlMode = Mode.Gamepad;
-            }
-
-            if (this.controlMode != this.lastMode) {
-                this.dispatchEvent(new ModeChangeEvent(this.controlMode, this.lastMode));
-                this.lastMode = this.controlMode;
-            }
-
-            if (this.controlMode != Mode.None) {
-                this.checkMode(
-                    this.controlMode,
-                    this.controlMode === Mode.MagicWindow || this.disableVertical,
-                    evt,
-                    dt);
-            }
-        };
-
-        const timer = new RequestAnimationFrameTimer();
-        timer.addEventListener("tick", () => {
-            if (this.controlMode === Mode.MouseScreenEdge) {
-                update(lastEvt);
-            }
-            else {
-                lastT = performance.now();
-            }
-        });
-        timer.start();
-
-        this.controls.addEventListener("click", (evt) => {
-            if (this.controlMode == Mode.MouseScreenEdge
-                && evt.pointerType === "mouse"
-                && !this.controls.isPointerLocked
-                && this.allowPointerLock) {
-                this.controls.lockPointer();
-            }
-
-            update(evt);
-        });
-
-        this.controls.addEventListener("move", update);
-    }
-
-    get networkPose() {
-        return this._networkPose;
-    }
-
-    set networkPose(value) {
-        this._networkPose = value;
-        if (this._networkPose) {
-            this.target = this._networkPose.Orientation;
-        }
-    }
-
-    /**
-     * @param {Mode} mode
-     * @param {ScreenPointerEvent} evt
-     */
-    pointerMovement(mode, evt) {
-        switch (mode) {
-            case Mode.MouseLocked:
-            case Mode.Gamepad:
-            case Mode.Touch:
-                return this.getAxialMovement(evt);
-
-            case Mode.MouseScreenEdge:
-                return this.getRadiusMovement(evt);
-
-            default:
-                return new Vector3(0, 0, 0);
-        }
-    }
-
-    /**
-     * @param {ScreenPointerEvent} evt
-     */
-    getAxialMovement(evt) {
-        const viewport = new Vector3(
-            MOUSE_SENSITIVITY_SCALE * evt.du,
-            MOUSE_SENSITIVITY_SCALE * evt.dv,
-            evt.dz);
-
-        return viewport;
-    }
-
-    /**
-     * @param {ScreenPointerEvent} evt
-     */
-    getRadiusMovement(evt) {
-        const viewport = new Vector3(evt.u, evt.v, evt.dz);
-        const absX = Math.abs(viewport.x);
-        const absY = Math.abs(viewport.y);
-
-
-        viewport.x = Math.sign(viewport.x) * Math.pow(Math.max(0, absX - this.edgeFactor) / (1 - this.edgeFactor), this.accelerationX) * this.speedX;
-        viewport.y = Math.sign(viewport.y) * Math.pow(Math.max(0, absY - this.edgeFactor) / (1 - this.edgeFactor), this.accelerationY) * this.speedY;
-
-        return viewport;
-    }
-
-    get meanTouchPointMovement() {
-        const delta = new Vector2(0, 0);
-        let count = 0;
-        for (const pointer of this.controls.pointers.values()) {
-            if (pointer.type === "touch") {
-                delta.x += pointer.x;
-                delta.y += pointer.y;
-                ++count;
-            }
-        }
-
-        delta.set(
-            TOUCH_SENSITIVITY_SCALE * delta.y / count,
-            -TOUCH_SENSITIVITY_SCALE * delta.x / count);
-        return delta;
-    }
-
-    /**
-     * @param {Mode} mode
-     * @param {Boolean} disableVertical
-     * @param {ScreenPointerEvent} evt
-     * @param {Number} dt
-     */
-    orientationDelta(mode, disableVertical, evt, dt) {
-        if (mode == Mode.MagicWindow
-            || mode == Mode.NetworkView) {
-            const endQuat = this.absoluteOrientation;
-            const dRot = this.lastGyro.inverse().multiply(endQuat);
-            this.lastGyro = endQuat;
-            return dRot;
-        }
-        else {
-            var move = this.pointerMovement(mode, evt);
-
-            if (disableVertical) {
-                move.x = 0;
-            }
-            else if (this.invertVertical) {
-                move.x *= -1;
-            }
-
-            if (this.disableHorizontal) {
-                move.y = 0;
-            }
-            else if (this.invertHorizontal) {
-                move.y *= -1;
-            }
-
-            move.z *= 0.5;
-
-            move.multiplyScalar(dt);
-            deltaEuler.set(move.y, move.x, move.z, "YXZ");
-            deltaQuat.setFromEuler(deltaEuler);
-
-            return deltaQuat;
-        }
-    }
-
-    get absoluteOrientation() {
-        if (this.controlMode == Mode.MagicWindow) {
-            return NEUTRAL_POSITION_RESET_QUAT
-                .multiply(UnityInput.gyro.attitude)
-                .multiply(FLIP_IMAGE_QUAT);
-        }
-        else if (this.controlMode == Mode.NetworkView) {
-            return new Quaternion().fromArray(this.networkPose.Orientation);
-        }
-        else {
-            return new Quaternion(0, 0, 0, 1);
-        }
-    }
-
-    /**
-     * @param {Mode} mode
-     * @param {ScreenPointerEvent} evt
-     */
-    gestureSatisfied(mode, evt) {
-        if (mode == Mode.Touch) {
-            return this.controls.getPointerCount("touch") === this.requiredTouchCount;
-        }
-        else if (mode == Mode.NetworkView) {
-            return this.networkPose !== null;
-        }
-        else if (mode == Mode.MouseLocked
-            || mode == Mode.MouseScreenEdge) {
-            const pressed = this.requiredMouseButton == MouseButtons.None || evt.buttons === this.requiredMouseButton;
-            const down = this.requiredMouseButton != MouseButtons.None && evt.buttons === this.requiredMouseButton;
-            return pressed && !down && (mode != Mode.MouseLocked || this.controls.isPointerLocked);
-        }
-        else {
-            return mode == Mode.Gamepad
-                || mode == Mode.MagicWindow
-                || mode == Mode.WebXR;
-        }
-    }
-
-    /**
-     * @param {Mode} mode
-     */
-    dragRequired(mode) {
-        return mode != Mode.NetworkView
-            && (mode == Mode.Touch
-                || (mode == Mode.MouseLocked
-                    && this.requiredMouseButton != MouseButtons.None));
-    }
-
-    /**
-     * @param {Mode} mode
-     */
-    dragSatisfied(mode, evt) {
-        return !this.dragRequired(mode)
-            || evt.dragDistance > this.dragThreshold;
-    }
-
-    /**
-     * @param {Mode} mode
-     * @param {Boolean} disableVertical
-     * @param {ScreenPointerEvent} evt
-     * @param {Number} dt
-     */
-    checkMode(mode, disableVertical, evt, dt) {
-        if (this.gestureSatisfied(mode, evt)
-            && this.dragSatisfied(mode, evt)) {
-            const dQuat = this.orientationDelta(mode, disableVertical, evt, dt);
-            this.stage.rotateView(
-                dQuat,
-                this.minimumX,
-                this.maximumX);
-        }
-    }
-}
-
-CameraControl.Mode = Mode;
-
 const completeEvt = { type: "fadeComplete" };
 
 class Fader extends Mesh {
     /**
      * 
-     * @param {PerspectiveCamera} camera
+     * @param {import("three").PerspectiveCamera} camera
      * @param {number} t
-     * @param {Color|number} color
+     * @param {import("three").Color|number} color
      */
     constructor(camera, t = 0.25, color = 0x000000) {
         const geom = new PlaneBufferGeometry(1, 1, 1, 1);
@@ -64680,7 +64826,7 @@ class Fader extends Mesh {
 
 class AbstractCubeMapView extends TexturedMesh {
     /**
-     * @param {BoxBufferGeometry|SphereBufferGeometry} geom
+     * @param {import("three").BoxBufferGeometry|import("three").SphereBufferGeometry} geom
      */
     constructor(geom) {
         const mat = new MeshBasicMaterial({ side: BackSide });
@@ -64692,7 +64838,7 @@ class AbstractCubeMapView extends TexturedMesh {
  * Recalculates the UV coordinates for a BufferGeometry
  * object to be able to map to a Cubemap that is packed as
  * a cross-configuration in a single image.
- * @param {BufferGeometry} geom
+ * @param {import("three").BufferGeometry} geom
  */
 function setGeometryUVsForCubemaps(geom) {
     const positions = geom.attributes.position;
@@ -64819,7 +64965,7 @@ function setGeometryUVsForCubemaps(geom) {
 
 class Skybox extends AbstractCubeMapView {
     /**
-     * @param {PerspectiveCamera} camera
+     * @param {import("three").PerspectiveCamera} camera
      */
     constructor(camera) {
         const dim = Math.sqrt(camera.far * camera.far / 3);
@@ -64890,77 +65036,20 @@ class ThreeJSApplication extends EventBase {
 
         this.controls = new ScreenPointerControls(this.renderer.domElement);
 
-        this.raycaster = new Raycaster();
-        let hoveredObj = null;
-        const scales = new Map();
-        const hits = [];
-        const raycast = (evt) => {
-            let pointer = null;
-
-            if (this.controls.isPointerLocked) {
-                pointer = { x: 0, y: 0 };
-            }
-            else {
-                pointer = { x: evt.u, y: evt.v };
-            }
-
-            this.raycaster.setFromCamera(pointer, this.camera);
-
-            arrayClear(hits);
-            this.raycaster.intersectObject(this.foreground, true, hits);
-
-            let curObj = null;
-            for (let hit of hits) {
-                if (hit.object
-                    && hit.object._listeners
-                    && hit.object._listeners.click
-                    && hit.object._listeners.click.length) {
-                    curObj = hit.object;
-                }
-            }
-
-            if (curObj !== hoveredObj) {
-
-                if (hoveredObj && scales.has(hoveredObj)) {
-                    hoveredObj.scale.fromArray(scales.get(hoveredObj));
-                }
-
-                if (curObj) {
-                    if (!scales.has(curObj)) {
-                        scales.set(curObj, curObj.scale.toArray());
-                    }
-                    curObj.scale.multiplyScalar(1.1);
-                }
-
-                hoveredObj = curObj;
-            }
-
-            return curObj;
-        };
-
-        this.controls.addEventListener("move", (evt) => {
-            const lastObj = hoveredObj;
-            const curObj = raycast(evt);
-            if (curObj != lastObj) {
-                if (lastObj) {
-                    lastObj.dispatchEvent({ type: "exit" });
-                }
-
-                if (curObj) {
-                    curObj.dispatchEvent({ type: "enter" });
-                }
-            }
-        });
-
-        this.controls.addEventListener("click", (evt) => {
-            const curObj = raycast(evt);
-            if (curObj) {
-                curObj.dispatchEvent({ type: "click" });
-            }
-        });
-
         this.cameraControl = new CameraControl(this.camera, this.stage, this.controls);
-        this.cameraControl.controlMode = CameraControl.Mode.MouseLocked;
+
+        const scales = new Map();
+        this.eventSystem = new EventSystem(this.camera, this.foreground, this.controls);
+        this.eventSystem.addEventListener("enter", (evt) => {
+            if (!scales.has(evt.object)) {
+                scales.set(evt.object, evt.object.scale.clone());
+            }
+            evt.object.scale.multiplyScalar(1.1);
+        });
+
+        this.eventSystem.addEventListener("exit", (evt) => {
+            evt.object.scale.copy(scales.get(evt.object));
+        });
 
         const update = (evt) => {
             this.skybox.update();
