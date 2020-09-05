@@ -97,22 +97,21 @@ namespace Calla.Controllers
                 return NotFound();
             }
 
-            var activities = db.Activities
+            return Json(db.Activities
+               .AsNoTracking()
                .Include(act => act.StartStation)
                .Select(act => new Activity
                {
                    ID = act.Id,
                    Name = act.Name,
                    StartStationFileID = act.StartStation.FileId
-               });
-
-            return Json(activities);
+               }));
         }
 
         [HttpGet("VR/Activity/{id}/Scene")]
-        public IActionResult Scene(int id)
-        {
-            var transforms = db.Transforms
+        public IActionResult Scene(int id) =>
+            Json(db.Transforms
+                .AsNoTracking()
                 .Where(t => t.ActivityId == id)
                 .Select(t => new Transform
                 {
@@ -120,14 +119,12 @@ namespace Calla.Controllers
                     ParentID = t.ParentTransformId ?? 0,
                     Name = t.Name,
                     Matrix = t.Matrix
-                });
-            return Json(transforms);
-        }
+                }));
 
         [HttpGet("VR/Activity/{id}/Stations")]
-        public IActionResult ActivityStations(int id)
-        {
-            var stations = db.Stations
+        public IActionResult ActivityStations(int id) =>
+            Json(db.Stations
+                .AsNoTracking()
                 .Include(st => st.Transform)
                     .ThenInclude(t => t.Activity)
                 .Where(st => st.Transform.ActivityId == id)
@@ -139,14 +136,12 @@ namespace Calla.Controllers
                     FileID = st.FileId,
                     IsStart = st.TransformId == st.Transform.Activity.StartStationId,
                     Zone = st.Zone
-                });
-            return Json(stations);
-        }
+                }));
 
         [HttpGet("VR/Activity/{id}/Map")]
-        public IActionResult ActivityStationConnections(int id)
-        {
-            var edges = db.StationConnections
+        public IActionResult ActivityStationConnections(int id) =>
+            Json(db.StationConnections
+                .AsNoTracking()
                 .Include(stc => stc.FromStation)
                     .ThenInclude(st => st.Transform)
                 .Where(stc => stc.FromStation.Transform.ActivityId == id)
@@ -154,14 +149,12 @@ namespace Calla.Controllers
                 {
                     FromStationID = stc.FromStationId,
                     ToStationID = stc.ToStationId
-                });
-            return Json(edges);
-        }
+                }));
 
         [HttpGet("VR/Activity/{id}/Audio")]
-        public IActionResult ActivityAudio(int id)
-        {
-            var audio = db.AudioTracks
+        public IActionResult ActivityAudio(int id) =>
+            Json(db.AudioTracks
+                .AsNoTracking()
                 .Include(at => at.Transform)
                 .Include(at => at.PlaybackControls)
                 .Where(at => at.Transform.ActivityId == id)
@@ -177,14 +170,12 @@ namespace Calla.Controllers
                     TransformID = at.TransformId,
                     Volume = at.Volume,
                     Zone = at.Zone
-                });
-            return Json(audio);
-        }
+                }));
 
         [HttpGet("VR/Activity/{id}/Signs")]
-        public IActionResult ActivitySigns(int id)
-        {
-            var signs = db.Signs
+        public IActionResult ActivitySigns(int id) =>
+            Json(db.Signs
+                .AsNoTracking()
                 .Include(s => s.Transform)
                 .Where(s => s.Transform.ActivityId == id)
                 .Select(s => new Sign
@@ -192,8 +183,6 @@ namespace Calla.Controllers
                     ImageFileID = s.FileId,
                     IsCallout = s.IsCallout,
                     TransformID = s.TransformId
-                });
-            return Json(signs);
-        }
+                }));
     }
 }
