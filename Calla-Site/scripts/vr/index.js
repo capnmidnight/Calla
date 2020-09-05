@@ -1,6 +1,6 @@
 import { Object3D } from "three";
 import { DebugObject } from "./DebugObject";
-import { getObject } from "./getObject";
+import { getObject } from "./fetching";
 import { Image2DMesh } from "./Image2DMesh";
 import { TextMesh } from "./TextMesh";
 import { ThreeJSApplication } from "./ThreeJSApplication";
