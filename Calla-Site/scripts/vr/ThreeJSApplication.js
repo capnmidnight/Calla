@@ -1,4 +1,4 @@
-﻿import { AmbientLight, Color, Object3D, PerspectiveCamera, Raycaster, Scene, WebGLRenderer } from "three";
+import { AmbientLight, Color, Object3D, PerspectiveCamera, Raycaster, Scene, WebGLRenderer } from "three";
 import { arrayClear, EventBase } from "../calla";
 import { CameraControl } from "../input/CameraControl";
 import { ScreenPointerControls } from "../input/ScreenPointerControls";
@@ -62,8 +62,10 @@ export class ThreeJSApplication extends EventBase {
         this.controls = new ScreenPointerControls(this.renderer.domElement);
 
         this.raycaster = new Raycaster();
-        let lastObj = null;
-        this.controls.addEventListener("move", (evt) => {
+        let hoveredObj = null;
+        const scales = new Map();
+        const hits = [];
+        const raycast = (evt) => {
             let pointer = null;
 
             if (this.controls.isPointerLocked) {
@@ -74,21 +76,6 @@ export class ThreeJSApplication extends EventBase {
             }
 
             this.raycaster.setFromCamera(pointer, this.camera);
-        });
-
-        this.controls.addEventListener("click", () => {
-            if (lastObj) {
-                lastObj.dispatchEvent({ type: "click" });
-            }
-        });
-
-        this.cameraControl = new CameraControl(this.camera, this.stage, this.controls);
-        this.cameraControl.controlMode = CameraControl.Mode.MouseLocked;
-
-        const scales = new Map();
-        const hits = [];
-        const update = (evt) => {
-            this.skybox.update();
 
             arrayClear(hits);
             this.raycaster.intersectObject(this.foreground, true, hits);
@@ -103,10 +90,10 @@ export class ThreeJSApplication extends EventBase {
                 }
             }
 
-            if (curObj !== lastObj) {
+            if (curObj !== hoveredObj) {
 
-                if (lastObj && scales.has(lastObj)) {
-                    lastObj.scale.fromArray(scales.get(lastObj));
+                if (hoveredObj && scales.has(hoveredObj)) {
+                    hoveredObj.scale.fromArray(scales.get(hoveredObj));
                 }
 
                 if (curObj) {
@@ -116,9 +103,38 @@ export class ThreeJSApplication extends EventBase {
                     curObj.scale.multiplyScalar(1.1);
                 }
 
-                lastObj = curObj;
+                hoveredObj = curObj;
             }
 
+            return curObj;
+        };
+
+        this.controls.addEventListener("move", (evt) => {
+            const lastObj = hoveredObj;
+            const curObj = raycast(evt);
+            if (curObj != lastObj) {
+                if (lastObj) {
+                    lastObj.dispatchEvent({ type: "exit" });
+                }
+
+                if (curObj) {
+                    curObj.dispatchEvent({ type: "enter" });
+                }
+            }
+        });
+
+        this.controls.addEventListener("click", (evt) => {
+            const curObj = raycast(evt);
+            if (curObj) {
+                curObj.dispatchEvent({ type: "click" });
+            }
+        });
+
+        this.cameraControl = new CameraControl(this.camera, this.stage, this.controls);
+        this.cameraControl.controlMode = CameraControl.Mode.MouseLocked;
+
+        const update = (evt) => {
+            this.skybox.update();
             this.fader.update(evt.sdt);
             this.renderer.render(this.scene, this.camera);
         };
