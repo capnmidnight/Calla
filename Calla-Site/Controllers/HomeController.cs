@@ -4,7 +4,6 @@ using Calla.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 using System.Diagnostics;
 
@@ -12,25 +11,16 @@ namespace Calla.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> logger;
         private readonly IWebHostEnvironment env;
 
-        public HomeController(ILogger<HomeController> logger, IWebHostEnvironment env)
+        public HomeController(IWebHostEnvironment env)
         {
-            this.logger = logger;
             this.env = env;
         }
 
         [Route("/")]
         [ServiceFilter(typeof(LogHitsAttribute))]
         public IActionResult Index()
-        {
-            return View();
-        }
-
-        [Route("/Basic")]
-        [ServiceFilter(typeof(LogHitsAttribute))]
-        public IActionResult Basic()
         {
             return View();
         }
