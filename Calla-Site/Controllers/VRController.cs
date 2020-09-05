@@ -2,10 +2,8 @@ using Juniper;
 using Juniper.HTTP.Server;
 using Juniper.World.GIS;
 
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 using System;
 using System.Linq;
