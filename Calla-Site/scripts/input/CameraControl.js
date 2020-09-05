@@ -25,6 +25,7 @@ const Mode = Object.freeze({
     None: "none",
     Auto: "auto",
     MouseLocked: "mouselocked",
+    MouseUnlocked: "mouseunlocked",
     MouseScreenEdge: "mouseedge",
     Touch: "touchswipe",
     Gamepad: "gamepad",
@@ -71,11 +72,12 @@ export class CameraControl extends EventBase {
         /** @type {Mode} */
         this.lastMode = Mode.None;
 
-        /** @type {MouseButtons} */
-        this.requiredMouseButton = MouseButtons.None;
-
-        /** @type {Boolean} */
-        this.showCustomCursor = false;
+        /** @type {Map<Mode, MouseButtons>} */
+        this.requiredMouseButton = new Map([
+            [Mode.MouseLocked, MouseButtons.None],
+            [Mode.MouseUnlocked, MouseButtons.Mouse0],
+            [Mode.MouseScreenEdge, MouseButtons.None]
+        ]);
 
         /** @type {Boolean} */
         this.allowPointerLock = false;
@@ -134,12 +136,13 @@ export class CameraControl extends EventBase {
             lastT = t;
             lastEvt = evt;
 
-            if (evt.pointerType === "mouse") {
+            if (evt.pointerType === "mouse"
+                && this.controlMode !== Mode.MouseScreenEdge) {
                 if (this.controls.isPointerLocked) {
                     this.controlMode = Mode.MouseLocked;
                 }
                 else {
-                    this.controlMode = Mode.MouseScreenEdge;
+                    this.controlMode = Mode.MouseUnlocked;
                 }
             }
             else if (evt.pointerType === "touch") {
@@ -165,7 +168,9 @@ export class CameraControl extends EventBase {
 
         const timer = new RequestAnimationFrameTimer();
         timer.addEventListener("tick", () => {
-            if (this.controlMode === Mode.MouseScreenEdge) {
+            if (lastEvt
+                && (this.controlMode === Mode.MouseScreenEdge
+                    || this.controlMode === Mode.Gamepad)) {
                 update(lastEvt);
             }
             else {
@@ -175,10 +180,10 @@ export class CameraControl extends EventBase {
         timer.start();
 
         this.controls.addEventListener("click", (evt) => {
-            if (this.controlMode == Mode.MouseScreenEdge
+            if (this.allowPointerLock
+                && this.controlMode == Mode.MouseUnlocked
                 && evt.pointerType === "mouse"
-                && !this.controls.isPointerLocked
-                && this.allowPointerLock) {
+                && !this.controls.isPointerLocked) {
                 this.controls.lockPointer();
             }
 
@@ -206,6 +211,7 @@ export class CameraControl extends EventBase {
     pointerMovement(mode, evt) {
         switch (mode) {
             case Mode.MouseLocked:
+            case Mode.MouseUnlocked:
             case Mode.Gamepad:
             case Mode.Touch:
                 return this.getAxialMovement(evt);
@@ -237,7 +243,6 @@ export class CameraControl extends EventBase {
         const viewport = new Vector3(evt.u, evt.v, evt.dz);
         const absX = Math.abs(viewport.x);
         const absY = Math.abs(viewport.y);
-
 
         viewport.x = Math.sign(viewport.x) * Math.pow(Math.max(0, absX - this.edgeFactor) / (1 - this.edgeFactor), this.accelerationX) * this.speedX;
         viewport.y = Math.sign(viewport.y) * Math.pow(Math.max(0, absY - this.edgeFactor) / (1 - this.edgeFactor), this.accelerationY) * this.speedY;
@@ -293,7 +298,7 @@ export class CameraControl extends EventBase {
                 move.y *= -1;
             }
 
-            move.z *= 0.5;
+            move.z *= 0.125;
 
             move.multiplyScalar(dt);
             deltaEuler.set(move.y, move.x, move.z, "YXZ");
@@ -328,11 +333,8 @@ export class CameraControl extends EventBase {
         else if (mode == Mode.NetworkView) {
             return this.networkPose !== null;
         }
-        else if (mode == Mode.MouseLocked
-            || mode == Mode.MouseScreenEdge) {
-            const pressed = this.requiredMouseButton == MouseButtons.None || evt.buttons === this.requiredMouseButton;
-            const down = this.requiredMouseButton != MouseButtons.None && evt.buttons === this.requiredMouseButton;
-            return pressed && !down && (mode != Mode.MouseLocked || this.controls.isPointerLocked);
+        else if (this.requiredMouseButton.has(mode)) {
+            return evt.buttons === this.requiredMouseButton.get(mode);
         }
         else {
             return mode == Mode.Gamepad
@@ -345,10 +347,9 @@ export class CameraControl extends EventBase {
      * @param {Mode} mode
      */
     dragRequired(mode) {
-        return mode != Mode.NetworkView
-            && (mode == Mode.Touch
-                || (mode == Mode.MouseLocked
-                    && this.requiredMouseButton != MouseButtons.None));
+        return mode == Mode.Touch
+            || !this.requiredMouseButton.has(mode)
+            || this.requiredMouseButton.get(mode) != MouseButtons.None;
     }
 
     /**
