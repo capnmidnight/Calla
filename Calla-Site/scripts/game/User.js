@@ -1,6 +1,5 @@
-import { EventBase, InterpolatedPose, isString, project } from "../calla";
+import { EventBase, isString, project } from "../calla";
 import { AvatarMode } from "./avatars/AvatarMode";
-import { BaseAvatar } from "./avatars/BaseAvatar";
 import { EmojiAvatar } from "./avatars/EmojiAvatar";
 import { PhotoAvatar } from "./avatars/PhotoAvatar";
 import { VideoAvatar } from "./avatars/VideoAvatar";
@@ -23,7 +22,7 @@ export class User extends EventBase {
      * 
      * @param {string} id
      * @param {string} displayName
-     * @param {InterpolatedPose} pose
+     * @param {import("../calla").InterpolatedPose} pose
      * @param {boolean} isMe
      */
     constructor(id, displayName, pose, isMe) {
@@ -97,7 +96,7 @@ export class User extends EventBase {
 
     /**
      * An avatar using a live video.
-     * @type {PhotoAvatar}
+     * @type {VideoAvatar}
      **/
     get avatarVideo() {
         return this._avatarVideo;
@@ -150,7 +149,7 @@ export class User extends EventBase {
 
     /**
      * Set the emoji to use as an avatar.
-     * @param {Emoji} emoji
+     * @param {import("./emoji/Emoji").Emoji} emoji
      */
     set avatarEmoji(emoji) {
         if (emoji
@@ -200,7 +199,7 @@ export class User extends EventBase {
 
     /**
      * Returns the current avatar
-     * @returns {BaseAvatar}
+     * @returns {import("./avatars/BaseAvatar").BaseAvatar}
      **/
     get avatar() {
         switch (this.avatarMode) {

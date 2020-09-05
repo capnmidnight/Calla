@@ -1,4 +1,4 @@
-import { Euler, Object3D, PerspectiveCamera, Quaternion } from "three";
+import { Euler, Object3D, Quaternion } from "three";
 import { clamp } from "../calla";
 
 /**
@@ -12,7 +12,7 @@ const defaultAvatarHeight = 1.75,
 
 export class Stage extends Object3D {
     /**
-     * @param {PerspectiveCamera} camera
+     * @param {import("three").PerspectiveCamera} camera
      */
     constructor(camera) {
         super();

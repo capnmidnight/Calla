@@ -4,6 +4,11 @@ import { height, src, width } from "../html/attrs";
 import { Canvas, Img } from "../html/tags";
 
 export class TexturedMesh extends Mesh {
+    /**
+     * 
+     * @param {import("three").BufferGeometry} geom
+     * @param {import("three").Material} mat
+     */
     constructor(geom, mat) {
         super(geom, mat);
         this.isVideo = false;

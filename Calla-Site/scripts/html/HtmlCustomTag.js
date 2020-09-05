@@ -8,7 +8,7 @@ export class HtmlCustomTag extends EventBase {
     /**
      * Creates a new pseudo-element
      * @param {string} tagName - the type of tag that will contain the elements in the custom tag.
-     * @param {...TagChild} rest - optional attributes, child elements, and text
+     * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
      */
     constructor(tagName, ...rest) {
         super();

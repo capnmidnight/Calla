@@ -1,10 +1,10 @@
-import { BoxBufferGeometry, PerspectiveCamera } from "three";
+import { BoxBufferGeometry } from "three";
 import { AbstractCubeMapView } from "./AbstractCubeMapView";
 import { setGeometryUVsForCubemaps } from "./setGeometryUVsForCubemaps";
 
 export class Skybox extends AbstractCubeMapView {
     /**
-     * @param {PerspectiveCamera} camera
+     * @param {import("three").PerspectiveCamera} camera
      */
     constructor(camera) {
         const dim = Math.sqrt(camera.far * camera.far / 3);

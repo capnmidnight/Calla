@@ -8,7 +8,7 @@ import { Input, Label } from "./tags";
  * @param {string} id - the ID to use for the input box
  * @param {string} inputType - the type to use for the input box (number, text, etc.)
  * @param {string} labelText - the text to display in the label
- * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text to use on the select element
  * @returns {LabeledInputTag}
  */
 export function LabeledInput(id, inputType, labelText, ...rest) {
@@ -24,8 +24,7 @@ export class LabeledInputTag extends HtmlCustomTag {
      * @param {string} id - the ID to use for the input box
      * @param {string} inputType - the type to use for the input box (number, text, etc.)
      * @param {string} labelText - the text to display in the label
-     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
-     * @returns {LabeledInputTag}
+     * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text to use on the select element
      */
     constructor(id, inputType, labelText, ...rest) {
         super("div");

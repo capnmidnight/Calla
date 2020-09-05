@@ -3,7 +3,7 @@ import { TexturedMesh } from "./TexturedMesh";
 
 export class AbstractCubeMapView extends TexturedMesh {
     /**
-     * @param {BoxBufferGeometry|SphereBufferGeometry} geom
+     * @param {import("three").BoxBufferGeometry|import("three").SphereBufferGeometry} geom
      */
     constructor(geom) {
         const mat = new MeshBasicMaterial({ side: BackSide });

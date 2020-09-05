@@ -10,7 +10,7 @@ const selectEvt = new Event("select");
  * Creates an OptionPanelTag element
  * @param {string} id - the ID to use for the content element of the option panel
  * @param {string} name - the text to use in the button that triggers displaying the content element
- * @param {...TagChild} rest - optional attributes, child elements, and text to use on the content element
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text to use on the content element
  */
 export function OptionPanel(id, name, ...rest) {
     return new OptionPanelTag(id, name, ...rest);

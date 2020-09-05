@@ -43,7 +43,7 @@ function render(self) {
  * @param {string} noSelectionText - the text to display when no items are available.
  * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
  * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
- * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text to use on the select element
  * @returns {SelectBoxTag}
  */
 export function SelectBox(id, noSelectionText, makeID, makeLabel, ...rest) {
@@ -61,7 +61,7 @@ export class SelectBoxTag extends HtmlCustomTag {
      * @param {string} noSelectionText - the text to display when no items are available.
      * @param {makeItemValueCallback} makeID - a function that evalutes a databound item to create an ID for it.
      * @param {makeItemValueCallback} makeLabel - a function that evalutes a databound item to create a label for it.
-     * @param {...TagChild} rest - optional attributes, child elements, and text to use on the select element
+     * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text to use on the select element
      */
     constructor(tagId, noSelectionText, makeID, makeLabel, ...rest) {
         super("select", id(tagId), ...rest);

@@ -1,10 +1,8 @@
-import { BufferGeometry } from "three";
-
 /**
  * Recalculates the UV coordinates for a BufferGeometry
  * object to be able to map to a Cubemap that is packed as
  * a cross-configuration in a single image.
- * @param {BufferGeometry} geom
+ * @param {import("three").BufferGeometry} geom
  */
 export function setGeometryUVsForCubemaps(geom) {
     const positions = geom.attributes.position;

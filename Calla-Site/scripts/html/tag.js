@@ -4,7 +4,7 @@ import { CssProp, CssPropSet } from "./css";
 import { HtmlEvt } from "./evts";
 
 /**
- * @typedef {(Element|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
+ * @typedef {(Node|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
  **/
 
 /**

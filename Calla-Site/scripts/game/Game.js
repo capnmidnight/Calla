@@ -1,4 +1,4 @@
-import { addEventListeners, arrayClear, clamp, EventBase, InterpolatedPose, isString, lerp, project, unproject } from "../calla";
+import { addEventListeners, arrayClear, clamp, EventBase, isString, lerp, project, unproject } from "../calla";
 import { id } from "../html/attrs";
 import { resizeCanvas } from "../html/canvas";
 import { hide, show } from "../html/ops";
@@ -30,7 +30,7 @@ const CAMERA_LERP = 0.01,
         user: null
     }));
 
-/** @type {Map.<Game, EventedGamepad>} */
+/** @type {Map<Game, EventedGamepad>} */
 const gamepads = new Map();
 
 export class Game extends EventBase {
@@ -285,7 +285,7 @@ export class Game extends EventBase {
      * 
      * @param {string} id
      * @param {string} displayName
-     * @param {InterpolatedPose} pose
+     * @param {import("../calla").InterpolatedPose} pose
      */
     addUser(id, displayName, pose) {
         if (this.users.has(id)) {
@@ -385,7 +385,7 @@ export class Game extends EventBase {
      * 
      * @param {string} id
      * @param {string} displayName
-     * @param {InterpolatedPose} pose
+     * @param {import("../calla").InterpolatedPose} pose
      * @param {string} avatarURL
      * @param {string} roomName
      */

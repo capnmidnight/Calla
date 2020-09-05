@@ -1,4 +1,4 @@
-import { Mesh, MeshBasicMaterial, PlaneBufferGeometry, PerspectiveCamera, Color } from "three";
+import { Mesh, MeshBasicMaterial, PlaneBufferGeometry } from "three";
 import { once } from "../calla";
 
 const completeEvt = { type: "fadeComplete" };
@@ -6,9 +6,9 @@ const completeEvt = { type: "fadeComplete" };
 export class Fader extends Mesh {
     /**
      * 
-     * @param {PerspectiveCamera} camera
+     * @param {import("three").PerspectiveCamera} camera
      * @param {number} t
-     * @param {Color|number} color
+     * @param {import("three").Color|number} color
      */
     constructor(camera, t = 0.25, color = 0x000000) {
         const geom = new PlaneBufferGeometry(1, 1, 1, 1);
