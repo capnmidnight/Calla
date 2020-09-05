@@ -1,10 +1,10 @@
 import { AmbientLight, Color, Object3D, PerspectiveCamera, Scene, WebGLRenderer } from "three";
 import { EventBase } from "../calla";
 import { CameraControl } from "../input/CameraControl";
+import { EventSystem } from "../input/EventSystem";
 import { ScreenPointerControls } from "../input/ScreenPointerControls";
 import { Stage } from "../input/Stage";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
-import { EventSystem } from "./EventSystem";
 import { Fader } from "./Fader";
 import { Skybox } from "./Skybox";
 
@@ -61,6 +61,7 @@ export class ThreeJSApplication extends EventBase {
         resize();
 
         this.controls = new ScreenPointerControls(this.renderer.domElement);
+
         this.cameraControl = new CameraControl(this.camera, this.stage, this.controls);
 
         const scales = new Map();

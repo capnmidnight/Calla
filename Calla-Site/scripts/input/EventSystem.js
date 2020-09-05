@@ -16,7 +16,7 @@ export class EventSystem extends EventBase {
     /**
      * @param {import("three").PerspectiveCamera} camera
      * @param {import("three").Object3D} inputLayer
-     * @param {import("../input/ScreenPointerControls").ScreenPointerControls} screenPointers
+     * @param {import("./ScreenPointerControls").ScreenPointerControls} screenPointers
      */
     constructor(camera, inputLayer, screenPointers) {
         super();
