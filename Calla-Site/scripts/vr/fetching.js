@@ -1,15 +1,20 @@
+async function getResponse(path) {
+    const request = fetch(path);
+    const response = await request;
+    if (!response.ok) {
+        throw new Error(`[${response.status}] - ${response.statusText}`);
+    }
+    return response;
+}
+
 /**
  * @param {string} path
  * @returns {Promise<any>}
  */
 export async function getObject(path) {
-    const request = fetch(path),
-        response = await request;
-    if (!response.ok) {
-        throw new Error(`[${response.status}] - ${response.statusText}`);
-    }
-
-    return await response.json();
+    const response = await getResponse(path);
+    const obj = await response.json();
+    return obj;
 }
 
 /**
@@ -17,12 +22,18 @@ export async function getObject(path) {
  * @returns {Promise<string>}
  */
 export async function getFile(path) {
-    const request = fetch(path),
-        response = await request;
+    const response = await getResponse(path);
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    return blobUrl;
+}
 
-    if (!response.ok) {
-        throw new Error(`[${response.status}] - ${response.statusText}`);
-    }
+/**
+ * @param {string} path
+ * @returns {Promise<Uint8Array[]>}
+ */
+async function getParts(path) {
+    const response = await getResponse(path);
 
     const contentLength = parseInt(response.headers.get("Content-Length"), 10);
     if (!contentLength) {
@@ -35,23 +46,49 @@ export async function getFile(path) {
     }
 
     const reader = response.body.getReader();
-    const parts = [];
+    const buffer = new Uint8Array(contentLength);
     let receivedLength = 0;
-    while(true) {
+    while (true) {
         const { done, value } = await reader.read();
         if (done) {
             break;
         }
 
-        receivedLength += value.length;
-        if (receivedLength > contentLength) {
+        if (receivedLength + value.length > contentLength) {
             throw new Error("Whoa! Recieved content exceeded expected amount");
         }
 
-        parts.push(value);
+        buffer.set(value, receivedLength);
+        receivedLength += value.length;
     }
 
-    const blob = new Blob(parts, { type: contentType });
-    const blobUrl = URL.createObjectURL(blob);
-    return blobUrl;
+    return { buffer, contentType };
+}
+
+/**
+ * @param {string} path
+ * @returns {Promise<any>}
+ */
+export async function getObjectWithProgress(path) {
+    const { buffer } = await getParts(path);
+    const decoder = new TextDecoder("utf-8");
+    const text = decoder.decode(buffer);
+    const obj = JSON.parse(text);
+    return obj;
+}
+
+/**
+ * @param {string} path
+ * @returns {Promise<string>}
+ */
+export async function getFileWithProgress(path) {
+    const { buffer, contentType } = await getParts(path);
+    try {
+        const blob = new Blob([buffer], { type: contentType });
+        const blobUrl = URL.createObjectURL(blob);
+        return blobUrl;
+    }
+    catch (exp) {
+        throw exp;
+    }
 }

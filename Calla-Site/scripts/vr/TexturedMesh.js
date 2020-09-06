@@ -2,7 +2,7 @@ import { Mesh, Texture } from "three";
 import { isString, once } from "../calla";
 import { height, src, width } from "../html/attrs";
 import { Canvas, Img } from "../html/tags";
-import { getFile } from "./fetching";
+import { getFileWithProgress } from "./fetching";
 
 export class TexturedMesh extends Mesh {
     /**
@@ -21,7 +21,7 @@ export class TexturedMesh extends Mesh {
 
     async setImage(img) {
         if (isString(img)) {
-            img = await getFile(img);
+            img = await getFileWithProgress(img);
             img = Img(src(img));
         }
 

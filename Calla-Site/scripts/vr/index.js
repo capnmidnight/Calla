@@ -1,6 +1,6 @@
 import { Object3D } from "three";
 import { DebugObject } from "./DebugObject";
-import { getObject } from "./fetching";
+import { getObject, getObjectWithProgress } from "./fetching";
 import { Image2DMesh } from "./Image2DMesh";
 import { TextMesh } from "./TextMesh";
 import { ThreeJSApplication } from "./ThreeJSApplication";
@@ -44,12 +44,14 @@ async function showActivity(activityID, skipHistory = false) {
     await app.fader.fadeOut();
     app.clearScene();
 
-    const activity = `/VR/Activity/${activityID}`,
-        transforms = await getObject(`${activity}/Scene`),
-        stations = await getObject(`${activity}/Stations`),
-        connections = await getObject(`${activity}/Map`),
-        signs = await getObject(`${activity}/Signs`),
-        audio = await getObject(`${activity}/Audio`);
+    const all = await getObjectWithProgress(`/VR/Activity/${activityID}`);
+    const {
+        transforms,
+        stations,
+        connections,
+        signs,
+        audioTracks
+    } = all;
 
     let startID = null;
     for (let station of stations) {

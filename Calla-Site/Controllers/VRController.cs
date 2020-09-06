@@ -2,11 +2,17 @@ using Juniper;
 using Juniper.HTTP.Server;
 using Juniper.World.GIS;
 
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 
 using System;
 using System.Linq;
+using System.Net;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 using Yarrow.Data;
 using Yarrow.Models;
@@ -16,10 +22,16 @@ namespace Calla.Controllers
     public class VRController : Controller
     {
         private readonly YarrowContext db;
+        private readonly JsonSerializerOptions serializerOptions;
 
-        public VRController(YarrowContext db)
+        public VRController(YarrowContext db, IHostEnvironment env)
         {
             this.db = db;
+            serializerOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = env.IsDevelopment()
+            };
         }
 
         [HttpGet("VR/File/{id}")]
@@ -105,90 +117,89 @@ namespace Calla.Controllers
 
             return Json(db.Activities
                .AsNoTracking()
-               .Include(act => act.StartStation)
                .Select(act => new Activity
                {
                    ID = act.Id,
-                   Name = act.Name,
-                   StartStationFileID = act.StartStation.FileId
+                   Name = act.Name
                }));
         }
 
-        [HttpGet("VR/Activity/{id}/Scene")]
-        public IActionResult Scene(int id) =>
-            Json(db.Transforms
+        [HttpGet("VR/Activity/{id}")]
+        public async Task<IActionResult> Activity(int id)
+        {
+            var activity = db.Activities
                 .AsNoTracking()
-                .Where(t => t.ActivityId == id)
-                .Select(t => new Transform
+                .Where(act => act.Id == id)
+                .Include(act => act.Transforms)
+                    .ThenInclude(t => t.Stations)
+                        .ThenInclude(s => s.StationConnectionsFromStation)
+                .Include(act => act.Transforms)
+                    .ThenInclude(t => t.AudioTracks)
+                        .ThenInclude(aud => aud.PlaybackControls)
+                .Include(act => act.Transforms)
+                    .ThenInclude(t => t.Signs)
+                .AsEnumerable()
+                .Select(act => new FullActivity
                 {
-                    ID = t.Id,
-                    ParentID = t.ParentTransformId ?? 0,
-                    Name = t.Name,
-                    Matrix = t.Matrix
-                }));
+                    ID = act.Id,
+                    Name = act.Name,
+                    Transforms = act.Transforms
+                        .Select(t => new Transform
+                        {
+                            ID = t.Id,
+                            ParentID = t.ParentTransformId ?? 0,
+                            Name = t.Name,
+                            Matrix = t.Matrix
+                        }),
+                    Stations = act.Transforms
+                        .Where(t => t.Stations is object)
+                        .Select(t => new Station
+                        {
+                            TransformID = t.Stations.TransformId,
+                            Location = new LatLngPoint(t.Stations.Latitude, t.Stations.Longitude, t.Stations.Altitude),
+                            Rotation = t.Stations.Rotation,
+                            FileID = t.Stations.FileId,
+                            IsStart = t.Stations.TransformId == act.StartStationId,
+                            Zone = t.Stations.Zone
+                        }),
+                    Connections = act.Transforms
+                        .Where(t => t.Stations is object && t.Stations.StationConnectionsFromStation is object)
+                        .SelectMany(t => t.Stations.StationConnectionsFromStation
+                            .Select(stc => new GraphEdge
+                            {
+                                FromStationID = stc.FromStationId,
+                                ToStationID = stc.ToStationId
+                            })),
+                    AudioTracks = act.Transforms
+                        .Where(t => t.AudioTracks is object)
+                        .SelectMany(t => t.AudioTracks
+                            .Select(at => new AudioTrack
+                            {
+                                AudioFileID = at.FileId,
+                                AutoPlay = at.AutoPlay,
+                                Loop = at.Loop,
+                                MaxDistance = at.MaxDistance,
+                                MinDistance = at.MinDistance,
+                                PlaybackTransformID = at.PlaybackControls?.TransformId ?? 0,
+                                Spatialize = at.Spatialize,
+                                TransformID = at.TransformId,
+                                Volume = at.Volume,
+                                Zone = at.Zone
+                            })),
+                    Signs = act.Transforms
+                        .Where(t => t.Signs is object)
+                        .SelectMany(t => t.Signs
+                            .Select(s => new Sign
+                            {
+                                ImageFileID = s.FileId,
+                                IsCallout = s.IsCallout,
+                                TransformID = s.TransformId
+                            }))
+                })
+                .SingleOrDefault();
 
-        [HttpGet("VR/Activity/{id}/Stations")]
-        public IActionResult ActivityStations(int id) =>
-            Json(db.Stations
-                .AsNoTracking()
-                .Include(st => st.Transform)
-                    .ThenInclude(t => t.Activity)
-                .Where(st => st.Transform.ActivityId == id)
-                .Select(st => new Station
-                {
-                    TransformID = st.TransformId,
-                    Location = new LatLngPoint(st.Latitude, st.Longitude, st.Altitude),
-                    Rotation = st.Rotation,
-                    FileID = st.FileId,
-                    IsStart = st.TransformId == st.Transform.Activity.StartStationId,
-                    Zone = st.Zone
-                }));
-
-        [HttpGet("VR/Activity/{id}/Map")]
-        public IActionResult ActivityStationConnections(int id) =>
-            Json(db.StationConnections
-                .AsNoTracking()
-                .Include(stc => stc.FromStation)
-                    .ThenInclude(st => st.Transform)
-                .Where(stc => stc.FromStation.Transform.ActivityId == id)
-                .Select(stc => new GraphEdge
-                {
-                    FromStationID = stc.FromStationId,
-                    ToStationID = stc.ToStationId
-                }));
-
-        [HttpGet("VR/Activity/{id}/Audio")]
-        public IActionResult ActivityAudio(int id) =>
-            Json(db.AudioTracks
-                .AsNoTracking()
-                .Include(at => at.Transform)
-                .Include(at => at.PlaybackControls)
-                .Where(at => at.Transform.ActivityId == id)
-                .Select(at => new AudioTrack
-                {
-                    AudioFileID = at.FileId,
-                    AutoPlay = at.AutoPlay,
-                    Loop = at.Loop,
-                    MaxDistance = at.MaxDistance,
-                    MinDistance = at.MinDistance,
-                    PlaybackTransformID = at.PlaybackControls.TransformId,
-                    Spatialize = at.Spatialize,
-                    TransformID = at.TransformId,
-                    Volume = at.Volume,
-                    Zone = at.Zone
-                }));
-
-        [HttpGet("VR/Activity/{id}/Signs")]
-        public IActionResult ActivitySigns(int id) =>
-            Json(db.Signs
-                .AsNoTracking()
-                .Include(s => s.Transform)
-                .Where(s => s.Transform.ActivityId == id)
-                .Select(s => new Sign
-                {
-                    ImageFileID = s.FileId,
-                    IsCallout = s.IsCallout,
-                    TransformID = s.TransformId
-                }));
+            var json = JsonSerializer.Serialize(activity, serializerOptions);
+            return new JsonBlobResult(json);
+        }
     }
 }
