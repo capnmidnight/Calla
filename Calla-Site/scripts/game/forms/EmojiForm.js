@@ -3,8 +3,8 @@ import { onClick } from "../../html/evts";
 import { gridPos } from "../../html/grid";
 import { hide, isOpen, show, toggleOpen } from "../../html/ops";
 import { A, Button, Div, H1, H2, Label, LI, P, Span, UL } from "../../html/tags";
-import { EmojiGroup } from "../emoji/EmojiGroup";
-import { allIcons as icons, emojiStyle, textStyle } from "../emoji/emojis";
+import { EmojiGroup } from "../../emoji/EmojiGroup";
+import { allIcons as icons, emojiStyle, textStyle } from "../../emoji/emojis";
 import { FormDialog } from "./FormDialog";
 
 const disabler = disabled(true),

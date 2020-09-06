@@ -1,4 +1,4 @@
-import { bust } from "../game/emoji/emojis";
+import { bust } from "../emoji/emojis";
 import { CallaClient, once, wait, when } from "../calla";
 import { TestCase } from "../testing/TestCase";
 import { userNumber } from "../testing/userNumber";

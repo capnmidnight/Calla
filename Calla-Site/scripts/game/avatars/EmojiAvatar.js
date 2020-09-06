@@ -1,5 +1,5 @@
 import { setContextSize } from "../../html/canvas";
-import { isSurfer } from "../emoji/emojis";
+import { isSurfer } from "../../emoji/emojis";
 import { TextImage } from "../graphics/TextImage";
 import { BaseAvatar } from "./BaseAvatar";
 
@@ -10,7 +10,7 @@ export class EmojiAvatar extends BaseAvatar {
 
     /**
      * Creatse a new avatar that uses a Unicode emoji as its representation.
-     * @param {import("../emoji/Emoji").Emoji} emoji
+     * @param {import("../../emoji/Emoji").Emoji} emoji
      */
     constructor(emoji) {
         super(isSurfer(emoji));

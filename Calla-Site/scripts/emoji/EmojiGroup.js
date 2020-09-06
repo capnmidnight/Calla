@@ -1,4 +1,3 @@
-import { arrayRandom } from "../../calla";
 import { Emoji } from "./Emoji";
 
 export class EmojiGroup extends Emoji {
@@ -21,7 +20,12 @@ export class EmojiGroup extends Emoji {
      * @returns {(Emoji|EmojiGroup)}
      **/
     random() {
-        const selection = arrayRandom(this.alts);
+        const idx = Math.floor(Math.random() * this.alts.length);
+        if (idx < 0) {
+            return null;
+        }
+
+        const selection = this.alts[idx];
         if (selection instanceof EmojiGroup) {
             return selection.random();
         }

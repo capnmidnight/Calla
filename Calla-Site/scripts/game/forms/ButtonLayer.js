@@ -19,7 +19,7 @@ import {
     upwardsButton,
     videoCamera,
     whiteFlower
-} from "../emoji/emojis";
+} from "../../emoji/emojis";
 
 const toggleOptionsEvt = new Event("toggleOptions"),
     tweetEvt = new Event("tweet"),

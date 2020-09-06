@@ -3,7 +3,7 @@ import { AvatarMode } from "./avatars/AvatarMode";
 import { EmojiAvatar } from "./avatars/EmojiAvatar";
 import { PhotoAvatar } from "./avatars/PhotoAvatar";
 import { VideoAvatar } from "./avatars/VideoAvatar";
-import { bust, mutedSpeaker, speakerMediumVolume } from "./emoji/emojis";
+import { bust, mutedSpeaker, speakerMediumVolume } from "../emoji/emojis";
 import { getTransform } from "./graphics/getTransform";
 import { TextImage } from "./graphics/TextImage";
 
@@ -149,7 +149,7 @@ export class User extends EventBase {
 
     /**
      * Set the emoji to use as an avatar.
-     * @param {import("./emoji/Emoji").Emoji} emoji
+     * @param {import("../emoji/Emoji").Emoji} emoji
      */
     set avatarEmoji(emoji) {
         if (emoji

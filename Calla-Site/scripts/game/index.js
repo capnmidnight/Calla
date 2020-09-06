@@ -2,7 +2,7 @@ import { addEventListeners, CallaClient } from "../calla";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
 import { disabled } from "../html/attrs";
 import { hide, isOpen, show } from "../html/ops";
-import { allPeople as people } from "./emoji/emojis";
+import { allPeople as people } from "../emoji/emojis";
 import { ButtonLayer } from "./forms/ButtonLayer";
 import { DevicesDialog } from "./forms/DevicesDialog";
 import { EmojiForm } from "./forms/EmojiForm";
