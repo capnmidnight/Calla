@@ -132,9 +132,11 @@ export class Game extends EventBase {
         // ============= POINTERS =================
         this.screenControls = new ScreenPointerControls(this.element);
         addEventListeners(this.screenControls, {
-            wheel: (evt) => {
-                this.zoom += evt.dz;
-                this.dispatchEvent(zoomChangedEvt);
+            move: (evt) => {
+                if (Math.abs(evt.dz) > 0) {
+                    this.zoom += evt.dz;
+                    this.dispatchEvent(zoomChangedEvt);
+                }
             },
             drag: (evt) => {
                 this.targetOffsetCameraX = this.offsetCameraX += evt.dx;

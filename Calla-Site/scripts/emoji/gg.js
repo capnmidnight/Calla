@@ -1,3 +1,4 @@
+import { Emoji } from "./Emoji";
 import { g } from "./EmojiGroup";
 
 /**
@@ -6,7 +7,7 @@ import { g } from "./EmojiGroup";
  * @param {string} v - a Unicode sequence.
  * @param {string} d - an English text description of the pictogram.
  * @param {any} o - a set of properties to set on the Emoji object.
- * @param {...(import("./Emoji").Emoji|import("./EmojiGroup").EmojiGroup)} r - the emoji that are contained in this group.
+ * @param {...(Emoji|import("./EmojiGroup").EmojiGroup)} r - the emoji that are contained in this group.
  * @returns {import("./EmojiGroup").EmojiGroup}
  */
 export function gg(v, d, o, ...r) {
