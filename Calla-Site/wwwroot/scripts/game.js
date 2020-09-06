@@ -21191,7 +21191,7 @@ function setLocked(target, value) {
 /**
  * Unicode-standardized pictograms.
  **/
-class Emoji$1 {
+class Emoji {
     /**
      * Creates a new Unicode-standardized pictograms.
      * @param {string} value - a Unicode sequence.
@@ -21219,10 +21219,10 @@ class Emoji$1 {
  * @param {any} [o=null] - an optional set of properties to set on the Emoji object.
  */
 function e(v, d, o = null) {
-    return Object.assign(new Emoji$1(v, d), o);
+    return Object.assign(new Emoji(v, d), o);
 }
 
-class EmojiGroup extends Emoji$1 {
+class EmojiGroup extends Emoji {
     /**
      * Groupings of Unicode-standardized pictograms.
      * @param {string} value - a Unicode sequence.
@@ -21284,7 +21284,7 @@ function g(v, d, ...r) {
  * @param {string} v - a Unicode sequence.
  * @param {string} d - an English text description of the pictogram.
  * @param {any} o - a set of properties to set on the Emoji object.
- * @param {...(import("./Emoji").Emoji|import("./EmojiGroup").EmojiGroup)} r - the emoji that are contained in this group.
+ * @param {...(Emoji|import("./EmojiGroup").EmojiGroup)} r - the emoji that are contained in this group.
  * @returns {import("./EmojiGroup").EmojiGroup}
  */
 function gg(v, d, o, ...r) {
@@ -32040,9 +32040,11 @@ class Game extends EventBase {
         // ============= POINTERS =================
         this.screenControls = new ScreenPointerControls(this.element);
         addEventListeners(this.screenControls, {
-            wheel: (evt) => {
-                this.zoom += evt.dz;
-                this.dispatchEvent(zoomChangedEvt$1);
+            move: (evt) => {
+                if (Math.abs(evt.dz) > 0) {
+                    this.zoom += evt.dz;
+                    this.dispatchEvent(zoomChangedEvt$1);
+                }
             },
             drag: (evt) => {
                 this.targetOffsetCameraX = this.offsetCameraX += evt.dx;

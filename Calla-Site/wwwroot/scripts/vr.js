@@ -50795,31 +50795,31 @@ function DebugObject() {
     return new Mesh(cube, mube);
 }
 
+async function getResponse(path) {
+    const request = fetch(path);
+    const response = await request;
+    if (!response.ok) {
+        throw new Error(`[${response.status}] - ${response.statusText}`);
+    }
+    return response;
+}
+
 /**
  * @param {string} path
  * @returns {Promise<any>}
  */
 async function getObject(path) {
-    const request = fetch(path),
-        response = await request;
-    if (!response.ok) {
-        throw new Error(`[${response.status}] - ${response.statusText}`);
-    }
-
-    return await response.json();
+    const response = await getResponse(path);
+    const obj = await response.json();
+    return obj;
 }
 
 /**
  * @param {string} path
- * @returns {Promise<string>}
+ * @returns {Promise<Uint8Array[]>}
  */
-async function getFile(path) {
-    const request = fetch(path),
-        response = await request;
-
-    if (!response.ok) {
-        throw new Error(`[${response.status}] - ${response.statusText}`);
-    }
+async function getParts(path) {
+    const response = await getResponse(path);
 
     const contentLength = parseInt(response.headers.get("Content-Length"), 10);
     if (!contentLength) {
@@ -50832,25 +50832,51 @@ async function getFile(path) {
     }
 
     const reader = response.body.getReader();
-    const parts = [];
+    const buffer = new Uint8Array(contentLength);
     let receivedLength = 0;
-    while(true) {
+    while (true) {
         const { done, value } = await reader.read();
         if (done) {
             break;
         }
 
-        receivedLength += value.length;
-        if (receivedLength > contentLength) {
+        if (receivedLength + value.length > contentLength) {
             throw new Error("Whoa! Recieved content exceeded expected amount");
         }
 
-        parts.push(value);
+        buffer.set(value, receivedLength);
+        receivedLength += value.length;
     }
 
-    const blob = new Blob(parts, { type: contentType });
-    const blobUrl = URL.createObjectURL(blob);
-    return blobUrl;
+    return { buffer, contentType };
+}
+
+/**
+ * @param {string} path
+ * @returns {Promise<any>}
+ */
+async function getObjectWithProgress(path) {
+    const { buffer } = await getParts(path);
+    const decoder = new TextDecoder("utf-8");
+    const text = decoder.decode(buffer);
+    const obj = JSON.parse(text);
+    return obj;
+}
+
+/**
+ * @param {string} path
+ * @returns {Promise<string>}
+ */
+async function getFileWithProgress(path) {
+    const { buffer, contentType } = await getParts(path);
+    try {
+        const blob = new Blob([buffer], { type: contentType });
+        const blobUrl = URL.createObjectURL(blob);
+        return blobUrl;
+    }
+    catch (exp) {
+        throw exp;
+    }
 }
 
 /**
@@ -63263,7 +63289,7 @@ class TexturedMesh extends Mesh {
 
     async setImage(img) {
         if (isString(img)) {
-            img = await getFile(img);
+            img = await getFileWithProgress(img);
             img = Img(src(img));
         }
 
@@ -65111,12 +65137,14 @@ async function showActivity(activityID, skipHistory = false) {
     await app.fader.fadeOut();
     app.clearScene();
 
-    const activity = `/VR/Activity/${activityID}`,
-        transforms = await getObject(`${activity}/Scene`),
-        stations = await getObject(`${activity}/Stations`),
-        connections = await getObject(`${activity}/Map`),
-        signs = await getObject(`${activity}/Signs`),
-        audio = await getObject(`${activity}/Audio`);
+    const all = await getObjectWithProgress(`/VR/Activity/${activityID}`);
+    const {
+        transforms,
+        stations,
+        connections,
+        signs,
+        audioTracks
+    } = all;
 
     let startID = null;
     for (let station of stations) {
