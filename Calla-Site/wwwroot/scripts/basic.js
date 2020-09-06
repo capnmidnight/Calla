@@ -19538,7 +19538,7 @@ class CallaClient extends EventBase {
     }
 
     /**
-     * @param {import("../game/emoji/Emoji").Emoji} emoji
+     * @param {import("../emoji/Emoji").Emoji} emoji
      **/
     set avatarEmoji(emoji) {
         for (let toUserID of this.userIDs()) {
@@ -19556,7 +19556,7 @@ class CallaClient extends EventBase {
     }
 
     /**
-     * @param {import("../game/emoji/Emoji").Emoji} emoji
+     * @param {import("../emoji/Emoji").Emoji} emoji
      **/
     emote(emoji) {
         for (let toUserID of this.userIDs()) {

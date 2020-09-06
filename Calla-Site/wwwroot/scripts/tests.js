@@ -3,28 +3,6 @@ const JVB_HOST = JITSI_HOST;
 const JVB_MUC = "conference." + JITSI_HOST;
 
 /**
- * Returns a random item from an array of items.
- *
- * Provides an option to consider an additional item as part of the collection
- * for random selection.
- * @param {any[]} arr
- * @param {any} defaultValue
- */
-function arrayRandom(arr, defaultValue) {
-    if (!(arr instanceof Array)) {
-        throw new Error("Must provide an array as the first parameter.");
-    }
-    const offset = defaultValue ? 1 : 0,
-        idx = Math.floor(Math.random() * (arr.length + offset)) - offset;
-    if (idx < 0) {
-        return defaultValue;
-    }
-    else {
-        return arr[idx];
-    }
-}
-
-/**
  * Removes an item at the given index from an array.
  * @param {any[]} arr
  * @param {number} idx
@@ -19578,7 +19556,7 @@ class CallaClient extends EventBase {
     }
 
     /**
-     * @param {import("../game/emoji/Emoji").Emoji} emoji
+     * @param {import("../emoji/Emoji").Emoji} emoji
      **/
     set avatarEmoji(emoji) {
         for (let toUserID of this.userIDs()) {
@@ -19596,7 +19574,7 @@ class CallaClient extends EventBase {
     }
 
     /**
-     * @param {import("../game/emoji/Emoji").Emoji} emoji
+     * @param {import("../emoji/Emoji").Emoji} emoji
      **/
     emote(emoji) {
         for (let toUserID of this.userIDs()) {
@@ -20489,7 +20467,12 @@ class EmojiGroup extends Emoji$1 {
      * @returns {(Emoji|EmojiGroup)}
      **/
     random() {
-        const selection = arrayRandom(this.alts);
+        const idx = Math.floor(Math.random() * this.alts.length);
+        if (idx < 0) {
+            return null;
+        }
+
+        const selection = this.alts[idx];
         if (selection instanceof EmojiGroup) {
             return selection.random();
         }
