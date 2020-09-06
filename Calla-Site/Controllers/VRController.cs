@@ -2,17 +2,13 @@ using Juniper;
 using Juniper.HTTP.Server;
 using Juniper.World.GIS;
 
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 
 using System;
 using System.Linq;
-using System.Net;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 using Yarrow.Data;
 using Yarrow.Models;
@@ -125,7 +121,7 @@ namespace Calla.Controllers
         }
 
         [HttpGet("VR/Activity/{id}")]
-        public async Task<IActionResult> Activity(int id)
+        public IActionResult Activity(int id)
         {
             var activity = db.Activities
                 .AsNoTracking()
