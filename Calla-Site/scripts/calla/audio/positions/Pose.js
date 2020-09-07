@@ -1,6 +1,6 @@
 import { Vector3 } from "three/src/math/Vector3";
 import { project } from "../../math/project";
-import { slerpVectors } from "../../math";
+import { slerpVectors } from "../../math/slerpVectors";
 
 /**
  * A position and orientation, at a given time.

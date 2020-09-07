@@ -1,5 +1,7 @@
-import { Mesh, Texture } from "three";
-import { isString, once } from "../calla";
+import { Mesh } from "three/src/objects/Mesh";
+import { Texture } from "three/src/textures/Texture";
+import { once } from "../calla/events/once";
+import { isString } from "../calla/typeChecks";
 import { height, src, width } from "../html/attrs";
 import { Canvas, Img } from "../html/tags";
 import { getFileWithProgress } from "./fetching";

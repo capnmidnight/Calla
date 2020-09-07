@@ -1,5 +1,9 @@
-import { Euler, Quaternion, Vector2, Vector3 } from "three";
-import { clamp, EventBase } from "../calla";
+import { Euler } from "three/src/math/Euler";
+import { Quaternion } from "three/src/math/Quaternion";
+import { Vector2 } from "three/src/math/Vector2";
+import { Vector3 } from "three/src/math/Vector3";
+import { EventBase } from "../calla/events/EventBase";
+import { clamp } from "../calla/math/clamp";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
 import { MouseButtons } from "./MouseButton";
 

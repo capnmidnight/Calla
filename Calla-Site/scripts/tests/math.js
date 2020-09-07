@@ -1,4 +1,5 @@
-import { lerp, once } from "../calla";
+import { lerp } from "../calla/math/lerp";
+import { once } from "../calla/events/once";
 import { TestCase } from "../testing/TestCase";
 
 export class MathTests extends TestCase {

@@ -1,4 +1,4 @@
-import { BoxBufferGeometry } from "three";
+import { BoxBufferGeometry } from "three/src/geometries/BoxGeometry";
 import { AbstractCubeMapView } from "./AbstractCubeMapView";
 import { setGeometryUVsForCubemaps } from "./setGeometryUVsForCubemaps";
 

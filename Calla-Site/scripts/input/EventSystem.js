@@ -1,5 +1,6 @@
-import { Raycaster } from "three";
-import { arrayClear, EventBase } from "../calla";
+import { Raycaster } from "three/src/core/Raycaster";
+import { arrayClear } from "../calla/arrays/arrayClear";
+import { EventBase } from "../calla/events/EventBase";
 
 class EventSystemEvent extends Event {
     /**

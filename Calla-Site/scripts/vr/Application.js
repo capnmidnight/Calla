@@ -1,5 +1,10 @@
-import { AmbientLight, Color, Object3D, PerspectiveCamera, Scene, WebGLRenderer } from "three";
-import { EventBase } from "../calla";
+import { PerspectiveCamera } from "three/src/cameras/PerspectiveCamera";
+import { Object3D } from "three/src/core/Object3D";
+import { AmbientLight } from "three/src/lights/AmbientLight";
+import { Color } from "three/src/math/Color";
+import { WebGLRenderer } from "three/src/renderers/WebGLRenderer";
+import { Scene } from "three/src/scenes/Scene";
+import { EventBase } from "../calla/events/EventBase";
 import { CameraControl } from "../input/CameraControl";
 import { EventSystem } from "../input/EventSystem";
 import { ScreenPointerControls } from "../input/ScreenPointerControls";

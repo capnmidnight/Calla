@@ -1,4 +1,5 @@
-import { BackSide, MeshBasicMaterial } from "three";
+import { BackSide } from "three/src/constants";
+import { MeshBasicMaterial } from "three/src/materials/MeshBasicMaterial";
 import { TexturedMesh } from "./TexturedMesh";
 
 export class AbstractCubeMapView extends TexturedMesh {

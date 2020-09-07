@@ -1,4 +1,4 @@
-import { SphereBufferGeometry } from "three";
+import { SphereBufferGeometry } from "three/src/geometries/SphereGeometry";
 import { AbstractCubeMapView } from "./AbstractCubeMapView";
 import { setGeometryUVsForCubemaps } from "./setGeometryUVsForCubemaps";
 

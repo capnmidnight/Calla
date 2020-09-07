@@ -1,5 +1,5 @@
-import { isFunction } from "../calla";
-import { disabled, value, id } from "./attrs";
+import { isFunction } from "../calla/typeChecks";
+import { disabled, id, value } from "./attrs";
 import { HtmlCustomTag } from "./HtmlCustomTag";
 import { clear, Option } from "./tags";
 

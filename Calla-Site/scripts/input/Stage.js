@@ -1,5 +1,7 @@
-import { Euler, Object3D, Quaternion } from "three";
-import { clamp } from "../calla";
+import { Object3D } from "three/src/core/Object3D";
+import { Euler } from "three/src/math/Euler";
+import { Quaternion } from "three/src/math/Quaternion";
+import { clamp } from "../calla/math/clamp";
 
 /**
  * When running on systems that do not understand the relationship between the camera and 

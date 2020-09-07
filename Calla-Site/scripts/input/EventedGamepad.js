@@ -1,4 +1,4 @@
-import { EventBase } from "../calla";
+import { EventBase } from "../calla/events/EventBase";
 
 /** @type {WeakMap<EventedGamepad, object> */
 const gamepadStates = new WeakMap();

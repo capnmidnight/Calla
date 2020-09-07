@@ -1,4 +1,7 @@
-import { BoxBufferGeometry, Mesh, MeshBasicMaterial, Object3D } from "three";
+import { Object3D } from "three/src/core/Object3D";
+import { BoxBufferGeometry } from "three/src/geometries/BoxGeometry";
+import { MeshBasicMaterial } from "three/src/materials/MeshBasicMaterial";
+import { Mesh } from "three/src/objects/Mesh";
 
 const cubeGeom = new BoxBufferGeometry(1, 1, 1, 1, 1, 1);
 const valueBarMat = new MeshBasicMaterial({ color: 0xc0c0c0 });

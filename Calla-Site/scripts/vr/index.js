@@ -1,4 +1,4 @@
-import { Object3D } from "three";
+import { Object3D } from "three/src/core/Object3D";
 import { Application } from "./Application";
 import { DebugObject } from "./DebugObject";
 import { getObject, getObjectWithProgress } from "./fetching";

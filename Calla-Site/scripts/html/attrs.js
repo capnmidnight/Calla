@@ -1,4 +1,4 @@
-import { isBoolean } from "../calla";
+import { isBoolean } from "../calla/typeChecks";
 
 /**
  * A setter functor for HTML attributes.

@@ -1,4 +1,5 @@
-import { EventBase, isFunction } from "../calla";
+import { EventBase } from "../calla/events/EventBase";
+import { isFunction } from "../calla/typeChecks";
 import { TestCaseFailEvent } from "./TestCaseFailEvent";
 import { TestCaseMessageEvent } from "./TestCaseMessageEvent";
 import { TestRunnerResultsEvent } from "./TestRunnerResultsEvent";

@@ -1,5 +1,7 @@
-import { Mesh, MeshBasicMaterial, PlaneBufferGeometry } from "three";
-import { once } from "../calla";
+import { PlaneBufferGeometry } from "three/src/geometries/PlaneGeometry";
+import { MeshBasicMaterial } from "three/src/materials/MeshBasicMaterial";
+import { Mesh } from "three/src/objects/Mesh";
+import { once } from "../calla/events/once";
 
 const completeEvt = { type: "fadeComplete" };
 

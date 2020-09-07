@@ -1,4 +1,5 @@
-import { arrayClear, arrayRemove } from "../calla";
+import { arrayClear } from "../calla/arrays/arrayClear";
+import { arrayRemove } from "../calla/arrays/arrayRemove";
 
 export class LRUCache {
     constructor(size) {
