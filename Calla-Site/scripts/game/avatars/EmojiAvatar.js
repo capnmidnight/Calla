@@ -21,6 +21,7 @@ export class EmojiAvatar extends BaseAvatar {
         const emojiText = new TextImage();
 
         emojiText.color = emoji.color || "black";
+        emojiText.fontFamily = "Noto Color Emoji";
         emojiText.fontSize = 256;
         emojiText.value = this.value;
         setContextSize(this.g, emojiText.width, emojiText.height);

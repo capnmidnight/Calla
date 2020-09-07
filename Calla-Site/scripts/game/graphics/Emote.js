@@ -13,6 +13,7 @@ export class Emote {
         this.life = 1;
         this.width = -1;
         this.emoteText = new TextImage();
+        this.emoteText.fontFamily = "Noto Color Emoji";
         this.emoteText.value = emoji.value;
     }
 

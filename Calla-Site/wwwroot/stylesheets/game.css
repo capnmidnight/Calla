@@ -293,6 +293,7 @@ menuitem {
 #emoji > .content button {
     padding: 0;
     font-size: 200%;
+    font-family: "Noto Color Emoji";
     width: 2em;
 }
 

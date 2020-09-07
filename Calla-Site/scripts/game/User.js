@@ -14,7 +14,9 @@ const POSITION_REQUEST_DEBOUNCE_TIME = 1,
     muteAudioIcon = new TextImage(),
     speakerActivityIcon = new TextImage();
 
+muteAudioIcon.fontFamily = "Noto Color Emoji";
 muteAudioIcon.value = mutedSpeaker.value;
+speakerActivityIcon.fontFamily = "Noto Color Emoji";
 speakerActivityIcon.value = speakerMediumVolume.value;
 
 export class User extends EventBase {

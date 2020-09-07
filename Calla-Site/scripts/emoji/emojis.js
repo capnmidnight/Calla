@@ -555,17 +555,17 @@ export const faceVomitting = e("\u{1F92E}", "Face Vomiting");
 export const explodingHead = e("\u{1F92F}", "Exploding Head");
 export const smilingFaceWithHearts = e("\u{1F970}", "Smiling Face with Hearts");
 export const yawningFace = e("\u{1F971}", "Yawning Face");
-export const smilingFaceWithTear = e("\u{1F972}", "Smiling Face with Tear");
+//export const smilingFaceWithTear = e("\u{1F972}", "Smiling Face with Tear");
 export const partyingFace = e("\u{1F973}", "Partying Face");
 export const woozyFace = e("\u{1F974}", "Woozy Face");
 export const hotFace = e("\u{1F975}", "Hot Face");
 export const coldFace = e("\u{1F976}", "Cold Face");
-export const disguisedFace = e("\u{1F978}", "Disguised Face");
+//export const disguisedFace = e("\u{1F978}", "Disguised Face");
 export const pleadingFace = e("\u{1F97A}", "Pleading Face");
 export const faceWithMonocle = e("\u{1F9D0}", "Face with Monocle");
 export const skullAndCrossbones = e("\u{2620}\u{FE0F}", "Skull and Crossbones");
 export const frowningFace = e("\u{2639}\u{FE0F}", "Frowning Face");
-export const fmilingFace = e("\u{263A}\u{FE0F}", "Smiling Face");
+export const smilingFace = e("\u{263A}\u{FE0F}", "Smiling Face");
 export const speakingHead = e("\u{1F5E3}\u{FE0F}", "Speaking Head");
 export const bust = e("\u{1F464}", "Bust in Silhouette");
 export const faces = gg(
@@ -675,17 +675,17 @@ export const faces = gg(
     explodingHead,
     smilingFaceWithHearts,
     yawningFace,
-    smilingFaceWithTear,
+    //smilingFaceWithTear,
     partyingFace,
     woozyFace,
     hotFace,
     coldFace,
-    disguisedFace,
+    //disguisedFace,
     pleadingFace,
     faceWithMonocle,
     skullAndCrossbones,
     frowningFace,
-    fmilingFace,
+    smilingFace,
     speakingHead,
     bust,
 });
@@ -771,7 +771,7 @@ export const hands = g(
     e("\u{1F596}", "Vulcan Salute"),
     e("\u{1F64C}", "Raising Hands"),
     e("\u{1F64F}", "Folded Hands"),
-    e("\u{1F90C}", "Pinched Fingers"),
+    //e("\u{1F90C}", "Pinched Fingers"),
     e("\u{1F90F}", "Pinching Hand"),
     e("\u{1F918}", "Sign of the Horns"),
     e("\u{1F919}", "Call Me Hand"),
@@ -806,9 +806,9 @@ export const bodyParts = g(
     e("\u{1F9BB}", "Ear with Hearing Aid"),
     e("\u{1F9BE}", "Mechanical Arm"),
     e("\u{1F9BF}", "Mechanical Leg"),
-    e("\u{1F9E0}", "Brain"),
-    e("\u{1FAC0}", "Anatomical Heart"),
-    e("\u{1FAC1}", "Lungs"));
+    //e("\u{1FAC0}", "Anatomical Heart"),
+    //e("\u{1FAC1}", "Lungs"),
+    e("\u{1F9E0}", "Brain"));
 
 export const animals = g(
     "Animals", "Animals and insects",
@@ -821,7 +821,7 @@ export const animals = g(
     e("\u{1F406}", "Leopard"),
     e("\u{1F407}", "Rabbit"),
     e("\u{1F408}", "Cat"),
-    e("\u{1F408}\u{200D}\u{2B1B}", "Black Cat"),
+    //e("\u{1F408}\u{200D}\u{2B1B}", "Black Cat"),
     e("\u{1F409}", "Dragon"),
     e("\u{1F40A}", "Crocodile"),
     e("\u{1F40B}", "Whale"),
@@ -913,22 +913,22 @@ export const animals = g(
     e("\u{1F9A0}", "Microbe"),
     e("\u{1F9A1}", "Badger"),
     e("\u{1F9A2}", "Swan"),
-    e("\u{1F9A3}", "Mammoth"),
-    e("\u{1F9A4}", "Dodo"),
+    //e("\u{1F9A3}", "Mammoth"),
+    //e("\u{1F9A4}", "Dodo"),
     e("\u{1F9A5}", "Sloth"),
     e("\u{1F9A6}", "Otter"),
     e("\u{1F9A7}", "Orangutan"),
     e("\u{1F9A8}", "Skunk"),
     e("\u{1F9A9}", "Flamingo"),
-    e("\u{1F9AB}", "Beaver"),
-    e("\u{1F9AC}", "Bison"),
-    e("\u{1F9AD}", "Seal"),
-    e("\u{1F9AE}", "Guide Dog"),
-    e("\u{1FAB0}", "Fly"),
-    e("\u{1FAB1}", "Worm"),
-    e("\u{1FAB2}", "Beetle"),
-    e("\u{1FAB3}", "Cockroach"),
-    e("\u{1FAB6}", "Feather"));
+    //e("\u{1F9AB}", "Beaver"),
+    //e("\u{1F9AC}", "Bison"),
+    //e("\u{1F9AD}", "Seal"),
+    //e("\u{1FAB0}", "Fly"),
+    //e("\u{1FAB1}", "Worm"),
+    //e("\u{1FAB2}", "Beetle"),
+    //e("\u{1FAB3}", "Cockroach"),
+    //e("\u{1FAB6}", "Feather"),
+    e("\u{1F9AE}", "Guide Dog"));
 
 export const whiteFlower = e("\u{1F4AE}", "White Flower");
 export const plants = g(
@@ -954,7 +954,7 @@ export const plants = g(
     e("\u{1F490}", "Bouquet"),
     whiteFlower,
     e("\u{1F940}", "Wilted Flower"),
-    e("\u{1FAB4}", "Potted Plant"),
+    //e("\u{1FAB4}", "Potted Plant"),
     e("\u{2618}\u{FE0F}", "Shamrock"));
 
 export const banana = e("\u{1F34C}", "Banana");
@@ -1044,12 +1044,12 @@ export const food = g(
     e("\u{1F9C6}", "Falafel"),
     e("\u{1F9C7}", "Waffle"),
     e("\u{1F9C8}", "Butter"),
-    e("\u{1FAD0}", "Blueberries"),
-    e("\u{1FAD1}", "Bell Pepper"),
-    e("\u{1FAD2}", "Olive"),
-    e("\u{1FAD3}", "Flatbread"),
-    e("\u{1FAD4}", "Tamale"),
-    e("\u{1FAD5}", "Fondue"),
+    //e("\u{1FAD0}", "Blueberries"),
+    //e("\u{1FAD1}", "Bell Pepper"),
+    //e("\u{1FAD2}", "Olive"),
+    //e("\u{1FAD3}", "Flatbread"),
+    //e("\u{1FAD4}", "Tamale"),
+    //e("\u{1FAD5}", "Fondue"),
     e("\u{1F366}", "Soft Ice Cream"),
     e("\u{1F367}", "Shaved Ice"),
     e("\u{1F368}", "Ice Cream"),
@@ -1080,8 +1080,8 @@ export const food = g(
     e("\u{1F9C3}", "Beverage Box"),
     e("\u{1F9C9}", "Mate"),
     e("\u{1F9CA}", "Ice"),
-    e("\u{1F9CB}", "Bubble Tea"),
-    e("\u{1FAD6}", "Teapot"),
+    //e("\u{1F9CB}", "Bubble Tea"),
+    //e("\u{1FAD6}", "Teapot"),
     e("\u{2615}", "Hot Beverage"),
     e("\u{1F374}", "Fork and Knife"),
     e("\u{1F37D}\u{FE0F}", "Fork and Knife with Plate"),
@@ -1357,9 +1357,9 @@ export const flags = g(
     e("\u{1F3C1}", "Chequered Flag"),
     e("\u{1F3F3}\u{FE0F}", "White Flag"),
     e("\u{1F3F3}\u{FE0F}\u{200D}\u{1F308}", "Rainbow Flag"),
-    e("\u{1F3F3}\u{FE0F}\u{200D}\u{26A7}\u{FE0F}", "Transgender Flag"),
+    //e("\u{1F3F3}\u{FE0F}\u{200D}\u{26A7}\u{FE0F}", "Transgender Flag"),
     e("\u{1F3F4}", "Black Flag"),
-    e("\u{1F3F4}\u{200D}\u{2620}\u{FE0F}", "Pirate Flag"),
+    //e("\u{1F3F4}\u{200D}\u{2620}\u{FE0F}", "Pirate Flag"),
     e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}", "Flag: England"),
     e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}", "Flag: Scotland"),
     e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}", "Flag: Wales"),
@@ -1423,8 +1423,8 @@ export const canoe = e("\u{1F6F6}", "Canoe");
 export const flyingSaucer = e("\u{1F6F8}", "Flying Saucer");
 export const skateboard = e("\u{1F6F9}", "Skateboard");
 export const autoRickshaw = e("\u{1F6FA}", "Auto Rickshaw");
-export const pickupTruck = e("\u{1F6FB}", "Pickup Truck");
-export const rollerSkate = e("\u{1F6FC}", "Roller Skate");
+//export const pickupTruck = e("\u{1F6FB}", "Pickup Truck");
+//export const rollerSkate = e("\u{1F6FC}", "Roller Skate");
 export const parachute = e("\u{1FA82}", "Parachute");
 export const anchor = e("\u{2693}", "Anchor");
 export const ferry = e("\u{26F4}\u{FE0F}", "Ferry");
@@ -1489,8 +1489,8 @@ export const vehicles = g(
     flyingSaucer,
     skateboard,
     autoRickshaw,
-    pickupTruck,
-    rollerSkate,
+    //pickupTruck,
+    //rollerSkate,
     motorizedWheelchair,
     manualWheelchair,
     parachute,
@@ -1883,9 +1883,9 @@ export const games = g(
     e("\u{1F9E9}", "Puzzle Piece"),
     e("\u{265F}\u{FE0F}", "Chess Pawn"),
     e("\u{1FA80}", "Yo-Yo"),
-    e("\u{1FA81}", "Kite"),
-    e("\u{1FA83}", "Boomerang"),
-    e("\u{1FA86}", "Nesting Dolls"));
+    //e("\u{1FA83}", "Boomerang"),
+    //e("\u{1FA86}", "Nesting Dolls"),
+    e("\u{1FA81}", "Kite"));
 
 export const sportsEquipment = g(
     "Sports Equipment", "Sports equipment",
@@ -1956,8 +1956,7 @@ export const clothing = g(
     e("\u{1FA70}", "Ballet Shoes"),
     e("\u{1FA71}", "One-Piece Swimsuit"),
     e("\u{1FA72}", "Briefs"),
-    e("\u{1FA73}", "Shorts"),
-    e("\u{1FA74}", "Thong Sandal"));
+    e("\u{1FA73}", "Shorts"));
 
 export const town = g(
     "Town", "Town",
@@ -1991,8 +1990,6 @@ export const town = g(
     e("\u{1F6D2}", "Shopping Cart"),
     e("\u{1F488}", "Barber Pole"),
     e("\u{1F492}", "Wedding"),
-    e("\u{1F6D6}", "Hut"),
-    e("\u{1F6D7}", "Elevator"),
     e("\u{1F5F3}\u{FE0F}", "Ballot Box with Ballot"));
 
 export const music = g(
@@ -2006,9 +2003,9 @@ export const music = g(
     e("\u{1F3BA}", "Trumpet"),
     e("\u{1F3BB}", "Violin"),
     e("\u{1F941}", "Drum"),
-    e("\u{1FA95}", "Banjo"),
-    e("\u{1FA97}", "Accordion"),
-    e("\u{1FA98}", "Long Drum"));
+    //e("\u{1FA97}", "Accordion"),
+    //e("\u{1FA98}", "Long Drum"),
+    e("\u{1FA95}", "Banjo"));
 
 export const weather = g(
     "Weather", "Weather",
@@ -2079,8 +2076,8 @@ export const finance = g(
     e("\u{1F4B6}", "Euro Banknote"),
     e("\u{1F4B7}", "Pound Banknote"),
     e("\u{1F4B8}", "Money with Wings"),
-    e("\u{1F4B9}", "Chart Increasing with Yen"),
-    e("\u{1FA99}", "Coin"));
+    //e("\u{1FA99}", "Coin"),
+    e("\u{1F4B9}", "Chart Increasing with Yen"));
 
 export const writing = g(
     "Writing", "Writing",
@@ -2257,7 +2254,6 @@ export const mail = g(
 
 export const celebration = g(
     "Celebration", "Celebration",
-    e("\u{1FA85}", "Piñata"),
     e("\u{1F380}", "Ribbon"),
     e("\u{1F381}", "Wrapped Gift"),
     e("\u{1F383}", "Jack-O-Lantern"),
@@ -2299,11 +2295,7 @@ export const tools = g(
     e("\u{26CF}\u{FE0F}", "Pick"),
     e("\u{26D1}\u{FE0F}", "Rescue Worker’s Helmet"),
     e("\u{26D3}\u{FE0F}", "Chains"),
-    compression,
-    e("\u{1FA9A}", "Carpentry Saw"),
-    e("\u{1FA9B}", "Screwdriver"),
-    e("\u{1FA9C}", "Ladder"),
-    e("\u{1FA9D}", "Hook"));
+    compression);
 
 export const office = g(
     "Office", "Office",
@@ -2415,8 +2407,6 @@ export const household = g(
     e("\u{1F4F0}", "Newspaper"),
     key,
     e("\u{1F525}", "Fire"),
-    e("\u{1FAA8}", "Rock"),
-    e("\u{1FAB5}", "Wood"),
     e("\u{1F52B}", "Pistol"),
     e("\u{1F56F}\u{FE0F}", "Candle"),
     e("\u{1F5BC}\u{FE0F}", "Framed Picture"),
@@ -2441,16 +2431,6 @@ export const household = g(
     e("\u{1F9FD}", "Sponge"),
     e("\u{1FA91}", "Chair"),
     e("\u{1FA92}", "Razor"),
-    e("\u{1FA9E}", "Mirror"),
-    e("\u{1FA9F}", "Window"),
-    e("\u{1FAA0}", "Plunger"),
-    e("\u{1FAA1}", "Sewing Needle"),
-    e("\u{1FAA2}", "Knot"),
-    e("\u{1FAA3}", "Bucket"),
-    e("\u{1FAA4}", "Mouse Trap"),
-    e("\u{1FAA5}", "Toothbrush"),
-    e("\u{1FAA6}", "Headstone"),
-    e("\u{1FAA7}", "Placard"),
     e("\u{1F397}\u{FE0F}", "Reminder Ribbon"));
 
 export const activities = g(
@@ -2497,10 +2477,8 @@ export const medieval = g(
     e("\u{1F5E1}\u{FE0F}", "Dagger"),
     e("\u{1F6E1}\u{FE0F}", "Shield"),
     e("\u{1F52E}", "Crystal Ball"),
-    e("\u{1FA84}", "Magic Wand"),
     e("\u{2694}\u{FE0F}", "Crossed Swords"),
-    e("\u{269C}\u{FE0F}", "Fleur-de-lis"),
-    e("\u{1FA96}", "Military Helmet"));
+    e("\u{269C}\u{FE0F}", "Fleur-de-lis"));
 
 export const doubleExclamationMark = e("\u{203C}\u{FE0F}", "Double Exclamation Mark");
 export const interrobang = e("\u{2049}\u{FE0F}", "Exclamation Question Mark");

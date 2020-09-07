@@ -1,3 +1,8 @@
+@font-face {
+    font-family: "Noto Color Emoji";
+    src: url('../fonts/NotoColorEmoji.ttf') format('truetype');
+}
+
 * {
     box-sizing: border-box;
     font-family: -apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif;

@@ -1,6 +1,7 @@
 import { EventBase, isNumber } from "../../calla";
 import { setContextSize } from "../../html/canvas";
 import { CanvasOffscreen } from "../../html/tags";
+import { loadFont } from "./loadFont";
 
 /**
  * @type {WeakMap<TextImage, TextImagePrivate>}
@@ -116,8 +117,6 @@ class TextImagePrivate {
     }
 }
 
-const loadedFonts = [];
-
 export class TextImage extends EventBase {
     /**
      * @param {string} fontFamily
@@ -130,16 +129,7 @@ export class TextImage extends EventBase {
     async loadFontAndSetText(value = null) {
         const testString = value || DEFAULT_TEST_TEXT;
         const font = makeFont(this);
-        if (loadedFonts.indexOf(font) === -1) {
-            const fonts = await document.fonts.load(font, testString);
-            if (fonts.length === 0) {
-                console.warn(`Failed to load font "${font}". If this is a system font, just set the object's \`value\` property, instead of calling \`loadFontAndSetText\`.`);
-            }
-            else {
-                loadedFonts.push(font);
-            }
-        }
-
+        await loadFont(font);
         this.value = value;
     }
 

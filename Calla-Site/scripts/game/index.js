@@ -1,8 +1,9 @@
 import { addEventListeners, CallaClient } from "../calla";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
+import { allPeople as people } from "../emoji/emojis";
 import { disabled } from "../html/attrs";
 import { hide, isOpen, show } from "../html/ops";
-import { allPeople as people } from "../emoji/emojis";
+import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
 import { ButtonLayer } from "./forms/ButtonLayer";
 import { DevicesDialog } from "./forms/DevicesDialog";
 import { EmojiForm } from "./forms/EmojiForm";
@@ -11,8 +12,8 @@ import { LoginForm } from "./forms/LoginForm";
 import { OptionsForm } from "./forms/OptionsForm";
 import { UserDirectoryForm } from "./forms/UserDirectoryForm";
 import { Game } from "./Game";
+import { loadFont } from "./graphics/loadFont";
 import { Settings } from "./Settings";
-import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
 
 const CAMERA_ZOOM_MIN = 0.5,
     CAMERA_ZOOM_MAX = 20,
@@ -489,3 +490,5 @@ showView(login);
 
 login.ready = true;
 timer.start();
+
+loadFont("Noto Color Emoji");
