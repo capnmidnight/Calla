@@ -20016,7 +20016,7 @@ function when(target, resolveEvt, filterTest, timeout) {
     });
 }
 
-const versionString = "v0.7.3";
+const versionString = "v0.8.0";
 
 /* global JitsiMeetJS */
 
