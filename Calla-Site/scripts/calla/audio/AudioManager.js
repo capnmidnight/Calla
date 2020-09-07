@@ -51,11 +51,32 @@ export class AudioManager extends EventBase {
             this.dispatchEvent(audioActivityEvt);
         };
 
+        /** @type {BaseListener} */
+        this.listener = null;
+
         /** @type {AudioContext} */
         this.audioContext = null;
 
-        /** @type {BaseListener} */
-        this.listener = null;
+        this.createContext();
+
+        if (this.audioContext instanceof AudioContext) {
+            const gestures = Object.keys(window)
+                .filter(x => x.startsWith("on"))
+                .map(x => x.substring(2));
+
+            const startAudio = () => {
+                this.start();
+                if (this.audioContext.state === "running") {
+                    for (let gesture of gestures) {
+                        window.removeEventListener(gesture, startAudio);
+                    }
+                }
+            }
+
+            for (let gesture of gestures) {
+                window.addEventListener(gesture, startAudio);
+            }
+        }
 
         Object.seal(this);
     }
@@ -65,6 +86,7 @@ export class AudioManager extends EventBase {
      **/
     start() {
         this.createContext();
+        this.audioContext.resume();
     }
 
     update() {
