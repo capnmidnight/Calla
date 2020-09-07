@@ -7,10 +7,12 @@ import { AudioListenerOld } from "./spatializers/listeners/AudioListenerOld";
 import { BaseListener } from "./spatializers/listeners/BaseListener";
 import { ResonanceScene } from "./spatializers/listeners/ResonanceScene";
 import { getFile } from "../fetching";
+import { LRUCache } from "../LRUCache";
 
 const BUFFER_SIZE = 1024,
     audioActivityEvt = new AudioActivityEvent(),
-    audioReadyEvt = new Event("audioready");
+    audioReadyEvt = new Event("audioready"),
+    cache = new LRUCache(50);
 
 let hasAudioContext = Object.prototype.hasOwnProperty.call(window, "AudioContext"),
     hasAudioListener = hasAudioContext && Object.prototype.hasOwnProperty.call(window, "AudioListener"),
@@ -244,9 +246,13 @@ export class AudioManager extends EventBase {
         const sources = [];
         for (let path of paths) {
             const s = document.createElement("source");
-
-            if (onProgress) {
+            const key = path;
+            if (cache.has(key)) {
+                path = cache.get(key);
+            }
+            else if (onProgress) {
                 path = await getFile(path, onProgress);
+                cache.set(key, path);
             }
             s.src = path;
             sources.push(s);

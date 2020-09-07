@@ -5,7 +5,7 @@ import { getFile } from "../calla/fetching";
 import { isString } from "../calla/typeChecks";
 import { height, src, width } from "../html/attrs";
 import { Canvas, Img } from "../html/tags";
-import { LRUCache } from "./LRUCache";
+import { LRUCache } from "../calla/LRUCache";
 
 const cache = new LRUCache(50);
 
