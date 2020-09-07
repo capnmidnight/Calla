@@ -38,9 +38,9 @@ export class BaseSource extends BaseSpatializer {
         this.audio.playsInline = true;
     }
 
-    play() {
+    async play() {
         if (this.audio) {
-            this.audio.play();
+            await this.audio.play();
         }
     }
 

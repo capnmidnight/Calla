@@ -19,7 +19,7 @@ export class AudioSource {
         /** @type {Map<string, JitsiTrack>} */
         this.tracks = new Map();
 
-        /** @type {import("./spatializers/BaseSpatializer").BaseSpatializer} */
+        /** @type {import("./spatializers/sources/BaseSource").BaseSource} */
         this._spatializer = null;
     }
 

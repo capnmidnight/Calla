@@ -340,8 +340,7 @@ export class CallaClient extends EventBase {
             this.conference.addEventListener(CONFERENCE_JOINED, async () => {
                 this.localUserID = this.conference.myUserId();
                 console.log("======== CONFERENCE_JOINED ::", this.localUserID);
-                const user = this.audio.createUser(this.localUserID);
-                user.spatializer = this.audio.listener;
+                const user = this.audio.createLocalUser(this.localUserID);
                 this.joined = true;
                 this.setDisplayName(userName);
                 this.dispatchEvent(Object.assign(

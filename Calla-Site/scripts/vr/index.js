@@ -1,4 +1,6 @@
 import { Object3D } from "three/src/core/Object3D";
+import { Quaternion } from "three/src/math/Quaternion";
+import { Vector3 } from "three/src/math/Vector3";
 import { getObject } from "../calla/fetching";
 import { splitProgress } from "../calla/progress";
 import { Application } from "./Application";
@@ -8,9 +10,17 @@ import { TextMesh } from "./TextMesh";
 
 
 const app = new Application();
+
+/** @type {Map<number, Object3D>} */
 const curTransforms = new Map();
+
+/** @type {Map<number, Station>} */
 const curStations = new Map();
+
+/** @type{Map<number, GraphEdge>} */
 const curConnections = new Map();
+
+/** @type{Map<string, AudioTrack[]>} */
 const curAudioTracks = new Map();
 
 const views = [
@@ -33,8 +43,10 @@ app.addEventListener("sceneclearing", () => {
     curTransforms.clear();
     curStations.clear();
     curConnections.clear();
-    for (let audioTrack of curAudioTracks.values()) {
-        app.audio.removeClip(audioTrack.path);
+    for (let zoneTracks of curAudioTracks.values()) {
+        for (let audioTrack of zoneTracks) {
+            app.audio.removeClip(audioTrack.path);
+        }
     }
     curAudioTracks.clear();
 });
@@ -69,11 +81,11 @@ let curZone = "";
 /**
  * @param {string} zone
  */
-function playAudioZone(zone) {
+async function playAudioZone(zone) {
     if (zone !== curZone) {
         stopCurrentAudioZone();
         curZone = zone;
-        playCurrentAudioZone();
+        await playCurrentAudioZone();
     }
 }
 
@@ -86,14 +98,16 @@ function stopCurrentAudioZone() {
     }
 }
 
-function playCurrentAudioZone() {
+async function playCurrentAudioZone() {
     if (curAudioTracks.has(curZone)) {
         const curTracks = curAudioTracks.get(curZone);
         for (let audioTrack of curTracks) {
-            app.audio.playClip(audioTrack.path, audioTrack.volume);
+            await app.audio.playClip(audioTrack.path, audioTrack.volume);
         }
     }
 }
+
+window.playCurrentAudioZone = playCurrentAudioZone;
 
 async function showMainMenu(_, skipHistory = false) {
     setHistory(0, null, skipHistory, "Main");
@@ -200,8 +214,13 @@ async function showActivity(activityID, skipHistory = false) {
         transform.add(img);
     }
 
+    const pos = new Vector3(),
+        quat = new Quaternion(),
+        up = new Vector3(),
+        forward = new Vector3();
+
     for (let audioTrack of audioTracks) {
-        await app.audio.addClip(
+        const clip = await app.audio.addClip(
             audioTrack.path,
             audioTrack.loop,
             false,
@@ -214,6 +233,26 @@ async function showActivity(activityID, skipHistory = false) {
 
         if (audioTrack.zone !== null) {
             curAudioTracks.get(audioTrack.zone).push(audioTrack);
+        }
+
+        clip.spatializer.minDistance = audioTrack.minDistance;
+        clip.spatializer.maxDistance = audioTrack.maxDistance;
+
+        if (audioTrack.spatialize) {
+            const transform = curTransforms.get(audioTrack.transformID);
+            transform.getWorldPosition(pos);
+            transform.getWorldQuaternion(quat);
+            forward.set(0, 0, -1).applyQuaternion(quat);
+            up.set(0, 1, 0).applyQuaternion(quat);
+            app.audio.setClipPose(
+                audioTrack.path,
+                pos.x, pos.y, pos.z,
+                forward.x, forward.y, forward.z,
+                up.x, up.y, up.z,
+                0);
+
+            await clip.spatializer.audio.play();
+            clip.spatializer.audio.pause();
         }
     }
 
@@ -241,7 +280,7 @@ async function showStation(stationID, onProgress) {
         there.visible = otherStationID === stationID;
     }
 
-    playAudioZone(station.zone);
+    await playAudioZone(station.zone);
 
     await app.fadeIn();
 }

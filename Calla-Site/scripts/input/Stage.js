@@ -98,6 +98,18 @@ export class Stage extends Object3D {
     }
 
     /**
+     * @param {import("three/src/math/Vector3").Vector3} pos
+     * @param {import("three/src/math/Vector3").Vector3} fwd
+     * @param {import("three/src/math/Vector3").Vector3} up
+     */
+    getCameraPose(pos, fwd, up) {
+        this.camera.getWorldPosition(pos);
+        this.camera.getWorldQuaternion(viewQuat);
+        fwd.set(0, 0, -1).applyQuaternion(viewQuat);
+        up.set(0, 1, 0).applyQuaternion(viewQuat);
+    }
+
+    /**
      * @type {Number}
      **/
     get avatarHeight() {

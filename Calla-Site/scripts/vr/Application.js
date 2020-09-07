@@ -2,6 +2,7 @@ import { PerspectiveCamera } from "three/src/cameras/PerspectiveCamera";
 import { Object3D } from "three/src/core/Object3D";
 import { AmbientLight } from "three/src/lights/AmbientLight";
 import { Color } from "three/src/math/Color";
+import { Vector3 } from "three/src/math/Vector3";
 import { WebGLRenderer } from "three/src/renderers/WebGLRenderer";
 import { Scene } from "three/src/scenes/Scene";
 import { AudioManager } from "../calla/audio/AudioManager";
@@ -17,12 +18,18 @@ import { Skybox } from "./Skybox";
 
 const visibleBackground = new Color(0x606060);
 const invisibleBackground = new Color(0x000000);
+const userPos = new Vector3();
+const userFwd = new Vector3();
+const userUp = new Vector3();
 
 export class Application extends EventBase {
     constructor() {
         super();
 
         this.audio = new AudioManager();
+        this.audio.addEventListener("audioready", () => {
+            this.audio.createLocalUser("local-user");
+        });
 
         this.renderer = new WebGLRenderer({
             canvas: document.getElementById("frontBuffer"),
@@ -109,10 +116,18 @@ export class Application extends EventBase {
                 this.skybox.visible = false;
             }
             this.skybox.update();
+            this.audio.update();
             this.loadingBar.update(evt.sdt);
             this.fader.update(evt.sdt);
             this.stage.presentationPoint.getWorldPosition(this.transition.position);
             this.stage.presentationPoint.getWorldQuaternion(this.transition.quaternion);
+            this.stage.getCameraPose(userPos, userFwd, userUp);
+            this.audio.setUserPose(
+                "local-user",
+                userPos.x, userPos.y, userPos.z,
+                userFwd.x, userFwd.y, userFwd.z,
+                userUp.x, userUp.y, userUp.z,
+                0);
             this.menu.position.copy(this.transition.position);
             this.menu.quaternion.copy(this.transition.quaternion);
             this.renderer.render(this.scene, this.camera);

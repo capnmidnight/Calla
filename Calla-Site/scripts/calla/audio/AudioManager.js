@@ -9,7 +9,8 @@ import { ResonanceScene } from "./spatializers/listeners/ResonanceScene";
 import { getFile } from "../fetching";
 
 const BUFFER_SIZE = 1024,
-    audioActivityEvt = new AudioActivityEvent();
+    audioActivityEvt = new AudioActivityEvent(),
+    audioReadyEvt = new Event("audioready");
 
 let hasAudioContext = Object.prototype.hasOwnProperty.call(window, "AudioContext"),
     hasAudioListener = hasAudioContext && Object.prototype.hasOwnProperty.call(window, "AudioListener"),
@@ -60,17 +61,20 @@ export class AudioManager extends EventBase {
 
         this.createContext();
 
-        if (this.audioContext instanceof AudioContext) {
+        if (this.audioContext instanceof AudioContext
+            && !this.ready) {
             const gestures = Object.keys(window)
                 .filter(x => x.startsWith("on"))
                 .map(x => x.substring(2));
 
             const startAudio = () => {
                 this.start();
-                if (this.audioContext.state === "running") {
+                if (this.ready) {
                     for (let gesture of gestures) {
                         window.removeEventListener(gesture, startAudio);
                     }
+
+                    this.dispatchEvent(audioReadyEvt);
                 }
             }
 
@@ -80,6 +84,20 @@ export class AudioManager extends EventBase {
         }
 
         Object.seal(this);
+    }
+
+    addEventListener(name, listener, opts) {
+        if (name === audioReadyEvt.type
+            && this.ready) {
+            listener(audioReadyEvt);
+        }
+        else {
+            super.addEventListener(name, listener, opts);
+        }
+    }
+
+    get ready() {
+        return this.audioContext.state === "running";
     }
 
     /** 
@@ -204,6 +222,17 @@ export class AudioManager extends EventBase {
     }
 
     /**
+     * Create a new user for the audio listener.
+     * @param {string} id
+     * @returns {AudioSource}
+     */
+    createLocalUser(id) {
+        const user = this.createUser(id);
+        user.spatializer = this.listener;
+        return user;
+    }
+
+    /**
      * Creates a new sound effect from a series of fallback paths
      * for media files.
      * @param {string} name - the name of the sound effect, to reference when executing playback.
@@ -215,6 +244,7 @@ export class AudioManager extends EventBase {
         const sources = [];
         for (let path of paths) {
             const s = document.createElement("source");
+
             if (onProgress) {
                 path = await getFile(path, onProgress);
             }
@@ -241,12 +271,11 @@ export class AudioManager extends EventBase {
      * @param {string} name - the name of the effect to play.
      * @param {number} [volume=1] - the volume at which to play the effect.
      */
-    playClip(name, volume = 1) {
+    async playClip(name, volume = 1) {
         if (this.clips.has(name)) {
             const clip = this.clips.get(name);
             clip.volume = volume;
-            clip.spatializer.audio.load();
-            clip.spatializer.play();
+            await clip.spatializer.play();
         }
     }
 
