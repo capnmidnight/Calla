@@ -103,8 +103,8 @@ export class Application extends EventBase {
             this.skybox.update();
             this.loadingBar.update(evt.sdt);
             this.fader.update(evt.sdt);
-            this.stage.avatar.getWorldPosition(this.transition.position);
-            this.stage.avatar.getWorldQuaternion(this.transition.quaternion);
+            this.stage.presentationPoint.getWorldPosition(this.transition.position);
+            this.stage.presentationPoint.getWorldQuaternion(this.transition.quaternion);
             this.menu.position.copy(this.transition.position);
             this.menu.quaternion.copy(this.transition.quaternion);
             this.renderer.render(this.scene, this.camera);

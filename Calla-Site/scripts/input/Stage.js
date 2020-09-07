@@ -43,11 +43,14 @@ export class Stage extends Object3D {
         this.shoulders.add(this.hands);
         this.shoulders.add(this.body);
 
+        this.presentationPoint = new Object3D();
+
         this.avatar = new Object3D();
         this.avatar.rotation.set(0, 0, 0);
         this.avatar.position.set(0, 0, 0);
         this.avatar.add(this.pivot);
         this.avatar.add(this.shoulders);
+        this.avatar.add(this.presentationPoint);
 
         this.add(this.avatar);
     }
@@ -85,8 +88,11 @@ export class Stage extends Object3D {
         }
         x = clamp(x, minX, maxX);
 
-        this.pivot.rotation.x = x;
         this.avatar.rotation.y = y;
+        this.avatar.updateMatrixWorld();
+
+        this.pivot.rotation.x = x;
+        this.pivot.updateMatrixWorld();
     }
 
     /**
