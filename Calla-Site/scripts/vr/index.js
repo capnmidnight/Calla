@@ -153,12 +153,12 @@ async function showActivity(activityID, skipHistory = false) {
     for (let sign of signs) {
         const transform = curTransforms.get(sign.transformID);
         const img = new Image2DMesh();
-        img.name = "sign-" + sign.imageFileID;
+        img.name = "sign-" + sign.fileID;
         if (sign.isCallout) {
             img.addEventListener("click", () => console.log(img.name));
         }
         const prog = progs.shift();
-        await img.setImage(`VR/File/${sign.imageFileID}`, prog);
+        await img.setImage(sign.path, prog);
         transform.add(img);
     }
 
@@ -173,10 +173,9 @@ async function showStation(stationID, onProgress) {
     await app.fadeOut();
 
     const station = curStations.get(stationID),
-        here = curTransforms.get(stationID),
-        imgPath = `/VR/File/${station.fileID}`;
+        here = curTransforms.get(stationID);
 
-    await app.skybox.setImage(imgPath, onProgress);
+    await app.skybox.setImage(station.path, onProgress);
     app.skybox.quaternion.fromArray(station.rotation);
     app.showSkybox = true;
 

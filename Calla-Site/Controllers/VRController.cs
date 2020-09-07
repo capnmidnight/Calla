@@ -152,9 +152,10 @@ namespace Calla.Controllers
                         .Select(t => new Station
                         {
                             TransformID = t.Stations.TransformId,
+                            FileID = t.Stations.FileId,
+                            Path = $"VR/File/{t.Stations.FileId}",
                             Location = new LatLngPoint(t.Stations.Latitude, t.Stations.Longitude, t.Stations.Altitude),
                             Rotation = t.Stations.Rotation,
-                            FileID = t.Stations.FileId,
                             IsStart = t.Stations.TransformId == act.StartStationId,
                             Zone = t.Stations.Zone
                         }),
@@ -171,14 +172,15 @@ namespace Calla.Controllers
                         .SelectMany(t => t.AudioTracks
                             .Select(at => new AudioTrack
                             {
-                                AudioFileID = at.FileId,
+                                TransformID = at.TransformId,
+                                FileID = at.FileId,
+                                Path = $"VR/File/{at.FileId}",
                                 AutoPlay = at.AutoPlay,
                                 Loop = at.Loop,
                                 MaxDistance = at.MaxDistance,
                                 MinDistance = at.MinDistance,
                                 PlaybackTransformID = at.PlaybackControls?.TransformId ?? 0,
                                 Spatialize = at.Spatialize,
-                                TransformID = at.TransformId,
                                 Volume = at.Volume,
                                 Zone = at.Zone
                             })),
@@ -187,9 +189,10 @@ namespace Calla.Controllers
                         .SelectMany(t => t.Signs
                             .Select(s => new Sign
                             {
-                                ImageFileID = s.FileId,
-                                IsCallout = s.IsCallout,
-                                TransformID = s.TransformId
+                                TransformID = s.TransformId,
+                                FileID = s.FileId,
+                                Path = $"VR/File/{s.FileId}",
+                                IsCallout = s.IsCallout
                             }))
                 })
                 .SingleOrDefault();
