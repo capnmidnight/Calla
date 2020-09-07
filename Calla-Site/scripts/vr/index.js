@@ -2,6 +2,7 @@ import { Object3D } from "three";
 import { DebugObject } from "./DebugObject";
 import { getObject, getObjectWithProgress } from "./fetching";
 import { Image2DMesh } from "./Image2DMesh";
+import { splitProgress } from "./progress";
 import { TextMesh } from "./TextMesh";
 import { ThreeJSApplication } from "./ThreeJSApplication";
 
@@ -38,13 +39,24 @@ async function showLesson(lessonID, skipHistory = false) {
     await showMenu(`VR/Lesson/${lessonID}/Activities`, (activity) => showActivity(activity.id));
 }
 
+/**
+ * @param {Number} soFar
+ * @param {Number} total
+ * @param {String?} msg
+ */
+function onProgress(soFar, total, msg) {
+    app.onProgress(soFar, total, msg);
+}
+
 async function showActivity(activityID, skipHistory = false) {
     setHistory(3, activityID, skipHistory, "Activity");
 
-    await app.fader.fadeOut();
+    await app.fadeOut();
     app.clearScene();
 
-    const all = await getObjectWithProgress(`/VR/Activity/${activityID}`);
+    const [lessonProg, assetProg] = splitProgress(onProgress, [1, 99]);
+
+    const all = await getObjectWithProgress(`/VR/Activity/${activityID}`, lessonProg);
     const {
         transforms,
         stations,
@@ -52,6 +64,9 @@ async function showActivity(activityID, skipHistory = false) {
         signs,
         audioTracks
     } = all;
+
+
+    const progs = splitProgress(assetProg, signs.length + 1);
 
     let startID = null;
     for (let station of stations) {
@@ -105,7 +120,7 @@ async function showActivity(activityID, skipHistory = false) {
             icon.position.y += 1;
 
             from.add(icon);
-            icon.addEventListener("click", () => showStation(toStationID));
+            icon.addEventListener("click", () => showStation(toStationID, onProgress));
         }
     }
 
@@ -116,25 +131,27 @@ async function showActivity(activityID, skipHistory = false) {
         if (sign.isCallout) {
             img.addEventListener("click", () => console.log(img.name));
         }
-        await img.setImage(`VR/File/${sign.imageFileID}`);
+        const prog = progs.shift();
+        await img.setImage(`VR/File/${sign.imageFileID}`, prog);
         transform.add(img);
     }
 
     if (startID !== null) {
-        await showStation(startID, true);
+        await showStation(startID, progs.shift());
     }
-    await app.fader.fadeIn();
+
+    await app.fadeIn();
 }
 
-async function showStation(stationID, skipHistory = false) {
-    await app.fader.fadeOut();
+async function showStation(stationID, onProgress) {
+    await app.fadeOut();
 
     const station = curStations.get(stationID),
         here = curTransforms.get(stationID),
         imgPath = `/VR/File/${station.fileID}`;
 
-    await app.skybox.setImage(imgPath);
-    app.skybox.visible = true;
+    await app.skybox.setImage(imgPath, onProgress);
+    app.showSkybox = true;
     app.skybox.quaternion.fromArray(station.rotation);
 
     here.getWorldPosition(app.stage.position);
@@ -144,7 +161,7 @@ async function showStation(stationID, skipHistory = false) {
         there.visible = otherStationID === stationID;
     }
 
-    await app.fader.fadeIn();
+    await app.fadeIn();
 }
 
 const functs = [
@@ -173,7 +190,7 @@ function setHistory(step, id, skipHistory, name) {
 }
 
 async function showMenu(path, onClick) {
-    await app.fader.fadeOut();
+    await app.fadeOut();
 
     app.clearScene();
     app.skybox.visible = false;
@@ -187,7 +204,7 @@ async function showMenu(path, onClick) {
         tasks.push(addMenuItem(item, y, onClick));
     }
     await Promise.all(tasks);
-    await app.fader.fadeIn();
+    await app.fadeIn();
 }
 
 async function addMenuItem(item, y, onClick) {

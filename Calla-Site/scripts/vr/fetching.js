@@ -1,4 +1,10 @@
-async function getResponse(path) {
+import { isFunction } from "../calla";
+
+/**
+ * @param {string} path
+ * @returns {Promise<Response>}
+ */
+export async function getResponse(path) {
     const request = fetch(path);
     const response = await request;
     if (!response.ok) {
@@ -29,10 +35,29 @@ export async function getFile(path) {
 }
 
 /**
+ * @callback progressCallback
+ * @param {number} soFar
+ * @param {number} total
+ * @param {string?} message
+ **/
+
+/**
+ * @typedef {object} getPartsReturnType
+ * @property {Uint8Array} buffer
+ * @property {string} contentType
+ **/
+
+/**
  * @param {string} path
- * @returns {Promise<Uint8Array[]>}
+ * @param {progressCallback} onProgress
+ * @returns {Promise<getPartsReturnType>}
  */
-async function getParts(path) {
+export async function getBufferWithProgress(path, onProgress) {
+    if (!isFunction(onProgress)) {
+        throw new Error("progress callback is required");
+    }
+
+    onProgress(0, 1, path);
     const response = await getResponse(path);
 
     const contentLength = parseInt(response.headers.get("Content-Length"), 10);
@@ -60,6 +85,7 @@ async function getParts(path) {
 
         buffer.set(value, receivedLength);
         receivedLength += value.length;
+        onProgress(receivedLength, contentLength, path);
     }
 
     return { buffer, contentType };
@@ -67,10 +93,11 @@ async function getParts(path) {
 
 /**
  * @param {string} path
+ * @param {progressCallback} onProgress
  * @returns {Promise<any>}
  */
-export async function getObjectWithProgress(path) {
-    const { buffer } = await getParts(path);
+export async function getObjectWithProgress(path, onProgress) {
+    const { buffer } = await getBufferWithProgress(path, onProgress);
     const decoder = new TextDecoder("utf-8");
     const text = decoder.decode(buffer);
     const obj = JSON.parse(text);
@@ -79,16 +106,12 @@ export async function getObjectWithProgress(path) {
 
 /**
  * @param {string} path
+ * @param {progressCallback} onProgress
  * @returns {Promise<string>}
  */
-export async function getFileWithProgress(path) {
-    const { buffer, contentType } = await getParts(path);
-    try {
-        const blob = new Blob([buffer], { type: contentType });
-        const blobUrl = URL.createObjectURL(blob);
-        return blobUrl;
-    }
-    catch (exp) {
-        throw exp;
-    }
+export async function getFileWithProgress(path, onProgress) {
+    const { buffer, contentType } = await getBufferWithProgress(path, onProgress);
+    const blob = new Blob([buffer], { type: contentType });
+    const blobUrl = URL.createObjectURL(blob);
+    return blobUrl;
 }

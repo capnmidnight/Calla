@@ -32,15 +32,23 @@ export class Fader extends Mesh {
         this.material.opacity = v;
     }
 
+    get isIn() {
+        return this.opacity < 1;
+    }
+
+    get isOut() {
+        return this.opacity > 0;
+    }
+
     async fadeOut() {
-        if (this.opacity < 1) {
+        if (this.isIn) {
             this.direction = 1;
             await once(this, "fadeComplete");
         }
     }
 
     async fadeIn() {
-        if (this.opacity > 0) {
+        if (this.isOut) {
             this.direction = -1;
             await once(this, "fadeComplete");
         }

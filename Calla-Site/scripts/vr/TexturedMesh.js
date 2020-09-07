@@ -4,6 +4,8 @@ import { height, src, width } from "../html/attrs";
 import { Canvas, Img } from "../html/tags";
 import { getFileWithProgress } from "./fetching";
 
+const cache = new Map();
+
 export class TexturedMesh extends Mesh {
     /**
      * @param {import("three").BufferGeometry} geom
@@ -15,13 +17,18 @@ export class TexturedMesh extends Mesh {
     }
 
     /**
-     *
      * @param {HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|string|Texture} img
+     * @param {import("./fetching").progressCallback} onProgress
      */
 
-    async setImage(img) {
+    async setImage(img, onProgress) {
+        const key = img;
+        if (cache.has(key)) {
+            img = cache.get(key);
+        }
+
         if (isString(img)) {
-            img = await getFileWithProgress(img);
+            img = await getFileWithProgress(img, onProgress);
             img = Img(src(img));
         }
 
@@ -46,6 +53,9 @@ export class TexturedMesh extends Mesh {
             img = new Texture(img);
         }
 
+        if (!cache.has(key)) {
+            cache.set(key, img);
+        }
         this.material.map = img;
         img = this.material.map.image;
         this.isVideo = img instanceof HTMLVideoElement;

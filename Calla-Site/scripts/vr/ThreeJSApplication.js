@@ -1,12 +1,16 @@
 import { AmbientLight, Color, Object3D, PerspectiveCamera, Scene, WebGLRenderer } from "three";
-import { EventBase } from "../calla";
+import { EventBase, arrayClear } from "../calla";
 import { CameraControl } from "../input/CameraControl";
 import { EventSystem } from "../input/EventSystem";
 import { ScreenPointerControls } from "../input/ScreenPointerControls";
 import { Stage } from "../input/Stage";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
 import { Fader } from "./Fader";
+import { LoadingBar } from "./LoadingBar";
 import { Skybox } from "./Skybox";
+
+const visibleBackground = new Color(0x606060);
+const invisibleBackground = new Color(0x000000);
 
 export class ThreeJSApplication extends EventBase {
     constructor() {
@@ -29,9 +33,11 @@ export class ThreeJSApplication extends EventBase {
         this.camera = new PerspectiveCamera(50, 1, 0.01, 1000);
 
         this.fader = new Fader(this.camera);
+        this.fadeDepth = 0;
 
         this.skybox = new Skybox(this.camera);
         this.skybox.visible = false;
+        this.showSkybox = false;
 
         this.stage = new Stage(this.camera);
         this.stage.position.set(0, 0, 0);
@@ -47,10 +53,19 @@ export class ThreeJSApplication extends EventBase {
         this.foreground = new Object3D();
         this.foreground.name = "Foreground";
 
+        this.loadingBar = new LoadingBar();
+        this.loadingBar.position.set(0, 1.5, -2);
+
+        this.transition = new Object3D();
+        this.transition.name = "Transition";
+        this.transition.visible = false;
+        this.transition.add(this.loadingBar);
+
         this.scene = new Scene();
-        this.scene.background = new Color(0x606060);
+        this.scene.background = visibleBackground;
         this.scene.add(this.background);
         this.scene.add(this.foreground);
+        this.scene.add(this.transition);
 
         const resize = () => {
             this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -78,7 +93,11 @@ export class ThreeJSApplication extends EventBase {
         });
 
         const update = (evt) => {
+            if (!this.showSkybox) {
+                this.skybox.visible = false;
+            }
             this.skybox.update();
+            this.loadingBar.update(evt.sdt);
             this.fader.update(evt.sdt);
             this.renderer.render(this.scene, this.camera);
         };
@@ -96,5 +115,43 @@ export class ThreeJSApplication extends EventBase {
     clearScene() {
         this.dispatchEvent(new Event("sceneclearing"));
         this.foreground.remove(...this.foreground.children);
+    }
+
+    async fadeOut() {
+        console.log("fade out", this.fadeDepth);
+        ++this.fadeDepth;
+        if (this.fadeDepth === 1) {
+            console.log("fading out");
+            await this.fader.fadeOut();
+            this.skybox.visible = false;
+            this.scene.background = invisibleBackground;
+            this.foreground.visible = false;
+            this.transition.visible = true;
+            this.loadingBar.onProgress(0, 1);
+            await this.fader.fadeIn();
+        }
+    }
+
+    async fadeIn() {
+        console.log("fade in", this.fadeDepth);
+        --this.fadeDepth;
+        if (this.fadeDepth === 0) {
+            console.log("fading in");
+            await this.fader.fadeOut();
+            this.skybox.visible = this.showSkybox;
+            this.scene.background = visibleBackground;
+            this.foreground.visible = true;
+            this.transition.visible = false;
+            await this.fader.fadeIn();
+        }
+    }
+
+    /**
+     * @param {number} soFar
+     * @param {number} total
+     * @param {string?} msg
+     */
+    onProgress(soFar, total, msg) {
+        this.loadingBar.onProgress(soFar, total, msg);
     }
 }
