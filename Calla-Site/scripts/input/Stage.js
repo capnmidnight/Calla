@@ -21,34 +21,35 @@ export class Stage extends Object3D {
         this.position.copy(camera.position);
         this.position.y = 0;
 
-        this.avatar = new Object3D();
-        this.add(this.avatar);
-        this.avatar.rotation.set(0, 0, 0);
-        this.avatar.position.set(0, 0, 0);
-
-        this.pivot = new Object3D();
-        this.avatar.add(this.pivot);
-        this.pivot.rotation.set(0, 0, 0);
-        this.pivot.position.set(0, defaultAvatarHeight - 0.1, 0);
-
-        this.neck = new Object3D();
-        this.pivot.add(this.neck);
-        this.neck.rotation.set(0, 0, 0);
-        this.neck.position.set(0, 0.1, 0);
-
         this.camera = camera;
-        this.neck.add(this.camera);
         this.camera.position.set(0, 0, 0);
         this.camera.rotation.set(0, 0, 0);
 
-        this.shoulders = new Object3D();
-        this.avatar.add(this.shoulders);
+        this.neck = new Object3D();
+        this.neck.rotation.set(0, 0, 0);
+        this.neck.position.set(0, 0.1, 0);
+        this.neck.add(this.camera);
+
+        this.pivot = new Object3D();
+        this.pivot.rotation.set(0, 0, 0);
+        this.pivot.position.set(0, defaultAvatarHeight - 0.1, 0);
+        this.pivot.add(this.neck);
 
         this.hands = new Object3D();
-        this.shoulders.add(this.hands);
 
         this.body = new Object3D();
+
+        this.shoulders = new Object3D();
+        this.shoulders.add(this.hands);
         this.shoulders.add(this.body);
+
+        this.avatar = new Object3D();
+        this.avatar.rotation.set(0, 0, 0);
+        this.avatar.position.set(0, 0, 0);
+        this.avatar.add(this.pivot);
+        this.avatar.add(this.shoulders);
+
+        this.add(this.avatar);
     }
 
     /**

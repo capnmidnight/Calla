@@ -50,8 +50,12 @@ export class Application extends EventBase {
         this.background.add(this.skybox);
         this.background.add(this.stage);
 
+        this.menu = new Object3D();
+        this.menu.name = "Menu";
+
         this.foreground = new Object3D();
         this.foreground.name = "Foreground";
+        this.foreground.add(this.menu);
 
         this.loadingBar = new LoadingBar();
         this.loadingBar.position.set(0, 1.5, -2);
@@ -99,6 +103,10 @@ export class Application extends EventBase {
             this.skybox.update();
             this.loadingBar.update(evt.sdt);
             this.fader.update(evt.sdt);
+            this.stage.avatar.getWorldPosition(this.transition.position);
+            this.stage.avatar.getWorldQuaternion(this.transition.quaternion);
+            this.menu.position.copy(this.transition.position);
+            this.menu.quaternion.copy(this.transition.quaternion);
             this.renderer.render(this.scene, this.camera);
         };
         this.timer = new RequestAnimationFrameTimer();
@@ -114,14 +122,14 @@ export class Application extends EventBase {
 
     clearScene() {
         this.dispatchEvent(new Event("sceneclearing"));
+        this.menu.remove(...this.menu.children);
         this.foreground.remove(...this.foreground.children);
+        this.foreground.add(this.menu);
     }
 
     async fadeOut() {
-        console.log("fade out", this.fadeDepth);
         ++this.fadeDepth;
         if (this.fadeDepth === 1) {
-            console.log("fading out");
             await this.fader.fadeOut();
             this.skybox.visible = false;
             this.scene.background = invisibleBackground;
@@ -133,10 +141,8 @@ export class Application extends EventBase {
     }
 
     async fadeIn() {
-        console.log("fade in", this.fadeDepth);
         --this.fadeDepth;
         if (this.fadeDepth === 0) {
-            console.log("fading in");
             await this.fader.fadeOut();
             this.skybox.visible = this.showSkybox;
             this.scene.background = visibleBackground;

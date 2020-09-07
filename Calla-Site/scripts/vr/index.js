@@ -151,8 +151,8 @@ async function showStation(stationID, onProgress) {
         imgPath = `/VR/File/${station.fileID}`;
 
     await app.skybox.setImage(imgPath, onProgress);
-    app.showSkybox = true;
     app.skybox.quaternion.fromArray(station.rotation);
+    app.showSkybox = true;
 
     here.getWorldPosition(app.stage.position);
 
@@ -225,7 +225,7 @@ async function addMenuItem(item, y, onClick) {
 
     await mesh.loadFontAndSetText(item.name);
 
-    app.foreground.add(mesh);
+    app.menu.add(mesh);
     if (item.enabled !== false) {
         mesh.addEventListener("click", () => onClick(item));
     }

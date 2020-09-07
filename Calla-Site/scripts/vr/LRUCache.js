@@ -1,4 +1,5 @@
-﻿import { arrayClear, arrayRemove } from "../calla";
+import { arrayClear, arrayRemove } from "../calla";
+
 export class LRUCache {
     constructor(size) {
         this.size = size;
@@ -8,8 +9,15 @@ export class LRUCache {
 
     set(key, value) {
         this.usage.push(key);
+        const removed = [];
         while (this.usage.length > this.size) {
-            this.map.delete(this.usage.shift());
+            const toDelete = this.usage.shift();
+            removed.push(toDelete);
+            this.map.delete(toDelete);
+        }
+        arrayRemove(removed, key);
+        if (removed.length > 0) {
+            console.log("removing", removed.join(", "));
         }
         return this.map.set(key, value);
     }

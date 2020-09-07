@@ -5,7 +5,7 @@ import { Canvas, Img } from "../html/tags";
 import { getFileWithProgress } from "./fetching";
 import { LRUCache } from "./LRUCache";
 
-const cache = new LRUCache(10);
+const cache = new LRUCache(50);
 
 export class TexturedMesh extends Mesh {
     /**
