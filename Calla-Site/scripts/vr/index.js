@@ -24,6 +24,15 @@ app.addEventListener("started", () => {
 
 app.start();
 
+/**
+ * @param {Number} soFar
+ * @param {Number} total
+ * @param {String?} msg
+ */
+function onProgress(soFar, total, msg) {
+    app.onProgress(soFar, total, msg);
+}
+
 async function showMainMenu(_, skipHistory = false) {
     setHistory(0, null, skipHistory, "Main");
     await showMenu("VR/Languages", (language) => showLanguage(language.id));
@@ -37,15 +46,6 @@ async function showLanguage(languageID, skipHistory = false) {
 async function showLesson(lessonID, skipHistory = false) {
     setHistory(2, lessonID, skipHistory, "Lesson");
     await showMenu(`VR/Lesson/${lessonID}/Activities`, (activity) => showActivity(activity.id));
-}
-
-/**
- * @param {Number} soFar
- * @param {Number} total
- * @param {String?} msg
- */
-function onProgress(soFar, total, msg) {
-    app.onProgress(soFar, total, msg);
 }
 
 async function showActivity(activityID, skipHistory = false) {
