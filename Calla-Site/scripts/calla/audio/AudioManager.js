@@ -187,7 +187,7 @@ export class AudioManager extends EventBase {
      * @param {string} name - the name of the sound effect, to reference when executing playback.
      * @param {string[]} paths - a series of fallback paths for loading the media of the sound effect.
      */
-    addClip(name, ...paths) {
+    addClip(name, loop, autoPlay, onProgress, ...paths) {
         const source = new AudioSource();
 
         const sources = paths
@@ -198,8 +198,10 @@ export class AudioManager extends EventBase {
             });
 
         const elem = document.createElement("audio");
+        elem.loop = loop;
         elem.controls = false;
         elem.playsInline = true;
+        elem.autoplay = autoPlay;
         elem.append(...sources);
 
         source.spatializer = this.createSpatializer(name, elem);
