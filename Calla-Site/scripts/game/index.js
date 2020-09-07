@@ -1,4 +1,5 @@
-import { addEventListeners, CallaClient } from "../calla";
+import { CallaClient } from "../calla/CallaClient";
+import { addEventListeners } from "../calla/events/addEventListeners";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
 import { allPeople as people } from "../emoji/emojis";
 import { disabled } from "../html/attrs";

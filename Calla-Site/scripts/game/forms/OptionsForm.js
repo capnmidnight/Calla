@@ -1,4 +1,4 @@
-import { isGoodNumber, isString } from "../../calla";
+import { isGoodNumber, isString } from "../../calla/typeChecks";
 import { disabled, height, htmlFor, id, max, min, placeHolder, step, value, width } from "../../html/attrs";
 import { cssWidth } from "../../html/css";
 import { onClick, onInput, onKeyUp } from "../../html/evts";

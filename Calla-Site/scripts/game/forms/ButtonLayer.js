@@ -1,9 +1,4 @@
-import { EventBase } from "../../calla";
-import { alt, className, id, max, min, role, src, step, title, value } from "../../html/attrs";
-import { cssHeight, margin, textAlign } from "../../html/css";
-import { onClick, onInput } from "../../html/evts";
-import { updateLabel } from "../../html/ops";
-import { Button, Div, Img, InputRange, Run } from "../../html/tags";
+import { EventBase } from "../../calla/events/EventBase";
 import {
     door,
     downRightArrow,
@@ -20,6 +15,11 @@ import {
     videoCamera,
     whiteFlower
 } from "../../emoji/emojis";
+import { alt, className, id, max, min, role, src, step, title, value } from "../../html/attrs";
+import { cssHeight, margin, textAlign } from "../../html/css";
+import { onClick, onInput } from "../../html/evts";
+import { updateLabel } from "../../html/ops";
+import { Button, Div, Img, InputRange, Run } from "../../html/tags";
 
 const toggleOptionsEvt = new Event("toggleOptions"),
     tweetEvt = new Event("tweet"),

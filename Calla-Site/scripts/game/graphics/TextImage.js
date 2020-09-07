@@ -1,4 +1,5 @@
-import { EventBase, isNumber } from "../../calla";
+import { EventBase } from "../../calla/events/EventBase";
+import { isNumber } from "../../calla/typeChecks";
 import { setContextSize } from "../../html/canvas";
 import { CanvasOffscreen } from "../../html/tags";
 import { loadFont } from "./loadFont";

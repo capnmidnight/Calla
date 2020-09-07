@@ -1,5 +1,6 @@
 // Import the configuration parameters.
-import { CallaClient, canChangeAudioOutput } from "../calla";
+import { canChangeAudioOutput } from "../calla/audio/canChangeAudioOutput";
+import { CallaClient } from "../calla/CallaClient";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
 // Sets up a convenient button for opening multiple
 // windows for testing.

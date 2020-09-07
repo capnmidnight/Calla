@@ -1,9 +1,11 @@
-import { EventBase, isString, project } from "../calla";
+import { EventBase } from "../calla/events/EventBase";
+import { project } from "../calla/math/project";
+import { isString } from "../calla/typeChecks";
+import { bust, mutedSpeaker, speakerMediumVolume } from "../emoji/emojis";
 import { AvatarMode } from "./avatars/AvatarMode";
 import { EmojiAvatar } from "./avatars/EmojiAvatar";
 import { PhotoAvatar } from "./avatars/PhotoAvatar";
 import { VideoAvatar } from "./avatars/VideoAvatar";
-import { bust, mutedSpeaker, speakerMediumVolume } from "../emoji/emojis";
 import { getTransform } from "./graphics/getTransform";
 import { TextImage } from "./graphics/TextImage";
 
