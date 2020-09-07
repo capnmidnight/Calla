@@ -1,5 +1,6 @@
-import { Vector } from "./Vector";
-import { project } from "../../math";
+import { Vector3 } from "three/src/math/Vector3";
+import { project } from "../../math/project";
+import { slerpVectors } from "../../math";
 
 /**
  * A position and orientation, at a given time.
@@ -10,10 +11,10 @@ export class Pose {
      **/
     constructor() {
         this.t = 0;
-        this.p = new Vector();
-        this.f = new Vector();
+        this.p = new Vector3();
+        this.f = new Vector3();
         this.f.set(0, 0, -1);
-        this.u = new Vector();
+        this.u = new Vector3();
         this.u.set(0, 1, 0);
 
         Object.seal(this);
@@ -64,9 +65,10 @@ export class Pose {
         }
         else if (start.t < t) {
             const p = project(t, start.t, end.t);
-            this.p.lerp(start.p, end.p, p);
-            this.f.slerp(start.f, end.f, p);
-            this.u.slerp(start.u, end.u, p);
+            this.p.copy(start.p);
+            this.p.lerp(end.p, p);
+            slerpVectors(this.f, start.f, end.f, p);
+            slerpVectors(this.u, start.u, end.u, p);
             this.t = t;
         }
     }

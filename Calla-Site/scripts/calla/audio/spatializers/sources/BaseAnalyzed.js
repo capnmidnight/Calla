@@ -1,4 +1,5 @@
-import { clamp, isGoodNumber } from "../../../math";
+import { clamp } from "../../../math/clamp";
+import { isGoodNumber } from "../../../typeChecks";
 import { AudioActivityEvent } from "../../AudioActivityEvent";
 import { BaseSource } from "./BaseSource";
 

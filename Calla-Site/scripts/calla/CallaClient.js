@@ -9,8 +9,7 @@ import { EventBase } from "./events/EventBase";
 import { once } from "./events/once";
 import { until } from "./events/until";
 import { when } from "./events/when";
-import { isGoodNumber } from "./math";
-import { isNumber } from "./typeChecks";
+import { isGoodNumber, isNumber } from "./typeChecks";
 import { versionString } from "./version";
 
 console.info("Calla", versionString);

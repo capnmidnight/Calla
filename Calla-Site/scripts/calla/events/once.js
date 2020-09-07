@@ -1,5 +1,4 @@
-import { isGoodNumber } from "../math";
-import { isNumber, isString } from "../typeChecks";
+import { isGoodNumber, isNumber, isString } from "../typeChecks";
 import { add } from "./add";
 
 /**
