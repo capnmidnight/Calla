@@ -50789,96 +50789,6 @@ if ( typeof __THREE_DEVTOOLS__ !== 'undefined' ) {
 
 }
 
-const cube = new BoxBufferGeometry(0.1, 0.1, 0.1, 1, 1, 1),
-    mube = new MeshBasicMaterial({ color: 0xff0000 });
-function DebugObject() {
-    return new Mesh(cube, mube);
-}
-
-async function getResponse(path) {
-    const request = fetch(path);
-    const response = await request;
-    if (!response.ok) {
-        throw new Error(`[${response.status}] - ${response.statusText}`);
-    }
-    return response;
-}
-
-/**
- * @param {string} path
- * @returns {Promise<any>}
- */
-async function getObject(path) {
-    const response = await getResponse(path);
-    const obj = await response.json();
-    return obj;
-}
-
-/**
- * @param {string} path
- * @returns {Promise<Uint8Array[]>}
- */
-async function getParts(path) {
-    const response = await getResponse(path);
-
-    const contentLength = parseInt(response.headers.get("Content-Length"), 10);
-    if (!contentLength) {
-        throw new Error("Server did not provide a content length header.");
-    }
-
-    const contentType = response.headers.get("Content-Type");
-    if (!contentType) {
-        throw new Error("Server did not provide a content type");
-    }
-
-    const reader = response.body.getReader();
-    const buffer = new Uint8Array(contentLength);
-    let receivedLength = 0;
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-            break;
-        }
-
-        if (receivedLength + value.length > contentLength) {
-            throw new Error("Whoa! Recieved content exceeded expected amount");
-        }
-
-        buffer.set(value, receivedLength);
-        receivedLength += value.length;
-    }
-
-    return { buffer, contentType };
-}
-
-/**
- * @param {string} path
- * @returns {Promise<any>}
- */
-async function getObjectWithProgress(path) {
-    const { buffer } = await getParts(path);
-    const decoder = new TextDecoder("utf-8");
-    const text = decoder.decode(buffer);
-    const obj = JSON.parse(text);
-    return obj;
-}
-
-/**
- * @param {string} path
- * @returns {Promise<string>}
- */
-async function getFileWithProgress(path) {
-    const { buffer, contentType } = await getParts(path);
-    try {
-        const blob = new Blob([buffer], { type: contentType });
-        const blobUrl = URL.createObjectURL(blob);
-        return blobUrl;
-    }
-    catch (exp) {
-        throw exp;
-    }
-}
-
 /**
  * Empties out an array
  * @param {any[]} arr - the array to empty.
@@ -50902,6 +50812,26 @@ function arrayRemoveAt(arr, idx) {
         throw new Error("Must provide an array as the first parameter.");
     }
     return arr.splice(idx, 1);
+}
+
+/**
+ * Removes a given item from an array.
+ * @param {any[]} arr
+ * @param {any} value
+ * @returns {boolean} - true, if the item was removed
+ */
+function arrayRemove(arr, value) {
+    if (!(arr instanceof Array)) {
+        throw new Error("Must provide an array as the first parameter.");
+    }
+
+    const idx = arr.indexOf(value);
+    if (idx > -1) {
+        arrayRemoveAt(arr, idx);
+        return true;
+    }
+
+    return false;
 }
 
 /**
@@ -62990,848 +62920,6 @@ console.info("Calla", versionString);
 
 const audioActivityEvt$2 = new AudioActivityEvent();
 
-/**
- * A setter functor for HTML attributes.
- **/
-class HtmlAttr {
-    /**
-     * Creates a new setter functor for HTML Attributes
-     * @param {string} key - the attribute name.
-     * @param {string} value - the value to set for the attribute.
-     * @param {...string} tags - the HTML tags that support this attribute.
-     */
-    constructor(key, value, ...tags) {
-        this.key = key;
-        this.value = value;
-        this.tags = tags.map(t => t.toLocaleUpperCase());
-        Object.freeze(this);
-    }
-
-    /**
-     * Set the attribute value on an HTMLElement
-     * @param {HTMLElement} elem - the element on which to set the attribute.
-     */
-    apply(elem) {
-        const isValid = this.tags.length === 0
-            || this.tags.indexOf(elem.tagName) > -1;
-
-        if (!isValid) {
-            console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
-        }
-        else if (this.key === "style") {
-            Object.assign(elem[this.key], this.value);
-        }
-        else if (!isBoolean(value)) {
-            elem[this.key] = this.value;
-        }
-        else if (this.value) {
-            elem.setAttribute(this.key, "");
-        }
-        else {
-            elem.removeAttribute(this.key);
-        }
-    }
-}
-
-/**
- * Specifies the height of elements listed here. For all other elements, use the CSS height property.
- * @param {number} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function height(value) { return new HtmlAttr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
-
-/**
- * The URL of the embeddable content.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function src(value) { return new HtmlAttr("src", value, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
-
-/**
- * Defines a default value which will be displayed in the element on page load.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function value(value) { return new HtmlAttr("value", value, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
-
-/**
- * For the elements listed here, this establishes the element's width.
- * @param {number} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function width(value) { return new HtmlAttr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
-
-/**
- * A CSS property that will be applied to an element's style attribute.
- **/
-class CssProp {
-    /**
-     * Creates a new CSS property that will be applied to an element's style attribute.
-     * @param {string} key - the property name.
-     * @param {string} value - the value to set for the property.
-     */
-    constructor(key, value) {
-        this.key = key;
-        this.value = value;
-        Object.freeze(this);
-    }
-
-    /**
-     * Set the attribute value on an HTMLElement
-     * @param {HTMLElement} elem - the element on which to set the attribute.
-     */
-    apply(elem) {
-        elem.style[this.key] = this.value;
-    }
-}
-
-class CssPropSet {
-    /**
-     * @param {...(CssProp|CssPropSet)} rest
-     */
-    constructor(...rest) {
-        this.set = new Map();
-        const set = (key, value) => {
-            if (value || isBoolean(value)) {
-                this.set.set(key, value);
-            }
-            else if (this.set.has(key)) {
-                this.set.delete(key);
-            }
-        };
-        for (let prop of rest) {
-            if (prop instanceof CssProp) {
-                const { key, value } = prop;
-                set(key, value);
-            }
-            else if (prop instanceof CssPropSet) {
-                for (let subProp of prop.set.entries()) {
-                    const [key, value] = subProp;
-                    set(key, value);
-                }
-            }
-        }
-    }
-
-    /**
-     * Set the attribute value on an HTMLElement
-     * @param {HTMLElement} elem - the element on which to set the attribute.
-     */
-    apply(elem) {
-        for (let prop of this.set.entries()) {
-            const [key, value] = prop;
-            elem.style[key] = value;
-        }
-    }
-}
-
-/**
- * Creates a style attribute with a fontFamily property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function fontFamily(v) { return new CssProp("fontFamily", v); }
-
-
-// A selection of fonts for preferred monospace rendering.
-const monospaceFonts = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
-const monospaceFamily = fontFamily(monospaceFonts);
-// A selection of fonts that should match whatever the user's operating system normally uses.
-const systemFonts = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
-const systemFamily = fontFamily(systemFonts);
-
-/**
- * A setter functor for HTML element events.
- **/
-class HtmlEvt {
-    /**
-     * Creates a new setter functor for an HTML element event.
-     * @param {string} name - the name of the event to attach to.
-     * @param {Function} callback - the callback function to use with the event handler.
-     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
-     */
-    constructor(name, callback, opts) {
-        if (!isFunction(callback)) {
-            throw new Error("A function instance is required for this parameter");
-        }
-
-        this.name = name;
-        this.callback = callback;
-        this.opts = opts;
-        Object.freeze(this);
-    }
-
-    /**
-     * Add the encapsulate callback as an event listener to the give HTMLElement
-     * @param {HTMLElement} elem
-     */
-    add(elem) {
-        elem.addEventListener(this.name, this.callback, this.opts);
-    }
-
-    /**
-     * Remove the encapsulate callback as an event listener from the give HTMLElement
-     * @param {HTMLElement} elem
-     */
-    remove(elem) {
-        elem.removeEventListener(this.name, this.callback);
-    }
-}
-
-/**
- * @typedef {(Node|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
- **/
-
-/**
- * Creates an HTML element for a given tag name.
- * 
- * Boolean attributes that you want to default to true can be passed
- * as just the attribute creating function, 
- *   e.g. `Audio(autoPlay)` vs `Audio(autoPlay(true))`
- * @param {string} name - the name of the tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLElement}
- */
-function tag(name, ...rest) {
-    let elem = null;
-
-    for (let i = 0; i < rest.length; ++i) {
-        const attr = rest[i];
-        if (isFunction(attr)) {
-            rest[i] = attr(true);
-        }
-
-        if (attr instanceof HtmlAttr
-            && attr.key === "id") {
-            elem = document.getElementById(attr.value);
-        }
-    }
-
-    if (elem === null) {
-        elem = document.createElement(name);
-    }
-
-    for (let x of rest) {
-        if (x !== null && x !== undefined) {
-            if (isString(x)
-                || isNumber(x)
-                || isBoolean(x)
-                || x instanceof Date) {
-                elem.appendChild(document.createTextNode(x));
-            }
-            else if (x instanceof Node) {
-                elem.appendChild(x);
-            }
-            else if (x.element instanceof Node) {
-                elem.appendChild(x.element);
-            }
-            else if (x instanceof HtmlAttr
-                || x instanceof CssProp
-                || x instanceof CssPropSet) {
-                x.apply(elem);
-            }
-            else if (x instanceof HtmlEvt) {
-                x.add(elem);
-            }
-            else {
-                console.trace(`Skipping ${x}: unsupported value type.`, x);
-            }
-        }
-    }
-
-    return elem;
-}
-
-/**
- * creates an HTML Canvas tag
- * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLCanvasElement}
- */
-function Canvas(...rest) { return tag("canvas", ...rest); }
-
-/**
- * creates an HTML Img tag
- * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLImageElement}
- */
-function Img(...rest) { return tag("img", ...rest); }
-
-/**
- * Creates an offscreen canvas element, if they are available. Otherwise, returns an HTMLCanvasElement.
- * @param {number} w - the width of the canvas
- * @param {number} h - the height of the canvas
- * @param {...import("./tag").TagChild} rest - optional HTML attributes and child elements, to use in constructing the HTMLCanvasElement if OffscreenCanvas is not available.
- * @returns {OffscreenCanvas|HTMLCanvasElement}
- */
-function CanvasOffscreen(w, h, ...rest) {
-    if (window.OffscreenCanvas) {
-        return new OffscreenCanvas(w, h);
-    }
-    else {
-        return Canvas(...rest, width(w), height(h));
-    }
-}
-
-class TexturedMesh extends Mesh {
-    /**
-     * @param {import("three").BufferGeometry} geom
-     * @param {import("three").Material} mat
-     */
-    constructor(geom, mat) {
-        super(geom, mat);
-        this.isVideo = false;
-    }
-
-    /**
-     *
-     * @param {HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|string|Texture} img
-     */
-
-    async setImage(img) {
-        if (isString(img)) {
-            img = await getFileWithProgress(img);
-            img = Img(src(img));
-        }
-
-        if (img instanceof HTMLImageElement) {
-            if (!img.complete) {
-                await once(img, "load", "error", 10000);
-            }
-
-            // Force the image to be power-of-2 dimensioned.
-            const w = Math.pow(2, Math.floor(Math.log2(img.width))),
-                h = Math.pow(2, Math.floor(Math.log2(img.height))),
-                canv = Canvas(
-                    width(w),
-                    height(h)),
-                g = canv.getContext("2d");
-            g.drawImage(img, 0, 0, img.width, img.height, 0, 0, w, h);
-
-            img = canv;
-        }
-
-        if (!(img instanceof Texture)) {
-            img = new Texture(img);
-        }
-
-        this.material.map = img;
-        img = this.material.map.image;
-        this.isVideo = img instanceof HTMLVideoElement;
-        this.updateTexture();
-    }
-
-    updateTexture() {
-        if (this.material && this.material.map) {
-            this.material.map.needsUpdate = true;
-        }
-    }
-
-    update() {
-        if (this.isVideo) {
-            this.updateTexture();
-        }
-    }
-}
-
-const geom = new PlaneBufferGeometry(1, 1, 1, 1);
-
-class Image2DMesh extends TexturedMesh {
-    constructor() {
-        const mat = new MeshBasicMaterial({ transparent: true });
-        super(geom, mat);
-    }
-}
-
-/**
- * Returns true if the given object is either an HTMLCanvasElement or an OffscreenCanvas.
- * @param {any} obj
- * @returns {boolean}
- */
-
-/**
- * Resizes a canvas element
- * @param {HTMLCanvasElement|OffscreenCanvas} canv
- * @param {number} w - the new width of the canvas
- * @param {number} h - the new height of the canvas
- * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
- * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
- */
-function setCanvasSize(canv, w, h, superscale = 1) {
-    w = Math.floor(w * superscale);
-    h = Math.floor(h * superscale);
-    if (canv.width != w
-        || canv.height != h) {
-        canv.width = w;
-        canv.height = h;
-        return true;
-    }
-    return false;
-}
-
-/**
- * Resizes the canvas element of a given rendering context.
- * 
- * Note: the imageSmoothingEnabled, textBaseline, textAlign, and font 
- * properties of the context will be restored after the context is resized,
- * as these values are usually reset to their default values when a canvas
- * is resized.
- * @param {RenderingContext} ctx
- * @param {number} w - the new width of the canvas
- * @param {number} h - the new height of the canvas
- * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
- * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
- */
-function setContextSize(ctx, w, h, superscale = 1) {
-    const oldImageSmoothingEnabled = ctx.imageSmoothingEnabled,
-        oldTextBaseline = ctx.textBaseline,
-        oldTextAlign = ctx.textAlign,
-        oldFont = ctx.font,
-        resized = setCanvasSize(
-            ctx.canvas,
-            w,
-            h,
-            superscale);
-
-    if (resized) {
-        ctx.imageSmoothingEnabled = oldImageSmoothingEnabled;
-        ctx.textBaseline = oldTextBaseline;
-        ctx.textAlign = oldTextAlign;
-        ctx.font = oldFont;
-    }
-
-    return resized;
-}
-
-/**
- * @type {WeakMap<TextImage, TextImagePrivate>}
- **/
-const selfs = new WeakMap();
-const DEFAULT_TEST_TEXT = "The quick brown fox jumps over the lazy dog";
-const redrawnEvt = new Event("redrawn");
-
-function makeFont(style) {
-    const fontParts = [];
-    if (style.fontStyle && style.fontStyle !== "normal") {
-        fontParts.push(style.fontStyle);
-    }
-
-    if (style.fontVariant && style.fontVariant !== "normal") {
-        fontParts.push(style.fontVariant);
-    }
-
-    if (style.fontWeight && style.fontWeight !== "normal") {
-        fontParts.push(style.fontWeight);
-    }
-
-    fontParts.push(style.fontSize + "px");
-    fontParts.push(style.fontFamily);
-
-    return fontParts.join(" ");
-}
-
-class TextImagePrivate {
-    constructor() {
-        /** @type {string} */
-        this.color = "black";
-
-        /** @type {string} */
-        this.bgColor = null;
-
-        /** @type {string} */
-        this.fontStyle = "normal";
-
-        /** @type {string} */
-        this.fontVariant = "normal";
-
-        /** @type {string} */
-        this.fontWeight = "normal";
-
-        /** @type {string} */
-        this.fontFamily = "sans-serif";
-
-        /** @type {number} */
-        this.fontSize = 20;
-
-        /** @type {number} */
-        this.scale = 1;
-
-        /** @type {number} */
-        this.padding = {
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0
-        };
-
-        /** @type {string} */
-        this.value = null;
-
-        this.canvas = CanvasOffscreen(10, 10);
-        this.g = this.canvas.getContext("2d");
-        this.g.textBaseline = "top";
-    }
-
-    redraw(parent) {
-        this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        if (this.fontFamily
-            && this.fontSize
-            && this.color
-            && this.scale
-            && this.value) {
-            const fontHeight = this.fontSize * this.scale;
-            const font = makeFont(this);
-            this.g.font = font;
-
-            const metrics = this.g.measureText(this.value);
-            let dx = 0,
-                dy = 0,
-                trueWidth = metrics.width,
-                trueHeight = fontHeight;
-            if (metrics.actualBoundingBoxLeft !== undefined) {
-                dy = metrics.actualBoundingBoxAscent;
-                trueWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
-                trueHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
-            }
-
-            dx += this.padding.left;
-            dy += this.padding.top;
-            trueWidth += this.padding.right + this.padding.left;
-            trueHeight += this.padding.top + this.padding.bottom;
-
-            setContextSize(this.g, trueWidth, trueHeight);
-
-            if (this.bgColor) {
-                this.g.fillStyle = this.bgColor;
-                this.g.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            }
-            else {
-                this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            }
-
-            this.g.fillStyle = this.color;
-            this.g.fillText(this.value, dx, dy);
-            parent.dispatchEvent(redrawnEvt);
-        }
-    }
-}
-
-class TextImage extends EventBase {
-    /**
-     * @param {string} fontFamily
-     */
-    constructor() {
-        super();
-        selfs.set(this, new TextImagePrivate());
-    }
-
-    async loadFontAndSetText(value = null) {
-        const testString = value || DEFAULT_TEST_TEXT;
-        const font = makeFont(this);
-        const fonts = await document.fonts.load(font, testString);
-        if (fonts.length === 0) {
-            console.warn(`Failed to load font "${font}". If this is a system font, just set the object's \`value\` property, instead of calling \`loadFontAndSetText\`.`);
-        }
-
-        this.value = value;
-    }
-
-    get canvas() {
-        return selfs.get(this).canvas;
-    }
-
-    get width() {
-        const self = selfs.get(this);
-        return self.canvas.width / self.scale;
-    }
-
-    get height() {
-        const self = selfs.get(this);
-        return self.canvas.height / self.scale;
-    }
-
-    get scale() {
-        return selfs.get(this).scale;
-    }
-
-    set scale(v) {
-        if (this.scale !== v) {
-            const self = selfs.get(this);
-            self.scale = v;
-            self.redraw(this);
-        }
-    }
-
-    get padding() {
-        return selfs.get(this).padding;
-    }
-
-    set padding(v) {
-
-        if (v instanceof Array) {
-            if (v.length === 1) {
-                v = {
-                    top: v[0],
-                    right: v[0],
-                    bottom: v[0],
-                    left: v[0]
-                };
-            }
-            else if (v.length === 2) {
-                v = {
-                    top: v[0],
-                    right: v[1],
-                    bottom: v[0],
-                    left: v[1]
-                };
-            }
-            else if (v.length === 4) {
-                v = {
-                    top: v[0],
-                    right: v[1],
-                    bottom: v[2],
-                    left: v[3]
-                };
-            }
-            else {
-                return;
-            }
-        }
-        else if (isNumber(v)) {
-            v = {
-                top: v,
-                right: v,
-                bottom: v,
-                left: v
-            };
-        }
-
-
-        if (this.padding.top !== v.top
-            || this.padding.right != v.right
-            || this.padding.bottom != v.bottom
-            || this.padding.left != v.left) {
-            const self = selfs.get(this);
-            self.padding = v;
-            self.redraw(this);
-        }
-    }
-
-    get fontStyle() {
-        return selfs.get(this).fontStyle;
-    }
-
-    set fontStyle(v) {
-        if (this.fontStyle !== v) {
-            const self = selfs.get(this);
-            self.fontStyle = v;
-            self.redraw(this);
-        }
-    }
-
-    get fontVariant() {
-        return selfs.get(this).fontVariant;
-    }
-
-    set fontVariant(v) {
-        if (this.fontVariant !== v) {
-            const self = selfs.get(this);
-            self.fontVariant = v;
-            self.redraw(this);
-        }
-    }
-
-    get fontWeight() {
-        return selfs.get(this).fontWeight;
-    }
-
-    set fontWeight(v) {
-        if (this.fontWeight !== v) {
-            const self = selfs.get(this);
-            self.fontWeight = v;
-            self.redraw(this);
-        }
-    }
-
-    get fontSize() {
-        return selfs.get(this).fontSize;
-    }
-
-    set fontSize(v) {
-        if (this.fontSize !== v) {
-            const self = selfs.get(this);
-            self.fontSize = v;
-            self.redraw(this);
-        }
-    }
-
-    get fontFamily() {
-        return selfs.get(this).fontFamily;
-    }
-
-    set fontFamily(v) {
-        if (this.fontFamily !== v) {
-            const self = selfs.get(this);
-            self.fontFamily = v;
-            self.redraw(this);
-        }
-    }
-
-    get color() {
-        return selfs.get(this).color;
-    }
-
-    set color(v) {
-        if (this.color !== v) {
-            const self = selfs.get(this);
-            self.color = v;
-            self.redraw(this);
-        }
-    }
-
-    get bgColor() {
-        return selfs.get(this).bgColor;
-    }
-
-    set bgColor(v) {
-        if (this.bgColor !== v) {
-            const self = selfs.get(this);
-            self.bgColor = v;
-            self.redraw(this);
-        }
-    }
-
-    get value() {
-        return selfs.get(this).value;
-    }
-
-    set value(v) {
-        if (this.value !== v) {
-            const self = selfs.get(this);
-            self.value = v;
-            self.redraw(this);
-        }
-    }
-
-    /**
-     *
-     * @param {CanvasRenderingContext2D} g - the canvas to which to render the text.
-     * @param {number} x
-     * @param {number} y
-     */
-    draw(g, x, y) {
-        const self = selfs.get(this);
-        if (self.canvas.width > 0
-            && self.canvas.height > 0) {
-            g.drawImage(self.canvas, x, y, this.width, this.height);
-        }
-    }
-}
-
-class TextMesh extends Image2DMesh {
-    constructor() {
-        super();
-        this.textImage = new TextImage();
-        this.setImage(this.textImage.canvas);
-        this.textImage.addEventListener("redrawn", () => {
-            this.scale.set(this.textImage.width / 300, this.textImage.height / 300, 1);
-            this.updateTexture();
-        });
-    }
-
-    async loadFontAndSetText(value = null) {
-        await this.textImage.loadFontAndSetText(value);
-    }
-
-    get textWidth() {
-        this.textImage.width;
-    }
-
-    get textHeight() {
-        return this.textImage.height;
-    }
-
-    get textScale() {
-        return this.textImage.scale;
-    }
-
-    set textScale(v) {
-        this.textImage.scale = v;
-    }
-
-    get textPadding() {
-        return this.textImage.padding;
-    }
-
-    set textPadding(v) {
-        this.textImage.padding = v;
-    }
-
-    get fontStyle() {
-        return this.textImage.fontStyle;
-    }
-
-    set fontStyle(v) {
-        this.textImage.fontStyle = v;
-    }
-
-    get fontVariant() {
-        return this.textImage.fontVariant;
-    }
-
-    set fontVariant(v) {
-        this.textImage.fontVariant = v;
-    }
-
-    get fontWeight() {
-        return this.textImage.fontWeight;
-    }
-
-    set fontWeight(v) {
-        this.textImage.fontWeight = v;
-    }
-
-    get fontSize() {
-        return this.textImage.fontSize;
-    }
-
-    set fontSize(v) {
-        this.textImage.fontSize = v;
-    }
-
-    get fontFamily() {
-        return this.textImage.fontFamily;
-    }
-
-    set fontFamily(v) {
-        this.textImage.fontFamily = v;
-    }
-
-    get textColor() {
-        return this.textImage.color;
-    }
-
-    set textColor(v) {
-        this.textImage.color = v;
-    }
-
-    get textBgColor() {
-        return this.textImage.bgColor;
-    }
-
-    set textBgColor(v) {
-        this.textImage.bgColor = v;
-    }
-
-    get value() {
-        return this.textImage.value;
-    }
-
-    set value(v) {
-        this.textImage.value = v;
-    }
-}
-
 class TimerTickEvent extends Event {
     constructor() {
         super("tick");
@@ -64713,34 +63801,35 @@ class Stage extends Object3D {
         this.position.copy(camera.position);
         this.position.y = 0;
 
-        this.avatar = new Object3D();
-        this.add(this.avatar);
-        this.avatar.rotation.set(0, 0, 0);
-        this.avatar.position.set(0, 0, 0);
-
-        this.pivot = new Object3D();
-        this.avatar.add(this.pivot);
-        this.pivot.rotation.set(0, 0, 0);
-        this.pivot.position.set(0, defaultAvatarHeight - 0.1, 0);
-
-        this.neck = new Object3D();
-        this.pivot.add(this.neck);
-        this.neck.rotation.set(0, 0, 0);
-        this.neck.position.set(0, 0.1, 0);
-
         this.camera = camera;
-        this.neck.add(this.camera);
         this.camera.position.set(0, 0, 0);
         this.camera.rotation.set(0, 0, 0);
 
-        this.shoulders = new Object3D();
-        this.avatar.add(this.shoulders);
+        this.neck = new Object3D();
+        this.neck.rotation.set(0, 0, 0);
+        this.neck.position.set(0, 0.1, 0);
+        this.neck.add(this.camera);
+
+        this.pivot = new Object3D();
+        this.pivot.rotation.set(0, 0, 0);
+        this.pivot.position.set(0, defaultAvatarHeight - 0.1, 0);
+        this.pivot.add(this.neck);
 
         this.hands = new Object3D();
-        this.shoulders.add(this.hands);
 
         this.body = new Object3D();
+
+        this.shoulders = new Object3D();
+        this.shoulders.add(this.hands);
         this.shoulders.add(this.body);
+
+        this.avatar = new Object3D();
+        this.avatar.rotation.set(0, 0, 0);
+        this.avatar.position.set(0, 0, 0);
+        this.avatar.add(this.pivot);
+        this.avatar.add(this.shoulders);
+
+        this.add(this.avatar);
     }
 
     /**
@@ -64819,15 +63908,23 @@ class Fader extends Mesh {
         this.material.opacity = v;
     }
 
+    get isIn() {
+        return this.opacity < 1;
+    }
+
+    get isOut() {
+        return this.opacity > 0;
+    }
+
     async fadeOut() {
-        if (this.opacity < 1) {
+        if (this.isIn) {
             this.direction = 1;
             await once(this, "fadeComplete");
         }
     }
 
     async fadeIn() {
-        if (this.opacity > 0) {
+        if (this.isOut) {
             this.direction = -1;
             await once(this, "fadeComplete");
         }
@@ -64846,6 +63943,581 @@ class Fader extends Mesh {
                 this.direction = 0;
                 this.dispatchEvent(completeEvt);
             }
+        }
+    }
+}
+
+const cubeGeom = new BoxBufferGeometry(1, 1, 1, 1, 1, 1);
+const valueBarMat = new MeshBasicMaterial({ color: 0xc0c0c0 });
+const chromeMat = new MeshBasicMaterial({ color: 0xffffff });
+
+function chrome(x, y, z, w, h, d) {
+    const chromeMesh = new Mesh(cubeGeom, chromeMat);
+    chromeMesh.position.set(x, y, z);
+    chromeMesh.scale.set(w, h, d);
+    return chromeMesh;
+}
+
+const velocity = 0.1;
+class LoadingBar extends Object3D {
+    constructor() {
+        super();
+
+        this.valueBar = new Mesh(cubeGeom, valueBarMat);
+        this.valueBar.position.set(0, 0, 0);
+        this.valueBar.scale.set(0, 1, 1);
+        this.value = 0;
+        this.targetValue = 0;
+
+        const valueBarContainer = new Object3D();
+        valueBarContainer.scale.set(1, 0.1, 0.1);
+        valueBarContainer.add(this.valueBar);
+
+        this.add(valueBarContainer);
+
+        this.add(chrome(-0.5, 0, -0.05, 0.01, 0.1, 0.01));
+        this.add(chrome(-0.5, 0, 0.05, 0.01, 0.1, 0.01));
+        this.add(chrome(0.5, 0, -0.05, 0.01, 0.1, 0.01));
+        this.add(chrome(0.5, 0, 0.05, 0.01, 0.1, 0.01));
+
+        this.add(chrome(-0.5, -0.05, 0, 0.01, 0.01, 0.1));
+        this.add(chrome(0.5, -0.05, 0, 0.01, 0.01, 0.1));
+        this.add(chrome(-0.5, 0.05, 0, 0.01, 0.01, 0.1));
+        this.add(chrome(0.5, 0.05, 0, 0.01, 0.01, 0.1));
+
+        this.add(chrome(0, -0.05, -0.05, 1, 0.01, 0.01));
+        this.add(chrome(0, 0.05, -0.05, 1, 0.01, 0.01));
+        this.add(chrome(0, -0.05, 0.05, 1, 0.01, 0.01));
+        this.add(chrome(0, 0.05, 0.05, 1, 0.01, 0.01));
+    }
+
+    /**
+     * @param {number} soFar
+     * @param {number} total
+     * @param {string?} msg
+     */
+    onProgress(soFar, total, msg) {
+        this.targetValue = soFar / total;
+        if (msg) {
+            console.log((100 * this.targetValue).toFixed(2) + "%", msg);
+        }
+    }
+
+    update(dt) {
+        if (this.parent.visible) {
+            this.value = Math.min(this.targetValue, this.value + velocity * dt);
+            this.valueBar.scale.set(this.value, 1, 1);
+            this.valueBar.position.x = this.value / 2 - 0.5;
+            this.visible = this.value > 0;
+        }
+    }
+}
+
+/**
+ * A setter functor for HTML attributes.
+ **/
+class HtmlAttr {
+    /**
+     * Creates a new setter functor for HTML Attributes
+     * @param {string} key - the attribute name.
+     * @param {string} value - the value to set for the attribute.
+     * @param {...string} tags - the HTML tags that support this attribute.
+     */
+    constructor(key, value, ...tags) {
+        this.key = key;
+        this.value = value;
+        this.tags = tags.map(t => t.toLocaleUpperCase());
+        Object.freeze(this);
+    }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        const isValid = this.tags.length === 0
+            || this.tags.indexOf(elem.tagName) > -1;
+
+        if (!isValid) {
+            console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
+        }
+        else if (this.key === "style") {
+            Object.assign(elem[this.key], this.value);
+        }
+        else if (!isBoolean(value)) {
+            elem[this.key] = this.value;
+        }
+        else if (this.value) {
+            elem.setAttribute(this.key, "");
+        }
+        else {
+            elem.removeAttribute(this.key);
+        }
+    }
+}
+
+/**
+ * Specifies the height of elements listed here. For all other elements, use the CSS height property.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function height(value) { return new HtmlAttr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+
+/**
+ * The URL of the embeddable content.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function src(value) { return new HtmlAttr("src", value, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
+
+/**
+ * Defines a default value which will be displayed in the element on page load.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function value(value) { return new HtmlAttr("value", value, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
+
+/**
+ * For the elements listed here, this establishes the element's width.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function width(value) { return new HtmlAttr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+
+/**
+ * A CSS property that will be applied to an element's style attribute.
+ **/
+class CssProp {
+    /**
+     * Creates a new CSS property that will be applied to an element's style attribute.
+     * @param {string} key - the property name.
+     * @param {string} value - the value to set for the property.
+     */
+    constructor(key, value) {
+        this.key = key;
+        this.value = value;
+        Object.freeze(this);
+    }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        elem.style[this.key] = this.value;
+    }
+}
+
+class CssPropSet {
+    /**
+     * @param {...(CssProp|CssPropSet)} rest
+     */
+    constructor(...rest) {
+        this.set = new Map();
+        const set = (key, value) => {
+            if (value || isBoolean(value)) {
+                this.set.set(key, value);
+            }
+            else if (this.set.has(key)) {
+                this.set.delete(key);
+            }
+        };
+        for (let prop of rest) {
+            if (prop instanceof CssProp) {
+                const { key, value } = prop;
+                set(key, value);
+            }
+            else if (prop instanceof CssPropSet) {
+                for (let subProp of prop.set.entries()) {
+                    const [key, value] = subProp;
+                    set(key, value);
+                }
+            }
+        }
+    }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        for (let prop of this.set.entries()) {
+            const [key, value] = prop;
+            elem.style[key] = value;
+        }
+    }
+}
+
+/**
+ * Creates a style attribute with a fontFamily property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function fontFamily(v) { return new CssProp("fontFamily", v); }
+
+
+// A selection of fonts for preferred monospace rendering.
+const monospaceFonts = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
+const monospaceFamily = fontFamily(monospaceFonts);
+// A selection of fonts that should match whatever the user's operating system normally uses.
+const systemFonts = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
+const systemFamily = fontFamily(systemFonts);
+
+/**
+ * A setter functor for HTML element events.
+ **/
+class HtmlEvt {
+    /**
+     * Creates a new setter functor for an HTML element event.
+     * @param {string} name - the name of the event to attach to.
+     * @param {Function} callback - the callback function to use with the event handler.
+     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+     */
+    constructor(name, callback, opts) {
+        if (!isFunction(callback)) {
+            throw new Error("A function instance is required for this parameter");
+        }
+
+        this.name = name;
+        this.callback = callback;
+        this.opts = opts;
+        Object.freeze(this);
+    }
+
+    /**
+     * Add the encapsulate callback as an event listener to the give HTMLElement
+     * @param {HTMLElement} elem
+     */
+    add(elem) {
+        elem.addEventListener(this.name, this.callback, this.opts);
+    }
+
+    /**
+     * Remove the encapsulate callback as an event listener from the give HTMLElement
+     * @param {HTMLElement} elem
+     */
+    remove(elem) {
+        elem.removeEventListener(this.name, this.callback);
+    }
+}
+
+/**
+ * @typedef {(Node|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
+ **/
+
+/**
+ * Creates an HTML element for a given tag name.
+ * 
+ * Boolean attributes that you want to default to true can be passed
+ * as just the attribute creating function, 
+ *   e.g. `Audio(autoPlay)` vs `Audio(autoPlay(true))`
+ * @param {string} name - the name of the tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLElement}
+ */
+function tag(name, ...rest) {
+    let elem = null;
+
+    for (let i = 0; i < rest.length; ++i) {
+        const attr = rest[i];
+        if (isFunction(attr)) {
+            rest[i] = attr(true);
+        }
+
+        if (attr instanceof HtmlAttr
+            && attr.key === "id") {
+            elem = document.getElementById(attr.value);
+        }
+    }
+
+    if (elem === null) {
+        elem = document.createElement(name);
+    }
+
+    for (let x of rest) {
+        if (x !== null && x !== undefined) {
+            if (isString(x)
+                || isNumber(x)
+                || isBoolean(x)
+                || x instanceof Date) {
+                elem.appendChild(document.createTextNode(x));
+            }
+            else if (x instanceof Node) {
+                elem.appendChild(x);
+            }
+            else if (x.element instanceof Node) {
+                elem.appendChild(x.element);
+            }
+            else if (x instanceof HtmlAttr
+                || x instanceof CssProp
+                || x instanceof CssPropSet) {
+                x.apply(elem);
+            }
+            else if (x instanceof HtmlEvt) {
+                x.add(elem);
+            }
+            else {
+                console.trace(`Skipping ${x}: unsupported value type.`, x);
+            }
+        }
+    }
+
+    return elem;
+}
+
+/**
+ * creates an HTML Canvas tag
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLCanvasElement}
+ */
+function Canvas(...rest) { return tag("canvas", ...rest); }
+
+/**
+ * creates an HTML Img tag
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLImageElement}
+ */
+function Img(...rest) { return tag("img", ...rest); }
+
+/**
+ * Creates an offscreen canvas element, if they are available. Otherwise, returns an HTMLCanvasElement.
+ * @param {number} w - the width of the canvas
+ * @param {number} h - the height of the canvas
+ * @param {...import("./tag").TagChild} rest - optional HTML attributes and child elements, to use in constructing the HTMLCanvasElement if OffscreenCanvas is not available.
+ * @returns {OffscreenCanvas|HTMLCanvasElement}
+ */
+function CanvasOffscreen(w, h, ...rest) {
+    if (window.OffscreenCanvas) {
+        return new OffscreenCanvas(w, h);
+    }
+    else {
+        return Canvas(...rest, width(w), height(h));
+    }
+}
+
+/**
+ * @param {string} path
+ * @returns {Promise<Response>}
+ */
+async function getResponse(path) {
+    const request = fetch(path);
+    const response = await request;
+    if (!response.ok) {
+        throw new Error(`[${response.status}] - ${response.statusText}`);
+    }
+    return response;
+}
+
+/**
+ * @param {string} path
+ * @returns {Promise<any>}
+ */
+async function getObject(path) {
+    const response = await getResponse(path);
+    const obj = await response.json();
+    return obj;
+}
+
+/**
+ * @callback progressCallback
+ * @param {number} soFar
+ * @param {number} total
+ * @param {string?} message
+ **/
+
+/**
+ * @typedef {object} getPartsReturnType
+ * @property {Uint8Array} buffer
+ * @property {string} contentType
+ **/
+
+/**
+ * @param {string} path
+ * @param {progressCallback} onProgress
+ * @returns {Promise<getPartsReturnType>}
+ */
+async function getBufferWithProgress(path, onProgress) {
+    if (!isFunction(onProgress)) {
+        throw new Error("progress callback is required");
+    }
+
+    onProgress(0, 1, path);
+    const response = await getResponse(path);
+
+    const contentLength = parseInt(response.headers.get("Content-Length"), 10);
+    if (!contentLength) {
+        throw new Error("Server did not provide a content length header.");
+    }
+
+    const contentType = response.headers.get("Content-Type");
+    if (!contentType) {
+        throw new Error("Server did not provide a content type");
+    }
+
+    const reader = response.body.getReader();
+    const buffer = new Uint8Array(contentLength);
+    let receivedLength = 0;
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+            break;
+        }
+
+        if (receivedLength + value.length > contentLength) {
+            throw new Error("Whoa! Recieved content exceeded expected amount");
+        }
+
+        buffer.set(value, receivedLength);
+        receivedLength += value.length;
+        onProgress(receivedLength, contentLength, path);
+    }
+
+    return { buffer, contentType };
+}
+
+/**
+ * @param {string} path
+ * @param {progressCallback} onProgress
+ * @returns {Promise<any>}
+ */
+async function getObjectWithProgress(path, onProgress) {
+    const { buffer } = await getBufferWithProgress(path, onProgress);
+    const decoder = new TextDecoder("utf-8");
+    const text = decoder.decode(buffer);
+    const obj = JSON.parse(text);
+    return obj;
+}
+
+/**
+ * @param {string} path
+ * @param {progressCallback} onProgress
+ * @returns {Promise<string>}
+ */
+async function getFileWithProgress(path, onProgress) {
+    const { buffer, contentType } = await getBufferWithProgress(path, onProgress);
+    const blob = new Blob([buffer], { type: contentType });
+    const blobUrl = URL.createObjectURL(blob);
+    return blobUrl;
+}
+
+class LRUCache {
+    constructor(size) {
+        this.size = size;
+        this.map = new Map();
+        this.usage = [];
+    }
+
+    set(key, value) {
+        this.usage.push(key);
+        const removed = [];
+        while (this.usage.length > this.size) {
+            const toDelete = this.usage.shift();
+            removed.push(toDelete);
+            this.map.delete(toDelete);
+        }
+        arrayRemove(removed, key);
+        if (removed.length > 0) {
+            console.log("removing", removed.join(", "));
+        }
+        return this.map.set(key, value);
+    }
+
+    has(key) {
+        return this.map.has(key);
+    }
+
+    get(key) {
+        return this.map.get(key);
+    }
+
+    delete(key) {
+        arrayRemove(this.usage, key);
+        return this.map.delete(key);
+    }
+
+    clear() {
+        arrayClear(this.usage);
+        this.map.clear();
+    }
+
+    keys() {
+        return this.map.keys();
+    }
+
+    values() {
+        return this.map.values();
+    }
+
+    entries() {
+        return this.map.entries();
+    }
+}
+
+const cache = new LRUCache(50);
+
+class TexturedMesh extends Mesh {
+    /**
+     * @param {import("three").BufferGeometry} geom
+     * @param {import("three").Material} mat
+     */
+    constructor(geom, mat) {
+        super(geom, mat);
+        this.isVideo = false;
+    }
+
+    /**
+     * @param {HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|string|Texture} img
+     * @param {import("./fetching").progressCallback} onProgress
+     */
+
+    async setImage(img, onProgress) {
+        const key = img;
+        if (cache.has(key)) {
+            img = cache.get(key);
+        }
+
+        if (isString(img)) {
+            img = await getFileWithProgress(img, onProgress);
+            img = Img(src(img));
+        }
+
+        if (img instanceof HTMLImageElement) {
+            if (!img.complete) {
+                await once(img, "load", "error", 10000);
+            }
+
+            // Force the image to be power-of-2 dimensioned.
+            const w = Math.pow(2, Math.floor(Math.log2(img.width))),
+                h = Math.pow(2, Math.floor(Math.log2(img.height))),
+                canv = Canvas(
+                    width(w),
+                    height(h)),
+                g = canv.getContext("2d");
+            g.drawImage(img, 0, 0, img.width, img.height, 0, 0, w, h);
+
+            img = canv;
+        }
+
+        if (!(img instanceof Texture)) {
+            img = new Texture(img);
+        }
+
+        cache.set(key, img);
+        this.material.map = img;
+        img = this.material.map.image;
+        this.isVideo = img instanceof HTMLVideoElement;
+        this.updateTexture();
+    }
+
+    updateTexture() {
+        if (this.material && this.material.map) {
+            this.material.map.needsUpdate = true;
+        }
+    }
+
+    update() {
+        if (this.isVideo) {
+            this.updateTexture();
         }
     }
 }
@@ -65008,7 +64680,10 @@ class Skybox extends AbstractCubeMapView {
     }
 }
 
-class ThreeJSApplication extends EventBase {
+const visibleBackground = new Color(0x606060);
+const invisibleBackground = new Color(0x000000);
+
+class Application extends EventBase {
     constructor() {
         super();
 
@@ -65029,9 +64704,11 @@ class ThreeJSApplication extends EventBase {
         this.camera = new PerspectiveCamera(50, 1, 0.01, 1000);
 
         this.fader = new Fader(this.camera);
+        this.fadeDepth = 0;
 
         this.skybox = new Skybox(this.camera);
         this.skybox.visible = false;
+        this.showSkybox = false;
 
         this.stage = new Stage(this.camera);
         this.stage.position.set(0, 0, 0);
@@ -65044,13 +64721,26 @@ class ThreeJSApplication extends EventBase {
         this.background.add(this.skybox);
         this.background.add(this.stage);
 
+        this.menu = new Object3D();
+        this.menu.name = "Menu";
+
         this.foreground = new Object3D();
         this.foreground.name = "Foreground";
+        this.foreground.add(this.menu);
+
+        this.loadingBar = new LoadingBar();
+        this.loadingBar.position.set(0, 1.5, -2);
+
+        this.transition = new Object3D();
+        this.transition.name = "Transition";
+        this.transition.visible = false;
+        this.transition.add(this.loadingBar);
 
         this.scene = new Scene();
-        this.scene.background = new Color(0x606060);
+        this.scene.background = visibleBackground;
         this.scene.add(this.background);
         this.scene.add(this.foreground);
+        this.scene.add(this.transition);
 
         const resize = () => {
             this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -65078,8 +64768,16 @@ class ThreeJSApplication extends EventBase {
         });
 
         const update = (evt) => {
+            if (!this.showSkybox) {
+                this.skybox.visible = false;
+            }
             this.skybox.update();
+            this.loadingBar.update(evt.sdt);
             this.fader.update(evt.sdt);
+            this.stage.avatar.getWorldPosition(this.transition.position);
+            this.stage.avatar.getWorldQuaternion(this.transition.quaternion);
+            this.menu.position.copy(this.transition.position);
+            this.menu.quaternion.copy(this.transition.quaternion);
             this.renderer.render(this.scene, this.camera);
         };
         this.timer = new RequestAnimationFrameTimer();
@@ -65095,11 +64793,600 @@ class ThreeJSApplication extends EventBase {
 
     clearScene() {
         this.dispatchEvent(new Event("sceneclearing"));
+        this.menu.remove(...this.menu.children);
         this.foreground.remove(...this.foreground.children);
+        this.foreground.add(this.menu);
+    }
+
+    async fadeOut() {
+        ++this.fadeDepth;
+        if (this.fadeDepth === 1) {
+            await this.fader.fadeOut();
+            this.skybox.visible = false;
+            this.scene.background = invisibleBackground;
+            this.foreground.visible = false;
+            this.transition.visible = true;
+            this.loadingBar.onProgress(0, 1);
+            await this.fader.fadeIn();
+        }
+    }
+
+    async fadeIn() {
+        --this.fadeDepth;
+        if (this.fadeDepth === 0) {
+            await this.fader.fadeOut();
+            this.skybox.visible = this.showSkybox;
+            this.scene.background = visibleBackground;
+            this.foreground.visible = true;
+            this.transition.visible = false;
+            await this.fader.fadeIn();
+        }
+    }
+
+    /**
+     * @param {number} soFar
+     * @param {number} total
+     * @param {string?} msg
+     */
+    onProgress(soFar, total, msg) {
+        this.loadingBar.onProgress(soFar, total, msg);
     }
 }
 
-const app = new ThreeJSApplication();
+const cube = new BoxBufferGeometry(0.1, 0.1, 0.1, 1, 1, 1),
+    mube = new MeshBasicMaterial({ color: 0xff0000 });
+function DebugObject() {
+    return new Mesh(cube, mube);
+}
+
+const geom = new PlaneBufferGeometry(1, 1, 1, 1);
+
+class Image2DMesh extends TexturedMesh {
+    constructor() {
+        const mat = new MeshBasicMaterial({ transparent: true });
+        super(geom, mat);
+    }
+}
+
+/**
+ * @param {import("./fetching").progressCallback} onProgress
+ * @param {Number|Number[]} subProgressWeights
+ * @returns {import("./fetching").progressCallback[])
+ */
+function splitProgress(onProgress, subProgressWeights) {
+    if (isNumber(subProgressWeights)) {
+        const numWeights = subProgressWeights;
+        subProgressWeights = new Array(numWeights);
+        for (let i = 0; i < numWeights; ++i) {
+            subProgressWeights[i] = 1 /numWeights;
+        }
+    }
+
+    let weightTotal = 0;
+    for (let i = 0; i < subProgressWeights.length; ++i) {
+        weightTotal += subProgressWeights[i];
+    }
+
+    /** @type {Number[]} */
+    const subProgressValues = new Array(subProgressWeights.length);
+
+    /** @type {import("./fetching").progressCallback[]} */
+    const subProgressCallbacks = new Array(subProgressWeights.length);
+
+    /**
+     * @param {Number} i
+     * @param {Number} subSoFar
+     * @param {Number} subTotal
+     * @param {String?} msg
+     **/
+    const update = (i, subSoFar, subTotal, msg) => {
+        subProgressValues[i] = subSoFar / subTotal;
+        let soFar = 0;
+        for (let j = 0; j < subProgressWeights.length; ++j) {
+            soFar += subProgressValues[j] * subProgressWeights[j];
+        }
+        onProgress(soFar, weightTotal, msg);
+    };
+
+    for (let i = 0; i < subProgressWeights.length; ++i) {
+        subProgressValues[i] = 0;
+        subProgressCallbacks[i] = (soFar, total, msg) => update(i, soFar, total, msg);
+    }
+
+    return subProgressCallbacks;
+}
+
+/**
+ * Returns true if the given object is either an HTMLCanvasElement or an OffscreenCanvas.
+ * @param {any} obj
+ * @returns {boolean}
+ */
+
+/**
+ * Resizes a canvas element
+ * @param {HTMLCanvasElement|OffscreenCanvas} canv
+ * @param {number} w - the new width of the canvas
+ * @param {number} h - the new height of the canvas
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function setCanvasSize(canv, w, h, superscale = 1) {
+    w = Math.floor(w * superscale);
+    h = Math.floor(h * superscale);
+    if (canv.width != w
+        || canv.height != h) {
+        canv.width = w;
+        canv.height = h;
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Resizes the canvas element of a given rendering context.
+ * 
+ * Note: the imageSmoothingEnabled, textBaseline, textAlign, and font 
+ * properties of the context will be restored after the context is resized,
+ * as these values are usually reset to their default values when a canvas
+ * is resized.
+ * @param {RenderingContext} ctx
+ * @param {number} w - the new width of the canvas
+ * @param {number} h - the new height of the canvas
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function setContextSize(ctx, w, h, superscale = 1) {
+    const oldImageSmoothingEnabled = ctx.imageSmoothingEnabled,
+        oldTextBaseline = ctx.textBaseline,
+        oldTextAlign = ctx.textAlign,
+        oldFont = ctx.font,
+        resized = setCanvasSize(
+            ctx.canvas,
+            w,
+            h,
+            superscale);
+
+    if (resized) {
+        ctx.imageSmoothingEnabled = oldImageSmoothingEnabled;
+        ctx.textBaseline = oldTextBaseline;
+        ctx.textAlign = oldTextAlign;
+        ctx.font = oldFont;
+    }
+
+    return resized;
+}
+
+/**
+ * @type {WeakMap<TextImage, TextImagePrivate>}
+ **/
+const selfs = new WeakMap();
+const DEFAULT_TEST_TEXT = "The quick brown fox jumps over the lazy dog";
+const redrawnEvt = new Event("redrawn");
+
+function makeFont(style) {
+    const fontParts = [];
+    if (style.fontStyle && style.fontStyle !== "normal") {
+        fontParts.push(style.fontStyle);
+    }
+
+    if (style.fontVariant && style.fontVariant !== "normal") {
+        fontParts.push(style.fontVariant);
+    }
+
+    if (style.fontWeight && style.fontWeight !== "normal") {
+        fontParts.push(style.fontWeight);
+    }
+
+    fontParts.push(style.fontSize + "px");
+    fontParts.push(style.fontFamily);
+
+    return fontParts.join(" ");
+}
+
+class TextImagePrivate {
+    constructor() {
+        /** @type {string} */
+        this.color = "black";
+
+        /** @type {string} */
+        this.bgColor = null;
+
+        /** @type {string} */
+        this.fontStyle = "normal";
+
+        /** @type {string} */
+        this.fontVariant = "normal";
+
+        /** @type {string} */
+        this.fontWeight = "normal";
+
+        /** @type {string} */
+        this.fontFamily = "sans-serif";
+
+        /** @type {number} */
+        this.fontSize = 20;
+
+        /** @type {number} */
+        this.scale = 1;
+
+        /** @type {number} */
+        this.padding = {
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0
+        };
+
+        /** @type {string} */
+        this.value = null;
+
+        this.canvas = CanvasOffscreen(10, 10);
+        this.g = this.canvas.getContext("2d");
+        this.g.textBaseline = "top";
+    }
+
+    redraw(parent) {
+        this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        if (this.fontFamily
+            && this.fontSize
+            && this.color
+            && this.scale
+            && this.value) {
+            const fontHeight = this.fontSize * this.scale;
+            const font = makeFont(this);
+            this.g.font = font;
+
+            const metrics = this.g.measureText(this.value);
+            let dx = 0,
+                dy = 0,
+                trueWidth = metrics.width,
+                trueHeight = fontHeight;
+            if (metrics.actualBoundingBoxLeft !== undefined) {
+                dy = metrics.actualBoundingBoxAscent;
+                trueWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
+                trueHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+            }
+
+            dx += this.padding.left;
+            dy += this.padding.top;
+            trueWidth += this.padding.right + this.padding.left;
+            trueHeight += this.padding.top + this.padding.bottom;
+
+            setContextSize(this.g, trueWidth, trueHeight);
+
+            if (this.bgColor) {
+                this.g.fillStyle = this.bgColor;
+                this.g.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+            else {
+                this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+
+            this.g.fillStyle = this.color;
+            this.g.fillText(this.value, dx, dy);
+            parent.dispatchEvent(redrawnEvt);
+        }
+    }
+}
+
+class TextImage extends EventBase {
+    /**
+     * @param {string} fontFamily
+     */
+    constructor() {
+        super();
+        selfs.set(this, new TextImagePrivate());
+    }
+
+    async loadFontAndSetText(value = null) {
+        const testString = value || DEFAULT_TEST_TEXT;
+        const font = makeFont(this);
+        const fonts = await document.fonts.load(font, testString);
+        if (fonts.length === 0) {
+            console.warn(`Failed to load font "${font}". If this is a system font, just set the object's \`value\` property, instead of calling \`loadFontAndSetText\`.`);
+        }
+
+        this.value = value;
+    }
+
+    get canvas() {
+        return selfs.get(this).canvas;
+    }
+
+    get width() {
+        const self = selfs.get(this);
+        return self.canvas.width / self.scale;
+    }
+
+    get height() {
+        const self = selfs.get(this);
+        return self.canvas.height / self.scale;
+    }
+
+    get scale() {
+        return selfs.get(this).scale;
+    }
+
+    set scale(v) {
+        if (this.scale !== v) {
+            const self = selfs.get(this);
+            self.scale = v;
+            self.redraw(this);
+        }
+    }
+
+    get padding() {
+        return selfs.get(this).padding;
+    }
+
+    set padding(v) {
+
+        if (v instanceof Array) {
+            if (v.length === 1) {
+                v = {
+                    top: v[0],
+                    right: v[0],
+                    bottom: v[0],
+                    left: v[0]
+                };
+            }
+            else if (v.length === 2) {
+                v = {
+                    top: v[0],
+                    right: v[1],
+                    bottom: v[0],
+                    left: v[1]
+                };
+            }
+            else if (v.length === 4) {
+                v = {
+                    top: v[0],
+                    right: v[1],
+                    bottom: v[2],
+                    left: v[3]
+                };
+            }
+            else {
+                return;
+            }
+        }
+        else if (isNumber(v)) {
+            v = {
+                top: v,
+                right: v,
+                bottom: v,
+                left: v
+            };
+        }
+
+
+        if (this.padding.top !== v.top
+            || this.padding.right != v.right
+            || this.padding.bottom != v.bottom
+            || this.padding.left != v.left) {
+            const self = selfs.get(this);
+            self.padding = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontStyle() {
+        return selfs.get(this).fontStyle;
+    }
+
+    set fontStyle(v) {
+        if (this.fontStyle !== v) {
+            const self = selfs.get(this);
+            self.fontStyle = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontVariant() {
+        return selfs.get(this).fontVariant;
+    }
+
+    set fontVariant(v) {
+        if (this.fontVariant !== v) {
+            const self = selfs.get(this);
+            self.fontVariant = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontWeight() {
+        return selfs.get(this).fontWeight;
+    }
+
+    set fontWeight(v) {
+        if (this.fontWeight !== v) {
+            const self = selfs.get(this);
+            self.fontWeight = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontSize() {
+        return selfs.get(this).fontSize;
+    }
+
+    set fontSize(v) {
+        if (this.fontSize !== v) {
+            const self = selfs.get(this);
+            self.fontSize = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontFamily() {
+        return selfs.get(this).fontFamily;
+    }
+
+    set fontFamily(v) {
+        if (this.fontFamily !== v) {
+            const self = selfs.get(this);
+            self.fontFamily = v;
+            self.redraw(this);
+        }
+    }
+
+    get color() {
+        return selfs.get(this).color;
+    }
+
+    set color(v) {
+        if (this.color !== v) {
+            const self = selfs.get(this);
+            self.color = v;
+            self.redraw(this);
+        }
+    }
+
+    get bgColor() {
+        return selfs.get(this).bgColor;
+    }
+
+    set bgColor(v) {
+        if (this.bgColor !== v) {
+            const self = selfs.get(this);
+            self.bgColor = v;
+            self.redraw(this);
+        }
+    }
+
+    get value() {
+        return selfs.get(this).value;
+    }
+
+    set value(v) {
+        if (this.value !== v) {
+            const self = selfs.get(this);
+            self.value = v;
+            self.redraw(this);
+        }
+    }
+
+    /**
+     *
+     * @param {CanvasRenderingContext2D} g - the canvas to which to render the text.
+     * @param {number} x
+     * @param {number} y
+     */
+    draw(g, x, y) {
+        const self = selfs.get(this);
+        if (self.canvas.width > 0
+            && self.canvas.height > 0) {
+            g.drawImage(self.canvas, x, y, this.width, this.height);
+        }
+    }
+}
+
+class TextMesh extends Image2DMesh {
+    constructor() {
+        super();
+        this.textImage = new TextImage();
+        this.setImage(this.textImage.canvas);
+        this.textImage.addEventListener("redrawn", () => {
+            this.scale.set(this.textImage.width / 300, this.textImage.height / 300, 1);
+            this.updateTexture();
+        });
+    }
+
+    async loadFontAndSetText(value = null) {
+        await this.textImage.loadFontAndSetText(value);
+    }
+
+    get textWidth() {
+        this.textImage.width;
+    }
+
+    get textHeight() {
+        return this.textImage.height;
+    }
+
+    get textScale() {
+        return this.textImage.scale;
+    }
+
+    set textScale(v) {
+        this.textImage.scale = v;
+    }
+
+    get textPadding() {
+        return this.textImage.padding;
+    }
+
+    set textPadding(v) {
+        this.textImage.padding = v;
+    }
+
+    get fontStyle() {
+        return this.textImage.fontStyle;
+    }
+
+    set fontStyle(v) {
+        this.textImage.fontStyle = v;
+    }
+
+    get fontVariant() {
+        return this.textImage.fontVariant;
+    }
+
+    set fontVariant(v) {
+        this.textImage.fontVariant = v;
+    }
+
+    get fontWeight() {
+        return this.textImage.fontWeight;
+    }
+
+    set fontWeight(v) {
+        this.textImage.fontWeight = v;
+    }
+
+    get fontSize() {
+        return this.textImage.fontSize;
+    }
+
+    set fontSize(v) {
+        this.textImage.fontSize = v;
+    }
+
+    get fontFamily() {
+        return this.textImage.fontFamily;
+    }
+
+    set fontFamily(v) {
+        this.textImage.fontFamily = v;
+    }
+
+    get textColor() {
+        return this.textImage.color;
+    }
+
+    set textColor(v) {
+        this.textImage.color = v;
+    }
+
+    get textBgColor() {
+        return this.textImage.bgColor;
+    }
+
+    set textBgColor(v) {
+        this.textImage.bgColor = v;
+    }
+
+    get value() {
+        return this.textImage.value;
+    }
+
+    set value(v) {
+        this.textImage.value = v;
+    }
+}
+
+const app = new Application();
 const curTransforms = new Map();
 const curStations = new Map();
 const curConnections = new Map();
@@ -65131,13 +65418,24 @@ async function showLesson(lessonID, skipHistory = false) {
     await showMenu(`VR/Lesson/${lessonID}/Activities`, (activity) => showActivity(activity.id));
 }
 
+/**
+ * @param {Number} soFar
+ * @param {Number} total
+ * @param {String?} msg
+ */
+function onProgress(soFar, total, msg) {
+    app.onProgress(soFar, total, msg);
+}
+
 async function showActivity(activityID, skipHistory = false) {
     setHistory(3, activityID, skipHistory, "Activity");
 
-    await app.fader.fadeOut();
+    await app.fadeOut();
     app.clearScene();
 
-    const all = await getObjectWithProgress(`/VR/Activity/${activityID}`);
+    const [lessonProg, assetProg] = splitProgress(onProgress, [1, 99]);
+
+    const all = await getObjectWithProgress(`/VR/Activity/${activityID}`, lessonProg);
     const {
         transforms,
         stations,
@@ -65145,6 +65443,9 @@ async function showActivity(activityID, skipHistory = false) {
         signs,
         audioTracks
     } = all;
+
+
+    const progs = splitProgress(assetProg, signs.length + 1);
 
     let startID = null;
     for (let station of stations) {
@@ -65198,7 +65499,7 @@ async function showActivity(activityID, skipHistory = false) {
             icon.position.y += 1;
 
             from.add(icon);
-            icon.addEventListener("click", () => showStation(toStationID));
+            icon.addEventListener("click", () => showStation(toStationID, onProgress));
         }
     }
 
@@ -65209,26 +65510,28 @@ async function showActivity(activityID, skipHistory = false) {
         if (sign.isCallout) {
             img.addEventListener("click", () => console.log(img.name));
         }
-        await img.setImage(`VR/File/${sign.imageFileID}`);
+        const prog = progs.shift();
+        await img.setImage(`VR/File/${sign.imageFileID}`, prog);
         transform.add(img);
     }
 
     if (startID !== null) {
-        await showStation(startID, true);
+        await showStation(startID, progs.shift());
     }
-    await app.fader.fadeIn();
+
+    await app.fadeIn();
 }
 
-async function showStation(stationID, skipHistory = false) {
-    await app.fader.fadeOut();
+async function showStation(stationID, onProgress) {
+    await app.fadeOut();
 
     const station = curStations.get(stationID),
         here = curTransforms.get(stationID),
         imgPath = `/VR/File/${station.fileID}`;
 
-    await app.skybox.setImage(imgPath);
-    app.skybox.visible = true;
+    await app.skybox.setImage(imgPath, onProgress);
     app.skybox.quaternion.fromArray(station.rotation);
+    app.showSkybox = true;
 
     here.getWorldPosition(app.stage.position);
 
@@ -65237,7 +65540,7 @@ async function showStation(stationID, skipHistory = false) {
         there.visible = otherStationID === stationID;
     }
 
-    await app.fader.fadeIn();
+    await app.fadeIn();
 }
 
 const functs = [
@@ -65266,7 +65569,7 @@ function setHistory(step, id, skipHistory, name) {
 }
 
 async function showMenu(path, onClick) {
-    await app.fader.fadeOut();
+    await app.fadeOut();
 
     app.clearScene();
     app.skybox.visible = false;
@@ -65280,7 +65583,7 @@ async function showMenu(path, onClick) {
         tasks.push(addMenuItem(item, y, onClick));
     }
     await Promise.all(tasks);
-    await app.fader.fadeIn();
+    await app.fadeIn();
 }
 
 async function addMenuItem(item, y, onClick) {
@@ -65301,7 +65604,7 @@ async function addMenuItem(item, y, onClick) {
 
     await mesh.loadFontAndSetText(item.name);
 
-    app.foreground.add(mesh);
+    app.menu.add(mesh);
     if (item.enabled !== false) {
         mesh.addEventListener("click", () => onClick(item));
     }

@@ -69,6 +69,26 @@ function arrayRemoveAt(arr, idx) {
 }
 
 /**
+ * Removes a given item from an array.
+ * @param {any[]} arr
+ * @param {any} value
+ * @returns {boolean} - true, if the item was removed
+ */
+function arrayRemove(arr, value) {
+    if (!(arr instanceof Array)) {
+        throw new Error("Must provide an array as the first parameter.");
+    }
+
+    const idx = arr.indexOf(value);
+    if (idx > -1) {
+        arrayRemoveAt(arr, idx);
+        return true;
+    }
+
+    return false;
+}
+
+/**
  * A test for filtering an array
  * @callback scanArrayCallback
  * @param {any} obj - an array item to check.
@@ -19694,6 +19714,7 @@ exports.add = add;
 exports.addEventListeners = addEventListeners;
 exports.arrayClear = arrayClear;
 exports.arrayRandom = arrayRandom;
+exports.arrayRemove = arrayRemove;
 exports.arrayRemoveAt = arrayRemoveAt;
 exports.arrayScan = arrayScan;
 exports.canChangeAudioOutput = canChangeAudioOutput;

@@ -46,6 +46,26 @@ function arrayRemoveAt(arr, idx) {
 }
 
 /**
+ * Removes a given item from an array.
+ * @param {any[]} arr
+ * @param {any} value
+ * @returns {boolean} - true, if the item was removed
+ */
+function arrayRemove(arr, value) {
+    if (!(arr instanceof Array)) {
+        throw new Error("Must provide an array as the first parameter.");
+    }
+
+    const idx = arr.indexOf(value);
+    if (idx > -1) {
+        arrayRemoveAt(arr, idx);
+        return true;
+    }
+
+    return false;
+}
+
+/**
  * A test for filtering an array
  * @callback scanArrayCallback
  * @param {any} obj - an array item to check.
@@ -19646,4 +19666,4 @@ class CallaClient extends EventBase {
     }
 }
 
-export { AudioActivityEvent, AudioListenerBase, AudioListenerNew, AudioListenerOld, AudioManager, BaseAnalyzed, BaseListener, BaseSource, BaseSpatializer, BaseWebAudio, CallaClient, EventBase, InterpolatedPose, MockAudioContext, PannerBase, PannerNew, PannerOld, Pose, ResonanceScene, ResonanceSource, Vector, add, addEventListeners, arrayClear, arrayRandom, arrayRemoveAt, arrayScan, canChangeAudioOutput, clamp, isBoolean, isFunction, isGoodNumber, isNumber, isString, lerp, once, project, unproject, until, versionString, wait, when };
+export { AudioActivityEvent, AudioListenerBase, AudioListenerNew, AudioListenerOld, AudioManager, BaseAnalyzed, BaseListener, BaseSource, BaseSpatializer, BaseWebAudio, CallaClient, EventBase, InterpolatedPose, MockAudioContext, PannerBase, PannerNew, PannerOld, Pose, ResonanceScene, ResonanceSource, Vector, add, addEventListeners, arrayClear, arrayRandom, arrayRemove, arrayRemoveAt, arrayScan, canChangeAudioOutput, clamp, isBoolean, isFunction, isGoodNumber, isNumber, isString, lerp, once, project, unproject, until, versionString, wait, when };
