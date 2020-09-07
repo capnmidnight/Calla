@@ -4,7 +4,7 @@ import { once } from "../calla/events/once";
 import { isString } from "../calla/typeChecks";
 import { height, src, width } from "../html/attrs";
 import { Canvas, Img } from "../html/tags";
-import { getFileWithProgress } from "./fetching";
+import { getFile } from "./fetching";
 import { LRUCache } from "./LRUCache";
 
 const cache = new LRUCache(50);
@@ -31,7 +31,7 @@ export class TexturedMesh extends Mesh {
         }
 
         if (isString(img)) {
-            img = await getFileWithProgress(img, onProgress);
+            img = await getFile(img, onProgress);
             img = Img(src(img));
         }
 

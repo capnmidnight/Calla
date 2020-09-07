@@ -1,7 +1,7 @@
 import { Object3D } from "three/src/core/Object3D";
 import { Application } from "./Application";
 import { DebugObject } from "./DebugObject";
-import { getObject, getObjectWithProgress } from "./fetching";
+import { getObject } from "./fetching";
 import { Image2DMesh } from "./Image2DMesh";
 import { splitProgress } from "./progress";
 import { TextMesh } from "./TextMesh";
@@ -82,7 +82,7 @@ async function showActivity(activityID, skipHistory = false) {
 
     const [lessonProg, assetProg] = splitProgress(onProgress, [1, 99]);
 
-    const all = await getObjectWithProgress(`/VR/Activity/${activityID}`, lessonProg);
+    const all = await getObject(`/VR/Activity/${activityID}`, lessonProg);
     const {
         transforms,
         stations,

@@ -14,27 +14,6 @@ export async function getResponse(path) {
 }
 
 /**
- * @param {string} path
- * @returns {Promise<any>}
- */
-export async function getObject(path) {
-    const response = await getResponse(path);
-    const obj = await response.json();
-    return obj;
-}
-
-/**
- * @param {string} path
- * @returns {Promise<string>}
- */
-export async function getFile(path) {
-    const response = await getResponse(path);
-    const blob = await response.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    return blobUrl;
-}
-
-/**
  * @callback progressCallback
  * @param {number} soFar
  * @param {number} total
@@ -112,6 +91,38 @@ export async function getObjectWithProgress(path, onProgress) {
 export async function getFileWithProgress(path, onProgress) {
     const { buffer, contentType } = await getBufferWithProgress(path, onProgress);
     const blob = new Blob([buffer], { type: contentType });
+    const blobUrl = URL.createObjectURL(blob);
+    return blobUrl;
+}
+
+
+/**
+ * @param {string} path
+ * @param {progressCallback?} onProgress
+ * @returns {Promise<any>}
+ */
+export async function getObject(path, onProgress = null) {
+    if (isFunction(onProgress)) {
+        return await getObjectWithProgress(path, onProgress);
+    }
+
+    const response = await getResponse(path);
+    const obj = await response.json();
+    return obj;
+}
+
+/**
+ * @param {string} path
+ * @param {progressCallback?} onProgress
+ * @returns {Promise<string>}
+ */
+export async function getFile(path, onProgress = null) {
+    if (isFunction(onProgress)) {
+        return await getFileWithProgress(path, onProgress);
+    }
+
+    const response = await getResponse(path);
+    const blob = await response.blob();
     const blobUrl = URL.createObjectURL(blob);
     return blobUrl;
 }
