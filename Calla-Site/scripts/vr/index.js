@@ -12,6 +12,22 @@ const curTransforms = new Map();
 const curStations = new Map();
 const curConnections = new Map();
 
+const views = [
+    ["Main", showMainMenu],
+    ["Language", showLanguage],
+    ["Lesson", showLesson],
+    ["Activity", showActivity]
+];
+
+/**
+ * @callback viewCallback
+ * @param {number} id
+ * @param {boolean} skipHistory
+ **/
+
+/** @type {Map<string, viewCallback>} */
+const viewMap = new Map(views);
+
 app.addEventListener("sceneclearing", () => {
     curTransforms.clear();
     curStations.clear();
@@ -19,7 +35,17 @@ app.addEventListener("sceneclearing", () => {
 });
 
 app.addEventListener("started", () => {
-    showMainMenu();
+    if (window.location.search.length === 0) {
+        showMainMenu();
+    }
+    else {
+        const expr = window.location.search.substring(1); // 1 removes the question mark;
+        const parts = expr.split("=");
+        const viewName = parts[0];
+        const id = parseInt(parts[1], 10);
+        const func = viewMap.get(viewName);
+        func(id, true);
+    }
 });
 
 app.start();
@@ -164,16 +190,10 @@ async function showStation(stationID, onProgress) {
     await app.fadeIn();
 }
 
-const functs = [
-    showMainMenu,
-    showLanguage,
-    showLesson,
-    showActivity
-];
-
 window.addEventListener("popstate", (evt) => {
     const state = evt.state;
-    const func = functs[state.step];
+    const view = views[state.step]
+    const func = view[1];
     func(state.id, true);
 });
 
