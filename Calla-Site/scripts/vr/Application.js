@@ -1,5 +1,5 @@
 import { AmbientLight, Color, Object3D, PerspectiveCamera, Scene, WebGLRenderer } from "three";
-import { EventBase, arrayClear } from "../calla";
+import { EventBase } from "../calla";
 import { CameraControl } from "../input/CameraControl";
 import { EventSystem } from "../input/EventSystem";
 import { ScreenPointerControls } from "../input/ScreenPointerControls";
@@ -12,7 +12,7 @@ import { Skybox } from "./Skybox";
 const visibleBackground = new Color(0x606060);
 const invisibleBackground = new Color(0x000000);
 
-export class ThreeJSApplication extends EventBase {
+export class Application extends EventBase {
     constructor() {
         super();
 

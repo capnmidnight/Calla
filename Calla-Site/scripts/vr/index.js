@@ -1,13 +1,13 @@
 import { Object3D } from "three";
+import { Application } from "./Application";
 import { DebugObject } from "./DebugObject";
 import { getObject, getObjectWithProgress } from "./fetching";
 import { Image2DMesh } from "./Image2DMesh";
 import { splitProgress } from "./progress";
 import { TextMesh } from "./TextMesh";
-import { ThreeJSApplication } from "./ThreeJSApplication";
 
 
-const app = new ThreeJSApplication();
+const app = new Application();
 const curTransforms = new Map();
 const curStations = new Map();
 const curConnections = new Map();
