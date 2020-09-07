@@ -3,10 +3,10 @@
     ViewData["Title"] = "Referrers";
 }
 
-@model StringCount[]
+@model IEnumerable<string>
 
 
-@if (Model.Length == 0)
+@if (Model.Empty())
 {
     <p>No Content</p>
 }
@@ -16,7 +16,7 @@ else
         @foreach(var row in Model)
         {
             <li>
-                [@row.Count] <a href="@row.Value" target="_blank" rel="noreferrer nofollow">@row.Value</a>
+                <a href="@row" target="_blank" rel="noreferrer nofollow">@row</a>
             </li>
         }
     </ul>

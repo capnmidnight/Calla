@@ -83,6 +83,18 @@ namespace Calla.Controllers
             return Ok();
         }
 
+        private static readonly string[] blacklist =
+        {
+            "N/A",
+            "https://www.calla.chat",
+            "https://www.calla.chat/",
+            "https://calla.chat",
+            "https://calla.chat/",
+            "http://www.calla.chat",
+            "http://www.calla.chat/",
+            "http://calla.chat",
+            "http://calla.chat/"
+        };
         [HttpGet]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public ActionResult Referrers()
@@ -92,7 +104,11 @@ namespace Calla.Controllers
                 return NotFound();
             }
 
-            return View(db.PageViews.ValueCount(pv => pv.Referrer));
+            return View(db.PageViews
+                .AsNoTracking()
+                .Where(pv => !blacklist.Contains(pv.Referrer))
+                .OrderByDescending(pv=>pv.Timestamp)
+                .Select(pv => pv.Referrer));
         }
 
         [HttpGet]
