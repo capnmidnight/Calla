@@ -3,8 +3,9 @@ import { isString, once } from "../calla";
 import { height, src, width } from "../html/attrs";
 import { Canvas, Img } from "../html/tags";
 import { getFileWithProgress } from "./fetching";
+import { LRUCache } from "./LRUCache";
 
-const cache = new Map();
+const cache = new LRUCache(10);
 
 export class TexturedMesh extends Mesh {
     /**
@@ -53,9 +54,7 @@ export class TexturedMesh extends Mesh {
             img = new Texture(img);
         }
 
-        if (!cache.has(key)) {
-            cache.set(key, img);
-        }
+        cache.set(key, img);
         this.material.map = img;
         img = this.material.map.image;
         this.isVideo = img instanceof HTMLVideoElement;
