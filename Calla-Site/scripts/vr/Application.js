@@ -4,6 +4,7 @@ import { AmbientLight } from "three/src/lights/AmbientLight";
 import { Color } from "three/src/math/Color";
 import { WebGLRenderer } from "three/src/renderers/WebGLRenderer";
 import { Scene } from "three/src/scenes/Scene";
+import { AudioManager } from "../calla/audio/AudioManager";
 import { EventBase } from "../calla/events/EventBase";
 import { CameraControl } from "../input/CameraControl";
 import { EventSystem } from "../input/EventSystem";
@@ -20,6 +21,8 @@ const invisibleBackground = new Color(0x000000);
 export class Application extends EventBase {
     constructor() {
         super();
+
+        this.audio = new AudioManager();
 
         this.renderer = new WebGLRenderer({
             canvas: document.getElementById("frontBuffer"),

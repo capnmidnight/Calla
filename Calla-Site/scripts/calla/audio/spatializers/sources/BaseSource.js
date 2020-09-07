@@ -44,6 +44,12 @@ export class BaseSource extends BaseSpatializer {
         }
     }
 
+    stop() {
+        if (this.audio) {
+            this.audio.pause();
+        }
+    }
+
     /**
      * Discard values and make this instance useless.
      */

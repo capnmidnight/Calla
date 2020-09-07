@@ -1,9 +1,9 @@
 import { Object3D } from "three/src/core/Object3D";
+import { getObject } from "../calla/fetching";
+import { splitProgress } from "../calla/progress";
 import { Application } from "./Application";
 import { DebugObject } from "./DebugObject";
-import { getObject } from "./fetching";
 import { Image2DMesh } from "./Image2DMesh";
-import { splitProgress } from "./progress";
 import { TextMesh } from "./TextMesh";
 
 
@@ -11,6 +11,7 @@ const app = new Application();
 const curTransforms = new Map();
 const curStations = new Map();
 const curConnections = new Map();
+const curAudioTracks = new Map();
 
 const views = [
     ["Main", showMainMenu],
@@ -32,6 +33,10 @@ app.addEventListener("sceneclearing", () => {
     curTransforms.clear();
     curStations.clear();
     curConnections.clear();
+    for (let audioTrack of curAudioTracks.values()) {
+        app.audio.removeClip(audioTrack.path);
+    }
+    curAudioTracks.clear();
 });
 
 app.addEventListener("started", () => {
@@ -57,6 +62,37 @@ app.start();
  */
 function onProgress(soFar, total, msg) {
     app.onProgress(soFar, total, msg);
+}
+
+
+let curZone = "";
+/**
+ * @param {string} zone
+ */
+function playAudioZone(zone) {
+    if (zone !== curZone) {
+        stopCurrentAudioZone();
+        curZone = zone;
+        playCurrentAudioZone();
+    }
+}
+
+function stopCurrentAudioZone() {
+    if (curAudioTracks.has(curZone)) {
+        const curTracks = curAudioTracks.get(curZone);
+        for (let audioTrack of curTracks) {
+            app.audio.stopClip(audioTrack.path);
+        }
+    }
+}
+
+function playCurrentAudioZone() {
+    if (curAudioTracks.has(curZone)) {
+        const curTracks = curAudioTracks.get(curZone);
+        for (let audioTrack of curTracks) {
+            app.audio.playClip(audioTrack.path, audioTrack.volume);
+        }
+    }
 }
 
 async function showMainMenu(_, skipHistory = false) {
@@ -92,7 +128,7 @@ async function showActivity(activityID, skipHistory = false) {
     } = all;
 
 
-    const progs = splitProgress(assetProg, signs.length + 1);
+    const progs = splitProgress(assetProg, signs.length + audioTracks.length + 1);
 
     let startID = null;
     for (let station of stations) {
@@ -135,6 +171,8 @@ async function showActivity(activityID, skipHistory = false) {
         const from = curTransforms.get(fromStationID),
             exits = curConnections.get(fromStationID);
 
+        from.visible = false;
+
         for (let toStationID of exits) {
             const to = curTransforms.get(toStationID),
                 icon = DebugObject();
@@ -162,6 +200,23 @@ async function showActivity(activityID, skipHistory = false) {
         transform.add(img);
     }
 
+    for (let audioTrack of audioTracks) {
+        await app.audio.addClip(
+            audioTrack.path,
+            audioTrack.loop,
+            false,
+            progs.shift(),
+            audioTrack.path);
+
+        if (!curAudioTracks.has(audioTrack.zone)) {
+            curAudioTracks.set(audioTrack.zone, []);
+        }
+
+        if (audioTrack.zone !== null) {
+            curAudioTracks.get(audioTrack.zone).push(audioTrack);
+        }
+    }
+
     if (startID !== null) {
         await showStation(startID, progs.shift());
     }
@@ -185,6 +240,8 @@ async function showStation(stationID, onProgress) {
         const there = curTransforms.get(otherStationID);
         there.visible = otherStationID === stationID;
     }
+
+    playAudioZone(station.zone);
 
     await app.fadeIn();
 }

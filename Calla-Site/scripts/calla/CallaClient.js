@@ -130,8 +130,8 @@ export class CallaClient extends EventBase {
         });
 
         this.addEventListener("userInitRequest", (evt) => {
-            const source = this.audio.getSource(this.localUserID);
-            const { p, f, u } = source.pose.end;
+            const user = this.audio.getUser(this.localUserID);
+            const { p, f, u } = user.pose.end;
             this.userInitResponse(evt.id, {
                 id: this.localUserID,
                 px: p.x,
@@ -340,8 +340,8 @@ export class CallaClient extends EventBase {
             this.conference.addEventListener(CONFERENCE_JOINED, async () => {
                 this.localUserID = this.conference.myUserId();
                 console.log("======== CONFERENCE_JOINED ::", this.localUserID);
-                const source = this.audio.createSource(this.localUserID);
-                source.spatializer = this.audio.listener;
+                const user = this.audio.createUser(this.localUserID);
+                user.spatializer = this.audio.listener;
                 this.joined = true;
                 this.setDisplayName(userName);
                 this.dispatchEvent(Object.assign(
@@ -349,7 +349,7 @@ export class CallaClient extends EventBase {
                     id: this.localUserID,
                     roomName,
                     displayName: userName,
-                    pose: source.pose
+                    pose: user.pose
                 }));
                 await this.setPreferredDevicesAsync();
             });
@@ -373,14 +373,14 @@ export class CallaClient extends EventBase {
                 onTrackMuteChanged(track, track.isMuted());
             };
 
-            this.conference.addEventListener(USER_JOINED, (id, user) => {
+            this.conference.addEventListener(USER_JOINED, (id, jitsiUser) => {
                 console.log("======== USER_JOINED ::", id);
-                const source = this.audio.createSource(id);
+                const user = this.audio.createUser(id);
                 const evt = Object.assign(
                     new Event("participantJoined"), {
                     id,
-                    displayName: user.getDisplayName(),
-                    pose: source.pose
+                    displayName: jitsiUser.getDisplayName(),
+                    pose: user.pose
                 });
                 this.dispatchEvent(evt);
             });
@@ -412,21 +412,21 @@ export class CallaClient extends EventBase {
                         id: userID,
                         stream: track.stream
                     }),
-                    source = this.audio.getSource(userID);
+                    user = this.audio.getUser(userID);
 
                 setLoggers(track, JitsiMeetJS.events.track);
 
                 track.addEventListener(JitsiMeetJS.events.track.TRACK_MUTE_CHANGED, onTrackChanged);
 
-                if (source.tracks.has(trackKind)) {
-                    source.tracks.get(trackKind).dispose();
-                    source.tracks.delete(trackKind);
+                if (user.tracks.has(trackKind)) {
+                    user.tracks.get(trackKind).dispose();
+                    user.tracks.delete(trackKind);
                 }
 
-                source.tracks.set(trackKind, track);
+                user.tracks.set(trackKind, track);
 
                 if (trackKind === "audio" && !isLocal) {
-                    this.audio.setSourceStream(userID, track.stream);
+                    this.audio.setUserStream(userID, track.stream);
                 }
 
                 this.dispatchEvent(trackAddedEvt);
@@ -443,15 +443,15 @@ export class CallaClient extends EventBase {
                         id: userID,
                         stream: null
                     }),
-                    source = this.audio.getSource(userID);
+                    user = this.audio.getUser(userID);
 
-                if (source && source.tracks.has(trackKind)) {
-                    source.tracks.get(trackKind).dispose();
-                    source.tracks.delete(trackKind);
+                if (user && user.tracks.has(trackKind)) {
+                    user.tracks.get(trackKind).dispose();
+                    user.tracks.delete(trackKind);
                 }
 
                 if (trackKind === "audio" && !isLocal) {
-                    this.audio.setSourceStream(userID, null);
+                    this.audio.setUserStream(userID, null);
                 }
 
                 track.dispose();
@@ -573,9 +573,9 @@ export class CallaClient extends EventBase {
 
     dispose() {
         if (this.localUserID) {
-            const source = this.audio.getSource(this.localUserID);
-            if (source) {
-                for (let track of source.tracks.values()) {
+            const user = this.audio.getUser(this.localUserID);
+            if (user) {
+                for (let track of user.tracks.values()) {
                     track.dispose();
                 }
             }
@@ -593,17 +593,17 @@ export class CallaClient extends EventBase {
     async leaveAsync() {
         if (this.conference) {
             if (this.localUserID !== null) {
-                const source = this.audio.getSource(this.localUserID);
-                if (source) {
-                    if (source.tracks.has("video")) {
+                const user = this.audio.getUser(this.localUserID);
+                if (user) {
+                    if (user.tracks.has("video")) {
                         const removeTrackTask = once(this, "videoRemoved");
-                        this.conference.removeTrack(source.tracks.get("video"));
+                        this.conference.removeTrack(user.tracks.get("video"));
                         await removeTrackTask;
                     }
 
-                    if (source.tracks.has("audio")) {
+                    if (user.tracks.has("audio")) {
                         const removeTrackTask = once(this, "audioRemoved");
-                        this.conference.removeTrack(source.tracks.get("audio"));
+                        this.conference.removeTrack(user.tracks.get("audio"));
                         await removeTrackTask;
                     }
                 }
@@ -688,16 +688,16 @@ export class CallaClient extends EventBase {
             return null;
         }
 
-        const source = this.audio.getSource(this.localUserID);
-        if (!source) {
+        const user = this.audio.getUser(this.localUserID);
+        if (!user) {
             return null;
         }
 
-        if (!source.tracks.has(type)) {
+        if (!user.tracks.has(type)) {
             return null;
         }
 
-        return source.tracks.get(type);
+        return user.tracks.get(type);
     }
 
     /**
@@ -933,7 +933,7 @@ export class CallaClient extends EventBase {
     }
 
     removeUser(id) {
-        this.audio.removeSource(id);
+        this.audio.removeUser(id);
     }
 
     /**

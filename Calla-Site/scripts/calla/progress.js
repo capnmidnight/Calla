@@ -1,4 +1,4 @@
-import { isNumber } from "../calla/typeChecks";
+import { isNumber } from "./typeChecks";
 
 /**
  * @param {import("./fetching").progressCallback} onProgress

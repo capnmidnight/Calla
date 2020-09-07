@@ -1,4 +1,4 @@
-import { isFunction } from "../calla/typeChecks";
+import { isFunction } from "./typeChecks";
 
 /**
  * @param {string} path

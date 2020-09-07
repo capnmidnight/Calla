@@ -4,7 +4,7 @@ import { onBlur, onClick, onFocus, onKeyPress, onMouseOut, onMouseOver } from ".
 import { gridPos, row } from "../../html/grid";
 import { hide, isOpen } from "../../html/ops";
 import { Button, Canvas, Div, InputText } from "../../html/tags";
-import { HubConnectionBuilder } from "../../lib/signalr";
+import { HubConnectionBuilder } from "../../lib/signalr/dist/esm/HubConnectionBuilder";
 import { User } from "../User";
 import { FormDialog } from "./FormDialog";
 

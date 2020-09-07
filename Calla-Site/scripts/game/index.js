@@ -189,8 +189,8 @@ addEventListeners(controls, {
 addEventListeners(login, {
     login: async () => {
         client.startAudio();
-        client.audio.addClip("join", false, false, "audio/door-open.ogg", "audio/door-open.mp3", "audio/door-open.wav");
-        client.audio.addClip("leave", false, false, "audio/door-close.ogg", "audio/door-close.mp3", "audio/door-close.wav");
+        await client.audio.addClip("join", false, false, null, "audio/door-open.ogg", "audio/door-open.mp3", "audio/door-open.wav");
+        await client.audio.addClip("leave", false, false, null, "audio/door-close.ogg", "audio/door-close.mp3", "audio/door-close.wav");
         setAudioProperties();
 
         let roomName = login.roomName;

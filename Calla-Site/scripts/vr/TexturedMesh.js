@@ -1,10 +1,10 @@
 import { Mesh } from "three/src/objects/Mesh";
 import { Texture } from "three/src/textures/Texture";
 import { once } from "../calla/events/once";
+import { getFile } from "../calla/fetching";
 import { isString } from "../calla/typeChecks";
 import { height, src, width } from "../html/attrs";
 import { Canvas, Img } from "../html/tags";
-import { getFile } from "./fetching";
 import { LRUCache } from "./LRUCache";
 
 const cache = new LRUCache(50);
@@ -21,7 +21,7 @@ export class TexturedMesh extends Mesh {
 
     /**
      * @param {HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|string|Texture} img
-     * @param {import("./fetching").progressCallback} onProgress
+     * @param {import("../calla/fetching").progressCallback} onProgress
      */
 
     async setImage(img, onProgress) {
