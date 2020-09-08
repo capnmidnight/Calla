@@ -12837,7 +12837,7 @@ class AudioSource {
         /** @type {Map<string, JitsiTrack>} */
         this.tracks = new Map();
 
-        /** @type {import("./spatializers/BaseSpatializer").BaseSpatializer} */
+        /** @type {import("./spatializers/sources/BaseSource").BaseSource} */
         this._spatializer = null;
     }
 
@@ -13000,9 +13000,15 @@ class BaseSource extends BaseSpatializer {
         this.audio.playsInline = true;
     }
 
-    play() {
+    async play() {
         if (this.audio) {
-            this.audio.play();
+            await this.audio.play();
+        }
+    }
+
+    stop() {
+        if (this.audio) {
+            this.audio.pause();
         }
     }
 
@@ -19469,7 +19475,7 @@ class ResonanceScene extends BaseListener {
         super();
 
         this.scene = new ResonanceAudio(audioContext, {
-            ambisonicOrder: 3,
+            ambisonicOrder: 1,
             renderingMode: "bypass"
         });
         
@@ -19516,8 +19522,218 @@ class ResonanceScene extends BaseListener {
     }
 }
 
+/**
+ * @param {string} path
+ * @returns {Promise<Response>}
+ */
+async function getResponse(path) {
+    const request = fetch(path);
+    const response = await request;
+    if (!response.ok) {
+        throw new Error(`[${response.status}] - ${response.statusText}`);
+    }
+    return response;
+}
+
+/**
+ * @callback progressCallback
+ * @param {number} soFar
+ * @param {number} total
+ * @param {string?} message
+ **/
+
+/**
+ * @typedef {object} getPartsReturnType
+ * @property {Uint8Array} buffer
+ * @property {string} contentType
+ **/
+
+/**
+ * @param {string} path
+ * @param {progressCallback} onProgress
+ * @returns {Promise<getPartsReturnType>}
+ */
+async function getBufferWithProgress(path, onProgress) {
+    if (!isFunction(onProgress)) {
+        throw new Error("progress callback is required");
+    }
+
+    onProgress(0, 1, path);
+    const response = await getResponse(path);
+
+    const contentLength = parseInt(response.headers.get("Content-Length"), 10);
+    if (!contentLength) {
+        throw new Error("Server did not provide a content length header.");
+    }
+
+    const contentType = response.headers.get("Content-Type");
+    if (!contentType) {
+        throw new Error("Server did not provide a content type");
+    }
+
+    const reader = response.body.getReader();
+    const buffer = new Uint8Array(contentLength);
+    let receivedLength = 0;
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+            break;
+        }
+
+        if (receivedLength + value.length > contentLength) {
+            throw new Error("Whoa! Recieved content exceeded expected amount");
+        }
+
+        buffer.set(value, receivedLength);
+        receivedLength += value.length;
+        onProgress(receivedLength, contentLength, path);
+    }
+
+    return { buffer, contentType };
+}
+
+
+/**
+ * @param {string} path
+ * @param {progressCallback} onProgress
+ * @returns {Promise<Blob>}
+ */
+async function getBlobWithProgress(path, onProgress) {
+    const { buffer, contentType } = await getBufferWithProgress(path, onProgress);
+    const blob = new Blob([buffer], { type: contentType });
+    return blob;
+}
+
+/**
+ * @param {string} path
+ * @param {progressCallback} onProgress
+ * @returns {Promise<string>}
+ */
+async function getFileWithProgress(path, onProgress) {
+    const blob = await getBlobWithProgress(path, onProgress);
+    const blobUrl = URL.createObjectURL(blob);
+    return blobUrl;
+}
+
+/**
+ * @param {string} path
+ * @param {progressCallback?} onProgress
+ * @returns {Promise<Blob>}
+ */
+async function getBlob(path, onProgress = null) {
+    if (isFunction(onProgress)) {
+        return await getBlobWithProgress(path, onProgress);
+    }
+
+    const response = await getResponse(path);
+    const blob = await response.blob();
+    return blob;
+}
+
+/**
+ * @param {string} path
+ * @param {progressCallback?} onProgress
+ * @returns {Promise<string>}
+ */
+async function getFile(path, onProgress = null) {
+    if (isFunction(onProgress)) {
+        return await getFileWithProgress(path, onProgress);
+    }
+
+    const blob = await getBlob(path);
+    const blobUrl = URL.createObjectURL(blob);
+    return blobUrl;
+}
+
+/**
+ * Empties out an array
+ * @param {any[]} arr - the array to empty.
+ * @returns {any[]} - the items that were in the array.
+ */
+function arrayClear(arr) {
+    if (!(arr instanceof Array)) {
+        throw new Error("Must provide an array as the first parameter.");
+    }
+    return arr.splice(0);
+}
+
+/**
+ * Removes a given item from an array.
+ * @param {any[]} arr
+ * @param {any} value
+ * @returns {boolean} - true, if the item was removed
+ */
+function arrayRemove(arr, value) {
+    if (!(arr instanceof Array)) {
+        throw new Error("Must provide an array as the first parameter.");
+    }
+
+    const idx = arr.indexOf(value);
+    if (idx > -1) {
+        arrayRemoveAt(arr, idx);
+        return true;
+    }
+
+    return false;
+}
+
+class LRUCache {
+    constructor(size) {
+        this.size = size;
+        this.map = new Map();
+        this.usage = [];
+    }
+
+    set(key, value) {
+        this.usage.push(key);
+        const removed = [];
+        while (this.usage.length > this.size) {
+            const toDelete = this.usage.shift();
+            removed.push(toDelete);
+            this.map.delete(toDelete);
+        }
+        arrayRemove(removed, key);
+        if (removed.length > 0) {
+            console.log("removing", removed.join(", "));
+        }
+        return this.map.set(key, value);
+    }
+
+    has(key) {
+        return this.map.has(key);
+    }
+
+    get(key) {
+        return this.map.get(key);
+    }
+
+    delete(key) {
+        arrayRemove(this.usage, key);
+        return this.map.delete(key);
+    }
+
+    clear() {
+        arrayClear(this.usage);
+        this.map.clear();
+    }
+
+    keys() {
+        return this.map.keys();
+    }
+
+    values() {
+        return this.map.values();
+    }
+
+    entries() {
+        return this.map.entries();
+    }
+}
+
 const BUFFER_SIZE = 1024,
-    audioActivityEvt$1 = new AudioActivityEvent();
+    audioActivityEvt$1 = new AudioActivityEvent(),
+    audioReadyEvt = new Event("audioready"),
+    cache = new LRUCache(50);
 
 let hasAudioContext = Object.prototype.hasOwnProperty.call(window, "AudioContext"),
     hasAudioListener = hasAudioContext && Object.prototype.hasOwnProperty.call(window, "AudioListener"),
@@ -19544,7 +19760,7 @@ class AudioManager extends EventBase {
         this.transitionTime = 0.5;
 
         /** @type {Map<string, AudioSource>} */
-        this.sources = new Map();
+        this.users = new Map();
 
         /** @type {Map<string, AudioSource>} */
         this.clips = new Map();
@@ -19560,13 +19776,51 @@ class AudioManager extends EventBase {
             this.dispatchEvent(audioActivityEvt$1);
         };
 
-        /** @type {AudioContext} */
-        this.audioContext = null;
-
         /** @type {BaseListener} */
         this.listener = null;
 
+        /** @type {AudioContext} */
+        this.audioContext = null;
+
+        this.createContext();
+
+        if (this.audioContext instanceof AudioContext
+            && !this.ready) {
+            const gestures = Object.keys(window)
+                .filter(x => x.startsWith("on"))
+                .map(x => x.substring(2));
+
+            const startAudio = () => {
+                this.start();
+                if (this.ready) {
+                    for (let gesture of gestures) {
+                        window.removeEventListener(gesture, startAudio);
+                    }
+
+                    this.dispatchEvent(audioReadyEvt);
+                }
+            };
+
+            for (let gesture of gestures) {
+                window.addEventListener(gesture, startAudio);
+            }
+        }
+
         Object.seal(this);
+    }
+
+    addEventListener(name, listener, opts) {
+        if (name === audioReadyEvt.type
+            && this.ready) {
+            listener(audioReadyEvt);
+        }
+        else {
+            super.addEventListener(name, listener, opts);
+        }
+    }
+
+    get ready() {
+        return this.audioContext.state === "running";
     }
 
     /** 
@@ -19574,13 +19828,14 @@ class AudioManager extends EventBase {
      **/
     start() {
         this.createContext();
+        this.audioContext.resume();
     }
 
     update() {
         if (this.audioContext) {
             const t = this.currentTime;
-            for (let source of this.sources.values()) {
-                source.update(t);
+            for (let user of this.users.values()) {
+                user.update(t);
             }
 
             for (let clip of this.clips.values()) {
@@ -19669,45 +19924,6 @@ class AudioManager extends EventBase {
     }
 
     /**
-     * Creates a new sound effect from a series of fallback paths
-     * for media files.
-     * @param {string} name - the name of the sound effect, to reference when executing playback.
-     * @param {string[]} paths - a series of fallback paths for loading the media of the sound effect.
-     */
-    addClip(name, ...paths) {
-        const source = new AudioSource();
-
-        const sources = paths
-            .map((p) => {
-                const s = document.createElement("source");
-                s.src = p;
-                return s;
-            });
-
-        const elem = document.createElement("audio");
-        elem.controls = false;
-        elem.playsInline = true;
-        elem.append(...sources);
-
-        source.spatializer = this.createSpatializer(name, elem);
-
-        this.clips.set(name, source);
-    }
-
-    /**
-     * Plays a named sound effect.
-     * @param {string} name - the name of the effect to play.
-     * @param {number} [volume=1] - the volume at which to play the effect.
-     */
-    playClip(name, volume = 1) {
-        if (this.clips.has(name)) {
-            const clip = this.clips.get(name);
-            clip.volume = volume;
-            clip.spatializer.play();
-        }
-    }
-
-    /**
      * Gets the current playback time.
      * @type {number}
      */
@@ -19720,59 +19936,163 @@ class AudioManager extends EventBase {
      * @param {string} id
      * @returns {AudioSource}
      */
-    createSource(id) {
-        if (!this.sources.has(id)) {
-            this.sources.set(id, new AudioSource());
+    createUser(id) {
+        if (!this.users.has(id)) {
+            this.users.set(id, new AudioSource());
         }
 
-        return this.sources.get(id);
+        return this.users.get(id);
     }
 
     /**
-     * Get an existing audio source.
+     * Create a new user for the audio listener.
      * @param {string} id
      * @returns {AudioSource}
      */
-    getSource(id) {
-        return this.sources.get(id) || null;
+    createLocalUser(id) {
+        const user = this.createUser(id);
+        user.spatializer = this.listener;
+        return user;
+    }
+
+    /**
+     * Creates a new sound effect from a series of fallback paths
+     * for media files.
+     * @param {string} name - the name of the sound effect, to reference when executing playback.
+     * @param {string[]} paths - a series of fallback paths for loading the media of the sound effect.
+     */
+    async addClip(name, loop, autoPlay, onProgress, ...paths) {
+        const clip = new AudioSource();
+
+        const sources = [];
+        for (let path of paths) {
+            const s = document.createElement("source");
+            const key = path;
+            if (cache.has(key)) {
+                path = cache.get(key);
+            }
+            else if (onProgress) {
+                path = await getFile(path, onProgress);
+                cache.set(key, path);
+            }
+            s.src = path;
+            sources.push(s);
+        }
+
+        const elem = document.createElement("audio");
+        elem.loop = loop;
+        elem.controls = false;
+        elem.playsInline = true;
+        elem.autoplay = autoPlay;
+        elem.append(...sources);
+
+        clip.spatializer = this.createSpatializer(name, elem);
+
+        this.clips.set(name, clip);
+
+        return clip;
+    }
+
+    /**
+     * Plays a named sound effect.
+     * @param {string} name - the name of the effect to play.
+     * @param {number} [volume=1] - the volume at which to play the effect.
+     */
+    async playClip(name, volume = 1) {
+        if (this.clips.has(name)) {
+            const clip = this.clips.get(name);
+            clip.volume = volume;
+            await clip.spatializer.play();
+        }
+    }
+
+    stopClip(name) {
+        if (this.clips.has(name)) {
+            const clip = this.clips.get(name);
+            clip.spatializer.stop();
+        }
+    }
+
+    /**
+     * Get an audio source.
+     * @param {Map<string, AudioSource>} sources - the collection of audio sources from which to retrieve.
+     * @param {string} id - the id of the audio source to get
+     **/
+    getSource(sources, id) {
+        return sources.get(id) || null;
+    }
+
+    /**
+     * Get an existing user.
+     * @param {string} id
+     * @returns {AudioSource}
+     */
+    getUser(id) {
+        return this.getSource(this.users, id);
+    }
+
+    /**
+     * Get an existing audio clip.
+     * @param {string} id
+     * @returns {AudioSource}
+     */
+    getClip(id) {
+        return this.getSource(this.clips, id);
+    }
+
+    /**
+     * Remove an audio source from audio processing.
+     * @param {Map<string, AudioSource>} sources - the collection of audio sources from which to remove.
+     * @param {string} id - the id of the audio source to remove
+     **/
+    removeSource(sources, id) {
+        if (sources.has(id)) {
+            const source = sources.get(id);
+            sources.delete(id);
+            source.dispose();
+        }
     }
 
     /**
      * Remove a user from audio processing.
      * @param {string} id - the id of the user to remove
      **/
-    removeSource(id) {
-        if (this.sources.has(id)) {
-            const source = this.sources.get(id);
-            this.sources.delete(id);
-            source.dispose();
-        }
+    removeUser(id) {
+        this.removeSource(this.users, id);
+    }
+
+    /**
+     * Remove an audio clip from audio processing.
+     * @param {string} id - the id of the audio clip to remove
+     **/
+    removeClip(id) {
+        this.removeSource(this.clips, id);
     }
 
     /**
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream
      **/
-    setSourceStream(id, stream) {
-        if (this.sources.has(id)) {
-            const source = this.sources.get(id);
-            if (source.spatializer) {
-                source.spatializer.removeEventListener("audioActivity", this.onAudioActivity);
-                source.spatializer = null;
+    setUserStream(id, stream) {
+        if (this.users.has(id)) {
+            const user = this.users.get(id);
+            if (user.spatializer) {
+                user.spatializer.removeEventListener("audioActivity", this.onAudioActivity);
+                user.spatializer = null;
             }
 
             if (stream) {
-                source.spatializer = this.createSpatializer(id, stream, BUFFER_SIZE);
-                if (source.spatializer) {
-                    if (source.spatializer.audio) {
-                        source.spatializer.audio.autoPlay = true;
-                        source.spatializer.audio.muted = true;
-                        source.spatializer.audio.addEventListener("onloadedmetadata", () =>
-                            source.spatializer.audio.play());
-                        source.spatializer.audio.play();
+                user.spatializer = this.createSpatializer(id, stream, BUFFER_SIZE);
+                if (user.spatializer) {
+                    if (user.spatializer.audio) {
+                        user.spatializer.audio.autoPlay = true;
+                        user.spatializer.audio.muted = true;
+                        user.spatializer.audio.addEventListener("onloadedmetadata", () =>
+                            user.spatializer.audio.play());
+                        user.spatializer.audio.play();
                     }
-                    source.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
-                    source.spatializer.addEventListener("audioActivity", this.onAudioActivity);
+                    user.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
+                    user.spatializer.addEventListener("audioActivity", this.onAudioActivity);
                 }
             }
         }
@@ -19791,9 +20111,9 @@ class AudioManager extends EventBase {
         this.transitionTime = transitionTime;
         this.rolloff = rolloff;
 
-        for (let source of this.sources.values()) {
-            if (source.spatializer) {
-                source.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
+        for (let user of this.users.values()) {
+            if (user.spatializer) {
+                user.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
             }
         }
 
@@ -19805,22 +20125,57 @@ class AudioManager extends EventBase {
     }
 
     /**
-     * Set the position of an audio source.
-     * @param {string} id - the id of the user for which to set the position.
-     * @param {number} x - the horizontal component of the position.
-     * @param {number} y - the vertical component of the position.
-     * @param {number} z - the lateral component of the position.
-     **/
-    setUserPosition(id, x, y, z) {
-        if (this.sources.has(id)) {
-            const source = this.sources.get(id);
+     * @callback {withPoseCallback}
+     * @param {InterpolatedPose} pose
+     * @param {number} dt
+     */
+
+    /**
+     * Get a pose, normalize the transition time, and perform on operation on it, if it exists.
+     * @param {Map<string, AudioSource>} sources - the collection of poses from which to retrieve the pose.
+     * @param {string} id - the id of the pose for which to perform the operation.
+     * @param {number} dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
+     * @param {withPoseCallback} poseCallback
+     */
+    withPose(sources, id, dt, poseCallback) {
+        if (sources.has(id)) {
+            const source = sources.get(id);
             const pose = source.pose;
-            pose.setTargetPosition(x, y, z, this.currentTime, this.transitionTime);
+
+            if (dt === null) {
+                dt = this.transitionTime;
+            }
+
+            poseCallback(pose, dt);
         }
     }
 
     /**
-     * Set the position of an audio source.
+     * Get a user pose, normalize the transition time, and perform on operation on it, if it exists.
+     * @param {string} id - the id of the user for which to perform the operation.
+     * @param {number} dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
+     * @param {withPoseCallback} poseCallback
+     */
+    withUser(id, dt, poseCallback) {
+        this.withPose(this.users, id, dt, poseCallback);
+    }
+
+    /**
+     * Set the position of a user.
+     * @param {string} id - the id of the user for which to set the position.
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
+     * @param {number} z - the lateral component of the position.
+     * @param {number?} dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
+     **/
+    setUserPosition(id, x, y, z, dt = null) {
+        this.withUser(id, dt, (pose, dt) => {
+            pose.setTargetPosition(x, y, z, this.currentTime, dt);
+        });
+    }
+
+    /**
+     * Set the orientation of a user.
      * @param {string} id - the id of the user for which to set the position.
      * @param {number} fx - the horizontal component of the forward vector.
      * @param {number} fy - the vertical component of the forward vector.
@@ -19828,17 +20183,16 @@ class AudioManager extends EventBase {
      * @param {number} ux - the horizontal component of the up vector.
      * @param {number} uy - the vertical component of the up vector.
      * @param {number} uz - the lateral component of the up vector.
+     * @param {number?} dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
      **/
-    setUserOrientation(id, fx, fy, fz, ux, uy, uz) {
-        if (this.sources.has(id)) {
-            const source = this.sources.get(id);
-            const pose = source.pose;
-            pose.setTargetOrientation(fx, fy, fz, ux, uy, uz, this.currentTime, this.transitionTime);
-        }
+    setUserOrientation(id, fx, fy, fz, ux, uy, uz, dt = null) {
+        this.withUser(id, dt, (pose, dt) => {
+            pose.setTargetOrientation(fx, fy, fz, ux, uy, uz, this.currentTime, dt);
+        });
     }
 
     /**
-     * Set the position of an audio source.
+     * Set the position and orientation of a user.
      * @param {string} id - the id of the user for which to set the position.
      * @param {number} px - the horizontal component of the position.
      * @param {number} py - the vertical component of the position.
@@ -19849,13 +20203,73 @@ class AudioManager extends EventBase {
      * @param {number} ux - the horizontal component of the up vector.
      * @param {number} uy - the vertical component of the up vector.
      * @param {number} uz - the lateral component of the up vector.
+     * @param {number?} dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
      **/
-    setUserPose(id, px, py, pz, fx, fy, fz, ux, uy, uz) {
-        if (this.sources.has(id)) {
-            const source = this.sources.get(id);
-            const pose = source.pose;
-            pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, this.transitionTime);
-        }
+    setUserPose(id, px, py, pz, fx, fy, fz, ux, uy, uz, dt = null) {
+        this.withUser(id, dt, (pose, dt) => {
+            pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, dt);
+        });
+    }
+
+    /**
+     * Get an audio clip pose, normalize the transition time, and perform on operation on it, if it exists.
+     * @param {string} id - the id of the audio clip for which to perform the operation.
+     * @param {number} dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
+     * @param {withPoseCallback} poseCallback
+     */
+    withClip(id, dt, poseCallback) {
+        this.withPose(this.clips, id, dt, poseCallback);
+    }
+
+    /**
+     * Set the position of an audio clip.
+     * @param {string} id - the id of the audio clip for which to set the position.
+     * @param {number} x - the horizontal component of the position.
+     * @param {number} y - the vertical component of the position.
+     * @param {number} z - the lateral component of the position.
+     * @param {number?} dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
+     **/
+    setClipPosition(id, x, y, z, dt = null) {
+        this.withClip(id, dt, (pose, dt) => {
+            pose.setTargetPosition(x, y, z, this.currentTime, dt);
+        });
+    }
+
+    /**
+     * Set the orientation of an audio clip.
+     * @param {string} id - the id of the audio clip for which to set the position.
+     * @param {number} fx - the horizontal component of the forward vector.
+     * @param {number} fy - the vertical component of the forward vector.
+     * @param {number} fz - the lateral component of the forward vector.
+     * @param {number} ux - the horizontal component of the up vector.
+     * @param {number} uy - the vertical component of the up vector.
+     * @param {number} uz - the lateral component of the up vector.
+     * @param {number?} dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
+     **/
+    setClipOrientation(id, fx, fy, fz, ux, uy, uz, dt = null) {
+        this.withClip(id, dt, (pose, dt) => {
+            pose.setTargetOrientation(fx, fy, fz, ux, uy, uz, this.currentTime, dt);
+        });
+    }
+
+    /**
+     * Set the position and orientation of an audio clip.
+     * @param {string} id - the id of the audio clip for which to set the position.
+     * @param {number} px - the horizontal component of the position.
+     * @param {number} py - the vertical component of the position.
+     * @param {number} pz - the lateral component of the position.
+     * @param {number} fx - the horizontal component of the forward vector.
+     * @param {number} fy - the vertical component of the forward vector.
+     * @param {number} fz - the lateral component of the forward vector.
+     * @param {number} ux - the horizontal component of the up vector.
+     * @param {number} uy - the vertical component of the up vector.
+     * @param {number} uz - the lateral component of the up vector.
+     * @param {number?} dt - the amount of time to take to make the transition. Defaults to this AudioManager's `transitionTime`.
+     **/
+    setClipPose(id, px, py, pz, fx, fy, fz, ux, uy, uz, dt = null) {
+        this.withClip(id, dt, (pose, dt) => {
+            pose.setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, this.currentTime, dt);
+        });
     }
 }
 
@@ -20138,8 +20552,8 @@ class CallaClient extends EventBase {
         });
 
         this.addEventListener("userInitRequest", (evt) => {
-            const source = this.audio.getSource(this.localUserID);
-            const { p, f, u } = source.pose.end;
+            const user = this.audio.getUser(this.localUserID);
+            const { p, f, u } = user.pose.end;
             this.userInitResponse(evt.id, {
                 id: this.localUserID,
                 px: p.x,
@@ -20348,8 +20762,7 @@ class CallaClient extends EventBase {
             this.conference.addEventListener(CONFERENCE_JOINED, async () => {
                 this.localUserID = this.conference.myUserId();
                 console.log("======== CONFERENCE_JOINED ::", this.localUserID);
-                const source = this.audio.createSource(this.localUserID);
-                source.spatializer = this.audio.listener;
+                const user = this.audio.createLocalUser(this.localUserID);
                 this.joined = true;
                 this.setDisplayName(userName);
                 this.dispatchEvent(Object.assign(
@@ -20357,7 +20770,7 @@ class CallaClient extends EventBase {
                     id: this.localUserID,
                     roomName,
                     displayName: userName,
-                    pose: source.pose
+                    pose: user.pose
                 }));
                 await this.setPreferredDevicesAsync();
             });
@@ -20381,14 +20794,14 @@ class CallaClient extends EventBase {
                 onTrackMuteChanged(track, track.isMuted());
             };
 
-            this.conference.addEventListener(USER_JOINED, (id, user) => {
+            this.conference.addEventListener(USER_JOINED, (id, jitsiUser) => {
                 console.log("======== USER_JOINED ::", id);
-                const source = this.audio.createSource(id);
+                const user = this.audio.createUser(id);
                 const evt = Object.assign(
                     new Event("participantJoined"), {
                     id,
-                    displayName: user.getDisplayName(),
-                    pose: source.pose
+                    displayName: jitsiUser.getDisplayName(),
+                    pose: user.pose
                 });
                 this.dispatchEvent(evt);
             });
@@ -20420,21 +20833,21 @@ class CallaClient extends EventBase {
                         id: userID,
                         stream: track.stream
                     }),
-                    source = this.audio.getSource(userID);
+                    user = this.audio.getUser(userID);
 
                 setLoggers(track, JitsiMeetJS.events.track);
 
                 track.addEventListener(JitsiMeetJS.events.track.TRACK_MUTE_CHANGED, onTrackChanged);
 
-                if (source.tracks.has(trackKind)) {
-                    source.tracks.get(trackKind).dispose();
-                    source.tracks.delete(trackKind);
+                if (user.tracks.has(trackKind)) {
+                    user.tracks.get(trackKind).dispose();
+                    user.tracks.delete(trackKind);
                 }
 
-                source.tracks.set(trackKind, track);
+                user.tracks.set(trackKind, track);
 
                 if (trackKind === "audio" && !isLocal) {
-                    this.audio.setSourceStream(userID, track.stream);
+                    this.audio.setUserStream(userID, track.stream);
                 }
 
                 this.dispatchEvent(trackAddedEvt);
@@ -20451,15 +20864,15 @@ class CallaClient extends EventBase {
                         id: userID,
                         stream: null
                     }),
-                    source = this.audio.getSource(userID);
+                    user = this.audio.getUser(userID);
 
-                if (source && source.tracks.has(trackKind)) {
-                    source.tracks.get(trackKind).dispose();
-                    source.tracks.delete(trackKind);
+                if (user && user.tracks.has(trackKind)) {
+                    user.tracks.get(trackKind).dispose();
+                    user.tracks.delete(trackKind);
                 }
 
                 if (trackKind === "audio" && !isLocal) {
-                    this.audio.setSourceStream(userID, null);
+                    this.audio.setUserStream(userID, null);
                 }
 
                 track.dispose();
@@ -20581,9 +20994,9 @@ class CallaClient extends EventBase {
 
     dispose() {
         if (this.localUserID) {
-            const source = this.audio.getSource(this.localUserID);
-            if (source) {
-                for (let track of source.tracks.values()) {
+            const user = this.audio.getUser(this.localUserID);
+            if (user) {
+                for (let track of user.tracks.values()) {
                     track.dispose();
                 }
             }
@@ -20601,17 +21014,17 @@ class CallaClient extends EventBase {
     async leaveAsync() {
         if (this.conference) {
             if (this.localUserID !== null) {
-                const source = this.audio.getSource(this.localUserID);
-                if (source) {
-                    if (source.tracks.has("video")) {
+                const user = this.audio.getUser(this.localUserID);
+                if (user) {
+                    if (user.tracks.has("video")) {
                         const removeTrackTask = once(this, "videoRemoved");
-                        this.conference.removeTrack(source.tracks.get("video"));
+                        this.conference.removeTrack(user.tracks.get("video"));
                         await removeTrackTask;
                     }
 
-                    if (source.tracks.has("audio")) {
+                    if (user.tracks.has("audio")) {
                         const removeTrackTask = once(this, "audioRemoved");
-                        this.conference.removeTrack(source.tracks.get("audio"));
+                        this.conference.removeTrack(user.tracks.get("audio"));
                         await removeTrackTask;
                     }
                 }
@@ -20696,16 +21109,16 @@ class CallaClient extends EventBase {
             return null;
         }
 
-        const source = this.audio.getSource(this.localUserID);
-        if (!source) {
+        const user = this.audio.getUser(this.localUserID);
+        if (!user) {
             return null;
         }
 
-        if (!source.tracks.has(type)) {
+        if (!user.tracks.has(type)) {
             return null;
         }
 
-        return source.tracks.get(type);
+        return user.tracks.get(type);
     }
 
     /**
@@ -20941,7 +21354,7 @@ class CallaClient extends EventBase {
     }
 
     removeUser(id) {
-        this.audio.removeSource(id);
+        this.audio.removeUser(id);
     }
 
     /**
