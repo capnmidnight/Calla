@@ -182,7 +182,7 @@ export class ScreenPointerControls extends EventBase {
                 && newPinchDistance !== null) {
                 canClick = false;
                 const ddist = newPinchDistance - oldPinchDistance;
-                moveEvt.dz = ddist / 100;
+                moveEvt.dz = ddist / 10;
             }
 
             this.dispatchEvent(moveEvt);
