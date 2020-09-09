@@ -4,8 +4,11 @@ namespace Yarrow.Models.Admin
     {
         public int ID { get; set; }
 
+        public string TransformPath { get; set; }
+
         public string FileName { get; set; }
         public string Mime { get; set; }
+        public string FileSize { get; set; }
 
         public string ActivityName { get; set; }
     }

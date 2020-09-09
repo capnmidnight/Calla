@@ -77,6 +77,7 @@ namespace Calla.Controllers
                     AutoPlay = at.AutoPlay,
                     FileID = at.File.Id,
                     FileName = at.File.Name,
+                    FileSize = Juniper.Units.FileSize.Format((ulong)at.File.Size, Juniper.Units.UnitOfMeasure.Bytes),
                     Loop = at.Loop,
                     MaxDistance = at.MaxDistance,
                     Mime = at.File.Mime,
@@ -85,6 +86,7 @@ namespace Calla.Controllers
                     PlaybackTransformID = at.PlaybackControls.TransformId,
                     Spatialize = at.Spatialize,
                     TransformID = at.TransformId,
+                    TransformPath = at.Transform.FullPath,
                     Volume = at.Volume,
                     Zone = at.Zone
                 })
