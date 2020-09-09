@@ -9,11 +9,10 @@ export class PannerNew extends PannerBase {
      * Creates a new positioner that uses WebAudio's playback dependent time progression.
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream
-     * @param {number} bufferSize
      * @param {AudioContext} audioContext
      */
-    constructor(id, stream, bufferSize, audioContext) {
-        super(id, stream, bufferSize, audioContext);
+    constructor(id, stream, audioContext) {
+        super(id, stream, audioContext);
 
         Object.seal(this);
     }

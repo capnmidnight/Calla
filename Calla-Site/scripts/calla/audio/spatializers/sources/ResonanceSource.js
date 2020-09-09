@@ -1,21 +1,20 @@
-import { BaseAnalyzed } from "./BaseAnalyzed";
+import { BaseRoutedSource } from "./BaseRoutedSource";
 
 /**
  * A spatializer that uses Google's Resonance Audio library.
  **/
-export class ResonanceSource extends BaseAnalyzed {
+export class ResonanceSource extends BaseRoutedSource {
 
     /**
      * Creates a new spatializer that uses Google's Resonance Audio library.
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream
-     * @param {number} bufferSize
      * @param {AudioContext} audioContext
      * @param {import("../../../../lib/resonance-audio/src/resonance-audio").ResonanceAudio} res
      */
-    constructor(id, stream, bufferSize, audioContext, res) {
+    constructor(id, stream, audioContext, res) {
         const resNode = res.createSource();
-        super(id, stream, bufferSize, audioContext, resNode.input);
+        super(id, stream, audioContext, resNode.input);
 
         this.resScene = res;
         this.resNode = resNode;

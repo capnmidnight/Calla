@@ -31,12 +31,17 @@ export class AudioListenerOld extends AudioListenerBase {
      * @private
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
-     * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
+     * @param {boolean} spatialize - whether or not the audio stream should be spatialized. Stereo audio streams that are spatialized will get down-mixed to a single channel.
      * @param {AudioContext} audioContext
      * @return {import("../sources/BaseSource").BaseSource}
      */
-    createSource(id, stream, bufferSize, audioContext) {
-        return new PannerOld(id, stream, bufferSize, audioContext);
+    createSource(id, stream, spatialize, audioContext) {
+        if (spatialize) {
+            return new PannerOld(id, stream, audioContext);
+        }
+        else {
+            return super.createSource(id, stream, spatialize, audioContext);
+        }
     }
 }
 

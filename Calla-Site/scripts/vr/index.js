@@ -107,8 +107,6 @@ async function playCurrentAudioZone() {
     }
 }
 
-window.playCurrentAudioZone = playCurrentAudioZone;
-
 async function showMainMenu(_, skipHistory = false) {
     setHistory(0, null, skipHistory, "Main");
     await showMenu("VR/Languages", (language) => showLanguage(language.id));
@@ -220,7 +218,7 @@ async function showActivity(activityID, skipHistory = false) {
         forward = new Vector3();
 
     for (let audioTrack of audioTracks) {
-        const clip = await app.audio.addClip(
+        const clip = await app.audio.createClip(
             audioTrack.path,
             audioTrack.loop,
             false,

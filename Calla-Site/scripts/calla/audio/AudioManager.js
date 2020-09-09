@@ -1,5 +1,6 @@
 import { EventBase } from "../events/EventBase";
 import { getFile } from "../fetching";
+import { ActivityAnalyser } from "./ActivityAnalyser";
 import { AudioActivityEvent } from "./AudioActivityEvent";
 import { AudioSource } from "./AudioSource";
 import { MockAudioContext } from "./MockAudioContext";
@@ -38,6 +39,9 @@ export class AudioManager extends EventBase {
 
         /** @type {Map<string, AudioSource>} */
         this.users = new Map();
+
+        /** @type {Map<string, ActivityAnalyser>} */
+        this.analysers = new Map();
 
         /** @type {Map<string, AudioSource>} */
         this.clips = new Map();
@@ -111,12 +115,17 @@ export class AudioManager extends EventBase {
     update() {
         if (this.audioContext) {
             const t = this.currentTime;
+
+            for (let clip of this.clips.values()) {
+                clip.update(t);
+            }
+
             for (let user of this.users.values()) {
                 user.update(t);
             }
 
-            for (let clip of this.clips.values()) {
-                clip.update(t);
+            for (let analyser of this.analysers.values()) {
+                analyser.update(t);
             }
         }
     }
@@ -185,10 +194,10 @@ export class AudioManager extends EventBase {
      * @private
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
-     * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
+     * @param {boolean} spatialize - whether or not the audio stream should be spatialized. Stereo audio streams that are spatialized will get down-mixed to a single channel.
      * @return {import("./spatializers/sources/BaseSource").BaseSource}
      */
-    createSpatializer(id, stream, bufferSize) {
+    createSpatializer(id, stream, spatialize) {
         if (!this.listener) {
             throw new Error("Audio context isn't ready");
         }
@@ -197,7 +206,7 @@ export class AudioManager extends EventBase {
             throw new Error("No stream or audio element given.");
         }
 
-        return this.listener.createSource(id, stream, bufferSize, this.audioContext);
+        return this.listener.createSource(id, stream, spatialize, this.audioContext);
     }
 
     /**
@@ -236,9 +245,13 @@ export class AudioManager extends EventBase {
      * Creates a new sound effect from a series of fallback paths
      * for media files.
      * @param {string} name - the name of the sound effect, to reference when executing playback.
-     * @param {string[]} paths - a series of fallback paths for loading the media of the sound effect.
+     * @param {boolean} loop - whether or not the sound effect should be played on loop.
+     * @param {boolean} autoPlay - whether or not the sound effect should be played immediately.
+     * @param {boolean} spatialize - whether or not the sound effect should be spatialized.
+     * @param {import("../fetching").progressCallback} - an optional callback function to use for tracking progress of loading the clip.
+     * @param {...string} paths - a series of fallback paths for loading the media of the sound effect.
      */
-    async addClip(name, loop, autoPlay, onProgress, ...paths) {
+    async createClip(name, loop, autoPlay, spatialize, onProgress, ...paths) {
         const clip = new AudioSource();
 
         const sources = [];
@@ -258,7 +271,7 @@ export class AudioManager extends EventBase {
         elem.autoplay = autoPlay;
         elem.append(...sources);
 
-        clip.spatializer = this.createSpatializer(name, elem);
+        clip.spatializer = this.createSpatializer(name, elem, spatialize);
 
         this.clips.set(name, clip);
 
@@ -348,23 +361,27 @@ export class AudioManager extends EventBase {
     setUserStream(id, stream) {
         if (this.users.has(id)) {
             const user = this.users.get(id);
-            if (user.spatializer) {
-                user.spatializer.removeEventListener("audioActivity", this.onAudioActivity);
-                user.spatializer = null;
+            if (this.analysers.has(id)) {
+                const analyser = this.analysers.get(id);
+                this.analysers.delete(id);
+                analyser.removeEventListener("audioActivity", this.onAudioActivity);
+                analyser.dispose();
             }
 
             if (stream) {
-                user.spatializer = this.createSpatializer(id, stream, BUFFER_SIZE);
-                if (user.spatializer) {
-                    if (user.spatializer.audio) {
-                        user.spatializer.audio.autoPlay = true;
-                        user.spatializer.audio.muted = true;
-                        user.spatializer.audio.addEventListener("onloadedmetadata", () =>
-                            user.spatializer.audio.play());
-                        user.spatializer.audio.play();
-                    }
-                    user.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
-                    user.spatializer.addEventListener("audioActivity", this.onAudioActivity);
+                user.spatializer = this.createSpatializer(id, stream, true);
+                user.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
+
+                const analyser = new ActivityAnalyser(user, this.audioContext, BUFFER_SIZE);
+                analyser.addEventListener("audioActivity", this.onAudioActivity);
+                this.analysers.set(id, analyser);
+
+                if (user.spatializer.audio) {
+                    user.spatializer.audio.autoPlay = true;
+                    user.spatializer.audio.muted = true;
+                    user.spatializer.audio.addEventListener("onloadedmetadata", () =>
+                        user.spatializer.audio.play());
+                    user.spatializer.audio.play();
                 }
             }
         }
@@ -397,7 +414,7 @@ export class AudioManager extends EventBase {
     }
 
     /**
-     * @callback {withPoseCallback}
+     * @callback withPoseCallback
      * @param {InterpolatedPose} pose
      * @param {number} dt
      */

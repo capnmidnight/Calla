@@ -52,11 +52,16 @@ export class ResonanceScene extends BaseListener {
      * @private
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
-     * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
+     * @param {boolean} spatialize - whether or not the audio stream should be spatialized. Stereo audio streams that are spatialized will get down-mixed to a single channel.
      * @param {AudioContext} audioContext
      * @return {import("../sources/BaseSource").BaseSource}
      */
-    createSource(id, stream, bufferSize, audioContext) {
-        return new ResonanceSource(id, stream, bufferSize, audioContext, this.scene);
+    createSource(id, stream, spatialize, audioContext) {
+        if (spatialize) {
+            return new ResonanceSource(id, stream, audioContext, this.scene);
+        }
+        else {
+            return super.createSource(id, stream, spatialize, audioContext);
+        }
     }
 }
