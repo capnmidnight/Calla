@@ -14,6 +14,7 @@
                 body: JSON.stringify(obj)
             });
         }
+
         async function updateItem(obj) {
             const request = req("POST", obj);
             const response = await request;
@@ -69,6 +70,8 @@
                 padding: 0.5em;
             }
     </style>
+
+    @RenderSection("HeadScripts", required: false)
 }
 
 

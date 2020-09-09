@@ -4,6 +4,49 @@
 
 @section HeadScripts
 {
+    <script>
+        function req(method, obj) {
+            return fetch(document.location.href, {
+                method,
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(obj)
+            });
+        }
+
+        async function updateItem(obj) {
+            const request = req("POST", obj);
+            const response = await request;
+            if (!response.ok) {
+                alert("Error! " + response.status + " " + response.statusText);
+            }
+        }
+
+        async function deleteItem(id) {
+            const tableRow = document.getElementById("row-" + id);
+            tableRow.style.color = "red";
+
+            const tableBody = tableRow.parentElement;
+            const request = req("DELETE", id);
+            const response = await request;
+            if (response.ok) {
+                tableBody.removeChild(tableRow);
+
+                if (tableBody.children.length === 0) {
+                    const table = tableBody.parentElement;
+                    const tableParent = table.parentElement;
+                    const p = document.createElement("p");
+                    p.appendChild(document.createTextNode("No Content"));
+                    tableParent.removeChild(table);
+                    tableParent.appendChild(p);
+                }
+            }
+            else {
+                alert(response.statusText);
+            }
+        }
+    </script>
     <style type="text/css">
         #output {
             width: 100%;
@@ -27,6 +70,8 @@
                 padding: 0.5em;
             }
     </style>
+
+    @RenderSection("HeadScripts", required: false)
 }
 <a href="~/YarrowVRAdmin/Activities">Activities</a>
 -- <a href="~/YarrowVRAdmin/Files">Files</a>

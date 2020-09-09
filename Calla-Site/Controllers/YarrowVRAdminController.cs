@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 
 using System.Linq;
+using System.Threading.Tasks;
 
 using Yarrow.Data;
 
@@ -64,7 +65,60 @@ namespace Calla.Controllers
                 return NotFound();
             }
 
-            return View(db.AudioTracks);
+            return View(db.AudioTracks
+                .AsNoTracking()
+                .Include(at => at.File)
+                .Include(at => at.Transform)
+                    .ThenInclude(t => t.Activity)
+                .Select(at => new Yarrow.Models.Admin.AudioTrack
+                {
+                    ID = at.Id,
+                    ActivityName = at.Transform.Activity.Name,
+                    AutoPlay = at.AutoPlay,
+                    FileID = at.File.Id,
+                    FileName = at.File.Name,
+                    Loop = at.Loop,
+                    MaxDistance = at.MaxDistance,
+                    Mime = at.File.Mime,
+                    MinDistance = at.MinDistance,
+                    Path = $"VR/File/{at.File.Id}",
+                    PlaybackTransformID = at.PlaybackControls.TransformId,
+                    Spatialize = at.Spatialize,
+                    TransformID = at.TransformId,
+                    Volume = at.Volume,
+                    Zone = at.Zone
+                })
+                .OrderBy(at => at.ActivityName)
+                .ThenBy(at => at.Zone)
+                .ThenBy(at => at.FileID));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AudioTracks([FromBody] Yarrow.Models.Admin.AudioTrack audioTrack)
+        {
+            if (!env.IsDevelopment()
+                || audioTrack is null)
+            {
+                return NotFound();
+            }
+
+            if (audioTrack.ID > 0)
+            {
+                var cur = await db.AudioTracks
+                    .SingleOrDefaultAsync(r => r.Id == audioTrack.ID)
+                    .ConfigureAwait(false);
+
+                cur.Spatialize = audioTrack.Spatialize;
+
+                await db.SaveChangesAsync()
+                    .ConfigureAwait(false);
+
+                return Ok();
+            }
+            else
+            {
+                return NotFound();
+            }
         }
 
         [HttpGet]

@@ -3,7 +3,14 @@
     ViewData["Title"] = "Audio Tracks";
 }
 
-@model System.Collections.Generic.IEnumerable<Yarrow.Data.AudioTracks>
+@model IEnumerable<Yarrow.Models.Admin.AudioTrack>
+
+@section HeadScripts{
+    <script type="text/javascript">
+        function toggleSpatialization(id) {
+        }
+    </script>
+}
 
 
 @if (Model == null || Model.Empty())
@@ -16,6 +23,7 @@ else
         <thead>
             <tr>
                 <th></th>
+                <th>Activity</th>
                 <th>Transform</th>
                 <th>File</th>
                 <th>Volume</th>
@@ -23,22 +31,27 @@ else
                 <th>MaxDistance</th>
                 <th>AutoPlay</th>
                 <th>Loop</th>
-                <th>Spatialize</th>
+                <th>Zone</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
             @foreach (var row in Model)
             {
             <tr>
-                <td><a href="~/YarrowVRAdmin/AudioTrack/@row.Id">@row.Id</a></td>
-                <td><a href="~/YarrowVRAdmin/Transform/@row.TransformId">@row.TransformId</a></td>
-                <td><a href="~/YarrowVRAdmin/File/@row.FileId">@row.FileId</a></td>
+                <td>@row.ID</td>
+                <td>@row.ActivityName</td>
+                <td><a href="~/YarrowVRAdmin/Transform/@row.TransformID">@row.TransformID</a></td>
+                <td><a href="~/@row.Path">@row.FileName</a> (@row.Mime)</td>
                 <td>@row.Volume</td>
                 <td>@row.MinDistance</td>
                 <td>@row.MaxDistance</td>
                 <td>@row.AutoPlay</td>
                 <td>@row.Loop</td>
-                <td>@row.Spatialize</td>
+                <td>@row.Zone</td>
+                <td>
+                    <button type="button" onclick="updateItem({ID: @row.ID, Spatialize: '@row.Spatialize' === 'False'})">@(row.Spatialize ? "Surround" : "Mono")</button>
+                </td>
             </tr>
             }
         </tbody>
