@@ -1,4 +1,5 @@
 import { isFunction } from "./typeChecks";
+import { LRUCache } from "./LRUCache";
 
 /**
  * @param {string} path
@@ -67,6 +68,8 @@ export async function getBufferWithProgress(path, onProgress) {
         onProgress(receivedLength, contentLength, path);
     }
 
+    onProgress(1, 1, path);
+
     return { buffer, contentType };
 }
 
@@ -95,15 +98,28 @@ export async function getBlobWithProgress(path, onProgress) {
     return blob;
 }
 
+/** @type {Map<string, string>} */
+const cache = new Map();
+
 /**
  * @param {string} path
  * @param {progressCallback} onProgress
  * @returns {Promise<string>}
  */
 export async function getFileWithProgress(path, onProgress) {
-    const blob = await getBlobWithProgress(path, onProgress);
-    const blobUrl = URL.createObjectURL(blob);
-    return blobUrl;
+    const key = path;
+    if (cache.has(key)) {
+        onProgress(0, 1, path);
+        const blobUrl = cache.get(key);
+        onProgress(1, 1, path);
+        return blobUrl;
+    }
+    else {
+        const blob = await getBlobWithProgress(path, onProgress);
+        const blobUrl = URL.createObjectURL(blob);
+        cache.set(key, blobUrl);
+        return blobUrl;
+    }
 }
 
 /**

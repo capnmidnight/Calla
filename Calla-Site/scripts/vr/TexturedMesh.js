@@ -5,9 +5,6 @@ import { getFile } from "../calla/fetching";
 import { isString } from "../calla/typeChecks";
 import { height, src, width } from "../html/attrs";
 import { Canvas, Img } from "../html/tags";
-import { LRUCache } from "../calla/LRUCache";
-
-const cache = new LRUCache(50);
 
 export class TexturedMesh extends Mesh {
     /**
@@ -25,11 +22,6 @@ export class TexturedMesh extends Mesh {
      */
 
     async setImage(img, onProgress) {
-        const key = img;
-        if (cache.has(key)) {
-            img = cache.get(key);
-        }
-
         if (isString(img)) {
             img = await getFile(img, onProgress);
             img = Img(src(img));
@@ -56,7 +48,6 @@ export class TexturedMesh extends Mesh {
             img = new Texture(img);
         }
 
-        cache.set(key, img);
         this.material.map = img;
         img = this.material.map.image;
         this.isVideo = img instanceof HTMLVideoElement;
