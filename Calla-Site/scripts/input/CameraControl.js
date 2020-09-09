@@ -227,8 +227,8 @@ export class CameraControl extends EventBase {
      */
     pointerMovement(mode, evt) {
         switch (mode) {
-            case Mode.MouseLocked:
             case Mode.MouseUnlocked:
+            case Mode.MouseLocked:
             case Mode.Gamepad:
             case Mode.Touch:
                 return this.getAxialMovement(evt);
@@ -246,7 +246,7 @@ export class CameraControl extends EventBase {
      */
     getAxialMovement(evt) {
         const viewport = new Vector2(
-            MOUSE_SENSITIVITY_SCALE * evt.du,
+            -MOUSE_SENSITIVITY_SCALE * evt.du,
             MOUSE_SENSITIVITY_SCALE * evt.dv);
 
         return viewport;

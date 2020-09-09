@@ -35,7 +35,7 @@ export class EventSystem extends EventBase {
          * @returns {import("three").Intersection}
          */
         const raycast = (evt) => {
-            const pointer = { x: evt.u, y: evt.v };
+            const pointer = { x: evt.u, y: -evt.v };
             raycaster.setFromCamera(pointer, camera);
 
             arrayClear(hits);

@@ -94,7 +94,7 @@ export class ScreenPointerControls extends EventBase {
             evt.dz = 0;
 
             evt.du = 2 * evt.dx / element.clientWidth;
-            evt.dv = -2 * evt.dy / element.clientHeight;
+            evt.dv = 2 * evt.dy / element.clientHeight;
 
             if (this.isPointerLocked) {
                 evt.u = 0;
@@ -108,7 +108,7 @@ export class ScreenPointerControls extends EventBase {
                 evt.y = pointer.y;
 
                 evt.u = unproject(project(evt.x, 0, element.clientWidth), -1, 1);
-                evt.v = unproject(project(evt.y, 0, element.clientHeight), 1, -1);
+                evt.v = unproject(project(evt.y, 0, element.clientHeight), -1, 1);
             }
 
             evt.dragDistance = pointer.dragDistance;
