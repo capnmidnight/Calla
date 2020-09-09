@@ -99,17 +99,27 @@ export class Application extends EventBase {
         this.cameraControl = new CameraControl(this.camera, this.stage, this.controls);
 
         const scales = new Map();
-        this.eventSystem = new EventSystem(this.camera, this.foreground, this.controls);
-        this.eventSystem.addEventListener("enter", (evt) => {
-            if (!scales.has(evt.object)) {
-                scales.set(evt.object, evt.object.scale.clone());
-            }
-            evt.object.scale.multiplyScalar(1.1);
-        });
 
-        this.eventSystem.addEventListener("exit", (evt) => {
-            evt.object.scale.copy(scales.get(evt.object));
-        });
+        /**
+         * @param {import("../input/EventSystem").EventSystemEvent} evt
+         */
+        const onEnter = (evt) => {
+            if (!scales.has(evt.hit.object)) {
+                scales.set(evt.hit.object, evt.hit.object.scale.clone());
+            }
+            evt.hit.object.scale.multiplyScalar(1.1);
+        };
+
+        /**
+         * @param {import("../input/EventSystem").EventSystemEvent} evt
+         */
+        const onExit = (evt) => {
+            evt.hit.object.scale.copy(scales.get(evt.hit.object));
+        };
+
+        this.eventSystem = new EventSystem(this.camera, this.foreground, this.controls);
+        this.eventSystem.addEventListener("enter", onEnter);
+        this.eventSystem.addEventListener("exit", onExit);
 
         const update = (evt) => {
             if (!this.showSkybox) {

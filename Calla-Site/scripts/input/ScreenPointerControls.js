@@ -1,5 +1,7 @@
 import { EventBase } from "../calla/events/EventBase";
 import { isFirefox } from "../html/flags";
+import { project } from "../calla/math/project";
+import { unproject } from "../calla/math/unproject";
 
 export class ScreenPointerEvent extends Event {
     constructor(type) {
@@ -80,23 +82,34 @@ export class ScreenPointerControls extends EventBase {
          * @param {ScreenPointerEvent} evt
          * @param {Pointer} pointer
          */
-        function setHorizontal(evt, pointer) {
+        const setHorizontal = (evt, pointer) => {
 
             evt.pointerType = pointer.type;
             evt.pointerID = pointer.id;
 
             evt.buttons = pointer.buttons;
 
-            evt.x = pointer.x;
-            evt.y = pointer.y;
             evt.dx = pointer.dx;
             evt.dy = pointer.dy;
             evt.dz = 0;
 
-            evt.u = 2 * evt.x / element.clientWidth - 1;
-            evt.v = -2 * evt.y / element.clientHeight + 1;
             evt.du = 2 * evt.dx / element.clientWidth;
             evt.dv = -2 * evt.dy / element.clientHeight;
+
+            if (this.isPointerLocked) {
+                evt.u = 0;
+                evt.v = 0;
+
+                evt.x = element.clientWidth / 2;
+                evt.y = element.clientHeight / 2;
+            }
+            else {
+                evt.x = pointer.x;
+                evt.y = pointer.y;
+
+                evt.u = unproject(project(evt.x, 0, element.clientWidth), -1, 1);
+                evt.v = unproject(project(evt.y, 0, element.clientHeight), 1, -1);
+            }
 
             evt.dragDistance = pointer.dragDistance;
         }

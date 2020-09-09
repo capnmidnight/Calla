@@ -2,14 +2,14 @@ import { Raycaster } from "three/src/core/Raycaster";
 import { arrayClear } from "../calla/arrays/arrayClear";
 import { EventBase } from "../calla/events/EventBase";
 
-class EventSystemEvent extends Event {
+export class EventSystemEvent extends Event {
     /**
      * @param {String} type
-     * @param {import("three").Object3D} obj
+     * @param {import("three").Intersection} obj
      */
     constructor(type, obj) {
         super(type);
-        this.object = obj;
+        this.hit = obj;
     }
 }
 
@@ -17,68 +17,78 @@ export class EventSystem extends EventBase {
     /**
      * @param {import("three").PerspectiveCamera} camera
      * @param {import("three").Object3D} inputLayer
-     * @param {import("./ScreenPointerControls").ScreenPointerControls} screenPointers
+     * @param {...import("./ScreenPointerControls").ScreenPointerControls} screenPointer
      */
-    constructor(camera, inputLayer, screenPointers) {
+    constructor(camera, inputLayer, ...pointers) {
         super();
 
         const raycaster = new Raycaster();
+
+        /** @type {Map<Number, import("three").Intersection>} */
+        const hovers = new Map();
+
         /** @type {import("three").Intersection[]} */
         const hits = [];
+
+        /**
+         * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
+         * @returns {import("three").Intersection}
+         */
         const raycast = (evt) => {
-            let pointer = null;
-
-            if (screenPointers.isPointerLocked
-                && evt.pointerType === "mouse") {
-                pointer = { x: 0, y: 0 };
-            }
-            else {
-                pointer = { x: evt.u, y: evt.v };
-            }
-
+            const pointer = { x: evt.u, y: evt.v };
             raycaster.setFromCamera(pointer, camera);
 
             arrayClear(hits);
             raycaster.intersectObject(inputLayer, true, hits);
 
-            let curObj = null;
+            /** @type {import("three").Intersection} */
+            let curHit = null;
             for (let hit of hits) {
                 if (hit.object
                     && hit.object._listeners
                     && hit.object._listeners.click
                     && hit.object._listeners.click.length) {
-                    curObj = hit.object;
+                    curHit = hit;
                 }
             }
 
-            return curObj;
+            return curHit;
         };
 
-        /** @type {Map<Number, import("three").Object3D>} */
-        const hovers = new Map();
-        screenPointers.addEventListener("move", (evt) => {
-            const lastObj = hovers.get(evt.pointerID);
-            const curObj = raycast(evt);
-            if (curObj != lastObj) {
-                if (lastObj) {
+        /**
+         * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
+         */
+        const onMove = (evt) => {
+            const lastHit = hovers.get(evt.pointerID);
+            const curHit = raycast(evt);
+            if ((curHit && curHit.object) != (lastHit && lastHit.object)) {
+                if (lastHit && lastHit.object) {
                     hovers.delete(evt.pointerID);
-                    lastObj.dispatchEvent({ type: "exit" });
-                    this.dispatchEvent(new EventSystemEvent("exit", lastObj));
+                    lastHit.object.dispatchEvent({ type: "exit" });
+                    this.dispatchEvent(new EventSystemEvent("exit", lastHit));
                 }
 
-                if (curObj) {
-                    hovers.set(evt.pointerID, curObj);
-                    curObj.dispatchEvent({ type: "enter" });
-                    this.dispatchEvent(new EventSystemEvent("enter", curObj));
+                if (curHit && curHit.object) {
+                    hovers.set(evt.pointerID, curHit);
+                    curHit.object.dispatchEvent({ type: "enter" });
+                    this.dispatchEvent(new EventSystemEvent("enter", curHit));
                 }
             }
-        });
+        };
 
-        screenPointers.addEventListener("click", (evt) => {
-            const curObj = raycast(evt);
-            if (curObj) {
-                curObj.dispatchEvent({ type: "click" });
+        /**
+         * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
+         */
+        const onClick = (evt) => {
+            const curHit = raycast(evt);
+            if (curHit && curHit.object) {
+                curHit.object.dispatchEvent({ type: "click" });
             }
-        });
+        };
+
+        for (let pointer of pointers) {
+            pointer.addEventListener("move", onMove);
+            pointer.addEventListener("click", onClick);
+        }
     }
 }
