@@ -34,10 +34,8 @@ namespace Calla
             services.AddAuthentication();
             services.AddAuthorization();
             services.AddEntityFrameworkNpgsql();
-            services.AddDbContext<Data.CallaContext>();
-            services.AddDbContext<Yarrow.Data.YarrowContext>();
-            services.AddScoped<LogHitsAttribute>();
             services.AddSignalR();
+            services.AddDbContext<Yarrow.Data.YarrowContext>();
 
             var controllersWithViews = services.AddControllersWithViews();
             var razorPages = services.AddRazorPages();
@@ -46,6 +44,9 @@ namespace Calla
                 controllersWithViews.AddRazorRuntimeCompilation();
                 razorPages.AddRazorRuntimeCompilation();
             }
+
+            services.AddScoped<LogHitsAttribute>();
+            services.AddDbContext<Data.CallaContext>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
