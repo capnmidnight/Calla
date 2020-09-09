@@ -16,6 +16,7 @@ export class ResonanceSource extends BaseRoutedSource {
         const resNode = res.createSource();
         super(id, stream, audioContext, resNode.input);
 
+        this.inNode.disconnect(audioContext.destination);
         this.resScene = res;
         this.resNode = resNode;
 

@@ -9,12 +9,11 @@ export class BaseRoutedSource extends BaseSource {
      * @param {AudioNode} inNode
      */
     constructor(id, stream, audioContext, inNode) {
-        super(id, stream, audioContext, (source) => {
-            source.connect(inNode);
-        });
+        super(id, stream, audioContext, inNode);
 
         /** @type {AudioNode} */
         this.inNode = inNode;
+        this.inNode.connect(audioContext.destination);
     }
 
     /**

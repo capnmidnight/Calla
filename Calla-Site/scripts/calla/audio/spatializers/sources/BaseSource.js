@@ -1,11 +1,6 @@
 import { canChangeAudioOutput } from "../../canChangeAudioOutput";
 import { BaseSpatializer } from "../BaseSpatializer";
 
-/**
- * @callback sourceReadyCallback
- * @param {AudioNode} source
- */
-
 /** Base class providing functionality for spatializers. */
 export class BaseSource extends BaseSpatializer {
     /**
@@ -14,9 +9,9 @@ export class BaseSource extends BaseSpatializer {
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream
      * @param {AudioContext} audioContext - the output WebAudio context
-     * @param {sourceReadyCallback} onSourceReady
+     * @param {AudioNode} destination - this node out to which to pipe the stream
      */
-    constructor(id, stream, audioContext, onSourceReady) {
+    constructor(id, stream, audioContext, destination) {
         super();
 
         this.id = id;
@@ -35,7 +30,7 @@ export class BaseSource extends BaseSpatializer {
         if (stream instanceof HTMLAudioElement) {
             this.audio = stream;
             this.source = audioContext.createMediaElementSource(this.audio);
-            onSourceReady(this.source);
+            this.source.connect(destination);
         }
         else if (stream instanceof MediaStream) {
             this.stream = stream;
@@ -45,7 +40,7 @@ export class BaseSource extends BaseSpatializer {
             const checkSource = () => {
                 if (this.stream.active) {
                     this.source = audioContext.createMediaStreamSource(this.stream);
-                    onSourceReady(this.source);
+                    this.source.connect(destination);
                 }
                 else {
                     setTimeout(checkSource, 0);

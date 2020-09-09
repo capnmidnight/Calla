@@ -9,8 +9,6 @@ export class DirectSource extends BaseSource {
      * @param {AudioContext} audioContext
      */
     constructor(id, stream, audioContext) {
-        super(id, stream, audioContext, (source) => {
-            source.connect(audioContext.destination);
-        });
+        super(id, stream, audioContext, audioContext.destination);
     }
 }
