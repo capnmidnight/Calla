@@ -222,6 +222,7 @@ async function showActivity(activityID, skipHistory = false) {
             audioTrack.path,
             audioTrack.loop,
             false,
+            !audioTrack.spatialize,
             progs.shift(),
             audioTrack.path);
 
