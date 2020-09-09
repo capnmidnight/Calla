@@ -5,7 +5,7 @@ using Calla.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
+
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;

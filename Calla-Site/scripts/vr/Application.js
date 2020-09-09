@@ -131,12 +131,12 @@ export class Application extends EventBase {
             this.fader.update(evt.sdt);
             this.stage.presentationPoint.getWorldPosition(this.transition.position);
             this.stage.presentationPoint.getWorldQuaternion(this.transition.quaternion);
-            this.stage.getCameraPose(userPos, userFwd, userUp);
+            const m = this.camera.matrixWorld.elements;
             this.audio.setUserPose(
                 "local-user",
-                userPos.x, userPos.y, userPos.z,
-                userFwd.x, userFwd.y, userFwd.z,
-                userUp.x, userUp.y, userUp.z,
+                m[12], m[13], m[14],
+                -m[8], -m[9], -m[10],
+                m[4], m[5], m[6],
                 0);
             this.menu.position.copy(this.transition.position);
             this.menu.quaternion.copy(this.transition.quaternion);

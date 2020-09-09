@@ -1,6 +1,4 @@
 import { Object3D } from "three/src/core/Object3D";
-import { Quaternion } from "three/src/math/Quaternion";
-import { Vector3 } from "three/src/math/Vector3";
 import { arrayClear } from "../calla/arrays/arrayClear";
 import { once } from "../calla/events/once";
 import { getObject } from "../calla/fetching";
@@ -211,11 +209,6 @@ async function showActivity(activityID, skipHistory = false) {
         transform.add(img);
     }
 
-    const pos = new Vector3(),
-        quat = new Quaternion(),
-        up = new Vector3(),
-        forward = new Vector3();
-
     for (let audioTrack of audioTracks) {
         const clip = await app.audio.createClip(
             audioTrack.path,
@@ -231,15 +224,13 @@ async function showActivity(activityID, skipHistory = false) {
 
         if (audioTrack.spatialize) {
             const transform = curTransforms.get(audioTrack.transformID);
-            transform.getWorldPosition(pos);
-            transform.getWorldQuaternion(quat);
-            forward.set(0, 0, -1).applyQuaternion(quat);
-            up.set(0, 1, 0).applyQuaternion(quat);
+            transform.add(DebugObject(0x0000ff));
+            const m = transform.matrixWorld.elements;
             app.audio.setClipPose(
                 audioTrack.path,
-                pos.x, pos.y, pos.z,
-                forward.x, forward.y, forward.z,
-                up.x, up.y, up.z,
+                m[12], m[13], m[14],
+                m[8], m[9], m[10],
+                m[4], m[5], m[6],
                 0);
 
             await clip.spatializer.audio.play();
