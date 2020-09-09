@@ -1,4 +1,5 @@
 import { Object3D } from "three/src/core/Object3D";
+import { Vector3 } from "three/src/math/Vector3";
 import { arrayClear } from "../calla/arrays/arrayClear";
 import { once } from "../calla/events/once";
 import { getObject } from "../calla/fetching";
@@ -7,8 +8,12 @@ import { Application } from "./Application";
 import { DebugObject } from "./DebugObject";
 import { Image2DMesh } from "./Image2DMesh";
 import { TextMesh } from "./TextMesh";
+import { setRightUpFwdPos } from "../calla/math/setRightUpFwd";
 
-
+const R = new Vector3();
+const U = new Vector3();
+const F = new Vector3();
+const P = new Vector3();
 const app = new Application();
 
 /** @type {Map<number, Object3D>} */
@@ -225,12 +230,12 @@ async function showActivity(activityID, skipHistory = false) {
         if (audioTrack.spatialize) {
             const transform = curTransforms.get(audioTrack.transformID);
             transform.add(DebugObject(0x0000ff));
-            const m = transform.matrixWorld.elements;
+            setRightUpFwdPos(transform.matrixWorld, R, U, F, P);
             app.audio.setClipPose(
                 audioTrack.path,
-                m[12], m[13], m[14],
-                m[8], m[9], m[10],
-                m[4], m[5], m[6],
+                P.x, P.y, P.z,
+                R.x, R.y, R.z,
+                F.x, F.y, F.z,
                 0);
 
             await clip.spatializer.audio.play();

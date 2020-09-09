@@ -15,12 +15,14 @@ import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer
 import { Fader } from "./Fader";
 import { LoadingBar } from "./LoadingBar";
 import { Skybox } from "./Skybox";
+import { setRightUpFwdPos } from "../calla/math/setRightUpFwd";
 
 const visibleBackground = new Color(0x606060);
 const invisibleBackground = new Color(0x000000);
-const userPos = new Vector3();
-const userFwd = new Vector3();
-const userUp = new Vector3();
+const R = new Vector3();
+const U = new Vector3();
+const F = new Vector3();
+const P = new Vector3();
 
 export class Application extends EventBase {
     constructor() {
@@ -131,12 +133,13 @@ export class Application extends EventBase {
             this.fader.update(evt.sdt);
             this.stage.presentationPoint.getWorldPosition(this.transition.position);
             this.stage.presentationPoint.getWorldQuaternion(this.transition.quaternion);
-            const m = this.camera.matrixWorld.elements;
+            
+            setRightUpFwdPos(this.camera.matrixWorld, R, U, F, P);
             this.audio.setUserPose(
                 "local-user",
-                m[12], m[13], m[14],
-                -m[8], -m[9], -m[10],
-                m[4], m[5], m[6],
+                P.x, P.y, P.z,
+                F.x, F.y, F.z,
+                U.x, U.y, U.z,
                 0);
             this.menu.position.copy(this.transition.position);
             this.menu.quaternion.copy(this.transition.quaternion);
