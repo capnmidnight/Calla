@@ -1,6 +1,7 @@
 import { Object3D } from "three/src/core/Object3D";
 import { Quaternion } from "three/src/math/Quaternion";
 import { Vector3 } from "three/src/math/Vector3";
+import { once } from "../calla/events/once";
 import { getObject } from "../calla/fetching";
 import { splitProgress } from "../calla/progress";
 import { Application } from "./Application";
@@ -252,6 +253,19 @@ async function showActivity(activityID, skipHistory = false) {
 
             await clip.spatializer.audio.play();
             clip.spatializer.audio.pause();
+        }
+
+        if (audioTrack.playbackTransformID > 0) {
+            const playbackButton = DebugObject(0x00ff00);
+            playbackButton.addEventListener("click", async () => {
+                stopCurrentAudioZone();
+                app.audio.playClip(audioTrack.path, audioTrack.volume)
+                await once(clip.spatializer.audio, "ended");
+                playCurrentAudioZone();
+            });
+
+            const transform = curTransforms.get(audioTrack.playbackTransformID);
+            transform.add(playbackButton);
         }
     }
 
