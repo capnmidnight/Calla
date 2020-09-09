@@ -1,4 +1,4 @@
-const versionString = "v0.9.1";
+const versionString = "v0.9.2";
 
 const c = document.querySelector("#version");
 if (c) {

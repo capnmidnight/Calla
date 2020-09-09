@@ -2827,102 +2827,6 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
 }
 
 
-// Static temp storage for matrix inversion.
-let a00;
-let a01;
-let a02;
-let a03;
-let a10;
-let a11;
-let a12;
-let a13;
-let a20;
-let a21;
-let a22;
-let a23;
-let a30;
-let a31;
-let a32;
-let a33;
-let b00;
-let b01;
-let b02;
-let b03;
-let b04;
-let b05;
-let b06;
-let b07;
-let b08;
-let b09;
-let b10;
-let b11;
-let det;
-
-
-/**
- * A 4x4 matrix inversion utility. This does not handle the case when the
- * arguments are not proper 4x4 matrices.
- * @param {Float32Array} out   The inverted result.
- * @param {Float32Array} a     The source matrix.
- * @return {Float32Array} out
- */
-function invertMatrix4(out, a) {
-    a00 = a[0];
-    a01 = a[1];
-    a02 = a[2];
-    a03 = a[3];
-    a10 = a[4];
-    a11 = a[5];
-    a12 = a[6];
-    a13 = a[7];
-    a20 = a[8];
-    a21 = a[9];
-    a22 = a[10];
-    a23 = a[11];
-    a30 = a[12];
-    a31 = a[13];
-    a32 = a[14];
-    a33 = a[15];
-    b00 = a00 * a11 - a01 * a10;
-    b01 = a00 * a12 - a02 * a10;
-    b02 = a00 * a13 - a03 * a10;
-    b03 = a01 * a12 - a02 * a11;
-    b04 = a01 * a13 - a03 * a11;
-    b05 = a02 * a13 - a03 * a12;
-    b06 = a20 * a31 - a21 * a30;
-    b07 = a20 * a32 - a22 * a30;
-    b08 = a20 * a33 - a23 * a30;
-    b09 = a21 * a32 - a22 * a31;
-    b10 = a21 * a33 - a23 * a31;
-    b11 = a22 * a33 - a23 * a32;
-    det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
-
-    if (!det) {
-        return null;
-    }
-
-    det = 1.0 / det;
-    out[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
-    out[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
-    out[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
-    out[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
-    out[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
-    out[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
-    out[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
-    out[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
-    out[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
-    out[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
-    out[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
-    out[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
-    out[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
-    out[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
-    out[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
-    out[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
-
-    return out;
-}
-
-
 /**
  * Check if a value is defined in the ENUM dictionary.
  * @param {Object} enumDictionary - ENUM dictionary.
@@ -3338,9 +3242,9 @@ class FOARotator {
         this._inX.gain.value = -1;
 
         // Apply the rotation in the world space.
-        // |Y|   | m0  m3  m6 |   | Y * m0 + Z * m3 + X * m6 |   | Yr |
-        // |Z| * | m1  m4  m7 | = | Y * m1 + Z * m4 + X * m7 | = | Zr |
-        // |X|   | m2  m5  m8 |   | Y * m2 + Z * m5 + X * m8 |   | Xr |
+        // |X|   | m0  m3  m6 |   | X * m0 + Y * m3 + Z * m6 |   | Xr |
+        // |Y| * | m1  m4  m7 | = | X * m1 + Y * m4 + Z * m7 | = | Yr |
+        // |Z|   | m2  m5  m8 |   | X * m2 + Y * m5 + Z * m8 |   | Zr |
         this._inX.connect(this._m0);
         this._inX.connect(this._m1);
         this._inX.connect(this._m2);
@@ -3389,9 +3293,9 @@ class FOARotator {
         this._splitter.disconnect(this._inZ, 3);
 
         // Apply the rotation in the world space.
-        // |Y|   | m0  m3  m6 |   | Y * m0 + Z * m3 + X * m6 |   | Yr |
-        // |Z| * | m1  m4  m7 | = | Y * m1 + Z * m4 + X * m7 | = | Zr |
-        // |X|   | m2  m5  m8 |   | Y * m2 + Z * m5 + X * m8 |   | Xr |
+        // |X|   | m0  m3  m6 |   | X * m0 + Y * m3 + Z * m6 |   | Xr |
+        // |Y| * | m1  m4  m7 | = | X * m1 + Y * m4 + Z * m7 | = | Yr |
+        // |Z|   | m2  m5  m8 |   | X * m2 + Y * m5 + Z * m8 |   | Zr |
         this._inX.disconnect(this._m0);
         this._inX.disconnect(this._m1);
         this._inX.disconnect(this._m2);
@@ -3785,21 +3689,6 @@ class FOARenderer {
      */
     setRotationMatrix4(rotationMatrix4) {
         this._foaRotator.setRotationMatrix4(rotationMatrix4);
-    }
-
-
-    /**
-     * Set the rotation matrix from a Three.js camera object. Depreated in V1, and
-     * this exists only for the backward compatiblity. Instead, use
-     * |setRotatationMatrix4()| with Three.js |camera.worldMatrix.elements|.
-     * @deprecated
-     * @param {Object} cameraMatrix - Matrix4 from Three.js |camera.matrix|.
-     */
-    setRotationMatrixFromCamera(cameraMatrix) {
-        // Extract the inner array elements and inverse. (The actual view rotation is
-        // the opposite of the camera movement.)
-        invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
-        this._foaRotator.setRotationMatrix4(this._tempMatrix4);
     }
 
     getRenderingMode() {
@@ -4449,9 +4338,9 @@ class HOARotator {
         this._gainNodeMatrix[0][3].gain.value = rotationMatrix3[3];
         this._gainNodeMatrix[0][4].gain.value = rotationMatrix3[4];
         this._gainNodeMatrix[0][5].gain.value = rotationMatrix3[5];
-        this._gainNodeMatrix[0][6].gain.value = rotationMatrix3[6];
-        this._gainNodeMatrix[0][7].gain.value = rotationMatrix3[7];
-        this._gainNodeMatrix[0][8].gain.value = rotationMatrix3[8];
+        this._gainNodeMatrix[0][6].gain.value = -rotationMatrix3[6];
+        this._gainNodeMatrix[0][7].gain.value = -rotationMatrix3[7];
+        this._gainNodeMatrix[0][8].gain.value = -rotationMatrix3[8];
         computeHOAMatrices(this._gainNodeMatrix);
     }
 
@@ -4467,9 +4356,9 @@ class HOARotator {
         this._gainNodeMatrix[0][3].gain.value = rotationMatrix4[4];
         this._gainNodeMatrix[0][4].gain.value = rotationMatrix4[5];
         this._gainNodeMatrix[0][5].gain.value = rotationMatrix4[6];
-        this._gainNodeMatrix[0][6].gain.value = rotationMatrix4[8];
-        this._gainNodeMatrix[0][7].gain.value = rotationMatrix4[9];
-        this._gainNodeMatrix[0][8].gain.value = rotationMatrix4[10];
+        this._gainNodeMatrix[0][6].gain.value = -rotationMatrix4[8];
+        this._gainNodeMatrix[0][7].gain.value = -rotationMatrix4[9];
+        this._gainNodeMatrix[0][8].gain.value = -rotationMatrix4[10];
         computeHOAMatrices(this._gainNodeMatrix);
     }
 
@@ -4486,9 +4375,9 @@ class HOARotator {
         rotationMatrix3[3] = this._gainNodeMatrix[0][3].gain.value;
         rotationMatrix3[4] = this._gainNodeMatrix[0][4].gain.value;
         rotationMatrix3[5] = this._gainNodeMatrix[0][5].gain.value;
-        rotationMatrix3[6] = this._gainNodeMatrix[0][6].gain.value;
-        rotationMatrix3[7] = this._gainNodeMatrix[0][7].gain.value;
-        rotationMatrix3[8] = this._gainNodeMatrix[0][8].gain.value;
+        rotationMatrix3[6] = -this._gainNodeMatrix[0][6].gain.value;
+        rotationMatrix3[7] = -this._gainNodeMatrix[0][7].gain.value;
+        rotationMatrix3[8] = -this._gainNodeMatrix[0][8].gain.value;
         return rotationMatrix3;
     }
 
@@ -4505,9 +4394,9 @@ class HOARotator {
         rotationMatrix4[4] = this._gainNodeMatrix[0][3].gain.value;
         rotationMatrix4[5] = this._gainNodeMatrix[0][4].gain.value;
         rotationMatrix4[6] = this._gainNodeMatrix[0][5].gain.value;
-        rotationMatrix4[8] = this._gainNodeMatrix[0][6].gain.value;
-        rotationMatrix4[9] = this._gainNodeMatrix[0][7].gain.value;
-        rotationMatrix4[10] = this._gainNodeMatrix[0][8].gain.value;
+        rotationMatrix4[8] = -this._gainNodeMatrix[0][6].gain.value;
+        rotationMatrix4[9] = -this._gainNodeMatrix[0][7].gain.value;
+        rotationMatrix4[10] = -this._gainNodeMatrix[0][8].gain.value;
         return rotationMatrix4;
     }
 
@@ -6563,12 +6452,10 @@ const normalizeVector = function (v) {
  * @return {Float32Array}
  * @private
  */
-const crossProduct = function (a, b) {
-    return [
-        a[1] * b[2] - a[2] * b[1],
-        a[2] * b[0] - a[0] * b[2],
-        a[0] * b[1] - a[1] * b[0],
-    ];
+const crossProduct = function (ax, ay, az, bx, by, bz, arr) {
+    arr[0] = ay * bz - az * by;
+    arr[1] = az * bx - ax * bz;
+    arr[2] = ax * by - ay * bx;
 };
 
 /**
@@ -6967,11 +6854,10 @@ class Listener {
      */
     setOrientation(forwardX, forwardY, forwardZ,
         upX, upY, upZ) {
-        let right = crossProduct([forwardX, forwardY, forwardZ],
-            [upX, upY, upZ]);
-        this._tempMatrix3[0] = right[0];
-        this._tempMatrix3[1] = right[1];
-        this._tempMatrix3[2] = right[2];
+        crossProduct(
+            forwardX, forwardY, forwardZ,
+            upX, upY, upZ,
+            this._tempMatrix3);
         this._tempMatrix3[3] = upX;
         this._tempMatrix3[4] = upY;
         this._tempMatrix3[5] = upZ;
@@ -6979,22 +6865,6 @@ class Listener {
         this._tempMatrix3[7] = forwardY;
         this._tempMatrix3[8] = forwardZ;
         this._renderer.setRotationMatrix3(this._tempMatrix3);
-    }
-
-
-    /**
-     * Set the listener's position and orientation using a Three.js Matrix4 object.
-     * @param {Object} matrix4
-     * The Three.js Matrix4 object representing the listener's world transform.
-     */
-    setFromMatrix(matrix4) {
-        // Update ambisonic rotation matrix internally.
-        this._renderer.setRotationMatrix4(matrix4.elements);
-
-        // Extract position from matrix.
-        this.position[0] = matrix4.elements[12];
-        this.position[1] = matrix4.elements[13];
-        this.position[2] = matrix4.elements[14];
     }
 }
 
@@ -7409,7 +7279,11 @@ class Source {
         this._forward = options.forward;
         this._up = options.up;
         this._dx = new Float32Array(3);
-        this._right = crossProduct(this._forward, this._up);
+        this._right = [];
+        crossProduct(
+            this._forward[0], this._forward[1], this._forward[2],
+            this._up[0], this._up[1], this._up[2],
+            this._right);
 
         // Create audio nodes.
         let context = scene._context;
@@ -7570,36 +7444,10 @@ class Source {
         this._up[0] = upX;
         this._up[1] = upY;
         this._up[2] = upZ;
-        this._right = crossProduct(this._forward, this._up);
-    }
-
-
-    // TODO(bitllama): Make sure this works with Three.js as intended.
-    /**
-     * Set source's position and orientation using a
-     * Three.js modelViewMatrix object.
-     * @param {Float32Array} matrix4
-     * The Matrix4 representing the object position and rotation in world space.
-     */
-    setFromMatrix(matrix4) {
-        this._right[0] = matrix4.elements[0];
-        this._right[1] = matrix4.elements[1];
-        this._right[2] = matrix4.elements[2];
-        this._up[0] = matrix4.elements[4];
-        this._up[1] = matrix4.elements[5];
-        this._up[2] = matrix4.elements[6];
-        this._forward[0] = matrix4.elements[8];
-        this._forward[1] = matrix4.elements[9];
-        this._forward[2] = matrix4.elements[10];
-
-        // Normalize to remove scaling.
-        this._right = normalizeVector(this._right);
-        this._up = normalizeVector(this._up);
-        this._forward = normalizeVector(this._forward);
-
-        // Update position.
-        this.setPosition(
-            matrix4.elements[12], matrix4.elements[13], matrix4.elements[14]);
+        crossProduct(
+            forwardX, forwardY, forwardZ,
+            upX, upY, upZ,
+            this._right);
     }
 
 
@@ -20459,7 +20307,7 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-const versionString = "v0.9.1";
+const versionString = "v0.9.2";
 
 /* global JitsiMeetJS */
 
