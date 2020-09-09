@@ -5475,6 +5475,99 @@ function isBoolean(obj) {
 }
 
 /**
+ * 
+ * @param {Function} a
+ * @param {Function} b
+ */
+function add(a, b) {
+    return evt => {
+        a(evt);
+        b(evt);
+    };
+}
+
+/**
+ * Wait for a specific event, one time.
+ * @param {import("./EventBase").EventBase|EventTarget} target - the event target.
+ * @param {string} resolveEvt - the name of the event that will resolve the Promise this method creates.
+ * @param {string} rejectEvt - the name of the event that could reject the Promise this method creates.
+ * @param {number} timeout - the number of milliseconds to wait for the resolveEvt, before rejecting.
+ */
+function once(target, resolveEvt, rejectEvt, timeout) {
+
+    if (timeout === undefined
+        && isGoodNumber(rejectEvt)) {
+        timeout = rejectEvt;
+        rejectEvt = undefined;
+    }
+
+    return new Promise((resolve, reject) => {
+        const hasResolveEvt = isString(resolveEvt);
+        if (hasResolveEvt) {
+            const oldResolve = resolve;
+            const remove = () => {
+                target.removeEventListener(resolveEvt, oldResolve);
+            };
+            resolve = add(remove, resolve);
+            reject = add(remove, reject);
+        }
+
+        const hasRejectEvt = isString(rejectEvt);
+        if (hasRejectEvt) {
+            const oldReject = reject;
+            const remove = () => {
+                target.removeEventListener(rejectEvt, oldReject);
+            };
+
+            resolve = add(remove, resolve);
+            reject = add(remove, reject);
+        }
+
+        if (isNumber(timeout)) {
+            const timer = setTimeout(reject, timeout, `'${resolveEvt}' has timed out.`),
+                cancel = () => clearTimeout(timer);
+            resolve = add(cancel, resolve);
+            reject = add(cancel, reject);
+        }
+
+        if (hasResolveEvt) {
+            target.addEventListener(resolveEvt, resolve);
+        }
+
+        if (hasRejectEvt) {
+            target.addEventListener(rejectEvt, () => {
+                reject("Rejection event found");
+            });
+        }
+    });
+}
+
+/**
+ * Empties out an array
+ * @param {any[]} arr - the array to empty.
+ * @returns {any[]} - the items that were in the array.
+ */
+function arrayClear(arr) {
+    if (!(arr instanceof Array)) {
+        throw new Error("Must provide an array as the first parameter.");
+    }
+    return arr.splice(0);
+}
+
+/**
+ * Removes an item at the given index from an array.
+ * @param {any[]} arr
+ * @param {number} idx
+ * @returns {any} - the item that was removed.
+ */
+function arrayRemoveAt(arr, idx) {
+    if (!(arr instanceof Array)) {
+        throw new Error("Must provide an array as the first parameter.");
+    }
+    return arr.splice(idx, 1);
+}
+
+/**
  * @param {string} path
  * @returns {Promise<Response>}
  */
@@ -5541,6 +5634,8 @@ async function getBufferWithProgress(path, onProgress) {
         onProgress(receivedLength, contentLength, path);
     }
 
+    onProgress(1, 1, path);
+
     return { buffer, contentType };
 }
 
@@ -5569,15 +5664,28 @@ async function getBlobWithProgress(path, onProgress) {
     return blob;
 }
 
+/** @type {Map<string, string>} */
+const cache = new Map();
+
 /**
  * @param {string} path
  * @param {progressCallback} onProgress
  * @returns {Promise<string>}
  */
 async function getFileWithProgress(path, onProgress) {
-    const blob = await getBlobWithProgress(path, onProgress);
-    const blobUrl = URL.createObjectURL(blob);
-    return blobUrl;
+    const key = path;
+    if (cache.has(key)) {
+        onProgress(0, 1, path);
+        const blobUrl = cache.get(key);
+        onProgress(1, 1, path);
+        return blobUrl;
+    }
+    else {
+        const blob = await getBlobWithProgress(path, onProgress);
+        const blobUrl = URL.createObjectURL(blob);
+        cache.set(key, blobUrl);
+        return blobUrl;
+    }
 }
 
 /**
@@ -32558,19 +32666,6 @@ Scene.prototype = Object.assign( Object.create( Object3D.prototype ), {
 
 } );
 
-/**
- * Removes an item at the given index from an array.
- * @param {any[]} arr
- * @param {number} idx
- * @returns {any} - the item that was removed.
- */
-function arrayRemoveAt(arr, idx) {
-    if (!(arr instanceof Array)) {
-        throw new Error("Must provide an array as the first parameter.");
-    }
-    return arr.splice(idx, 1);
-}
-
 const EventBase = (function () {
     try {
         new window.EventTarget();
@@ -32655,6 +32750,18 @@ const EventBase = (function () {
 })();
 
 /**
+ * Force a value onto a range
+ *
+ * @param {number} v
+ * @param {number} min
+ * @param {number} max
+ */
+
+function clamp(v, min, max) {
+    return Math.min(max, Math.max(min, v));
+}
+
+/**
  * An Event class for tracking changes to audio activity.
  **/
 class AudioActivityEvent extends Event {
@@ -32676,6 +32783,113 @@ class AudioActivityEvent extends Event {
     set(id, isActive) {
         this.id = id;
         this.isActive = isActive;
+    }
+}
+
+const audioActivityEvt = new AudioActivityEvent(),
+    activityCounterMin = 0,
+    activityCounterMax = 60,
+    activityCounterThresh = 5;
+
+/**
+ * 
+ * @param {number} frequency
+ * @param {number} sampleRate
+ * @param {number} bufferSize
+ */
+function frequencyToIndex(frequency, sampleRate, bufferSize) {
+    const nyquist = sampleRate / 2;
+    const index = Math.round(frequency / nyquist * bufferSize);
+    return clamp(index, 0, bufferSize);
+}
+
+/**
+ * 
+ * @param {AnalyserNode} analyser
+ * @param {Float32Array} frequencies
+ * @param {number} minHz
+ * @param {number} maxHz
+ * @param {number} bufferSize
+ */
+function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz, bufferSize) {
+    const sampleRate = analyser.context.sampleRate,
+        start = frequencyToIndex(minHz, sampleRate, bufferSize),
+        end = frequencyToIndex(maxHz, sampleRate, bufferSize),
+        count = end - start;
+    let sum = 0;
+    for (let i = start; i < end; ++i) {
+        sum += frequencies[i];
+    }
+    return count === 0 ? 0 : (sum / count);
+}
+
+class ActivityAnalyser extends EventBase {
+    /**
+     * @param {import("./AudioSource").AudioSource} source
+     * @param {AudioContext} audioContext
+     * @param {number} bufferSize
+     */
+    constructor(source, audioContext, bufferSize) {
+        super();
+
+        if (!isGoodNumber(bufferSize)
+            || bufferSize <= 0) {
+            throw new Error("Buffer size must be greater than 0");
+        }
+
+        this.id = source.id;
+
+        this.bufferSize = bufferSize;
+        this.buffer = new Float32Array(this.bufferSize);
+
+        /** @type {boolean} */
+        this.wasActive = false;
+        this.lastAudible = true;
+        this.activityCounter = 0;
+
+        /** @type {AnalyserNode} */
+        this.analyser = null;
+
+        const checkSource = () => {
+            if (source.spatializer.source) {
+                this.analyser = audioContext.createAnalyser();
+                this.analyser.fftSize = 2 * this.bufferSize;
+                this.analyser.smoothingTimeConstant = 0.2;
+                source.spatializer.source.connect(this.analyser);
+            }
+            else {
+                setTimeout(checkSource, 0);
+            }
+        };
+
+        checkSource();
+    }
+
+    dispose() {
+        this.analyser.disconnect();
+        this.analyser = null;
+        this.buffer = null;
+    }
+
+    update() {
+        if (this.analyser) {
+            this.analyser.getFloatFrequencyData(this.buffer);
+
+            const average = 1.1 + analyserFrequencyAverage(this.analyser, this.buffer, 85, 255, this.bufferSize) / 100;
+            if (average >= 0.5 && this.activityCounter < activityCounterMax) {
+                this.activityCounter++;
+            } else if (average < 0.5 && this.activityCounter > activityCounterMin) {
+                this.activityCounter--;
+            }
+
+            const isActive = this.activityCounter > activityCounterThresh;
+            if (this.wasActive !== isActive) {
+                this.wasActive = isActive;
+                audioActivityEvt.id = this.id;
+                audioActivityEvt.isActive = isActive;
+                this.dispatchEvent(audioActivityEvt);
+            }
+        }
     }
 }
 
@@ -34531,18 +34745,6 @@ class MockAudioContext {
 }
 
 /**
- * Force a value onto a range
- *
- * @param {number} v
- * @param {number} min
- * @param {number} max
- */
-
-function clamp(v, min, max) {
-    return Math.min(max, Math.max(min, v));
-}
-
-/**
  * Indicates whether or not the current browser can change the destination device for audio output.
  * @constant
  * @type {boolean}
@@ -34594,16 +34796,22 @@ class BaseSpatializer extends EventBase {
     }
 }
 
+/**
+ * @callback sourceReadyCallback
+ * @param {AudioNode} source
+ */
+
 /** Base class providing functionality for spatializers. */
 class BaseSource extends BaseSpatializer {
-
     /**
      * Creates a spatializer that keeps track of the relative position
      * of an audio element to the listener destination.
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream
+     * @param {AudioContext} audioContext - the output WebAudio context
+     * @param {sourceReadyCallback} onSourceReady
      */
-    constructor(id, stream) {
+    constructor(id, stream, audioContext, onSourceReady) {
         super();
 
         this.id = id;
@@ -34614,15 +34822,32 @@ class BaseSource extends BaseSpatializer {
         /** @type {MediaStream} */
         this.stream = null;
 
+        /** @type {AudioNode} */
+        this.source = null;
+
         this.volume = 1;
 
         if (stream instanceof HTMLAudioElement) {
             this.audio = stream;
+            this.source = audioContext.createMediaElementSource(this.audio);
+            onSourceReady(this.source);
         }
         else if (stream instanceof MediaStream) {
             this.stream = stream;
             this.audio = document.createElement("audio");
             this.audio.srcObject = this.stream;
+
+            const checkSource = () => {
+                if (this.stream.active) {
+                    this.source = audioContext.createMediaStreamSource(this.stream);
+                    onSourceReady(this.source);
+                }
+                else {
+                    setTimeout(checkSource, 0);
+                }
+            };
+
+            setTimeout(checkSource, 0);
         }
         else if (stream !== null) {
             throw new Error("Can't create a node from the given stream. Expected type HTMLAudioElement or MediaStream.");
@@ -34647,11 +34872,18 @@ class BaseSource extends BaseSpatializer {
      * Discard values and make this instance useless.
      */
     dispose() {
+        if (this.source) {
+            this.source.disconnect();
+            this.source = null;
+        }
+
         if (this.audio) {
             this.audio.pause();
             this.audio = null;
         }
+
         this.stream = null;
+
         super.dispose();
     }
 
@@ -34666,197 +34898,31 @@ class BaseSource extends BaseSpatializer {
     }
 }
 
-const audioActivityEvt = new AudioActivityEvent(),
-    activityCounterMin = 0,
-    activityCounterMax = 60,
-    activityCounterThresh = 5;
-
-/**
- * 
- * @param {number} frequency
- * @param {number} sampleRate
- * @param {number} bufferSize
- */
-function frequencyToIndex(frequency, sampleRate, bufferSize) {
-    var nyquist = sampleRate / 2;
-    var index = Math.round(frequency / nyquist * bufferSize);
-    return clamp(index, 0, bufferSize)
-}
-
-/**
- * 
- * @param {AnalyserNode} analyser
- * @param {Float32Array} frequencies
- * @param {number} minHz
- * @param {number} maxHz
- * @param {number} bufferSize
- */
-function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz, bufferSize) {
-    const sampleRate = analyser.context.sampleRate,
-        start = frequencyToIndex(minHz, sampleRate, bufferSize),
-        end = frequencyToIndex(maxHz, sampleRate, bufferSize),
-        count = end - start;
-    let sum = 0;
-    for (let i = start; i < end; ++i) {
-        sum += frequencies[i];
-    }
-    return count === 0 ? 0 : (sum / count);
-}
-
-class BaseAnalyzed extends BaseSource {
+class BaseRoutedSource extends BaseSource {
 
     /**
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream
-     * @param {number} bufferSize
      * @param {AudioContext} audioContext
-     * @param {PannerNode|StereoPannerNode} inNode
+     * @param {AudioNode} inNode
      */
-    constructor(id, stream, bufferSize, audioContext, inNode) {
-        super(id, stream);
+    constructor(id, stream, audioContext, inNode) {
+        super(id, stream, audioContext, (source) => {
+            source.connect(inNode);
+        });
 
-        this.bufferSize = bufferSize;
-        if (!isGoodNumber(this.bufferSize)
-            || this.bufferSize <= 0) {
-            this.buffer = null;
-            this.analyser = null;
-        }
-        else {
-            this.buffer = new Float32Array(this.bufferSize);
-
-            /** @type {AnalyserNode} */
-            this.analyser = audioContext.createAnalyser();
-            this.analyser.fftSize = 2 * this.bufferSize;
-            this.analyser.smoothingTimeConstant = 0.2;
-        }
-
-        /** @type {PannerNode|StereoPannerNode} */
+        /** @type {AudioNode} */
         this.inNode = inNode;
-
-        /** @type {boolean} */
-        this.wasActive = false;
-        this.lastAudible = true;
-        this.activityCounter = 0;
-
-        /** @type {MediaSource} */
-        this.source = null;
-
-        const checkSource = () => {
-            if (!this.source) {
-                if (this.stream) {
-                    try {
-                        if (this.stream.active) {
-                            this.source = audioContext.createMediaStreamSource(this.stream);
-                            this.source.connect(this.analyser);
-                            this.source.connect(this.inNode);
-                            setTimeout(checkSource, 0);
-                        }
-                    }
-                    catch (exp) {
-                        console.warn("Creating the media stream failed. Reason: ", exp);
-                    }
-                }
-                else if (this.audio) {
-                    try {
-                        this.source = audioContext.createMediaElementSource(this.audio);
-                        this.source.connect(this.inNode);
-                        if (this.analyser) {
-                            this.source.connect(this.analyser);
-                        }
-                    }
-                    catch (exp) {
-                        console.warn("Creating the media stream failed. Reason: ", exp);
-                    }
-                }
-            }
-        };
-
-        checkSource();
-    }
-
-    /**
-     * Performs the spatialization operation for the audio source's latest location.
-     * @param {import("../../positions/Pose").Pose} loc
-     * @fires BaseAnalyzedSpatializer#audioActivity
-     */
-    update(loc) {
-        super.update(loc);
-
-        if (this.analyser && this.source) {
-            this.analyser.getFloatFrequencyData(this.buffer);
-
-            const average = 1.1 + analyserFrequencyAverage(this.analyser, this.buffer, 85, 255, this.bufferSize) / 100;
-            if (average >= 0.5 && this.activityCounter < activityCounterMax) {
-                this.activityCounter++;
-            } else if (average < 0.5 && this.activityCounter > activityCounterMin) {
-                this.activityCounter--;
-            }
-
-            const isActive = this.activityCounter > activityCounterThresh;
-            if (this.wasActive !== isActive) {
-                this.wasActive = isActive;
-                audioActivityEvt.id = this.id;
-                audioActivityEvt.isActive = isActive;
-                this.dispatchEvent(audioActivityEvt);
-            }
-        }
     }
 
     /**
      * Discard values and make this instance useless.
      */
     dispose() {
-        if (this.source) {
-            if (this.analyser) {
-                this.source.disconnect(this.analyser);
-            }
-            this.source.disconnect(this.inNode);
+        if (this.inNode) {
+            this.inNode.disconnect();
+            this.inNode = null;
         }
-
-        this.source = null;
-        this.inNode = null;
-        this.analyser = null;
-        this.buffer = null;
-
-        super.dispose();
-    }
-}
-
-/**
- * A spatializer that uses the WebAudio API.
- **/
-class BaseWebAudio extends BaseAnalyzed {
-
-    /**
-     * Creates a new spatializer that uses the WebAudio API
-     * @param {string} id
-     * @param {MediaStream|HTMLAudioElement} stream
-     * @param {number} bufferSize
-     * @param {AudioContext} audioContext
-     * @param {PannerNode|StereoPannerNode} inNode
-     * @param {GainNode=} outNode
-     */
-    constructor(id, stream, bufferSize, audioContext, inNode, outNode = null) {
-        super(id, stream, bufferSize, audioContext, inNode);
-
-        this.outNode = outNode || inNode;
-        this.outNode.connect(audioContext.destination);
-
-        if (this.inNode !== this.outNode) {
-            this.inNode.connect(this.outNode);
-        }
-    }
-
-    /**
-     * Discard values and make this instance useless.
-     */
-    dispose() {
-        if (this.inNode !== this.outNode) {
-            this.inNode.disconnect(this.outNode);
-        }
-
-        this.outNode.disconnect(this.outNode.context.destination);
-        this.outNode = null;
 
         super.dispose();
     }
@@ -34865,18 +34931,17 @@ class BaseWebAudio extends BaseAnalyzed {
 /**
  * A spatializer that uses WebAudio's PannerNode
  **/
-class PannerBase extends BaseWebAudio {
+class PannerBase extends BaseRoutedSource {
 
     /**
      * Creates a new spatializer that uses WebAudio's PannerNode.
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream
-     * @param {number} bufferSize
      * @param {AudioContext} audioContext
      */
-    constructor(id, stream, bufferSize, audioContext) {
+    constructor(id, stream, audioContext) {
         const panner = audioContext.createPanner();
-        super(id, stream, bufferSize, audioContext, panner);
+        super(id, stream, audioContext, panner);
 
         this.inNode.panningModel = "HRTF";
         this.inNode.distanceModel = "inverse";
@@ -34905,11 +34970,10 @@ class PannerNew extends PannerBase {
      * Creates a new positioner that uses WebAudio's playback dependent time progression.
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream
-     * @param {number} bufferSize
      * @param {AudioContext} audioContext
      */
-    constructor(id, stream, bufferSize, audioContext) {
-        super(id, stream, bufferSize, audioContext);
+    constructor(id, stream, audioContext) {
+        super(id, stream, audioContext);
 
         Object.seal(this);
     }
@@ -34930,6 +34994,20 @@ class PannerNew extends PannerBase {
     }
 }
 
+class DirectSource extends BaseSource {
+    /**
+     * Creates a new "spatializer" that performs no panning. An anti-spatializer.
+     * @param {string} id
+     * @param {MediaStream|HTMLAudioElement} stream
+     * @param {AudioContext} audioContext
+     */
+    constructor(id, stream, audioContext) {
+        super(id, stream, audioContext, (source) => {
+            source.connect(audioContext.destination);
+        });
+    }
+}
+
 class BaseListener extends BaseSpatializer {
     /**
      * Creates a spatializer that keeps track of position
@@ -34943,12 +35021,17 @@ class BaseListener extends BaseSpatializer {
      * @private
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
-     * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
+     * @param {boolean} spatialize - whether or not the audio stream should be spatialized. Stereo audio streams that are spatialized will get down-mixed to a single channel.
      * @param {AudioContext} audioContext
      * @return {BaseSource}
      */
-    createSource(id, stream, bufferSize, audioContext) {
-        throw new Error("Calla no longer supports manual volume scaling");
+    createSource(id, stream, spatialize, audioContext) {
+        if (spatialize) {
+            throw new Error("Calla no longer supports manual volume scaling");
+        }
+        else {
+            return new DirectSource(id, stream, audioContext);
+        }
     }
 }
 
@@ -35010,12 +35093,17 @@ class AudioListenerNew extends AudioListenerBase {
      * @private
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
-     * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
+     * @param {boolean} spatialize - whether or not the audio stream should be spatialized. Stereo audio streams that are spatialized will get down-mixed to a single channel.
      * @param {AudioContext} audioContext
      * @return {BaseSource}
      */
-    createSource(id, stream, bufferSize, audioContext) {
-        return new PannerNew(id, stream, bufferSize, audioContext);
+    createSource(id, stream, spatialize, audioContext) {
+        if (spatialize) {
+            return new PannerNew(id, stream, audioContext);
+        }
+        else {
+            return super.createSource(id, stream, spatialize, audioContext);
+        }
     }
 }
 
@@ -35028,11 +35116,10 @@ class PannerOld extends PannerBase {
      * Creates a new positioner that uses the WebAudio API's old setPosition method.
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream
-     * @param {number} bufferSize
      * @param {AudioContext} audioContext
      */
-    constructor(id, stream, bufferSize, audioContext) {
-        super(id, stream, bufferSize, audioContext);
+    constructor(id, stream, audioContext) {
+        super(id, stream, audioContext);
 
         Object.seal(this);
     }
@@ -35079,12 +35166,17 @@ class AudioListenerOld extends AudioListenerBase {
      * @private
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
-     * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
+     * @param {boolean} spatialize - whether or not the audio stream should be spatialized. Stereo audio streams that are spatialized will get down-mixed to a single channel.
      * @param {AudioContext} audioContext
      * @return {import("../sources/BaseSource").BaseSource}
      */
-    createSource(id, stream, bufferSize, audioContext) {
-        return new PannerOld(id, stream, bufferSize, audioContext);
+    createSource(id, stream, spatialize, audioContext) {
+        if (spatialize) {
+            return new PannerOld(id, stream, audioContext);
+        }
+        else {
+            return super.createSource(id, stream, spatialize, audioContext);
+        }
     }
 }
 
@@ -41051,19 +41143,18 @@ ResonanceAudio.Version = Version$1;
 /**
  * A spatializer that uses Google's Resonance Audio library.
  **/
-class ResonanceSource extends BaseAnalyzed {
+class ResonanceSource extends BaseRoutedSource {
 
     /**
      * Creates a new spatializer that uses Google's Resonance Audio library.
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream
-     * @param {number} bufferSize
      * @param {AudioContext} audioContext
      * @param {import("../../../../lib/resonance-audio/src/resonance-audio").ResonanceAudio} res
      */
-    constructor(id, stream, bufferSize, audioContext, res) {
+    constructor(id, stream, audioContext, res) {
         const resNode = res.createSource();
-        super(id, stream, bufferSize, audioContext, resNode.input);
+        super(id, stream, audioContext, resNode.input);
 
         this.resScene = res;
         this.resNode = resNode;
@@ -41144,104 +41235,23 @@ class ResonanceScene extends BaseListener {
      * @private
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
-     * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
+     * @param {boolean} spatialize - whether or not the audio stream should be spatialized. Stereo audio streams that are spatialized will get down-mixed to a single channel.
      * @param {AudioContext} audioContext
      * @return {import("../sources/BaseSource").BaseSource}
      */
-    createSource(id, stream, bufferSize, audioContext) {
-        return new ResonanceSource(id, stream, bufferSize, audioContext, this.scene);
-    }
-}
-
-/**
- * Empties out an array
- * @param {any[]} arr - the array to empty.
- * @returns {any[]} - the items that were in the array.
- */
-function arrayClear(arr) {
-    if (!(arr instanceof Array)) {
-        throw new Error("Must provide an array as the first parameter.");
-    }
-    return arr.splice(0);
-}
-
-/**
- * Removes a given item from an array.
- * @param {any[]} arr
- * @param {any} value
- * @returns {boolean} - true, if the item was removed
- */
-function arrayRemove(arr, value) {
-    if (!(arr instanceof Array)) {
-        throw new Error("Must provide an array as the first parameter.");
-    }
-
-    const idx = arr.indexOf(value);
-    if (idx > -1) {
-        arrayRemoveAt(arr, idx);
-        return true;
-    }
-
-    return false;
-}
-
-class LRUCache {
-    constructor(size) {
-        this.size = size;
-        this.map = new Map();
-        this.usage = [];
-    }
-
-    set(key, value) {
-        this.usage.push(key);
-        const removed = [];
-        while (this.usage.length > this.size) {
-            const toDelete = this.usage.shift();
-            removed.push(toDelete);
-            this.map.delete(toDelete);
+    createSource(id, stream, spatialize, audioContext) {
+        if (spatialize) {
+            return new ResonanceSource(id, stream, audioContext, this.scene);
         }
-        arrayRemove(removed, key);
-        if (removed.length > 0) {
-            console.log("removing", removed.join(", "));
+        else {
+            return super.createSource(id, stream, spatialize, audioContext);
         }
-        return this.map.set(key, value);
-    }
-
-    has(key) {
-        return this.map.has(key);
-    }
-
-    get(key) {
-        return this.map.get(key);
-    }
-
-    delete(key) {
-        arrayRemove(this.usage, key);
-        return this.map.delete(key);
-    }
-
-    clear() {
-        arrayClear(this.usage);
-        this.map.clear();
-    }
-
-    keys() {
-        return this.map.keys();
-    }
-
-    values() {
-        return this.map.values();
-    }
-
-    entries() {
-        return this.map.entries();
     }
 }
 
 const BUFFER_SIZE = 1024,
     audioActivityEvt$1 = new AudioActivityEvent(),
-    audioReadyEvt = new Event("audioready"),
-    cache = new LRUCache(50);
+    audioReadyEvt = new Event("audioready");
 
 let hasAudioContext = Object.prototype.hasOwnProperty.call(window, "AudioContext"),
     hasAudioListener = hasAudioContext && Object.prototype.hasOwnProperty.call(window, "AudioListener"),
@@ -41269,6 +41279,9 @@ class AudioManager extends EventBase {
 
         /** @type {Map<string, AudioSource>} */
         this.users = new Map();
+
+        /** @type {Map<string, ActivityAnalyser>} */
+        this.analysers = new Map();
 
         /** @type {Map<string, AudioSource>} */
         this.clips = new Map();
@@ -41342,12 +41355,17 @@ class AudioManager extends EventBase {
     update() {
         if (this.audioContext) {
             const t = this.currentTime;
+
+            for (let clip of this.clips.values()) {
+                clip.update(t);
+            }
+
             for (let user of this.users.values()) {
                 user.update(t);
             }
 
-            for (let clip of this.clips.values()) {
-                clip.update(t);
+            for (let analyser of this.analysers.values()) {
+                analyser.update(t);
             }
         }
     }
@@ -41416,10 +41434,10 @@ class AudioManager extends EventBase {
      * @private
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream - the audio element that is being spatialized.
-     * @param {number} bufferSize - the size of the analysis buffer to use for audio activity detection
+     * @param {boolean} spatialize - whether or not the audio stream should be spatialized. Stereo audio streams that are spatialized will get down-mixed to a single channel.
      * @return {import("./spatializers/sources/BaseSource").BaseSource}
      */
-    createSpatializer(id, stream, bufferSize) {
+    createSpatializer(id, stream, spatialize) {
         if (!this.listener) {
             throw new Error("Audio context isn't ready");
         }
@@ -41428,7 +41446,7 @@ class AudioManager extends EventBase {
             throw new Error("No stream or audio element given.");
         }
 
-        return this.listener.createSource(id, stream, bufferSize, this.audioContext);
+        return this.listener.createSource(id, stream, spatialize, this.audioContext);
     }
 
     /**
@@ -41467,21 +41485,20 @@ class AudioManager extends EventBase {
      * Creates a new sound effect from a series of fallback paths
      * for media files.
      * @param {string} name - the name of the sound effect, to reference when executing playback.
-     * @param {string[]} paths - a series of fallback paths for loading the media of the sound effect.
+     * @param {boolean} loop - whether or not the sound effect should be played on loop.
+     * @param {boolean} autoPlay - whether or not the sound effect should be played immediately.
+     * @param {boolean} spatialize - whether or not the sound effect should be spatialized.
+     * @param {import("../fetching").progressCallback} - an optional callback function to use for tracking progress of loading the clip.
+     * @param {...string} paths - a series of fallback paths for loading the media of the sound effect.
      */
-    async addClip(name, loop, autoPlay, onProgress, ...paths) {
+    async createClip(name, loop, autoPlay, spatialize, onProgress, ...paths) {
         const clip = new AudioSource();
 
         const sources = [];
         for (let path of paths) {
             const s = document.createElement("source");
-            const key = path;
-            if (cache.has(key)) {
-                path = cache.get(key);
-            }
-            else if (onProgress) {
+            if (onProgress) {
                 path = await getFile(path, onProgress);
-                cache.set(key, path);
             }
             s.src = path;
             sources.push(s);
@@ -41494,7 +41511,7 @@ class AudioManager extends EventBase {
         elem.autoplay = autoPlay;
         elem.append(...sources);
 
-        clip.spatializer = this.createSpatializer(name, elem);
+        clip.spatializer = this.createSpatializer(name, elem, spatialize);
 
         this.clips.set(name, clip);
 
@@ -41584,23 +41601,27 @@ class AudioManager extends EventBase {
     setUserStream(id, stream) {
         if (this.users.has(id)) {
             const user = this.users.get(id);
-            if (user.spatializer) {
-                user.spatializer.removeEventListener("audioActivity", this.onAudioActivity);
-                user.spatializer = null;
+            if (this.analysers.has(id)) {
+                const analyser = this.analysers.get(id);
+                this.analysers.delete(id);
+                analyser.removeEventListener("audioActivity", this.onAudioActivity);
+                analyser.dispose();
             }
 
             if (stream) {
-                user.spatializer = this.createSpatializer(id, stream, BUFFER_SIZE);
-                if (user.spatializer) {
-                    if (user.spatializer.audio) {
-                        user.spatializer.audio.autoPlay = true;
-                        user.spatializer.audio.muted = true;
-                        user.spatializer.audio.addEventListener("onloadedmetadata", () =>
-                            user.spatializer.audio.play());
-                        user.spatializer.audio.play();
-                    }
-                    user.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
-                    user.spatializer.addEventListener("audioActivity", this.onAudioActivity);
+                user.spatializer = this.createSpatializer(id, stream, true);
+                user.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
+
+                const analyser = new ActivityAnalyser(user, this.audioContext, BUFFER_SIZE);
+                analyser.addEventListener("audioActivity", this.onAudioActivity);
+                this.analysers.set(id, analyser);
+
+                if (user.spatializer.audio) {
+                    user.spatializer.audio.autoPlay = true;
+                    user.spatializer.audio.muted = true;
+                    user.spatializer.audio.addEventListener("onloadedmetadata", () =>
+                        user.spatializer.audio.play());
+                    user.spatializer.audio.play();
                 }
             }
         }
@@ -41633,7 +41654,7 @@ class AudioManager extends EventBase {
     }
 
     /**
-     * @callback {withPoseCallback}
+     * @callback withPoseCallback
      * @param {InterpolatedPose} pose
      * @param {number} dt
      */
@@ -42434,11 +42455,11 @@ Object.assign( Raycaster.prototype, {
 class EventSystemEvent extends Event {
     /**
      * @param {String} type
-     * @param {import("three").Object3D} obj
+     * @param {import("three").Intersection} obj
      */
     constructor(type, obj) {
         super(type);
-        this.object = obj;
+        this.hit = obj;
     }
 }
 
@@ -42446,73 +42467,95 @@ class EventSystem extends EventBase {
     /**
      * @param {import("three").PerspectiveCamera} camera
      * @param {import("three").Object3D} inputLayer
-     * @param {import("./ScreenPointerControls").ScreenPointerControls} screenPointers
+     * @param {...import("./ScreenPointerControls").ScreenPointerControls} screenPointer
      */
-    constructor(camera, inputLayer, screenPointers) {
+    constructor(camera, inputLayer, ...pointers) {
         super();
 
         const raycaster = new Raycaster();
+
+        /** @type {Map<Number, import("three").Intersection>} */
+        const hovers = new Map();
+
         /** @type {import("three").Intersection[]} */
         const hits = [];
+
+        /**
+         * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
+         * @returns {import("three").Intersection}
+         */
         const raycast = (evt) => {
-            let pointer = null;
-
-            if (screenPointers.isPointerLocked
-                && evt.pointerType === "mouse") {
-                pointer = { x: 0, y: 0 };
-            }
-            else {
-                pointer = { x: evt.u, y: evt.v };
-            }
-
+            const pointer = { x: evt.u, y: evt.v };
             raycaster.setFromCamera(pointer, camera);
 
             arrayClear(hits);
             raycaster.intersectObject(inputLayer, true, hits);
 
-            let curObj = null;
+            /** @type {import("three").Intersection} */
+            let curHit = null;
             for (let hit of hits) {
                 if (hit.object
                     && hit.object._listeners
                     && hit.object._listeners.click
                     && hit.object._listeners.click.length) {
-                    curObj = hit.object;
+                    curHit = hit;
                 }
             }
 
-            return curObj;
+            return curHit;
         };
 
-        /** @type {Map<Number, import("three").Object3D>} */
-        const hovers = new Map();
-        screenPointers.addEventListener("move", (evt) => {
-            const lastObj = hovers.get(evt.pointerID);
-            const curObj = raycast(evt);
-            if (curObj != lastObj) {
-                if (lastObj) {
+        /**
+         * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
+         */
+        const onMove = (evt) => {
+            const lastHit = hovers.get(evt.pointerID);
+            const curHit = raycast(evt);
+            if ((curHit && curHit.object) != (lastHit && lastHit.object)) {
+                if (lastHit && lastHit.object) {
                     hovers.delete(evt.pointerID);
-                    lastObj.dispatchEvent({ type: "exit" });
-                    this.dispatchEvent(new EventSystemEvent("exit", lastObj));
+                    lastHit.object.dispatchEvent({ type: "exit" });
+                    this.dispatchEvent(new EventSystemEvent("exit", lastHit));
                 }
 
-                if (curObj) {
-                    hovers.set(evt.pointerID, curObj);
-                    curObj.dispatchEvent({ type: "enter" });
-                    this.dispatchEvent(new EventSystemEvent("enter", curObj));
+                if (curHit && curHit.object) {
+                    hovers.set(evt.pointerID, curHit);
+                    curHit.object.dispatchEvent({ type: "enter" });
+                    this.dispatchEvent(new EventSystemEvent("enter", curHit));
                 }
             }
-        });
+        };
 
-        screenPointers.addEventListener("click", (evt) => {
-            const curObj = raycast(evt);
-            if (curObj) {
-                curObj.dispatchEvent({ type: "click" });
+        /**
+         * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
+         */
+        const onClick = (evt) => {
+            const curHit = raycast(evt);
+            if (curHit && curHit.object) {
+                curHit.object.dispatchEvent({ type: "click" });
             }
-        });
+        };
+
+        for (let pointer of pointers) {
+            pointer.addEventListener("move", onMove);
+            pointer.addEventListener("click", onClick);
+        }
     }
 }
 
 const isFirefox = typeof InstallTrigger !== "undefined";
+
+/**
+ * Translate a value out of a range.
+ *
+ * @param {number} v
+ * @param {number} min
+ * @param {number} max
+ */
+
+function unproject(v, min, max) {
+    return v * (max - min) + min;
+}
 
 class ScreenPointerEvent extends Event {
     constructor(type) {
@@ -42593,26 +42636,37 @@ class ScreenPointerControls extends EventBase {
          * @param {ScreenPointerEvent} evt
          * @param {Pointer} pointer
          */
-        function setHorizontal(evt, pointer) {
+        const setHorizontal = (evt, pointer) => {
 
             evt.pointerType = pointer.type;
             evt.pointerID = pointer.id;
 
             evt.buttons = pointer.buttons;
 
-            evt.x = pointer.x;
-            evt.y = pointer.y;
             evt.dx = pointer.dx;
             evt.dy = pointer.dy;
             evt.dz = 0;
 
-            evt.u = 2 * evt.x / element.clientWidth - 1;
-            evt.v = -2 * evt.y / element.clientHeight + 1;
             evt.du = 2 * evt.dx / element.clientWidth;
             evt.dv = -2 * evt.dy / element.clientHeight;
 
+            if (this.isPointerLocked) {
+                evt.u = 0;
+                evt.v = 0;
+
+                evt.x = element.clientWidth / 2;
+                evt.y = element.clientHeight / 2;
+            }
+            else {
+                evt.x = pointer.x;
+                evt.y = pointer.y;
+
+                evt.u = unproject(project(evt.x, 0, element.clientWidth), -1, 1);
+                evt.v = unproject(project(evt.y, 0, element.clientHeight), 1, -1);
+            }
+
             evt.dragDistance = pointer.dragDistance;
-        }
+        };
 
         /**
          * @param {Pointer} pointer - the newest state of the pointer.
@@ -42895,74 +42949,6 @@ class Stage extends Object3D {
     get avatarHeight() {
         return this.camera.position.y;
     }
-}
-
-/**
- * 
- * @param {Function} a
- * @param {Function} b
- */
-function add(a, b) {
-    return evt => {
-        a(evt);
-        b(evt);
-    };
-}
-
-/**
- * Wait for a specific event, one time.
- * @param {import("./EventBase").EventBase|EventTarget} target - the event target.
- * @param {string} resolveEvt - the name of the event that will resolve the Promise this method creates.
- * @param {string} rejectEvt - the name of the event that could reject the Promise this method creates.
- * @param {number} timeout - the number of milliseconds to wait for the resolveEvt, before rejecting.
- */
-function once(target, resolveEvt, rejectEvt, timeout) {
-
-    if (timeout === undefined
-        && isGoodNumber(rejectEvt)) {
-        timeout = rejectEvt;
-        rejectEvt = undefined;
-    }
-
-    return new Promise((resolve, reject) => {
-        const hasResolveEvt = isString(resolveEvt);
-        if (hasResolveEvt) {
-            const oldResolve = resolve;
-            const remove = () => {
-                target.removeEventListener(resolveEvt, oldResolve);
-            };
-            resolve = add(remove, resolve);
-            reject = add(remove, reject);
-        }
-
-        const hasRejectEvt = isString(rejectEvt);
-        if (hasRejectEvt) {
-            const oldReject = reject;
-            const remove = () => {
-                target.removeEventListener(rejectEvt, oldReject);
-            };
-
-            resolve = add(remove, resolve);
-            reject = add(remove, reject);
-        }
-
-        if (isNumber(timeout)) {
-            const timer = setTimeout(reject, timeout, `'${resolveEvt}' has timed out.`),
-                cancel = () => clearTimeout(timer);
-            resolve = add(cancel, resolve);
-            reject = add(cancel, reject);
-        }
-
-        if (hasResolveEvt) {
-            target.addEventListener(resolveEvt, resolve);
-        }
-
-        if (hasRejectEvt) {
-            target.addEventListener(rejectEvt, () => {
-                reject("Rejection event found");
-            });
-        }
-    });
 }
 
 const completeEvt = { type: "fadeComplete" };
@@ -43383,8 +43369,6 @@ function CanvasOffscreen(w, h, ...rest) {
     }
 }
 
-const cache$1 = new LRUCache(50);
-
 class TexturedMesh extends Mesh {
     /**
      * @param {import("three").BufferGeometry} geom
@@ -43401,11 +43385,6 @@ class TexturedMesh extends Mesh {
      */
 
     async setImage(img, onProgress) {
-        const key = img;
-        if (cache$1.has(key)) {
-            img = cache$1.get(key);
-        }
-
         if (isString(img)) {
             img = await getFile(img, onProgress);
             img = Img(src(img));
@@ -43432,7 +43411,6 @@ class TexturedMesh extends Mesh {
             img = new Texture(img);
         }
 
-        cache$1.set(key, img);
         this.material.map = img;
         img = this.material.map.image;
         this.isVideo = img instanceof HTMLVideoElement;
@@ -43693,17 +43671,27 @@ class Application extends EventBase {
         this.cameraControl = new CameraControl(this.camera, this.stage, this.controls);
 
         const scales = new Map();
-        this.eventSystem = new EventSystem(this.camera, this.foreground, this.controls);
-        this.eventSystem.addEventListener("enter", (evt) => {
-            if (!scales.has(evt.object)) {
-                scales.set(evt.object, evt.object.scale.clone());
-            }
-            evt.object.scale.multiplyScalar(1.1);
-        });
 
-        this.eventSystem.addEventListener("exit", (evt) => {
-            evt.object.scale.copy(scales.get(evt.object));
-        });
+        /**
+         * @param {import("../input/EventSystem").EventSystemEvent} evt
+         */
+        const onEnter = (evt) => {
+            if (!scales.has(evt.hit.object)) {
+                scales.set(evt.hit.object, evt.hit.object.scale.clone());
+            }
+            evt.hit.object.scale.multiplyScalar(1.1);
+        };
+
+        /**
+         * @param {import("../input/EventSystem").EventSystemEvent} evt
+         */
+        const onExit = (evt) => {
+            evt.hit.object.scale.copy(scales.get(evt.hit.object));
+        };
+
+        this.eventSystem = new EventSystem(this.camera, this.foreground, this.controls);
+        this.eventSystem.addEventListener("enter", onEnter);
+        this.eventSystem.addEventListener("exit", onExit);
 
         const update = (evt) => {
             if (!this.showSkybox) {
@@ -44398,8 +44386,6 @@ async function playCurrentAudioZone() {
     }
 }
 
-window.playCurrentAudioZone = playCurrentAudioZone;
-
 async function showMainMenu(_, skipHistory = false) {
     setHistory(0, null, skipHistory, "Main");
     await showMenu("VR/Languages", (language) => showLanguage(language.id));
@@ -44511,10 +44497,11 @@ async function showActivity(activityID, skipHistory = false) {
         forward = new Vector3();
 
     for (let audioTrack of audioTracks) {
-        const clip = await app.audio.addClip(
+        const clip = await app.audio.createClip(
             audioTrack.path,
             audioTrack.loop,
             false,
+            !audioTrack.spatialize,
             progs.shift(),
             audioTrack.path);
 
@@ -44544,6 +44531,19 @@ async function showActivity(activityID, skipHistory = false) {
 
             await clip.spatializer.audio.play();
             clip.spatializer.audio.pause();
+        }
+
+        if (audioTrack.playbackTransformID > 0) {
+            const playbackButton = DebugObject(0x00ff00);
+            playbackButton.addEventListener("click", async () => {
+                stopCurrentAudioZone();
+                app.audio.playClip(audioTrack.path, audioTrack.volume);
+                await once(clip.spatializer.audio, "ended");
+                playCurrentAudioZone();
+            });
+
+            const transform = curTransforms.get(audioTrack.playbackTransformID);
+            transform.add(playbackButton);
         }
     }
 
