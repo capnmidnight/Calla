@@ -54,9 +54,6 @@ export class LoadingBar extends Object3D {
      */
     onProgress(soFar, total, msg) {
         this.targetValue = soFar / total;
-        if (msg) {
-            console.log((100 * this.targetValue).toFixed(2) + "%", msg);
-        }
     }
 
     update(dt) {
