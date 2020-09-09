@@ -13204,11 +13204,6 @@ class BaseSpatializer extends EventBase {
     }
 }
 
-/**
- * @callback sourceReadyCallback
- * @param {AudioNode} source
- */
-
 /** Base class providing functionality for spatializers. */
 class BaseSource extends BaseSpatializer {
     /**
@@ -13217,9 +13212,9 @@ class BaseSource extends BaseSpatializer {
      * @param {string} id
      * @param {MediaStream|HTMLAudioElement} stream
      * @param {AudioContext} audioContext - the output WebAudio context
-     * @param {sourceReadyCallback} onSourceReady
+     * @param {AudioNode} destination - this node out to which to pipe the stream
      */
-    constructor(id, stream, audioContext, onSourceReady) {
+    constructor(id, stream, audioContext, destination) {
         super();
 
         this.id = id;
@@ -13238,7 +13233,7 @@ class BaseSource extends BaseSpatializer {
         if (stream instanceof HTMLAudioElement) {
             this.audio = stream;
             this.source = audioContext.createMediaElementSource(this.audio);
-            onSourceReady(this.source);
+            this.source.connect(destination);
         }
         else if (stream instanceof MediaStream) {
             this.stream = stream;
@@ -13248,7 +13243,7 @@ class BaseSource extends BaseSpatializer {
             const checkSource = () => {
                 if (this.stream.active) {
                     this.source = audioContext.createMediaStreamSource(this.stream);
-                    onSourceReady(this.source);
+                    this.source.connect(destination);
                 }
                 else {
                     setTimeout(checkSource, 0);
@@ -13315,12 +13310,11 @@ class BaseRoutedSource extends BaseSource {
      * @param {AudioNode} inNode
      */
     constructor(id, stream, audioContext, inNode) {
-        super(id, stream, audioContext, (source) => {
-            source.connect(inNode);
-        });
+        super(id, stream, audioContext, inNode);
 
         /** @type {AudioNode} */
         this.inNode = inNode;
+        this.inNode.connect(audioContext.destination);
     }
 
     /**
@@ -13410,9 +13404,7 @@ class DirectSource extends BaseSource {
      * @param {AudioContext} audioContext
      */
     constructor(id, stream, audioContext) {
-        super(id, stream, audioContext, (source) => {
-            source.connect(audioContext.destination);
-        });
+        super(id, stream, audioContext, audioContext.destination);
     }
 }
 
@@ -14124,9 +14116,9 @@ class FOARotator {
         this._context = context;
 
         this._splitter = this._context.createChannelSplitter(4);
+        this._inX = this._context.createGain();
         this._inY = this._context.createGain();
         this._inZ = this._context.createGain();
-        this._inX = this._context.createGain();
         this._m0 = this._context.createGain();
         this._m1 = this._context.createGain();
         this._m2 = this._context.createGain();
@@ -14136,18 +14128,18 @@ class FOARotator {
         this._m6 = this._context.createGain();
         this._m7 = this._context.createGain();
         this._m8 = this._context.createGain();
+        this._outX = this._context.createGain();
         this._outY = this._context.createGain();
         this._outZ = this._context.createGain();
-        this._outX = this._context.createGain();
         this._merger = this._context.createChannelMerger(4);
 
-        // ACN channel ordering: [1, 2, 3] => [-Y, Z, -X]
-        // Y (from channel 1)
-        this._splitter.connect(this._inY, 1);
-        // Z (from channel 2)
-        this._splitter.connect(this._inZ, 2);
-        // X (from channel 3)
-        this._splitter.connect(this._inX, 3);
+        // ACN channel ordering: [1, 2, 3] => [X, Y, Z]
+        // X (from channel 1)
+        this._splitter.connect(this._inX, 1);
+        // Y (from channel 2)
+        this._splitter.connect(this._inY, 2);
+        // Z (from channel 3)
+        this._splitter.connect(this._inZ, 3);
         this._inY.gain.value = -1;
         this._inX.gain.value = -1;
 
@@ -14155,34 +14147,34 @@ class FOARotator {
         // |Y|   | m0  m3  m6 |   | Y * m0 + Z * m3 + X * m6 |   | Yr |
         // |Z| * | m1  m4  m7 | = | Y * m1 + Z * m4 + X * m7 | = | Zr |
         // |X|   | m2  m5  m8 |   | Y * m2 + Z * m5 + X * m8 |   | Xr |
-        this._inY.connect(this._m0);
-        this._inY.connect(this._m1);
-        this._inY.connect(this._m2);
-        this._inZ.connect(this._m3);
-        this._inZ.connect(this._m4);
-        this._inZ.connect(this._m5);
-        this._inX.connect(this._m6);
-        this._inX.connect(this._m7);
-        this._inX.connect(this._m8);
-        this._m0.connect(this._outY);
-        this._m1.connect(this._outZ);
-        this._m2.connect(this._outX);
-        this._m3.connect(this._outY);
-        this._m4.connect(this._outZ);
-        this._m5.connect(this._outX);
-        this._m6.connect(this._outY);
-        this._m7.connect(this._outZ);
-        this._m8.connect(this._outX);
+        this._inX.connect(this._m0);
+        this._inX.connect(this._m1);
+        this._inX.connect(this._m2);
+        this._inY.connect(this._m3);
+        this._inY.connect(this._m4);
+        this._inY.connect(this._m5);
+        this._inZ.connect(this._m6);
+        this._inZ.connect(this._m7);
+        this._inZ.connect(this._m8);
+        this._m0.connect(this._outX);
+        this._m1.connect(this._outY);
+        this._m2.connect(this._outZ);
+        this._m3.connect(this._outX);
+        this._m4.connect(this._outY);
+        this._m5.connect(this._outZ);
+        this._m6.connect(this._outX);
+        this._m7.connect(this._outY);
+        this._m8.connect(this._outZ);
 
         // Transform 3: world space to audio space.
         // W -> W (to channel 0)
         this._splitter.connect(this._merger, 0, 0);
-        // Y (to channel 1)
-        this._outY.connect(this._merger, 0, 1);
-        // Z (to channel 2)
-        this._outZ.connect(this._merger, 0, 2);
-        // X (to channel 3)
-        this._outX.connect(this._merger, 0, 3);
+        // X (to channel 1)
+        this._outX.connect(this._merger, 0, 1);
+        // Y (to channel 2)
+        this._outY.connect(this._merger, 0, 2);
+        // Z (to channel 3)
+        this._outZ.connect(this._merger, 0, 3);
         this._outY.gain.value = -1;
         this._outX.gain.value = -1;
 
@@ -14194,46 +14186,46 @@ class FOARotator {
     }
 
     dispose() {
-        // ACN channel ordering: [1, 2, 3] => [-Y, Z, -X]
-        // Y (from channel 1)
-        this._splitter.disconnect(this._inY, 1);
-        // Z (from channel 2)
-        this._splitter.disconnect(this._inZ, 2);
-        // X (from channel 3)
-        this._splitter.disconnect(this._inX, 3);
+        // ACN channel ordering: [1, 2, 3] => [X, Y, Z]
+        // X (from channel 1)
+        this._splitter.disconnect(this._inX, 1);
+        // Y (from channel 2)
+        this._splitter.disconnect(this._inY, 2);
+        // Z (from channel 3)
+        this._splitter.disconnect(this._inZ, 3);
 
         // Apply the rotation in the world space.
         // |Y|   | m0  m3  m6 |   | Y * m0 + Z * m3 + X * m6 |   | Yr |
         // |Z| * | m1  m4  m7 | = | Y * m1 + Z * m4 + X * m7 | = | Zr |
         // |X|   | m2  m5  m8 |   | Y * m2 + Z * m5 + X * m8 |   | Xr |
-        this._inY.disconnect(this._m0);
-        this._inY.disconnect(this._m1);
-        this._inY.disconnect(this._m2);
-        this._inZ.disconnect(this._m3);
-        this._inZ.disconnect(this._m4);
-        this._inZ.disconnect(this._m5);
-        this._inX.disconnect(this._m6);
-        this._inX.disconnect(this._m7);
-        this._inX.disconnect(this._m8);
-        this._m0.disconnect(this._outY);
-        this._m1.disconnect(this._outZ);
-        this._m2.disconnect(this._outX);
-        this._m3.disconnect(this._outY);
-        this._m4.disconnect(this._outZ);
-        this._m5.disconnect(this._outX);
-        this._m6.disconnect(this._outY);
-        this._m7.disconnect(this._outZ);
-        this._m8.disconnect(this._outX);
+        this._inX.disconnect(this._m0);
+        this._inX.disconnect(this._m1);
+        this._inX.disconnect(this._m2);
+        this._inY.disconnect(this._m3);
+        this._inY.disconnect(this._m4);
+        this._inY.disconnect(this._m5);
+        this._inZ.disconnect(this._m6);
+        this._inZ.disconnect(this._m7);
+        this._inZ.disconnect(this._m8);
+        this._m0.disconnect(this._outX);
+        this._m1.disconnect(this._outY);
+        this._m2.disconnect(this._outZ);
+        this._m3.disconnect(this._outX);
+        this._m4.disconnect(this._outY);
+        this._m5.disconnect(this._outZ);
+        this._m6.disconnect(this._outX);
+        this._m7.disconnect(this._outY);
+        this._m8.disconnect(this._outZ);
 
         // Transform 3: world space to audio space.
         // W -> W (to channel 0)
         this._splitter.disconnect(this._merger, 0, 0);
-        // Y (to channel 1)
-        this._outY.disconnect(this._merger, 0, 1);
-        // Z (to channel 2)
-        this._outZ.disconnect(this._merger, 0, 2);
-        // X (to channel 3)
-        this._outX.disconnect(this._merger, 0, 3);
+        // X (to channel 1)
+        this._outX.disconnect(this._merger, 0, 1);
+        // Y (to channel 2)
+        this._outY.disconnect(this._merger, 0, 2);
+        // Z (to channel 3)
+        this._outZ.disconnect(this._merger, 0, 3);
     }
 
 
@@ -14904,6 +14896,16 @@ function getKroneckerDelta(i, j) {
     return i === j ? 1 : 0;
 }
 
+/**
+  * @param {Number} l
+ * @param {Number} i
+ * @param {Number} j
+ * @param {Number} index
+ */
+function lij2i(l, i, j) {
+    const index = (j + l) * (2 * l + 1) + (i + l);
+    return index;
+}
 
 /**
  * A helper function to allow us to access a matrix array in the same
@@ -14918,7 +14920,7 @@ function getKroneckerDelta(i, j) {
  * @param {Number} gainValue
  */
 function setCenteredElement(matrix, l, i, j, gainValue) {
-    const index = (j + l) * (2 * l + 1) + (i + l);
+    const index = lij2i(l, i, j);
     // Row-wise indexing.
     matrix[l - 1][index].gain.value = gainValue;
 }
@@ -14936,7 +14938,7 @@ function setCenteredElement(matrix, l, i, j, gainValue) {
  */
 function getCenteredElement(matrix, l, i, j) {
     // Row-wise indexing.
-    const index = (j + l) * (2 * l + 1) + (i + l);
+    const index = lij2i(l, i, j);
     return matrix[l - 1][index].gain.value;
 }
 
@@ -14955,18 +14957,18 @@ function getCenteredElement(matrix, l, i, j) {
  */
 function getP(matrix, i, a, b, l) {
     if (b === l) {
-        return getCenteredElement(matrix, 1, i, 1) *
-            getCenteredElement(matrix, l - 1, a, l - 1) -
-            getCenteredElement(matrix, 1, i, -1) *
-            getCenteredElement(matrix, l - 1, a, -l + 1);
+        return getCenteredElement(matrix, 1,     i,      1) *
+               getCenteredElement(matrix, l - 1, a,  l - 1) -
+               getCenteredElement(matrix, 1,     i,     -1) *
+               getCenteredElement(matrix, l - 1, a, -l + 1);
     } else if (b === -l) {
-        return getCenteredElement(matrix, 1, i, 1) *
-            getCenteredElement(matrix, l - 1, a, -l + 1) +
-            getCenteredElement(matrix, 1, i, -1) *
-            getCenteredElement(matrix, l - 1, a, l - 1);
+        return getCenteredElement(matrix, 1,     i,      1) *
+               getCenteredElement(matrix, l - 1, a, -l + 1) +
+               getCenteredElement(matrix, 1,     i,     -1) *
+               getCenteredElement(matrix, l - 1, a,  l - 1);
     } else {
-        return getCenteredElement(matrix, 1, i, 0) *
-            getCenteredElement(matrix, l - 1, a, b);
+        return getCenteredElement(matrix, 1,     i, 0) *
+               getCenteredElement(matrix, l - 1, a, b);
     }
 }
 
@@ -15006,11 +15008,12 @@ function getU(matrix, m, n, l) {
  */
 function getV(matrix, m, n, l) {
     if (m === 0) {
-        return getP(matrix, 1, 1, n, l) + getP(matrix, -1, -1, n, l);
+        return getP(matrix, 1, 1, n, l) +
+               getP(matrix, -1, -1, n, l);
     } else if (m > 0) {
         const d = getKroneckerDelta(m, 1);
-        return getP(matrix, 1, m - 1, n, l) * Math.sqrt(1 + d) -
-            getP(matrix, -1, -m + 1, n, l) * (1 - d);
+        return getP(matrix,  1,  m - 1, n, l) * Math.sqrt(1 + d) -
+               getP(matrix, -1, -m + 1, n, l) * (1 - d);
     } else {
         // Note there is apparent errata in [1,2,2b] dealing with this particular
         // case. [2b] writes it should be P*(1-d)+P*(1-d)^0.5
@@ -15018,8 +15021,8 @@ function getV(matrix, m, n, l) {
         // you must have it as P*(1-d)+P*(1+d)^0.5 to form a 2^.5 term, which
         // parallels the case where m > 0.
         const d = getKroneckerDelta(m, -1);
-        return getP(matrix, 1, m + 1, n, l) * (1 - d) +
-            getP(matrix, -1, -m - 1, n, l) * Math.sqrt(1 + d);
+        return getP(matrix,  1,  m + 1, n, l) * (1 - d) +
+               getP(matrix, -1, -m - 1, n, l) * Math.sqrt(1 + d);
     }
 }
 
@@ -15043,7 +15046,8 @@ function getW(matrix, m, n, l) {
         return 0;
     }
 
-    return m > 0 ? getP(matrix, 1, m + 1, n, l) + getP(matrix, -1, -m - 1, n, l) :
+    return m > 0 ?
+        getP(matrix, 1, m + 1, n, l) + getP(matrix, -1, -m - 1, n, l) :
         getP(matrix, 1, m - 1, n, l) - getP(matrix, -1, -m + 1, n, l);
 }
 
@@ -19564,6 +19568,7 @@ class ResonanceSource extends BaseRoutedSource {
         const resNode = res.createSource();
         super(id, stream, audioContext, resNode.input);
 
+        this.inNode.disconnect(audioContext.destination);
         this.resScene = res;
         this.resNode = resNode;
 
@@ -20367,7 +20372,7 @@ function when(target, resolveEvt, filterTest, timeout) {
     });
 }
 
-const versionString = "v0.9.0";
+const versionString = "v0.9.1";
 
 /* global JitsiMeetJS */
 
