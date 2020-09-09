@@ -1,6 +1,7 @@
 import { Object3D } from "three/src/core/Object3D";
 import { Quaternion } from "three/src/math/Quaternion";
 import { Vector3 } from "three/src/math/Vector3";
+import { arrayClear } from "../calla/arrays/arrayClear";
 import { once } from "../calla/events/once";
 import { getObject } from "../calla/fetching";
 import { splitProgress } from "../calla/progress";
@@ -21,8 +22,8 @@ const curStations = new Map();
 /** @type{Map<number, GraphEdge>} */
 const curConnections = new Map();
 
-/** @type{Map<string, AudioTrack[]>} */
-const curAudioTracks = new Map();
+/** @type{AudioTrack[]} */
+const curAudioTracks = [];
 
 const views = [
     ["Main", showMainMenu],
@@ -44,12 +45,11 @@ app.addEventListener("sceneclearing", () => {
     curTransforms.clear();
     curStations.clear();
     curConnections.clear();
-    for (let zoneTracks of curAudioTracks.values()) {
-        for (let audioTrack of zoneTracks) {
-            app.audio.removeClip(audioTrack.path);
-        }
+    for (let audioTrack of curAudioTracks) {
+        app.audio.removeClip(audioTrack.path);
     }
-    curAudioTracks.clear();
+    arrayClear(curAudioTracks);
+    curZone = null;
 });
 
 app.addEventListener("started", () => {
@@ -78,7 +78,8 @@ function onProgress(soFar, total, msg) {
 }
 
 
-let curZone = "";
+/** @type {string} */
+let curZone = null;
 /**
  * @param {string} zone
  */
@@ -91,18 +92,15 @@ async function playAudioZone(zone) {
 }
 
 function stopCurrentAudioZone() {
-    if (curAudioTracks.has(curZone)) {
-        const curTracks = curAudioTracks.get(curZone);
-        for (let audioTrack of curTracks) {
-            app.audio.stopClip(audioTrack.path);
-        }
+    for (let audioTrack of curAudioTracks) {
+        if (audioTrack.zone === curZone);
+        app.audio.stopClip(audioTrack.path);
     }
 }
 
 async function playCurrentAudioZone() {
-    if (curAudioTracks.has(curZone)) {
-        const curTracks = curAudioTracks.get(curZone);
-        for (let audioTrack of curTracks) {
+    for (let audioTrack of curAudioTracks) {
+        if (audioTrack.zone === curZone) {
             await app.audio.playClip(audioTrack.path, audioTrack.volume);
         }
     }
@@ -227,14 +225,7 @@ async function showActivity(activityID, skipHistory = false) {
             progs.shift(),
             audioTrack.path);
 
-        if (!curAudioTracks.has(audioTrack.zone)) {
-            curAudioTracks.set(audioTrack.zone, []);
-        }
-
-        if (audioTrack.zone !== null) {
-            curAudioTracks.get(audioTrack.zone).push(audioTrack);
-        }
-
+        curAudioTracks.push(audioTrack);
         clip.spatializer.minDistance = audioTrack.minDistance;
         clip.spatializer.maxDistance = audioTrack.maxDistance;
 
