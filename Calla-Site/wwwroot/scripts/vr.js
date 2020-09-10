@@ -32666,6 +32666,76 @@ Scene.prototype = Object.assign( Object.create( Object3D.prototype ), {
 
 } );
 
+/**
+ * A setter functor for HTML element events.
+ **/
+class HtmlEvt {
+    /**
+     * Creates a new setter functor for an HTML element event.
+     * @param {string} name - the name of the event to attach to.
+     * @param {Function} callback - the callback function to use with the event handler.
+     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+     */
+    constructor(name, callback, opts) {
+        if (!isFunction(callback)) {
+            throw new Error("A function instance is required for this parameter");
+        }
+
+        this.name = name;
+        this.callback = callback;
+        this.opts = opts;
+        Object.freeze(this);
+    }
+
+    /**
+     * Add the encapsulate callback as an event listener to the give HTMLElement
+     * @param {HTMLElement} elem
+     */
+    add(elem) {
+        elem.addEventListener(this.name, this.callback, this.opts);
+    }
+
+    /**
+     * Remove the encapsulate callback as an event listener from the give HTMLElement
+     * @param {HTMLElement} elem
+     */
+    remove(elem) {
+        elem.removeEventListener(this.name, this.callback);
+    }
+}
+
+/**
+ * @callback onUserGestureTestCallback
+ * @returns {boolean}
+ */
+
+/**
+ * This is not an event handler that you can add to an element. It's a global event that
+ * waits for the user to perform some sort of interaction with the website.
+ * @param {Function} callback
+ * @param {onUserGestureTestCallback} test
+  */
+function onUserGesture(callback, test) {
+    const gestures = Object.keys(window)
+        .filter(x => x.startsWith("on"))
+        .map(x => x.substring(2));
+
+    const check = (evt) => {
+        console.log(evt.type);
+        if (!test || test()) {
+            for (let gesture of gestures) {
+                window.removeEventListener(gesture, check);
+            }
+
+            callback();
+        }
+    };
+
+    for (let gesture of gestures) {
+        window.addEventListener(gesture, check);
+    }
+}
+
 const EventBase = (function () {
     try {
         new window.EventTarget();
@@ -41164,24 +41234,12 @@ class AudioManager extends EventBase {
 
         if (this.audioContext instanceof AudioContext
             && !this.ready) {
-            const gestures = Object.keys(window)
-                .filter(x => x.startsWith("on"))
-                .map(x => x.substring(2));
-
-            const startAudio = () => {
+            onUserGesture(() => {
+                this.dispatchEvent(audioReadyEvt);
+            }, () => {
                 this.start();
-                if (this.ready) {
-                    for (let gesture of gestures) {
-                        window.removeEventListener(gesture, startAudio);
-                    }
-
-                    this.dispatchEvent(audioReadyEvt);
-                }
-            };
-
-            for (let gesture of gestures) {
-                window.addEventListener(gesture, startAudio);
-            }
+                return this.ready;
+            });
         }
 
         Object.seal(this);
@@ -41660,122 +41718,18 @@ class AudioManager extends EventBase {
 }
 
 /**
- * Pick a value that is proportionally between two values.
- *
- * @param {number} a
- * @param {number} b
- * @param {number} p
- * @returns {number}
+ * @param {import("three/src/math/Matrix4").Matrix4} matrix
+ * @param {import("three/src/math/Vector3").Vector3} R
+ * @param {import("three/src/math/Vector3").Vector3} U
+ * @param {import("three/src/math/Vector3").Vector3} F
+ * @param {import("three/src/math/Vector3").Vector3} P
  */
-
-function lerp(a, b, p) {
-    return (1 - p) * a + p * b;
-}
-
-class TimerTickEvent extends Event {
-    constructor() {
-        super("tick");
-        this.dt = 0;
-        this.t = 0;
-        this.sdt = 0;
-        Object.seal(this);
-    }
-}
-
-class BaseTimer extends EventBase {
-
-    /**
-     * 
-     * @param {number} targetFrameRate
-     */
-    constructor(targetFrameRate) {
-        super();
-
-        this._timer = null;
-        this.targetFrameRate = targetFrameRate;
-
-        /**
-         * @param {number} t
-         */
-        this._onTick = (t) => {
-            const tickEvt = new TimerTickEvent();
-            let lt = t;
-            /**
-             * @param {number} t
-             */
-            this._onTick = (t) => {
-                tickEvt.t = t;
-                tickEvt.dt = t - lt;
-                tickEvt.sdt = tickEvt.dt;
-                lt = t;
-                /**
-                 * @param {number} t
-                 */
-                this._onTick = (t) => {
-                    tickEvt.t = t;
-                    tickEvt.dt = t - lt;
-                    tickEvt.sdt = lerp(tickEvt.sdt, tickEvt.dt, 0.01);
-                    lt = t;
-                    this.dispatchEvent(tickEvt);
-                };
-            };
-        };
-    }
-
-    restart() {
-        this.stop();
-        this.start();
-    }
-
-    get isRunning() {
-        return this._timer !== null;
-    }
-
-    start() {
-        throw new Error("Not implemented in base class");
-    }
-
-    stop() {
-        this._timer = null;
-    }
-
-    /** @type {number} */
-    get targetFrameRate() {
-        return this._targetFPS;
-    }
-
-    set targetFrameRate(fps) {
-        this._targetFPS = fps;
-        this._frameTime = 1000 / fps;
-    }
-}
-
-class RequestAnimationFrameTimer extends BaseTimer {
-    constructor() {
-        super(60);
-    }
-
-    start() {
-        const updater = (t) => {
-            this._timer = requestAnimationFrame(updater);
-            this._onTick(t);
-        };
-        this._timer = requestAnimationFrame(updater);
-    }
-
-    stop() {
-        if (this.isRunning) {
-            cancelAnimationFrame(this._timer);
-            super.stop();
-        }
-    }
-
-    get targetFrameRate() {
-        return super.targetFrameRate;
-    }
-
-    set targetFrameRate(fps) {
-    }
+function setRightUpFwdPos(matrix, R, U, F, P) {
+    const m = matrix.elements;
+    R.set(m[0], m[1], m[2]);
+    U.set(m[4], m[5], m[6]);
+    F.crossVectors(U, R);
+    P.set(m[12], m[13], m[14]);
 }
 
 const MouseButton = Object.freeze({
@@ -41920,7 +41874,7 @@ class CameraControl extends EventBase {
 
         this.fovZoomEnabled = true;
         this.minFOV = 25;
-        this.maxFOV = 100;
+        this.maxFOV = 120;
 
         let lastT = performance.now();
         let lastEvt = null;
@@ -41962,16 +41916,11 @@ class CameraControl extends EventBase {
 
             if (this.fovZoomEnabled
                 && Math.abs(evt.dz) > 0) {
-                const fov = clamp(this.camera.fov - evt.dz, this.minFOV, this.maxFOV);
-                if (fov !== this.camera.fov) {
-                    this.camera.fov = fov;
-                    this.camera.updateProjectionMatrix();
-                }
+                this.fov = clamp(this.camera.fov - evt.dz, this.minFOV, this.maxFOV);
             }
         };
 
-        const timer = new RequestAnimationFrameTimer();
-        timer.addEventListener("tick", () => {
+        this.update = () => {
             if (lastEvt
                 && (this.controlMode === Mode.MouseScreenEdge
                     || this.controlMode === Mode.Gamepad)) {
@@ -41980,8 +41929,7 @@ class CameraControl extends EventBase {
             else {
                 lastT = performance.now();
             }
-        });
-        timer.start();
+        };
 
         this.controls.addEventListener("click", (evt) => {
             if (this.allowPointerLock
@@ -41995,6 +41943,17 @@ class CameraControl extends EventBase {
         });
 
         this.controls.addEventListener("move", update);
+    }
+
+    get fov() {
+        return this.camera.fov;
+    }
+
+    set fov(v) {
+        if (v !== this.fov) {
+            this.camera.fov = v;
+            this.camera.updateProjectionMatrix();
+        }
     }
 
     get networkPose() {
@@ -42181,6 +42140,41 @@ class CameraControl extends EventBase {
 
 CameraControl.Mode = Mode;
 
+/** @type {WeakMap<CursorControl, HTMLCanvasElement} */
+const canvases = new WeakMap();
+
+class CursorControl {
+    /**
+     * @param {HTMLCanvasElement} canvas
+     */
+    constructor(canvas) {
+        canvases.set(this, canvas);
+    }
+
+    /**
+     * 
+     * @param {import("three").Intersection} lastHit
+     * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
+     */
+    setCursor(lastHit, evt) {
+        if (evt.pointerType === "mouse") {
+            const canvas = canvases.get(this),
+                pressing = evt.buttons === MouseButtons.Mouse0,
+                dragging = evt.dragDistance > 0;
+
+            canvas.style.cursor = lastHit
+                ? lastHit.object.disabled
+                    ? "not-allowed"
+                    : dragging
+                        ? "move"
+                        : "pointer"
+                : pressing
+                    ? "grabbing"
+                    : "grab";
+        }
+    }
+}
+
 function Raycaster( origin, direction, near, far ) {
 
 	this.ray = new Ray( origin, direction );
@@ -42322,11 +42316,12 @@ class EventSystemEvent extends Event {
 
 class EventSystem extends EventBase {
     /**
+     * @param {import ("./CursorControl".CursorControl} cursors
      * @param {import("three").PerspectiveCamera} camera
      * @param {import("three").Object3D} inputLayer
      * @param {...import("./ScreenPointerControls").ScreenPointerControls} screenPointer
      */
-    constructor(camera, inputLayer, ...pointers) {
+    constructor(cursors, camera, inputLayer, ...pointers) {
         super();
 
         const raycaster = new Raycaster();
@@ -42336,6 +42331,15 @@ class EventSystem extends EventBase {
 
         /** @type {import("three").Intersection[]} */
         const hits = [];
+
+        /**
+         * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
+         */
+        const setCursor = (evt) => {
+            cursors.setCursor(
+                hovers.get(evt.pointerID),
+                evt);
+        };
 
         /**
          * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
@@ -42351,10 +42355,7 @@ class EventSystem extends EventBase {
             /** @type {import("three").Intersection} */
             let curHit = null;
             for (let hit of hits) {
-                if (hit.object
-                    && hit.object._listeners
-                    && hit.object._listeners.click
-                    && hit.object._listeners.click.length) {
+                if (hit.object) {
                     curHit = hit;
                 }
             }
@@ -42396,6 +42397,9 @@ class EventSystem extends EventBase {
         for (let pointer of pointers) {
             pointer.addEventListener("move", onMove);
             pointer.addEventListener("click", onClick);
+            pointer.addEventListener("pointerdown", setCursor);
+            pointer.addEventListener("move", setCursor);
+            pointer.addEventListener("pointerup", setCursor);
         }
     }
 }
@@ -42468,6 +42472,8 @@ class Pointer {
 }
 
 const MAX_DRAG_DISTANCE = 5,
+    pointerDownEvt = new ScreenPointerEvent("pointerdown"),
+    pointerUpEvt = new ScreenPointerEvent("pointerup"),
     clickEvt = new ScreenPointerEvent("click"),
     moveEvt = new ScreenPointerEvent("move"),
     dragEvt = new ScreenPointerEvent("drag");
@@ -42493,7 +42499,7 @@ class ScreenPointerControls extends EventBase {
          * @param {ScreenPointerEvent} evt
          * @param {Pointer} pointer
          */
-        const setHorizontal = (evt, pointer) => {
+        const dispatch = (evt, pointer, dz) => {
 
             evt.pointerType = pointer.type;
             evt.pointerID = pointer.id;
@@ -42502,7 +42508,7 @@ class ScreenPointerControls extends EventBase {
 
             evt.dx = pointer.dx;
             evt.dy = pointer.dy;
-            evt.dz = 0;
+            evt.dz = dz;
 
             evt.du = 2 * evt.dx / element.clientWidth;
             evt.dv = 2 * evt.dy / element.clientHeight;
@@ -42523,6 +42529,7 @@ class ScreenPointerControls extends EventBase {
             }
 
             evt.dragDistance = pointer.dragDistance;
+            this.dispatchEvent(evt);
         };
 
         /**
@@ -42555,13 +42562,15 @@ class ScreenPointerControls extends EventBase {
                 && !evt.altKey
                 && !evt.ctrlKey
                 && !evt.metaKey) {
+
                 evt.preventDefault();
+
                 // Chrome and Firefox report scroll values in completely different ranges.
-                const deltaZ = -evt.deltaY * (isFirefox ? 1 : 0.02);
-                moveEvt.pointerType = "mouse";
-                moveEvt.buttons = evt.buttons;
-                moveEvt.dz = deltaZ;
-                this.dispatchEvent(moveEvt);
+                const pointer = new Pointer(evt),
+                    _ = replacePointer(pointer),
+                    deltaZ = -evt.deltaY * (isFirefox ? 1 : 0.02);
+
+                dispatch(moveEvt, pointer, deltaZ);
             }
         }, { passive: false });
 
@@ -42576,27 +42585,36 @@ class ScreenPointerControls extends EventBase {
                 this.currentInputType = pointer.type;
             }
 
+            dispatch(pointerDownEvt, pointer, 0);
+
             canClick = oldCount === 0
                 && newCount === 1;
         });
+
+        /**
+         * @param {number} oldPinchDistance
+         * @param {number} newPinchDistance
+         * @returns {number}
+         */
+        const getPinchZoom = (oldPinchDistance, newPinchDistance) => {
+            if (oldPinchDistance !== null
+                && newPinchDistance !== null) {
+                canClick = false;
+                const ddist = newPinchDistance - oldPinchDistance;
+                return ddist / 10;
+            }
+
+            return 0;
+        };
 
         element.addEventListener("pointermove", (evt) => {
             const oldPinchDistance = this.pinchDistance,
                 pointer = new Pointer(evt),
                 last = replacePointer(pointer),
                 count = this.pressCount,
-                newPinchDistance = this.pinchDistance;
+                dz = getPinchZoom(oldPinchDistance, this.pinchDistance);
 
-            setHorizontal(moveEvt, pointer);
-
-            if (oldPinchDistance !== null
-                && newPinchDistance !== null) {
-                canClick = false;
-                const ddist = newPinchDistance - oldPinchDistance;
-                moveEvt.dz = ddist / 10;
-            }
-
-            this.dispatchEvent(moveEvt);
+            dispatch(moveEvt, pointer, dz);
 
             if (count === 1
                 && pointer.buttons === 1
@@ -42604,8 +42622,7 @@ class ScreenPointerControls extends EventBase {
                 pointer.dragDistance += pointer.moveDistance;
                 if (pointer.dragDistance > MAX_DRAG_DISTANCE) {
                     canClick = false;
-                    setHorizontal(dragEvt, pointer);
-                    this.dispatchEvent(dragEvt);
+                    dispatch(dragEvt, pointer, 0);
                 }
             }
         });
@@ -42613,9 +42630,11 @@ class ScreenPointerControls extends EventBase {
         element.addEventListener("pointerup", (evt) => {
             const pointer = new Pointer(evt),
                 _ = replacePointer(pointer);
+
+            dispatch(pointerUpEvt, pointer, 0);
+
             if (canClick) {
-                setHorizontal(clickEvt, pointer);
-                this.dispatchEvent(clickEvt);
+                dispatch(clickEvt, pointer, 0);
             }
 
             pointer.dragDistance = 0;
@@ -42793,6 +42812,133 @@ class Stage extends Object3D {
      **/
     get avatarHeight() {
         return this.camera.position.y;
+    }
+}
+
+/**
+ * Pick a value that is proportionally between two values.
+ *
+ * @param {number} a
+ * @param {number} b
+ * @param {number} p
+ * @returns {number}
+ */
+
+function lerp(a, b, p) {
+    return (1 - p) * a + p * b;
+}
+
+class TimerTickEvent extends Event {
+    constructor() {
+        super("tick");
+        this.dt = 0;
+        this.t = 0;
+        this.sdt = 0;
+        Object.seal(this);
+    }
+}
+
+class BaseTimer extends EventBase {
+
+    /**
+     * 
+     * @param {number} targetFrameRate
+     */
+    constructor(targetFrameRate) {
+        super();
+
+        this._timer = null;
+        this.targetFrameRate = targetFrameRate;
+
+        /**
+         * @param {number} t
+         */
+        this._onTick = (t) => {
+            const tickEvt = new TimerTickEvent();
+            let lt = t;
+            /**
+             * @param {number} t
+             */
+            this._onTick = (t) => {
+                tickEvt.t = t;
+                tickEvt.dt = t - lt;
+                tickEvt.sdt = tickEvt.dt;
+                lt = t;
+                /**
+                 * @param {number} t
+                 */
+                this._onTick = (t) => {
+                    tickEvt.t = t;
+                    tickEvt.dt = t - lt;
+                    tickEvt.sdt = lerp(tickEvt.sdt, tickEvt.dt, 0.01);
+                    lt = t;
+                    this.dispatchEvent(tickEvt);
+                };
+            };
+        };
+    }
+
+    restart() {
+        this.stop();
+        this.start();
+    }
+
+    get isRunning() {
+        return this._timer !== null;
+    }
+
+    start() {
+        throw new Error("Not implemented in base class");
+    }
+
+    stop() {
+        this._timer = null;
+    }
+
+    /** @type {number} */
+    get targetFrameRate() {
+        return this._targetFPS;
+    }
+
+    set targetFrameRate(fps) {
+        this._targetFPS = fps;
+        this._frameTime = 1000 / fps;
+    }
+}
+
+/** @type {WeakMap<ThreeJSTimer,import("three").WebGLRenderer>} */
+const renderers = new WeakMap();
+
+class ThreeJSTimer extends BaseTimer {
+    /**
+     * @param {import("three").WebGLRenderer} renderer
+     */
+    constructor(renderer) {
+        super(60);
+        renderers.set(this, renderer);
+    }
+
+    start() {
+        const renderer = renderers.get(this);
+        const updater = (t) => {
+            this._onTick(t);
+        };
+        this._timer = renderer.setAnimationLoop(updater);
+    }
+
+    stop() {
+        if (this.isRunning) {
+            const renderer = renderers.get(this);
+            renderer.setAnimationLoop(null);
+            super.stop();
+        }
+    }
+
+    get targetFrameRate() {
+        return super.targetFrameRate;
+    }
+
+    set targetFrameRate(fps) {
     }
 }
 
@@ -42980,11 +43126,32 @@ class HtmlAttr {
 function height(value) { return new HtmlAttr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
 
 /**
+ * The URL of a linked resource.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function href(value) { return new HtmlAttr("href", value, "a", "area", "base", "link"); }
+
+/**
+ * Often used with CSS to style a specific element. The value of this attribute must be unique.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function id(value) { return new HtmlAttr("id", value); }
+
+/**
  * The URL of the embeddable content.
  * @param {string} value - the value to set on the attribute.
  * @returns {HtmlAttr}
  **/
 function src(value) { return new HtmlAttr("src", value, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
+
+/**
+ * Defines the type of the element.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function type(value) { return new HtmlAttr("type", value, "button", "input", "command", "embed", "object", "script", "source", "style", "menu"); }
 
 /**
  * Defines a default value which will be displayed in the element on page load.
@@ -43065,11 +43232,39 @@ class CssPropSet {
 }
 
 /**
+ * Creates a style attribute with a display property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function display(v) { return new CssProp("display", v); }
+
+/**
  * Creates a style attribute with a fontFamily property.
  * @param {string} v
  * @returns {HtmlAttr}
  **/
 function fontFamily(v) { return new CssProp("fontFamily", v); }
+
+/**
+ * Creates a style attribute with a left property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function left(v) { return new CssProp("left", v); }
+
+/**
+ * Creates a style attribute with a textDecoration property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function textDecoration(v) { return new CssProp("textDecoration", v); }
+
+/**
+ * Creates a style attribute with a width property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function cssWidth(v) { return new CssProp("width", v); }
 
 
 // A selection of fonts for preferred monospace rendering.
@@ -43078,44 +43273,6 @@ const monospaceFamily = fontFamily(monospaceFonts);
 // A selection of fonts that should match whatever the user's operating system normally uses.
 const systemFonts = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
 const systemFamily = fontFamily(systemFonts);
-
-/**
- * A setter functor for HTML element events.
- **/
-class HtmlEvt {
-    /**
-     * Creates a new setter functor for an HTML element event.
-     * @param {string} name - the name of the event to attach to.
-     * @param {Function} callback - the callback function to use with the event handler.
-     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
-     */
-    constructor(name, callback, opts) {
-        if (!isFunction(callback)) {
-            throw new Error("A function instance is required for this parameter");
-        }
-
-        this.name = name;
-        this.callback = callback;
-        this.opts = opts;
-        Object.freeze(this);
-    }
-
-    /**
-     * Add the encapsulate callback as an event listener to the give HTMLElement
-     * @param {HTMLElement} elem
-     */
-    add(elem) {
-        elem.addEventListener(this.name, this.callback, this.opts);
-    }
-
-    /**
-     * Remove the encapsulate callback as an event listener from the give HTMLElement
-     * @param {HTMLElement} elem
-     */
-    remove(elem) {
-        elem.removeEventListener(this.name, this.callback);
-    }
-}
 
 /**
  * @typedef {(Node|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
@@ -43182,6 +43339,27 @@ function tag(name, ...rest) {
 }
 
 /**
+ * creates an HTML A tag
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLAnchorElement}
+ */
+function A(...rest) { return tag("a", ...rest); }
+
+/**
+ * creates an HTML HtmlButton tag
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLButtonElement}
+ */
+function ButtonRaw(...rest) { return tag("button", ...rest); }
+
+/**
+ * creates an HTML Button tag
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLButtonElement}
+ */
+function Button(...rest) { return ButtonRaw(...rest, type("button")); }
+
+/**
  * creates an HTML Canvas tag
  * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
  * @returns {HTMLCanvasElement}
@@ -43208,6 +43386,159 @@ function CanvasOffscreen(w, h, ...rest) {
     }
     else {
         return Canvas(...rest, width(w), height(h));
+    }
+}
+
+function stylizeElement(element) {
+    element.style.position = "absolute";
+    element.style.bottom = "20px";
+    element.style.padding = "12px 6px";
+    element.style.border = "1px solid #fff";
+    element.style.borderRadius = "4px";
+    element.style.background = "rgba(0,0,0,0.1)";
+    element.style.color = "#fff";
+    element.style.font = "normal 13px sans-serif";
+    element.style.textAlign = "center";
+    element.style.opacity = "0.5";
+    element.style.outline = "none";
+    element.style.zIndex = "999";
+}
+
+class SessionStartedEvt extends Event {
+    /**
+     * @param {XRSession} session
+     * @param {string} sessionType
+     */
+    constructor(session, sessionType) {
+        super("sessionstarted");
+        this.session = session;
+        this.sessionType = sessionType;
+
+        Object.freeze(this);
+    }
+}
+
+const sessionEndedEvt = Object.seal(new Event("sessionended"));
+
+class ScreenControl extends EventBase {
+
+    /**
+     * @param {import("three").WebGLRenderer} renderer
+     */
+    constructor(renderer) {
+        super();
+
+        if (!("xr" in navigator)) {
+            const insecure = window.isSecureContext === false;
+            this.element = A(
+                href(insecure
+                    ? document.location.href.replace(/^http:/, "https:")
+                    : "https://immersiveweb.dev/"),
+                insecure
+                    ? "WEBXR NEEDS HTTPS"
+                    : "WEBXR NOT AVAILABLE",
+                left("calc(50% - 90px)"),
+                cssWidth("180px"),
+                textDecoration("none"));
+        }
+        else {
+            this.element = Button(
+                id("VRButton"),
+                display("none"));
+
+            const showButton = (name, type, referenceSpaceType, sessionInit) => {
+                let currentSession = null;
+                const onSessionStarted = (session) => {
+                    session.addEventListener("end", onSessionEnded);
+                    renderer.xr.setReferenceSpaceType(referenceSpaceType);
+                    renderer.xr.setSession(session);
+                    this.element.textContent = ("EXIT " + name).trim();
+                    currentSession = session;
+                    this.dispatchEvent(new SessionStartedEvt(session, type));
+                };
+
+                const onSessionEnded = () => {
+                    currentSession.removeEventListener("end", onSessionEnded);
+                    this.element.textContent = ("ENTER " + name).trim();
+                    currentSession = null;
+                    this.dispatchEvent(sessionEndedEvt);
+                };
+
+                this.element.style.display = "";
+                this.element.style.cursor = "pointer";
+                this.element.style.left = "calc(50% - 50px)";
+                this.element.style.width = "100px";
+                this.element.textContent = ("ENTER " + name).trim();
+
+                this.element.addEventListener("pointerenter", () => {
+                    this.element.style.opacity = "1.0";
+                });
+                this.element.addEventListener("pointerleave", () => {
+                    this.element.style.opacity = "0.5";
+                });
+
+                this.toggle = async () => {
+                    if (currentSession === null) {
+                        // WebXR"s requestReferenceSpace only works if the corresponding feature
+                        // was requested at session creation time. For simplicity, just ask for
+                        // the interesting ones as optional features, but be aware that the
+                        // requestReferenceSpace call will fail if it turns out to be unavailable.
+                        // ("local" is always available for immersive sessions and doesn"t need to
+                        // be requested separately.)
+                        const session = await navigator.xr.requestSession(type, sessionInit);
+                        onSessionStarted(session);
+                    } else {
+                        currentSession.end();
+                    }
+                };
+
+                this.element.addEventListener("click", this.toggle);
+            };
+
+            function showEnterVR() {
+                showButton("VR", "immersive-vr", "local-floor", { optionalFeatures: ["local-floor", "bounded-floor", "hand-tracking"] });
+            }
+
+            function showEnterAR() {
+                showButton("AR", "immserive-ar", "local-floor");
+            }
+
+            function showEnterInline() {
+                showButton("", "inline", "viewer");
+            }
+
+            const showWebXRNotFound = () => {
+                disableButton();
+                this.element.textContent = "VR NOT SUPPORTED";
+            };
+
+            const disableButton = () => {
+                this.element.style.display = "";
+                this.element.style.cursor = "auto";
+                this.element.style.left = "calc(50% - 75px)";
+                this.element.style.width = "150px";
+                this.element.onmouseenter = null;
+                this.element.onmouseleave = null;
+                this.element.onclick = null;
+            };
+
+            (async function () {
+                if (await navigator.xr.isSessionSupported("immersive-vr")) {
+                    showEnterVR();
+                }
+                else if (await navigator.xr.isSessionSupported("immersive-ar")) {
+                    showEnterAR();
+                }
+                else if (await navigator.xr.isSessionSupported("inline")) {
+                    showEnterInline();
+                }
+                else {
+                    showWebXRNotFound();
+                }
+            })();
+        }
+
+        stylizeElement(this.element);
     }
 }
 
@@ -43430,21 +43761,6 @@ class Skybox extends AbstractCubeMapView {
     }
 }
 
-/**
- * @param {import("three/src/math/Matrix4").Matrix4} matrix
- * @param {import("three/src/math/Vector3").Vector3} R
- * @param {import("three/src/math/Vector3").Vector3} U
- * @param {import("three/src/math/Vector3").Vector3} F
- * @param {import("three/src/math/Vector3").Vector3} P
- */
-function setRightUpFwdPos(matrix, R, U, F, P) {
-    const m = matrix.elements;
-    R.set(m[0], m[1], m[2]);
-    U.set(m[4], m[5], m[6]);
-    F.crossVectors(U, R);
-    P.set(m[12], m[13], m[14]);
-}
-
 const visibleBackground = new Color(0x606060);
 const invisibleBackground = new Color(0x000000);
 const R = new Vector3();
@@ -43474,6 +43790,7 @@ class Application extends EventBase {
             preserveDrawingBuffer: false
         });
         this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.xr.enabled = true;
 
         this.camera = new PerspectiveCamera(50, 1, 0.01, 1000);
 
@@ -43516,17 +43833,54 @@ class Application extends EventBase {
         this.scene.add(this.foreground);
         this.scene.add(this.transition);
 
-        const resize = () => {
+        const _resize = async (isPresenting, wasPresenting) => {
+            if (isPresenting) {
+                const endSessionTask = once(this.screenControl, "sessionended");
+                await this.screenControl.toggle();
+                await endSessionTask;
+                setTimeout(_resize, 0, false, wasPresenting);
+                return;
+            }
+
             this.renderer.setSize(window.innerWidth, window.innerHeight);
             this.camera.aspect = window.innerWidth / window.innerHeight;
             this.camera.updateProjectionMatrix();
+
+            if (wasPresenting) {
+                const startSessionTask = once(this.screenControl, "sessionstarted");
+                await this.screenControl.toggle();
+                await startSessionTask;
+            }
         };
-        window.addEventListener("resize", resize);
-        resize();
 
         this.controls = new ScreenPointerControls(this.renderer.domElement);
 
         this.cameraControl = new CameraControl(this.camera, this.stage, this.controls);
+
+        /** @type {string} */
+        let sessionType = "inline";
+        this.screenControl = new ScreenControl(this.renderer);
+        this.screenControl.addEventListener("sessionstarted", (evt) => {
+            this.cameraControl.fov = evt.session.renderState.inlineVerticalFieldOfView * 180 / Math.PI;
+            sessionType = evt.sessionType;
+        });
+        this.screenControl.addEventListener("sessionended", () => {
+            this.cameraControl.fov = 50;
+            sessionType = "inline";
+        });
+        document.body.append(this.screenControl.element);
+
+        let isResizing = false;
+        const resize = async () => {
+            console.log(sessionType);
+            if (!isResizing && sessionType === "inline") {
+                isResizing = true;
+                await _resize(this.renderer.xr.isPresenting, this.renderer.xr.isPresenting);
+                isResizing = false;
+            }
+        };
+        window.addEventListener("resize", resize);
+        resize();
 
         const scales = new Map();
 
@@ -43534,34 +43888,47 @@ class Application extends EventBase {
          * @param {import("../input/EventSystem").EventSystemEvent} evt
          */
         const onEnter = (evt) => {
-            if (!scales.has(evt.hit.object)) {
-                scales.set(evt.hit.object, evt.hit.object.scale.clone());
+            if (!evt.hit.object.disabled) {
+                if (!scales.has(evt.hit.object)) {
+                    scales.set(evt.hit.object, evt.hit.object.scale.clone());
+                }
+                evt.hit.object.scale.multiplyScalar(1.1);
             }
-            evt.hit.object.scale.multiplyScalar(1.1);
         };
 
         /**
          * @param {import("../input/EventSystem").EventSystemEvent} evt
          */
         const onExit = (evt) => {
-            evt.hit.object.scale.copy(scales.get(evt.hit.object));
+            if (!evt.hit.object.disabled) {
+                evt.hit.object.scale.copy(scales.get(evt.hit.object));
+            }
         };
 
-        this.eventSystem = new EventSystem(this.camera, this.foreground, this.controls);
+        this.cursors = new CursorControl(this.renderer.domElement);
+
+        this.eventSystem = new EventSystem(this.cursors, this.camera, this.foreground, this.controls);
         this.eventSystem.addEventListener("enter", onEnter);
         this.eventSystem.addEventListener("exit", onExit);
 
         const update = (evt) => {
+
+            this.cameraControl.update();
+
             if (!this.showSkybox) {
                 this.skybox.visible = false;
             }
             this.skybox.update();
+
             this.audio.update();
+
             this.loadingBar.update(evt.sdt);
+
             this.fader.update(evt.sdt);
+
             this.stage.presentationPoint.getWorldPosition(this.transition.position);
             this.stage.presentationPoint.getWorldQuaternion(this.transition.quaternion);
-            
+
             setRightUpFwdPos(this.camera.matrixWorld, R, U, F, P);
             this.audio.setUserPose(
                 "local-user",
@@ -43569,11 +43936,13 @@ class Application extends EventBase {
                 F.x, F.y, F.z,
                 U.x, U.y, U.z,
                 0);
+
             this.menu.position.copy(this.transition.position);
             this.menu.quaternion.copy(this.transition.quaternion);
+
             this.renderer.render(this.scene, this.camera);
         };
-        this.timer = new RequestAnimationFrameTimer();
+        this.timer = new ThreeJSTimer(this.renderer);
         this.timer.addEventListener("tick", update);
 
         window.app = this;
@@ -44460,7 +44829,7 @@ async function showMenu(path, onClick) {
 }
 
 async function addMenuItem(item, y, onClick) {
-    const mesh = Object.assign(new TextMesh(), {
+    const button = Object.assign(new TextMesh(), {
         textBgColor: item.enabled !== false
             ? "#ffffff"
             : "#a0a0a0",
@@ -44472,15 +44841,18 @@ async function addMenuItem(item, y, onClick) {
         fontSize: 100
     });
 
-    mesh.name = item.name;
-    mesh.position.set(0, y, -5);
+    button.name = item.name;
+    button.position.set(0, y, -5);
 
-    await mesh.loadFontAndSetText(item.name);
+    await button.loadFontAndSetText(item.name);
 
-    app.menu.add(mesh);
-    if (item.enabled !== false) {
-        mesh.addEventListener("click", () => onClick(item));
-    }
+    app.menu.add(button);
+    button.disabled = item.enabled === false;
+    button.addEventListener("click", () => {
+        if (!button.disabled) {
+            onClick(item);
+        }
+    });
 }
 
 } catch(exp) {
