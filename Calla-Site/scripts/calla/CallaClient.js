@@ -990,9 +990,9 @@ export class CallaClient extends EventBase {
         return await until(this, "userInitResponse",
             () => this.userInitRequest(toUserID),
             (evt) => evt.id === toUserID
-                && isGoodNumber(evt.x)
-                && isGoodNumber(evt.y)
-                && isGoodNumber(evt.z),
+                && isGoodNumber(evt.px)
+                && isGoodNumber(evt.py)
+                && isGoodNumber(evt.pz),
             1000);
     }
 

@@ -52,8 +52,8 @@ export class TestBase extends TestCase {
             this.hasValue(response.id, "UserID");
             this.isNotEqualTo(response.id, this.client.localUserID, "other user ID overlaps local user ID");
 
-            this.hasValue(response.x, "User parameter");
-            this.isNotEqualTo(response.x, userNumber, "Wrong user parameter");
+            this.hasValue(response.px, "User parameter");
+            this.isNotEqualTo(response.px, userNumber, "Wrong user parameter");
         }
     }
 
