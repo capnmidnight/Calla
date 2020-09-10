@@ -43389,21 +43389,6 @@ function CanvasOffscreen(w, h, ...rest) {
     }
 }
 
-function stylizeElement(element) {
-    element.style.position = "absolute";
-    element.style.bottom = "20px";
-    element.style.padding = "12px 6px";
-    element.style.border = "1px solid #fff";
-    element.style.borderRadius = "4px";
-    element.style.background = "rgba(0,0,0,0.1)";
-    element.style.color = "#fff";
-    element.style.font = "normal 13px sans-serif";
-    element.style.textAlign = "center";
-    element.style.opacity = "0.5";
-    element.style.outline = "none";
-    element.style.zIndex = "999";
-}
-
 class SessionStartedEvt extends Event {
     /**
      * @param {XRSession} session
@@ -43424,8 +43409,9 @@ class ScreenControl extends EventBase {
 
     /**
      * @param {import("three").WebGLRenderer} renderer
+     * @param {import("three").PerspectiveCamera} camera
      */
-    constructor(renderer) {
+    constructor(renderer, camera) {
         super();
 
         if (!("xr" in navigator)) {
@@ -43454,6 +43440,9 @@ class ScreenControl extends EventBase {
                     renderer.xr.setSession(session);
                     this.element.textContent = ("EXIT " + name).trim();
                     currentSession = session;
+                    if (type === "inline") {
+                        camera.fov = evt.session.renderState.inlineVerticalFieldOfView * 180 / Math.PI;
+                    }
                     this.dispatchEvent(new SessionStartedEvt(session, type));
                 };
 
@@ -43461,6 +43450,9 @@ class ScreenControl extends EventBase {
                     currentSession.removeEventListener("end", onSessionEnded);
                     this.element.textContent = ("ENTER " + name).trim();
                     currentSession = null;
+                    if (type === "inline") {
+                        camera.fov = 50;
+                    }
                     this.dispatchEvent(sessionEndedEvt);
                 };
 
@@ -43470,75 +43462,98 @@ class ScreenControl extends EventBase {
                 this.element.style.width = "100px";
                 this.element.textContent = ("ENTER " + name).trim();
 
-                this.element.addEventListener("pointerenter", () => {
-                    this.element.style.opacity = "1.0";
-                });
-                this.element.addEventListener("pointerleave", () => {
-                    this.element.style.opacity = "0.5";
-                });
-
                 this.toggle = async () => {
                     if (currentSession === null) {
-                        // WebXR"s requestReferenceSpace only works if the corresponding feature
-                        // was requested at session creation time. For simplicity, just ask for
-                        // the interesting ones as optional features, but be aware that the
-                        // requestReferenceSpace call will fail if it turns out to be unavailable.
-                        // ("local" is always available for immersive sessions and doesn"t need to
-                        // be requested separately.)
-                        const session = await navigator.xr.requestSession(type, sessionInit);
-                        onSessionStarted(session);
-                    } else {
-                        currentSession.end();
+                        if (name === "FULLSCREEN") {
+                            await renderer.domElement.requestFullscreen({
+                                navigationUI: "show"
+                            });
+                        }
+                        else {
+
+                            // WebXR"s requestReferenceSpace only works if the corresponding feature
+                            // was requested at session creation time. For simplicity, just ask for
+                            // the interesting ones as optional features, but be aware that the
+                            // requestReferenceSpace call will fail if it turns out to be unavailable.
+                            // ("local" is always available for immersive sessions and doesn"t need to
+                            // be requested separately.)
+                            const session = await navigator.xr.requestSession(type, sessionInit);
+                            onSessionStarted(session);
+                        }
+                    }
+                    else {
+                        if (name === "FULLSCREEN") {
+                            await document.exitFullscreen();
+                        }
+                        else {
+                            currentSession.end();
+                        }
                     }
                 };
 
                 this.element.addEventListener("click", this.toggle);
             };
 
-            function showEnterVR() {
-                showButton("VR", "immersive-vr", "local-floor", { optionalFeatures: ["local-floor", "bounded-floor", "hand-tracking"] });
-            }
-
-            function showEnterAR() {
-                showButton("AR", "immserive-ar", "local-floor");
-            }
-
-            function showEnterInline() {
-                showButton("", "inline", "viewer");
-            }
-
-            const showWebXRNotFound = () => {
-                disableButton();
-                this.element.textContent = "VR NOT SUPPORTED";
+            const onPointerEnter = () => {
+                this.element.style.opacity = "1.0";
             };
 
-            const disableButton = () => {
-                this.element.style.display = "";
-                this.element.style.cursor = "auto";
-                this.element.style.left = "calc(50% - 75px)";
-                this.element.style.width = "150px";
-                this.element.onmouseenter = null;
-                this.element.onmouseleave = null;
-                this.element.onclick = null;
+            const onPointerLeave = () => {
+                this.element.style.opacity = "0.5";
             };
 
-            (async function () {
-                if (await navigator.xr.isSessionSupported("immersive-vr")) {
-                    showEnterVR();
+            this.element.addEventListener("pointerenter", onPointerEnter);
+            this.element.addEventListener("pointerleave", onPointerLeave);
+
+            (async () => {
+                if (await navigator.xr.isSessionSupported("immersive-ar")) {
+                    showButton("AR", "immserive-ar", "local-floor");
                 }
-                else if (await navigator.xr.isSessionSupported("immersive-ar")) {
-                    showEnterAR();
+                else if (await navigator.xr.isSessionSupported("immersive-vr")) {
+                    showButton("VR", "immersive-vr", "local-floor", { optionalFeatures: ["local-floor", "bounded-floor", "hand-tracking"] });
                 }
                 else if (await navigator.xr.isSessionSupported("inline")) {
-                    showEnterInline();
+                    showButton("FULLSCREEN", "inline", "viewer");
                 }
                 else {
-                    showWebXRNotFound();
+                    disableButton();
+                    this.element.textContent = "VR NOT SUPPORTED";
+                    this.element.style.display = "";
+                    this.element.style.cursor = "auto";
+                    this.element.style.left = "calc(50% - 75px)";
+                    this.element.style.width = "150px";
+                    this.element.removeEventListener("pointerenter", onPointerEnter);
+                    this.element.removeEventListener("pointerleave", onPointerLeave);
                 }
             })();
         }
 
-        stylizeElement(this.element);
+        this.element.style.position = "absolute";
+        this.element.style.bottom = "20px";
+        this.element.style.padding = "12px 6px";
+        this.element.style.border = "1px solid #fff";
+        this.element.style.borderRadius = "4px";
+        this.element.style.background = "rgba(0,0,0,0.1)";
+        this.element.style.color = "#fff";
+        this.element.style.font = "normal 13px sans-serif";
+        this.element.style.textAlign = "center";
+        this.element.style.opacity = "0.5";
+        this.element.style.outline = "none";
+        this.element.style.zIndex = "999";
+
+        const resize = async () => {
+            if (!renderer.xr.isPresenting) {
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+            }
+        };
+        window.addEventListener("resize", resize);
+        resize();
+    }
+
+    get isFullscreen() {
+        return document.fullscreen;
     }
 }
 
@@ -43761,6 +43776,40 @@ class Skybox extends AbstractCubeMapView {
     }
 }
 
+class UISystem {
+    /**
+     * @param {import("../input/EventSystem").EventSystem} eventSystem
+     */
+    constructor(eventSystem) {
+        /** @type {WeakMap<import("three").Object3D, import("three").Vector3>} */
+        const scales = new WeakMap();
+
+        /**
+         * @param {import("../input/EventSystem").EventSystemEvent} evt
+         */
+        const onEnter = (evt) => {
+            if (!evt.hit.object.disabled) {
+                if (!scales.has(evt.hit.object)) {
+                    scales.set(evt.hit.object, evt.hit.object.scale.clone());
+                }
+                evt.hit.object.scale.multiplyScalar(1.1);
+            }
+        };
+
+        /**
+         * @param {import("../input/EventSystem").EventSystemEvent} evt
+         */
+        const onExit = (evt) => {
+            if (!evt.hit.object.disabled) {
+                evt.hit.object.scale.copy(scales.get(evt.hit.object));
+            }
+        };
+
+        eventSystem.addEventListener("enter", onEnter);
+        eventSystem.addEventListener("exit", onExit);
+    }
+}
+
 const visibleBackground = new Color(0x606060);
 const invisibleBackground = new Color(0x000000);
 const R = new Vector3();
@@ -43833,83 +43882,17 @@ class Application extends EventBase {
         this.scene.add(this.foreground);
         this.scene.add(this.transition);
 
-        const _resize = async (isPresenting, wasPresenting) => {
-            if (isPresenting) {
-                const endSessionTask = once(this.screenControl, "sessionended");
-                await this.screenControl.toggle();
-                await endSessionTask;
-                setTimeout(_resize, 0, false, wasPresenting);
-                return;
-            }
-
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
-            this.camera.aspect = window.innerWidth / window.innerHeight;
-            this.camera.updateProjectionMatrix();
-
-            if (wasPresenting) {
-                const startSessionTask = once(this.screenControl, "sessionstarted");
-                await this.screenControl.toggle();
-                await startSessionTask;
-            }
-        };
-
         this.controls = new ScreenPointerControls(this.renderer.domElement);
 
         this.cameraControl = new CameraControl(this.camera, this.stage, this.controls);
 
-        /** @type {string} */
-        let sessionType = "inline";
-        this.screenControl = new ScreenControl(this.renderer);
-        this.screenControl.addEventListener("sessionstarted", (evt) => {
-            this.cameraControl.fov = evt.session.renderState.inlineVerticalFieldOfView * 180 / Math.PI;
-            sessionType = evt.sessionType;
-        });
-        this.screenControl.addEventListener("sessionended", () => {
-            this.cameraControl.fov = 50;
-            sessionType = "inline";
-        });
+        this.screenControl = new ScreenControl(this.renderer, this.camera);
         document.body.append(this.screenControl.element);
-
-        let isResizing = false;
-        const resize = async () => {
-            console.log(sessionType);
-            if (!isResizing && sessionType === "inline") {
-                isResizing = true;
-                await _resize(this.renderer.xr.isPresenting, this.renderer.xr.isPresenting);
-                isResizing = false;
-            }
-        };
-        window.addEventListener("resize", resize);
-        resize();
-
-        const scales = new Map();
-
-        /**
-         * @param {import("../input/EventSystem").EventSystemEvent} evt
-         */
-        const onEnter = (evt) => {
-            if (!evt.hit.object.disabled) {
-                if (!scales.has(evt.hit.object)) {
-                    scales.set(evt.hit.object, evt.hit.object.scale.clone());
-                }
-                evt.hit.object.scale.multiplyScalar(1.1);
-            }
-        };
-
-        /**
-         * @param {import("../input/EventSystem").EventSystemEvent} evt
-         */
-        const onExit = (evt) => {
-            if (!evt.hit.object.disabled) {
-                evt.hit.object.scale.copy(scales.get(evt.hit.object));
-            }
-        };
 
         this.cursors = new CursorControl(this.renderer.domElement);
 
         this.eventSystem = new EventSystem(this.cursors, this.camera, this.foreground, this.controls);
-        this.eventSystem.addEventListener("enter", onEnter);
-        this.eventSystem.addEventListener("exit", onExit);
+        this.uiSystem = new UISystem(this.eventSystem);
 
         const update = (evt) => {
 

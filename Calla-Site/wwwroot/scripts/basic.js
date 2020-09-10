@@ -10927,19 +10927,6 @@ class AudioActivityEvent extends Event {
     }
 }
 
-/**
- * Removes an item at the given index from an array.
- * @param {any[]} arr
- * @param {number} idx
- * @returns {any} - the item that was removed.
- */
-function arrayRemoveAt(arr, idx) {
-    if (!(arr instanceof Array)) {
-        throw new Error("Must provide an array as the first parameter.");
-    }
-    return arr.splice(idx, 1);
-}
-
 function t(o, s, c) {
     return typeof o === s
         || o instanceof c;
@@ -10966,6 +10953,51 @@ function isNumber(obj) {
 function isGoodNumber(v) {
     return isNumber(v)
         && !Number.isNaN(v);
+}
+
+/**
+ * @callback onUserGestureTestCallback
+ * @returns {boolean}
+ */
+
+/**
+ * This is not an event handler that you can add to an element. It's a global event that
+ * waits for the user to perform some sort of interaction with the website.
+ * @param {Function} callback
+ * @param {onUserGestureTestCallback} test
+  */
+function onUserGesture(callback, test) {
+    const gestures = Object.keys(window)
+        .filter(x => x.startsWith("on"))
+        .map(x => x.substring(2));
+
+    const check = (evt) => {
+        console.log(evt.type);
+        if (!test || test()) {
+            for (let gesture of gestures) {
+                window.removeEventListener(gesture, check);
+            }
+
+            callback();
+        }
+    };
+
+    for (let gesture of gestures) {
+        window.addEventListener(gesture, check);
+    }
+}
+
+/**
+ * Removes an item at the given index from an array.
+ * @param {any[]} arr
+ * @param {number} idx
+ * @returns {any} - the item that was removed.
+ */
+function arrayRemoveAt(arr, idx) {
+    if (!(arr instanceof Array)) {
+        throw new Error("Must provide an array as the first parameter.");
+    }
+    return arr.splice(idx, 1);
 }
 
 const EventBase = (function () {
@@ -19572,24 +19604,12 @@ class AudioManager extends EventBase {
 
         if (this.audioContext instanceof AudioContext
             && !this.ready) {
-            const gestures = Object.keys(window)
-                .filter(x => x.startsWith("on"))
-                .map(x => x.substring(2));
-
-            const startAudio = () => {
+            onUserGesture(() => {
+                this.dispatchEvent(audioReadyEvt);
+            }, () => {
                 this.start();
-                if (this.ready) {
-                    for (let gesture of gestures) {
-                        window.removeEventListener(gesture, startAudio);
-                    }
-
-                    this.dispatchEvent(audioReadyEvt);
-                }
-            };
-
-            for (let gesture of gestures) {
-                window.addEventListener(gesture, startAudio);
-            }
+                return this.ready;
+            });
         }
 
         Object.seal(this);
@@ -20224,7 +20244,7 @@ function when(target, resolveEvt, filterTest, timeout) {
     });
 }
 
-const versionString = "v0.9.3";
+const versionString = "v0.10.0";
 
 /* global JitsiMeetJS */
 
@@ -20341,8 +20361,38 @@ class CallaClient extends EventBase {
         /** @type {String} */
         this.preferredVideoInputID = null;
 
-        this.addEventListener("participantJoined", (evt) => {
-            this.userInitRequest(evt.id);
+        this.addEventListener("participantJoined", async (evt) => {
+            const response = await this.userInitRequestAsync(evt.id);
+
+            if (isNumber(response.x)
+                && isNumber(response.y)
+                && isNumber(response.z)) {
+                this.audio.setUserPosition(
+                    response.id,
+                    response.x, response.y, response.z);
+            }
+            else if (isNumber(response.fx)
+                && isNumber(response.fy)
+                && isNumber(response.fz)
+                && isNumber(response.ux)
+                && isNumber(response.uy)
+                && isNumber(response.uz)) {
+                if (isNumber(response.px)
+                    && isNumber(response.py)
+                    && isNumber(response.pz)) {
+                    this.audio.setUserPose(
+                        response.id,
+                        response.px, response.py, response.pz,
+                        response.fx, response.fy, response.fz,
+                        response.ux, response.uy, response.uz);
+                }
+                else {
+                    this.audio.setUserOrientation(
+                        response.id,
+                        response.fx, response.fy, response.fz,
+                        response.ux, response.uy, response.uz);
+                }
+            }
         });
 
         this.addEventListener("userInitRequest", (evt) => {
@@ -20360,29 +20410,6 @@ class CallaClient extends EventBase {
                 uy: u.y,
                 uz: u.z
             });
-        });
-
-        this.addEventListener("userInitResponse", (evt) => {
-            if (isNumber(evt.x)
-                && isNumber(evt.y)
-                && isNumber(evt.z)) {
-                this.audio.setUserPosition(evt.id, evt.x, evt.y, evt.z);
-            }
-            else if (isNumber(evt.fx)
-                && isNumber(evt.fy)
-                && isNumber(evt.fz)
-                && isNumber(evt.ux)
-                && isNumber(evt.uy)
-                && isNumber(evt.uz)) {
-                if (isNumber(evt.px)
-                    && isNumber(evt.py)
-                    && isNumber(evt.pz)) {
-                    this.audio.setUserPose(evt.id, evt.px, evt.py, evt.pz, evt.fx, evt.fy, evt.fz, evt.ux, evt.uy, evt.uz);
-                }
-                else {
-                    this.audio.setUserOrientation(evt.id, evt.fx, evt.fy, evt.fz, evt.ux, evt.uy, evt.uz);
-                }
-            }
         });
 
         this.addEventListener("userMoved", (evt) => {
@@ -21194,21 +21221,13 @@ class CallaClient extends EventBase {
      * 
      * @param {string} toUserID
      */
-    userInitRequest(toUserID) {
-        this.sendMessageTo(toUserID, "userInitRequest");
-    }
-
-    /**
-     * 
-     * @param {string} toUserID
-     */
     async userInitRequestAsync(toUserID) {
         return await until(this, "userInitResponse",
-            () => this.userInitRequest(toUserID),
+            () => this.sendMessageTo(toUserID, "userInitRequest"),
             (evt) => evt.id === toUserID
-                && isGoodNumber(evt.x)
-                && isGoodNumber(evt.y)
-                && isGoodNumber(evt.z),
+                && isGoodNumber(evt.px)
+                && isGoodNumber(evt.py)
+                && isGoodNumber(evt.pz),
             1000);
     }
 

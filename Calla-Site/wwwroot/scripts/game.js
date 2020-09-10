@@ -12209,19 +12209,6 @@ class AudioActivityEvent extends Event {
     }
 }
 
-/**
- * Removes an item at the given index from an array.
- * @param {any[]} arr
- * @param {number} idx
- * @returns {any} - the item that was removed.
- */
-function arrayRemoveAt(arr, idx) {
-    if (!(arr instanceof Array)) {
-        throw new Error("Must provide an array as the first parameter.");
-    }
-    return arr.splice(idx, 1);
-}
-
 function t(o, s, c) {
     return typeof o === s
         || o instanceof c;
@@ -12252,6 +12239,145 @@ function isGoodNumber(v) {
 
 function isBoolean(obj) {
     return t(obj, "boolean", Boolean);
+}
+
+/**
+ * A setter functor for HTML element events.
+ **/
+class HtmlEvt {
+    /**
+     * Creates a new setter functor for an HTML element event.
+     * @param {string} name - the name of the event to attach to.
+     * @param {Function} callback - the callback function to use with the event handler.
+     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+     */
+    constructor(name, callback, opts) {
+        if (!isFunction(callback)) {
+            throw new Error("A function instance is required for this parameter");
+        }
+
+        this.name = name;
+        this.callback = callback;
+        this.opts = opts;
+        Object.freeze(this);
+    }
+
+    /**
+     * Add the encapsulate callback as an event listener to the give HTMLElement
+     * @param {HTMLElement} elem
+     */
+    add(elem) {
+        elem.addEventListener(this.name, this.callback, this.opts);
+    }
+
+    /**
+     * Remove the encapsulate callback as an event listener from the give HTMLElement
+     * @param {HTMLElement} elem
+     */
+    remove(elem) {
+        elem.removeEventListener(this.name, this.callback);
+    }
+}
+
+/**
+ * The blur event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onBlur(callback, opts) { return new HtmlEvt("blur", callback, opts); }
+
+/**
+ * The click event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onClick(callback, opts) { return new HtmlEvt("click", callback, opts); }
+
+/**
+ * The focus event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onFocus(callback, opts) { return new HtmlEvt("focus", callback, opts); }
+
+/**
+ * The input event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onInput(callback, opts) { return new HtmlEvt("input", callback, opts); }
+
+/**
+ * The keypress event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onKeyPress(callback, opts) { return new HtmlEvt("keypress", callback, opts); }
+
+/**
+ * The keyup event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onKeyUp(callback, opts) { return new HtmlEvt("keyup", callback, opts); }
+
+/**
+ * The mouseout event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onMouseOut(callback, opts) { return new HtmlEvt("mouseout", callback, opts); }
+
+/**
+ * The mouseover event.
+ * @param {Function} callback - the callback function to use with the event handler.
+ * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+ **/
+function onMouseOver(callback, opts) { return new HtmlEvt("mouseover", callback, opts); }
+
+/**
+ * @callback onUserGestureTestCallback
+ * @returns {boolean}
+ */
+
+/**
+ * This is not an event handler that you can add to an element. It's a global event that
+ * waits for the user to perform some sort of interaction with the website.
+ * @param {Function} callback
+ * @param {onUserGestureTestCallback} test
+  */
+function onUserGesture(callback, test) {
+    const gestures = Object.keys(window)
+        .filter(x => x.startsWith("on"))
+        .map(x => x.substring(2));
+
+    const check = (evt) => {
+        console.log(evt.type);
+        if (!test || test()) {
+            for (let gesture of gestures) {
+                window.removeEventListener(gesture, check);
+            }
+
+            callback();
+        }
+    };
+
+    for (let gesture of gestures) {
+        window.addEventListener(gesture, check);
+    }
+}
+
+/**
+ * Removes an item at the given index from an array.
+ * @param {any[]} arr
+ * @param {number} idx
+ * @returns {any} - the item that was removed.
+ */
+function arrayRemoveAt(arr, idx) {
+    if (!(arr instanceof Array)) {
+        throw new Error("Must provide an array as the first parameter.");
+    }
+    return arr.splice(idx, 1);
 }
 
 const EventBase = (function () {
@@ -20877,24 +21003,12 @@ class AudioManager extends EventBase {
 
         if (this.audioContext instanceof AudioContext
             && !this.ready) {
-            const gestures = Object.keys(window)
-                .filter(x => x.startsWith("on"))
-                .map(x => x.substring(2));
-
-            const startAudio = () => {
+            onUserGesture(() => {
+                this.dispatchEvent(audioReadyEvt);
+            }, () => {
                 this.start();
-                if (this.ready) {
-                    for (let gesture of gestures) {
-                        window.removeEventListener(gesture, startAudio);
-                    }
-
-                    this.dispatchEvent(audioReadyEvt);
-                }
-            };
-
-            for (let gesture of gestures) {
-                window.addEventListener(gesture, startAudio);
-            }
+                return this.ready;
+            });
         }
 
         Object.seal(this);
@@ -21529,7 +21643,7 @@ function when(target, resolveEvt, filterTest, timeout) {
     });
 }
 
-const versionString = "v0.9.3";
+const versionString = "v0.10.0";
 
 /* global JitsiMeetJS */
 
@@ -21646,8 +21760,38 @@ class CallaClient extends EventBase {
         /** @type {String} */
         this.preferredVideoInputID = null;
 
-        this.addEventListener("participantJoined", (evt) => {
-            this.userInitRequest(evt.id);
+        this.addEventListener("participantJoined", async (evt) => {
+            const response = await this.userInitRequestAsync(evt.id);
+
+            if (isNumber(response.x)
+                && isNumber(response.y)
+                && isNumber(response.z)) {
+                this.audio.setUserPosition(
+                    response.id,
+                    response.x, response.y, response.z);
+            }
+            else if (isNumber(response.fx)
+                && isNumber(response.fy)
+                && isNumber(response.fz)
+                && isNumber(response.ux)
+                && isNumber(response.uy)
+                && isNumber(response.uz)) {
+                if (isNumber(response.px)
+                    && isNumber(response.py)
+                    && isNumber(response.pz)) {
+                    this.audio.setUserPose(
+                        response.id,
+                        response.px, response.py, response.pz,
+                        response.fx, response.fy, response.fz,
+                        response.ux, response.uy, response.uz);
+                }
+                else {
+                    this.audio.setUserOrientation(
+                        response.id,
+                        response.fx, response.fy, response.fz,
+                        response.ux, response.uy, response.uz);
+                }
+            }
         });
 
         this.addEventListener("userInitRequest", (evt) => {
@@ -21665,29 +21809,6 @@ class CallaClient extends EventBase {
                 uy: u.y,
                 uz: u.z
             });
-        });
-
-        this.addEventListener("userInitResponse", (evt) => {
-            if (isNumber(evt.x)
-                && isNumber(evt.y)
-                && isNumber(evt.z)) {
-                this.audio.setUserPosition(evt.id, evt.x, evt.y, evt.z);
-            }
-            else if (isNumber(evt.fx)
-                && isNumber(evt.fy)
-                && isNumber(evt.fz)
-                && isNumber(evt.ux)
-                && isNumber(evt.uy)
-                && isNumber(evt.uz)) {
-                if (isNumber(evt.px)
-                    && isNumber(evt.py)
-                    && isNumber(evt.pz)) {
-                    this.audio.setUserPose(evt.id, evt.px, evt.py, evt.pz, evt.fx, evt.fy, evt.fz, evt.ux, evt.uy, evt.uz);
-                }
-                else {
-                    this.audio.setUserOrientation(evt.id, evt.fx, evt.fy, evt.fz, evt.ux, evt.uy, evt.uz);
-                }
-            }
         });
 
         this.addEventListener("userMoved", (evt) => {
@@ -22499,21 +22620,13 @@ class CallaClient extends EventBase {
      * 
      * @param {string} toUserID
      */
-    userInitRequest(toUserID) {
-        this.sendMessageTo(toUserID, "userInitRequest");
-    }
-
-    /**
-     * 
-     * @param {string} toUserID
-     */
     async userInitRequestAsync(toUserID) {
         return await until(this, "userInitResponse",
-            () => this.userInitRequest(toUserID),
+            () => this.sendMessageTo(toUserID, "userInitRequest"),
             (evt) => evt.id === toUserID
-                && isGoodNumber(evt.x)
-                && isGoodNumber(evt.y)
-                && isGoodNumber(evt.z),
+                && isGoodNumber(evt.px)
+                && isGoodNumber(evt.py)
+                && isGoodNumber(evt.pz),
             1000);
     }
 
@@ -25920,100 +26033,6 @@ const monospaceFamily = fontFamily(monospaceFonts);
 // A selection of fonts that should match whatever the user's operating system normally uses.
 const systemFonts = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
 const systemFamily = fontFamily(systemFonts);
-
-/**
- * A setter functor for HTML element events.
- **/
-class HtmlEvt {
-    /**
-     * Creates a new setter functor for an HTML element event.
-     * @param {string} name - the name of the event to attach to.
-     * @param {Function} callback - the callback function to use with the event handler.
-     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
-     */
-    constructor(name, callback, opts) {
-        if (!isFunction(callback)) {
-            throw new Error("A function instance is required for this parameter");
-        }
-
-        this.name = name;
-        this.callback = callback;
-        this.opts = opts;
-        Object.freeze(this);
-    }
-
-    /**
-     * Add the encapsulate callback as an event listener to the give HTMLElement
-     * @param {HTMLElement} elem
-     */
-    add(elem) {
-        elem.addEventListener(this.name, this.callback, this.opts);
-    }
-
-    /**
-     * Remove the encapsulate callback as an event listener from the give HTMLElement
-     * @param {HTMLElement} elem
-     */
-    remove(elem) {
-        elem.removeEventListener(this.name, this.callback);
-    }
-}
-
-/**
- * The blur event.
- * @param {Function} callback - the callback function to use with the event handler.
- * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
- **/
-function onBlur(callback, opts) { return new HtmlEvt("blur", callback, opts); }
-
-/**
- * The click event.
- * @param {Function} callback - the callback function to use with the event handler.
- * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
- **/
-function onClick(callback, opts) { return new HtmlEvt("click", callback, opts); }
-
-/**
- * The focus event.
- * @param {Function} callback - the callback function to use with the event handler.
- * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
- **/
-function onFocus(callback, opts) { return new HtmlEvt("focus", callback, opts); }
-
-/**
- * The input event.
- * @param {Function} callback - the callback function to use with the event handler.
- * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
- **/
-function onInput(callback, opts) { return new HtmlEvt("input", callback, opts); }
-
-/**
- * The keypress event.
- * @param {Function} callback - the callback function to use with the event handler.
- * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
- **/
-function onKeyPress(callback, opts) { return new HtmlEvt("keypress", callback, opts); }
-
-/**
- * The keyup event.
- * @param {Function} callback - the callback function to use with the event handler.
- * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
- **/
-function onKeyUp(callback, opts) { return new HtmlEvt("keyup", callback, opts); }
-
-/**
- * The mouseout event.
- * @param {Function} callback - the callback function to use with the event handler.
- * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
- **/
-function onMouseOut(callback, opts) { return new HtmlEvt("mouseout", callback, opts); }
-
-/**
- * The mouseover event.
- * @param {Function} callback - the callback function to use with the event handler.
- * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
- **/
-function onMouseOver(callback, opts) { return new HtmlEvt("mouseover", callback, opts); }
 
 /**
  * @typedef {(Node|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
@@ -32719,6 +32738,8 @@ class Pointer {
 }
 
 const MAX_DRAG_DISTANCE = 5,
+    pointerDownEvt = new ScreenPointerEvent("pointerdown"),
+    pointerUpEvt = new ScreenPointerEvent("pointerup"),
     clickEvt = new ScreenPointerEvent("click"),
     moveEvt = new ScreenPointerEvent("move"),
     dragEvt = new ScreenPointerEvent("drag");
@@ -32744,7 +32765,7 @@ class ScreenPointerControls extends EventBase {
          * @param {ScreenPointerEvent} evt
          * @param {Pointer} pointer
          */
-        const setHorizontal = (evt, pointer) => {
+        const dispatch = (evt, pointer, dz) => {
 
             evt.pointerType = pointer.type;
             evt.pointerID = pointer.id;
@@ -32753,7 +32774,7 @@ class ScreenPointerControls extends EventBase {
 
             evt.dx = pointer.dx;
             evt.dy = pointer.dy;
-            evt.dz = 0;
+            evt.dz = dz;
 
             evt.du = 2 * evt.dx / element.clientWidth;
             evt.dv = 2 * evt.dy / element.clientHeight;
@@ -32774,6 +32795,7 @@ class ScreenPointerControls extends EventBase {
             }
 
             evt.dragDistance = pointer.dragDistance;
+            this.dispatchEvent(evt);
         };
 
         /**
@@ -32806,13 +32828,15 @@ class ScreenPointerControls extends EventBase {
                 && !evt.altKey
                 && !evt.ctrlKey
                 && !evt.metaKey) {
+
                 evt.preventDefault();
+
                 // Chrome and Firefox report scroll values in completely different ranges.
-                const deltaZ = -evt.deltaY * (isFirefox ? 1 : 0.02);
-                moveEvt.pointerType = "mouse";
-                moveEvt.buttons = evt.buttons;
-                moveEvt.dz = deltaZ;
-                this.dispatchEvent(moveEvt);
+                const pointer = new Pointer(evt),
+                    _ = replacePointer(pointer),
+                    deltaZ = -evt.deltaY * (isFirefox ? 1 : 0.02);
+
+                dispatch(moveEvt, pointer, deltaZ);
             }
         }, { passive: false });
 
@@ -32827,27 +32851,36 @@ class ScreenPointerControls extends EventBase {
                 this.currentInputType = pointer.type;
             }
 
+            dispatch(pointerDownEvt, pointer, 0);
+
             canClick = oldCount === 0
                 && newCount === 1;
         });
+
+        /**
+         * @param {number} oldPinchDistance
+         * @param {number} newPinchDistance
+         * @returns {number}
+         */
+        const getPinchZoom = (oldPinchDistance, newPinchDistance) => {
+            if (oldPinchDistance !== null
+                && newPinchDistance !== null) {
+                canClick = false;
+                const ddist = newPinchDistance - oldPinchDistance;
+                return ddist / 10;
+            }
+
+            return 0;
+        };
 
         element.addEventListener("pointermove", (evt) => {
             const oldPinchDistance = this.pinchDistance,
                 pointer = new Pointer(evt),
                 last = replacePointer(pointer),
                 count = this.pressCount,
-                newPinchDistance = this.pinchDistance;
+                dz = getPinchZoom(oldPinchDistance, this.pinchDistance);
 
-            setHorizontal(moveEvt, pointer);
-
-            if (oldPinchDistance !== null
-                && newPinchDistance !== null) {
-                canClick = false;
-                const ddist = newPinchDistance - oldPinchDistance;
-                moveEvt.dz = ddist / 10;
-            }
-
-            this.dispatchEvent(moveEvt);
+            dispatch(moveEvt, pointer, dz);
 
             if (count === 1
                 && pointer.buttons === 1
@@ -32855,8 +32888,7 @@ class ScreenPointerControls extends EventBase {
                 pointer.dragDistance += pointer.moveDistance;
                 if (pointer.dragDistance > MAX_DRAG_DISTANCE) {
                     canClick = false;
-                    setHorizontal(dragEvt, pointer);
-                    this.dispatchEvent(dragEvt);
+                    dispatch(dragEvt, pointer, 0);
                 }
             }
         });
@@ -32864,9 +32896,11 @@ class ScreenPointerControls extends EventBase {
         element.addEventListener("pointerup", (evt) => {
             const pointer = new Pointer(evt),
                 _ = replacePointer(pointer);
+
+            dispatch(pointerUpEvt, pointer, 0);
+
             if (canClick) {
-                setHorizontal(clickEvt, pointer);
-                this.dispatchEvent(clickEvt);
+                dispatch(clickEvt, pointer, 0);
             }
 
             pointer.dragDistance = 0;
