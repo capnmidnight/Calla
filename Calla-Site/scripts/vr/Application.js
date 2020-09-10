@@ -92,54 +92,12 @@ export class Application extends EventBase {
         this.scene.add(this.foreground);
         this.scene.add(this.transition);
 
-        const _resize = async (isPresenting, wasPresenting) => {
-            if (isPresenting) {
-                const endSessionTask = once(this.screenControl, "sessionended");
-                await this.screenControl.toggle();
-                await endSessionTask;
-                setTimeout(_resize, 0, false, wasPresenting);
-                return;
-            }
-
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
-            this.camera.aspect = window.innerWidth / window.innerHeight;
-            this.camera.updateProjectionMatrix();
-
-            if (wasPresenting) {
-                const startSessionTask = once(this.screenControl, "sessionstarted");
-                await this.screenControl.toggle();
-                await startSessionTask;
-            }
-        }
-
         this.controls = new ScreenPointerControls(this.renderer.domElement);
 
         this.cameraControl = new CameraControl(this.camera, this.stage, this.controls);
 
-        /** @type {string} */
-        let sessionType = "inline";
-        this.screenControl = new ScreenControl(this.renderer);
-        this.screenControl.addEventListener("sessionstarted", (evt) => {
-            this.cameraControl.fov = evt.session.renderState.inlineVerticalFieldOfView * 180 / Math.PI;
-            sessionType = evt.sessionType;
-        });
-        this.screenControl.addEventListener("sessionended", () => {
-            this.cameraControl.fov = 50;
-            sessionType = "inline";
-        });
+        this.screenControl = new ScreenControl(this.renderer, this.camera);
         document.body.append(this.screenControl.element);
-
-        let isResizing = false;
-        const resize = async () => {
-            console.log(sessionType);
-            if (!isResizing && sessionType === "inline") {
-                isResizing = true;
-                await _resize(this.renderer.xr.isPresenting, this.renderer.xr.isPresenting);
-                isResizing = false;
-            }
-        };
-        window.addEventListener("resize", resize);
-        resize();
 
         const scales = new Map();
 
