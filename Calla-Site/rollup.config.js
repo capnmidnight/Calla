@@ -82,7 +82,12 @@ if (process.env.BUILD === "production") {
     });
 }
 
-if (process.env.BUILD === "development"
+if (process.env.BUILD === "vr"
+    || process.env.BUILD === "production") {
+    bundles.push(def("vr", true, true));
+}
+
+if (process.env.BUILD === "calla"
     || process.env.BUILD === "production") {
     bundles.push(
         def("tests", false, false),
@@ -90,7 +95,5 @@ if (process.env.BUILD === "development"
         def("basic", false, true),
         def("game", true, true));
 }
-
-bundles.push(def("vr", true, true));
 
 export default bundles;

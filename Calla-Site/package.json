@@ -5,7 +5,8 @@
   "scripts": {
     "build": "rollup -c --environment BUILD:production",
     "watch": "rollup -c -w --environment BUILD:development",
-    "watch:vr": "rollup -c -w --environment BUILD:developmentvr"
+    "watch:vr": "rollup -c -w --environment BUILD:vr",
+    "watch:calla": "rollup -c -w --environment BUILD:calla"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^9.0.0",
