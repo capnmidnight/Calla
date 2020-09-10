@@ -7,7 +7,6 @@ import { WebGLRenderer } from "three/src/renderers/WebGLRenderer";
 import { Scene } from "three/src/scenes/Scene";
 import { AudioManager } from "../calla/audio/AudioManager";
 import { EventBase } from "../calla/events/EventBase";
-import { once } from "../calla/events/once";
 import { setRightUpFwdPos } from "../calla/math/setRightUpFwd";
 import { CameraControl } from "../input/CameraControl";
 import { CursorControl } from "../input/CursorControl";
@@ -19,6 +18,7 @@ import { Fader } from "./Fader";
 import { LoadingBar } from "./LoadingBar";
 import { ScreenControl } from "./ScreenControl";
 import { Skybox } from "./Skybox";
+import { UISystem } from "./UISystem";
 
 const visibleBackground = new Color(0x606060);
 const invisibleBackground = new Color(0x000000);
@@ -99,34 +99,10 @@ export class Application extends EventBase {
         this.screenControl = new ScreenControl(this.renderer, this.camera);
         document.body.append(this.screenControl.element);
 
-        const scales = new Map();
-
-        /**
-         * @param {import("../input/EventSystem").EventSystemEvent} evt
-         */
-        const onEnter = (evt) => {
-            if (!evt.hit.object.disabled) {
-                if (!scales.has(evt.hit.object)) {
-                    scales.set(evt.hit.object, evt.hit.object.scale.clone());
-                }
-                evt.hit.object.scale.multiplyScalar(1.1);
-            }
-        };
-
-        /**
-         * @param {import("../input/EventSystem").EventSystemEvent} evt
-         */
-        const onExit = (evt) => {
-            if (!evt.hit.object.disabled) {
-                evt.hit.object.scale.copy(scales.get(evt.hit.object));
-            }
-        };
-
         this.cursors = new CursorControl(this.renderer.domElement);
 
         this.eventSystem = new EventSystem(this.cursors, this.camera, this.foreground, this.controls);
-        this.eventSystem.addEventListener("enter", onEnter);
-        this.eventSystem.addEventListener("exit", onExit);
+        this.uiSystem = new UISystem(this.eventSystem);
 
         const update = (evt) => {
 
