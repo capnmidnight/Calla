@@ -15349,8 +15349,10 @@ class FOARotator {
         this._splitter.connect(this._inY, 2);
         // Z (from channel 3)
         this._splitter.connect(this._inZ, 3);
-        this._inY.gain.value = -1;
+
         this._inX.gain.value = -1;
+        this._inY.gain.value = -1;
+        this._inZ.gain.value = -1;
 
         // Apply the rotation in the world space.
         // |X|   | m0  m3  m6 |   | X * m0 + Y * m3 + Z * m6 |   | Xr |
@@ -15384,10 +15386,12 @@ class FOARotator {
         this._outY.connect(this._merger, 0, 2);
         // Z (to channel 3)
         this._outZ.connect(this._merger, 0, 3);
-        this._outY.gain.value = -1;
-        this._outX.gain.value = -1;
 
-        this.setRotationMatrix3(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, -1]));
+        this._outX.gain.value = -1;
+        this._outY.gain.value = -1;
+        this._outZ.gain.value = -1;
+
+        this.setRotationMatrix3(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
 
         // input/output proxy.
         this.input = this._splitter;
@@ -16400,7 +16404,7 @@ class HOARotator {
         this._splitter.connect(this._merger, 0, 0);
 
         // Default Identity matrix.
-        this.setRotationMatrix3(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, -1]));
+        this.setRotationMatrix3(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
 
         // Input/Output proxy.
         this.input = this._splitter;
@@ -16449,9 +16453,9 @@ class HOARotator {
         this._gainNodeMatrix[0][3].gain.value = rotationMatrix3[3];
         this._gainNodeMatrix[0][4].gain.value = rotationMatrix3[4];
         this._gainNodeMatrix[0][5].gain.value = rotationMatrix3[5];
-        this._gainNodeMatrix[0][6].gain.value = -rotationMatrix3[6];
-        this._gainNodeMatrix[0][7].gain.value = -rotationMatrix3[7];
-        this._gainNodeMatrix[0][8].gain.value = -rotationMatrix3[8];
+        this._gainNodeMatrix[0][6].gain.value = rotationMatrix3[6];
+        this._gainNodeMatrix[0][7].gain.value = rotationMatrix3[7];
+        this._gainNodeMatrix[0][8].gain.value = rotationMatrix3[8];
         computeHOAMatrices(this._gainNodeMatrix);
     }
 
@@ -16467,9 +16471,9 @@ class HOARotator {
         this._gainNodeMatrix[0][3].gain.value = rotationMatrix4[4];
         this._gainNodeMatrix[0][4].gain.value = rotationMatrix4[5];
         this._gainNodeMatrix[0][5].gain.value = rotationMatrix4[6];
-        this._gainNodeMatrix[0][6].gain.value = -rotationMatrix4[8];
-        this._gainNodeMatrix[0][7].gain.value = -rotationMatrix4[9];
-        this._gainNodeMatrix[0][8].gain.value = -rotationMatrix4[10];
+        this._gainNodeMatrix[0][6].gain.value = rotationMatrix4[8];
+        this._gainNodeMatrix[0][7].gain.value = rotationMatrix4[9];
+        this._gainNodeMatrix[0][8].gain.value = rotationMatrix4[10];
         computeHOAMatrices(this._gainNodeMatrix);
     }
 
@@ -16486,9 +16490,9 @@ class HOARotator {
         rotationMatrix3[3] = this._gainNodeMatrix[0][3].gain.value;
         rotationMatrix3[4] = this._gainNodeMatrix[0][4].gain.value;
         rotationMatrix3[5] = this._gainNodeMatrix[0][5].gain.value;
-        rotationMatrix3[6] = -this._gainNodeMatrix[0][6].gain.value;
-        rotationMatrix3[7] = -this._gainNodeMatrix[0][7].gain.value;
-        rotationMatrix3[8] = -this._gainNodeMatrix[0][8].gain.value;
+        rotationMatrix3[6] = this._gainNodeMatrix[0][6].gain.value;
+        rotationMatrix3[7] = this._gainNodeMatrix[0][7].gain.value;
+        rotationMatrix3[8] = this._gainNodeMatrix[0][8].gain.value;
         return rotationMatrix3;
     }
 
@@ -16505,9 +16509,9 @@ class HOARotator {
         rotationMatrix4[4] = this._gainNodeMatrix[0][3].gain.value;
         rotationMatrix4[5] = this._gainNodeMatrix[0][4].gain.value;
         rotationMatrix4[6] = this._gainNodeMatrix[0][5].gain.value;
-        rotationMatrix4[8] = -this._gainNodeMatrix[0][6].gain.value;
-        rotationMatrix4[9] = -this._gainNodeMatrix[0][7].gain.value;
-        rotationMatrix4[10] = -this._gainNodeMatrix[0][8].gain.value;
+        rotationMatrix4[8] = this._gainNodeMatrix[0][6].gain.value;
+        rotationMatrix4[9] = this._gainNodeMatrix[0][7].gain.value;
+        rotationMatrix4[10] = this._gainNodeMatrix[0][8].gain.value;
         return rotationMatrix4;
     }
 
@@ -18972,9 +18976,9 @@ class Listener {
         this._tempMatrix3[3] = upX;
         this._tempMatrix3[4] = upY;
         this._tempMatrix3[5] = upZ;
-        this._tempMatrix3[6] = forwardX;
-        this._tempMatrix3[7] = forwardY;
-        this._tempMatrix3[8] = forwardZ;
+        this._tempMatrix3[6] = -forwardX;
+        this._tempMatrix3[7] = -forwardY;
+        this._tempMatrix3[8] = -forwardZ;
         this._renderer.setRotationMatrix3(this._tempMatrix3);
     }
 }
@@ -21525,7 +21529,7 @@ function when(target, resolveEvt, filterTest, timeout) {
     });
 }
 
-const versionString = "v0.9.2";
+const versionString = "v0.9.3";
 
 /* global JitsiMeetJS */
 
