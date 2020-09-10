@@ -12714,8 +12714,10 @@ class ActivityAnalyser extends EventBase {
     }
 
     dispose() {
-        this.analyser.disconnect();
-        this.analyser = null;
+        if (this.analyser) {
+            this.analyser.disconnect();
+            this.analyser = null;
+        }
         this.buffer = null;
     }
 
@@ -21010,21 +21012,6 @@ class AudioManager extends EventBase {
 
         this.createContext();
 
-        if (this.audioContext instanceof AudioContext) {
-            if (this.ready) {
-                console.log("AudioContext is already running.");
-            }
-            else {
-                onUserGesture(() => {
-                    console.log("AudioContext is finally running.");
-                    this.dispatchEvent(audioReadyEvt);
-                }, () => {
-                    this.start();
-                    return this.ready;
-                });
-            }
-        }
-
         Object.seal(this);
     }
 
@@ -21039,15 +21026,15 @@ class AudioManager extends EventBase {
     }
 
     get ready() {
-        return this.audioContext.state === "running";
+        return this.audioContext && this.audioContext.state === "running";
     }
 
     /** 
      * Perform the audio system initialization, after a user gesture 
      **/
-    start() {
+    async start() {
         this.createContext();
-        this.audioContext.resume();
+        await this.audioContext.resume();
     }
 
     update() {
@@ -21080,6 +21067,19 @@ class AudioManager extends EventBase {
             if (hasAudioContext) {
                 try {
                     this.audioContext = new AudioContext();
+                    if (this.ready) {
+                        console.log("AudioContext is already running.");
+                    }
+                    else {
+                        console.log("AudioContext is not yet running.");
+                        onUserGesture(() => {
+                            console.log("AudioContext is finally running.");
+                            this.dispatchEvent(audioReadyEvt);
+                        }, async () => {
+                            await this.start();
+                            return this.ready;
+                        });
+                    }
                 }
                 catch (exp) {
                     hasAudioContext = false;
@@ -21298,7 +21298,6 @@ class AudioManager extends EventBase {
      **/
     setUserStream(id, stream) {
         if (this.users.has(id)) {
-            const user = this.users.get(id);
             if (this.analysers.has(id)) {
                 const analyser = this.analysers.get(id);
                 this.analysers.delete(id);
@@ -21306,21 +21305,21 @@ class AudioManager extends EventBase {
                 analyser.dispose();
             }
 
+            const user = this.users.get(id);
+            user.spatializer = null;
+
             if (stream) {
                 user.spatializer = this.createSpatializer(id, stream, true);
                 user.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.transitionTime);
+                user.spatializer.audio.autoPlay = true;
+                user.spatializer.audio.muted = true;
+                user.spatializer.audio.addEventListener("onloadedmetadata", () =>
+                    user.spatializer.audio.play());
+                user.spatializer.audio.play();
 
                 const analyser = new ActivityAnalyser(user, this.audioContext, BUFFER_SIZE);
                 analyser.addEventListener("audioActivity", this.onAudioActivity);
                 this.analysers.set(id, analyser);
-
-                if (user.spatializer.audio) {
-                    user.spatializer.audio.autoPlay = true;
-                    user.spatializer.audio.muted = true;
-                    user.spatializer.audio.addEventListener("onloadedmetadata", () =>
-                        user.spatializer.audio.play());
-                    user.spatializer.audio.play();
-                }
             }
         }
     }
@@ -21657,7 +21656,7 @@ function when(target, resolveEvt, filterTest, timeout) {
     });
 }
 
-const versionString = "v0.10.1";
+const versionString = "v0.10.2";
 
 /* global JitsiMeetJS */
 
@@ -22676,10 +22675,6 @@ class CallaClient extends EventBase {
         for (let toUserID of this.userIDs()) {
             this.sendMessageTo(toUserID, "emote", emoji);
         }
-    }
-
-    startAudio() {
-        this.audio.start();
     }
 }
 
@@ -34844,7 +34839,6 @@ addEventListeners(controls, {
 
 addEventListeners(login, {
     login: async () => {
-        client.startAudio();
         await client.audio.createClip("join", false, false, true, null, "audio/door-open.ogg", "audio/door-open.mp3", "audio/door-open.wav");
         await client.audio.createClip("leave", false, false, true, null, "audio/door-close.ogg", "audio/door-close.mp3", "audio/door-close.wav");
         setAudioProperties();
