@@ -1157,6 +1157,18 @@ export function onWheel(callback, opts) { return new HtmlEvt("wheel", callback, 
  * @returns {boolean}
  */
 
+
+const gestures = [
+    "change",
+    "click",
+    "contextmenu",
+    "dblclick",
+    "mouseup",
+    "pointerup",
+    "reset",
+    "submit",
+    "touchend"
+];
 /**
  * This is not an event handler that you can add to an element. It's a global event that
  * waits for the user to perform some sort of interaction with the website.
@@ -1164,13 +1176,10 @@ export function onWheel(callback, opts) { return new HtmlEvt("wheel", callback, 
  * @param {onUserGestureTestCallback} test
   */
 export function onUserGesture(callback, test) {
-    const gestures = Object.keys(window)
-        .filter(x => x.startsWith("on"))
-        .map(x => x.substring(2));
-
+    test = test || (() => true);
     const check = (evt) => {
-        console.log(evt.type);
-        if (!test || test()) {
+        console.log(evt.type, evt.isTrusted);
+        if (evt.isTrusted && test()) {
             for (let gesture of gestures) {
                 window.removeEventListener(gesture, check);
             }

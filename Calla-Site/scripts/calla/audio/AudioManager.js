@@ -66,14 +66,19 @@ export class AudioManager extends EventBase {
 
         this.createContext();
 
-        if (this.audioContext instanceof AudioContext
-            && !this.ready) {
-            onUserGesture(() => {
-                this.dispatchEvent(audioReadyEvt);
-            }, () => {
-                this.start();
-                return this.ready;
-            });
+        if (this.audioContext instanceof AudioContext) {
+            if (this.ready) {
+                console.log("AudioContext is already running.");
+            }
+            else {
+                onUserGesture(() => {
+                    console.log("AudioContext is finally running.");
+                    this.dispatchEvent(audioReadyEvt);
+                }, () => {
+                    this.start();
+                    return this.ready;
+                });
+            }
         }
 
         Object.seal(this);

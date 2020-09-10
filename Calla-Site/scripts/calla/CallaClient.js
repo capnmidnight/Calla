@@ -491,11 +491,10 @@ export class CallaClient extends EventBase {
         if (evt.id === null
             || evt.id === undefined
             || evt.id === "local") {
-            evt.id = this.localUserID;
-            console.warn("Jitsi didn't give use the local user id");
             if (this.localUserID === null) {
-                console.warn("BUT I DON'T KNOW THE LOCAL USER ID YET!");
+                console.warn("I DON'T KNOW THE LOCAL USER ID YET!");
             }
+            evt.id = this.localUserID;
         }
 
         super.dispatchEvent(evt);
