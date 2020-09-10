@@ -323,7 +323,7 @@ async function showMenu(path, onClick) {
 }
 
 async function addMenuItem(item, y, onClick) {
-    const mesh = Object.assign(new TextMesh(), {
+    const button = Object.assign(new TextMesh(), {
         textBgColor: item.enabled !== false
             ? "#ffffff"
             : "#a0a0a0",
@@ -335,13 +335,16 @@ async function addMenuItem(item, y, onClick) {
         fontSize: 100
     });
 
-    mesh.name = item.name;
-    mesh.position.set(0, y, -5);
+    button.name = item.name;
+    button.position.set(0, y, -5);
 
-    await mesh.loadFontAndSetText(item.name);
+    await button.loadFontAndSetText(item.name);
 
-    app.menu.add(mesh);
-    if (item.enabled !== false) {
-        mesh.addEventListener("click", () => onClick(item));
-    }
+    app.menu.add(button);
+    button.disabled = item.enabled === false;
+    button.addEventListener("click", () => {
+        if (!button.disabled) {
+            onClick(item);
+        }
+    });
 }

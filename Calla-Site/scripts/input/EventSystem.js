@@ -15,11 +15,12 @@ export class EventSystemEvent extends Event {
 
 export class EventSystem extends EventBase {
     /**
+     * @param {import ("./CursorControl".CursorControl} cursors
      * @param {import("three").PerspectiveCamera} camera
      * @param {import("three").Object3D} inputLayer
      * @param {...import("./ScreenPointerControls").ScreenPointerControls} screenPointer
      */
-    constructor(camera, inputLayer, ...pointers) {
+    constructor(cursors, camera, inputLayer, ...pointers) {
         super();
 
         const raycaster = new Raycaster();
@@ -29,6 +30,15 @@ export class EventSystem extends EventBase {
 
         /** @type {import("three").Intersection[]} */
         const hits = [];
+
+        /**
+         * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
+         */
+        const setCursor = (evt) => {
+            cursors.setCursor(
+                hovers.get(evt.pointerID),
+                evt);
+        }
 
         /**
          * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
@@ -44,10 +54,7 @@ export class EventSystem extends EventBase {
             /** @type {import("three").Intersection} */
             let curHit = null;
             for (let hit of hits) {
-                if (hit.object
-                    && hit.object._listeners
-                    && hit.object._listeners.click
-                    && hit.object._listeners.click.length) {
+                if (hit.object) {
                     curHit = hit;
                 }
             }
@@ -89,6 +96,9 @@ export class EventSystem extends EventBase {
         for (let pointer of pointers) {
             pointer.addEventListener("move", onMove);
             pointer.addEventListener("click", onClick);
+            pointer.addEventListener("pointerdown", setCursor);
+            pointer.addEventListener("move", setCursor);
+            pointer.addEventListener("pointerup", setCursor);
         }
     }
 }

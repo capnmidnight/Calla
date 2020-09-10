@@ -16,6 +16,7 @@ import { Fader } from "./Fader";
 import { LoadingBar } from "./LoadingBar";
 import { Skybox } from "./Skybox";
 import { setRightUpFwdPos } from "../calla/math/setRightUpFwd";
+import { CursorControl } from "../input/CursorControl";
 
 const visibleBackground = new Color(0x606060);
 const invisibleBackground = new Color(0x000000);
@@ -106,20 +107,26 @@ export class Application extends EventBase {
          * @param {import("../input/EventSystem").EventSystemEvent} evt
          */
         const onEnter = (evt) => {
-            if (!scales.has(evt.hit.object)) {
-                scales.set(evt.hit.object, evt.hit.object.scale.clone());
+            if (!evt.hit.object.disabled) {
+                if (!scales.has(evt.hit.object)) {
+                    scales.set(evt.hit.object, evt.hit.object.scale.clone());
+                }
+                evt.hit.object.scale.multiplyScalar(1.1);
             }
-            evt.hit.object.scale.multiplyScalar(1.1);
         };
 
         /**
          * @param {import("../input/EventSystem").EventSystemEvent} evt
          */
         const onExit = (evt) => {
-            evt.hit.object.scale.copy(scales.get(evt.hit.object));
+            if (!evt.hit.object.disabled) {
+                evt.hit.object.scale.copy(scales.get(evt.hit.object));
+            }
         };
 
-        this.eventSystem = new EventSystem(this.camera, this.foreground, this.controls);
+        this.cursors = new CursorControl(this.renderer.domElement);
+
+        this.eventSystem = new EventSystem(this.cursors, this.camera, this.foreground, this.controls);
         this.eventSystem.addEventListener("enter", onEnter);
         this.eventSystem.addEventListener("exit", onExit);
 
