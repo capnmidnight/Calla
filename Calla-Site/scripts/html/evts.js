@@ -1151,3 +1151,35 @@ export function onWaiting(callback, opts) { return new HtmlEvt("waiting", callba
  * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
  **/
 export function onWheel(callback, opts) { return new HtmlEvt("wheel", callback, opts); }
+
+/**
+ * @callback onUserGestureTestCallback
+ * @returns {boolean}
+ */
+
+/**
+ * This is not an event handler that you can add to an element. It's a global event that
+ * waits for the user to perform some sort of interaction with the website.
+ * @param {Function} callback
+ * @param {onUserGestureTestCallback} test
+  */
+export function onUserGesture(callback, test) {
+    const gestures = Object.keys(window)
+        .filter(x => x.startsWith("on"))
+        .map(x => x.substring(2));
+
+    const check = (evt) => {
+        console.log(evt.type);
+        if (!test || test()) {
+            for (let gesture of gestures) {
+                window.removeEventListener(gesture, check);
+            }
+
+            callback();
+        }
+    }
+
+    for (let gesture of gestures) {
+        window.addEventListener(gesture, check);
+    }
+}

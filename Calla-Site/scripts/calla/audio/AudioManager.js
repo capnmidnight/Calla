@@ -1,3 +1,4 @@
+import { onUserGesture } from "../../html/evts";
 import { EventBase } from "../events/EventBase";
 import { getFile } from "../fetching";
 import { ActivityAnalyser } from "./ActivityAnalyser";
@@ -67,24 +68,12 @@ export class AudioManager extends EventBase {
 
         if (this.audioContext instanceof AudioContext
             && !this.ready) {
-            const gestures = Object.keys(window)
-                .filter(x => x.startsWith("on"))
-                .map(x => x.substring(2));
-
-            const startAudio = () => {
+            onUserGesture(() => {
+                this.dispatchEvent(audioReadyEvt);
+            }, () => {
                 this.start();
-                if (this.ready) {
-                    for (let gesture of gestures) {
-                        window.removeEventListener(gesture, startAudio);
-                    }
-
-                    this.dispatchEvent(audioReadyEvt);
-                }
-            }
-
-            for (let gesture of gestures) {
-                window.addEventListener(gesture, startAudio);
-            }
+                return this.ready;
+            });
         }
 
         Object.seal(this);
