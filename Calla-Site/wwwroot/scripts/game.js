@@ -12340,6 +12340,18 @@ function onMouseOver(callback, opts) { return new HtmlEvt("mouseover", callback,
  * @returns {boolean}
  */
 
+
+const gestures = [
+    "change",
+    "click",
+    "contextmenu",
+    "dblclick",
+    "mouseup",
+    "pointerup",
+    "reset",
+    "submit",
+    "touchend"
+];
 /**
  * This is not an event handler that you can add to an element. It's a global event that
  * waits for the user to perform some sort of interaction with the website.
@@ -12347,13 +12359,10 @@ function onMouseOver(callback, opts) { return new HtmlEvt("mouseover", callback,
  * @param {onUserGestureTestCallback} test
   */
 function onUserGesture(callback, test) {
-    const gestures = Object.keys(window)
-        .filter(x => x.startsWith("on"))
-        .map(x => x.substring(2));
-
+    test = test || (() => true);
     const check = (evt) => {
-        console.log(evt.type);
-        if (!test || test()) {
+        console.log(evt.type, evt.isTrusted);
+        if (evt.isTrusted && test()) {
             for (let gesture of gestures) {
                 window.removeEventListener(gesture, check);
             }
@@ -21001,14 +21010,19 @@ class AudioManager extends EventBase {
 
         this.createContext();
 
-        if (this.audioContext instanceof AudioContext
-            && !this.ready) {
-            onUserGesture(() => {
-                this.dispatchEvent(audioReadyEvt);
-            }, () => {
-                this.start();
-                return this.ready;
-            });
+        if (this.audioContext instanceof AudioContext) {
+            if (this.ready) {
+                console.log("AudioContext is already running.");
+            }
+            else {
+                onUserGesture(() => {
+                    console.log("AudioContext is finally running.");
+                    this.dispatchEvent(audioReadyEvt);
+                }, () => {
+                    this.start();
+                    return this.ready;
+                });
+            }
         }
 
         Object.seal(this);
@@ -21643,7 +21657,7 @@ function when(target, resolveEvt, filterTest, timeout) {
     });
 }
 
-const versionString = "v0.10.0";
+const versionString = "v0.10.1";
 
 /* global JitsiMeetJS */
 
@@ -22126,11 +22140,10 @@ class CallaClient extends EventBase {
         if (evt.id === null
             || evt.id === undefined
             || evt.id === "local") {
-            evt.id = this.localUserID;
-            console.warn("Jitsi didn't give use the local user id");
             if (this.localUserID === null) {
-                console.warn("BUT I DON'T KNOW THE LOCAL USER ID YET!");
+                console.warn("I DON'T KNOW THE LOCAL USER ID YET!");
             }
+            evt.id = this.localUserID;
         }
 
         super.dispatchEvent(evt);
@@ -22952,7 +22965,7 @@ const standing = skinAndSex("\u{1F9CD}", "Standing");
 const kneeling = skinAndSex("\u{1F9CE}", "Kneeling");
 const runners = skinAndSex("\u{1F3C3}", "Running");
 
-const gestures = g(
+const gestures$1 = g(
     "Gestures", "Gestures",
     frowners,
     pouters,
@@ -23219,7 +23232,7 @@ const people = gg(
 const allPeople = gg(
     "All People", "All People", {
     people,
-    gestures,
+    gestures: gestures$1,
     inMotion,
     resting,
     roles,
@@ -25434,7 +25447,7 @@ const allIcons = gg(
     hands,
     bodyParts,
     people,
-    gestures,
+    gestures: gestures$1,
     inMotion,
     resting,
     roles,

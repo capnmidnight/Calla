@@ -32709,6 +32709,18 @@ class HtmlEvt {
  * @returns {boolean}
  */
 
+
+const gestures = [
+    "change",
+    "click",
+    "contextmenu",
+    "dblclick",
+    "mouseup",
+    "pointerup",
+    "reset",
+    "submit",
+    "touchend"
+];
 /**
  * This is not an event handler that you can add to an element. It's a global event that
  * waits for the user to perform some sort of interaction with the website.
@@ -32716,13 +32728,10 @@ class HtmlEvt {
  * @param {onUserGestureTestCallback} test
   */
 function onUserGesture(callback, test) {
-    const gestures = Object.keys(window)
-        .filter(x => x.startsWith("on"))
-        .map(x => x.substring(2));
-
+    test = test || (() => true);
     const check = (evt) => {
-        console.log(evt.type);
-        if (!test || test()) {
+        console.log(evt.type, evt.isTrusted);
+        if (evt.isTrusted && test()) {
             for (let gesture of gestures) {
                 window.removeEventListener(gesture, check);
             }
@@ -41232,14 +41241,19 @@ class AudioManager extends EventBase {
 
         this.createContext();
 
-        if (this.audioContext instanceof AudioContext
-            && !this.ready) {
-            onUserGesture(() => {
-                this.dispatchEvent(audioReadyEvt);
-            }, () => {
-                this.start();
-                return this.ready;
-            });
+        if (this.audioContext instanceof AudioContext) {
+            if (this.ready) {
+                console.log("AudioContext is already running.");
+            }
+            else {
+                onUserGesture(() => {
+                    console.log("AudioContext is finally running.");
+                    this.dispatchEvent(audioReadyEvt);
+                }, () => {
+                    this.start();
+                    return this.ready;
+                });
+            }
         }
 
         Object.seal(this);
