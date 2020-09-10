@@ -33,6 +33,7 @@ namespace Calla.Controllers
         [HttpGet("VR/File/{id}")]
         public IActionResult File(int id)
         {
+            var acceptTypes = MediaType.ParseAll(Request.Headers["Accept"]);
             var fileInfo = db.Files
                 .SingleOrDefault(f => f.Id == id);
             if (fileInfo is null)
