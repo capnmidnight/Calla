@@ -83,11 +83,13 @@ if (process.env.BUILD === "production") {
 }
 
 if (process.env.BUILD === "vr"
+    || process.env.BUILD === "development"
     || process.env.BUILD === "production") {
     bundles.push(def("vr", true, true));
 }
 
 if (process.env.BUILD === "calla"
+    || process.env.BUILD === "development"
     || process.env.BUILD === "production") {
     bundles.push(
         def("tests", false, false),

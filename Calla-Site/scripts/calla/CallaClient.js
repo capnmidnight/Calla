@@ -1028,8 +1028,4 @@ export class CallaClient extends EventBase {
             this.sendMessageTo(toUserID, "emote", emoji);
         }
     }
-
-    startAudio() {
-        this.audio.start();
-    }
 }

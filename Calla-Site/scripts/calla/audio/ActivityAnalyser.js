@@ -83,8 +83,10 @@ export class ActivityAnalyser extends EventBase {
     }
 
     dispose() {
-        this.analyser.disconnect();
-        this.analyser = null;
+        if (this.analyser) {
+            this.analyser.disconnect();
+            this.analyser = null;
+        }
         this.buffer = null;
     }
 

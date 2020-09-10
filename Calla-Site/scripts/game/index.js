@@ -188,7 +188,6 @@ addEventListeners(controls, {
 
 addEventListeners(login, {
     login: async () => {
-        client.startAudio();
         await client.audio.createClip("join", false, false, true, null, "audio/door-open.ogg", "audio/door-open.mp3", "audio/door-open.wav");
         await client.audio.createClip("leave", false, false, true, null, "audio/door-close.ogg", "audio/door-close.mp3", "audio/door-close.wav");
         setAudioProperties();

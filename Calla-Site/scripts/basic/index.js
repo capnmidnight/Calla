@@ -186,9 +186,6 @@ function connect() {
     controls.userName.disabled = true;
     controls.connect.disabled = true;
 
-    // initialize the audio.
-    client.startAudio();
-
     // and start the connection.
     client.join(roomName, userName);
 }
