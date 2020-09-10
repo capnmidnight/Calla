@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "build": "rollup -c --environment BUILD:production",
-    "watch": "rollup -c -w --environment BUILD:development"
+    "watch": "rollup -c -w --environment BUILD:development",
+    "watch:vr": "rollup -c -w --environment BUILD:developmentvr"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^9.0.0",
@@ -14,10 +15,6 @@
     "three": "^0.119.1",
     "tracekit": "^0.4.5",
     "typescript": "^3.9.7"
-  },
-  "-vs-binding": {
-    "ProjectOpened": [
-      "watch"
-    ]
   }
+, "-vs-binding":{"ProjectOpened":["watch:vr"]}
 }

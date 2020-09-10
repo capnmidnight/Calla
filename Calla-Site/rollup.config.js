@@ -66,13 +66,8 @@ function def(name, withTraceKit, minify) {
     return opts;
 }
 
-const bundles = [
-    def("tests", false, false),
-    def("version", false, true),
-    def("basic", false, true),
-    def("game", true, true),
-    def("vr", true, true)
-];
+const bundles = [];
+
 
 if (process.env.BUILD === "production") {
     bundles.push({
@@ -81,13 +76,21 @@ if (process.env.BUILD === "production") {
             nodeResolve()
         ],
         output: [{
-            format: "es",
-            file: `scripts/calla/calla.js`
-        }, {
             format: "cjs",
             file: `scripts/calla/calla.cjs.js`
         }]
     });
 }
+
+if (process.env.BUILD === "development"
+    || process.env.BUILD === "production") {
+    bundles.push(
+        def("tests", false, false),
+        def("version", false, true),
+        def("basic", false, true),
+        def("game", true, true));
+}
+
+bundles.push(def("vr", true, true));
 
 export default bundles;
