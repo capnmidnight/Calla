@@ -4,7 +4,6 @@ import { Vector2 } from "three/src/math/Vector2";
 import { Vector3 } from "three/src/math/Vector3";
 import { EventBase } from "../calla/events/EventBase";
 import { clamp } from "../calla/math/clamp";
-import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
 import { MouseButtons } from "./MouseButton";
 
 
@@ -133,7 +132,7 @@ export class CameraControl extends EventBase {
 
         this.fovZoomEnabled = true;
         this.minFOV = 25;
-        this.maxFOV = 100;
+        this.maxFOV = 120;
 
         let lastT = performance.now();
         let lastEvt = null;
@@ -175,16 +174,11 @@ export class CameraControl extends EventBase {
 
             if (this.fovZoomEnabled
                 && Math.abs(evt.dz) > 0) {
-                const fov = clamp(this.camera.fov - evt.dz, this.minFOV, this.maxFOV);
-                if (fov !== this.camera.fov) {
-                    this.camera.fov = fov;
-                    this.camera.updateProjectionMatrix();
-                }
+                this.fov = clamp(this.camera.fov - evt.dz, this.minFOV, this.maxFOV);
             }
         };
 
-        const timer = new RequestAnimationFrameTimer();
-        timer.addEventListener("tick", () => {
+        this.update = () => {
             if (lastEvt
                 && (this.controlMode === Mode.MouseScreenEdge
                     || this.controlMode === Mode.Gamepad)) {
@@ -193,8 +187,7 @@ export class CameraControl extends EventBase {
             else {
                 lastT = performance.now();
             }
-        });
-        timer.start();
+        };
 
         this.controls.addEventListener("click", (evt) => {
             if (this.allowPointerLock
@@ -208,6 +201,17 @@ export class CameraControl extends EventBase {
         });
 
         this.controls.addEventListener("move", update);
+    }
+
+    get fov() {
+        return this.camera.fov;
+    }
+
+    set fov(v) {
+        if (v !== this.fov) {
+            this.camera.fov = v;
+            this.camera.updateProjectionMatrix();
+        }
     }
 
     get networkPose() {

@@ -7,16 +7,18 @@ import { WebGLRenderer } from "three/src/renderers/WebGLRenderer";
 import { Scene } from "three/src/scenes/Scene";
 import { AudioManager } from "../calla/audio/AudioManager";
 import { EventBase } from "../calla/events/EventBase";
+import { once } from "../calla/events/once";
+import { setRightUpFwdPos } from "../calla/math/setRightUpFwd";
 import { CameraControl } from "../input/CameraControl";
+import { CursorControl } from "../input/CursorControl";
 import { EventSystem } from "../input/EventSystem";
 import { ScreenPointerControls } from "../input/ScreenPointerControls";
 import { Stage } from "../input/Stage";
-import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
+import { ThreeJSTimer } from "../timers/ThreeJSTimer";
 import { Fader } from "./Fader";
 import { LoadingBar } from "./LoadingBar";
+import { ScreenControl } from "./ScreenControl";
 import { Skybox } from "./Skybox";
-import { setRightUpFwdPos } from "../calla/math/setRightUpFwd";
-import { CursorControl } from "../input/CursorControl";
 
 const visibleBackground = new Color(0x606060);
 const invisibleBackground = new Color(0x000000);
@@ -47,6 +49,7 @@ export class Application extends EventBase {
             preserveDrawingBuffer: false
         });
         this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.xr.enabled = true;
 
         this.camera = new PerspectiveCamera(50, 1, 0.01, 1000);
 
@@ -89,17 +92,54 @@ export class Application extends EventBase {
         this.scene.add(this.foreground);
         this.scene.add(this.transition);
 
-        const resize = () => {
+        const _resize = async (isPresenting, wasPresenting) => {
+            if (isPresenting) {
+                const endSessionTask = once(this.screenControl, "sessionended");
+                await this.screenControl.toggle();
+                await endSessionTask;
+                setTimeout(_resize, 0, false, wasPresenting);
+                return;
+            }
+
             this.renderer.setSize(window.innerWidth, window.innerHeight);
             this.camera.aspect = window.innerWidth / window.innerHeight;
             this.camera.updateProjectionMatrix();
-        };
-        window.addEventListener("resize", resize);
-        resize();
+
+            if (wasPresenting) {
+                const startSessionTask = once(this.screenControl, "sessionstarted");
+                await this.screenControl.toggle();
+                await startSessionTask;
+            }
+        }
 
         this.controls = new ScreenPointerControls(this.renderer.domElement);
 
         this.cameraControl = new CameraControl(this.camera, this.stage, this.controls);
+
+        /** @type {string} */
+        let sessionType = "inline";
+        this.screenControl = new ScreenControl(this.renderer);
+        this.screenControl.addEventListener("sessionstarted", (evt) => {
+            this.cameraControl.fov = evt.session.renderState.inlineVerticalFieldOfView * 180 / Math.PI;
+            sessionType = evt.sessionType;
+        });
+        this.screenControl.addEventListener("sessionended", () => {
+            this.cameraControl.fov = 50;
+            sessionType = "inline";
+        });
+        document.body.append(this.screenControl.element);
+
+        let isResizing = false;
+        const resize = async () => {
+            console.log(sessionType);
+            if (!isResizing && sessionType === "inline") {
+                isResizing = true;
+                await _resize(this.renderer.xr.isPresenting, this.renderer.xr.isPresenting);
+                isResizing = false;
+            }
+        };
+        window.addEventListener("resize", resize);
+        resize();
 
         const scales = new Map();
 
@@ -131,16 +171,23 @@ export class Application extends EventBase {
         this.eventSystem.addEventListener("exit", onExit);
 
         const update = (evt) => {
+
+            this.cameraControl.update();
+
             if (!this.showSkybox) {
                 this.skybox.visible = false;
             }
             this.skybox.update();
+
             this.audio.update();
+
             this.loadingBar.update(evt.sdt);
+
             this.fader.update(evt.sdt);
+
             this.stage.presentationPoint.getWorldPosition(this.transition.position);
             this.stage.presentationPoint.getWorldQuaternion(this.transition.quaternion);
-            
+
             setRightUpFwdPos(this.camera.matrixWorld, R, U, F, P);
             this.audio.setUserPose(
                 "local-user",
@@ -148,11 +195,13 @@ export class Application extends EventBase {
                 F.x, F.y, F.z,
                 U.x, U.y, U.z,
                 0);
+
             this.menu.position.copy(this.transition.position);
             this.menu.quaternion.copy(this.transition.quaternion);
+
             this.renderer.render(this.scene, this.camera);
         };
-        this.timer = new RequestAnimationFrameTimer();
+        this.timer = new ThreeJSTimer(this.renderer);
         this.timer.addEventListener("tick", update);
 
         window.app = this;
