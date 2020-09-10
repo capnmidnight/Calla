@@ -5734,6 +5734,21 @@ async function getFile(path, onProgress = null) {
 }
 
 /**
+ * @param {import("three/src/math/Matrix4").Matrix4} matrix
+ * @param {import("three/src/math/Vector3").Vector3} R
+ * @param {import("three/src/math/Vector3").Vector3} U
+ * @param {import("three/src/math/Vector3").Vector3} F
+ * @param {import("three/src/math/Vector3").Vector3} P
+ */
+function setRightUpFwdPos(matrix, R, U, F, P) {
+    const m = matrix.elements;
+    R.set(m[0], m[1], m[2]);
+    U.set(m[4], m[5], m[6]);
+    F.crossVectors(U, R);
+    P.set(m[12], m[13], m[14]);
+}
+
+/**
  * @param {import("./fetching").progressCallback} onProgress
  * @param {Number|Number[]} subProgressWeights
  * @returns {import("./fetching").progressCallback[])
@@ -32729,9 +32744,13 @@ const gestures = [
   */
 function onUserGesture(callback, test) {
     test = test || (() => true);
-    const check = (evt) => {
-        console.log(evt.type, evt.isTrusted);
-        if (evt.isTrusted && test()) {
+    const check = async (evt) => {
+        let testResult = test();
+        if (testResult instanceof Promise) {
+            testResult = await testResult;
+        }
+
+        if (evt.isTrusted && testResult) {
             for (let gesture of gestures) {
                 window.removeEventListener(gesture, check);
             }
@@ -41730,21 +41749,6 @@ class AudioManager extends EventBase {
     }
 }
 
-/**
- * @param {import("three/src/math/Matrix4").Matrix4} matrix
- * @param {import("three/src/math/Vector3").Vector3} R
- * @param {import("three/src/math/Vector3").Vector3} U
- * @param {import("three/src/math/Vector3").Vector3} F
- * @param {import("three/src/math/Vector3").Vector3} P
- */
-function setRightUpFwdPos(matrix, R, U, F, P) {
-    const m = matrix.elements;
-    R.set(m[0], m[1], m[2]);
-    U.set(m[4], m[5], m[6]);
-    F.crossVectors(U, R);
-    P.set(m[12], m[13], m[14]);
-}
-
 const MouseButton = Object.freeze({
     Mouse0: 0,
     Mouse1: 1,
@@ -44623,146 +44627,156 @@ async function showLanguage(languageID, skipHistory = false) {
 
 async function showLesson(lessonID, skipHistory = false) {
     setHistory(2, lessonID, skipHistory, "Lesson");
+    app.clearScene();
     await showMenu(`VR/Lesson/${lessonID}/Activities`, (activity) => showActivity(activity.id));
 }
 
 async function showActivity(activityID, skipHistory = false) {
-    setHistory(3, activityID, skipHistory, "Activity");
-
-    await app.fadeOut();
-    app.clearScene();
-
-    const [lessonProg, assetProg] = splitProgress(onProgress, [1, 99]);
-
-    const all = await getObject(`/VR/Activity/${activityID}`, lessonProg);
-    const {
-        transforms,
-        stations,
-        connections,
-        signs,
-        audioTracks
-    } = all;
-
-
-    const progs = splitProgress(assetProg, signs.length + audioTracks.length + 1);
-
-    let startID = null;
-    for (let station of stations) {
-        curStations.set(station.transformID, station);
-        if (station.isStart) {
-            startID = station.transformID;
-        }
+    if (!app.audio.ready) {
+        showMenu([{
+            id: activityID,
+            name: "Start Activity"
+        }], async (activity) => {
+            await once(app.audio, "audioready");
+            showActivity(activity.id, skipHistory);
+        });
     }
+    else {
+        setHistory(3, activityID, skipHistory, "Activity");
 
-    for (let connection of connections) {
-        if (!curConnections.has(connection.fromStationID)) {
-            curConnections.set(connection.fromStationID, []);
+        await app.fadeOut();
+        app.clearScene();
+
+        const [lessonProg, assetProg] = splitProgress(onProgress, [1, 99]);
+
+        const all = await getObject(`/VR/Activity/${activityID}`, lessonProg);
+        const {
+            transforms,
+            stations,
+            connections,
+            signs,
+            audioTracks
+        } = all;
+
+
+        const progs = splitProgress(assetProg, signs.length + audioTracks.length + 1);
+
+        let startID = null;
+        for (let station of stations) {
+            curStations.set(station.transformID, station);
+            if (station.isStart) {
+                startID = station.transformID;
+            }
         }
 
-        const arr = curConnections.get(connection.fromStationID);
-        arr.push(connection.toStationID);
-    }
+        for (let connection of connections) {
+            if (!curConnections.has(connection.fromStationID)) {
+                curConnections.set(connection.fromStationID, []);
+            }
 
-    for (let transform of transforms) {
-        const obj = new Object3D();
-        obj.name = transform.name;
-        obj.userData.id = transform.id;
-        obj.matrix.fromArray(transform.matrix);
-        obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
-        curTransforms.set(transform.id, obj);
-    }
-
-    for (let transform of transforms) {
-        const child = curTransforms.get(transform.id);
-        if (transform.parentID === 0) {
-            app.foreground.add(child);
+            const arr = curConnections.get(connection.fromStationID);
+            arr.push(connection.toStationID);
         }
-        else {
-            const parent = curTransforms.get(transform.parentID);
-            parent.attach(child);
+
+        for (let transform of transforms) {
+            const obj = new Object3D();
+            obj.name = transform.name;
+            obj.userData.id = transform.id;
+            obj.matrix.fromArray(transform.matrix);
+            obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
+            curTransforms.set(transform.id, obj);
         }
-    }
 
-    for (let fromStationID of curConnections.keys()) {
-        const from = curTransforms.get(fromStationID),
-            exits = curConnections.get(fromStationID);
-
-        from.visible = false;
-
-        for (let toStationID of exits) {
-            const to = curTransforms.get(toStationID),
-                icon = DebugObject();
-            icon.position.copy(to.position);
-            icon.position.sub(from.position);
-            icon.position.y = 0;
-            icon.position.normalize();
-            icon.position.multiplyScalar(1.5);
-            icon.position.y += 1;
-
-            from.add(icon);
-            icon.addEventListener("click", () => showStation(toStationID, onProgress));
+        for (let transform of transforms) {
+            const child = curTransforms.get(transform.id);
+            if (transform.parentID === 0) {
+                app.foreground.add(child);
+            }
+            else {
+                const parent = curTransforms.get(transform.parentID);
+                parent.attach(child);
+            }
         }
-    }
 
-    for (let sign of signs) {
-        const transform = curTransforms.get(sign.transformID);
-        const img = new Image2DMesh();
-        img.name = "sign-" + sign.fileID;
-        if (sign.isCallout) {
-            img.addEventListener("click", () => console.log(img.name));
+        for (let fromStationID of curConnections.keys()) {
+            const from = curTransforms.get(fromStationID),
+                exits = curConnections.get(fromStationID);
+
+            from.visible = false;
+
+            for (let toStationID of exits) {
+                const to = curTransforms.get(toStationID),
+                    icon = DebugObject();
+                icon.position.copy(to.position);
+                icon.position.sub(from.position);
+                icon.position.y = 0;
+                icon.position.normalize();
+                icon.position.multiplyScalar(1.5);
+                icon.position.y += 1;
+
+                from.add(icon);
+                icon.addEventListener("click", () => showStation(toStationID, onProgress));
+            }
         }
-        const prog = progs.shift();
-        await img.setImage(sign.path, prog);
-        transform.add(img);
-    }
 
-    for (let audioTrack of audioTracks) {
-        const clip = await app.audio.createClip(
-            audioTrack.path,
-            audioTrack.loop,
-            false,
-            audioTrack.spatialize,
-            progs.shift(),
-            audioTrack.path);
+        for (let sign of signs) {
+            const transform = curTransforms.get(sign.transformID);
+            const img = new Image2DMesh();
+            img.name = "sign-" + sign.fileID;
+            if (sign.isCallout) {
+                img.addEventListener("click", () => console.log(img.name));
+            }
+            const prog = progs.shift();
+            await img.setImage(sign.path, prog);
+            transform.add(img);
+        }
 
-        curAudioTracks.push(audioTrack);
-        clip.spatializer.minDistance = audioTrack.minDistance;
-        clip.spatializer.maxDistance = audioTrack.maxDistance;
-
-        if (audioTrack.spatialize) {
-            const transform = curTransforms.get(audioTrack.transformID);
-            transform.add(DebugObject(0x0000ff));
-            setRightUpFwdPos(transform.matrixWorld, R$1, U$1, F$1, P$1);
-            app.audio.setClipPose(
+        for (let audioTrack of audioTracks) {
+            const clip = await app.audio.createClip(
                 audioTrack.path,
-                P$1.x, P$1.y, P$1.z,
-                R$1.x, R$1.y, R$1.z,
-                F$1.x, F$1.y, F$1.z,
-                0);
+                audioTrack.loop,
+                false,
+                audioTrack.spatialize,
+                progs.shift(),
+                audioTrack.path);
 
-            await clip.spatializer.audio.play();
-            clip.spatializer.audio.pause();
+            curAudioTracks.push(audioTrack);
+            clip.spatializer.minDistance = audioTrack.minDistance;
+            clip.spatializer.maxDistance = audioTrack.maxDistance;
+
+            if (audioTrack.spatialize) {
+                const transform = curTransforms.get(audioTrack.transformID);
+                transform.add(DebugObject(0x0000ff));
+                setRightUpFwdPos(transform.matrixWorld, R$1, U$1, F$1, P$1);
+                app.audio.setClipPose(
+                    audioTrack.path,
+                    P$1.x, P$1.y, P$1.z,
+                    R$1.x, R$1.y, R$1.z,
+                    F$1.x, F$1.y, F$1.z,
+                    0);
+            }
+
+            if (audioTrack.playbackTransformID > 0) {
+                const playbackButton = DebugObject(0x00ff00);
+                playbackButton.addEventListener("click", async () => {
+                    stopCurrentAudioZone();
+                    app.audio.playClip(audioTrack.path, audioTrack.volume);
+                    await once(clip.spatializer.audio, "ended");
+                    playCurrentAudioZone();
+                });
+
+                const transform = curTransforms.get(audioTrack.playbackTransformID);
+                transform.add(playbackButton);
+            }
         }
 
-        if (audioTrack.playbackTransformID > 0) {
-            const playbackButton = DebugObject(0x00ff00);
-            playbackButton.addEventListener("click", async () => {
-                stopCurrentAudioZone();
-                app.audio.playClip(audioTrack.path, audioTrack.volume);
-                await once(clip.spatializer.audio, "ended");
-                playCurrentAudioZone();
-            });
+        if (startID !== null) {
 
-            const transform = curTransforms.get(audioTrack.playbackTransformID);
-            transform.add(playbackButton);
+            await showStation(startID, progs.shift());
         }
-    }
 
-    if (startID !== null) {
-        await showStation(startID, progs.shift());
+        await app.fadeIn();
     }
-
-    await app.fadeIn();
 }
 
 async function showStation(stationID, onProgress) {
@@ -44806,14 +44820,16 @@ function setHistory(step, id, skipHistory, name) {
     }
 }
 
-async function showMenu(path, onClick) {
+async function showMenu(pathOrItems, onClick) {
     await app.fadeOut();
 
-    app.clearScene();
+    app.menu.remove(...app.menu.children);
     app.skybox.visible = false;
     app.stage.position.set(0, 0, 0);
 
-    const items = await await getObject(path);
+    const items = isString(pathOrItems)
+        ? await getObject(pathOrItems)
+        : pathOrItems;
     const tasks = [];
     for (let i = 0; i < items.length; ++i) {
         const item = items[i];

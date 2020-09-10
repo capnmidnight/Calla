@@ -10980,9 +10980,13 @@ const gestures = [
   */
 function onUserGesture(callback, test) {
     test = test || (() => true);
-    const check = (evt) => {
-        console.log(evt.type, evt.isTrusted);
-        if (evt.isTrusted && test()) {
+    const check = async (evt) => {
+        let testResult = test();
+        if (testResult instanceof Promise) {
+            testResult = await testResult;
+        }
+
+        if (evt.isTrusted && testResult) {
             for (let gesture of gestures) {
                 window.removeEventListener(gesture, check);
             }
@@ -20257,7 +20261,7 @@ function when(target, resolveEvt, filterTest, timeout) {
     });
 }
 
-const versionString = "v0.10.2";
+const versionString = "v0.10.3";
 
 /* global JitsiMeetJS */
 
