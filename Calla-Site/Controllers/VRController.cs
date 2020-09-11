@@ -131,10 +131,17 @@ namespace Calla.Controllers
                     .ThenInclude(t => t.Stations)
                         .ThenInclude(s => s.StationConnectionsFromStation)
                 .Include(act => act.Transforms)
+                    .ThenInclude(t => t.Stations)
+                        .ThenInclude(s => s.File)
+                .Include(act => act.Transforms)
                     .ThenInclude(t => t.AudioTracks)
                         .ThenInclude(aud => aud.PlaybackControls)
                 .Include(act => act.Transforms)
+                    .ThenInclude(t => t.AudioTracks)
+                        .ThenInclude(aud => aud.File)
+                .Include(act => act.Transforms)
                     .ThenInclude(t => t.Signs)
+                        .ThenInclude(s => s.File)
                 .AsEnumerable()
                 .Select(act => new FullActivity
                 {
@@ -154,6 +161,7 @@ namespace Calla.Controllers
                         {
                             TransformID = t.Stations.TransformId,
                             FileID = t.Stations.FileId,
+                            FileName = t.Stations.File.Name,
                             Path = $"VR/File/{t.Stations.FileId}",
                             Location = new LatLngPoint(t.Stations.Latitude, t.Stations.Longitude, t.Stations.Altitude),
                             Rotation = t.Stations.Rotation,
@@ -161,7 +169,8 @@ namespace Calla.Controllers
                             Zone = t.Stations.Zone
                         }),
                     Connections = act.Transforms
-                        .Where(t => t.Stations is object && t.Stations.StationConnectionsFromStation is object)
+                        .Where(t => t.Stations is object
+                            && t.Stations.StationConnectionsFromStation is object)
                         .SelectMany(t => t.Stations.StationConnectionsFromStation
                             .Select(stc => new GraphEdge
                             {
@@ -175,6 +184,7 @@ namespace Calla.Controllers
                             {
                                 TransformID = at.TransformId,
                                 FileID = at.FileId,
+                                FileName = at.File.Name,
                                 Path = $"VR/File/{at.FileId}",
                                 AutoPlay = at.AutoPlay,
                                 Loop = at.Loop,
@@ -192,6 +202,7 @@ namespace Calla.Controllers
                             {
                                 TransformID = s.TransformId,
                                 FileID = s.FileId,
+                                FileName = s.File.Name,
                                 Path = $"VR/File/{s.FileId}",
                                 IsCallout = s.IsCallout
                             }))
