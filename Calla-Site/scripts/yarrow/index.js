@@ -225,8 +225,7 @@ async function showActivity(activityID, skipHistory = false) {
 
         for (let sign of signs) {
             const transform = curTransforms.get(sign.transformID);
-            const img = new Image2DMesh();
-            img.name = "sign-" + sign.fileID;
+            const img = new Image2DMesh("sign-" + sign.fileID);
             if (sign.isCallout) {
                 img.addEventListener("click", () => console.log(img.name));
             }
@@ -357,7 +356,7 @@ async function showMenu(pathOrItems, onClick) {
  * @param {menuItemCallback} onClick
  */
 function addMenuItem(item, y, onClick) {
-    const button = Object.assign(new TextMesh(), {
+    const button = Object.assign(new TextMesh(item.name), {
         name: item.name,
         disabled: item.enabled === false,
         textBgColor: item.enabled !== false

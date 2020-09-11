@@ -2,8 +2,11 @@ import { TextImage } from "../graphics2d/TextImage";
 import { Image2DMesh } from "./Image2DMesh";
 
 export class TextMesh extends Image2DMesh {
-    constructor() {
-        super();
+    /**
+     * @param {string} name
+     */
+    constructor(name) {
+        super(name);
         this.textImage = new TextImage();
         this.setImage(this.textImage.canvas);
         this.textImage.addEventListener("redrawn", () => {

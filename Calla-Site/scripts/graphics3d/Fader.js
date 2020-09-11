@@ -1,7 +1,7 @@
-import { PlaneBufferGeometry } from "three/src/geometries/PlaneGeometry";
-import { MeshBasicMaterial } from "three/src/materials/MeshBasicMaterial";
 import { Mesh } from "three/src/objects/Mesh";
 import { once } from "../calla/events/once";
+import { plane } from "./Plane";
+import { solid } from "./solid";
 
 const completeEvt = { type: "fadeComplete" };
 
@@ -13,11 +13,7 @@ export class Fader extends Mesh {
      * @param {import("three").Color|number} color
      */
     constructor(camera, t = 0.25, color = 0x000000) {
-        const geom = new PlaneBufferGeometry(1, 1, 1, 1);
-        const mat = new MeshBasicMaterial({ color, opacity: 1, transparent: true });
-        super(geom, mat);
-
-        this.material = mat;
+        super(plane, solid({ color, opacity: 1, transparent: true }));
 
         this.speed = 1 / t;
         this.direction = 0;

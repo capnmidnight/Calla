@@ -1,16 +1,9 @@
 import { Object3D } from "three/src/core/Object3D";
-import { BoxBufferGeometry } from "three/src/geometries/BoxGeometry";
-import { MeshBasicMaterial } from "three/src/materials/MeshBasicMaterial";
-import { Mesh } from "three/src/objects/Mesh";
-
-const cubeGeom = new BoxBufferGeometry(1, 1, 1, 1, 1, 1);
-const valueBarMat = new MeshBasicMaterial({ color: 0xc0c0c0 });
-const chromeMat = new MeshBasicMaterial({ color: 0xffffff });
+import { Cube } from "./Cube";
 
 function chrome(x, y, z, w, h, d) {
-    const chromeMesh = new Mesh(cubeGeom, chromeMat);
+    const chromeMesh = new Cube(0xffffff, w, h, d);
     chromeMesh.position.set(x, y, z);
-    chromeMesh.scale.set(w, h, d);
     return chromeMesh;
 }
 
@@ -19,8 +12,7 @@ export class LoadingBar extends Object3D {
     constructor() {
         super();
 
-        this.valueBar = new Mesh(cubeGeom, valueBarMat);
-        this.valueBar.position.set(0, 0, 0);
+        this.valueBar = new Cube(0xc0c0c0, 0, 1, 1);
         this.valueBar.scale.set(0, 1, 1);
         this.value = 0;
         this.targetValue = 0;
