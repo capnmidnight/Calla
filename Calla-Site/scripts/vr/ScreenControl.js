@@ -2,6 +2,7 @@ import { href, id } from "../html/attrs";
 import { cssWidth, display, left, textDecoration } from "../html/css";
 import { A, Button } from "../html/tags";
 import { EventBase } from "../calla/events/EventBase";
+import { onUserGesture } from "../html/evts";
 
 export class SessionStartedEvt extends Event {
     /**
@@ -24,8 +25,9 @@ export class ScreenControl extends EventBase {
     /**
      * @param {import("three").WebGLRenderer} renderer
      * @param {import("three").PerspectiveCamera} camera
+     * @param {boolean} enableAR
      */
-    constructor(renderer, camera) {
+    constructor(renderer, camera, enableAR) {
         super();
 
         if (!("xr" in navigator)) {
@@ -120,24 +122,14 @@ export class ScreenControl extends EventBase {
             this.element.addEventListener("pointerleave", onPointerLeave);
 
             (async () => {
-                if (await navigator.xr.isSessionSupported("immersive-ar")) {
+                if (enableAR && await navigator.xr.isSessionSupported("immersive-ar")) {
                     showButton("AR", "immserive-ar", "local-floor");
                 }
                 else if (await navigator.xr.isSessionSupported("immersive-vr")) {
-                    showButton("VR", "immersive-vr", "local-floor", { optionalFeatures: ["local-floor", "bounded-floor", "hand-tracking"] });
-                }
-                else if (await navigator.xr.isSessionSupported("inline")) {
-                    showButton("FULLSCREEN", "inline", "viewer");
+                    showButton("VR", "immersive-vr", "local", { optionalFeatures: ["local", "local-floor", "bounded-floor", "hand-tracking"] });
                 }
                 else {
-                    disableButton();
-                    this.element.textContent = "VR NOT SUPPORTED";
-                    this.element.style.display = "";
-                    this.element.style.cursor = "auto";
-                    this.element.style.left = "calc(50% - 75px)";
-                    this.element.style.width = "150px";
-                    this.element.removeEventListener("pointerenter", onPointerEnter);
-                    this.element.removeEventListener("pointerleave", onPointerLeave);
+                    showButton("FULLSCREEN");
                 }
             })();
         }
