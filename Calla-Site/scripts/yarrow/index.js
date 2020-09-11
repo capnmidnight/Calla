@@ -8,9 +8,11 @@ import { splitProgress } from "../calla/progress";
 import { isString } from "../calla/typeChecks";
 import { loadFont, makeFont } from "../graphics2d/fonts";
 import { DebugObject } from "../graphics3d/DebugObject";
-import { Image2DMesh } from "../graphics3d/Image2DMesh";
 import { TextMesh } from "../graphics3d/TextMesh";
 import { Application } from "../vr/Application";
+import { Sign } from "./Sign";
+import { NavIcon } from "./NavIcon";
+import { PlaybackButton } from "./PlaybackButton";
 
 const R = new Vector3();
 const U = new Vector3();
@@ -212,29 +214,18 @@ async function showActivity(activityID, skipHistory = false) {
             from.visible = false;
 
             for (let toStationID of exits) {
-                const to = curTransforms.get(toStationID),
-                    icon = new DebugObject(0xff0000);
-                icon.position.copy(to.position);
-                icon.position.sub(from.position);
-                icon.position.y = 0;
-                icon.position.normalize();
-                icon.position.multiplyScalar(1.5);
-                icon.position.y += 1;
-
-                from.add(icon);
+                const to = curTransforms.get(toStationID);
+                const icon = new NavIcon(from, to);
                 icon.addEventListener("click", () => showStation(toStationID, onProgress));
+                from.add(icon);
             }
         }
 
         /////////// BUILD SIGNS /////////////
         for (let sign of signs) {
             const transform = curTransforms.get(sign.transformID);
-            const img = new Image2DMesh("sign-" + sign.fileID);
-            if (sign.isCallout) {
-                img.addEventListener("click", () => console.log(img.name));
-            }
-            const prog = progs.shift();
-            await img.setImage(sign.path, prog);
+            const img = new Sign(sign);
+            await img.setImage(sign.path, progs.shift());
             transform.add(img);
         }
 
@@ -249,6 +240,7 @@ async function showActivity(activityID, skipHistory = false) {
                 audioTrack.path);
 
             curAudioTracks.push(audioTrack);
+
             clip.spatializer.minDistance = audioTrack.minDistance;
             clip.spatializer.maxDistance = audioTrack.maxDistance;
 
@@ -265,7 +257,7 @@ async function showActivity(activityID, skipHistory = false) {
             }
 
             if (audioTrack.playbackTransformID > 0) {
-                const playbackButton = new DebugObject(0x00ff00);
+                const playbackButton = new PlaybackButton(audioTrack);
                 playbackButton.addEventListener("click", async () => {
                     stopCurrentAudioZone();
                     app.audio.playClip(audioTrack.path, audioTrack.volume)
@@ -280,7 +272,6 @@ async function showActivity(activityID, skipHistory = false) {
 
         /////////// START ACTIVITY /////////////
         if (startID !== null) {
-
             await showStation(startID, progs.shift());
         }
 
@@ -306,6 +297,8 @@ async function showStation(stationID, onProgress) {
     }
 
     await playAudioZone(station.zone);
+
+    console.info("Current station is", station.fileName);
 
     await app.fadeIn();
 }
