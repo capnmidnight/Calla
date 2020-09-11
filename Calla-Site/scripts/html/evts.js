@@ -1188,7 +1188,10 @@ export function onUserGesture(callback, test) {
                 window.removeEventListener(gesture, check);
             }
 
-            callback();
+            const result = callback();
+            if (result instanceof Promise) {
+                await result;
+            }
         }
     }
 
