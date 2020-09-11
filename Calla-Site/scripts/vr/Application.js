@@ -1,3 +1,4 @@
+import WebXRPolyfill from "webxr-polyfill";
 import { PerspectiveCamera } from "three/src/cameras/PerspectiveCamera";
 import { Object3D } from "three/src/core/Object3D";
 import { AmbientLight } from "three/src/lights/AmbientLight";
@@ -21,6 +22,7 @@ import { ThreeJSTimer } from "../timers/ThreeJSTimer";
 import { ScreenControl } from "./ScreenControl";
 import { UISystem } from "./UISystem";
 
+const polyfill = new WebXRPolyfill();
 const visibleBackground = new Color(0x606060);
 const invisibleBackground = new Color(0x000000);
 const R = new Vector3();
