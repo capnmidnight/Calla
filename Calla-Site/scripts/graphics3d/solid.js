@@ -1,4 +1,4 @@
-import { MeshBasicMaterial } from "three/src/materials/MeshBasicMaterial";
+import { MeshStandardMaterial } from "three/src/materials/MeshStandardMaterial";
 
 const colors = new Map();
 
@@ -9,7 +9,7 @@ export function solid(opts) {
         .join(",");
 
     if (!colors.has(key)) {
-        colors.set(key, new MeshBasicMaterial(opts));
+        colors.set(key, new MeshStandardMaterial(opts));
     }
 
     return colors.get(key);

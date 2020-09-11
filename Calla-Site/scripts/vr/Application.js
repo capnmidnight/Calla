@@ -1,6 +1,7 @@
 import { PerspectiveCamera } from "three/src/cameras/PerspectiveCamera";
 import { Object3D } from "three/src/core/Object3D";
 import { AmbientLight } from "three/src/lights/AmbientLight";
+import { DirectionalLight } from "three/src/lights/DirectionalLight";
 import { Color } from "three/src/math/Color";
 import { Vector3 } from "three/src/math/Vector3";
 import { WebGLRenderer } from "three/src/renderers/WebGLRenderer";
@@ -63,11 +64,16 @@ export class Application extends EventBase {
         this.stage = new Stage(this.camera);
         this.stage.position.set(0, 0, 0);
 
-        this.light = new AmbientLight(0xffffff, 1);
+        this.sun = new DirectionalLight(0xffffff, 0.5);
+        this.sun.position.set(0, 1, 1);
+        this.sun.lookAt(0, 0, 0);
+
+        this.ambient = new AmbientLight(0xffffff, 0.5);
 
         this.background = new Object3D();
         this.background.name = "Background";
-        this.background.add(this.light);
+        this.background.add(this.sun);
+        this.background.add(this.ambient);
         this.background.add(this.skybox);
         this.background.add(this.stage);
 
