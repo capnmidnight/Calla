@@ -17,7 +17,12 @@
     "rollup-plugin-terser": "^7.0.0",
     "three": "^0.119.1",
     "tracekit": "^0.4.5",
-    "typescript": "^3.9.7"
+    "typescript": "^3.9.7",
+    "webxr-polyfill": "^2.0.3"
+  },
+  "-vs-binding": {
+    "ProjectOpened": [
+      "watch:yarrow"
+    ]
   }
-, "-vs-binding":{"ProjectOpened":["watch:yarrow"]}
 }
