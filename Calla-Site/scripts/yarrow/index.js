@@ -165,6 +165,7 @@ async function showActivity(activityID, skipHistory = false) {
 
         const progs = splitProgress(assetProg, signs.length + audioTracks.length + 1);
 
+        /////////// GROUP DATA /////////////
         let startID = null;
         for (let station of stations) {
             curStations.set(station.transformID, station);
@@ -182,6 +183,7 @@ async function showActivity(activityID, skipHistory = false) {
             arr.push(connection.toStationID);
         }
 
+        /////////// BUILD SCENE GRAPH /////////////
         for (let transform of transforms) {
             const obj = new Object3D();
             obj.name = transform.name;
@@ -202,6 +204,7 @@ async function showActivity(activityID, skipHistory = false) {
             }
         }
 
+        /////////// BUILD STATIONS /////////////
         for (let fromStationID of curConnections.keys()) {
             const from = curTransforms.get(fromStationID),
                 exits = curConnections.get(fromStationID);
@@ -223,6 +226,7 @@ async function showActivity(activityID, skipHistory = false) {
             }
         }
 
+        /////////// BUILD SIGNS /////////////
         for (let sign of signs) {
             const transform = curTransforms.get(sign.transformID);
             const img = new Image2DMesh("sign-" + sign.fileID);
@@ -234,6 +238,7 @@ async function showActivity(activityID, skipHistory = false) {
             transform.add(img);
         }
 
+        /////////// BUILD AUDIO TRACKS /////////////
         for (let audioTrack of audioTracks) {
             const clip = await app.audio.createClip(
                 audioTrack.path,
@@ -273,6 +278,7 @@ async function showActivity(activityID, skipHistory = false) {
             }
         }
 
+        /////////// START ACTIVITY /////////////
         if (startID !== null) {
 
             await showStation(startID, progs.shift());
