@@ -213,7 +213,7 @@ async function showActivity(activityID, skipHistory = false) {
 
             for (let toStationID of exits) {
                 const to = curTransforms.get(toStationID),
-                    icon = DebugObject();
+                    icon = new DebugObject(0xff0000);
                 icon.position.copy(to.position);
                 icon.position.sub(from.position);
                 icon.position.y = 0;
@@ -254,7 +254,7 @@ async function showActivity(activityID, skipHistory = false) {
 
             if (audioTrack.spatialize) {
                 const transform = curTransforms.get(audioTrack.transformID);
-                transform.add(DebugObject(0x0000ff));
+                transform.add(new DebugObject(0x0000ff));
                 setRightUpFwdPos(transform.matrixWorld, R, U, F, P);
                 app.audio.setClipPose(
                     audioTrack.path,
@@ -265,7 +265,7 @@ async function showActivity(activityID, skipHistory = false) {
             }
 
             if (audioTrack.playbackTransformID > 0) {
-                const playbackButton = DebugObject(0x00ff00);
+                const playbackButton = new DebugObject(0x00ff00);
                 playbackButton.addEventListener("click", async () => {
                     stopCurrentAudioZone();
                     app.audio.playClip(audioTrack.path, audioTrack.volume)
