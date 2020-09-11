@@ -113,18 +113,14 @@ export class Application extends EventBase {
         this.uiSystem = new UISystem(this.eventSystem);
 
         const update = (evt) => {
-
-            this.cameraControl.update();
-
             if (!this.showSkybox) {
                 this.skybox.visible = false;
             }
+
+            this.cameraControl.update();
             this.skybox.update();
-
             this.audio.update();
-
             this.loadingBar.update(evt.sdt);
-
             this.fader.update(evt.sdt);
 
             this.stage.presentationPoint.getWorldPosition(this.transition.position);
