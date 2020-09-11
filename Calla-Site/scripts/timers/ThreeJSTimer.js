@@ -8,7 +8,7 @@ export class ThreeJSTimer extends BaseTimer {
      * @param {import("three").WebGLRenderer} renderer
      */
     constructor(renderer) {
-        super(60);
+        super(120);
         renderers.set(this, renderer);
     }
 
@@ -26,12 +26,5 @@ export class ThreeJSTimer extends BaseTimer {
             renderer.setAnimationLoop(null);
             super.stop();
         }
-    }
-
-    get targetFrameRate() {
-        return super.targetFrameRate;
-    }
-
-    set targetFrameRate(fps) {
     }
 }
