@@ -49,6 +49,7 @@ function def(name, withTraceKit, minify) {
 
     if (process.env.BUILD === "production" && minify) {
         opts.output.push({
+            sourcemap: true,
             file: `wwwroot/scripts/${name}.min.js`,
             plugins: [terser({
                 module: true

@@ -12371,7 +12371,10 @@ function onUserGesture(callback, test) {
                 window.removeEventListener(gesture, check);
             }
 
-            callback();
+            const result = callback();
+            if (result instanceof Promise) {
+                await result;
+            }
         }
     };
 
@@ -18362,7 +18365,7 @@ const DEFAULT_SOURCE_WIDTH = 0;
  * The maximum delay (in seconds) of a single wall reflection.
  * @type {Number}
  */
-const DEFAULT_REFLECTION_MAX_DURATION = 0.5;
+const DEFAULT_REFLECTION_MAX_DURATION = 2;
 
 
 /**
@@ -25859,20 +25862,25 @@ class BaseTimer extends EventBase {
              * @param {number} t
              */
             this._onTick = (t) => {
-                tickEvt.t = t;
-                tickEvt.dt = t - lt;
-                tickEvt.sdt = tickEvt.dt;
-                lt = t;
-                /**
-                 * @param {number} t
-                 */
-                this._onTick = (t) => {
+                if (t > lt) {
                     tickEvt.t = t;
                     tickEvt.dt = t - lt;
-                    tickEvt.sdt = lerp(tickEvt.sdt, tickEvt.dt, 0.01);
+                    tickEvt.sdt = tickEvt.dt;
                     lt = t;
-                    this.dispatchEvent(tickEvt);
-                };
+                    /**
+                     * @param {number} t
+                     */
+                    this._onTick = (t) => {
+                        const dt = t - lt;
+                        if (dt > 0 && dt >= this._frameTime) {
+                            tickEvt.t = t;
+                            tickEvt.dt = dt;
+                            tickEvt.sdt = lerp(tickEvt.sdt, tickEvt.dt, 0.01);
+                            lt = t;
+                            this.dispatchEvent(tickEvt);
+                        }
+                    };
+                }
             };
         };
     }

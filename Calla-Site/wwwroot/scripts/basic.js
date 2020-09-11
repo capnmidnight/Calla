@@ -10991,7 +10991,10 @@ function onUserGesture(callback, test) {
                 window.removeEventListener(gesture, check);
             }
 
-            callback();
+            const result = callback();
+            if (result instanceof Promise) {
+                await result;
+            }
         }
     };
 
@@ -16963,7 +16966,7 @@ const DEFAULT_SOURCE_WIDTH = 0;
  * The maximum delay (in seconds) of a single wall reflection.
  * @type {Number}
  */
-const DEFAULT_REFLECTION_MAX_DURATION = 0.5;
+const DEFAULT_REFLECTION_MAX_DURATION = 2;
 
 
 /**

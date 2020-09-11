@@ -1,8 +1,10 @@
+import WebXRPolyfill from "webxr-polyfill/src/WebXRPolyfill";
+import { EventBase } from "../calla/events/EventBase";
 import { href, id } from "../html/attrs";
 import { cssWidth, display, left, textDecoration } from "../html/css";
 import { A, Button } from "../html/tags";
-import { EventBase } from "../calla/events/EventBase";
-import { onUserGesture } from "../html/evts";
+
+new WebXRPolyfill();
 
 export class SessionStartedEvt extends Event {
     /**
