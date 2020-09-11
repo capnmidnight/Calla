@@ -12062,559 +12062,6 @@ class BoxBufferGeometry extends BufferGeometry {
 
 }
 
-let materialId = 0;
-
-function Material() {
-
-	Object.defineProperty( this, 'id', { value: materialId ++ } );
-
-	this.uuid = MathUtils.generateUUID();
-
-	this.name = '';
-	this.type = 'Material';
-
-	this.fog = true;
-
-	this.blending = NormalBlending;
-	this.side = FrontSide;
-	this.flatShading = false;
-	this.vertexColors = false;
-
-	this.opacity = 1;
-	this.transparent = false;
-
-	this.blendSrc = SrcAlphaFactor;
-	this.blendDst = OneMinusSrcAlphaFactor;
-	this.blendEquation = AddEquation;
-	this.blendSrcAlpha = null;
-	this.blendDstAlpha = null;
-	this.blendEquationAlpha = null;
-
-	this.depthFunc = LessEqualDepth;
-	this.depthTest = true;
-	this.depthWrite = true;
-
-	this.stencilWriteMask = 0xff;
-	this.stencilFunc = AlwaysStencilFunc;
-	this.stencilRef = 0;
-	this.stencilFuncMask = 0xff;
-	this.stencilFail = KeepStencilOp;
-	this.stencilZFail = KeepStencilOp;
-	this.stencilZPass = KeepStencilOp;
-	this.stencilWrite = false;
-
-	this.clippingPlanes = null;
-	this.clipIntersection = false;
-	this.clipShadows = false;
-
-	this.shadowSide = null;
-
-	this.colorWrite = true;
-
-	this.precision = null; // override the renderer's default precision for this material
-
-	this.polygonOffset = false;
-	this.polygonOffsetFactor = 0;
-	this.polygonOffsetUnits = 0;
-
-	this.dithering = false;
-
-	this.alphaTest = 0;
-	this.premultipliedAlpha = false;
-
-	this.visible = true;
-
-	this.toneMapped = true;
-
-	this.userData = {};
-
-	this.version = 0;
-
-}
-
-Material.prototype = Object.assign( Object.create( EventDispatcher.prototype ), {
-
-	constructor: Material,
-
-	isMaterial: true,
-
-	onBeforeCompile: function ( /* shaderobject, renderer */ ) {},
-
-	customProgramCacheKey: function () {
-
-		return this.onBeforeCompile.toString();
-
-	},
-
-	setValues: function ( values ) {
-
-		if ( values === undefined ) return;
-
-		for ( const key in values ) {
-
-			const newValue = values[ key ];
-
-			if ( newValue === undefined ) {
-
-				console.warn( "THREE.Material: '" + key + "' parameter is undefined." );
-				continue;
-
-			}
-
-			// for backward compatability if shading is set in the constructor
-			if ( key === 'shading' ) {
-
-				console.warn( 'THREE.' + this.type + ': .shading has been removed. Use the boolean .flatShading instead.' );
-				this.flatShading = ( newValue === FlatShading ) ? true : false;
-				continue;
-
-			}
-
-			const currentValue = this[ key ];
-
-			if ( currentValue === undefined ) {
-
-				console.warn( "THREE." + this.type + ": '" + key + "' is not a property of this material." );
-				continue;
-
-			}
-
-			if ( currentValue && currentValue.isColor ) {
-
-				currentValue.set( newValue );
-
-			} else if ( ( currentValue && currentValue.isVector3 ) && ( newValue && newValue.isVector3 ) ) {
-
-				currentValue.copy( newValue );
-
-			} else {
-
-				this[ key ] = newValue;
-
-			}
-
-		}
-
-	},
-
-	toJSON: function ( meta ) {
-
-		const isRoot = ( meta === undefined || typeof meta === 'string' );
-
-		if ( isRoot ) {
-
-			meta = {
-				textures: {},
-				images: {}
-			};
-
-		}
-
-		const data = {
-			metadata: {
-				version: 4.5,
-				type: 'Material',
-				generator: 'Material.toJSON'
-			}
-		};
-
-		// standard Material serialization
-		data.uuid = this.uuid;
-		data.type = this.type;
-
-		if ( this.name !== '' ) data.name = this.name;
-
-		if ( this.color && this.color.isColor ) data.color = this.color.getHex();
-
-		if ( this.roughness !== undefined ) data.roughness = this.roughness;
-		if ( this.metalness !== undefined ) data.metalness = this.metalness;
-
-		if ( this.sheen && this.sheen.isColor ) data.sheen = this.sheen.getHex();
-		if ( this.emissive && this.emissive.isColor ) data.emissive = this.emissive.getHex();
-		if ( this.emissiveIntensity && this.emissiveIntensity !== 1 ) data.emissiveIntensity = this.emissiveIntensity;
-
-		if ( this.specular && this.specular.isColor ) data.specular = this.specular.getHex();
-		if ( this.shininess !== undefined ) data.shininess = this.shininess;
-		if ( this.clearcoat !== undefined ) data.clearcoat = this.clearcoat;
-		if ( this.clearcoatRoughness !== undefined ) data.clearcoatRoughness = this.clearcoatRoughness;
-
-		if ( this.clearcoatMap && this.clearcoatMap.isTexture ) {
-
-			data.clearcoatMap = this.clearcoatMap.toJSON( meta ).uuid;
-
-		}
-
-		if ( this.clearcoatRoughnessMap && this.clearcoatRoughnessMap.isTexture ) {
-
-			data.clearcoatRoughnessMap = this.clearcoatRoughnessMap.toJSON( meta ).uuid;
-
-		}
-
-		if ( this.clearcoatNormalMap && this.clearcoatNormalMap.isTexture ) {
-
-			data.clearcoatNormalMap = this.clearcoatNormalMap.toJSON( meta ).uuid;
-			data.clearcoatNormalScale = this.clearcoatNormalScale.toArray();
-
-		}
-
-		if ( this.map && this.map.isTexture ) data.map = this.map.toJSON( meta ).uuid;
-		if ( this.matcap && this.matcap.isTexture ) data.matcap = this.matcap.toJSON( meta ).uuid;
-		if ( this.alphaMap && this.alphaMap.isTexture ) data.alphaMap = this.alphaMap.toJSON( meta ).uuid;
-		if ( this.lightMap && this.lightMap.isTexture ) data.lightMap = this.lightMap.toJSON( meta ).uuid;
-
-		if ( this.aoMap && this.aoMap.isTexture ) {
-
-			data.aoMap = this.aoMap.toJSON( meta ).uuid;
-			data.aoMapIntensity = this.aoMapIntensity;
-
-		}
-
-		if ( this.bumpMap && this.bumpMap.isTexture ) {
-
-			data.bumpMap = this.bumpMap.toJSON( meta ).uuid;
-			data.bumpScale = this.bumpScale;
-
-		}
-
-		if ( this.normalMap && this.normalMap.isTexture ) {
-
-			data.normalMap = this.normalMap.toJSON( meta ).uuid;
-			data.normalMapType = this.normalMapType;
-			data.normalScale = this.normalScale.toArray();
-
-		}
-
-		if ( this.displacementMap && this.displacementMap.isTexture ) {
-
-			data.displacementMap = this.displacementMap.toJSON( meta ).uuid;
-			data.displacementScale = this.displacementScale;
-			data.displacementBias = this.displacementBias;
-
-		}
-
-		if ( this.roughnessMap && this.roughnessMap.isTexture ) data.roughnessMap = this.roughnessMap.toJSON( meta ).uuid;
-		if ( this.metalnessMap && this.metalnessMap.isTexture ) data.metalnessMap = this.metalnessMap.toJSON( meta ).uuid;
-
-		if ( this.emissiveMap && this.emissiveMap.isTexture ) data.emissiveMap = this.emissiveMap.toJSON( meta ).uuid;
-		if ( this.specularMap && this.specularMap.isTexture ) data.specularMap = this.specularMap.toJSON( meta ).uuid;
-
-		if ( this.envMap && this.envMap.isTexture ) {
-
-			data.envMap = this.envMap.toJSON( meta ).uuid;
-			data.reflectivity = this.reflectivity; // Scale behind envMap
-			data.refractionRatio = this.refractionRatio;
-
-			if ( this.combine !== undefined ) data.combine = this.combine;
-			if ( this.envMapIntensity !== undefined ) data.envMapIntensity = this.envMapIntensity;
-
-		}
-
-		if ( this.gradientMap && this.gradientMap.isTexture ) {
-
-			data.gradientMap = this.gradientMap.toJSON( meta ).uuid;
-
-		}
-
-		if ( this.size !== undefined ) data.size = this.size;
-		if ( this.sizeAttenuation !== undefined ) data.sizeAttenuation = this.sizeAttenuation;
-
-		if ( this.blending !== NormalBlending ) data.blending = this.blending;
-		if ( this.flatShading === true ) data.flatShading = this.flatShading;
-		if ( this.side !== FrontSide ) data.side = this.side;
-		if ( this.vertexColors ) data.vertexColors = true;
-
-		if ( this.opacity < 1 ) data.opacity = this.opacity;
-		if ( this.transparent === true ) data.transparent = this.transparent;
-
-		data.depthFunc = this.depthFunc;
-		data.depthTest = this.depthTest;
-		data.depthWrite = this.depthWrite;
-
-		data.stencilWrite = this.stencilWrite;
-		data.stencilWriteMask = this.stencilWriteMask;
-		data.stencilFunc = this.stencilFunc;
-		data.stencilRef = this.stencilRef;
-		data.stencilFuncMask = this.stencilFuncMask;
-		data.stencilFail = this.stencilFail;
-		data.stencilZFail = this.stencilZFail;
-		data.stencilZPass = this.stencilZPass;
-
-		// rotation (SpriteMaterial)
-		if ( this.rotation && this.rotation !== 0 ) data.rotation = this.rotation;
-
-		if ( this.polygonOffset === true ) data.polygonOffset = true;
-		if ( this.polygonOffsetFactor !== 0 ) data.polygonOffsetFactor = this.polygonOffsetFactor;
-		if ( this.polygonOffsetUnits !== 0 ) data.polygonOffsetUnits = this.polygonOffsetUnits;
-
-		if ( this.linewidth && this.linewidth !== 1 ) data.linewidth = this.linewidth;
-		if ( this.dashSize !== undefined ) data.dashSize = this.dashSize;
-		if ( this.gapSize !== undefined ) data.gapSize = this.gapSize;
-		if ( this.scale !== undefined ) data.scale = this.scale;
-
-		if ( this.dithering === true ) data.dithering = true;
-
-		if ( this.alphaTest > 0 ) data.alphaTest = this.alphaTest;
-		if ( this.premultipliedAlpha === true ) data.premultipliedAlpha = this.premultipliedAlpha;
-
-		if ( this.wireframe === true ) data.wireframe = this.wireframe;
-		if ( this.wireframeLinewidth > 1 ) data.wireframeLinewidth = this.wireframeLinewidth;
-		if ( this.wireframeLinecap !== 'round' ) data.wireframeLinecap = this.wireframeLinecap;
-		if ( this.wireframeLinejoin !== 'round' ) data.wireframeLinejoin = this.wireframeLinejoin;
-
-		if ( this.morphTargets === true ) data.morphTargets = true;
-		if ( this.morphNormals === true ) data.morphNormals = true;
-		if ( this.skinning === true ) data.skinning = true;
-
-		if ( this.visible === false ) data.visible = false;
-
-		if ( this.toneMapped === false ) data.toneMapped = false;
-
-		if ( JSON.stringify( this.userData ) !== '{}' ) data.userData = this.userData;
-
-		// TODO: Copied from Object3D.toJSON
-
-		function extractFromCache( cache ) {
-
-			const values = [];
-
-			for ( const key in cache ) {
-
-				const data = cache[ key ];
-				delete data.metadata;
-				values.push( data );
-
-			}
-
-			return values;
-
-		}
-
-		if ( isRoot ) {
-
-			const textures = extractFromCache( meta.textures );
-			const images = extractFromCache( meta.images );
-
-			if ( textures.length > 0 ) data.textures = textures;
-			if ( images.length > 0 ) data.images = images;
-
-		}
-
-		return data;
-
-	},
-
-	clone: function () {
-
-		return new this.constructor().copy( this );
-
-	},
-
-	copy: function ( source ) {
-
-		this.name = source.name;
-
-		this.fog = source.fog;
-
-		this.blending = source.blending;
-		this.side = source.side;
-		this.flatShading = source.flatShading;
-		this.vertexColors = source.vertexColors;
-
-		this.opacity = source.opacity;
-		this.transparent = source.transparent;
-
-		this.blendSrc = source.blendSrc;
-		this.blendDst = source.blendDst;
-		this.blendEquation = source.blendEquation;
-		this.blendSrcAlpha = source.blendSrcAlpha;
-		this.blendDstAlpha = source.blendDstAlpha;
-		this.blendEquationAlpha = source.blendEquationAlpha;
-
-		this.depthFunc = source.depthFunc;
-		this.depthTest = source.depthTest;
-		this.depthWrite = source.depthWrite;
-
-		this.stencilWriteMask = source.stencilWriteMask;
-		this.stencilFunc = source.stencilFunc;
-		this.stencilRef = source.stencilRef;
-		this.stencilFuncMask = source.stencilFuncMask;
-		this.stencilFail = source.stencilFail;
-		this.stencilZFail = source.stencilZFail;
-		this.stencilZPass = source.stencilZPass;
-		this.stencilWrite = source.stencilWrite;
-
-		const srcPlanes = source.clippingPlanes;
-		let dstPlanes = null;
-
-		if ( srcPlanes !== null ) {
-
-			const n = srcPlanes.length;
-			dstPlanes = new Array( n );
-
-			for ( let i = 0; i !== n; ++ i ) {
-
-				dstPlanes[ i ] = srcPlanes[ i ].clone();
-
-			}
-
-		}
-
-		this.clippingPlanes = dstPlanes;
-		this.clipIntersection = source.clipIntersection;
-		this.clipShadows = source.clipShadows;
-
-		this.shadowSide = source.shadowSide;
-
-		this.colorWrite = source.colorWrite;
-
-		this.precision = source.precision;
-
-		this.polygonOffset = source.polygonOffset;
-		this.polygonOffsetFactor = source.polygonOffsetFactor;
-		this.polygonOffsetUnits = source.polygonOffsetUnits;
-
-		this.dithering = source.dithering;
-
-		this.alphaTest = source.alphaTest;
-		this.premultipliedAlpha = source.premultipliedAlpha;
-
-		this.visible = source.visible;
-
-		this.toneMapped = source.toneMapped;
-
-		this.userData = JSON.parse( JSON.stringify( source.userData ) );
-
-		return this;
-
-	},
-
-	dispose: function () {
-
-		this.dispatchEvent( { type: 'dispose' } );
-
-	}
-
-} );
-
-Object.defineProperty( Material.prototype, 'needsUpdate', {
-
-	set: function ( value ) {
-
-		if ( value === true ) this.version ++;
-
-	}
-
-} );
-
-/**
- * parameters = {
- *  color: <hex>,
- *  opacity: <float>,
- *  map: new THREE.Texture( <Image> ),
- *
- *  lightMap: new THREE.Texture( <Image> ),
- *  lightMapIntensity: <float>
- *
- *  aoMap: new THREE.Texture( <Image> ),
- *  aoMapIntensity: <float>
- *
- *  specularMap: new THREE.Texture( <Image> ),
- *
- *  alphaMap: new THREE.Texture( <Image> ),
- *
- *  envMap: new THREE.CubeTexture( [posx, negx, posy, negy, posz, negz] ),
- *  combine: THREE.Multiply,
- *  reflectivity: <float>,
- *  refractionRatio: <float>,
- *
- *  depthTest: <bool>,
- *  depthWrite: <bool>,
- *
- *  wireframe: <boolean>,
- *  wireframeLinewidth: <float>,
- *
- *  skinning: <bool>,
- *  morphTargets: <bool>
- * }
- */
-
-function MeshBasicMaterial( parameters ) {
-
-	Material.call( this );
-
-	this.type = 'MeshBasicMaterial';
-
-	this.color = new Color( 0xffffff ); // emissive
-
-	this.map = null;
-
-	this.lightMap = null;
-	this.lightMapIntensity = 1.0;
-
-	this.aoMap = null;
-	this.aoMapIntensity = 1.0;
-
-	this.specularMap = null;
-
-	this.alphaMap = null;
-
-	this.envMap = null;
-	this.combine = MultiplyOperation;
-	this.reflectivity = 1;
-	this.refractionRatio = 0.98;
-
-	this.wireframe = false;
-	this.wireframeLinewidth = 1;
-	this.wireframeLinecap = 'round';
-	this.wireframeLinejoin = 'round';
-
-	this.skinning = false;
-	this.morphTargets = false;
-
-	this.setValues( parameters );
-
-}
-
-MeshBasicMaterial.prototype = Object.create( Material.prototype );
-MeshBasicMaterial.prototype.constructor = MeshBasicMaterial;
-
-MeshBasicMaterial.prototype.isMeshBasicMaterial = true;
-
-MeshBasicMaterial.prototype.copy = function ( source ) {
-
-	Material.prototype.copy.call( this, source );
-
-	this.color.copy( source.color );
-
-	this.map = source.map;
-
-	this.lightMap = source.lightMap;
-	this.lightMapIntensity = source.lightMapIntensity;
-
-	this.aoMap = source.aoMap;
-	this.aoMapIntensity = source.aoMapIntensity;
-
-	this.specularMap = source.specularMap;
-
-	this.alphaMap = source.alphaMap;
-
-	this.envMap = source.envMap;
-	this.combine = source.combine;
-	this.reflectivity = source.reflectivity;
-	this.refractionRatio = source.refractionRatio;
-
-	this.wireframe = source.wireframe;
-	this.wireframeLinewidth = source.wireframeLinewidth;
-	this.wireframeLinecap = source.wireframeLinecap;
-	this.wireframeLinejoin = source.wireframeLinejoin;
-
-	this.skinning = source.skinning;
-	this.morphTargets = source.morphTargets;
-
-	return this;
-
-};
-
 const _vector$4 = new Vector3();
 const _segCenter = new Vector3();
 const _segDir = new Vector3();
@@ -13669,6 +13116,559 @@ Object.assign( Triangle.prototype, {
 
 } );
 
+let materialId = 0;
+
+function Material() {
+
+	Object.defineProperty( this, 'id', { value: materialId ++ } );
+
+	this.uuid = MathUtils.generateUUID();
+
+	this.name = '';
+	this.type = 'Material';
+
+	this.fog = true;
+
+	this.blending = NormalBlending;
+	this.side = FrontSide;
+	this.flatShading = false;
+	this.vertexColors = false;
+
+	this.opacity = 1;
+	this.transparent = false;
+
+	this.blendSrc = SrcAlphaFactor;
+	this.blendDst = OneMinusSrcAlphaFactor;
+	this.blendEquation = AddEquation;
+	this.blendSrcAlpha = null;
+	this.blendDstAlpha = null;
+	this.blendEquationAlpha = null;
+
+	this.depthFunc = LessEqualDepth;
+	this.depthTest = true;
+	this.depthWrite = true;
+
+	this.stencilWriteMask = 0xff;
+	this.stencilFunc = AlwaysStencilFunc;
+	this.stencilRef = 0;
+	this.stencilFuncMask = 0xff;
+	this.stencilFail = KeepStencilOp;
+	this.stencilZFail = KeepStencilOp;
+	this.stencilZPass = KeepStencilOp;
+	this.stencilWrite = false;
+
+	this.clippingPlanes = null;
+	this.clipIntersection = false;
+	this.clipShadows = false;
+
+	this.shadowSide = null;
+
+	this.colorWrite = true;
+
+	this.precision = null; // override the renderer's default precision for this material
+
+	this.polygonOffset = false;
+	this.polygonOffsetFactor = 0;
+	this.polygonOffsetUnits = 0;
+
+	this.dithering = false;
+
+	this.alphaTest = 0;
+	this.premultipliedAlpha = false;
+
+	this.visible = true;
+
+	this.toneMapped = true;
+
+	this.userData = {};
+
+	this.version = 0;
+
+}
+
+Material.prototype = Object.assign( Object.create( EventDispatcher.prototype ), {
+
+	constructor: Material,
+
+	isMaterial: true,
+
+	onBeforeCompile: function ( /* shaderobject, renderer */ ) {},
+
+	customProgramCacheKey: function () {
+
+		return this.onBeforeCompile.toString();
+
+	},
+
+	setValues: function ( values ) {
+
+		if ( values === undefined ) return;
+
+		for ( const key in values ) {
+
+			const newValue = values[ key ];
+
+			if ( newValue === undefined ) {
+
+				console.warn( "THREE.Material: '" + key + "' parameter is undefined." );
+				continue;
+
+			}
+
+			// for backward compatability if shading is set in the constructor
+			if ( key === 'shading' ) {
+
+				console.warn( 'THREE.' + this.type + ': .shading has been removed. Use the boolean .flatShading instead.' );
+				this.flatShading = ( newValue === FlatShading ) ? true : false;
+				continue;
+
+			}
+
+			const currentValue = this[ key ];
+
+			if ( currentValue === undefined ) {
+
+				console.warn( "THREE." + this.type + ": '" + key + "' is not a property of this material." );
+				continue;
+
+			}
+
+			if ( currentValue && currentValue.isColor ) {
+
+				currentValue.set( newValue );
+
+			} else if ( ( currentValue && currentValue.isVector3 ) && ( newValue && newValue.isVector3 ) ) {
+
+				currentValue.copy( newValue );
+
+			} else {
+
+				this[ key ] = newValue;
+
+			}
+
+		}
+
+	},
+
+	toJSON: function ( meta ) {
+
+		const isRoot = ( meta === undefined || typeof meta === 'string' );
+
+		if ( isRoot ) {
+
+			meta = {
+				textures: {},
+				images: {}
+			};
+
+		}
+
+		const data = {
+			metadata: {
+				version: 4.5,
+				type: 'Material',
+				generator: 'Material.toJSON'
+			}
+		};
+
+		// standard Material serialization
+		data.uuid = this.uuid;
+		data.type = this.type;
+
+		if ( this.name !== '' ) data.name = this.name;
+
+		if ( this.color && this.color.isColor ) data.color = this.color.getHex();
+
+		if ( this.roughness !== undefined ) data.roughness = this.roughness;
+		if ( this.metalness !== undefined ) data.metalness = this.metalness;
+
+		if ( this.sheen && this.sheen.isColor ) data.sheen = this.sheen.getHex();
+		if ( this.emissive && this.emissive.isColor ) data.emissive = this.emissive.getHex();
+		if ( this.emissiveIntensity && this.emissiveIntensity !== 1 ) data.emissiveIntensity = this.emissiveIntensity;
+
+		if ( this.specular && this.specular.isColor ) data.specular = this.specular.getHex();
+		if ( this.shininess !== undefined ) data.shininess = this.shininess;
+		if ( this.clearcoat !== undefined ) data.clearcoat = this.clearcoat;
+		if ( this.clearcoatRoughness !== undefined ) data.clearcoatRoughness = this.clearcoatRoughness;
+
+		if ( this.clearcoatMap && this.clearcoatMap.isTexture ) {
+
+			data.clearcoatMap = this.clearcoatMap.toJSON( meta ).uuid;
+
+		}
+
+		if ( this.clearcoatRoughnessMap && this.clearcoatRoughnessMap.isTexture ) {
+
+			data.clearcoatRoughnessMap = this.clearcoatRoughnessMap.toJSON( meta ).uuid;
+
+		}
+
+		if ( this.clearcoatNormalMap && this.clearcoatNormalMap.isTexture ) {
+
+			data.clearcoatNormalMap = this.clearcoatNormalMap.toJSON( meta ).uuid;
+			data.clearcoatNormalScale = this.clearcoatNormalScale.toArray();
+
+		}
+
+		if ( this.map && this.map.isTexture ) data.map = this.map.toJSON( meta ).uuid;
+		if ( this.matcap && this.matcap.isTexture ) data.matcap = this.matcap.toJSON( meta ).uuid;
+		if ( this.alphaMap && this.alphaMap.isTexture ) data.alphaMap = this.alphaMap.toJSON( meta ).uuid;
+		if ( this.lightMap && this.lightMap.isTexture ) data.lightMap = this.lightMap.toJSON( meta ).uuid;
+
+		if ( this.aoMap && this.aoMap.isTexture ) {
+
+			data.aoMap = this.aoMap.toJSON( meta ).uuid;
+			data.aoMapIntensity = this.aoMapIntensity;
+
+		}
+
+		if ( this.bumpMap && this.bumpMap.isTexture ) {
+
+			data.bumpMap = this.bumpMap.toJSON( meta ).uuid;
+			data.bumpScale = this.bumpScale;
+
+		}
+
+		if ( this.normalMap && this.normalMap.isTexture ) {
+
+			data.normalMap = this.normalMap.toJSON( meta ).uuid;
+			data.normalMapType = this.normalMapType;
+			data.normalScale = this.normalScale.toArray();
+
+		}
+
+		if ( this.displacementMap && this.displacementMap.isTexture ) {
+
+			data.displacementMap = this.displacementMap.toJSON( meta ).uuid;
+			data.displacementScale = this.displacementScale;
+			data.displacementBias = this.displacementBias;
+
+		}
+
+		if ( this.roughnessMap && this.roughnessMap.isTexture ) data.roughnessMap = this.roughnessMap.toJSON( meta ).uuid;
+		if ( this.metalnessMap && this.metalnessMap.isTexture ) data.metalnessMap = this.metalnessMap.toJSON( meta ).uuid;
+
+		if ( this.emissiveMap && this.emissiveMap.isTexture ) data.emissiveMap = this.emissiveMap.toJSON( meta ).uuid;
+		if ( this.specularMap && this.specularMap.isTexture ) data.specularMap = this.specularMap.toJSON( meta ).uuid;
+
+		if ( this.envMap && this.envMap.isTexture ) {
+
+			data.envMap = this.envMap.toJSON( meta ).uuid;
+			data.reflectivity = this.reflectivity; // Scale behind envMap
+			data.refractionRatio = this.refractionRatio;
+
+			if ( this.combine !== undefined ) data.combine = this.combine;
+			if ( this.envMapIntensity !== undefined ) data.envMapIntensity = this.envMapIntensity;
+
+		}
+
+		if ( this.gradientMap && this.gradientMap.isTexture ) {
+
+			data.gradientMap = this.gradientMap.toJSON( meta ).uuid;
+
+		}
+
+		if ( this.size !== undefined ) data.size = this.size;
+		if ( this.sizeAttenuation !== undefined ) data.sizeAttenuation = this.sizeAttenuation;
+
+		if ( this.blending !== NormalBlending ) data.blending = this.blending;
+		if ( this.flatShading === true ) data.flatShading = this.flatShading;
+		if ( this.side !== FrontSide ) data.side = this.side;
+		if ( this.vertexColors ) data.vertexColors = true;
+
+		if ( this.opacity < 1 ) data.opacity = this.opacity;
+		if ( this.transparent === true ) data.transparent = this.transparent;
+
+		data.depthFunc = this.depthFunc;
+		data.depthTest = this.depthTest;
+		data.depthWrite = this.depthWrite;
+
+		data.stencilWrite = this.stencilWrite;
+		data.stencilWriteMask = this.stencilWriteMask;
+		data.stencilFunc = this.stencilFunc;
+		data.stencilRef = this.stencilRef;
+		data.stencilFuncMask = this.stencilFuncMask;
+		data.stencilFail = this.stencilFail;
+		data.stencilZFail = this.stencilZFail;
+		data.stencilZPass = this.stencilZPass;
+
+		// rotation (SpriteMaterial)
+		if ( this.rotation && this.rotation !== 0 ) data.rotation = this.rotation;
+
+		if ( this.polygonOffset === true ) data.polygonOffset = true;
+		if ( this.polygonOffsetFactor !== 0 ) data.polygonOffsetFactor = this.polygonOffsetFactor;
+		if ( this.polygonOffsetUnits !== 0 ) data.polygonOffsetUnits = this.polygonOffsetUnits;
+
+		if ( this.linewidth && this.linewidth !== 1 ) data.linewidth = this.linewidth;
+		if ( this.dashSize !== undefined ) data.dashSize = this.dashSize;
+		if ( this.gapSize !== undefined ) data.gapSize = this.gapSize;
+		if ( this.scale !== undefined ) data.scale = this.scale;
+
+		if ( this.dithering === true ) data.dithering = true;
+
+		if ( this.alphaTest > 0 ) data.alphaTest = this.alphaTest;
+		if ( this.premultipliedAlpha === true ) data.premultipliedAlpha = this.premultipliedAlpha;
+
+		if ( this.wireframe === true ) data.wireframe = this.wireframe;
+		if ( this.wireframeLinewidth > 1 ) data.wireframeLinewidth = this.wireframeLinewidth;
+		if ( this.wireframeLinecap !== 'round' ) data.wireframeLinecap = this.wireframeLinecap;
+		if ( this.wireframeLinejoin !== 'round' ) data.wireframeLinejoin = this.wireframeLinejoin;
+
+		if ( this.morphTargets === true ) data.morphTargets = true;
+		if ( this.morphNormals === true ) data.morphNormals = true;
+		if ( this.skinning === true ) data.skinning = true;
+
+		if ( this.visible === false ) data.visible = false;
+
+		if ( this.toneMapped === false ) data.toneMapped = false;
+
+		if ( JSON.stringify( this.userData ) !== '{}' ) data.userData = this.userData;
+
+		// TODO: Copied from Object3D.toJSON
+
+		function extractFromCache( cache ) {
+
+			const values = [];
+
+			for ( const key in cache ) {
+
+				const data = cache[ key ];
+				delete data.metadata;
+				values.push( data );
+
+			}
+
+			return values;
+
+		}
+
+		if ( isRoot ) {
+
+			const textures = extractFromCache( meta.textures );
+			const images = extractFromCache( meta.images );
+
+			if ( textures.length > 0 ) data.textures = textures;
+			if ( images.length > 0 ) data.images = images;
+
+		}
+
+		return data;
+
+	},
+
+	clone: function () {
+
+		return new this.constructor().copy( this );
+
+	},
+
+	copy: function ( source ) {
+
+		this.name = source.name;
+
+		this.fog = source.fog;
+
+		this.blending = source.blending;
+		this.side = source.side;
+		this.flatShading = source.flatShading;
+		this.vertexColors = source.vertexColors;
+
+		this.opacity = source.opacity;
+		this.transparent = source.transparent;
+
+		this.blendSrc = source.blendSrc;
+		this.blendDst = source.blendDst;
+		this.blendEquation = source.blendEquation;
+		this.blendSrcAlpha = source.blendSrcAlpha;
+		this.blendDstAlpha = source.blendDstAlpha;
+		this.blendEquationAlpha = source.blendEquationAlpha;
+
+		this.depthFunc = source.depthFunc;
+		this.depthTest = source.depthTest;
+		this.depthWrite = source.depthWrite;
+
+		this.stencilWriteMask = source.stencilWriteMask;
+		this.stencilFunc = source.stencilFunc;
+		this.stencilRef = source.stencilRef;
+		this.stencilFuncMask = source.stencilFuncMask;
+		this.stencilFail = source.stencilFail;
+		this.stencilZFail = source.stencilZFail;
+		this.stencilZPass = source.stencilZPass;
+		this.stencilWrite = source.stencilWrite;
+
+		const srcPlanes = source.clippingPlanes;
+		let dstPlanes = null;
+
+		if ( srcPlanes !== null ) {
+
+			const n = srcPlanes.length;
+			dstPlanes = new Array( n );
+
+			for ( let i = 0; i !== n; ++ i ) {
+
+				dstPlanes[ i ] = srcPlanes[ i ].clone();
+
+			}
+
+		}
+
+		this.clippingPlanes = dstPlanes;
+		this.clipIntersection = source.clipIntersection;
+		this.clipShadows = source.clipShadows;
+
+		this.shadowSide = source.shadowSide;
+
+		this.colorWrite = source.colorWrite;
+
+		this.precision = source.precision;
+
+		this.polygonOffset = source.polygonOffset;
+		this.polygonOffsetFactor = source.polygonOffsetFactor;
+		this.polygonOffsetUnits = source.polygonOffsetUnits;
+
+		this.dithering = source.dithering;
+
+		this.alphaTest = source.alphaTest;
+		this.premultipliedAlpha = source.premultipliedAlpha;
+
+		this.visible = source.visible;
+
+		this.toneMapped = source.toneMapped;
+
+		this.userData = JSON.parse( JSON.stringify( source.userData ) );
+
+		return this;
+
+	},
+
+	dispose: function () {
+
+		this.dispatchEvent( { type: 'dispose' } );
+
+	}
+
+} );
+
+Object.defineProperty( Material.prototype, 'needsUpdate', {
+
+	set: function ( value ) {
+
+		if ( value === true ) this.version ++;
+
+	}
+
+} );
+
+/**
+ * parameters = {
+ *  color: <hex>,
+ *  opacity: <float>,
+ *  map: new THREE.Texture( <Image> ),
+ *
+ *  lightMap: new THREE.Texture( <Image> ),
+ *  lightMapIntensity: <float>
+ *
+ *  aoMap: new THREE.Texture( <Image> ),
+ *  aoMapIntensity: <float>
+ *
+ *  specularMap: new THREE.Texture( <Image> ),
+ *
+ *  alphaMap: new THREE.Texture( <Image> ),
+ *
+ *  envMap: new THREE.CubeTexture( [posx, negx, posy, negy, posz, negz] ),
+ *  combine: THREE.Multiply,
+ *  reflectivity: <float>,
+ *  refractionRatio: <float>,
+ *
+ *  depthTest: <bool>,
+ *  depthWrite: <bool>,
+ *
+ *  wireframe: <boolean>,
+ *  wireframeLinewidth: <float>,
+ *
+ *  skinning: <bool>,
+ *  morphTargets: <bool>
+ * }
+ */
+
+function MeshBasicMaterial( parameters ) {
+
+	Material.call( this );
+
+	this.type = 'MeshBasicMaterial';
+
+	this.color = new Color( 0xffffff ); // emissive
+
+	this.map = null;
+
+	this.lightMap = null;
+	this.lightMapIntensity = 1.0;
+
+	this.aoMap = null;
+	this.aoMapIntensity = 1.0;
+
+	this.specularMap = null;
+
+	this.alphaMap = null;
+
+	this.envMap = null;
+	this.combine = MultiplyOperation;
+	this.reflectivity = 1;
+	this.refractionRatio = 0.98;
+
+	this.wireframe = false;
+	this.wireframeLinewidth = 1;
+	this.wireframeLinecap = 'round';
+	this.wireframeLinejoin = 'round';
+
+	this.skinning = false;
+	this.morphTargets = false;
+
+	this.setValues( parameters );
+
+}
+
+MeshBasicMaterial.prototype = Object.create( Material.prototype );
+MeshBasicMaterial.prototype.constructor = MeshBasicMaterial;
+
+MeshBasicMaterial.prototype.isMeshBasicMaterial = true;
+
+MeshBasicMaterial.prototype.copy = function ( source ) {
+
+	Material.prototype.copy.call( this, source );
+
+	this.color.copy( source.color );
+
+	this.map = source.map;
+
+	this.lightMap = source.lightMap;
+	this.lightMapIntensity = source.lightMapIntensity;
+
+	this.aoMap = source.aoMap;
+	this.aoMapIntensity = source.aoMapIntensity;
+
+	this.specularMap = source.specularMap;
+
+	this.alphaMap = source.alphaMap;
+
+	this.envMap = source.envMap;
+	this.combine = source.combine;
+	this.reflectivity = source.reflectivity;
+	this.refractionRatio = source.refractionRatio;
+
+	this.wireframe = source.wireframe;
+	this.wireframeLinewidth = source.wireframeLinewidth;
+	this.wireframeLinecap = source.wireframeLinecap;
+	this.wireframeLinejoin = source.wireframeLinejoin;
+
+	this.skinning = source.skinning;
+	this.morphTargets = source.morphTargets;
+
+	return this;
+
+};
+
 const _inverseMatrix = new Matrix4();
 const _ray = new Ray();
 const _sphere = new Sphere();
@@ -14241,14 +14241,202 @@ function setGeometryUVsForCubemaps(geom) {
     }
 }
 
+/**
+ * parameters = {
+ *  color: <hex>,
+ *  roughness: <float>,
+ *  metalness: <float>,
+ *  opacity: <float>,
+ *
+ *  map: new THREE.Texture( <Image> ),
+ *
+ *  lightMap: new THREE.Texture( <Image> ),
+ *  lightMapIntensity: <float>
+ *
+ *  aoMap: new THREE.Texture( <Image> ),
+ *  aoMapIntensity: <float>
+ *
+ *  emissive: <hex>,
+ *  emissiveIntensity: <float>
+ *  emissiveMap: new THREE.Texture( <Image> ),
+ *
+ *  bumpMap: new THREE.Texture( <Image> ),
+ *  bumpScale: <float>,
+ *
+ *  normalMap: new THREE.Texture( <Image> ),
+ *  normalMapType: THREE.TangentSpaceNormalMap,
+ *  normalScale: <Vector2>,
+ *
+ *  displacementMap: new THREE.Texture( <Image> ),
+ *  displacementScale: <float>,
+ *  displacementBias: <float>,
+ *
+ *  roughnessMap: new THREE.Texture( <Image> ),
+ *
+ *  metalnessMap: new THREE.Texture( <Image> ),
+ *
+ *  alphaMap: new THREE.Texture( <Image> ),
+ *
+ *  envMap: new THREE.CubeTexture( [posx, negx, posy, negy, posz, negz] ),
+ *  envMapIntensity: <float>
+ *
+ *  refractionRatio: <float>,
+ *
+ *  wireframe: <boolean>,
+ *  wireframeLinewidth: <float>,
+ *
+ *  skinning: <bool>,
+ *  morphTargets: <bool>,
+ *  morphNormals: <bool>
+ * }
+ */
+
+function MeshStandardMaterial( parameters ) {
+
+	Material.call( this );
+
+	this.defines = { 'STANDARD': '' };
+
+	this.type = 'MeshStandardMaterial';
+
+	this.color = new Color( 0xffffff ); // diffuse
+	this.roughness = 1.0;
+	this.metalness = 0.0;
+
+	this.map = null;
+
+	this.lightMap = null;
+	this.lightMapIntensity = 1.0;
+
+	this.aoMap = null;
+	this.aoMapIntensity = 1.0;
+
+	this.emissive = new Color( 0x000000 );
+	this.emissiveIntensity = 1.0;
+	this.emissiveMap = null;
+
+	this.bumpMap = null;
+	this.bumpScale = 1;
+
+	this.normalMap = null;
+	this.normalMapType = TangentSpaceNormalMap;
+	this.normalScale = new Vector2( 1, 1 );
+
+	this.displacementMap = null;
+	this.displacementScale = 1;
+	this.displacementBias = 0;
+
+	this.roughnessMap = null;
+
+	this.metalnessMap = null;
+
+	this.alphaMap = null;
+
+	this.envMap = null;
+	this.envMapIntensity = 1.0;
+
+	this.refractionRatio = 0.98;
+
+	this.wireframe = false;
+	this.wireframeLinewidth = 1;
+	this.wireframeLinecap = 'round';
+	this.wireframeLinejoin = 'round';
+
+	this.skinning = false;
+	this.morphTargets = false;
+	this.morphNormals = false;
+
+	this.vertexTangents = false;
+
+	this.setValues( parameters );
+
+}
+
+MeshStandardMaterial.prototype = Object.create( Material.prototype );
+MeshStandardMaterial.prototype.constructor = MeshStandardMaterial;
+
+MeshStandardMaterial.prototype.isMeshStandardMaterial = true;
+
+MeshStandardMaterial.prototype.copy = function ( source ) {
+
+	Material.prototype.copy.call( this, source );
+
+	this.defines = { 'STANDARD': '' };
+
+	this.color.copy( source.color );
+	this.roughness = source.roughness;
+	this.metalness = source.metalness;
+
+	this.map = source.map;
+
+	this.lightMap = source.lightMap;
+	this.lightMapIntensity = source.lightMapIntensity;
+
+	this.aoMap = source.aoMap;
+	this.aoMapIntensity = source.aoMapIntensity;
+
+	this.emissive.copy( source.emissive );
+	this.emissiveMap = source.emissiveMap;
+	this.emissiveIntensity = source.emissiveIntensity;
+
+	this.bumpMap = source.bumpMap;
+	this.bumpScale = source.bumpScale;
+
+	this.normalMap = source.normalMap;
+	this.normalMapType = source.normalMapType;
+	this.normalScale.copy( source.normalScale );
+
+	this.displacementMap = source.displacementMap;
+	this.displacementScale = source.displacementScale;
+	this.displacementBias = source.displacementBias;
+
+	this.roughnessMap = source.roughnessMap;
+
+	this.metalnessMap = source.metalnessMap;
+
+	this.alphaMap = source.alphaMap;
+
+	this.envMap = source.envMap;
+	this.envMapIntensity = source.envMapIntensity;
+
+	this.refractionRatio = source.refractionRatio;
+
+	this.wireframe = source.wireframe;
+	this.wireframeLinewidth = source.wireframeLinewidth;
+	this.wireframeLinecap = source.wireframeLinecap;
+	this.wireframeLinejoin = source.wireframeLinejoin;
+
+	this.skinning = source.skinning;
+	this.morphTargets = source.morphTargets;
+	this.morphNormals = source.morphNormals;
+
+	this.vertexTangents = source.vertexTangents;
+
+	return this;
+
+};
+
+const colors = new Map();
+
+function solid(opts) {
+    const key = Object
+        .keys(opts)
+        .map(k => `${k}:${opts[k]}`)
+        .join(",");
+
+    if (!colors.has(key)) {
+        colors.set(key, new MeshStandardMaterial(opts));
+    }
+
+    return colors.get(key);
+}
+
 const cube = new BoxBufferGeometry(1, 1, 1, 1, 1, 1);
 cube.name = "CubeGeom";
 
 const invCube = cube.clone();
 invCube.name = "InvertedCubeGeom";
 setGeometryUVsForCubemaps(invCube);
-
-const colors = new Map();
 
 /**
  * @param {string|number|import("three").Color} color
@@ -14258,515 +14446,171 @@ const colors = new Map();
  */
 class Cube extends Mesh {
     constructor(color, sx, sy, sz) {
-        if (!colors.has(color)) {
-            colors.set(color, new MeshBasicMaterial({ color }));
-        }
-        super(cube, colors.get(color));
+        super(cube, solid({ color }));
         this.scale.set(sx, sy, sz);
     }
 }
 
+class DebugObject extends Cube {
+    /**
+     * @param {string|number|import("three").Color} color
+     */
+    constructor(color = 0xff0000) {
+        super(color, 0.1, 0.1, 0.1);
+        const x = new Cube(0xff0000, 3.0, 0.1, 0.1);
+        const y = new Cube(0x00ff00, 0.1, 3.0, 0.1);
+        const z = new Cube(0x0000ff, 0.1, 0.1, 3.0);
+
+        x.position.x = 1.5;
+        y.position.y = 1.5;
+        z.position.z = 1.5;
+
+        this.add(x, y, z);
+    }
+}
+
+const EventBase = (function () {
+    try {
+        new window.EventTarget();
+        return class EventBase extends EventTarget {
+            constructor() {
+                super();
+            }
+        };
+    } catch (exp) {
+
+        /** @type {WeakMap<EventBase, Map<string, Listener[]>> */
+        const selfs = new WeakMap();
+
+        return class EventBase {
+
+            constructor() {
+                selfs.set(this, new Map());
+            }
+
+            /**
+             * @param {string} type
+             * @param {Function} callback
+             * @param {any} options
+             */
+            addEventListener(type, callback, options) {
+                if (isFunction(callback)) {
+                    const self = selfs.get(this);
+                    if (!self.has(type)) {
+                        self.set(type, []);
+                    }
+
+                    const listeners = self.get(type);
+                    if (!listeners.find(l => l.callback === callback)) {
+                        listeners.push({
+                            target: this,
+                            callback,
+                            options
+                        });
+                    }
+                }
+            }
+
+            /**
+             * @param {string} type
+             * @param {Function} callback
+             */
+            removeEventListener(type, callback) {
+                if (isFunction(callback)) {
+                    const self = selfs.get(this);
+                    if (self.has(type)) {
+                        const listeners = self.get(type),
+                            idx = listeners.findIndex(l => l.callback === callback);
+                        if (idx >= 0) {
+                            arrayRemoveAt(listeners, idx);
+                        }
+                    }
+                }
+            }
+
+            /**
+             * @param {Event} evt
+             */
+            dispatchEvent(evt) {
+                const self = selfs.get(this);
+                if (!self.has(evt.type)) {
+                    return true;
+                }
+                else {
+                    const listeners = self.get(evt.type);
+                    for (let listener of listeners) {
+                        if (listener.options && listener.options.once) {
+                            this.removeEventListener(evt.type, listener.callback);
+                        }
+                        listener.callback.call(listener.target, evt);
+                    }
+                    return !evt.defaultPrevented;
+                }
+            }
+        };
+    }
+
+})();
+
 /**
- * @param {string|number|import("three").Color} color
+ * Returns true if the given object is either an HTMLCanvasElement or an OffscreenCanvas.
+ * @param {any} obj
+ * @returns {boolean}
  */
-function DebugObject(color = 0xff0000) {
-    const center = new Cube(color, 0.1, 0.1, 0.1);
-    const x = new Cube(0xff0000, 3, 0.1, 0.1);
-    const y = new Cube(0x00ff00, 0.1, 3, 0.1);
-    const z = new Cube(0x0000ff, 0.1, 0.1, 3);
 
-    x.position.x = 1.5;
-    y.position.y = 1.5;
-    z.position.z = 1.5;
-
-    center.add(x, y, z);
-    return center;
+/**
+ * Resizes a canvas element
+ * @param {HTMLCanvasElement|OffscreenCanvas} canv
+ * @param {number} w - the new width of the canvas
+ * @param {number} h - the new height of the canvas
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function setCanvasSize(canv, w, h, superscale = 1) {
+    w = Math.floor(w * superscale);
+    h = Math.floor(h * superscale);
+    if (canv.width != w
+        || canv.height != h) {
+        canv.width = w;
+        canv.height = h;
+        return true;
+    }
+    return false;
 }
 
-// PlaneGeometry
+/**
+ * Resizes the canvas element of a given rendering context.
+ * 
+ * Note: the imageSmoothingEnabled, textBaseline, textAlign, and font 
+ * properties of the context will be restored after the context is resized,
+ * as these values are usually reset to their default values when a canvas
+ * is resized.
+ * @param {RenderingContext} ctx
+ * @param {number} w - the new width of the canvas
+ * @param {number} h - the new height of the canvas
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function setContextSize(ctx, w, h, superscale = 1) {
+    const oldImageSmoothingEnabled = ctx.imageSmoothingEnabled,
+        oldTextBaseline = ctx.textBaseline,
+        oldTextAlign = ctx.textAlign,
+        oldFont = ctx.font,
+        resized = setCanvasSize(
+            ctx.canvas,
+            w,
+            h,
+            superscale);
 
-function PlaneGeometry( width, height, widthSegments, heightSegments ) {
+    if (resized) {
+        ctx.imageSmoothingEnabled = oldImageSmoothingEnabled;
+        ctx.textBaseline = oldTextBaseline;
+        ctx.textAlign = oldTextAlign;
+        ctx.font = oldFont;
+    }
 
-	Geometry.call( this );
-
-	this.type = 'PlaneGeometry';
-
-	this.parameters = {
-		width: width,
-		height: height,
-		widthSegments: widthSegments,
-		heightSegments: heightSegments
-	};
-
-	this.fromBufferGeometry( new PlaneBufferGeometry( width, height, widthSegments, heightSegments ) );
-	this.mergeVertices();
-
+    return resized;
 }
-
-PlaneGeometry.prototype = Object.create( Geometry.prototype );
-PlaneGeometry.prototype.constructor = PlaneGeometry;
-
-// PlaneBufferGeometry
-
-function PlaneBufferGeometry( width, height, widthSegments, heightSegments ) {
-
-	BufferGeometry.call( this );
-
-	this.type = 'PlaneBufferGeometry';
-
-	this.parameters = {
-		width: width,
-		height: height,
-		widthSegments: widthSegments,
-		heightSegments: heightSegments
-	};
-
-	width = width || 1;
-	height = height || 1;
-
-	const width_half = width / 2;
-	const height_half = height / 2;
-
-	const gridX = Math.floor( widthSegments ) || 1;
-	const gridY = Math.floor( heightSegments ) || 1;
-
-	const gridX1 = gridX + 1;
-	const gridY1 = gridY + 1;
-
-	const segment_width = width / gridX;
-	const segment_height = height / gridY;
-
-	// buffers
-
-	const indices = [];
-	const vertices = [];
-	const normals = [];
-	const uvs = [];
-
-	// generate vertices, normals and uvs
-
-	for ( let iy = 0; iy < gridY1; iy ++ ) {
-
-		const y = iy * segment_height - height_half;
-
-		for ( let ix = 0; ix < gridX1; ix ++ ) {
-
-			const x = ix * segment_width - width_half;
-
-			vertices.push( x, - y, 0 );
-
-			normals.push( 0, 0, 1 );
-
-			uvs.push( ix / gridX );
-			uvs.push( 1 - ( iy / gridY ) );
-
-		}
-
-	}
-
-	// indices
-
-	for ( let iy = 0; iy < gridY; iy ++ ) {
-
-		for ( let ix = 0; ix < gridX; ix ++ ) {
-
-			const a = ix + gridX1 * iy;
-			const b = ix + gridX1 * ( iy + 1 );
-			const c = ( ix + 1 ) + gridX1 * ( iy + 1 );
-			const d = ( ix + 1 ) + gridX1 * iy;
-
-			// faces
-
-			indices.push( a, b, d );
-			indices.push( b, c, d );
-
-		}
-
-	}
-
-	// build geometry
-
-	this.setIndex( indices );
-	this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-	this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
-	this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
-
-}
-
-PlaneBufferGeometry.prototype = Object.create( BufferGeometry.prototype );
-PlaneBufferGeometry.prototype.constructor = PlaneBufferGeometry;
-
-let _canvas;
-
-const ImageUtils = {
-
-	getDataURL: function ( image ) {
-
-		if ( /^data:/i.test( image.src ) ) {
-
-			return image.src;
-
-		}
-
-		if ( typeof HTMLCanvasElement == 'undefined' ) {
-
-			return image.src;
-
-		}
-
-		let canvas;
-
-		if ( image instanceof HTMLCanvasElement ) {
-
-			canvas = image;
-
-		} else {
-
-			if ( _canvas === undefined ) _canvas = document.createElementNS( 'http://www.w3.org/1999/xhtml', 'canvas' );
-
-			_canvas.width = image.width;
-			_canvas.height = image.height;
-
-			const context = _canvas.getContext( '2d' );
-
-			if ( image instanceof ImageData ) {
-
-				context.putImageData( image, 0, 0 );
-
-			} else {
-
-				context.drawImage( image, 0, 0, image.width, image.height );
-
-			}
-
-			canvas = _canvas;
-
-		}
-
-		if ( canvas.width > 2048 || canvas.height > 2048 ) {
-
-			return canvas.toDataURL( 'image/jpeg', 0.6 );
-
-		} else {
-
-			return canvas.toDataURL( 'image/png' );
-
-		}
-
-	}
-
-};
-
-let textureId = 0;
-
-function Texture( image, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, encoding ) {
-
-	Object.defineProperty( this, 'id', { value: textureId ++ } );
-
-	this.uuid = MathUtils.generateUUID();
-
-	this.name = '';
-
-	this.image = image !== undefined ? image : Texture.DEFAULT_IMAGE;
-	this.mipmaps = [];
-
-	this.mapping = mapping !== undefined ? mapping : Texture.DEFAULT_MAPPING;
-
-	this.wrapS = wrapS !== undefined ? wrapS : ClampToEdgeWrapping;
-	this.wrapT = wrapT !== undefined ? wrapT : ClampToEdgeWrapping;
-
-	this.magFilter = magFilter !== undefined ? magFilter : LinearFilter;
-	this.minFilter = minFilter !== undefined ? minFilter : LinearMipmapLinearFilter;
-
-	this.anisotropy = anisotropy !== undefined ? anisotropy : 1;
-
-	this.format = format !== undefined ? format : RGBAFormat;
-	this.internalFormat = null;
-	this.type = type !== undefined ? type : UnsignedByteType;
-
-	this.offset = new Vector2( 0, 0 );
-	this.repeat = new Vector2( 1, 1 );
-	this.center = new Vector2( 0, 0 );
-	this.rotation = 0;
-
-	this.matrixAutoUpdate = true;
-	this.matrix = new Matrix3();
-
-	this.generateMipmaps = true;
-	this.premultiplyAlpha = false;
-	this.flipY = true;
-	this.unpackAlignment = 4;	// valid values: 1, 2, 4, 8 (see http://www.khronos.org/opengles/sdk/docs/man/xhtml/glPixelStorei.xml)
-
-	// Values of encoding !== THREE.LinearEncoding only supported on map, envMap and emissiveMap.
-	//
-	// Also changing the encoding after already used by a Material will not automatically make the Material
-	// update. You need to explicitly call Material.needsUpdate to trigger it to recompile.
-	this.encoding = encoding !== undefined ? encoding : LinearEncoding;
-
-	this.version = 0;
-	this.onUpdate = null;
-
-}
-
-Texture.DEFAULT_IMAGE = undefined;
-Texture.DEFAULT_MAPPING = UVMapping;
-
-Texture.prototype = Object.assign( Object.create( EventDispatcher.prototype ), {
-
-	constructor: Texture,
-
-	isTexture: true,
-
-	updateMatrix: function () {
-
-		this.matrix.setUvTransform( this.offset.x, this.offset.y, this.repeat.x, this.repeat.y, this.rotation, this.center.x, this.center.y );
-
-	},
-
-	clone: function () {
-
-		return new this.constructor().copy( this );
-
-	},
-
-	copy: function ( source ) {
-
-		this.name = source.name;
-
-		this.image = source.image;
-		this.mipmaps = source.mipmaps.slice( 0 );
-
-		this.mapping = source.mapping;
-
-		this.wrapS = source.wrapS;
-		this.wrapT = source.wrapT;
-
-		this.magFilter = source.magFilter;
-		this.minFilter = source.minFilter;
-
-		this.anisotropy = source.anisotropy;
-
-		this.format = source.format;
-		this.internalFormat = source.internalFormat;
-		this.type = source.type;
-
-		this.offset.copy( source.offset );
-		this.repeat.copy( source.repeat );
-		this.center.copy( source.center );
-		this.rotation = source.rotation;
-
-		this.matrixAutoUpdate = source.matrixAutoUpdate;
-		this.matrix.copy( source.matrix );
-
-		this.generateMipmaps = source.generateMipmaps;
-		this.premultiplyAlpha = source.premultiplyAlpha;
-		this.flipY = source.flipY;
-		this.unpackAlignment = source.unpackAlignment;
-		this.encoding = source.encoding;
-
-		return this;
-
-	},
-
-	toJSON: function ( meta ) {
-
-		const isRootObject = ( meta === undefined || typeof meta === 'string' );
-
-		if ( ! isRootObject && meta.textures[ this.uuid ] !== undefined ) {
-
-			return meta.textures[ this.uuid ];
-
-		}
-
-		const output = {
-
-			metadata: {
-				version: 4.5,
-				type: 'Texture',
-				generator: 'Texture.toJSON'
-			},
-
-			uuid: this.uuid,
-			name: this.name,
-
-			mapping: this.mapping,
-
-			repeat: [ this.repeat.x, this.repeat.y ],
-			offset: [ this.offset.x, this.offset.y ],
-			center: [ this.center.x, this.center.y ],
-			rotation: this.rotation,
-
-			wrap: [ this.wrapS, this.wrapT ],
-
-			format: this.format,
-			type: this.type,
-			encoding: this.encoding,
-
-			minFilter: this.minFilter,
-			magFilter: this.magFilter,
-			anisotropy: this.anisotropy,
-
-			flipY: this.flipY,
-
-			premultiplyAlpha: this.premultiplyAlpha,
-			unpackAlignment: this.unpackAlignment
-
-		};
-
-		if ( this.image !== undefined ) {
-
-			// TODO: Move to THREE.Image
-
-			const image = this.image;
-
-			if ( image.uuid === undefined ) {
-
-				image.uuid = MathUtils.generateUUID(); // UGH
-
-			}
-
-			if ( ! isRootObject && meta.images[ image.uuid ] === undefined ) {
-
-				let url;
-
-				if ( Array.isArray( image ) ) {
-
-					// process array of images e.g. CubeTexture
-
-					url = [];
-
-					for ( let i = 0, l = image.length; i < l; i ++ ) {
-
-						url.push( ImageUtils.getDataURL( image[ i ] ) );
-
-					}
-
-				} else {
-
-					// process single image
-
-					url = ImageUtils.getDataURL( image );
-
-				}
-
-				meta.images[ image.uuid ] = {
-					uuid: image.uuid,
-					url: url
-				};
-
-			}
-
-			output.image = image.uuid;
-
-		}
-
-		if ( ! isRootObject ) {
-
-			meta.textures[ this.uuid ] = output;
-
-		}
-
-		return output;
-
-	},
-
-	dispose: function () {
-
-		this.dispatchEvent( { type: 'dispose' } );
-
-	},
-
-	transformUv: function ( uv ) {
-
-		if ( this.mapping !== UVMapping ) return uv;
-
-		uv.applyMatrix3( this.matrix );
-
-		if ( uv.x < 0 || uv.x > 1 ) {
-
-			switch ( this.wrapS ) {
-
-				case RepeatWrapping:
-
-					uv.x = uv.x - Math.floor( uv.x );
-					break;
-
-				case ClampToEdgeWrapping:
-
-					uv.x = uv.x < 0 ? 0 : 1;
-					break;
-
-				case MirroredRepeatWrapping:
-
-					if ( Math.abs( Math.floor( uv.x ) % 2 ) === 1 ) {
-
-						uv.x = Math.ceil( uv.x ) - uv.x;
-
-					} else {
-
-						uv.x = uv.x - Math.floor( uv.x );
-
-					}
-
-					break;
-
-			}
-
-		}
-
-		if ( uv.y < 0 || uv.y > 1 ) {
-
-			switch ( this.wrapT ) {
-
-				case RepeatWrapping:
-
-					uv.y = uv.y - Math.floor( uv.y );
-					break;
-
-				case ClampToEdgeWrapping:
-
-					uv.y = uv.y < 0 ? 0 : 1;
-					break;
-
-				case MirroredRepeatWrapping:
-
-					if ( Math.abs( Math.floor( uv.y ) % 2 ) === 1 ) {
-
-						uv.y = Math.ceil( uv.y ) - uv.y;
-
-					} else {
-
-						uv.y = uv.y - Math.floor( uv.y );
-
-					}
-
-					break;
-
-			}
-
-		}
-
-		if ( this.flipY ) {
-
-			uv.y = 1 - uv.y;
-
-		}
-
-		return uv;
-
-	}
-
-} );
-
-Object.defineProperty( Texture.prototype, "needsUpdate", {
-
-	set: function ( value ) {
-
-		if ( value === true ) this.version ++;
-
-	}
-
-} );
 
 /**
  * A setter functor for HTML attributes.
@@ -15165,219 +15009,6 @@ function CanvasOffscreen(w, h, ...rest) {
     }
 }
 
-class TexturedMesh extends Mesh {
-    /**
-     * @param {import("three").BufferGeometry} geom
-     * @param {import("three").Material} mat
-     */
-    constructor(geom, mat) {
-        super(geom, mat);
-        this.isVideo = false;
-    }
-
-    /**
-     * @param {HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|string|Texture} img
-     * @param {import("../calla/fetching").progressCallback} onProgress
-     */
-
-    async setImage(img, onProgress) {
-        if (isString(img)) {
-            img = await getFile(img, onProgress);
-            img = Img(src(img));
-        }
-
-        if (img instanceof HTMLImageElement) {
-            if (!img.complete) {
-                await once(img, "load", "error", 10000);
-            }
-
-            // Force the image to be power-of-2 dimensioned.
-            const w = Math.pow(2, Math.floor(Math.log2(img.width))),
-                h = Math.pow(2, Math.floor(Math.log2(img.height))),
-                canv = Canvas(
-                    width(w),
-                    height(h)),
-                g = canv.getContext("2d");
-            g.drawImage(img, 0, 0, img.width, img.height, 0, 0, w, h);
-
-            img = canv;
-        }
-
-        if (!(img instanceof Texture)) {
-            img = new Texture(img);
-        }
-
-        this.material.map = img;
-        img = this.material.map.image;
-        this.isVideo = img instanceof HTMLVideoElement;
-        this.updateTexture();
-    }
-
-    updateTexture() {
-        if (this.material && this.material.map) {
-            this.material.map.needsUpdate = true;
-        }
-    }
-
-    update() {
-        if (this.isVideo) {
-            this.updateTexture();
-        }
-    }
-}
-
-const geom = new PlaneBufferGeometry(1, 1, 1, 1);
-
-class Image2DMesh extends TexturedMesh {
-    constructor() {
-        const mat = new MeshBasicMaterial({ transparent: true });
-        super(geom, mat);
-    }
-}
-
-const EventBase = (function () {
-    try {
-        new window.EventTarget();
-        return class EventBase extends EventTarget {
-            constructor() {
-                super();
-            }
-        };
-    } catch (exp) {
-
-        /** @type {WeakMap<EventBase, Map<string, Listener[]>> */
-        const selfs = new WeakMap();
-
-        return class EventBase {
-
-            constructor() {
-                selfs.set(this, new Map());
-            }
-
-            /**
-             * @param {string} type
-             * @param {Function} callback
-             * @param {any} options
-             */
-            addEventListener(type, callback, options) {
-                if (isFunction(callback)) {
-                    const self = selfs.get(this);
-                    if (!self.has(type)) {
-                        self.set(type, []);
-                    }
-
-                    const listeners = self.get(type);
-                    if (!listeners.find(l => l.callback === callback)) {
-                        listeners.push({
-                            target: this,
-                            callback,
-                            options
-                        });
-                    }
-                }
-            }
-
-            /**
-             * @param {string} type
-             * @param {Function} callback
-             */
-            removeEventListener(type, callback) {
-                if (isFunction(callback)) {
-                    const self = selfs.get(this);
-                    if (self.has(type)) {
-                        const listeners = self.get(type),
-                            idx = listeners.findIndex(l => l.callback === callback);
-                        if (idx >= 0) {
-                            arrayRemoveAt(listeners, idx);
-                        }
-                    }
-                }
-            }
-
-            /**
-             * @param {Event} evt
-             */
-            dispatchEvent(evt) {
-                const self = selfs.get(this);
-                if (!self.has(evt.type)) {
-                    return true;
-                }
-                else {
-                    const listeners = self.get(evt.type);
-                    for (let listener of listeners) {
-                        if (listener.options && listener.options.once) {
-                            this.removeEventListener(evt.type, listener.callback);
-                        }
-                        listener.callback.call(listener.target, evt);
-                    }
-                    return !evt.defaultPrevented;
-                }
-            }
-        };
-    }
-
-})();
-
-/**
- * Returns true if the given object is either an HTMLCanvasElement or an OffscreenCanvas.
- * @param {any} obj
- * @returns {boolean}
- */
-
-/**
- * Resizes a canvas element
- * @param {HTMLCanvasElement|OffscreenCanvas} canv
- * @param {number} w - the new width of the canvas
- * @param {number} h - the new height of the canvas
- * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
- * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
- */
-function setCanvasSize(canv, w, h, superscale = 1) {
-    w = Math.floor(w * superscale);
-    h = Math.floor(h * superscale);
-    if (canv.width != w
-        || canv.height != h) {
-        canv.width = w;
-        canv.height = h;
-        return true;
-    }
-    return false;
-}
-
-/**
- * Resizes the canvas element of a given rendering context.
- * 
- * Note: the imageSmoothingEnabled, textBaseline, textAlign, and font 
- * properties of the context will be restored after the context is resized,
- * as these values are usually reset to their default values when a canvas
- * is resized.
- * @param {RenderingContext} ctx
- * @param {number} w - the new width of the canvas
- * @param {number} h - the new height of the canvas
- * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
- * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
- */
-function setContextSize(ctx, w, h, superscale = 1) {
-    const oldImageSmoothingEnabled = ctx.imageSmoothingEnabled,
-        oldTextBaseline = ctx.textBaseline,
-        oldTextAlign = ctx.textAlign,
-        oldFont = ctx.font,
-        resized = setCanvasSize(
-            ctx.canvas,
-            w,
-            h,
-            superscale);
-
-    if (resized) {
-        ctx.imageSmoothingEnabled = oldImageSmoothingEnabled;
-        ctx.textBaseline = oldTextBaseline;
-        ctx.textAlign = oldTextAlign;
-        ctx.font = oldFont;
-    }
-
-    return resized;
-}
-
 /**
  * @type {WeakMap<TextImage, TextImagePrivate>}
  **/
@@ -15678,9 +15309,571 @@ class TextImage extends EventBase {
     }
 }
 
+// PlaneGeometry
+
+function PlaneGeometry( width, height, widthSegments, heightSegments ) {
+
+	Geometry.call( this );
+
+	this.type = 'PlaneGeometry';
+
+	this.parameters = {
+		width: width,
+		height: height,
+		widthSegments: widthSegments,
+		heightSegments: heightSegments
+	};
+
+	this.fromBufferGeometry( new PlaneBufferGeometry( width, height, widthSegments, heightSegments ) );
+	this.mergeVertices();
+
+}
+
+PlaneGeometry.prototype = Object.create( Geometry.prototype );
+PlaneGeometry.prototype.constructor = PlaneGeometry;
+
+// PlaneBufferGeometry
+
+function PlaneBufferGeometry( width, height, widthSegments, heightSegments ) {
+
+	BufferGeometry.call( this );
+
+	this.type = 'PlaneBufferGeometry';
+
+	this.parameters = {
+		width: width,
+		height: height,
+		widthSegments: widthSegments,
+		heightSegments: heightSegments
+	};
+
+	width = width || 1;
+	height = height || 1;
+
+	const width_half = width / 2;
+	const height_half = height / 2;
+
+	const gridX = Math.floor( widthSegments ) || 1;
+	const gridY = Math.floor( heightSegments ) || 1;
+
+	const gridX1 = gridX + 1;
+	const gridY1 = gridY + 1;
+
+	const segment_width = width / gridX;
+	const segment_height = height / gridY;
+
+	// buffers
+
+	const indices = [];
+	const vertices = [];
+	const normals = [];
+	const uvs = [];
+
+	// generate vertices, normals and uvs
+
+	for ( let iy = 0; iy < gridY1; iy ++ ) {
+
+		const y = iy * segment_height - height_half;
+
+		for ( let ix = 0; ix < gridX1; ix ++ ) {
+
+			const x = ix * segment_width - width_half;
+
+			vertices.push( x, - y, 0 );
+
+			normals.push( 0, 0, 1 );
+
+			uvs.push( ix / gridX );
+			uvs.push( 1 - ( iy / gridY ) );
+
+		}
+
+	}
+
+	// indices
+
+	for ( let iy = 0; iy < gridY; iy ++ ) {
+
+		for ( let ix = 0; ix < gridX; ix ++ ) {
+
+			const a = ix + gridX1 * iy;
+			const b = ix + gridX1 * ( iy + 1 );
+			const c = ( ix + 1 ) + gridX1 * ( iy + 1 );
+			const d = ( ix + 1 ) + gridX1 * iy;
+
+			// faces
+
+			indices.push( a, b, d );
+			indices.push( b, c, d );
+
+		}
+
+	}
+
+	// build geometry
+
+	this.setIndex( indices );
+	this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
+	this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
+	this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
+
+}
+
+PlaneBufferGeometry.prototype = Object.create( BufferGeometry.prototype );
+PlaneBufferGeometry.prototype.constructor = PlaneBufferGeometry;
+
+const plane = new PlaneBufferGeometry(1, 1, 1, 1);
+plane.name = "PlaneGeom";
+
+let _canvas;
+
+const ImageUtils = {
+
+	getDataURL: function ( image ) {
+
+		if ( /^data:/i.test( image.src ) ) {
+
+			return image.src;
+
+		}
+
+		if ( typeof HTMLCanvasElement == 'undefined' ) {
+
+			return image.src;
+
+		}
+
+		let canvas;
+
+		if ( image instanceof HTMLCanvasElement ) {
+
+			canvas = image;
+
+		} else {
+
+			if ( _canvas === undefined ) _canvas = document.createElementNS( 'http://www.w3.org/1999/xhtml', 'canvas' );
+
+			_canvas.width = image.width;
+			_canvas.height = image.height;
+
+			const context = _canvas.getContext( '2d' );
+
+			if ( image instanceof ImageData ) {
+
+				context.putImageData( image, 0, 0 );
+
+			} else {
+
+				context.drawImage( image, 0, 0, image.width, image.height );
+
+			}
+
+			canvas = _canvas;
+
+		}
+
+		if ( canvas.width > 2048 || canvas.height > 2048 ) {
+
+			return canvas.toDataURL( 'image/jpeg', 0.6 );
+
+		} else {
+
+			return canvas.toDataURL( 'image/png' );
+
+		}
+
+	}
+
+};
+
+let textureId = 0;
+
+function Texture( image, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, encoding ) {
+
+	Object.defineProperty( this, 'id', { value: textureId ++ } );
+
+	this.uuid = MathUtils.generateUUID();
+
+	this.name = '';
+
+	this.image = image !== undefined ? image : Texture.DEFAULT_IMAGE;
+	this.mipmaps = [];
+
+	this.mapping = mapping !== undefined ? mapping : Texture.DEFAULT_MAPPING;
+
+	this.wrapS = wrapS !== undefined ? wrapS : ClampToEdgeWrapping;
+	this.wrapT = wrapT !== undefined ? wrapT : ClampToEdgeWrapping;
+
+	this.magFilter = magFilter !== undefined ? magFilter : LinearFilter;
+	this.minFilter = minFilter !== undefined ? minFilter : LinearMipmapLinearFilter;
+
+	this.anisotropy = anisotropy !== undefined ? anisotropy : 1;
+
+	this.format = format !== undefined ? format : RGBAFormat;
+	this.internalFormat = null;
+	this.type = type !== undefined ? type : UnsignedByteType;
+
+	this.offset = new Vector2( 0, 0 );
+	this.repeat = new Vector2( 1, 1 );
+	this.center = new Vector2( 0, 0 );
+	this.rotation = 0;
+
+	this.matrixAutoUpdate = true;
+	this.matrix = new Matrix3();
+
+	this.generateMipmaps = true;
+	this.premultiplyAlpha = false;
+	this.flipY = true;
+	this.unpackAlignment = 4;	// valid values: 1, 2, 4, 8 (see http://www.khronos.org/opengles/sdk/docs/man/xhtml/glPixelStorei.xml)
+
+	// Values of encoding !== THREE.LinearEncoding only supported on map, envMap and emissiveMap.
+	//
+	// Also changing the encoding after already used by a Material will not automatically make the Material
+	// update. You need to explicitly call Material.needsUpdate to trigger it to recompile.
+	this.encoding = encoding !== undefined ? encoding : LinearEncoding;
+
+	this.version = 0;
+	this.onUpdate = null;
+
+}
+
+Texture.DEFAULT_IMAGE = undefined;
+Texture.DEFAULT_MAPPING = UVMapping;
+
+Texture.prototype = Object.assign( Object.create( EventDispatcher.prototype ), {
+
+	constructor: Texture,
+
+	isTexture: true,
+
+	updateMatrix: function () {
+
+		this.matrix.setUvTransform( this.offset.x, this.offset.y, this.repeat.x, this.repeat.y, this.rotation, this.center.x, this.center.y );
+
+	},
+
+	clone: function () {
+
+		return new this.constructor().copy( this );
+
+	},
+
+	copy: function ( source ) {
+
+		this.name = source.name;
+
+		this.image = source.image;
+		this.mipmaps = source.mipmaps.slice( 0 );
+
+		this.mapping = source.mapping;
+
+		this.wrapS = source.wrapS;
+		this.wrapT = source.wrapT;
+
+		this.magFilter = source.magFilter;
+		this.minFilter = source.minFilter;
+
+		this.anisotropy = source.anisotropy;
+
+		this.format = source.format;
+		this.internalFormat = source.internalFormat;
+		this.type = source.type;
+
+		this.offset.copy( source.offset );
+		this.repeat.copy( source.repeat );
+		this.center.copy( source.center );
+		this.rotation = source.rotation;
+
+		this.matrixAutoUpdate = source.matrixAutoUpdate;
+		this.matrix.copy( source.matrix );
+
+		this.generateMipmaps = source.generateMipmaps;
+		this.premultiplyAlpha = source.premultiplyAlpha;
+		this.flipY = source.flipY;
+		this.unpackAlignment = source.unpackAlignment;
+		this.encoding = source.encoding;
+
+		return this;
+
+	},
+
+	toJSON: function ( meta ) {
+
+		const isRootObject = ( meta === undefined || typeof meta === 'string' );
+
+		if ( ! isRootObject && meta.textures[ this.uuid ] !== undefined ) {
+
+			return meta.textures[ this.uuid ];
+
+		}
+
+		const output = {
+
+			metadata: {
+				version: 4.5,
+				type: 'Texture',
+				generator: 'Texture.toJSON'
+			},
+
+			uuid: this.uuid,
+			name: this.name,
+
+			mapping: this.mapping,
+
+			repeat: [ this.repeat.x, this.repeat.y ],
+			offset: [ this.offset.x, this.offset.y ],
+			center: [ this.center.x, this.center.y ],
+			rotation: this.rotation,
+
+			wrap: [ this.wrapS, this.wrapT ],
+
+			format: this.format,
+			type: this.type,
+			encoding: this.encoding,
+
+			minFilter: this.minFilter,
+			magFilter: this.magFilter,
+			anisotropy: this.anisotropy,
+
+			flipY: this.flipY,
+
+			premultiplyAlpha: this.premultiplyAlpha,
+			unpackAlignment: this.unpackAlignment
+
+		};
+
+		if ( this.image !== undefined ) {
+
+			// TODO: Move to THREE.Image
+
+			const image = this.image;
+
+			if ( image.uuid === undefined ) {
+
+				image.uuid = MathUtils.generateUUID(); // UGH
+
+			}
+
+			if ( ! isRootObject && meta.images[ image.uuid ] === undefined ) {
+
+				let url;
+
+				if ( Array.isArray( image ) ) {
+
+					// process array of images e.g. CubeTexture
+
+					url = [];
+
+					for ( let i = 0, l = image.length; i < l; i ++ ) {
+
+						url.push( ImageUtils.getDataURL( image[ i ] ) );
+
+					}
+
+				} else {
+
+					// process single image
+
+					url = ImageUtils.getDataURL( image );
+
+				}
+
+				meta.images[ image.uuid ] = {
+					uuid: image.uuid,
+					url: url
+				};
+
+			}
+
+			output.image = image.uuid;
+
+		}
+
+		if ( ! isRootObject ) {
+
+			meta.textures[ this.uuid ] = output;
+
+		}
+
+		return output;
+
+	},
+
+	dispose: function () {
+
+		this.dispatchEvent( { type: 'dispose' } );
+
+	},
+
+	transformUv: function ( uv ) {
+
+		if ( this.mapping !== UVMapping ) return uv;
+
+		uv.applyMatrix3( this.matrix );
+
+		if ( uv.x < 0 || uv.x > 1 ) {
+
+			switch ( this.wrapS ) {
+
+				case RepeatWrapping:
+
+					uv.x = uv.x - Math.floor( uv.x );
+					break;
+
+				case ClampToEdgeWrapping:
+
+					uv.x = uv.x < 0 ? 0 : 1;
+					break;
+
+				case MirroredRepeatWrapping:
+
+					if ( Math.abs( Math.floor( uv.x ) % 2 ) === 1 ) {
+
+						uv.x = Math.ceil( uv.x ) - uv.x;
+
+					} else {
+
+						uv.x = uv.x - Math.floor( uv.x );
+
+					}
+
+					break;
+
+			}
+
+		}
+
+		if ( uv.y < 0 || uv.y > 1 ) {
+
+			switch ( this.wrapT ) {
+
+				case RepeatWrapping:
+
+					uv.y = uv.y - Math.floor( uv.y );
+					break;
+
+				case ClampToEdgeWrapping:
+
+					uv.y = uv.y < 0 ? 0 : 1;
+					break;
+
+				case MirroredRepeatWrapping:
+
+					if ( Math.abs( Math.floor( uv.y ) % 2 ) === 1 ) {
+
+						uv.y = Math.ceil( uv.y ) - uv.y;
+
+					} else {
+
+						uv.y = uv.y - Math.floor( uv.y );
+
+					}
+
+					break;
+
+			}
+
+		}
+
+		if ( this.flipY ) {
+
+			uv.y = 1 - uv.y;
+
+		}
+
+		return uv;
+
+	}
+
+} );
+
+Object.defineProperty( Texture.prototype, "needsUpdate", {
+
+	set: function ( value ) {
+
+		if ( value === true ) this.version ++;
+
+	}
+
+} );
+
+class TexturedMesh extends Mesh {
+    /**
+     * @param {import("three").BufferGeometry} geom
+     * @param {import("three").Material} mat
+     */
+    constructor(geom, mat) {
+        super(geom, mat);
+        this.isVideo = false;
+    }
+
+    /**
+     * @param {HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|string|Texture} img
+     * @param {import("../calla/fetching").progressCallback} onProgress
+     */
+
+    async setImage(img, onProgress) {
+        if (isString(img)) {
+            img = await getFile(img, onProgress);
+            img = Img(src(img));
+        }
+
+        if (img instanceof HTMLImageElement) {
+            if (!img.complete) {
+                await once(img, "load", "error", 10000);
+            }
+
+            // Force the image to be power-of-2 dimensioned.
+            const w = Math.pow(2, Math.floor(Math.log2(img.width))),
+                h = Math.pow(2, Math.floor(Math.log2(img.height))),
+                canv = Canvas(
+                    width(w),
+                    height(h)),
+                g = canv.getContext("2d");
+            g.drawImage(img, 0, 0, img.width, img.height, 0, 0, w, h);
+
+            img = canv;
+        }
+
+        if (!(img instanceof Texture)) {
+            img = new Texture(img);
+        }
+
+        this.material.map = img;
+        img = this.material.map.image;
+        this.isVideo = img instanceof HTMLVideoElement;
+        this.updateTexture();
+    }
+
+    updateTexture() {
+        if (this.material && this.material.map) {
+            this.material.map.needsUpdate = true;
+        }
+    }
+
+    update() {
+        if (this.isVideo) {
+            this.updateTexture();
+        }
+    }
+}
+
+class Image2DMesh extends TexturedMesh {
+    /**
+     * @param {string} name
+     */
+    constructor(name) {
+        super(plane, solid({ name, transparent: true }));
+        this.name = name;
+    }
+}
+
 class TextMesh extends Image2DMesh {
-    constructor() {
-        super();
+    /**
+     * @param {string} name
+     */
+    constructor(name) {
+        super(name);
         this.textImage = new TextImage();
         this.setImage(this.textImage.canvas);
         this.textImage.addEventListener("redrawn", () => {
@@ -16156,28 +16349,6 @@ AmbientLight.prototype = Object.assign( Object.create( Light.prototype ), {
 
 } );
 
-function DataTexture( data, width, height, format, type, mapping, wrapS, wrapT, magFilter, minFilter, anisotropy, encoding ) {
-
-	Texture.call( this, null, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, encoding );
-
-	this.image = { data: data || null, width: width || 1, height: height || 1 };
-
-	this.magFilter = magFilter !== undefined ? magFilter : NearestFilter;
-	this.minFilter = minFilter !== undefined ? minFilter : NearestFilter;
-
-	this.generateMipmaps = false;
-	this.flipY = false;
-	this.unpackAlignment = 1;
-
-	this.needsUpdate = true;
-
-}
-
-DataTexture.prototype = Object.create( Texture.prototype );
-DataTexture.prototype.constructor = DataTexture;
-
-DataTexture.prototype.isDataTexture = true;
-
 const _sphere$1 = new Sphere();
 const _vector$5 = new Vector3();
 
@@ -16342,6 +16513,347 @@ Object.assign( Frustum.prototype, {
 	}
 
 } );
+
+function LightShadow( camera ) {
+
+	this.camera = camera;
+
+	this.bias = 0;
+	this.normalBias = 0;
+	this.radius = 1;
+
+	this.mapSize = new Vector2( 512, 512 );
+
+	this.map = null;
+	this.mapPass = null;
+	this.matrix = new Matrix4();
+
+	this.autoUpdate = true;
+	this.needsUpdate = false;
+
+	this._frustum = new Frustum();
+	this._frameExtents = new Vector2( 1, 1 );
+
+	this._viewportCount = 1;
+
+	this._viewports = [
+
+		new Vector4( 0, 0, 1, 1 )
+
+	];
+
+}
+
+Object.assign( LightShadow.prototype, {
+
+	_projScreenMatrix: new Matrix4(),
+
+	_lightPositionWorld: new Vector3(),
+
+	_lookTarget: new Vector3(),
+
+	getViewportCount: function () {
+
+		return this._viewportCount;
+
+	},
+
+	getFrustum: function () {
+
+		return this._frustum;
+
+	},
+
+	updateMatrices: function ( light ) {
+
+		const shadowCamera = this.camera,
+			shadowMatrix = this.matrix,
+			projScreenMatrix = this._projScreenMatrix,
+			lookTarget = this._lookTarget,
+			lightPositionWorld = this._lightPositionWorld;
+
+		lightPositionWorld.setFromMatrixPosition( light.matrixWorld );
+		shadowCamera.position.copy( lightPositionWorld );
+
+		lookTarget.setFromMatrixPosition( light.target.matrixWorld );
+		shadowCamera.lookAt( lookTarget );
+		shadowCamera.updateMatrixWorld();
+
+		projScreenMatrix.multiplyMatrices( shadowCamera.projectionMatrix, shadowCamera.matrixWorldInverse );
+		this._frustum.setFromProjectionMatrix( projScreenMatrix );
+
+		shadowMatrix.set(
+			0.5, 0.0, 0.0, 0.5,
+			0.0, 0.5, 0.0, 0.5,
+			0.0, 0.0, 0.5, 0.5,
+			0.0, 0.0, 0.0, 1.0
+		);
+
+		shadowMatrix.multiply( shadowCamera.projectionMatrix );
+		shadowMatrix.multiply( shadowCamera.matrixWorldInverse );
+
+	},
+
+	getViewport: function ( viewportIndex ) {
+
+		return this._viewports[ viewportIndex ];
+
+	},
+
+	getFrameExtents: function () {
+
+		return this._frameExtents;
+
+	},
+
+	copy: function ( source ) {
+
+		this.camera = source.camera.clone();
+
+		this.bias = source.bias;
+		this.radius = source.radius;
+
+		this.mapSize.copy( source.mapSize );
+
+		return this;
+
+	},
+
+	clone: function () {
+
+		return new this.constructor().copy( this );
+
+	},
+
+	toJSON: function () {
+
+		const object = {};
+
+		if ( this.bias !== 0 ) object.bias = this.bias;
+		if ( this.normalBias !== 0 ) object.normalBias = this.normalBias;
+		if ( this.radius !== 1 ) object.radius = this.radius;
+		if ( this.mapSize.x !== 512 || this.mapSize.y !== 512 ) object.mapSize = this.mapSize.toArray();
+
+		object.camera = this.camera.toJSON( false ).object;
+		delete object.camera.matrix;
+
+		return object;
+
+	}
+
+} );
+
+function OrthographicCamera( left, right, top, bottom, near, far ) {
+
+	Camera.call( this );
+
+	this.type = 'OrthographicCamera';
+
+	this.zoom = 1;
+	this.view = null;
+
+	this.left = ( left !== undefined ) ? left : - 1;
+	this.right = ( right !== undefined ) ? right : 1;
+	this.top = ( top !== undefined ) ? top : 1;
+	this.bottom = ( bottom !== undefined ) ? bottom : - 1;
+
+	this.near = ( near !== undefined ) ? near : 0.1;
+	this.far = ( far !== undefined ) ? far : 2000;
+
+	this.updateProjectionMatrix();
+
+}
+
+OrthographicCamera.prototype = Object.assign( Object.create( Camera.prototype ), {
+
+	constructor: OrthographicCamera,
+
+	isOrthographicCamera: true,
+
+	copy: function ( source, recursive ) {
+
+		Camera.prototype.copy.call( this, source, recursive );
+
+		this.left = source.left;
+		this.right = source.right;
+		this.top = source.top;
+		this.bottom = source.bottom;
+		this.near = source.near;
+		this.far = source.far;
+
+		this.zoom = source.zoom;
+		this.view = source.view === null ? null : Object.assign( {}, source.view );
+
+		return this;
+
+	},
+
+	setViewOffset: function ( fullWidth, fullHeight, x, y, width, height ) {
+
+		if ( this.view === null ) {
+
+			this.view = {
+				enabled: true,
+				fullWidth: 1,
+				fullHeight: 1,
+				offsetX: 0,
+				offsetY: 0,
+				width: 1,
+				height: 1
+			};
+
+		}
+
+		this.view.enabled = true;
+		this.view.fullWidth = fullWidth;
+		this.view.fullHeight = fullHeight;
+		this.view.offsetX = x;
+		this.view.offsetY = y;
+		this.view.width = width;
+		this.view.height = height;
+
+		this.updateProjectionMatrix();
+
+	},
+
+	clearViewOffset: function () {
+
+		if ( this.view !== null ) {
+
+			this.view.enabled = false;
+
+		}
+
+		this.updateProjectionMatrix();
+
+	},
+
+	updateProjectionMatrix: function () {
+
+		const dx = ( this.right - this.left ) / ( 2 * this.zoom );
+		const dy = ( this.top - this.bottom ) / ( 2 * this.zoom );
+		const cx = ( this.right + this.left ) / 2;
+		const cy = ( this.top + this.bottom ) / 2;
+
+		let left = cx - dx;
+		let right = cx + dx;
+		let top = cy + dy;
+		let bottom = cy - dy;
+
+		if ( this.view !== null && this.view.enabled ) {
+
+			const scaleW = ( this.right - this.left ) / this.view.fullWidth / this.zoom;
+			const scaleH = ( this.top - this.bottom ) / this.view.fullHeight / this.zoom;
+
+			left += scaleW * this.view.offsetX;
+			right = left + scaleW * this.view.width;
+			top -= scaleH * this.view.offsetY;
+			bottom = top - scaleH * this.view.height;
+
+		}
+
+		this.projectionMatrix.makeOrthographic( left, right, top, bottom, this.near, this.far );
+
+		this.projectionMatrixInverse.getInverse( this.projectionMatrix );
+
+	},
+
+	toJSON: function ( meta ) {
+
+		const data = Object3D.prototype.toJSON.call( this, meta );
+
+		data.object.zoom = this.zoom;
+		data.object.left = this.left;
+		data.object.right = this.right;
+		data.object.top = this.top;
+		data.object.bottom = this.bottom;
+		data.object.near = this.near;
+		data.object.far = this.far;
+
+		if ( this.view !== null ) data.object.view = Object.assign( {}, this.view );
+
+		return data;
+
+	}
+
+} );
+
+function DirectionalLightShadow() {
+
+	LightShadow.call( this, new OrthographicCamera( - 5, 5, 5, - 5, 0.5, 500 ) );
+
+}
+
+DirectionalLightShadow.prototype = Object.assign( Object.create( LightShadow.prototype ), {
+
+	constructor: DirectionalLightShadow,
+
+	isDirectionalLightShadow: true,
+
+	updateMatrices: function ( light ) {
+
+		LightShadow.prototype.updateMatrices.call( this, light );
+
+	}
+
+} );
+
+function DirectionalLight( color, intensity ) {
+
+	Light.call( this, color, intensity );
+
+	this.type = 'DirectionalLight';
+
+	this.position.copy( Object3D.DefaultUp );
+	this.updateMatrix();
+
+	this.target = new Object3D();
+
+	this.shadow = new DirectionalLightShadow();
+
+}
+
+DirectionalLight.prototype = Object.assign( Object.create( Light.prototype ), {
+
+	constructor: DirectionalLight,
+
+	isDirectionalLight: true,
+
+	copy: function ( source ) {
+
+		Light.prototype.copy.call( this, source );
+
+		this.target = source.target.clone();
+
+		this.shadow = source.shadow.clone();
+
+		return this;
+
+	}
+
+} );
+
+function DataTexture( data, width, height, format, type, mapping, wrapS, wrapT, magFilter, minFilter, anisotropy, encoding ) {
+
+	Texture.call( this, null, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy, encoding );
+
+	this.image = { data: data || null, width: width || 1, height: height || 1 };
+
+	this.magFilter = magFilter !== undefined ? magFilter : NearestFilter;
+	this.minFilter = minFilter !== undefined ? minFilter : NearestFilter;
+
+	this.generateMipmaps = false;
+	this.flipY = false;
+	this.unpackAlignment = 1;
+
+	this.needsUpdate = true;
+
+}
+
+DataTexture.prototype = Object.create( Texture.prototype );
+DataTexture.prototype.constructor = DataTexture;
+
+DataTexture.prototype.isDataTexture = true;
 
 /**
  * Uniforms library for shared webgl shaders
@@ -42823,11 +43335,7 @@ class Fader extends Mesh {
      * @param {import("three").Color|number} color
      */
     constructor(camera, t = 0.25, color = 0x000000) {
-        const geom = new PlaneBufferGeometry(1, 1, 1, 1);
-        const mat = new MeshBasicMaterial({ color, opacity: 1, transparent: true });
-        super(geom, mat);
-
-        this.material = mat;
+        super(plane, solid({ color, opacity: 1, transparent: true }));
 
         this.speed = 1 / t;
         this.direction = 0;
@@ -44423,11 +44931,16 @@ class Application extends EventBase {
         this.stage = new Stage(this.camera);
         this.stage.position.set(0, 0, 0);
 
-        this.light = new AmbientLight(0xffffff, 1);
+        this.sun = new DirectionalLight(0xffffff, 0.5);
+        this.sun.position.set(0, 1, 1);
+        this.sun.lookAt(0, 0, 0);
+
+        this.ambient = new AmbientLight(0xffffff, 0.5);
 
         this.background = new Object3D();
         this.background.name = "Background";
-        this.background.add(this.light);
+        this.background.add(this.sun);
+        this.background.add(this.ambient);
         this.background.add(this.skybox);
         this.background.add(this.stage);
 
@@ -44545,6 +45058,51 @@ class Application extends EventBase {
      */
     onProgress(soFar, total, msg) {
         this.loadingBar.onProgress(soFar, total, msg);
+    }
+}
+
+class Sign extends Image2DMesh {
+    constructor(sign) {
+        super("sign-" + sign.fileName);
+        if (sign.isCallout) {
+            this.addEventListener("click", () => console.log(img.name));
+        }
+    }
+}
+
+const marker = new DebugObject(0xff0000);
+
+class NavIcon extends Object3D {
+    /**
+     * @param {Object3D} from
+     * @param {Object3D} to
+     */
+    constructor(from, to) {
+        super();
+
+        this.name = `nav-from-${from.name}-to-${to.name}`;
+        this.position.copy(to.position);
+        this.position.sub(from.position);
+        this.position.y = 0;
+        this.position.normalize();
+        this.position.multiplyScalar(1.5);
+        this.position.y += 1;
+
+        const icon = marker.clone();
+        const fwdClick = (evt) => this.dispatchEvent(evt);
+        icon.addEventListener("click", fwdClick);
+        icon.children.forEach(c => c.addEventListener("click", fwdClick));
+        icon.addEventListener("drag", console.log);
+
+        this.add(icon);
+
+    }
+}
+
+class PlaybackButton extends DebugObject {
+    constructor(audioTrack) {
+        super(0x00ff00);
+        this.name = "play-" + audioTrack.fileName;
     }
 }
 
@@ -44701,6 +45259,7 @@ async function showActivity(activityID, skipHistory = false) {
 
         const progs = splitProgress(assetProg, signs.length + audioTracks.length + 1);
 
+        /////////// GROUP DATA /////////////
         let startID = null;
         for (let station of stations) {
             curStations.set(station.transformID, station);
@@ -44718,6 +45277,7 @@ async function showActivity(activityID, skipHistory = false) {
             arr.push(connection.toStationID);
         }
 
+        /////////// BUILD SCENE GRAPH /////////////
         for (let transform of transforms) {
             const obj = new Object3D();
             obj.name = transform.name;
@@ -44738,6 +45298,7 @@ async function showActivity(activityID, skipHistory = false) {
             }
         }
 
+        /////////// BUILD STATIONS /////////////
         for (let fromStationID of curConnections.keys()) {
             const from = curTransforms.get(fromStationID),
                 exits = curConnections.get(fromStationID);
@@ -44745,32 +45306,22 @@ async function showActivity(activityID, skipHistory = false) {
             from.visible = false;
 
             for (let toStationID of exits) {
-                const to = curTransforms.get(toStationID),
-                    icon = DebugObject();
-                icon.position.copy(to.position);
-                icon.position.sub(from.position);
-                icon.position.y = 0;
-                icon.position.normalize();
-                icon.position.multiplyScalar(1.5);
-                icon.position.y += 1;
-
-                from.add(icon);
+                const to = curTransforms.get(toStationID);
+                const icon = new NavIcon(from, to);
                 icon.addEventListener("click", () => showStation(toStationID, onProgress));
+                from.add(icon);
             }
         }
 
+        /////////// BUILD SIGNS /////////////
         for (let sign of signs) {
             const transform = curTransforms.get(sign.transformID);
-            const img = new Image2DMesh();
-            img.name = "sign-" + sign.fileID;
-            if (sign.isCallout) {
-                img.addEventListener("click", () => console.log(img.name));
-            }
-            const prog = progs.shift();
-            await img.setImage(sign.path, prog);
+            const img = new Sign(sign);
+            await img.setImage(sign.path, progs.shift());
             transform.add(img);
         }
 
+        /////////// BUILD AUDIO TRACKS /////////////
         for (let audioTrack of audioTracks) {
             const clip = await app.audio.createClip(
                 audioTrack.path,
@@ -44781,12 +45332,13 @@ async function showActivity(activityID, skipHistory = false) {
                 audioTrack.path);
 
             curAudioTracks.push(audioTrack);
+
             clip.spatializer.minDistance = audioTrack.minDistance;
             clip.spatializer.maxDistance = audioTrack.maxDistance;
 
             if (audioTrack.spatialize) {
                 const transform = curTransforms.get(audioTrack.transformID);
-                transform.add(DebugObject(0x0000ff));
+                transform.add(new DebugObject(0x0000ff));
                 setRightUpFwdPos(transform.matrixWorld, R$1, U$1, F$1, P$1);
                 app.audio.setClipPose(
                     audioTrack.path,
@@ -44797,7 +45349,7 @@ async function showActivity(activityID, skipHistory = false) {
             }
 
             if (audioTrack.playbackTransformID > 0) {
-                const playbackButton = DebugObject(0x00ff00);
+                const playbackButton = new PlaybackButton(audioTrack);
                 playbackButton.addEventListener("click", async () => {
                     stopCurrentAudioZone();
                     app.audio.playClip(audioTrack.path, audioTrack.volume);
@@ -44810,8 +45362,8 @@ async function showActivity(activityID, skipHistory = false) {
             }
         }
 
+        /////////// START ACTIVITY /////////////
         if (startID !== null) {
-
             await showStation(startID, progs.shift());
         }
 
@@ -44837,6 +45389,8 @@ async function showStation(stationID, onProgress) {
     }
 
     await playAudioZone(station.zone);
+
+    console.info("Current station is", station.fileName);
 
     await app.fadeIn();
 }
@@ -44893,7 +45447,7 @@ async function showMenu(pathOrItems, onClick) {
  * @param {menuItemCallback} onClick
  */
 function addMenuItem(item, y, onClick) {
-    const button = Object.assign(new TextMesh(), {
+    const button = Object.assign(new TextMesh(item.name), {
         name: item.name,
         disabled: item.enabled === false,
         textBgColor: item.enabled !== false
