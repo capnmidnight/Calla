@@ -25487,6 +25487,51 @@ const allIcons = gg(
     medieval
 });
 
+const DEFAULT_TEST_TEXT = "The quick brown fox jumps over the lazy dog";
+const loadedFonts = [];
+
+/**
+ * 
+ * @param {any} style
+ * @returns {string}
+ */
+function makeFont(style) {
+    const fontParts = [];
+    if (style.fontStyle && style.fontStyle !== "normal") {
+        fontParts.push(style.fontStyle);
+    }
+
+    if (style.fontVariant && style.fontVariant !== "normal") {
+        fontParts.push(style.fontVariant);
+    }
+
+    if (style.fontWeight && style.fontWeight !== "normal") {
+        fontParts.push(style.fontWeight);
+    }
+
+    fontParts.push(style.fontSize + "px");
+    fontParts.push(style.fontFamily);
+
+    return fontParts.join(" ");
+}
+
+/**
+ * @param {string} font
+ * @param {string?} testString
+ */
+async function loadFont(font, testString = null) {
+    if (loadedFonts.indexOf(font) === -1) {
+        testString = testString || DEFAULT_TEST_TEXT;
+        const fonts = await document.fonts.load(font, testString);
+        if (fonts.length === 0) {
+            console.warn(`Failed to load font "${font}". If this is a system font, just set the object's \`value\` property, instead of calling \`loadFontAndSetText\`.`);
+        }
+        else {
+            loadedFonts.push(font);
+        }
+    }
+}
+
 /**
  * A setter functor for HTML attributes.
  **/
@@ -27754,16 +27799,61 @@ class EventedGamepad extends EventBase {
     }
 }
 
-/**
- * Types of avatars.
- * @enum {string}
- **/
-const AvatarMode = Object.freeze({
-    none: null,
-    emoji: "emoji",
-    photo: "photo",
-    video: "video"
-});
+let _getTransform = null;
+
+if (!Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "getTransform")
+    && Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "mozCurrentTransform")) {
+
+    class MockDOMMatrix {
+        constructor(trans) {
+            this.a = trans[0];
+            this.b = trans[1];
+            this.c = trans[2];
+            this.d = trans[3];
+            this.e = trans[4];
+            this.f = trans[5];
+        }
+
+        get is2D() {
+            return true;
+        }
+
+        get isIdentity() {
+            return this.a === 1
+                && this.b === 0
+                && this.c === 0
+                && this.d === 1
+                && this.e === 0
+                && this.f === 0;
+        }
+
+        transformPoint(p) {
+            return {
+                x: p.x * this.a + p.y * this.c + this.e,
+                y: p.x * this.b + p.y * this.d + this.f
+            }
+        }
+    }
+
+    /**
+     * @param {CanvasRenderingContext2D} g
+     */
+    _getTransform = (g) => {
+        return new MockDOMMatrix(g.mozCurrentTransform);
+    };
+}
+else {
+    /**
+     * @param {CanvasRenderingContext2D} g
+     */
+    _getTransform = (g) => {
+        return g.getTransform();
+    };
+}
+
+function getTransform(g) {
+    return _getTransform(g);
+}
 
 /**
  * Returns true if the given object is either an HTMLCanvasElement or an OffscreenCanvas.
@@ -27839,50 +27929,11 @@ function resizeCanvas(canv, superscale = 1) {
         superscale);
 }
 
-const DEFAULT_TEST_TEXT = "The quick brown fox jumps over the lazy dog";
-const loadedFonts = [];
-
-/**
- * @param {string} font
- * @param {string?} testString
- */
-async function loadFont(font, testString = DEFAULT_TEST_TEXT) {
-    if (loadedFonts.indexOf(font) === -1) {
-        const fonts = await document.fonts.load(font, testString);
-        if (fonts.length === 0) {
-            console.warn(`Failed to load font "${font}". If this is a system font, just set the object's \`value\` property, instead of calling \`loadFontAndSetText\`.`);
-        }
-        else {
-            loadedFonts.push(font);
-        }
-    }
-}
-
 /**
  * @type {WeakMap<TextImage, TextImagePrivate>}
  **/
 const selfs$1 = new WeakMap();
 const redrawnEvt = new Event("redrawn");
-
-function makeFont(style) {
-    const fontParts = [];
-    if (style.fontStyle && style.fontStyle !== "normal") {
-        fontParts.push(style.fontStyle);
-    }
-
-    if (style.fontVariant && style.fontVariant !== "normal") {
-        fontParts.push(style.fontVariant);
-    }
-
-    if (style.fontWeight && style.fontWeight !== "normal") {
-        fontParts.push(style.fontWeight);
-    }
-
-    fontParts.push(style.fontSize + "px");
-    fontParts.push(style.fontFamily);
-
-    return fontParts.join(" ");
-}
 
 class TextImagePrivate {
     constructor() {
@@ -27982,7 +28033,7 @@ class TextImage extends EventBase {
 
     async loadFontAndSetText(value = null) {
         const font = makeFont(this);
-        await loadFont(font);
+        await loadFont(font, value);
         this.value = value;
     }
 
@@ -28179,6 +28230,17 @@ class TextImage extends EventBase {
 }
 
 /**
+ * Types of avatars.
+ * @enum {string}
+ **/
+const AvatarMode = Object.freeze({
+    none: null,
+    emoji: "emoji",
+    photo: "photo",
+    video: "video"
+});
+
+/**
  * A base class for different types of avatars.
  **/
 class BaseAvatar {
@@ -28354,62 +28416,6 @@ class VideoAvatar extends BaseAvatar {
 
         super.draw(g, width, height, isMe);
     }
-}
-
-let _getTransform = null;
-
-if (!Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "getTransform")
-    && Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "mozCurrentTransform")) {
-
-    class MockDOMMatrix {
-        constructor(trans) {
-            this.a = trans[0];
-            this.b = trans[1];
-            this.c = trans[2];
-            this.d = trans[3];
-            this.e = trans[4];
-            this.f = trans[5];
-        }
-
-        get is2D() {
-            return true;
-        }
-
-        get isIdentity() {
-            return this.a === 1
-                && this.b === 0
-                && this.c === 0
-                && this.d === 1
-                && this.e === 0
-                && this.f === 0;
-        }
-
-        transformPoint(p) {
-            return {
-                x: p.x * this.a + p.y * this.c + this.e,
-                y: p.x * this.b + p.y * this.d + this.f
-            }
-        }
-    }
-
-    /**
-     * @param {CanvasRenderingContext2D} g
-     */
-    _getTransform = (g) => {
-        return new MockDOMMatrix(g.mozCurrentTransform);
-    };
-}
-else {
-    /**
-     * @param {CanvasRenderingContext2D} g
-     */
-    _getTransform = (g) => {
-        return g.getTransform();
-    };
-}
-
-function getTransform(g) {
-    return _getTransform(g);
 }
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1,
@@ -32696,361 +32702,6 @@ class UserDirectoryForm extends FormDialog {
     }
 }
 
-class ScreenPointerEvent extends Event {
-    constructor(type) {
-        super(type);
-
-        this.pointerType = null;
-        this.pointerID = null;
-        this.x = 0;
-        this.y = 0;
-        this.dx = 0;
-        this.dy = 0;
-        this.dz = 0;
-        this.u = 0;
-        this.v = 0;
-        this.du = 0;
-        this.dv = 0;
-        this.buttons = 0;
-        this.dragDistance = 0;
-
-        Object.seal(this);
-    }
-}
-
-class InputTypeChangingEvent extends Event {
-    /**
-     * @param {String} inputType
-     */
-    constructor(inputType) {
-        super("inputtypechanging");
-        this.newInputType = inputType;
-
-        Object.freeze(this);
-    }
-}
-
-class Pointer {
-    /**
-     * @param {PointerEvent} evt
-     */
-    constructor(evt) {
-        this.type = evt.pointerType;
-        this.id = evt.pointerId;
-        this.buttons = evt.buttons;
-        this.moveDistance = 0;
-        this.dragDistance = 0;
-        this.x = evt.offsetX;
-        this.y = evt.offsetY;
-        this.dx = evt.movementX;
-        this.dy = evt.movementY;
-
-        Object.seal(this);
-    }
-}
-
-const MAX_DRAG_DISTANCE = 5,
-    pointerDownEvt = new ScreenPointerEvent("pointerdown"),
-    pointerUpEvt = new ScreenPointerEvent("pointerup"),
-    clickEvt = new ScreenPointerEvent("click"),
-    moveEvt = new ScreenPointerEvent("move"),
-    dragEvt = new ScreenPointerEvent("drag");
-
-class ScreenPointerControls extends EventBase {
-    /**
-     * @param {Element} element the element from which to receive pointer events
-     */
-    constructor(element) {
-        super();
-
-        this.pointerLockElement = element;
-
-        /** @type {Map<Number, Pointer>} */
-        this.pointers = new Map();
-
-        /** @type {String} */
-        this.currentInputType = null;
-
-        let canClick = true;
-
-        /**
-         * @param {ScreenPointerEvent} evt
-         * @param {Pointer} pointer
-         */
-        const dispatch = (evt, pointer, dz) => {
-
-            evt.pointerType = pointer.type;
-            evt.pointerID = pointer.id;
-
-            evt.buttons = pointer.buttons;
-
-            evt.dx = pointer.dx;
-            evt.dy = pointer.dy;
-            evt.dz = dz;
-
-            evt.du = 2 * evt.dx / element.clientWidth;
-            evt.dv = 2 * evt.dy / element.clientHeight;
-
-            if (this.isPointerLocked) {
-                evt.u = 0;
-                evt.v = 0;
-
-                evt.x = element.clientWidth / 2;
-                evt.y = element.clientHeight / 2;
-            }
-            else {
-                evt.x = pointer.x;
-                evt.y = pointer.y;
-
-                evt.u = unproject(project(evt.x, 0, element.clientWidth), -1, 1);
-                evt.v = unproject(project(evt.y, 0, element.clientHeight), -1, 1);
-            }
-
-            evt.dragDistance = pointer.dragDistance;
-            this.dispatchEvent(evt);
-        };
-
-        /**
-         * @param {Pointer} pointer - the newest state of the pointer.
-         * @returns {Pointer} - the pointer state that was replaced, if any.
-         */
-        const replacePointer = (pointer) => {
-            const last = this.pointers.get(pointer.id);
-
-            if (last) {
-                pointer.dragDistance = last.dragDistance;
-
-                if (this.isPointerLocked) {
-                    pointer.x = last.x + pointer.dx;
-                    pointer.y = last.y + pointer.dy;
-                }
-            }
-
-            pointer.moveDistance = Math.sqrt(
-                pointer.dx * pointer.dx
-                + pointer.dy * pointer.dy);
-
-            this.pointers.set(pointer.id, pointer);
-
-            return last;
-        };
-
-        element.addEventListener("wheel", (evt) => {
-            if (!evt.shiftKey
-                && !evt.altKey
-                && !evt.ctrlKey
-                && !evt.metaKey) {
-
-                evt.preventDefault();
-
-                // Chrome and Firefox report scroll values in completely different ranges.
-                const pointer = new Pointer(evt),
-                    _ = replacePointer(pointer),
-                    deltaZ = -evt.deltaY * (isFirefox ? 1 : 0.02);
-
-                dispatch(moveEvt, pointer, deltaZ);
-            }
-        }, { passive: false });
-
-        element.addEventListener("pointerdown", (evt) => {
-            const oldCount = this.pressCount,
-                pointer = new Pointer(evt),
-                _ = replacePointer(pointer),
-                newCount = this.pressCount;
-
-            if (pointer.type !== this.currentInputType) {
-                this.dispatchEvent(new InputTypeChangingEvent(pointer.type));
-                this.currentInputType = pointer.type;
-            }
-
-            dispatch(pointerDownEvt, pointer, 0);
-
-            canClick = oldCount === 0
-                && newCount === 1;
-        });
-
-        /**
-         * @param {number} oldPinchDistance
-         * @param {number} newPinchDistance
-         * @returns {number}
-         */
-        const getPinchZoom = (oldPinchDistance, newPinchDistance) => {
-            if (oldPinchDistance !== null
-                && newPinchDistance !== null) {
-                canClick = false;
-                const ddist = newPinchDistance - oldPinchDistance;
-                return ddist / 10;
-            }
-
-            return 0;
-        };
-
-        element.addEventListener("pointermove", (evt) => {
-            const oldPinchDistance = this.pinchDistance,
-                pointer = new Pointer(evt),
-                last = replacePointer(pointer),
-                count = this.pressCount,
-                dz = getPinchZoom(oldPinchDistance, this.pinchDistance);
-
-            dispatch(moveEvt, pointer, dz);
-
-            if (count === 1
-                && pointer.buttons === 1
-                && last && last.buttons === pointer.buttons) {
-                pointer.dragDistance += pointer.moveDistance;
-                if (pointer.dragDistance > MAX_DRAG_DISTANCE) {
-                    canClick = false;
-                    dispatch(dragEvt, pointer, 0);
-                }
-            }
-        });
-
-        element.addEventListener("pointerup", (evt) => {
-            const pointer = new Pointer(evt),
-                _ = replacePointer(pointer);
-
-            dispatch(pointerUpEvt, pointer, 0);
-
-            if (canClick) {
-                dispatch(clickEvt, pointer, 0);
-            }
-
-            pointer.dragDistance = 0;
-
-            if (pointer.type === "touch") {
-                this.pointers.delete(pointer.id);
-            }
-        });
-
-        element.addEventListener("pointercancel", (evt) => {
-            if (this.pointers.has(evt.pointerId)) {
-                this.pointers.delete(evt.pointerId);
-            }
-        });
-    }
-
-    get primaryPointer() {
-        for (let pointer of this.pointers.values()) {
-            return pointer;
-        }
-    }
-
-    getPointerCount(type) {
-        let count = 0;
-        for (const pointer of this.pointers.values()) {
-            if (pointer.type === type) {
-                ++count;
-            }
-        }
-        return count;
-    }
-
-    get pressCount() {
-        let count = 0;
-        for (let pointer of this.pointers.values()) {
-            if (pointer.buttons === 1) {
-                ++count;
-            }
-        }
-        return count;
-    }
-
-    get pinchDistance() {
-        const count = this.pressCount;
-        if (count !== 2) {
-            return null;
-        }
-
-        let a, b;
-        for (let pointer of this.pointers.values()) {
-            if (pointer.buttons === 1) {
-                if (!a) {
-                    a = pointer;
-                }
-                else if (!b) {
-                    b = pointer;
-                }
-                else {
-                    break;
-                }
-            }
-        }
-
-        const dx = b.x - a.x,
-            dy = b.y - a.y;
-
-        return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    lockPointer() {
-        this.pointerLockElement.requestPointerLock();
-    }
-
-    get isPointerLocked() {
-        return document.pointerLockElement !== null;
-    }
-}
-
-const EMOJI_LIFE = 3;
-
-class Emote {
-    constructor(emoji, x, y) {
-        this.emoji = emoji;
-        this.x = x;
-        this.y = y;
-        this.dx = Math.random() - 0.5;
-        this.dy = -Math.random() * 0.5 - 0.5;
-        this.life = 1;
-        this.width = -1;
-        this.emoteText = new TextImage();
-        this.emoteText.fontFamily = "Noto Color Emoji";
-        this.emoteText.value = emoji.value;
-    }
-
-    isDead() {
-        return this.life <= 0.01;
-    }
-
-    update(dt) {
-        this.life -= dt / EMOJI_LIFE;
-        this.dx *= 0.99;
-        this.dy *= 0.99;
-        this.x += this.dx * dt;
-        this.y += this.dy * dt;
-    }
-
-    drawShadow(g, map) {
-        const scale = getTransform(g).a;
-        g.save();
-        {
-            g.shadowColor = "rgba(0, 0, 0, 0.5)";
-            g.shadowOffsetX = 3 * scale;
-            g.shadowOffsetY = 3 * scale;
-            g.shadowBlur = 3 * scale;
-
-            this.drawEmote(g, map);
-        }
-        g.restore();
-    }
-
-    /**
-     * 
-     * @param {CanvasRenderingContext2D} g
-     * @param {any} map
-     */
-    drawEmote(g, map) {
-        const oldAlpha = g.globalAlpha,
-            scale = getTransform(g).a;
-        g.globalAlpha = this.life;
-        this.emoteText.fontSize = map.tileHeight / 2;
-        this.emoteText.scale = scale;
-        this.emoteText.draw(g,
-            this.x * map.tileWidth - this.width / 2,
-            this.y * map.tileHeight);
-        g.globalAlpha = oldAlpha;
-    }
-}
-
 // javascript-astar 0.4.1
 // http://github.com/bgrins/javascript-astar
 // Freely distributable under the MIT License.
@@ -33750,6 +33401,361 @@ class TileMap {
         }
 
         return { x, y };
+    }
+}
+
+class ScreenPointerEvent extends Event {
+    constructor(type) {
+        super(type);
+
+        this.pointerType = null;
+        this.pointerID = null;
+        this.x = 0;
+        this.y = 0;
+        this.dx = 0;
+        this.dy = 0;
+        this.dz = 0;
+        this.u = 0;
+        this.v = 0;
+        this.du = 0;
+        this.dv = 0;
+        this.buttons = 0;
+        this.dragDistance = 0;
+
+        Object.seal(this);
+    }
+}
+
+class InputTypeChangingEvent extends Event {
+    /**
+     * @param {String} inputType
+     */
+    constructor(inputType) {
+        super("inputtypechanging");
+        this.newInputType = inputType;
+
+        Object.freeze(this);
+    }
+}
+
+class Pointer {
+    /**
+     * @param {PointerEvent} evt
+     */
+    constructor(evt) {
+        this.type = evt.pointerType;
+        this.id = evt.pointerId;
+        this.buttons = evt.buttons;
+        this.moveDistance = 0;
+        this.dragDistance = 0;
+        this.x = evt.offsetX;
+        this.y = evt.offsetY;
+        this.dx = evt.movementX;
+        this.dy = evt.movementY;
+
+        Object.seal(this);
+    }
+}
+
+const MAX_DRAG_DISTANCE = 5,
+    pointerDownEvt = new ScreenPointerEvent("pointerdown"),
+    pointerUpEvt = new ScreenPointerEvent("pointerup"),
+    clickEvt = new ScreenPointerEvent("click"),
+    moveEvt = new ScreenPointerEvent("move"),
+    dragEvt = new ScreenPointerEvent("drag");
+
+class ScreenPointerControls extends EventBase {
+    /**
+     * @param {Element} element the element from which to receive pointer events
+     */
+    constructor(element) {
+        super();
+
+        this.pointerLockElement = element;
+
+        /** @type {Map<Number, Pointer>} */
+        this.pointers = new Map();
+
+        /** @type {String} */
+        this.currentInputType = null;
+
+        let canClick = true;
+
+        /**
+         * @param {ScreenPointerEvent} evt
+         * @param {Pointer} pointer
+         */
+        const dispatch = (evt, pointer, dz) => {
+
+            evt.pointerType = pointer.type;
+            evt.pointerID = pointer.id;
+
+            evt.buttons = pointer.buttons;
+
+            evt.dx = pointer.dx;
+            evt.dy = pointer.dy;
+            evt.dz = dz;
+
+            evt.du = 2 * evt.dx / element.clientWidth;
+            evt.dv = 2 * evt.dy / element.clientHeight;
+
+            if (this.isPointerLocked) {
+                evt.u = 0;
+                evt.v = 0;
+
+                evt.x = element.clientWidth / 2;
+                evt.y = element.clientHeight / 2;
+            }
+            else {
+                evt.x = pointer.x;
+                evt.y = pointer.y;
+
+                evt.u = unproject(project(evt.x, 0, element.clientWidth), -1, 1);
+                evt.v = unproject(project(evt.y, 0, element.clientHeight), -1, 1);
+            }
+
+            evt.dragDistance = pointer.dragDistance;
+            this.dispatchEvent(evt);
+        };
+
+        /**
+         * @param {Pointer} pointer - the newest state of the pointer.
+         * @returns {Pointer} - the pointer state that was replaced, if any.
+         */
+        const replacePointer = (pointer) => {
+            const last = this.pointers.get(pointer.id);
+
+            if (last) {
+                pointer.dragDistance = last.dragDistance;
+
+                if (this.isPointerLocked) {
+                    pointer.x = last.x + pointer.dx;
+                    pointer.y = last.y + pointer.dy;
+                }
+            }
+
+            pointer.moveDistance = Math.sqrt(
+                pointer.dx * pointer.dx
+                + pointer.dy * pointer.dy);
+
+            this.pointers.set(pointer.id, pointer);
+
+            return last;
+        };
+
+        element.addEventListener("wheel", (evt) => {
+            if (!evt.shiftKey
+                && !evt.altKey
+                && !evt.ctrlKey
+                && !evt.metaKey) {
+
+                evt.preventDefault();
+
+                // Chrome and Firefox report scroll values in completely different ranges.
+                const pointer = new Pointer(evt),
+                    _ = replacePointer(pointer),
+                    deltaZ = -evt.deltaY * (isFirefox ? 1 : 0.02);
+
+                dispatch(moveEvt, pointer, deltaZ);
+            }
+        }, { passive: false });
+
+        element.addEventListener("pointerdown", (evt) => {
+            const oldCount = this.pressCount,
+                pointer = new Pointer(evt),
+                _ = replacePointer(pointer),
+                newCount = this.pressCount;
+
+            if (pointer.type !== this.currentInputType) {
+                this.dispatchEvent(new InputTypeChangingEvent(pointer.type));
+                this.currentInputType = pointer.type;
+            }
+
+            dispatch(pointerDownEvt, pointer, 0);
+
+            canClick = oldCount === 0
+                && newCount === 1;
+        });
+
+        /**
+         * @param {number} oldPinchDistance
+         * @param {number} newPinchDistance
+         * @returns {number}
+         */
+        const getPinchZoom = (oldPinchDistance, newPinchDistance) => {
+            if (oldPinchDistance !== null
+                && newPinchDistance !== null) {
+                canClick = false;
+                const ddist = newPinchDistance - oldPinchDistance;
+                return ddist / 10;
+            }
+
+            return 0;
+        };
+
+        element.addEventListener("pointermove", (evt) => {
+            const oldPinchDistance = this.pinchDistance,
+                pointer = new Pointer(evt),
+                last = replacePointer(pointer),
+                count = this.pressCount,
+                dz = getPinchZoom(oldPinchDistance, this.pinchDistance);
+
+            dispatch(moveEvt, pointer, dz);
+
+            if (count === 1
+                && pointer.buttons === 1
+                && last && last.buttons === pointer.buttons) {
+                pointer.dragDistance += pointer.moveDistance;
+                if (pointer.dragDistance > MAX_DRAG_DISTANCE) {
+                    canClick = false;
+                    dispatch(dragEvt, pointer, 0);
+                }
+            }
+        });
+
+        element.addEventListener("pointerup", (evt) => {
+            const pointer = new Pointer(evt),
+                _ = replacePointer(pointer);
+
+            dispatch(pointerUpEvt, pointer, 0);
+
+            if (canClick) {
+                dispatch(clickEvt, pointer, 0);
+            }
+
+            pointer.dragDistance = 0;
+
+            if (pointer.type === "touch") {
+                this.pointers.delete(pointer.id);
+            }
+        });
+
+        element.addEventListener("pointercancel", (evt) => {
+            if (this.pointers.has(evt.pointerId)) {
+                this.pointers.delete(evt.pointerId);
+            }
+        });
+    }
+
+    get primaryPointer() {
+        for (let pointer of this.pointers.values()) {
+            return pointer;
+        }
+    }
+
+    getPointerCount(type) {
+        let count = 0;
+        for (const pointer of this.pointers.values()) {
+            if (pointer.type === type) {
+                ++count;
+            }
+        }
+        return count;
+    }
+
+    get pressCount() {
+        let count = 0;
+        for (let pointer of this.pointers.values()) {
+            if (pointer.buttons === 1) {
+                ++count;
+            }
+        }
+        return count;
+    }
+
+    get pinchDistance() {
+        const count = this.pressCount;
+        if (count !== 2) {
+            return null;
+        }
+
+        let a, b;
+        for (let pointer of this.pointers.values()) {
+            if (pointer.buttons === 1) {
+                if (!a) {
+                    a = pointer;
+                }
+                else if (!b) {
+                    b = pointer;
+                }
+                else {
+                    break;
+                }
+            }
+        }
+
+        const dx = b.x - a.x,
+            dy = b.y - a.y;
+
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    lockPointer() {
+        this.pointerLockElement.requestPointerLock();
+    }
+
+    get isPointerLocked() {
+        return document.pointerLockElement !== null;
+    }
+}
+
+const EMOJI_LIFE = 3;
+
+class Emote {
+    constructor(emoji, x, y) {
+        this.emoji = emoji;
+        this.x = x;
+        this.y = y;
+        this.dx = Math.random() - 0.5;
+        this.dy = -Math.random() * 0.5 - 0.5;
+        this.life = 1;
+        this.width = -1;
+        this.emoteText = new TextImage();
+        this.emoteText.fontFamily = "Noto Color Emoji";
+        this.emoteText.value = emoji.value;
+    }
+
+    isDead() {
+        return this.life <= 0.01;
+    }
+
+    update(dt) {
+        this.life -= dt / EMOJI_LIFE;
+        this.dx *= 0.99;
+        this.dy *= 0.99;
+        this.x += this.dx * dt;
+        this.y += this.dy * dt;
+    }
+
+    drawShadow(g, map) {
+        const scale = getTransform(g).a;
+        g.save();
+        {
+            g.shadowColor = "rgba(0, 0, 0, 0.5)";
+            g.shadowOffsetX = 3 * scale;
+            g.shadowOffsetY = 3 * scale;
+            g.shadowBlur = 3 * scale;
+
+            this.drawEmote(g, map);
+        }
+        g.restore();
+    }
+
+    /**
+     * 
+     * @param {CanvasRenderingContext2D} g
+     * @param {any} map
+     */
+    drawEmote(g, map) {
+        const oldAlpha = g.globalAlpha,
+            scale = getTransform(g).a;
+        g.globalAlpha = this.life;
+        this.emoteText.fontSize = map.tileHeight / 2;
+        this.emoteText.scale = scale;
+        this.emoteText.draw(g,
+            this.x * map.tileWidth - this.width / 2,
+            this.y * map.tileHeight);
+        g.globalAlpha = oldAlpha;
     }
 }
 

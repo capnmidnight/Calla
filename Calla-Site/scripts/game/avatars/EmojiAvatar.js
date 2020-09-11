@@ -1,6 +1,6 @@
-import { setContextSize } from "../../html/canvas";
 import { isSurfer } from "../../emoji/emojis";
-import { TextImage } from "../graphics/TextImage";
+import { TextImage } from "../../graphics2d/TextImage";
+import { setContextSize } from "../../html/canvas";
 import { BaseAvatar } from "./BaseAvatar";
 
 /**

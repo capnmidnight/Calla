@@ -2,6 +2,7 @@ import { CallaClient } from "../calla/CallaClient";
 import { addEventListeners } from "../calla/events/addEventListeners";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
 import { allPeople as people } from "../emoji/emojis";
+import { loadFont } from "../graphics2d/fonts";
 import { disabled } from "../html/attrs";
 import { hide, isOpen, show } from "../html/ops";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
@@ -13,7 +14,6 @@ import { LoginForm } from "./forms/LoginForm";
 import { OptionsForm } from "./forms/OptionsForm";
 import { UserDirectoryForm } from "./forms/UserDirectoryForm";
 import { Game } from "./Game";
-import { loadFont } from "./graphics/loadFont";
 import { Settings } from "./Settings";
 
 const CAMERA_ZOOM_MIN = 0.5,

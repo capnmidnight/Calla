@@ -1,6 +1,6 @@
 import { SphereBufferGeometry } from "three/src/geometries/SphereGeometry";
-import { AbstractCubeMapView } from "./AbstractCubeMapView";
-import { setGeometryUVsForCubemaps } from "./setGeometryUVsForCubemaps";
+import { AbstractCubeMapView } from "../graphics3d/AbstractCubeMapView";
+import { setGeometryUVsForCubemaps } from "../graphics3d/setGeometryUVsForCubemaps";
 
 const geom = new SphereBufferGeometry(0.25, 50, 25);
 setGeometryUVsForCubemaps(geom);

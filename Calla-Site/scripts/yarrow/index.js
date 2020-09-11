@@ -6,10 +6,11 @@ import { getObject } from "../calla/fetching";
 import { setRightUpFwdPos } from "../calla/math/setRightUpFwd";
 import { splitProgress } from "../calla/progress";
 import { isString } from "../calla/typeChecks";
-import { Application } from "./Application";
-import { DebugObject } from "./DebugObject";
-import { Image2DMesh } from "./Image2DMesh";
-import { TextMesh } from "./TextMesh";
+import { loadFont, makeFont } from "../graphics2d/fonts";
+import { DebugObject } from "../graphics3d/DebugObject";
+import { Image2DMesh } from "../graphics3d/Image2DMesh";
+import { TextMesh } from "../graphics3d/TextMesh";
+import { Application } from "../vr/Application";
 
 const R = new Vector3();
 const U = new Vector3();
@@ -36,6 +37,11 @@ const views = [
     ["Activity", showActivity]
 ];
 
+const menuItemFont = {
+    fontFamily: "Roboto",
+    fontSize: 100
+};
+
 /**
  * @callback viewCallback
  * @param {number} id
@@ -56,7 +62,10 @@ app.addEventListener("sceneclearing", () => {
     curZone = null;
 });
 
-app.addEventListener("started", () => {
+app.addEventListener("started", async () => {
+
+    await loadFont(makeFont(menuItemFont));
+
     if (window.location.search.length === 0) {
         showMainMenu();
     }
@@ -315,6 +324,15 @@ function setHistory(step, id, skipHistory, name) {
     }
 }
 
+/**
+ * @callback menuItemCallback
+ * @param {any} selectedValue
+ */
+
+/**
+ * @param {String|any[]} pathOrItems
+ * @param {menuItemCallback} onClick
+ */
 async function showMenu(pathOrItems, onClick) {
     await app.fadeOut();
 
@@ -325,39 +343,39 @@ async function showMenu(pathOrItems, onClick) {
     const items = isString(pathOrItems)
         ? await getObject(pathOrItems)
         : pathOrItems;
-    const tasks = [];
     for (let i = 0; i < items.length; ++i) {
         const item = items[i];
         const y = ((items.length - 1) / 2 - i) / 2 + 1.5;
-        tasks.push(addMenuItem(item, y, onClick));
+        addMenuItem(item, y, onClick);
     }
-    await Promise.all(tasks);
     await app.fadeIn();
 }
 
-async function addMenuItem(item, y, onClick) {
+/**
+ * @param {any} item
+ * @param {number} y
+ * @param {menuItemCallback} onClick
+ */
+function addMenuItem(item, y, onClick) {
     const button = Object.assign(new TextMesh(), {
+        name: item.name,
+        disabled: item.enabled === false,
         textBgColor: item.enabled !== false
             ? "#ffffff"
             : "#a0a0a0",
         textColor: item.enabled !== false
             ? "#000000"
             : "#505050",
-        textPadding: [15, 30],
-        fontFamily: "Roboto",
-        fontSize: 100
-    });
+        textPadding: [15, 30]
+    }, menuItemFont);
 
-    button.name = item.name;
     button.position.set(0, y, -5);
-
-    await button.loadFontAndSetText(item.name);
-
-    app.menu.add(button);
-    button.disabled = item.enabled === false;
+    button.value = item.name;
     button.addEventListener("click", () => {
         if (!button.disabled) {
             onClick(item);
         }
     });
+
+    app.menu.add(button);
 }

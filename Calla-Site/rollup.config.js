@@ -82,10 +82,10 @@ if (process.env.BUILD === "production") {
     });
 }
 
-if (process.env.BUILD === "vr"
+if (process.env.BUILD === "yarrow"
     || process.env.BUILD === "development"
     || process.env.BUILD === "production") {
-    bundles.push(def("vr", true, true));
+    bundles.push(def("yarrow", true, true));
 }
 
 if (process.env.BUILD === "calla"

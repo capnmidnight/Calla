@@ -1,35 +1,14 @@
-import { EventBase } from "../../calla/events/EventBase";
-import { isNumber } from "../../calla/typeChecks";
-import { setContextSize } from "../../html/canvas";
-import { CanvasOffscreen } from "../../html/tags";
-import { loadFont } from "./loadFont";
+import { EventBase } from "../calla/events/EventBase";
+import { isNumber } from "../calla/typeChecks";
+import { setContextSize } from "../html/canvas";
+import { CanvasOffscreen } from "../html/tags";
+import { loadFont, makeFont } from "./fonts";
 
 /**
  * @type {WeakMap<TextImage, TextImagePrivate>}
  **/
 const selfs = new WeakMap();
-const DEFAULT_TEST_TEXT = "The quick brown fox jumps over the lazy dog";
 const redrawnEvt = new Event("redrawn");
-
-function makeFont(style) {
-    const fontParts = [];
-    if (style.fontStyle && style.fontStyle !== "normal") {
-        fontParts.push(style.fontStyle);
-    }
-
-    if (style.fontVariant && style.fontVariant !== "normal") {
-        fontParts.push(style.fontVariant);
-    }
-
-    if (style.fontWeight && style.fontWeight !== "normal") {
-        fontParts.push(style.fontWeight);
-    }
-
-    fontParts.push(style.fontSize + "px");
-    fontParts.push(style.fontFamily);
-
-    return fontParts.join(" ");
-}
 
 class TextImagePrivate {
     constructor() {
@@ -128,9 +107,8 @@ export class TextImage extends EventBase {
     }
 
     async loadFontAndSetText(value = null) {
-        const testString = value || DEFAULT_TEST_TEXT;
         const font = makeFont(this);
-        await loadFont(font);
+        await loadFont(font, value);
         this.value = value;
     }
 

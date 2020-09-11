@@ -1,4 +1,4 @@
-import { TextImage } from "../game/graphics/TextImage";
+import { TextImage } from "../graphics2d/TextImage";
 import { Image2DMesh } from "./Image2DMesh";
 
 export class TextMesh extends Image2DMesh {
