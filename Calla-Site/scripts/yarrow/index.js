@@ -334,8 +334,12 @@ function setHistory(step, id, skipHistory, name) {
 async function showMenu(pathOrItems, onClick) {
     await app.fadeOut();
 
+    await app.skybox.setImage("images/cube2.jpg");
+    app.sun.position.set(1, 1, -1);
+    app.sun.lookAt(0, 0, 0);
+    app.showSkybox = true;
+
     app.menu.remove(...app.menu.children);
-    app.skybox.visible = false;
     app.stage.position.set(0, 0, 0);
 
     const items = isString(pathOrItems)
@@ -346,6 +350,7 @@ async function showMenu(pathOrItems, onClick) {
         const y = ((items.length - 1) / 2 - i) / 2 + 1.5;
         addMenuItem(item, y, onClick);
     }
+
     await app.fadeIn();
 }
 
