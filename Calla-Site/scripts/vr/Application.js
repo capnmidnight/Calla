@@ -111,7 +111,7 @@ export class Application extends EventBase {
 
         this.cursors = new CursorControl(this.renderer.domElement);
 
-        this.eventSystem = new EventSystem(this.cursors, this.camera, this.foreground, this.controls);
+        this.eventSystem = new EventSystem(this.cursors, this.renderer, this.camera, this.foreground, this.controls);
         this.uiSystem = new UISystem(this.eventSystem);
 
         const update = (evt) => {

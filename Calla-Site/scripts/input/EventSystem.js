@@ -16,11 +16,12 @@ export class EventSystemEvent extends Event {
 export class EventSystem extends EventBase {
     /**
      * @param {import ("./CursorControl".CursorControl} cursors
+     * @param {import("three").WebGLRenderer} renderer
      * @param {import("three").PerspectiveCamera} camera
      * @param {import("three").Object3D} inputLayer
      * @param {...import("./ScreenPointerControls").ScreenPointerControls} screenPointer
      */
-    constructor(cursors, camera, inputLayer, ...pointers) {
+    constructor(cursors, renderer, camera, inputLayer, ...pointers) {
         super();
 
         const raycaster = new Raycaster();
@@ -46,7 +47,12 @@ export class EventSystem extends EventBase {
          */
         const raycast = (evt) => {
             const pointer = { x: evt.u, y: -evt.v };
-            raycaster.setFromCamera(pointer, camera);
+
+            const cam = renderer.xr.isPresenting
+                ? renderer.xr.getCamera(camera)
+                : camera;
+
+            raycaster.setFromCamera(pointer, cam);
 
             arrayClear(hits);
             raycaster.intersectObject(inputLayer, true, hits);
