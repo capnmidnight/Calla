@@ -69,6 +69,7 @@ export class ScreenControl extends EventBase {
                         camera.fov = 50;
                     }
                     this.dispatchEvent(sessionEndedEvt);
+                    resize();
                 };
 
                 this.element.style.display = "";
