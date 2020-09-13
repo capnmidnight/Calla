@@ -9,6 +9,26 @@ export class CursorControl {
      */
     constructor(canvas) {
         canvases.set(this, canvas);
+
+        this.pointerLockElement = canvas;
+
+        this.allowPointerLock = true;
+
+        canvas.addEventListener("click", (evt) => {
+            if (this.allowPointerLock
+                && evt.pointerType === "mouse"
+                && !this.isPointerLocked) {
+                this.lockPointer();
+            }
+        });
+    }
+
+    lockPointer() {
+        this.pointerLockElement.requestPointerLock();
+    }
+
+    get isPointerLocked() {
+        return document.pointerLockElement !== null;
     }
 
     /**

@@ -61,13 +61,15 @@ export class CameraControl extends EventBase {
      * @param {import("three").PerspectiveCamera} camera
      * @param {import("./Stage").Stage} stage
      * @param {import("./ScreenPointerControls").ScreenPointerControls} controls
+     * @param {import("./CursorControl").CursorControl} cursors
      */
-    constructor(camera, stage, controls) {
+    constructor(camera, stage, controls, cursors) {
         super();
 
         this.camera = camera;
         this.stage = stage;
         this.controls = controls;
+        this.cursors = cursors;
 
         /** @type {Mode} */
         this.controlMode = Mode.Auto;
@@ -81,9 +83,6 @@ export class CameraControl extends EventBase {
             [Mode.MouseUnlocked, MouseButtons.Mouse0],
             [Mode.MouseScreenEdge, MouseButtons.None]
         ]);
-
-        /** @type {Boolean} */
-        this.allowPointerLock = false;
 
         /** @type {Number} */
         this.requiredTouchCount = 1;
@@ -145,7 +144,7 @@ export class CameraControl extends EventBase {
 
             if (evt.pointerType === "mouse"
                 && this.controlMode !== Mode.MouseScreenEdge) {
-                if (this.controls.isPointerLocked) {
+                if (this.cursors.isPointerLocked) {
                     this.controlMode = Mode.MouseLocked;
                 }
                 else {
@@ -189,17 +188,7 @@ export class CameraControl extends EventBase {
             }
         };
 
-        this.controls.addEventListener("click", (evt) => {
-            if (this.allowPointerLock
-                && this.controlMode == Mode.MouseUnlocked
-                && evt.pointerType === "mouse"
-                && !this.controls.isPointerLocked) {
-                this.controls.lockPointer();
-            }
-
-            update(evt);
-        });
-
+        this.controls.addEventListener("click", update);
         this.controls.addEventListener("move", update);
     }
 

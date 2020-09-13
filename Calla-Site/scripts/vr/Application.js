@@ -102,14 +102,14 @@ export class Application extends EventBase {
         this.scene.add(this.transition);
         this.scene.add(this.grid);
 
-        this.controls = new ScreenPointerControls(this.renderer.domElement);
-
-        this.cameraControl = new CameraControl(this.camera, this.stage, this.controls);
-
-        this.screenControl = new ScreenControl(this.renderer, this.camera);
-        document.body.append(this.screenControl.element);
-
         this.cursors = new CursorControl(this.renderer.domElement);
+
+        this.controls = new ScreenPointerControls(this.renderer.domElement, this.cursors);
+
+        this.cameraControl = new CameraControl(this.camera, this.stage, this.controls, this.cursors);
+
+        this.screenControl = new ScreenControl(this.renderer, this.camera, false);
+        document.body.append(this.screenControl.element);
 
         this.eventSystem = new EventSystem(this.renderer, this.camera, this.cursors, this.background, this.foreground, this.controls);
         this.uiSystem = new UISystem(this.eventSystem);
