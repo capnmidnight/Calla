@@ -4,7 +4,7 @@ export class Sign extends Image2DMesh {
     constructor(sign) {
         super("sign-" + sign.fileName);
         if (sign.isCallout) {
-            this.addEventListener("click", () => console.log(img.name));
+            this.addEventListener("click", () => console.log(sign.name));
         }
     }
 }
