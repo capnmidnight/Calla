@@ -11,7 +11,7 @@ plane.name = "PlaneGeom";
  * @param {number} sy
  * @param {number} sz
  */
-export class Cube extends Mesh {
+export class Plane extends Mesh {
     constructor(color, sx, sy, sz) {
         super(cube, solid({ color, transparent: true, opacity: 1 }));
         this.scale.set(sx, sy, sz);
