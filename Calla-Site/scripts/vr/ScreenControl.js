@@ -63,12 +63,13 @@ export class ScreenControl extends EventBase {
 
                 const onSessionEnded = () => {
                     currentSession.removeEventListener("end", onSessionEnded);
-                    this.element.textContent = ("ENTER " + name).trim();
                     currentSession = null;
+                    renderer.xr.setSession(null);
+                    this.element.textContent = ("ENTER " + name).trim();
+                    this.dispatchEvent(sessionEndedEvt);
                     if (type === "inline") {
                         camera.fov = 50;
                     }
-                    this.dispatchEvent(sessionEndedEvt);
                     resize();
                 };
 
