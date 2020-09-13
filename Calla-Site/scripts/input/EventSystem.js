@@ -1,6 +1,7 @@
 import { Raycaster } from "three/src/core/Raycaster";
 import { arrayClear } from "../calla/arrays/arrayClear";
 import { EventBase } from "../calla/events/EventBase";
+import { Cube } from "../graphics3d/Cube";
 
 export class EventSystemEvent extends Event {
     /**
@@ -15,13 +16,14 @@ export class EventSystemEvent extends Event {
 
 export class EventSystem extends EventBase {
     /**
-     * @param {import ("./CursorControl".CursorControl} cursors
      * @param {import("three").WebGLRenderer} renderer
      * @param {import("three").PerspectiveCamera} camera
+     * @param {import ("./CursorControl".CursorControl} cursors
+     * @param {import("three").Object3D} systemLayer
      * @param {import("three").Object3D} inputLayer
      * @param {...import("./ScreenPointerControls").ScreenPointerControls} screenPointer
      */
-    constructor(cursors, renderer, camera, inputLayer, ...pointers) {
+    constructor(renderer, camera, cursors, systemLayer, inputLayer, ...pointers) {
         super();
 
         const raycaster = new Raycaster();
@@ -31,6 +33,9 @@ export class EventSystem extends EventBase {
 
         /** @type {import("three").Intersection[]} */
         const hits = [];
+
+        const cursor = new Cube(0xffffff, 0.01, 0.01, 0.01);
+        systemLayer.add(cursor);
 
         /**
          * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
@@ -53,6 +58,9 @@ export class EventSystem extends EventBase {
                 : camera;
 
             raycaster.setFromCamera(pointer, cam);
+            cursor.position.copy(raycaster.ray.direction);
+            cursor.position.multiplyScalar(2);
+            cursor.position.add(raycaster.ray.origin);
 
             arrayClear(hits);
             raycaster.intersectObject(inputLayer, true, hits);
