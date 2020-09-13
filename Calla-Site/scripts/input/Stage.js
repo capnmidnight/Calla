@@ -14,28 +14,23 @@ const defaultAvatarHeight = 1.75,
 
 export class Stage extends Object3D {
     /**
+     * @param {import("three").WebGLRenderer} renderer
      * @param {import("three").PerspectiveCamera} camera
      */
-    constructor(camera) {
+    constructor(renderer, camera) {
         super();
+
+        this.renderer = renderer;
 
         this.rotation.copy(camera.rotation);
         this.position.copy(camera.position);
         this.position.y = 0;
 
         this.camera = camera;
-        this.camera.position.set(0, 0, 0);
-        this.camera.rotation.set(0, 0, 0);
 
-        this.neck = new Object3D();
-        this.neck.rotation.set(0, 0, 0);
-        this.neck.position.set(0, 0.1, 0);
-        this.neck.add(this.camera);
-
-        this.pivot = new Object3D();
-        this.pivot.rotation.set(0, 0, 0);
-        this.pivot.position.set(0, defaultAvatarHeight - 0.1, 0);
-        this.pivot.add(this.neck);
+        this.head = new Object3D();
+        this.head.position.set(0, defaultAvatarHeight, 0);
+        this.head.add(this.camera);
 
         this.hands = new Object3D();
 
@@ -47,10 +42,11 @@ export class Stage extends Object3D {
 
         this.presentationPoint = new Object3D();
 
+        this.pitch = 0;
+        this.heading = 0;
+
         this.avatar = new Object3D();
-        this.avatar.rotation.set(0, 0, 0);
-        this.avatar.position.set(0, 0, 0);
-        this.avatar.add(this.pivot);
+        this.avatar.add(this.head);
         this.avatar.add(this.shoulders);
         this.avatar.add(this.presentationPoint);
 
@@ -63,12 +59,9 @@ export class Stage extends Object3D {
      * @param {Number} maxX
      */
     rotateView(dQuat, minX = -Math.PI, maxX = Math.PI) {
-        const x = this.pivot.rotation.x;
-        const y = this.avatar.rotation.y;
-
         viewEuler.setFromQuaternion(dQuat, "YXZ");
-        viewEuler.x += x;
-        viewEuler.y += y;
+        viewEuler.x += this.pitch;
+        viewEuler.y += this.heading;
 
         viewQuat.setFromEuler(viewEuler);
 
@@ -90,17 +83,38 @@ export class Stage extends Object3D {
         }
         x = clamp(x, minX, maxX);
 
-        this.avatar.rotation.y = y;
-        this.avatar.updateMatrixWorld();
+        this.pitch = x;
+        this.heading = y;
+    }
 
-        this.pivot.rotation.x = x;
-        this.pivot.updateMatrixWorld();
+    update() {
+        if (this.renderer.xr.isPresenting) {
+            const vrCamera = this.renderer.xr.getCamera(this.head);
+
+            const snapHeading = (Math.round(this.heading * 4 / Math.PI) * Math.PI / 4);
+
+            const vrY = vrCamera.position.y;
+            const dY = defaultAvatarHeight - vrY;
+
+            this.avatar.rotation.y = snapHeading;;
+            this.head.rotation.x = 0;
+            this.head.position.set(0, dY, 0);
+        }
+        else {
+            this.avatar.rotation.y = this.heading;
+            this.head.rotation.x = this.pitch;
+            this.head.position.set(0, defaultAvatarHeight, 0);
+        }
+
+        this.avatar.updateMatrixWorld();
+        this.head.updateMatrixWorld();
+        this.camera.updateMatrixWorld();
     }
 
     /**
      * @type {Number}
      **/
     get avatarHeight() {
-        return this.camera.position.y;
+        return this.head.position.y;
     }
 }

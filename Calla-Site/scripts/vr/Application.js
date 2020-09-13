@@ -62,7 +62,7 @@ export class Application extends EventBase {
         this.skybox.visible = false;
         this.showSkybox = false;
 
-        this.stage = new Stage(this.camera);
+        this.stage = new Stage(this.renderer, this.camera);
         this.stage.position.set(0, 0, 0);
 
         this.sun = new DirectionalLight(0xffffff, 0.5);
@@ -109,6 +109,9 @@ export class Application extends EventBase {
         this.cameraControl = new CameraControl(this.camera, this.stage, this.controls, this.cursors);
 
         this.screenControl = new ScreenControl(this.renderer, this.camera, false);
+        this.screenControl.addEventListener("sessionstarted", () => {
+            this.cursors.lockPointer();
+        });
         document.body.append(this.screenControl.element);
 
         this.eventSystem = new EventSystem(this.renderer, this.camera, this.cursors, this.background, this.foreground, this.controls);
@@ -119,9 +122,9 @@ export class Application extends EventBase {
                 this.skybox.visible = false;
             }
 
+            this.stage.update();
             this.cameraControl.update();
             this.skybox.update();
-            this.audio.update();
             this.loadingBar.update(evt.sdt);
             this.fader.update(evt.sdt);
 
@@ -130,13 +133,18 @@ export class Application extends EventBase {
 
             this.stage.getWorldPosition(this.grid.position);
 
-            setRightUpFwdPos(this.camera.matrixWorld, R, U, F, P);
+            const cam = this.renderer.xr.isPresenting
+                ? this.renderer.xr.getCamera(this.camera)
+                : this.camera;
+            
+            setRightUpFwdPos(cam.matrixWorld, R, U, F, P);
             this.audio.setUserPose(
                 "local-user",
                 P.x, P.y, P.z,
                 F.x, F.y, F.z,
                 U.x, U.y, U.z,
                 0);
+            this.audio.update();
 
             this.menu.position.copy(this.transition.position);
             this.menu.quaternion.copy(this.transition.quaternion);
