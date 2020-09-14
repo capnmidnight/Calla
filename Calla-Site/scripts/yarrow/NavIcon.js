@@ -1,27 +1,8 @@
-import { FrontSide } from "three/src/constants";
 import { Object3D } from "three/src/core/Object3D";
 import { upArrow } from "../emoji/emojis";
-import { TextMesh } from "../graphics3d/TextMesh";
-;
+import { EmojiIconMesh } from "../graphics3d/EmojiIconMesh";
 
-const buttonStyle = {
-    textBgColor: "transparent",
-    textColor: "#000000",
-    fontFamily: "Roboto",
-    fontSize: 100
-};
-
-const buttonMatOpts = {
-    lit: false,
-    side: FrontSide
-};
-
-/** @type {TextMesh} */
-const navButton = Object.assign(
-    new TextMesh("navButton", buttonMatOpts),
-    buttonStyle, {
-    value: upArrow.value
-});
+const navButton = new EmojiIconMesh("navButton", upArrow);
 
 export class NavIcon extends Object3D {
     /**

@@ -1,34 +1,10 @@
-import { FrontSide } from "three/src/constants";
 import { Object3D } from "three/src/core/Object3D";
 import { once } from "../calla/events/once";
 import { pauseButton, playButton } from "../emoji/emojis";
-import { TextMesh } from "../graphics3d/TextMesh";
+import { EmojiIconMesh } from "../graphics3d/EmojiIconMesh";
 
-const buttonStyle = {
-    textBgColor: "transparent",
-    textColor: "#000000",
-    fontFamily: "Roboto",
-    fontSize: 100
-};
-
-const buttonMatOpts = {
-    lit: false,
-    side: FrontSide
-};
-
-/** @type {TextMesh} */
-const playButtonMesh = Object.assign(
-    new TextMesh("playbackButtonPlay", buttonMatOpts),
-    buttonStyle, {
-    value: playButton.value
-});
-
-/** @type {TextMesh} */
-const pauseButtonMesh = Object.assign(
-    new TextMesh("playbackButtonPause", buttonMatOpts),
-    buttonStyle, {
-    value: pauseButton.value
-});
+const playButtonMesh = new EmojiIconMesh("playbackButtonPlay", playButton);
+const pauseButtonMesh = new EmojiIconMesh("playbackButtonPause", pauseButton);
 
 const playEvt = { type: "play" };
 const stopEvt = { type: "stop" };
