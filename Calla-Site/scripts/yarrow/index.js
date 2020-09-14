@@ -246,7 +246,6 @@ async function showActivity(activityID, skipHistory = false) {
 
             if (audioTrack.spatialize) {
                 const transform = curTransforms.get(audioTrack.transformID);
-                transform.add(new DebugObject(0x0000ff));
                 setRightUpFwdPos(transform.matrixWorld, R, U, F, P);
                 app.audio.setClipPose(
                     audioTrack.path,
