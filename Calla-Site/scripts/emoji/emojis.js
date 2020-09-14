@@ -798,7 +798,6 @@ export const openHands = e("\u{1F450}", "Open Hands");
 export const nailPolish = e("\u{1F485}", "Nail Polish");
 export const handsWithFingersSplayed = e("\u{1F590}\u{FE0F}", "Hand with Fingers Splayed");
 export const handsWithFingersSplayed2 = e("\u{1F591}\u{FE0F}", "Hand with Fingers Splayed 2");
-export const handsWithFingersSplayed2 = e("\u{1F591}\u{FE0F}", "Hand with Fingers Splayed 2");
 export const thumbsUp2 = e("\u{1F592}", "Thumbs Up 2");
 export const thumbsDown2 = e("\u{1F593}", "Thumbs Down 2");
 export const peaceFingers = e("\u{1F594}", "Peace Fingers");
@@ -830,7 +829,7 @@ export const handshake = e("\u{1F91D}", "Handshake");
 export const crossedFingers = e("\u{1F91E}", "Crossed Fingers");
 export const loveYouGesture = e("\u{1F91F}", "Love-You Gesture");
 export const palmsUpTogether = e("\u{1F932}", "Palms Up Together");
-export const indexPointingUp = e("\u{261D}\u{FE0F}", "Index Pointing Up");
+export const indexPointingUp4 = e("\u{261D}\u{FE0F}", "Index Pointing Up 4");
 export const raisedFist = e("\u{270A}", "Raised Fist");
 export const raisedHand = e("\u{270B}", "Raised Hand");
 export const victoryHand = e("\u{270C}\u{FE0F}", "Victory Hand");
@@ -883,7 +882,7 @@ export const hands = g(
     crossedFingers,
     loveYouGesture,
     palmsUpTogether,
-    indexPointingUp,
+    indexPointingUp4,
     raisedFist,
     raisedHand,
     victoryHand,
