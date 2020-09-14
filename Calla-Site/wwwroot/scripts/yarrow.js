@@ -5841,6 +5841,849 @@ async function loadFont(font, testString = null) {
     }
 }
 
+const EventBase = (function () {
+    try {
+        new window.EventTarget();
+        return class EventBase extends EventTarget {
+            constructor() {
+                super();
+            }
+        };
+    } catch (exp) {
+
+        /** @type {WeakMap<EventBase, Map<string, Listener[]>> */
+        const selfs = new WeakMap();
+
+        return class EventBase {
+
+            constructor() {
+                selfs.set(this, new Map());
+            }
+
+            /**
+             * @param {string} type
+             * @param {Function} callback
+             * @param {any} options
+             */
+            addEventListener(type, callback, options) {
+                if (isFunction(callback)) {
+                    const self = selfs.get(this);
+                    if (!self.has(type)) {
+                        self.set(type, []);
+                    }
+
+                    const listeners = self.get(type);
+                    if (!listeners.find(l => l.callback === callback)) {
+                        listeners.push({
+                            target: this,
+                            callback,
+                            options
+                        });
+                    }
+                }
+            }
+
+            /**
+             * @param {string} type
+             * @param {Function} callback
+             */
+            removeEventListener(type, callback) {
+                if (isFunction(callback)) {
+                    const self = selfs.get(this);
+                    if (self.has(type)) {
+                        const listeners = self.get(type),
+                            idx = listeners.findIndex(l => l.callback === callback);
+                        if (idx >= 0) {
+                            arrayRemoveAt(listeners, idx);
+                        }
+                    }
+                }
+            }
+
+            /**
+             * @param {Event} evt
+             */
+            dispatchEvent(evt) {
+                const self = selfs.get(this);
+                if (!self.has(evt.type)) {
+                    return true;
+                }
+                else {
+                    const listeners = self.get(evt.type);
+                    for (let listener of listeners) {
+                        if (listener.options && listener.options.once) {
+                            this.removeEventListener(evt.type, listener.callback);
+                        }
+                        listener.callback.call(listener.target, evt);
+                    }
+                    return !evt.defaultPrevented;
+                }
+            }
+        };
+    }
+
+})();
+
+/**
+ * Returns true if the given object is either an HTMLCanvasElement or an OffscreenCanvas.
+ * @param {any} obj
+ * @returns {boolean}
+ */
+
+/**
+ * Resizes a canvas element
+ * @param {HTMLCanvasElement|OffscreenCanvas} canv
+ * @param {number} w - the new width of the canvas
+ * @param {number} h - the new height of the canvas
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function setCanvasSize(canv, w, h, superscale = 1) {
+    w = Math.floor(w * superscale);
+    h = Math.floor(h * superscale);
+    if (canv.width != w
+        || canv.height != h) {
+        canv.width = w;
+        canv.height = h;
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Resizes the canvas element of a given rendering context.
+ * 
+ * Note: the imageSmoothingEnabled, textBaseline, textAlign, and font 
+ * properties of the context will be restored after the context is resized,
+ * as these values are usually reset to their default values when a canvas
+ * is resized.
+ * @param {RenderingContext} ctx
+ * @param {number} w - the new width of the canvas
+ * @param {number} h - the new height of the canvas
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function setContextSize(ctx, w, h, superscale = 1) {
+    const oldImageSmoothingEnabled = ctx.imageSmoothingEnabled,
+        oldTextBaseline = ctx.textBaseline,
+        oldTextAlign = ctx.textAlign,
+        oldFont = ctx.font,
+        resized = setCanvasSize(
+            ctx.canvas,
+            w,
+            h,
+            superscale);
+
+    if (resized) {
+        ctx.imageSmoothingEnabled = oldImageSmoothingEnabled;
+        ctx.textBaseline = oldTextBaseline;
+        ctx.textAlign = oldTextAlign;
+        ctx.font = oldFont;
+    }
+
+    return resized;
+}
+
+/**
+ * A setter functor for HTML attributes.
+ **/
+class HtmlAttr {
+    /**
+     * Creates a new setter functor for HTML Attributes
+     * @param {string} key - the attribute name.
+     * @param {string} value - the value to set for the attribute.
+     * @param {...string} tags - the HTML tags that support this attribute.
+     */
+    constructor(key, value, ...tags) {
+        this.key = key;
+        this.value = value;
+        this.tags = tags.map(t => t.toLocaleUpperCase());
+        Object.freeze(this);
+    }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        const isValid = this.tags.length === 0
+            || this.tags.indexOf(elem.tagName) > -1;
+
+        if (!isValid) {
+            console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
+        }
+        else if (this.key === "style") {
+            Object.assign(elem[this.key], this.value);
+        }
+        else if (!isBoolean(value)) {
+            elem[this.key] = this.value;
+        }
+        else if (this.value) {
+            elem.setAttribute(this.key, "");
+        }
+        else {
+            elem.removeAttribute(this.key);
+        }
+    }
+}
+
+/**
+ * Specifies the height of elements listed here. For all other elements, use the CSS height property.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function height(value) { return new HtmlAttr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+
+/**
+ * The URL of a linked resource.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function href(value) { return new HtmlAttr("href", value, "a", "area", "base", "link"); }
+
+/**
+ * Often used with CSS to style a specific element. The value of this attribute must be unique.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function id(value) { return new HtmlAttr("id", value); }
+
+/**
+ * The URL of the embeddable content.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function src(value) { return new HtmlAttr("src", value, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
+
+/**
+ * Defines the type of the element.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function type(value) { return new HtmlAttr("type", value, "button", "input", "command", "embed", "object", "script", "source", "style", "menu"); }
+
+/**
+ * Defines a default value which will be displayed in the element on page load.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function value(value) { return new HtmlAttr("value", value, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
+
+/**
+ * For the elements listed here, this establishes the element's width.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function width(value) { return new HtmlAttr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+
+/**
+ * A CSS property that will be applied to an element's style attribute.
+ **/
+class CssProp {
+    /**
+     * Creates a new CSS property that will be applied to an element's style attribute.
+     * @param {string} key - the property name.
+     * @param {string} value - the value to set for the property.
+     */
+    constructor(key, value) {
+        this.key = key;
+        this.value = value;
+        Object.freeze(this);
+    }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        elem.style[this.key] = this.value;
+    }
+}
+
+class CssPropSet {
+    /**
+     * @param {...(CssProp|CssPropSet)} rest
+     */
+    constructor(...rest) {
+        this.set = new Map();
+        const set = (key, value) => {
+            if (value || isBoolean(value)) {
+                this.set.set(key, value);
+            }
+            else if (this.set.has(key)) {
+                this.set.delete(key);
+            }
+        };
+        for (let prop of rest) {
+            if (prop instanceof CssProp) {
+                const { key, value } = prop;
+                set(key, value);
+            }
+            else if (prop instanceof CssPropSet) {
+                for (let subProp of prop.set.entries()) {
+                    const [key, value] = subProp;
+                    set(key, value);
+                }
+            }
+        }
+    }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        for (let prop of this.set.entries()) {
+            const [key, value] = prop;
+            elem.style[key] = value;
+        }
+    }
+}
+
+/**
+ * Creates a style attribute with a display property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function display(v) { return new CssProp("display", v); }
+
+/**
+ * Creates a style attribute with a fontFamily property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function fontFamily(v) { return new CssProp("fontFamily", v); }
+
+/**
+ * Creates a style attribute with a left property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function left(v) { return new CssProp("left", v); }
+
+/**
+ * Creates a style attribute with a textDecoration property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function textDecoration(v) { return new CssProp("textDecoration", v); }
+
+/**
+ * Creates a style attribute with a width property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function cssWidth(v) { return new CssProp("width", v); }
+
+
+// A selection of fonts for preferred monospace rendering.
+const monospaceFonts = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
+const monospaceFamily = fontFamily(monospaceFonts);
+// A selection of fonts that should match whatever the user's operating system normally uses.
+const systemFonts = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
+const systemFamily = fontFamily(systemFonts);
+
+/**
+ * A setter functor for HTML element events.
+ **/
+class HtmlEvt {
+    /**
+     * Creates a new setter functor for an HTML element event.
+     * @param {string} name - the name of the event to attach to.
+     * @param {Function} callback - the callback function to use with the event handler.
+     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+     */
+    constructor(name, callback, opts) {
+        if (!isFunction(callback)) {
+            throw new Error("A function instance is required for this parameter");
+        }
+
+        this.name = name;
+        this.callback = callback;
+        this.opts = opts;
+        Object.freeze(this);
+    }
+
+    /**
+     * Add the encapsulate callback as an event listener to the give HTMLElement
+     * @param {HTMLElement} elem
+     */
+    add(elem) {
+        elem.addEventListener(this.name, this.callback, this.opts);
+    }
+
+    /**
+     * Remove the encapsulate callback as an event listener from the give HTMLElement
+     * @param {HTMLElement} elem
+     */
+    remove(elem) {
+        elem.removeEventListener(this.name, this.callback);
+    }
+}
+
+/**
+ * @callback onUserGestureTestCallback
+ * @returns {boolean}
+ */
+
+
+const gestures = [
+    "change",
+    "click",
+    "contextmenu",
+    "dblclick",
+    "mouseup",
+    "pointerup",
+    "reset",
+    "submit",
+    "touchend"
+];
+/**
+ * This is not an event handler that you can add to an element. It's a global event that
+ * waits for the user to perform some sort of interaction with the website.
+ * @param {Function} callback
+ * @param {onUserGestureTestCallback} test
+  */
+function onUserGesture(callback, test) {
+    test = test || (() => true);
+    const check = async (evt) => {
+        let testResult = test();
+        if (testResult instanceof Promise) {
+            testResult = await testResult;
+        }
+
+        if (evt.isTrusted && testResult) {
+            for (let gesture of gestures) {
+                window.removeEventListener(gesture, check);
+            }
+
+            const result = callback();
+            if (result instanceof Promise) {
+                await result;
+            }
+        }
+    };
+
+    for (let gesture of gestures) {
+        window.addEventListener(gesture, check);
+    }
+}
+
+/**
+ * @typedef {(Node|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
+ **/
+
+/**
+ * Creates an HTML element for a given tag name.
+ * 
+ * Boolean attributes that you want to default to true can be passed
+ * as just the attribute creating function, 
+ *   e.g. `Audio(autoPlay)` vs `Audio(autoPlay(true))`
+ * @param {string} name - the name of the tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLElement}
+ */
+function tag(name, ...rest) {
+    let elem = null;
+
+    for (let i = 0; i < rest.length; ++i) {
+        const attr = rest[i];
+        if (isFunction(attr)) {
+            rest[i] = attr(true);
+        }
+
+        if (attr instanceof HtmlAttr
+            && attr.key === "id") {
+            elem = document.getElementById(attr.value);
+        }
+    }
+
+    if (elem === null) {
+        elem = document.createElement(name);
+    }
+
+    for (let x of rest) {
+        if (x !== null && x !== undefined) {
+            if (isString(x)
+                || isNumber(x)
+                || isBoolean(x)
+                || x instanceof Date) {
+                elem.appendChild(document.createTextNode(x));
+            }
+            else if (x instanceof Node) {
+                elem.appendChild(x);
+            }
+            else if (x.element instanceof Node) {
+                elem.appendChild(x.element);
+            }
+            else if (x instanceof HtmlAttr
+                || x instanceof CssProp
+                || x instanceof CssPropSet) {
+                x.apply(elem);
+            }
+            else if (x instanceof HtmlEvt) {
+                x.add(elem);
+            }
+            else {
+                console.trace(`Skipping ${x}: unsupported value type.`, x);
+            }
+        }
+    }
+
+    return elem;
+}
+
+/**
+ * creates an HTML A tag
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLAnchorElement}
+ */
+function A(...rest) { return tag("a", ...rest); }
+
+/**
+ * creates an HTML HtmlButton tag
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLButtonElement}
+ */
+function ButtonRaw(...rest) { return tag("button", ...rest); }
+
+/**
+ * creates an HTML Button tag
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLButtonElement}
+ */
+function Button(...rest) { return ButtonRaw(...rest, type("button")); }
+
+/**
+ * creates an HTML Canvas tag
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLCanvasElement}
+ */
+function Canvas(...rest) { return tag("canvas", ...rest); }
+
+/**
+ * creates an HTML Img tag
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLImageElement}
+ */
+function Img(...rest) { return tag("img", ...rest); }
+
+/**
+ * Creates an offscreen canvas element, if they are available. Otherwise, returns an HTMLCanvasElement.
+ * @param {number} w - the width of the canvas
+ * @param {number} h - the height of the canvas
+ * @param {...import("./tag").TagChild} rest - optional HTML attributes and child elements, to use in constructing the HTMLCanvasElement if OffscreenCanvas is not available.
+ * @returns {OffscreenCanvas|HTMLCanvasElement}
+ */
+function CanvasOffscreen(w, h, ...rest) {
+    if (window.OffscreenCanvas) {
+        return new OffscreenCanvas(w, h);
+    }
+    else {
+        return Canvas(...rest, width(w), height(h));
+    }
+}
+
+/**
+ * @type {WeakMap<TextImage, TextImagePrivate>}
+ **/
+const selfs = new WeakMap();
+const redrawnEvt = new Event("redrawn");
+
+class TextImagePrivate {
+    constructor() {
+        /** @type {string} */
+        this.color = "black";
+
+        /** @type {string} */
+        this.bgColor = null;
+
+        /** @type {string} */
+        this.fontStyle = "normal";
+
+        /** @type {string} */
+        this.fontVariant = "normal";
+
+        /** @type {string} */
+        this.fontWeight = "normal";
+
+        /** @type {string} */
+        this.fontFamily = "sans-serif";
+
+        /** @type {number} */
+        this.fontSize = 20;
+
+        /** @type {number} */
+        this.scale = 1;
+
+        /** @type {number} */
+        this.padding = {
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0
+        };
+
+        /** @type {string} */
+        this.value = null;
+
+        this.canvas = CanvasOffscreen(10, 10);
+        this.g = this.canvas.getContext("2d");
+        this.g.textBaseline = "top";
+    }
+
+    redraw(parent) {
+        this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        if (this.fontFamily
+            && this.fontSize
+            && this.color
+            && this.scale
+            && this.value) {
+            const fontHeight = this.fontSize * this.scale;
+            const font = makeFont(this);
+            this.g.font = font;
+
+            const metrics = this.g.measureText(this.value);
+            let dx = 0,
+                dy = 0,
+                trueWidth = metrics.width,
+                trueHeight = fontHeight;
+            if (metrics.actualBoundingBoxLeft !== undefined) {
+                dy = metrics.actualBoundingBoxAscent;
+                trueWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
+                trueHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+            }
+
+            dx += this.padding.left;
+            dy += this.padding.top;
+            trueWidth += this.padding.right + this.padding.left;
+            trueHeight += this.padding.top + this.padding.bottom;
+
+            setContextSize(this.g, trueWidth, trueHeight);
+
+            if (this.bgColor) {
+                this.g.fillStyle = this.bgColor;
+                this.g.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+            else {
+                this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+
+            this.g.fillStyle = this.color;
+            this.g.fillText(this.value, dx, dy);
+            parent.dispatchEvent(redrawnEvt);
+        }
+    }
+}
+
+class TextImage extends EventBase {
+    /**
+     * @param {string} fontFamily
+     */
+    constructor() {
+        super();
+        selfs.set(this, new TextImagePrivate());
+    }
+
+    async loadFontAndSetText(value = null) {
+        const font = makeFont(this);
+        await loadFont(font, value);
+        this.value = value;
+    }
+
+    get canvas() {
+        return selfs.get(this).canvas;
+    }
+
+    get width() {
+        const self = selfs.get(this);
+        return self.canvas.width / self.scale;
+    }
+
+    get height() {
+        const self = selfs.get(this);
+        return self.canvas.height / self.scale;
+    }
+
+    get scale() {
+        return selfs.get(this).scale;
+    }
+
+    set scale(v) {
+        if (this.scale !== v) {
+            const self = selfs.get(this);
+            self.scale = v;
+            self.redraw(this);
+        }
+    }
+
+    get padding() {
+        return selfs.get(this).padding;
+    }
+
+    set padding(v) {
+
+        if (v instanceof Array) {
+            if (v.length === 1) {
+                v = {
+                    top: v[0],
+                    right: v[0],
+                    bottom: v[0],
+                    left: v[0]
+                };
+            }
+            else if (v.length === 2) {
+                v = {
+                    top: v[0],
+                    right: v[1],
+                    bottom: v[0],
+                    left: v[1]
+                };
+            }
+            else if (v.length === 4) {
+                v = {
+                    top: v[0],
+                    right: v[1],
+                    bottom: v[2],
+                    left: v[3]
+                };
+            }
+            else {
+                return;
+            }
+        }
+        else if (isNumber(v)) {
+            v = {
+                top: v,
+                right: v,
+                bottom: v,
+                left: v
+            };
+        }
+
+
+        if (this.padding.top !== v.top
+            || this.padding.right != v.right
+            || this.padding.bottom != v.bottom
+            || this.padding.left != v.left) {
+            const self = selfs.get(this);
+            self.padding = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontStyle() {
+        return selfs.get(this).fontStyle;
+    }
+
+    set fontStyle(v) {
+        if (this.fontStyle !== v) {
+            const self = selfs.get(this);
+            self.fontStyle = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontVariant() {
+        return selfs.get(this).fontVariant;
+    }
+
+    set fontVariant(v) {
+        if (this.fontVariant !== v) {
+            const self = selfs.get(this);
+            self.fontVariant = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontWeight() {
+        return selfs.get(this).fontWeight;
+    }
+
+    set fontWeight(v) {
+        if (this.fontWeight !== v) {
+            const self = selfs.get(this);
+            self.fontWeight = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontSize() {
+        return selfs.get(this).fontSize;
+    }
+
+    set fontSize(v) {
+        if (this.fontSize !== v) {
+            const self = selfs.get(this);
+            self.fontSize = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontFamily() {
+        return selfs.get(this).fontFamily;
+    }
+
+    set fontFamily(v) {
+        if (this.fontFamily !== v) {
+            const self = selfs.get(this);
+            self.fontFamily = v;
+            self.redraw(this);
+        }
+    }
+
+    get color() {
+        return selfs.get(this).color;
+    }
+
+    set color(v) {
+        if (this.color !== v) {
+            const self = selfs.get(this);
+            self.color = v;
+            self.redraw(this);
+        }
+    }
+
+    get bgColor() {
+        return selfs.get(this).bgColor;
+    }
+
+    set bgColor(v) {
+        if (this.bgColor !== v) {
+            const self = selfs.get(this);
+            self.bgColor = v;
+            self.redraw(this);
+        }
+    }
+
+    get value() {
+        return selfs.get(this).value;
+    }
+
+    set value(v) {
+        if (this.value !== v) {
+            const self = selfs.get(this);
+            self.value = v;
+            self.redraw(this);
+        }
+    }
+
+    /**
+     *
+     * @param {CanvasRenderingContext2D} g - the canvas to which to render the text.
+     * @param {number} x
+     * @param {number} y
+     */
+    draw(g, x, y) {
+        const self = selfs.get(this);
+        if (self.canvas.width > 0
+            && self.canvas.height > 0) {
+            g.drawImage(self.canvas, x, y, this.width, this.height);
+        }
+    }
+}
+
 const _colorKeywords = { 'aliceblue': 0xF0F8FF, 'antiquewhite': 0xFAEBD7, 'aqua': 0x00FFFF, 'aquamarine': 0x7FFFD4, 'azure': 0xF0FFFF,
 	'beige': 0xF5F5DC, 'bisque': 0xFFE4C4, 'black': 0x000000, 'blanchedalmond': 0xFFEBCD, 'blue': 0x0000FF, 'blueviolet': 0x8A2BE2,
 	'brown': 0xA52A2A, 'burlywood': 0xDEB887, 'cadetblue': 0x5F9EA0, 'chartreuse': 0x7FFF00, 'chocolate': 0xD2691E, 'coral': 0xFF7F50,
@@ -11901,166 +12744,118 @@ BufferGeometry.prototype = Object.assign( Object.create( EventDispatcher.prototy
 
 } );
 
-// BoxBufferGeometry
+// PlaneGeometry
 
-class BoxBufferGeometry extends BufferGeometry {
+function PlaneGeometry( width, height, widthSegments, heightSegments ) {
 
-	constructor( width = 1, height = 1, depth = 1, widthSegments = 1, heightSegments = 1, depthSegments = 1 ) {
+	Geometry.call( this );
 
-		super();
+	this.type = 'PlaneGeometry';
 
-		this.type = 'BoxBufferGeometry';
+	this.parameters = {
+		width: width,
+		height: height,
+		widthSegments: widthSegments,
+		heightSegments: heightSegments
+	};
 
-		this.parameters = {
-			width: width,
-			height: height,
-			depth: depth,
-			widthSegments: widthSegments,
-			heightSegments: heightSegments,
-			depthSegments: depthSegments
-		};
+	this.fromBufferGeometry( new PlaneBufferGeometry( width, height, widthSegments, heightSegments ) );
+	this.mergeVertices();
 
-		const scope = this;
+}
 
-		// segments
+PlaneGeometry.prototype = Object.create( Geometry.prototype );
+PlaneGeometry.prototype.constructor = PlaneGeometry;
 
-		widthSegments = Math.floor( widthSegments );
-		heightSegments = Math.floor( heightSegments );
-		depthSegments = Math.floor( depthSegments );
+// PlaneBufferGeometry
 
-		// buffers
+function PlaneBufferGeometry( width, height, widthSegments, heightSegments ) {
 
-		const indices = [];
-		const vertices = [];
-		const normals = [];
-		const uvs = [];
+	BufferGeometry.call( this );
 
-		// helper variables
+	this.type = 'PlaneBufferGeometry';
 
-		let numberOfVertices = 0;
-		let groupStart = 0;
+	this.parameters = {
+		width: width,
+		height: height,
+		widthSegments: widthSegments,
+		heightSegments: heightSegments
+	};
 
-		// build each side of the box geometry
+	width = width || 1;
+	height = height || 1;
 
-		buildPlane( 'z', 'y', 'x', - 1, - 1, depth, height, width, depthSegments, heightSegments, 0 ); // px
-		buildPlane( 'z', 'y', 'x', 1, - 1, depth, height, - width, depthSegments, heightSegments, 1 ); // nx
-		buildPlane( 'x', 'z', 'y', 1, 1, width, depth, height, widthSegments, depthSegments, 2 ); // py
-		buildPlane( 'x', 'z', 'y', 1, - 1, width, depth, - height, widthSegments, depthSegments, 3 ); // ny
-		buildPlane( 'x', 'y', 'z', 1, - 1, width, height, depth, widthSegments, heightSegments, 4 ); // pz
-		buildPlane( 'x', 'y', 'z', - 1, - 1, width, height, - depth, widthSegments, heightSegments, 5 ); // nz
+	const width_half = width / 2;
+	const height_half = height / 2;
 
-		// build geometry
+	const gridX = Math.floor( widthSegments ) || 1;
+	const gridY = Math.floor( heightSegments ) || 1;
 
-		this.setIndex( indices );
-		this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-		this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
-		this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
+	const gridX1 = gridX + 1;
+	const gridY1 = gridY + 1;
 
-		function buildPlane( u, v, w, udir, vdir, width, height, depth, gridX, gridY, materialIndex ) {
+	const segment_width = width / gridX;
+	const segment_height = height / gridY;
 
-			const segmentWidth = width / gridX;
-			const segmentHeight = height / gridY;
+	// buffers
 
-			const widthHalf = width / 2;
-			const heightHalf = height / 2;
-			const depthHalf = depth / 2;
+	const indices = [];
+	const vertices = [];
+	const normals = [];
+	const uvs = [];
 
-			const gridX1 = gridX + 1;
-			const gridY1 = gridY + 1;
+	// generate vertices, normals and uvs
 
-			let vertexCounter = 0;
-			let groupCount = 0;
+	for ( let iy = 0; iy < gridY1; iy ++ ) {
 
-			const vector = new Vector3();
+		const y = iy * segment_height - height_half;
 
-			// generate vertices, normals and uvs
+		for ( let ix = 0; ix < gridX1; ix ++ ) {
 
-			for ( let iy = 0; iy < gridY1; iy ++ ) {
+			const x = ix * segment_width - width_half;
 
-				const y = iy * segmentHeight - heightHalf;
+			vertices.push( x, - y, 0 );
 
-				for ( let ix = 0; ix < gridX1; ix ++ ) {
+			normals.push( 0, 0, 1 );
 
-					const x = ix * segmentWidth - widthHalf;
-
-					// set values to correct vector component
-
-					vector[ u ] = x * udir;
-					vector[ v ] = y * vdir;
-					vector[ w ] = depthHalf;
-
-					// now apply vector to vertex buffer
-
-					vertices.push( vector.x, vector.y, vector.z );
-
-					// set values to correct vector component
-
-					vector[ u ] = 0;
-					vector[ v ] = 0;
-					vector[ w ] = depth > 0 ? 1 : - 1;
-
-					// now apply vector to normal buffer
-
-					normals.push( vector.x, vector.y, vector.z );
-
-					// uvs
-
-					uvs.push( ix / gridX );
-					uvs.push( 1 - ( iy / gridY ) );
-
-					// counters
-
-					vertexCounter += 1;
-
-				}
-
-			}
-
-			// indices
-
-			// 1. you need three indices to draw a single face
-			// 2. a single segment consists of two faces
-			// 3. so we need to generate six (2*3) indices per segment
-
-			for ( let iy = 0; iy < gridY; iy ++ ) {
-
-				for ( let ix = 0; ix < gridX; ix ++ ) {
-
-					const a = numberOfVertices + ix + gridX1 * iy;
-					const b = numberOfVertices + ix + gridX1 * ( iy + 1 );
-					const c = numberOfVertices + ( ix + 1 ) + gridX1 * ( iy + 1 );
-					const d = numberOfVertices + ( ix + 1 ) + gridX1 * iy;
-
-					// faces
-
-					indices.push( a, b, d );
-					indices.push( b, c, d );
-
-					// increase counter
-
-					groupCount += 6;
-
-				}
-
-			}
-
-			// add a group to the geometry. this will ensure multi material support
-
-			scope.addGroup( groupStart, groupCount, materialIndex );
-
-			// calculate new start value for groups
-
-			groupStart += groupCount;
-
-			// update total number of vertices
-
-			numberOfVertices += vertexCounter;
+			uvs.push( ix / gridX );
+			uvs.push( 1 - ( iy / gridY ) );
 
 		}
 
 	}
 
+	// indices
+
+	for ( let iy = 0; iy < gridY; iy ++ ) {
+
+		for ( let ix = 0; ix < gridX; ix ++ ) {
+
+			const a = ix + gridX1 * iy;
+			const b = ix + gridX1 * ( iy + 1 );
+			const c = ( ix + 1 ) + gridX1 * ( iy + 1 );
+			const d = ( ix + 1 ) + gridX1 * iy;
+
+			// faces
+
+			indices.push( a, b, d );
+			indices.push( b, c, d );
+
+		}
+
+	}
+
+	// build geometry
+
+	this.setIndex( indices );
+	this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
+	this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
+	this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
+
 }
+
+PlaneBufferGeometry.prototype = Object.create( BufferGeometry.prototype );
+PlaneBufferGeometry.prototype.constructor = PlaneBufferGeometry;
 
 const _vector$4 = new Vector3();
 const _segCenter = new Vector3();
@@ -14113,135 +14908,6 @@ function checkBufferGeometryIntersection( object, material, raycaster, ray, posi
 }
 
 /**
- * Recalculates the UV coordinates for a BufferGeometry
- * object to be able to map to a Cubemap that is packed as
- * a cross-configuration in a single image.
- * @param {import("three").BufferGeometry} geom
- */
-function setGeometryUVsForCubemaps(geom) {
-    const positions = geom.attributes.position;
-    const normals = geom.attributes.normal;
-    const uvs = geom.attributes.uv;
-
-    for (let n = 0; n < normals.count; ++n) {
-        const _x = n * normals.itemSize,
-            _y = n * normals.itemSize + 1,
-            _z = n * normals.itemSize + 2,
-            nx = normals.array[_x],
-            ny = normals.array[_y],
-            nz = normals.array[_z],
-            _nx_ = Math.abs(nx),
-            _ny_ = Math.abs(ny),
-            _nz_ = Math.abs(nz),
-            px = positions.array[_x],
-            py = positions.array[_y],
-            pz = positions.array[_z],
-            _px_ = Math.abs(px),
-            _py_ = Math.abs(py),
-            _pz_ = Math.abs(pz),
-            _u = n * uvs.itemSize,
-            _v = n * uvs.itemSize + 1;
-
-        let u = uvs.array[_u],
-            v = uvs.array[_v],
-            largest = 0,
-            mx = _nx_,
-            max = _px_;
-
-        if (_ny_ > mx) {
-            largest = 1;
-            mx = _ny_;
-            max = _py_;
-        }
-        if (_nz_ > mx) {
-            largest = 2;
-            mx = _nz_;
-            max = _pz_;
-        }
-
-        if (largest === 0) {
-            if (px < 0) {
-                //left
-                u = -pz;
-                v = py;
-            }
-            else {
-                // right
-                u = pz;
-                v = py;
-            }
-        }
-        else if (largest === 1) {
-            if (py < 0) {
-                // bottom
-                u = px;
-                v = -pz;
-            }
-            else {
-                // top
-                u = px;
-                v = pz;
-            }
-        }
-        else {
-            if (pz < 0) {
-                // front
-                u = px;
-                v = py;
-            }
-            else {
-                // back
-                u = -px;
-                v = py;
-            }
-        }
-
-        u = (u / max + 1) / 8;
-        v = (v / max + 1) / 6;
-
-        if (largest === 0) {
-            if (px < 0) {
-                //left
-                u += 0;
-                v += 1 / 3;
-            }
-            else {
-                // right
-                u += 0.5;
-                v += 1 / 3;
-            }
-        }
-        else if (largest === 1) {
-            if (py < 0) {
-                // bottom
-                u += 0.25;
-                v += 0;
-            }
-            else {
-                // top
-                u += 0.25;
-                v += 2 / 3;
-            }
-        }
-        else {
-            if (pz < 0) {
-                // front
-                u += 0.25;
-                v += 1 / 3;
-            }
-            else {
-                // back
-                u += 0.75;
-                v += 1 / 3;
-            }
-        }
-
-        uvs.array[_u] = u;
-        uvs.array[_v] = v;
-    }
-}
-
-/**
  * parameters = {
  *  color: <hex>,
  *  roughness: <float>,
@@ -14418,6 +15084,9 @@ MeshStandardMaterial.prototype.copy = function ( source ) {
 
 const colors = new Map();
 
+/**
+ * @param {(import("three").MeshBasicMaterialParameters|import("three").MeshStandardMaterialParameters)?} opts
+ */
 function solid(opts) {
     const key = Object
         .keys(opts)
@@ -14425,1005 +15094,25 @@ function solid(opts) {
         .join(",");
 
     if (!colors.has(key)) {
-        colors.set(key, new MeshStandardMaterial(opts));
+        const lit = opts.lit;
+        if ("lit" in opts) {
+            delete opts.lit;
+        }
+
+        if ("name" in opts) {
+            delete opts.name;
+        }
+
+        if (lit !== false) {
+            colors.set(key, new MeshStandardMaterial(opts));
+        }
+        else {
+            colors.set(key, new MeshBasicMaterial(opts));
+        }
     }
 
     return colors.get(key);
 }
-
-const cube = new BoxBufferGeometry(1, 1, 1, 1, 1, 1);
-cube.name = "CubeGeom";
-
-const invCube = cube.clone();
-invCube.name = "InvertedCubeGeom";
-setGeometryUVsForCubemaps(invCube);
-
-/**
- * @param {string|number|import("three").Color} color
- * @param {number} sx
- * @param {number} sy
- * @param {number} sz
- */
-class Cube extends Mesh {
-    constructor(color, sx, sy, sz) {
-        super(cube, solid({ color }));
-        this.scale.set(sx, sy, sz);
-    }
-}
-
-class DebugObject extends Cube {
-    /**
-     * @param {string|number|import("three").Color} color
-     */
-    constructor(color = 0xff0000) {
-        super(color, 0.1, 0.1, 0.1);
-        const x = new Cube(0xff0000, 3.0, 0.1, 0.1);
-        const y = new Cube(0x00ff00, 0.1, 3.0, 0.1);
-        const z = new Cube(0x0000ff, 0.1, 0.1, 3.0);
-
-        x.position.x = 1.5;
-        y.position.y = 1.5;
-        z.position.z = 1.5;
-
-        this.add(x, y, z);
-    }
-}
-
-const EventBase = (function () {
-    try {
-        new window.EventTarget();
-        return class EventBase extends EventTarget {
-            constructor() {
-                super();
-            }
-        };
-    } catch (exp) {
-
-        /** @type {WeakMap<EventBase, Map<string, Listener[]>> */
-        const selfs = new WeakMap();
-
-        return class EventBase {
-
-            constructor() {
-                selfs.set(this, new Map());
-            }
-
-            /**
-             * @param {string} type
-             * @param {Function} callback
-             * @param {any} options
-             */
-            addEventListener(type, callback, options) {
-                if (isFunction(callback)) {
-                    const self = selfs.get(this);
-                    if (!self.has(type)) {
-                        self.set(type, []);
-                    }
-
-                    const listeners = self.get(type);
-                    if (!listeners.find(l => l.callback === callback)) {
-                        listeners.push({
-                            target: this,
-                            callback,
-                            options
-                        });
-                    }
-                }
-            }
-
-            /**
-             * @param {string} type
-             * @param {Function} callback
-             */
-            removeEventListener(type, callback) {
-                if (isFunction(callback)) {
-                    const self = selfs.get(this);
-                    if (self.has(type)) {
-                        const listeners = self.get(type),
-                            idx = listeners.findIndex(l => l.callback === callback);
-                        if (idx >= 0) {
-                            arrayRemoveAt(listeners, idx);
-                        }
-                    }
-                }
-            }
-
-            /**
-             * @param {Event} evt
-             */
-            dispatchEvent(evt) {
-                const self = selfs.get(this);
-                if (!self.has(evt.type)) {
-                    return true;
-                }
-                else {
-                    const listeners = self.get(evt.type);
-                    for (let listener of listeners) {
-                        if (listener.options && listener.options.once) {
-                            this.removeEventListener(evt.type, listener.callback);
-                        }
-                        listener.callback.call(listener.target, evt);
-                    }
-                    return !evt.defaultPrevented;
-                }
-            }
-        };
-    }
-
-})();
-
-/**
- * Returns true if the given object is either an HTMLCanvasElement or an OffscreenCanvas.
- * @param {any} obj
- * @returns {boolean}
- */
-
-/**
- * Resizes a canvas element
- * @param {HTMLCanvasElement|OffscreenCanvas} canv
- * @param {number} w - the new width of the canvas
- * @param {number} h - the new height of the canvas
- * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
- * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
- */
-function setCanvasSize(canv, w, h, superscale = 1) {
-    w = Math.floor(w * superscale);
-    h = Math.floor(h * superscale);
-    if (canv.width != w
-        || canv.height != h) {
-        canv.width = w;
-        canv.height = h;
-        return true;
-    }
-    return false;
-}
-
-/**
- * Resizes the canvas element of a given rendering context.
- * 
- * Note: the imageSmoothingEnabled, textBaseline, textAlign, and font 
- * properties of the context will be restored after the context is resized,
- * as these values are usually reset to their default values when a canvas
- * is resized.
- * @param {RenderingContext} ctx
- * @param {number} w - the new width of the canvas
- * @param {number} h - the new height of the canvas
- * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
- * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
- */
-function setContextSize(ctx, w, h, superscale = 1) {
-    const oldImageSmoothingEnabled = ctx.imageSmoothingEnabled,
-        oldTextBaseline = ctx.textBaseline,
-        oldTextAlign = ctx.textAlign,
-        oldFont = ctx.font,
-        resized = setCanvasSize(
-            ctx.canvas,
-            w,
-            h,
-            superscale);
-
-    if (resized) {
-        ctx.imageSmoothingEnabled = oldImageSmoothingEnabled;
-        ctx.textBaseline = oldTextBaseline;
-        ctx.textAlign = oldTextAlign;
-        ctx.font = oldFont;
-    }
-
-    return resized;
-}
-
-/**
- * A setter functor for HTML attributes.
- **/
-class HtmlAttr {
-    /**
-     * Creates a new setter functor for HTML Attributes
-     * @param {string} key - the attribute name.
-     * @param {string} value - the value to set for the attribute.
-     * @param {...string} tags - the HTML tags that support this attribute.
-     */
-    constructor(key, value, ...tags) {
-        this.key = key;
-        this.value = value;
-        this.tags = tags.map(t => t.toLocaleUpperCase());
-        Object.freeze(this);
-    }
-
-    /**
-     * Set the attribute value on an HTMLElement
-     * @param {HTMLElement} elem - the element on which to set the attribute.
-     */
-    apply(elem) {
-        const isValid = this.tags.length === 0
-            || this.tags.indexOf(elem.tagName) > -1;
-
-        if (!isValid) {
-            console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
-        }
-        else if (this.key === "style") {
-            Object.assign(elem[this.key], this.value);
-        }
-        else if (!isBoolean(value)) {
-            elem[this.key] = this.value;
-        }
-        else if (this.value) {
-            elem.setAttribute(this.key, "");
-        }
-        else {
-            elem.removeAttribute(this.key);
-        }
-    }
-}
-
-/**
- * Specifies the height of elements listed here. For all other elements, use the CSS height property.
- * @param {number} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function height(value) { return new HtmlAttr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
-
-/**
- * The URL of a linked resource.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function href(value) { return new HtmlAttr("href", value, "a", "area", "base", "link"); }
-
-/**
- * Often used with CSS to style a specific element. The value of this attribute must be unique.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function id(value) { return new HtmlAttr("id", value); }
-
-/**
- * The URL of the embeddable content.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function src(value) { return new HtmlAttr("src", value, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
-
-/**
- * Defines the type of the element.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function type(value) { return new HtmlAttr("type", value, "button", "input", "command", "embed", "object", "script", "source", "style", "menu"); }
-
-/**
- * Defines a default value which will be displayed in the element on page load.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function value(value) { return new HtmlAttr("value", value, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
-
-/**
- * For the elements listed here, this establishes the element's width.
- * @param {number} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function width(value) { return new HtmlAttr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
-
-/**
- * A CSS property that will be applied to an element's style attribute.
- **/
-class CssProp {
-    /**
-     * Creates a new CSS property that will be applied to an element's style attribute.
-     * @param {string} key - the property name.
-     * @param {string} value - the value to set for the property.
-     */
-    constructor(key, value) {
-        this.key = key;
-        this.value = value;
-        Object.freeze(this);
-    }
-
-    /**
-     * Set the attribute value on an HTMLElement
-     * @param {HTMLElement} elem - the element on which to set the attribute.
-     */
-    apply(elem) {
-        elem.style[this.key] = this.value;
-    }
-}
-
-class CssPropSet {
-    /**
-     * @param {...(CssProp|CssPropSet)} rest
-     */
-    constructor(...rest) {
-        this.set = new Map();
-        const set = (key, value) => {
-            if (value || isBoolean(value)) {
-                this.set.set(key, value);
-            }
-            else if (this.set.has(key)) {
-                this.set.delete(key);
-            }
-        };
-        for (let prop of rest) {
-            if (prop instanceof CssProp) {
-                const { key, value } = prop;
-                set(key, value);
-            }
-            else if (prop instanceof CssPropSet) {
-                for (let subProp of prop.set.entries()) {
-                    const [key, value] = subProp;
-                    set(key, value);
-                }
-            }
-        }
-    }
-
-    /**
-     * Set the attribute value on an HTMLElement
-     * @param {HTMLElement} elem - the element on which to set the attribute.
-     */
-    apply(elem) {
-        for (let prop of this.set.entries()) {
-            const [key, value] = prop;
-            elem.style[key] = value;
-        }
-    }
-}
-
-/**
- * Creates a style attribute with a display property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function display(v) { return new CssProp("display", v); }
-
-/**
- * Creates a style attribute with a fontFamily property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function fontFamily(v) { return new CssProp("fontFamily", v); }
-
-/**
- * Creates a style attribute with a left property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function left(v) { return new CssProp("left", v); }
-
-/**
- * Creates a style attribute with a textDecoration property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function textDecoration(v) { return new CssProp("textDecoration", v); }
-
-/**
- * Creates a style attribute with a width property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function cssWidth(v) { return new CssProp("width", v); }
-
-
-// A selection of fonts for preferred monospace rendering.
-const monospaceFonts = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
-const monospaceFamily = fontFamily(monospaceFonts);
-// A selection of fonts that should match whatever the user's operating system normally uses.
-const systemFonts = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
-const systemFamily = fontFamily(systemFonts);
-
-/**
- * A setter functor for HTML element events.
- **/
-class HtmlEvt {
-    /**
-     * Creates a new setter functor for an HTML element event.
-     * @param {string} name - the name of the event to attach to.
-     * @param {Function} callback - the callback function to use with the event handler.
-     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
-     */
-    constructor(name, callback, opts) {
-        if (!isFunction(callback)) {
-            throw new Error("A function instance is required for this parameter");
-        }
-
-        this.name = name;
-        this.callback = callback;
-        this.opts = opts;
-        Object.freeze(this);
-    }
-
-    /**
-     * Add the encapsulate callback as an event listener to the give HTMLElement
-     * @param {HTMLElement} elem
-     */
-    add(elem) {
-        elem.addEventListener(this.name, this.callback, this.opts);
-    }
-
-    /**
-     * Remove the encapsulate callback as an event listener from the give HTMLElement
-     * @param {HTMLElement} elem
-     */
-    remove(elem) {
-        elem.removeEventListener(this.name, this.callback);
-    }
-}
-
-/**
- * @callback onUserGestureTestCallback
- * @returns {boolean}
- */
-
-
-const gestures = [
-    "change",
-    "click",
-    "contextmenu",
-    "dblclick",
-    "mouseup",
-    "pointerup",
-    "reset",
-    "submit",
-    "touchend"
-];
-/**
- * This is not an event handler that you can add to an element. It's a global event that
- * waits for the user to perform some sort of interaction with the website.
- * @param {Function} callback
- * @param {onUserGestureTestCallback} test
-  */
-function onUserGesture(callback, test) {
-    test = test || (() => true);
-    const check = async (evt) => {
-        let testResult = test();
-        if (testResult instanceof Promise) {
-            testResult = await testResult;
-        }
-
-        if (evt.isTrusted && testResult) {
-            for (let gesture of gestures) {
-                window.removeEventListener(gesture, check);
-            }
-
-            const result = callback();
-            if (result instanceof Promise) {
-                await result;
-            }
-        }
-    };
-
-    for (let gesture of gestures) {
-        window.addEventListener(gesture, check);
-    }
-}
-
-/**
- * @typedef {(Node|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
- **/
-
-/**
- * Creates an HTML element for a given tag name.
- * 
- * Boolean attributes that you want to default to true can be passed
- * as just the attribute creating function, 
- *   e.g. `Audio(autoPlay)` vs `Audio(autoPlay(true))`
- * @param {string} name - the name of the tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLElement}
- */
-function tag(name, ...rest) {
-    let elem = null;
-
-    for (let i = 0; i < rest.length; ++i) {
-        const attr = rest[i];
-        if (isFunction(attr)) {
-            rest[i] = attr(true);
-        }
-
-        if (attr instanceof HtmlAttr
-            && attr.key === "id") {
-            elem = document.getElementById(attr.value);
-        }
-    }
-
-    if (elem === null) {
-        elem = document.createElement(name);
-    }
-
-    for (let x of rest) {
-        if (x !== null && x !== undefined) {
-            if (isString(x)
-                || isNumber(x)
-                || isBoolean(x)
-                || x instanceof Date) {
-                elem.appendChild(document.createTextNode(x));
-            }
-            else if (x instanceof Node) {
-                elem.appendChild(x);
-            }
-            else if (x.element instanceof Node) {
-                elem.appendChild(x.element);
-            }
-            else if (x instanceof HtmlAttr
-                || x instanceof CssProp
-                || x instanceof CssPropSet) {
-                x.apply(elem);
-            }
-            else if (x instanceof HtmlEvt) {
-                x.add(elem);
-            }
-            else {
-                console.trace(`Skipping ${x}: unsupported value type.`, x);
-            }
-        }
-    }
-
-    return elem;
-}
-
-/**
- * creates an HTML A tag
- * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLAnchorElement}
- */
-function A(...rest) { return tag("a", ...rest); }
-
-/**
- * creates an HTML HtmlButton tag
- * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLButtonElement}
- */
-function ButtonRaw(...rest) { return tag("button", ...rest); }
-
-/**
- * creates an HTML Button tag
- * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLButtonElement}
- */
-function Button(...rest) { return ButtonRaw(...rest, type("button")); }
-
-/**
- * creates an HTML Canvas tag
- * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLCanvasElement}
- */
-function Canvas(...rest) { return tag("canvas", ...rest); }
-
-/**
- * creates an HTML Img tag
- * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLImageElement}
- */
-function Img(...rest) { return tag("img", ...rest); }
-
-/**
- * Creates an offscreen canvas element, if they are available. Otherwise, returns an HTMLCanvasElement.
- * @param {number} w - the width of the canvas
- * @param {number} h - the height of the canvas
- * @param {...import("./tag").TagChild} rest - optional HTML attributes and child elements, to use in constructing the HTMLCanvasElement if OffscreenCanvas is not available.
- * @returns {OffscreenCanvas|HTMLCanvasElement}
- */
-function CanvasOffscreen(w, h, ...rest) {
-    if (window.OffscreenCanvas) {
-        return new OffscreenCanvas(w, h);
-    }
-    else {
-        return Canvas(...rest, width(w), height(h));
-    }
-}
-
-/**
- * @type {WeakMap<TextImage, TextImagePrivate>}
- **/
-const selfs = new WeakMap();
-const redrawnEvt = new Event("redrawn");
-
-class TextImagePrivate {
-    constructor() {
-        /** @type {string} */
-        this.color = "black";
-
-        /** @type {string} */
-        this.bgColor = null;
-
-        /** @type {string} */
-        this.fontStyle = "normal";
-
-        /** @type {string} */
-        this.fontVariant = "normal";
-
-        /** @type {string} */
-        this.fontWeight = "normal";
-
-        /** @type {string} */
-        this.fontFamily = "sans-serif";
-
-        /** @type {number} */
-        this.fontSize = 20;
-
-        /** @type {number} */
-        this.scale = 1;
-
-        /** @type {number} */
-        this.padding = {
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0
-        };
-
-        /** @type {string} */
-        this.value = null;
-
-        this.canvas = CanvasOffscreen(10, 10);
-        this.g = this.canvas.getContext("2d");
-        this.g.textBaseline = "top";
-    }
-
-    redraw(parent) {
-        this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        if (this.fontFamily
-            && this.fontSize
-            && this.color
-            && this.scale
-            && this.value) {
-            const fontHeight = this.fontSize * this.scale;
-            const font = makeFont(this);
-            this.g.font = font;
-
-            const metrics = this.g.measureText(this.value);
-            let dx = 0,
-                dy = 0,
-                trueWidth = metrics.width,
-                trueHeight = fontHeight;
-            if (metrics.actualBoundingBoxLeft !== undefined) {
-                dy = metrics.actualBoundingBoxAscent;
-                trueWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
-                trueHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
-            }
-
-            dx += this.padding.left;
-            dy += this.padding.top;
-            trueWidth += this.padding.right + this.padding.left;
-            trueHeight += this.padding.top + this.padding.bottom;
-
-            setContextSize(this.g, trueWidth, trueHeight);
-
-            if (this.bgColor) {
-                this.g.fillStyle = this.bgColor;
-                this.g.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            }
-            else {
-                this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            }
-
-            this.g.fillStyle = this.color;
-            this.g.fillText(this.value, dx, dy);
-            parent.dispatchEvent(redrawnEvt);
-        }
-    }
-}
-
-class TextImage extends EventBase {
-    /**
-     * @param {string} fontFamily
-     */
-    constructor() {
-        super();
-        selfs.set(this, new TextImagePrivate());
-    }
-
-    async loadFontAndSetText(value = null) {
-        const font = makeFont(this);
-        await loadFont(font, value);
-        this.value = value;
-    }
-
-    get canvas() {
-        return selfs.get(this).canvas;
-    }
-
-    get width() {
-        const self = selfs.get(this);
-        return self.canvas.width / self.scale;
-    }
-
-    get height() {
-        const self = selfs.get(this);
-        return self.canvas.height / self.scale;
-    }
-
-    get scale() {
-        return selfs.get(this).scale;
-    }
-
-    set scale(v) {
-        if (this.scale !== v) {
-            const self = selfs.get(this);
-            self.scale = v;
-            self.redraw(this);
-        }
-    }
-
-    get padding() {
-        return selfs.get(this).padding;
-    }
-
-    set padding(v) {
-
-        if (v instanceof Array) {
-            if (v.length === 1) {
-                v = {
-                    top: v[0],
-                    right: v[0],
-                    bottom: v[0],
-                    left: v[0]
-                };
-            }
-            else if (v.length === 2) {
-                v = {
-                    top: v[0],
-                    right: v[1],
-                    bottom: v[0],
-                    left: v[1]
-                };
-            }
-            else if (v.length === 4) {
-                v = {
-                    top: v[0],
-                    right: v[1],
-                    bottom: v[2],
-                    left: v[3]
-                };
-            }
-            else {
-                return;
-            }
-        }
-        else if (isNumber(v)) {
-            v = {
-                top: v,
-                right: v,
-                bottom: v,
-                left: v
-            };
-        }
-
-
-        if (this.padding.top !== v.top
-            || this.padding.right != v.right
-            || this.padding.bottom != v.bottom
-            || this.padding.left != v.left) {
-            const self = selfs.get(this);
-            self.padding = v;
-            self.redraw(this);
-        }
-    }
-
-    get fontStyle() {
-        return selfs.get(this).fontStyle;
-    }
-
-    set fontStyle(v) {
-        if (this.fontStyle !== v) {
-            const self = selfs.get(this);
-            self.fontStyle = v;
-            self.redraw(this);
-        }
-    }
-
-    get fontVariant() {
-        return selfs.get(this).fontVariant;
-    }
-
-    set fontVariant(v) {
-        if (this.fontVariant !== v) {
-            const self = selfs.get(this);
-            self.fontVariant = v;
-            self.redraw(this);
-        }
-    }
-
-    get fontWeight() {
-        return selfs.get(this).fontWeight;
-    }
-
-    set fontWeight(v) {
-        if (this.fontWeight !== v) {
-            const self = selfs.get(this);
-            self.fontWeight = v;
-            self.redraw(this);
-        }
-    }
-
-    get fontSize() {
-        return selfs.get(this).fontSize;
-    }
-
-    set fontSize(v) {
-        if (this.fontSize !== v) {
-            const self = selfs.get(this);
-            self.fontSize = v;
-            self.redraw(this);
-        }
-    }
-
-    get fontFamily() {
-        return selfs.get(this).fontFamily;
-    }
-
-    set fontFamily(v) {
-        if (this.fontFamily !== v) {
-            const self = selfs.get(this);
-            self.fontFamily = v;
-            self.redraw(this);
-        }
-    }
-
-    get color() {
-        return selfs.get(this).color;
-    }
-
-    set color(v) {
-        if (this.color !== v) {
-            const self = selfs.get(this);
-            self.color = v;
-            self.redraw(this);
-        }
-    }
-
-    get bgColor() {
-        return selfs.get(this).bgColor;
-    }
-
-    set bgColor(v) {
-        if (this.bgColor !== v) {
-            const self = selfs.get(this);
-            self.bgColor = v;
-            self.redraw(this);
-        }
-    }
-
-    get value() {
-        return selfs.get(this).value;
-    }
-
-    set value(v) {
-        if (this.value !== v) {
-            const self = selfs.get(this);
-            self.value = v;
-            self.redraw(this);
-        }
-    }
-
-    /**
-     *
-     * @param {CanvasRenderingContext2D} g - the canvas to which to render the text.
-     * @param {number} x
-     * @param {number} y
-     */
-    draw(g, x, y) {
-        const self = selfs.get(this);
-        if (self.canvas.width > 0
-            && self.canvas.height > 0) {
-            g.drawImage(self.canvas, x, y, this.width, this.height);
-        }
-    }
-}
-
-// PlaneGeometry
-
-function PlaneGeometry( width, height, widthSegments, heightSegments ) {
-
-	Geometry.call( this );
-
-	this.type = 'PlaneGeometry';
-
-	this.parameters = {
-		width: width,
-		height: height,
-		widthSegments: widthSegments,
-		heightSegments: heightSegments
-	};
-
-	this.fromBufferGeometry( new PlaneBufferGeometry( width, height, widthSegments, heightSegments ) );
-	this.mergeVertices();
-
-}
-
-PlaneGeometry.prototype = Object.create( Geometry.prototype );
-PlaneGeometry.prototype.constructor = PlaneGeometry;
-
-// PlaneBufferGeometry
-
-function PlaneBufferGeometry( width, height, widthSegments, heightSegments ) {
-
-	BufferGeometry.call( this );
-
-	this.type = 'PlaneBufferGeometry';
-
-	this.parameters = {
-		width: width,
-		height: height,
-		widthSegments: widthSegments,
-		heightSegments: heightSegments
-	};
-
-	width = width || 1;
-	height = height || 1;
-
-	const width_half = width / 2;
-	const height_half = height / 2;
-
-	const gridX = Math.floor( widthSegments ) || 1;
-	const gridY = Math.floor( heightSegments ) || 1;
-
-	const gridX1 = gridX + 1;
-	const gridY1 = gridY + 1;
-
-	const segment_width = width / gridX;
-	const segment_height = height / gridY;
-
-	// buffers
-
-	const indices = [];
-	const vertices = [];
-	const normals = [];
-	const uvs = [];
-
-	// generate vertices, normals and uvs
-
-	for ( let iy = 0; iy < gridY1; iy ++ ) {
-
-		const y = iy * segment_height - height_half;
-
-		for ( let ix = 0; ix < gridX1; ix ++ ) {
-
-			const x = ix * segment_width - width_half;
-
-			vertices.push( x, - y, 0 );
-
-			normals.push( 0, 0, 1 );
-
-			uvs.push( ix / gridX );
-			uvs.push( 1 - ( iy / gridY ) );
-
-		}
-
-	}
-
-	// indices
-
-	for ( let iy = 0; iy < gridY; iy ++ ) {
-
-		for ( let ix = 0; ix < gridX; ix ++ ) {
-
-			const a = ix + gridX1 * iy;
-			const b = ix + gridX1 * ( iy + 1 );
-			const c = ( ix + 1 ) + gridX1 * ( iy + 1 );
-			const d = ( ix + 1 ) + gridX1 * iy;
-
-			// faces
-
-			indices.push( a, b, d );
-			indices.push( b, c, d );
-
-		}
-
-	}
-
-	// build geometry
-
-	this.setIndex( indices );
-	this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-	this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
-	this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
-
-}
-
-PlaneBufferGeometry.prototype = Object.create( BufferGeometry.prototype );
-PlaneBufferGeometry.prototype.constructor = PlaneBufferGeometry;
 
 const plane = new PlaneBufferGeometry(1, 1, 1, 1);
 plane.name = "PlaneGeom";
@@ -15864,23 +15553,31 @@ class TexturedMesh extends Mesh {
 class Image2DMesh extends TexturedMesh {
     /**
      * @param {string} name
+     * @param {(import("three").MeshBasicMaterialParameters|import("three").MeshStandardMaterialParameters)?} materialOptions
      */
-    constructor(name) {
-        super(plane, solid({ name, transparent: true }));
-        this.name = name;
+    constructor(name, materialOptions) {
+        super(plane, solid(Object.assign(
+            { transparent: true, opacity: 1 },
+            materialOptions,
+            { name })));
+
+        if (name) {
+            this.name = name;
+        }
     }
 }
 
 class TextMesh extends Image2DMesh {
     /**
      * @param {string} name
+ * @param {(import("three").MeshBasicMaterialParameters|import("three").MeshStandardMaterialParameters)?} materialOptions
      */
-    constructor(name) {
-        super(name);
+    constructor(name, materialOptions) {
+        super(name, materialOptions);
         this.textImage = new TextImage();
         this.setImage(this.textImage.canvas);
         this.textImage.addEventListener("redrawn", () => {
-            this.scale.set(this.textImage.width / 300, this.textImage.height / 300, 1);
+            this.scale.set(this.textImage.width / 400, this.textImage.height / 400, 1);
             this.updateTexture();
         });
     }
@@ -15974,7 +15671,7 @@ class TextMesh extends Image2DMesh {
     }
 
     set value(v) {
-        this.textImage.value = v;
+        this.textImage.loadFontAndSetText(v);
     }
 }
 
@@ -16282,6 +15979,452 @@ PerspectiveCamera.prototype = Object.assign( Object.create( Camera.prototype ), 
 
 } );
 
+/**
+ * parameters = {
+ *  color: <hex>,
+ *  opacity: <float>,
+ *
+ *  linewidth: <float>,
+ *  linecap: "round",
+ *  linejoin: "round"
+ * }
+ */
+
+function LineBasicMaterial( parameters ) {
+
+	Material.call( this );
+
+	this.type = 'LineBasicMaterial';
+
+	this.color = new Color( 0xffffff );
+
+	this.linewidth = 1;
+	this.linecap = 'round';
+	this.linejoin = 'round';
+
+	this.morphTargets = false;
+
+	this.setValues( parameters );
+
+}
+
+LineBasicMaterial.prototype = Object.create( Material.prototype );
+LineBasicMaterial.prototype.constructor = LineBasicMaterial;
+
+LineBasicMaterial.prototype.isLineBasicMaterial = true;
+
+LineBasicMaterial.prototype.copy = function ( source ) {
+
+	Material.prototype.copy.call( this, source );
+
+	this.color.copy( source.color );
+
+	this.linewidth = source.linewidth;
+	this.linecap = source.linecap;
+	this.linejoin = source.linejoin;
+
+	this.morphTargets = source.morphTargets;
+
+	return this;
+
+};
+
+const _start = new Vector3();
+const _end = new Vector3();
+const _inverseMatrix$1 = new Matrix4();
+const _ray$1 = new Ray();
+const _sphere$1 = new Sphere();
+
+function Line( geometry, material, mode ) {
+
+	if ( mode === 1 ) {
+
+		console.error( 'THREE.Line: parameter THREE.LinePieces no longer supported. Use THREE.LineSegments instead.' );
+
+	}
+
+	Object3D.call( this );
+
+	this.type = 'Line';
+
+	this.geometry = geometry !== undefined ? geometry : new BufferGeometry();
+	this.material = material !== undefined ? material : new LineBasicMaterial();
+
+	this.updateMorphTargets();
+
+}
+
+Line.prototype = Object.assign( Object.create( Object3D.prototype ), {
+
+	constructor: Line,
+
+	isLine: true,
+
+	copy: function ( source ) {
+
+		Object3D.prototype.copy.call( this, source );
+
+		this.material = source.material;
+		this.geometry = source.geometry;
+
+		return this;
+
+	},
+
+	computeLineDistances: function () {
+
+		const geometry = this.geometry;
+
+		if ( geometry.isBufferGeometry ) {
+
+			// we assume non-indexed geometry
+
+			if ( geometry.index === null ) {
+
+				const positionAttribute = geometry.attributes.position;
+				const lineDistances = [ 0 ];
+
+				for ( let i = 1, l = positionAttribute.count; i < l; i ++ ) {
+
+					_start.fromBufferAttribute( positionAttribute, i - 1 );
+					_end.fromBufferAttribute( positionAttribute, i );
+
+					lineDistances[ i ] = lineDistances[ i - 1 ];
+					lineDistances[ i ] += _start.distanceTo( _end );
+
+				}
+
+				geometry.setAttribute( 'lineDistance', new Float32BufferAttribute( lineDistances, 1 ) );
+
+			} else {
+
+				console.warn( 'THREE.Line.computeLineDistances(): Computation only possible with non-indexed BufferGeometry.' );
+
+			}
+
+		} else if ( geometry.isGeometry ) {
+
+			const vertices = geometry.vertices;
+			const lineDistances = geometry.lineDistances;
+
+			lineDistances[ 0 ] = 0;
+
+			for ( let i = 1, l = vertices.length; i < l; i ++ ) {
+
+				lineDistances[ i ] = lineDistances[ i - 1 ];
+				lineDistances[ i ] += vertices[ i - 1 ].distanceTo( vertices[ i ] );
+
+			}
+
+		}
+
+		return this;
+
+	},
+
+	raycast: function ( raycaster, intersects ) {
+
+		const geometry = this.geometry;
+		const matrixWorld = this.matrixWorld;
+		const threshold = raycaster.params.Line.threshold;
+
+		// Checking boundingSphere distance to ray
+
+		if ( geometry.boundingSphere === null ) geometry.computeBoundingSphere();
+
+		_sphere$1.copy( geometry.boundingSphere );
+		_sphere$1.applyMatrix4( matrixWorld );
+		_sphere$1.radius += threshold;
+
+		if ( raycaster.ray.intersectsSphere( _sphere$1 ) === false ) return;
+
+		//
+
+		_inverseMatrix$1.getInverse( matrixWorld );
+		_ray$1.copy( raycaster.ray ).applyMatrix4( _inverseMatrix$1 );
+
+		const localThreshold = threshold / ( ( this.scale.x + this.scale.y + this.scale.z ) / 3 );
+		const localThresholdSq = localThreshold * localThreshold;
+
+		const vStart = new Vector3();
+		const vEnd = new Vector3();
+		const interSegment = new Vector3();
+		const interRay = new Vector3();
+		const step = ( this && this.isLineSegments ) ? 2 : 1;
+
+		if ( geometry.isBufferGeometry ) {
+
+			const index = geometry.index;
+			const attributes = geometry.attributes;
+			const positions = attributes.position.array;
+
+			if ( index !== null ) {
+
+				const indices = index.array;
+
+				for ( let i = 0, l = indices.length - 1; i < l; i += step ) {
+
+					const a = indices[ i ];
+					const b = indices[ i + 1 ];
+
+					vStart.fromArray( positions, a * 3 );
+					vEnd.fromArray( positions, b * 3 );
+
+					const distSq = _ray$1.distanceSqToSegment( vStart, vEnd, interRay, interSegment );
+
+					if ( distSq > localThresholdSq ) continue;
+
+					interRay.applyMatrix4( this.matrixWorld ); //Move back to world space for distance calculation
+
+					const distance = raycaster.ray.origin.distanceTo( interRay );
+
+					if ( distance < raycaster.near || distance > raycaster.far ) continue;
+
+					intersects.push( {
+
+						distance: distance,
+						// What do we want? intersection point on the ray or on the segment??
+						// point: raycaster.ray.at( distance ),
+						point: interSegment.clone().applyMatrix4( this.matrixWorld ),
+						index: i,
+						face: null,
+						faceIndex: null,
+						object: this
+
+					} );
+
+				}
+
+			} else {
+
+				for ( let i = 0, l = positions.length / 3 - 1; i < l; i += step ) {
+
+					vStart.fromArray( positions, 3 * i );
+					vEnd.fromArray( positions, 3 * i + 3 );
+
+					const distSq = _ray$1.distanceSqToSegment( vStart, vEnd, interRay, interSegment );
+
+					if ( distSq > localThresholdSq ) continue;
+
+					interRay.applyMatrix4( this.matrixWorld ); //Move back to world space for distance calculation
+
+					const distance = raycaster.ray.origin.distanceTo( interRay );
+
+					if ( distance < raycaster.near || distance > raycaster.far ) continue;
+
+					intersects.push( {
+
+						distance: distance,
+						// What do we want? intersection point on the ray or on the segment??
+						// point: raycaster.ray.at( distance ),
+						point: interSegment.clone().applyMatrix4( this.matrixWorld ),
+						index: i,
+						face: null,
+						faceIndex: null,
+						object: this
+
+					} );
+
+				}
+
+			}
+
+		} else if ( geometry.isGeometry ) {
+
+			const vertices = geometry.vertices;
+			const nbVertices = vertices.length;
+
+			for ( let i = 0; i < nbVertices - 1; i += step ) {
+
+				const distSq = _ray$1.distanceSqToSegment( vertices[ i ], vertices[ i + 1 ], interRay, interSegment );
+
+				if ( distSq > localThresholdSq ) continue;
+
+				interRay.applyMatrix4( this.matrixWorld ); //Move back to world space for distance calculation
+
+				const distance = raycaster.ray.origin.distanceTo( interRay );
+
+				if ( distance < raycaster.near || distance > raycaster.far ) continue;
+
+				intersects.push( {
+
+					distance: distance,
+					// What do we want? intersection point on the ray or on the segment??
+					// point: raycaster.ray.at( distance ),
+					point: interSegment.clone().applyMatrix4( this.matrixWorld ),
+					index: i,
+					face: null,
+					faceIndex: null,
+					object: this
+
+				} );
+
+			}
+
+		}
+
+	},
+
+	updateMorphTargets: function () {
+
+		const geometry = this.geometry;
+
+		if ( geometry.isBufferGeometry ) {
+
+			const morphAttributes = geometry.morphAttributes;
+			const keys = Object.keys( morphAttributes );
+
+			if ( keys.length > 0 ) {
+
+				const morphAttribute = morphAttributes[ keys[ 0 ] ];
+
+				if ( morphAttribute !== undefined ) {
+
+					this.morphTargetInfluences = [];
+					this.morphTargetDictionary = {};
+
+					for ( let m = 0, ml = morphAttribute.length; m < ml; m ++ ) {
+
+						const name = morphAttribute[ m ].name || String( m );
+
+						this.morphTargetInfluences.push( 0 );
+						this.morphTargetDictionary[ name ] = m;
+
+					}
+
+				}
+
+			}
+
+		} else {
+
+			const morphTargets = geometry.morphTargets;
+
+			if ( morphTargets !== undefined && morphTargets.length > 0 ) {
+
+				console.error( 'THREE.Line.updateMorphTargets() does not support THREE.Geometry. Use THREE.BufferGeometry instead.' );
+
+			}
+
+		}
+
+	}
+
+} );
+
+const _start$1 = new Vector3();
+const _end$1 = new Vector3();
+
+function LineSegments( geometry, material ) {
+
+	Line.call( this, geometry, material );
+
+	this.type = 'LineSegments';
+
+}
+
+LineSegments.prototype = Object.assign( Object.create( Line.prototype ), {
+
+	constructor: LineSegments,
+
+	isLineSegments: true,
+
+	computeLineDistances: function () {
+
+		const geometry = this.geometry;
+
+		if ( geometry.isBufferGeometry ) {
+
+			// we assume non-indexed geometry
+
+			if ( geometry.index === null ) {
+
+				const positionAttribute = geometry.attributes.position;
+				const lineDistances = [];
+
+				for ( let i = 0, l = positionAttribute.count; i < l; i += 2 ) {
+
+					_start$1.fromBufferAttribute( positionAttribute, i );
+					_end$1.fromBufferAttribute( positionAttribute, i + 1 );
+
+					lineDistances[ i ] = ( i === 0 ) ? 0 : lineDistances[ i - 1 ];
+					lineDistances[ i + 1 ] = lineDistances[ i ] + _start$1.distanceTo( _end$1 );
+
+				}
+
+				geometry.setAttribute( 'lineDistance', new Float32BufferAttribute( lineDistances, 1 ) );
+
+			} else {
+
+				console.warn( 'THREE.LineSegments.computeLineDistances(): Computation only possible with non-indexed BufferGeometry.' );
+
+			}
+
+		} else if ( geometry.isGeometry ) {
+
+			const vertices = geometry.vertices;
+			const lineDistances = geometry.lineDistances;
+
+			for ( let i = 0, l = vertices.length; i < l; i += 2 ) {
+
+				_start$1.copy( vertices[ i ] );
+				_end$1.copy( vertices[ i + 1 ] );
+
+				lineDistances[ i ] = ( i === 0 ) ? 0 : lineDistances[ i - 1 ];
+				lineDistances[ i + 1 ] = lineDistances[ i ] + _start$1.distanceTo( _end$1 );
+
+			}
+
+		}
+
+		return this;
+
+	}
+
+} );
+
+function GridHelper( size, divisions, color1, color2 ) {
+
+	size = size || 10;
+	divisions = divisions || 10;
+	color1 = new Color( color1 !== undefined ? color1 : 0x444444 );
+	color2 = new Color( color2 !== undefined ? color2 : 0x888888 );
+
+	const center = divisions / 2;
+	const step = size / divisions;
+	const halfSize = size / 2;
+
+	const vertices = [], colors = [];
+
+	for ( let i = 0, j = 0, k = - halfSize; i <= divisions; i ++, k += step ) {
+
+		vertices.push( - halfSize, 0, k, halfSize, 0, k );
+		vertices.push( k, 0, - halfSize, k, 0, halfSize );
+
+		const color = i === center ? color1 : color2;
+
+		color.toArray( colors, j ); j += 3;
+		color.toArray( colors, j ); j += 3;
+		color.toArray( colors, j ); j += 3;
+		color.toArray( colors, j ); j += 3;
+
+	}
+
+	const geometry = new BufferGeometry();
+	geometry.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
+	geometry.setAttribute( 'color', new Float32BufferAttribute( colors, 3 ) );
+
+	const material = new LineBasicMaterial( { vertexColors: true, toneMapped: false } );
+
+	LineSegments.call( this, geometry, material );
+
+	this.type = 'GridHelper';
+
+}
+
+GridHelper.prototype = Object.create( LineSegments.prototype );
+GridHelper.prototype.constructor = GridHelper;
+
 function Light( color, intensity ) {
 
 	Object3D.call( this );
@@ -16352,7 +16495,7 @@ AmbientLight.prototype = Object.assign( Object.create( Light.prototype ), {
 
 } );
 
-const _sphere$1 = new Sphere();
+const _sphere$2 = new Sphere();
 const _vector$5 = new Vector3();
 
 function Frustum( p0, p1, p2, p3, p4, p5 ) {
@@ -16433,19 +16576,19 @@ Object.assign( Frustum.prototype, {
 
 		if ( geometry.boundingSphere === null ) geometry.computeBoundingSphere();
 
-		_sphere$1.copy( geometry.boundingSphere ).applyMatrix4( object.matrixWorld );
+		_sphere$2.copy( geometry.boundingSphere ).applyMatrix4( object.matrixWorld );
 
-		return this.intersectsSphere( _sphere$1 );
+		return this.intersectsSphere( _sphere$2 );
 
 	},
 
 	intersectsSprite: function ( sprite ) {
 
-		_sphere$1.center.set( 0, 0, 0 );
-		_sphere$1.radius = 0.7071067811865476;
-		_sphere$1.applyMatrix4( sprite.matrixWorld );
+		_sphere$2.center.set( 0, 0, 0 );
+		_sphere$2.radius = 0.7071067811865476;
+		_sphere$2.applyMatrix4( sprite.matrixWorld );
 
-		return this.intersectsSphere( _sphere$1 );
+		return this.intersectsSphere( _sphere$2 );
 
 	},
 
@@ -17265,6 +17408,167 @@ function WebGLAttributes( gl, capabilities ) {
 		update: update
 
 	};
+
+}
+
+// BoxBufferGeometry
+
+class BoxBufferGeometry extends BufferGeometry {
+
+	constructor( width = 1, height = 1, depth = 1, widthSegments = 1, heightSegments = 1, depthSegments = 1 ) {
+
+		super();
+
+		this.type = 'BoxBufferGeometry';
+
+		this.parameters = {
+			width: width,
+			height: height,
+			depth: depth,
+			widthSegments: widthSegments,
+			heightSegments: heightSegments,
+			depthSegments: depthSegments
+		};
+
+		const scope = this;
+
+		// segments
+
+		widthSegments = Math.floor( widthSegments );
+		heightSegments = Math.floor( heightSegments );
+		depthSegments = Math.floor( depthSegments );
+
+		// buffers
+
+		const indices = [];
+		const vertices = [];
+		const normals = [];
+		const uvs = [];
+
+		// helper variables
+
+		let numberOfVertices = 0;
+		let groupStart = 0;
+
+		// build each side of the box geometry
+
+		buildPlane( 'z', 'y', 'x', - 1, - 1, depth, height, width, depthSegments, heightSegments, 0 ); // px
+		buildPlane( 'z', 'y', 'x', 1, - 1, depth, height, - width, depthSegments, heightSegments, 1 ); // nx
+		buildPlane( 'x', 'z', 'y', 1, 1, width, depth, height, widthSegments, depthSegments, 2 ); // py
+		buildPlane( 'x', 'z', 'y', 1, - 1, width, depth, - height, widthSegments, depthSegments, 3 ); // ny
+		buildPlane( 'x', 'y', 'z', 1, - 1, width, height, depth, widthSegments, heightSegments, 4 ); // pz
+		buildPlane( 'x', 'y', 'z', - 1, - 1, width, height, - depth, widthSegments, heightSegments, 5 ); // nz
+
+		// build geometry
+
+		this.setIndex( indices );
+		this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
+		this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
+		this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
+
+		function buildPlane( u, v, w, udir, vdir, width, height, depth, gridX, gridY, materialIndex ) {
+
+			const segmentWidth = width / gridX;
+			const segmentHeight = height / gridY;
+
+			const widthHalf = width / 2;
+			const heightHalf = height / 2;
+			const depthHalf = depth / 2;
+
+			const gridX1 = gridX + 1;
+			const gridY1 = gridY + 1;
+
+			let vertexCounter = 0;
+			let groupCount = 0;
+
+			const vector = new Vector3();
+
+			// generate vertices, normals and uvs
+
+			for ( let iy = 0; iy < gridY1; iy ++ ) {
+
+				const y = iy * segmentHeight - heightHalf;
+
+				for ( let ix = 0; ix < gridX1; ix ++ ) {
+
+					const x = ix * segmentWidth - widthHalf;
+
+					// set values to correct vector component
+
+					vector[ u ] = x * udir;
+					vector[ v ] = y * vdir;
+					vector[ w ] = depthHalf;
+
+					// now apply vector to vertex buffer
+
+					vertices.push( vector.x, vector.y, vector.z );
+
+					// set values to correct vector component
+
+					vector[ u ] = 0;
+					vector[ v ] = 0;
+					vector[ w ] = depth > 0 ? 1 : - 1;
+
+					// now apply vector to normal buffer
+
+					normals.push( vector.x, vector.y, vector.z );
+
+					// uvs
+
+					uvs.push( ix / gridX );
+					uvs.push( 1 - ( iy / gridY ) );
+
+					// counters
+
+					vertexCounter += 1;
+
+				}
+
+			}
+
+			// indices
+
+			// 1. you need three indices to draw a single face
+			// 2. a single segment consists of two faces
+			// 3. so we need to generate six (2*3) indices per segment
+
+			for ( let iy = 0; iy < gridY; iy ++ ) {
+
+				for ( let ix = 0; ix < gridX; ix ++ ) {
+
+					const a = numberOfVertices + ix + gridX1 * iy;
+					const b = numberOfVertices + ix + gridX1 * ( iy + 1 );
+					const c = numberOfVertices + ( ix + 1 ) + gridX1 * ( iy + 1 );
+					const d = numberOfVertices + ( ix + 1 ) + gridX1 * iy;
+
+					// faces
+
+					indices.push( a, b, d );
+					indices.push( b, c, d );
+
+					// increase counter
+
+					groupCount += 6;
+
+				}
+
+			}
+
+			// add a group to the geometry. this will ensure multi material support
+
+			scope.addGroup( groupStart, groupCount, materialIndex );
+
+			// calculate new start value for groups
+
+			groupStart += groupCount;
+
+			// update total number of vertices
+
+			numberOfVertices += vertexCounter;
+
+		}
+
+	}
 
 }
 
@@ -43394,6 +43698,159 @@ class Fader extends Mesh {
     }
 }
 
+/**
+ * Recalculates the UV coordinates for a BufferGeometry
+ * object to be able to map to a Cubemap that is packed as
+ * a cross-configuration in a single image.
+ * @param {import("three").BufferGeometry} geom
+ */
+function setGeometryUVsForCubemaps(geom) {
+    const positions = geom.attributes.position;
+    const normals = geom.attributes.normal;
+    const uvs = geom.attributes.uv;
+
+    for (let n = 0; n < normals.count; ++n) {
+        const _x = n * normals.itemSize,
+            _y = n * normals.itemSize + 1,
+            _z = n * normals.itemSize + 2,
+            nx = normals.array[_x],
+            ny = normals.array[_y],
+            nz = normals.array[_z],
+            _nx_ = Math.abs(nx),
+            _ny_ = Math.abs(ny),
+            _nz_ = Math.abs(nz),
+            px = positions.array[_x],
+            py = positions.array[_y],
+            pz = positions.array[_z],
+            _px_ = Math.abs(px),
+            _py_ = Math.abs(py),
+            _pz_ = Math.abs(pz),
+            _u = n * uvs.itemSize,
+            _v = n * uvs.itemSize + 1;
+
+        let u = uvs.array[_u],
+            v = uvs.array[_v],
+            largest = 0,
+            mx = _nx_,
+            max = _px_;
+
+        if (_ny_ > mx) {
+            largest = 1;
+            mx = _ny_;
+            max = _py_;
+        }
+        if (_nz_ > mx) {
+            largest = 2;
+            mx = _nz_;
+            max = _pz_;
+        }
+
+        if (largest === 0) {
+            if (px < 0) {
+                //left
+                u = -pz;
+                v = py;
+            }
+            else {
+                // right
+                u = pz;
+                v = py;
+            }
+        }
+        else if (largest === 1) {
+            if (py < 0) {
+                // bottom
+                u = px;
+                v = -pz;
+            }
+            else {
+                // top
+                u = px;
+                v = pz;
+            }
+        }
+        else {
+            if (pz < 0) {
+                // front
+                u = px;
+                v = py;
+            }
+            else {
+                // back
+                u = -px;
+                v = py;
+            }
+        }
+
+        u = (u / max + 1) / 8;
+        v = (v / max + 1) / 6;
+
+        if (largest === 0) {
+            if (px < 0) {
+                //left
+                u += 0;
+                v += 1 / 3;
+            }
+            else {
+                // right
+                u += 0.5;
+                v += 1 / 3;
+            }
+        }
+        else if (largest === 1) {
+            if (py < 0) {
+                // bottom
+                u += 0.25;
+                v += 0;
+            }
+            else {
+                // top
+                u += 0.25;
+                v += 2 / 3;
+            }
+        }
+        else {
+            if (pz < 0) {
+                // front
+                u += 0.25;
+                v += 1 / 3;
+            }
+            else {
+                // back
+                u += 0.75;
+                v += 1 / 3;
+            }
+        }
+
+        uvs.array[_u] = u;
+        uvs.array[_v] = v;
+    }
+}
+
+const cube = new BoxBufferGeometry(1, 1, 1, 1, 1, 1);
+cube.name = "CubeGeom";
+
+const invCube = cube.clone();
+invCube.name = "InvertedCubeGeom";
+setGeometryUVsForCubemaps(invCube);
+
+/**
+ * @param {string|number|import("three").Color} color
+ * @param {number} sx
+ * @param {number} sy
+ * @param {number} sz
+ * @param {(import("three").MeshBasicMaterialParameters|import("three").MeshStandardMaterialParameters)?} materialOptions
+ */
+class Cube extends Mesh {
+    constructor(color, sx, sy, sz, materialOptions) {
+        super(cube, solid(Object.assign(
+            { transparent: true, opacity: 1 },
+            materialOptions,
+            { color })));
+        this.scale.set(sx, sy, sz);
+    }
+}
+
 function chrome(x, y, z, w, h, d) {
     const chromeMesh = new Cube(0xffffff, w, h, d);
     chromeMesh.position.set(x, y, z);
@@ -43498,6 +43955,7 @@ const MouseButtons = Object.freeze({
 
 const NEUTRAL_POSITION_RESET_QUAT = new Quaternion().setFromEuler(new Euler(Math.PI / 2, 0, 0));
 const FLIP_IMAGE_QUAT = new Quaternion().setFromEuler(new Euler(0, 0, Math.PI));
+const motion = new Vector2();
 
 /// <summary>
 /// The mouse is not as sensitive as the motion controllers, so we have to bump up the
@@ -43550,13 +44008,15 @@ class CameraControl extends EventBase {
      * @param {import("three").PerspectiveCamera} camera
      * @param {import("./Stage").Stage} stage
      * @param {import("./ScreenPointerControls").ScreenPointerControls} controls
+     * @param {import("./CursorControl").CursorControl} cursors
      */
-    constructor(camera, stage, controls) {
+    constructor(camera, stage, controls, cursors) {
         super();
 
         this.camera = camera;
         this.stage = stage;
         this.controls = controls;
+        this.cursors = cursors;
 
         /** @type {Mode} */
         this.controlMode = Mode.Auto;
@@ -43570,9 +44030,6 @@ class CameraControl extends EventBase {
             [Mode.MouseUnlocked, MouseButtons.Mouse0],
             [Mode.MouseScreenEdge, MouseButtons.None]
         ]);
-
-        /** @type {Boolean} */
-        this.allowPointerLock = false;
 
         /** @type {Number} */
         this.requiredTouchCount = 1;
@@ -43632,10 +44089,9 @@ class CameraControl extends EventBase {
             lastT = t;
             lastEvt = evt;
 
-            if (evt.pointerType === "mouse"
-                && this.controlMode !== Mode.MouseScreenEdge) {
-                if (this.controls.isPointerLocked) {
-                    this.controlMode = Mode.MouseLocked;
+            if (evt.pointerType === "mouse") {
+                if (this.cursors.isPointerLocked) {
+                    this.controlMode = Mode.MouseScreenEdge;
                 }
                 else {
                     this.controlMode = Mode.MouseUnlocked;
@@ -43678,17 +44134,7 @@ class CameraControl extends EventBase {
             }
         };
 
-        this.controls.addEventListener("click", (evt) => {
-            if (this.allowPointerLock
-                && this.controlMode == Mode.MouseUnlocked
-                && evt.pointerType === "mouse"
-                && !this.controls.isPointerLocked) {
-                this.controls.lockPointer();
-            }
-
-            update(evt);
-        });
-
+        this.controls.addEventListener("click", update);
         this.controls.addEventListener("move", update);
     }
 
@@ -43730,7 +44176,7 @@ class CameraControl extends EventBase {
                 return this.getRadiusMovement(evt);
 
             default:
-                return new Vector3(0, 0, 0);
+                return motion.set(0, 0);
         }
     }
 
@@ -43738,42 +44184,44 @@ class CameraControl extends EventBase {
      * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
      */
     getAxialMovement(evt) {
-        const viewport = new Vector2(
+        motion.set(
             -MOUSE_SENSITIVITY_SCALE * evt.du,
             MOUSE_SENSITIVITY_SCALE * evt.dv);
 
-        return viewport;
+        return motion;
+    }
+
+    _scaleRadialComponent(n, dn, ddn) {
+        const absN = Math.abs(n);
+        return Math.sign(n) * Math.pow(Math.max(0, absN - this.edgeFactor) / (1 - this.edgeFactor), ddn) * dn;
     }
 
     /**
      * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
      */
     getRadiusMovement(evt) {
-        const viewport = new Vector2(evt.u, evt.v);
-        const absX = Math.abs(viewport.x);
-        const absY = Math.abs(viewport.y);
+        motion.set(
+            this._scaleRadialComponent(evt.u, this.speedX, this.accelerationX),
+            this._scaleRadialComponent(-evt.v, this.speedY, this.accelerationY));
 
-        viewport.x = Math.sign(viewport.x) * Math.pow(Math.max(0, absX - this.edgeFactor) / (1 - this.edgeFactor), this.accelerationX) * this.speedX;
-        viewport.y = Math.sign(viewport.y) * Math.pow(Math.max(0, absY - this.edgeFactor) / (1 - this.edgeFactor), this.accelerationY) * this.speedY;
-
-        return viewport;
+        return motion;
     }
 
     get meanTouchPointMovement() {
-        const delta = new Vector2(0, 0);
+        motion.set(0, 0);
         let count = 0;
         for (const pointer of this.controls.pointers.values()) {
             if (pointer.type === "touch") {
-                delta.x += pointer.x;
-                delta.y += pointer.y;
+                motion.x += pointer.x;
+                motion.y += pointer.y;
                 ++count;
             }
         }
 
-        delta.set(
-            TOUCH_SENSITIVITY_SCALE * delta.y / count,
-            -TOUCH_SENSITIVITY_SCALE * delta.x / count);
-        return delta;
+        motion.set(
+            TOUCH_SENSITIVITY_SCALE * motion.y / count,
+            -TOUCH_SENSITIVITY_SCALE * motion.x / count);
+        return motion;
     }
 
     /**
@@ -43896,6 +44344,25 @@ class CursorControl {
      */
     constructor(canvas) {
         canvases.set(this, canvas);
+
+        this.pointerLockElement = canvas;
+
+        this.allowPointerLock = false;
+
+        canvas.addEventListener("click", (evt) => {
+            if (this.allowPointerLock
+                && !this.isPointerLocked) {
+                this.lockPointer();
+            }
+        });
+    }
+
+    lockPointer() {
+        this.pointerLockElement.requestPointerLock();
+    }
+
+    get isPointerLocked() {
+        return document.pointerLockElement !== null;
     }
 
     /**
@@ -44063,12 +44530,14 @@ class EventSystemEvent extends Event {
 
 class EventSystem extends EventBase {
     /**
-     * @param {import ("./CursorControl".CursorControl} cursors
+     * @param {import("three").WebGLRenderer} renderer
      * @param {import("three").PerspectiveCamera} camera
+     * @param {import ("./CursorControl".CursorControl} cursors
+     * @param {import("three").Object3D} systemLayer
      * @param {import("three").Object3D} inputLayer
      * @param {...import("./ScreenPointerControls").ScreenPointerControls} screenPointer
      */
-    constructor(cursors, camera, inputLayer, ...pointers) {
+    constructor(renderer, camera, cursors, systemLayer, inputLayer, ...pointers) {
         super();
 
         const raycaster = new Raycaster();
@@ -44078,6 +44547,9 @@ class EventSystem extends EventBase {
 
         /** @type {import("three").Intersection[]} */
         const hits = [];
+
+        const cursor = new Cube(0xffff00, 0.01, 0.01, 0.01);
+        systemLayer.add(cursor);
 
         /**
          * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
@@ -44094,7 +44566,12 @@ class EventSystem extends EventBase {
          */
         const raycast = (evt) => {
             const pointer = { x: evt.u, y: -evt.v };
-            raycaster.setFromCamera(pointer, camera);
+
+            const cam = renderer.xr.isPresenting
+                ? renderer.xr.getCamera(camera)
+                : camera;
+
+            raycaster.setFromCamera(pointer, cam);
 
             arrayClear(hits);
             raycaster.intersectObject(inputLayer, true, hits);
@@ -44102,10 +44579,17 @@ class EventSystem extends EventBase {
             /** @type {import("three").Intersection} */
             let curHit = null;
             for (let hit of hits) {
-                if (hit.object) {
+                if (hit.object && hit.object.visible) {
                     curHit = hit;
                 }
             }
+
+            cursor.position.copy(raycaster.ray.direction);
+            cursor.position.multiplyScalar(curHit && curHit.distance || 2);
+            if (curHit) {
+                cursor.position.add(curHit.face.normal.multiplyScalar(0.01));
+            }
+            cursor.position.add(raycaster.ray.origin);
 
             return curHit;
         };
@@ -44137,7 +44621,12 @@ class EventSystem extends EventBase {
         const onClick = (evt) => {
             const curHit = raycast(evt);
             if (curHit && curHit.object) {
-                curHit.object.dispatchEvent({ type: "click" });
+                if (evt.buttons === MouseButtons.Mouse0) {
+                    curHit.object.dispatchEvent({ type: "click" });
+                }
+                else {
+                    console.log(curHit);
+                }
             }
         };
 
@@ -44232,8 +44721,6 @@ class ScreenPointerControls extends EventBase {
     constructor(element) {
         super();
 
-        this.pointerLockElement = element;
-
         /** @type {Map<Number, Pointer>} */
         this.pointers = new Map();
 
@@ -44253,27 +44740,18 @@ class ScreenPointerControls extends EventBase {
 
             evt.buttons = pointer.buttons;
 
+            evt.x = pointer.x;
+            evt.y = pointer.y;
+
+            evt.u = unproject(project(evt.x, 0, element.clientWidth), -1, 1);
+            evt.v = unproject(project(evt.y, 0, element.clientHeight), -1, 1);
+
             evt.dx = pointer.dx;
             evt.dy = pointer.dy;
             evt.dz = dz;
 
             evt.du = 2 * evt.dx / element.clientWidth;
             evt.dv = 2 * evt.dy / element.clientHeight;
-
-            if (this.isPointerLocked) {
-                evt.u = 0;
-                evt.v = 0;
-
-                evt.x = element.clientWidth / 2;
-                evt.y = element.clientHeight / 2;
-            }
-            else {
-                evt.x = pointer.x;
-                evt.y = pointer.y;
-
-                evt.u = unproject(project(evt.x, 0, element.clientWidth), -1, 1);
-                evt.v = unproject(project(evt.y, 0, element.clientHeight), -1, 1);
-            }
 
             evt.dragDistance = pointer.dragDistance;
             this.dispatchEvent(evt);
@@ -44289,7 +44767,7 @@ class ScreenPointerControls extends EventBase {
             if (last) {
                 pointer.dragDistance = last.dragDistance;
 
-                if (this.isPointerLocked) {
+                if (document.pointerLockElement) {
                     pointer.x = last.x + pointer.dx;
                     pointer.y = last.y + pointer.dy;
                 }
@@ -44376,7 +44854,9 @@ class ScreenPointerControls extends EventBase {
 
         element.addEventListener("pointerup", (evt) => {
             const pointer = new Pointer(evt),
-                _ = replacePointer(pointer);
+                lastPointer = replacePointer(pointer);
+
+            pointer.buttons = lastPointer.buttons;
 
             dispatch(pointerUpEvt, pointer, 0);
 
@@ -44389,6 +44869,10 @@ class ScreenPointerControls extends EventBase {
             if (pointer.type === "touch") {
                 this.pointers.delete(pointer.id);
             }
+        });
+
+        element.addEventListener("contextmenu", (evt) => {
+            evt.preventDefault();
         });
 
         element.addEventListener("pointercancel", (evt) => {
@@ -44417,7 +44901,7 @@ class ScreenPointerControls extends EventBase {
     get pressCount() {
         let count = 0;
         for (let pointer of this.pointers.values()) {
-            if (pointer.buttons === 1) {
+            if (pointer.buttons > 0) {
                 ++count;
             }
         }
@@ -44450,14 +44934,6 @@ class ScreenPointerControls extends EventBase {
 
         return Math.sqrt(dx * dx + dy * dy);
     }
-
-    lockPointer() {
-        this.pointerLockElement.requestPointerLock();
-    }
-
-    get isPointerLocked() {
-        return document.pointerLockElement !== null;
-    }
 }
 
 /**
@@ -44471,28 +44947,23 @@ const defaultAvatarHeight = 1.75,
 
 class Stage extends Object3D {
     /**
+     * @param {import("three").WebGLRenderer} renderer
      * @param {import("three").PerspectiveCamera} camera
      */
-    constructor(camera) {
+    constructor(renderer, camera) {
         super();
+
+        this.renderer = renderer;
 
         this.rotation.copy(camera.rotation);
         this.position.copy(camera.position);
         this.position.y = 0;
 
         this.camera = camera;
-        this.camera.position.set(0, 0, 0);
-        this.camera.rotation.set(0, 0, 0);
 
-        this.neck = new Object3D();
-        this.neck.rotation.set(0, 0, 0);
-        this.neck.position.set(0, 0.1, 0);
-        this.neck.add(this.camera);
-
-        this.pivot = new Object3D();
-        this.pivot.rotation.set(0, 0, 0);
-        this.pivot.position.set(0, defaultAvatarHeight - 0.1, 0);
-        this.pivot.add(this.neck);
+        this.head = new Object3D();
+        this.head.position.set(0, defaultAvatarHeight, 0);
+        this.head.add(this.camera);
 
         this.hands = new Object3D();
 
@@ -44504,10 +44975,11 @@ class Stage extends Object3D {
 
         this.presentationPoint = new Object3D();
 
+        this.pitch = 0;
+        this.heading = 0;
+
         this.avatar = new Object3D();
-        this.avatar.rotation.set(0, 0, 0);
-        this.avatar.position.set(0, 0, 0);
-        this.avatar.add(this.pivot);
+        this.avatar.add(this.head);
         this.avatar.add(this.shoulders);
         this.avatar.add(this.presentationPoint);
 
@@ -44520,12 +44992,9 @@ class Stage extends Object3D {
      * @param {Number} maxX
      */
     rotateView(dQuat, minX = -Math.PI, maxX = Math.PI) {
-        const x = this.pivot.rotation.x;
-        const y = this.avatar.rotation.y;
-
         viewEuler.setFromQuaternion(dQuat, "YXZ");
-        viewEuler.x += x;
-        viewEuler.y += y;
+        viewEuler.x += this.pitch;
+        viewEuler.y += this.heading;
 
         viewQuat.setFromEuler(viewEuler);
 
@@ -44547,18 +45016,38 @@ class Stage extends Object3D {
         }
         x = clamp(x, minX, maxX);
 
-        this.avatar.rotation.y = y;
-        this.avatar.updateMatrixWorld();
+        this.pitch = x;
+        this.heading = y;
+    }
 
-        this.pivot.rotation.x = x;
-        this.pivot.updateMatrixWorld();
+    update() {
+        if (this.renderer.xr.isPresenting) {
+            const vrCamera = this.renderer.xr.getCamera(this.head);
+
+            const snapHeading = (Math.round(this.heading * 4 / Math.PI) * Math.PI / 4);
+
+            const vrY = vrCamera.position.y;
+            const dY = defaultAvatarHeight - vrY;
+
+            this.avatar.rotation.y = snapHeading;            this.head.rotation.x = 0;
+            this.head.position.set(0, dY, 0);
+        }
+        else {
+            this.avatar.rotation.y = this.heading;
+            this.head.rotation.x = this.pitch;
+            this.head.position.set(0, defaultAvatarHeight, 0);
+        }
+
+        this.avatar.updateMatrixWorld();
+        this.head.updateMatrixWorld();
+        this.camera.updateMatrixWorld();
     }
 
     /**
      * @type {Number}
      **/
     get avatarHeight() {
-        return this.camera.position.y;
+        return this.head.position.y;
     }
 }
 
@@ -44687,6153 +45176,6 @@ class ThreeJSTimer extends BaseTimer {
     }
 }
 
-/**
- * @license
- * webxr-polyfill
- * Copyright (c) 2017 Google
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * @license
- * cardboard-vr-display
- * Copyright (c) 2015-2017 Google
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * @license
- * webvr-polyfill-dpdb 
- * Copyright (c) 2017 Google
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * @license
- * wglu-preserve-state
- * Copyright (c) 2016, Brandon Jones.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-
-/**
- * @license
- * nosleep.js
- * Copyright (c) 2017, Rich Tibbett
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-
-const _global = typeof global !== 'undefined' ? global :
-                typeof self !== 'undefined' ? self :
-                typeof window !== 'undefined' ? window : {};
-
-const PRIVATE = Symbol('@@webxr-polyfill/EventTarget');
-class EventTarget$1 {
-  constructor() {
-    this[PRIVATE] = {
-      listeners: new Map(),
-    };
-  }
-  addEventListener(type, listener) {
-    if (typeof type !== 'string') { throw new Error('`type` must be a string'); }
-    if (typeof listener !== 'function') { throw new Error('`listener` must be a function'); }
-    const typedListeners = this[PRIVATE].listeners.get(type) || [];
-    typedListeners.push(listener);
-    this[PRIVATE].listeners.set(type, typedListeners);
-  }
-  removeEventListener(type, listener) {
-    if (typeof type !== 'string') { throw new Error('`type` must be a string'); }
-    if (typeof listener !== 'function') { throw new Error('`listener` must be a function'); }
-    const typedListeners = this[PRIVATE].listeners.get(type) || [];
-    for (let i = typedListeners.length; i >= 0; i--) {
-      if (typedListeners[i] === listener) {
-        typedListeners.pop();
-      }
-    }
-  }
-  dispatchEvent(type, event) {
-    const typedListeners = this[PRIVATE].listeners.get(type) || [];
-    const queue = [];
-    for (let i = 0; i < typedListeners.length; i++) {
-      queue[i] = typedListeners[i];
-    }
-    for (let listener of queue) {
-      listener(event);
-    }
-    if (typeof this[`on${type}`] === 'function') {
-      this[`on${type}`](event);
-    }
-  }
-}
-
-const EPSILON = 0.000001;
-let ARRAY_TYPE = (typeof Float32Array !== 'undefined') ? Float32Array : Array;
-
-function create() {
-  let out = new ARRAY_TYPE(16);
-  if(ARRAY_TYPE != Float32Array) {
-    out[1] = 0;
-    out[2] = 0;
-    out[3] = 0;
-    out[4] = 0;
-    out[6] = 0;
-    out[7] = 0;
-    out[8] = 0;
-    out[9] = 0;
-    out[11] = 0;
-    out[12] = 0;
-    out[13] = 0;
-    out[14] = 0;
-  }
-  out[0] = 1;
-  out[5] = 1;
-  out[10] = 1;
-  out[15] = 1;
-  return out;
-}
-
-function copy(out, a) {
-  out[0] = a[0];
-  out[1] = a[1];
-  out[2] = a[2];
-  out[3] = a[3];
-  out[4] = a[4];
-  out[5] = a[5];
-  out[6] = a[6];
-  out[7] = a[7];
-  out[8] = a[8];
-  out[9] = a[9];
-  out[10] = a[10];
-  out[11] = a[11];
-  out[12] = a[12];
-  out[13] = a[13];
-  out[14] = a[14];
-  out[15] = a[15];
-  return out;
-}
-
-
-function identity(out) {
-  out[0] = 1;
-  out[1] = 0;
-  out[2] = 0;
-  out[3] = 0;
-  out[4] = 0;
-  out[5] = 1;
-  out[6] = 0;
-  out[7] = 0;
-  out[8] = 0;
-  out[9] = 0;
-  out[10] = 1;
-  out[11] = 0;
-  out[12] = 0;
-  out[13] = 0;
-  out[14] = 0;
-  out[15] = 1;
-  return out;
-}
-
-function invert(out, a) {
-  let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
-  let a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
-  let a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
-  let a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
-  let b00 = a00 * a11 - a01 * a10;
-  let b01 = a00 * a12 - a02 * a10;
-  let b02 = a00 * a13 - a03 * a10;
-  let b03 = a01 * a12 - a02 * a11;
-  let b04 = a01 * a13 - a03 * a11;
-  let b05 = a02 * a13 - a03 * a12;
-  let b06 = a20 * a31 - a21 * a30;
-  let b07 = a20 * a32 - a22 * a30;
-  let b08 = a20 * a33 - a23 * a30;
-  let b09 = a21 * a32 - a22 * a31;
-  let b10 = a21 * a33 - a23 * a31;
-  let b11 = a22 * a33 - a23 * a32;
-  let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
-  if (!det) {
-    return null;
-  }
-  det = 1.0 / det;
-  out[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
-  out[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
-  out[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
-  out[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
-  out[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
-  out[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
-  out[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
-  out[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
-  out[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
-  out[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
-  out[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
-  out[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
-  out[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
-  out[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
-  out[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
-  out[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
-  return out;
-}
-
-
-function multiply(out, a, b) {
-  let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
-  let a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
-  let a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
-  let a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
-  let b0  = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
-  out[0] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-  out[1] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-  out[2] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-  out[3] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
-  b0 = b[4]; b1 = b[5]; b2 = b[6]; b3 = b[7];
-  out[4] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-  out[5] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-  out[6] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-  out[7] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
-  b0 = b[8]; b1 = b[9]; b2 = b[10]; b3 = b[11];
-  out[8] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-  out[9] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-  out[10] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-  out[11] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
-  b0 = b[12]; b1 = b[13]; b2 = b[14]; b3 = b[15];
-  out[12] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-  out[13] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-  out[14] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-  out[15] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
-  return out;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-function fromRotationTranslation(out, q, v) {
-  let x = q[0], y = q[1], z = q[2], w = q[3];
-  let x2 = x + x;
-  let y2 = y + y;
-  let z2 = z + z;
-  let xx = x * x2;
-  let xy = x * y2;
-  let xz = x * z2;
-  let yy = y * y2;
-  let yz = y * z2;
-  let zz = z * z2;
-  let wx = w * x2;
-  let wy = w * y2;
-  let wz = w * z2;
-  out[0] = 1 - (yy + zz);
-  out[1] = xy + wz;
-  out[2] = xz - wy;
-  out[3] = 0;
-  out[4] = xy - wz;
-  out[5] = 1 - (xx + zz);
-  out[6] = yz + wx;
-  out[7] = 0;
-  out[8] = xz + wy;
-  out[9] = yz - wx;
-  out[10] = 1 - (xx + yy);
-  out[11] = 0;
-  out[12] = v[0];
-  out[13] = v[1];
-  out[14] = v[2];
-  out[15] = 1;
-  return out;
-}
-
-function getTranslation(out, mat) {
-  out[0] = mat[12];
-  out[1] = mat[13];
-  out[2] = mat[14];
-  return out;
-}
-
-function getRotation(out, mat) {
-  let trace = mat[0] + mat[5] + mat[10];
-  let S = 0;
-  if (trace > 0) {
-    S = Math.sqrt(trace + 1.0) * 2;
-    out[3] = 0.25 * S;
-    out[0] = (mat[6] - mat[9]) / S;
-    out[1] = (mat[8] - mat[2]) / S;
-    out[2] = (mat[1] - mat[4]) / S;
-  } else if ((mat[0] > mat[5]) && (mat[0] > mat[10])) {
-    S = Math.sqrt(1.0 + mat[0] - mat[5] - mat[10]) * 2;
-    out[3] = (mat[6] - mat[9]) / S;
-    out[0] = 0.25 * S;
-    out[1] = (mat[1] + mat[4]) / S;
-    out[2] = (mat[8] + mat[2]) / S;
-  } else if (mat[5] > mat[10]) {
-    S = Math.sqrt(1.0 + mat[5] - mat[0] - mat[10]) * 2;
-    out[3] = (mat[8] - mat[2]) / S;
-    out[0] = (mat[1] + mat[4]) / S;
-    out[1] = 0.25 * S;
-    out[2] = (mat[6] + mat[9]) / S;
-  } else {
-    S = Math.sqrt(1.0 + mat[10] - mat[0] - mat[5]) * 2;
-    out[3] = (mat[1] - mat[4]) / S;
-    out[0] = (mat[8] + mat[2]) / S;
-    out[1] = (mat[6] + mat[9]) / S;
-    out[2] = 0.25 * S;
-  }
-  return out;
-}
-
-
-
-
-function perspective(out, fovy, aspect, near, far) {
-  let f = 1.0 / Math.tan(fovy / 2), nf;
-  out[0] = f / aspect;
-  out[1] = 0;
-  out[2] = 0;
-  out[3] = 0;
-  out[4] = 0;
-  out[5] = f;
-  out[6] = 0;
-  out[7] = 0;
-  out[8] = 0;
-  out[9] = 0;
-  out[11] = -1;
-  out[12] = 0;
-  out[13] = 0;
-  out[15] = 0;
-  if (far != null && far !== Infinity) {
-    nf = 1 / (near - far);
-    out[10] = (far + near) * nf;
-    out[14] = (2 * far * near) * nf;
-  } else {
-    out[10] = -1;
-    out[14] = -2 * near;
-  }
-  return out;
-}
-
-function create$1() {
-  let out = new ARRAY_TYPE(3);
-  if(ARRAY_TYPE != Float32Array) {
-    out[0] = 0;
-    out[1] = 0;
-    out[2] = 0;
-  }
-  return out;
-}
-function clone$1(a) {
-  var out = new ARRAY_TYPE(3);
-  out[0] = a[0];
-  out[1] = a[1];
-  out[2] = a[2];
-  return out;
-}
-function length(a) {
-  let x = a[0];
-  let y = a[1];
-  let z = a[2];
-  return Math.sqrt(x*x + y*y + z*z);
-}
-function fromValues$1(x, y, z) {
-  let out = new ARRAY_TYPE(3);
-  out[0] = x;
-  out[1] = y;
-  out[2] = z;
-  return out;
-}
-function copy$1(out, a) {
-  out[0] = a[0];
-  out[1] = a[1];
-  out[2] = a[2];
-  return out;
-}
-
-function add$1(out, a, b) {
-  out[0] = a[0] + b[0];
-  out[1] = a[1] + b[1];
-  out[2] = a[2] + b[2];
-  return out;
-}
-
-
-
-
-
-
-
-
-function scale$1(out, a, b) {
-  out[0] = a[0] * b;
-  out[1] = a[1] * b;
-  out[2] = a[2] * b;
-  return out;
-}
-
-
-
-
-
-
-function normalize(out, a) {
-  let x = a[0];
-  let y = a[1];
-  let z = a[2];
-  let len = x*x + y*y + z*z;
-  if (len > 0) {
-    len = 1 / Math.sqrt(len);
-    out[0] = a[0] * len;
-    out[1] = a[1] * len;
-    out[2] = a[2] * len;
-  }
-  return out;
-}
-function dot(a, b) {
-  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-}
-function cross(out, a, b) {
-  let ax = a[0], ay = a[1], az = a[2];
-  let bx = b[0], by = b[1], bz = b[2];
-  out[0] = ay * bz - az * by;
-  out[1] = az * bx - ax * bz;
-  out[2] = ax * by - ay * bx;
-  return out;
-}
-
-
-
-
-
-
-function transformQuat(out, a, q) {
-    let qx = q[0], qy = q[1], qz = q[2], qw = q[3];
-    let x = a[0], y = a[1], z = a[2];
-    let uvx = qy * z - qz * y,
-        uvy = qz * x - qx * z,
-        uvz = qx * y - qy * x;
-    let uuvx = qy * uvz - qz * uvy,
-        uuvy = qz * uvx - qx * uvz,
-        uuvz = qx * uvy - qy * uvx;
-    let w2 = qw * 2;
-    uvx *= w2;
-    uvy *= w2;
-    uvz *= w2;
-    uuvx *= 2;
-    uuvy *= 2;
-    uuvz *= 2;
-    out[0] = x + uvx + uuvx;
-    out[1] = y + uvy + uuvy;
-    out[2] = z + uvz + uuvz;
-    return out;
-}
-
-
-
-function angle(a, b) {
-  let tempA = fromValues$1(a[0], a[1], a[2]);
-  let tempB = fromValues$1(b[0], b[1], b[2]);
-  normalize(tempA, tempA);
-  normalize(tempB, tempB);
-  let cosine = dot(tempA, tempB);
-  if(cosine > 1.0) {
-    return 0;
-  }
-  else if(cosine < -1.0) {
-    return Math.PI;
-  } else {
-    return Math.acos(cosine);
-  }
-}
-
-
-
-
-
-
-
-
-const len = length;
-
-const forEach = (function() {
-  let vec = create$1();
-  return function(a, stride, offset, count, fn, arg) {
-    let i, l;
-    if(!stride) {
-      stride = 3;
-    }
-    if(!offset) {
-      offset = 0;
-    }
-    if(count) {
-      l = Math.min((count * stride) + offset, a.length);
-    } else {
-      l = a.length;
-    }
-    for(i = offset; i < l; i += stride) {
-      vec[0] = a[i]; vec[1] = a[i+1]; vec[2] = a[i+2];
-      fn(vec, vec, arg);
-      a[i] = vec[0]; a[i+1] = vec[1]; a[i+2] = vec[2];
-    }
-    return a;
-  };
-})();
-
-function create$2() {
-  let out = new ARRAY_TYPE(9);
-  if(ARRAY_TYPE != Float32Array) {
-    out[1] = 0;
-    out[2] = 0;
-    out[3] = 0;
-    out[5] = 0;
-    out[6] = 0;
-    out[7] = 0;
-  }
-  out[0] = 1;
-  out[4] = 1;
-  out[8] = 1;
-  return out;
-}
-
-function create$3() {
-  let out = new ARRAY_TYPE(4);
-  if(ARRAY_TYPE != Float32Array) {
-    out[0] = 0;
-    out[1] = 0;
-    out[2] = 0;
-    out[3] = 0;
-  }
-  return out;
-}
-function clone$3(a) {
-  let out = new ARRAY_TYPE(4);
-  out[0] = a[0];
-  out[1] = a[1];
-  out[2] = a[2];
-  out[3] = a[3];
-  return out;
-}
-function fromValues$3(x, y, z, w) {
-  let out = new ARRAY_TYPE(4);
-  out[0] = x;
-  out[1] = y;
-  out[2] = z;
-  out[3] = w;
-  return out;
-}
-function copy$3(out, a) {
-  out[0] = a[0];
-  out[1] = a[1];
-  out[2] = a[2];
-  out[3] = a[3];
-  return out;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function normalize$1(out, a) {
-  let x = a[0];
-  let y = a[1];
-  let z = a[2];
-  let w = a[3];
-  let len = x*x + y*y + z*z + w*w;
-  if (len > 0) {
-    len = 1 / Math.sqrt(len);
-    out[0] = x * len;
-    out[1] = y * len;
-    out[2] = z * len;
-    out[3] = w * len;
-  }
-  return out;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const forEach$1 = (function() {
-  let vec = create$3();
-  return function(a, stride, offset, count, fn, arg) {
-    let i, l;
-    if(!stride) {
-      stride = 4;
-    }
-    if(!offset) {
-      offset = 0;
-    }
-    if(count) {
-      l = Math.min((count * stride) + offset, a.length);
-    } else {
-      l = a.length;
-    }
-    for(i = offset; i < l; i += stride) {
-      vec[0] = a[i]; vec[1] = a[i+1]; vec[2] = a[i+2]; vec[3] = a[i+3];
-      fn(vec, vec, arg);
-      a[i] = vec[0]; a[i+1] = vec[1]; a[i+2] = vec[2]; a[i+3] = vec[3];
-    }
-    return a;
-  };
-})();
-
-function create$4() {
-  let out = new ARRAY_TYPE(4);
-  if(ARRAY_TYPE != Float32Array) {
-    out[0] = 0;
-    out[1] = 0;
-    out[2] = 0;
-  }
-  out[3] = 1;
-  return out;
-}
-
-function setAxisAngle(out, axis, rad) {
-  rad = rad * 0.5;
-  let s = Math.sin(rad);
-  out[0] = s * axis[0];
-  out[1] = s * axis[1];
-  out[2] = s * axis[2];
-  out[3] = Math.cos(rad);
-  return out;
-}
-
-function multiply$4(out, a, b) {
-  let ax = a[0], ay = a[1], az = a[2], aw = a[3];
-  let bx = b[0], by = b[1], bz = b[2], bw = b[3];
-  out[0] = ax * bw + aw * bx + ay * bz - az * by;
-  out[1] = ay * bw + aw * by + az * bx - ax * bz;
-  out[2] = az * bw + aw * bz + ax * by - ay * bx;
-  out[3] = aw * bw - ax * bx - ay * by - az * bz;
-  return out;
-}
-
-
-
-
-function slerp(out, a, b, t) {
-  let ax = a[0], ay = a[1], az = a[2], aw = a[3];
-  let bx = b[0], by = b[1], bz = b[2], bw = b[3];
-  let omega, cosom, sinom, scale0, scale1;
-  cosom = ax * bx + ay * by + az * bz + aw * bw;
-  if ( cosom < 0.0 ) {
-    cosom = -cosom;
-    bx = - bx;
-    by = - by;
-    bz = - bz;
-    bw = - bw;
-  }
-  if ( (1.0 - cosom) > EPSILON ) {
-    omega  = Math.acos(cosom);
-    sinom  = Math.sin(omega);
-    scale0 = Math.sin((1.0 - t) * omega) / sinom;
-    scale1 = Math.sin(t * omega) / sinom;
-  } else {
-    scale0 = 1.0 - t;
-    scale1 = t;
-  }
-  out[0] = scale0 * ax + scale1 * bx;
-  out[1] = scale0 * ay + scale1 * by;
-  out[2] = scale0 * az + scale1 * bz;
-  out[3] = scale0 * aw + scale1 * bw;
-  return out;
-}
-
-function invert$2(out, a) {
-  let a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3];
-  let dot$$1 = a0*a0 + a1*a1 + a2*a2 + a3*a3;
-  let invDot = dot$$1 ? 1.0/dot$$1 : 0;
-  out[0] = -a0*invDot;
-  out[1] = -a1*invDot;
-  out[2] = -a2*invDot;
-  out[3] = a3*invDot;
-  return out;
-}
-
-function fromMat3(out, m) {
-  let fTrace = m[0] + m[4] + m[8];
-  let fRoot;
-  if ( fTrace > 0.0 ) {
-    fRoot = Math.sqrt(fTrace + 1.0);
-    out[3] = 0.5 * fRoot;
-    fRoot = 0.5/fRoot;
-    out[0] = (m[5]-m[7])*fRoot;
-    out[1] = (m[6]-m[2])*fRoot;
-    out[2] = (m[1]-m[3])*fRoot;
-  } else {
-    let i = 0;
-    if ( m[4] > m[0] )
-      i = 1;
-    if ( m[8] > m[i*3+i] )
-      i = 2;
-    let j = (i+1)%3;
-    let k = (i+2)%3;
-    fRoot = Math.sqrt(m[i*3+i]-m[j*3+j]-m[k*3+k] + 1.0);
-    out[i] = 0.5 * fRoot;
-    fRoot = 0.5 / fRoot;
-    out[3] = (m[j*3+k] - m[k*3+j]) * fRoot;
-    out[j] = (m[j*3+i] + m[i*3+j]) * fRoot;
-    out[k] = (m[k*3+i] + m[i*3+k]) * fRoot;
-  }
-  return out;
-}
-function fromEuler(out, x, y, z) {
-    let halfToRad = 0.5 * Math.PI / 180.0;
-    x *= halfToRad;
-    y *= halfToRad;
-    z *= halfToRad;
-    let sx = Math.sin(x);
-    let cx = Math.cos(x);
-    let sy = Math.sin(y);
-    let cy = Math.cos(y);
-    let sz = Math.sin(z);
-    let cz = Math.cos(z);
-    out[0] = sx * cy * cz - cx * sy * sz;
-    out[1] = cx * sy * cz + sx * cy * sz;
-    out[2] = cx * cy * sz - sx * sy * cz;
-    out[3] = cx * cy * cz + sx * sy * sz;
-    return out;
-}
-
-const clone$4 = clone$3;
-const fromValues$4 = fromValues$3;
-const copy$4 = copy$3;
-
-
-
-
-
-
-
-
-
-
-const normalize$2 = normalize$1;
-
-
-const rotationTo = (function() {
-  let tmpvec3 = create$1();
-  let xUnitVec3 = fromValues$1(1,0,0);
-  let yUnitVec3 = fromValues$1(0,1,0);
-  return function(out, a, b) {
-    let dot$$1 = dot(a, b);
-    if (dot$$1 < -0.999999) {
-      cross(tmpvec3, xUnitVec3, a);
-      if (len(tmpvec3) < 0.000001)
-        cross(tmpvec3, yUnitVec3, a);
-      normalize(tmpvec3, tmpvec3);
-      setAxisAngle(out, tmpvec3, Math.PI);
-      return out;
-    } else if (dot$$1 > 0.999999) {
-      out[0] = 0;
-      out[1] = 0;
-      out[2] = 0;
-      out[3] = 1;
-      return out;
-    } else {
-      cross(tmpvec3, a, b);
-      out[0] = tmpvec3[0];
-      out[1] = tmpvec3[1];
-      out[2] = tmpvec3[2];
-      out[3] = 1 + dot$$1;
-      return normalize$2(out, out);
-    }
-  };
-})();
-const sqlerp = (function () {
-  let temp1 = create$4();
-  let temp2 = create$4();
-  return function (out, a, b, c, d, t) {
-    slerp(temp1, a, d, t);
-    slerp(temp2, b, c, t);
-    slerp(out, temp1, temp2, 2 * t * (1 - t));
-    return out;
-  };
-}());
-const setAxes = (function() {
-  let matr = create$2();
-  return function(out, view, right, up) {
-    matr[0] = right[0];
-    matr[3] = right[1];
-    matr[6] = right[2];
-    matr[1] = up[0];
-    matr[4] = up[1];
-    matr[7] = up[2];
-    matr[2] = -view[0];
-    matr[5] = -view[1];
-    matr[8] = -view[2];
-    return normalize$2(out, fromMat3(out, matr));
-  };
-})();
-
-const PRIVATE$1 = Symbol('@@webxr-polyfill/XRRigidTransform');
-class XRRigidTransform$1 {
-  constructor() {
-    this[PRIVATE$1] = {
-      matrix: null,
-      position: null,
-      orientation: null,
-      inverse: null,
-    };
-    if (arguments.length === 0) {
-      this[PRIVATE$1].matrix = identity(new Float32Array(16));
-    } else if (arguments.length === 1) {
-      if (arguments[0] instanceof Float32Array) {
-        this[PRIVATE$1].matrix = arguments[0];
-      } else {
-        this[PRIVATE$1].position = this._getPoint(arguments[0]);
-        this[PRIVATE$1].orientation = DOMPointReadOnly.fromPoint({
-            x: 0, y: 0, z: 0, w: 1
-        });
-      }
-    } else if (arguments.length === 2) {
-      this[PRIVATE$1].position = this._getPoint(arguments[0]);
-      this[PRIVATE$1].orientation = this._getPoint(arguments[1]);
-    } else {
-      throw new Error("Too many arguments!");
-    }
-    if (this[PRIVATE$1].matrix) {
-        let position = create$1();
-        getTranslation(position, this[PRIVATE$1].matrix);
-        this[PRIVATE$1].position = DOMPointReadOnly.fromPoint({
-            x: position[0],
-            y: position[1],
-            z: position[2]
-        });
-        let orientation = create$4();
-        getRotation(orientation, this[PRIVATE$1].matrix);
-        this[PRIVATE$1].orientation = DOMPointReadOnly.fromPoint({
-          x: orientation[0],
-          y: orientation[1],
-          z: orientation[2],
-          w: orientation[3]
-        });
-    } else {
-        this[PRIVATE$1].matrix = identity(new Float32Array(16));
-        fromRotationTranslation(
-          this[PRIVATE$1].matrix,
-          fromValues$4(
-            this[PRIVATE$1].orientation.x,
-            this[PRIVATE$1].orientation.y,
-            this[PRIVATE$1].orientation.z,
-            this[PRIVATE$1].orientation.w),
-          fromValues$1(
-            this[PRIVATE$1].position.x,
-            this[PRIVATE$1].position.y,
-            this[PRIVATE$1].position.z)
-        );
-    }
-  }
-  _getPoint(arg) {
-    if (arg instanceof DOMPointReadOnly) {
-      return arg;
-    }
-    return DOMPointReadOnly.fromPoint(arg);
-  }
-  get matrix() { return this[PRIVATE$1].matrix; }
-  get position() { return this[PRIVATE$1].position; }
-  get orientation() { return this[PRIVATE$1].orientation; }
-  get inverse() {
-    if (this[PRIVATE$1].inverse === null) {
-      let invMatrix = identity(new Float32Array(16));
-      invert(invMatrix, this[PRIVATE$1].matrix);
-      this[PRIVATE$1].inverse = new XRRigidTransform$1(invMatrix);
-      this[PRIVATE$1].inverse[PRIVATE$1].inverse = this;
-    }
-    return this[PRIVATE$1].inverse;
-  }
-}
-
-const PRIVATE$2 = Symbol('@@webxr-polyfill/XRSpace');
-
-class XRSpace {
-  constructor(specialType = null, inputSource = null) {
-    this[PRIVATE$2] = {
-      specialType,
-      inputSource,
-      baseMatrix: null,
-      inverseBaseMatrix: null,
-      lastFrameId: -1
-    };
-  }
-  get _specialType() {
-    return this[PRIVATE$2].specialType;
-  }
-  get _inputSource() {
-    return this[PRIVATE$2].inputSource;
-  }
-  _ensurePoseUpdated(device, frameId) {
-    if (frameId == this[PRIVATE$2].lastFrameId) return;
-    this[PRIVATE$2].lastFrameId = frameId;
-    this._onPoseUpdate(device);
-  }
-  _onPoseUpdate(device) {
-    if (this[PRIVATE$2].specialType == 'viewer') {
-      this._baseMatrix = device.getBasePoseMatrix();
-    }
-  }
-  set _baseMatrix(matrix) {
-    this[PRIVATE$2].baseMatrix = matrix;
-    this[PRIVATE$2].inverseBaseMatrix = null;
-  }
-  get _baseMatrix() {
-    if (!this[PRIVATE$2].baseMatrix) {
-      if (this[PRIVATE$2].inverseBaseMatrix) {
-        this[PRIVATE$2].baseMatrix = new Float32Array(16);
-        invert(this[PRIVATE$2].baseMatrix, this[PRIVATE$2].inverseBaseMatrix);
-      }
-    }
-    return this[PRIVATE$2].baseMatrix;
-  }
-  set _inverseBaseMatrix(matrix) {
-    this[PRIVATE$2].inverseBaseMatrix = matrix;
-    this[PRIVATE$2].baseMatrix = null;
-  }
-  get _inverseBaseMatrix() {
-    if (!this[PRIVATE$2].inverseBaseMatrix) {
-      if (this[PRIVATE$2].baseMatrix) {
-        this[PRIVATE$2].inverseBaseMatrix = new Float32Array(16);
-        invert(this[PRIVATE$2].inverseBaseMatrix, this[PRIVATE$2].baseMatrix);
-      }
-    }
-    return this[PRIVATE$2].inverseBaseMatrix;
-  }
-  _getSpaceRelativeTransform(space) {
-    if (!this._inverseBaseMatrix || !space._baseMatrix) {
-      return null;
-    }
-    let out = new Float32Array(16);
-    multiply(out, this._inverseBaseMatrix, space._baseMatrix);
-    return new XRRigidTransform$1(out);
-  }
-}
-
-const DEFAULT_EMULATION_HEIGHT = 1.6;
-const PRIVATE$3 = Symbol('@@webxr-polyfill/XRReferenceSpace');
-const XRReferenceSpaceTypes = [
-  'viewer',
-  'local',
-  'local-floor',
-  'bounded-floor',
-  'unbounded'
-];
-function isFloor(type) {
-  return type === 'bounded-floor' || type === 'local-floor';
-}
-class XRReferenceSpace extends XRSpace {
-  constructor(type, transform = null) {
-    if (!XRReferenceSpaceTypes.includes(type)) {
-      throw new Error(`XRReferenceSpaceType must be one of ${XRReferenceSpaceTypes}`);
-    }
-    super(type);
-    if (type === 'bounded-floor' && !transform) {
-      throw new Error(`XRReferenceSpace cannot use 'bounded-floor' type if the platform does not provide the floor level`);
-    }
-    if (isFloor(type) && !transform) {
-      transform = identity(new Float32Array(16));
-      transform[13] = DEFAULT_EMULATION_HEIGHT;
-    }
-    this._inverseBaseMatrix = transform || identity(new Float32Array(16));
-    this[PRIVATE$3] = {
-      type,
-      transform,
-      originOffset : identity(new Float32Array(16)),
-    };
-  }
-  _transformBasePoseMatrix(out, pose) {
-    multiply(out, this._inverseBaseMatrix, pose);
-  }
-  _originOffsetMatrix() {
-    return this[PRIVATE$3].originOffset;
-  }
-  _adjustForOriginOffset(transformMatrix) {
-    let inverseOriginOffsetMatrix = new Float32Array(16);
-    invert(inverseOriginOffsetMatrix, this[PRIVATE$3].originOffset);
-    multiply(transformMatrix, inverseOriginOffsetMatrix, transformMatrix);
-  }
-  _getSpaceRelativeTransform(space) {
-    let transform = super._getSpaceRelativeTransform(space);
-    this._adjustForOriginOffset(transform.matrix);
-    return new XRRigidTransform(transform.matrix);
-  }
-  getOffsetReferenceSpace(additionalOffset) {
-    let newSpace = new XRReferenceSpace(
-      this[PRIVATE$3].type,
-      this[PRIVATE$3].transform,
-      this[PRIVATE$3].bounds);
-    multiply(newSpace[PRIVATE$3].originOffset, this[PRIVATE$3].originOffset, additionalOffset.matrix);
-    return newSpace;
-  }
-}
-
-const PRIVATE$4 = Symbol('@@webxr-polyfill/XR');
-const XRSessionModes = ['inline', 'immersive-vr', 'immersive-ar'];
-const DEFAULT_SESSION_OPTIONS = {
-  'inline': {
-    requiredFeatures: ['viewer'],
-    optionalFeatures: [],
-  },
-  'immersive-vr': {
-    requiredFeatures: ['viewer', 'local'],
-    optionalFeatures: [],
-  },
-  'immersive-ar': {
-    requiredFeatures: ['viewer', 'local'],
-    optionalFeatures: [],
-  }
-};
-const POLYFILL_REQUEST_SESSION_ERROR =
-`Polyfill Error: Must call navigator.xr.isSessionSupported() with any XRSessionMode
-or navigator.xr.requestSession('inline') prior to requesting an immersive
-session. This is a limitation specific to the WebXR Polyfill and does not apply
-to native implementations of the API.`;
-class XRSystem extends EventTarget$1 {
-  constructor(devicePromise) {
-    super();
-    this[PRIVATE$4] = {
-      device: null,
-      devicePromise,
-      immersiveSession: null,
-      inlineSessions: new Set(),
-    };
-    devicePromise.then((device) => { this[PRIVATE$4].device = device; });
-  }
-  async isSessionSupported(mode) {
-    if (!this[PRIVATE$4].device) {
-      await this[PRIVATE$4].devicePromise;
-    }
-    if (mode != 'inline') {
-      return Promise.resolve(this[PRIVATE$4].device.isSessionSupported(mode));
-    }
-    return Promise.resolve(true);
-  }
-  async requestSession(mode, options) {
-    if (!this[PRIVATE$4].device) {
-      if (mode != 'inline') {
-        throw new Error(POLYFILL_REQUEST_SESSION_ERROR);
-      } else {
-        await this[PRIVATE$4].devicePromise;
-      }
-    }
-    if (!XRSessionModes.includes(mode)) {
-      throw new TypeError(
-          `The provided value '${mode}' is not a valid enum value of type XRSessionMode`);
-    }
-    const defaultOptions = DEFAULT_SESSION_OPTIONS[mode];
-    const requiredFeatures = defaultOptions.requiredFeatures.concat(
-        options && options.requiredFeatures ? options.requiredFeatures : []);
-    const optionalFeatures = defaultOptions.optionalFeatures.concat(
-        options && options.optionalFeatures ? options.optionalFeatures : []);
-    const enabledFeatures = new Set();
-    let requirementsFailed = false;
-    for (let feature of requiredFeatures) {
-      if (!this[PRIVATE$4].device.isFeatureSupported(feature)) {
-        console.error(`The required feature '${feature}' is not supported`);
-        requirementsFailed = true;
-      } else {
-        enabledFeatures.add(feature);
-      }
-    }
-    if (requirementsFailed) {
-      throw new DOMException('Session does not support some required features', 'NotSupportedError');
-    }
-    for (let feature of optionalFeatures) {
-      if (!this[PRIVATE$4].device.isFeatureSupported(feature)) {
-        console.log(`The optional feature '${feature}' is not supported`);
-      } else {
-        enabledFeatures.add(feature);
-      }
-    }
-    const sessionId = await this[PRIVATE$4].device.requestSession(mode, enabledFeatures);
-    const session = new XRSession(this[PRIVATE$4].device, mode, sessionId);
-    if (mode == 'inline') {
-      this[PRIVATE$4].inlineSessions.add(session);
-    } else {
-      this[PRIVATE$4].immersiveSession = session;
-    }
-    const onSessionEnd = () => {
-      if (mode == 'inline') {
-        this[PRIVATE$4].inlineSessions.delete(session);
-      } else {
-        this[PRIVATE$4].immersiveSession = null;
-      }
-      session.removeEventListener('end', onSessionEnd);
-    };
-    session.addEventListener('end', onSessionEnd);
-    return session;
-  }
-}
-
-let now;
-if ('performance' in _global === false) {
-  let startTime = Date.now();
-  now = () => Date.now() - startTime;
-} else {
-  now = () => performance.now();
-}
-var now$1 = now;
-
-const PRIVATE$5 = Symbol('@@webxr-polyfill/XRPose');
-class XRPose$1 {
-  constructor(transform, emulatedPosition) {
-    this[PRIVATE$5] = {
-      transform,
-      emulatedPosition,
-    };
-  }
-  get transform() { return this[PRIVATE$5].transform; }
-  get emulatedPosition() { return this[PRIVATE$5].emulatedPosition; }
-}
-
-const PRIVATE$6 = Symbol('@@webxr-polyfill/XRViewerPose');
-class XRViewerPose extends XRPose$1 {
-  constructor(transform, views, emulatedPosition = false) {
-    super(transform, emulatedPosition);
-    this[PRIVATE$6] = {
-      views
-    };
-  }
-  get views() {
-    return this[PRIVATE$6].views;
-  }
-}
-
-const PRIVATE$7 = Symbol('@@webxr-polyfill/XRViewport');
-class XRViewport {
-  constructor(target) {
-    this[PRIVATE$7] = { target };
-  }
-  get x() { return this[PRIVATE$7].target.x; }
-  get y() { return this[PRIVATE$7].target.y; }
-  get width() { return this[PRIVATE$7].target.width; }
-  get height() { return this[PRIVATE$7].target.height; }
-}
-
-const XREyes = ['left', 'right', 'none'];
-const PRIVATE$8 = Symbol('@@webxr-polyfill/XRView');
-class XRView {
-  constructor(device, transform, eye, sessionId) {
-    if (!XREyes.includes(eye)) {
-      throw new Error(`XREye must be one of: ${XREyes}`);
-    }
-    const temp = Object.create(null);
-    const viewport = new XRViewport(temp);
-    this[PRIVATE$8] = {
-      device,
-      eye,
-      viewport,
-      temp,
-      sessionId,
-      transform,
-    };
-  }
-  get eye() { return this[PRIVATE$8].eye; }
-  get projectionMatrix() { return this[PRIVATE$8].device.getProjectionMatrix(this.eye); }
-  get transform() { return this[PRIVATE$8].transform; }
-  _getViewport(layer) {
-    if (this[PRIVATE$8].device.getViewport(this[PRIVATE$8].sessionId,
-                                           this.eye,
-                                           layer,
-                                           this[PRIVATE$8].temp)) {
-      return this[PRIVATE$8].viewport;
-    }
-    return undefined;
-  }
-}
-
-const PRIVATE$9 = Symbol('@@webxr-polyfill/XRFrame');
-const NON_ACTIVE_MSG = "XRFrame access outside the callback that produced it is invalid.";
-const NON_ANIMFRAME_MSG = "getViewerPose can only be called on XRFrame objects passed to XRSession.requestAnimationFrame callbacks.";
-let NEXT_FRAME_ID = 0;
-class XRFrame {
-  constructor(device, session, sessionId) {
-    this[PRIVATE$9] = {
-      id: ++NEXT_FRAME_ID,
-      active: false,
-      animationFrame: false,
-      device,
-      session,
-      sessionId
-    };
-  }
-  get session() { return this[PRIVATE$9].session; }
-  getViewerPose(referenceSpace) {
-    if (!this[PRIVATE$9].animationFrame) {
-      throw new DOMException(NON_ANIMFRAME_MSG, 'InvalidStateError');
-    }
-    if (!this[PRIVATE$9].active) {
-      throw new DOMException(NON_ACTIVE_MSG, 'InvalidStateError');
-    }
-    const device = this[PRIVATE$9].device;
-    const session = this[PRIVATE$9].session;
-    session[PRIVATE$15].viewerSpace._ensurePoseUpdated(device, this[PRIVATE$9].id);
-    referenceSpace._ensurePoseUpdated(device, this[PRIVATE$9].id);
-    let viewerTransform = referenceSpace._getSpaceRelativeTransform(session[PRIVATE$15].viewerSpace);
-    const views = [];
-    for (let viewSpace of session[PRIVATE$15].viewSpaces) {
-      viewSpace._ensurePoseUpdated(device, this[PRIVATE$9].id);
-      let viewTransform = referenceSpace._getSpaceRelativeTransform(viewSpace);
-      let view = new XRView(device, viewTransform, viewSpace.eye, this[PRIVATE$9].sessionId);
-      views.push(view);
-    }
-    let viewerPose = new XRViewerPose(viewerTransform, views, false                             );
-    return viewerPose;
-  }
-  getPose(space, baseSpace) {
-    if (!this[PRIVATE$9].active) {
-      throw new DOMException(NON_ACTIVE_MSG, 'InvalidStateError');
-    }
-    const device = this[PRIVATE$9].device;
-    if (space._specialType === "target-ray" || space._specialType === "grip") {
-      return device.getInputPose(
-        space._inputSource, baseSpace, space._specialType);
-    } else {
-      space._ensurePoseUpdated(device, this[PRIVATE$9].id);
-      baseSpace._ensurePoseUpdated(device, this[PRIVATE$9].id);
-      let transform = baseSpace._getSpaceRelativeTransform(space);
-      if (!transform) { return null; }
-      return new XRPose(transform, false                             );
-    }
-  }
-}
-
-const PRIVATE$10 = Symbol('@@webxr-polyfill/XRRenderState');
-const XRRenderStateInit = Object.freeze({
-  depthNear: 0.1,
-  depthFar: 1000.0,
-  inlineVerticalFieldOfView: null,
-  baseLayer: null
-});
-class XRRenderState {
-  constructor(stateInit = {}) {
-    const config = Object.assign({}, XRRenderStateInit, stateInit);
-    this[PRIVATE$10] = { config };
-  }
-  get depthNear() { return this[PRIVATE$10].config.depthNear; }
-  get depthFar() { return this[PRIVATE$10].config.depthFar; }
-  get inlineVerticalFieldOfView() { return this[PRIVATE$10].config.inlineVerticalFieldOfView; }
-  get baseLayer() { return this[PRIVATE$10].config.baseLayer; }
-}
-
-const POLYFILLED_XR_COMPATIBLE = Symbol('@@webxr-polyfill/polyfilled-xr-compatible');
-const XR_COMPATIBLE = Symbol('@@webxr-polyfill/xr-compatible');
-
-const PRIVATE$11 = Symbol('@@webxr-polyfill/XRWebGLLayer');
-const XRWebGLLayerInit = Object.freeze({
-  antialias: true,
-  depth: false,
-  stencil: false,
-  alpha: true,
-  multiview: false,
-  ignoreDepthValues: false,
-  framebufferScaleFactor: 1.0,
-});
-class XRWebGLLayer$1 {
-  constructor(session, context, layerInit={}) {
-    const config = Object.assign({}, XRWebGLLayerInit, layerInit);
-    if (!(session instanceof XRSession$1)) {
-      throw new Error('session must be a XRSession');
-    }
-    if (session.ended) {
-      throw new Error(`InvalidStateError`);
-    }
-    if (context[POLYFILLED_XR_COMPATIBLE]) {
-      if (context[XR_COMPATIBLE] !== true) {
-        throw new Error(`InvalidStateError`);
-      }
-    }
-    const framebuffer = context.getParameter(context.FRAMEBUFFER_BINDING);
-    this[PRIVATE$11] = {
-      context,
-      config,
-      framebuffer,
-      session,
-    };
-  }
-  get context() { return this[PRIVATE$11].context; }
-  get antialias() { return this[PRIVATE$11].config.antialias; }
-  get ignoreDepthValues() { return true; }
-  get framebuffer() { return this[PRIVATE$11].framebuffer; }
-  get framebufferWidth() { return this[PRIVATE$11].context.drawingBufferWidth; }
-  get framebufferHeight() { return this[PRIVATE$11].context.drawingBufferHeight; }
-  get _session() { return this[PRIVATE$11].session; }
-  getViewport(view) {
-    return view._getViewport(this);
-  }
-  static getNativeFramebufferScaleFactor(session) {
-    if (!session) {
-      throw new TypeError('getNativeFramebufferScaleFactor must be passed a session.')
-    }
-    if (session[PRIVATE$15].ended) { return 0.0; }
-    return 1.0;
-  }
-}
-
-const PRIVATE$12 = Symbol('@@webxr-polyfill/XRInputSourceEvent');
-class XRInputSourceEvent extends Event {
-  constructor(type, eventInitDict) {
-    super(type, eventInitDict);
-    this[PRIVATE$12] = {
-      frame: eventInitDict.frame,
-      inputSource: eventInitDict.inputSource
-    };
-    Object.setPrototypeOf(this, XRInputSourceEvent.prototype);
-  }
-  get frame() { return this[PRIVATE$12].frame; }
-  get inputSource() { return this[PRIVATE$12].inputSource; }
-}
-
-const PRIVATE$13 = Symbol('@@webxr-polyfill/XRSessionEvent');
-class XRSessionEvent extends Event {
-  constructor(type, eventInitDict) {
-    super(type, eventInitDict);
-    this[PRIVATE$13] = {
-      session: eventInitDict.session
-    };
-    Object.setPrototypeOf(this, XRSessionEvent.prototype);
-  }
-  get session() { return this[PRIVATE$13].session; }
-}
-
-const PRIVATE$14 = Symbol('@@webxr-polyfill/XRInputSourcesChangeEvent');
-class XRInputSourcesChangeEvent extends Event {
-  constructor(type, eventInitDict) {
-    super(type, eventInitDict);
-    this[PRIVATE$14] = {
-      session: eventInitDict.session,
-      added: eventInitDict.added,
-      removed: eventInitDict.removed
-    };
-    Object.setPrototypeOf(this, XRInputSourcesChangeEvent.prototype);
-  }
-  get session() { return this[PRIVATE$14].session; }
-  get added() { return this[PRIVATE$14].added; }
-  get removed() { return this[PRIVATE$14].removed; }
-}
-
-const PRIVATE$15 = Symbol('@@webxr-polyfill/XRSession');
-class XRViewSpace extends XRSpace {
-  constructor(eye) {
-    super(eye);
-  }
-  get eye() {
-    return this._specialType;
-  }
-  _onPoseUpdate(device) {
-    this._inverseBaseMatrix = device.getBaseViewMatrix(this._specialType);
-  }
-}
-class XRSession$1 extends EventTarget$1 {
-  constructor(device, mode, id) {
-    super();
-    let immersive = mode != 'inline';
-    let initialRenderState = new XRRenderState({
-      inlineVerticalFieldOfView: immersive ? null : Math.PI * 0.5
-    });
-    this[PRIVATE$15] = {
-      device,
-      mode,
-      immersive,
-      ended: false,
-      suspended: false,
-      frameCallbacks: [],
-      currentFrameCallbacks: null,
-      frameHandle: 0,
-      deviceFrameHandle: null,
-      id,
-      activeRenderState: initialRenderState,
-      pendingRenderState: null,
-      viewerSpace: new XRReferenceSpace("viewer"),
-      viewSpaces: [],
-      currentInputSources: []
-    };
-    if (immersive) {
-      this[PRIVATE$15].viewSpaces.push(new XRViewSpace('left'),
-                                    new XRViewSpace('right'));
-    } else {
-      this[PRIVATE$15].viewSpaces.push(new XRViewSpace('none'));
-    }
-    this[PRIVATE$15].onDeviceFrame = () => {
-      if (this[PRIVATE$15].ended || this[PRIVATE$15].suspended) {
-        return;
-      }
-      this[PRIVATE$15].deviceFrameHandle = null;
-      this[PRIVATE$15].startDeviceFrameLoop();
-      if (this[PRIVATE$15].pendingRenderState !== null) {
-        this[PRIVATE$15].activeRenderState = new XRRenderState(this[PRIVATE$15].pendingRenderState);
-        this[PRIVATE$15].pendingRenderState = null;
-        if (this[PRIVATE$15].activeRenderState.baseLayer) {
-          this[PRIVATE$15].device.onBaseLayerSet(
-            this[PRIVATE$15].id,
-            this[PRIVATE$15].activeRenderState.baseLayer);
-        }
-      }
-      if (this[PRIVATE$15].activeRenderState.baseLayer === null) {
-        return;
-      }
-      const frame = new XRFrame(device, this, this[PRIVATE$15].id);
-      const callbacks = this[PRIVATE$15].currentFrameCallbacks = this[PRIVATE$15].frameCallbacks;
-      this[PRIVATE$15].frameCallbacks = [];
-      frame[PRIVATE$9].active = true;
-      frame[PRIVATE$9].animationFrame = true;
-      this[PRIVATE$15].device.onFrameStart(this[PRIVATE$15].id, this[PRIVATE$15].activeRenderState);
-      this._checkInputSourcesChange();
-      const rightNow = now$1();
-      for (let i = 0; i < callbacks.length; i++) {
-        try {
-          if (!callbacks[i].cancelled && typeof callbacks[i].callback === 'function') {
-            callbacks[i].callback(rightNow, frame);
-          }
-        } catch(err) {
-          console.error(err);
-        }
-      }
-      this[PRIVATE$15].currentFrameCallbacks = null;
-      frame[PRIVATE$9].active = false;
-      this[PRIVATE$15].device.onFrameEnd(this[PRIVATE$15].id);
-    };
-    this[PRIVATE$15].startDeviceFrameLoop = () => {
-      if (this[PRIVATE$15].deviceFrameHandle === null) {
-        this[PRIVATE$15].deviceFrameHandle = this[PRIVATE$15].device.requestAnimationFrame(
-          this[PRIVATE$15].onDeviceFrame
-        );
-      }
-    };
-    this[PRIVATE$15].stopDeviceFrameLoop = () => {
-      const handle = this[PRIVATE$15].deviceFrameHandle;
-      if (handle !== null) {
-        this[PRIVATE$15].device.cancelAnimationFrame(handle);
-        this[PRIVATE$15].deviceFrameHandle = null;
-      }
-    };
-    this[PRIVATE$15].onPresentationEnd = sessionId => {
-      if (sessionId !== this[PRIVATE$15].id) {
-        this[PRIVATE$15].suspended = false;
-        this[PRIVATE$15].startDeviceFrameLoop();
-        this.dispatchEvent('focus', { session: this });
-        return;
-      }
-      this[PRIVATE$15].ended = true;
-      this[PRIVATE$15].stopDeviceFrameLoop();
-      device.removeEventListener('@@webxr-polyfill/vr-present-end', this[PRIVATE$15].onPresentationEnd);
-      device.removeEventListener('@@webxr-polyfill/vr-present-start', this[PRIVATE$15].onPresentationStart);
-      device.removeEventListener('@@webxr-polyfill/input-select-start', this[PRIVATE$15].onSelectStart);
-      device.removeEventListener('@@webxr-polyfill/input-select-end', this[PRIVATE$15].onSelectEnd);
-      this.dispatchEvent('end', new XRSessionEvent('end', { session: this }));
-    };
-    device.addEventListener('@@webxr-polyfill/vr-present-end', this[PRIVATE$15].onPresentationEnd);
-    this[PRIVATE$15].onPresentationStart = sessionId => {
-      if (sessionId === this[PRIVATE$15].id) {
-        return;
-      }
-      this[PRIVATE$15].suspended = true;
-      this[PRIVATE$15].stopDeviceFrameLoop();
-      this.dispatchEvent('blur', { session: this });
-    };
-    device.addEventListener('@@webxr-polyfill/vr-present-start', this[PRIVATE$15].onPresentationStart);
-    this[PRIVATE$15].onSelectStart = evt => {
-      if (evt.sessionId !== this[PRIVATE$15].id) {
-        return;
-      }
-      this[PRIVATE$15].dispatchInputSourceEvent('selectstart',  evt.inputSource);
-    };
-    device.addEventListener('@@webxr-polyfill/input-select-start', this[PRIVATE$15].onSelectStart);
-    this[PRIVATE$15].onSelectEnd = evt => {
-      if (evt.sessionId !== this[PRIVATE$15].id) {
-        return;
-      }
-      this[PRIVATE$15].dispatchInputSourceEvent('selectend',  evt.inputSource);
-      this[PRIVATE$15].dispatchInputSourceEvent('select',  evt.inputSource);
-    };
-    device.addEventListener('@@webxr-polyfill/input-select-end', this[PRIVATE$15].onSelectEnd);
-    this[PRIVATE$15].onSqueezeStart = evt => {
-      if (evt.sessionId !== this[PRIVATE$15].id) {
-        return;
-      }
-      this[PRIVATE$15].dispatchInputSourceEvent('squeezestart',  evt.inputSource);
-    };
-    device.addEventListener('@@webxr-polyfill/input-squeeze-start', this[PRIVATE$15].onSqueezeStart);
-    this[PRIVATE$15].onSqueezeEnd = evt => {
-      if (evt.sessionId !== this[PRIVATE$15].id) {
-        return;
-      }
-      this[PRIVATE$15].dispatchInputSourceEvent('squeezeend',  evt.inputSource);
-      this[PRIVATE$15].dispatchInputSourceEvent('squeeze',  evt.inputSource);
-    };
-    device.addEventListener('@@webxr-polyfill/input-squeeze-end', this[PRIVATE$15].onSqueezeEnd);
-    this[PRIVATE$15].dispatchInputSourceEvent = (type, inputSource) => {
-      const frame = new XRFrame(device, this, this[PRIVATE$15].id);
-      const event = new XRInputSourceEvent(type, { frame, inputSource });
-      frame[PRIVATE$9].active = true;
-      this.dispatchEvent(type, event);
-      frame[PRIVATE$9].active = false;
-    };
-    this[PRIVATE$15].startDeviceFrameLoop();
-    this.onblur = undefined;
-    this.onfocus = undefined;
-    this.onresetpose = undefined;
-    this.onend = undefined;
-    this.onselect = undefined;
-    this.onselectstart = undefined;
-    this.onselectend = undefined;
-  }
-  get renderState() { return this[PRIVATE$15].activeRenderState; }
-  get environmentBlendMode() {
-    return this[PRIVATE$15].device.environmentBlendMode || 'opaque';
-  }
-  async requestReferenceSpace(type) {
-    if (this[PRIVATE$15].ended) {
-      return;
-    }
-    if (!XRReferenceSpaceTypes.includes(type)) {
-      throw new TypeError(`XRReferenceSpaceType must be one of ${XRReferenceSpaceTypes}`);
-    }
-    if (!this[PRIVATE$15].device.doesSessionSupportReferenceSpace(this[PRIVATE$15].id, type)) {
-      throw new DOMException(`The ${type} reference space is not supported by this session.`, 'NotSupportedError');
-    }
-    if (type === 'viewer') {
-      return this[PRIVATE$15].viewerSpace;
-    }
-    let transform = await this[PRIVATE$15].device.requestFrameOfReferenceTransform(type);
-    if (type === 'bounded-floor') {
-      if (!transform) {
-        throw new DOMException(`${type} XRReferenceSpace not supported by this device.`, 'NotSupportedError');
-      }
-      let bounds = this[PRIVATE$15].device.requestStageBounds();
-      if (!bounds) {
-        throw new DOMException(`${type} XRReferenceSpace not supported by this device.`, 'NotSupportedError');
-      }
-      throw new DOMException(`The WebXR polyfill does not support the ${type} reference space yet.`, 'NotSupportedError');
-    }
-    return new XRReferenceSpace(type, transform);
-  }
-  requestAnimationFrame(callback) {
-    if (this[PRIVATE$15].ended) {
-      return;
-    }
-    const handle = ++this[PRIVATE$15].frameHandle;
-    this[PRIVATE$15].frameCallbacks.push({
-      handle,
-      callback,
-      cancelled: false
-    });
-    return handle;
-  }
-  cancelAnimationFrame(handle) {
-    let callbacks = this[PRIVATE$15].frameCallbacks;
-    let index = callbacks.findIndex(d => d && d.handle === handle);
-    if (index > -1) {
-      callbacks[index].cancelled = true;
-      callbacks.splice(index, 1);
-    }
-    callbacks = this[PRIVATE$15].currentFrameCallbacks;
-    if (callbacks) {
-      index = callbacks.findIndex(d => d && d.handle === handle);
-      if (index > -1) {
-        callbacks[index].cancelled = true;
-      }
-    }
-  }
-  get inputSources() {
-    return this[PRIVATE$15].device.getInputSources();
-  }
-  async end() {
-    if (this[PRIVATE$15].ended) {
-      return;
-    }
-    if (this[PRIVATE$15].immersive) {
-      this[PRIVATE$15].ended = true;
-      this[PRIVATE$15].device.removeEventListener('@@webxr-polyfill/vr-present-start',
-                                                 this[PRIVATE$15].onPresentationStart);
-      this[PRIVATE$15].device.removeEventListener('@@webxr-polyfill/vr-present-end',
-                                                 this[PRIVATE$15].onPresentationEnd);
-      this[PRIVATE$15].device.removeEventListener('@@webxr-polyfill/input-select-start',
-                                                 this[PRIVATE$15].onSelectStart);
-      this[PRIVATE$15].device.removeEventListener('@@webxr-polyfill/input-select-end',
-                                                 this[PRIVATE$15].onSelectEnd);
-      this.dispatchEvent('end', new XRSessionEvent('end', { session: this }));
-    }
-    this[PRIVATE$15].stopDeviceFrameLoop();
-    return this[PRIVATE$15].device.endSession(this[PRIVATE$15].id);
-  }
-  updateRenderState(newState) {
-    if (this[PRIVATE$15].ended) {
-      const message = "Can't call updateRenderState on an XRSession " +
-                      "that has already ended.";
-      throw new Error(message);
-    }
-    if (newState.baseLayer && (newState.baseLayer._session !== this)) {
-      const message = "Called updateRenderState with a base layer that was " +
-                      "created by a different session.";
-      throw new Error(message);
-    }
-    const fovSet = (newState.inlineVerticalFieldOfView !== null) &&
-                   (newState.inlineVerticalFieldOfView !== undefined);
-    if (fovSet) {
-      if (this[PRIVATE$15].immersive) {
-        const message = "inlineVerticalFieldOfView must not be set for an " +
-                        "XRRenderState passed to updateRenderState for an " +
-                        "immersive session.";
-        throw new Error(message);
-      } else {
-        newState.inlineVerticalFieldOfView = Math.min(
-          3.13, Math.max(0.01, newState.inlineVerticalFieldOfView));
-      }
-    }
-    if (this[PRIVATE$15].pendingRenderState === null) {
-      const activeRenderState = this[PRIVATE$15].activeRenderState;
-      this[PRIVATE$15].pendingRenderState = {
-        depthNear: activeRenderState.depthNear,
-        depthFar: activeRenderState.depthFar,
-        inlineVerticalFieldOfView: activeRenderState.inlineVerticalFieldOfView,
-        baseLayer: activeRenderState.baseLayer
-      };
-    }
-    Object.assign(this[PRIVATE$15].pendingRenderState, newState);
-  }
-  _checkInputSourcesChange() {
-    const added = [];
-    const removed = [];
-    const newInputSources = this.inputSources;
-    const oldInputSources = this[PRIVATE$15].currentInputSources;
-    for (const newInputSource of newInputSources) {
-      if (!oldInputSources.includes(newInputSource)) {
-        added.push(newInputSource);
-      }
-    }
-    for (const oldInputSource of oldInputSources) {
-      if (!newInputSources.includes(oldInputSource)) {
-        removed.push(oldInputSource);
-      }
-    }
-    if (added.length > 0 || removed.length > 0) {
-      this.dispatchEvent('inputsourceschange', new XRInputSourcesChangeEvent('inputsourceschange', {
-        session: this,
-        added: added,
-        removed: removed
-      }));
-    }
-    this[PRIVATE$15].currentInputSources.length = 0;
-    for (const newInputSource of newInputSources) {
-      this[PRIVATE$15].currentInputSources.push(newInputSource);
-    }
-  }
-}
-
-const PRIVATE$16 = Symbol('@@webxr-polyfill/XRInputSource');
-class XRInputSource {
-  constructor(impl) {
-    this[PRIVATE$16] = {
-      impl,
-      gripSpace: new XRSpace("grip", this),
-      targetRaySpace: new XRSpace("target-ray", this)
-    };
-  }
-  get handedness() { return this[PRIVATE$16].impl.handedness; }
-  get targetRayMode() { return this[PRIVATE$16].impl.targetRayMode; }
-  get gripSpace() {
-    let mode = this[PRIVATE$16].impl.targetRayMode;
-    if (mode === "gaze" || mode === "screen") {
-      return null;
-    }
-    return this[PRIVATE$16].gripSpace;
-  }
-  get targetRaySpace() { return this[PRIVATE$16].targetRaySpace; }
-  get profiles() { return this[PRIVATE$16].impl.profiles; }
-  get gamepad() { return this[PRIVATE$16].impl.gamepad; }
-}
-
-const PRIVATE$17 = Symbol('@@webxr-polyfill/XRReferenceSpaceEvent');
-class XRReferenceSpaceEvent extends Event {
-  constructor(type, eventInitDict) {
-    super(type, eventInitDict);
-    this[PRIVATE$17] = {
-      referenceSpace: eventInitDict.referenceSpace,
-      transform: eventInitDict.transform || null
-    };
-    Object.setPrototypeOf(this, XRReferenceSpaceEvent.prototype);
-  }
-  get referenceSpace() { return this[PRIVATE$17].referenceSpace; }
-  get transform() { return this[PRIVATE$17].transform; }
-}
-
-var API = {
-  XRSystem,
-  XRSession: XRSession$1,
-  XRSessionEvent,
-  XRFrame,
-  XRView,
-  XRViewport,
-  XRViewerPose,
-  XRWebGLLayer: XRWebGLLayer$1,
-  XRSpace,
-  XRReferenceSpace,
-  XRReferenceSpaceEvent,
-  XRInputSource,
-  XRInputSourceEvent,
-  XRInputSourcesChangeEvent,
-  XRRenderState,
-  XRRigidTransform: XRRigidTransform$1,
-  XRPose: XRPose$1,
-};
-
-const polyfillMakeXRCompatible = Context => {
-  if (typeof Context.prototype.makeXRCompatible === 'function') {
-    return false;
-  }
-  Context.prototype.makeXRCompatible = function () {
-    this[XR_COMPATIBLE] = true;
-    return Promise.resolve();
-  };
-  return true;
-};
-const polyfillGetContext = (Canvas) => {
-  const getContext = Canvas.prototype.getContext;
-  Canvas.prototype.getContext = function (contextType, glAttribs) {
-    const ctx = getContext.call(this, contextType, glAttribs);
-    if (ctx) {
-      ctx[POLYFILLED_XR_COMPATIBLE] = true;
-      if (glAttribs && ('xrCompatible' in glAttribs)) {
-        ctx[XR_COMPATIBLE] = glAttribs.xrCompatible;
-      }
-    }
-    return ctx;
-  };
-};
-
-const isImageBitmapSupported = global =>
-  !!(global.ImageBitmapRenderingContext &&
-     global.createImageBitmap);
-const isMobile = global => {
-  var check = false;
-  (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4)))check = true;})(global.navigator.userAgent||global.navigator.vendor||global.opera);
-  return check;
-};
-const applyCanvasStylesForMinimalRendering = canvas => {
-  canvas.style.display = 'block';
-  canvas.style.position = 'absolute';
-  canvas.style.width = canvas.style.height = '1px';
-  canvas.style.top = canvas.style.left = '0px';
-};
-
-var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
-
-
-function unwrapExports (x) {
-	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
-}
-
-function createCommonjsModule(fn, module) {
-	return module = { exports: {} }, fn(module, module.exports), module.exports;
-}
-
-var cardboardVrDisplay = createCommonjsModule(function (module, exports) {
-(function (global, factory) {
-	module.exports = factory();
-}(commonjsGlobal, (function () { var classCallCheck = function (instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-};
-var createClass = function () {
-  function defineProperties(target, props) {
-    for (var i = 0; i < props.length; i++) {
-      var descriptor = props[i];
-      descriptor.enumerable = descriptor.enumerable || false;
-      descriptor.configurable = true;
-      if ("value" in descriptor) descriptor.writable = true;
-      Object.defineProperty(target, descriptor.key, descriptor);
-    }
-  }
-  return function (Constructor, protoProps, staticProps) {
-    if (protoProps) defineProperties(Constructor.prototype, protoProps);
-    if (staticProps) defineProperties(Constructor, staticProps);
-    return Constructor;
-  };
-}();
-var slicedToArray = function () {
-  function sliceIterator(arr, i) {
-    var _arr = [];
-    var _n = true;
-    var _d = false;
-    var _e = undefined;
-    try {
-      for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
-        _arr.push(_s.value);
-        if (i && _arr.length === i) break;
-      }
-    } catch (err) {
-      _d = true;
-      _e = err;
-    } finally {
-      try {
-        if (!_n && _i["return"]) _i["return"]();
-      } finally {
-        if (_d) throw _e;
-      }
-    }
-    return _arr;
-  }
-  return function (arr, i) {
-    if (Array.isArray(arr)) {
-      return arr;
-    } else if (Symbol.iterator in Object(arr)) {
-      return sliceIterator(arr, i);
-    } else {
-      throw new TypeError("Invalid attempt to destructure non-iterable instance");
-    }
-  };
-}();
-var MIN_TIMESTEP = 0.001;
-var MAX_TIMESTEP = 1;
-var dataUri = function dataUri(mimeType, svg) {
-  return 'data:' + mimeType + ',' + encodeURIComponent(svg);
-};
-var lerp = function lerp(a, b, t) {
-  return a + (b - a) * t;
-};
-var isIOS = function () {
-  var isIOS = /iPad|iPhone|iPod/.test(navigator.platform);
-  return function () {
-    return isIOS;
-  };
-}();
-var isWebViewAndroid = function () {
-  var isWebViewAndroid = navigator.userAgent.indexOf('Version') !== -1 && navigator.userAgent.indexOf('Android') !== -1 && navigator.userAgent.indexOf('Chrome') !== -1;
-  return function () {
-    return isWebViewAndroid;
-  };
-}();
-var isSafari = function () {
-  var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-  return function () {
-    return isSafari;
-  };
-}();
-var isFirefoxAndroid = function () {
-  var isFirefoxAndroid = navigator.userAgent.indexOf('Firefox') !== -1 && navigator.userAgent.indexOf('Android') !== -1;
-  return function () {
-    return isFirefoxAndroid;
-  };
-}();
-var getChromeVersion = function () {
-  var match = navigator.userAgent.match(/.*Chrome\/([0-9]+)/);
-  var value = match ? parseInt(match[1], 10) : null;
-  return function () {
-    return value;
-  };
-}();
-var isSafariWithoutDeviceMotion = function () {
-  var value = false;
-  value = isIOS() && isSafari() && navigator.userAgent.indexOf('13_4') !== -1;
-  return function () {
-    return value;
-  };
-}();
-var isChromeWithoutDeviceMotion = function () {
-  var value = false;
-  if (getChromeVersion() === 65) {
-    var match = navigator.userAgent.match(/.*Chrome\/([0-9\.]*)/);
-    if (match) {
-      var _match$1$split = match[1].split('.'),
-          _match$1$split2 = slicedToArray(_match$1$split, 4),
-          major = _match$1$split2[0],
-          minor = _match$1$split2[1],
-          branch = _match$1$split2[2],
-          build = _match$1$split2[3];
-      value = parseInt(branch, 10) === 3325 && parseInt(build, 10) < 148;
-    }
-  }
-  return function () {
-    return value;
-  };
-}();
-var isR7 = function () {
-  var isR7 = navigator.userAgent.indexOf('R7 Build') !== -1;
-  return function () {
-    return isR7;
-  };
-}();
-var isLandscapeMode = function isLandscapeMode() {
-  var rtn = window.orientation == 90 || window.orientation == -90;
-  return isR7() ? !rtn : rtn;
-};
-var isTimestampDeltaValid = function isTimestampDeltaValid(timestampDeltaS) {
-  if (isNaN(timestampDeltaS)) {
-    return false;
-  }
-  if (timestampDeltaS <= MIN_TIMESTEP) {
-    return false;
-  }
-  if (timestampDeltaS > MAX_TIMESTEP) {
-    return false;
-  }
-  return true;
-};
-var getScreenWidth = function getScreenWidth() {
-  return Math.max(window.screen.width, window.screen.height) * window.devicePixelRatio;
-};
-var getScreenHeight = function getScreenHeight() {
-  return Math.min(window.screen.width, window.screen.height) * window.devicePixelRatio;
-};
-var requestFullscreen = function requestFullscreen(element) {
-  if (isWebViewAndroid()) {
-    return false;
-  }
-  if (element.requestFullscreen) {
-    element.requestFullscreen();
-  } else if (element.webkitRequestFullscreen) {
-    element.webkitRequestFullscreen();
-  } else if (element.mozRequestFullScreen) {
-    element.mozRequestFullScreen();
-  } else if (element.msRequestFullscreen) {
-    element.msRequestFullscreen();
-  } else {
-    return false;
-  }
-  return true;
-};
-var exitFullscreen = function exitFullscreen() {
-  if (document.exitFullscreen) {
-    document.exitFullscreen();
-  } else if (document.webkitExitFullscreen) {
-    document.webkitExitFullscreen();
-  } else if (document.mozCancelFullScreen) {
-    document.mozCancelFullScreen();
-  } else if (document.msExitFullscreen) {
-    document.msExitFullscreen();
-  } else {
-    return false;
-  }
-  return true;
-};
-var getFullscreenElement = function getFullscreenElement() {
-  return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-};
-var linkProgram = function linkProgram(gl, vertexSource, fragmentSource, attribLocationMap) {
-  var vertexShader = gl.createShader(gl.VERTEX_SHADER);
-  gl.shaderSource(vertexShader, vertexSource);
-  gl.compileShader(vertexShader);
-  var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-  gl.shaderSource(fragmentShader, fragmentSource);
-  gl.compileShader(fragmentShader);
-  var program = gl.createProgram();
-  gl.attachShader(program, vertexShader);
-  gl.attachShader(program, fragmentShader);
-  for (var attribName in attribLocationMap) {
-    gl.bindAttribLocation(program, attribLocationMap[attribName], attribName);
-  }gl.linkProgram(program);
-  gl.deleteShader(vertexShader);
-  gl.deleteShader(fragmentShader);
-  return program;
-};
-var getProgramUniforms = function getProgramUniforms(gl, program) {
-  var uniforms = {};
-  var uniformCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
-  var uniformName = '';
-  for (var i = 0; i < uniformCount; i++) {
-    var uniformInfo = gl.getActiveUniform(program, i);
-    uniformName = uniformInfo.name.replace('[0]', '');
-    uniforms[uniformName] = gl.getUniformLocation(program, uniformName);
-  }
-  return uniforms;
-};
-var orthoMatrix = function orthoMatrix(out, left, right, bottom, top, near, far) {
-  var lr = 1 / (left - right),
-      bt = 1 / (bottom - top),
-      nf = 1 / (near - far);
-  out[0] = -2 * lr;
-  out[1] = 0;
-  out[2] = 0;
-  out[3] = 0;
-  out[4] = 0;
-  out[5] = -2 * bt;
-  out[6] = 0;
-  out[7] = 0;
-  out[8] = 0;
-  out[9] = 0;
-  out[10] = 2 * nf;
-  out[11] = 0;
-  out[12] = (left + right) * lr;
-  out[13] = (top + bottom) * bt;
-  out[14] = (far + near) * nf;
-  out[15] = 1;
-  return out;
-};
-var isMobile = function isMobile() {
-  var check = false;
-  (function (a) {
-    if (/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a) || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0, 4))) check = true;
-  })(navigator.userAgent || navigator.vendor || window.opera);
-  return check;
-};
-var extend = function extend(dest, src) {
-  for (var key in src) {
-    if (src.hasOwnProperty(key)) {
-      dest[key] = src[key];
-    }
-  }
-  return dest;
-};
-var safariCssSizeWorkaround = function safariCssSizeWorkaround(canvas) {
-  if (isIOS()) {
-    var width = canvas.style.width;
-    var height = canvas.style.height;
-    canvas.style.width = parseInt(width) + 1 + 'px';
-    canvas.style.height = parseInt(height) + 'px';
-    setTimeout(function () {
-      canvas.style.width = width;
-      canvas.style.height = height;
-    }, 100);
-  }
-  window.canvas = canvas;
-};
-var frameDataFromPose = function () {
-  var piOver180 = Math.PI / 180.0;
-  var rad45 = Math.PI * 0.25;
-  function mat4_perspectiveFromFieldOfView(out, fov, near, far) {
-    var upTan = Math.tan(fov ? fov.upDegrees * piOver180 : rad45),
-        downTan = Math.tan(fov ? fov.downDegrees * piOver180 : rad45),
-        leftTan = Math.tan(fov ? fov.leftDegrees * piOver180 : rad45),
-        rightTan = Math.tan(fov ? fov.rightDegrees * piOver180 : rad45),
-        xScale = 2.0 / (leftTan + rightTan),
-        yScale = 2.0 / (upTan + downTan);
-    out[0] = xScale;
-    out[1] = 0.0;
-    out[2] = 0.0;
-    out[3] = 0.0;
-    out[4] = 0.0;
-    out[5] = yScale;
-    out[6] = 0.0;
-    out[7] = 0.0;
-    out[8] = -((leftTan - rightTan) * xScale * 0.5);
-    out[9] = (upTan - downTan) * yScale * 0.5;
-    out[10] = far / (near - far);
-    out[11] = -1.0;
-    out[12] = 0.0;
-    out[13] = 0.0;
-    out[14] = far * near / (near - far);
-    out[15] = 0.0;
-    return out;
-  }
-  function mat4_fromRotationTranslation(out, q, v) {
-    var x = q[0],
-        y = q[1],
-        z = q[2],
-        w = q[3],
-        x2 = x + x,
-        y2 = y + y,
-        z2 = z + z,
-        xx = x * x2,
-        xy = x * y2,
-        xz = x * z2,
-        yy = y * y2,
-        yz = y * z2,
-        zz = z * z2,
-        wx = w * x2,
-        wy = w * y2,
-        wz = w * z2;
-    out[0] = 1 - (yy + zz);
-    out[1] = xy + wz;
-    out[2] = xz - wy;
-    out[3] = 0;
-    out[4] = xy - wz;
-    out[5] = 1 - (xx + zz);
-    out[6] = yz + wx;
-    out[7] = 0;
-    out[8] = xz + wy;
-    out[9] = yz - wx;
-    out[10] = 1 - (xx + yy);
-    out[11] = 0;
-    out[12] = v[0];
-    out[13] = v[1];
-    out[14] = v[2];
-    out[15] = 1;
-    return out;
-  }
-  function mat4_translate(out, a, v) {
-    var x = v[0],
-        y = v[1],
-        z = v[2],
-        a00,
-        a01,
-        a02,
-        a03,
-        a10,
-        a11,
-        a12,
-        a13,
-        a20,
-        a21,
-        a22,
-        a23;
-    if (a === out) {
-      out[12] = a[0] * x + a[4] * y + a[8] * z + a[12];
-      out[13] = a[1] * x + a[5] * y + a[9] * z + a[13];
-      out[14] = a[2] * x + a[6] * y + a[10] * z + a[14];
-      out[15] = a[3] * x + a[7] * y + a[11] * z + a[15];
-    } else {
-      a00 = a[0];a01 = a[1];a02 = a[2];a03 = a[3];
-      a10 = a[4];a11 = a[5];a12 = a[6];a13 = a[7];
-      a20 = a[8];a21 = a[9];a22 = a[10];a23 = a[11];
-      out[0] = a00;out[1] = a01;out[2] = a02;out[3] = a03;
-      out[4] = a10;out[5] = a11;out[6] = a12;out[7] = a13;
-      out[8] = a20;out[9] = a21;out[10] = a22;out[11] = a23;
-      out[12] = a00 * x + a10 * y + a20 * z + a[12];
-      out[13] = a01 * x + a11 * y + a21 * z + a[13];
-      out[14] = a02 * x + a12 * y + a22 * z + a[14];
-      out[15] = a03 * x + a13 * y + a23 * z + a[15];
-    }
-    return out;
-  }
-  function mat4_invert(out, a) {
-    var a00 = a[0],
-        a01 = a[1],
-        a02 = a[2],
-        a03 = a[3],
-        a10 = a[4],
-        a11 = a[5],
-        a12 = a[6],
-        a13 = a[7],
-        a20 = a[8],
-        a21 = a[9],
-        a22 = a[10],
-        a23 = a[11],
-        a30 = a[12],
-        a31 = a[13],
-        a32 = a[14],
-        a33 = a[15],
-        b00 = a00 * a11 - a01 * a10,
-        b01 = a00 * a12 - a02 * a10,
-        b02 = a00 * a13 - a03 * a10,
-        b03 = a01 * a12 - a02 * a11,
-        b04 = a01 * a13 - a03 * a11,
-        b05 = a02 * a13 - a03 * a12,
-        b06 = a20 * a31 - a21 * a30,
-        b07 = a20 * a32 - a22 * a30,
-        b08 = a20 * a33 - a23 * a30,
-        b09 = a21 * a32 - a22 * a31,
-        b10 = a21 * a33 - a23 * a31,
-        b11 = a22 * a33 - a23 * a32,
-    det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
-    if (!det) {
-      return null;
-    }
-    det = 1.0 / det;
-    out[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
-    out[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
-    out[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
-    out[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
-    out[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
-    out[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
-    out[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
-    out[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
-    out[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
-    out[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
-    out[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
-    out[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
-    out[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
-    out[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
-    out[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
-    out[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
-    return out;
-  }
-  var defaultOrientation = new Float32Array([0, 0, 0, 1]);
-  var defaultPosition = new Float32Array([0, 0, 0]);
-  function updateEyeMatrices(projection, view, pose, fov, offset, vrDisplay) {
-    mat4_perspectiveFromFieldOfView(projection, fov || null, vrDisplay.depthNear, vrDisplay.depthFar);
-    var orientation = pose.orientation || defaultOrientation;
-    var position = pose.position || defaultPosition;
-    mat4_fromRotationTranslation(view, orientation, position);
-    if (offset) mat4_translate(view, view, offset);
-    mat4_invert(view, view);
-  }
-  return function (frameData, pose, vrDisplay) {
-    if (!frameData || !pose) return false;
-    frameData.pose = pose;
-    frameData.timestamp = pose.timestamp;
-    updateEyeMatrices(frameData.leftProjectionMatrix, frameData.leftViewMatrix, pose, vrDisplay._getFieldOfView("left"), vrDisplay._getEyeOffset("left"), vrDisplay);
-    updateEyeMatrices(frameData.rightProjectionMatrix, frameData.rightViewMatrix, pose, vrDisplay._getFieldOfView("right"), vrDisplay._getEyeOffset("right"), vrDisplay);
-    return true;
-  };
-}();
-var isInsideCrossOriginIFrame = function isInsideCrossOriginIFrame() {
-  var isFramed = window.self !== window.top;
-  var refOrigin = getOriginFromUrl(document.referrer);
-  var thisOrigin = getOriginFromUrl(window.location.href);
-  return isFramed && refOrigin !== thisOrigin;
-};
-var getOriginFromUrl = function getOriginFromUrl(url) {
-  var domainIdx;
-  var protoSepIdx = url.indexOf("://");
-  if (protoSepIdx !== -1) {
-    domainIdx = protoSepIdx + 3;
-  } else {
-    domainIdx = 0;
-  }
-  var domainEndIdx = url.indexOf('/', domainIdx);
-  if (domainEndIdx === -1) {
-    domainEndIdx = url.length;
-  }
-  return url.substring(0, domainEndIdx);
-};
-var getQuaternionAngle = function getQuaternionAngle(quat) {
-  if (quat.w > 1) {
-    console.warn('getQuaternionAngle: w > 1');
-    return 0;
-  }
-  var angle = 2 * Math.acos(quat.w);
-  return angle;
-};
-var warnOnce = function () {
-  var observedWarnings = {};
-  return function (key, message) {
-    if (observedWarnings[key] === undefined) {
-      console.warn('webvr-polyfill: ' + message);
-      observedWarnings[key] = true;
-    }
-  };
-}();
-var deprecateWarning = function deprecateWarning(deprecated, suggested) {
-  var alternative = suggested ? 'Please use ' + suggested + ' instead.' : '';
-  warnOnce(deprecated, deprecated + ' has been deprecated. ' + 'This may not work on native WebVR displays. ' + alternative);
-};
-function WGLUPreserveGLState(gl, bindings, callback) {
-  if (!bindings) {
-    callback(gl);
-    return;
-  }
-  var boundValues = [];
-  var activeTexture = null;
-  for (var i = 0; i < bindings.length; ++i) {
-    var binding = bindings[i];
-    switch (binding) {
-      case gl.TEXTURE_BINDING_2D:
-      case gl.TEXTURE_BINDING_CUBE_MAP:
-        var textureUnit = bindings[++i];
-        if (textureUnit < gl.TEXTURE0 || textureUnit > gl.TEXTURE31) {
-          console.error("TEXTURE_BINDING_2D or TEXTURE_BINDING_CUBE_MAP must be followed by a valid texture unit");
-          boundValues.push(null, null);
-          break;
-        }
-        if (!activeTexture) {
-          activeTexture = gl.getParameter(gl.ACTIVE_TEXTURE);
-        }
-        gl.activeTexture(textureUnit);
-        boundValues.push(gl.getParameter(binding), null);
-        break;
-      case gl.ACTIVE_TEXTURE:
-        activeTexture = gl.getParameter(gl.ACTIVE_TEXTURE);
-        boundValues.push(null);
-        break;
-      default:
-        boundValues.push(gl.getParameter(binding));
-        break;
-    }
-  }
-  callback(gl);
-  for (var i = 0; i < bindings.length; ++i) {
-    var binding = bindings[i];
-    var boundValue = boundValues[i];
-    switch (binding) {
-      case gl.ACTIVE_TEXTURE:
-        break;
-      case gl.ARRAY_BUFFER_BINDING:
-        gl.bindBuffer(gl.ARRAY_BUFFER, boundValue);
-        break;
-      case gl.COLOR_CLEAR_VALUE:
-        gl.clearColor(boundValue[0], boundValue[1], boundValue[2], boundValue[3]);
-        break;
-      case gl.COLOR_WRITEMASK:
-        gl.colorMask(boundValue[0], boundValue[1], boundValue[2], boundValue[3]);
-        break;
-      case gl.CURRENT_PROGRAM:
-        gl.useProgram(boundValue);
-        break;
-      case gl.ELEMENT_ARRAY_BUFFER_BINDING:
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, boundValue);
-        break;
-      case gl.FRAMEBUFFER_BINDING:
-        gl.bindFramebuffer(gl.FRAMEBUFFER, boundValue);
-        break;
-      case gl.RENDERBUFFER_BINDING:
-        gl.bindRenderbuffer(gl.RENDERBUFFER, boundValue);
-        break;
-      case gl.TEXTURE_BINDING_2D:
-        var textureUnit = bindings[++i];
-        if (textureUnit < gl.TEXTURE0 || textureUnit > gl.TEXTURE31)
-          break;
-        gl.activeTexture(textureUnit);
-        gl.bindTexture(gl.TEXTURE_2D, boundValue);
-        break;
-      case gl.TEXTURE_BINDING_CUBE_MAP:
-        var textureUnit = bindings[++i];
-        if (textureUnit < gl.TEXTURE0 || textureUnit > gl.TEXTURE31)
-          break;
-        gl.activeTexture(textureUnit);
-        gl.bindTexture(gl.TEXTURE_CUBE_MAP, boundValue);
-        break;
-      case gl.VIEWPORT:
-        gl.viewport(boundValue[0], boundValue[1], boundValue[2], boundValue[3]);
-        break;
-      case gl.BLEND:
-      case gl.CULL_FACE:
-      case gl.DEPTH_TEST:
-      case gl.SCISSOR_TEST:
-      case gl.STENCIL_TEST:
-        if (boundValue) {
-          gl.enable(binding);
-        } else {
-          gl.disable(binding);
-        }
-        break;
-      default:
-        console.log("No GL restore behavior for 0x" + binding.toString(16));
-        break;
-    }
-    if (activeTexture) {
-      gl.activeTexture(activeTexture);
-    }
-  }
-}
-var glPreserveState = WGLUPreserveGLState;
-var distortionVS = ['attribute vec2 position;', 'attribute vec3 texCoord;', 'varying vec2 vTexCoord;', 'uniform vec4 viewportOffsetScale[2];', 'void main() {', '  vec4 viewport = viewportOffsetScale[int(texCoord.z)];', '  vTexCoord = (texCoord.xy * viewport.zw) + viewport.xy;', '  gl_Position = vec4( position, 1.0, 1.0 );', '}'].join('\n');
-var distortionFS = ['precision mediump float;', 'uniform sampler2D diffuse;', 'varying vec2 vTexCoord;', 'void main() {', '  gl_FragColor = texture2D(diffuse, vTexCoord);', '}'].join('\n');
-function CardboardDistorter(gl, cardboardUI, bufferScale, dirtySubmitFrameBindings) {
-  this.gl = gl;
-  this.cardboardUI = cardboardUI;
-  this.bufferScale = bufferScale;
-  this.dirtySubmitFrameBindings = dirtySubmitFrameBindings;
-  this.ctxAttribs = gl.getContextAttributes();
-  this.instanceExt = gl.getExtension('ANGLE_instanced_arrays');
-  this.meshWidth = 20;
-  this.meshHeight = 20;
-  this.bufferWidth = gl.drawingBufferWidth;
-  this.bufferHeight = gl.drawingBufferHeight;
-  this.realBindFramebuffer = gl.bindFramebuffer;
-  this.realEnable = gl.enable;
-  this.realDisable = gl.disable;
-  this.realColorMask = gl.colorMask;
-  this.realClearColor = gl.clearColor;
-  this.realViewport = gl.viewport;
-  if (!isIOS()) {
-    this.realCanvasWidth = Object.getOwnPropertyDescriptor(gl.canvas.__proto__, 'width');
-    this.realCanvasHeight = Object.getOwnPropertyDescriptor(gl.canvas.__proto__, 'height');
-  }
-  this.isPatched = false;
-  this.lastBoundFramebuffer = null;
-  this.cullFace = false;
-  this.depthTest = false;
-  this.blend = false;
-  this.scissorTest = false;
-  this.stencilTest = false;
-  this.viewport = [0, 0, 0, 0];
-  this.colorMask = [true, true, true, true];
-  this.clearColor = [0, 0, 0, 0];
-  this.attribs = {
-    position: 0,
-    texCoord: 1
-  };
-  this.program = linkProgram(gl, distortionVS, distortionFS, this.attribs);
-  this.uniforms = getProgramUniforms(gl, this.program);
-  this.viewportOffsetScale = new Float32Array(8);
-  this.setTextureBounds();
-  this.vertexBuffer = gl.createBuffer();
-  this.indexBuffer = gl.createBuffer();
-  this.indexCount = 0;
-  this.renderTarget = gl.createTexture();
-  this.framebuffer = gl.createFramebuffer();
-  this.depthStencilBuffer = null;
-  this.depthBuffer = null;
-  this.stencilBuffer = null;
-  if (this.ctxAttribs.depth && this.ctxAttribs.stencil) {
-    this.depthStencilBuffer = gl.createRenderbuffer();
-  } else if (this.ctxAttribs.depth) {
-    this.depthBuffer = gl.createRenderbuffer();
-  } else if (this.ctxAttribs.stencil) {
-    this.stencilBuffer = gl.createRenderbuffer();
-  }
-  this.patch();
-  this.onResize();
-}
-CardboardDistorter.prototype.destroy = function () {
-  var gl = this.gl;
-  this.unpatch();
-  gl.deleteProgram(this.program);
-  gl.deleteBuffer(this.vertexBuffer);
-  gl.deleteBuffer(this.indexBuffer);
-  gl.deleteTexture(this.renderTarget);
-  gl.deleteFramebuffer(this.framebuffer);
-  if (this.depthStencilBuffer) {
-    gl.deleteRenderbuffer(this.depthStencilBuffer);
-  }
-  if (this.depthBuffer) {
-    gl.deleteRenderbuffer(this.depthBuffer);
-  }
-  if (this.stencilBuffer) {
-    gl.deleteRenderbuffer(this.stencilBuffer);
-  }
-  if (this.cardboardUI) {
-    this.cardboardUI.destroy();
-  }
-};
-CardboardDistorter.prototype.onResize = function () {
-  var gl = this.gl;
-  var self = this;
-  var glState = [gl.RENDERBUFFER_BINDING, gl.TEXTURE_BINDING_2D, gl.TEXTURE0];
-  glPreserveState(gl, glState, function (gl) {
-    self.realBindFramebuffer.call(gl, gl.FRAMEBUFFER, null);
-    if (self.scissorTest) {
-      self.realDisable.call(gl, gl.SCISSOR_TEST);
-    }
-    self.realColorMask.call(gl, true, true, true, true);
-    self.realViewport.call(gl, 0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-    self.realClearColor.call(gl, 0, 0, 0, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    self.realBindFramebuffer.call(gl, gl.FRAMEBUFFER, self.framebuffer);
-    gl.bindTexture(gl.TEXTURE_2D, self.renderTarget);
-    gl.texImage2D(gl.TEXTURE_2D, 0, self.ctxAttribs.alpha ? gl.RGBA : gl.RGB, self.bufferWidth, self.bufferHeight, 0, self.ctxAttribs.alpha ? gl.RGBA : gl.RGB, gl.UNSIGNED_BYTE, null);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, self.renderTarget, 0);
-    if (self.ctxAttribs.depth && self.ctxAttribs.stencil) {
-      gl.bindRenderbuffer(gl.RENDERBUFFER, self.depthStencilBuffer);
-      gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, self.bufferWidth, self.bufferHeight);
-      gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, self.depthStencilBuffer);
-    } else if (self.ctxAttribs.depth) {
-      gl.bindRenderbuffer(gl.RENDERBUFFER, self.depthBuffer);
-      gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, self.bufferWidth, self.bufferHeight);
-      gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, self.depthBuffer);
-    } else if (self.ctxAttribs.stencil) {
-      gl.bindRenderbuffer(gl.RENDERBUFFER, self.stencilBuffer);
-      gl.renderbufferStorage(gl.RENDERBUFFER, gl.STENCIL_INDEX8, self.bufferWidth, self.bufferHeight);
-      gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.STENCIL_ATTACHMENT, gl.RENDERBUFFER, self.stencilBuffer);
-    }
-    if (!gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE) {
-      console.error('Framebuffer incomplete!');
-    }
-    self.realBindFramebuffer.call(gl, gl.FRAMEBUFFER, self.lastBoundFramebuffer);
-    if (self.scissorTest) {
-      self.realEnable.call(gl, gl.SCISSOR_TEST);
-    }
-    self.realColorMask.apply(gl, self.colorMask);
-    self.realViewport.apply(gl, self.viewport);
-    self.realClearColor.apply(gl, self.clearColor);
-  });
-  if (this.cardboardUI) {
-    this.cardboardUI.onResize();
-  }
-};
-CardboardDistorter.prototype.patch = function () {
-  if (this.isPatched) {
-    return;
-  }
-  var self = this;
-  var canvas = this.gl.canvas;
-  var gl = this.gl;
-  if (!isIOS()) {
-    canvas.width = getScreenWidth() * this.bufferScale;
-    canvas.height = getScreenHeight() * this.bufferScale;
-    Object.defineProperty(canvas, 'width', {
-      configurable: true,
-      enumerable: true,
-      get: function get() {
-        return self.bufferWidth;
-      },
-      set: function set(value) {
-        self.bufferWidth = value;
-        self.realCanvasWidth.set.call(canvas, value);
-        self.onResize();
-      }
-    });
-    Object.defineProperty(canvas, 'height', {
-      configurable: true,
-      enumerable: true,
-      get: function get() {
-        return self.bufferHeight;
-      },
-      set: function set(value) {
-        self.bufferHeight = value;
-        self.realCanvasHeight.set.call(canvas, value);
-        self.onResize();
-      }
-    });
-  }
-  this.lastBoundFramebuffer = gl.getParameter(gl.FRAMEBUFFER_BINDING);
-  if (this.lastBoundFramebuffer == null) {
-    this.lastBoundFramebuffer = this.framebuffer;
-    this.gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
-  }
-  this.gl.bindFramebuffer = function (target, framebuffer) {
-    self.lastBoundFramebuffer = framebuffer ? framebuffer : self.framebuffer;
-    self.realBindFramebuffer.call(gl, target, self.lastBoundFramebuffer);
-  };
-  this.cullFace = gl.getParameter(gl.CULL_FACE);
-  this.depthTest = gl.getParameter(gl.DEPTH_TEST);
-  this.blend = gl.getParameter(gl.BLEND);
-  this.scissorTest = gl.getParameter(gl.SCISSOR_TEST);
-  this.stencilTest = gl.getParameter(gl.STENCIL_TEST);
-  gl.enable = function (pname) {
-    switch (pname) {
-      case gl.CULL_FACE:
-        self.cullFace = true;break;
-      case gl.DEPTH_TEST:
-        self.depthTest = true;break;
-      case gl.BLEND:
-        self.blend = true;break;
-      case gl.SCISSOR_TEST:
-        self.scissorTest = true;break;
-      case gl.STENCIL_TEST:
-        self.stencilTest = true;break;
-    }
-    self.realEnable.call(gl, pname);
-  };
-  gl.disable = function (pname) {
-    switch (pname) {
-      case gl.CULL_FACE:
-        self.cullFace = false;break;
-      case gl.DEPTH_TEST:
-        self.depthTest = false;break;
-      case gl.BLEND:
-        self.blend = false;break;
-      case gl.SCISSOR_TEST:
-        self.scissorTest = false;break;
-      case gl.STENCIL_TEST:
-        self.stencilTest = false;break;
-    }
-    self.realDisable.call(gl, pname);
-  };
-  this.colorMask = gl.getParameter(gl.COLOR_WRITEMASK);
-  gl.colorMask = function (r, g, b, a) {
-    self.colorMask[0] = r;
-    self.colorMask[1] = g;
-    self.colorMask[2] = b;
-    self.colorMask[3] = a;
-    self.realColorMask.call(gl, r, g, b, a);
-  };
-  this.clearColor = gl.getParameter(gl.COLOR_CLEAR_VALUE);
-  gl.clearColor = function (r, g, b, a) {
-    self.clearColor[0] = r;
-    self.clearColor[1] = g;
-    self.clearColor[2] = b;
-    self.clearColor[3] = a;
-    self.realClearColor.call(gl, r, g, b, a);
-  };
-  this.viewport = gl.getParameter(gl.VIEWPORT);
-  gl.viewport = function (x, y, w, h) {
-    self.viewport[0] = x;
-    self.viewport[1] = y;
-    self.viewport[2] = w;
-    self.viewport[3] = h;
-    self.realViewport.call(gl, x, y, w, h);
-  };
-  this.isPatched = true;
-  safariCssSizeWorkaround(canvas);
-};
-CardboardDistorter.prototype.unpatch = function () {
-  if (!this.isPatched) {
-    return;
-  }
-  var gl = this.gl;
-  var canvas = this.gl.canvas;
-  if (!isIOS()) {
-    Object.defineProperty(canvas, 'width', this.realCanvasWidth);
-    Object.defineProperty(canvas, 'height', this.realCanvasHeight);
-  }
-  canvas.width = this.bufferWidth;
-  canvas.height = this.bufferHeight;
-  gl.bindFramebuffer = this.realBindFramebuffer;
-  gl.enable = this.realEnable;
-  gl.disable = this.realDisable;
-  gl.colorMask = this.realColorMask;
-  gl.clearColor = this.realClearColor;
-  gl.viewport = this.realViewport;
-  if (this.lastBoundFramebuffer == this.framebuffer) {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  }
-  this.isPatched = false;
-  setTimeout(function () {
-    safariCssSizeWorkaround(canvas);
-  }, 1);
-};
-CardboardDistorter.prototype.setTextureBounds = function (leftBounds, rightBounds) {
-  if (!leftBounds) {
-    leftBounds = [0, 0, 0.5, 1];
-  }
-  if (!rightBounds) {
-    rightBounds = [0.5, 0, 0.5, 1];
-  }
-  this.viewportOffsetScale[0] = leftBounds[0];
-  this.viewportOffsetScale[1] = leftBounds[1];
-  this.viewportOffsetScale[2] = leftBounds[2];
-  this.viewportOffsetScale[3] = leftBounds[3];
-  this.viewportOffsetScale[4] = rightBounds[0];
-  this.viewportOffsetScale[5] = rightBounds[1];
-  this.viewportOffsetScale[6] = rightBounds[2];
-  this.viewportOffsetScale[7] = rightBounds[3];
-};
-CardboardDistorter.prototype.submitFrame = function () {
-  var gl = this.gl;
-  var self = this;
-  var glState = [];
-  if (!this.dirtySubmitFrameBindings) {
-    glState.push(gl.CURRENT_PROGRAM, gl.ARRAY_BUFFER_BINDING, gl.ELEMENT_ARRAY_BUFFER_BINDING, gl.TEXTURE_BINDING_2D, gl.TEXTURE0);
-  }
-  glPreserveState(gl, glState, function (gl) {
-    self.realBindFramebuffer.call(gl, gl.FRAMEBUFFER, null);
-    var positionDivisor = 0;
-    var texCoordDivisor = 0;
-    if (self.instanceExt) {
-      positionDivisor = gl.getVertexAttrib(self.attribs.position, self.instanceExt.VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE);
-      texCoordDivisor = gl.getVertexAttrib(self.attribs.texCoord, self.instanceExt.VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE);
-    }
-    if (self.cullFace) {
-      self.realDisable.call(gl, gl.CULL_FACE);
-    }
-    if (self.depthTest) {
-      self.realDisable.call(gl, gl.DEPTH_TEST);
-    }
-    if (self.blend) {
-      self.realDisable.call(gl, gl.BLEND);
-    }
-    if (self.scissorTest) {
-      self.realDisable.call(gl, gl.SCISSOR_TEST);
-    }
-    if (self.stencilTest) {
-      self.realDisable.call(gl, gl.STENCIL_TEST);
-    }
-    self.realColorMask.call(gl, true, true, true, true);
-    self.realViewport.call(gl, 0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-    if (self.ctxAttribs.alpha || isIOS()) {
-      self.realClearColor.call(gl, 0, 0, 0, 1);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-    }
-    gl.useProgram(self.program);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, self.indexBuffer);
-    gl.bindBuffer(gl.ARRAY_BUFFER, self.vertexBuffer);
-    gl.enableVertexAttribArray(self.attribs.position);
-    gl.enableVertexAttribArray(self.attribs.texCoord);
-    gl.vertexAttribPointer(self.attribs.position, 2, gl.FLOAT, false, 20, 0);
-    gl.vertexAttribPointer(self.attribs.texCoord, 3, gl.FLOAT, false, 20, 8);
-    if (self.instanceExt) {
-      if (positionDivisor != 0) {
-        self.instanceExt.vertexAttribDivisorANGLE(self.attribs.position, 0);
-      }
-      if (texCoordDivisor != 0) {
-        self.instanceExt.vertexAttribDivisorANGLE(self.attribs.texCoord, 0);
-      }
-    }
-    gl.activeTexture(gl.TEXTURE0);
-    gl.uniform1i(self.uniforms.diffuse, 0);
-    gl.bindTexture(gl.TEXTURE_2D, self.renderTarget);
-    gl.uniform4fv(self.uniforms.viewportOffsetScale, self.viewportOffsetScale);
-    gl.drawElements(gl.TRIANGLES, self.indexCount, gl.UNSIGNED_SHORT, 0);
-    if (self.cardboardUI) {
-      self.cardboardUI.renderNoState();
-    }
-    self.realBindFramebuffer.call(self.gl, gl.FRAMEBUFFER, self.framebuffer);
-    if (!self.ctxAttribs.preserveDrawingBuffer) {
-      self.realClearColor.call(gl, 0, 0, 0, 0);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-    }
-    if (!self.dirtySubmitFrameBindings) {
-      self.realBindFramebuffer.call(gl, gl.FRAMEBUFFER, self.lastBoundFramebuffer);
-    }
-    if (self.cullFace) {
-      self.realEnable.call(gl, gl.CULL_FACE);
-    }
-    if (self.depthTest) {
-      self.realEnable.call(gl, gl.DEPTH_TEST);
-    }
-    if (self.blend) {
-      self.realEnable.call(gl, gl.BLEND);
-    }
-    if (self.scissorTest) {
-      self.realEnable.call(gl, gl.SCISSOR_TEST);
-    }
-    if (self.stencilTest) {
-      self.realEnable.call(gl, gl.STENCIL_TEST);
-    }
-    self.realColorMask.apply(gl, self.colorMask);
-    self.realViewport.apply(gl, self.viewport);
-    if (self.ctxAttribs.alpha || !self.ctxAttribs.preserveDrawingBuffer) {
-      self.realClearColor.apply(gl, self.clearColor);
-    }
-    if (self.instanceExt) {
-      if (positionDivisor != 0) {
-        self.instanceExt.vertexAttribDivisorANGLE(self.attribs.position, positionDivisor);
-      }
-      if (texCoordDivisor != 0) {
-        self.instanceExt.vertexAttribDivisorANGLE(self.attribs.texCoord, texCoordDivisor);
-      }
-    }
-  });
-  if (isIOS()) {
-    var canvas = gl.canvas;
-    if (canvas.width != self.bufferWidth || canvas.height != self.bufferHeight) {
-      self.bufferWidth = canvas.width;
-      self.bufferHeight = canvas.height;
-      self.onResize();
-    }
-  }
-};
-CardboardDistorter.prototype.updateDeviceInfo = function (deviceInfo) {
-  var gl = this.gl;
-  var self = this;
-  var glState = [gl.ARRAY_BUFFER_BINDING, gl.ELEMENT_ARRAY_BUFFER_BINDING];
-  glPreserveState(gl, glState, function (gl) {
-    var vertices = self.computeMeshVertices_(self.meshWidth, self.meshHeight, deviceInfo);
-    gl.bindBuffer(gl.ARRAY_BUFFER, self.vertexBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-    if (!self.indexCount) {
-      var indices = self.computeMeshIndices_(self.meshWidth, self.meshHeight);
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, self.indexBuffer);
-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
-      self.indexCount = indices.length;
-    }
-  });
-};
-CardboardDistorter.prototype.computeMeshVertices_ = function (width, height, deviceInfo) {
-  var vertices = new Float32Array(2 * width * height * 5);
-  var lensFrustum = deviceInfo.getLeftEyeVisibleTanAngles();
-  var noLensFrustum = deviceInfo.getLeftEyeNoLensTanAngles();
-  var viewport = deviceInfo.getLeftEyeVisibleScreenRect(noLensFrustum);
-  var vidx = 0;
-  for (var e = 0; e < 2; e++) {
-    for (var j = 0; j < height; j++) {
-      for (var i = 0; i < width; i++, vidx++) {
-        var u = i / (width - 1);
-        var v = j / (height - 1);
-        var s = u;
-        var t = v;
-        var x = lerp(lensFrustum[0], lensFrustum[2], u);
-        var y = lerp(lensFrustum[3], lensFrustum[1], v);
-        var d = Math.sqrt(x * x + y * y);
-        var r = deviceInfo.distortion.distortInverse(d);
-        var p = x * r / d;
-        var q = y * r / d;
-        u = (p - noLensFrustum[0]) / (noLensFrustum[2] - noLensFrustum[0]);
-        v = (q - noLensFrustum[3]) / (noLensFrustum[1] - noLensFrustum[3]);
-        u = (viewport.x + u * viewport.width - 0.5) * 2.0;
-        v = (viewport.y + v * viewport.height - 0.5) * 2.0;
-        vertices[vidx * 5 + 0] = u;
-        vertices[vidx * 5 + 1] = v;
-        vertices[vidx * 5 + 2] = s;
-        vertices[vidx * 5 + 3] = t;
-        vertices[vidx * 5 + 4] = e;
-      }
-    }
-    var w = lensFrustum[2] - lensFrustum[0];
-    lensFrustum[0] = -(w + lensFrustum[0]);
-    lensFrustum[2] = w - lensFrustum[2];
-    w = noLensFrustum[2] - noLensFrustum[0];
-    noLensFrustum[0] = -(w + noLensFrustum[0]);
-    noLensFrustum[2] = w - noLensFrustum[2];
-    viewport.x = 1 - (viewport.x + viewport.width);
-  }
-  return vertices;
-};
-CardboardDistorter.prototype.computeMeshIndices_ = function (width, height) {
-  var indices = new Uint16Array(2 * (width - 1) * (height - 1) * 6);
-  var halfwidth = width / 2;
-  var halfheight = height / 2;
-  var vidx = 0;
-  var iidx = 0;
-  for (var e = 0; e < 2; e++) {
-    for (var j = 0; j < height; j++) {
-      for (var i = 0; i < width; i++, vidx++) {
-        if (i == 0 || j == 0) continue;
-        if (i <= halfwidth == j <= halfheight) {
-          indices[iidx++] = vidx;
-          indices[iidx++] = vidx - width - 1;
-          indices[iidx++] = vidx - width;
-          indices[iidx++] = vidx - width - 1;
-          indices[iidx++] = vidx;
-          indices[iidx++] = vidx - 1;
-        } else {
-          indices[iidx++] = vidx - 1;
-          indices[iidx++] = vidx - width;
-          indices[iidx++] = vidx;
-          indices[iidx++] = vidx - width;
-          indices[iidx++] = vidx - 1;
-          indices[iidx++] = vidx - width - 1;
-        }
-      }
-    }
-  }
-  return indices;
-};
-CardboardDistorter.prototype.getOwnPropertyDescriptor_ = function (proto, attrName) {
-  var descriptor = Object.getOwnPropertyDescriptor(proto, attrName);
-  if (descriptor.get === undefined || descriptor.set === undefined) {
-    descriptor.configurable = true;
-    descriptor.enumerable = true;
-    descriptor.get = function () {
-      return this.getAttribute(attrName);
-    };
-    descriptor.set = function (val) {
-      this.setAttribute(attrName, val);
-    };
-  }
-  return descriptor;
-};
-var uiVS = ['attribute vec2 position;', 'uniform mat4 projectionMat;', 'void main() {', '  gl_Position = projectionMat * vec4( position, -1.0, 1.0 );', '}'].join('\n');
-var uiFS = ['precision mediump float;', 'uniform vec4 color;', 'void main() {', '  gl_FragColor = color;', '}'].join('\n');
-var DEG2RAD = Math.PI / 180.0;
-var kAnglePerGearSection = 60;
-var kOuterRimEndAngle = 12;
-var kInnerRimBeginAngle = 20;
-var kOuterRadius = 1;
-var kMiddleRadius = 0.75;
-var kInnerRadius = 0.3125;
-var kCenterLineThicknessDp = 4;
-var kButtonWidthDp = 28;
-var kTouchSlopFactor = 1.5;
-function CardboardUI(gl) {
-  this.gl = gl;
-  this.attribs = {
-    position: 0
-  };
-  this.program = linkProgram(gl, uiVS, uiFS, this.attribs);
-  this.uniforms = getProgramUniforms(gl, this.program);
-  this.vertexBuffer = gl.createBuffer();
-  this.gearOffset = 0;
-  this.gearVertexCount = 0;
-  this.arrowOffset = 0;
-  this.arrowVertexCount = 0;
-  this.projMat = new Float32Array(16);
-  this.listener = null;
-  this.onResize();
-}
-CardboardUI.prototype.destroy = function () {
-  var gl = this.gl;
-  if (this.listener) {
-    gl.canvas.removeEventListener('click', this.listener, false);
-  }
-  gl.deleteProgram(this.program);
-  gl.deleteBuffer(this.vertexBuffer);
-};
-CardboardUI.prototype.listen = function (optionsCallback, backCallback) {
-  var canvas = this.gl.canvas;
-  this.listener = function (event) {
-    var midline = canvas.clientWidth / 2;
-    var buttonSize = kButtonWidthDp * kTouchSlopFactor;
-    if (event.clientX > midline - buttonSize && event.clientX < midline + buttonSize && event.clientY > canvas.clientHeight - buttonSize) {
-      optionsCallback(event);
-    }
-    else if (event.clientX < buttonSize && event.clientY < buttonSize) {
-        backCallback(event);
-      }
-  };
-  canvas.addEventListener('click', this.listener, false);
-};
-CardboardUI.prototype.onResize = function () {
-  var gl = this.gl;
-  var self = this;
-  var glState = [gl.ARRAY_BUFFER_BINDING];
-  glPreserveState(gl, glState, function (gl) {
-    var vertices = [];
-    var midline = gl.drawingBufferWidth / 2;
-    var physicalPixels = Math.max(screen.width, screen.height) * window.devicePixelRatio;
-    var scalingRatio = gl.drawingBufferWidth / physicalPixels;
-    var dps = scalingRatio * window.devicePixelRatio;
-    var lineWidth = kCenterLineThicknessDp * dps / 2;
-    var buttonSize = kButtonWidthDp * kTouchSlopFactor * dps;
-    var buttonScale = kButtonWidthDp * dps / 2;
-    var buttonBorder = (kButtonWidthDp * kTouchSlopFactor - kButtonWidthDp) * dps;
-    vertices.push(midline - lineWidth, buttonSize);
-    vertices.push(midline - lineWidth, gl.drawingBufferHeight);
-    vertices.push(midline + lineWidth, buttonSize);
-    vertices.push(midline + lineWidth, gl.drawingBufferHeight);
-    self.gearOffset = vertices.length / 2;
-    function addGearSegment(theta, r) {
-      var angle = (90 - theta) * DEG2RAD;
-      var x = Math.cos(angle);
-      var y = Math.sin(angle);
-      vertices.push(kInnerRadius * x * buttonScale + midline, kInnerRadius * y * buttonScale + buttonScale);
-      vertices.push(r * x * buttonScale + midline, r * y * buttonScale + buttonScale);
-    }
-    for (var i = 0; i <= 6; i++) {
-      var segmentTheta = i * kAnglePerGearSection;
-      addGearSegment(segmentTheta, kOuterRadius);
-      addGearSegment(segmentTheta + kOuterRimEndAngle, kOuterRadius);
-      addGearSegment(segmentTheta + kInnerRimBeginAngle, kMiddleRadius);
-      addGearSegment(segmentTheta + (kAnglePerGearSection - kInnerRimBeginAngle), kMiddleRadius);
-      addGearSegment(segmentTheta + (kAnglePerGearSection - kOuterRimEndAngle), kOuterRadius);
-    }
-    self.gearVertexCount = vertices.length / 2 - self.gearOffset;
-    self.arrowOffset = vertices.length / 2;
-    function addArrowVertex(x, y) {
-      vertices.push(buttonBorder + x, gl.drawingBufferHeight - buttonBorder - y);
-    }
-    var angledLineWidth = lineWidth / Math.sin(45 * DEG2RAD);
-    addArrowVertex(0, buttonScale);
-    addArrowVertex(buttonScale, 0);
-    addArrowVertex(buttonScale + angledLineWidth, angledLineWidth);
-    addArrowVertex(angledLineWidth, buttonScale + angledLineWidth);
-    addArrowVertex(angledLineWidth, buttonScale - angledLineWidth);
-    addArrowVertex(0, buttonScale);
-    addArrowVertex(buttonScale, buttonScale * 2);
-    addArrowVertex(buttonScale + angledLineWidth, buttonScale * 2 - angledLineWidth);
-    addArrowVertex(angledLineWidth, buttonScale - angledLineWidth);
-    addArrowVertex(0, buttonScale);
-    addArrowVertex(angledLineWidth, buttonScale - lineWidth);
-    addArrowVertex(kButtonWidthDp * dps, buttonScale - lineWidth);
-    addArrowVertex(angledLineWidth, buttonScale + lineWidth);
-    addArrowVertex(kButtonWidthDp * dps, buttonScale + lineWidth);
-    self.arrowVertexCount = vertices.length / 2 - self.arrowOffset;
-    gl.bindBuffer(gl.ARRAY_BUFFER, self.vertexBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-  });
-};
-CardboardUI.prototype.render = function () {
-  var gl = this.gl;
-  var self = this;
-  var glState = [gl.CULL_FACE, gl.DEPTH_TEST, gl.BLEND, gl.SCISSOR_TEST, gl.STENCIL_TEST, gl.COLOR_WRITEMASK, gl.VIEWPORT, gl.CURRENT_PROGRAM, gl.ARRAY_BUFFER_BINDING];
-  glPreserveState(gl, glState, function (gl) {
-    gl.disable(gl.CULL_FACE);
-    gl.disable(gl.DEPTH_TEST);
-    gl.disable(gl.BLEND);
-    gl.disable(gl.SCISSOR_TEST);
-    gl.disable(gl.STENCIL_TEST);
-    gl.colorMask(true, true, true, true);
-    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-    self.renderNoState();
-  });
-};
-CardboardUI.prototype.renderNoState = function () {
-  var gl = this.gl;
-  gl.useProgram(this.program);
-  gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-  gl.enableVertexAttribArray(this.attribs.position);
-  gl.vertexAttribPointer(this.attribs.position, 2, gl.FLOAT, false, 8, 0);
-  gl.uniform4f(this.uniforms.color, 1.0, 1.0, 1.0, 1.0);
-  orthoMatrix(this.projMat, 0, gl.drawingBufferWidth, 0, gl.drawingBufferHeight, 0.1, 1024.0);
-  gl.uniformMatrix4fv(this.uniforms.projectionMat, false, this.projMat);
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-  gl.drawArrays(gl.TRIANGLE_STRIP, this.gearOffset, this.gearVertexCount);
-  gl.drawArrays(gl.TRIANGLE_STRIP, this.arrowOffset, this.arrowVertexCount);
-};
-function Distortion(coefficients) {
-  this.coefficients = coefficients;
-}
-Distortion.prototype.distortInverse = function (radius) {
-  var r0 = 0;
-  var r1 = 1;
-  var dr0 = radius - this.distort(r0);
-  while (Math.abs(r1 - r0) > 0.0001             ) {
-    var dr1 = radius - this.distort(r1);
-    var r2 = r1 - dr1 * ((r1 - r0) / (dr1 - dr0));
-    r0 = r1;
-    r1 = r2;
-    dr0 = dr1;
-  }
-  return r1;
-};
-Distortion.prototype.distort = function (radius) {
-  var r2 = radius * radius;
-  var ret = 0;
-  for (var i = 0; i < this.coefficients.length; i++) {
-    ret = r2 * (ret + this.coefficients[i]);
-  }
-  return (ret + 1) * radius;
-};
-var degToRad = Math.PI / 180;
-var radToDeg = 180 / Math.PI;
-var Vector3 = function Vector3(x, y, z) {
-  this.x = x || 0;
-  this.y = y || 0;
-  this.z = z || 0;
-};
-Vector3.prototype = {
-  constructor: Vector3,
-  set: function set(x, y, z) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-    return this;
-  },
-  copy: function copy(v) {
-    this.x = v.x;
-    this.y = v.y;
-    this.z = v.z;
-    return this;
-  },
-  length: function length() {
-    return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-  },
-  normalize: function normalize() {
-    var scalar = this.length();
-    if (scalar !== 0) {
-      var invScalar = 1 / scalar;
-      this.multiplyScalar(invScalar);
-    } else {
-      this.x = 0;
-      this.y = 0;
-      this.z = 0;
-    }
-    return this;
-  },
-  multiplyScalar: function multiplyScalar(scalar) {
-    this.x *= scalar;
-    this.y *= scalar;
-    this.z *= scalar;
-  },
-  applyQuaternion: function applyQuaternion(q) {
-    var x = this.x;
-    var y = this.y;
-    var z = this.z;
-    var qx = q.x;
-    var qy = q.y;
-    var qz = q.z;
-    var qw = q.w;
-    var ix = qw * x + qy * z - qz * y;
-    var iy = qw * y + qz * x - qx * z;
-    var iz = qw * z + qx * y - qy * x;
-    var iw = -qx * x - qy * y - qz * z;
-    this.x = ix * qw + iw * -qx + iy * -qz - iz * -qy;
-    this.y = iy * qw + iw * -qy + iz * -qx - ix * -qz;
-    this.z = iz * qw + iw * -qz + ix * -qy - iy * -qx;
-    return this;
-  },
-  dot: function dot(v) {
-    return this.x * v.x + this.y * v.y + this.z * v.z;
-  },
-  crossVectors: function crossVectors(a, b) {
-    var ax = a.x,
-        ay = a.y,
-        az = a.z;
-    var bx = b.x,
-        by = b.y,
-        bz = b.z;
-    this.x = ay * bz - az * by;
-    this.y = az * bx - ax * bz;
-    this.z = ax * by - ay * bx;
-    return this;
-  }
-};
-var Quaternion = function Quaternion(x, y, z, w) {
-  this.x = x || 0;
-  this.y = y || 0;
-  this.z = z || 0;
-  this.w = w !== undefined ? w : 1;
-};
-Quaternion.prototype = {
-  constructor: Quaternion,
-  set: function set(x, y, z, w) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-    this.w = w;
-    return this;
-  },
-  copy: function copy(quaternion) {
-    this.x = quaternion.x;
-    this.y = quaternion.y;
-    this.z = quaternion.z;
-    this.w = quaternion.w;
-    return this;
-  },
-  setFromEulerXYZ: function setFromEulerXYZ(x, y, z) {
-    var c1 = Math.cos(x / 2);
-    var c2 = Math.cos(y / 2);
-    var c3 = Math.cos(z / 2);
-    var s1 = Math.sin(x / 2);
-    var s2 = Math.sin(y / 2);
-    var s3 = Math.sin(z / 2);
-    this.x = s1 * c2 * c3 + c1 * s2 * s3;
-    this.y = c1 * s2 * c3 - s1 * c2 * s3;
-    this.z = c1 * c2 * s3 + s1 * s2 * c3;
-    this.w = c1 * c2 * c3 - s1 * s2 * s3;
-    return this;
-  },
-  setFromEulerYXZ: function setFromEulerYXZ(x, y, z) {
-    var c1 = Math.cos(x / 2);
-    var c2 = Math.cos(y / 2);
-    var c3 = Math.cos(z / 2);
-    var s1 = Math.sin(x / 2);
-    var s2 = Math.sin(y / 2);
-    var s3 = Math.sin(z / 2);
-    this.x = s1 * c2 * c3 + c1 * s2 * s3;
-    this.y = c1 * s2 * c3 - s1 * c2 * s3;
-    this.z = c1 * c2 * s3 - s1 * s2 * c3;
-    this.w = c1 * c2 * c3 + s1 * s2 * s3;
-    return this;
-  },
-  setFromAxisAngle: function setFromAxisAngle(axis, angle) {
-    var halfAngle = angle / 2,
-        s = Math.sin(halfAngle);
-    this.x = axis.x * s;
-    this.y = axis.y * s;
-    this.z = axis.z * s;
-    this.w = Math.cos(halfAngle);
-    return this;
-  },
-  multiply: function multiply(q) {
-    return this.multiplyQuaternions(this, q);
-  },
-  multiplyQuaternions: function multiplyQuaternions(a, b) {
-    var qax = a.x,
-        qay = a.y,
-        qaz = a.z,
-        qaw = a.w;
-    var qbx = b.x,
-        qby = b.y,
-        qbz = b.z,
-        qbw = b.w;
-    this.x = qax * qbw + qaw * qbx + qay * qbz - qaz * qby;
-    this.y = qay * qbw + qaw * qby + qaz * qbx - qax * qbz;
-    this.z = qaz * qbw + qaw * qbz + qax * qby - qay * qbx;
-    this.w = qaw * qbw - qax * qbx - qay * qby - qaz * qbz;
-    return this;
-  },
-  inverse: function inverse() {
-    this.x *= -1;
-    this.y *= -1;
-    this.z *= -1;
-    this.normalize();
-    return this;
-  },
-  normalize: function normalize() {
-    var l = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
-    if (l === 0) {
-      this.x = 0;
-      this.y = 0;
-      this.z = 0;
-      this.w = 1;
-    } else {
-      l = 1 / l;
-      this.x = this.x * l;
-      this.y = this.y * l;
-      this.z = this.z * l;
-      this.w = this.w * l;
-    }
-    return this;
-  },
-  slerp: function slerp(qb, t) {
-    if (t === 0) return this;
-    if (t === 1) return this.copy(qb);
-    var x = this.x,
-        y = this.y,
-        z = this.z,
-        w = this.w;
-    var cosHalfTheta = w * qb.w + x * qb.x + y * qb.y + z * qb.z;
-    if (cosHalfTheta < 0) {
-      this.w = -qb.w;
-      this.x = -qb.x;
-      this.y = -qb.y;
-      this.z = -qb.z;
-      cosHalfTheta = -cosHalfTheta;
-    } else {
-      this.copy(qb);
-    }
-    if (cosHalfTheta >= 1.0) {
-      this.w = w;
-      this.x = x;
-      this.y = y;
-      this.z = z;
-      return this;
-    }
-    var halfTheta = Math.acos(cosHalfTheta);
-    var sinHalfTheta = Math.sqrt(1.0 - cosHalfTheta * cosHalfTheta);
-    if (Math.abs(sinHalfTheta) < 0.001) {
-      this.w = 0.5 * (w + this.w);
-      this.x = 0.5 * (x + this.x);
-      this.y = 0.5 * (y + this.y);
-      this.z = 0.5 * (z + this.z);
-      return this;
-    }
-    var ratioA = Math.sin((1 - t) * halfTheta) / sinHalfTheta,
-        ratioB = Math.sin(t * halfTheta) / sinHalfTheta;
-    this.w = w * ratioA + this.w * ratioB;
-    this.x = x * ratioA + this.x * ratioB;
-    this.y = y * ratioA + this.y * ratioB;
-    this.z = z * ratioA + this.z * ratioB;
-    return this;
-  },
-  setFromUnitVectors: function () {
-    var v1, r;
-    var EPS = 0.000001;
-    return function (vFrom, vTo) {
-      if (v1 === undefined) v1 = new Vector3();
-      r = vFrom.dot(vTo) + 1;
-      if (r < EPS) {
-        r = 0;
-        if (Math.abs(vFrom.x) > Math.abs(vFrom.z)) {
-          v1.set(-vFrom.y, vFrom.x, 0);
-        } else {
-          v1.set(0, -vFrom.z, vFrom.y);
-        }
-      } else {
-        v1.crossVectors(vFrom, vTo);
-      }
-      this.x = v1.x;
-      this.y = v1.y;
-      this.z = v1.z;
-      this.w = r;
-      this.normalize();
-      return this;
-    };
-  }()
-};
-function Device(params) {
-  this.width = params.width || getScreenWidth();
-  this.height = params.height || getScreenHeight();
-  this.widthMeters = params.widthMeters;
-  this.heightMeters = params.heightMeters;
-  this.bevelMeters = params.bevelMeters;
-}
-var DEFAULT_ANDROID = new Device({
-  widthMeters: 0.110,
-  heightMeters: 0.062,
-  bevelMeters: 0.004
-});
-var DEFAULT_IOS = new Device({
-  widthMeters: 0.1038,
-  heightMeters: 0.0584,
-  bevelMeters: 0.004
-});
-var Viewers = {
-  CardboardV1: new CardboardViewer({
-    id: 'CardboardV1',
-    label: 'Cardboard I/O 2014',
-    fov: 40,
-    interLensDistance: 0.060,
-    baselineLensDistance: 0.035,
-    screenLensDistance: 0.042,
-    distortionCoefficients: [0.441, 0.156],
-    inverseCoefficients: [-0.4410035, 0.42756155, -0.4804439, 0.5460139, -0.58821183, 0.5733938, -0.48303202, 0.33299083, -0.17573841, 0.0651772, -0.01488963, 0.001559834]
-  }),
-  CardboardV2: new CardboardViewer({
-    id: 'CardboardV2',
-    label: 'Cardboard I/O 2015',
-    fov: 60,
-    interLensDistance: 0.064,
-    baselineLensDistance: 0.035,
-    screenLensDistance: 0.039,
-    distortionCoefficients: [0.34, 0.55],
-    inverseCoefficients: [-0.33836704, -0.18162185, 0.862655, -1.2462051, 1.0560602, -0.58208317, 0.21609078, -0.05444823, 0.009177956, -9.904169E-4, 6.183535E-5, -1.6981803E-6]
-  })
-};
-function DeviceInfo(deviceParams, additionalViewers) {
-  this.viewer = Viewers.CardboardV2;
-  this.updateDeviceParams(deviceParams);
-  this.distortion = new Distortion(this.viewer.distortionCoefficients);
-  for (var i = 0; i < additionalViewers.length; i++) {
-    var viewer = additionalViewers[i];
-    Viewers[viewer.id] = new CardboardViewer(viewer);
-  }
-}
-DeviceInfo.prototype.updateDeviceParams = function (deviceParams) {
-  this.device = this.determineDevice_(deviceParams) || this.device;
-};
-DeviceInfo.prototype.getDevice = function () {
-  return this.device;
-};
-DeviceInfo.prototype.setViewer = function (viewer) {
-  this.viewer = viewer;
-  this.distortion = new Distortion(this.viewer.distortionCoefficients);
-};
-DeviceInfo.prototype.determineDevice_ = function (deviceParams) {
-  if (!deviceParams) {
-    if (isIOS()) {
-      console.warn('Using fallback iOS device measurements.');
-      return DEFAULT_IOS;
-    } else {
-      console.warn('Using fallback Android device measurements.');
-      return DEFAULT_ANDROID;
-    }
-  }
-  var METERS_PER_INCH = 0.0254;
-  var metersPerPixelX = METERS_PER_INCH / deviceParams.xdpi;
-  var metersPerPixelY = METERS_PER_INCH / deviceParams.ydpi;
-  var width = getScreenWidth();
-  var height = getScreenHeight();
-  return new Device({
-    widthMeters: metersPerPixelX * width,
-    heightMeters: metersPerPixelY * height,
-    bevelMeters: deviceParams.bevelMm * 0.001
-  });
-};
-DeviceInfo.prototype.getDistortedFieldOfViewLeftEye = function () {
-  var viewer = this.viewer;
-  var device = this.device;
-  var distortion = this.distortion;
-  var eyeToScreenDistance = viewer.screenLensDistance;
-  var outerDist = (device.widthMeters - viewer.interLensDistance) / 2;
-  var innerDist = viewer.interLensDistance / 2;
-  var bottomDist = viewer.baselineLensDistance - device.bevelMeters;
-  var topDist = device.heightMeters - bottomDist;
-  var outerAngle = radToDeg * Math.atan(distortion.distort(outerDist / eyeToScreenDistance));
-  var innerAngle = radToDeg * Math.atan(distortion.distort(innerDist / eyeToScreenDistance));
-  var bottomAngle = radToDeg * Math.atan(distortion.distort(bottomDist / eyeToScreenDistance));
-  var topAngle = radToDeg * Math.atan(distortion.distort(topDist / eyeToScreenDistance));
-  return {
-    leftDegrees: Math.min(outerAngle, viewer.fov),
-    rightDegrees: Math.min(innerAngle, viewer.fov),
-    downDegrees: Math.min(bottomAngle, viewer.fov),
-    upDegrees: Math.min(topAngle, viewer.fov)
-  };
-};
-DeviceInfo.prototype.getLeftEyeVisibleTanAngles = function () {
-  var viewer = this.viewer;
-  var device = this.device;
-  var distortion = this.distortion;
-  var fovLeft = Math.tan(-degToRad * viewer.fov);
-  var fovTop = Math.tan(degToRad * viewer.fov);
-  var fovRight = Math.tan(degToRad * viewer.fov);
-  var fovBottom = Math.tan(-degToRad * viewer.fov);
-  var halfWidth = device.widthMeters / 4;
-  var halfHeight = device.heightMeters / 2;
-  var verticalLensOffset = viewer.baselineLensDistance - device.bevelMeters - halfHeight;
-  var centerX = viewer.interLensDistance / 2 - halfWidth;
-  var centerY = -verticalLensOffset;
-  var centerZ = viewer.screenLensDistance;
-  var screenLeft = distortion.distort((centerX - halfWidth) / centerZ);
-  var screenTop = distortion.distort((centerY + halfHeight) / centerZ);
-  var screenRight = distortion.distort((centerX + halfWidth) / centerZ);
-  var screenBottom = distortion.distort((centerY - halfHeight) / centerZ);
-  var result = new Float32Array(4);
-  result[0] = Math.max(fovLeft, screenLeft);
-  result[1] = Math.min(fovTop, screenTop);
-  result[2] = Math.min(fovRight, screenRight);
-  result[3] = Math.max(fovBottom, screenBottom);
-  return result;
-};
-DeviceInfo.prototype.getLeftEyeNoLensTanAngles = function () {
-  var viewer = this.viewer;
-  var device = this.device;
-  var distortion = this.distortion;
-  var result = new Float32Array(4);
-  var fovLeft = distortion.distortInverse(Math.tan(-degToRad * viewer.fov));
-  var fovTop = distortion.distortInverse(Math.tan(degToRad * viewer.fov));
-  var fovRight = distortion.distortInverse(Math.tan(degToRad * viewer.fov));
-  var fovBottom = distortion.distortInverse(Math.tan(-degToRad * viewer.fov));
-  var halfWidth = device.widthMeters / 4;
-  var halfHeight = device.heightMeters / 2;
-  var verticalLensOffset = viewer.baselineLensDistance - device.bevelMeters - halfHeight;
-  var centerX = viewer.interLensDistance / 2 - halfWidth;
-  var centerY = -verticalLensOffset;
-  var centerZ = viewer.screenLensDistance;
-  var screenLeft = (centerX - halfWidth) / centerZ;
-  var screenTop = (centerY + halfHeight) / centerZ;
-  var screenRight = (centerX + halfWidth) / centerZ;
-  var screenBottom = (centerY - halfHeight) / centerZ;
-  result[0] = Math.max(fovLeft, screenLeft);
-  result[1] = Math.min(fovTop, screenTop);
-  result[2] = Math.min(fovRight, screenRight);
-  result[3] = Math.max(fovBottom, screenBottom);
-  return result;
-};
-DeviceInfo.prototype.getLeftEyeVisibleScreenRect = function (undistortedFrustum) {
-  var viewer = this.viewer;
-  var device = this.device;
-  var dist = viewer.screenLensDistance;
-  var eyeX = (device.widthMeters - viewer.interLensDistance) / 2;
-  var eyeY = viewer.baselineLensDistance - device.bevelMeters;
-  var left = (undistortedFrustum[0] * dist + eyeX) / device.widthMeters;
-  var top = (undistortedFrustum[1] * dist + eyeY) / device.heightMeters;
-  var right = (undistortedFrustum[2] * dist + eyeX) / device.widthMeters;
-  var bottom = (undistortedFrustum[3] * dist + eyeY) / device.heightMeters;
-  return {
-    x: left,
-    y: bottom,
-    width: right - left,
-    height: top - bottom
-  };
-};
-DeviceInfo.prototype.getFieldOfViewLeftEye = function (opt_isUndistorted) {
-  return opt_isUndistorted ? this.getUndistortedFieldOfViewLeftEye() : this.getDistortedFieldOfViewLeftEye();
-};
-DeviceInfo.prototype.getFieldOfViewRightEye = function (opt_isUndistorted) {
-  var fov = this.getFieldOfViewLeftEye(opt_isUndistorted);
-  return {
-    leftDegrees: fov.rightDegrees,
-    rightDegrees: fov.leftDegrees,
-    upDegrees: fov.upDegrees,
-    downDegrees: fov.downDegrees
-  };
-};
-DeviceInfo.prototype.getUndistortedFieldOfViewLeftEye = function () {
-  var p = this.getUndistortedParams_();
-  return {
-    leftDegrees: radToDeg * Math.atan(p.outerDist),
-    rightDegrees: radToDeg * Math.atan(p.innerDist),
-    downDegrees: radToDeg * Math.atan(p.bottomDist),
-    upDegrees: radToDeg * Math.atan(p.topDist)
-  };
-};
-DeviceInfo.prototype.getUndistortedViewportLeftEye = function () {
-  var p = this.getUndistortedParams_();
-  var viewer = this.viewer;
-  var device = this.device;
-  var eyeToScreenDistance = viewer.screenLensDistance;
-  var screenWidth = device.widthMeters / eyeToScreenDistance;
-  var screenHeight = device.heightMeters / eyeToScreenDistance;
-  var xPxPerTanAngle = device.width / screenWidth;
-  var yPxPerTanAngle = device.height / screenHeight;
-  var x = Math.round((p.eyePosX - p.outerDist) * xPxPerTanAngle);
-  var y = Math.round((p.eyePosY - p.bottomDist) * yPxPerTanAngle);
-  return {
-    x: x,
-    y: y,
-    width: Math.round((p.eyePosX + p.innerDist) * xPxPerTanAngle) - x,
-    height: Math.round((p.eyePosY + p.topDist) * yPxPerTanAngle) - y
-  };
-};
-DeviceInfo.prototype.getUndistortedParams_ = function () {
-  var viewer = this.viewer;
-  var device = this.device;
-  var distortion = this.distortion;
-  var eyeToScreenDistance = viewer.screenLensDistance;
-  var halfLensDistance = viewer.interLensDistance / 2 / eyeToScreenDistance;
-  var screenWidth = device.widthMeters / eyeToScreenDistance;
-  var screenHeight = device.heightMeters / eyeToScreenDistance;
-  var eyePosX = screenWidth / 2 - halfLensDistance;
-  var eyePosY = (viewer.baselineLensDistance - device.bevelMeters) / eyeToScreenDistance;
-  var maxFov = viewer.fov;
-  var viewerMax = distortion.distortInverse(Math.tan(degToRad * maxFov));
-  var outerDist = Math.min(eyePosX, viewerMax);
-  var innerDist = Math.min(halfLensDistance, viewerMax);
-  var bottomDist = Math.min(eyePosY, viewerMax);
-  var topDist = Math.min(screenHeight - eyePosY, viewerMax);
-  return {
-    outerDist: outerDist,
-    innerDist: innerDist,
-    topDist: topDist,
-    bottomDist: bottomDist,
-    eyePosX: eyePosX,
-    eyePosY: eyePosY
-  };
-};
-function CardboardViewer(params) {
-  this.id = params.id;
-  this.label = params.label;
-  this.fov = params.fov;
-  this.interLensDistance = params.interLensDistance;
-  this.baselineLensDistance = params.baselineLensDistance;
-  this.screenLensDistance = params.screenLensDistance;
-  this.distortionCoefficients = params.distortionCoefficients;
-  this.inverseCoefficients = params.inverseCoefficients;
-}
-DeviceInfo.Viewers = Viewers;
-var format = 1;
-var last_updated = "2019-11-09T17:36:14Z";
-var devices = [{"type":"android","rules":[{"mdmh":"asus/*/Nexus 7/*"},{"ua":"Nexus 7"}],"dpi":[320.8,323],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"asus/*/ASUS_X00PD/*"},{"ua":"ASUS_X00PD"}],"dpi":245,"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"asus/*/ASUS_X008D/*"},{"ua":"ASUS_X008D"}],"dpi":282,"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"asus/*/ASUS_Z00AD/*"},{"ua":"ASUS_Z00AD"}],"dpi":[403,404.6],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"Google/*/Pixel 2 XL/*"},{"ua":"Pixel 2 XL"}],"dpi":537.9,"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"Google/*/Pixel 3 XL/*"},{"ua":"Pixel 3 XL"}],"dpi":[558.5,553.8],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"Google/*/Pixel XL/*"},{"ua":"Pixel XL"}],"dpi":[537.9,533],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"Google/*/Pixel 3/*"},{"ua":"Pixel 3"}],"dpi":442.4,"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"Google/*/Pixel 2/*"},{"ua":"Pixel 2"}],"dpi":441,"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"Google/*/Pixel/*"},{"ua":"Pixel"}],"dpi":[432.6,436.7],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"HTC/*/HTC6435LVW/*"},{"ua":"HTC6435LVW"}],"dpi":[449.7,443.3],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"HTC/*/HTC One XL/*"},{"ua":"HTC One XL"}],"dpi":[315.3,314.6],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"htc/*/Nexus 9/*"},{"ua":"Nexus 9"}],"dpi":289,"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"HTC/*/HTC One M9/*"},{"ua":"HTC One M9"}],"dpi":[442.5,443.3],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"HTC/*/HTC One_M8/*"},{"ua":"HTC One_M8"}],"dpi":[449.7,447.4],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"HTC/*/HTC One/*"},{"ua":"HTC One"}],"dpi":472.8,"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"Huawei/*/Nexus 6P/*"},{"ua":"Nexus 6P"}],"dpi":[515.1,518],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"Huawei/*/BLN-L24/*"},{"ua":"HONORBLN-L24"}],"dpi":480,"bw":4,"ac":500},{"type":"android","rules":[{"mdmh":"Huawei/*/BKL-L09/*"},{"ua":"BKL-L09"}],"dpi":403,"bw":3.47,"ac":500},{"type":"android","rules":[{"mdmh":"LENOVO/*/Lenovo PB2-690Y/*"},{"ua":"Lenovo PB2-690Y"}],"dpi":[457.2,454.713],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"LGE/*/Nexus 5X/*"},{"ua":"Nexus 5X"}],"dpi":[422,419.9],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"LGE/*/LGMS345/*"},{"ua":"LGMS345"}],"dpi":[221.7,219.1],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"LGE/*/LG-D800/*"},{"ua":"LG-D800"}],"dpi":[422,424.1],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"LGE/*/LG-D850/*"},{"ua":"LG-D850"}],"dpi":[537.9,541.9],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"LGE/*/VS985 4G/*"},{"ua":"VS985 4G"}],"dpi":[537.9,535.6],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"LGE/*/Nexus 5/*"},{"ua":"Nexus 5 B"}],"dpi":[442.4,444.8],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"LGE/*/Nexus 4/*"},{"ua":"Nexus 4"}],"dpi":[319.8,318.4],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"LGE/*/LG-P769/*"},{"ua":"LG-P769"}],"dpi":[240.6,247.5],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"LGE/*/LGMS323/*"},{"ua":"LGMS323"}],"dpi":[206.6,204.6],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"LGE/*/LGLS996/*"},{"ua":"LGLS996"}],"dpi":[403.4,401.5],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"Micromax/*/4560MMX/*"},{"ua":"4560MMX"}],"dpi":[240,219.4],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"Micromax/*/A250/*"},{"ua":"Micromax A250"}],"dpi":[480,446.4],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"Micromax/*/Micromax AQ4501/*"},{"ua":"Micromax AQ4501"}],"dpi":240,"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"motorola/*/G5/*"},{"ua":"Moto G (5) Plus"}],"dpi":[403.4,403],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"motorola/*/DROID RAZR/*"},{"ua":"DROID RAZR"}],"dpi":[368.1,256.7],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"motorola/*/XT830C/*"},{"ua":"XT830C"}],"dpi":[254,255.9],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"motorola/*/XT1021/*"},{"ua":"XT1021"}],"dpi":[254,256.7],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"motorola/*/XT1023/*"},{"ua":"XT1023"}],"dpi":[254,256.7],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"motorola/*/XT1028/*"},{"ua":"XT1028"}],"dpi":[326.6,327.6],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"motorola/*/XT1034/*"},{"ua":"XT1034"}],"dpi":[326.6,328.4],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"motorola/*/XT1053/*"},{"ua":"XT1053"}],"dpi":[315.3,316.1],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"motorola/*/XT1562/*"},{"ua":"XT1562"}],"dpi":[403.4,402.7],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"motorola/*/Nexus 6/*"},{"ua":"Nexus 6 B"}],"dpi":[494.3,489.7],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"motorola/*/XT1063/*"},{"ua":"XT1063"}],"dpi":[295,296.6],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"motorola/*/XT1064/*"},{"ua":"XT1064"}],"dpi":[295,295.6],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"motorola/*/XT1092/*"},{"ua":"XT1092"}],"dpi":[422,424.1],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"motorola/*/XT1095/*"},{"ua":"XT1095"}],"dpi":[422,423.4],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"motorola/*/G4/*"},{"ua":"Moto G (4)"}],"dpi":401,"bw":4,"ac":1000},{"type":"android","rules":[{"mdmh":"OnePlus/*/A0001/*"},{"ua":"A0001"}],"dpi":[403.4,401],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"OnePlus/*/ONE E1001/*"},{"ua":"ONE E1001"}],"dpi":[442.4,441.4],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"OnePlus/*/ONE E1003/*"},{"ua":"ONE E1003"}],"dpi":[442.4,441.4],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"OnePlus/*/ONE E1005/*"},{"ua":"ONE E1005"}],"dpi":[442.4,441.4],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"OnePlus/*/ONE A2001/*"},{"ua":"ONE A2001"}],"dpi":[391.9,405.4],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"OnePlus/*/ONE A2003/*"},{"ua":"ONE A2003"}],"dpi":[391.9,405.4],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"OnePlus/*/ONE A2005/*"},{"ua":"ONE A2005"}],"dpi":[391.9,405.4],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"OnePlus/*/ONEPLUS A3000/*"},{"ua":"ONEPLUS A3000"}],"dpi":401,"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"OnePlus/*/ONEPLUS A3003/*"},{"ua":"ONEPLUS A3003"}],"dpi":401,"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"OnePlus/*/ONEPLUS A3010/*"},{"ua":"ONEPLUS A3010"}],"dpi":401,"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"OnePlus/*/ONEPLUS A5000/*"},{"ua":"ONEPLUS A5000 "}],"dpi":[403.411,399.737],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"OnePlus/*/ONE A5010/*"},{"ua":"ONEPLUS A5010"}],"dpi":[403,400],"bw":2,"ac":1000},{"type":"android","rules":[{"mdmh":"OnePlus/*/ONEPLUS A6000/*"},{"ua":"ONEPLUS A6000"}],"dpi":401,"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"OnePlus/*/ONEPLUS A6003/*"},{"ua":"ONEPLUS A6003"}],"dpi":401,"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"OnePlus/*/ONEPLUS A6010/*"},{"ua":"ONEPLUS A6010"}],"dpi":401,"bw":2,"ac":500},{"type":"android","rules":[{"mdmh":"OnePlus/*/ONEPLUS A6013/*"},{"ua":"ONEPLUS A6013"}],"dpi":401,"bw":2,"ac":500},{"type":"android","rules":[{"mdmh":"OPPO/*/X909/*"},{"ua":"X909"}],"dpi":[442.4,444.1],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/GT-I9082/*"},{"ua":"GT-I9082"}],"dpi":[184.7,185.4],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G360P/*"},{"ua":"SM-G360P"}],"dpi":[196.7,205.4],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/Nexus S/*"},{"ua":"Nexus S"}],"dpi":[234.5,229.8],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/GT-I9300/*"},{"ua":"GT-I9300"}],"dpi":[304.8,303.9],"bw":5,"ac":500},{"type":"android","rules":[{"mdmh":"samsung/*/SM-T230NU/*"},{"ua":"SM-T230NU"}],"dpi":216,"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"samsung/*/SGH-T399/*"},{"ua":"SGH-T399"}],"dpi":[217.7,231.4],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SGH-M919/*"},{"ua":"SGH-M919"}],"dpi":[440.8,437.7],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-N9005/*"},{"ua":"SM-N9005"}],"dpi":[386.4,387],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"samsung/*/SAMSUNG-SM-N900A/*"},{"ua":"SAMSUNG-SM-N900A"}],"dpi":[386.4,387.7],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/GT-I9500/*"},{"ua":"GT-I9500"}],"dpi":[442.5,443.3],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"samsung/*/GT-I9505/*"},{"ua":"GT-I9505"}],"dpi":439.4,"bw":4,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G900F/*"},{"ua":"SM-G900F"}],"dpi":[415.6,431.6],"bw":5,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G900M/*"},{"ua":"SM-G900M"}],"dpi":[415.6,431.6],"bw":5,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G800F/*"},{"ua":"SM-G800F"}],"dpi":326.8,"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G906S/*"},{"ua":"SM-G906S"}],"dpi":[562.7,572.4],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/GT-I9300/*"},{"ua":"GT-I9300"}],"dpi":[306.7,304.8],"bw":5,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-T535/*"},{"ua":"SM-T535"}],"dpi":[142.6,136.4],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"samsung/*/SM-N920C/*"},{"ua":"SM-N920C"}],"dpi":[515.1,518.4],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-N920P/*"},{"ua":"SM-N920P"}],"dpi":[386.3655,390.144],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-N920W8/*"},{"ua":"SM-N920W8"}],"dpi":[515.1,518.4],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/GT-I9300I/*"},{"ua":"GT-I9300I"}],"dpi":[304.8,305.8],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/GT-I9195/*"},{"ua":"GT-I9195"}],"dpi":[249.4,256.7],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"samsung/*/SPH-L520/*"},{"ua":"SPH-L520"}],"dpi":[249.4,255.9],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SAMSUNG-SGH-I717/*"},{"ua":"SAMSUNG-SGH-I717"}],"dpi":285.8,"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SPH-D710/*"},{"ua":"SPH-D710"}],"dpi":[217.7,204.2],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/GT-N7100/*"},{"ua":"GT-N7100"}],"dpi":265.1,"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SCH-I605/*"},{"ua":"SCH-I605"}],"dpi":265.1,"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/Galaxy Nexus/*"},{"ua":"Galaxy Nexus"}],"dpi":[315.3,314.2],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-N910H/*"},{"ua":"SM-N910H"}],"dpi":[515.1,518],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-N910C/*"},{"ua":"SM-N910C"}],"dpi":[515.2,520.2],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G130M/*"},{"ua":"SM-G130M"}],"dpi":[165.9,164.8],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G928I/*"},{"ua":"SM-G928I"}],"dpi":[515.1,518.4],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G920F/*"},{"ua":"SM-G920F"}],"dpi":580.6,"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G920P/*"},{"ua":"SM-G920P"}],"dpi":[522.5,577],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G925F/*"},{"ua":"SM-G925F"}],"dpi":580.6,"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G925V/*"},{"ua":"SM-G925V"}],"dpi":[522.5,576.6],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G930F/*"},{"ua":"SM-G930F"}],"dpi":576.6,"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G935F/*"},{"ua":"SM-G935F"}],"dpi":533,"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G950F/*"},{"ua":"SM-G950F"}],"dpi":[562.707,565.293],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G955U/*"},{"ua":"SM-G955U"}],"dpi":[522.514,525.762],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G955F/*"},{"ua":"SM-G955F"}],"dpi":[522.514,525.762],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G960F/*"},{"ua":"SM-G960F"}],"dpi":[569.575,571.5],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G9600/*"},{"ua":"SM-G9600"}],"dpi":[569.575,571.5],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G960T/*"},{"ua":"SM-G960T"}],"dpi":[569.575,571.5],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G960N/*"},{"ua":"SM-G960N"}],"dpi":[569.575,571.5],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G960U/*"},{"ua":"SM-G960U"}],"dpi":[569.575,571.5],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G9608/*"},{"ua":"SM-G9608"}],"dpi":[569.575,571.5],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G960FD/*"},{"ua":"SM-G960FD"}],"dpi":[569.575,571.5],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G960W/*"},{"ua":"SM-G960W"}],"dpi":[569.575,571.5],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G965F/*"},{"ua":"SM-G965F"}],"dpi":529,"bw":2,"ac":1000},{"type":"android","rules":[{"mdmh":"Sony/*/C6903/*"},{"ua":"C6903"}],"dpi":[442.5,443.3],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"Sony/*/D6653/*"},{"ua":"D6653"}],"dpi":[428.6,427.6],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"Sony/*/E6653/*"},{"ua":"E6653"}],"dpi":[428.6,425.7],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"Sony/*/E6853/*"},{"ua":"E6853"}],"dpi":[403.4,401.9],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"Sony/*/SGP321/*"},{"ua":"SGP321"}],"dpi":[224.7,224.1],"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"TCT/*/ALCATEL ONE TOUCH Fierce/*"},{"ua":"ALCATEL ONE TOUCH Fierce"}],"dpi":[240,247.5],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"THL/*/thl 5000/*"},{"ua":"thl 5000"}],"dpi":[480,443.3],"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"Fly/*/IQ4412/*"},{"ua":"IQ4412"}],"dpi":307.9,"bw":3,"ac":1000},{"type":"android","rules":[{"mdmh":"ZTE/*/ZTE Blade L2/*"},{"ua":"ZTE Blade L2"}],"dpi":240,"bw":3,"ac":500},{"type":"android","rules":[{"mdmh":"BENEVE/*/VR518/*"},{"ua":"VR518"}],"dpi":480,"bw":3,"ac":500},{"type":"ios","rules":[{"res":[640,960]}],"dpi":[325.1,328.4],"bw":4,"ac":1000},{"type":"ios","rules":[{"res":[640,1136]}],"dpi":[317.1,320.2],"bw":3,"ac":1000},{"type":"ios","rules":[{"res":[750,1334]}],"dpi":326.4,"bw":4,"ac":1000},{"type":"ios","rules":[{"res":[1242,2208]}],"dpi":[453.6,458.4],"bw":4,"ac":1000},{"type":"ios","rules":[{"res":[1125,2001]}],"dpi":[410.9,415.4],"bw":4,"ac":1000},{"type":"ios","rules":[{"res":[1125,2436]}],"dpi":458,"bw":4,"ac":1000},{"type":"android","rules":[{"mdmh":"Huawei/*/EML-L29/*"},{"ua":"EML-L29"}],"dpi":428,"bw":3.45,"ac":500},{"type":"android","rules":[{"mdmh":"Nokia/*/Nokia 7.1/*"},{"ua":"Nokia 7.1"}],"dpi":[432,431.9],"bw":3,"ac":500},{"type":"ios","rules":[{"res":[1242,2688]}],"dpi":458,"bw":4,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G570M/*"},{"ua":"SM-G570M"}],"dpi":320,"bw":3.684,"ac":1000},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G970F/*"},{"ua":"SM-G970F"}],"dpi":438,"bw":2.281,"ac":500},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G973F/*"},{"ua":"SM-G973F"}],"dpi":550,"bw":2.002,"ac":500},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G975F/*"},{"ua":"SM-G975F"}],"dpi":522,"bw":2.054,"ac":500},{"type":"android","rules":[{"mdmh":"samsung/*/SM-G977F/*"},{"ua":"SM-G977F"}],"dpi":505,"bw":2.334,"ac":500},{"type":"ios","rules":[{"res":[828,1792]}],"dpi":326,"bw":5,"ac":500}];
-var DPDB_CACHE = {
-	format: format,
-	last_updated: last_updated,
-	devices: devices
-};
-function Dpdb(url, onDeviceParamsUpdated) {
-  this.dpdb = DPDB_CACHE;
-  this.recalculateDeviceParams_();
-  if (url) {
-    this.onDeviceParamsUpdated = onDeviceParamsUpdated;
-    var xhr = new XMLHttpRequest();
-    var obj = this;
-    xhr.open('GET', url, true);
-    xhr.addEventListener('load', function () {
-      obj.loading = false;
-      if (xhr.status >= 200 && xhr.status <= 299) {
-        obj.dpdb = JSON.parse(xhr.response);
-        obj.recalculateDeviceParams_();
-      } else {
-        console.error('Error loading online DPDB!');
-      }
-    });
-    xhr.send();
-  }
-}
-Dpdb.prototype.getDeviceParams = function () {
-  return this.deviceParams;
-};
-Dpdb.prototype.recalculateDeviceParams_ = function () {
-  var newDeviceParams = this.calcDeviceParams_();
-  if (newDeviceParams) {
-    this.deviceParams = newDeviceParams;
-    if (this.onDeviceParamsUpdated) {
-      this.onDeviceParamsUpdated(this.deviceParams);
-    }
-  } else {
-    console.error('Failed to recalculate device parameters.');
-  }
-};
-Dpdb.prototype.calcDeviceParams_ = function () {
-  var db = this.dpdb;
-  if (!db) {
-    console.error('DPDB not available.');
-    return null;
-  }
-  if (db.format != 1) {
-    console.error('DPDB has unexpected format version.');
-    return null;
-  }
-  if (!db.devices || !db.devices.length) {
-    console.error('DPDB does not have a devices section.');
-    return null;
-  }
-  var userAgent = navigator.userAgent || navigator.vendor || window.opera;
-  var width = getScreenWidth();
-  var height = getScreenHeight();
-  if (!db.devices) {
-    console.error('DPDB has no devices section.');
-    return null;
-  }
-  for (var i = 0; i < db.devices.length; i++) {
-    var device = db.devices[i];
-    if (!device.rules) {
-      console.warn('Device[' + i + '] has no rules section.');
-      continue;
-    }
-    if (device.type != 'ios' && device.type != 'android') {
-      console.warn('Device[' + i + '] has invalid type.');
-      continue;
-    }
-    if (isIOS() != (device.type == 'ios')) continue;
-    var matched = false;
-    for (var j = 0; j < device.rules.length; j++) {
-      var rule = device.rules[j];
-      if (this.ruleMatches_(rule, userAgent, width, height)) {
-        matched = true;
-        break;
-      }
-    }
-    if (!matched) continue;
-    var xdpi = device.dpi[0] || device.dpi;
-    var ydpi = device.dpi[1] || device.dpi;
-    return new DeviceParams({ xdpi: xdpi, ydpi: ydpi, bevelMm: device.bw });
-  }
-  console.warn('No DPDB device match.');
-  return null;
-};
-Dpdb.prototype.ruleMatches_ = function (rule, ua, screenWidth, screenHeight) {
-  if (!rule.ua && !rule.res) return false;
-  if (rule.ua && rule.ua.substring(0, 2) === 'SM') rule.ua = rule.ua.substring(0, 7);
-  if (rule.ua && ua.indexOf(rule.ua) < 0) return false;
-  if (rule.res) {
-    if (!rule.res[0] || !rule.res[1]) return false;
-    var resX = rule.res[0];
-    var resY = rule.res[1];
-    if (Math.min(screenWidth, screenHeight) != Math.min(resX, resY) || Math.max(screenWidth, screenHeight) != Math.max(resX, resY)) {
-      return false;
-    }
-  }
-  return true;
-};
-function DeviceParams(params) {
-  this.xdpi = params.xdpi;
-  this.ydpi = params.ydpi;
-  this.bevelMm = params.bevelMm;
-}
-function SensorSample(sample, timestampS) {
-  this.set(sample, timestampS);
-}
-SensorSample.prototype.set = function (sample, timestampS) {
-  this.sample = sample;
-  this.timestampS = timestampS;
-};
-SensorSample.prototype.copy = function (sensorSample) {
-  this.set(sensorSample.sample, sensorSample.timestampS);
-};
-function ComplementaryFilter(kFilter, isDebug) {
-  this.kFilter = kFilter;
-  this.isDebug = isDebug;
-  this.currentAccelMeasurement = new SensorSample();
-  this.currentGyroMeasurement = new SensorSample();
-  this.previousGyroMeasurement = new SensorSample();
-  if (isIOS()) {
-    this.filterQ = new Quaternion(-1, 0, 0, 1);
-  } else {
-    this.filterQ = new Quaternion(1, 0, 0, 1);
-  }
-  this.previousFilterQ = new Quaternion();
-  this.previousFilterQ.copy(this.filterQ);
-  this.accelQ = new Quaternion();
-  this.isOrientationInitialized = false;
-  this.estimatedGravity = new Vector3();
-  this.measuredGravity = new Vector3();
-  this.gyroIntegralQ = new Quaternion();
-}
-ComplementaryFilter.prototype.addAccelMeasurement = function (vector, timestampS) {
-  this.currentAccelMeasurement.set(vector, timestampS);
-};
-ComplementaryFilter.prototype.addGyroMeasurement = function (vector, timestampS) {
-  this.currentGyroMeasurement.set(vector, timestampS);
-  var deltaT = timestampS - this.previousGyroMeasurement.timestampS;
-  if (isTimestampDeltaValid(deltaT)) {
-    this.run_();
-  }
-  this.previousGyroMeasurement.copy(this.currentGyroMeasurement);
-};
-ComplementaryFilter.prototype.run_ = function () {
-  if (!this.isOrientationInitialized) {
-    this.accelQ = this.accelToQuaternion_(this.currentAccelMeasurement.sample);
-    this.previousFilterQ.copy(this.accelQ);
-    this.isOrientationInitialized = true;
-    return;
-  }
-  var deltaT = this.currentGyroMeasurement.timestampS - this.previousGyroMeasurement.timestampS;
-  var gyroDeltaQ = this.gyroToQuaternionDelta_(this.currentGyroMeasurement.sample, deltaT);
-  this.gyroIntegralQ.multiply(gyroDeltaQ);
-  this.filterQ.copy(this.previousFilterQ);
-  this.filterQ.multiply(gyroDeltaQ);
-  var invFilterQ = new Quaternion();
-  invFilterQ.copy(this.filterQ);
-  invFilterQ.inverse();
-  this.estimatedGravity.set(0, 0, -1);
-  this.estimatedGravity.applyQuaternion(invFilterQ);
-  this.estimatedGravity.normalize();
-  this.measuredGravity.copy(this.currentAccelMeasurement.sample);
-  this.measuredGravity.normalize();
-  var deltaQ = new Quaternion();
-  deltaQ.setFromUnitVectors(this.estimatedGravity, this.measuredGravity);
-  deltaQ.inverse();
-  if (this.isDebug) {
-    console.log('Delta: %d deg, G_est: (%s, %s, %s), G_meas: (%s, %s, %s)', radToDeg * getQuaternionAngle(deltaQ), this.estimatedGravity.x.toFixed(1), this.estimatedGravity.y.toFixed(1), this.estimatedGravity.z.toFixed(1), this.measuredGravity.x.toFixed(1), this.measuredGravity.y.toFixed(1), this.measuredGravity.z.toFixed(1));
-  }
-  var targetQ = new Quaternion();
-  targetQ.copy(this.filterQ);
-  targetQ.multiply(deltaQ);
-  this.filterQ.slerp(targetQ, 1 - this.kFilter);
-  this.previousFilterQ.copy(this.filterQ);
-};
-ComplementaryFilter.prototype.getOrientation = function () {
-  return this.filterQ;
-};
-ComplementaryFilter.prototype.accelToQuaternion_ = function (accel) {
-  var normAccel = new Vector3();
-  normAccel.copy(accel);
-  normAccel.normalize();
-  var quat = new Quaternion();
-  quat.setFromUnitVectors(new Vector3(0, 0, -1), normAccel);
-  quat.inverse();
-  return quat;
-};
-ComplementaryFilter.prototype.gyroToQuaternionDelta_ = function (gyro, dt) {
-  var quat = new Quaternion();
-  var axis = new Vector3();
-  axis.copy(gyro);
-  axis.normalize();
-  quat.setFromAxisAngle(axis, gyro.length() * dt);
-  return quat;
-};
-function PosePredictor(predictionTimeS, isDebug) {
-  this.predictionTimeS = predictionTimeS;
-  this.isDebug = isDebug;
-  this.previousQ = new Quaternion();
-  this.previousTimestampS = null;
-  this.deltaQ = new Quaternion();
-  this.outQ = new Quaternion();
-}
-PosePredictor.prototype.getPrediction = function (currentQ, gyro, timestampS) {
-  if (!this.previousTimestampS) {
-    this.previousQ.copy(currentQ);
-    this.previousTimestampS = timestampS;
-    return currentQ;
-  }
-  var axis = new Vector3();
-  axis.copy(gyro);
-  axis.normalize();
-  var angularSpeed = gyro.length();
-  if (angularSpeed < degToRad * 20) {
-    if (this.isDebug) {
-      console.log('Moving slowly, at %s deg/s: no prediction', (radToDeg * angularSpeed).toFixed(1));
-    }
-    this.outQ.copy(currentQ);
-    this.previousQ.copy(currentQ);
-    return this.outQ;
-  }
-  var predictAngle = angularSpeed * this.predictionTimeS;
-  this.deltaQ.setFromAxisAngle(axis, predictAngle);
-  this.outQ.copy(this.previousQ);
-  this.outQ.multiply(this.deltaQ);
-  this.previousQ.copy(currentQ);
-  this.previousTimestampS = timestampS;
-  return this.outQ;
-};
-function FusionPoseSensor(kFilter, predictionTime, yawOnly, isDebug) {
-  this.yawOnly = yawOnly;
-  this.accelerometer = new Vector3();
-  this.gyroscope = new Vector3();
-  this.filter = new ComplementaryFilter(kFilter, isDebug);
-  this.posePredictor = new PosePredictor(predictionTime, isDebug);
-  this.isFirefoxAndroid = isFirefoxAndroid();
-  this.isIOS = isIOS();
-  var chromeVersion = getChromeVersion();
-  this.isDeviceMotionInRadians = !this.isIOS && chromeVersion && chromeVersion < 66;
-  this.isWithoutDeviceMotion = isChromeWithoutDeviceMotion() || isSafariWithoutDeviceMotion();
-  this.filterToWorldQ = new Quaternion();
-  if (isIOS()) {
-    this.filterToWorldQ.setFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2);
-  } else {
-    this.filterToWorldQ.setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 2);
-  }
-  this.inverseWorldToScreenQ = new Quaternion();
-  this.worldToScreenQ = new Quaternion();
-  this.originalPoseAdjustQ = new Quaternion();
-  this.originalPoseAdjustQ.setFromAxisAngle(new Vector3(0, 0, 1), -window.orientation * Math.PI / 180);
-  this.setScreenTransform_();
-  if (isLandscapeMode()) {
-    this.filterToWorldQ.multiply(this.inverseWorldToScreenQ);
-  }
-  this.resetQ = new Quaternion();
-  this.orientationOut_ = new Float32Array(4);
-  this.start();
-}
-FusionPoseSensor.prototype.getPosition = function () {
-  return null;
-};
-FusionPoseSensor.prototype.getOrientation = function () {
-  var orientation = void 0;
-  if (this.isWithoutDeviceMotion && this._deviceOrientationQ) {
-    this.deviceOrientationFixQ = this.deviceOrientationFixQ || function () {
-      var z = new Quaternion().setFromAxisAngle(new Vector3(0, 0, -1), 0);
-      var y = new Quaternion();
-      if (window.orientation === -90) {
-        y.setFromAxisAngle(new Vector3(0, 1, 0), Math.PI / -2);
-      } else {
-        y.setFromAxisAngle(new Vector3(0, 1, 0), Math.PI / 2);
-      }
-      return z.multiply(y);
-    }();
-    this.deviceOrientationFilterToWorldQ = this.deviceOrientationFilterToWorldQ || function () {
-      var q = new Quaternion();
-      q.setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 2);
-      return q;
-    }();
-    orientation = this._deviceOrientationQ;
-    var out = new Quaternion();
-    out.copy(orientation);
-    out.multiply(this.deviceOrientationFilterToWorldQ);
-    out.multiply(this.resetQ);
-    out.multiply(this.worldToScreenQ);
-    out.multiplyQuaternions(this.deviceOrientationFixQ, out);
-    if (this.yawOnly) {
-      out.x = 0;
-      out.z = 0;
-      out.normalize();
-    }
-    this.orientationOut_[0] = out.x;
-    this.orientationOut_[1] = out.y;
-    this.orientationOut_[2] = out.z;
-    this.orientationOut_[3] = out.w;
-    return this.orientationOut_;
-  } else {
-    var filterOrientation = this.filter.getOrientation();
-    orientation = this.posePredictor.getPrediction(filterOrientation, this.gyroscope, this.previousTimestampS);
-  }
-  var out = new Quaternion();
-  out.copy(this.filterToWorldQ);
-  out.multiply(this.resetQ);
-  out.multiply(orientation);
-  out.multiply(this.worldToScreenQ);
-  if (this.yawOnly) {
-    out.x = 0;
-    out.z = 0;
-    out.normalize();
-  }
-  this.orientationOut_[0] = out.x;
-  this.orientationOut_[1] = out.y;
-  this.orientationOut_[2] = out.z;
-  this.orientationOut_[3] = out.w;
-  return this.orientationOut_;
-};
-FusionPoseSensor.prototype.resetPose = function () {
-  this.resetQ.copy(this.filter.getOrientation());
-  this.resetQ.x = 0;
-  this.resetQ.y = 0;
-  this.resetQ.z *= -1;
-  this.resetQ.normalize();
-  if (isLandscapeMode()) {
-    this.resetQ.multiply(this.inverseWorldToScreenQ);
-  }
-  this.resetQ.multiply(this.originalPoseAdjustQ);
-};
-FusionPoseSensor.prototype.onDeviceOrientation_ = function (e) {
-  this._deviceOrientationQ = this._deviceOrientationQ || new Quaternion();
-  var alpha = e.alpha,
-      beta = e.beta,
-      gamma = e.gamma;
-  alpha = (alpha || 0) * Math.PI / 180;
-  beta = (beta || 0) * Math.PI / 180;
-  gamma = (gamma || 0) * Math.PI / 180;
-  this._deviceOrientationQ.setFromEulerYXZ(beta, alpha, -gamma);
-};
-FusionPoseSensor.prototype.onDeviceMotion_ = function (deviceMotion) {
-  this.updateDeviceMotion_(deviceMotion);
-};
-FusionPoseSensor.prototype.updateDeviceMotion_ = function (deviceMotion) {
-  var accGravity = deviceMotion.accelerationIncludingGravity;
-  var rotRate = deviceMotion.rotationRate;
-  var timestampS = deviceMotion.timeStamp / 1000;
-  var deltaS = timestampS - this.previousTimestampS;
-  if (deltaS < 0) {
-    warnOnce('fusion-pose-sensor:invalid:non-monotonic', 'Invalid timestamps detected: non-monotonic timestamp from devicemotion');
-    this.previousTimestampS = timestampS;
-    return;
-  } else if (deltaS <= MIN_TIMESTEP || deltaS > MAX_TIMESTEP) {
-    warnOnce('fusion-pose-sensor:invalid:outside-threshold', 'Invalid timestamps detected: Timestamp from devicemotion outside expected range.');
-    this.previousTimestampS = timestampS;
-    return;
-  }
-  this.accelerometer.set(-accGravity.x, -accGravity.y, -accGravity.z);
-  if (rotRate) {
-    if (isR7()) {
-      this.gyroscope.set(-rotRate.beta, rotRate.alpha, rotRate.gamma);
-    } else {
-      this.gyroscope.set(rotRate.alpha, rotRate.beta, rotRate.gamma);
-    }
-    if (!this.isDeviceMotionInRadians) {
-      this.gyroscope.multiplyScalar(Math.PI / 180);
-    }
-    this.filter.addGyroMeasurement(this.gyroscope, timestampS);
-  }
-  this.filter.addAccelMeasurement(this.accelerometer, timestampS);
-  this.previousTimestampS = timestampS;
-};
-FusionPoseSensor.prototype.onOrientationChange_ = function (screenOrientation) {
-  this.setScreenTransform_();
-};
-FusionPoseSensor.prototype.onMessage_ = function (event) {
-  var message = event.data;
-  if (!message || !message.type) {
-    return;
-  }
-  var type = message.type.toLowerCase();
-  if (type !== 'devicemotion') {
-    return;
-  }
-  this.updateDeviceMotion_(message.deviceMotionEvent);
-};
-FusionPoseSensor.prototype.setScreenTransform_ = function () {
-  this.worldToScreenQ.set(0, 0, 0, 1);
-  switch (window.orientation) {
-    case 0:
-      break;
-    case 90:
-      this.worldToScreenQ.setFromAxisAngle(new Vector3(0, 0, 1), -Math.PI / 2);
-      break;
-    case -90:
-      this.worldToScreenQ.setFromAxisAngle(new Vector3(0, 0, 1), Math.PI / 2);
-      break;
-  }
-  this.inverseWorldToScreenQ.copy(this.worldToScreenQ);
-  this.inverseWorldToScreenQ.inverse();
-};
-FusionPoseSensor.prototype.start = function () {
-  this.onDeviceMotionCallback_ = this.onDeviceMotion_.bind(this);
-  this.onOrientationChangeCallback_ = this.onOrientationChange_.bind(this);
-  this.onMessageCallback_ = this.onMessage_.bind(this);
-  this.onDeviceOrientationCallback_ = this.onDeviceOrientation_.bind(this);
-  if (isIOS() && isInsideCrossOriginIFrame()) {
-    window.addEventListener('message', this.onMessageCallback_);
-  }
-  window.addEventListener('orientationchange', this.onOrientationChangeCallback_);
-  if (this.isWithoutDeviceMotion) {
-    window.addEventListener('deviceorientation', this.onDeviceOrientationCallback_);
-  } else {
-    window.addEventListener('devicemotion', this.onDeviceMotionCallback_);
-  }
-};
-FusionPoseSensor.prototype.stop = function () {
-  window.removeEventListener('devicemotion', this.onDeviceMotionCallback_);
-  window.removeEventListener('deviceorientation', this.onDeviceOrientationCallback_);
-  window.removeEventListener('orientationchange', this.onOrientationChangeCallback_);
-  window.removeEventListener('message', this.onMessageCallback_);
-};
-var SENSOR_FREQUENCY = 60;
-var X_AXIS = new Vector3(1, 0, 0);
-var Z_AXIS = new Vector3(0, 0, 1);
-var SENSOR_TO_VR = new Quaternion();
-SENSOR_TO_VR.setFromAxisAngle(X_AXIS, -Math.PI / 2);
-SENSOR_TO_VR.multiply(new Quaternion().setFromAxisAngle(Z_AXIS, Math.PI / 2));
-var PoseSensor = function () {
-  function PoseSensor(config) {
-    classCallCheck(this, PoseSensor);
-    this.config = config;
-    this.sensor = null;
-    this.fusionSensor = null;
-    this._out = new Float32Array(4);
-    this.api = null;
-    this.errors = [];
-    this._sensorQ = new Quaternion();
-    this._outQ = new Quaternion();
-    this._onSensorRead = this._onSensorRead.bind(this);
-    this._onSensorError = this._onSensorError.bind(this);
-    this.init();
-  }
-  createClass(PoseSensor, [{
-    key: 'init',
-    value: function init() {
-      var sensor = null;
-      try {
-        sensor = new RelativeOrientationSensor({
-          frequency: SENSOR_FREQUENCY,
-          referenceFrame: 'screen'
-        });
-        sensor.addEventListener('error', this._onSensorError);
-      } catch (error) {
-        this.errors.push(error);
-        if (error.name === 'SecurityError') {
-          console.error('Cannot construct sensors due to the Feature Policy');
-          console.warn('Attempting to fall back using "devicemotion"; however this will ' + 'fail in the future without correct permissions.');
-          this.useDeviceMotion();
-        } else if (error.name === 'ReferenceError') {
-          this.useDeviceMotion();
-        } else {
-          console.error(error);
-        }
-      }
-      if (sensor) {
-        this.api = 'sensor';
-        this.sensor = sensor;
-        this.sensor.addEventListener('reading', this._onSensorRead);
-        this.sensor.start();
-      }
-    }
-  }, {
-    key: 'useDeviceMotion',
-    value: function useDeviceMotion() {
-      this.api = 'devicemotion';
-      this.fusionSensor = new FusionPoseSensor(this.config.K_FILTER, this.config.PREDICTION_TIME_S, this.config.YAW_ONLY, this.config.DEBUG);
-      if (this.sensor) {
-        this.sensor.removeEventListener('reading', this._onSensorRead);
-        this.sensor.removeEventListener('error', this._onSensorError);
-        this.sensor = null;
-      }
-    }
-  }, {
-    key: 'getOrientation',
-    value: function getOrientation() {
-      if (this.fusionSensor) {
-        return this.fusionSensor.getOrientation();
-      }
-      if (!this.sensor || !this.sensor.quaternion) {
-        this._out[0] = this._out[1] = this._out[2] = 0;
-        this._out[3] = 1;
-        return this._out;
-      }
-      var q = this.sensor.quaternion;
-      this._sensorQ.set(q[0], q[1], q[2], q[3]);
-      var out = this._outQ;
-      out.copy(SENSOR_TO_VR);
-      out.multiply(this._sensorQ);
-      if (this.config.YAW_ONLY) {
-        out.x = out.z = 0;
-        out.normalize();
-      }
-      this._out[0] = out.x;
-      this._out[1] = out.y;
-      this._out[2] = out.z;
-      this._out[3] = out.w;
-      return this._out;
-    }
-  }, {
-    key: '_onSensorError',
-    value: function _onSensorError(event) {
-      this.errors.push(event.error);
-      if (event.error.name === 'NotAllowedError') {
-        console.error('Permission to access sensor was denied');
-      } else if (event.error.name === 'NotReadableError') {
-        console.error('Sensor could not be read');
-      } else {
-        console.error(event.error);
-      }
-      this.useDeviceMotion();
-    }
-  }, {
-    key: '_onSensorRead',
-    value: function _onSensorRead() {}
-  }]);
-  return PoseSensor;
-}();
-var rotateInstructionsAsset = "<svg width='198' height='240' viewBox='0 0 198 240' xmlns='http://www.w3.org/2000/svg'><g fill='none' fill-rule='evenodd'><path d='M149.625 109.527l6.737 3.891v.886c0 .177.013.36.038.549.01.081.02.162.027.242.14 1.415.974 2.998 2.105 3.999l5.72 5.062.081-.09s4.382-2.53 5.235-3.024l25.97 14.993v54.001c0 .771-.386 1.217-.948 1.217-.233 0-.495-.076-.772-.236l-23.967-13.838-.014.024-27.322 15.775-.85-1.323c-4.731-1.529-9.748-2.74-14.951-3.61a.27.27 0 0 0-.007.024l-5.067 16.961-7.891 4.556-.037-.063v27.59c0 .772-.386 1.217-.948 1.217-.232 0-.495-.076-.772-.236l-42.473-24.522c-.95-.549-1.72-1.877-1.72-2.967v-1.035l-.021.047a5.111 5.111 0 0 0-1.816-.399 5.682 5.682 0 0 0-.546.001 13.724 13.724 0 0 1-1.918-.041c-1.655-.153-3.2-.6-4.404-1.296l-46.576-26.89.005.012-10.278-18.75c-1.001-1.827-.241-4.216 1.698-5.336l56.011-32.345a4.194 4.194 0 0 1 2.099-.572c1.326 0 2.572.659 3.227 1.853l.005-.003.227.413-.006.004a9.63 9.63 0 0 0 1.477 2.018l.277.27c1.914 1.85 4.468 2.801 7.113 2.801 1.949 0 3.948-.517 5.775-1.572.013 0 7.319-4.219 7.319-4.219a4.194 4.194 0 0 1 2.099-.572c1.326 0 2.572.658 3.226 1.853l3.25 5.928.022-.018 6.785 3.917-.105-.182 46.881-26.965m0-1.635c-.282 0-.563.073-.815.218l-46.169 26.556-5.41-3.124-3.005-5.481c-.913-1.667-2.699-2.702-4.66-2.703-1.011 0-2.02.274-2.917.792a3825 3825 0 0 1-7.275 4.195l-.044.024a9.937 9.937 0 0 1-4.957 1.353c-2.292 0-4.414-.832-5.976-2.342l-.252-.245a7.992 7.992 0 0 1-1.139-1.534 1.379 1.379 0 0 0-.06-.122l-.227-.414a1.718 1.718 0 0 0-.095-.154c-.938-1.574-2.673-2.545-4.571-2.545-1.011 0-2.02.274-2.917.792L3.125 155.502c-2.699 1.559-3.738 4.94-2.314 7.538l10.278 18.75c.177.323.448.563.761.704l46.426 26.804c1.403.81 3.157 1.332 5.072 1.508a15.661 15.661 0 0 0 2.146.046 4.766 4.766 0 0 1 .396 0c.096.004.19.011.283.022.109 1.593 1.159 3.323 2.529 4.114l42.472 24.522c.524.302 1.058.455 1.59.455 1.497 0 2.583-1.2 2.583-2.852v-26.562l7.111-4.105a1.64 1.64 0 0 0 .749-.948l4.658-15.593c4.414.797 8.692 1.848 12.742 3.128l.533.829a1.634 1.634 0 0 0 2.193.531l26.532-15.317L193 192.433c.523.302 1.058.455 1.59.455 1.497 0 2.583-1.199 2.583-2.852v-54.001c0-.584-.312-1.124-.818-1.416l-25.97-14.993a1.633 1.633 0 0 0-1.636.001c-.606.351-2.993 1.73-4.325 2.498l-4.809-4.255c-.819-.725-1.461-1.933-1.561-2.936a7.776 7.776 0 0 0-.033-.294 2.487 2.487 0 0 1-.023-.336v-.886c0-.584-.312-1.123-.817-1.416l-6.739-3.891a1.633 1.633 0 0 0-.817-.219' fill='#455A64'/><path d='M96.027 132.636l46.576 26.891c1.204.695 1.979 1.587 2.242 2.541l-.01.007-81.374 46.982h-.001c-1.654-.152-3.199-.6-4.403-1.295l-46.576-26.891 83.546-48.235' fill='#FAFAFA'/><path d='M63.461 209.174c-.008 0-.015 0-.022-.002-1.693-.156-3.228-.609-4.441-1.309l-46.576-26.89a.118.118 0 0 1 0-.203l83.546-48.235a.117.117 0 0 1 .117 0l46.576 26.891c1.227.708 2.021 1.612 2.296 2.611a.116.116 0 0 1-.042.124l-.021.016-81.375 46.981a.11.11 0 0 1-.058.016zm-50.747-28.303l46.401 26.79c1.178.68 2.671 1.121 4.32 1.276l81.272-46.922c-.279-.907-1.025-1.73-2.163-2.387l-46.517-26.857-83.313 48.1z' fill='#607D8B'/><path d='M148.327 165.471a5.85 5.85 0 0 1-.546.001c-1.894-.083-3.302-1.038-3.145-2.132a2.693 2.693 0 0 0-.072-1.105l-81.103 46.822c.628.058 1.272.073 1.918.042.182-.009.364-.009.546-.001 1.894.083 3.302 1.038 3.145 2.132l79.257-45.759' fill='#FFF'/><path d='M69.07 211.347a.118.118 0 0 1-.115-.134c.045-.317-.057-.637-.297-.925-.505-.61-1.555-1.022-2.738-1.074a5.966 5.966 0 0 0-.535.001 14.03 14.03 0 0 1-1.935-.041.117.117 0 0 1-.103-.092.116.116 0 0 1 .055-.126l81.104-46.822a.117.117 0 0 1 .171.07c.104.381.129.768.074 1.153-.045.316.057.637.296.925.506.61 1.555 1.021 2.739 1.073.178.008.357.008.535-.001a.117.117 0 0 1 .064.218l-79.256 45.759a.114.114 0 0 1-.059.016zm-3.405-2.372c.089 0 .177.002.265.006 1.266.056 2.353.488 2.908 1.158.227.274.35.575.36.882l78.685-45.429c-.036 0-.072-.001-.107-.003-1.267-.056-2.354-.489-2.909-1.158-.282-.34-.402-.724-.347-1.107a2.604 2.604 0 0 0-.032-.91L63.846 208.97a13.91 13.91 0 0 0 1.528.012c.097-.005.194-.007.291-.007z' fill='#607D8B'/><path d='M2.208 162.134c-1.001-1.827-.241-4.217 1.698-5.337l56.011-32.344c1.939-1.12 4.324-.546 5.326 1.281l.232.41a9.344 9.344 0 0 0 1.47 2.021l.278.27c3.325 3.214 8.583 3.716 12.888 1.23l7.319-4.22c1.94-1.119 4.324-.546 5.325 1.282l3.25 5.928-83.519 48.229-10.278-18.75z' fill='#FAFAFA'/><path d='M12.486 181.001a.112.112 0 0 1-.031-.005.114.114 0 0 1-.071-.056L2.106 162.19c-1.031-1.88-.249-4.345 1.742-5.494l56.01-32.344a4.328 4.328 0 0 1 2.158-.588c1.415 0 2.65.702 3.311 1.882.01.008.018.017.024.028l.227.414a.122.122 0 0 1 .013.038 9.508 9.508 0 0 0 1.439 1.959l.275.266c1.846 1.786 4.344 2.769 7.031 2.769 1.977 0 3.954-.538 5.717-1.557a.148.148 0 0 1 .035-.013l7.284-4.206a4.321 4.321 0 0 1 2.157-.588c1.427 0 2.672.716 3.329 1.914l3.249 5.929a.116.116 0 0 1-.044.157l-83.518 48.229a.116.116 0 0 1-.059.016zm49.53-57.004c-.704 0-1.41.193-2.041.557l-56.01 32.345c-1.882 1.086-2.624 3.409-1.655 5.179l10.221 18.645 83.317-48.112-3.195-5.829c-.615-1.122-1.783-1.792-3.124-1.792a4.08 4.08 0 0 0-2.04.557l-7.317 4.225a.148.148 0 0 1-.035.013 11.7 11.7 0 0 1-5.801 1.569c-2.748 0-5.303-1.007-7.194-2.835l-.278-.27a9.716 9.716 0 0 1-1.497-2.046.096.096 0 0 1-.013-.037l-.191-.347a.11.11 0 0 1-.023-.029c-.615-1.123-1.783-1.793-3.124-1.793z' fill='#607D8B'/><path d='M42.434 155.808c-2.51-.001-4.697-1.258-5.852-3.365-1.811-3.304-.438-7.634 3.059-9.654l12.291-7.098a7.599 7.599 0 0 1 3.789-1.033c2.51 0 4.697 1.258 5.852 3.365 1.811 3.304.439 7.634-3.059 9.654l-12.291 7.098a7.606 7.606 0 0 1-3.789 1.033zm13.287-20.683a7.128 7.128 0 0 0-3.555.971l-12.291 7.098c-3.279 1.893-4.573 5.942-2.883 9.024 1.071 1.955 3.106 3.122 5.442 3.122a7.13 7.13 0 0 0 3.556-.97l12.291-7.098c3.279-1.893 4.572-5.942 2.883-9.024-1.072-1.955-3.106-3.123-5.443-3.123z' fill='#607D8B'/><path d='M149.588 109.407l6.737 3.89v.887c0 .176.013.36.037.549.011.081.02.161.028.242.14 1.415.973 2.998 2.105 3.999l7.396 6.545c.177.156.358.295.541.415 1.579 1.04 2.95.466 3.062-1.282.049-.784.057-1.595.023-2.429l-.003-.16v-1.151l25.987 15.003v54c0 1.09-.77 1.53-1.72.982l-42.473-24.523c-.95-.548-1.72-1.877-1.72-2.966v-34.033' fill='#FAFAFA'/><path d='M194.553 191.25c-.257 0-.54-.085-.831-.253l-42.472-24.521c-.981-.567-1.779-1.943-1.779-3.068v-34.033h.234v34.033c0 1.051.745 2.336 1.661 2.866l42.473 24.521c.424.245.816.288 1.103.122.285-.164.442-.52.442-1.002v-53.933l-25.753-14.868.003 1.106c.034.832.026 1.654-.024 2.439-.054.844-.396 1.464-.963 1.746-.619.309-1.45.173-2.28-.373a5.023 5.023 0 0 1-.553-.426l-7.397-6.544c-1.158-1.026-1.999-2.625-2.143-4.076a9.624 9.624 0 0 0-.027-.238 4.241 4.241 0 0 1-.038-.564v-.82l-6.68-3.856.117-.202 6.738 3.89.058.034v.954c0 .171.012.351.036.533.011.083.021.165.029.246.138 1.395.948 2.935 2.065 3.923l7.397 6.545c.173.153.35.289.527.406.758.499 1.504.63 2.047.359.49-.243.786-.795.834-1.551.05-.778.057-1.591.024-2.417l-.004-.163v-1.355l.175.1 25.987 15.004.059.033v54.068c0 .569-.198.996-.559 1.204a1.002 1.002 0 0 1-.506.131' fill='#607D8B'/><path d='M145.685 163.161l24.115 13.922-25.978 14.998-1.462-.307c-6.534-2.17-13.628-3.728-21.019-4.616-4.365-.524-8.663 1.096-9.598 3.62a2.746 2.746 0 0 0-.011 1.928c1.538 4.267 4.236 8.363 7.995 12.135l.532.845-25.977 14.997-24.115-13.922 75.518-43.6' fill='#FFF'/><path d='M94.282 220.818l-.059-.033-24.29-14.024.175-.101 75.577-43.634.058.033 24.29 14.024-26.191 15.122-.045-.01-1.461-.307c-6.549-2.174-13.613-3.725-21.009-4.614a13.744 13.744 0 0 0-1.638-.097c-3.758 0-7.054 1.531-7.837 3.642a2.62 2.62 0 0 0-.01 1.848c1.535 4.258 4.216 8.326 7.968 12.091l.016.021.526.835.006.01.064.102-.105.061-25.977 14.998-.058.033zm-23.881-14.057l23.881 13.788 24.802-14.32c.546-.315.846-.489 1.017-.575l-.466-.74c-3.771-3.787-6.467-7.881-8.013-12.168a2.851 2.851 0 0 1 .011-2.008c.815-2.199 4.203-3.795 8.056-3.795.557 0 1.117.033 1.666.099 7.412.891 14.491 2.445 21.041 4.621.836.175 1.215.254 1.39.304l25.78-14.884-23.881-13.788-75.284 43.466z' fill='#607D8B'/><path d='M167.23 125.979v50.871l-27.321 15.773-6.461-14.167c-.91-1.996-3.428-1.738-5.624.574a10.238 10.238 0 0 0-2.33 4.018l-6.46 21.628-27.322 15.774v-50.871l75.518-43.6' fill='#FFF'/><path d='M91.712 220.567a.127.127 0 0 1-.059-.016.118.118 0 0 1-.058-.101v-50.871c0-.042.023-.08.058-.101l75.519-43.6a.117.117 0 0 1 .175.101v50.871c0 .041-.023.08-.059.1l-27.321 15.775a.118.118 0 0 1-.094.01.12.12 0 0 1-.071-.063l-6.46-14.168c-.375-.822-1.062-1.275-1.934-1.275-1.089 0-2.364.686-3.5 1.881a10.206 10.206 0 0 0-2.302 3.972l-6.46 21.627a.118.118 0 0 1-.054.068L91.77 220.551a.12.12 0 0 1-.058.016zm.117-50.92v50.601l27.106-15.65 6.447-21.583a10.286 10.286 0 0 1 2.357-4.065c1.18-1.242 2.517-1.954 3.669-1.954.969 0 1.731.501 2.146 1.411l6.407 14.051 27.152-15.676v-50.601l-75.284 43.466z' fill='#607D8B'/><path d='M168.543 126.213v50.87l-27.322 15.774-6.46-14.168c-.91-1.995-3.428-1.738-5.624.574a10.248 10.248 0 0 0-2.33 4.019l-6.461 21.627-27.321 15.774v-50.87l75.518-43.6' fill='#FFF'/><path d='M93.025 220.8a.123.123 0 0 1-.059-.015.12.12 0 0 1-.058-.101v-50.871c0-.042.023-.08.058-.101l75.518-43.6a.112.112 0 0 1 .117 0c.036.02.059.059.059.1v50.871a.116.116 0 0 1-.059.101l-27.321 15.774a.111.111 0 0 1-.094.01.115.115 0 0 1-.071-.062l-6.46-14.168c-.375-.823-1.062-1.275-1.935-1.275-1.088 0-2.363.685-3.499 1.881a10.19 10.19 0 0 0-2.302 3.971l-6.461 21.628a.108.108 0 0 1-.053.067l-27.322 15.775a.12.12 0 0 1-.058.015zm.117-50.919v50.6l27.106-15.649 6.447-21.584a10.293 10.293 0 0 1 2.357-4.065c1.179-1.241 2.516-1.954 3.668-1.954.969 0 1.732.502 2.147 1.412l6.407 14.051 27.152-15.676v-50.601l-75.284 43.466z' fill='#607D8B'/><path d='M169.8 177.083l-27.322 15.774-6.46-14.168c-.91-1.995-3.428-1.738-5.625.574a10.246 10.246 0 0 0-2.329 4.019l-6.461 21.627-27.321 15.774v-50.87l75.518-43.6v50.87z' fill='#FAFAFA'/><path d='M94.282 220.917a.234.234 0 0 1-.234-.233v-50.871c0-.083.045-.161.117-.202l75.518-43.601a.234.234 0 1 1 .35.202v50.871a.233.233 0 0 1-.116.202l-27.322 15.775a.232.232 0 0 1-.329-.106l-6.461-14.168c-.36-.789-.992-1.206-1.828-1.206-1.056 0-2.301.672-3.415 1.844a10.099 10.099 0 0 0-2.275 3.924l-6.46 21.628a.235.235 0 0 1-.107.136l-27.322 15.774a.23.23 0 0 1-.116.031zm.233-50.969v50.331l26.891-15.525 6.434-21.539a10.41 10.41 0 0 1 2.384-4.112c1.201-1.265 2.569-1.991 3.753-1.991 1.018 0 1.818.526 2.253 1.48l6.354 13.934 26.982-15.578v-50.331l-75.051 43.331z' fill='#607D8B'/><path d='M109.894 199.943c-1.774 0-3.241-.725-4.244-2.12a.224.224 0 0 1 .023-.294.233.233 0 0 1 .301-.023c.78.547 1.705.827 2.75.827 1.323 0 2.754-.439 4.256-1.306 5.311-3.067 9.631-10.518 9.631-16.611 0-1.927-.442-3.56-1.278-4.724a.232.232 0 0 1 .323-.327c1.671 1.172 2.591 3.381 2.591 6.219 0 6.242-4.426 13.863-9.865 17.003-1.574.908-3.084 1.356-4.488 1.356zm-2.969-1.542c.813.651 1.82.877 2.968.877h.001c1.321 0 2.753-.327 4.254-1.194 5.311-3.067 9.632-10.463 9.632-16.556 0-1.979-.463-3.599-1.326-4.761.411 1.035.625 2.275.625 3.635 0 6.243-4.426 13.883-9.865 17.023-1.574.909-3.084 1.317-4.49 1.317-.641 0-1.243-.149-1.799-.341z' fill='#607D8B'/><path d='M113.097 197.23c5.384-3.108 9.748-10.636 9.748-16.814 0-2.051-.483-3.692-1.323-4.86-1.784-1.252-4.374-1.194-7.257.47-5.384 3.108-9.748 10.636-9.748 16.814 0 2.051.483 3.692 1.323 4.86 1.784 1.252 4.374 1.194 7.257-.47' fill='#FAFAFA'/><path d='M108.724 198.614c-1.142 0-2.158-.213-3.019-.817-.021-.014-.04.014-.055-.007-.894-1.244-1.367-2.948-1.367-4.973 0-6.242 4.426-13.864 9.865-17.005 1.574-.908 3.084-1.363 4.49-1.363 1.142 0 2.158.309 3.018.913a.23.23 0 0 1 .056.056c.894 1.244 1.367 2.972 1.367 4.997 0 6.243-4.426 13.783-9.865 16.923-1.574.909-3.084 1.276-4.49 1.276zm-2.718-1.109c.774.532 1.688.776 2.718.776 1.323 0 2.754-.413 4.256-1.28 5.311-3.066 9.631-10.505 9.631-16.598 0-1.909-.434-3.523-1.255-4.685-.774-.533-1.688-.799-2.718-.799-1.323 0-2.755.441-4.256 1.308-5.311 3.066-9.631 10.506-9.631 16.599 0 1.909.434 3.517 1.255 4.679z' fill='#607D8B'/><path d='M149.318 114.262l-9.984 8.878 15.893 11.031 5.589-6.112-11.498-13.797' fill='#FAFAFA'/><path d='M169.676 120.84l-9.748 5.627c-3.642 2.103-9.528 2.113-13.147.024-3.62-2.089-3.601-5.488.041-7.591l9.495-5.608-6.729-3.885-81.836 47.071 45.923 26.514 3.081-1.779c.631-.365.869-.898.618-1.39-2.357-4.632-2.593-9.546-.683-14.262 5.638-13.92 24.509-24.815 48.618-28.07 8.169-1.103 16.68-.967 24.704.394.852.145 1.776.008 2.407-.357l3.081-1.778-25.825-14.91' fill='#FAFAFA'/><path d='M113.675 183.459a.47.47 0 0 1-.233-.062l-45.924-26.515a.468.468 0 0 1 .001-.809l81.836-47.071a.467.467 0 0 1 .466 0l6.729 3.885a.467.467 0 0 1-.467.809l-6.496-3.75-80.9 46.533 44.988 25.973 2.848-1.644c.192-.111.62-.409.435-.773-2.416-4.748-2.658-9.814-.7-14.65 2.806-6.927 8.885-13.242 17.582-18.263 8.657-4.998 19.518-8.489 31.407-10.094 8.198-1.107 16.79-.97 24.844.397.739.125 1.561.007 2.095-.301l2.381-1.374-25.125-14.506a.467.467 0 0 1 .467-.809l25.825 14.91a.467.467 0 0 1 0 .809l-3.081 1.779c-.721.417-1.763.575-2.718.413-7.963-1.351-16.457-1.486-24.563-.392-11.77 1.589-22.512 5.039-31.065 9.977-8.514 4.916-14.456 11.073-17.183 17.805-1.854 4.578-1.623 9.376.666 13.875.37.725.055 1.513-.8 2.006l-3.081 1.78a.476.476 0 0 1-.234.062' fill='#455A64'/><path d='M153.316 128.279c-2.413 0-4.821-.528-6.652-1.586-1.818-1.049-2.82-2.461-2.82-3.975 0-1.527 1.016-2.955 2.861-4.02l9.493-5.607a.233.233 0 1 1 .238.402l-9.496 5.609c-1.696.979-2.628 2.263-2.628 3.616 0 1.34.918 2.608 2.585 3.571 3.549 2.049 9.343 2.038 12.914-.024l9.748-5.628a.234.234 0 0 1 .234.405l-9.748 5.628c-1.858 1.072-4.296 1.609-6.729 1.609' fill='#607D8B'/><path d='M113.675 182.992l-45.913-26.508M113.675 183.342a.346.346 0 0 1-.175-.047l-45.913-26.508a.35.35 0 1 1 .35-.607l45.913 26.508a.35.35 0 0 1-.175.654' fill='#455A64'/><path d='M67.762 156.484v54.001c0 1.09.77 2.418 1.72 2.967l42.473 24.521c.95.549 1.72.11 1.72-.98v-54.001' fill='#FAFAFA'/><path d='M112.727 238.561c-.297 0-.62-.095-.947-.285l-42.473-24.521c-1.063-.613-1.895-2.05-1.895-3.27v-54.001a.35.35 0 1 1 .701 0v54.001c0 .96.707 2.18 1.544 2.663l42.473 24.522c.344.198.661.243.87.122.206-.119.325-.411.325-.799v-54.001a.35.35 0 1 1 .7 0v54.001c0 .655-.239 1.154-.675 1.406a1.235 1.235 0 0 1-.623.162' fill='#455A64'/><path d='M112.86 147.512h-.001c-2.318 0-4.499-.522-6.142-1.471-1.705-.984-2.643-2.315-2.643-3.749 0-1.445.952-2.791 2.68-3.788l12.041-6.953c1.668-.962 3.874-1.493 6.212-1.493 2.318 0 4.499.523 6.143 1.472 1.704.984 2.643 2.315 2.643 3.748 0 1.446-.952 2.791-2.68 3.789l-12.042 6.952c-1.668.963-3.874 1.493-6.211 1.493zm12.147-16.753c-2.217 0-4.298.497-5.861 1.399l-12.042 6.952c-1.502.868-2.33 1.998-2.33 3.182 0 1.173.815 2.289 2.293 3.142 1.538.889 3.596 1.378 5.792 1.378h.001c2.216 0 4.298-.497 5.861-1.399l12.041-6.953c1.502-.867 2.33-1.997 2.33-3.182 0-1.172-.814-2.288-2.292-3.142-1.539-.888-3.596-1.377-5.793-1.377z' fill='#607D8B'/><path d='M165.63 123.219l-5.734 3.311c-3.167 1.828-8.286 1.837-11.433.02-3.147-1.817-3.131-4.772.036-6.601l5.734-3.31 11.397 6.58' fill='#FAFAFA'/><path d='M154.233 117.448l9.995 5.771-4.682 2.704c-1.434.827-3.352 1.283-5.399 1.283-2.029 0-3.923-.449-5.333-1.263-1.29-.744-2-1.694-2-2.674 0-.991.723-1.955 2.036-2.713l5.383-3.108m0-.809l-5.734 3.31c-3.167 1.829-3.183 4.784-.036 6.601 1.568.905 3.623 1.357 5.684 1.357 2.077 0 4.159-.46 5.749-1.377l5.734-3.311-11.397-6.58M145.445 179.667c-1.773 0-3.241-.85-4.243-2.245-.067-.092-.057-.275.023-.356.08-.081.207-.12.3-.055.781.548 1.706.812 2.751.811 1.322 0 2.754-.446 4.256-1.313 5.31-3.066 9.631-10.522 9.631-16.615 0-1.927-.442-3.562-1.279-4.726a.235.235 0 0 1 .024-.301.232.232 0 0 1 .3-.027c1.67 1.172 2.59 3.38 2.59 6.219 0 6.242-4.425 13.987-9.865 17.127-1.573.908-3.083 1.481-4.488 1.481zM142.476 178c.814.651 1.82 1.002 2.969 1.002 1.322 0 2.753-.452 4.255-1.32 5.31-3.065 9.631-10.523 9.631-16.617 0-1.98-.463-3.63-1.325-4.793.411 1.035.624 2.26.624 3.62 0 6.242-4.425 13.875-9.865 17.015-1.573.909-3.084 1.376-4.489 1.376a5.49 5.49 0 0 1-1.8-.283z' fill='#607D8B'/><path d='M148.648 176.704c5.384-3.108 9.748-10.636 9.748-16.813 0-2.052-.483-3.693-1.322-4.861-1.785-1.252-4.375-1.194-7.258.471-5.383 3.108-9.748 10.636-9.748 16.813 0 2.051.484 3.692 1.323 4.86 1.785 1.253 4.374 1.195 7.257-.47' fill='#FAFAFA'/><path d='M144.276 178.276c-1.143 0-2.158-.307-3.019-.911a.217.217 0 0 1-.055-.054c-.895-1.244-1.367-2.972-1.367-4.997 0-6.241 4.425-13.875 9.865-17.016 1.573-.908 3.084-1.369 4.489-1.369 1.143 0 2.158.307 3.019.91a.24.24 0 0 1 .055.055c.894 1.244 1.367 2.971 1.367 4.997 0 6.241-4.425 13.875-9.865 17.016-1.573.908-3.084 1.369-4.489 1.369zm-2.718-1.172c.773.533 1.687.901 2.718.901 1.322 0 2.754-.538 4.256-1.405 5.31-3.066 9.631-10.567 9.631-16.661 0-1.908-.434-3.554-1.256-4.716-.774-.532-1.688-.814-2.718-.814-1.322 0-2.754.433-4.256 1.3-5.31 3.066-9.631 10.564-9.631 16.657 0 1.91.434 3.576 1.256 4.738z' fill='#607D8B'/><path d='M150.72 172.361l-.363-.295a24.105 24.105 0 0 0 2.148-3.128 24.05 24.05 0 0 0 1.977-4.375l.443.149a24.54 24.54 0 0 1-2.015 4.46 24.61 24.61 0 0 1-2.19 3.189M115.917 191.514l-.363-.294a24.174 24.174 0 0 0 2.148-3.128 24.038 24.038 0 0 0 1.976-4.375l.443.148a24.48 24.48 0 0 1-2.015 4.461 24.662 24.662 0 0 1-2.189 3.188M114 237.476V182.584 237.476' fill='#607D8B'/><g><path d='M81.822 37.474c.017-.135-.075-.28-.267-.392-.327-.188-.826-.21-1.109-.045l-6.012 3.471c-.131.076-.194.178-.191.285.002.132.002.461.002.578v.043l-.007.128-6.591 3.779c-.001 0-2.077 1.046-2.787 5.192 0 0-.912 6.961-.898 19.745.015 12.57.606 17.07 1.167 21.351.22 1.684 3.001 2.125 3.001 2.125.331.04.698-.027 1.08-.248l75.273-43.551c1.808-1.069 2.667-3.719 3.056-6.284 1.213-7.99 1.675-32.978-.275-39.878-.196-.693-.51-1.083-.868-1.282l-2.086-.79c-.727.028-1.416.467-1.534.535L82.032 37.072l-.21.402' fill='#FFF'/><path d='M144.311 1.701l2.085.79c.358.199.672.589.868 1.282 1.949 6.9 1.487 31.887.275 39.878-.39 2.565-1.249 5.215-3.056 6.284L69.21 93.486a1.78 1.78 0 0 1-.896.258l-.183-.011c0 .001-2.782-.44-3.003-2.124-.56-4.282-1.151-8.781-1.165-21.351-.015-12.784.897-19.745.897-19.745.71-4.146 2.787-5.192 2.787-5.192l6.591-3.779.007-.128v-.043c0-.117 0-.446-.002-.578-.003-.107.059-.21.191-.285l6.012-3.472a.98.98 0 0 1 .481-.11c.218 0 .449.053.627.156.193.112.285.258.268.392l.211-.402 60.744-34.836c.117-.068.806-.507 1.534-.535m0-.997l-.039.001c-.618.023-1.283.244-1.974.656l-.021.012-60.519 34.706a2.358 2.358 0 0 0-.831-.15c-.365 0-.704.084-.98.244l-6.012 3.471c-.442.255-.699.69-.689 1.166l.001.15-6.08 3.487c-.373.199-2.542 1.531-3.29 5.898l-.006.039c-.009.07-.92 7.173-.906 19.875.014 12.62.603 17.116 1.172 21.465l.002.015c.308 2.355 3.475 2.923 3.836 2.98l.034.004c.101.013.204.019.305.019a2.77 2.77 0 0 0 1.396-.392l75.273-43.552c1.811-1.071 2.999-3.423 3.542-6.997 1.186-7.814 1.734-33.096-.301-40.299-.253-.893-.704-1.527-1.343-1.882l-.132-.062-2.085-.789a.973.973 0 0 0-.353-.065' fill='#455A64'/><path d='M128.267 11.565l1.495.434-56.339 32.326' fill='#FFF'/><path d='M74.202 90.545a.5.5 0 0 1-.25-.931l18.437-10.645a.499.499 0 1 1 .499.864L74.451 90.478l-.249.067M75.764 42.654l-.108-.062.046-.171 5.135-2.964.17.045-.045.171-5.135 2.964-.063.017M70.52 90.375V46.421l.063-.036L137.84 7.554v43.954l-.062.036L70.52 90.375zm.25-43.811v43.38l66.821-38.579V7.985L70.77 46.564z' fill='#607D8B'/><path d='M86.986 83.182c-.23.149-.612.384-.849.523l-11.505 6.701c-.237.139-.206.252.068.252h.565c.275 0 .693-.113.93-.252L87.7 83.705c.237-.139.428-.253.425-.256a11.29 11.29 0 0 1-.006-.503c0-.274-.188-.377-.418-.227l-.715.463' fill='#607D8B'/><path d='M75.266 90.782H74.7c-.2 0-.316-.056-.346-.166-.03-.11.043-.217.215-.317l11.505-6.702c.236-.138.615-.371.844-.519l.715-.464a.488.488 0 0 1 .266-.089c.172 0 .345.13.345.421 0 .214.001.363.003.437l.006.004-.004.069c-.003.075-.003.075-.486.356l-11.505 6.702a2.282 2.282 0 0 1-.992.268zm-.6-.25l.034.001h.566c.252 0 .649-.108.866-.234l11.505-6.702c.168-.098.294-.173.361-.214-.004-.084-.004-.218-.004-.437l-.095-.171-.131.049-.714.463c-.232.15-.616.386-.854.525l-11.505 6.702-.029.018z' fill='#607D8B'/><path d='M75.266 89.871H74.7c-.2 0-.316-.056-.346-.166-.03-.11.043-.217.215-.317l11.505-6.702c.258-.151.694-.268.993-.268h.565c.2 0 .316.056.346.166.03.11-.043.217-.215.317l-11.505 6.702a2.282 2.282 0 0 1-.992.268zm-.6-.25l.034.001h.566c.252 0 .649-.107.866-.234l11.505-6.702.03-.018-.035-.001h-.565c-.252 0-.649.108-.867.234l-11.505 6.702-.029.018zM74.37 90.801v-1.247 1.247' fill='#607D8B'/><path d='M68.13 93.901c-.751-.093-1.314-.737-1.439-1.376-.831-4.238-1.151-8.782-1.165-21.352-.015-12.784.897-19.745.897-19.745.711-4.146 2.787-5.192 2.787-5.192l74.859-43.219c.223-.129 2.487-1.584 3.195.923 1.95 6.9 1.488 31.887.275 39.878-.389 2.565-1.248 5.215-3.056 6.283L69.21 93.653c-.382.221-.749.288-1.08.248 0 0-2.781-.441-3.001-2.125-.561-4.281-1.152-8.781-1.167-21.351-.014-12.784.898-19.745.898-19.745.71-4.146 2.787-5.191 2.787-5.191l6.598-3.81.871-.119 6.599-3.83.046-.461L68.13 93.901' fill='#FAFAFA'/><path d='M68.317 94.161l-.215-.013h-.001l-.244-.047c-.719-.156-2.772-.736-2.976-2.292-.568-4.34-1.154-8.813-1.168-21.384-.014-12.654.891-19.707.9-19.777.725-4.231 2.832-5.338 2.922-5.382l6.628-3.827.87-.119 6.446-3.742.034-.334a.248.248 0 0 1 .273-.223.248.248 0 0 1 .223.272l-.059.589-6.752 3.919-.87.118-6.556 3.785c-.031.016-1.99 1.068-2.666 5.018-.007.06-.908 7.086-.894 19.702.014 12.539.597 16.996 1.161 21.305.091.691.689 1.154 1.309 1.452a1.95 1.95 0 0 1-.236-.609c-.781-3.984-1.155-8.202-1.17-21.399-.014-12.653.891-19.707.9-19.777.725-4.231 2.832-5.337 2.922-5.382-.004.001 74.444-42.98 74.846-43.212l.028-.017c.904-.538 1.72-.688 2.36-.433.555.221.949.733 1.172 1.52 2.014 7.128 1.46 32.219.281 39.983-.507 3.341-1.575 5.515-3.175 6.462L69.335 93.869a2.023 2.023 0 0 1-1.018.292zm-.147-.507c.293.036.604-.037.915-.217l75.273-43.551c1.823-1.078 2.602-3.915 2.934-6.106 1.174-7.731 1.731-32.695-.268-39.772-.178-.631-.473-1.032-.876-1.192-.484-.193-1.166-.052-1.921.397l-.034.021-74.858 43.218c-.031.017-1.989 1.069-2.666 5.019-.007.059-.908 7.085-.894 19.702.015 13.155.386 17.351 1.161 21.303.09.461.476.983 1.037 1.139.114.025.185.037.196.039h.001z' fill='#455A64'/><path d='M69.317 68.982c.489-.281.885-.056.885.505 0 .56-.396 1.243-.885 1.525-.488.282-.884.057-.884-.504 0-.56.396-1.243.884-1.526' fill='#FFF'/><path d='M68.92 71.133c-.289 0-.487-.228-.487-.625 0-.56.396-1.243.884-1.526a.812.812 0 0 1 .397-.121c.289 0 .488.229.488.626 0 .56-.396 1.243-.885 1.525a.812.812 0 0 1-.397.121m.794-2.459a.976.976 0 0 0-.49.147c-.548.317-.978 1.058-.978 1.687 0 .486.271.812.674.812a.985.985 0 0 0 .491-.146c.548-.317.978-1.057.978-1.687 0-.486-.272-.813-.675-.813' fill='#8097A2'/><path d='M68.92 70.947c-.271 0-.299-.307-.299-.439 0-.491.361-1.116.79-1.363a.632.632 0 0 1 .303-.096c.272 0 .301.306.301.438 0 .491-.363 1.116-.791 1.364a.629.629 0 0 1-.304.096m.794-2.086a.812.812 0 0 0-.397.121c-.488.283-.884.966-.884 1.526 0 .397.198.625.487.625a.812.812 0 0 0 .397-.121c.489-.282.885-.965.885-1.525 0-.397-.199-.626-.488-.626' fill='#8097A2'/><path d='M69.444 85.35c.264-.152.477-.031.477.272 0 .303-.213.67-.477.822-.263.153-.477.031-.477-.271 0-.302.214-.671.477-.823' fill='#FFF'/><path d='M69.23 86.51c-.156 0-.263-.123-.263-.337 0-.302.214-.671.477-.823a.431.431 0 0 1 .214-.066c.156 0 .263.124.263.338 0 .303-.213.67-.477.822a.431.431 0 0 1-.214.066m.428-1.412c-.1 0-.203.029-.307.09-.32.185-.57.618-.57.985 0 .309.185.524.449.524a.63.63 0 0 0 .308-.09c.32-.185.57-.618.57-.985 0-.309-.185-.524-.45-.524' fill='#8097A2'/><path d='M69.23 86.322l-.076-.149c0-.235.179-.544.384-.661l.12-.041.076.151c0 .234-.179.542-.383.66l-.121.04m.428-1.038a.431.431 0 0 0-.214.066c-.263.152-.477.521-.477.823 0 .214.107.337.263.337a.431.431 0 0 0 .214-.066c.264-.152.477-.519.477-.822 0-.214-.107-.338-.263-.338' fill='#8097A2'/><path d='M139.278 7.769v43.667L72.208 90.16V46.493l67.07-38.724' fill='#455A64'/><path d='M72.083 90.375V46.421l.063-.036 67.257-38.831v43.954l-.062.036-67.258 38.831zm.25-43.811v43.38l66.821-38.579V7.985L72.333 46.564z' fill='#607D8B'/></g><path d='M125.737 88.647l-7.639 3.334V84l-11.459 4.713v8.269L99 100.315l13.369 3.646 13.368-15.314' fill='#455A64'/></g></svg>";
-function RotateInstructions() {
-  this.loadIcon_();
-  var overlay = document.createElement('div');
-  var s = overlay.style;
-  s.position = 'fixed';
-  s.top = 0;
-  s.right = 0;
-  s.bottom = 0;
-  s.left = 0;
-  s.backgroundColor = 'gray';
-  s.fontFamily = 'sans-serif';
-  s.zIndex = 1000000;
-  var img = document.createElement('img');
-  img.src = this.icon;
-  var s = img.style;
-  s.marginLeft = '25%';
-  s.marginTop = '25%';
-  s.width = '50%';
-  overlay.appendChild(img);
-  var text = document.createElement('div');
-  var s = text.style;
-  s.textAlign = 'center';
-  s.fontSize = '16px';
-  s.lineHeight = '24px';
-  s.margin = '24px 25%';
-  s.width = '50%';
-  text.innerHTML = 'Place your phone into your Cardboard viewer.';
-  overlay.appendChild(text);
-  var snackbar = document.createElement('div');
-  var s = snackbar.style;
-  s.backgroundColor = '#CFD8DC';
-  s.position = 'fixed';
-  s.bottom = 0;
-  s.width = '100%';
-  s.height = '48px';
-  s.padding = '14px 24px';
-  s.boxSizing = 'border-box';
-  s.color = '#656A6B';
-  overlay.appendChild(snackbar);
-  var snackbarText = document.createElement('div');
-  snackbarText.style.float = 'left';
-  snackbarText.innerHTML = 'No Cardboard viewer?';
-  var snackbarButton = document.createElement('a');
-  snackbarButton.href = 'https://www.google.com/get/cardboard/get-cardboard/';
-  snackbarButton.innerHTML = 'get one';
-  snackbarButton.target = '_blank';
-  var s = snackbarButton.style;
-  s.float = 'right';
-  s.fontWeight = 600;
-  s.textTransform = 'uppercase';
-  s.borderLeft = '1px solid gray';
-  s.paddingLeft = '24px';
-  s.textDecoration = 'none';
-  s.color = '#656A6B';
-  snackbar.appendChild(snackbarText);
-  snackbar.appendChild(snackbarButton);
-  this.overlay = overlay;
-  this.text = text;
-  this.hide();
-}
-RotateInstructions.prototype.show = function (parent) {
-  if (!parent && !this.overlay.parentElement) {
-    document.body.appendChild(this.overlay);
-  } else if (parent) {
-    if (this.overlay.parentElement && this.overlay.parentElement != parent) this.overlay.parentElement.removeChild(this.overlay);
-    parent.appendChild(this.overlay);
-  }
-  this.overlay.style.display = 'block';
-  var img = this.overlay.querySelector('img');
-  var s = img.style;
-  if (isLandscapeMode()) {
-    s.width = '20%';
-    s.marginLeft = '40%';
-    s.marginTop = '3%';
-  } else {
-    s.width = '50%';
-    s.marginLeft = '25%';
-    s.marginTop = '25%';
-  }
-};
-RotateInstructions.prototype.hide = function () {
-  this.overlay.style.display = 'none';
-};
-RotateInstructions.prototype.showTemporarily = function (ms, parent) {
-  this.show(parent);
-  this.timer = setTimeout(this.hide.bind(this), ms);
-};
-RotateInstructions.prototype.disableShowTemporarily = function () {
-  clearTimeout(this.timer);
-};
-RotateInstructions.prototype.update = function () {
-  this.disableShowTemporarily();
-  if (!isLandscapeMode() && isMobile()) {
-    this.show();
-  } else {
-    this.hide();
-  }
-};
-RotateInstructions.prototype.loadIcon_ = function () {
-  this.icon = dataUri('image/svg+xml', rotateInstructionsAsset);
-};
-var DEFAULT_VIEWER = 'CardboardV1';
-var VIEWER_KEY = 'WEBVR_CARDBOARD_VIEWER';
-var CLASS_NAME = 'webvr-polyfill-viewer-selector';
-function ViewerSelector(defaultViewer) {
-  try {
-    this.selectedKey = localStorage.getItem(VIEWER_KEY);
-  } catch (error) {
-    console.error('Failed to load viewer profile: %s', error);
-  }
-  if (!this.selectedKey) {
-    this.selectedKey = defaultViewer || DEFAULT_VIEWER;
-  }
-  this.dialog = this.createDialog_(DeviceInfo.Viewers);
-  this.root = null;
-  this.onChangeCallbacks_ = [];
-}
-ViewerSelector.prototype.show = function (root) {
-  this.root = root;
-  root.appendChild(this.dialog);
-  var selected = this.dialog.querySelector('#' + this.selectedKey);
-  selected.checked = true;
-  this.dialog.style.display = 'block';
-};
-ViewerSelector.prototype.hide = function () {
-  if (this.root && this.root.contains(this.dialog)) {
-    this.root.removeChild(this.dialog);
-  }
-  this.dialog.style.display = 'none';
-};
-ViewerSelector.prototype.getCurrentViewer = function () {
-  return DeviceInfo.Viewers[this.selectedKey];
-};
-ViewerSelector.prototype.getSelectedKey_ = function () {
-  var input = this.dialog.querySelector('input[name=field]:checked');
-  if (input) {
-    return input.id;
-  }
-  return null;
-};
-ViewerSelector.prototype.onChange = function (cb) {
-  this.onChangeCallbacks_.push(cb);
-};
-ViewerSelector.prototype.fireOnChange_ = function (viewer) {
-  for (var i = 0; i < this.onChangeCallbacks_.length; i++) {
-    this.onChangeCallbacks_[i](viewer);
-  }
-};
-ViewerSelector.prototype.onSave_ = function () {
-  this.selectedKey = this.getSelectedKey_();
-  if (!this.selectedKey || !DeviceInfo.Viewers[this.selectedKey]) {
-    console.error('ViewerSelector.onSave_: this should never happen!');
-    return;
-  }
-  this.fireOnChange_(DeviceInfo.Viewers[this.selectedKey]);
-  try {
-    localStorage.setItem(VIEWER_KEY, this.selectedKey);
-  } catch (error) {
-    console.error('Failed to save viewer profile: %s', error);
-  }
-  this.hide();
-};
-ViewerSelector.prototype.createDialog_ = function (options) {
-  var container = document.createElement('div');
-  container.classList.add(CLASS_NAME);
-  container.style.display = 'none';
-  var overlay = document.createElement('div');
-  var s = overlay.style;
-  s.position = 'fixed';
-  s.left = 0;
-  s.top = 0;
-  s.width = '100%';
-  s.height = '100%';
-  s.background = 'rgba(0, 0, 0, 0.3)';
-  overlay.addEventListener('click', this.hide.bind(this));
-  var width = 280;
-  var dialog = document.createElement('div');
-  var s = dialog.style;
-  s.boxSizing = 'border-box';
-  s.position = 'fixed';
-  s.top = '24px';
-  s.left = '50%';
-  s.marginLeft = -width / 2 + 'px';
-  s.width = width + 'px';
-  s.padding = '24px';
-  s.overflow = 'hidden';
-  s.background = '#fafafa';
-  s.fontFamily = "'Roboto', sans-serif";
-  s.boxShadow = '0px 5px 20px #666';
-  dialog.appendChild(this.createH1_('Select your viewer'));
-  for (var id in options) {
-    dialog.appendChild(this.createChoice_(id, options[id].label));
-  }
-  dialog.appendChild(this.createButton_('Save', this.onSave_.bind(this)));
-  container.appendChild(overlay);
-  container.appendChild(dialog);
-  return container;
-};
-ViewerSelector.prototype.createH1_ = function (name) {
-  var h1 = document.createElement('h1');
-  var s = h1.style;
-  s.color = 'black';
-  s.fontSize = '20px';
-  s.fontWeight = 'bold';
-  s.marginTop = 0;
-  s.marginBottom = '24px';
-  h1.innerHTML = name;
-  return h1;
-};
-ViewerSelector.prototype.createChoice_ = function (id, name) {
-  var div = document.createElement('div');
-  div.style.marginTop = '8px';
-  div.style.color = 'black';
-  var input = document.createElement('input');
-  input.style.fontSize = '30px';
-  input.setAttribute('id', id);
-  input.setAttribute('type', 'radio');
-  input.setAttribute('value', id);
-  input.setAttribute('name', 'field');
-  var label = document.createElement('label');
-  label.style.marginLeft = '4px';
-  label.setAttribute('for', id);
-  label.innerHTML = name;
-  div.appendChild(input);
-  div.appendChild(label);
-  return div;
-};
-ViewerSelector.prototype.createButton_ = function (label, onclick) {
-  var button = document.createElement('button');
-  button.innerHTML = label;
-  var s = button.style;
-  s.float = 'right';
-  s.textTransform = 'uppercase';
-  s.color = '#1094f7';
-  s.fontSize = '14px';
-  s.letterSpacing = 0;
-  s.border = 0;
-  s.background = 'none';
-  s.marginTop = '16px';
-  button.addEventListener('click', onclick);
-  return button;
-};
-var commonjsGlobal$$1 = typeof window !== 'undefined' ? window : typeof commonjsGlobal !== 'undefined' ? commonjsGlobal : typeof self !== 'undefined' ? self : {};
-function unwrapExports$$1 (x) {
-	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
-}
-function createCommonjsModule$$1(fn, module) {
-	return module = { exports: {} }, fn(module, module.exports), module.exports;
-}
-var NoSleep = createCommonjsModule$$1(function (module, exports) {
-(function webpackUniversalModuleDefinition(root, factory) {
-	module.exports = factory();
-})(commonjsGlobal$$1, function() {
-return          (function(modules) {
-         	var installedModules = {};
-         	function __webpack_require__(moduleId) {
-         		if(installedModules[moduleId]) {
-         			return installedModules[moduleId].exports;
-         		}
-         		var module = installedModules[moduleId] = {
-         			i: moduleId,
-         			l: false,
-         			exports: {}
-         		};
-         		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-         		module.l = true;
-         		return module.exports;
-         	}
-         	__webpack_require__.m = modules;
-         	__webpack_require__.c = installedModules;
-         	__webpack_require__.d = function(exports, name, getter) {
-         		if(!__webpack_require__.o(exports, name)) {
-         			Object.defineProperty(exports, name, {
-         				configurable: false,
-         				enumerable: true,
-         				get: getter
-         			});
-         		}
-         	};
-         	__webpack_require__.n = function(module) {
-         		var getter = module && module.__esModule ?
-         			function getDefault() { return module['default']; } :
-         			function getModuleExports() { return module; };
-         		__webpack_require__.d(getter, 'a', getter);
-         		return getter;
-         	};
-         	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
-         	__webpack_require__.p = "";
-         	return __webpack_require__(__webpack_require__.s = 0);
-         })
-         ([
-      (function(module, exports, __webpack_require__) {
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-var mediaFile = __webpack_require__(1);
-var oldIOS = typeof navigator !== 'undefined' && parseFloat(('' + (/CPU.*OS ([0-9_]{3,4})[0-9_]{0,1}|(CPU like).*AppleWebKit.*Mobile/i.exec(navigator.userAgent) || [0, ''])[1]).replace('undefined', '3_2').replace('_', '.').replace('_', '')) < 10 && !window.MSStream;
-var NoSleep = function () {
-  function NoSleep() {
-    _classCallCheck(this, NoSleep);
-    if (oldIOS) {
-      this.noSleepTimer = null;
-    } else {
-      this.noSleepVideo = document.createElement('video');
-      this.noSleepVideo.setAttribute('playsinline', '');
-      this.noSleepVideo.setAttribute('src', mediaFile);
-      this.noSleepVideo.addEventListener('timeupdate', function (e) {
-        if (this.noSleepVideo.currentTime > 0.5) {
-          this.noSleepVideo.currentTime = Math.random();
-        }
-      }.bind(this));
-    }
-  }
-  _createClass(NoSleep, [{
-    key: 'enable',
-    value: function enable() {
-      if (oldIOS) {
-        this.disable();
-        this.noSleepTimer = window.setInterval(function () {
-          window.location.href = '/';
-          window.setTimeout(window.stop, 0);
-        }, 15000);
-      } else {
-        this.noSleepVideo.play();
-      }
-    }
-  }, {
-    key: 'disable',
-    value: function disable() {
-      if (oldIOS) {
-        if (this.noSleepTimer) {
-          window.clearInterval(this.noSleepTimer);
-          this.noSleepTimer = null;
-        }
-      } else {
-        this.noSleepVideo.pause();
-      }
-    }
-  }]);
-  return NoSleep;
-}();
-module.exports = NoSleep;
-      }),
-      (function(module, exports, __webpack_require__) {
-module.exports = 'data:video/mp4;base64,AAAAIGZ0eXBtcDQyAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAACKBtZGF0AAAC8wYF///v3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE0MiByMjQ3OSBkZDc5YTYxIC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAxNCAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTEgcmVmPTEgZGVibG9jaz0xOjA6MCBhbmFseXNlPTB4MToweDExMSBtZT1oZXggc3VibWU9MiBwc3k9MSBwc3lfcmQ9MS4wMDowLjAwIG1peGVkX3JlZj0wIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MCA4eDhkY3Q9MCBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0wIHRocmVhZHM9NiBsb29rYWhlYWRfdGhyZWFkcz0xIHNsaWNlZF90aHJlYWRzPTAgbnI9MCBkZWNpbWF0ZT0xIGludGVybGFjZWQ9MCBibHVyYXlfY29tcGF0PTAgY29uc3RyYWluZWRfaW50cmE9MCBiZnJhbWVzPTMgYl9weXJhbWlkPTIgYl9hZGFwdD0xIGJfYmlhcz0wIGRpcmVjdD0xIHdlaWdodGI9MSBvcGVuX2dvcD0wIHdlaWdodHA9MSBrZXlpbnQ9MzAwIGtleWludF9taW49MzAgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD0xMCByYz1jcmYgbWJ0cmVlPTEgY3JmPTIwLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IHZidl9tYXhyYXRlPTIwMDAwIHZidl9idWZzaXplPTI1MDAwIGNyZl9tYXg9MC4wIG5hbF9ocmQ9bm9uZSBmaWxsZXI9MCBpcF9yYXRpbz0xLjQwIGFxPTE6MS4wMACAAAAAOWWIhAA3//p+C7v8tDDSTjf97w55i3SbRPO4ZY+hkjD5hbkAkL3zpJ6h/LR1CAABzgB1kqqzUorlhQAAAAxBmiQYhn/+qZYADLgAAAAJQZ5CQhX/AAj5IQADQGgcIQADQGgcAAAACQGeYUQn/wALKCEAA0BoHAAAAAkBnmNEJ/8ACykhAANAaBwhAANAaBwAAAANQZpoNExDP/6plgAMuSEAA0BoHAAAAAtBnoZFESwr/wAI+SEAA0BoHCEAA0BoHAAAAAkBnqVEJ/8ACykhAANAaBwAAAAJAZ6nRCf/AAsoIQADQGgcIQADQGgcAAAADUGarDRMQz/+qZYADLghAANAaBwAAAALQZ7KRRUsK/8ACPkhAANAaBwAAAAJAZ7pRCf/AAsoIQADQGgcIQADQGgcAAAACQGe60Qn/wALKCEAA0BoHAAAAA1BmvA0TEM//qmWAAy5IQADQGgcIQADQGgcAAAAC0GfDkUVLCv/AAj5IQADQGgcAAAACQGfLUQn/wALKSEAA0BoHCEAA0BoHAAAAAkBny9EJ/8ACyghAANAaBwAAAANQZs0NExDP/6plgAMuCEAA0BoHAAAAAtBn1JFFSwr/wAI+SEAA0BoHCEAA0BoHAAAAAkBn3FEJ/8ACyghAANAaBwAAAAJAZ9zRCf/AAsoIQADQGgcIQADQGgcAAAADUGbeDRMQz/+qZYADLkhAANAaBwAAAALQZ+WRRUsK/8ACPghAANAaBwhAANAaBwAAAAJAZ+1RCf/AAspIQADQGgcAAAACQGft0Qn/wALKSEAA0BoHCEAA0BoHAAAAA1Bm7w0TEM//qmWAAy4IQADQGgcAAAAC0Gf2kUVLCv/AAj5IQADQGgcAAAACQGf+UQn/wALKCEAA0BoHCEAA0BoHAAAAAkBn/tEJ/8ACykhAANAaBwAAAANQZvgNExDP/6plgAMuSEAA0BoHCEAA0BoHAAAAAtBnh5FFSwr/wAI+CEAA0BoHAAAAAkBnj1EJ/8ACyghAANAaBwhAANAaBwAAAAJAZ4/RCf/AAspIQADQGgcAAAADUGaJDRMQz/+qZYADLghAANAaBwAAAALQZ5CRRUsK/8ACPkhAANAaBwhAANAaBwAAAAJAZ5hRCf/AAsoIQADQGgcAAAACQGeY0Qn/wALKSEAA0BoHCEAA0BoHAAAAA1Bmmg0TEM//qmWAAy5IQADQGgcAAAAC0GehkUVLCv/AAj5IQADQGgcIQADQGgcAAAACQGepUQn/wALKSEAA0BoHAAAAAkBnqdEJ/8ACyghAANAaBwAAAANQZqsNExDP/6plgAMuCEAA0BoHCEAA0BoHAAAAAtBnspFFSwr/wAI+SEAA0BoHAAAAAkBnulEJ/8ACyghAANAaBwhAANAaBwAAAAJAZ7rRCf/AAsoIQADQGgcAAAADUGa8DRMQz/+qZYADLkhAANAaBwhAANAaBwAAAALQZ8ORRUsK/8ACPkhAANAaBwAAAAJAZ8tRCf/AAspIQADQGgcIQADQGgcAAAACQGfL0Qn/wALKCEAA0BoHAAAAA1BmzQ0TEM//qmWAAy4IQADQGgcAAAAC0GfUkUVLCv/AAj5IQADQGgcIQADQGgcAAAACQGfcUQn/wALKCEAA0BoHAAAAAkBn3NEJ/8ACyghAANAaBwhAANAaBwAAAANQZt4NExC//6plgAMuSEAA0BoHAAAAAtBn5ZFFSwr/wAI+CEAA0BoHCEAA0BoHAAAAAkBn7VEJ/8ACykhAANAaBwAAAAJAZ+3RCf/AAspIQADQGgcAAAADUGbuzRMQn/+nhAAYsAhAANAaBwhAANAaBwAAAAJQZ/aQhP/AAspIQADQGgcAAAACQGf+UQn/wALKCEAA0BoHCEAA0BoHCEAA0BoHCEAA0BoHCEAA0BoHCEAA0BoHAAACiFtb292AAAAbG12aGQAAAAA1YCCX9WAgl8AAAPoAAAH/AABAAABAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAAAGGlvZHMAAAAAEICAgAcAT////v7/AAAF+XRyYWsAAABcdGtoZAAAAAPVgIJf1YCCXwAAAAEAAAAAAAAH0AAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAygAAAMoAAAAAACRlZHRzAAAAHGVsc3QAAAAAAAAAAQAAB9AAABdwAAEAAAAABXFtZGlhAAAAIG1kaGQAAAAA1YCCX9WAgl8AAV+QAAK/IFXEAAAAAAAtaGRscgAAAAAAAAAAdmlkZQAAAAAAAAAAAAAAAFZpZGVvSGFuZGxlcgAAAAUcbWluZgAAABR2bWhkAAAAAQAAAAAAAAAAAAAAJGRpbmYAAAAcZHJlZgAAAAAAAAABAAAADHVybCAAAAABAAAE3HN0YmwAAACYc3RzZAAAAAAAAAABAAAAiGF2YzEAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAygDKAEgAAABIAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY//8AAAAyYXZjQwFNQCj/4QAbZ01AKOyho3ySTUBAQFAAAAMAEAAr8gDxgxlgAQAEaO+G8gAAABhzdHRzAAAAAAAAAAEAAAA8AAALuAAAABRzdHNzAAAAAAAAAAEAAAABAAAB8GN0dHMAAAAAAAAAPAAAAAEAABdwAAAAAQAAOpgAAAABAAAXcAAAAAEAAAAAAAAAAQAAC7gAAAABAAA6mAAAAAEAABdwAAAAAQAAAAAAAAABAAALuAAAAAEAADqYAAAAAQAAF3AAAAABAAAAAAAAAAEAAAu4AAAAAQAAOpgAAAABAAAXcAAAAAEAAAAAAAAAAQAAC7gAAAABAAA6mAAAAAEAABdwAAAAAQAAAAAAAAABAAALuAAAAAEAADqYAAAAAQAAF3AAAAABAAAAAAAAAAEAAAu4AAAAAQAAOpgAAAABAAAXcAAAAAEAAAAAAAAAAQAAC7gAAAABAAA6mAAAAAEAABdwAAAAAQAAAAAAAAABAAALuAAAAAEAADqYAAAAAQAAF3AAAAABAAAAAAAAAAEAAAu4AAAAAQAAOpgAAAABAAAXcAAAAAEAAAAAAAAAAQAAC7gAAAABAAA6mAAAAAEAABdwAAAAAQAAAAAAAAABAAALuAAAAAEAADqYAAAAAQAAF3AAAAABAAAAAAAAAAEAAAu4AAAAAQAAOpgAAAABAAAXcAAAAAEAAAAAAAAAAQAAC7gAAAABAAA6mAAAAAEAABdwAAAAAQAAAAAAAAABAAALuAAAAAEAAC7gAAAAAQAAF3AAAAABAAAAAAAAABxzdHNjAAAAAAAAAAEAAAABAAAAAQAAAAEAAAEEc3RzegAAAAAAAAAAAAAAPAAAAzQAAAAQAAAADQAAAA0AAAANAAAAEQAAAA8AAAANAAAADQAAABEAAAAPAAAADQAAAA0AAAARAAAADwAAAA0AAAANAAAAEQAAAA8AAAANAAAADQAAABEAAAAPAAAADQAAAA0AAAARAAAADwAAAA0AAAANAAAAEQAAAA8AAAANAAAADQAAABEAAAAPAAAADQAAAA0AAAARAAAADwAAAA0AAAANAAAAEQAAAA8AAAANAAAADQAAABEAAAAPAAAADQAAAA0AAAARAAAADwAAAA0AAAANAAAAEQAAAA8AAAANAAAADQAAABEAAAANAAAADQAAAQBzdGNvAAAAAAAAADwAAAAwAAADZAAAA3QAAAONAAADoAAAA7kAAAPQAAAD6wAAA/4AAAQXAAAELgAABEMAAARcAAAEbwAABIwAAAShAAAEugAABM0AAATkAAAE/wAABRIAAAUrAAAFQgAABV0AAAVwAAAFiQAABaAAAAW1AAAFzgAABeEAAAX+AAAGEwAABiwAAAY/AAAGVgAABnEAAAaEAAAGnQAABrQAAAbPAAAG4gAABvUAAAcSAAAHJwAAB0AAAAdTAAAHcAAAB4UAAAeeAAAHsQAAB8gAAAfjAAAH9gAACA8AAAgmAAAIQQAACFQAAAhnAAAIhAAACJcAAAMsdHJhawAAAFx0a2hkAAAAA9WAgl/VgIJfAAAAAgAAAAAAAAf8AAAAAAAAAAAAAAABAQAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAACsm1kaWEAAAAgbWRoZAAAAADVgIJf1YCCXwAArEQAAWAAVcQAAAAAACdoZGxyAAAAAAAAAABzb3VuAAAAAAAAAAAAAAAAU3RlcmVvAAAAAmNtaW5mAAAAEHNtaGQAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAidzdGJsAAAAZ3N0c2QAAAAAAAAAAQAAAFdtcDRhAAAAAAAAAAEAAAAAAAAAAAACABAAAAAArEQAAAAAADNlc2RzAAAAAAOAgIAiAAIABICAgBRAFQAAAAADDUAAAAAABYCAgAISEAaAgIABAgAAABhzdHRzAAAAAAAAAAEAAABYAAAEAAAAABxzdHNjAAAAAAAAAAEAAAABAAAAAQAAAAEAAAAUc3RzegAAAAAAAAAGAAAAWAAAAXBzdGNvAAAAAAAAAFgAAAOBAAADhwAAA5oAAAOtAAADswAAA8oAAAPfAAAD5QAAA/gAAAQLAAAEEQAABCgAAAQ9AAAEUAAABFYAAARpAAAEgAAABIYAAASbAAAErgAABLQAAATHAAAE3gAABPMAAAT5AAAFDAAABR8AAAUlAAAFPAAABVEAAAVXAAAFagAABX0AAAWDAAAFmgAABa8AAAXCAAAFyAAABdsAAAXyAAAF+AAABg0AAAYgAAAGJgAABjkAAAZQAAAGZQAABmsAAAZ+AAAGkQAABpcAAAauAAAGwwAABskAAAbcAAAG7wAABwYAAAcMAAAHIQAABzQAAAc6AAAHTQAAB2QAAAdqAAAHfwAAB5IAAAeYAAAHqwAAB8IAAAfXAAAH3QAAB/AAAAgDAAAICQAACCAAAAg1AAAIOwAACE4AAAhhAAAIeAAACH4AAAiRAAAIpAAACKoAAAiwAAAItgAACLwAAAjCAAAAFnVkdGEAAAAObmFtZVN0ZXJlbwAAAHB1ZHRhAAAAaG1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAAO2lsc3QAAAAzqXRvbwAAACtkYXRhAAAAAQAAAABIYW5kQnJha2UgMC4xMC4yIDIwMTUwNjExMDA=';
-      })
-         ]);
-});
-});
-var NoSleep$1 = unwrapExports$$1(NoSleep);
-var nextDisplayId = 1000;
-var defaultLeftBounds = [0, 0, 0.5, 1];
-var defaultRightBounds = [0.5, 0, 0.5, 1];
-var raf = window.requestAnimationFrame;
-var caf = window.cancelAnimationFrame;
-function VRFrameData() {
-  this.leftProjectionMatrix = new Float32Array(16);
-  this.leftViewMatrix = new Float32Array(16);
-  this.rightProjectionMatrix = new Float32Array(16);
-  this.rightViewMatrix = new Float32Array(16);
-  this.pose = null;
-}
-function VRDisplayCapabilities(config) {
-  Object.defineProperties(this, {
-    hasPosition: {
-      writable: false, enumerable: true, value: config.hasPosition
-    },
-    hasExternalDisplay: {
-      writable: false, enumerable: true, value: config.hasExternalDisplay
-    },
-    canPresent: {
-      writable: false, enumerable: true, value: config.canPresent
-    },
-    maxLayers: {
-      writable: false, enumerable: true, value: config.maxLayers
-    },
-    hasOrientation: {
-      enumerable: true, get: function get() {
-        deprecateWarning('VRDisplayCapabilities.prototype.hasOrientation', 'VRDisplay.prototype.getFrameData');
-        return config.hasOrientation;
-      }
-    }
-  });
-}
-function VRDisplay(config) {
-  config = config || {};
-  var USE_WAKELOCK = 'wakelock' in config ? config.wakelock : true;
-  this.isPolyfilled = true;
-  this.displayId = nextDisplayId++;
-  this.displayName = '';
-  this.depthNear = 0.01;
-  this.depthFar = 10000.0;
-  this.isPresenting = false;
-  Object.defineProperty(this, 'isConnected', {
-    get: function get() {
-      deprecateWarning('VRDisplay.prototype.isConnected', 'VRDisplayCapabilities.prototype.hasExternalDisplay');
-      return false;
-    }
-  });
-  this.capabilities = new VRDisplayCapabilities({
-    hasPosition: false,
-    hasOrientation: false,
-    hasExternalDisplay: false,
-    canPresent: false,
-    maxLayers: 1
-  });
-  this.stageParameters = null;
-  this.waitingForPresent_ = false;
-  this.layer_ = null;
-  this.originalParent_ = null;
-  this.fullscreenElement_ = null;
-  this.fullscreenWrapper_ = null;
-  this.fullscreenElementCachedStyle_ = null;
-  this.fullscreenEventTarget_ = null;
-  this.fullscreenChangeHandler_ = null;
-  this.fullscreenErrorHandler_ = null;
-  if (USE_WAKELOCK && isMobile()) {
-    this.wakelock_ = new NoSleep$1();
-  }
-}
-VRDisplay.prototype.getFrameData = function (frameData) {
-  return frameDataFromPose(frameData, this._getPose(), this);
-};
-VRDisplay.prototype.getPose = function () {
-  deprecateWarning('VRDisplay.prototype.getPose', 'VRDisplay.prototype.getFrameData');
-  return this._getPose();
-};
-VRDisplay.prototype.resetPose = function () {
-  deprecateWarning('VRDisplay.prototype.resetPose');
-  return this._resetPose();
-};
-VRDisplay.prototype.getImmediatePose = function () {
-  deprecateWarning('VRDisplay.prototype.getImmediatePose', 'VRDisplay.prototype.getFrameData');
-  return this._getPose();
-};
-VRDisplay.prototype.requestAnimationFrame = function (callback) {
-  return raf(callback);
-};
-VRDisplay.prototype.cancelAnimationFrame = function (id) {
-  return caf(id);
-};
-VRDisplay.prototype.wrapForFullscreen = function (element) {
-  if (isIOS()) {
-    return element;
-  }
-  if (!this.fullscreenWrapper_) {
-    this.fullscreenWrapper_ = document.createElement('div');
-    var cssProperties = ['height: ' + Math.min(screen.height, screen.width) + 'px !important', 'top: 0 !important', 'left: 0 !important', 'right: 0 !important', 'border: 0', 'margin: 0', 'padding: 0', 'z-index: 999999 !important', 'position: fixed'];
-    this.fullscreenWrapper_.setAttribute('style', cssProperties.join('; ') + ';');
-    this.fullscreenWrapper_.classList.add('webvr-polyfill-fullscreen-wrapper');
-  }
-  if (this.fullscreenElement_ == element) {
-    return this.fullscreenWrapper_;
-  }
-  if (this.fullscreenElement_) {
-    if (this.originalParent_) {
-      this.originalParent_.appendChild(this.fullscreenElement_);
-    } else {
-      this.fullscreenElement_.parentElement.removeChild(this.fullscreenElement_);
-    }
-  }
-  this.fullscreenElement_ = element;
-  this.originalParent_ = element.parentElement;
-  if (!this.originalParent_) {
-    document.body.appendChild(element);
-  }
-  if (!this.fullscreenWrapper_.parentElement) {
-    var parent = this.fullscreenElement_.parentElement;
-    parent.insertBefore(this.fullscreenWrapper_, this.fullscreenElement_);
-    parent.removeChild(this.fullscreenElement_);
-  }
-  this.fullscreenWrapper_.insertBefore(this.fullscreenElement_, this.fullscreenWrapper_.firstChild);
-  this.fullscreenElementCachedStyle_ = this.fullscreenElement_.getAttribute('style');
-  var self = this;
-  function applyFullscreenElementStyle() {
-    if (!self.fullscreenElement_) {
-      return;
-    }
-    var cssProperties = ['position: absolute', 'top: 0', 'left: 0', 'width: ' + Math.max(screen.width, screen.height) + 'px', 'height: ' + Math.min(screen.height, screen.width) + 'px', 'border: 0', 'margin: 0', 'padding: 0'];
-    self.fullscreenElement_.setAttribute('style', cssProperties.join('; ') + ';');
-  }
-  applyFullscreenElementStyle();
-  return this.fullscreenWrapper_;
-};
-VRDisplay.prototype.removeFullscreenWrapper = function () {
-  if (!this.fullscreenElement_) {
-    return;
-  }
-  var element = this.fullscreenElement_;
-  if (this.fullscreenElementCachedStyle_) {
-    element.setAttribute('style', this.fullscreenElementCachedStyle_);
-  } else {
-    element.removeAttribute('style');
-  }
-  this.fullscreenElement_ = null;
-  this.fullscreenElementCachedStyle_ = null;
-  var parent = this.fullscreenWrapper_.parentElement;
-  this.fullscreenWrapper_.removeChild(element);
-  if (this.originalParent_ === parent) {
-    parent.insertBefore(element, this.fullscreenWrapper_);
-  }
-  else if (this.originalParent_) {
-      this.originalParent_.appendChild(element);
-    }
-  parent.removeChild(this.fullscreenWrapper_);
-  return element;
-};
-VRDisplay.prototype.requestPresent = function (layers) {
-  var wasPresenting = this.isPresenting;
-  var self = this;
-  if (!(layers instanceof Array)) {
-    deprecateWarning('VRDisplay.prototype.requestPresent with non-array argument', 'an array of VRLayers as the first argument');
-    layers = [layers];
-  }
-  return new Promise(function (resolve, reject) {
-    if (!self.capabilities.canPresent) {
-      reject(new Error('VRDisplay is not capable of presenting.'));
-      return;
-    }
-    if (layers.length == 0 || layers.length > self.capabilities.maxLayers) {
-      reject(new Error('Invalid number of layers.'));
-      return;
-    }
-    var incomingLayer = layers[0];
-    if (!incomingLayer.source) {
-      resolve();
-      return;
-    }
-    var leftBounds = incomingLayer.leftBounds || defaultLeftBounds;
-    var rightBounds = incomingLayer.rightBounds || defaultRightBounds;
-    if (wasPresenting) {
-      var layer = self.layer_;
-      if (layer.source !== incomingLayer.source) {
-        layer.source = incomingLayer.source;
-      }
-      for (var i = 0; i < 4; i++) {
-        layer.leftBounds[i] = leftBounds[i];
-        layer.rightBounds[i] = rightBounds[i];
-      }
-      self.wrapForFullscreen(self.layer_.source);
-      self.updatePresent_();
-      resolve();
-      return;
-    }
-    self.layer_ = {
-      predistorted: incomingLayer.predistorted,
-      source: incomingLayer.source,
-      leftBounds: leftBounds.slice(0),
-      rightBounds: rightBounds.slice(0)
-    };
-    self.waitingForPresent_ = false;
-    if (self.layer_ && self.layer_.source) {
-      var fullscreenElement = self.wrapForFullscreen(self.layer_.source);
-      var onFullscreenChange = function onFullscreenChange() {
-        var actualFullscreenElement = getFullscreenElement();
-        self.isPresenting = fullscreenElement === actualFullscreenElement;
-        if (self.isPresenting) {
-          if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape-primary').catch(function (error) {
-              console.error('screen.orientation.lock() failed due to', error.message);
-            });
-          }
-          self.waitingForPresent_ = false;
-          self.beginPresent_();
-          resolve();
-        } else {
-          if (screen.orientation && screen.orientation.unlock) {
-            screen.orientation.unlock();
-          }
-          self.removeFullscreenWrapper();
-          self.disableWakeLock();
-          self.endPresent_();
-          self.removeFullscreenListeners_();
-        }
-        self.fireVRDisplayPresentChange_();
-      };
-      var onFullscreenError = function onFullscreenError() {
-        if (!self.waitingForPresent_) {
-          return;
-        }
-        self.removeFullscreenWrapper();
-        self.removeFullscreenListeners_();
-        self.disableWakeLock();
-        self.waitingForPresent_ = false;
-        self.isPresenting = false;
-        reject(new Error('Unable to present.'));
-      };
-      self.addFullscreenListeners_(fullscreenElement, onFullscreenChange, onFullscreenError);
-      if (requestFullscreen(fullscreenElement)) {
-        self.enableWakeLock();
-        self.waitingForPresent_ = true;
-      } else if (isIOS() || isWebViewAndroid()) {
-        self.enableWakeLock();
-        self.isPresenting = true;
-        self.beginPresent_();
-        self.fireVRDisplayPresentChange_();
-        resolve();
-      }
-    }
-    if (!self.waitingForPresent_ && !isIOS()) {
-      exitFullscreen();
-      reject(new Error('Unable to present.'));
-    }
-  });
-};
-VRDisplay.prototype.exitPresent = function () {
-  var wasPresenting = this.isPresenting;
-  var self = this;
-  this.isPresenting = false;
-  this.layer_ = null;
-  this.disableWakeLock();
-  return new Promise(function (resolve, reject) {
-    if (wasPresenting) {
-      if (!exitFullscreen() && isIOS()) {
-        self.endPresent_();
-        self.fireVRDisplayPresentChange_();
-      }
-      if (isWebViewAndroid()) {
-        self.removeFullscreenWrapper();
-        self.removeFullscreenListeners_();
-        self.endPresent_();
-        self.fireVRDisplayPresentChange_();
-      }
-      resolve();
-    } else {
-      reject(new Error('Was not presenting to VRDisplay.'));
-    }
-  });
-};
-VRDisplay.prototype.getLayers = function () {
-  if (this.layer_) {
-    return [this.layer_];
-  }
-  return [];
-};
-VRDisplay.prototype.fireVRDisplayPresentChange_ = function () {
-  var event = new CustomEvent('vrdisplaypresentchange', { detail: { display: this } });
-  window.dispatchEvent(event);
-};
-VRDisplay.prototype.fireVRDisplayConnect_ = function () {
-  var event = new CustomEvent('vrdisplayconnect', { detail: { display: this } });
-  window.dispatchEvent(event);
-};
-VRDisplay.prototype.addFullscreenListeners_ = function (element, changeHandler, errorHandler) {
-  this.removeFullscreenListeners_();
-  this.fullscreenEventTarget_ = element;
-  this.fullscreenChangeHandler_ = changeHandler;
-  this.fullscreenErrorHandler_ = errorHandler;
-  if (changeHandler) {
-    if (document.fullscreenEnabled) {
-      element.addEventListener('fullscreenchange', changeHandler, false);
-    } else if (document.webkitFullscreenEnabled) {
-      element.addEventListener('webkitfullscreenchange', changeHandler, false);
-    } else if (document.mozFullScreenEnabled) {
-      document.addEventListener('mozfullscreenchange', changeHandler, false);
-    } else if (document.msFullscreenEnabled) {
-      element.addEventListener('msfullscreenchange', changeHandler, false);
-    }
-  }
-  if (errorHandler) {
-    if (document.fullscreenEnabled) {
-      element.addEventListener('fullscreenerror', errorHandler, false);
-    } else if (document.webkitFullscreenEnabled) {
-      element.addEventListener('webkitfullscreenerror', errorHandler, false);
-    } else if (document.mozFullScreenEnabled) {
-      document.addEventListener('mozfullscreenerror', errorHandler, false);
-    } else if (document.msFullscreenEnabled) {
-      element.addEventListener('msfullscreenerror', errorHandler, false);
-    }
-  }
-};
-VRDisplay.prototype.removeFullscreenListeners_ = function () {
-  if (!this.fullscreenEventTarget_) return;
-  var element = this.fullscreenEventTarget_;
-  if (this.fullscreenChangeHandler_) {
-    var changeHandler = this.fullscreenChangeHandler_;
-    element.removeEventListener('fullscreenchange', changeHandler, false);
-    element.removeEventListener('webkitfullscreenchange', changeHandler, false);
-    document.removeEventListener('mozfullscreenchange', changeHandler, false);
-    element.removeEventListener('msfullscreenchange', changeHandler, false);
-  }
-  if (this.fullscreenErrorHandler_) {
-    var errorHandler = this.fullscreenErrorHandler_;
-    element.removeEventListener('fullscreenerror', errorHandler, false);
-    element.removeEventListener('webkitfullscreenerror', errorHandler, false);
-    document.removeEventListener('mozfullscreenerror', errorHandler, false);
-    element.removeEventListener('msfullscreenerror', errorHandler, false);
-  }
-  this.fullscreenEventTarget_ = null;
-  this.fullscreenChangeHandler_ = null;
-  this.fullscreenErrorHandler_ = null;
-};
-VRDisplay.prototype.enableWakeLock = function () {
-  if (this.wakelock_) {
-    this.wakelock_.enable();
-  }
-};
-VRDisplay.prototype.disableWakeLock = function () {
-  if (this.wakelock_) {
-    this.wakelock_.disable();
-  }
-};
-VRDisplay.prototype.beginPresent_ = function () {
-};
-VRDisplay.prototype.endPresent_ = function () {
-};
-VRDisplay.prototype.submitFrame = function (pose) {
-};
-VRDisplay.prototype.getEyeParameters = function (whichEye) {
-  return null;
-};
-var config = {
-  ADDITIONAL_VIEWERS: [],
-  DEFAULT_VIEWER: '',
-  MOBILE_WAKE_LOCK: true,
-  DEBUG: false,
-  DPDB_URL: 'https://dpdb.webvr.rocks/dpdb.json',
-  K_FILTER: 0.98,
-  PREDICTION_TIME_S: 0.040,
-  CARDBOARD_UI_DISABLED: false,
-  ROTATE_INSTRUCTIONS_DISABLED: false,
-  YAW_ONLY: false,
-  BUFFER_SCALE: 0.5,
-  DIRTY_SUBMIT_FRAME_BINDINGS: false
-};
-var Eye = {
-  LEFT: 'left',
-  RIGHT: 'right'
-};
-function CardboardVRDisplay(config$$1) {
-  var defaults = extend({}, config);
-  config$$1 = extend(defaults, config$$1 || {});
-  VRDisplay.call(this, {
-    wakelock: config$$1.MOBILE_WAKE_LOCK
-  });
-  this.config = config$$1;
-  this.displayName = 'Cardboard VRDisplay';
-  this.capabilities = new VRDisplayCapabilities({
-    hasPosition: false,
-    hasOrientation: true,
-    hasExternalDisplay: false,
-    canPresent: true,
-    maxLayers: 1
-  });
-  this.stageParameters = null;
-  this.bufferScale_ = this.config.BUFFER_SCALE;
-  this.poseSensor_ = new PoseSensor(this.config);
-  this.distorter_ = null;
-  this.cardboardUI_ = null;
-  this.dpdb_ = new Dpdb(this.config.DPDB_URL, this.onDeviceParamsUpdated_.bind(this));
-  this.deviceInfo_ = new DeviceInfo(this.dpdb_.getDeviceParams(), config$$1.ADDITIONAL_VIEWERS);
-  this.viewerSelector_ = new ViewerSelector(config$$1.DEFAULT_VIEWER);
-  this.viewerSelector_.onChange(this.onViewerChanged_.bind(this));
-  this.deviceInfo_.setViewer(this.viewerSelector_.getCurrentViewer());
-  if (!this.config.ROTATE_INSTRUCTIONS_DISABLED) {
-    this.rotateInstructions_ = new RotateInstructions();
-  }
-  if (isIOS()) {
-    window.addEventListener('resize', this.onResize_.bind(this));
-  }
-}
-CardboardVRDisplay.prototype = Object.create(VRDisplay.prototype);
-CardboardVRDisplay.prototype._getPose = function () {
-  return {
-    position: null,
-    orientation: this.poseSensor_.getOrientation(),
-    linearVelocity: null,
-    linearAcceleration: null,
-    angularVelocity: null,
-    angularAcceleration: null
-  };
-};
-CardboardVRDisplay.prototype._resetPose = function () {
-  if (this.poseSensor_.resetPose) {
-    this.poseSensor_.resetPose();
-  }
-};
-CardboardVRDisplay.prototype._getFieldOfView = function (whichEye) {
-  var fieldOfView;
-  if (whichEye == Eye.LEFT) {
-    fieldOfView = this.deviceInfo_.getFieldOfViewLeftEye();
-  } else if (whichEye == Eye.RIGHT) {
-    fieldOfView = this.deviceInfo_.getFieldOfViewRightEye();
-  } else {
-    console.error('Invalid eye provided: %s', whichEye);
-    return null;
-  }
-  return fieldOfView;
-};
-CardboardVRDisplay.prototype._getEyeOffset = function (whichEye) {
-  var offset;
-  if (whichEye == Eye.LEFT) {
-    offset = [-this.deviceInfo_.viewer.interLensDistance * 0.5, 0.0, 0.0];
-  } else if (whichEye == Eye.RIGHT) {
-    offset = [this.deviceInfo_.viewer.interLensDistance * 0.5, 0.0, 0.0];
-  } else {
-    console.error('Invalid eye provided: %s', whichEye);
-    return null;
-  }
-  return offset;
-};
-CardboardVRDisplay.prototype.getEyeParameters = function (whichEye) {
-  var offset = this._getEyeOffset(whichEye);
-  var fieldOfView = this._getFieldOfView(whichEye);
-  var eyeParams = {
-    offset: offset,
-    renderWidth: this.deviceInfo_.device.width * 0.5 * this.bufferScale_,
-    renderHeight: this.deviceInfo_.device.height * this.bufferScale_
-  };
-  Object.defineProperty(eyeParams, 'fieldOfView', {
-    enumerable: true,
-    get: function get() {
-      deprecateWarning('VRFieldOfView', 'VRFrameData\'s projection matrices');
-      return fieldOfView;
-    }
-  });
-  return eyeParams;
-};
-CardboardVRDisplay.prototype.onDeviceParamsUpdated_ = function (newParams) {
-  if (this.config.DEBUG) {
-    console.log('DPDB reported that device params were updated.');
-  }
-  this.deviceInfo_.updateDeviceParams(newParams);
-  if (this.distorter_) {
-    this.distorter_.updateDeviceInfo(this.deviceInfo_);
-  }
-};
-CardboardVRDisplay.prototype.updateBounds_ = function () {
-  if (this.layer_ && this.distorter_ && (this.layer_.leftBounds || this.layer_.rightBounds)) {
-    this.distorter_.setTextureBounds(this.layer_.leftBounds, this.layer_.rightBounds);
-  }
-};
-CardboardVRDisplay.prototype.beginPresent_ = function () {
-  var gl = this.layer_.source.getContext('webgl');
-  if (!gl) gl = this.layer_.source.getContext('experimental-webgl');
-  if (!gl) gl = this.layer_.source.getContext('webgl2');
-  if (!gl) return;
-  if (this.layer_.predistorted) {
-    if (!this.config.CARDBOARD_UI_DISABLED) {
-      gl.canvas.width = getScreenWidth() * this.bufferScale_;
-      gl.canvas.height = getScreenHeight() * this.bufferScale_;
-      this.cardboardUI_ = new CardboardUI(gl);
-    }
-  } else {
-    if (!this.config.CARDBOARD_UI_DISABLED) {
-      this.cardboardUI_ = new CardboardUI(gl);
-    }
-    this.distorter_ = new CardboardDistorter(gl, this.cardboardUI_, this.config.BUFFER_SCALE, this.config.DIRTY_SUBMIT_FRAME_BINDINGS);
-    this.distorter_.updateDeviceInfo(this.deviceInfo_);
-  }
-  if (this.cardboardUI_) {
-    this.cardboardUI_.listen(function (e) {
-      this.viewerSelector_.show(this.layer_.source.parentElement);
-      e.stopPropagation();
-      e.preventDefault();
-    }.bind(this), function (e) {
-      this.exitPresent();
-      e.stopPropagation();
-      e.preventDefault();
-    }.bind(this));
-  }
-  if (this.rotateInstructions_) {
-    if (isLandscapeMode() && isMobile()) {
-      this.rotateInstructions_.showTemporarily(3000, this.layer_.source.parentElement);
-    } else {
-      this.rotateInstructions_.update();
-    }
-  }
-  this.orientationHandler = this.onOrientationChange_.bind(this);
-  window.addEventListener('orientationchange', this.orientationHandler);
-  this.vrdisplaypresentchangeHandler = this.updateBounds_.bind(this);
-  window.addEventListener('vrdisplaypresentchange', this.vrdisplaypresentchangeHandler);
-  this.fireVRDisplayDeviceParamsChange_();
-};
-CardboardVRDisplay.prototype.endPresent_ = function () {
-  if (this.distorter_) {
-    this.distorter_.destroy();
-    this.distorter_ = null;
-  }
-  if (this.cardboardUI_) {
-    this.cardboardUI_.destroy();
-    this.cardboardUI_ = null;
-  }
-  if (this.rotateInstructions_) {
-    this.rotateInstructions_.hide();
-  }
-  this.viewerSelector_.hide();
-  window.removeEventListener('orientationchange', this.orientationHandler);
-  window.removeEventListener('vrdisplaypresentchange', this.vrdisplaypresentchangeHandler);
-};
-CardboardVRDisplay.prototype.updatePresent_ = function () {
-  this.endPresent_();
-  this.beginPresent_();
-};
-CardboardVRDisplay.prototype.submitFrame = function (pose) {
-  if (this.distorter_) {
-    this.updateBounds_();
-    this.distorter_.submitFrame();
-  } else if (this.cardboardUI_ && this.layer_) {
-    var gl = this.layer_.source.getContext('webgl');
-    if (!gl) gl = this.layer_.source.getContext('experimental-webgl');
-    if (!gl) gl = this.layer_.source.getContext('webgl2');
-    var canvas = gl.canvas;
-    if (canvas.width != this.lastWidth || canvas.height != this.lastHeight) {
-      this.cardboardUI_.onResize();
-    }
-    this.lastWidth = canvas.width;
-    this.lastHeight = canvas.height;
-    this.cardboardUI_.render();
-  }
-};
-CardboardVRDisplay.prototype.onOrientationChange_ = function (e) {
-  this.viewerSelector_.hide();
-  if (this.rotateInstructions_) {
-    this.rotateInstructions_.update();
-  }
-  this.onResize_();
-};
-CardboardVRDisplay.prototype.onResize_ = function (e) {
-  if (this.layer_) {
-    var gl = this.layer_.source.getContext('webgl');
-    if (!gl) gl = this.layer_.source.getContext('experimental-webgl');
-    if (!gl) gl = this.layer_.source.getContext('webgl2');
-    var cssProperties = ['position: absolute', 'top: 0', 'left: 0',
-    'width: 100vw', 'height: 100vh', 'border: 0', 'margin: 0',
-    'padding: 0px', 'box-sizing: content-box'];
-    gl.canvas.setAttribute('style', cssProperties.join('; ') + ';');
-    safariCssSizeWorkaround(gl.canvas);
-  }
-};
-CardboardVRDisplay.prototype.onViewerChanged_ = function (viewer) {
-  this.deviceInfo_.setViewer(viewer);
-  if (this.distorter_) {
-    this.distorter_.updateDeviceInfo(this.deviceInfo_);
-  }
-  this.fireVRDisplayDeviceParamsChange_();
-};
-CardboardVRDisplay.prototype.fireVRDisplayDeviceParamsChange_ = function () {
-  var event = new CustomEvent('vrdisplaydeviceparamschange', {
-    detail: {
-      vrdisplay: this,
-      deviceInfo: this.deviceInfo_
-    }
-  });
-  window.dispatchEvent(event);
-};
-CardboardVRDisplay.VRFrameData = VRFrameData;
-CardboardVRDisplay.VRDisplay = VRDisplay;
-return CardboardVRDisplay;
-})));
-});
-var CardboardVRDisplay = unwrapExports(cardboardVrDisplay);
-
-class XRDevice extends EventTarget$1 {
-  constructor(global) {
-    super();
-    this.global = global;
-    this.onWindowResize = this.onWindowResize.bind(this);
-    this.global.window.addEventListener('resize', this.onWindowResize);
-    this.environmentBlendMode = 'opaque';
-  }
-  onBaseLayerSet(sessionId, layer) { throw new Error('Not implemented'); }
-  isSessionSupported(mode) { throw new Error('Not implemented'); }
-  isFeatureSupported(featureDescriptor) { throw new Error('Not implemented'); }
-  async requestSession(mode, enabledFeatures) { throw new Error('Not implemented'); }
-  requestAnimationFrame(callback) { throw new Error('Not implemented'); }
-  onFrameStart(sessionId) { throw new Error('Not implemented'); }
-  onFrameEnd(sessionId) { throw new Error('Not implemented'); }
-  doesSessionSupportReferenceSpace(sessionId, type) { throw new Error('Not implemented'); }
-  requestStageBounds() { throw new Error('Not implemented'); }
-  async requestFrameOfReferenceTransform(type, options) {
-    return undefined;
-  }
-  cancelAnimationFrame(handle) { throw new Error('Not implemented'); }
-  endSession(sessionId) { throw new Error('Not implemented'); }
-  getViewport(sessionId, eye, layer, target) { throw new Error('Not implemented'); }
-  getProjectionMatrix(eye) { throw new Error('Not implemented'); }
-  getBasePoseMatrix() { throw new Error('Not implemented'); }
-  getBaseViewMatrix(eye) { throw new Error('Not implemented'); }
-  getInputSources() { throw new Error('Not implemented'); }
-  getInputPose(inputSource, coordinateSystem, poseType) { throw new Error('Not implemented'); }
-  onWindowResize() {
-    this.onWindowResize();
-  }
-}
-
-let daydream = {
-  mapping: '',
-  profiles: ['google-daydream', 'generic-trigger-touchpad'],
-  buttons: {
-    length: 3,
-    0: null,
-    1: null,
-    2: 0
-  },
-};
-let viveFocus = {
-  mapping: 'xr-standard',
-  profiles: ['htc-vive-focus', 'generic-trigger-touchpad'],
-  buttons: {
-    length: 3,
-    0: 1,
-    1: null,
-    2: 0
-  },
-};
-let oculusGo = {
-  mapping: 'xr-standard',
-  profiles: ['oculus-go', 'generic-trigger-touchpad'],
-  buttons: {
-    length: 3,
-    0: 1,
-    1: null,
-    2: 0
-  },
-  gripTransform: {
-    orientation: [Math.PI * 0.11, 0, 0, 1]
-  }
-};
-let oculusTouch = {
-  mapping: 'xr-standard',
-  displayProfiles: {
-    'Oculus Quest': ['oculus-touch-v2', 'oculus-touch', 'generic-trigger-squeeze-thumbstick']
-  },
-  profiles: ['oculus-touch', 'generic-trigger-squeeze-thumbstick'],
-  axes: {
-    length: 4,
-    0: null,
-    1: null,
-    2: 0,
-    3: 1
-  },
-  buttons: {
-    length: 7,
-    0: 1,
-    1: 2,
-    2: null,
-    3: 0,
-    4: 3,
-    5: 4,
-    6: null
-  },
-  gripTransform: {
-    position: [0, -0.02, 0.04, 1],
-    orientation: [Math.PI * 0.11, 0, 0, 1]
-  }
-};
-let openVr = {
-  mapping: 'xr-standard',
-  profiles: ['htc-vive', 'generic-trigger-squeeze-touchpad'],
-  displayProfiles: {
-    'HTC Vive': ['htc-vive', 'generic-trigger-squeeze-touchpad'],
-    'HTC Vive DVT': ['htc-vive', 'generic-trigger-squeeze-touchpad'],
-    'Valve Index': ['valve-index', 'generic-trigger-squeeze-touchpad-thumbstick']
-  },
-  buttons: {
-    length: 3,
-    0: 1,
-    1: 2,
-    2: 0
-  },
-  gripTransform: {
-    position: [0, 0, 0.05, 1],
-  },
-  targetRayTransform: {
-    orientation: [Math.PI * -0.08, 0, 0, 1]
-  },
-  userAgentOverrides: {
-    "Firefox": {
-      axes: {
-        invert: [1, 3]
-      }
-    }
-  }
-};
-let samsungGearVR = {
-  mapping: 'xr-standard',
-  profiles: ['samsung-gearvr', 'generic-trigger-touchpad'],
-  buttons: {
-    length: 3,
-    0: 1,
-    1: null,
-    2: 0
-  },
-  gripTransform: {
-    orientation: [Math.PI * 0.11, 0, 0, 1]
-  }
-};
-let samsungOdyssey = {
-  mapping: 'xr-standard',
-  profiles: ['samsung-odyssey', 'microsoft-mixed-reality', 'generic-trigger-squeeze-touchpad-thumbstick'],
-  buttons: {
-    length: 4,
-    0: 1,
-    1: 0,
-    2: 2,
-    3: 4,
-  },
-  gripTransform: {
-    position: [0, -0.02, 0.04, 1],
-    orientation: [Math.PI * 0.11, 0, 0, 1]
-  }
-};
-let windowsMixedReality = {
-  mapping: 'xr-standard',
-  profiles: ['microsoft-mixed-reality', 'generic-trigger-squeeze-touchpad-thumbstick'],
-  buttons: {
-    length: 4,
-    0: 1,
-    1: 0,
-    2: 2,
-    3: 4,
-  },
-  gripTransform: {
-    position: [0, -0.02, 0.04, 1],
-    orientation: [Math.PI * 0.11, 0, 0, 1]
-  }
-};
-let GamepadMappings = {
-  'Daydream Controller': daydream,
-  'Gear VR Controller': samsungGearVR,
-  'HTC Vive Focus Controller': viveFocus,
-  'Oculus Go Controller': oculusGo,
-  'Oculus Touch (Right)': oculusTouch,
-  'Oculus Touch (Left)': oculusTouch,
-  'OpenVR Gamepad': openVr,
-  'Spatial Controller (Spatial Interaction Source) 045E-065A': windowsMixedReality,
-  'Spatial Controller (Spatial Interaction Source) 045E-065D': samsungOdyssey,
-  'Windows Mixed Reality (Right)': windowsMixedReality,
-  'Windows Mixed Reality (Left)': windowsMixedReality,
-};
-
-const HEAD_ELBOW_OFFSET_RIGHTHANDED = fromValues$1(0.155, -0.465, -0.15);
-const HEAD_ELBOW_OFFSET_LEFTHANDED = fromValues$1(-0.155, -0.465, -0.15);
-const ELBOW_WRIST_OFFSET = fromValues$1(0, 0, -0.25);
-const WRIST_CONTROLLER_OFFSET = fromValues$1(0, 0, 0.05);
-const ARM_EXTENSION_OFFSET = fromValues$1(-0.08, 0.14, 0.08);
-const ELBOW_BEND_RATIO = 0.4;
-const EXTENSION_RATIO_WEIGHT = 0.4;
-const MIN_ANGULAR_SPEED = 0.61;
-const MIN_ANGLE_DELTA = 0.175;
-const MIN_EXTENSION_COS = 0.12;
-const MAX_EXTENSION_COS = 0.87;
-const RAD_TO_DEG = 180 / Math.PI;
-function eulerFromQuaternion(out, q, order) {
-  function clamp(value, min$$1, max$$1) {
-    return (value < min$$1 ? min$$1 : (value > max$$1 ? max$$1 : value));
-  }
-  var sqx = q[0] * q[0];
-  var sqy = q[1] * q[1];
-  var sqz = q[2] * q[2];
-  var sqw = q[3] * q[3];
-  if ( order === 'XYZ' ) {
-    out[0] = Math.atan2( 2 * ( q[0] * q[3] - q[1] * q[2] ), ( sqw - sqx - sqy + sqz ) );
-    out[1] = Math.asin(  clamp( 2 * ( q[0] * q[2] + q[1] * q[3] ), -1, 1 ) );
-    out[2] = Math.atan2( 2 * ( q[2] * q[3] - q[0] * q[1] ), ( sqw + sqx - sqy - sqz ) );
-  } else if ( order ===  'YXZ' ) {
-    out[0] = Math.asin(  clamp( 2 * ( q[0] * q[3] - q[1] * q[2] ), -1, 1 ) );
-    out[1] = Math.atan2( 2 * ( q[0] * q[2] + q[1] * q[3] ), ( sqw - sqx - sqy + sqz ) );
-    out[2] = Math.atan2( 2 * ( q[0] * q[1] + q[2] * q[3] ), ( sqw - sqx + sqy - sqz ) );
-  } else if ( order === 'ZXY' ) {
-    out[0] = Math.asin(  clamp( 2 * ( q[0] * q[3] + q[1] * q[2] ), -1, 1 ) );
-    out[1] = Math.atan2( 2 * ( q[1] * q[3] - q[2] * q[0] ), ( sqw - sqx - sqy + sqz ) );
-    out[2] = Math.atan2( 2 * ( q[2] * q[3] - q[0] * q[1] ), ( sqw - sqx + sqy - sqz ) );
-  } else if ( order === 'ZYX' ) {
-    out[0] = Math.atan2( 2 * ( q[0] * q[3] + q[2] * q[1] ), ( sqw - sqx - sqy + sqz ) );
-    out[1] = Math.asin(  clamp( 2 * ( q[1] * q[3] - q[0] * q[2] ), -1, 1 ) );
-    out[2] = Math.atan2( 2 * ( q[0] * q[1] + q[2] * q[3] ), ( sqw + sqx - sqy - sqz ) );
-  } else if ( order === 'YZX' ) {
-    out[0] = Math.atan2( 2 * ( q[0] * q[3] - q[2] * q[1] ), ( sqw - sqx + sqy - sqz ) );
-    out[1] = Math.atan2( 2 * ( q[1] * q[3] - q[0] * q[2] ), ( sqw + sqx - sqy - sqz ) );
-    out[2] = Math.asin(  clamp( 2 * ( q[0] * q[1] + q[2] * q[3] ), -1, 1 ) );
-  } else if ( order === 'XZY' ) {
-    out[0] = Math.atan2( 2 * ( q[0] * q[3] + q[1] * q[2] ), ( sqw - sqx + sqy - sqz ) );
-    out[1] = Math.atan2( 2 * ( q[0] * q[2] + q[1] * q[3] ), ( sqw + sqx - sqy - sqz ) );
-    out[2] = Math.asin(  clamp( 2 * ( q[2] * q[3] - q[0] * q[1] ), -1, 1 ) );
-  } else {
-    console.log('No order given for quaternion to euler conversion.');
-    return;
-  }
-}
-class OrientationArmModel {
-  constructor() {
-    this.hand = 'right';
-    this.headElbowOffset = HEAD_ELBOW_OFFSET_RIGHTHANDED;
-    this.controllerQ = create$4();
-    this.lastControllerQ = create$4();
-    this.headQ = create$4();
-    this.headPos = create$1();
-    this.elbowPos = create$1();
-    this.wristPos = create$1();
-    this.time = null;
-    this.lastTime = null;
-    this.rootQ = create$4();
-    this.position = create$1();
-  }
-  setHandedness(hand) {
-    if (this.hand != hand) {
-      this.hand = hand;
-      if (this.hand == 'left') {
-        this.headElbowOffset = HEAD_ELBOW_OFFSET_LEFTHANDED;
-      } else {
-        this.headElbowOffset = HEAD_ELBOW_OFFSET_RIGHTHANDED;
-      }
-    }
-  }
-  update(controllerOrientation, headPoseMatrix) {
-    this.time = now$1();
-    if (controllerOrientation) {
-      copy$4(this.lastControllerQ, this.controllerQ);
-      copy$4(this.controllerQ, controllerOrientation);
-    }
-    if (headPoseMatrix) {
-      getTranslation(this.headPos, headPoseMatrix);
-      getRotation(this.headQ, headPoseMatrix);
-    }
-    let headYawQ = this.getHeadYawOrientation_();
-    let angleDelta = this.quatAngle_(this.lastControllerQ, this.controllerQ);
-    let timeDelta = (this.time - this.lastTime) / 1000;
-    let controllerAngularSpeed = angleDelta / timeDelta;
-    if (controllerAngularSpeed > MIN_ANGULAR_SPEED) {
-      slerp(this.rootQ, this.rootQ, headYawQ,
-                 Math.min(angleDelta / MIN_ANGLE_DELTA, 1.0));
-    } else {
-      copy$4(this.rootQ, headYawQ);
-    }
-    let controllerForward = fromValues$1(0, 0, -1.0);
-    transformQuat(controllerForward, controllerForward, this.controllerQ);
-    let controllerDotY = dot(controllerForward, [0, 1, 0]);
-    let extensionRatio = this.clamp_(
-        (controllerDotY - MIN_EXTENSION_COS) / MAX_EXTENSION_COS, 0.0, 1.0);
-    let controllerCameraQ = clone$4(this.rootQ);
-    invert$2(controllerCameraQ, controllerCameraQ);
-    multiply$4(controllerCameraQ, controllerCameraQ, this.controllerQ);
-    let elbowPos = this.elbowPos;
-    copy$1(elbowPos, this.headPos);
-    add$1(elbowPos, elbowPos, this.headElbowOffset);
-    let elbowOffset = clone$1(ARM_EXTENSION_OFFSET);
-    scale$1(elbowOffset, elbowOffset, extensionRatio);
-    add$1(elbowPos, elbowPos, elbowOffset);
-    let totalAngle = this.quatAngle_(controllerCameraQ, create$4());
-    let totalAngleDeg = totalAngle * RAD_TO_DEG;
-    let lerpSuppression = 1 - Math.pow(totalAngleDeg / 180, 4);let elbowRatio = ELBOW_BEND_RATIO;
-    let wristRatio = 1 - ELBOW_BEND_RATIO;
-    let lerpValue = lerpSuppression *
-        (elbowRatio + wristRatio * extensionRatio * EXTENSION_RATIO_WEIGHT);
-    let wristQ = create$4();
-    slerp(wristQ, wristQ, controllerCameraQ, lerpValue);
-    let invWristQ = invert$2(create$4(), wristQ);
-    let elbowQ = clone$4(controllerCameraQ);
-    multiply$4(elbowQ, elbowQ, invWristQ);
-    let wristPos = this.wristPos;
-    copy$1(wristPos, WRIST_CONTROLLER_OFFSET);
-    transformQuat(wristPos, wristPos, wristQ);
-    add$1(wristPos, wristPos, ELBOW_WRIST_OFFSET);
-    transformQuat(wristPos, wristPos, elbowQ);
-    add$1(wristPos, wristPos, elbowPos);
-    let offset = clone$1(ARM_EXTENSION_OFFSET);
-    scale$1(offset, offset, extensionRatio);
-    add$1(this.position, this.wristPos, offset);
-    transformQuat(this.position, this.position, this.rootQ);
-    this.lastTime = this.time;
-  }
-  getPosition() {
-    return this.position;
-  }
-  getHeadYawOrientation_() {
-    let headEuler = create$1();
-    eulerFromQuaternion(headEuler, this.headQ, 'YXZ');
-    let destinationQ = fromEuler(create$4(), 0, headEuler[1] * RAD_TO_DEG, 0);
-    return destinationQ;
-  }
-  clamp_(value, min$$1, max$$1) {
-    return Math.min(Math.max(value, min$$1), max$$1);
-  }
-  quatAngle_(q1, q2) {
-    let vec1 = [0, 0, -1];
-    let vec2 = [0, 0, -1];
-    transformQuat(vec1, vec1, q1);
-    transformQuat(vec2, vec2, q2);
-    return angle(vec1, vec2);
-  }
-}
-
-const PRIVATE$18 = Symbol('@@webxr-polyfill/XRRemappedGamepad');
-const PLACEHOLDER_BUTTON = { pressed: false, touched: false, value: 0.0 };
-Object.freeze(PLACEHOLDER_BUTTON);
-class XRRemappedGamepad {
-  constructor(gamepad, display, map) {
-    if (!map) {
-      map = {};
-    }
-    if (map.userAgentOverrides) {
-      for (let agent in map.userAgentOverrides) {
-        if (navigator.userAgent.includes(agent)) {
-          let override = map.userAgentOverrides[agent];
-          for (let key in override) {
-            if (key in map) {
-              Object.assign(map[key], override[key]);
-            } else {
-              map[key] = override[key];
-            }
-          }
-          break;
-        }
-      }
-    }
-    let axes = new Array(map.axes && map.axes.length ? map.axes.length : gamepad.axes.length);
-    let buttons = new Array(map.buttons && map.buttons.length ? map.buttons.length : gamepad.buttons.length);
-    let gripTransform = null;
-    if (map.gripTransform) {
-      let orientation = map.gripTransform.orientation || [0, 0, 0, 1];
-      gripTransform = create();
-      fromRotationTranslation(
-        gripTransform,
-        normalize$2(orientation, orientation),
-        map.gripTransform.position || [0, 0, 0]
-      );
-    }
-    let targetRayTransform = null;
-    if (map.targetRayTransform) {
-      let orientation =  map.targetRayTransform.orientation || [0, 0, 0, 1];
-      targetRayTransform = create();
-      fromRotationTranslation(
-        targetRayTransform,
-        normalize$2(orientation, orientation),
-        map.targetRayTransform.position || [0, 0, 0]
-      );
-    }
-    let profiles = map.profiles;
-    if (map.displayProfiles) {
-      if (display.displayName in map.displayProfiles) {
-        profiles = map.displayProfiles[display.displayName];
-      }
-    }
-    this[PRIVATE$18] = {
-      gamepad,
-      map,
-      profiles: profiles || [gamepad.id],
-      mapping: map.mapping || gamepad.mapping,
-      axes,
-      buttons,
-      gripTransform,
-      targetRayTransform,
-    };
-    this._update();
-  }
-  _update() {
-    let gamepad = this[PRIVATE$18].gamepad;
-    let map = this[PRIVATE$18].map;
-    let axes = this[PRIVATE$18].axes;
-    for (let i = 0; i < axes.length; ++i) {
-      if (map.axes && i in map.axes) {
-        if (map.axes[i] === null) {
-          axes[i] = 0;
-        } else {
-          axes[i] = gamepad.axes[map.axes[i]];
-        }
-      } else {
-        axes[i] = gamepad.axes[i];
-      }
-    }
-    if (map.axes && map.axes.invert) {
-      for (let axis of map.axes.invert) {
-        if (axis < axes.length) {
-          axes[axis] *= -1;
-        }
-      }
-    }
-    let buttons = this[PRIVATE$18].buttons;
-    for (let i = 0; i < buttons.length; ++i) {
-      if (map.buttons && i in map.buttons) {
-        if (map.buttons[i] === null) {
-          buttons[i] = PLACEHOLDER_BUTTON;
-        } else {
-          buttons[i] = gamepad.buttons[map.buttons[i]];
-        }
-      } else {
-        buttons[i] = gamepad.buttons[i];
-      }
-    }
-  }
-  get id() {
-    return '';
-  }
-  get _profiles() {
-    return this[PRIVATE$18].profiles;
-  }
-  get index() {
-    return -1;
-  }
-  get connected() {
-    return this[PRIVATE$18].gamepad.connected;
-  }
-  get timestamp() {
-    return this[PRIVATE$18].gamepad.timestamp;
-  }
-  get mapping() {
-    return this[PRIVATE$18].mapping;
-  }
-  get axes() {
-    return this[PRIVATE$18].axes;
-  }
-  get buttons() {
-    return this[PRIVATE$18].buttons;
-  }
-  get hapticActuators() {
-    return this[PRIVATE$18].gamepad.hapticActuators;
-  }
-}
-class GamepadXRInputSource {
-  constructor(polyfill, display, primaryButtonIndex = 0, primarySqueezeButtonIndex = -1) {
-    this.polyfill = polyfill;
-    this.display = display;
-    this.nativeGamepad = null;
-    this.gamepad = null;
-    this.inputSource = new XRInputSource(this);
-    this.lastPosition = create$1();
-    this.emulatedPosition = false;
-    this.basePoseMatrix = create();
-    this.outputMatrix = create();
-    this.primaryButtonIndex = primaryButtonIndex;
-    this.primaryActionPressed = false;
-    this.primarySqueezeButtonIndex = primarySqueezeButtonIndex;
-    this.primarySqueezeActionPressed = false;
-    this.handedness = '';
-    this.targetRayMode = 'gaze';
-    this.armModel = null;
-  }
-  get profiles() {
-    return this.gamepad ? this.gamepad._profiles : [];
-  }
-  updateFromGamepad(gamepad) {
-    if (this.nativeGamepad !== gamepad) {
-      this.nativeGamepad = gamepad;
-      if (gamepad) {
-        this.gamepad = new XRRemappedGamepad(gamepad, this.display, GamepadMappings[gamepad.id]);
-      } else {
-        this.gamepad = null;
-      }
-    }
-    this.handedness = gamepad.hand === '' ? 'none' : gamepad.hand;
-    if (this.gamepad) {
-      this.gamepad._update();
-    }
-    if (gamepad.pose) {
-      this.targetRayMode = 'tracked-pointer';
-      this.emulatedPosition = !gamepad.pose.hasPosition;
-    } else if (gamepad.hand === '') {
-      this.targetRayMode = 'gaze';
-      this.emulatedPosition = false;
-    }
-  }
-  updateBasePoseMatrix() {
-    if (this.nativeGamepad && this.nativeGamepad.pose) {
-      let pose = this.nativeGamepad.pose;
-      let position = pose.position;
-      let orientation = pose.orientation;
-      if (!position && !orientation) {
-        return;
-      }
-      if (!position) {
-        if (!pose.hasPosition) {
-          if (!this.armModel) {
-            this.armModel = new OrientationArmModel();
-          }
-          this.armModel.setHandedness(this.nativeGamepad.hand);
-          this.armModel.update(orientation, this.polyfill.getBasePoseMatrix());
-          position = this.armModel.getPosition();
-        } else {
-          position = this.lastPosition;
-        }
-      } else {
-        this.lastPosition[0] = position[0];
-        this.lastPosition[1] = position[1];
-        this.lastPosition[2] = position[2];
-      }
-      fromRotationTranslation(this.basePoseMatrix, orientation, position);
-    } else {
-      copy(this.basePoseMatrix, this.polyfill.getBasePoseMatrix());
-    }
-    return this.basePoseMatrix;
-  }
-  getXRPose(coordinateSystem, poseType) {
-    this.updateBasePoseMatrix();
-    switch(poseType) {
-      case "target-ray":
-        coordinateSystem._transformBasePoseMatrix(this.outputMatrix, this.basePoseMatrix);
-        if (this.gamepad && this.gamepad[PRIVATE$18].targetRayTransform) {
-          multiply(this.outputMatrix, this.outputMatrix, this.gamepad[PRIVATE$18].targetRayTransform);
-        }
-        break;
-      case "grip":
-        if (!this.nativeGamepad || !this.nativeGamepad.pose) {
-          return null;
-        }
-        coordinateSystem._transformBasePoseMatrix(this.outputMatrix, this.basePoseMatrix);
-        if (this.gamepad && this.gamepad[PRIVATE$18].gripTransform) {
-          multiply(this.outputMatrix, this.outputMatrix, this.gamepad[PRIVATE$18].gripTransform);
-        }
-        break;
-      default:
-        return null;
-    }
-    coordinateSystem._adjustForOriginOffset(this.outputMatrix);
-    return new XRPose(new XRRigidTransform(this.outputMatrix), this.emulatedPosition);
-  }
-}
-
-const TEST_ENV = "production" === 'test';
-const EXTRA_PRESENTATION_ATTRIBUTES = {
-  highRefreshRate: true,
-};
-const PRIMARY_BUTTON_MAP = {
-  oculus: 1,
-  openvr: 1,
-  'spatial controller (spatial interaction source)': 1
-};
-let SESSION_ID = 0;
-class Session {
-  constructor(mode, enabledFeatures, polyfillOptions={}) {
-    this.mode = mode;
-    this.enabledFeatures = enabledFeatures;
-    this.outputContext = null;
-    this.immersive = mode == 'immersive-vr' || mode == 'immersive-ar';
-    this.ended = null;
-    this.baseLayer = null;
-    this.id = ++SESSION_ID;
-    this.modifiedCanvasLayer = false;
-    if (this.outputContext && !TEST_ENV) {
-      const renderContextType = polyfillOptions.renderContextType || '2d';
-      this.renderContext = this.outputContext.canvas.getContext(renderContextType);
-    }
-  }
-}
-class WebVRDevice extends XRDevice {
-  constructor(global, display) {
-    const { canPresent } = display.capabilities;
-    super(global);
-    this.display = display;
-    this.frame = new global.VRFrameData();
-    this.sessions = new Map();
-    this.immersiveSession = null;
-    this.canPresent = canPresent;
-    this.baseModelMatrix = create();
-    this.gamepadInputSources = {};
-    this.tempVec3 = new Float32Array(3);
-    this.onVRDisplayPresentChange = this.onVRDisplayPresentChange.bind(this);
-    global.window.addEventListener('vrdisplaypresentchange', this.onVRDisplayPresentChange);
-    this.CAN_USE_GAMEPAD = global.navigator && ('getGamepads' in global.navigator);
-    this.HAS_BITMAP_SUPPORT = isImageBitmapSupported(global);
-  }
-  get depthNear() { return this.display.depthNear; }
-  set depthNear(val) { this.display.depthNear = val; }
-  get depthFar() { return this.display.depthFar; }
-  set depthFar(val) { this.display.depthFar = val; }
-  onBaseLayerSet(sessionId, layer) {
-    const session = this.sessions.get(sessionId);
-    const canvas = layer.context.canvas;
-    if (session.immersive) {
-      const left = this.display.getEyeParameters('left');
-      const right = this.display.getEyeParameters('right');
-      canvas.width = Math.max(left.renderWidth, right.renderWidth) * 2;
-      canvas.height = Math.max(left.renderHeight, right.renderHeight);
-      this.display.requestPresent([{
-          source: canvas, attributes: EXTRA_PRESENTATION_ATTRIBUTES
-        }]).then(() => {
-        if ( !this.global.document.body.contains(canvas)) {
-          session.modifiedCanvasLayer = true;
-          this.global.document.body.appendChild(canvas);
-          applyCanvasStylesForMinimalRendering(canvas);
-        }
-        session.baseLayer = layer;
-      });
-    }
-    else {
-      session.baseLayer = layer;
-    }
-  }
-  isSessionSupported(mode) {
-    if (mode == 'immersive-ar') {
-      return false;
-    }
-    if (mode == 'immersive-vr' && this.canPresent === false) {
-      return false;
-    }
-    return true;
-  }
-  isFeatureSupported(featureDescriptor) {
-    switch(featureDescriptor) {
-      case 'viewer': return true;
-      case 'local': return true;
-      case 'local-floor': return true;
-      case 'bounded': return false;
-      case 'unbounded': return false;
-      default: return false;
-    }
-  }
-  async requestSession(mode, enabledFeatures) {
-    if (!this.isSessionSupported(mode)) {
-      return Promise.reject();
-    }
-    let immersive = mode == 'immersive-vr';
-    if (immersive) {
-      const canvas = this.global.document.createElement('canvas');
-      {
-        const ctx = canvas.getContext('webgl');
-      }
-      await this.display.requestPresent([{
-          source: canvas, attributes: EXTRA_PRESENTATION_ATTRIBUTES }]);
-    }
-    const session = new Session(mode, enabledFeatures, {
-      renderContextType: this.HAS_BITMAP_SUPPORT ? 'bitmaprenderer' : '2d'
-    });
-    this.sessions.set(session.id, session);
-    if (immersive) {
-      this.immersiveSession = session;
-      this.dispatchEvent('@@webxr-polyfill/vr-present-start', session.id);
-    }
-    return Promise.resolve(session.id);
-  }
-  requestAnimationFrame(callback) {
-    return this.display.requestAnimationFrame(callback);
-  }
-  getPrimaryButtonIndex(gamepad) {
-    let primaryButton = 0;
-    let name = gamepad.id.toLowerCase();
-    for (let key in PRIMARY_BUTTON_MAP) {
-      if (name.includes(key)) {
-        primaryButton = PRIMARY_BUTTON_MAP[key];
-        break;
-      }
-    }
-    return Math.min(primaryButton, gamepad.buttons.length - 1);
-  }
-  onFrameStart(sessionId, renderState) {
-    this.display.depthNear = renderState.depthNear;
-    this.display.depthFar = renderState.depthFar;
-    this.display.getFrameData(this.frame);
-    const session = this.sessions.get(sessionId);
-    if (session.immersive && this.CAN_USE_GAMEPAD) {
-      let prevInputSources = this.gamepadInputSources;
-      this.gamepadInputSources = {};
-      let gamepads = this.global.navigator.getGamepads();
-      for (let i = 0; i < gamepads.length; ++i) {
-        let gamepad = gamepads[i];
-        if (gamepad && gamepad.displayId > 0) {
-          let inputSourceImpl = prevInputSources[i];
-          if (!inputSourceImpl) {
-            inputSourceImpl = new GamepadXRInputSource(this, this.display, this.getPrimaryButtonIndex(gamepad));
-          }
-          inputSourceImpl.updateFromGamepad(gamepad);
-          this.gamepadInputSources[i] = inputSourceImpl;
-          if (inputSourceImpl.primaryButtonIndex != -1) {
-            let primaryActionPressed = gamepad.buttons[inputSourceImpl.primaryButtonIndex].pressed;
-            if (primaryActionPressed && !inputSourceImpl.primaryActionPressed) {
-              this.dispatchEvent('@@webxr-polyfill/input-select-start', { sessionId: session.id, inputSource: inputSourceImpl.inputSource });
-            } else if (!primaryActionPressed && inputSourceImpl.primaryActionPressed) {
-              this.dispatchEvent('@@webxr-polyfill/input-select-end', { sessionId: session.id, inputSource: inputSourceImpl.inputSource });
-            }
-            inputSourceImpl.primaryActionPressed = primaryActionPressed;
-          }
-          if (inputSourceImpl.primarySqueezeButtonIndex != -1) {
-            let primarySqueezeActionPressed = gamepad.buttons[inputSourceImpl.primarySqueezeButtonIndex].pressed;
-            if (primarySqueezeActionPressed && !inputSourceImpl.primarySqueezeActionPressed) {
-              this.dispatchEvent('@@webxr-polyfill/input-squeeze-start', { sessionId: session.id, inputSource: inputSourceImpl.inputSource });
-            } else if (!primarySqueezeActionPressed && inputSourceImpl.primarySqueezeActionPressed) {
-              this.dispatchEvent('@@webxr-polyfill/input-squeeze-end', { sessionId: session.id, inputSource: inputSourceImpl.inputSource });
-            }
-            inputSourceImpl.primarySqueezeActionPressed = primarySqueezeActionPressed;
-          }
-        }
-      }
-    }
-    if (!session.immersive && session.baseLayer) {
-      const canvas = session.baseLayer.context.canvas;
-      perspective(this.frame.leftProjectionMatrix, renderState.inlineVerticalFieldOfView,
-          canvas.width/canvas.height, renderState.depthNear, renderState.depthFar);
-    }
-  }
-  onFrameEnd(sessionId) {
-    const session = this.sessions.get(sessionId);
-    if (session.ended || !session.baseLayer) {
-      return;
-    }
-    if (session.outputContext &&
-        !(session.immersive && !this.display.capabilities.hasExternalDisplay)) {
-      const mirroring =
-        session.immersive && this.display.capabilities.hasExternalDisplay;
-      const iCanvas = session.baseLayer.context.canvas;
-      const iWidth = mirroring ? iCanvas.width / 2 : iCanvas.width;
-      const iHeight = iCanvas.height;
-      {
-        const oCanvas = session.outputContext.canvas;
-        const oWidth = oCanvas.width;
-        const oHeight = oCanvas.height;
-        const renderContext = session.renderContext;
-        if (this.HAS_BITMAP_SUPPORT) {
-          if (iCanvas.transferToImageBitmap) {
-            renderContext.transferFromImageBitmap(iCanvas.transferToImageBitmap());
-          }
-          else {
-            this.global.createImageBitmap(iCanvas, 0, 0, iWidth, iHeight, {
-              resizeWidth: oWidth,
-              resizeHeight: oHeight,
-            }).then(bitmap => renderContext.transferFromImageBitmap(bitmap));
-          }
-        } else {
-          renderContext.drawImage(iCanvas, 0, 0, iWidth, iHeight,
-                                           0, 0, oWidth, oHeight);
-        }
-      }
-    }
-    if (session.immersive && session.baseLayer) {
-      this.display.submitFrame();
-    }
-  }
-  cancelAnimationFrame(handle) {
-    this.display.cancelAnimationFrame(handle);
-  }
-  async endSession(sessionId) {
-    const session = this.sessions.get(sessionId);
-    if (session.ended) {
-      return;
-    }
-    if (session.immersive) {
-      return this.display.exitPresent();
-    } else {
-      session.ended = true;
-    }
-  }
-  doesSessionSupportReferenceSpace(sessionId, type) {
-    const session = this.sessions.get(sessionId);
-    if (session.ended) {
-      return false;
-    }
-    return session.enabledFeatures.has(type);
-  }
-  requestStageBounds() {
-    if (this.display.stageParameters) {
-      const width = this.display.stageParameters.sizeX;
-      const depth = this.display.stageParameters.sizeZ;
-      const data = [];
-      data.push(-width / 2);
-      data.push(-depth / 2);
-      data.push(width / 2);
-      data.push(-depth / 2);
-      data.push(width / 2);
-      data.push(depth / 2);
-      data.push(-width / 2);
-      data.push(depth / 2);
-      return data;
-    }
-    return null;
-  }
-  async requestFrameOfReferenceTransform(type, options) {
-    if ((type === 'local-floor' || type === 'bounded-floor') &&
-        this.display.stageParameters &&
-        this.display.stageParameters.sittingToStandingTransform) {
-      return this.display.stageParameters.sittingToStandingTransform;
-    }
-    return null;
-  }
-  getProjectionMatrix(eye) {
-    if (eye === 'left') {
-      return this.frame.leftProjectionMatrix;
-    } else if (eye === 'right') {
-      return this.frame.rightProjectionMatrix;
-    } else if (eye === 'none') {
-      return this.frame.leftProjectionMatrix;
-    } else {
-      throw new Error(`eye must be of type 'left' or 'right'`);
-    }
-  }
-  getViewport(sessionId, eye, layer, target) {
-    const session = this.sessions.get(sessionId);
-    const { width, height } = layer.context.canvas;
-    if (!session.immersive) {
-      target.x = target.y = 0;
-      target.width = width;
-      target.height = height;
-      return true;
-    }
-    if (eye === 'left' || eye === 'none') {
-      target.x = 0;
-    } else if (eye === 'right') {
-      target.x = width / 2;
-    } else {
-      return false;
-    }
-    target.y = 0;
-    target.width = width / 2;
-    target.height = height;
-    return true;
-  }
-  getBasePoseMatrix() {
-    let { position, orientation } = this.frame.pose;
-    if (!position && !orientation) {
-      return this.baseModelMatrix;
-    }
-    if (!position) {
-      position = this.tempVec3;
-      position[0] = position[1] = position[2] = 0;
-    }
-    fromRotationTranslation(this.baseModelMatrix, orientation, position);
-    return this.baseModelMatrix;
-  }
-  getBaseViewMatrix(eye) {
-    if (eye === 'left' || eye === 'none') {
-      return this.frame.leftViewMatrix;
-    } else if (eye === 'right') {
-      return this.frame.rightViewMatrix;
-    } else {
-      throw new Error(`eye must be of type 'left' or 'right'`);
-    }
-  }
-  getInputSources() {
-    let inputSources = [];
-    for (let i in this.gamepadInputSources) {
-      inputSources.push(this.gamepadInputSources[i].inputSource);
-    }
-    return inputSources;
-  }
-  getInputPose(inputSource, coordinateSystem, poseType) {
-    if (!coordinateSystem) {
-      return null;
-    }
-    for (let i in this.gamepadInputSources) {
-      let inputSourceImpl = this.gamepadInputSources[i];
-      if (inputSourceImpl.inputSource === inputSource) {
-        return inputSourceImpl.getXRPose(coordinateSystem, poseType);
-      }
-    }
-    return null;
-  }
-  onWindowResize() {
-  }
-  onVRDisplayPresentChange(e) {
-    if (!this.display.isPresenting) {
-      this.sessions.forEach(session => {
-        if (session.immersive && !session.ended) {
-          if (session.modifiedCanvasLayer) {
-            const canvas = session.baseLayer.context.canvas;
-            document.body.removeChild(canvas);
-            canvas.setAttribute('style', '');
-          }
-          if (this.immersiveSession === session) {
-            this.immersiveSession = null;
-          }
-          this.dispatchEvent('@@webxr-polyfill/vr-present-end', session.id);
-        }
-      });
-    }
-  }
-}
-
-class CardboardXRDevice extends WebVRDevice {
-  constructor(global, cardboardConfig) {
-    const display = new CardboardVRDisplay(cardboardConfig || {});
-    super(global, display);
-    this.display = display;
-    this.frame = {
-      rightViewMatrix: new Float32Array(16),
-      leftViewMatrix: new Float32Array(16),
-      rightProjectionMatrix: new Float32Array(16),
-      leftProjectionMatrix: new Float32Array(16),
-      pose: null,
-      timestamp: null,
-    };
-  }
-}
-let SESSION_ID$1 = 0;
-class Session$1 {
-  constructor(mode, enabledFeatures) {
-    this.mode = mode;
-    this.enabledFeatures = enabledFeatures;
-    this.ended = null;
-    this.baseLayer = null;
-    this.id = ++SESSION_ID$1;
-  }
-}
-class InlineDevice extends XRDevice {
-  constructor(global) {
-    super(global);
-    this.sessions = new Map();
-    this.projectionMatrix = create();
-    this.identityMatrix = create();
-  }
-  onBaseLayerSet(sessionId, layer) {
-    const session = this.sessions.get(sessionId);
-    session.baseLayer = layer;
-  }
-  isSessionSupported(mode) {
-    return mode == 'inline';
-  }
-  isFeatureSupported(featureDescriptor) {
-    switch(featureDescriptor) {
-      case 'viewer': return true;
-      default: return false;
-    }
-  }
-  async requestSession(mode, enabledFeatures) {
-    if (!this.isSessionSupported(mode)) {
-      return Promise.reject();
-    }
-    const session = new Session$1(mode, enabledFeatures);
-    this.sessions.set(session.id, session);
-    return Promise.resolve(session.id);
-  }
-  requestAnimationFrame(callback) {
-    return window.requestAnimationFrame(callback);
-  }
-  cancelAnimationFrame(handle) {
-    window.cancelAnimationFrame(handle);
-  }
-  onFrameStart(sessionId, renderState) {
-    const session = this.sessions.get(sessionId);
-    if (session.baseLayer) {
-      const canvas = session.baseLayer.context.canvas;
-      perspective(this.projectionMatrix, renderState.inlineVerticalFieldOfView,
-          canvas.width/canvas.height, renderState.depthNear, renderState.depthFar);
-    }
-  }
-  onFrameEnd(sessionId) {
-  }
-  async endSession(sessionId) {
-    const session = this.sessions.get(sessionId);
-    session.ended = true;
-  }
-  doesSessionSupportReferenceSpace(sessionId, type) {
-    const session = this.sessions.get(sessionId);
-    if (session.ended) {
-      return false;
-    }
-    return session.enabledFeatures.has(type);
-  }
-  requestStageBounds() {
-    return null;
-  }
-  async requestFrameOfReferenceTransform(type, options) {
-    return null;
-  }
-  getProjectionMatrix(eye) {
-    return this.projectionMatrix;
-  }
-  getViewport(sessionId, eye, layer, target) {
-    const session = this.sessions.get(sessionId);
-    const { width, height } = layer.context.canvas;
-    target.x = target.y = 0;
-    target.width = width;
-    target.height = height;
-    return true;
-  }
-  getBasePoseMatrix() {
-    return this.identityMatrix;
-  }
-  getBaseViewMatrix(eye) {
-    return this.identityMatrix;
-  }
-  getInputSources() {
-    return [];
-  }
-  getInputPose(inputSource, coordinateSystem, poseType) {
-    return null;
-  }
-  onWindowResize() {
-  }
-}
-
-const getWebVRDevice = async function (global) {
-  let device = null;
-  if ('getVRDisplays' in global.navigator) {
-    try {
-      const displays = await global.navigator.getVRDisplays();
-      if (displays && displays.length) {
-        device = new WebVRDevice(global, displays[0]);
-      }
-    } catch (e) {}
-  }
-  return device;
-};
-const requestXRDevice = async function (global, config) {
-  if (config.webvr) {
-    let xr = await getWebVRDevice(global);
-    if (xr) {
-      return xr;
-    }
-  }
-  let mobile = isMobile(global);
-  if ((mobile && config.cardboard) ||
-      (!mobile && config.allowCardboardOnDesktop)) {
-    if (!global.VRFrameData) {
-      global.VRFrameData = function () {
-        this.rightViewMatrix = new Float32Array(16);
-        this.leftViewMatrix = new Float32Array(16);
-        this.rightProjectionMatrix = new Float32Array(16);
-        this.leftProjectionMatrix = new Float32Array(16);
-        this.pose = null;
-      };
-    }
-    return new CardboardXRDevice(global, config.cardboardConfig);
-  }
-  return new InlineDevice(global);
-};
-
-const CONFIG_DEFAULTS = {
-  global: _global,
-  webvr: true,
-  cardboard: true,
-  cardboardConfig: null,
-  allowCardboardOnDesktop: false,
-};
-const partials = ['navigator', 'HTMLCanvasElement', 'WebGLRenderingContext'];
-class WebXRPolyfill {
-  constructor(config={}) {
-    this.config = Object.freeze(Object.assign({}, CONFIG_DEFAULTS, config));
-    this.global = this.config.global;
-    this.nativeWebXR = 'xr' in this.global.navigator;
-    this.injected = false;
-    if (!this.nativeWebXR) {
-      this._injectPolyfill(this.global);
-    } else {
-      this._injectCompatibilityShims(this.global);
-    }
-  }
-  _injectPolyfill(global) {
-    if (!partials.every(iface => !!global[iface])) {
-      throw new Error(`Global must have the following attributes : ${partials}`);
-    }
-    for (const className of Object.keys(API)) {
-      if (global[className] !== undefined) {
-        console.warn(`${className} already defined on global.`);
-      } else {
-        global[className] = API[className];
-      }
-    }
-    {
-      const polyfilledCtx = polyfillMakeXRCompatible(global.WebGLRenderingContext);
-      if (polyfilledCtx) {
-        polyfillGetContext(global.HTMLCanvasElement);
-        if (global.OffscreenCanvas) {
-          polyfillGetContext(global.OffscreenCanvas);
-        }
-        if (global.WebGL2RenderingContext){
-          polyfillMakeXRCompatible(global.WebGL2RenderingContext);
-        }
-        if (!window.isSecureContext) {
-          console.warn(`WebXR Polyfill Warning:
-This page is not running in a secure context (https:// or localhost)!
-This means that although the page may be able to use the WebXR Polyfill it will
-not be able to use native WebXR implementations, and as such will not be able to
-access dedicated VR or AR hardware, and will not be able to take advantage of
-any performance improvements a native WebXR implementation may offer. Please
-host this content on a secure origin for the best user experience.
-`);
-        }
-      }
-    }
-    this.injected = true;
-    this._patchNavigatorXR();
-  }
-  _patchNavigatorXR() {
-    let devicePromise = requestXRDevice(this.global, this.config);
-    this.xr = new API.XRSystem(devicePromise);
-    Object.defineProperty(this.global.navigator, 'xr', {
-      value: this.xr,
-      configurable: true,
-    });
-  }
-  _injectCompatibilityShims(global) {
-    if (!partials.every(iface => !!global[iface])) {
-      throw new Error(`Global must have the following attributes : ${partials}`);
-    }
-    if (global.navigator.xr &&
-        'supportsSession' in global.navigator.xr &&
-        !('isSessionSupported' in global.navigator.xr)) {
-      let originalSupportsSession = global.navigator.xr.supportsSession;
-      global.navigator.xr.isSessionSupported = function(mode) {
-        return originalSupportsSession.call(this, mode).then(() => {
-          return true;
-        }).catch(() => {
-          return false;
-        });
-      };
-      global.navigator.xr.supportsSession = function(mode) {
-        console.warn("navigator.xr.supportsSession() is deprecated. Please " +
-        "call navigator.xr.isSessionSupported() instead and check the boolean " +
-        "value returned when the promise resolves.");
-        return originalSupportsSession.call(this, mode);
-      };
-    }
-  }
-}
-
-new WebXRPolyfill();
-
 class SessionStartedEvt extends Event {
     /**
      * @param {XRSession} session
@@ -50894,12 +45236,14 @@ class ScreenControl extends EventBase {
 
                 const onSessionEnded = () => {
                     currentSession.removeEventListener("end", onSessionEnded);
-                    this.element.textContent = ("ENTER " + name).trim();
                     currentSession = null;
+                    renderer.xr.setSession(null);
+                    this.element.textContent = ("ENTER " + name).trim();
+                    this.dispatchEvent(sessionEndedEvt);
                     if (type === "inline") {
                         camera.fov = 50;
                     }
-                    this.dispatchEvent(sessionEndedEvt);
+                    resize();
                 };
 
                 this.element.style.display = "";
@@ -50995,14 +45339,14 @@ class ScreenControl extends EventBase {
 
 class UISystem {
     /**
-     * @param {import("../input/EventSystem").EventSystem} eventSystem
+     * @param {import("./EventSystem").EventSystem} eventSystem
      */
     constructor(eventSystem) {
         /** @type {WeakMap<import("three").Object3D, import("three").Vector3>} */
         const scales = new WeakMap();
 
         /**
-         * @param {import("../input/EventSystem").EventSystemEvent} evt
+         * @param {import("./EventSystem").EventSystemEvent} evt
          */
         const onEnter = (evt) => {
             if (!evt.hit.object.disabled) {
@@ -51014,7 +45358,7 @@ class UISystem {
         };
 
         /**
-         * @param {import("../input/EventSystem").EventSystemEvent} evt
+         * @param {import("./EventSystem").EventSystemEvent} evt
          */
         const onExit = (evt) => {
             if (!evt.hit.object.disabled) {
@@ -51067,7 +45411,7 @@ class Application extends EventBase {
         this.skybox.visible = false;
         this.showSkybox = false;
 
-        this.stage = new Stage(this.camera);
+        this.stage = new Stage(this.renderer, this.camera);
         this.stage.position.set(0, 0, 0);
 
         this.sun = new DirectionalLight(0xffffff, 0.5);
@@ -51098,45 +45442,61 @@ class Application extends EventBase {
         this.transition.visible = false;
         this.transition.add(this.loadingBar);
 
+        this.grid = new GridHelper(10, 10);
+
         this.scene = new Scene();
         this.scene.background = visibleBackground;
         this.scene.add(this.background);
         this.scene.add(this.foreground);
         this.scene.add(this.transition);
-
-        this.controls = new ScreenPointerControls(this.renderer.domElement);
-
-        this.cameraControl = new CameraControl(this.camera, this.stage, this.controls);
-
-        this.screenControl = new ScreenControl(this.renderer, this.camera);
-        document.body.append(this.screenControl.element);
+        this.scene.add(this.grid);
 
         this.cursors = new CursorControl(this.renderer.domElement);
 
-        this.eventSystem = new EventSystem(this.cursors, this.camera, this.foreground, this.controls);
+        this.controls = new ScreenPointerControls(this.renderer.domElement);
+
+        this.cameraControl = new CameraControl(this.camera, this.stage, this.controls, this.cursors);
+
+        this.screenControl = new ScreenControl(this.renderer, this.camera, false);
+        this.screenControl.addEventListener("sessionstarted", () => {
+            this.cursors.lockPointer();
+        });
+        document.body.append(this.screenControl.element);
+
+        this.eventSystem = new EventSystem(this.renderer, this.camera, this.cursors, this.background, this.foreground, this.controls);
         this.uiSystem = new UISystem(this.eventSystem);
 
+        /**
+         * @param {import("../timers/BaseTimer").TimerTickEvent} evt
+         */
         const update = (evt) => {
             if (!this.showSkybox) {
                 this.skybox.visible = false;
             }
 
+            this.stage.update();
             this.cameraControl.update();
             this.skybox.update();
-            this.audio.update();
             this.loadingBar.update(evt.sdt);
             this.fader.update(evt.sdt);
 
             this.stage.presentationPoint.getWorldPosition(this.transition.position);
             this.stage.presentationPoint.getWorldQuaternion(this.transition.quaternion);
 
-            setRightUpFwdPos(this.camera.matrixWorld, R, U, F, P);
+            this.stage.getWorldPosition(this.grid.position);
+
+            const cam = this.renderer.xr.isPresenting
+                ? this.renderer.xr.getCamera(this.camera)
+                : this.camera;
+            
+            setRightUpFwdPos(cam.matrixWorld, R, U, F, P);
             this.audio.setUserPose(
                 "local-user",
                 P.x, P.y, P.z,
                 F.x, F.y, F.z,
                 U.x, U.y, U.z,
                 0);
+            this.audio.update();
 
             this.menu.position.copy(this.transition.position);
             this.menu.quaternion.copy(this.transition.quaternion);
@@ -51166,6 +45526,7 @@ class Application extends EventBase {
         if (this.fadeDepth === 1) {
             await this.fader.fadeOut();
             this.skybox.visible = false;
+            this.grid.visible = false;
             this.scene.background = invisibleBackground;
             this.foreground.visible = false;
             this.transition.visible = true;
@@ -51179,6 +45540,7 @@ class Application extends EventBase {
         if (this.fadeDepth === 0) {
             await this.fader.fadeOut();
             this.skybox.visible = this.showSkybox;
+            this.grid.visible = true;
             this.scene.background = visibleBackground;
             this.foreground.visible = true;
             this.transition.visible = false;
@@ -51196,16 +45558,2938 @@ class Application extends EventBase {
     }
 }
 
-class Sign extends Image2DMesh {
-    constructor(sign) {
-        super("sign-" + sign.fileName);
-        if (sign.isCallout) {
-            this.addEventListener("click", () => console.log(img.name));
+/**
+ * Unicode-standardized pictograms.
+ **/
+class Emoji {
+    /**
+     * Creates a new Unicode-standardized pictograms.
+     * @param {string} value - a Unicode sequence.
+     * @param {string} desc - an English text description of the pictogram.
+     */
+    constructor(value, desc) {
+        this.value = value;
+        this.desc = desc;
+    }
+
+    /**
+     * Determines of the provided Emoji or EmojiGroup is a subset of
+     * this emoji.
+     * @param {(Emoji|EmojiGroup)} e
+     */
+    contains(e) {
+        return this.value.indexOf(e.value) >= 0;
+    }
+}
+
+/**
+ * Shorthand for `new Emoji`, which saves significantly on bundle size.
+ * @param {string} v - a Unicode sequence.
+ * @param {string} d - an English text description of the pictogram.
+ * @param {any} [o=null] - an optional set of properties to set on the Emoji object.
+ * @returns {Emoji}
+ */
+function e(v, d, o = null) {
+    return Object.assign(new Emoji(v, d), o);
+}
+
+class EmojiGroup extends Emoji {
+    /**
+     * Groupings of Unicode-standardized pictograms.
+     * @param {string} value - a Unicode sequence.
+     * @param {string} desc - an English text description of the pictogram.
+     * @param {Emoji[]} rest - Emojis in this group.
+     */
+    constructor(value, desc, ...rest) {
+        super(value, desc);
+        /** @type {Emoji[]} */
+        this.alts = rest;
+        /** @type {string} */
+        this.width = null;
+    }
+
+    /**
+     * Selects a random emoji out of the collection.
+     * @returns {(Emoji|EmojiGroup)}
+     **/
+    random() {
+        const idx = Math.floor(Math.random() * this.alts.length);
+        if (idx < 0) {
+            return null;
+        }
+
+        const selection = this.alts[idx];
+        if (selection instanceof EmojiGroup) {
+            return selection.random();
+        }
+        else {
+            return selection;
+        }
+    }
+
+    /**
+     *
+     * @param {(Emoji|EmojiGroup)} e
+     */
+    contains(e) {
+        return super.contains(e)
+            || this.alts.reduce((a, b) => a || b.contains(e), false);
+    }
+}
+
+
+/**
+ * Shorthand for `new EmojiGroup`, which saves significantly on bundle size.
+ * @param {string} v - a Unicode sequence.
+ * @param {string} d - an English text description of the pictogram.
+ * @param {...(Emoji|EmojiGroup)} r - the emoji that are contained in this group.
+ * @returns {EmojiGroup}
+ */
+function g(v, d, ...r) {
+    return new EmojiGroup(v, d, ...r);
+}
+
+/**
+ * A shorthand for `new EmojiGroup` that allows for setting optional properties
+ * on the EmojiGroup object.
+ * @param {string} v - a Unicode sequence.
+ * @param {string} d - an English text description of the pictogram.
+ * @param {any} o - a set of properties to set on the Emoji object.
+ * @param {...(Emoji|import("./EmojiGroup").EmojiGroup)} r - the emoji that are contained in this group.
+ * @returns {import("./EmojiGroup").EmojiGroup}
+ */
+function gg(v, d, o, ...r) {
+    return Object.assign(
+        g(
+            v,
+            d,
+            ...Object
+                .values(o)
+                .filter(v => v instanceof Emoji),
+            ...r),
+        o);
+}
+
+const textStyle = e("\u{FE0E}", "Variation Selector-15: text style");
+const emojiStyle = e("\u{FE0F}", "Variation Selector-16: emoji style");
+const zeroWidthJoiner = e("\u{200D}", "Zero Width Joiner");
+const combiningEnclosingCircleBackslash = e("\u{20E3}", "Combining Enclosing Circle Backslash");
+const combiningEnclosingKeycap = e("\u{20E3}", "Combining Enclosing Keycap");
+
+const female = e("\u{2640}\u{FE0F}", "Female");
+const male = e("\u{2642}\u{FE0F}", "Male");
+const skinL = e("\u{1F3FB}", "Light Skin Tone");
+const skinML = e("\u{1F3FC}", "Medium-Light Skin Tone");
+const skinM = e("\u{1F3FD}", "Medium Skin Tone");
+const skinMD = e("\u{1F3FE}", "Medium-Dark Skin Tone");
+const skinD = e("\u{1F3FF}", "Dark Skin Tone");
+const hairRed = e("\u{1F9B0}", "Red Hair");
+const hairCurly = e("\u{1F9B1}", "Curly Hair");
+const hairWhite = e("\u{1F9B3}", "White Hair");
+const hairBald = e("\u{1F9B2}", "Bald");
+
+function combo(a, b) {
+    if (a instanceof Array) {
+        return a.map(c => combo(c, b));
+    }
+    else if (a instanceof EmojiGroup) {
+        const { value, desc } = combo(e(a.value, a.desc), b);
+        return g(value, desc, ...combo(a.alts, b));
+    }
+    else if (b instanceof Array) {
+        return b.map(c => combo(a, c));
+    }
+    else {
+        return e(a.value + b.value, a.desc + ": " + b.desc);
+    }
+}
+
+function join(a, b) {
+    if (a instanceof Array) {
+        return a.map(c => join(c, b));
+    }
+    else if (a instanceof EmojiGroup) {
+        const { value, desc } = join(e(a.value, a.desc), b);
+        return g(value, desc, ...join(a.alts, b));
+    }
+    else if (b instanceof Array) {
+        return b.map(c => join(a, c));
+    }
+    else {
+        return e(a.value + zeroWidthJoiner.value + b.value, a.desc + ": " + b.desc);
+    }
+}
+
+function skin(v, d, ...rest) {
+    const person = e(v, d),
+        light = combo(person, skinL),
+        mediumLight = combo(person, skinML),
+        medium = combo(person, skinM),
+        mediumDark = combo(person, skinMD),
+        dark = combo(person, skinD);
+    return gg(person.value, person.desc, {
+        default: person,
+        light,
+        mediumLight,
+        medium,
+        mediumDark,
+        dark
+    }, ...rest);
+}
+
+function sex(person) {
+    const man = join(person, male),
+        woman = join(person, female);
+
+    return gg(person.value, person.desc, {
+        default: person,
+        man,
+        woman
+    });
+}
+
+function skinAndSex(v, d) {
+    return sex(skin(v, d));
+}
+
+function skinAndHair(v, d, ...rest) {
+    const people = skin(v, d),
+        red = join(people, hairRed),
+        curly = join(people, hairCurly),
+        white = join(people, hairWhite),
+        bald = join(people, hairBald);
+    return gg(people.value, people.desc, {
+        default: people,
+        red,
+        curly,
+        white,
+        bald
+    }, ...rest);
+}
+
+function sym(symbol, name) {
+    const j = e(symbol.value, name),
+        men = join(man.default, j),
+        women = join(woman.default, j);
+    return gg(symbol.value, symbol.desc, {
+        symbol,
+        men,
+        women
+    });
+}
+
+const frowners = skinAndSex("\u{1F64D}", "Frowning");
+const pouters = skinAndSex("\u{1F64E}", "Pouting");
+const gesturingNo = skinAndSex("\u{1F645}", "Gesturing NO");
+const gesturingOK = skinAndSex("\u{1F646}", "Gesturing OK");
+const tippingHand = skinAndSex("\u{1F481}", "Tipping Hand");
+const raisingHand = skinAndSex("\u{1F64B}", "Raising Hand");
+const bowing = skinAndSex("\u{1F647}", "Bowing");
+const facePalming = skinAndSex("\u{1F926}", "Facepalming");
+const shrugging = skinAndSex("\u{1F937}", "Shrugging");
+const cantHear = skinAndSex("\u{1F9CF}", "Can't Hear");
+const gettingMassage = skinAndSex("\u{1F486}", "Getting Massage");
+const gettingHaircut = skinAndSex("\u{1F487}", "Getting Haircut");
+
+const constructionWorkers = skinAndSex("\u{1F477}", "Construction Worker");
+const guards = skinAndSex("\u{1F482}", "Guard");
+const spies = skinAndSex("\u{1F575}", "Spy");
+const police = skinAndSex("\u{1F46E}", "Police");
+const wearingTurban = skinAndSex("\u{1F473}", "Wearing Turban");
+const superheroes = skinAndSex("\u{1F9B8}", "Superhero");
+const supervillains = skinAndSex("\u{1F9B9}", "Supervillain");
+const mages = skinAndSex("\u{1F9D9}", "Mage");
+const fairies = skinAndSex("\u{1F9DA}", "Fairy");
+const vampires = skinAndSex("\u{1F9DB}", "Vampire");
+const merpeople = skinAndSex("\u{1F9DC}", "Merperson");
+const elves = skinAndSex("\u{1F9DD}", "Elf");
+const walking = skinAndSex("\u{1F6B6}", "Walking");
+const standing = skinAndSex("\u{1F9CD}", "Standing");
+const kneeling = skinAndSex("\u{1F9CE}", "Kneeling");
+const runners = skinAndSex("\u{1F3C3}", "Running");
+
+const gestures$1 = g(
+    "Gestures", "Gestures",
+    frowners,
+    pouters,
+    gesturingNo,
+    gesturingOK,
+    tippingHand,
+    raisingHand,
+    bowing,
+    facePalming,
+    shrugging,
+    cantHear,
+    gettingMassage,
+    gettingHaircut);
+
+
+const baby = skin("\u{1F476}", "Baby");
+const child = skin("\u{1F9D2}", "Child");
+const boy = skin("\u{1F466}", "Boy");
+const girl = skin("\u{1F467}", "Girl");
+const children = gg(child.value, child.desc, {
+    default: child,
+    male: boy,
+    female: girl
+});
+
+
+const blondes = skinAndSex("\u{1F471}", "Blond Person");
+const person = skin("\u{1F9D1}", "Person", blondes.default, wearingTurban.default);
+
+const beardedMan = skin("\u{1F9D4}", "Bearded Man");
+const manInSuitLevitating = e("\u{1F574}\u{FE0F}", "Man in Suit, Levitating");
+const manWithChineseCap = skin("\u{1F472}", "Man With Chinese Cap");
+const manInTuxedo = skin("\u{1F935}", "Man in Tuxedo");
+const man = skinAndHair("\u{1F468}", "Man",
+    blondes.man,
+    beardedMan,
+    manInSuitLevitating,
+    manWithChineseCap,
+    wearingTurban.man,
+    manInTuxedo);
+
+const pregnantWoman = skin("\u{1F930}", "Pregnant Woman");
+const breastFeeding = skin("\u{1F931}", "Breast-Feeding");
+const womanWithHeadscarf = skin("\u{1F9D5}", "Woman With Headscarf");
+const brideWithVeil = skin("\u{1F470}", "Bride With Veil");
+const woman = skinAndHair("\u{1F469}", "Woman",
+    blondes.woman,
+    pregnantWoman,
+    breastFeeding,
+    womanWithHeadscarf,
+    wearingTurban.woman,
+    brideWithVeil);
+const adults = gg(
+    person.value, "Adult", {
+    default: person,
+    male: man,
+    female: woman
+});
+
+const olderPerson = skin("\u{1F9D3}", "Older Person");
+const oldMan = skin("\u{1F474}", "Old Man");
+const oldWoman = skin("\u{1F475}", "Old Woman");
+const elderly = gg(
+    olderPerson.value, olderPerson.desc, {
+    default: olderPerson,
+    male: oldMan,
+    female: oldWoman
+});
+
+const medical = e("\u{2695}\u{FE0F}", "Medical");
+const healthCareWorkers = sym(medical, "Health Care");
+
+const graduationCap = e("\u{1F393}", "Graduation Cap");
+const students = sym(graduationCap, "Student");
+
+const school = e("\u{1F3EB}", "School");
+const teachers = sym(school, "Teacher");
+
+const balanceScale = e("\u{2696}\u{FE0F}", "Balance Scale");
+const judges = sym(balanceScale, "Judge");
+
+const sheafOfRice = e("\u{1F33E}", "Sheaf of Rice");
+const farmers = sym(sheafOfRice, "Farmer");
+
+const cooking = e("\u{1F373}", "Cooking");
+const cooks = sym(cooking, "Cook");
+
+const wrench = e("\u{1F527}", "Wrench");
+const mechanics = sym(wrench, "Mechanic");
+
+const factory = e("\u{1F3ED}", "Factory");
+const factoryWorkers = sym(factory, "Factory Worker");
+
+const briefcase = e("\u{1F4BC}", "Briefcase");
+const officeWorkers = sym(briefcase, "Office Worker");
+
+const fireEngine = e("\u{1F692}", "Fire Engine");
+const fireFighters = sym(fireEngine, "Fire Fighter");
+
+const rocket = e("\u{1F680}", "Rocket");
+const astronauts = sym(rocket, "Astronaut");
+
+const airplane = e("\u{2708}\u{FE0F}", "Airplane");
+const pilots = sym(airplane, "Pilot");
+
+const artistPalette = e("\u{1F3A8}", "Artist Palette");
+const artists = sym(artistPalette, "Artist");
+
+const microphone = e("\u{1F3A4}", "Microphone");
+const singers = sym(microphone, "Singer");
+
+const laptop = e("\u{1F4BB}", "Laptop");
+const technologists = sym(laptop, "Technologist");
+
+const microscope = e("\u{1F52C}", "Microscope");
+const scientists = sym(microscope, "Scientist");
+
+const crown = e("\u{1F451}", "Crown");
+const prince = skin("\u{1F934}", "Prince");
+const princess = skin("\u{1F478}", "Princess");
+const royalty = gg(
+    crown.value, crown.desc, {
+    symbol: crown,
+    male: prince,
+    female: princess
+});
+
+const roles = gg(
+    "Roles", "Depictions of people working", {
+    healthCareWorkers,
+    students,
+    teachers,
+    judges,
+    farmers,
+    cooks,
+    mechanics,
+    factoryWorkers,
+    officeWorkers,
+    scientists,
+    technologists,
+    singers,
+    artists,
+    pilots,
+    astronauts,
+    fireFighters,
+    spies,
+    guards,
+    constructionWorkers,
+    royalty
+});
+
+const cherub = skin("\u{1F47C}", "Cherub");
+const santaClaus = skin("\u{1F385}", "Santa Claus");
+const mrsClaus = skin("\u{1F936}", "Mrs. Claus");
+
+const genies = sex(e("\u{1F9DE}", "Genie"));
+const zombies = sex(e("\u{1F9DF}", "Zombie"));
+
+const fantasy = gg(
+    "Fantasy", "Depictions of fantasy characters", {
+    cherub,
+    santaClaus,
+    mrsClaus,
+    superheroes,
+    supervillains,
+    mages,
+    fairies,
+    vampires,
+    merpeople,
+    elves,
+    genies,
+    zombies
+});
+
+const whiteCane = e("\u{1F9AF}", "Probing Cane");
+const withProbingCane = sym(whiteCane, "Probing");
+
+const motorizedWheelchair = e("\u{1F9BC}", "Motorized Wheelchair");
+const inMotorizedWheelchair = sym(motorizedWheelchair, "In Motorized Wheelchair");
+
+const manualWheelchair = e("\u{1F9BD}", "Manual Wheelchair");
+const inManualWheelchair = sym(manualWheelchair, "In Manual Wheelchair");
+
+
+const manDancing = skin("\u{1F57A}", "Man Dancing");
+const womanDancing = skin("\u{1F483}", "Woman Dancing");
+const dancers = gg(
+    manDancing.value, "Dancing", {
+    male: manDancing,
+    female: womanDancing
+});
+
+const jugglers = skinAndSex("\u{1F939}", "Juggler");
+
+const climbers = skinAndSex("\u{1F9D7}", "Climber");
+const fencer = e("\u{1F93A}", "Fencer");
+const jockeys = skin("\u{1F3C7}", "Jockey");
+const skier = e("\u{26F7}\u{FE0F}", "Skier");
+const snowboarders = skin("\u{1F3C2}", "Snowboarder");
+const golfers = skinAndSex("\u{1F3CC}\u{FE0F}", "Golfer");
+const surfers = skinAndSex("\u{1F3C4}", "Surfing");
+const rowers = skinAndSex("\u{1F6A3}", "Rowing Boat");
+const swimmers = skinAndSex("\u{1F3CA}", "Swimming");
+const basketballers = skinAndSex("\u{26F9}\u{FE0F}", "Basket Baller");
+const weightLifters = skinAndSex("\u{1F3CB}\u{FE0F}", "Weight Lifter");
+const bikers = skinAndSex("\u{1F6B4}", "Biker");
+const mountainBikers = skinAndSex("\u{1F6B5}", "Mountain Biker");
+const cartwheelers = skinAndSex("\u{1F938}", "Cartwheeler");
+const wrestlers = sex(e("\u{1F93C}", "Wrestler"));
+const waterPoloers = skinAndSex("\u{1F93D}", "Water Polo Player");
+const handBallers = skinAndSex("\u{1F93E}", "Hand Baller");
+
+const inMotion = gg(
+    "In Motion", "Depictions of people in motion", {
+    walking,
+    standing,
+    kneeling,
+    withProbingCane,
+    inMotorizedWheelchair,
+    inManualWheelchair,
+    dancers,
+    jugglers,
+    climbers,
+    fencer,
+    jockeys,
+    skier,
+    snowboarders,
+    golfers,
+    surfers,
+    rowers,
+    swimmers,
+    runners,
+    basketballers,
+    weightLifters,
+    bikers,
+    mountainBikers,
+    cartwheelers,
+    wrestlers,
+    waterPoloers,
+    handBallers
+});
+
+const inLotusPosition = skinAndSex("\u{1F9D8}", "In Lotus Position");
+const inBath = skin("\u{1F6C0}", "In Bath");
+const inBed = skin("\u{1F6CC}", "In Bed");
+const inSauna = skinAndSex("\u{1F9D6}", "In Sauna");
+const resting = gg(
+    "Resting", "Depictions of people at rest", {
+    inLotusPosition,
+    inBath,
+    inBed,
+    inSauna
+});
+
+const babies = g(baby.value, baby.desc, baby, cherub);
+const people = gg(
+    "People", "People", {
+    babies,
+    children,
+    adults,
+    elderly
+});
+
+const allPeople = gg(
+    "All People", "All People", {
+    people,
+    gestures: gestures$1,
+    inMotion,
+    resting,
+    roles,
+    fantasy
+});
+
+const ogre = e("\u{1F479}", "Ogre");
+const goblin = e("\u{1F47A}", "Goblin");
+const ghost = e("\u{1F47B}", "Ghost");
+const alien = e("\u{1F47D}", "Alien");
+const alienMonster = e("\u{1F47E}", "Alien Monster");
+const angryFaceWithHorns = e("\u{1F47F}", "Angry Face with Horns");
+const skull = e("\u{1F480}", "Skull");
+const pileOfPoo = e("\u{1F4A9}", "Pile of Poo");
+const grinningFace = e("\u{1F600}", "Grinning Face");
+const beamingFaceWithSmilingEyes = e("\u{1F601}", "Beaming Face with Smiling Eyes");
+const faceWithTearsOfJoy = e("\u{1F602}", "Face with Tears of Joy");
+const grinningFaceWithBigEyes = e("\u{1F603}", "Grinning Face with Big Eyes");
+const grinningFaceWithSmilingEyes = e("\u{1F604}", "Grinning Face with Smiling Eyes");
+const grinningFaceWithSweat = e("\u{1F605}", "Grinning Face with Sweat");
+const grinningSquitingFace = e("\u{1F606}", "Grinning Squinting Face");
+const smillingFaceWithHalo = e("\u{1F607}", "Smiling Face with Halo");
+const smilingFaceWithHorns = e("\u{1F608}", "Smiling Face with Horns");
+const winkingFace = e("\u{1F609}", "Winking Face");
+const smilingFaceWithSmilingEyes = e("\u{1F60A}", "Smiling Face with Smiling Eyes");
+const faceSavoringFood = e("\u{1F60B}", "Face Savoring Food");
+const relievedFace = e("\u{1F60C}", "Relieved Face");
+const smilingFaceWithHeartEyes = e("\u{1F60D}", "Smiling Face with Heart-Eyes");
+const smilingFaceWithSunglasses = e("\u{1F60E}", "Smiling Face with Sunglasses");
+const smirkingFace = e("\u{1F60F}", "Smirking Face");
+const neutralFace = e("\u{1F610}", "Neutral Face");
+const expressionlessFace = e("\u{1F611}", "Expressionless Face");
+const unamusedFace = e("\u{1F612}", "Unamused Face");
+const downcastFaceWithSweat = e("\u{1F613}", "Downcast Face with Sweat");
+const pensiveFace = e("\u{1F614}", "Pensive Face");
+const confusedFace = e("\u{1F615}", "Confused Face");
+const confoundedFace = e("\u{1F616}", "Confounded Face");
+const kissingFace = e("\u{1F617}", "Kissing Face");
+const faceBlowingAKiss = e("\u{1F618}", "Face Blowing a Kiss");
+const kissingFaceWithSmilingEyes = e("\u{1F619}", "Kissing Face with Smiling Eyes");
+const kissingFaceWithClosedEyes = e("\u{1F61A}", "Kissing Face with Closed Eyes");
+const faceWithTongue = e("\u{1F61B}", "Face with Tongue");
+const winkingFaceWithTongue = e("\u{1F61C}", "Winking Face with Tongue");
+const squintingFaceWithTongue = e("\u{1F61D}", "Squinting Face with Tongue");
+const disappointedFace = e("\u{1F61E}", "Disappointed Face");
+const worriedFace = e("\u{1F61F}", "Worried Face");
+const angryFace = e("\u{1F620}", "Angry Face");
+const poutingFace = e("\u{1F621}", "Pouting Face");
+const cryingFace = e("\u{1F622}", "Crying Face");
+const perseveringFace = e("\u{1F623}", "Persevering Face");
+const faceWithSteamFromNose = e("\u{1F624}", "Face with Steam From Nose");
+const sadButRelievedFace = e("\u{1F625}", "Sad but Relieved Face");
+const frowningFaceWithOpenMouth = e("\u{1F626}", "Frowning Face with Open Mouth");
+const anguishedFace = e("\u{1F627}", "Anguished Face");
+const fearfulFace = e("\u{1F628}", "Fearful Face");
+const wearyFace = e("\u{1F629}", "Weary Face");
+const sleepyFace = e("\u{1F62A}", "Sleepy Face");
+const tiredFace = e("\u{1F62B}", "Tired Face");
+const grimacingFace = e("\u{1F62C}", "Grimacing Face");
+const loudlyCryingFace = e("\u{1F62D}", "Loudly Crying Face");
+const faceWithOpenMouth = e("\u{1F62E}", "Face with Open Mouth");
+const hushedFace = e("\u{1F62F}", "Hushed Face");
+const anxiousFaceWithSweat = e("\u{1F630}", "Anxious Face with Sweat");
+const faceScreamingInFear = e("\u{1F631}", "Face Screaming in Fear");
+const astonishedFace = e("\u{1F632}", "Astonished Face");
+const flushedFace = e("\u{1F633}", "Flushed Face");
+const sleepingFace = e("\u{1F634}", "Sleeping Face");
+const dizzyFace = e("\u{1F635}", "Dizzy Face");
+const faceWithoutMouth = e("\u{1F636}", "Face Without Mouth");
+const faceWithMedicalMask = e("\u{1F637}", "Face with Medical Mask");
+const grinningCatWithSmilingEyes = e("\u{1F638}", "Grinning Cat with Smiling Eyes");
+const catWithTearsOfJoy = e("\u{1F639}", "Cat with Tears of Joy");
+const grinningCat = e("\u{1F63A}", "Grinning Cat");
+const smilingCatWithHeartEyes = e("\u{1F63B}", "Smiling Cat with Heart-Eyes");
+const catWithWrySmile = e("\u{1F63C}", "Cat with Wry Smile");
+const kissingCat = e("\u{1F63D}", "Kissing Cat");
+const poutingCat = e("\u{1F63E}", "Pouting Cat");
+const cryingCat = e("\u{1F63F}", "Crying Cat");
+const wearyCat = e("\u{1F640}", "Weary Cat");
+const slightlyFrowningFace = e("\u{1F641}", "Slightly Frowning Face");
+const slightlySmilingFace = e("\u{1F642}", "Slightly Smiling Face");
+const updisdeDownFace = e("\u{1F643}", "Upside-Down Face");
+const faceWithRollingEyes = e("\u{1F644}", "Face with Rolling Eyes");
+const seeNoEvilMonkey = e("\u{1F648}", "See-No-Evil Monkey");
+const hearNoEvilMonkey = e("\u{1F649}", "Hear-No-Evil Monkey");
+const speakNoEvilMonkey = e("\u{1F64A}", "Speak-No-Evil Monkey");
+const zipperMouthFace = e("\u{1F910}", "Zipper-Mouth Face");
+const moneyMouthFace = e("\u{1F911}", "Money-Mouth Face");
+const faceWithThermometer = e("\u{1F912}", "Face with Thermometer");
+const nerdFace = e("\u{1F913}", "Nerd Face");
+const thinkingFace = e("\u{1F914}", "Thinking Face");
+const faceWithHeadBandage = e("\u{1F915}", "Face with Head-Bandage");
+const robot = e("\u{1F916}", "Robot");
+const huggingFace = e("\u{1F917}", "Hugging Face");
+const cowboyHatFace = e("\u{1F920}", "Cowboy Hat Face");
+const clownFace = e("\u{1F921}", "Clown Face");
+const nauseatedFace = e("\u{1F922}", "Nauseated Face");
+const rollingOnTheFloorLaughing = e("\u{1F923}", "Rolling on the Floor Laughing");
+const droolingFace = e("\u{1F924}", "Drooling Face");
+const lyingFace = e("\u{1F925}", "Lying Face");
+const sneezingFace = e("\u{1F927}", "Sneezing Face");
+const faceWithRaisedEyebrow = e("\u{1F928}", "Face with Raised Eyebrow");
+const starStruck = e("\u{1F929}", "Star-Struck");
+const zanyFace = e("\u{1F92A}", "Zany Face");
+const shushingFace = e("\u{1F92B}", "Shushing Face");
+const faceWithSymbolsOnMouth = e("\u{1F92C}", "Face with Symbols on Mouth");
+const faceWithHandOverMouth = e("\u{1F92D}", "Face with Hand Over Mouth");
+const faceVomitting = e("\u{1F92E}", "Face Vomiting");
+const explodingHead = e("\u{1F92F}", "Exploding Head");
+const smilingFaceWithHearts = e("\u{1F970}", "Smiling Face with Hearts");
+const yawningFace = e("\u{1F971}", "Yawning Face");
+//export const smilingFaceWithTear = e("\u{1F972}", "Smiling Face with Tear");
+const partyingFace = e("\u{1F973}", "Partying Face");
+const woozyFace = e("\u{1F974}", "Woozy Face");
+const hotFace = e("\u{1F975}", "Hot Face");
+const coldFace = e("\u{1F976}", "Cold Face");
+//export const disguisedFace = e("\u{1F978}", "Disguised Face");
+const pleadingFace = e("\u{1F97A}", "Pleading Face");
+const faceWithMonocle = e("\u{1F9D0}", "Face with Monocle");
+const skullAndCrossbones = e("\u{2620}\u{FE0F}", "Skull and Crossbones");
+const frowningFace = e("\u{2639}\u{FE0F}", "Frowning Face");
+const smilingFace = e("\u{263A}\u{FE0F}", "Smiling Face");
+const speakingHead = e("\u{1F5E3}\u{FE0F}", "Speaking Head");
+const bust = e("\u{1F464}", "Bust in Silhouette");
+const faces = gg(
+    "Faces", "Round emoji faces", {
+    ogre,
+    goblin,
+    ghost,
+    alien,
+    alienMonster,
+    angryFaceWithHorns,
+    skull,
+    pileOfPoo,
+    grinningFace,
+    beamingFaceWithSmilingEyes,
+    faceWithTearsOfJoy,
+    grinningFaceWithBigEyes,
+    grinningFaceWithSmilingEyes,
+    grinningFaceWithSweat,
+    grinningSquitingFace,
+    smillingFaceWithHalo,
+    smilingFaceWithHorns,
+    winkingFace,
+    smilingFaceWithSmilingEyes,
+    faceSavoringFood,
+    relievedFace,
+    smilingFaceWithHeartEyes,
+    smilingFaceWithSunglasses,
+    smirkingFace,
+    neutralFace,
+    expressionlessFace,
+    unamusedFace,
+    downcastFaceWithSweat,
+    pensiveFace,
+    confusedFace,
+    confoundedFace,
+    kissingFace,
+    faceBlowingAKiss,
+    kissingFaceWithSmilingEyes,
+    kissingFaceWithClosedEyes,
+    faceWithTongue,
+    winkingFaceWithTongue,
+    squintingFaceWithTongue,
+    disappointedFace,
+    worriedFace,
+    angryFace,
+    poutingFace,
+    cryingFace,
+    perseveringFace,
+    faceWithSteamFromNose,
+    sadButRelievedFace,
+    frowningFaceWithOpenMouth,
+    anguishedFace,
+    fearfulFace,
+    wearyFace,
+    sleepyFace,
+    tiredFace,
+    grimacingFace,
+    loudlyCryingFace,
+    faceWithOpenMouth,
+    hushedFace,
+    anxiousFaceWithSweat,
+    faceScreamingInFear,
+    astonishedFace,
+    flushedFace,
+    sleepingFace,
+    dizzyFace,
+    faceWithoutMouth,
+    faceWithMedicalMask,
+    grinningCatWithSmilingEyes,
+    catWithTearsOfJoy,
+    grinningCat,
+    smilingCatWithHeartEyes,
+    catWithWrySmile,
+    kissingCat,
+    poutingCat,
+    cryingCat,
+    wearyCat,
+    slightlyFrowningFace,
+    slightlySmilingFace,
+    updisdeDownFace,
+    faceWithRollingEyes,
+    seeNoEvilMonkey,
+    hearNoEvilMonkey,
+    speakNoEvilMonkey,
+    zipperMouthFace,
+    moneyMouthFace,
+    faceWithThermometer,
+    nerdFace,
+    thinkingFace,
+    faceWithHeadBandage,
+    robot,
+    huggingFace,
+    cowboyHatFace,
+    clownFace,
+    nauseatedFace,
+    rollingOnTheFloorLaughing,
+    droolingFace,
+    lyingFace,
+    sneezingFace,
+    faceWithRaisedEyebrow,
+    starStruck,
+    zanyFace,
+    shushingFace,
+    faceWithSymbolsOnMouth,
+    faceWithHandOverMouth,
+    faceVomitting,
+    explodingHead,
+    smilingFaceWithHearts,
+    yawningFace,
+    //smilingFaceWithTear,
+    partyingFace,
+    woozyFace,
+    hotFace,
+    coldFace,
+    //disguisedFace,
+    pleadingFace,
+    faceWithMonocle,
+    skullAndCrossbones,
+    frowningFace,
+    smilingFace,
+    speakingHead,
+    bust,
+});
+
+const kissMark = e("\u{1F48B}", "Kiss Mark");
+const loveLetter = e("\u{1F48C}", "Love Letter");
+const beatingHeart = e("\u{1F493}", "Beating Heart");
+const brokenHeart = e("\u{1F494}", "Broken Heart");
+const twoHearts = e("\u{1F495}", "Two Hearts");
+const sparklingHeart = e("\u{1F496}", "Sparkling Heart");
+const growingHeart = e("\u{1F497}", "Growing Heart");
+const heartWithArrow = e("\u{1F498}", "Heart with Arrow");
+const blueHeart = e("\u{1F499}", "Blue Heart");
+const greenHeart = e("\u{1F49A}", "Green Heart");
+const yellowHeart = e("\u{1F49B}", "Yellow Heart");
+const purpleHeart = e("\u{1F49C}", "Purple Heart");
+const heartWithRibbon = e("\u{1F49D}", "Heart with Ribbon");
+const revolvingHearts = e("\u{1F49E}", "Revolving Hearts");
+const heartDecoration = e("\u{1F49F}", "Heart Decoration");
+const blackHeart = e("\u{1F5A4}", "Black Heart");
+const whiteHeart = e("\u{1F90D}", "White Heart");
+const brownHeart = e("\u{1F90E}", "Brown Heart");
+const orangeHeart = e("\u{1F9E1}", "Orange Heart");
+const heartExclamation = e("\u{2763}\u{FE0F}", "Heart Exclamation");
+const redHeart = e("\u{2764}\u{FE0F}", "Red Heart");
+const love = gg(
+    "Love", "Hearts and kisses", {
+    kissMark,
+    loveLetter,
+    beatingHeart,
+    brokenHeart,
+    twoHearts,
+    sparklingHeart,
+    growingHeart,
+    heartWithArrow,
+    blueHeart,
+    greenHeart,
+    yellowHeart,
+    purpleHeart,
+    heartWithRibbon,
+    revolvingHearts,
+    heartDecoration,
+    blackHeart,
+    whiteHeart,
+    brownHeart,
+    orangeHeart,
+    heartExclamation,
+    redHeart,
+});
+
+const angerSymbol = e("\u{1F4A2}", "Anger Symbol");
+const bomb = e("\u{1F4A3}", "Bomb");
+const zzz = e("\u{1F4A4}", "Zzz");
+const collision = e("\u{1F4A5}", "Collision");
+const sweatDroplets = e("\u{1F4A6}", "Sweat Droplets");
+const dashingAway = e("\u{1F4A8}", "Dashing Away");
+const dizzy = e("\u{1F4AB}", "Dizzy");
+const speechBalloon = e("\u{1F4AC}", "Speech Balloon");
+const thoughtBalloon = e("\u{1F4AD}", "Thought Balloon");
+const hundredPoints = e("\u{1F4AF}", "Hundred Points");
+const hole = e("\u{1F573}\u{FE0F}", "Hole");
+const leftSpeechBubble = e("\u{1F5E8}\u{FE0F}", "Left Speech Bubble");
+const rightSpeechBubble = e("\u{1F5E9}\u{FE0F}", "Right Speech Bubble");
+const conversationBubbles2 = e("\u{1F5EA}\u{FE0F}", "Conversation Bubbles 2");
+const conversationBubbles3 = e("\u{1F5EB}\u{FE0F}", "Conversation Bubbles 3");
+const leftThoughtBubble = e("\u{1F5EC}\u{FE0F}", "Left Thought Bubble");
+const rightThoughtBubble = e("\u{1F5ED}\u{FE0F}", "Right Thought Bubble");
+const leftAngerBubble = e("\u{1F5EE}\u{FE0F}", "Left Anger Bubble");
+const rightAngerBubble = e("\u{1F5EF}\u{FE0F}", "Right Anger Bubble");
+const angerBubble = e("\u{1F5F0}\u{FE0F}", "Anger Bubble");
+const angerBubbleLightningBolt = e("\u{1F5F1}\u{FE0F}", "Anger Bubble Lightning");
+const lightningBolt = e("\u{1F5F2}\u{FE0F}", "Lightning Bolt");
+
+const cartoon = g(
+    "Cartoon", "Cartoon symbols",
+    angerSymbol,
+    bomb,
+    zzz,
+    collision,
+    sweatDroplets,
+    dashingAway,
+    dizzy,
+    speechBalloon,
+    thoughtBalloon,
+    hundredPoints,
+    hole,
+    leftSpeechBubble,
+    rightSpeechBubble,
+    conversationBubbles2,
+    conversationBubbles3,
+    leftThoughtBubble,
+    rightThoughtBubble,
+    leftAngerBubble,
+    rightAngerBubble,
+    angerBubble,
+    angerBubbleLightningBolt,
+    lightningBolt);
+
+const backhandIndexPointingUp = e("\u{1F446}", "Backhand Index Pointing Up");
+const backhandIndexPointingDown = e("\u{1F447}", "Backhand Index Pointing Down");
+const backhandIndexPointingLeft = e("\u{1F448}", "Backhand Index Pointing Left");
+const backhandIndexPointingRight = e("\u{1F449}", "Backhand Index Pointing Right");
+const oncomingFist = e("\u{1F44A}", "Oncoming Fist");
+const wavingHand = e("\u{1F44B}", "Waving Hand");
+const okHand = e("\u{1F58F}", "OK Hand");
+const thumbsUp = e("\u{1F44D}", "Thumbs Up");
+const thumbsDown = e("\u{1F44E}", "Thumbs Down");
+const clappingHands = e("\u{1F44F}", "Clapping Hands");
+const openHands = e("\u{1F450}", "Open Hands");
+const nailPolish = e("\u{1F485}", "Nail Polish");
+const handsWithFingersSplayed = e("\u{1F590}\u{FE0F}", "Hand with Fingers Splayed");
+const handsWithFingersSplayed2 = e("\u{1F591}\u{FE0F}", "Hand with Fingers Splayed 2");
+const thumbsUp2 = e("\u{1F592}", "Thumbs Up 2");
+const thumbsDown2 = e("\u{1F593}", "Thumbs Down 2");
+const peaceFingers = e("\u{1F594}", "Peace Fingers");
+const middleFinger = e("\u{1F595}", "Middle Finger");
+const vulcanSalute = e("\u{1F596}", "Vulcan Salute");
+const handPointingDown = e("\u{1F597}", "Hand Pointing Down");
+const handPointingLeft = e("\u{1F598}", "Hand Pointing Left");
+const handPointingRight = e("\u{1F599}", "Hand Pointing Right");
+const handPointingLeft2 = e("\u{1F59A}", "Hand Pointing Left 2");
+const handPointingRight2 = e("\u{1F59B}", "Hand Pointing Right 2");
+const indexPointingLeft = e("\u{1F59C}", "Index Pointing Left");
+const indexPointingRight = e("\u{1F59D}", "Index Pointing Right");
+const indexPointingUp = e("\u{1F59E}", "Index Pointing Up");
+const indexPointingDown = e("\u{1F59F}", "Index Pointing Down");
+const indexPointingUp2 = e("\u{1F5A0}", "Index Pointing Up 2");
+const indexPointingDown2 = e("\u{1F5A1}", "Index Pointing Down 2");
+const indexPointingUp3 = e("\u{1F5A2}", "Index Pointing Up 3");
+const indexPointingDown3 = e("\u{1F5A3}", "Index Pointing Down 3");
+const raisingHands = e("\u{1F64C}", "Raising Hands");
+const foldedHands = e("\u{1F64F}", "Folded Hands");
+//export const pinchedFingers = e("\u{1F90C}", "Pinched Fingers");
+const pinchingHand = e("\u{1F90F}", "Pinching Hand");
+const signOfTheHorns = e("\u{1F918}", "Sign of the Horns");
+const callMeHand = e("\u{1F919}", "Call Me Hand");
+const rasiedBackOfHand = e("\u{1F91A}", "Raised Back of Hand");
+const leftFacingFist = e("\u{1F91B}", "Left-Facing Fist");
+const rightFacingFist = e("\u{1F91C}", "Right-Facing Fist");
+const handshake = e("\u{1F91D}", "Handshake");
+const crossedFingers = e("\u{1F91E}", "Crossed Fingers");
+const loveYouGesture = e("\u{1F91F}", "Love-You Gesture");
+const palmsUpTogether = e("\u{1F932}", "Palms Up Together");
+const indexPointingUp4 = e("\u{261D}\u{FE0F}", "Index Pointing Up 4");
+const raisedFist = e("\u{270A}", "Raised Fist");
+const raisedHand = e("\u{270B}", "Raised Hand");
+const victoryHand = e("\u{270C}\u{FE0F}", "Victory Hand");
+const writingHand = e("\u{270D}\u{FE0F}", "Writing Hand");
+const hands = g(
+    "Hands", "Hands pointing at things",
+    backhandIndexPointingUp,
+    backhandIndexPointingDown,
+    backhandIndexPointingLeft,
+    backhandIndexPointingRight,
+    oncomingFist,
+    wavingHand,
+    okHand,
+    thumbsUp,
+    thumbsDown,
+    clappingHands,
+    openHands,
+    nailPolish,
+    handsWithFingersSplayed,
+    handsWithFingersSplayed2,
+    handsWithFingersSplayed2,
+    thumbsUp2,
+    thumbsDown2,
+    peaceFingers,
+    middleFinger,
+    vulcanSalute,
+    handPointingDown,
+    handPointingLeft,
+    handPointingRight,
+    handPointingLeft2,
+    handPointingRight2,
+    indexPointingLeft,
+    indexPointingRight,
+    indexPointingUp,
+    indexPointingDown,
+    indexPointingUp2,
+    indexPointingDown2,
+    indexPointingUp3,
+    indexPointingDown3,
+    raisingHands,
+    foldedHands,
+    //pinchedFingers,
+    pinchingHand,
+    signOfTheHorns,
+    callMeHand,
+    rasiedBackOfHand,
+    leftFacingFist,
+    rightFacingFist,
+    handshake,
+    crossedFingers,
+    loveYouGesture,
+    palmsUpTogether,
+    indexPointingUp4,
+    raisedFist,
+    raisedHand,
+    victoryHand,
+    writingHand);
+
+const bodyParts = g(
+    "Body Parts", "General body parts",
+    e("\u{1F440}", "Eyes"),
+    e("\u{1F441}\u{FE0F}", "Eye"),
+    e("\u{1F441}\u{FE0F}\u{200D}\u{1F5E8}\u{FE0F}", "Eye in Speech Bubble"),
+    e("\u{1F442}", "Ear"),
+    e("\u{1F443}", "Nose"),
+    e("\u{1F444}", "Mouth"),
+    e("\u{1F445}", "Tongue"),
+    e("\u{1F4AA}", "Flexed Biceps"),
+    e("\u{1F933}", "Selfie"),
+    e("\u{1F9B4}", "Bone"),
+    e("\u{1F9B5}", "Leg"),
+    e("\u{1F9B6}", "Foot"),
+    e("\u{1F9B7}", "Tooth"),
+    e("\u{1F9BB}", "Ear with Hearing Aid"),
+    e("\u{1F9BE}", "Mechanical Arm"),
+    e("\u{1F9BF}", "Mechanical Leg"),
+    //e("\u{1FAC0}", "Anatomical Heart"),
+    //e("\u{1FAC1}", "Lungs"),
+    e("\u{1F9E0}", "Brain"));
+
+const animals = g(
+    "Animals", "Animals and insects",
+    e("\u{1F400}", "Rat"),
+    e("\u{1F401}", "Mouse"),
+    e("\u{1F402}", "Ox"),
+    e("\u{1F403}", "Water Buffalo"),
+    e("\u{1F404}", "Cow"),
+    e("\u{1F405}", "Tiger"),
+    e("\u{1F406}", "Leopard"),
+    e("\u{1F407}", "Rabbit"),
+    e("\u{1F408}", "Cat"),
+    //e("\u{1F408}\u{200D}\u{2B1B}", "Black Cat"),
+    e("\u{1F409}", "Dragon"),
+    e("\u{1F40A}", "Crocodile"),
+    e("\u{1F40B}", "Whale"),
+    e("\u{1F40C}", "Snail"),
+    e("\u{1F40D}", "Snake"),
+    e("\u{1F40E}", "Horse"),
+    e("\u{1F40F}", "Ram"),
+    e("\u{1F410}", "Goat"),
+    e("\u{1F411}", "Ewe"),
+    e("\u{1F412}", "Monkey"),
+    e("\u{1F413}", "Rooster"),
+    e("\u{1F414}", "Chicken"),
+    e("\u{1F415}", "Dog"),
+    e("\u{1F415}\u{200D}\u{1F9BA}", "Service Dog"),
+    e("\u{1F416}", "Pig"),
+    e("\u{1F417}", "Boar"),
+    e("\u{1F418}", "Elephant"),
+    e("\u{1F419}", "Octopus"),
+    e("\u{1F41A}", "Spiral Shell"),
+    e("\u{1F41B}", "Bug"),
+    e("\u{1F41C}", "Ant"),
+    e("\u{1F41D}", "Honeybee"),
+    e("\u{1F41E}", "Lady Beetle"),
+    e("\u{1F41F}", "Fish"),
+    e("\u{1F420}", "Tropical Fish"),
+    e("\u{1F421}", "Blowfish"),
+    e("\u{1F422}", "Turtle"),
+    e("\u{1F423}", "Hatching Chick"),
+    e("\u{1F424}", "Baby Chick"),
+    e("\u{1F425}", "Front-Facing Baby Chick"),
+    e("\u{1F426}", "Bird"),
+    e("\u{1F427}", "Penguin"),
+    e("\u{1F428}", "Koala"),
+    e("\u{1F429}", "Poodle"),
+    e("\u{1F42A}", "Camel"),
+    e("\u{1F42B}", "Two-Hump Camel"),
+    e("\u{1F42C}", "Dolphin"),
+    e("\u{1F42D}", "Mouse Face"),
+    e("\u{1F42E}", "Cow Face"),
+    e("\u{1F42F}", "Tiger Face"),
+    e("\u{1F430}", "Rabbit Face"),
+    e("\u{1F431}", "Cat Face"),
+    e("\u{1F432}", "Dragon Face"),
+    e("\u{1F433}", "Spouting Whale"),
+    e("\u{1F434}", "Horse Face"),
+    e("\u{1F435}", "Monkey Face"),
+    e("\u{1F436}", "Dog Face"),
+    e("\u{1F437}", "Pig Face"),
+    e("\u{1F438}", "Frog"),
+    e("\u{1F439}", "Hamster"),
+    e("\u{1F43A}", "Wolf"),
+    e("\u{1F43B}", "Bear"),
+    e("\u{1F43B}\u{200D}\u{2744}\u{FE0F}", "Polar Bear"),
+    e("\u{1F43C}", "Panda"),
+    e("\u{1F43D}", "Pig Nose"),
+    e("\u{1F43E}", "Paw Prints"),
+    e("\u{1F43F}\u{FE0F}", "Chipmunk"),
+    e("\u{1F54A}\u{FE0F}", "Dove"),
+    e("\u{1F577}\u{FE0F}", "Spider"),
+    e("\u{1F578}\u{FE0F}", "Spider Web"),
+    e("\u{1F981}", "Lion"),
+    e("\u{1F982}", "Scorpion"),
+    e("\u{1F983}", "Turkey"),
+    e("\u{1F984}", "Unicorn"),
+    e("\u{1F985}", "Eagle"),
+    e("\u{1F986}", "Duck"),
+    e("\u{1F987}", "Bat"),
+    e("\u{1F988}", "Shark"),
+    e("\u{1F989}", "Owl"),
+    e("\u{1F98A}", "Fox"),
+    e("\u{1F98B}", "Butterfly"),
+    e("\u{1F98C}", "Deer"),
+    e("\u{1F98D}", "Gorilla"),
+    e("\u{1F98E}", "Lizard"),
+    e("\u{1F98F}", "Rhinoceros"),
+    e("\u{1F992}", "Giraffe"),
+    e("\u{1F993}", "Zebra"),
+    e("\u{1F994}", "Hedgehog"),
+    e("\u{1F995}", "Sauropod"),
+    e("\u{1F996}", "T-Rex"),
+    e("\u{1F997}", "Cricket"),
+    e("\u{1F998}", "Kangaroo"),
+    e("\u{1F999}", "Llama"),
+    e("\u{1F99A}", "Peacock"),
+    e("\u{1F99B}", "Hippopotamus"),
+    e("\u{1F99C}", "Parrot"),
+    e("\u{1F99D}", "Raccoon"),
+    e("\u{1F99F}", "Mosquito"),
+    e("\u{1F9A0}", "Microbe"),
+    e("\u{1F9A1}", "Badger"),
+    e("\u{1F9A2}", "Swan"),
+    //e("\u{1F9A3}", "Mammoth"),
+    //e("\u{1F9A4}", "Dodo"),
+    e("\u{1F9A5}", "Sloth"),
+    e("\u{1F9A6}", "Otter"),
+    e("\u{1F9A7}", "Orangutan"),
+    e("\u{1F9A8}", "Skunk"),
+    e("\u{1F9A9}", "Flamingo"),
+    //e("\u{1F9AB}", "Beaver"),
+    //e("\u{1F9AC}", "Bison"),
+    //e("\u{1F9AD}", "Seal"),
+    //e("\u{1FAB0}", "Fly"),
+    //e("\u{1FAB1}", "Worm"),
+    //e("\u{1FAB2}", "Beetle"),
+    //e("\u{1FAB3}", "Cockroach"),
+    //e("\u{1FAB6}", "Feather"),
+    e("\u{1F9AE}", "Guide Dog"));
+
+const whiteFlower = e("\u{1F4AE}", "White Flower");
+const plants = g(
+    "Plants", "Flowers, trees, and things",
+    e("\u{1F331}", "Seedling"),
+    e("\u{1F332}", "Evergreen Tree"),
+    e("\u{1F333}", "Deciduous Tree"),
+    e("\u{1F334}", "Palm Tree"),
+    e("\u{1F335}", "Cactus"),
+    e("\u{1F337}", "Tulip"),
+    e("\u{1F338}", "Cherry Blossom"),
+    e("\u{1F339}", "Rose"),
+    e("\u{1F33A}", "Hibiscus"),
+    e("\u{1F33B}", "Sunflower"),
+    e("\u{1F33C}", "Blossom"),
+    sheafOfRice,
+    e("\u{1F33F}", "Herb"),
+    e("\u{1F340}", "Four Leaf Clover"),
+    e("\u{1F341}", "Maple Leaf"),
+    e("\u{1F342}", "Fallen Leaf"),
+    e("\u{1F343}", "Leaf Fluttering in Wind"),
+    e("\u{1F3F5}\u{FE0F}", "Rosette"),
+    e("\u{1F490}", "Bouquet"),
+    whiteFlower,
+    e("\u{1F940}", "Wilted Flower"),
+    //e("\u{1FAB4}", "Potted Plant"),
+    e("\u{2618}\u{FE0F}", "Shamrock"));
+
+const banana = e("\u{1F34C}", "Banana");
+const food = g(
+    "Food", "Food, drink, and utensils",
+    e("\u{1F32D}", "Hot Dog"),
+    e("\u{1F32E}", "Taco"),
+    e("\u{1F32F}", "Burrito"),
+    e("\u{1F330}", "Chestnut"),
+    e("\u{1F336}\u{FE0F}", "Hot Pepper"),
+    e("\u{1F33D}", "Ear of Corn"),
+    e("\u{1F344}", "Mushroom"),
+    e("\u{1F345}", "Tomato"),
+    e("\u{1F346}", "Eggplant"),
+    e("\u{1F347}", "Grapes"),
+    e("\u{1F348}", "Melon"),
+    e("\u{1F349}", "Watermelon"),
+    e("\u{1F34A}", "Tangerine"),
+    e("\u{1F34B}", "Lemon"),
+    banana,
+    e("\u{1F34D}", "Pineapple"),
+    e("\u{1F34E}", "Red Apple"),
+    e("\u{1F34F}", "Green Apple"),
+    e("\u{1F350}", "Pear"),
+    e("\u{1F351}", "Peach"),
+    e("\u{1F352}", "Cherries"),
+    e("\u{1F353}", "Strawberry"),
+    e("\u{1F354}", "Hamburger"),
+    e("\u{1F355}", "Pizza"),
+    e("\u{1F356}", "Meat on Bone"),
+    e("\u{1F357}", "Poultry Leg"),
+    e("\u{1F358}", "Rice Cracker"),
+    e("\u{1F359}", "Rice Ball"),
+    e("\u{1F35A}", "Cooked Rice"),
+    e("\u{1F35B}", "Curry Rice"),
+    e("\u{1F35C}", "Steaming Bowl"),
+    e("\u{1F35D}", "Spaghetti"),
+    e("\u{1F35E}", "Bread"),
+    e("\u{1F35F}", "French Fries"),
+    e("\u{1F360}", "Roasted Sweet Potato"),
+    e("\u{1F361}", "Dango"),
+    e("\u{1F362}", "Oden"),
+    e("\u{1F363}", "Sushi"),
+    e("\u{1F364}", "Fried Shrimp"),
+    e("\u{1F365}", "Fish Cake with Swirl"),
+    e("\u{1F371}", "Bento Box"),
+    e("\u{1F372}", "Pot of Food"),
+    cooking,
+    e("\u{1F37F}", "Popcorn"),
+    e("\u{1F950}", "Croissant"),
+    e("\u{1F951}", "Avocado"),
+    e("\u{1F952}", "Cucumber"),
+    e("\u{1F953}", "Bacon"),
+    e("\u{1F954}", "Potato"),
+    e("\u{1F955}", "Carrot"),
+    e("\u{1F956}", "Baguette Bread"),
+    e("\u{1F957}", "Green Salad"),
+    e("\u{1F958}", "Shallow Pan of Food"),
+    e("\u{1F959}", "Stuffed Flatbread"),
+    e("\u{1F95A}", "Egg"),
+    e("\u{1F95C}", "Peanuts"),
+    e("\u{1F95D}", "Kiwi Fruit"),
+    e("\u{1F95E}", "Pancakes"),
+    e("\u{1F95F}", "Dumpling"),
+    e("\u{1F960}", "Fortune Cookie"),
+    e("\u{1F961}", "Takeout Box"),
+    e("\u{1F963}", "Bowl with Spoon"),
+    e("\u{1F965}", "Coconut"),
+    e("\u{1F966}", "Broccoli"),
+    e("\u{1F968}", "Pretzel"),
+    e("\u{1F969}", "Cut of Meat"),
+    e("\u{1F96A}", "Sandwich"),
+    e("\u{1F96B}", "Canned Food"),
+    e("\u{1F96C}", "Leafy Green"),
+    e("\u{1F96D}", "Mango"),
+    e("\u{1F96E}", "Moon Cake"),
+    e("\u{1F96F}", "Bagel"),
+    e("\u{1F980}", "Crab"),
+    e("\u{1F990}", "Shrimp"),
+    e("\u{1F991}", "Squid"),
+    e("\u{1F99E}", "Lobster"),
+    e("\u{1F9AA}", "Oyster"),
+    e("\u{1F9C0}", "Cheese Wedge"),
+    e("\u{1F9C2}", "Salt"),
+    e("\u{1F9C4}", "Garlic"),
+    e("\u{1F9C5}", "Onion"),
+    e("\u{1F9C6}", "Falafel"),
+    e("\u{1F9C7}", "Waffle"),
+    e("\u{1F9C8}", "Butter"),
+    //e("\u{1FAD0}", "Blueberries"),
+    //e("\u{1FAD1}", "Bell Pepper"),
+    //e("\u{1FAD2}", "Olive"),
+    //e("\u{1FAD3}", "Flatbread"),
+    //e("\u{1FAD4}", "Tamale"),
+    //e("\u{1FAD5}", "Fondue"),
+    e("\u{1F366}", "Soft Ice Cream"),
+    e("\u{1F367}", "Shaved Ice"),
+    e("\u{1F368}", "Ice Cream"),
+    e("\u{1F369}", "Doughnut"),
+    e("\u{1F36A}", "Cookie"),
+    e("\u{1F36B}", "Chocolate Bar"),
+    e("\u{1F36C}", "Candy"),
+    e("\u{1F36D}", "Lollipop"),
+    e("\u{1F36E}", "Custard"),
+    e("\u{1F36F}", "Honey Pot"),
+    e("\u{1F370}", "Shortcake"),
+    e("\u{1F382}", "Birthday Cake"),
+    e("\u{1F967}", "Pie"),
+    e("\u{1F9C1}", "Cupcake"),
+    e("\u{1F375}", "Teacup Without Handle"),
+    e("\u{1F376}", "Sake"),
+    e("\u{1F377}", "Wine Glass"),
+    e("\u{1F378}", "Cocktail Glass"),
+    e("\u{1F379}", "Tropical Drink"),
+    e("\u{1F37A}", "Beer Mug"),
+    e("\u{1F37B}", "Clinking Beer Mugs"),
+    e("\u{1F37C}", "Baby Bottle"),
+    e("\u{1F37E}", "Bottle with Popping Cork"),
+    e("\u{1F942}", "Clinking Glasses"),
+    e("\u{1F943}", "Tumbler Glass"),
+    e("\u{1F95B}", "Glass of Milk"),
+    e("\u{1F964}", "Cup with Straw"),
+    e("\u{1F9C3}", "Beverage Box"),
+    e("\u{1F9C9}", "Mate"),
+    e("\u{1F9CA}", "Ice"),
+    //e("\u{1F9CB}", "Bubble Tea"),
+    //e("\u{1FAD6}", "Teapot"),
+    e("\u{2615}", "Hot Beverage"),
+    e("\u{1F374}", "Fork and Knife"),
+    e("\u{1F37D}\u{FE0F}", "Fork and Knife with Plate"),
+    e("\u{1F3FA}", "Amphora"),
+    e("\u{1F52A}", "Kitchen Knife"),
+    e("\u{1F944}", "Spoon"),
+    e("\u{1F962}", "Chopsticks"));
+
+const nations = g(
+    "National Flags", "Flags of countries from around the world",
+    e("\u{1F1E6}\u{1F1E8}", "Flag: Ascension Island"),
+    e("\u{1F1E6}\u{1F1E9}", "Flag: Andorra"),
+    e("\u{1F1E6}\u{1F1EA}", "Flag: United Arab Emirates"),
+    e("\u{1F1E6}\u{1F1EB}", "Flag: Afghanistan"),
+    e("\u{1F1E6}\u{1F1EC}", "Flag: Antigua & Barbuda"),
+    e("\u{1F1E6}\u{1F1EE}", "Flag: Anguilla"),
+    e("\u{1F1E6}\u{1F1F1}", "Flag: Albania"),
+    e("\u{1F1E6}\u{1F1F2}", "Flag: Armenia"),
+    e("\u{1F1E6}\u{1F1F4}", "Flag: Angola"),
+    e("\u{1F1E6}\u{1F1F6}", "Flag: Antarctica"),
+    e("\u{1F1E6}\u{1F1F7}", "Flag: Argentina"),
+    e("\u{1F1E6}\u{1F1F8}", "Flag: American Samoa"),
+    e("\u{1F1E6}\u{1F1F9}", "Flag: Austria"),
+    e("\u{1F1E6}\u{1F1FA}", "Flag: Australia"),
+    e("\u{1F1E6}\u{1F1FC}", "Flag: Aruba"),
+    e("\u{1F1E6}\u{1F1FD}", "Flag: Åland Islands"),
+    e("\u{1F1E6}\u{1F1FF}", "Flag: Azerbaijan"),
+    e("\u{1F1E7}\u{1F1E6}", "Flag: Bosnia & Herzegovina"),
+    e("\u{1F1E7}\u{1F1E7}", "Flag: Barbados"),
+    e("\u{1F1E7}\u{1F1E9}", "Flag: Bangladesh"),
+    e("\u{1F1E7}\u{1F1EA}", "Flag: Belgium"),
+    e("\u{1F1E7}\u{1F1EB}", "Flag: Burkina Faso"),
+    e("\u{1F1E7}\u{1F1EC}", "Flag: Bulgaria"),
+    e("\u{1F1E7}\u{1F1ED}", "Flag: Bahrain"),
+    e("\u{1F1E7}\u{1F1EE}", "Flag: Burundi"),
+    e("\u{1F1E7}\u{1F1EF}", "Flag: Benin"),
+    e("\u{1F1E7}\u{1F1F1}", "Flag: St. Barthélemy"),
+    e("\u{1F1E7}\u{1F1F2}", "Flag: Bermuda"),
+    e("\u{1F1E7}\u{1F1F3}", "Flag: Brunei"),
+    e("\u{1F1E7}\u{1F1F4}", "Flag: Bolivia"),
+    e("\u{1F1E7}\u{1F1F6}", "Flag: Caribbean Netherlands"),
+    e("\u{1F1E7}\u{1F1F7}", "Flag: Brazil"),
+    e("\u{1F1E7}\u{1F1F8}", "Flag: Bahamas"),
+    e("\u{1F1E7}\u{1F1F9}", "Flag: Bhutan"),
+    e("\u{1F1E7}\u{1F1FB}", "Flag: Bouvet Island"),
+    e("\u{1F1E7}\u{1F1FC}", "Flag: Botswana"),
+    e("\u{1F1E7}\u{1F1FE}", "Flag: Belarus"),
+    e("\u{1F1E7}\u{1F1FF}", "Flag: Belize"),
+    e("\u{1F1E8}\u{1F1E6}", "Flag: Canada"),
+    e("\u{1F1E8}\u{1F1E8}", "Flag: Cocos (Keeling) Islands"),
+    e("\u{1F1E8}\u{1F1E9}", "Flag: Congo - Kinshasa"),
+    e("\u{1F1E8}\u{1F1EB}", "Flag: Central African Republic"),
+    e("\u{1F1E8}\u{1F1EC}", "Flag: Congo - Brazzaville"),
+    e("\u{1F1E8}\u{1F1ED}", "Flag: Switzerland"),
+    e("\u{1F1E8}\u{1F1EE}", "Flag: Côte d’Ivoire"),
+    e("\u{1F1E8}\u{1F1F0}", "Flag: Cook Islands"),
+    e("\u{1F1E8}\u{1F1F1}", "Flag: Chile"),
+    e("\u{1F1E8}\u{1F1F2}", "Flag: Cameroon"),
+    e("\u{1F1E8}\u{1F1F3}", "Flag: China"),
+    e("\u{1F1E8}\u{1F1F4}", "Flag: Colombia"),
+    e("\u{1F1E8}\u{1F1F5}", "Flag: Clipperton Island"),
+    e("\u{1F1E8}\u{1F1F7}", "Flag: Costa Rica"),
+    e("\u{1F1E8}\u{1F1FA}", "Flag: Cuba"),
+    e("\u{1F1E8}\u{1F1FB}", "Flag: Cape Verde"),
+    e("\u{1F1E8}\u{1F1FC}", "Flag: Curaçao"),
+    e("\u{1F1E8}\u{1F1FD}", "Flag: Christmas Island"),
+    e("\u{1F1E8}\u{1F1FE}", "Flag: Cyprus"),
+    e("\u{1F1E8}\u{1F1FF}", "Flag: Czechia"),
+    e("\u{1F1E9}\u{1F1EA}", "Flag: Germany"),
+    e("\u{1F1E9}\u{1F1EC}", "Flag: Diego Garcia"),
+    e("\u{1F1E9}\u{1F1EF}", "Flag: Djibouti"),
+    e("\u{1F1E9}\u{1F1F0}", "Flag: Denmark"),
+    e("\u{1F1E9}\u{1F1F2}", "Flag: Dominica"),
+    e("\u{1F1E9}\u{1F1F4}", "Flag: Dominican Republic"),
+    e("\u{1F1E9}\u{1F1FF}", "Flag: Algeria"),
+    e("\u{1F1EA}\u{1F1E6}", "Flag: Ceuta & Melilla"),
+    e("\u{1F1EA}\u{1F1E8}", "Flag: Ecuador"),
+    e("\u{1F1EA}\u{1F1EA}", "Flag: Estonia"),
+    e("\u{1F1EA}\u{1F1EC}", "Flag: Egypt"),
+    e("\u{1F1EA}\u{1F1ED}", "Flag: Western Sahara"),
+    e("\u{1F1EA}\u{1F1F7}", "Flag: Eritrea"),
+    e("\u{1F1EA}\u{1F1F8}", "Flag: Spain"),
+    e("\u{1F1EA}\u{1F1F9}", "Flag: Ethiopia"),
+    e("\u{1F1EA}\u{1F1FA}", "Flag: European Union"),
+    e("\u{1F1EB}\u{1F1EE}", "Flag: Finland"),
+    e("\u{1F1EB}\u{1F1EF}", "Flag: Fiji"),
+    e("\u{1F1EB}\u{1F1F0}", "Flag: Falkland Islands"),
+    e("\u{1F1EB}\u{1F1F2}", "Flag: Micronesia"),
+    e("\u{1F1EB}\u{1F1F4}", "Flag: Faroe Islands"),
+    e("\u{1F1EB}\u{1F1F7}", "Flag: France"),
+    e("\u{1F1EC}\u{1F1E6}", "Flag: Gabon"),
+    e("\u{1F1EC}\u{1F1E7}", "Flag: United Kingdom"),
+    e("\u{1F1EC}\u{1F1E9}", "Flag: Grenada"),
+    e("\u{1F1EC}\u{1F1EA}", "Flag: Georgia"),
+    e("\u{1F1EC}\u{1F1EB}", "Flag: French Guiana"),
+    e("\u{1F1EC}\u{1F1EC}", "Flag: Guernsey"),
+    e("\u{1F1EC}\u{1F1ED}", "Flag: Ghana"),
+    e("\u{1F1EC}\u{1F1EE}", "Flag: Gibraltar"),
+    e("\u{1F1EC}\u{1F1F1}", "Flag: Greenland"),
+    e("\u{1F1EC}\u{1F1F2}", "Flag: Gambia"),
+    e("\u{1F1EC}\u{1F1F3}", "Flag: Guinea"),
+    e("\u{1F1EC}\u{1F1F5}", "Flag: Guadeloupe"),
+    e("\u{1F1EC}\u{1F1F6}", "Flag: Equatorial Guinea"),
+    e("\u{1F1EC}\u{1F1F7}", "Flag: Greece"),
+    e("\u{1F1EC}\u{1F1F8}", "Flag: South Georgia & South Sandwich Islands"),
+    e("\u{1F1EC}\u{1F1F9}", "Flag: Guatemala"),
+    e("\u{1F1EC}\u{1F1FA}", "Flag: Guam"),
+    e("\u{1F1EC}\u{1F1FC}", "Flag: Guinea-Bissau"),
+    e("\u{1F1EC}\u{1F1FE}", "Flag: Guyana"),
+    e("\u{1F1ED}\u{1F1F0}", "Flag: Hong Kong SAR China"),
+    e("\u{1F1ED}\u{1F1F2}", "Flag: Heard & McDonald Islands"),
+    e("\u{1F1ED}\u{1F1F3}", "Flag: Honduras"),
+    e("\u{1F1ED}\u{1F1F7}", "Flag: Croatia"),
+    e("\u{1F1ED}\u{1F1F9}", "Flag: Haiti"),
+    e("\u{1F1ED}\u{1F1FA}", "Flag: Hungary"),
+    e("\u{1F1EE}\u{1F1E8}", "Flag: Canary Islands"),
+    e("\u{1F1EE}\u{1F1E9}", "Flag: Indonesia"),
+    e("\u{1F1EE}\u{1F1EA}", "Flag: Ireland"),
+    e("\u{1F1EE}\u{1F1F1}", "Flag: Israel"),
+    e("\u{1F1EE}\u{1F1F2}", "Flag: Isle of Man"),
+    e("\u{1F1EE}\u{1F1F3}", "Flag: India"),
+    e("\u{1F1EE}\u{1F1F4}", "Flag: British Indian Ocean Territory"),
+    e("\u{1F1EE}\u{1F1F6}", "Flag: Iraq"),
+    e("\u{1F1EE}\u{1F1F7}", "Flag: Iran"),
+    e("\u{1F1EE}\u{1F1F8}", "Flag: Iceland"),
+    e("\u{1F1EE}\u{1F1F9}", "Flag: Italy"),
+    e("\u{1F1EF}\u{1F1EA}", "Flag: Jersey"),
+    e("\u{1F1EF}\u{1F1F2}", "Flag: Jamaica"),
+    e("\u{1F1EF}\u{1F1F4}", "Flag: Jordan"),
+    e("\u{1F1EF}\u{1F1F5}", "Flag: Japan"),
+    e("\u{1F1F0}\u{1F1EA}", "Flag: Kenya"),
+    e("\u{1F1F0}\u{1F1EC}", "Flag: Kyrgyzstan"),
+    e("\u{1F1F0}\u{1F1ED}", "Flag: Cambodia"),
+    e("\u{1F1F0}\u{1F1EE}", "Flag: Kiribati"),
+    e("\u{1F1F0}\u{1F1F2}", "Flag: Comoros"),
+    e("\u{1F1F0}\u{1F1F3}", "Flag: St. Kitts & Nevis"),
+    e("\u{1F1F0}\u{1F1F5}", "Flag: North Korea"),
+    e("\u{1F1F0}\u{1F1F7}", "Flag: South Korea"),
+    e("\u{1F1F0}\u{1F1FC}", "Flag: Kuwait"),
+    e("\u{1F1F0}\u{1F1FE}", "Flag: Cayman Islands"),
+    e("\u{1F1F0}\u{1F1FF}", "Flag: Kazakhstan"),
+    e("\u{1F1F1}\u{1F1E6}", "Flag: Laos"),
+    e("\u{1F1F1}\u{1F1E7}", "Flag: Lebanon"),
+    e("\u{1F1F1}\u{1F1E8}", "Flag: St. Lucia"),
+    e("\u{1F1F1}\u{1F1EE}", "Flag: Liechtenstein"),
+    e("\u{1F1F1}\u{1F1F0}", "Flag: Sri Lanka"),
+    e("\u{1F1F1}\u{1F1F7}", "Flag: Liberia"),
+    e("\u{1F1F1}\u{1F1F8}", "Flag: Lesotho"),
+    e("\u{1F1F1}\u{1F1F9}", "Flag: Lithuania"),
+    e("\u{1F1F1}\u{1F1FA}", "Flag: Luxembourg"),
+    e("\u{1F1F1}\u{1F1FB}", "Flag: Latvia"),
+    e("\u{1F1F1}\u{1F1FE}", "Flag: Libya"),
+    e("\u{1F1F2}\u{1F1E6}", "Flag: Morocco"),
+    e("\u{1F1F2}\u{1F1E8}", "Flag: Monaco"),
+    e("\u{1F1F2}\u{1F1E9}", "Flag: Moldova"),
+    e("\u{1F1F2}\u{1F1EA}", "Flag: Montenegro"),
+    e("\u{1F1F2}\u{1F1EB}", "Flag: St. Martin"),
+    e("\u{1F1F2}\u{1F1EC}", "Flag: Madagascar"),
+    e("\u{1F1F2}\u{1F1ED}", "Flag: Marshall Islands"),
+    e("\u{1F1F2}\u{1F1F0}", "Flag: North Macedonia"),
+    e("\u{1F1F2}\u{1F1F1}", "Flag: Mali"),
+    e("\u{1F1F2}\u{1F1F2}", "Flag: Myanmar (Burma)"),
+    e("\u{1F1F2}\u{1F1F3}", "Flag: Mongolia"),
+    e("\u{1F1F2}\u{1F1F4}", "Flag: Macao Sar China"),
+    e("\u{1F1F2}\u{1F1F5}", "Flag: Northern Mariana Islands"),
+    e("\u{1F1F2}\u{1F1F6}", "Flag: Martinique"),
+    e("\u{1F1F2}\u{1F1F7}", "Flag: Mauritania"),
+    e("\u{1F1F2}\u{1F1F8}", "Flag: Montserrat"),
+    e("\u{1F1F2}\u{1F1F9}", "Flag: Malta"),
+    e("\u{1F1F2}\u{1F1FA}", "Flag: Mauritius"),
+    e("\u{1F1F2}\u{1F1FB}", "Flag: Maldives"),
+    e("\u{1F1F2}\u{1F1FC}", "Flag: Malawi"),
+    e("\u{1F1F2}\u{1F1FD}", "Flag: Mexico"),
+    e("\u{1F1F2}\u{1F1FE}", "Flag: Malaysia"),
+    e("\u{1F1F2}\u{1F1FF}", "Flag: Mozambique"),
+    e("\u{1F1F3}\u{1F1E6}", "Flag: Namibia"),
+    e("\u{1F1F3}\u{1F1E8}", "Flag: New Caledonia"),
+    e("\u{1F1F3}\u{1F1EA}", "Flag: Niger"),
+    e("\u{1F1F3}\u{1F1EB}", "Flag: Norfolk Island"),
+    e("\u{1F1F3}\u{1F1EC}", "Flag: Nigeria"),
+    e("\u{1F1F3}\u{1F1EE}", "Flag: Nicaragua"),
+    e("\u{1F1F3}\u{1F1F1}", "Flag: Netherlands"),
+    e("\u{1F1F3}\u{1F1F4}", "Flag: Norway"),
+    e("\u{1F1F3}\u{1F1F5}", "Flag: Nepal"),
+    e("\u{1F1F3}\u{1F1F7}", "Flag: Nauru"),
+    e("\u{1F1F3}\u{1F1FA}", "Flag: Niue"),
+    e("\u{1F1F3}\u{1F1FF}", "Flag: New Zealand"),
+    e("\u{1F1F4}\u{1F1F2}", "Flag: Oman"),
+    e("\u{1F1F5}\u{1F1E6}", "Flag: Panama"),
+    e("\u{1F1F5}\u{1F1EA}", "Flag: Peru"),
+    e("\u{1F1F5}\u{1F1EB}", "Flag: French Polynesia"),
+    e("\u{1F1F5}\u{1F1EC}", "Flag: Papua New Guinea"),
+    e("\u{1F1F5}\u{1F1ED}", "Flag: Philippines"),
+    e("\u{1F1F5}\u{1F1F0}", "Flag: Pakistan"),
+    e("\u{1F1F5}\u{1F1F1}", "Flag: Poland"),
+    e("\u{1F1F5}\u{1F1F2}", "Flag: St. Pierre & Miquelon"),
+    e("\u{1F1F5}\u{1F1F3}", "Flag: Pitcairn Islands"),
+    e("\u{1F1F5}\u{1F1F7}", "Flag: Puerto Rico"),
+    e("\u{1F1F5}\u{1F1F8}", "Flag: Palestinian Territories"),
+    e("\u{1F1F5}\u{1F1F9}", "Flag: Portugal"),
+    e("\u{1F1F5}\u{1F1FC}", "Flag: Palau"),
+    e("\u{1F1F5}\u{1F1FE}", "Flag: Paraguay"),
+    e("\u{1F1F6}\u{1F1E6}", "Flag: Qatar"),
+    e("\u{1F1F7}\u{1F1EA}", "Flag: Réunion"),
+    e("\u{1F1F7}\u{1F1F4}", "Flag: Romania"),
+    e("\u{1F1F7}\u{1F1F8}", "Flag: Serbia"),
+    e("\u{1F1F7}\u{1F1FA}", "Flag: Russia"),
+    e("\u{1F1F7}\u{1F1FC}", "Flag: Rwanda"),
+    e("\u{1F1F8}\u{1F1E6}", "Flag: Saudi Arabia"),
+    e("\u{1F1F8}\u{1F1E7}", "Flag: Solomon Islands"),
+    e("\u{1F1F8}\u{1F1E8}", "Flag: Seychelles"),
+    e("\u{1F1F8}\u{1F1E9}", "Flag: Sudan"),
+    e("\u{1F1F8}\u{1F1EA}", "Flag: Sweden"),
+    e("\u{1F1F8}\u{1F1EC}", "Flag: Singapore"),
+    e("\u{1F1F8}\u{1F1ED}", "Flag: St. Helena"),
+    e("\u{1F1F8}\u{1F1EE}", "Flag: Slovenia"),
+    e("\u{1F1F8}\u{1F1EF}", "Flag: Svalbard & Jan Mayen"),
+    e("\u{1F1F8}\u{1F1F0}", "Flag: Slovakia"),
+    e("\u{1F1F8}\u{1F1F1}", "Flag: Sierra Leone"),
+    e("\u{1F1F8}\u{1F1F2}", "Flag: San Marino"),
+    e("\u{1F1F8}\u{1F1F3}", "Flag: Senegal"),
+    e("\u{1F1F8}\u{1F1F4}", "Flag: Somalia"),
+    e("\u{1F1F8}\u{1F1F7}", "Flag: Suriname"),
+    e("\u{1F1F8}\u{1F1F8}", "Flag: South Sudan"),
+    e("\u{1F1F8}\u{1F1F9}", "Flag: São Tomé & Príncipe"),
+    e("\u{1F1F8}\u{1F1FB}", "Flag: El Salvador"),
+    e("\u{1F1F8}\u{1F1FD}", "Flag: Sint Maarten"),
+    e("\u{1F1F8}\u{1F1FE}", "Flag: Syria"),
+    e("\u{1F1F8}\u{1F1FF}", "Flag: Eswatini"),
+    e("\u{1F1F9}\u{1F1E6}", "Flag: Tristan Da Cunha"),
+    e("\u{1F1F9}\u{1F1E8}", "Flag: Turks & Caicos Islands"),
+    e("\u{1F1F9}\u{1F1E9}", "Flag: Chad"),
+    e("\u{1F1F9}\u{1F1EB}", "Flag: French Southern Territories"),
+    e("\u{1F1F9}\u{1F1EC}", "Flag: Togo"),
+    e("\u{1F1F9}\u{1F1ED}", "Flag: Thailand"),
+    e("\u{1F1F9}\u{1F1EF}", "Flag: Tajikistan"),
+    e("\u{1F1F9}\u{1F1F0}", "Flag: Tokelau"),
+    e("\u{1F1F9}\u{1F1F1}", "Flag: Timor-Leste"),
+    e("\u{1F1F9}\u{1F1F2}", "Flag: Turkmenistan"),
+    e("\u{1F1F9}\u{1F1F3}", "Flag: Tunisia"),
+    e("\u{1F1F9}\u{1F1F4}", "Flag: Tonga"),
+    e("\u{1F1F9}\u{1F1F7}", "Flag: Turkey"),
+    e("\u{1F1F9}\u{1F1F9}", "Flag: Trinidad & Tobago"),
+    e("\u{1F1F9}\u{1F1FB}", "Flag: Tuvalu"),
+    e("\u{1F1F9}\u{1F1FC}", "Flag: Taiwan"),
+    e("\u{1F1F9}\u{1F1FF}", "Flag: Tanzania"),
+    e("\u{1F1FA}\u{1F1E6}", "Flag: Ukraine"),
+    e("\u{1F1FA}\u{1F1EC}", "Flag: Uganda"),
+    e("\u{1F1FA}\u{1F1F2}", "Flag: U.S. Outlying Islands"),
+    e("\u{1F1FA}\u{1F1F3}", "Flag: United Nations"),
+    e("\u{1F1FA}\u{1F1F8}", "Flag: United States"),
+    e("\u{1F1FA}\u{1F1FE}", "Flag: Uruguay"),
+    e("\u{1F1FA}\u{1F1FF}", "Flag: Uzbekistan"),
+    e("\u{1F1FB}\u{1F1E6}", "Flag: Vatican City"),
+    e("\u{1F1FB}\u{1F1E8}", "Flag: St. Vincent & Grenadines"),
+    e("\u{1F1FB}\u{1F1EA}", "Flag: Venezuela"),
+    e("\u{1F1FB}\u{1F1EC}", "Flag: British Virgin Islands"),
+    e("\u{1F1FB}\u{1F1EE}", "Flag: U.S. Virgin Islands"),
+    e("\u{1F1FB}\u{1F1F3}", "Flag: Vietnam"),
+    e("\u{1F1FB}\u{1F1FA}", "Flag: Vanuatu"),
+    e("\u{1F1FC}\u{1F1EB}", "Flag: Wallis & Futuna"),
+    e("\u{1F1FC}\u{1F1F8}", "Flag: Samoa"),
+    e("\u{1F1FD}\u{1F1F0}", "Flag: Kosovo"),
+    e("\u{1F1FE}\u{1F1EA}", "Flag: Yemen"),
+    e("\u{1F1FE}\u{1F1F9}", "Flag: Mayotte"),
+    e("\u{1F1FF}\u{1F1E6}", "Flag: South Africa"),
+    e("\u{1F1FF}\u{1F1F2}", "Flag: Zambia"),
+    e("\u{1F1FF}\u{1F1FC}", "Flag: Zimbabwe"));
+
+const flags = g(
+    "Flags", "Basic flags",
+    e("\u{1F38C}", "Crossed Flags"),
+    e("\u{1F3C1}", "Chequered Flag"),
+    e("\u{1F3F3}\u{FE0F}", "White Flag"),
+    e("\u{1F3F3}\u{FE0F}\u{200D}\u{1F308}", "Rainbow Flag"),
+    //e("\u{1F3F3}\u{FE0F}\u{200D}\u{26A7}\u{FE0F}", "Transgender Flag"),
+    e("\u{1F3F4}", "Black Flag"),
+    //e("\u{1F3F4}\u{200D}\u{2620}\u{FE0F}", "Pirate Flag"),
+    e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}", "Flag: England"),
+    e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}", "Flag: Scotland"),
+    e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}", "Flag: Wales"),
+    e("\u{1F6A9}", "Triangular Flag"));
+
+const motorcycle = e("\u{1F3CD}\u{FE0F}", "Motorcycle");
+const racingCar = e("\u{1F3CE}\u{FE0F}", "Racing Car");
+const seat = e("\u{1F4BA}", "Seat");
+const helicopter = e("\u{1F681}", "Helicopter");
+const locomotive = e("\u{1F682}", "Locomotive");
+const railwayCar = e("\u{1F683}", "Railway Car");
+const highspeedTrain = e("\u{1F684}", "High-Speed Train");
+const bulletTrain = e("\u{1F685}", "Bullet Train");
+const train = e("\u{1F686}", "Train");
+const metro = e("\u{1F687}", "Metro");
+const lightRail = e("\u{1F688}", "Light Rail");
+const station = e("\u{1F689}", "Station");
+const tram = e("\u{1F68A}", "Tram");
+const tramCar = e("\u{1F68B}", "Tram Car");
+const bus = e("\u{1F68C}", "Bus");
+const oncomingBus = e("\u{1F68D}", "Oncoming Bus");
+const trolleyBus = e("\u{1F68E}", "Trolleybus");
+const busStop = e("\u{1F68F}", "Bus Stop");
+const miniBus = e("\u{1F690}", "Minibus");
+const ambulance = e("\u{1F691}", "Ambulance");
+const policeCar = e("\u{1F693}", "Police Car");
+const oncomingPoliceCar = e("\u{1F694}", "Oncoming Police Car");
+const taxi = e("\u{1F695}", "Taxi");
+const oncomingTaxi = e("\u{1F696}", "Oncoming Taxi");
+const automobile = e("\u{1F697}", "Automobile");
+const oncomingAutomobile = e("\u{1F698}", "Oncoming Automobile");
+const sportUtilityVehicle = e("\u{1F699}", "Sport Utility Vehicle");
+const deliveryTruck = e("\u{1F69A}", "Delivery Truck");
+const articulatedLorry = e("\u{1F69B}", "Articulated Lorry");
+const tractor = e("\u{1F69C}", "Tractor");
+const monorail = e("\u{1F69D}", "Monorail");
+const mountainRailway = e("\u{1F69E}", "Mountain Railway");
+const suspensionRailway = e("\u{1F69F}", "Suspension Railway");
+const mountainCableway = e("\u{1F6A0}", "Mountain Cableway");
+const aerialTramway = e("\u{1F6A1}", "Aerial Tramway");
+const ship = e("\u{1F6A2}", "Ship");
+const speedBoat = e("\u{1F6A4}", "Speedboat");
+const horizontalTrafficLight = e("\u{1F6A5}", "Horizontal Traffic Light");
+const verticalTrafficLight = e("\u{1F6A6}", "Vertical Traffic Light");
+const construction = e("\u{1F6A7}", "Construction");
+const policeCarLight = e("\u{1F6A8}", "Police Car Light");
+const bicycle = e("\u{1F6B2}", "Bicycle");
+const stopSign = e("\u{1F6D1}", "Stop Sign");
+const oilDrum = e("\u{1F6E2}\u{FE0F}", "Oil Drum");
+const motorway = e("\u{1F6E3}\u{FE0F}", "Motorway");
+const railwayTrack = e("\u{1F6E4}\u{FE0F}", "Railway Track");
+const motorBoat = e("\u{1F6E5}\u{FE0F}", "Motor Boat");
+const smallAirplane = e("\u{1F6E9}\u{FE0F}", "Small Airplane");
+const airplaneDeparture = e("\u{1F6EB}", "Airplane Departure");
+const airplaneArrival = e("\u{1F6EC}", "Airplane Arrival");
+const satellite = e("\u{1F6F0}\u{FE0F}", "Satellite");
+const passengerShip = e("\u{1F6F3}\u{FE0F}", "Passenger Ship");
+const kickScooter = e("\u{1F6F4}", "Kick Scooter");
+const motorScooter = e("\u{1F6F5}", "Motor Scooter");
+const canoe = e("\u{1F6F6}", "Canoe");
+const flyingSaucer = e("\u{1F6F8}", "Flying Saucer");
+const skateboard = e("\u{1F6F9}", "Skateboard");
+const autoRickshaw = e("\u{1F6FA}", "Auto Rickshaw");
+//export const pickupTruck = e("\u{1F6FB}", "Pickup Truck");
+//export const rollerSkate = e("\u{1F6FC}", "Roller Skate");
+const parachute = e("\u{1FA82}", "Parachute");
+const anchor = e("\u{2693}", "Anchor");
+const ferry = e("\u{26F4}\u{FE0F}", "Ferry");
+const sailboat = e("\u{26F5}", "Sailboat");
+const fuelPump = e("\u{26FD}", "Fuel Pump");
+const vehicles = g(
+    "Vehicles", "Things that go",
+    motorcycle,
+    racingCar,
+    seat,
+    rocket,
+    helicopter,
+    locomotive,
+    railwayCar,
+    highspeedTrain,
+    bulletTrain,
+    train,
+    metro,
+    lightRail,
+    station,
+    tram,
+    tramCar,
+    bus,
+    oncomingBus,
+    trolleyBus,
+    busStop,
+    miniBus,
+    ambulance,
+    fireEngine,
+    taxi,
+    oncomingTaxi,
+    automobile,
+    oncomingAutomobile,
+    sportUtilityVehicle,
+    deliveryTruck,
+    articulatedLorry,
+    tractor,
+    monorail,
+    mountainRailway,
+    suspensionRailway,
+    mountainCableway,
+    aerialTramway,
+    ship,
+    speedBoat,
+    horizontalTrafficLight,
+    verticalTrafficLight,
+    construction,
+    bicycle,
+    stopSign,
+    oilDrum,
+    motorway,
+    railwayTrack,
+    motorBoat,
+    smallAirplane,
+    airplaneDeparture,
+    airplaneArrival,
+    satellite,
+    passengerShip,
+    kickScooter,
+    motorScooter,
+    canoe,
+    flyingSaucer,
+    skateboard,
+    autoRickshaw,
+    //pickupTruck,
+    //rollerSkate,
+    motorizedWheelchair,
+    manualWheelchair,
+    parachute,
+    anchor,
+    ferry,
+    sailboat,
+    fuelPump,
+    airplane);
+
+const bloodTypes = g(
+    "Blood Types", "Blood types",
+    e("\u{1F170}", "A Button (Blood Type)"),
+    e("\u{1F171}", "B Button (Blood Type)"),
+    e("\u{1F17E}", "O Button (Blood Type)"),
+    e("\u{1F18E}", "AB Button (Blood Type)"));
+
+const regionIndicators = g(
+    "Regions", "Region indicators",
+    e("\u{1F1E6}", "Regional Indicator Symbol Letter A"),
+    e("\u{1F1E7}", "Regional Indicator Symbol Letter B"),
+    e("\u{1F1E8}", "Regional Indicator Symbol Letter C"),
+    e("\u{1F1E9}", "Regional Indicator Symbol Letter D"),
+    e("\u{1F1EA}", "Regional Indicator Symbol Letter E"),
+    e("\u{1F1EB}", "Regional Indicator Symbol Letter F"),
+    e("\u{1F1EC}", "Regional Indicator Symbol Letter G"),
+    e("\u{1F1ED}", "Regional Indicator Symbol Letter H"),
+    e("\u{1F1EE}", "Regional Indicator Symbol Letter I"),
+    e("\u{1F1EF}", "Regional Indicator Symbol Letter J"),
+    e("\u{1F1F0}", "Regional Indicator Symbol Letter K"),
+    e("\u{1F1F1}", "Regional Indicator Symbol Letter L"),
+    e("\u{1F1F2}", "Regional Indicator Symbol Letter M"),
+    e("\u{1F1F3}", "Regional Indicator Symbol Letter N"),
+    e("\u{1F1F4}", "Regional Indicator Symbol Letter O"),
+    e("\u{1F1F5}", "Regional Indicator Symbol Letter P"),
+    e("\u{1F1F6}", "Regional Indicator Symbol Letter Q"),
+    e("\u{1F1F7}", "Regional Indicator Symbol Letter R"),
+    e("\u{1F1F8}", "Regional Indicator Symbol Letter S"),
+    e("\u{1F1F9}", "Regional Indicator Symbol Letter T"),
+    e("\u{1F1FA}", "Regional Indicator Symbol Letter U"),
+    e("\u{1F1FB}", "Regional Indicator Symbol Letter V"),
+    e("\u{1F1FC}", "Regional Indicator Symbol Letter W"),
+    e("\u{1F1FD}", "Regional Indicator Symbol Letter X"),
+    e("\u{1F1FE}", "Regional Indicator Symbol Letter Y"),
+    e("\u{1F1FF}", "Regional Indicator Symbol Letter Z"));
+
+const japanese = g(
+    "Japanese", "Japanse symbology",
+    e("\u{1F530}", "Japanese Symbol for Beginner"),
+    e("\u{1F201}", "Japanese “Here” Button"),
+    e("\u{1F202}\u{FE0F}", "Japanese “Service Charge” Button"),
+    e("\u{1F21A}", "Japanese “Free of Charge” Button"),
+    e("\u{1F22F}", "Japanese “Reserved” Button"),
+    e("\u{1F232}", "Japanese “Prohibited” Button"),
+    e("\u{1F233}", "Japanese “Vacancy” Button"),
+    e("\u{1F234}", "Japanese “Passing Grade” Button"),
+    e("\u{1F235}", "Japanese “No Vacancy” Button"),
+    e("\u{1F236}", "Japanese “Not Free of Charge” Button"),
+    e("\u{1F237}\u{FE0F}", "Japanese “Monthly Amount” Button"),
+    e("\u{1F238}", "Japanese “Application” Button"),
+    e("\u{1F239}", "Japanese “Discount” Button"),
+    e("\u{1F23A}", "Japanese “Open for Business” Button"),
+    e("\u{1F250}", "Japanese “Bargain” Button"),
+    e("\u{1F251}", "Japanese “Acceptable” Button"),
+    e("\u{3297}\u{FE0F}", "Japanese “Congratulations” Button"),
+    e("\u{3299}\u{FE0F}", "Japanese “Secret” Button"));
+
+const clocks = g(
+    "Clocks", "Time-keeping pieces",
+    e("\u{1F550}", "One O’Clock"),
+    e("\u{1F551}", "Two O’Clock"),
+    e("\u{1F552}", "Three O’Clock"),
+    e("\u{1F553}", "Four O’Clock"),
+    e("\u{1F554}", "Five O’Clock"),
+    e("\u{1F555}", "Six O’Clock"),
+    e("\u{1F556}", "Seven O’Clock"),
+    e("\u{1F557}", "Eight O’Clock"),
+    e("\u{1F558}", "Nine O’Clock"),
+    e("\u{1F559}", "Ten O’Clock"),
+    e("\u{1F55A}", "Eleven O’Clock"),
+    e("\u{1F55B}", "Twelve O’Clock"),
+    e("\u{1F55C}", "One-Thirty"),
+    e("\u{1F55D}", "Two-Thirty"),
+    e("\u{1F55E}", "Three-Thirty"),
+    e("\u{1F55F}", "Four-Thirty"),
+    e("\u{1F560}", "Five-Thirty"),
+    e("\u{1F561}", "Six-Thirty"),
+    e("\u{1F562}", "Seven-Thirty"),
+    e("\u{1F563}", "Eight-Thirty"),
+    e("\u{1F564}", "Nine-Thirty"),
+    e("\u{1F565}", "Ten-Thirty"),
+    e("\u{1F566}", "Eleven-Thirty"),
+    e("\u{1F567}", "Twelve-Thirty"),
+    e("\u{1F570}\u{FE0F}", "Mantelpiece Clock"),
+    e("\u{231A}", "Watch"),
+    e("\u{23F0}", "Alarm Clock"),
+    e("\u{23F1}\u{FE0F}", "Stopwatch"),
+    e("\u{23F2}\u{FE0F}", "Timer Clock"),
+    e("\u{231B}", "Hourglass Done"),
+    e("\u{23F3}", "Hourglass Not Done"));
+
+const clockwiseVerticalArrows = e("\u{1F503}\u{FE0F}", "Clockwise Vertical Arrows");
+const counterclockwiseArrowsButton = e("\u{1F504}\u{FE0F}", "Counterclockwise Arrows Button");
+const leftRightArrow = e("\u{2194}\u{FE0F}", "Left-Right Arrow");
+const upDownArrow = e("\u{2195}\u{FE0F}", "Up-Down Arrow");
+const upLeftArrow = e("\u{2196}\u{FE0F}", "Up-Left Arrow");
+const upRightArrow = e("\u{2197}\u{FE0F}", "Up-Right Arrow");
+const downRightArrow = e("\u{2198}", "Down-Right Arrow");
+const downRightArrowText = e("\u{2198}\u{FE0E}", "Down-Right Arrow");
+const downRightArrowEmoji = e("\u{2198}\u{FE0F}", "Down-Right Arrow");
+const downLeftArrow = e("\u{2199}\u{FE0F}", "Down-Left Arrow");
+const rightArrowCurvingLeft = e("\u{21A9}\u{FE0F}", "Right Arrow Curving Left");
+const leftArrowCurvingRight = e("\u{21AA}\u{FE0F}", "Left Arrow Curving Right");
+const rightArrow = e("\u{27A1}\u{FE0F}", "Right Arrow");
+const rightArrowCurvingUp = e("\u{2934}\u{FE0F}", "Right Arrow Curving Up");
+const rightArrowCurvingDown = e("\u{2935}\u{FE0F}", "Right Arrow Curving Down");
+const leftArrow = e("\u{2B05}\u{FE0F}", "Left Arrow");
+const upArrow = e("\u{2B06}\u{FE0F}", "Up Arrow");
+const downArrow = e("\u{2B07}\u{FE0F}", "Down Arrow");
+const arrows = g(
+    "Arrows", "Arrows pointing in different directions",
+    clockwiseVerticalArrows,
+    counterclockwiseArrowsButton,
+    leftRightArrow,
+    upDownArrow,
+    upLeftArrow,
+    upRightArrow,
+    downRightArrowEmoji,
+    downLeftArrow,
+    rightArrowCurvingLeft,
+    leftArrowCurvingRight,
+    rightArrow,
+    rightArrowCurvingUp,
+    rightArrowCurvingDown,
+    leftArrow,
+    upArrow,
+    downArrow);
+
+const shapes = g(
+    "Shapes", "Colored shapes",
+    e("\u{1F534}", "Red Circle"),
+    e("\u{1F535}", "Blue Circle"),
+    e("\u{1F536}", "Large Orange Diamond"),
+    e("\u{1F537}", "Large Blue Diamond"),
+    e("\u{1F538}", "Small Orange Diamond"),
+    e("\u{1F539}", "Small Blue Diamond"),
+    e("\u{1F53A}", "Red Triangle Pointed Up"),
+    e("\u{1F53B}", "Red Triangle Pointed Down"),
+    e("\u{1F7E0}", "Orange Circle"),
+    e("\u{1F7E1}", "Yellow Circle"),
+    e("\u{1F7E2}", "Green Circle"),
+    e("\u{1F7E3}", "Purple Circle"),
+    e("\u{1F7E4}", "Brown Circle"),
+    e("\u{2B55}", "Hollow Red Circle"),
+    e("\u{26AA}", "White Circle"),
+    e("\u{26AB}", "Black Circle"),
+    e("\u{1F7E5}", "Red Square"),
+    e("\u{1F7E6}", "Blue Square"),
+    e("\u{1F7E7}", "Orange Square"),
+    e("\u{1F7E8}", "Yellow Square"),
+    e("\u{1F7E9}", "Green Square"),
+    e("\u{1F7EA}", "Purple Square"),
+    e("\u{1F7EB}", "Brown Square"),
+    e("\u{1F532}", "Black Square Button"),
+    e("\u{1F533}", "White Square Button"),
+    e("\u{25AA}\u{FE0F}", "Black Small Square"),
+    e("\u{25AB}\u{FE0F}", "White Small Square"),
+    e("\u{25FD}", "White Medium-Small Square"),
+    e("\u{25FE}", "Black Medium-Small Square"),
+    e("\u{25FB}\u{FE0F}", "White Medium Square"),
+    e("\u{25FC}\u{FE0F}", "Black Medium Square"),
+    e("\u{2B1B}", "Black Large Square"),
+    e("\u{2B1C}", "White Large Square"),
+    e("\u{2B50}", "Star"),
+    e("\u{1F4A0}", "Diamond with a Dot"));
+
+const clearButton = e("\u{1F191}", "CL Button");
+const coolButton = e("\u{1F192}", "Cool Button");
+const freeButton = e("\u{1F193}", "Free Button");
+const idButton = e("\u{1F194}", "ID Button");
+const newButton = e("\u{1F195}", "New Button");
+const ngButton = e("\u{1F196}", "NG Button");
+const okButton = e("\u{1F197}", "OK Button");
+const sosButton = e("\u{1F198}", "SOS Button");
+const upButton = e("\u{1F199}", "Up! Button");
+const vsButton = e("\u{1F19A}", "Vs Button");
+const radioButton = e("\u{1F518}", "Radio Button");
+const backArrow = e("\u{1F519}", "Back Arrow");
+const endArrow = e("\u{1F51A}", "End Arrow");
+const onArrow = e("\u{1F51B}", "On! Arrow");
+const soonArrow = e("\u{1F51C}", "Soon Arrow");
+const topArrow = e("\u{1F51D}", "Top Arrow");
+const checkBoxWithCheck = e("\u{2611}\u{FE0F}", "Check Box with Check");
+const inputLatinUppercase = e("\u{1F520}", "Input Latin Uppercase");
+const inputLatinLowercase = e("\u{1F521}", "Input Latin Lowercase");
+const inputNumbers = e("\u{1F522}", "Input Numbers");
+const inputSymbols = e("\u{1F523}", "Input Symbols");
+const inputLatinLetters = e("\u{1F524}", "Input Latin Letters");
+const shuffleTracksButton = e("\u{1F500}", "Shuffle Tracks Button");
+const repeatButton = e("\u{1F501}", "Repeat Button");
+const repeatSingleButton = e("\u{1F502}", "Repeat Single Button");
+const upwardsButton = e("\u{1F53C}", "Upwards Button");
+const downwardsButton = e("\u{1F53D}", "Downwards Button");
+const playButton = e("\u{25B6}\u{FE0F}", "Play Button");
+const reverseButton = e("\u{25C0}\u{FE0F}", "Reverse Button");
+const ejectButton = e("\u{23CF}\u{FE0F}", "Eject Button");
+const fastForwardButton = e("\u{23E9}", "Fast-Forward Button");
+const fastReverseButton = e("\u{23EA}", "Fast Reverse Button");
+const fastUpButton = e("\u{23EB}", "Fast Up Button");
+const fastDownButton = e("\u{23EC}", "Fast Down Button");
+const nextTrackButton = e("\u{23ED}\u{FE0F}", "Next Track Button");
+const lastTrackButton = e("\u{23EE}\u{FE0F}", "Last Track Button");
+const playOrPauseButton = e("\u{23EF}\u{FE0F}", "Play or Pause Button");
+const pauseButton = e("\u{23F8}\u{FE0F}", "Pause Button");
+const stopButton = e("\u{23F9}\u{FE0F}", "Stop Button");
+const recordButton = e("\u{23FA}\u{FE0F}", "Record Button");
+const buttons = g(
+    "Buttons", "Buttons",
+    clearButton,
+    coolButton,
+    freeButton,
+    idButton,
+    newButton,
+    ngButton,
+    okButton,
+    sosButton,
+    upButton,
+    vsButton,
+    radioButton,
+    backArrow,
+    endArrow,
+    onArrow,
+    soonArrow,
+    topArrow,
+    checkBoxWithCheck,
+    inputLatinUppercase,
+    inputLatinLowercase,
+    inputNumbers,
+    inputSymbols,
+    inputLatinLetters,
+    shuffleTracksButton,
+    repeatButton,
+    repeatSingleButton,
+    upwardsButton,
+    downwardsButton,
+    playButton,
+    pauseButton,
+    reverseButton,
+    ejectButton,
+    fastForwardButton,
+    fastReverseButton,
+    fastUpButton,
+    fastDownButton,
+    nextTrackButton,
+    lastTrackButton,
+    playOrPauseButton,
+    pauseButton,
+    stopButton,
+    recordButton);
+
+const zodiac = g(
+    "Zodiac", "The symbology of astrology",
+    e("\u{2648}", "Aries"),
+    e("\u{2649}", "Taurus"),
+    e("\u{264A}", "Gemini"),
+    e("\u{264B}", "Cancer"),
+    e("\u{264C}", "Leo"),
+    e("\u{264D}", "Virgo"),
+    e("\u{264E}", "Libra"),
+    e("\u{264F}", "Scorpio"),
+    e("\u{2650}", "Sagittarius"),
+    e("\u{2651}", "Capricorn"),
+    e("\u{2652}", "Aquarius"),
+    e("\u{2653}", "Pisces"),
+    e("\u{26CE}", "Ophiuchus"));
+
+const numbers = g(
+    "Numbers", "Numbers",
+    e("\u{30}\u{FE0F}", "Digit Zero"),
+    e("\u{31}\u{FE0F}", "Digit One"),
+    e("\u{32}\u{FE0F}", "Digit Two"),
+    e("\u{33}\u{FE0F}", "Digit Three"),
+    e("\u{34}\u{FE0F}", "Digit Four"),
+    e("\u{35}\u{FE0F}", "Digit Five"),
+    e("\u{36}\u{FE0F}", "Digit Six"),
+    e("\u{37}\u{FE0F}", "Digit Seven"),
+    e("\u{38}\u{FE0F}", "Digit Eight"),
+    e("\u{39}\u{FE0F}", "Digit Nine"),
+    e("\u{2A}\u{FE0F}", "Asterisk"),
+    e("\u{23}\u{FE0F}", "Number Sign"),
+    e("\u{30}\u{FE0F}\u{20E3}", "Keycap Digit Zero"),
+    e("\u{31}\u{FE0F}\u{20E3}", "Keycap Digit One"),
+    e("\u{32}\u{FE0F}\u{20E3}", "Keycap Digit Two"),
+    e("\u{33}\u{FE0F}\u{20E3}", "Keycap Digit Three"),
+    e("\u{34}\u{FE0F}\u{20E3}", "Keycap Digit Four"),
+    e("\u{35}\u{FE0F}\u{20E3}", "Keycap Digit Five"),
+    e("\u{36}\u{FE0F}\u{20E3}", "Keycap Digit Six"),
+    e("\u{37}\u{FE0F}\u{20E3}", "Keycap Digit Seven"),
+    e("\u{38}\u{FE0F}\u{20E3}", "Keycap Digit Eight"),
+    e("\u{39}\u{FE0F}\u{20E3}", "Keycap Digit Nine"),
+    e("\u{2A}\u{FE0F}\u{20E3}", "Keycap Asterisk"),
+    e("\u{23}\u{FE0F}\u{20E3}", "Keycap Number Sign"),
+    e("\u{1F51F}", "Keycap: 10"));
+
+const tagPlusSign = e("\u{E002B}", "Tag Plus Sign");
+const tagMinusHyphen = e("\u{E002D}", "Tag Hyphen-Minus");
+const tags = g(
+    "Tags", "Tags",
+    e("\u{E0020}", "Tag Space"),
+    e("\u{E0021}", "Tag Exclamation Mark"),
+    e("\u{E0022}", "Tag Quotation Mark"),
+    e("\u{E0023}", "Tag Number Sign"),
+    e("\u{E0024}", "Tag Dollar Sign"),
+    e("\u{E0025}", "Tag Percent Sign"),
+    e("\u{E0026}", "Tag Ampersand"),
+    e("\u{E0027}", "Tag Apostrophe"),
+    e("\u{E0028}", "Tag Left Parenthesis"),
+    e("\u{E0029}", "Tag Right Parenthesis"),
+    e("\u{E002A}", "Tag Asterisk"),
+    tagPlusSign,
+    e("\u{E002C}", "Tag Comma"),
+    tagMinusHyphen,
+    e("\u{E002E}", "Tag Full Stop"),
+    e("\u{E002F}", "Tag Solidus"),
+    e("\u{E0030}", "Tag Digit Zero"),
+    e("\u{E0031}", "Tag Digit One"),
+    e("\u{E0032}", "Tag Digit Two"),
+    e("\u{E0033}", "Tag Digit Three"),
+    e("\u{E0034}", "Tag Digit Four"),
+    e("\u{E0035}", "Tag Digit Five"),
+    e("\u{E0036}", "Tag Digit Six"),
+    e("\u{E0037}", "Tag Digit Seven"),
+    e("\u{E0038}", "Tag Digit Eight"),
+    e("\u{E0039}", "Tag Digit Nine"),
+    e("\u{E003A}", "Tag Colon"),
+    e("\u{E003B}", "Tag Semicolon"),
+    e("\u{E003C}", "Tag Less-Than Sign"),
+    e("\u{E003D}", "Tag Equals Sign"),
+    e("\u{E003E}", "Tag Greater-Than Sign"),
+    e("\u{E003F}", "Tag Question Mark"),
+    e("\u{E0040}", "Tag Commercial at"),
+    e("\u{E0041}", "Tag Latin Capital Letter a"),
+    e("\u{E0042}", "Tag Latin Capital Letter B"),
+    e("\u{E0043}", "Tag Latin Capital Letter C"),
+    e("\u{E0044}", "Tag Latin Capital Letter D"),
+    e("\u{E0045}", "Tag Latin Capital Letter E"),
+    e("\u{E0046}", "Tag Latin Capital Letter F"),
+    e("\u{E0047}", "Tag Latin Capital Letter G"),
+    e("\u{E0048}", "Tag Latin Capital Letter H"),
+    e("\u{E0049}", "Tag Latin Capital Letter I"),
+    e("\u{E004A}", "Tag Latin Capital Letter J"),
+    e("\u{E004B}", "Tag Latin Capital Letter K"),
+    e("\u{E004C}", "Tag Latin Capital Letter L"),
+    e("\u{E004D}", "Tag Latin Capital Letter M"),
+    e("\u{E004E}", "Tag Latin Capital Letter N"),
+    e("\u{E004F}", "Tag Latin Capital Letter O"),
+    e("\u{E0050}", "Tag Latin Capital Letter P"),
+    e("\u{E0051}", "Tag Latin Capital Letter Q"),
+    e("\u{E0052}", "Tag Latin Capital Letter R"),
+    e("\u{E0053}", "Tag Latin Capital Letter S"),
+    e("\u{E0054}", "Tag Latin Capital Letter T"),
+    e("\u{E0055}", "Tag Latin Capital Letter U"),
+    e("\u{E0056}", "Tag Latin Capital Letter V"),
+    e("\u{E0057}", "Tag Latin Capital Letter W"),
+    e("\u{E0058}", "Tag Latin Capital Letter X"),
+    e("\u{E0059}", "Tag Latin Capital Letter Y"),
+    e("\u{E005A}", "Tag Latin Capital Letter Z"),
+    e("\u{E005B}", "Tag Left Square Bracket"),
+    e("\u{E005C}", "Tag Reverse Solidus"),
+    e("\u{E005D}", "Tag Right Square Bracket"),
+    e("\u{E005E}", "Tag Circumflex Accent"),
+    e("\u{E005F}", "Tag Low Line"),
+    e("\u{E0060}", "Tag Grave Accent"),
+    e("\u{E0061}", "Tag Latin Small Letter a"),
+    e("\u{E0062}", "Tag Latin Small Letter B"),
+    e("\u{E0063}", "Tag Latin Small Letter C"),
+    e("\u{E0064}", "Tag Latin Small Letter D"),
+    e("\u{E0065}", "Tag Latin Small Letter E"),
+    e("\u{E0066}", "Tag Latin Small Letter F"),
+    e("\u{E0067}", "Tag Latin Small Letter G"),
+    e("\u{E0068}", "Tag Latin Small Letter H"),
+    e("\u{E0069}", "Tag Latin Small Letter I"),
+    e("\u{E006A}", "Tag Latin Small Letter J"),
+    e("\u{E006B}", "Tag Latin Small Letter K"),
+    e("\u{E006C}", "Tag Latin Small Letter L"),
+    e("\u{E006D}", "Tag Latin Small Letter M"),
+    e("\u{E006E}", "Tag Latin Small Letter N"),
+    e("\u{E006F}", "Tag Latin Small Letter O"),
+    e("\u{E0070}", "Tag Latin Small Letter P"),
+    e("\u{E0071}", "Tag Latin Small Letter Q"),
+    e("\u{E0072}", "Tag Latin Small Letter R"),
+    e("\u{E0073}", "Tag Latin Small Letter S"),
+    e("\u{E0074}", "Tag Latin Small Letter T"),
+    e("\u{E0075}", "Tag Latin Small Letter U"),
+    e("\u{E0076}", "Tag Latin Small Letter V"),
+    e("\u{E0077}", "Tag Latin Small Letter W"),
+    e("\u{E0078}", "Tag Latin Small Letter X"),
+    e("\u{E0079}", "Tag Latin Small Letter Y"),
+    e("\u{E007A}", "Tag Latin Small Letter Z"),
+    e("\u{E007B}", "Tag Left Curly Bracket"),
+    e("\u{E007C}", "Tag Vertical Line"),
+    e("\u{E007D}", "Tag Right Curly Bracket"),
+    e("\u{E007E}", "Tag Tilde"),
+    e("\u{E007F}", "Cancel Tag"));
+
+const math = g(
+    "Math", "Math",
+    e("\u{2716}\u{FE0F}", "Multiply"),
+    e("\u{2795}", "Plus"),
+    e("\u{2796}", "Minus"),
+    e("\u{2797}", "Divide"));
+
+const games = g(
+    "Games", "Games",
+    e("\u{2660}\u{FE0F}", "Spade Suit"),
+    e("\u{2663}\u{FE0F}", "Club Suit"),
+    e("\u{2665}\u{FE0F}", "Heart Suit", { color: "red" }),
+    e("\u{2666}\u{FE0F}", "Diamond Suit", { color: "red" }),
+    e("\u{1F004}", "Mahjong Red Dragon"),
+    e("\u{1F0CF}", "Joker"),
+    e("\u{1F3AF}", "Direct Hit"),
+    e("\u{1F3B0}", "Slot Machine"),
+    e("\u{1F3B1}", "Pool 8 Ball"),
+    e("\u{1F3B2}", "Game Die"),
+    e("\u{1F3B3}", "Bowling"),
+    e("\u{1F3B4}", "Flower Playing Cards"),
+    e("\u{1F9E9}", "Puzzle Piece"),
+    e("\u{265F}\u{FE0F}", "Chess Pawn"),
+    e("\u{1FA80}", "Yo-Yo"),
+    //e("\u{1FA83}", "Boomerang"),
+    //e("\u{1FA86}", "Nesting Dolls"),
+    e("\u{1FA81}", "Kite"));
+
+const sportsEquipment = g(
+    "Sports Equipment", "Sports equipment",
+    e("\u{1F3BD}", "Running Shirt"),
+    e("\u{1F3BE}", "Tennis"),
+    e("\u{1F3BF}", "Skis"),
+    e("\u{1F3C0}", "Basketball"),
+    e("\u{1F3C5}", "Sports Medal"),
+    e("\u{1F3C6}", "Trophy"),
+    e("\u{1F3C8}", "American Football"),
+    e("\u{1F3C9}", "Rugby Football"),
+    e("\u{1F3CF}", "Cricket Game"),
+    e("\u{1F3D0}", "Volleyball"),
+    e("\u{1F3D1}", "Field Hockey"),
+    e("\u{1F3D2}", "Ice Hockey"),
+    e("\u{1F3D3}", "Ping Pong"),
+    e("\u{1F3F8}", "Badminton"),
+    e("\u{1F6F7}", "Sled"),
+    e("\u{1F945}", "Goal Net"),
+    e("\u{1F947}", "1st Place Medal"),
+    e("\u{1F948}", "2nd Place Medal"),
+    e("\u{1F949}", "3rd Place Medal"),
+    e("\u{1F94A}", "Boxing Glove"),
+    e("\u{1F94C}", "Curling Stone"),
+    e("\u{1F94D}", "Lacrosse"),
+    e("\u{1F94E}", "Softball"),
+    e("\u{1F94F}", "Flying Disc"),
+    e("\u{26BD}", "Soccer Ball"),
+    e("\u{26BE}", "Baseball"),
+    e("\u{26F8}\u{FE0F}", "Ice Skate"));
+
+const clothing = g(
+    "Clothing", "Clothing",
+    e("\u{1F3A9}", "Top Hat"),
+    e("\u{1F93F}", "Diving Mask"),
+    e("\u{1F452}", "Woman’s Hat"),
+    e("\u{1F453}", "Glasses"),
+    e("\u{1F576}\u{FE0F}", "Sunglasses"),
+    e("\u{1F454}", "Necktie"),
+    e("\u{1F455}", "T-Shirt"),
+    e("\u{1F456}", "Jeans"),
+    e("\u{1F457}", "Dress"),
+    e("\u{1F458}", "Kimono"),
+    e("\u{1F459}", "Bikini"),
+    e("\u{1F45A}", "Woman’s Clothes"),
+    e("\u{1F45B}", "Purse"),
+    e("\u{1F45C}", "Handbag"),
+    e("\u{1F45D}", "Clutch Bag"),
+    e("\u{1F45E}", "Man’s Shoe"),
+    e("\u{1F45F}", "Running Shoe"),
+    e("\u{1F460}", "High-Heeled Shoe"),
+    e("\u{1F461}", "Woman’s Sandal"),
+    e("\u{1F462}", "Woman’s Boot"),
+    e("\u{1F94B}", "Martial Arts Uniform"),
+    e("\u{1F97B}", "Sari"),
+    e("\u{1F97C}", "Lab Coat"),
+    e("\u{1F97D}", "Goggles"),
+    e("\u{1F97E}", "Hiking Boot"),
+    e("\u{1F97F}", "Flat Shoe"),
+    whiteCane,
+    e("\u{1F9BA}", "Safety Vest"),
+    e("\u{1F9E2}", "Billed Cap"),
+    e("\u{1F9E3}", "Scarf"),
+    e("\u{1F9E4}", "Gloves"),
+    e("\u{1F9E5}", "Coat"),
+    e("\u{1F9E6}", "Socks"),
+    e("\u{1F9FF}", "Nazar Amulet"),
+    e("\u{1FA70}", "Ballet Shoes"),
+    e("\u{1FA71}", "One-Piece Swimsuit"),
+    e("\u{1FA72}", "Briefs"),
+    e("\u{1FA73}", "Shorts"));
+
+const town = g(
+    "Town", "Town",
+    e("\u{1F3D7}\u{FE0F}", "Building Construction"),
+    e("\u{1F3D8}\u{FE0F}", "Houses"),
+    e("\u{1F3D9}\u{FE0F}", "Cityscape"),
+    e("\u{1F3DA}\u{FE0F}", "Derelict House"),
+    e("\u{1F3DB}\u{FE0F}", "Classical Building"),
+    e("\u{1F3DC}\u{FE0F}", "Desert"),
+    e("\u{1F3DD}\u{FE0F}", "Desert Island"),
+    e("\u{1F3DE}\u{FE0F}", "National Park"),
+    e("\u{1F3DF}\u{FE0F}", "Stadium"),
+    e("\u{1F3E0}", "House"),
+    e("\u{1F3E1}", "House with Garden"),
+    e("\u{1F3E2}", "Office Building"),
+    e("\u{1F3E3}", "Japanese Post Office"),
+    e("\u{1F3E4}", "Post Office"),
+    e("\u{1F3E5}", "Hospital"),
+    e("\u{1F3E6}", "Bank"),
+    e("\u{1F3E7}", "ATM Sign"),
+    e("\u{1F3E8}", "Hotel"),
+    e("\u{1F3E9}", "Love Hotel"),
+    e("\u{1F3EA}", "Convenience Store"),
+    school,
+    e("\u{1F3EC}", "Department Store"),
+    factory,
+    e("\u{1F309}", "Bridge at Night"),
+    e("\u{26F2}", "Fountain"),
+    e("\u{1F6CD}\u{FE0F}", "Shopping Bags"),
+    e("\u{1F9FE}", "Receipt"),
+    e("\u{1F6D2}", "Shopping Cart"),
+    e("\u{1F488}", "Barber Pole"),
+    e("\u{1F492}", "Wedding"),
+    e("\u{1F5F3}\u{FE0F}", "Ballot Box with Ballot"));
+
+const music = g(
+    "Music", "Music",
+    e("\u{1F3BC}", "Musical Score"),
+    e("\u{1F3B6}", "Musical Notes"),
+    e("\u{1F3B5}", "Musical Note"),
+    e("\u{1F3B7}", "Saxophone"),
+    e("\u{1F3B8}", "Guitar"),
+    e("\u{1F3B9}", "Musical Keyboard"),
+    e("\u{1F3BA}", "Trumpet"),
+    e("\u{1F3BB}", "Violin"),
+    e("\u{1F941}", "Drum"),
+    //e("\u{1FA97}", "Accordion"),
+    //e("\u{1FA98}", "Long Drum"),
+    e("\u{1FA95}", "Banjo"));
+
+const weather = g(
+    "Weather", "Weather",
+    e("\u{1F304}", "Sunrise Over Mountains"),
+    e("\u{1F305}", "Sunrise"),
+    e("\u{1F306}", "Cityscape at Dusk"),
+    e("\u{1F307}", "Sunset"),
+    e("\u{1F303}", "Night with Stars"),
+    e("\u{1F302}", "Closed Umbrella"),
+    e("\u{2602}\u{FE0F}", "Umbrella"),
+    e("\u{2614}\u{FE0F}", "Umbrella with Rain Drops"),
+    e("\u{2603}\u{FE0F}", "Snowman"),
+    e("\u{26C4}", "Snowman Without Snow"),
+    e("\u{2600}\u{FE0F}", "Sun"),
+    e("\u{2601}\u{FE0F}", "Cloud"),
+    e("\u{1F324}\u{FE0F}", "Sun Behind Small Cloud"),
+    e("\u{26C5}", "Sun Behind Cloud"),
+    e("\u{1F325}\u{FE0F}", "Sun Behind Large Cloud"),
+    e("\u{1F326}\u{FE0F}", "Sun Behind Rain Cloud"),
+    e("\u{1F327}\u{FE0F}", "Cloud with Rain"),
+    e("\u{1F328}\u{FE0F}", "Cloud with Snow"),
+    e("\u{1F329}\u{FE0F}", "Cloud with Lightning"),
+    e("\u{26C8}\u{FE0F}", "Cloud with Lightning and Rain"),
+    e("\u{2744}\u{FE0F}", "Snowflake"),
+    e("\u{1F300}", "Cyclone"),
+    e("\u{1F32A}\u{FE0F}", "Tornado"),
+    e("\u{1F32C}\u{FE0F}", "Wind Face"),
+    e("\u{1F30A}", "Water Wave"),
+    e("\u{1F32B}\u{FE0F}", "Fog"),
+    e("\u{1F301}", "Foggy"),
+    e("\u{1F308}", "Rainbow"),
+    e("\u{1F321}\u{FE0F}", "Thermometer"));
+
+const astro = g(
+    "Astronomy", "Astronomy",
+    e("\u{1F30C}", "Milky Way"),
+    e("\u{1F30D}", "Globe Showing Europe-Africa"),
+    e("\u{1F30E}", "Globe Showing Americas"),
+    e("\u{1F30F}", "Globe Showing Asia-Australia"),
+    e("\u{1F310}", "Globe with Meridians"),
+    e("\u{1F311}", "New Moon"),
+    e("\u{1F312}", "Waxing Crescent Moon"),
+    e("\u{1F313}", "First Quarter Moon"),
+    e("\u{1F314}", "Waxing Gibbous Moon"),
+    e("\u{1F315}", "Full Moon"),
+    e("\u{1F316}", "Waning Gibbous Moon"),
+    e("\u{1F317}", "Last Quarter Moon"),
+    e("\u{1F318}", "Waning Crescent Moon"),
+    e("\u{1F319}", "Crescent Moon"),
+    e("\u{1F31A}", "New Moon Face"),
+    e("\u{1F31B}", "First Quarter Moon Face"),
+    e("\u{1F31C}", "Last Quarter Moon Face"),
+    e("\u{1F31D}", "Full Moon Face"),
+    e("\u{1F31E}", "Sun with Face"),
+    e("\u{1F31F}", "Glowing Star"),
+    e("\u{1F320}", "Shooting Star"),
+    e("\u{2604}\u{FE0F}", "Comet"),
+    e("\u{1FA90}", "Ringed Planet"));
+
+const finance = g(
+    "Finance", "Finance",
+    e("\u{1F4B0}", "Money Bag"),
+    e("\u{1F4B1}", "Currency Exchange"),
+    e("\u{1F4B2}", "Heavy Dollar Sign"),
+    e("\u{1F4B3}", "Credit Card"),
+    e("\u{1F4B4}", "Yen Banknote"),
+    e("\u{1F4B5}", "Dollar Banknote"),
+    e("\u{1F4B6}", "Euro Banknote"),
+    e("\u{1F4B7}", "Pound Banknote"),
+    e("\u{1F4B8}", "Money with Wings"),
+    //e("\u{1FA99}", "Coin"),
+    e("\u{1F4B9}", "Chart Increasing with Yen"));
+
+const writing = g(
+    "Writing", "Writing",
+    e("\u{1F58A}\u{FE0F}", "Pen"),
+    e("\u{1F58B}\u{FE0F}", "Fountain Pen"),
+    e("\u{1F58C}\u{FE0F}", "Paintbrush"),
+    e("\u{1F58D}\u{FE0F}", "Crayon"),
+    e("\u{270F}\u{FE0F}", "Pencil"),
+    e("\u{2712}\u{FE0F}", "Black Nib"));
+
+const alembic = e("\u{2697}\u{FE0F}", "Alembic");
+const gear = e("\u{2699}\u{FE0F}", "Gear");
+const atomSymbol = e("\u{269B}\u{FE0F}", "Atom Symbol");
+const keyboard = e("\u{2328}\u{FE0F}", "Keyboard");
+const telephone = e("\u{260E}\u{FE0F}", "Telephone");
+const studioMicrophone = e("\u{1F399}\u{FE0F}", "Studio Microphone");
+const levelSlider = e("\u{1F39A}\u{FE0F}", "Level Slider");
+const controlKnobs = e("\u{1F39B}\u{FE0F}", "Control Knobs");
+const movieCamera = e("\u{1F3A5}", "Movie Camera");
+const headphone = e("\u{1F3A7}", "Headphone");
+const videoGame = e("\u{1F3AE}", "Video Game");
+const lightBulb = e("\u{1F4A1}", "Light Bulb");
+const computerDisk = e("\u{1F4BD}", "Computer Disk");
+const floppyDisk = e("\u{1F4BE}", "Floppy Disk");
+const opticalDisk = e("\u{1F4BF}", "Optical Disk");
+const dvd = e("\u{1F4C0}", "DVD");
+const telephoneReceiver = e("\u{1F4DE}", "Telephone Receiver");
+const pager = e("\u{1F4DF}", "Pager");
+const faxMachine = e("\u{1F4E0}", "Fax Machine");
+const satelliteAntenna = e("\u{1F4E1}", "Satellite Antenna");
+const loudspeaker = e("\u{1F4E2}", "Loudspeaker");
+const megaphone = e("\u{1F4E3}", "Megaphone");
+const mobilePhone = e("\u{1F4F1}", "Mobile Phone");
+const mobilePhoneWithArrow = e("\u{1F4F2}", "Mobile Phone with Arrow");
+const mobilePhoneVibrating = e("\u{1F4F3}", "Mobile Phone Vibrating");
+const mobilePhoneOff = e("\u{1F4F4}", "Mobile Phone Off");
+const noMobilePhone = e("\u{1F4F5}", "No Mobile Phone");
+const antennaBars = e("\u{1F4F6}", "Antenna Bars");
+const camera = e("\u{1F4F7}", "Camera");
+const cameraWithFlash = e("\u{1F4F8}", "Camera with Flash");
+const videoCamera = e("\u{1F4F9}", "Video Camera");
+const television = e("\u{1F4FA}", "Television");
+const radio = e("\u{1F4FB}", "Radio");
+const videocassette = e("\u{1F4FC}", "Videocassette");
+const filmProjector = e("\u{1F4FD}\u{FE0F}", "Film Projector");
+const portableStereo = e("\u{1F4FE}\u{FE0F}", "Portable Stereo");
+const dimButton = e("\u{1F505}", "Dim Button");
+const brightButton = e("\u{1F506}", "Bright Button");
+const mutedSpeaker = e("\u{1F507}", "Muted Speaker");
+const speakerLowVolume = e("\u{1F508}", "Speaker Low Volume");
+const speakerMediumVolume = e("\u{1F509}", "Speaker Medium Volume");
+const speakerHighVolume = e("\u{1F50A}", "Speaker High Volume");
+const battery = e("\u{1F50B}", "Battery");
+const electricPlug = e("\u{1F50C}", "Electric Plug");
+const magnifyingGlassTiltedLeft = e("\u{1F50D}", "Magnifying Glass Tilted Left");
+const magnifyingGlassTiltedRight = e("\u{1F50E}", "Magnifying Glass Tilted Right");
+const lockedWithPen = e("\u{1F50F}", "Locked with Pen");
+const lockedWithKey = e("\u{1F510}", "Locked with Key");
+const key = e("\u{1F511}", "Key");
+const locked = e("\u{1F512}", "Locked");
+const unlocked = e("\u{1F513}", "Unlocked");
+const bell = e("\u{1F514}", "Bell");
+const bellWithSlash = e("\u{1F515}", "Bell with Slash");
+const bookmark = e("\u{1F516}", "Bookmark");
+const link = e("\u{1F517}", "Link");
+const joystick = e("\u{1F579}\u{FE0F}", "Joystick");
+const desktopComputer = e("\u{1F5A5}\u{FE0F}", "Desktop Computer");
+const printer = e("\u{1F5A8}\u{FE0F}", "Printer");
+const computerMouse = e("\u{1F5B1}\u{FE0F}", "Computer Mouse");
+const trackball = e("\u{1F5B2}\u{FE0F}", "Trackball");
+const blackFolder = e("\u{1F5BF}", "Black Folder");
+const folder = e("\u{1F5C0}", "Folder");
+const openFolder = e("\u{1F5C1}", "Open Folder");
+const cardIndexDividers = e("\u{1F5C2}", "Card Index Dividers");
+const cardFileBox = e("\u{1F5C3}", "Card File Box");
+const fileCabinet = e("\u{1F5C4}", "File Cabinet");
+const emptyNote = e("\u{1F5C5}", "Empty Note");
+const emptyNotePage = e("\u{1F5C6}", "Empty Note Page");
+const emptyNotePad = e("\u{1F5C7}", "Empty Note Pad");
+const note = e("\u{1F5C8}", "Note");
+const notePage = e("\u{1F5C9}", "Note Page");
+const notePad = e("\u{1F5CA}", "Note Pad");
+const emptyDocument = e("\u{1F5CB}", "Empty Document");
+const emptyPage = e("\u{1F5CC}", "Empty Page");
+const emptyPages = e("\u{1F5CD}", "Empty Pages");
+const documentIcon = e("\u{1F5CE}", "Document");
+const page = e("\u{1F5CF}", "Page");
+const pages = e("\u{1F5D0}", "Pages");
+const wastebasket = e("\u{1F5D1}", "Wastebasket");
+const spiralNotePad = e("\u{1F5D2}", "Spiral Note Pad");
+const spiralCalendar = e("\u{1F5D3}", "Spiral Calendar");
+const desktopWindow = e("\u{1F5D4}", "Desktop Window");
+const minimize = e("\u{1F5D5}", "Minimize");
+const maximize = e("\u{1F5D6}", "Maximize");
+const overlap = e("\u{1F5D7}", "Overlap");
+const reload = e("\u{1F5D8}", "Reload");
+const close = e("\u{1F5D9}", "Close");
+const increaseFontSize = e("\u{1F5DA}", "Increase Font Size");
+const decreaseFontSize = e("\u{1F5DB}", "Decrease Font Size");
+const compression = e("\u{1F5DC}", "Compression");
+const oldKey = e("\u{1F5DD}", "Old Key");
+const tech = g(
+    "Technology", "Technology",
+    joystick,
+    videoGame,
+    lightBulb,
+    laptop,
+    briefcase,
+    computerDisk,
+    floppyDisk,
+    opticalDisk,
+    dvd,
+    desktopComputer,
+    keyboard,
+    printer,
+    computerMouse,
+    trackball,
+    telephone,
+    telephoneReceiver,
+    pager,
+    faxMachine,
+    satelliteAntenna,
+    loudspeaker,
+    megaphone,
+    television,
+    radio,
+    videocassette,
+    filmProjector,
+    studioMicrophone,
+    levelSlider,
+    controlKnobs,
+    microphone,
+    movieCamera,
+    headphone,
+    camera,
+    cameraWithFlash,
+    videoCamera,
+    mobilePhone,
+    mobilePhoneOff,
+    mobilePhoneWithArrow,
+    lockedWithPen,
+    lockedWithKey,
+    locked,
+    unlocked,
+    bell,
+    bellWithSlash,
+    bookmark,
+    link,
+    mobilePhoneVibrating,
+    antennaBars,
+    dimButton,
+    brightButton,
+    mutedSpeaker,
+    speakerLowVolume,
+    speakerMediumVolume,
+    speakerHighVolume,
+    battery,
+    electricPlug);
+
+const mail = g(
+    "Mail", "Mail",
+    e("\u{1F4E4}", "Outbox Tray"),
+    e("\u{1F4E5}", "Inbox Tray"),
+    e("\u{1F4E6}", "Package"),
+    e("\u{1F4E7}", "E-Mail"),
+    e("\u{1F4E8}", "Incoming Envelope"),
+    e("\u{1F4E9}", "Envelope with Arrow"),
+    e("\u{1F4EA}", "Closed Mailbox with Lowered Flag"),
+    e("\u{1F4EB}", "Closed Mailbox with Raised Flag"),
+    e("\u{1F4EC}", "Open Mailbox with Raised Flag"),
+    e("\u{1F4ED}", "Open Mailbox with Lowered Flag"),
+    e("\u{1F4EE}", "Postbox"),
+    e("\u{1F4EF}", "Postal Horn"));
+
+const celebration = g(
+    "Celebration", "Celebration",
+    e("\u{1F380}", "Ribbon"),
+    e("\u{1F381}", "Wrapped Gift"),
+    e("\u{1F383}", "Jack-O-Lantern"),
+    e("\u{1F384}", "Christmas Tree"),
+    e("\u{1F9E8}", "Firecracker"),
+    e("\u{1F386}", "Fireworks"),
+    e("\u{1F387}", "Sparkler"),
+    e("\u{2728}", "Sparkles"),
+    e("\u{2747}\u{FE0F}", "Sparkle"),
+    e("\u{1F388}", "Balloon"),
+    e("\u{1F389}", "Party Popper"),
+    e("\u{1F38A}", "Confetti Ball"),
+    e("\u{1F38B}", "Tanabata Tree"),
+    e("\u{1F38D}", "Pine Decoration"),
+    e("\u{1F38E}", "Japanese Dolls"),
+    e("\u{1F38F}", "Carp Streamer"),
+    e("\u{1F390}", "Wind Chime"),
+    e("\u{1F391}", "Moon Viewing Ceremony"),
+    e("\u{1F392}", "Backpack"),
+    graduationCap,
+    e("\u{1F9E7}", "Red Envelope"),
+    e("\u{1F3EE}", "Red Paper Lantern"),
+    e("\u{1F396}\u{FE0F}", "Military Medal"));
+
+const tools = g(
+    "Tools", "Tools",
+    e("\u{1F3A3}", "Fishing Pole"),
+    e("\u{1F526}", "Flashlight"),
+    wrench,
+    e("\u{1F528}", "Hammer"),
+    e("\u{1F529}", "Nut and Bolt"),
+    e("\u{1F6E0}\u{FE0F}", "Hammer and Wrench"),
+    e("\u{1F9ED}", "Compass"),
+    e("\u{1F9EF}", "Fire Extinguisher"),
+    e("\u{1F9F0}", "Toolbox"),
+    e("\u{1F9F1}", "Brick"),
+    e("\u{1FA93}", "Axe"),
+    e("\u{2692}\u{FE0F}", "Hammer and Pick"),
+    e("\u{26CF}\u{FE0F}", "Pick"),
+    e("\u{26D1}\u{FE0F}", "Rescue Worker’s Helmet"),
+    e("\u{26D3}\u{FE0F}", "Chains"),
+    compression);
+
+const office = g(
+    "Office", "Office",
+    e("\u{1F4C1}", "File Folder"),
+    e("\u{1F4C2}", "Open File Folder"),
+    e("\u{1F4C3}", "Page with Curl"),
+    e("\u{1F4C4}", "Page Facing Up"),
+    e("\u{1F4C5}", "Calendar"),
+    e("\u{1F4C6}", "Tear-Off Calendar"),
+    e("\u{1F4C7}", "Card Index"),
+    cardIndexDividers,
+    cardFileBox,
+    fileCabinet,
+    wastebasket,
+    spiralNotePad,
+    spiralCalendar,
+    e("\u{1F4C8}", "Chart Increasing"),
+    e("\u{1F4C9}", "Chart Decreasing"),
+    e("\u{1F4CA}", "Bar Chart"),
+    e("\u{1F4CB}", "Clipboard"),
+    e("\u{1F4CC}", "Pushpin"),
+    e("\u{1F4CD}", "Round Pushpin"),
+    e("\u{1F4CE}", "Paperclip"),
+    e("\u{1F587}\u{FE0F}", "Linked Paperclips"),
+    e("\u{1F4CF}", "Straight Ruler"),
+    e("\u{1F4D0}", "Triangular Ruler"),
+    e("\u{1F4D1}", "Bookmark Tabs"),
+    e("\u{1F4D2}", "Ledger"),
+    e("\u{1F4D3}", "Notebook"),
+    e("\u{1F4D4}", "Notebook with Decorative Cover"),
+    e("\u{1F4D5}", "Closed Book"),
+    e("\u{1F4D6}", "Open Book"),
+    e("\u{1F4D7}", "Green Book"),
+    e("\u{1F4D8}", "Blue Book"),
+    e("\u{1F4D9}", "Orange Book"),
+    e("\u{1F4DA}", "Books"),
+    e("\u{1F4DB}", "Name Badge"),
+    e("\u{1F4DC}", "Scroll"),
+    e("\u{1F4DD}", "Memo"),
+    e("\u{2702}\u{FE0F}", "Scissors"),
+    e("\u{2709}\u{FE0F}", "Envelope"));
+
+const signs = g(
+    "Signs", "Signs",
+    e("\u{1F3A6}", "Cinema"),
+    noMobilePhone,
+    e("\u{1F51E}", "No One Under Eighteen"),
+    e("\u{1F6AB}", "Prohibited"),
+    e("\u{1F6AC}", "Cigarette"),
+    e("\u{1F6AD}", "No Smoking"),
+    e("\u{1F6AE}", "Litter in Bin Sign"),
+    e("\u{1F6AF}", "No Littering"),
+    e("\u{1F6B0}", "Potable Water"),
+    e("\u{1F6B1}", "Non-Potable Water"),
+    e("\u{1F6B3}", "No Bicycles"),
+    e("\u{1F6B7}", "No Pedestrians"),
+    e("\u{1F6B8}", "Children Crossing"),
+    e("\u{1F6B9}", "Men’s Room"),
+    e("\u{1F6BA}", "Women’s Room"),
+    e("\u{1F6BB}", "Restroom"),
+    e("\u{1F6BC}", "Baby Symbol"),
+    e("\u{1F6BE}", "Water Closet"),
+    e("\u{1F6C2}", "Passport Control"),
+    e("\u{1F6C3}", "Customs"),
+    e("\u{1F6C4}", "Baggage Claim"),
+    e("\u{1F6C5}", "Left Luggage"),
+    e("\u{1F17F}\u{FE0F}", "Parking Button"),
+    e("\u{267F}", "Wheelchair Symbol"),
+    e("\u{2622}\u{FE0F}", "Radioactive"),
+    e("\u{2623}\u{FE0F}", "Biohazard"),
+    e("\u{26A0}\u{FE0F}", "Warning"),
+    e("\u{26A1}", "High Voltage"),
+    e("\u{26D4}", "No Entry"),
+    e("\u{267B}\u{FE0F}", "Recycling Symbol"),
+    female,
+    male,
+    e("\u{26A7}\u{FE0F}", "Transgender Symbol"));
+
+const religion = g(
+    "Religion", "Religion",
+    e("\u{1F52F}", "Dotted Six-Pointed Star"),
+    e("\u{2721}\u{FE0F}", "Star of David"),
+    e("\u{1F549}\u{FE0F}", "Om"),
+    e("\u{1F54B}", "Kaaba"),
+    e("\u{1F54C}", "Mosque"),
+    e("\u{1F54D}", "Synagogue"),
+    e("\u{1F54E}", "Menorah"),
+    e("\u{1F6D0}", "Place of Worship"),
+    e("\u{1F6D5}", "Hindu Temple"),
+    e("\u{2626}\u{FE0F}", "Orthodox Cross"),
+    e("\u{271D}\u{FE0F}", "Latin Cross"),
+    e("\u{262A}\u{FE0F}", "Star and Crescent"),
+    e("\u{262E}\u{FE0F}", "Peace Symbol"),
+    e("\u{262F}\u{FE0F}", "Yin Yang"),
+    e("\u{2638}\u{FE0F}", "Wheel of Dharma"),
+    e("\u{267E}\u{FE0F}", "Infinity"),
+    e("\u{1FA94}", "Diya Lamp"),
+    e("\u{26E9}\u{FE0F}", "Shinto Shrine"),
+    e("\u{26EA}", "Church"),
+    e("\u{2734}\u{FE0F}", "Eight-Pointed Star"),
+    e("\u{1F4FF}", "Prayer Beads"));
+
+const door = e("\u{1F6AA}", "Door");
+const household = g(
+    "Household", "Household",
+    e("\u{1F484}", "Lipstick"),
+    e("\u{1F48D}", "Ring"),
+    e("\u{1F48E}", "Gem Stone"),
+    e("\u{1F4F0}", "Newspaper"),
+    key,
+    e("\u{1F525}", "Fire"),
+    e("\u{1F52B}", "Pistol"),
+    e("\u{1F56F}\u{FE0F}", "Candle"),
+    e("\u{1F5BC}\u{FE0F}", "Framed Picture"),
+    oldKey,
+    e("\u{1F5DE}\u{FE0F}", "Rolled-Up Newspaper"),
+    e("\u{1F5FA}\u{FE0F}", "World Map"),
+    door,
+    e("\u{1F6BD}", "Toilet"),
+    e("\u{1F6BF}", "Shower"),
+    e("\u{1F6C1}", "Bathtub"),
+    e("\u{1F6CB}\u{FE0F}", "Couch and Lamp"),
+    e("\u{1F6CF}\u{FE0F}", "Bed"),
+    e("\u{1F9F4}", "Lotion Bottle"),
+    e("\u{1F9F5}", "Thread"),
+    e("\u{1F9F6}", "Yarn"),
+    e("\u{1F9F7}", "Safety Pin"),
+    e("\u{1F9F8}", "Teddy Bear"),
+    e("\u{1F9F9}", "Broom"),
+    e("\u{1F9FA}", "Basket"),
+    e("\u{1F9FB}", "Roll of Paper"),
+    e("\u{1F9FC}", "Soap"),
+    e("\u{1F9FD}", "Sponge"),
+    e("\u{1FA91}", "Chair"),
+    e("\u{1FA92}", "Razor"),
+    e("\u{1F397}\u{FE0F}", "Reminder Ribbon"));
+
+const activities = g(
+    "Activities", "Activities",
+    e("\u{1F39E}\u{FE0F}", "Film Frames"),
+    e("\u{1F39F}\u{FE0F}", "Admission Tickets"),
+    e("\u{1F3A0}", "Carousel Horse"),
+    e("\u{1F3A1}", "Ferris Wheel"),
+    e("\u{1F3A2}", "Roller Coaster"),
+    artistPalette,
+    e("\u{1F3AA}", "Circus Tent"),
+    e("\u{1F3AB}", "Ticket"),
+    e("\u{1F3AC}", "Clapper Board"),
+    e("\u{1F3AD}", "Performing Arts"));
+
+const travel = g(
+    "Travel", "Travel",
+    e("\u{1F3F7}\u{FE0F}", "Label"),
+    e("\u{1F30B}", "Volcano"),
+    e("\u{1F3D4}\u{FE0F}", "Snow-Capped Mountain"),
+    e("\u{26F0}\u{FE0F}", "Mountain"),
+    e("\u{1F3D5}\u{FE0F}", "Camping"),
+    e("\u{1F3D6}\u{FE0F}", "Beach with Umbrella"),
+    e("\u{26F1}\u{FE0F}", "Umbrella on Ground"),
+    e("\u{1F3EF}", "Japanese Castle"),
+    e("\u{1F463}", "Footprints"),
+    e("\u{1F5FB}", "Mount Fuji"),
+    e("\u{1F5FC}", "Tokyo Tower"),
+    e("\u{1F5FD}", "Statue of Liberty"),
+    e("\u{1F5FE}", "Map of Japan"),
+    e("\u{1F5FF}", "Moai"),
+    e("\u{1F6CE}\u{FE0F}", "Bellhop Bell"),
+    e("\u{1F9F3}", "Luggage"),
+    e("\u{26F3}", "Flag in Hole"),
+    e("\u{26FA}", "Tent"),
+    e("\u{2668}\u{FE0F}", "Hot Springs"));
+
+const medieval = g(
+    "Medieval", "Medieval",
+    e("\u{1F3F0}", "Castle"),
+    e("\u{1F3F9}", "Bow and Arrow"),
+    crown,
+    e("\u{1F531}", "Trident Emblem"),
+    e("\u{1F5E1}\u{FE0F}", "Dagger"),
+    e("\u{1F6E1}\u{FE0F}", "Shield"),
+    e("\u{1F52E}", "Crystal Ball"),
+    e("\u{2694}\u{FE0F}", "Crossed Swords"),
+    e("\u{269C}\u{FE0F}", "Fleur-de-lis"));
+
+const doubleExclamationMark = e("\u{203C}\u{FE0F}", "Double Exclamation Mark");
+const interrobang = e("\u{2049}\u{FE0F}", "Exclamation Question Mark");
+const information = e("\u{2139}\u{FE0F}", "Information");
+const circledM = e("\u{24C2}\u{FE0F}", "Circled M");
+const checkMarkButton = e("\u{2705}", "Check Mark Button");
+const checkMark = e("\u{2714}\u{FE0F}", "Check Mark");
+const eightSpokedAsterisk = e("\u{2733}\u{FE0F}", "Eight-Spoked Asterisk");
+const crossMark = e("\u{274C}", "Cross Mark");
+const crossMarkButton = e("\u{274E}", "Cross Mark Button");
+const questionMark = e("\u{2753}", "Question Mark");
+const whiteQuestionMark = e("\u{2754}", "White Question Mark");
+const whiteExclamationMark = e("\u{2755}", "White Exclamation Mark");
+const exclamationMark = e("\u{2757}", "Exclamation Mark");
+const curlyLoop = e("\u{27B0}", "Curly Loop");
+const doubleCurlyLoop = e("\u{27BF}", "Double Curly Loop");
+const wavyDash = e("\u{3030}\u{FE0F}", "Wavy Dash");
+const partAlternationMark = e("\u{303D}\u{FE0F}", "Part Alternation Mark");
+const tradeMark = e("\u{2122}\u{FE0F}", "Trade Mark");
+const copyright = e("\u{A9}\u{FE0F}", "Copyright");
+const registered = e("\u{AE}\u{FE0F}", "Registered");
+const squareFourCourners = e("\u{26F6}\u{FE0F}", "Square: Four Corners");
+
+const marks = gg(
+    "Marks", "Marks", {
+    doubleExclamationMark,
+    interrobang,
+    information,
+    circledM,
+    checkMarkButton,
+    checkMark,
+    eightSpokedAsterisk,
+    crossMark,
+    crossMarkButton,
+    questionMark,
+    whiteQuestionMark,
+    whiteExclamationMark,
+    exclamationMark,
+    curlyLoop,
+    doubleCurlyLoop,
+    wavyDash,
+    partAlternationMark,
+    tradeMark,
+    copyright,
+    registered,
+});
+
+const droplet = e("\u{1F4A7}", "Droplet");
+const dropOfBlood = e("\u{1FA78}", "Drop of Blood");
+const adhesiveBandage = e("\u{1FA79}", "Adhesive Bandage");
+const stethoscope = e("\u{1FA7A}", "Stethoscope");
+const syringe = e("\u{1F489}", "Syringe");
+const pill = e("\u{1F48A}", "Pill");
+const testTube = e("\u{1F9EA}", "Test Tube");
+const petriDish = e("\u{1F9EB}", "Petri Dish");
+const dna = e("\u{1F9EC}", "DNA");
+const abacus = e("\u{1F9EE}", "Abacus");
+const magnet = e("\u{1F9F2}", "Magnet");
+const telescope = e("\u{1F52D}", "Telescope");
+
+const science = gg(
+    "Science", "Science", {
+    droplet,
+    dropOfBlood,
+    adhesiveBandage,
+    stethoscope,
+    syringe,
+    pill,
+    microscope,
+    testTube,
+    petriDish,
+    dna,
+    abacus,
+    magnet,
+    telescope,
+    medical,
+    balanceScale,
+    alembic,
+    gear,
+    atomSymbol,
+    magnifyingGlassTiltedLeft,
+    magnifyingGlassTiltedRight,
+});
+const whiteChessKing = e("\u{2654}", "White Chess King");
+const whiteChessQueen = e("\u{2655}", "White Chess Queen");
+const whiteChessRook = e("\u{2656}", "White Chess Rook");
+const whiteChessBishop = e("\u{2657}", "White Chess Bishop");
+const whiteChessKnight = e("\u{2658}", "White Chess Knight");
+const whiteChessPawn = e("\u{2659}", "White Chess Pawn");
+const whiteChessPieces = gg(whiteChessKing.value + whiteChessQueen.value + whiteChessRook.value + whiteChessBishop.value + whiteChessKnight.value + whiteChessPawn.value, "White Chess Pieces", {
+    width: "auto",
+    king: whiteChessKing,
+    queen: whiteChessQueen,
+    rook: whiteChessRook,
+    bishop: whiteChessBishop,
+    knight: whiteChessKnight,
+    pawn: whiteChessPawn
+});
+const blackChessKing = e("\u{265A}", "Black Chess King");
+const blackChessQueen = e("\u{265B}", "Black Chess Queen");
+const blackChessRook = e("\u{265C}", "Black Chess Rook");
+const blackChessBishop = e("\u{265D}", "Black Chess Bishop");
+const blackChessKnight = e("\u{265E}", "Black Chess Knight");
+const blackChessPawn = e("\u{265F}", "Black Chess Pawn");
+const blackChessPieces = gg(blackChessKing.value + blackChessQueen.value + blackChessRook.value + blackChessBishop.value + blackChessKnight.value + blackChessPawn.value, "Black Chess Pieces", {
+    width: "auto",
+    king: blackChessKing,
+    queen: blackChessQueen,
+    rook: blackChessRook,
+    bishop: blackChessBishop,
+    knight: blackChessKnight,
+    pawn: blackChessPawn
+});
+const chessPawns = gg(whiteChessPawn.value + blackChessPawn.value, "Chess Pawns", {
+    width: "auto",
+    white: whiteChessPawn,
+    black: blackChessPawn
+});
+const chessRooks = gg(whiteChessRook.value + blackChessRook.value, "Chess Rooks", {
+    width: "auto",
+    white: whiteChessRook,
+    black: blackChessRook
+});
+const chessBishops = gg(whiteChessBishop.value + blackChessBishop.value, "Chess Bishops", {
+    width: "auto",
+    white: whiteChessBishop,
+    black: blackChessBishop
+});
+const chessKnights = gg(whiteChessKnight.value + blackChessKnight.value, "Chess Knights", {
+    width: "auto",
+    white: whiteChessKnight,
+    black: blackChessKnight
+});
+const chessQueens = gg(whiteChessQueen.value + blackChessQueen.value, "Chess Queens", {
+    width: "auto",
+    white: whiteChessQueen,
+    black: blackChessQueen
+});
+const chessKings = gg(whiteChessKing.value + blackChessKing.value, "Chess Kings", {
+    width: "auto",
+    white: whiteChessKing,
+    black: blackChessKing
+});
+
+const chess = gg("Chess Pieces", "Chess Pieces", {
+    width: "auto",
+    white: whiteChessPieces,
+    black: blackChessPieces,
+    pawns: chessPawns,
+    rooks: chessRooks,
+    bishops: chessBishops,
+    knights: chessKnights,
+    queens: chessQueens,
+    kings: chessKings
+});
+
+const dice1 = e("\u2680", "Dice: Side 1");
+const dice2 = e("\u2681", "Dice: Side 2");
+const dice3 = e("\u2682", "Dice: Side 3");
+const dice4 = e("\u2683", "Dice: Side 4");
+const dice5 = e("\u2684", "Dice: Side 5");
+const dice6 = e("\u2685", "Dice: Side 6");
+const dice = gg("Dice", "Dice", {
+    dice1,
+    dice2,
+    dice3,
+    dice4,
+    dice5,
+    dice6
+});
+
+const allIcons = gg(
+    "All Icons", "All Icons", {
+    faces,
+    love,
+    cartoon,
+    hands,
+    bodyParts,
+    people,
+    gestures: gestures$1,
+    inMotion,
+    resting,
+    roles,
+    fantasy,
+    animals,
+    plants,
+    food,
+    flags,
+    vehicles,
+    clocks,
+    arrows,
+    shapes,
+    buttons,
+    zodiac,
+    chess,
+    dice,
+    math,
+    games,
+    sportsEquipment,
+    clothing,
+    town,
+    music,
+    weather,
+    astro,
+    finance,
+    writing,
+    science,
+    tech,
+    mail,
+    celebration,
+    tools,
+    office,
+    signs,
+    religion,
+    household,
+    activities,
+    travel,
+    medieval
+});
+
+class EmojiIconMesh extends TextMesh {
+    /**
+     * @param {string} name
+     * @param {import("../emoji/Emoji").Emoji} emoji
+     */
+    constructor(name, emoji) {
+        super(name, {
+            lit: false,
+            side: FrontSide
+        });
+
+        if (emoji) {
+            this.textBgColor = "transparent";
+            this.textColor = "#000000";
+            this.fontFamily = "Segoe UI Emoji";
+            this.fontSize = 100;
+
+            this.value = emoji;
         }
     }
 }
 
-const marker = new DebugObject(0xff0000);
+const navButton = new EmojiIconMesh("navButton", upArrow.value);
 
 class NavIcon extends Object3D {
     /**
@@ -51223,21 +48507,73 @@ class NavIcon extends Object3D {
         this.position.multiplyScalar(1.5);
         this.position.y += 1;
 
-        const icon = marker.clone();
+        const icon = navButton.clone();
         const fwdClick = (evt) => this.dispatchEvent(evt);
         icon.addEventListener("click", fwdClick);
         icon.children.forEach(c => c.addEventListener("click", fwdClick));
         icon.addEventListener("drag", console.log);
-
         this.add(icon);
 
+        this.lookAt(0, 1.75, 0);
+        this.scale.setScalar(0.5);
     }
 }
 
-class PlaybackButton extends DebugObject {
-    constructor(audioTrack) {
-        super(0x00ff00);
+const playButtonMesh = new EmojiIconMesh("playbackButtonPlay", playButton.value + speakerLowVolume.value);
+const pauseButtonMesh = new EmojiIconMesh("playbackButtonPause", pauseButton.value + speakerHighVolume.value);
+
+const playEvt = { type: "play" };
+const stopEvt = { type: "stop" };
+
+class PlaybackButton extends Object3D {
+    /**
+     * @param {AudioTrack} audioTrack
+     * @param {import("../calla/audio/AudioSource").AudioSource} clip
+     * @param {import("../calla/audio/AudioManager").AudioManager} audioSys
+     */
+    constructor(audioTrack, clip, audioSys) {
+        super();
         this.name = "play-" + audioTrack.fileName;
+
+        let isPlaying = false;
+
+        const onStop = () => {
+            if (isPlaying) {
+                this.playButton.visible = true;
+                this.pauseButton.visible = false;
+                audioSys.stopClip(audioTrack.path);
+                this.dispatchEvent(stopEvt);
+                isPlaying = false;
+            }
+        };
+
+        this.playButton = playButtonMesh.clone();
+        this.playButton.addEventListener("click", async () => {
+            this.playButton.visible = false;
+            this.pauseButton.visible = true;
+            this.dispatchEvent(playEvt);
+            await audioSys.playClip(audioTrack.path, audioTrack.volume);
+            isPlaying = true;
+            await once(clip.spatializer.audio, "ended");
+            onStop();
+        });
+
+        this.pauseButton = pauseButtonMesh.clone();
+        this.pauseButton.visible = false;
+        this.pauseButton.addEventListener("click", onStop);
+
+        this.add(this.playButton, this.pauseButton);
+
+        this.scale.setScalar(0.5);
+    }
+}
+
+class Sign extends Image2DMesh {
+    constructor(sign) {
+        super("sign-" + sign.fileName);
+        if (sign.isCallout) {
+            this.addEventListener("click", () => console.log(sign.name));
+        }
     }
 }
 
@@ -51271,6 +48607,14 @@ const menuItemFont = {
     fontSize: 100
 };
 
+const emojiFont = {
+    fontFamily: "Segoe UI Emoji",
+    fontSize: 100
+};
+
+/** @type {EmojiIconMesh} */
+let homeIcon = null;
+
 /**
  * @callback viewCallback
  * @param {number} id
@@ -51293,7 +48637,17 @@ app.addEventListener("sceneclearing", () => {
 
 app.addEventListener("started", async () => {
 
-    await loadFont(makeFont(menuItemFont));
+    await Promise.all([
+        loadFont(makeFont(menuItemFont)),
+        loadFont(makeFont(emojiFont))]);
+
+    homeIcon = new EmojiIconMesh("homeButton", door.value);
+    homeIcon.position.set(0, 0, -1);
+    homeIcon.lookAt(0, 1.75, 0);
+
+    homeIcon.addEventListener("click", () => {
+        history.back();
+    });
 
     if (window.location.search.length === 0) {
         showMainMenu();
@@ -51350,18 +48704,18 @@ async function playCurrentAudioZone() {
 
 async function showMainMenu(_, skipHistory = false) {
     setHistory(0, null, skipHistory, "Main");
-    await showMenu("VR/Languages", (language) => showLanguage(language.id));
+    await showMenu("VR/Languages", false, (language) => showLanguage(language.id));
 }
 
 async function showLanguage(languageID, skipHistory = false) {
     setHistory(1, languageID, skipHistory, "Language");
-    await showMenu(`VR/Language/${languageID}/Lessons`, (lesson) => showLesson(lesson.id));
+    await showMenu(`VR/Language/${languageID}/Lessons`, true, (lesson) => showLesson(lesson.id));
 }
 
 async function showLesson(lessonID, skipHistory = false) {
     setHistory(2, lessonID, skipHistory, "Lesson");
     app.clearScene();
-    await showMenu(`VR/Lesson/${lessonID}/Activities`, (activity) => showActivity(activity.id));
+    await showMenu(`VR/Lesson/${lessonID}/Activities`, true, (activity) => showActivity(activity.id));
 }
 
 async function showActivity(activityID, skipHistory = false) {
@@ -51369,7 +48723,7 @@ async function showActivity(activityID, skipHistory = false) {
         showMenu([{
             id: activityID,
             name: "Start Activity"
-        }], async (activity) => {
+        }], false, async (activity) => {
             await once(app.audio, "audioready");
             showActivity(activity.id, skipHistory);
         });
@@ -51395,6 +48749,15 @@ async function showActivity(activityID, skipHistory = false) {
         const progs = splitProgress(assetProg, signs.length + audioTracks.length + 1);
 
         /////////// GROUP DATA /////////////
+        for (let transform of transforms) {
+            const obj = new Object3D();
+            obj.name = transform.name;
+            obj.userData.id = transform.id;
+            obj.matrix.fromArray(transform.matrix);
+            obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
+            curTransforms.set(transform.id, obj);
+        }
+
         let startID = null;
         for (let station of stations) {
             curStations.set(station.transformID, station);
@@ -51413,15 +48776,6 @@ async function showActivity(activityID, skipHistory = false) {
         }
 
         /////////// BUILD SCENE GRAPH /////////////
-        for (let transform of transforms) {
-            const obj = new Object3D();
-            obj.name = transform.name;
-            obj.userData.id = transform.id;
-            obj.matrix.fromArray(transform.matrix);
-            obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
-            curTransforms.set(transform.id, obj);
-        }
-
         for (let transform of transforms) {
             const child = curTransforms.get(transform.id);
             if (transform.parentID === 0) {
@@ -51473,7 +48827,6 @@ async function showActivity(activityID, skipHistory = false) {
 
             if (audioTrack.spatialize) {
                 const transform = curTransforms.get(audioTrack.transformID);
-                transform.add(new DebugObject(0x0000ff));
                 setRightUpFwdPos(transform.matrixWorld, R$1, U$1, F$1, P$1);
                 app.audio.setClipPose(
                     audioTrack.path,
@@ -51484,18 +48837,34 @@ async function showActivity(activityID, skipHistory = false) {
             }
 
             if (audioTrack.playbackTransformID > 0) {
-                const playbackButton = new PlaybackButton(audioTrack);
-                playbackButton.addEventListener("click", async () => {
-                    stopCurrentAudioZone();
-                    app.audio.playClip(audioTrack.path, audioTrack.volume);
-                    await once(clip.spatializer.audio, "ended");
-                    playCurrentAudioZone();
-                });
+                const playbackButton = new PlaybackButton(audioTrack, clip, app.audio);
+                playbackButton.addEventListener("play", stopCurrentAudioZone);
+                playbackButton.addEventListener("stop", playCurrentAudioZone);
 
                 const transform = curTransforms.get(audioTrack.playbackTransformID);
                 transform.add(playbackButton);
+
+                const findStation = () => {
+                    let here = transform;
+                    while (here !== null) {
+                        for (let station of curStations.values()) {
+                            if (station.transformID === here.userData.id) {
+                                return here;
+                            }
+                        }
+                        here = here.parent;
+                    }
+                };
+
+                const stTransform = findStation();
+                if (stTransform && stTransform !== transform) {
+                    stTransform.attach(playbackButton);
+                    playbackButton.lookAt(P$1.set(0, 1.75, 0).add(stTransform.position));
+                }
             }
         }
+
+        app.menu.add(homeIcon);
 
         /////////// START ACTIVITY /////////////
         if (startID !== null) {
@@ -51554,25 +48923,45 @@ function setHistory(step, id, skipHistory, name) {
  * @param {any} selectedValue
  */
 
+const backButton = { name: "Back" };
+
 /**
  * @param {String|any[]} pathOrItems
+ * @param {boolean} showBackButton
  * @param {menuItemCallback} onClick
  */
-async function showMenu(pathOrItems, onClick) {
+async function showMenu(pathOrItems, showBackButton, onClick) {
     await app.fadeOut();
 
+    await app.skybox.setImage("images/cube2.jpg");
+    app.sun.position.set(1, 1, -1);
+    app.sun.lookAt(0, 0, 0);
+    app.showSkybox = true;
+
     app.menu.remove(...app.menu.children);
-    app.skybox.visible = false;
     app.stage.position.set(0, 0, 0);
 
     const items = isString(pathOrItems)
         ? await getObject(pathOrItems)
         : pathOrItems;
+
+    if (showBackButton) {
+        items.push(backButton);
+    }
+
     for (let i = 0; i < items.length; ++i) {
         const item = items[i];
-        const y = ((items.length - 1) / 2 - i) / 2 + 1.5;
-        addMenuItem(item, y, onClick);
+        const y = ((items.length - 1) / 2 - i) * 0.4 + 1.5;
+        addMenuItem(item, y, (item) => {
+            if (item === backButton) {
+                history.back();
+            }
+            else {
+                onClick(item);
+            }
+        });
     }
+
     await app.fadeIn();
 }
 
@@ -51586,10 +48975,14 @@ function addMenuItem(item, y, onClick) {
         name: item.name,
         disabled: item.enabled === false,
         textBgColor: item.enabled !== false
-            ? "#ffffff"
+            ? item === backButton
+                ? "#000000"
+                : "#ffffff"
             : "#a0a0a0",
         textColor: item.enabled !== false
-            ? "#000000"
+            ? item === backButton
+                ? "#ffffff"
+                : "#000000"
             : "#505050",
         textPadding: [15, 30]
     }, menuItemFont);
