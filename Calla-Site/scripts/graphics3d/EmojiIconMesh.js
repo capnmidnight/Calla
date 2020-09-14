@@ -15,7 +15,7 @@ export class EmojiIconMesh extends TextMesh {
         if (emoji) {
             this.textBgColor = "transparent";
             this.textColor = "#000000";
-            this.fontFamily = "Noto Color Emoji";
+            this.fontFamily = "Segoe UI Emoji";
             this.fontSize = 100;
 
             this.value = emoji;

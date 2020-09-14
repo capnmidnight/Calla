@@ -3,6 +3,11 @@
     src: url('../fonts/NotoColorEmoji.ttf') format('truetype');
 }
 
+@font-face {
+    font-family: "Segoe UI Emoji";
+    src: url('../fonts/seguiemj.ttf') format('truetype');
+}
+
 * {
     box-sizing: border-box;
     font-family: -apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif;

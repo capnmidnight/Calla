@@ -46,7 +46,7 @@ const menuItemFont = {
 };
 
 const emojiFont = {
-    fontFamily: "Noto Color Emoji",
+    fontFamily: "Segoe UI Emoji",
     fontSize: 100
 };
 
