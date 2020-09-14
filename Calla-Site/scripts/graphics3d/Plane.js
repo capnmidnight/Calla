@@ -10,10 +10,14 @@ plane.name = "PlaneGeom";
  * @param {number} sx
  * @param {number} sy
  * @param {number} sz
+ * @param {(import("three").MeshBasicMaterialParameters|import("three").MeshStandardMaterialParameters)?} materialOptions
  */
 export class Plane extends Mesh {
-    constructor(color, sx, sy, sz) {
-        super(cube, solid({ color, transparent: true, opacity: 1 }));
+    constructor(color, sx, sy, sz, materialOptions) {
+        super(cube, solid(Object.assign(
+            { transparent: true, opacity: 1 },
+            materialOptions,
+            { color })));
         this.scale.set(sx, sy, sz);
     }
 }

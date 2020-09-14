@@ -4,9 +4,10 @@ import { Image2DMesh } from "./Image2DMesh";
 export class TextMesh extends Image2DMesh {
     /**
      * @param {string} name
+ * @param {(import("three").MeshBasicMaterialParameters|import("three").MeshStandardMaterialParameters)?} materialOptions
      */
-    constructor(name) {
-        super(name);
+    constructor(name, materialOptions) {
+        super(name, materialOptions);
         this.textImage = new TextImage();
         this.setImage(this.textImage.canvas);
         this.textImage.addEventListener("redrawn", () => {
