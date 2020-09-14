@@ -1835,6 +1835,7 @@ export const buttons = g(
     repeatSingleButton,
     upwardsButton,
     downwardsButton,
+    playButton,
     pauseButton,
     reverseButton,
     ejectButton,
