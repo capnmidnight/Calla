@@ -13,7 +13,16 @@ export function solid(opts) {
         .join(",");
 
     if (!colors.has(key)) {
-        if (opts.lit !== false) {
+        const lit = opts.lit;
+        if ("lit" in opts) {
+            delete opts.lit;
+        }
+
+        if ("name" in opts) {
+            delete opts.name;
+        }
+
+        if (lit !== false) {
             colors.set(key, new MeshStandardMaterial(opts));
         }
         else {

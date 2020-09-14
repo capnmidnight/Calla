@@ -12,6 +12,9 @@ export class Image2DMesh extends TexturedMesh {
             { transparent: true, opacity: 1 },
             materialOptions,
             { name })));
-        this.name = name;
+
+        if (name) {
+            this.name = name;
+        }
     }
 }
