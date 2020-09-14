@@ -1,13 +1,13 @@
 export class UISystem {
     /**
-     * @param {import("../input/EventSystem").EventSystem} eventSystem
+     * @param {import("./EventSystem").EventSystem} eventSystem
      */
     constructor(eventSystem) {
         /** @type {WeakMap<import("three").Object3D, import("three").Vector3>} */
         const scales = new WeakMap();
 
         /**
-         * @param {import("../input/EventSystem").EventSystemEvent} evt
+         * @param {import("./EventSystem").EventSystemEvent} evt
          */
         const onEnter = (evt) => {
             if (!evt.hit.object.disabled) {
@@ -19,7 +19,7 @@ export class UISystem {
         };
 
         /**
-         * @param {import("../input/EventSystem").EventSystemEvent} evt
+         * @param {import("./EventSystem").EventSystemEvent} evt
          */
         const onExit = (evt) => {
             if (!evt.hit.object.disabled) {

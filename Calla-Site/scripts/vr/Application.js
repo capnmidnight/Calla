@@ -20,7 +20,7 @@ import { ScreenPointerControls } from "../input/ScreenPointerControls";
 import { Stage } from "../input/Stage";
 import { ThreeJSTimer } from "../timers/ThreeJSTimer";
 import { ScreenControl } from "./ScreenControl";
-import { UISystem } from "./UISystem";
+import { UISystem } from "../input/UISystem";
 
 const visibleBackground = new Color(0x606060);
 const invisibleBackground = new Color(0x000000);
