@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Unicode-standardized pictograms.
  **/
 export class Emoji {
@@ -27,6 +27,7 @@ export class Emoji {
  * @param {string} v - a Unicode sequence.
  * @param {string} d - an English text description of the pictogram.
  * @param {any} [o=null] - an optional set of properties to set on the Emoji object.
+ * @returns {Emoji}
  */
 export function e(v, d, o = null) {
     return Object.assign(new Emoji(v, d), o);
