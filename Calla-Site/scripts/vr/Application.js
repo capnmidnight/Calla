@@ -104,7 +104,7 @@ export class Application extends EventBase {
 
         this.cursors = new CursorControl(this.renderer.domElement);
 
-        this.controls = new ScreenPointerControls(this.renderer.domElement, this.cursors);
+        this.controls = new ScreenPointerControls(this.renderer.domElement);
 
         this.cameraControl = new CameraControl(this.camera, this.stage, this.controls, this.cursors);
 

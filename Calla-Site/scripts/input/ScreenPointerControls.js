@@ -66,9 +66,8 @@ const MAX_DRAG_DISTANCE = 5,
 export class ScreenPointerControls extends EventBase {
     /**
      * @param {Element} element the element from which to receive pointer events
-     * @param {import("./CursorControl").CursorControl} cursors
      */
-    constructor(element, cursors) {
+    constructor(element) {
         super();
 
         /** @type {Map<Number, Pointer>} */
@@ -117,7 +116,7 @@ export class ScreenPointerControls extends EventBase {
             if (last) {
                 pointer.dragDistance = last.dragDistance;
 
-                if (cursors.isPointerLocked) {
+                if (document.pointerLockElement) {
                     pointer.x = last.x + pointer.dx;
                     pointer.y = last.y + pointer.dy;
                 }
