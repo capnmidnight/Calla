@@ -59,9 +59,6 @@ export class EventSystem extends EventBase {
                 : camera;
 
             raycaster.setFromCamera(pointer, cam);
-            cursor.position.copy(raycaster.ray.direction);
-            cursor.position.multiplyScalar(2);
-            cursor.position.add(raycaster.ray.origin);
 
             arrayClear(hits);
             raycaster.intersectObject(inputLayer, true, hits);
@@ -73,6 +70,13 @@ export class EventSystem extends EventBase {
                     curHit = hit;
                 }
             }
+
+            cursor.position.copy(raycaster.ray.direction);
+            cursor.position.multiplyScalar(curHit && curHit.distance || 2);
+            if (curHit) {
+                cursor.position.add(curHit.face.normal.multiplyScalar(0.01));
+            }
+            cursor.position.add(raycaster.ray.origin);
 
             return curHit;
         };
