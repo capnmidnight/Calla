@@ -7,12 +7,11 @@ import { setRightUpFwdPos } from "../calla/math/setRightUpFwd";
 import { splitProgress } from "../calla/progress";
 import { isString } from "../calla/typeChecks";
 import { loadFont, makeFont } from "../graphics2d/fonts";
-import { DebugObject } from "../graphics3d/DebugObject";
 import { TextMesh } from "../graphics3d/TextMesh";
 import { Application } from "../vr/Application";
-import { Sign } from "./Sign";
 import { NavIcon } from "./NavIcon";
 import { PlaybackButton } from "./PlaybackButton";
+import { Sign } from "./Sign";
 
 const R = new Vector3();
 const U = new Vector3();
@@ -256,16 +255,31 @@ async function showActivity(activityID, skipHistory = false) {
             }
 
             if (audioTrack.playbackTransformID > 0) {
-                const playbackButton = new PlaybackButton(audioTrack);
-                playbackButton.addEventListener("click", async () => {
-                    stopCurrentAudioZone();
-                    app.audio.playClip(audioTrack.path, audioTrack.volume)
-                    await once(clip.spatializer.audio, "ended");
-                    playCurrentAudioZone();
-                });
+                const playbackButton = new PlaybackButton(audioTrack, clip, app.audio);
+                playbackButton.addEventListener("play", stopCurrentAudioZone);
+                playbackButton.addEventListener("stop", playCurrentAudioZone);
 
                 const transform = curTransforms.get(audioTrack.playbackTransformID);
                 transform.add(playbackButton);
+
+                const findStation = () => {
+                    let here = transform;
+                    while (here !== null) {
+                        for (let station of curStations.values()) {
+                            if (station.transformID === here.userData.id) {
+                                return here;
+                            }
+                        }
+                        here = here.parent;
+                    }
+                };
+
+                const stTransform = findStation();
+                if (stTransform && stTransform !== transform) {
+                    stTransform.updateMatrixWorld(true);
+                    stTransform.attach(playbackButton);
+                    playbackButton.lookAt(P.set(0, 1.75, 0).add(stTransform.position));
+                }
             }
         }
 
