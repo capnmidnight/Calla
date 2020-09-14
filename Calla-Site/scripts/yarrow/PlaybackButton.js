@@ -1,4 +1,4 @@
-import { DoubleSide } from "three/src/constants";
+import { FrontSide } from "three/src/constants";
 import { Object3D } from "three/src/core/Object3D";
 import { once } from "../calla/events/once";
 import { pauseButton, playButton } from "../emoji/emojis";
@@ -13,7 +13,7 @@ const buttonStyle = {
 
 const buttonMatOpts = {
     lit: false,
-    side: DoubleSide
+    side: FrontSide
 };
 
 /** @type {TextMesh} */
