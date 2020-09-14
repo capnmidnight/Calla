@@ -43,6 +43,10 @@ const menuItemFont = {
     fontSize: 100
 };
 
+const emojiFont = {
+    fontFamily: "Noto Color Emoji",
+    fontSize: 100
+};
 /**
  * @callback viewCallback
  * @param {number} id
@@ -65,7 +69,9 @@ app.addEventListener("sceneclearing", () => {
 
 app.addEventListener("started", async () => {
 
-    await loadFont(makeFont(menuItemFont));
+    await Promise.all([
+        loadFont(makeFont(menuItemFont)),
+        loadFont(makeFont(emojiFont))]);
 
     if (window.location.search.length === 0) {
         showMainMenu();
