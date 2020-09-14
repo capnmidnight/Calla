@@ -69,7 +69,7 @@ export class EventSystem extends EventBase {
             /** @type {import("three").Intersection} */
             let curHit = null;
             for (let hit of hits) {
-                if (hit.object) {
+                if (hit.object && hit.object.visible) {
                     curHit = hit;
                 }
             }
