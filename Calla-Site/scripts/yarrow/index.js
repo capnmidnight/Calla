@@ -128,18 +128,18 @@ async function playCurrentAudioZone() {
 
 async function showMainMenu(_, skipHistory = false) {
     setHistory(0, null, skipHistory, "Main");
-    await showMenu("VR/Languages", (language) => showLanguage(language.id));
+    await showMenu("VR/Languages", false, (language) => showLanguage(language.id));
 }
 
 async function showLanguage(languageID, skipHistory = false) {
     setHistory(1, languageID, skipHistory, "Language");
-    await showMenu(`VR/Language/${languageID}/Lessons`, (lesson) => showLesson(lesson.id));
+    await showMenu(`VR/Language/${languageID}/Lessons`, true, (lesson) => showLesson(lesson.id));
 }
 
 async function showLesson(lessonID, skipHistory = false) {
     setHistory(2, lessonID, skipHistory, "Lesson");
     app.clearScene();
-    await showMenu(`VR/Lesson/${lessonID}/Activities`, (activity) => showActivity(activity.id));
+    await showMenu(`VR/Lesson/${lessonID}/Activities`, true, (activity) => showActivity(activity.id));
 }
 
 async function showActivity(activityID, skipHistory = false) {
@@ -147,7 +147,7 @@ async function showActivity(activityID, skipHistory = false) {
         showMenu([{
             id: activityID,
             name: "Start Activity"
-        }], async (activity) => {
+        }], false, async (activity) => {
             await once(app.audio, "audioready");
             showActivity(activity.id, skipHistory);
         });
@@ -345,11 +345,14 @@ function setHistory(step, id, skipHistory, name) {
  * @param {any} selectedValue
  */
 
+const backButton = { name: "Back" };
+
 /**
  * @param {String|any[]} pathOrItems
+ * @param {boolean} showBackButton
  * @param {menuItemCallback} onClick
  */
-async function showMenu(pathOrItems, onClick) {
+async function showMenu(pathOrItems, showBackButton, onClick) {
     await app.fadeOut();
 
     await app.skybox.setImage("images/cube2.jpg");
@@ -363,10 +366,22 @@ async function showMenu(pathOrItems, onClick) {
     const items = isString(pathOrItems)
         ? await getObject(pathOrItems)
         : pathOrItems;
+
+    if (showBackButton) {
+        items.push(backButton);
+    }
+
     for (let i = 0; i < items.length; ++i) {
         const item = items[i];
         const y = ((items.length - 1) / 2 - i) / 2 + 1.5;
-        addMenuItem(item, y, onClick);
+        addMenuItem(item, y, (item) => {
+            if (item === backButton) {
+                history.back();
+            }
+            else {
+                onClick(item);
+            }
+        });
     }
 
     await app.fadeIn();
@@ -382,10 +397,14 @@ function addMenuItem(item, y, onClick) {
         name: item.name,
         disabled: item.enabled === false,
         textBgColor: item.enabled !== false
-            ? "#ffffff"
+            ? item === backButton
+                ? "#000000"
+                : "#ffffff"
             : "#a0a0a0",
         textColor: item.enabled !== false
-            ? "#000000"
+            ? item === backButton
+                ? "#ffffff"
+                : "#000000"
             : "#505050",
         textPadding: [15, 30]
     }, menuItemFont);
