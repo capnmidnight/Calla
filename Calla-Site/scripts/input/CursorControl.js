@@ -16,7 +16,6 @@ export class CursorControl {
 
         canvas.addEventListener("click", (evt) => {
             if (this.allowPointerLock
-                && evt.pointerType === "mouse"
                 && !this.isPointerLocked) {
                 this.lockPointer();
             }
