@@ -1,7 +1,27 @@
+import { FrontSide } from "three/src/constants";
 import { Object3D } from "three/src/core/Object3D";
-import { DebugObject } from "../graphics3d/DebugObject";
+import { upArrow } from "../emoji/emojis";
+import { TextMesh } from "../graphics3d/TextMesh";
+;
 
-const marker = new DebugObject(0xff0000);
+const buttonStyle = {
+    textBgColor: "transparent",
+    textColor: "#000000",
+    fontFamily: "Roboto",
+    fontSize: 100
+};
+
+const buttonMatOpts = {
+    lit: false,
+    side: FrontSide
+};
+
+/** @type {TextMesh} */
+const navButton = Object.assign(
+    new TextMesh("navButton", buttonMatOpts),
+    buttonStyle, {
+    value: upArrow.value
+});
 
 export class NavIcon extends Object3D {
     /**
@@ -19,13 +39,14 @@ export class NavIcon extends Object3D {
         this.position.multiplyScalar(1.5);
         this.position.y += 1;
 
-        const icon = marker.clone();
+        const icon = navButton.clone();
         const fwdClick = (evt) => this.dispatchEvent(evt);
         icon.addEventListener("click", fwdClick);
         icon.children.forEach(c => c.addEventListener("click", fwdClick));
         icon.addEventListener("drag", console.log);
-
         this.add(icon);
 
+        this.lookAt(0, 1.75, 0);
+        this.scale.setScalar(0.5);
     }
 }
