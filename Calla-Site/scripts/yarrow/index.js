@@ -276,7 +276,6 @@ async function showActivity(activityID, skipHistory = false) {
 
                 const stTransform = findStation();
                 if (stTransform && stTransform !== transform) {
-                    stTransform.updateMatrixWorld(true);
                     stTransform.attach(playbackButton);
                     playbackButton.lookAt(P.set(0, 1.75, 0).add(stTransform.position));
                 }
