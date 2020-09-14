@@ -90,27 +90,18 @@ export class ScreenPointerControls extends EventBase {
 
             evt.buttons = pointer.buttons;
 
+            evt.x = pointer.x;
+            evt.y = pointer.y;
+
+            evt.u = unproject(project(evt.x, 0, element.clientWidth), -1, 1);
+            evt.v = unproject(project(evt.y, 0, element.clientHeight), -1, 1);
+
             evt.dx = pointer.dx;
             evt.dy = pointer.dy;
             evt.dz = dz;
 
             evt.du = 2 * evt.dx / element.clientWidth;
             evt.dv = 2 * evt.dy / element.clientHeight;
-
-            if (cursors.isPointerLocked) {
-                evt.u = 0;
-                evt.v = 0;
-
-                evt.x = element.clientWidth / 2;
-                evt.y = element.clientHeight / 2;
-            }
-            else {
-                evt.x = pointer.x;
-                evt.y = pointer.y;
-
-                evt.u = unproject(project(evt.x, 0, element.clientWidth), -1, 1);
-                evt.v = unproject(project(evt.y, 0, element.clientHeight), -1, 1);
-            }
 
             evt.dragDistance = pointer.dragDistance;
             this.dispatchEvent(evt);
