@@ -389,7 +389,7 @@ async function showMenu(pathOrItems, showBackButton, onClick) {
 
     for (let i = 0; i < items.length; ++i) {
         const item = items[i];
-        const y = ((items.length - 1) / 2 - i) / 2 + 1.5;
+        const y = ((items.length - 1) / 2 - i) * 0.4 + 1.5;
         addMenuItem(item, y, (item) => {
             if (item === backButton) {
                 history.back();

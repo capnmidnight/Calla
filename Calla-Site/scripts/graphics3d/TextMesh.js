@@ -11,7 +11,7 @@ export class TextMesh extends Image2DMesh {
         this.textImage = new TextImage();
         this.setImage(this.textImage.canvas);
         this.textImage.addEventListener("redrawn", () => {
-            this.scale.set(this.textImage.width / 300, this.textImage.height / 300, 1);
+            this.scale.set(this.textImage.width / 400, this.textImage.height / 400, 1);
             this.updateTexture();
         });
     }
