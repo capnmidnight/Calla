@@ -736,57 +736,158 @@ export const love = gg(
     redHeart,
 });
 
+export const angerSymbol = e("\u{1F4A2}", "Anger Symbol");
+export const bomb = e("\u{1F4A3}", "Bomb");
+export const zzz = e("\u{1F4A4}", "Zzz");
+export const collision = e("\u{1F4A5}", "Collision");
+export const sweatDroplets = e("\u{1F4A6}", "Sweat Droplets");
+export const dashingAway = e("\u{1F4A8}", "Dashing Away");
+export const dizzy = e("\u{1F4AB}", "Dizzy");
+export const speechBalloon = e("\u{1F4AC}", "Speech Balloon");
+export const thoughtBalloon = e("\u{1F4AD}", "Thought Balloon");
+export const hundredPoints = e("\u{1F4AF}", "Hundred Points");
+export const hole = e("\u{1F573}\u{FE0F}", "Hole");
+export const leftSpeechBubble = e("\u{1F5E8}\u{FE0F}", "Left Speech Bubble");
+export const rightSpeechBubble = e("\u{1F5E9}\u{FE0F}", "Right Speech Bubble");
+export const conversationBubbles2 = e("\u{1F5EA}\u{FE0F}", "Conversation Bubbles 2");
+export const conversationBubbles3 = e("\u{1F5EB}\u{FE0F}", "Conversation Bubbles 3");
+export const leftThoughtBubble = e("\u{1F5EC}\u{FE0F}", "Left Thought Bubble");
+export const rightThoughtBubble = e("\u{1F5ED}\u{FE0F}", "Right Thought Bubble");
+export const leftAngerBubble = e("\u{1F5EE}\u{FE0F}", "Left Anger Bubble");
+export const rightAngerBubble = e("\u{1F5EF}\u{FE0F}", "Right Anger Bubble");
+export const angerBubble = e("\u{1F5F0}\u{FE0F}", "Anger Bubble");
+export const angerBubbleLightningBolt = e("\u{1F5F1}\u{FE0F}", "Anger Bubble Lightning");
+export const lightningBolt = e("\u{1F5F2}\u{FE0F}", "Lightning Bolt");
+
 export const cartoon = g(
     "Cartoon", "Cartoon symbols",
-    e("\u{1F4A2}", "Anger Symbol"),
-    e("\u{1F4A3}", "Bomb"),
-    e("\u{1F4A4}", "Zzz"),
-    e("\u{1F4A5}", "Collision"),
-    e("\u{1F4A6}", "Sweat Droplets"),
-    e("\u{1F4A8}", "Dashing Away"),
-    e("\u{1F4AB}", "Dizzy"),
-    e("\u{1F4AC}", "Speech Balloon"),
-    e("\u{1F4AD}", "Thought Balloon"),
-    e("\u{1F4AF}", "Hundred Points"),
-    e("\u{1F573}\u{FE0F}", "Hole"),
-    e("\u{1F5E8}\u{FE0F}", "Left Speech Bubble"),
-    e("\u{1F5EF}\u{FE0F}", "Right Anger Bubble"));
+    angerSymbol,
+    bomb,
+    zzz,
+    collision,
+    sweatDroplets,
+    dashingAway,
+    dizzy,
+    speechBalloon,
+    thoughtBalloon,
+    hundredPoints,
+    hole,
+    leftSpeechBubble,
+    rightSpeechBubble,
+    conversationBubbles2,
+    conversationBubbles3,
+    leftThoughtBubble,
+    rightThoughtBubble,
+    leftAngerBubble,
+    rightAngerBubble,
+    angerBubble,
+    angerBubbleLightningBolt,
+    lightningBolt);
 
+export const backhandIndexPointingUp = e("\u{1F446}", "Backhand Index Pointing Up");
+export const backhandIndexPointingDown = e("\u{1F447}", "Backhand Index Pointing Down");
+export const backhandIndexPointingLeft = e("\u{1F448}", "Backhand Index Pointing Left");
+export const backhandIndexPointingRight = e("\u{1F449}", "Backhand Index Pointing Right");
+export const oncomingFist = e("\u{1F44A}", "Oncoming Fist");
+export const wavingHand = e("\u{1F44B}", "Waving Hand");
+export const okHand = e("\u{1F58F}", "OK Hand");
+export const thumbsUp = e("\u{1F44D}", "Thumbs Up");
+export const thumbsDown = e("\u{1F44E}", "Thumbs Down");
+export const clappingHands = e("\u{1F44F}", "Clapping Hands");
+export const openHands = e("\u{1F450}", "Open Hands");
+export const nailPolish = e("\u{1F485}", "Nail Polish");
+export const handsWithFingersSplayed = e("\u{1F590}\u{FE0F}", "Hand with Fingers Splayed");
+export const handsWithFingersSplayed2 = e("\u{1F591}\u{FE0F}", "Hand with Fingers Splayed 2");
+export const handsWithFingersSplayed2 = e("\u{1F591}\u{FE0F}", "Hand with Fingers Splayed 2");
+export const thumbsUp2 = e("\u{1F592}", "Thumbs Up 2");
+export const thumbsDown2 = e("\u{1F593}", "Thumbs Down 2");
+export const peaceFingers = e("\u{1F594}", "Peace Fingers");
+export const middleFinger = e("\u{1F595}", "Middle Finger");
+export const vulcanSalute = e("\u{1F596}", "Vulcan Salute");
+export const handPointingDown = e("\u{1F597}", "Hand Pointing Down");
+export const handPointingLeft = e("\u{1F598}", "Hand Pointing Left");
+export const handPointingRight = e("\u{1F599}", "Hand Pointing Right");
+export const handPointingLeft2 = e("\u{1F59A}", "Hand Pointing Left 2");
+export const handPointingRight2 = e("\u{1F59B}", "Hand Pointing Right 2");
+export const indexPointingLeft = e("\u{1F59C}", "Index Pointing Left");
+export const indexPointingRight = e("\u{1F59D}", "Index Pointing Right");
+export const indexPointingUp = e("\u{1F59E}", "Index Pointing Up");
+export const indexPointingDown = e("\u{1F59F}", "Index Pointing Down");
+export const indexPointingUp2 = e("\u{1F5A0}", "Index Pointing Up 2");
+export const indexPointingDown2 = e("\u{1F5A1}", "Index Pointing Down 2");
+export const indexPointingUp3 = e("\u{1F5A2}", "Index Pointing Up 3");
+export const indexPointingDown3 = e("\u{1F5A3}", "Index Pointing Down 3");
+export const raisingHands = e("\u{1F64C}", "Raising Hands");
+export const foldedHands = e("\u{1F64F}", "Folded Hands");
+//export const pinchedFingers = e("\u{1F90C}", "Pinched Fingers");
+export const pinchingHand = e("\u{1F90F}", "Pinching Hand");
+export const signOfTheHorns = e("\u{1F918}", "Sign of the Horns");
+export const callMeHand = e("\u{1F919}", "Call Me Hand");
+export const rasiedBackOfHand = e("\u{1F91A}", "Raised Back of Hand");
+export const leftFacingFist = e("\u{1F91B}", "Left-Facing Fist");
+export const rightFacingFist = e("\u{1F91C}", "Right-Facing Fist");
+export const handshake = e("\u{1F91D}", "Handshake");
+export const crossedFingers = e("\u{1F91E}", "Crossed Fingers");
+export const loveYouGesture = e("\u{1F91F}", "Love-You Gesture");
+export const palmsUpTogether = e("\u{1F932}", "Palms Up Together");
+export const indexPointingUp = e("\u{261D}\u{FE0F}", "Index Pointing Up");
+export const raisedFist = e("\u{270A}", "Raised Fist");
+export const raisedHand = e("\u{270B}", "Raised Hand");
+export const victoryHand = e("\u{270C}\u{FE0F}", "Victory Hand");
+export const writingHand = e("\u{270D}\u{FE0F}", "Writing Hand");
 export const hands = g(
     "Hands", "Hands pointing at things",
-    e("\u{1F446}", "Backhand Index Pointing Up"),
-    e("\u{1F447}", "Backhand Index Pointing Down"),
-    e("\u{1F448}", "Backhand Index Pointing Left"),
-    e("\u{1F449}", "Backhand Index Pointing Right"),
-    e("\u{1F44A}", "Oncoming Fist"),
-    e("\u{1F44B}", "Waving Hand"),
-    e("\u{1F44C}", "OK Hand"),
-    e("\u{1F44D}", "Thumbs Up"),
-    e("\u{1F44E}", "Thumbs Down"),
-    e("\u{1F44F}", "Clapping Hands"),
-    e("\u{1F450}", "Open Hands"),
-    e("\u{1F485}", "Nail Polish"),
-    e("\u{1F590}\u{FE0F}", "Hand with Fingers Splayed"),
-    e("\u{1F595}", "Middle Finger"),
-    e("\u{1F596}", "Vulcan Salute"),
-    e("\u{1F64C}", "Raising Hands"),
-    e("\u{1F64F}", "Folded Hands"),
-    //e("\u{1F90C}", "Pinched Fingers"),
-    e("\u{1F90F}", "Pinching Hand"),
-    e("\u{1F918}", "Sign of the Horns"),
-    e("\u{1F919}", "Call Me Hand"),
-    e("\u{1F91A}", "Raised Back of Hand"),
-    e("\u{1F91B}", "Left-Facing Fist"),
-    e("\u{1F91C}", "Right-Facing Fist"),
-    e("\u{1F91D}", "Handshake"),
-    e("\u{1F91E}", "Crossed Fingers"),
-    e("\u{1F91F}", "Love-You Gesture"),
-    e("\u{1F932}", "Palms Up Together"),
-    e("\u{261D}\u{FE0F}", "Index Pointing Up"),
-    e("\u{270A}", "Raised Fist"),
-    e("\u{270B}", "Raised Hand"),
-    e("\u{270C}\u{FE0F}", "Victory Hand"),
-    e("\u{270D}\u{FE0F}", "Writing Hand"));
+    backhandIndexPointingUp,
+    backhandIndexPointingDown,
+    backhandIndexPointingLeft,
+    backhandIndexPointingRight,
+    oncomingFist,
+    wavingHand,
+    okHand,
+    thumbsUp,
+    thumbsDown,
+    clappingHands,
+    openHands,
+    nailPolish,
+    handsWithFingersSplayed,
+    handsWithFingersSplayed2,
+    handsWithFingersSplayed2,
+    thumbsUp2,
+    thumbsDown2,
+    peaceFingers,
+    middleFinger,
+    vulcanSalute,
+    handPointingDown,
+    handPointingLeft,
+    handPointingRight,
+    handPointingLeft2,
+    handPointingRight2,
+    indexPointingLeft,
+    indexPointingRight,
+    indexPointingUp,
+    indexPointingDown,
+    indexPointingUp2,
+    indexPointingDown2,
+    indexPointingUp3,
+    indexPointingDown3,
+    raisingHands,
+    foldedHands,
+    //pinchedFingers,
+    pinchingHand,
+    signOfTheHorns,
+    callMeHand,
+    rasiedBackOfHand,
+    leftFacingFist,
+    rightFacingFist,
+    handshake,
+    crossedFingers,
+    loveYouGesture,
+    palmsUpTogether,
+    indexPointingUp,
+    raisedFist,
+    raisedHand,
+    victoryHand,
+    writingHand);
 
 export const bodyParts = g(
     "Body Parts", "General body parts",
@@ -1591,27 +1692,42 @@ export const clocks = g(
     e("\u{231B}", "Hourglass Done"),
     e("\u{23F3}", "Hourglass Not Done"));
 
+export const clockwiseVerticalArrows = e("\u{1F503}\u{FE0F}", "Clockwise Vertical Arrows");
+export const counterclockwiseArrowsButton = e("\u{1F504}\u{FE0F}", "Counterclockwise Arrows Button");
+export const leftRightArrow = e("\u{2194}\u{FE0F}", "Left-Right Arrow");
+export const upDownArrow = e("\u{2195}\u{FE0F}", "Up-Down Arrow");
+export const upLeftArrow = e("\u{2196}\u{FE0F}", "Up-Left Arrow");
+export const upRightArrow = e("\u{2197}\u{FE0F}", "Up-Right Arrow");
 export const downRightArrow = e("\u{2198}", "Down-Right Arrow");
 export const downRightArrowText = e("\u{2198}\u{FE0E}", "Down-Right Arrow");
 export const downRightArrowEmoji = e("\u{2198}\u{FE0F}", "Down-Right Arrow");
+export const downLeftArrow = e("\u{2199}\u{FE0F}", "Down-Left Arrow");
+export const rightArrowCurvingLeft = e("\u{21A9}\u{FE0F}", "Right Arrow Curving Left");
+export const leftArrowCurvingRight = e("\u{21AA}\u{FE0F}", "Left Arrow Curving Right");
+export const rightArrow = e("\u{27A1}\u{FE0F}", "Right Arrow");
+export const rightArrowCurvingUp = e("\u{2934}\u{FE0F}", "Right Arrow Curving Up");
+export const rightArrowCurvingDown = e("\u{2935}\u{FE0F}", "Right Arrow Curving Down");
+export const leftArrow = e("\u{2B05}\u{FE0F}", "Left Arrow");
+export const upArrow = e("\u{2B06}\u{FE0F}", "Up Arrow");
+export const downArrow = e("\u{2B07}\u{FE0F}", "Down Arrow");
 export const arrows = g(
     "Arrows", "Arrows pointing in different directions",
-    e("\u{1F503}\u{FE0F}", "Clockwise Vertical Arrows"),
-    e("\u{1F504}\u{FE0F}", "Counterclockwise Arrows Button"),
-    e("\u{2194}\u{FE0F}", "Left-Right Arrow"),
-    e("\u{2195}\u{FE0F}", "Up-Down Arrow"),
-    e("\u{2196}\u{FE0F}", "Up-Left Arrow"),
-    e("\u{2197}\u{FE0F}", "Up-Right Arrow"),
+    clockwiseVerticalArrows,
+    counterclockwiseArrowsButton,
+    leftRightArrow,
+    upDownArrow,
+    upLeftArrow,
+    upRightArrow,
     downRightArrowEmoji,
-    e("\u{2199}\u{FE0F}", "Down-Left Arrow"),
-    e("\u{21A9}\u{FE0F}", "Right Arrow Curving Left"),
-    e("\u{21AA}\u{FE0F}", "Left Arrow Curving Right"),
-    e("\u{27A1}\u{FE0F}", "Right Arrow"),
-    e("\u{2934}\u{FE0F}", "Right Arrow Curving Up"),
-    e("\u{2935}\u{FE0F}", "Right Arrow Curving Down"),
-    e("\u{2B05}\u{FE0F}", "Left Arrow"),
-    e("\u{2B06}\u{FE0F}", "Up Arrow"),
-    e("\u{2B07}\u{FE0F}", "Down Arrow"));
+    downLeftArrow,
+    rightArrowCurvingLeft,
+    leftArrowCurvingRight,
+    rightArrow,
+    rightArrowCurvingUp,
+    rightArrowCurvingDown,
+    leftArrow,
+    upArrow,
+    downArrow);
 
 export const shapes = g(
     "Shapes", "Colored shapes",
@@ -1651,6 +1767,28 @@ export const shapes = g(
     e("\u{2B50}", "Star"),
     e("\u{1F4A0}", "Diamond with a Dot"));
 
+export const clearButton = e("\u{1F191}", "CL Button");
+export const coolButton = e("\u{1F192}", "Cool Button");
+export const freeButton = e("\u{1F193}", "Free Button");
+export const idButton = e("\u{1F194}", "ID Button");
+export const newButton = e("\u{1F195}", "New Button");
+export const ngButton = e("\u{1F196}", "NG Button");
+export const okButton = e("\u{1F197}", "OK Button");
+export const sosButton = e("\u{1F198}", "SOS Button");
+export const upButton = e("\u{1F199}", "Up! Button");
+export const vsButton = e("\u{1F19A}", "Vs Button");
+export const radioButton = e("\u{1F518}", "Radio Button");
+export const backArrow = e("\u{1F519}", "Back Arrow");
+export const endArrow = e("\u{1F51A}", "End Arrow");
+export const onArrow = e("\u{1F51B}", "On! Arrow");
+export const soonArrow = e("\u{1F51C}", "Soon Arrow");
+export const topArrow = e("\u{1F51D}", "Top Arrow");
+export const checkBoxWithCheck = e("\u{2611}\u{FE0F}", "Check Box with Check");
+export const inputLatinUppercase = e("\u{1F520}", "Input Latin Uppercase");
+export const inputLatinLowercase = e("\u{1F521}", "Input Latin Lowercase");
+export const inputNumbers = e("\u{1F522}", "Input Numbers");
+export const inputSymbols = e("\u{1F523}", "Input Symbols");
+export const inputLatinLetters = e("\u{1F524}", "Input Latin Letters");
 export const shuffleTracksButton = e("\u{1F500}", "Shuffle Tracks Button");
 export const repeatButton = e("\u{1F501}", "Repeat Button");
 export const repeatSingleButton = e("\u{1F502}", "Repeat Single Button");
@@ -1669,32 +1807,30 @@ export const playOrPauseButton = e("\u{23EF}\u{FE0F}", "Play or Pause Button");
 export const pauseButton = e("\u{23F8}\u{FE0F}", "Pause Button");
 export const stopButton = e("\u{23F9}\u{FE0F}", "Stop Button");
 export const recordButton = e("\u{23FA}\u{FE0F}", "Record Button");
-
-
 export const buttons = g(
     "Buttons", "Buttons",
-    e("\u{1F191}", "CL Button"),
-    e("\u{1F192}", "Cool Button"),
-    e("\u{1F193}", "Free Button"),
-    e("\u{1F194}", "ID Button"),
-    e("\u{1F195}", "New Button"),
-    e("\u{1F196}", "NG Button"),
-    e("\u{1F197}", "OK Button"),
-    e("\u{1F198}", "SOS Button"),
-    e("\u{1F199}", "Up! Button"),
-    e("\u{1F19A}", "Vs Button"),
-    e("\u{1F518}", "Radio Button"),
-    e("\u{1F519}", "Back Arrow"),
-    e("\u{1F51A}", "End Arrow"),
-    e("\u{1F51B}", "On! Arrow"),
-    e("\u{1F51C}", "Soon Arrow"),
-    e("\u{1F51D}", "Top Arrow"),
-    e("\u{2611}\u{FE0F}", "Check Box with Check"),
-    e("\u{1F520}", "Input Latin Uppercase"),
-    e("\u{1F521}", "Input Latin Lowercase"),
-    e("\u{1F522}", "Input Numbers"),
-    e("\u{1F523}", "Input Symbols"),
-    e("\u{1F524}", "Input Latin Letters"),
+    clearButton,
+    coolButton,
+    freeButton,
+    idButton,
+    newButton,
+    ngButton,
+    okButton,
+    sosButton,
+    upButton,
+    vsButton,
+    radioButton,
+    backArrow,
+    endArrow,
+    onArrow,
+    soonArrow,
+    topArrow,
+    checkBoxWithCheck,
+    inputLatinUppercase,
+    inputLatinLowercase,
+    inputNumbers,
+    inputSymbols,
+    inputLatinLetters,
     shuffleTracksButton,
     repeatButton,
     repeatSingleButton,
