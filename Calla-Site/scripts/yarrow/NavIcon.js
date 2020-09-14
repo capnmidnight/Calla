@@ -2,7 +2,7 @@ import { Object3D } from "three/src/core/Object3D";
 import { upArrow } from "../emoji/emojis";
 import { EmojiIconMesh } from "../graphics3d/EmojiIconMesh";
 
-const navButton = new EmojiIconMesh("navButton", upArrow);
+const navButton = new EmojiIconMesh("navButton", upArrow.value);
 
 export class NavIcon extends Object3D {
     /**

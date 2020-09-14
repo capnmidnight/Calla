@@ -15,10 +15,10 @@ export class EmojiIconMesh extends TextMesh {
         if (emoji) {
             this.textBgColor = "transparent";
             this.textColor = "#000000";
-            this.fontFamily = "Roboto";
+            this.fontFamily = "Noto Color Emoji";
             this.fontSize = 100;
 
-            this.value = emoji.value;
+            this.value = emoji;
         }
     }
 }

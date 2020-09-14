@@ -1,10 +1,10 @@
 import { Object3D } from "three/src/core/Object3D";
 import { once } from "../calla/events/once";
-import { pauseButton, playButton } from "../emoji/emojis";
+import { pauseButton, playButton, speakerHighVolume, speakerLowVolume } from "../emoji/emojis";
 import { EmojiIconMesh } from "../graphics3d/EmojiIconMesh";
 
-const playButtonMesh = new EmojiIconMesh("playbackButtonPlay", playButton);
-const pauseButtonMesh = new EmojiIconMesh("playbackButtonPause", pauseButton);
+const playButtonMesh = new EmojiIconMesh("playbackButtonPlay", playButton.value + speakerLowVolume.value);
+const pauseButtonMesh = new EmojiIconMesh("playbackButtonPause", pauseButton.value + speakerHighVolume.value);
 
 const playEvt = { type: "play" };
 const stopEvt = { type: "stop" };
