@@ -9,6 +9,7 @@ import { MouseButtons } from "./MouseButton";
 
 const NEUTRAL_POSITION_RESET_QUAT = new Quaternion().setFromEuler(new Euler(Math.PI / 2, 0, 0));
 const FLIP_IMAGE_QUAT = new Quaternion().setFromEuler(new Euler(0, 0, Math.PI));
+const motion = new Vector2();
 
 /// <summary>
 /// The mouse is not as sensitive as the motion controllers, so we have to bump up the
@@ -142,10 +143,9 @@ export class CameraControl extends EventBase {
             lastT = t;
             lastEvt = evt;
 
-            if (evt.pointerType === "mouse"
-                && this.controlMode !== Mode.MouseScreenEdge) {
+            if (evt.pointerType === "mouse") {
                 if (this.cursors.isPointerLocked) {
-                    this.controlMode = Mode.MouseLocked;
+                    this.controlMode = Mode.MouseScreenEdge;
                 }
                 else {
                     this.controlMode = Mode.MouseUnlocked;
@@ -230,7 +230,7 @@ export class CameraControl extends EventBase {
                 return this.getRadiusMovement(evt);
 
             default:
-                return new Vector3(0, 0, 0);
+                return motion.set(0, 0);
         }
     }
 
@@ -238,42 +238,44 @@ export class CameraControl extends EventBase {
      * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
      */
     getAxialMovement(evt) {
-        const viewport = new Vector2(
+        motion.set(
             -MOUSE_SENSITIVITY_SCALE * evt.du,
             MOUSE_SENSITIVITY_SCALE * evt.dv);
 
-        return viewport;
+        return motion;
+    }
+
+    _scaleRadialComponent(n, dn, ddn) {
+        const absN = Math.abs(n);
+        return Math.sign(n) * Math.pow(Math.max(0, absN - this.edgeFactor) / (1 - this.edgeFactor), ddn) * dn;
     }
 
     /**
      * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
      */
     getRadiusMovement(evt) {
-        const viewport = new Vector2(evt.u, evt.v);
-        const absX = Math.abs(viewport.x);
-        const absY = Math.abs(viewport.y);
+        motion.set(
+            this._scaleRadialComponent(evt.u, this.speedX, this.accelerationX),
+            this._scaleRadialComponent(-evt.v, this.speedY, this.accelerationY));
 
-        viewport.x = Math.sign(viewport.x) * Math.pow(Math.max(0, absX - this.edgeFactor) / (1 - this.edgeFactor), this.accelerationX) * this.speedX;
-        viewport.y = Math.sign(viewport.y) * Math.pow(Math.max(0, absY - this.edgeFactor) / (1 - this.edgeFactor), this.accelerationY) * this.speedY;
-
-        return viewport;
+        return motion;
     }
 
     get meanTouchPointMovement() {
-        const delta = new Vector2(0, 0);
+        motion.set(0, 0);
         let count = 0;
         for (const pointer of this.controls.pointers.values()) {
             if (pointer.type === "touch") {
-                delta.x += pointer.x;
-                delta.y += pointer.y;
+                motion.x += pointer.x;
+                motion.y += pointer.y;
                 ++count;
             }
         }
 
-        delta.set(
-            TOUCH_SENSITIVITY_SCALE * delta.y / count,
-            -TOUCH_SENSITIVITY_SCALE * delta.x / count);
-        return delta;
+        motion.set(
+            TOUCH_SENSITIVITY_SCALE * motion.y / count,
+            -TOUCH_SENSITIVITY_SCALE * motion.x / count);
+        return motion;
     }
 
     /**
