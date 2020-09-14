@@ -12,7 +12,7 @@ export class CursorControl {
 
         this.pointerLockElement = canvas;
 
-        this.allowPointerLock = true;
+        this.allowPointerLock = false;
 
         canvas.addEventListener("click", (evt) => {
             if (this.allowPointerLock
