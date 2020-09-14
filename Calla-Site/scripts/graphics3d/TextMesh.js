@@ -105,6 +105,6 @@ export class TextMesh extends Image2DMesh {
     }
 
     set value(v) {
-        this.textImage.value = v;
+        this.textImage.loadFontAndSetText(v);
     }
 }
