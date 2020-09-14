@@ -213,7 +213,9 @@ export class ScreenPointerControls extends EventBase {
 
         element.addEventListener("pointerup", (evt) => {
             const pointer = new Pointer(evt),
-                _ = replacePointer(pointer);
+                lastPointer = replacePointer(pointer);
+
+            pointer.buttons = lastPointer.buttons;
 
             dispatch(pointerUpEvt, pointer, 0);
 
@@ -226,6 +228,10 @@ export class ScreenPointerControls extends EventBase {
             if (pointer.type === "touch") {
                 this.pointers.delete(pointer.id);
             }
+        });
+
+        element.addEventListener("contextmenu", (evt) => {
+            evt.preventDefault();
         });
 
         element.addEventListener("pointercancel", (evt) => {
@@ -254,7 +260,7 @@ export class ScreenPointerControls extends EventBase {
     get pressCount() {
         let count = 0;
         for (let pointer of this.pointers.values()) {
-            if (pointer.buttons === 1) {
+            if (pointer.buttons > 0) {
                 ++count;
             }
         }

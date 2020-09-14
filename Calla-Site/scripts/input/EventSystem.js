@@ -2,6 +2,7 @@ import { Raycaster } from "three/src/core/Raycaster";
 import { arrayClear } from "../calla/arrays/arrayClear";
 import { EventBase } from "../calla/events/EventBase";
 import { Cube } from "../graphics3d/Cube";
+import { MouseButtons } from "./MouseButton";
 
 export class EventSystemEvent extends Event {
     /**
@@ -103,7 +104,12 @@ export class EventSystem extends EventBase {
         const onClick = (evt) => {
             const curHit = raycast(evt);
             if (curHit && curHit.object) {
-                curHit.object.dispatchEvent({ type: "click" });
+                if (evt.buttons === MouseButtons.Mouse0) {
+                    curHit.object.dispatchEvent({ type: "click" });
+                }
+                else {
+                    console.log(curHit);
+                }
             }
         };
 
