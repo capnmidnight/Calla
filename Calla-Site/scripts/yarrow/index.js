@@ -12,6 +12,8 @@ import { Application } from "../vr/Application";
 import { NavIcon } from "./NavIcon";
 import { PlaybackButton } from "./PlaybackButton";
 import { Sign } from "./Sign";
+import { door } from "../emoji/emojis";
+import { EmojiIconMesh } from "../graphics3d/EmojiIconMesh";
 
 const R = new Vector3();
 const U = new Vector3();
@@ -47,6 +49,10 @@ const emojiFont = {
     fontFamily: "Noto Color Emoji",
     fontSize: 100
 };
+
+/** @type {EmojiIconMesh} */
+let homeIcon = null;
+
 /**
  * @callback viewCallback
  * @param {number} id
@@ -72,6 +78,14 @@ app.addEventListener("started", async () => {
     await Promise.all([
         loadFont(makeFont(menuItemFont)),
         loadFont(makeFont(emojiFont))]);
+
+    homeIcon = new EmojiIconMesh("homeButton", door.value);
+    homeIcon.position.set(0, 0, -1);
+    homeIcon.lookAt(0, 1.75, 0);
+
+    homeIcon.addEventListener("click", () => {
+        history.back();
+    });
 
     if (window.location.search.length === 0) {
         showMainMenu();
@@ -287,6 +301,8 @@ async function showActivity(activityID, skipHistory = false) {
                 }
             }
         }
+
+        app.menu.add(homeIcon);
 
         /////////// START ACTIVITY /////////////
         if (startID !== null) {
