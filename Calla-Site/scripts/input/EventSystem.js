@@ -35,7 +35,7 @@ export class EventSystem extends EventBase {
         /** @type {import("three").Intersection[]} */
         const hits = [];
 
-        const cursor = new Cube(0xffffff, 0.01, 0.01, 0.01);
+        const cursor = new Cube(0xffff00, 0.01, 0.01, 0.01);
         systemLayer.add(cursor);
 
         /**
