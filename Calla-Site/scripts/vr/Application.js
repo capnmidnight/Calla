@@ -117,6 +117,9 @@ export class Application extends EventBase {
         this.eventSystem = new EventSystem(this.renderer, this.camera, this.cursors, this.background, this.foreground, this.controls);
         this.uiSystem = new UISystem(this.eventSystem);
 
+        /**
+         * @param {import("../timers/BaseTimer").TimerTickEvent} evt
+         */
         const update = (evt) => {
             if (!this.showSkybox) {
                 this.skybox.visible = false;

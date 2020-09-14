@@ -1,7 +1,7 @@
 import { EventBase } from "../calla/events/EventBase";
 import { lerp } from "../calla/math/lerp";
 
-class TimerTickEvent extends Event {
+export class TimerTickEvent extends Event {
     constructor() {
         super("tick");
         this.dt = 0;
