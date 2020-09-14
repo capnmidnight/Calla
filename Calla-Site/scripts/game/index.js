@@ -2,7 +2,7 @@ import { CallaClient } from "../calla/CallaClient";
 import { addEventListeners } from "../calla/events/addEventListeners";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
 import { allPeople as people } from "../emoji/emojis";
-import { loadFont } from "../graphics2d/fonts";
+import { loadFont, makeFont } from "../graphics2d/fonts";
 import { disabled } from "../html/attrs";
 import { hide, isOpen, show } from "../html/ops";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
@@ -491,4 +491,7 @@ showView(login);
 login.ready = true;
 timer.start();
 
-loadFont("Noto Color Emoji");
+loadFont(makeFont({
+    fontFamily: "Noto Color Emoji",
+    fontSize: 100
+}));
