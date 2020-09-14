@@ -168,6 +168,15 @@ async function showActivity(activityID, skipHistory = false) {
         const progs = splitProgress(assetProg, signs.length + audioTracks.length + 1);
 
         /////////// GROUP DATA /////////////
+        for (let transform of transforms) {
+            const obj = new Object3D();
+            obj.name = transform.name;
+            obj.userData.id = transform.id;
+            obj.matrix.fromArray(transform.matrix);
+            obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
+            curTransforms.set(transform.id, obj);
+        }
+
         let startID = null;
         for (let station of stations) {
             curStations.set(station.transformID, station);
@@ -186,15 +195,6 @@ async function showActivity(activityID, skipHistory = false) {
         }
 
         /////////// BUILD SCENE GRAPH /////////////
-        for (let transform of transforms) {
-            const obj = new Object3D();
-            obj.name = transform.name;
-            obj.userData.id = transform.id;
-            obj.matrix.fromArray(transform.matrix);
-            obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
-            curTransforms.set(transform.id, obj);
-        }
-
         for (let transform of transforms) {
             const child = curTransforms.get(transform.id);
             if (transform.parentID === 0) {
