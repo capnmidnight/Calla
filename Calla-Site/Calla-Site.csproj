@@ -15,6 +15,13 @@
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="scripts\lib\signalr\node_modules\**" />
+    <Content Remove="scripts\lib\signalr\node_modules\**" />
+    <EmbeddedResource Remove="scripts\lib\signalr\node_modules\**" />
+    <None Remove="scripts\lib\signalr\node_modules\**" />
+    <TypeScriptCompile Remove="scripts\lib\signalr\node_modules\**" />
+  </ItemGroup>
+  <ItemGroup>
     <TypeScriptCompile Remove="wwwroot\data\tilesets\nature\nature.tsx" />
     <TypeScriptCompile Remove="wwwroot\data\tilesets\room\room.tsx" />
     <TypeScriptCompile Remove="wwwroot\data\tilesets\TileTest\TileTest.tsx" />
