@@ -1,0 +1,17 @@
+@{
+    Layout = "_PWA";
+}
+
+@section HeadScripts {
+    <link rel="stylesheet" type="text/css" href="~/stylesheets/yarrow.css" />
+    <environment names="Staging,Production">
+        <script type="module" src="~/scripts/vrtest.min.js"></script>
+    </environment>
+    <environment names="Development">
+        <script type="module" src="~/scripts/vrtest.js"></script>
+    </environment>
+}
+
+<canvas id="frontBuffer"></canvas>
+
+<div id="controls"></div>

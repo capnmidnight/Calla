@@ -87,6 +87,12 @@ namespace Calla.Controllers
             return View();
         }
 
+        [HttpGet]
+        public IActionResult Test()
+        {
+            return View();
+        }
+
         [HttpGet("VR/Languages")]
         public IActionResult Languages()
         {

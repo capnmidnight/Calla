@@ -87,6 +87,7 @@ if (process.env.BUILD === "yarrow"
     || process.env.BUILD === "development"
     || process.env.BUILD === "production") {
     bundles.push(def("yarrow", true, true));
+    bundles.push(def("vrtest", true, true));
 }
 
 if (process.env.BUILD === "calla"
