@@ -1276,15 +1276,24 @@ if (typeof define === 'function' && define.amd) {
 
 }(typeof window !== 'undefined' ? window : global));
 
-
+(function(){
+var keepTrying = true;
 TraceKit.report.subscribe((err) => {
-    err.userAgent = navigator.userAgent;
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/ErrorLog", true);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.send(JSON.stringify(err));
+    if(keepTrying){
+        try{
+            err.userAgent = navigator.userAgent;
+            const xhr = new XMLHttpRequest();
+            xhr.onerror = function() { keepTrying = false; };
+            xhr.open("POST", "/ErrorLog");
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.send(JSON.stringify(err));
+        }
+        catch(exp){
+            keepTrying = false;
+        }
+    }
 });
-
+})();
 try{
 
 /*!
@@ -14324,8 +14333,8 @@ class Vector3 {
 
 }
 
-const _vector = new Vector3();
-const _quaternion = new Quaternion();
+const _vector = /*@__PURE__*/ new Vector3();
+const _quaternion = /*@__PURE__*/ new Quaternion();
 
 /**
  * Translate a value into a range.
@@ -14470,10 +14479,18 @@ class InterpolatedPose {
      * @param {number} dt - the amount of time to take making the transition.
      */
     setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, t, dt) {
-        this.start.copy(this.current);
-        this.start.t = t;
         this.end.set(px, py, pz, fx, fy, fz, ux, uy, uz);
         this.end.t = t + dt;
+        if (dt <= 0) {
+            this.start.copy(this.end);
+            this.start.t = t;
+            this.current.copy(this.end);
+            this.current.t = t;
+        }
+        else {
+            this.start.copy(this.current);
+            this.start.t = t;
+        }
     }
 
     /**
@@ -21663,7 +21680,7 @@ function when(target, resolveEvt, filterTest, timeout) {
     });
 }
 
-const versionString = "v0.10.3";
+const versionString = "v0.10.4";
 
 /* global JitsiMeetJS */
 
@@ -22736,6 +22753,7 @@ class Emoji {
  * @param {string} v - a Unicode sequence.
  * @param {string} d - an English text description of the pictogram.
  * @param {any} [o=null] - an optional set of properties to set on the Emoji object.
+ * @returns {Emoji}
  */
 function e(v, d, o = null) {
     return Object.assign(new Emoji(v, d), o);
@@ -23527,57 +23545,157 @@ const love = gg(
     redHeart,
 });
 
+const angerSymbol = e("\u{1F4A2}", "Anger Symbol");
+const bomb = e("\u{1F4A3}", "Bomb");
+const zzz = e("\u{1F4A4}", "Zzz");
+const collision = e("\u{1F4A5}", "Collision");
+const sweatDroplets = e("\u{1F4A6}", "Sweat Droplets");
+const dashingAway = e("\u{1F4A8}", "Dashing Away");
+const dizzy = e("\u{1F4AB}", "Dizzy");
+const speechBalloon = e("\u{1F4AC}", "Speech Balloon");
+const thoughtBalloon = e("\u{1F4AD}", "Thought Balloon");
+const hundredPoints = e("\u{1F4AF}", "Hundred Points");
+const hole = e("\u{1F573}\u{FE0F}", "Hole");
+const leftSpeechBubble = e("\u{1F5E8}\u{FE0F}", "Left Speech Bubble");
+const rightSpeechBubble = e("\u{1F5E9}\u{FE0F}", "Right Speech Bubble");
+const conversationBubbles2 = e("\u{1F5EA}\u{FE0F}", "Conversation Bubbles 2");
+const conversationBubbles3 = e("\u{1F5EB}\u{FE0F}", "Conversation Bubbles 3");
+const leftThoughtBubble = e("\u{1F5EC}\u{FE0F}", "Left Thought Bubble");
+const rightThoughtBubble = e("\u{1F5ED}\u{FE0F}", "Right Thought Bubble");
+const leftAngerBubble = e("\u{1F5EE}\u{FE0F}", "Left Anger Bubble");
+const rightAngerBubble = e("\u{1F5EF}\u{FE0F}", "Right Anger Bubble");
+const angerBubble = e("\u{1F5F0}\u{FE0F}", "Anger Bubble");
+const angerBubbleLightningBolt = e("\u{1F5F1}\u{FE0F}", "Anger Bubble Lightning");
+const lightningBolt = e("\u{1F5F2}\u{FE0F}", "Lightning Bolt");
+
 const cartoon = g(
     "Cartoon", "Cartoon symbols",
-    e("\u{1F4A2}", "Anger Symbol"),
-    e("\u{1F4A3}", "Bomb"),
-    e("\u{1F4A4}", "Zzz"),
-    e("\u{1F4A5}", "Collision"),
-    e("\u{1F4A6}", "Sweat Droplets"),
-    e("\u{1F4A8}", "Dashing Away"),
-    e("\u{1F4AB}", "Dizzy"),
-    e("\u{1F4AC}", "Speech Balloon"),
-    e("\u{1F4AD}", "Thought Balloon"),
-    e("\u{1F4AF}", "Hundred Points"),
-    e("\u{1F573}\u{FE0F}", "Hole"),
-    e("\u{1F5E8}\u{FE0F}", "Left Speech Bubble"),
-    e("\u{1F5EF}\u{FE0F}", "Right Anger Bubble"));
+    angerSymbol,
+    bomb,
+    zzz,
+    collision,
+    sweatDroplets,
+    dashingAway,
+    dizzy,
+    speechBalloon,
+    thoughtBalloon,
+    hundredPoints,
+    hole,
+    leftSpeechBubble,
+    rightSpeechBubble,
+    conversationBubbles2,
+    conversationBubbles3,
+    leftThoughtBubble,
+    rightThoughtBubble,
+    leftAngerBubble,
+    rightAngerBubble,
+    angerBubble,
+    angerBubbleLightningBolt,
+    lightningBolt);
 
+const backhandIndexPointingUp = e("\u{1F446}", "Backhand Index Pointing Up");
+const backhandIndexPointingDown = e("\u{1F447}", "Backhand Index Pointing Down");
+const backhandIndexPointingLeft = e("\u{1F448}", "Backhand Index Pointing Left");
+const backhandIndexPointingRight = e("\u{1F449}", "Backhand Index Pointing Right");
+const oncomingFist = e("\u{1F44A}", "Oncoming Fist");
+const wavingHand = e("\u{1F44B}", "Waving Hand");
+const okHand = e("\u{1F58F}", "OK Hand");
+const thumbsUp = e("\u{1F44D}", "Thumbs Up");
+const thumbsDown = e("\u{1F44E}", "Thumbs Down");
+const clappingHands = e("\u{1F44F}", "Clapping Hands");
+const openHands = e("\u{1F450}", "Open Hands");
+const nailPolish = e("\u{1F485}", "Nail Polish");
+const handsWithFingersSplayed = e("\u{1F590}\u{FE0F}", "Hand with Fingers Splayed");
+const handsWithFingersSplayed2 = e("\u{1F591}\u{FE0F}", "Hand with Fingers Splayed 2");
+const thumbsUp2 = e("\u{1F592}", "Thumbs Up 2");
+const thumbsDown2 = e("\u{1F593}", "Thumbs Down 2");
+const peaceFingers = e("\u{1F594}", "Peace Fingers");
+const middleFinger = e("\u{1F595}", "Middle Finger");
+const vulcanSalute = e("\u{1F596}", "Vulcan Salute");
+const handPointingDown = e("\u{1F597}", "Hand Pointing Down");
+const handPointingLeft = e("\u{1F598}", "Hand Pointing Left");
+const handPointingRight = e("\u{1F599}", "Hand Pointing Right");
+const handPointingLeft2 = e("\u{1F59A}", "Hand Pointing Left 2");
+const handPointingRight2 = e("\u{1F59B}", "Hand Pointing Right 2");
+const indexPointingLeft = e("\u{1F59C}", "Index Pointing Left");
+const indexPointingRight = e("\u{1F59D}", "Index Pointing Right");
+const indexPointingUp = e("\u{1F59E}", "Index Pointing Up");
+const indexPointingDown = e("\u{1F59F}", "Index Pointing Down");
+const indexPointingUp2 = e("\u{1F5A0}", "Index Pointing Up 2");
+const indexPointingDown2 = e("\u{1F5A1}", "Index Pointing Down 2");
+const indexPointingUp3 = e("\u{1F5A2}", "Index Pointing Up 3");
+const indexPointingDown3 = e("\u{1F5A3}", "Index Pointing Down 3");
+const raisingHands = e("\u{1F64C}", "Raising Hands");
+const foldedHands = e("\u{1F64F}", "Folded Hands");
+//export const pinchedFingers = e("\u{1F90C}", "Pinched Fingers");
+const pinchingHand = e("\u{1F90F}", "Pinching Hand");
+const signOfTheHorns = e("\u{1F918}", "Sign of the Horns");
+const callMeHand = e("\u{1F919}", "Call Me Hand");
+const rasiedBackOfHand = e("\u{1F91A}", "Raised Back of Hand");
+const leftFacingFist = e("\u{1F91B}", "Left-Facing Fist");
+const rightFacingFist = e("\u{1F91C}", "Right-Facing Fist");
+const handshake = e("\u{1F91D}", "Handshake");
+const crossedFingers = e("\u{1F91E}", "Crossed Fingers");
+const loveYouGesture = e("\u{1F91F}", "Love-You Gesture");
+const palmsUpTogether = e("\u{1F932}", "Palms Up Together");
+const indexPointingUp4 = e("\u{261D}\u{FE0F}", "Index Pointing Up 4");
+const raisedFist = e("\u{270A}", "Raised Fist");
+const raisedHand = e("\u{270B}", "Raised Hand");
+const victoryHand = e("\u{270C}\u{FE0F}", "Victory Hand");
+const writingHand = e("\u{270D}\u{FE0F}", "Writing Hand");
 const hands = g(
     "Hands", "Hands pointing at things",
-    e("\u{1F446}", "Backhand Index Pointing Up"),
-    e("\u{1F447}", "Backhand Index Pointing Down"),
-    e("\u{1F448}", "Backhand Index Pointing Left"),
-    e("\u{1F449}", "Backhand Index Pointing Right"),
-    e("\u{1F44A}", "Oncoming Fist"),
-    e("\u{1F44B}", "Waving Hand"),
-    e("\u{1F44C}", "OK Hand"),
-    e("\u{1F44D}", "Thumbs Up"),
-    e("\u{1F44E}", "Thumbs Down"),
-    e("\u{1F44F}", "Clapping Hands"),
-    e("\u{1F450}", "Open Hands"),
-    e("\u{1F485}", "Nail Polish"),
-    e("\u{1F590}\u{FE0F}", "Hand with Fingers Splayed"),
-    e("\u{1F595}", "Middle Finger"),
-    e("\u{1F596}", "Vulcan Salute"),
-    e("\u{1F64C}", "Raising Hands"),
-    e("\u{1F64F}", "Folded Hands"),
-    //e("\u{1F90C}", "Pinched Fingers"),
-    e("\u{1F90F}", "Pinching Hand"),
-    e("\u{1F918}", "Sign of the Horns"),
-    e("\u{1F919}", "Call Me Hand"),
-    e("\u{1F91A}", "Raised Back of Hand"),
-    e("\u{1F91B}", "Left-Facing Fist"),
-    e("\u{1F91C}", "Right-Facing Fist"),
-    e("\u{1F91D}", "Handshake"),
-    e("\u{1F91E}", "Crossed Fingers"),
-    e("\u{1F91F}", "Love-You Gesture"),
-    e("\u{1F932}", "Palms Up Together"),
-    e("\u{261D}\u{FE0F}", "Index Pointing Up"),
-    e("\u{270A}", "Raised Fist"),
-    e("\u{270B}", "Raised Hand"),
-    e("\u{270C}\u{FE0F}", "Victory Hand"),
-    e("\u{270D}\u{FE0F}", "Writing Hand"));
+    backhandIndexPointingUp,
+    backhandIndexPointingDown,
+    backhandIndexPointingLeft,
+    backhandIndexPointingRight,
+    oncomingFist,
+    wavingHand,
+    okHand,
+    thumbsUp,
+    thumbsDown,
+    clappingHands,
+    openHands,
+    nailPolish,
+    handsWithFingersSplayed,
+    handsWithFingersSplayed2,
+    handsWithFingersSplayed2,
+    thumbsUp2,
+    thumbsDown2,
+    peaceFingers,
+    middleFinger,
+    vulcanSalute,
+    handPointingDown,
+    handPointingLeft,
+    handPointingRight,
+    handPointingLeft2,
+    handPointingRight2,
+    indexPointingLeft,
+    indexPointingRight,
+    indexPointingUp,
+    indexPointingDown,
+    indexPointingUp2,
+    indexPointingDown2,
+    indexPointingUp3,
+    indexPointingDown3,
+    raisingHands,
+    foldedHands,
+    //pinchedFingers,
+    pinchingHand,
+    signOfTheHorns,
+    callMeHand,
+    rasiedBackOfHand,
+    leftFacingFist,
+    rightFacingFist,
+    handshake,
+    crossedFingers,
+    loveYouGesture,
+    palmsUpTogether,
+    indexPointingUp4,
+    raisedFist,
+    raisedHand,
+    victoryHand,
+    writingHand);
 
 const bodyParts = g(
     "Body Parts", "General body parts",
@@ -24382,27 +24500,42 @@ const clocks = g(
     e("\u{231B}", "Hourglass Done"),
     e("\u{23F3}", "Hourglass Not Done"));
 
+const clockwiseVerticalArrows = e("\u{1F503}\u{FE0F}", "Clockwise Vertical Arrows");
+const counterclockwiseArrowsButton = e("\u{1F504}\u{FE0F}", "Counterclockwise Arrows Button");
+const leftRightArrow = e("\u{2194}\u{FE0F}", "Left-Right Arrow");
+const upDownArrow = e("\u{2195}\u{FE0F}", "Up-Down Arrow");
+const upLeftArrow = e("\u{2196}\u{FE0F}", "Up-Left Arrow");
+const upRightArrow = e("\u{2197}\u{FE0F}", "Up-Right Arrow");
 const downRightArrow = e("\u{2198}", "Down-Right Arrow");
 const downRightArrowText = e("\u{2198}\u{FE0E}", "Down-Right Arrow");
 const downRightArrowEmoji = e("\u{2198}\u{FE0F}", "Down-Right Arrow");
+const downLeftArrow = e("\u{2199}\u{FE0F}", "Down-Left Arrow");
+const rightArrowCurvingLeft = e("\u{21A9}\u{FE0F}", "Right Arrow Curving Left");
+const leftArrowCurvingRight = e("\u{21AA}\u{FE0F}", "Left Arrow Curving Right");
+const rightArrow = e("\u{27A1}\u{FE0F}", "Right Arrow");
+const rightArrowCurvingUp = e("\u{2934}\u{FE0F}", "Right Arrow Curving Up");
+const rightArrowCurvingDown = e("\u{2935}\u{FE0F}", "Right Arrow Curving Down");
+const leftArrow = e("\u{2B05}\u{FE0F}", "Left Arrow");
+const upArrow = e("\u{2B06}\u{FE0F}", "Up Arrow");
+const downArrow = e("\u{2B07}\u{FE0F}", "Down Arrow");
 const arrows = g(
     "Arrows", "Arrows pointing in different directions",
-    e("\u{1F503}\u{FE0F}", "Clockwise Vertical Arrows"),
-    e("\u{1F504}\u{FE0F}", "Counterclockwise Arrows Button"),
-    e("\u{2194}\u{FE0F}", "Left-Right Arrow"),
-    e("\u{2195}\u{FE0F}", "Up-Down Arrow"),
-    e("\u{2196}\u{FE0F}", "Up-Left Arrow"),
-    e("\u{2197}\u{FE0F}", "Up-Right Arrow"),
+    clockwiseVerticalArrows,
+    counterclockwiseArrowsButton,
+    leftRightArrow,
+    upDownArrow,
+    upLeftArrow,
+    upRightArrow,
     downRightArrowEmoji,
-    e("\u{2199}\u{FE0F}", "Down-Left Arrow"),
-    e("\u{21A9}\u{FE0F}", "Right Arrow Curving Left"),
-    e("\u{21AA}\u{FE0F}", "Left Arrow Curving Right"),
-    e("\u{27A1}\u{FE0F}", "Right Arrow"),
-    e("\u{2934}\u{FE0F}", "Right Arrow Curving Up"),
-    e("\u{2935}\u{FE0F}", "Right Arrow Curving Down"),
-    e("\u{2B05}\u{FE0F}", "Left Arrow"),
-    e("\u{2B06}\u{FE0F}", "Up Arrow"),
-    e("\u{2B07}\u{FE0F}", "Down Arrow"));
+    downLeftArrow,
+    rightArrowCurvingLeft,
+    leftArrowCurvingRight,
+    rightArrow,
+    rightArrowCurvingUp,
+    rightArrowCurvingDown,
+    leftArrow,
+    upArrow,
+    downArrow);
 
 const shapes = g(
     "Shapes", "Colored shapes",
@@ -24442,6 +24575,28 @@ const shapes = g(
     e("\u{2B50}", "Star"),
     e("\u{1F4A0}", "Diamond with a Dot"));
 
+const clearButton = e("\u{1F191}", "CL Button");
+const coolButton = e("\u{1F192}", "Cool Button");
+const freeButton = e("\u{1F193}", "Free Button");
+const idButton = e("\u{1F194}", "ID Button");
+const newButton = e("\u{1F195}", "New Button");
+const ngButton = e("\u{1F196}", "NG Button");
+const okButton = e("\u{1F197}", "OK Button");
+const sosButton = e("\u{1F198}", "SOS Button");
+const upButton = e("\u{1F199}", "Up! Button");
+const vsButton = e("\u{1F19A}", "Vs Button");
+const radioButton = e("\u{1F518}", "Radio Button");
+const backArrow = e("\u{1F519}", "Back Arrow");
+const endArrow = e("\u{1F51A}", "End Arrow");
+const onArrow = e("\u{1F51B}", "On! Arrow");
+const soonArrow = e("\u{1F51C}", "Soon Arrow");
+const topArrow = e("\u{1F51D}", "Top Arrow");
+const checkBoxWithCheck = e("\u{2611}\u{FE0F}", "Check Box with Check");
+const inputLatinUppercase = e("\u{1F520}", "Input Latin Uppercase");
+const inputLatinLowercase = e("\u{1F521}", "Input Latin Lowercase");
+const inputNumbers = e("\u{1F522}", "Input Numbers");
+const inputSymbols = e("\u{1F523}", "Input Symbols");
+const inputLatinLetters = e("\u{1F524}", "Input Latin Letters");
 const shuffleTracksButton = e("\u{1F500}", "Shuffle Tracks Button");
 const repeatButton = e("\u{1F501}", "Repeat Button");
 const repeatSingleButton = e("\u{1F502}", "Repeat Single Button");
@@ -24460,37 +24615,36 @@ const playOrPauseButton = e("\u{23EF}\u{FE0F}", "Play or Pause Button");
 const pauseButton = e("\u{23F8}\u{FE0F}", "Pause Button");
 const stopButton = e("\u{23F9}\u{FE0F}", "Stop Button");
 const recordButton = e("\u{23FA}\u{FE0F}", "Record Button");
-
-
 const buttons = g(
     "Buttons", "Buttons",
-    e("\u{1F191}", "CL Button"),
-    e("\u{1F192}", "Cool Button"),
-    e("\u{1F193}", "Free Button"),
-    e("\u{1F194}", "ID Button"),
-    e("\u{1F195}", "New Button"),
-    e("\u{1F196}", "NG Button"),
-    e("\u{1F197}", "OK Button"),
-    e("\u{1F198}", "SOS Button"),
-    e("\u{1F199}", "Up! Button"),
-    e("\u{1F19A}", "Vs Button"),
-    e("\u{1F518}", "Radio Button"),
-    e("\u{1F519}", "Back Arrow"),
-    e("\u{1F51A}", "End Arrow"),
-    e("\u{1F51B}", "On! Arrow"),
-    e("\u{1F51C}", "Soon Arrow"),
-    e("\u{1F51D}", "Top Arrow"),
-    e("\u{2611}\u{FE0F}", "Check Box with Check"),
-    e("\u{1F520}", "Input Latin Uppercase"),
-    e("\u{1F521}", "Input Latin Lowercase"),
-    e("\u{1F522}", "Input Numbers"),
-    e("\u{1F523}", "Input Symbols"),
-    e("\u{1F524}", "Input Latin Letters"),
+    clearButton,
+    coolButton,
+    freeButton,
+    idButton,
+    newButton,
+    ngButton,
+    okButton,
+    sosButton,
+    upButton,
+    vsButton,
+    radioButton,
+    backArrow,
+    endArrow,
+    onArrow,
+    soonArrow,
+    topArrow,
+    checkBoxWithCheck,
+    inputLatinUppercase,
+    inputLatinLowercase,
+    inputNumbers,
+    inputSymbols,
+    inputLatinLetters,
     shuffleTracksButton,
     repeatButton,
     repeatSingleButton,
     upwardsButton,
     downwardsButton,
+    playButton,
     pauseButton,
     reverseButton,
     ejectButton,
@@ -25833,10 +25987,19 @@ function lerp(a, b, p) {
 class TimerTickEvent extends Event {
     constructor() {
         super("tick");
-        this.dt = 0;
         this.t = 0;
+        this.dt = 0;
         this.sdt = 0;
         Object.seal(this);
+    }
+
+    /**
+     * @param {TimerTickEvent} evt
+     */
+    copy(evt) {
+        this.t = evt.t;
+        this.dt = evt.dt;
+        this.sdt = evt.sdt;
     }
 }
 
@@ -25915,7 +26078,7 @@ class BaseTimer extends EventBase {
 
 class RequestAnimationFrameTimer extends BaseTimer {
     constructor() {
-        super(60);
+        super(120);
     }
 
     start() {
@@ -25931,13 +26094,6 @@ class RequestAnimationFrameTimer extends BaseTimer {
             cancelAnimationFrame(this._timer);
             super.stop();
         }
-    }
-
-    get targetFrameRate() {
-        return super.targetFrameRate;
-    }
-
-    set targetFrameRate(fps) {
     }
 }
 
@@ -33479,8 +33635,6 @@ class ScreenPointerControls extends EventBase {
     constructor(element) {
         super();
 
-        this.pointerLockElement = element;
-
         /** @type {Map<Number, Pointer>} */
         this.pointers = new Map();
 
@@ -33500,27 +33654,18 @@ class ScreenPointerControls extends EventBase {
 
             evt.buttons = pointer.buttons;
 
+            evt.x = pointer.x;
+            evt.y = pointer.y;
+
+            evt.u = unproject(project(evt.x, 0, element.clientWidth), -1, 1);
+            evt.v = unproject(project(evt.y, 0, element.clientHeight), -1, 1);
+
             evt.dx = pointer.dx;
             evt.dy = pointer.dy;
             evt.dz = dz;
 
             evt.du = 2 * evt.dx / element.clientWidth;
             evt.dv = 2 * evt.dy / element.clientHeight;
-
-            if (this.isPointerLocked) {
-                evt.u = 0;
-                evt.v = 0;
-
-                evt.x = element.clientWidth / 2;
-                evt.y = element.clientHeight / 2;
-            }
-            else {
-                evt.x = pointer.x;
-                evt.y = pointer.y;
-
-                evt.u = unproject(project(evt.x, 0, element.clientWidth), -1, 1);
-                evt.v = unproject(project(evt.y, 0, element.clientHeight), -1, 1);
-            }
 
             evt.dragDistance = pointer.dragDistance;
             this.dispatchEvent(evt);
@@ -33536,7 +33681,7 @@ class ScreenPointerControls extends EventBase {
             if (last) {
                 pointer.dragDistance = last.dragDistance;
 
-                if (this.isPointerLocked) {
+                if (document.pointerLockElement) {
                     pointer.x = last.x + pointer.dx;
                     pointer.y = last.y + pointer.dy;
                 }
@@ -33623,7 +33768,9 @@ class ScreenPointerControls extends EventBase {
 
         element.addEventListener("pointerup", (evt) => {
             const pointer = new Pointer(evt),
-                _ = replacePointer(pointer);
+                lastPointer = replacePointer(pointer);
+
+            pointer.buttons = lastPointer.buttons;
 
             dispatch(pointerUpEvt, pointer, 0);
 
@@ -33636,6 +33783,10 @@ class ScreenPointerControls extends EventBase {
             if (pointer.type === "touch") {
                 this.pointers.delete(pointer.id);
             }
+        });
+
+        element.addEventListener("contextmenu", (evt) => {
+            evt.preventDefault();
         });
 
         element.addEventListener("pointercancel", (evt) => {
@@ -33664,7 +33815,7 @@ class ScreenPointerControls extends EventBase {
     get pressCount() {
         let count = 0;
         for (let pointer of this.pointers.values()) {
-            if (pointer.buttons === 1) {
+            if (pointer.buttons > 0) {
                 ++count;
             }
         }
@@ -33696,14 +33847,6 @@ class ScreenPointerControls extends EventBase {
             dy = b.y - a.y;
 
         return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    lockPointer() {
-        this.pointerLockElement.requestPointerLock();
-    }
-
-    get isPointerLocked() {
-        return document.pointerLockElement !== null;
     }
 }
 
@@ -35160,7 +35303,10 @@ showView(login);
 login.ready = true;
 timer.start();
 
-loadFont("Noto Color Emoji");
+loadFont(makeFont({
+    fontFamily: "Noto Color Emoji",
+    fontSize: 100
+}));
 
 } catch(exp) {
     TraceKit.report(exp);

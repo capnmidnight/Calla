@@ -1296,18 +1296,6 @@ TraceKit.report.subscribe((err) => {
 })();
 try{
 
-/**
- * Empties out an array
- * @param {any[]} arr - the array to empty.
- * @returns {any[]} - the items that were in the array.
- */
-function arrayClear(arr) {
-    if (!(arr instanceof Array)) {
-        throw new Error("Must provide an array as the first parameter.");
-    }
-    return arr.splice(0);
-}
-
 function t(o, s, c) {
     return typeof o === s
         || o instanceof c;
@@ -1406,6 +1394,18 @@ function once(target, resolveEvt, rejectEvt, timeout) {
             });
         }
     });
+}
+
+/**
+ * Empties out an array
+ * @param {any[]} arr - the array to empty.
+ * @returns {any[]} - the items that were in the array.
+ */
+function arrayClear(arr) {
+    if (!(arr instanceof Array)) {
+        throw new Error("Must provide an array as the first parameter.");
+    }
+    return arr.splice(0);
 }
 
 /**
@@ -1585,4001 +1585,6 @@ async function getFile(path, onProgress = null) {
     const blob = await getBlob(path);
     const blobUrl = URL.createObjectURL(blob);
     return blobUrl;
-}
-
-/**
- * @param {import("./fetching").progressCallback} onProgress
- * @param {Number|Number[]} subProgressWeights
- * @returns {import("./fetching").progressCallback[])
- */
-function splitProgress(onProgress, subProgressWeights) {
-    if (isNumber(subProgressWeights)) {
-        const numWeights = subProgressWeights;
-        subProgressWeights = new Array(numWeights);
-        for (let i = 0; i < numWeights; ++i) {
-            subProgressWeights[i] = 1 /numWeights;
-        }
-    }
-
-    let weightTotal = 0;
-    for (let i = 0; i < subProgressWeights.length; ++i) {
-        weightTotal += subProgressWeights[i];
-    }
-
-    /** @type {Number[]} */
-    const subProgressValues = new Array(subProgressWeights.length);
-
-    /** @type {import("./fetching").progressCallback[]} */
-    const subProgressCallbacks = new Array(subProgressWeights.length);
-
-    /**
-     * @param {Number} i
-     * @param {Number} subSoFar
-     * @param {Number} subTotal
-     * @param {String?} msg
-     **/
-    const update = (i, subSoFar, subTotal, msg) => {
-        subProgressValues[i] = subSoFar / subTotal;
-        let soFar = 0;
-        for (let j = 0; j < subProgressWeights.length; ++j) {
-            soFar += subProgressValues[j] * subProgressWeights[j];
-        }
-        onProgress(soFar, weightTotal, msg);
-    };
-
-    for (let i = 0; i < subProgressWeights.length; ++i) {
-        subProgressValues[i] = 0;
-        subProgressCallbacks[i] = (soFar, total, msg) => update(i, soFar, total, msg);
-    }
-
-    return subProgressCallbacks;
-}
-
-/**
- * Unicode-standardized pictograms.
- **/
-class Emoji {
-    /**
-     * Creates a new Unicode-standardized pictograms.
-     * @param {string} value - a Unicode sequence.
-     * @param {string} desc - an English text description of the pictogram.
-     */
-    constructor(value, desc) {
-        this.value = value;
-        this.desc = desc;
-    }
-
-    /**
-     * Determines of the provided Emoji or EmojiGroup is a subset of
-     * this emoji.
-     * @param {(Emoji|EmojiGroup)} e
-     */
-    contains(e) {
-        return this.value.indexOf(e.value) >= 0;
-    }
-}
-
-/**
- * Shorthand for `new Emoji`, which saves significantly on bundle size.
- * @param {string} v - a Unicode sequence.
- * @param {string} d - an English text description of the pictogram.
- * @param {any} [o=null] - an optional set of properties to set on the Emoji object.
- * @returns {Emoji}
- */
-function e(v, d, o = null) {
-    return Object.assign(new Emoji(v, d), o);
-}
-
-class EmojiGroup extends Emoji {
-    /**
-     * Groupings of Unicode-standardized pictograms.
-     * @param {string} value - a Unicode sequence.
-     * @param {string} desc - an English text description of the pictogram.
-     * @param {Emoji[]} rest - Emojis in this group.
-     */
-    constructor(value, desc, ...rest) {
-        super(value, desc);
-        /** @type {Emoji[]} */
-        this.alts = rest;
-        /** @type {string} */
-        this.width = null;
-    }
-
-    /**
-     * Selects a random emoji out of the collection.
-     * @returns {(Emoji|EmojiGroup)}
-     **/
-    random() {
-        const idx = Math.floor(Math.random() * this.alts.length);
-        if (idx < 0) {
-            return null;
-        }
-
-        const selection = this.alts[idx];
-        if (selection instanceof EmojiGroup) {
-            return selection.random();
-        }
-        else {
-            return selection;
-        }
-    }
-
-    /**
-     *
-     * @param {(Emoji|EmojiGroup)} e
-     */
-    contains(e) {
-        return super.contains(e)
-            || this.alts.reduce((a, b) => a || b.contains(e), false);
-    }
-}
-
-
-/**
- * Shorthand for `new EmojiGroup`, which saves significantly on bundle size.
- * @param {string} v - a Unicode sequence.
- * @param {string} d - an English text description of the pictogram.
- * @param {...(Emoji|EmojiGroup)} r - the emoji that are contained in this group.
- * @returns {EmojiGroup}
- */
-function g(v, d, ...r) {
-    return new EmojiGroup(v, d, ...r);
-}
-
-/**
- * A shorthand for `new EmojiGroup` that allows for setting optional properties
- * on the EmojiGroup object.
- * @param {string} v - a Unicode sequence.
- * @param {string} d - an English text description of the pictogram.
- * @param {any} o - a set of properties to set on the Emoji object.
- * @param {...(Emoji|import("./EmojiGroup").EmojiGroup)} r - the emoji that are contained in this group.
- * @returns {import("./EmojiGroup").EmojiGroup}
- */
-function gg(v, d, o, ...r) {
-    return Object.assign(
-        g(
-            v,
-            d,
-            ...Object
-                .values(o)
-                .filter(v => v instanceof Emoji),
-            ...r),
-        o);
-}
-
-const textStyle = e("\u{FE0E}", "Variation Selector-15: text style");
-const emojiStyle = e("\u{FE0F}", "Variation Selector-16: emoji style");
-const zeroWidthJoiner = e("\u{200D}", "Zero Width Joiner");
-const combiningEnclosingCircleBackslash = e("\u{20E3}", "Combining Enclosing Circle Backslash");
-const combiningEnclosingKeycap = e("\u{20E3}", "Combining Enclosing Keycap");
-
-const female = e("\u{2640}\u{FE0F}", "Female");
-const male = e("\u{2642}\u{FE0F}", "Male");
-const skinL = e("\u{1F3FB}", "Light Skin Tone");
-const skinML = e("\u{1F3FC}", "Medium-Light Skin Tone");
-const skinM = e("\u{1F3FD}", "Medium Skin Tone");
-const skinMD = e("\u{1F3FE}", "Medium-Dark Skin Tone");
-const skinD = e("\u{1F3FF}", "Dark Skin Tone");
-const hairRed = e("\u{1F9B0}", "Red Hair");
-const hairCurly = e("\u{1F9B1}", "Curly Hair");
-const hairWhite = e("\u{1F9B3}", "White Hair");
-const hairBald = e("\u{1F9B2}", "Bald");
-
-function combo(a, b) {
-    if (a instanceof Array) {
-        return a.map(c => combo(c, b));
-    }
-    else if (a instanceof EmojiGroup) {
-        const { value, desc } = combo(e(a.value, a.desc), b);
-        return g(value, desc, ...combo(a.alts, b));
-    }
-    else if (b instanceof Array) {
-        return b.map(c => combo(a, c));
-    }
-    else {
-        return e(a.value + b.value, a.desc + ": " + b.desc);
-    }
-}
-
-function join(a, b) {
-    if (a instanceof Array) {
-        return a.map(c => join(c, b));
-    }
-    else if (a instanceof EmojiGroup) {
-        const { value, desc } = join(e(a.value, a.desc), b);
-        return g(value, desc, ...join(a.alts, b));
-    }
-    else if (b instanceof Array) {
-        return b.map(c => join(a, c));
-    }
-    else {
-        return e(a.value + zeroWidthJoiner.value + b.value, a.desc + ": " + b.desc);
-    }
-}
-
-function skin(v, d, ...rest) {
-    const person = e(v, d),
-        light = combo(person, skinL),
-        mediumLight = combo(person, skinML),
-        medium = combo(person, skinM),
-        mediumDark = combo(person, skinMD),
-        dark = combo(person, skinD);
-    return gg(person.value, person.desc, {
-        default: person,
-        light,
-        mediumLight,
-        medium,
-        mediumDark,
-        dark
-    }, ...rest);
-}
-
-function sex(person) {
-    const man = join(person, male),
-        woman = join(person, female);
-
-    return gg(person.value, person.desc, {
-        default: person,
-        man,
-        woman
-    });
-}
-
-function skinAndSex(v, d) {
-    return sex(skin(v, d));
-}
-
-function skinAndHair(v, d, ...rest) {
-    const people = skin(v, d),
-        red = join(people, hairRed),
-        curly = join(people, hairCurly),
-        white = join(people, hairWhite),
-        bald = join(people, hairBald);
-    return gg(people.value, people.desc, {
-        default: people,
-        red,
-        curly,
-        white,
-        bald
-    }, ...rest);
-}
-
-function sym(symbol, name) {
-    const j = e(symbol.value, name),
-        men = join(man.default, j),
-        women = join(woman.default, j);
-    return gg(symbol.value, symbol.desc, {
-        symbol,
-        men,
-        women
-    });
-}
-
-const frowners = skinAndSex("\u{1F64D}", "Frowning");
-const pouters = skinAndSex("\u{1F64E}", "Pouting");
-const gesturingNo = skinAndSex("\u{1F645}", "Gesturing NO");
-const gesturingOK = skinAndSex("\u{1F646}", "Gesturing OK");
-const tippingHand = skinAndSex("\u{1F481}", "Tipping Hand");
-const raisingHand = skinAndSex("\u{1F64B}", "Raising Hand");
-const bowing = skinAndSex("\u{1F647}", "Bowing");
-const facePalming = skinAndSex("\u{1F926}", "Facepalming");
-const shrugging = skinAndSex("\u{1F937}", "Shrugging");
-const cantHear = skinAndSex("\u{1F9CF}", "Can't Hear");
-const gettingMassage = skinAndSex("\u{1F486}", "Getting Massage");
-const gettingHaircut = skinAndSex("\u{1F487}", "Getting Haircut");
-
-const constructionWorkers = skinAndSex("\u{1F477}", "Construction Worker");
-const guards = skinAndSex("\u{1F482}", "Guard");
-const spies = skinAndSex("\u{1F575}", "Spy");
-const police = skinAndSex("\u{1F46E}", "Police");
-const wearingTurban = skinAndSex("\u{1F473}", "Wearing Turban");
-const superheroes = skinAndSex("\u{1F9B8}", "Superhero");
-const supervillains = skinAndSex("\u{1F9B9}", "Supervillain");
-const mages = skinAndSex("\u{1F9D9}", "Mage");
-const fairies = skinAndSex("\u{1F9DA}", "Fairy");
-const vampires = skinAndSex("\u{1F9DB}", "Vampire");
-const merpeople = skinAndSex("\u{1F9DC}", "Merperson");
-const elves = skinAndSex("\u{1F9DD}", "Elf");
-const walking = skinAndSex("\u{1F6B6}", "Walking");
-const standing = skinAndSex("\u{1F9CD}", "Standing");
-const kneeling = skinAndSex("\u{1F9CE}", "Kneeling");
-const runners = skinAndSex("\u{1F3C3}", "Running");
-
-const gestures = g(
-    "Gestures", "Gestures",
-    frowners,
-    pouters,
-    gesturingNo,
-    gesturingOK,
-    tippingHand,
-    raisingHand,
-    bowing,
-    facePalming,
-    shrugging,
-    cantHear,
-    gettingMassage,
-    gettingHaircut);
-
-
-const baby = skin("\u{1F476}", "Baby");
-const child = skin("\u{1F9D2}", "Child");
-const boy = skin("\u{1F466}", "Boy");
-const girl = skin("\u{1F467}", "Girl");
-const children = gg(child.value, child.desc, {
-    default: child,
-    male: boy,
-    female: girl
-});
-
-
-const blondes = skinAndSex("\u{1F471}", "Blond Person");
-const person = skin("\u{1F9D1}", "Person", blondes.default, wearingTurban.default);
-
-const beardedMan = skin("\u{1F9D4}", "Bearded Man");
-const manInSuitLevitating = e("\u{1F574}\u{FE0F}", "Man in Suit, Levitating");
-const manWithChineseCap = skin("\u{1F472}", "Man With Chinese Cap");
-const manInTuxedo = skin("\u{1F935}", "Man in Tuxedo");
-const man = skinAndHair("\u{1F468}", "Man",
-    blondes.man,
-    beardedMan,
-    manInSuitLevitating,
-    manWithChineseCap,
-    wearingTurban.man,
-    manInTuxedo);
-
-const pregnantWoman = skin("\u{1F930}", "Pregnant Woman");
-const breastFeeding = skin("\u{1F931}", "Breast-Feeding");
-const womanWithHeadscarf = skin("\u{1F9D5}", "Woman With Headscarf");
-const brideWithVeil = skin("\u{1F470}", "Bride With Veil");
-const woman = skinAndHair("\u{1F469}", "Woman",
-    blondes.woman,
-    pregnantWoman,
-    breastFeeding,
-    womanWithHeadscarf,
-    wearingTurban.woman,
-    brideWithVeil);
-const adults = gg(
-    person.value, "Adult", {
-    default: person,
-    male: man,
-    female: woman
-});
-
-const olderPerson = skin("\u{1F9D3}", "Older Person");
-const oldMan = skin("\u{1F474}", "Old Man");
-const oldWoman = skin("\u{1F475}", "Old Woman");
-const elderly = gg(
-    olderPerson.value, olderPerson.desc, {
-    default: olderPerson,
-    male: oldMan,
-    female: oldWoman
-});
-
-const medical = e("\u{2695}\u{FE0F}", "Medical");
-const healthCareWorkers = sym(medical, "Health Care");
-
-const graduationCap = e("\u{1F393}", "Graduation Cap");
-const students = sym(graduationCap, "Student");
-
-const school = e("\u{1F3EB}", "School");
-const teachers = sym(school, "Teacher");
-
-const balanceScale = e("\u{2696}\u{FE0F}", "Balance Scale");
-const judges = sym(balanceScale, "Judge");
-
-const sheafOfRice = e("\u{1F33E}", "Sheaf of Rice");
-const farmers = sym(sheafOfRice, "Farmer");
-
-const cooking = e("\u{1F373}", "Cooking");
-const cooks = sym(cooking, "Cook");
-
-const wrench = e("\u{1F527}", "Wrench");
-const mechanics = sym(wrench, "Mechanic");
-
-const factory = e("\u{1F3ED}", "Factory");
-const factoryWorkers = sym(factory, "Factory Worker");
-
-const briefcase = e("\u{1F4BC}", "Briefcase");
-const officeWorkers = sym(briefcase, "Office Worker");
-
-const fireEngine = e("\u{1F692}", "Fire Engine");
-const fireFighters = sym(fireEngine, "Fire Fighter");
-
-const rocket = e("\u{1F680}", "Rocket");
-const astronauts = sym(rocket, "Astronaut");
-
-const airplane = e("\u{2708}\u{FE0F}", "Airplane");
-const pilots = sym(airplane, "Pilot");
-
-const artistPalette = e("\u{1F3A8}", "Artist Palette");
-const artists = sym(artistPalette, "Artist");
-
-const microphone = e("\u{1F3A4}", "Microphone");
-const singers = sym(microphone, "Singer");
-
-const laptop = e("\u{1F4BB}", "Laptop");
-const technologists = sym(laptop, "Technologist");
-
-const microscope = e("\u{1F52C}", "Microscope");
-const scientists = sym(microscope, "Scientist");
-
-const crown = e("\u{1F451}", "Crown");
-const prince = skin("\u{1F934}", "Prince");
-const princess = skin("\u{1F478}", "Princess");
-const royalty = gg(
-    crown.value, crown.desc, {
-    symbol: crown,
-    male: prince,
-    female: princess
-});
-
-const roles = gg(
-    "Roles", "Depictions of people working", {
-    healthCareWorkers,
-    students,
-    teachers,
-    judges,
-    farmers,
-    cooks,
-    mechanics,
-    factoryWorkers,
-    officeWorkers,
-    scientists,
-    technologists,
-    singers,
-    artists,
-    pilots,
-    astronauts,
-    fireFighters,
-    spies,
-    guards,
-    constructionWorkers,
-    royalty
-});
-
-const cherub = skin("\u{1F47C}", "Cherub");
-const santaClaus = skin("\u{1F385}", "Santa Claus");
-const mrsClaus = skin("\u{1F936}", "Mrs. Claus");
-
-const genies = sex(e("\u{1F9DE}", "Genie"));
-const zombies = sex(e("\u{1F9DF}", "Zombie"));
-
-const fantasy = gg(
-    "Fantasy", "Depictions of fantasy characters", {
-    cherub,
-    santaClaus,
-    mrsClaus,
-    superheroes,
-    supervillains,
-    mages,
-    fairies,
-    vampires,
-    merpeople,
-    elves,
-    genies,
-    zombies
-});
-
-const whiteCane = e("\u{1F9AF}", "Probing Cane");
-const withProbingCane = sym(whiteCane, "Probing");
-
-const motorizedWheelchair = e("\u{1F9BC}", "Motorized Wheelchair");
-const inMotorizedWheelchair = sym(motorizedWheelchair, "In Motorized Wheelchair");
-
-const manualWheelchair = e("\u{1F9BD}", "Manual Wheelchair");
-const inManualWheelchair = sym(manualWheelchair, "In Manual Wheelchair");
-
-
-const manDancing = skin("\u{1F57A}", "Man Dancing");
-const womanDancing = skin("\u{1F483}", "Woman Dancing");
-const dancers = gg(
-    manDancing.value, "Dancing", {
-    male: manDancing,
-    female: womanDancing
-});
-
-const jugglers = skinAndSex("\u{1F939}", "Juggler");
-
-const climbers = skinAndSex("\u{1F9D7}", "Climber");
-const fencer = e("\u{1F93A}", "Fencer");
-const jockeys = skin("\u{1F3C7}", "Jockey");
-const skier = e("\u{26F7}\u{FE0F}", "Skier");
-const snowboarders = skin("\u{1F3C2}", "Snowboarder");
-const golfers = skinAndSex("\u{1F3CC}\u{FE0F}", "Golfer");
-const surfers = skinAndSex("\u{1F3C4}", "Surfing");
-const rowers = skinAndSex("\u{1F6A3}", "Rowing Boat");
-const swimmers = skinAndSex("\u{1F3CA}", "Swimming");
-const basketballers = skinAndSex("\u{26F9}\u{FE0F}", "Basket Baller");
-const weightLifters = skinAndSex("\u{1F3CB}\u{FE0F}", "Weight Lifter");
-const bikers = skinAndSex("\u{1F6B4}", "Biker");
-const mountainBikers = skinAndSex("\u{1F6B5}", "Mountain Biker");
-const cartwheelers = skinAndSex("\u{1F938}", "Cartwheeler");
-const wrestlers = sex(e("\u{1F93C}", "Wrestler"));
-const waterPoloers = skinAndSex("\u{1F93D}", "Water Polo Player");
-const handBallers = skinAndSex("\u{1F93E}", "Hand Baller");
-
-const inMotion = gg(
-    "In Motion", "Depictions of people in motion", {
-    walking,
-    standing,
-    kneeling,
-    withProbingCane,
-    inMotorizedWheelchair,
-    inManualWheelchair,
-    dancers,
-    jugglers,
-    climbers,
-    fencer,
-    jockeys,
-    skier,
-    snowboarders,
-    golfers,
-    surfers,
-    rowers,
-    swimmers,
-    runners,
-    basketballers,
-    weightLifters,
-    bikers,
-    mountainBikers,
-    cartwheelers,
-    wrestlers,
-    waterPoloers,
-    handBallers
-});
-
-const inLotusPosition = skinAndSex("\u{1F9D8}", "In Lotus Position");
-const inBath = skin("\u{1F6C0}", "In Bath");
-const inBed = skin("\u{1F6CC}", "In Bed");
-const inSauna = skinAndSex("\u{1F9D6}", "In Sauna");
-const resting = gg(
-    "Resting", "Depictions of people at rest", {
-    inLotusPosition,
-    inBath,
-    inBed,
-    inSauna
-});
-
-const babies = g(baby.value, baby.desc, baby, cherub);
-const people = gg(
-    "People", "People", {
-    babies,
-    children,
-    adults,
-    elderly
-});
-
-const allPeople = gg(
-    "All People", "All People", {
-    people,
-    gestures,
-    inMotion,
-    resting,
-    roles,
-    fantasy
-});
-
-const ogre = e("\u{1F479}", "Ogre");
-const goblin = e("\u{1F47A}", "Goblin");
-const ghost = e("\u{1F47B}", "Ghost");
-const alien = e("\u{1F47D}", "Alien");
-const alienMonster = e("\u{1F47E}", "Alien Monster");
-const angryFaceWithHorns = e("\u{1F47F}", "Angry Face with Horns");
-const skull = e("\u{1F480}", "Skull");
-const pileOfPoo = e("\u{1F4A9}", "Pile of Poo");
-const grinningFace = e("\u{1F600}", "Grinning Face");
-const beamingFaceWithSmilingEyes = e("\u{1F601}", "Beaming Face with Smiling Eyes");
-const faceWithTearsOfJoy = e("\u{1F602}", "Face with Tears of Joy");
-const grinningFaceWithBigEyes = e("\u{1F603}", "Grinning Face with Big Eyes");
-const grinningFaceWithSmilingEyes = e("\u{1F604}", "Grinning Face with Smiling Eyes");
-const grinningFaceWithSweat = e("\u{1F605}", "Grinning Face with Sweat");
-const grinningSquitingFace = e("\u{1F606}", "Grinning Squinting Face");
-const smillingFaceWithHalo = e("\u{1F607}", "Smiling Face with Halo");
-const smilingFaceWithHorns = e("\u{1F608}", "Smiling Face with Horns");
-const winkingFace = e("\u{1F609}", "Winking Face");
-const smilingFaceWithSmilingEyes = e("\u{1F60A}", "Smiling Face with Smiling Eyes");
-const faceSavoringFood = e("\u{1F60B}", "Face Savoring Food");
-const relievedFace = e("\u{1F60C}", "Relieved Face");
-const smilingFaceWithHeartEyes = e("\u{1F60D}", "Smiling Face with Heart-Eyes");
-const smilingFaceWithSunglasses = e("\u{1F60E}", "Smiling Face with Sunglasses");
-const smirkingFace = e("\u{1F60F}", "Smirking Face");
-const neutralFace = e("\u{1F610}", "Neutral Face");
-const expressionlessFace = e("\u{1F611}", "Expressionless Face");
-const unamusedFace = e("\u{1F612}", "Unamused Face");
-const downcastFaceWithSweat = e("\u{1F613}", "Downcast Face with Sweat");
-const pensiveFace = e("\u{1F614}", "Pensive Face");
-const confusedFace = e("\u{1F615}", "Confused Face");
-const confoundedFace = e("\u{1F616}", "Confounded Face");
-const kissingFace = e("\u{1F617}", "Kissing Face");
-const faceBlowingAKiss = e("\u{1F618}", "Face Blowing a Kiss");
-const kissingFaceWithSmilingEyes = e("\u{1F619}", "Kissing Face with Smiling Eyes");
-const kissingFaceWithClosedEyes = e("\u{1F61A}", "Kissing Face with Closed Eyes");
-const faceWithTongue = e("\u{1F61B}", "Face with Tongue");
-const winkingFaceWithTongue = e("\u{1F61C}", "Winking Face with Tongue");
-const squintingFaceWithTongue = e("\u{1F61D}", "Squinting Face with Tongue");
-const disappointedFace = e("\u{1F61E}", "Disappointed Face");
-const worriedFace = e("\u{1F61F}", "Worried Face");
-const angryFace = e("\u{1F620}", "Angry Face");
-const poutingFace = e("\u{1F621}", "Pouting Face");
-const cryingFace = e("\u{1F622}", "Crying Face");
-const perseveringFace = e("\u{1F623}", "Persevering Face");
-const faceWithSteamFromNose = e("\u{1F624}", "Face with Steam From Nose");
-const sadButRelievedFace = e("\u{1F625}", "Sad but Relieved Face");
-const frowningFaceWithOpenMouth = e("\u{1F626}", "Frowning Face with Open Mouth");
-const anguishedFace = e("\u{1F627}", "Anguished Face");
-const fearfulFace = e("\u{1F628}", "Fearful Face");
-const wearyFace = e("\u{1F629}", "Weary Face");
-const sleepyFace = e("\u{1F62A}", "Sleepy Face");
-const tiredFace = e("\u{1F62B}", "Tired Face");
-const grimacingFace = e("\u{1F62C}", "Grimacing Face");
-const loudlyCryingFace = e("\u{1F62D}", "Loudly Crying Face");
-const faceWithOpenMouth = e("\u{1F62E}", "Face with Open Mouth");
-const hushedFace = e("\u{1F62F}", "Hushed Face");
-const anxiousFaceWithSweat = e("\u{1F630}", "Anxious Face with Sweat");
-const faceScreamingInFear = e("\u{1F631}", "Face Screaming in Fear");
-const astonishedFace = e("\u{1F632}", "Astonished Face");
-const flushedFace = e("\u{1F633}", "Flushed Face");
-const sleepingFace = e("\u{1F634}", "Sleeping Face");
-const dizzyFace = e("\u{1F635}", "Dizzy Face");
-const faceWithoutMouth = e("\u{1F636}", "Face Without Mouth");
-const faceWithMedicalMask = e("\u{1F637}", "Face with Medical Mask");
-const grinningCatWithSmilingEyes = e("\u{1F638}", "Grinning Cat with Smiling Eyes");
-const catWithTearsOfJoy = e("\u{1F639}", "Cat with Tears of Joy");
-const grinningCat = e("\u{1F63A}", "Grinning Cat");
-const smilingCatWithHeartEyes = e("\u{1F63B}", "Smiling Cat with Heart-Eyes");
-const catWithWrySmile = e("\u{1F63C}", "Cat with Wry Smile");
-const kissingCat = e("\u{1F63D}", "Kissing Cat");
-const poutingCat = e("\u{1F63E}", "Pouting Cat");
-const cryingCat = e("\u{1F63F}", "Crying Cat");
-const wearyCat = e("\u{1F640}", "Weary Cat");
-const slightlyFrowningFace = e("\u{1F641}", "Slightly Frowning Face");
-const slightlySmilingFace = e("\u{1F642}", "Slightly Smiling Face");
-const updisdeDownFace = e("\u{1F643}", "Upside-Down Face");
-const faceWithRollingEyes = e("\u{1F644}", "Face with Rolling Eyes");
-const seeNoEvilMonkey = e("\u{1F648}", "See-No-Evil Monkey");
-const hearNoEvilMonkey = e("\u{1F649}", "Hear-No-Evil Monkey");
-const speakNoEvilMonkey = e("\u{1F64A}", "Speak-No-Evil Monkey");
-const zipperMouthFace = e("\u{1F910}", "Zipper-Mouth Face");
-const moneyMouthFace = e("\u{1F911}", "Money-Mouth Face");
-const faceWithThermometer = e("\u{1F912}", "Face with Thermometer");
-const nerdFace = e("\u{1F913}", "Nerd Face");
-const thinkingFace = e("\u{1F914}", "Thinking Face");
-const faceWithHeadBandage = e("\u{1F915}", "Face with Head-Bandage");
-const robot = e("\u{1F916}", "Robot");
-const huggingFace = e("\u{1F917}", "Hugging Face");
-const cowboyHatFace = e("\u{1F920}", "Cowboy Hat Face");
-const clownFace = e("\u{1F921}", "Clown Face");
-const nauseatedFace = e("\u{1F922}", "Nauseated Face");
-const rollingOnTheFloorLaughing = e("\u{1F923}", "Rolling on the Floor Laughing");
-const droolingFace = e("\u{1F924}", "Drooling Face");
-const lyingFace = e("\u{1F925}", "Lying Face");
-const sneezingFace = e("\u{1F927}", "Sneezing Face");
-const faceWithRaisedEyebrow = e("\u{1F928}", "Face with Raised Eyebrow");
-const starStruck = e("\u{1F929}", "Star-Struck");
-const zanyFace = e("\u{1F92A}", "Zany Face");
-const shushingFace = e("\u{1F92B}", "Shushing Face");
-const faceWithSymbolsOnMouth = e("\u{1F92C}", "Face with Symbols on Mouth");
-const faceWithHandOverMouth = e("\u{1F92D}", "Face with Hand Over Mouth");
-const faceVomitting = e("\u{1F92E}", "Face Vomiting");
-const explodingHead = e("\u{1F92F}", "Exploding Head");
-const smilingFaceWithHearts = e("\u{1F970}", "Smiling Face with Hearts");
-const yawningFace = e("\u{1F971}", "Yawning Face");
-//export const smilingFaceWithTear = e("\u{1F972}", "Smiling Face with Tear");
-const partyingFace = e("\u{1F973}", "Partying Face");
-const woozyFace = e("\u{1F974}", "Woozy Face");
-const hotFace = e("\u{1F975}", "Hot Face");
-const coldFace = e("\u{1F976}", "Cold Face");
-//export const disguisedFace = e("\u{1F978}", "Disguised Face");
-const pleadingFace = e("\u{1F97A}", "Pleading Face");
-const faceWithMonocle = e("\u{1F9D0}", "Face with Monocle");
-const skullAndCrossbones = e("\u{2620}\u{FE0F}", "Skull and Crossbones");
-const frowningFace = e("\u{2639}\u{FE0F}", "Frowning Face");
-const smilingFace = e("\u{263A}\u{FE0F}", "Smiling Face");
-const speakingHead = e("\u{1F5E3}\u{FE0F}", "Speaking Head");
-const bust = e("\u{1F464}", "Bust in Silhouette");
-const faces = gg(
-    "Faces", "Round emoji faces", {
-    ogre,
-    goblin,
-    ghost,
-    alien,
-    alienMonster,
-    angryFaceWithHorns,
-    skull,
-    pileOfPoo,
-    grinningFace,
-    beamingFaceWithSmilingEyes,
-    faceWithTearsOfJoy,
-    grinningFaceWithBigEyes,
-    grinningFaceWithSmilingEyes,
-    grinningFaceWithSweat,
-    grinningSquitingFace,
-    smillingFaceWithHalo,
-    smilingFaceWithHorns,
-    winkingFace,
-    smilingFaceWithSmilingEyes,
-    faceSavoringFood,
-    relievedFace,
-    smilingFaceWithHeartEyes,
-    smilingFaceWithSunglasses,
-    smirkingFace,
-    neutralFace,
-    expressionlessFace,
-    unamusedFace,
-    downcastFaceWithSweat,
-    pensiveFace,
-    confusedFace,
-    confoundedFace,
-    kissingFace,
-    faceBlowingAKiss,
-    kissingFaceWithSmilingEyes,
-    kissingFaceWithClosedEyes,
-    faceWithTongue,
-    winkingFaceWithTongue,
-    squintingFaceWithTongue,
-    disappointedFace,
-    worriedFace,
-    angryFace,
-    poutingFace,
-    cryingFace,
-    perseveringFace,
-    faceWithSteamFromNose,
-    sadButRelievedFace,
-    frowningFaceWithOpenMouth,
-    anguishedFace,
-    fearfulFace,
-    wearyFace,
-    sleepyFace,
-    tiredFace,
-    grimacingFace,
-    loudlyCryingFace,
-    faceWithOpenMouth,
-    hushedFace,
-    anxiousFaceWithSweat,
-    faceScreamingInFear,
-    astonishedFace,
-    flushedFace,
-    sleepingFace,
-    dizzyFace,
-    faceWithoutMouth,
-    faceWithMedicalMask,
-    grinningCatWithSmilingEyes,
-    catWithTearsOfJoy,
-    grinningCat,
-    smilingCatWithHeartEyes,
-    catWithWrySmile,
-    kissingCat,
-    poutingCat,
-    cryingCat,
-    wearyCat,
-    slightlyFrowningFace,
-    slightlySmilingFace,
-    updisdeDownFace,
-    faceWithRollingEyes,
-    seeNoEvilMonkey,
-    hearNoEvilMonkey,
-    speakNoEvilMonkey,
-    zipperMouthFace,
-    moneyMouthFace,
-    faceWithThermometer,
-    nerdFace,
-    thinkingFace,
-    faceWithHeadBandage,
-    robot,
-    huggingFace,
-    cowboyHatFace,
-    clownFace,
-    nauseatedFace,
-    rollingOnTheFloorLaughing,
-    droolingFace,
-    lyingFace,
-    sneezingFace,
-    faceWithRaisedEyebrow,
-    starStruck,
-    zanyFace,
-    shushingFace,
-    faceWithSymbolsOnMouth,
-    faceWithHandOverMouth,
-    faceVomitting,
-    explodingHead,
-    smilingFaceWithHearts,
-    yawningFace,
-    //smilingFaceWithTear,
-    partyingFace,
-    woozyFace,
-    hotFace,
-    coldFace,
-    //disguisedFace,
-    pleadingFace,
-    faceWithMonocle,
-    skullAndCrossbones,
-    frowningFace,
-    smilingFace,
-    speakingHead,
-    bust,
-});
-
-const kissMark = e("\u{1F48B}", "Kiss Mark");
-const loveLetter = e("\u{1F48C}", "Love Letter");
-const beatingHeart = e("\u{1F493}", "Beating Heart");
-const brokenHeart = e("\u{1F494}", "Broken Heart");
-const twoHearts = e("\u{1F495}", "Two Hearts");
-const sparklingHeart = e("\u{1F496}", "Sparkling Heart");
-const growingHeart = e("\u{1F497}", "Growing Heart");
-const heartWithArrow = e("\u{1F498}", "Heart with Arrow");
-const blueHeart = e("\u{1F499}", "Blue Heart");
-const greenHeart = e("\u{1F49A}", "Green Heart");
-const yellowHeart = e("\u{1F49B}", "Yellow Heart");
-const purpleHeart = e("\u{1F49C}", "Purple Heart");
-const heartWithRibbon = e("\u{1F49D}", "Heart with Ribbon");
-const revolvingHearts = e("\u{1F49E}", "Revolving Hearts");
-const heartDecoration = e("\u{1F49F}", "Heart Decoration");
-const blackHeart = e("\u{1F5A4}", "Black Heart");
-const whiteHeart = e("\u{1F90D}", "White Heart");
-const brownHeart = e("\u{1F90E}", "Brown Heart");
-const orangeHeart = e("\u{1F9E1}", "Orange Heart");
-const heartExclamation = e("\u{2763}\u{FE0F}", "Heart Exclamation");
-const redHeart = e("\u{2764}\u{FE0F}", "Red Heart");
-const love = gg(
-    "Love", "Hearts and kisses", {
-    kissMark,
-    loveLetter,
-    beatingHeart,
-    brokenHeart,
-    twoHearts,
-    sparklingHeart,
-    growingHeart,
-    heartWithArrow,
-    blueHeart,
-    greenHeart,
-    yellowHeart,
-    purpleHeart,
-    heartWithRibbon,
-    revolvingHearts,
-    heartDecoration,
-    blackHeart,
-    whiteHeart,
-    brownHeart,
-    orangeHeart,
-    heartExclamation,
-    redHeart,
-});
-
-const angerSymbol = e("\u{1F4A2}", "Anger Symbol");
-const bomb = e("\u{1F4A3}", "Bomb");
-const zzz = e("\u{1F4A4}", "Zzz");
-const collision = e("\u{1F4A5}", "Collision");
-const sweatDroplets = e("\u{1F4A6}", "Sweat Droplets");
-const dashingAway = e("\u{1F4A8}", "Dashing Away");
-const dizzy = e("\u{1F4AB}", "Dizzy");
-const speechBalloon = e("\u{1F4AC}", "Speech Balloon");
-const thoughtBalloon = e("\u{1F4AD}", "Thought Balloon");
-const hundredPoints = e("\u{1F4AF}", "Hundred Points");
-const hole = e("\u{1F573}\u{FE0F}", "Hole");
-const leftSpeechBubble = e("\u{1F5E8}\u{FE0F}", "Left Speech Bubble");
-const rightSpeechBubble = e("\u{1F5E9}\u{FE0F}", "Right Speech Bubble");
-const conversationBubbles2 = e("\u{1F5EA}\u{FE0F}", "Conversation Bubbles 2");
-const conversationBubbles3 = e("\u{1F5EB}\u{FE0F}", "Conversation Bubbles 3");
-const leftThoughtBubble = e("\u{1F5EC}\u{FE0F}", "Left Thought Bubble");
-const rightThoughtBubble = e("\u{1F5ED}\u{FE0F}", "Right Thought Bubble");
-const leftAngerBubble = e("\u{1F5EE}\u{FE0F}", "Left Anger Bubble");
-const rightAngerBubble = e("\u{1F5EF}\u{FE0F}", "Right Anger Bubble");
-const angerBubble = e("\u{1F5F0}\u{FE0F}", "Anger Bubble");
-const angerBubbleLightningBolt = e("\u{1F5F1}\u{FE0F}", "Anger Bubble Lightning");
-const lightningBolt = e("\u{1F5F2}\u{FE0F}", "Lightning Bolt");
-
-const cartoon = g(
-    "Cartoon", "Cartoon symbols",
-    angerSymbol,
-    bomb,
-    zzz,
-    collision,
-    sweatDroplets,
-    dashingAway,
-    dizzy,
-    speechBalloon,
-    thoughtBalloon,
-    hundredPoints,
-    hole,
-    leftSpeechBubble,
-    rightSpeechBubble,
-    conversationBubbles2,
-    conversationBubbles3,
-    leftThoughtBubble,
-    rightThoughtBubble,
-    leftAngerBubble,
-    rightAngerBubble,
-    angerBubble,
-    angerBubbleLightningBolt,
-    lightningBolt);
-
-const backhandIndexPointingUp = e("\u{1F446}", "Backhand Index Pointing Up");
-const backhandIndexPointingDown = e("\u{1F447}", "Backhand Index Pointing Down");
-const backhandIndexPointingLeft = e("\u{1F448}", "Backhand Index Pointing Left");
-const backhandIndexPointingRight = e("\u{1F449}", "Backhand Index Pointing Right");
-const oncomingFist = e("\u{1F44A}", "Oncoming Fist");
-const wavingHand = e("\u{1F44B}", "Waving Hand");
-const okHand = e("\u{1F58F}", "OK Hand");
-const thumbsUp = e("\u{1F44D}", "Thumbs Up");
-const thumbsDown = e("\u{1F44E}", "Thumbs Down");
-const clappingHands = e("\u{1F44F}", "Clapping Hands");
-const openHands = e("\u{1F450}", "Open Hands");
-const nailPolish = e("\u{1F485}", "Nail Polish");
-const handsWithFingersSplayed = e("\u{1F590}\u{FE0F}", "Hand with Fingers Splayed");
-const handsWithFingersSplayed2 = e("\u{1F591}\u{FE0F}", "Hand with Fingers Splayed 2");
-const thumbsUp2 = e("\u{1F592}", "Thumbs Up 2");
-const thumbsDown2 = e("\u{1F593}", "Thumbs Down 2");
-const peaceFingers = e("\u{1F594}", "Peace Fingers");
-const middleFinger = e("\u{1F595}", "Middle Finger");
-const vulcanSalute = e("\u{1F596}", "Vulcan Salute");
-const handPointingDown = e("\u{1F597}", "Hand Pointing Down");
-const handPointingLeft = e("\u{1F598}", "Hand Pointing Left");
-const handPointingRight = e("\u{1F599}", "Hand Pointing Right");
-const handPointingLeft2 = e("\u{1F59A}", "Hand Pointing Left 2");
-const handPointingRight2 = e("\u{1F59B}", "Hand Pointing Right 2");
-const indexPointingLeft = e("\u{1F59C}", "Index Pointing Left");
-const indexPointingRight = e("\u{1F59D}", "Index Pointing Right");
-const indexPointingUp = e("\u{1F59E}", "Index Pointing Up");
-const indexPointingDown = e("\u{1F59F}", "Index Pointing Down");
-const indexPointingUp2 = e("\u{1F5A0}", "Index Pointing Up 2");
-const indexPointingDown2 = e("\u{1F5A1}", "Index Pointing Down 2");
-const indexPointingUp3 = e("\u{1F5A2}", "Index Pointing Up 3");
-const indexPointingDown3 = e("\u{1F5A3}", "Index Pointing Down 3");
-const raisingHands = e("\u{1F64C}", "Raising Hands");
-const foldedHands = e("\u{1F64F}", "Folded Hands");
-//export const pinchedFingers = e("\u{1F90C}", "Pinched Fingers");
-const pinchingHand = e("\u{1F90F}", "Pinching Hand");
-const signOfTheHorns = e("\u{1F918}", "Sign of the Horns");
-const callMeHand = e("\u{1F919}", "Call Me Hand");
-const rasiedBackOfHand = e("\u{1F91A}", "Raised Back of Hand");
-const leftFacingFist = e("\u{1F91B}", "Left-Facing Fist");
-const rightFacingFist = e("\u{1F91C}", "Right-Facing Fist");
-const handshake = e("\u{1F91D}", "Handshake");
-const crossedFingers = e("\u{1F91E}", "Crossed Fingers");
-const loveYouGesture = e("\u{1F91F}", "Love-You Gesture");
-const palmsUpTogether = e("\u{1F932}", "Palms Up Together");
-const indexPointingUp4 = e("\u{261D}\u{FE0F}", "Index Pointing Up 4");
-const raisedFist = e("\u{270A}", "Raised Fist");
-const raisedHand = e("\u{270B}", "Raised Hand");
-const victoryHand = e("\u{270C}\u{FE0F}", "Victory Hand");
-const writingHand = e("\u{270D}\u{FE0F}", "Writing Hand");
-const hands = g(
-    "Hands", "Hands pointing at things",
-    backhandIndexPointingUp,
-    backhandIndexPointingDown,
-    backhandIndexPointingLeft,
-    backhandIndexPointingRight,
-    oncomingFist,
-    wavingHand,
-    okHand,
-    thumbsUp,
-    thumbsDown,
-    clappingHands,
-    openHands,
-    nailPolish,
-    handsWithFingersSplayed,
-    handsWithFingersSplayed2,
-    handsWithFingersSplayed2,
-    thumbsUp2,
-    thumbsDown2,
-    peaceFingers,
-    middleFinger,
-    vulcanSalute,
-    handPointingDown,
-    handPointingLeft,
-    handPointingRight,
-    handPointingLeft2,
-    handPointingRight2,
-    indexPointingLeft,
-    indexPointingRight,
-    indexPointingUp,
-    indexPointingDown,
-    indexPointingUp2,
-    indexPointingDown2,
-    indexPointingUp3,
-    indexPointingDown3,
-    raisingHands,
-    foldedHands,
-    //pinchedFingers,
-    pinchingHand,
-    signOfTheHorns,
-    callMeHand,
-    rasiedBackOfHand,
-    leftFacingFist,
-    rightFacingFist,
-    handshake,
-    crossedFingers,
-    loveYouGesture,
-    palmsUpTogether,
-    indexPointingUp4,
-    raisedFist,
-    raisedHand,
-    victoryHand,
-    writingHand);
-
-const bodyParts = g(
-    "Body Parts", "General body parts",
-    e("\u{1F440}", "Eyes"),
-    e("\u{1F441}\u{FE0F}", "Eye"),
-    e("\u{1F441}\u{FE0F}\u{200D}\u{1F5E8}\u{FE0F}", "Eye in Speech Bubble"),
-    e("\u{1F442}", "Ear"),
-    e("\u{1F443}", "Nose"),
-    e("\u{1F444}", "Mouth"),
-    e("\u{1F445}", "Tongue"),
-    e("\u{1F4AA}", "Flexed Biceps"),
-    e("\u{1F933}", "Selfie"),
-    e("\u{1F9B4}", "Bone"),
-    e("\u{1F9B5}", "Leg"),
-    e("\u{1F9B6}", "Foot"),
-    e("\u{1F9B7}", "Tooth"),
-    e("\u{1F9BB}", "Ear with Hearing Aid"),
-    e("\u{1F9BE}", "Mechanical Arm"),
-    e("\u{1F9BF}", "Mechanical Leg"),
-    //e("\u{1FAC0}", "Anatomical Heart"),
-    //e("\u{1FAC1}", "Lungs"),
-    e("\u{1F9E0}", "Brain"));
-
-const animals = g(
-    "Animals", "Animals and insects",
-    e("\u{1F400}", "Rat"),
-    e("\u{1F401}", "Mouse"),
-    e("\u{1F402}", "Ox"),
-    e("\u{1F403}", "Water Buffalo"),
-    e("\u{1F404}", "Cow"),
-    e("\u{1F405}", "Tiger"),
-    e("\u{1F406}", "Leopard"),
-    e("\u{1F407}", "Rabbit"),
-    e("\u{1F408}", "Cat"),
-    //e("\u{1F408}\u{200D}\u{2B1B}", "Black Cat"),
-    e("\u{1F409}", "Dragon"),
-    e("\u{1F40A}", "Crocodile"),
-    e("\u{1F40B}", "Whale"),
-    e("\u{1F40C}", "Snail"),
-    e("\u{1F40D}", "Snake"),
-    e("\u{1F40E}", "Horse"),
-    e("\u{1F40F}", "Ram"),
-    e("\u{1F410}", "Goat"),
-    e("\u{1F411}", "Ewe"),
-    e("\u{1F412}", "Monkey"),
-    e("\u{1F413}", "Rooster"),
-    e("\u{1F414}", "Chicken"),
-    e("\u{1F415}", "Dog"),
-    e("\u{1F415}\u{200D}\u{1F9BA}", "Service Dog"),
-    e("\u{1F416}", "Pig"),
-    e("\u{1F417}", "Boar"),
-    e("\u{1F418}", "Elephant"),
-    e("\u{1F419}", "Octopus"),
-    e("\u{1F41A}", "Spiral Shell"),
-    e("\u{1F41B}", "Bug"),
-    e("\u{1F41C}", "Ant"),
-    e("\u{1F41D}", "Honeybee"),
-    e("\u{1F41E}", "Lady Beetle"),
-    e("\u{1F41F}", "Fish"),
-    e("\u{1F420}", "Tropical Fish"),
-    e("\u{1F421}", "Blowfish"),
-    e("\u{1F422}", "Turtle"),
-    e("\u{1F423}", "Hatching Chick"),
-    e("\u{1F424}", "Baby Chick"),
-    e("\u{1F425}", "Front-Facing Baby Chick"),
-    e("\u{1F426}", "Bird"),
-    e("\u{1F427}", "Penguin"),
-    e("\u{1F428}", "Koala"),
-    e("\u{1F429}", "Poodle"),
-    e("\u{1F42A}", "Camel"),
-    e("\u{1F42B}", "Two-Hump Camel"),
-    e("\u{1F42C}", "Dolphin"),
-    e("\u{1F42D}", "Mouse Face"),
-    e("\u{1F42E}", "Cow Face"),
-    e("\u{1F42F}", "Tiger Face"),
-    e("\u{1F430}", "Rabbit Face"),
-    e("\u{1F431}", "Cat Face"),
-    e("\u{1F432}", "Dragon Face"),
-    e("\u{1F433}", "Spouting Whale"),
-    e("\u{1F434}", "Horse Face"),
-    e("\u{1F435}", "Monkey Face"),
-    e("\u{1F436}", "Dog Face"),
-    e("\u{1F437}", "Pig Face"),
-    e("\u{1F438}", "Frog"),
-    e("\u{1F439}", "Hamster"),
-    e("\u{1F43A}", "Wolf"),
-    e("\u{1F43B}", "Bear"),
-    e("\u{1F43B}\u{200D}\u{2744}\u{FE0F}", "Polar Bear"),
-    e("\u{1F43C}", "Panda"),
-    e("\u{1F43D}", "Pig Nose"),
-    e("\u{1F43E}", "Paw Prints"),
-    e("\u{1F43F}\u{FE0F}", "Chipmunk"),
-    e("\u{1F54A}\u{FE0F}", "Dove"),
-    e("\u{1F577}\u{FE0F}", "Spider"),
-    e("\u{1F578}\u{FE0F}", "Spider Web"),
-    e("\u{1F981}", "Lion"),
-    e("\u{1F982}", "Scorpion"),
-    e("\u{1F983}", "Turkey"),
-    e("\u{1F984}", "Unicorn"),
-    e("\u{1F985}", "Eagle"),
-    e("\u{1F986}", "Duck"),
-    e("\u{1F987}", "Bat"),
-    e("\u{1F988}", "Shark"),
-    e("\u{1F989}", "Owl"),
-    e("\u{1F98A}", "Fox"),
-    e("\u{1F98B}", "Butterfly"),
-    e("\u{1F98C}", "Deer"),
-    e("\u{1F98D}", "Gorilla"),
-    e("\u{1F98E}", "Lizard"),
-    e("\u{1F98F}", "Rhinoceros"),
-    e("\u{1F992}", "Giraffe"),
-    e("\u{1F993}", "Zebra"),
-    e("\u{1F994}", "Hedgehog"),
-    e("\u{1F995}", "Sauropod"),
-    e("\u{1F996}", "T-Rex"),
-    e("\u{1F997}", "Cricket"),
-    e("\u{1F998}", "Kangaroo"),
-    e("\u{1F999}", "Llama"),
-    e("\u{1F99A}", "Peacock"),
-    e("\u{1F99B}", "Hippopotamus"),
-    e("\u{1F99C}", "Parrot"),
-    e("\u{1F99D}", "Raccoon"),
-    e("\u{1F99F}", "Mosquito"),
-    e("\u{1F9A0}", "Microbe"),
-    e("\u{1F9A1}", "Badger"),
-    e("\u{1F9A2}", "Swan"),
-    //e("\u{1F9A3}", "Mammoth"),
-    //e("\u{1F9A4}", "Dodo"),
-    e("\u{1F9A5}", "Sloth"),
-    e("\u{1F9A6}", "Otter"),
-    e("\u{1F9A7}", "Orangutan"),
-    e("\u{1F9A8}", "Skunk"),
-    e("\u{1F9A9}", "Flamingo"),
-    //e("\u{1F9AB}", "Beaver"),
-    //e("\u{1F9AC}", "Bison"),
-    //e("\u{1F9AD}", "Seal"),
-    //e("\u{1FAB0}", "Fly"),
-    //e("\u{1FAB1}", "Worm"),
-    //e("\u{1FAB2}", "Beetle"),
-    //e("\u{1FAB3}", "Cockroach"),
-    //e("\u{1FAB6}", "Feather"),
-    e("\u{1F9AE}", "Guide Dog"));
-
-const whiteFlower = e("\u{1F4AE}", "White Flower");
-const plants = g(
-    "Plants", "Flowers, trees, and things",
-    e("\u{1F331}", "Seedling"),
-    e("\u{1F332}", "Evergreen Tree"),
-    e("\u{1F333}", "Deciduous Tree"),
-    e("\u{1F334}", "Palm Tree"),
-    e("\u{1F335}", "Cactus"),
-    e("\u{1F337}", "Tulip"),
-    e("\u{1F338}", "Cherry Blossom"),
-    e("\u{1F339}", "Rose"),
-    e("\u{1F33A}", "Hibiscus"),
-    e("\u{1F33B}", "Sunflower"),
-    e("\u{1F33C}", "Blossom"),
-    sheafOfRice,
-    e("\u{1F33F}", "Herb"),
-    e("\u{1F340}", "Four Leaf Clover"),
-    e("\u{1F341}", "Maple Leaf"),
-    e("\u{1F342}", "Fallen Leaf"),
-    e("\u{1F343}", "Leaf Fluttering in Wind"),
-    e("\u{1F3F5}\u{FE0F}", "Rosette"),
-    e("\u{1F490}", "Bouquet"),
-    whiteFlower,
-    e("\u{1F940}", "Wilted Flower"),
-    //e("\u{1FAB4}", "Potted Plant"),
-    e("\u{2618}\u{FE0F}", "Shamrock"));
-
-const banana = e("\u{1F34C}", "Banana");
-const food = g(
-    "Food", "Food, drink, and utensils",
-    e("\u{1F32D}", "Hot Dog"),
-    e("\u{1F32E}", "Taco"),
-    e("\u{1F32F}", "Burrito"),
-    e("\u{1F330}", "Chestnut"),
-    e("\u{1F336}\u{FE0F}", "Hot Pepper"),
-    e("\u{1F33D}", "Ear of Corn"),
-    e("\u{1F344}", "Mushroom"),
-    e("\u{1F345}", "Tomato"),
-    e("\u{1F346}", "Eggplant"),
-    e("\u{1F347}", "Grapes"),
-    e("\u{1F348}", "Melon"),
-    e("\u{1F349}", "Watermelon"),
-    e("\u{1F34A}", "Tangerine"),
-    e("\u{1F34B}", "Lemon"),
-    banana,
-    e("\u{1F34D}", "Pineapple"),
-    e("\u{1F34E}", "Red Apple"),
-    e("\u{1F34F}", "Green Apple"),
-    e("\u{1F350}", "Pear"),
-    e("\u{1F351}", "Peach"),
-    e("\u{1F352}", "Cherries"),
-    e("\u{1F353}", "Strawberry"),
-    e("\u{1F354}", "Hamburger"),
-    e("\u{1F355}", "Pizza"),
-    e("\u{1F356}", "Meat on Bone"),
-    e("\u{1F357}", "Poultry Leg"),
-    e("\u{1F358}", "Rice Cracker"),
-    e("\u{1F359}", "Rice Ball"),
-    e("\u{1F35A}", "Cooked Rice"),
-    e("\u{1F35B}", "Curry Rice"),
-    e("\u{1F35C}", "Steaming Bowl"),
-    e("\u{1F35D}", "Spaghetti"),
-    e("\u{1F35E}", "Bread"),
-    e("\u{1F35F}", "French Fries"),
-    e("\u{1F360}", "Roasted Sweet Potato"),
-    e("\u{1F361}", "Dango"),
-    e("\u{1F362}", "Oden"),
-    e("\u{1F363}", "Sushi"),
-    e("\u{1F364}", "Fried Shrimp"),
-    e("\u{1F365}", "Fish Cake with Swirl"),
-    e("\u{1F371}", "Bento Box"),
-    e("\u{1F372}", "Pot of Food"),
-    cooking,
-    e("\u{1F37F}", "Popcorn"),
-    e("\u{1F950}", "Croissant"),
-    e("\u{1F951}", "Avocado"),
-    e("\u{1F952}", "Cucumber"),
-    e("\u{1F953}", "Bacon"),
-    e("\u{1F954}", "Potato"),
-    e("\u{1F955}", "Carrot"),
-    e("\u{1F956}", "Baguette Bread"),
-    e("\u{1F957}", "Green Salad"),
-    e("\u{1F958}", "Shallow Pan of Food"),
-    e("\u{1F959}", "Stuffed Flatbread"),
-    e("\u{1F95A}", "Egg"),
-    e("\u{1F95C}", "Peanuts"),
-    e("\u{1F95D}", "Kiwi Fruit"),
-    e("\u{1F95E}", "Pancakes"),
-    e("\u{1F95F}", "Dumpling"),
-    e("\u{1F960}", "Fortune Cookie"),
-    e("\u{1F961}", "Takeout Box"),
-    e("\u{1F963}", "Bowl with Spoon"),
-    e("\u{1F965}", "Coconut"),
-    e("\u{1F966}", "Broccoli"),
-    e("\u{1F968}", "Pretzel"),
-    e("\u{1F969}", "Cut of Meat"),
-    e("\u{1F96A}", "Sandwich"),
-    e("\u{1F96B}", "Canned Food"),
-    e("\u{1F96C}", "Leafy Green"),
-    e("\u{1F96D}", "Mango"),
-    e("\u{1F96E}", "Moon Cake"),
-    e("\u{1F96F}", "Bagel"),
-    e("\u{1F980}", "Crab"),
-    e("\u{1F990}", "Shrimp"),
-    e("\u{1F991}", "Squid"),
-    e("\u{1F99E}", "Lobster"),
-    e("\u{1F9AA}", "Oyster"),
-    e("\u{1F9C0}", "Cheese Wedge"),
-    e("\u{1F9C2}", "Salt"),
-    e("\u{1F9C4}", "Garlic"),
-    e("\u{1F9C5}", "Onion"),
-    e("\u{1F9C6}", "Falafel"),
-    e("\u{1F9C7}", "Waffle"),
-    e("\u{1F9C8}", "Butter"),
-    //e("\u{1FAD0}", "Blueberries"),
-    //e("\u{1FAD1}", "Bell Pepper"),
-    //e("\u{1FAD2}", "Olive"),
-    //e("\u{1FAD3}", "Flatbread"),
-    //e("\u{1FAD4}", "Tamale"),
-    //e("\u{1FAD5}", "Fondue"),
-    e("\u{1F366}", "Soft Ice Cream"),
-    e("\u{1F367}", "Shaved Ice"),
-    e("\u{1F368}", "Ice Cream"),
-    e("\u{1F369}", "Doughnut"),
-    e("\u{1F36A}", "Cookie"),
-    e("\u{1F36B}", "Chocolate Bar"),
-    e("\u{1F36C}", "Candy"),
-    e("\u{1F36D}", "Lollipop"),
-    e("\u{1F36E}", "Custard"),
-    e("\u{1F36F}", "Honey Pot"),
-    e("\u{1F370}", "Shortcake"),
-    e("\u{1F382}", "Birthday Cake"),
-    e("\u{1F967}", "Pie"),
-    e("\u{1F9C1}", "Cupcake"),
-    e("\u{1F375}", "Teacup Without Handle"),
-    e("\u{1F376}", "Sake"),
-    e("\u{1F377}", "Wine Glass"),
-    e("\u{1F378}", "Cocktail Glass"),
-    e("\u{1F379}", "Tropical Drink"),
-    e("\u{1F37A}", "Beer Mug"),
-    e("\u{1F37B}", "Clinking Beer Mugs"),
-    e("\u{1F37C}", "Baby Bottle"),
-    e("\u{1F37E}", "Bottle with Popping Cork"),
-    e("\u{1F942}", "Clinking Glasses"),
-    e("\u{1F943}", "Tumbler Glass"),
-    e("\u{1F95B}", "Glass of Milk"),
-    e("\u{1F964}", "Cup with Straw"),
-    e("\u{1F9C3}", "Beverage Box"),
-    e("\u{1F9C9}", "Mate"),
-    e("\u{1F9CA}", "Ice"),
-    //e("\u{1F9CB}", "Bubble Tea"),
-    //e("\u{1FAD6}", "Teapot"),
-    e("\u{2615}", "Hot Beverage"),
-    e("\u{1F374}", "Fork and Knife"),
-    e("\u{1F37D}\u{FE0F}", "Fork and Knife with Plate"),
-    e("\u{1F3FA}", "Amphora"),
-    e("\u{1F52A}", "Kitchen Knife"),
-    e("\u{1F944}", "Spoon"),
-    e("\u{1F962}", "Chopsticks"));
-
-const nations = g(
-    "National Flags", "Flags of countries from around the world",
-    e("\u{1F1E6}\u{1F1E8}", "Flag: Ascension Island"),
-    e("\u{1F1E6}\u{1F1E9}", "Flag: Andorra"),
-    e("\u{1F1E6}\u{1F1EA}", "Flag: United Arab Emirates"),
-    e("\u{1F1E6}\u{1F1EB}", "Flag: Afghanistan"),
-    e("\u{1F1E6}\u{1F1EC}", "Flag: Antigua & Barbuda"),
-    e("\u{1F1E6}\u{1F1EE}", "Flag: Anguilla"),
-    e("\u{1F1E6}\u{1F1F1}", "Flag: Albania"),
-    e("\u{1F1E6}\u{1F1F2}", "Flag: Armenia"),
-    e("\u{1F1E6}\u{1F1F4}", "Flag: Angola"),
-    e("\u{1F1E6}\u{1F1F6}", "Flag: Antarctica"),
-    e("\u{1F1E6}\u{1F1F7}", "Flag: Argentina"),
-    e("\u{1F1E6}\u{1F1F8}", "Flag: American Samoa"),
-    e("\u{1F1E6}\u{1F1F9}", "Flag: Austria"),
-    e("\u{1F1E6}\u{1F1FA}", "Flag: Australia"),
-    e("\u{1F1E6}\u{1F1FC}", "Flag: Aruba"),
-    e("\u{1F1E6}\u{1F1FD}", "Flag: Åland Islands"),
-    e("\u{1F1E6}\u{1F1FF}", "Flag: Azerbaijan"),
-    e("\u{1F1E7}\u{1F1E6}", "Flag: Bosnia & Herzegovina"),
-    e("\u{1F1E7}\u{1F1E7}", "Flag: Barbados"),
-    e("\u{1F1E7}\u{1F1E9}", "Flag: Bangladesh"),
-    e("\u{1F1E7}\u{1F1EA}", "Flag: Belgium"),
-    e("\u{1F1E7}\u{1F1EB}", "Flag: Burkina Faso"),
-    e("\u{1F1E7}\u{1F1EC}", "Flag: Bulgaria"),
-    e("\u{1F1E7}\u{1F1ED}", "Flag: Bahrain"),
-    e("\u{1F1E7}\u{1F1EE}", "Flag: Burundi"),
-    e("\u{1F1E7}\u{1F1EF}", "Flag: Benin"),
-    e("\u{1F1E7}\u{1F1F1}", "Flag: St. Barthélemy"),
-    e("\u{1F1E7}\u{1F1F2}", "Flag: Bermuda"),
-    e("\u{1F1E7}\u{1F1F3}", "Flag: Brunei"),
-    e("\u{1F1E7}\u{1F1F4}", "Flag: Bolivia"),
-    e("\u{1F1E7}\u{1F1F6}", "Flag: Caribbean Netherlands"),
-    e("\u{1F1E7}\u{1F1F7}", "Flag: Brazil"),
-    e("\u{1F1E7}\u{1F1F8}", "Flag: Bahamas"),
-    e("\u{1F1E7}\u{1F1F9}", "Flag: Bhutan"),
-    e("\u{1F1E7}\u{1F1FB}", "Flag: Bouvet Island"),
-    e("\u{1F1E7}\u{1F1FC}", "Flag: Botswana"),
-    e("\u{1F1E7}\u{1F1FE}", "Flag: Belarus"),
-    e("\u{1F1E7}\u{1F1FF}", "Flag: Belize"),
-    e("\u{1F1E8}\u{1F1E6}", "Flag: Canada"),
-    e("\u{1F1E8}\u{1F1E8}", "Flag: Cocos (Keeling) Islands"),
-    e("\u{1F1E8}\u{1F1E9}", "Flag: Congo - Kinshasa"),
-    e("\u{1F1E8}\u{1F1EB}", "Flag: Central African Republic"),
-    e("\u{1F1E8}\u{1F1EC}", "Flag: Congo - Brazzaville"),
-    e("\u{1F1E8}\u{1F1ED}", "Flag: Switzerland"),
-    e("\u{1F1E8}\u{1F1EE}", "Flag: Côte d’Ivoire"),
-    e("\u{1F1E8}\u{1F1F0}", "Flag: Cook Islands"),
-    e("\u{1F1E8}\u{1F1F1}", "Flag: Chile"),
-    e("\u{1F1E8}\u{1F1F2}", "Flag: Cameroon"),
-    e("\u{1F1E8}\u{1F1F3}", "Flag: China"),
-    e("\u{1F1E8}\u{1F1F4}", "Flag: Colombia"),
-    e("\u{1F1E8}\u{1F1F5}", "Flag: Clipperton Island"),
-    e("\u{1F1E8}\u{1F1F7}", "Flag: Costa Rica"),
-    e("\u{1F1E8}\u{1F1FA}", "Flag: Cuba"),
-    e("\u{1F1E8}\u{1F1FB}", "Flag: Cape Verde"),
-    e("\u{1F1E8}\u{1F1FC}", "Flag: Curaçao"),
-    e("\u{1F1E8}\u{1F1FD}", "Flag: Christmas Island"),
-    e("\u{1F1E8}\u{1F1FE}", "Flag: Cyprus"),
-    e("\u{1F1E8}\u{1F1FF}", "Flag: Czechia"),
-    e("\u{1F1E9}\u{1F1EA}", "Flag: Germany"),
-    e("\u{1F1E9}\u{1F1EC}", "Flag: Diego Garcia"),
-    e("\u{1F1E9}\u{1F1EF}", "Flag: Djibouti"),
-    e("\u{1F1E9}\u{1F1F0}", "Flag: Denmark"),
-    e("\u{1F1E9}\u{1F1F2}", "Flag: Dominica"),
-    e("\u{1F1E9}\u{1F1F4}", "Flag: Dominican Republic"),
-    e("\u{1F1E9}\u{1F1FF}", "Flag: Algeria"),
-    e("\u{1F1EA}\u{1F1E6}", "Flag: Ceuta & Melilla"),
-    e("\u{1F1EA}\u{1F1E8}", "Flag: Ecuador"),
-    e("\u{1F1EA}\u{1F1EA}", "Flag: Estonia"),
-    e("\u{1F1EA}\u{1F1EC}", "Flag: Egypt"),
-    e("\u{1F1EA}\u{1F1ED}", "Flag: Western Sahara"),
-    e("\u{1F1EA}\u{1F1F7}", "Flag: Eritrea"),
-    e("\u{1F1EA}\u{1F1F8}", "Flag: Spain"),
-    e("\u{1F1EA}\u{1F1F9}", "Flag: Ethiopia"),
-    e("\u{1F1EA}\u{1F1FA}", "Flag: European Union"),
-    e("\u{1F1EB}\u{1F1EE}", "Flag: Finland"),
-    e("\u{1F1EB}\u{1F1EF}", "Flag: Fiji"),
-    e("\u{1F1EB}\u{1F1F0}", "Flag: Falkland Islands"),
-    e("\u{1F1EB}\u{1F1F2}", "Flag: Micronesia"),
-    e("\u{1F1EB}\u{1F1F4}", "Flag: Faroe Islands"),
-    e("\u{1F1EB}\u{1F1F7}", "Flag: France"),
-    e("\u{1F1EC}\u{1F1E6}", "Flag: Gabon"),
-    e("\u{1F1EC}\u{1F1E7}", "Flag: United Kingdom"),
-    e("\u{1F1EC}\u{1F1E9}", "Flag: Grenada"),
-    e("\u{1F1EC}\u{1F1EA}", "Flag: Georgia"),
-    e("\u{1F1EC}\u{1F1EB}", "Flag: French Guiana"),
-    e("\u{1F1EC}\u{1F1EC}", "Flag: Guernsey"),
-    e("\u{1F1EC}\u{1F1ED}", "Flag: Ghana"),
-    e("\u{1F1EC}\u{1F1EE}", "Flag: Gibraltar"),
-    e("\u{1F1EC}\u{1F1F1}", "Flag: Greenland"),
-    e("\u{1F1EC}\u{1F1F2}", "Flag: Gambia"),
-    e("\u{1F1EC}\u{1F1F3}", "Flag: Guinea"),
-    e("\u{1F1EC}\u{1F1F5}", "Flag: Guadeloupe"),
-    e("\u{1F1EC}\u{1F1F6}", "Flag: Equatorial Guinea"),
-    e("\u{1F1EC}\u{1F1F7}", "Flag: Greece"),
-    e("\u{1F1EC}\u{1F1F8}", "Flag: South Georgia & South Sandwich Islands"),
-    e("\u{1F1EC}\u{1F1F9}", "Flag: Guatemala"),
-    e("\u{1F1EC}\u{1F1FA}", "Flag: Guam"),
-    e("\u{1F1EC}\u{1F1FC}", "Flag: Guinea-Bissau"),
-    e("\u{1F1EC}\u{1F1FE}", "Flag: Guyana"),
-    e("\u{1F1ED}\u{1F1F0}", "Flag: Hong Kong SAR China"),
-    e("\u{1F1ED}\u{1F1F2}", "Flag: Heard & McDonald Islands"),
-    e("\u{1F1ED}\u{1F1F3}", "Flag: Honduras"),
-    e("\u{1F1ED}\u{1F1F7}", "Flag: Croatia"),
-    e("\u{1F1ED}\u{1F1F9}", "Flag: Haiti"),
-    e("\u{1F1ED}\u{1F1FA}", "Flag: Hungary"),
-    e("\u{1F1EE}\u{1F1E8}", "Flag: Canary Islands"),
-    e("\u{1F1EE}\u{1F1E9}", "Flag: Indonesia"),
-    e("\u{1F1EE}\u{1F1EA}", "Flag: Ireland"),
-    e("\u{1F1EE}\u{1F1F1}", "Flag: Israel"),
-    e("\u{1F1EE}\u{1F1F2}", "Flag: Isle of Man"),
-    e("\u{1F1EE}\u{1F1F3}", "Flag: India"),
-    e("\u{1F1EE}\u{1F1F4}", "Flag: British Indian Ocean Territory"),
-    e("\u{1F1EE}\u{1F1F6}", "Flag: Iraq"),
-    e("\u{1F1EE}\u{1F1F7}", "Flag: Iran"),
-    e("\u{1F1EE}\u{1F1F8}", "Flag: Iceland"),
-    e("\u{1F1EE}\u{1F1F9}", "Flag: Italy"),
-    e("\u{1F1EF}\u{1F1EA}", "Flag: Jersey"),
-    e("\u{1F1EF}\u{1F1F2}", "Flag: Jamaica"),
-    e("\u{1F1EF}\u{1F1F4}", "Flag: Jordan"),
-    e("\u{1F1EF}\u{1F1F5}", "Flag: Japan"),
-    e("\u{1F1F0}\u{1F1EA}", "Flag: Kenya"),
-    e("\u{1F1F0}\u{1F1EC}", "Flag: Kyrgyzstan"),
-    e("\u{1F1F0}\u{1F1ED}", "Flag: Cambodia"),
-    e("\u{1F1F0}\u{1F1EE}", "Flag: Kiribati"),
-    e("\u{1F1F0}\u{1F1F2}", "Flag: Comoros"),
-    e("\u{1F1F0}\u{1F1F3}", "Flag: St. Kitts & Nevis"),
-    e("\u{1F1F0}\u{1F1F5}", "Flag: North Korea"),
-    e("\u{1F1F0}\u{1F1F7}", "Flag: South Korea"),
-    e("\u{1F1F0}\u{1F1FC}", "Flag: Kuwait"),
-    e("\u{1F1F0}\u{1F1FE}", "Flag: Cayman Islands"),
-    e("\u{1F1F0}\u{1F1FF}", "Flag: Kazakhstan"),
-    e("\u{1F1F1}\u{1F1E6}", "Flag: Laos"),
-    e("\u{1F1F1}\u{1F1E7}", "Flag: Lebanon"),
-    e("\u{1F1F1}\u{1F1E8}", "Flag: St. Lucia"),
-    e("\u{1F1F1}\u{1F1EE}", "Flag: Liechtenstein"),
-    e("\u{1F1F1}\u{1F1F0}", "Flag: Sri Lanka"),
-    e("\u{1F1F1}\u{1F1F7}", "Flag: Liberia"),
-    e("\u{1F1F1}\u{1F1F8}", "Flag: Lesotho"),
-    e("\u{1F1F1}\u{1F1F9}", "Flag: Lithuania"),
-    e("\u{1F1F1}\u{1F1FA}", "Flag: Luxembourg"),
-    e("\u{1F1F1}\u{1F1FB}", "Flag: Latvia"),
-    e("\u{1F1F1}\u{1F1FE}", "Flag: Libya"),
-    e("\u{1F1F2}\u{1F1E6}", "Flag: Morocco"),
-    e("\u{1F1F2}\u{1F1E8}", "Flag: Monaco"),
-    e("\u{1F1F2}\u{1F1E9}", "Flag: Moldova"),
-    e("\u{1F1F2}\u{1F1EA}", "Flag: Montenegro"),
-    e("\u{1F1F2}\u{1F1EB}", "Flag: St. Martin"),
-    e("\u{1F1F2}\u{1F1EC}", "Flag: Madagascar"),
-    e("\u{1F1F2}\u{1F1ED}", "Flag: Marshall Islands"),
-    e("\u{1F1F2}\u{1F1F0}", "Flag: North Macedonia"),
-    e("\u{1F1F2}\u{1F1F1}", "Flag: Mali"),
-    e("\u{1F1F2}\u{1F1F2}", "Flag: Myanmar (Burma)"),
-    e("\u{1F1F2}\u{1F1F3}", "Flag: Mongolia"),
-    e("\u{1F1F2}\u{1F1F4}", "Flag: Macao Sar China"),
-    e("\u{1F1F2}\u{1F1F5}", "Flag: Northern Mariana Islands"),
-    e("\u{1F1F2}\u{1F1F6}", "Flag: Martinique"),
-    e("\u{1F1F2}\u{1F1F7}", "Flag: Mauritania"),
-    e("\u{1F1F2}\u{1F1F8}", "Flag: Montserrat"),
-    e("\u{1F1F2}\u{1F1F9}", "Flag: Malta"),
-    e("\u{1F1F2}\u{1F1FA}", "Flag: Mauritius"),
-    e("\u{1F1F2}\u{1F1FB}", "Flag: Maldives"),
-    e("\u{1F1F2}\u{1F1FC}", "Flag: Malawi"),
-    e("\u{1F1F2}\u{1F1FD}", "Flag: Mexico"),
-    e("\u{1F1F2}\u{1F1FE}", "Flag: Malaysia"),
-    e("\u{1F1F2}\u{1F1FF}", "Flag: Mozambique"),
-    e("\u{1F1F3}\u{1F1E6}", "Flag: Namibia"),
-    e("\u{1F1F3}\u{1F1E8}", "Flag: New Caledonia"),
-    e("\u{1F1F3}\u{1F1EA}", "Flag: Niger"),
-    e("\u{1F1F3}\u{1F1EB}", "Flag: Norfolk Island"),
-    e("\u{1F1F3}\u{1F1EC}", "Flag: Nigeria"),
-    e("\u{1F1F3}\u{1F1EE}", "Flag: Nicaragua"),
-    e("\u{1F1F3}\u{1F1F1}", "Flag: Netherlands"),
-    e("\u{1F1F3}\u{1F1F4}", "Flag: Norway"),
-    e("\u{1F1F3}\u{1F1F5}", "Flag: Nepal"),
-    e("\u{1F1F3}\u{1F1F7}", "Flag: Nauru"),
-    e("\u{1F1F3}\u{1F1FA}", "Flag: Niue"),
-    e("\u{1F1F3}\u{1F1FF}", "Flag: New Zealand"),
-    e("\u{1F1F4}\u{1F1F2}", "Flag: Oman"),
-    e("\u{1F1F5}\u{1F1E6}", "Flag: Panama"),
-    e("\u{1F1F5}\u{1F1EA}", "Flag: Peru"),
-    e("\u{1F1F5}\u{1F1EB}", "Flag: French Polynesia"),
-    e("\u{1F1F5}\u{1F1EC}", "Flag: Papua New Guinea"),
-    e("\u{1F1F5}\u{1F1ED}", "Flag: Philippines"),
-    e("\u{1F1F5}\u{1F1F0}", "Flag: Pakistan"),
-    e("\u{1F1F5}\u{1F1F1}", "Flag: Poland"),
-    e("\u{1F1F5}\u{1F1F2}", "Flag: St. Pierre & Miquelon"),
-    e("\u{1F1F5}\u{1F1F3}", "Flag: Pitcairn Islands"),
-    e("\u{1F1F5}\u{1F1F7}", "Flag: Puerto Rico"),
-    e("\u{1F1F5}\u{1F1F8}", "Flag: Palestinian Territories"),
-    e("\u{1F1F5}\u{1F1F9}", "Flag: Portugal"),
-    e("\u{1F1F5}\u{1F1FC}", "Flag: Palau"),
-    e("\u{1F1F5}\u{1F1FE}", "Flag: Paraguay"),
-    e("\u{1F1F6}\u{1F1E6}", "Flag: Qatar"),
-    e("\u{1F1F7}\u{1F1EA}", "Flag: Réunion"),
-    e("\u{1F1F7}\u{1F1F4}", "Flag: Romania"),
-    e("\u{1F1F7}\u{1F1F8}", "Flag: Serbia"),
-    e("\u{1F1F7}\u{1F1FA}", "Flag: Russia"),
-    e("\u{1F1F7}\u{1F1FC}", "Flag: Rwanda"),
-    e("\u{1F1F8}\u{1F1E6}", "Flag: Saudi Arabia"),
-    e("\u{1F1F8}\u{1F1E7}", "Flag: Solomon Islands"),
-    e("\u{1F1F8}\u{1F1E8}", "Flag: Seychelles"),
-    e("\u{1F1F8}\u{1F1E9}", "Flag: Sudan"),
-    e("\u{1F1F8}\u{1F1EA}", "Flag: Sweden"),
-    e("\u{1F1F8}\u{1F1EC}", "Flag: Singapore"),
-    e("\u{1F1F8}\u{1F1ED}", "Flag: St. Helena"),
-    e("\u{1F1F8}\u{1F1EE}", "Flag: Slovenia"),
-    e("\u{1F1F8}\u{1F1EF}", "Flag: Svalbard & Jan Mayen"),
-    e("\u{1F1F8}\u{1F1F0}", "Flag: Slovakia"),
-    e("\u{1F1F8}\u{1F1F1}", "Flag: Sierra Leone"),
-    e("\u{1F1F8}\u{1F1F2}", "Flag: San Marino"),
-    e("\u{1F1F8}\u{1F1F3}", "Flag: Senegal"),
-    e("\u{1F1F8}\u{1F1F4}", "Flag: Somalia"),
-    e("\u{1F1F8}\u{1F1F7}", "Flag: Suriname"),
-    e("\u{1F1F8}\u{1F1F8}", "Flag: South Sudan"),
-    e("\u{1F1F8}\u{1F1F9}", "Flag: São Tomé & Príncipe"),
-    e("\u{1F1F8}\u{1F1FB}", "Flag: El Salvador"),
-    e("\u{1F1F8}\u{1F1FD}", "Flag: Sint Maarten"),
-    e("\u{1F1F8}\u{1F1FE}", "Flag: Syria"),
-    e("\u{1F1F8}\u{1F1FF}", "Flag: Eswatini"),
-    e("\u{1F1F9}\u{1F1E6}", "Flag: Tristan Da Cunha"),
-    e("\u{1F1F9}\u{1F1E8}", "Flag: Turks & Caicos Islands"),
-    e("\u{1F1F9}\u{1F1E9}", "Flag: Chad"),
-    e("\u{1F1F9}\u{1F1EB}", "Flag: French Southern Territories"),
-    e("\u{1F1F9}\u{1F1EC}", "Flag: Togo"),
-    e("\u{1F1F9}\u{1F1ED}", "Flag: Thailand"),
-    e("\u{1F1F9}\u{1F1EF}", "Flag: Tajikistan"),
-    e("\u{1F1F9}\u{1F1F0}", "Flag: Tokelau"),
-    e("\u{1F1F9}\u{1F1F1}", "Flag: Timor-Leste"),
-    e("\u{1F1F9}\u{1F1F2}", "Flag: Turkmenistan"),
-    e("\u{1F1F9}\u{1F1F3}", "Flag: Tunisia"),
-    e("\u{1F1F9}\u{1F1F4}", "Flag: Tonga"),
-    e("\u{1F1F9}\u{1F1F7}", "Flag: Turkey"),
-    e("\u{1F1F9}\u{1F1F9}", "Flag: Trinidad & Tobago"),
-    e("\u{1F1F9}\u{1F1FB}", "Flag: Tuvalu"),
-    e("\u{1F1F9}\u{1F1FC}", "Flag: Taiwan"),
-    e("\u{1F1F9}\u{1F1FF}", "Flag: Tanzania"),
-    e("\u{1F1FA}\u{1F1E6}", "Flag: Ukraine"),
-    e("\u{1F1FA}\u{1F1EC}", "Flag: Uganda"),
-    e("\u{1F1FA}\u{1F1F2}", "Flag: U.S. Outlying Islands"),
-    e("\u{1F1FA}\u{1F1F3}", "Flag: United Nations"),
-    e("\u{1F1FA}\u{1F1F8}", "Flag: United States"),
-    e("\u{1F1FA}\u{1F1FE}", "Flag: Uruguay"),
-    e("\u{1F1FA}\u{1F1FF}", "Flag: Uzbekistan"),
-    e("\u{1F1FB}\u{1F1E6}", "Flag: Vatican City"),
-    e("\u{1F1FB}\u{1F1E8}", "Flag: St. Vincent & Grenadines"),
-    e("\u{1F1FB}\u{1F1EA}", "Flag: Venezuela"),
-    e("\u{1F1FB}\u{1F1EC}", "Flag: British Virgin Islands"),
-    e("\u{1F1FB}\u{1F1EE}", "Flag: U.S. Virgin Islands"),
-    e("\u{1F1FB}\u{1F1F3}", "Flag: Vietnam"),
-    e("\u{1F1FB}\u{1F1FA}", "Flag: Vanuatu"),
-    e("\u{1F1FC}\u{1F1EB}", "Flag: Wallis & Futuna"),
-    e("\u{1F1FC}\u{1F1F8}", "Flag: Samoa"),
-    e("\u{1F1FD}\u{1F1F0}", "Flag: Kosovo"),
-    e("\u{1F1FE}\u{1F1EA}", "Flag: Yemen"),
-    e("\u{1F1FE}\u{1F1F9}", "Flag: Mayotte"),
-    e("\u{1F1FF}\u{1F1E6}", "Flag: South Africa"),
-    e("\u{1F1FF}\u{1F1F2}", "Flag: Zambia"),
-    e("\u{1F1FF}\u{1F1FC}", "Flag: Zimbabwe"));
-
-const flags = g(
-    "Flags", "Basic flags",
-    e("\u{1F38C}", "Crossed Flags"),
-    e("\u{1F3C1}", "Chequered Flag"),
-    e("\u{1F3F3}\u{FE0F}", "White Flag"),
-    e("\u{1F3F3}\u{FE0F}\u{200D}\u{1F308}", "Rainbow Flag"),
-    //e("\u{1F3F3}\u{FE0F}\u{200D}\u{26A7}\u{FE0F}", "Transgender Flag"),
-    e("\u{1F3F4}", "Black Flag"),
-    //e("\u{1F3F4}\u{200D}\u{2620}\u{FE0F}", "Pirate Flag"),
-    e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}", "Flag: England"),
-    e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}", "Flag: Scotland"),
-    e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}", "Flag: Wales"),
-    e("\u{1F6A9}", "Triangular Flag"));
-
-const motorcycle = e("\u{1F3CD}\u{FE0F}", "Motorcycle");
-const racingCar = e("\u{1F3CE}\u{FE0F}", "Racing Car");
-const seat = e("\u{1F4BA}", "Seat");
-const helicopter = e("\u{1F681}", "Helicopter");
-const locomotive = e("\u{1F682}", "Locomotive");
-const railwayCar = e("\u{1F683}", "Railway Car");
-const highspeedTrain = e("\u{1F684}", "High-Speed Train");
-const bulletTrain = e("\u{1F685}", "Bullet Train");
-const train = e("\u{1F686}", "Train");
-const metro = e("\u{1F687}", "Metro");
-const lightRail = e("\u{1F688}", "Light Rail");
-const station = e("\u{1F689}", "Station");
-const tram = e("\u{1F68A}", "Tram");
-const tramCar = e("\u{1F68B}", "Tram Car");
-const bus = e("\u{1F68C}", "Bus");
-const oncomingBus = e("\u{1F68D}", "Oncoming Bus");
-const trolleyBus = e("\u{1F68E}", "Trolleybus");
-const busStop = e("\u{1F68F}", "Bus Stop");
-const miniBus = e("\u{1F690}", "Minibus");
-const ambulance = e("\u{1F691}", "Ambulance");
-const policeCar = e("\u{1F693}", "Police Car");
-const oncomingPoliceCar = e("\u{1F694}", "Oncoming Police Car");
-const taxi = e("\u{1F695}", "Taxi");
-const oncomingTaxi = e("\u{1F696}", "Oncoming Taxi");
-const automobile = e("\u{1F697}", "Automobile");
-const oncomingAutomobile = e("\u{1F698}", "Oncoming Automobile");
-const sportUtilityVehicle = e("\u{1F699}", "Sport Utility Vehicle");
-const deliveryTruck = e("\u{1F69A}", "Delivery Truck");
-const articulatedLorry = e("\u{1F69B}", "Articulated Lorry");
-const tractor = e("\u{1F69C}", "Tractor");
-const monorail = e("\u{1F69D}", "Monorail");
-const mountainRailway = e("\u{1F69E}", "Mountain Railway");
-const suspensionRailway = e("\u{1F69F}", "Suspension Railway");
-const mountainCableway = e("\u{1F6A0}", "Mountain Cableway");
-const aerialTramway = e("\u{1F6A1}", "Aerial Tramway");
-const ship = e("\u{1F6A2}", "Ship");
-const speedBoat = e("\u{1F6A4}", "Speedboat");
-const horizontalTrafficLight = e("\u{1F6A5}", "Horizontal Traffic Light");
-const verticalTrafficLight = e("\u{1F6A6}", "Vertical Traffic Light");
-const construction = e("\u{1F6A7}", "Construction");
-const policeCarLight = e("\u{1F6A8}", "Police Car Light");
-const bicycle = e("\u{1F6B2}", "Bicycle");
-const stopSign = e("\u{1F6D1}", "Stop Sign");
-const oilDrum = e("\u{1F6E2}\u{FE0F}", "Oil Drum");
-const motorway = e("\u{1F6E3}\u{FE0F}", "Motorway");
-const railwayTrack = e("\u{1F6E4}\u{FE0F}", "Railway Track");
-const motorBoat = e("\u{1F6E5}\u{FE0F}", "Motor Boat");
-const smallAirplane = e("\u{1F6E9}\u{FE0F}", "Small Airplane");
-const airplaneDeparture = e("\u{1F6EB}", "Airplane Departure");
-const airplaneArrival = e("\u{1F6EC}", "Airplane Arrival");
-const satellite = e("\u{1F6F0}\u{FE0F}", "Satellite");
-const passengerShip = e("\u{1F6F3}\u{FE0F}", "Passenger Ship");
-const kickScooter = e("\u{1F6F4}", "Kick Scooter");
-const motorScooter = e("\u{1F6F5}", "Motor Scooter");
-const canoe = e("\u{1F6F6}", "Canoe");
-const flyingSaucer = e("\u{1F6F8}", "Flying Saucer");
-const skateboard = e("\u{1F6F9}", "Skateboard");
-const autoRickshaw = e("\u{1F6FA}", "Auto Rickshaw");
-//export const pickupTruck = e("\u{1F6FB}", "Pickup Truck");
-//export const rollerSkate = e("\u{1F6FC}", "Roller Skate");
-const parachute = e("\u{1FA82}", "Parachute");
-const anchor = e("\u{2693}", "Anchor");
-const ferry = e("\u{26F4}\u{FE0F}", "Ferry");
-const sailboat = e("\u{26F5}", "Sailboat");
-const fuelPump = e("\u{26FD}", "Fuel Pump");
-const vehicles = g(
-    "Vehicles", "Things that go",
-    motorcycle,
-    racingCar,
-    seat,
-    rocket,
-    helicopter,
-    locomotive,
-    railwayCar,
-    highspeedTrain,
-    bulletTrain,
-    train,
-    metro,
-    lightRail,
-    station,
-    tram,
-    tramCar,
-    bus,
-    oncomingBus,
-    trolleyBus,
-    busStop,
-    miniBus,
-    ambulance,
-    fireEngine,
-    taxi,
-    oncomingTaxi,
-    automobile,
-    oncomingAutomobile,
-    sportUtilityVehicle,
-    deliveryTruck,
-    articulatedLorry,
-    tractor,
-    monorail,
-    mountainRailway,
-    suspensionRailway,
-    mountainCableway,
-    aerialTramway,
-    ship,
-    speedBoat,
-    horizontalTrafficLight,
-    verticalTrafficLight,
-    construction,
-    bicycle,
-    stopSign,
-    oilDrum,
-    motorway,
-    railwayTrack,
-    motorBoat,
-    smallAirplane,
-    airplaneDeparture,
-    airplaneArrival,
-    satellite,
-    passengerShip,
-    kickScooter,
-    motorScooter,
-    canoe,
-    flyingSaucer,
-    skateboard,
-    autoRickshaw,
-    //pickupTruck,
-    //rollerSkate,
-    motorizedWheelchair,
-    manualWheelchair,
-    parachute,
-    anchor,
-    ferry,
-    sailboat,
-    fuelPump,
-    airplane);
-
-const bloodTypes = g(
-    "Blood Types", "Blood types",
-    e("\u{1F170}", "A Button (Blood Type)"),
-    e("\u{1F171}", "B Button (Blood Type)"),
-    e("\u{1F17E}", "O Button (Blood Type)"),
-    e("\u{1F18E}", "AB Button (Blood Type)"));
-
-const regionIndicators = g(
-    "Regions", "Region indicators",
-    e("\u{1F1E6}", "Regional Indicator Symbol Letter A"),
-    e("\u{1F1E7}", "Regional Indicator Symbol Letter B"),
-    e("\u{1F1E8}", "Regional Indicator Symbol Letter C"),
-    e("\u{1F1E9}", "Regional Indicator Symbol Letter D"),
-    e("\u{1F1EA}", "Regional Indicator Symbol Letter E"),
-    e("\u{1F1EB}", "Regional Indicator Symbol Letter F"),
-    e("\u{1F1EC}", "Regional Indicator Symbol Letter G"),
-    e("\u{1F1ED}", "Regional Indicator Symbol Letter H"),
-    e("\u{1F1EE}", "Regional Indicator Symbol Letter I"),
-    e("\u{1F1EF}", "Regional Indicator Symbol Letter J"),
-    e("\u{1F1F0}", "Regional Indicator Symbol Letter K"),
-    e("\u{1F1F1}", "Regional Indicator Symbol Letter L"),
-    e("\u{1F1F2}", "Regional Indicator Symbol Letter M"),
-    e("\u{1F1F3}", "Regional Indicator Symbol Letter N"),
-    e("\u{1F1F4}", "Regional Indicator Symbol Letter O"),
-    e("\u{1F1F5}", "Regional Indicator Symbol Letter P"),
-    e("\u{1F1F6}", "Regional Indicator Symbol Letter Q"),
-    e("\u{1F1F7}", "Regional Indicator Symbol Letter R"),
-    e("\u{1F1F8}", "Regional Indicator Symbol Letter S"),
-    e("\u{1F1F9}", "Regional Indicator Symbol Letter T"),
-    e("\u{1F1FA}", "Regional Indicator Symbol Letter U"),
-    e("\u{1F1FB}", "Regional Indicator Symbol Letter V"),
-    e("\u{1F1FC}", "Regional Indicator Symbol Letter W"),
-    e("\u{1F1FD}", "Regional Indicator Symbol Letter X"),
-    e("\u{1F1FE}", "Regional Indicator Symbol Letter Y"),
-    e("\u{1F1FF}", "Regional Indicator Symbol Letter Z"));
-
-const japanese = g(
-    "Japanese", "Japanse symbology",
-    e("\u{1F530}", "Japanese Symbol for Beginner"),
-    e("\u{1F201}", "Japanese “Here” Button"),
-    e("\u{1F202}\u{FE0F}", "Japanese “Service Charge” Button"),
-    e("\u{1F21A}", "Japanese “Free of Charge” Button"),
-    e("\u{1F22F}", "Japanese “Reserved” Button"),
-    e("\u{1F232}", "Japanese “Prohibited” Button"),
-    e("\u{1F233}", "Japanese “Vacancy” Button"),
-    e("\u{1F234}", "Japanese “Passing Grade” Button"),
-    e("\u{1F235}", "Japanese “No Vacancy” Button"),
-    e("\u{1F236}", "Japanese “Not Free of Charge” Button"),
-    e("\u{1F237}\u{FE0F}", "Japanese “Monthly Amount” Button"),
-    e("\u{1F238}", "Japanese “Application” Button"),
-    e("\u{1F239}", "Japanese “Discount” Button"),
-    e("\u{1F23A}", "Japanese “Open for Business” Button"),
-    e("\u{1F250}", "Japanese “Bargain” Button"),
-    e("\u{1F251}", "Japanese “Acceptable” Button"),
-    e("\u{3297}\u{FE0F}", "Japanese “Congratulations” Button"),
-    e("\u{3299}\u{FE0F}", "Japanese “Secret” Button"));
-
-const clocks = g(
-    "Clocks", "Time-keeping pieces",
-    e("\u{1F550}", "One O’Clock"),
-    e("\u{1F551}", "Two O’Clock"),
-    e("\u{1F552}", "Three O’Clock"),
-    e("\u{1F553}", "Four O’Clock"),
-    e("\u{1F554}", "Five O’Clock"),
-    e("\u{1F555}", "Six O’Clock"),
-    e("\u{1F556}", "Seven O’Clock"),
-    e("\u{1F557}", "Eight O’Clock"),
-    e("\u{1F558}", "Nine O’Clock"),
-    e("\u{1F559}", "Ten O’Clock"),
-    e("\u{1F55A}", "Eleven O’Clock"),
-    e("\u{1F55B}", "Twelve O’Clock"),
-    e("\u{1F55C}", "One-Thirty"),
-    e("\u{1F55D}", "Two-Thirty"),
-    e("\u{1F55E}", "Three-Thirty"),
-    e("\u{1F55F}", "Four-Thirty"),
-    e("\u{1F560}", "Five-Thirty"),
-    e("\u{1F561}", "Six-Thirty"),
-    e("\u{1F562}", "Seven-Thirty"),
-    e("\u{1F563}", "Eight-Thirty"),
-    e("\u{1F564}", "Nine-Thirty"),
-    e("\u{1F565}", "Ten-Thirty"),
-    e("\u{1F566}", "Eleven-Thirty"),
-    e("\u{1F567}", "Twelve-Thirty"),
-    e("\u{1F570}\u{FE0F}", "Mantelpiece Clock"),
-    e("\u{231A}", "Watch"),
-    e("\u{23F0}", "Alarm Clock"),
-    e("\u{23F1}\u{FE0F}", "Stopwatch"),
-    e("\u{23F2}\u{FE0F}", "Timer Clock"),
-    e("\u{231B}", "Hourglass Done"),
-    e("\u{23F3}", "Hourglass Not Done"));
-
-const clockwiseVerticalArrows = e("\u{1F503}\u{FE0F}", "Clockwise Vertical Arrows");
-const counterclockwiseArrowsButton = e("\u{1F504}\u{FE0F}", "Counterclockwise Arrows Button");
-const leftRightArrow = e("\u{2194}\u{FE0F}", "Left-Right Arrow");
-const upDownArrow = e("\u{2195}\u{FE0F}", "Up-Down Arrow");
-const upLeftArrow = e("\u{2196}\u{FE0F}", "Up-Left Arrow");
-const upRightArrow = e("\u{2197}\u{FE0F}", "Up-Right Arrow");
-const downRightArrow = e("\u{2198}", "Down-Right Arrow");
-const downRightArrowText = e("\u{2198}\u{FE0E}", "Down-Right Arrow");
-const downRightArrowEmoji = e("\u{2198}\u{FE0F}", "Down-Right Arrow");
-const downLeftArrow = e("\u{2199}\u{FE0F}", "Down-Left Arrow");
-const rightArrowCurvingLeft = e("\u{21A9}\u{FE0F}", "Right Arrow Curving Left");
-const leftArrowCurvingRight = e("\u{21AA}\u{FE0F}", "Left Arrow Curving Right");
-const rightArrow = e("\u{27A1}\u{FE0F}", "Right Arrow");
-const rightArrowCurvingUp = e("\u{2934}\u{FE0F}", "Right Arrow Curving Up");
-const rightArrowCurvingDown = e("\u{2935}\u{FE0F}", "Right Arrow Curving Down");
-const leftArrow = e("\u{2B05}\u{FE0F}", "Left Arrow");
-const upArrow = e("\u{2B06}\u{FE0F}", "Up Arrow");
-const downArrow = e("\u{2B07}\u{FE0F}", "Down Arrow");
-const arrows = g(
-    "Arrows", "Arrows pointing in different directions",
-    clockwiseVerticalArrows,
-    counterclockwiseArrowsButton,
-    leftRightArrow,
-    upDownArrow,
-    upLeftArrow,
-    upRightArrow,
-    downRightArrowEmoji,
-    downLeftArrow,
-    rightArrowCurvingLeft,
-    leftArrowCurvingRight,
-    rightArrow,
-    rightArrowCurvingUp,
-    rightArrowCurvingDown,
-    leftArrow,
-    upArrow,
-    downArrow);
-
-const shapes = g(
-    "Shapes", "Colored shapes",
-    e("\u{1F534}", "Red Circle"),
-    e("\u{1F535}", "Blue Circle"),
-    e("\u{1F536}", "Large Orange Diamond"),
-    e("\u{1F537}", "Large Blue Diamond"),
-    e("\u{1F538}", "Small Orange Diamond"),
-    e("\u{1F539}", "Small Blue Diamond"),
-    e("\u{1F53A}", "Red Triangle Pointed Up"),
-    e("\u{1F53B}", "Red Triangle Pointed Down"),
-    e("\u{1F7E0}", "Orange Circle"),
-    e("\u{1F7E1}", "Yellow Circle"),
-    e("\u{1F7E2}", "Green Circle"),
-    e("\u{1F7E3}", "Purple Circle"),
-    e("\u{1F7E4}", "Brown Circle"),
-    e("\u{2B55}", "Hollow Red Circle"),
-    e("\u{26AA}", "White Circle"),
-    e("\u{26AB}", "Black Circle"),
-    e("\u{1F7E5}", "Red Square"),
-    e("\u{1F7E6}", "Blue Square"),
-    e("\u{1F7E7}", "Orange Square"),
-    e("\u{1F7E8}", "Yellow Square"),
-    e("\u{1F7E9}", "Green Square"),
-    e("\u{1F7EA}", "Purple Square"),
-    e("\u{1F7EB}", "Brown Square"),
-    e("\u{1F532}", "Black Square Button"),
-    e("\u{1F533}", "White Square Button"),
-    e("\u{25AA}\u{FE0F}", "Black Small Square"),
-    e("\u{25AB}\u{FE0F}", "White Small Square"),
-    e("\u{25FD}", "White Medium-Small Square"),
-    e("\u{25FE}", "Black Medium-Small Square"),
-    e("\u{25FB}\u{FE0F}", "White Medium Square"),
-    e("\u{25FC}\u{FE0F}", "Black Medium Square"),
-    e("\u{2B1B}", "Black Large Square"),
-    e("\u{2B1C}", "White Large Square"),
-    e("\u{2B50}", "Star"),
-    e("\u{1F4A0}", "Diamond with a Dot"));
-
-const clearButton = e("\u{1F191}", "CL Button");
-const coolButton = e("\u{1F192}", "Cool Button");
-const freeButton = e("\u{1F193}", "Free Button");
-const idButton = e("\u{1F194}", "ID Button");
-const newButton = e("\u{1F195}", "New Button");
-const ngButton = e("\u{1F196}", "NG Button");
-const okButton = e("\u{1F197}", "OK Button");
-const sosButton = e("\u{1F198}", "SOS Button");
-const upButton = e("\u{1F199}", "Up! Button");
-const vsButton = e("\u{1F19A}", "Vs Button");
-const radioButton = e("\u{1F518}", "Radio Button");
-const backArrow = e("\u{1F519}", "Back Arrow");
-const endArrow = e("\u{1F51A}", "End Arrow");
-const onArrow = e("\u{1F51B}", "On! Arrow");
-const soonArrow = e("\u{1F51C}", "Soon Arrow");
-const topArrow = e("\u{1F51D}", "Top Arrow");
-const checkBoxWithCheck = e("\u{2611}\u{FE0F}", "Check Box with Check");
-const inputLatinUppercase = e("\u{1F520}", "Input Latin Uppercase");
-const inputLatinLowercase = e("\u{1F521}", "Input Latin Lowercase");
-const inputNumbers = e("\u{1F522}", "Input Numbers");
-const inputSymbols = e("\u{1F523}", "Input Symbols");
-const inputLatinLetters = e("\u{1F524}", "Input Latin Letters");
-const shuffleTracksButton = e("\u{1F500}", "Shuffle Tracks Button");
-const repeatButton = e("\u{1F501}", "Repeat Button");
-const repeatSingleButton = e("\u{1F502}", "Repeat Single Button");
-const upwardsButton = e("\u{1F53C}", "Upwards Button");
-const downwardsButton = e("\u{1F53D}", "Downwards Button");
-const playButton = e("\u{25B6}\u{FE0F}", "Play Button");
-const reverseButton = e("\u{25C0}\u{FE0F}", "Reverse Button");
-const ejectButton = e("\u{23CF}\u{FE0F}", "Eject Button");
-const fastForwardButton = e("\u{23E9}", "Fast-Forward Button");
-const fastReverseButton = e("\u{23EA}", "Fast Reverse Button");
-const fastUpButton = e("\u{23EB}", "Fast Up Button");
-const fastDownButton = e("\u{23EC}", "Fast Down Button");
-const nextTrackButton = e("\u{23ED}\u{FE0F}", "Next Track Button");
-const lastTrackButton = e("\u{23EE}\u{FE0F}", "Last Track Button");
-const playOrPauseButton = e("\u{23EF}\u{FE0F}", "Play or Pause Button");
-const pauseButton = e("\u{23F8}\u{FE0F}", "Pause Button");
-const stopButton = e("\u{23F9}\u{FE0F}", "Stop Button");
-const recordButton = e("\u{23FA}\u{FE0F}", "Record Button");
-const buttons = g(
-    "Buttons", "Buttons",
-    clearButton,
-    coolButton,
-    freeButton,
-    idButton,
-    newButton,
-    ngButton,
-    okButton,
-    sosButton,
-    upButton,
-    vsButton,
-    radioButton,
-    backArrow,
-    endArrow,
-    onArrow,
-    soonArrow,
-    topArrow,
-    checkBoxWithCheck,
-    inputLatinUppercase,
-    inputLatinLowercase,
-    inputNumbers,
-    inputSymbols,
-    inputLatinLetters,
-    shuffleTracksButton,
-    repeatButton,
-    repeatSingleButton,
-    upwardsButton,
-    downwardsButton,
-    playButton,
-    pauseButton,
-    reverseButton,
-    ejectButton,
-    fastForwardButton,
-    fastReverseButton,
-    fastUpButton,
-    fastDownButton,
-    nextTrackButton,
-    lastTrackButton,
-    playOrPauseButton,
-    pauseButton,
-    stopButton,
-    recordButton);
-
-const zodiac = g(
-    "Zodiac", "The symbology of astrology",
-    e("\u{2648}", "Aries"),
-    e("\u{2649}", "Taurus"),
-    e("\u{264A}", "Gemini"),
-    e("\u{264B}", "Cancer"),
-    e("\u{264C}", "Leo"),
-    e("\u{264D}", "Virgo"),
-    e("\u{264E}", "Libra"),
-    e("\u{264F}", "Scorpio"),
-    e("\u{2650}", "Sagittarius"),
-    e("\u{2651}", "Capricorn"),
-    e("\u{2652}", "Aquarius"),
-    e("\u{2653}", "Pisces"),
-    e("\u{26CE}", "Ophiuchus"));
-
-const numbers = g(
-    "Numbers", "Numbers",
-    e("\u{30}\u{FE0F}", "Digit Zero"),
-    e("\u{31}\u{FE0F}", "Digit One"),
-    e("\u{32}\u{FE0F}", "Digit Two"),
-    e("\u{33}\u{FE0F}", "Digit Three"),
-    e("\u{34}\u{FE0F}", "Digit Four"),
-    e("\u{35}\u{FE0F}", "Digit Five"),
-    e("\u{36}\u{FE0F}", "Digit Six"),
-    e("\u{37}\u{FE0F}", "Digit Seven"),
-    e("\u{38}\u{FE0F}", "Digit Eight"),
-    e("\u{39}\u{FE0F}", "Digit Nine"),
-    e("\u{2A}\u{FE0F}", "Asterisk"),
-    e("\u{23}\u{FE0F}", "Number Sign"),
-    e("\u{30}\u{FE0F}\u{20E3}", "Keycap Digit Zero"),
-    e("\u{31}\u{FE0F}\u{20E3}", "Keycap Digit One"),
-    e("\u{32}\u{FE0F}\u{20E3}", "Keycap Digit Two"),
-    e("\u{33}\u{FE0F}\u{20E3}", "Keycap Digit Three"),
-    e("\u{34}\u{FE0F}\u{20E3}", "Keycap Digit Four"),
-    e("\u{35}\u{FE0F}\u{20E3}", "Keycap Digit Five"),
-    e("\u{36}\u{FE0F}\u{20E3}", "Keycap Digit Six"),
-    e("\u{37}\u{FE0F}\u{20E3}", "Keycap Digit Seven"),
-    e("\u{38}\u{FE0F}\u{20E3}", "Keycap Digit Eight"),
-    e("\u{39}\u{FE0F}\u{20E3}", "Keycap Digit Nine"),
-    e("\u{2A}\u{FE0F}\u{20E3}", "Keycap Asterisk"),
-    e("\u{23}\u{FE0F}\u{20E3}", "Keycap Number Sign"),
-    e("\u{1F51F}", "Keycap: 10"));
-
-const tagPlusSign = e("\u{E002B}", "Tag Plus Sign");
-const tagMinusHyphen = e("\u{E002D}", "Tag Hyphen-Minus");
-const tags = g(
-    "Tags", "Tags",
-    e("\u{E0020}", "Tag Space"),
-    e("\u{E0021}", "Tag Exclamation Mark"),
-    e("\u{E0022}", "Tag Quotation Mark"),
-    e("\u{E0023}", "Tag Number Sign"),
-    e("\u{E0024}", "Tag Dollar Sign"),
-    e("\u{E0025}", "Tag Percent Sign"),
-    e("\u{E0026}", "Tag Ampersand"),
-    e("\u{E0027}", "Tag Apostrophe"),
-    e("\u{E0028}", "Tag Left Parenthesis"),
-    e("\u{E0029}", "Tag Right Parenthesis"),
-    e("\u{E002A}", "Tag Asterisk"),
-    tagPlusSign,
-    e("\u{E002C}", "Tag Comma"),
-    tagMinusHyphen,
-    e("\u{E002E}", "Tag Full Stop"),
-    e("\u{E002F}", "Tag Solidus"),
-    e("\u{E0030}", "Tag Digit Zero"),
-    e("\u{E0031}", "Tag Digit One"),
-    e("\u{E0032}", "Tag Digit Two"),
-    e("\u{E0033}", "Tag Digit Three"),
-    e("\u{E0034}", "Tag Digit Four"),
-    e("\u{E0035}", "Tag Digit Five"),
-    e("\u{E0036}", "Tag Digit Six"),
-    e("\u{E0037}", "Tag Digit Seven"),
-    e("\u{E0038}", "Tag Digit Eight"),
-    e("\u{E0039}", "Tag Digit Nine"),
-    e("\u{E003A}", "Tag Colon"),
-    e("\u{E003B}", "Tag Semicolon"),
-    e("\u{E003C}", "Tag Less-Than Sign"),
-    e("\u{E003D}", "Tag Equals Sign"),
-    e("\u{E003E}", "Tag Greater-Than Sign"),
-    e("\u{E003F}", "Tag Question Mark"),
-    e("\u{E0040}", "Tag Commercial at"),
-    e("\u{E0041}", "Tag Latin Capital Letter a"),
-    e("\u{E0042}", "Tag Latin Capital Letter B"),
-    e("\u{E0043}", "Tag Latin Capital Letter C"),
-    e("\u{E0044}", "Tag Latin Capital Letter D"),
-    e("\u{E0045}", "Tag Latin Capital Letter E"),
-    e("\u{E0046}", "Tag Latin Capital Letter F"),
-    e("\u{E0047}", "Tag Latin Capital Letter G"),
-    e("\u{E0048}", "Tag Latin Capital Letter H"),
-    e("\u{E0049}", "Tag Latin Capital Letter I"),
-    e("\u{E004A}", "Tag Latin Capital Letter J"),
-    e("\u{E004B}", "Tag Latin Capital Letter K"),
-    e("\u{E004C}", "Tag Latin Capital Letter L"),
-    e("\u{E004D}", "Tag Latin Capital Letter M"),
-    e("\u{E004E}", "Tag Latin Capital Letter N"),
-    e("\u{E004F}", "Tag Latin Capital Letter O"),
-    e("\u{E0050}", "Tag Latin Capital Letter P"),
-    e("\u{E0051}", "Tag Latin Capital Letter Q"),
-    e("\u{E0052}", "Tag Latin Capital Letter R"),
-    e("\u{E0053}", "Tag Latin Capital Letter S"),
-    e("\u{E0054}", "Tag Latin Capital Letter T"),
-    e("\u{E0055}", "Tag Latin Capital Letter U"),
-    e("\u{E0056}", "Tag Latin Capital Letter V"),
-    e("\u{E0057}", "Tag Latin Capital Letter W"),
-    e("\u{E0058}", "Tag Latin Capital Letter X"),
-    e("\u{E0059}", "Tag Latin Capital Letter Y"),
-    e("\u{E005A}", "Tag Latin Capital Letter Z"),
-    e("\u{E005B}", "Tag Left Square Bracket"),
-    e("\u{E005C}", "Tag Reverse Solidus"),
-    e("\u{E005D}", "Tag Right Square Bracket"),
-    e("\u{E005E}", "Tag Circumflex Accent"),
-    e("\u{E005F}", "Tag Low Line"),
-    e("\u{E0060}", "Tag Grave Accent"),
-    e("\u{E0061}", "Tag Latin Small Letter a"),
-    e("\u{E0062}", "Tag Latin Small Letter B"),
-    e("\u{E0063}", "Tag Latin Small Letter C"),
-    e("\u{E0064}", "Tag Latin Small Letter D"),
-    e("\u{E0065}", "Tag Latin Small Letter E"),
-    e("\u{E0066}", "Tag Latin Small Letter F"),
-    e("\u{E0067}", "Tag Latin Small Letter G"),
-    e("\u{E0068}", "Tag Latin Small Letter H"),
-    e("\u{E0069}", "Tag Latin Small Letter I"),
-    e("\u{E006A}", "Tag Latin Small Letter J"),
-    e("\u{E006B}", "Tag Latin Small Letter K"),
-    e("\u{E006C}", "Tag Latin Small Letter L"),
-    e("\u{E006D}", "Tag Latin Small Letter M"),
-    e("\u{E006E}", "Tag Latin Small Letter N"),
-    e("\u{E006F}", "Tag Latin Small Letter O"),
-    e("\u{E0070}", "Tag Latin Small Letter P"),
-    e("\u{E0071}", "Tag Latin Small Letter Q"),
-    e("\u{E0072}", "Tag Latin Small Letter R"),
-    e("\u{E0073}", "Tag Latin Small Letter S"),
-    e("\u{E0074}", "Tag Latin Small Letter T"),
-    e("\u{E0075}", "Tag Latin Small Letter U"),
-    e("\u{E0076}", "Tag Latin Small Letter V"),
-    e("\u{E0077}", "Tag Latin Small Letter W"),
-    e("\u{E0078}", "Tag Latin Small Letter X"),
-    e("\u{E0079}", "Tag Latin Small Letter Y"),
-    e("\u{E007A}", "Tag Latin Small Letter Z"),
-    e("\u{E007B}", "Tag Left Curly Bracket"),
-    e("\u{E007C}", "Tag Vertical Line"),
-    e("\u{E007D}", "Tag Right Curly Bracket"),
-    e("\u{E007E}", "Tag Tilde"),
-    e("\u{E007F}", "Cancel Tag"));
-
-const math = g(
-    "Math", "Math",
-    e("\u{2716}\u{FE0F}", "Multiply"),
-    e("\u{2795}", "Plus"),
-    e("\u{2796}", "Minus"),
-    e("\u{2797}", "Divide"));
-
-const games = g(
-    "Games", "Games",
-    e("\u{2660}\u{FE0F}", "Spade Suit"),
-    e("\u{2663}\u{FE0F}", "Club Suit"),
-    e("\u{2665}\u{FE0F}", "Heart Suit", { color: "red" }),
-    e("\u{2666}\u{FE0F}", "Diamond Suit", { color: "red" }),
-    e("\u{1F004}", "Mahjong Red Dragon"),
-    e("\u{1F0CF}", "Joker"),
-    e("\u{1F3AF}", "Direct Hit"),
-    e("\u{1F3B0}", "Slot Machine"),
-    e("\u{1F3B1}", "Pool 8 Ball"),
-    e("\u{1F3B2}", "Game Die"),
-    e("\u{1F3B3}", "Bowling"),
-    e("\u{1F3B4}", "Flower Playing Cards"),
-    e("\u{1F9E9}", "Puzzle Piece"),
-    e("\u{265F}\u{FE0F}", "Chess Pawn"),
-    e("\u{1FA80}", "Yo-Yo"),
-    //e("\u{1FA83}", "Boomerang"),
-    //e("\u{1FA86}", "Nesting Dolls"),
-    e("\u{1FA81}", "Kite"));
-
-const sportsEquipment = g(
-    "Sports Equipment", "Sports equipment",
-    e("\u{1F3BD}", "Running Shirt"),
-    e("\u{1F3BE}", "Tennis"),
-    e("\u{1F3BF}", "Skis"),
-    e("\u{1F3C0}", "Basketball"),
-    e("\u{1F3C5}", "Sports Medal"),
-    e("\u{1F3C6}", "Trophy"),
-    e("\u{1F3C8}", "American Football"),
-    e("\u{1F3C9}", "Rugby Football"),
-    e("\u{1F3CF}", "Cricket Game"),
-    e("\u{1F3D0}", "Volleyball"),
-    e("\u{1F3D1}", "Field Hockey"),
-    e("\u{1F3D2}", "Ice Hockey"),
-    e("\u{1F3D3}", "Ping Pong"),
-    e("\u{1F3F8}", "Badminton"),
-    e("\u{1F6F7}", "Sled"),
-    e("\u{1F945}", "Goal Net"),
-    e("\u{1F947}", "1st Place Medal"),
-    e("\u{1F948}", "2nd Place Medal"),
-    e("\u{1F949}", "3rd Place Medal"),
-    e("\u{1F94A}", "Boxing Glove"),
-    e("\u{1F94C}", "Curling Stone"),
-    e("\u{1F94D}", "Lacrosse"),
-    e("\u{1F94E}", "Softball"),
-    e("\u{1F94F}", "Flying Disc"),
-    e("\u{26BD}", "Soccer Ball"),
-    e("\u{26BE}", "Baseball"),
-    e("\u{26F8}\u{FE0F}", "Ice Skate"));
-
-const clothing = g(
-    "Clothing", "Clothing",
-    e("\u{1F3A9}", "Top Hat"),
-    e("\u{1F93F}", "Diving Mask"),
-    e("\u{1F452}", "Woman’s Hat"),
-    e("\u{1F453}", "Glasses"),
-    e("\u{1F576}\u{FE0F}", "Sunglasses"),
-    e("\u{1F454}", "Necktie"),
-    e("\u{1F455}", "T-Shirt"),
-    e("\u{1F456}", "Jeans"),
-    e("\u{1F457}", "Dress"),
-    e("\u{1F458}", "Kimono"),
-    e("\u{1F459}", "Bikini"),
-    e("\u{1F45A}", "Woman’s Clothes"),
-    e("\u{1F45B}", "Purse"),
-    e("\u{1F45C}", "Handbag"),
-    e("\u{1F45D}", "Clutch Bag"),
-    e("\u{1F45E}", "Man’s Shoe"),
-    e("\u{1F45F}", "Running Shoe"),
-    e("\u{1F460}", "High-Heeled Shoe"),
-    e("\u{1F461}", "Woman’s Sandal"),
-    e("\u{1F462}", "Woman’s Boot"),
-    e("\u{1F94B}", "Martial Arts Uniform"),
-    e("\u{1F97B}", "Sari"),
-    e("\u{1F97C}", "Lab Coat"),
-    e("\u{1F97D}", "Goggles"),
-    e("\u{1F97E}", "Hiking Boot"),
-    e("\u{1F97F}", "Flat Shoe"),
-    whiteCane,
-    e("\u{1F9BA}", "Safety Vest"),
-    e("\u{1F9E2}", "Billed Cap"),
-    e("\u{1F9E3}", "Scarf"),
-    e("\u{1F9E4}", "Gloves"),
-    e("\u{1F9E5}", "Coat"),
-    e("\u{1F9E6}", "Socks"),
-    e("\u{1F9FF}", "Nazar Amulet"),
-    e("\u{1FA70}", "Ballet Shoes"),
-    e("\u{1FA71}", "One-Piece Swimsuit"),
-    e("\u{1FA72}", "Briefs"),
-    e("\u{1FA73}", "Shorts"));
-
-const town = g(
-    "Town", "Town",
-    e("\u{1F3D7}\u{FE0F}", "Building Construction"),
-    e("\u{1F3D8}\u{FE0F}", "Houses"),
-    e("\u{1F3D9}\u{FE0F}", "Cityscape"),
-    e("\u{1F3DA}\u{FE0F}", "Derelict House"),
-    e("\u{1F3DB}\u{FE0F}", "Classical Building"),
-    e("\u{1F3DC}\u{FE0F}", "Desert"),
-    e("\u{1F3DD}\u{FE0F}", "Desert Island"),
-    e("\u{1F3DE}\u{FE0F}", "National Park"),
-    e("\u{1F3DF}\u{FE0F}", "Stadium"),
-    e("\u{1F3E0}", "House"),
-    e("\u{1F3E1}", "House with Garden"),
-    e("\u{1F3E2}", "Office Building"),
-    e("\u{1F3E3}", "Japanese Post Office"),
-    e("\u{1F3E4}", "Post Office"),
-    e("\u{1F3E5}", "Hospital"),
-    e("\u{1F3E6}", "Bank"),
-    e("\u{1F3E7}", "ATM Sign"),
-    e("\u{1F3E8}", "Hotel"),
-    e("\u{1F3E9}", "Love Hotel"),
-    e("\u{1F3EA}", "Convenience Store"),
-    school,
-    e("\u{1F3EC}", "Department Store"),
-    factory,
-    e("\u{1F309}", "Bridge at Night"),
-    e("\u{26F2}", "Fountain"),
-    e("\u{1F6CD}\u{FE0F}", "Shopping Bags"),
-    e("\u{1F9FE}", "Receipt"),
-    e("\u{1F6D2}", "Shopping Cart"),
-    e("\u{1F488}", "Barber Pole"),
-    e("\u{1F492}", "Wedding"),
-    e("\u{1F5F3}\u{FE0F}", "Ballot Box with Ballot"));
-
-const music = g(
-    "Music", "Music",
-    e("\u{1F3BC}", "Musical Score"),
-    e("\u{1F3B6}", "Musical Notes"),
-    e("\u{1F3B5}", "Musical Note"),
-    e("\u{1F3B7}", "Saxophone"),
-    e("\u{1F3B8}", "Guitar"),
-    e("\u{1F3B9}", "Musical Keyboard"),
-    e("\u{1F3BA}", "Trumpet"),
-    e("\u{1F3BB}", "Violin"),
-    e("\u{1F941}", "Drum"),
-    //e("\u{1FA97}", "Accordion"),
-    //e("\u{1FA98}", "Long Drum"),
-    e("\u{1FA95}", "Banjo"));
-
-const weather = g(
-    "Weather", "Weather",
-    e("\u{1F304}", "Sunrise Over Mountains"),
-    e("\u{1F305}", "Sunrise"),
-    e("\u{1F306}", "Cityscape at Dusk"),
-    e("\u{1F307}", "Sunset"),
-    e("\u{1F303}", "Night with Stars"),
-    e("\u{1F302}", "Closed Umbrella"),
-    e("\u{2602}\u{FE0F}", "Umbrella"),
-    e("\u{2614}\u{FE0F}", "Umbrella with Rain Drops"),
-    e("\u{2603}\u{FE0F}", "Snowman"),
-    e("\u{26C4}", "Snowman Without Snow"),
-    e("\u{2600}\u{FE0F}", "Sun"),
-    e("\u{2601}\u{FE0F}", "Cloud"),
-    e("\u{1F324}\u{FE0F}", "Sun Behind Small Cloud"),
-    e("\u{26C5}", "Sun Behind Cloud"),
-    e("\u{1F325}\u{FE0F}", "Sun Behind Large Cloud"),
-    e("\u{1F326}\u{FE0F}", "Sun Behind Rain Cloud"),
-    e("\u{1F327}\u{FE0F}", "Cloud with Rain"),
-    e("\u{1F328}\u{FE0F}", "Cloud with Snow"),
-    e("\u{1F329}\u{FE0F}", "Cloud with Lightning"),
-    e("\u{26C8}\u{FE0F}", "Cloud with Lightning and Rain"),
-    e("\u{2744}\u{FE0F}", "Snowflake"),
-    e("\u{1F300}", "Cyclone"),
-    e("\u{1F32A}\u{FE0F}", "Tornado"),
-    e("\u{1F32C}\u{FE0F}", "Wind Face"),
-    e("\u{1F30A}", "Water Wave"),
-    e("\u{1F32B}\u{FE0F}", "Fog"),
-    e("\u{1F301}", "Foggy"),
-    e("\u{1F308}", "Rainbow"),
-    e("\u{1F321}\u{FE0F}", "Thermometer"));
-
-const astro = g(
-    "Astronomy", "Astronomy",
-    e("\u{1F30C}", "Milky Way"),
-    e("\u{1F30D}", "Globe Showing Europe-Africa"),
-    e("\u{1F30E}", "Globe Showing Americas"),
-    e("\u{1F30F}", "Globe Showing Asia-Australia"),
-    e("\u{1F310}", "Globe with Meridians"),
-    e("\u{1F311}", "New Moon"),
-    e("\u{1F312}", "Waxing Crescent Moon"),
-    e("\u{1F313}", "First Quarter Moon"),
-    e("\u{1F314}", "Waxing Gibbous Moon"),
-    e("\u{1F315}", "Full Moon"),
-    e("\u{1F316}", "Waning Gibbous Moon"),
-    e("\u{1F317}", "Last Quarter Moon"),
-    e("\u{1F318}", "Waning Crescent Moon"),
-    e("\u{1F319}", "Crescent Moon"),
-    e("\u{1F31A}", "New Moon Face"),
-    e("\u{1F31B}", "First Quarter Moon Face"),
-    e("\u{1F31C}", "Last Quarter Moon Face"),
-    e("\u{1F31D}", "Full Moon Face"),
-    e("\u{1F31E}", "Sun with Face"),
-    e("\u{1F31F}", "Glowing Star"),
-    e("\u{1F320}", "Shooting Star"),
-    e("\u{2604}\u{FE0F}", "Comet"),
-    e("\u{1FA90}", "Ringed Planet"));
-
-const finance = g(
-    "Finance", "Finance",
-    e("\u{1F4B0}", "Money Bag"),
-    e("\u{1F4B1}", "Currency Exchange"),
-    e("\u{1F4B2}", "Heavy Dollar Sign"),
-    e("\u{1F4B3}", "Credit Card"),
-    e("\u{1F4B4}", "Yen Banknote"),
-    e("\u{1F4B5}", "Dollar Banknote"),
-    e("\u{1F4B6}", "Euro Banknote"),
-    e("\u{1F4B7}", "Pound Banknote"),
-    e("\u{1F4B8}", "Money with Wings"),
-    //e("\u{1FA99}", "Coin"),
-    e("\u{1F4B9}", "Chart Increasing with Yen"));
-
-const writing = g(
-    "Writing", "Writing",
-    e("\u{1F58A}\u{FE0F}", "Pen"),
-    e("\u{1F58B}\u{FE0F}", "Fountain Pen"),
-    e("\u{1F58C}\u{FE0F}", "Paintbrush"),
-    e("\u{1F58D}\u{FE0F}", "Crayon"),
-    e("\u{270F}\u{FE0F}", "Pencil"),
-    e("\u{2712}\u{FE0F}", "Black Nib"));
-
-const alembic = e("\u{2697}\u{FE0F}", "Alembic");
-const gear = e("\u{2699}\u{FE0F}", "Gear");
-const atomSymbol = e("\u{269B}\u{FE0F}", "Atom Symbol");
-const keyboard = e("\u{2328}\u{FE0F}", "Keyboard");
-const telephone = e("\u{260E}\u{FE0F}", "Telephone");
-const studioMicrophone = e("\u{1F399}\u{FE0F}", "Studio Microphone");
-const levelSlider = e("\u{1F39A}\u{FE0F}", "Level Slider");
-const controlKnobs = e("\u{1F39B}\u{FE0F}", "Control Knobs");
-const movieCamera = e("\u{1F3A5}", "Movie Camera");
-const headphone = e("\u{1F3A7}", "Headphone");
-const videoGame = e("\u{1F3AE}", "Video Game");
-const lightBulb = e("\u{1F4A1}", "Light Bulb");
-const computerDisk = e("\u{1F4BD}", "Computer Disk");
-const floppyDisk = e("\u{1F4BE}", "Floppy Disk");
-const opticalDisk = e("\u{1F4BF}", "Optical Disk");
-const dvd = e("\u{1F4C0}", "DVD");
-const telephoneReceiver = e("\u{1F4DE}", "Telephone Receiver");
-const pager = e("\u{1F4DF}", "Pager");
-const faxMachine = e("\u{1F4E0}", "Fax Machine");
-const satelliteAntenna = e("\u{1F4E1}", "Satellite Antenna");
-const loudspeaker = e("\u{1F4E2}", "Loudspeaker");
-const megaphone = e("\u{1F4E3}", "Megaphone");
-const mobilePhone = e("\u{1F4F1}", "Mobile Phone");
-const mobilePhoneWithArrow = e("\u{1F4F2}", "Mobile Phone with Arrow");
-const mobilePhoneVibrating = e("\u{1F4F3}", "Mobile Phone Vibrating");
-const mobilePhoneOff = e("\u{1F4F4}", "Mobile Phone Off");
-const noMobilePhone = e("\u{1F4F5}", "No Mobile Phone");
-const antennaBars = e("\u{1F4F6}", "Antenna Bars");
-const camera = e("\u{1F4F7}", "Camera");
-const cameraWithFlash = e("\u{1F4F8}", "Camera with Flash");
-const videoCamera = e("\u{1F4F9}", "Video Camera");
-const television = e("\u{1F4FA}", "Television");
-const radio = e("\u{1F4FB}", "Radio");
-const videocassette = e("\u{1F4FC}", "Videocassette");
-const filmProjector = e("\u{1F4FD}\u{FE0F}", "Film Projector");
-const portableStereo = e("\u{1F4FE}\u{FE0F}", "Portable Stereo");
-const dimButton = e("\u{1F505}", "Dim Button");
-const brightButton = e("\u{1F506}", "Bright Button");
-const mutedSpeaker = e("\u{1F507}", "Muted Speaker");
-const speakerLowVolume = e("\u{1F508}", "Speaker Low Volume");
-const speakerMediumVolume = e("\u{1F509}", "Speaker Medium Volume");
-const speakerHighVolume = e("\u{1F50A}", "Speaker High Volume");
-const battery = e("\u{1F50B}", "Battery");
-const electricPlug = e("\u{1F50C}", "Electric Plug");
-const magnifyingGlassTiltedLeft = e("\u{1F50D}", "Magnifying Glass Tilted Left");
-const magnifyingGlassTiltedRight = e("\u{1F50E}", "Magnifying Glass Tilted Right");
-const lockedWithPen = e("\u{1F50F}", "Locked with Pen");
-const lockedWithKey = e("\u{1F510}", "Locked with Key");
-const key = e("\u{1F511}", "Key");
-const locked = e("\u{1F512}", "Locked");
-const unlocked = e("\u{1F513}", "Unlocked");
-const bell = e("\u{1F514}", "Bell");
-const bellWithSlash = e("\u{1F515}", "Bell with Slash");
-const bookmark = e("\u{1F516}", "Bookmark");
-const link = e("\u{1F517}", "Link");
-const joystick = e("\u{1F579}\u{FE0F}", "Joystick");
-const desktopComputer = e("\u{1F5A5}\u{FE0F}", "Desktop Computer");
-const printer = e("\u{1F5A8}\u{FE0F}", "Printer");
-const computerMouse = e("\u{1F5B1}\u{FE0F}", "Computer Mouse");
-const trackball = e("\u{1F5B2}\u{FE0F}", "Trackball");
-const blackFolder = e("\u{1F5BF}", "Black Folder");
-const folder = e("\u{1F5C0}", "Folder");
-const openFolder = e("\u{1F5C1}", "Open Folder");
-const cardIndexDividers = e("\u{1F5C2}", "Card Index Dividers");
-const cardFileBox = e("\u{1F5C3}", "Card File Box");
-const fileCabinet = e("\u{1F5C4}", "File Cabinet");
-const emptyNote = e("\u{1F5C5}", "Empty Note");
-const emptyNotePage = e("\u{1F5C6}", "Empty Note Page");
-const emptyNotePad = e("\u{1F5C7}", "Empty Note Pad");
-const note = e("\u{1F5C8}", "Note");
-const notePage = e("\u{1F5C9}", "Note Page");
-const notePad = e("\u{1F5CA}", "Note Pad");
-const emptyDocument = e("\u{1F5CB}", "Empty Document");
-const emptyPage = e("\u{1F5CC}", "Empty Page");
-const emptyPages = e("\u{1F5CD}", "Empty Pages");
-const documentIcon = e("\u{1F5CE}", "Document");
-const page = e("\u{1F5CF}", "Page");
-const pages = e("\u{1F5D0}", "Pages");
-const wastebasket = e("\u{1F5D1}", "Wastebasket");
-const spiralNotePad = e("\u{1F5D2}", "Spiral Note Pad");
-const spiralCalendar = e("\u{1F5D3}", "Spiral Calendar");
-const desktopWindow = e("\u{1F5D4}", "Desktop Window");
-const minimize = e("\u{1F5D5}", "Minimize");
-const maximize = e("\u{1F5D6}", "Maximize");
-const overlap = e("\u{1F5D7}", "Overlap");
-const reload = e("\u{1F5D8}", "Reload");
-const close = e("\u{1F5D9}", "Close");
-const increaseFontSize = e("\u{1F5DA}", "Increase Font Size");
-const decreaseFontSize = e("\u{1F5DB}", "Decrease Font Size");
-const compression = e("\u{1F5DC}", "Compression");
-const oldKey = e("\u{1F5DD}", "Old Key");
-const tech = g(
-    "Technology", "Technology",
-    joystick,
-    videoGame,
-    lightBulb,
-    laptop,
-    briefcase,
-    computerDisk,
-    floppyDisk,
-    opticalDisk,
-    dvd,
-    desktopComputer,
-    keyboard,
-    printer,
-    computerMouse,
-    trackball,
-    telephone,
-    telephoneReceiver,
-    pager,
-    faxMachine,
-    satelliteAntenna,
-    loudspeaker,
-    megaphone,
-    television,
-    radio,
-    videocassette,
-    filmProjector,
-    studioMicrophone,
-    levelSlider,
-    controlKnobs,
-    microphone,
-    movieCamera,
-    headphone,
-    camera,
-    cameraWithFlash,
-    videoCamera,
-    mobilePhone,
-    mobilePhoneOff,
-    mobilePhoneWithArrow,
-    lockedWithPen,
-    lockedWithKey,
-    locked,
-    unlocked,
-    bell,
-    bellWithSlash,
-    bookmark,
-    link,
-    mobilePhoneVibrating,
-    antennaBars,
-    dimButton,
-    brightButton,
-    mutedSpeaker,
-    speakerLowVolume,
-    speakerMediumVolume,
-    speakerHighVolume,
-    battery,
-    electricPlug);
-
-const mail = g(
-    "Mail", "Mail",
-    e("\u{1F4E4}", "Outbox Tray"),
-    e("\u{1F4E5}", "Inbox Tray"),
-    e("\u{1F4E6}", "Package"),
-    e("\u{1F4E7}", "E-Mail"),
-    e("\u{1F4E8}", "Incoming Envelope"),
-    e("\u{1F4E9}", "Envelope with Arrow"),
-    e("\u{1F4EA}", "Closed Mailbox with Lowered Flag"),
-    e("\u{1F4EB}", "Closed Mailbox with Raised Flag"),
-    e("\u{1F4EC}", "Open Mailbox with Raised Flag"),
-    e("\u{1F4ED}", "Open Mailbox with Lowered Flag"),
-    e("\u{1F4EE}", "Postbox"),
-    e("\u{1F4EF}", "Postal Horn"));
-
-const celebration = g(
-    "Celebration", "Celebration",
-    e("\u{1F380}", "Ribbon"),
-    e("\u{1F381}", "Wrapped Gift"),
-    e("\u{1F383}", "Jack-O-Lantern"),
-    e("\u{1F384}", "Christmas Tree"),
-    e("\u{1F9E8}", "Firecracker"),
-    e("\u{1F386}", "Fireworks"),
-    e("\u{1F387}", "Sparkler"),
-    e("\u{2728}", "Sparkles"),
-    e("\u{2747}\u{FE0F}", "Sparkle"),
-    e("\u{1F388}", "Balloon"),
-    e("\u{1F389}", "Party Popper"),
-    e("\u{1F38A}", "Confetti Ball"),
-    e("\u{1F38B}", "Tanabata Tree"),
-    e("\u{1F38D}", "Pine Decoration"),
-    e("\u{1F38E}", "Japanese Dolls"),
-    e("\u{1F38F}", "Carp Streamer"),
-    e("\u{1F390}", "Wind Chime"),
-    e("\u{1F391}", "Moon Viewing Ceremony"),
-    e("\u{1F392}", "Backpack"),
-    graduationCap,
-    e("\u{1F9E7}", "Red Envelope"),
-    e("\u{1F3EE}", "Red Paper Lantern"),
-    e("\u{1F396}\u{FE0F}", "Military Medal"));
-
-const tools = g(
-    "Tools", "Tools",
-    e("\u{1F3A3}", "Fishing Pole"),
-    e("\u{1F526}", "Flashlight"),
-    wrench,
-    e("\u{1F528}", "Hammer"),
-    e("\u{1F529}", "Nut and Bolt"),
-    e("\u{1F6E0}\u{FE0F}", "Hammer and Wrench"),
-    e("\u{1F9ED}", "Compass"),
-    e("\u{1F9EF}", "Fire Extinguisher"),
-    e("\u{1F9F0}", "Toolbox"),
-    e("\u{1F9F1}", "Brick"),
-    e("\u{1FA93}", "Axe"),
-    e("\u{2692}\u{FE0F}", "Hammer and Pick"),
-    e("\u{26CF}\u{FE0F}", "Pick"),
-    e("\u{26D1}\u{FE0F}", "Rescue Worker’s Helmet"),
-    e("\u{26D3}\u{FE0F}", "Chains"),
-    compression);
-
-const office = g(
-    "Office", "Office",
-    e("\u{1F4C1}", "File Folder"),
-    e("\u{1F4C2}", "Open File Folder"),
-    e("\u{1F4C3}", "Page with Curl"),
-    e("\u{1F4C4}", "Page Facing Up"),
-    e("\u{1F4C5}", "Calendar"),
-    e("\u{1F4C6}", "Tear-Off Calendar"),
-    e("\u{1F4C7}", "Card Index"),
-    cardIndexDividers,
-    cardFileBox,
-    fileCabinet,
-    wastebasket,
-    spiralNotePad,
-    spiralCalendar,
-    e("\u{1F4C8}", "Chart Increasing"),
-    e("\u{1F4C9}", "Chart Decreasing"),
-    e("\u{1F4CA}", "Bar Chart"),
-    e("\u{1F4CB}", "Clipboard"),
-    e("\u{1F4CC}", "Pushpin"),
-    e("\u{1F4CD}", "Round Pushpin"),
-    e("\u{1F4CE}", "Paperclip"),
-    e("\u{1F587}\u{FE0F}", "Linked Paperclips"),
-    e("\u{1F4CF}", "Straight Ruler"),
-    e("\u{1F4D0}", "Triangular Ruler"),
-    e("\u{1F4D1}", "Bookmark Tabs"),
-    e("\u{1F4D2}", "Ledger"),
-    e("\u{1F4D3}", "Notebook"),
-    e("\u{1F4D4}", "Notebook with Decorative Cover"),
-    e("\u{1F4D5}", "Closed Book"),
-    e("\u{1F4D6}", "Open Book"),
-    e("\u{1F4D7}", "Green Book"),
-    e("\u{1F4D8}", "Blue Book"),
-    e("\u{1F4D9}", "Orange Book"),
-    e("\u{1F4DA}", "Books"),
-    e("\u{1F4DB}", "Name Badge"),
-    e("\u{1F4DC}", "Scroll"),
-    e("\u{1F4DD}", "Memo"),
-    e("\u{2702}\u{FE0F}", "Scissors"),
-    e("\u{2709}\u{FE0F}", "Envelope"));
-
-const signs = g(
-    "Signs", "Signs",
-    e("\u{1F3A6}", "Cinema"),
-    noMobilePhone,
-    e("\u{1F51E}", "No One Under Eighteen"),
-    e("\u{1F6AB}", "Prohibited"),
-    e("\u{1F6AC}", "Cigarette"),
-    e("\u{1F6AD}", "No Smoking"),
-    e("\u{1F6AE}", "Litter in Bin Sign"),
-    e("\u{1F6AF}", "No Littering"),
-    e("\u{1F6B0}", "Potable Water"),
-    e("\u{1F6B1}", "Non-Potable Water"),
-    e("\u{1F6B3}", "No Bicycles"),
-    e("\u{1F6B7}", "No Pedestrians"),
-    e("\u{1F6B8}", "Children Crossing"),
-    e("\u{1F6B9}", "Men’s Room"),
-    e("\u{1F6BA}", "Women’s Room"),
-    e("\u{1F6BB}", "Restroom"),
-    e("\u{1F6BC}", "Baby Symbol"),
-    e("\u{1F6BE}", "Water Closet"),
-    e("\u{1F6C2}", "Passport Control"),
-    e("\u{1F6C3}", "Customs"),
-    e("\u{1F6C4}", "Baggage Claim"),
-    e("\u{1F6C5}", "Left Luggage"),
-    e("\u{1F17F}\u{FE0F}", "Parking Button"),
-    e("\u{267F}", "Wheelchair Symbol"),
-    e("\u{2622}\u{FE0F}", "Radioactive"),
-    e("\u{2623}\u{FE0F}", "Biohazard"),
-    e("\u{26A0}\u{FE0F}", "Warning"),
-    e("\u{26A1}", "High Voltage"),
-    e("\u{26D4}", "No Entry"),
-    e("\u{267B}\u{FE0F}", "Recycling Symbol"),
-    female,
-    male,
-    e("\u{26A7}\u{FE0F}", "Transgender Symbol"));
-
-const religion = g(
-    "Religion", "Religion",
-    e("\u{1F52F}", "Dotted Six-Pointed Star"),
-    e("\u{2721}\u{FE0F}", "Star of David"),
-    e("\u{1F549}\u{FE0F}", "Om"),
-    e("\u{1F54B}", "Kaaba"),
-    e("\u{1F54C}", "Mosque"),
-    e("\u{1F54D}", "Synagogue"),
-    e("\u{1F54E}", "Menorah"),
-    e("\u{1F6D0}", "Place of Worship"),
-    e("\u{1F6D5}", "Hindu Temple"),
-    e("\u{2626}\u{FE0F}", "Orthodox Cross"),
-    e("\u{271D}\u{FE0F}", "Latin Cross"),
-    e("\u{262A}\u{FE0F}", "Star and Crescent"),
-    e("\u{262E}\u{FE0F}", "Peace Symbol"),
-    e("\u{262F}\u{FE0F}", "Yin Yang"),
-    e("\u{2638}\u{FE0F}", "Wheel of Dharma"),
-    e("\u{267E}\u{FE0F}", "Infinity"),
-    e("\u{1FA94}", "Diya Lamp"),
-    e("\u{26E9}\u{FE0F}", "Shinto Shrine"),
-    e("\u{26EA}", "Church"),
-    e("\u{2734}\u{FE0F}", "Eight-Pointed Star"),
-    e("\u{1F4FF}", "Prayer Beads"));
-
-const door = e("\u{1F6AA}", "Door");
-const household = g(
-    "Household", "Household",
-    e("\u{1F484}", "Lipstick"),
-    e("\u{1F48D}", "Ring"),
-    e("\u{1F48E}", "Gem Stone"),
-    e("\u{1F4F0}", "Newspaper"),
-    key,
-    e("\u{1F525}", "Fire"),
-    e("\u{1F52B}", "Pistol"),
-    e("\u{1F56F}\u{FE0F}", "Candle"),
-    e("\u{1F5BC}\u{FE0F}", "Framed Picture"),
-    oldKey,
-    e("\u{1F5DE}\u{FE0F}", "Rolled-Up Newspaper"),
-    e("\u{1F5FA}\u{FE0F}", "World Map"),
-    door,
-    e("\u{1F6BD}", "Toilet"),
-    e("\u{1F6BF}", "Shower"),
-    e("\u{1F6C1}", "Bathtub"),
-    e("\u{1F6CB}\u{FE0F}", "Couch and Lamp"),
-    e("\u{1F6CF}\u{FE0F}", "Bed"),
-    e("\u{1F9F4}", "Lotion Bottle"),
-    e("\u{1F9F5}", "Thread"),
-    e("\u{1F9F6}", "Yarn"),
-    e("\u{1F9F7}", "Safety Pin"),
-    e("\u{1F9F8}", "Teddy Bear"),
-    e("\u{1F9F9}", "Broom"),
-    e("\u{1F9FA}", "Basket"),
-    e("\u{1F9FB}", "Roll of Paper"),
-    e("\u{1F9FC}", "Soap"),
-    e("\u{1F9FD}", "Sponge"),
-    e("\u{1FA91}", "Chair"),
-    e("\u{1FA92}", "Razor"),
-    e("\u{1F397}\u{FE0F}", "Reminder Ribbon"));
-
-const activities = g(
-    "Activities", "Activities",
-    e("\u{1F39E}\u{FE0F}", "Film Frames"),
-    e("\u{1F39F}\u{FE0F}", "Admission Tickets"),
-    e("\u{1F3A0}", "Carousel Horse"),
-    e("\u{1F3A1}", "Ferris Wheel"),
-    e("\u{1F3A2}", "Roller Coaster"),
-    artistPalette,
-    e("\u{1F3AA}", "Circus Tent"),
-    e("\u{1F3AB}", "Ticket"),
-    e("\u{1F3AC}", "Clapper Board"),
-    e("\u{1F3AD}", "Performing Arts"));
-
-const travel = g(
-    "Travel", "Travel",
-    e("\u{1F3F7}\u{FE0F}", "Label"),
-    e("\u{1F30B}", "Volcano"),
-    e("\u{1F3D4}\u{FE0F}", "Snow-Capped Mountain"),
-    e("\u{26F0}\u{FE0F}", "Mountain"),
-    e("\u{1F3D5}\u{FE0F}", "Camping"),
-    e("\u{1F3D6}\u{FE0F}", "Beach with Umbrella"),
-    e("\u{26F1}\u{FE0F}", "Umbrella on Ground"),
-    e("\u{1F3EF}", "Japanese Castle"),
-    e("\u{1F463}", "Footprints"),
-    e("\u{1F5FB}", "Mount Fuji"),
-    e("\u{1F5FC}", "Tokyo Tower"),
-    e("\u{1F5FD}", "Statue of Liberty"),
-    e("\u{1F5FE}", "Map of Japan"),
-    e("\u{1F5FF}", "Moai"),
-    e("\u{1F6CE}\u{FE0F}", "Bellhop Bell"),
-    e("\u{1F9F3}", "Luggage"),
-    e("\u{26F3}", "Flag in Hole"),
-    e("\u{26FA}", "Tent"),
-    e("\u{2668}\u{FE0F}", "Hot Springs"));
-
-const medieval = g(
-    "Medieval", "Medieval",
-    e("\u{1F3F0}", "Castle"),
-    e("\u{1F3F9}", "Bow and Arrow"),
-    crown,
-    e("\u{1F531}", "Trident Emblem"),
-    e("\u{1F5E1}\u{FE0F}", "Dagger"),
-    e("\u{1F6E1}\u{FE0F}", "Shield"),
-    e("\u{1F52E}", "Crystal Ball"),
-    e("\u{2694}\u{FE0F}", "Crossed Swords"),
-    e("\u{269C}\u{FE0F}", "Fleur-de-lis"));
-
-const doubleExclamationMark = e("\u{203C}\u{FE0F}", "Double Exclamation Mark");
-const interrobang = e("\u{2049}\u{FE0F}", "Exclamation Question Mark");
-const information = e("\u{2139}\u{FE0F}", "Information");
-const circledM = e("\u{24C2}\u{FE0F}", "Circled M");
-const checkMarkButton = e("\u{2705}", "Check Mark Button");
-const checkMark = e("\u{2714}\u{FE0F}", "Check Mark");
-const eightSpokedAsterisk = e("\u{2733}\u{FE0F}", "Eight-Spoked Asterisk");
-const crossMark = e("\u{274C}", "Cross Mark");
-const crossMarkButton = e("\u{274E}", "Cross Mark Button");
-const questionMark = e("\u{2753}", "Question Mark");
-const whiteQuestionMark = e("\u{2754}", "White Question Mark");
-const whiteExclamationMark = e("\u{2755}", "White Exclamation Mark");
-const exclamationMark = e("\u{2757}", "Exclamation Mark");
-const curlyLoop = e("\u{27B0}", "Curly Loop");
-const doubleCurlyLoop = e("\u{27BF}", "Double Curly Loop");
-const wavyDash = e("\u{3030}\u{FE0F}", "Wavy Dash");
-const partAlternationMark = e("\u{303D}\u{FE0F}", "Part Alternation Mark");
-const tradeMark = e("\u{2122}\u{FE0F}", "Trade Mark");
-const copyright = e("\u{A9}\u{FE0F}", "Copyright");
-const registered = e("\u{AE}\u{FE0F}", "Registered");
-const squareFourCourners = e("\u{26F6}\u{FE0F}", "Square: Four Corners");
-
-const marks = gg(
-    "Marks", "Marks", {
-    doubleExclamationMark,
-    interrobang,
-    information,
-    circledM,
-    checkMarkButton,
-    checkMark,
-    eightSpokedAsterisk,
-    crossMark,
-    crossMarkButton,
-    questionMark,
-    whiteQuestionMark,
-    whiteExclamationMark,
-    exclamationMark,
-    curlyLoop,
-    doubleCurlyLoop,
-    wavyDash,
-    partAlternationMark,
-    tradeMark,
-    copyright,
-    registered,
-});
-
-const droplet = e("\u{1F4A7}", "Droplet");
-const dropOfBlood = e("\u{1FA78}", "Drop of Blood");
-const adhesiveBandage = e("\u{1FA79}", "Adhesive Bandage");
-const stethoscope = e("\u{1FA7A}", "Stethoscope");
-const syringe = e("\u{1F489}", "Syringe");
-const pill = e("\u{1F48A}", "Pill");
-const testTube = e("\u{1F9EA}", "Test Tube");
-const petriDish = e("\u{1F9EB}", "Petri Dish");
-const dna = e("\u{1F9EC}", "DNA");
-const abacus = e("\u{1F9EE}", "Abacus");
-const magnet = e("\u{1F9F2}", "Magnet");
-const telescope = e("\u{1F52D}", "Telescope");
-
-const science = gg(
-    "Science", "Science", {
-    droplet,
-    dropOfBlood,
-    adhesiveBandage,
-    stethoscope,
-    syringe,
-    pill,
-    microscope,
-    testTube,
-    petriDish,
-    dna,
-    abacus,
-    magnet,
-    telescope,
-    medical,
-    balanceScale,
-    alembic,
-    gear,
-    atomSymbol,
-    magnifyingGlassTiltedLeft,
-    magnifyingGlassTiltedRight,
-});
-const whiteChessKing = e("\u{2654}", "White Chess King");
-const whiteChessQueen = e("\u{2655}", "White Chess Queen");
-const whiteChessRook = e("\u{2656}", "White Chess Rook");
-const whiteChessBishop = e("\u{2657}", "White Chess Bishop");
-const whiteChessKnight = e("\u{2658}", "White Chess Knight");
-const whiteChessPawn = e("\u{2659}", "White Chess Pawn");
-const whiteChessPieces = gg(whiteChessKing.value + whiteChessQueen.value + whiteChessRook.value + whiteChessBishop.value + whiteChessKnight.value + whiteChessPawn.value, "White Chess Pieces", {
-    width: "auto",
-    king: whiteChessKing,
-    queen: whiteChessQueen,
-    rook: whiteChessRook,
-    bishop: whiteChessBishop,
-    knight: whiteChessKnight,
-    pawn: whiteChessPawn
-});
-const blackChessKing = e("\u{265A}", "Black Chess King");
-const blackChessQueen = e("\u{265B}", "Black Chess Queen");
-const blackChessRook = e("\u{265C}", "Black Chess Rook");
-const blackChessBishop = e("\u{265D}", "Black Chess Bishop");
-const blackChessKnight = e("\u{265E}", "Black Chess Knight");
-const blackChessPawn = e("\u{265F}", "Black Chess Pawn");
-const blackChessPieces = gg(blackChessKing.value + blackChessQueen.value + blackChessRook.value + blackChessBishop.value + blackChessKnight.value + blackChessPawn.value, "Black Chess Pieces", {
-    width: "auto",
-    king: blackChessKing,
-    queen: blackChessQueen,
-    rook: blackChessRook,
-    bishop: blackChessBishop,
-    knight: blackChessKnight,
-    pawn: blackChessPawn
-});
-const chessPawns = gg(whiteChessPawn.value + blackChessPawn.value, "Chess Pawns", {
-    width: "auto",
-    white: whiteChessPawn,
-    black: blackChessPawn
-});
-const chessRooks = gg(whiteChessRook.value + blackChessRook.value, "Chess Rooks", {
-    width: "auto",
-    white: whiteChessRook,
-    black: blackChessRook
-});
-const chessBishops = gg(whiteChessBishop.value + blackChessBishop.value, "Chess Bishops", {
-    width: "auto",
-    white: whiteChessBishop,
-    black: blackChessBishop
-});
-const chessKnights = gg(whiteChessKnight.value + blackChessKnight.value, "Chess Knights", {
-    width: "auto",
-    white: whiteChessKnight,
-    black: blackChessKnight
-});
-const chessQueens = gg(whiteChessQueen.value + blackChessQueen.value, "Chess Queens", {
-    width: "auto",
-    white: whiteChessQueen,
-    black: blackChessQueen
-});
-const chessKings = gg(whiteChessKing.value + blackChessKing.value, "Chess Kings", {
-    width: "auto",
-    white: whiteChessKing,
-    black: blackChessKing
-});
-
-const chess = gg("Chess Pieces", "Chess Pieces", {
-    width: "auto",
-    white: whiteChessPieces,
-    black: blackChessPieces,
-    pawns: chessPawns,
-    rooks: chessRooks,
-    bishops: chessBishops,
-    knights: chessKnights,
-    queens: chessQueens,
-    kings: chessKings
-});
-
-const dice1 = e("\u2680", "Dice: Side 1");
-const dice2 = e("\u2681", "Dice: Side 2");
-const dice3 = e("\u2682", "Dice: Side 3");
-const dice4 = e("\u2683", "Dice: Side 4");
-const dice5 = e("\u2684", "Dice: Side 5");
-const dice6 = e("\u2685", "Dice: Side 6");
-const dice = gg("Dice", "Dice", {
-    dice1,
-    dice2,
-    dice3,
-    dice4,
-    dice5,
-    dice6
-});
-
-const allIcons = gg(
-    "All Icons", "All Icons", {
-    faces,
-    love,
-    cartoon,
-    hands,
-    bodyParts,
-    people,
-    gestures,
-    inMotion,
-    resting,
-    roles,
-    fantasy,
-    animals,
-    plants,
-    food,
-    flags,
-    vehicles,
-    clocks,
-    arrows,
-    shapes,
-    buttons,
-    zodiac,
-    chess,
-    dice,
-    math,
-    games,
-    sportsEquipment,
-    clothing,
-    town,
-    music,
-    weather,
-    astro,
-    finance,
-    writing,
-    science,
-    tech,
-    mail,
-    celebration,
-    tools,
-    office,
-    signs,
-    religion,
-    household,
-    activities,
-    travel,
-    medieval
-});
-
-const DEFAULT_TEST_TEXT = "The quick brown fox jumps over the lazy dog";
-const loadedFonts = [];
-
-/**
- * 
- * @param {any} style
- * @returns {string}
- */
-function makeFont(style) {
-    const fontParts = [];
-    if (style.fontStyle && style.fontStyle !== "normal") {
-        fontParts.push(style.fontStyle);
-    }
-
-    if (style.fontVariant && style.fontVariant !== "normal") {
-        fontParts.push(style.fontVariant);
-    }
-
-    if (style.fontWeight && style.fontWeight !== "normal") {
-        fontParts.push(style.fontWeight);
-    }
-
-    fontParts.push(style.fontSize + "px");
-    fontParts.push(style.fontFamily);
-
-    return fontParts.join(" ");
-}
-
-/**
- * @param {string} font
- * @param {string?} testString
- */
-async function loadFont(font, testString = null) {
-    if (loadedFonts.indexOf(font) === -1) {
-        testString = testString || DEFAULT_TEST_TEXT;
-        const fonts = await document.fonts.load(font, testString);
-        if (fonts.length === 0) {
-            console.warn(`Failed to load font "${font}". If this is a system font, just set the object's \`value\` property, instead of calling \`loadFontAndSetText\`.`);
-        }
-        else {
-            loadedFonts.push(font);
-        }
-    }
-}
-
-const CullFaceNone = 0;
-const CullFaceBack = 1;
-const CullFaceFront = 2;
-const PCFShadowMap = 1;
-const PCFSoftShadowMap = 2;
-const VSMShadowMap = 3;
-const FrontSide = 0;
-const BackSide = 1;
-const DoubleSide = 2;
-const FlatShading = 1;
-const NoBlending = 0;
-const NormalBlending = 1;
-const AdditiveBlending = 2;
-const SubtractiveBlending = 3;
-const MultiplyBlending = 4;
-const CustomBlending = 5;
-const AddEquation = 100;
-const SubtractEquation = 101;
-const ReverseSubtractEquation = 102;
-const MinEquation = 103;
-const MaxEquation = 104;
-const ZeroFactor = 200;
-const OneFactor = 201;
-const SrcColorFactor = 202;
-const OneMinusSrcColorFactor = 203;
-const SrcAlphaFactor = 204;
-const OneMinusSrcAlphaFactor = 205;
-const DstAlphaFactor = 206;
-const OneMinusDstAlphaFactor = 207;
-const DstColorFactor = 208;
-const OneMinusDstColorFactor = 209;
-const SrcAlphaSaturateFactor = 210;
-const NeverDepth = 0;
-const AlwaysDepth = 1;
-const LessDepth = 2;
-const LessEqualDepth = 3;
-const EqualDepth = 4;
-const GreaterEqualDepth = 5;
-const GreaterDepth = 6;
-const NotEqualDepth = 7;
-const MultiplyOperation = 0;
-const MixOperation = 1;
-const AddOperation = 2;
-const NoToneMapping = 0;
-const LinearToneMapping = 1;
-const ReinhardToneMapping = 2;
-const CineonToneMapping = 3;
-const ACESFilmicToneMapping = 4;
-const CustomToneMapping = 5;
-
-const UVMapping = 300;
-const CubeReflectionMapping = 301;
-const CubeRefractionMapping = 302;
-const EquirectangularReflectionMapping = 303;
-const EquirectangularRefractionMapping = 304;
-const CubeUVReflectionMapping = 306;
-const CubeUVRefractionMapping = 307;
-const RepeatWrapping = 1000;
-const ClampToEdgeWrapping = 1001;
-const MirroredRepeatWrapping = 1002;
-const NearestFilter = 1003;
-const NearestMipmapNearestFilter = 1004;
-const NearestMipmapLinearFilter = 1005;
-const LinearFilter = 1006;
-const LinearMipmapNearestFilter = 1007;
-const LinearMipmapLinearFilter = 1008;
-const UnsignedByteType = 1009;
-const ByteType = 1010;
-const ShortType = 1011;
-const UnsignedShortType = 1012;
-const IntType = 1013;
-const UnsignedIntType = 1014;
-const FloatType = 1015;
-const HalfFloatType = 1016;
-const UnsignedShort4444Type = 1017;
-const UnsignedShort5551Type = 1018;
-const UnsignedShort565Type = 1019;
-const UnsignedInt248Type = 1020;
-const AlphaFormat = 1021;
-const RGBFormat = 1022;
-const RGBAFormat = 1023;
-const LuminanceFormat = 1024;
-const LuminanceAlphaFormat = 1025;
-const DepthFormat = 1026;
-const DepthStencilFormat = 1027;
-const RedFormat = 1028;
-const RedIntegerFormat = 1029;
-const RGFormat = 1030;
-const RGIntegerFormat = 1031;
-const RGBIntegerFormat = 1032;
-const RGBAIntegerFormat = 1033;
-
-const RGB_S3TC_DXT1_Format = 33776;
-const RGBA_S3TC_DXT1_Format = 33777;
-const RGBA_S3TC_DXT3_Format = 33778;
-const RGBA_S3TC_DXT5_Format = 33779;
-const RGB_PVRTC_4BPPV1_Format = 35840;
-const RGB_PVRTC_2BPPV1_Format = 35841;
-const RGBA_PVRTC_4BPPV1_Format = 35842;
-const RGBA_PVRTC_2BPPV1_Format = 35843;
-const RGB_ETC1_Format = 36196;
-const RGB_ETC2_Format = 37492;
-const RGBA_ETC2_EAC_Format = 37496;
-const RGBA_ASTC_4x4_Format = 37808;
-const RGBA_ASTC_5x4_Format = 37809;
-const RGBA_ASTC_5x5_Format = 37810;
-const RGBA_ASTC_6x5_Format = 37811;
-const RGBA_ASTC_6x6_Format = 37812;
-const RGBA_ASTC_8x5_Format = 37813;
-const RGBA_ASTC_8x6_Format = 37814;
-const RGBA_ASTC_8x8_Format = 37815;
-const RGBA_ASTC_10x5_Format = 37816;
-const RGBA_ASTC_10x6_Format = 37817;
-const RGBA_ASTC_10x8_Format = 37818;
-const RGBA_ASTC_10x10_Format = 37819;
-const RGBA_ASTC_12x10_Format = 37820;
-const RGBA_ASTC_12x12_Format = 37821;
-const RGBA_BPTC_Format = 36492;
-const SRGB8_ALPHA8_ASTC_4x4_Format = 37840;
-const SRGB8_ALPHA8_ASTC_5x4_Format = 37841;
-const SRGB8_ALPHA8_ASTC_5x5_Format = 37842;
-const SRGB8_ALPHA8_ASTC_6x5_Format = 37843;
-const SRGB8_ALPHA8_ASTC_6x6_Format = 37844;
-const SRGB8_ALPHA8_ASTC_8x5_Format = 37845;
-const SRGB8_ALPHA8_ASTC_8x6_Format = 37846;
-const SRGB8_ALPHA8_ASTC_8x8_Format = 37847;
-const SRGB8_ALPHA8_ASTC_10x5_Format = 37848;
-const SRGB8_ALPHA8_ASTC_10x6_Format = 37849;
-const SRGB8_ALPHA8_ASTC_10x8_Format = 37850;
-const SRGB8_ALPHA8_ASTC_10x10_Format = 37851;
-const SRGB8_ALPHA8_ASTC_12x10_Format = 37852;
-const SRGB8_ALPHA8_ASTC_12x12_Format = 37853;
-const LinearEncoding = 3000;
-const sRGBEncoding = 3001;
-const GammaEncoding = 3007;
-const RGBEEncoding = 3002;
-const LogLuvEncoding = 3003;
-const RGBM7Encoding = 3004;
-const RGBM16Encoding = 3005;
-const RGBDEncoding = 3006;
-const BasicDepthPacking = 3200;
-const RGBADepthPacking = 3201;
-const TangentSpaceNormalMap = 0;
-const ObjectSpaceNormalMap = 1;
-const KeepStencilOp = 7680;
-const AlwaysStencilFunc = 519;
-
-const StaticDrawUsage = 35044;
-const GLSL3 = "300 es";
-
-const EventBase = (function () {
-    try {
-        new window.EventTarget();
-        return class EventBase extends EventTarget {
-            constructor() {
-                super();
-            }
-        };
-    } catch (exp) {
-
-        /** @type {WeakMap<EventBase, Map<string, Listener[]>> */
-        const selfs = new WeakMap();
-
-        return class EventBase {
-
-            constructor() {
-                selfs.set(this, new Map());
-            }
-
-            /**
-             * @param {string} type
-             * @param {Function} callback
-             * @param {any} options
-             */
-            addEventListener(type, callback, options) {
-                if (isFunction(callback)) {
-                    const self = selfs.get(this);
-                    if (!self.has(type)) {
-                        self.set(type, []);
-                    }
-
-                    const listeners = self.get(type);
-                    if (!listeners.find(l => l.callback === callback)) {
-                        listeners.push({
-                            target: this,
-                            callback,
-                            options
-                        });
-                    }
-                }
-            }
-
-            /**
-             * @param {string} type
-             * @param {Function} callback
-             */
-            removeEventListener(type, callback) {
-                if (isFunction(callback)) {
-                    const self = selfs.get(this);
-                    if (self.has(type)) {
-                        const listeners = self.get(type),
-                            idx = listeners.findIndex(l => l.callback === callback);
-                        if (idx >= 0) {
-                            arrayRemoveAt(listeners, idx);
-                        }
-                    }
-                }
-            }
-
-            /**
-             * @param {Event} evt
-             */
-            dispatchEvent(evt) {
-                const self = selfs.get(this);
-                if (!self.has(evt.type)) {
-                    return true;
-                }
-                else {
-                    const listeners = self.get(evt.type);
-                    for (let listener of listeners) {
-                        if (listener.options && listener.options.once) {
-                            this.removeEventListener(evt.type, listener.callback);
-                        }
-                        listener.callback.call(listener.target, evt);
-                    }
-                    return !evt.defaultPrevented;
-                }
-            }
-        };
-    }
-
-})();
-
-/**
- * Returns true if the given object is either an HTMLCanvasElement or an OffscreenCanvas.
- * @param {any} obj
- * @returns {boolean}
- */
-
-/**
- * Resizes a canvas element
- * @param {HTMLCanvasElement|OffscreenCanvas} canv
- * @param {number} w - the new width of the canvas
- * @param {number} h - the new height of the canvas
- * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
- * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
- */
-function setCanvasSize(canv, w, h, superscale = 1) {
-    w = Math.floor(w * superscale);
-    h = Math.floor(h * superscale);
-    if (canv.width != w
-        || canv.height != h) {
-        canv.width = w;
-        canv.height = h;
-        return true;
-    }
-    return false;
-}
-
-/**
- * Resizes the canvas element of a given rendering context.
- * 
- * Note: the imageSmoothingEnabled, textBaseline, textAlign, and font 
- * properties of the context will be restored after the context is resized,
- * as these values are usually reset to their default values when a canvas
- * is resized.
- * @param {RenderingContext} ctx
- * @param {number} w - the new width of the canvas
- * @param {number} h - the new height of the canvas
- * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
- * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
- */
-function setContextSize(ctx, w, h, superscale = 1) {
-    const oldImageSmoothingEnabled = ctx.imageSmoothingEnabled,
-        oldTextBaseline = ctx.textBaseline,
-        oldTextAlign = ctx.textAlign,
-        oldFont = ctx.font,
-        resized = setCanvasSize(
-            ctx.canvas,
-            w,
-            h,
-            superscale);
-
-    if (resized) {
-        ctx.imageSmoothingEnabled = oldImageSmoothingEnabled;
-        ctx.textBaseline = oldTextBaseline;
-        ctx.textAlign = oldTextAlign;
-        ctx.font = oldFont;
-    }
-
-    return resized;
-}
-
-/**
- * A setter functor for HTML attributes.
- **/
-class HtmlAttr {
-    /**
-     * Creates a new setter functor for HTML Attributes
-     * @param {string} key - the attribute name.
-     * @param {string} value - the value to set for the attribute.
-     * @param {...string} tags - the HTML tags that support this attribute.
-     */
-    constructor(key, value, ...tags) {
-        this.key = key;
-        this.value = value;
-        this.tags = tags.map(t => t.toLocaleUpperCase());
-        Object.freeze(this);
-    }
-
-    /**
-     * Set the attribute value on an HTMLElement
-     * @param {HTMLElement} elem - the element on which to set the attribute.
-     */
-    apply(elem) {
-        const isValid = this.tags.length === 0
-            || this.tags.indexOf(elem.tagName) > -1;
-
-        if (!isValid) {
-            console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
-        }
-        else if (this.key === "style") {
-            Object.assign(elem[this.key], this.value);
-        }
-        else if (!isBoolean(value)) {
-            elem[this.key] = this.value;
-        }
-        else if (this.value) {
-            elem.setAttribute(this.key, "");
-        }
-        else {
-            elem.removeAttribute(this.key);
-        }
-    }
-}
-
-/**
- * Specifies the height of elements listed here. For all other elements, use the CSS height property.
- * @param {number} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function height(value) { return new HtmlAttr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
-
-/**
- * The URL of a linked resource.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function href(value) { return new HtmlAttr("href", value, "a", "area", "base", "link"); }
-
-/**
- * Often used with CSS to style a specific element. The value of this attribute must be unique.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function id(value) { return new HtmlAttr("id", value); }
-
-/**
- * The URL of the embeddable content.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function src(value) { return new HtmlAttr("src", value, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
-
-/**
- * Defines the type of the element.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function type(value) { return new HtmlAttr("type", value, "button", "input", "command", "embed", "object", "script", "source", "style", "menu"); }
-
-/**
- * Defines a default value which will be displayed in the element on page load.
- * @param {string} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function value(value) { return new HtmlAttr("value", value, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
-
-/**
- * For the elements listed here, this establishes the element's width.
- * @param {number} value - the value to set on the attribute.
- * @returns {HtmlAttr}
- **/
-function width(value) { return new HtmlAttr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
-
-/**
- * A CSS property that will be applied to an element's style attribute.
- **/
-class CssProp {
-    /**
-     * Creates a new CSS property that will be applied to an element's style attribute.
-     * @param {string} key - the property name.
-     * @param {string} value - the value to set for the property.
-     */
-    constructor(key, value) {
-        this.key = key;
-        this.value = value;
-        Object.freeze(this);
-    }
-
-    /**
-     * Set the attribute value on an HTMLElement
-     * @param {HTMLElement} elem - the element on which to set the attribute.
-     */
-    apply(elem) {
-        elem.style[this.key] = this.value;
-    }
-}
-
-class CssPropSet {
-    /**
-     * @param {...(CssProp|CssPropSet)} rest
-     */
-    constructor(...rest) {
-        this.set = new Map();
-        const set = (key, value) => {
-            if (value || isBoolean(value)) {
-                this.set.set(key, value);
-            }
-            else if (this.set.has(key)) {
-                this.set.delete(key);
-            }
-        };
-        for (let prop of rest) {
-            if (prop instanceof CssProp) {
-                const { key, value } = prop;
-                set(key, value);
-            }
-            else if (prop instanceof CssPropSet) {
-                for (let subProp of prop.set.entries()) {
-                    const [key, value] = subProp;
-                    set(key, value);
-                }
-            }
-        }
-    }
-
-    /**
-     * Set the attribute value on an HTMLElement
-     * @param {HTMLElement} elem - the element on which to set the attribute.
-     */
-    apply(elem) {
-        for (let prop of this.set.entries()) {
-            const [key, value] = prop;
-            elem.style[key] = value;
-        }
-    }
-}
-
-/**
- * Creates a style attribute with a display property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function display(v) { return new CssProp("display", v); }
-
-/**
- * Creates a style attribute with a fontFamily property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function fontFamily(v) { return new CssProp("fontFamily", v); }
-
-/**
- * Creates a style attribute with a left property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function left(v) { return new CssProp("left", v); }
-
-/**
- * Creates a style attribute with a textDecoration property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function textDecoration(v) { return new CssProp("textDecoration", v); }
-
-/**
- * Creates a style attribute with a width property.
- * @param {string} v
- * @returns {HtmlAttr}
- **/
-function cssWidth(v) { return new CssProp("width", v); }
-
-
-// A selection of fonts for preferred monospace rendering.
-const monospaceFonts = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
-const monospaceFamily = fontFamily(monospaceFonts);
-// A selection of fonts that should match whatever the user's operating system normally uses.
-const systemFonts = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
-const systemFamily = fontFamily(systemFonts);
-
-/**
- * A setter functor for HTML element events.
- **/
-class HtmlEvt {
-    /**
-     * Creates a new setter functor for an HTML element event.
-     * @param {string} name - the name of the event to attach to.
-     * @param {Function} callback - the callback function to use with the event handler.
-     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
-     */
-    constructor(name, callback, opts) {
-        if (!isFunction(callback)) {
-            throw new Error("A function instance is required for this parameter");
-        }
-
-        this.name = name;
-        this.callback = callback;
-        this.opts = opts;
-        Object.freeze(this);
-    }
-
-    /**
-     * Add the encapsulate callback as an event listener to the give HTMLElement
-     * @param {HTMLElement} elem
-     */
-    add(elem) {
-        elem.addEventListener(this.name, this.callback, this.opts);
-    }
-
-    /**
-     * Remove the encapsulate callback as an event listener from the give HTMLElement
-     * @param {HTMLElement} elem
-     */
-    remove(elem) {
-        elem.removeEventListener(this.name, this.callback);
-    }
-}
-
-/**
- * @callback onUserGestureTestCallback
- * @returns {boolean}
- */
-
-
-const gestures$1 = [
-    "change",
-    "click",
-    "contextmenu",
-    "dblclick",
-    "mouseup",
-    "pointerup",
-    "reset",
-    "submit",
-    "touchend"
-];
-/**
- * This is not an event handler that you can add to an element. It's a global event that
- * waits for the user to perform some sort of interaction with the website.
- * @param {Function} callback
- * @param {onUserGestureTestCallback} test
-  */
-function onUserGesture(callback, test) {
-    test = test || (() => true);
-    const check = async (evt) => {
-        let testResult = test();
-        if (testResult instanceof Promise) {
-            testResult = await testResult;
-        }
-
-        if (evt.isTrusted && testResult) {
-            for (let gesture of gestures$1) {
-                window.removeEventListener(gesture, check);
-            }
-
-            const result = callback();
-            if (result instanceof Promise) {
-                await result;
-            }
-        }
-    };
-
-    for (let gesture of gestures$1) {
-        window.addEventListener(gesture, check);
-    }
-}
-
-/**
- * @typedef {(Node|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
- **/
-
-/**
- * Creates an HTML element for a given tag name.
- * 
- * Boolean attributes that you want to default to true can be passed
- * as just the attribute creating function, 
- *   e.g. `Audio(autoPlay)` vs `Audio(autoPlay(true))`
- * @param {string} name - the name of the tag
- * @param {...TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLElement}
- */
-function tag(name, ...rest) {
-    let elem = null;
-
-    for (let i = 0; i < rest.length; ++i) {
-        const attr = rest[i];
-        if (isFunction(attr)) {
-            rest[i] = attr(true);
-        }
-
-        if (attr instanceof HtmlAttr
-            && attr.key === "id") {
-            elem = document.getElementById(attr.value);
-        }
-    }
-
-    if (elem === null) {
-        elem = document.createElement(name);
-    }
-
-    for (let x of rest) {
-        if (x !== null && x !== undefined) {
-            if (isString(x)
-                || isNumber(x)
-                || isBoolean(x)
-                || x instanceof Date) {
-                elem.appendChild(document.createTextNode(x));
-            }
-            else if (x instanceof Node) {
-                elem.appendChild(x);
-            }
-            else if (x.element instanceof Node) {
-                elem.appendChild(x.element);
-            }
-            else if (x instanceof HtmlAttr
-                || x instanceof CssProp
-                || x instanceof CssPropSet) {
-                x.apply(elem);
-            }
-            else if (x instanceof HtmlEvt) {
-                x.add(elem);
-            }
-            else {
-                console.trace(`Skipping ${x}: unsupported value type.`, x);
-            }
-        }
-    }
-
-    return elem;
-}
-
-/**
- * creates an HTML A tag
- * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLAnchorElement}
- */
-function A(...rest) { return tag("a", ...rest); }
-
-/**
- * creates an HTML HtmlButton tag
- * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLButtonElement}
- */
-function ButtonRaw(...rest) { return tag("button", ...rest); }
-
-/**
- * creates an HTML Button tag
- * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLButtonElement}
- */
-function Button(...rest) { return ButtonRaw(...rest, type("button")); }
-
-/**
- * creates an HTML Canvas tag
- * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLCanvasElement}
- */
-function Canvas(...rest) { return tag("canvas", ...rest); }
-
-/**
- * creates an HTML Img tag
- * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
- * @returns {HTMLImageElement}
- */
-function Img(...rest) { return tag("img", ...rest); }
-
-/**
- * Creates an offscreen canvas element, if they are available. Otherwise, returns an HTMLCanvasElement.
- * @param {number} w - the width of the canvas
- * @param {number} h - the height of the canvas
- * @param {...import("./tag").TagChild} rest - optional HTML attributes and child elements, to use in constructing the HTMLCanvasElement if OffscreenCanvas is not available.
- * @returns {OffscreenCanvas|HTMLCanvasElement}
- */
-function CanvasOffscreen(w, h, ...rest) {
-    if (window.OffscreenCanvas) {
-        return new OffscreenCanvas(w, h);
-    }
-    else {
-        return Canvas(...rest, width(w), height(h));
-    }
-}
-
-/**
- * @type {WeakMap<TextImage, TextImagePrivate>}
- **/
-const selfs = new WeakMap();
-const redrawnEvt = new Event("redrawn");
-
-class TextImagePrivate {
-    constructor() {
-        /** @type {string} */
-        this.color = "black";
-
-        /** @type {string} */
-        this.bgColor = null;
-
-        /** @type {string} */
-        this.fontStyle = "normal";
-
-        /** @type {string} */
-        this.fontVariant = "normal";
-
-        /** @type {string} */
-        this.fontWeight = "normal";
-
-        /** @type {string} */
-        this.fontFamily = "sans-serif";
-
-        /** @type {number} */
-        this.fontSize = 20;
-
-        /** @type {number} */
-        this.scale = 1;
-
-        /** @type {number} */
-        this.padding = {
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0
-        };
-
-        /** @type {string} */
-        this.value = null;
-
-        this.canvas = CanvasOffscreen(10, 10);
-        this.g = this.canvas.getContext("2d");
-        this.g.textBaseline = "top";
-    }
-
-    redraw(parent) {
-        this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        if (this.fontFamily
-            && this.fontSize
-            && this.color
-            && this.scale
-            && this.value) {
-            const fontHeight = this.fontSize * this.scale;
-            const font = makeFont(this);
-            this.g.font = font;
-
-            const metrics = this.g.measureText(this.value);
-            let dx = 0,
-                dy = 0,
-                trueWidth = metrics.width,
-                trueHeight = fontHeight;
-            if (metrics.actualBoundingBoxLeft !== undefined) {
-                dy = metrics.actualBoundingBoxAscent;
-                trueWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
-                trueHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
-            }
-
-            dx += this.padding.left;
-            dy += this.padding.top;
-            trueWidth += this.padding.right + this.padding.left;
-            trueHeight += this.padding.top + this.padding.bottom;
-
-            setContextSize(this.g, trueWidth, trueHeight);
-
-            if (this.bgColor) {
-                this.g.fillStyle = this.bgColor;
-                this.g.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            }
-            else {
-                this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            }
-
-            this.g.fillStyle = this.color;
-            this.g.fillText(this.value, dx, dy);
-            parent.dispatchEvent(redrawnEvt);
-        }
-    }
-}
-
-class TextImage extends EventBase {
-    /**
-     * @param {string} fontFamily
-     */
-    constructor() {
-        super();
-        selfs.set(this, new TextImagePrivate());
-    }
-
-    async loadFontAndSetText(value = null) {
-        const font = makeFont(this);
-        await loadFont(font, value);
-        this.value = value;
-    }
-
-    get canvas() {
-        return selfs.get(this).canvas;
-    }
-
-    get width() {
-        const self = selfs.get(this);
-        return self.canvas.width / self.scale;
-    }
-
-    get height() {
-        const self = selfs.get(this);
-        return self.canvas.height / self.scale;
-    }
-
-    get scale() {
-        return selfs.get(this).scale;
-    }
-
-    set scale(v) {
-        if (this.scale !== v) {
-            const self = selfs.get(this);
-            self.scale = v;
-            self.redraw(this);
-        }
-    }
-
-    get padding() {
-        return selfs.get(this).padding;
-    }
-
-    set padding(v) {
-
-        if (v instanceof Array) {
-            if (v.length === 1) {
-                v = {
-                    top: v[0],
-                    right: v[0],
-                    bottom: v[0],
-                    left: v[0]
-                };
-            }
-            else if (v.length === 2) {
-                v = {
-                    top: v[0],
-                    right: v[1],
-                    bottom: v[0],
-                    left: v[1]
-                };
-            }
-            else if (v.length === 4) {
-                v = {
-                    top: v[0],
-                    right: v[1],
-                    bottom: v[2],
-                    left: v[3]
-                };
-            }
-            else {
-                return;
-            }
-        }
-        else if (isNumber(v)) {
-            v = {
-                top: v,
-                right: v,
-                bottom: v,
-                left: v
-            };
-        }
-
-
-        if (this.padding.top !== v.top
-            || this.padding.right != v.right
-            || this.padding.bottom != v.bottom
-            || this.padding.left != v.left) {
-            const self = selfs.get(this);
-            self.padding = v;
-            self.redraw(this);
-        }
-    }
-
-    get fontStyle() {
-        return selfs.get(this).fontStyle;
-    }
-
-    set fontStyle(v) {
-        if (this.fontStyle !== v) {
-            const self = selfs.get(this);
-            self.fontStyle = v;
-            self.redraw(this);
-        }
-    }
-
-    get fontVariant() {
-        return selfs.get(this).fontVariant;
-    }
-
-    set fontVariant(v) {
-        if (this.fontVariant !== v) {
-            const self = selfs.get(this);
-            self.fontVariant = v;
-            self.redraw(this);
-        }
-    }
-
-    get fontWeight() {
-        return selfs.get(this).fontWeight;
-    }
-
-    set fontWeight(v) {
-        if (this.fontWeight !== v) {
-            const self = selfs.get(this);
-            self.fontWeight = v;
-            self.redraw(this);
-        }
-    }
-
-    get fontSize() {
-        return selfs.get(this).fontSize;
-    }
-
-    set fontSize(v) {
-        if (this.fontSize !== v) {
-            const self = selfs.get(this);
-            self.fontSize = v;
-            self.redraw(this);
-        }
-    }
-
-    get fontFamily() {
-        return selfs.get(this).fontFamily;
-    }
-
-    set fontFamily(v) {
-        if (this.fontFamily !== v) {
-            const self = selfs.get(this);
-            self.fontFamily = v;
-            self.redraw(this);
-        }
-    }
-
-    get color() {
-        return selfs.get(this).color;
-    }
-
-    set color(v) {
-        if (this.color !== v) {
-            const self = selfs.get(this);
-            self.color = v;
-            self.redraw(this);
-        }
-    }
-
-    get bgColor() {
-        return selfs.get(this).bgColor;
-    }
-
-    set bgColor(v) {
-        if (this.bgColor !== v) {
-            const self = selfs.get(this);
-            self.bgColor = v;
-            self.redraw(this);
-        }
-    }
-
-    get value() {
-        return selfs.get(this).value;
-    }
-
-    set value(v) {
-        if (this.value !== v) {
-            const self = selfs.get(this);
-            self.value = v;
-            self.redraw(this);
-        }
-    }
-
-    /**
-     *
-     * @param {CanvasRenderingContext2D} g - the canvas to which to render the text.
-     * @param {number} x
-     * @param {number} y
-     */
-    draw(g, x, y) {
-        const self = selfs.get(this);
-        if (self.canvas.width > 0
-            && self.canvas.height > 0) {
-            g.drawImage(self.canvas, x, y, this.width, this.height);
-        }
-    }
 }
 
 /**
@@ -13580,6 +9585,156 @@ class Vector4 {
 
 }
 
+const CullFaceNone = 0;
+const CullFaceBack = 1;
+const CullFaceFront = 2;
+const PCFShadowMap = 1;
+const PCFSoftShadowMap = 2;
+const VSMShadowMap = 3;
+const FrontSide = 0;
+const BackSide = 1;
+const DoubleSide = 2;
+const FlatShading = 1;
+const NoBlending = 0;
+const NormalBlending = 1;
+const AdditiveBlending = 2;
+const SubtractiveBlending = 3;
+const MultiplyBlending = 4;
+const CustomBlending = 5;
+const AddEquation = 100;
+const SubtractEquation = 101;
+const ReverseSubtractEquation = 102;
+const MinEquation = 103;
+const MaxEquation = 104;
+const ZeroFactor = 200;
+const OneFactor = 201;
+const SrcColorFactor = 202;
+const OneMinusSrcColorFactor = 203;
+const SrcAlphaFactor = 204;
+const OneMinusSrcAlphaFactor = 205;
+const DstAlphaFactor = 206;
+const OneMinusDstAlphaFactor = 207;
+const DstColorFactor = 208;
+const OneMinusDstColorFactor = 209;
+const SrcAlphaSaturateFactor = 210;
+const NeverDepth = 0;
+const AlwaysDepth = 1;
+const LessDepth = 2;
+const LessEqualDepth = 3;
+const EqualDepth = 4;
+const GreaterEqualDepth = 5;
+const GreaterDepth = 6;
+const NotEqualDepth = 7;
+const MultiplyOperation = 0;
+const MixOperation = 1;
+const AddOperation = 2;
+const NoToneMapping = 0;
+const LinearToneMapping = 1;
+const ReinhardToneMapping = 2;
+const CineonToneMapping = 3;
+const ACESFilmicToneMapping = 4;
+const CustomToneMapping = 5;
+
+const UVMapping = 300;
+const CubeReflectionMapping = 301;
+const CubeRefractionMapping = 302;
+const EquirectangularReflectionMapping = 303;
+const EquirectangularRefractionMapping = 304;
+const CubeUVReflectionMapping = 306;
+const CubeUVRefractionMapping = 307;
+const RepeatWrapping = 1000;
+const ClampToEdgeWrapping = 1001;
+const MirroredRepeatWrapping = 1002;
+const NearestFilter = 1003;
+const NearestMipmapNearestFilter = 1004;
+const NearestMipmapLinearFilter = 1005;
+const LinearFilter = 1006;
+const LinearMipmapNearestFilter = 1007;
+const LinearMipmapLinearFilter = 1008;
+const UnsignedByteType = 1009;
+const ByteType = 1010;
+const ShortType = 1011;
+const UnsignedShortType = 1012;
+const IntType = 1013;
+const UnsignedIntType = 1014;
+const FloatType = 1015;
+const HalfFloatType = 1016;
+const UnsignedShort4444Type = 1017;
+const UnsignedShort5551Type = 1018;
+const UnsignedShort565Type = 1019;
+const UnsignedInt248Type = 1020;
+const AlphaFormat = 1021;
+const RGBFormat = 1022;
+const RGBAFormat = 1023;
+const LuminanceFormat = 1024;
+const LuminanceAlphaFormat = 1025;
+const DepthFormat = 1026;
+const DepthStencilFormat = 1027;
+const RedFormat = 1028;
+const RedIntegerFormat = 1029;
+const RGFormat = 1030;
+const RGIntegerFormat = 1031;
+const RGBIntegerFormat = 1032;
+const RGBAIntegerFormat = 1033;
+
+const RGB_S3TC_DXT1_Format = 33776;
+const RGBA_S3TC_DXT1_Format = 33777;
+const RGBA_S3TC_DXT3_Format = 33778;
+const RGBA_S3TC_DXT5_Format = 33779;
+const RGB_PVRTC_4BPPV1_Format = 35840;
+const RGB_PVRTC_2BPPV1_Format = 35841;
+const RGBA_PVRTC_4BPPV1_Format = 35842;
+const RGBA_PVRTC_2BPPV1_Format = 35843;
+const RGB_ETC1_Format = 36196;
+const RGB_ETC2_Format = 37492;
+const RGBA_ETC2_EAC_Format = 37496;
+const RGBA_ASTC_4x4_Format = 37808;
+const RGBA_ASTC_5x4_Format = 37809;
+const RGBA_ASTC_5x5_Format = 37810;
+const RGBA_ASTC_6x5_Format = 37811;
+const RGBA_ASTC_6x6_Format = 37812;
+const RGBA_ASTC_8x5_Format = 37813;
+const RGBA_ASTC_8x6_Format = 37814;
+const RGBA_ASTC_8x8_Format = 37815;
+const RGBA_ASTC_10x5_Format = 37816;
+const RGBA_ASTC_10x6_Format = 37817;
+const RGBA_ASTC_10x8_Format = 37818;
+const RGBA_ASTC_10x10_Format = 37819;
+const RGBA_ASTC_12x10_Format = 37820;
+const RGBA_ASTC_12x12_Format = 37821;
+const RGBA_BPTC_Format = 36492;
+const SRGB8_ALPHA8_ASTC_4x4_Format = 37840;
+const SRGB8_ALPHA8_ASTC_5x4_Format = 37841;
+const SRGB8_ALPHA8_ASTC_5x5_Format = 37842;
+const SRGB8_ALPHA8_ASTC_6x5_Format = 37843;
+const SRGB8_ALPHA8_ASTC_6x6_Format = 37844;
+const SRGB8_ALPHA8_ASTC_8x5_Format = 37845;
+const SRGB8_ALPHA8_ASTC_8x6_Format = 37846;
+const SRGB8_ALPHA8_ASTC_8x8_Format = 37847;
+const SRGB8_ALPHA8_ASTC_10x5_Format = 37848;
+const SRGB8_ALPHA8_ASTC_10x6_Format = 37849;
+const SRGB8_ALPHA8_ASTC_10x8_Format = 37850;
+const SRGB8_ALPHA8_ASTC_10x10_Format = 37851;
+const SRGB8_ALPHA8_ASTC_12x10_Format = 37852;
+const SRGB8_ALPHA8_ASTC_12x12_Format = 37853;
+const LinearEncoding = 3000;
+const sRGBEncoding = 3001;
+const GammaEncoding = 3007;
+const RGBEEncoding = 3002;
+const LogLuvEncoding = 3003;
+const RGBM7Encoding = 3004;
+const RGBM16Encoding = 3005;
+const RGBDEncoding = 3006;
+const BasicDepthPacking = 3200;
+const RGBADepthPacking = 3201;
+const TangentSpaceNormalMap = 0;
+const ObjectSpaceNormalMap = 1;
+const KeepStencilOp = 7680;
+const AlwaysStencilFunc = 519;
+
+const StaticDrawUsage = 35044;
+const GLSL3 = "300 es";
+
 const _vector$2 = new Vector3();
 const _vector2 = new Vector2();
 
@@ -15601,36 +11756,32 @@ BufferGeometry.prototype = Object.assign( Object.create( EventDispatcher.prototy
 
 } );
 
-// PlaneBufferGeometry
+// BoxBufferGeometry
 
-class PlaneBufferGeometry extends BufferGeometry {
+class BoxBufferGeometry extends BufferGeometry {
 
-	constructor( width, height, widthSegments, heightSegments ) {
+	constructor( width = 1, height = 1, depth = 1, widthSegments = 1, heightSegments = 1, depthSegments = 1 ) {
 
 		super();
-		this.type = 'PlaneBufferGeometry';
+
+		this.type = 'BoxBufferGeometry';
 
 		this.parameters = {
 			width: width,
 			height: height,
+			depth: depth,
 			widthSegments: widthSegments,
-			heightSegments: heightSegments
+			heightSegments: heightSegments,
+			depthSegments: depthSegments
 		};
 
-		width = width || 1;
-		height = height || 1;
+		const scope = this;
 
-		const width_half = width / 2;
-		const height_half = height / 2;
+		// segments
 
-		const gridX = Math.floor( widthSegments ) || 1;
-		const gridY = Math.floor( heightSegments ) || 1;
-
-		const gridX1 = gridX + 1;
-		const gridY1 = gridY + 1;
-
-		const segment_width = width / gridX;
-		const segment_height = height / gridY;
+		widthSegments = Math.floor( widthSegments );
+		heightSegments = Math.floor( heightSegments );
+		depthSegments = Math.floor( depthSegments );
 
 		// buffers
 
@@ -15639,46 +11790,19 @@ class PlaneBufferGeometry extends BufferGeometry {
 		const normals = [];
 		const uvs = [];
 
-		// generate vertices, normals and uvs
+		// helper variables
 
-		for ( let iy = 0; iy < gridY1; iy ++ ) {
+		let numberOfVertices = 0;
+		let groupStart = 0;
 
-			const y = iy * segment_height - height_half;
+		// build each side of the box geometry
 
-			for ( let ix = 0; ix < gridX1; ix ++ ) {
-
-				const x = ix * segment_width - width_half;
-
-				vertices.push( x, - y, 0 );
-
-				normals.push( 0, 0, 1 );
-
-				uvs.push( ix / gridX );
-				uvs.push( 1 - ( iy / gridY ) );
-
-			}
-
-		}
-
-		// indices
-
-		for ( let iy = 0; iy < gridY; iy ++ ) {
-
-			for ( let ix = 0; ix < gridX; ix ++ ) {
-
-				const a = ix + gridX1 * iy;
-				const b = ix + gridX1 * ( iy + 1 );
-				const c = ( ix + 1 ) + gridX1 * ( iy + 1 );
-				const d = ( ix + 1 ) + gridX1 * iy;
-
-				// faces
-
-				indices.push( a, b, d );
-				indices.push( b, c, d );
-
-			}
-
-		}
+		buildPlane( 'z', 'y', 'x', - 1, - 1, depth, height, width, depthSegments, heightSegments, 0 ); // px
+		buildPlane( 'z', 'y', 'x', 1, - 1, depth, height, - width, depthSegments, heightSegments, 1 ); // nx
+		buildPlane( 'x', 'z', 'y', 1, 1, width, depth, height, widthSegments, depthSegments, 2 ); // py
+		buildPlane( 'x', 'z', 'y', 1, - 1, width, depth, - height, widthSegments, depthSegments, 3 ); // ny
+		buildPlane( 'x', 'y', 'z', 1, - 1, width, height, depth, widthSegments, heightSegments, 4 ); // pz
+		buildPlane( 'x', 'y', 'z', - 1, - 1, width, height, - depth, widthSegments, heightSegments, 5 ); // nz
 
 		// build geometry
 
@@ -15686,6 +11810,108 @@ class PlaneBufferGeometry extends BufferGeometry {
 		this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
 		this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
 		this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
+
+		function buildPlane( u, v, w, udir, vdir, width, height, depth, gridX, gridY, materialIndex ) {
+
+			const segmentWidth = width / gridX;
+			const segmentHeight = height / gridY;
+
+			const widthHalf = width / 2;
+			const heightHalf = height / 2;
+			const depthHalf = depth / 2;
+
+			const gridX1 = gridX + 1;
+			const gridY1 = gridY + 1;
+
+			let vertexCounter = 0;
+			let groupCount = 0;
+
+			const vector = new Vector3();
+
+			// generate vertices, normals and uvs
+
+			for ( let iy = 0; iy < gridY1; iy ++ ) {
+
+				const y = iy * segmentHeight - heightHalf;
+
+				for ( let ix = 0; ix < gridX1; ix ++ ) {
+
+					const x = ix * segmentWidth - widthHalf;
+
+					// set values to correct vector component
+
+					vector[ u ] = x * udir;
+					vector[ v ] = y * vdir;
+					vector[ w ] = depthHalf;
+
+					// now apply vector to vertex buffer
+
+					vertices.push( vector.x, vector.y, vector.z );
+
+					// set values to correct vector component
+
+					vector[ u ] = 0;
+					vector[ v ] = 0;
+					vector[ w ] = depth > 0 ? 1 : - 1;
+
+					// now apply vector to normal buffer
+
+					normals.push( vector.x, vector.y, vector.z );
+
+					// uvs
+
+					uvs.push( ix / gridX );
+					uvs.push( 1 - ( iy / gridY ) );
+
+					// counters
+
+					vertexCounter += 1;
+
+				}
+
+			}
+
+			// indices
+
+			// 1. you need three indices to draw a single face
+			// 2. a single segment consists of two faces
+			// 3. so we need to generate six (2*3) indices per segment
+
+			for ( let iy = 0; iy < gridY; iy ++ ) {
+
+				for ( let ix = 0; ix < gridX; ix ++ ) {
+
+					const a = numberOfVertices + ix + gridX1 * iy;
+					const b = numberOfVertices + ix + gridX1 * ( iy + 1 );
+					const c = numberOfVertices + ( ix + 1 ) + gridX1 * ( iy + 1 );
+					const d = numberOfVertices + ( ix + 1 ) + gridX1 * iy;
+
+					// faces
+
+					indices.push( a, b, d );
+					indices.push( b, c, d );
+
+					// increase counter
+
+					groupCount += 6;
+
+				}
+
+			}
+
+			// add a group to the geometry. this will ensure multi material support
+
+			scope.addGroup( groupStart, groupCount, materialIndex );
+
+			// calculate new start value for groups
+
+			groupStart += groupCount;
+
+			// update total number of vertices
+
+			numberOfVertices += vertexCounter;
+
+		}
 
 	}
 
@@ -17738,6 +13964,135 @@ function checkBufferGeometryIntersection( object, material, raycaster, ray, posi
 }
 
 /**
+ * Recalculates the UV coordinates for a BufferGeometry
+ * object to be able to map to a Cubemap that is packed as
+ * a cross-configuration in a single image.
+ * @param {import("three").BufferGeometry} geom
+ */
+function setGeometryUVsForCubemaps(geom) {
+    const positions = geom.attributes.position;
+    const normals = geom.attributes.normal;
+    const uvs = geom.attributes.uv;
+
+    for (let n = 0; n < normals.count; ++n) {
+        const _x = n * normals.itemSize,
+            _y = n * normals.itemSize + 1,
+            _z = n * normals.itemSize + 2,
+            nx = normals.array[_x],
+            ny = normals.array[_y],
+            nz = normals.array[_z],
+            _nx_ = Math.abs(nx),
+            _ny_ = Math.abs(ny),
+            _nz_ = Math.abs(nz),
+            px = positions.array[_x],
+            py = positions.array[_y],
+            pz = positions.array[_z],
+            _px_ = Math.abs(px),
+            _py_ = Math.abs(py),
+            _pz_ = Math.abs(pz),
+            _u = n * uvs.itemSize,
+            _v = n * uvs.itemSize + 1;
+
+        let u = uvs.array[_u],
+            v = uvs.array[_v],
+            largest = 0,
+            mx = _nx_,
+            max = _px_;
+
+        if (_ny_ > mx) {
+            largest = 1;
+            mx = _ny_;
+            max = _py_;
+        }
+        if (_nz_ > mx) {
+            largest = 2;
+            mx = _nz_;
+            max = _pz_;
+        }
+
+        if (largest === 0) {
+            if (px < 0) {
+                //left
+                u = -pz;
+                v = py;
+            }
+            else {
+                // right
+                u = pz;
+                v = py;
+            }
+        }
+        else if (largest === 1) {
+            if (py < 0) {
+                // bottom
+                u = px;
+                v = -pz;
+            }
+            else {
+                // top
+                u = px;
+                v = pz;
+            }
+        }
+        else {
+            if (pz < 0) {
+                // front
+                u = px;
+                v = py;
+            }
+            else {
+                // back
+                u = -px;
+                v = py;
+            }
+        }
+
+        u = (u / max + 1) / 8;
+        v = (v / max + 1) / 6;
+
+        if (largest === 0) {
+            if (px < 0) {
+                //left
+                u += 0;
+                v += 1 / 3;
+            }
+            else {
+                // right
+                u += 0.5;
+                v += 1 / 3;
+            }
+        }
+        else if (largest === 1) {
+            if (py < 0) {
+                // bottom
+                u += 0.25;
+                v += 0;
+            }
+            else {
+                // top
+                u += 0.25;
+                v += 2 / 3;
+            }
+        }
+        else {
+            if (pz < 0) {
+                // front
+                u += 0.25;
+                v += 1 / 3;
+            }
+            else {
+                // back
+                u += 0.75;
+                v += 1 / 3;
+            }
+        }
+
+        uvs.array[_u] = u;
+        uvs.array[_v] = v;
+    }
+}
+
+/**
  * parameters = {
  *  color: <hex>,
  *  roughness: <float>,
@@ -17942,6 +14297,1026 @@ function solid(opts) {
     }
 
     return colors.get(key);
+}
+
+const cube = new BoxBufferGeometry(1, 1, 1, 1, 1, 1);
+cube.name = "CubeGeom";
+
+const invCube = cube.clone();
+invCube.name = "InvertedCubeGeom";
+setGeometryUVsForCubemaps(invCube);
+
+/**
+ * @param {string|number|import("../lib/three.js").Color} color
+ * @param {number} sx
+ * @param {number} sy
+ * @param {number} sz
+ * @param {(import("../lib/three.js").MeshBasicMaterialParameters|import("../lib/three.js").MeshStandardMaterialParameters)?} materialOptions
+ */
+class Cube extends Mesh {
+    constructor(color, sx, sy, sz, materialOptions) {
+        super(cube, solid(Object.assign(
+            { transparent: true, opacity: 1 },
+            materialOptions,
+            { color })));
+        this.scale.set(sx, sy, sz);
+    }
+}
+
+class DebugObject extends Cube {
+    /**
+     * @param {string|number|import("../lib/three.js").Color} color
+     */
+    constructor(color = 0xff0000) {
+        super(color, 0.1, 0.1, 0.1);
+        const x = new Cube(0xff0000, 3.0, 0.1, 0.1);
+        const y = new Cube(0x00ff00, 0.1, 3.0, 0.1);
+        const z = new Cube(0x0000ff, 0.1, 0.1, 3.0);
+
+        x.position.x = 1.5;
+        y.position.y = 1.5;
+        z.position.z = 1.5;
+
+        this.add(x, y, z);
+    }
+}
+
+const EventBase = (function () {
+    try {
+        new window.EventTarget();
+        return class EventBase extends EventTarget {
+            constructor() {
+                super();
+            }
+        };
+    } catch (exp) {
+
+        /** @type {WeakMap<EventBase, Map<string, Listener[]>> */
+        const selfs = new WeakMap();
+
+        return class EventBase {
+
+            constructor() {
+                selfs.set(this, new Map());
+            }
+
+            /**
+             * @param {string} type
+             * @param {Function} callback
+             * @param {any} options
+             */
+            addEventListener(type, callback, options) {
+                if (isFunction(callback)) {
+                    const self = selfs.get(this);
+                    if (!self.has(type)) {
+                        self.set(type, []);
+                    }
+
+                    const listeners = self.get(type);
+                    if (!listeners.find(l => l.callback === callback)) {
+                        listeners.push({
+                            target: this,
+                            callback,
+                            options
+                        });
+                    }
+                }
+            }
+
+            /**
+             * @param {string} type
+             * @param {Function} callback
+             */
+            removeEventListener(type, callback) {
+                if (isFunction(callback)) {
+                    const self = selfs.get(this);
+                    if (self.has(type)) {
+                        const listeners = self.get(type),
+                            idx = listeners.findIndex(l => l.callback === callback);
+                        if (idx >= 0) {
+                            arrayRemoveAt(listeners, idx);
+                        }
+                    }
+                }
+            }
+
+            /**
+             * @param {Event} evt
+             */
+            dispatchEvent(evt) {
+                const self = selfs.get(this);
+                if (!self.has(evt.type)) {
+                    return true;
+                }
+                else {
+                    const listeners = self.get(evt.type);
+                    for (let listener of listeners) {
+                        if (listener.options && listener.options.once) {
+                            this.removeEventListener(evt.type, listener.callback);
+                        }
+                        listener.callback.call(listener.target, evt);
+                    }
+                    return !evt.defaultPrevented;
+                }
+            }
+        };
+    }
+
+})();
+
+/**
+ * Returns true if the given object is either an HTMLCanvasElement or an OffscreenCanvas.
+ * @param {any} obj
+ * @returns {boolean}
+ */
+
+/**
+ * Resizes a canvas element
+ * @param {HTMLCanvasElement|OffscreenCanvas} canv
+ * @param {number} w - the new width of the canvas
+ * @param {number} h - the new height of the canvas
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function setCanvasSize(canv, w, h, superscale = 1) {
+    w = Math.floor(w * superscale);
+    h = Math.floor(h * superscale);
+    if (canv.width != w
+        || canv.height != h) {
+        canv.width = w;
+        canv.height = h;
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Resizes the canvas element of a given rendering context.
+ * 
+ * Note: the imageSmoothingEnabled, textBaseline, textAlign, and font 
+ * properties of the context will be restored after the context is resized,
+ * as these values are usually reset to their default values when a canvas
+ * is resized.
+ * @param {RenderingContext} ctx
+ * @param {number} w - the new width of the canvas
+ * @param {number} h - the new height of the canvas
+ * @param {number} [superscale=1] - a value by which to scale width and height to achieve supersampling. Defaults to 1.
+ * @returns {boolean} - true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
+ */
+function setContextSize(ctx, w, h, superscale = 1) {
+    const oldImageSmoothingEnabled = ctx.imageSmoothingEnabled,
+        oldTextBaseline = ctx.textBaseline,
+        oldTextAlign = ctx.textAlign,
+        oldFont = ctx.font,
+        resized = setCanvasSize(
+            ctx.canvas,
+            w,
+            h,
+            superscale);
+
+    if (resized) {
+        ctx.imageSmoothingEnabled = oldImageSmoothingEnabled;
+        ctx.textBaseline = oldTextBaseline;
+        ctx.textAlign = oldTextAlign;
+        ctx.font = oldFont;
+    }
+
+    return resized;
+}
+
+/**
+ * A setter functor for HTML attributes.
+ **/
+class HtmlAttr {
+    /**
+     * Creates a new setter functor for HTML Attributes
+     * @param {string} key - the attribute name.
+     * @param {string} value - the value to set for the attribute.
+     * @param {...string} tags - the HTML tags that support this attribute.
+     */
+    constructor(key, value, ...tags) {
+        this.key = key;
+        this.value = value;
+        this.tags = tags.map(t => t.toLocaleUpperCase());
+        Object.freeze(this);
+    }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        const isValid = this.tags.length === 0
+            || this.tags.indexOf(elem.tagName) > -1;
+
+        if (!isValid) {
+            console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
+        }
+        else if (this.key === "style") {
+            Object.assign(elem[this.key], this.value);
+        }
+        else if (!isBoolean(value)) {
+            elem[this.key] = this.value;
+        }
+        else if (this.value) {
+            elem.setAttribute(this.key, "");
+        }
+        else {
+            elem.removeAttribute(this.key);
+        }
+    }
+}
+
+/**
+ * Specifies the height of elements listed here. For all other elements, use the CSS height property.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function height(value) { return new HtmlAttr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+
+/**
+ * The URL of a linked resource.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function href(value) { return new HtmlAttr("href", value, "a", "area", "base", "link"); }
+
+/**
+ * Often used with CSS to style a specific element. The value of this attribute must be unique.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function id(value) { return new HtmlAttr("id", value); }
+
+/**
+ * The URL of the embeddable content.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function src(value) { return new HtmlAttr("src", value, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
+
+/**
+ * Defines the type of the element.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function type(value) { return new HtmlAttr("type", value, "button", "input", "command", "embed", "object", "script", "source", "style", "menu"); }
+
+/**
+ * Defines a default value which will be displayed in the element on page load.
+ * @param {string} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function value(value) { return new HtmlAttr("value", value, "button", "data", "input", "li", "meter", "option", "progress", "param"); }
+
+/**
+ * For the elements listed here, this establishes the element's width.
+ * @param {number} value - the value to set on the attribute.
+ * @returns {HtmlAttr}
+ **/
+function width(value) { return new HtmlAttr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
+
+/**
+ * A CSS property that will be applied to an element's style attribute.
+ **/
+class CssProp {
+    /**
+     * Creates a new CSS property that will be applied to an element's style attribute.
+     * @param {string} key - the property name.
+     * @param {string} value - the value to set for the property.
+     */
+    constructor(key, value) {
+        this.key = key;
+        this.value = value;
+        Object.freeze(this);
+    }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        elem.style[this.key] = this.value;
+    }
+}
+
+class CssPropSet {
+    /**
+     * @param {...(CssProp|CssPropSet)} rest
+     */
+    constructor(...rest) {
+        this.set = new Map();
+        const set = (key, value) => {
+            if (value || isBoolean(value)) {
+                this.set.set(key, value);
+            }
+            else if (this.set.has(key)) {
+                this.set.delete(key);
+            }
+        };
+        for (let prop of rest) {
+            if (prop instanceof CssProp) {
+                const { key, value } = prop;
+                set(key, value);
+            }
+            else if (prop instanceof CssPropSet) {
+                for (let subProp of prop.set.entries()) {
+                    const [key, value] = subProp;
+                    set(key, value);
+                }
+            }
+        }
+    }
+
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param {HTMLElement} elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        for (let prop of this.set.entries()) {
+            const [key, value] = prop;
+            elem.style[key] = value;
+        }
+    }
+}
+
+/**
+ * Creates a style attribute with a display property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function display(v) { return new CssProp("display", v); }
+
+/**
+ * Creates a style attribute with a fontFamily property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function fontFamily(v) { return new CssProp("fontFamily", v); }
+
+/**
+ * Creates a style attribute with a left property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function left(v) { return new CssProp("left", v); }
+
+/**
+ * Creates a style attribute with a textDecoration property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function textDecoration(v) { return new CssProp("textDecoration", v); }
+
+/**
+ * Creates a style attribute with a width property.
+ * @param {string} v
+ * @returns {HtmlAttr}
+ **/
+function cssWidth(v) { return new CssProp("width", v); }
+
+
+// A selection of fonts for preferred monospace rendering.
+const monospaceFonts = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
+const monospaceFamily = fontFamily(monospaceFonts);
+// A selection of fonts that should match whatever the user's operating system normally uses.
+const systemFonts = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
+const systemFamily = fontFamily(systemFonts);
+
+/**
+ * A setter functor for HTML element events.
+ **/
+class HtmlEvt {
+    /**
+     * Creates a new setter functor for an HTML element event.
+     * @param {string} name - the name of the event to attach to.
+     * @param {Function} callback - the callback function to use with the event handler.
+     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+     */
+    constructor(name, callback, opts) {
+        if (!isFunction(callback)) {
+            throw new Error("A function instance is required for this parameter");
+        }
+
+        this.name = name;
+        this.callback = callback;
+        this.opts = opts;
+        Object.freeze(this);
+    }
+
+    /**
+     * Add the encapsulate callback as an event listener to the give HTMLElement
+     * @param {HTMLElement} elem
+     */
+    add(elem) {
+        elem.addEventListener(this.name, this.callback, this.opts);
+    }
+
+    /**
+     * Remove the encapsulate callback as an event listener from the give HTMLElement
+     * @param {HTMLElement} elem
+     */
+    remove(elem) {
+        elem.removeEventListener(this.name, this.callback);
+    }
+}
+
+/**
+ * @callback onUserGestureTestCallback
+ * @returns {boolean}
+ */
+
+
+const gestures = [
+    "change",
+    "click",
+    "contextmenu",
+    "dblclick",
+    "mouseup",
+    "pointerup",
+    "reset",
+    "submit",
+    "touchend"
+];
+/**
+ * This is not an event handler that you can add to an element. It's a global event that
+ * waits for the user to perform some sort of interaction with the website.
+ * @param {Function} callback
+ * @param {onUserGestureTestCallback} test
+  */
+function onUserGesture(callback, test) {
+    test = test || (() => true);
+    const check = async (evt) => {
+        let testResult = test();
+        if (testResult instanceof Promise) {
+            testResult = await testResult;
+        }
+
+        if (evt.isTrusted && testResult) {
+            for (let gesture of gestures) {
+                window.removeEventListener(gesture, check);
+            }
+
+            const result = callback();
+            if (result instanceof Promise) {
+                await result;
+            }
+        }
+    };
+
+    for (let gesture of gestures) {
+        window.addEventListener(gesture, check);
+    }
+}
+
+/**
+ * @typedef {(Node|HtmlAttr|HtmlEvt|string|number|boolean|Date)} TagChild
+ **/
+
+/**
+ * Creates an HTML element for a given tag name.
+ * 
+ * Boolean attributes that you want to default to true can be passed
+ * as just the attribute creating function, 
+ *   e.g. `Audio(autoPlay)` vs `Audio(autoPlay(true))`
+ * @param {string} name - the name of the tag
+ * @param {...TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLElement}
+ */
+function tag(name, ...rest) {
+    let elem = null;
+
+    for (let i = 0; i < rest.length; ++i) {
+        const attr = rest[i];
+        if (isFunction(attr)) {
+            rest[i] = attr(true);
+        }
+
+        if (attr instanceof HtmlAttr
+            && attr.key === "id") {
+            elem = document.getElementById(attr.value);
+        }
+    }
+
+    if (elem === null) {
+        elem = document.createElement(name);
+    }
+
+    for (let x of rest) {
+        if (x !== null && x !== undefined) {
+            if (isString(x)
+                || isNumber(x)
+                || isBoolean(x)
+                || x instanceof Date) {
+                elem.appendChild(document.createTextNode(x));
+            }
+            else if (x instanceof Node) {
+                elem.appendChild(x);
+            }
+            else if (x.element instanceof Node) {
+                elem.appendChild(x.element);
+            }
+            else if (x instanceof HtmlAttr
+                || x instanceof CssProp
+                || x instanceof CssPropSet) {
+                x.apply(elem);
+            }
+            else if (x instanceof HtmlEvt) {
+                x.add(elem);
+            }
+            else {
+                console.trace(`Skipping ${x}: unsupported value type.`, x);
+            }
+        }
+    }
+
+    return elem;
+}
+
+/**
+ * creates an HTML A tag
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLAnchorElement}
+ */
+function A(...rest) { return tag("a", ...rest); }
+
+/**
+ * creates an HTML HtmlButton tag
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLButtonElement}
+ */
+function ButtonRaw(...rest) { return tag("button", ...rest); }
+
+/**
+ * creates an HTML Button tag
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLButtonElement}
+ */
+function Button(...rest) { return ButtonRaw(...rest, type("button")); }
+
+/**
+ * creates an HTML Canvas tag
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLCanvasElement}
+ */
+function Canvas(...rest) { return tag("canvas", ...rest); }
+
+/**
+ * creates an HTML Img tag
+ * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
+ * @returns {HTMLImageElement}
+ */
+function Img(...rest) { return tag("img", ...rest); }
+
+/**
+ * Creates an offscreen canvas element, if they are available. Otherwise, returns an HTMLCanvasElement.
+ * @param {number} w - the width of the canvas
+ * @param {number} h - the height of the canvas
+ * @param {...import("./tag").TagChild} rest - optional HTML attributes and child elements, to use in constructing the HTMLCanvasElement if OffscreenCanvas is not available.
+ * @returns {OffscreenCanvas|HTMLCanvasElement}
+ */
+function CanvasOffscreen(w, h, ...rest) {
+    if (window.OffscreenCanvas) {
+        return new OffscreenCanvas(w, h);
+    }
+    else {
+        return Canvas(...rest, width(w), height(h));
+    }
+}
+
+const DEFAULT_TEST_TEXT = "The quick brown fox jumps over the lazy dog";
+const loadedFonts = [];
+
+/**
+ * 
+ * @param {any} style
+ * @returns {string}
+ */
+function makeFont(style) {
+    const fontParts = [];
+    if (style.fontStyle && style.fontStyle !== "normal") {
+        fontParts.push(style.fontStyle);
+    }
+
+    if (style.fontVariant && style.fontVariant !== "normal") {
+        fontParts.push(style.fontVariant);
+    }
+
+    if (style.fontWeight && style.fontWeight !== "normal") {
+        fontParts.push(style.fontWeight);
+    }
+
+    fontParts.push(style.fontSize + "px");
+    fontParts.push(style.fontFamily);
+
+    return fontParts.join(" ");
+}
+
+/**
+ * @param {string} font
+ * @param {string?} testString
+ */
+async function loadFont(font, testString = null) {
+    if (loadedFonts.indexOf(font) === -1) {
+        testString = testString || DEFAULT_TEST_TEXT;
+        const fonts = await document.fonts.load(font, testString);
+        if (fonts.length === 0) {
+            console.warn(`Failed to load font "${font}". If this is a system font, just set the object's \`value\` property, instead of calling \`loadFontAndSetText\`.`);
+        }
+        else {
+            loadedFonts.push(font);
+        }
+    }
+}
+
+/**
+ * @type {WeakMap<TextImage, TextImagePrivate>}
+ **/
+const selfs = new WeakMap();
+const redrawnEvt = new Event("redrawn");
+
+class TextImagePrivate {
+    constructor() {
+        /** @type {string} */
+        this.color = "black";
+
+        /** @type {string} */
+        this.bgColor = null;
+
+        /** @type {string} */
+        this.fontStyle = "normal";
+
+        /** @type {string} */
+        this.fontVariant = "normal";
+
+        /** @type {string} */
+        this.fontWeight = "normal";
+
+        /** @type {string} */
+        this.fontFamily = "sans-serif";
+
+        /** @type {number} */
+        this.fontSize = 20;
+
+        /** @type {number} */
+        this.scale = 1;
+
+        /** @type {number} */
+        this.padding = {
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0
+        };
+
+        /** @type {string} */
+        this.value = null;
+
+        this.canvas = CanvasOffscreen(10, 10);
+        this.g = this.canvas.getContext("2d");
+        this.g.textBaseline = "top";
+    }
+
+    redraw(parent) {
+        this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        if (this.fontFamily
+            && this.fontSize
+            && this.color
+            && this.scale
+            && this.value) {
+            const fontHeight = this.fontSize * this.scale;
+            const font = makeFont(this);
+            this.g.font = font;
+
+            const metrics = this.g.measureText(this.value);
+            let dx = 0,
+                dy = 0,
+                trueWidth = metrics.width,
+                trueHeight = fontHeight;
+            if (metrics.actualBoundingBoxLeft !== undefined) {
+                dy = metrics.actualBoundingBoxAscent;
+                trueWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
+                trueHeight = metrics.actualBoundingBoxDescent + metrics.actualBoundingBoxAscent;
+            }
+
+            dx += this.padding.left;
+            dy += this.padding.top;
+            trueWidth += this.padding.right + this.padding.left;
+            trueHeight += this.padding.top + this.padding.bottom;
+
+            setContextSize(this.g, trueWidth, trueHeight);
+
+            if (this.bgColor) {
+                this.g.fillStyle = this.bgColor;
+                this.g.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+            else {
+                this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+
+            this.g.fillStyle = this.color;
+            this.g.fillText(this.value, dx, dy);
+            parent.dispatchEvent(redrawnEvt);
+        }
+    }
+}
+
+class TextImage extends EventBase {
+    /**
+     * @param {string} fontFamily
+     */
+    constructor() {
+        super();
+        selfs.set(this, new TextImagePrivate());
+    }
+
+    async loadFontAndSetText(value = null) {
+        const font = makeFont(this);
+        await loadFont(font, value);
+        this.value = value;
+    }
+
+    get canvas() {
+        return selfs.get(this).canvas;
+    }
+
+    get width() {
+        const self = selfs.get(this);
+        return self.canvas.width / self.scale;
+    }
+
+    get height() {
+        const self = selfs.get(this);
+        return self.canvas.height / self.scale;
+    }
+
+    get scale() {
+        return selfs.get(this).scale;
+    }
+
+    set scale(v) {
+        if (this.scale !== v) {
+            const self = selfs.get(this);
+            self.scale = v;
+            self.redraw(this);
+        }
+    }
+
+    get padding() {
+        return selfs.get(this).padding;
+    }
+
+    set padding(v) {
+
+        if (v instanceof Array) {
+            if (v.length === 1) {
+                v = {
+                    top: v[0],
+                    right: v[0],
+                    bottom: v[0],
+                    left: v[0]
+                };
+            }
+            else if (v.length === 2) {
+                v = {
+                    top: v[0],
+                    right: v[1],
+                    bottom: v[0],
+                    left: v[1]
+                };
+            }
+            else if (v.length === 4) {
+                v = {
+                    top: v[0],
+                    right: v[1],
+                    bottom: v[2],
+                    left: v[3]
+                };
+            }
+            else {
+                return;
+            }
+        }
+        else if (isNumber(v)) {
+            v = {
+                top: v,
+                right: v,
+                bottom: v,
+                left: v
+            };
+        }
+
+
+        if (this.padding.top !== v.top
+            || this.padding.right != v.right
+            || this.padding.bottom != v.bottom
+            || this.padding.left != v.left) {
+            const self = selfs.get(this);
+            self.padding = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontStyle() {
+        return selfs.get(this).fontStyle;
+    }
+
+    set fontStyle(v) {
+        if (this.fontStyle !== v) {
+            const self = selfs.get(this);
+            self.fontStyle = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontVariant() {
+        return selfs.get(this).fontVariant;
+    }
+
+    set fontVariant(v) {
+        if (this.fontVariant !== v) {
+            const self = selfs.get(this);
+            self.fontVariant = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontWeight() {
+        return selfs.get(this).fontWeight;
+    }
+
+    set fontWeight(v) {
+        if (this.fontWeight !== v) {
+            const self = selfs.get(this);
+            self.fontWeight = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontSize() {
+        return selfs.get(this).fontSize;
+    }
+
+    set fontSize(v) {
+        if (this.fontSize !== v) {
+            const self = selfs.get(this);
+            self.fontSize = v;
+            self.redraw(this);
+        }
+    }
+
+    get fontFamily() {
+        return selfs.get(this).fontFamily;
+    }
+
+    set fontFamily(v) {
+        if (this.fontFamily !== v) {
+            const self = selfs.get(this);
+            self.fontFamily = v;
+            self.redraw(this);
+        }
+    }
+
+    get color() {
+        return selfs.get(this).color;
+    }
+
+    set color(v) {
+        if (this.color !== v) {
+            const self = selfs.get(this);
+            self.color = v;
+            self.redraw(this);
+        }
+    }
+
+    get bgColor() {
+        return selfs.get(this).bgColor;
+    }
+
+    set bgColor(v) {
+        if (this.bgColor !== v) {
+            const self = selfs.get(this);
+            self.bgColor = v;
+            self.redraw(this);
+        }
+    }
+
+    get value() {
+        return selfs.get(this).value;
+    }
+
+    set value(v) {
+        if (this.value !== v) {
+            const self = selfs.get(this);
+            self.value = v;
+            self.redraw(this);
+        }
+    }
+
+    /**
+     *
+     * @param {CanvasRenderingContext2D} g - the canvas to which to render the text.
+     * @param {number} x
+     * @param {number} y
+     */
+    draw(g, x, y) {
+        const self = selfs.get(this);
+        if (self.canvas.width > 0
+            && self.canvas.height > 0) {
+            g.drawImage(self.canvas, x, y, this.width, this.height);
+        }
+    }
+}
+
+// PlaneBufferGeometry
+
+class PlaneBufferGeometry extends BufferGeometry {
+
+	constructor( width, height, widthSegments, heightSegments ) {
+
+		super();
+		this.type = 'PlaneBufferGeometry';
+
+		this.parameters = {
+			width: width,
+			height: height,
+			widthSegments: widthSegments,
+			heightSegments: heightSegments
+		};
+
+		width = width || 1;
+		height = height || 1;
+
+		const width_half = width / 2;
+		const height_half = height / 2;
+
+		const gridX = Math.floor( widthSegments ) || 1;
+		const gridY = Math.floor( heightSegments ) || 1;
+
+		const gridX1 = gridX + 1;
+		const gridY1 = gridY + 1;
+
+		const segment_width = width / gridX;
+		const segment_height = height / gridY;
+
+		// buffers
+
+		const indices = [];
+		const vertices = [];
+		const normals = [];
+		const uvs = [];
+
+		// generate vertices, normals and uvs
+
+		for ( let iy = 0; iy < gridY1; iy ++ ) {
+
+			const y = iy * segment_height - height_half;
+
+			for ( let ix = 0; ix < gridX1; ix ++ ) {
+
+				const x = ix * segment_width - width_half;
+
+				vertices.push( x, - y, 0 );
+
+				normals.push( 0, 0, 1 );
+
+				uvs.push( ix / gridX );
+				uvs.push( 1 - ( iy / gridY ) );
+
+			}
+
+		}
+
+		// indices
+
+		for ( let iy = 0; iy < gridY; iy ++ ) {
+
+			for ( let ix = 0; ix < gridX; ix ++ ) {
+
+				const a = ix + gridX1 * iy;
+				const b = ix + gridX1 * ( iy + 1 );
+				const c = ( ix + 1 ) + gridX1 * ( iy + 1 );
+				const d = ( ix + 1 ) + gridX1 * iy;
+
+				// faces
+
+				indices.push( a, b, d );
+				indices.push( b, c, d );
+
+			}
+
+		}
+
+		// build geometry
+
+		this.setIndex( indices );
+		this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
+		this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
+		this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
+
+	}
+
 }
 
 const plane = new PlaneBufferGeometry(1, 1, 1, 1);
@@ -18502,28 +15877,6 @@ class TextMesh extends Image2DMesh {
 
     set value(v) {
         this.textImage.loadFontAndSetText(v);
-    }
-}
-
-class EmojiIconMesh extends TextMesh {
-    /**
-     * @param {string} name
-     * @param {import("../emoji/Emoji").Emoji} emoji
-     */
-    constructor(name, emoji) {
-        super(name, {
-            lit: false,
-            side: FrontSide
-        });
-
-        if (emoji) {
-            this.textBgColor = "transparent";
-            this.textColor = "#000000";
-            this.fontFamily = "Segoe UI Emoji";
-            this.fontSize = 100;
-
-            this.value = emoji;
-        }
     }
 }
 
@@ -25923,320 +23276,6 @@ class Fader extends Mesh {
                 this.dispatchEvent(completeEvt);
             }
         }
-    }
-}
-
-// BoxBufferGeometry
-
-class BoxBufferGeometry extends BufferGeometry {
-
-	constructor( width = 1, height = 1, depth = 1, widthSegments = 1, heightSegments = 1, depthSegments = 1 ) {
-
-		super();
-
-		this.type = 'BoxBufferGeometry';
-
-		this.parameters = {
-			width: width,
-			height: height,
-			depth: depth,
-			widthSegments: widthSegments,
-			heightSegments: heightSegments,
-			depthSegments: depthSegments
-		};
-
-		const scope = this;
-
-		// segments
-
-		widthSegments = Math.floor( widthSegments );
-		heightSegments = Math.floor( heightSegments );
-		depthSegments = Math.floor( depthSegments );
-
-		// buffers
-
-		const indices = [];
-		const vertices = [];
-		const normals = [];
-		const uvs = [];
-
-		// helper variables
-
-		let numberOfVertices = 0;
-		let groupStart = 0;
-
-		// build each side of the box geometry
-
-		buildPlane( 'z', 'y', 'x', - 1, - 1, depth, height, width, depthSegments, heightSegments, 0 ); // px
-		buildPlane( 'z', 'y', 'x', 1, - 1, depth, height, - width, depthSegments, heightSegments, 1 ); // nx
-		buildPlane( 'x', 'z', 'y', 1, 1, width, depth, height, widthSegments, depthSegments, 2 ); // py
-		buildPlane( 'x', 'z', 'y', 1, - 1, width, depth, - height, widthSegments, depthSegments, 3 ); // ny
-		buildPlane( 'x', 'y', 'z', 1, - 1, width, height, depth, widthSegments, heightSegments, 4 ); // pz
-		buildPlane( 'x', 'y', 'z', - 1, - 1, width, height, - depth, widthSegments, heightSegments, 5 ); // nz
-
-		// build geometry
-
-		this.setIndex( indices );
-		this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-		this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
-		this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
-
-		function buildPlane( u, v, w, udir, vdir, width, height, depth, gridX, gridY, materialIndex ) {
-
-			const segmentWidth = width / gridX;
-			const segmentHeight = height / gridY;
-
-			const widthHalf = width / 2;
-			const heightHalf = height / 2;
-			const depthHalf = depth / 2;
-
-			const gridX1 = gridX + 1;
-			const gridY1 = gridY + 1;
-
-			let vertexCounter = 0;
-			let groupCount = 0;
-
-			const vector = new Vector3();
-
-			// generate vertices, normals and uvs
-
-			for ( let iy = 0; iy < gridY1; iy ++ ) {
-
-				const y = iy * segmentHeight - heightHalf;
-
-				for ( let ix = 0; ix < gridX1; ix ++ ) {
-
-					const x = ix * segmentWidth - widthHalf;
-
-					// set values to correct vector component
-
-					vector[ u ] = x * udir;
-					vector[ v ] = y * vdir;
-					vector[ w ] = depthHalf;
-
-					// now apply vector to vertex buffer
-
-					vertices.push( vector.x, vector.y, vector.z );
-
-					// set values to correct vector component
-
-					vector[ u ] = 0;
-					vector[ v ] = 0;
-					vector[ w ] = depth > 0 ? 1 : - 1;
-
-					// now apply vector to normal buffer
-
-					normals.push( vector.x, vector.y, vector.z );
-
-					// uvs
-
-					uvs.push( ix / gridX );
-					uvs.push( 1 - ( iy / gridY ) );
-
-					// counters
-
-					vertexCounter += 1;
-
-				}
-
-			}
-
-			// indices
-
-			// 1. you need three indices to draw a single face
-			// 2. a single segment consists of two faces
-			// 3. so we need to generate six (2*3) indices per segment
-
-			for ( let iy = 0; iy < gridY; iy ++ ) {
-
-				for ( let ix = 0; ix < gridX; ix ++ ) {
-
-					const a = numberOfVertices + ix + gridX1 * iy;
-					const b = numberOfVertices + ix + gridX1 * ( iy + 1 );
-					const c = numberOfVertices + ( ix + 1 ) + gridX1 * ( iy + 1 );
-					const d = numberOfVertices + ( ix + 1 ) + gridX1 * iy;
-
-					// faces
-
-					indices.push( a, b, d );
-					indices.push( b, c, d );
-
-					// increase counter
-
-					groupCount += 6;
-
-				}
-
-			}
-
-			// add a group to the geometry. this will ensure multi material support
-
-			scope.addGroup( groupStart, groupCount, materialIndex );
-
-			// calculate new start value for groups
-
-			groupStart += groupCount;
-
-			// update total number of vertices
-
-			numberOfVertices += vertexCounter;
-
-		}
-
-	}
-
-}
-
-/**
- * Recalculates the UV coordinates for a BufferGeometry
- * object to be able to map to a Cubemap that is packed as
- * a cross-configuration in a single image.
- * @param {import("three").BufferGeometry} geom
- */
-function setGeometryUVsForCubemaps(geom) {
-    const positions = geom.attributes.position;
-    const normals = geom.attributes.normal;
-    const uvs = geom.attributes.uv;
-
-    for (let n = 0; n < normals.count; ++n) {
-        const _x = n * normals.itemSize,
-            _y = n * normals.itemSize + 1,
-            _z = n * normals.itemSize + 2,
-            nx = normals.array[_x],
-            ny = normals.array[_y],
-            nz = normals.array[_z],
-            _nx_ = Math.abs(nx),
-            _ny_ = Math.abs(ny),
-            _nz_ = Math.abs(nz),
-            px = positions.array[_x],
-            py = positions.array[_y],
-            pz = positions.array[_z],
-            _px_ = Math.abs(px),
-            _py_ = Math.abs(py),
-            _pz_ = Math.abs(pz),
-            _u = n * uvs.itemSize,
-            _v = n * uvs.itemSize + 1;
-
-        let u = uvs.array[_u],
-            v = uvs.array[_v],
-            largest = 0,
-            mx = _nx_,
-            max = _px_;
-
-        if (_ny_ > mx) {
-            largest = 1;
-            mx = _ny_;
-            max = _py_;
-        }
-        if (_nz_ > mx) {
-            largest = 2;
-            mx = _nz_;
-            max = _pz_;
-        }
-
-        if (largest === 0) {
-            if (px < 0) {
-                //left
-                u = -pz;
-                v = py;
-            }
-            else {
-                // right
-                u = pz;
-                v = py;
-            }
-        }
-        else if (largest === 1) {
-            if (py < 0) {
-                // bottom
-                u = px;
-                v = -pz;
-            }
-            else {
-                // top
-                u = px;
-                v = pz;
-            }
-        }
-        else {
-            if (pz < 0) {
-                // front
-                u = px;
-                v = py;
-            }
-            else {
-                // back
-                u = -px;
-                v = py;
-            }
-        }
-
-        u = (u / max + 1) / 8;
-        v = (v / max + 1) / 6;
-
-        if (largest === 0) {
-            if (px < 0) {
-                //left
-                u += 0;
-                v += 1 / 3;
-            }
-            else {
-                // right
-                u += 0.5;
-                v += 1 / 3;
-            }
-        }
-        else if (largest === 1) {
-            if (py < 0) {
-                // bottom
-                u += 0.25;
-                v += 0;
-            }
-            else {
-                // top
-                u += 0.25;
-                v += 2 / 3;
-            }
-        }
-        else {
-            if (pz < 0) {
-                // front
-                u += 0.25;
-                v += 1 / 3;
-            }
-            else {
-                // back
-                u += 0.75;
-                v += 1 / 3;
-            }
-        }
-
-        uvs.array[_u] = u;
-        uvs.array[_v] = v;
-    }
-}
-
-const cube = new BoxBufferGeometry(1, 1, 1, 1, 1, 1);
-cube.name = "CubeGeom";
-
-const invCube = cube.clone();
-invCube.name = "InvertedCubeGeom";
-setGeometryUVsForCubemaps(invCube);
-
-/**
- * @param {string|number|import("../lib/three.js").Color} color
- * @param {number} sx
- * @param {number} sy
- * @param {number} sz
- * @param {(import("../lib/three.js").MeshBasicMaterialParameters|import("../lib/three.js").MeshStandardMaterialParameters)?} materialOptions
- */
-class Cube extends Mesh {
-    constructor(color, sx, sy, sz, materialOptions) {
-        super(cube, solid(Object.assign(
-            { transparent: true, opacity: 1 },
-            materialOptions,
-            { color })));
-        this.scale.set(sx, sy, sz);
     }
 }
 
@@ -47413,33 +44452,2934 @@ class CallaAudioSource extends Object3D {
     }
 }
 
-const navButton = new EmojiIconMesh("navButton", upArrow.value);
-
-class NavIcon extends Object3D {
+/**
+ * Unicode-standardized pictograms.
+ **/
+class Emoji {
     /**
-     * @param {Object3D} from
-     * @param {Object3D} to
+     * Creates a new Unicode-standardized pictograms.
+     * @param {string} value - a Unicode sequence.
+     * @param {string} desc - an English text description of the pictogram.
      */
-    constructor(from, to) {
-        super();
+    constructor(value, desc) {
+        this.value = value;
+        this.desc = desc;
+    }
 
-        this.name = `nav-from-${from.name}-to-${to.name}`;
-        this.position.copy(to.position);
-        this.position.sub(from.position);
-        this.position.y = 0;
-        this.position.normalize();
-        this.position.multiplyScalar(1.5);
-        this.position.y += 1;
+    /**
+     * Determines of the provided Emoji or EmojiGroup is a subset of
+     * this emoji.
+     * @param {(Emoji|EmojiGroup)} e
+     */
+    contains(e) {
+        return this.value.indexOf(e.value) >= 0;
+    }
+}
 
-        const icon = navButton.clone();
-        const fwdClick = (evt) => this.dispatchEvent(evt);
-        icon.addEventListener("click", fwdClick);
-        icon.children.forEach(c => c.addEventListener("click", fwdClick));
-        icon.addEventListener("drag", console.log);
-        this.add(icon);
+/**
+ * Shorthand for `new Emoji`, which saves significantly on bundle size.
+ * @param {string} v - a Unicode sequence.
+ * @param {string} d - an English text description of the pictogram.
+ * @param {any} [o=null] - an optional set of properties to set on the Emoji object.
+ * @returns {Emoji}
+ */
+function e(v, d, o = null) {
+    return Object.assign(new Emoji(v, d), o);
+}
 
-        this.lookAt(0, 1.75, 0);
-        this.scale.setScalar(0.5);
+class EmojiGroup extends Emoji {
+    /**
+     * Groupings of Unicode-standardized pictograms.
+     * @param {string} value - a Unicode sequence.
+     * @param {string} desc - an English text description of the pictogram.
+     * @param {Emoji[]} rest - Emojis in this group.
+     */
+    constructor(value, desc, ...rest) {
+        super(value, desc);
+        /** @type {Emoji[]} */
+        this.alts = rest;
+        /** @type {string} */
+        this.width = null;
+    }
+
+    /**
+     * Selects a random emoji out of the collection.
+     * @returns {(Emoji|EmojiGroup)}
+     **/
+    random() {
+        const idx = Math.floor(Math.random() * this.alts.length);
+        if (idx < 0) {
+            return null;
+        }
+
+        const selection = this.alts[idx];
+        if (selection instanceof EmojiGroup) {
+            return selection.random();
+        }
+        else {
+            return selection;
+        }
+    }
+
+    /**
+     *
+     * @param {(Emoji|EmojiGroup)} e
+     */
+    contains(e) {
+        return super.contains(e)
+            || this.alts.reduce((a, b) => a || b.contains(e), false);
+    }
+}
+
+
+/**
+ * Shorthand for `new EmojiGroup`, which saves significantly on bundle size.
+ * @param {string} v - a Unicode sequence.
+ * @param {string} d - an English text description of the pictogram.
+ * @param {...(Emoji|EmojiGroup)} r - the emoji that are contained in this group.
+ * @returns {EmojiGroup}
+ */
+function g(v, d, ...r) {
+    return new EmojiGroup(v, d, ...r);
+}
+
+/**
+ * A shorthand for `new EmojiGroup` that allows for setting optional properties
+ * on the EmojiGroup object.
+ * @param {string} v - a Unicode sequence.
+ * @param {string} d - an English text description of the pictogram.
+ * @param {any} o - a set of properties to set on the Emoji object.
+ * @param {...(Emoji|import("./EmojiGroup").EmojiGroup)} r - the emoji that are contained in this group.
+ * @returns {import("./EmojiGroup").EmojiGroup}
+ */
+function gg(v, d, o, ...r) {
+    return Object.assign(
+        g(
+            v,
+            d,
+            ...Object
+                .values(o)
+                .filter(v => v instanceof Emoji),
+            ...r),
+        o);
+}
+
+const textStyle = e("\u{FE0E}", "Variation Selector-15: text style");
+const emojiStyle = e("\u{FE0F}", "Variation Selector-16: emoji style");
+const zeroWidthJoiner = e("\u{200D}", "Zero Width Joiner");
+const combiningEnclosingCircleBackslash = e("\u{20E3}", "Combining Enclosing Circle Backslash");
+const combiningEnclosingKeycap = e("\u{20E3}", "Combining Enclosing Keycap");
+
+const female = e("\u{2640}\u{FE0F}", "Female");
+const male = e("\u{2642}\u{FE0F}", "Male");
+const skinL = e("\u{1F3FB}", "Light Skin Tone");
+const skinML = e("\u{1F3FC}", "Medium-Light Skin Tone");
+const skinM = e("\u{1F3FD}", "Medium Skin Tone");
+const skinMD = e("\u{1F3FE}", "Medium-Dark Skin Tone");
+const skinD = e("\u{1F3FF}", "Dark Skin Tone");
+const hairRed = e("\u{1F9B0}", "Red Hair");
+const hairCurly = e("\u{1F9B1}", "Curly Hair");
+const hairWhite = e("\u{1F9B3}", "White Hair");
+const hairBald = e("\u{1F9B2}", "Bald");
+
+function combo(a, b) {
+    if (a instanceof Array) {
+        return a.map(c => combo(c, b));
+    }
+    else if (a instanceof EmojiGroup) {
+        const { value, desc } = combo(e(a.value, a.desc), b);
+        return g(value, desc, ...combo(a.alts, b));
+    }
+    else if (b instanceof Array) {
+        return b.map(c => combo(a, c));
+    }
+    else {
+        return e(a.value + b.value, a.desc + ": " + b.desc);
+    }
+}
+
+function join(a, b) {
+    if (a instanceof Array) {
+        return a.map(c => join(c, b));
+    }
+    else if (a instanceof EmojiGroup) {
+        const { value, desc } = join(e(a.value, a.desc), b);
+        return g(value, desc, ...join(a.alts, b));
+    }
+    else if (b instanceof Array) {
+        return b.map(c => join(a, c));
+    }
+    else {
+        return e(a.value + zeroWidthJoiner.value + b.value, a.desc + ": " + b.desc);
+    }
+}
+
+function skin(v, d, ...rest) {
+    const person = e(v, d),
+        light = combo(person, skinL),
+        mediumLight = combo(person, skinML),
+        medium = combo(person, skinM),
+        mediumDark = combo(person, skinMD),
+        dark = combo(person, skinD);
+    return gg(person.value, person.desc, {
+        default: person,
+        light,
+        mediumLight,
+        medium,
+        mediumDark,
+        dark
+    }, ...rest);
+}
+
+function sex(person) {
+    const man = join(person, male),
+        woman = join(person, female);
+
+    return gg(person.value, person.desc, {
+        default: person,
+        man,
+        woman
+    });
+}
+
+function skinAndSex(v, d) {
+    return sex(skin(v, d));
+}
+
+function skinAndHair(v, d, ...rest) {
+    const people = skin(v, d),
+        red = join(people, hairRed),
+        curly = join(people, hairCurly),
+        white = join(people, hairWhite),
+        bald = join(people, hairBald);
+    return gg(people.value, people.desc, {
+        default: people,
+        red,
+        curly,
+        white,
+        bald
+    }, ...rest);
+}
+
+function sym(symbol, name) {
+    const j = e(symbol.value, name),
+        men = join(man.default, j),
+        women = join(woman.default, j);
+    return gg(symbol.value, symbol.desc, {
+        symbol,
+        men,
+        women
+    });
+}
+
+const frowners = skinAndSex("\u{1F64D}", "Frowning");
+const pouters = skinAndSex("\u{1F64E}", "Pouting");
+const gesturingNo = skinAndSex("\u{1F645}", "Gesturing NO");
+const gesturingOK = skinAndSex("\u{1F646}", "Gesturing OK");
+const tippingHand = skinAndSex("\u{1F481}", "Tipping Hand");
+const raisingHand = skinAndSex("\u{1F64B}", "Raising Hand");
+const bowing = skinAndSex("\u{1F647}", "Bowing");
+const facePalming = skinAndSex("\u{1F926}", "Facepalming");
+const shrugging = skinAndSex("\u{1F937}", "Shrugging");
+const cantHear = skinAndSex("\u{1F9CF}", "Can't Hear");
+const gettingMassage = skinAndSex("\u{1F486}", "Getting Massage");
+const gettingHaircut = skinAndSex("\u{1F487}", "Getting Haircut");
+
+const constructionWorkers = skinAndSex("\u{1F477}", "Construction Worker");
+const guards = skinAndSex("\u{1F482}", "Guard");
+const spies = skinAndSex("\u{1F575}", "Spy");
+const police = skinAndSex("\u{1F46E}", "Police");
+const wearingTurban = skinAndSex("\u{1F473}", "Wearing Turban");
+const superheroes = skinAndSex("\u{1F9B8}", "Superhero");
+const supervillains = skinAndSex("\u{1F9B9}", "Supervillain");
+const mages = skinAndSex("\u{1F9D9}", "Mage");
+const fairies = skinAndSex("\u{1F9DA}", "Fairy");
+const vampires = skinAndSex("\u{1F9DB}", "Vampire");
+const merpeople = skinAndSex("\u{1F9DC}", "Merperson");
+const elves = skinAndSex("\u{1F9DD}", "Elf");
+const walking = skinAndSex("\u{1F6B6}", "Walking");
+const standing = skinAndSex("\u{1F9CD}", "Standing");
+const kneeling = skinAndSex("\u{1F9CE}", "Kneeling");
+const runners = skinAndSex("\u{1F3C3}", "Running");
+
+const gestures$1 = g(
+    "Gestures", "Gestures",
+    frowners,
+    pouters,
+    gesturingNo,
+    gesturingOK,
+    tippingHand,
+    raisingHand,
+    bowing,
+    facePalming,
+    shrugging,
+    cantHear,
+    gettingMassage,
+    gettingHaircut);
+
+
+const baby = skin("\u{1F476}", "Baby");
+const child = skin("\u{1F9D2}", "Child");
+const boy = skin("\u{1F466}", "Boy");
+const girl = skin("\u{1F467}", "Girl");
+const children = gg(child.value, child.desc, {
+    default: child,
+    male: boy,
+    female: girl
+});
+
+
+const blondes = skinAndSex("\u{1F471}", "Blond Person");
+const person = skin("\u{1F9D1}", "Person", blondes.default, wearingTurban.default);
+
+const beardedMan = skin("\u{1F9D4}", "Bearded Man");
+const manInSuitLevitating = e("\u{1F574}\u{FE0F}", "Man in Suit, Levitating");
+const manWithChineseCap = skin("\u{1F472}", "Man With Chinese Cap");
+const manInTuxedo = skin("\u{1F935}", "Man in Tuxedo");
+const man = skinAndHair("\u{1F468}", "Man",
+    blondes.man,
+    beardedMan,
+    manInSuitLevitating,
+    manWithChineseCap,
+    wearingTurban.man,
+    manInTuxedo);
+
+const pregnantWoman = skin("\u{1F930}", "Pregnant Woman");
+const breastFeeding = skin("\u{1F931}", "Breast-Feeding");
+const womanWithHeadscarf = skin("\u{1F9D5}", "Woman With Headscarf");
+const brideWithVeil = skin("\u{1F470}", "Bride With Veil");
+const woman = skinAndHair("\u{1F469}", "Woman",
+    blondes.woman,
+    pregnantWoman,
+    breastFeeding,
+    womanWithHeadscarf,
+    wearingTurban.woman,
+    brideWithVeil);
+const adults = gg(
+    person.value, "Adult", {
+    default: person,
+    male: man,
+    female: woman
+});
+
+const olderPerson = skin("\u{1F9D3}", "Older Person");
+const oldMan = skin("\u{1F474}", "Old Man");
+const oldWoman = skin("\u{1F475}", "Old Woman");
+const elderly = gg(
+    olderPerson.value, olderPerson.desc, {
+    default: olderPerson,
+    male: oldMan,
+    female: oldWoman
+});
+
+const medical = e("\u{2695}\u{FE0F}", "Medical");
+const healthCareWorkers = sym(medical, "Health Care");
+
+const graduationCap = e("\u{1F393}", "Graduation Cap");
+const students = sym(graduationCap, "Student");
+
+const school = e("\u{1F3EB}", "School");
+const teachers = sym(school, "Teacher");
+
+const balanceScale = e("\u{2696}\u{FE0F}", "Balance Scale");
+const judges = sym(balanceScale, "Judge");
+
+const sheafOfRice = e("\u{1F33E}", "Sheaf of Rice");
+const farmers = sym(sheafOfRice, "Farmer");
+
+const cooking = e("\u{1F373}", "Cooking");
+const cooks = sym(cooking, "Cook");
+
+const wrench = e("\u{1F527}", "Wrench");
+const mechanics = sym(wrench, "Mechanic");
+
+const factory = e("\u{1F3ED}", "Factory");
+const factoryWorkers = sym(factory, "Factory Worker");
+
+const briefcase = e("\u{1F4BC}", "Briefcase");
+const officeWorkers = sym(briefcase, "Office Worker");
+
+const fireEngine = e("\u{1F692}", "Fire Engine");
+const fireFighters = sym(fireEngine, "Fire Fighter");
+
+const rocket = e("\u{1F680}", "Rocket");
+const astronauts = sym(rocket, "Astronaut");
+
+const airplane = e("\u{2708}\u{FE0F}", "Airplane");
+const pilots = sym(airplane, "Pilot");
+
+const artistPalette = e("\u{1F3A8}", "Artist Palette");
+const artists = sym(artistPalette, "Artist");
+
+const microphone = e("\u{1F3A4}", "Microphone");
+const singers = sym(microphone, "Singer");
+
+const laptop = e("\u{1F4BB}", "Laptop");
+const technologists = sym(laptop, "Technologist");
+
+const microscope = e("\u{1F52C}", "Microscope");
+const scientists = sym(microscope, "Scientist");
+
+const crown = e("\u{1F451}", "Crown");
+const prince = skin("\u{1F934}", "Prince");
+const princess = skin("\u{1F478}", "Princess");
+const royalty = gg(
+    crown.value, crown.desc, {
+    symbol: crown,
+    male: prince,
+    female: princess
+});
+
+const roles = gg(
+    "Roles", "Depictions of people working", {
+    healthCareWorkers,
+    students,
+    teachers,
+    judges,
+    farmers,
+    cooks,
+    mechanics,
+    factoryWorkers,
+    officeWorkers,
+    scientists,
+    technologists,
+    singers,
+    artists,
+    pilots,
+    astronauts,
+    fireFighters,
+    spies,
+    guards,
+    constructionWorkers,
+    royalty
+});
+
+const cherub = skin("\u{1F47C}", "Cherub");
+const santaClaus = skin("\u{1F385}", "Santa Claus");
+const mrsClaus = skin("\u{1F936}", "Mrs. Claus");
+
+const genies = sex(e("\u{1F9DE}", "Genie"));
+const zombies = sex(e("\u{1F9DF}", "Zombie"));
+
+const fantasy = gg(
+    "Fantasy", "Depictions of fantasy characters", {
+    cherub,
+    santaClaus,
+    mrsClaus,
+    superheroes,
+    supervillains,
+    mages,
+    fairies,
+    vampires,
+    merpeople,
+    elves,
+    genies,
+    zombies
+});
+
+const whiteCane = e("\u{1F9AF}", "Probing Cane");
+const withProbingCane = sym(whiteCane, "Probing");
+
+const motorizedWheelchair = e("\u{1F9BC}", "Motorized Wheelchair");
+const inMotorizedWheelchair = sym(motorizedWheelchair, "In Motorized Wheelchair");
+
+const manualWheelchair = e("\u{1F9BD}", "Manual Wheelchair");
+const inManualWheelchair = sym(manualWheelchair, "In Manual Wheelchair");
+
+
+const manDancing = skin("\u{1F57A}", "Man Dancing");
+const womanDancing = skin("\u{1F483}", "Woman Dancing");
+const dancers = gg(
+    manDancing.value, "Dancing", {
+    male: manDancing,
+    female: womanDancing
+});
+
+const jugglers = skinAndSex("\u{1F939}", "Juggler");
+
+const climbers = skinAndSex("\u{1F9D7}", "Climber");
+const fencer = e("\u{1F93A}", "Fencer");
+const jockeys = skin("\u{1F3C7}", "Jockey");
+const skier = e("\u{26F7}\u{FE0F}", "Skier");
+const snowboarders = skin("\u{1F3C2}", "Snowboarder");
+const golfers = skinAndSex("\u{1F3CC}\u{FE0F}", "Golfer");
+const surfers = skinAndSex("\u{1F3C4}", "Surfing");
+const rowers = skinAndSex("\u{1F6A3}", "Rowing Boat");
+const swimmers = skinAndSex("\u{1F3CA}", "Swimming");
+const basketballers = skinAndSex("\u{26F9}\u{FE0F}", "Basket Baller");
+const weightLifters = skinAndSex("\u{1F3CB}\u{FE0F}", "Weight Lifter");
+const bikers = skinAndSex("\u{1F6B4}", "Biker");
+const mountainBikers = skinAndSex("\u{1F6B5}", "Mountain Biker");
+const cartwheelers = skinAndSex("\u{1F938}", "Cartwheeler");
+const wrestlers = sex(e("\u{1F93C}", "Wrestler"));
+const waterPoloers = skinAndSex("\u{1F93D}", "Water Polo Player");
+const handBallers = skinAndSex("\u{1F93E}", "Hand Baller");
+
+const inMotion = gg(
+    "In Motion", "Depictions of people in motion", {
+    walking,
+    standing,
+    kneeling,
+    withProbingCane,
+    inMotorizedWheelchair,
+    inManualWheelchair,
+    dancers,
+    jugglers,
+    climbers,
+    fencer,
+    jockeys,
+    skier,
+    snowboarders,
+    golfers,
+    surfers,
+    rowers,
+    swimmers,
+    runners,
+    basketballers,
+    weightLifters,
+    bikers,
+    mountainBikers,
+    cartwheelers,
+    wrestlers,
+    waterPoloers,
+    handBallers
+});
+
+const inLotusPosition = skinAndSex("\u{1F9D8}", "In Lotus Position");
+const inBath = skin("\u{1F6C0}", "In Bath");
+const inBed = skin("\u{1F6CC}", "In Bed");
+const inSauna = skinAndSex("\u{1F9D6}", "In Sauna");
+const resting = gg(
+    "Resting", "Depictions of people at rest", {
+    inLotusPosition,
+    inBath,
+    inBed,
+    inSauna
+});
+
+const babies = g(baby.value, baby.desc, baby, cherub);
+const people = gg(
+    "People", "People", {
+    babies,
+    children,
+    adults,
+    elderly
+});
+
+const allPeople = gg(
+    "All People", "All People", {
+    people,
+    gestures: gestures$1,
+    inMotion,
+    resting,
+    roles,
+    fantasy
+});
+
+const ogre = e("\u{1F479}", "Ogre");
+const goblin = e("\u{1F47A}", "Goblin");
+const ghost = e("\u{1F47B}", "Ghost");
+const alien = e("\u{1F47D}", "Alien");
+const alienMonster = e("\u{1F47E}", "Alien Monster");
+const angryFaceWithHorns = e("\u{1F47F}", "Angry Face with Horns");
+const skull = e("\u{1F480}", "Skull");
+const pileOfPoo = e("\u{1F4A9}", "Pile of Poo");
+const grinningFace = e("\u{1F600}", "Grinning Face");
+const beamingFaceWithSmilingEyes = e("\u{1F601}", "Beaming Face with Smiling Eyes");
+const faceWithTearsOfJoy = e("\u{1F602}", "Face with Tears of Joy");
+const grinningFaceWithBigEyes = e("\u{1F603}", "Grinning Face with Big Eyes");
+const grinningFaceWithSmilingEyes = e("\u{1F604}", "Grinning Face with Smiling Eyes");
+const grinningFaceWithSweat = e("\u{1F605}", "Grinning Face with Sweat");
+const grinningSquitingFace = e("\u{1F606}", "Grinning Squinting Face");
+const smillingFaceWithHalo = e("\u{1F607}", "Smiling Face with Halo");
+const smilingFaceWithHorns = e("\u{1F608}", "Smiling Face with Horns");
+const winkingFace = e("\u{1F609}", "Winking Face");
+const smilingFaceWithSmilingEyes = e("\u{1F60A}", "Smiling Face with Smiling Eyes");
+const faceSavoringFood = e("\u{1F60B}", "Face Savoring Food");
+const relievedFace = e("\u{1F60C}", "Relieved Face");
+const smilingFaceWithHeartEyes = e("\u{1F60D}", "Smiling Face with Heart-Eyes");
+const smilingFaceWithSunglasses = e("\u{1F60E}", "Smiling Face with Sunglasses");
+const smirkingFace = e("\u{1F60F}", "Smirking Face");
+const neutralFace = e("\u{1F610}", "Neutral Face");
+const expressionlessFace = e("\u{1F611}", "Expressionless Face");
+const unamusedFace = e("\u{1F612}", "Unamused Face");
+const downcastFaceWithSweat = e("\u{1F613}", "Downcast Face with Sweat");
+const pensiveFace = e("\u{1F614}", "Pensive Face");
+const confusedFace = e("\u{1F615}", "Confused Face");
+const confoundedFace = e("\u{1F616}", "Confounded Face");
+const kissingFace = e("\u{1F617}", "Kissing Face");
+const faceBlowingAKiss = e("\u{1F618}", "Face Blowing a Kiss");
+const kissingFaceWithSmilingEyes = e("\u{1F619}", "Kissing Face with Smiling Eyes");
+const kissingFaceWithClosedEyes = e("\u{1F61A}", "Kissing Face with Closed Eyes");
+const faceWithTongue = e("\u{1F61B}", "Face with Tongue");
+const winkingFaceWithTongue = e("\u{1F61C}", "Winking Face with Tongue");
+const squintingFaceWithTongue = e("\u{1F61D}", "Squinting Face with Tongue");
+const disappointedFace = e("\u{1F61E}", "Disappointed Face");
+const worriedFace = e("\u{1F61F}", "Worried Face");
+const angryFace = e("\u{1F620}", "Angry Face");
+const poutingFace = e("\u{1F621}", "Pouting Face");
+const cryingFace = e("\u{1F622}", "Crying Face");
+const perseveringFace = e("\u{1F623}", "Persevering Face");
+const faceWithSteamFromNose = e("\u{1F624}", "Face with Steam From Nose");
+const sadButRelievedFace = e("\u{1F625}", "Sad but Relieved Face");
+const frowningFaceWithOpenMouth = e("\u{1F626}", "Frowning Face with Open Mouth");
+const anguishedFace = e("\u{1F627}", "Anguished Face");
+const fearfulFace = e("\u{1F628}", "Fearful Face");
+const wearyFace = e("\u{1F629}", "Weary Face");
+const sleepyFace = e("\u{1F62A}", "Sleepy Face");
+const tiredFace = e("\u{1F62B}", "Tired Face");
+const grimacingFace = e("\u{1F62C}", "Grimacing Face");
+const loudlyCryingFace = e("\u{1F62D}", "Loudly Crying Face");
+const faceWithOpenMouth = e("\u{1F62E}", "Face with Open Mouth");
+const hushedFace = e("\u{1F62F}", "Hushed Face");
+const anxiousFaceWithSweat = e("\u{1F630}", "Anxious Face with Sweat");
+const faceScreamingInFear = e("\u{1F631}", "Face Screaming in Fear");
+const astonishedFace = e("\u{1F632}", "Astonished Face");
+const flushedFace = e("\u{1F633}", "Flushed Face");
+const sleepingFace = e("\u{1F634}", "Sleeping Face");
+const dizzyFace = e("\u{1F635}", "Dizzy Face");
+const faceWithoutMouth = e("\u{1F636}", "Face Without Mouth");
+const faceWithMedicalMask = e("\u{1F637}", "Face with Medical Mask");
+const grinningCatWithSmilingEyes = e("\u{1F638}", "Grinning Cat with Smiling Eyes");
+const catWithTearsOfJoy = e("\u{1F639}", "Cat with Tears of Joy");
+const grinningCat = e("\u{1F63A}", "Grinning Cat");
+const smilingCatWithHeartEyes = e("\u{1F63B}", "Smiling Cat with Heart-Eyes");
+const catWithWrySmile = e("\u{1F63C}", "Cat with Wry Smile");
+const kissingCat = e("\u{1F63D}", "Kissing Cat");
+const poutingCat = e("\u{1F63E}", "Pouting Cat");
+const cryingCat = e("\u{1F63F}", "Crying Cat");
+const wearyCat = e("\u{1F640}", "Weary Cat");
+const slightlyFrowningFace = e("\u{1F641}", "Slightly Frowning Face");
+const slightlySmilingFace = e("\u{1F642}", "Slightly Smiling Face");
+const updisdeDownFace = e("\u{1F643}", "Upside-Down Face");
+const faceWithRollingEyes = e("\u{1F644}", "Face with Rolling Eyes");
+const seeNoEvilMonkey = e("\u{1F648}", "See-No-Evil Monkey");
+const hearNoEvilMonkey = e("\u{1F649}", "Hear-No-Evil Monkey");
+const speakNoEvilMonkey = e("\u{1F64A}", "Speak-No-Evil Monkey");
+const zipperMouthFace = e("\u{1F910}", "Zipper-Mouth Face");
+const moneyMouthFace = e("\u{1F911}", "Money-Mouth Face");
+const faceWithThermometer = e("\u{1F912}", "Face with Thermometer");
+const nerdFace = e("\u{1F913}", "Nerd Face");
+const thinkingFace = e("\u{1F914}", "Thinking Face");
+const faceWithHeadBandage = e("\u{1F915}", "Face with Head-Bandage");
+const robot = e("\u{1F916}", "Robot");
+const huggingFace = e("\u{1F917}", "Hugging Face");
+const cowboyHatFace = e("\u{1F920}", "Cowboy Hat Face");
+const clownFace = e("\u{1F921}", "Clown Face");
+const nauseatedFace = e("\u{1F922}", "Nauseated Face");
+const rollingOnTheFloorLaughing = e("\u{1F923}", "Rolling on the Floor Laughing");
+const droolingFace = e("\u{1F924}", "Drooling Face");
+const lyingFace = e("\u{1F925}", "Lying Face");
+const sneezingFace = e("\u{1F927}", "Sneezing Face");
+const faceWithRaisedEyebrow = e("\u{1F928}", "Face with Raised Eyebrow");
+const starStruck = e("\u{1F929}", "Star-Struck");
+const zanyFace = e("\u{1F92A}", "Zany Face");
+const shushingFace = e("\u{1F92B}", "Shushing Face");
+const faceWithSymbolsOnMouth = e("\u{1F92C}", "Face with Symbols on Mouth");
+const faceWithHandOverMouth = e("\u{1F92D}", "Face with Hand Over Mouth");
+const faceVomitting = e("\u{1F92E}", "Face Vomiting");
+const explodingHead = e("\u{1F92F}", "Exploding Head");
+const smilingFaceWithHearts = e("\u{1F970}", "Smiling Face with Hearts");
+const yawningFace = e("\u{1F971}", "Yawning Face");
+//export const smilingFaceWithTear = e("\u{1F972}", "Smiling Face with Tear");
+const partyingFace = e("\u{1F973}", "Partying Face");
+const woozyFace = e("\u{1F974}", "Woozy Face");
+const hotFace = e("\u{1F975}", "Hot Face");
+const coldFace = e("\u{1F976}", "Cold Face");
+//export const disguisedFace = e("\u{1F978}", "Disguised Face");
+const pleadingFace = e("\u{1F97A}", "Pleading Face");
+const faceWithMonocle = e("\u{1F9D0}", "Face with Monocle");
+const skullAndCrossbones = e("\u{2620}\u{FE0F}", "Skull and Crossbones");
+const frowningFace = e("\u{2639}\u{FE0F}", "Frowning Face");
+const smilingFace = e("\u{263A}\u{FE0F}", "Smiling Face");
+const speakingHead = e("\u{1F5E3}\u{FE0F}", "Speaking Head");
+const bust = e("\u{1F464}", "Bust in Silhouette");
+const faces = gg(
+    "Faces", "Round emoji faces", {
+    ogre,
+    goblin,
+    ghost,
+    alien,
+    alienMonster,
+    angryFaceWithHorns,
+    skull,
+    pileOfPoo,
+    grinningFace,
+    beamingFaceWithSmilingEyes,
+    faceWithTearsOfJoy,
+    grinningFaceWithBigEyes,
+    grinningFaceWithSmilingEyes,
+    grinningFaceWithSweat,
+    grinningSquitingFace,
+    smillingFaceWithHalo,
+    smilingFaceWithHorns,
+    winkingFace,
+    smilingFaceWithSmilingEyes,
+    faceSavoringFood,
+    relievedFace,
+    smilingFaceWithHeartEyes,
+    smilingFaceWithSunglasses,
+    smirkingFace,
+    neutralFace,
+    expressionlessFace,
+    unamusedFace,
+    downcastFaceWithSweat,
+    pensiveFace,
+    confusedFace,
+    confoundedFace,
+    kissingFace,
+    faceBlowingAKiss,
+    kissingFaceWithSmilingEyes,
+    kissingFaceWithClosedEyes,
+    faceWithTongue,
+    winkingFaceWithTongue,
+    squintingFaceWithTongue,
+    disappointedFace,
+    worriedFace,
+    angryFace,
+    poutingFace,
+    cryingFace,
+    perseveringFace,
+    faceWithSteamFromNose,
+    sadButRelievedFace,
+    frowningFaceWithOpenMouth,
+    anguishedFace,
+    fearfulFace,
+    wearyFace,
+    sleepyFace,
+    tiredFace,
+    grimacingFace,
+    loudlyCryingFace,
+    faceWithOpenMouth,
+    hushedFace,
+    anxiousFaceWithSweat,
+    faceScreamingInFear,
+    astonishedFace,
+    flushedFace,
+    sleepingFace,
+    dizzyFace,
+    faceWithoutMouth,
+    faceWithMedicalMask,
+    grinningCatWithSmilingEyes,
+    catWithTearsOfJoy,
+    grinningCat,
+    smilingCatWithHeartEyes,
+    catWithWrySmile,
+    kissingCat,
+    poutingCat,
+    cryingCat,
+    wearyCat,
+    slightlyFrowningFace,
+    slightlySmilingFace,
+    updisdeDownFace,
+    faceWithRollingEyes,
+    seeNoEvilMonkey,
+    hearNoEvilMonkey,
+    speakNoEvilMonkey,
+    zipperMouthFace,
+    moneyMouthFace,
+    faceWithThermometer,
+    nerdFace,
+    thinkingFace,
+    faceWithHeadBandage,
+    robot,
+    huggingFace,
+    cowboyHatFace,
+    clownFace,
+    nauseatedFace,
+    rollingOnTheFloorLaughing,
+    droolingFace,
+    lyingFace,
+    sneezingFace,
+    faceWithRaisedEyebrow,
+    starStruck,
+    zanyFace,
+    shushingFace,
+    faceWithSymbolsOnMouth,
+    faceWithHandOverMouth,
+    faceVomitting,
+    explodingHead,
+    smilingFaceWithHearts,
+    yawningFace,
+    //smilingFaceWithTear,
+    partyingFace,
+    woozyFace,
+    hotFace,
+    coldFace,
+    //disguisedFace,
+    pleadingFace,
+    faceWithMonocle,
+    skullAndCrossbones,
+    frowningFace,
+    smilingFace,
+    speakingHead,
+    bust,
+});
+
+const kissMark = e("\u{1F48B}", "Kiss Mark");
+const loveLetter = e("\u{1F48C}", "Love Letter");
+const beatingHeart = e("\u{1F493}", "Beating Heart");
+const brokenHeart = e("\u{1F494}", "Broken Heart");
+const twoHearts = e("\u{1F495}", "Two Hearts");
+const sparklingHeart = e("\u{1F496}", "Sparkling Heart");
+const growingHeart = e("\u{1F497}", "Growing Heart");
+const heartWithArrow = e("\u{1F498}", "Heart with Arrow");
+const blueHeart = e("\u{1F499}", "Blue Heart");
+const greenHeart = e("\u{1F49A}", "Green Heart");
+const yellowHeart = e("\u{1F49B}", "Yellow Heart");
+const purpleHeart = e("\u{1F49C}", "Purple Heart");
+const heartWithRibbon = e("\u{1F49D}", "Heart with Ribbon");
+const revolvingHearts = e("\u{1F49E}", "Revolving Hearts");
+const heartDecoration = e("\u{1F49F}", "Heart Decoration");
+const blackHeart = e("\u{1F5A4}", "Black Heart");
+const whiteHeart = e("\u{1F90D}", "White Heart");
+const brownHeart = e("\u{1F90E}", "Brown Heart");
+const orangeHeart = e("\u{1F9E1}", "Orange Heart");
+const heartExclamation = e("\u{2763}\u{FE0F}", "Heart Exclamation");
+const redHeart = e("\u{2764}\u{FE0F}", "Red Heart");
+const love = gg(
+    "Love", "Hearts and kisses", {
+    kissMark,
+    loveLetter,
+    beatingHeart,
+    brokenHeart,
+    twoHearts,
+    sparklingHeart,
+    growingHeart,
+    heartWithArrow,
+    blueHeart,
+    greenHeart,
+    yellowHeart,
+    purpleHeart,
+    heartWithRibbon,
+    revolvingHearts,
+    heartDecoration,
+    blackHeart,
+    whiteHeart,
+    brownHeart,
+    orangeHeart,
+    heartExclamation,
+    redHeart,
+});
+
+const angerSymbol = e("\u{1F4A2}", "Anger Symbol");
+const bomb = e("\u{1F4A3}", "Bomb");
+const zzz = e("\u{1F4A4}", "Zzz");
+const collision = e("\u{1F4A5}", "Collision");
+const sweatDroplets = e("\u{1F4A6}", "Sweat Droplets");
+const dashingAway = e("\u{1F4A8}", "Dashing Away");
+const dizzy = e("\u{1F4AB}", "Dizzy");
+const speechBalloon = e("\u{1F4AC}", "Speech Balloon");
+const thoughtBalloon = e("\u{1F4AD}", "Thought Balloon");
+const hundredPoints = e("\u{1F4AF}", "Hundred Points");
+const hole = e("\u{1F573}\u{FE0F}", "Hole");
+const leftSpeechBubble = e("\u{1F5E8}\u{FE0F}", "Left Speech Bubble");
+const rightSpeechBubble = e("\u{1F5E9}\u{FE0F}", "Right Speech Bubble");
+const conversationBubbles2 = e("\u{1F5EA}\u{FE0F}", "Conversation Bubbles 2");
+const conversationBubbles3 = e("\u{1F5EB}\u{FE0F}", "Conversation Bubbles 3");
+const leftThoughtBubble = e("\u{1F5EC}\u{FE0F}", "Left Thought Bubble");
+const rightThoughtBubble = e("\u{1F5ED}\u{FE0F}", "Right Thought Bubble");
+const leftAngerBubble = e("\u{1F5EE}\u{FE0F}", "Left Anger Bubble");
+const rightAngerBubble = e("\u{1F5EF}\u{FE0F}", "Right Anger Bubble");
+const angerBubble = e("\u{1F5F0}\u{FE0F}", "Anger Bubble");
+const angerBubbleLightningBolt = e("\u{1F5F1}\u{FE0F}", "Anger Bubble Lightning");
+const lightningBolt = e("\u{1F5F2}\u{FE0F}", "Lightning Bolt");
+
+const cartoon = g(
+    "Cartoon", "Cartoon symbols",
+    angerSymbol,
+    bomb,
+    zzz,
+    collision,
+    sweatDroplets,
+    dashingAway,
+    dizzy,
+    speechBalloon,
+    thoughtBalloon,
+    hundredPoints,
+    hole,
+    leftSpeechBubble,
+    rightSpeechBubble,
+    conversationBubbles2,
+    conversationBubbles3,
+    leftThoughtBubble,
+    rightThoughtBubble,
+    leftAngerBubble,
+    rightAngerBubble,
+    angerBubble,
+    angerBubbleLightningBolt,
+    lightningBolt);
+
+const backhandIndexPointingUp = e("\u{1F446}", "Backhand Index Pointing Up");
+const backhandIndexPointingDown = e("\u{1F447}", "Backhand Index Pointing Down");
+const backhandIndexPointingLeft = e("\u{1F448}", "Backhand Index Pointing Left");
+const backhandIndexPointingRight = e("\u{1F449}", "Backhand Index Pointing Right");
+const oncomingFist = e("\u{1F44A}", "Oncoming Fist");
+const wavingHand = e("\u{1F44B}", "Waving Hand");
+const okHand = e("\u{1F58F}", "OK Hand");
+const thumbsUp = e("\u{1F44D}", "Thumbs Up");
+const thumbsDown = e("\u{1F44E}", "Thumbs Down");
+const clappingHands = e("\u{1F44F}", "Clapping Hands");
+const openHands = e("\u{1F450}", "Open Hands");
+const nailPolish = e("\u{1F485}", "Nail Polish");
+const handsWithFingersSplayed = e("\u{1F590}\u{FE0F}", "Hand with Fingers Splayed");
+const handsWithFingersSplayed2 = e("\u{1F591}\u{FE0F}", "Hand with Fingers Splayed 2");
+const thumbsUp2 = e("\u{1F592}", "Thumbs Up 2");
+const thumbsDown2 = e("\u{1F593}", "Thumbs Down 2");
+const peaceFingers = e("\u{1F594}", "Peace Fingers");
+const middleFinger = e("\u{1F595}", "Middle Finger");
+const vulcanSalute = e("\u{1F596}", "Vulcan Salute");
+const handPointingDown = e("\u{1F597}", "Hand Pointing Down");
+const handPointingLeft = e("\u{1F598}", "Hand Pointing Left");
+const handPointingRight = e("\u{1F599}", "Hand Pointing Right");
+const handPointingLeft2 = e("\u{1F59A}", "Hand Pointing Left 2");
+const handPointingRight2 = e("\u{1F59B}", "Hand Pointing Right 2");
+const indexPointingLeft = e("\u{1F59C}", "Index Pointing Left");
+const indexPointingRight = e("\u{1F59D}", "Index Pointing Right");
+const indexPointingUp = e("\u{1F59E}", "Index Pointing Up");
+const indexPointingDown = e("\u{1F59F}", "Index Pointing Down");
+const indexPointingUp2 = e("\u{1F5A0}", "Index Pointing Up 2");
+const indexPointingDown2 = e("\u{1F5A1}", "Index Pointing Down 2");
+const indexPointingUp3 = e("\u{1F5A2}", "Index Pointing Up 3");
+const indexPointingDown3 = e("\u{1F5A3}", "Index Pointing Down 3");
+const raisingHands = e("\u{1F64C}", "Raising Hands");
+const foldedHands = e("\u{1F64F}", "Folded Hands");
+//export const pinchedFingers = e("\u{1F90C}", "Pinched Fingers");
+const pinchingHand = e("\u{1F90F}", "Pinching Hand");
+const signOfTheHorns = e("\u{1F918}", "Sign of the Horns");
+const callMeHand = e("\u{1F919}", "Call Me Hand");
+const rasiedBackOfHand = e("\u{1F91A}", "Raised Back of Hand");
+const leftFacingFist = e("\u{1F91B}", "Left-Facing Fist");
+const rightFacingFist = e("\u{1F91C}", "Right-Facing Fist");
+const handshake = e("\u{1F91D}", "Handshake");
+const crossedFingers = e("\u{1F91E}", "Crossed Fingers");
+const loveYouGesture = e("\u{1F91F}", "Love-You Gesture");
+const palmsUpTogether = e("\u{1F932}", "Palms Up Together");
+const indexPointingUp4 = e("\u{261D}\u{FE0F}", "Index Pointing Up 4");
+const raisedFist = e("\u{270A}", "Raised Fist");
+const raisedHand = e("\u{270B}", "Raised Hand");
+const victoryHand = e("\u{270C}\u{FE0F}", "Victory Hand");
+const writingHand = e("\u{270D}\u{FE0F}", "Writing Hand");
+const hands = g(
+    "Hands", "Hands pointing at things",
+    backhandIndexPointingUp,
+    backhandIndexPointingDown,
+    backhandIndexPointingLeft,
+    backhandIndexPointingRight,
+    oncomingFist,
+    wavingHand,
+    okHand,
+    thumbsUp,
+    thumbsDown,
+    clappingHands,
+    openHands,
+    nailPolish,
+    handsWithFingersSplayed,
+    handsWithFingersSplayed2,
+    handsWithFingersSplayed2,
+    thumbsUp2,
+    thumbsDown2,
+    peaceFingers,
+    middleFinger,
+    vulcanSalute,
+    handPointingDown,
+    handPointingLeft,
+    handPointingRight,
+    handPointingLeft2,
+    handPointingRight2,
+    indexPointingLeft,
+    indexPointingRight,
+    indexPointingUp,
+    indexPointingDown,
+    indexPointingUp2,
+    indexPointingDown2,
+    indexPointingUp3,
+    indexPointingDown3,
+    raisingHands,
+    foldedHands,
+    //pinchedFingers,
+    pinchingHand,
+    signOfTheHorns,
+    callMeHand,
+    rasiedBackOfHand,
+    leftFacingFist,
+    rightFacingFist,
+    handshake,
+    crossedFingers,
+    loveYouGesture,
+    palmsUpTogether,
+    indexPointingUp4,
+    raisedFist,
+    raisedHand,
+    victoryHand,
+    writingHand);
+
+const bodyParts = g(
+    "Body Parts", "General body parts",
+    e("\u{1F440}", "Eyes"),
+    e("\u{1F441}\u{FE0F}", "Eye"),
+    e("\u{1F441}\u{FE0F}\u{200D}\u{1F5E8}\u{FE0F}", "Eye in Speech Bubble"),
+    e("\u{1F442}", "Ear"),
+    e("\u{1F443}", "Nose"),
+    e("\u{1F444}", "Mouth"),
+    e("\u{1F445}", "Tongue"),
+    e("\u{1F4AA}", "Flexed Biceps"),
+    e("\u{1F933}", "Selfie"),
+    e("\u{1F9B4}", "Bone"),
+    e("\u{1F9B5}", "Leg"),
+    e("\u{1F9B6}", "Foot"),
+    e("\u{1F9B7}", "Tooth"),
+    e("\u{1F9BB}", "Ear with Hearing Aid"),
+    e("\u{1F9BE}", "Mechanical Arm"),
+    e("\u{1F9BF}", "Mechanical Leg"),
+    //e("\u{1FAC0}", "Anatomical Heart"),
+    //e("\u{1FAC1}", "Lungs"),
+    e("\u{1F9E0}", "Brain"));
+
+const animals = g(
+    "Animals", "Animals and insects",
+    e("\u{1F400}", "Rat"),
+    e("\u{1F401}", "Mouse"),
+    e("\u{1F402}", "Ox"),
+    e("\u{1F403}", "Water Buffalo"),
+    e("\u{1F404}", "Cow"),
+    e("\u{1F405}", "Tiger"),
+    e("\u{1F406}", "Leopard"),
+    e("\u{1F407}", "Rabbit"),
+    e("\u{1F408}", "Cat"),
+    //e("\u{1F408}\u{200D}\u{2B1B}", "Black Cat"),
+    e("\u{1F409}", "Dragon"),
+    e("\u{1F40A}", "Crocodile"),
+    e("\u{1F40B}", "Whale"),
+    e("\u{1F40C}", "Snail"),
+    e("\u{1F40D}", "Snake"),
+    e("\u{1F40E}", "Horse"),
+    e("\u{1F40F}", "Ram"),
+    e("\u{1F410}", "Goat"),
+    e("\u{1F411}", "Ewe"),
+    e("\u{1F412}", "Monkey"),
+    e("\u{1F413}", "Rooster"),
+    e("\u{1F414}", "Chicken"),
+    e("\u{1F415}", "Dog"),
+    e("\u{1F415}\u{200D}\u{1F9BA}", "Service Dog"),
+    e("\u{1F416}", "Pig"),
+    e("\u{1F417}", "Boar"),
+    e("\u{1F418}", "Elephant"),
+    e("\u{1F419}", "Octopus"),
+    e("\u{1F41A}", "Spiral Shell"),
+    e("\u{1F41B}", "Bug"),
+    e("\u{1F41C}", "Ant"),
+    e("\u{1F41D}", "Honeybee"),
+    e("\u{1F41E}", "Lady Beetle"),
+    e("\u{1F41F}", "Fish"),
+    e("\u{1F420}", "Tropical Fish"),
+    e("\u{1F421}", "Blowfish"),
+    e("\u{1F422}", "Turtle"),
+    e("\u{1F423}", "Hatching Chick"),
+    e("\u{1F424}", "Baby Chick"),
+    e("\u{1F425}", "Front-Facing Baby Chick"),
+    e("\u{1F426}", "Bird"),
+    e("\u{1F427}", "Penguin"),
+    e("\u{1F428}", "Koala"),
+    e("\u{1F429}", "Poodle"),
+    e("\u{1F42A}", "Camel"),
+    e("\u{1F42B}", "Two-Hump Camel"),
+    e("\u{1F42C}", "Dolphin"),
+    e("\u{1F42D}", "Mouse Face"),
+    e("\u{1F42E}", "Cow Face"),
+    e("\u{1F42F}", "Tiger Face"),
+    e("\u{1F430}", "Rabbit Face"),
+    e("\u{1F431}", "Cat Face"),
+    e("\u{1F432}", "Dragon Face"),
+    e("\u{1F433}", "Spouting Whale"),
+    e("\u{1F434}", "Horse Face"),
+    e("\u{1F435}", "Monkey Face"),
+    e("\u{1F436}", "Dog Face"),
+    e("\u{1F437}", "Pig Face"),
+    e("\u{1F438}", "Frog"),
+    e("\u{1F439}", "Hamster"),
+    e("\u{1F43A}", "Wolf"),
+    e("\u{1F43B}", "Bear"),
+    e("\u{1F43B}\u{200D}\u{2744}\u{FE0F}", "Polar Bear"),
+    e("\u{1F43C}", "Panda"),
+    e("\u{1F43D}", "Pig Nose"),
+    e("\u{1F43E}", "Paw Prints"),
+    e("\u{1F43F}\u{FE0F}", "Chipmunk"),
+    e("\u{1F54A}\u{FE0F}", "Dove"),
+    e("\u{1F577}\u{FE0F}", "Spider"),
+    e("\u{1F578}\u{FE0F}", "Spider Web"),
+    e("\u{1F981}", "Lion"),
+    e("\u{1F982}", "Scorpion"),
+    e("\u{1F983}", "Turkey"),
+    e("\u{1F984}", "Unicorn"),
+    e("\u{1F985}", "Eagle"),
+    e("\u{1F986}", "Duck"),
+    e("\u{1F987}", "Bat"),
+    e("\u{1F988}", "Shark"),
+    e("\u{1F989}", "Owl"),
+    e("\u{1F98A}", "Fox"),
+    e("\u{1F98B}", "Butterfly"),
+    e("\u{1F98C}", "Deer"),
+    e("\u{1F98D}", "Gorilla"),
+    e("\u{1F98E}", "Lizard"),
+    e("\u{1F98F}", "Rhinoceros"),
+    e("\u{1F992}", "Giraffe"),
+    e("\u{1F993}", "Zebra"),
+    e("\u{1F994}", "Hedgehog"),
+    e("\u{1F995}", "Sauropod"),
+    e("\u{1F996}", "T-Rex"),
+    e("\u{1F997}", "Cricket"),
+    e("\u{1F998}", "Kangaroo"),
+    e("\u{1F999}", "Llama"),
+    e("\u{1F99A}", "Peacock"),
+    e("\u{1F99B}", "Hippopotamus"),
+    e("\u{1F99C}", "Parrot"),
+    e("\u{1F99D}", "Raccoon"),
+    e("\u{1F99F}", "Mosquito"),
+    e("\u{1F9A0}", "Microbe"),
+    e("\u{1F9A1}", "Badger"),
+    e("\u{1F9A2}", "Swan"),
+    //e("\u{1F9A3}", "Mammoth"),
+    //e("\u{1F9A4}", "Dodo"),
+    e("\u{1F9A5}", "Sloth"),
+    e("\u{1F9A6}", "Otter"),
+    e("\u{1F9A7}", "Orangutan"),
+    e("\u{1F9A8}", "Skunk"),
+    e("\u{1F9A9}", "Flamingo"),
+    //e("\u{1F9AB}", "Beaver"),
+    //e("\u{1F9AC}", "Bison"),
+    //e("\u{1F9AD}", "Seal"),
+    //e("\u{1FAB0}", "Fly"),
+    //e("\u{1FAB1}", "Worm"),
+    //e("\u{1FAB2}", "Beetle"),
+    //e("\u{1FAB3}", "Cockroach"),
+    //e("\u{1FAB6}", "Feather"),
+    e("\u{1F9AE}", "Guide Dog"));
+
+const whiteFlower = e("\u{1F4AE}", "White Flower");
+const plants = g(
+    "Plants", "Flowers, trees, and things",
+    e("\u{1F331}", "Seedling"),
+    e("\u{1F332}", "Evergreen Tree"),
+    e("\u{1F333}", "Deciduous Tree"),
+    e("\u{1F334}", "Palm Tree"),
+    e("\u{1F335}", "Cactus"),
+    e("\u{1F337}", "Tulip"),
+    e("\u{1F338}", "Cherry Blossom"),
+    e("\u{1F339}", "Rose"),
+    e("\u{1F33A}", "Hibiscus"),
+    e("\u{1F33B}", "Sunflower"),
+    e("\u{1F33C}", "Blossom"),
+    sheafOfRice,
+    e("\u{1F33F}", "Herb"),
+    e("\u{1F340}", "Four Leaf Clover"),
+    e("\u{1F341}", "Maple Leaf"),
+    e("\u{1F342}", "Fallen Leaf"),
+    e("\u{1F343}", "Leaf Fluttering in Wind"),
+    e("\u{1F3F5}\u{FE0F}", "Rosette"),
+    e("\u{1F490}", "Bouquet"),
+    whiteFlower,
+    e("\u{1F940}", "Wilted Flower"),
+    //e("\u{1FAB4}", "Potted Plant"),
+    e("\u{2618}\u{FE0F}", "Shamrock"));
+
+const banana = e("\u{1F34C}", "Banana");
+const food = g(
+    "Food", "Food, drink, and utensils",
+    e("\u{1F32D}", "Hot Dog"),
+    e("\u{1F32E}", "Taco"),
+    e("\u{1F32F}", "Burrito"),
+    e("\u{1F330}", "Chestnut"),
+    e("\u{1F336}\u{FE0F}", "Hot Pepper"),
+    e("\u{1F33D}", "Ear of Corn"),
+    e("\u{1F344}", "Mushroom"),
+    e("\u{1F345}", "Tomato"),
+    e("\u{1F346}", "Eggplant"),
+    e("\u{1F347}", "Grapes"),
+    e("\u{1F348}", "Melon"),
+    e("\u{1F349}", "Watermelon"),
+    e("\u{1F34A}", "Tangerine"),
+    e("\u{1F34B}", "Lemon"),
+    banana,
+    e("\u{1F34D}", "Pineapple"),
+    e("\u{1F34E}", "Red Apple"),
+    e("\u{1F34F}", "Green Apple"),
+    e("\u{1F350}", "Pear"),
+    e("\u{1F351}", "Peach"),
+    e("\u{1F352}", "Cherries"),
+    e("\u{1F353}", "Strawberry"),
+    e("\u{1F354}", "Hamburger"),
+    e("\u{1F355}", "Pizza"),
+    e("\u{1F356}", "Meat on Bone"),
+    e("\u{1F357}", "Poultry Leg"),
+    e("\u{1F358}", "Rice Cracker"),
+    e("\u{1F359}", "Rice Ball"),
+    e("\u{1F35A}", "Cooked Rice"),
+    e("\u{1F35B}", "Curry Rice"),
+    e("\u{1F35C}", "Steaming Bowl"),
+    e("\u{1F35D}", "Spaghetti"),
+    e("\u{1F35E}", "Bread"),
+    e("\u{1F35F}", "French Fries"),
+    e("\u{1F360}", "Roasted Sweet Potato"),
+    e("\u{1F361}", "Dango"),
+    e("\u{1F362}", "Oden"),
+    e("\u{1F363}", "Sushi"),
+    e("\u{1F364}", "Fried Shrimp"),
+    e("\u{1F365}", "Fish Cake with Swirl"),
+    e("\u{1F371}", "Bento Box"),
+    e("\u{1F372}", "Pot of Food"),
+    cooking,
+    e("\u{1F37F}", "Popcorn"),
+    e("\u{1F950}", "Croissant"),
+    e("\u{1F951}", "Avocado"),
+    e("\u{1F952}", "Cucumber"),
+    e("\u{1F953}", "Bacon"),
+    e("\u{1F954}", "Potato"),
+    e("\u{1F955}", "Carrot"),
+    e("\u{1F956}", "Baguette Bread"),
+    e("\u{1F957}", "Green Salad"),
+    e("\u{1F958}", "Shallow Pan of Food"),
+    e("\u{1F959}", "Stuffed Flatbread"),
+    e("\u{1F95A}", "Egg"),
+    e("\u{1F95C}", "Peanuts"),
+    e("\u{1F95D}", "Kiwi Fruit"),
+    e("\u{1F95E}", "Pancakes"),
+    e("\u{1F95F}", "Dumpling"),
+    e("\u{1F960}", "Fortune Cookie"),
+    e("\u{1F961}", "Takeout Box"),
+    e("\u{1F963}", "Bowl with Spoon"),
+    e("\u{1F965}", "Coconut"),
+    e("\u{1F966}", "Broccoli"),
+    e("\u{1F968}", "Pretzel"),
+    e("\u{1F969}", "Cut of Meat"),
+    e("\u{1F96A}", "Sandwich"),
+    e("\u{1F96B}", "Canned Food"),
+    e("\u{1F96C}", "Leafy Green"),
+    e("\u{1F96D}", "Mango"),
+    e("\u{1F96E}", "Moon Cake"),
+    e("\u{1F96F}", "Bagel"),
+    e("\u{1F980}", "Crab"),
+    e("\u{1F990}", "Shrimp"),
+    e("\u{1F991}", "Squid"),
+    e("\u{1F99E}", "Lobster"),
+    e("\u{1F9AA}", "Oyster"),
+    e("\u{1F9C0}", "Cheese Wedge"),
+    e("\u{1F9C2}", "Salt"),
+    e("\u{1F9C4}", "Garlic"),
+    e("\u{1F9C5}", "Onion"),
+    e("\u{1F9C6}", "Falafel"),
+    e("\u{1F9C7}", "Waffle"),
+    e("\u{1F9C8}", "Butter"),
+    //e("\u{1FAD0}", "Blueberries"),
+    //e("\u{1FAD1}", "Bell Pepper"),
+    //e("\u{1FAD2}", "Olive"),
+    //e("\u{1FAD3}", "Flatbread"),
+    //e("\u{1FAD4}", "Tamale"),
+    //e("\u{1FAD5}", "Fondue"),
+    e("\u{1F366}", "Soft Ice Cream"),
+    e("\u{1F367}", "Shaved Ice"),
+    e("\u{1F368}", "Ice Cream"),
+    e("\u{1F369}", "Doughnut"),
+    e("\u{1F36A}", "Cookie"),
+    e("\u{1F36B}", "Chocolate Bar"),
+    e("\u{1F36C}", "Candy"),
+    e("\u{1F36D}", "Lollipop"),
+    e("\u{1F36E}", "Custard"),
+    e("\u{1F36F}", "Honey Pot"),
+    e("\u{1F370}", "Shortcake"),
+    e("\u{1F382}", "Birthday Cake"),
+    e("\u{1F967}", "Pie"),
+    e("\u{1F9C1}", "Cupcake"),
+    e("\u{1F375}", "Teacup Without Handle"),
+    e("\u{1F376}", "Sake"),
+    e("\u{1F377}", "Wine Glass"),
+    e("\u{1F378}", "Cocktail Glass"),
+    e("\u{1F379}", "Tropical Drink"),
+    e("\u{1F37A}", "Beer Mug"),
+    e("\u{1F37B}", "Clinking Beer Mugs"),
+    e("\u{1F37C}", "Baby Bottle"),
+    e("\u{1F37E}", "Bottle with Popping Cork"),
+    e("\u{1F942}", "Clinking Glasses"),
+    e("\u{1F943}", "Tumbler Glass"),
+    e("\u{1F95B}", "Glass of Milk"),
+    e("\u{1F964}", "Cup with Straw"),
+    e("\u{1F9C3}", "Beverage Box"),
+    e("\u{1F9C9}", "Mate"),
+    e("\u{1F9CA}", "Ice"),
+    //e("\u{1F9CB}", "Bubble Tea"),
+    //e("\u{1FAD6}", "Teapot"),
+    e("\u{2615}", "Hot Beverage"),
+    e("\u{1F374}", "Fork and Knife"),
+    e("\u{1F37D}\u{FE0F}", "Fork and Knife with Plate"),
+    e("\u{1F3FA}", "Amphora"),
+    e("\u{1F52A}", "Kitchen Knife"),
+    e("\u{1F944}", "Spoon"),
+    e("\u{1F962}", "Chopsticks"));
+
+const nations = g(
+    "National Flags", "Flags of countries from around the world",
+    e("\u{1F1E6}\u{1F1E8}", "Flag: Ascension Island"),
+    e("\u{1F1E6}\u{1F1E9}", "Flag: Andorra"),
+    e("\u{1F1E6}\u{1F1EA}", "Flag: United Arab Emirates"),
+    e("\u{1F1E6}\u{1F1EB}", "Flag: Afghanistan"),
+    e("\u{1F1E6}\u{1F1EC}", "Flag: Antigua & Barbuda"),
+    e("\u{1F1E6}\u{1F1EE}", "Flag: Anguilla"),
+    e("\u{1F1E6}\u{1F1F1}", "Flag: Albania"),
+    e("\u{1F1E6}\u{1F1F2}", "Flag: Armenia"),
+    e("\u{1F1E6}\u{1F1F4}", "Flag: Angola"),
+    e("\u{1F1E6}\u{1F1F6}", "Flag: Antarctica"),
+    e("\u{1F1E6}\u{1F1F7}", "Flag: Argentina"),
+    e("\u{1F1E6}\u{1F1F8}", "Flag: American Samoa"),
+    e("\u{1F1E6}\u{1F1F9}", "Flag: Austria"),
+    e("\u{1F1E6}\u{1F1FA}", "Flag: Australia"),
+    e("\u{1F1E6}\u{1F1FC}", "Flag: Aruba"),
+    e("\u{1F1E6}\u{1F1FD}", "Flag: Åland Islands"),
+    e("\u{1F1E6}\u{1F1FF}", "Flag: Azerbaijan"),
+    e("\u{1F1E7}\u{1F1E6}", "Flag: Bosnia & Herzegovina"),
+    e("\u{1F1E7}\u{1F1E7}", "Flag: Barbados"),
+    e("\u{1F1E7}\u{1F1E9}", "Flag: Bangladesh"),
+    e("\u{1F1E7}\u{1F1EA}", "Flag: Belgium"),
+    e("\u{1F1E7}\u{1F1EB}", "Flag: Burkina Faso"),
+    e("\u{1F1E7}\u{1F1EC}", "Flag: Bulgaria"),
+    e("\u{1F1E7}\u{1F1ED}", "Flag: Bahrain"),
+    e("\u{1F1E7}\u{1F1EE}", "Flag: Burundi"),
+    e("\u{1F1E7}\u{1F1EF}", "Flag: Benin"),
+    e("\u{1F1E7}\u{1F1F1}", "Flag: St. Barthélemy"),
+    e("\u{1F1E7}\u{1F1F2}", "Flag: Bermuda"),
+    e("\u{1F1E7}\u{1F1F3}", "Flag: Brunei"),
+    e("\u{1F1E7}\u{1F1F4}", "Flag: Bolivia"),
+    e("\u{1F1E7}\u{1F1F6}", "Flag: Caribbean Netherlands"),
+    e("\u{1F1E7}\u{1F1F7}", "Flag: Brazil"),
+    e("\u{1F1E7}\u{1F1F8}", "Flag: Bahamas"),
+    e("\u{1F1E7}\u{1F1F9}", "Flag: Bhutan"),
+    e("\u{1F1E7}\u{1F1FB}", "Flag: Bouvet Island"),
+    e("\u{1F1E7}\u{1F1FC}", "Flag: Botswana"),
+    e("\u{1F1E7}\u{1F1FE}", "Flag: Belarus"),
+    e("\u{1F1E7}\u{1F1FF}", "Flag: Belize"),
+    e("\u{1F1E8}\u{1F1E6}", "Flag: Canada"),
+    e("\u{1F1E8}\u{1F1E8}", "Flag: Cocos (Keeling) Islands"),
+    e("\u{1F1E8}\u{1F1E9}", "Flag: Congo - Kinshasa"),
+    e("\u{1F1E8}\u{1F1EB}", "Flag: Central African Republic"),
+    e("\u{1F1E8}\u{1F1EC}", "Flag: Congo - Brazzaville"),
+    e("\u{1F1E8}\u{1F1ED}", "Flag: Switzerland"),
+    e("\u{1F1E8}\u{1F1EE}", "Flag: Côte d’Ivoire"),
+    e("\u{1F1E8}\u{1F1F0}", "Flag: Cook Islands"),
+    e("\u{1F1E8}\u{1F1F1}", "Flag: Chile"),
+    e("\u{1F1E8}\u{1F1F2}", "Flag: Cameroon"),
+    e("\u{1F1E8}\u{1F1F3}", "Flag: China"),
+    e("\u{1F1E8}\u{1F1F4}", "Flag: Colombia"),
+    e("\u{1F1E8}\u{1F1F5}", "Flag: Clipperton Island"),
+    e("\u{1F1E8}\u{1F1F7}", "Flag: Costa Rica"),
+    e("\u{1F1E8}\u{1F1FA}", "Flag: Cuba"),
+    e("\u{1F1E8}\u{1F1FB}", "Flag: Cape Verde"),
+    e("\u{1F1E8}\u{1F1FC}", "Flag: Curaçao"),
+    e("\u{1F1E8}\u{1F1FD}", "Flag: Christmas Island"),
+    e("\u{1F1E8}\u{1F1FE}", "Flag: Cyprus"),
+    e("\u{1F1E8}\u{1F1FF}", "Flag: Czechia"),
+    e("\u{1F1E9}\u{1F1EA}", "Flag: Germany"),
+    e("\u{1F1E9}\u{1F1EC}", "Flag: Diego Garcia"),
+    e("\u{1F1E9}\u{1F1EF}", "Flag: Djibouti"),
+    e("\u{1F1E9}\u{1F1F0}", "Flag: Denmark"),
+    e("\u{1F1E9}\u{1F1F2}", "Flag: Dominica"),
+    e("\u{1F1E9}\u{1F1F4}", "Flag: Dominican Republic"),
+    e("\u{1F1E9}\u{1F1FF}", "Flag: Algeria"),
+    e("\u{1F1EA}\u{1F1E6}", "Flag: Ceuta & Melilla"),
+    e("\u{1F1EA}\u{1F1E8}", "Flag: Ecuador"),
+    e("\u{1F1EA}\u{1F1EA}", "Flag: Estonia"),
+    e("\u{1F1EA}\u{1F1EC}", "Flag: Egypt"),
+    e("\u{1F1EA}\u{1F1ED}", "Flag: Western Sahara"),
+    e("\u{1F1EA}\u{1F1F7}", "Flag: Eritrea"),
+    e("\u{1F1EA}\u{1F1F8}", "Flag: Spain"),
+    e("\u{1F1EA}\u{1F1F9}", "Flag: Ethiopia"),
+    e("\u{1F1EA}\u{1F1FA}", "Flag: European Union"),
+    e("\u{1F1EB}\u{1F1EE}", "Flag: Finland"),
+    e("\u{1F1EB}\u{1F1EF}", "Flag: Fiji"),
+    e("\u{1F1EB}\u{1F1F0}", "Flag: Falkland Islands"),
+    e("\u{1F1EB}\u{1F1F2}", "Flag: Micronesia"),
+    e("\u{1F1EB}\u{1F1F4}", "Flag: Faroe Islands"),
+    e("\u{1F1EB}\u{1F1F7}", "Flag: France"),
+    e("\u{1F1EC}\u{1F1E6}", "Flag: Gabon"),
+    e("\u{1F1EC}\u{1F1E7}", "Flag: United Kingdom"),
+    e("\u{1F1EC}\u{1F1E9}", "Flag: Grenada"),
+    e("\u{1F1EC}\u{1F1EA}", "Flag: Georgia"),
+    e("\u{1F1EC}\u{1F1EB}", "Flag: French Guiana"),
+    e("\u{1F1EC}\u{1F1EC}", "Flag: Guernsey"),
+    e("\u{1F1EC}\u{1F1ED}", "Flag: Ghana"),
+    e("\u{1F1EC}\u{1F1EE}", "Flag: Gibraltar"),
+    e("\u{1F1EC}\u{1F1F1}", "Flag: Greenland"),
+    e("\u{1F1EC}\u{1F1F2}", "Flag: Gambia"),
+    e("\u{1F1EC}\u{1F1F3}", "Flag: Guinea"),
+    e("\u{1F1EC}\u{1F1F5}", "Flag: Guadeloupe"),
+    e("\u{1F1EC}\u{1F1F6}", "Flag: Equatorial Guinea"),
+    e("\u{1F1EC}\u{1F1F7}", "Flag: Greece"),
+    e("\u{1F1EC}\u{1F1F8}", "Flag: South Georgia & South Sandwich Islands"),
+    e("\u{1F1EC}\u{1F1F9}", "Flag: Guatemala"),
+    e("\u{1F1EC}\u{1F1FA}", "Flag: Guam"),
+    e("\u{1F1EC}\u{1F1FC}", "Flag: Guinea-Bissau"),
+    e("\u{1F1EC}\u{1F1FE}", "Flag: Guyana"),
+    e("\u{1F1ED}\u{1F1F0}", "Flag: Hong Kong SAR China"),
+    e("\u{1F1ED}\u{1F1F2}", "Flag: Heard & McDonald Islands"),
+    e("\u{1F1ED}\u{1F1F3}", "Flag: Honduras"),
+    e("\u{1F1ED}\u{1F1F7}", "Flag: Croatia"),
+    e("\u{1F1ED}\u{1F1F9}", "Flag: Haiti"),
+    e("\u{1F1ED}\u{1F1FA}", "Flag: Hungary"),
+    e("\u{1F1EE}\u{1F1E8}", "Flag: Canary Islands"),
+    e("\u{1F1EE}\u{1F1E9}", "Flag: Indonesia"),
+    e("\u{1F1EE}\u{1F1EA}", "Flag: Ireland"),
+    e("\u{1F1EE}\u{1F1F1}", "Flag: Israel"),
+    e("\u{1F1EE}\u{1F1F2}", "Flag: Isle of Man"),
+    e("\u{1F1EE}\u{1F1F3}", "Flag: India"),
+    e("\u{1F1EE}\u{1F1F4}", "Flag: British Indian Ocean Territory"),
+    e("\u{1F1EE}\u{1F1F6}", "Flag: Iraq"),
+    e("\u{1F1EE}\u{1F1F7}", "Flag: Iran"),
+    e("\u{1F1EE}\u{1F1F8}", "Flag: Iceland"),
+    e("\u{1F1EE}\u{1F1F9}", "Flag: Italy"),
+    e("\u{1F1EF}\u{1F1EA}", "Flag: Jersey"),
+    e("\u{1F1EF}\u{1F1F2}", "Flag: Jamaica"),
+    e("\u{1F1EF}\u{1F1F4}", "Flag: Jordan"),
+    e("\u{1F1EF}\u{1F1F5}", "Flag: Japan"),
+    e("\u{1F1F0}\u{1F1EA}", "Flag: Kenya"),
+    e("\u{1F1F0}\u{1F1EC}", "Flag: Kyrgyzstan"),
+    e("\u{1F1F0}\u{1F1ED}", "Flag: Cambodia"),
+    e("\u{1F1F0}\u{1F1EE}", "Flag: Kiribati"),
+    e("\u{1F1F0}\u{1F1F2}", "Flag: Comoros"),
+    e("\u{1F1F0}\u{1F1F3}", "Flag: St. Kitts & Nevis"),
+    e("\u{1F1F0}\u{1F1F5}", "Flag: North Korea"),
+    e("\u{1F1F0}\u{1F1F7}", "Flag: South Korea"),
+    e("\u{1F1F0}\u{1F1FC}", "Flag: Kuwait"),
+    e("\u{1F1F0}\u{1F1FE}", "Flag: Cayman Islands"),
+    e("\u{1F1F0}\u{1F1FF}", "Flag: Kazakhstan"),
+    e("\u{1F1F1}\u{1F1E6}", "Flag: Laos"),
+    e("\u{1F1F1}\u{1F1E7}", "Flag: Lebanon"),
+    e("\u{1F1F1}\u{1F1E8}", "Flag: St. Lucia"),
+    e("\u{1F1F1}\u{1F1EE}", "Flag: Liechtenstein"),
+    e("\u{1F1F1}\u{1F1F0}", "Flag: Sri Lanka"),
+    e("\u{1F1F1}\u{1F1F7}", "Flag: Liberia"),
+    e("\u{1F1F1}\u{1F1F8}", "Flag: Lesotho"),
+    e("\u{1F1F1}\u{1F1F9}", "Flag: Lithuania"),
+    e("\u{1F1F1}\u{1F1FA}", "Flag: Luxembourg"),
+    e("\u{1F1F1}\u{1F1FB}", "Flag: Latvia"),
+    e("\u{1F1F1}\u{1F1FE}", "Flag: Libya"),
+    e("\u{1F1F2}\u{1F1E6}", "Flag: Morocco"),
+    e("\u{1F1F2}\u{1F1E8}", "Flag: Monaco"),
+    e("\u{1F1F2}\u{1F1E9}", "Flag: Moldova"),
+    e("\u{1F1F2}\u{1F1EA}", "Flag: Montenegro"),
+    e("\u{1F1F2}\u{1F1EB}", "Flag: St. Martin"),
+    e("\u{1F1F2}\u{1F1EC}", "Flag: Madagascar"),
+    e("\u{1F1F2}\u{1F1ED}", "Flag: Marshall Islands"),
+    e("\u{1F1F2}\u{1F1F0}", "Flag: North Macedonia"),
+    e("\u{1F1F2}\u{1F1F1}", "Flag: Mali"),
+    e("\u{1F1F2}\u{1F1F2}", "Flag: Myanmar (Burma)"),
+    e("\u{1F1F2}\u{1F1F3}", "Flag: Mongolia"),
+    e("\u{1F1F2}\u{1F1F4}", "Flag: Macao Sar China"),
+    e("\u{1F1F2}\u{1F1F5}", "Flag: Northern Mariana Islands"),
+    e("\u{1F1F2}\u{1F1F6}", "Flag: Martinique"),
+    e("\u{1F1F2}\u{1F1F7}", "Flag: Mauritania"),
+    e("\u{1F1F2}\u{1F1F8}", "Flag: Montserrat"),
+    e("\u{1F1F2}\u{1F1F9}", "Flag: Malta"),
+    e("\u{1F1F2}\u{1F1FA}", "Flag: Mauritius"),
+    e("\u{1F1F2}\u{1F1FB}", "Flag: Maldives"),
+    e("\u{1F1F2}\u{1F1FC}", "Flag: Malawi"),
+    e("\u{1F1F2}\u{1F1FD}", "Flag: Mexico"),
+    e("\u{1F1F2}\u{1F1FE}", "Flag: Malaysia"),
+    e("\u{1F1F2}\u{1F1FF}", "Flag: Mozambique"),
+    e("\u{1F1F3}\u{1F1E6}", "Flag: Namibia"),
+    e("\u{1F1F3}\u{1F1E8}", "Flag: New Caledonia"),
+    e("\u{1F1F3}\u{1F1EA}", "Flag: Niger"),
+    e("\u{1F1F3}\u{1F1EB}", "Flag: Norfolk Island"),
+    e("\u{1F1F3}\u{1F1EC}", "Flag: Nigeria"),
+    e("\u{1F1F3}\u{1F1EE}", "Flag: Nicaragua"),
+    e("\u{1F1F3}\u{1F1F1}", "Flag: Netherlands"),
+    e("\u{1F1F3}\u{1F1F4}", "Flag: Norway"),
+    e("\u{1F1F3}\u{1F1F5}", "Flag: Nepal"),
+    e("\u{1F1F3}\u{1F1F7}", "Flag: Nauru"),
+    e("\u{1F1F3}\u{1F1FA}", "Flag: Niue"),
+    e("\u{1F1F3}\u{1F1FF}", "Flag: New Zealand"),
+    e("\u{1F1F4}\u{1F1F2}", "Flag: Oman"),
+    e("\u{1F1F5}\u{1F1E6}", "Flag: Panama"),
+    e("\u{1F1F5}\u{1F1EA}", "Flag: Peru"),
+    e("\u{1F1F5}\u{1F1EB}", "Flag: French Polynesia"),
+    e("\u{1F1F5}\u{1F1EC}", "Flag: Papua New Guinea"),
+    e("\u{1F1F5}\u{1F1ED}", "Flag: Philippines"),
+    e("\u{1F1F5}\u{1F1F0}", "Flag: Pakistan"),
+    e("\u{1F1F5}\u{1F1F1}", "Flag: Poland"),
+    e("\u{1F1F5}\u{1F1F2}", "Flag: St. Pierre & Miquelon"),
+    e("\u{1F1F5}\u{1F1F3}", "Flag: Pitcairn Islands"),
+    e("\u{1F1F5}\u{1F1F7}", "Flag: Puerto Rico"),
+    e("\u{1F1F5}\u{1F1F8}", "Flag: Palestinian Territories"),
+    e("\u{1F1F5}\u{1F1F9}", "Flag: Portugal"),
+    e("\u{1F1F5}\u{1F1FC}", "Flag: Palau"),
+    e("\u{1F1F5}\u{1F1FE}", "Flag: Paraguay"),
+    e("\u{1F1F6}\u{1F1E6}", "Flag: Qatar"),
+    e("\u{1F1F7}\u{1F1EA}", "Flag: Réunion"),
+    e("\u{1F1F7}\u{1F1F4}", "Flag: Romania"),
+    e("\u{1F1F7}\u{1F1F8}", "Flag: Serbia"),
+    e("\u{1F1F7}\u{1F1FA}", "Flag: Russia"),
+    e("\u{1F1F7}\u{1F1FC}", "Flag: Rwanda"),
+    e("\u{1F1F8}\u{1F1E6}", "Flag: Saudi Arabia"),
+    e("\u{1F1F8}\u{1F1E7}", "Flag: Solomon Islands"),
+    e("\u{1F1F8}\u{1F1E8}", "Flag: Seychelles"),
+    e("\u{1F1F8}\u{1F1E9}", "Flag: Sudan"),
+    e("\u{1F1F8}\u{1F1EA}", "Flag: Sweden"),
+    e("\u{1F1F8}\u{1F1EC}", "Flag: Singapore"),
+    e("\u{1F1F8}\u{1F1ED}", "Flag: St. Helena"),
+    e("\u{1F1F8}\u{1F1EE}", "Flag: Slovenia"),
+    e("\u{1F1F8}\u{1F1EF}", "Flag: Svalbard & Jan Mayen"),
+    e("\u{1F1F8}\u{1F1F0}", "Flag: Slovakia"),
+    e("\u{1F1F8}\u{1F1F1}", "Flag: Sierra Leone"),
+    e("\u{1F1F8}\u{1F1F2}", "Flag: San Marino"),
+    e("\u{1F1F8}\u{1F1F3}", "Flag: Senegal"),
+    e("\u{1F1F8}\u{1F1F4}", "Flag: Somalia"),
+    e("\u{1F1F8}\u{1F1F7}", "Flag: Suriname"),
+    e("\u{1F1F8}\u{1F1F8}", "Flag: South Sudan"),
+    e("\u{1F1F8}\u{1F1F9}", "Flag: São Tomé & Príncipe"),
+    e("\u{1F1F8}\u{1F1FB}", "Flag: El Salvador"),
+    e("\u{1F1F8}\u{1F1FD}", "Flag: Sint Maarten"),
+    e("\u{1F1F8}\u{1F1FE}", "Flag: Syria"),
+    e("\u{1F1F8}\u{1F1FF}", "Flag: Eswatini"),
+    e("\u{1F1F9}\u{1F1E6}", "Flag: Tristan Da Cunha"),
+    e("\u{1F1F9}\u{1F1E8}", "Flag: Turks & Caicos Islands"),
+    e("\u{1F1F9}\u{1F1E9}", "Flag: Chad"),
+    e("\u{1F1F9}\u{1F1EB}", "Flag: French Southern Territories"),
+    e("\u{1F1F9}\u{1F1EC}", "Flag: Togo"),
+    e("\u{1F1F9}\u{1F1ED}", "Flag: Thailand"),
+    e("\u{1F1F9}\u{1F1EF}", "Flag: Tajikistan"),
+    e("\u{1F1F9}\u{1F1F0}", "Flag: Tokelau"),
+    e("\u{1F1F9}\u{1F1F1}", "Flag: Timor-Leste"),
+    e("\u{1F1F9}\u{1F1F2}", "Flag: Turkmenistan"),
+    e("\u{1F1F9}\u{1F1F3}", "Flag: Tunisia"),
+    e("\u{1F1F9}\u{1F1F4}", "Flag: Tonga"),
+    e("\u{1F1F9}\u{1F1F7}", "Flag: Turkey"),
+    e("\u{1F1F9}\u{1F1F9}", "Flag: Trinidad & Tobago"),
+    e("\u{1F1F9}\u{1F1FB}", "Flag: Tuvalu"),
+    e("\u{1F1F9}\u{1F1FC}", "Flag: Taiwan"),
+    e("\u{1F1F9}\u{1F1FF}", "Flag: Tanzania"),
+    e("\u{1F1FA}\u{1F1E6}", "Flag: Ukraine"),
+    e("\u{1F1FA}\u{1F1EC}", "Flag: Uganda"),
+    e("\u{1F1FA}\u{1F1F2}", "Flag: U.S. Outlying Islands"),
+    e("\u{1F1FA}\u{1F1F3}", "Flag: United Nations"),
+    e("\u{1F1FA}\u{1F1F8}", "Flag: United States"),
+    e("\u{1F1FA}\u{1F1FE}", "Flag: Uruguay"),
+    e("\u{1F1FA}\u{1F1FF}", "Flag: Uzbekistan"),
+    e("\u{1F1FB}\u{1F1E6}", "Flag: Vatican City"),
+    e("\u{1F1FB}\u{1F1E8}", "Flag: St. Vincent & Grenadines"),
+    e("\u{1F1FB}\u{1F1EA}", "Flag: Venezuela"),
+    e("\u{1F1FB}\u{1F1EC}", "Flag: British Virgin Islands"),
+    e("\u{1F1FB}\u{1F1EE}", "Flag: U.S. Virgin Islands"),
+    e("\u{1F1FB}\u{1F1F3}", "Flag: Vietnam"),
+    e("\u{1F1FB}\u{1F1FA}", "Flag: Vanuatu"),
+    e("\u{1F1FC}\u{1F1EB}", "Flag: Wallis & Futuna"),
+    e("\u{1F1FC}\u{1F1F8}", "Flag: Samoa"),
+    e("\u{1F1FD}\u{1F1F0}", "Flag: Kosovo"),
+    e("\u{1F1FE}\u{1F1EA}", "Flag: Yemen"),
+    e("\u{1F1FE}\u{1F1F9}", "Flag: Mayotte"),
+    e("\u{1F1FF}\u{1F1E6}", "Flag: South Africa"),
+    e("\u{1F1FF}\u{1F1F2}", "Flag: Zambia"),
+    e("\u{1F1FF}\u{1F1FC}", "Flag: Zimbabwe"));
+
+const flags = g(
+    "Flags", "Basic flags",
+    e("\u{1F38C}", "Crossed Flags"),
+    e("\u{1F3C1}", "Chequered Flag"),
+    e("\u{1F3F3}\u{FE0F}", "White Flag"),
+    e("\u{1F3F3}\u{FE0F}\u{200D}\u{1F308}", "Rainbow Flag"),
+    //e("\u{1F3F3}\u{FE0F}\u{200D}\u{26A7}\u{FE0F}", "Transgender Flag"),
+    e("\u{1F3F4}", "Black Flag"),
+    //e("\u{1F3F4}\u{200D}\u{2620}\u{FE0F}", "Pirate Flag"),
+    e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}", "Flag: England"),
+    e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}", "Flag: Scotland"),
+    e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}", "Flag: Wales"),
+    e("\u{1F6A9}", "Triangular Flag"));
+
+const motorcycle = e("\u{1F3CD}\u{FE0F}", "Motorcycle");
+const racingCar = e("\u{1F3CE}\u{FE0F}", "Racing Car");
+const seat = e("\u{1F4BA}", "Seat");
+const helicopter = e("\u{1F681}", "Helicopter");
+const locomotive = e("\u{1F682}", "Locomotive");
+const railwayCar = e("\u{1F683}", "Railway Car");
+const highspeedTrain = e("\u{1F684}", "High-Speed Train");
+const bulletTrain = e("\u{1F685}", "Bullet Train");
+const train = e("\u{1F686}", "Train");
+const metro = e("\u{1F687}", "Metro");
+const lightRail = e("\u{1F688}", "Light Rail");
+const station = e("\u{1F689}", "Station");
+const tram = e("\u{1F68A}", "Tram");
+const tramCar = e("\u{1F68B}", "Tram Car");
+const bus = e("\u{1F68C}", "Bus");
+const oncomingBus = e("\u{1F68D}", "Oncoming Bus");
+const trolleyBus = e("\u{1F68E}", "Trolleybus");
+const busStop = e("\u{1F68F}", "Bus Stop");
+const miniBus = e("\u{1F690}", "Minibus");
+const ambulance = e("\u{1F691}", "Ambulance");
+const policeCar = e("\u{1F693}", "Police Car");
+const oncomingPoliceCar = e("\u{1F694}", "Oncoming Police Car");
+const taxi = e("\u{1F695}", "Taxi");
+const oncomingTaxi = e("\u{1F696}", "Oncoming Taxi");
+const automobile = e("\u{1F697}", "Automobile");
+const oncomingAutomobile = e("\u{1F698}", "Oncoming Automobile");
+const sportUtilityVehicle = e("\u{1F699}", "Sport Utility Vehicle");
+const deliveryTruck = e("\u{1F69A}", "Delivery Truck");
+const articulatedLorry = e("\u{1F69B}", "Articulated Lorry");
+const tractor = e("\u{1F69C}", "Tractor");
+const monorail = e("\u{1F69D}", "Monorail");
+const mountainRailway = e("\u{1F69E}", "Mountain Railway");
+const suspensionRailway = e("\u{1F69F}", "Suspension Railway");
+const mountainCableway = e("\u{1F6A0}", "Mountain Cableway");
+const aerialTramway = e("\u{1F6A1}", "Aerial Tramway");
+const ship = e("\u{1F6A2}", "Ship");
+const speedBoat = e("\u{1F6A4}", "Speedboat");
+const horizontalTrafficLight = e("\u{1F6A5}", "Horizontal Traffic Light");
+const verticalTrafficLight = e("\u{1F6A6}", "Vertical Traffic Light");
+const construction = e("\u{1F6A7}", "Construction");
+const policeCarLight = e("\u{1F6A8}", "Police Car Light");
+const bicycle = e("\u{1F6B2}", "Bicycle");
+const stopSign = e("\u{1F6D1}", "Stop Sign");
+const oilDrum = e("\u{1F6E2}\u{FE0F}", "Oil Drum");
+const motorway = e("\u{1F6E3}\u{FE0F}", "Motorway");
+const railwayTrack = e("\u{1F6E4}\u{FE0F}", "Railway Track");
+const motorBoat = e("\u{1F6E5}\u{FE0F}", "Motor Boat");
+const smallAirplane = e("\u{1F6E9}\u{FE0F}", "Small Airplane");
+const airplaneDeparture = e("\u{1F6EB}", "Airplane Departure");
+const airplaneArrival = e("\u{1F6EC}", "Airplane Arrival");
+const satellite = e("\u{1F6F0}\u{FE0F}", "Satellite");
+const passengerShip = e("\u{1F6F3}\u{FE0F}", "Passenger Ship");
+const kickScooter = e("\u{1F6F4}", "Kick Scooter");
+const motorScooter = e("\u{1F6F5}", "Motor Scooter");
+const canoe = e("\u{1F6F6}", "Canoe");
+const flyingSaucer = e("\u{1F6F8}", "Flying Saucer");
+const skateboard = e("\u{1F6F9}", "Skateboard");
+const autoRickshaw = e("\u{1F6FA}", "Auto Rickshaw");
+//export const pickupTruck = e("\u{1F6FB}", "Pickup Truck");
+//export const rollerSkate = e("\u{1F6FC}", "Roller Skate");
+const parachute = e("\u{1FA82}", "Parachute");
+const anchor = e("\u{2693}", "Anchor");
+const ferry = e("\u{26F4}\u{FE0F}", "Ferry");
+const sailboat = e("\u{26F5}", "Sailboat");
+const fuelPump = e("\u{26FD}", "Fuel Pump");
+const vehicles = g(
+    "Vehicles", "Things that go",
+    motorcycle,
+    racingCar,
+    seat,
+    rocket,
+    helicopter,
+    locomotive,
+    railwayCar,
+    highspeedTrain,
+    bulletTrain,
+    train,
+    metro,
+    lightRail,
+    station,
+    tram,
+    tramCar,
+    bus,
+    oncomingBus,
+    trolleyBus,
+    busStop,
+    miniBus,
+    ambulance,
+    fireEngine,
+    taxi,
+    oncomingTaxi,
+    automobile,
+    oncomingAutomobile,
+    sportUtilityVehicle,
+    deliveryTruck,
+    articulatedLorry,
+    tractor,
+    monorail,
+    mountainRailway,
+    suspensionRailway,
+    mountainCableway,
+    aerialTramway,
+    ship,
+    speedBoat,
+    horizontalTrafficLight,
+    verticalTrafficLight,
+    construction,
+    bicycle,
+    stopSign,
+    oilDrum,
+    motorway,
+    railwayTrack,
+    motorBoat,
+    smallAirplane,
+    airplaneDeparture,
+    airplaneArrival,
+    satellite,
+    passengerShip,
+    kickScooter,
+    motorScooter,
+    canoe,
+    flyingSaucer,
+    skateboard,
+    autoRickshaw,
+    //pickupTruck,
+    //rollerSkate,
+    motorizedWheelchair,
+    manualWheelchair,
+    parachute,
+    anchor,
+    ferry,
+    sailboat,
+    fuelPump,
+    airplane);
+
+const bloodTypes = g(
+    "Blood Types", "Blood types",
+    e("\u{1F170}", "A Button (Blood Type)"),
+    e("\u{1F171}", "B Button (Blood Type)"),
+    e("\u{1F17E}", "O Button (Blood Type)"),
+    e("\u{1F18E}", "AB Button (Blood Type)"));
+
+const regionIndicators = g(
+    "Regions", "Region indicators",
+    e("\u{1F1E6}", "Regional Indicator Symbol Letter A"),
+    e("\u{1F1E7}", "Regional Indicator Symbol Letter B"),
+    e("\u{1F1E8}", "Regional Indicator Symbol Letter C"),
+    e("\u{1F1E9}", "Regional Indicator Symbol Letter D"),
+    e("\u{1F1EA}", "Regional Indicator Symbol Letter E"),
+    e("\u{1F1EB}", "Regional Indicator Symbol Letter F"),
+    e("\u{1F1EC}", "Regional Indicator Symbol Letter G"),
+    e("\u{1F1ED}", "Regional Indicator Symbol Letter H"),
+    e("\u{1F1EE}", "Regional Indicator Symbol Letter I"),
+    e("\u{1F1EF}", "Regional Indicator Symbol Letter J"),
+    e("\u{1F1F0}", "Regional Indicator Symbol Letter K"),
+    e("\u{1F1F1}", "Regional Indicator Symbol Letter L"),
+    e("\u{1F1F2}", "Regional Indicator Symbol Letter M"),
+    e("\u{1F1F3}", "Regional Indicator Symbol Letter N"),
+    e("\u{1F1F4}", "Regional Indicator Symbol Letter O"),
+    e("\u{1F1F5}", "Regional Indicator Symbol Letter P"),
+    e("\u{1F1F6}", "Regional Indicator Symbol Letter Q"),
+    e("\u{1F1F7}", "Regional Indicator Symbol Letter R"),
+    e("\u{1F1F8}", "Regional Indicator Symbol Letter S"),
+    e("\u{1F1F9}", "Regional Indicator Symbol Letter T"),
+    e("\u{1F1FA}", "Regional Indicator Symbol Letter U"),
+    e("\u{1F1FB}", "Regional Indicator Symbol Letter V"),
+    e("\u{1F1FC}", "Regional Indicator Symbol Letter W"),
+    e("\u{1F1FD}", "Regional Indicator Symbol Letter X"),
+    e("\u{1F1FE}", "Regional Indicator Symbol Letter Y"),
+    e("\u{1F1FF}", "Regional Indicator Symbol Letter Z"));
+
+const japanese = g(
+    "Japanese", "Japanse symbology",
+    e("\u{1F530}", "Japanese Symbol for Beginner"),
+    e("\u{1F201}", "Japanese “Here” Button"),
+    e("\u{1F202}\u{FE0F}", "Japanese “Service Charge” Button"),
+    e("\u{1F21A}", "Japanese “Free of Charge” Button"),
+    e("\u{1F22F}", "Japanese “Reserved” Button"),
+    e("\u{1F232}", "Japanese “Prohibited” Button"),
+    e("\u{1F233}", "Japanese “Vacancy” Button"),
+    e("\u{1F234}", "Japanese “Passing Grade” Button"),
+    e("\u{1F235}", "Japanese “No Vacancy” Button"),
+    e("\u{1F236}", "Japanese “Not Free of Charge” Button"),
+    e("\u{1F237}\u{FE0F}", "Japanese “Monthly Amount” Button"),
+    e("\u{1F238}", "Japanese “Application” Button"),
+    e("\u{1F239}", "Japanese “Discount” Button"),
+    e("\u{1F23A}", "Japanese “Open for Business” Button"),
+    e("\u{1F250}", "Japanese “Bargain” Button"),
+    e("\u{1F251}", "Japanese “Acceptable” Button"),
+    e("\u{3297}\u{FE0F}", "Japanese “Congratulations” Button"),
+    e("\u{3299}\u{FE0F}", "Japanese “Secret” Button"));
+
+const clocks = g(
+    "Clocks", "Time-keeping pieces",
+    e("\u{1F550}", "One O’Clock"),
+    e("\u{1F551}", "Two O’Clock"),
+    e("\u{1F552}", "Three O’Clock"),
+    e("\u{1F553}", "Four O’Clock"),
+    e("\u{1F554}", "Five O’Clock"),
+    e("\u{1F555}", "Six O’Clock"),
+    e("\u{1F556}", "Seven O’Clock"),
+    e("\u{1F557}", "Eight O’Clock"),
+    e("\u{1F558}", "Nine O’Clock"),
+    e("\u{1F559}", "Ten O’Clock"),
+    e("\u{1F55A}", "Eleven O’Clock"),
+    e("\u{1F55B}", "Twelve O’Clock"),
+    e("\u{1F55C}", "One-Thirty"),
+    e("\u{1F55D}", "Two-Thirty"),
+    e("\u{1F55E}", "Three-Thirty"),
+    e("\u{1F55F}", "Four-Thirty"),
+    e("\u{1F560}", "Five-Thirty"),
+    e("\u{1F561}", "Six-Thirty"),
+    e("\u{1F562}", "Seven-Thirty"),
+    e("\u{1F563}", "Eight-Thirty"),
+    e("\u{1F564}", "Nine-Thirty"),
+    e("\u{1F565}", "Ten-Thirty"),
+    e("\u{1F566}", "Eleven-Thirty"),
+    e("\u{1F567}", "Twelve-Thirty"),
+    e("\u{1F570}\u{FE0F}", "Mantelpiece Clock"),
+    e("\u{231A}", "Watch"),
+    e("\u{23F0}", "Alarm Clock"),
+    e("\u{23F1}\u{FE0F}", "Stopwatch"),
+    e("\u{23F2}\u{FE0F}", "Timer Clock"),
+    e("\u{231B}", "Hourglass Done"),
+    e("\u{23F3}", "Hourglass Not Done"));
+
+const clockwiseVerticalArrows = e("\u{1F503}\u{FE0F}", "Clockwise Vertical Arrows");
+const counterclockwiseArrowsButton = e("\u{1F504}\u{FE0F}", "Counterclockwise Arrows Button");
+const leftRightArrow = e("\u{2194}\u{FE0F}", "Left-Right Arrow");
+const upDownArrow = e("\u{2195}\u{FE0F}", "Up-Down Arrow");
+const upLeftArrow = e("\u{2196}\u{FE0F}", "Up-Left Arrow");
+const upRightArrow = e("\u{2197}\u{FE0F}", "Up-Right Arrow");
+const downRightArrow = e("\u{2198}", "Down-Right Arrow");
+const downRightArrowText = e("\u{2198}\u{FE0E}", "Down-Right Arrow");
+const downRightArrowEmoji = e("\u{2198}\u{FE0F}", "Down-Right Arrow");
+const downLeftArrow = e("\u{2199}\u{FE0F}", "Down-Left Arrow");
+const rightArrowCurvingLeft = e("\u{21A9}\u{FE0F}", "Right Arrow Curving Left");
+const leftArrowCurvingRight = e("\u{21AA}\u{FE0F}", "Left Arrow Curving Right");
+const rightArrow = e("\u{27A1}\u{FE0F}", "Right Arrow");
+const rightArrowCurvingUp = e("\u{2934}\u{FE0F}", "Right Arrow Curving Up");
+const rightArrowCurvingDown = e("\u{2935}\u{FE0F}", "Right Arrow Curving Down");
+const leftArrow = e("\u{2B05}\u{FE0F}", "Left Arrow");
+const upArrow = e("\u{2B06}\u{FE0F}", "Up Arrow");
+const downArrow = e("\u{2B07}\u{FE0F}", "Down Arrow");
+const arrows = g(
+    "Arrows", "Arrows pointing in different directions",
+    clockwiseVerticalArrows,
+    counterclockwiseArrowsButton,
+    leftRightArrow,
+    upDownArrow,
+    upLeftArrow,
+    upRightArrow,
+    downRightArrowEmoji,
+    downLeftArrow,
+    rightArrowCurvingLeft,
+    leftArrowCurvingRight,
+    rightArrow,
+    rightArrowCurvingUp,
+    rightArrowCurvingDown,
+    leftArrow,
+    upArrow,
+    downArrow);
+
+const shapes = g(
+    "Shapes", "Colored shapes",
+    e("\u{1F534}", "Red Circle"),
+    e("\u{1F535}", "Blue Circle"),
+    e("\u{1F536}", "Large Orange Diamond"),
+    e("\u{1F537}", "Large Blue Diamond"),
+    e("\u{1F538}", "Small Orange Diamond"),
+    e("\u{1F539}", "Small Blue Diamond"),
+    e("\u{1F53A}", "Red Triangle Pointed Up"),
+    e("\u{1F53B}", "Red Triangle Pointed Down"),
+    e("\u{1F7E0}", "Orange Circle"),
+    e("\u{1F7E1}", "Yellow Circle"),
+    e("\u{1F7E2}", "Green Circle"),
+    e("\u{1F7E3}", "Purple Circle"),
+    e("\u{1F7E4}", "Brown Circle"),
+    e("\u{2B55}", "Hollow Red Circle"),
+    e("\u{26AA}", "White Circle"),
+    e("\u{26AB}", "Black Circle"),
+    e("\u{1F7E5}", "Red Square"),
+    e("\u{1F7E6}", "Blue Square"),
+    e("\u{1F7E7}", "Orange Square"),
+    e("\u{1F7E8}", "Yellow Square"),
+    e("\u{1F7E9}", "Green Square"),
+    e("\u{1F7EA}", "Purple Square"),
+    e("\u{1F7EB}", "Brown Square"),
+    e("\u{1F532}", "Black Square Button"),
+    e("\u{1F533}", "White Square Button"),
+    e("\u{25AA}\u{FE0F}", "Black Small Square"),
+    e("\u{25AB}\u{FE0F}", "White Small Square"),
+    e("\u{25FD}", "White Medium-Small Square"),
+    e("\u{25FE}", "Black Medium-Small Square"),
+    e("\u{25FB}\u{FE0F}", "White Medium Square"),
+    e("\u{25FC}\u{FE0F}", "Black Medium Square"),
+    e("\u{2B1B}", "Black Large Square"),
+    e("\u{2B1C}", "White Large Square"),
+    e("\u{2B50}", "Star"),
+    e("\u{1F4A0}", "Diamond with a Dot"));
+
+const clearButton = e("\u{1F191}", "CL Button");
+const coolButton = e("\u{1F192}", "Cool Button");
+const freeButton = e("\u{1F193}", "Free Button");
+const idButton = e("\u{1F194}", "ID Button");
+const newButton = e("\u{1F195}", "New Button");
+const ngButton = e("\u{1F196}", "NG Button");
+const okButton = e("\u{1F197}", "OK Button");
+const sosButton = e("\u{1F198}", "SOS Button");
+const upButton = e("\u{1F199}", "Up! Button");
+const vsButton = e("\u{1F19A}", "Vs Button");
+const radioButton = e("\u{1F518}", "Radio Button");
+const backArrow = e("\u{1F519}", "Back Arrow");
+const endArrow = e("\u{1F51A}", "End Arrow");
+const onArrow = e("\u{1F51B}", "On! Arrow");
+const soonArrow = e("\u{1F51C}", "Soon Arrow");
+const topArrow = e("\u{1F51D}", "Top Arrow");
+const checkBoxWithCheck = e("\u{2611}\u{FE0F}", "Check Box with Check");
+const inputLatinUppercase = e("\u{1F520}", "Input Latin Uppercase");
+const inputLatinLowercase = e("\u{1F521}", "Input Latin Lowercase");
+const inputNumbers = e("\u{1F522}", "Input Numbers");
+const inputSymbols = e("\u{1F523}", "Input Symbols");
+const inputLatinLetters = e("\u{1F524}", "Input Latin Letters");
+const shuffleTracksButton = e("\u{1F500}", "Shuffle Tracks Button");
+const repeatButton = e("\u{1F501}", "Repeat Button");
+const repeatSingleButton = e("\u{1F502}", "Repeat Single Button");
+const upwardsButton = e("\u{1F53C}", "Upwards Button");
+const downwardsButton = e("\u{1F53D}", "Downwards Button");
+const playButton = e("\u{25B6}\u{FE0F}", "Play Button");
+const reverseButton = e("\u{25C0}\u{FE0F}", "Reverse Button");
+const ejectButton = e("\u{23CF}\u{FE0F}", "Eject Button");
+const fastForwardButton = e("\u{23E9}", "Fast-Forward Button");
+const fastReverseButton = e("\u{23EA}", "Fast Reverse Button");
+const fastUpButton = e("\u{23EB}", "Fast Up Button");
+const fastDownButton = e("\u{23EC}", "Fast Down Button");
+const nextTrackButton = e("\u{23ED}\u{FE0F}", "Next Track Button");
+const lastTrackButton = e("\u{23EE}\u{FE0F}", "Last Track Button");
+const playOrPauseButton = e("\u{23EF}\u{FE0F}", "Play or Pause Button");
+const pauseButton = e("\u{23F8}\u{FE0F}", "Pause Button");
+const stopButton = e("\u{23F9}\u{FE0F}", "Stop Button");
+const recordButton = e("\u{23FA}\u{FE0F}", "Record Button");
+const buttons = g(
+    "Buttons", "Buttons",
+    clearButton,
+    coolButton,
+    freeButton,
+    idButton,
+    newButton,
+    ngButton,
+    okButton,
+    sosButton,
+    upButton,
+    vsButton,
+    radioButton,
+    backArrow,
+    endArrow,
+    onArrow,
+    soonArrow,
+    topArrow,
+    checkBoxWithCheck,
+    inputLatinUppercase,
+    inputLatinLowercase,
+    inputNumbers,
+    inputSymbols,
+    inputLatinLetters,
+    shuffleTracksButton,
+    repeatButton,
+    repeatSingleButton,
+    upwardsButton,
+    downwardsButton,
+    playButton,
+    pauseButton,
+    reverseButton,
+    ejectButton,
+    fastForwardButton,
+    fastReverseButton,
+    fastUpButton,
+    fastDownButton,
+    nextTrackButton,
+    lastTrackButton,
+    playOrPauseButton,
+    pauseButton,
+    stopButton,
+    recordButton);
+
+const zodiac = g(
+    "Zodiac", "The symbology of astrology",
+    e("\u{2648}", "Aries"),
+    e("\u{2649}", "Taurus"),
+    e("\u{264A}", "Gemini"),
+    e("\u{264B}", "Cancer"),
+    e("\u{264C}", "Leo"),
+    e("\u{264D}", "Virgo"),
+    e("\u{264E}", "Libra"),
+    e("\u{264F}", "Scorpio"),
+    e("\u{2650}", "Sagittarius"),
+    e("\u{2651}", "Capricorn"),
+    e("\u{2652}", "Aquarius"),
+    e("\u{2653}", "Pisces"),
+    e("\u{26CE}", "Ophiuchus"));
+
+const numbers = g(
+    "Numbers", "Numbers",
+    e("\u{30}\u{FE0F}", "Digit Zero"),
+    e("\u{31}\u{FE0F}", "Digit One"),
+    e("\u{32}\u{FE0F}", "Digit Two"),
+    e("\u{33}\u{FE0F}", "Digit Three"),
+    e("\u{34}\u{FE0F}", "Digit Four"),
+    e("\u{35}\u{FE0F}", "Digit Five"),
+    e("\u{36}\u{FE0F}", "Digit Six"),
+    e("\u{37}\u{FE0F}", "Digit Seven"),
+    e("\u{38}\u{FE0F}", "Digit Eight"),
+    e("\u{39}\u{FE0F}", "Digit Nine"),
+    e("\u{2A}\u{FE0F}", "Asterisk"),
+    e("\u{23}\u{FE0F}", "Number Sign"),
+    e("\u{30}\u{FE0F}\u{20E3}", "Keycap Digit Zero"),
+    e("\u{31}\u{FE0F}\u{20E3}", "Keycap Digit One"),
+    e("\u{32}\u{FE0F}\u{20E3}", "Keycap Digit Two"),
+    e("\u{33}\u{FE0F}\u{20E3}", "Keycap Digit Three"),
+    e("\u{34}\u{FE0F}\u{20E3}", "Keycap Digit Four"),
+    e("\u{35}\u{FE0F}\u{20E3}", "Keycap Digit Five"),
+    e("\u{36}\u{FE0F}\u{20E3}", "Keycap Digit Six"),
+    e("\u{37}\u{FE0F}\u{20E3}", "Keycap Digit Seven"),
+    e("\u{38}\u{FE0F}\u{20E3}", "Keycap Digit Eight"),
+    e("\u{39}\u{FE0F}\u{20E3}", "Keycap Digit Nine"),
+    e("\u{2A}\u{FE0F}\u{20E3}", "Keycap Asterisk"),
+    e("\u{23}\u{FE0F}\u{20E3}", "Keycap Number Sign"),
+    e("\u{1F51F}", "Keycap: 10"));
+
+const tagPlusSign = e("\u{E002B}", "Tag Plus Sign");
+const tagMinusHyphen = e("\u{E002D}", "Tag Hyphen-Minus");
+const tags = g(
+    "Tags", "Tags",
+    e("\u{E0020}", "Tag Space"),
+    e("\u{E0021}", "Tag Exclamation Mark"),
+    e("\u{E0022}", "Tag Quotation Mark"),
+    e("\u{E0023}", "Tag Number Sign"),
+    e("\u{E0024}", "Tag Dollar Sign"),
+    e("\u{E0025}", "Tag Percent Sign"),
+    e("\u{E0026}", "Tag Ampersand"),
+    e("\u{E0027}", "Tag Apostrophe"),
+    e("\u{E0028}", "Tag Left Parenthesis"),
+    e("\u{E0029}", "Tag Right Parenthesis"),
+    e("\u{E002A}", "Tag Asterisk"),
+    tagPlusSign,
+    e("\u{E002C}", "Tag Comma"),
+    tagMinusHyphen,
+    e("\u{E002E}", "Tag Full Stop"),
+    e("\u{E002F}", "Tag Solidus"),
+    e("\u{E0030}", "Tag Digit Zero"),
+    e("\u{E0031}", "Tag Digit One"),
+    e("\u{E0032}", "Tag Digit Two"),
+    e("\u{E0033}", "Tag Digit Three"),
+    e("\u{E0034}", "Tag Digit Four"),
+    e("\u{E0035}", "Tag Digit Five"),
+    e("\u{E0036}", "Tag Digit Six"),
+    e("\u{E0037}", "Tag Digit Seven"),
+    e("\u{E0038}", "Tag Digit Eight"),
+    e("\u{E0039}", "Tag Digit Nine"),
+    e("\u{E003A}", "Tag Colon"),
+    e("\u{E003B}", "Tag Semicolon"),
+    e("\u{E003C}", "Tag Less-Than Sign"),
+    e("\u{E003D}", "Tag Equals Sign"),
+    e("\u{E003E}", "Tag Greater-Than Sign"),
+    e("\u{E003F}", "Tag Question Mark"),
+    e("\u{E0040}", "Tag Commercial at"),
+    e("\u{E0041}", "Tag Latin Capital Letter a"),
+    e("\u{E0042}", "Tag Latin Capital Letter B"),
+    e("\u{E0043}", "Tag Latin Capital Letter C"),
+    e("\u{E0044}", "Tag Latin Capital Letter D"),
+    e("\u{E0045}", "Tag Latin Capital Letter E"),
+    e("\u{E0046}", "Tag Latin Capital Letter F"),
+    e("\u{E0047}", "Tag Latin Capital Letter G"),
+    e("\u{E0048}", "Tag Latin Capital Letter H"),
+    e("\u{E0049}", "Tag Latin Capital Letter I"),
+    e("\u{E004A}", "Tag Latin Capital Letter J"),
+    e("\u{E004B}", "Tag Latin Capital Letter K"),
+    e("\u{E004C}", "Tag Latin Capital Letter L"),
+    e("\u{E004D}", "Tag Latin Capital Letter M"),
+    e("\u{E004E}", "Tag Latin Capital Letter N"),
+    e("\u{E004F}", "Tag Latin Capital Letter O"),
+    e("\u{E0050}", "Tag Latin Capital Letter P"),
+    e("\u{E0051}", "Tag Latin Capital Letter Q"),
+    e("\u{E0052}", "Tag Latin Capital Letter R"),
+    e("\u{E0053}", "Tag Latin Capital Letter S"),
+    e("\u{E0054}", "Tag Latin Capital Letter T"),
+    e("\u{E0055}", "Tag Latin Capital Letter U"),
+    e("\u{E0056}", "Tag Latin Capital Letter V"),
+    e("\u{E0057}", "Tag Latin Capital Letter W"),
+    e("\u{E0058}", "Tag Latin Capital Letter X"),
+    e("\u{E0059}", "Tag Latin Capital Letter Y"),
+    e("\u{E005A}", "Tag Latin Capital Letter Z"),
+    e("\u{E005B}", "Tag Left Square Bracket"),
+    e("\u{E005C}", "Tag Reverse Solidus"),
+    e("\u{E005D}", "Tag Right Square Bracket"),
+    e("\u{E005E}", "Tag Circumflex Accent"),
+    e("\u{E005F}", "Tag Low Line"),
+    e("\u{E0060}", "Tag Grave Accent"),
+    e("\u{E0061}", "Tag Latin Small Letter a"),
+    e("\u{E0062}", "Tag Latin Small Letter B"),
+    e("\u{E0063}", "Tag Latin Small Letter C"),
+    e("\u{E0064}", "Tag Latin Small Letter D"),
+    e("\u{E0065}", "Tag Latin Small Letter E"),
+    e("\u{E0066}", "Tag Latin Small Letter F"),
+    e("\u{E0067}", "Tag Latin Small Letter G"),
+    e("\u{E0068}", "Tag Latin Small Letter H"),
+    e("\u{E0069}", "Tag Latin Small Letter I"),
+    e("\u{E006A}", "Tag Latin Small Letter J"),
+    e("\u{E006B}", "Tag Latin Small Letter K"),
+    e("\u{E006C}", "Tag Latin Small Letter L"),
+    e("\u{E006D}", "Tag Latin Small Letter M"),
+    e("\u{E006E}", "Tag Latin Small Letter N"),
+    e("\u{E006F}", "Tag Latin Small Letter O"),
+    e("\u{E0070}", "Tag Latin Small Letter P"),
+    e("\u{E0071}", "Tag Latin Small Letter Q"),
+    e("\u{E0072}", "Tag Latin Small Letter R"),
+    e("\u{E0073}", "Tag Latin Small Letter S"),
+    e("\u{E0074}", "Tag Latin Small Letter T"),
+    e("\u{E0075}", "Tag Latin Small Letter U"),
+    e("\u{E0076}", "Tag Latin Small Letter V"),
+    e("\u{E0077}", "Tag Latin Small Letter W"),
+    e("\u{E0078}", "Tag Latin Small Letter X"),
+    e("\u{E0079}", "Tag Latin Small Letter Y"),
+    e("\u{E007A}", "Tag Latin Small Letter Z"),
+    e("\u{E007B}", "Tag Left Curly Bracket"),
+    e("\u{E007C}", "Tag Vertical Line"),
+    e("\u{E007D}", "Tag Right Curly Bracket"),
+    e("\u{E007E}", "Tag Tilde"),
+    e("\u{E007F}", "Cancel Tag"));
+
+const math = g(
+    "Math", "Math",
+    e("\u{2716}\u{FE0F}", "Multiply"),
+    e("\u{2795}", "Plus"),
+    e("\u{2796}", "Minus"),
+    e("\u{2797}", "Divide"));
+
+const games = g(
+    "Games", "Games",
+    e("\u{2660}\u{FE0F}", "Spade Suit"),
+    e("\u{2663}\u{FE0F}", "Club Suit"),
+    e("\u{2665}\u{FE0F}", "Heart Suit", { color: "red" }),
+    e("\u{2666}\u{FE0F}", "Diamond Suit", { color: "red" }),
+    e("\u{1F004}", "Mahjong Red Dragon"),
+    e("\u{1F0CF}", "Joker"),
+    e("\u{1F3AF}", "Direct Hit"),
+    e("\u{1F3B0}", "Slot Machine"),
+    e("\u{1F3B1}", "Pool 8 Ball"),
+    e("\u{1F3B2}", "Game Die"),
+    e("\u{1F3B3}", "Bowling"),
+    e("\u{1F3B4}", "Flower Playing Cards"),
+    e("\u{1F9E9}", "Puzzle Piece"),
+    e("\u{265F}\u{FE0F}", "Chess Pawn"),
+    e("\u{1FA80}", "Yo-Yo"),
+    //e("\u{1FA83}", "Boomerang"),
+    //e("\u{1FA86}", "Nesting Dolls"),
+    e("\u{1FA81}", "Kite"));
+
+const sportsEquipment = g(
+    "Sports Equipment", "Sports equipment",
+    e("\u{1F3BD}", "Running Shirt"),
+    e("\u{1F3BE}", "Tennis"),
+    e("\u{1F3BF}", "Skis"),
+    e("\u{1F3C0}", "Basketball"),
+    e("\u{1F3C5}", "Sports Medal"),
+    e("\u{1F3C6}", "Trophy"),
+    e("\u{1F3C8}", "American Football"),
+    e("\u{1F3C9}", "Rugby Football"),
+    e("\u{1F3CF}", "Cricket Game"),
+    e("\u{1F3D0}", "Volleyball"),
+    e("\u{1F3D1}", "Field Hockey"),
+    e("\u{1F3D2}", "Ice Hockey"),
+    e("\u{1F3D3}", "Ping Pong"),
+    e("\u{1F3F8}", "Badminton"),
+    e("\u{1F6F7}", "Sled"),
+    e("\u{1F945}", "Goal Net"),
+    e("\u{1F947}", "1st Place Medal"),
+    e("\u{1F948}", "2nd Place Medal"),
+    e("\u{1F949}", "3rd Place Medal"),
+    e("\u{1F94A}", "Boxing Glove"),
+    e("\u{1F94C}", "Curling Stone"),
+    e("\u{1F94D}", "Lacrosse"),
+    e("\u{1F94E}", "Softball"),
+    e("\u{1F94F}", "Flying Disc"),
+    e("\u{26BD}", "Soccer Ball"),
+    e("\u{26BE}", "Baseball"),
+    e("\u{26F8}\u{FE0F}", "Ice Skate"));
+
+const clothing = g(
+    "Clothing", "Clothing",
+    e("\u{1F3A9}", "Top Hat"),
+    e("\u{1F93F}", "Diving Mask"),
+    e("\u{1F452}", "Woman’s Hat"),
+    e("\u{1F453}", "Glasses"),
+    e("\u{1F576}\u{FE0F}", "Sunglasses"),
+    e("\u{1F454}", "Necktie"),
+    e("\u{1F455}", "T-Shirt"),
+    e("\u{1F456}", "Jeans"),
+    e("\u{1F457}", "Dress"),
+    e("\u{1F458}", "Kimono"),
+    e("\u{1F459}", "Bikini"),
+    e("\u{1F45A}", "Woman’s Clothes"),
+    e("\u{1F45B}", "Purse"),
+    e("\u{1F45C}", "Handbag"),
+    e("\u{1F45D}", "Clutch Bag"),
+    e("\u{1F45E}", "Man’s Shoe"),
+    e("\u{1F45F}", "Running Shoe"),
+    e("\u{1F460}", "High-Heeled Shoe"),
+    e("\u{1F461}", "Woman’s Sandal"),
+    e("\u{1F462}", "Woman’s Boot"),
+    e("\u{1F94B}", "Martial Arts Uniform"),
+    e("\u{1F97B}", "Sari"),
+    e("\u{1F97C}", "Lab Coat"),
+    e("\u{1F97D}", "Goggles"),
+    e("\u{1F97E}", "Hiking Boot"),
+    e("\u{1F97F}", "Flat Shoe"),
+    whiteCane,
+    e("\u{1F9BA}", "Safety Vest"),
+    e("\u{1F9E2}", "Billed Cap"),
+    e("\u{1F9E3}", "Scarf"),
+    e("\u{1F9E4}", "Gloves"),
+    e("\u{1F9E5}", "Coat"),
+    e("\u{1F9E6}", "Socks"),
+    e("\u{1F9FF}", "Nazar Amulet"),
+    e("\u{1FA70}", "Ballet Shoes"),
+    e("\u{1FA71}", "One-Piece Swimsuit"),
+    e("\u{1FA72}", "Briefs"),
+    e("\u{1FA73}", "Shorts"));
+
+const town = g(
+    "Town", "Town",
+    e("\u{1F3D7}\u{FE0F}", "Building Construction"),
+    e("\u{1F3D8}\u{FE0F}", "Houses"),
+    e("\u{1F3D9}\u{FE0F}", "Cityscape"),
+    e("\u{1F3DA}\u{FE0F}", "Derelict House"),
+    e("\u{1F3DB}\u{FE0F}", "Classical Building"),
+    e("\u{1F3DC}\u{FE0F}", "Desert"),
+    e("\u{1F3DD}\u{FE0F}", "Desert Island"),
+    e("\u{1F3DE}\u{FE0F}", "National Park"),
+    e("\u{1F3DF}\u{FE0F}", "Stadium"),
+    e("\u{1F3E0}", "House"),
+    e("\u{1F3E1}", "House with Garden"),
+    e("\u{1F3E2}", "Office Building"),
+    e("\u{1F3E3}", "Japanese Post Office"),
+    e("\u{1F3E4}", "Post Office"),
+    e("\u{1F3E5}", "Hospital"),
+    e("\u{1F3E6}", "Bank"),
+    e("\u{1F3E7}", "ATM Sign"),
+    e("\u{1F3E8}", "Hotel"),
+    e("\u{1F3E9}", "Love Hotel"),
+    e("\u{1F3EA}", "Convenience Store"),
+    school,
+    e("\u{1F3EC}", "Department Store"),
+    factory,
+    e("\u{1F309}", "Bridge at Night"),
+    e("\u{26F2}", "Fountain"),
+    e("\u{1F6CD}\u{FE0F}", "Shopping Bags"),
+    e("\u{1F9FE}", "Receipt"),
+    e("\u{1F6D2}", "Shopping Cart"),
+    e("\u{1F488}", "Barber Pole"),
+    e("\u{1F492}", "Wedding"),
+    e("\u{1F5F3}\u{FE0F}", "Ballot Box with Ballot"));
+
+const music = g(
+    "Music", "Music",
+    e("\u{1F3BC}", "Musical Score"),
+    e("\u{1F3B6}", "Musical Notes"),
+    e("\u{1F3B5}", "Musical Note"),
+    e("\u{1F3B7}", "Saxophone"),
+    e("\u{1F3B8}", "Guitar"),
+    e("\u{1F3B9}", "Musical Keyboard"),
+    e("\u{1F3BA}", "Trumpet"),
+    e("\u{1F3BB}", "Violin"),
+    e("\u{1F941}", "Drum"),
+    //e("\u{1FA97}", "Accordion"),
+    //e("\u{1FA98}", "Long Drum"),
+    e("\u{1FA95}", "Banjo"));
+
+const weather = g(
+    "Weather", "Weather",
+    e("\u{1F304}", "Sunrise Over Mountains"),
+    e("\u{1F305}", "Sunrise"),
+    e("\u{1F306}", "Cityscape at Dusk"),
+    e("\u{1F307}", "Sunset"),
+    e("\u{1F303}", "Night with Stars"),
+    e("\u{1F302}", "Closed Umbrella"),
+    e("\u{2602}\u{FE0F}", "Umbrella"),
+    e("\u{2614}\u{FE0F}", "Umbrella with Rain Drops"),
+    e("\u{2603}\u{FE0F}", "Snowman"),
+    e("\u{26C4}", "Snowman Without Snow"),
+    e("\u{2600}\u{FE0F}", "Sun"),
+    e("\u{2601}\u{FE0F}", "Cloud"),
+    e("\u{1F324}\u{FE0F}", "Sun Behind Small Cloud"),
+    e("\u{26C5}", "Sun Behind Cloud"),
+    e("\u{1F325}\u{FE0F}", "Sun Behind Large Cloud"),
+    e("\u{1F326}\u{FE0F}", "Sun Behind Rain Cloud"),
+    e("\u{1F327}\u{FE0F}", "Cloud with Rain"),
+    e("\u{1F328}\u{FE0F}", "Cloud with Snow"),
+    e("\u{1F329}\u{FE0F}", "Cloud with Lightning"),
+    e("\u{26C8}\u{FE0F}", "Cloud with Lightning and Rain"),
+    e("\u{2744}\u{FE0F}", "Snowflake"),
+    e("\u{1F300}", "Cyclone"),
+    e("\u{1F32A}\u{FE0F}", "Tornado"),
+    e("\u{1F32C}\u{FE0F}", "Wind Face"),
+    e("\u{1F30A}", "Water Wave"),
+    e("\u{1F32B}\u{FE0F}", "Fog"),
+    e("\u{1F301}", "Foggy"),
+    e("\u{1F308}", "Rainbow"),
+    e("\u{1F321}\u{FE0F}", "Thermometer"));
+
+const astro = g(
+    "Astronomy", "Astronomy",
+    e("\u{1F30C}", "Milky Way"),
+    e("\u{1F30D}", "Globe Showing Europe-Africa"),
+    e("\u{1F30E}", "Globe Showing Americas"),
+    e("\u{1F30F}", "Globe Showing Asia-Australia"),
+    e("\u{1F310}", "Globe with Meridians"),
+    e("\u{1F311}", "New Moon"),
+    e("\u{1F312}", "Waxing Crescent Moon"),
+    e("\u{1F313}", "First Quarter Moon"),
+    e("\u{1F314}", "Waxing Gibbous Moon"),
+    e("\u{1F315}", "Full Moon"),
+    e("\u{1F316}", "Waning Gibbous Moon"),
+    e("\u{1F317}", "Last Quarter Moon"),
+    e("\u{1F318}", "Waning Crescent Moon"),
+    e("\u{1F319}", "Crescent Moon"),
+    e("\u{1F31A}", "New Moon Face"),
+    e("\u{1F31B}", "First Quarter Moon Face"),
+    e("\u{1F31C}", "Last Quarter Moon Face"),
+    e("\u{1F31D}", "Full Moon Face"),
+    e("\u{1F31E}", "Sun with Face"),
+    e("\u{1F31F}", "Glowing Star"),
+    e("\u{1F320}", "Shooting Star"),
+    e("\u{2604}\u{FE0F}", "Comet"),
+    e("\u{1FA90}", "Ringed Planet"));
+
+const finance = g(
+    "Finance", "Finance",
+    e("\u{1F4B0}", "Money Bag"),
+    e("\u{1F4B1}", "Currency Exchange"),
+    e("\u{1F4B2}", "Heavy Dollar Sign"),
+    e("\u{1F4B3}", "Credit Card"),
+    e("\u{1F4B4}", "Yen Banknote"),
+    e("\u{1F4B5}", "Dollar Banknote"),
+    e("\u{1F4B6}", "Euro Banknote"),
+    e("\u{1F4B7}", "Pound Banknote"),
+    e("\u{1F4B8}", "Money with Wings"),
+    //e("\u{1FA99}", "Coin"),
+    e("\u{1F4B9}", "Chart Increasing with Yen"));
+
+const writing = g(
+    "Writing", "Writing",
+    e("\u{1F58A}\u{FE0F}", "Pen"),
+    e("\u{1F58B}\u{FE0F}", "Fountain Pen"),
+    e("\u{1F58C}\u{FE0F}", "Paintbrush"),
+    e("\u{1F58D}\u{FE0F}", "Crayon"),
+    e("\u{270F}\u{FE0F}", "Pencil"),
+    e("\u{2712}\u{FE0F}", "Black Nib"));
+
+const alembic = e("\u{2697}\u{FE0F}", "Alembic");
+const gear = e("\u{2699}\u{FE0F}", "Gear");
+const atomSymbol = e("\u{269B}\u{FE0F}", "Atom Symbol");
+const keyboard = e("\u{2328}\u{FE0F}", "Keyboard");
+const telephone = e("\u{260E}\u{FE0F}", "Telephone");
+const studioMicrophone = e("\u{1F399}\u{FE0F}", "Studio Microphone");
+const levelSlider = e("\u{1F39A}\u{FE0F}", "Level Slider");
+const controlKnobs = e("\u{1F39B}\u{FE0F}", "Control Knobs");
+const movieCamera = e("\u{1F3A5}", "Movie Camera");
+const headphone = e("\u{1F3A7}", "Headphone");
+const videoGame = e("\u{1F3AE}", "Video Game");
+const lightBulb = e("\u{1F4A1}", "Light Bulb");
+const computerDisk = e("\u{1F4BD}", "Computer Disk");
+const floppyDisk = e("\u{1F4BE}", "Floppy Disk");
+const opticalDisk = e("\u{1F4BF}", "Optical Disk");
+const dvd = e("\u{1F4C0}", "DVD");
+const telephoneReceiver = e("\u{1F4DE}", "Telephone Receiver");
+const pager = e("\u{1F4DF}", "Pager");
+const faxMachine = e("\u{1F4E0}", "Fax Machine");
+const satelliteAntenna = e("\u{1F4E1}", "Satellite Antenna");
+const loudspeaker = e("\u{1F4E2}", "Loudspeaker");
+const megaphone = e("\u{1F4E3}", "Megaphone");
+const mobilePhone = e("\u{1F4F1}", "Mobile Phone");
+const mobilePhoneWithArrow = e("\u{1F4F2}", "Mobile Phone with Arrow");
+const mobilePhoneVibrating = e("\u{1F4F3}", "Mobile Phone Vibrating");
+const mobilePhoneOff = e("\u{1F4F4}", "Mobile Phone Off");
+const noMobilePhone = e("\u{1F4F5}", "No Mobile Phone");
+const antennaBars = e("\u{1F4F6}", "Antenna Bars");
+const camera = e("\u{1F4F7}", "Camera");
+const cameraWithFlash = e("\u{1F4F8}", "Camera with Flash");
+const videoCamera = e("\u{1F4F9}", "Video Camera");
+const television = e("\u{1F4FA}", "Television");
+const radio = e("\u{1F4FB}", "Radio");
+const videocassette = e("\u{1F4FC}", "Videocassette");
+const filmProjector = e("\u{1F4FD}\u{FE0F}", "Film Projector");
+const portableStereo = e("\u{1F4FE}\u{FE0F}", "Portable Stereo");
+const dimButton = e("\u{1F505}", "Dim Button");
+const brightButton = e("\u{1F506}", "Bright Button");
+const mutedSpeaker = e("\u{1F507}", "Muted Speaker");
+const speakerLowVolume = e("\u{1F508}", "Speaker Low Volume");
+const speakerMediumVolume = e("\u{1F509}", "Speaker Medium Volume");
+const speakerHighVolume = e("\u{1F50A}", "Speaker High Volume");
+const battery = e("\u{1F50B}", "Battery");
+const electricPlug = e("\u{1F50C}", "Electric Plug");
+const magnifyingGlassTiltedLeft = e("\u{1F50D}", "Magnifying Glass Tilted Left");
+const magnifyingGlassTiltedRight = e("\u{1F50E}", "Magnifying Glass Tilted Right");
+const lockedWithPen = e("\u{1F50F}", "Locked with Pen");
+const lockedWithKey = e("\u{1F510}", "Locked with Key");
+const key = e("\u{1F511}", "Key");
+const locked = e("\u{1F512}", "Locked");
+const unlocked = e("\u{1F513}", "Unlocked");
+const bell = e("\u{1F514}", "Bell");
+const bellWithSlash = e("\u{1F515}", "Bell with Slash");
+const bookmark = e("\u{1F516}", "Bookmark");
+const link = e("\u{1F517}", "Link");
+const joystick = e("\u{1F579}\u{FE0F}", "Joystick");
+const desktopComputer = e("\u{1F5A5}\u{FE0F}", "Desktop Computer");
+const printer = e("\u{1F5A8}\u{FE0F}", "Printer");
+const computerMouse = e("\u{1F5B1}\u{FE0F}", "Computer Mouse");
+const trackball = e("\u{1F5B2}\u{FE0F}", "Trackball");
+const blackFolder = e("\u{1F5BF}", "Black Folder");
+const folder = e("\u{1F5C0}", "Folder");
+const openFolder = e("\u{1F5C1}", "Open Folder");
+const cardIndexDividers = e("\u{1F5C2}", "Card Index Dividers");
+const cardFileBox = e("\u{1F5C3}", "Card File Box");
+const fileCabinet = e("\u{1F5C4}", "File Cabinet");
+const emptyNote = e("\u{1F5C5}", "Empty Note");
+const emptyNotePage = e("\u{1F5C6}", "Empty Note Page");
+const emptyNotePad = e("\u{1F5C7}", "Empty Note Pad");
+const note = e("\u{1F5C8}", "Note");
+const notePage = e("\u{1F5C9}", "Note Page");
+const notePad = e("\u{1F5CA}", "Note Pad");
+const emptyDocument = e("\u{1F5CB}", "Empty Document");
+const emptyPage = e("\u{1F5CC}", "Empty Page");
+const emptyPages = e("\u{1F5CD}", "Empty Pages");
+const documentIcon = e("\u{1F5CE}", "Document");
+const page = e("\u{1F5CF}", "Page");
+const pages = e("\u{1F5D0}", "Pages");
+const wastebasket = e("\u{1F5D1}", "Wastebasket");
+const spiralNotePad = e("\u{1F5D2}", "Spiral Note Pad");
+const spiralCalendar = e("\u{1F5D3}", "Spiral Calendar");
+const desktopWindow = e("\u{1F5D4}", "Desktop Window");
+const minimize = e("\u{1F5D5}", "Minimize");
+const maximize = e("\u{1F5D6}", "Maximize");
+const overlap = e("\u{1F5D7}", "Overlap");
+const reload = e("\u{1F5D8}", "Reload");
+const close = e("\u{1F5D9}", "Close");
+const increaseFontSize = e("\u{1F5DA}", "Increase Font Size");
+const decreaseFontSize = e("\u{1F5DB}", "Decrease Font Size");
+const compression = e("\u{1F5DC}", "Compression");
+const oldKey = e("\u{1F5DD}", "Old Key");
+const tech = g(
+    "Technology", "Technology",
+    joystick,
+    videoGame,
+    lightBulb,
+    laptop,
+    briefcase,
+    computerDisk,
+    floppyDisk,
+    opticalDisk,
+    dvd,
+    desktopComputer,
+    keyboard,
+    printer,
+    computerMouse,
+    trackball,
+    telephone,
+    telephoneReceiver,
+    pager,
+    faxMachine,
+    satelliteAntenna,
+    loudspeaker,
+    megaphone,
+    television,
+    radio,
+    videocassette,
+    filmProjector,
+    studioMicrophone,
+    levelSlider,
+    controlKnobs,
+    microphone,
+    movieCamera,
+    headphone,
+    camera,
+    cameraWithFlash,
+    videoCamera,
+    mobilePhone,
+    mobilePhoneOff,
+    mobilePhoneWithArrow,
+    lockedWithPen,
+    lockedWithKey,
+    locked,
+    unlocked,
+    bell,
+    bellWithSlash,
+    bookmark,
+    link,
+    mobilePhoneVibrating,
+    antennaBars,
+    dimButton,
+    brightButton,
+    mutedSpeaker,
+    speakerLowVolume,
+    speakerMediumVolume,
+    speakerHighVolume,
+    battery,
+    electricPlug);
+
+const mail = g(
+    "Mail", "Mail",
+    e("\u{1F4E4}", "Outbox Tray"),
+    e("\u{1F4E5}", "Inbox Tray"),
+    e("\u{1F4E6}", "Package"),
+    e("\u{1F4E7}", "E-Mail"),
+    e("\u{1F4E8}", "Incoming Envelope"),
+    e("\u{1F4E9}", "Envelope with Arrow"),
+    e("\u{1F4EA}", "Closed Mailbox with Lowered Flag"),
+    e("\u{1F4EB}", "Closed Mailbox with Raised Flag"),
+    e("\u{1F4EC}", "Open Mailbox with Raised Flag"),
+    e("\u{1F4ED}", "Open Mailbox with Lowered Flag"),
+    e("\u{1F4EE}", "Postbox"),
+    e("\u{1F4EF}", "Postal Horn"));
+
+const celebration = g(
+    "Celebration", "Celebration",
+    e("\u{1F380}", "Ribbon"),
+    e("\u{1F381}", "Wrapped Gift"),
+    e("\u{1F383}", "Jack-O-Lantern"),
+    e("\u{1F384}", "Christmas Tree"),
+    e("\u{1F9E8}", "Firecracker"),
+    e("\u{1F386}", "Fireworks"),
+    e("\u{1F387}", "Sparkler"),
+    e("\u{2728}", "Sparkles"),
+    e("\u{2747}\u{FE0F}", "Sparkle"),
+    e("\u{1F388}", "Balloon"),
+    e("\u{1F389}", "Party Popper"),
+    e("\u{1F38A}", "Confetti Ball"),
+    e("\u{1F38B}", "Tanabata Tree"),
+    e("\u{1F38D}", "Pine Decoration"),
+    e("\u{1F38E}", "Japanese Dolls"),
+    e("\u{1F38F}", "Carp Streamer"),
+    e("\u{1F390}", "Wind Chime"),
+    e("\u{1F391}", "Moon Viewing Ceremony"),
+    e("\u{1F392}", "Backpack"),
+    graduationCap,
+    e("\u{1F9E7}", "Red Envelope"),
+    e("\u{1F3EE}", "Red Paper Lantern"),
+    e("\u{1F396}\u{FE0F}", "Military Medal"));
+
+const tools = g(
+    "Tools", "Tools",
+    e("\u{1F3A3}", "Fishing Pole"),
+    e("\u{1F526}", "Flashlight"),
+    wrench,
+    e("\u{1F528}", "Hammer"),
+    e("\u{1F529}", "Nut and Bolt"),
+    e("\u{1F6E0}\u{FE0F}", "Hammer and Wrench"),
+    e("\u{1F9ED}", "Compass"),
+    e("\u{1F9EF}", "Fire Extinguisher"),
+    e("\u{1F9F0}", "Toolbox"),
+    e("\u{1F9F1}", "Brick"),
+    e("\u{1FA93}", "Axe"),
+    e("\u{2692}\u{FE0F}", "Hammer and Pick"),
+    e("\u{26CF}\u{FE0F}", "Pick"),
+    e("\u{26D1}\u{FE0F}", "Rescue Worker’s Helmet"),
+    e("\u{26D3}\u{FE0F}", "Chains"),
+    compression);
+
+const office = g(
+    "Office", "Office",
+    e("\u{1F4C1}", "File Folder"),
+    e("\u{1F4C2}", "Open File Folder"),
+    e("\u{1F4C3}", "Page with Curl"),
+    e("\u{1F4C4}", "Page Facing Up"),
+    e("\u{1F4C5}", "Calendar"),
+    e("\u{1F4C6}", "Tear-Off Calendar"),
+    e("\u{1F4C7}", "Card Index"),
+    cardIndexDividers,
+    cardFileBox,
+    fileCabinet,
+    wastebasket,
+    spiralNotePad,
+    spiralCalendar,
+    e("\u{1F4C8}", "Chart Increasing"),
+    e("\u{1F4C9}", "Chart Decreasing"),
+    e("\u{1F4CA}", "Bar Chart"),
+    e("\u{1F4CB}", "Clipboard"),
+    e("\u{1F4CC}", "Pushpin"),
+    e("\u{1F4CD}", "Round Pushpin"),
+    e("\u{1F4CE}", "Paperclip"),
+    e("\u{1F587}\u{FE0F}", "Linked Paperclips"),
+    e("\u{1F4CF}", "Straight Ruler"),
+    e("\u{1F4D0}", "Triangular Ruler"),
+    e("\u{1F4D1}", "Bookmark Tabs"),
+    e("\u{1F4D2}", "Ledger"),
+    e("\u{1F4D3}", "Notebook"),
+    e("\u{1F4D4}", "Notebook with Decorative Cover"),
+    e("\u{1F4D5}", "Closed Book"),
+    e("\u{1F4D6}", "Open Book"),
+    e("\u{1F4D7}", "Green Book"),
+    e("\u{1F4D8}", "Blue Book"),
+    e("\u{1F4D9}", "Orange Book"),
+    e("\u{1F4DA}", "Books"),
+    e("\u{1F4DB}", "Name Badge"),
+    e("\u{1F4DC}", "Scroll"),
+    e("\u{1F4DD}", "Memo"),
+    e("\u{2702}\u{FE0F}", "Scissors"),
+    e("\u{2709}\u{FE0F}", "Envelope"));
+
+const signs = g(
+    "Signs", "Signs",
+    e("\u{1F3A6}", "Cinema"),
+    noMobilePhone,
+    e("\u{1F51E}", "No One Under Eighteen"),
+    e("\u{1F6AB}", "Prohibited"),
+    e("\u{1F6AC}", "Cigarette"),
+    e("\u{1F6AD}", "No Smoking"),
+    e("\u{1F6AE}", "Litter in Bin Sign"),
+    e("\u{1F6AF}", "No Littering"),
+    e("\u{1F6B0}", "Potable Water"),
+    e("\u{1F6B1}", "Non-Potable Water"),
+    e("\u{1F6B3}", "No Bicycles"),
+    e("\u{1F6B7}", "No Pedestrians"),
+    e("\u{1F6B8}", "Children Crossing"),
+    e("\u{1F6B9}", "Men’s Room"),
+    e("\u{1F6BA}", "Women’s Room"),
+    e("\u{1F6BB}", "Restroom"),
+    e("\u{1F6BC}", "Baby Symbol"),
+    e("\u{1F6BE}", "Water Closet"),
+    e("\u{1F6C2}", "Passport Control"),
+    e("\u{1F6C3}", "Customs"),
+    e("\u{1F6C4}", "Baggage Claim"),
+    e("\u{1F6C5}", "Left Luggage"),
+    e("\u{1F17F}\u{FE0F}", "Parking Button"),
+    e("\u{267F}", "Wheelchair Symbol"),
+    e("\u{2622}\u{FE0F}", "Radioactive"),
+    e("\u{2623}\u{FE0F}", "Biohazard"),
+    e("\u{26A0}\u{FE0F}", "Warning"),
+    e("\u{26A1}", "High Voltage"),
+    e("\u{26D4}", "No Entry"),
+    e("\u{267B}\u{FE0F}", "Recycling Symbol"),
+    female,
+    male,
+    e("\u{26A7}\u{FE0F}", "Transgender Symbol"));
+
+const religion = g(
+    "Religion", "Religion",
+    e("\u{1F52F}", "Dotted Six-Pointed Star"),
+    e("\u{2721}\u{FE0F}", "Star of David"),
+    e("\u{1F549}\u{FE0F}", "Om"),
+    e("\u{1F54B}", "Kaaba"),
+    e("\u{1F54C}", "Mosque"),
+    e("\u{1F54D}", "Synagogue"),
+    e("\u{1F54E}", "Menorah"),
+    e("\u{1F6D0}", "Place of Worship"),
+    e("\u{1F6D5}", "Hindu Temple"),
+    e("\u{2626}\u{FE0F}", "Orthodox Cross"),
+    e("\u{271D}\u{FE0F}", "Latin Cross"),
+    e("\u{262A}\u{FE0F}", "Star and Crescent"),
+    e("\u{262E}\u{FE0F}", "Peace Symbol"),
+    e("\u{262F}\u{FE0F}", "Yin Yang"),
+    e("\u{2638}\u{FE0F}", "Wheel of Dharma"),
+    e("\u{267E}\u{FE0F}", "Infinity"),
+    e("\u{1FA94}", "Diya Lamp"),
+    e("\u{26E9}\u{FE0F}", "Shinto Shrine"),
+    e("\u{26EA}", "Church"),
+    e("\u{2734}\u{FE0F}", "Eight-Pointed Star"),
+    e("\u{1F4FF}", "Prayer Beads"));
+
+const door = e("\u{1F6AA}", "Door");
+const household = g(
+    "Household", "Household",
+    e("\u{1F484}", "Lipstick"),
+    e("\u{1F48D}", "Ring"),
+    e("\u{1F48E}", "Gem Stone"),
+    e("\u{1F4F0}", "Newspaper"),
+    key,
+    e("\u{1F525}", "Fire"),
+    e("\u{1F52B}", "Pistol"),
+    e("\u{1F56F}\u{FE0F}", "Candle"),
+    e("\u{1F5BC}\u{FE0F}", "Framed Picture"),
+    oldKey,
+    e("\u{1F5DE}\u{FE0F}", "Rolled-Up Newspaper"),
+    e("\u{1F5FA}\u{FE0F}", "World Map"),
+    door,
+    e("\u{1F6BD}", "Toilet"),
+    e("\u{1F6BF}", "Shower"),
+    e("\u{1F6C1}", "Bathtub"),
+    e("\u{1F6CB}\u{FE0F}", "Couch and Lamp"),
+    e("\u{1F6CF}\u{FE0F}", "Bed"),
+    e("\u{1F9F4}", "Lotion Bottle"),
+    e("\u{1F9F5}", "Thread"),
+    e("\u{1F9F6}", "Yarn"),
+    e("\u{1F9F7}", "Safety Pin"),
+    e("\u{1F9F8}", "Teddy Bear"),
+    e("\u{1F9F9}", "Broom"),
+    e("\u{1F9FA}", "Basket"),
+    e("\u{1F9FB}", "Roll of Paper"),
+    e("\u{1F9FC}", "Soap"),
+    e("\u{1F9FD}", "Sponge"),
+    e("\u{1FA91}", "Chair"),
+    e("\u{1FA92}", "Razor"),
+    e("\u{1F397}\u{FE0F}", "Reminder Ribbon"));
+
+const activities = g(
+    "Activities", "Activities",
+    e("\u{1F39E}\u{FE0F}", "Film Frames"),
+    e("\u{1F39F}\u{FE0F}", "Admission Tickets"),
+    e("\u{1F3A0}", "Carousel Horse"),
+    e("\u{1F3A1}", "Ferris Wheel"),
+    e("\u{1F3A2}", "Roller Coaster"),
+    artistPalette,
+    e("\u{1F3AA}", "Circus Tent"),
+    e("\u{1F3AB}", "Ticket"),
+    e("\u{1F3AC}", "Clapper Board"),
+    e("\u{1F3AD}", "Performing Arts"));
+
+const travel = g(
+    "Travel", "Travel",
+    e("\u{1F3F7}\u{FE0F}", "Label"),
+    e("\u{1F30B}", "Volcano"),
+    e("\u{1F3D4}\u{FE0F}", "Snow-Capped Mountain"),
+    e("\u{26F0}\u{FE0F}", "Mountain"),
+    e("\u{1F3D5}\u{FE0F}", "Camping"),
+    e("\u{1F3D6}\u{FE0F}", "Beach with Umbrella"),
+    e("\u{26F1}\u{FE0F}", "Umbrella on Ground"),
+    e("\u{1F3EF}", "Japanese Castle"),
+    e("\u{1F463}", "Footprints"),
+    e("\u{1F5FB}", "Mount Fuji"),
+    e("\u{1F5FC}", "Tokyo Tower"),
+    e("\u{1F5FD}", "Statue of Liberty"),
+    e("\u{1F5FE}", "Map of Japan"),
+    e("\u{1F5FF}", "Moai"),
+    e("\u{1F6CE}\u{FE0F}", "Bellhop Bell"),
+    e("\u{1F9F3}", "Luggage"),
+    e("\u{26F3}", "Flag in Hole"),
+    e("\u{26FA}", "Tent"),
+    e("\u{2668}\u{FE0F}", "Hot Springs"));
+
+const medieval = g(
+    "Medieval", "Medieval",
+    e("\u{1F3F0}", "Castle"),
+    e("\u{1F3F9}", "Bow and Arrow"),
+    crown,
+    e("\u{1F531}", "Trident Emblem"),
+    e("\u{1F5E1}\u{FE0F}", "Dagger"),
+    e("\u{1F6E1}\u{FE0F}", "Shield"),
+    e("\u{1F52E}", "Crystal Ball"),
+    e("\u{2694}\u{FE0F}", "Crossed Swords"),
+    e("\u{269C}\u{FE0F}", "Fleur-de-lis"));
+
+const doubleExclamationMark = e("\u{203C}\u{FE0F}", "Double Exclamation Mark");
+const interrobang = e("\u{2049}\u{FE0F}", "Exclamation Question Mark");
+const information = e("\u{2139}\u{FE0F}", "Information");
+const circledM = e("\u{24C2}\u{FE0F}", "Circled M");
+const checkMarkButton = e("\u{2705}", "Check Mark Button");
+const checkMark = e("\u{2714}\u{FE0F}", "Check Mark");
+const eightSpokedAsterisk = e("\u{2733}\u{FE0F}", "Eight-Spoked Asterisk");
+const crossMark = e("\u{274C}", "Cross Mark");
+const crossMarkButton = e("\u{274E}", "Cross Mark Button");
+const questionMark = e("\u{2753}", "Question Mark");
+const whiteQuestionMark = e("\u{2754}", "White Question Mark");
+const whiteExclamationMark = e("\u{2755}", "White Exclamation Mark");
+const exclamationMark = e("\u{2757}", "Exclamation Mark");
+const curlyLoop = e("\u{27B0}", "Curly Loop");
+const doubleCurlyLoop = e("\u{27BF}", "Double Curly Loop");
+const wavyDash = e("\u{3030}\u{FE0F}", "Wavy Dash");
+const partAlternationMark = e("\u{303D}\u{FE0F}", "Part Alternation Mark");
+const tradeMark = e("\u{2122}\u{FE0F}", "Trade Mark");
+const copyright = e("\u{A9}\u{FE0F}", "Copyright");
+const registered = e("\u{AE}\u{FE0F}", "Registered");
+const squareFourCourners = e("\u{26F6}\u{FE0F}", "Square: Four Corners");
+
+const marks = gg(
+    "Marks", "Marks", {
+    doubleExclamationMark,
+    interrobang,
+    information,
+    circledM,
+    checkMarkButton,
+    checkMark,
+    eightSpokedAsterisk,
+    crossMark,
+    crossMarkButton,
+    questionMark,
+    whiteQuestionMark,
+    whiteExclamationMark,
+    exclamationMark,
+    curlyLoop,
+    doubleCurlyLoop,
+    wavyDash,
+    partAlternationMark,
+    tradeMark,
+    copyright,
+    registered,
+});
+
+const droplet = e("\u{1F4A7}", "Droplet");
+const dropOfBlood = e("\u{1FA78}", "Drop of Blood");
+const adhesiveBandage = e("\u{1FA79}", "Adhesive Bandage");
+const stethoscope = e("\u{1FA7A}", "Stethoscope");
+const syringe = e("\u{1F489}", "Syringe");
+const pill = e("\u{1F48A}", "Pill");
+const testTube = e("\u{1F9EA}", "Test Tube");
+const petriDish = e("\u{1F9EB}", "Petri Dish");
+const dna = e("\u{1F9EC}", "DNA");
+const abacus = e("\u{1F9EE}", "Abacus");
+const magnet = e("\u{1F9F2}", "Magnet");
+const telescope = e("\u{1F52D}", "Telescope");
+
+const science = gg(
+    "Science", "Science", {
+    droplet,
+    dropOfBlood,
+    adhesiveBandage,
+    stethoscope,
+    syringe,
+    pill,
+    microscope,
+    testTube,
+    petriDish,
+    dna,
+    abacus,
+    magnet,
+    telescope,
+    medical,
+    balanceScale,
+    alembic,
+    gear,
+    atomSymbol,
+    magnifyingGlassTiltedLeft,
+    magnifyingGlassTiltedRight,
+});
+const whiteChessKing = e("\u{2654}", "White Chess King");
+const whiteChessQueen = e("\u{2655}", "White Chess Queen");
+const whiteChessRook = e("\u{2656}", "White Chess Rook");
+const whiteChessBishop = e("\u{2657}", "White Chess Bishop");
+const whiteChessKnight = e("\u{2658}", "White Chess Knight");
+const whiteChessPawn = e("\u{2659}", "White Chess Pawn");
+const whiteChessPieces = gg(whiteChessKing.value + whiteChessQueen.value + whiteChessRook.value + whiteChessBishop.value + whiteChessKnight.value + whiteChessPawn.value, "White Chess Pieces", {
+    width: "auto",
+    king: whiteChessKing,
+    queen: whiteChessQueen,
+    rook: whiteChessRook,
+    bishop: whiteChessBishop,
+    knight: whiteChessKnight,
+    pawn: whiteChessPawn
+});
+const blackChessKing = e("\u{265A}", "Black Chess King");
+const blackChessQueen = e("\u{265B}", "Black Chess Queen");
+const blackChessRook = e("\u{265C}", "Black Chess Rook");
+const blackChessBishop = e("\u{265D}", "Black Chess Bishop");
+const blackChessKnight = e("\u{265E}", "Black Chess Knight");
+const blackChessPawn = e("\u{265F}", "Black Chess Pawn");
+const blackChessPieces = gg(blackChessKing.value + blackChessQueen.value + blackChessRook.value + blackChessBishop.value + blackChessKnight.value + blackChessPawn.value, "Black Chess Pieces", {
+    width: "auto",
+    king: blackChessKing,
+    queen: blackChessQueen,
+    rook: blackChessRook,
+    bishop: blackChessBishop,
+    knight: blackChessKnight,
+    pawn: blackChessPawn
+});
+const chessPawns = gg(whiteChessPawn.value + blackChessPawn.value, "Chess Pawns", {
+    width: "auto",
+    white: whiteChessPawn,
+    black: blackChessPawn
+});
+const chessRooks = gg(whiteChessRook.value + blackChessRook.value, "Chess Rooks", {
+    width: "auto",
+    white: whiteChessRook,
+    black: blackChessRook
+});
+const chessBishops = gg(whiteChessBishop.value + blackChessBishop.value, "Chess Bishops", {
+    width: "auto",
+    white: whiteChessBishop,
+    black: blackChessBishop
+});
+const chessKnights = gg(whiteChessKnight.value + blackChessKnight.value, "Chess Knights", {
+    width: "auto",
+    white: whiteChessKnight,
+    black: blackChessKnight
+});
+const chessQueens = gg(whiteChessQueen.value + blackChessQueen.value, "Chess Queens", {
+    width: "auto",
+    white: whiteChessQueen,
+    black: blackChessQueen
+});
+const chessKings = gg(whiteChessKing.value + blackChessKing.value, "Chess Kings", {
+    width: "auto",
+    white: whiteChessKing,
+    black: blackChessKing
+});
+
+const chess = gg("Chess Pieces", "Chess Pieces", {
+    width: "auto",
+    white: whiteChessPieces,
+    black: blackChessPieces,
+    pawns: chessPawns,
+    rooks: chessRooks,
+    bishops: chessBishops,
+    knights: chessKnights,
+    queens: chessQueens,
+    kings: chessKings
+});
+
+const dice1 = e("\u2680", "Dice: Side 1");
+const dice2 = e("\u2681", "Dice: Side 2");
+const dice3 = e("\u2682", "Dice: Side 3");
+const dice4 = e("\u2683", "Dice: Side 4");
+const dice5 = e("\u2684", "Dice: Side 5");
+const dice6 = e("\u2685", "Dice: Side 6");
+const dice = gg("Dice", "Dice", {
+    dice1,
+    dice2,
+    dice3,
+    dice4,
+    dice5,
+    dice6
+});
+
+const allIcons = gg(
+    "All Icons", "All Icons", {
+    faces,
+    love,
+    cartoon,
+    hands,
+    bodyParts,
+    people,
+    gestures: gestures$1,
+    inMotion,
+    resting,
+    roles,
+    fantasy,
+    animals,
+    plants,
+    food,
+    flags,
+    vehicles,
+    clocks,
+    arrows,
+    shapes,
+    buttons,
+    zodiac,
+    chess,
+    dice,
+    math,
+    games,
+    sportsEquipment,
+    clothing,
+    town,
+    music,
+    weather,
+    astro,
+    finance,
+    writing,
+    science,
+    tech,
+    mail,
+    celebration,
+    tools,
+    office,
+    signs,
+    religion,
+    household,
+    activities,
+    travel,
+    medieval
+});
+
+class EmojiIconMesh extends TextMesh {
+    /**
+     * @param {string} name
+     * @param {import("../emoji/Emoji").Emoji} emoji
+     */
+    constructor(name, emoji) {
+        super(name, {
+            lit: false,
+            side: FrontSide
+        });
+
+        if (emoji) {
+            this.textBgColor = "transparent";
+            this.textColor = "#000000";
+            this.fontFamily = "Segoe UI Emoji";
+            this.fontSize = 100;
+
+            this.value = emoji;
+        }
     }
 }
 
@@ -47493,98 +47433,10 @@ class PlaybackButton extends Object3D {
     }
 }
 
-class Sign extends Image2DMesh {
-    constructor(sign) {
-        super("sign-" + sign.fileName);
-        if (sign.isCallout) {
-            this.addEventListener("click", () => console.log(sign.name));
-        }
-    }
-}
-
-const P$2 = new Vector3();
 const app = new Application();
 
-/** @type {Map<number, Object3D>} */
-const curTransforms = new Map();
-
-/** @type {Map<number, Station>} */
-const curStations = new Map();
-
-/** @type{Map<number, GraphEdge>} */
-const curConnections = new Map();
-
-/** @type{AudioTrack[]} */
-const curAudioTracks = [];
-
-const views = [
-    ["Main", showMainMenu],
-    ["Language", showLanguage],
-    ["Lesson", showLesson],
-    ["Activity", showActivity]
-];
-
-const menuItemFont = {
-    fontFamily: "Roboto",
-    fontSize: 100
-};
-
-const emojiFont = {
-    fontFamily: "Segoe UI Emoji",
-    fontSize: 100
-};
-
-/** @type {EmojiIconMesh} */
-let homeIcon = null;
-
-/**
- * @callback viewCallback
- * @param {number} id
- * @param {boolean} skipHistory
- **/
-
-/** @type {Map<string, viewCallback>} */
-const viewMap = new Map(views);
-
-app.addEventListener("sceneclearing", () => {
-    curTransforms.clear();
-    curStations.clear();
-    curConnections.clear();
-    for (let audioTrack of curAudioTracks) {
-        app.audio.removeClip(audioTrack.fileName);
-    }
-    arrayClear(curAudioTracks);
-    curZone = null;
-});
-
-app.addEventListener("started", async () => {
-
-    await Promise.all([
-        loadFont(makeFont(menuItemFont)),
-        loadFont(makeFont(emojiFont))]);
-
-    homeIcon = new EmojiIconMesh("homeButton", door.value);
-    homeIcon.position.set(0, 0, -1);
-    homeIcon.lookAt(0, 1.75, 0);
-
-    homeIcon.addEventListener("click", () => {
-        history.back();
-    });
-
-    if (window.location.search.length === 0) {
-        showMainMenu();
-    }
-    else {
-        const expr = window.location.search.substring(1); // 1 removes the question mark;
-        const parts = expr.split("=");
-        const viewName = parts[0];
-        const id = parseInt(parts[1], 10);
-        const func = viewMap.get(viewName);
-        func(id, true);
-    }
-});
-
-app.start();
+/** @type {CallaAudioSource} */
+let clip = null;
 
 /**
  * @param {Number} soFar
@@ -47596,250 +47448,55 @@ function onProgress(soFar, total, msg) {
 }
 
 
-/** @type {string} */
-let curZone = null;
-/**
- * @param {string} zone
- */
-async function playAudioZone(zone) {
-    if (zone !== curZone) {
-        stopCurrentAudioZone();
-        curZone = zone;
-        await playCurrentAudioZone();
+app.addEventListener("started", start);
+app.addEventListener("tick", update);
+
+app.start();
+
+const Q = new Quaternion();
+const E = new Euler();
+
+function update(evt) {
+    if (clip) {
+        E.y = evt.t / 10000;
+        Q.setFromEuler(E);
+        clip.position.set(0, 1.75, -4).applyQuaternion(Q);
+        clip.lookAt(0, 1.75, 0);
     }
 }
 
-function stopCurrentAudioZone() {
-    for (let audioTrack of curAudioTracks) {
-        if (audioTrack.zone === curZone);
-        app.audio.stopClip(audioTrack.fileName);
-    }
-}
-
-async function playCurrentAudioZone() {
-    for (let audioTrack of curAudioTracks) {
-        if (audioTrack.zone === curZone) {
-            await app.audio.playClip(audioTrack.fileName, audioTrack.volume);
-        }
-    }
-}
-
-async function showMainMenu(_, skipHistory = false) {
-    setHistory(0, null, skipHistory, "Main");
-    await showMenu("VR/Languages", false, (language) => showLanguage(language.id));
-}
-
-async function showLanguage(languageID, skipHistory = false) {
-    setHistory(1, languageID, skipHistory, "Language");
-    await showMenu(`VR/Language/${languageID}/Lessons`, true, (lesson) => showLesson(lesson.id));
-}
-
-async function showLesson(lessonID, skipHistory = false) {
-    setHistory(2, lessonID, skipHistory, "Lesson");
-    app.clearScene();
-    await showMenu(`VR/Lesson/${lessonID}/Activities`, true, (activity) => showActivity(activity.id));
-}
-
-async function showActivity(activityID, skipHistory = false) {
+async function start() {
+    await app.fadeOut();
     if (!app.audio.ready) {
         showMenu([{
-            id: activityID,
-            name: "Start Activity"
+            name: "Start"
         }], false, async (activity) => {
             await once(app.audio, "audioready");
-            showActivity(activity.id, skipHistory);
+            start();
         });
     }
     else {
-        setHistory(3, activityID, skipHistory, "Activity");
+        clip = new CallaAudioSource(app.audio, "music");
+        await clip.load(
+            true,
+            false,
+            true,
+            onProgress,
+            "/audio/Planet.wav");
 
-        await app.fadeOut();
-        app.clearScene();
+        clip.minDistance = 1;
+        clip.maxDistance = 10;
+        clip.add(new DebugObject());
+        app.foreground.add(clip);
 
-        const [lessonProg, assetProg] = splitProgress(onProgress, [1, 99]);
-
-        const all = await getObject(`/VR/Activity/${activityID}`, lessonProg);
-        const {
-            transforms,
-            stations,
-            connections,
-            signs,
-            audioTracks
-        } = all;
-
-
-        const progs = splitProgress(assetProg, signs.length + audioTracks.length + 1);
-
-        /////////// GROUP DATA /////////////
-        for (let transform of transforms) {
-            const obj = new Object3D();
-            obj.name = transform.name;
-            obj.userData.id = transform.id;
-            obj.matrix.fromArray(transform.matrix);
-            obj.matrix.decompose(obj.position, obj.quaternion, obj.scale);
-            curTransforms.set(transform.id, obj);
-        }
-
-        let startID = null;
-        for (let station of stations) {
-            curStations.set(station.transformID, station);
-            if (station.isStart) {
-                startID = station.transformID;
-            }
-        }
-
-        for (let connection of connections) {
-            if (!curConnections.has(connection.fromStationID)) {
-                curConnections.set(connection.fromStationID, []);
-            }
-
-            const arr = curConnections.get(connection.fromStationID);
-            arr.push(connection.toStationID);
-        }
-
-        /////////// BUILD SCENE GRAPH /////////////
-        for (let transform of transforms) {
-            const child = curTransforms.get(transform.id);
-            if (transform.parentID === 0) {
-                app.foreground.add(child);
-            }
-            else {
-                const parent = curTransforms.get(transform.parentID);
-                parent.attach(child);
-            }
-        }
-
-        /////////// BUILD STATIONS /////////////
-        for (let fromStationID of curConnections.keys()) {
-            const from = curTransforms.get(fromStationID),
-                exits = curConnections.get(fromStationID);
-
-            from.visible = false;
-
-            for (let toStationID of exits) {
-                const to = curTransforms.get(toStationID);
-                const icon = new NavIcon(from, to);
-                icon.addEventListener("click", () => showStation(toStationID, onProgress));
-                from.add(icon);
-            }
-        }
-
-        /////////// BUILD SIGNS /////////////
-        for (let sign of signs) {
-            const transform = curTransforms.get(sign.transformID);
-            const img = new Sign(sign);
-            await img.setImage(sign.path, progs.shift());
-            transform.add(img);
-        }
-
-        /////////// BUILD AUDIO TRACKS /////////////
-        for (let audioTrack of audioTracks) {
-            const clip = new CallaAudioSource(app.audio, audioTrack.fileName);
-            await clip.load(
-                audioTrack.loop,
-                false,
-                audioTrack.spatialize,
-                progs.shift(),
-                audioTrack.path);
-
-            curAudioTracks.push(audioTrack);
-
-            clip.minDistance = audioTrack.minDistance;
-            clip.maxDistance = audioTrack.maxDistance;
-
-            if (audioTrack.spatialize) {
-                const transform = curTransforms.get(audioTrack.transformID);
-                transform.add(clip);
-            }
-
-            if (audioTrack.playbackTransformID > 0) {
-                const playbackButton = new PlaybackButton(audioTrack.fileName, audioTrack.volume, clip, app.audio);
-                playbackButton.addEventListener("play", stopCurrentAudioZone);
-                playbackButton.addEventListener("stop", playCurrentAudioZone);
-
-                const transform = curTransforms.get(audioTrack.playbackTransformID);
-                transform.add(playbackButton);
-
-                const findStation = () => {
-                    let here = transform;
-                    while (here !== null) {
-                        for (let station of curStations.values()) {
-                            if (station.transformID === here.userData.id) {
-                                return here;
-                            }
-                        }
-                        here = here.parent;
-                    }
-                };
-
-                const stTransform = findStation();
-                if (stTransform && stTransform !== transform) {
-                    stTransform.attach(playbackButton);
-                    playbackButton.lookAt(P$2.set(0, 1.75, 0).add(stTransform.position));
-                }
-            }
-        }
-
-        app.menu.add(homeIcon);
-
-        /////////// START ACTIVITY /////////////
-        if (startID !== null) {
-            await showStation(startID, progs.shift());
-        }
-
-        await app.fadeIn();
+        const playbackButton = new PlaybackButton("music", 1, clip, app.audio);
+        playbackButton.position.set(0, 1.75, -3);
+        playbackButton.lookAt(0, 1.75, 0);
+        app.foreground.add(playbackButton);
     }
-}
-
-async function showStation(stationID, onProgress) {
-    await app.fadeOut();
-
-    const station = curStations.get(stationID),
-        here = curTransforms.get(stationID);
-
-    await app.skybox.setImage(station.path, onProgress);
-    app.skybox.quaternion.fromArray(station.rotation);
-    app.showSkybox = true;
-
-    here.getWorldPosition(app.stage.position);
-
-    for (let otherStationID of curStations.keys()) {
-        const there = curTransforms.get(otherStationID);
-        there.visible = otherStationID === stationID;
-    }
-
-    await playAudioZone(station.zone);
-
-    console.info("Current station is", station.fileName);
-
     await app.fadeIn();
 }
 
-window.addEventListener("popstate", (evt) => {
-    const state = evt.state;
-    const view = views[state.step];
-    const func = view[1];
-    func(state.id, true);
-});
-
-function setHistory(step, id, skipHistory, name) {
-    if (!skipHistory) {
-        if (id !== null) {
-            const stub = `?${name}=${id}`;
-            history.pushState({ step, id }, name, stub);
-        }
-        else {
-            history.replaceState({ step }, name, "");
-        }
-    }
-}
-
-/**
- * @callback menuItemCallback
- * @param {any} selectedValue
- */
-
-const backButton = { name: "Back" };
 
 /**
  * @param {String|any[]} pathOrItems
@@ -47917,4 +47574,4 @@ function addMenuItem(item, y, onClick) {
 } catch(exp) {
     TraceKit.report(exp);
 }
-//# sourceMappingURL=yarrow.js.map
+//# sourceMappingURL=vrtest.js.map
