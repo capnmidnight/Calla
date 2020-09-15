@@ -2142,8 +2142,8 @@ class Vector3 {
 
 }
 
-const _vector = new Vector3();
-const _quaternion = new Quaternion();
+const _vector = /*@__PURE__*/ new Vector3();
+const _quaternion = /*@__PURE__*/ new Quaternion();
 
 /**
  * Translate a value into a range.
@@ -2288,10 +2288,18 @@ class InterpolatedPose {
      * @param {number} dt - the amount of time to take making the transition.
      */
     setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, t, dt) {
-        this.start.copy(this.current);
-        this.start.t = t;
         this.end.set(px, py, pz, fx, fy, fz, ux, uy, uz);
         this.end.t = t + dt;
+        if (dt <= 0) {
+            this.start.copy(this.end);
+            this.start.t = t;
+            this.current.copy(this.end);
+            this.current.t = t;
+        }
+        else {
+            this.start.copy(this.current);
+            this.start.t = t;
+        }
     }
 
     /**
@@ -20374,7 +20382,7 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 } );
 
-const versionString = "v0.10.3";
+const versionString = "v0.10.4";
 
 /* global JitsiMeetJS */
 
