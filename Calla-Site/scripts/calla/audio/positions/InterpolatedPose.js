@@ -41,7 +41,7 @@ export class InterpolatedPose {
             this.current.copy(this.end);
             this.current.t = t;
         }
-        else if (this.current.t > this.end.t) {
+        else {
             this.start.copy(this.current);
             this.start.t = t;
         }

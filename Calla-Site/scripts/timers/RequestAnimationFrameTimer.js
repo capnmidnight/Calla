@@ -2,7 +2,7 @@ import { BaseTimer } from "./BaseTimer";
 
 export class RequestAnimationFrameTimer extends BaseTimer {
     constructor() {
-        super(60);
+        super(120);
     }
 
     start() {
@@ -18,12 +18,5 @@ export class RequestAnimationFrameTimer extends BaseTimer {
             cancelAnimationFrame(this._timer);
             super.stop();
         }
-    }
-
-    get targetFrameRate() {
-        return super.targetFrameRate;
-    }
-
-    set targetFrameRate(fps) {
     }
 }
