@@ -1,18 +1,18 @@
 import { once } from "../calla/events/once";
 import { getObject } from "../calla/fetching";
-import { setRightUpFwdPosFromMatrix } from "../calla/math/matrices";
 import { isString } from "../calla/typeChecks";
+import { DebugObject } from "../graphics3d/DebugObject";
 import { TextMesh } from "../graphics3d/TextMesh";
-import { Object3D } from "../lib/three.js/src/core/Object3D";
-import { Vector3 } from "../lib/three.js/src/math/Vector3";
+import { Euler } from "../lib/three.js/src/math/Euler";
+import { Quaternion } from "../lib/three.js/src/math/Quaternion";
 import { Application } from "../vr/Application";
+import { CallaAudioSource } from "../vr/CallaAudioSource";
 import { PlaybackButton } from "../yarrow/PlaybackButton";
 
-const R = new Vector3();
-const U = new Vector3();
-const F = new Vector3();
-const P = new Vector3();
 const app = new Application();
+
+/** @type {CallaAudioSource} */
+let clip = null;
 
 /**
  * @param {Number} soFar
@@ -25,8 +25,21 @@ function onProgress(soFar, total, msg) {
 
 
 app.addEventListener("started", start);
+app.addEventListener("tick", update);
 
 app.start();
+
+const Q = new Quaternion();
+const E = new Euler();
+
+function update(evt) {
+    if (clip) {
+        E.y = evt.t / 10000;
+        Q.setFromEuler(E);
+        clip.position.set(0, 1.75, -4).applyQuaternion(Q);
+        clip.lookAt(0, 1.75, 0);
+    }
+}
 
 async function start() {
     await app.fadeOut();
@@ -39,32 +52,23 @@ async function start() {
         });
     }
     else {
-        const clip = await app.audio.createClip(
-            "music",
+        clip = new CallaAudioSource(app.audio, "music");
+        await clip.load(
             true,
             false,
             true,
-            null,
+            onProgress,
             "/audio/Planet.wav");
 
-        clip.spatializer.minDistance = 1;
-        clip.spatializer.maxDistance = 10;
-
-        const clipPose = new Object3D();
-        app.foreground.add(clipPose);
-        clipPose.position.set(-1, 1.75, -3);
-        clipPose.updateMatrixWorld();
-        setRightUpFwdPosFromMatrix(clipPose.matrixWorld, R, U, F, P);
-        app.audio.setClipPose(
-            "music",
-            P.x, P.y, P.z,
-            F.x, F.y, F.z,
-            U.x, U.y, U.z);
+        clip.minDistance = 1;
+        clip.maxDistance = 10;
+        clip.add(new DebugObject());
+        app.foreground.add(clip);
 
         const playbackButton = new PlaybackButton("music", 1, clip, app.audio);
+        playbackButton.position.set(0, 1.75, -3);
+        playbackButton.lookAt(0, 1.75, 0);
         app.foreground.add(playbackButton);
-        playbackButton.position.copy(clipPose.position);
-        playbackButton.lookAt(P.set(0, 1.75, 0));
     }
     await app.fadeIn();
 }

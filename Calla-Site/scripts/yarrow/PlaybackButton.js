@@ -11,13 +11,14 @@ const stopEvt = { type: "stop" };
 
 export class PlaybackButton extends Object3D {
     /**
-     * @param {AudioTrack} audioTrack
-     * @param {import("../calla/audio/AudioSource").AudioSource} clip
+     * @param {string} name
+     * @param {number} volume
+     * @param {import("../vr/CallaAudioSource").CallaAudioSource} clip
      * @param {import("../calla/audio/AudioManager").AudioManager} audioSys
      */
-    constructor(audioTrack, clip, audioSys) {
+    constructor(name, volume, clip, audioSys) {
         super();
-        this.name = "play-" + audioTrack.fileName;
+        this.name = "play-" + name;
 
         let isPlaying = false;
 
@@ -25,7 +26,7 @@ export class PlaybackButton extends Object3D {
             if (isPlaying) {
                 this.playButton.visible = true;
                 this.pauseButton.visible = false;
-                audioSys.stopClip(audioTrack.path);
+                audioSys.stopClip(name);
                 this.dispatchEvent(stopEvt);
                 isPlaying = false;
             }
@@ -36,9 +37,9 @@ export class PlaybackButton extends Object3D {
             this.playButton.visible = false;
             this.pauseButton.visible = true;
             this.dispatchEvent(playEvt);
-            await audioSys.playClip(audioTrack.path, audioTrack.volume)
+            await audioSys.playClip(name, volume)
             isPlaying = true;
-            await once(clip.spatializer.audio, "ended");
+            await once(clip.audioElement, "ended");
             onStop();
         });
 

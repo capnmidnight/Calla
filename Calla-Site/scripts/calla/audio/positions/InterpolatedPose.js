@@ -33,10 +33,18 @@ export class InterpolatedPose {
      * @param {number} dt - the amount of time to take making the transition.
      */
     setTarget(px, py, pz, fx, fy, fz, ux, uy, uz, t, dt) {
-        this.start.copy(this.current);
-        this.start.t = t;
         this.end.set(px, py, pz, fx, fy, fz, ux, uy, uz);
         this.end.t = t + dt;
+        if (dt <= 0) {
+            this.start.copy(this.end);
+            this.start.t = t;
+            this.current.copy(this.end);
+            this.current.t = t;
+        }
+        else if (this.current.t > this.end.t) {
+            this.start.copy(this.current);
+            this.start.t = t;
+        }
     }
 
     /**

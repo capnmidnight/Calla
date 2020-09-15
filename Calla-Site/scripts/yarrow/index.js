@@ -1,23 +1,20 @@
-import { Object3D } from "../lib/three.js/src/core/Object3D";
-import { Vector3 } from "../lib/three.js/src/math/Vector3";
 import { arrayClear } from "../calla/arrays/arrayClear";
 import { once } from "../calla/events/once";
 import { getObject } from "../calla/fetching";
-import { setRightUpFwdPosFromMatrix } from "../calla/math/matrices";
 import { splitProgress } from "../calla/progress";
 import { isString } from "../calla/typeChecks";
+import { door } from "../emoji/emojis";
 import { loadFont, makeFont } from "../graphics2d/fonts";
+import { EmojiIconMesh } from "../graphics3d/EmojiIconMesh";
 import { TextMesh } from "../graphics3d/TextMesh";
+import { Object3D } from "../lib/three.js/src/core/Object3D";
+import { Vector3 } from "../lib/three.js/src/math/Vector3";
 import { Application } from "../vr/Application";
+import { CallaAudioSource } from "../vr/CallaAudioSource";
 import { NavIcon } from "./NavIcon";
 import { PlaybackButton } from "./PlaybackButton";
 import { Sign } from "./Sign";
-import { door } from "../emoji/emojis";
-import { EmojiIconMesh } from "../graphics3d/EmojiIconMesh";
 
-const R = new Vector3();
-const U = new Vector3();
-const F = new Vector3();
 const P = new Vector3();
 const app = new Application();
 
@@ -67,7 +64,7 @@ app.addEventListener("sceneclearing", () => {
     curStations.clear();
     curConnections.clear();
     for (let audioTrack of curAudioTracks) {
-        app.audio.removeClip(audioTrack.path);
+        app.audio.removeClip(audioTrack.fileName);
     }
     arrayClear(curAudioTracks);
     curZone = null;
@@ -128,14 +125,14 @@ async function playAudioZone(zone) {
 function stopCurrentAudioZone() {
     for (let audioTrack of curAudioTracks) {
         if (audioTrack.zone === curZone);
-        app.audio.stopClip(audioTrack.path);
+        app.audio.stopClip(audioTrack.fileName);
     }
 }
 
 async function playCurrentAudioZone() {
     for (let audioTrack of curAudioTracks) {
         if (audioTrack.zone === curZone) {
-            await app.audio.playClip(audioTrack.path, audioTrack.volume);
+            await app.audio.playClip(audioTrack.fileName, audioTrack.volume);
         }
     }
 }
@@ -250,8 +247,8 @@ async function showActivity(activityID, skipHistory = false) {
 
         /////////// BUILD AUDIO TRACKS /////////////
         for (let audioTrack of audioTracks) {
-            const clip = await app.audio.createClip(
-                audioTrack.path,
+            const clip = new CallaAudioSource(app.audio, audioTrack.fileName);
+            await clip.load(
                 audioTrack.loop,
                 false,
                 audioTrack.spatialize,
@@ -260,22 +257,16 @@ async function showActivity(activityID, skipHistory = false) {
 
             curAudioTracks.push(audioTrack);
 
-            clip.spatializer.minDistance = audioTrack.minDistance;
-            clip.spatializer.maxDistance = audioTrack.maxDistance;
+            clip.minDistance = audioTrack.minDistance;
+            clip.maxDistance = audioTrack.maxDistance;
 
             if (audioTrack.spatialize) {
                 const transform = curTransforms.get(audioTrack.transformID);
-                setRightUpFwdPosFromMatrix(transform.matrixWorld, R, U, F, P);
-                app.audio.setClipPose(
-                    audioTrack.path,
-                    P.x, P.y, P.z,
-                    R.x, R.y, R.z,
-                    F.x, F.y, F.z,
-                    0);
+                transform.add(clip);
             }
 
             if (audioTrack.playbackTransformID > 0) {
-                const playbackButton = new PlaybackButton(audioTrack, clip, app.audio);
+                const playbackButton = new PlaybackButton(audioTrack.fileName, audioTrack.volume, clip, app.audio);
                 playbackButton.addEventListener("play", stopCurrentAudioZone);
                 playbackButton.addEventListener("stop", playCurrentAudioZone);
 

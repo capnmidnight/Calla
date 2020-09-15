@@ -1,14 +1,5 @@
-import { PerspectiveCamera } from "../lib/three.js/src/cameras/PerspectiveCamera";
-import { Object3D } from "../lib/three.js/src/core/Object3D";
-import { AmbientLight } from "../lib/three.js/src/lights/AmbientLight";
-import { DirectionalLight } from "../lib/three.js/src/lights/DirectionalLight";
-import { Color } from "../lib/three.js/src/math/Color";
-import { Vector3 } from "../lib/three.js/src/math/Vector3";
-import { WebGLRenderer } from "../lib/three.js/src/renderers/WebGLRenderer";
-import { Scene } from "../lib/three.js/src/scenes/Scene";
 import { AudioManager } from "../calla/audio/AudioManager";
 import { EventBase } from "../calla/events/EventBase";
-import { setRightUpFwdPosFromMatrix } from "../calla/math/matrices";
 import { Fader } from "../graphics3d/Fader";
 import { LoadingBar } from "../graphics3d/LoadingBar";
 import { Skybox } from "../graphics3d/Skybox";
@@ -17,25 +8,27 @@ import { CursorControl } from "../input/CursorControl";
 import { EventSystem } from "../input/EventSystem";
 import { ScreenPointerControls } from "../input/ScreenPointerControls";
 import { Stage } from "../input/Stage";
-import { ThreeJSTimer } from "../timers/ThreeJSTimer";
-import { ScreenControl } from "./ScreenControl";
 import { UISystem } from "../input/UISystem";
+import { PerspectiveCamera } from "../lib/three.js/src/cameras/PerspectiveCamera";
+import { Object3D } from "../lib/three.js/src/core/Object3D";
+import { AmbientLight } from "../lib/three.js/src/lights/AmbientLight";
+import { DirectionalLight } from "../lib/three.js/src/lights/DirectionalLight";
+import { Color } from "../lib/three.js/src/math/Color";
+import { WebGLRenderer } from "../lib/three.js/src/renderers/WebGLRenderer";
+import { Scene } from "../lib/three.js/src/scenes/Scene";
+import { ThreeJSTimer } from "../timers/ThreeJSTimer";
+import { CallaAudioListener } from "./CallaAudioListener";
+import { ScreenControl } from "./ScreenControl";
+import { TimerTickEvent } from "../timers/BaseTimer";
 
 const visibleBackground = new Color(0x606060);
 const invisibleBackground = new Color(0x000000);
-const R = new Vector3();
-const U = new Vector3();
-const F = new Vector3();
-const P = new Vector3();
+
+const updateEvt = new TimerTickEvent();
 
 export class Application extends EventBase {
     constructor() {
         super();
-
-        this.audio = new AudioManager();
-        this.audio.addEventListener("audioready", () => {
-            this.audio.createLocalUser("local-user");
-        });
 
         this.renderer = new WebGLRenderer({
             canvas: document.getElementById("frontBuffer"),
@@ -52,7 +45,11 @@ export class Application extends EventBase {
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.xr.enabled = true;
 
+        this.audio = new AudioManager();
+        this.listener = new CallaAudioListener(this.audio);
+
         this.camera = new PerspectiveCamera(50, 1, 0.01, 1000);
+        this.camera.add(this.listener);
 
         this.fader = new Fader(this.camera);
         this.fadeDepth = 0;
@@ -117,10 +114,14 @@ export class Application extends EventBase {
          * @param {import("../timers/BaseTimer").TimerTickEvent} evt
          */
         const update = (evt) => {
+            updateEvt.copy(evt);
+            this.dispatchEvent(updateEvt);
+
             if (!this.showSkybox) {
                 this.skybox.visible = false;
             }
 
+            this.audio.update();
             this.stage.update();
             this.cameraControl.update();
             this.skybox.update();
@@ -134,20 +135,8 @@ export class Application extends EventBase {
             this.menu.quaternion.copy(this.transition.quaternion);
 
             this.renderer.render(this.scene, this.camera);
-
-            const cam = this.renderer.xr.isPresenting
-                ? this.renderer.xr.getCamera(this.camera)
-                : this.camera;
-
-            setRightUpFwdPosFromMatrix(cam.matrixWorld, R, U, F, P);
-            this.audio.setUserPose(
-                "local-user",
-                P.x, P.y, P.z,
-                F.x, F.y, F.z,
-                U.x, U.y, U.z,
-                0);
-            this.audio.update();
         };
+
         this.timer = new ThreeJSTimer(this.renderer);
         this.timer.addEventListener("tick", update);
 

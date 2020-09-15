@@ -4,10 +4,19 @@ import { lerp } from "../calla/math/lerp";
 export class TimerTickEvent extends Event {
     constructor() {
         super("tick");
-        this.dt = 0;
         this.t = 0;
+        this.dt = 0;
         this.sdt = 0;
         Object.seal(this);
+    }
+
+    /**
+     * @param {TimerTickEvent} evt
+     */
+    copy(evt) {
+        this.t = evt.t;
+        this.dt = evt.dt;
+        this.sdt = evt.sdt;
     }
 }
 
