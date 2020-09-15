@@ -1,5 +1,5 @@
-import { MeshBasicMaterial } from "three/src/materials/MeshBasicMaterial";
-import { MeshStandardMaterial } from "three/src/materials/MeshStandardMaterial";
+import { MeshBasicMaterial } from "../lib/three.js/src/materials/MeshBasicMaterial";
+import { MeshStandardMaterial } from "../lib/three.js/src/materials/MeshStandardMaterial";
 
 const colors = new Map();
 

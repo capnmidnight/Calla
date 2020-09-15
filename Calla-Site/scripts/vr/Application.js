@@ -1,15 +1,14 @@
-import { PerspectiveCamera } from "three/src/cameras/PerspectiveCamera";
-import { Object3D } from "three/src/core/Object3D";
-import { GridHelper } from "three/src/helpers/GridHelper";
-import { AmbientLight } from "three/src/lights/AmbientLight";
-import { DirectionalLight } from "three/src/lights/DirectionalLight";
-import { Color } from "three/src/math/Color";
-import { Vector3 } from "three/src/math/Vector3";
-import { WebGLRenderer } from "three/src/renderers/WebGLRenderer";
-import { Scene } from "three/src/scenes/Scene";
+import { PerspectiveCamera } from "../lib/three.js/src/cameras/PerspectiveCamera";
+import { Object3D } from "../lib/three.js/src/core/Object3D";
+import { AmbientLight } from "../lib/three.js/src/lights/AmbientLight";
+import { DirectionalLight } from "../lib/three.js/src/lights/DirectionalLight";
+import { Color } from "../lib/three.js/src/math/Color";
+import { Vector3 } from "../lib/three.js/src/math/Vector3";
+import { WebGLRenderer } from "../lib/three.js/src/renderers/WebGLRenderer";
+import { Scene } from "../lib/three.js/src/scenes/Scene";
 import { AudioManager } from "../calla/audio/AudioManager";
 import { EventBase } from "../calla/events/EventBase";
-import { setRightUpFwdPos } from "../calla/math/setRightUpFwd";
+import { setRightUpFwdPosFromMatrix } from "../calla/math/matrices";
 import { Fader } from "../graphics3d/Fader";
 import { LoadingBar } from "../graphics3d/LoadingBar";
 import { Skybox } from "../graphics3d/Skybox";
@@ -93,14 +92,11 @@ export class Application extends EventBase {
         this.transition.visible = false;
         this.transition.add(this.loadingBar);
 
-        this.grid = new GridHelper(10, 10);
-
         this.scene = new Scene();
         this.scene.background = visibleBackground;
         this.scene.add(this.background);
         this.scene.add(this.foreground);
         this.scene.add(this.transition);
-        this.scene.add(this.grid);
 
         this.cursors = new CursorControl(this.renderer.domElement);
 
@@ -134,13 +130,16 @@ export class Application extends EventBase {
             this.stage.presentationPoint.getWorldPosition(this.transition.position);
             this.stage.presentationPoint.getWorldQuaternion(this.transition.quaternion);
 
-            this.stage.getWorldPosition(this.grid.position);
+            this.menu.position.copy(this.transition.position);
+            this.menu.quaternion.copy(this.transition.quaternion);
+
+            this.renderer.render(this.scene, this.camera);
 
             const cam = this.renderer.xr.isPresenting
                 ? this.renderer.xr.getCamera(this.camera)
                 : this.camera;
-            
-            setRightUpFwdPos(cam.matrixWorld, R, U, F, P);
+
+            setRightUpFwdPosFromMatrix(cam.matrixWorld, R, U, F, P);
             this.audio.setUserPose(
                 "local-user",
                 P.x, P.y, P.z,
@@ -148,11 +147,6 @@ export class Application extends EventBase {
                 U.x, U.y, U.z,
                 0);
             this.audio.update();
-
-            this.menu.position.copy(this.transition.position);
-            this.menu.quaternion.copy(this.transition.quaternion);
-
-            this.renderer.render(this.scene, this.camera);
         };
         this.timer = new ThreeJSTimer(this.renderer);
         this.timer.addEventListener("tick", update);
@@ -177,7 +171,7 @@ export class Application extends EventBase {
         if (this.fadeDepth === 1) {
             await this.fader.fadeOut();
             this.skybox.visible = false;
-            this.grid.visible = false;
+            this.stage.grid.visible = false;
             this.scene.background = invisibleBackground;
             this.foreground.visible = false;
             this.transition.visible = true;
@@ -191,7 +185,7 @@ export class Application extends EventBase {
         if (this.fadeDepth === 0) {
             await this.fader.fadeOut();
             this.skybox.visible = this.showSkybox;
-            this.grid.visible = true;
+            this.stage.grid.visible = true;
             this.scene.background = visibleBackground;
             this.foreground.visible = true;
             this.transition.visible = false;

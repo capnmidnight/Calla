@@ -1,4 +1,4 @@
-import { Object3D } from "three/src/core/Object3D";
+import { Object3D } from "../lib/three.js/src/core/Object3D";
 import { once } from "../calla/events/once";
 import { pauseButton, playButton, speakerHighVolume, speakerLowVolume } from "../emoji/emojis";
 import { EmojiIconMesh } from "../graphics3d/EmojiIconMesh";

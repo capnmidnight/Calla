@@ -1,4 +1,4 @@
-import { Object3D } from "three/src/core/Object3D";
+import { Object3D } from "../lib/three.js/src/core/Object3D";
 import { Cube } from "./Cube";
 
 function chrome(x, y, z, w, h, d) {

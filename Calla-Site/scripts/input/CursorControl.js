@@ -32,7 +32,7 @@ export class CursorControl {
 
     /**
      * 
-     * @param {import("three").Intersection} lastHit
+     * @param {import("../lib/three.js").Intersection} lastHit
      * @param {import("./ScreenPointerControls").ScreenPointerEvent} evt
      */
     setCursor(lastHit, evt) {

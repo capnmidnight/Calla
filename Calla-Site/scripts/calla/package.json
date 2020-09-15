@@ -41,8 +41,5 @@
   "bugs": {
     "url": "https://github.com/capnmidnight/Calla/issues"
   },
-  "homepage": "https://github.com/capnmidnight/Calla#README",
-  "devDependencies": {
-    "three": "^0.120.1"
-  }
+  "homepage": "https://github.com/capnmidnight/Calla#README"
 }

@@ -1,4 +1,4 @@
-import { FrontSide } from "three/src/constants";
+import { FrontSide } from "../lib/three.js/src/constants";
 import { TextMesh } from "./TextMesh";
 
 export class EmojiIconMesh extends TextMesh {

@@ -1,4 +1,4 @@
-import { Mesh } from "three/src/objects/Mesh";
+import { Mesh } from "../lib/three.js/src/objects/Mesh";
 import { once } from "../calla/events/once";
 import { plane } from "./Plane";
 import { solid } from "./solid";

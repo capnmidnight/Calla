@@ -1,7 +1,7 @@
-import { Euler } from "three/src/math/Euler";
-import { Quaternion } from "three/src/math/Quaternion";
-import { Vector2 } from "three/src/math/Vector2";
-import { Vector3 } from "three/src/math/Vector3";
+import { Euler } from "../lib/three.js/src/math/Euler";
+import { Quaternion } from "../lib/three.js/src/math/Quaternion";
+import { Vector2 } from "../lib/three.js/src/math/Vector2";
+import { Vector3 } from "../lib/three.js/src/math/Vector3";
 import { EventBase } from "../calla/events/EventBase";
 import { clamp } from "../calla/math/clamp";
 import { MouseButtons } from "./MouseButton";
@@ -59,7 +59,7 @@ class ModeChangeEvent extends Event {
 export class CameraControl extends EventBase {
 
     /**
-     * @param {import("three").PerspectiveCamera} camera
+     * @param {import("../lib/three.js").PerspectiveCamera} camera
      * @param {import("./Stage").Stage} stage
      * @param {import("./ScreenPointerControls").ScreenPointerControls} controls
      * @param {import("./CursorControl").CursorControl} cursors

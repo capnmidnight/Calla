@@ -1,5 +1,5 @@
-import { Mesh } from "three/src/objects/Mesh";
-import { Texture } from "three/src/textures/Texture";
+import { Mesh } from "../lib/three.js/src/objects/Mesh";
+import { Texture } from "../lib/three.js/src/textures/Texture";
 import { once } from "../calla/events/once";
 import { getFile } from "../calla/fetching";
 import { isString } from "../calla/typeChecks";

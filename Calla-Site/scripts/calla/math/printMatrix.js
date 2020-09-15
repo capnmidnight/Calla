@@ -20,7 +20,7 @@ export function printMatrixElements(pre, m) {
 }
 
 /**
- * @param {import("three/src/math/Matrix4").Matrix4} m
+ * @param {import("../lib/three.js/src/math/Matrix4").Matrix4} m
  **/
 export function printMatrix(pre, m) {
     printMatrixElements(pre, m.elements);

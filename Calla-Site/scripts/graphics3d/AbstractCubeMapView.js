@@ -1,10 +1,10 @@
-import { BackSide } from "three/src/constants";
-import { MeshBasicMaterial } from "three/src/materials/MeshBasicMaterial";
+import { BackSide } from "../lib/three.js/src/constants";
+import { MeshBasicMaterial } from "../lib/three.js/src/materials/MeshBasicMaterial";
 import { TexturedMesh } from "./TexturedMesh";
 
 export class AbstractCubeMapView extends TexturedMesh {
     /**
-     * @param {import("three").BoxBufferGeometry|import("three").SphereBufferGeometry} geom
+     * @param {import("../lib/three.js").BoxBufferGeometry|import("../lib/three.js").SphereBufferGeometry} geom
      */
     constructor(geom) {
         const mat = new MeshBasicMaterial({ side: BackSide });

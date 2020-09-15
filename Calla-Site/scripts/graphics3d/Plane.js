@@ -1,5 +1,5 @@
-import { PlaneBufferGeometry } from "three/src/geometries/PlaneGeometry";
-import { Mesh } from "three/src/objects/Mesh";
+import { PlaneBufferGeometry } from "../lib/three.js/src/geometries/PlaneGeometry";
+import { Mesh } from "../lib/three.js/src/objects/Mesh";
 import { solid } from "./solid";
 
 export const plane = new PlaneBufferGeometry(1, 1, 1, 1);

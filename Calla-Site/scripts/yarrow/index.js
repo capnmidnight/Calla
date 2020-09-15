@@ -1,9 +1,9 @@
-import { Object3D } from "three/src/core/Object3D";
-import { Vector3 } from "three/src/math/Vector3";
+import { Object3D } from "../lib/three.js/src/core/Object3D";
+import { Vector3 } from "../lib/three.js/src/math/Vector3";
 import { arrayClear } from "../calla/arrays/arrayClear";
 import { once } from "../calla/events/once";
 import { getObject } from "../calla/fetching";
-import { setRightUpFwdPos } from "../calla/math/setRightUpFwd";
+import { setRightUpFwdPosFromMatrix } from "../calla/math/matrices";
 import { splitProgress } from "../calla/progress";
 import { isString } from "../calla/typeChecks";
 import { loadFont, makeFont } from "../graphics2d/fonts";
@@ -265,7 +265,7 @@ async function showActivity(activityID, skipHistory = false) {
 
             if (audioTrack.spatialize) {
                 const transform = curTransforms.get(audioTrack.transformID);
-                setRightUpFwdPos(transform.matrixWorld, R, U, F, P);
+                setRightUpFwdPosFromMatrix(transform.matrixWorld, R, U, F, P);
                 app.audio.setClipPose(
                     audioTrack.path,
                     P.x, P.y, P.z,

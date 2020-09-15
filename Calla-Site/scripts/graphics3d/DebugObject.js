@@ -2,7 +2,7 @@ import { Cube } from "./Cube";
 
 export class DebugObject extends Cube {
     /**
-     * @param {string|number|import("three").Color} color
+     * @param {string|number|import("../lib/three.js").Color} color
      */
     constructor(color = 0xff0000) {
         super(color, 0.1, 0.1, 0.1);

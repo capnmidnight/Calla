@@ -1,4 +1,4 @@
-import { Vector3 } from "three/src/math/Vector3";
+import { Vector3 } from "../../../lib/three.js/src/math/Vector3";
 import { project } from "../../math/project";
 import { slerpVectors } from "../../math/slerpVectors";
 

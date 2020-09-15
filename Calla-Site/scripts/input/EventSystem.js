@@ -1,4 +1,4 @@
-import { Raycaster } from "three/src/core/Raycaster";
+import { Raycaster } from "../lib/three.js/src/core/Raycaster";
 import { arrayClear } from "../calla/arrays/arrayClear";
 import { EventBase } from "../calla/events/EventBase";
 import { Cube } from "../graphics3d/Cube";

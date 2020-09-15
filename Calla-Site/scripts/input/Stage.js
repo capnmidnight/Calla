@@ -1,6 +1,7 @@
-import { Object3D } from "three/src/core/Object3D";
-import { Euler } from "three/src/math/Euler";
-import { Quaternion } from "three/src/math/Quaternion";
+import { Object3D } from "../lib/three.js/src/core/Object3D";
+import { GridHelper } from "../lib/three.js/src/helpers/GridHelper";
+import { Euler } from "../lib/three.js/src/math/Euler";
+import { Quaternion } from "../lib/three.js/src/math/Quaternion";
 import { clamp } from "../calla/math/clamp";
 
 /**
@@ -14,8 +15,8 @@ const defaultAvatarHeight = 1.75,
 
 export class Stage extends Object3D {
     /**
-     * @param {import("three").WebGLRenderer} renderer
-     * @param {import("three").PerspectiveCamera} camera
+     * @param {import("../lib/three.js").WebGLRenderer} renderer
+     * @param {import("../lib/three.js").PerspectiveCamera} camera
      */
     constructor(renderer, camera) {
         super();
@@ -50,7 +51,10 @@ export class Stage extends Object3D {
         this.avatar.add(this.shoulders);
         this.avatar.add(this.presentationPoint);
 
+        this.grid = new GridHelper(10, 10);
+
         this.add(this.avatar);
+        this.add(this.grid);
     }
 
     /**
