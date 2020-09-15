@@ -15,6 +15,9 @@ namespace Calla
                 .UseSystemd()
                 .ConfigureWebHostDefaults(webBuilder => webBuilder
                     .ConfigureKestrel(kestrel => kestrel.AddServerHeader = false)
+#if DEBUG
+                    .UseUrls("http://*:80", "https://*:443")
+#endif
                     .UseStartup<Startup>());
     }
 }
