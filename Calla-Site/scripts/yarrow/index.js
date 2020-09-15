@@ -362,7 +362,7 @@ const backButton = { name: "Back" };
 async function showMenu(pathOrItems, showBackButton, onClick) {
     await app.fadeOut();
 
-    await app.skybox.setImage("images/cube2.jpg");
+    await app.skybox.setImage("images/default-background.jpg");
     app.sun.position.set(1, 1, -1);
     app.sun.lookAt(0, 0, 0);
     app.showSkybox = true;
