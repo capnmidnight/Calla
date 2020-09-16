@@ -32,6 +32,9 @@
   <ItemGroup>
     <Content Include="dist\calla.cjs.js" />
     <Content Include="dist\calla.js" />
+    <Content Include="doc\basic\Tutorial.md" />
+    <Content Include="doc\basic\tutorial1.png" />
+    <Content Include="doc\basic\tutorial2.png" />
     <Content Include="lib\jquery.js" />
     <Content Include="lib\resonance-audio\.eslintrc.js" />
     <Content Include="lib\resonance-audio\.gitignore" />
@@ -258,6 +261,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="dist\" />
+    <Folder Include="doc\basic\" />
     <Folder Include="lib\" />
     <Folder Include="lib\resonance-audio\" />
     <Folder Include="lib\resonance-audio\build\" />
@@ -279,6 +283,7 @@
     <Folder Include="lib\resonance-audio\omnitone\test\resources\" />
     <Folder Include="lib\resonance-audio\src\" />
     <Folder Include="lib\resonance-audio\test\" />
+    <Folder Include="doc\" />
     <Folder Include="src\" />
     <Folder Include="src\arrays\" />
     <Folder Include="src\audio\" />
