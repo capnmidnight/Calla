@@ -1,7 +1,6 @@
 import fs from "fs";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import { terser } from "rollup-plugin-terser";
-//import typescript from "@rollup/plugin-typescript";
 
 const traceKit = fs.readFileSync("node_modules/tracekit/tracekit.js", { encoding: "utf8" });
 const banner = `${traceKit}
@@ -34,20 +33,6 @@ function def(name, withTraceKit, minify) {
     const opts = {
         input: `scripts/${name}/index.js`,
         plugins: [
-            //    typescript({
-            //        tsconfig: false,
-            //        noImplicitAny: false,
-            //        alwaysStrict: true,
-            //        noEmitOnError: true,
-            //        removeComments: false,
-            //        sourceMap: true,
-            //        module: "ES2020",
-            //        target: "ES6",
-            //        allowJs: true,
-            //        checkJs: true,
-            //        esModuleInterop: true,
-            //        skipLibCheck: true
-            //    }),
             nodeResolve()
         ],
         output: [{
@@ -76,7 +61,11 @@ function def(name, withTraceKit, minify) {
     return opts;
 }
 
-const bundles = [];
+const bundles = [
+    def("tests", false, false),
+    def("version", false, true),
+    def("basic", false, true),
+    def("game", true, true)];
 
 
 if (process.env.BUILD === "production") {
@@ -90,23 +79,6 @@ if (process.env.BUILD === "production") {
             file: `scripts/calla/calla.cjs.js`
         }]
     });
-}
-
-if (process.env.BUILD === "yarrow"
-    || process.env.BUILD === "development"
-    || process.env.BUILD === "production") {
-    bundles.push(def("yarrow", true, true));
-    bundles.push(def("vrtest", true, true));
-}
-
-if (process.env.BUILD === "calla"
-    || process.env.BUILD === "development"
-    || process.env.BUILD === "production") {
-    bundles.push(
-        def("tests", false, false),
-        def("version", false, true),
-        def("basic", false, true),
-        def("game", true, true));
 }
 
 export default bundles;

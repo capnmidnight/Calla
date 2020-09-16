@@ -108,7 +108,8 @@ namespace Calla.Controllers
                 .AsNoTracking()
                 .Where(pv => !blacklist.Contains(pv.Referrer))
                 .OrderByDescending(pv=>pv.Timestamp)
-                .Select(pv => pv.Referrer));
+                .Select(pv => pv.Referrer)
+                .ToArray());
         }
 
         [HttpGet]

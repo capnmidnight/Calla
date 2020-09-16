@@ -44,8 +44,4 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Juniper\src\Juniper.Root\Juniper.Root.csproj" />
-    <ProjectReference Include="..\Juniper\src\Juniper.Server\Juniper.Server.csproj" />
-  </ItemGroup>
 </Project>

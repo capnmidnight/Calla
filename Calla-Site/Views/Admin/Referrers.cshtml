@@ -3,10 +3,10 @@
     ViewData["Title"] = "Referrers";
 }
 
-@model IEnumerable<string>
+@model string[]
 
 
-@if (Model.Empty())
+@if (Model.Length == 0)
 {
     <p>No Content</p>
 }

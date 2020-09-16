@@ -1,2 +1,1 @@
-dotnet ef dbcontext scaffold Name=ConnectionStrings:Yarrow Npgsql.EntityFrameworkCore.PostgreSQL -o Data/Yarrow --context YarrowContext --force
 dotnet ef dbcontext scaffold Name=ConnectionStrings:Calla Npgsql.EntityFrameworkCore.PostgreSQL -o Data/Calla --context CallaContext --force

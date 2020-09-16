@@ -4,7 +4,6 @@ import { onBlur, onClick, onFocus, onKeyPress, onMouseOut, onMouseOver } from ".
 import { gridPos, row } from "../../html/grid";
 import { hide, isOpen } from "../../html/ops";
 import { Button, Canvas, Div, InputText } from "../../html/tags";
-import { HubConnectionBuilder } from "../../lib/signalr/dist/esm/HubConnectionBuilder";
 import { User } from "../User";
 import { FormDialog } from "./FormDialog";
 
@@ -43,26 +42,24 @@ export class UserDirectoryForm extends FormDialog {
         /** @type {Map<string, CanvasRenderingContext2D>} */
         this.avatarGs = new Map();
 
-        this.chat = new HubConnectionBuilder().withUrl("/Chat").build();
-
         let lastUser = null;
 
-        this.chat.on("ReceiveMessage", (room, user, message) => {
-            if (user !== lastUser) {
-                lastUser = user;
-                user = "";
-            }
+        //this.chat.on("ReceiveMessage", (room, user, message) => {
+        //    if (user !== lastUser) {
+        //        lastUser = user;
+        //        user = "";
+        //    }
 
-            this.messages.append(Div(user), Div(message));
-            this.messages.lastChild.scrollIntoView();
-        });
+        //    this.messages.append(Div(user), Div(message));
+        //    this.messages.lastChild.scrollIntoView();
+        //});
 
         const sendMessage = async () => {
             if (this.entry.value.length > 0) {
                 this.send.disabled
                     = this.entry.disabled
                     = true;
-                await this.chat.invoke("SendMessage", this.roomName, this.userName, this.entry.value);
+                //await this.chat.invoke("SendMessage", this.roomName, this.userName, this.entry.value);
                 this.entry.value = "";
                 this.entry.disabled
                     = this.send.disabled
@@ -102,8 +99,8 @@ export class UserDirectoryForm extends FormDialog {
     async startAsync(roomName, userName) {
         this.roomName = roomName;
         this.userName = userName;
-        await this.chat.start();
-        await this.chat.invoke("Join", this.roomName);
+        //await this.chat.start();
+        //await this.chat.invoke("Join", this.roomName);
         this.entry.disabled
             = this.send.disabled
             = false;

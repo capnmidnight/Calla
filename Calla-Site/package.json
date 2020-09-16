@@ -4,11 +4,7 @@
   "private": true,
   "scripts": {
     "build": "rollup -c --environment BUILD:production",
-    "build:calla": "rollup -c --environment BUILD:calla",
-    "build:yarrow": "rollup -c --environment BUILD:yarrow",
-    "watch": "rollup -c -w --environment BUILD:development",
-    "watch:calla": "rollup -c -w --environment BUILD:calla",
-    "watch:yarrow": "rollup -c -w --environment BUILD:yarrow"
+    "watch": "rollup -c -w --environment BUILD:development"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^9.0.0",
@@ -18,7 +14,7 @@
   },
   "-vs-binding": {
     "ProjectOpened": [
-      "watch:yarrow"
+      "watch"
     ]
   }
 }

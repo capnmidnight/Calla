@@ -1,5 +1,4 @@
 using Calla.ActionFilters;
-using Calla.Hubs;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -35,14 +34,11 @@ namespace Calla
             services.AddAuthorization();
             services.AddEntityFrameworkNpgsql();
             services.AddSignalR();
-            services.AddDbContext<Yarrow.Data.YarrowContext>();
 
             var controllersWithViews = services.AddControllersWithViews();
-            var razorPages = services.AddRazorPages();
             if (Environment.IsDevelopment())
             {
                 controllersWithViews.AddRazorRuntimeCompilation();
-                razorPages.AddRazorRuntimeCompilation();
             }
 
             services.AddScoped<LogHitsAttribute>();
@@ -117,10 +113,6 @@ namespace Calla
             endpoints.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}");
-
-            endpoints.MapRazorPages();
-
-            endpoints.MapHub<ChatHub>("/Chat");
         }
     }
 }
