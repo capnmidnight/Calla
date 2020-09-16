@@ -1,6 +1,6 @@
-import { setRightUpFwdPosFromMatrix } from "../calla/math/matrices";
-import { Object3D } from "../lib/three.js/src/core/Object3D";
-import { Vector3 } from "../lib/three.js/src/math/Vector3";
+import { Object3D } from "../../lib/three.js/src/core/Object3D";
+import { Vector3 } from "../../lib/three.js/src/math/Vector3";
+import { setRightUpFwdPosFromMatrix } from "../math/matrices";
 
 const R = new Vector3();
 const U = new Vector3();

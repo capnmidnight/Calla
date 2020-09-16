@@ -1,5 +1,6 @@
 import { AudioManager } from "../calla/audio/AudioManager";
 import { EventBase } from "../calla/events/EventBase";
+import { CallaAudioListener } from "../calla/vr/CallaAudioListener";
 import { Fader } from "../graphics3d/Fader";
 import { LoadingBar } from "../graphics3d/LoadingBar";
 import { Skybox } from "../graphics3d/Skybox";
@@ -16,10 +17,9 @@ import { DirectionalLight } from "../lib/three.js/src/lights/DirectionalLight";
 import { Color } from "../lib/three.js/src/math/Color";
 import { WebGLRenderer } from "../lib/three.js/src/renderers/WebGLRenderer";
 import { Scene } from "../lib/three.js/src/scenes/Scene";
-import { ThreeJSTimer } from "../timers/ThreeJSTimer";
-import { CallaAudioListener } from "./CallaAudioListener";
-import { ScreenControl } from "./ScreenControl";
 import { TimerTickEvent } from "../timers/BaseTimer";
+import { ThreeJSTimer } from "../timers/ThreeJSTimer";
+import { ScreenControl } from "./ScreenControl";
 
 const visibleBackground = new Color(0x606060);
 const invisibleBackground = new Color(0x000000);
@@ -140,6 +140,15 @@ export class Application extends EventBase {
         this.timer = new ThreeJSTimer(this.renderer);
         this.timer.addEventListener("tick", update);
 
+        /**
+         * @param {number} soFar
+         * @param {number} total
+         * @param {string?} msg
+         */
+        this.onProgress = (soFar, total, msg) => {
+            this.loadingBar.onProgress(soFar, total, msg);
+        };
+
         window.app = this;
     }
 
@@ -180,14 +189,5 @@ export class Application extends EventBase {
             this.transition.visible = false;
             await this.fader.fadeIn();
         }
-    }
-
-    /**
-     * @param {number} soFar
-     * @param {number} total
-     * @param {string?} msg
-     */
-    onProgress(soFar, total, msg) {
-        this.loadingBar.onProgress(soFar, total, msg);
     }
 }
