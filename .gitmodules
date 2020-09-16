@@ -1,3 +1,4 @@
 [submodule "resonance-audio"]
 	path = Calla/lib/resonance-audio
 	url = https://github.com/capnmidnight/resonance-audio-web-sdk.git
+	branch = master
