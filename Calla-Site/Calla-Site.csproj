@@ -19,6 +19,7 @@
     <Content Remove="scripts\lib\signalr\node_modules\**" />
     <EmbeddedResource Remove="scripts\lib\signalr\node_modules\**" />
     <None Remove="scripts\lib\signalr\node_modules\**" />
+    <TypeScriptCompile Remove="node_modules\**" />
     <TypeScriptCompile Remove="scripts\lib\signalr\node_modules\**" />
   </ItemGroup>
   <ItemGroup>
