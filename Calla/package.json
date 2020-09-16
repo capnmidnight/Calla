@@ -9,9 +9,7 @@
         "build:major": "npm version major && node writeversion.js && rollup -c --environment BUILD:production",
         "watch": "rollup -c -w --environment BUILD:development"
     },
-    "dependencies": {
-        "three": "^0.120.1"
-    },
+    "dependencies": {},
     "devDependencies": {
         "@rollup/plugin-node-resolve": "^9.0.0",
         "rollup": "^2.27.0",

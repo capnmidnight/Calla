@@ -1,7 +1,7 @@
 /**
- * @param {import("three").Vector3} m
- * @param {import("three").Vector3} a
- * @param {import("three").Vector3} b
+ * @param {import("./Vector3").Vector3} m
+ * @param {import("./Vector3").Vector3} a
+ * @param {import("./Vector3").Vector3} b
  * @param {number} p
  */
 

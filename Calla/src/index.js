@@ -8,4 +8,3 @@ export * from "./math";
 export * from "./progress";
 export * from "./typeChecks";
 export * from "./version";
-export * from "./vr";

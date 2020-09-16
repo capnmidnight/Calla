@@ -237,9 +237,7 @@
     <Content Include="src\events\EventBase.js" />
     <Content Include="src\events\index.js" />
     <Content Include="src\events\once.js" />
-    <Content Include="src\events\onUserGesture.js">
-      <SubType>Code</SubType>
-    </Content>
+    <Content Include="src\events\onUserGesture.js" />
     <Content Include="src\events\until.js" />
     <Content Include="src\events\wait.js" />
     <Content Include="src\events\when.js" />
@@ -249,21 +247,13 @@
     <Content Include="src\math\clamp.js" />
     <Content Include="src\math\index.js" />
     <Content Include="src\math\lerp.js" />
-    <Content Include="src\math\matrices.js" />
     <Content Include="src\math\project.js" />
     <Content Include="src\math\slerpVectors.js" />
     <Content Include="src\math\unproject.js" />
+    <Content Include="src\math\Vector3.js" />
     <Content Include="src\progress.js" />
     <Content Include="src\typeChecks.js" />
     <Content Include="src\version.js" />
-    <Content Include="src\vr\BaseThreeJSAudioObject.js">
-      <SubType>Code</SubType>
-    </Content>
-    <Content Include="src\vr\CallaAudioListener.js" />
-    <Content Include="src\vr\CallaAudioSource.js" />
-    <Content Include="src\vr\index.js">
-      <SubType>Code</SubType>
-    </Content>
     <Content Include="writeversion.js" />
   </ItemGroup>
   <ItemGroup>
@@ -298,7 +288,6 @@
     <Folder Include="src\audio\spatializers\sources\" />
     <Folder Include="src\events\" />
     <Folder Include="src\math\" />
-    <Folder Include="src\vr\" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsToolsV2.targets" />
   <ProjectExtensions>
