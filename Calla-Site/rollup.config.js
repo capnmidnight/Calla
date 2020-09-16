@@ -61,24 +61,26 @@ function def(name, withTraceKit, minify) {
     return opts;
 }
 
-const bundles = [
-    def("tests", false, false),
-    def("version", false, true),
-    def("basic", false, true),
-    def("game", true, true)];
-
+const bundles = [];
 
 if (process.env.BUILD === "production") {
-    bundles.push({
-        input: `scripts/calla/index.js`,
-        plugins: [
-            nodeResolve()
-        ],
-        output: [{
-            format: "cjs",
-            file: `scripts/calla/calla.cjs.js`
-        }]
-    });
+    bundles.push(def("version", false, true));
+}
+
+if (process.env.BUILD === "development") {
+    bundles.push(def("tests", false, false));
+}
+
+if (process.env.BUILD === "production"
+    || process.env.BUILD === "development"
+    || process.env.BUILD === "basic") {
+    bundles.push(def("basic", false, true));
+}
+
+if (process.env.BUILD === "production"
+    || process.env.BUILD === "development"
+    || process.env.BUILD === "game") {
+    bundles.push(def("game", true, true));
 }
 
 export default bundles;

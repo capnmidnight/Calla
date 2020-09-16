@@ -1,4 +1,3 @@
-import { isGoodNumber, isString } from "../../calla/typeChecks";
 import { disabled, height, htmlFor, id, max, min, placeHolder, step, value, width } from "../../html/attrs";
 import { cssWidth } from "../../html/css";
 import { onClick, onInput, onKeyUp } from "../../html/evts";
@@ -9,6 +8,7 @@ import { OptionPanel } from "../../html/OptionPanelTag";
 import { SelectBox } from "../../html/SelectBoxTag";
 import { Button, Canvas, Div, InputURL, Label, P } from "../../html/tags";
 import { EventedGamepad } from "../../input/EventedGamepad";
+import { isGoodNumber, isString } from "../../lib/calla";
 import { User } from "../User";
 import { FormDialog } from "./FormDialog";
 import { InputBinding } from "./InputBinding";

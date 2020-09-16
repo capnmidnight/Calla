@@ -1,7 +1,5 @@
-import { EventBase } from "../calla/events/EventBase";
 import { isFirefox } from "../html/flags";
-import { project } from "../calla/math/project";
-import { unproject } from "../calla/math/unproject";
+import { EventBase, project, unproject } from "../lib/calla";
 
 export class ScreenPointerEvent extends Event {
     constructor(type) {

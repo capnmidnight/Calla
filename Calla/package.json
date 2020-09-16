@@ -1,0 +1,64 @@
+{
+    "name": "calla",
+    "version": "0.11.0",
+    "homepage": "https://calla.chat",
+    "scripts": {
+        "build": "rollup -c --environment BUILD:production",
+        "build:patch": "npm version patch && node writeversion.js && rollup -c --environment BUILD:production",
+        "build:minor": "npm version minor && node writeversion.js && rollup -c --environment BUILD:production",
+        "build:major": "npm version major && node writeversion.js && rollup -c --environment BUILD:production",
+        "watch": "rollup -c -w --environment BUILD:development"
+    },
+    "dependencies": {
+        "three": "^0.120.1"
+    },
+    "devDependencies": {
+        "@rollup/plugin-node-resolve": "^9.0.0",
+        "rollup": "^2.27.0",
+        "rollup-plugin-terser": "^7.0.0"
+    },
+    "-vs-binding": {
+        "ProjectOpened": [
+            "watch"
+        ]
+    },
+    "description": "Teleconferencing through Jitsi with audio spatialization",
+    "module": "index.js",
+    "main": "calla.cjs.js",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/capnmidnight/Calla.git"
+    },
+    "keywords": [
+        "WebRTC",
+        "Jitsi",
+        "teleconferencing",
+        "meeting",
+        "communication",
+        "WebXR",
+        "WebVR",
+        "WebAudio",
+        "Web Audio",
+        "WebAudio API",
+        "Web Audio API",
+        "VR audio",
+        "360 audio",
+        "interactive audio",
+        "spatialized audio",
+        "spatial audio",
+        "spatial",
+        "spatialization",
+        "ambisonic",
+        "audio"
+    ],
+    "author": "Sean T. McBeth <sean.mcbeth@gmail.com> (https://github.com/capnmidnight)",
+    "contributors": [
+        "Sean T. McBeth <sean.mcbeth@gmail.com> (https://github.com/capnmidnight)",
+        "mooomooo (https://github.com/mooomooo)",
+        "heinzlotto (https://github.com/heinzelotto)"
+    ],
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/capnmidnight/Calla/issues"
+    }
+}

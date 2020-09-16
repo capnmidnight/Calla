@@ -1,4 +1,4 @@
-import { EventBase } from "../calla/events/EventBase";
+import { EventBase } from "../lib/calla";
 import { TestCaseFailEvent } from "./TestCaseFailEvent";
 import { TestCaseMessageEvent } from "./TestCaseMessageEvent";
 import { TestCaseSuccessEvent } from "./TestCaseSuccessEvent";

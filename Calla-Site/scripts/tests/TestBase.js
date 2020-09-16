@@ -1,8 +1,5 @@
-import { CallaClient } from "../calla/CallaClient";
-import { once } from "../calla/events/once";
-import { wait } from "../calla/events/wait";
-import { when } from "../calla/events/when";
 import { bust } from "../emoji/emojis";
+import { CallaClient, once, wait, when } from "../lib/calla";
 import { TestCase } from "../testing/TestCase";
 import { userNumber } from "../testing/userNumber";
 

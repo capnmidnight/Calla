@@ -1,4 +1,4 @@
-import { isBoolean } from "../calla/typeChecks";
+import { isBoolean } from "../lib/calla";
 
 /**
  * A CSS property that will be applied to an element's style attribute.

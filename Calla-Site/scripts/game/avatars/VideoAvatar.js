@@ -1,8 +1,8 @@
-import { once } from "../../calla/index";
 import { autoPlay, muted, playsInline, srcObject, volume } from "../../html/attrs";
 import { setContextSize } from "../../html/canvas";
 import { isIOS } from "../../html/flags";
 import { Video } from "../../html/tags";
+import { once } from "../../lib/calla";
 import { BaseAvatar } from "./BaseAvatar";
 
 /**

@@ -1,10 +1,9 @@
-import { CallaClient } from "../calla/CallaClient";
-import { addEventListeners } from "../calla/events/addEventListeners";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
 import { allPeople as people } from "../emoji/emojis";
 import { loadFont, makeFont } from "../graphics2d/fonts";
 import { disabled } from "../html/attrs";
 import { hide, isOpen, show } from "../html/ops";
+import { addEventListeners, CallaClient } from "../lib/calla";
 import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
 import { ButtonLayer } from "./forms/ButtonLayer";
 import { DevicesDialog } from "./forms/DevicesDialog";

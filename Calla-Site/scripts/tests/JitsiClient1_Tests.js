@@ -1,5 +1,4 @@
-import { once } from "../calla/events/once";
-import { wait } from "../calla/events/wait";
+import { once, wait } from "../lib/calla";
 import { openSideTest } from "../testing/windowing";
 import { TestBase } from "./TestBase";
 

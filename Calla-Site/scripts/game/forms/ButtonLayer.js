@@ -1,4 +1,3 @@
-import { EventBase } from "../../calla/events/EventBase";
 import {
     door,
     downRightArrow,
@@ -20,6 +19,7 @@ import { cssHeight, margin, textAlign } from "../../html/css";
 import { onClick, onInput } from "../../html/evts";
 import { updateLabel } from "../../html/ops";
 import { Button, Div, Img, InputRange, Run } from "../../html/tags";
+import { EventBase } from "../../lib/calla";
 
 const toggleOptionsEvt = new Event("toggleOptions"),
     tweetEvt = new Event("tweet"),

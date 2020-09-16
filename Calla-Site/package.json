@@ -2,10 +2,14 @@
   "version": "1.0.0",
   "name": "calla-site",
   "private": true,
-  "scripts": {
-    "build": "rollup -c --environment BUILD:production",
-    "watch": "rollup -c -w --environment BUILD:development"
-  },
+    "scripts": {
+        "build": "rollup -c --environment BUILD:production",
+        "build:basic": "rollup -c --environment BUILD:basic",
+        "build:game": "rollup -c --environment BUILD:game",
+        "watch": "rollup -c -w --environment BUILD:development",
+        "watch:basic": "rollup -c -w --environment BUILD:basic",
+        "watch:game": "rollup -c -w --environment BUILD:game"
+    },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^9.0.0",
     "@rollup/plugin-strip": "^2.0.0",

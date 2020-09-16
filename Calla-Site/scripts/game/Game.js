@@ -1,11 +1,3 @@
-import { arrayClear } from "../calla/arrays/arrayClear";
-import { addEventListeners } from "../calla/events/addEventListeners";
-import { EventBase } from "../calla/events/EventBase";
-import { clamp } from "../calla/math/clamp";
-import { lerp } from "../calla/math/lerp";
-import { project } from "../calla/math/project";
-import { unproject } from "../calla/math/unproject";
-import { isString } from "../calla/typeChecks";
 import { TileMap } from "../graphics2d/TileMap";
 import { id } from "../html/attrs";
 import { resizeCanvas } from "../html/canvas";
@@ -13,6 +5,16 @@ import { hide, show } from "../html/ops";
 import { Canvas } from "../html/tags";
 import { EventedGamepad } from "../input/EventedGamepad";
 import { ScreenPointerControls } from "../input/ScreenPointerControls";
+import {
+    addEventListeners,
+    arrayClear,
+    clamp,
+    EventBase,
+    isString,
+    lerp,
+    project,
+    unproject
+} from "../lib/calla";
 import { Emote } from "./Emote";
 import { User } from "./User";
 

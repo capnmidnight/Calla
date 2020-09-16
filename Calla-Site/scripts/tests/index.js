@@ -1,5 +1,5 @@
-import { CallaClient } from "../calla/CallaClient";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
+import { CallaClient } from "../lib/calla";
 import { HtmlTestOutput as TestOutput } from "../testing/HtmlTestOutput";
 import { userNumber } from "../testing/userNumber";
 import { JitsiClient1_Tests } from "./JitsiClient1_Tests";
