@@ -382,9 +382,8 @@ Strictly speaking, only importing the `CallaClient` is necessary, but there are 
 ```javascript
 import { 
   CallaClient, // required  
-  canChangeAudioOutput, // Will be use to enable/disable the audio output selector
-  InterpolatedPose // this will tell sufficiently smart editors where to find auto-completion data.
-} from "Calla";
+  canChangeAudioOutput // Will be use to enable/disable the audio output selector
+} from "calla";
 ```
 
 ### Initialize Calla
