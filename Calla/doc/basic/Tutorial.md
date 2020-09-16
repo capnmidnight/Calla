@@ -11,7 +11,7 @@ Calla is designed around event-driven programming. It takes the responsibility o
 ## User Interface
 You'll need to create at least a basic HTML interface for a user to be able to join your conference. Here, I show a very basic one that achieves the control of the spatialization effect.
 
-<img src="https://raw.githubusercontent.com/capnmidnight/Calla/master/tutorial1.png">
+<img src="https://raw.githubusercontent.com/capnmidnight/Calla/master/Calla/doc/tutorial1.png">
 
 First of all, comply with standards
 ```html
@@ -780,4 +780,4 @@ function changeVideo(id, stream) {
 ## Results
 
 Once you've set everything up and you and a few users have joined a conference, you should have something that looks like this:
-<img src="https://raw.githubusercontent.com/capnmidnight/Calla/master/tutorial2.png">
+<img src="https://raw.githubusercontent.com/capnmidnight/Calla/master/Calla/doc/tutorial2.png">

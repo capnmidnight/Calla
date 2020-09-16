@@ -1,6 +1,7 @@
 ﻿# Calla
 
-A hack on top of [Jitsi](https://jitsi.org) to create a virtual meeting room where users can sit next to each other to hear each other better.
+A wrapper library for Jitsi Meet that adds audio spatialization, to be able to create virtual meeting rooms.
+
 <img src="https://raw.githubusercontent.com/capnmidnight/Calla/master/repo-preview.jpg">
 
 ## PROBLEM
@@ -26,10 +27,13 @@ Calla adds a small, RPG-style map to the Jitsi meeting view. It gives you an ava
 
 ## INSTALLATION
 
+<em>NOTE: This project is currently going through an overhaul in how it is setup. In the future, Calla will be just the library for interfacing with Jitsi Meet and spatializing its audio. The application currently visible on [calla.chat](https://calla.chat) will become a separate project. </em>
+
 - First, setup Jitsi Meet on a server of your choice: [Jitsi quick-start instructions](https://jitsi.github.io/handbook/docs/devops-guide/devops-guide-quickstart).
-- Install the Calla front-end (basically the rest of this repository) onto another server of your choice.
-  - Modify "JITSI_HOST" in `index.html` scripts to point to your Jitsi Meet server.
-- You may also want to edit `index.html` to change/remove the link(s) to this repository and/or my Twitter profile.
+- <strike>Install the Calla front-end (basically the rest of this repository) onto another server of your choice</strike>.
+  - <strike>Modify "JITSI_HOST" in `index.html` scripts to point to your Jitsi Meet server</strike>.
+- <strike>You may also want to edit `index.html` to change/remove the link(s) to this repository and/or my Twitter profile</strike>.
+- <em>new setup instructions TBD</em>
   
 Make sure you keep the distinction between your Jitsi installation and your Calla installation clear. You can conceivably run them on the same server, but I won't be digging into customizing a Jitsi installation enough to figure that out, so my setup has them on separate servers.
 
