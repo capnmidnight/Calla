@@ -1,0 +1,26 @@
+[Unit]
+Description=Calla ASP.NET Core web app
+
+[Service]
+Type=notify
+SyslogIdentifier=Calla
+
+WorkingDirectory=/home/azureuser/bin/Calla
+ExecStart=/home/azureuser/bin/Calla/Calla-Site
+User=azureuser
+
+Restart=always
+RestartSec=5
+KillSignal=SIGINT
+
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+Environment=DOTNET_ROOT=/usr/share/dotnet
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://*:80;https://*:443
+Environment=ConnectionStrings__Calla=Host=db.calla.chat;Database=calla;Username=smcbeth;Password=<replace>
+Environment=IPSalt=<replace>
+
+[Install]
+WantedBy=multi-user.target
