@@ -91,6 +91,7 @@ Make the configuration controls line up nice.
 Make the clickable space of the page visible to the user.
 ```css
 #space {
+    position: relative;
     background-color: #ccc;
     border: inset 2px;
     overflow: hidden;
@@ -104,7 +105,7 @@ Every user is going to have their own DIV with their user name and video display
 
 We want the user blocks to be clipped by the space container, and positioned inside of it.
 ```css
-    position: relative;
+    position: absolute;
 ```
 
 Don't make user blocks too large or the motion doesn't feel right.
@@ -258,13 +259,13 @@ I've also added a parameter for indicating when the user is the local user, so w
     constructor(id, name, pose, isLocal) {
         /**
          * The user's name.
-         * @type {string} 
+         * @type {string}
          **/
         this._name = null;
 
         /**
          * An HTML element to display the user's name.
-         * @type {HTMLDivElement} 
+         * @type {HTMLDivElement}
          **/
         this._nameEl = null;
 
@@ -380,8 +381,8 @@ Let's start setting up an application.
 ### Import Calla
 Strictly speaking, only importing the `CallaClient` is necessary, but there are some other, useful elements as well.
 ```javascript
-import { 
-  CallaClient, // required  
+import {
+  CallaClient, // required
   canChangeAudioOutput // Will be use to enable/disable the audio output selector
 } from "calla";
 ```
@@ -583,7 +584,7 @@ Start the renderer
     timer = requestAnimationFrame(update);
 ```
 
-Create a user graphic for the local user (see below). 
+Create a user graphic for the local user (see below).
 ```javascript
     addUser(id, displayName, pose, true);
 ```
@@ -591,7 +592,7 @@ Create a user graphic for the local user (see below).
 For testing purposes, we place the user at a random location  on the page. Ideally, you'd have a starting location for users so you could design a predictable onboarding path for them (see below).
 ```javascript
     setPosition(
-      Math.random() * (controls.space.clientWidth - 100) + 50, 
+      Math.random() * (controls.space.clientWidth - 100) + 50,
       Math.random() * (controls.space.clientHeight - 100) + 50);
 });
 ```
