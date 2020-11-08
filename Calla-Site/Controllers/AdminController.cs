@@ -107,8 +107,9 @@ namespace Calla.Controllers
             return View(db.PageViews
                 .AsNoTracking()
                 .Where(pv => !blacklist.Contains(pv.Referrer))
-                .OrderByDescending(pv=>pv.Timestamp)
+                .OrderByDescending(pv => pv.Timestamp)
                 .Select(pv => pv.Referrer)
+                .Distinct()
                 .ToArray());
         }
 
@@ -124,8 +125,8 @@ namespace Calla.Controllers
             return View(db.PageViews
                 .Where(pv => pv.Referrer != "N/A")
                 .AsEnumerable()
-                .Select(pv => new Uri(pv.Referrer))
-                .Select(uri => uri.Host.StartsWith("www.", StringComparison.InvariantCultureIgnoreCase)
+                .Select(pv => Uri.TryCreate(pv.Referrer, UriKind.Absolute, out var uri) ? uri : null)
+                .Select(uri => uri == null ? "N/A" : uri.Host.StartsWith("www.", StringComparison.InvariantCultureIgnoreCase)
                     ? uri.Host.Substring(4)
                     : uri.Host)
                 .GroupBy(host => host)
