@@ -914,7 +914,7 @@ export class CallaClient extends EventBase {
     setLocalOrientation(fx, fy, fz, ux, uy, uz) {
         this.audio.setUserOrientation(this.localUserID, fx, fy, fz, ux, uy, uz);
         for (let toUserID of this.userIDs()) {
-            this.sendMessageTo(toUserID, "userTurned", { x, y, z });
+            this.sendMessageTo(toUserID, "userTurned", { fx, fy, fz, ux, uy, uz });
         }
     }
 
