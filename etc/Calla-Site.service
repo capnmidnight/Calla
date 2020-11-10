@@ -19,7 +19,7 @@ Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
 Environment=DOTNET_ROOT=/usr/share/dotnet
 Environment=ASPNETCORE_ENVIRONMENT=Production
 Environment=ASPNETCORE_URLS=http://*:80;https://*:443
-Environment=ConnectionStrings__Calla=Host=db.calla.chat;Database=calla;Username=smcbeth;Password=<replace>
+Environment=ConnectionStrings__Calla=Host=<replace>;Database=calla;Username=<replace>;Password=<replace>
 Environment=IPSalt=<replace>
 
 [Install]
