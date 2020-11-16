@@ -20035,6 +20035,7 @@ function addUser(id, name, pose, isLocal) {
         users.get(id).dispose();
     }
     users.set(id, user);
+    currentUser = name;
     controls.space.append(user.container);
 }
 

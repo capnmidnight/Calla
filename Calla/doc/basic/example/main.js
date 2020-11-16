@@ -244,6 +244,7 @@ function addUser(id, name, pose, isLocal) {
   const user = new User(id, name, pose, isLocal);
 
   controls.space.append(user.container);
+    currentUser = name;
 
   users.set(id, user);
 }

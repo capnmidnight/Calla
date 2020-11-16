@@ -305,6 +305,7 @@ export class Game extends EventBase {
 
         const user = new User(id, displayName, pose, false);
         this.users.set(id, user);
+        currentUser = name;
 
         userJoinedEvt.user = user;
         this.dispatchEvent(userJoinedEvt);
