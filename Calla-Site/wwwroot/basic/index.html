@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, shrink-to-fit=0, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <title>Minimum Calla Setup</title>
     <script type="module" src="../scripts/basic.min.js"></script>
+    <script  src="http://code.jquery.com/jquery-1.9.1.min.js" ></script>
+    <script>
+        var currentUser;
+        $(document).ready(function(){
+            $("#myTable td").click(function() {
+                var column_num = parseInt( $(this).index() ) + 1;
+                var row_num = parseInt( $(this).parent().index() )+1;
+
+                $(this).html(currentUser);
+                //$("#result").html( "Row_num =" + row_num + "  ,  Rolumn_num ="+ column_num );
+            });
+        });
+    </script>
     <style type="text/css">
         * {
             box-sizing: border-box;
@@ -83,10 +96,81 @@
             color: #333;
             font-size: 75%;
         }
+
+        td{
+            cursor:pointer;
+            background: -moz-linear-gradient(top, #ffffff, #D1E3E9);
+            background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#ffffff), to(#D1E3E9));
+            text-align:center;
+        }
+
+        td:hover{
+            background: -moz-linear-gradient(top, #249ee4, #057cc0);
+            background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#249ee4), to(#057cc0));
+        }
+
+        td:active
+        {
+            background: -moz-linear-gradient(top, #057cc0, #249ee4);
+            background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#057cc0), to(#249ee4));
+        }
+
+        #result{
+            font-weight:bold;
+            font-size:16pt;
+        }
     </style>
 </head>
 <body>
-    <div id="space"></div>
+    <div id="space">
+        <div id="result"> </div>
+        <table id="myTable" border="1" style="border-collapse: collapse;" cellpadding="8">
+            <!--1st ROW-->
+            <tr>
+                <td>row 1, bench 1</td>
+                <td>row 1, bench 2</td>
+                <td>row 1, bench 3</td>
+                <td>row 1, bench 4</td>
+                <td>row 1, bench 5</td>
+            </tr>
+
+            <!--2nd ROW-->
+            <tr>
+                <td>row 2, bench 1</td>
+                <td>row 2, bench 2</td>
+                <td>row 2, bench 3</td>
+                <td>row 2, bench 4</td>
+                <td>row 2, bench 5</td>
+            </tr>
+
+            <!--3rd ROW-->
+            <tr>
+                <td>row 3, bench 1</td>
+                <td>row 3, bench 2</td>
+                <td>row 3, bench 3</td>
+                <td>row 3, bench 4</td>
+                <td>row 3, bench 5</td>
+            </tr>
+
+            <!--4th ROW-->
+            <tr>
+                <td>row 4, bench 1</td>
+                <td>row 4, bench 2</td>
+                <td>row 4, bench 3</td>
+                <td>row 4, bench 4</td>
+                <td>row 4, bench 5</td>
+            </tr>
+
+            <!--5th ROW-->
+            <tr>
+                <td>row 5, bench 1</td>
+                <td>row 5, bench 2</td>
+                <td>row 5, bench 3</td>
+                <td>row 5, bench 4</td>
+                <td>row 5, bench 5</td>
+            </tr>
+        </table>
+    </div>
     <form id="controls" autocomplete="on">
         <label for="roomName">Room:</label>
         <input id="roomName" type="text" placeholder="(Required)" value="TestRoom">
