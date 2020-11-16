@@ -91,6 +91,67 @@
             overflow: hidden;
         }
 
+        .rightTable {
+            display: block;
+            margin-left: auto;
+            margin-right: 50px;
+            margin-top: -250px;
+            width: 50%;
+            -webkit-transform: rotate(90deg);
+            -moz-transform: rotate(90deg);
+            -o-transform: rotate(90deg);
+            -ms-transform: rotate(90deg);
+            transform: rotate(90deg);
+            z-index: -3;
+        }
+
+        .leftTable {
+            display: block;
+            margin-left: 50px;
+            margin-right: auto;
+            margin-top: 40px;
+            width: 50%;
+            z-index: -2;
+        }
+
+        .smallTable {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: -10px;
+            width: 50%;
+            z-index: -1;
+        }
+
+        .teacherTable {
+            display: block;
+            margin-left: 20px;
+            margin-right: auto;
+            width: 50%;
+            -webkit-transform: rotate(-90deg);
+            -moz-transform: rotate(-90deg);
+            -o-transform: rotate(-90deg);
+            -ms-transform: rotate(-90deg);
+            transform: rotate(-90deg);
+        }
+
+        .rightRug {
+            display: block;
+            margin-left: auto;
+            margin-right: 50px;
+            margin-top: -80px;
+            width: 50%;
+            z-index: -4;
+        }
+
+         .circle {
+            border-radius: 50%;
+            width: 200px;
+            height: 200px;
+        }
+
+
+
         footer {
             text-align: right;
             color: #333;
@@ -123,9 +184,15 @@
 </head>
 <body>
     <div id="space">
-        <div id="result"> </div>
-        <table id="myTable" border="1" style="border-collapse: collapse;" cellpadding="8">
-            <!--1st ROW-->
+        <!--This will serve as the backgound images of the classroom-->
+        <img src="../images/teacher.png" style="width:200px; height:170px;" class="teacherTable" />
+        <img src="../images/small-desk.png" style="width:170px; height:170px;" class="smallTable" />
+        <img src="../images/desks-square.png" style="width:180px; height:150px;" class="rightTable" />
+        <img src="../images/desks-square.png" style="width:180px; height:150px;" class="leftTable" />
+
+        <!--        <div id="result"> </div>-->
+        <!--        <table id="myTable" border="1" style="border-collapse: collapse;" cellpadding="8">
+            &lt;!&ndash;1st ROW&ndash;&gt;
             <tr>
                 <td>row 1, bench 1</td>
                 <td>row 1, bench 2</td>
@@ -134,7 +201,7 @@
                 <td>row 1, bench 5</td>
             </tr>
 
-            <!--2nd ROW-->
+            &lt;!&ndash;2nd ROW&ndash;&gt;
             <tr>
                 <td>row 2, bench 1</td>
                 <td>row 2, bench 2</td>
@@ -143,7 +210,7 @@
                 <td>row 2, bench 5</td>
             </tr>
 
-            <!--3rd ROW-->
+            &lt;!&ndash;3rd ROW&ndash;&gt;
             <tr>
                 <td>row 3, bench 1</td>
                 <td>row 3, bench 2</td>
@@ -152,7 +219,7 @@
                 <td>row 3, bench 5</td>
             </tr>
 
-            <!--4th ROW-->
+            &lt;!&ndash;4th ROW&ndash;&gt;
             <tr>
                 <td>row 4, bench 1</td>
                 <td>row 4, bench 2</td>
@@ -161,7 +228,7 @@
                 <td>row 4, bench 5</td>
             </tr>
 
-            <!--5th ROW-->
+            &lt;!&ndash;5th ROW&ndash;&gt;
             <tr>
                 <td>row 5, bench 1</td>
                 <td>row 5, bench 2</td>
@@ -169,7 +236,7 @@
                 <td>row 5, bench 4</td>
                 <td>row 5, bench 5</td>
             </tr>
-        </table>
+        </table>-->
     </div>
     <form id="controls" autocomplete="on">
         <label for="roomName">Room:</label>
