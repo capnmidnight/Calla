@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, shrink-to-fit=0, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <title>Minimum Calla Setup</title>
+    <title>Kaksha</title>
     <script type="module" src="../scripts/basic.min.js"></script>
     <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
     <script>
@@ -43,19 +43,15 @@
         }
 
         .user {
-            position: relative;
-            width: 10em;
-            border-width: 2px;
+            position: absolute;
+            width: 5em;
+            border-width: 1px;
             border-style: solid;
             border-color: #888;
             background-color: #eee;
             padding: 5px;
-            box-shadow: rgba(0,0,0,0.5) 5px 5px 10px;
-        }
-
-        .localUser {
-            border-color: #383;
-            background-color: #8e8;
+            height: 13%;
+            width: 19%;
         }
 
         .userName {
@@ -64,6 +60,7 @@
 
         .userVideo {
             max-width: 100%;
+            visibility: hidden;
         }
 
         .localUser > .userVideo {
@@ -77,13 +74,13 @@
             column-gap: 0.5em;
         }
 
-            #controls > label {
-                text-align: right;
-            }
+        #controls > label {
+            text-align: right;
+        }
 
-            #controls > select {
-                width: 100%;
-            }
+        #controls > select {
+            width: 100%;
+        }
 
         #space {
             background-color: #ccc;
@@ -92,64 +89,10 @@
 	        background-color: #ccc;
             border: inset 2px;
             overflow: hidden;
-            background-image: url(../images/teacher.png), url(../images/small-desk.png), url(../images/desks-square.png);
             background-position: left top, right bottom, left bottom;
             background-repeat: no-repeat, no-repeat;
             background-size: 250px 200px;
 	    }
-
-        .rightTable {
-            display: block;
-            margin-left: auto;
-            margin-right: 50px;
-            margin-top: -250px;
-            width: 50%;
-            -webkit-transform: rotate(90deg);
-            -moz-transform: rotate(90deg);
-            -o-transform: rotate(90deg);
-            -ms-transform: rotate(90deg);
-            transform: rotate(90deg);
-            z-index: -3;
-        }
-
-        .leftTable {
-            display: block;
-            margin-left: 50px;
-            margin-right: auto;
-            margin-top: 40px;
-            width: 50%;
-            z-index: -2;
-        }
-
-        .smallTable {
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            margin-top: -10px;
-            width: 50%;
-            z-index: -1;
-        }
-
-        .teacherTable {
-            display: block;
-            margin-left: 20px;
-            margin-right: auto;
-            width: 50%;
-            -webkit-transform: rotate(-90deg);
-            -moz-transform: rotate(-90deg);
-            -o-transform: rotate(-90deg);
-            -ms-transform: rotate(-90deg);
-            transform: rotate(-90deg);
-        }
-
-        .rightRug {
-            display: block;
-            margin-left: auto;
-            margin-right: 50px;
-            margin-top: -80px;
-            width: 50%;
-            z-index: -4;
-        }
 
          .circle {
             border-radius: 50%;
@@ -157,33 +100,12 @@
             height: 200px;
         }
 
-
-
-        footer {
-            text-align: right;
-            color: #333;
-            font-size: 75%;
-        }
-
-        td{
+        td {
             cursor:pointer;
-            background: -moz-linear-gradient(top, #ffffff, #D1E3E9);
-            background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#ffffff), to(#D1E3E9));
-            text-align:center;
+            background-image: url("../images/chair-desk.png");
         }
 
-        td:hover{
-            background: -moz-linear-gradient(top, #249ee4, #057cc0);
-            background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#249ee4), to(#057cc0));
-        }
-
-        td:active
-        {
-            background: -moz-linear-gradient(top, #057cc0, #249ee4);
-            background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#057cc0), to(#249ee4));
-        }
-
-        #result{
+        #result {
             font-weight:bold;
             font-size:16pt;
         }
@@ -191,59 +113,63 @@
 </head>
 <body>
     <div id="space">
-        <!--        <div id="result"> </div>-->
-        <!--        <table id="myTable" border="1" style="border-collapse: collapse;" cellpadding="8">
-            &lt;!&ndash;1st ROW&ndash;&gt;
+        <div id="result"> </div>
+        <table id="myTable" border="1" style="border-collapse: collapse; width: 100%; height: 100%" cellpadding="8">
+            <!--1st ROW-->
             <tr>
-                <td>row 1, bench 1</td>
-                <td>row 1, bench 2</td>
-                <td>row 1, bench 3</td>
-                <td>row 1, bench 4</td>
-                <td>row 1, bench 5</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
             </tr>
 
-            &lt;!&ndash;2nd ROW&ndash;&gt;
+            <tr></tr>
+            <!--2nd ROW-->
             <tr>
-                <td>row 2, bench 1</td>
-                <td>row 2, bench 2</td>
-                <td>row 2, bench 3</td>
-                <td>row 2, bench 4</td>
-                <td>row 2, bench 5</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
             </tr>
 
-            &lt;!&ndash;3rd ROW&ndash;&gt;
+            <tr></tr>
+            <!--3rd ROW-->
             <tr>
-                <td>row 3, bench 1</td>
-                <td>row 3, bench 2</td>
-                <td>row 3, bench 3</td>
-                <td>row 3, bench 4</td>
-                <td>row 3, bench 5</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
             </tr>
 
-            &lt;!&ndash;4th ROW&ndash;&gt;
+            <tr></tr>
+            <!--4th ROW-->
             <tr>
-                <td>row 4, bench 1</td>
-                <td>row 4, bench 2</td>
-                <td>row 4, bench 3</td>
-                <td>row 4, bench 4</td>
-                <td>row 4, bench 5</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
             </tr>
 
-            &lt;!&ndash;5th ROW&ndash;&gt;
+            <tr></tr>
+            <!--5th ROW-->
             <tr>
-                <td>row 5, bench 1</td>
-                <td>row 5, bench 2</td>
-                <td>row 5, bench 3</td>
-                <td>row 5, bench 4</td>
-                <td>row 5, bench 5</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
             </tr>
-        </table>-->
+        </table>
     </div>
     <form id="controls" autocomplete="on">
-        <label for="roomName">Room:</label>
+        <label for="roomName">Classroom:</label>
         <input id="roomName" type="text" placeholder="(Required)" value="TestRoom">
 
-        <label for="userName">User:</label>
+        <label for="userName">Student name:</label>
         <input id="userName" placeholder="(Required)" type="text" value="TestUser">
 
         <label for="cams">Video:</label>
@@ -260,8 +186,5 @@
         <button type="button" id="leave" disabled>Leave</button>
         <button type="button" id="sideTest">Open side test</button>
     </div>
-    <footer>
-        <a href="https://www.calla.chat">Calla</a> is made with glue and tenacity at <a href="https://www.dlsdc.com">Diplomatic Language Services</a>.
-    </footer>
 </body>
 </html>
