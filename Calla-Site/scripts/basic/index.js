@@ -467,5 +467,5 @@ controls.connect.disabled = false;
 if (userNumber === 1) {
     controls.sideTest.addEventListener("click", openSideTest);
 }
-controls.roomName.value = "TestRoom";
-controls.userName.value = `TestUser${userNumber}`;
+controls.roomName.value = "CS101";
+controls.userName.value = `Student${userNumber}`;
