@@ -1,0 +1,13 @@
+import Bowser from "bowser";
+export declare const browser: Bowser.Parser.ParsedResult;
+export declare const isDesktop: boolean;
+export declare const isChrome: boolean;
+export declare const isFirefox: boolean;
+export declare const isIOS: boolean;
+export declare const isSafari: boolean;
+export declare const isMobileVR: boolean;
+export declare const isOculus: boolean;
+export declare const isOculusGo: boolean;
+export declare const isOculusQuest: boolean;
+export declare const hasWebXR: boolean;
+export declare const hasWebVR: boolean;

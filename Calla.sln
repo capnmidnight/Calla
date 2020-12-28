@@ -7,6 +7,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Calla-Site", "Calla-Site\Ca
 EndProject
 Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "Calla", "Calla\Calla.njsproj", "{FCCA2BA7-3F19-48B3-83E0-1A7E2BF1C93E}"
 EndProject
+Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "Kudzu", "Kudzu\Kudzu.njsproj", "{71825365-14BF-4A33-8ECF-AC2200D475E4}"
+EndProject
+Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "MyRollup", "MyRollup\MyRollup.njsproj", "{B4E3117E-3AF2-4C07-BC49-A4DCCEF2C784}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{FCCA2BA7-3F19-48B3-83E0-1A7E2BF1C93E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FCCA2BA7-3F19-48B3-83E0-1A7E2BF1C93E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FCCA2BA7-3F19-48B3-83E0-1A7E2BF1C93E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71825365-14BF-4A33-8ECF-AC2200D475E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71825365-14BF-4A33-8ECF-AC2200D475E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71825365-14BF-4A33-8ECF-AC2200D475E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71825365-14BF-4A33-8ECF-AC2200D475E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4E3117E-3AF2-4C07-BC49-A4DCCEF2C784}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4E3117E-3AF2-4C07-BC49-A4DCCEF2C784}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4E3117E-3AF2-4C07-BC49-A4DCCEF2C784}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4E3117E-3AF2-4C07-BC49-A4DCCEF2C784}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

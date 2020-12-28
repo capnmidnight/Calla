@@ -1,0 +1,177 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">14.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <Name>Kudzu</Name>
+    <RootNamespace>Kudzu</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>71825365-14bf-4a33-8ecf-ac2200d475e4</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>
+    </StartupFile>
+    <StartWebBrowser>False</StartWebBrowser>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <ProjectTypeGuids>{3AF33F2E-1136-4D97-BBB7-1795711AC8B8};{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}</ProjectTypeGuids>
+    <EnableTypeScript>true</EnableTypeScript>
+    <StartWebBrowser>False</StartWebBrowser>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="package.json" />
+    <Content Include="README.md" />
+    <Content Include="tsconfig.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="src\" />
+    <Folder Include="src\arrays\" />
+    <Folder Include="src\emoji\" />
+    <Folder Include="src\events\" />
+    <Folder Include="src\graphics2d\" />
+    <Folder Include="src\html\" />
+    <Folder Include="src\input\" />
+    <Folder Include="src\io\" />
+    <Folder Include="src\math\" />
+    <Folder Include="src\strings\" />
+    <Folder Include="src\testing\" />
+    <Folder Include="src\timers\" />
+    <Folder Include="src\workers\" />
+  </ItemGroup>
+  <ItemGroup>
+    <TypeScriptCompile Include="src\arrays\arrayBinarySearch.ts" />
+    <TypeScriptCompile Include="src\arrays\arrayClear.ts" />
+    <TypeScriptCompile Include="src\arrays\arrayRandom.ts" />
+    <TypeScriptCompile Include="src\arrays\arrayRemove.ts" />
+    <TypeScriptCompile Include="src\arrays\arrayRemoveAt.ts" />
+    <TypeScriptCompile Include="src\arrays\arrayScan.ts" />
+    <TypeScriptCompile Include="src\arrays\arraySortedInsert.ts" />
+    <TypeScriptCompile Include="src\emoji\Emoji.ts" />
+    <TypeScriptCompile Include="src\emoji\EmojiGroup.ts" />
+    <TypeScriptCompile Include="src\emoji\emojis.ts" />
+    <TypeScriptCompile Include="src\emoji\gg.ts" />
+    <TypeScriptCompile Include="src\events\add.ts" />
+    <TypeScriptCompile Include="src\events\ErsatzEventTarget.ts" />
+    <TypeScriptCompile Include="src\events\EventBase.ts" />
+    <TypeScriptCompile Include="src\events\once.ts" />
+    <TypeScriptCompile Include="src\events\onUserGesture.ts" />
+    <TypeScriptCompile Include="src\events\sleep.ts" />
+    <TypeScriptCompile Include="src\events\waitFor.ts" />
+    <TypeScriptCompile Include="src\graphics2d\fonts.ts" />
+    <TypeScriptCompile Include="src\graphics2d\forcePowerOf2.ts" />
+    <TypeScriptCompile Include="src\graphics2d\getTransform.ts" />
+    <TypeScriptCompile Include="src\graphics2d\sliceCubeMap.ts" />
+    <TypeScriptCompile Include="src\graphics2d\sliceImage.ts" />
+    <TypeScriptCompile Include="src\graphics2d\TextImage.ts" />
+    <TypeScriptCompile Include="src\html\attrs.ts" />
+    <TypeScriptCompile Include="src\html\canvas.ts" />
+    <TypeScriptCompile Include="src\html\css.ts" />
+    <TypeScriptCompile Include="src\html\evts.ts" />
+    <TypeScriptCompile Include="src\html\flags.ts" />
+    <TypeScriptCompile Include="src\html\grid.ts" />
+    <TypeScriptCompile Include="src\html\tags.ts" />
+    <TypeScriptCompile Include="src\input\Direction.ts" />
+    <TypeScriptCompile Include="src\input\EventedGamepad.ts" />
+    <TypeScriptCompile Include="src\input\Hand.ts" />
+    <TypeScriptCompile Include="src\input\Interaction.ts" />
+    <TypeScriptCompile Include="src\input\MouseButton.ts" />
+    <TypeScriptCompile Include="src\input\PointerState.ts" />
+    <TypeScriptCompile Include="src\input\ZoomEvent.ts" />
+    <TypeScriptCompile Include="src\io\arrayProgress.ts" />
+    <TypeScriptCompile Include="src\io\copyPixelBicubic.ts" />
+    <TypeScriptCompile Include="src\io\copyPixelBilinear.ts" />
+    <TypeScriptCompile Include="src\io\copyPixelLanczos.ts" />
+    <TypeScriptCompile Include="src\io\copyPixelNearest.ts" />
+    <TypeScriptCompile Include="src\io\createScript.ts" />
+    <TypeScriptCompile Include="src\io\CubeMapFace.ts" />
+    <TypeScriptCompile Include="src\io\errorLogger.ts" />
+    <TypeScriptCompile Include="src\io\getBlob.ts" />
+    <TypeScriptCompile Include="src\io\getBuffer.ts" />
+    <TypeScriptCompile Include="src\io\getCanvas.ts" />
+    <TypeScriptCompile Include="src\io\getCubes.ts" />
+    <TypeScriptCompile Include="src\io\getEquiMapImages.ts" />
+    <TypeScriptCompile Include="src\io\getFile.ts" />
+    <TypeScriptCompile Include="src\io\getImage.ts" />
+    <TypeScriptCompile Include="src\io\getImageBitmap.ts" />
+    <TypeScriptCompile Include="src\io\getImageData.ts" />
+    <TypeScriptCompile Include="src\io\getObject.ts" />
+    <TypeScriptCompile Include="src\io\getResponse.ts" />
+    <TypeScriptCompile Include="src\io\InterpolationType.ts" />
+    <TypeScriptCompile Include="src\io\kernelResample.ts" />
+    <TypeScriptCompile Include="src\io\loadScript.ts" />
+    <TypeScriptCompile Include="src\io\LRUCache.ts" />
+    <TypeScriptCompile Include="src\io\progressCallback.ts" />
+    <TypeScriptCompile Include="src\io\readBufferObject.ts" />
+    <TypeScriptCompile Include="src\io\readResponseBuffer.ts" />
+    <TypeScriptCompile Include="src\io\renderFace.ts" />
+    <TypeScriptCompile Include="src\io\splitProgress.ts" />
+    <TypeScriptCompile Include="src\io\taskProgress.ts" />
+    <TypeScriptCompile Include="src\math\angleClamp.ts" />
+    <TypeScriptCompile Include="src\math\clamp.ts" />
+    <TypeScriptCompile Include="src\math\lerp.ts" />
+    <TypeScriptCompile Include="src\math\powerOf2.ts" />
+    <TypeScriptCompile Include="src\math\project.ts" />
+    <TypeScriptCompile Include="src\math\unproject.ts" />
+    <TypeScriptCompile Include="src\strings\stringRandom.ts" />
+    <TypeScriptCompile Include="src\testing\userNumber.ts" />
+    <TypeScriptCompile Include="src\testing\windowing.ts" />
+    <TypeScriptCompile Include="src\timers\BaseTimer.ts" />
+    <TypeScriptCompile Include="src\timers\RequestAnimationFrameTimer.ts" />
+    <TypeScriptCompile Include="src\timers\SetIntervalTimer.ts" />
+    <TypeScriptCompile Include="src\timers\SetTimeoutTimer.ts" />
+    <TypeScriptCompile Include="src\typeChecks.ts" />
+    <TypeScriptCompile Include="src\using.ts" />
+    <TypeScriptCompile Include="src\workers\WorkerClient.ts" />
+    <TypeScriptCompile Include="src\workers\WorkerServer.ts" />
+  </ItemGroup>
+  <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsToolsV2.targets" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>False</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>0</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:48022/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>True</UseCustomServer>
+          <CustomServerUrl>http://localhost:1337</CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}" User="">
+        <WebProjectProperties>
+          <StartPageUrl>
+          </StartPageUrl>
+          <StartAction>CurrentPage</StartAction>
+          <AspNetDebugging>True</AspNetDebugging>
+          <SilverlightDebugging>False</SilverlightDebugging>
+          <NativeDebugging>False</NativeDebugging>
+          <SQLDebugging>False</SQLDebugging>
+          <ExternalProgram>
+          </ExternalProgram>
+          <StartExternalURL>
+          </StartExternalURL>
+          <StartCmdLineArguments>
+          </StartCmdLineArguments>
+          <StartWorkingDirectory>
+          </StartWorkingDirectory>
+          <EnableENC>False</EnableENC>
+          <AlwaysStartWebServerOnDebug>False</AlwaysStartWebServerOnDebug>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>
