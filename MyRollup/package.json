@@ -8,7 +8,8 @@
     "name": "Sean T. McBeth"
   },
   "scripts": {
-    "restore": "npm install"
+    "restore": "npm install",
+    "build": "npm run restore"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.0.0",

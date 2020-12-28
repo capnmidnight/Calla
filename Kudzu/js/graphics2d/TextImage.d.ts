@@ -1,5 +1,5 @@
 import { TypedEventBase } from "../events/EventBase";
-import type { Context2D } from "../html/canvas";
+import type { CanvasTypes, Context2D } from "../html/canvas";
 export interface PaddingRect {
     top: number;
     right: number;
@@ -42,7 +42,7 @@ export declare class TextImage extends TypedEventBase<TextImageEvents> {
     set minHeight(v: number | null);
     get maxHeight(): number | null;
     set maxHeight(v: number | null);
-    get canvas(): HTMLCanvasElement | OffscreenCanvas;
+    get canvas(): CanvasTypes;
     get width(): number;
     get height(): number;
     get padding(): PaddingRect;
