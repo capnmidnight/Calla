@@ -64,11 +64,11 @@ function makeBundle(name, input, outputDir, isProduction, options) {
             commonjs(),
             replace({
                 "process.env.NODE_ENV": JSON.stringify(isProduction ? "production" : "development"),
-                "__filename__": function (match) {
+                "__filename": function (match) {
                     const curDir = process.cwd().replace('\\', '/');
                     let path = match.replace('\\', '/');
                     path = path.substring(curDir.length);
-                    return path;
+                    return JSON.stringify(path);
                 }
             }),
             json()
