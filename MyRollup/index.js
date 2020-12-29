@@ -4,6 +4,7 @@ const { nodeResolve } = require("@rollup/plugin-node-resolve");
 const replace = require("@rollup/plugin-replace");
 const typescript = require("@rollup/plugin-typescript");
 const glslify = require("rollup-plugin-glslify");
+const sourcemaps = require("rollup-plugin-sourcemaps");
 const { terser } = require("rollup-plugin-terser");
 
 module.exports.warnings = {
@@ -31,7 +32,7 @@ module.exports.warnings = {
     }
 };
 
-function makeBundle(name, inputFile, outputDir, isProduction, options) {
+function coallesceOptions(options, isProduction) {
     options = options || {};
     const devOptions = options.dev || {};
     const prodOptions = options.prod || {};
@@ -44,10 +45,20 @@ function makeBundle(name, inputFile, outputDir, isProduction, options) {
         delete options.prod;
     }
 
-    options = Object.assign(options, isProduction ? prodOptions : devOptions);
+    options = Object.assign(
+        options,
+        isProduction
+            ? prodOptions
+            : devOptions);
+
+    return options;
+}
+
+function makeBundle(name, input, outputDir, isProduction, options) {
+    options = coallesceOptions(options, isProduction);
 
     const opts = {
-        input: `scripts/${name}/index.ts`,
+        input,
         plugins: [
             nodeResolve(),
             commonjs(),
@@ -64,7 +75,10 @@ function makeBundle(name, inputFile, outputDir, isProduction, options) {
         ],
         output: {
             format: options.isWorker ? "es" : "iife",
-            sourcemap: true
+            sourcemap: true,
+            file: isProduction
+                ? `${outputDir}/${name}.min.js`
+                : `${outputDir}/${name}.js`
         }
     };
 
@@ -72,8 +86,19 @@ function makeBundle(name, inputFile, outputDir, isProduction, options) {
         opts.plugins.push(glslify());
     }
 
-    if (/\.ts$/.test(inputFile)) {
+    if (/\.ts$/.test(input)) {
         opts.plugins.push(typescript());
+    }
+
+    opts.plugins.push(sourcemaps());
+
+    if (isProduction) {
+        opts.plugins.push(
+            terser({
+                format: {
+                    comments: false
+                }
+            }));
     }
 
     if (options.surpressions) {
@@ -82,19 +107,6 @@ function makeBundle(name, inputFile, outputDir, isProduction, options) {
                 defaultHandler(warning);
             }
         };
-    }
-
-    if (isProduction) {
-        opts.output.file = `${outputDir}/${name}.min.js`;
-        opts.plugins.push(
-            terser({
-                format: {
-                    comments: false
-                }
-            }));
-    }
-    else {
-        opts.output.file = `${outputDir}/${name}.js`;
     }
 
     return opts;
@@ -119,4 +131,4 @@ module.exports.makeBundles = function makeBundles(name, inputFile, outputDir, op
         }
     }
     return tasks;
-}
+};
