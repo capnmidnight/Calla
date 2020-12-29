@@ -1,47 +1,46 @@
-import { EventBase } from "../../events/EventBase";
-
-/** Base class providing functionality for spatializers. */
-export class BaseSpatializer extends EventBase {
-
-    /**
-     * Creates a spatializer that keeps track of position
-     */
-    constructor() {
-        super();
-
+/**
+ * Base class providing functionality for spatializers.
+ */
+export class BaseSpatializer {
+    constructor(audioContext) {
+        this.audioContext = audioContext;
+        this.gain = null;
         this.minDistance = 1;
-        this.minDistanceSq = 1;
         this.maxDistance = 10;
-        this.maxDistanceSq = 100;
         this.rolloff = 1;
-        this.transitionTime = 0.5;
+        this.algorithm = "logarithmic";
+        this.transitionTime = 0.1;
+        this.gain = audioContext.createGain();
     }
-
     /**
      * Sets parameters that alter spatialization.
-     * @param {number} minDistance
-     * @param {number} maxDistance
-     * @param {number} rolloff
-     * @param {number} transitionTime
      **/
-    setAudioProperties(minDistance, maxDistance, rolloff, transitionTime) {
+    setAudioProperties(minDistance, maxDistance, rolloff, algorithm, transitionTime) {
         this.minDistance = minDistance;
         this.maxDistance = maxDistance;
-        this.transitionTime = transitionTime;
         this.rolloff = rolloff;
+        this.algorithm = algorithm;
+        this.transitionTime = transitionTime;
     }
-
     /**
      * Discard values and make this instance useless.
      */
     dispose() {
+        if (this.gain) {
+            this.gain.disconnect();
+            this.gain = null;
+        }
     }
-
-    /**
-     * Performs the spatialization operation for the audio source's latest location.
-     * @param {import("../positions/Pose").Pose} loc
-     */
-    update(loc) {
+    get volume() {
+        return this.gain.gain.value;
+    }
+    set volume(v) {
+        this.gain.gain.value = v;
+    }
+    play() {
+        return Promise.resolve();
+    }
+    stop() {
     }
 }
-
+//# sourceMappingURL=BaseSpatializer.js.map

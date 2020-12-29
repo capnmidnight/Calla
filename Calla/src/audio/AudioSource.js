@@ -1,32 +1,14 @@
 import { InterpolatedPose } from "./positions/InterpolatedPose";
-
-
-/**
- * @typedef {object} JitsiTrack
- * @property {Function} getParticipantId
- * @property {Function} getType
- * @property {Function} isMuted
- * @property {Function} isLocal
- * @property {Function} addEventListener
- * @property {Function} dispose
- * @property {MediaStream} stream
- **/
-
 export class AudioSource {
-    constructor() {
+    constructor(id) {
+        this.id = id;
         this.pose = new InterpolatedPose();
-
-        /** @type {Map<string, JitsiTrack>} */
-        this.tracks = new Map();
-
-        /** @type {import("./spatializers/sources/BaseSource").BaseSource} */
+        this.streams = new Map();
         this._spatializer = null;
     }
-
     get spatializer() {
         return this._spatializer;
     }
-
     set spatializer(v) {
         if (this.spatializer !== v) {
             if (this._spatializer) {
@@ -35,19 +17,18 @@ export class AudioSource {
             this._spatializer = v;
         }
     }
-
     dispose() {
         this.spatializer = null;
     }
-
     /**
      * Update the user.
-     * @param {number} t - the current update time.
+     * @param t - the current update time.
      */
     update(t) {
         this.pose.update(t);
         if (this.spatializer) {
-            this.spatializer.update(this.pose.current);
+            this.spatializer.update(this.pose.current, t);
         }
     }
 }
+//# sourceMappingURL=AudioSource.js.map

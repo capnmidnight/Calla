@@ -27,6 +27,10 @@ export function isArray(obj: any): obj is Array<any> {
     return obj instanceof Array;
 }
 
+export function isHTMLElement(obj: any): obj is HTMLElement {
+    return obj instanceof HTMLElement;
+}
+
 /**
  * Check a value to see if it is of a number type
  * and is not the special NaN value.

@@ -54,7 +54,7 @@ function coallesceOptions(options, isProduction) {
     return options;
 }
 
-function makeBundle(name, input, outputDir, isProduction, options) {
+function makeBundle(name, input, outputDir, format, isProduction, options) {
     options = coallesceOptions(options, isProduction);
 
     const opts = {
@@ -74,7 +74,7 @@ function makeBundle(name, input, outputDir, isProduction, options) {
             json()
         ],
         output: {
-            format: options.isWorker ? "es" : "iife",
+            format,
             sourcemap: true,
             file: isProduction
                 ? `${outputDir}/${name}.min.js`
@@ -112,7 +112,7 @@ function makeBundle(name, input, outputDir, isProduction, options) {
     return opts;
 }
 
-module.exports.makeBundles = function makeBundles(name, inputFile, outputDir, options) {
+module.exports.makeBundles = function makeBundles(name, inputFile, outputDir, format, options) {
     const tasks = [];
     const inDevelopment = process.env.BUILD === "development"
         || process.env.BUILD === "all";
@@ -123,11 +123,11 @@ module.exports.makeBundles = function makeBundles(name, inputFile, outputDir, op
     if (inBuild) {
         if (inDevelopment) {
             console.log("\tIncluding:", name, "development");
-            tasks.push(makeBundle(name, inputFile, outputDir, false, options));
+            tasks.push(makeBundle(name, inputFile, outputDir, format, false, options));
         }
         if (inProduction) {
             console.log("\tIncluding:", name, "production");
-            tasks.push(makeBundle(name, inputFile, outputDir, true, options));
+            tasks.push(makeBundle(name, inputFile, outputDir, format, true, options));
         }
     }
     return tasks;

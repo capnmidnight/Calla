@@ -1,5 +1,5 @@
-import { isFunction } from "../typeChecks";
-import { IAppliable, UnsafeHTMLElement } from "./attrs";
+import { isFunction, isHTMLElement } from "../typeChecks";
+import { IAppliable } from "./attrs";
 
 type EventListenerOpts = boolean | AddEventListenerOptions;
 
@@ -24,8 +24,10 @@ export class HtmlEvt implements IAppliable {
         Object.freeze(this);
     }
 
-    apply(elem: UnsafeHTMLElement) {
-        this.add(elem);
+    apply(elem: HTMLElement | ElementCSSInlineStyle) {
+        if (isHTMLElement(elem)) {
+            this.add(elem);
+        }
     }
 
     /**

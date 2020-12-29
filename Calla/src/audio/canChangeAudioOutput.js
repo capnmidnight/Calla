@@ -1,6 +1,6 @@
-﻿/**
+import { isFunction } from "kudzu";
+/**
  * Indicates whether or not the current browser can change the destination device for audio output.
- * @constant
- * @type {boolean}
  **/
-export const canChangeAudioOutput = HTMLAudioElement.prototype["setSinkId"] instanceof Function;
+export const canChangeAudioOutput = isFunction(HTMLAudioElement.prototype.setSinkId);
+//# sourceMappingURL=canChangeAudioOutput.js.map

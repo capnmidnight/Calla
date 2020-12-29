@@ -1,12 +1,12 @@
 {
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "package.json"
   ],
   "exclude": [
     "bin",
     "obj",
-    "wwwroot",
-    "node_modules"
+    "dist"
   ],
   "compilerOptions": {
     "lib": [ "ESNext", "DOM", "WebWorker" ],
@@ -14,9 +14,6 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Node",
-    "declarationDir": "js",
-    "outDir": "js",
-    "rootDir": "src",
     "sourceMap": true,
     "incremental": true,
 

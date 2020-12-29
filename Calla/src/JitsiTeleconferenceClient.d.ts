@@ -1,0 +1,38 @@
+import type { blobFetchingCallback, progressCallback, scriptLoadingCallback } from "kudzu";
+import { BaseTeleconferenceClient } from "./BaseTeleconferenceClient";
+import type { IMetadataClientExt } from "./IMetadataClient";
+import type JitsiConference from "./lib-jitsi-meet/JitsiConference";
+export declare class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
+    private loadScript;
+    private usingDefaultMetadataClient;
+    private host;
+    private bridgeHost;
+    private bridgeMUC;
+    private connection;
+    conference: JitsiConference;
+    private tracks;
+    private listenersForObjs;
+    constructor(getBlob: blobFetchingCallback, loadScript: scriptLoadingCallback);
+    private _on;
+    private _off;
+    getDefaultMetadataClient(): IMetadataClientExt;
+    prepare(JITSI_HOST: string, JVB_HOST: string, JVB_MUC: string, onProgress?: progressCallback): Promise<void>;
+    connect(): Promise<void>;
+    join(roomName: string, password?: string): Promise<void>;
+    identify(userName: string): Promise<void>;
+    private tryRemoveTrack;
+    leave(): Promise<void>;
+    disconnect(): Promise<void>;
+    userExists(id: string): boolean;
+    getUserNames(): string[][];
+    private getCurrentMediaTrack;
+    setAudioInputDevice(device: MediaDeviceInfo): Promise<void>;
+    setVideoInputDevice(device: MediaDeviceInfo): Promise<void>;
+    getCurrentAudioInputDevice(): Promise<MediaDeviceInfo>;
+    getCurrentVideoInputDevice(): Promise<MediaDeviceInfo>;
+    toggleAudioMuted(): Promise<boolean>;
+    toggleVideoMuted(): Promise<boolean>;
+    private isMediaMuted;
+    getAudioMuted(): Promise<boolean>;
+    getVideoMuted(): Promise<boolean>;
+}

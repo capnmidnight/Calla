@@ -1,5 +1,5 @@
 import { isNullOrUndefined } from "../typeChecks";
-import { display, gridArea, gridColumn, gridRow, gridTemplateColumns, gridTemplateRows, styles } from "./css";
+import { display, gridArea, gridColumn, gridRow, gridTemplateColumns, gridTemplateRows, styles } from "./attrs";
 /**
  * Constructs a CSS grid area definition.
  * @param x - the starting horizontal cell for the element.
