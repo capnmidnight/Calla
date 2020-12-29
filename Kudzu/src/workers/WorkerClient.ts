@@ -1,5 +1,5 @@
 import type { progressCallback } from "../io/progressCallback";
-import { isFunction, isNumber } from "../typeChecks";
+import { isFunction, isNumber, isString } from "../typeChecks";
 import type { WorkerMethodMessages } from "./WorkerServer";
 import { WorkerMethodMessageType } from "./WorkerServer";
 
@@ -14,14 +14,18 @@ export class WorkerClient {
     private methodExists = new Map<string, boolean>();
 
     enabled: boolean = true;
-    
+
     /**
      * Creates a new pooled worker method executor.
      * @param scriptPath - the path to the unminified script to use for the worker
      * @param minScriptPath - the path to the minified script to use for the worker (optional)
      * @param workerPoolSize - the number of worker threads to create for the pool (defaults to 1)
      */
-    constructor(scriptPath: string, minScriptPath?: string, workerPoolSize: number = 1) {
+    constructor(scriptPath: string);
+    constructor(scriptPath: string, minScriptPath: string);
+    constructor(scriptPath: string, workerPoolSize: number);
+    constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number);
+    constructor(scriptPath: string, minScriptPath?: number | string, workerPoolSize: number = 1) {
 
         if (!WorkerClient.isSupported) {
             console.warn("Workers are not supported on this system.");
@@ -43,11 +47,12 @@ export class WorkerClient {
         }
 
         // Choose which version of the script we're going to load.
-        if (process.env.NODE_ENV === "development") {
+        if (process.env.NODE_ENV === "development"
+            || !isString(minScriptPath)) {
             this.script = scriptPath;
         }
         else {
-            this.script = minScriptPath || scriptPath;
+            this.script = minScriptPath;
         }
 
         this.workers = new Array(workerPoolSize);
@@ -83,7 +88,7 @@ export class WorkerClient {
      * @param transferables - any values in any of the parameters that should be transfered instead of copied to the worker thread.
      * @param onProgress - a callback for receiving progress reports on long-running invocations.
      */
-    execute<T>(methodName: string, params: any[], transferables: any = null, onProgress: any = null): Promise<T|undefined> {
+    execute<T>(methodName: string, params: any[], transferables: any = null, onProgress: any = null): Promise<T | undefined> {
         if (!WorkerClient.isSupported) {
             return Promise.reject(new Error("Workers are not supported on this system."));
         }

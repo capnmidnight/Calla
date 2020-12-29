@@ -13,7 +13,10 @@ export declare class WorkerClient {
      * @param minScriptPath - the path to the minified script to use for the worker (optional)
      * @param workerPoolSize - the number of worker threads to create for the pool (defaults to 1)
      */
-    constructor(scriptPath: string, minScriptPath?: string, workerPoolSize?: number);
+    constructor(scriptPath: string);
+    constructor(scriptPath: string, minScriptPath: string);
+    constructor(scriptPath: string, workerPoolSize: number);
+    constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number);
     /**
      * Execute a method on the worker thread.
      * @param methodName - the name of the method to execute.

@@ -1,12 +1,6 @@
-import { isFunction, isNumber } from "../typeChecks";
+import { isFunction, isNumber, isString } from "../typeChecks";
 import { WorkerMethodMessageType } from "./WorkerServer";
 export class WorkerClient {
-    /**
-     * Creates a new pooled worker method executor.
-     * @param scriptPath - the path to the unminified script to use for the worker
-     * @param minScriptPath - the path to the minified script to use for the worker (optional)
-     * @param workerPoolSize - the number of worker threads to create for the pool (defaults to 1)
-     */
     constructor(scriptPath, minScriptPath, workerPoolSize = 1) {
         this.taskCounter = 0;
         this.methodExists = new Map();
@@ -28,11 +22,12 @@ export class WorkerClient {
             throw new Error("Worker pool size must be a postive integer greater than 0");
         }
         // Choose which version of the script we're going to load.
-        if (process.env.NODE_ENV === "development") {
+        if (process.env.NODE_ENV === "development"
+            || !isString(minScriptPath)) {
             this.script = scriptPath;
         }
         else {
-            this.script = minScriptPath || scriptPath;
+            this.script = minScriptPath;
         }
         this.workers = new Array(workerPoolSize);
     }
