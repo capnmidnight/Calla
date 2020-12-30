@@ -15,3 +15,5 @@ export * from "./using";
 
 import { version } from "../package.json";
 console.info(`Kudzu v${version}.`);
+
+export { version };

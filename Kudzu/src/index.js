@@ -14,4 +14,5 @@ export * from "./typeChecks";
 export * from "./using";
 import { version } from "../package.json";
 console.info(`Kudzu v${version}.`);
+export { version };
 //# sourceMappingURL=index.js.map

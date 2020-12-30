@@ -12,3 +12,5 @@ export * from "./timers";
 export * from "./workers";
 export * from "./typeChecks";
 export * from "./using";
+import { version } from "../package.json";
+export { version };
