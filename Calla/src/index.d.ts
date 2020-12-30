@@ -10,3 +10,5 @@ export * from "./ITeleconferenceClient";
 export * from "./JitsiMetadataClient";
 export * from "./JitsiTeleconferenceClient";
 export * from "./SignalRMetadataClient";
+import { version } from "../package.json";
+export { version };

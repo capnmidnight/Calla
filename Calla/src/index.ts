@@ -13,3 +13,5 @@ export * from "./SignalRMetadataClient";
 
 import { version } from "../package.json";
 console.info(`Calla v${version}.`);
+
+export { version };

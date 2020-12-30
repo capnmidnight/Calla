@@ -12,4 +12,5 @@ export * from "./JitsiTeleconferenceClient";
 export * from "./SignalRMetadataClient";
 import { version } from "../package.json";
 console.info(`Calla v${version}.`);
+export { version };
 //# sourceMappingURL=index.js.map
