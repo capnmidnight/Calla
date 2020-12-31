@@ -1,5 +1,5 @@
-import { lerp, once } from "../lib/calla";
-import { TestCase } from "../testing/TestCase";
+import { lerp, once } from "kudzu";
+import { TestCase } from "kudzu/src/testing/TestCase";
 
 export class MathTests extends TestCase {
     test_Lerp0() {

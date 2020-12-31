@@ -12,13 +12,10 @@ import {
     canChangeAudioOutput,
     InterpolatedPose
 } from "calla";
-
 import { RequestAnimationFrameTimer } from "kudzu";
+
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
 
-// Sets up a convenient button for opening multiple
-// windows for testing.
-import { openSideTest, userNumber } from "kudzu";
 
 
 // Gets all the named elements in the document so we can
@@ -31,8 +28,7 @@ const controls = {
     space: document.getElementById("space") as HTMLDivElement,
     cams: document.getElementById("cams") as HTMLSelectElement,
     mics: document.getElementById("mics") as HTMLSelectElement,
-    speakers: document.getElementById("speakers") as HTMLSelectElement,
-    sideTest: document.getElementById("sideTest") as HTMLButtonElement
+    speakers: document.getElementById("speakers") as HTMLSelectElement
 };
 
 /**
@@ -457,15 +453,18 @@ function deviceSelector(addNone: boolean, select: HTMLSelectElement, values: Med
     controls.connect.disabled = false;
 })();
 
+// Sets up a convenient button for opening multiple
+// windows for testing.
+import { openSideTest } from "kudzu/src/testing/windowing";
+import { userNumber } from "kudzu/src/testing/userNumber";
 
-
-
+const sideTest = document.getElementById("sideTest") as HTMLButtonElement
 
 if (userNumber === 1) {
-    controls.sideTest.addEventListener("click", openSideTest);
+    sideTest.addEventListener("click", openSideTest);
 }
 else {
-    controls.sideTest.style.display = "none";
+    sideTest.style.display = "none";
 }
 
 controls.roomName.value = "TestRoom";

@@ -1,7 +1,7 @@
+import { once, wait, when } from "kudzu";
+import { TestCase } from "kudzu/src/testing/TestCase";
+import { userNumber } from "kudzu/src/testing/userNumber";
 import { bust } from "../emoji/emojis";
-import { CallaClient, once, wait, when } from "../lib/calla";
-import { TestCase } from "../testing/TestCase";
-import { userNumber } from "../testing/userNumber";
 
 const TEST_ROOM_NAME = "testroom";
 

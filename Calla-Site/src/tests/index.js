@@ -1,7 +1,6 @@
+import { HtmlTestOutput as TestOutput } from "kudzu/src/testing/HtmlTestOutput";
+import { userNumber } from "kudzu/src/testing/userNumber";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
-import { CallaClient } from "../lib/calla";
-import { HtmlTestOutput as TestOutput } from "../testing/HtmlTestOutput";
-import { userNumber } from "../testing/userNumber";
 import { JitsiClient1_Tests } from "./JitsiClient1_Tests";
 import { JitsiClient2_Tests } from "./JitsiClient2_Tests";
 

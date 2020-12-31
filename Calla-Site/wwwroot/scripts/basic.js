@@ -5056,47 +5056,6 @@
       }
   }
 
-  const loc = new URL(document.location.href);
-  const testNumber = loc.searchParams.get("testUserNumber");
-  /**
-   * The test instance value that the current window has loaded. This is
-   * figured out either from a number in the query string parameter "testUserNumber",
-   * or the default value of 1.
-   **/
-  const userNumber = !isNullOrUndefined(testNumber)
-      ? parseInt(testNumber, 10)
-      : 1;
-
-  const windows = [];
-  // Closes all the windows.
-  window.addEventListener("unload", () => {
-      for (const w of windows) {
-          w.close();
-      }
-  });
-  /**
-   * Opens a window that will be closed when the window that opened it is closed.
-   * @param href - the location to load in the window
-   * @param x - the screen position horizontal component
-   * @param y - the screen position vertical component
-   * @param width - the screen size horizontal component
-   * @param height - the screen size vertical component
-   */
-  function openWindow(href, x, y, width, height) {
-      const w = window.open(href, "_blank", `left=${x},top=${y},width=${width},height=${height}`);
-      if (w) {
-          windows.push(w);
-      }
-  }
-  /**
-   * Opens a new window with a query string parameter that can be used to differentiate different test instances.
-   **/
-  function openSideTest() {
-      const loc = new URL(document.location.href);
-      loc.searchParams.set("testUserNumber", (userNumber + windows.length + 1).toString());
-      openWindow(loc.href, window.screenLeft + window.outerWidth, 0, window.innerWidth, window.innerHeight);
-  }
-
   class TimerTickEvent extends Event {
       constructor() {
           super("tick");
@@ -13299,13 +13258,11 @@
   var CallaMetadataEventType;
   (function (CallaMetadataEventType) {
       CallaMetadataEventType["UserPosed"] = "userPosed";
-      CallaMetadataEventType["PoseResponse"] = "sendUserPosed";
       CallaMetadataEventType["UserPointer"] = "userPointer";
       CallaMetadataEventType["SetAvatarEmoji"] = "setAvatarEmoji";
       CallaMetadataEventType["AvatarChanged"] = "avatarChanged";
       CallaMetadataEventType["Emote"] = "emote";
       CallaMetadataEventType["Chat"] = "chat";
-      CallaMetadataEventType["RequestPose"] = "requestPose";
   })(CallaMetadataEventType || (CallaMetadataEventType = {}));
   class CallaEvent extends Event {
       constructor(eventType) {
@@ -14615,100 +14572,45 @@
   const JVB_HOST = JITSI_HOST;
   const JVB_MUC = "conference." + JITSI_HOST;
 
+  const loc = new URL(document.location.href);
+  const testNumber = loc.searchParams.get("testUserNumber");
   /**
-   * Calla will provide a managed object for the user's position, but we
-   * are responsible in our application code for displaying that position
-   * in some way. This User class helps encapsulate that representation.
+   * The test instance value that the current window has loaded. This is
+   * figured out either from a number in the query string parameter "testUserNumber",
+   * or the default value of 1.
    **/
-  class User {
-      /**
-       * Creates a new User object.
-       */
-      constructor(id, name, pose, isLocal) {
-          this.id = id;
-          this.pose = pose;
-          // The user's name.
-          this._name = null;
-          // An HTML element to display the user's name.
-          this._nameEl = null;
-          // Calla will eventually give us a video stream for the user.
-          this._videoStream = null;
-          // An HTML element for displaying the user's video.
-          this._video = null;
-          this.container = document.createElement("div");
-          this.container.className = "user";
-          if (isLocal) {
-              this.container.className += " localUser";
-              name += " (Me)";
-          }
-          this.name = name;
+  const userNumber = !isNullOrUndefined(testNumber)
+      ? parseInt(testNumber, 10)
+      : 1;
+
+  const windows = [];
+  // Closes all the windows.
+  window.addEventListener("unload", () => {
+      for (const w of windows) {
+          w.close();
       }
-      /**
-       * Removes the user from the page.
-       **/
-      dispose() {
-          this.container.parentElement.removeChild(this.container);
+  });
+  /**
+   * Opens a window that will be closed when the window that opened it is closed.
+   * @param href - the location to load in the window
+   * @param x - the screen position horizontal component
+   * @param y - the screen position vertical component
+   * @param width - the screen size horizontal component
+   * @param height - the screen size vertical component
+   */
+  function openWindow(href, x, y, width, height) {
+      const w = window.open(href, "_blank", `left=${x},top=${y},width=${width},height=${height}`);
+      if (w) {
+          windows.push(w);
       }
-      /**
-       * Gets the user's name.
-       **/
-      get name() {
-          return this._name;
-      }
-      /**
-       * Sets the user's name, and updates the display of it.
-       **/
-      set name(v) {
-          if (this._nameEl) {
-              this.container.removeChild(this._nameEl);
-              this._nameEl = null;
-          }
-          this._name = v;
-          this._nameEl = document.createElement("div");
-          this._nameEl.className = "userName";
-          this._nameEl.append(document.createTextNode(this.name));
-          this.container.append(this._nameEl);
-      }
-      /**
-       * Gets the user's video stream.
-       **/
-      get videoStream() {
-          return this._videoStream;
-      }
-      /**
-       * Sets the user's video stream, deleting any previous stream that may have existed,
-       * and updates the display of the user to have the new video stream.
-       **/
-      set videoStream(v) {
-          if (this._video) {
-              this.container.removeChild(this._video);
-              this._video = null;
-          }
-          this._videoStream = v;
-          if (this._videoStream) {
-              this._video = document.createElement("video");
-              this._video.playsInline = true;
-              this._video.autoplay = true;
-              this._video.controls = false;
-              this._video.muted = true;
-              this._video.volume = 0;
-              this._video.srcObject = this._videoStream;
-              this._video.className = "userVideo";
-              this.container.append(this._video);
-              this._video.play();
-          }
-      }
-      /**
-       * Moves the user's graphics element to the latest position that Calla has
-       * calculated for it.
-       **/
-      update() {
-          const dx = this.container.parentElement.clientLeft - this.container.clientWidth / 2;
-          const dy = this.container.parentElement.clientTop - this.container.clientHeight / 2;
-          this.container.style.left = (100 * this.pose.current.p[0] + dx) + "px";
-          this.container.style.zIndex = this.pose.current.p[1].toFixed(3);
-          this.container.style.top = (100 * this.pose.current.p[2] + dy) + "px";
-      }
+  }
+  /**
+   * Opens a new window with a query string parameter that can be used to differentiate different test instances.
+   **/
+  function openSideTest() {
+      const loc = new URL(document.location.href);
+      loc.searchParams.set("testUserNumber", (userNumber + windows.length + 1).toString());
+      openWindow(loc.href, window.screenLeft + window.outerWidth, 0, window.innerWidth, window.innerHeight);
   }
 
   // Import the configuration parameters.
@@ -14722,8 +14624,7 @@
       space: document.getElementById("space"),
       cams: document.getElementById("cams"),
       mics: document.getElementById("mics"),
-      speakers: document.getElementById("speakers"),
-      sideTest: document.getElementById("sideTest")
+      speakers: document.getElementById("speakers")
   };
   /**
    * The animation timer handle, used for later stopping animation.
@@ -14873,6 +14774,101 @@
   async function leave() {
       await client.leave();
   }
+  /**
+   * Calla will provide a managed object for the user's position, but we
+   * are responsible in our application code for displaying that position
+   * in some way. This User class helps encapsulate that representation.
+   **/
+  class User {
+      /**
+       * Creates a new User object.
+       */
+      constructor(id, name, pose, isLocal) {
+          this.id = id;
+          this.pose = pose;
+          // The user's name.
+          this._name = null;
+          // An HTML element to display the user's name.
+          this._nameEl = null;
+          // Calla will eventually give us a video stream for the user.
+          this._videoStream = null;
+          // An HTML element for displaying the user's video.
+          this._video = null;
+          this.container = document.createElement("div");
+          this.container.className = "user";
+          if (isLocal) {
+              this.container.className += " localUser";
+              name += " (Me)";
+          }
+          this.name = name;
+      }
+      /**
+       * Removes the user from the page.
+       **/
+      dispose() {
+          this.container.parentElement.removeChild(this.container);
+      }
+      /**
+       * Gets the user's name.
+       **/
+      get name() {
+          return this._name;
+      }
+      /**
+       * Sets the user's name, and updates the display of it.
+       **/
+      set name(v) {
+          if (this._nameEl) {
+              this.container.removeChild(this._nameEl);
+              this._nameEl = null;
+          }
+          this._name = v;
+          this._nameEl = document.createElement("div");
+          this._nameEl.className = "userName";
+          this._nameEl.append(document.createTextNode(this.name));
+          this.container.append(this._nameEl);
+      }
+      /**
+       * Gets the user's video stream.
+       **/
+      get videoStream() {
+          return this._videoStream;
+      }
+      /**
+       * Sets the user's video stream, deleting any previous stream that may have existed,
+       * and updates the display of the user to have the new video stream.
+       **/
+      set videoStream(v) {
+          if (this._video) {
+              this.container.removeChild(this._video);
+              this._video = null;
+          }
+          this._videoStream = v;
+          if (this._videoStream) {
+              this._video = document.createElement("video");
+              this._video.playsInline = true;
+              this._video.autoplay = true;
+              this._video.controls = false;
+              this._video.muted = true;
+              this._video.volume = 0;
+              this._video.srcObject = this._videoStream;
+              this._video.className = "userVideo";
+              this.container.append(this._video);
+              this._video.play();
+          }
+      }
+      /**
+       * Moves the user's graphics element to the latest position that Calla has
+       * calculated for it.
+       **/
+      update() {
+          const dx = this.container.parentElement.clientLeft - this.container.clientWidth / 2;
+          const dy = this.container.parentElement.clientTop - this.container.clientHeight / 2;
+          this.container.style.left = (100 * this.pose.current.p[0] + dx) + "px";
+          this.container.style.zIndex = this.pose.current.p[1].toFixed(3);
+          this.container.style.top = (100 * this.pose.current.p[2] + dy) + "px";
+      }
+  }
   // =========== BEGIN Wire up events ================
   controls$1.connect.addEventListener("click", connect);
   controls$1.leave.addEventListener("click", leave);
@@ -14966,11 +14962,12 @@
       // the user attempt to connect to the conference now.
       controls$1.connect.disabled = false;
   })();
+  const sideTest = document.getElementById("sideTest");
   if (userNumber === 1) {
-      controls$1.sideTest.addEventListener("click", openSideTest);
+      sideTest.addEventListener("click", openSideTest);
   }
   else {
-      controls$1.sideTest.style.display = "none";
+      sideTest.style.display = "none";
   }
   controls$1.roomName.value = "TestRoom";
   controls$1.userName.value = `TestUser${userNumber}`;

@@ -2,9 +2,6 @@
 import { Calla, CallaTeleconferenceEventType, canChangeAudioOutput } from "calla";
 import { RequestAnimationFrameTimer } from "kudzu";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
-// Sets up a convenient button for opening multiple
-// windows for testing.
-import { openSideTest, userNumber } from "kudzu";
 // Gets all the named elements in the document so we can
 // setup event handlers on them.
 const controls = {
@@ -15,8 +12,7 @@ const controls = {
     space: document.getElementById("space"),
     cams: document.getElementById("cams"),
     mics: document.getElementById("mics"),
-    speakers: document.getElementById("speakers"),
-    sideTest: document.getElementById("sideTest")
+    speakers: document.getElementById("speakers")
 };
 /**
  * The animation timer handle, used for later stopping animation.
@@ -354,11 +350,16 @@ function deviceSelector(addNone, select, values, preferredDeviceID, onSelect) {
     // the user attempt to connect to the conference now.
     controls.connect.disabled = false;
 })();
+// Sets up a convenient button for opening multiple
+// windows for testing.
+import { openSideTest } from "kudzu/src/testing/windowing";
+import { userNumber } from "kudzu/src/testing/userNumber";
+const sideTest = document.getElementById("sideTest");
 if (userNumber === 1) {
-    controls.sideTest.addEventListener("click", openSideTest);
+    sideTest.addEventListener("click", openSideTest);
 }
 else {
-    controls.sideTest.style.display = "none";
+    sideTest.style.display = "none";
 }
 controls.roomName.value = "TestRoom";
 controls.userName.value = `TestUser${userNumber}`;

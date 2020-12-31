@@ -1,5 +1,5 @@
-import { once, wait } from "../lib/calla";
-import { openSideTest } from "../testing/windowing";
+import { once, wait } from "kudzu";
+import { openSideTest } from "kudzu/src/testing/windowing";
 import { TestBase } from "./TestBase";
 
 const TEST_ROOM_NAME = "testroom";
