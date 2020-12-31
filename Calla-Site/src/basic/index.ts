@@ -409,19 +409,6 @@ function deviceSelector(addNone: boolean, select: HTMLSelectElement, values: Med
 // Setup the device lists.
 (async function () {
 
-    // If we want to create sessions that default to having 
-    // no video enabled, we can change`getPreferredVideoInputAsync(true)`
-    // to `getPreferredVideoInputAsync(false)`.
-    deviceSelector(
-        true,
-        controls.cams,
-        await client.getVideoInputDevices(true),
-        client.preferredVideoInputID,
-        (device) => client.setVideoInputDevice(device));
-
-    // If we want to create sessions that default to having 
-    // no video enabled, we can change`getPreferredVideoInputAsync(true)`
-    // to `getPreferredVideoInputAsync(false)`.
     deviceSelector(
         true,
         controls.mics,
@@ -439,6 +426,16 @@ function deviceSelector(addNone: boolean, select: HTMLSelectElement, values: Med
         await client.getAudioOutputDevices(true),
         client.preferredAudioOutputID,
         (device) => client.setAudioOutputDevice(device));
+
+    // If we want to create sessions that default to having 
+    // no video enabled, we can change`getPreferredVideoInputAsync(true)`
+    // to `getPreferredVideoInputAsync(false)`.
+    deviceSelector(
+        true,
+        controls.cams,
+        await client.getVideoInputDevices(true),
+        client.preferredVideoInputID,
+        (device) => client.setVideoInputDevice(device));
 
     // Chromium is pretty much the only browser that can change
     // audio outputs at this time, so disable the control if we

@@ -1,4 +1,3 @@
-// Import the configuration parameters.
 import { Calla, CallaTeleconferenceEventType, canChangeAudioOutput } from "calla";
 import { RequestAnimationFrameTimer } from "kudzu";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
@@ -327,19 +326,16 @@ function deviceSelector(addNone, select, values, preferredDeviceID, onSelect) {
 }
 // Setup the device lists.
 (async function () {
-    // If we want to create sessions that default to having 
-    // no video enabled, we can change`getPreferredVideoInputAsync(true)`
-    // to `getPreferredVideoInputAsync(false)`.
-    deviceSelector(true, controls.cams, await client.getVideoInputDevices(true), client.preferredVideoInputID, (device) => client.setVideoInputDevice(device));
-    // If we want to create sessions that default to having 
-    // no video enabled, we can change`getPreferredVideoInputAsync(true)`
-    // to `getPreferredVideoInputAsync(false)`.
     deviceSelector(true, controls.mics, await client.getAudioInputDevices(true), client.preferredAudioInputID, (device) => client.setAudioInputDevice(device));
     // There is no way to set "no" audio output, so we don't
     // allow a selection of "none" here. Also, it's a good idea
     // to always start off with an audio output device, so always
     // call `getPreferredAudioOutputAsync(true)`.
     deviceSelector(false, controls.speakers, await client.getAudioOutputDevices(true), client.preferredAudioOutputID, (device) => client.setAudioOutputDevice(device));
+    // If we want to create sessions that default to having 
+    // no video enabled, we can change`getPreferredVideoInputAsync(true)`
+    // to `getPreferredVideoInputAsync(false)`.
+    deviceSelector(true, controls.cams, await client.getVideoInputDevices(true), client.preferredVideoInputID, (device) => client.setVideoInputDevice(device));
     // Chromium is pretty much the only browser that can change
     // audio outputs at this time, so disable the control if we
     // detect there is no option to change outputs.
