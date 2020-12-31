@@ -8,6 +8,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
+using System;
+
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
+
+using Calla.Hubs;
+
 namespace Calla
 {
     public class Startup
@@ -30,10 +37,12 @@ namespace Calla
                 services.AddLettuceEncrypt();
             }
 
+            services.AddLogging(LoggerOpts);
+            services.AddRazorPages();
             services.AddAuthentication();
             services.AddAuthorization();
             services.AddEntityFrameworkNpgsql();
-            services.AddSignalR();
+            services.AddSignalR(HubOpts);
 
             var controllersWithViews = services.AddControllersWithViews();
             if (Environment.IsDevelopment())
@@ -91,14 +100,20 @@ namespace Calla
             get
             {
                 var extTypes = new FileExtensionContentTypeProvider();
-                var types = Configuration.GetSection("ContentTypes")?.GetChildren();
-                if (types is object)
+                var optionalTypes = Configuration.GetSection("ContentTypes")?.GetChildren();
+                if (optionalTypes is object)
                 {
-                    foreach (var type in types)
+                    foreach (var type in optionalTypes)
                     {
                         extTypes.Mappings[type.Key] = type.Value;
                     }
                 }
+
+                // required types
+                extTypes.Mappings[".glb"] = "model/gltf-binary";
+                extTypes.Mappings[".gltf"] = "model/gltf+json";
+                extTypes.Mappings[".vert"] = "x-shader/x-vertex";
+                extTypes.Mappings[".frag"] = "x-shader/x-fragment";
 
                 var statOpts = new StaticFileOptions
                 {
@@ -113,6 +128,22 @@ namespace Calla
             endpoints.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}");
+            endpoints.MapRazorPages();
+            endpoints.MapHub<CallaUserStateHub>("/calla");
+        }
+
+        private void HubOpts(HubOptions opts)
+        {
+            opts.ClientTimeoutInterval = TimeSpan.FromSeconds(5);
+            opts.HandshakeTimeout = TimeSpan.FromSeconds(5);
+        }
+
+        private void LoggerOpts(ILoggingBuilder builder)
+        {
+            if (Environment.IsDevelopment())
+            {
+                builder.AddConsole();
+            }
         }
     }
 }

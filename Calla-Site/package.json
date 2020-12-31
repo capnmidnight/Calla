@@ -2,23 +2,37 @@
   "version": "1.0.0",
   "name": "calla-site",
   "private": true,
-    "scripts": {
-        "build": "rollup -c --environment BUILD:production",
-        "build:basic": "rollup -c --environment BUILD:basic",
-        "build:game": "rollup -c --environment BUILD:game",
-        "watch": "rollup -c -w --environment BUILD:development",
-        "watch:basic": "rollup -c -w --environment BUILD:basic",
-        "watch:game": "rollup -c -w --environment BUILD:game"
-    },
+  "scripts": {
+    "_restore": "npm install && tsc --build",
+    "_build": "npm run _restore && rollup -c --environment",
+    "_watch": "npm run _restore && rollup -w -c --environment",
+    "build:debug": "npm version minor && rollup -c --environment -- BUILD:development,PROJECT:all",
+    "build:release": "npm version minor && npm run _build -- BUILD:production,PROJECT:all",
+    "rebuild:all": "npm run _build -- BUILD:all,PROJECT:all",
+    "rebuild:debug": "npm run _build -- BUILD:development,PROJECT:all",
+    "rebuild:release": "npm run _build -- BUILD:production,PROJECT:all",
+    "watch:all": "npm run _watch -- BUILD:development,PROJECT:all",
+    "watch:basic": "npm run _watch -- BUILD:development,PROJECT:basic",
+    "watch:game": "npm run _watch -- BUILD:development,PROJECT:game"
+  },
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^9.0.0",
-    "@rollup/plugin-strip": "^2.0.0",
-    "rollup-plugin-terser": "^7.0.0",
-    "tracekit": "^0.4.5"
+    "@types/node": "^14.14.16",
+    "my-rollup": "file:../MyRollup",
+    "rollup": "^2.35.1",
+    "tslib": "^2.0.3",
+    "typescript": "^4.1.3"
+  },
+  "dependencies": {
+    "@microsoft/signalr": "^5.0.1",
+    "calla": "file:../Calla",
+    "kudzu": "file:../Kudzu",
+    "gl-matrix": "^3.3.0",
+    "three": "^0.123.0",
+    "webxr-polyfill": "^2.0.3"
   },
   "-vs-binding": {
     "ProjectOpened": [
-      "watch"
+      "watch:game"
     ]
   }
 }

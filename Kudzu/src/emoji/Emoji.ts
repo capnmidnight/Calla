@@ -24,13 +24,3 @@ export class Emoji {
         return this.value.indexOf(e.value) >= 0;
     }
 }
-
-/**
- * Shorthand for `new Emoji`, which saves significantly on bundle size.
- * @param v - a Unicode sequence.
- * @param d - an English text description of the pictogram.
- * @param [o] - an optional set of properties to set on the Emoji object.
- */
-export function e(v: string, d: string, o: any = null) {
-    return new Emoji(v, d, o);
-}

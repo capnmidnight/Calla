@@ -1,52 +1,61 @@
-import type { Emoji } from "./Emoji";
-import { e } from "./Emoji";
-import { EmojiGroup, g } from "./EmojiGroup";
-import { gg } from "./gg";
+import { Emoji } from "./Emoji";
+import { EmojiGroup } from "./EmojiGroup";
 
+export function isSurfer(e: Emoji) {
+    return surfers.contains(e)
+        || rowers.contains(e)
+        || swimmers.contains(e)
+        || merpeople.contains(e);
+}
 
-export const textStyle = e("\u{FE0E}", "Variation Selector-15: text style");
-export const emojiStyle = e("\u{FE0F}", "Variation Selector-16: emoji style");
-export const zeroWidthJoiner = e("\u{200D}", "Zero Width Joiner");
-export const combiningEnclosingCircleBackslash = e("\u{20E3}", "Combining Enclosing Circle Backslash");
-export const combiningEnclosingKeycap = e("\u{20E3}", "Combining Enclosing Keycap");
-export const combiners = [
-    textStyle,
-    emojiStyle,
-    zeroWidthJoiner,
-    combiningEnclosingCircleBackslash,
-    combiningEnclosingKeycap,
-];
+/**
+ * Shorthand for `new Emoji`, which saves significantly on bundle size.
+ * @param v - a Unicode sequence.
+ * @param d - an English text description of the pictogram.
+ * @param [o] - an optional set of properties to set on the Emoji object.
+ */
+function e(v: string, d: string, o: any = null) {
+    return new Emoji(v, d, o);
+}
 
-export const female = e("\u{2640}\u{FE0F}", "Female");
-export const male = e("\u{2642}\u{FE0F}", "Male");
-export const sexes = [
-    female,
-    male,
-];
-export const skinL = e("\u{1F3FB}", "Light Skin Tone");
-export const skinML = e("\u{1F3FC}", "Medium-Light Skin Tone");
-export const skinM = e("\u{1F3FD}", "Medium Skin Tone");
-export const skinMD = e("\u{1F3FE}", "Medium-Dark Skin Tone");
-export const skinD = e("\u{1F3FF}", "Dark Skin Tone");
-export const skinTones = [
-    skinL,
-    skinML,
-    skinM,
-    skinMD,
-    skinD,
-];
-export const hairRed = e("\u{1F9B0}", "Red Hair");
-export const hairCurly = e("\u{1F9B1}", "Curly Hair");
-export const hairWhite = e("\u{1F9B3}", "White Hair");
-export const hairBald = e("\u{1F9B2}", "Bald");
-export const hairColors = [
-    hairRed,
-    hairCurly,
-    hairWhite,
-    hairBald,
-];
+/**
+ * Shorthand for `new Emoji`, which saves significantly on bundle size.
+ * @param v - a Unicode sequence.
+ * @param d - an English text description of the pictogram.
+ * @param [o] - an optional set of properties to set on the Emoji object.
+ */
+function E(v: string, d: string, o: any = null): Emoji {
+    return new Emoji(v + emojiStyle.value, d, o);
+}
 
-function combo(a: any, b: any): any {
+/**
+ * Shorthand for `new EmojiGroup`, which saves significantly on bundle size.
+ * @param v - a Unicode sequence.
+ * @param d - an English text description of the pictogram.
+ * @param r - the emoji that are contained in this group.
+ */
+function g(v: string, d: string, ...r: (Emoji | EmojiGroup)[]) {
+    return new EmojiGroup(v, d, ...r);
+}
+
+/**
+ * A shorthand for `new EmojiGroup` that allows for setting optional properties
+ * on the EmojiGroup object.
+ */
+function gg(v: string, d: string, o: any, ...r: Emoji[]) {
+    const emojis = Object.values(o)
+        .filter(oo => oo instanceof Emoji)
+        .map(oo => oo as Emoji)
+        .concat(...r);
+    return Object.assign(
+        g(
+            v,
+            d,
+            ...emojis),
+        o) as EmojiGroup;
+}
+
+function combo(a: any, b: any, altDesc: string | null = null): any {
     if (a instanceof Array) {
         return a.map(c => combo(c, b));
     }
@@ -58,11 +67,11 @@ function combo(a: any, b: any): any {
         return b.map(c => combo(a, c));
     }
     else {
-        return e(a.value + b.value, a.desc + ": " + b.desc);
+        return e(a.value + b.value, altDesc || (a.desc + ": " + b.desc));
     }
 }
 
-function join(a: any, b: any): any {
+function join(a: any, b: any, altDesc: string | null = null): any {
     if (a instanceof Array) {
         return a.map(c => join(c, b));
     }
@@ -74,15 +83,8 @@ function join(a: any, b: any): any {
         return b.map(c => join(a, c));
     }
     else {
-        return e(a.value + zeroWidthJoiner.value + b.value, a.desc + ": " + b.desc);
+        return e(a.value + zeroWidthJoiner.value + b.value, altDesc || (a.desc + ": " + b.desc));
     }
-}
-
-export function isSurfer(e: Emoji) {
-    return surfers.contains(e)
-        || rowers.contains(e)
-        || swimmers.contains(e)
-        || merpeople.contains(e);
 }
 
 function skin(v: string, d: string, ...rest: Emoji[]) {
@@ -142,6 +144,49 @@ function sym(symbol: Emoji, name: string) {
         women
     });
 }
+
+
+export const textStyle = e("\uFE0E", "Variation Selector-15: text style");
+export const emojiStyle = e("\uFE0F", "Variation Selector-16: emoji style");
+export const zeroWidthJoiner = e("\u200D", "Zero Width Joiner");
+export const combiningEnclosingKeycap = e("\u20E3", "Combining Enclosing Keycap");
+export const combiners = [
+    textStyle,
+    emojiStyle,
+    zeroWidthJoiner,
+    combiningEnclosingKeycap,
+];
+
+export const female = E("\u2640", "Female");
+export const male = E("\u2642", "Male");
+export const transgender = E("\u26A7", "Transgender Symbol");
+export const sexes = [
+    female,
+    male,
+    transgender
+];
+export const skinL = e("\u{1F3FB}", "Light Skin Tone");
+export const skinML = e("\u{1F3FC}", "Medium-Light Skin Tone");
+export const skinM = e("\u{1F3FD}", "Medium Skin Tone");
+export const skinMD = e("\u{1F3FE}", "Medium-Dark Skin Tone");
+export const skinD = e("\u{1F3FF}", "Dark Skin Tone");
+export const skinTones = [
+    skinL,
+    skinML,
+    skinM,
+    skinMD,
+    skinD,
+];
+export const hairRed = e("\u{1F9B0}", "Red Hair");
+export const hairCurly = e("\u{1F9B1}", "Curly Hair");
+export const hairWhite = e("\u{1F9B3}", "White Hair");
+export const hairBald = e("\u{1F9B2}", "Bald");
+export const hairColors = [
+    hairRed,
+    hairCurly,
+    hairWhite,
+    hairBald,
+];
 
 export const frowners = skinAndSex("\u{1F64D}", "Frowning");
 export const pouters = skinAndSex("\u{1F64E}", "Pouting");
@@ -206,7 +251,7 @@ export const person = skin("\u{1F9D1}", "Person",
     (wearingTurban as any).default as Emoji);
 
 export const beardedMan = skin("\u{1F9D4}", "Bearded Man");
-export const manInSuitLevitating = e("\u{1F574}\u{FE0F}", "Man in Suit, Levitating");
+export const manInSuitLevitating = E("\u{1F574}", "Man in Suit, Levitating");
 export const manWithChineseCap = skin("\u{1F472}", "Man With Chinese Cap");
 export const manInTuxedo = skin("\u{1F935}", "Man in Tuxedo");
 export const man = skinAndHair("\u{1F468}", "Man",
@@ -245,7 +290,7 @@ export const elderly = gg(
     female: oldWoman
 });
 
-export const medical = e("\u{2695}\u{FE0F}", "Medical");
+export const medical = E("\u2695", "Medical");
 export const healthCareWorkers = sym(medical, "Health Care");
 
 export const graduationCap = e("\u{1F393}", "Graduation Cap");
@@ -254,7 +299,7 @@ export const students = sym(graduationCap, "Student");
 export const school = e("\u{1F3EB}", "School");
 export const teachers = sym(school, "Teacher");
 
-export const balanceScale = e("\u{2696}\u{FE0F}", "Balance Scale");
+export const balanceScale = E("\u2696", "Balance Scale");
 export const judges = sym(balanceScale, "Judge");
 
 export const sheafOfRice = e("\u{1F33E}", "Sheaf of Rice");
@@ -278,7 +323,7 @@ export const fireFighters = sym(fireEngine, "Fire Fighter");
 export const rocket = e("\u{1F680}", "Rocket");
 export const astronauts = sym(rocket, "Astronaut");
 
-export const airplane = e("\u{2708}\u{FE0F}", "Airplane");
+export const airplane = E("\u2708", "Airplane");
 export const pilots = sym(airplane, "Pilot");
 
 export const artistPalette = e("\u{1F3A8}", "Artist Palette");
@@ -350,6 +395,7 @@ export const fantasy = gg(
     zombies
 });
 
+export const safetyVest = e("\u{1F9BA}", "Safety Vest");
 export const whiteCane = e("\u{1F9AF}", "Probing Cane");
 export const withProbingCane = sym(whiteCane, "Probing");
 
@@ -373,14 +419,14 @@ export const jugglers = skinAndSex("\u{1F939}", "Juggler");
 export const climbers = skinAndSex("\u{1F9D7}", "Climber");
 export const fencer = e("\u{1F93A}", "Fencer");
 export const jockeys = skin("\u{1F3C7}", "Jockey");
-export const skier = e("\u{26F7}\u{FE0F}", "Skier");
+export const skier = E("\u26F7", "Skier");
 export const snowboarders = skin("\u{1F3C2}", "Snowboarder");
-export const golfers = skinAndSex("\u{1F3CC}\u{FE0F}", "Golfer");
+export const golfers = skinAndSex("\u{1F3CC}" + emojiStyle.value, "Golfer");
 export const surfers = skinAndSex("\u{1F3C4}", "Surfing");
 export const rowers = skinAndSex("\u{1F6A3}", "Rowing Boat");
 export const swimmers = skinAndSex("\u{1F3CA}", "Swimming");
-export const basketballers = skinAndSex("\u{26F9}\u{FE0F}", "Basket Baller");
-export const weightLifters = skinAndSex("\u{1F3CB}\u{FE0F}", "Weight Lifter");
+export const basketballers = skinAndSex("\u26F9" + emojiStyle.value, "Basket Baller");
+export const weightLifters = skinAndSex("\u{1F3CB}" + emojiStyle.value, "Weight Lifter");
 export const bikers = skinAndSex("\u{1F6B4}", "Biker");
 export const mountainBikers = skinAndSex("\u{1F6B5}", "Mountain Biker");
 export const cartwheelers = skinAndSex("\u{1F938}", "Cartwheeler");
@@ -562,10 +608,10 @@ export const coldFace = e("\u{1F976}", "Cold Face");
 //export const disguisedFace = e("\u{1F978}", "Disguised Face");
 export const pleadingFace = e("\u{1F97A}", "Pleading Face");
 export const faceWithMonocle = e("\u{1F9D0}", "Face with Monocle");
-export const skullAndCrossbones = e("\u{2620}\u{FE0F}", "Skull and Crossbones");
-export const frowningFace = e("\u{2639}\u{FE0F}", "Frowning Face");
-export const smilingFace = e("\u{263A}\u{FE0F}", "Smiling Face");
-export const speakingHead = e("\u{1F5E3}\u{FE0F}", "Speaking Head");
+export const skullAndCrossbones = E("\u2620", "Skull and Crossbones");
+export const frowningFace = E("\u2639", "Frowning Face");
+export const smilingFace = E("\u263A", "Smiling Face");
+export const speakingHead = E("\u{1F5E3}", "Speaking Head");
 export const bust = e("\u{1F464}", "Bust in Silhouette");
 export const faces = gg(
     "Faces", "Round emoji faces", {
@@ -708,8 +754,8 @@ export const blackHeart = e("\u{1F5A4}", "Black Heart");
 export const whiteHeart = e("\u{1F90D}", "White Heart");
 export const brownHeart = e("\u{1F90E}", "Brown Heart");
 export const orangeHeart = e("\u{1F9E1}", "Orange Heart");
-export const heartExclamation = e("\u{2763}\u{FE0F}", "Heart Exclamation");
-export const redHeart = e("\u{2764}\u{FE0F}", "Red Heart");
+export const heartExclamation = E("\u2763", "Heart Exclamation");
+export const redHeart = E("\u2764", "Red Heart");
 export const love = gg(
     "Love", "Hearts and kisses", {
     kissMark,
@@ -745,18 +791,18 @@ export const dizzy = e("\u{1F4AB}", "Dizzy");
 export const speechBalloon = e("\u{1F4AC}", "Speech Balloon");
 export const thoughtBalloon = e("\u{1F4AD}", "Thought Balloon");
 export const hundredPoints = e("\u{1F4AF}", "Hundred Points");
-export const hole = e("\u{1F573}\u{FE0F}", "Hole");
-export const leftSpeechBubble = e("\u{1F5E8}\u{FE0F}", "Left Speech Bubble");
-export const rightSpeechBubble = e("\u{1F5E9}\u{FE0F}", "Right Speech Bubble");
-export const conversationBubbles2 = e("\u{1F5EA}\u{FE0F}", "Conversation Bubbles 2");
-export const conversationBubbles3 = e("\u{1F5EB}\u{FE0F}", "Conversation Bubbles 3");
-export const leftThoughtBubble = e("\u{1F5EC}\u{FE0F}", "Left Thought Bubble");
-export const rightThoughtBubble = e("\u{1F5ED}\u{FE0F}", "Right Thought Bubble");
-export const leftAngerBubble = e("\u{1F5EE}\u{FE0F}", "Left Anger Bubble");
-export const rightAngerBubble = e("\u{1F5EF}\u{FE0F}", "Right Anger Bubble");
-export const angerBubble = e("\u{1F5F0}\u{FE0F}", "Anger Bubble");
-export const angerBubbleLightningBolt = e("\u{1F5F1}\u{FE0F}", "Anger Bubble Lightning");
-export const lightningBolt = e("\u{1F5F2}\u{FE0F}", "Lightning Bolt");
+export const hole = E("\u{1F573}", "Hole");
+export const leftSpeechBubble = E("\u{1F5E8}", "Left Speech Bubble");
+export const rightSpeechBubble = E("\u{1F5E9}", "Right Speech Bubble");
+export const conversationBubbles2 = E("\u{1F5EA}", "Conversation Bubbles 2");
+export const conversationBubbles3 = E("\u{1F5EB}", "Conversation Bubbles 3");
+export const leftThoughtBubble = E("\u{1F5EC}", "Left Thought Bubble");
+export const rightThoughtBubble = E("\u{1F5ED}", "Right Thought Bubble");
+export const leftAngerBubble = E("\u{1F5EE}", "Left Anger Bubble");
+export const rightAngerBubble = E("\u{1F5EF}", "Right Anger Bubble");
+export const angerBubble = E("\u{1F5F0}", "Anger Bubble");
+export const angerBubbleLightningBolt = E("\u{1F5F1}", "Anger Bubble Lightning");
+export const lightningBolt = E("\u{1F5F2}", "Lightning Bolt");
 
 export const cartoon = g(
     "Cartoon", "Cartoon symbols",
@@ -795,8 +841,8 @@ export const thumbsDown = e("\u{1F44E}", "Thumbs Down");
 export const clappingHands = e("\u{1F44F}", "Clapping Hands");
 export const openHands = e("\u{1F450}", "Open Hands");
 export const nailPolish = e("\u{1F485}", "Nail Polish");
-export const handsWithFingersSplayed = e("\u{1F590}\u{FE0F}", "Hand with Fingers Splayed");
-export const handsWithFingersSplayed2 = e("\u{1F591}\u{FE0F}", "Hand with Fingers Splayed 2");
+export const handsWithFingersSplayed = E("\u{1F590}", "Hand with Fingers Splayed");
+export const handsWithFingersSplayed2 = E("\u{1F591}", "Hand with Fingers Splayed 2");
 export const thumbsUp2 = e("\u{1F592}", "Thumbs Up 2");
 export const thumbsDown2 = e("\u{1F593}", "Thumbs Down 2");
 export const peaceFingers = e("\u{1F594}", "Peace Fingers");
@@ -817,7 +863,7 @@ export const indexPointingUp3 = e("\u{1F5A2}", "Index Pointing Up 3");
 export const indexPointingDown3 = e("\u{1F5A3}", "Index Pointing Down 3");
 export const raisingHands = e("\u{1F64C}", "Raising Hands");
 export const foldedHands = e("\u{1F64F}", "Folded Hands");
-//export const pinchedFingers = e("\u{1F90C}", "Pinched Fingers");
+export const pinchedFingers = e("\u{1F90C}", "Pinched Fingers");
 export const pinchingHand = e("\u{1F90F}", "Pinching Hand");
 export const signOfTheHorns = e("\u{1F918}", "Sign of the Horns");
 export const callMeHand = e("\u{1F919}", "Call Me Hand");
@@ -828,11 +874,11 @@ export const handshake = e("\u{1F91D}", "Handshake");
 export const crossedFingers = e("\u{1F91E}", "Crossed Fingers");
 export const loveYouGesture = e("\u{1F91F}", "Love-You Gesture");
 export const palmsUpTogether = e("\u{1F932}", "Palms Up Together");
-export const indexPointingUp4 = e("\u{261D}\u{FE0F}", "Index Pointing Up 4");
-export const raisedFist = e("\u{270A}", "Raised Fist");
-export const raisedHand = e("\u{270B}", "Raised Hand");
-export const victoryHand = e("\u{270C}\u{FE0F}", "Victory Hand");
-export const writingHand = e("\u{270D}\u{FE0F}", "Writing Hand");
+export const indexPointingUp4 = E("\u261D", "Index Pointing Up 4");
+export const raisedFist = e("\u270A", "Raised Fist");
+export const raisedHand = e("\u270B", "Raised Hand");
+export const victoryHand = E("\u270C", "Victory Hand");
+export const writingHand = E("\u270D", "Writing Hand");
 export const hands = g(
     "Hands", "Hands pointing at things",
     backhandIndexPointingUp,
@@ -870,7 +916,7 @@ export const hands = g(
     indexPointingDown3,
     raisingHands,
     foldedHands,
-    //pinchedFingers,
+    pinchedFingers,
     pinchingHand,
     signOfTheHorns,
     callMeHand,
@@ -887,11 +933,86 @@ export const hands = g(
     victoryHand,
     writingHand);
 
+export const redCircle = e("\u{1F534}", "Red Circle");
+export const blueCircle = e("\u{1F535}", "Blue Circle");
+export const largeOrangeDiamond = e("\u{1F536}", "Large Orange Diamond");
+export const largeBlueDiamond = e("\u{1F537}", "Large Blue Diamond");
+export const smallOrangeDiamond = e("\u{1F538}", "Small Orange Diamond");
+export const smallBlueDiamond = e("\u{1F539}", "Small Blue Diamond");
+export const redTrianglePointedUp = e("\u{1F53A}", "Red Triangle Pointed Up");
+export const redTrianglePointedDown = e("\u{1F53B}", "Red Triangle Pointed Down");
+export const orangeCircle = e("\u{1F7E0}", "Orange Circle");
+export const yellowCircle = e("\u{1F7E1}", "Yellow Circle");
+export const greenCircle = e("\u{1F7E2}", "Green Circle");
+export const purpleCircle = e("\u{1F7E3}", "Purple Circle");
+export const brownCircle = e("\u{1F7E4}", "Brown Circle");
+export const hollowRedCircle = e("\u2B55", "Hollow Red Circle");
+export const whiteCircle = e("\u26AA", "White Circle");
+export const blackCircle = e("\u26AB", "Black Circle");
+export const redSquare = e("\u{1F7E5}", "Red Square");
+export const blueSquare = e("\u{1F7E6}", "Blue Square");
+export const orangeSquare = e("\u{1F7E7}", "Orange Square");
+export const yellowSquare = e("\u{1F7E8}", "Yellow Square");
+export const greenSquare = e("\u{1F7E9}", "Green Square");
+export const purpleSquare = e("\u{1F7EA}", "Purple Square");
+export const brownSquare = e("\u{1F7EB}", "Brown Square");
+export const blackSquareButton = e("\u{1F532}", "Black Square Button");
+export const whiteSquareButton = e("\u{1F533}", "White Square Button");
+export const blackSmallSquare = E("\u25AA", "Black Small Square");
+export const whiteSmallSquare = E("\u25AB", "White Small Square");
+export const whiteMediumSmallSquare = e("\u25FD", "White Medium-Small Square");
+export const blackMediumSmallSquare = e("\u25FE", "Black Medium-Small Square");
+export const whiteMediumSquare = E("\u25FB", "White Medium Square");
+export const blackMediumSquare = E("\u25FC", "Black Medium Square");
+export const blackLargeSquare = e("\u2B1B", "Black Large Square");
+export const whiteLargeSquare = e("\u2B1C", "White Large Square");
+export const star = e("\u2B50", "Star");
+export const diamondWithADot = e("\u{1F4A0}", "Diamond with a Dot");
+export const shapes = g(
+    "Shapes", "Colored shapes",
+    redCircle,
+    blueCircle,
+    largeOrangeDiamond,
+    largeBlueDiamond,
+    smallOrangeDiamond,
+    smallBlueDiamond,
+    redTrianglePointedUp,
+    redTrianglePointedDown,
+    orangeCircle,
+    yellowCircle,
+    greenCircle,
+    purpleCircle,
+    brownCircle,
+    hollowRedCircle,
+    whiteCircle,
+    blackCircle,
+    redSquare,
+    blueSquare,
+    orangeSquare,
+    yellowSquare,
+    greenSquare,
+    purpleSquare,
+    brownSquare,
+    blackSquareButton,
+    whiteSquareButton,
+    blackSmallSquare,
+    whiteSmallSquare,
+    whiteMediumSmallSquare,
+    blackMediumSmallSquare,
+    whiteMediumSquare,
+    blackMediumSquare,
+    blackLargeSquare,
+    whiteLargeSquare,
+    star,
+    diamondWithADot);
+
+export const eye = E("\u{1F441}", "Eye");
+export const eyeInSpeechBubble = join(eye, leftSpeechBubble, "Eye in Speech Bubble");
 export const bodyParts = g(
     "Body Parts", "General body parts",
     e("\u{1F440}", "Eyes"),
-    e("\u{1F441}\u{FE0F}", "Eye"),
-    e("\u{1F441}\u{FE0F}\u{200D}\u{1F5E8}\u{FE0F}", "Eye in Speech Bubble"),
+    eye,
+    eyeInSpeechBubble,
     e("\u{1F442}", "Ear"),
     e("\u{1F443}", "Nose"),
     e("\u{1F444}", "Mouth"),
@@ -905,10 +1026,50 @@ export const bodyParts = g(
     e("\u{1F9BB}", "Ear with Hearing Aid"),
     e("\u{1F9BE}", "Mechanical Arm"),
     e("\u{1F9BF}", "Mechanical Leg"),
-    //e("\u{1FAC0}", "Anatomical Heart"),
-    //e("\u{1FAC1}", "Lungs"),
+    e("\u{1FAC0}", "Anatomical Heart"),
+    e("\u{1FAC1}", "Lungs"),
     e("\u{1F9E0}", "Brain"));
 
+export const snowflake = E("\u2744", "Snowflake");
+export const rainbow = e("\u{1F308}", "Rainbow");
+export const weather = g(
+    "Weather", "Weather",
+    e("\u{1F304}", "Sunrise Over Mountains"),
+    e("\u{1F305}", "Sunrise"),
+    e("\u{1F306}", "Cityscape at Dusk"),
+    e("\u{1F307}", "Sunset"),
+    e("\u{1F303}", "Night with Stars"),
+    e("\u{1F302}", "Closed Umbrella"),
+    E("\u2602", "Umbrella"),
+    E("\u2614", "Umbrella with Rain Drops"),
+    E("\u2603", "Snowman"),
+    e("\u26C4", "Snowman Without Snow"),
+    E("\u2600", "Sun"),
+    E("\u2601", "Cloud"),
+    E("\u{1F324}", "Sun Behind Small Cloud"),
+    e("\u26C5", "Sun Behind Cloud"),
+    E("\u{1F325}", "Sun Behind Large Cloud"),
+    E("\u{1F326}", "Sun Behind Rain Cloud"),
+    E("\u{1F327}", "Cloud with Rain"),
+    E("\u{1F328}", "Cloud with Snow"),
+    E("\u{1F329}", "Cloud with Lightning"),
+    E("\u26C8", "Cloud with Lightning and Rain"),
+    snowflake,
+    e("\u{1F300}", "Cyclone"),
+    E("\u{1F32A}", "Tornado"),
+    E("\u{1F32C}", "Wind Face"),
+    e("\u{1F30A}", "Water Wave"),
+    E("\u{1F32B}", "Fog"),
+    e("\u{1F301}", "Foggy"),
+    rainbow,
+    E("\u{1F321}", "Thermometer"));
+
+export const cat = e("\u{1F408}", "Cat");
+export const blackCat = join(cat, blackLargeSquare, "Black Cat");
+export const dog = e("\u{1F415}", "Dog");
+export const serviceDog = join(dog, safetyVest, "Service Dog");
+export const bear = e("\u{1F43B}", "Bear");
+export const polarBear = join(bear, snowflake, "Polar Bear");
 export const animals = g(
     "Animals", "Animals and insects",
     e("\u{1F400}", "Rat"),
@@ -919,8 +1080,8 @@ export const animals = g(
     e("\u{1F405}", "Tiger"),
     e("\u{1F406}", "Leopard"),
     e("\u{1F407}", "Rabbit"),
-    e("\u{1F408}", "Cat"),
-    //e("\u{1F408}\u{200D}\u{2B1B}", "Black Cat"),
+    cat,
+    blackCat,
     e("\u{1F409}", "Dragon"),
     e("\u{1F40A}", "Crocodile"),
     e("\u{1F40B}", "Whale"),
@@ -933,8 +1094,8 @@ export const animals = g(
     e("\u{1F412}", "Monkey"),
     e("\u{1F413}", "Rooster"),
     e("\u{1F414}", "Chicken"),
-    e("\u{1F415}", "Dog"),
-    e("\u{1F415}\u{200D}\u{1F9BA}", "Service Dog"),
+    dog,
+    serviceDog,
     e("\u{1F416}", "Pig"),
     e("\u{1F417}", "Boar"),
     e("\u{1F418}", "Elephant"),
@@ -972,15 +1133,15 @@ export const animals = g(
     e("\u{1F438}", "Frog"),
     e("\u{1F439}", "Hamster"),
     e("\u{1F43A}", "Wolf"),
-    e("\u{1F43B}", "Bear"),
-    e("\u{1F43B}\u{200D}\u{2744}\u{FE0F}", "Polar Bear"),
+    bear,
+    polarBear,
     e("\u{1F43C}", "Panda"),
     e("\u{1F43D}", "Pig Nose"),
     e("\u{1F43E}", "Paw Prints"),
-    e("\u{1F43F}\u{FE0F}", "Chipmunk"),
-    e("\u{1F54A}\u{FE0F}", "Dove"),
-    e("\u{1F577}\u{FE0F}", "Spider"),
-    e("\u{1F578}\u{FE0F}", "Spider Web"),
+    E("\u{1F43F}", "Chipmunk"),
+    E("\u{1F54A}", "Dove"),
+    E("\u{1F577}", "Spider"),
+    E("\u{1F578}", "Spider Web"),
     e("\u{1F981}", "Lion"),
     e("\u{1F982}", "Scorpion"),
     e("\u{1F983}", "Turkey"),
@@ -1049,12 +1210,12 @@ export const plants = g(
     e("\u{1F341}", "Maple Leaf"),
     e("\u{1F342}", "Fallen Leaf"),
     e("\u{1F343}", "Leaf Fluttering in Wind"),
-    e("\u{1F3F5}\u{FE0F}", "Rosette"),
+    E("\u{1F3F5}", "Rosette"),
     e("\u{1F490}", "Bouquet"),
     whiteFlower,
     e("\u{1F940}", "Wilted Flower"),
     //e("\u{1FAB4}", "Potted Plant"),
-    e("\u{2618}\u{FE0F}", "Shamrock"));
+    E("\u2618", "Shamrock"));
 
 export const banana = e("\u{1F34C}", "Banana");
 export const food = g(
@@ -1063,7 +1224,7 @@ export const food = g(
     e("\u{1F32E}", "Taco"),
     e("\u{1F32F}", "Burrito"),
     e("\u{1F330}", "Chestnut"),
-    e("\u{1F336}\u{FE0F}", "Hot Pepper"),
+    E("\u{1F336}", "Hot Pepper"),
     e("\u{1F33D}", "Ear of Corn"),
     e("\u{1F344}", "Mushroom"),
     e("\u{1F345}", "Tomato"),
@@ -1181,9 +1342,9 @@ export const food = g(
     e("\u{1F9CA}", "Ice"),
     //e("\u{1F9CB}", "Bubble Tea"),
     //e("\u{1FAD6}", "Teapot"),
-    e("\u{2615}", "Hot Beverage"),
+    e("\u2615", "Hot Beverage"),
     e("\u{1F374}", "Fork and Knife"),
-    e("\u{1F37D}\u{FE0F}", "Fork and Knife with Plate"),
+    E("\u{1F37D}", "Fork and Knife with Plate"),
     e("\u{1F3FA}", "Amphora"),
     e("\u{1F52A}", "Kitchen Knife"),
     e("\u{1F944}", "Spoon"),
@@ -1450,22 +1611,27 @@ export const nations = g(
     e("\u{1F1FF}\u{1F1F2}", "Flag: Zambia"),
     e("\u{1F1FF}\u{1F1FC}", "Flag: Zimbabwe"));
 
+export const whiteFlag = E("\u{1F3F3}", "White Flag");
+export const rainbowFlag = join(whiteFlag, rainbow, "Rainbow Flag");
+export const transgenderFlag = join(whiteFlag, transgender, "Transgender Flag");
+export const blackFlag = e("\u{1F3F4}", "Black Flag");
+export const pirateFlag = join(blackFlag, skullAndCrossbones, "Pirate Flag");
 export const flags = g(
     "Flags", "Basic flags",
     e("\u{1F38C}", "Crossed Flags"),
     e("\u{1F3C1}", "Chequered Flag"),
-    e("\u{1F3F3}\u{FE0F}", "White Flag"),
-    e("\u{1F3F3}\u{FE0F}\u{200D}\u{1F308}", "Rainbow Flag"),
-    //e("\u{1F3F3}\u{FE0F}\u{200D}\u{26A7}\u{FE0F}", "Transgender Flag"),
-    e("\u{1F3F4}", "Black Flag"),
-    //e("\u{1F3F4}\u{200D}\u{2620}\u{FE0F}", "Pirate Flag"),
+    whiteFlag,
+    rainbowFlag,
+    transgenderFlag,
+    blackFlag,
+    pirateFlag,
     e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}", "Flag: England"),
     e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}", "Flag: Scotland"),
     e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}", "Flag: Wales"),
     e("\u{1F6A9}", "Triangular Flag"));
 
-export const motorcycle = e("\u{1F3CD}\u{FE0F}", "Motorcycle");
-export const racingCar = e("\u{1F3CE}\u{FE0F}", "Racing Car");
+export const motorcycle = E("\u{1F3CD}", "Motorcycle");
+export const racingCar = E("\u{1F3CE}", "Racing Car");
 export const seat = e("\u{1F4BA}", "Seat");
 export const helicopter = e("\u{1F681}", "Helicopter");
 export const locomotive = e("\u{1F682}", "Locomotive");
@@ -1507,15 +1673,15 @@ export const construction = e("\u{1F6A7}", "Construction");
 export const policeCarLight = e("\u{1F6A8}", "Police Car Light");
 export const bicycle = e("\u{1F6B2}", "Bicycle");
 export const stopSign = e("\u{1F6D1}", "Stop Sign");
-export const oilDrum = e("\u{1F6E2}\u{FE0F}", "Oil Drum");
-export const motorway = e("\u{1F6E3}\u{FE0F}", "Motorway");
-export const railwayTrack = e("\u{1F6E4}\u{FE0F}", "Railway Track");
-export const motorBoat = e("\u{1F6E5}\u{FE0F}", "Motor Boat");
-export const smallAirplane = e("\u{1F6E9}\u{FE0F}", "Small Airplane");
+export const oilDrum = E("\u{1F6E2}", "Oil Drum");
+export const motorway = E("\u{1F6E3}", "Motorway");
+export const railwayTrack = E("\u{1F6E4}", "Railway Track");
+export const motorBoat = E("\u{1F6E5}", "Motor Boat");
+export const smallAirplane = E("\u{1F6E9}", "Small Airplane");
 export const airplaneDeparture = e("\u{1F6EB}", "Airplane Departure");
 export const airplaneArrival = e("\u{1F6EC}", "Airplane Arrival");
-export const satellite = e("\u{1F6F0}\u{FE0F}", "Satellite");
-export const passengerShip = e("\u{1F6F3}\u{FE0F}", "Passenger Ship");
+export const satellite = E("\u{1F6F0}", "Satellite");
+export const passengerShip = E("\u{1F6F3}", "Passenger Ship");
 export const kickScooter = e("\u{1F6F4}", "Kick Scooter");
 export const motorScooter = e("\u{1F6F5}", "Motor Scooter");
 export const canoe = e("\u{1F6F6}", "Canoe");
@@ -1525,10 +1691,10 @@ export const autoRickshaw = e("\u{1F6FA}", "Auto Rickshaw");
 //export const pickupTruck = e("\u{1F6FB}", "Pickup Truck");
 //export const rollerSkate = e("\u{1F6FC}", "Roller Skate");
 export const parachute = e("\u{1FA82}", "Parachute");
-export const anchor = e("\u{2693}", "Anchor");
-export const ferry = e("\u{26F4}\u{FE0F}", "Ferry");
-export const sailboat = e("\u{26F5}", "Sailboat");
-export const fuelPump = e("\u{26FD}", "Fuel Pump");
+export const anchor = e("\u2693", "Anchor");
+export const ferry = E("\u26F4", "Ferry");
+export const sailboat = e("\u26F5", "Sailboat");
+export const fuelPump = e("\u26FD", "Fuel Pump");
 export const vehicles = g(
     "Vehicles", "Things that go",
     motorcycle,
@@ -1639,7 +1805,7 @@ export const japanese = g(
     "Japanese", "Japanse symbology",
     e("\u{1F530}", "Japanese Symbol for Beginner"),
     e("\u{1F201}", "Japanese “Here” Button"),
-    e("\u{1F202}\u{FE0F}", "Japanese “Service Charge” Button"),
+    E("\u{1F202}", "Japanese “Service Charge” Button"),
     e("\u{1F21A}", "Japanese “Free of Charge” Button"),
     e("\u{1F22F}", "Japanese “Reserved” Button"),
     e("\u{1F232}", "Japanese “Prohibited” Button"),
@@ -1647,14 +1813,14 @@ export const japanese = g(
     e("\u{1F234}", "Japanese “Passing Grade” Button"),
     e("\u{1F235}", "Japanese “No Vacancy” Button"),
     e("\u{1F236}", "Japanese “Not Free of Charge” Button"),
-    e("\u{1F237}\u{FE0F}", "Japanese “Monthly Amount” Button"),
+    E("\u{1F237}", "Japanese “Monthly Amount” Button"),
     e("\u{1F238}", "Japanese “Application” Button"),
     e("\u{1F239}", "Japanese “Discount” Button"),
     e("\u{1F23A}", "Japanese “Open for Business” Button"),
     e("\u{1F250}", "Japanese “Bargain” Button"),
     e("\u{1F251}", "Japanese “Acceptable” Button"),
-    e("\u{3297}\u{FE0F}", "Japanese “Congratulations” Button"),
-    e("\u{3299}\u{FE0F}", "Japanese “Secret” Button"));
+    E("\u3297", "Japanese “Congratulations” Button"),
+    E("\u3299", "Japanese “Secret” Button"));
 
 export const clocks = g(
     "Clocks", "Time-keeping pieces",
@@ -1682,32 +1848,32 @@ export const clocks = g(
     e("\u{1F565}", "Ten-Thirty"),
     e("\u{1F566}", "Eleven-Thirty"),
     e("\u{1F567}", "Twelve-Thirty"),
-    e("\u{1F570}\u{FE0F}", "Mantelpiece Clock"),
-    e("\u{231A}", "Watch"),
-    e("\u{23F0}", "Alarm Clock"),
-    e("\u{23F1}\u{FE0F}", "Stopwatch"),
-    e("\u{23F2}\u{FE0F}", "Timer Clock"),
-    e("\u{231B}", "Hourglass Done"),
-    e("\u{23F3}", "Hourglass Not Done"));
+    E("\u{1F570}", "Mantelpiece Clock"),
+    e("\u231A", "Watch"),
+    e("\u23F0", "Alarm Clock"),
+    E("\u23F1", "Stopwatch"),
+    E("\u23F2", "Timer Clock"),
+    e("\u231B", "Hourglass Done"),
+    e("\u23F3", "Hourglass Not Done"));
 
-export const clockwiseVerticalArrows = e("\u{1F503}\u{FE0F}", "Clockwise Vertical Arrows");
-export const counterclockwiseArrowsButton = e("\u{1F504}\u{FE0F}", "Counterclockwise Arrows Button");
-export const leftRightArrow = e("\u{2194}\u{FE0F}", "Left-Right Arrow");
-export const upDownArrow = e("\u{2195}\u{FE0F}", "Up-Down Arrow");
-export const upLeftArrow = e("\u{2196}\u{FE0F}", "Up-Left Arrow");
-export const upRightArrow = e("\u{2197}\u{FE0F}", "Up-Right Arrow");
-export const downRightArrow = e("\u{2198}", "Down-Right Arrow");
-export const downRightArrowText = e("\u{2198}\u{FE0E}", "Down-Right Arrow");
-export const downRightArrowEmoji = e("\u{2198}\u{FE0F}", "Down-Right Arrow");
-export const downLeftArrow = e("\u{2199}\u{FE0F}", "Down-Left Arrow");
-export const rightArrowCurvingLeft = e("\u{21A9}\u{FE0F}", "Right Arrow Curving Left");
-export const leftArrowCurvingRight = e("\u{21AA}\u{FE0F}", "Left Arrow Curving Right");
-export const rightArrow = e("\u{27A1}\u{FE0F}", "Right Arrow");
-export const rightArrowCurvingUp = e("\u{2934}\u{FE0F}", "Right Arrow Curving Up");
-export const rightArrowCurvingDown = e("\u{2935}\u{FE0F}", "Right Arrow Curving Down");
-export const leftArrow = e("\u{2B05}\u{FE0F}", "Left Arrow");
-export const upArrow = e("\u{2B06}\u{FE0F}", "Up Arrow");
-export const downArrow = e("\u{2B07}\u{FE0F}", "Down Arrow");
+export const clockwiseVerticalArrows = E("\u{1F503}", "Clockwise Vertical Arrows");
+export const counterclockwiseArrowsButton = E("\u{1F504}", "Counterclockwise Arrows Button");
+export const leftRightArrow = E("\u2194", "Left-Right Arrow");
+export const upDownArrow = E("\u2195", "Up-Down Arrow");
+export const upLeftArrow = E("\u2196", "Up-Left Arrow");
+export const upRightArrow = E("\u2197", "Up-Right Arrow");
+export const downRightArrow = e("\u2198", "Down-Right Arrow");
+export const downRightArrowText = e("\u2198" + textStyle.value, "Down-Right Arrow");
+export const downRightArrowEmoji = E("\u2198", "Down-Right Arrow");
+export const downLeftArrow = E("\u2199", "Down-Left Arrow");
+export const rightArrowCurvingLeft = E("\u21A9", "Right Arrow Curving Left");
+export const leftArrowCurvingRight = E("\u21AA", "Left Arrow Curving Right");
+export const rightArrow = E("\u27A1", "Right Arrow");
+export const rightArrowCurvingUp = E("\u2934", "Right Arrow Curving Up");
+export const rightArrowCurvingDown = E("\u2935", "Right Arrow Curving Down");
+export const leftArrow = E("\u2B05", "Left Arrow");
+export const upArrow = E("\u2B06", "Up Arrow");
+export const downArrow = E("\u2B07", "Down Arrow");
 export const arrows = g(
     "Arrows", "Arrows pointing in different directions",
     clockwiseVerticalArrows,
@@ -1727,79 +1893,6 @@ export const arrows = g(
     upArrow,
     downArrow);
 
-export const redCircle = e("\u{1F534}", "Red Circle");
-export const blueCircle = e("\u{1F535}", "Blue Circle");
-export const largeOrangeDiamond = e("\u{1F536}", "Large Orange Diamond");
-export const largeBlueDiamond = e("\u{1F537}", "Large Blue Diamond");
-export const smallOrangeDiamond = e("\u{1F538}", "Small Orange Diamond");
-export const smallBlueDiamond = e("\u{1F539}", "Small Blue Diamond");
-export const redTrianglePointedUp = e("\u{1F53A}", "Red Triangle Pointed Up");
-export const redTrianglePointedDown = e("\u{1F53B}", "Red Triangle Pointed Down");
-export const orangeCircle = e("\u{1F7E0}", "Orange Circle");
-export const yellowCircle = e("\u{1F7E1}", "Yellow Circle");
-export const greenCircle = e("\u{1F7E2}", "Green Circle");
-export const purpleCircle = e("\u{1F7E3}", "Purple Circle");
-export const brownCircle = e("\u{1F7E4}", "Brown Circle");
-export const hollowRedCircle = e("\u{2B55}", "Hollow Red Circle");
-export const whiteCircle = e("\u{26AA}", "White Circle");
-export const blackCircle = e("\u{26AB}", "Black Circle");
-export const redSquare = e("\u{1F7E5}", "Red Square");
-export const blueSquare = e("\u{1F7E6}", "Blue Square");
-export const orangeSquare = e("\u{1F7E7}", "Orange Square");
-export const yellowSquare = e("\u{1F7E8}", "Yellow Square");
-export const greenSquare = e("\u{1F7E9}", "Green Square");
-export const purpleSquare = e("\u{1F7EA}", "Purple Square");
-export const brownSquare = e("\u{1F7EB}", "Brown Square");
-export const blackSquareButton = e("\u{1F532}", "Black Square Button");
-export const whiteSquareButton = e("\u{1F533}", "White Square Button");
-export const blackSmallSquare = e("\u{25AA}\u{FE0F}", "Black Small Square");
-export const whiteSmallSquare = e("\u{25AB}\u{FE0F}", "White Small Square");
-export const whiteMediumSmallSquare = e("\u{25FD}", "White Medium-Small Square");
-export const blackMediumSmallSquare = e("\u{25FE}", "Black Medium-Small Square");
-export const whiteMediumSquare = e("\u{25FB}\u{FE0F}", "White Medium Square");
-export const blackMediumSquare = e("\u{25FC}\u{FE0F}", "Black Medium Square");
-export const blackLargeSquare = e("\u{2B1B}", "Black Large Square");
-export const whiteLargeSquare = e("\u{2B1C}", "White Large Square");
-export const star = e("\u{2B50}", "Star");
-export const diamondWithADot = e("\u{1F4A0}", "Diamond with a Dot");
-export const shapes = g(
-    "Shapes", "Colored shapes",
-    redCircle,
-    blueCircle,
-    largeOrangeDiamond,
-    largeBlueDiamond,
-    smallOrangeDiamond,
-    smallBlueDiamond,
-    redTrianglePointedUp,
-    redTrianglePointedDown,
-    orangeCircle,
-    yellowCircle,
-    greenCircle,
-    purpleCircle,
-    brownCircle,
-    hollowRedCircle,
-    whiteCircle,
-    blackCircle,
-    redSquare,
-    blueSquare,
-    orangeSquare,
-    yellowSquare,
-    greenSquare,
-    purpleSquare,
-    brownSquare,
-    blackSquareButton,
-    whiteSquareButton,
-    blackSmallSquare,
-    whiteSmallSquare,
-    whiteMediumSmallSquare,
-    blackMediumSmallSquare,
-    whiteMediumSquare,
-    blackMediumSquare,
-    blackLargeSquare,
-    whiteLargeSquare,
-    star,
-    diamondWithADot);
-
 export const clearButton = e("\u{1F191}", "CL Button");
 export const coolButton = e("\u{1F192}", "Cool Button");
 export const freeButton = e("\u{1F193}", "Free Button");
@@ -1816,7 +1909,7 @@ export const endArrow = e("\u{1F51A}", "End Arrow");
 export const onArrow = e("\u{1F51B}", "On! Arrow");
 export const soonArrow = e("\u{1F51C}", "Soon Arrow");
 export const topArrow = e("\u{1F51D}", "Top Arrow");
-export const checkBoxWithCheck = e("\u{2611}\u{FE0F}", "Check Box with Check");
+export const checkBoxWithCheck = E("\u2611", "Check Box with Check");
 export const inputLatinUppercase = e("\u{1F520}", "Input Latin Uppercase");
 export const inputLatinLowercase = e("\u{1F521}", "Input Latin Lowercase");
 export const inputNumbers = e("\u{1F522}", "Input Numbers");
@@ -1827,19 +1920,19 @@ export const repeatButton = e("\u{1F501}", "Repeat Button");
 export const repeatSingleButton = e("\u{1F502}", "Repeat Single Button");
 export const upwardsButton = e("\u{1F53C}", "Upwards Button");
 export const downwardsButton = e("\u{1F53D}", "Downwards Button");
-export const playButton = e("\u{25B6}\u{FE0F}", "Play Button");
-export const reverseButton = e("\u{25C0}\u{FE0F}", "Reverse Button");
-export const ejectButton = e("\u{23CF}\u{FE0F}", "Eject Button");
-export const fastForwardButton = e("\u{23E9}", "Fast-Forward Button");
-export const fastReverseButton = e("\u{23EA}", "Fast Reverse Button");
-export const fastUpButton = e("\u{23EB}", "Fast Up Button");
-export const fastDownButton = e("\u{23EC}", "Fast Down Button");
-export const nextTrackButton = e("\u{23ED}\u{FE0F}", "Next Track Button");
-export const lastTrackButton = e("\u{23EE}\u{FE0F}", "Last Track Button");
-export const playOrPauseButton = e("\u{23EF}\u{FE0F}", "Play or Pause Button");
-export const pauseButton = e("\u{23F8}\u{FE0F}", "Pause Button");
-export const stopButton = e("\u{23F9}\u{FE0F}", "Stop Button");
-export const recordButton = e("\u{23FA}\u{FE0F}", "Record Button");
+export const playButton = E("\u25B6", "Play Button");
+export const reverseButton = E("\u25C0", "Reverse Button");
+export const ejectButton = E("\u23CF", "Eject Button");
+export const fastForwardButton = e("\u23E9", "Fast-Forward Button");
+export const fastReverseButton = e("\u23EA", "Fast Reverse Button");
+export const fastUpButton = e("\u23EB", "Fast Up Button");
+export const fastDownButton = e("\u23EC", "Fast Down Button");
+export const nextTrackButton = E("\u23ED", "Next Track Button");
+export const lastTrackButton = E("\u23EE", "Last Track Button");
+export const playOrPauseButton = E("\u23EF", "Play or Pause Button");
+export const pauseButton = E("\u23F8", "Pause Button");
+export const stopButton = E("\u23F9", "Stop Button");
+export const recordButton = E("\u23FA", "Record Button");
 export const buttons = g(
     "Buttons", "Buttons",
     clearButton,
@@ -1886,47 +1979,74 @@ export const buttons = g(
 
 export const zodiac = g(
     "Zodiac", "The symbology of astrology",
-    e("\u{2648}", "Aries"),
-    e("\u{2649}", "Taurus"),
-    e("\u{264A}", "Gemini"),
-    e("\u{264B}", "Cancer"),
-    e("\u{264C}", "Leo"),
-    e("\u{264D}", "Virgo"),
-    e("\u{264E}", "Libra"),
-    e("\u{264F}", "Scorpio"),
-    e("\u{2650}", "Sagittarius"),
-    e("\u{2651}", "Capricorn"),
-    e("\u{2652}", "Aquarius"),
-    e("\u{2653}", "Pisces"),
-    e("\u{26CE}", "Ophiuchus"));
+    e("\u2648", "Aries"),
+    e("\u2649", "Taurus"),
+    e("\u264A", "Gemini"),
+    e("\u264B", "Cancer"),
+    e("\u264C", "Leo"),
+    e("\u264D", "Virgo"),
+    e("\u264E", "Libra"),
+    e("\u264F", "Scorpio"),
+    e("\u2650", "Sagittarius"),
+    e("\u2651", "Capricorn"),
+    e("\u2652", "Aquarius"),
+    e("\u2653", "Pisces"),
+    e("\u26CE", "Ophiuchus"));
+
+export const digit0 = E("0", "Digit Zero");
+export const digit1 = E("1", "Digit One");
+export const digit2 = E("2", "Digit Two");
+export const digit3 = E("3", "Digit Three");
+export const digit4 = E("4", "Digit Four");
+export const digit5 = E("5", "Digit Five");
+export const digit6 = E("6", "Digit Six");
+export const digit7 = E("7", "Digit Seven");
+export const digit8 = E("8", "Digit Eight");
+export const digit9 = E("9", "Digit Nine");
+export const asterisk = E("\u002A", "Asterisk");
+export const numberSign = E("\u0023", "Number Sign");
+
+export const keycapDigit0 = combo(digit0, combiningEnclosingKeycap, "Keycap Digit Zero");
+export const keycapDigit1 = combo(digit1, combiningEnclosingKeycap, "Keycap Digit One");
+export const keycapDigit2 = combo(digit2, combiningEnclosingKeycap, "Keycap Digit Two");
+export const keycapDigit3 = combo(digit3, combiningEnclosingKeycap, "Keycap Digit Three");
+export const keycapDigit4 = combo(digit4, combiningEnclosingKeycap, "Keycap Digit Four");
+export const keycapDigit5 = combo(digit5, combiningEnclosingKeycap, "Keycap Digit Five");
+export const keycapDigit6 = combo(digit6, combiningEnclosingKeycap, "Keycap Digit Six");
+export const keycapDigit7 = combo(digit7, combiningEnclosingKeycap, "Keycap Digit Seven");
+export const keycapDigit8 = combo(digit8, combiningEnclosingKeycap, "Keycap Digit Eight");
+export const keycapDigit9 = combo(digit9, combiningEnclosingKeycap, "Keycap Digit Nine");
+export const keycapAsterisk = combo(asterisk, combiningEnclosingKeycap, "Keycap Asterisk");
+export const keycapNumberSign = combo(numberSign, combiningEnclosingKeycap, "Keycap Number Sign");
+export const keycap10 = e("\u{1F51F}", "Keycap: 10");
 
 export const numbers = g(
     "Numbers", "Numbers",
-    e("\u{30}\u{FE0F}", "Digit Zero"),
-    e("\u{31}\u{FE0F}", "Digit One"),
-    e("\u{32}\u{FE0F}", "Digit Two"),
-    e("\u{33}\u{FE0F}", "Digit Three"),
-    e("\u{34}\u{FE0F}", "Digit Four"),
-    e("\u{35}\u{FE0F}", "Digit Five"),
-    e("\u{36}\u{FE0F}", "Digit Six"),
-    e("\u{37}\u{FE0F}", "Digit Seven"),
-    e("\u{38}\u{FE0F}", "Digit Eight"),
-    e("\u{39}\u{FE0F}", "Digit Nine"),
-    e("\u{2A}\u{FE0F}", "Asterisk"),
-    e("\u{23}\u{FE0F}", "Number Sign"),
-    e("\u{30}\u{FE0F}\u{20E3}", "Keycap Digit Zero"),
-    e("\u{31}\u{FE0F}\u{20E3}", "Keycap Digit One"),
-    e("\u{32}\u{FE0F}\u{20E3}", "Keycap Digit Two"),
-    e("\u{33}\u{FE0F}\u{20E3}", "Keycap Digit Three"),
-    e("\u{34}\u{FE0F}\u{20E3}", "Keycap Digit Four"),
-    e("\u{35}\u{FE0F}\u{20E3}", "Keycap Digit Five"),
-    e("\u{36}\u{FE0F}\u{20E3}", "Keycap Digit Six"),
-    e("\u{37}\u{FE0F}\u{20E3}", "Keycap Digit Seven"),
-    e("\u{38}\u{FE0F}\u{20E3}", "Keycap Digit Eight"),
-    e("\u{39}\u{FE0F}\u{20E3}", "Keycap Digit Nine"),
-    e("\u{2A}\u{FE0F}\u{20E3}", "Keycap Asterisk"),
-    e("\u{23}\u{FE0F}\u{20E3}", "Keycap Number Sign"),
-    e("\u{1F51F}", "Keycap: 10"));
+    digit0,
+    digit1,
+    digit2,
+    digit3,
+    digit4,
+    digit5,
+    digit6,
+    digit7,
+    digit8,
+    digit9,
+    asterisk,
+    numberSign,
+    keycapDigit0,
+    keycapDigit1,
+    keycapDigit2,
+    keycapDigit3,
+    keycapDigit4,
+    keycapDigit5,
+    keycapDigit6,
+    keycapDigit7,
+    keycapDigit8,
+    keycapDigit9,
+    keycapAsterisk,
+    keycapNumberSign,
+    keycap10);
 
 export const tagPlusSign = e("\u{E002B}", "Tag Plus Sign");
 export const tagMinusHyphen = e("\u{E002D}", "Tag Hyphen-Minus");
@@ -2031,17 +2151,17 @@ export const tags = g(
 
 export const math = g(
     "Math", "Math",
-    e("\u{2716}\u{FE0F}", "Multiply"),
-    e("\u{2795}", "Plus"),
-    e("\u{2796}", "Minus"),
-    e("\u{2797}", "Divide"));
+    E("\u2716", "Multiply"),
+    e("\u2795", "Plus"),
+    e("\u2796", "Minus"),
+    e("\u2797", "Divide"));
 
 export const games = g(
     "Games", "Games",
-    e("\u{2660}\u{FE0F}", "Spade Suit"),
-    e("\u{2663}\u{FE0F}", "Club Suit"),
-    e("\u{2665}\u{FE0F}", "Heart Suit", { color: "red" }),
-    e("\u{2666}\u{FE0F}", "Diamond Suit", { color: "red" }),
+    E("\u2660", "Spade Suit"),
+    E("\u2663", "Club Suit"),
+    E("\u2665", "Heart Suit", { color: "red" }),
+    E("\u2666", "Diamond Suit", { color: "red" }),
     e("\u{1F004}", "Mahjong Red Dragon"),
     e("\u{1F0CF}", "Joker"),
     e("\u{1F3AF}", "Direct Hit"),
@@ -2051,7 +2171,7 @@ export const games = g(
     e("\u{1F3B3}", "Bowling"),
     e("\u{1F3B4}", "Flower Playing Cards"),
     e("\u{1F9E9}", "Puzzle Piece"),
-    e("\u{265F}\u{FE0F}", "Chess Pawn"),
+    E("\u265F", "Chess Pawn"),
     e("\u{1FA80}", "Yo-Yo"),
     //e("\u{1FA83}", "Boomerang"),
     //e("\u{1FA86}", "Nesting Dolls"),
@@ -2083,9 +2203,9 @@ export const sportsEquipment = g(
     e("\u{1F94D}", "Lacrosse"),
     e("\u{1F94E}", "Softball"),
     e("\u{1F94F}", "Flying Disc"),
-    e("\u{26BD}", "Soccer Ball"),
-    e("\u{26BE}", "Baseball"),
-    e("\u{26F8}\u{FE0F}", "Ice Skate"));
+    e("\u26BD", "Soccer Ball"),
+    e("\u26BE", "Baseball"),
+    E("\u26F8", "Ice Skate"));
 
 export const clothing = g(
     "Clothing", "Clothing",
@@ -2093,7 +2213,7 @@ export const clothing = g(
     e("\u{1F93F}", "Diving Mask"),
     e("\u{1F452}", "Woman’s Hat"),
     e("\u{1F453}", "Glasses"),
-    e("\u{1F576}\u{FE0F}", "Sunglasses"),
+    E("\u{1F576}", "Sunglasses"),
     e("\u{1F454}", "Necktie"),
     e("\u{1F455}", "T-Shirt"),
     e("\u{1F456}", "Jeans"),
@@ -2116,7 +2236,7 @@ export const clothing = g(
     e("\u{1F97E}", "Hiking Boot"),
     e("\u{1F97F}", "Flat Shoe"),
     whiteCane,
-    e("\u{1F9BA}", "Safety Vest"),
+    safetyVest,
     e("\u{1F9E2}", "Billed Cap"),
     e("\u{1F9E3}", "Scarf"),
     e("\u{1F9E4}", "Gloves"),
@@ -2130,15 +2250,15 @@ export const clothing = g(
 
 export const town = g(
     "Town", "Town",
-    e("\u{1F3D7}\u{FE0F}", "Building Construction"),
-    e("\u{1F3D8}\u{FE0F}", "Houses"),
-    e("\u{1F3D9}\u{FE0F}", "Cityscape"),
-    e("\u{1F3DA}\u{FE0F}", "Derelict House"),
-    e("\u{1F3DB}\u{FE0F}", "Classical Building"),
-    e("\u{1F3DC}\u{FE0F}", "Desert"),
-    e("\u{1F3DD}\u{FE0F}", "Desert Island"),
-    e("\u{1F3DE}\u{FE0F}", "National Park"),
-    e("\u{1F3DF}\u{FE0F}", "Stadium"),
+    E("\u{1F3D7}", "Building Construction"),
+    E("\u{1F3D8}", "Houses"),
+    E("\u{1F3D9}", "Cityscape"),
+    E("\u{1F3DA}", "Derelict House"),
+    E("\u{1F3DB}", "Classical Building"),
+    E("\u{1F3DC}", "Desert"),
+    E("\u{1F3DD}", "Desert Island"),
+    E("\u{1F3DE}", "National Park"),
+    E("\u{1F3DF}", "Stadium"),
     e("\u{1F3E0}", "House"),
     e("\u{1F3E1}", "House with Garden"),
     e("\u{1F3E2}", "Office Building"),
@@ -2154,13 +2274,13 @@ export const town = g(
     e("\u{1F3EC}", "Department Store"),
     factory,
     e("\u{1F309}", "Bridge at Night"),
-    e("\u{26F2}", "Fountain"),
-    e("\u{1F6CD}\u{FE0F}", "Shopping Bags"),
+    e("\u26F2", "Fountain"),
+    E("\u{1F6CD}", "Shopping Bags"),
     e("\u{1F9FE}", "Receipt"),
     e("\u{1F6D2}", "Shopping Cart"),
     e("\u{1F488}", "Barber Pole"),
     e("\u{1F492}", "Wedding"),
-    e("\u{1F5F3}\u{FE0F}", "Ballot Box with Ballot"));
+    E("\u{1F5F3}", "Ballot Box with Ballot"));
 
 export const music = g(
     "Music", "Music",
@@ -2176,38 +2296,6 @@ export const music = g(
     //e("\u{1FA97}", "Accordion"),
     //e("\u{1FA98}", "Long Drum"),
     e("\u{1FA95}", "Banjo"));
-
-export const weather = g(
-    "Weather", "Weather",
-    e("\u{1F304}", "Sunrise Over Mountains"),
-    e("\u{1F305}", "Sunrise"),
-    e("\u{1F306}", "Cityscape at Dusk"),
-    e("\u{1F307}", "Sunset"),
-    e("\u{1F303}", "Night with Stars"),
-    e("\u{1F302}", "Closed Umbrella"),
-    e("\u{2602}\u{FE0F}", "Umbrella"),
-    e("\u{2614}\u{FE0F}", "Umbrella with Rain Drops"),
-    e("\u{2603}\u{FE0F}", "Snowman"),
-    e("\u{26C4}", "Snowman Without Snow"),
-    e("\u{2600}\u{FE0F}", "Sun"),
-    e("\u{2601}\u{FE0F}", "Cloud"),
-    e("\u{1F324}\u{FE0F}", "Sun Behind Small Cloud"),
-    e("\u{26C5}", "Sun Behind Cloud"),
-    e("\u{1F325}\u{FE0F}", "Sun Behind Large Cloud"),
-    e("\u{1F326}\u{FE0F}", "Sun Behind Rain Cloud"),
-    e("\u{1F327}\u{FE0F}", "Cloud with Rain"),
-    e("\u{1F328}\u{FE0F}", "Cloud with Snow"),
-    e("\u{1F329}\u{FE0F}", "Cloud with Lightning"),
-    e("\u{26C8}\u{FE0F}", "Cloud with Lightning and Rain"),
-    e("\u{2744}\u{FE0F}", "Snowflake"),
-    e("\u{1F300}", "Cyclone"),
-    e("\u{1F32A}\u{FE0F}", "Tornado"),
-    e("\u{1F32C}\u{FE0F}", "Wind Face"),
-    e("\u{1F30A}", "Water Wave"),
-    e("\u{1F32B}\u{FE0F}", "Fog"),
-    e("\u{1F301}", "Foggy"),
-    e("\u{1F308}", "Rainbow"),
-    e("\u{1F321}\u{FE0F}", "Thermometer"));
 
 export const astro = g(
     "Astronomy", "Astronomy",
@@ -2232,7 +2320,7 @@ export const astro = g(
     e("\u{1F31E}", "Sun with Face"),
     e("\u{1F31F}", "Glowing Star"),
     e("\u{1F320}", "Shooting Star"),
-    e("\u{2604}\u{FE0F}", "Comet"),
+    E("\u2604", "Comet"),
     e("\u{1FA90}", "Ringed Planet"));
 
 export const finance = g(
@@ -2251,21 +2339,21 @@ export const finance = g(
 
 export const writing = g(
     "Writing", "Writing",
-    e("\u{1F58A}\u{FE0F}", "Pen"),
-    e("\u{1F58B}\u{FE0F}", "Fountain Pen"),
-    e("\u{1F58C}\u{FE0F}", "Paintbrush"),
-    e("\u{1F58D}\u{FE0F}", "Crayon"),
-    e("\u{270F}\u{FE0F}", "Pencil"),
-    e("\u{2712}\u{FE0F}", "Black Nib"));
+    E("\u{1F58A}", "Pen"),
+    E("\u{1F58B}", "Fountain Pen"),
+    E("\u{1F58C}", "Paintbrush"),
+    E("\u{1F58D}", "Crayon"),
+    E("\u270F", "Pencil"),
+    E("\u2712", "Black Nib"));
 
-export const alembic = e("\u{2697}\u{FE0F}", "Alembic");
-export const gear = e("\u{2699}\u{FE0F}", "Gear");
-export const atomSymbol = e("\u{269B}\u{FE0F}", "Atom Symbol");
-export const keyboard = e("\u{2328}\u{FE0F}", "Keyboard");
-export const telephone = e("\u{260E}\u{FE0F}", "Telephone");
-export const studioMicrophone = e("\u{1F399}\u{FE0F}", "Studio Microphone");
-export const levelSlider = e("\u{1F39A}\u{FE0F}", "Level Slider");
-export const controlKnobs = e("\u{1F39B}\u{FE0F}", "Control Knobs");
+export const alembic = E("\u2697", "Alembic");
+export const gear = E("\u2699", "Gear");
+export const atomSymbol = E("\u269B", "Atom Symbol");
+export const keyboard = E("\u2328", "Keyboard");
+export const telephone = E("\u260E", "Telephone");
+export const studioMicrophone = E("\u{1F399}", "Studio Microphone");
+export const levelSlider = E("\u{1F39A}", "Level Slider");
+export const controlKnobs = E("\u{1F39B}", "Control Knobs");
 export const movieCamera = e("\u{1F3A5}", "Movie Camera");
 export const headphone = e("\u{1F3A7}", "Headphone");
 export const videoGame = e("\u{1F3AE}", "Video Game");
@@ -2292,8 +2380,8 @@ export const videoCamera = e("\u{1F4F9}", "Video Camera");
 export const television = e("\u{1F4FA}", "Television");
 export const radio = e("\u{1F4FB}", "Radio");
 export const videocassette = e("\u{1F4FC}", "Videocassette");
-export const filmProjector = e("\u{1F4FD}\u{FE0F}", "Film Projector");
-export const portableStereo = e("\u{1F4FE}\u{FE0F}", "Portable Stereo");
+export const filmProjector = E("\u{1F4FD}", "Film Projector");
+export const portableStereo = E("\u{1F4FE}", "Portable Stereo");
 export const dimButton = e("\u{1F505}", "Dim Button");
 export const brightButton = e("\u{1F506}", "Bright Button");
 export const mutedSpeaker = e("\u{1F507}", "Muted Speaker");
@@ -2313,11 +2401,11 @@ export const bell = e("\u{1F514}", "Bell");
 export const bellWithSlash = e("\u{1F515}", "Bell with Slash");
 export const bookmark = e("\u{1F516}", "Bookmark");
 export const link = e("\u{1F517}", "Link");
-export const joystick = e("\u{1F579}\u{FE0F}", "Joystick");
-export const desktopComputer = e("\u{1F5A5}\u{FE0F}", "Desktop Computer");
-export const printer = e("\u{1F5A8}\u{FE0F}", "Printer");
-export const computerMouse = e("\u{1F5B1}\u{FE0F}", "Computer Mouse");
-export const trackball = e("\u{1F5B2}\u{FE0F}", "Trackball");
+export const joystick = E("\u{1F579}", "Joystick");
+export const desktopComputer = E("\u{1F5A5}", "Desktop Computer");
+export const printer = E("\u{1F5A8}", "Printer");
+export const computerMouse = E("\u{1F5B1}", "Computer Mouse");
+export const trackball = E("\u{1F5B2}", "Trackball");
 export const blackFolder = e("\u{1F5BF}", "Black Folder");
 export const folder = e("\u{1F5C0}", "Folder");
 export const openFolder = e("\u{1F5C1}", "Open Folder");
@@ -2431,8 +2519,8 @@ export const celebration = g(
     e("\u{1F9E8}", "Firecracker"),
     e("\u{1F386}", "Fireworks"),
     e("\u{1F387}", "Sparkler"),
-    e("\u{2728}", "Sparkles"),
-    e("\u{2747}\u{FE0F}", "Sparkle"),
+    e("\u2728", "Sparkles"),
+    E("\u2747", "Sparkle"),
     e("\u{1F388}", "Balloon"),
     e("\u{1F389}", "Party Popper"),
     e("\u{1F38A}", "Confetti Ball"),
@@ -2446,7 +2534,7 @@ export const celebration = g(
     graduationCap,
     e("\u{1F9E7}", "Red Envelope"),
     e("\u{1F3EE}", "Red Paper Lantern"),
-    e("\u{1F396}\u{FE0F}", "Military Medal"));
+    E("\u{1F396}", "Military Medal"));
 
 export const tools = g(
     "Tools", "Tools",
@@ -2455,16 +2543,16 @@ export const tools = g(
     wrench,
     e("\u{1F528}", "Hammer"),
     e("\u{1F529}", "Nut and Bolt"),
-    e("\u{1F6E0}\u{FE0F}", "Hammer and Wrench"),
+    E("\u{1F6E0}", "Hammer and Wrench"),
     e("\u{1F9ED}", "Compass"),
     e("\u{1F9EF}", "Fire Extinguisher"),
     e("\u{1F9F0}", "Toolbox"),
     e("\u{1F9F1}", "Brick"),
     e("\u{1FA93}", "Axe"),
-    e("\u{2692}\u{FE0F}", "Hammer and Pick"),
-    e("\u{26CF}\u{FE0F}", "Pick"),
-    e("\u{26D1}\u{FE0F}", "Rescue Worker’s Helmet"),
-    e("\u{26D3}\u{FE0F}", "Chains"),
+    E("\u2692", "Hammer and Pick"),
+    E("\u26CF", "Pick"),
+    E("\u26D1", "Rescue Worker’s Helmet"),
+    E("\u26D3", "Chains"),
     compression);
 
 export const office = g(
@@ -2489,7 +2577,7 @@ export const office = g(
     e("\u{1F4CC}", "Pushpin"),
     e("\u{1F4CD}", "Round Pushpin"),
     e("\u{1F4CE}", "Paperclip"),
-    e("\u{1F587}\u{FE0F}", "Linked Paperclips"),
+    E("\u{1F587}", "Linked Paperclips"),
     e("\u{1F4CF}", "Straight Ruler"),
     e("\u{1F4D0}", "Triangular Ruler"),
     e("\u{1F4D1}", "Bookmark Tabs"),
@@ -2505,8 +2593,8 @@ export const office = g(
     e("\u{1F4DB}", "Name Badge"),
     e("\u{1F4DC}", "Scroll"),
     e("\u{1F4DD}", "Memo"),
-    e("\u{2702}\u{FE0F}", "Scissors"),
-    e("\u{2709}\u{FE0F}", "Envelope"));
+    E("\u2702", "Scissors"),
+    E("\u2709", "Envelope"));
 
 export const signs = g(
     "Signs", "Signs",
@@ -2532,40 +2620,40 @@ export const signs = g(
     e("\u{1F6C3}", "Customs"),
     e("\u{1F6C4}", "Baggage Claim"),
     e("\u{1F6C5}", "Left Luggage"),
-    e("\u{1F17F}\u{FE0F}", "Parking Button"),
-    e("\u{267F}", "Wheelchair Symbol"),
-    e("\u{2622}\u{FE0F}", "Radioactive"),
-    e("\u{2623}\u{FE0F}", "Biohazard"),
-    e("\u{26A0}\u{FE0F}", "Warning"),
-    e("\u{26A1}", "High Voltage"),
-    e("\u{26D4}", "No Entry"),
-    e("\u{267B}\u{FE0F}", "Recycling Symbol"),
+    E("\u{1F17F}", "Parking Button"),
+    e("\u267F", "Wheelchair Symbol"),
+    E("\u2622", "Radioactive"),
+    E("\u2623", "Biohazard"),
+    E("\u26A0", "Warning"),
+    e("\u26A1", "High Voltage"),
+    e("\u26D4", "No Entry"),
+    E("\u267B", "Recycling Symbol"),
     female,
     male,
-    e("\u{26A7}\u{FE0F}", "Transgender Symbol"));
+    transgender);
 
 export const religion = g(
     "Religion", "Religion",
     e("\u{1F52F}", "Dotted Six-Pointed Star"),
-    e("\u{2721}\u{FE0F}", "Star of David"),
-    e("\u{1F549}\u{FE0F}", "Om"),
+    E("\u2721", "Star of David"),
+    E("\u{1F549}", "Om"),
     e("\u{1F54B}", "Kaaba"),
     e("\u{1F54C}", "Mosque"),
     e("\u{1F54D}", "Synagogue"),
     e("\u{1F54E}", "Menorah"),
     e("\u{1F6D0}", "Place of Worship"),
     e("\u{1F6D5}", "Hindu Temple"),
-    e("\u{2626}\u{FE0F}", "Orthodox Cross"),
-    e("\u{271D}\u{FE0F}", "Latin Cross"),
-    e("\u{262A}\u{FE0F}", "Star and Crescent"),
-    e("\u{262E}\u{FE0F}", "Peace Symbol"),
-    e("\u{262F}\u{FE0F}", "Yin Yang"),
-    e("\u{2638}\u{FE0F}", "Wheel of Dharma"),
-    e("\u{267E}\u{FE0F}", "Infinity"),
+    E("\u2626", "Orthodox Cross"),
+    E("\u271D", "Latin Cross"),
+    E("\u262A", "Star and Crescent"),
+    E("\u262E", "Peace Symbol"),
+    E("\u262F", "Yin Yang"),
+    E("\u2638", "Wheel of Dharma"),
+    E("\u267E", "Infinity"),
     e("\u{1FA94}", "Diya Lamp"),
-    e("\u{26E9}\u{FE0F}", "Shinto Shrine"),
-    e("\u{26EA}", "Church"),
-    e("\u{2734}\u{FE0F}", "Eight-Pointed Star"),
+    E("\u26E9", "Shinto Shrine"),
+    e("\u26EA", "Church"),
+    E("\u2734", "Eight-Pointed Star"),
     e("\u{1F4FF}", "Prayer Beads"));
 
 export const door = e("\u{1F6AA}", "Door");
@@ -2578,17 +2666,17 @@ export const household = g(
     key,
     e("\u{1F525}", "Fire"),
     e("\u{1F52B}", "Pistol"),
-    e("\u{1F56F}\u{FE0F}", "Candle"),
-    e("\u{1F5BC}\u{FE0F}", "Framed Picture"),
+    E("\u{1F56F}", "Candle"),
+    E("\u{1F5BC}", "Framed Picture"),
     oldKey,
-    e("\u{1F5DE}\u{FE0F}", "Rolled-Up Newspaper"),
-    e("\u{1F5FA}\u{FE0F}", "World Map"),
+    E("\u{1F5DE}", "Rolled-Up Newspaper"),
+    E("\u{1F5FA}", "World Map"),
     door,
     e("\u{1F6BD}", "Toilet"),
     e("\u{1F6BF}", "Shower"),
     e("\u{1F6C1}", "Bathtub"),
-    e("\u{1F6CB}\u{FE0F}", "Couch and Lamp"),
-    e("\u{1F6CF}\u{FE0F}", "Bed"),
+    E("\u{1F6CB}", "Couch and Lamp"),
+    E("\u{1F6CF}", "Bed"),
     e("\u{1F9F4}", "Lotion Bottle"),
     e("\u{1F9F5}", "Thread"),
     e("\u{1F9F6}", "Yarn"),
@@ -2601,12 +2689,12 @@ export const household = g(
     e("\u{1F9FD}", "Sponge"),
     e("\u{1FA91}", "Chair"),
     e("\u{1FA92}", "Razor"),
-    e("\u{1F397}\u{FE0F}", "Reminder Ribbon"));
+    E("\u{1F397}", "Reminder Ribbon"));
 
 export const activities = g(
     "Activities", "Activities",
-    e("\u{1F39E}\u{FE0F}", "Film Frames"),
-    e("\u{1F39F}\u{FE0F}", "Admission Tickets"),
+    E("\u{1F39E}", "Film Frames"),
+    E("\u{1F39F}", "Admission Tickets"),
     e("\u{1F3A0}", "Carousel Horse"),
     e("\u{1F3A1}", "Ferris Wheel"),
     e("\u{1F3A2}", "Roller Coaster"),
@@ -2618,13 +2706,13 @@ export const activities = g(
 
 export const travel = g(
     "Travel", "Travel",
-    e("\u{1F3F7}\u{FE0F}", "Label"),
+    E("\u{1F3F7}", "Label"),
     e("\u{1F30B}", "Volcano"),
-    e("\u{1F3D4}\u{FE0F}", "Snow-Capped Mountain"),
-    e("\u{26F0}\u{FE0F}", "Mountain"),
-    e("\u{1F3D5}\u{FE0F}", "Camping"),
-    e("\u{1F3D6}\u{FE0F}", "Beach with Umbrella"),
-    e("\u{26F1}\u{FE0F}", "Umbrella on Ground"),
+    E("\u{1F3D4}", "Snow-Capped Mountain"),
+    E("\u26F0", "Mountain"),
+    E("\u{1F3D5}", "Camping"),
+    E("\u{1F3D6}", "Beach with Umbrella"),
+    E("\u26F1", "Umbrella on Ground"),
     e("\u{1F3EF}", "Japanese Castle"),
     e("\u{1F463}", "Footprints"),
     e("\u{1F5FB}", "Mount Fuji"),
@@ -2632,11 +2720,11 @@ export const travel = g(
     e("\u{1F5FD}", "Statue of Liberty"),
     e("\u{1F5FE}", "Map of Japan"),
     e("\u{1F5FF}", "Moai"),
-    e("\u{1F6CE}\u{FE0F}", "Bellhop Bell"),
+    E("\u{1F6CE}", "Bellhop Bell"),
     e("\u{1F9F3}", "Luggage"),
-    e("\u{26F3}", "Flag in Hole"),
-    e("\u{26FA}", "Tent"),
-    e("\u{2668}\u{FE0F}", "Hot Springs"));
+    e("\u26F3", "Flag in Hole"),
+    e("\u26FA", "Tent"),
+    E("\u2668", "Hot Springs"));
 
 export const medieval = g(
     "Medieval", "Medieval",
@@ -2644,33 +2732,33 @@ export const medieval = g(
     e("\u{1F3F9}", "Bow and Arrow"),
     crown,
     e("\u{1F531}", "Trident Emblem"),
-    e("\u{1F5E1}\u{FE0F}", "Dagger"),
-    e("\u{1F6E1}\u{FE0F}", "Shield"),
+    E("\u{1F5E1}", "Dagger"),
+    E("\u{1F6E1}", "Shield"),
     e("\u{1F52E}", "Crystal Ball"),
-    e("\u{2694}\u{FE0F}", "Crossed Swords"),
-    e("\u{269C}\u{FE0F}", "Fleur-de-lis"));
+    E("\u2694", "Crossed Swords"),
+    E("\u269C", "Fleur-de-lis"));
 
-export const doubleExclamationMark = e("\u{203C}\u{FE0F}", "Double Exclamation Mark");
-export const interrobang = e("\u{2049}\u{FE0F}", "Exclamation Question Mark");
-export const information = e("\u{2139}\u{FE0F}", "Information");
-export const circledM = e("\u{24C2}\u{FE0F}", "Circled M");
-export const checkMarkButton = e("\u{2705}", "Check Mark Button");
-export const checkMark = e("\u{2714}\u{FE0F}", "Check Mark");
-export const eightSpokedAsterisk = e("\u{2733}\u{FE0F}", "Eight-Spoked Asterisk");
-export const crossMark = e("\u{274C}", "Cross Mark");
-export const crossMarkButton = e("\u{274E}", "Cross Mark Button");
-export const questionMark = e("\u{2753}", "Question Mark");
-export const whiteQuestionMark = e("\u{2754}", "White Question Mark");
-export const whiteExclamationMark = e("\u{2755}", "White Exclamation Mark");
-export const exclamationMark = e("\u{2757}", "Exclamation Mark");
-export const curlyLoop = e("\u{27B0}", "Curly Loop");
-export const doubleCurlyLoop = e("\u{27BF}", "Double Curly Loop");
-export const wavyDash = e("\u{3030}\u{FE0F}", "Wavy Dash");
-export const partAlternationMark = e("\u{303D}\u{FE0F}", "Part Alternation Mark");
-export const tradeMark = e("\u{2122}\u{FE0F}", "Trade Mark");
-export const copyright = e("\u{A9}\u{FE0F}", "Copyright");
-export const registered = e("\u{AE}\u{FE0F}", "Registered");
-export const squareFourCourners = e("\u{26F6}\u{FE0F}", "Square: Four Corners");
+export const doubleExclamationMark = E("\u203C", "Double Exclamation Mark");
+export const interrobang = E("\u2049", "Exclamation Question Mark");
+export const information = E("\u2139", "Information");
+export const circledM = E("\u24C2", "Circled M");
+export const checkMarkButton = e("\u2705", "Check Mark Button");
+export const checkMark = E("\u2714", "Check Mark");
+export const eightSpokedAsterisk = E("\u2733", "Eight-Spoked Asterisk");
+export const crossMark = e("\u274C", "Cross Mark");
+export const crossMarkButton = e("\u274E", "Cross Mark Button");
+export const questionMark = e("\u2753", "Question Mark");
+export const whiteQuestionMark = e("\u2754", "White Question Mark");
+export const whiteExclamationMark = e("\u2755", "White Exclamation Mark");
+export const exclamationMark = e("\u2757", "Exclamation Mark");
+export const curlyLoop = e("\u27B0", "Curly Loop");
+export const doubleCurlyLoop = e("\u27BF", "Double Curly Loop");
+export const wavyDash = E("\u3030", "Wavy Dash");
+export const partAlternationMark = E("\u303D", "Part Alternation Mark");
+export const tradeMark = E("\u2122", "Trade Mark");
+export const copyright = E("\u00A9", "Copyright");
+export const registered = E("\u00AE", "Registered");
+export const squareFourCourners = E("\u26F6", "Square: Four Corners");
 
 export const marks = gg(
     "Marks", "Marks", {
@@ -2732,12 +2820,12 @@ export const science = gg(
     magnifyingGlassTiltedLeft,
     magnifyingGlassTiltedRight,
 });
-export const whiteChessKing = e("\u{2654}", "White Chess King");
-export const whiteChessQueen = e("\u{2655}", "White Chess Queen");
-export const whiteChessRook = e("\u{2656}", "White Chess Rook");
-export const whiteChessBishop = e("\u{2657}", "White Chess Bishop");
-export const whiteChessKnight = e("\u{2658}", "White Chess Knight");
-export const whiteChessPawn = e("\u{2659}", "White Chess Pawn");
+export const whiteChessKing = e("\u2654", "White Chess King");
+export const whiteChessQueen = e("\u2655", "White Chess Queen");
+export const whiteChessRook = e("\u2656", "White Chess Rook");
+export const whiteChessBishop = e("\u2657", "White Chess Bishop");
+export const whiteChessKnight = e("\u2658", "White Chess Knight");
+export const whiteChessPawn = e("\u2659", "White Chess Pawn");
 export const whiteChessPieces = gg(whiteChessKing.value + whiteChessQueen.value + whiteChessRook.value + whiteChessBishop.value + whiteChessKnight.value + whiteChessPawn.value, "White Chess Pieces", {
     width: "auto",
     king: whiteChessKing,
@@ -2747,12 +2835,12 @@ export const whiteChessPieces = gg(whiteChessKing.value + whiteChessQueen.value 
     knight: whiteChessKnight,
     pawn: whiteChessPawn
 });
-export const blackChessKing = e("\u{265A}", "Black Chess King");
-export const blackChessQueen = e("\u{265B}", "Black Chess Queen");
-export const blackChessRook = e("\u{265C}", "Black Chess Rook");
-export const blackChessBishop = e("\u{265D}", "Black Chess Bishop");
-export const blackChessKnight = e("\u{265E}", "Black Chess Knight");
-export const blackChessPawn = e("\u{265F}", "Black Chess Pawn");
+export const blackChessKing = e("\u265A", "Black Chess King");
+export const blackChessQueen = e("\u265B", "Black Chess Queen");
+export const blackChessRook = e("\u265C", "Black Chess Rook");
+export const blackChessBishop = e("\u265D", "Black Chess Bishop");
+export const blackChessKnight = e("\u265E", "Black Chess Knight");
+export const blackChessPawn = e("\u265F", "Black Chess Pawn");
 export const blackChessPieces = gg(blackChessKing.value + blackChessQueen.value + blackChessRook.value + blackChessBishop.value + blackChessKnight.value + blackChessPawn.value, "Black Chess Pieces", {
     width: "auto",
     king: blackChessKing,

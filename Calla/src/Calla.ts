@@ -1,6 +1,15 @@
 import { HubConnectionState } from "@microsoft/signalr";
-import type { Emoji, IDisposable, progressCallback } from "kudzu";
-import { blobFetchingCallback, getBlob as _getBlob, isNullOrUndefined, loadScript as _loadScript, scriptLoadingCallback, TypedEventBase } from "kudzu";
+import {
+    blobFetchingCallback,
+    Emoji,
+    getBlob as _getBlob,
+    IDisposable,
+    isNullOrUndefined,
+    loadScript as _loadScript,
+    progressCallback,
+    scriptLoadingCallback,
+    TypedEventBase
+} from "kudzu";
 import { AudioActivityEvent } from "./audio/AudioActivityEvent";
 import type { AudioManager } from "./audio/AudioManager";
 import { canChangeAudioOutput } from "./audio/canChangeAudioOutput";
@@ -20,9 +29,9 @@ import {
     CallaTeleconferenceEventType
 } from "./CallaEvents";
 import type { ICombinedClient } from "./ICombinedClient";
-import type { IMetadataClientExt } from "./IMetadataClient";
-import type { ITeleconferenceClient, ITeleconferenceClientExt } from "./ITeleconferenceClient";
-import { JitsiTeleconferenceClient } from "./JitsiTeleconferenceClient";
+import type { IMetadataClientExt } from "./meta/IMetadataClient";
+import type { ITeleconferenceClient, ITeleconferenceClientExt } from "./tele/ITeleconferenceClient";
+import { JitsiTeleconferenceClient } from "./tele/jitsi/JitsiTeleconferenceClient";
 
 export interface MediaPermissionSet {
     audio: boolean;
@@ -92,15 +101,15 @@ export class Calla
         this.tele.addEventListener(CallaTeleconferenceEventType.ServerFailed, fwd);
         this.tele.addEventListener(CallaTeleconferenceEventType.ConferenceFailed, fwd);
         this.tele.addEventListener(CallaTeleconferenceEventType.ConferenceRestored, fwd);
-        this.tele.addEventListener(CallaTeleconferenceEventType.UserNameChanged, fwd);
+
         this.tele.addEventListener(CallaTeleconferenceEventType.AudioMuteStatusChanged, fwd);
         this.tele.addEventListener(CallaTeleconferenceEventType.VideoMuteStatusChanged, fwd);
 
         this.tele.addEventListener(CallaTeleconferenceEventType.ConferenceJoined, async (evt: CallaConferenceJoinedEvent) => {
             const user = this.audio.createLocalUser(evt.id);
             evt.pose = user.pose;
-            await this.setPreferredDevices();
             this.dispatchEvent(evt);
+            await this.setPreferredDevices();
         });
 
         this.tele.addEventListener(CallaTeleconferenceEventType.ConferenceLeft, (evt: CallaConferenceLeftEvent) => {
@@ -109,18 +118,7 @@ export class Calla
         });
 
         this.tele.addEventListener(CallaTeleconferenceEventType.ParticipantJoined, async (joinEvt: CallaParticipantJoinedEvent) => {
-            const poseEvt = await this.meta.getNext(CallaMetadataEventType.UserPosed, joinEvt.id);
             joinEvt.source = this.audio.createUser(joinEvt.id);
-            this.audio.setUserPose(
-                poseEvt.id,
-                poseEvt.px, poseEvt.py, poseEvt.pz,
-                poseEvt.fx, poseEvt.fy, poseEvt.fz,
-                poseEvt.ux, poseEvt.uy, poseEvt.uz,
-                0);
-            const O = this.audio.getUserOffset(poseEvt.id);
-            poseEvt.px += O[0];
-            poseEvt.py += O[1];
-            poseEvt.pz += O[2];
             this.dispatchEvent(joinEvt);
         });
 
@@ -128,6 +126,10 @@ export class Calla
             this.dispatchEvent(evt);
             this.audio.removeUser(evt.id);
         });
+
+        this.tele.addEventListener(CallaTeleconferenceEventType.UserNameChanged, fwd);
+        this.tele.addEventListener(CallaTeleconferenceEventType.VideoAdded, fwd);
+        this.tele.addEventListener(CallaTeleconferenceEventType.VideoRemoved, fwd);
 
         this.tele.addEventListener(CallaTeleconferenceEventType.AudioAdded, (evt: CallaAudioStreamAddedEvent) => {
             const user = this.audio.getUser(evt.id);
@@ -174,7 +176,7 @@ export class Calla
                 poseEvt.pz += O[2];
             }
             this.dispatchEvent(poseEvt);
-        }
+        };
 
         this.meta.addEventListener(CallaMetadataEventType.UserPointer, offsetEvt);
 
@@ -273,6 +275,11 @@ export class Calla
     setLocalPose(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
         this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz, 0);
         this.meta.setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz);
+    }
+
+    setLocalPoseImmediate(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
+        this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz, 0);
+        this.meta.setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz);
     }
 
     setLocalPointer(name: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {

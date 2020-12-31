@@ -49,14 +49,3 @@ export class EmojiGroup extends Emoji {
         }
     }
 }
-
-
-/**
- * Shorthand for `new EmojiGroup`, which saves significantly on bundle size.
- * @param v - a Unicode sequence.
- * @param d - an English text description of the pictogram.
- * @param r - the emoji that are contained in this group.
- */
-export function g(v: string, d: string, ...r: (Emoji | EmojiGroup)[]) {
-    return new EmojiGroup(v, d, ...r);
-}

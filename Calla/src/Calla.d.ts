@@ -1,11 +1,10 @@
 import { HubConnectionState } from "@microsoft/signalr";
-import type { Emoji, IDisposable, progressCallback } from "kudzu";
-import { blobFetchingCallback, scriptLoadingCallback, TypedEventBase } from "kudzu";
+import { blobFetchingCallback, Emoji, IDisposable, progressCallback, scriptLoadingCallback, TypedEventBase } from "kudzu";
 import type { AudioManager } from "./audio/AudioManager";
 import type { CallaClientEvents } from "./CallaEvents";
 import type { ICombinedClient } from "./ICombinedClient";
-import type { IMetadataClientExt } from "./IMetadataClient";
-import type { ITeleconferenceClient, ITeleconferenceClientExt } from "./ITeleconferenceClient";
+import type { IMetadataClientExt } from "./meta/IMetadataClient";
+import type { ITeleconferenceClient, ITeleconferenceClientExt } from "./tele/ITeleconferenceClient";
 export interface MediaPermissionSet {
     audio: boolean;
     video: boolean;
@@ -48,6 +47,7 @@ export declare class Calla extends TypedEventBase<CallaClientEvents> implements 
     get offsetRadius(): number;
     set offsetRadius(v: number);
     setLocalPose(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
+    setLocalPoseImmediate(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
     setLocalPointer(name: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void;
     setAvatarEmoji(emoji: Emoji): void;
     setAvatarURL(url: string): void;

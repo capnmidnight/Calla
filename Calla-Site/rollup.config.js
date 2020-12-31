@@ -1,86 +1,22 @@
-import fs from "fs";
-import { nodeResolve } from "@rollup/plugin-node-resolve";
-import { terser } from "rollup-plugin-terser";
+import { makeBundles, warnings } from "my-rollup";
 
-const traceKit = fs.readFileSync("node_modules/tracekit/tracekit.js", { encoding: "utf8" });
-const banner = `${traceKit}
-(function(){
-var keepTrying = true;
-TraceKit.report.subscribe((err) => {
-    if(keepTrying){
-        try{
-            err.userAgent = navigator.userAgent;
-            const xhr = new XMLHttpRequest();
-            xhr.onerror = function() { keepTrying = false; };
-            xhr.open("POST", "/ErrorLog");
-            xhr.setRequestHeader("Content-Type", "application/json");
-            xhr.send(JSON.stringify(err));
-        }
-        catch(exp){
-            keepTrying = false;
-        }
-    }
-});
-})();
-try{
-`;
-const footer = `
-} catch(exp) {
-    TraceKit.report(exp);
-}`;
+const opts = {
+    surpressions: [
+        warnings.and(warnings.isInModule(/lib-jitsi-meet\.min\.js$/), warnings.isEval),
+        warnings.and(warnings.isInModule(/@microsoft[\/\\]signalr[\/\\]/), warnings.isThisUndefined)
+    ]
+};
 
-function def(name, withTraceKit, minify) {
-    const opts = {
-        input: `scripts/${name}/index.js`,
-        plugins: [
-            nodeResolve()
-        ],
-        output: [{
-            sourcemap: true,
-            file: `wwwroot/scripts/${name}.js`
-        }]
-    };
+export function makeConfig() {
+    const tasks = [];
 
-    if (process.env.BUILD === "production" && minify) {
-        opts.output.push({
-            sourcemap: true,
-            file: `wwwroot/scripts/${name}.min.js`,
-            plugins: [terser({
-                module: true
-            })]
-        });
+    if (process.env.PROJECT && process.env.BUILD) {
+        console.log("Building:", process.env.PROJECT, process.env.BUILD);
+        tasks.push(...makeBundles("basic", "src/basic/index.js", "wwwroot/scripts", "iife", opts));
+        tasks.push(...makeBundles("game", "src/game/index.js", "wwwroot/scripts", "iife", opts));
     }
 
-    if (withTraceKit) {
-        for (let output of opts.output) {
-            output.banner = banner;
-            output.footer = footer;
-        }
-    }
-
-    return opts;
+    return tasks;
 }
 
-const bundles = [];
-
-if (process.env.BUILD === "production") {
-    bundles.push(def("version", false, true));
-}
-
-if (process.env.BUILD === "development") {
-    bundles.push(def("tests", false, false));
-}
-
-if (process.env.BUILD === "production"
-    || process.env.BUILD === "development"
-    || process.env.BUILD === "basic") {
-    bundles.push(def("basic", false, true));
-}
-
-if (process.env.BUILD === "production"
-    || process.env.BUILD === "development"
-    || process.env.BUILD === "game") {
-    bundles.push(def("game", true, true));
-}
-
-export default bundles;
+export default makeConfig();
