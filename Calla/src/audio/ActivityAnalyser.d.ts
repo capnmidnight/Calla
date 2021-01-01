@@ -1,5 +1,5 @@
-import type { IDisposable } from "kudzu";
-import { TypedEventBase } from "kudzu";
+import { TypedEventBase } from "kudzu/events/EventBase";
+import type { IDisposable } from "kudzu/using";
 import { AudioActivityEvent } from "./AudioActivityEvent";
 import type { AudioSource } from "./AudioSource";
 interface AudioAnaylserEvents {

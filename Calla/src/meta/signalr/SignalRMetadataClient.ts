@@ -1,11 +1,10 @@
-import type { HubConnection } from "@microsoft/signalr";
+import { HubConnection, HubConnectionState } from "@microsoft/signalr";
 import {
     HttpTransportType,
-    HubConnectionBuilder,
-    HubConnectionState
+    HubConnectionBuilder
 } from "@microsoft/signalr";
-import type { Emoji } from "kudzu";
-import { waitFor } from "kudzu";
+import type { Emoji } from "kudzu/emoji/Emoji";
+import { waitFor } from "kudzu/events/waitFor";
 import type { CallaEventType } from "../../CallaEvents";
 import {
     CallaAvatarChangedEvent,
@@ -16,6 +15,7 @@ import {
     CallaUserPointerEvent,
     CallaUserPosedEvent
 } from "../../CallaEvents";
+import { ConnectionState } from "../../ConnectionState";
 import { BaseMetadataClient } from "../BaseMetadataClient";
 
 export class SignalRMetadataClient
@@ -71,19 +71,24 @@ export class SignalRMetadataClient
     }
 
     get metadataState() {
-        return this.hub.state;
+        switch (this.hub.state) {
+            case HubConnectionState.Connected: return ConnectionState.Connected;
+            case HubConnectionState.Connecting: case HubConnectionState.Reconnecting: return ConnectionState.Connecting;
+            case HubConnectionState.Disconnected: return ConnectionState.Disconnected;
+            case HubConnectionState.Disconnecting: return ConnectionState.Disconnecting;
+        }
     }
 
     private async maybeStart(): Promise<void> {
-        if (this.metadataState === HubConnectionState.Connecting) {
-            await waitFor(() => this.metadataState === HubConnectionState.Connected);
+        if (this.metadataState === ConnectionState.Connecting) {
+            await waitFor(() => this.metadataState === ConnectionState.Connected);
         }
         else {
-            if (this.metadataState === HubConnectionState.Disconnecting) {
-                await waitFor(() => this.metadataState === HubConnectionState.Disconnected);
+            if (this.metadataState === ConnectionState.Disconnecting) {
+                await waitFor(() => this.metadataState === ConnectionState.Disconnected);
             }
 
-            if (this.metadataState === HubConnectionState.Disconnected) {
+            if (this.metadataState === ConnectionState.Disconnected) {
                 await this.hub.start();
             }
         }
@@ -120,15 +125,15 @@ export class SignalRMetadataClient
     }
 
     private async maybeDisconnect() {
-        if (this.metadataState === HubConnectionState.Disconnecting) {
-            await waitFor(() => this.metadataState === HubConnectionState.Disconnected);
+        if (this.metadataState === ConnectionState.Disconnecting) {
+            await waitFor(() => this.metadataState === ConnectionState.Disconnected);
         }
         else {
-            if (this.metadataState === HubConnectionState.Connecting) {
-                await waitFor(() => this.metadataState === HubConnectionState.Connected);
+            if (this.metadataState === ConnectionState.Connecting) {
+                await waitFor(() => this.metadataState === ConnectionState.Connected);
             }
 
-            if (this.metadataState === HubConnectionState.Connected) {
+            if (this.metadataState === ConnectionState.Connected) {
                 await this.hub.stop();
             }
         }

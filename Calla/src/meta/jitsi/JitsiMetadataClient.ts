@@ -1,5 +1,7 @@
-import { HubConnectionState } from "@microsoft/signalr";
-import { arrayRemove, arraySortedInsert, once, waitFor } from "kudzu";
+import { arrayRemove } from "kudzu/arrays/arrayRemove";
+import { arraySortedInsert } from "kudzu/arrays/arraySortedInsert";
+import { once } from "kudzu/events/once";
+import { waitFor } from "kudzu/events/waitFor";
 import {
     CallaAvatarChangedEvent,
     CallaChatEvent,
@@ -13,6 +15,7 @@ import {
     CallaUserPointerEvent,
     CallaUserPosedEvent
 } from "../../CallaEvents";
+import { ConnectionState } from "../../ConnectionState";
 import type JitsiParticipant from "../../lib-jitsi-meet/JitsiParticipant";
 import type { JitsiTeleconferenceClient } from "../../tele/jitsi/JitsiTeleconferenceClient";
 import { BaseMetadataClient } from "../BaseMetadataClient";
@@ -27,7 +30,7 @@ const JITSI_HAX_FINGERPRINT = "Calla";
 
 export class JitsiMetadataClient
     extends BaseMetadataClient {
-    private _status = HubConnectionState.Disconnected;
+    private _status = ConnectionState.Disconnected;
     private remoteUserIDs = new Array<string>();
 
     constructor(private tele: JitsiTeleconferenceClient) {
@@ -42,7 +45,7 @@ export class JitsiMetadataClient
         });
     }
 
-    get metadataState(): HubConnectionState {
+    get metadataState(): ConnectionState {
         return this._status;
     }
 
@@ -52,7 +55,7 @@ export class JitsiMetadataClient
 
     async join(_roomName: string): Promise<void> {
         // JitsiTeleconferenceClient will already join
-        this._status = HubConnectionState.Connecting;
+        this._status = ConnectionState.Connecting;
         this.tele.conference.addEventListener(JitsiMeetJS.events.conference.ENDPOINT_MESSAGE_RECEIVED, (user: JitsiParticipant, data: JitsiHaxCommand) => {
             if (data.hax === JITSI_HAX_FINGERPRINT) {
                 const fromUserID = user.getId();
@@ -85,12 +88,12 @@ export class JitsiMetadataClient
         });
 
         await once(this.tele.conference, JitsiMeetJS.events.conference.DATA_CHANNEL_OPENED);
-        this._status = HubConnectionState.Connected;
+        this._status = ConnectionState.Connected;
     }
 
     async leave(): Promise<void> {
         // JitsiTeleconferenceClient will already leave
-        this._status = HubConnectionState.Disconnected;
+        this._status = ConnectionState.Disconnected;
     }
 
     async identify(_userName: string): Promise<void> {
@@ -118,7 +121,7 @@ export class JitsiMetadataClient
     }
 
     protected async stopInternal(): Promise<void> {
-        this._status = HubConnectionState.Disconnecting;
-        await waitFor(() => this.metadataState === HubConnectionState.Disconnected);
+        this._status = ConnectionState.Disconnecting;
+        await waitFor(() => this.metadataState === ConnectionState.Disconnected);
     }
 }

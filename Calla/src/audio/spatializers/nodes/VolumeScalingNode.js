@@ -1,5 +1,6 @@
 import { vec3 } from "gl-matrix";
-import { clamp, project } from "kudzu";
+import { clamp } from "kudzu/math/clamp";
+import { project } from "kudzu/math/project";
 import { BaseNode } from "./BaseNode";
 const delta = vec3.create();
 export class VolumeScalingNode extends BaseNode {

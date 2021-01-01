@@ -1,6 +1,7 @@
-import { HubConnectionState } from "@microsoft/signalr";
-import { sleep, TypedEventBase } from "kudzu";
+import { TypedEventBase } from "kudzu/events/EventBase";
+import { sleep } from "kudzu/events/sleep";
 import { CallaMetadataEventType, CallaUserEvent } from "../CallaEvents";
+import { ConnectionState } from "../ConnectionState";
 export class BaseMetadataClient extends TypedEventBase {
     constructor(sleepTime) {
         super();
@@ -20,7 +21,7 @@ export class BaseMetadataClient extends TypedEventBase {
         });
     }
     get isConnected() {
-        return this.metadataState === HubConnectionState.Connected;
+        return this.metadataState === ConnectionState.Connected;
     }
     async callThrottled(key, command, ...args) {
         if (!this.tasks.has(key)) {

@@ -15,8 +15,8 @@
  */
 
 import { vec3 } from "gl-matrix";
-import type { IDisposable } from "kudzu";
-import { isArray, isGoodNumber } from "kudzu";
+import type { IDisposable } from "kudzu/using";
+import { isArray, isGoodNumber } from "kudzu/typeChecks";
 import { Direction } from "./Direction";
 import type { Inverters } from "./Inverters";
 import type { ReflectionCoefficients } from "./ReflectionCoefficients";

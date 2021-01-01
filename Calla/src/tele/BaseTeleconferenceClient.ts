@@ -1,11 +1,15 @@
-import { HubConnectionState } from "@microsoft/signalr";
-import type { blobFetchingCallback, ErsatzEventTarget, progressCallback } from "kudzu";
-import { arrayScan, isOculusQuest, TypedEventBase } from "kudzu";
+import { arrayScan } from "kudzu/arrays/arrayScan";
+import type { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
+import { TypedEventBase } from "kudzu/events/EventBase";
+import { isOculusQuest } from "kudzu/html/flags";
+import type { blobFetchingCallback } from "kudzu/io/fetchingCallback";
+import type { progressCallback } from "kudzu/io/progressCallback";
 import { AudioManager, SpatializerType } from "../audio/AudioManager";
 import { canChangeAudioOutput } from "../audio/canChangeAudioOutput";
 import type { MediaDeviceSet, MediaPermissionSet } from "../Calla";
 import type { CallaTeleconferenceEvents } from "../CallaEvents";
 import { CallaTeleconferenceEventType, CallaUserEvent } from "../CallaEvents";
+import { ConnectionState } from "../ConnectionState";
 import type { IMetadataClientExt } from "../meta/IMetadataClient";
 import type { ITeleconferenceClientExt } from "./ITeleconferenceClient";
 
@@ -61,22 +65,22 @@ export abstract class BaseTeleconferenceClient
 
     audio: AudioManager;
 
-    private _connectionState = HubConnectionState.Disconnected;
-    private _conferenceState = HubConnectionState.Disconnected;
+    private _connectionState = ConnectionState.Disconnected;
+    private _conferenceState = ConnectionState.Disconnected;
 
-    get connectionState(): HubConnectionState {
+    get connectionState(): ConnectionState {
         return this._connectionState;
     }
 
-    private setConnectionState(state: HubConnectionState): void {
+    private setConnectionState(state: ConnectionState): void {
         this._connectionState = state;
     }
 
-    get conferenceState(): HubConnectionState {
+    get conferenceState(): ConnectionState {
         return this._conferenceState;
     }
 
-    private setConferenceState(state: HubConnectionState): void {
+    private setConferenceState(state: ConnectionState): void {
         this._conferenceState = state;
     }
 
@@ -88,14 +92,14 @@ export abstract class BaseTeleconferenceClient
             : SpatializerType.Medium,
             getBlob);
 
-        this.addEventListener(CallaTeleconferenceEventType.ServerConnected, this.setConnectionState.bind(this, HubConnectionState.Connected));
-        this.addEventListener(CallaTeleconferenceEventType.ServerFailed, this.setConnectionState.bind(this, HubConnectionState.Disconnected));
-        this.addEventListener(CallaTeleconferenceEventType.ServerDisconnected, this.setConnectionState.bind(this, HubConnectionState.Disconnected));
+        this.addEventListener(CallaTeleconferenceEventType.ServerConnected, this.setConnectionState.bind(this, ConnectionState.Connected));
+        this.addEventListener(CallaTeleconferenceEventType.ServerFailed, this.setConnectionState.bind(this, ConnectionState.Disconnected));
+        this.addEventListener(CallaTeleconferenceEventType.ServerDisconnected, this.setConnectionState.bind(this, ConnectionState.Disconnected));
 
-        this.addEventListener(CallaTeleconferenceEventType.ConferenceJoined, this.setConferenceState.bind(this, HubConnectionState.Connected));
-        this.addEventListener(CallaTeleconferenceEventType.ConferenceFailed, this.setConferenceState.bind(this, HubConnectionState.Disconnected));
-        this.addEventListener(CallaTeleconferenceEventType.ConferenceRestored, this.setConferenceState.bind(this, HubConnectionState.Connected));
-        this.addEventListener(CallaTeleconferenceEventType.ConferenceLeft, this.setConferenceState.bind(this, HubConnectionState.Disconnected));
+        this.addEventListener(CallaTeleconferenceEventType.ConferenceJoined, this.setConferenceState.bind(this, ConnectionState.Connected));
+        this.addEventListener(CallaTeleconferenceEventType.ConferenceFailed, this.setConferenceState.bind(this, ConnectionState.Disconnected));
+        this.addEventListener(CallaTeleconferenceEventType.ConferenceRestored, this.setConferenceState.bind(this, ConnectionState.Connected));
+        this.addEventListener(CallaTeleconferenceEventType.ConferenceLeft, this.setConferenceState.bind(this, ConnectionState.Disconnected));
     }
 
     dispatchEvent<K extends string & keyof CallaTeleconferenceEvents>(evt: CallaTeleconferenceEvents[K] & Event): boolean {
@@ -312,19 +316,19 @@ export abstract class BaseTeleconferenceClient
     }
 
     async connect(): Promise<void> {
-        this.setConnectionState(HubConnectionState.Connecting);
+        this.setConnectionState(ConnectionState.Connecting);
     }
 
     async join(_roomName: string, _password?: string): Promise<void> {
-        this.setConferenceState(HubConnectionState.Connecting);
+        this.setConferenceState(ConnectionState.Connecting);
     }
 
     async leave(): Promise<void> {
-        this.setConferenceState(HubConnectionState.Disconnecting);
+        this.setConferenceState(ConnectionState.Disconnecting);
     }
 
     async disconnect(): Promise<void> {
-        this.setConnectionState(HubConnectionState.Disconnecting);
+        this.setConnectionState(ConnectionState.Disconnecting);
     }
 
     abstract userExists(id: string): boolean;

@@ -1,9 +1,11 @@
-import { HubConnectionState } from "@microsoft/signalr";
-import type { blobFetchingCallback, ErsatzEventTarget, progressCallback } from "kudzu";
-import { TypedEventBase } from "kudzu";
+import type { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
+import { TypedEventBase } from "kudzu/events/EventBase";
+import type { blobFetchingCallback } from "kudzu/io/fetchingCallback";
+import type { progressCallback } from "kudzu/io/progressCallback";
 import { AudioManager } from "../audio/AudioManager";
 import type { MediaPermissionSet } from "../Calla";
 import type { CallaTeleconferenceEvents } from "../CallaEvents";
+import { ConnectionState } from "../ConnectionState";
 import type { IMetadataClientExt } from "../meta/IMetadataClient";
 import type { ITeleconferenceClientExt } from "./ITeleconferenceClient";
 export declare function addLogger(obj: ErsatzEventTarget, evtName: string): void;
@@ -17,9 +19,9 @@ export declare abstract class BaseTeleconferenceClient extends TypedEventBase<Ca
     audio: AudioManager;
     private _connectionState;
     private _conferenceState;
-    get connectionState(): HubConnectionState;
+    get connectionState(): ConnectionState;
     private setConnectionState;
-    get conferenceState(): HubConnectionState;
+    get conferenceState(): ConnectionState;
     private setConferenceState;
     constructor(getBlob: blobFetchingCallback);
     dispatchEvent<K extends string & keyof CallaTeleconferenceEvents>(evt: CallaTeleconferenceEvents[K] & Event): boolean;

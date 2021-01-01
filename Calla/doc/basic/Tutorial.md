@@ -9,7 +9,7 @@ The following tutorial describes how to use Calla, by walking through Calla's ow
 Calla is designed around event-driven programming. It takes the responsibility of managing audio and video streams (and the processing thereof), and you provide the user interface for making sense of it all. As such, there are a number of interfaces that you'll have to implement, and a few with which you'll need to integrate.
 
 ## User Interface
-You'll need to create at least a basic HTML interface for a user to be able to join your conference. Here, I show a very basic one that achieves the control of the spatialization effect.
+You'll need to create at least a basic HTML interface for a user to be able to join your conference. Here, I show a very basic one that provides the user a means of controlling the spatialization effect.
 
 <img src="https://raw.githubusercontent.com/capnmidnight/Calla/master/Calla/doc/basic/tutorial1.png">
 

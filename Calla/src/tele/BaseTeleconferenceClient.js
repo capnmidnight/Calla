@@ -1,8 +1,10 @@
-import { HubConnectionState } from "@microsoft/signalr";
-import { arrayScan, isOculusQuest, TypedEventBase } from "kudzu";
+import { arrayScan } from "kudzu/arrays/arrayScan";
+import { TypedEventBase } from "kudzu/events/EventBase";
+import { isOculusQuest } from "kudzu/html/flags";
 import { AudioManager, SpatializerType } from "../audio/AudioManager";
 import { canChangeAudioOutput } from "../audio/canChangeAudioOutput";
 import { CallaTeleconferenceEventType, CallaUserEvent } from "../CallaEvents";
+import { ConnectionState } from "../ConnectionState";
 export function addLogger(obj, evtName) {
     obj.addEventListener(evtName, (...rest) => {
         if (loggingEnabled) {
@@ -38,20 +40,20 @@ export class BaseTeleconferenceClient extends TypedEventBase {
         this.localUserName = null;
         this.roomName = null;
         this._prepared = false;
-        this._connectionState = HubConnectionState.Disconnected;
-        this._conferenceState = HubConnectionState.Disconnected;
+        this._connectionState = ConnectionState.Disconnected;
+        this._conferenceState = ConnectionState.Disconnected;
         this.hasAudioPermission = false;
         this.hasVideoPermission = false;
         this.audio = new AudioManager(isOculusQuest
             ? SpatializerType.High
             : SpatializerType.Medium, getBlob);
-        this.addEventListener(CallaTeleconferenceEventType.ServerConnected, this.setConnectionState.bind(this, HubConnectionState.Connected));
-        this.addEventListener(CallaTeleconferenceEventType.ServerFailed, this.setConnectionState.bind(this, HubConnectionState.Disconnected));
-        this.addEventListener(CallaTeleconferenceEventType.ServerDisconnected, this.setConnectionState.bind(this, HubConnectionState.Disconnected));
-        this.addEventListener(CallaTeleconferenceEventType.ConferenceJoined, this.setConferenceState.bind(this, HubConnectionState.Connected));
-        this.addEventListener(CallaTeleconferenceEventType.ConferenceFailed, this.setConferenceState.bind(this, HubConnectionState.Disconnected));
-        this.addEventListener(CallaTeleconferenceEventType.ConferenceRestored, this.setConferenceState.bind(this, HubConnectionState.Connected));
-        this.addEventListener(CallaTeleconferenceEventType.ConferenceLeft, this.setConferenceState.bind(this, HubConnectionState.Disconnected));
+        this.addEventListener(CallaTeleconferenceEventType.ServerConnected, this.setConnectionState.bind(this, ConnectionState.Connected));
+        this.addEventListener(CallaTeleconferenceEventType.ServerFailed, this.setConnectionState.bind(this, ConnectionState.Disconnected));
+        this.addEventListener(CallaTeleconferenceEventType.ServerDisconnected, this.setConnectionState.bind(this, ConnectionState.Disconnected));
+        this.addEventListener(CallaTeleconferenceEventType.ConferenceJoined, this.setConferenceState.bind(this, ConnectionState.Connected));
+        this.addEventListener(CallaTeleconferenceEventType.ConferenceFailed, this.setConferenceState.bind(this, ConnectionState.Disconnected));
+        this.addEventListener(CallaTeleconferenceEventType.ConferenceRestored, this.setConferenceState.bind(this, ConnectionState.Connected));
+        this.addEventListener(CallaTeleconferenceEventType.ConferenceLeft, this.setConferenceState.bind(this, ConnectionState.Disconnected));
     }
     toggleLogging() {
         loggingEnabled = !loggingEnabled;
@@ -229,16 +231,16 @@ export class BaseTeleconferenceClient extends TypedEventBase {
         this.preferredVideoInputID = device && device.deviceId || null;
     }
     async connect() {
-        this.setConnectionState(HubConnectionState.Connecting);
+        this.setConnectionState(ConnectionState.Connecting);
     }
     async join(_roomName, _password) {
-        this.setConferenceState(HubConnectionState.Connecting);
+        this.setConferenceState(ConnectionState.Connecting);
     }
     async leave() {
-        this.setConferenceState(HubConnectionState.Disconnecting);
+        this.setConferenceState(ConnectionState.Disconnecting);
     }
     async disconnect() {
-        this.setConnectionState(HubConnectionState.Disconnecting);
+        this.setConnectionState(ConnectionState.Disconnecting);
     }
 }
 //# sourceMappingURL=BaseTeleconferenceClient.js.map

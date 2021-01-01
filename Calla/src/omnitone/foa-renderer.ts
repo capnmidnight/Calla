@@ -22,7 +22,7 @@
 
 
 import { mat3, mat4 } from "gl-matrix";
-import type { IDisposable } from "kudzu";
+import type { IDisposable } from "kudzu/using";
 import { BufferDataType, BufferList } from './buffer-list';
 import { FOAConvolver } from './foa-convolver';
 import { FOARotator } from './foa-rotator';

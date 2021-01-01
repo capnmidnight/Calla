@@ -17,7 +17,7 @@
  * @file Spatially encodes input using weighted spherical harmonics.
  * @author Andrew Allen <bitllama@google.com>
  */
-import type { IDisposable } from "kudzu";
+import type { IDisposable } from "kudzu/using";
 export interface EncoderOptions {
     /**
      * Desired ambisonic order.Defaults to

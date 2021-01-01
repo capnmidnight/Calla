@@ -1,7 +1,11 @@
-import { HubConnectionState } from "@microsoft/signalr";
-import { blobFetchingCallback, Emoji, IDisposable, progressCallback, scriptLoadingCallback, TypedEventBase } from "kudzu";
+import type { Emoji } from "kudzu/emoji/Emoji";
+import { TypedEventBase } from "kudzu/events/EventBase";
+import type { blobFetchingCallback, scriptLoadingCallback } from "kudzu/io/fetchingCallback";
+import type { progressCallback } from "kudzu/io/progressCallback";
+import type { IDisposable } from "kudzu/using";
 import type { AudioManager } from "./audio/AudioManager";
 import type { CallaClientEvents } from "./CallaEvents";
+import { ConnectionState } from "./ConnectionState";
 import type { ICombinedClient } from "./ICombinedClient";
 import type { IMetadataClientExt } from "./meta/IMetadataClient";
 import type { ITeleconferenceClient, ITeleconferenceClientExt } from "./tele/ITeleconferenceClient";
@@ -14,7 +18,7 @@ export interface MediaDeviceSet {
     videoInput: MediaDeviceInfo[];
     audioOutput: MediaDeviceInfo[];
 }
-export declare enum ConnectionState {
+export declare enum ClientState {
     InConference = "in-conference",
     JoiningConference = "joining-conference",
     Connected = "connected",
@@ -29,8 +33,8 @@ export declare class Calla extends TypedEventBase<CallaClientEvents> implements 
     tele: ITeleconferenceClientExt;
     meta: IMetadataClientExt;
     constructor(getBlob?: blobFetchingCallback, loadScript?: scriptLoadingCallback, TeleClientType?: new (getBlob: blobFetchingCallback, loadScript: scriptLoadingCallback) => ITeleconferenceClientExt, MetaClientType?: new (tele: ITeleconferenceClient) => IMetadataClientExt);
-    get connectionState(): HubConnectionState;
-    get conferenceState(): HubConnectionState;
+    get connectionState(): ConnectionState;
+    get conferenceState(): ConnectionState;
     get audio(): AudioManager;
     get preferredAudioOutputID(): string;
     set preferredAudioOutputID(v: string);
@@ -62,7 +66,7 @@ export declare class Calla extends TypedEventBase<CallaClientEvents> implements 
     toggleVideoMuted(): Promise<boolean>;
     getAudioMuted(): Promise<boolean>;
     getVideoMuted(): Promise<boolean>;
-    get metadataState(): HubConnectionState;
+    get metadataState(): ConnectionState;
     get localUserID(): string;
     get localUserName(): string;
     get roomName(): string;

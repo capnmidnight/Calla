@@ -1,12 +1,13 @@
 {
   "include": [
-    "src/**/*.ts",
+    "**/*.ts",
     "package.json"
   ],
   "exclude": [
     "bin",
-    "obj",
-    "dist"
+    "dist",
+    "node_modules",
+    "obj"
   ],
   "compileOnSave": true,
   "compilerOptions": {

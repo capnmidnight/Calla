@@ -18,7 +18,7 @@
  * @author Andrew Allen <bitllama@google.com>
  */
 import { vec3 } from "gl-matrix";
-import type { IDisposable } from "kudzu";
+import type { IDisposable } from "kudzu/using";
 import type { RenderingMode } from "../omnitone/rendering-mode";
 import { Listener } from './listener';
 import { Room } from './room';

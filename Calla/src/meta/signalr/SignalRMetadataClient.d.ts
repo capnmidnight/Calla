@@ -1,5 +1,5 @@
-import { HubConnectionState } from "@microsoft/signalr";
 import type { CallaEventType } from "../../CallaEvents";
+import { ConnectionState } from "../../ConnectionState";
 import { BaseMetadataClient } from "../BaseMetadataClient";
 export declare class SignalRMetadataClient extends BaseMetadataClient {
     private hub;
@@ -8,7 +8,7 @@ export declare class SignalRMetadataClient extends BaseMetadataClient {
     private currentRoom;
     private currentUserID;
     constructor();
-    get metadataState(): HubConnectionState;
+    get metadataState(): ConnectionState;
     private maybeStart;
     private maybeJoin;
     private maybeIdentify;

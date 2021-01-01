@@ -18,7 +18,7 @@
  * ambisonic decoder and the optimized binaural renderer.
  */
 import { mat3, mat4 } from "gl-matrix";
-import type { IDisposable } from "kudzu";
+import type { IDisposable } from "kudzu/using";
 import { HOARotator } from './hoa-rotator';
 import { RenderingMode } from "./rendering-mode";
 export interface HOARendererOptions {

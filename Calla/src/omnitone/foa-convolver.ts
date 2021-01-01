@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { IDisposable } from "kudzu";
+import type { IDisposable } from "kudzu/using";
 
 
 /**

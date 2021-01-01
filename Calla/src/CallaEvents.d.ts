@@ -1,4 +1,4 @@
-import { Emoji } from "kudzu";
+import { Emoji } from "kudzu/emoji/Emoji";
 import type { AudioActivityEvent } from "./audio/AudioActivityEvent";
 import type { AudioSource } from "./audio/AudioSource";
 import type { InterpolatedPose } from "./audio/positions/InterpolatedPose";

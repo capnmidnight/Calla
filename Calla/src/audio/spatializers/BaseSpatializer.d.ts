@@ -1,4 +1,4 @@
-import type { IDisposable } from "kudzu";
+import type { IDisposable } from "kudzu/using";
 import type { Pose } from "../positions/Pose";
 /**
  * Base class providing functionality for spatializers.

@@ -1,12 +1,13 @@
-import type { HubConnectionState } from "@microsoft/signalr";
-import type { Emoji, TypedEventBase } from "kudzu";
+import type { Emoji } from "kudzu/emoji/Emoji";
+import type { TypedEventBase } from "kudzu/events/EventBase";
 import type { CallaMetadataEvents } from "../CallaEvents";
+import type { ConnectionState } from "../ConnectionState";
 import type { IClient } from "../IClient";
 
 export interface IMetadataClient
     extends TypedEventBase<CallaMetadataEvents>, IClient {
 
-    metadataState: HubConnectionState;
+    metadataState: ConnectionState;
 
     /**
      * Set the position of the listener.

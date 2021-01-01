@@ -1,8 +1,9 @@
-import { HubConnectionState } from "@microsoft/signalr";
-import type { Emoji } from "kudzu";
-import { sleep, TypedEventBase } from "kudzu";
+import type { Emoji } from "kudzu/emoji/Emoji";
+import { TypedEventBase } from "kudzu/events/EventBase";
+import { sleep } from "kudzu/events/sleep";
 import type { CallaEventType, CallaMetadataEvents } from "../CallaEvents";
 import { CallaMetadataEventType, CallaUserEvent } from "../CallaEvents";
+import { ConnectionState } from "../ConnectionState";
 import type { IMetadataClientExt } from "./IMetadataClient";
 
 
@@ -30,10 +31,10 @@ export abstract class BaseMetadataClient
         });
     }
 
-    abstract get metadataState(): HubConnectionState;
+    abstract get metadataState(): ConnectionState;
 
     get isConnected(): boolean {
-        return this.metadataState === HubConnectionState.Connected;
+        return this.metadataState === ConnectionState.Connected;
     }
 
     protected abstract callInternal(command: CallaEventType, ...args: any[]): Promise<void>;

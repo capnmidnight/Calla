@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { IDisposable } from "kudzu";
+import type { IDisposable } from "kudzu/using";
 /**
  * @file Late reverberation filter for Ambisonic content.
  * @author Andrew Allen <bitllama@google.com>

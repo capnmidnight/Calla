@@ -1,5 +1,8 @@
-import { Calla, CallaTeleconferenceEventType, canChangeAudioOutput } from "calla";
-import { RequestAnimationFrameTimer } from "kudzu";
+// Import the configuration parameters.
+import { canChangeAudioOutput } from "calla/src/audio";
+import { Calla } from "calla/src/Calla";
+import { CallaTeleconferenceEventType } from "calla/src/CallaEvents";
+import { RequestAnimationFrameTimer } from "kudzu/timers/RequestAnimationFrameTimer";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
 // Gets all the named elements in the document so we can
 // setup event handlers on them.
@@ -348,8 +351,8 @@ function deviceSelector(addNone, select, values, preferredDeviceID, onSelect) {
 })();
 // Sets up a convenient button for opening multiple
 // windows for testing.
-import { openSideTest } from "kudzu/src/testing/windowing";
-import { userNumber } from "kudzu/src/testing/userNumber";
+import { userNumber } from "kudzu/testing/userNumber";
+import { openSideTest } from "kudzu/testing/windowing";
 const sideTest = document.getElementById("sideTest");
 if (userNumber === 1) {
     sideTest.addEventListener("click", openSideTest);

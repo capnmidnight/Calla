@@ -1,5 +1,7 @@
-import type { IDisposable } from "kudzu";
-import { clamp, isGoodNumber, TypedEventBase } from "kudzu";
+import { TypedEventBase } from "kudzu/events/EventBase";
+import { clamp } from "kudzu/math/clamp";
+import { isGoodNumber } from "kudzu/typeChecks";
+import type { IDisposable } from "kudzu/using";
 import { AudioActivityEvent } from "./AudioActivityEvent";
 import type { AudioSource } from "./AudioSource";
 import { BaseNode } from "./spatializers/nodes/BaseNode";

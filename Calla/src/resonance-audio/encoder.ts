@@ -20,7 +20,7 @@
  */
 
 
-import type { IDisposable } from "kudzu";
+import type { IDisposable } from "kudzu/using";
 import {
     MAX_RE_WEIGHTS,
     SPHERICAL_HARMONICS,

@@ -1,4 +1,11 @@
-import { arrayRemove, arraySortedInsert, Audio, autoPlay, controls, display, muted, onUserGesture, playsInline, srcObject, styles, TypedEventBase, using, waitFor } from "kudzu";
+import { arrayRemove } from "kudzu/arrays/arrayRemove";
+import { arraySortedInsert } from "kudzu/arrays/arraySortedInsert";
+import { TypedEventBase } from "kudzu/events/EventBase";
+import { onUserGesture } from "kudzu/events/onUserGesture";
+import { waitFor } from "kudzu/events/waitFor";
+import { autoPlay, controls, display, muted, playsInline, srcObject, styles } from "kudzu/html/attrs";
+import { Audio } from "kudzu/html/tags";
+import { using } from "kudzu/using";
 import { ActivityAnalyser } from "./ActivityAnalyser";
 import { AudioActivityEvent } from "./AudioActivityEvent";
 import { AudioSource } from "./AudioSource";

@@ -1,5 +1,6 @@
 import { vec3 } from "gl-matrix";
-import { clamp, project } from "kudzu";
+import { clamp } from "kudzu/math/clamp";
+import { project } from "kudzu/math/project";
 import type { Pose } from "../../positions/Pose";
 import type { VolumeScalingListener } from "../listeners/VolumeScalingListener";
 import { BaseNode } from "./BaseNode";

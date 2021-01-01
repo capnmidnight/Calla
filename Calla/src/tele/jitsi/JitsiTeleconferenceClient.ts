@@ -1,10 +1,11 @@
-import { HubConnectionState } from "@microsoft/signalr";
-import { arrayClear, blobFetchingCallback, ErsatzEventTarget, once, progressCallback, scriptLoadingCallback, splitProgress, using, waitFor } from "kudzu";
-import {
-    addLogger,
-    BaseTeleconferenceClient,
-    DEFAULT_LOCAL_USER_ID
-} from "../BaseTeleconferenceClient";
+import { arrayClear } from "kudzu/arrays/arrayClear";
+import { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
+import { once } from "kudzu/events/once";
+import { waitFor } from "kudzu/events/waitFor";
+import { blobFetchingCallback, scriptLoadingCallback } from "kudzu/io/fetchingCallback";
+import { progressCallback } from "kudzu/io/progressCallback";
+import { splitProgress } from "kudzu/io/splitProgress";
+import { using } from "kudzu/using";
 import type { CallaTeleconferenceEvents } from "../../CallaEvents";
 import {
     CallaAudioStreamAddedEvent,
@@ -25,13 +26,19 @@ import {
     CallaVideoStreamRemovedEvent,
     StreamType
 } from "../../CallaEvents";
-import type { IMetadataClientExt } from "../../meta/IMetadataClient";
-import { JitsiMetadataClient } from "../../meta/jitsi/JitsiMetadataClient";
+import { ConnectionState } from "../../ConnectionState";
 import type JitsiConference from "../../lib-jitsi-meet/JitsiConference";
 import type { JitsiConnection } from "../../lib-jitsi-meet/JitsiMeetJS";
 import type JitsiParticipant from "../../lib-jitsi-meet/JitsiParticipant";
 import type JitsiLocalTrack from "../../lib-jitsi-meet/modules/RTC/JitsiLocalTrack";
 import type JitsiRemoteTrack from "../../lib-jitsi-meet/modules/RTC/JitsiRemoteTrack";
+import type { IMetadataClientExt } from "../../meta/IMetadataClient";
+import { JitsiMetadataClient } from "../../meta/jitsi/JitsiMetadataClient";
+import {
+    addLogger,
+    BaseTeleconferenceClient,
+    DEFAULT_LOCAL_USER_ID
+} from "../BaseTeleconferenceClient";
 
 
 const jQueryPath = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js";
@@ -365,14 +372,14 @@ export class JitsiTeleconferenceClient
     }
 
     async leave(): Promise<void> {
-        if (this.conferenceState === HubConnectionState.Connecting) {
-            await waitFor(() => this.conferenceState === HubConnectionState.Connected);
+        if (this.conferenceState === ConnectionState.Connecting) {
+            await waitFor(() => this.conferenceState === ConnectionState.Connected);
         }
 
-        if (this.conferenceState === HubConnectionState.Disconnecting) {
-            await waitFor(() => this.conferenceState === HubConnectionState.Disconnected);
+        if (this.conferenceState === ConnectionState.Disconnecting) {
+            await waitFor(() => this.conferenceState === ConnectionState.Disconnected);
         }
-        else if (this.conferenceState === HubConnectionState.Connected) {
+        else if (this.conferenceState === ConnectionState.Connected) {
             await super.leave();
 
             try {
@@ -389,14 +396,14 @@ export class JitsiTeleconferenceClient
     }
 
     async disconnect(): Promise<void> {
-        if (this.connectionState === HubConnectionState.Connecting) {
-            await waitFor(() => this.connectionState === HubConnectionState.Connected);
+        if (this.connectionState === ConnectionState.Connecting) {
+            await waitFor(() => this.connectionState === ConnectionState.Connected);
         }
 
-        if (this.connectionState === HubConnectionState.Disconnecting) {
-            await waitFor(() => this.connectionState === HubConnectionState.Disconnected);
+        if (this.connectionState === ConnectionState.Disconnecting) {
+            await waitFor(() => this.connectionState === ConnectionState.Disconnected);
         }
-        else if (this.connectionState === HubConnectionState.Connected) {
+        else if (this.connectionState === ConnectionState.Connected) {
             await super.disconnect();
             await this.leave();
             const disconnectTask = once(this, CallaTeleconferenceEventType.ServerDisconnected);

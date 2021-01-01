@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { vec3 } from "gl-matrix";
-import type { IDisposable } from "kudzu";
+import type { IDisposable } from "kudzu/using";
 import type { ReflectionCoefficients } from "./ReflectionCoefficients";
 import type { RoomDimensions } from "./RoomDimensions";
 export interface EarlyReflectionsOptions {

@@ -1,15 +1,11 @@
-import { HubConnectionState } from "@microsoft/signalr";
-import {
-    blobFetchingCallback,
-    Emoji,
-    getBlob as _getBlob,
-    IDisposable,
-    isNullOrUndefined,
-    loadScript as _loadScript,
-    progressCallback,
-    scriptLoadingCallback,
-    TypedEventBase
-} from "kudzu";
+import type { Emoji } from "kudzu/emoji/Emoji";
+import { TypedEventBase } from "kudzu/events/EventBase";
+import type { blobFetchingCallback, scriptLoadingCallback } from "kudzu/io/fetchingCallback";
+import { getBlob as _getBlob } from "kudzu/io/getBlob";
+import { loadScript as _loadScript } from "kudzu/io/loadScript";
+import type { progressCallback } from "kudzu/io/progressCallback";
+import { isNullOrUndefined } from "kudzu/typeChecks";
+import type { IDisposable } from "kudzu/using";
 import { AudioActivityEvent } from "./audio/AudioActivityEvent";
 import type { AudioManager } from "./audio/AudioManager";
 import { canChangeAudioOutput } from "./audio/canChangeAudioOutput";
@@ -28,6 +24,7 @@ import {
     CallaMetadataEventType,
     CallaTeleconferenceEventType
 } from "./CallaEvents";
+import { ConnectionState } from "./ConnectionState";
 import type { ICombinedClient } from "./ICombinedClient";
 import type { IMetadataClientExt } from "./meta/IMetadataClient";
 import type { ITeleconferenceClient, ITeleconferenceClientExt } from "./tele/ITeleconferenceClient";
@@ -44,7 +41,7 @@ export interface MediaDeviceSet {
     audioOutput: MediaDeviceInfo[];
 }
 
-export enum ConnectionState {
+export enum ClientState {
     InConference = "in-conference",
     JoiningConference = "joining-conference",
     Connected = "connected",
@@ -203,11 +200,11 @@ export class Calla
         Object.seal(this);
     }
 
-    get connectionState(): HubConnectionState {
+    get connectionState(): ConnectionState {
         return this.tele.connectionState;
     }
 
-    get conferenceState(): HubConnectionState {
+    get conferenceState(): ConnectionState {
         return this.tele.conferenceState;
     }
 
@@ -338,7 +335,7 @@ export class Calla
         return await this.tele.getVideoMuted();
     }
 
-    get metadataState(): HubConnectionState {
+    get metadataState(): ConnectionState {
         return this.meta.metadataState;
     }
 
@@ -368,14 +365,14 @@ export class Calla
 
     async connect(): Promise<void> {
         await this.tele.connect();
-        if (this.tele.connectionState === HubConnectionState.Connected) {
+        if (this.tele.connectionState === ConnectionState.Connected) {
             await this.meta.connect();
         }
     }
 
     async join(roomName: string): Promise<void> {
         await this.tele.join(roomName);
-        if (this.tele.conferenceState === HubConnectionState.Connected) {
+        if (this.tele.conferenceState === ConnectionState.Connected) {
             await this.meta.join(roomName);
         }
     }

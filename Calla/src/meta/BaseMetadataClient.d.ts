@@ -1,14 +1,14 @@
-import { HubConnectionState } from "@microsoft/signalr";
-import type { Emoji } from "kudzu";
-import { TypedEventBase } from "kudzu";
+import type { Emoji } from "kudzu/emoji/Emoji";
+import { TypedEventBase } from "kudzu/events/EventBase";
 import type { CallaEventType, CallaMetadataEvents } from "../CallaEvents";
+import { ConnectionState } from "../ConnectionState";
 import type { IMetadataClientExt } from "./IMetadataClient";
 export declare abstract class BaseMetadataClient extends TypedEventBase<CallaMetadataEvents> implements IMetadataClientExt {
     private sleepTime;
     private tasks;
     constructor(sleepTime: number);
     getNext<T extends keyof CallaMetadataEvents>(evtName: T, userID: string): Promise<CallaMetadataEvents[T]>;
-    abstract get metadataState(): HubConnectionState;
+    abstract get metadataState(): ConnectionState;
     get isConnected(): boolean;
     protected abstract callInternal(command: CallaEventType, ...args: any[]): Promise<void>;
     private callThrottled;

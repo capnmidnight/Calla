@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { IDisposable } from "kudzu";
+import type { IDisposable } from "kudzu/using";
 /**
  * @file A collection of convolvers. Can be used for the optimized FOA binaural
  * rendering. (e.g. SH-MaxRe HRTFs)

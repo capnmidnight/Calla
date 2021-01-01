@@ -23,7 +23,7 @@
 
 // Internal dependencies.
 import { vec3 } from "gl-matrix";
-import type { IDisposable } from "kudzu";
+import type { IDisposable } from "kudzu/using";
 import { Attenuation } from './attenuation';
 import type { AttenuationRolloff } from "./AttenuationRolloff";
 import { Directivity } from './directivity';

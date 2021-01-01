@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { ReadonlyMat3, ReadonlyMat4 } from "gl-matrix";
-import type { IDisposable } from "kudzu";
+import type { IDisposable } from "kudzu/using";
 /**
  * Higher-order-ambisonic decoder based on gain node network. We expect
  * the order of the channels to conform to ACN ordering. Below are the helper

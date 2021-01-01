@@ -19,7 +19,7 @@
  * @author Andrew Allen <bitllama@google.com>
  */
 
-import { isGoodNumber } from "kudzu";
+import { isGoodNumber } from "kudzu/typeChecks";
 import type { AttenuationRolloff } from "./AttenuationRolloff";
 import {
     DEFAULT_ATTENUATION_ROLLOFF,

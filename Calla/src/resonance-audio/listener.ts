@@ -21,7 +21,7 @@
 
 
 import { mat3, vec3 } from "gl-matrix";
-import type { IDisposable } from "kudzu";
+import type { IDisposable } from "kudzu/using";
 import type { FOARenderer } from "../omnitone/foa-renderer";
 import type { HOARenderer } from "../omnitone/hoa-renderer";
 import { createFOARenderer, createHOARenderer } from "../omnitone/omnitone";

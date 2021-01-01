@@ -1,5 +1,5 @@
-import { HubConnectionState } from "@microsoft/signalr";
 import { CallaEventType } from "../../CallaEvents";
+import { ConnectionState } from "../../ConnectionState";
 import type { JitsiTeleconferenceClient } from "../../tele/jitsi/JitsiTeleconferenceClient";
 import { BaseMetadataClient } from "../BaseMetadataClient";
 export interface JitsiHaxCommand {
@@ -12,7 +12,7 @@ export declare class JitsiMetadataClient extends BaseMetadataClient {
     private _status;
     private remoteUserIDs;
     constructor(tele: JitsiTeleconferenceClient);
-    get metadataState(): HubConnectionState;
+    get metadataState(): ConnectionState;
     connect(): Promise<void>;
     join(_roomName: string): Promise<void>;
     leave(): Promise<void>;

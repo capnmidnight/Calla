@@ -15,7 +15,7 @@
  */
 
 import { mat3, mat4, ReadonlyMat3, ReadonlyMat4 } from "gl-matrix";
-import type { IDisposable } from "kudzu";
+import type { IDisposable } from "kudzu/using";
 
 /**
  * @file Sound field rotator for first-order-ambisonics decoding.

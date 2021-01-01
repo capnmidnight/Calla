@@ -20,7 +20,7 @@
  */
 
 import { vec3 } from "gl-matrix";
-import type { IDisposable } from "kudzu";
+import type { IDisposable } from "kudzu/using";
 import type { RenderingMode } from "../omnitone/rendering-mode";
 import { Encoder } from './encoder';
 import { Listener } from './listener';

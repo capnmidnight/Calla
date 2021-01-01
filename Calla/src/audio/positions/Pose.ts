@@ -1,5 +1,5 @@
 import { vec3 } from "gl-matrix";
-import { project } from "kudzu";
+import { project } from "kudzu/math/project";
 
 /**
  * A position and orientation, at a given time.

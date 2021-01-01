@@ -1,4 +1,6 @@
-import { arrayClear, arrayRemove, once } from "kudzu";
+import { arrayClear } from "kudzu/arrays/arrayClear";
+import { arrayRemove } from "kudzu/arrays/arrayRemove";
+import { once } from "kudzu/events/once";
 import { BaseSpatializer } from "../BaseSpatializer";
 
 /**

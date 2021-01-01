@@ -18,7 +18,7 @@
  * @author Andrew Allen <bitllama@google.com>
  */
 import { vec3 } from "gl-matrix";
-import type { IDisposable } from "kudzu";
+import type { IDisposable } from "kudzu/using";
 import { EarlyReflections } from './early-reflections';
 import { LateReflections } from './late-reflections';
 import type { RoomDimensions } from "./RoomDimensions";

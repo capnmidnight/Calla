@@ -1,6 +1,12 @@
 // Import the configuration parameters.
 import {
-    Calla,
+    canChangeAudioOutput,
+    InterpolatedPose
+} from "calla/src/audio";
+import {
+    Calla
+} from "calla/src/Calla";
+import {
     CallaConferenceJoinedEvent,
     CallaConferenceLeftEvent,
     CallaParticipantJoinedEvent,
@@ -8,13 +14,11 @@ import {
     CallaTeleconferenceEventType,
     CallaUserNameChangedEvent,
     CallaVideoStreamAddedEvent,
-    CallaVideoStreamRemovedEvent,
-    canChangeAudioOutput,
-    InterpolatedPose
-} from "calla";
-import { RequestAnimationFrameTimer } from "kudzu";
-
+    CallaVideoStreamRemovedEvent
+} from "calla/src/CallaEvents";
+import { RequestAnimationFrameTimer } from "kudzu/timers/RequestAnimationFrameTimer";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
+
 
 
 
@@ -450,10 +454,11 @@ function deviceSelector(addNone: boolean, select: HTMLSelectElement, values: Med
     controls.connect.disabled = false;
 })();
 
+
 // Sets up a convenient button for opening multiple
 // windows for testing.
-import { openSideTest } from "kudzu/src/testing/windowing";
-import { userNumber } from "kudzu/src/testing/userNumber";
+import { userNumber } from "kudzu/testing/userNumber";
+import { openSideTest } from "kudzu/testing/windowing";
 
 const sideTest = document.getElementById("sideTest") as HTMLButtonElement
 

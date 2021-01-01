@@ -17,7 +17,7 @@
  * @file Distance-based attenuation filter.
  * @author Andrew Allen <bitllama@google.com>
  */
-import { isGoodNumber } from "kudzu";
+import { isGoodNumber } from "kudzu/typeChecks";
 import { DEFAULT_ATTENUATION_ROLLOFF, DEFAULT_MAX_DISTANCE, DEFAULT_MIN_DISTANCE, EPSILON_FLOAT } from "./utils";
 /**
  * Distance-based attenuation filter.

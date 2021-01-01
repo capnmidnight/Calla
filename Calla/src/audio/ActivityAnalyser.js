@@ -1,4 +1,6 @@
-import { clamp, isGoodNumber, TypedEventBase } from "kudzu";
+import { TypedEventBase } from "kudzu/events/EventBase";
+import { clamp } from "kudzu/math/clamp";
+import { isGoodNumber } from "kudzu/typeChecks";
 import { AudioActivityEvent } from "./AudioActivityEvent";
 import { BaseNode } from "./spatializers/nodes/BaseNode";
 const audioActivityEvt = new AudioActivityEvent();

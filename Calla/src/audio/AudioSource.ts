@@ -1,4 +1,4 @@
-import type { IDisposable } from "kudzu";
+import type { IDisposable } from "kudzu/using";
 import type { StreamType } from "../CallaEvents";
 import { InterpolatedPose } from "./positions/InterpolatedPose";
 import type { BaseSpatializer } from "./spatializers/BaseSpatializer";

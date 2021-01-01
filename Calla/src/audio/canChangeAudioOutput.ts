@@ -1,4 +1,4 @@
-import { isFunction } from "kudzu";
+import { isFunction } from "kudzu/typeChecks";
 
 /**
  * Indicates whether or not the current browser can change the destination device for audio output.

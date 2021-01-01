@@ -1,8 +1,9 @@
-import type { HubConnectionState } from "@microsoft/signalr";
-import type { progressCallback, TypedEventBase } from "kudzu";
+import type { TypedEventBase } from "kudzu/events/EventBase";
+import type { progressCallback } from "kudzu/io/progressCallback";
 import type { AudioManager } from "../audio/AudioManager";
 import type { MediaPermissionSet } from "../Calla";
 import type { CallaTeleconferenceEvents } from "../CallaEvents";
+import type { ConnectionState } from "../ConnectionState";
 import type { IClient } from "../IClient";
 import type { IMetadataClientExt } from "../meta/IMetadataClient";
 export interface ITeleconferenceClient extends TypedEventBase<CallaTeleconferenceEvents>, IClient {
@@ -12,8 +13,8 @@ export interface ITeleconferenceClient extends TypedEventBase<CallaTeleconferenc
     roomName: string;
     userExists(id: string): boolean;
     getUserNames(): string[][];
-    connectionState: HubConnectionState;
-    conferenceState: HubConnectionState;
+    connectionState: ConnectionState;
+    conferenceState: ConnectionState;
     /**
      * Get the client ready to connect to the teleconferencing server.
      * @param JITSI_HOST

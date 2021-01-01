@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { vec3 } from "gl-matrix";
-import { isArray, isGoodNumber } from "kudzu";
+import { isArray, isGoodNumber } from "kudzu/typeChecks";
 import { Direction } from "./Direction";
 import { DEFAULT_POSITION, DEFAULT_REFLECTION_COEFFICIENTS, DEFAULT_REFLECTION_CUTOFF_FREQUENCY, DEFAULT_REFLECTION_MAX_DURATION, DEFAULT_REFLECTION_MIN_DISTANCE, DEFAULT_REFLECTION_MULTIPLIER, DEFAULT_ROOM_DIMENSIONS, DEFAULT_SPEED_OF_SOUND, DirectionSign, DirectionToAxis, DirectionToDimension } from "./utils";
 /**

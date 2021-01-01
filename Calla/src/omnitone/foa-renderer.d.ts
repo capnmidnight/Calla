@@ -18,7 +18,7 @@
  * ambisonic decoder and the optimized binaural renderer.
  */
 import { mat3, mat4 } from "gl-matrix";
-import type { IDisposable } from "kudzu";
+import type { IDisposable } from "kudzu/using";
 import { FOARotator } from './foa-rotator';
 import { ChannelMap } from './foa-router';
 import { RenderingMode } from "./rendering-mode";

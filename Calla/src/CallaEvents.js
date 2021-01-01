@@ -1,4 +1,4 @@
-import { Emoji } from "kudzu";
+import { Emoji } from "kudzu/emoji/Emoji";
 export var CallaTeleconferenceEventType;
 (function (CallaTeleconferenceEventType) {
     CallaTeleconferenceEventType["ServerConnected"] = "serverConnected";

@@ -1,6 +1,7 @@
 import type { vec3 } from "gl-matrix";
-import type { blobFetchingCallback, progressCallback } from "kudzu";
-import { TypedEventBase } from "kudzu";
+import { TypedEventBase } from "kudzu/events/EventBase";
+import type { blobFetchingCallback } from "kudzu/io/fetchingCallback";
+import type { progressCallback } from "kudzu/io/progressCallback";
 import { AudioActivityEvent } from "./AudioActivityEvent";
 import { AudioSource } from "./AudioSource";
 import type { BaseNode } from "./spatializers/nodes/BaseNode";

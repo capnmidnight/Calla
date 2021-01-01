@@ -1,19 +1,22 @@
-import { HubConnectionState } from "@microsoft/signalr";
-import { getBlob as _getBlob, isNullOrUndefined, loadScript as _loadScript, TypedEventBase } from "kudzu";
+import { TypedEventBase } from "kudzu/events/EventBase";
+import { getBlob as _getBlob } from "kudzu/io/getBlob";
+import { loadScript as _loadScript } from "kudzu/io/loadScript";
+import { isNullOrUndefined } from "kudzu/typeChecks";
 import { AudioActivityEvent } from "./audio/AudioActivityEvent";
 import { canChangeAudioOutput } from "./audio/canChangeAudioOutput";
 import { CallaMetadataEventType, CallaTeleconferenceEventType } from "./CallaEvents";
+import { ConnectionState } from "./ConnectionState";
 import { JitsiTeleconferenceClient } from "./tele/jitsi/JitsiTeleconferenceClient";
-export var ConnectionState;
-(function (ConnectionState) {
-    ConnectionState["InConference"] = "in-conference";
-    ConnectionState["JoiningConference"] = "joining-conference";
-    ConnectionState["Connected"] = "connected";
-    ConnectionState["Connecting"] = "connecting";
-    ConnectionState["Prepaired"] = "prepaired";
-    ConnectionState["Prepairing"] = "prepairing";
-    ConnectionState["Unprepared"] = "unprepaired";
-})(ConnectionState || (ConnectionState = {}));
+export var ClientState;
+(function (ClientState) {
+    ClientState["InConference"] = "in-conference";
+    ClientState["JoiningConference"] = "joining-conference";
+    ClientState["Connected"] = "connected";
+    ClientState["Connecting"] = "connecting";
+    ClientState["Prepaired"] = "prepaired";
+    ClientState["Prepairing"] = "prepairing";
+    ClientState["Unprepared"] = "unprepaired";
+})(ClientState || (ClientState = {}));
 const audioActivityEvt = new AudioActivityEvent();
 export class Calla extends TypedEventBase {
     constructor(getBlob, loadScript, TeleClientType, MetaClientType) {
@@ -244,13 +247,13 @@ export class Calla extends TypedEventBase {
     }
     async connect() {
         await this.tele.connect();
-        if (this.tele.connectionState === HubConnectionState.Connected) {
+        if (this.tele.connectionState === ConnectionState.Connected) {
             await this.meta.connect();
         }
     }
     async join(roomName) {
         await this.tele.join(roomName);
-        if (this.tele.conferenceState === HubConnectionState.Connected) {
+        if (this.tele.conferenceState === ConnectionState.Connected) {
             await this.meta.join(roomName);
         }
     }
