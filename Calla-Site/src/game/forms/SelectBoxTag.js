@@ -2,13 +2,9 @@ import { isFunction } from "../lib/calla";
 import { disabled, id, value } from "./attrs";
 import { HtmlCustomTag } from "./HtmlCustomTag";
 import { clear, Option } from "./tags";
-
-const disabler = disabled(true),
-    enabler = disabled(false);
-
+const disabler = disabled(true), enabler = disabled(false);
 /** @type {WeakMap<SelectBoxTag, any[]>} */
 const values = new WeakMap();
-
 function render(self) {
     clear(self.element);
     if (self.values.length === 0) {
@@ -20,23 +16,17 @@ function render(self) {
             self.element.append(Option(self.noSelectionText));
         }
         for (let v of self.values) {
-            self.element.append(
-                Option(
-                    value(self.makeID(v)),
-                    self.makeLabel(v)));
+            self.element.append(Option(value(self.makeID(v)), self.makeLabel(v)));
         }
-
         enabler.apply(self.element);
     }
 }
-
 /**
  * Creates a string from a list item to use as the item's ID or label in a select box.
  * @callback makeItemValueCallback
  * @param {any} obj - the object
  * @returns {string}
  */
-
 /**
  * Creates a select box that can bind to collections
  * @param {string} id - the ID to use for the select box
@@ -49,12 +39,10 @@ function render(self) {
 export function SelectBox(id, noSelectionText, makeID, makeLabel, ...rest) {
     return new SelectBoxTag(id, noSelectionText, makeID, makeLabel, ...rest);
 }
-
 /**
  * A select box that can be databound to collections.
  **/
 export class SelectBoxTag extends HtmlCustomTag {
-
     /**
      * Creates a select box that can bind to collections
      * @param {string} tagId - the ID to use for the select box.
@@ -65,23 +53,18 @@ export class SelectBoxTag extends HtmlCustomTag {
      */
     constructor(tagId, noSelectionText, makeID, makeLabel, ...rest) {
         super("select", id(tagId), ...rest);
-
         if (!isFunction(makeID)) {
             throw new Error("makeID parameter must be a Function");
         }
-
         if (!isFunction(makeLabel)) {
             throw new Error("makeLabel parameter must be a Function");
         }
-
         this.noSelectionText = noSelectionText;
         this.makeID = (v) => v !== null && makeID(v) || null;
         this.makeLabel = (v) => v !== null && makeLabel(v) || "None";
         this.emptySelectionEnabled = true;
-
         Object.seal(this);
     }
-
     /**
      * Gets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
      * @type {boolean}
@@ -89,7 +72,6 @@ export class SelectBoxTag extends HtmlCustomTag {
     get emptySelectionEnabled() {
         return this._emptySelectionEnabled;
     }
-
     /**
      * Sets whether or not the select box will have a vestigial entry for "no selection" or "null" in the select box.
      * @param {boolean} value
@@ -98,7 +80,6 @@ export class SelectBoxTag extends HtmlCustomTag {
         this._emptySelectionEnabled = value;
         render(this);
     }
-
     /**
      * Gets the collection to which the select box was databound
      **/
@@ -108,7 +89,6 @@ export class SelectBoxTag extends HtmlCustomTag {
         }
         return values.get(this);
     }
-
     /**
      * Sets the collection to which the select box will be databound
      **/
@@ -119,7 +99,6 @@ export class SelectBoxTag extends HtmlCustomTag {
         render(this);
         this.selectedValue = curValue;
     }
-
     /**
      * Returns the collection of HTMLOptionElements that are stored in the select box
      * @type {HTMLOptionsCollection}
@@ -127,7 +106,6 @@ export class SelectBoxTag extends HtmlCustomTag {
     get options() {
         return this.element.options;
     }
-
     /**
      * Gets the index of the item that is currently selected in the select box.
      * The index is offset by -1 if the select box has `emptySelectionEnabled`
@@ -142,7 +120,6 @@ export class SelectBoxTag extends HtmlCustomTag {
         }
         return i;
     }
-
     /**
      * Sets the index of the item that should be selected in the select box.
      * The index is offset by -1 if the select box has `emptySelectionEnabled`
@@ -156,7 +133,6 @@ export class SelectBoxTag extends HtmlCustomTag {
         }
         this.element.selectedIndex = i;
     }
-
     /**
      * Gets the item at `selectedIndex` in the collection to which the select box was databound
      * @type {any}
@@ -169,7 +145,6 @@ export class SelectBoxTag extends HtmlCustomTag {
             return null;
         }
     }
-
     /**
      * Gets the index of the given item in the select box's databound collection, then
      * sets that index as the `selectedIndex`.
@@ -178,20 +153,16 @@ export class SelectBoxTag extends HtmlCustomTag {
     set selectedValue(value) {
         this.selectedIndex = this.indexOf(value);
     }
-
     get selectedText() {
         const opts = this.element.selectedOptions;
         if (opts.length === 1) {
             return opts[0].textContent || opts[0].innerText;
         }
     }
-
     set selectedText(value) {
-        const idx = this.values.findIndex(v =>
-            value !== null && this.makeLabel(v) === value);
+        const idx = this.values.findIndex(v => value !== null && this.makeLabel(v) === value);
         this.selectedIndex = idx;
     }
-
     /**
      * Returns the index of the given item in the select box's databound collection.
      * @param {any} value
@@ -199,17 +170,16 @@ export class SelectBoxTag extends HtmlCustomTag {
      */
     indexOf(value) {
         return this.values
-            .findIndex(v =>
-                value !== null
-                && this.makeID(value) === this.makeID(v));
+            .findIndex(v => value !== null
+            && this.makeID(value) === this.makeID(v));
     }
-
     /**
      * Checks to see if the value exists in the databound collection.
      * @param {any} value
      * @returns {boolean}
      */
     contains(value) {
-        return this.indexOf(value) >= 0.
+        return this.indexOf(value) >= 0.;
     }
 }
+//# sourceMappingURL=SelectBoxTag.js.map

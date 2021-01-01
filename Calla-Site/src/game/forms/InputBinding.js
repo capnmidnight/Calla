@@ -1,11 +1,8 @@
 import { EventBase } from "../../lib/calla";
-
 const inputBindingChangedEvt = new Event("inputBindingChanged");
-
 export class InputBinding extends EventBase {
     constructor() {
         super();
-
         const bindings = new Map([
             ["keyButtonUp", "ArrowUp"],
             ["keyButtonDown", "ArrowDown"],
@@ -15,10 +12,8 @@ export class InputBinding extends EventBase {
             ["keyButtonToggleAudio", "a"],
             ["keyButtonZoomOut", "["],
             ["keyButtonZoomIn", "]"],
-
             ["gpAxisLeftRight", 0],
             ["gpAxisUpDown", 1],
-
             ["gpButtonEmote", 0],
             ["gpButtonToggleAudio", 1],
             ["gpButtonZoomIn", 6],
@@ -28,7 +23,6 @@ export class InputBinding extends EventBase {
             ["gpButtonLeft", 14],
             ["gpButtonRight", 15]
         ]);
-
         for (let id of bindings.keys()) {
             Object.defineProperty(this, id, {
                 get: () => bindings.get(id),
@@ -41,7 +35,6 @@ export class InputBinding extends EventBase {
                 }
             });
         }
-
         this.clone = () => {
             const c = {};
             for (let kp of bindings.entries()) {
@@ -49,7 +42,7 @@ export class InputBinding extends EventBase {
             }
             return c;
         };
-
         Object.freeze(this);
     }
 }
+//# sourceMappingURL=InputBinding.js.map

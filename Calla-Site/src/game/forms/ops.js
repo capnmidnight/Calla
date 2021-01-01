@@ -1,5 +1,4 @@
 import { disabled } from "./attrs";
-
 export function isOpen(target) {
     if (target.isOpen) {
         return target.isOpen();
@@ -8,7 +7,6 @@ export function isOpen(target) {
         return target.style.display !== "none";
     }
 }
-
 /**
  * Sets the element's style's display property to "none"
  * when `v` is false, or `displayType` when `v` is true.
@@ -27,7 +25,6 @@ export function setOpen(target, v, displayType = "") {
         hide(target);
     }
 }
-
 export function updateLabel(target, open, enabledText, disabledText, bothText) {
     bothText = bothText || "";
     if (target.accessKey) {
@@ -40,7 +37,6 @@ export function updateLabel(target, open, enabledText, disabledText, bothText) {
         target.innerHTML = (open ? enabledText : disabledText) + bothText;
     }
 }
-
 export function toggleOpen(target, displayType = "") {
     if (target.toggleOpen) {
         target.toggleOpen(displayType);
@@ -52,7 +48,6 @@ export function toggleOpen(target, displayType = "") {
         show(target);
     }
 }
-
 export function show(target, displayType = "") {
     if (target.show) {
         target.show();
@@ -61,7 +56,6 @@ export function show(target, displayType = "") {
         target.style.display = displayType;
     }
 }
-
 export function hide(target) {
     if (target.hide) {
         target.hide();
@@ -69,11 +63,9 @@ export function hide(target) {
     else {
         target.style.display = "none";
     }
-};
-
-const disabler = disabled(true),
-    enabler = disabled(false);
-
+}
+;
+const disabler = disabled(true), enabler = disabled(false);
 export function setLocked(target, value) {
     if (target.setLocked) {
         target.setLocked(value);
@@ -84,4 +76,6 @@ export function setLocked(target, value) {
     else {
         enabler.apply(target);
     }
-};
+}
+;
+//# sourceMappingURL=ops.js.map

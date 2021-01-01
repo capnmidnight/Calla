@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Types of avatars.
  * @enum {string}
  **/
@@ -8,3 +8,4 @@ export const AvatarMode = Object.freeze({
     photo: "photo",
     video: "video"
 });
+//# sourceMappingURL=AvatarMode.js.map

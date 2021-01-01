@@ -1,0 +1,37 @@
+export declare class Settings {
+    constructor();
+    get preferredAudioOutputID(): any;
+    set preferredAudioOutputID(value: any);
+    get preferredAudioInputID(): any;
+    set preferredAudioInputID(value: any);
+    get preferredVideoInputID(): any;
+    set preferredVideoInputID(value: any);
+    get transitionSpeed(): any;
+    set transitionSpeed(value: any);
+    get drawHearing(): any;
+    set drawHearing(value: any);
+    get audioDistanceMin(): any;
+    set audioDistanceMin(value: any);
+    get audioDistanceMax(): any;
+    set audioDistanceMax(value: any);
+    get audioRolloff(): any;
+    set audioRolloff(value: any);
+    get fontSize(): any;
+    set fontSize(value: any);
+    get zoom(): any;
+    set zoom(value: any);
+    get userName(): any;
+    set userName(value: any);
+    get email(): any;
+    set email(value: any);
+    get avatarEmoji(): any;
+    set avatarEmoji(value: any);
+    get avatarURL(): any;
+    set avatarURL(value: any);
+    get roomName(): any;
+    set roomName(value: any);
+    get gamepadIndex(): any;
+    set gamepadIndex(value: any);
+    get inputBinding(): any;
+    set inputBinding(value: any);
+}

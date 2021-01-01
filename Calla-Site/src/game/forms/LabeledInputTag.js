@@ -2,7 +2,6 @@ import { htmlFor, type } from "./attrs";
 import { HtmlCustomTag } from "./HtmlCustomTag";
 import { setLocked } from "./ops";
 import { Input, Label } from "./tags";
-
 /**
  * Creates an input box that has a label attached to it.
  * @param {string} id - the ID to use for the input box
@@ -14,7 +13,6 @@ import { Input, Label } from "./tags";
 export function LabeledInput(id, inputType, labelText, ...rest) {
     return new LabeledInputTag(id, inputType, labelText, ...rest);
 }
-
 /**
  * An input box that has a label attached to it.
  **/
@@ -28,25 +26,12 @@ export class LabeledInputTag extends HtmlCustomTag {
      */
     constructor(id, inputType, labelText, ...rest) {
         super("div");
-
-        this.label = Label(
-            htmlFor(id),
-            labelText);
-
-        this.input = Input(
-            type(inputType),
-            ...rest);
-
-        this.element.append(
-            this.label,
-            this.input);
-
+        this.label = Label(htmlFor(id), labelText);
+        this.input = Input(type(inputType), ...rest);
+        this.element.append(this.label, this.input);
         this.element.style.display = "grid";
-
-
         Object.seal(this);
     }
-
     /**
      * Retrieves the desired element for attaching events.
      * @returns {HTMLElement}
@@ -54,7 +39,6 @@ export class LabeledInputTag extends HtmlCustomTag {
     get eventTarget() {
         return this.input;
     }
-
     /**
      * Gets the value attribute of the input element
      * @type {string}
@@ -62,7 +46,6 @@ export class LabeledInputTag extends HtmlCustomTag {
     get value() {
         return this.input.value;
     }
-
     /**
      * Sets the value attribute of the input element
      * @param {string} v
@@ -70,7 +53,6 @@ export class LabeledInputTag extends HtmlCustomTag {
     set value(v) {
         this.input.value = v;
     }
-
     /**
      * Gets whether or not the input element is checked, if it's a checkbox or radio button.
      * @type {boolean}
@@ -78,7 +60,6 @@ export class LabeledInputTag extends HtmlCustomTag {
     get checked() {
         return this.input.checked;
     }
-
     /**
      * Sets whether or not the input element is checked, if it's a checkbox or radio button.
      * @param {boolean} v
@@ -86,7 +67,6 @@ export class LabeledInputTag extends HtmlCustomTag {
     set checked(v) {
         this.input.checked = v;
     }
-
     /**
      * Sets whether or not the input element should be disabled.
      * @param {boolean} value
@@ -95,3 +75,4 @@ export class LabeledInputTag extends HtmlCustomTag {
         setLocked(this.input, value);
     }
 }
+//# sourceMappingURL=LabeledInputTag.js.map

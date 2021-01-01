@@ -6,22 +6,14 @@ import { AvatarMode } from "./avatars/AvatarMode";
 import { EmojiAvatar } from "./avatars/EmojiAvatar";
 import { PhotoAvatar } from "./avatars/PhotoAvatar";
 import { VideoAvatar } from "./avatars/VideoAvatar";
-
-const POSITION_REQUEST_DEBOUNCE_TIME = 1,
-    STACKED_USER_OFFSET_X = 5,
-    STACKED_USER_OFFSET_Y = 5,
-    eventNames = ["userMoved", "userPositionNeeded"],
-    muteAudioIcon = new TextImage(),
-    speakerActivityIcon = new TextImage();
-
+const POSITION_REQUEST_DEBOUNCE_TIME = 1, STACKED_USER_OFFSET_X = 5, STACKED_USER_OFFSET_Y = 5, eventNames = ["userMoved", "userPositionNeeded"], muteAudioIcon = new TextImage(), speakerActivityIcon = new TextImage();
 muteAudioIcon.fontFamily = "Noto Color Emoji";
 muteAudioIcon.value = mutedSpeaker.value;
 speakerActivityIcon.fontFamily = "Noto Color Emoji";
 speakerActivityIcon.value = speakerMediumVolume.value;
-
 export class User extends EventBase {
     /**
-     * 
+     *
      * @param {string} id
      * @param {string} displayName
      * @param {import("../calla").InterpolatedPose} pose
@@ -29,16 +21,13 @@ export class User extends EventBase {
      */
     constructor(id, displayName, pose, isMe) {
         super();
-
         this.id = id;
         this.pose = pose;
         this.label = isMe ? "(Me)" : `(${this.id})`;
-
         /** @type {AvatarMode} */
         this.setAvatarVideo(null);
         this.avatarImage = null;
         this.avatarEmoji = bust;
-
         this.audioMuted = false;
         this.videoMuted = true;
         this.isMe = isMe;
@@ -58,23 +47,18 @@ export class User extends EventBase {
         this.displayName = displayName;
         Object.seal(this);
     }
-
     get x() {
         return this.pose.current.p.x;
     }
-
     get y() {
         return this.pose.current.p.z;
     }
-
     get gridX() {
         return this.pose.end.p.x;
     }
-
     get gridY() {
         return this.pose.end.p.z;
     }
-
     deserialize(evt) {
         switch (evt.avatarMode) {
             case AvatarMode.emoji:
@@ -87,7 +71,6 @@ export class User extends EventBase {
                 break;
         }
     }
-
     serialize() {
         return {
             id: this.id,
@@ -95,7 +78,6 @@ export class User extends EventBase {
             avatarID: this.avatarID
         };
     }
-
     /**
      * An avatar using a live video.
      * @type {VideoAvatar}
@@ -103,7 +85,6 @@ export class User extends EventBase {
     get avatarVideo() {
         return this._avatarVideo;
     }
-
     /**
      * Set the current video element used as the avatar.
      * @param {MediaStream} stream
@@ -116,7 +97,6 @@ export class User extends EventBase {
             this._avatarVideo = null;
         }
     }
-
     /**
      * An avatar using a photo
      * @type {string}
@@ -126,7 +106,6 @@ export class User extends EventBase {
             && this._avatarImage.url
             || null;
     }
-
     /**
      * Set the URL of the photo to use as an avatar.
      * @param {string} url
@@ -140,7 +119,6 @@ export class User extends EventBase {
             this._avatarImage = null;
         }
     }
-
     /**
      * An avatar using a Unicode emoji.
      * @type {EmojiAvatar}
@@ -148,7 +126,6 @@ export class User extends EventBase {
     get avatarEmoji() {
         return this._avatarEmoji;
     }
-
     /**
      * Set the emoji to use as an avatar.
      * @param {import("../emoji/Emoji").Emoji} emoji
@@ -163,7 +140,6 @@ export class User extends EventBase {
             this._avatarEmoji = null;
         }
     }
-
     /**
      * Returns the type of avatar that is currently active.
      * @returns {AvatarMode}
@@ -182,7 +158,6 @@ export class User extends EventBase {
             return AvatarMode.none;
         }
     }
-
     /**
      * Returns a serialized representation of the current avatar,
      * if such a representation exists.
@@ -198,7 +173,6 @@ export class User extends EventBase {
                 return null;
         }
     }
-
     /**
      * Returns the current avatar
      * @returns {import("./avatars/BaseAvatar").BaseAvatar}
@@ -215,24 +189,19 @@ export class User extends EventBase {
                 return null;
         }
     }
-
     addEventListener(evtName, func, opts) {
         if (eventNames.indexOf(evtName) === -1) {
             throw new Error(`Unrecognized event type: ${evtName}`);
         }
-
         super.addEventListener(evtName, func, opts);
     }
-
     get displayName() {
         return this._displayName || this.label;
     }
-
     set displayName(name) {
         this._displayName = name;
         this.userNameText.value = this.displayName;
     }
-
     moveTo(x, y) {
         if (this.isMe) {
             this.moveEvent.x = x;
@@ -240,10 +209,8 @@ export class User extends EventBase {
             this.dispatchEvent(this.moveEvent);
         }
     }
-
     update(map, users) {
         const t = performance.now() / 1000;
-
         this.stackUserCount = 0;
         this.stackIndex = 0;
         for (let user of users.values()) {
@@ -255,25 +222,17 @@ export class User extends EventBase {
                 ++this.stackUserCount;
             }
         }
-
         this.stackAvatarWidth = map.tileWidth - (this.stackUserCount - 1) * STACKED_USER_OFFSET_X;
         this.stackAvatarHeight = map.tileHeight - (this.stackUserCount - 1) * STACKED_USER_OFFSET_Y;
         this.stackOffsetX = this.stackIndex * STACKED_USER_OFFSET_X;
         this.stackOffsetY = this.stackIndex * STACKED_USER_OFFSET_Y;
     }
-
     drawShadow(g, map) {
-        const scale = getTransform(g).a,
-            x = this.x * map.tileWidth,
-            y = this.y * map.tileHeight,
-            t = getTransform(g),
-            p = t.transformPoint({ x, y });
-
+        const scale = getTransform(g).a, x = this.x * map.tileWidth, y = this.y * map.tileHeight, t = getTransform(g), p = t.transformPoint({ x, y });
         this.visible = -map.tileWidth <= p.x
             && p.x < g.canvas.width
             && -map.tileHeight <= p.y
             && p.y < g.canvas.height;
-
         if (this.visible) {
             g.save();
             {
@@ -281,21 +240,18 @@ export class User extends EventBase {
                 g.shadowOffsetX = 3 * scale;
                 g.shadowOffsetY = 3 * scale;
                 g.shadowBlur = 3 * scale;
-
                 this.innerDraw(g, map);
             }
             g.restore();
         }
     }
-
     drawAvatar(g, map) {
         if (this.visible) {
             g.save();
             {
                 this.innerDraw(g, map);
                 if (this.isActive && !this.audioMuted) {
-                    const height = this.stackAvatarHeight / 2,
-                        scale = getTransform(g).a;
+                    const height = this.stackAvatarHeight / 2, scale = getTransform(g).a;
                     speakerActivityIcon.fontSize = height;
                     speakerActivityIcon.scale = scale;
                     speakerActivityIcon.draw(g, this.stackAvatarWidth - speakerActivityIcon.width, 0);
@@ -304,23 +260,15 @@ export class User extends EventBase {
             g.restore();
         }
     }
-
     innerDraw(g, map) {
-        g.translate(
-            this.x * map.tileWidth + this.stackOffsetX,
-            this.y * map.tileHeight + this.stackOffsetY);
+        g.translate(this.x * map.tileWidth + this.stackOffsetX, this.y * map.tileHeight + this.stackOffsetY);
         g.fillStyle = "black";
         g.textBaseline = "top";
-
         if (this.avatar) {
             this.avatar.draw(g, this.stackAvatarWidth, this.stackAvatarHeight, this.isMe);
         }
-
         if (this.audioMuted || !this.videoMuted) {
-
-            const height = this.stackAvatarHeight / 2,
-                scale = getTransform(g).a;
-
+            const height = this.stackAvatarHeight / 2, scale = getTransform(g).a;
             if (this.audioMuted) {
                 muteAudioIcon.fontSize = height;
                 muteAudioIcon.scale = scale;
@@ -328,20 +276,16 @@ export class User extends EventBase {
             }
         }
     }
-
     drawName(g, map, fontSize) {
         if (this.visible) {
             const scale = getTransform(g).a;
             g.save();
             {
-                g.translate(
-                    this.x * map.tileWidth + this.stackOffsetX,
-                    this.y * map.tileHeight + this.stackOffsetY);
+                g.translate(this.x * map.tileWidth + this.stackOffsetX, this.y * map.tileHeight + this.stackOffsetY);
                 g.shadowColor = "black";
                 g.shadowOffsetX = 3 * scale;
                 g.shadowOffsetY = 3 * scale;
                 g.shadowBlur = 3 * scale;
-
                 const textScale = fontSize / this.userNameText.fontSize;
                 g.scale(textScale, textScale);
                 this.userNameText.draw(g, 0, -this.userNameText.height);
@@ -349,28 +293,20 @@ export class User extends EventBase {
             g.restore();
         }
     }
-
     drawHearingTile(g, map, dx, dy, p) {
         g.save();
         {
-            g.translate(
-                (this.gridX + dx) * map.tileWidth,
-                (this.gridY + dy) * map.tileHeight);
+            g.translate((this.gridX + dx) * map.tileWidth, (this.gridY + dy) * map.tileHeight);
             g.strokeStyle = `rgba(0, 255, 0, ${(1 - p) / 2})`;
             g.strokeRect(0, 0, map.tileWidth, map.tileHeight);
         }
         g.restore();
     }
-
     drawHearingRange(g, map, minDist, maxDist) {
-        const scale = getTransform(g).a,
-            tw = Math.min(maxDist, Math.ceil(g.canvas.width / (2 * map.tileWidth * scale))),
-            th = Math.min(maxDist, Math.ceil(g.canvas.height / (2 * map.tileHeight * scale)));
-
+        const scale = getTransform(g).a, tw = Math.min(maxDist, Math.ceil(g.canvas.width / (2 * map.tileWidth * scale))), th = Math.min(maxDist, Math.ceil(g.canvas.height / (2 * map.tileHeight * scale)));
         for (let dy = 0; dy < th; ++dy) {
             for (let dx = 0; dx < tw; ++dx) {
-                const dist = Math.sqrt(dx * dx + dy * dy),
-                    p = project(dist, minDist, maxDist);
+                const dist = Math.sqrt(dx * dx + dy * dy), p = project(dist, minDist, maxDist);
                 if (p <= 1) {
                     this.drawHearingTile(g, map, dx, dy, p);
                     if (dy != 0) {
@@ -387,3 +323,4 @@ export class User extends EventBase {
         }
     }
 }
+//# sourceMappingURL=User.js.map
