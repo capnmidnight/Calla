@@ -12,7 +12,8 @@
             font-family: -apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif;
         }
 
-        html, body {
+        html,
+        body {
             position: absolute;
             width: 100%;
             height: 100%;
@@ -74,6 +75,7 @@
             }
 
         #space {
+            position: relative;
             background-color: #ccc;
             border: inset 2px;
             overflow: hidden;
@@ -90,10 +92,16 @@
     <div id="space"></div>
     <form id="controls" autocomplete="on">
         <label for="roomName">Room:</label>
-        <input id="roomName" type="text" placeholder="(Required)" value="TestRoom">
+        <input id="roomName"
+               type="text"
+               placeholder="(Required)"
+               value="TestRoom">
 
         <label for="userName">User:</label>
-        <input id="userName" placeholder="(Required)" type="text" value="TestUser">
+        <input id="userName"
+               placeholder="(Required)"
+               type="text"
+               value="TestUser">
 
         <label for="cams">Video:</label>
         <select id="cams"></select>

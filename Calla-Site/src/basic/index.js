@@ -1,8 +1,19 @@
-// Import the configuration parameters.
+// Chromium-based browsers give the user the option of changing
+// the output audio device. This flag indicates whether or not
+// we are in a browser that supports such a feature, without
+// hardcoding the project to a specific browser.
 import { canChangeAudioOutput } from "calla/src/audio";
+// Strictly speaking, this is the only class that needs to be
+// imported, if you are consuming Calla through a vanilla
+// JavaScript project.
 import { Calla } from "calla/src/Calla";
+// This enumeration contains all the names of the event types
+// used by Calla, which is convenient if you are using an
+// editor that supports auto-completion.
 import { CallaTeleconferenceEventType } from "calla/src/CallaEvents";
+// Calla provides a convient means of pumping animation events.
 import { RequestAnimationFrameTimer } from "kudzu/timers/RequestAnimationFrameTimer";
+// Import the configuration parameters.
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
 // Gets all the named elements in the document so we can
 // setup event handlers on them.
@@ -17,10 +28,6 @@ const controls = {
     speakers: document.getElementById("speakers")
 };
 /**
- * The animation timer handle, used for later stopping animation.
- **/
-const timer = new RequestAnimationFrameTimer();
-/**
  * The Calla interface, through which teleconferencing sessions and
  * user audio positioning is managed.
  **/
@@ -29,6 +36,10 @@ const client = new Calla();
  * A place to stow references to our users.
  **/
 const users = new Map();
+/**
+ * The animation timer handle, used for later stopping animation.
+ **/
+const timer = new RequestAnimationFrameTimer();
 /**
  * We need a "user gesture" to create AudioContext objects. The user clicking
  * on the login button is the most natural place for that.
@@ -132,8 +143,6 @@ function changeVideo(id, stream) {
  * transmit the new value to all the other users, and will
  * perform a smooth transition of the value so users
  * don't pop around.
- * @param {any} x
- * @param {any} y
  */
 function setPosition(x, y) {
     if (client.localUserID) {
@@ -229,6 +238,8 @@ class User {
      * and updates the display of the user to have the new video stream.
      **/
     set videoStream(v) {
+        // Make sure to remove any existing video elements, first. This
+        // will occur if the user changes their video input device.
         if (this._video) {
             this.container.removeChild(this._video);
             this._video = null;
@@ -254,9 +265,10 @@ class User {
     update() {
         const dx = this.container.parentElement.clientLeft - this.container.clientWidth / 2;
         const dy = this.container.parentElement.clientTop - this.container.clientHeight / 2;
-        this.container.style.left = (100 * this.pose.current.p[0] + dx) + "px";
-        this.container.style.zIndex = this.pose.current.p[1].toFixed(3);
-        this.container.style.top = (100 * this.pose.current.p[2] + dy) + "px";
+        const { p } = this.pose.current;
+        this.container.style.left = (100 * p[0] + dx) + "px";
+        this.container.style.zIndex = p[1].toFixed(3);
+        this.container.style.top = (100 * p[2] + dy) + "px";
     }
 }
 // =========== BEGIN Wire up events ================
@@ -329,28 +341,24 @@ function deviceSelector(addNone, select, values, preferredDeviceID, onSelect) {
 }
 // Setup the device lists.
 (async function () {
-    deviceSelector(true, controls.mics, await client.getAudioInputDevices(true), client.preferredAudioInputID, (device) => client.setAudioInputDevice(device));
-    // There is no way to set "no" audio output, so we don't
-    // allow a selection of "none" here. Also, it's a good idea
-    // to always start off with an audio output device, so always
-    // call `getPreferredAudioOutputAsync(true)`.
-    deviceSelector(false, controls.speakers, await client.getAudioOutputDevices(true), client.preferredAudioOutputID, (device) => client.setAudioOutputDevice(device));
-    // If we want to create sessions that default to having 
-    // no video enabled, we can change`getPreferredVideoInputAsync(true)`
-    // to `getPreferredVideoInputAsync(false)`.
-    deviceSelector(true, controls.cams, await client.getVideoInputDevices(true), client.preferredVideoInputID, (device) => client.setVideoInputDevice(device));
     // Chromium is pretty much the only browser that can change
     // audio outputs at this time, so disable the control if we
     // detect there is no option to change outputs.
     controls.speakers.disabled = !canChangeAudioOutput;
+    deviceSelector(true, controls.cams, await client.getVideoInputDevices(true), client.preferredVideoInputID, (device) => client.setVideoInputDevice(device));
+    deviceSelector(true, controls.mics, await client.getAudioInputDevices(true), client.preferredAudioInputID, (device) => client.setAudioInputDevice(device));
+    deviceSelector(false, controls.speakers, await client.getAudioOutputDevices(true), client.preferredAudioOutputID, (device) => client.setAudioOutputDevice(device));
     await client.prepare(JITSI_HOST, JVB_HOST, JVB_MUC);
     await client.connect();
     // At this point, everything is ready, so we can let 
     // the user attempt to connect to the conference now.
     controls.connect.disabled = false;
 })();
-// Sets up a convenient button for opening multiple
-// windows for testing.
+// ===================================================
+// The following is just some testing code for running
+// locally and testing multiple connections. It can
+// safely be ignored.
+// ===================================================
 import { userNumber } from "kudzu/testing/userNumber";
 import { openSideTest } from "kudzu/testing/windowing";
 const sideTest = document.getElementById("sideTest");

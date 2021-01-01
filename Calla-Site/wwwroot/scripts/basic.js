@@ -10549,7 +10549,7 @@
       openWindow(loc.href, window.screenLeft + window.outerWidth, 0, window.innerWidth, window.innerHeight);
   }
 
-  // Import the configuration parameters.
+  // Chromium-based browsers give the user the option of changing
   // Gets all the named elements in the document so we can
   // setup event handlers on them.
   const controls$1 = {
@@ -10563,10 +10563,6 @@
       speakers: document.getElementById("speakers")
   };
   /**
-   * The animation timer handle, used for later stopping animation.
-   **/
-  const timer = new RequestAnimationFrameTimer();
-  /**
    * The Calla interface, through which teleconferencing sessions and
    * user audio positioning is managed.
    **/
@@ -10575,6 +10571,10 @@
    * A place to stow references to our users.
    **/
   const users = new Map();
+  /**
+   * The animation timer handle, used for later stopping animation.
+   **/
+  const timer = new RequestAnimationFrameTimer();
   /**
    * We need a "user gesture" to create AudioContext objects. The user clicking
    * on the login button is the most natural place for that.
@@ -10678,8 +10678,6 @@
    * transmit the new value to all the other users, and will
    * perform a smooth transition of the value so users
    * don't pop around.
-   * @param {any} x
-   * @param {any} y
    */
   function setPosition(x, y) {
       if (client.localUserID) {
@@ -10775,6 +10773,8 @@
        * and updates the display of the user to have the new video stream.
        **/
       set videoStream(v) {
+          // Make sure to remove any existing video elements, first. This
+          // will occur if the user changes their video input device.
           if (this._video) {
               this.container.removeChild(this._video);
               this._video = null;
@@ -10800,9 +10800,10 @@
       update() {
           const dx = this.container.parentElement.clientLeft - this.container.clientWidth / 2;
           const dy = this.container.parentElement.clientTop - this.container.clientHeight / 2;
-          this.container.style.left = (100 * this.pose.current.p[0] + dx) + "px";
-          this.container.style.zIndex = this.pose.current.p[1].toFixed(3);
-          this.container.style.top = (100 * this.pose.current.p[2] + dy) + "px";
+          const { p } = this.pose.current;
+          this.container.style.left = (100 * p[0] + dx) + "px";
+          this.container.style.zIndex = p[1].toFixed(3);
+          this.container.style.top = (100 * p[2] + dy) + "px";
       }
   }
   // =========== BEGIN Wire up events ================
@@ -10875,20 +10876,13 @@
   }
   // Setup the device lists.
   (async function () {
-      deviceSelector(true, controls$1.mics, await client.getAudioInputDevices(true), client.preferredAudioInputID, (device) => client.setAudioInputDevice(device));
-      // There is no way to set "no" audio output, so we don't
-      // allow a selection of "none" here. Also, it's a good idea
-      // to always start off with an audio output device, so always
-      // call `getPreferredAudioOutputAsync(true)`.
-      deviceSelector(false, controls$1.speakers, await client.getAudioOutputDevices(true), client.preferredAudioOutputID, (device) => client.setAudioOutputDevice(device));
-      // If we want to create sessions that default to having 
-      // no video enabled, we can change`getPreferredVideoInputAsync(true)`
-      // to `getPreferredVideoInputAsync(false)`.
-      deviceSelector(true, controls$1.cams, await client.getVideoInputDevices(true), client.preferredVideoInputID, (device) => client.setVideoInputDevice(device));
       // Chromium is pretty much the only browser that can change
       // audio outputs at this time, so disable the control if we
       // detect there is no option to change outputs.
       controls$1.speakers.disabled = !canChangeAudioOutput;
+      deviceSelector(true, controls$1.cams, await client.getVideoInputDevices(true), client.preferredVideoInputID, (device) => client.setVideoInputDevice(device));
+      deviceSelector(true, controls$1.mics, await client.getAudioInputDevices(true), client.preferredAudioInputID, (device) => client.setAudioInputDevice(device));
+      deviceSelector(false, controls$1.speakers, await client.getAudioOutputDevices(true), client.preferredAudioOutputID, (device) => client.setAudioOutputDevice(device));
       await client.prepare(JITSI_HOST, JVB_HOST, JVB_MUC);
       await client.connect();
       // At this point, everything is ready, so we can let 

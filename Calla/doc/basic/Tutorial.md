@@ -26,11 +26,6 @@ Then, set a fixed viewport so that mobile users don't get some crazy scrolling
     <meta name="viewport" content="width=device-width, shrink-to-fit=0, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
 ```
 
-Give your page a title
-```html
-    <title>Minimum Calla Setup</title>
-```
-
 And import your script module that will setup the conference session
 ```html
     <script type="module" src="index.js"></script>
@@ -231,14 +226,14 @@ Before you can create a teleconferencing session, you need to know 3 pieces of i
 
 I find it convenient to store these in a module.
 ```javascript
-export const JITSI_HOST = "tele.calla.chat";
+export const JITSI_HOST = "beta.meet.jit.si";
 export const JVB_HOST = JITSI_HOST;
 export const JVB_MUC = "conference." + JITSI_HOST;
 ```
 
 So that I can later import them as such:
 ```javascript
-import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../../../constants.js";
+import { JITSI_HOST, JVB_HOST, JVB_MUC } from "./constants.js";
 ```
 
 ## Users
@@ -364,9 +359,10 @@ The pose property will automatically update, we just need to read it and move th
     update() {
         const dx = this.container.parentElement.clientLeft - this.container.clientWidth / 2;
         const dy = this.container.parentElement.clientTop - this.container.clientHeight / 2;
-        this.container.style.left = (100 * this.pose.current.p.x + dx) + "px";
-        this.container.style.zIndex = this.pose.current.p.y;
-        this.container.style.top = (100 * this.pose.current.p.z + dy) + "px";
+        const { p } = this.pose.current;
+        this.container.style.left = (100 * p[0] + dx) + "px";
+        this.container.style.zIndex = p[1].toFixed(3);
+        this.container.style.top = (100 * p[2] + dy) + "px";
     }
 ```
 
@@ -379,10 +375,11 @@ And that's it for the User class
 Let's start setting up an application.
 
 ### Import Calla
-Strictly speaking, only importing the `CallaClient` is necessary, but there are some other, useful elements as well.
+Strictly speaking, only importing the `Calla` client class is necessary, but there are some other, useful elements as well.
 ```javascript
 import {
-  CallaClient, // required
+  Calla, // required
+  CallaTeleconferenceEventType, // Contains all the names of events we will be consuming.
   canChangeAudioOutput // Will be use to enable/disable the audio output selector
 } from "calla";
 ```
@@ -390,7 +387,7 @@ import {
 ### Initialize Calla
 Construct the Calla API object. It manages most aspects of the teleconferencing session, as well as spatializing audio. All you need to do is render graphics and tell Calla when the local user has moved.
 ```javascript
-const client = new CallaClient(JITSI_HOST, JVB_HOST, JVB_MUC);
+const client = new Calla();
 ```
 
 ### Keep track of users
@@ -399,45 +396,57 @@ We need to keep a collection of users so we can iterate through updating their g
 const users = new Map();
 ```
 
+### Run an animation
+The animation timer handle, used for later stopping animation.
+```javascript
+const timer = new RequestAnimationFrameTimer();
+```
+
 ### Setup device lists
 Setup the device lists in an asynchronous function.
 ```javascript
 (async function () {
 ```
 
-If we want to create sessions that default to having  no video enabled, we can change`getPreferredVideoInputAsync(true)` to `getPreferredVideoInputAsync(false)`.
-```javascript
-    deviceSelector(
-        true,
-        controls.cams,
-        await client.getVideoInputDevicesAsync(),
-        await client.getPreferredVideoInputAsync(true),
-        (device) => client.setVideoInputDeviceAsync(device));
-```
-
-If we want to create sessions that default to having no audio enabled, we can change`getPreferredAudioInputAsync(true)` to `getPreferredAudioInputAsync(false)`.
-```javascript
-    deviceSelector(
-        true,
-        controls.mics,
-        await client.getAudioInputDevicesAsync(),
-        await client.getPreferredAudioInputAsync(true),
-        (device) => client.setAudioInputDeviceAsync(device));
-```
-
-There is no way to set "no" audio output, so we don't allow a selection of "none" here. Also, it's a good idea to always start off with an audio output device, so always call `getPreferredAudioOutputAsync(true)`.
-```javascript
-    deviceSelector(
-        false,
-        controls.speakers,
-        await client.getAudioOutputDevicesAsync(),
-        await client.getPreferredAudioOutputAsync(true),
-        (device) => client.setAudioOutputDeviceAsync(device));
-```
-
 Chromium is pretty much the only browser that can change audio outputs at this time, so disable the control if we detect there is no option to change outputs.
 ```javascript
     controls.speakers.disabled = !canChangeAudioOutput;
+
+    deviceSelector(
+        true,
+        controls.cams,
+        await client.getVideoInputDevices(true),
+        client.preferredVideoInputID,
+        (device) => client.setVideoInputDevice(device));
+
+    deviceSelector(
+        true,
+        controls.mics,
+        await client.getAudioInputDevices(true),
+        client.preferredAudioInputID,
+        (device) => client.setAudioInputDevice(device));
+
+    deviceSelector(
+        false,
+        controls.speakers,
+        await client.getAudioOutputDevices(true),
+        client.preferredAudioOutputID,
+        (device) => client.setAudioOutputDevice(device));
+```
+
+Now, let's connect to Jitsi Meet. First, we have to download the right version of `lib-jitsi-meet` for the server to which we are trying to connect.
+```javascript
+    await client.prepare(JITSI_HOST, JVB_HOST, JVB_MUC);
+```
+
+Then, we can make the connection to the teleconferencing server. This won't join rooms yet, but anticipating the need to connect makes joining a room a lot faster for the user.
+```javascript
+    await client.connect();
+```
+
+At this point, everything is ready, so we can let the user attempt to connect to the conference now. This should go at the very end of your script.
+```javascript
+    controls.connect.disabled = false;
 })();
 ```
 
@@ -445,10 +454,10 @@ The device selectors setup previously use the following function for creating th
 * addNone - whether a vestigial "none" item should be added to the front of the list.
 * select - the HTMLSelectElement box to add items to.
 * values - An array of MediaDeviceInfo objects to bind to the control.
-* preferredDevice - A best-guess at the correct media device to use.
+* preferredDeviceID - A best-guess at the correct media device to use.
 * onSelect - a callback for handling the user's selection of device.
 ```javascript
-function deviceSelector(addNone, select, values, preferredDevice, onSelect) {
+function deviceSelector(addNone, select, values, preferredDeviceID, onSelect) {
 ```
 
 Add a vestigial "none" item?
@@ -460,13 +469,15 @@ Add a vestigial "none" item?
     }
 ```
 
-Create the select box options.
+Create the select box options, while also keeping track of selected devices..
 ```javascript
+    let preferredDevice = null;
     select.append(...values.map((value) => {
         const opt = document.createElement("option");
         opt.value = value.deviceId;
         opt.text = value.label;
         if (preferredDevice && preferredDevice.deviceId === value.deviceId) {
+            preferredDevice = value;
             opt.selected = true;
         }
         return opt;
@@ -490,14 +501,10 @@ Respond to a user selection. We use "input" instead of "change" because "change"
 
 And fire a provisional "selection" for that best-guess media device.
 ```javascript
-    onSelect(preferredDevice);
+    if (preferredDevice) {
+        onSelect(preferredDevice);
+    }
 }
-```
-
-### Initialization complete
-At this point, everything is ready, so we can let the user attempt to connect to the conference now. This should go at the very end of your script.
-```javascript
-controls.connect.disabled = false;
 ```
 
 ## Operations
@@ -520,7 +527,7 @@ There is a pretty strict workflow on how to handle connecting to and living thro
 The follow click event handler does double-duty. Foremost, it validates the user's input room and name and starts the conference connection. But we also need a "user gesture" to create AudioContext objects. The user clicking on the login button is the most natural place for that.
 ```javascript
 controls.connect.addEventListener("click", connect);
-function connect() {
+async function connect() {
 ```
 Validate the user input values...
 ```javascript
@@ -549,17 +556,15 @@ Keep the user from double-clicking the connect button, or changing the room or t
     controls.connect.disabled = true;
 ```
 
-The following two operations are done separately in case you have extra setup you want to do before actually joining the conference. Always start the audio from a "user gesture", e.g. a button click.
-
-Initialize the audio *first*.
+And *now* start the connection.
 ```javascript
-    client.startAudio();
+    await client.join(roomName);
+}
 ```
 
-And *then* start the connection.
+And give ourselves a name
 ```javascript
-    client.join(roomName, userName);
-}
+    await client.identify(userName);
 ```
 
 ### Connected
@@ -602,11 +607,11 @@ Calla needs to cleanup the audio and video tracks if the user decides they want 
 
 Leaving is really simple.
 ```javascript
-controls.leave.addEventListener("click", () => client.leaveAsync());
+controls.leave.addEventListener("click", () => client.leave());
 ```
 
 ### Local user left
-The user does not always leave of their own volition, so we can't just wait for the `leaveAsync` task to resolve. For example, the user might have been kicked by a moderator. So we need to listen for leaving the conference separately from choosing to leave the conference, and then shut down the rendering.
+The user does not always leave of their own volition, so we can't just wait for the `leave` task to resolve. For example, the user might have been kicked by a moderator. So we need to listen for leaving the conference separately from choosing to leave the conference, and then shut down the rendering.
 
 ```javascript
 client.addEventListener("videoConferenceLeft", () => {
