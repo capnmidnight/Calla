@@ -2,15 +2,15 @@
 // the output audio device. This flag indicates whether or not
 // we are in a browser that supports such a feature, without
 // hardcoding the project to a specific browser.
-import { canChangeAudioOutput } from "calla/src/audio";
+import { canChangeAudioOutput } from "calla/audio/canChangeAudioOutput";
 // Strictly speaking, this is the only class that needs to be
 // imported, if you are consuming Calla through a vanilla
 // JavaScript project.
-import { Calla } from "calla/src/Calla";
+import { Calla } from "calla/Calla";
 // This enumeration contains all the names of the event types
 // used by Calla, which is convenient if you are using an
 // editor that supports auto-completion.
-import { CallaTeleconferenceEventType } from "calla/src/CallaEvents";
+import { CallaTeleconferenceEventType } from "calla/CallaEvents";
 // Calla provides a convient means of pumping animation events.
 import { RequestAnimationFrameTimer } from "kudzu/timers/RequestAnimationFrameTimer";
 // Import the configuration parameters.

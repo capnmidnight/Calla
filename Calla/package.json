@@ -3,14 +3,42 @@
   "version": "1.0.0",
   "main": "src/index.js",
   "files": [
+    "audio/",
+    "dist/",
     "doc/",
-    "src/",
-    "README.md"
+    "lib-jitsi-meet/",
+    "meta/",
+    "omnitone/",
+    "resonance-audio/",
+    "tele/",
+    "Calla.ts",
+    "Calla.js",
+    "Calla.d.ts",
+    "Calla.js.map",
+    "CallaEvents.ts",
+    "CallaEvents.js",
+    "CallaEvents.d.ts",
+    "CallaEvents.js.map",
+    "ConnectionState.ts",
+    "ConnectionState.js",
+    "ConnectionState.d.ts",
+    "ConnectionState.js.map",
+    "IClient.ts",
+    "IClient.js",
+    "IClient.d.ts",
+    "IClient.js.map",
+    "ICombinedClient.ts",
+    "ICombinedClient.js",
+    "ICombinedClient.d.ts",
+    "ICombinedClient.js.map",
+    "README.md",
+    "tsconfig.json"
   ],
   "devDependencies": {
     "@types/node": "^14.14.16",
     "tslib": "^2.0.3",
-    "typescript": "^4.1.3"
+    "typescript": "^4.1.3",
+    "my-rollup": "file:../MyRollup"
   },
   "dependencies": {
     "@microsoft/signalr": "^5.0.1",
@@ -18,8 +46,7 @@
     "kudzu": "file:../Kudzu"
   },
   "scripts": {
-    "build:calla": "npm install && tsc --build",
-    "watch:calla": "npm install && tsc --watch"
+    "build": "npm install && tsc --build && rollup -c --environment BUILD:all,PROJECT:all"
   },
   "homepage": "https://calla.chat",
   "description": "Teleconferencing through Jitsi with audio spatialization",

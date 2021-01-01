@@ -109,6 +109,12 @@ function makeBundle(name, input, outputDir, format, isProduction, options) {
         };
     }
 
+    if (options.output) {
+        for (const key in options.output) {
+            opts.output[key] = options.output[key];
+        }
+    }
+
     return opts;
 }
 
