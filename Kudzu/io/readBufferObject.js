@@ -1,6 +1,6 @@
+import { readBufferText } from "./readBufferText";
 export function readBufferObject(buffer) {
-    const decoder = new TextDecoder("utf-8");
-    const text = decoder.decode(buffer);
+    const text = readBufferText(buffer);
     const obj = JSON.parse(text);
     return obj;
 }
