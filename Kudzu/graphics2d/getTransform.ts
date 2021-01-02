@@ -1,4 +1,6 @@
-let _getTransform: (g: CanvasRenderingContext2D) => DOMMatrix;
+import type { Context2D } from "../html/canvas";
+
+let _getTransform: (g: Context2D) => DOMMatrix;
 
 if (!Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "getTransform")
     && Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "mozCurrentTransform")) {
@@ -7,7 +9,7 @@ if (!Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "g
         mozCurrentTransform: number[];
     }
 
-    type MozCanvasRenderingContext2D = CanvasRenderingContext2D
+    type MozCanvasRenderingContext2D = Context2D
         & MozCurrentTransformMixin;
 
     class MockDOMMatrix {
@@ -55,17 +57,17 @@ if (!Object.prototype.hasOwnProperty.call(CanvasRenderingContext2D.prototype, "g
         }
     }
 
-    _getTransform = (g: CanvasRenderingContext2D) => {
+    _getTransform = (g: Context2D) => {
         const mozG = g as MozCanvasRenderingContext2D;
         return new MockDOMMatrix(mozG.mozCurrentTransform) as DOMMatrix;
     }
 }
 else {
-    _getTransform = (g: CanvasRenderingContext2D) => {
+    _getTransform = (g: Context2D) => {
         return g.getTransform();
     }
 }
 
-export function getTransform(g: CanvasRenderingContext2D) {
+export function getTransform(g: Context2D) {
     return _getTransform(g);
 }
