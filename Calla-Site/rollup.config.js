@@ -14,6 +14,7 @@ export function makeConfig() {
         console.log("Building:", process.env.PROJECT, process.env.BUILD);
         tasks.push(...makeBundles("basic", "src/basic/index.js", "wwwroot/scripts", "iife", opts));
         tasks.push(...makeBundles("game", "src/game/index.js", "wwwroot/scripts", "iife", opts));
+        tasks.push(...makeBundles("version", "src/version/index.js", "wwwroot/scripts", "iife"));
     }
 
     return tasks;
