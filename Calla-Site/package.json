@@ -30,10 +30,5 @@
     "gl-matrix": "^3.3.0",
     "three": "^0.123.0",
     "webxr-polyfill": "^2.0.3"
-  },
-  "-vs-binding": {
-    "ProjectOpened": [
-      "watch:game"
-    ]
   }
 }

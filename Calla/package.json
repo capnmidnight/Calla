@@ -87,10 +87,5 @@
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/capnmidnight/Calla/issues"
-  },
-  "-vs-binding": {
-    "ProjectOpened": [
-      "watch:calla"
-    ]
   }
 }

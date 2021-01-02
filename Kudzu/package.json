@@ -40,10 +40,5 @@
   "description": "Kudzu",
   "author": {
     "name": ""
-  },
-  "-vs-binding": {
-    "ProjectOpened": [
-      "watch:kudzu"
-    ]
   }
 }
