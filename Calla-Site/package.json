@@ -4,16 +4,17 @@
   "private": true,
   "scripts": {
     "_restore": "npm install && tsc --build",
-    "_build": "npm run _restore && rollup -c --environment",
-    "_watch": "npm run _restore && rollup -w -c --environment",
+    "_build": "rollup -c --environment",
+    "_watch": "rollup -w -c --environment",
     "build:debug": "npm version minor && rollup -c --environment -- BUILD:development,PROJECT:all",
     "build:release": "npm version minor && npm run _build -- BUILD:production,PROJECT:all",
-    "rebuild:all": "npm run _build -- BUILD:all,PROJECT:all",
-    "rebuild:debug": "npm run _build -- BUILD:development,PROJECT:all",
-    "rebuild:release": "npm run _build -- BUILD:production,PROJECT:all",
-    "watch:all": "npm run _watch -- BUILD:development,PROJECT:all",
-    "watch:basic": "npm run _watch -- BUILD:development,PROJECT:basic",
-    "watch:game": "npm run _watch -- BUILD:development,PROJECT:game"
+    "rebuild:all": "npm run _restore && npm run _build -- BUILD:all,PROJECT:all",
+    "rebuild:debug": "npm run _restore && npm run _build -- BUILD:development,PROJECT:all",
+    "rebuild:release": "npm run _restore && npm run _build -- BUILD:production,PROJECT:all",
+    "rebuild:basic": "npm run _build -- BUILD:all,PROJECT:basic",
+    "watch:all": "npm run _restore && npm run _watch -- BUILD:development,PROJECT:all",
+    "watch:basic": "npm run _restore && npm run _watch -- BUILD:development,PROJECT:basic",
+    "watch:game": "npm run _restore && npm run _watch -- BUILD:development,PROJECT:game"
   },
   "devDependencies": {
     "@types/node": "^14.14.16",
