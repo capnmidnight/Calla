@@ -3,7 +3,7 @@ import { isFunction } from "../typeChecks";
 export class EventBase {
     constructor() {
         this.listeners = new Map();
-        this.options = new Map();
+        this.listenerOptions = new Map();
     }
     addEventListener(type, callback, options) {
         if (isFunction(callback)) {
@@ -15,7 +15,7 @@ export class EventBase {
             if (!listeners.find(c => c === callback)) {
                 listeners.push(callback);
                 if (options) {
-                    this.options.set(callback, options);
+                    this.listenerOptions.set(callback, options);
                 }
             }
         }
@@ -32,8 +32,8 @@ export class EventBase {
         const idx = listeners.findIndex(c => c === callback);
         if (idx >= 0) {
             arrayRemoveAt(listeners, idx);
-            if (this.options.has(callback)) {
-                this.options.delete(callback);
+            if (this.listenerOptions.has(callback)) {
+                this.listenerOptions.delete(callback);
             }
         }
     }
@@ -41,7 +41,7 @@ export class EventBase {
         const listeners = this.listeners.get(evt.type);
         if (listeners) {
             for (const callback of listeners) {
-                const options = this.options.get(callback);
+                const options = this.listenerOptions.get(callback);
                 if (options && options.once) {
                     this.removeListener(listeners, callback);
                 }

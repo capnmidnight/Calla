@@ -1,6 +1,6 @@
 export declare class EventBase implements EventTarget {
     private listeners;
-    private options;
+    private listenerOptions;
     addEventListener(type: string, callback: (evt: Event) => any, options?: AddEventListenerOptions): void;
     removeEventListener(type: string, callback: (evt: Event) => any): void;
     private removeListener;
