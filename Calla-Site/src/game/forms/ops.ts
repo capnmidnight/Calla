@@ -1,7 +1,29 @@
-import { disabled } from "./attrs";
+import { isFunction } from "kudzu/typeChecks";
+import { disabled } from "kudzu/html/attrs";
 
-export function isOpen(target) {
-    if (target.isOpen) {
+export interface IOpenable {
+    isOpen(): boolean;
+    setOpen(v: boolean, displayType?: string): void;
+    updateLabel(open: boolean, enabledText: string, disabledText: string, bothText: string): void;
+    toggleOpen(displayType?: string): void;
+    show(): void;
+    hide(displayType?: string): void;
+    setLocked(v: boolean): void;
+    accessKey: string;
+}
+
+export function isOpenable(obj: any): obj is IOpenable {
+    return isFunction(obj.isOpen)
+        && isFunction(obj.setOpen)
+        && isFunction(obj.updateLabel)
+        && isFunction(obj.toggleOpen)
+        && isFunction(obj.show)
+        && isFunction(obj.hide)
+        && isFunction(obj.setLocked);
+}
+
+export function isOpen(target: IOpenable | HTMLElement) {
+    if (isOpenable(target)) {
         return target.isOpen();
     }
     else {
@@ -16,8 +38,8 @@ export function isOpen(target) {
  * @param {boolean} v
  * @param {string} [displayType=""]
  */
-export function setOpen(target, v, displayType = "") {
-    if (target.setOpen) {
+export function setOpen(target: IOpenable | HTMLElement, v: boolean, displayType = "") {
+    if (isOpenable(target)) {
         target.setOpen(v, displayType);
     }
     else if (v) {
@@ -28,12 +50,12 @@ export function setOpen(target, v, displayType = "") {
     }
 }
 
-export function updateLabel(target, open, enabledText, disabledText, bothText) {
+export function updateLabel(target: IOpenable | HTMLElement, open: boolean, enabledText: string, disabledText: string, bothText: string) {
     bothText = bothText || "";
     if (target.accessKey) {
         bothText += ` <kbd>(ALT+${target.accessKey.toUpperCase()})</kbd>`;
     }
-    if (target.updateLabel) {
+    if (isOpenable(target)) {
         target.updateLabel(open, enabledText, disabledText, bothText);
     }
     else {
@@ -41,8 +63,8 @@ export function updateLabel(target, open, enabledText, disabledText, bothText) {
     }
 }
 
-export function toggleOpen(target, displayType = "") {
-    if (target.toggleOpen) {
+export function toggleOpen(target: IOpenable | HTMLElement, displayType = "") {
+    if (isOpenable(target)) {
         target.toggleOpen(displayType);
     }
     else if (isOpen(target)) {
@@ -53,8 +75,8 @@ export function toggleOpen(target, displayType = "") {
     }
 }
 
-export function show(target, displayType = "") {
-    if (target.show) {
+export function show(target: IOpenable | HTMLElement, displayType = "") {
+    if (isOpenable(target)) {
         target.show();
     }
     else {
@@ -62,9 +84,9 @@ export function show(target, displayType = "") {
     }
 }
 
-export function hide(target) {
-    if (target.hide) {
-        target.hide();
+export function hide(target: IOpenable | HTMLElement, displayType = "") {
+    if (isOpenable(target)) {
+        target.hide(displayType);
     }
     else {
         target.style.display = "none";
@@ -74,8 +96,8 @@ export function hide(target) {
 const disabler = disabled(true),
     enabler = disabled(false);
 
-export function setLocked(target, value) {
-    if (target.setLocked) {
+export function setLocked(target: IOpenable | HTMLElement, value: boolean) {
+    if (isOpenable(target)) {
         target.setLocked(value);
     }
     else if (value) {

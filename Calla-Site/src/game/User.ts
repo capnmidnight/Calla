@@ -1,11 +1,17 @@
-import { bust, mutedSpeaker, speakerMediumVolume } from "../emoji/emojis";
-import { getTransform } from "../graphics2d/getTransform";
-import { TextImage } from "../graphics2d/TextImage";
-import { EventBase, isString, project } from "../lib/calla";
+import type { InterpolatedPose } from "calla/audio/positions/InterpolatedPose";
+import type { Emoji } from "kudzu/emoji/Emoji";
+import { bust, mutedSpeaker, speakerMediumVolume } from "kudzu/emoji/emojis";
+import { EventBase } from "kudzu/events/EventBase";
+import { getTransform } from "kudzu/graphics2d/getTransform";
+import { TextImage } from "kudzu/graphics2d/TextImage";
+import type { Context2D } from "kudzu/html/canvas";
+import { project } from "kudzu/math/project";
+import { isString } from "kudzu/typeChecks";
 import { AvatarMode } from "./avatars/AvatarMode";
 import { EmojiAvatar } from "./avatars/EmojiAvatar";
 import { PhotoAvatar } from "./avatars/PhotoAvatar";
 import { VideoAvatar } from "./avatars/VideoAvatar";
+import type { TileMap } from "./TileMap";
 
 const POSITION_REQUEST_DEBOUNCE_TIME = 1,
     STACKED_USER_OFFSET_X = 5,
@@ -20,65 +26,59 @@ speakerActivityIcon.fontFamily = "Noto Color Emoji";
 speakerActivityIcon.value = speakerMediumVolume.value;
 
 export class User extends EventBase {
-    /**
-     * 
-     * @param {string} id
-     * @param {string} displayName
-     * @param {import("../calla").InterpolatedPose} pose
-     * @param {boolean} isMe
-     */
-    constructor(id, displayName, pose, isMe) {
+    label: string;
+    audioMuted: boolean = false;
+    videoMuted: boolean = true;
+    isActive: boolean = false;
+    stackUserCount: number = 1;
+    stackIndex: number = 0;
+    stackAvatarHeight: number = 0;
+    stackAvatarWidth: number = 0;
+    stackOffsetX: number = 0;
+    stackOffsetY: number = 0;
+    lastPositionRequestTime: number;
+    visible: boolean = true;
+    userNameText: TextImage;
+    private _displayName: string = null;
+    private _avatarVideo: VideoAvatar = null;
+    private _avatarImage: PhotoAvatar = null;
+    private _avatarEmoji: EmojiAvatar = null;
+
+    constructor(public id: string, displayName: string, private pose: InterpolatedPose, public isMe: boolean) {
         super();
 
-        this.id = id;
-        this.pose = pose;
         this.label = isMe ? "(Me)" : `(${this.id})`;
 
-        /** @type {AvatarMode} */
-        this.setAvatarVideo(null);
-        this.avatarImage = null;
-        this.avatarEmoji = bust;
+        this.setAvatarEmoji(bust);
 
-        this.audioMuted = false;
-        this.videoMuted = true;
-        this.isMe = isMe;
-        this.isActive = false;
-        this.stackUserCount = 1;
-        this.stackIndex = 0;
-        this.stackAvatarHeight = 0;
-        this.stackAvatarWidth = 0;
-        this.stackOffsetX = 0;
-        this.stackOffsetY = 0;
         this.lastPositionRequestTime = performance.now() / 1000 - POSITION_REQUEST_DEBOUNCE_TIME;
-        this.visible = true;
         this.userNameText = new TextImage();
-        this.userNameText.color = "white";
+        this.userNameText.fillColor = "white";
         this.userNameText.fontSize = 128;
-        this._displayName = null;
         this.displayName = displayName;
         Object.seal(this);
     }
 
     get x() {
-        return this.pose.current.p.x;
+        return this.pose.current.p[0];
     }
 
     get y() {
-        return this.pose.current.p.z;
+        return this.pose.current.p[2];
     }
 
     get gridX() {
-        return this.pose.end.p.x;
+        return this.pose.end.p[0];
     }
 
     get gridY() {
-        return this.pose.end.p.z;
+        return this.pose.end.p[2];
     }
 
     deserialize(evt) {
         switch (evt.avatarMode) {
             case AvatarMode.emoji:
-                this.avatarEmoji = evt.avatarID;
+                this.setAvatarEmoji(evt.avatarID);
                 break;
             case AvatarMode.photo:
                 this.avatarImage = evt.avatarID;
@@ -106,10 +106,10 @@ export class User extends EventBase {
 
     /**
      * Set the current video element used as the avatar.
-     * @param {MediaStream} stream
+     * @param stream
      **/
-    setAvatarVideo(stream) {
-        if (stream instanceof MediaStream) {
+    setAvatarVideo(stream:MediaStream) {
+        if (stream) {
             this._avatarVideo = new VideoAvatar(stream);
         }
         else {
@@ -143,7 +143,6 @@ export class User extends EventBase {
 
     /**
      * An avatar using a Unicode emoji.
-     * @type {EmojiAvatar}
      **/
     get avatarEmoji() {
         return this._avatarEmoji;
@@ -151,9 +150,8 @@ export class User extends EventBase {
 
     /**
      * Set the emoji to use as an avatar.
-     * @param {import("../emoji/Emoji").Emoji} emoji
      */
-    set avatarEmoji(emoji) {
+    setAvatarEmoji(emoji:Emoji) {
         if (emoji
             && emoji.value
             && emoji.desc) {
@@ -216,7 +214,7 @@ export class User extends EventBase {
         }
     }
 
-    addEventListener(evtName, func, opts) {
+    addEventListener(evtName: string, func: (evt: Event) => any, opts: AddEventListenerOptions) {
         if (eventNames.indexOf(evtName) === -1) {
             throw new Error(`Unrecognized event type: ${evtName}`);
         }
@@ -233,7 +231,7 @@ export class User extends EventBase {
         this.userNameText.value = this.displayName;
     }
 
-    moveTo(x, y) {
+    moveTo(x: number, y: number) {
         if (this.isMe) {
             this.moveEvent.x = x;
             this.moveEvent.y = y;
@@ -241,7 +239,7 @@ export class User extends EventBase {
         }
     }
 
-    update(map, users) {
+    update(map: TileMap, users: Map<string, User>) {
         const t = performance.now() / 1000;
 
         this.stackUserCount = 0;
@@ -262,7 +260,7 @@ export class User extends EventBase {
         this.stackOffsetY = this.stackIndex * STACKED_USER_OFFSET_Y;
     }
 
-    drawShadow(g, map) {
+    drawShadow(g: Context2D, map: TileMap) {
         const scale = getTransform(g).a,
             x = this.x * map.tileWidth,
             y = this.y * map.tileHeight,
@@ -288,7 +286,7 @@ export class User extends EventBase {
         }
     }
 
-    drawAvatar(g, map) {
+    drawAvatar(g: Context2D, map: TileMap) {
         if (this.visible) {
             g.save();
             {
@@ -305,7 +303,7 @@ export class User extends EventBase {
         }
     }
 
-    innerDraw(g, map) {
+    innerDraw(g: Context2D, map: TileMap) {
         g.translate(
             this.x * map.tileWidth + this.stackOffsetX,
             this.y * map.tileHeight + this.stackOffsetY);
@@ -329,7 +327,7 @@ export class User extends EventBase {
         }
     }
 
-    drawName(g, map, fontSize) {
+    drawName(g: Context2D, map: TileMap, fontSize: number) {
         if (this.visible) {
             const scale = getTransform(g).a;
             g.save();
@@ -350,7 +348,7 @@ export class User extends EventBase {
         }
     }
 
-    drawHearingTile(g, map, dx, dy, p) {
+    drawHearingTile(g: Context2D, map: TileMap, dx: number, dy: number, p: number) {
         g.save();
         {
             g.translate(
@@ -362,7 +360,7 @@ export class User extends EventBase {
         g.restore();
     }
 
-    drawHearingRange(g, map, minDist, maxDist) {
+    drawHearingRange(g: Context2D, map: TileMap, minDist: number, maxDist: number) {
         const scale = getTransform(g).a,
             tw = Math.min(maxDist, Math.ceil(g.canvas.width / (2 * map.tileWidth * scale))),
             th = Math.min(maxDist, Math.ceil(g.canvas.height / (2 * map.tileHeight * scale)));

@@ -1,17 +1,22 @@
-import { getTransform } from "../graphics2d/getTransform";
-import { TextImage } from "../graphics2d/TextImage";
+import type { Emoji } from "kudzu/emoji/Emoji";
+import { getTransform } from "kudzu/graphics2d/getTransform";
+import { TextImage } from "kudzu/graphics2d/TextImage";
+import type { Context2D } from "kudzu/html/canvas";
+import type { TileMap } from "./TileMap";
 
 const EMOJI_LIFE = 3;
 
 export class Emote {
-    constructor(emoji, x, y) {
-        this.emoji = emoji;
-        this.x = x;
-        this.y = y;
+    dx: number;
+    dy: number;
+
+    life = 1;
+    width = -1;
+    emoteText: TextImage = null;
+
+    constructor(public emoji: Emoji, public x: number, public y: number) {
         this.dx = Math.random() - 0.5;
         this.dy = -Math.random() * 0.5 - 0.5;
-        this.life = 1;
-        this.width = -1;
         this.emoteText = new TextImage();
         this.emoteText.fontFamily = "Noto Color Emoji";
         this.emoteText.value = emoji.value;
@@ -21,7 +26,7 @@ export class Emote {
         return this.life <= 0.01;
     }
 
-    update(dt) {
+    update(dt: number) {
         this.life -= dt / EMOJI_LIFE;
         this.dx *= 0.99;
         this.dy *= 0.99;
@@ -29,7 +34,7 @@ export class Emote {
         this.y += this.dy * dt;
     }
 
-    drawShadow(g, map) {
+    drawShadow(g: Context2D, map: TileMap) {
         const scale = getTransform(g).a;
         g.save();
         {
@@ -43,12 +48,7 @@ export class Emote {
         g.restore();
     }
 
-    /**
-     * 
-     * @param {CanvasRenderingContext2D} g
-     * @param {any} map
-     */
-    drawEmote(g, map) {
+    drawEmote(g: Context2D, map: TileMap) {
         const oldAlpha = g.globalAlpha,
             scale = getTransform(g).a;
         g.globalAlpha = this.life;

@@ -1,18 +1,36 @@
-import { EventBase } from "../../lib/calla";
+import type { Emoji } from "kudzu/emoji/Emoji";
+import { EventBase } from "kudzu/events/EventBase";
 export declare class ButtonLayer extends EventBase {
-    constructor(targetCanvas: any, zoomMin: any, zoomMax: any);
+    element: HTMLDivElement;
+    optionsButton: HTMLButtonElement;
+    instructionsButton: HTMLButtonElement;
+    shareButton: HTMLButtonElement;
+    showUsersButton: HTMLButtonElement;
+    fullscreenButton: HTMLButtonElement;
+    leaveButton: HTMLButtonElement;
+    toggleAudioButton: HTMLButtonElement;
+    toggleAudioLabel: HTMLDivElement;
+    toggleVideoButton: HTMLButtonElement;
+    toggleVideoLabel: HTMLDivElement;
+    changeDevicesButton: HTMLButtonElement;
+    emoteButton: HTMLDivElement;
+    zoomInButton: HTMLButtonElement;
+    slider: HTMLInputElement;
+    zoomOutButton: HTMLButtonElement;
+    private _audioEnabled;
+    private _videoEnabled;
+    constructor(zoomMin: number, zoomMax: number);
     get isFullscreen(): boolean;
     set isFullscreen(value: boolean);
     hide(): void;
     show(): void;
     get enabled(): boolean;
     set enabled(v: boolean);
-    get audioEnabled(): any;
-    set audioEnabled(value: any);
-    get videoEnabled(): any;
-    set videoEnabled(value: any);
-    setEmojiButton(key: any, emoji: any): void;
+    get audioEnabled(): boolean;
+    set audioEnabled(value: boolean);
+    get videoEnabled(): boolean;
+    set videoEnabled(value: boolean);
+    setEmojiButton(emoji: Emoji): void;
     get zoom(): number;
-    /** @type {number} */
     set zoom(v: number);
 }

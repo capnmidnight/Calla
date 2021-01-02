@@ -1,4 +1,4 @@
-import { EventBase } from "../../lib/calla";
+import { EventBase } from "kudzu/events/EventBase";
 const inputBindingChangedEvt = new Event("inputBindingChanged");
 export class InputBinding extends EventBase {
     constructor() {

@@ -1,33 +1,37 @@
+import { getImage } from "kudzu/io/getImage";
+import { getXml } from "kudzu/io/getXml";
 export class TileSet {
     constructor(url) {
         this.url = url;
+        this.name = null;
         this.tileWidth = 0;
         this.tileHeight = 0;
         this.tilesPerRow = 0;
-        this.image = new Image();
-        this.collision = {};
+        this.tileCount = 0;
+        this.image = null;
+        this.collision = new Map();
     }
     async load() {
-        const response = await fetch(this.url), text = await response.text(), parser = new DOMParser(), xml = parser.parseFromString(text, "text/xml"), tileset = xml.documentElement, imageLoad = new Promise((resolve, reject) => {
-            this.image.addEventListener("load", (evt) => {
-                this.tilesPerRow = Math.floor(this.image.width / this.tileWidth);
-                resolve();
-            });
-            this.image.addEventListener("error", reject);
-        }), image = tileset.querySelector("image"), imageSource = image.getAttribute("source"), imageURL = new URL(imageSource, this.url), tiles = tileset.querySelectorAll("tile");
-        for (let tile of tiles) {
-            const id = 1 * tile.getAttribute("id"), collid = tile.querySelector("properties > property[name='Collision']"), value = collid.getAttribute("value");
-            this.collision[id] = value === "true";
+        const tileset = await getXml(this.url.href);
+        const image = tileset.querySelector("image");
+        const imageSource = image.getAttribute("source");
+        const imageURL = new URL(imageSource, this.url);
+        const tiles = tileset.querySelectorAll("tile");
+        for (let i = 0; i < tiles.length; ++i) {
+            const tile = tiles[i];
+            const id = parseInt(tile.getAttribute("id"), 10);
+            const collid = tile.querySelector("properties > property[name='Collision']");
+            const value = collid.getAttribute("value");
+            this.collision.set(id, value === "true");
         }
         this.name = tileset.getAttribute("name");
-        this.tileWidth = 1 * tileset.getAttribute("tilewidth");
-        this.tileHeight = 1 * tileset.getAttribute("tileheight");
-        this.tileCount = 1 * tileset.getAttribute("tilecount");
-        this.image.src = imageURL.href;
-        await imageLoad;
+        this.tileWidth = parseInt(tileset.getAttribute("tilewidth"), 10);
+        this.tileHeight = parseInt(tileset.getAttribute("tileheight"), 10);
+        this.tileCount = parseInt(tileset.getAttribute("tilecount"), 10);
+        this.image = await getImage(imageURL.href);
     }
     isClear(tile) {
-        return !this.collision[tile - 1];
+        return !this.collision.get(tile - 1);
     }
     draw(g, tile, x, y) {
         if (tile > 0) {

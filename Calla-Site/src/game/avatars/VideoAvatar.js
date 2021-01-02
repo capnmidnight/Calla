@@ -1,8 +1,8 @@
-import { autoPlay, muted, playsInline, srcObject, volume } from "../../html/attrs";
-import { setContextSize } from "../../html/canvas";
-import { isIOS } from "../../html/flags";
-import { Video } from "../../html/tags";
-import { once } from "../../lib/calla";
+import { once } from "kudzu/events/once";
+import { autoPlay, muted, playsInline, srcObject, volume } from "kudzu/html/attrs";
+import { setContextSize } from "kudzu/html/canvas";
+import { isIOS } from "kudzu/html/flags";
+import { Video } from "kudzu/html/tags";
 import { BaseAvatar } from "./BaseAvatar";
 /**
  * An avatar that uses an HTML Video element as its representation.
@@ -10,33 +10,30 @@ import { BaseAvatar } from "./BaseAvatar";
 export class VideoAvatar extends BaseAvatar {
     /**
      * Creates a new avatar that uses a MediaStream as its representation.
-     * @param {MediaStream|HTMLVideoElement} stream
      */
     constructor(stream) {
         super(false);
-        let video = null;
         if (stream instanceof HTMLVideoElement) {
-            video = stream;
+            this.video = stream;
         }
         else if (stream instanceof MediaStream) {
-            video = Video(autoPlay, playsInline, muted, volume(0), srcObject(stream));
+            this.video = Video(autoPlay, playsInline, muted, volume(0), srcObject(stream));
         }
         else {
             throw new Error("Can only create a video avatar from an HTMLVideoElement or MediaStream.");
         }
-        this.video = video;
         if (!isIOS) {
-            video.play();
-            once(video, "canplay")
-                .then(() => video.play());
+            this.video.play();
+            once(this.video, "canplay")
+                .then(() => this.video.play());
         }
     }
     /**
      * Render the avatar at a certain size.
-     * @param {CanvasRenderingContext2D} g - the context to render to
-     * @param {number} width - the width the avatar should be rendered at
-     * @param {number} height - the height the avatar should be rendered at.
-     * @param {boolean} isMe - whether the avatar is the local user
+     * @param g - the context to render to
+     * @param width - the width the avatar should be rendered at
+     * @param height - the height the avatar should be rendered at.
+     * @param isMe - whether the avatar is the local user
      */
     draw(g, width, height, isMe) {
         if (this.video.videoWidth > 0

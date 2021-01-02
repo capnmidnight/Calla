@@ -1,12 +1,18 @@
-import { TileMap } from "../graphics2d/TileMap";
-import { id } from "../html/attrs";
-import { resizeCanvas } from "../html/canvas";
-import { hide, show } from "../html/ops";
-import { Canvas } from "../html/tags";
-import { EventedGamepad } from "../input/EventedGamepad";
-import { ScreenPointerControls } from "../input/ScreenPointerControls";
-import { addEventListeners, arrayClear, clamp, EventBase, isString, lerp, project, unproject } from "../lib/calla";
+import { arrayClear } from "kudzu/arrays/arrayClear";
+import { EventBase } from "kudzu/events/EventBase";
+import { id } from "kudzu/html/attrs";
+import { resizeCanvas } from "kudzu/html/canvas";
+import { Canvas } from "kudzu/html/tags";
+import { EventedGamepad } from "kudzu/input/EventedGamepad";
+import { ScreenPointerControls } from "kudzu/input/ScreenPointerControls";
+import { clamp } from "kudzu/math/clamp";
+import { lerp } from "kudzu/math/lerp";
+import { project } from "kudzu/math/project";
+import { unproject } from "kudzu/math/unproject";
+import { isString } from "kudzu/typeChecks";
 import { Emote } from "./Emote";
+import { hide, show } from "./forms/ops";
+import { TileMap } from "./TileMap";
 import { User } from "./User";
 const CAMERA_LERP = 0.01, CAMERA_ZOOM_SHAPE = 2, MOVE_REPEAT = 0.125, gameStartedEvt = new Event("gameStarted"), gameEndedEvt = new Event("gameEnded"), zoomChangedEvt = new Event("zoomChanged"), emojiNeededEvt = new Event("emojiNeeded"), toggleAudioEvt = new Event("toggleAudio"), toggleVideoEvt = new Event("toggleVideo"), moveEvent = Object.assign(new Event("userMoved"), {
     x: 0,
@@ -23,32 +29,41 @@ export class Game extends EventBase {
         super();
         this.zoomMin = zoomMin;
         this.zoomMax = zoomMax;
-        this.element = Canvas(id("frontBuffer"));
-        this.gFront = this.element.getContext("2d");
-        /** @type {User} */
-        this.me = null;
-        /** @type {TileMap} */
-        this.map = null;
-        this.waypoints = [];
-        this.keys = {};
-        /** @type {Map.<string, User>} */
+        this.waypoints = new Array();
         this.users = new Map();
+        this.emotes = new Array();
+        this.keys = new Map();
         this.lastMove = Number.MAX_VALUE;
         this.lastWalk = Number.MAX_VALUE;
         this.gridOffsetX = 0;
         this.gridOffsetY = 0;
-        this.cameraX = this.offsetCameraX = this.targetOffsetCameraX = 0;
-        this.cameraY = this.offsetCameraY = this.targetOffsetCameraY = 0;
-        this.cameraZ = this.targetCameraZ = 1.5;
-        this.currentRoomName = null;
-        this.fontSize = 10;
+        this.fontSize = 0;
+        this.cameraX = 0;
+        this.offsetCameraX = 0;
+        this.targetOffsetCameraX = 0;
+        this.cameraY = 0;
+        this.offsetCameraY = 0;
+        this.targetOffsetCameraY = 0;
+        this.cameraZ = 1.5;
+        this.targetCameraZ = 1.5;
         this.drawHearing = false;
         this.audioDistanceMin = 2;
         this.audioDistanceMax = 10;
         this.rolloff = 5;
+        this.lastGamepadIndex = -1;
+        this.gamepadIndex = -1;
+        this.transitionSpeed = 0.125;
+        this.keyboardEnabled = true;
+        this.me = null;
+        this.map = null;
+        this.currentRoomName = null;
         this.currentEmoji = null;
-        /** @type {Emote[]} */
-        this.emotes = [];
+        this.element = Canvas(id("frontBuffer"));
+        this.gFront = this.element.getContext("2d");
+        this.audioDistanceMin = 2;
+        this.audioDistanceMax = 10;
+        this.rolloff = 5;
+        this.currentEmoji = null;
         this.inputBinding = {
             keyButtonUp: "ArrowUp",
             keyButtonDown: "ArrowDown",
@@ -74,8 +89,8 @@ export class Game extends EventBase {
         this.transitionSpeed = 0.125;
         this.keyboardEnabled = true;
         // ============= KEYBOARD =================
-        addEventListener("keydown", (evt) => {
-            this.keys[evt.key] = evt;
+        window.addEventListener("keydown", (evt) => {
+            this.keys.set(evt.key, evt);
             if (this.keyboardEnabled
                 && !evt.ctrlKey
                 && !evt.altKey
@@ -86,30 +101,28 @@ export class Game extends EventBase {
                 this.toggleMyAudio();
             }
         });
-        addEventListener("keyup", (evt) => {
-            if (this.keys[evt.key]) {
-                delete this.keys[evt.key];
+        window.addEventListener("keyup", (evt) => {
+            if (this.keys.has(evt.key)) {
+                this.keys.delete(evt.key);
             }
         });
         // ============= KEYBOARD =================
         // ============= POINTERS =================
         this.screenControls = new ScreenPointerControls(this.element);
-        addEventListeners(this.screenControls, {
-            move: (evt) => {
-                if (Math.abs(evt.dz) > 0) {
-                    this.zoom += evt.dz;
-                    this.dispatchEvent(zoomChangedEvt);
-                }
-            },
-            drag: (evt) => {
-                this.targetOffsetCameraX = this.offsetCameraX += evt.dx;
-                this.targetOffsetCameraY = this.offsetCameraY += evt.dy;
-            },
-            click: (evt) => {
-                if (!!this.me) {
-                    const tile = this.getTileAt(evt), dx = tile.x - this.me.gridX, dy = tile.y - this.me.gridY;
-                    this.moveMeByPath(dx, dy);
-                }
+        this.screenControls.addEventListener("move", (evt) => {
+            if (Math.abs(evt.dz) > 0) {
+                this.zoom += evt.dz;
+                this.dispatchEvent(zoomChangedEvt);
+            }
+        });
+        this.screenControls.addEventListener("drag", (evt) => {
+            this.targetOffsetCameraX = this.offsetCameraX += evt.dx;
+            this.targetOffsetCameraY = this.offsetCameraY += evt.dy;
+        });
+        this.screenControls.addEventListener("click", (evt) => {
+            if (!!this.me) {
+                const tile = this.getTileAt(evt), dx = tile.x - this.me.gridX, dy = tile.y - this.me.gridY;
+                this.moveMeByPath(dx, dy);
             }
         });
         // ============= POINTERS =================
@@ -202,12 +215,6 @@ export class Game extends EventBase {
         const a = project(v, this.zoomMin, this.zoomMax), b = Math.pow(a, CAMERA_ZOOM_SHAPE), c = unproject(b, this.zoomMin, this.zoomMax);
         this.targetCameraZ = c;
     }
-    /**
-     *
-     * @param {string} id
-     * @param {string} displayName
-     * @param {import("../calla").InterpolatedPose} pose
-     */
     addUser(id, displayName, pose) {
         if (this.users.has(id)) {
             this.removeUser(id);
@@ -241,10 +248,6 @@ export class Game extends EventBase {
     */
     /**
      * Find a user by id, then perform an operation on it.
-     * @param {string} msg
-     * @param {string} id
-     * @param {withUserCallback} callback
-     * @param {number} timeout
      */
     withUser(msg, id, callback, timeout) {
         if (timeout === undefined) {
@@ -285,17 +288,9 @@ export class Game extends EventBase {
     }
     setAvatarEmoji(id, emoji) {
         this.withUser("set avatar emoji", id, (user) => {
-            user.avatarEmoji = emoji;
+            user.setAvatarEmoji(emoji);
         });
     }
-    /**
-     *
-     * @param {string} id
-     * @param {string} displayName
-     * @param {import("../calla").InterpolatedPose} pose
-     * @param {string} avatarURL
-     * @param {string} roomName
-     */
     async startAsync(id, displayName, pose, avatarURL, roomName) {
         this.currentRoomName = roomName.toLowerCase();
         this.me = new User(id, displayName, pose, true);
@@ -329,7 +324,7 @@ export class Game extends EventBase {
         this.dispatchEvent(gameStartedEvt);
     }
     startLoop() {
-        show(this);
+        show(this.element);
         this.resize();
         this.element.focus();
     }
@@ -341,7 +336,7 @@ export class Game extends EventBase {
         this.map = null;
         this.users.clear();
         this.me = null;
-        hide(this);
+        hide(this.element);
         this.dispatchEvent(gameEndedEvt);
     }
     update(dt) {

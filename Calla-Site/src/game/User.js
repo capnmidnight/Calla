@@ -1,7 +1,9 @@
-import { bust, mutedSpeaker, speakerMediumVolume } from "../emoji/emojis";
-import { getTransform } from "../graphics2d/getTransform";
-import { TextImage } from "../graphics2d/TextImage";
-import { EventBase, isString, project } from "../lib/calla";
+import { bust, mutedSpeaker, speakerMediumVolume } from "kudzu/emoji/emojis";
+import { EventBase } from "kudzu/events/EventBase";
+import { getTransform } from "kudzu/graphics2d/getTransform";
+import { TextImage } from "kudzu/graphics2d/TextImage";
+import { project } from "kudzu/math/project";
+import { isString } from "kudzu/typeChecks";
 import { AvatarMode } from "./avatars/AvatarMode";
 import { EmojiAvatar } from "./avatars/EmojiAvatar";
 import { PhotoAvatar } from "./avatars/PhotoAvatar";
@@ -12,25 +14,13 @@ muteAudioIcon.value = mutedSpeaker.value;
 speakerActivityIcon.fontFamily = "Noto Color Emoji";
 speakerActivityIcon.value = speakerMediumVolume.value;
 export class User extends EventBase {
-    /**
-     *
-     * @param {string} id
-     * @param {string} displayName
-     * @param {import("../calla").InterpolatedPose} pose
-     * @param {boolean} isMe
-     */
     constructor(id, displayName, pose, isMe) {
         super();
         this.id = id;
         this.pose = pose;
-        this.label = isMe ? "(Me)" : `(${this.id})`;
-        /** @type {AvatarMode} */
-        this.setAvatarVideo(null);
-        this.avatarImage = null;
-        this.avatarEmoji = bust;
+        this.isMe = isMe;
         this.audioMuted = false;
         this.videoMuted = true;
-        this.isMe = isMe;
         this.isActive = false;
         this.stackUserCount = 1;
         this.stackIndex = 0;
@@ -38,31 +28,36 @@ export class User extends EventBase {
         this.stackAvatarWidth = 0;
         this.stackOffsetX = 0;
         this.stackOffsetY = 0;
-        this.lastPositionRequestTime = performance.now() / 1000 - POSITION_REQUEST_DEBOUNCE_TIME;
         this.visible = true;
-        this.userNameText = new TextImage();
-        this.userNameText.color = "white";
-        this.userNameText.fontSize = 128;
         this._displayName = null;
+        this._avatarVideo = null;
+        this._avatarImage = null;
+        this._avatarEmoji = null;
+        this.label = isMe ? "(Me)" : `(${this.id})`;
+        this.setAvatarEmoji(bust);
+        this.lastPositionRequestTime = performance.now() / 1000 - POSITION_REQUEST_DEBOUNCE_TIME;
+        this.userNameText = new TextImage();
+        this.userNameText.fillColor = "white";
+        this.userNameText.fontSize = 128;
         this.displayName = displayName;
         Object.seal(this);
     }
     get x() {
-        return this.pose.current.p.x;
+        return this.pose.current.p[0];
     }
     get y() {
-        return this.pose.current.p.z;
+        return this.pose.current.p[2];
     }
     get gridX() {
-        return this.pose.end.p.x;
+        return this.pose.end.p[0];
     }
     get gridY() {
-        return this.pose.end.p.z;
+        return this.pose.end.p[2];
     }
     deserialize(evt) {
         switch (evt.avatarMode) {
             case AvatarMode.emoji:
-                this.avatarEmoji = evt.avatarID;
+                this.setAvatarEmoji(evt.avatarID);
                 break;
             case AvatarMode.photo:
                 this.avatarImage = evt.avatarID;
@@ -87,10 +82,10 @@ export class User extends EventBase {
     }
     /**
      * Set the current video element used as the avatar.
-     * @param {MediaStream} stream
+     * @param stream
      **/
     setAvatarVideo(stream) {
-        if (stream instanceof MediaStream) {
+        if (stream) {
             this._avatarVideo = new VideoAvatar(stream);
         }
         else {
@@ -121,16 +116,14 @@ export class User extends EventBase {
     }
     /**
      * An avatar using a Unicode emoji.
-     * @type {EmojiAvatar}
      **/
     get avatarEmoji() {
         return this._avatarEmoji;
     }
     /**
      * Set the emoji to use as an avatar.
-     * @param {import("../emoji/Emoji").Emoji} emoji
      */
-    set avatarEmoji(emoji) {
+    setAvatarEmoji(emoji) {
         if (emoji
             && emoji.value
             && emoji.desc) {

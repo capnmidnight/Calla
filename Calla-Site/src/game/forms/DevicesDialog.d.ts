@@ -1,16 +1,20 @@
+import type { SelectBoxTag } from "./SelectBoxTag";
 import { FormDialog } from "./FormDialog";
 export declare class DevicesDialog extends FormDialog {
+    videoInputSelect: SelectBoxTag<MediaDeviceInfo>;
+    audioInputSelect: SelectBoxTag<MediaDeviceInfo>;
+    audioOutputSelect: SelectBoxTag<MediaDeviceInfo>;
     constructor();
-    get audioInputDevices(): any;
-    set audioInputDevices(values: any);
-    get currentAudioInputDevice(): any;
-    set currentAudioInputDevice(value: any);
-    get audioOutputDevices(): any;
-    set audioOutputDevices(values: any);
-    get currentAudioOutputDevice(): any;
-    set currentAudioOutputDevice(value: any);
-    get videoInputDevices(): any;
-    set videoInputDevices(values: any);
-    get currentVideoInputDevice(): any;
-    set currentVideoInputDevice(value: any);
+    get audioInputDevices(): MediaDeviceInfo[];
+    set audioInputDevices(values: MediaDeviceInfo[]);
+    get currentAudioInputDevice(): MediaDeviceInfo;
+    set currentAudioInputDevice(value: MediaDeviceInfo);
+    get audioOutputDevices(): MediaDeviceInfo[];
+    set audioOutputDevices(values: MediaDeviceInfo[]);
+    get currentAudioOutputDevice(): MediaDeviceInfo;
+    set currentAudioOutputDevice(value: MediaDeviceInfo);
+    get videoInputDevices(): MediaDeviceInfo[];
+    set videoInputDevices(values: MediaDeviceInfo[]);
+    get currentVideoInputDevice(): MediaDeviceInfo;
+    set currentVideoInputDevice(value: MediaDeviceInfo);
 }

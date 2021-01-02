@@ -1,10 +1,10 @@
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
-import { allPeople as people } from "../emoji/emojis";
-import { loadFont, makeFont } from "../graphics2d/fonts";
-import { disabled } from "../html/attrs";
-import { hide, isOpen, show } from "../html/ops";
-import { addEventListeners, CallaClient } from "../lib/calla";
-import { RequestAnimationFrameTimer } from "../timers/RequestAnimationFrameTimer";
+import { allPeople as people } from "kudzu/emoji/emojis";
+import { loadFont, makeFont } from "kudzu/graphics2d/fonts";
+import { disabled } from "kudzu/html/attrs";
+import { hide, isOpen, show } from "./forms/ops";
+import { Calla } from "calla/Calla";
+import { RequestAnimationFrameTimer } from "kudzu/timers/RequestAnimationFrameTimer";
 import { ButtonLayer } from "./forms/ButtonLayer";
 import { DevicesDialog } from "./forms/DevicesDialog";
 import { EmojiForm } from "./forms/EmojiForm";
@@ -14,7 +14,7 @@ import { OptionsForm } from "./forms/OptionsForm";
 import { UserDirectoryForm } from "./forms/UserDirectoryForm";
 import { Game } from "./Game";
 import { Settings } from "./Settings";
-const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), game = new Game(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(), directory = new UserDirectoryForm(), controls = new ButtonLayer(game.element, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new FormDialog("instructions"), emoji = new EmojiForm(), client = new CallaClient(JITSI_HOST, JVB_HOST, JVB_MUC), timer = new RequestAnimationFrameTimer(), disabler = disabled(true), enabler = disabled(false);
+const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), game = new Game(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(), directory = new UserDirectoryForm(), controls = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new FormDialog("instructions"), emoji = new EmojiForm(), client = new Calla(), timer = new RequestAnimationFrameTimer(), disabler = disabled(true), enabler = disabled(false);
 let waitingForEmoji = false;
 Object.assign(window, {
     settings,
@@ -50,15 +50,9 @@ async function recordRoom(roomName) {
     const shortName = await response.text();
     return shortName;
 }
-/**
- * @callback showViewCallback
- * @returns {void}
- */
-/**
- * @param {FormDialog} view
- * @returns {showViewCallback}
- */
-const _showView = (view) => () => showView(view);
+function _showView(view) {
+    return () => showView(view);
+}
 function showView(view) {
     if (!waitingForEmoji) {
         hide(login);
@@ -352,13 +346,11 @@ addEventListeners(client, {
         game.updateAudioActivity(evt.id, evt.isActive);
     }
 });
-addEventListeners(timer, {
-    tick: (evt) => {
-        client.update();
-        options.update();
-        directory.update();
-        game.update(evt.dt);
-    }
+timer.addEventListener("tick", (evt) => {
+    client.update();
+    options.update();
+    directory.update();
+    game.update(evt.dt);
 });
 options.drawHearing = game.drawHearing = settings.drawHearing;
 options.audioDistanceMin = game.audioDistanceMin = settings.audioDistanceMin;
@@ -378,8 +370,12 @@ controls.enabled = false;
 showView(login);
 login.ready = true;
 timer.start();
-loadFont(makeFont({
-    fontFamily: "Noto Color Emoji",
-    fontSize: 100
-}));
+(async function () {
+    await loadFont(makeFont({
+        fontFamily: "Noto Color Emoji",
+        fontSize: 100
+    }));
+    await client.prepare(JITSI_HOST, JVB_HOST, JVB_MUC);
+    await client.connect();
+})();
 //# sourceMappingURL=index.js.map

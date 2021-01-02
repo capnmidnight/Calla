@@ -1,51 +1,48 @@
-import { EventBase } from "../lib/calla";
+import { EventBase } from "kudzu/events/EventBase";
+import { TagChild } from "kudzu/html/tags";
 /**
  * A pseudo-element that is made out of other elements.
  **/
-export declare class HtmlCustomTag extends EventBase {
+export declare class HtmlCustomTag<T extends HTMLElement> extends EventBase {
+    element: T;
     /**
      * Creates a new pseudo-element
-     * @param {string} tagName - the type of tag that will contain the elements in the custom tag.
-     * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
+     * @param tagName - the type of tag that will contain the elements in the custom tag.
+     * @param rest - optional attributes, child elements, and text
      */
-    constructor(tagName: any, ...rest: any[]);
+    constructor(tagName: string, ...rest: TagChild[]);
     /**
      * Gets the ID attribute of the container element.
-     * @type {string}
      **/
-    get id(): any;
+    get id(): string;
     /**
      * Retrieves the desired element for attaching events.
-     * @returns {HTMLElement}
      **/
-    get eventTarget(): any;
+    get eventTarget(): HTMLElement;
     /**
      * Determine if an event type should be forwarded to the container element.
-     * @param {string} name
-     * @returns {boolean}
      */
-    isForwardedEvent(name: any): boolean;
+    isForwardedEvent(_name: string): boolean;
     /**
      * Adds an event listener to the container element.
-     * @param {string} name - the name of the event to attach to.
-     * @param {Function} callback - the callback function to use with the event handler.
-     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+     * @param name - the name of the event to attach to.
+     * @param callback - the callback function to use with the event handler.
+     * @param opts - additional attach options.
      */
-    addEventListener(name: any, callback: any, opts: any): void;
+    addEventListener(name: string, callback: (evt: Event) => any, opts?: AddEventListenerOptions): void;
     /**
      * Removes an event listener from the container element.
-     * @param {string} name - the name of the event to attach to.
-     * @param {Function} callback - the callback function to use with the event handler.
+     * @param name - the name of the event to attach to.
+     * @param callback - the callback function to use with the event handler.
      */
-    removeEventListener(name: any, callback: any): void;
+    removeEventListener(name: string, callback: (evt: Event) => any): void;
     /**
      * Gets the style attribute of the underlying select box.
-     * @type {ElementCSSInlineStyle}
      */
-    get style(): any;
-    get tagName(): any;
-    get disabled(): any;
-    set disabled(v: any);
+    get style(): CSSStyleDeclaration;
+    get tagName(): string;
+    get disabled(): boolean;
+    set disabled(_v: boolean);
     /**
      * Moves cursor focus to the underyling element.
      **/

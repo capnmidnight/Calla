@@ -1,7 +1,8 @@
-import { id } from "../../html/attrs";
-import { hide, show } from "../../html/ops";
-import { Div } from "../../html/tags";
-import { EventBase, once } from "../../lib/calla";
+import { EventBase } from "kudzu/events/EventBase";
+import { once } from "kudzu/events/once";
+import { id } from "kudzu/html/attrs";
+import { Div } from "kudzu/html/tags";
+import { hide, show } from "./ops";
 const hiddenEvt = new Event("hidden"), shownEvt = new Event("shown");
 export class FormDialog extends EventBase {
     constructor(tagId) {
@@ -15,14 +16,31 @@ export class FormDialog extends EventBase {
             closeButton.addEventListener("click", () => hide(this));
         }
     }
+    isOpen() {
+        return this.style.display !== "none";
+    }
+    setOpen(v, displayType) {
+        this.style.display = v
+            ? displayType || ""
+            : "none";
+    }
+    updateLabel(_open, _enabledText, _disabledText, _bothText) {
+    }
+    toggleOpen(displayType) {
+        this.setOpen(!this.isOpen(), displayType);
+    }
+    setLocked(_v) {
+    }
+    get accessKey() {
+        return this.element.accessKey;
+    }
     get tagName() {
         return this.element.tagName;
     }
     get disabled() {
-        return this.element.disabled;
+        return false;
     }
-    set disabled(v) {
-        this.element.disabled = v;
+    set disabled(_v) {
     }
     get style() {
         return this.element.style;

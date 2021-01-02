@@ -1,27 +1,27 @@
-import { autoPlay, muted, playsInline, srcObject, volume } from "../../html/attrs";
-import { setContextSize } from "../../html/canvas";
-import { isIOS } from "../../html/flags";
-import { Video } from "../../html/tags";
-import { once } from "../../lib/calla";
+import { once } from "kudzu/events/once";
+import { autoPlay, muted, playsInline, srcObject, volume } from "kudzu/html/attrs";
+import type { Context2D } from "kudzu/html/canvas";
+import { setContextSize } from "kudzu/html/canvas";
+import { isIOS } from "kudzu/html/flags";
+import { Video } from "kudzu/html/tags";
 import { BaseAvatar } from "./BaseAvatar";
 
 /**
  * An avatar that uses an HTML Video element as its representation.
  **/
 export class VideoAvatar extends BaseAvatar {
+    video: HTMLVideoElement;
     /**
      * Creates a new avatar that uses a MediaStream as its representation.
-     * @param {MediaStream|HTMLVideoElement} stream
      */
-    constructor(stream) {
+    constructor(stream: MediaProvider) {
         super(false);
 
-        let video = null;
         if (stream instanceof HTMLVideoElement) {
-            video = stream;
+            this.video = stream;
         }
         else if (stream instanceof MediaStream) {
-            video = Video(
+            this.video = Video(
                 autoPlay,
                 playsInline,
                 muted,
@@ -32,23 +32,21 @@ export class VideoAvatar extends BaseAvatar {
             throw new Error("Can only create a video avatar from an HTMLVideoElement or MediaStream.");
         }
 
-        this.video = video;
-
         if (!isIOS) {
-            video.play();
-            once(video, "canplay")
-                .then(() => video.play());
+            this.video.play();
+            once(this.video, "canplay")
+                .then(() => this.video.play());
         }
     }
 
     /**
      * Render the avatar at a certain size.
-     * @param {CanvasRenderingContext2D} g - the context to render to
-     * @param {number} width - the width the avatar should be rendered at
-     * @param {number} height - the height the avatar should be rendered at.
-     * @param {boolean} isMe - whether the avatar is the local user
+     * @param g - the context to render to
+     * @param width - the width the avatar should be rendered at
+     * @param height - the height the avatar should be rendered at.
+     * @param isMe - whether the avatar is the local user
      */
-    draw(g, width, height, isMe) {
+    draw(g: Context2D, width: number, height: number, isMe: boolean) {
         if (this.video.videoWidth > 0
             && this.video.videoHeight > 0) {
             const offset = (this.video.videoWidth - this.video.videoHeight) / 2,
@@ -66,7 +64,7 @@ export class VideoAvatar extends BaseAvatar {
                 sx, sy,
                 dim, dim,
                 0, 0,
-                dim, dim)
+                dim, dim);
             this.g.restore();
         }
 

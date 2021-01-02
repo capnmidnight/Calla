@@ -1,53 +1,75 @@
-import { EventBase } from "../lib/calla";
+import type { InterpolatedPose } from "calla/audio/positions/InterpolatedPose";
+import type { Emoji } from "kudzu/emoji/Emoji";
+import { EventBase } from "kudzu/events/EventBase";
+import { TextImage } from "kudzu/graphics2d/TextImage";
+import type { Context2D } from "kudzu/html/canvas";
+import { EmojiAvatar } from "./avatars/EmojiAvatar";
+import { PhotoAvatar } from "./avatars/PhotoAvatar";
+import { VideoAvatar } from "./avatars/VideoAvatar";
+import type { TileMap } from "./TileMap";
 export declare class User extends EventBase {
-    /**
-     *
-     * @param {string} id
-     * @param {string} displayName
-     * @param {import("../calla").InterpolatedPose} pose
-     * @param {boolean} isMe
-     */
-    constructor(id: any, displayName: any, pose: any, isMe: any);
-    get x(): any;
-    get y(): any;
-    get gridX(): any;
-    get gridY(): any;
+    id: string;
+    private pose;
+    isMe: boolean;
+    label: string;
+    audioMuted: boolean;
+    videoMuted: boolean;
+    isActive: boolean;
+    stackUserCount: number;
+    stackIndex: number;
+    stackAvatarHeight: number;
+    stackAvatarWidth: number;
+    stackOffsetX: number;
+    stackOffsetY: number;
+    lastPositionRequestTime: number;
+    visible: boolean;
+    userNameText: TextImage;
+    private _displayName;
+    private _avatarVideo;
+    private _avatarImage;
+    private _avatarEmoji;
+    constructor(id: string, displayName: string, pose: InterpolatedPose, isMe: boolean);
+    get x(): number;
+    get y(): number;
+    get gridX(): number;
+    get gridY(): number;
     deserialize(evt: any): void;
     serialize(): {
-        id: any;
+        id: string;
         avatarMode: any;
-        avatarID: any;
+        avatarID: string | {
+            value: string;
+            desc: string;
+        };
     };
     /**
      * An avatar using a live video.
      * @type {VideoAvatar}
      **/
-    get avatarVideo(): any;
+    get avatarVideo(): VideoAvatar;
     /**
      * Set the current video element used as the avatar.
-     * @param {MediaStream} stream
+     * @param stream
      **/
-    setAvatarVideo(stream: any): void;
+    setAvatarVideo(stream: MediaStream): void;
     /**
      * An avatar using a photo
      * @type {string}
      **/
-    get avatarImage(): any;
+    get avatarImage(): string;
     /**
      * Set the URL of the photo to use as an avatar.
      * @param {string} url
      */
-    set avatarImage(url: any);
+    set avatarImage(url: string);
     /**
      * An avatar using a Unicode emoji.
-     * @type {EmojiAvatar}
      **/
-    get avatarEmoji(): any;
+    get avatarEmoji(): EmojiAvatar;
     /**
      * Set the emoji to use as an avatar.
-     * @param {import("../emoji/Emoji").Emoji} emoji
      */
-    set avatarEmoji(emoji: any);
+    setAvatarEmoji(emoji: Emoji): void;
     /**
      * Returns the type of avatar that is currently active.
      * @returns {AvatarMode}
@@ -58,21 +80,24 @@ export declare class User extends EventBase {
      * if such a representation exists.
      * @returns {string}
      **/
-    get avatarID(): any;
+    get avatarID(): string | {
+        value: string;
+        desc: string;
+    };
     /**
      * Returns the current avatar
      * @returns {import("./avatars/BaseAvatar").BaseAvatar}
      **/
-    get avatar(): any;
-    addEventListener(evtName: any, func: any, opts: any): void;
-    get displayName(): any;
-    set displayName(name: any);
-    moveTo(x: any, y: any): void;
-    update(map: any, users: any): void;
-    drawShadow(g: any, map: any): void;
-    drawAvatar(g: any, map: any): void;
-    innerDraw(g: any, map: any): void;
-    drawName(g: any, map: any, fontSize: any): void;
-    drawHearingTile(g: any, map: any, dx: any, dy: any, p: any): void;
-    drawHearingRange(g: any, map: any, minDist: any, maxDist: any): void;
+    get avatar(): EmojiAvatar | PhotoAvatar | VideoAvatar;
+    addEventListener(evtName: string, func: (evt: Event) => any, opts: AddEventListenerOptions): void;
+    get displayName(): string;
+    set displayName(name: string);
+    moveTo(x: number, y: number): void;
+    update(map: TileMap, users: Map<string, User>): void;
+    drawShadow(g: Context2D, map: TileMap): void;
+    drawAvatar(g: Context2D, map: TileMap): void;
+    innerDraw(g: Context2D, map: TileMap): void;
+    drawName(g: Context2D, map: TileMap, fontSize: number): void;
+    drawHearingTile(g: Context2D, map: TileMap, dx: number, dy: number, p: number): void;
+    drawHearingRange(g: Context2D, map: TileMap, minDist: number, maxDist: number): void;
 }

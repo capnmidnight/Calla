@@ -1,13 +1,21 @@
-import { id } from "../../html/attrs";
-import { hide, show } from "../../html/ops";
-import { Div } from "../../html/tags";
-import { EventBase, once } from "../../lib/calla";
+import { EventBase } from "kudzu/events/EventBase";
+import { once } from "kudzu/events/once";
+import { id } from "kudzu/html/attrs";
+import { Div } from "kudzu/html/tags";
+import { hide, IOpenable, show } from "./ops";
 
 const hiddenEvt = new Event("hidden"),
     shownEvt = new Event("shown");
 
-export class FormDialog extends EventBase {
-    constructor(tagId) {
+export class FormDialog
+    extends EventBase
+    implements IOpenable {
+    element: HTMLElement;
+    header: HTMLElement;
+    content: HTMLElement;
+    footer: HTMLElement;
+
+    constructor(tagId: string) {
         super();
 
         this.element = Div(id(tagId));
@@ -21,27 +29,50 @@ export class FormDialog extends EventBase {
         }
     }
 
+    isOpen(): boolean {
+        return this.style.display !== "none";
+    }
+
+    setOpen(v: boolean, displayType?: string): void {
+        this.style.display = v
+            ? displayType || ""
+            : "none";
+    }
+
+    updateLabel(_open: boolean, _enabledText: string, _disabledText: string, _bothText: string): void {
+    }
+
+    toggleOpen(displayType?: string): void {
+        this.setOpen(!this.isOpen(), displayType);
+    }
+
+    setLocked(_v: boolean): void {
+    }
+
+    get accessKey(): string {
+        return this.element.accessKey;
+    }
+
     get tagName() {
         return this.element.tagName;
     }
 
     get disabled() {
-        return this.element.disabled;
+        return false;
     }
 
-    set disabled(v) {
-        this.element.disabled = v;
+    set disabled(_v: boolean) {
     }
 
     get style() {
         return this.element.style;
     }
 
-    appendChild(child) {
+    appendChild(child: HTMLElement) {
         return this.element.appendChild(child);
     }
 
-    append(...rest) {
+    append(...rest: HTMLElement[]) {
         this.element.append(...rest);
     }
 

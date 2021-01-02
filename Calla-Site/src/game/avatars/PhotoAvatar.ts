@@ -1,4 +1,4 @@
-import { setContextSize } from "../../html/canvas";
+import { setContextSize } from "kudzu/html/canvas";
 import { BaseAvatar } from "./BaseAvatar";
 
 /**
@@ -6,11 +6,12 @@ import { BaseAvatar } from "./BaseAvatar";
  **/
 export class PhotoAvatar extends BaseAvatar {
 
+    url: string;
+
     /**
      * Creates a new avatar that uses an Image as its representation.
-     * @param {(URL|string)} url
      */
-    constructor(url) {
+    constructor(url: string | URL) {
         super(false);
 
         const img = new Image();
@@ -27,9 +28,13 @@ export class PhotoAvatar extends BaseAvatar {
                 dim, dim);
         });
 
-        /** @type {string} */
-        this.url
-            = img.src
-            = url && url.href || url;
+        if (url instanceof URL) {
+            this.url = url.href;
+        }
+        else {
+            this.url = url;
+        }
+
+        img.src = this.url;
     }
 }

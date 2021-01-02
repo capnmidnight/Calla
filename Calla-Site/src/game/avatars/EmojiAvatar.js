@@ -1,6 +1,6 @@
-import { isSurfer } from "../../emoji/emojis";
-import { TextImage } from "../../graphics2d/TextImage";
-import { setContextSize } from "../../html/canvas";
+import { isSurfer } from "kudzu/emoji/emojis";
+import { TextImage } from "kudzu/graphics2d/TextImage";
+import { setContextSize } from "kudzu/html/canvas";
 import { BaseAvatar } from "./BaseAvatar";
 /**
  * An avatar that uses a Unicode emoji as its representation
@@ -15,7 +15,7 @@ export class EmojiAvatar extends BaseAvatar {
         this.value = emoji.value;
         this.desc = emoji.desc;
         const emojiText = new TextImage();
-        emojiText.color = emoji.color || "black";
+        emojiText.fillColor = emoji.color || "black";
         emojiText.fontFamily = "Noto Color Emoji";
         emojiText.fontSize = 256;
         emojiText.value = this.value;

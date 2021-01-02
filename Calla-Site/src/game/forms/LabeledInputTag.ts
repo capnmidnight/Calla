@@ -1,7 +1,7 @@
-import { htmlFor, type } from "./attrs";
+import { htmlFor, type } from "kudzu/html/attrs";
+import { Input, Label } from "kudzu/html/tags";
 import { HtmlCustomTag } from "./HtmlCustomTag";
 import { setLocked } from "./ops";
-import { Input, Label } from "./tags";
 
 /**
  * Creates an input box that has a label attached to it.

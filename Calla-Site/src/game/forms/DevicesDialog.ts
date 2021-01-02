@@ -1,5 +1,6 @@
-import { onInput } from "../../html/evts";
-import { SelectBox } from "../../html/SelectBoxTag";
+import { onInput } from "kudzu/html/evts";
+import { SelectBox } from "./SelectBoxTag";
+import type { SelectBoxTag } from "./SelectBoxTag";
 import { FormDialog } from "./FormDialog";
 
 const audioInputChangedEvt = new Event("audioInputChanged"),
@@ -7,26 +8,29 @@ const audioInputChangedEvt = new Event("audioInputChanged"),
     videoInputChangedEvt = new Event("videoInputChanged");
 
 export class DevicesDialog extends FormDialog {
+    videoInputSelect: SelectBoxTag<MediaDeviceInfo>;
+    audioInputSelect: SelectBoxTag<MediaDeviceInfo>;
+    audioOutputSelect: SelectBoxTag<MediaDeviceInfo>;
     constructor() {
         super("devices");
 
-        const _ = (evt) => () => this.dispatchEvent(evt);
+        const _ = (evt: Event) => () => this.dispatchEvent(evt);
 
-        this.videoInputSelect = SelectBox(
+        this.videoInputSelect = SelectBox<MediaDeviceInfo>(
             "videoInputDevices",
             "No video input",
             d => d.deviceId,
             d => d.label,
             onInput(_(videoInputChangedEvt)));
 
-        this.audioInputSelect = SelectBox(
+        this.audioInputSelect = SelectBox<MediaDeviceInfo>(
             "audioInputDevices",
             "No audio input",
             d => d.deviceId,
             d => d.label,
             onInput(_(audioInputChangedEvt)));
 
-        this.audioOutputSelect = SelectBox(
+        this.audioOutputSelect = SelectBox<MediaDeviceInfo>(
             "audioOutputDevices",
             "No audio output",
             d => d.deviceId,

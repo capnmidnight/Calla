@@ -1,6 +1,16 @@
-import { disabled } from "./attrs";
+import { isFunction } from "kudzu/typeChecks";
+import { disabled } from "kudzu/html/attrs";
+export function isOpenable(obj) {
+    return isFunction(obj.isOpen)
+        && isFunction(obj.setOpen)
+        && isFunction(obj.updateLabel)
+        && isFunction(obj.toggleOpen)
+        && isFunction(obj.show)
+        && isFunction(obj.hide)
+        && isFunction(obj.setLocked);
+}
 export function isOpen(target) {
-    if (target.isOpen) {
+    if (isOpenable(target)) {
         return target.isOpen();
     }
     else {
@@ -15,7 +25,7 @@ export function isOpen(target) {
  * @param {string} [displayType=""]
  */
 export function setOpen(target, v, displayType = "") {
-    if (target.setOpen) {
+    if (isOpenable(target)) {
         target.setOpen(v, displayType);
     }
     else if (v) {
@@ -30,7 +40,7 @@ export function updateLabel(target, open, enabledText, disabledText, bothText) {
     if (target.accessKey) {
         bothText += ` <kbd>(ALT+${target.accessKey.toUpperCase()})</kbd>`;
     }
-    if (target.updateLabel) {
+    if (isOpenable(target)) {
         target.updateLabel(open, enabledText, disabledText, bothText);
     }
     else {
@@ -38,7 +48,7 @@ export function updateLabel(target, open, enabledText, disabledText, bothText) {
     }
 }
 export function toggleOpen(target, displayType = "") {
-    if (target.toggleOpen) {
+    if (isOpenable(target)) {
         target.toggleOpen(displayType);
     }
     else if (isOpen(target)) {
@@ -49,16 +59,16 @@ export function toggleOpen(target, displayType = "") {
     }
 }
 export function show(target, displayType = "") {
-    if (target.show) {
+    if (isOpenable(target)) {
         target.show();
     }
     else {
         target.style.display = displayType;
     }
 }
-export function hide(target) {
-    if (target.hide) {
-        target.hide();
+export function hide(target, displayType = "") {
+    if (isOpenable(target)) {
+        target.hide(displayType);
     }
     else {
         target.style.display = "none";
@@ -67,7 +77,7 @@ export function hide(target) {
 ;
 const disabler = disabled(true), enabler = disabled(false);
 export function setLocked(target, value) {
-    if (target.setLocked) {
+    if (isOpenable(target)) {
         target.setLocked(value);
     }
     else if (value) {

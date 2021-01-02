@@ -1,12 +1,19 @@
+import type { Emoji } from "kudzu/emoji/Emoji";
+import { TextImage } from "kudzu/graphics2d/TextImage";
+import type { Context2D } from "kudzu/html/canvas";
+import type { TileMap } from "./TileMap";
 export declare class Emote {
-    constructor(emoji: any, x: any, y: any);
+    emoji: Emoji;
+    x: number;
+    y: number;
+    dx: number;
+    dy: number;
+    life: number;
+    width: number;
+    emoteText: TextImage;
+    constructor(emoji: Emoji, x: number, y: number);
     isDead(): boolean;
-    update(dt: any): void;
-    drawShadow(g: any, map: any): void;
-    /**
-     *
-     * @param {CanvasRenderingContext2D} g
-     * @param {any} map
-     */
-    drawEmote(g: any, map: any): void;
+    update(dt: number): void;
+    drawShadow(g: Context2D, map: TileMap): void;
+    drawEmote(g: Context2D, map: TileMap): void;
 }

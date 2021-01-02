@@ -1,11 +1,11 @@
-import { className, disabled, href, htmlFor, title } from "../../html/attrs";
-import { onClick } from "../../html/evts";
-import { gridPos } from "../../html/grid";
-import { hide, isOpen, show, toggleOpen } from "../../html/ops";
-import { A, Button, Div, H1, H2, Label, LI, P, Span, UL } from "../../html/tags";
-import { EmojiGroup } from "../../emoji/EmojiGroup";
-import { allIcons as icons, emojiStyle, textStyle } from "../../emoji/emojis";
+import type { EmojiGroup } from "kudzu/emoji/EmojiGroup";
+import { allIcons as icons, emojiStyle, textStyle } from "kudzu/emoji/emojis";
+import { className, disabled, href, htmlFor, title } from "kudzu/html/attrs";
+import { onClick } from "kudzu/html/evts";
+import { gridPos } from "kudzu/html/grid";
+import { A, Button, Div, H1, H2, Label, LI, P, Span, UL } from "kudzu/html/tags";
 import { FormDialog } from "./FormDialog";
+import { hide, isOpen, show, toggleOpen } from "./ops";
 
 const disabler = disabled(true),
     enabler = disabled(false);

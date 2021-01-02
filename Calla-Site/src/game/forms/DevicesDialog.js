@@ -1,5 +1,5 @@
-import { onInput } from "../../html/evts";
-import { SelectBox } from "../../html/SelectBoxTag";
+import { onInput } from "kudzu/html/evts";
+import { SelectBox } from "./SelectBoxTag";
 import { FormDialog } from "./FormDialog";
 const audioInputChangedEvt = new Event("audioInputChanged"), audioOutputChangedEvt = new Event("audioOutputChanged"), videoInputChangedEvt = new Event("videoInputChanged");
 export class DevicesDialog extends FormDialog {

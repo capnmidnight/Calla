@@ -1,51 +1,47 @@
-﻿export class TileSet {
-    constructor(url) {
-        this.url = url;
-        this.tileWidth = 0;
-        this.tileHeight = 0;
-        this.tilesPerRow = 0;
-        this.image = new Image();
-        this.collision = {};
+import type { Context2D } from "kudzu/html/canvas";
+import { getImage } from "kudzu/io/getImage";
+import { getXml } from "kudzu/io/getXml";
+
+export class TileSet {
+    name: string = null;
+    tileWidth = 0;
+    tileHeight = 0;
+    tilesPerRow = 0;
+    tileCount = 0;
+    image: HTMLImageElement = null;
+    collision = new Map<number, boolean>();
+
+    constructor(private url: URL) {
     }
 
-    async load() {
-        const response = await fetch(this.url),
-            text = await response.text(),
-            parser = new DOMParser(),
-            xml = parser.parseFromString(text, "text/xml"),
-            tileset = xml.documentElement,
-            imageLoad = new Promise((resolve, reject) => {
-                this.image.addEventListener("load", (evt) => {
-                    this.tilesPerRow = Math.floor(this.image.width / this.tileWidth);
-                    resolve();
-                });
-                this.image.addEventListener("error", reject);
-            }),
-            image = tileset.querySelector("image"),
-            imageSource = image.getAttribute("source"),
-            imageURL = new URL(imageSource, this.url),
-            tiles = tileset.querySelectorAll("tile");
+    async load(): Promise<void> {
+        const tileset = await getXml(this.url.href);
+        const image = tileset.querySelector("image");
+        const imageSource = image.getAttribute("source");
+        const imageURL = new URL(imageSource, this.url);
+        const tiles = tileset.querySelectorAll("tile");
 
-        for (let tile of tiles) {
-            const id = 1 * tile.getAttribute("id"),
-                collid = tile.querySelector("properties > property[name='Collision']"),
-                value = collid.getAttribute("value");
-            this.collision[id] = value === "true";
+        for (let i = 0; i < tiles.length; ++i) {
+            const tile = tiles[i];
+            const id = parseInt(tile.getAttribute("id"), 10);
+            const collid = tile.querySelector("properties > property[name='Collision']");
+            const value = collid.getAttribute("value");
+            this.collision.set(id, value === "true");
         }
 
         this.name = tileset.getAttribute("name");
-        this.tileWidth = 1 * tileset.getAttribute("tilewidth");
-        this.tileHeight = 1 * tileset.getAttribute("tileheight");
-        this.tileCount = 1 * tileset.getAttribute("tilecount");
-        this.image.src = imageURL.href;
-        await imageLoad;
+        this.tileWidth = parseInt(tileset.getAttribute("tilewidth"), 10);
+        this.tileHeight = parseInt(tileset.getAttribute("tileheight"), 10);
+        this.tileCount = parseInt(tileset.getAttribute("tilecount"), 10);
+
+        this.image = await getImage(imageURL.href);
     }
 
-    isClear(tile) {
-        return !this.collision[tile - 1];
+    isClear(tile: number) {
+        return !this.collision.get(tile - 1);
     }
 
-    draw(g, tile, x, y) {
+    draw(g: Context2D, tile: number, x: number, y: number) {
         if (tile > 0) {
             const idx = tile - 1,
                 sx = this.tileWidth * (idx % this.tilesPerRow),

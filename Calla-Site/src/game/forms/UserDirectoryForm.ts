@@ -1,11 +1,9 @@
-import { disabled, height, id, width } from "../../html/attrs";
-import { backgroundColor, zIndex } from "../../html/css";
-import { onBlur, onClick, onFocus, onKeyPress, onMouseOut, onMouseOver } from "../../html/evts";
-import { gridPos, row } from "../../html/grid";
-import { hide, isOpen } from "../../html/ops";
-import { Button, Canvas, Div, InputText } from "../../html/tags";
-import { User } from "../User";
+import { backgroundColor, disabled, height, id, width, zIndex } from "kudzu/html/attrs";
+import { onBlur, onClick, onFocus, onKeyPress, onMouseOut, onMouseOver } from "kudzu/html/evts";
+import { gridPos, row } from "kudzu/html/grid";
+import { Button, Canvas, Div, InputText } from "kudzu/html/tags";
 import { FormDialog } from "./FormDialog";
+import { hide, isOpen } from "./ops";
 
 const newRowColor = backgroundColor("lightgreen");
 const hoveredColor = backgroundColor("rgba(65, 255, 202, 0.25)");
@@ -25,7 +23,7 @@ export class UserDirectoryForm extends FormDialog {
     constructor() {
         super("users");
 
-        const _ = (evt) => () => this.dispatchEvent(evt);
+        const _ = (evt: Event) => () => this.dispatchEvent(evt);
 
         this.roomName = null;
         this.userName = null;

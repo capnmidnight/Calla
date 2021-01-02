@@ -1,8 +1,8 @@
-import { id } from "./attrs";
-import { onClick } from "./evts";
+import { id } from "kudzu/html/attrs";
+import { onClick } from "kudzu/html/evts";
+import { Button, P } from "kudzu/html/tags";
 import { HtmlCustomTag } from "./HtmlCustomTag";
 import { setOpen } from "./ops";
-import { Button, P } from "./tags";
 const selectEvt = new Event("select");
 /**
  * Creates an OptionPanelTag element

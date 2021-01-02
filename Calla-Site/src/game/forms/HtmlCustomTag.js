@@ -1,13 +1,13 @@
-import { EventBase } from "../lib/calla";
-import { tag } from "./tag";
+import { EventBase } from "kudzu/events/EventBase";
+import { tag } from "kudzu/html/tags";
 /**
  * A pseudo-element that is made out of other elements.
  **/
 export class HtmlCustomTag extends EventBase {
     /**
      * Creates a new pseudo-element
-     * @param {string} tagName - the type of tag that will contain the elements in the custom tag.
-     * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text
+     * @param tagName - the type of tag that will contain the elements in the custom tag.
+     * @param rest - optional attributes, child elements, and text
      */
     constructor(tagName, ...rest) {
         super();
@@ -15,31 +15,27 @@ export class HtmlCustomTag extends EventBase {
     }
     /**
      * Gets the ID attribute of the container element.
-     * @type {string}
      **/
     get id() {
         return this.element.id;
     }
     /**
      * Retrieves the desired element for attaching events.
-     * @returns {HTMLElement}
      **/
     get eventTarget() {
         return this.element;
     }
     /**
      * Determine if an event type should be forwarded to the container element.
-     * @param {string} name
-     * @returns {boolean}
      */
-    isForwardedEvent(name) {
+    isForwardedEvent(_name) {
         return true;
     }
     /**
      * Adds an event listener to the container element.
-     * @param {string} name - the name of the event to attach to.
-     * @param {Function} callback - the callback function to use with the event handler.
-     * @param {(boolean|AddEventListenerOptions)=} opts - additional attach options.
+     * @param name - the name of the event to attach to.
+     * @param callback - the callback function to use with the event handler.
+     * @param opts - additional attach options.
      */
     addEventListener(name, callback, opts) {
         if (this.isForwardedEvent(name)) {
@@ -51,8 +47,8 @@ export class HtmlCustomTag extends EventBase {
     }
     /**
      * Removes an event listener from the container element.
-     * @param {string} name - the name of the event to attach to.
-     * @param {Function} callback - the callback function to use with the event handler.
+     * @param name - the name of the event to attach to.
+     * @param callback - the callback function to use with the event handler.
      */
     removeEventListener(name, callback) {
         if (this.isForwardedEvent(name)) {
@@ -64,7 +60,6 @@ export class HtmlCustomTag extends EventBase {
     }
     /**
      * Gets the style attribute of the underlying select box.
-     * @type {ElementCSSInlineStyle}
      */
     get style() {
         return this.element.style;
@@ -73,10 +68,9 @@ export class HtmlCustomTag extends EventBase {
         return this.element.tagName;
     }
     get disabled() {
-        return this.element.disabled;
+        return false;
     }
-    set disabled(v) {
-        this.element.disabled = v;
+    set disabled(_v) {
     }
     /**
      * Moves cursor focus to the underyling element.

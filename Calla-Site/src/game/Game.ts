@@ -1,23 +1,24 @@
-import { TileMap } from "../graphics2d/TileMap";
-import { id } from "../html/attrs";
-import { resizeCanvas } from "../html/canvas";
-import { hide, show } from "../html/ops";
-import { Canvas } from "../html/tags";
-import { EventedGamepad } from "../input/EventedGamepad";
-import { ScreenPointerControls } from "../input/ScreenPointerControls";
-import {
-    addEventListeners,
-    arrayClear,
-    clamp,
-    EventBase,
-    isString,
-    lerp,
-    project,
-    unproject
-} from "../lib/calla";
+import type { InterpolatedPose } from "calla/audio/positions/InterpolatedPose";
+import { arrayClear } from "kudzu/arrays/arrayClear";
+import type { Emoji } from "kudzu/emoji/Emoji";
+import { EventBase } from "kudzu/events/EventBase";
+import { id } from "kudzu/html/attrs";
+import { resizeCanvas } from "kudzu/html/canvas";
+import { Canvas } from "kudzu/html/tags";
+import { EventedGamepad } from "kudzu/input/EventedGamepad";
+import { ScreenPointerControls } from "kudzu/input/ScreenPointerControls";
+import { clamp } from "kudzu/math/clamp";
+import { lerp } from "kudzu/math/lerp";
+import { project } from "kudzu/math/project";
+import { unproject } from "kudzu/math/unproject";
+import { isString } from "kudzu/typeChecks";
 import { Emote } from "./Emote";
+import { hide, show } from "./forms/ops";
+import type { IInputBinding } from "./Settings";
+import { TileMap } from "./TileMap";
 import { User } from "./User";
 
+type withUserCallback = (user: User) => any;
 
 const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_SHAPE = 2,
@@ -44,47 +45,53 @@ const gamepads = new Map();
 
 export class Game extends EventBase {
 
-    constructor(zoomMin, zoomMax) {
-        super();
+    waypoints = new Array<{ x: number, y: number; }>();
+    users = new Map<string, User>();
+    emotes = new Array<Emote>();
+    keys = new Map<string, KeyboardEvent>();
 
-        this.zoomMin = zoomMin;
-        this.zoomMax = zoomMax;
+    lastMove = Number.MAX_VALUE;
+    lastWalk = Number.MAX_VALUE;
+    gridOffsetX = 0;
+    gridOffsetY = 0;
+    fontSize = 0;
+    cameraX = 0;
+    offsetCameraX = 0;
+    targetOffsetCameraX = 0;
+    cameraY = 0;
+    offsetCameraY = 0;
+    targetOffsetCameraY = 0;
+    cameraZ = 1.5;
+    targetCameraZ = 1.5;
+    drawHearing = false;
+    audioDistanceMin = 2;
+    audioDistanceMax = 10;
+    rolloff = 5;
+    lastGamepadIndex = -1;
+    gamepadIndex = -1;
+    transitionSpeed = 0.125;
+    keyboardEnabled = true;
+
+    me: User = null;
+    map: TileMap = null;
+    currentRoomName: string = null;
+    currentEmoji: Emoji = null;
+
+    element: HTMLCanvasElement;
+    gFront: CanvasRenderingContext2D;
+    inputBinding: IInputBinding;
+
+    constructor(public zoomMin: number, public zoomMax: number) {
+        super();
 
         this.element = Canvas(id("frontBuffer"));
         this.gFront = this.element.getContext("2d");
 
-        /** @type {User} */
-        this.me = null;
-
-        /** @type {TileMap} */
-        this.map = null;
-
-        this.waypoints = [];
-
-        this.keys = {};
-
-        /** @type {Map.<string, User>} */
-        this.users = new Map();
-
-        this.lastMove = Number.MAX_VALUE;
-        this.lastWalk = Number.MAX_VALUE;
-        this.gridOffsetX = 0;
-        this.gridOffsetY = 0;
-        this.cameraX = this.offsetCameraX = this.targetOffsetCameraX = 0;
-        this.cameraY = this.offsetCameraY = this.targetOffsetCameraY = 0;
-        this.cameraZ = this.targetCameraZ = 1.5;
-        this.currentRoomName = null;
-        this.fontSize = 10;
-
-        this.drawHearing = false;
         this.audioDistanceMin = 2;
         this.audioDistanceMax = 10;
         this.rolloff = 5;
 
         this.currentEmoji = null;
-
-        /** @type {Emote[]} */
-        this.emotes = [];
 
         this.inputBinding = {
             keyButtonUp: "ArrowUp",
@@ -117,8 +124,8 @@ export class Game extends EventBase {
 
         // ============= KEYBOARD =================
 
-        addEventListener("keydown", (evt) => {
-            this.keys[evt.key] = evt;
+        window.addEventListener("keydown", (evt: KeyboardEvent) => {
+            this.keys.set(evt.key, evt);
             if (this.keyboardEnabled
                 && !evt.ctrlKey
                 && !evt.altKey
@@ -130,9 +137,9 @@ export class Game extends EventBase {
             }
         });
 
-        addEventListener("keyup", (evt) => {
-            if (this.keys[evt.key]) {
-                delete this.keys[evt.key];
+        window.addEventListener("keyup", (evt: KeyboardEvent) => {
+            if (this.keys.has(evt.key)) {
+                this.keys.delete(evt.key);
             }
         });
 
@@ -140,25 +147,24 @@ export class Game extends EventBase {
 
         // ============= POINTERS =================
         this.screenControls = new ScreenPointerControls(this.element);
-        addEventListeners(this.screenControls, {
-            move: (evt) => {
-                if (Math.abs(evt.dz) > 0) {
-                    this.zoom += evt.dz;
-                    this.dispatchEvent(zoomChangedEvt);
-                }
-            },
-            drag: (evt) => {
-                this.targetOffsetCameraX = this.offsetCameraX += evt.dx;
-                this.targetOffsetCameraY = this.offsetCameraY += evt.dy;
-            },
-            click: (evt) => {
-                if (!!this.me) {
-                    const tile = this.getTileAt(evt),
-                        dx = tile.x - this.me.gridX,
-                        dy = tile.y - this.me.gridY;
+        this.screenControls.addEventListener("move", (evt) => {
+            if (Math.abs(evt.dz) > 0) {
+                this.zoom += evt.dz;
+                this.dispatchEvent(zoomChangedEvt);
+            }
+        });
+        this.screenControls.addEventListener("drag", (evt) => {
+            this.targetOffsetCameraX = this.offsetCameraX += evt.dx;
+            this.targetOffsetCameraY = this.offsetCameraY += evt.dy;
+        });
 
-                    this.moveMeByPath(dx, dy);
-                }
+        this.screenControls.addEventListener("click", (evt) => {
+            if (!!this.me) {
+                const tile = this.getTileAt(evt),
+                    dx = tile.x - this.me.gridX,
+                    dy = tile.y - this.me.gridY;
+
+                this.moveMeByPath(dx, dy);
             }
         });
         // ============= POINTERS =================
@@ -170,19 +176,19 @@ export class Game extends EventBase {
         return this.element.style;
     }
 
-    initializeUser(id, evt) {
+    initializeUser(id: string, evt) {
         this.withUser("initialize user", id, (user) => {
             user.deserialize(evt);
         });
     }
 
-    updateAudioActivity(id, isActive) {
+    updateAudioActivity(id: string, isActive: boolean) {
         this.withUser("update audio activity", id, (user) => {
             user.isActive = isActive;
         });
     }
 
-    emote(id, emoji) {
+    emote(id: string, emoji: Emoji) {
         if (this.users.has(id)) {
             const user = this.users.get(id);
             if (user.isMe) {
@@ -205,7 +211,7 @@ export class Game extends EventBase {
         }
     }
 
-    getTileAt(cursor) {
+    getTileAt(cursor: { x: number, y: number; }) {
         const imageX = cursor.x * devicePixelRatio - this.gridOffsetX - this.offsetCameraX,
             imageY = cursor.y * devicePixelRatio - this.gridOffsetY - this.offsetCameraY,
             zoomX = imageX / this.cameraZ,
@@ -218,7 +224,7 @@ export class Game extends EventBase {
         return tile;
     }
 
-    moveMeTo(x, y) {
+    moveMeTo(x: number, y: number) {
         if (this.map.isClear(x, y, this.me.avatar)) {
             this.targetOffsetCameraX = 0;
             this.targetOffsetCameraY = 0;
@@ -228,12 +234,12 @@ export class Game extends EventBase {
         }
     }
 
-    moveMeBy(dx, dy) {
+    moveMeBy(dx: number, dy: number) {
         const clearTile = this.map.getClearTile(this.me.gridX, this.me.gridY, dx, dy, this.me.avatar);
         this.moveMeTo(clearTile.x, clearTile.y);
     }
 
-    moveMeByPath(dx, dy) {
+    moveMeByPath(dx: number, dy: number) {
         arrayClear(this.waypoints);
 
         const x = this.me.gridX,
@@ -265,25 +271,25 @@ export class Game extends EventBase {
         }
     }
 
-    warpMeTo(x, y) {
+    warpMeTo(x: number, y: number) {
         const clearTile = this.map.getClearTileNear(x, y, 3, this.me.avatar);
         this.moveMeTo(clearTile.x, clearTile.y);
     }
 
-    visit(id) {
+    visit(id: string) {
         this.withUser("visit", id, (user) => {
             this.warpMeTo(user.gridX, user.gridY);
         });
     }
 
-    get zoom() {
+    get zoom(): number {
         const a = project(this.targetCameraZ, this.zoomMin, this.zoomMax),
             b = Math.pow(a, 1 / CAMERA_ZOOM_SHAPE),
             c = unproject(b, this.zoomMin, this.zoomMax);
         return c;
     }
 
-    set zoom(v) {
+    set zoom(v: number) {
         v = clamp(v, this.zoomMin, this.zoomMax);
 
         const a = project(v, this.zoomMin, this.zoomMax),
@@ -292,13 +298,7 @@ export class Game extends EventBase {
         this.targetCameraZ = c;
     }
 
-    /**
-     * 
-     * @param {string} id
-     * @param {string} displayName
-     * @param {import("../calla").InterpolatedPose} pose
-     */
-    addUser(id, displayName, pose) {
+    addUser(id: string, displayName: string, pose: InterpolatedPose) {
         if (this.users.has(id)) {
             this.removeUser(id);
         }
@@ -318,13 +318,13 @@ export class Game extends EventBase {
         this.dispatchEvent(toggleVideoEvt);
     }
 
-    muteUserAudio(id, muted) {
+    muteUserAudio(id: string, muted: boolean) {
         this.withUser("mute audio", id, (user) => {
             user.audioMuted = muted;
         });
     }
 
-    muteUserVideo(id, muted) {
+    muteUserVideo(id: string, muted: boolean) {
         this.withUser("mute video", id, (user) => {
             user.videoMuted = muted;
         });
@@ -339,18 +339,14 @@ export class Game extends EventBase {
 
     /**
      * Find a user by id, then perform an operation on it.
-     * @param {string} msg
-     * @param {string} id
-     * @param {withUserCallback} callback
-     * @param {number} timeout
      */
-    withUser(msg, id, callback, timeout) {
+    withUser(msg: string, id: string, callback: withUserCallback, timeout?: number) {
         if (timeout === undefined) {
             timeout = 5000;
         }
         if (id) {
             if (this.users.has(id)) {
-                const user = this.users.get(id)
+                const user = this.users.get(id);
                 callback(user);
             }
             else {
@@ -362,45 +358,37 @@ export class Game extends EventBase {
         }
     }
 
-    changeUserName(id, displayName) {
+    changeUserName(id: string, displayName: string) {
         this.withUser("change user name", id, (user) => {
             user.displayName = displayName;
         });
     }
 
-    removeUser(id) {
+    removeUser(id: string) {
         if (this.users.has(id)) {
             this.users.delete(id);
         }
     }
 
-    setAvatarVideo(id, stream) {
+    setAvatarVideo(id: string, stream: MediaStream) {
         this.withUser("set avatar video", id, (user) => {
             user.setAvatarVideo(stream);
         });
     }
 
-    setAvatarURL(id, url) {
+    setAvatarURL(id: string, url:string) {
         this.withUser("set avatar image", id, (user) => {
             user.avatarImage = url;
         });
     }
 
-    setAvatarEmoji(id, emoji) {
+    setAvatarEmoji(id: string, emoji: Emoji) {
         this.withUser("set avatar emoji", id, (user) => {
-            user.avatarEmoji = emoji;
+            user.setAvatarEmoji(emoji);
         });
     }
 
-    /**
-     * 
-     * @param {string} id
-     * @param {string} displayName
-     * @param {import("../calla").InterpolatedPose} pose
-     * @param {string} avatarURL
-     * @param {string} roomName
-     */
-    async startAsync(id, displayName, pose, avatarURL, roomName) {
+    async startAsync(id: string, displayName: string, pose: InterpolatedPose, avatarURL: string, roomName: string) {
         this.currentRoomName = roomName.toLowerCase();
         this.me = new User(id, displayName, pose, true);
         if (isString(avatarURL)) {
@@ -437,7 +425,7 @@ export class Game extends EventBase {
     }
 
     startLoop() {
-        show(this);
+        show(this.element);
         this.resize();
         this.element.focus();
     }
@@ -451,11 +439,11 @@ export class Game extends EventBase {
         this.map = null;
         this.users.clear();
         this.me = null;
-        hide(this);
+        hide(this.element);
         this.dispatchEvent(gameEndedEvt);
     }
 
-    update(dt) {
+    update(dt: number) {
         if (this.currentRoomName !== null) {
             dt /= 1000;
             this.gridOffsetX = Math.floor(0.5 * this.element.width / this.map.tileWidth) * this.map.tileWidth;

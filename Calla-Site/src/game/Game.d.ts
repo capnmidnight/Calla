@@ -1,32 +1,73 @@
-import { EventBase } from "../lib/calla";
+import type { InterpolatedPose } from "calla/audio/positions/InterpolatedPose";
+import type { Emoji } from "kudzu/emoji/Emoji";
+import { EventBase } from "kudzu/events/EventBase";
+import { Emote } from "./Emote";
+import type { IInputBinding } from "./Settings";
+import { TileMap } from "./TileMap";
+import { User } from "./User";
+declare type withUserCallback = (user: User) => any;
 export declare class Game extends EventBase {
-    constructor(zoomMin: any, zoomMax: any);
-    get style(): any;
-    initializeUser(id: any, evt: any): void;
-    updateAudioActivity(id: any, isActive: any): void;
-    emote(id: any, emoji: any): void;
-    getTileAt(cursor: any): {
+    zoomMin: number;
+    zoomMax: number;
+    waypoints: {
+        x: number;
+        y: number;
+    }[];
+    users: Map<string, User>;
+    emotes: Emote[];
+    keys: Map<string, KeyboardEvent>;
+    lastMove: number;
+    lastWalk: number;
+    gridOffsetX: number;
+    gridOffsetY: number;
+    fontSize: number;
+    cameraX: number;
+    offsetCameraX: number;
+    targetOffsetCameraX: number;
+    cameraY: number;
+    offsetCameraY: number;
+    targetOffsetCameraY: number;
+    cameraZ: number;
+    targetCameraZ: number;
+    drawHearing: boolean;
+    audioDistanceMin: number;
+    audioDistanceMax: number;
+    rolloff: number;
+    lastGamepadIndex: number;
+    gamepadIndex: number;
+    transitionSpeed: number;
+    keyboardEnabled: boolean;
+    me: User;
+    map: TileMap;
+    currentRoomName: string;
+    currentEmoji: Emoji;
+    element: HTMLCanvasElement;
+    gFront: CanvasRenderingContext2D;
+    inputBinding: IInputBinding;
+    constructor(zoomMin: number, zoomMax: number);
+    get style(): CSSStyleDeclaration;
+    initializeUser(id: string, evt: any): void;
+    updateAudioActivity(id: string, isActive: boolean): void;
+    emote(id: string, emoji: Emoji): void;
+    getTileAt(cursor: {
+        x: number;
+        y: number;
+    }): {
         x: number;
         y: number;
     };
-    moveMeTo(x: any, y: any): void;
-    moveMeBy(dx: any, dy: any): void;
-    moveMeByPath(dx: any, dy: any): void;
-    warpMeTo(x: any, y: any): void;
-    visit(id: any): void;
-    get zoom(): any;
-    set zoom(v: any);
-    /**
-     *
-     * @param {string} id
-     * @param {string} displayName
-     * @param {import("../calla").InterpolatedPose} pose
-     */
-    addUser(id: any, displayName: any, pose: any): void;
+    moveMeTo(x: number, y: number): void;
+    moveMeBy(dx: number, dy: number): void;
+    moveMeByPath(dx: number, dy: number): void;
+    warpMeTo(x: number, y: number): void;
+    visit(id: string): void;
+    get zoom(): number;
+    set zoom(v: number);
+    addUser(id: string, displayName: string, pose: InterpolatedPose): void;
     toggleMyAudio(): void;
     toggleMyVideo(): void;
-    muteUserAudio(id: any, muted: any): void;
-    muteUserVideo(id: any, muted: any): void;
+    muteUserAudio(id: string, muted: boolean): void;
+    muteUserVideo(id: string, muted: boolean): void;
     /**
     * Used to perform on operation when a valid user object is found.
     * @callback withUserCallback
@@ -35,30 +76,19 @@ export declare class Game extends EventBase {
     */
     /**
      * Find a user by id, then perform an operation on it.
-     * @param {string} msg
-     * @param {string} id
-     * @param {withUserCallback} callback
-     * @param {number} timeout
      */
-    withUser(msg: any, id: any, callback: any, timeout: any): void;
-    changeUserName(id: any, displayName: any): void;
-    removeUser(id: any): void;
-    setAvatarVideo(id: any, stream: any): void;
-    setAvatarURL(id: any, url: any): void;
-    setAvatarEmoji(id: any, emoji: any): void;
-    /**
-     *
-     * @param {string} id
-     * @param {string} displayName
-     * @param {import("../calla").InterpolatedPose} pose
-     * @param {string} avatarURL
-     * @param {string} roomName
-     */
-    startAsync(id: any, displayName: any, pose: any, avatarURL: any, roomName: any): Promise<void>;
+    withUser(msg: string, id: string, callback: withUserCallback, timeout?: number): void;
+    changeUserName(id: string, displayName: string): void;
+    removeUser(id: string): void;
+    setAvatarVideo(id: string, stream: MediaStream): void;
+    setAvatarURL(id: string, url: string): void;
+    setAvatarEmoji(id: string, emoji: Emoji): void;
+    startAsync(id: string, displayName: string, pose: InterpolatedPose, avatarURL: string, roomName: string): Promise<void>;
     startLoop(): void;
     resize(): void;
     end(): void;
-    update(dt: any): void;
+    update(dt: number): void;
     render(): void;
     drawCursor(): void;
 }
+export {};

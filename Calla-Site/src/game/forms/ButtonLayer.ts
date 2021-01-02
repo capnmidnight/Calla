@@ -1,3 +1,4 @@
+import type { Emoji } from "kudzu/emoji/Emoji";
 import {
     door,
     downRightArrow,
@@ -13,13 +14,12 @@ import {
     upwardsButton,
     videoCamera,
     whiteFlower
-} from "../../emoji/emojis";
-import { alt, className, id, max, min, role, src, step, title, value } from "../../html/attrs";
-import { cssHeight, margin, textAlign } from "../../html/css";
-import { onClick, onInput } from "../../html/evts";
-import { updateLabel } from "../../html/ops";
-import { Button, Div, Img, InputRange, Run } from "../../html/tags";
-import { EventBase } from "../../lib/calla";
+} from "kudzu/emoji/emojis";
+import { EventBase } from "kudzu/events/EventBase";
+import { alt, className, height as cssHeight, id, margin, max, min, role, src, step, textAlign, title, value } from "kudzu/html/attrs";
+import { onClick, onInput } from "kudzu/html/evts";
+import { Button, Div, Img, InputRange, Run } from "kudzu/html/tags";
+import { updateLabel } from "./ops";
 
 const toggleOptionsEvt = new Event("toggleOptions"),
     tweetEvt = new Event("tweet"),
@@ -35,12 +35,33 @@ const toggleOptionsEvt = new Event("toggleOptions"),
     zoomChangedEvt = new Event("zoomChanged");
 
 export class ButtonLayer extends EventBase {
-    constructor(targetCanvas, zoomMin, zoomMax) {
+
+    element: HTMLDivElement;
+    optionsButton: HTMLButtonElement;
+    instructionsButton: HTMLButtonElement;
+    shareButton: HTMLButtonElement;
+    showUsersButton: HTMLButtonElement;
+    fullscreenButton: HTMLButtonElement;
+    leaveButton: HTMLButtonElement;
+    toggleAudioButton: HTMLButtonElement;
+    toggleAudioLabel: HTMLDivElement;
+    toggleVideoButton: HTMLButtonElement;
+    toggleVideoLabel: HTMLDivElement;
+    changeDevicesButton: HTMLButtonElement;
+    emoteButton: HTMLDivElement;
+    zoomInButton: HTMLButtonElement;
+    slider: HTMLInputElement;
+    zoomOutButton: HTMLButtonElement;
+
+    private _audioEnabled: boolean = true;
+    private _videoEnabled: boolean = false;
+
+    constructor(zoomMin: number, zoomMax: number) {
         super();
 
-        const _ = (evt) => () => this.dispatchEvent(evt);
+        const _ = (evt: Event) => () => this.dispatchEvent(evt);
 
-        const changeZoom = (dz) => {
+        const changeZoom = (dz: number) => {
             this.zoom += dz;
             this.dispatchEvent(zoomChangedEvt);
         };
@@ -151,7 +172,7 @@ export class ButtonLayer extends EventBase {
                     min(zoomMin),
                     max(zoomMax),
                     step(0.1),
-                    value(0),
+                    value("0"),
                     onInput(() => this.dispatchEvent(zoomChangedEvt)))),
 
 
@@ -161,9 +182,6 @@ export class ButtonLayer extends EventBase {
                 onClick(() => changeZoom(-0.5)),
                 Run(magnifyingGlassTiltedRight.value),
                 Run("-")));
-
-        this._audioEnabled = true;
-        this._videoEnabled = false;
 
         Object.seal(this);
     }
@@ -199,8 +217,9 @@ export class ButtonLayer extends EventBase {
     }
 
     set enabled(v) {
-        for (let button of this.element.querySelectorAll("button")) {
-            button.disabled = !v;
+        const buttons = this.element.querySelectorAll("button");
+        for (let i = 0; i < buttons.length; ++i) {
+            buttons[i].disabled = !v;
         }
     }
 
@@ -230,7 +249,7 @@ export class ButtonLayer extends EventBase {
             noMobilePhone.value);
     }
 
-    setEmojiButton(key, emoji) {
+    setEmojiButton(emoji: Emoji) {
         this.emoteButton.innerHTML = emoji.value;
     }
 
@@ -238,8 +257,7 @@ export class ButtonLayer extends EventBase {
         return parseFloat(this.slider.value);
     }
 
-    /** @type {number} */
-    set zoom(v) {
-        this.slider.value = v;
+    set zoom(v: number) {
+        this.slider.value = v.toFixed(3);
     }
 }

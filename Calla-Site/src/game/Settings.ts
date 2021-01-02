@@ -1,6 +1,30 @@
+import { isNullOrUndefined } from "kudzu/typeChecks";
+
 const KEY = "CallaSettings";
 
-const DEFAULT_INPUT_BINDING = Object.freeze({
+export interface IInputBinding {
+    keyButtonUp: string;
+    keyButtonDown: string;
+    keyButtonLeft: string;
+    keyButtonRight: string;
+    keyButtonEmote: string;
+    keyButtonToggleAudio: string;
+    keyButtonZoomOut: string;
+    keyButtonZoomIn: string;
+
+    gpButtonEmote: number;
+    gpButtonToggleAudio: number;
+    gpButtonZoomIn: number;
+    gpButtonZoomOut: number;
+    gpButtonUp: number;
+    gpButtonDown: number;
+    gpButtonLeft: number;
+    gpButtonRight: number;
+
+    [v: string]: string|number;
+}
+
+const DEFAULT_INPUT_BINDING: IInputBinding = Object.freeze({
     keyButtonUp: "ArrowUp",
     keyButtonDown: "ArrowDown",
     keyButtonLeft: "ArrowLeft",
@@ -20,273 +44,240 @@ const DEFAULT_INPUT_BINDING = Object.freeze({
     gpButtonRight: 15
 });
 
-/** @type {WeakMap<Settings, SettingsPrivate>} */
-const selfs = new WeakMap();
+export class Settings {
 
-class SettingsPrivate {
+    private _drawHearing = false;
+    private _audioDistanceMin = 1;
+    private _audioDistanceMax = 10;
+    private _audioRolloff = 1;
+    private _fontSize = 12;
+    private _transitionSpeed = 1;
+    private _zoom = 1.5;
+    private _roomName = "calla";
+    private _userName = "";
+    private _email = "";
+    private _avatarEmoji: string = null;
+    private _avatarURL: string = null;
+    private _gamepadIndex = 0;
+    private _preferredAudioOutputID: string = null;
+    private _preferredAudioInputID: string = null;
+    private _preferredVideoInputID: string = null;
+    private _inputBinding: IInputBinding = null;
+
     constructor() {
-        this.drawHearing = false;
-        this.audioDistanceMin = 1;
-        this.audioDistanceMax = 10;
-        this.audioRolloff = 1;
-        this.fontSize = 12;
-        this.transitionSpeed = 1;
-        this.zoom = 1.5;
-        this.roomName = "calla";
-        this.userName = "";
-        this.email = "";
-        this.avatarEmoji = null;
-
-        /** @type {string} */
-        this.avatarURL = null;
-        this.gamepadIndex = 0;
-
-        /** @type {string} */
-        this.preferredAudioOutputID = null;
-
-        /** @type {string} */
-        this.preferredAudioInputID = null;
-
-        /** @type {string} */
-        this.preferredVideoInputID = null;
 
         this.inputBinding = DEFAULT_INPUT_BINDING;
 
-        const selfStr = localStorage.getItem(KEY);
-        if (selfStr) {
+        const thisStr = localStorage.getItem(KEY);
+        if (thisStr) {
             Object.assign(
                 this,
-                JSON.parse(selfStr));
+                JSON.parse(thisStr));
         }
 
-        for (var key in DEFAULT_INPUT_BINDING) {
-            if (this.inputBinding[key] === undefined) {
-                this.inputBinding[key] = DEFAULT_INPUT_BINDING[key];
+        for (const key in DEFAULT_INPUT_BINDING) {
+            if (isNullOrUndefined(this._inputBinding[key])) {
+                this._inputBinding[key] = DEFAULT_INPUT_BINDING[key];
             }
         }
 
-        Object.seal(this);
-    }
-
-    commit() {
-        localStorage.setItem(KEY, JSON.stringify(this));
-    }
-}
-
-export class Settings {
-    constructor() {
-        const self = new SettingsPrivate();
-        selfs.set(this, self);
-
         if (window.location.hash.length > 0) {
-            self.roomName = window.location.hash.substring(1);
+            this.roomName = window.location.hash.substring(1);
         }
+
         Object.seal(this);
+    }
+
+    private commit() {
+        localStorage.setItem(KEY, JSON.stringify(this));
     }
 
     get preferredAudioOutputID() {
-        return selfs.get(this).preferredAudioOutputID;
+        return this._preferredAudioOutputID;
     }
 
     set preferredAudioOutputID(value) {
         if (value !== this.preferredAudioOutputID) {
-            const self = selfs.get(this);
-            self.preferredAudioOutputID = value;
-            self.commit();
+            this._preferredAudioOutputID = value;
+            this.commit();
         }
     }
 
     get preferredAudioInputID() {
-        return selfs.get(this).preferredAudioInputID;
+        return this._preferredAudioInputID;
     }
 
     set preferredAudioInputID(value) {
         if (value !== this.preferredAudioInputID) {
-            const self = selfs.get(this);
-            self.preferredAudioInputID = value;
-            self.commit();
+            this._preferredAudioInputID = value;
+            this.commit();
         }
     }
 
     get preferredVideoInputID() {
-        return selfs.get(this).preferredVideoInputID;
+        return this._preferredVideoInputID;
     }
 
     set preferredVideoInputID(value) {
         if (value !== this.preferredVideoInputID) {
-            const self = selfs.get(this);
-            self.preferredVideoInputID = value;
-            self.commit();
+            this._preferredVideoInputID = value;
+            this.commit();
         }
     }
 
     get transitionSpeed() {
-        return selfs.get(this).transitionSpeed;
+        return this._transitionSpeed;
     }
 
     set transitionSpeed(value) {
         if (value !== this.transitionSpeed) {
-            const self = selfs.get(this);
-            self.transitionSpeed = value;
-            self.commit();
+            this._transitionSpeed = value;
+            this.commit();
         }
     }
 
     get drawHearing() {
-        return selfs.get(this).drawHearing;
+        return this._drawHearing;
     }
 
     set drawHearing(value) {
         if (value !== this.drawHearing) {
-            const self = selfs.get(this);
-            self.drawHearing = value;
-            self.commit();
+            this._drawHearing = value;
+            this.commit();
         }
     }
 
     get audioDistanceMin() {
-        return selfs.get(this).audioDistanceMin;
+        return this._audioDistanceMin;
     }
 
     set audioDistanceMin(value) {
         if (value !== this.audioDistanceMin) {
-            const self = selfs.get(this);
-            self.audioDistanceMin = value;
-            self.commit();
+            this._audioDistanceMin = value;
+            this.commit();
         }
     }
 
     get audioDistanceMax() {
-        return selfs.get(this).audioDistanceMax;
+        return this._audioDistanceMax;
     }
 
     set audioDistanceMax(value) {
         if (value !== this.audioDistanceMax) {
-            const self = selfs.get(this);
-            self.audioDistanceMax = value;
-            self.commit();
+            this._audioDistanceMax = value;
+            this.commit();
         }
     }
 
     get audioRolloff() {
-        return selfs.get(this).audioRolloff;
+        return this._audioRolloff;
     }
 
     set audioRolloff(value) {
         if (value !== this.audioRolloff) {
-            const self = selfs.get(this);
-            self.audioRolloff = value;
-            self.commit();
+            this._audioRolloff = value;
+            this.commit();
         }
     }
 
     get fontSize() {
-        return selfs.get(this).fontSize;
+        return this._fontSize;
     }
 
     set fontSize(value) {
         if (value !== this.fontSize) {
-            const self = selfs.get(this);
-            self.fontSize = value;
-            self.commit();
+            this._fontSize = value;
+            this.commit();
         }
     }
 
     get zoom() {
-        return selfs.get(this).zoom;
+        return this._zoom;
     }
 
     set zoom(value) {
         if (value !== this.zoom) {
-            const self = selfs.get(this);
-            self.zoom = value;
-            self.commit();
+            this._zoom = value;
+            this.commit();
         }
     }
 
     get userName() {
-        return selfs.get(this).userName;
+        return this._userName;
     }
 
     set userName(value) {
         if (value !== this.userName) {
-            const self = selfs.get(this);
-            self.userName = value;
-            self.commit();
+            this._userName = value;
+            this.commit();
         }
     }
 
     get email() {
-        return selfs.get(this).email;
+        return this._email;
     }
 
     set email(value) {
         if (value !== this.email) {
-            const self = selfs.get(this);
-            self.email = value;
-            self.commit();
+            this._email = value;
+            this.commit();
         }
     }
 
     get avatarEmoji() {
-        return selfs.get(this).avatarEmoji;
+        return this._avatarEmoji;
     }
 
     set avatarEmoji(value) {
         if (value !== this.avatarEmoji) {
-            const self = selfs.get(this);
-            self.avatarEmoji = value;
-            self.commit();
+            this._avatarEmoji = value;
+            this.commit();
         }
     }
 
     get avatarURL() {
-        return selfs.get(this).avatarURL;
+        return this._avatarURL;
     }
 
     set avatarURL(value) {
         if (value !== this.avatarURL) {
-            const self = selfs.get(this);
-            self.avatarURL = value;
-            self.commit();
+            this._avatarURL = value;
+            this.commit();
         }
     }
 
     get roomName() {
-        return selfs.get(this).roomName;
+        return this._roomName;
     }
 
     set roomName(value) {
         if (value !== this.roomName) {
-            const self = selfs.get(this);
-            self.roomName = value;
-            self.commit();
+            this._roomName = value;
+            this.commit();
         }
     }
 
     get gamepadIndex() {
-        return selfs.get(this).gamepadIndex;
+        return this._gamepadIndex;
     }
 
     set gamepadIndex(value) {
         if (value !== this.gamepadIndex) {
-            const self = selfs.get(this);
-            self.gamepadIndex = value;
-            self.commit();
+            this._gamepadIndex = value;
+            this.commit();
         }
     }
 
     get inputBinding() {
-        return selfs.get(this).inputBinding;
+        return this._inputBinding;
     }
 
     set inputBinding(value) {
         if (value !== this.inputBinding) {
-            const self = selfs.get(this);
             for (let key in value) {
-                self.inputBinding[key] = value[key];
+                this._inputBinding[key] = value[key];
             }
-            self.commit();
+            this.commit();
         }
     }
 }

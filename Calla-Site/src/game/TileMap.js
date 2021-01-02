@@ -1,48 +1,35 @@
-import { CanvasOffscreen } from "../html/tags";
-import { astar, Graph } from "../lib/astar";
+import { createUtilityCanvas } from "kudzu/html/canvas";
+import { getXml } from "kudzu/io/getXml";
+import * as astar from "../lib/astar";
 import { TileSet } from "./TileSet";
-/** @type {WeakMap<TileMap, TileMapPrivate>} */
-const selfs = new WeakMap();
-class TileMapPrivate {
-    constructor(tilemapName) {
-        this.url = new URL(`data/tilemaps/${tilemapName}.tmx`, document.baseURI);
-        this.tileWidth = 0;
-        this.tileHeight = 0;
-        this.layers = 0;
-        this.width = 0;
-        this.height = 0;
-        this.offsetX = 0;
-        this.offsetY = 0;
-        /** @type {TileSet} */
-        this.tileset = null;
-        /** @type {number[][][]} */
-        this.tiles = null;
-        /** @type {Graph} */
-        this.graph = null;
-        /** @type {OffscreenCanvas[]} */
-        this.layerImages = [];
-        Object.seal(this);
-    }
-}
 export class TileMap {
     constructor(tilemapName) {
-        selfs.set(this, new TileMapPrivate(tilemapName));
+        this._tileWidth = 0;
+        this._tileHeight = 0;
+        this._layers = 0;
+        this._width = 0;
+        this._height = 0;
+        this._offsetX = 0;
+        this._offsetY = 0;
+        this._layerImages = new Array();
+        this._url = null;
+        this._tileset = null;
+        this._tiles = null;
+        this._graph = null;
+        this._url = new URL(`data/tilemaps/${tilemapName}.tmx`, document.baseURI);
     }
     async load() {
-        const self = selfs.get(this), response = await fetch(self.url.href);
-        if (!response.ok) {
-            throw new Error(`Failed to load TileMap from ${self.url.href}. Reason: [${response.status}] ${response.statusText}`);
-        }
-        const text = await response.text(), parser = new DOMParser(), xml = parser.parseFromString(text, "text/xml"), map = xml.documentElement, width = 1 * map.getAttribute("width"), height = 1 * map.getAttribute("height"), tileWidth = 1 * map.getAttribute("tilewidth"), tileHeight = 1 * map.getAttribute("tileheight"), tileset = map.querySelector("tileset"), tilesetSource = tileset.getAttribute("source"), layers = map.querySelectorAll("layer > data");
-        self.layers = layers.length;
-        self.width = width;
-        self.height = height;
-        self.offsetX = -Math.floor(width / 2);
-        self.offsetY = -Math.floor(height / 2);
-        self.tileWidth = tileWidth;
-        self.tileHeight = tileHeight;
-        self.tiles = [];
-        for (let layer of layers) {
+        const map = await getXml(this._url.href), width = parseInt(map.getAttribute("width"), 10), height = parseInt(map.getAttribute("height"), 10), tileWidth = parseInt(map.getAttribute("tilewidth"), 10), tileHeight = parseInt(map.getAttribute("tileheight"), 10), tileset = map.querySelector("tileset"), tilesetSource = tileset.getAttribute("source"), layers = map.querySelectorAll("layer > data");
+        this._layers = layers.length;
+        this._width = width;
+        this._height = height;
+        this._offsetX = -Math.floor(width / 2);
+        this._offsetY = -Math.floor(height / 2);
+        this._tileWidth = tileWidth;
+        this._tileHeight = tileHeight;
+        this._tiles = [];
+        for (let i = 0; i < layers.length; ++i) {
+            const layer = layers[i];
             const tileIds = layer.innerHTML
                 .replace(" ", "")
                 .replace("\t", "")
@@ -61,30 +48,30 @@ export class TileMap {
             if (row.length > 0) {
                 rows.push(row);
             }
-            self.tiles.push(rows);
+            this._tiles.push(rows);
         }
-        self.tileset = new TileSet(new URL(tilesetSource, self.url));
-        await self.tileset.load();
-        self.tileWidth = self.tileset.tileWidth;
-        self.tileHeight = self.tileset.tileHeight;
-        for (let l = 0; l < self.layers; ++l) {
-            const img = CanvasOffscreen(this.width * this.tileWidth, this.height * this.tileHeight);
-            self.layerImages.push(img);
+        this._tileset = new TileSet(new URL(tilesetSource, this._url));
+        await this._tileset.load();
+        this._tileWidth = this._tileset.tileWidth;
+        this._tileHeight = this._tileset.tileHeight;
+        for (let l = 0; l < this._layers; ++l) {
+            const img = createUtilityCanvas(this.width * this.tileWidth, this.height * this.tileHeight);
+            this._layerImages.push(img);
             const context = img.getContext("2d");
-            const layer = self.tiles[l];
+            const layer = this._tiles[l];
             for (let y = 0; y < this.height; ++y) {
                 const row = layer[y];
                 for (let x = 0; x < this.width; ++x) {
                     const tile = row[x];
-                    self.tileset.draw(context, tile, x, y);
+                    this._tileset.draw(context, tile, x, y);
                 }
             }
         }
         let grid = [];
-        for (let row of self.tiles[0]) {
+        for (let row of this._tiles[0]) {
             let gridrow = [];
             for (let tile of row) {
-                if (self.tileset.isClear(tile)) {
+                if (this._tileset.isClear(tile)) {
                     gridrow.push(1);
                 }
                 else {
@@ -93,67 +80,63 @@ export class TileMap {
             }
             grid.push(gridrow);
         }
-        self.graph = new Graph(grid, { diagonal: true });
+        this._graph = new astar.Graph(grid, { diagonal: true });
     }
     get width() {
-        return selfs.get(this).width;
+        return this._width;
     }
     get height() {
-        return selfs.get(this).height;
+        return this._height;
     }
     get tileWidth() {
-        return selfs.get(this).tileWidth;
+        return this._tileWidth;
     }
     get tileHeight() {
-        return selfs.get(this).tileHeight;
+        return this._tileHeight;
     }
     isInBounds(x, y) {
         return 0 <= x && x < this.width
             && 0 <= y && y < this.height;
     }
     getGridNode(x, y) {
-        const self = selfs.get(this);
-        x -= self.offsetX;
-        y -= self.offsetY;
+        x -= this._offsetX;
+        y -= this._offsetY;
         x = Math.round(x);
         y = Math.round(y);
         if (this.isInBounds(x, y)) {
-            return self.graph.grid[y][x];
+            return this._graph.grid[y][x];
         }
         else {
             return null;
         }
     }
     draw(g) {
-        const self = selfs.get(this);
         g.save();
         {
-            g.translate(self.offsetX * this.tileWidth, self.offsetY * this.tileHeight);
-            for (let img of self.layerImages) {
+            g.translate(this._offsetX * this.tileWidth, this._offsetY * this.tileHeight);
+            for (let img of this._layerImages) {
                 g.drawImage(img, 0, 0);
             }
         }
         g.restore();
     }
     searchPath(start, end) {
-        const self = selfs.get(this);
-        return astar.search(self.graph, start, end)
+        return astar.search(this._graph, start, end)
             .map(p => {
             return {
-                x: p.y + self.offsetX,
-                y: p.x + self.offsetY
+                x: p.y + this._offsetX,
+                y: p.x + this._offsetY
             };
         });
     }
     isClear(x, y, avatar) {
-        const self = selfs.get(this);
-        x -= self.offsetX;
-        y -= self.offsetY;
+        x -= this._offsetX;
+        y -= this._offsetY;
         x = Math.round(x);
         y = Math.round(y);
         return x < 0 || this.width <= x
             || y < 0 || this.height <= y
-            || self.tileset && self.tileset.isClear(self.tiles[0][y][x])
+            || this._tileset && this._tileset.isClear(this._tiles[0][y][x])
             || avatar && avatar.canSwim;
     }
     // Use Bresenham's line algorithm (with integer error)

@@ -1,4 +1,15 @@
-export declare function isOpen(target: any): any;
+export interface IOpenable {
+    isOpen(): boolean;
+    setOpen(v: boolean, displayType?: string): void;
+    updateLabel(open: boolean, enabledText: string, disabledText: string, bothText: string): void;
+    toggleOpen(displayType?: string): void;
+    show(): void;
+    hide(displayType?: string): void;
+    setLocked(v: boolean): void;
+    accessKey: string;
+}
+export declare function isOpenable(obj: any): obj is IOpenable;
+export declare function isOpen(target: IOpenable | HTMLElement): boolean;
 /**
  * Sets the element's style's display property to "none"
  * when `v` is false, or `displayType` when `v` is true.
@@ -6,9 +17,9 @@ export declare function isOpen(target: any): any;
  * @param {boolean} v
  * @param {string} [displayType=""]
  */
-export declare function setOpen(target: any, v: any, displayType?: string): void;
-export declare function updateLabel(target: any, open: any, enabledText: any, disabledText: any, bothText: any): void;
-export declare function toggleOpen(target: any, displayType?: string): void;
-export declare function show(target: any, displayType?: string): void;
-export declare function hide(target: any): void;
-export declare function setLocked(target: any, value: any): void;
+export declare function setOpen(target: IOpenable | HTMLElement, v: boolean, displayType?: string): void;
+export declare function updateLabel(target: IOpenable | HTMLElement, open: boolean, enabledText: string, disabledText: string, bothText: string): void;
+export declare function toggleOpen(target: IOpenable | HTMLElement, displayType?: string): void;
+export declare function show(target: IOpenable | HTMLElement, displayType?: string): void;
+export declare function hide(target: IOpenable | HTMLElement, displayType?: string): void;
+export declare function setLocked(target: IOpenable | HTMLElement, value: boolean): void;

@@ -1,16 +1,15 @@
-import { disabled, height, htmlFor, id, max, min, placeHolder, step, value, width } from "../../html/attrs";
-import { cssWidth } from "../../html/css";
-import { onClick, onInput, onKeyUp } from "../../html/evts";
-import { gridColsDef } from "../../html/grid";
-import { LabeledInput } from "../../html/LabeledInputTag";
-import { isOpen, setLocked } from "../../html/ops";
-import { OptionPanel } from "../../html/OptionPanelTag";
-import { SelectBox } from "../../html/SelectBoxTag";
-import { Button, Canvas, Div, InputURL, Label, P } from "../../html/tags";
-import { EventedGamepad } from "../../input/EventedGamepad";
-import { isGoodNumber, isString } from "../../lib/calla";
+import { disabled, height, htmlFor, id, max, min, placeHolder, step, value, width as cssWidth, width } from "kudzu/html/attrs";
+import { onClick, onInput, onKeyUp } from "kudzu/html/evts";
+import { gridColsDef } from "kudzu/html/grid";
+import { Button, Canvas, Div, InputURL, Label, P } from "kudzu/html/tags";
+import { EventedGamepad } from "kudzu/input/EventedGamepad";
+import { isGoodNumber, isString } from "kudzu/typeChecks";
 import { FormDialog } from "./FormDialog";
 import { InputBinding } from "./InputBinding";
+import { LabeledInput } from "./LabeledInputTag";
+import { isOpen, setLocked } from "./ops";
+import { OptionPanel } from "./OptionPanelTag";
+import { SelectBox } from "./SelectBoxTag";
 const keyWidthStyle = cssWidth("7em"), numberWidthStyle = cssWidth("3em"), avatarUrlChangedEvt = new Event("avatarURLChanged"), gamepadChangedEvt = new Event("gamepadChanged"), selectAvatarEvt = new Event("selectAvatar"), fontSizeChangedEvt = new Event("fontSizeChanged"), inputBindingChangedEvt = new Event("inputBindingChanged"), audioPropsChangedEvt = new Event("audioPropertiesChanged"), toggleDrawHearingEvt = new Event("toggleDrawHearing"), toggleVideoEvt = new Event("toggleVideo"), gamepadButtonUpEvt = Object.assign(new Event("gamepadbuttonup"), {
     button: 0
 }), gamepadAxisMaxedEvt = Object.assign(new Event("gamepadaxismaxed"), {

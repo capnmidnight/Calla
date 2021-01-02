@@ -1,8 +1,8 @@
-import { id } from "../../html/attrs";
-import { setLocked, setOpen } from "../../html/ops";
-import { SelectBox } from "../../html/SelectBoxTag";
-import { Button, Div, InputEmail, InputText } from "../../html/tags";
+import { id } from "kudzu/html/attrs";
+import { Button, Div, InputEmail, InputText } from "kudzu/html/tags";
 import { FormDialog } from "./FormDialog";
+import { setLocked, setOpen } from "./ops";
+import { SelectBox } from "./SelectBoxTag";
 /** @type {WeakMap<LoginForm, LoginFormPrivate>} */
 const selfs = new WeakMap();
 class LoginFormPrivate {
