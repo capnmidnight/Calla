@@ -24,7 +24,7 @@ export class HtmlEvt implements IAppliable {
         Object.freeze(this);
     }
 
-    apply(elem: HTMLElement | ElementCSSInlineStyle) {
+    apply(elem: HTMLElement | CSSStyleDeclaration) {
         if (isHTMLElement(elem)) {
             this.add(elem);
         }

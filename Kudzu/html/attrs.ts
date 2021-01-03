@@ -1,7 +1,7 @@
 import { isBoolean, isHTMLElement } from "../typeChecks";
 
 export interface IAppliable {
-    apply(elem: HTMLElement | ElementCSSInlineStyle): void;
+    apply(elem: HTMLElement | CSSStyleDeclaration): void;
 }
 
 /**
@@ -27,7 +27,7 @@ export class Attr implements IAppliable {
      * Set the attribute value on an HTMLElement
      * @param elem - the element on which to set the attribute.
      */
-    apply(elem: HTMLElement | ElementCSSInlineStyle) {
+    apply(elem: HTMLElement | CSSStyleDeclaration) {
         if (isHTMLElement(elem)) {
             const isValid = this.tags.length === 0
                 || this.tags.indexOf(elem.tagName) > -1;
@@ -963,7 +963,7 @@ export class CssPropSet implements IAppliable {
      * Set the attribute value on an HTMLElement
      * @param elem - the element on which to set the attribute.
      */
-    apply(elem: HTMLElement | ElementCSSInlineStyle) {
+    apply(elem: HTMLElement | CSSStyleDeclaration) {
         const style = isHTMLElement(elem)
             ? elem.style
             : elem;
@@ -1337,8 +1337,8 @@ export function wordWrap(v: string) { return new Attr("wordWrap", v); }
 export function writingMode(v: string) { return new Attr("writingMode", v); }
 export function x(v: string) { return new Attr("x", v); }
 export function y(v: string) { return new Attr("y", v); }
-export function zIndex(v: string) { return new Attr("zIndex", v); }
-export function zoom(v: string) { return new Attr("zoom", v); }
+export function zIndex(v: number) { return new Attr("zIndex", v); }
+export function zoom(v: number) { return new Attr("zoom", v); }
 
 
 /**

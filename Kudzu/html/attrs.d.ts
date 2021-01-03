@@ -1,5 +1,5 @@
 export interface IAppliable {
-    apply(elem: HTMLElement | ElementCSSInlineStyle): void;
+    apply(elem: HTMLElement | CSSStyleDeclaration): void;
 }
 /**
  * A setter functor for HTML attributes.
@@ -19,7 +19,7 @@ export declare class Attr implements IAppliable {
      * Set the attribute value on an HTMLElement
      * @param elem - the element on which to set the attribute.
      */
-    apply(elem: HTMLElement | ElementCSSInlineStyle): void;
+    apply(elem: HTMLElement | CSSStyleDeclaration): void;
 }
 /**
  * a list of types the server accepts, typically a file type.
@@ -723,7 +723,7 @@ export declare class CssPropSet implements IAppliable {
      * Set the attribute value on an HTMLElement
      * @param elem - the element on which to set the attribute.
      */
-    apply(elem: HTMLElement | ElementCSSInlineStyle): void;
+    apply(elem: HTMLElement | CSSStyleDeclaration): void;
 }
 /**
  * Combine style properties.
@@ -1084,8 +1084,8 @@ export declare function wordWrap(v: string): Attr;
 export declare function writingMode(v: string): Attr;
 export declare function x(v: string): Attr;
 export declare function y(v: string): Attr;
-export declare function zIndex(v: string): Attr;
-export declare function zoom(v: string): Attr;
+export declare function zIndex(v: number): Attr;
+export declare function zoom(v: number): Attr;
 /**
  * A selection of fonts for preferred monospace rendering.
  **/
