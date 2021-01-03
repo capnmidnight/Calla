@@ -251,8 +251,8 @@ export class Settings {
         const thisStr = localStorage.getItem(KEY);
         if (thisStr) {
             const obj = JSON.parse(thisStr);
-            const inputBindings = obj.inputBinding;
-            delete obj.inputBinding;
+            const inputBindings = obj._inputBinding;
+            delete obj._inputBinding;
             Object.assign(this, obj);
             this.inputBinding = inputBindings;
         }

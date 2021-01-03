@@ -121,8 +121,8 @@ export class Graph {
         if (options) {
             this.diagonal = options.diagonal !== false;
         }
-        this.nodes = new Array(gridIn.length * gridIn[0].length);
-        this.grid = new Array(gridIn.length);
+        this.nodes = new Array();
+        this.grid = new Array();
         for (let x = 0; x < gridIn.length; x++) {
             const row = gridIn[x];
             this.grid[x] = new Array(row.length);

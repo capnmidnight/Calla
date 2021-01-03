@@ -1,8 +1,8 @@
-import { isBoolean, isNumber, isString } from "../typeChecks";
+import { isBoolean, isDate, isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { Attr, IAppliable, type, margin, styles } from "./attrs";
 
 interface HasNode {
-    element: Node;
+    element: HTMLElement;
 }
 
 type makesIAppliable = (v: any) => IAppliable;
@@ -18,7 +18,13 @@ export type TagChild = Node
     | Date;
 
 function hasNode(obj: any): obj is HasNode {
-    return "element" in obj && obj.element instanceof Node;
+    return !isNullOrUndefined(obj)
+        && !isString(obj)
+        && !isNumber(obj)
+        && !isBoolean(obj)
+        && !isDate(obj)
+        && "element" in obj
+        && obj.element instanceof Node;
 }
 
 /**

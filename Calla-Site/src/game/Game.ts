@@ -13,6 +13,7 @@ import { unproject } from "kudzu/math/unproject";
 import { isString } from "kudzu/typeChecks";
 import { Emote, EmoteEvent } from "./Emote";
 import { hide, show } from "./forms/ops";
+import { ScreenPointerControls } from "./ScreenPointerControls";
 import type { IInputBinding } from "./Settings";
 import { TileMap } from "./TileMap";
 import { User, UserJoinedEvent, UserMovedEvent } from "./User";
@@ -84,6 +85,7 @@ export class Game extends TypedEventBase<GameEvents> {
     element: HTMLCanvasElement;
     gFront: CanvasRenderingContext2D;
     inputBinding: IInputBinding;
+    screenControls: ScreenPointerControls;
 
     constructor(public zoomMin: number, public zoomMax: number) {
         super();

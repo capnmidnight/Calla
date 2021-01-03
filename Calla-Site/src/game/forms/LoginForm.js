@@ -16,7 +16,7 @@ export class LoginForm extends FormDialog {
         this.roomEntryControl = Div(id("roomEntryControl"));
         const curRooms = new Array();
         const curOpts = this.element.querySelectorAll("#roomSelector option");
-        for (let i = 0; i = curOpts.length; ++i) {
+        for (let i = 0; i < curOpts.length; ++i) {
             const opt = curOpts[i];
             curRooms.push({
                 ShortName: opt.value,

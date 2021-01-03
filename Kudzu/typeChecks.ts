@@ -23,6 +23,10 @@ export function isObject(obj: any): obj is object {
     return t(obj, "object", Object);
 }
 
+export function isDate(obj: any): obj is Date {
+    return obj instanceof Date;
+}
+
 export function isArray(obj: any): obj is Array<any> {
     return obj instanceof Array;
 }

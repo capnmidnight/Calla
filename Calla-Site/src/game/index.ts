@@ -302,7 +302,7 @@ directory.addEventListener("warpTo", (evt) => {
 client.addEventListener(CallaTeleconferenceEventType.ConferenceJoined, async (evt) => {
     login.connected = true;
 
-    await game.startAsync(evt.id, login.userName, evt.pose, evt.avatarURL, login.roomName);
+    await game.startAsync(evt.id, login.userName, evt.pose, null, login.roomName);
 
     options.avatarURL = settings.avatarURL
     client.setAvatarURL(settings.avatarURL);

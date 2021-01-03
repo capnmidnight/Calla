@@ -42,7 +42,7 @@ export class LoginForm extends FormDialog<LoginFormEvents> {
 
         const curRooms = new Array<RoomEntry>();
         const curOpts = this.element.querySelectorAll("#roomSelector option");
-        for (let i = 0; i = curOpts.length; ++i) {
+        for (let i = 0; i < curOpts.length; ++i) {
             const opt = curOpts[i] as HTMLOptionElement;
             curRooms.push({
                 ShortName: opt.value,

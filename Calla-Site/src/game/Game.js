@@ -11,6 +11,7 @@ import { unproject } from "kudzu/math/unproject";
 import { isString } from "kudzu/typeChecks";
 import { Emote, EmoteEvent } from "./Emote";
 import { hide, show } from "./forms/ops";
+import { ScreenPointerControls } from "./ScreenPointerControls";
 import { TileMap } from "./TileMap";
 import { User, UserJoinedEvent, UserMovedEvent } from "./User";
 const CAMERA_LERP = 0.01, CAMERA_ZOOM_SHAPE = 2, MOVE_REPEAT = 0.125, gameStartedEvt = new TypedEvent("gameStarted"), gameEndedEvt = new TypedEvent("gameEnded"), zoomChangedEvt = new TypedEvent("zoomChanged"), emojiNeededEvt = new TypedEvent("emojiNeeded"), toggleAudioEvt = new TypedEvent("toggleAudio"), toggleVideoEvt = new TypedEvent("toggleVideo"), userJoinedEvt = new UserJoinedEvent(null), moveEvent = new UserMovedEvent(null), emoteEvt = new EmoteEvent(null);

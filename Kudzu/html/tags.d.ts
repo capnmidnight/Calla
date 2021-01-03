@@ -1,6 +1,6 @@
 import { IAppliable } from "./attrs";
 interface HasNode {
-    element: Node;
+    element: HTMLElement;
 }
 declare type makesIAppliable = (v: any) => IAppliable;
 export declare type TagChild = Node | HasNode | IAppliable | makesIAppliable | string | number | boolean | Date;

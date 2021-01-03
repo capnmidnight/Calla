@@ -3,6 +3,7 @@ export declare function isString(obj: any): obj is string;
 export declare function isBoolean(obj: any): obj is boolean;
 export declare function isNumber(obj: any): obj is number;
 export declare function isObject(obj: any): obj is object;
+export declare function isDate(obj: any): obj is Date;
 export declare function isArray(obj: any): obj is Array<any>;
 export declare function isHTMLElement(obj: any): obj is HTMLElement;
 export declare function assertNever(x: never): never;

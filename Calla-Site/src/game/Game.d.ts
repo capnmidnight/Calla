@@ -2,6 +2,7 @@ import type { InterpolatedPose } from "calla/audio/positions/InterpolatedPose";
 import type { Emoji } from "kudzu/emoji/Emoji";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { Emote, EmoteEvent } from "./Emote";
+import { ScreenPointerControls } from "./ScreenPointerControls";
 import type { IInputBinding } from "./Settings";
 import { TileMap } from "./TileMap";
 import { User, UserJoinedEvent, UserMovedEvent } from "./User";
@@ -55,6 +56,7 @@ export declare class Game extends TypedEventBase<GameEvents> {
     element: HTMLCanvasElement;
     gFront: CanvasRenderingContext2D;
     inputBinding: IInputBinding;
+    screenControls: ScreenPointerControls;
     constructor(zoomMin: number, zoomMax: number);
     get style(): CSSStyleDeclaration;
     updateAudioActivity(id: string, isActive: boolean): void;

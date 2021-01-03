@@ -17,6 +17,9 @@ export function isNumber(obj) {
 export function isObject(obj) {
     return t(obj, "object", Object);
 }
+export function isDate(obj) {
+    return obj instanceof Date;
+}
 export function isArray(obj) {
     return obj instanceof Array;
 }
