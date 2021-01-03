@@ -6,9 +6,11 @@ export declare class EventBase implements EventTarget {
     private removeListener;
     dispatchEvent(evt: Event): boolean;
 }
-export declare class TypedEventBase<EventBaseT> extends EventBase {
+export declare class TypedEvent<T extends string> extends Event {
+    constructor(type: T);
+}
+export declare class TypedEventBase<EventsT> extends EventBase {
     private mappedCallbacks;
-    addEventListener<K extends string & keyof EventBaseT>(type: K, callback: (evt: Event & EventBaseT[K]) => any, options?: AddEventListenerOptions): void;
-    removeEventListener<K extends string & keyof EventBaseT>(type: K, callback: (evt: Event & EventBaseT[K]) => any): void;
-    dispatchEvent<K extends string & keyof EventBaseT>(evt: Event & EventBaseT[K]): boolean;
+    addEventListener<K extends string & keyof EventsT>(type: K, callback: (evt: TypedEvent<K> & EventsT[K]) => any, options?: AddEventListenerOptions): void;
+    removeEventListener<K extends string & keyof EventsT>(type: K, callback: (evt: TypedEvent<K> & EventsT[K]) => any): void;
 }

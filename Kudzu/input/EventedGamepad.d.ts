@@ -1,19 +1,19 @@
-import { TypedEventBase } from "../events/EventBase";
-declare class GamepadButtonEvent extends Event {
+import { TypedEvent, TypedEventBase } from "../events/EventBase";
+declare class GamepadButtonEvent<T extends string> extends TypedEvent<T> {
     button: number;
-    constructor(type: string, button: number);
+    constructor(type: T, button: number);
 }
-export declare class GamepadButtonUpEvent extends GamepadButtonEvent {
+export declare class GamepadButtonUpEvent extends GamepadButtonEvent<"gamepadButtonUp"> {
     constructor(button: number);
 }
-export declare class GamepadButtonDownEvent extends GamepadButtonEvent {
+export declare class GamepadButtonDownEvent extends GamepadButtonEvent<"gamepadButtonDown"> {
     constructor(button: number);
 }
-declare class GamepadAxisEvent extends Event {
+declare class GamepadAxisEvent<T extends string> extends TypedEvent<T> {
     axis: number;
-    constructor(type: string, axis: number);
+    constructor(type: T, axis: number);
 }
-export declare class GamepadAxisMaxedEvent extends GamepadAxisEvent {
+export declare class GamepadAxisMaxedEvent extends GamepadAxisEvent<"gamepadAxisMaxed"> {
     constructor(axis: number);
 }
 interface EventedGamepadEvents {

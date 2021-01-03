@@ -58,27 +58,29 @@ export class EventBase implements EventTarget {
     }
 }
 
-export class TypedEventBase<EventBaseT> extends EventBase {
+export class TypedEvent<T extends string> extends Event {
+    constructor(type: T) {
+        super(type);
+    }
+}
+
+export class TypedEventBase<EventsT> extends EventBase {
     private mappedCallbacks = new Map<Function, (evt: Event) => any>();
 
-    addEventListener<K extends string & keyof EventBaseT>(type: K, callback: (evt: Event & EventBaseT[K]) => any, options?: AddEventListenerOptions): void {
+    addEventListener<K extends string & keyof EventsT>(type: K, callback: (evt: TypedEvent<K> & EventsT[K]) => any, options?: AddEventListenerOptions): void {
         let mappedCallback = this.mappedCallbacks.get(callback);
         if (mappedCallback == null) {
-            mappedCallback = (evt: Event) => callback(evt as Event & EventBaseT[K]);
+            mappedCallback = (evt: Event) => callback(evt as TypedEvent<K> & EventsT[K]);
             this.mappedCallbacks.set(callback, mappedCallback);
         }
 
         super.addEventListener(type, mappedCallback, options);
     }
 
-    removeEventListener<K extends string & keyof EventBaseT>(type: K, callback: (evt: Event & EventBaseT[K]) => any) {
+    removeEventListener<K extends string & keyof EventsT>(type: K, callback: (evt: TypedEvent<K> & EventsT[K]) => any) {
         const mappedCallback = this.mappedCallbacks.get(callback);
         if (mappedCallback) {
             super.removeEventListener(type, mappedCallback);
         }
-    }
-
-    dispatchEvent<K extends string & keyof EventBaseT>(evt: Event & EventBaseT[K]): boolean {
-        return super.dispatchEvent(evt);
     }
 }

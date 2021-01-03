@@ -1,9 +1,9 @@
-import { TypedEventBase } from "../events/EventBase";
+import { TypedEvent, TypedEventBase } from "../events/EventBase";
 import { createUtilityCanvas, setContextSize } from "../html/canvas";
 import { clamp } from "../math/clamp";
 import { isNumber } from "../typeChecks";
 import { loadFont, makeFont } from "./fonts";
-const redrawnEvt = new Event("redrawn");
+const redrawnEvt = new TypedEvent("redrawn");
 export class TextImage extends TypedEventBase {
     constructor() {
         super();

@@ -1,11 +1,9 @@
-import { TypedEventBase } from "../events/EventBase";
+import { TypedEvent, TypedEventBase } from "../events/EventBase";
 import type { CanvasTypes, Context2D } from "../html/canvas";
 import { createUtilityCanvas, setContextSize } from "../html/canvas";
 import { clamp } from "../math/clamp";
 import { isNumber } from "../typeChecks";
 import { loadFont, makeFont } from "./fonts";
-
-const redrawnEvt = new Event("redrawn");
 
 export interface PaddingRect {
     top: number;
@@ -15,8 +13,10 @@ export interface PaddingRect {
 }
 
 interface TextImageEvents {
-    redrawn: Event;
+    redrawn: TypedEvent<"redrawn">;
 }
+
+const redrawnEvt = new TypedEvent("redrawn");
 
 export class TextImage extends TypedEventBase<TextImageEvents> {
     private _minWidth: number | null = null;

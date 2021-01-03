@@ -1,4 +1,4 @@
-import { TypedEventBase } from "../events/EventBase";
+import { TypedEvent, TypedEventBase } from "../events/EventBase";
 import type { CanvasTypes, Context2D } from "../html/canvas";
 export interface PaddingRect {
     top: number;
@@ -7,7 +7,7 @@ export interface PaddingRect {
     left: number;
 }
 interface TextImageEvents {
-    redrawn: Event;
+    redrawn: TypedEvent<"redrawn">;
 }
 export declare class TextImage extends TypedEventBase<TextImageEvents> {
     private _minWidth;

@@ -51,6 +51,11 @@ export class EventBase {
         return !evt.defaultPrevented;
     }
 }
+export class TypedEvent extends Event {
+    constructor(type) {
+        super(type);
+    }
+}
 export class TypedEventBase extends EventBase {
     constructor() {
         super(...arguments);
@@ -69,9 +74,6 @@ export class TypedEventBase extends EventBase {
         if (mappedCallback) {
             super.removeEventListener(type, mappedCallback);
         }
-    }
-    dispatchEvent(evt) {
-        return super.dispatchEvent(evt);
     }
 }
 //# sourceMappingURL=EventBase.js.map

@@ -1,29 +1,29 @@
-import { TypedEventBase } from "../events/EventBase";
-class GamepadButtonEvent extends Event {
+import { TypedEvent, TypedEventBase } from "../events/EventBase";
+class GamepadButtonEvent extends TypedEvent {
     constructor(type, button) {
-        super("gamepadbutton" + type);
+        super(type);
         this.button = button;
     }
 }
 export class GamepadButtonUpEvent extends GamepadButtonEvent {
     constructor(button) {
-        super("up", button);
+        super("gamepadButtonUp", button);
     }
 }
 export class GamepadButtonDownEvent extends GamepadButtonEvent {
     constructor(button) {
-        super("down", button);
+        super("gamepadButtonDown", button);
     }
 }
-class GamepadAxisEvent extends Event {
+class GamepadAxisEvent extends TypedEvent {
     constructor(type, axis) {
-        super("gamepadaxis" + type);
+        super(type);
         this.axis = axis;
     }
 }
 export class GamepadAxisMaxedEvent extends GamepadAxisEvent {
     constructor(axis) {
-        super("maxed", axis);
+        super("gamepadAxisMaxed", axis);
     }
 }
 export class EventedGamepad extends TypedEventBase {
