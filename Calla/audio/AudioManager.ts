@@ -1,7 +1,7 @@
 import type { vec3 } from "gl-matrix";
 import { arrayRemove } from "kudzu/arrays/arrayRemove";
 import { arraySortedInsert } from "kudzu/arrays/arraySortedInsert";
-import { TypedEventBase } from "kudzu/events/EventBase";
+import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { onUserGesture } from "kudzu/events/onUserGesture";
 import { waitFor } from "kudzu/events/waitFor";
 import { autoPlay, controls, display, muted, playsInline, srcObject, styles } from "kudzu/html/attrs";
@@ -36,7 +36,7 @@ type withPoseCallback<T> = (pose: InterpolatedPose, dt: number) => T;
 
 const BUFFER_SIZE = 1024;
 const audioActivityEvt = new AudioActivityEvent();
-const audioReadyEvt = new Event("audioready");
+const audioReadyEvt = new TypedEvent("audioReady");
 const testAudio = Audio();
 
 const useTrackSource = "createMediaStreamTrackSource" in AudioContext.prototype;
@@ -81,7 +81,7 @@ let hasNewAudioListener = hasAudioListener && "positionX" in AudioListener.proto
 let attemptResonanceAPI = hasAudioListener;
 
 interface AudioManagerEvents {
-    audioready: Event,
+    audioReady: TypedEvent<"audioReady">,
     audioActivity: AudioActivityEvent;
 }
 

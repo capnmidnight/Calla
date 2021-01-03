@@ -23,7 +23,7 @@ import { BaseMetadataClient } from "../BaseMetadataClient";
 
 export interface JitsiHaxCommand {
     hax: string,
-    command: CallaEventType,
+    command: CallaMetadataEventType,
     values: any[];
 }
 

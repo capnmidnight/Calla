@@ -1,6 +1,6 @@
 import { arrayRemove } from "kudzu/arrays/arrayRemove";
 import { arraySortedInsert } from "kudzu/arrays/arraySortedInsert";
-import { TypedEventBase } from "kudzu/events/EventBase";
+import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { onUserGesture } from "kudzu/events/onUserGesture";
 import { waitFor } from "kudzu/events/waitFor";
 import { autoPlay, controls, display, muted, playsInline, srcObject, styles } from "kudzu/html/attrs";
@@ -22,7 +22,7 @@ if (!("OfflineAudioContext" in globalThis) && "webkitOfflineAudioContext" in glo
 }
 const BUFFER_SIZE = 1024;
 const audioActivityEvt = new AudioActivityEvent();
-const audioReadyEvt = new Event("audioready");
+const audioReadyEvt = new TypedEvent("audioReady");
 const testAudio = Audio();
 const useTrackSource = "createMediaStreamTrackSource" in AudioContext.prototype;
 const useElementSource = !useTrackSource && !("createMediaStreamSource" in AudioContext.prototype);

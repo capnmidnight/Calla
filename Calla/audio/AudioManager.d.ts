@@ -1,12 +1,12 @@
 import type { vec3 } from "gl-matrix";
-import { TypedEventBase } from "kudzu/events/EventBase";
+import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import type { blobFetchingCallback } from "kudzu/io/fetchingCallback";
 import type { progressCallback } from "kudzu/io/progressCallback";
 import { AudioActivityEvent } from "./AudioActivityEvent";
 import { AudioSource } from "./AudioSource";
 import type { BaseNode } from "./spatializers/nodes/BaseNode";
 interface AudioManagerEvents {
-    audioready: Event;
+    audioReady: TypedEvent<"audioReady">;
     audioActivity: AudioActivityEvent;
 }
 export declare enum SpatializerType {
