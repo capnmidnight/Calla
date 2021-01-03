@@ -1,0 +1,1 @@
+{"version":3,"file":"postObjectForImageBitmap.js","sourceRoot":"","sources":["postObjectForImageBitmap.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,iBAAiB,EAAE,MAAM,qBAAqB,CAAC;AAExD,MAAM,CAAC,KAAK,UAAU,wBAAwB,CAAI,IAAY,EAAE,GAAM,EAAE,UAA6B;IACjG,MAAM,IAAI,GAAG,MAAM,iBAAiB,CAAC,IAAI,EAAE,GAAG,EAAE,UAAU,CAAC,CAAC;IAC5D,OAAO,MAAM,iBAAiB,CAAC,IAAI,CAAC,CAAC;AACzC,CAAC"}
