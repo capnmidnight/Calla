@@ -98,7 +98,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
     private minDistance = 1;
     private maxDistance = 10;
     private rolloff = 1;
-    private algorithm = "logarithmic";
+    private _algorithm = "logarithmic";
     private transitionTime = 0.5;
     private _offsetRadius = 0;
 
@@ -141,6 +141,10 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
     set offsetRadius(v) {
         this._offsetRadius = v;
         this.updateUserOffsets();
+    }
+
+    get algorithm() {
+        return this._algorithm;
     }
 
     addEventListener<K extends string & keyof AudioManagerEvents>(type: K, callback: (evt: Event & AudioManagerEvents[K]) => any, options: AddEventListenerOptions = null): void {
@@ -583,7 +587,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
         this.maxDistance = maxDistance;
         this.transitionTime = transitionTime;
         this.rolloff = rolloff;
-        this.algorithm = algorithm;
+        this._algorithm = algorithm;
 
         for (const user of this.users.values()) {
             if (user.spatializer) {

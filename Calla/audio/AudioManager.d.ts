@@ -23,7 +23,7 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
     private minDistance;
     private maxDistance;
     private rolloff;
-    private algorithm;
+    private _algorithm;
     private transitionTime;
     private _offsetRadius;
     private clips;
@@ -43,6 +43,7 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
     constructor(type: SpatializerType, getBlob: blobFetchingCallback);
     get offsetRadius(): number;
     set offsetRadius(v: number);
+    get algorithm(): string;
     addEventListener<K extends string & keyof AudioManagerEvents>(type: K, callback: (evt: Event & AudioManagerEvents[K]) => any, options?: AddEventListenerOptions): void;
     get ready(): boolean;
     /**

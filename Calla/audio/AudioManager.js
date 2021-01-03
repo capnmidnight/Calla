@@ -80,7 +80,7 @@ export class AudioManager extends TypedEventBase {
         this.minDistance = 1;
         this.maxDistance = 10;
         this.rolloff = 1;
-        this.algorithm = "logarithmic";
+        this._algorithm = "logarithmic";
         this.transitionTime = 0.5;
         this._offsetRadius = 0;
         this.clips = new Map();
@@ -107,6 +107,9 @@ export class AudioManager extends TypedEventBase {
     set offsetRadius(v) {
         this._offsetRadius = v;
         this.updateUserOffsets();
+    }
+    get algorithm() {
+        return this._algorithm;
     }
     addEventListener(type, callback, options = null) {
         if (type === audioReadyEvt.type
@@ -481,7 +484,7 @@ export class AudioManager extends TypedEventBase {
         this.maxDistance = maxDistance;
         this.transitionTime = transitionTime;
         this.rolloff = rolloff;
-        this.algorithm = algorithm;
+        this._algorithm = algorithm;
         for (const user of this.users.values()) {
             if (user.spatializer) {
                 user.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.algorithm, this.transitionTime);
