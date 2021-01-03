@@ -1,6 +1,10 @@
-import { EventBase } from "kudzu/events/EventBase";
+import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { IOpenable } from "./ops";
-export declare class FormDialog extends EventBase implements IOpenable {
+export interface FormDialogEvents {
+    hidden: TypedEvent<"hidden">;
+    shown: TypedEvent<"shown">;
+}
+export declare class FormDialog<T extends FormDialogEvents> extends TypedEventBase<T> implements IOpenable {
     element: HTMLElement;
     header: HTMLElement;
     content: HTMLElement;
@@ -8,10 +12,7 @@ export declare class FormDialog extends EventBase implements IOpenable {
     constructor(tagId: string);
     isOpen(): boolean;
     setOpen(v: boolean, displayType?: string): void;
-    updateLabel(_open: boolean, _enabledText: string, _disabledText: string, _bothText: string): void;
     toggleOpen(displayType?: string): void;
-    setLocked(_v: boolean): void;
-    get accessKey(): string;
     get tagName(): string;
     get disabled(): boolean;
     set disabled(_v: boolean);

@@ -1,5 +1,12 @@
 import { setContextSize } from "kudzu/html/canvas";
-import { BaseAvatar } from "./BaseAvatar";
+import { AvatarMode } from "./AvatarMode";
+import { BaseAvatar, BaseAvatarChangedEvent } from "./BaseAvatar";
+
+export class PhotoAvatarChangedEvent extends BaseAvatarChangedEvent<AvatarMode.Photo, string> {
+    constructor(url: string) {
+        super(AvatarMode.Photo, url);
+    }
+}
 
 /**
  * An avatar that uses an Image as its representation.
@@ -12,7 +19,7 @@ export class PhotoAvatar extends BaseAvatar {
      * Creates a new avatar that uses an Image as its representation.
      */
     constructor(url: string | URL) {
-        super(false);
+        super(AvatarMode.Photo, false);
 
         const img = new Image();
         img.addEventListener("load", () => {

@@ -4,7 +4,14 @@ import type { Context2D } from "kudzu/html/canvas";
 import { setContextSize } from "kudzu/html/canvas";
 import { isIOS } from "kudzu/html/flags";
 import { Video } from "kudzu/html/tags";
-import { BaseAvatar } from "./BaseAvatar";
+import { AvatarMode } from "./AvatarMode";
+import { BaseAvatar, BaseAvatarChangedEvent } from "./BaseAvatar";
+
+export class VideoAvatarChangedEvent extends BaseAvatarChangedEvent<AvatarMode.Video, MediaStream> {
+    constructor(video: MediaStream) {
+        super(AvatarMode.Video, video);
+    }
+}
 
 /**
  * An avatar that uses an HTML Video element as its representation.
@@ -15,7 +22,7 @@ export class VideoAvatar extends BaseAvatar {
      * Creates a new avatar that uses a MediaStream as its representation.
      */
     constructor(stream: MediaProvider) {
-        super(false);
+        super(AvatarMode.Video, false);
 
         if (stream instanceof HTMLVideoElement) {
             this.video = stream;

@@ -1,12 +1,23 @@
 import type { InterpolatedPose } from "calla/audio/positions/InterpolatedPose";
 import type { Emoji } from "kudzu/emoji/Emoji";
-import { EventBase } from "kudzu/events/EventBase";
-import { Emote } from "./Emote";
+import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
+import { Emote, EmoteEvent } from "./Emote";
 import type { IInputBinding } from "./Settings";
 import { TileMap } from "./TileMap";
-import { User } from "./User";
+import { User, UserJoinedEvent, UserMovedEvent } from "./User";
 declare type withUserCallback = (user: User) => any;
-export declare class Game extends EventBase {
+interface GameEvents {
+    gameStarted: TypedEvent<"gameStarted">;
+    gameEnded: TypedEvent<"gameEnded">;
+    zoomChanged: TypedEvent<"zoomChanged">;
+    emojiNeeded: TypedEvent<"emojiNeeded">;
+    toggleAudio: TypedEvent<"toggleAudio">;
+    toggleVideo: TypedEvent<"toggleVideo">;
+    userJoined: UserJoinedEvent;
+    userMoved: UserMovedEvent;
+    emote: EmoteEvent;
+}
+export declare class Game extends TypedEventBase<GameEvents> {
     zoomMin: number;
     zoomMax: number;
     waypoints: {
@@ -46,7 +57,6 @@ export declare class Game extends EventBase {
     inputBinding: IInputBinding;
     constructor(zoomMin: number, zoomMax: number);
     get style(): CSSStyleDeclaration;
-    initializeUser(id: string, evt: any): void;
     updateAudioActivity(id: string, isActive: boolean): void;
     emote(id: string, emoji: Emoji): void;
     getTileAt(cursor: {

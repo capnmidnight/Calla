@@ -1,53 +1,49 @@
+import type { TagChild } from "kudzu/html/tags";
 import { HtmlCustomTag } from "./HtmlCustomTag";
 /**
  * Creates an input box that has a label attached to it.
- * @param {string} id - the ID to use for the input box
- * @param {string} inputType - the type to use for the input box (number, text, etc.)
- * @param {string} labelText - the text to display in the label
- * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text to use on the select element
- * @returns {LabeledInputTag}
+ * @param id - the ID to use for the input box
+ * @param inputType - the type to use for the input box (number, text, etc.)
+ * @param labelText - the text to display in the label
+ * @param rest - optional attributes, child elements, and text to use on the select element
  */
-export declare function LabeledInput(id: any, inputType: any, labelText: any, ...rest: any[]): LabeledInputTag;
+export declare function LabeledInput(id: string, inputType: string, labelText: string, ...rest: TagChild[]): LabeledInputTag;
 /**
  * An input box that has a label attached to it.
  **/
-export declare class LabeledInputTag extends HtmlCustomTag {
+export declare class LabeledInputTag extends HtmlCustomTag<HTMLDivElement> {
+    private label;
+    input: HTMLInputElement;
     /**
      * Creates an input box that has a label attached to it.
-     * @param {string} id - the ID to use for the input box
-     * @param {string} inputType - the type to use for the input box (number, text, etc.)
-     * @param {string} labelText - the text to display in the label
-     * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text to use on the select element
+     * @param id - the ID to use for the input box
+     * @param inputType - the type to use for the input box (number, text, etc.)
+     * @param labelText - the text to display in the label
+     * @param rest - optional attributes, child elements, and text to use on the select element
      */
-    constructor(id: any, inputType: any, labelText: any, ...rest: any[]);
+    constructor(id: string, inputType: string, labelText: string, ...rest: TagChild[]);
     /**
      * Retrieves the desired element for attaching events.
-     * @returns {HTMLElement}
      **/
-    get eventTarget(): any;
+    get eventTarget(): HTMLInputElement;
     /**
      * Gets the value attribute of the input element
-     * @type {string}
      */
-    get value(): any;
+    get value(): string;
     /**
      * Sets the value attribute of the input element
-     * @param {string} v
      */
-    set value(v: any);
+    set value(v: string);
     /**
      * Gets whether or not the input element is checked, if it's a checkbox or radio button.
-     * @type {boolean}
      */
-    get checked(): any;
+    get checked(): boolean;
     /**
      * Sets whether or not the input element is checked, if it's a checkbox or radio button.
-     * @param {boolean} v
      */
-    set checked(v: any);
+    set checked(v: boolean);
     /**
      * Sets whether or not the input element should be disabled.
-     * @param {boolean} value
      */
-    setLocked(value: any): void;
+    setLocked(value: boolean): void;
 }

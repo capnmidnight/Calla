@@ -1,6 +1,6 @@
 import { disabled, id, value } from "kudzu/html/attrs";
 import { elementClearChildren, Option, TagChild } from "kudzu/html/tags";
-import { isFunction } from "kudzu/typeChecks";
+import { isFunction, isNullOrUndefined } from "kudzu/typeChecks";
 import { HtmlCustomTag } from "./HtmlCustomTag";
 
 const disabler = disabled(true);
@@ -187,8 +187,12 @@ export class SelectBoxTag<T> extends HtmlCustomTag<HTMLSelectElement> {
      * Returns the index of the given item in the select box's databound collection.
      */
     indexOf(value: T): number {
+        if (isNullOrUndefined(value)) {
+            return -1;
+        }
         return this.values
-            .findIndex((v: T) => value !== null && this.makeID(value) === this.makeID(v));
+            .findIndex((v: T) =>
+                this.makeID(value) === this.makeID(v));
     }
 
     /**

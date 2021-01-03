@@ -1,27 +1,36 @@
-import { FormDialog } from "./FormDialog";
-export declare class LoginForm extends FormDialog {
+import { TypedEvent } from "kudzu/events/EventBase";
+import { FormDialog, FormDialogEvents } from "./FormDialog";
+interface LoginFormEvents extends FormDialogEvents {
+    login: TypedEvent<"login">;
+}
+export declare class LoginForm extends FormDialog<LoginFormEvents> {
+    private _ready;
+    private _connecting;
+    private _connected;
+    private roomSelectControl;
+    private roomEntryControl;
+    private roomSelect;
+    private roomInput;
+    private userNameInput;
+    private emailInput;
+    private connectButton;
     constructor();
-    /**
-     * @param {KeyboardEvent} evt
-     * @param {Function} callback
-     */
-    _checkInput(evt: any, callback: any): void;
-    addEventListener(evtName: any, callback: any, options: any): void;
-    removeEventListener(evtName: any, callback: any): void;
+    private validate;
     get roomSelectMode(): boolean;
     set roomSelectMode(value: boolean);
-    get roomName(): any;
-    set roomName(v: any);
-    set userName(value: any);
-    get userName(): any;
-    set email(value: any);
-    get email(): any;
-    get connectButtonText(): any;
-    set connectButtonText(str: any);
-    get ready(): any;
-    set ready(v: any);
-    get connecting(): any;
-    set connecting(v: any);
-    get connected(): any;
-    set connected(v: any);
+    get roomName(): string;
+    set roomName(v: string);
+    set userName(value: string);
+    get userName(): string;
+    set email(value: string);
+    get email(): string;
+    get connectButtonText(): string;
+    set connectButtonText(str: string);
+    get ready(): boolean;
+    set ready(v: boolean);
+    get connecting(): boolean;
+    set connecting(v: boolean);
+    get connected(): boolean;
+    set connected(v: boolean);
 }
+export {};

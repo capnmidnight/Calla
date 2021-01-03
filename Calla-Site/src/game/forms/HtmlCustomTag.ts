@@ -1,11 +1,12 @@
 import { EventBase } from "kudzu/events/EventBase";
 import { tag, TagChild } from "kudzu/html/tags";
+import { setOpen } from "./ops";
 
 /**
  * A pseudo-element that is made out of other elements.
  **/
-export class HtmlCustomTag<T extends HTMLElement> extends EventBase {
-    element: T;
+export class HtmlCustomTag<ElementT extends HTMLElement> extends EventBase {
+    element: ElementT;
     /**
      * Creates a new pseudo-element
      * @param tagName - the type of tag that will contain the elements in the custom tag.
@@ -13,7 +14,7 @@ export class HtmlCustomTag<T extends HTMLElement> extends EventBase {
      */
     constructor(tagName: string, ...rest: TagChild[]) {
         super();
-        this.element = tag(tagName, ...rest) as T;
+        this.element = tag(tagName, ...rest) as ElementT;
     }
 
     /**
@@ -71,6 +72,14 @@ export class HtmlCustomTag<T extends HTMLElement> extends EventBase {
      */
     get style(): CSSStyleDeclaration {
         return this.element.style;
+    }
+
+    get visible() {
+        return this.style.display !== null;
+    }
+
+    set visible(v) {
+        setOpen(this.element, v);
     }
 
     get tagName(): string {

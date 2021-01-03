@@ -1,10 +1,10 @@
-import { EventBase } from "kudzu/events/EventBase";
+import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { once } from "kudzu/events/once";
 import { id } from "kudzu/html/attrs";
 import { Div } from "kudzu/html/tags";
 import { hide, show } from "./ops";
-const hiddenEvt = new Event("hidden"), shownEvt = new Event("shown");
-export class FormDialog extends EventBase {
+const hiddenEvt = new TypedEvent("hidden"), shownEvt = new TypedEvent("shown");
+export class FormDialog extends TypedEventBase {
     constructor(tagId) {
         super();
         this.element = Div(id(tagId));
@@ -24,15 +24,8 @@ export class FormDialog extends EventBase {
             ? displayType || ""
             : "none";
     }
-    updateLabel(_open, _enabledText, _disabledText, _bothText) {
-    }
     toggleOpen(displayType) {
         this.setOpen(!this.isOpen(), displayType);
-    }
-    setLocked(_v) {
-    }
-    get accessKey() {
-        return this.element.accessKey;
     }
     get tagName() {
         return this.element.tagName;

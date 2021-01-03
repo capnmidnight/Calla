@@ -1,22 +1,35 @@
 import type { InterpolatedPose } from "calla/audio/positions/InterpolatedPose";
-import type { Emoji } from "kudzu/emoji/Emoji";
 import { bust, mutedSpeaker, speakerMediumVolume } from "kudzu/emoji/emojis";
-import { EventBase } from "kudzu/events/EventBase";
+import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { getTransform } from "kudzu/graphics2d/getTransform";
 import { TextImage } from "kudzu/graphics2d/TextImage";
 import type { Context2D } from "kudzu/html/canvas";
 import { project } from "kudzu/math/project";
-import { isString } from "kudzu/typeChecks";
+import { assertNever, isString } from "kudzu/typeChecks";
 import { AvatarMode } from "./avatars/AvatarMode";
+import { AvatarChangedEvent } from "./avatars/BaseAvatar";
 import { EmojiAvatar } from "./avatars/EmojiAvatar";
 import { PhotoAvatar } from "./avatars/PhotoAvatar";
 import { VideoAvatar } from "./avatars/VideoAvatar";
 import type { TileMap } from "./TileMap";
 
+export class UserMovedEvent extends TypedEvent<"userMoved"> {
+    x = 0;
+    y = 0;
+    constructor(public id: string) {
+        super("userMoved");
+    }
+}
+
+export class UserJoinedEvent extends TypedEvent<"userJoined">{
+    constructor(public user: User) {
+        super("userJoined");
+    }
+}
+
 const POSITION_REQUEST_DEBOUNCE_TIME = 1,
     STACKED_USER_OFFSET_X = 5,
     STACKED_USER_OFFSET_Y = 5,
-    eventNames = ["userMoved", "userPositionNeeded"],
     muteAudioIcon = new TextImage(),
     speakerActivityIcon = new TextImage();
 
@@ -25,7 +38,11 @@ muteAudioIcon.value = mutedSpeaker.value;
 speakerActivityIcon.fontFamily = "Noto Color Emoji";
 speakerActivityIcon.value = speakerMediumVolume.value;
 
-export class User extends EventBase {
+interface UserEvents {
+    userMoved: UserMovedEvent;
+}
+
+export class User extends TypedEventBase<UserEvents> {
     label: string;
     audioMuted: boolean = false;
     videoMuted: boolean = true;
@@ -43,13 +60,15 @@ export class User extends EventBase {
     private _avatarVideo: VideoAvatar = null;
     private _avatarImage: PhotoAvatar = null;
     private _avatarEmoji: EmojiAvatar = null;
+    private userMovedEvt: UserMovedEvent;
 
     constructor(public id: string, displayName: string, private pose: InterpolatedPose, public isMe: boolean) {
         super();
 
+        this.userMovedEvt = new UserMovedEvent(id);
         this.label = isMe ? "(Me)" : `(${this.id})`;
 
-        this.setAvatarEmoji(bust);
+        this.setAvatarEmoji(bust.value);
 
         this.lastPositionRequestTime = performance.now() / 1000 - POSITION_REQUEST_DEBOUNCE_TIME;
         this.userNameText = new TextImage();
@@ -75,16 +94,18 @@ export class User extends EventBase {
         return this.pose.end.p[2];
     }
 
-    deserialize(evt) {
-        switch (evt.avatarMode) {
-            case AvatarMode.emoji:
-                this.setAvatarEmoji(evt.avatarID);
+    setAvatar(evt: AvatarChangedEvent) {
+        switch (evt.mode) {
+            case AvatarMode.Emoji:
+                this.setAvatarEmoji(evt.avatar);
                 break;
-            case AvatarMode.photo:
-                this.avatarImage = evt.avatarID;
+            case AvatarMode.Photo:
+                this.setAvatarImage(evt.avatar);
                 break;
-            default:
+            case AvatarMode.Video:
+                this.setAvatarVideo(evt.avatar);
                 break;
+            default: assertNever(evt);
         }
     }
 
@@ -98,7 +119,6 @@ export class User extends EventBase {
 
     /**
      * An avatar using a live video.
-     * @type {VideoAvatar}
      **/
     get avatarVideo() {
         return this._avatarVideo;
@@ -106,9 +126,8 @@ export class User extends EventBase {
 
     /**
      * Set the current video element used as the avatar.
-     * @param stream
      **/
-    setAvatarVideo(stream:MediaStream) {
+    setAvatarVideo(stream: MediaStream) {
         if (stream) {
             this._avatarVideo = new VideoAvatar(stream);
         }
@@ -119,19 +138,15 @@ export class User extends EventBase {
 
     /**
      * An avatar using a photo
-     * @type {string}
      **/
     get avatarImage() {
-        return this._avatarImage
-            && this._avatarImage.url
-            || null;
+        return this._avatarImage;
     }
 
     /**
      * Set the URL of the photo to use as an avatar.
-     * @param {string} url
      */
-    set avatarImage(url) {
+    setAvatarImage(url: string) {
         if (isString(url)
             && url.length > 0) {
             this._avatarImage = new PhotoAvatar(url);
@@ -151,10 +166,8 @@ export class User extends EventBase {
     /**
      * Set the emoji to use as an avatar.
      */
-    setAvatarEmoji(emoji:Emoji) {
-        if (emoji
-            && emoji.value
-            && emoji.desc) {
+    setAvatarEmoji(emoji: string) {
+        if (emoji) {
             this._avatarEmoji = new EmojiAvatar(emoji);
         }
         else {
@@ -164,62 +177,53 @@ export class User extends EventBase {
 
     /**
      * Returns the type of avatar that is currently active.
-     * @returns {AvatarMode}
      **/
     get avatarMode() {
         if (this._avatarVideo) {
-            return AvatarMode.video;
+            return AvatarMode.Video;
         }
         else if (this._avatarImage) {
-            return AvatarMode.photo;
+            return AvatarMode.Photo;
         }
         else if (this._avatarEmoji) {
-            return AvatarMode.emoji;
+            return AvatarMode.Emoji;
         }
         else {
-            return AvatarMode.none;
+            return AvatarMode.None;
         }
     }
 
     /**
      * Returns a serialized representation of the current avatar,
      * if such a representation exists.
-     * @returns {string}
      **/
-    get avatarID() {
+    get avatarID(): string {
         switch (this.avatarMode) {
-            case AvatarMode.emoji:
-                return { value: this.avatarEmoji.value, desc: this.avatarEmoji.desc };
-            case AvatarMode.photo:
-                return this.avatarImage;
-            default:
+            case AvatarMode.Emoji:
+                return this.avatarEmoji.value;
+            case AvatarMode.Photo:
+                return this.avatarImage.url;
+            case AvatarMode.Video: case AvatarMode.None:
                 return null;
+            default: assertNever(this.avatarMode);
         }
     }
 
     /**
      * Returns the current avatar
-     * @returns {import("./avatars/BaseAvatar").BaseAvatar}
      **/
     get avatar() {
         switch (this.avatarMode) {
-            case AvatarMode.emoji:
+            case AvatarMode.Emoji:
                 return this._avatarEmoji;
-            case AvatarMode.photo:
+            case AvatarMode.Photo:
                 return this._avatarImage;
-            case AvatarMode.video:
+            case AvatarMode.Video:
                 return this._avatarVideo;
-            default:
+            case AvatarMode.None:
                 return null;
+            default: assertNever(this.avatarMode);
         }
-    }
-
-    addEventListener(evtName: string, func: (evt: Event) => any, opts: AddEventListenerOptions) {
-        if (eventNames.indexOf(evtName) === -1) {
-            throw new Error(`Unrecognized event type: ${evtName}`);
-        }
-
-        super.addEventListener(evtName, func, opts);
     }
 
     get displayName() {
@@ -233,15 +237,13 @@ export class User extends EventBase {
 
     moveTo(x: number, y: number) {
         if (this.isMe) {
-            this.moveEvent.x = x;
-            this.moveEvent.y = y;
-            this.dispatchEvent(this.moveEvent);
+            this.userMovedEvt.x = x;
+            this.userMovedEvt.y = y;
+            this.dispatchEvent(this.userMovedEvt);
         }
     }
 
     update(map: TileMap, users: Map<string, User>) {
-        const t = performance.now() / 1000;
-
         this.stackUserCount = 0;
         this.stackIndex = 0;
         for (let user of users.values()) {

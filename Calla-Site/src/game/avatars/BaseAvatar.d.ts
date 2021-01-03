@@ -1,15 +1,26 @@
 import type { CanvasTypes, Context2D } from "kudzu/html/canvas";
+import type { AvatarMode } from "./AvatarMode";
+import type { EmojiAvatarChangedEvent } from "./EmojiAvatar";
+import type { PhotoAvatarChangedEvent } from "./PhotoAvatar";
+import type { VideoAvatarChangedEvent } from "./VideoAvatar";
+export declare abstract class BaseAvatarChangedEvent<ModeT extends AvatarMode, AvatarT> extends Event {
+    mode: ModeT;
+    avatar: AvatarT;
+    constructor(mode: ModeT, avatar: AvatarT);
+}
+export declare type AvatarChangedEvent = EmojiAvatarChangedEvent | PhotoAvatarChangedEvent | VideoAvatarChangedEvent;
 /**
  * A base class for different types of avatars.
  **/
 export declare class BaseAvatar {
+    mode: AvatarMode;
     canSwim: boolean;
-    protected element: CanvasTypes;
+    element: CanvasTypes;
     protected g: Context2D;
     /**
      * Encapsulates a resource to use as an avatar.
      */
-    constructor(canSwim: boolean);
+    constructor(mode: AvatarMode, canSwim: boolean);
     /**
      * Render the avatar at a certain size.
      * @param g - the context to render to

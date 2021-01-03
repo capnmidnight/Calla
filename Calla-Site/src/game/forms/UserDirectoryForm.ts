@@ -1,107 +1,51 @@
-import { backgroundColor, disabled, height, id, width, zIndex } from "kudzu/html/attrs";
-import { onBlur, onClick, onFocus, onKeyPress, onMouseOut, onMouseOver } from "kudzu/html/evts";
+import { backgroundColor, height, id, styles, width, zIndex } from "kudzu/html/attrs";
+import { onClick, onMouseOut, onMouseOver } from "kudzu/html/evts";
 import { gridPos, row } from "kudzu/html/grid";
-import { Button, Canvas, Div, InputText } from "kudzu/html/tags";
-import { FormDialog } from "./FormDialog";
+import { Canvas, Div } from "kudzu/html/tags";
+import type { User } from "../User";
+import { FormDialog, FormDialogEvents } from "./FormDialog";
 import { hide, isOpen } from "./ops";
 
 const newRowColor = backgroundColor("lightgreen");
 const hoveredColor = backgroundColor("rgba(65, 255, 202, 0.25)");
 const unhoveredColor = backgroundColor("transparent");
-const warpToEvt = Object.assign(
-    new Event("warpTo"),
-    {
-        id: null
-    });
 
-const chatFocusChanged = new Event("chatFocusChanged");
+export class UserDirectoryFormWarpToEvent extends Event {
+    id: string = null;
+    constructor() {
+        super("warpTo");
+    }
+}
+
+interface UserDirectoryFormEvents extends FormDialogEvents {
+    warpTo: UserDirectoryFormWarpToEvent;
+}
+
+const warpToEvt = new UserDirectoryFormWarpToEvent();
 
 const ROW_TIMEOUT = 3000;
 
-export class UserDirectoryForm extends FormDialog {
+export class UserDirectoryForm extends FormDialog<UserDirectoryFormEvents> {
+
+    roomName: string = null;
+    userName: string = null;
+    usersList: HTMLDivElement;
+    rows = new Map<string, HTMLElement[]>();
+    users = new Map<string, User>();
+    avatarGs = new Map<string, CanvasRenderingContext2D>();
+    lastUser: User = null;
 
     constructor() {
         super("users");
 
-        const _ = (evt: Event) => () => this.dispatchEvent(evt);
-
-        this.roomName = null;
-        this.userName = null;
-        this.chatFocused = false;
         this.usersList = Div(id("chatUsers"));
-        this.messages = Div(id("chatMessages"));
-
-        /** @type {Map.<string, Element[]>} */
-        this.rows = new Map();
-
-        /** @type {Map<string, User>} */
-        this.users = new Map();
-
-        /** @type {Map<string, CanvasRenderingContext2D>} */
-        this.avatarGs = new Map();
-
-        let lastUser = null;
-
-        //this.chat.on("ReceiveMessage", (room, user, message) => {
-        //    if (user !== lastUser) {
-        //        lastUser = user;
-        //        user = "";
-        //    }
-
-        //    this.messages.append(Div(user), Div(message));
-        //    this.messages.lastChild.scrollIntoView();
-        //});
-
-        const sendMessage = async () => {
-            if (this.entry.value.length > 0) {
-                this.send.disabled
-                    = this.entry.disabled
-                    = true;
-                //await this.chat.invoke("SendMessage", this.roomName, this.userName, this.entry.value);
-                this.entry.value = "";
-                this.entry.disabled
-                    = this.send.disabled
-                    = false;
-                this.entry.focus();
-            }
-        };
-
-        const onFocusChanged = () => this.dispatchEvent(chatFocusChanged);
-
-        this.entry = InputText(
-            id("chatEntry"),
-            disabled,
-            onFocus(() => this.chatFocused = true),
-            onFocus(onFocusChanged),
-            onBlur(() => this.chatFocused = false),
-            onBlur(onFocusChanged),
-            onKeyPress((evt) => {
-                if (evt.key === "Enter") {
-                    sendMessage();
-                }
-            }));
-
-        this.send = Button(
-            id("chatSend"),
-            disabled,
-            onClick(sendMessage));
 
         Object.seal(this);
     }
 
-    /**
-     *
-     * @param {string} roomName
-     * @param {string} userName
-     */
-    async startAsync(roomName, userName) {
+    async startAsync(roomName: string, userName: string) {
         this.roomName = roomName;
         this.userName = userName;
-        //await this.chat.start();
-        //await this.chat.invoke("Join", this.roomName);
-        this.entry.disabled
-            = this.send.disabled
-            = false;
     }
 
     update() {
@@ -111,17 +55,13 @@ export class UserDirectoryForm extends FormDialog {
                 if (this.avatarGs.has(id) && user.avatar) {
                     const g = this.avatarGs.get(id);
                     g.clearRect(0, 0, g.canvas.width, g.canvas.height);
-                    user.avatar.draw(g, g.canvas.width, g.canvas.height);
+                    user.avatar.draw(g, g.canvas.width, g.canvas.height, user.isMe);
                 }
             }
         }
     }
 
-    /**
-     * 
-     * @param {User} user
-     */
-    set(user) {
+    set(user: User) {
         const isNew = !this.rows.has(user.id);
         this.delete(user.id);
         const row = this.rows.size + 1;
@@ -146,29 +86,28 @@ export class UserDirectoryForm extends FormDialog {
 
         const avatar = this.avatarGs.get(user.id).canvas;
 
+        const trueRow = Div(
+            styles(gridPos(1, row, 2, 1), zIndex(1), unhoveredColor),
+            onMouseOver((_:Event) => {
+                hoveredColor.apply(trueRow.style);
+            }),
+            onMouseOut(() => unhoveredColor.apply(trueRow.style)),
+            onClick(() => {
+                hide(this);
+                warpToEvt.id = user.id;
+                this.dispatchEvent(warpToEvt);
+            }));
+
         const elems = [
-            Div(gridPos(1, row), zIndex(0), avatar),
-            Div(gridPos(2, row), zIndex(0), user.displayName),
-            Div(
-                gridPos(1, row, 2, 1), zIndex(1),
-                unhoveredColor,
-                onMouseOver(function () {
-                    hoveredColor.apply(this);
-                }),
-                onMouseOut(function () {
-                    unhoveredColor.apply(this);
-                }),
-                onClick(() => {
-                    hide(this);
-                    warpToEvt.id = user.id;
-                    this.dispatchEvent(warpToEvt);
-                }))];
+            Div(styles(gridPos(1, row), zIndex(0)), avatar),
+            Div(styles(gridPos(2, row), zIndex(0)), user.displayName),
+            trueRow];
 
         this.rows.set(user.id, elems);
         this.usersList.append(...elems);
     }
 
-    delete(userID) {
+    delete(userID: string) {
         if (this.rows.has(userID)) {
             const elems = this.rows.get(userID);
             this.rows.delete(userID);
@@ -192,10 +131,10 @@ export class UserDirectoryForm extends FormDialog {
         }
     }
 
-    warn(...rest) {
+    warn(...rest: any[]) {
         const elem = Div(
-            gridPos(1, this.rows.size + 1, 2, 1),
-            backgroundColor("yellow"),
+            styles(gridPos(1, this.rows.size + 1, 2, 1),
+                backgroundColor("yellow")),
             ...rest.map(i => i.toString()));
 
         this.usersList.append(elem);

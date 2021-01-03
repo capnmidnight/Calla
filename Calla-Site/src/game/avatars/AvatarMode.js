@@ -1,11 +1,11 @@
 /**
  * Types of avatars.
- * @enum {string}
  **/
-export const AvatarMode = Object.freeze({
-    none: null,
-    emoji: "emoji",
-    photo: "photo",
-    video: "video"
-});
+export var AvatarMode;
+(function (AvatarMode) {
+    AvatarMode["None"] = "none";
+    AvatarMode["Emoji"] = "emoji";
+    AvatarMode["Photo"] = "photo";
+    AvatarMode["Video"] = "video";
+})(AvatarMode || (AvatarMode = {}));
 //# sourceMappingURL=AvatarMode.js.map

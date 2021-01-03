@@ -3,8 +3,8 @@ import { TagChild } from "kudzu/html/tags";
 /**
  * A pseudo-element that is made out of other elements.
  **/
-export declare class HtmlCustomTag<T extends HTMLElement> extends EventBase {
-    element: T;
+export declare class HtmlCustomTag<ElementT extends HTMLElement> extends EventBase {
+    element: ElementT;
     /**
      * Creates a new pseudo-element
      * @param tagName - the type of tag that will contain the elements in the custom tag.
@@ -40,6 +40,8 @@ export declare class HtmlCustomTag<T extends HTMLElement> extends EventBase {
      * Gets the style attribute of the underlying select box.
      */
     get style(): CSSStyleDeclaration;
+    get visible(): boolean;
+    set visible(v: boolean);
     get tagName(): string;
     get disabled(): boolean;
     set disabled(_v: boolean);

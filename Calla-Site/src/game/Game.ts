@@ -1,49 +1,53 @@
 import type { InterpolatedPose } from "calla/audio/positions/InterpolatedPose";
 import { arrayClear } from "kudzu/arrays/arrayClear";
 import type { Emoji } from "kudzu/emoji/Emoji";
-import { EventBase } from "kudzu/events/EventBase";
+import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { id } from "kudzu/html/attrs";
 import { resizeCanvas } from "kudzu/html/canvas";
 import { Canvas } from "kudzu/html/tags";
 import { EventedGamepad } from "kudzu/input/EventedGamepad";
-import { ScreenPointerControls } from "kudzu/input/ScreenPointerControls";
 import { clamp } from "kudzu/math/clamp";
 import { lerp } from "kudzu/math/lerp";
 import { project } from "kudzu/math/project";
 import { unproject } from "kudzu/math/unproject";
 import { isString } from "kudzu/typeChecks";
-import { Emote } from "./Emote";
+import { Emote, EmoteEvent } from "./Emote";
 import { hide, show } from "./forms/ops";
 import type { IInputBinding } from "./Settings";
 import { TileMap } from "./TileMap";
-import { User } from "./User";
+import { User, UserJoinedEvent, UserMovedEvent } from "./User";
 
 type withUserCallback = (user: User) => any;
 
 const CAMERA_LERP = 0.01,
     CAMERA_ZOOM_SHAPE = 2,
     MOVE_REPEAT = 0.125,
-    gameStartedEvt = new Event("gameStarted"),
-    gameEndedEvt = new Event("gameEnded"),
-    zoomChangedEvt = new Event("zoomChanged"),
-    emojiNeededEvt = new Event("emojiNeeded"),
-    toggleAudioEvt = new Event("toggleAudio"),
-    toggleVideoEvt = new Event("toggleVideo"),
-    moveEvent = Object.assign(new Event("userMoved"), {
-        x: 0,
-        y: 0
-    }),
-    emoteEvt = Object.assign(new Event("emote"), {
-        emoji: null
-    }),
-    userJoinedEvt = Object.assign(new Event("userJoined", {
-        user: null
-    }));
+    gameStartedEvt = new TypedEvent("gameStarted"),
+    gameEndedEvt = new TypedEvent("gameEnded"),
+    zoomChangedEvt = new TypedEvent("zoomChanged"),
+    emojiNeededEvt = new TypedEvent("emojiNeeded"),
+    toggleAudioEvt = new TypedEvent("toggleAudio"),
+    toggleVideoEvt = new TypedEvent("toggleVideo"),
+    userJoinedEvt = new UserJoinedEvent(null),
+    moveEvent = new UserMovedEvent(null),
+    emoteEvt = new EmoteEvent(null);
+
+interface GameEvents {
+    gameStarted: TypedEvent<"gameStarted">;
+    gameEnded: TypedEvent<"gameEnded">;
+    zoomChanged: TypedEvent<"zoomChanged">;
+    emojiNeeded: TypedEvent<"emojiNeeded">;
+    toggleAudio: TypedEvent<"toggleAudio">;
+    toggleVideo: TypedEvent<"toggleVideo">;
+    userJoined: UserJoinedEvent;
+    userMoved: UserMovedEvent;
+    emote: EmoteEvent;
+}
 
 /** @type {Map<Game, EventedGamepad>} */
 const gamepads = new Map();
 
-export class Game extends EventBase {
+export class Game extends TypedEventBase<GameEvents> {
 
     waypoints = new Array<{ x: number, y: number; }>();
     users = new Map<string, User>();
@@ -174,12 +178,6 @@ export class Game extends EventBase {
 
     get style() {
         return this.element.style;
-    }
-
-    initializeUser(id: string, evt) {
-        this.withUser("initialize user", id, (user) => {
-            user.deserialize(evt);
-        });
     }
 
     updateAudioActivity(id: string, isActive: boolean) {
@@ -376,15 +374,15 @@ export class Game extends EventBase {
         });
     }
 
-    setAvatarURL(id: string, url:string) {
+    setAvatarURL(id: string, url: string) {
         this.withUser("set avatar image", id, (user) => {
-            user.avatarImage = url;
+            user.setAvatarImage(url);
         });
     }
 
     setAvatarEmoji(id: string, emoji: Emoji) {
         this.withUser("set avatar emoji", id, (user) => {
-            user.setAvatarEmoji(emoji);
+            user.setAvatarEmoji(emoji.value);
         });
     }
 
@@ -392,7 +390,7 @@ export class Game extends EventBase {
         this.currentRoomName = roomName.toLowerCase();
         this.me = new User(id, displayName, pose, true);
         if (isString(avatarURL)) {
-            this.me.avatarImage = avatarURL;
+            this.me.setAvatarImage(avatarURL);
         }
         this.users.set(id, this.me);
 

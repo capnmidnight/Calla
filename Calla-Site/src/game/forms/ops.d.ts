@@ -1,12 +1,9 @@
 export interface IOpenable {
     isOpen(): boolean;
     setOpen(v: boolean, displayType?: string): void;
-    updateLabel(open: boolean, enabledText: string, disabledText: string, bothText: string): void;
     toggleOpen(displayType?: string): void;
     show(): void;
     hide(displayType?: string): void;
-    setLocked(v: boolean): void;
-    accessKey: string;
 }
 export declare function isOpenable(obj: any): obj is IOpenable;
 export declare function isOpen(target: IOpenable | HTMLElement): boolean;
@@ -18,8 +15,17 @@ export declare function isOpen(target: IOpenable | HTMLElement): boolean;
  * @param {string} [displayType=""]
  */
 export declare function setOpen(target: IOpenable | HTMLElement, v: boolean, displayType?: string): void;
-export declare function updateLabel(target: IOpenable | HTMLElement, open: boolean, enabledText: string, disabledText: string, bothText: string): void;
 export declare function toggleOpen(target: IOpenable | HTMLElement, displayType?: string): void;
 export declare function show(target: IOpenable | HTMLElement, displayType?: string): void;
 export declare function hide(target: IOpenable | HTMLElement, displayType?: string): void;
-export declare function setLocked(target: IOpenable | HTMLElement, value: boolean): void;
+export interface ILabelable {
+    updateLabel(open: boolean, enabledText: string, disabledText: string, bothText: string): void;
+    accessKey: string;
+}
+export declare function isLabelable(obj: any): obj is ILabelable;
+export declare function updateLabel(target: ILabelable | HTMLElement, open: boolean, enabledText: string, disabledText: string, bothText?: string): void;
+export interface ILockable {
+    setLocked(v: boolean): void;
+}
+export declare function isLockable(obj: any): obj is ILockable;
+export declare function setLocked(target: ILockable | HTMLElement, value: boolean): void;

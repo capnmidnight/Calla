@@ -1,1 +1,1 @@
-{"version":3,"file":"AvatarMode.js","sourceRoot":"","sources":["AvatarMode.ts"],"names":[],"mappings":"AAAA;;;IAGI;AACJ,MAAM,CAAC,MAAM,UAAU,GAAG,MAAM,CAAC,MAAM,CAAC;IACpC,IAAI,EAAE,IAAI;IACV,KAAK,EAAE,OAAO;IACd,KAAK,EAAE,OAAO;IACd,KAAK,EAAE,OAAO;CACjB,CAAC,CAAC"}
+{"version":3,"file":"AvatarMode.js","sourceRoot":"","sources":["AvatarMode.ts"],"names":[],"mappings":"AAAA;;IAEI;AACJ,MAAM,CAAN,IAAY,UAKX;AALD,WAAY,UAAU;IAClB,2BAAa,CAAA;IACb,6BAAe,CAAA;IACf,6BAAe,CAAA;IACf,6BAAe,CAAA;AACnB,CAAC,EALW,UAAU,KAAV,UAAU,QAKrB"}

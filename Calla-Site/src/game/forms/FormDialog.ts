@@ -1,14 +1,19 @@
-import { EventBase } from "kudzu/events/EventBase";
+import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { once } from "kudzu/events/once";
 import { id } from "kudzu/html/attrs";
 import { Div } from "kudzu/html/tags";
 import { hide, IOpenable, show } from "./ops";
 
-const hiddenEvt = new Event("hidden"),
-    shownEvt = new Event("shown");
+export interface FormDialogEvents {
+    hidden: TypedEvent<"hidden">;
+    shown: TypedEvent<"shown">;
+}
 
-export class FormDialog
-    extends EventBase
+const hiddenEvt = new TypedEvent("hidden"),
+    shownEvt = new TypedEvent("shown");
+
+export class FormDialog<T extends FormDialogEvents>
+    extends TypedEventBase<T>
     implements IOpenable {
     element: HTMLElement;
     header: HTMLElement;
@@ -17,7 +22,6 @@ export class FormDialog
 
     constructor(tagId: string) {
         super();
-
         this.element = Div(id(tagId));
         this.header = this.element.querySelector(".header");
         this.content = this.element.querySelector(".content");
@@ -39,18 +43,8 @@ export class FormDialog
             : "none";
     }
 
-    updateLabel(_open: boolean, _enabledText: string, _disabledText: string, _bothText: string): void {
-    }
-
     toggleOpen(displayType?: string): void {
         this.setOpen(!this.isOpen(), displayType);
-    }
-
-    setLocked(_v: boolean): void {
-    }
-
-    get accessKey(): string {
-        return this.element.accessKey;
     }
 
     get tagName() {

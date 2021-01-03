@@ -1,3 +1,4 @@
+import { TypedEventBase } from "kudzu/events/EventBase";
 export interface IInputBinding {
     keyButtonUp: string;
     keyButtonDown: string;
@@ -7,6 +8,8 @@ export interface IInputBinding {
     keyButtonToggleAudio: string;
     keyButtonZoomOut: string;
     keyButtonZoomIn: string;
+    gpAxisLeftRight: number;
+    gpAxisUpDown: number;
     gpButtonEmote: number;
     gpButtonToggleAudio: number;
     gpButtonZoomIn: number;
@@ -15,7 +18,58 @@ export interface IInputBinding {
     gpButtonDown: number;
     gpButtonLeft: number;
     gpButtonRight: number;
-    [v: string]: string | number;
+}
+export declare class InputBindingChangedEvent extends Event {
+    constructor();
+}
+interface InputBindingEvents {
+    inputBindingChanged: InputBindingChangedEvent;
+}
+export declare class InputBinding extends TypedEventBase<InputBindingEvents> implements IInputBinding {
+    private bindings;
+    constructor();
+    get(key: string): string | number;
+    set(key: string, value: string | number): void;
+    get keyButtonUp(): string;
+    set keyButtonUp(v: string);
+    get keyButtonDown(): string;
+    set keyButtonDown(v: string);
+    get keyButtonLeft(): string;
+    set keyButtonLeft(v: string);
+    get keyButtonRight(): string;
+    set keyButtonRight(v: string);
+    get keyButtonEmote(): string;
+    set keyButtonEmote(v: string);
+    get keyButtonToggleAudio(): string;
+    set keyButtonToggleAudio(v: string);
+    get keyButtonZoomOut(): string;
+    set keyButtonZoomOut(v: string);
+    get keyButtonZoomIn(): string;
+    set keyButtonZoomIn(v: string);
+    get gpAxisLeftRight(): number;
+    set gpAxisLeftRight(v: number);
+    get gpAxisUpDown(): number;
+    set gpAxisUpDown(v: number);
+    get gpButtonEmote(): number;
+    set gpButtonEmote(v: number);
+    get gpButtonToggleAudio(): number;
+    set gpButtonToggleAudio(v: number);
+    get gpButtonZoomIn(): number;
+    set gpButtonZoomIn(v: number);
+    get gpButtonZoomOut(): number;
+    set gpButtonZoomOut(v: number);
+    get gpButtonUp(): number;
+    set gpButtonUp(v: number);
+    get gpButtonDown(): number;
+    set gpButtonDown(v: number);
+    get gpButtonLeft(): number;
+    set gpButtonLeft(v: number);
+    get gpButtonRight(): number;
+    set gpButtonRight(v: number);
+    private checkedSet;
+    toJSON(): IInputBinding;
+    copy(obj: IInputBinding): void;
+    fix(obj: IInputBinding): void;
 }
 export declare class Settings {
     private _drawHearing;
@@ -31,10 +85,10 @@ export declare class Settings {
     private _avatarEmoji;
     private _avatarURL;
     private _gamepadIndex;
+    private _inputBinding;
     private _preferredAudioOutputID;
     private _preferredAudioInputID;
     private _preferredVideoInputID;
-    private _inputBinding;
     constructor();
     private commit;
     get preferredAudioOutputID(): string;
@@ -72,3 +126,4 @@ export declare class Settings {
     get inputBinding(): IInputBinding;
     set inputBinding(value: IInputBinding);
 }
+export {};

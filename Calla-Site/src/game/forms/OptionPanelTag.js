@@ -1,14 +1,16 @@
+import { TypedEvent } from "kudzu/events/EventBase";
 import { id } from "kudzu/html/attrs";
 import { onClick } from "kudzu/html/evts";
 import { Button, P } from "kudzu/html/tags";
 import { HtmlCustomTag } from "./HtmlCustomTag";
-import { setOpen } from "./ops";
-const selectEvt = new Event("select");
+const selectEvt = new TypedEvent("select");
 /**
- * Creates an OptionPanelTag element
- * @param {string} id - the ID to use for the content element of the option panel
- * @param {string} name - the text to use in the button that triggers displaying the content element
- * @param {...import("./tag").TagChild} rest - optional attributes, child elements, and text to use on the content element
+ * Creates a new panel that can be opened with a button click,
+ * living in a collection of panels that will be hidden when
+ * this panel is opened.
+ * @param id - the ID to use for the content element of the option panel
+ * @param name - the text to use in the button that triggers displaying the content element
+ * @param rest - optional attributes, child elements, and text to use on the content element
  */
 export function OptionPanel(id, name, ...rest) {
     return new OptionPanelTag(id, name, ...rest);
@@ -21,9 +23,9 @@ export class OptionPanelTag extends HtmlCustomTag {
      * Creates a new panel that can be opened with a button click,
      * living in a collection of panels that will be hidden when
      * this panel is opened.
-     * @param {string} panelID - the ID to use for the panel element.
-     * @param {string} name - the text to use on the button.
-     * @param {...any} rest
+     * @param id - the ID to use for the content element of the option panel
+     * @param name - the text to use in the button that triggers displaying the content element
+     * @param rest - optional attributes, child elements, and text to use on the content element
      */
     constructor(panelID, name, ...rest) {
         super("div", id(panelID), P(...rest));
@@ -34,17 +36,15 @@ export class OptionPanelTag extends HtmlCustomTag {
     }
     /**
      * Gets whether or not the panel is visible
-     * @type {boolean}
      **/
     get visible() {
-        return this.element.style.display !== null;
+        return super.visible;
     }
     /**
      * Sets whether or not the panel is visible
-     * @param {boolean} v
      **/
     set visible(v) {
-        setOpen(this.element, v);
+        super.visible = v;
         this.button.className = v ? "tabSelected" : "tabUnselected";
         this.element.className = v ? "tabSelected" : "tabUnselected";
     }

@@ -1,6 +1,13 @@
+import { TypedEvent } from "kudzu/events/EventBase";
 import { getTransform } from "kudzu/graphics2d/getTransform";
 import { TextImage } from "kudzu/graphics2d/TextImage";
 const EMOJI_LIFE = 3;
+export class EmoteEvent extends TypedEvent {
+    constructor(emoji) {
+        super("emote");
+        this.emoji = emoji;
+    }
+}
 export class Emote {
     constructor(emoji, x, y) {
         this.emoji = emoji;

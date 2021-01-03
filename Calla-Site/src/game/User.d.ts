@@ -1,13 +1,27 @@
 import type { InterpolatedPose } from "calla/audio/positions/InterpolatedPose";
-import type { Emoji } from "kudzu/emoji/Emoji";
-import { EventBase } from "kudzu/events/EventBase";
+import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { TextImage } from "kudzu/graphics2d/TextImage";
 import type { Context2D } from "kudzu/html/canvas";
+import { AvatarMode } from "./avatars/AvatarMode";
+import { AvatarChangedEvent } from "./avatars/BaseAvatar";
 import { EmojiAvatar } from "./avatars/EmojiAvatar";
 import { PhotoAvatar } from "./avatars/PhotoAvatar";
 import { VideoAvatar } from "./avatars/VideoAvatar";
 import type { TileMap } from "./TileMap";
-export declare class User extends EventBase {
+export declare class UserMovedEvent extends TypedEvent<"userMoved"> {
+    id: string;
+    x: number;
+    y: number;
+    constructor(id: string);
+}
+export declare class UserJoinedEvent extends TypedEvent<"userJoined"> {
+    user: User;
+    constructor(user: User);
+}
+interface UserEvents {
+    userMoved: UserMovedEvent;
+}
+export declare class User extends TypedEventBase<UserEvents> {
     id: string;
     private pose;
     isMe: boolean;
@@ -28,40 +42,34 @@ export declare class User extends EventBase {
     private _avatarVideo;
     private _avatarImage;
     private _avatarEmoji;
+    private userMovedEvt;
     constructor(id: string, displayName: string, pose: InterpolatedPose, isMe: boolean);
     get x(): number;
     get y(): number;
     get gridX(): number;
     get gridY(): number;
-    deserialize(evt: any): void;
+    setAvatar(evt: AvatarChangedEvent): void;
     serialize(): {
         id: string;
-        avatarMode: any;
-        avatarID: string | {
-            value: string;
-            desc: string;
-        };
+        avatarMode: AvatarMode;
+        avatarID: string;
     };
     /**
      * An avatar using a live video.
-     * @type {VideoAvatar}
      **/
     get avatarVideo(): VideoAvatar;
     /**
      * Set the current video element used as the avatar.
-     * @param stream
      **/
     setAvatarVideo(stream: MediaStream): void;
     /**
      * An avatar using a photo
-     * @type {string}
      **/
-    get avatarImage(): string;
+    get avatarImage(): PhotoAvatar;
     /**
      * Set the URL of the photo to use as an avatar.
-     * @param {string} url
      */
-    set avatarImage(url: string);
+    setAvatarImage(url: string): void;
     /**
      * An avatar using a Unicode emoji.
      **/
@@ -69,27 +77,20 @@ export declare class User extends EventBase {
     /**
      * Set the emoji to use as an avatar.
      */
-    setAvatarEmoji(emoji: Emoji): void;
+    setAvatarEmoji(emoji: string): void;
     /**
      * Returns the type of avatar that is currently active.
-     * @returns {AvatarMode}
      **/
-    get avatarMode(): any;
+    get avatarMode(): AvatarMode;
     /**
      * Returns a serialized representation of the current avatar,
      * if such a representation exists.
-     * @returns {string}
      **/
-    get avatarID(): string | {
-        value: string;
-        desc: string;
-    };
+    get avatarID(): string;
     /**
      * Returns the current avatar
-     * @returns {import("./avatars/BaseAvatar").BaseAvatar}
      **/
-    get avatar(): EmojiAvatar | PhotoAvatar | VideoAvatar;
-    addEventListener(evtName: string, func: (evt: Event) => any, opts: AddEventListenerOptions): void;
+    get avatar(): VideoAvatar | PhotoAvatar | EmojiAvatar;
     get displayName(): string;
     set displayName(name: string);
     moveTo(x: number, y: number): void;
@@ -101,3 +102,4 @@ export declare class User extends EventBase {
     drawHearingTile(g: Context2D, map: TileMap, dx: number, dy: number, p: number): void;
     drawHearingRange(g: Context2D, map: TileMap, minDist: number, maxDist: number): void;
 }
+export {};

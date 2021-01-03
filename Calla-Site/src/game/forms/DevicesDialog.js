@@ -1,14 +1,14 @@
 import { onInput } from "kudzu/html/evts";
 import { SelectBox } from "./SelectBoxTag";
 import { FormDialog } from "./FormDialog";
-const audioInputChangedEvt = new Event("audioInputChanged"), audioOutputChangedEvt = new Event("audioOutputChanged"), videoInputChangedEvt = new Event("videoInputChanged");
+import { TypedEvent } from "kudzu/events/EventBase";
+const audioInputChangedEvt = new TypedEvent("audioInputChanged"), audioOutputChangedEvt = new TypedEvent("audioOutputChanged"), videoInputChangedEvt = new TypedEvent("videoInputChanged");
 export class DevicesDialog extends FormDialog {
     constructor() {
         super("devices");
-        const _ = (evt) => () => this.dispatchEvent(evt);
-        this.videoInputSelect = SelectBox("videoInputDevices", "No video input", d => d.deviceId, d => d.label, onInput(_(videoInputChangedEvt)));
-        this.audioInputSelect = SelectBox("audioInputDevices", "No audio input", d => d.deviceId, d => d.label, onInput(_(audioInputChangedEvt)));
-        this.audioOutputSelect = SelectBox("audioOutputDevices", "No audio output", d => d.deviceId, d => d.label, onInput(_(audioOutputChangedEvt)));
+        this.videoInputSelect = SelectBox("videoInputDevices", "No video input", d => d.deviceId, d => d.label, onInput(() => this.dispatchEvent(videoInputChangedEvt)));
+        this.audioInputSelect = SelectBox("audioInputDevices", "No audio input", d => d.deviceId, d => d.label, onInput(() => this.dispatchEvent(audioInputChangedEvt)));
+        this.audioOutputSelect = SelectBox("audioOutputDevices", "No audio output", d => d.deviceId, d => d.label, onInput(() => this.dispatchEvent(audioOutputChangedEvt)));
         this.audioInputDevices = [];
         this.audioOutputDevices = [];
         this.videoInputDevices = [];

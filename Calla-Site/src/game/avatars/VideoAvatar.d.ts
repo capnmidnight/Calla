@@ -1,5 +1,9 @@
 import type { Context2D } from "kudzu/html/canvas";
-import { BaseAvatar } from "./BaseAvatar";
+import { AvatarMode } from "./AvatarMode";
+import { BaseAvatar, BaseAvatarChangedEvent } from "./BaseAvatar";
+export declare class VideoAvatarChangedEvent extends BaseAvatarChangedEvent<AvatarMode.Video, MediaStream> {
+    constructor(video: MediaStream);
+}
 /**
  * An avatar that uses an HTML Video element as its representation.
  **/

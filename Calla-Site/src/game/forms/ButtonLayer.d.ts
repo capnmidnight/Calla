@@ -1,6 +1,21 @@
 import type { Emoji } from "kudzu/emoji/Emoji";
-import { EventBase } from "kudzu/events/EventBase";
-export declare class ButtonLayer extends EventBase {
+import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
+import { IOpenable } from "./ops";
+interface ButtonLayerEvents {
+    toggleOptions: TypedEvent<"toggleOptions">;
+    tweet: TypedEvent<"tweet">;
+    leave: TypedEvent<"leave">;
+    toggleFullscreen: TypedEvent<"toggleFullscreen">;
+    toggleInstructions: TypedEvent<"toggleInstructions">;
+    toggleUserDirectory: TypedEvent<"toggleUserDirectory">;
+    toggleAudio: TypedEvent<"toggleAudio">;
+    toggleVideo: TypedEvent<"toggleVideo">;
+    changeDevices: TypedEvent<"changeDevices">;
+    emote: TypedEvent<"emote">;
+    selectEmoji: TypedEvent<"selectEmoji">;
+    zoomChanged: TypedEvent<"zoomChanged">;
+}
+export declare class ButtonLayer extends TypedEventBase<ButtonLayerEvents> implements IOpenable {
     element: HTMLDivElement;
     optionsButton: HTMLButtonElement;
     instructionsButton: HTMLButtonElement;
@@ -22,6 +37,10 @@ export declare class ButtonLayer extends EventBase {
     constructor(zoomMin: number, zoomMax: number);
     get isFullscreen(): boolean;
     set isFullscreen(value: boolean);
+    get style(): CSSStyleDeclaration;
+    isOpen(): boolean;
+    setOpen(v: boolean, displayType?: string): void;
+    toggleOpen(displayType?: string): void;
     hide(): void;
     show(): void;
     get enabled(): boolean;
@@ -34,3 +53,4 @@ export declare class ButtonLayer extends EventBase {
     get zoom(): number;
     set zoom(v: number);
 }
+export {};

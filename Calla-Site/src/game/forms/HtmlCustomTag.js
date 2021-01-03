@@ -1,5 +1,6 @@
 import { EventBase } from "kudzu/events/EventBase";
 import { tag } from "kudzu/html/tags";
+import { setOpen } from "./ops";
 /**
  * A pseudo-element that is made out of other elements.
  **/
@@ -63,6 +64,12 @@ export class HtmlCustomTag extends EventBase {
      */
     get style() {
         return this.element.style;
+    }
+    get visible() {
+        return this.style.display !== null;
+    }
+    set visible(v) {
+        setOpen(this.element, v);
     }
     get tagName() {
         return this.element.tagName;

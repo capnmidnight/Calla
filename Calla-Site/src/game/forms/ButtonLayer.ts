@@ -15,27 +15,44 @@ import {
     videoCamera,
     whiteFlower
 } from "kudzu/emoji/emojis";
-import { EventBase } from "kudzu/events/EventBase";
+import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { alt, className, height as cssHeight, id, margin, max, min, role, src, step, textAlign, title, value } from "kudzu/html/attrs";
 import { onClick, onInput } from "kudzu/html/evts";
 import { Button, Div, Img, InputRange, Run } from "kudzu/html/tags";
-import { updateLabel } from "./ops";
+import { IOpenable, updateLabel } from "./ops";
 
-const toggleOptionsEvt = new Event("toggleOptions"),
-    tweetEvt = new Event("tweet"),
-    leaveEvt = new Event("leave"),
-    toggleFullscreenEvt = new Event("toggleFullscreen"),
-    toggleInstructionsEvt = new Event("toggleInstructions"),
-    toggleUserDirectoryEvt = new Event("toggleUserDirectory"),
-    toggleAudioEvt = new Event("toggleAudio"),
-    toggleVideoEvt = new Event("toggleVideo"),
-    changeDevicesEvt = new Event("changeDevices"),
-    emoteEvt = new Event("emote"),
-    selectEmojiEvt = new Event("selectEmoji"),
-    zoomChangedEvt = new Event("zoomChanged");
+interface ButtonLayerEvents {
+    toggleOptions: TypedEvent<"toggleOptions">;
+    tweet: TypedEvent<"tweet">;
+    leave: TypedEvent<"leave">;
+    toggleFullscreen: TypedEvent<"toggleFullscreen">;
+    toggleInstructions: TypedEvent<"toggleInstructions">;
+    toggleUserDirectory: TypedEvent<"toggleUserDirectory">;
+    toggleAudio: TypedEvent<"toggleAudio">;
+    toggleVideo: TypedEvent<"toggleVideo">;
+    changeDevices: TypedEvent<"changeDevices">;
+    emote: TypedEvent<"emote">;
+    selectEmoji: TypedEvent<"selectEmoji">;
+    zoomChanged: TypedEvent<"zoomChanged">;
+}
 
-export class ButtonLayer extends EventBase {
+const toggleOptionsEvt = new TypedEvent("toggleOptions"),
+    tweetEvt = new TypedEvent("tweet"),
+    leaveEvt = new TypedEvent("leave"),
+    toggleFullscreenEvt = new TypedEvent("toggleFullscreen"),
+    toggleInstructionsEvt = new TypedEvent("toggleInstructions"),
+    toggleUserDirectoryEvt = new TypedEvent("toggleUserDirectory"),
+    toggleAudioEvt = new TypedEvent("toggleAudio"),
+    toggleVideoEvt = new TypedEvent("toggleVideo"),
+    changeDevicesEvt = new TypedEvent("changeDevices"),
+    emoteEvt = new TypedEvent("emote"),
+    selectEmojiEvt = new TypedEvent("selectEmoji"),
+    zoomChangedEvt = new TypedEvent("zoomChanged");
 
+export class ButtonLayer
+    extends TypedEventBase<ButtonLayerEvents>
+    implements IOpenable
+{
     element: HTMLDivElement;
     optionsButton: HTMLButtonElement;
     instructionsButton: HTMLButtonElement;
@@ -59,35 +76,33 @@ export class ButtonLayer extends EventBase {
     constructor(zoomMin: number, zoomMax: number) {
         super();
 
-        const _ = (evt: Event) => () => this.dispatchEvent(evt);
-
         const changeZoom = (dz: number) => {
             this.zoom += dz;
             this.dispatchEvent(zoomChangedEvt);
         };
 
-        this.element = Div(id("controls"))
+        this.element = Div(id("controls"));
 
         this.element.append(
 
             this.optionsButton = Button(
                 id("optionsButton"),
                 title("Show/hide options"),
-                onClick(_(toggleOptionsEvt)),
+                onClick(() => this.dispatchEvent(toggleOptionsEvt)),
                 Run(gear.value),
                 Run("Options")),
 
             this.instructionsButton = Button(
                 id("instructionsButton"),
                 title("Show/hide instructions"),
-                onClick(_(toggleInstructionsEvt)),
+                onClick(() => this.dispatchEvent(toggleInstructionsEvt)),
                 Run(questionMark.value),
                 Run("Info")),
 
             this.shareButton = Button(
                 id("shareButton"),
                 title("Share your current room to twitter"),
-                onClick(_(tweetEvt)),
+                onClick(() => this.dispatchEvent(tweetEvt)),
                 Img(src("https://cdn2.iconfinder.com/data/icons/minimalism/512/twitter.png"),
                     alt("icon"),
                     role("presentation"),
@@ -98,7 +113,7 @@ export class ButtonLayer extends EventBase {
             this.showUsersButton = Button(
                 id("showUsersButton"),
                 title("View user directory"),
-                onClick(_(toggleUserDirectoryEvt)),
+                onClick(() => this.dispatchEvent(toggleUserDirectoryEvt)),
                 Run(speakingHead.value),
                 Run("Users")),
 
@@ -106,7 +121,7 @@ export class ButtonLayer extends EventBase {
             this.fullscreenButton = Button(
                 id("fullscreenButton"),
                 title("Toggle fullscreen"),
-                onClick(_(toggleFullscreenEvt)),
+                onClick(() => this.dispatchEvent(toggleFullscreenEvt)),
                 onClick(() => this.isFullscreen = !this.isFullscreen),
                 Run(squareFourCourners.value),
                 Run("Expand")),
@@ -115,7 +130,7 @@ export class ButtonLayer extends EventBase {
             this.leaveButton = Button(
                 id("leaveButton"),
                 title("Leave the room"),
-                onClick(_(leaveEvt)),
+                onClick(() => this.dispatchEvent(leaveEvt)),
                 Run(door.value),
                 Run("Leave")),
 
@@ -125,19 +140,19 @@ export class ButtonLayer extends EventBase {
                 this.toggleAudioButton = Button(
                     id("toggleAudioButton"),
                     title("Toggle audio mute/unmute"),
-                    onClick(_(toggleAudioEvt)),
+                    onClick(() => this.dispatchEvent(toggleAudioEvt)),
                     this.toggleAudioLabel = Run(speakerHighVolume.value),
                     Run("Audio")),
                 this.toggleVideoButton = Button(
                     id("toggleVideoButton"),
                     title("Toggle video mute/unmute"),
-                    onClick(_(toggleVideoEvt)),
+                    onClick(() => this.dispatchEvent(toggleVideoEvt)),
                     this.toggleVideoLabel = Run(noMobilePhone.value),
                     Run("Video")),
                 this.changeDevicesButton = Button(
                     id("changeDevicesButton"),
                     title("Change devices"),
-                    onClick(_(changeDevicesEvt)),
+                    onClick(() => this.dispatchEvent(changeDevicesEvt)),
                     Run(upwardsButton.value),
                     Run("Change"))),
 
@@ -148,13 +163,13 @@ export class ButtonLayer extends EventBase {
                 Button(
                     id("emoteButton"),
                     title("Emote"),
-                    onClick(_(emoteEvt)),
+                    onClick(() => this.dispatchEvent(emoteEvt)),
                     this.emoteButton = Run(whiteFlower.value),
                     Run("Emote")),
                 Button(
                     id("selectEmoteButton"),
                     title("Select Emoji"),
-                    onClick(_(selectEmojiEvt)),
+                    onClick(() => this.dispatchEvent(selectEmojiEvt)),
                     Run(upwardsButton.value),
                     Run("Change"))),
 
@@ -197,6 +212,7 @@ export class ButtonLayer extends EventBase {
         else {
             document.exitFullscreen();
         }
+
         updateLabel(
             this.fullscreenButton,
             value,
@@ -204,12 +220,30 @@ export class ButtonLayer extends EventBase {
             squareFourCourners.value);
     }
 
+    get style() {
+        return this.element.style;
+    }
+
+    isOpen(): boolean {
+        return this.style.display !== "none";
+    }
+
+    setOpen(v: boolean, displayType?: string): void {
+        this.style.display = v
+            ? displayType || ""
+            : "none";
+    }
+
+    toggleOpen(displayType?: string): void {
+        this.setOpen(!this.isOpen(), displayType);
+    }
+
     hide() {
-        this.element.style.display = "none";
+        this.setOpen(false);
     }
 
     show() {
-        this.element.style.display = "";
+        this.setOpen(true);
     }
 
     get enabled() {

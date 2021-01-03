@@ -1,5 +1,214 @@
-import { isNullOrUndefined } from "kudzu/typeChecks";
+import { TypedEventBase } from "kudzu/events/EventBase";
 const KEY = "CallaSettings";
+export class InputBindingChangedEvent extends Event {
+    constructor() {
+        super("inputBindingChanged");
+    }
+}
+const inputBindingChangedEvt = new InputBindingChangedEvent();
+export class InputBinding extends TypedEventBase {
+    constructor() {
+        super();
+        this.bindings = new Map([
+            ["keyButtonUp", "ArrowUp"],
+            ["keyButtonDown", "ArrowDown"],
+            ["keyButtonLeft", "ArrowLeft"],
+            ["keyButtonRight", "ArrowRight"],
+            ["keyButtonEmote", "e"],
+            ["keyButtonToggleAudio", "a"],
+            ["keyButtonZoomOut", "["],
+            ["keyButtonZoomIn", "]"],
+            ["gpAxisLeftRight", 0],
+            ["gpAxisUpDown", 1],
+            ["gpButtonEmote", 0],
+            ["gpButtonToggleAudio", 1],
+            ["gpButtonZoomIn", 6],
+            ["gpButtonZoomOut", 7],
+            ["gpButtonUp", 12],
+            ["gpButtonDown", 13],
+            ["gpButtonLeft", 14],
+            ["gpButtonRight", 15]
+        ]);
+        for (let id of this.bindings.keys()) {
+            Object.defineProperty(this, id, {
+                get: () => this.bindings.get(id),
+                set: (v) => {
+                    if (this.bindings.has(id)
+                        && v !== this.bindings.get(id)) {
+                        this.bindings.set(id, v);
+                        this.dispatchEvent(inputBindingChangedEvt);
+                    }
+                }
+            });
+        }
+        Object.freeze(this);
+    }
+    get(key) {
+        return this.bindings.get(key);
+    }
+    set(key, value) {
+        this.bindings.set(key, value);
+    }
+    get keyButtonUp() { return this.bindings.get("keyButtonUp"); }
+    set keyButtonUp(v) { this.checkedSet("keyButtonUp", v); }
+    get keyButtonDown() { return this.bindings.get("keyButtonDown"); }
+    set keyButtonDown(v) { this.checkedSet("keyButtonDown", v); }
+    get keyButtonLeft() { return this.bindings.get("keyButtonLeft"); }
+    set keyButtonLeft(v) { this.checkedSet("keyButtonLeft", v); }
+    get keyButtonRight() { return this.bindings.get("keyButtonRight"); }
+    set keyButtonRight(v) { this.checkedSet("keyButtonRight", v); }
+    get keyButtonEmote() { return this.bindings.get("keyButtonEmote"); }
+    set keyButtonEmote(v) { this.checkedSet("keyButtonEmote", v); }
+    get keyButtonToggleAudio() { return this.bindings.get("keyButtonToggleAudio"); }
+    set keyButtonToggleAudio(v) { this.checkedSet("keyButtonToggleAudio", v); }
+    get keyButtonZoomOut() { return this.bindings.get("keyButtonZoomOut"); }
+    set keyButtonZoomOut(v) { this.checkedSet("keyButtonZoomOut", v); }
+    get keyButtonZoomIn() { return this.bindings.get("keyButtonZoomIn"); }
+    set keyButtonZoomIn(v) { this.checkedSet("keyButtonZoomIn", v); }
+    get gpAxisLeftRight() { return this.bindings.get("gpAxisLeftRight"); }
+    set gpAxisLeftRight(v) { this.checkedSet("gpAxisLeftRight", v); }
+    get gpAxisUpDown() { return this.bindings.get("gpAxisUpDown"); }
+    set gpAxisUpDown(v) { this.checkedSet("gpAxisUpDown", v); }
+    get gpButtonEmote() { return this.bindings.get("gpButtonEmote"); }
+    set gpButtonEmote(v) { this.checkedSet("gpButtonEmote", v); }
+    get gpButtonToggleAudio() { return this.bindings.get("gpButtonToggleAudio"); }
+    set gpButtonToggleAudio(v) { this.checkedSet("gpButtonToggleAudio", v); }
+    get gpButtonZoomIn() { return this.bindings.get("gpButtonZoomIn"); }
+    set gpButtonZoomIn(v) { this.checkedSet("gpButtonZoomIn", v); }
+    get gpButtonZoomOut() { return this.bindings.get("gpButtonZoomOut"); }
+    set gpButtonZoomOut(v) { this.checkedSet("gpButtonZoomOut", v); }
+    get gpButtonUp() { return this.bindings.get("gpButtonUp"); }
+    set gpButtonUp(v) { this.checkedSet("gpButtonUp", v); }
+    get gpButtonDown() { return this.bindings.get("gpButtonDown"); }
+    set gpButtonDown(v) { this.checkedSet("gpButtonDown", v); }
+    get gpButtonLeft() { return this.bindings.get("gpButtonLeft"); }
+    set gpButtonLeft(v) { this.checkedSet("gpButtonLeft", v); }
+    get gpButtonRight() { return this.bindings.get("gpButtonRight"); }
+    set gpButtonRight(v) { this.checkedSet("gpButtonRight", v); }
+    checkedSet(key, v) {
+        if (this.bindings.has(key)
+            && v !== this.bindings.get(key)) {
+            this.bindings.set(key, v);
+            this.dispatchEvent(inputBindingChangedEvt);
+        }
+    }
+    toJSON() {
+        return {
+            keyButtonUp: this.keyButtonUp,
+            keyButtonDown: this.keyButtonDown,
+            keyButtonLeft: this.keyButtonLeft,
+            keyButtonRight: this.keyButtonRight,
+            keyButtonEmote: this.keyButtonEmote,
+            keyButtonToggleAudio: this.keyButtonToggleAudio,
+            keyButtonZoomOut: this.keyButtonZoomOut,
+            keyButtonZoomIn: this.keyButtonZoomIn,
+            gpAxisLeftRight: this.gpAxisLeftRight,
+            gpAxisUpDown: this.gpAxisUpDown,
+            gpButtonEmote: this.gpButtonEmote,
+            gpButtonToggleAudio: this.gpButtonToggleAudio,
+            gpButtonZoomIn: this.gpButtonZoomIn,
+            gpButtonZoomOut: this.gpButtonZoomOut,
+            gpButtonUp: this.gpButtonUp,
+            gpButtonDown: this.gpButtonDown,
+            gpButtonLeft: this.gpButtonLeft,
+            gpButtonRight: this.gpButtonRight
+        };
+    }
+    copy(obj) {
+        this.keyButtonUp = obj.keyButtonUp;
+        this.keyButtonDown = obj.keyButtonDown;
+        this.keyButtonLeft = obj.keyButtonLeft;
+        this.keyButtonRight = obj.keyButtonRight;
+        this.keyButtonEmote = obj.keyButtonEmote;
+        this.keyButtonToggleAudio = obj.keyButtonToggleAudio;
+        this.keyButtonZoomOut = obj.keyButtonZoomOut;
+        this.keyButtonZoomIn = obj.keyButtonZoomIn;
+        this.gpAxisLeftRight = obj.gpAxisLeftRight;
+        this.gpAxisUpDown = obj.gpAxisUpDown;
+        this.gpButtonEmote = obj.gpButtonEmote;
+        this.gpButtonToggleAudio = obj.gpButtonToggleAudio;
+        this.gpButtonZoomIn = obj.gpButtonZoomIn;
+        this.gpButtonZoomOut = obj.gpButtonZoomOut;
+        this.gpButtonUp = obj.gpButtonUp;
+        this.gpButtonDown = obj.gpButtonDown;
+        this.gpButtonLeft = obj.gpButtonLeft;
+        this.gpButtonRight = obj.gpButtonRight;
+    }
+    fix(obj) {
+        if (!this.bindings.has("keyButtonUp")) {
+            this.keyButtonUp = obj.keyButtonUp;
+        }
+        ;
+        if (!this.bindings.has("keyButtonDown")) {
+            this.keyButtonDown = obj.keyButtonDown;
+        }
+        ;
+        if (!this.bindings.has("keyButtonLeft")) {
+            this.keyButtonLeft = obj.keyButtonLeft;
+        }
+        ;
+        if (!this.bindings.has("keyButtonRight")) {
+            this.keyButtonRight = obj.keyButtonRight;
+        }
+        ;
+        if (!this.bindings.has("keyButtonEmote")) {
+            this.keyButtonEmote = obj.keyButtonEmote;
+        }
+        ;
+        if (!this.bindings.has("keyButtonToggleAudio")) {
+            this.keyButtonToggleAudio = obj.keyButtonToggleAudio;
+        }
+        ;
+        if (!this.bindings.has("keyButtonZoomOut")) {
+            this.keyButtonZoomOut = obj.keyButtonZoomOut;
+        }
+        ;
+        if (!this.bindings.has("keyButtonZoomIn")) {
+            this.keyButtonZoomIn = obj.keyButtonZoomIn;
+        }
+        ;
+        if (!this.bindings.has("gpAxisLeftRight")) {
+            this.gpAxisLeftRight = obj.gpAxisLeftRight;
+        }
+        ;
+        if (!this.bindings.has("gpAxisUpDown")) {
+            this.gpAxisUpDown = obj.gpAxisUpDown;
+        }
+        ;
+        if (!this.bindings.has("gpButtonEmote")) {
+            this.gpButtonEmote = obj.gpButtonEmote;
+        }
+        ;
+        if (!this.bindings.has("gpButtonToggleAudio")) {
+            this.gpButtonToggleAudio = obj.gpButtonToggleAudio;
+        }
+        ;
+        if (!this.bindings.has("gpButtonZoomIn")) {
+            this.gpButtonZoomIn = obj.gpButtonZoomIn;
+        }
+        ;
+        if (!this.bindings.has("gpButtonZoomOut")) {
+            this.gpButtonZoomOut = obj.gpButtonZoomOut;
+        }
+        ;
+        if (!this.bindings.has("gpButtonUp")) {
+            this.gpButtonUp = obj.gpButtonUp;
+        }
+        ;
+        if (!this.bindings.has("gpButtonDown")) {
+            this.gpButtonDown = obj.gpButtonDown;
+        }
+        ;
+        if (!this.bindings.has("gpButtonLeft")) {
+            this.gpButtonLeft = obj.gpButtonLeft;
+        }
+        ;
+        if (!this.bindings.has("gpButtonRight")) {
+            this.gpButtonRight = obj.gpButtonRight;
+        }
+        ;
+    }
+}
 const DEFAULT_INPUT_BINDING = Object.freeze({
     keyButtonUp: "ArrowUp",
     keyButtonDown: "ArrowDown",
@@ -9,6 +218,8 @@ const DEFAULT_INPUT_BINDING = Object.freeze({
     keyButtonToggleAudio: "a",
     keyButtonZoomOut: "[",
     keyButtonZoomIn: "]",
+    gpAxisLeftRight: 0,
+    gpAxisUpDown: 1,
     gpButtonEmote: 0,
     gpButtonToggleAudio: 1,
     gpButtonZoomIn: 6,
@@ -33,20 +244,19 @@ export class Settings {
         this._avatarEmoji = null;
         this._avatarURL = null;
         this._gamepadIndex = 0;
+        this._inputBinding = new InputBinding();
         this._preferredAudioOutputID = null;
         this._preferredAudioInputID = null;
         this._preferredVideoInputID = null;
-        this._inputBinding = null;
-        this.inputBinding = DEFAULT_INPUT_BINDING;
         const thisStr = localStorage.getItem(KEY);
         if (thisStr) {
-            Object.assign(this, JSON.parse(thisStr));
+            const obj = JSON.parse(thisStr);
+            const inputBindings = obj.inputBinding;
+            delete obj.inputBinding;
+            Object.assign(this, obj);
+            this.inputBinding = inputBindings;
         }
-        for (const key in DEFAULT_INPUT_BINDING) {
-            if (isNullOrUndefined(this._inputBinding[key])) {
-                this._inputBinding[key] = DEFAULT_INPUT_BINDING[key];
-            }
-        }
+        this._inputBinding.fix(DEFAULT_INPUT_BINDING);
         if (window.location.hash.length > 0) {
             this.roomName = window.location.hash.substring(1);
         }
@@ -200,13 +410,13 @@ export class Settings {
         }
     }
     get inputBinding() {
-        return this._inputBinding;
+        return this._inputBinding.toJSON();
     }
     set inputBinding(value) {
-        if (value !== this.inputBinding) {
-            for (let key in value) {
-                this._inputBinding[key] = value[key];
-            }
+        let hasChanged = false;
+        this._inputBinding.addEventListener("inputBindingChanged", (_) => hasChanged = true, { once: true });
+        this._inputBinding.copy(value);
+        if (hasChanged) {
             this.commit();
         }
     }

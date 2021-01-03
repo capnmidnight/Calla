@@ -1,112 +1,165 @@
 import { disabled, height, htmlFor, id, max, min, placeHolder, step, value, width as cssWidth, width } from "kudzu/html/attrs";
+import { CanvasTypes } from "kudzu/html/canvas";
 import { onClick, onInput, onKeyUp } from "kudzu/html/evts";
 import { gridColsDef } from "kudzu/html/grid";
 import { Button, Canvas, Div, InputURL, Label, P } from "kudzu/html/tags";
 import { EventedGamepad } from "kudzu/input/EventedGamepad";
 import { isGoodNumber, isString } from "kudzu/typeChecks";
-import { FormDialog } from "./FormDialog";
-import { InputBinding } from "./InputBinding";
+import { IInputBinding, InputBinding } from "../Settings";
+import type { User } from "../User";
+import { FormDialog, FormDialogEvents } from "./FormDialog";
+import type { LabeledInputTag } from "./LabeledInputTag";
 import { LabeledInput } from "./LabeledInputTag";
 import { isOpen, setLocked } from "./ops";
 import { OptionPanel } from "./OptionPanelTag";
+import type { SelectBoxTag } from "./SelectBoxTag";
 import { SelectBox } from "./SelectBoxTag";
 
 
+export class OptionsFormAvatarURLChangedEvent extends Event { constructor() { super("avatarURLChanged"); } }
+export class OptionsFormGamepadChangedEvent extends Event { constructor() { super("gamepadChanged"); } }
+export class OptionsFormSelectAvatarEvent extends Event { constructor() { super("selectAvatar"); } }
+export class OptionsFormFontSizeChangedEvent extends Event { constructor() { super("fontSizeChanged"); } }
+export class OptionsFormInputBindingChangedEvent extends Event { constructor() { super("inputBindingChanged"); } }
+export class OptionsFormAudioPropertiesChangedEvent extends Event { constructor() { super("audioPropertiesChanged"); } }
+export class OptionsFormToggleDrawHearingEvent extends Event { constructor() { super("toggleDrawHearing"); } }
+export class OptionsFormToggleVideoEvent extends Event { constructor() { super("toggleVideo"); } }
+
+export class OptionsFormGamepadButtonUpEvent extends Event {
+    button = 0;
+    constructor() { super("gamepadButtonUp"); }
+}
+
+export class OptionsFormGamepadAxisMaxedEvent extends Event {
+    axis = 0;
+    constructor() { super("gamepadAxisMaxed"); }
+}
+
+interface OptionsFormEvents extends FormDialogEvents {
+    avatarURLChanged: OptionsFormAvatarURLChangedEvent;
+    gamepadChanged: OptionsFormGamepadChangedEvent;
+    selectAvatar: OptionsFormSelectAvatarEvent;
+    fontSizeChanged: OptionsFormFontSizeChangedEvent;
+    inputBindingChanged: OptionsFormInputBindingChangedEvent;
+    audioPropertiesChanged: OptionsFormAudioPropertiesChangedEvent;
+    toggleDrawHearing: OptionsFormToggleDrawHearingEvent;
+    toggleVideo: OptionsFormToggleVideoEvent;
+    gamepadButtonUp: OptionsFormGamepadButtonUpEvent;
+    gamepadAxisMaxed: OptionsFormGamepadAxisMaxedEvent;
+}
 
 const keyWidthStyle = cssWidth("7em"),
     numberWidthStyle = cssWidth("3em"),
-    avatarUrlChangedEvt = new Event("avatarURLChanged"),
-    gamepadChangedEvt = new Event("gamepadChanged"),
-    selectAvatarEvt = new Event("selectAvatar"),
-    fontSizeChangedEvt = new Event("fontSizeChanged"),
-    inputBindingChangedEvt = new Event("inputBindingChanged"),
-    audioPropsChangedEvt = new Event("audioPropertiesChanged"),
-    toggleDrawHearingEvt = new Event("toggleDrawHearing"),
-    toggleVideoEvt = new Event("toggleVideo"),
-    gamepadButtonUpEvt = Object.assign(new Event("gamepadbuttonup"), {
-        button: 0
-    }),
-    gamepadAxisMaxedEvt = Object.assign(new Event("gamepadaxismaxed"), {
-        axis: 0
-    });
+    avatarUrlChangedEvt = new OptionsFormAvatarURLChangedEvent(),
+    gamepadChangedEvt = new OptionsFormGamepadChangedEvent(),
+    selectAvatarEvt = new OptionsFormSelectAvatarEvent(),
+    fontSizeChangedEvt = new OptionsFormFontSizeChangedEvent(),
+    inputBindingChangedEvt = new OptionsFormInputBindingChangedEvent(),
+    audioPropsChangedEvt = new OptionsFormAudioPropertiesChangedEvent(),
+    toggleDrawHearingEvt = new OptionsFormToggleDrawHearingEvent(),
+    toggleVideoEvt = new OptionsFormToggleVideoEvent(),
+    gamepadButtonUpEvt = new OptionsFormGamepadButtonUpEvent(),
+    gamepadAxisMaxedEvt = new OptionsFormGamepadAxisMaxedEvent();
 
 const disabler = disabled(true),
     enabler = disabled(false);
 
-/** @type {WeakMap<OptionsForm, OptionsFormPrivate>} */
-const selfs = new WeakMap();
+export class OptionsForm
+    extends FormDialog<OptionsFormEvents>
+    implements IInputBinding {
+    _drawHearing = false;
 
-class OptionsFormPrivate {
-    constructor() {
-        this.inputBinding = new InputBinding();
-        /** @type {EventedGamepad} */
-        this.pad = null;
-    }
-}
+    private _inputBinding = new InputBinding();
+    private _pad: EventedGamepad;
+    avatarURLInput: HTMLInputElement;
+    clearAvatarURLButton: HTMLButtonElement;
+    useVideoAvatarButton: HTMLButtonElement;
+    avatarPreview: HTMLCanvasElement;
+    fontSizeInput: LabeledInputTag;
+    drawHearingCheck: LabeledInputTag;
+    audioMinInput: LabeledInputTag;
+    audioMaxInput: LabeledInputTag;
+    audioRolloffInput: LabeledInputTag;
+    gpSelect: SelectBoxTag<Gamepad>;
 
-export class OptionsForm extends FormDialog {
+    keyButtonUpInput: LabeledInputTag;
+    keyButtonDownInput: LabeledInputTag;
+    keyButtonLeftInput: LabeledInputTag;
+    keyButtonRightInput: LabeledInputTag;
+    keyButtonEmoteInput: LabeledInputTag;
+    keyButtonToggleAudioInput: LabeledInputTag;
+    keyButtonZoomOutInput: LabeledInputTag;
+    keyButtonZoomInInput: LabeledInputTag;
+
+    gpAxisLeftRightInput: LabeledInputTag;
+    gpAxisUpDownInput: LabeledInputTag;
+    gpButtonUpInput: LabeledInputTag;
+    gpButtonDownInput: LabeledInputTag;
+    gpButtonLeftInput: LabeledInputTag;
+    gpButtonRightInput: LabeledInputTag;
+    gpButtonEmoteInput: LabeledInputTag;
+    gpButtonToggleAudioInput: LabeledInputTag;
+    gpButtonZoomOutInput: LabeledInputTag;
+    gpButtonZoomInInput: LabeledInputTag;
+
+
+    user: User = null;
+    private _avatarG: CanvasRenderingContext2D;
+
     constructor() {
         super("options");
 
-        const _ = (evt) => () => this.dispatchEvent(evt);
-
-        const self = new OptionsFormPrivate();
-        selfs.set(this, self);
+        const _ = (evt: Event) => () => this.dispatchEvent(evt);
 
         const audioPropsChanged = onInput(_(audioPropsChangedEvt));
 
-        const makeKeyboardBinder = (id, label) => {
+        const makeKeyboardBinder = (id: string, label: string) => {
             const key = LabeledInput(
                 id,
                 "text",
                 label,
                 keyWidthStyle,
-                onKeyUp((evt) => {
-                    if (evt.key !== "Tab"
-                        && evt.key !== "Shift") {
-                        key.value
-                            = self.inputBinding[id]
-                            = evt.key;
+                onKeyUp((evt: Event) => {
+                    const keyEvt = evt as KeyboardEvent;
+                    if (keyEvt.key !== "Tab"
+                        && keyEvt.key !== "Shift") {
+                        this._inputBinding.set(id, keyEvt.key);
                         this.dispatchEvent(inputBindingChangedEvt);
                     }
                 }));
-            key.value = self.inputBinding[id];
+            key.value = this._inputBinding.get(id).toString();
             return key;
-        }
+        };
 
-        const makeGamepadButtonBinder = (id, label) => {
+        const makeGamepadButtonBinder = (id: string, label: string) => {
             const gp = LabeledInput(
                 id,
                 "text",
                 label,
                 numberWidthStyle);
-            this.addEventListener("gamepadbuttonup", (evt) => {
+            this.addEventListener("gamepadButtonUp", (evt) => {
                 if (document.activeElement === gp.input) {
-                    gp.value
-                        = self.inputBinding[id]
-                        = evt.button;
+                    this._inputBinding.set(id, evt.button);
                     this.dispatchEvent(inputBindingChangedEvt);
                 }
             });
-            gp.value = self.inputBinding[id];
+            gp.value = this._inputBinding.get(id).toString();
             return gp;
         };
 
-        const makeGamepadAxisBinder = (id, label) => {
+        const makeGamepadAxisBinder = (id: string, label: string) => {
             const gp = LabeledInput(
                 id,
                 "text",
                 label,
                 numberWidthStyle);
-            this.addEventListener("gamepadaxismaxed", (evt) => {
+            this.addEventListener("gamepadAxisMaxed", (evt) => {
                 if (document.activeElement === gp.input) {
-                    gp.value
-                        = self.inputBinding[id]
-                        = evt.axis;
+                    this._inputBinding.set(id, evt.axis);
                     this.dispatchEvent(inputBindingChangedEvt);
                 }
             });
-            gp.value = self.inputBinding[id];
+            gp.value = this._inputBinding.get(id).toString();
             return gp;
         };
 
@@ -160,7 +213,7 @@ export class OptionsForm extends FormDialog {
                     "fontSize",
                     "number",
                     "Font size: ",
-                    value(10),
+                    value("10"),
                     min(5),
                     max(32),
                     numberWidthStyle,
@@ -178,7 +231,7 @@ export class OptionsForm extends FormDialog {
                         "minAudio",
                         "number",
                         "Min: ",
-                        value(1),
+                        value("1"),
                         min(0),
                         max(100),
                         numberWidthStyle,
@@ -187,7 +240,7 @@ export class OptionsForm extends FormDialog {
                         "maxAudio",
                         "number",
                         "Min: ",
-                        value(10),
+                        value("10"),
                         min(0),
                         max(100),
                         numberWidthStyle,
@@ -196,7 +249,7 @@ export class OptionsForm extends FormDialog {
                         "rollof",
                         "number",
                         "Rollof: ",
-                        value(1),
+                        value("1"),
                         min(0.1),
                         max(10),
                         step(0.1),
@@ -204,38 +257,38 @@ export class OptionsForm extends FormDialog {
                         audioPropsChanged))),
 
             OptionPanel("keyboard", "Keyboard",
-                this.keyButtonUp = makeKeyboardBinder("keyButtonUp", "Up: "),
-                this.keyButtonDown = makeKeyboardBinder("keyButtonDown", "Down: "),
-                this.keyButtonLeft = makeKeyboardBinder("keyButtonLeft", "Left: "),
-                this.keyButtonRight = makeKeyboardBinder("keyButtonRight", "Right: "),
-                this.keyButtonEmote = makeKeyboardBinder("keyButtonEmote", "Emote: "),
-                this.keyButtonToggleAudio = makeKeyboardBinder("keyButtonToggleAudio", "Toggle audio: ")),
+                this.keyButtonUpInput = makeKeyboardBinder("keyButtonUp", "Up: "),
+                this.keyButtonDownInput = makeKeyboardBinder("keyButtonDown", "Down: "),
+                this.keyButtonLeftInput = makeKeyboardBinder("keyButtonLeft", "Left: "),
+                this.keyButtonRightInput = makeKeyboardBinder("keyButtonRight", "Right: "),
+                this.keyButtonEmoteInput = makeKeyboardBinder("keyButtonEmote", "Emote: "),
+                this.keyButtonToggleAudioInput = makeKeyboardBinder("keyButtonToggleAudio", "Toggle audio: ")),
 
             OptionPanel("gamepad", "Gamepad",
                 Div(
                     Label(htmlFor("gamepads"),
 
                         "Use gamepad: "),
-                    this.gpSelect = SelectBox(
+                    this.gpSelect = SelectBox<Gamepad>(
                         "gamepads",
                         "No gamepad",
                         gp => gp.id,
                         gp => gp.id,
                         onInput(_(gamepadChangedEvt)))),
-                this.gpAxisLeftRight = makeGamepadAxisBinder("gpAxisLeftRight", "Left/Right axis:"),
-                this.gpAxisUpDown = makeGamepadAxisBinder("gpAxisUpDown", "Up/Down axis:"),
-                this.gpButtonUp = makeGamepadButtonBinder("gpButtonUp", "Up button: "),
-                this.gpButtonDown = makeGamepadButtonBinder("gpButtonDown", "Down button: "),
-                this.gpButtonLeft = makeGamepadButtonBinder("gpButtonLeft", "Left button: "),
-                this.gpButtonRight = makeGamepadButtonBinder("gpButtonRight", "Right button: "),
-                this.gpButtonEmote = makeGamepadButtonBinder("gpButtonEmote", "Emote button: "),
-                this.gpButtonToggleAudio = makeGamepadButtonBinder("gpButtonToggleAudio", "Toggle audio button: "))
+                this.gpAxisLeftRightInput = makeGamepadAxisBinder("gpAxisLeftRight", "Left/Right axis:"),
+                this.gpAxisUpDownInput = makeGamepadAxisBinder("gpAxisUpDown", "Up/Down axis:"),
+                this.gpButtonUpInput = makeGamepadButtonBinder("gpButtonUp", "Up button: "),
+                this.gpButtonDownInput = makeGamepadButtonBinder("gpButtonDown", "Down button: "),
+                this.gpButtonLeftInput = makeGamepadButtonBinder("gpButtonLeft", "Left button: "),
+                this.gpButtonRightInput = makeGamepadButtonBinder("gpButtonRight", "Right button: "),
+                this.gpButtonEmoteInput = makeGamepadButtonBinder("gpButtonEmote", "Emote button: "),
+                this.gpButtonToggleAudioInput = makeGamepadButtonBinder("gpButtonToggleAudio", "Toggle audio button: "))
         ];
 
         const cols = [];
         for (let i = 0; i < panels.length; ++i) {
             cols[i] = "1fr";
-            panels[i].element.style.gridColumnStart = i + 1;
+            panels[i].style.gridColumnStart = (i + 1).toFixed(0);
         }
 
         gridColsDef(...cols).apply(this.header);
@@ -243,7 +296,7 @@ export class OptionsForm extends FormDialog {
         this.header.append(...panels.map(p => p.button));
         this.content.append(...panels.map(p => p.element));
 
-        const showPanel = (p) =>
+        const showPanel = (p: number) =>
             () => {
                 for (let i = 0; i < panels.length; ++i) {
                     panels[i].visible = i === p;
@@ -255,21 +308,30 @@ export class OptionsForm extends FormDialog {
             panels[i].addEventListener("select", showPanel(i));
         }
 
-        self.inputBinding.addEventListener("inputBindingChanged", () => {
-            for (let id of Object.getOwnPropertyNames(self.inputBinding)) {
-                if (value[id] !== undefined
-                    && this[id] != undefined) {
-                    this[id].value = value[id];
-                }
-            }
+        this._inputBinding.addEventListener("inputBindingChanged", () => {
+            this.keyButtonUp = this._inputBinding.keyButtonUp;
+            this.keyButtonDown = this._inputBinding.keyButtonDown;
+            this.keyButtonLeft = this._inputBinding.keyButtonLeft;
+            this.keyButtonRight = this._inputBinding.keyButtonRight;
+            this.keyButtonEmote = this._inputBinding.keyButtonEmote;
+            this.keyButtonToggleAudio = this._inputBinding.keyButtonToggleAudio;
+            this.keyButtonZoomOut = this._inputBinding.keyButtonZoomOut;
+            this.keyButtonZoomIn = this._inputBinding.keyButtonZoomIn;
+
+            this.gpAxisLeftRight = this._inputBinding.gpAxisLeftRight;
+            this.gpAxisUpDown = this._inputBinding.gpAxisUpDown;
+            this.gpButtonUp = this._inputBinding.gpButtonUp;
+            this.gpButtonDown = this._inputBinding.gpButtonDown;
+            this.gpButtonLeft = this._inputBinding.gpButtonLeft;
+            this.gpButtonRight = this._inputBinding.gpButtonRight;
+            this.gpButtonEmote = this._inputBinding.gpButtonEmote;
+            this.gpButtonToggleAudio = this._inputBinding.gpButtonToggleAudio;
+            this.gpButtonZoomOut = this._inputBinding.gpButtonZoomOut;
+            this.gpButtonZoomIn = this._inputBinding.gpButtonZoomIn;
         });
 
         this.gamepads = [];
 
-        this._drawHearing = false;
-
-        /** @type {User} */
-        this.user = null;
         this._avatarG = this.avatarPreview.getContext("2d");
 
         Object.seal(this);
@@ -279,16 +341,16 @@ export class OptionsForm extends FormDialog {
         if (isOpen(this)) {
             const pad = this.currentGamepad;
             if (pad) {
-                if (self.pad) {
-                    self.pad.update(pad);
+                if (this._pad) {
+                    this._pad.update(pad);
                 }
                 else {
-                    self.pad = new EventedGamepad(pad);
-                    self.pad.addEventListener("gamepadbuttonup", (evt) => {
+                    this._pad = new EventedGamepad(pad);
+                    this._pad.addEventListener("gamepadbuttonup", (evt) => {
                         gamepadButtonUpEvt.button = evt.button;
                         this.dispatchEvent(gamepadButtonUpEvt);
                     });
-                    self.pad.addEventListener("gamepadaxismaxed", (evt) => {
+                    this._pad.addEventListener("gamepadaxismaxed", (evt) => {
                         gamepadAxisMaxedEvt.axis = evt.axis;
                         this.dispatchEvent(gamepadAxisMaxedEvt);
                     });
@@ -323,7 +385,7 @@ export class OptionsForm extends FormDialog {
     }
 
 
-    setAvatarVideo(v) {
+    setAvatarVideo(v: CanvasTypes) {
         if (v !== null) {
             this.useVideoAvatarButton.innerHTML = "Remove video";
         }
@@ -333,21 +395,11 @@ export class OptionsForm extends FormDialog {
     }
 
     get inputBinding() {
-        const self = selfs.get(this);
-        return self.inputBinding.clone();
+        return this._inputBinding.toJSON();
     }
 
     set inputBinding(value) {
-        const self = selfs.get(this);
-        for (let id of Object.getOwnPropertyNames(value)) {
-            if (self.inputBinding[id] !== undefined
-                && value[id] !== undefined
-                && this[id] != undefined) {
-                self.inputBinding[id]
-                    = this[id].value
-                    = value[id];
-            }
-        }
+        this._inputBinding.copy(value);
     }
 
     get gamepads() {
@@ -357,14 +409,14 @@ export class OptionsForm extends FormDialog {
     set gamepads(values) {
         const disable = values.length === 0;
         this.gpSelect.values = values;
-        setLocked(this.gpAxisLeftRight, disable);
-        setLocked(this.gpAxisUpDown, disable);
-        setLocked(this.gpButtonUp, disable);
-        setLocked(this.gpButtonDown, disable);
-        setLocked(this.gpButtonLeft, disable);
-        setLocked(this.gpButtonRight, disable);
-        setLocked(this.gpButtonEmote, disable);
-        setLocked(this.gpButtonToggleAudio, disable);
+        setLocked(this.gpAxisLeftRightInput, disable);
+        setLocked(this.gpAxisUpDownInput, disable);
+        setLocked(this.gpButtonUpInput, disable);
+        setLocked(this.gpButtonDownInput, disable);
+        setLocked(this.gpButtonLeftInput, disable);
+        setLocked(this.gpButtonRightInput, disable);
+        setLocked(this.gpButtonEmoteInput, disable);
+        setLocked(this.gpButtonToggleAudioInput, disable);
     }
 
     get currentGamepadIndex() {
@@ -410,7 +462,7 @@ export class OptionsForm extends FormDialog {
     set audioDistanceMin(value) {
         if (isGoodNumber(value)
             && value > 0) {
-            this.audioMinInput.value = value;
+            this.audioMinInput.value = value.toFixed(3);
             if (this.audioDistanceMin > this.audioDistanceMax) {
                 this.audioDistanceMax = this.audioDistanceMin;
             }
@@ -431,7 +483,7 @@ export class OptionsForm extends FormDialog {
     set audioDistanceMax(value) {
         if (isGoodNumber(value)
             && value > 0) {
-            this.audioMaxInput.value = value;
+            this.audioMaxInput.value = value.toFixed(3);
             if (this.audioDistanceMin > this.audioDistanceMax) {
                 this.audioDistanceMin = this.audioDistanceMax;
             }
@@ -452,7 +504,7 @@ export class OptionsForm extends FormDialog {
     set audioRolloff(value) {
         if (isGoodNumber(value)
             && value > 0) {
-            this.audioRolloffInput.value = value;
+            this.audioRolloffInput.value = value.toFixed(3);
         }
     }
 
@@ -470,7 +522,61 @@ export class OptionsForm extends FormDialog {
     set fontSize(value) {
         if (isGoodNumber(value)
             && value > 0) {
-            this.fontSizeInput.value = value;
+            this.fontSizeInput.value = value.toFixed(3);
         }
     }
+
+    get keyButtonUp() { return this.keyButtonUpInput.value; }
+    set keyButtonUp(v) { this.keyButtonUpInput.value = v; }
+
+    get keyButtonDown() { return this.keyButtonDownInput.value; }
+    set keyButtonDown(v) { this.keyButtonDownInput.value = v; }
+
+    get keyButtonLeft() { return this.keyButtonLeftInput.value; }
+    set keyButtonLeft(v) { this.keyButtonLeftInput.value = v; }
+
+    get keyButtonRight() { return this.keyButtonRightInput.value; }
+    set keyButtonRight(v) { this.keyButtonRightInput.value = v; }
+
+    get keyButtonEmote() { return this.keyButtonEmoteInput.value; }
+    set keyButtonEmote(v) { this.keyButtonEmoteInput.value = v; }
+
+    get keyButtonToggleAudio() { return this.keyButtonToggleAudioInput.value; }
+    set keyButtonToggleAudio(v) { this.keyButtonToggleAudioInput.value = v; }
+
+    get keyButtonZoomOut() { return this.keyButtonZoomOutInput.value; }
+    set keyButtonZoomOut(v) { this.keyButtonZoomOutInput.value = v; }
+
+    get keyButtonZoomIn() { return this.keyButtonZoomInInput.value; }
+    set keyButtonZoomIn(v) { this.keyButtonZoomInInput.value = v; }
+
+    get gpAxisLeftRight() { return parseInt(this.gpAxisLeftRightInput.value, 10); }
+    set gpAxisLeftRight(v) { this.gpAxisLeftRightInput.value = v.toFixed(0); }
+
+    get gpAxisUpDown() { return parseInt(this.gpAxisUpDownInput.value, 10); }
+    set gpAxisUpDown(v) { this.gpAxisUpDownInput.value = v.toFixed(0); }
+
+    get gpButtonUp() { return parseInt(this.gpButtonUpInput.value, 10); }
+    set gpButtonUp(v) { this.gpButtonUpInput.value = v.toFixed(0); }
+
+    get gpButtonDown() { return parseInt(this.gpButtonDownInput.value, 10); }
+    set gpButtonDown(v) { this.gpButtonDownInput.value = v.toFixed(0); }
+
+    get gpButtonLeft() { return parseInt(this.gpButtonLeftInput.value, 10); }
+    set gpButtonLeft(v) { this.gpButtonLeftInput.value = v.toFixed(0); }
+
+    get gpButtonRight() { return parseInt(this.gpButtonRightInput.value, 10); }
+    set gpButtonRight(v) { this.gpButtonRightInput.value = v.toFixed(0); }
+
+    get gpButtonEmote() { return parseInt(this.gpButtonEmoteInput.value, 10); }
+    set gpButtonEmote(v) { this.gpButtonEmoteInput.value = v.toFixed(0); }
+
+    get gpButtonToggleAudio() { return parseInt(this.gpButtonToggleAudioInput.value, 10); }
+    set gpButtonToggleAudio(v) { this.gpButtonToggleAudioInput.value = v.toFixed(0); }
+
+    get gpButtonZoomOut() { return parseInt(this.gpButtonZoomOutInput.value, 10); }
+    set gpButtonZoomOut(v) { this.gpButtonZoomOutInput.value = v.toFixed(0); }
+
+    get gpButtonZoomIn() { return parseInt(this.gpButtonZoomInInput.value, 10); }
+    set gpButtonZoomIn(v) { this.gpButtonZoomInInput.value = v.toFixed(0); }
 }

@@ -1,14 +1,15 @@
-import type { Emoji } from "kudzu/emoji/Emoji";
-import { BaseAvatar } from "./BaseAvatar";
+import { AvatarMode } from "./AvatarMode";
+import { BaseAvatar, BaseAvatarChangedEvent } from "./BaseAvatar";
+export declare class EmojiAvatarChangedEvent extends BaseAvatarChangedEvent<AvatarMode.Emoji, string> {
+    constructor(emoji: string);
+}
 /**
  * An avatar that uses a Unicode emoji as its representation
  **/
 export declare class EmojiAvatar extends BaseAvatar {
     value: string;
-    desc: string;
     /**
-     * Creatse a new avatar that uses a Unicode emoji as its representation.
-     * @param {import("../../emoji/Emoji").Emoji} emoji
+     * Creats a new avatar that uses a Unicode emoji as its representation.
      */
-    constructor(emoji: Emoji);
+    constructor(emoji: string);
 }

@@ -1,18 +1,36 @@
-import type { EmojiGroup } from "kudzu/emoji/EmojiGroup";
+import { Emoji } from "kudzu/emoji/Emoji";
+import { EmojiGroup } from "kudzu/emoji/EmojiGroup";
 import { allIcons as icons, emojiStyle, textStyle } from "kudzu/emoji/emojis";
+import { TypedEvent } from "kudzu/events/EventBase";
 import { className, disabled, href, htmlFor, title } from "kudzu/html/attrs";
 import { onClick } from "kudzu/html/evts";
 import { gridPos } from "kudzu/html/grid";
 import { A, Button, Div, H1, H2, Label, LI, P, Span, UL } from "kudzu/html/tags";
-import { FormDialog } from "./FormDialog";
+import { isArray } from "kudzu/typeChecks";
+import { FormDialog, FormDialogEvents } from "./FormDialog";
 import { hide, isOpen, show, toggleOpen } from "./ops";
 
 const disabler = disabled(true),
     enabler = disabled(false);
 
-const cancelEvt = new Event("emojiCanceled");
+class EmojiSelectedEvent extends TypedEvent<"emojiSelected"> {
+    constructor(public emoji: Emoji) {
+        super("emojiSelected");
+    }
+}
 
-export class EmojiForm extends FormDialog {
+const cancelEvt = new TypedEvent("emojiCanceled");
+
+interface EmojiFormEvents extends FormDialogEvents {
+    emojiCanceled: TypedEvent<"emojiCanceled">;
+    emojiSelected: EmojiSelectedEvent;
+}
+
+export class EmojiForm extends FormDialog<EmojiFormEvents> {
+    recent: HTMLParagraphElement;
+    preview: HTMLElement;
+    confirmButton: HTMLElement;
+    selectAsync: () => Promise<Emoji>;
     constructor() {
         super("emoji");
 
@@ -20,19 +38,19 @@ export class EmojiForm extends FormDialog {
             H2("Recent"),
             this.recent = P("(None)"));
 
-        const previousEmoji = [],
-            allAlts = [];
+        const previousEmoji = new Array<Emoji>(),
+            allAlts = new Array<HTMLDivElement>();
 
-        let selectedEmoji = null,
+        let selectedEmoji: Emoji = null,
             idCounter = 0;
 
         const closeAll = () => {
             for (let alt of allAlts) {
                 hide(alt);
             }
-        }
+        };
 
-        function combine(a, b) {
+        function combine(a: Emoji, b: Emoji): Emoji {
             let left = a.value;
 
             let idx = left.indexOf(emojiStyle.value);
@@ -43,10 +61,7 @@ export class EmojiForm extends FormDialog {
                 left = left.substring(0, idx);
             }
 
-            return {
-                value: left + b.value,
-                desc: a.desc + "/" + b.desc
-            };
+            return new Emoji(left + b.value, a.desc + "/" + b.desc);
         }
 
         /**
@@ -55,25 +70,26 @@ export class EmojiForm extends FormDialog {
          * @param {HTMLElement} container
          * @param {boolean} isAlts
          */
-        const addIconsToContainer = (group, container, isAlts) => {
-            const alts = group.alts || group;
+        const addIconsToContainer = (group: EmojiGroup | (Emoji[]), container: HTMLElement, isAlts: boolean) => {
+            const alts = isArray(group) && group
+                || !isArray(group) && group.alts;
             for (let icon of alts) {
+                let subAlts: HTMLDivElement = null;
                 const btn = Button(
                     title(icon.desc),
-                    onClick((evt) => {
+                    onClick((_evt) => {
+                        const evt = _evt as MouseEvent;
                         selectedEmoji = selectedEmoji && evt.ctrlKey
                             ? combine(selectedEmoji, icon)
                             : icon;
                         this.preview.innerHTML = `${selectedEmoji.value} - ${selectedEmoji.desc}`;
                         enabler.apply(this.confirmButton);
 
-                        if (alts) {
-                            toggleOpen(alts);
-                            btn.innerHTML = icon.value + (isOpen(alts) ? "-" : "+");
+                        if (subAlts) {
+                            toggleOpen(subAlts);
+                            btn.innerHTML = icon.value + (isOpen(subAlts) ? "-" : "+");
                         }
                     }), icon.value);
-
-                let alts = null;
 
                 /** @type {HTMLUListElement|HTMLSpanElement} */
                 let g = null;
@@ -86,25 +102,25 @@ export class EmojiForm extends FormDialog {
                                 icon.desc)));
                 }
                 else {
-                    g = Span(btn)
+                    g = Span(btn);
                 }
 
-                if (icon.alts) {
-                    alts = Div();
-                    allAlts.push(alts);
-                    addIconsToContainer(icon, alts, true);
-                    hide(alts);
-                    g.appendChild(alts);
+                if ((icon as any).alts) {
+                    subAlts = Div();
+                    allAlts.push(subAlts);
+                    addIconsToContainer((icon as any), subAlts, true);
+                    hide(subAlts);
+                    g.appendChild(subAlts);
                     btn.style.width = "3em";
                     btn.innerHTML += "+";
                 }
 
-                if (icon.width) {
-                    btn.style.width = icon.width;
+                if ((icon as any).width) {
+                    btn.style.width = (icon as any).width;
                 }
 
-                if (icon.color) {
-                    btn.style.color = icon.color;
+                if ((icon as any).color) {
+                    btn.style.color = (icon as any).color;
                 }
 
                 container.appendChild(g);
@@ -124,7 +140,7 @@ export class EmojiForm extends FormDialog {
                         }),
                         group.value + " -");
 
-                addIconsToContainer(group, container);
+                addIconsToContainer(group, container, false);
                 header.appendChild(headerButton);
                 this.content.appendChild(header);
                 this.content.appendChild(container);
@@ -140,7 +156,7 @@ export class EmojiForm extends FormDialog {
                     if (idx === -1) {
                         previousEmoji.push(selectedEmoji);
                         this.recent.innerHTML = "";
-                        addIconsToContainer(previousEmoji, this.recent);
+                        addIconsToContainer(previousEmoji, this.recent, false);
                     }
 
                     this.dispatchEvent(new EmojiSelectedEvent(selectedEmoji));
@@ -157,12 +173,12 @@ export class EmojiForm extends FormDialog {
 
             this.preview = Span(gridPos(1, 4, 3, 1)));
 
-        disabler.apply(this.confirmButton)
+        disabler.apply(this.confirmButton);
 
         this.selectAsync = () => {
             return new Promise((resolve, reject) => {
-                let yes = null,
-                    no = null;
+                let yes: (evt: EmojiSelectedEvent) => void = null,
+                    no: () => void = null;
 
                 const done = () => {
                     this.removeEventListener("emojiSelected", yes);
@@ -170,7 +186,7 @@ export class EmojiForm extends FormDialog {
                     this.removeEventListener("hidden", no);
                 };
 
-                yes = (evt) => {
+                yes = (evt: EmojiSelectedEvent) => {
                     done();
                     try {
                         resolve(evt.emoji);
@@ -193,12 +209,5 @@ export class EmojiForm extends FormDialog {
                 show(this);
             });
         };
-    }
-}
-
-class EmojiSelectedEvent extends Event {
-    constructor(emoji) {
-        super("emojiSelected");
-        this.emoji = emoji;
     }
 }

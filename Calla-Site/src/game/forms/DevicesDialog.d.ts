@@ -1,6 +1,12 @@
 import type { SelectBoxTag } from "./SelectBoxTag";
-import { FormDialog } from "./FormDialog";
-export declare class DevicesDialog extends FormDialog {
+import { FormDialog, FormDialogEvents } from "./FormDialog";
+import { TypedEvent } from "kudzu/events/EventBase";
+interface DevicesDialogEvents extends FormDialogEvents {
+    audioInputChanged: TypedEvent<"audioInputChanged">;
+    audioOutputChanged: TypedEvent<"audioOutputChanged">;
+    videoInputChanged: TypedEvent<"videoInputChanged">;
+}
+export declare class DevicesDialog extends FormDialog<DevicesDialogEvents> {
     videoInputSelect: SelectBoxTag<MediaDeviceInfo>;
     audioInputSelect: SelectBoxTag<MediaDeviceInfo>;
     audioOutputSelect: SelectBoxTag<MediaDeviceInfo>;
@@ -18,3 +24,4 @@ export declare class DevicesDialog extends FormDialog {
     get currentVideoInputDevice(): MediaDeviceInfo;
     set currentVideoInputDevice(value: MediaDeviceInfo);
 }
+export {};

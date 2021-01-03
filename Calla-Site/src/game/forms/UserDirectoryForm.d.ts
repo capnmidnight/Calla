@@ -1,19 +1,26 @@
-import { FormDialog } from "./FormDialog";
-export declare class UserDirectoryForm extends FormDialog {
+import type { User } from "../User";
+import { FormDialog, FormDialogEvents } from "./FormDialog";
+export declare class UserDirectoryFormWarpToEvent extends Event {
+    id: string;
     constructor();
-    /**
-     *
-     * @param {string} roomName
-     * @param {string} userName
-     */
-    startAsync(roomName: any, userName: any): Promise<void>;
+}
+interface UserDirectoryFormEvents extends FormDialogEvents {
+    warpTo: UserDirectoryFormWarpToEvent;
+}
+export declare class UserDirectoryForm extends FormDialog<UserDirectoryFormEvents> {
+    roomName: string;
+    userName: string;
+    usersList: HTMLDivElement;
+    rows: Map<string, HTMLElement[]>;
+    users: Map<string, User>;
+    avatarGs: Map<string, CanvasRenderingContext2D>;
+    lastUser: User;
+    constructor();
+    startAsync(roomName: string, userName: string): Promise<void>;
     update(): void;
-    /**
-     *
-     * @param {User} user
-     */
-    set(user: any): void;
-    delete(userID: any): void;
+    set(user: User): void;
+    delete(userID: string): void;
     clear(): void;
     warn(...rest: any[]): void;
 }
+export {};

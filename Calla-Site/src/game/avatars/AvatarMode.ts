@@ -1,10 +1,9 @@
-﻿/**
+/**
  * Types of avatars.
- * @enum {string}
  **/
-export const AvatarMode = Object.freeze({
-    none: null,
-    emoji: "emoji",
-    photo: "photo",
-    video: "video"
-});
+export enum AvatarMode {
+    None = "none",
+    Emoji = "emoji",
+    Photo = "photo",
+    Video = "video"
+}

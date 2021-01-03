@@ -1,19 +1,23 @@
 import { isSurfer } from "kudzu/emoji/emojis";
 import { TextImage } from "kudzu/graphics2d/TextImage";
 import { setContextSize } from "kudzu/html/canvas";
-import { BaseAvatar } from "./BaseAvatar";
+import { AvatarMode } from "./AvatarMode";
+import { BaseAvatar, BaseAvatarChangedEvent } from "./BaseAvatar";
+export class EmojiAvatarChangedEvent extends BaseAvatarChangedEvent {
+    constructor(emoji) {
+        super(AvatarMode.Emoji, emoji);
+    }
+}
 /**
  * An avatar that uses a Unicode emoji as its representation
  **/
 export class EmojiAvatar extends BaseAvatar {
     /**
-     * Creatse a new avatar that uses a Unicode emoji as its representation.
-     * @param {import("../../emoji/Emoji").Emoji} emoji
+     * Creats a new avatar that uses a Unicode emoji as its representation.
      */
     constructor(emoji) {
-        super(isSurfer(emoji));
-        this.value = emoji.value;
-        this.desc = emoji.desc;
+        super(AvatarMode.Emoji, isSurfer(emoji));
+        this.value = emoji;
         const emojiText = new TextImage();
         emojiText.fillColor = emoji.color || "black";
         emojiText.fontFamily = "Noto Color Emoji";

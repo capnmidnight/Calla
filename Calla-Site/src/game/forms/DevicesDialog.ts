@@ -1,41 +1,47 @@
 import { onInput } from "kudzu/html/evts";
 import { SelectBox } from "./SelectBoxTag";
 import type { SelectBoxTag } from "./SelectBoxTag";
-import { FormDialog } from "./FormDialog";
+import { FormDialog, FormDialogEvents } from "./FormDialog";
+import { TypedEvent } from "kudzu/events/EventBase";
 
-const audioInputChangedEvt = new Event("audioInputChanged"),
-    audioOutputChangedEvt = new Event("audioOutputChanged"),
-    videoInputChangedEvt = new Event("videoInputChanged");
+const audioInputChangedEvt = new TypedEvent("audioInputChanged"),
+    audioOutputChangedEvt = new TypedEvent("audioOutputChanged"),
+    videoInputChangedEvt = new TypedEvent("videoInputChanged");
 
-export class DevicesDialog extends FormDialog {
+interface DevicesDialogEvents extends FormDialogEvents {
+    audioInputChanged: TypedEvent<"audioInputChanged">;
+    audioOutputChanged: TypedEvent<"audioOutputChanged">;
+    videoInputChanged: TypedEvent<"videoInputChanged">;
+}
+
+export class DevicesDialog extends FormDialog<DevicesDialogEvents>{
     videoInputSelect: SelectBoxTag<MediaDeviceInfo>;
     audioInputSelect: SelectBoxTag<MediaDeviceInfo>;
     audioOutputSelect: SelectBoxTag<MediaDeviceInfo>;
+
     constructor() {
         super("devices");
-
-        const _ = (evt: Event) => () => this.dispatchEvent(evt);
 
         this.videoInputSelect = SelectBox<MediaDeviceInfo>(
             "videoInputDevices",
             "No video input",
             d => d.deviceId,
             d => d.label,
-            onInput(_(videoInputChangedEvt)));
+            onInput(() => this.dispatchEvent(videoInputChangedEvt)));
 
         this.audioInputSelect = SelectBox<MediaDeviceInfo>(
             "audioInputDevices",
             "No audio input",
             d => d.deviceId,
             d => d.label,
-            onInput(_(audioInputChangedEvt)));
+            onInput(() => this.dispatchEvent(audioInputChangedEvt)));
 
         this.audioOutputSelect = SelectBox<MediaDeviceInfo>(
             "audioOutputDevices",
             "No audio output",
             d => d.deviceId,
             d => d.label,
-            onInput(_(audioOutputChangedEvt)));
+            onInput(() => this.dispatchEvent(audioOutputChangedEvt)));
 
         this.audioInputDevices = [];
         this.audioOutputDevices = [];
@@ -44,53 +50,53 @@ export class DevicesDialog extends FormDialog {
         Object.seal(this);
     }
 
-    get audioInputDevices() {
+    get audioInputDevices(): MediaDeviceInfo[] {
         return this.audioInputSelect.values;
     }
 
-    set audioInputDevices(values) {
+    set audioInputDevices(values: MediaDeviceInfo[]) {
         this.audioInputSelect.values = values;
     }
 
-    get currentAudioInputDevice() {
+    get currentAudioInputDevice(): MediaDeviceInfo {
         return this.audioInputSelect.selectedValue;
     }
 
-    set currentAudioInputDevice(value) {
+    set currentAudioInputDevice(value: MediaDeviceInfo) {
         this.audioInputSelect.selectedValue = value;
     }
 
 
-    get audioOutputDevices() {
+    get audioOutputDevices(): MediaDeviceInfo[] {
         return this.audioOutputSelect.values;
     }
 
-    set audioOutputDevices(values) {
+    set audioOutputDevices(values: MediaDeviceInfo[]) {
         this.audioOutputSelect.values = values;
     }
 
-    get currentAudioOutputDevice() {
+    get currentAudioOutputDevice(): MediaDeviceInfo {
         return this.audioOutputSelect.selectedValue;
     }
 
-    set currentAudioOutputDevice(value) {
+    set currentAudioOutputDevice(value: MediaDeviceInfo) {
         this.audioOutputSelect.selectedValue = value;
     }
 
 
-    get videoInputDevices() {
+    get videoInputDevices(): MediaDeviceInfo[] {
         return this.videoInputSelect.values;
     }
 
-    set videoInputDevices(values) {
+    set videoInputDevices(values: MediaDeviceInfo[]) {
         this.videoInputSelect.values = values;
     }
 
-    get currentVideoInputDevice() {
+    get currentVideoInputDevice(): MediaDeviceInfo {
         return this.videoInputSelect.selectedValue;
     }
 
-    set currentVideoInputDevice(value) {
+    set currentVideoInputDevice(value: MediaDeviceInfo) {
         this.videoInputSelect.selectedValue = value;
     }
 }

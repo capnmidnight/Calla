@@ -1,4 +1,8 @@
-import { BaseAvatar } from "./BaseAvatar";
+import { AvatarMode } from "./AvatarMode";
+import { BaseAvatar, BaseAvatarChangedEvent } from "./BaseAvatar";
+export declare class PhotoAvatarChangedEvent extends BaseAvatarChangedEvent<AvatarMode.Photo, string> {
+    constructor(url: string);
+}
 /**
  * An avatar that uses an Image as its representation.
  **/

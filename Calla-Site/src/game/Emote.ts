@@ -1,10 +1,17 @@
 import type { Emoji } from "kudzu/emoji/Emoji";
+import { TypedEvent } from "kudzu/events/EventBase";
 import { getTransform } from "kudzu/graphics2d/getTransform";
 import { TextImage } from "kudzu/graphics2d/TextImage";
 import type { Context2D } from "kudzu/html/canvas";
 import type { TileMap } from "./TileMap";
 
 const EMOJI_LIFE = 3;
+
+export class EmoteEvent extends TypedEvent<"emote"> {
+    constructor(public emoji: Emoji) {
+        super("emote");
+    }
+}
 
 export class Emote {
     dx: number;

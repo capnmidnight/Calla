@@ -3,11 +3,9 @@ import { disabled } from "kudzu/html/attrs";
 export function isOpenable(obj) {
     return isFunction(obj.isOpen)
         && isFunction(obj.setOpen)
-        && isFunction(obj.updateLabel)
         && isFunction(obj.toggleOpen)
         && isFunction(obj.show)
-        && isFunction(obj.hide)
-        && isFunction(obj.setLocked);
+        && isFunction(obj.hide);
 }
 export function isOpen(target) {
     if (isOpenable(target)) {
@@ -33,18 +31,6 @@ export function setOpen(target, v, displayType = "") {
     }
     else {
         hide(target);
-    }
-}
-export function updateLabel(target, open, enabledText, disabledText, bothText) {
-    bothText = bothText || "";
-    if (target.accessKey) {
-        bothText += ` <kbd>(ALT+${target.accessKey.toUpperCase()})</kbd>`;
-    }
-    if (isOpenable(target)) {
-        target.updateLabel(open, enabledText, disabledText, bothText);
-    }
-    else {
-        target.innerHTML = (open ? enabledText : disabledText) + bothText;
     }
 }
 export function toggleOpen(target, displayType = "") {
@@ -75,9 +61,27 @@ export function hide(target, displayType = "") {
     }
 }
 ;
+export function isLabelable(obj) {
+    return isFunction(obj.updateLabel);
+}
+export function updateLabel(target, open, enabledText, disabledText, bothText) {
+    bothText = bothText || "";
+    if (target.accessKey) {
+        bothText += ` <kbd>(ALT+${target.accessKey.toUpperCase()})</kbd>`;
+    }
+    if (isLabelable(target)) {
+        target.updateLabel(open, enabledText, disabledText, bothText);
+    }
+    else {
+        target.innerHTML = (open ? enabledText : disabledText) + bothText;
+    }
+}
+export function isLockable(obj) {
+    return isFunction(obj.setLocked);
+}
 const disabler = disabled(true), enabler = disabled(false);
 export function setLocked(target, value) {
-    if (isOpenable(target)) {
+    if (isLockable(target)) {
         target.setLocked(value);
     }
     else if (value) {

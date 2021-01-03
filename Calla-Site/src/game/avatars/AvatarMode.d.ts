@@ -1,10 +1,9 @@
 /**
  * Types of avatars.
- * @enum {string}
  **/
-export declare const AvatarMode: Readonly<{
-    none: any;
-    emoji: string;
-    photo: string;
-    video: string;
-}>;
+export declare enum AvatarMode {
+    None = "none",
+    Emoji = "emoji",
+    Photo = "photo",
+    Video = "video"
+}
