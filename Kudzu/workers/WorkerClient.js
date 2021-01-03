@@ -1,4 +1,4 @@
-import { isFunction, isNumber, isString } from "../typeChecks";
+import { assertNever, isFunction, isNumber, isString } from "../typeChecks";
 import { WorkerMethodMessageType } from "./WorkerServer";
 export class WorkerClient {
     constructor(scriptPath, minScriptPath, workerPoolSize = 1) {
@@ -90,9 +90,7 @@ export class WorkerClient {
                             cleanup();
                             reject(new Error(`${methodName} failed. Reason: ${data.errorMessage}`));
                             break;
-                        default:
-                            cleanup();
-                            reject(new Error(`${methodName} failed. Reason: unknown response message type.`));
+                        default: assertNever(data);
                     }
                 }
             };

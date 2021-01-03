@@ -31,6 +31,10 @@ export function isHTMLElement(obj: any): obj is HTMLElement {
     return obj instanceof HTMLElement;
 }
 
+export function assertNever(x: never): never {
+    throw new Error("Unexpected object: " + x);
+}
+
 /**
  * Check a value to see if it is of a number type
  * and is not the special NaN value.

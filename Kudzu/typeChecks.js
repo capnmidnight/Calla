@@ -23,6 +23,9 @@ export function isArray(obj) {
 export function isHTMLElement(obj) {
     return obj instanceof HTMLElement;
 }
+export function assertNever(x) {
+    throw new Error("Unexpected object: " + x);
+}
 /**
  * Check a value to see if it is of a number type
  * and is not the special NaN value.
