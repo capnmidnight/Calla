@@ -20,7 +20,12 @@ export class Emoji {
      * Determines of the provided Emoji or EmojiGroup is a subset of
      * this emoji.
      */
-    contains(e: Emoji) {
-        return this.value.indexOf(e.value) >= 0;
+    contains(e: Emoji | string): boolean {
+        if (e instanceof Emoji) {
+            return this.contains(e.value);
+        }
+        else {
+            return this.value.indexOf(e) >= 0;
+        }
     }
 }

@@ -1,7 +1,7 @@
 import { Emoji } from "./Emoji";
 
 export class EmojiGroup extends Emoji {
-    width: string|null = null;
+    width: string | null = null;
     alts: (Emoji | EmojiGroup)[];
 
     /**
@@ -19,7 +19,7 @@ export class EmojiGroup extends Emoji {
     /**
      * Selects a random emoji out of the collection.
      **/
-    random(): Emoji|null {
+    random(): Emoji | null {
         const idx = Math.floor(Math.random() * this.alts.length);
         if (idx < 0) {
             return null;
@@ -34,7 +34,7 @@ export class EmojiGroup extends Emoji {
         }
     }
 
-    contains(e: Emoji): boolean {
+    contains(e: Emoji | string): boolean {
         if (super.contains(e)) {
             return true;
         }

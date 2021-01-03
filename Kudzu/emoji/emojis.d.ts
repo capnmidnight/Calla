@@ -1,6 +1,6 @@
 import { Emoji } from "./Emoji";
 import { EmojiGroup } from "./EmojiGroup";
-export declare function isSurfer(e: Emoji): boolean;
+export declare function isSurfer(e: Emoji | string): boolean;
 export declare const textStyle: Emoji;
 export declare const emojiStyle: Emoji;
 export declare const zeroWidthJoiner: Emoji;

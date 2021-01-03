@@ -1,7 +1,7 @@
 import { Emoji } from "./Emoji";
 import { EmojiGroup } from "./EmojiGroup";
 
-export function isSurfer(e: Emoji) {
+export function isSurfer(e: Emoji | string) {
     return surfers.contains(e)
         || rowers.contains(e)
         || swimmers.contains(e)

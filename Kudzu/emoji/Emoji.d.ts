@@ -16,5 +16,5 @@ export declare class Emoji {
      * Determines of the provided Emoji or EmojiGroup is a subset of
      * this emoji.
      */
-    contains(e: Emoji): boolean;
+    contains(e: Emoji | string): boolean;
 }

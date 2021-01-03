@@ -13,5 +13,5 @@ export declare class EmojiGroup extends Emoji {
      * Selects a random emoji out of the collection.
      **/
     random(): Emoji | null;
-    contains(e: Emoji): boolean;
+    contains(e: Emoji | string): boolean;
 }

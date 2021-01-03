@@ -20,7 +20,12 @@ export class Emoji {
      * this emoji.
      */
     contains(e) {
-        return this.value.indexOf(e.value) >= 0;
+        if (e instanceof Emoji) {
+            return this.contains(e.value);
+        }
+        else {
+            return this.value.indexOf(e) >= 0;
+        }
     }
 }
 //# sourceMappingURL=Emoji.js.map
