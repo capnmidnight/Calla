@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { assertNever } from "kudzu/typeChecks";
 import { BufferDataType, BufferList } from './buffer-list';
 import { FOAConvolver } from './foa-convolver';
 import { FOARotator } from './foa-rotator';
@@ -152,10 +153,7 @@ export class FOARenderer {
                 this.convolver.disable();
                 this.bypass.disconnect();
                 break;
-            default:
-                log('FOARenderer: Rendering mode "' + mode + '" is not ' +
-                    'supported.');
-                return;
+            default: assertNever(mode);
         }
         this.config.renderingMode = mode;
     }

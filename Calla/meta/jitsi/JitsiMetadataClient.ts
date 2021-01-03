@@ -2,6 +2,7 @@ import { arrayRemove } from "kudzu/arrays/arrayRemove";
 import { arraySortedInsert } from "kudzu/arrays/arraySortedInsert";
 import { once } from "kudzu/events/once";
 import { waitFor } from "kudzu/events/waitFor";
+import { assertNever } from "kudzu/typeChecks";
 import {
     CallaAvatarChangedEvent,
     CallaChatEvent,
@@ -81,8 +82,7 @@ export class JitsiMetadataClient
                         this.dispatchEvent(new CallaChatEvent(fromUserID, values[0]));
                         break;
                     default:
-                        console.warn("Unknown message type:", command, "from user:", fromUserID, "values:", values);
-                        break;
+                        assertNever(command);
                 }
             }
         });

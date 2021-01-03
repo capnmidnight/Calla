@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { assertNever } from "kudzu/typeChecks";
 import { BufferDataType, BufferList } from './buffer-list';
 import { HOAConvolver } from './hoa-convolver';
 import { HOARotator } from './hoa-rotator';
@@ -146,10 +147,7 @@ export class HOARenderer {
                 this.convolver.disable();
                 this.bypass.disconnect();
                 break;
-            default:
-                log('HOARenderer: Rendering mode "' + mode + '" is not ' +
-                    'supported.');
-                return;
+            default: assertNever(mode);
         }
         this.config.renderingMode = mode;
     }

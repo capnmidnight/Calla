@@ -1,6 +1,7 @@
 import { HubConnectionState } from "@microsoft/signalr";
 import { HttpTransportType, HubConnectionBuilder } from "@microsoft/signalr";
 import { waitFor } from "kudzu/events/waitFor";
+import { assertNever } from "kudzu/typeChecks";
 import { CallaAvatarChangedEvent, CallaChatEvent, CallaEmojiAvatarEvent, CallaEmoteEvent, CallaMetadataEventType, CallaUserPointerEvent, CallaUserPosedEvent } from "../../CallaEvents";
 import { ConnectionState } from "../../ConnectionState";
 import { BaseMetadataClient } from "../BaseMetadataClient";
@@ -44,6 +45,7 @@ export class SignalRMetadataClient extends BaseMetadataClient {
             case HubConnectionState.Reconnecting: return ConnectionState.Connecting;
             case HubConnectionState.Disconnected: return ConnectionState.Disconnected;
             case HubConnectionState.Disconnecting: return ConnectionState.Disconnecting;
+            default: assertNever(this.hub.state);
         }
     }
     async maybeStart() {

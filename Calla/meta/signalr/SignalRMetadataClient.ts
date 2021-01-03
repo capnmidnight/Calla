@@ -5,6 +5,7 @@ import {
 } from "@microsoft/signalr";
 import type { Emoji } from "kudzu/emoji/Emoji";
 import { waitFor } from "kudzu/events/waitFor";
+import { assertNever } from "kudzu/typeChecks";
 import type { CallaEventType } from "../../CallaEvents";
 import {
     CallaAvatarChangedEvent,
@@ -76,6 +77,7 @@ export class SignalRMetadataClient
             case HubConnectionState.Connecting: case HubConnectionState.Reconnecting: return ConnectionState.Connecting;
             case HubConnectionState.Disconnected: return ConnectionState.Disconnected;
             case HubConnectionState.Disconnecting: return ConnectionState.Disconnecting;
+            default: assertNever(this.hub.state);
         }
     }
 

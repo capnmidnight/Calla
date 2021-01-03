@@ -22,6 +22,7 @@
 
 
 import { mat3, mat4 } from "gl-matrix";
+import { assertNever } from "kudzu/typeChecks";
 import type { IDisposable } from "kudzu/using";
 import { BufferDataType, BufferList } from './buffer-list';
 import { HOAConvolver } from './hoa-convolver';
@@ -203,10 +204,7 @@ export class HOARenderer implements IDisposable {
                 this.convolver.disable();
                 this.bypass.disconnect();
                 break;
-            default:
-                log('HOARenderer: Rendering mode "' + mode + '" is not ' +
-                    'supported.');
-                return;
+            default: assertNever(mode);
         }
 
         this.config.renderingMode = mode;
