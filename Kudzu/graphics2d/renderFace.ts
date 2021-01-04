@@ -1,15 +1,15 @@
 import type { CanvasTypes } from "../html/canvas";
 import { createUtilityCanvas } from "../html/canvas";
+import { arrayProgress } from "../io/arrayProgress";
+import type { progressCallback } from "../io/progressCallback";
 import { angleClamp } from "../math/angleClamp";
 import { isFunction } from "../typeChecks";
-import { arrayProgress } from "./arrayProgress";
 import { copyPixelBicubic } from "./copyPixelBicubic";
 import { copyPixelBilinear } from "./copyPixelBilinear";
 import { copyPixelLanczos } from "./copyPixelLanczos";
 import { copyPixelNearest } from "./copyPixelNearest";
 import { CubeMapFace, CubeMapFaceNames } from "./CubeMapFace";
 import { InterpolationType } from "./InterpolationType";
-import type { progressCallback } from "./progressCallback";
 
 const rotations = new Map();
 rotations.set(CubeMapFace.PositiveY, 3);

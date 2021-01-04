@@ -1,7 +1,7 @@
 import { createUtilityCanvas } from "../html/canvas";
+import { arrayProgress } from "../io/arrayProgress";
 import { angleClamp } from "../math/angleClamp";
 import { isFunction } from "../typeChecks";
-import { arrayProgress } from "./arrayProgress";
 import { copyPixelBicubic } from "./copyPixelBicubic";
 import { copyPixelBilinear } from "./copyPixelBilinear";
 import { copyPixelLanczos } from "./copyPixelLanczos";

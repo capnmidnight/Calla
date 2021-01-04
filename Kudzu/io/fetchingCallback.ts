@@ -1,5 +1,5 @@
+import type { InterpolationType } from "../graphics2d/InterpolationType";
 import type { CanvasTypes } from "../html/canvas";
-import type { InterpolationType } from "./InterpolationType";
 import type { progressCallback } from "./progressCallback";
 
 export type fetchingCallback<T> = (path: string, progress?: progressCallback) => Promise<T>;

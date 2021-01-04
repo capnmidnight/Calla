@@ -1,14 +1,14 @@
-import type { CanvasTypes } from "../html/canvas";
-import { hasImageBitmap } from "../html/canvas";
-import { getImageData } from "./getImageData";
-import type { InterpolationType } from "./InterpolationType";
-import type { progressCallback } from "./progressCallback";
+import type { InterpolationType } from "../graphics2d/InterpolationType";
 import {
     renderCanvasFace,
     renderCanvasFaces,
     renderImageBitmapFace,
     renderImageBitmapFaces
-} from "./renderFace";
+} from "../graphics2d/renderFace";
+import type { CanvasTypes } from "../html/canvas";
+import { hasImageBitmap } from "../html/canvas";
+import { getImageData } from "./getImageData";
+import type { progressCallback } from "./progressCallback";
 import { splitProgress } from "./splitProgress";
 
 export async function getEquiMapCanvases(path: string, interpolation: InterpolationType, maxWidth: number, onProgress?: progressCallback): Promise<CanvasTypes[]> {
