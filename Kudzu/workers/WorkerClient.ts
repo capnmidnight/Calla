@@ -1,4 +1,4 @@
-import type { progressCallback } from "../io/progressCallback";
+import type { progressCallback } from "../tasks/progressCallback";
 import { assertNever, isFunction, isNumber, isString } from "../typeChecks";
 import type { WorkerMethodMessages } from "./WorkerServer";
 import { WorkerMethodMessageType } from "./WorkerServer";

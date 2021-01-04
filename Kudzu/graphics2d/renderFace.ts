@@ -1,8 +1,8 @@
 import type { CanvasTypes } from "../html/canvas";
 import { createUtilityCanvas } from "../html/canvas";
-import { arrayProgress } from "../io/arrayProgress";
-import type { progressCallback } from "../io/progressCallback";
 import { angleClamp } from "../math/angleClamp";
+import { arrayProgress } from "../tasks/arrayProgress";
+import type { progressCallback } from "../tasks/progressCallback";
 import { isFunction } from "../typeChecks";
 import { copyPixelBicubic } from "./copyPixelBicubic";
 import { copyPixelBilinear } from "./copyPixelBilinear";

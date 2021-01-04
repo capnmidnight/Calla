@@ -1,4 +1,4 @@
-import type { progressCallback } from "../io/progressCallback";
+import type { progressCallback } from "../tasks/progressCallback";
 
 const DEFAULT_TEST_TEXT = "The quick brown fox jumps over the lazy dog";
 const loadedFonts: string[] = [];

@@ -4,10 +4,10 @@ import {
     createUtilityCanvasFromImageBitmap,
     hasImageBitmap
 } from "../html/canvas";
+import type { progressCallback } from "../tasks/progressCallback";
 import { using } from "../using";
 import { getImage } from "./getImage";
 import { getImageBitmap } from "./getImageBitmap";
-import type { progressCallback } from "./progressCallback";
 
 
 export async function getCanvasViaImageBitmap(path: string, onProgress?: progressCallback): Promise<CanvasTypes> {

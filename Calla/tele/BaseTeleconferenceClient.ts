@@ -3,7 +3,7 @@ import type { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
 import { TypedEventBase } from "kudzu/events/EventBase";
 import { isOculusQuest } from "kudzu/html/flags";
 import type { blobFetchingCallback } from "kudzu/io/fetchingCallback";
-import type { progressCallback } from "kudzu/io/progressCallback";
+import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { AudioManager, SpatializerType } from "../audio/AudioManager";
 import { canChangeAudioOutput } from "../audio/canChangeAudioOutput";
 import type { MediaDeviceSet, MediaPermissionSet } from "../Calla";

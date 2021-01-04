@@ -7,9 +7,9 @@ import {
 } from "../graphics2d/renderFace";
 import type { CanvasTypes } from "../html/canvas";
 import { hasImageBitmap } from "../html/canvas";
+import type { progressCallback } from "../tasks/progressCallback";
+import { splitProgress } from "../tasks/splitProgress";
 import { getImageData } from "./getImageData";
-import type { progressCallback } from "./progressCallback";
-import { splitProgress } from "./splitProgress";
 
 export async function getEquiMapCanvases(path: string, interpolation: InterpolationType, maxWidth: number, onProgress?: progressCallback): Promise<CanvasTypes[]> {
     const splits = splitProgress(onProgress, [1, 6]);

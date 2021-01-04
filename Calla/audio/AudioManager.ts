@@ -8,7 +8,7 @@ import { autoPlay, controls, display, muted, playsInline, srcObject, styles } fr
 import type { HTMLAudioElementWithSinkID } from "kudzu/html/tags";
 import { Audio } from "kudzu/html/tags";
 import type { blobFetchingCallback } from "kudzu/io/fetchingCallback";
-import type { progressCallback } from "kudzu/io/progressCallback";
+import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { using } from "kudzu/using";
 import { ActivityAnalyser } from "./ActivityAnalyser";
 import { AudioActivityEvent } from "./AudioActivityEvent";

@@ -1,7 +1,7 @@
 import type { Emoji } from "kudzu/emoji/Emoji";
 import { TypedEventBase } from "kudzu/events/EventBase";
 import type { blobFetchingCallback, scriptLoadingCallback } from "kudzu/io/fetchingCallback";
-import type { progressCallback } from "kudzu/io/progressCallback";
+import type { progressCallback } from "kudzu/tasks/progressCallback";
 import type { IDisposable } from "kudzu/using";
 import type { AudioManager } from "./audio/AudioManager";
 import type { CallaClientEvents } from "./CallaEvents";

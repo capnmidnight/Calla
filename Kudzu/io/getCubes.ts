@@ -1,10 +1,10 @@
 import { sliceCubeMap } from "../graphics2d/sliceCubeMap";
 import type { CanvasTypes } from "../html/canvas";
 import { hasImageBitmap } from "../html/canvas";
+import type { progressCallback } from "../tasks/progressCallback";
 import { usingAsync } from "../using";
 import { getImage } from "./getImage";
 import { getImageBitmap } from "./getImageBitmap";
-import type { progressCallback } from "./progressCallback";
 
 
 export async function getCubeImageBitmaps(path: string, onProgress?: progressCallback) {

@@ -1,6 +1,6 @@
 import type { InterpolationType } from "../graphics2d/InterpolationType";
 import type { CanvasTypes } from "../html/canvas";
-import type { progressCallback } from "./progressCallback";
+import type { progressCallback } from "../tasks/progressCallback";
 export declare type fetchingCallback<T> = (path: string, progress?: progressCallback) => Promise<T>;
 export declare type blobFetchingCallback = fetchingCallback<Blob>;
 export declare type canvasFetchingCallback = fetchingCallback<CanvasTypes>;

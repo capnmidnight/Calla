@@ -1,5 +1,5 @@
 import type { TypedEventBase } from "kudzu/events/EventBase";
-import type { progressCallback } from "kudzu/io/progressCallback";
+import type { progressCallback } from "kudzu/tasks/progressCallback";
 import type { AudioManager } from "../audio/AudioManager";
 import type { MediaPermissionSet } from "../Calla";
 import type { CallaTeleconferenceEvents } from "../CallaEvents";

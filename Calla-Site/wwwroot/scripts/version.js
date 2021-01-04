@@ -1,7 +1,12 @@
-const versionString = "v0.11.0";
+(function () {
+  'use strict';
 
-const c = document.querySelector("#version");
-if (c) {
-    c.innerHTML = versionString;
-}
+  var version = "1.0.0";
+
+  const c = document.querySelector("#version");
+  if (c) {
+      c.innerHTML = "v" + version;
+  }
+
+}());
 //# sourceMappingURL=version.js.map

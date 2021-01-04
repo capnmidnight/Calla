@@ -1,5 +1,5 @@
+import type { progressCallback } from "../tasks/progressCallback";
 import { getBuffer } from "./getBuffer";
-import { progressCallback } from "./progressCallback";
 import { readBufferXml } from "./readBufferXml";
 
 export async function getXml(path: string, onProgress?: progressCallback): Promise<HTMLElement> {

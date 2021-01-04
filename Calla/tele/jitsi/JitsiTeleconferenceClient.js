@@ -1,7 +1,7 @@
 import { arrayClear } from "kudzu/arrays/arrayClear";
 import { once } from "kudzu/events/once";
 import { waitFor } from "kudzu/events/waitFor";
-import { splitProgress } from "kudzu/io/splitProgress";
+import { splitProgress } from "kudzu/tasks/splitProgress";
 import { using } from "kudzu/using";
 import { CallaAudioStreamAddedEvent, CallaAudioStreamRemovedEvent, CallaConferenceFailedEvent, CallaConferenceJoinedEvent, CallaConferenceLeftEvent, CallaParticipantJoinedEvent, CallaParticipantLeftEvent, CallaParticipantNameChangeEvent, CallaTeleconferenceEventType, CallaTeleconferenceServerConnectedEvent, CallaTeleconferenceServerDisconnectedEvent, CallaTeleconferenceServerFailedEvent, CallaUserAudioMutedEvent, CallaUserVideoMutedEvent, CallaVideoStreamAddedEvent, CallaVideoStreamRemovedEvent, StreamType } from "../../CallaEvents";
 import { ConnectionState } from "../../ConnectionState";

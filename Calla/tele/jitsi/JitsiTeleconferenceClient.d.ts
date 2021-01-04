@@ -1,5 +1,5 @@
 import { blobFetchingCallback, scriptLoadingCallback } from "kudzu/io/fetchingCallback";
-import { progressCallback } from "kudzu/io/progressCallback";
+import type { progressCallback } from "kudzu/tasks/progressCallback";
 import type JitsiConference from "../../lib-jitsi-meet/JitsiConference";
 import type { IMetadataClientExt } from "../../meta/IMetadataClient";
 import { BaseTeleconferenceClient } from "../BaseTeleconferenceClient";

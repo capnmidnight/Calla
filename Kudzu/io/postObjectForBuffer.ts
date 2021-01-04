@@ -1,5 +1,5 @@
+import type { progressCallback } from "../tasks/progressCallback";
 import { postObjectForResponse } from "./postObjectForResponse";
-import type { progressCallback } from "./progressCallback";
 import type { getPartsReturnType } from "./readResponseBuffer";
 import { readResponseBuffer } from "./readResponseBuffer";
 

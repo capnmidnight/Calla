@@ -1,4 +1,4 @@
-import type { progressCallback } from "../io/progressCallback";
+import type { progressCallback } from "../tasks/progressCallback";
 export declare type workerClientCallback<T> = (...params: any[]) => Promise<T>;
 export declare class WorkerClient {
     static isSupported: boolean;

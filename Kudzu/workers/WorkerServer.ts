@@ -1,4 +1,4 @@
-import type { progressCallback } from "../io/progressCallback";
+import type { progressCallback } from "../tasks/progressCallback";
 
 export type workerServerMethod = (taskID: number, ...params: any[]) => Promise<void>;
 

@@ -1,7 +1,7 @@
 import type { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
 import { TypedEventBase } from "kudzu/events/EventBase";
 import type { blobFetchingCallback } from "kudzu/io/fetchingCallback";
-import type { progressCallback } from "kudzu/io/progressCallback";
+import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { AudioManager } from "../audio/AudioManager";
 import type { MediaPermissionSet } from "../Calla";
 import type { CallaTeleconferenceEvents } from "../CallaEvents";

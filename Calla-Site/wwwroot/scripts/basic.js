@@ -20,11 +20,17 @@
     function isObject(obj) {
         return t(obj, "object", Object);
     }
+    function isDate(obj) {
+        return obj instanceof Date;
+    }
     function isArray(obj) {
         return obj instanceof Array;
     }
     function isHTMLElement(obj) {
         return obj instanceof HTMLElement;
+    }
+    function assertNever(x) {
+        throw new Error("Unexpected object: " + x);
     }
     /**
      * Check a value to see if it is of a number type
@@ -54,7 +60,7 @@
     class EventBase {
         constructor() {
             this.listeners = new Map();
-            this.options = new Map();
+            this.listenerOptions = new Map();
         }
         addEventListener(type, callback, options) {
             if (isFunction(callback)) {
@@ -66,7 +72,7 @@
                 if (!listeners.find(c => c === callback)) {
                     listeners.push(callback);
                     if (options) {
-                        this.options.set(callback, options);
+                        this.listenerOptions.set(callback, options);
                     }
                 }
             }
@@ -83,8 +89,8 @@
             const idx = listeners.findIndex(c => c === callback);
             if (idx >= 0) {
                 arrayRemoveAt(listeners, idx);
-                if (this.options.has(callback)) {
-                    this.options.delete(callback);
+                if (this.listenerOptions.has(callback)) {
+                    this.listenerOptions.delete(callback);
                 }
             }
         }
@@ -92,7 +98,7 @@
             const listeners = this.listeners.get(evt.type);
             if (listeners) {
                 for (const callback of listeners) {
-                    const options = this.options.get(callback);
+                    const options = this.listenerOptions.get(callback);
                     if (options && options.once) {
                         this.removeListener(listeners, callback);
                     }
@@ -100,6 +106,11 @@
                 }
             }
             return !evt.defaultPrevented;
+        }
+    }
+    class TypedEvent extends Event {
+        constructor(type) {
+            super(type);
         }
     }
     class TypedEventBase extends EventBase {
@@ -121,9 +132,6 @@
                 super.removeEventListener(type, mappedCallback);
             }
         }
-        dispatchEvent(evt) {
-            return super.dispatchEvent(evt);
-        }
     }
 
     async function getResponse(path) {
@@ -135,7 +143,23 @@
         return response;
     }
 
-    async function readResponseBuffer(path, response, contentLength, onProgress) {
+    async function readResponseBuffer(response, path, onProgress) {
+        const contentType = response.headers.get("Content-Type");
+        if (!contentType) {
+            throw new Error("Server did not provide a content type");
+        }
+        let contentLength = 1;
+        const contentLengthStr = response.headers.get("Content-Length");
+        if (!contentLengthStr) {
+            console.warn(`Server did not provide a content length header. Path: ${path}`);
+        }
+        else {
+            contentLength = parseInt(contentLengthStr, 10);
+            if (!isGoodNumber(contentLength)) {
+                console.warn(`Server did not provide a valid content length header. Value: ${contentLengthStr}, Path: ${path}`);
+                contentLength = 1;
+            }
+        }
         if (onProgress) {
             onProgress(0, 1, path);
         }
@@ -172,7 +196,7 @@
         if (onProgress) {
             onProgress(1, 1, path);
         }
-        return buffer;
+        return { buffer, contentType };
     }
 
     async function getBuffer(path, onProgress) {
@@ -180,27 +204,7 @@
             onProgress(0, 1, path);
         }
         const response = await getResponse(path);
-        const contentType = response.headers.get("Content-Type");
-        if (!contentType) {
-            throw new Error("Server did not provide a content type");
-        }
-        let contentLength = 1;
-        const contentLengthStr = response.headers.get("Content-Length");
-        if (!contentLengthStr) {
-            console.warn(`Server did not provide a content length header. Path: ${path}`);
-        }
-        else {
-            contentLength = parseInt(contentLengthStr, 10);
-            if (!isGoodNumber(contentLength)) {
-                console.warn(`Server did not provide a valid content length header. Value: ${contentLengthStr}, Path: ${path}`);
-                contentLength = 1;
-            }
-        }
-        const buffer = await readResponseBuffer(path, response, contentLength, onProgress);
-        if (onProgress) {
-            onProgress(1, 1, path);
-        }
-        return { buffer, contentType };
+        return await readResponseBuffer(response, path, onProgress);
     }
 
     async function getBlob(path, onProgress) {
@@ -355,7 +359,13 @@
     const systemFamily = fontFamily(systemFonts);
 
     function hasNode(obj) {
-        return "element" in obj && obj.element instanceof Node;
+        return !isNullOrUndefined(obj)
+            && !isString(obj)
+            && !isNumber(obj)
+            && !isBoolean(obj)
+            && !isDate(obj)
+            && "element" in obj
+            && obj.element instanceof Node;
     }
     /**
      * Creates an HTML element for a given tag name.
@@ -475,7 +485,12 @@
          * this emoji.
          */
         contains(e) {
-            return this.value.indexOf(e.value) >= 0;
+            if (e instanceof Emoji) {
+                return this.contains(e.value);
+            }
+            else {
+                return this.value.indexOf(e) >= 0;
+            }
         }
     }
 
@@ -1011,8 +1026,7 @@
                             this.dispatchEvent(new CallaChatEvent(fromUserID, values[0]));
                             break;
                         default:
-                            console.warn("Unknown message type:", command, "from user:", fromUserID, "values:", values);
-                            break;
+                            assertNever(command);
                     }
                 }
             });
@@ -6500,10 +6514,7 @@
                     this.convolver.disable();
                     this.bypass.disconnect();
                     break;
-                default:
-                    log$1('FOARenderer: Rendering mode "' + mode + '" is not ' +
-                        'supported.');
-                    return;
+                default: assertNever(mode);
             }
             this.config.renderingMode = mode;
         }
@@ -7213,10 +7224,7 @@
                     this.convolver.disable();
                     this.bypass.disconnect();
                     break;
-                default:
-                    log$1('HOARenderer: Rendering mode "' + mode + '" is not ' +
-                        'supported.');
-                    return;
+                default: assertNever(mode);
             }
             this.config.renderingMode = mode;
         }
@@ -8861,7 +8869,7 @@
     }
     const BUFFER_SIZE = 1024;
     const audioActivityEvt$1 = new AudioActivityEvent();
-    const audioReadyEvt = new Event("audioready");
+    const audioReadyEvt = new TypedEvent("audioReady");
     const testAudio = Audio();
     const useTrackSource = "createMediaStreamTrackSource" in AudioContext.prototype;
     const useElementSource = !useTrackSource && !("createMediaStreamSource" in AudioContext.prototype);
@@ -8919,7 +8927,7 @@
             this.minDistance = 1;
             this.maxDistance = 10;
             this.rolloff = 1;
-            this.algorithm = "logarithmic";
+            this._algorithm = "logarithmic";
             this.transitionTime = 0.5;
             this._offsetRadius = 0;
             this.clips = new Map();
@@ -8946,6 +8954,9 @@
         set offsetRadius(v) {
             this._offsetRadius = v;
             this.updateUserOffsets();
+        }
+        get algorithm() {
+            return this._algorithm;
         }
         addEventListener(type, callback, options = null) {
             if (type === audioReadyEvt.type
@@ -9320,7 +9331,7 @@
             this.maxDistance = maxDistance;
             this.transitionTime = transitionTime;
             this.rolloff = rolloff;
-            this.algorithm = algorithm;
+            this._algorithm = algorithm;
             for (const user of this.users.values()) {
                 if (user.spatializer) {
                     user.spatializer.setAudioProperties(this.minDistance, this.maxDistance, this.rolloff, this.algorithm, this.transitionTime);

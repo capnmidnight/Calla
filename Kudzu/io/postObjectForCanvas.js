@@ -1,7 +1,7 @@
 import { createUtilityCanvasFromImage, createUtilityCanvasFromImageBitmap, hasImageBitmap } from "../html/canvas";
 import { using } from "../using";
-import { postObjectForImageBitmap } from "./postObjectForImageBitmap";
 import { postObjectForImage } from "./postObjectForImage";
+import { postObjectForImageBitmap } from "./postObjectForImageBitmap";
 export async function postObjectForCanvasViaImageBitmap(path, obj, onProgress) {
     return using(await postObjectForImageBitmap(path, obj, onProgress), (img) => {
         return createUtilityCanvasFromImageBitmap(img);

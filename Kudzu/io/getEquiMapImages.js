@@ -1,7 +1,7 @@
 import { renderCanvasFace, renderCanvasFaces, renderImageBitmapFace, renderImageBitmapFaces } from "../graphics2d/renderFace";
 import { hasImageBitmap } from "../html/canvas";
+import { splitProgress } from "../tasks/splitProgress";
 import { getImageData } from "./getImageData";
-import { splitProgress } from "./splitProgress";
 export async function getEquiMapCanvases(path, interpolation, maxWidth, onProgress) {
     const splits = splitProgress(onProgress, [1, 6]);
     const imgData = await getImageData(path, splits.shift());

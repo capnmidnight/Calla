@@ -1,4 +1,4 @@
-import type { progressCallback } from "../io/progressCallback";
+import type { progressCallback } from "../tasks/progressCallback";
 export interface FontDescription {
     fontSize: number;
     fontFamily: string;

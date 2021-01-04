@@ -1,6 +1,6 @@
 import { once } from "../events/once";
+import type { progressCallback } from "../tasks/progressCallback";
 import { getFile } from "./getFile";
-import type { progressCallback } from "./progressCallback";
 
 
 export async function getImage(path: string, onProgress?: progressCallback): Promise<HTMLImageElement> {

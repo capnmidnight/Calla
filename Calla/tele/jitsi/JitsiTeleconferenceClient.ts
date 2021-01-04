@@ -3,8 +3,8 @@ import { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
 import { once } from "kudzu/events/once";
 import { waitFor } from "kudzu/events/waitFor";
 import { blobFetchingCallback, scriptLoadingCallback } from "kudzu/io/fetchingCallback";
-import { progressCallback } from "kudzu/io/progressCallback";
-import { splitProgress } from "kudzu/io/splitProgress";
+import type { progressCallback } from "kudzu/tasks/progressCallback";
+import { splitProgress } from "kudzu/tasks/splitProgress";
 import { using } from "kudzu/using";
 import type { CallaTeleconferenceEvents } from "../../CallaEvents";
 import {

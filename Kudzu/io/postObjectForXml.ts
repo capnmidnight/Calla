@@ -1,4 +1,4 @@
-import { progressCallback } from "./progressCallback";
+import type { progressCallback } from "../tasks/progressCallback";
 import { postObjectForBuffer } from "./postObjectForBuffer";
 import { readBufferXml } from "./readBufferXml";
 

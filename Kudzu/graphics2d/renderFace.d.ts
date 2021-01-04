@@ -1,5 +1,5 @@
 import type { CanvasTypes } from "../html/canvas";
-import type { progressCallback } from "../io/progressCallback";
+import type { progressCallback } from "../tasks/progressCallback";
 import { CubeMapFace } from "./CubeMapFace";
 import { InterpolationType } from "./InterpolationType";
 export declare function renderCanvasFace(readData: ImageData, faceName: CubeMapFace, interpolation: InterpolationType, maxWidth?: number, onProgress?: progressCallback): Promise<CanvasTypes>;

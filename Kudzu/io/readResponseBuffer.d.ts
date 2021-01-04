@@ -1,4 +1,4 @@
-import { progressCallback } from "./progressCallback";
+import type { progressCallback } from "../tasks/progressCallback";
 export declare type getPartsReturnType = {
     buffer: ArrayBuffer;
     contentType: string;

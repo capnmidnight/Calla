@@ -1,4 +1,4 @@
-import { progressCallback } from "./progressCallback";
+import type { progressCallback } from "../tasks/progressCallback";
 import { postObjectForBlob } from "./postObjectForBlob";
 
 export async function postObjectForFile<T>(path: string, obj: T, onProgress?: progressCallback) {

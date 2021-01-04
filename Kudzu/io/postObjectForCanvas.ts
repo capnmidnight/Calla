@@ -1,13 +1,12 @@
-import { progressCallback } from "./progressCallback";
-import { CanvasTypes } from "../html/canvas";
 import {
-    createUtilityCanvasFromImage,
+    CanvasTypes, createUtilityCanvasFromImage,
     createUtilityCanvasFromImageBitmap,
     hasImageBitmap
 } from "../html/canvas";
+import type { progressCallback } from "../tasks/progressCallback";
 import { using } from "../using";
-import { postObjectForImageBitmap } from "./postObjectForImageBitmap";
 import { postObjectForImage } from "./postObjectForImage";
+import { postObjectForImageBitmap } from "./postObjectForImageBitmap";
 
 export async function postObjectForCanvasViaImageBitmap<T>(path: string, obj: T, onProgress?: progressCallback): Promise<CanvasTypes> {
     return using(await postObjectForImageBitmap(path, obj, onProgress), (img: ImageBitmap) => {

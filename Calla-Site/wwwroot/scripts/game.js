@@ -11897,15 +11897,15 @@
         return response;
     }
 
+    async function postObjectForBuffer(path, obj, onProgress) {
+        const response = await postObjectForResponse(path, obj);
+        return await readResponseBuffer(response, path, onProgress);
+    }
+
     function readBufferText(buffer) {
         const decoder = new TextDecoder("utf-8");
         const text = decoder.decode(buffer);
         return text;
-    }
-
-    async function postObjectForBuffer(path, obj, onProgress) {
-        const response = await postObjectForResponse(path, obj);
-        return await readResponseBuffer(response, path, onProgress);
     }
 
     async function postObjectForText(path, obj, onProgress) {

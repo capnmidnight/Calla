@@ -3,7 +3,7 @@ import { TypedEventBase } from "kudzu/events/EventBase";
 import type { blobFetchingCallback, scriptLoadingCallback } from "kudzu/io/fetchingCallback";
 import { getBlob as _getBlob } from "kudzu/io/getBlob";
 import { loadScript as _loadScript } from "kudzu/io/loadScript";
-import type { progressCallback } from "kudzu/io/progressCallback";
+import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { isNullOrUndefined } from "kudzu/typeChecks";
 import type { IDisposable } from "kudzu/using";
 import { AudioActivityEvent } from "./audio/AudioActivityEvent";

@@ -1,7 +1,7 @@
 import { waitFor } from "../events/waitFor";
+import type { progressCallback } from "../tasks/progressCallback";
 import { createScript } from "./createScript";
 import { getFile } from "./getFile";
-import type { progressCallback } from "./progressCallback";
 
 export async function loadScript(path: string, test: () => boolean, onProgress?: progressCallback): Promise<void> {
     if (!test()) {

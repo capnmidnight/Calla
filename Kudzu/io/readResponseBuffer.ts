@@ -1,5 +1,5 @@
+import type { progressCallback } from "../tasks/progressCallback";
 import { isGoodNumber } from "../typeChecks";
-import { progressCallback } from "./progressCallback";
 
 export type getPartsReturnType = {
     buffer: ArrayBuffer;
