@@ -1,9 +1,9 @@
 import { createUtilityCanvas } from "kudzu/html/canvas";
-import { getXml } from "kudzu/io/getXml";
 import * as astar from "../lib/astar";
 import { TileSet } from "./TileSet";
 export class TileMap {
-    constructor(tilemapName) {
+    constructor(tilemapName, fetcher) {
+        this.fetcher = fetcher;
         this._tileWidth = 0;
         this._tileHeight = 0;
         this._layers = 0;
@@ -19,7 +19,7 @@ export class TileMap {
         this._url = new URL(`data/tilemaps/${tilemapName}.tmx`, document.baseURI);
     }
     async load() {
-        const map = await getXml(this._url.href), width = parseInt(map.getAttribute("width"), 10), height = parseInt(map.getAttribute("height"), 10), tileWidth = parseInt(map.getAttribute("tilewidth"), 10), tileHeight = parseInt(map.getAttribute("tileheight"), 10), tileset = map.querySelector("tileset"), tilesetSource = tileset.getAttribute("source"), layers = map.querySelectorAll("layer > data");
+        const map = await this.fetcher.getXml(this._url.href), width = parseInt(map.getAttribute("width"), 10), height = parseInt(map.getAttribute("height"), 10), tileWidth = parseInt(map.getAttribute("tilewidth"), 10), tileHeight = parseInt(map.getAttribute("tileheight"), 10), tileset = map.querySelector("tileset"), tilesetSource = tileset.getAttribute("source"), layers = map.querySelectorAll("layer > data");
         this._layers = layers.length;
         this._width = width;
         this._height = height;
@@ -50,7 +50,7 @@ export class TileMap {
             }
             this._tiles.push(rows);
         }
-        this._tileset = new TileSet(new URL(tilesetSource, this._url));
+        this._tileset = new TileSet(new URL(tilesetSource, this._url), this.fetcher);
         await this._tileset.load();
         this._tileWidth = this._tileset.tileWidth;
         this._tileHeight = this._tileset.tileHeight;

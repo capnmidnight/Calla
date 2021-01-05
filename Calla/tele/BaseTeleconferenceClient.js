@@ -34,8 +34,9 @@ export const DEFAULT_LOCAL_USER_ID = "local-user";
 let loggingEnabled = window.location.hostname === "localhost"
     || /\bdebug\b/.test(window.location.search);
 export class BaseTeleconferenceClient extends TypedEventBase {
-    constructor(getBlob) {
+    constructor(fetcher) {
         super();
+        this.fetcher = fetcher;
         this.localUserID = null;
         this.localUserName = null;
         this.roomName = null;
@@ -44,9 +45,9 @@ export class BaseTeleconferenceClient extends TypedEventBase {
         this._conferenceState = ConnectionState.Disconnected;
         this.hasAudioPermission = false;
         this.hasVideoPermission = false;
-        this.audio = new AudioManager(isOculusQuest
+        this.audio = new AudioManager(fetcher, isOculusQuest
             ? SpatializerType.High
-            : SpatializerType.Medium, getBlob);
+            : SpatializerType.Medium);
         this.addEventListener(CallaTeleconferenceEventType.ServerConnected, this.setConnectionState.bind(this, ConnectionState.Connected));
         this.addEventListener(CallaTeleconferenceEventType.ServerFailed, this.setConnectionState.bind(this, ConnectionState.Disconnected));
         this.addEventListener(CallaTeleconferenceEventType.ServerDisconnected, this.setConnectionState.bind(this, ConnectionState.Disconnected));

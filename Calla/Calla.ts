@@ -1,8 +1,7 @@
 import type { Emoji } from "kudzu/emoji/Emoji";
 import { TypedEventBase } from "kudzu/events/EventBase";
-import type { blobFetchingCallback, scriptLoadingCallback } from "kudzu/io/fetchingCallback";
-import { getBlob as _getBlob } from "kudzu/io/getBlob";
-import { loadScript as _loadScript } from "kudzu/io/loadScript";
+import { IFetcher } from "kudzu/io/IFetcher";
+import { Fetcher } from "kudzu/io/Fetcher";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { isNullOrUndefined } from "kudzu/typeChecks";
 import type { IDisposable } from "kudzu/using";
@@ -64,25 +63,20 @@ export class Calla
     meta: IMetadataClientExt;
 
     constructor(
-        getBlob?: blobFetchingCallback,
-        loadScript?: scriptLoadingCallback,
-        TeleClientType?: new (getBlob: blobFetchingCallback, loadScript: scriptLoadingCallback) => ITeleconferenceClientExt,
+        fetcher?: IFetcher,
+        TeleClientType?: new (fetcher?: IFetcher) => ITeleconferenceClientExt,
         MetaClientType?: new (tele: ITeleconferenceClient) => IMetadataClientExt) {
         super();
 
-        if (isNullOrUndefined(getBlob)) {
-            getBlob = _getBlob;
-        }
-
-        if (isNullOrUndefined(loadScript)) {
-            loadScript = _loadScript;
+        if (isNullOrUndefined(fetcher)) {
+            fetcher = new Fetcher();
         }
 
         if (isNullOrUndefined(TeleClientType)) {
             TeleClientType = JitsiTeleconferenceClient;
         }
 
-        this.tele = new TeleClientType(getBlob, loadScript);
+        this.tele = new TeleClientType(fetcher);
 
         if (isNullOrUndefined(MetaClientType)) {
             this.meta = this.tele.getDefaultMetadataClient();

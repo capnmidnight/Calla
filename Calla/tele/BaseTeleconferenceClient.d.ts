@@ -1,6 +1,6 @@
 import type { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
 import { TypedEventBase } from "kudzu/events/EventBase";
-import type { blobFetchingCallback } from "kudzu/io/fetchingCallback";
+import { IFetcher } from "kudzu/io/IFetcher";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { AudioManager } from "../audio/AudioManager";
 import type { MediaPermissionSet } from "../Calla";
@@ -11,6 +11,7 @@ import type { ITeleconferenceClientExt } from "./ITeleconferenceClient";
 export declare function addLogger(obj: ErsatzEventTarget, evtName: string): void;
 export declare const DEFAULT_LOCAL_USER_ID = "local-user";
 export declare abstract class BaseTeleconferenceClient extends TypedEventBase<CallaTeleconferenceEvents> implements ITeleconferenceClientExt {
+    protected fetcher: IFetcher;
     toggleLogging(): void;
     localUserID: string;
     localUserName: string;
@@ -23,7 +24,7 @@ export declare abstract class BaseTeleconferenceClient extends TypedEventBase<Ca
     private setConnectionState;
     get conferenceState(): ConnectionState;
     private setConferenceState;
-    constructor(getBlob: blobFetchingCallback);
+    constructor(fetcher: IFetcher);
     dispatchEvent<K extends string & keyof CallaTeleconferenceEvents>(evt: CallaTeleconferenceEvents[K] & Event): boolean;
     getNext<T extends keyof CallaTeleconferenceEvents>(evtName: T, userID: string): Promise<CallaTeleconferenceEvents[T]>;
     get preferredAudioInputID(): string;

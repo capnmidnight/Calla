@@ -6,6 +6,7 @@ import { id } from "kudzu/html/attrs";
 import { resizeCanvas } from "kudzu/html/canvas";
 import { Canvas } from "kudzu/html/tags";
 import { EventedGamepad } from "kudzu/input/EventedGamepad";
+import { IFetcher } from "kudzu/io/IFetcher";
 import { clamp } from "kudzu/math/clamp";
 import { lerp } from "kudzu/math/lerp";
 import { project } from "kudzu/math/project";
@@ -87,7 +88,7 @@ export class Game extends TypedEventBase<GameEvents> {
     inputBinding: IInputBinding;
     screenControls: ScreenPointerControls;
 
-    constructor(public zoomMin: number, public zoomMax: number) {
+    constructor(private fetcher: IFetcher, public zoomMin: number, public zoomMax: number) {
         super();
 
         this.element = Canvas(id("frontBuffer"));
@@ -396,7 +397,7 @@ export class Game extends TypedEventBase<GameEvents> {
         }
         this.users.set(id, this.me);
 
-        this.map = new TileMap(this.currentRoomName);
+        this.map = new TileMap(this.currentRoomName, this.fetcher);
         let success = false;
         for (let retryCount = 0; retryCount < 2; ++retryCount) {
             try {
@@ -407,7 +408,7 @@ export class Game extends TypedEventBase<GameEvents> {
                 if (retryCount === 0) {
                     console.warn(exp);
                     console.warn("Retrying with default map.");
-                    this.map = new TileMap("default");
+                    this.map = new TileMap("default", this.fetcher);
                 }
                 else {
                     console.error(exp);

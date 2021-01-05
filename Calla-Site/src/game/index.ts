@@ -4,8 +4,7 @@ import { Emoji } from "kudzu/emoji/Emoji";
 import { allPeople as people } from "kudzu/emoji/emojis";
 import { loadFont, makeFont } from "kudzu/graphics2d/fonts";
 import { disabled } from "kudzu/html/attrs";
-import { postObjectForResponse } from "kudzu/io/postObjectForResponse";
-import { postObjectForText } from "kudzu/io/postObjectForText";
+import { Fetcher } from "kudzu/io/Fetcher";
 import { TimerTickEvent } from "kudzu/timers/BaseTimer";
 import { RequestAnimationFrameTimer } from "kudzu/timers/RequestAnimationFrameTimer";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
@@ -23,7 +22,8 @@ import { Settings } from "./Settings";
 const CAMERA_ZOOM_MIN = 0.5,
     CAMERA_ZOOM_MAX = 20,
     settings = new Settings(),
-    game = new Game(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
+    fetcher = new Fetcher(),
+    game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
     login = new LoginForm(),
     directory = new UserDirectoryForm(),
     controls = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
@@ -31,7 +31,7 @@ const CAMERA_ZOOM_MIN = 0.5,
     options = new OptionsForm(),
     instructions = new FormDialog("instructions"),
     emoji = new EmojiForm(),
-    client = new Calla(),
+    client = new Calla(fetcher),
     timer = new RequestAnimationFrameTimer(),
     disabler = disabled(true),
     enabler = disabled(false);
@@ -40,6 +40,7 @@ let waitingForEmoji = false;
 
 Object.assign(window, {
     settings,
+    fetcher,
     client,
     game,
     login,
@@ -52,11 +53,11 @@ Object.assign(window, {
 });
 
 async function recordJoin(Name: string, Email: string, Room: string) {
-    await postObjectForResponse("/Contacts", { Name, Email, Room });
+    await fetcher.postObject("/Contacts", { Name, Email, Room });
 }
 
 async function recordRoom(roomName: string) {
-    return await postObjectForText("/Game/Rooms", roomName);
+    return await fetcher.postObjectForText("/Game/Rooms", roomName);
 }
 
 function _showView(view: FormDialog<any>) {

@@ -36,7 +36,7 @@ export declare class WorkerClient {
      * @param params - the parameters to pass to the method.
      * @param onProgress - a callback for receiving progress reports on long-running invocations.
      */
-    execute<T>(methodName: string, params: any[], onProgress: progressCallback): Promise<T>;
+    execute<T>(methodName: string, params: any[], onProgress?: progressCallback): Promise<T>;
     /**
      * Creates a function that can optionally choose to invoke either the provided
      * worker method, or a UI-thread fallback, if this worker dispatcher is not enabled.

@@ -5,6 +5,7 @@ import { onUserGesture } from "kudzu/events/onUserGesture";
 import { waitFor } from "kudzu/events/waitFor";
 import { autoPlay, controls, display, muted, playsInline, srcObject, styles } from "kudzu/html/attrs";
 import { Audio } from "kudzu/html/tags";
+import { Fetcher } from "kudzu/io/Fetcher";
 import { using } from "kudzu/using";
 import { ActivityAnalyser } from "./ActivityAnalyser";
 import { AudioActivityEvent } from "./AudioActivityEvent";
@@ -73,10 +74,8 @@ export class AudioManager extends TypedEventBase {
     /**
      * Creates a new manager of audio sources, destinations, and their spatialization.
      **/
-    constructor(type, getBlob) {
+    constructor(fetcher, type) {
         super();
-        this.type = type;
-        this.getBlob = getBlob;
         this.minDistance = 1;
         this.maxDistance = 10;
         this.rolloff = 1;
@@ -93,6 +92,8 @@ export class AudioManager extends TypedEventBase {
         this.element = null;
         this.destination = null;
         this._audioOutputDeviceID = null;
+        this.fetcher = fetcher || new Fetcher();
+        this.type = type || SpatializerType.Medium;
         this.onAudioActivity = (evt) => {
             audioActivityEvt.id = evt.id;
             audioActivityEvt.isActive = evt.isActive;
@@ -319,7 +320,7 @@ export class AudioManager extends TypedEventBase {
             }
         }
         else {
-            const blob = await this.getBlob(path, onProgress);
+            const blob = await this.fetcher.getBlob(path, onProgress);
             if (testAudio.canPlayType(blob.type)) {
                 goodBlob = blob;
             }

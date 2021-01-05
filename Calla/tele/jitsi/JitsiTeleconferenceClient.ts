@@ -2,7 +2,7 @@ import { arrayClear } from "kudzu/arrays/arrayClear";
 import { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
 import { once } from "kudzu/events/once";
 import { waitFor } from "kudzu/events/waitFor";
-import { blobFetchingCallback, scriptLoadingCallback } from "kudzu/io/fetchingCallback";
+import { IFetcher } from "kudzu/io/IFetcher";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { splitProgress } from "kudzu/tasks/splitProgress";
 import { using } from "kudzu/using";
@@ -75,8 +75,8 @@ export class JitsiTeleconferenceClient
     private tracks = new Map<string, Map<StreamType, JitsiLocalTrack | JitsiRemoteTrack>>();
     private listenersForObjs = new Map<ErsatzEventTarget, Map<string, Function[]>>();
 
-    constructor(getBlob: blobFetchingCallback, private loadScript: scriptLoadingCallback) {
-        super(getBlob);
+    constructor(fetcher?: IFetcher) {
+        super(fetcher);
     }
 
     private _on(obj: ErsatzEventTarget, evtName: string, handler: Function): void {
@@ -120,8 +120,8 @@ export class JitsiTeleconferenceClient
             this.bridgeMUC = JVB_MUC;
             console.info("Connecting to:", this.host);
             const progs = splitProgress(onProgress, 2);
-            await this.loadScript(jQueryPath, () => "jQuery" in globalThis, progs.shift());
-            await this.loadScript(`https://${this.host}/libs/lib-jitsi-meet.min.js`, () => "JitsiMeetJS" in globalThis, progs.shift());
+            await this.fetcher.loadScript(jQueryPath, () => "jQuery" in globalThis, progs.shift());
+            await this.fetcher.loadScript(`https://${this.host}/libs/lib-jitsi-meet.min.js`, () => "JitsiMeetJS" in globalThis, progs.shift());
             if (process.env.NODE_ENV === "development") {
                 JitsiMeetJS.setLogLevel(JitsiMeetJS.logLevels.ERROR);
             }

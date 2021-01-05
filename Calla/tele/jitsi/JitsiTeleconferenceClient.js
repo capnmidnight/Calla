@@ -25,9 +25,8 @@ function decodeUserName(v) {
     }
 }
 export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
-    constructor(getBlob, loadScript) {
-        super(getBlob);
-        this.loadScript = loadScript;
+    constructor(fetcher) {
+        super(fetcher);
         this.usingDefaultMetadataClient = false;
         this.host = null;
         this.bridgeHost = null;
@@ -73,8 +72,8 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
             this.bridgeMUC = JVB_MUC;
             console.info("Connecting to:", this.host);
             const progs = splitProgress(onProgress, 2);
-            await this.loadScript(jQueryPath, () => "jQuery" in globalThis, progs.shift());
-            await this.loadScript(`https://${this.host}/libs/lib-jitsi-meet.min.js`, () => "JitsiMeetJS" in globalThis, progs.shift());
+            await this.fetcher.loadScript(jQueryPath, () => "jQuery" in globalThis, progs.shift());
+            await this.fetcher.loadScript(`https://${this.host}/libs/lib-jitsi-meet.min.js`, () => "JitsiMeetJS" in globalThis, progs.shift());
             if (process.env.NODE_ENV === "development") {
                 JitsiMeetJS.setLogLevel(JitsiMeetJS.logLevels.ERROR);
             }

@@ -7,7 +7,8 @@ import { waitFor } from "kudzu/events/waitFor";
 import { autoPlay, controls, display, muted, playsInline, srcObject, styles } from "kudzu/html/attrs";
 import type { HTMLAudioElementWithSinkID } from "kudzu/html/tags";
 import { Audio } from "kudzu/html/tags";
-import type { blobFetchingCallback } from "kudzu/io/fetchingCallback";
+import { Fetcher } from "kudzu/io/Fetcher";
+import { IFetcher } from "kudzu/io/IFetcher";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { using } from "kudzu/using";
 import { ActivityAnalyser } from "./ActivityAnalyser";
@@ -117,11 +118,17 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
 
     private onAudioActivity: (evt: AudioActivityEvent) => void;
 
+    private fetcher: IFetcher;
+    private type: SpatializerType;
+
     /**
      * Creates a new manager of audio sources, destinations, and their spatialization.
      **/
-    constructor(private type: SpatializerType, private getBlob: blobFetchingCallback) {
+    constructor(fetcher?: IFetcher, type?: SpatializerType) {
         super();
+
+        this.fetcher = fetcher || new Fetcher();
+        this.type = type || SpatializerType.Medium;
 
         this.onAudioActivity = (evt: AudioActivityEvent) => {
             audioActivityEvt.id = evt.id;
@@ -392,7 +399,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
             }
         }
         else {
-            const blob = await this.getBlob(path, onProgress);
+            const blob = await this.fetcher.getBlob(path, onProgress);
             if (testAudio.canPlayType(blob.type)) {
                 goodBlob = blob;
             }

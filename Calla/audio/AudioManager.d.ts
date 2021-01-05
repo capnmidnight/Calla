@@ -1,6 +1,6 @@
 import type { vec3 } from "gl-matrix";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
-import type { blobFetchingCallback } from "kudzu/io/fetchingCallback";
+import { IFetcher } from "kudzu/io/IFetcher";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { AudioActivityEvent } from "./AudioActivityEvent";
 import { AudioSource } from "./AudioSource";
@@ -18,8 +18,6 @@ export declare enum SpatializerType {
  * A manager of audio sources, destinations, and their spatialization.
  **/
 export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
-    private type;
-    private getBlob;
     private minDistance;
     private maxDistance;
     private rolloff;
@@ -37,10 +35,12 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
     private destination;
     private _audioOutputDeviceID;
     private onAudioActivity;
+    private fetcher;
+    private type;
     /**
      * Creates a new manager of audio sources, destinations, and their spatialization.
      **/
-    constructor(type: SpatializerType, getBlob: blobFetchingCallback);
+    constructor(fetcher?: IFetcher, type?: SpatializerType);
     get offsetRadius(): number;
     set offsetRadius(v: number);
     get algorithm(): string;

@@ -18,8 +18,9 @@ const CAMERA_LERP = 0.01, CAMERA_ZOOM_SHAPE = 2, MOVE_REPEAT = 0.125, gameStarte
 /** @type {Map<Game, EventedGamepad>} */
 const gamepads = new Map();
 export class Game extends TypedEventBase {
-    constructor(zoomMin, zoomMax) {
+    constructor(fetcher, zoomMin, zoomMax) {
         super();
+        this.fetcher = fetcher;
         this.zoomMin = zoomMin;
         this.zoomMax = zoomMax;
         this.waypoints = new Array();
@@ -286,7 +287,7 @@ export class Game extends TypedEventBase {
             this.me.setAvatarImage(avatarURL);
         }
         this.users.set(id, this.me);
-        this.map = new TileMap(this.currentRoomName);
+        this.map = new TileMap(this.currentRoomName, this.fetcher);
         let success = false;
         for (let retryCount = 0; retryCount < 2; ++retryCount) {
             try {
@@ -297,7 +298,7 @@ export class Game extends TypedEventBase {
                 if (retryCount === 0) {
                     console.warn(exp);
                     console.warn("Retrying with default map.");
-                    this.map = new TileMap("default");
+                    this.map = new TileMap("default", this.fetcher);
                 }
                 else {
                     console.error(exp);

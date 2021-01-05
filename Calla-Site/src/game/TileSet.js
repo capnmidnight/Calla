@@ -1,8 +1,7 @@
-import { getImage } from "kudzu/io/getImage";
-import { getXml } from "kudzu/io/getXml";
 export class TileSet {
-    constructor(url) {
+    constructor(url, fetcher) {
         this.url = url;
+        this.fetcher = fetcher;
         this.name = null;
         this.tileWidth = 0;
         this.tileHeight = 0;
@@ -12,7 +11,7 @@ export class TileSet {
         this.collision = new Map();
     }
     async load() {
-        const tileset = await getXml(this.url.href);
+        const tileset = await this.fetcher.getXml(this.url.href);
         const image = tileset.querySelector("image");
         const imageSource = image.getAttribute("source");
         const imageURL = new URL(imageSource, this.url);
@@ -28,7 +27,7 @@ export class TileSet {
         this.tileWidth = parseInt(tileset.getAttribute("tilewidth"), 10);
         this.tileHeight = parseInt(tileset.getAttribute("tileheight"), 10);
         this.tileCount = parseInt(tileset.getAttribute("tilecount"), 10);
-        this.image = await getImage(imageURL.href);
+        this.image = await this.fetcher.getImage(imageURL.href);
     }
     isClear(tile) {
         return !this.collision.get(tile - 1);

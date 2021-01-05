@@ -1,1 +1,0 @@
-{"version":3,"file":"readBufferObject.js","sourceRoot":"","sources":["readBufferObject.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,cAAc,EAAE,MAAM,kBAAkB,CAAC;AAElD,MAAM,UAAU,gBAAgB,CAAI,MAAmB;IACnD,MAAM,IAAI,GAAG,cAAc,CAAC,MAAM,CAAC,CAAC;IACpC,MAAM,GAAG,GAAG,IAAI,CAAC,KAAK,CAAC,IAAI,CAAC,CAAC;IAC7B,OAAO,GAAQ,CAAC;AACpB,CAAC"}

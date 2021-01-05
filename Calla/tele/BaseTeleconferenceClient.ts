@@ -2,7 +2,7 @@ import { arrayScan } from "kudzu/arrays/arrayScan";
 import type { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
 import { TypedEventBase } from "kudzu/events/EventBase";
 import { isOculusQuest } from "kudzu/html/flags";
-import type { blobFetchingCallback } from "kudzu/io/fetchingCallback";
+import { IFetcher } from "kudzu/io/IFetcher";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { AudioManager, SpatializerType } from "../audio/AudioManager";
 import { canChangeAudioOutput } from "../audio/canChangeAudioOutput";
@@ -84,13 +84,12 @@ export abstract class BaseTeleconferenceClient
         this._conferenceState = state;
     }
 
-    constructor(getBlob: blobFetchingCallback) {
+    constructor(protected fetcher: IFetcher) {
         super();
 
-        this.audio = new AudioManager(isOculusQuest
+        this.audio = new AudioManager(fetcher, isOculusQuest
             ? SpatializerType.High
-            : SpatializerType.Medium,
-            getBlob);
+            : SpatializerType.Medium);
 
         this.addEventListener(CallaTeleconferenceEventType.ServerConnected, this.setConnectionState.bind(this, ConnectionState.Connected));
         this.addEventListener(CallaTeleconferenceEventType.ServerFailed, this.setConnectionState.bind(this, ConnectionState.Disconnected));

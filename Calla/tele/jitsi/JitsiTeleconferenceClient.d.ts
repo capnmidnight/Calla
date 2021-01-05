@@ -1,10 +1,9 @@
-import { blobFetchingCallback, scriptLoadingCallback } from "kudzu/io/fetchingCallback";
+import { IFetcher } from "kudzu/io/IFetcher";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
 import type JitsiConference from "../../lib-jitsi-meet/JitsiConference";
 import type { IMetadataClientExt } from "../../meta/IMetadataClient";
 import { BaseTeleconferenceClient } from "../BaseTeleconferenceClient";
 export declare class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
-    private loadScript;
     private usingDefaultMetadataClient;
     private host;
     private bridgeHost;
@@ -13,7 +12,7 @@ export declare class JitsiTeleconferenceClient extends BaseTeleconferenceClient 
     conference: JitsiConference;
     private tracks;
     private listenersForObjs;
-    constructor(getBlob: blobFetchingCallback, loadScript: scriptLoadingCallback);
+    constructor(fetcher?: IFetcher);
     private _on;
     private _off;
     getDefaultMetadataClient(): IMetadataClientExt;

@@ -1,6 +1,5 @@
 import type { Context2D } from "kudzu/html/canvas";
-import { getImage } from "kudzu/io/getImage";
-import { getXml } from "kudzu/io/getXml";
+import { IFetcher } from "kudzu/io/IFetcher";
 
 export class TileSet {
     name: string = null;
@@ -11,11 +10,11 @@ export class TileSet {
     image: HTMLImageElement = null;
     collision = new Map<number, boolean>();
 
-    constructor(private url: URL) {
+    constructor(private url: URL, private fetcher: IFetcher) {
     }
 
     async load(): Promise<void> {
-        const tileset = await getXml(this.url.href);
+        const tileset = await this.fetcher.getXml(this.url.href);
         const image = tileset.querySelector("image");
         const imageSource = image.getAttribute("source");
         const imageURL = new URL(imageSource, this.url);
@@ -34,7 +33,7 @@ export class TileSet {
         this.tileHeight = parseInt(tileset.getAttribute("tileheight"), 10);
         this.tileCount = parseInt(tileset.getAttribute("tilecount"), 10);
 
-        this.image = await getImage(imageURL.href);
+        this.image = await this.fetcher.getImage(imageURL.href);
     }
 
     isClear(tile: number) {

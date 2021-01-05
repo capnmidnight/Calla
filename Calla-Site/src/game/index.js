@@ -4,8 +4,7 @@ import { Emoji } from "kudzu/emoji/Emoji";
 import { allPeople as people } from "kudzu/emoji/emojis";
 import { loadFont, makeFont } from "kudzu/graphics2d/fonts";
 import { disabled } from "kudzu/html/attrs";
-import { postObjectForResponse } from "kudzu/io/postObjectForResponse";
-import { postObjectForText } from "kudzu/io/postObjectForText";
+import { Fetcher } from "kudzu/io/Fetcher";
 import { RequestAnimationFrameTimer } from "kudzu/timers/RequestAnimationFrameTimer";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
 import { ButtonLayer } from "./forms/ButtonLayer";
@@ -18,10 +17,11 @@ import { OptionsForm } from "./forms/OptionsForm";
 import { UserDirectoryForm } from "./forms/UserDirectoryForm";
 import { Game } from "./Game";
 import { Settings } from "./Settings";
-const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), game = new Game(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(), directory = new UserDirectoryForm(), controls = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new FormDialog("instructions"), emoji = new EmojiForm(), client = new Calla(), timer = new RequestAnimationFrameTimer(), disabler = disabled(true), enabler = disabled(false);
+const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), fetcher = new Fetcher(), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(), directory = new UserDirectoryForm(), controls = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new FormDialog("instructions"), emoji = new EmojiForm(), client = new Calla(fetcher), timer = new RequestAnimationFrameTimer(), disabler = disabled(true), enabler = disabled(false);
 let waitingForEmoji = false;
 Object.assign(window, {
     settings,
+    fetcher,
     client,
     game,
     login,
@@ -33,10 +33,10 @@ Object.assign(window, {
     instructions
 });
 async function recordJoin(Name, Email, Room) {
-    await postObjectForResponse("/Contacts", { Name, Email, Room });
+    await fetcher.postObject("/Contacts", { Name, Email, Room });
 }
 async function recordRoom(roomName) {
-    return await postObjectForText("/Game/Rooms", roomName);
+    return await fetcher.postObjectForText("/Game/Rooms", roomName);
 }
 function _showView(view) {
     return () => showView(view);

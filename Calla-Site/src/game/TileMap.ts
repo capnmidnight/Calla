@@ -1,6 +1,6 @@
 import type { CanvasTypes, Context2D } from "kudzu/html/canvas";
 import { createUtilityCanvas } from "kudzu/html/canvas";
-import { getXml } from "kudzu/io/getXml";
+import { IFetcher } from "kudzu/io/IFetcher";
 import * as astar from "../lib/astar";
 import type { BaseAvatar } from "./avatars/BaseAvatar";
 import { TileSet } from "./TileSet";
@@ -21,12 +21,12 @@ export class TileMap {
     private _tiles: number[][][] = null;
     private _graph: astar.Graph = null;
 
-    constructor(tilemapName: string) {
+    constructor(tilemapName: string, private fetcher: IFetcher) {
         this._url = new URL(`data/tilemaps/${tilemapName}.tmx`, document.baseURI);
     }
 
     async load() {
-        const map = await getXml(this._url.href),
+        const map = await this.fetcher.getXml(this._url.href),
             width = parseInt(map.getAttribute("width"), 10),
             height = parseInt(map.getAttribute("height"), 10),
             tileWidth = parseInt(map.getAttribute("tilewidth"), 10),
@@ -69,7 +69,7 @@ export class TileMap {
             this._tiles.push(rows);
         }
 
-        this._tileset = new TileSet(new URL(tilesetSource, this._url));
+        this._tileset = new TileSet(new URL(tilesetSource, this._url), this.fetcher);
         await this._tileset.load();
         this._tileWidth = this._tileset.tileWidth;
         this._tileHeight = this._tileset.tileHeight;

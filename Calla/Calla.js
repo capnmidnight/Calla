@@ -1,6 +1,5 @@
 import { TypedEventBase } from "kudzu/events/EventBase";
-import { getBlob as _getBlob } from "kudzu/io/getBlob";
-import { loadScript as _loadScript } from "kudzu/io/loadScript";
+import { Fetcher } from "kudzu/io/Fetcher";
 import { isNullOrUndefined } from "kudzu/typeChecks";
 import { AudioActivityEvent } from "./audio/AudioActivityEvent";
 import { canChangeAudioOutput } from "./audio/canChangeAudioOutput";
@@ -19,20 +18,17 @@ export var ClientState;
 })(ClientState || (ClientState = {}));
 const audioActivityEvt = new AudioActivityEvent();
 export class Calla extends TypedEventBase {
-    constructor(getBlob, loadScript, TeleClientType, MetaClientType) {
+    constructor(fetcher, TeleClientType, MetaClientType) {
         super();
         this.isAudioMuted = null;
         this.isVideoMuted = null;
-        if (isNullOrUndefined(getBlob)) {
-            getBlob = _getBlob;
-        }
-        if (isNullOrUndefined(loadScript)) {
-            loadScript = _loadScript;
+        if (isNullOrUndefined(fetcher)) {
+            fetcher = new Fetcher();
         }
         if (isNullOrUndefined(TeleClientType)) {
             TeleClientType = JitsiTeleconferenceClient;
         }
-        this.tele = new TeleClientType(getBlob, loadScript);
+        this.tele = new TeleClientType(fetcher);
         if (isNullOrUndefined(MetaClientType)) {
             this.meta = this.tele.getDefaultMetadataClient();
         }
