@@ -3,7 +3,6 @@ import { Fetcher } from "kudzu/io/Fetcher";
 import { isNullOrUndefined } from "kudzu/typeChecks";
 import { AudioActivityEvent } from "./audio/AudioActivityEvent";
 import { canChangeAudioOutput } from "./audio/canChangeAudioOutput";
-import { CallaMetadataEventType, CallaTeleconferenceEventType } from "./CallaEvents";
 import { ConnectionState } from "./ConnectionState";
 import { JitsiTeleconferenceClient } from "./tele/jitsi/JitsiTeleconferenceClient";
 export var ClientState;
@@ -36,35 +35,35 @@ export class Calla extends TypedEventBase {
             this.meta = new MetaClientType(this.tele);
         }
         const fwd = this.dispatchEvent.bind(this);
-        this.tele.addEventListener(CallaTeleconferenceEventType.ServerConnected, fwd);
-        this.tele.addEventListener(CallaTeleconferenceEventType.ServerDisconnected, fwd);
-        this.tele.addEventListener(CallaTeleconferenceEventType.ServerFailed, fwd);
-        this.tele.addEventListener(CallaTeleconferenceEventType.ConferenceFailed, fwd);
-        this.tele.addEventListener(CallaTeleconferenceEventType.ConferenceRestored, fwd);
-        this.tele.addEventListener(CallaTeleconferenceEventType.AudioMuteStatusChanged, fwd);
-        this.tele.addEventListener(CallaTeleconferenceEventType.VideoMuteStatusChanged, fwd);
-        this.tele.addEventListener(CallaTeleconferenceEventType.ConferenceJoined, async (evt) => {
+        this.tele.addEventListener("serverConnected", fwd);
+        this.tele.addEventListener("serverDisconnected", fwd);
+        this.tele.addEventListener("serverFailed", fwd);
+        this.tele.addEventListener("conferenceFailed", fwd);
+        this.tele.addEventListener("conferenceRestored", fwd);
+        this.tele.addEventListener("audioMuteStatusChanged", fwd);
+        this.tele.addEventListener("videoMuteStatusChanged", fwd);
+        this.tele.addEventListener("conferenceJoined", async (evt) => {
             const user = this.audio.createLocalUser(evt.id);
             evt.pose = user.pose;
             this.dispatchEvent(evt);
             await this.setPreferredDevices();
         });
-        this.tele.addEventListener(CallaTeleconferenceEventType.ConferenceLeft, (evt) => {
+        this.tele.addEventListener("conferenceLeft", (evt) => {
             this.audio.createLocalUser(evt.id);
             this.dispatchEvent(evt);
         });
-        this.tele.addEventListener(CallaTeleconferenceEventType.ParticipantJoined, async (joinEvt) => {
+        this.tele.addEventListener("participantJoined", async (joinEvt) => {
             joinEvt.source = this.audio.createUser(joinEvt.id);
             this.dispatchEvent(joinEvt);
         });
-        this.tele.addEventListener(CallaTeleconferenceEventType.ParticipantLeft, (evt) => {
+        this.tele.addEventListener("participantLeft", (evt) => {
             this.dispatchEvent(evt);
             this.audio.removeUser(evt.id);
         });
-        this.tele.addEventListener(CallaTeleconferenceEventType.UserNameChanged, fwd);
-        this.tele.addEventListener(CallaTeleconferenceEventType.VideoAdded, fwd);
-        this.tele.addEventListener(CallaTeleconferenceEventType.VideoRemoved, fwd);
-        this.tele.addEventListener(CallaTeleconferenceEventType.AudioAdded, (evt) => {
+        this.tele.addEventListener("userNameChanged", fwd);
+        this.tele.addEventListener("videoAdded", fwd);
+        this.tele.addEventListener("videoRemoved", fwd);
+        this.tele.addEventListener("audioAdded", (evt) => {
             const user = this.audio.getUser(evt.id);
             if (user) {
                 let stream = user.streams.get(evt.kind);
@@ -79,7 +78,7 @@ export class Calla extends TypedEventBase {
                 this.dispatchEvent(evt);
             }
         });
-        this.tele.addEventListener(CallaTeleconferenceEventType.AudioRemoved, (evt) => {
+        this.tele.addEventListener("audioRemoved", (evt) => {
             const user = this.audio.getUser(evt.id);
             if (user && user.streams.has(evt.kind)) {
                 user.streams.delete(evt.kind);
@@ -89,10 +88,10 @@ export class Calla extends TypedEventBase {
             }
             this.dispatchEvent(evt);
         });
-        this.meta.addEventListener(CallaMetadataEventType.AvatarChanged, fwd);
-        this.meta.addEventListener(CallaMetadataEventType.Chat, fwd);
-        this.meta.addEventListener(CallaMetadataEventType.Emote, fwd);
-        this.meta.addEventListener(CallaMetadataEventType.SetAvatarEmoji, fwd);
+        this.meta.addEventListener("avatarChanged", fwd);
+        this.meta.addEventListener("chat", fwd);
+        this.meta.addEventListener("emote", fwd);
+        this.meta.addEventListener("setAvatarEmoji", fwd);
         const offsetEvt = (poseEvt) => {
             const O = this.audio.getUserOffset(poseEvt.id);
             if (O) {
@@ -102,8 +101,8 @@ export class Calla extends TypedEventBase {
             }
             this.dispatchEvent(poseEvt);
         };
-        this.meta.addEventListener(CallaMetadataEventType.UserPointer, offsetEvt);
-        this.meta.addEventListener(CallaMetadataEventType.UserPosed, (evt) => {
+        this.meta.addEventListener("userPointer", offsetEvt);
+        this.meta.addEventListener("userPosed", (evt) => {
             this.audio.setUserPose(evt.id, evt.px, evt.py, evt.pz, evt.fx, evt.fy, evt.fz, evt.ux, evt.uy, evt.uz);
             offsetEvt(evt);
         });

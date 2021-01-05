@@ -3,7 +3,7 @@ import { once } from "kudzu/events/once";
 import { waitFor } from "kudzu/events/waitFor";
 import { splitProgress } from "kudzu/tasks/splitProgress";
 import { using } from "kudzu/using";
-import { CallaAudioStreamAddedEvent, CallaAudioStreamRemovedEvent, CallaConferenceFailedEvent, CallaConferenceJoinedEvent, CallaConferenceLeftEvent, CallaParticipantJoinedEvent, CallaParticipantLeftEvent, CallaParticipantNameChangeEvent, CallaTeleconferenceEventType, CallaTeleconferenceServerConnectedEvent, CallaTeleconferenceServerDisconnectedEvent, CallaTeleconferenceServerFailedEvent, CallaUserAudioMutedEvent, CallaUserVideoMutedEvent, CallaVideoStreamAddedEvent, CallaVideoStreamRemovedEvent, StreamType } from "../../CallaEvents";
+import { CallaAudioStreamAddedEvent, CallaAudioStreamRemovedEvent, CallaConferenceFailedEvent, CallaConferenceJoinedEvent, CallaConferenceLeftEvent, CallaParticipantJoinedEvent, CallaParticipantLeftEvent, CallaParticipantNameChangeEvent, CallaTeleconferenceServerConnectedEvent, CallaTeleconferenceServerDisconnectedEvent, CallaTeleconferenceServerFailedEvent, CallaUserAudioMutedEvent, CallaUserVideoMutedEvent, CallaVideoStreamAddedEvent, CallaVideoStreamRemovedEvent, StreamType } from "../../CallaEvents";
 import { ConnectionState } from "../../ConnectionState";
 import { JitsiMetadataClient } from "../../meta/jitsi/JitsiMetadataClient";
 import { addLogger, BaseTeleconferenceClient, DEFAULT_LOCAL_USER_ID } from "../BaseTeleconferenceClient";
@@ -233,7 +233,7 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
                     }
                 });
             });
-            const joinTask = once(this, CallaTeleconferenceEventType.ConferenceJoined);
+            const joinTask = once(this, "conferenceJoined");
             this.conference.join(password);
             await joinTask;
         }
@@ -281,7 +281,7 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
             try {
                 await this.tryRemoveTrack(this.localUserID, StreamType.Video);
                 await this.tryRemoveTrack(this.localUserID, StreamType.Audio);
-                const leaveTask = once(this, CallaTeleconferenceEventType.ConferenceLeft);
+                const leaveTask = once(this, "conferenceLeft");
                 this.conference.leave();
                 await leaveTask;
             }
@@ -300,7 +300,7 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
         else if (this.connectionState === ConnectionState.Connected) {
             await super.disconnect();
             await this.leave();
-            const disconnectTask = once(this, CallaTeleconferenceEventType.ServerDisconnected);
+            const disconnectTask = once(this, "serverDisconnected");
             this.connection.disconnect();
             await disconnectTask;
         }
@@ -333,12 +333,12 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
         await super.setAudioInputDevice(device);
         const cur = this.getCurrentMediaTrack(StreamType.Audio);
         if (cur) {
-            const removeTask = this.getNext(CallaTeleconferenceEventType.AudioRemoved, this.localUserID);
+            const removeTask = this.getNext("audioRemoved", this.localUserID);
             this.conference.removeTrack(cur);
             await removeTask;
         }
         if (this.conference && this.preferredAudioInputID) {
-            const addTask = this.getNext(CallaTeleconferenceEventType.AudioAdded, this.localUserID);
+            const addTask = this.getNext("audioAdded", this.localUserID);
             const tracks = await JitsiMeetJS.createLocalTracks({
                 devices: ["audio"],
                 micDeviceId: this.preferredAudioInputID,
@@ -358,12 +358,12 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
         await super.setVideoInputDevice(device);
         const cur = this.getCurrentMediaTrack(StreamType.Video);
         if (cur) {
-            const removeTask = this.getNext(CallaTeleconferenceEventType.VideoRemoved, this.localUserID);
+            const removeTask = this.getNext("videoRemoved", this.localUserID);
             this.conference.removeTrack(cur);
             await removeTask;
         }
         if (this.conference && this.preferredVideoInputID) {
-            const addTask = this.getNext(CallaTeleconferenceEventType.VideoAdded, this.localUserID);
+            const addTask = this.getNext("videoAdded", this.localUserID);
             const tracks = await JitsiMeetJS.createLocalTracks({
                 devices: ["video"],
                 cameraDeviceId: this.preferredVideoInputID
@@ -395,7 +395,7 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
         }
     }
     async toggleAudioMuted() {
-        const changeTask = this.getNext(CallaTeleconferenceEventType.AudioMuteStatusChanged, this.localUserID);
+        const changeTask = this.getNext("audioMuteStatusChanged", this.localUserID);
         const cur = this.getCurrentMediaTrack(StreamType.Audio);
         if (cur) {
             const muted = cur.isMuted();
@@ -413,7 +413,7 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
         return evt.muted;
     }
     async toggleVideoMuted() {
-        const changeTask = this.getNext(CallaTeleconferenceEventType.VideoMuteStatusChanged, this.localUserID);
+        const changeTask = this.getNext("videoMuteStatusChanged", this.localUserID);
         const cur = this.getCurrentMediaTrack(StreamType.Video);
         if (cur) {
             await this.setVideoInputDevice(null);

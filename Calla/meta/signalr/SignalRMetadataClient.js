@@ -1,8 +1,7 @@
-import { HubConnectionState } from "@microsoft/signalr";
-import { HttpTransportType, HubConnectionBuilder } from "@microsoft/signalr";
+import { HttpTransportType, HubConnectionBuilder, HubConnectionState } from "@microsoft/signalr";
 import { waitFor } from "kudzu/events/waitFor";
 import { assertNever } from "kudzu/typeChecks";
-import { CallaAvatarChangedEvent, CallaChatEvent, CallaEmojiAvatarEvent, CallaEmoteEvent, CallaMetadataEventType, CallaUserPointerEvent, CallaUserPosedEvent } from "../../CallaEvents";
+import { CallaAvatarChangedEvent, CallaChatEvent, CallaEmojiAvatarEvent, CallaEmoteEvent, CallaUserPointerEvent, CallaUserPosedEvent } from "../../CallaEvents";
 import { ConnectionState } from "../../ConnectionState";
 import { BaseMetadataClient } from "../BaseMetadataClient";
 export class SignalRMetadataClient extends BaseMetadataClient {
@@ -19,22 +18,22 @@ export class SignalRMetadataClient extends BaseMetadataClient {
             this.lastRoom = null;
             this.lastUserID = null;
         });
-        this.hub.on(CallaMetadataEventType.UserPosed, (fromUserID, px, py, pz, fx, fy, fz, ux, uy, uz) => {
+        this.hub.on("userPosed", (fromUserID, px, py, pz, fx, fy, fz, ux, uy, uz) => {
             this.dispatchEvent(new CallaUserPosedEvent(fromUserID, px, py, pz, fx, fy, fz, ux, uy, uz));
         });
-        this.hub.on(CallaMetadataEventType.UserPointer, (fromUserID, name, px, py, pz, fx, fy, fz, ux, uy, uz) => {
+        this.hub.on("userPointer", (fromUserID, name, px, py, pz, fx, fy, fz, ux, uy, uz) => {
             this.dispatchEvent(new CallaUserPointerEvent(fromUserID, name, px, py, pz, fx, fy, fz, ux, uy, uz));
         });
-        this.hub.on(CallaMetadataEventType.AvatarChanged, (fromUserID, url) => {
+        this.hub.on("avatarChanged", (fromUserID, url) => {
             this.dispatchEvent(new CallaAvatarChangedEvent(fromUserID, url));
         });
-        this.hub.on(CallaMetadataEventType.Emote, (fromUserID, emoji) => {
+        this.hub.on("emote", (fromUserID, emoji) => {
             this.dispatchEvent(new CallaEmoteEvent(fromUserID, emoji));
         });
-        this.hub.on(CallaMetadataEventType.SetAvatarEmoji, (fromUserID, emoji) => {
+        this.hub.on("setAvatarEmoji", (fromUserID, emoji) => {
             this.dispatchEvent(new CallaEmojiAvatarEvent(fromUserID, emoji));
         });
-        this.hub.on(CallaMetadataEventType.Chat, (fromUserID, text) => {
+        this.hub.on("chat", (fromUserID, text) => {
             this.dispatchEvent(new CallaChatEvent(fromUserID, text));
         });
     }

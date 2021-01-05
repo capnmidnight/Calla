@@ -8,7 +8,7 @@ import { AudioManager, SpatializerType } from "../audio/AudioManager";
 import { canChangeAudioOutput } from "../audio/canChangeAudioOutput";
 import type { MediaDeviceSet, MediaPermissionSet } from "../Calla";
 import type { CallaTeleconferenceEvents } from "../CallaEvents";
-import { CallaTeleconferenceEventType, CallaUserEvent } from "../CallaEvents";
+import { CallaUserEvent } from "../CallaEvents";
 import { ConnectionState } from "../ConnectionState";
 import type { IMetadataClientExt } from "../meta/IMetadataClient";
 import type { ITeleconferenceClientExt } from "./ITeleconferenceClient";
@@ -91,14 +91,14 @@ export abstract class BaseTeleconferenceClient
             ? SpatializerType.High
             : SpatializerType.Medium);
 
-        this.addEventListener(CallaTeleconferenceEventType.ServerConnected, this.setConnectionState.bind(this, ConnectionState.Connected));
-        this.addEventListener(CallaTeleconferenceEventType.ServerFailed, this.setConnectionState.bind(this, ConnectionState.Disconnected));
-        this.addEventListener(CallaTeleconferenceEventType.ServerDisconnected, this.setConnectionState.bind(this, ConnectionState.Disconnected));
+        this.addEventListener("serverConnected", this.setConnectionState.bind(this, ConnectionState.Connected));
+        this.addEventListener("serverFailed", this.setConnectionState.bind(this, ConnectionState.Disconnected));
+        this.addEventListener("serverDisconnected", this.setConnectionState.bind(this, ConnectionState.Disconnected));
 
-        this.addEventListener(CallaTeleconferenceEventType.ConferenceJoined, this.setConferenceState.bind(this, ConnectionState.Connected));
-        this.addEventListener(CallaTeleconferenceEventType.ConferenceFailed, this.setConferenceState.bind(this, ConnectionState.Disconnected));
-        this.addEventListener(CallaTeleconferenceEventType.ConferenceRestored, this.setConferenceState.bind(this, ConnectionState.Connected));
-        this.addEventListener(CallaTeleconferenceEventType.ConferenceLeft, this.setConferenceState.bind(this, ConnectionState.Disconnected));
+        this.addEventListener("conferenceJoined", this.setConferenceState.bind(this, ConnectionState.Connected));
+        this.addEventListener("conferenceFailed", this.setConferenceState.bind(this, ConnectionState.Disconnected));
+        this.addEventListener("conferenceRestored", this.setConferenceState.bind(this, ConnectionState.Connected));
+        this.addEventListener("conferenceLeft", this.setConferenceState.bind(this, ConnectionState.Disconnected));
     }
 
     dispatchEvent<K extends string & keyof CallaTeleconferenceEvents>(evt: CallaTeleconferenceEvents[K] & Event): boolean {

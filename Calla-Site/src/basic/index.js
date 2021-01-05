@@ -7,10 +7,6 @@ import { canChangeAudioOutput } from "calla/audio/canChangeAudioOutput";
 // imported, if you are consuming Calla through a vanilla
 // JavaScript project.
 import { Calla } from "calla/Calla";
-// This enumeration contains all the names of the event types
-// used by Calla, which is convenient if you are using an
-// editor that supports auto-completion.
-import { CallaTeleconferenceEventType } from "calla/CallaEvents";
 // Calla provides a convient means of pumping animation events.
 import { RequestAnimationFrameTimer } from "kudzu/timers/RequestAnimationFrameTimer";
 // Import the configuration parameters.
@@ -279,22 +275,22 @@ controls.space.addEventListener("click", (evt) => {
     const y = evt.clientY - controls.space.offsetTop;
     setPosition(x, y);
 });
-client.addEventListener(CallaTeleconferenceEventType.ConferenceJoined, (evt) => startGame(evt.id, evt.pose));
+client.addEventListener("conferenceJoined", (evt) => startGame(evt.id, evt.pose));
 /**
  * If the user has left the conference (or been kicked
  * by a moderator), we need to shut down the rendering.
  **/
-client.addEventListener(CallaTeleconferenceEventType.ConferenceLeft, (evt) => {
+client.addEventListener("conferenceLeft", (evt) => {
     removeUser(evt.id);
     timer.stop();
     controls.leave.disabled = true;
     controls.connect.disabled = false;
 });
-client.addEventListener(CallaTeleconferenceEventType.ParticipantJoined, (evt) => addUser(evt.id, evt.displayName, evt.source.pose, false));
-client.addEventListener(CallaTeleconferenceEventType.ParticipantLeft, (evt) => removeUser(evt.id));
-client.addEventListener(CallaTeleconferenceEventType.VideoAdded, (evt) => changeVideo(evt.id, evt.stream));
-client.addEventListener(CallaTeleconferenceEventType.VideoRemoved, (evt) => changeVideo(evt.id, null));
-client.addEventListener(CallaTeleconferenceEventType.UserNameChanged, (evt) => changeName(evt.id, evt.displayName));
+client.addEventListener("participantJoined", (evt) => addUser(evt.id, evt.displayName, evt.source.pose, false));
+client.addEventListener("participantLeft", (evt) => removeUser(evt.id));
+client.addEventListener("videoAdded", (evt) => changeVideo(evt.id, evt.stream));
+client.addEventListener("videoRemoved", (evt) => changeVideo(evt.id, null));
+client.addEventListener("userNameChanged", (evt) => changeName(evt.id, evt.displayName));
 timer.addEventListener("tick", update);
 /**
  * Binds a device list to a select box.

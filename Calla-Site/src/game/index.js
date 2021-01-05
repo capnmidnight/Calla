@@ -1,5 +1,4 @@
 import { Calla } from "calla/Calla";
-import { CallaMetadataEventType, CallaTeleconferenceEventType } from "calla/CallaEvents";
 import { Emoji } from "kudzu/emoji/Emoji";
 import { allPeople as people } from "kudzu/emoji/emojis";
 import { loadFont, makeFont } from "kudzu/graphics2d/fonts";
@@ -223,7 +222,7 @@ game.addEventListener("zoomChanged", () => {
 directory.addEventListener("warpTo", (evt) => {
     game.visit(evt.id);
 });
-client.addEventListener(CallaTeleconferenceEventType.ConferenceJoined, async (evt) => {
+client.addEventListener("conferenceJoined", async (evt) => {
     login.connected = true;
     await game.startAsync(evt.id, login.userName, evt.pose, null, login.roomName);
     options.avatarURL = settings.avatarURL;
@@ -245,37 +244,37 @@ client.addEventListener(CallaTeleconferenceEventType.ConferenceJoined, async (ev
     game.muteUserVideo(client.localUserID, videoMuted);
     controls.videoEnabled = !videoMuted;
 });
-client.addEventListener(CallaTeleconferenceEventType.ConferenceLeft, () => {
+client.addEventListener("conferenceLeft", () => {
     game.end();
 });
-client.addEventListener(CallaTeleconferenceEventType.ParticipantJoined, (evt) => {
+client.addEventListener("participantJoined", (evt) => {
     client.audio.playClip("join");
     game.addUser(evt.id, evt.displayName, evt.source.pose);
 });
-client.addEventListener(CallaTeleconferenceEventType.ParticipantLeft, (evt) => {
+client.addEventListener("participantLeft", (evt) => {
     client.audio.playClip("leave");
     game.removeUser(evt.id);
     directory.delete(evt.id);
 });
-client.addEventListener(CallaTeleconferenceEventType.AudioAdded, (evt) => refreshUser(evt.id));
-client.addEventListener(CallaTeleconferenceEventType.AudioRemoved, (evt) => refreshUser(evt.id));
-client.addEventListener(CallaTeleconferenceEventType.VideoAdded, (evt) => {
+client.addEventListener("audioAdded", (evt) => refreshUser(evt.id));
+client.addEventListener("audioRemoved", (evt) => refreshUser(evt.id));
+client.addEventListener("videoAdded", (evt) => {
     game.setAvatarVideo(evt.id, evt.stream);
     refreshUser(evt.id);
 });
-client.addEventListener(CallaTeleconferenceEventType.VideoRemoved, (evt) => {
+client.addEventListener("videoRemoved", (evt) => {
     game.setAvatarVideo(evt.id, null);
     refreshUser(evt.id);
 });
-client.addEventListener(CallaMetadataEventType.AvatarChanged, (evt) => {
+client.addEventListener("avatarChanged", (evt) => {
     game.setAvatarURL(evt.id, evt.url);
     refreshUser(evt.id);
 });
-client.addEventListener(CallaTeleconferenceEventType.UserNameChanged, (evt) => {
+client.addEventListener("userNameChanged", (evt) => {
     game.changeUserName(evt.id, evt.displayName);
     refreshUser(evt.id);
 });
-client.addEventListener(CallaTeleconferenceEventType.AudioMuteStatusChanged, async (evt) => {
+client.addEventListener("audioMuteStatusChanged", async (evt) => {
     if (evt.id === client.localUserID) {
         controls.audioEnabled = !evt.muted;
         devices.currentAudioInputDevice = await client.getCurrentAudioInputDevice();
@@ -283,7 +282,7 @@ client.addEventListener(CallaTeleconferenceEventType.AudioMuteStatusChanged, asy
     }
     game.muteUserAudio(evt.id, evt.muted);
 });
-client.addEventListener(CallaTeleconferenceEventType.VideoMuteStatusChanged, async (evt) => {
+client.addEventListener("videoMuteStatusChanged", async (evt) => {
     if (evt.id === client.localUserID) {
         controls.videoEnabled = !evt.muted;
         if (evt.muted) {
@@ -298,17 +297,17 @@ client.addEventListener(CallaTeleconferenceEventType.VideoMuteStatusChanged, asy
     settings.preferredVideoInputID = client.preferredVideoInputID;
 });
 const rawEmoteEmoji = new Emoji(null, "");
-client.addEventListener(CallaMetadataEventType.Emote, (evt) => {
+client.addEventListener("emote", (evt) => {
     rawEmoteEmoji.value = evt.emoji;
     game.emote(evt.id, rawEmoteEmoji);
 });
 const rawAvatarEmoji = new Emoji(null, "");
-client.addEventListener(CallaMetadataEventType.SetAvatarEmoji, (evt) => {
+client.addEventListener("setAvatarEmoji", (evt) => {
     rawAvatarEmoji.value = evt.emoji;
     game.setAvatarEmoji(evt.id, rawAvatarEmoji);
     refreshUser(evt.id);
 });
-client.addEventListener(CallaTeleconferenceEventType.AudioActivity, (evt) => {
+client.addEventListener("audioActivity", (evt) => {
     game.updateAudioActivity(evt.id, evt.isActive);
 });
 timer.addEventListener("tick", (evt) => {

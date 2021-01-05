@@ -22,11 +22,6 @@ import type {
     CallaVideoStreamRemovedEvent
 } from "calla/CallaEvents";
 
-// This enumeration contains all the names of the event types
-// used by Calla, which is convenient if you are using an
-// editor that supports auto-completion.
-import { CallaTeleconferenceEventType } from "calla/CallaEvents";
-
 // Calla provides a convient means of pumping animation events.
 import { RequestAnimationFrameTimer } from "kudzu/timers/RequestAnimationFrameTimer";
 
@@ -342,33 +337,33 @@ controls.space.addEventListener("click", (evt: MouseEvent) => {
     setPosition(x, y);
 });
 
-client.addEventListener(CallaTeleconferenceEventType.ConferenceJoined, (evt: CallaConferenceJoinedEvent) =>
+client.addEventListener("conferenceJoined", (evt: CallaConferenceJoinedEvent) =>
     startGame(evt.id, evt.pose));
 
 /**
  * If the user has left the conference (or been kicked
  * by a moderator), we need to shut down the rendering.
  **/
-client.addEventListener(CallaTeleconferenceEventType.ConferenceLeft, (evt: CallaConferenceLeftEvent) => {
+client.addEventListener("conferenceLeft", (evt: CallaConferenceLeftEvent) => {
     removeUser(evt.id);
     timer.stop();
     controls.leave.disabled = true;
     controls.connect.disabled = false;
 });
 
-client.addEventListener(CallaTeleconferenceEventType.ParticipantJoined, (evt: CallaParticipantJoinedEvent) =>
+client.addEventListener("participantJoined", (evt: CallaParticipantJoinedEvent) =>
     addUser(evt.id, evt.displayName, evt.source.pose, false));
 
-client.addEventListener(CallaTeleconferenceEventType.ParticipantLeft, (evt: CallaParticipantLeftEvent) =>
+client.addEventListener("participantLeft", (evt: CallaParticipantLeftEvent) =>
     removeUser(evt.id));
 
-client.addEventListener(CallaTeleconferenceEventType.VideoAdded, (evt: CallaVideoStreamAddedEvent) =>
+client.addEventListener("videoAdded", (evt: CallaVideoStreamAddedEvent) =>
     changeVideo(evt.id, evt.stream));
 
-client.addEventListener(CallaTeleconferenceEventType.VideoRemoved, (evt: CallaVideoStreamRemovedEvent) =>
+client.addEventListener("videoRemoved", (evt: CallaVideoStreamRemovedEvent) =>
     changeVideo(evt.id, null));
 
-client.addEventListener(CallaTeleconferenceEventType.UserNameChanged, (evt: CallaUserNameChangedEvent) =>
+client.addEventListener("userNameChanged", (evt: CallaUserNameChangedEvent) =>
     changeName(evt.id, evt.displayName));
 
 timer.addEventListener("tick", update);

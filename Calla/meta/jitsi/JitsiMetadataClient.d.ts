@@ -1,4 +1,4 @@
-import { CallaEventType, CallaMetadataEventType } from "../../CallaEvents";
+import { CallaMetadataEventType } from "../../CallaEvents";
 import { ConnectionState } from "../../ConnectionState";
 import type { JitsiTeleconferenceClient } from "../../tele/jitsi/JitsiTeleconferenceClient";
 import { BaseMetadataClient } from "../BaseMetadataClient";
@@ -19,6 +19,6 @@ export declare class JitsiMetadataClient extends BaseMetadataClient {
     identify(_userName: string): Promise<void>;
     disconnect(): Promise<void>;
     private sendJitsiHax;
-    protected callInternal(command: CallaEventType, ...values: any[]): Promise<void>;
+    protected callInternal(command: CallaMetadataEventType, ...values: any[]): Promise<void>;
     protected stopInternal(): Promise<void>;
 }

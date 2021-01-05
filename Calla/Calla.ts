@@ -1,7 +1,7 @@
 import type { Emoji } from "kudzu/emoji/Emoji";
 import { TypedEventBase } from "kudzu/events/EventBase";
-import { IFetcher } from "kudzu/io/IFetcher";
 import { Fetcher } from "kudzu/io/Fetcher";
+import { IFetcher } from "kudzu/io/IFetcher";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { isNullOrUndefined } from "kudzu/typeChecks";
 import type { IDisposable } from "kudzu/using";
@@ -18,10 +18,6 @@ import type {
     CallaParticipantLeftEvent,
     CallaUserPointerEvent,
     CallaUserPosedEvent
-} from "./CallaEvents";
-import {
-    CallaMetadataEventType,
-    CallaTeleconferenceEventType
 } from "./CallaEvents";
 import { ConnectionState } from "./ConnectionState";
 import type { ICombinedClient } from "./ICombinedClient";
@@ -87,42 +83,42 @@ export class Calla
 
         const fwd = this.dispatchEvent.bind(this);
 
-        this.tele.addEventListener(CallaTeleconferenceEventType.ServerConnected, fwd);
-        this.tele.addEventListener(CallaTeleconferenceEventType.ServerDisconnected, fwd);
-        this.tele.addEventListener(CallaTeleconferenceEventType.ServerFailed, fwd);
-        this.tele.addEventListener(CallaTeleconferenceEventType.ConferenceFailed, fwd);
-        this.tele.addEventListener(CallaTeleconferenceEventType.ConferenceRestored, fwd);
+        this.tele.addEventListener("serverConnected", fwd);
+        this.tele.addEventListener("serverDisconnected", fwd);
+        this.tele.addEventListener("serverFailed", fwd);
+        this.tele.addEventListener("conferenceFailed", fwd);
+        this.tele.addEventListener("conferenceRestored", fwd);
 
-        this.tele.addEventListener(CallaTeleconferenceEventType.AudioMuteStatusChanged, fwd);
-        this.tele.addEventListener(CallaTeleconferenceEventType.VideoMuteStatusChanged, fwd);
+        this.tele.addEventListener("audioMuteStatusChanged", fwd);
+        this.tele.addEventListener("videoMuteStatusChanged", fwd);
 
-        this.tele.addEventListener(CallaTeleconferenceEventType.ConferenceJoined, async (evt: CallaConferenceJoinedEvent) => {
+        this.tele.addEventListener("conferenceJoined", async (evt: CallaConferenceJoinedEvent) => {
             const user = this.audio.createLocalUser(evt.id);
             evt.pose = user.pose;
             this.dispatchEvent(evt);
             await this.setPreferredDevices();
         });
 
-        this.tele.addEventListener(CallaTeleconferenceEventType.ConferenceLeft, (evt: CallaConferenceLeftEvent) => {
+        this.tele.addEventListener("conferenceLeft", (evt: CallaConferenceLeftEvent) => {
             this.audio.createLocalUser(evt.id);
             this.dispatchEvent(evt);
         });
 
-        this.tele.addEventListener(CallaTeleconferenceEventType.ParticipantJoined, async (joinEvt: CallaParticipantJoinedEvent) => {
+        this.tele.addEventListener("participantJoined", async (joinEvt: CallaParticipantJoinedEvent) => {
             joinEvt.source = this.audio.createUser(joinEvt.id);
             this.dispatchEvent(joinEvt);
         });
 
-        this.tele.addEventListener(CallaTeleconferenceEventType.ParticipantLeft, (evt: CallaParticipantLeftEvent) => {
+        this.tele.addEventListener("participantLeft", (evt: CallaParticipantLeftEvent) => {
             this.dispatchEvent(evt);
             this.audio.removeUser(evt.id);
         });
 
-        this.tele.addEventListener(CallaTeleconferenceEventType.UserNameChanged, fwd);
-        this.tele.addEventListener(CallaTeleconferenceEventType.VideoAdded, fwd);
-        this.tele.addEventListener(CallaTeleconferenceEventType.VideoRemoved, fwd);
+        this.tele.addEventListener("userNameChanged", fwd);
+        this.tele.addEventListener("videoAdded", fwd);
+        this.tele.addEventListener("videoRemoved", fwd);
 
-        this.tele.addEventListener(CallaTeleconferenceEventType.AudioAdded, (evt: CallaAudioStreamAddedEvent) => {
+        this.tele.addEventListener("audioAdded", (evt: CallaAudioStreamAddedEvent) => {
             const user = this.audio.getUser(evt.id);
             if (user) {
                 let stream = user.streams.get(evt.kind);
@@ -141,7 +137,7 @@ export class Calla
             }
         });
 
-        this.tele.addEventListener(CallaTeleconferenceEventType.AudioRemoved, (evt: CallaAudioStreamRemovedEvent) => {
+        this.tele.addEventListener("audioRemoved", (evt: CallaAudioStreamRemovedEvent) => {
             const user = this.audio.getUser(evt.id);
             if (user && user.streams.has(evt.kind)) {
                 user.streams.delete(evt.kind);
@@ -154,10 +150,10 @@ export class Calla
             this.dispatchEvent(evt);
         });
 
-        this.meta.addEventListener(CallaMetadataEventType.AvatarChanged, fwd);
-        this.meta.addEventListener(CallaMetadataEventType.Chat, fwd);
-        this.meta.addEventListener(CallaMetadataEventType.Emote, fwd);
-        this.meta.addEventListener(CallaMetadataEventType.SetAvatarEmoji, fwd);
+        this.meta.addEventListener("avatarChanged", fwd);
+        this.meta.addEventListener("chat", fwd);
+        this.meta.addEventListener("emote", fwd);
+        this.meta.addEventListener("setAvatarEmoji", fwd);
 
         const offsetEvt = (poseEvt: CallaUserPointerEvent | CallaUserPosedEvent): void => {
             const O = this.audio.getUserOffset(poseEvt.id);
@@ -169,9 +165,9 @@ export class Calla
             this.dispatchEvent(poseEvt);
         };
 
-        this.meta.addEventListener(CallaMetadataEventType.UserPointer, offsetEvt);
+        this.meta.addEventListener("userPointer", offsetEvt);
 
-        this.meta.addEventListener(CallaMetadataEventType.UserPosed, (evt: CallaUserPosedEvent) => {
+        this.meta.addEventListener("userPosed", (evt: CallaUserPosedEvent) => {
             this.audio.setUserPose(
                 evt.id,
                 evt.px, evt.py, evt.pz,

@@ -2,7 +2,7 @@ import type { Emoji } from "kudzu/emoji/Emoji";
 import { TypedEventBase } from "kudzu/events/EventBase";
 import { sleep } from "kudzu/events/sleep";
 import type { CallaEventType, CallaMetadataEvents } from "../CallaEvents";
-import { CallaMetadataEventType, CallaUserEvent } from "../CallaEvents";
+import { CallaUserEvent } from "../CallaEvents";
 import { ConnectionState } from "../ConnectionState";
 import type { IMetadataClientExt } from "./IMetadataClient";
 
@@ -59,31 +59,31 @@ export abstract class BaseMetadataClient
     }
 
     setLocalPose(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
-        this.callThrottled(CallaMetadataEventType.UserPosed, CallaMetadataEventType.UserPosed, px, py, pz, fx, fy, fz, ux, uy, uz);
+        this.callThrottled("userPosed", "userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
     }
 
     setLocalPoseImmediate(px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
-        this.callImmediate(CallaMetadataEventType.UserPosed, px, py, pz, fx, fy, fz, ux, uy, uz);
+        this.callImmediate("userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
     }
 
     setLocalPointer(name: string, px: number, py: number, pz: number, fx: number, fy: number, fz: number, ux: number, uy: number, uz: number): void {
-        this.callThrottled(CallaMetadataEventType.UserPointer + name, CallaMetadataEventType.UserPointer, name, px, py, pz, fx, fy, fz, ux, uy, uz);
+        this.callThrottled("userPointer" + name, "userPointer", name, px, py, pz, fx, fy, fz, ux, uy, uz);
     }
 
     setAvatarEmoji(emoji: Emoji): void {
-        this.callImmediate(CallaMetadataEventType.SetAvatarEmoji, emoji);
+        this.callImmediate("setAvatarEmoji", emoji);
     }
 
     setAvatarURL(url: string): void {
-        this.callImmediate(CallaMetadataEventType.AvatarChanged, url);
+        this.callImmediate("avatarChanged", url);
     }
 
     emote(emoji: Emoji): void {
-        this.callImmediate(CallaMetadataEventType.Emote, emoji);
+        this.callImmediate("emote", emoji);
     }
 
     chat(text: string): void {
-        this.callImmediate(CallaMetadataEventType.Chat, text);
+        this.callImmediate("chat", text);
     }
 
     abstract connect(): Promise<void>;

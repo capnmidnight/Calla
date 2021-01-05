@@ -3,7 +3,7 @@ import { TypedEventBase } from "kudzu/events/EventBase";
 import { isOculusQuest } from "kudzu/html/flags";
 import { AudioManager, SpatializerType } from "../audio/AudioManager";
 import { canChangeAudioOutput } from "../audio/canChangeAudioOutput";
-import { CallaTeleconferenceEventType, CallaUserEvent } from "../CallaEvents";
+import { CallaUserEvent } from "../CallaEvents";
 import { ConnectionState } from "../ConnectionState";
 export function addLogger(obj, evtName) {
     obj.addEventListener(evtName, (...rest) => {
@@ -48,13 +48,13 @@ export class BaseTeleconferenceClient extends TypedEventBase {
         this.audio = new AudioManager(fetcher, isOculusQuest
             ? SpatializerType.High
             : SpatializerType.Medium);
-        this.addEventListener(CallaTeleconferenceEventType.ServerConnected, this.setConnectionState.bind(this, ConnectionState.Connected));
-        this.addEventListener(CallaTeleconferenceEventType.ServerFailed, this.setConnectionState.bind(this, ConnectionState.Disconnected));
-        this.addEventListener(CallaTeleconferenceEventType.ServerDisconnected, this.setConnectionState.bind(this, ConnectionState.Disconnected));
-        this.addEventListener(CallaTeleconferenceEventType.ConferenceJoined, this.setConferenceState.bind(this, ConnectionState.Connected));
-        this.addEventListener(CallaTeleconferenceEventType.ConferenceFailed, this.setConferenceState.bind(this, ConnectionState.Disconnected));
-        this.addEventListener(CallaTeleconferenceEventType.ConferenceRestored, this.setConferenceState.bind(this, ConnectionState.Connected));
-        this.addEventListener(CallaTeleconferenceEventType.ConferenceLeft, this.setConferenceState.bind(this, ConnectionState.Disconnected));
+        this.addEventListener("serverConnected", this.setConnectionState.bind(this, ConnectionState.Connected));
+        this.addEventListener("serverFailed", this.setConnectionState.bind(this, ConnectionState.Disconnected));
+        this.addEventListener("serverDisconnected", this.setConnectionState.bind(this, ConnectionState.Disconnected));
+        this.addEventListener("conferenceJoined", this.setConferenceState.bind(this, ConnectionState.Connected));
+        this.addEventListener("conferenceFailed", this.setConferenceState.bind(this, ConnectionState.Disconnected));
+        this.addEventListener("conferenceRestored", this.setConferenceState.bind(this, ConnectionState.Connected));
+        this.addEventListener("conferenceLeft", this.setConferenceState.bind(this, ConnectionState.Disconnected));
     }
     toggleLogging() {
         loggingEnabled = !loggingEnabled;

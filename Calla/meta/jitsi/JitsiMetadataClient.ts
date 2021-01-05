@@ -8,11 +8,9 @@ import {
     CallaChatEvent,
     CallaEmojiAvatarEvent,
     CallaEmoteEvent,
-    CallaEventType,
     CallaMetadataEventType,
     CallaParticipantJoinedEvent,
     CallaParticipantLeftEvent,
-    CallaTeleconferenceEventType,
     CallaUserPointerEvent,
     CallaUserPosedEvent
 } from "../../CallaEvents";
@@ -37,11 +35,11 @@ export class JitsiMetadataClient
     constructor(private tele: JitsiTeleconferenceClient) {
         super(250);
 
-        this.tele.addEventListener(CallaTeleconferenceEventType.ParticipantJoined, (evt: CallaParticipantJoinedEvent) => {
+        this.tele.addEventListener("participantJoined", (evt: CallaParticipantJoinedEvent) => {
             arraySortedInsert(this.remoteUserIDs, evt.id, false);
         });
 
-        this.tele.addEventListener(CallaTeleconferenceEventType.ParticipantLeft, (evt: CallaParticipantLeftEvent) => {
+        this.tele.addEventListener("participantLeft", (evt: CallaParticipantLeftEvent) => {
             arrayRemove(this.remoteUserIDs, evt.id);
         });
     }
@@ -63,22 +61,22 @@ export class JitsiMetadataClient
                 const command = data.command;
                 const values = data.values;
                 switch (command) {
-                    case CallaMetadataEventType.AvatarChanged:
+                    case "avatarChanged":
                         this.dispatchEvent(new CallaAvatarChangedEvent(fromUserID, values[0]));
                         break;
-                    case CallaMetadataEventType.Emote:
+                    case "emote":
                         this.dispatchEvent(new CallaEmoteEvent(fromUserID, values[0]));
                         break;
-                    case CallaMetadataEventType.SetAvatarEmoji:
+                    case "setAvatarEmoji":
                         this.dispatchEvent(new CallaEmojiAvatarEvent(fromUserID, values[0]));
                         break;
-                    case CallaMetadataEventType.UserPosed:
+                    case "userPosed":
                         this.dispatchEvent(new CallaUserPosedEvent(fromUserID, values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]));
                         break;
-                    case CallaMetadataEventType.UserPointer:
+                    case "userPointer":
                         this.dispatchEvent(new CallaUserPointerEvent(fromUserID, values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8], values[9]));
                         break;
-                    case CallaMetadataEventType.Chat:
+                    case "chat":
                         this.dispatchEvent(new CallaChatEvent(fromUserID, values[0]));
                         break;
                     default:
@@ -104,7 +102,7 @@ export class JitsiMetadataClient
         // JitsiTeleconferenceClient will already disconnect
     }
 
-    private sendJitsiHax(toUserID: string, command: CallaEventType, ...values: any[]): void {
+    private sendJitsiHax(toUserID: string, command: CallaMetadataEventType, ...values: any[]): void {
         this.tele.conference.sendMessage({
             hax: JITSI_HAX_FINGERPRINT,
             command,
@@ -112,7 +110,7 @@ export class JitsiMetadataClient
         }, toUserID);
     }
 
-    protected callInternal(command: CallaEventType, ...values: any[]): Promise<void> {
+    protected callInternal(command: CallaMetadataEventType, ...values: any[]): Promise<void> {
         for (const toUserID of this.remoteUserIDs) {
             this.sendJitsiHax(toUserID, command, ...values);
         }

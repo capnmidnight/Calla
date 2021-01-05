@@ -16,7 +16,6 @@ import {
     CallaParticipantJoinedEvent,
     CallaParticipantLeftEvent,
     CallaParticipantNameChangeEvent,
-    CallaTeleconferenceEventType,
     CallaTeleconferenceServerConnectedEvent,
     CallaTeleconferenceServerDisconnectedEvent,
     CallaTeleconferenceServerFailedEvent,
@@ -329,7 +328,7 @@ export class JitsiTeleconferenceClient
                 });
             });
 
-            const joinTask = once(this, CallaTeleconferenceEventType.ConferenceJoined);
+            const joinTask = once(this, "conferenceJoined");
             this.conference.join(password);
             await joinTask;
         }
@@ -385,7 +384,7 @@ export class JitsiTeleconferenceClient
             try {
                 await this.tryRemoveTrack(this.localUserID, StreamType.Video);
                 await this.tryRemoveTrack(this.localUserID, StreamType.Audio);
-                const leaveTask = once(this, CallaTeleconferenceEventType.ConferenceLeft);
+                const leaveTask = once(this, "conferenceLeft");
                 this.conference.leave();
                 await leaveTask;
             }
@@ -406,7 +405,7 @@ export class JitsiTeleconferenceClient
         else if (this.connectionState === ConnectionState.Connected) {
             await super.disconnect();
             await this.leave();
-            const disconnectTask = once(this, CallaTeleconferenceEventType.ServerDisconnected);
+            const disconnectTask = once(this, "serverDisconnected");
             this.connection.disconnect();
             await disconnectTask;
         }
@@ -446,13 +445,13 @@ export class JitsiTeleconferenceClient
 
         const cur = this.getCurrentMediaTrack(StreamType.Audio);
         if (cur) {
-            const removeTask = this.getNext(CallaTeleconferenceEventType.AudioRemoved, this.localUserID);
+            const removeTask = this.getNext("audioRemoved", this.localUserID);
             this.conference.removeTrack(cur);
             await removeTask;
         }
 
         if (this.conference && this.preferredAudioInputID) {
-            const addTask = this.getNext(CallaTeleconferenceEventType.AudioAdded, this.localUserID);
+            const addTask = this.getNext("audioAdded", this.localUserID);
             const tracks = await JitsiMeetJS.createLocalTracks({
                 devices: ["audio"],
                 micDeviceId: this.preferredAudioInputID,
@@ -476,13 +475,13 @@ export class JitsiTeleconferenceClient
 
         const cur = this.getCurrentMediaTrack(StreamType.Video);
         if (cur) {
-            const removeTask = this.getNext(CallaTeleconferenceEventType.VideoRemoved, this.localUserID);
+            const removeTask = this.getNext("videoRemoved", this.localUserID);
             this.conference.removeTrack(cur);
             await removeTask;
         }
 
         if (this.conference && this.preferredVideoInputID) {
-            const addTask = this.getNext(CallaTeleconferenceEventType.VideoAdded, this.localUserID);
+            const addTask = this.getNext("videoAdded", this.localUserID);
             const tracks = await JitsiMeetJS.createLocalTracks({
                 devices: ["video"],
                 cameraDeviceId: this.preferredVideoInputID
@@ -525,7 +524,7 @@ export class JitsiTeleconferenceClient
     }
 
     async toggleAudioMuted() {
-        const changeTask = this.getNext(CallaTeleconferenceEventType.AudioMuteStatusChanged, this.localUserID);
+        const changeTask = this.getNext("audioMuteStatusChanged", this.localUserID);
         const cur = this.getCurrentMediaTrack(StreamType.Audio);
         if (cur) {
             const muted = cur.isMuted();
@@ -545,7 +544,7 @@ export class JitsiTeleconferenceClient
     }
 
     async toggleVideoMuted() {
-        const changeTask = this.getNext(CallaTeleconferenceEventType.VideoMuteStatusChanged, this.localUserID);
+        const changeTask = this.getNext("videoMuteStatusChanged", this.localUserID);
         const cur = this.getCurrentMediaTrack(StreamType.Video);
         if (cur) {
             await this.setVideoInputDevice(null);

@@ -3,7 +3,7 @@ import { arraySortedInsert } from "kudzu/arrays/arraySortedInsert";
 import { once } from "kudzu/events/once";
 import { waitFor } from "kudzu/events/waitFor";
 import { assertNever } from "kudzu/typeChecks";
-import { CallaAvatarChangedEvent, CallaChatEvent, CallaEmojiAvatarEvent, CallaEmoteEvent, CallaMetadataEventType, CallaTeleconferenceEventType, CallaUserPointerEvent, CallaUserPosedEvent } from "../../CallaEvents";
+import { CallaAvatarChangedEvent, CallaChatEvent, CallaEmojiAvatarEvent, CallaEmoteEvent, CallaUserPointerEvent, CallaUserPosedEvent } from "../../CallaEvents";
 import { ConnectionState } from "../../ConnectionState";
 import { BaseMetadataClient } from "../BaseMetadataClient";
 const JITSI_HAX_FINGERPRINT = "Calla";
@@ -13,10 +13,10 @@ export class JitsiMetadataClient extends BaseMetadataClient {
         this.tele = tele;
         this._status = ConnectionState.Disconnected;
         this.remoteUserIDs = new Array();
-        this.tele.addEventListener(CallaTeleconferenceEventType.ParticipantJoined, (evt) => {
+        this.tele.addEventListener("participantJoined", (evt) => {
             arraySortedInsert(this.remoteUserIDs, evt.id, false);
         });
-        this.tele.addEventListener(CallaTeleconferenceEventType.ParticipantLeft, (evt) => {
+        this.tele.addEventListener("participantLeft", (evt) => {
             arrayRemove(this.remoteUserIDs, evt.id);
         });
     }
@@ -35,22 +35,22 @@ export class JitsiMetadataClient extends BaseMetadataClient {
                 const command = data.command;
                 const values = data.values;
                 switch (command) {
-                    case CallaMetadataEventType.AvatarChanged:
+                    case "avatarChanged":
                         this.dispatchEvent(new CallaAvatarChangedEvent(fromUserID, values[0]));
                         break;
-                    case CallaMetadataEventType.Emote:
+                    case "emote":
                         this.dispatchEvent(new CallaEmoteEvent(fromUserID, values[0]));
                         break;
-                    case CallaMetadataEventType.SetAvatarEmoji:
+                    case "setAvatarEmoji":
                         this.dispatchEvent(new CallaEmojiAvatarEvent(fromUserID, values[0]));
                         break;
-                    case CallaMetadataEventType.UserPosed:
+                    case "userPosed":
                         this.dispatchEvent(new CallaUserPosedEvent(fromUserID, values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]));
                         break;
-                    case CallaMetadataEventType.UserPointer:
+                    case "userPointer":
                         this.dispatchEvent(new CallaUserPointerEvent(fromUserID, values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8], values[9]));
                         break;
-                    case CallaMetadataEventType.Chat:
+                    case "chat":
                         this.dispatchEvent(new CallaChatEvent(fromUserID, values[0]));
                         break;
                     default:

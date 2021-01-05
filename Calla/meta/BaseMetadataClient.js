@@ -1,6 +1,6 @@
 import { TypedEventBase } from "kudzu/events/EventBase";
 import { sleep } from "kudzu/events/sleep";
-import { CallaMetadataEventType, CallaUserEvent } from "../CallaEvents";
+import { CallaUserEvent } from "../CallaEvents";
 import { ConnectionState } from "../ConnectionState";
 export class BaseMetadataClient extends TypedEventBase {
     constructor(sleepTime) {
@@ -41,25 +41,25 @@ export class BaseMetadataClient extends TypedEventBase {
         await this.callInternal(command, ...args);
     }
     setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz) {
-        this.callThrottled(CallaMetadataEventType.UserPosed, CallaMetadataEventType.UserPosed, px, py, pz, fx, fy, fz, ux, uy, uz);
+        this.callThrottled("userPosed", "userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
     }
     setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz) {
-        this.callImmediate(CallaMetadataEventType.UserPosed, px, py, pz, fx, fy, fz, ux, uy, uz);
+        this.callImmediate("userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
     }
     setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz) {
-        this.callThrottled(CallaMetadataEventType.UserPointer + name, CallaMetadataEventType.UserPointer, name, px, py, pz, fx, fy, fz, ux, uy, uz);
+        this.callThrottled("userPointer" + name, "userPointer", name, px, py, pz, fx, fy, fz, ux, uy, uz);
     }
     setAvatarEmoji(emoji) {
-        this.callImmediate(CallaMetadataEventType.SetAvatarEmoji, emoji);
+        this.callImmediate("setAvatarEmoji", emoji);
     }
     setAvatarURL(url) {
-        this.callImmediate(CallaMetadataEventType.AvatarChanged, url);
+        this.callImmediate("avatarChanged", url);
     }
     emote(emoji) {
-        this.callImmediate(CallaMetadataEventType.Emote, emoji);
+        this.callImmediate("emote", emoji);
     }
     chat(text) {
-        this.callImmediate(CallaMetadataEventType.Chat, text);
+        this.callImmediate("chat", text);
     }
 }
 //# sourceMappingURL=BaseMetadataClient.js.map
