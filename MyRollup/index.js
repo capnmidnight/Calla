@@ -74,6 +74,7 @@ function makeBundle(name, input, outputDir, format, isProduction, options) {
             json()
         ],
         output: {
+            name,
             format,
             sourcemap: true,
             file: isProduction
