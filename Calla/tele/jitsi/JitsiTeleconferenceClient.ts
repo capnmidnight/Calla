@@ -199,16 +199,16 @@ export class JitsiTeleconferenceClient
                 }
             }
 
-            const fwd = (evtName: string, EvtClass: new () => CallaTeleconferenceEvents[keyof CallaTeleconferenceEvents], extra?: () => void): void => {
+            const fwd = (evtName: string, EvtClass: new () => CallaTeleconferenceEvents[keyof CallaTeleconferenceEvents], extra?: (evtName: string) => void): void => {
                 this._on(this.conference, evtName, () => {
                     this.dispatchEvent(new EvtClass());
                     if (extra) {
-                        extra();
+                        extra(evtName);
                     }
                 });
             };
 
-            const onLeft = async () => {
+            const onLeft = async (evtName: string) => {
                 this.localUserID = DEFAULT_LOCAL_USER_ID;
 
                 if (this.tracks.size > 0) {
@@ -226,6 +226,8 @@ export class JitsiTeleconferenceClient
                     this._off(this.conference);
                     this.conference = null;
                 }
+
+                console.info(`Left room '${roomName}'. Reason: ${evtName}.`);
             };
 
             fwd(conferenceEvents.CONFERENCE_ERROR, CallaConferenceFailedEvent, onLeft);
@@ -240,7 +242,7 @@ export class JitsiTeleconferenceClient
                 }
             });
 
-            this._on(this.conference, conferenceEvents.CONFERENCE_LEFT, onLeft);
+            this._on(this.conference, conferenceEvents.CONFERENCE_LEFT, () => onLeft(conferenceEvents.CONFERENCE_LEFT));
 
             this._on(this.conference, conferenceEvents.USER_JOINED, (id: string, jitsiUser: JitsiParticipant) => {
                 this.dispatchEvent(new CallaParticipantJoinedEvent(
