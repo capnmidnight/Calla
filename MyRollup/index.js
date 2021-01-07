@@ -3,7 +3,6 @@ const json = require("@rollup/plugin-json");
 const { nodeResolve } = require("@rollup/plugin-node-resolve");
 const replace = require("@rollup/plugin-replace");
 const typescript = require("@rollup/plugin-typescript");
-const glslify = require("rollup-plugin-glslify");
 const sourcemaps = require("rollup-plugin-sourcemaps");
 const { terser } = require("rollup-plugin-terser");
 
@@ -83,8 +82,8 @@ function makeBundle(name, input, outputDir, format, isProduction, options) {
         }
     };
 
-    if (options.webgl) {
-        opts.plugins.push(glslify());
+    if (options.plugins) {
+        opts.plugins.push(...options.plugins);
     }
 
     if (/\.ts$/.test(input)) {
