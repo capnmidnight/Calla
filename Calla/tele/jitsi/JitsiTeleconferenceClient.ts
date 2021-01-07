@@ -373,44 +373,29 @@ export class JitsiTeleconferenceClient
     }
 
     async leave(): Promise<void> {
-        if (this.conferenceState === ConnectionState.Connecting) {
-            await waitFor(() => this.conferenceState === ConnectionState.Connected);
-        }
+        await super.leave();
 
-        if (this.conferenceState === ConnectionState.Disconnecting) {
-            await waitFor(() => this.conferenceState === ConnectionState.Disconnected);
+        try {
+            await this.tryRemoveTrack(this.localUserID, StreamType.Video);
+            await this.tryRemoveTrack(this.localUserID, StreamType.Audio);
+            const leaveTask = once(this, "conferenceLeft");
+            this.conference.leave();
+            await leaveTask;
         }
-        else if (this.conferenceState === ConnectionState.Connected) {
-            await super.leave();
-
-            try {
-                await this.tryRemoveTrack(this.localUserID, StreamType.Video);
-                await this.tryRemoveTrack(this.localUserID, StreamType.Audio);
-                const leaveTask = once(this, "conferenceLeft");
-                this.conference.leave();
-                await leaveTask;
-            }
-            catch (exp) {
-                console.warn("><> CALLA <>< ---- Failed to leave teleconference.", exp);
-            }
+        catch (exp) {
+            console.warn("><> CALLA <>< ---- Failed to leave teleconference.", exp);
         }
     }
 
     async disconnect(): Promise<void> {
-        if (this.connectionState === ConnectionState.Connecting) {
-            await waitFor(() => this.connectionState === ConnectionState.Connected);
+        await super.disconnect();
+        if (this.conferenceState === ConnectionState.Connected) {
+            await this.leave();
         }
 
-        if (this.connectionState === ConnectionState.Disconnecting) {
-            await waitFor(() => this.connectionState === ConnectionState.Disconnected);
-        }
-        else if (this.connectionState === ConnectionState.Connected) {
-            await super.disconnect();
-            await this.leave();
-            const disconnectTask = once(this, "serverDisconnected");
-            this.connection.disconnect();
-            await disconnectTask;
-        }
+        const disconnectTask = once(this, "serverDisconnected");
+        this.connection.disconnect();
+        await disconnectTask;
     }
 
     userExists(id: string): boolean {
