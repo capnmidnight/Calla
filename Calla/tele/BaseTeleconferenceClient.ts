@@ -2,6 +2,7 @@ import { arrayScan } from "kudzu/arrays/arrayScan";
 import type { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
 import { TypedEventBase } from "kudzu/events/EventBase";
 import { isOculusQuest } from "kudzu/html/flags";
+import { Fetcher } from "kudzu/io/Fetcher";
 import { IFetcher } from "kudzu/io/IFetcher";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { AudioManager, SpatializerType } from "../audio/AudioManager";
@@ -62,6 +63,7 @@ export abstract class BaseTeleconferenceClient
     roomName: string = null;
 
     protected _prepared = false;
+    protected fetcher: IFetcher;
 
     audio: AudioManager;
 
@@ -84,10 +86,12 @@ export abstract class BaseTeleconferenceClient
         this._conferenceState = state;
     }
 
-    constructor(protected fetcher: IFetcher) {
+    constructor(fetcher: IFetcher, audio?: AudioManager) {
         super();
 
-        this.audio = new AudioManager(fetcher, isOculusQuest
+        this.fetcher = fetcher || new Fetcher();
+
+        this.audio = audio || new AudioManager(fetcher, isOculusQuest
             ? SpatializerType.High
             : SpatializerType.Medium);
 

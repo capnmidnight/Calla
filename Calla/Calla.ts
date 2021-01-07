@@ -1,7 +1,6 @@
 import type { Emoji } from "kudzu/emoji/Emoji";
 import { TypedEventBase } from "kudzu/events/EventBase";
-import { Fetcher } from "kudzu/io/Fetcher";
-import { IFetcher } from "kudzu/io/IFetcher";
+import type { IFetcher } from "kudzu/io/IFetcher";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { isNullOrUndefined } from "kudzu/typeChecks";
 import type { IDisposable } from "kudzu/using";
@@ -60,19 +59,16 @@ export class Calla
 
     constructor(
         fetcher?: IFetcher,
-        TeleClientType?: new (fetcher?: IFetcher) => ITeleconferenceClientExt,
+        audio?: AudioManager,
+        TeleClientType?: new (fetcher?: IFetcher, audio?: AudioManager) => ITeleconferenceClientExt,
         MetaClientType?: new (tele: ITeleconferenceClient) => IMetadataClientExt) {
         super();
-
-        if (isNullOrUndefined(fetcher)) {
-            fetcher = new Fetcher();
-        }
 
         if (isNullOrUndefined(TeleClientType)) {
             TeleClientType = JitsiTeleconferenceClient;
         }
 
-        this.tele = new TeleClientType(fetcher);
+        this.tele = new TeleClientType(fetcher, audio);
 
         if (isNullOrUndefined(MetaClientType)) {
             this.meta = this.tele.getDefaultMetadataClient();

@@ -1,11 +1,11 @@
 import { arrayClear } from "kudzu/arrays/arrayClear";
 import { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
 import { once } from "kudzu/events/once";
-import { waitFor } from "kudzu/events/waitFor";
 import { IFetcher } from "kudzu/io/IFetcher";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { splitProgress } from "kudzu/tasks/splitProgress";
 import { using } from "kudzu/using";
+import { AudioManager } from "../../audio/AudioManager";
 import type { CallaTeleconferenceEvents } from "../../CallaEvents";
 import {
     CallaAudioStreamAddedEvent,
@@ -74,8 +74,8 @@ export class JitsiTeleconferenceClient
     private tracks = new Map<string, Map<StreamType, JitsiLocalTrack | JitsiRemoteTrack>>();
     private listenersForObjs = new Map<ErsatzEventTarget, Map<string, Function[]>>();
 
-    constructor(fetcher?: IFetcher) {
-        super(fetcher);
+    constructor(fetcher?: IFetcher, audio?: AudioManager) {
+        super(fetcher, audio);
     }
 
     private _on(obj: ErsatzEventTarget, evtName: string, handler: Function): void {
