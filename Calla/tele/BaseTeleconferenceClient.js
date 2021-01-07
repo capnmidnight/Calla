@@ -1,6 +1,7 @@
 import { arrayScan } from "kudzu/arrays/arrayScan";
 import { TypedEventBase } from "kudzu/events/EventBase";
 import { isOculusQuest } from "kudzu/html/flags";
+import { Fetcher } from "kudzu/io/Fetcher";
 import { AudioManager, SpatializerType } from "../audio/AudioManager";
 import { canChangeAudioOutput } from "../audio/canChangeAudioOutput";
 import { CallaUserEvent } from "../CallaEvents";
@@ -34,9 +35,8 @@ export const DEFAULT_LOCAL_USER_ID = "local-user";
 let loggingEnabled = window.location.hostname === "localhost"
     || /\bdebug\b/.test(window.location.search);
 export class BaseTeleconferenceClient extends TypedEventBase {
-    constructor(fetcher) {
+    constructor(fetcher, audio) {
         super();
-        this.fetcher = fetcher;
         this.localUserID = null;
         this.localUserName = null;
         this.roomName = null;
@@ -45,7 +45,8 @@ export class BaseTeleconferenceClient extends TypedEventBase {
         this._conferenceState = ConnectionState.Disconnected;
         this.hasAudioPermission = false;
         this.hasVideoPermission = false;
-        this.audio = new AudioManager(fetcher, isOculusQuest
+        this.fetcher = fetcher || new Fetcher();
+        this.audio = audio || new AudioManager(fetcher, isOculusQuest
             ? SpatializerType.High
             : SpatializerType.Medium);
         this.addEventListener("serverConnected", this.setConnectionState.bind(this, ConnectionState.Connected));

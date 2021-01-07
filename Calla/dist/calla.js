@@ -6355,99 +6355,51 @@ var Calla = (function (exports) {
     const isOculusGo = isOculus && /pacific/.test(navigator.userAgent);
     const isOculusQuest = isOculus && /quest/.test(navigator.userAgent);
 
-    /**
-     * Removes a given item from an array, returning true if the item was removed.
-     */
-    function arrayRemove(arr, value) {
-        const idx = arr.indexOf(value);
-        if (idx > -1) {
-            arrayRemoveAt(arr, idx);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Performs a binary search on a list to find where the item should be inserted.
-     *
-     * If the item is found, the returned index will be an exact integer.
-     *
-     * If the item is not found, the returned insertion index will be 0.5 greater than
-     * the index at which it should be inserted.
-     */
-    function arrayBinarySearch(arr, item) {
-        let left = 0;
-        let right = arr.length;
-        let idx = Math.floor((left + right) / 2);
-        let found = false;
-        while (left < right && idx < arr.length) {
-            const compareTo = arr[idx];
-            if (!isNullOrUndefined(compareTo)
-                && item < compareTo) {
-                right = idx;
-            }
-            else {
-                if (item === compareTo) {
-                    found = true;
-                }
-                left = idx + 1;
-            }
-            idx = Math.floor((left + right) / 2);
-        }
-        if (!found) {
-            idx += 0.5;
-        }
-        return idx;
-    }
-
-    /**
-     * Performs an insert operation that maintains the sort
-     * order of the array, returning the index at which the
-     * item was inserted.
-     */
-    function arraySortedInsert(arr, item, allowDuplicates = true) {
-        let idx = arrayBinarySearch(arr, item);
-        const found = (idx % 1) === 0;
-        idx = idx | 0;
-        if (!found || allowDuplicates) {
-            arr.splice(idx, 0, item);
-        }
-        return idx;
-    }
-
-    const gestures = [
-        "change",
-        "click",
-        "contextmenu",
-        "dblclick",
-        "mouseup",
-        "pointerup",
-        "reset",
-        "submit",
-        "touchend"
-    ];
-    function identityPromise() {
-        return Promise.resolve();
-    }
-    /**
-     * This is not an event handler that you can add to an element. It's a global event that
-     * waits for the user to perform some sort of interaction with the website.
-      */
-    function onUserGesture(callback, test) {
-        const realTest = isNullOrUndefined(test)
-            ? identityPromise
-            : test;
-        const check = async (evt) => {
-            if (evt.isTrusted && await realTest()) {
-                for (const gesture of gestures) {
-                    window.removeEventListener(gesture, check);
-                }
-                callback();
-            }
+    function add(a, b) {
+        return async (v) => {
+            await a(v);
+            await b(v);
         };
-        for (const gesture of gestures) {
-            window.addEventListener(gesture, check);
+    }
+
+    function once(target, resolveEvt, rejectEvt, timeout) {
+        if (timeout == null
+            && isGoodNumber(rejectEvt)) {
+            timeout = rejectEvt;
+            rejectEvt = undefined;
         }
+        const hasResolveEvt = isString(resolveEvt);
+        const hasRejectEvt = isString(rejectEvt);
+        const hasTimeout = timeout != null;
+        return new Promise((resolve, reject) => {
+            if (hasResolveEvt) {
+                const remove = () => {
+                    target.removeEventListener(resolveEvt, resolve);
+                };
+                resolve = add(remove, resolve);
+                reject = add(remove, reject);
+            }
+            if (hasRejectEvt) {
+                const remove = () => {
+                    target.removeEventListener(rejectEvt, reject);
+                };
+                resolve = add(remove, resolve);
+                reject = add(remove, reject);
+            }
+            if (hasTimeout) {
+                const timer = setTimeout(reject, timeout, `'${resolveEvt}' has timed out.`), cancel = () => clearTimeout(timer);
+                resolve = add(cancel, resolve);
+                reject = add(cancel, reject);
+            }
+            if (hasResolveEvt) {
+                target.addEventListener(resolveEvt, resolve);
+            }
+            if (hasRejectEvt) {
+                target.addEventListener(rejectEvt, () => {
+                    reject("Rejection event found");
+                });
+            }
+        });
     }
 
     /**
@@ -6652,53 +6604,6 @@ var Calla = (function (exports) {
     function Audio(...rest) { return tag("audio", ...rest); }
     function Canvas(...rest) { return tag("canvas", ...rest); }
     function Script(...rest) { return tag("script", ...rest); }
-
-    function add(a, b) {
-        return async (v) => {
-            await a(v);
-            await b(v);
-        };
-    }
-
-    function once(target, resolveEvt, rejectEvt, timeout) {
-        if (timeout == null
-            && isGoodNumber(rejectEvt)) {
-            timeout = rejectEvt;
-            rejectEvt = undefined;
-        }
-        const hasResolveEvt = isString(resolveEvt);
-        const hasRejectEvt = isString(rejectEvt);
-        const hasTimeout = timeout != null;
-        return new Promise((resolve, reject) => {
-            if (hasResolveEvt) {
-                const remove = () => {
-                    target.removeEventListener(resolveEvt, resolve);
-                };
-                resolve = add(remove, resolve);
-                reject = add(remove, reject);
-            }
-            if (hasRejectEvt) {
-                const remove = () => {
-                    target.removeEventListener(rejectEvt, reject);
-                };
-                resolve = add(remove, resolve);
-                reject = add(remove, reject);
-            }
-            if (hasTimeout) {
-                const timer = setTimeout(reject, timeout, `'${resolveEvt}' has timed out.`), cancel = () => clearTimeout(timer);
-                resolve = add(cancel, resolve);
-                reject = add(cancel, reject);
-            }
-            if (hasResolveEvt) {
-                target.addEventListener(resolveEvt, resolve);
-            }
-            if (hasRejectEvt) {
-                target.addEventListener(rejectEvt, () => {
-                    reject("Rejection event found");
-                });
-            }
-        });
-    }
 
     const hasOffscreenCanvas = "OffscreenCanvas" in globalThis;
     const hasImageBitmap = "createImageBitmap" in globalThis;
@@ -7423,6 +7328,101 @@ var Calla = (function (exports) {
         }
         async renderImageBitmapFace(readData, faceName, interpolation, maxWidth, onProgress) {
             return await renderImageBitmapFace(readData, faceName, interpolation, maxWidth, onProgress);
+        }
+    }
+
+    /**
+     * Removes a given item from an array, returning true if the item was removed.
+     */
+    function arrayRemove(arr, value) {
+        const idx = arr.indexOf(value);
+        if (idx > -1) {
+            arrayRemoveAt(arr, idx);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Performs a binary search on a list to find where the item should be inserted.
+     *
+     * If the item is found, the returned index will be an exact integer.
+     *
+     * If the item is not found, the returned insertion index will be 0.5 greater than
+     * the index at which it should be inserted.
+     */
+    function arrayBinarySearch(arr, item) {
+        let left = 0;
+        let right = arr.length;
+        let idx = Math.floor((left + right) / 2);
+        let found = false;
+        while (left < right && idx < arr.length) {
+            const compareTo = arr[idx];
+            if (!isNullOrUndefined(compareTo)
+                && item < compareTo) {
+                right = idx;
+            }
+            else {
+                if (item === compareTo) {
+                    found = true;
+                }
+                left = idx + 1;
+            }
+            idx = Math.floor((left + right) / 2);
+        }
+        if (!found) {
+            idx += 0.5;
+        }
+        return idx;
+    }
+
+    /**
+     * Performs an insert operation that maintains the sort
+     * order of the array, returning the index at which the
+     * item was inserted.
+     */
+    function arraySortedInsert(arr, item, allowDuplicates = true) {
+        let idx = arrayBinarySearch(arr, item);
+        const found = (idx % 1) === 0;
+        idx = idx | 0;
+        if (!found || allowDuplicates) {
+            arr.splice(idx, 0, item);
+        }
+        return idx;
+    }
+
+    const gestures = [
+        "change",
+        "click",
+        "contextmenu",
+        "dblclick",
+        "mouseup",
+        "pointerup",
+        "reset",
+        "submit",
+        "touchend"
+    ];
+    function identityPromise() {
+        return Promise.resolve();
+    }
+    /**
+     * This is not an event handler that you can add to an element. It's a global event that
+     * waits for the user to perform some sort of interaction with the website.
+      */
+    function onUserGesture(callback, test) {
+        const realTest = isNullOrUndefined(test)
+            ? identityPromise
+            : test;
+        const check = async (evt) => {
+            if (evt.isTrusted && await realTest()) {
+                for (const gesture of gestures) {
+                    window.removeEventListener(gesture, check);
+                }
+                callback();
+            }
+        };
+        for (const gesture of gestures) {
+            window.addEventListener(gesture, check);
         }
     }
 
@@ -13557,9 +13557,8 @@ var Calla = (function (exports) {
     let loggingEnabled = window.location.hostname === "localhost"
         || /\bdebug\b/.test(window.location.search);
     class BaseTeleconferenceClient extends TypedEventBase {
-        constructor(fetcher) {
+        constructor(fetcher, audio) {
             super();
-            this.fetcher = fetcher;
             this.localUserID = null;
             this.localUserName = null;
             this.roomName = null;
@@ -13568,7 +13567,8 @@ var Calla = (function (exports) {
             this._conferenceState = ConnectionState.Disconnected;
             this.hasAudioPermission = false;
             this.hasVideoPermission = false;
-            this.audio = new AudioManager(fetcher, isOculusQuest
+            this.fetcher = fetcher || new Fetcher();
+            this.audio = audio || new AudioManager(fetcher, isOculusQuest
                 ? SpatializerType.High
                 : SpatializerType.Medium);
             this.addEventListener("serverConnected", this.setConnectionState.bind(this, ConnectionState.Connected));
@@ -13870,8 +13870,8 @@ var Calla = (function (exports) {
         }
     }
     class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
-        constructor(fetcher) {
-            super(fetcher);
+        constructor(fetcher, audio) {
+            super(fetcher, audio);
             this.usingDefaultMetadataClient = false;
             this.host = null;
             this.bridgeHost = null;
@@ -13983,11 +13983,11 @@ var Calla = (function (exports) {
                     this._on(this.conference, evtName, () => {
                         this.dispatchEvent(new EvtClass());
                         if (extra) {
-                            extra();
+                            extra(evtName);
                         }
                     });
                 };
-                const onLeft = async () => {
+                const onLeft = async (evtName) => {
                     this.localUserID = DEFAULT_LOCAL_USER_ID;
                     if (this.tracks.size > 0) {
                         console.warn("><> CALLA <>< ---- there are leftover conference tracks");
@@ -14002,6 +14002,7 @@ var Calla = (function (exports) {
                         this._off(this.conference);
                         this.conference = null;
                     }
+                    console.info(`Left room '${roomName}'. Reason: ${evtName}.`);
                 };
                 fwd(conferenceEvents.CONFERENCE_ERROR, CallaConferenceFailedEvent, onLeft);
                 fwd(conferenceEvents.CONFERENCE_FAILED, CallaConferenceFailedEvent, onLeft);
@@ -14013,7 +14014,7 @@ var Calla = (function (exports) {
                         this.dispatchEvent(new CallaConferenceJoinedEvent(userID, null));
                     }
                 });
-                this._on(this.conference, conferenceEvents.CONFERENCE_LEFT, onLeft);
+                this._on(this.conference, conferenceEvents.CONFERENCE_LEFT, () => onLeft(conferenceEvents.CONFERENCE_LEFT));
                 this._on(this.conference, conferenceEvents.USER_JOINED, (id, jitsiUser) => {
                     this.dispatchEvent(new CallaParticipantJoinedEvent(id, decodeUserName(jitsiUser.getDisplayName()), null));
                 });
@@ -14112,40 +14113,26 @@ var Calla = (function (exports) {
             }
         }
         async leave() {
-            if (this.conferenceState === ConnectionState.Connecting) {
-                await waitFor(() => this.conferenceState === ConnectionState.Connected);
+            await super.leave();
+            try {
+                await this.tryRemoveTrack(this.localUserID, StreamType.Video);
+                await this.tryRemoveTrack(this.localUserID, StreamType.Audio);
+                const leaveTask = once(this, "conferenceLeft");
+                this.conference.leave();
+                await leaveTask;
             }
-            if (this.conferenceState === ConnectionState.Disconnecting) {
-                await waitFor(() => this.conferenceState === ConnectionState.Disconnected);
-            }
-            else if (this.conferenceState === ConnectionState.Connected) {
-                await super.leave();
-                try {
-                    await this.tryRemoveTrack(this.localUserID, StreamType.Video);
-                    await this.tryRemoveTrack(this.localUserID, StreamType.Audio);
-                    const leaveTask = once(this, "conferenceLeft");
-                    this.conference.leave();
-                    await leaveTask;
-                }
-                catch (exp) {
-                    console.warn("><> CALLA <>< ---- Failed to leave teleconference.", exp);
-                }
+            catch (exp) {
+                console.warn("><> CALLA <>< ---- Failed to leave teleconference.", exp);
             }
         }
         async disconnect() {
-            if (this.connectionState === ConnectionState.Connecting) {
-                await waitFor(() => this.connectionState === ConnectionState.Connected);
-            }
-            if (this.connectionState === ConnectionState.Disconnecting) {
-                await waitFor(() => this.connectionState === ConnectionState.Disconnected);
-            }
-            else if (this.connectionState === ConnectionState.Connected) {
-                await super.disconnect();
+            await super.disconnect();
+            if (this.conferenceState === ConnectionState.Connected) {
                 await this.leave();
-                const disconnectTask = once(this, "serverDisconnected");
-                this.connection.disconnect();
-                await disconnectTask;
             }
+            const disconnectTask = once(this, "serverDisconnected");
+            this.connection.disconnect();
+            await disconnectTask;
         }
         userExists(id) {
             return this.conference
@@ -14291,17 +14278,14 @@ var Calla = (function (exports) {
     })(ClientState || (ClientState = {}));
     const audioActivityEvt$2 = new AudioActivityEvent();
     class Calla extends TypedEventBase {
-        constructor(fetcher, TeleClientType, MetaClientType) {
+        constructor(fetcher, audio, TeleClientType, MetaClientType) {
             super();
             this.isAudioMuted = null;
             this.isVideoMuted = null;
-            if (isNullOrUndefined(fetcher)) {
-                fetcher = new Fetcher();
-            }
             if (isNullOrUndefined(TeleClientType)) {
                 TeleClientType = JitsiTeleconferenceClient;
             }
-            this.tele = new TeleClientType(fetcher);
+            this.tele = new TeleClientType(fetcher, audio);
             if (isNullOrUndefined(MetaClientType)) {
                 this.meta = this.tele.getDefaultMetadataClient();
             }

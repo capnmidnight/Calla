@@ -1,6 +1,6 @@
 import type { Emoji } from "kudzu/emoji/Emoji";
 import { TypedEventBase } from "kudzu/events/EventBase";
-import { IFetcher } from "kudzu/io/IFetcher";
+import type { IFetcher } from "kudzu/io/IFetcher";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
 import type { IDisposable } from "kudzu/using";
 import type { AudioManager } from "./audio/AudioManager";
@@ -32,7 +32,7 @@ export declare class Calla extends TypedEventBase<CallaClientEvents> implements 
     isVideoMuted: boolean;
     tele: ITeleconferenceClientExt;
     meta: IMetadataClientExt;
-    constructor(fetcher?: IFetcher, TeleClientType?: new (fetcher?: IFetcher) => ITeleconferenceClientExt, MetaClientType?: new (tele: ITeleconferenceClient) => IMetadataClientExt);
+    constructor(fetcher?: IFetcher, audio?: AudioManager, TeleClientType?: new (fetcher?: IFetcher, audio?: AudioManager) => ITeleconferenceClientExt, MetaClientType?: new (tele: ITeleconferenceClient) => IMetadataClientExt);
     get connectionState(): ConnectionState;
     get conferenceState(): ConnectionState;
     get audio(): AudioManager;

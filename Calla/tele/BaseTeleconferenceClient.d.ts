@@ -11,12 +11,12 @@ import type { ITeleconferenceClientExt } from "./ITeleconferenceClient";
 export declare function addLogger(obj: ErsatzEventTarget, evtName: string): void;
 export declare const DEFAULT_LOCAL_USER_ID = "local-user";
 export declare abstract class BaseTeleconferenceClient extends TypedEventBase<CallaTeleconferenceEvents> implements ITeleconferenceClientExt {
-    protected fetcher: IFetcher;
     toggleLogging(): void;
     localUserID: string;
     localUserName: string;
     roomName: string;
     protected _prepared: boolean;
+    protected fetcher: IFetcher;
     audio: AudioManager;
     private _connectionState;
     private _conferenceState;
@@ -24,7 +24,7 @@ export declare abstract class BaseTeleconferenceClient extends TypedEventBase<Ca
     private setConnectionState;
     get conferenceState(): ConnectionState;
     private setConferenceState;
-    constructor(fetcher: IFetcher);
+    constructor(fetcher: IFetcher, audio?: AudioManager);
     dispatchEvent<K extends string & keyof CallaTeleconferenceEvents>(evt: CallaTeleconferenceEvents[K] & Event): boolean;
     getNext<T extends keyof CallaTeleconferenceEvents>(evtName: T, userID: string): Promise<CallaTeleconferenceEvents[T]>;
     get preferredAudioInputID(): string;

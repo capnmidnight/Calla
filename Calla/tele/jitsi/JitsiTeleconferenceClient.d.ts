@@ -1,5 +1,6 @@
 import { IFetcher } from "kudzu/io/IFetcher";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
+import { AudioManager } from "../../audio/AudioManager";
 import type JitsiConference from "../../lib-jitsi-meet/JitsiConference";
 import type { IMetadataClientExt } from "../../meta/IMetadataClient";
 import { BaseTeleconferenceClient } from "../BaseTeleconferenceClient";
@@ -12,7 +13,7 @@ export declare class JitsiTeleconferenceClient extends BaseTeleconferenceClient 
     conference: JitsiConference;
     private tracks;
     private listenersForObjs;
-    constructor(fetcher?: IFetcher);
+    constructor(fetcher?: IFetcher, audio?: AudioManager);
     private _on;
     private _off;
     getDefaultMetadataClient(): IMetadataClientExt;

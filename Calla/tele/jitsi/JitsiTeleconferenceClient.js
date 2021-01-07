@@ -1,6 +1,5 @@
 import { arrayClear } from "kudzu/arrays/arrayClear";
 import { once } from "kudzu/events/once";
-import { waitFor } from "kudzu/events/waitFor";
 import { splitProgress } from "kudzu/tasks/splitProgress";
 import { using } from "kudzu/using";
 import { CallaAudioStreamAddedEvent, CallaAudioStreamRemovedEvent, CallaConferenceFailedEvent, CallaConferenceJoinedEvent, CallaConferenceLeftEvent, CallaParticipantJoinedEvent, CallaParticipantLeftEvent, CallaParticipantNameChangeEvent, CallaTeleconferenceServerConnectedEvent, CallaTeleconferenceServerDisconnectedEvent, CallaTeleconferenceServerFailedEvent, CallaUserAudioMutedEvent, CallaUserVideoMutedEvent, CallaVideoStreamAddedEvent, CallaVideoStreamRemovedEvent, StreamType } from "../../CallaEvents";
@@ -25,8 +24,8 @@ function decodeUserName(v) {
     }
 }
 export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
-    constructor(fetcher) {
-        super(fetcher);
+    constructor(fetcher, audio) {
+        super(fetcher, audio);
         this.usingDefaultMetadataClient = false;
         this.host = null;
         this.bridgeHost = null;
@@ -141,11 +140,11 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
                 this._on(this.conference, evtName, () => {
                     this.dispatchEvent(new EvtClass());
                     if (extra) {
-                        extra();
+                        extra(evtName);
                     }
                 });
             };
-            const onLeft = async () => {
+            const onLeft = async (evtName) => {
                 this.localUserID = DEFAULT_LOCAL_USER_ID;
                 if (this.tracks.size > 0) {
                     console.warn("><> CALLA <>< ---- there are leftover conference tracks");
@@ -160,6 +159,7 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
                     this._off(this.conference);
                     this.conference = null;
                 }
+                console.info(`Left room '${roomName}'. Reason: ${evtName}.`);
             };
             fwd(conferenceEvents.CONFERENCE_ERROR, CallaConferenceFailedEvent, onLeft);
             fwd(conferenceEvents.CONFERENCE_FAILED, CallaConferenceFailedEvent, onLeft);
@@ -171,7 +171,7 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
                     this.dispatchEvent(new CallaConferenceJoinedEvent(userID, null));
                 }
             });
-            this._on(this.conference, conferenceEvents.CONFERENCE_LEFT, onLeft);
+            this._on(this.conference, conferenceEvents.CONFERENCE_LEFT, () => onLeft(conferenceEvents.CONFERENCE_LEFT));
             this._on(this.conference, conferenceEvents.USER_JOINED, (id, jitsiUser) => {
                 this.dispatchEvent(new CallaParticipantJoinedEvent(id, decodeUserName(jitsiUser.getDisplayName()), null));
             });
@@ -270,40 +270,26 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
         }
     }
     async leave() {
-        if (this.conferenceState === ConnectionState.Connecting) {
-            await waitFor(() => this.conferenceState === ConnectionState.Connected);
+        await super.leave();
+        try {
+            await this.tryRemoveTrack(this.localUserID, StreamType.Video);
+            await this.tryRemoveTrack(this.localUserID, StreamType.Audio);
+            const leaveTask = once(this, "conferenceLeft");
+            this.conference.leave();
+            await leaveTask;
         }
-        if (this.conferenceState === ConnectionState.Disconnecting) {
-            await waitFor(() => this.conferenceState === ConnectionState.Disconnected);
-        }
-        else if (this.conferenceState === ConnectionState.Connected) {
-            await super.leave();
-            try {
-                await this.tryRemoveTrack(this.localUserID, StreamType.Video);
-                await this.tryRemoveTrack(this.localUserID, StreamType.Audio);
-                const leaveTask = once(this, "conferenceLeft");
-                this.conference.leave();
-                await leaveTask;
-            }
-            catch (exp) {
-                console.warn("><> CALLA <>< ---- Failed to leave teleconference.", exp);
-            }
+        catch (exp) {
+            console.warn("><> CALLA <>< ---- Failed to leave teleconference.", exp);
         }
     }
     async disconnect() {
-        if (this.connectionState === ConnectionState.Connecting) {
-            await waitFor(() => this.connectionState === ConnectionState.Connected);
-        }
-        if (this.connectionState === ConnectionState.Disconnecting) {
-            await waitFor(() => this.connectionState === ConnectionState.Disconnected);
-        }
-        else if (this.connectionState === ConnectionState.Connected) {
-            await super.disconnect();
+        await super.disconnect();
+        if (this.conferenceState === ConnectionState.Connected) {
             await this.leave();
-            const disconnectTask = once(this, "serverDisconnected");
-            this.connection.disconnect();
-            await disconnectTask;
         }
+        const disconnectTask = once(this, "serverDisconnected");
+        this.connection.disconnect();
+        await disconnectTask;
     }
     userExists(id) {
         return this.conference
