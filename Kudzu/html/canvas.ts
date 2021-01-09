@@ -1,3 +1,4 @@
+import { openWindow } from "../testing/windowing";
 import { isNullOrUndefined } from "../typeChecks";
 import { height, width } from "./attrs";
 import { Canvas } from "./tags";
@@ -238,4 +239,17 @@ export function resizeContext(ctx: CanvasRenderingContext2D, superscale = 1) {
         ctx.canvas.clientWidth,
         ctx.canvas.clientHeight,
         superscale);
+}
+
+(HTMLCanvasElement.prototype as any).view = function (this: HTMLCanvasElement) {
+    const url = this.toDataURL();
+    openWindow(url, 0, 0, this.width + 10, this.height + 100);
+};
+
+if (hasOffscreenCanvas) {
+    (OffscreenCanvas.prototype as any).view =async function (this: OffscreenCanvas) {
+        const blob = await this.convertToBlob();
+        const url = URL.createObjectURL(blob);
+        openWindow(url, 0, 0, this.width + 10, this.height + 100);
+    };
 }

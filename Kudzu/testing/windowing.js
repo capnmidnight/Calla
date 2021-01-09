@@ -14,7 +14,7 @@ window.addEventListener("unload", () => {
  * @param width - the screen size horizontal component
  * @param height - the screen size vertical component
  */
-function openWindow(href, x, y, width, height) {
+export function openWindow(href, x, y, width, height) {
     const w = window.open(href, "_blank", `left=${x},top=${y},width=${width},height=${height}`);
     if (w) {
         windows.push(w);
