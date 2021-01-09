@@ -8,6 +8,18 @@
         return arr.splice(idx, 1)[0];
     }
 
+    /**
+     * Removes a given item from an array, returning true if the item was removed.
+     */
+    function arrayRemove(arr, value) {
+        const idx = arr.indexOf(value);
+        if (idx > -1) {
+            arrayRemoveAt(arr, idx);
+            return true;
+        }
+        return false;
+    }
+
     function t(o, s, c) {
         return typeof o === s
             || o instanceof c;
@@ -50,6 +62,54 @@
     function isNullOrUndefined(obj) {
         return obj === null
             || obj === undefined;
+    }
+
+    /**
+     * Performs a binary search on a list to find where the item should be inserted.
+     *
+     * If the item is found, the returned index will be an exact integer.
+     *
+     * If the item is not found, the returned insertion index will be 0.5 greater than
+     * the index at which it should be inserted.
+     */
+    function arrayBinarySearch(arr, item) {
+        let left = 0;
+        let right = arr.length;
+        let idx = Math.floor((left + right) / 2);
+        let found = false;
+        while (left < right && idx < arr.length) {
+            const compareTo = arr[idx];
+            if (!isNullOrUndefined(compareTo)
+                && item < compareTo) {
+                right = idx;
+            }
+            else {
+                if (item === compareTo) {
+                    found = true;
+                }
+                left = idx + 1;
+            }
+            idx = Math.floor((left + right) / 2);
+        }
+        if (!found) {
+            idx += 0.5;
+        }
+        return idx;
+    }
+
+    /**
+     * Performs an insert operation that maintains the sort
+     * order of the array, returning the index at which the
+     * item was inserted.
+     */
+    function arraySortedInsert(arr, item, allowDuplicates = true) {
+        let idx = arrayBinarySearch(arr, item);
+        const found = (idx % 1) === 0;
+        idx = idx | 0;
+        if (!found || allowDuplicates) {
+            arr.splice(idx, 0, item);
+        }
+        return idx;
     }
 
     class EventBase {
@@ -129,51 +189,39 @@
         }
     }
 
-    function add(a, b) {
-        return async (v) => {
-            await a(v);
-            await b(v);
-        };
+    const gestures = [
+        "change",
+        "click",
+        "contextmenu",
+        "dblclick",
+        "mouseup",
+        "pointerup",
+        "reset",
+        "submit",
+        "touchend"
+    ];
+    function identityPromise() {
+        return Promise.resolve();
     }
-
-    function once(target, resolveEvt, rejectEvt, timeout) {
-        if (timeout == null
-            && isGoodNumber(rejectEvt)) {
-            timeout = rejectEvt;
-            rejectEvt = undefined;
+    /**
+     * This is not an event handler that you can add to an element. It's a global event that
+     * waits for the user to perform some sort of interaction with the website.
+      */
+    function onUserGesture(callback, test) {
+        const realTest = isNullOrUndefined(test)
+            ? identityPromise
+            : test;
+        const check = async (evt) => {
+            if (evt.isTrusted && await realTest()) {
+                for (const gesture of gestures) {
+                    window.removeEventListener(gesture, check);
+                }
+                callback();
+            }
+        };
+        for (const gesture of gestures) {
+            window.addEventListener(gesture, check);
         }
-        const hasResolveEvt = isString(resolveEvt);
-        const hasRejectEvt = isString(rejectEvt);
-        const hasTimeout = timeout != null;
-        return new Promise((resolve, reject) => {
-            if (hasResolveEvt) {
-                const remove = () => {
-                    target.removeEventListener(resolveEvt, resolve);
-                };
-                resolve = add(remove, resolve);
-                reject = add(remove, reject);
-            }
-            if (hasRejectEvt) {
-                const remove = () => {
-                    target.removeEventListener(rejectEvt, reject);
-                };
-                resolve = add(remove, resolve);
-                reject = add(remove, reject);
-            }
-            if (hasTimeout) {
-                const timer = setTimeout(reject, timeout, `'${resolveEvt}' has timed out.`), cancel = () => clearTimeout(timer);
-                resolve = add(cancel, resolve);
-                reject = add(cancel, reject);
-            }
-            if (hasResolveEvt) {
-                target.addEventListener(resolveEvt, resolve);
-            }
-            if (hasRejectEvt) {
-                target.addEventListener(rejectEvt, () => {
-                    reject("Rejection event found");
-                });
-            }
-        });
     }
 
     function waitFor(test) {
@@ -502,6 +550,78 @@
         return Div(styles(margin("auto")), ...rest);
     }
 
+    function add(a, b) {
+        return async (v) => {
+            await a(v);
+            await b(v);
+        };
+    }
+
+    function once(target, resolveEvt, rejectEvt, timeout) {
+        if (timeout == null
+            && isGoodNumber(rejectEvt)) {
+            timeout = rejectEvt;
+            rejectEvt = undefined;
+        }
+        const hasResolveEvt = isString(resolveEvt);
+        const hasRejectEvt = isString(rejectEvt);
+        const hasTimeout = timeout != null;
+        return new Promise((resolve, reject) => {
+            if (hasResolveEvt) {
+                const remove = () => {
+                    target.removeEventListener(resolveEvt, resolve);
+                };
+                resolve = add(remove, resolve);
+                reject = add(remove, reject);
+            }
+            if (hasRejectEvt) {
+                const remove = () => {
+                    target.removeEventListener(rejectEvt, reject);
+                };
+                resolve = add(remove, resolve);
+                reject = add(remove, reject);
+            }
+            if (hasTimeout) {
+                const timer = setTimeout(reject, timeout, `'${resolveEvt}' has timed out.`), cancel = () => clearTimeout(timer);
+                resolve = add(cancel, resolve);
+                reject = add(cancel, reject);
+            }
+            if (hasResolveEvt) {
+                target.addEventListener(resolveEvt, resolve);
+            }
+            if (hasRejectEvt) {
+                target.addEventListener(rejectEvt, () => {
+                    reject("Rejection event found");
+                });
+            }
+        });
+    }
+
+    const loc = new URL(document.location.href);
+    const testNumber = loc.searchParams.get("testUserNumber");
+
+    const windows = [];
+    // Closes all the windows.
+    window.addEventListener("unload", () => {
+        for (const w of windows) {
+            w.close();
+        }
+    });
+    /**
+     * Opens a window that will be closed when the window that opened it is closed.
+     * @param href - the location to load in the window
+     * @param x - the screen position horizontal component
+     * @param y - the screen position vertical component
+     * @param width - the screen size horizontal component
+     * @param height - the screen size vertical component
+     */
+    function openWindow(href, x, y, width, height) {
+        const w = window.open(href, "_blank", `left=${x},top=${y},width=${width},height=${height}`);
+        if (w) {
+            windows.push(w);
+        }
+    }
+
     const hasOffscreenCanvas = "OffscreenCanvas" in globalThis;
     const hasImageBitmap = "createImageBitmap" in globalThis;
     const hasOffscreenCanvasRenderingContext2D = hasOffscreenCanvas && (function () {
@@ -653,6 +773,17 @@
      */
     function resizeCanvas(canv, superscale = 1) {
         return setCanvasSize(canv, canv.clientWidth, canv.clientHeight, superscale);
+    }
+    HTMLCanvasElement.prototype.view = function () {
+        const url = this.toDataURL();
+        openWindow(url, 0, 0, this.width + 10, this.height + 100);
+    };
+    if (hasOffscreenCanvas) {
+        OffscreenCanvas.prototype.view = async function () {
+            const blob = await this.convertToBlob();
+            const url = URL.createObjectURL(blob);
+            openWindow(url, 0, 0, this.width + 10, this.height + 100);
+        };
     }
 
     const Tau = 2 * Math.PI;
@@ -1320,2788 +1451,10 @@
     }
 
     /**
-     * Indicates whether or not the current browser can change the destination device for audio output.
-     **/
-    const canChangeAudioOutput = isFunction(HTMLAudioElement.prototype.setSinkId);
-
-    var ConnectionState;
-    (function (ConnectionState) {
-        ConnectionState["Disconnected"] = "Disconnected";
-        ConnectionState["Connecting"] = "Connecting";
-        ConnectionState["Connected"] = "Connected";
-        ConnectionState["Disconnecting"] = "Disconnecting";
-    })(ConnectionState || (ConnectionState = {}));
-
-    /**
      * Empties out an array, returning the items that were in the array.
      */
     function arrayClear(arr) {
         return arr.splice(0);
-    }
-
-    /**
-     * Unicode-standardized pictograms.
-     **/
-    class Emoji {
-        /**
-         * Creates a new Unicode-standardized pictograms.
-         * @param value - a Unicode sequence.
-         * @param desc - an English text description of the pictogram.
-         * @param props - an optional set of properties to store with the emoji.
-         */
-        constructor(value, desc, props = null) {
-            this.value = value;
-            this.desc = desc;
-            this.value = value;
-            this.desc = desc;
-            this.props = props || {};
-        }
-        /**
-         * Determines of the provided Emoji or EmojiGroup is a subset of
-         * this emoji.
-         */
-        contains(e) {
-            if (e instanceof Emoji) {
-                return this.contains(e.value);
-            }
-            else {
-                return this.value.indexOf(e) >= 0;
-            }
-        }
-    }
-
-    class CallaEvent extends Event {
-        constructor(eventType) {
-            super(eventType);
-            this.eventType = eventType;
-        }
-    }
-    class CallaTeleconferenceServerConnectedEvent extends CallaEvent {
-        constructor() {
-            super("serverConnected");
-        }
-    }
-    class CallaTeleconferenceServerDisconnectedEvent extends CallaEvent {
-        constructor() {
-            super("serverDisconnected");
-        }
-    }
-    class CallaTeleconferenceServerFailedEvent extends CallaEvent {
-        constructor() {
-            super("serverFailed");
-        }
-    }
-    class CallaUserEvent extends CallaEvent {
-        constructor(type, id) {
-            super(type);
-            this.id = id;
-        }
-    }
-    class CallaParticipantEvent extends CallaUserEvent {
-        constructor(type, id, displayName) {
-            super(type, id);
-            this.displayName = displayName;
-        }
-    }
-    class CallaConferenceJoinedEvent extends CallaUserEvent {
-        constructor(id, pose) {
-            super("conferenceJoined", id);
-            this.pose = pose;
-        }
-    }
-    class CallaConferenceLeftEvent extends CallaUserEvent {
-        constructor(id) {
-            super("conferenceLeft", id);
-        }
-    }
-    class CallaConferenceFailedEvent extends CallaEvent {
-        constructor() {
-            super("conferenceFailed");
-        }
-    }
-    class CallaParticipantJoinedEvent extends CallaParticipantEvent {
-        constructor(id, displayName, source) {
-            super("participantJoined", id, displayName);
-            this.source = source;
-        }
-    }
-    class CallaParticipantLeftEvent extends CallaUserEvent {
-        constructor(id) {
-            super("participantLeft", id);
-        }
-    }
-    class CallaParticipantNameChangeEvent extends CallaParticipantEvent {
-        constructor(id, displayName) {
-            super("userNameChanged", id, displayName);
-        }
-    }
-    class CallaUserMutedEvent extends CallaUserEvent {
-        constructor(type, id, muted) {
-            super(type, id);
-            this.muted = muted;
-        }
-    }
-    class CallaUserAudioMutedEvent extends CallaUserMutedEvent {
-        constructor(id, muted) {
-            super("audioMuteStatusChanged", id, muted);
-        }
-    }
-    class CallaUserVideoMutedEvent extends CallaUserMutedEvent {
-        constructor(id, muted) {
-            super("videoMuteStatusChanged", id, muted);
-        }
-    }
-    var StreamType;
-    (function (StreamType) {
-        StreamType["Audio"] = "audio";
-        StreamType["Video"] = "video";
-    })(StreamType || (StreamType = {}));
-    var StreamOpType;
-    (function (StreamOpType) {
-        StreamOpType["Added"] = "added";
-        StreamOpType["Removed"] = "removed";
-        StreamOpType["Changed"] = "changed";
-    })(StreamOpType || (StreamOpType = {}));
-    class CallaStreamEvent extends CallaUserEvent {
-        constructor(type, kind, op, id, stream) {
-            super(type, id);
-            this.kind = kind;
-            this.op = op;
-            this.stream = stream;
-        }
-    }
-    class CallaStreamAddedEvent extends CallaStreamEvent {
-        constructor(type, kind, id, stream) {
-            super(type, kind, StreamOpType.Added, id, stream);
-        }
-    }
-    class CallaStreamRemovedEvent extends CallaStreamEvent {
-        constructor(type, kind, id, stream) {
-            super(type, kind, StreamOpType.Removed, id, stream);
-        }
-    }
-    class CallaAudioStreamAddedEvent extends CallaStreamAddedEvent {
-        constructor(id, stream) {
-            super("audioAdded", StreamType.Audio, id, stream);
-        }
-    }
-    class CallaAudioStreamRemovedEvent extends CallaStreamRemovedEvent {
-        constructor(id, stream) {
-            super("audioRemoved", StreamType.Audio, id, stream);
-        }
-    }
-    class CallaVideoStreamAddedEvent extends CallaStreamAddedEvent {
-        constructor(id, stream) {
-            super("videoAdded", StreamType.Video, id, stream);
-        }
-    }
-    class CallaVideoStreamRemovedEvent extends CallaStreamRemovedEvent {
-        constructor(id, stream) {
-            super("videoRemoved", StreamType.Video, id, stream);
-        }
-    }
-    class CallaPoseEvent extends CallaUserEvent {
-        constructor(type, id, px, py, pz, fx, fy, fz, ux, uy, uz) {
-            super(type, id);
-            this.px = px;
-            this.py = py;
-            this.pz = pz;
-            this.fx = fx;
-            this.fy = fy;
-            this.fz = fz;
-            this.ux = ux;
-            this.uy = uy;
-            this.uz = uz;
-        }
-        set(px, py, pz, fx, fy, fz, ux, uy, uz) {
-            this.px = px;
-            this.py = py;
-            this.pz = pz;
-            this.fx = fx;
-            this.fy = fy;
-            this.fz = fz;
-            this.ux = ux;
-            this.uy = uy;
-            this.uz = uz;
-        }
-    }
-    class CallaUserPosedEvent extends CallaPoseEvent {
-        constructor(id, px, py, pz, fx, fy, fz, ux, uy, uz) {
-            super("userPosed", id, px, py, pz, fx, fy, fz, ux, uy, uz);
-        }
-    }
-    class CallaUserPointerEvent extends CallaPoseEvent {
-        constructor(id, name, px, py, pz, fx, fy, fz, ux, uy, uz) {
-            super("userPointer", id, px, py, pz, fx, fy, fz, ux, uy, uz);
-            this.name = name;
-        }
-    }
-    class CallaEmojiEvent extends CallaUserEvent {
-        constructor(type, id, emoji) {
-            super(type, id);
-            if (emoji instanceof Emoji) {
-                this.emoji = emoji.value;
-            }
-            else {
-                this.emoji = emoji;
-            }
-        }
-    }
-    class CallaEmoteEvent extends CallaEmojiEvent {
-        constructor(id, emoji) {
-            super("emote", id, emoji);
-        }
-    }
-    class CallaEmojiAvatarEvent extends CallaEmojiEvent {
-        constructor(id, emoji) {
-            super("setAvatarEmoji", id, emoji);
-        }
-    }
-    class CallaAvatarChangedEvent extends CallaUserEvent {
-        constructor(id, url) {
-            super("avatarChanged", id);
-            this.url = url;
-        }
-    }
-    class CallaChatEvent extends CallaUserEvent {
-        constructor(id, text) {
-            super("chat", id);
-            this.text = text;
-        }
-    }
-
-    /**
-     * Removes a given item from an array, returning true if the item was removed.
-     */
-    function arrayRemove(arr, value) {
-        const idx = arr.indexOf(value);
-        if (idx > -1) {
-            arrayRemoveAt(arr, idx);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Performs a binary search on a list to find where the item should be inserted.
-     *
-     * If the item is found, the returned index will be an exact integer.
-     *
-     * If the item is not found, the returned insertion index will be 0.5 greater than
-     * the index at which it should be inserted.
-     */
-    function arrayBinarySearch(arr, item) {
-        let left = 0;
-        let right = arr.length;
-        let idx = Math.floor((left + right) / 2);
-        let found = false;
-        while (left < right && idx < arr.length) {
-            const compareTo = arr[idx];
-            if (!isNullOrUndefined(compareTo)
-                && item < compareTo) {
-                right = idx;
-            }
-            else {
-                if (item === compareTo) {
-                    found = true;
-                }
-                left = idx + 1;
-            }
-            idx = Math.floor((left + right) / 2);
-        }
-        if (!found) {
-            idx += 0.5;
-        }
-        return idx;
-    }
-
-    /**
-     * Performs an insert operation that maintains the sort
-     * order of the array, returning the index at which the
-     * item was inserted.
-     */
-    function arraySortedInsert(arr, item, allowDuplicates = true) {
-        let idx = arrayBinarySearch(arr, item);
-        const found = (idx % 1) === 0;
-        idx = idx | 0;
-        if (!found || allowDuplicates) {
-            arr.splice(idx, 0, item);
-        }
-        return idx;
-    }
-
-    function sleep(dt) {
-        return new Promise((resolve) => {
-            setTimeout(resolve, dt);
-        });
-    }
-
-    class BaseMetadataClient extends TypedEventBase {
-        constructor(sleepTime) {
-            super();
-            this.sleepTime = sleepTime;
-            this.tasks = new Map();
-        }
-        async getNext(evtName, userID) {
-            return new Promise((resolve) => {
-                const getter = (evt) => {
-                    if (evt instanceof CallaUserEvent
-                        && evt.id === userID) {
-                        this.removeEventListener(evtName, getter);
-                        resolve(evt);
-                    }
-                };
-                this.addEventListener(evtName, getter);
-            });
-        }
-        get isConnected() {
-            return this.metadataState === ConnectionState.Connected;
-        }
-        async callThrottled(key, command, ...args) {
-            if (!this.tasks.has(key)) {
-                const start = performance.now();
-                const task = this.callInternal(command, ...args);
-                this.tasks.set(key, task);
-                await task;
-                const delta = performance.now() - start;
-                const sleepTime = this.sleepTime - delta;
-                if (sleepTime > 0) {
-                    await sleep(this.sleepTime);
-                }
-                this.tasks.delete(key);
-            }
-        }
-        async callImmediate(command, ...args) {
-            await this.callInternal(command, ...args);
-        }
-        setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz) {
-            this.callThrottled("userPosed", "userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
-        }
-        setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz) {
-            this.callImmediate("userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
-        }
-        setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz) {
-            this.callThrottled("userPointer" + name, "userPointer", name, px, py, pz, fx, fy, fz, ux, uy, uz);
-        }
-        setAvatarEmoji(emoji) {
-            this.callImmediate("setAvatarEmoji", emoji);
-        }
-        setAvatarURL(url) {
-            this.callImmediate("avatarChanged", url);
-        }
-        emote(emoji) {
-            this.callImmediate("emote", emoji);
-        }
-        chat(text) {
-            this.callImmediate("chat", text);
-        }
-    }
-
-    const JITSI_HAX_FINGERPRINT = "Calla";
-    class JitsiMetadataClient extends BaseMetadataClient {
-        constructor(tele) {
-            super(250);
-            this.tele = tele;
-            this._status = ConnectionState.Disconnected;
-            this.remoteUserIDs = new Array();
-            this.tele.addEventListener("participantJoined", (evt) => {
-                arraySortedInsert(this.remoteUserIDs, evt.id, false);
-            });
-            this.tele.addEventListener("participantLeft", (evt) => {
-                arrayRemove(this.remoteUserIDs, evt.id);
-            });
-        }
-        get metadataState() {
-            return this._status;
-        }
-        async connect() {
-            // JitsiTeleconferenceClient will already connect
-        }
-        async join(_roomName) {
-            // JitsiTeleconferenceClient will already join
-            this._status = ConnectionState.Connecting;
-            this.tele.conference.addEventListener(JitsiMeetJS.events.conference.ENDPOINT_MESSAGE_RECEIVED, (user, data) => {
-                if (data.hax === JITSI_HAX_FINGERPRINT) {
-                    const fromUserID = user.getId();
-                    const command = data.command;
-                    const values = data.values;
-                    switch (command) {
-                        case "avatarChanged":
-                            this.dispatchEvent(new CallaAvatarChangedEvent(fromUserID, values[0]));
-                            break;
-                        case "emote":
-                            this.dispatchEvent(new CallaEmoteEvent(fromUserID, values[0]));
-                            break;
-                        case "setAvatarEmoji":
-                            this.dispatchEvent(new CallaEmojiAvatarEvent(fromUserID, values[0]));
-                            break;
-                        case "userPosed":
-                            this.dispatchEvent(new CallaUserPosedEvent(fromUserID, values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]));
-                            break;
-                        case "userPointer":
-                            this.dispatchEvent(new CallaUserPointerEvent(fromUserID, values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8], values[9]));
-                            break;
-                        case "chat":
-                            this.dispatchEvent(new CallaChatEvent(fromUserID, values[0]));
-                            break;
-                        default:
-                            assertNever(command);
-                    }
-                }
-            });
-            await once(this.tele.conference, JitsiMeetJS.events.conference.DATA_CHANNEL_OPENED);
-            this._status = ConnectionState.Connected;
-        }
-        async leave() {
-            // JitsiTeleconferenceClient will already leave
-            this._status = ConnectionState.Disconnected;
-        }
-        async identify(_userName) {
-            // JitsiTeleconferenceClient will already identify the user
-        }
-        async disconnect() {
-            // JitsiTeleconferenceClient will already disconnect
-        }
-        sendJitsiHax(toUserID, command, ...values) {
-            this.tele.conference.sendMessage({
-                hax: JITSI_HAX_FINGERPRINT,
-                command,
-                values
-            }, toUserID);
-        }
-        callInternal(command, ...values) {
-            for (const toUserID of this.remoteUserIDs) {
-                this.sendJitsiHax(toUserID, command, ...values);
-            }
-            return Promise.resolve();
-        }
-        async stopInternal() {
-            this._status = ConnectionState.Disconnecting;
-            await waitFor(() => this.metadataState === ConnectionState.Disconnected);
-        }
-    }
-
-    /**
-     * Scans through a series of filters to find an item that matches
-     * any of the filters. The first item of the first filter that matches
-     * will be returned.
-     */
-    function arrayScan(arr, ...tests) {
-        for (const test of tests) {
-            for (const item of arr) {
-                if (test(item)) {
-                    return item;
-                }
-            }
-        }
-        return null;
-    }
-
-    // NOTE: this list must be up-to-date with browsers listed in
-    // test/acceptance/useragentstrings.yml
-    const BROWSER_ALIASES_MAP = {
-      'Amazon Silk': 'amazon_silk',
-      'Android Browser': 'android',
-      Bada: 'bada',
-      BlackBerry: 'blackberry',
-      Chrome: 'chrome',
-      Chromium: 'chromium',
-      Electron: 'electron',
-      Epiphany: 'epiphany',
-      Firefox: 'firefox',
-      Focus: 'focus',
-      Generic: 'generic',
-      'Google Search': 'google_search',
-      Googlebot: 'googlebot',
-      'Internet Explorer': 'ie',
-      'K-Meleon': 'k_meleon',
-      Maxthon: 'maxthon',
-      'Microsoft Edge': 'edge',
-      'MZ Browser': 'mz',
-      'NAVER Whale Browser': 'naver',
-      Opera: 'opera',
-      'Opera Coast': 'opera_coast',
-      PhantomJS: 'phantomjs',
-      Puffin: 'puffin',
-      QupZilla: 'qupzilla',
-      QQ: 'qq',
-      QQLite: 'qqlite',
-      Safari: 'safari',
-      Sailfish: 'sailfish',
-      'Samsung Internet for Android': 'samsung_internet',
-      SeaMonkey: 'seamonkey',
-      Sleipnir: 'sleipnir',
-      Swing: 'swing',
-      Tizen: 'tizen',
-      'UC Browser': 'uc',
-      Vivaldi: 'vivaldi',
-      'WebOS Browser': 'webos',
-      WeChat: 'wechat',
-      'Yandex Browser': 'yandex',
-      Roku: 'roku',
-    };
-
-    const BROWSER_MAP = {
-      amazon_silk: 'Amazon Silk',
-      android: 'Android Browser',
-      bada: 'Bada',
-      blackberry: 'BlackBerry',
-      chrome: 'Chrome',
-      chromium: 'Chromium',
-      electron: 'Electron',
-      epiphany: 'Epiphany',
-      firefox: 'Firefox',
-      focus: 'Focus',
-      generic: 'Generic',
-      googlebot: 'Googlebot',
-      google_search: 'Google Search',
-      ie: 'Internet Explorer',
-      k_meleon: 'K-Meleon',
-      maxthon: 'Maxthon',
-      edge: 'Microsoft Edge',
-      mz: 'MZ Browser',
-      naver: 'NAVER Whale Browser',
-      opera: 'Opera',
-      opera_coast: 'Opera Coast',
-      phantomjs: 'PhantomJS',
-      puffin: 'Puffin',
-      qupzilla: 'QupZilla',
-      qq: 'QQ Browser',
-      qqlite: 'QQ Browser Lite',
-      safari: 'Safari',
-      sailfish: 'Sailfish',
-      samsung_internet: 'Samsung Internet for Android',
-      seamonkey: 'SeaMonkey',
-      sleipnir: 'Sleipnir',
-      swing: 'Swing',
-      tizen: 'Tizen',
-      uc: 'UC Browser',
-      vivaldi: 'Vivaldi',
-      webos: 'WebOS Browser',
-      wechat: 'WeChat',
-      yandex: 'Yandex Browser',
-    };
-
-    const PLATFORMS_MAP = {
-      tablet: 'tablet',
-      mobile: 'mobile',
-      desktop: 'desktop',
-      tv: 'tv',
-    };
-
-    const OS_MAP = {
-      WindowsPhone: 'Windows Phone',
-      Windows: 'Windows',
-      MacOS: 'macOS',
-      iOS: 'iOS',
-      Android: 'Android',
-      WebOS: 'WebOS',
-      BlackBerry: 'BlackBerry',
-      Bada: 'Bada',
-      Tizen: 'Tizen',
-      Linux: 'Linux',
-      ChromeOS: 'Chrome OS',
-      PlayStation4: 'PlayStation 4',
-      Roku: 'Roku',
-    };
-
-    const ENGINE_MAP = {
-      EdgeHTML: 'EdgeHTML',
-      Blink: 'Blink',
-      Trident: 'Trident',
-      Presto: 'Presto',
-      Gecko: 'Gecko',
-      WebKit: 'WebKit',
-    };
-
-    class Utils {
-      /**
-       * Get first matched item for a string
-       * @param {RegExp} regexp
-       * @param {String} ua
-       * @return {Array|{index: number, input: string}|*|boolean|string}
-       */
-      static getFirstMatch(regexp, ua) {
-        const match = ua.match(regexp);
-        return (match && match.length > 0 && match[1]) || '';
-      }
-
-      /**
-       * Get second matched item for a string
-       * @param regexp
-       * @param {String} ua
-       * @return {Array|{index: number, input: string}|*|boolean|string}
-       */
-      static getSecondMatch(regexp, ua) {
-        const match = ua.match(regexp);
-        return (match && match.length > 1 && match[2]) || '';
-      }
-
-      /**
-       * Match a regexp and return a constant or undefined
-       * @param {RegExp} regexp
-       * @param {String} ua
-       * @param {*} _const Any const that will be returned if regexp matches the string
-       * @return {*}
-       */
-      static matchAndReturnConst(regexp, ua, _const) {
-        if (regexp.test(ua)) {
-          return _const;
-        }
-        return void (0);
-      }
-
-      static getWindowsVersionName(version) {
-        switch (version) {
-          case 'NT': return 'NT';
-          case 'XP': return 'XP';
-          case 'NT 5.0': return '2000';
-          case 'NT 5.1': return 'XP';
-          case 'NT 5.2': return '2003';
-          case 'NT 6.0': return 'Vista';
-          case 'NT 6.1': return '7';
-          case 'NT 6.2': return '8';
-          case 'NT 6.3': return '8.1';
-          case 'NT 10.0': return '10';
-          default: return undefined;
-        }
-      }
-
-      /**
-       * Get macOS version name
-       *    10.5 - Leopard
-       *    10.6 - Snow Leopard
-       *    10.7 - Lion
-       *    10.8 - Mountain Lion
-       *    10.9 - Mavericks
-       *    10.10 - Yosemite
-       *    10.11 - El Capitan
-       *    10.12 - Sierra
-       *    10.13 - High Sierra
-       *    10.14 - Mojave
-       *    10.15 - Catalina
-       *
-       * @example
-       *   getMacOSVersionName("10.14") // 'Mojave'
-       *
-       * @param  {string} version
-       * @return {string} versionName
-       */
-      static getMacOSVersionName(version) {
-        const v = version.split('.').splice(0, 2).map(s => parseInt(s, 10) || 0);
-        v.push(0);
-        if (v[0] !== 10) return undefined;
-        switch (v[1]) {
-          case 5: return 'Leopard';
-          case 6: return 'Snow Leopard';
-          case 7: return 'Lion';
-          case 8: return 'Mountain Lion';
-          case 9: return 'Mavericks';
-          case 10: return 'Yosemite';
-          case 11: return 'El Capitan';
-          case 12: return 'Sierra';
-          case 13: return 'High Sierra';
-          case 14: return 'Mojave';
-          case 15: return 'Catalina';
-          default: return undefined;
-        }
-      }
-
-      /**
-       * Get Android version name
-       *    1.5 - Cupcake
-       *    1.6 - Donut
-       *    2.0 - Eclair
-       *    2.1 - Eclair
-       *    2.2 - Froyo
-       *    2.x - Gingerbread
-       *    3.x - Honeycomb
-       *    4.0 - Ice Cream Sandwich
-       *    4.1 - Jelly Bean
-       *    4.4 - KitKat
-       *    5.x - Lollipop
-       *    6.x - Marshmallow
-       *    7.x - Nougat
-       *    8.x - Oreo
-       *    9.x - Pie
-       *
-       * @example
-       *   getAndroidVersionName("7.0") // 'Nougat'
-       *
-       * @param  {string} version
-       * @return {string} versionName
-       */
-      static getAndroidVersionName(version) {
-        const v = version.split('.').splice(0, 2).map(s => parseInt(s, 10) || 0);
-        v.push(0);
-        if (v[0] === 1 && v[1] < 5) return undefined;
-        if (v[0] === 1 && v[1] < 6) return 'Cupcake';
-        if (v[0] === 1 && v[1] >= 6) return 'Donut';
-        if (v[0] === 2 && v[1] < 2) return 'Eclair';
-        if (v[0] === 2 && v[1] === 2) return 'Froyo';
-        if (v[0] === 2 && v[1] > 2) return 'Gingerbread';
-        if (v[0] === 3) return 'Honeycomb';
-        if (v[0] === 4 && v[1] < 1) return 'Ice Cream Sandwich';
-        if (v[0] === 4 && v[1] < 4) return 'Jelly Bean';
-        if (v[0] === 4 && v[1] >= 4) return 'KitKat';
-        if (v[0] === 5) return 'Lollipop';
-        if (v[0] === 6) return 'Marshmallow';
-        if (v[0] === 7) return 'Nougat';
-        if (v[0] === 8) return 'Oreo';
-        if (v[0] === 9) return 'Pie';
-        return undefined;
-      }
-
-      /**
-       * Get version precisions count
-       *
-       * @example
-       *   getVersionPrecision("1.10.3") // 3
-       *
-       * @param  {string} version
-       * @return {number}
-       */
-      static getVersionPrecision(version) {
-        return version.split('.').length;
-      }
-
-      /**
-       * Calculate browser version weight
-       *
-       * @example
-       *   compareVersions('1.10.2.1',  '1.8.2.1.90')    // 1
-       *   compareVersions('1.010.2.1', '1.09.2.1.90');  // 1
-       *   compareVersions('1.10.2.1',  '1.10.2.1');     // 0
-       *   compareVersions('1.10.2.1',  '1.0800.2');     // -1
-       *   compareVersions('1.10.2.1',  '1.10',  true);  // 0
-       *
-       * @param {String} versionA versions versions to compare
-       * @param {String} versionB versions versions to compare
-       * @param {boolean} [isLoose] enable loose comparison
-       * @return {Number} comparison result: -1 when versionA is lower,
-       * 1 when versionA is bigger, 0 when both equal
-       */
-      /* eslint consistent-return: 1 */
-      static compareVersions(versionA, versionB, isLoose = false) {
-        // 1) get common precision for both versions, for example for "10.0" and "9" it should be 2
-        const versionAPrecision = Utils.getVersionPrecision(versionA);
-        const versionBPrecision = Utils.getVersionPrecision(versionB);
-
-        let precision = Math.max(versionAPrecision, versionBPrecision);
-        let lastPrecision = 0;
-
-        const chunks = Utils.map([versionA, versionB], (version) => {
-          const delta = precision - Utils.getVersionPrecision(version);
-
-          // 2) "9" -> "9.0" (for precision = 2)
-          const _version = version + new Array(delta + 1).join('.0');
-
-          // 3) "9.0" -> ["000000000"", "000000009"]
-          return Utils.map(_version.split('.'), chunk => new Array(20 - chunk.length).join('0') + chunk).reverse();
-        });
-
-        // adjust precision for loose comparison
-        if (isLoose) {
-          lastPrecision = precision - Math.min(versionAPrecision, versionBPrecision);
-        }
-
-        // iterate in reverse order by reversed chunks array
-        precision -= 1;
-        while (precision >= lastPrecision) {
-          // 4) compare: "000000009" > "000000010" = false (but "9" > "10" = true)
-          if (chunks[0][precision] > chunks[1][precision]) {
-            return 1;
-          }
-
-          if (chunks[0][precision] === chunks[1][precision]) {
-            if (precision === lastPrecision) {
-              // all version chunks are same
-              return 0;
-            }
-
-            precision -= 1;
-          } else if (chunks[0][precision] < chunks[1][precision]) {
-            return -1;
-          }
-        }
-
-        return undefined;
-      }
-
-      /**
-       * Array::map polyfill
-       *
-       * @param  {Array} arr
-       * @param  {Function} iterator
-       * @return {Array}
-       */
-      static map(arr, iterator) {
-        const result = [];
-        let i;
-        if (Array.prototype.map) {
-          return Array.prototype.map.call(arr, iterator);
-        }
-        for (i = 0; i < arr.length; i += 1) {
-          result.push(iterator(arr[i]));
-        }
-        return result;
-      }
-
-      /**
-       * Array::find polyfill
-       *
-       * @param  {Array} arr
-       * @param  {Function} predicate
-       * @return {Array}
-       */
-      static find(arr, predicate) {
-        let i;
-        let l;
-        if (Array.prototype.find) {
-          return Array.prototype.find.call(arr, predicate);
-        }
-        for (i = 0, l = arr.length; i < l; i += 1) {
-          const value = arr[i];
-          if (predicate(value, i)) {
-            return value;
-          }
-        }
-        return undefined;
-      }
-
-      /**
-       * Object::assign polyfill
-       *
-       * @param  {Object} obj
-       * @param  {Object} ...objs
-       * @return {Object}
-       */
-      static assign(obj, ...assigners) {
-        const result = obj;
-        let i;
-        let l;
-        if (Object.assign) {
-          return Object.assign(obj, ...assigners);
-        }
-        for (i = 0, l = assigners.length; i < l; i += 1) {
-          const assigner = assigners[i];
-          if (typeof assigner === 'object' && assigner !== null) {
-            const keys = Object.keys(assigner);
-            keys.forEach((key) => {
-              result[key] = assigner[key];
-            });
-          }
-        }
-        return obj;
-      }
-
-      /**
-       * Get short version/alias for a browser name
-       *
-       * @example
-       *   getBrowserAlias('Microsoft Edge') // edge
-       *
-       * @param  {string} browserName
-       * @return {string}
-       */
-      static getBrowserAlias(browserName) {
-        return BROWSER_ALIASES_MAP[browserName];
-      }
-
-      /**
-       * Get short version/alias for a browser name
-       *
-       * @example
-       *   getBrowserAlias('edge') // Microsoft Edge
-       *
-       * @param  {string} browserAlias
-       * @return {string}
-       */
-      static getBrowserTypeByAlias(browserAlias) {
-        return BROWSER_MAP[browserAlias] || '';
-      }
-    }
-
-    /**
-     * Browsers' descriptors
-     *
-     * The idea of descriptors is simple. You should know about them two simple things:
-     * 1. Every descriptor has a method or property called `test` and a `describe` method.
-     * 2. Order of descriptors is important.
-     *
-     * More details:
-     * 1. Method or property `test` serves as a way to detect whether the UA string
-     * matches some certain browser or not. The `describe` method helps to make a result
-     * object with params that show some browser-specific things: name, version, etc.
-     * 2. Order of descriptors is important because a Parser goes through them one by one
-     * in course. For example, if you insert Chrome's descriptor as the first one,
-     * more then a half of browsers will be described as Chrome, because they will pass
-     * the Chrome descriptor's test.
-     *
-     * Descriptor's `test` could be a property with an array of RegExps, where every RegExp
-     * will be applied to a UA string to test it whether it matches or not.
-     * If a descriptor has two or more regexps in the `test` array it tests them one by one
-     * with a logical sum operation. Parser stops if it has found any RegExp that matches the UA.
-     *
-     * Or `test` could be a method. In that case it gets a Parser instance and should
-     * return true/false to get the Parser know if this browser descriptor matches the UA or not.
-     */
-
-    const commonVersionIdentifier = /version\/(\d+(\.?_?\d+)+)/i;
-
-    const browsersList = [
-      /* Googlebot */
-      {
-        test: [/googlebot/i],
-        describe(ua) {
-          const browser = {
-            name: 'Googlebot',
-          };
-          const version = Utils.getFirstMatch(/googlebot\/(\d+(\.\d+))/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-
-      /* Opera < 13.0 */
-      {
-        test: [/opera/i],
-        describe(ua) {
-          const browser = {
-            name: 'Opera',
-          };
-          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:opera)[\s/](\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-
-      /* Opera > 13.0 */
-      {
-        test: [/opr\/|opios/i],
-        describe(ua) {
-          const browser = {
-            name: 'Opera',
-          };
-          const version = Utils.getFirstMatch(/(?:opr|opios)[\s/](\S+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/SamsungBrowser/i],
-        describe(ua) {
-          const browser = {
-            name: 'Samsung Internet for Android',
-          };
-          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:SamsungBrowser)[\s/](\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/Whale/i],
-        describe(ua) {
-          const browser = {
-            name: 'NAVER Whale Browser',
-          };
-          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:whale)[\s/](\d+(?:\.\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/MZBrowser/i],
-        describe(ua) {
-          const browser = {
-            name: 'MZ Browser',
-          };
-          const version = Utils.getFirstMatch(/(?:MZBrowser)[\s/](\d+(?:\.\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/focus/i],
-        describe(ua) {
-          const browser = {
-            name: 'Focus',
-          };
-          const version = Utils.getFirstMatch(/(?:focus)[\s/](\d+(?:\.\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/swing/i],
-        describe(ua) {
-          const browser = {
-            name: 'Swing',
-          };
-          const version = Utils.getFirstMatch(/(?:swing)[\s/](\d+(?:\.\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/coast/i],
-        describe(ua) {
-          const browser = {
-            name: 'Opera Coast',
-          };
-          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:coast)[\s/](\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/opt\/\d+(?:.?_?\d+)+/i],
-        describe(ua) {
-          const browser = {
-            name: 'Opera Touch',
-          };
-          const version = Utils.getFirstMatch(/(?:opt)[\s/](\d+(\.?_?\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/yabrowser/i],
-        describe(ua) {
-          const browser = {
-            name: 'Yandex Browser',
-          };
-          const version = Utils.getFirstMatch(/(?:yabrowser)[\s/](\d+(\.?_?\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/ucbrowser/i],
-        describe(ua) {
-          const browser = {
-            name: 'UC Browser',
-          };
-          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:ucbrowser)[\s/](\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/Maxthon|mxios/i],
-        describe(ua) {
-          const browser = {
-            name: 'Maxthon',
-          };
-          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:Maxthon|mxios)[\s/](\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/epiphany/i],
-        describe(ua) {
-          const browser = {
-            name: 'Epiphany',
-          };
-          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:epiphany)[\s/](\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/puffin/i],
-        describe(ua) {
-          const browser = {
-            name: 'Puffin',
-          };
-          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:puffin)[\s/](\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/sleipnir/i],
-        describe(ua) {
-          const browser = {
-            name: 'Sleipnir',
-          };
-          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:sleipnir)[\s/](\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/k-meleon/i],
-        describe(ua) {
-          const browser = {
-            name: 'K-Meleon',
-          };
-          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:k-meleon)[\s/](\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/micromessenger/i],
-        describe(ua) {
-          const browser = {
-            name: 'WeChat',
-          };
-          const version = Utils.getFirstMatch(/(?:micromessenger)[\s/](\d+(\.?_?\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/qqbrowser/i],
-        describe(ua) {
-          const browser = {
-            name: (/qqbrowserlite/i).test(ua) ? 'QQ Browser Lite' : 'QQ Browser',
-          };
-          const version = Utils.getFirstMatch(/(?:qqbrowserlite|qqbrowser)[/](\d+(\.?_?\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/msie|trident/i],
-        describe(ua) {
-          const browser = {
-            name: 'Internet Explorer',
-          };
-          const version = Utils.getFirstMatch(/(?:msie |rv:)(\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/\sedg\//i],
-        describe(ua) {
-          const browser = {
-            name: 'Microsoft Edge',
-          };
-
-          const version = Utils.getFirstMatch(/\sedg\/(\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/edg([ea]|ios)/i],
-        describe(ua) {
-          const browser = {
-            name: 'Microsoft Edge',
-          };
-
-          const version = Utils.getSecondMatch(/edg([ea]|ios)\/(\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/vivaldi/i],
-        describe(ua) {
-          const browser = {
-            name: 'Vivaldi',
-          };
-          const version = Utils.getFirstMatch(/vivaldi\/(\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/seamonkey/i],
-        describe(ua) {
-          const browser = {
-            name: 'SeaMonkey',
-          };
-          const version = Utils.getFirstMatch(/seamonkey\/(\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/sailfish/i],
-        describe(ua) {
-          const browser = {
-            name: 'Sailfish',
-          };
-
-          const version = Utils.getFirstMatch(/sailfish\s?browser\/(\d+(\.\d+)?)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/silk/i],
-        describe(ua) {
-          const browser = {
-            name: 'Amazon Silk',
-          };
-          const version = Utils.getFirstMatch(/silk\/(\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/phantom/i],
-        describe(ua) {
-          const browser = {
-            name: 'PhantomJS',
-          };
-          const version = Utils.getFirstMatch(/phantomjs\/(\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/slimerjs/i],
-        describe(ua) {
-          const browser = {
-            name: 'SlimerJS',
-          };
-          const version = Utils.getFirstMatch(/slimerjs\/(\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/blackberry|\bbb\d+/i, /rim\stablet/i],
-        describe(ua) {
-          const browser = {
-            name: 'BlackBerry',
-          };
-          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/blackberry[\d]+\/(\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/(web|hpw)[o0]s/i],
-        describe(ua) {
-          const browser = {
-            name: 'WebOS Browser',
-          };
-          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/w(?:eb)?[o0]sbrowser\/(\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/bada/i],
-        describe(ua) {
-          const browser = {
-            name: 'Bada',
-          };
-          const version = Utils.getFirstMatch(/dolfin\/(\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/tizen/i],
-        describe(ua) {
-          const browser = {
-            name: 'Tizen',
-          };
-          const version = Utils.getFirstMatch(/(?:tizen\s?)?browser\/(\d+(\.?_?\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/qupzilla/i],
-        describe(ua) {
-          const browser = {
-            name: 'QupZilla',
-          };
-          const version = Utils.getFirstMatch(/(?:qupzilla)[\s/](\d+(\.?_?\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/firefox|iceweasel|fxios/i],
-        describe(ua) {
-          const browser = {
-            name: 'Firefox',
-          };
-          const version = Utils.getFirstMatch(/(?:firefox|iceweasel|fxios)[\s/](\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/electron/i],
-        describe(ua) {
-          const browser = {
-            name: 'Electron',
-          };
-          const version = Utils.getFirstMatch(/(?:electron)\/(\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/MiuiBrowser/i],
-        describe(ua) {
-          const browser = {
-            name: 'Miui',
-          };
-          const version = Utils.getFirstMatch(/(?:MiuiBrowser)[\s/](\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/chromium/i],
-        describe(ua) {
-          const browser = {
-            name: 'Chromium',
-          };
-          const version = Utils.getFirstMatch(/(?:chromium)[\s/](\d+(\.?_?\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/chrome|crios|crmo/i],
-        describe(ua) {
-          const browser = {
-            name: 'Chrome',
-          };
-          const version = Utils.getFirstMatch(/(?:chrome|crios|crmo)\/(\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-      {
-        test: [/GSA/i],
-        describe(ua) {
-          const browser = {
-            name: 'Google Search',
-          };
-          const version = Utils.getFirstMatch(/(?:GSA)\/(\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-
-      /* Android Browser */
-      {
-        test(parser) {
-          const notLikeAndroid = !parser.test(/like android/i);
-          const butAndroid = parser.test(/android/i);
-          return notLikeAndroid && butAndroid;
-        },
-        describe(ua) {
-          const browser = {
-            name: 'Android Browser',
-          };
-          const version = Utils.getFirstMatch(commonVersionIdentifier, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-
-      /* PlayStation 4 */
-      {
-        test: [/playstation 4/i],
-        describe(ua) {
-          const browser = {
-            name: 'PlayStation 4',
-          };
-          const version = Utils.getFirstMatch(commonVersionIdentifier, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-
-      /* Safari */
-      {
-        test: [/safari|applewebkit/i],
-        describe(ua) {
-          const browser = {
-            name: 'Safari',
-          };
-          const version = Utils.getFirstMatch(commonVersionIdentifier, ua);
-
-          if (version) {
-            browser.version = version;
-          }
-
-          return browser;
-        },
-      },
-
-      /* Something else */
-      {
-        test: [/.*/i],
-        describe(ua) {
-          /* Here we try to make sure that there are explicit details about the device
-           * in order to decide what regexp exactly we want to apply
-           * (as there is a specific decision based on that conclusion)
-           */
-          const regexpWithoutDeviceSpec = /^(.*)\/(.*) /;
-          const regexpWithDeviceSpec = /^(.*)\/(.*)[ \t]\((.*)/;
-          const hasDeviceSpec = ua.search('\\(') !== -1;
-          const regexp = hasDeviceSpec ? regexpWithDeviceSpec : regexpWithoutDeviceSpec;
-          return {
-            name: Utils.getFirstMatch(regexp, ua),
-            version: Utils.getSecondMatch(regexp, ua),
-          };
-        },
-      },
-    ];
-
-    var osParsersList = [
-      /* Roku */
-      {
-        test: [/Roku\/DVP/],
-        describe(ua) {
-          const version = Utils.getFirstMatch(/Roku\/DVP-(\d+\.\d+)/i, ua);
-          return {
-            name: OS_MAP.Roku,
-            version,
-          };
-        },
-      },
-
-      /* Windows Phone */
-      {
-        test: [/windows phone/i],
-        describe(ua) {
-          const version = Utils.getFirstMatch(/windows phone (?:os)?\s?(\d+(\.\d+)*)/i, ua);
-          return {
-            name: OS_MAP.WindowsPhone,
-            version,
-          };
-        },
-      },
-
-      /* Windows */
-      {
-        test: [/windows /i],
-        describe(ua) {
-          const version = Utils.getFirstMatch(/Windows ((NT|XP)( \d\d?.\d)?)/i, ua);
-          const versionName = Utils.getWindowsVersionName(version);
-
-          return {
-            name: OS_MAP.Windows,
-            version,
-            versionName,
-          };
-        },
-      },
-
-      /* Firefox on iPad */
-      {
-        test: [/Macintosh(.*?) FxiOS(.*?)\//],
-        describe(ua) {
-          const result = {
-            name: OS_MAP.iOS,
-          };
-          const version = Utils.getSecondMatch(/(Version\/)(\d[\d.]+)/, ua);
-          if (version) {
-            result.version = version;
-          }
-          return result;
-        },
-      },
-
-      /* macOS */
-      {
-        test: [/macintosh/i],
-        describe(ua) {
-          const version = Utils.getFirstMatch(/mac os x (\d+(\.?_?\d+)+)/i, ua).replace(/[_\s]/g, '.');
-          const versionName = Utils.getMacOSVersionName(version);
-
-          const os = {
-            name: OS_MAP.MacOS,
-            version,
-          };
-          if (versionName) {
-            os.versionName = versionName;
-          }
-          return os;
-        },
-      },
-
-      /* iOS */
-      {
-        test: [/(ipod|iphone|ipad)/i],
-        describe(ua) {
-          const version = Utils.getFirstMatch(/os (\d+([_\s]\d+)*) like mac os x/i, ua).replace(/[_\s]/g, '.');
-
-          return {
-            name: OS_MAP.iOS,
-            version,
-          };
-        },
-      },
-
-      /* Android */
-      {
-        test(parser) {
-          const notLikeAndroid = !parser.test(/like android/i);
-          const butAndroid = parser.test(/android/i);
-          return notLikeAndroid && butAndroid;
-        },
-        describe(ua) {
-          const version = Utils.getFirstMatch(/android[\s/-](\d+(\.\d+)*)/i, ua);
-          const versionName = Utils.getAndroidVersionName(version);
-          const os = {
-            name: OS_MAP.Android,
-            version,
-          };
-          if (versionName) {
-            os.versionName = versionName;
-          }
-          return os;
-        },
-      },
-
-      /* WebOS */
-      {
-        test: [/(web|hpw)[o0]s/i],
-        describe(ua) {
-          const version = Utils.getFirstMatch(/(?:web|hpw)[o0]s\/(\d+(\.\d+)*)/i, ua);
-          const os = {
-            name: OS_MAP.WebOS,
-          };
-
-          if (version && version.length) {
-            os.version = version;
-          }
-          return os;
-        },
-      },
-
-      /* BlackBerry */
-      {
-        test: [/blackberry|\bbb\d+/i, /rim\stablet/i],
-        describe(ua) {
-          const version = Utils.getFirstMatch(/rim\stablet\sos\s(\d+(\.\d+)*)/i, ua)
-            || Utils.getFirstMatch(/blackberry\d+\/(\d+([_\s]\d+)*)/i, ua)
-            || Utils.getFirstMatch(/\bbb(\d+)/i, ua);
-
-          return {
-            name: OS_MAP.BlackBerry,
-            version,
-          };
-        },
-      },
-
-      /* Bada */
-      {
-        test: [/bada/i],
-        describe(ua) {
-          const version = Utils.getFirstMatch(/bada\/(\d+(\.\d+)*)/i, ua);
-
-          return {
-            name: OS_MAP.Bada,
-            version,
-          };
-        },
-      },
-
-      /* Tizen */
-      {
-        test: [/tizen/i],
-        describe(ua) {
-          const version = Utils.getFirstMatch(/tizen[/\s](\d+(\.\d+)*)/i, ua);
-
-          return {
-            name: OS_MAP.Tizen,
-            version,
-          };
-        },
-      },
-
-      /* Linux */
-      {
-        test: [/linux/i],
-        describe() {
-          return {
-            name: OS_MAP.Linux,
-          };
-        },
-      },
-
-      /* Chrome OS */
-      {
-        test: [/CrOS/],
-        describe() {
-          return {
-            name: OS_MAP.ChromeOS,
-          };
-        },
-      },
-
-      /* Playstation 4 */
-      {
-        test: [/PlayStation 4/],
-        describe(ua) {
-          const version = Utils.getFirstMatch(/PlayStation 4[/\s](\d+(\.\d+)*)/i, ua);
-          return {
-            name: OS_MAP.PlayStation4,
-            version,
-          };
-        },
-      },
-    ];
-
-    /*
-     * Tablets go first since usually they have more specific
-     * signs to detect.
-     */
-
-    var platformParsersList = [
-      /* Googlebot */
-      {
-        test: [/googlebot/i],
-        describe() {
-          return {
-            type: 'bot',
-            vendor: 'Google',
-          };
-        },
-      },
-
-      /* Huawei */
-      {
-        test: [/huawei/i],
-        describe(ua) {
-          const model = Utils.getFirstMatch(/(can-l01)/i, ua) && 'Nova';
-          const platform = {
-            type: PLATFORMS_MAP.mobile,
-            vendor: 'Huawei',
-          };
-          if (model) {
-            platform.model = model;
-          }
-          return platform;
-        },
-      },
-
-      /* Nexus Tablet */
-      {
-        test: [/nexus\s*(?:7|8|9|10).*/i],
-        describe() {
-          return {
-            type: PLATFORMS_MAP.tablet,
-            vendor: 'Nexus',
-          };
-        },
-      },
-
-      /* iPad */
-      {
-        test: [/ipad/i],
-        describe() {
-          return {
-            type: PLATFORMS_MAP.tablet,
-            vendor: 'Apple',
-            model: 'iPad',
-          };
-        },
-      },
-
-      /* Firefox on iPad */
-      {
-        test: [/Macintosh(.*?) FxiOS(.*?)\//],
-        describe() {
-          return {
-            type: PLATFORMS_MAP.tablet,
-            vendor: 'Apple',
-            model: 'iPad',
-          };
-        },
-      },
-
-      /* Amazon Kindle Fire */
-      {
-        test: [/kftt build/i],
-        describe() {
-          return {
-            type: PLATFORMS_MAP.tablet,
-            vendor: 'Amazon',
-            model: 'Kindle Fire HD 7',
-          };
-        },
-      },
-
-      /* Another Amazon Tablet with Silk */
-      {
-        test: [/silk/i],
-        describe() {
-          return {
-            type: PLATFORMS_MAP.tablet,
-            vendor: 'Amazon',
-          };
-        },
-      },
-
-      /* Tablet */
-      {
-        test: [/tablet(?! pc)/i],
-        describe() {
-          return {
-            type: PLATFORMS_MAP.tablet,
-          };
-        },
-      },
-
-      /* iPod/iPhone */
-      {
-        test(parser) {
-          const iDevice = parser.test(/ipod|iphone/i);
-          const likeIDevice = parser.test(/like (ipod|iphone)/i);
-          return iDevice && !likeIDevice;
-        },
-        describe(ua) {
-          const model = Utils.getFirstMatch(/(ipod|iphone)/i, ua);
-          return {
-            type: PLATFORMS_MAP.mobile,
-            vendor: 'Apple',
-            model,
-          };
-        },
-      },
-
-      /* Nexus Mobile */
-      {
-        test: [/nexus\s*[0-6].*/i, /galaxy nexus/i],
-        describe() {
-          return {
-            type: PLATFORMS_MAP.mobile,
-            vendor: 'Nexus',
-          };
-        },
-      },
-
-      /* Mobile */
-      {
-        test: [/[^-]mobi/i],
-        describe() {
-          return {
-            type: PLATFORMS_MAP.mobile,
-          };
-        },
-      },
-
-      /* BlackBerry */
-      {
-        test(parser) {
-          return parser.getBrowserName(true) === 'blackberry';
-        },
-        describe() {
-          return {
-            type: PLATFORMS_MAP.mobile,
-            vendor: 'BlackBerry',
-          };
-        },
-      },
-
-      /* Bada */
-      {
-        test(parser) {
-          return parser.getBrowserName(true) === 'bada';
-        },
-        describe() {
-          return {
-            type: PLATFORMS_MAP.mobile,
-          };
-        },
-      },
-
-      /* Windows Phone */
-      {
-        test(parser) {
-          return parser.getBrowserName() === 'windows phone';
-        },
-        describe() {
-          return {
-            type: PLATFORMS_MAP.mobile,
-            vendor: 'Microsoft',
-          };
-        },
-      },
-
-      /* Android Tablet */
-      {
-        test(parser) {
-          const osMajorVersion = Number(String(parser.getOSVersion()).split('.')[0]);
-          return parser.getOSName(true) === 'android' && (osMajorVersion >= 3);
-        },
-        describe() {
-          return {
-            type: PLATFORMS_MAP.tablet,
-          };
-        },
-      },
-
-      /* Android Mobile */
-      {
-        test(parser) {
-          return parser.getOSName(true) === 'android';
-        },
-        describe() {
-          return {
-            type: PLATFORMS_MAP.mobile,
-          };
-        },
-      },
-
-      /* desktop */
-      {
-        test(parser) {
-          return parser.getOSName(true) === 'macos';
-        },
-        describe() {
-          return {
-            type: PLATFORMS_MAP.desktop,
-            vendor: 'Apple',
-          };
-        },
-      },
-
-      /* Windows */
-      {
-        test(parser) {
-          return parser.getOSName(true) === 'windows';
-        },
-        describe() {
-          return {
-            type: PLATFORMS_MAP.desktop,
-          };
-        },
-      },
-
-      /* Linux */
-      {
-        test(parser) {
-          return parser.getOSName(true) === 'linux';
-        },
-        describe() {
-          return {
-            type: PLATFORMS_MAP.desktop,
-          };
-        },
-      },
-
-      /* PlayStation 4 */
-      {
-        test(parser) {
-          return parser.getOSName(true) === 'playstation 4';
-        },
-        describe() {
-          return {
-            type: PLATFORMS_MAP.tv,
-          };
-        },
-      },
-
-      /* Roku */
-      {
-        test(parser) {
-          return parser.getOSName(true) === 'roku';
-        },
-        describe() {
-          return {
-            type: PLATFORMS_MAP.tv,
-          };
-        },
-      },
-    ];
-
-    /*
-     * More specific goes first
-     */
-    var enginesParsersList = [
-      /* EdgeHTML */
-      {
-        test(parser) {
-          return parser.getBrowserName(true) === 'microsoft edge';
-        },
-        describe(ua) {
-          const isBlinkBased = /\sedg\//i.test(ua);
-
-          // return blink if it's blink-based one
-          if (isBlinkBased) {
-            return {
-              name: ENGINE_MAP.Blink,
-            };
-          }
-
-          // otherwise match the version and return EdgeHTML
-          const version = Utils.getFirstMatch(/edge\/(\d+(\.?_?\d+)+)/i, ua);
-
-          return {
-            name: ENGINE_MAP.EdgeHTML,
-            version,
-          };
-        },
-      },
-
-      /* Trident */
-      {
-        test: [/trident/i],
-        describe(ua) {
-          const engine = {
-            name: ENGINE_MAP.Trident,
-          };
-
-          const version = Utils.getFirstMatch(/trident\/(\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            engine.version = version;
-          }
-
-          return engine;
-        },
-      },
-
-      /* Presto */
-      {
-        test(parser) {
-          return parser.test(/presto/i);
-        },
-        describe(ua) {
-          const engine = {
-            name: ENGINE_MAP.Presto,
-          };
-
-          const version = Utils.getFirstMatch(/presto\/(\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            engine.version = version;
-          }
-
-          return engine;
-        },
-      },
-
-      /* Gecko */
-      {
-        test(parser) {
-          const isGecko = parser.test(/gecko/i);
-          const likeGecko = parser.test(/like gecko/i);
-          return isGecko && !likeGecko;
-        },
-        describe(ua) {
-          const engine = {
-            name: ENGINE_MAP.Gecko,
-          };
-
-          const version = Utils.getFirstMatch(/gecko\/(\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            engine.version = version;
-          }
-
-          return engine;
-        },
-      },
-
-      /* Blink */
-      {
-        test: [/(apple)?webkit\/537\.36/i],
-        describe() {
-          return {
-            name: ENGINE_MAP.Blink,
-          };
-        },
-      },
-
-      /* WebKit */
-      {
-        test: [/(apple)?webkit/i],
-        describe(ua) {
-          const engine = {
-            name: ENGINE_MAP.WebKit,
-          };
-
-          const version = Utils.getFirstMatch(/webkit\/(\d+(\.?_?\d+)+)/i, ua);
-
-          if (version) {
-            engine.version = version;
-          }
-
-          return engine;
-        },
-      },
-    ];
-
-    /**
-     * The main class that arranges the whole parsing process.
-     */
-    class Parser {
-      /**
-       * Create instance of Parser
-       *
-       * @param {String} UA User-Agent string
-       * @param {Boolean} [skipParsing=false] parser can skip parsing in purpose of performance
-       * improvements if you need to make a more particular parsing
-       * like {@link Parser#parseBrowser} or {@link Parser#parsePlatform}
-       *
-       * @throw {Error} in case of empty UA String
-       *
-       * @constructor
-       */
-      constructor(UA, skipParsing = false) {
-        if (UA === void (0) || UA === null || UA === '') {
-          throw new Error("UserAgent parameter can't be empty");
-        }
-
-        this._ua = UA;
-
-        /**
-         * @typedef ParsedResult
-         * @property {Object} browser
-         * @property {String|undefined} [browser.name]
-         * Browser name, like `"Chrome"` or `"Internet Explorer"`
-         * @property {String|undefined} [browser.version] Browser version as a String `"12.01.45334.10"`
-         * @property {Object} os
-         * @property {String|undefined} [os.name] OS name, like `"Windows"` or `"macOS"`
-         * @property {String|undefined} [os.version] OS version, like `"NT 5.1"` or `"10.11.1"`
-         * @property {String|undefined} [os.versionName] OS name, like `"XP"` or `"High Sierra"`
-         * @property {Object} platform
-         * @property {String|undefined} [platform.type]
-         * platform type, can be either `"desktop"`, `"tablet"` or `"mobile"`
-         * @property {String|undefined} [platform.vendor] Vendor of the device,
-         * like `"Apple"` or `"Samsung"`
-         * @property {String|undefined} [platform.model] Device model,
-         * like `"iPhone"` or `"Kindle Fire HD 7"`
-         * @property {Object} engine
-         * @property {String|undefined} [engine.name]
-         * Can be any of this: `WebKit`, `Blink`, `Gecko`, `Trident`, `Presto`, `EdgeHTML`
-         * @property {String|undefined} [engine.version] String version of the engine
-         */
-        this.parsedResult = {};
-
-        if (skipParsing !== true) {
-          this.parse();
-        }
-      }
-
-      /**
-       * Get UserAgent string of current Parser instance
-       * @return {String} User-Agent String of the current <Parser> object
-       *
-       * @public
-       */
-      getUA() {
-        return this._ua;
-      }
-
-      /**
-       * Test a UA string for a regexp
-       * @param {RegExp} regex
-       * @return {Boolean}
-       */
-      test(regex) {
-        return regex.test(this._ua);
-      }
-
-      /**
-       * Get parsed browser object
-       * @return {Object}
-       */
-      parseBrowser() {
-        this.parsedResult.browser = {};
-
-        const browserDescriptor = Utils.find(browsersList, (_browser) => {
-          if (typeof _browser.test === 'function') {
-            return _browser.test(this);
-          }
-
-          if (_browser.test instanceof Array) {
-            return _browser.test.some(condition => this.test(condition));
-          }
-
-          throw new Error("Browser's test function is not valid");
-        });
-
-        if (browserDescriptor) {
-          this.parsedResult.browser = browserDescriptor.describe(this.getUA());
-        }
-
-        return this.parsedResult.browser;
-      }
-
-      /**
-       * Get parsed browser object
-       * @return {Object}
-       *
-       * @public
-       */
-      getBrowser() {
-        if (this.parsedResult.browser) {
-          return this.parsedResult.browser;
-        }
-
-        return this.parseBrowser();
-      }
-
-      /**
-       * Get browser's name
-       * @return {String} Browser's name or an empty string
-       *
-       * @public
-       */
-      getBrowserName(toLowerCase) {
-        if (toLowerCase) {
-          return String(this.getBrowser().name).toLowerCase() || '';
-        }
-        return this.getBrowser().name || '';
-      }
-
-
-      /**
-       * Get browser's version
-       * @return {String} version of browser
-       *
-       * @public
-       */
-      getBrowserVersion() {
-        return this.getBrowser().version;
-      }
-
-      /**
-       * Get OS
-       * @return {Object}
-       *
-       * @example
-       * this.getOS();
-       * {
-       *   name: 'macOS',
-       *   version: '10.11.12'
-       * }
-       */
-      getOS() {
-        if (this.parsedResult.os) {
-          return this.parsedResult.os;
-        }
-
-        return this.parseOS();
-      }
-
-      /**
-       * Parse OS and save it to this.parsedResult.os
-       * @return {*|{}}
-       */
-      parseOS() {
-        this.parsedResult.os = {};
-
-        const os = Utils.find(osParsersList, (_os) => {
-          if (typeof _os.test === 'function') {
-            return _os.test(this);
-          }
-
-          if (_os.test instanceof Array) {
-            return _os.test.some(condition => this.test(condition));
-          }
-
-          throw new Error("Browser's test function is not valid");
-        });
-
-        if (os) {
-          this.parsedResult.os = os.describe(this.getUA());
-        }
-
-        return this.parsedResult.os;
-      }
-
-      /**
-       * Get OS name
-       * @param {Boolean} [toLowerCase] return lower-cased value
-       * @return {String} name of the OS — macOS, Windows, Linux, etc.
-       */
-      getOSName(toLowerCase) {
-        const { name } = this.getOS();
-
-        if (toLowerCase) {
-          return String(name).toLowerCase() || '';
-        }
-
-        return name || '';
-      }
-
-      /**
-       * Get OS version
-       * @return {String} full version with dots ('10.11.12', '5.6', etc)
-       */
-      getOSVersion() {
-        return this.getOS().version;
-      }
-
-      /**
-       * Get parsed platform
-       * @return {{}}
-       */
-      getPlatform() {
-        if (this.parsedResult.platform) {
-          return this.parsedResult.platform;
-        }
-
-        return this.parsePlatform();
-      }
-
-      /**
-       * Get platform name
-       * @param {Boolean} [toLowerCase=false]
-       * @return {*}
-       */
-      getPlatformType(toLowerCase = false) {
-        const { type } = this.getPlatform();
-
-        if (toLowerCase) {
-          return String(type).toLowerCase() || '';
-        }
-
-        return type || '';
-      }
-
-      /**
-       * Get parsed platform
-       * @return {{}}
-       */
-      parsePlatform() {
-        this.parsedResult.platform = {};
-
-        const platform = Utils.find(platformParsersList, (_platform) => {
-          if (typeof _platform.test === 'function') {
-            return _platform.test(this);
-          }
-
-          if (_platform.test instanceof Array) {
-            return _platform.test.some(condition => this.test(condition));
-          }
-
-          throw new Error("Browser's test function is not valid");
-        });
-
-        if (platform) {
-          this.parsedResult.platform = platform.describe(this.getUA());
-        }
-
-        return this.parsedResult.platform;
-      }
-
-      /**
-       * Get parsed engine
-       * @return {{}}
-       */
-      getEngine() {
-        if (this.parsedResult.engine) {
-          return this.parsedResult.engine;
-        }
-
-        return this.parseEngine();
-      }
-
-      /**
-       * Get engines's name
-       * @return {String} Engines's name or an empty string
-       *
-       * @public
-       */
-      getEngineName(toLowerCase) {
-        if (toLowerCase) {
-          return String(this.getEngine().name).toLowerCase() || '';
-        }
-        return this.getEngine().name || '';
-      }
-
-      /**
-       * Get parsed platform
-       * @return {{}}
-       */
-      parseEngine() {
-        this.parsedResult.engine = {};
-
-        const engine = Utils.find(enginesParsersList, (_engine) => {
-          if (typeof _engine.test === 'function') {
-            return _engine.test(this);
-          }
-
-          if (_engine.test instanceof Array) {
-            return _engine.test.some(condition => this.test(condition));
-          }
-
-          throw new Error("Browser's test function is not valid");
-        });
-
-        if (engine) {
-          this.parsedResult.engine = engine.describe(this.getUA());
-        }
-
-        return this.parsedResult.engine;
-      }
-
-      /**
-       * Parse full information about the browser
-       * @returns {Parser}
-       */
-      parse() {
-        this.parseBrowser();
-        this.parseOS();
-        this.parsePlatform();
-        this.parseEngine();
-
-        return this;
-      }
-
-      /**
-       * Get parsed result
-       * @return {ParsedResult}
-       */
-      getResult() {
-        return Utils.assign({}, this.parsedResult);
-      }
-
-      /**
-       * Check if parsed browser matches certain conditions
-       *
-       * @param {Object} checkTree It's one or two layered object,
-       * which can include a platform or an OS on the first layer
-       * and should have browsers specs on the bottom-laying layer
-       *
-       * @returns {Boolean|undefined} Whether the browser satisfies the set conditions or not.
-       * Returns `undefined` when the browser is no described in the checkTree object.
-       *
-       * @example
-       * const browser = Bowser.getParser(window.navigator.userAgent);
-       * if (browser.satisfies({chrome: '>118.01.1322' }))
-       * // or with os
-       * if (browser.satisfies({windows: { chrome: '>118.01.1322' } }))
-       * // or with platforms
-       * if (browser.satisfies({desktop: { chrome: '>118.01.1322' } }))
-       */
-      satisfies(checkTree) {
-        const platformsAndOSes = {};
-        let platformsAndOSCounter = 0;
-        const browsers = {};
-        let browsersCounter = 0;
-
-        const allDefinitions = Object.keys(checkTree);
-
-        allDefinitions.forEach((key) => {
-          const currentDefinition = checkTree[key];
-          if (typeof currentDefinition === 'string') {
-            browsers[key] = currentDefinition;
-            browsersCounter += 1;
-          } else if (typeof currentDefinition === 'object') {
-            platformsAndOSes[key] = currentDefinition;
-            platformsAndOSCounter += 1;
-          }
-        });
-
-        if (platformsAndOSCounter > 0) {
-          const platformsAndOSNames = Object.keys(platformsAndOSes);
-          const OSMatchingDefinition = Utils.find(platformsAndOSNames, name => (this.isOS(name)));
-
-          if (OSMatchingDefinition) {
-            const osResult = this.satisfies(platformsAndOSes[OSMatchingDefinition]);
-
-            if (osResult !== void 0) {
-              return osResult;
-            }
-          }
-
-          const platformMatchingDefinition = Utils.find(
-            platformsAndOSNames,
-            name => (this.isPlatform(name)),
-          );
-          if (platformMatchingDefinition) {
-            const platformResult = this.satisfies(platformsAndOSes[platformMatchingDefinition]);
-
-            if (platformResult !== void 0) {
-              return platformResult;
-            }
-          }
-        }
-
-        if (browsersCounter > 0) {
-          const browserNames = Object.keys(browsers);
-          const matchingDefinition = Utils.find(browserNames, name => (this.isBrowser(name, true)));
-
-          if (matchingDefinition !== void 0) {
-            return this.compareVersion(browsers[matchingDefinition]);
-          }
-        }
-
-        return undefined;
-      }
-
-      /**
-       * Check if the browser name equals the passed string
-       * @param browserName The string to compare with the browser name
-       * @param [includingAlias=false] The flag showing whether alias will be included into comparison
-       * @returns {boolean}
-       */
-      isBrowser(browserName, includingAlias = false) {
-        const defaultBrowserName = this.getBrowserName().toLowerCase();
-        let browserNameLower = browserName.toLowerCase();
-        const alias = Utils.getBrowserTypeByAlias(browserNameLower);
-
-        if (includingAlias && alias) {
-          browserNameLower = alias.toLowerCase();
-        }
-        return browserNameLower === defaultBrowserName;
-      }
-
-      compareVersion(version) {
-        let expectedResults = [0];
-        let comparableVersion = version;
-        let isLoose = false;
-
-        const currentBrowserVersion = this.getBrowserVersion();
-
-        if (typeof currentBrowserVersion !== 'string') {
-          return void 0;
-        }
-
-        if (version[0] === '>' || version[0] === '<') {
-          comparableVersion = version.substr(1);
-          if (version[1] === '=') {
-            isLoose = true;
-            comparableVersion = version.substr(2);
-          } else {
-            expectedResults = [];
-          }
-          if (version[0] === '>') {
-            expectedResults.push(1);
-          } else {
-            expectedResults.push(-1);
-          }
-        } else if (version[0] === '=') {
-          comparableVersion = version.substr(1);
-        } else if (version[0] === '~') {
-          isLoose = true;
-          comparableVersion = version.substr(1);
-        }
-
-        return expectedResults.indexOf(
-          Utils.compareVersions(currentBrowserVersion, comparableVersion, isLoose),
-        ) > -1;
-      }
-
-      isOS(osName) {
-        return this.getOSName(true) === String(osName).toLowerCase();
-      }
-
-      isPlatform(platformType) {
-        return this.getPlatformType(true) === String(platformType).toLowerCase();
-      }
-
-      isEngine(engineName) {
-        return this.getEngineName(true) === String(engineName).toLowerCase();
-      }
-
-      /**
-       * Is anything? Check if the browser is called "anything",
-       * the OS called "anything" or the platform called "anything"
-       * @param {String} anything
-       * @param [includingAlias=false] The flag showing whether alias will be included into comparison
-       * @returns {Boolean}
-       */
-      is(anything, includingAlias = false) {
-        return this.isBrowser(anything, includingAlias) || this.isOS(anything)
-          || this.isPlatform(anything);
-      }
-
-      /**
-       * Check if any of the given values satisfies this.is(anything)
-       * @param {String[]} anythings
-       * @returns {Boolean}
-       */
-      some(anythings = []) {
-        return anythings.some(anything => this.is(anything));
-      }
-    }
-
-    /*!
-     * Bowser - a browser detector
-     * https://github.com/lancedikson/bowser
-     * MIT License | (c) Dustin Diaz 2012-2015
-     * MIT License | (c) Denis Demchenko 2015-2019
-     */
-
-    /**
-     * Bowser class.
-     * Keep it simple as much as it can be.
-     * It's supposed to work with collections of {@link Parser} instances
-     * rather then solve one-instance problems.
-     * All the one-instance stuff is located in Parser class.
-     *
-     * @class
-     * @classdesc Bowser is a static object, that provides an API to the Parsers
-     * @hideconstructor
-     */
-    class Bowser {
-      /**
-       * Creates a {@link Parser} instance
-       *
-       * @param {String} UA UserAgent string
-       * @param {Boolean} [skipParsing=false] Will make the Parser postpone parsing until you ask it
-       * explicitly. Same as `skipParsing` for {@link Parser}.
-       * @returns {Parser}
-       * @throws {Error} when UA is not a String
-       *
-       * @example
-       * const parser = Bowser.getParser(window.navigator.userAgent);
-       * const result = parser.getResult();
-       */
-      static getParser(UA, skipParsing = false) {
-        if (typeof UA !== 'string') {
-          throw new Error('UserAgent should be a string');
-        }
-        return new Parser(UA, skipParsing);
-      }
-
-      /**
-       * Creates a {@link Parser} instance and runs {@link Parser.getResult} immediately
-       *
-       * @param UA
-       * @return {ParsedResult}
-       *
-       * @example
-       * const result = Bowser.parse(window.navigator.userAgent);
-       */
-      static parse(UA) {
-        return (new Parser(UA)).getResult();
-      }
-
-      static get BROWSER_MAP() {
-        return BROWSER_MAP;
-      }
-
-      static get ENGINE_MAP() {
-        return ENGINE_MAP;
-      }
-
-      static get OS_MAP() {
-        return OS_MAP;
-      }
-
-      static get PLATFORMS_MAP() {
-        return PLATFORMS_MAP;
-      }
-    }
-
-    const browser = Bowser.getParser(navigator.userAgent).getResult();
-    const isDesktop = browser.platform.type === "desktop";
-    const isChrome = browser.engine.name === "Blink";
-    const isFirefox = "InstallTrigger" in globalThis;
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.platform)
-        || /Macintosh(.*?) FxiOS(.*?)\//.test(navigator.platform)
-        || navigator.platform === "MacIntel" && navigator.maxTouchPoints > 2;
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    const isMobileVR = /Mobile VR/.test(navigator.userAgent);
-    const isOculus = /oculus/.test(navigator.userAgent);
-    const isOculusGo = isOculus && /pacific/.test(navigator.userAgent);
-    const isOculusQuest = isOculus && /quest/.test(navigator.userAgent);
-
-    const gestures = [
-        "change",
-        "click",
-        "contextmenu",
-        "dblclick",
-        "mouseup",
-        "pointerup",
-        "reset",
-        "submit",
-        "touchend"
-    ];
-    function identityPromise() {
-        return Promise.resolve();
-    }
-    /**
-     * This is not an event handler that you can add to an element. It's a global event that
-     * waits for the user to perform some sort of interaction with the website.
-      */
-    function onUserGesture(callback, test) {
-        const realTest = isNullOrUndefined(test)
-            ? identityPromise
-            : test;
-        const check = async (evt) => {
-            if (evt.isTrusted && await realTest()) {
-                for (const gesture of gestures) {
-                    window.removeEventListener(gesture, check);
-                }
-                callback();
-            }
-        };
-        for (const gesture of gestures) {
-            window.addEventListener(gesture, check);
-        }
     }
 
     /**
@@ -4904,6 +2257,11 @@
             }
         }
     }
+
+    /**
+     * Indicates whether or not the current browser can change the destination device for audio output.
+     **/
+    const canChangeAudioOutput = isFunction(HTMLAudioElement.prototype.setSinkId);
 
     /**
      * Rendering mode ENUM.
@@ -10177,6 +7535,2684 @@
         }
     }
 
+    var ConnectionState;
+    (function (ConnectionState) {
+        ConnectionState["Disconnected"] = "Disconnected";
+        ConnectionState["Connecting"] = "Connecting";
+        ConnectionState["Connected"] = "Connected";
+        ConnectionState["Disconnecting"] = "Disconnecting";
+    })(ConnectionState || (ConnectionState = {}));
+
+    /**
+     * Unicode-standardized pictograms.
+     **/
+    class Emoji {
+        /**
+         * Creates a new Unicode-standardized pictograms.
+         * @param value - a Unicode sequence.
+         * @param desc - an English text description of the pictogram.
+         * @param props - an optional set of properties to store with the emoji.
+         */
+        constructor(value, desc, props = null) {
+            this.value = value;
+            this.desc = desc;
+            this.value = value;
+            this.desc = desc;
+            this.props = props || {};
+        }
+        /**
+         * Determines of the provided Emoji or EmojiGroup is a subset of
+         * this emoji.
+         */
+        contains(e) {
+            if (e instanceof Emoji) {
+                return this.contains(e.value);
+            }
+            else {
+                return this.value.indexOf(e) >= 0;
+            }
+        }
+    }
+
+    class CallaEvent extends Event {
+        constructor(eventType) {
+            super(eventType);
+            this.eventType = eventType;
+        }
+    }
+    class CallaTeleconferenceServerConnectedEvent extends CallaEvent {
+        constructor() {
+            super("serverConnected");
+        }
+    }
+    class CallaTeleconferenceServerDisconnectedEvent extends CallaEvent {
+        constructor() {
+            super("serverDisconnected");
+        }
+    }
+    class CallaTeleconferenceServerFailedEvent extends CallaEvent {
+        constructor() {
+            super("serverFailed");
+        }
+    }
+    class CallaUserEvent extends CallaEvent {
+        constructor(type, id) {
+            super(type);
+            this.id = id;
+        }
+    }
+    class CallaParticipantEvent extends CallaUserEvent {
+        constructor(type, id, displayName) {
+            super(type, id);
+            this.displayName = displayName;
+        }
+    }
+    class CallaConferenceJoinedEvent extends CallaUserEvent {
+        constructor(id, pose) {
+            super("conferenceJoined", id);
+            this.pose = pose;
+        }
+    }
+    class CallaConferenceLeftEvent extends CallaUserEvent {
+        constructor(id) {
+            super("conferenceLeft", id);
+        }
+    }
+    class CallaConferenceFailedEvent extends CallaEvent {
+        constructor() {
+            super("conferenceFailed");
+        }
+    }
+    class CallaParticipantJoinedEvent extends CallaParticipantEvent {
+        constructor(id, displayName, source) {
+            super("participantJoined", id, displayName);
+            this.source = source;
+        }
+    }
+    class CallaParticipantLeftEvent extends CallaUserEvent {
+        constructor(id) {
+            super("participantLeft", id);
+        }
+    }
+    class CallaParticipantNameChangeEvent extends CallaParticipantEvent {
+        constructor(id, displayName) {
+            super("userNameChanged", id, displayName);
+        }
+    }
+    class CallaUserMutedEvent extends CallaUserEvent {
+        constructor(type, id, muted) {
+            super(type, id);
+            this.muted = muted;
+        }
+    }
+    class CallaUserAudioMutedEvent extends CallaUserMutedEvent {
+        constructor(id, muted) {
+            super("audioMuteStatusChanged", id, muted);
+        }
+    }
+    class CallaUserVideoMutedEvent extends CallaUserMutedEvent {
+        constructor(id, muted) {
+            super("videoMuteStatusChanged", id, muted);
+        }
+    }
+    var StreamType;
+    (function (StreamType) {
+        StreamType["Audio"] = "audio";
+        StreamType["Video"] = "video";
+    })(StreamType || (StreamType = {}));
+    var StreamOpType;
+    (function (StreamOpType) {
+        StreamOpType["Added"] = "added";
+        StreamOpType["Removed"] = "removed";
+        StreamOpType["Changed"] = "changed";
+    })(StreamOpType || (StreamOpType = {}));
+    class CallaStreamEvent extends CallaUserEvent {
+        constructor(type, kind, op, id, stream) {
+            super(type, id);
+            this.kind = kind;
+            this.op = op;
+            this.stream = stream;
+        }
+    }
+    class CallaStreamAddedEvent extends CallaStreamEvent {
+        constructor(type, kind, id, stream) {
+            super(type, kind, StreamOpType.Added, id, stream);
+        }
+    }
+    class CallaStreamRemovedEvent extends CallaStreamEvent {
+        constructor(type, kind, id, stream) {
+            super(type, kind, StreamOpType.Removed, id, stream);
+        }
+    }
+    class CallaAudioStreamAddedEvent extends CallaStreamAddedEvent {
+        constructor(id, stream) {
+            super("audioAdded", StreamType.Audio, id, stream);
+        }
+    }
+    class CallaAudioStreamRemovedEvent extends CallaStreamRemovedEvent {
+        constructor(id, stream) {
+            super("audioRemoved", StreamType.Audio, id, stream);
+        }
+    }
+    class CallaVideoStreamAddedEvent extends CallaStreamAddedEvent {
+        constructor(id, stream) {
+            super("videoAdded", StreamType.Video, id, stream);
+        }
+    }
+    class CallaVideoStreamRemovedEvent extends CallaStreamRemovedEvent {
+        constructor(id, stream) {
+            super("videoRemoved", StreamType.Video, id, stream);
+        }
+    }
+    class CallaPoseEvent extends CallaUserEvent {
+        constructor(type, id, px, py, pz, fx, fy, fz, ux, uy, uz) {
+            super(type, id);
+            this.px = px;
+            this.py = py;
+            this.pz = pz;
+            this.fx = fx;
+            this.fy = fy;
+            this.fz = fz;
+            this.ux = ux;
+            this.uy = uy;
+            this.uz = uz;
+        }
+        set(px, py, pz, fx, fy, fz, ux, uy, uz) {
+            this.px = px;
+            this.py = py;
+            this.pz = pz;
+            this.fx = fx;
+            this.fy = fy;
+            this.fz = fz;
+            this.ux = ux;
+            this.uy = uy;
+            this.uz = uz;
+        }
+    }
+    class CallaUserPosedEvent extends CallaPoseEvent {
+        constructor(id, px, py, pz, fx, fy, fz, ux, uy, uz) {
+            super("userPosed", id, px, py, pz, fx, fy, fz, ux, uy, uz);
+        }
+    }
+    class CallaUserPointerEvent extends CallaPoseEvent {
+        constructor(id, name, px, py, pz, fx, fy, fz, ux, uy, uz) {
+            super("userPointer", id, px, py, pz, fx, fy, fz, ux, uy, uz);
+            this.name = name;
+        }
+    }
+    class CallaEmojiEvent extends CallaUserEvent {
+        constructor(type, id, emoji) {
+            super(type, id);
+            if (emoji instanceof Emoji) {
+                this.emoji = emoji.value;
+            }
+            else {
+                this.emoji = emoji;
+            }
+        }
+    }
+    class CallaEmoteEvent extends CallaEmojiEvent {
+        constructor(id, emoji) {
+            super("emote", id, emoji);
+        }
+    }
+    class CallaEmojiAvatarEvent extends CallaEmojiEvent {
+        constructor(id, emoji) {
+            super("setAvatarEmoji", id, emoji);
+        }
+    }
+    class CallaAvatarChangedEvent extends CallaUserEvent {
+        constructor(id, url) {
+            super("avatarChanged", id);
+            this.url = url;
+        }
+    }
+    class CallaChatEvent extends CallaUserEvent {
+        constructor(id, text) {
+            super("chat", id);
+            this.text = text;
+        }
+    }
+
+    function sleep(dt) {
+        return new Promise((resolve) => {
+            setTimeout(resolve, dt);
+        });
+    }
+
+    class BaseMetadataClient extends TypedEventBase {
+        constructor(sleepTime) {
+            super();
+            this.sleepTime = sleepTime;
+            this.tasks = new Map();
+        }
+        async getNext(evtName, userID) {
+            return new Promise((resolve) => {
+                const getter = (evt) => {
+                    if (evt instanceof CallaUserEvent
+                        && evt.id === userID) {
+                        this.removeEventListener(evtName, getter);
+                        resolve(evt);
+                    }
+                };
+                this.addEventListener(evtName, getter);
+            });
+        }
+        get isConnected() {
+            return this.metadataState === ConnectionState.Connected;
+        }
+        async callThrottled(key, command, ...args) {
+            if (!this.tasks.has(key)) {
+                const start = performance.now();
+                const task = this.callInternal(command, ...args);
+                this.tasks.set(key, task);
+                await task;
+                const delta = performance.now() - start;
+                const sleepTime = this.sleepTime - delta;
+                if (sleepTime > 0) {
+                    await sleep(this.sleepTime);
+                }
+                this.tasks.delete(key);
+            }
+        }
+        async callImmediate(command, ...args) {
+            await this.callInternal(command, ...args);
+        }
+        setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz) {
+            this.callThrottled("userPosed", "userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
+        }
+        setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz) {
+            this.callImmediate("userPosed", px, py, pz, fx, fy, fz, ux, uy, uz);
+        }
+        setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz) {
+            this.callThrottled("userPointer" + name, "userPointer", name, px, py, pz, fx, fy, fz, ux, uy, uz);
+        }
+        setAvatarEmoji(emoji) {
+            this.callImmediate("setAvatarEmoji", emoji);
+        }
+        setAvatarURL(url) {
+            this.callImmediate("avatarChanged", url);
+        }
+        emote(emoji) {
+            this.callImmediate("emote", emoji);
+        }
+        chat(text) {
+            this.callImmediate("chat", text);
+        }
+    }
+
+    const JITSI_HAX_FINGERPRINT = "Calla";
+    class JitsiMetadataClient extends BaseMetadataClient {
+        constructor(tele) {
+            super(250);
+            this.tele = tele;
+            this._status = ConnectionState.Disconnected;
+            this.remoteUserIDs = new Array();
+            this.tele.addEventListener("participantJoined", (evt) => {
+                arraySortedInsert(this.remoteUserIDs, evt.id, false);
+            });
+            this.tele.addEventListener("participantLeft", (evt) => {
+                arrayRemove(this.remoteUserIDs, evt.id);
+            });
+        }
+        get metadataState() {
+            return this._status;
+        }
+        async connect() {
+            // JitsiTeleconferenceClient will already connect
+        }
+        async join(_roomName) {
+            // JitsiTeleconferenceClient will already join
+            this._status = ConnectionState.Connecting;
+            this.tele.conference.addEventListener(JitsiMeetJS.events.conference.ENDPOINT_MESSAGE_RECEIVED, (user, data) => {
+                if (data.hax === JITSI_HAX_FINGERPRINT) {
+                    const fromUserID = user.getId();
+                    const command = data.command;
+                    const values = data.values;
+                    switch (command) {
+                        case "avatarChanged":
+                            this.dispatchEvent(new CallaAvatarChangedEvent(fromUserID, values[0]));
+                            break;
+                        case "emote":
+                            this.dispatchEvent(new CallaEmoteEvent(fromUserID, values[0]));
+                            break;
+                        case "setAvatarEmoji":
+                            this.dispatchEvent(new CallaEmojiAvatarEvent(fromUserID, values[0]));
+                            break;
+                        case "userPosed":
+                            this.dispatchEvent(new CallaUserPosedEvent(fromUserID, values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]));
+                            break;
+                        case "userPointer":
+                            this.dispatchEvent(new CallaUserPointerEvent(fromUserID, values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8], values[9]));
+                            break;
+                        case "chat":
+                            this.dispatchEvent(new CallaChatEvent(fromUserID, values[0]));
+                            break;
+                        default:
+                            assertNever(command);
+                    }
+                }
+            });
+            await once(this.tele.conference, JitsiMeetJS.events.conference.DATA_CHANNEL_OPENED);
+            this._status = ConnectionState.Connected;
+        }
+        async leave() {
+            // JitsiTeleconferenceClient will already leave
+            this._status = ConnectionState.Disconnected;
+        }
+        async identify(_userName) {
+            // JitsiTeleconferenceClient will already identify the user
+        }
+        async disconnect() {
+            // JitsiTeleconferenceClient will already disconnect
+        }
+        sendJitsiHax(toUserID, command, ...values) {
+            this.tele.conference.sendMessage({
+                hax: JITSI_HAX_FINGERPRINT,
+                command,
+                values
+            }, toUserID);
+        }
+        callInternal(command, ...values) {
+            for (const toUserID of this.remoteUserIDs) {
+                this.sendJitsiHax(toUserID, command, ...values);
+            }
+            return Promise.resolve();
+        }
+        async stopInternal() {
+            this._status = ConnectionState.Disconnecting;
+            await waitFor(() => this.metadataState === ConnectionState.Disconnected);
+        }
+    }
+
+    /**
+     * Scans through a series of filters to find an item that matches
+     * any of the filters. The first item of the first filter that matches
+     * will be returned.
+     */
+    function arrayScan(arr, ...tests) {
+        for (const test of tests) {
+            for (const item of arr) {
+                if (test(item)) {
+                    return item;
+                }
+            }
+        }
+        return null;
+    }
+
+    // NOTE: this list must be up-to-date with browsers listed in
+    // test/acceptance/useragentstrings.yml
+    const BROWSER_ALIASES_MAP = {
+      'Amazon Silk': 'amazon_silk',
+      'Android Browser': 'android',
+      Bada: 'bada',
+      BlackBerry: 'blackberry',
+      Chrome: 'chrome',
+      Chromium: 'chromium',
+      Electron: 'electron',
+      Epiphany: 'epiphany',
+      Firefox: 'firefox',
+      Focus: 'focus',
+      Generic: 'generic',
+      'Google Search': 'google_search',
+      Googlebot: 'googlebot',
+      'Internet Explorer': 'ie',
+      'K-Meleon': 'k_meleon',
+      Maxthon: 'maxthon',
+      'Microsoft Edge': 'edge',
+      'MZ Browser': 'mz',
+      'NAVER Whale Browser': 'naver',
+      Opera: 'opera',
+      'Opera Coast': 'opera_coast',
+      PhantomJS: 'phantomjs',
+      Puffin: 'puffin',
+      QupZilla: 'qupzilla',
+      QQ: 'qq',
+      QQLite: 'qqlite',
+      Safari: 'safari',
+      Sailfish: 'sailfish',
+      'Samsung Internet for Android': 'samsung_internet',
+      SeaMonkey: 'seamonkey',
+      Sleipnir: 'sleipnir',
+      Swing: 'swing',
+      Tizen: 'tizen',
+      'UC Browser': 'uc',
+      Vivaldi: 'vivaldi',
+      'WebOS Browser': 'webos',
+      WeChat: 'wechat',
+      'Yandex Browser': 'yandex',
+      Roku: 'roku',
+    };
+
+    const BROWSER_MAP = {
+      amazon_silk: 'Amazon Silk',
+      android: 'Android Browser',
+      bada: 'Bada',
+      blackberry: 'BlackBerry',
+      chrome: 'Chrome',
+      chromium: 'Chromium',
+      electron: 'Electron',
+      epiphany: 'Epiphany',
+      firefox: 'Firefox',
+      focus: 'Focus',
+      generic: 'Generic',
+      googlebot: 'Googlebot',
+      google_search: 'Google Search',
+      ie: 'Internet Explorer',
+      k_meleon: 'K-Meleon',
+      maxthon: 'Maxthon',
+      edge: 'Microsoft Edge',
+      mz: 'MZ Browser',
+      naver: 'NAVER Whale Browser',
+      opera: 'Opera',
+      opera_coast: 'Opera Coast',
+      phantomjs: 'PhantomJS',
+      puffin: 'Puffin',
+      qupzilla: 'QupZilla',
+      qq: 'QQ Browser',
+      qqlite: 'QQ Browser Lite',
+      safari: 'Safari',
+      sailfish: 'Sailfish',
+      samsung_internet: 'Samsung Internet for Android',
+      seamonkey: 'SeaMonkey',
+      sleipnir: 'Sleipnir',
+      swing: 'Swing',
+      tizen: 'Tizen',
+      uc: 'UC Browser',
+      vivaldi: 'Vivaldi',
+      webos: 'WebOS Browser',
+      wechat: 'WeChat',
+      yandex: 'Yandex Browser',
+    };
+
+    const PLATFORMS_MAP = {
+      tablet: 'tablet',
+      mobile: 'mobile',
+      desktop: 'desktop',
+      tv: 'tv',
+    };
+
+    const OS_MAP = {
+      WindowsPhone: 'Windows Phone',
+      Windows: 'Windows',
+      MacOS: 'macOS',
+      iOS: 'iOS',
+      Android: 'Android',
+      WebOS: 'WebOS',
+      BlackBerry: 'BlackBerry',
+      Bada: 'Bada',
+      Tizen: 'Tizen',
+      Linux: 'Linux',
+      ChromeOS: 'Chrome OS',
+      PlayStation4: 'PlayStation 4',
+      Roku: 'Roku',
+    };
+
+    const ENGINE_MAP = {
+      EdgeHTML: 'EdgeHTML',
+      Blink: 'Blink',
+      Trident: 'Trident',
+      Presto: 'Presto',
+      Gecko: 'Gecko',
+      WebKit: 'WebKit',
+    };
+
+    class Utils {
+      /**
+       * Get first matched item for a string
+       * @param {RegExp} regexp
+       * @param {String} ua
+       * @return {Array|{index: number, input: string}|*|boolean|string}
+       */
+      static getFirstMatch(regexp, ua) {
+        const match = ua.match(regexp);
+        return (match && match.length > 0 && match[1]) || '';
+      }
+
+      /**
+       * Get second matched item for a string
+       * @param regexp
+       * @param {String} ua
+       * @return {Array|{index: number, input: string}|*|boolean|string}
+       */
+      static getSecondMatch(regexp, ua) {
+        const match = ua.match(regexp);
+        return (match && match.length > 1 && match[2]) || '';
+      }
+
+      /**
+       * Match a regexp and return a constant or undefined
+       * @param {RegExp} regexp
+       * @param {String} ua
+       * @param {*} _const Any const that will be returned if regexp matches the string
+       * @return {*}
+       */
+      static matchAndReturnConst(regexp, ua, _const) {
+        if (regexp.test(ua)) {
+          return _const;
+        }
+        return void (0);
+      }
+
+      static getWindowsVersionName(version) {
+        switch (version) {
+          case 'NT': return 'NT';
+          case 'XP': return 'XP';
+          case 'NT 5.0': return '2000';
+          case 'NT 5.1': return 'XP';
+          case 'NT 5.2': return '2003';
+          case 'NT 6.0': return 'Vista';
+          case 'NT 6.1': return '7';
+          case 'NT 6.2': return '8';
+          case 'NT 6.3': return '8.1';
+          case 'NT 10.0': return '10';
+          default: return undefined;
+        }
+      }
+
+      /**
+       * Get macOS version name
+       *    10.5 - Leopard
+       *    10.6 - Snow Leopard
+       *    10.7 - Lion
+       *    10.8 - Mountain Lion
+       *    10.9 - Mavericks
+       *    10.10 - Yosemite
+       *    10.11 - El Capitan
+       *    10.12 - Sierra
+       *    10.13 - High Sierra
+       *    10.14 - Mojave
+       *    10.15 - Catalina
+       *
+       * @example
+       *   getMacOSVersionName("10.14") // 'Mojave'
+       *
+       * @param  {string} version
+       * @return {string} versionName
+       */
+      static getMacOSVersionName(version) {
+        const v = version.split('.').splice(0, 2).map(s => parseInt(s, 10) || 0);
+        v.push(0);
+        if (v[0] !== 10) return undefined;
+        switch (v[1]) {
+          case 5: return 'Leopard';
+          case 6: return 'Snow Leopard';
+          case 7: return 'Lion';
+          case 8: return 'Mountain Lion';
+          case 9: return 'Mavericks';
+          case 10: return 'Yosemite';
+          case 11: return 'El Capitan';
+          case 12: return 'Sierra';
+          case 13: return 'High Sierra';
+          case 14: return 'Mojave';
+          case 15: return 'Catalina';
+          default: return undefined;
+        }
+      }
+
+      /**
+       * Get Android version name
+       *    1.5 - Cupcake
+       *    1.6 - Donut
+       *    2.0 - Eclair
+       *    2.1 - Eclair
+       *    2.2 - Froyo
+       *    2.x - Gingerbread
+       *    3.x - Honeycomb
+       *    4.0 - Ice Cream Sandwich
+       *    4.1 - Jelly Bean
+       *    4.4 - KitKat
+       *    5.x - Lollipop
+       *    6.x - Marshmallow
+       *    7.x - Nougat
+       *    8.x - Oreo
+       *    9.x - Pie
+       *
+       * @example
+       *   getAndroidVersionName("7.0") // 'Nougat'
+       *
+       * @param  {string} version
+       * @return {string} versionName
+       */
+      static getAndroidVersionName(version) {
+        const v = version.split('.').splice(0, 2).map(s => parseInt(s, 10) || 0);
+        v.push(0);
+        if (v[0] === 1 && v[1] < 5) return undefined;
+        if (v[0] === 1 && v[1] < 6) return 'Cupcake';
+        if (v[0] === 1 && v[1] >= 6) return 'Donut';
+        if (v[0] === 2 && v[1] < 2) return 'Eclair';
+        if (v[0] === 2 && v[1] === 2) return 'Froyo';
+        if (v[0] === 2 && v[1] > 2) return 'Gingerbread';
+        if (v[0] === 3) return 'Honeycomb';
+        if (v[0] === 4 && v[1] < 1) return 'Ice Cream Sandwich';
+        if (v[0] === 4 && v[1] < 4) return 'Jelly Bean';
+        if (v[0] === 4 && v[1] >= 4) return 'KitKat';
+        if (v[0] === 5) return 'Lollipop';
+        if (v[0] === 6) return 'Marshmallow';
+        if (v[0] === 7) return 'Nougat';
+        if (v[0] === 8) return 'Oreo';
+        if (v[0] === 9) return 'Pie';
+        return undefined;
+      }
+
+      /**
+       * Get version precisions count
+       *
+       * @example
+       *   getVersionPrecision("1.10.3") // 3
+       *
+       * @param  {string} version
+       * @return {number}
+       */
+      static getVersionPrecision(version) {
+        return version.split('.').length;
+      }
+
+      /**
+       * Calculate browser version weight
+       *
+       * @example
+       *   compareVersions('1.10.2.1',  '1.8.2.1.90')    // 1
+       *   compareVersions('1.010.2.1', '1.09.2.1.90');  // 1
+       *   compareVersions('1.10.2.1',  '1.10.2.1');     // 0
+       *   compareVersions('1.10.2.1',  '1.0800.2');     // -1
+       *   compareVersions('1.10.2.1',  '1.10',  true);  // 0
+       *
+       * @param {String} versionA versions versions to compare
+       * @param {String} versionB versions versions to compare
+       * @param {boolean} [isLoose] enable loose comparison
+       * @return {Number} comparison result: -1 when versionA is lower,
+       * 1 when versionA is bigger, 0 when both equal
+       */
+      /* eslint consistent-return: 1 */
+      static compareVersions(versionA, versionB, isLoose = false) {
+        // 1) get common precision for both versions, for example for "10.0" and "9" it should be 2
+        const versionAPrecision = Utils.getVersionPrecision(versionA);
+        const versionBPrecision = Utils.getVersionPrecision(versionB);
+
+        let precision = Math.max(versionAPrecision, versionBPrecision);
+        let lastPrecision = 0;
+
+        const chunks = Utils.map([versionA, versionB], (version) => {
+          const delta = precision - Utils.getVersionPrecision(version);
+
+          // 2) "9" -> "9.0" (for precision = 2)
+          const _version = version + new Array(delta + 1).join('.0');
+
+          // 3) "9.0" -> ["000000000"", "000000009"]
+          return Utils.map(_version.split('.'), chunk => new Array(20 - chunk.length).join('0') + chunk).reverse();
+        });
+
+        // adjust precision for loose comparison
+        if (isLoose) {
+          lastPrecision = precision - Math.min(versionAPrecision, versionBPrecision);
+        }
+
+        // iterate in reverse order by reversed chunks array
+        precision -= 1;
+        while (precision >= lastPrecision) {
+          // 4) compare: "000000009" > "000000010" = false (but "9" > "10" = true)
+          if (chunks[0][precision] > chunks[1][precision]) {
+            return 1;
+          }
+
+          if (chunks[0][precision] === chunks[1][precision]) {
+            if (precision === lastPrecision) {
+              // all version chunks are same
+              return 0;
+            }
+
+            precision -= 1;
+          } else if (chunks[0][precision] < chunks[1][precision]) {
+            return -1;
+          }
+        }
+
+        return undefined;
+      }
+
+      /**
+       * Array::map polyfill
+       *
+       * @param  {Array} arr
+       * @param  {Function} iterator
+       * @return {Array}
+       */
+      static map(arr, iterator) {
+        const result = [];
+        let i;
+        if (Array.prototype.map) {
+          return Array.prototype.map.call(arr, iterator);
+        }
+        for (i = 0; i < arr.length; i += 1) {
+          result.push(iterator(arr[i]));
+        }
+        return result;
+      }
+
+      /**
+       * Array::find polyfill
+       *
+       * @param  {Array} arr
+       * @param  {Function} predicate
+       * @return {Array}
+       */
+      static find(arr, predicate) {
+        let i;
+        let l;
+        if (Array.prototype.find) {
+          return Array.prototype.find.call(arr, predicate);
+        }
+        for (i = 0, l = arr.length; i < l; i += 1) {
+          const value = arr[i];
+          if (predicate(value, i)) {
+            return value;
+          }
+        }
+        return undefined;
+      }
+
+      /**
+       * Object::assign polyfill
+       *
+       * @param  {Object} obj
+       * @param  {Object} ...objs
+       * @return {Object}
+       */
+      static assign(obj, ...assigners) {
+        const result = obj;
+        let i;
+        let l;
+        if (Object.assign) {
+          return Object.assign(obj, ...assigners);
+        }
+        for (i = 0, l = assigners.length; i < l; i += 1) {
+          const assigner = assigners[i];
+          if (typeof assigner === 'object' && assigner !== null) {
+            const keys = Object.keys(assigner);
+            keys.forEach((key) => {
+              result[key] = assigner[key];
+            });
+          }
+        }
+        return obj;
+      }
+
+      /**
+       * Get short version/alias for a browser name
+       *
+       * @example
+       *   getBrowserAlias('Microsoft Edge') // edge
+       *
+       * @param  {string} browserName
+       * @return {string}
+       */
+      static getBrowserAlias(browserName) {
+        return BROWSER_ALIASES_MAP[browserName];
+      }
+
+      /**
+       * Get short version/alias for a browser name
+       *
+       * @example
+       *   getBrowserAlias('edge') // Microsoft Edge
+       *
+       * @param  {string} browserAlias
+       * @return {string}
+       */
+      static getBrowserTypeByAlias(browserAlias) {
+        return BROWSER_MAP[browserAlias] || '';
+      }
+    }
+
+    /**
+     * Browsers' descriptors
+     *
+     * The idea of descriptors is simple. You should know about them two simple things:
+     * 1. Every descriptor has a method or property called `test` and a `describe` method.
+     * 2. Order of descriptors is important.
+     *
+     * More details:
+     * 1. Method or property `test` serves as a way to detect whether the UA string
+     * matches some certain browser or not. The `describe` method helps to make a result
+     * object with params that show some browser-specific things: name, version, etc.
+     * 2. Order of descriptors is important because a Parser goes through them one by one
+     * in course. For example, if you insert Chrome's descriptor as the first one,
+     * more then a half of browsers will be described as Chrome, because they will pass
+     * the Chrome descriptor's test.
+     *
+     * Descriptor's `test` could be a property with an array of RegExps, where every RegExp
+     * will be applied to a UA string to test it whether it matches or not.
+     * If a descriptor has two or more regexps in the `test` array it tests them one by one
+     * with a logical sum operation. Parser stops if it has found any RegExp that matches the UA.
+     *
+     * Or `test` could be a method. In that case it gets a Parser instance and should
+     * return true/false to get the Parser know if this browser descriptor matches the UA or not.
+     */
+
+    const commonVersionIdentifier = /version\/(\d+(\.?_?\d+)+)/i;
+
+    const browsersList = [
+      /* Googlebot */
+      {
+        test: [/googlebot/i],
+        describe(ua) {
+          const browser = {
+            name: 'Googlebot',
+          };
+          const version = Utils.getFirstMatch(/googlebot\/(\d+(\.\d+))/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+
+      /* Opera < 13.0 */
+      {
+        test: [/opera/i],
+        describe(ua) {
+          const browser = {
+            name: 'Opera',
+          };
+          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:opera)[\s/](\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+
+      /* Opera > 13.0 */
+      {
+        test: [/opr\/|opios/i],
+        describe(ua) {
+          const browser = {
+            name: 'Opera',
+          };
+          const version = Utils.getFirstMatch(/(?:opr|opios)[\s/](\S+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/SamsungBrowser/i],
+        describe(ua) {
+          const browser = {
+            name: 'Samsung Internet for Android',
+          };
+          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:SamsungBrowser)[\s/](\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/Whale/i],
+        describe(ua) {
+          const browser = {
+            name: 'NAVER Whale Browser',
+          };
+          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:whale)[\s/](\d+(?:\.\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/MZBrowser/i],
+        describe(ua) {
+          const browser = {
+            name: 'MZ Browser',
+          };
+          const version = Utils.getFirstMatch(/(?:MZBrowser)[\s/](\d+(?:\.\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/focus/i],
+        describe(ua) {
+          const browser = {
+            name: 'Focus',
+          };
+          const version = Utils.getFirstMatch(/(?:focus)[\s/](\d+(?:\.\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/swing/i],
+        describe(ua) {
+          const browser = {
+            name: 'Swing',
+          };
+          const version = Utils.getFirstMatch(/(?:swing)[\s/](\d+(?:\.\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/coast/i],
+        describe(ua) {
+          const browser = {
+            name: 'Opera Coast',
+          };
+          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:coast)[\s/](\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/opt\/\d+(?:.?_?\d+)+/i],
+        describe(ua) {
+          const browser = {
+            name: 'Opera Touch',
+          };
+          const version = Utils.getFirstMatch(/(?:opt)[\s/](\d+(\.?_?\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/yabrowser/i],
+        describe(ua) {
+          const browser = {
+            name: 'Yandex Browser',
+          };
+          const version = Utils.getFirstMatch(/(?:yabrowser)[\s/](\d+(\.?_?\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/ucbrowser/i],
+        describe(ua) {
+          const browser = {
+            name: 'UC Browser',
+          };
+          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:ucbrowser)[\s/](\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/Maxthon|mxios/i],
+        describe(ua) {
+          const browser = {
+            name: 'Maxthon',
+          };
+          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:Maxthon|mxios)[\s/](\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/epiphany/i],
+        describe(ua) {
+          const browser = {
+            name: 'Epiphany',
+          };
+          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:epiphany)[\s/](\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/puffin/i],
+        describe(ua) {
+          const browser = {
+            name: 'Puffin',
+          };
+          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:puffin)[\s/](\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/sleipnir/i],
+        describe(ua) {
+          const browser = {
+            name: 'Sleipnir',
+          };
+          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:sleipnir)[\s/](\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/k-meleon/i],
+        describe(ua) {
+          const browser = {
+            name: 'K-Meleon',
+          };
+          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/(?:k-meleon)[\s/](\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/micromessenger/i],
+        describe(ua) {
+          const browser = {
+            name: 'WeChat',
+          };
+          const version = Utils.getFirstMatch(/(?:micromessenger)[\s/](\d+(\.?_?\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/qqbrowser/i],
+        describe(ua) {
+          const browser = {
+            name: (/qqbrowserlite/i).test(ua) ? 'QQ Browser Lite' : 'QQ Browser',
+          };
+          const version = Utils.getFirstMatch(/(?:qqbrowserlite|qqbrowser)[/](\d+(\.?_?\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/msie|trident/i],
+        describe(ua) {
+          const browser = {
+            name: 'Internet Explorer',
+          };
+          const version = Utils.getFirstMatch(/(?:msie |rv:)(\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/\sedg\//i],
+        describe(ua) {
+          const browser = {
+            name: 'Microsoft Edge',
+          };
+
+          const version = Utils.getFirstMatch(/\sedg\/(\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/edg([ea]|ios)/i],
+        describe(ua) {
+          const browser = {
+            name: 'Microsoft Edge',
+          };
+
+          const version = Utils.getSecondMatch(/edg([ea]|ios)\/(\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/vivaldi/i],
+        describe(ua) {
+          const browser = {
+            name: 'Vivaldi',
+          };
+          const version = Utils.getFirstMatch(/vivaldi\/(\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/seamonkey/i],
+        describe(ua) {
+          const browser = {
+            name: 'SeaMonkey',
+          };
+          const version = Utils.getFirstMatch(/seamonkey\/(\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/sailfish/i],
+        describe(ua) {
+          const browser = {
+            name: 'Sailfish',
+          };
+
+          const version = Utils.getFirstMatch(/sailfish\s?browser\/(\d+(\.\d+)?)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/silk/i],
+        describe(ua) {
+          const browser = {
+            name: 'Amazon Silk',
+          };
+          const version = Utils.getFirstMatch(/silk\/(\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/phantom/i],
+        describe(ua) {
+          const browser = {
+            name: 'PhantomJS',
+          };
+          const version = Utils.getFirstMatch(/phantomjs\/(\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/slimerjs/i],
+        describe(ua) {
+          const browser = {
+            name: 'SlimerJS',
+          };
+          const version = Utils.getFirstMatch(/slimerjs\/(\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/blackberry|\bbb\d+/i, /rim\stablet/i],
+        describe(ua) {
+          const browser = {
+            name: 'BlackBerry',
+          };
+          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/blackberry[\d]+\/(\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/(web|hpw)[o0]s/i],
+        describe(ua) {
+          const browser = {
+            name: 'WebOS Browser',
+          };
+          const version = Utils.getFirstMatch(commonVersionIdentifier, ua) || Utils.getFirstMatch(/w(?:eb)?[o0]sbrowser\/(\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/bada/i],
+        describe(ua) {
+          const browser = {
+            name: 'Bada',
+          };
+          const version = Utils.getFirstMatch(/dolfin\/(\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/tizen/i],
+        describe(ua) {
+          const browser = {
+            name: 'Tizen',
+          };
+          const version = Utils.getFirstMatch(/(?:tizen\s?)?browser\/(\d+(\.?_?\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/qupzilla/i],
+        describe(ua) {
+          const browser = {
+            name: 'QupZilla',
+          };
+          const version = Utils.getFirstMatch(/(?:qupzilla)[\s/](\d+(\.?_?\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/firefox|iceweasel|fxios/i],
+        describe(ua) {
+          const browser = {
+            name: 'Firefox',
+          };
+          const version = Utils.getFirstMatch(/(?:firefox|iceweasel|fxios)[\s/](\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/electron/i],
+        describe(ua) {
+          const browser = {
+            name: 'Electron',
+          };
+          const version = Utils.getFirstMatch(/(?:electron)\/(\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/MiuiBrowser/i],
+        describe(ua) {
+          const browser = {
+            name: 'Miui',
+          };
+          const version = Utils.getFirstMatch(/(?:MiuiBrowser)[\s/](\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/chromium/i],
+        describe(ua) {
+          const browser = {
+            name: 'Chromium',
+          };
+          const version = Utils.getFirstMatch(/(?:chromium)[\s/](\d+(\.?_?\d+)+)/i, ua) || Utils.getFirstMatch(commonVersionIdentifier, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/chrome|crios|crmo/i],
+        describe(ua) {
+          const browser = {
+            name: 'Chrome',
+          };
+          const version = Utils.getFirstMatch(/(?:chrome|crios|crmo)\/(\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+      {
+        test: [/GSA/i],
+        describe(ua) {
+          const browser = {
+            name: 'Google Search',
+          };
+          const version = Utils.getFirstMatch(/(?:GSA)\/(\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+
+      /* Android Browser */
+      {
+        test(parser) {
+          const notLikeAndroid = !parser.test(/like android/i);
+          const butAndroid = parser.test(/android/i);
+          return notLikeAndroid && butAndroid;
+        },
+        describe(ua) {
+          const browser = {
+            name: 'Android Browser',
+          };
+          const version = Utils.getFirstMatch(commonVersionIdentifier, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+
+      /* PlayStation 4 */
+      {
+        test: [/playstation 4/i],
+        describe(ua) {
+          const browser = {
+            name: 'PlayStation 4',
+          };
+          const version = Utils.getFirstMatch(commonVersionIdentifier, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+
+      /* Safari */
+      {
+        test: [/safari|applewebkit/i],
+        describe(ua) {
+          const browser = {
+            name: 'Safari',
+          };
+          const version = Utils.getFirstMatch(commonVersionIdentifier, ua);
+
+          if (version) {
+            browser.version = version;
+          }
+
+          return browser;
+        },
+      },
+
+      /* Something else */
+      {
+        test: [/.*/i],
+        describe(ua) {
+          /* Here we try to make sure that there are explicit details about the device
+           * in order to decide what regexp exactly we want to apply
+           * (as there is a specific decision based on that conclusion)
+           */
+          const regexpWithoutDeviceSpec = /^(.*)\/(.*) /;
+          const regexpWithDeviceSpec = /^(.*)\/(.*)[ \t]\((.*)/;
+          const hasDeviceSpec = ua.search('\\(') !== -1;
+          const regexp = hasDeviceSpec ? regexpWithDeviceSpec : regexpWithoutDeviceSpec;
+          return {
+            name: Utils.getFirstMatch(regexp, ua),
+            version: Utils.getSecondMatch(regexp, ua),
+          };
+        },
+      },
+    ];
+
+    var osParsersList = [
+      /* Roku */
+      {
+        test: [/Roku\/DVP/],
+        describe(ua) {
+          const version = Utils.getFirstMatch(/Roku\/DVP-(\d+\.\d+)/i, ua);
+          return {
+            name: OS_MAP.Roku,
+            version,
+          };
+        },
+      },
+
+      /* Windows Phone */
+      {
+        test: [/windows phone/i],
+        describe(ua) {
+          const version = Utils.getFirstMatch(/windows phone (?:os)?\s?(\d+(\.\d+)*)/i, ua);
+          return {
+            name: OS_MAP.WindowsPhone,
+            version,
+          };
+        },
+      },
+
+      /* Windows */
+      {
+        test: [/windows /i],
+        describe(ua) {
+          const version = Utils.getFirstMatch(/Windows ((NT|XP)( \d\d?.\d)?)/i, ua);
+          const versionName = Utils.getWindowsVersionName(version);
+
+          return {
+            name: OS_MAP.Windows,
+            version,
+            versionName,
+          };
+        },
+      },
+
+      /* Firefox on iPad */
+      {
+        test: [/Macintosh(.*?) FxiOS(.*?)\//],
+        describe(ua) {
+          const result = {
+            name: OS_MAP.iOS,
+          };
+          const version = Utils.getSecondMatch(/(Version\/)(\d[\d.]+)/, ua);
+          if (version) {
+            result.version = version;
+          }
+          return result;
+        },
+      },
+
+      /* macOS */
+      {
+        test: [/macintosh/i],
+        describe(ua) {
+          const version = Utils.getFirstMatch(/mac os x (\d+(\.?_?\d+)+)/i, ua).replace(/[_\s]/g, '.');
+          const versionName = Utils.getMacOSVersionName(version);
+
+          const os = {
+            name: OS_MAP.MacOS,
+            version,
+          };
+          if (versionName) {
+            os.versionName = versionName;
+          }
+          return os;
+        },
+      },
+
+      /* iOS */
+      {
+        test: [/(ipod|iphone|ipad)/i],
+        describe(ua) {
+          const version = Utils.getFirstMatch(/os (\d+([_\s]\d+)*) like mac os x/i, ua).replace(/[_\s]/g, '.');
+
+          return {
+            name: OS_MAP.iOS,
+            version,
+          };
+        },
+      },
+
+      /* Android */
+      {
+        test(parser) {
+          const notLikeAndroid = !parser.test(/like android/i);
+          const butAndroid = parser.test(/android/i);
+          return notLikeAndroid && butAndroid;
+        },
+        describe(ua) {
+          const version = Utils.getFirstMatch(/android[\s/-](\d+(\.\d+)*)/i, ua);
+          const versionName = Utils.getAndroidVersionName(version);
+          const os = {
+            name: OS_MAP.Android,
+            version,
+          };
+          if (versionName) {
+            os.versionName = versionName;
+          }
+          return os;
+        },
+      },
+
+      /* WebOS */
+      {
+        test: [/(web|hpw)[o0]s/i],
+        describe(ua) {
+          const version = Utils.getFirstMatch(/(?:web|hpw)[o0]s\/(\d+(\.\d+)*)/i, ua);
+          const os = {
+            name: OS_MAP.WebOS,
+          };
+
+          if (version && version.length) {
+            os.version = version;
+          }
+          return os;
+        },
+      },
+
+      /* BlackBerry */
+      {
+        test: [/blackberry|\bbb\d+/i, /rim\stablet/i],
+        describe(ua) {
+          const version = Utils.getFirstMatch(/rim\stablet\sos\s(\d+(\.\d+)*)/i, ua)
+            || Utils.getFirstMatch(/blackberry\d+\/(\d+([_\s]\d+)*)/i, ua)
+            || Utils.getFirstMatch(/\bbb(\d+)/i, ua);
+
+          return {
+            name: OS_MAP.BlackBerry,
+            version,
+          };
+        },
+      },
+
+      /* Bada */
+      {
+        test: [/bada/i],
+        describe(ua) {
+          const version = Utils.getFirstMatch(/bada\/(\d+(\.\d+)*)/i, ua);
+
+          return {
+            name: OS_MAP.Bada,
+            version,
+          };
+        },
+      },
+
+      /* Tizen */
+      {
+        test: [/tizen/i],
+        describe(ua) {
+          const version = Utils.getFirstMatch(/tizen[/\s](\d+(\.\d+)*)/i, ua);
+
+          return {
+            name: OS_MAP.Tizen,
+            version,
+          };
+        },
+      },
+
+      /* Linux */
+      {
+        test: [/linux/i],
+        describe() {
+          return {
+            name: OS_MAP.Linux,
+          };
+        },
+      },
+
+      /* Chrome OS */
+      {
+        test: [/CrOS/],
+        describe() {
+          return {
+            name: OS_MAP.ChromeOS,
+          };
+        },
+      },
+
+      /* Playstation 4 */
+      {
+        test: [/PlayStation 4/],
+        describe(ua) {
+          const version = Utils.getFirstMatch(/PlayStation 4[/\s](\d+(\.\d+)*)/i, ua);
+          return {
+            name: OS_MAP.PlayStation4,
+            version,
+          };
+        },
+      },
+    ];
+
+    /*
+     * Tablets go first since usually they have more specific
+     * signs to detect.
+     */
+
+    var platformParsersList = [
+      /* Googlebot */
+      {
+        test: [/googlebot/i],
+        describe() {
+          return {
+            type: 'bot',
+            vendor: 'Google',
+          };
+        },
+      },
+
+      /* Huawei */
+      {
+        test: [/huawei/i],
+        describe(ua) {
+          const model = Utils.getFirstMatch(/(can-l01)/i, ua) && 'Nova';
+          const platform = {
+            type: PLATFORMS_MAP.mobile,
+            vendor: 'Huawei',
+          };
+          if (model) {
+            platform.model = model;
+          }
+          return platform;
+        },
+      },
+
+      /* Nexus Tablet */
+      {
+        test: [/nexus\s*(?:7|8|9|10).*/i],
+        describe() {
+          return {
+            type: PLATFORMS_MAP.tablet,
+            vendor: 'Nexus',
+          };
+        },
+      },
+
+      /* iPad */
+      {
+        test: [/ipad/i],
+        describe() {
+          return {
+            type: PLATFORMS_MAP.tablet,
+            vendor: 'Apple',
+            model: 'iPad',
+          };
+        },
+      },
+
+      /* Firefox on iPad */
+      {
+        test: [/Macintosh(.*?) FxiOS(.*?)\//],
+        describe() {
+          return {
+            type: PLATFORMS_MAP.tablet,
+            vendor: 'Apple',
+            model: 'iPad',
+          };
+        },
+      },
+
+      /* Amazon Kindle Fire */
+      {
+        test: [/kftt build/i],
+        describe() {
+          return {
+            type: PLATFORMS_MAP.tablet,
+            vendor: 'Amazon',
+            model: 'Kindle Fire HD 7',
+          };
+        },
+      },
+
+      /* Another Amazon Tablet with Silk */
+      {
+        test: [/silk/i],
+        describe() {
+          return {
+            type: PLATFORMS_MAP.tablet,
+            vendor: 'Amazon',
+          };
+        },
+      },
+
+      /* Tablet */
+      {
+        test: [/tablet(?! pc)/i],
+        describe() {
+          return {
+            type: PLATFORMS_MAP.tablet,
+          };
+        },
+      },
+
+      /* iPod/iPhone */
+      {
+        test(parser) {
+          const iDevice = parser.test(/ipod|iphone/i);
+          const likeIDevice = parser.test(/like (ipod|iphone)/i);
+          return iDevice && !likeIDevice;
+        },
+        describe(ua) {
+          const model = Utils.getFirstMatch(/(ipod|iphone)/i, ua);
+          return {
+            type: PLATFORMS_MAP.mobile,
+            vendor: 'Apple',
+            model,
+          };
+        },
+      },
+
+      /* Nexus Mobile */
+      {
+        test: [/nexus\s*[0-6].*/i, /galaxy nexus/i],
+        describe() {
+          return {
+            type: PLATFORMS_MAP.mobile,
+            vendor: 'Nexus',
+          };
+        },
+      },
+
+      /* Mobile */
+      {
+        test: [/[^-]mobi/i],
+        describe() {
+          return {
+            type: PLATFORMS_MAP.mobile,
+          };
+        },
+      },
+
+      /* BlackBerry */
+      {
+        test(parser) {
+          return parser.getBrowserName(true) === 'blackberry';
+        },
+        describe() {
+          return {
+            type: PLATFORMS_MAP.mobile,
+            vendor: 'BlackBerry',
+          };
+        },
+      },
+
+      /* Bada */
+      {
+        test(parser) {
+          return parser.getBrowserName(true) === 'bada';
+        },
+        describe() {
+          return {
+            type: PLATFORMS_MAP.mobile,
+          };
+        },
+      },
+
+      /* Windows Phone */
+      {
+        test(parser) {
+          return parser.getBrowserName() === 'windows phone';
+        },
+        describe() {
+          return {
+            type: PLATFORMS_MAP.mobile,
+            vendor: 'Microsoft',
+          };
+        },
+      },
+
+      /* Android Tablet */
+      {
+        test(parser) {
+          const osMajorVersion = Number(String(parser.getOSVersion()).split('.')[0]);
+          return parser.getOSName(true) === 'android' && (osMajorVersion >= 3);
+        },
+        describe() {
+          return {
+            type: PLATFORMS_MAP.tablet,
+          };
+        },
+      },
+
+      /* Android Mobile */
+      {
+        test(parser) {
+          return parser.getOSName(true) === 'android';
+        },
+        describe() {
+          return {
+            type: PLATFORMS_MAP.mobile,
+          };
+        },
+      },
+
+      /* desktop */
+      {
+        test(parser) {
+          return parser.getOSName(true) === 'macos';
+        },
+        describe() {
+          return {
+            type: PLATFORMS_MAP.desktop,
+            vendor: 'Apple',
+          };
+        },
+      },
+
+      /* Windows */
+      {
+        test(parser) {
+          return parser.getOSName(true) === 'windows';
+        },
+        describe() {
+          return {
+            type: PLATFORMS_MAP.desktop,
+          };
+        },
+      },
+
+      /* Linux */
+      {
+        test(parser) {
+          return parser.getOSName(true) === 'linux';
+        },
+        describe() {
+          return {
+            type: PLATFORMS_MAP.desktop,
+          };
+        },
+      },
+
+      /* PlayStation 4 */
+      {
+        test(parser) {
+          return parser.getOSName(true) === 'playstation 4';
+        },
+        describe() {
+          return {
+            type: PLATFORMS_MAP.tv,
+          };
+        },
+      },
+
+      /* Roku */
+      {
+        test(parser) {
+          return parser.getOSName(true) === 'roku';
+        },
+        describe() {
+          return {
+            type: PLATFORMS_MAP.tv,
+          };
+        },
+      },
+    ];
+
+    /*
+     * More specific goes first
+     */
+    var enginesParsersList = [
+      /* EdgeHTML */
+      {
+        test(parser) {
+          return parser.getBrowserName(true) === 'microsoft edge';
+        },
+        describe(ua) {
+          const isBlinkBased = /\sedg\//i.test(ua);
+
+          // return blink if it's blink-based one
+          if (isBlinkBased) {
+            return {
+              name: ENGINE_MAP.Blink,
+            };
+          }
+
+          // otherwise match the version and return EdgeHTML
+          const version = Utils.getFirstMatch(/edge\/(\d+(\.?_?\d+)+)/i, ua);
+
+          return {
+            name: ENGINE_MAP.EdgeHTML,
+            version,
+          };
+        },
+      },
+
+      /* Trident */
+      {
+        test: [/trident/i],
+        describe(ua) {
+          const engine = {
+            name: ENGINE_MAP.Trident,
+          };
+
+          const version = Utils.getFirstMatch(/trident\/(\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            engine.version = version;
+          }
+
+          return engine;
+        },
+      },
+
+      /* Presto */
+      {
+        test(parser) {
+          return parser.test(/presto/i);
+        },
+        describe(ua) {
+          const engine = {
+            name: ENGINE_MAP.Presto,
+          };
+
+          const version = Utils.getFirstMatch(/presto\/(\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            engine.version = version;
+          }
+
+          return engine;
+        },
+      },
+
+      /* Gecko */
+      {
+        test(parser) {
+          const isGecko = parser.test(/gecko/i);
+          const likeGecko = parser.test(/like gecko/i);
+          return isGecko && !likeGecko;
+        },
+        describe(ua) {
+          const engine = {
+            name: ENGINE_MAP.Gecko,
+          };
+
+          const version = Utils.getFirstMatch(/gecko\/(\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            engine.version = version;
+          }
+
+          return engine;
+        },
+      },
+
+      /* Blink */
+      {
+        test: [/(apple)?webkit\/537\.36/i],
+        describe() {
+          return {
+            name: ENGINE_MAP.Blink,
+          };
+        },
+      },
+
+      /* WebKit */
+      {
+        test: [/(apple)?webkit/i],
+        describe(ua) {
+          const engine = {
+            name: ENGINE_MAP.WebKit,
+          };
+
+          const version = Utils.getFirstMatch(/webkit\/(\d+(\.?_?\d+)+)/i, ua);
+
+          if (version) {
+            engine.version = version;
+          }
+
+          return engine;
+        },
+      },
+    ];
+
+    /**
+     * The main class that arranges the whole parsing process.
+     */
+    class Parser {
+      /**
+       * Create instance of Parser
+       *
+       * @param {String} UA User-Agent string
+       * @param {Boolean} [skipParsing=false] parser can skip parsing in purpose of performance
+       * improvements if you need to make a more particular parsing
+       * like {@link Parser#parseBrowser} or {@link Parser#parsePlatform}
+       *
+       * @throw {Error} in case of empty UA String
+       *
+       * @constructor
+       */
+      constructor(UA, skipParsing = false) {
+        if (UA === void (0) || UA === null || UA === '') {
+          throw new Error("UserAgent parameter can't be empty");
+        }
+
+        this._ua = UA;
+
+        /**
+         * @typedef ParsedResult
+         * @property {Object} browser
+         * @property {String|undefined} [browser.name]
+         * Browser name, like `"Chrome"` or `"Internet Explorer"`
+         * @property {String|undefined} [browser.version] Browser version as a String `"12.01.45334.10"`
+         * @property {Object} os
+         * @property {String|undefined} [os.name] OS name, like `"Windows"` or `"macOS"`
+         * @property {String|undefined} [os.version] OS version, like `"NT 5.1"` or `"10.11.1"`
+         * @property {String|undefined} [os.versionName] OS name, like `"XP"` or `"High Sierra"`
+         * @property {Object} platform
+         * @property {String|undefined} [platform.type]
+         * platform type, can be either `"desktop"`, `"tablet"` or `"mobile"`
+         * @property {String|undefined} [platform.vendor] Vendor of the device,
+         * like `"Apple"` or `"Samsung"`
+         * @property {String|undefined} [platform.model] Device model,
+         * like `"iPhone"` or `"Kindle Fire HD 7"`
+         * @property {Object} engine
+         * @property {String|undefined} [engine.name]
+         * Can be any of this: `WebKit`, `Blink`, `Gecko`, `Trident`, `Presto`, `EdgeHTML`
+         * @property {String|undefined} [engine.version] String version of the engine
+         */
+        this.parsedResult = {};
+
+        if (skipParsing !== true) {
+          this.parse();
+        }
+      }
+
+      /**
+       * Get UserAgent string of current Parser instance
+       * @return {String} User-Agent String of the current <Parser> object
+       *
+       * @public
+       */
+      getUA() {
+        return this._ua;
+      }
+
+      /**
+       * Test a UA string for a regexp
+       * @param {RegExp} regex
+       * @return {Boolean}
+       */
+      test(regex) {
+        return regex.test(this._ua);
+      }
+
+      /**
+       * Get parsed browser object
+       * @return {Object}
+       */
+      parseBrowser() {
+        this.parsedResult.browser = {};
+
+        const browserDescriptor = Utils.find(browsersList, (_browser) => {
+          if (typeof _browser.test === 'function') {
+            return _browser.test(this);
+          }
+
+          if (_browser.test instanceof Array) {
+            return _browser.test.some(condition => this.test(condition));
+          }
+
+          throw new Error("Browser's test function is not valid");
+        });
+
+        if (browserDescriptor) {
+          this.parsedResult.browser = browserDescriptor.describe(this.getUA());
+        }
+
+        return this.parsedResult.browser;
+      }
+
+      /**
+       * Get parsed browser object
+       * @return {Object}
+       *
+       * @public
+       */
+      getBrowser() {
+        if (this.parsedResult.browser) {
+          return this.parsedResult.browser;
+        }
+
+        return this.parseBrowser();
+      }
+
+      /**
+       * Get browser's name
+       * @return {String} Browser's name or an empty string
+       *
+       * @public
+       */
+      getBrowserName(toLowerCase) {
+        if (toLowerCase) {
+          return String(this.getBrowser().name).toLowerCase() || '';
+        }
+        return this.getBrowser().name || '';
+      }
+
+
+      /**
+       * Get browser's version
+       * @return {String} version of browser
+       *
+       * @public
+       */
+      getBrowserVersion() {
+        return this.getBrowser().version;
+      }
+
+      /**
+       * Get OS
+       * @return {Object}
+       *
+       * @example
+       * this.getOS();
+       * {
+       *   name: 'macOS',
+       *   version: '10.11.12'
+       * }
+       */
+      getOS() {
+        if (this.parsedResult.os) {
+          return this.parsedResult.os;
+        }
+
+        return this.parseOS();
+      }
+
+      /**
+       * Parse OS and save it to this.parsedResult.os
+       * @return {*|{}}
+       */
+      parseOS() {
+        this.parsedResult.os = {};
+
+        const os = Utils.find(osParsersList, (_os) => {
+          if (typeof _os.test === 'function') {
+            return _os.test(this);
+          }
+
+          if (_os.test instanceof Array) {
+            return _os.test.some(condition => this.test(condition));
+          }
+
+          throw new Error("Browser's test function is not valid");
+        });
+
+        if (os) {
+          this.parsedResult.os = os.describe(this.getUA());
+        }
+
+        return this.parsedResult.os;
+      }
+
+      /**
+       * Get OS name
+       * @param {Boolean} [toLowerCase] return lower-cased value
+       * @return {String} name of the OS — macOS, Windows, Linux, etc.
+       */
+      getOSName(toLowerCase) {
+        const { name } = this.getOS();
+
+        if (toLowerCase) {
+          return String(name).toLowerCase() || '';
+        }
+
+        return name || '';
+      }
+
+      /**
+       * Get OS version
+       * @return {String} full version with dots ('10.11.12', '5.6', etc)
+       */
+      getOSVersion() {
+        return this.getOS().version;
+      }
+
+      /**
+       * Get parsed platform
+       * @return {{}}
+       */
+      getPlatform() {
+        if (this.parsedResult.platform) {
+          return this.parsedResult.platform;
+        }
+
+        return this.parsePlatform();
+      }
+
+      /**
+       * Get platform name
+       * @param {Boolean} [toLowerCase=false]
+       * @return {*}
+       */
+      getPlatformType(toLowerCase = false) {
+        const { type } = this.getPlatform();
+
+        if (toLowerCase) {
+          return String(type).toLowerCase() || '';
+        }
+
+        return type || '';
+      }
+
+      /**
+       * Get parsed platform
+       * @return {{}}
+       */
+      parsePlatform() {
+        this.parsedResult.platform = {};
+
+        const platform = Utils.find(platformParsersList, (_platform) => {
+          if (typeof _platform.test === 'function') {
+            return _platform.test(this);
+          }
+
+          if (_platform.test instanceof Array) {
+            return _platform.test.some(condition => this.test(condition));
+          }
+
+          throw new Error("Browser's test function is not valid");
+        });
+
+        if (platform) {
+          this.parsedResult.platform = platform.describe(this.getUA());
+        }
+
+        return this.parsedResult.platform;
+      }
+
+      /**
+       * Get parsed engine
+       * @return {{}}
+       */
+      getEngine() {
+        if (this.parsedResult.engine) {
+          return this.parsedResult.engine;
+        }
+
+        return this.parseEngine();
+      }
+
+      /**
+       * Get engines's name
+       * @return {String} Engines's name or an empty string
+       *
+       * @public
+       */
+      getEngineName(toLowerCase) {
+        if (toLowerCase) {
+          return String(this.getEngine().name).toLowerCase() || '';
+        }
+        return this.getEngine().name || '';
+      }
+
+      /**
+       * Get parsed platform
+       * @return {{}}
+       */
+      parseEngine() {
+        this.parsedResult.engine = {};
+
+        const engine = Utils.find(enginesParsersList, (_engine) => {
+          if (typeof _engine.test === 'function') {
+            return _engine.test(this);
+          }
+
+          if (_engine.test instanceof Array) {
+            return _engine.test.some(condition => this.test(condition));
+          }
+
+          throw new Error("Browser's test function is not valid");
+        });
+
+        if (engine) {
+          this.parsedResult.engine = engine.describe(this.getUA());
+        }
+
+        return this.parsedResult.engine;
+      }
+
+      /**
+       * Parse full information about the browser
+       * @returns {Parser}
+       */
+      parse() {
+        this.parseBrowser();
+        this.parseOS();
+        this.parsePlatform();
+        this.parseEngine();
+
+        return this;
+      }
+
+      /**
+       * Get parsed result
+       * @return {ParsedResult}
+       */
+      getResult() {
+        return Utils.assign({}, this.parsedResult);
+      }
+
+      /**
+       * Check if parsed browser matches certain conditions
+       *
+       * @param {Object} checkTree It's one or two layered object,
+       * which can include a platform or an OS on the first layer
+       * and should have browsers specs on the bottom-laying layer
+       *
+       * @returns {Boolean|undefined} Whether the browser satisfies the set conditions or not.
+       * Returns `undefined` when the browser is no described in the checkTree object.
+       *
+       * @example
+       * const browser = Bowser.getParser(window.navigator.userAgent);
+       * if (browser.satisfies({chrome: '>118.01.1322' }))
+       * // or with os
+       * if (browser.satisfies({windows: { chrome: '>118.01.1322' } }))
+       * // or with platforms
+       * if (browser.satisfies({desktop: { chrome: '>118.01.1322' } }))
+       */
+      satisfies(checkTree) {
+        const platformsAndOSes = {};
+        let platformsAndOSCounter = 0;
+        const browsers = {};
+        let browsersCounter = 0;
+
+        const allDefinitions = Object.keys(checkTree);
+
+        allDefinitions.forEach((key) => {
+          const currentDefinition = checkTree[key];
+          if (typeof currentDefinition === 'string') {
+            browsers[key] = currentDefinition;
+            browsersCounter += 1;
+          } else if (typeof currentDefinition === 'object') {
+            platformsAndOSes[key] = currentDefinition;
+            platformsAndOSCounter += 1;
+          }
+        });
+
+        if (platformsAndOSCounter > 0) {
+          const platformsAndOSNames = Object.keys(platformsAndOSes);
+          const OSMatchingDefinition = Utils.find(platformsAndOSNames, name => (this.isOS(name)));
+
+          if (OSMatchingDefinition) {
+            const osResult = this.satisfies(platformsAndOSes[OSMatchingDefinition]);
+
+            if (osResult !== void 0) {
+              return osResult;
+            }
+          }
+
+          const platformMatchingDefinition = Utils.find(
+            platformsAndOSNames,
+            name => (this.isPlatform(name)),
+          );
+          if (platformMatchingDefinition) {
+            const platformResult = this.satisfies(platformsAndOSes[platformMatchingDefinition]);
+
+            if (platformResult !== void 0) {
+              return platformResult;
+            }
+          }
+        }
+
+        if (browsersCounter > 0) {
+          const browserNames = Object.keys(browsers);
+          const matchingDefinition = Utils.find(browserNames, name => (this.isBrowser(name, true)));
+
+          if (matchingDefinition !== void 0) {
+            return this.compareVersion(browsers[matchingDefinition]);
+          }
+        }
+
+        return undefined;
+      }
+
+      /**
+       * Check if the browser name equals the passed string
+       * @param browserName The string to compare with the browser name
+       * @param [includingAlias=false] The flag showing whether alias will be included into comparison
+       * @returns {boolean}
+       */
+      isBrowser(browserName, includingAlias = false) {
+        const defaultBrowserName = this.getBrowserName().toLowerCase();
+        let browserNameLower = browserName.toLowerCase();
+        const alias = Utils.getBrowserTypeByAlias(browserNameLower);
+
+        if (includingAlias && alias) {
+          browserNameLower = alias.toLowerCase();
+        }
+        return browserNameLower === defaultBrowserName;
+      }
+
+      compareVersion(version) {
+        let expectedResults = [0];
+        let comparableVersion = version;
+        let isLoose = false;
+
+        const currentBrowserVersion = this.getBrowserVersion();
+
+        if (typeof currentBrowserVersion !== 'string') {
+          return void 0;
+        }
+
+        if (version[0] === '>' || version[0] === '<') {
+          comparableVersion = version.substr(1);
+          if (version[1] === '=') {
+            isLoose = true;
+            comparableVersion = version.substr(2);
+          } else {
+            expectedResults = [];
+          }
+          if (version[0] === '>') {
+            expectedResults.push(1);
+          } else {
+            expectedResults.push(-1);
+          }
+        } else if (version[0] === '=') {
+          comparableVersion = version.substr(1);
+        } else if (version[0] === '~') {
+          isLoose = true;
+          comparableVersion = version.substr(1);
+        }
+
+        return expectedResults.indexOf(
+          Utils.compareVersions(currentBrowserVersion, comparableVersion, isLoose),
+        ) > -1;
+      }
+
+      isOS(osName) {
+        return this.getOSName(true) === String(osName).toLowerCase();
+      }
+
+      isPlatform(platformType) {
+        return this.getPlatformType(true) === String(platformType).toLowerCase();
+      }
+
+      isEngine(engineName) {
+        return this.getEngineName(true) === String(engineName).toLowerCase();
+      }
+
+      /**
+       * Is anything? Check if the browser is called "anything",
+       * the OS called "anything" or the platform called "anything"
+       * @param {String} anything
+       * @param [includingAlias=false] The flag showing whether alias will be included into comparison
+       * @returns {Boolean}
+       */
+      is(anything, includingAlias = false) {
+        return this.isBrowser(anything, includingAlias) || this.isOS(anything)
+          || this.isPlatform(anything);
+      }
+
+      /**
+       * Check if any of the given values satisfies this.is(anything)
+       * @param {String[]} anythings
+       * @returns {Boolean}
+       */
+      some(anythings = []) {
+        return anythings.some(anything => this.is(anything));
+      }
+    }
+
+    /*!
+     * Bowser - a browser detector
+     * https://github.com/lancedikson/bowser
+     * MIT License | (c) Dustin Diaz 2012-2015
+     * MIT License | (c) Denis Demchenko 2015-2019
+     */
+
+    /**
+     * Bowser class.
+     * Keep it simple as much as it can be.
+     * It's supposed to work with collections of {@link Parser} instances
+     * rather then solve one-instance problems.
+     * All the one-instance stuff is located in Parser class.
+     *
+     * @class
+     * @classdesc Bowser is a static object, that provides an API to the Parsers
+     * @hideconstructor
+     */
+    class Bowser {
+      /**
+       * Creates a {@link Parser} instance
+       *
+       * @param {String} UA UserAgent string
+       * @param {Boolean} [skipParsing=false] Will make the Parser postpone parsing until you ask it
+       * explicitly. Same as `skipParsing` for {@link Parser}.
+       * @returns {Parser}
+       * @throws {Error} when UA is not a String
+       *
+       * @example
+       * const parser = Bowser.getParser(window.navigator.userAgent);
+       * const result = parser.getResult();
+       */
+      static getParser(UA, skipParsing = false) {
+        if (typeof UA !== 'string') {
+          throw new Error('UserAgent should be a string');
+        }
+        return new Parser(UA, skipParsing);
+      }
+
+      /**
+       * Creates a {@link Parser} instance and runs {@link Parser.getResult} immediately
+       *
+       * @param UA
+       * @return {ParsedResult}
+       *
+       * @example
+       * const result = Bowser.parse(window.navigator.userAgent);
+       */
+      static parse(UA) {
+        return (new Parser(UA)).getResult();
+      }
+
+      static get BROWSER_MAP() {
+        return BROWSER_MAP;
+      }
+
+      static get ENGINE_MAP() {
+        return ENGINE_MAP;
+      }
+
+      static get OS_MAP() {
+        return OS_MAP;
+      }
+
+      static get PLATFORMS_MAP() {
+        return PLATFORMS_MAP;
+      }
+    }
+
+    const browser = Bowser.getParser(navigator.userAgent).getResult();
+    const isDesktop = browser.platform.type === "desktop";
+    const isChrome = browser.engine.name === "Blink";
+    const isFirefox = "InstallTrigger" in globalThis;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.platform)
+        || /Macintosh(.*?) FxiOS(.*?)\//.test(navigator.platform)
+        || navigator.platform === "MacIntel" && navigator.maxTouchPoints > 2;
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const isMobileVR = /Mobile VR/.test(navigator.userAgent);
+    const isOculus = /oculus/.test(navigator.userAgent);
+    const isOculusGo = isOculus && /pacific/.test(navigator.userAgent);
+    const isOculusQuest = isOculus && /quest/.test(navigator.userAgent);
+
     function addLogger(obj, evtName) {
         obj.addEventListener(evtName, (...rest) => {
             if (loggingEnabled) {
@@ -10206,9 +10242,8 @@
     let loggingEnabled = window.location.hostname === "localhost"
         || /\bdebug\b/.test(window.location.search);
     class BaseTeleconferenceClient extends TypedEventBase {
-        constructor(fetcher) {
+        constructor(fetcher, audio) {
             super();
-            this.fetcher = fetcher;
             this.localUserID = null;
             this.localUserName = null;
             this.roomName = null;
@@ -10217,7 +10252,8 @@
             this._conferenceState = ConnectionState.Disconnected;
             this.hasAudioPermission = false;
             this.hasVideoPermission = false;
-            this.audio = new AudioManager(fetcher, isOculusQuest
+            this.fetcher = fetcher || new Fetcher();
+            this.audio = audio || new AudioManager(fetcher, isOculusQuest
                 ? SpatializerType.High
                 : SpatializerType.Medium);
             this.addEventListener("serverConnected", this.setConnectionState.bind(this, ConnectionState.Connected));
@@ -10435,8 +10471,8 @@
         }
     }
     class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
-        constructor(fetcher) {
-            super(fetcher);
+        constructor(fetcher, audio) {
+            super(fetcher, audio);
             this.usingDefaultMetadataClient = false;
             this.host = null;
             this.bridgeHost = null;
@@ -10548,11 +10584,11 @@
                     this._on(this.conference, evtName, () => {
                         this.dispatchEvent(new EvtClass());
                         if (extra) {
-                            extra();
+                            extra(evtName);
                         }
                     });
                 };
-                const onLeft = async () => {
+                const onLeft = async (evtName) => {
                     this.localUserID = DEFAULT_LOCAL_USER_ID;
                     if (this.tracks.size > 0) {
                         console.warn("><> CALLA <>< ---- there are leftover conference tracks");
@@ -10567,6 +10603,7 @@
                         this._off(this.conference);
                         this.conference = null;
                     }
+                    console.info(`Left room '${roomName}'. Reason: ${evtName}.`);
                 };
                 fwd(conferenceEvents.CONFERENCE_ERROR, CallaConferenceFailedEvent, onLeft);
                 fwd(conferenceEvents.CONFERENCE_FAILED, CallaConferenceFailedEvent, onLeft);
@@ -10578,7 +10615,7 @@
                         this.dispatchEvent(new CallaConferenceJoinedEvent(userID, null));
                     }
                 });
-                this._on(this.conference, conferenceEvents.CONFERENCE_LEFT, onLeft);
+                this._on(this.conference, conferenceEvents.CONFERENCE_LEFT, () => onLeft(conferenceEvents.CONFERENCE_LEFT));
                 this._on(this.conference, conferenceEvents.USER_JOINED, (id, jitsiUser) => {
                     this.dispatchEvent(new CallaParticipantJoinedEvent(id, decodeUserName(jitsiUser.getDisplayName()), null));
                 });
@@ -10677,40 +10714,26 @@
             }
         }
         async leave() {
-            if (this.conferenceState === ConnectionState.Connecting) {
-                await waitFor(() => this.conferenceState === ConnectionState.Connected);
+            await super.leave();
+            try {
+                await this.tryRemoveTrack(this.localUserID, StreamType.Video);
+                await this.tryRemoveTrack(this.localUserID, StreamType.Audio);
+                const leaveTask = once(this, "conferenceLeft");
+                this.conference.leave();
+                await leaveTask;
             }
-            if (this.conferenceState === ConnectionState.Disconnecting) {
-                await waitFor(() => this.conferenceState === ConnectionState.Disconnected);
-            }
-            else if (this.conferenceState === ConnectionState.Connected) {
-                await super.leave();
-                try {
-                    await this.tryRemoveTrack(this.localUserID, StreamType.Video);
-                    await this.tryRemoveTrack(this.localUserID, StreamType.Audio);
-                    const leaveTask = once(this, "conferenceLeft");
-                    this.conference.leave();
-                    await leaveTask;
-                }
-                catch (exp) {
-                    console.warn("><> CALLA <>< ---- Failed to leave teleconference.", exp);
-                }
+            catch (exp) {
+                console.warn("><> CALLA <>< ---- Failed to leave teleconference.", exp);
             }
         }
         async disconnect() {
-            if (this.connectionState === ConnectionState.Connecting) {
-                await waitFor(() => this.connectionState === ConnectionState.Connected);
-            }
-            if (this.connectionState === ConnectionState.Disconnecting) {
-                await waitFor(() => this.connectionState === ConnectionState.Disconnected);
-            }
-            else if (this.connectionState === ConnectionState.Connected) {
-                await super.disconnect();
+            await super.disconnect();
+            if (this.conferenceState === ConnectionState.Connected) {
                 await this.leave();
-                const disconnectTask = once(this, "serverDisconnected");
-                this.connection.disconnect();
-                await disconnectTask;
             }
+            const disconnectTask = once(this, "serverDisconnected");
+            this.connection.disconnect();
+            await disconnectTask;
         }
         userExists(id) {
             return this.conference
@@ -10856,17 +10879,14 @@
     })(ClientState || (ClientState = {}));
     const audioActivityEvt$2 = new AudioActivityEvent();
     class Calla extends TypedEventBase {
-        constructor(fetcher, TeleClientType, MetaClientType) {
+        constructor(fetcher, audio, TeleClientType, MetaClientType) {
             super();
             this.isAudioMuted = null;
             this.isVideoMuted = null;
-            if (isNullOrUndefined(fetcher)) {
-                fetcher = new Fetcher();
-            }
             if (isNullOrUndefined(TeleClientType)) {
                 TeleClientType = JitsiTeleconferenceClient;
             }
-            this.tele = new TeleClientType(fetcher);
+            this.tele = new TeleClientType(fetcher, audio);
             if (isNullOrUndefined(MetaClientType)) {
                 this.meta = this.tele.getDefaultMetadataClient();
             }
@@ -13726,24 +13746,26 @@
             };
         }
         copy(obj) {
-            this.keyButtonUp = obj.keyButtonUp;
-            this.keyButtonDown = obj.keyButtonDown;
-            this.keyButtonLeft = obj.keyButtonLeft;
-            this.keyButtonRight = obj.keyButtonRight;
-            this.keyButtonEmote = obj.keyButtonEmote;
-            this.keyButtonToggleAudio = obj.keyButtonToggleAudio;
-            this.keyButtonZoomOut = obj.keyButtonZoomOut;
-            this.keyButtonZoomIn = obj.keyButtonZoomIn;
-            this.gpAxisLeftRight = obj.gpAxisLeftRight;
-            this.gpAxisUpDown = obj.gpAxisUpDown;
-            this.gpButtonEmote = obj.gpButtonEmote;
-            this.gpButtonToggleAudio = obj.gpButtonToggleAudio;
-            this.gpButtonZoomIn = obj.gpButtonZoomIn;
-            this.gpButtonZoomOut = obj.gpButtonZoomOut;
-            this.gpButtonUp = obj.gpButtonUp;
-            this.gpButtonDown = obj.gpButtonDown;
-            this.gpButtonLeft = obj.gpButtonLeft;
-            this.gpButtonRight = obj.gpButtonRight;
+            if (obj) {
+                this.keyButtonUp = obj.keyButtonUp;
+                this.keyButtonDown = obj.keyButtonDown;
+                this.keyButtonLeft = obj.keyButtonLeft;
+                this.keyButtonRight = obj.keyButtonRight;
+                this.keyButtonEmote = obj.keyButtonEmote;
+                this.keyButtonToggleAudio = obj.keyButtonToggleAudio;
+                this.keyButtonZoomOut = obj.keyButtonZoomOut;
+                this.keyButtonZoomIn = obj.keyButtonZoomIn;
+                this.gpAxisLeftRight = obj.gpAxisLeftRight;
+                this.gpAxisUpDown = obj.gpAxisUpDown;
+                this.gpButtonEmote = obj.gpButtonEmote;
+                this.gpButtonToggleAudio = obj.gpButtonToggleAudio;
+                this.gpButtonZoomIn = obj.gpButtonZoomIn;
+                this.gpButtonZoomOut = obj.gpButtonZoomOut;
+                this.gpButtonUp = obj.gpButtonUp;
+                this.gpButtonDown = obj.gpButtonDown;
+                this.gpButtonLeft = obj.gpButtonLeft;
+                this.gpButtonRight = obj.gpButtonRight;
+            }
         }
         fix(obj) {
             if (!this.bindings.has("keyButtonUp")) {
@@ -13847,6 +13869,15 @@
                 const inputBindings = obj._inputBinding;
                 delete obj._inputBinding;
                 Object.assign(this, obj);
+                if (this._avatarEmoji
+                    && !isString(this._avatarEmoji)) {
+                    if ("value" in this._avatarEmoji) {
+                        this._avatarEmoji = this._avatarEmoji.value;
+                    }
+                    else {
+                        this._avatarEmoji = null;
+                    }
+                }
                 this.inputBinding = inputBindings;
             }
             this._inputBinding.fix(DEFAULT_INPUT_BINDING);
@@ -14221,8 +14252,8 @@
                     this.drawHearing = !this.drawHearing;
                     this.dispatchEvent(toggleDrawHearingEvt);
                 })), this.audioMinInput = LabeledInput("minAudio", "number", "Min: ", value("1"), min(0), max(100), numberWidthStyle, audioPropsChanged), this.audioMaxInput = LabeledInput("maxAudio", "number", "Min: ", value("10"), min(0), max(100), numberWidthStyle, audioPropsChanged), this.audioRolloffInput = LabeledInput("rollof", "number", "Rollof: ", value("1"), min(0.1), max(10), step(0.1), numberWidthStyle, audioPropsChanged))),
-                OptionPanel("keyboard", "Keyboard", this.keyButtonUpInput = makeKeyboardBinder("keyButtonUp", "Up: "), this.keyButtonDownInput = makeKeyboardBinder("keyButtonDown", "Down: "), this.keyButtonLeftInput = makeKeyboardBinder("keyButtonLeft", "Left: "), this.keyButtonRightInput = makeKeyboardBinder("keyButtonRight", "Right: "), this.keyButtonEmoteInput = makeKeyboardBinder("keyButtonEmote", "Emote: "), this.keyButtonToggleAudioInput = makeKeyboardBinder("keyButtonToggleAudio", "Toggle audio: ")),
-                OptionPanel("gamepad", "Gamepad", Div(Label(htmlFor("gamepads"), "Use gamepad: "), this.gpSelect = SelectBox("gamepads", "No gamepad", gp => gp.id, gp => gp.id, onInput(_(gamepadChangedEvt)))), this.gpAxisLeftRightInput = makeGamepadAxisBinder("gpAxisLeftRight", "Left/Right axis:"), this.gpAxisUpDownInput = makeGamepadAxisBinder("gpAxisUpDown", "Up/Down axis:"), this.gpButtonUpInput = makeGamepadButtonBinder("gpButtonUp", "Up button: "), this.gpButtonDownInput = makeGamepadButtonBinder("gpButtonDown", "Down button: "), this.gpButtonLeftInput = makeGamepadButtonBinder("gpButtonLeft", "Left button: "), this.gpButtonRightInput = makeGamepadButtonBinder("gpButtonRight", "Right button: "), this.gpButtonEmoteInput = makeGamepadButtonBinder("gpButtonEmote", "Emote button: "), this.gpButtonToggleAudioInput = makeGamepadButtonBinder("gpButtonToggleAudio", "Toggle audio button: "))
+                OptionPanel("keyboard", "Keyboard", this.keyButtonUpInput = makeKeyboardBinder("keyButtonUp", "Up: "), this.keyButtonDownInput = makeKeyboardBinder("keyButtonDown", "Down: "), this.keyButtonLeftInput = makeKeyboardBinder("keyButtonLeft", "Left: "), this.keyButtonRightInput = makeKeyboardBinder("keyButtonRight", "Right: "), this.keyButtonEmoteInput = makeKeyboardBinder("keyButtonEmote", "Emote: "), this.keyButtonToggleAudioInput = makeKeyboardBinder("keyButtonToggleAudio", "Toggle audio: "), this.keyButtonZoomInInput = makeKeyboardBinder("keyButtonZoomIn", "Zoom in: "), this.keyButtonZoomOutInput = makeKeyboardBinder("keyButtonZoomOut", "Zoom out: ")),
+                OptionPanel("gamepad", "Gamepad", Div(Label(htmlFor("gamepads"), "Use gamepad: "), this.gpSelect = SelectBox("gamepads", "No gamepad", gp => gp.id, gp => gp.id, onInput(_(gamepadChangedEvt)))), this.gpAxisLeftRightInput = makeGamepadAxisBinder("gpAxisLeftRight", "Left/Right axis:"), this.gpAxisUpDownInput = makeGamepadAxisBinder("gpAxisUpDown", "Up/Down axis:"), this.gpButtonUpInput = makeGamepadButtonBinder("gpButtonUp", "Up button: "), this.gpButtonDownInput = makeGamepadButtonBinder("gpButtonDown", "Down button: "), this.gpButtonLeftInput = makeGamepadButtonBinder("gpButtonLeft", "Left button: "), this.gpButtonRightInput = makeGamepadButtonBinder("gpButtonRight", "Right button: "), this.gpButtonEmoteInput = makeGamepadButtonBinder("gpButtonEmote", "Emote button: "), this.gpButtonToggleAudioInput = makeGamepadButtonBinder("gpButtonToggleAudio", "Toggle audio button: "), this.gpButtonZoomInInput = makeGamepadButtonBinder("gpButtonZoomIn", "Zoom in: "), this.gpButtonZoomOutInput = makeGamepadButtonBinder("gpButtonZoomOut", "Zoom out: "))
             ];
             const cols = [];
             for (let i = 0; i < panels.length; ++i) {
@@ -14444,25 +14475,25 @@
         get keyButtonZoomIn() { return this.keyButtonZoomInInput.value; }
         set keyButtonZoomIn(v) { this.keyButtonZoomInInput.value = v; }
         get gpAxisLeftRight() { return parseInt(this.gpAxisLeftRightInput.value, 10); }
-        set gpAxisLeftRight(v) { this.gpAxisLeftRightInput.value = v.toFixed(0); }
+        set gpAxisLeftRight(v) { this.gpAxisLeftRightInput.value = v?.toFixed(0); }
         get gpAxisUpDown() { return parseInt(this.gpAxisUpDownInput.value, 10); }
-        set gpAxisUpDown(v) { this.gpAxisUpDownInput.value = v.toFixed(0); }
+        set gpAxisUpDown(v) { this.gpAxisUpDownInput.value = v?.toFixed(0); }
         get gpButtonUp() { return parseInt(this.gpButtonUpInput.value, 10); }
-        set gpButtonUp(v) { this.gpButtonUpInput.value = v.toFixed(0); }
+        set gpButtonUp(v) { this.gpButtonUpInput.value = v?.toFixed(0); }
         get gpButtonDown() { return parseInt(this.gpButtonDownInput.value, 10); }
-        set gpButtonDown(v) { this.gpButtonDownInput.value = v.toFixed(0); }
+        set gpButtonDown(v) { this.gpButtonDownInput.value = v?.toFixed(0); }
         get gpButtonLeft() { return parseInt(this.gpButtonLeftInput.value, 10); }
-        set gpButtonLeft(v) { this.gpButtonLeftInput.value = v.toFixed(0); }
+        set gpButtonLeft(v) { this.gpButtonLeftInput.value = v?.toFixed(0); }
         get gpButtonRight() { return parseInt(this.gpButtonRightInput.value, 10); }
-        set gpButtonRight(v) { this.gpButtonRightInput.value = v.toFixed(0); }
+        set gpButtonRight(v) { this.gpButtonRightInput.value = v?.toFixed(0); }
         get gpButtonEmote() { return parseInt(this.gpButtonEmoteInput.value, 10); }
-        set gpButtonEmote(v) { this.gpButtonEmoteInput.value = v.toFixed(0); }
+        set gpButtonEmote(v) { this.gpButtonEmoteInput.value = v?.toFixed(0); }
         get gpButtonToggleAudio() { return parseInt(this.gpButtonToggleAudioInput.value, 10); }
-        set gpButtonToggleAudio(v) { this.gpButtonToggleAudioInput.value = v.toFixed(0); }
+        set gpButtonToggleAudio(v) { this.gpButtonToggleAudioInput.value = v?.toFixed(0); }
         get gpButtonZoomOut() { return parseInt(this.gpButtonZoomOutInput.value, 10); }
-        set gpButtonZoomOut(v) { this.gpButtonZoomOutInput.value = v.toFixed(0); }
+        set gpButtonZoomOut(v) { this.gpButtonZoomOutInput.value = v?.toFixed(0); }
         get gpButtonZoomIn() { return parseInt(this.gpButtonZoomInInput.value, 10); }
-        set gpButtonZoomIn(v) { this.gpButtonZoomInInput.value = v.toFixed(0); }
+        set gpButtonZoomIn(v) { this.gpButtonZoomInInput.value = v?.toFixed(0); }
     }
 
     const newRowColor = backgroundColor("lightgreen");
@@ -15636,7 +15667,8 @@
             this.tileWidth = parseInt(tileset.getAttribute("tilewidth"), 10);
             this.tileHeight = parseInt(tileset.getAttribute("tileheight"), 10);
             this.tileCount = parseInt(tileset.getAttribute("tilecount"), 10);
-            this.image = await this.fetcher.getImage(imageURL.href);
+            this.image = await this.fetcher.getCanvas(imageURL.href);
+            this.tilesPerRow = Math.floor(this.image.width / this.tileWidth);
         }
         isClear(tile) {
             return !this.collision.get(tile - 1);
@@ -16747,7 +16779,7 @@
         }
     }
 
-    const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), fetcher = new Fetcher(), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(), directory = new UserDirectoryForm(), controls$1 = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new FormDialog("instructions"), emoji = new EmojiForm(), client = new Calla(fetcher), timer = new RequestAnimationFrameTimer(), disabler$4 = disabled(true), enabler$4 = disabled(false);
+    const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), fetcher = new Fetcher(), audio = new AudioManager(fetcher, SpatializerType.High), client = new Calla(fetcher, audio), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(), directory = new UserDirectoryForm(), controls$1 = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new FormDialog("instructions"), emoji = new EmojiForm(), timer = new RequestAnimationFrameTimer(), disabler$4 = disabled(true), enabler$4 = disabled(false);
     let waitingForEmoji = false;
     Object.assign(window, {
         settings,
@@ -17070,6 +17102,7 @@
             fontFamily: "Noto Color Emoji",
             fontSize: 100
         }));
+        await client.getMediaPermissions();
         await client.prepare(JITSI_HOST, JVB_HOST, JVB_MUC);
         await client.connect();
     })();

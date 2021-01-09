@@ -341,6 +341,7 @@ function deviceSelector(addNone, select, values, preferredDeviceID, onSelect) {
     // audio outputs at this time, so disable the control if we
     // detect there is no option to change outputs.
     controls.speakers.disabled = !canChangeAudioOutput;
+    await client.getMediaPermissions();
     deviceSelector(true, controls.cams, await client.getVideoInputDevices(true), client.preferredVideoInputID, (device) => client.setVideoInputDevice(device));
     deviceSelector(true, controls.mics, await client.getAudioInputDevices(true), client.preferredAudioInputID, (device) => client.setAudioInputDevice(device));
     deviceSelector(false, controls.speakers, await client.getAudioOutputDevices(true), client.preferredAudioOutputID, (device) => client.setAudioOutputDevice(device));

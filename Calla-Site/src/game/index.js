@@ -1,3 +1,4 @@
+import { AudioManager, SpatializerType } from "calla/audio/AudioManager";
 import { Calla } from "calla/Calla";
 import { Emoji } from "kudzu/emoji/Emoji";
 import { allPeople as people } from "kudzu/emoji/emojis";
@@ -16,7 +17,7 @@ import { OptionsForm } from "./forms/OptionsForm";
 import { UserDirectoryForm } from "./forms/UserDirectoryForm";
 import { Game } from "./Game";
 import { Settings } from "./Settings";
-const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), fetcher = new Fetcher(), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(), directory = new UserDirectoryForm(), controls = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new FormDialog("instructions"), emoji = new EmojiForm(), client = new Calla(fetcher), timer = new RequestAnimationFrameTimer(), disabler = disabled(true), enabler = disabled(false);
+const CAMERA_ZOOM_MIN = 0.5, CAMERA_ZOOM_MAX = 20, settings = new Settings(), fetcher = new Fetcher(), audio = new AudioManager(fetcher, SpatializerType.High), client = new Calla(fetcher, audio), game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), login = new LoginForm(), directory = new UserDirectoryForm(), controls = new ButtonLayer(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX), devices = new DevicesDialog(), options = new OptionsForm(), instructions = new FormDialog("instructions"), emoji = new EmojiForm(), timer = new RequestAnimationFrameTimer(), disabler = disabled(true), enabler = disabled(false);
 let waitingForEmoji = false;
 Object.assign(window, {
     settings,
@@ -339,6 +340,7 @@ timer.start();
         fontFamily: "Noto Color Emoji",
         fontSize: 100
     }));
+    await client.getMediaPermissions();
     await client.prepare(JITSI_HOST, JVB_HOST, JVB_MUC);
     await client.connect();
 })();

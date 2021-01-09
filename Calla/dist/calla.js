@@ -6402,6 +6402,31 @@ var Calla = (function (exports) {
         });
     }
 
+    const loc = new URL(document.location.href);
+    const testNumber = loc.searchParams.get("testUserNumber");
+
+    const windows = [];
+    // Closes all the windows.
+    window.addEventListener("unload", () => {
+        for (const w of windows) {
+            w.close();
+        }
+    });
+    /**
+     * Opens a window that will be closed when the window that opened it is closed.
+     * @param href - the location to load in the window
+     * @param x - the screen position horizontal component
+     * @param y - the screen position vertical component
+     * @param width - the screen size horizontal component
+     * @param height - the screen size vertical component
+     */
+    function openWindow(href, x, y, width, height) {
+        const w = window.open(href, "_blank", `left=${x},top=${y},width=${width},height=${height}`);
+        if (w) {
+            windows.push(w);
+        }
+    }
+
     /**
      * A setter functor for HTML attributes.
      **/
@@ -6688,6 +6713,17 @@ var Calla = (function (exports) {
     const createUtilityCanvasFromImage = hasOffscreenCanvasRenderingContext2D
         ? createOffscreenCanvasFromImage
         : createCanvasFromImage;
+    HTMLCanvasElement.prototype.view = function () {
+        const url = this.toDataURL();
+        openWindow(url, 0, 0, this.width + 10, this.height + 100);
+    };
+    if (hasOffscreenCanvas) {
+        OffscreenCanvas.prototype.view = async function () {
+            const blob = await this.convertToBlob();
+            const url = URL.createObjectURL(blob);
+            openWindow(url, 0, 0, this.width + 10, this.height + 100);
+        };
+    }
 
     const Tau = 2 * Math.PI;
     function angleClamp(v) {
