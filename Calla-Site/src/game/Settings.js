@@ -1,4 +1,5 @@
 import { TypedEventBase } from "kudzu/events/EventBase";
+import { isString } from "kudzu/typeChecks";
 const KEY = "CallaSettings";
 export class InputBindingChangedEvent extends Event {
     constructor() {
@@ -115,24 +116,26 @@ export class InputBinding extends TypedEventBase {
         };
     }
     copy(obj) {
-        this.keyButtonUp = obj.keyButtonUp;
-        this.keyButtonDown = obj.keyButtonDown;
-        this.keyButtonLeft = obj.keyButtonLeft;
-        this.keyButtonRight = obj.keyButtonRight;
-        this.keyButtonEmote = obj.keyButtonEmote;
-        this.keyButtonToggleAudio = obj.keyButtonToggleAudio;
-        this.keyButtonZoomOut = obj.keyButtonZoomOut;
-        this.keyButtonZoomIn = obj.keyButtonZoomIn;
-        this.gpAxisLeftRight = obj.gpAxisLeftRight;
-        this.gpAxisUpDown = obj.gpAxisUpDown;
-        this.gpButtonEmote = obj.gpButtonEmote;
-        this.gpButtonToggleAudio = obj.gpButtonToggleAudio;
-        this.gpButtonZoomIn = obj.gpButtonZoomIn;
-        this.gpButtonZoomOut = obj.gpButtonZoomOut;
-        this.gpButtonUp = obj.gpButtonUp;
-        this.gpButtonDown = obj.gpButtonDown;
-        this.gpButtonLeft = obj.gpButtonLeft;
-        this.gpButtonRight = obj.gpButtonRight;
+        if (obj) {
+            this.keyButtonUp = obj.keyButtonUp;
+            this.keyButtonDown = obj.keyButtonDown;
+            this.keyButtonLeft = obj.keyButtonLeft;
+            this.keyButtonRight = obj.keyButtonRight;
+            this.keyButtonEmote = obj.keyButtonEmote;
+            this.keyButtonToggleAudio = obj.keyButtonToggleAudio;
+            this.keyButtonZoomOut = obj.keyButtonZoomOut;
+            this.keyButtonZoomIn = obj.keyButtonZoomIn;
+            this.gpAxisLeftRight = obj.gpAxisLeftRight;
+            this.gpAxisUpDown = obj.gpAxisUpDown;
+            this.gpButtonEmote = obj.gpButtonEmote;
+            this.gpButtonToggleAudio = obj.gpButtonToggleAudio;
+            this.gpButtonZoomIn = obj.gpButtonZoomIn;
+            this.gpButtonZoomOut = obj.gpButtonZoomOut;
+            this.gpButtonUp = obj.gpButtonUp;
+            this.gpButtonDown = obj.gpButtonDown;
+            this.gpButtonLeft = obj.gpButtonLeft;
+            this.gpButtonRight = obj.gpButtonRight;
+        }
     }
     fix(obj) {
         if (!this.bindings.has("keyButtonUp")) {
@@ -254,6 +257,15 @@ export class Settings {
             const inputBindings = obj._inputBinding;
             delete obj._inputBinding;
             Object.assign(this, obj);
+            if (this._avatarEmoji
+                && !isString(this._avatarEmoji)) {
+                if ("value" in this._avatarEmoji) {
+                    this._avatarEmoji = this._avatarEmoji.value;
+                }
+                else {
+                    this._avatarEmoji = null;
+                }
+            }
             this.inputBinding = inputBindings;
         }
         this._inputBinding.fix(DEFAULT_INPUT_BINDING);

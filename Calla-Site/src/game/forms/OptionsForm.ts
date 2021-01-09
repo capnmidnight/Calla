@@ -262,7 +262,9 @@ export class OptionsForm
                 this.keyButtonLeftInput = makeKeyboardBinder("keyButtonLeft", "Left: "),
                 this.keyButtonRightInput = makeKeyboardBinder("keyButtonRight", "Right: "),
                 this.keyButtonEmoteInput = makeKeyboardBinder("keyButtonEmote", "Emote: "),
-                this.keyButtonToggleAudioInput = makeKeyboardBinder("keyButtonToggleAudio", "Toggle audio: ")),
+                this.keyButtonToggleAudioInput = makeKeyboardBinder("keyButtonToggleAudio", "Toggle audio: "),
+                this.keyButtonZoomInInput = makeKeyboardBinder("keyButtonZoomIn", "Zoom in: "),
+                this.keyButtonZoomOutInput = makeKeyboardBinder("keyButtonZoomOut", "Zoom out: ")),
 
             OptionPanel("gamepad", "Gamepad",
                 Div(
@@ -282,7 +284,9 @@ export class OptionsForm
                 this.gpButtonLeftInput = makeGamepadButtonBinder("gpButtonLeft", "Left button: "),
                 this.gpButtonRightInput = makeGamepadButtonBinder("gpButtonRight", "Right button: "),
                 this.gpButtonEmoteInput = makeGamepadButtonBinder("gpButtonEmote", "Emote button: "),
-                this.gpButtonToggleAudioInput = makeGamepadButtonBinder("gpButtonToggleAudio", "Toggle audio button: "))
+                this.gpButtonToggleAudioInput = makeGamepadButtonBinder("gpButtonToggleAudio", "Toggle audio button: "),
+                this.gpButtonZoomInInput = makeGamepadButtonBinder("gpButtonZoomIn", "Zoom in: "),
+                this.gpButtonZoomOutInput = makeGamepadButtonBinder("gpButtonZoomOut", "Zoom out: "))
         ];
 
         const cols = [];
@@ -550,33 +554,102 @@ export class OptionsForm
     get keyButtonZoomIn() { return this.keyButtonZoomInInput.value; }
     set keyButtonZoomIn(v) { this.keyButtonZoomInInput.value = v; }
 
-    get gpAxisLeftRight() { return parseInt(this.gpAxisLeftRightInput.value, 10); }
-    set gpAxisLeftRight(v) { this.gpAxisLeftRightInput.value = v.toFixed(0); }
+    private getInteger(str: string): number {
+        if (str && /^\d+$/.test(str)) {
+            return parseInt(str, 10);
+        }
+        else {
+            return -1;
+        }
+    }
 
-    get gpAxisUpDown() { return parseInt(this.gpAxisUpDownInput.value, 10); }
-    set gpAxisUpDown(v) { this.gpAxisUpDownInput.value = v.toFixed(0); }
+    get gpAxisLeftRight() {
+        return this.getInteger(this.gpAxisLeftRightInput.value);
+    }
+    set gpAxisLeftRight(v) {
+        if(v) {
+            this.gpAxisLeftRightInput.value = v.toFixed(0);
+        }
+    }
 
-    get gpButtonUp() { return parseInt(this.gpButtonUpInput.value, 10); }
-    set gpButtonUp(v) { this.gpButtonUpInput.value = v.toFixed(0); }
+    get gpAxisUpDown() {
+        return this.getInteger(this.gpAxisUpDownInput.value);
+    }
+    set gpAxisUpDown(v) {
+        if(v) {
+            this.gpAxisUpDownInput.value = v.toFixed(0);
+        }
+    }
 
-    get gpButtonDown() { return parseInt(this.gpButtonDownInput.value, 10); }
-    set gpButtonDown(v) { this.gpButtonDownInput.value = v.toFixed(0); }
+    get gpButtonUp() {
+        return this.getInteger(this.gpButtonUpInput.value);
+    }
+    set gpButtonUp(v) {
+        if(v) {
+            this.gpButtonUpInput.value = v.toFixed(0);
+        }
+    }
 
-    get gpButtonLeft() { return parseInt(this.gpButtonLeftInput.value, 10); }
-    set gpButtonLeft(v) { this.gpButtonLeftInput.value = v.toFixed(0); }
+    get gpButtonDown() {
+        return this.getInteger(this.gpButtonDownInput.value);
+    }
+    set gpButtonDown(v) {
+        if(v) {
+            this.gpButtonDownInput.value = v.toFixed(0);
+        }
+    }
 
-    get gpButtonRight() { return parseInt(this.gpButtonRightInput.value, 10); }
-    set gpButtonRight(v) { this.gpButtonRightInput.value = v.toFixed(0); }
+    get gpButtonLeft() {
+        return this.getInteger(this.gpButtonLeftInput.value);
+    }
+    set gpButtonLeft(v) {
+        if(v) {
+            this.gpButtonLeftInput.value = v.toFixed(0);
+        }
+    }
 
-    get gpButtonEmote() { return parseInt(this.gpButtonEmoteInput.value, 10); }
-    set gpButtonEmote(v) { this.gpButtonEmoteInput.value = v.toFixed(0); }
+    get gpButtonRight() {
+        return this.getInteger(this.gpButtonRightInput.value);
+    }
+    set gpButtonRight(v) {
+        if(v) {
+            this.gpButtonRightInput.value = v.toFixed(0);
+        }
+    }
 
-    get gpButtonToggleAudio() { return parseInt(this.gpButtonToggleAudioInput.value, 10); }
-    set gpButtonToggleAudio(v) { this.gpButtonToggleAudioInput.value = v.toFixed(0); }
+    get gpButtonEmote() {
+        return this.getInteger(this.gpButtonEmoteInput.value);
+    }
+    set gpButtonEmote(v) {
+        if(v) {
+            this.gpButtonEmoteInput.value = v.toFixed(0);
+        }
+    }
 
-    get gpButtonZoomOut() { return parseInt(this.gpButtonZoomOutInput.value, 10); }
-    set gpButtonZoomOut(v) { this.gpButtonZoomOutInput.value = v.toFixed(0); }
+    get gpButtonToggleAudio() {
+        return this.getInteger(this.gpButtonToggleAudioInput.value);
+    }
+    set gpButtonToggleAudio(v) {
+        if(v) {
+            this.gpButtonToggleAudioInput.value = v.toFixed(0);
+        }
+    }
 
-    get gpButtonZoomIn() { return parseInt(this.gpButtonZoomInInput.value, 10); }
-    set gpButtonZoomIn(v) { this.gpButtonZoomInInput.value = v.toFixed(0); }
+    get gpButtonZoomOut() {
+        return this.getInteger(this.gpButtonZoomOutInput.value);
+    }
+    set gpButtonZoomOut(v) {
+        if(v) {
+            this.gpButtonZoomOutInput.value = v.toFixed(0);
+        }
+    }
+
+    get gpButtonZoomIn() {
+        return this.getInteger(this.gpButtonZoomInInput.value);
+    }
+    set gpButtonZoomIn(v) {
+        if(v) {
+            this.gpButtonZoomInInput.value = v.toFixed(0);
+        }
+    }
 }

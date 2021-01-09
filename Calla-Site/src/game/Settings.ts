@@ -1,4 +1,5 @@
 import { TypedEventBase } from "kudzu/events/EventBase";
+import { isString } from "kudzu/typeChecks";
 
 const KEY = "CallaSettings";
 
@@ -182,49 +183,51 @@ export class InputBinding
     }
 
     copy(obj: IInputBinding) {
-        this.keyButtonUp = obj.keyButtonUp;
-        this.keyButtonDown = obj.keyButtonDown;
-        this.keyButtonLeft = obj.keyButtonLeft;
-        this.keyButtonRight = obj.keyButtonRight;
-        this.keyButtonEmote = obj.keyButtonEmote;
-        this.keyButtonToggleAudio = obj.keyButtonToggleAudio;
-        this.keyButtonZoomOut = obj.keyButtonZoomOut;
-        this.keyButtonZoomIn = obj.keyButtonZoomIn;
+        if (obj) {
+            this.keyButtonUp = obj.keyButtonUp;
+            this.keyButtonDown = obj.keyButtonDown;
+            this.keyButtonLeft = obj.keyButtonLeft;
+            this.keyButtonRight = obj.keyButtonRight;
+            this.keyButtonEmote = obj.keyButtonEmote;
+            this.keyButtonToggleAudio = obj.keyButtonToggleAudio;
+            this.keyButtonZoomOut = obj.keyButtonZoomOut;
+            this.keyButtonZoomIn = obj.keyButtonZoomIn;
 
-        this.gpAxisLeftRight = obj.gpAxisLeftRight;
-        this.gpAxisUpDown = obj.gpAxisUpDown;
+            this.gpAxisLeftRight = obj.gpAxisLeftRight;
+            this.gpAxisUpDown = obj.gpAxisUpDown;
 
-        this.gpButtonEmote = obj.gpButtonEmote;
-        this.gpButtonToggleAudio = obj.gpButtonToggleAudio;
-        this.gpButtonZoomIn = obj.gpButtonZoomIn;
-        this.gpButtonZoomOut = obj.gpButtonZoomOut;
-        this.gpButtonUp = obj.gpButtonUp;
-        this.gpButtonDown = obj.gpButtonDown;
-        this.gpButtonLeft = obj.gpButtonLeft;
-        this.gpButtonRight = obj.gpButtonRight;
+            this.gpButtonEmote = obj.gpButtonEmote;
+            this.gpButtonToggleAudio = obj.gpButtonToggleAudio;
+            this.gpButtonZoomIn = obj.gpButtonZoomIn;
+            this.gpButtonZoomOut = obj.gpButtonZoomOut;
+            this.gpButtonUp = obj.gpButtonUp;
+            this.gpButtonDown = obj.gpButtonDown;
+            this.gpButtonLeft = obj.gpButtonLeft;
+            this.gpButtonRight = obj.gpButtonRight;
+        }
     }
 
     fix(obj: IInputBinding) {
-        if(!this.bindings.has("keyButtonUp")){ this.keyButtonUp = obj.keyButtonUp; };
-        if(!this.bindings.has("keyButtonDown")){ this.keyButtonDown = obj.keyButtonDown; };
-        if(!this.bindings.has("keyButtonLeft")){ this.keyButtonLeft = obj.keyButtonLeft; };
-        if(!this.bindings.has("keyButtonRight")){ this.keyButtonRight = obj.keyButtonRight; };
-        if(!this.bindings.has("keyButtonEmote")){ this.keyButtonEmote = obj.keyButtonEmote; };
-        if(!this.bindings.has("keyButtonToggleAudio")){ this.keyButtonToggleAudio = obj.keyButtonToggleAudio; };
-        if(!this.bindings.has("keyButtonZoomOut")){ this.keyButtonZoomOut = obj.keyButtonZoomOut; };
-        if(!this.bindings.has("keyButtonZoomIn")){ this.keyButtonZoomIn = obj.keyButtonZoomIn; };
+        if (!this.bindings.has("keyButtonUp")) { this.keyButtonUp = obj.keyButtonUp; };
+        if (!this.bindings.has("keyButtonDown")) { this.keyButtonDown = obj.keyButtonDown; };
+        if (!this.bindings.has("keyButtonLeft")) { this.keyButtonLeft = obj.keyButtonLeft; };
+        if (!this.bindings.has("keyButtonRight")) { this.keyButtonRight = obj.keyButtonRight; };
+        if (!this.bindings.has("keyButtonEmote")) { this.keyButtonEmote = obj.keyButtonEmote; };
+        if (!this.bindings.has("keyButtonToggleAudio")) { this.keyButtonToggleAudio = obj.keyButtonToggleAudio; };
+        if (!this.bindings.has("keyButtonZoomOut")) { this.keyButtonZoomOut = obj.keyButtonZoomOut; };
+        if (!this.bindings.has("keyButtonZoomIn")) { this.keyButtonZoomIn = obj.keyButtonZoomIn; };
 
-        if(!this.bindings.has("gpAxisLeftRight")){ this.gpAxisLeftRight = obj.gpAxisLeftRight; };
-        if(!this.bindings.has("gpAxisUpDown")){ this.gpAxisUpDown = obj.gpAxisUpDown; };
+        if (!this.bindings.has("gpAxisLeftRight")) { this.gpAxisLeftRight = obj.gpAxisLeftRight; };
+        if (!this.bindings.has("gpAxisUpDown")) { this.gpAxisUpDown = obj.gpAxisUpDown; };
 
-        if(!this.bindings.has("gpButtonEmote")){ this.gpButtonEmote = obj.gpButtonEmote; };
-        if(!this.bindings.has("gpButtonToggleAudio")){ this.gpButtonToggleAudio = obj.gpButtonToggleAudio; };
-        if(!this.bindings.has("gpButtonZoomIn")){ this.gpButtonZoomIn = obj.gpButtonZoomIn; };
-        if(!this.bindings.has("gpButtonZoomOut")){ this.gpButtonZoomOut = obj.gpButtonZoomOut; };
-        if(!this.bindings.has("gpButtonUp")){ this.gpButtonUp = obj.gpButtonUp; };
-        if(!this.bindings.has("gpButtonDown")){ this.gpButtonDown = obj.gpButtonDown; };
-        if(!this.bindings.has("gpButtonLeft")){ this.gpButtonLeft = obj.gpButtonLeft; };
-        if(!this.bindings.has("gpButtonRight")){ this.gpButtonRight = obj.gpButtonRight; };
+        if (!this.bindings.has("gpButtonEmote")) { this.gpButtonEmote = obj.gpButtonEmote; };
+        if (!this.bindings.has("gpButtonToggleAudio")) { this.gpButtonToggleAudio = obj.gpButtonToggleAudio; };
+        if (!this.bindings.has("gpButtonZoomIn")) { this.gpButtonZoomIn = obj.gpButtonZoomIn; };
+        if (!this.bindings.has("gpButtonZoomOut")) { this.gpButtonZoomOut = obj.gpButtonZoomOut; };
+        if (!this.bindings.has("gpButtonUp")) { this.gpButtonUp = obj.gpButtonUp; };
+        if (!this.bindings.has("gpButtonDown")) { this.gpButtonDown = obj.gpButtonDown; };
+        if (!this.bindings.has("gpButtonLeft")) { this.gpButtonLeft = obj.gpButtonLeft; };
+        if (!this.bindings.has("gpButtonRight")) { this.gpButtonRight = obj.gpButtonRight; };
     }
 }
 
@@ -280,11 +283,20 @@ export class Settings {
             const inputBindings = obj._inputBinding;
             delete obj._inputBinding;
             Object.assign(this, obj);
+            if (this._avatarEmoji
+                && !isString(this._avatarEmoji)) {
+                if ("value" in this._avatarEmoji) {
+                    this._avatarEmoji = (this._avatarEmoji as any).value;
+                }
+                else {
+                    this._avatarEmoji = null;
+                }
+            }
             this.inputBinding = inputBindings;
         }
 
         this._inputBinding.fix(DEFAULT_INPUT_BINDING);
-    
+
         if (window.location.hash.length > 0) {
             this.roomName = window.location.hash.substring(1);
         }

@@ -121,6 +121,7 @@ export declare class OptionsForm extends FormDialog<OptionsFormEvents> implement
     set keyButtonZoomOut(v: string);
     get keyButtonZoomIn(): string;
     set keyButtonZoomIn(v: string);
+    private getInteger;
     get gpAxisLeftRight(): number;
     set gpAxisLeftRight(v: number);
     get gpAxisUpDown(): number;
