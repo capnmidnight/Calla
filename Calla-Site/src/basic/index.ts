@@ -430,6 +430,8 @@ function deviceSelector(addNone: boolean, select: HTMLSelectElement, values: Med
     // detect there is no option to change outputs.
     controls.speakers.disabled = !canChangeAudioOutput;
 
+    await client.getMediaPermissions();
+
     deviceSelector(
         true,
         controls.cams,

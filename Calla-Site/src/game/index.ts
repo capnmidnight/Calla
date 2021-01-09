@@ -445,6 +445,7 @@ timer.start();
         fontSize: 100
     }));
 
+    await client.getMediaPermissions();
     await client.prepare(JITSI_HOST, JVB_HOST, JVB_MUC);
     await client.connect();
 })();
