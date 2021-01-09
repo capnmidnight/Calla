@@ -1,3 +1,4 @@
+import { AudioManager, SpatializerType } from "calla/audio/AudioManager";
 import { Calla } from "calla/Calla";
 import { Emoji } from "kudzu/emoji/Emoji";
 import { allPeople as people } from "kudzu/emoji/emojis";
@@ -22,6 +23,8 @@ const CAMERA_ZOOM_MIN = 0.5,
     CAMERA_ZOOM_MAX = 20,
     settings = new Settings(),
     fetcher = new Fetcher(),
+    audio = new AudioManager(fetcher, SpatializerType.High),
+    client = new Calla(fetcher, audio),
     game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
     login = new LoginForm(),
     directory = new UserDirectoryForm(),
@@ -30,7 +33,6 @@ const CAMERA_ZOOM_MIN = 0.5,
     options = new OptionsForm(),
     instructions = new FormDialog("instructions"),
     emoji = new EmojiForm(),
-    client = new Calla(fetcher),
     timer = new RequestAnimationFrameTimer(),
     disabler = disabled(true),
     enabler = disabled(false);
