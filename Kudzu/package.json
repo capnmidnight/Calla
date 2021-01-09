@@ -26,7 +26,7 @@
     "README.md"
   ],
   "devDependencies": {
-    "tslib": "^2.0.3",
+    "tslib": "^2.1.0",
     "typescript": "^4.1.3"
   },
   "dependencies": {

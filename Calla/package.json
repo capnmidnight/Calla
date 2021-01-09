@@ -35,7 +35,7 @@
     "tsconfig.json"
   ],
   "devDependencies": {
-    "tslib": "^2.0.3",
+    "tslib": "^2.1.0",
     "typescript": "^4.1.3",
     "my-rollup": "file:../MyRollup"
   },
@@ -46,7 +46,7 @@
     "kudzu": "file:../Kudzu"
   },
   "scripts": {
-    "build": "npm install && tsc --build && rollup -c --environment BUILD:all,PROJECT:all"
+    "build:calla": "npm install && tsc --build && rollup -c --environment BUILD:all,PROJECT:all"
   },
   "homepage": "https://calla.chat",
   "description": "Teleconferencing through Jitsi with audio spatialization",

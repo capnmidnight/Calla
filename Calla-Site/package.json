@@ -18,8 +18,8 @@
   },
   "devDependencies": {
     "my-rollup": "file:../MyRollup",
-    "rollup": "^2.35.1",
-    "tslib": "^2.0.3",
+    "rollup": "^2.36.1",
+    "tslib": "^2.1.0",
     "typescript": "^4.1.3"
   },
   "dependencies": {
