@@ -1,4 +1,4 @@
-import type { Context2D } from "kudzu/html/canvas";
+import type { CanvasTypes, Context2D } from "kudzu/html/canvas";
 import { IFetcher } from "kudzu/io/IFetcher";
 
 export class TileSet {
@@ -7,7 +7,7 @@ export class TileSet {
     tileHeight = 0;
     tilesPerRow = 0;
     tileCount = 0;
-    image: HTMLImageElement = null;
+    image: CanvasTypes = null;
     collision = new Map<number, boolean>();
 
     constructor(private url: URL, private fetcher: IFetcher) {
@@ -33,7 +33,9 @@ export class TileSet {
         this.tileHeight = parseInt(tileset.getAttribute("tileheight"), 10);
         this.tileCount = parseInt(tileset.getAttribute("tilecount"), 10);
 
-        this.image = await this.fetcher.getImage(imageURL.href);
+        this.image = await this.fetcher.getCanvas(imageURL.href);
+
+        this.tilesPerRow = Math.floor(this.image.width / this.tileWidth);
     }
 
     isClear(tile: number) {

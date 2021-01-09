@@ -27,7 +27,8 @@ export class TileSet {
         this.tileWidth = parseInt(tileset.getAttribute("tilewidth"), 10);
         this.tileHeight = parseInt(tileset.getAttribute("tileheight"), 10);
         this.tileCount = parseInt(tileset.getAttribute("tilecount"), 10);
-        this.image = await this.fetcher.getImage(imageURL.href);
+        this.image = await this.fetcher.getCanvas(imageURL.href);
+        this.tilesPerRow = Math.floor(this.image.width / this.tileWidth);
     }
     isClear(tile) {
         return !this.collision.get(tile - 1);
