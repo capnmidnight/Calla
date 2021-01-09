@@ -3,14 +3,17 @@
   "version": "1.0.0",
   "files": [
     "arrays/",
+    "collections/",
     "emoji/",
     "events/",
+    "fetchers/",
     "graphics2d/",
     "html/",
     "input/",
     "io/",
     "math/",
     "strings/",
+    "tasks/",
     "testing/",
     "timers/",
     "workers/",
@@ -26,19 +29,18 @@
     "README.md"
   ],
   "devDependencies": {
-    "tslib": "^2.1.0",
+    "@types/node": "^14.14.20",
     "typescript": "^4.1.3"
   },
   "dependencies": {
-    "@types/node": "^14.14.20",
     "bowser": "^2.11.0"
   },
   "scripts": {
     "build:kudzu": "npm install && tsc --build",
     "watch:kudzu": "npm install && tsc --watch"
   },
-  "description": "Kudzu",
+  "description": "JavaScript browser runtime library",
   "author": {
-    "name": ""
+    "name": "Sean T. McBeth"
   }
 }

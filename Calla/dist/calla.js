@@ -1190,7 +1190,7 @@ var Calla = (function (exports) {
          */
         HubConnection.prototype.stop = function () {
             return __awaiter$2(this, void 0, void 0, function () {
-                var startPromise, e_3;
+                var startPromise;
                 return __generator$2(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -1209,7 +1209,7 @@ var Calla = (function (exports) {
                             _a.sent();
                             return [3 /*break*/, 5];
                         case 4:
-                            e_3 = _a.sent();
+                            _a.sent();
                             return [3 /*break*/, 5];
                         case 5: return [2 /*return*/];
                     }
@@ -1531,7 +1531,6 @@ var Calla = (function (exports) {
             }
             this.cleanupPingTimer();
             this.pingServerHandle = setTimeout(function () { return __awaiter$2(_this, void 0, void 0, function () {
-                var _a;
                 return __generator$2(this, function (_b) {
                     switch (_b.label) {
                         case 0:
@@ -1544,7 +1543,7 @@ var Calla = (function (exports) {
                             _b.sent();
                             return [3 /*break*/, 4];
                         case 3:
-                            _a = _b.sent();
+                            _b.sent();
                             // We don't care about the error. It should be seen elsewhere in the client.
                             // The connection is probably in a bad or closed state now, cleanup the timer so it stops triggering
                             this.cleanupPingTimer();
@@ -2807,7 +2806,7 @@ var Calla = (function (exports) {
         };
         HttpConnection.prototype.stopInternal = function (error) {
             return __awaiter$6(this, void 0, void 0, function () {
-                var e_1, e_2;
+                var e_2;
                 return __generator$6(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -2823,7 +2822,7 @@ var Calla = (function (exports) {
                             _a.sent();
                             return [3 /*break*/, 4];
                         case 3:
-                            e_1 = _a.sent();
+                            _a.sent();
                             return [3 /*break*/, 4];
                         case 4:
                             if (!this.transport) return [3 /*break*/, 9];

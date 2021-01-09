@@ -2,7 +2,6 @@ const commonjs = require("@rollup/plugin-commonjs");
 const json = require("@rollup/plugin-json");
 const { nodeResolve } = require("@rollup/plugin-node-resolve");
 const replace = require("@rollup/plugin-replace");
-const typescript = require("@rollup/plugin-typescript");
 const sourcemaps = require("rollup-plugin-sourcemaps");
 const { terser } = require("rollup-plugin-terser");
 
@@ -84,10 +83,6 @@ function makeBundle(name, input, outputDir, format, isProduction, options) {
 
     if (options.plugins) {
         opts.plugins.push(...options.plugins);
-    }
-
-    if (/\.ts$/.test(input)) {
-        opts.plugins.push(typescript());
     }
 
     opts.plugins.push(sourcemaps());
