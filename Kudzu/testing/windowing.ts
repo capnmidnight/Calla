@@ -1,4 +1,4 @@
-import { userNumber } from "./userNumber";
+import { getUserNumber } from "./userNumber";
 
 const windows: Window[] = [];
 
@@ -29,7 +29,7 @@ export function openWindow(href: string, x: number, y: number, width: number, he
  **/
 export function openSideTest() {
     const loc = new URL(document.location.href);
-    loc.searchParams.set("testUserNumber", (userNumber + windows.length + 1).toString());
+    loc.searchParams.set("testUserNumber", (getUserNumber() + windows.length + 1).toString());
     openWindow(
         loc.href,
         window.screenLeft + window.outerWidth,

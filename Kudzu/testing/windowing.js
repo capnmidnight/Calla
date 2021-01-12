@@ -1,4 +1,4 @@
-import { userNumber } from "./userNumber";
+import { getUserNumber } from "./userNumber";
 const windows = [];
 // Closes all the windows.
 window.addEventListener("unload", () => {
@@ -25,7 +25,7 @@ export function openWindow(href, x, y, width, height) {
  **/
 export function openSideTest() {
     const loc = new URL(document.location.href);
-    loc.searchParams.set("testUserNumber", (userNumber + windows.length + 1).toString());
+    loc.searchParams.set("testUserNumber", (getUserNumber() + windows.length + 1).toString());
     openWindow(loc.href, window.screenLeft + window.outerWidth, 0, window.innerWidth, window.innerHeight);
 }
 //# sourceMappingURL=windowing.js.map

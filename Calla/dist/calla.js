@@ -4144,9 +4144,6 @@ var Calla = (function (exports) {
         });
     }
 
-    const loc = new URL(document.location.href);
-    const testNumber = loc.searchParams.get("testUserNumber");
-
     const windows = [];
     // Closes all the windows.
     window.addEventListener("unload", () => {
