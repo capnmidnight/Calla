@@ -241,10 +241,12 @@ export function resizeContext(ctx: CanvasRenderingContext2D, superscale = 1) {
         superscale);
 }
 
-(HTMLCanvasElement.prototype as any).view = function (this: HTMLCanvasElement) {
-    const url = this.toDataURL();
-    openWindow(url, 0, 0, this.width + 10, this.height + 100);
-};
+if ("HTMLCanvasElement" in globalThis) {
+    (HTMLCanvasElement.prototype as any).view = function (this: HTMLCanvasElement) {
+        const url = this.toDataURL();
+        openWindow(url, 0, 0, this.width + 10, this.height + 100);
+    };
+}
 
 if (hasOffscreenCanvas) {
     (OffscreenCanvas.prototype as any).view =async function (this: OffscreenCanvas) {

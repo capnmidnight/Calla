@@ -1,7 +1,7 @@
-import { assertNever, isFunction, isNumber, isString } from "../typeChecks";
+import { assertNever, isFunction, isNullOrUndefined, isNumber } from "../typeChecks";
 import { WorkerMethodMessageType } from "./WorkerServer";
 export class WorkerClient {
-    constructor(scriptPath, minScriptPath, workerPoolSize = 1) {
+    constructor(scriptPath, minScriptPath, workerPoolSize) {
         this.taskCounter = 0;
         this.methodExists = new Map();
         this.enabled = true;
@@ -9,21 +9,20 @@ export class WorkerClient {
             console.warn("Workers are not supported on this system.");
         }
         // Normalize constructor parameters.
-        if (!workerPoolSize) {
-            if (isNumber(minScriptPath)) {
-                workerPoolSize = minScriptPath;
-                minScriptPath = undefined;
-            }
-            else {
-                workerPoolSize = 1;
-            }
+        if (isNumber(minScriptPath)) {
+            workerPoolSize = minScriptPath;
+            minScriptPath = undefined;
         }
+        if (isNullOrUndefined(workerPoolSize)) {
+            workerPoolSize = 1;
+        }
+        // Validate parameters
         if (workerPoolSize < 1) {
             throw new Error("Worker pool size must be a postive integer greater than 0");
         }
         // Choose which version of the script we're going to load.
         if (process.env.NODE_ENV === "development"
-            || !isString(minScriptPath)) {
+            || isNullOrUndefined(minScriptPath)) {
             this.script = scriptPath;
         }
         else {

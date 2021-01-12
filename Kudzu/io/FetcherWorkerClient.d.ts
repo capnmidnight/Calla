@@ -6,7 +6,16 @@ import { Fetcher } from "./Fetcher";
 import { getPartsReturnType } from "./getPartsReturnType";
 export declare class FetcherWorkerClient extends Fetcher {
     worker: WorkerClient;
-    constructor(scriptPath: string, minScriptPath: string, workerPoolSize?: number);
+    /**
+     * Creates a new pooled worker method executor.
+     * @param scriptPath - the path to the unminified script to use for the worker
+     * @param minScriptPath - the path to the minified script to use for the worker (optional)
+     * @param workerPoolSize - the number of worker threads to create for the pool (defaults to 1)
+     */
+    constructor(scriptPath: string);
+    constructor(scriptPath: string, minScriptPath: string);
+    constructor(scriptPath: string, workerPoolSize: number);
+    constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number);
     getBuffer(path: string, onProgress?: progressCallback): Promise<getPartsReturnType>;
     postObjectForBuffer<T>(path: string, obj: T, onProgress?: progressCallback): Promise<getPartsReturnType>;
     getObject<T>(path: string, onProgress?: progressCallback): Promise<T>;

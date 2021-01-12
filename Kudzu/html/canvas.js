@@ -181,10 +181,12 @@ export function resizeCanvas(canv, superscale = 1) {
 export function resizeContext(ctx, superscale = 1) {
     return setContextSize(ctx, ctx.canvas.clientWidth, ctx.canvas.clientHeight, superscale);
 }
-HTMLCanvasElement.prototype.view = function () {
-    const url = this.toDataURL();
-    openWindow(url, 0, 0, this.width + 10, this.height + 100);
-};
+if ("HTMLCanvasElement" in globalThis) {
+    HTMLCanvasElement.prototype.view = function () {
+        const url = this.toDataURL();
+        openWindow(url, 0, 0, this.width + 10, this.height + 100);
+    };
+}
 if (hasOffscreenCanvas) {
     OffscreenCanvas.prototype.view = async function () {
         const blob = await this.convertToBlob();

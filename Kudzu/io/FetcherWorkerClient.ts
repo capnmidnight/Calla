@@ -4,6 +4,7 @@ import { renderImageBitmapFaces } from "../graphics2d/renderFace";
 import { hasImageBitmap, hasOffscreenCanvasRenderingContext2D, MemoryImageTypes } from "../html/canvas";
 import { progressCallback } from "../tasks/progressCallback";
 import { splitProgress } from "../tasks/splitProgress";
+import { isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { WorkerClient } from "../workers/WorkerClient";
 import { Fetcher } from "./Fetcher";
 import { getPartsReturnType } from "./getPartsReturnType";
@@ -12,10 +13,34 @@ export class FetcherWorkerClient extends Fetcher {
 
     worker: WorkerClient;
 
-    constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number = 10) {
+    /**
+     * Creates a new pooled worker method executor.
+     * @param scriptPath - the path to the unminified script to use for the worker
+     * @param minScriptPath - the path to the minified script to use for the worker (optional)
+     * @param workerPoolSize - the number of worker threads to create for the pool (defaults to 1)
+     */
+    constructor(scriptPath: string);
+    constructor(scriptPath: string, minScriptPath: string);
+    constructor(scriptPath: string, workerPoolSize: number);
+    constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number);
+    constructor(scriptPath: string, minScriptPath?: number | string, workerPoolSize: number = 1) {
         super();
 
-        this.worker = new WorkerClient(scriptPath, minScriptPath, workerPoolSize);
+        if (isNumber(minScriptPath)) {
+            workerPoolSize = minScriptPath;
+            minScriptPath = undefined;
+        }
+
+        if (isNullOrUndefined(workerPoolSize)) {
+            workerPoolSize = 1;
+        }
+
+        if (isString(minScriptPath)) {
+            this.worker = new WorkerClient(scriptPath, minScriptPath, workerPoolSize);
+        }
+        else {
+            this.worker = new WorkerClient(scriptPath, workerPoolSize);
+        }
     }
 
     async getBuffer(path: string, onProgress?: progressCallback): Promise<getPartsReturnType> {
@@ -27,7 +52,7 @@ export class FetcherWorkerClient extends Fetcher {
         }
     }
 
-    async postObjectForBuffer<T>(path: string, obj:T, onProgress?: progressCallback): Promise<getPartsReturnType> {
+    async postObjectForBuffer<T>(path: string, obj: T, onProgress?: progressCallback): Promise<getPartsReturnType> {
         if (this.worker.enabled) {
             return await this.worker.execute("postObjectForBuffer", [path, obj], onProgress);
         }
@@ -116,19 +141,4 @@ export class FetcherWorkerClient extends Fetcher {
             return await super.getEquiMaps(path, interpolation, maxWidth, onProgress);
         }
     }
-    /*
-
-
-export const getEquiMapImages = worker.createExecutor<ImageBitmap[] | CanvasTypes[]>(
-    "renderFace",
-    async (path: string, interpolation: InterpolationType, maxWidth: number, onProgress: progressCallback) => {
-        const splits = splitProgress(onProgress, [1, 6]);
-        const imgData = await getImageData(path, splits.shift());
-        return await renderImageBitmapFaces(
-            (readData: ImageData, faceName: CubeMapFace, interpolation: InterpolationType, maxWidth: number, onProgress: progressCallback) =>
-                worker.execute("renderFace", [readData, faceName, interpolation, maxWidth], onProgress),
-            imgData, interpolation, maxWidth, splits.shift());
-    },
-    (path: string, interpolation: InterpolationType, maxWidth: number, onProgress: progressCallback) => _getEquiMapCanvases(path, interpolation, maxWidth, onProgress));
-    */
 }

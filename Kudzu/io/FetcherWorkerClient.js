@@ -1,12 +1,25 @@
 import { renderImageBitmapFaces } from "../graphics2d/renderFace";
 import { hasImageBitmap, hasOffscreenCanvasRenderingContext2D } from "../html/canvas";
 import { splitProgress } from "../tasks/splitProgress";
+import { isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { WorkerClient } from "../workers/WorkerClient";
 import { Fetcher } from "./Fetcher";
 export class FetcherWorkerClient extends Fetcher {
-    constructor(scriptPath, minScriptPath, workerPoolSize = 10) {
+    constructor(scriptPath, minScriptPath, workerPoolSize = 1) {
         super();
-        this.worker = new WorkerClient(scriptPath, minScriptPath, workerPoolSize);
+        if (isNumber(minScriptPath)) {
+            workerPoolSize = minScriptPath;
+            minScriptPath = undefined;
+        }
+        if (isNullOrUndefined(workerPoolSize)) {
+            workerPoolSize = 1;
+        }
+        if (isString(minScriptPath)) {
+            this.worker = new WorkerClient(scriptPath, minScriptPath, workerPoolSize);
+        }
+        else {
+            this.worker = new WorkerClient(scriptPath, workerPoolSize);
+        }
     }
     async getBuffer(path, onProgress) {
         if (this.worker.enabled) {

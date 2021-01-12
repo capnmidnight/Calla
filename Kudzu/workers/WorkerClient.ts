@@ -1,5 +1,5 @@
 import type { progressCallback } from "../tasks/progressCallback";
-import { assertNever, isFunction, isNumber, isString } from "../typeChecks";
+import { assertNever, isFunction, isNullOrUndefined, isNumber } from "../typeChecks";
 import type { WorkerMethodMessages } from "./WorkerServer";
 import { WorkerMethodMessageType } from "./WorkerServer";
 
@@ -25,30 +25,30 @@ export class WorkerClient {
     constructor(scriptPath: string, minScriptPath: string);
     constructor(scriptPath: string, workerPoolSize: number);
     constructor(scriptPath: string, minScriptPath: string, workerPoolSize: number);
-    constructor(scriptPath: string, minScriptPath?: number | string, workerPoolSize: number = 1) {
+    constructor(scriptPath: string, minScriptPath?: number | string, workerPoolSize?: number) {
 
         if (!WorkerClient.isSupported) {
             console.warn("Workers are not supported on this system.");
         }
 
         // Normalize constructor parameters.
-        if (!workerPoolSize) {
-            if (isNumber(minScriptPath)) {
-                workerPoolSize = minScriptPath;
-                minScriptPath = undefined;
-            }
-            else {
-                workerPoolSize = 1;
-            }
+        if (isNumber(minScriptPath)) {
+            workerPoolSize = minScriptPath;
+            minScriptPath = undefined;
         }
 
+        if (isNullOrUndefined(workerPoolSize)) {
+            workerPoolSize = 1;
+        }
+
+        // Validate parameters
         if (workerPoolSize < 1) {
             throw new Error("Worker pool size must be a postive integer greater than 0");
         }
 
         // Choose which version of the script we're going to load.
         if (process.env.NODE_ENV === "development"
-            || !isString(minScriptPath)) {
+            || isNullOrUndefined(minScriptPath)) {
             this.script = scriptPath;
         }
         else {

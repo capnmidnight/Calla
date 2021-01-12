@@ -1,13 +1,13 @@
 import { isNullOrUndefined } from "../typeChecks";
 
 function getTestNumber(): string | null {
-    if (!("location" in globalThis)) {
-        return null;
-    }
-    else {
+    if ("location" in globalThis) {
         const loc = new URL(globalThis.location.href);
         const testNumber = loc.searchParams.get("testUserNumber");
         return testNumber;
+    }
+    else {
+        return null;
     }
 }
 
