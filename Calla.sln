@@ -33,6 +33,7 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "MyRollup", "MyRollup\", "{5
 		Release.AspNetCompiler.FixedNames = "false"
 		Release.AspNetCompiler.Debug = "False"
 		VWDPort = "49836"
+		SlnRelativePath = "MyRollup\"
 	EndProjectSection
 EndProject
 Global
