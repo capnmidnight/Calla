@@ -1,4 +1,4 @@
-import { assertNever, isFunction, isNullOrUndefined, isNumber } from "../typeChecks";
+import { assertNever, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { WorkerMethodMessageType } from "./WorkerServer";
 export class WorkerClient {
     constructor(scriptPath, minScriptPath, workerPoolSize) {
@@ -22,7 +22,7 @@ export class WorkerClient {
         }
         // Choose which version of the script we're going to load.
         if (process.env.NODE_ENV === "development"
-            || isNullOrUndefined(minScriptPath)) {
+            || !isString(minScriptPath)) {
             this.script = scriptPath;
         }
         else {

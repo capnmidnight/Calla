@@ -1,5 +1,5 @@
 import type { progressCallback } from "../tasks/progressCallback";
-import { assertNever, isFunction, isNullOrUndefined, isNumber } from "../typeChecks";
+import { assertNever, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import type { WorkerMethodMessages } from "./WorkerServer";
 import { WorkerMethodMessageType } from "./WorkerServer";
 
@@ -48,7 +48,7 @@ export class WorkerClient {
 
         // Choose which version of the script we're going to load.
         if (process.env.NODE_ENV === "development"
-            || isNullOrUndefined(minScriptPath)) {
+            || !isString(minScriptPath)) {
             this.script = scriptPath;
         }
         else {
