@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Calla-Site", "Calla-Site\Calla-Site.csproj", "{A272E105-63BA-4045-8467-D4ECC7B69ADA}"
 EndProject
-Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "MyRollup", "MyRollup\MyRollup.njsproj", "{B4E3117E-3AF2-4C07-BC49-A4DCCEF2C784}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Calla", "Calla\Calla.csproj", "{90C91FA6-DE75-470B-BDDB-E939F0696FD9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kudzu", "Kudzu\Kudzu.csproj", "{D3EFCB36-2567-4AD8-BBF0-62B43F567500}"
@@ -15,6 +13,26 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		Directory.Build.props = Directory.Build.props
 		Directory.Build.targets = Directory.Build.targets
+	EndProjectSection
+EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "MyRollup", "MyRollup\", "{515F5032-F1D9-4304-9073-E77176E89969}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_49836"
+		Debug.AspNetCompiler.PhysicalPath = "MyRollup\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_49836\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_49836"
+		Release.AspNetCompiler.PhysicalPath = "MyRollup\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_49836\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "49836"
 	EndProjectSection
 EndProject
 Global
@@ -27,10 +45,6 @@ Global
 		{A272E105-63BA-4045-8467-D4ECC7B69ADA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A272E105-63BA-4045-8467-D4ECC7B69ADA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A272E105-63BA-4045-8467-D4ECC7B69ADA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B4E3117E-3AF2-4C07-BC49-A4DCCEF2C784}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B4E3117E-3AF2-4C07-BC49-A4DCCEF2C784}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B4E3117E-3AF2-4C07-BC49-A4DCCEF2C784}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B4E3117E-3AF2-4C07-BC49-A4DCCEF2C784}.Release|Any CPU.Build.0 = Release|Any CPU
 		{90C91FA6-DE75-470B-BDDB-E939F0696FD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{90C91FA6-DE75-470B-BDDB-E939F0696FD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90C91FA6-DE75-470B-BDDB-E939F0696FD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -39,6 +53,10 @@ Global
 		{D3EFCB36-2567-4AD8-BBF0-62B43F567500}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3EFCB36-2567-4AD8-BBF0-62B43F567500}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D3EFCB36-2567-4AD8-BBF0-62B43F567500}.Release|Any CPU.Build.0 = Release|Any CPU
+		{515F5032-F1D9-4304-9073-E77176E89969}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{515F5032-F1D9-4304-9073-E77176E89969}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{515F5032-F1D9-4304-9073-E77176E89969}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{515F5032-F1D9-4304-9073-E77176E89969}.Release|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

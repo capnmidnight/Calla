@@ -467,10 +467,11 @@ function deviceSelector(addNone: boolean, select: HTMLSelectElement, values: Med
 // locally and testing multiple connections. It can
 // safely be ignored.
 // ===================================================
-import { userNumber } from "kudzu/testing/userNumber";
+import { getUserNumber } from "kudzu/testing/userNumber";
 import { openSideTest } from "kudzu/testing/windowing";
 
 const sideTest = document.getElementById("sideTest") as HTMLButtonElement
+const userNumber = getUserNumber();
 
 if (userNumber === 1) {
     sideTest.addEventListener("click", openSideTest);

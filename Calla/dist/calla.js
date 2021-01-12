@@ -4145,12 +4145,14 @@ var Calla = (function (exports) {
     }
 
     const windows = [];
-    // Closes all the windows.
-    window.addEventListener("unload", () => {
-        for (const w of windows) {
-            w.close();
-        }
-    });
+    if ("window" in globalThis) {
+        // Closes all the windows.
+        window.addEventListener("unload", () => {
+            for (const w of windows) {
+                w.close();
+            }
+        });
+    }
     /**
      * Opens a window that will be closed when the window that opened it is closed.
      * @param href - the location to load in the window
@@ -4160,9 +4162,14 @@ var Calla = (function (exports) {
      * @param height - the screen size vertical component
      */
     function openWindow(href, x, y, width, height) {
-        const w = window.open(href, "_blank", `left=${x},top=${y},width=${width},height=${height}`);
-        if (w) {
-            windows.push(w);
+        if ("window" in globalThis) {
+            const w = window.open(href, "_blank", `left=${x},top=${y},width=${width},height=${height}`);
+            if (w) {
+                windows.push(w);
+            }
+        }
+        else {
+            throw new Error("Cannot open a window from a Worker.");
         }
     }
 
@@ -4452,10 +4459,12 @@ var Calla = (function (exports) {
     const createUtilityCanvasFromImage = hasOffscreenCanvasRenderingContext2D
         ? createOffscreenCanvasFromImage
         : createCanvasFromImage;
-    HTMLCanvasElement.prototype.view = function () {
-        const url = this.toDataURL();
-        openWindow(url, 0, 0, this.width + 10, this.height + 100);
-    };
+    if ("HTMLCanvasElement" in globalThis) {
+        HTMLCanvasElement.prototype.view = function () {
+            const url = this.toDataURL();
+            openWindow(url, 0, 0, this.width + 10, this.height + 100);
+        };
+    }
     if (hasOffscreenCanvas) {
         OffscreenCanvas.prototype.view = async function () {
             const blob = await this.convertToBlob();
