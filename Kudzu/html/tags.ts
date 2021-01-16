@@ -92,6 +92,11 @@ export function elementClearChildren(elem: HTMLElement) {
     }
 }
 
+export function elementSetText(elem: HTMLElement, text: string) {
+    elementClearChildren(elem);
+    elem.appendChild(TextNode(text));
+}
+
 
 export type HTMLAudioElementWithSinkID = HTMLAudioElement & {
     sinkId: string;

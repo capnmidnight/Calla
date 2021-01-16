@@ -19,6 +19,7 @@ export declare function tag(name: string, ...rest: TagChild[]): HTMLElement;
  * Empty an element of all children. This is faster than setting `innerHTML = ""`.
  */
 export declare function elementClearChildren(elem: HTMLElement): void;
+export declare function elementSetText(elem: HTMLElement, text: string): void;
 export declare type HTMLAudioElementWithSinkID = HTMLAudioElement & {
     sinkId: string;
     setSinkId(id: string): Promise<void>;

@@ -65,6 +65,10 @@ export function elementClearChildren(elem) {
         elem.lastChild.remove();
     }
 }
+export function elementSetText(elem, text) {
+    elementClearChildren(elem);
+    elem.appendChild(TextNode(text));
+}
 export function A(...rest) { return tag("a", ...rest); }
 export function Abbr(...rest) { return tag("abbr", ...rest); }
 export function Address(...rest) { return tag("address", ...rest); }
