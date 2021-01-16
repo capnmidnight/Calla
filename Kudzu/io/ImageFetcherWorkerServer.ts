@@ -1,14 +1,14 @@
+import { hasImageBitmap, hasOffscreenCanvasRenderingContext2D } from "../html/canvas";
 import { progressCallback } from "../tasks/progressCallback";
 import { WorkerServer } from "../workers/WorkerServer";
-import { Fetcher } from "./Fetcher";
 import { getPartsReturnType } from "./getPartsReturnType";
+import { ImageFetcher } from "./ImageFetcher";
 
-export class FetcherWorkerServer extends WorkerServer {
-
+export class ImageFetcherWorkerServer extends WorkerServer {
     constructor(self: DedicatedWorkerGlobalScope) {
         super(self);
 
-        const fetcher = new Fetcher();
+        const fetcher = new ImageFetcher();
 
         this.add(
             "getBuffer",
@@ -41,5 +41,32 @@ export class FetcherWorkerServer extends WorkerServer {
             "postObjectForFile",
             (path: string, obj: any, headerMap: Map<string, string>, onProgress: progressCallback) =>
                 fetcher.postObjectForFile(path, obj, headerMap, onProgress));
+
+        if (hasImageBitmap) {
+            this.add(
+                "getImageBitmap",
+                (path: string, headerMap: Map<string, string>, onProgress: progressCallback) =>
+                    fetcher.getImageBitmap(path, headerMap, onProgress),
+                (imgBmp: ImageBitmap) => [imgBmp]);
+
+            this.add(
+                "postObjectForImageBitmap",
+                (path: string, obj: any, headerMap: Map<string, string>, onProgress: progressCallback) =>
+                    fetcher.postObjectForImageBitmap(path, obj, headerMap, onProgress),
+                (imgBmp: ImageBitmap) => [imgBmp]);
+
+            if (hasOffscreenCanvasRenderingContext2D) {
+                this.add(
+                    "getCubes",
+                    (path: string, headerMap: Map<string, string>, onProgress: progressCallback) =>
+                        fetcher._getCubesViaImageBitmaps(path, headerMap, onProgress),
+                    (imgBmps: ImageBitmap[]) => imgBmps);
+
+                this.add(
+                    "renderFace",
+                    fetcher.renderImageBitmapFace,
+                    (imgBmp: ImageBitmap) => [imgBmp]);
+            }
+        }
     }
 }

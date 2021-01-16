@@ -1089,16 +1089,16 @@ export declare function zoom(v: number): Attr;
 /**
  * A selection of fonts for preferred monospace rendering.
  **/
-export declare const monospaceFonts = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
+export declare function getMonospaceFonts(): string;
 /**
  * A selection of fonts for preferred monospace rendering.
  **/
-export declare const monospaceFamily: Attr;
+export declare function getMonospaceFamily(): Attr;
 /**
  * A selection of fonts that should match whatever the user's operating system normally uses.
  **/
-export declare const systemFonts = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
+export declare function getSystemFonts(): string;
 /**
  * A selection of fonts that should match whatever the user's operating system normally uses.
  **/
-export declare const systemFamily: Attr;
+export declare function getSystemFamily(): Attr;

@@ -1,8 +1,10 @@
+import { InterpolationType } from "../graphics2d/InterpolationType";
+import { MemoryImageTypes } from "../html/canvas";
 import { progressCallback } from "../tasks/progressCallback";
 import { WorkerClient } from "../workers/WorkerClient";
-import { Fetcher } from "./Fetcher";
 import { getPartsReturnType } from "./getPartsReturnType";
-export declare class FetcherWorkerClient extends Fetcher {
+import { ImageFetcher } from "./ImageFetcher";
+export declare class ImageFetcherWorkerClient extends ImageFetcher {
     worker: WorkerClient;
     /**
      * Creates a new pooled worker method executor.
@@ -20,4 +22,8 @@ export declare class FetcherWorkerClient extends Fetcher {
     protected _postObjectForObject<T, U>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<U>;
     protected _getFile(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string>;
     protected _postObjectForFile<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string>;
+    protected _getImageBitmap(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<ImageBitmap>;
+    protected _postObjectForImageBitmap<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<ImageBitmap>;
+    protected _getCubes(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
+    protected _getEquiMaps(path: string, interpolation: InterpolationType, maxWidth: number, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
 }

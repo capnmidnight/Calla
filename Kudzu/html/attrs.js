@@ -1152,17 +1152,25 @@ export function zoom(v) { return new Attr("zoom", v); }
 /**
  * A selection of fonts for preferred monospace rendering.
  **/
-export const monospaceFonts = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
+export function getMonospaceFonts() {
+    return "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
+}
 /**
  * A selection of fonts for preferred monospace rendering.
  **/
-export const monospaceFamily = fontFamily(monospaceFonts);
+export function getMonospaceFamily() {
+    return fontFamily(getMonospaceFonts());
+}
 /**
  * A selection of fonts that should match whatever the user's operating system normally uses.
  **/
-export const systemFonts = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
+export function getSystemFonts() {
+    return "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
+}
 /**
  * A selection of fonts that should match whatever the user's operating system normally uses.
  **/
-export const systemFamily = fontFamily(systemFonts);
+export function getSystemFamily() {
+    return fontFamily(getSystemFonts());
+}
 //# sourceMappingURL=attrs.js.map

@@ -1,10 +1,15 @@
+import { CubeMapFace } from "../graphics2d/CubeMapFace";
+import { InterpolationType } from "../graphics2d/InterpolationType";
+import { renderImageBitmapFaces } from "../graphics2d/renderFace";
+import { hasImageBitmap, hasOffscreenCanvasRenderingContext2D, MemoryImageTypes } from "../html/canvas";
 import { progressCallback } from "../tasks/progressCallback";
+import { splitProgress } from "../tasks/splitProgress";
 import { isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { WorkerClient } from "../workers/WorkerClient";
-import { Fetcher } from "./Fetcher";
 import { getPartsReturnType } from "./getPartsReturnType";
+import { ImageFetcher } from "./ImageFetcher";
 
-export class FetcherWorkerClient extends Fetcher {
+export class ImageFetcherWorkerClient extends ImageFetcher {
 
     worker: WorkerClient;
 
@@ -89,6 +94,51 @@ export class FetcherWorkerClient extends Fetcher {
         }
         else {
             return await super._postObjectForFile(path, obj, headerMap, onProgress);
+        }
+    }
+
+    protected async _getImageBitmap(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<ImageBitmap> {
+        if (this.worker.enabled) {
+            return await this.worker.execute("getImageBitmap", [path, headerMap], onProgress);
+        }
+        else {
+            return await super._getImageBitmap(path, headerMap, onProgress);
+        }
+    }
+
+    protected async _postObjectForImageBitmap<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<ImageBitmap> {
+        if (this.worker.enabled && hasImageBitmap) {
+            return await this.worker.execute("postObjectForImageBitmap", [path, headerMap, obj], onProgress);
+        }
+        else {
+            return await super._postObjectForImageBitmap(path, obj, headerMap, onProgress);
+        }
+    }
+
+    protected async _getCubes(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]> {
+        if (this.worker.enabled
+            && hasImageBitmap
+            && hasOffscreenCanvasRenderingContext2D) {
+            return await this.worker.execute("getCubes", [path, headerMap], onProgress);
+        }
+        else {
+            return await super._getCubes(path, headerMap, onProgress);
+        }
+    }
+
+    protected async _getEquiMaps(path: string, interpolation: InterpolationType, maxWidth: number, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]> {
+        if (this.worker.enabled
+            && hasImageBitmap
+            && hasOffscreenCanvasRenderingContext2D) {
+            const splits = splitProgress(onProgress, [1, 6]);
+            const imgData = await this._getImageData(path, headerMap, splits.shift());
+            return await renderImageBitmapFaces(
+                (readData: ImageData, faceName: CubeMapFace, interpolation: InterpolationType, maxWidth: number, onProgress?: progressCallback) =>
+                    this.worker.execute("renderFace", [readData, faceName, interpolation, maxWidth], onProgress),
+                imgData, interpolation, maxWidth, splits.shift());
+        }
+        else {
+            return await super.getEquiMaps(path, interpolation, maxWidth, onProgress);
         }
     }
 }
