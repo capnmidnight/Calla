@@ -43,95 +43,95 @@ export class FetcherWorkerClient extends Fetcher {
         }
     }
 
-    async getBuffer(path: string, onProgress?: progressCallback): Promise<getPartsReturnType> {
+    protected async _getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType> {
         if (this.worker.enabled) {
-            return await this.worker.execute("getBuffer", [path], onProgress);
+            return await this.worker.execute("getBuffer", [path, headerMap], onProgress);
         }
         else {
-            return await super.getBuffer(path, onProgress);
+            return await super._getBuffer(path, headerMap, onProgress);
         }
     }
 
-    async postObjectForBuffer<T>(path: string, obj: T, onProgress?: progressCallback): Promise<getPartsReturnType> {
+    protected async _postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType> {
         if (this.worker.enabled) {
-            return await this.worker.execute("postObjectForBuffer", [path, obj], onProgress);
+            return await this.worker.execute("postObjectForBuffer", [path, obj, headerMap], onProgress);
         }
         else {
-            return await super.postObjectForBuffer(path, obj, onProgress);
+            return await super._postObjectForBuffer(path, obj, headerMap, onProgress);
         }
     }
 
-    async getObject<T>(path: string, onProgress?: progressCallback): Promise<T> {
+    protected async _getObject<T>(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<T> {
         if (this.worker.enabled) {
-            return await this.worker.execute("getObject", [path], onProgress);
+            return await this.worker.execute("getObject", [path, headerMap], onProgress);
         }
         else {
-            return await super.getObject(path, onProgress);
+            return await super._getObject(path, headerMap, onProgress);
         }
     }
 
-    async postObjectForObject<T, U>(path: string, obj: T, onProgress?: progressCallback): Promise<U> {
+    protected async _postObjectForObject<T, U>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<U> {
         if (this.worker.enabled) {
-            return await this.worker.execute("postObjectForObject", [path, obj], onProgress);
+            return await this.worker.execute("postObjectForObject", [path, headerMap, obj], onProgress);
         }
         else {
-            return await super.postObjectForObject(path, obj, onProgress);
+            return await super._postObjectForObject(path, obj, headerMap, onProgress);
         }
     }
 
-    async getFile(path: string, onProgress?: progressCallback): Promise<string> {
+    protected async _getFile(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
         if (this.worker.enabled) {
-            return await this.worker.execute("getFile", [path], onProgress);
+            return await this.worker.execute("getFile", [path, headerMap], onProgress);
         }
         else {
-            return await super.getFile(path, onProgress);
+            return await super._getFile(path, headerMap, onProgress);
         }
     }
 
-    async postObjectForFile<T>(path: string, obj: T, onProgress?: progressCallback): Promise<string> {
+    protected async _postObjectForFile<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
         if (this.worker.enabled) {
-            return await this.worker.execute("postObjectForFile", [path, obj], onProgress);
+            return await this.worker.execute("postObjectForFile", [path, headerMap, obj], onProgress);
         }
         else {
-            return await super.postObjectForFile(path, obj, onProgress);
+            return await super._postObjectForFile(path, obj, headerMap, onProgress);
         }
     }
 
-    async getImageBitmap(path: string, onProgress?: progressCallback): Promise<ImageBitmap> {
+    protected async _getImageBitmap(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<ImageBitmap> {
         if (this.worker.enabled) {
-            return await this.worker.execute("getImageBitmap", [path], onProgress);
+            return await this.worker.execute("getImageBitmap", [path, headerMap], onProgress);
         }
         else {
-            return await super.getImageBitmap(path, onProgress);
+            return await super._getImageBitmap(path, headerMap, onProgress);
         }
     }
 
-    async postObjectForImageBitmap<T>(path: string, obj: T, onProgress?: progressCallback): Promise<ImageBitmap> {
+    protected async _postObjectForImageBitmap<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<ImageBitmap> {
         if (this.worker.enabled && hasImageBitmap) {
-            return await this.worker.execute("postObjectForImageBitmap", [path, obj], onProgress);
+            return await this.worker.execute("postObjectForImageBitmap", [path, headerMap, obj], onProgress);
         }
         else {
-            return await super.postObjectForImageBitmap(path, obj, onProgress);
+            return await super._postObjectForImageBitmap(path, obj, headerMap, onProgress);
         }
     }
 
-    async getCubes(path: string, onProgress?: progressCallback): Promise<MemoryImageTypes[]> {
+    protected async _getCubes(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]> {
         if (this.worker.enabled
             && hasImageBitmap
             && hasOffscreenCanvasRenderingContext2D) {
-            return await this.worker.execute("getCubes", [path], onProgress);
+            return await this.worker.execute("getCubes", [path, headerMap], onProgress);
         }
         else {
-            return await super.getCubes(path, onProgress);
+            return await super._getCubes(path, headerMap, onProgress);
         }
     }
 
-    async getEquiMaps(path: string, interpolation: InterpolationType, maxWidth: number, onProgress?: progressCallback): Promise<MemoryImageTypes[]> {
+    protected async _getEquiMaps(path: string, interpolation: InterpolationType, maxWidth: number, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]> {
         if (this.worker.enabled
             && hasImageBitmap
             && hasOffscreenCanvasRenderingContext2D) {
             const splits = splitProgress(onProgress, [1, 6]);
-            const imgData = await this.getImageData(path, splits.shift());
+            const imgData = await this._getImageData(path, headerMap, splits.shift());
             return await renderImageBitmapFaces(
                 (readData: ImageData, faceName: CubeMapFace, interpolation: InterpolationType, maxWidth: number, onProgress?: progressCallback) =>
                     this.worker.execute("renderFace", [readData, faceName, interpolation, maxWidth], onProgress),

@@ -5,17 +5,17 @@ export class FetcherWorkerServer extends WorkerServer {
     constructor(self) {
         super(self);
         const fetcher = new Fetcher();
-        this.add("getBuffer", (path, onProgress) => fetcher.getBuffer(path, onProgress), (parts) => [parts.buffer]);
-        this.add("postObjectForBuffer", (path, obj, onProgress) => fetcher.postObjectForBuffer(path, obj, onProgress), (parts) => [parts.buffer]);
-        this.add("getObject", (path, onProgress) => fetcher.getObject(path, onProgress));
-        this.add("postObjectForObject", (path, obj, onProgress) => fetcher.postObjectForObject(path, obj, onProgress));
-        this.add("getFile", (path, onProgress) => fetcher.getFile(path, onProgress));
-        this.add("postObjectForFile", (path, obj, onProgress) => fetcher.postObjectForFile(path, obj, onProgress));
+        this.add("getBuffer", (path, headerMap, onProgress) => fetcher.getBuffer(path, headerMap, onProgress), (parts) => [parts.buffer]);
+        this.add("postObjectForBuffer", (path, obj, headerMap, onProgress) => fetcher.postObjectForBuffer(path, obj, headerMap, onProgress), (parts) => [parts.buffer]);
+        this.add("getObject", (path, headerMap, onProgress) => fetcher.getObject(path, headerMap, onProgress));
+        this.add("postObjectForObject", (path, obj, headerMap, onProgress) => fetcher.postObjectForObject(path, obj, headerMap, onProgress));
+        this.add("getFile", (path, headerMap, onProgress) => fetcher.getFile(path, headerMap, onProgress));
+        this.add("postObjectForFile", (path, obj, headerMap, onProgress) => fetcher.postObjectForFile(path, obj, headerMap, onProgress));
         if (hasImageBitmap) {
-            this.add("getImageBitmap", (path, onProgress) => fetcher.getImageBitmap(path, onProgress), (imgBmp) => [imgBmp]);
-            this.add("postObjectForImageBitmap", (path, obj, onProgress) => fetcher.postObjectForImageBitmap(path, obj, onProgress), (imgBmp) => [imgBmp]);
+            this.add("getImageBitmap", (path, headerMap, onProgress) => fetcher.getImageBitmap(path, headerMap, onProgress), (imgBmp) => [imgBmp]);
+            this.add("postObjectForImageBitmap", (path, obj, headerMap, onProgress) => fetcher.postObjectForImageBitmap(path, obj, headerMap, onProgress), (imgBmp) => [imgBmp]);
             if (hasOffscreenCanvasRenderingContext2D) {
-                this.add("getCubes", (path, onProgress) => fetcher.getCubesViaImageBitmaps(path, onProgress), (imgBmps) => imgBmps);
+                this.add("getCubes", (path, headerMap, onProgress) => fetcher._getCubesViaImageBitmaps(path, headerMap, onProgress), (imgBmps) => imgBmps);
                 this.add("renderFace", fetcher.renderImageBitmapFace, (imgBmp) => [imgBmp]);
             }
         }

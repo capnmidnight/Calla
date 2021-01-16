@@ -13,58 +13,60 @@ export class FetcherWorkerServer extends WorkerServer {
 
         this.add(
             "getBuffer",
-            (path: string, onProgress: progressCallback) =>
-                fetcher.getBuffer(path, onProgress),
+            (path: string, headerMap: Map<string, string>, onProgress: progressCallback) =>
+                fetcher.getBuffer(path, headerMap, onProgress),
             (parts: getPartsReturnType) => [parts.buffer]);
 
         this.add(
             "postObjectForBuffer",
-            (path: string, obj: any, onProgress: progressCallback) =>
-                fetcher.postObjectForBuffer(path, obj, onProgress),
+            (path: string, obj: any, headerMap: Map<string, string>, onProgress: progressCallback) =>
+                fetcher.postObjectForBuffer(path, obj, headerMap, onProgress),
             (parts: getPartsReturnType) => [parts.buffer]);
 
         this.add(
             "getObject",
-            (path: string, onProgress: progressCallback) =>
-                fetcher.getObject(path, onProgress));
+            (path: string, headerMap: Map<string, string>, onProgress: progressCallback) =>
+                fetcher.getObject(path, headerMap, onProgress));
 
         this.add(
             "postObjectForObject",
-            (path: string, obj: any, onProgress: progressCallback) =>
-                fetcher.postObjectForObject(path, obj, onProgress));
+            (path: string, obj: any, headerMap: Map<string, string>, onProgress: progressCallback) =>
+                fetcher.postObjectForObject(path, obj, headerMap, onProgress));
 
         this.add(
             "getFile",
-            (path: string, onProgress: progressCallback) =>
-                fetcher.getFile(path, onProgress));
+            (path: string, headerMap: Map<string, string>, onProgress: progressCallback) =>
+                fetcher.getFile(path, headerMap, onProgress));
 
         this.add(
             "postObjectForFile",
-            (path: string, obj: any, onProgress: progressCallback) =>
-                fetcher.postObjectForFile(path, obj, onProgress));
+            (path: string, obj: any, headerMap: Map<string, string>, onProgress: progressCallback) =>
+                fetcher.postObjectForFile(path, obj, headerMap, onProgress));
 
         if (hasImageBitmap) {
             this.add(
                 "getImageBitmap",
-                (path: string, onProgress: progressCallback) =>
-                    fetcher.getImageBitmap(path, onProgress),
+                (path: string, headerMap: Map<string, string>, onProgress: progressCallback) =>
+                    fetcher.getImageBitmap(path, headerMap, onProgress),
                 (imgBmp: ImageBitmap) => [imgBmp]);
 
             this.add(
                 "postObjectForImageBitmap",
-                (path: string, obj: any, onProgress: progressCallback) =>
-                    fetcher.postObjectForImageBitmap(path, obj, onProgress),
+                (path: string, obj: any, headerMap: Map<string, string>, onProgress: progressCallback) =>
+                    fetcher.postObjectForImageBitmap(path, obj, headerMap, onProgress),
                 (imgBmp: ImageBitmap) => [imgBmp]);
 
             if (hasOffscreenCanvasRenderingContext2D) {
                 this.add(
                     "getCubes",
-                    (path: string, onProgress: progressCallback) =>
-                        fetcher.getCubesViaImageBitmaps(path, onProgress),
+                    (path: string, headerMap: Map<string, string>, onProgress: progressCallback) =>
+                        fetcher._getCubesViaImageBitmaps(path, headerMap, onProgress),
                     (imgBmps: ImageBitmap[]) => imgBmps);
 
                 this.add(
-                    "renderFace", fetcher.renderImageBitmapFace, (imgBmp: ImageBitmap) => [imgBmp]);
+                    "renderFace",
+                    fetcher.renderImageBitmapFace,
+                    (imgBmp: ImageBitmap) => [imgBmp]);
             }
         };
     };

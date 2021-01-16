@@ -21,86 +21,86 @@ export class FetcherWorkerClient extends Fetcher {
             this.worker = new WorkerClient(scriptPath, workerPoolSize);
         }
     }
-    async getBuffer(path, onProgress) {
+    async _getBuffer(path, headerMap, onProgress) {
         if (this.worker.enabled) {
-            return await this.worker.execute("getBuffer", [path], onProgress);
+            return await this.worker.execute("getBuffer", [path, headerMap], onProgress);
         }
         else {
-            return await super.getBuffer(path, onProgress);
+            return await super._getBuffer(path, headerMap, onProgress);
         }
     }
-    async postObjectForBuffer(path, obj, onProgress) {
+    async _postObjectForBuffer(path, obj, headerMap, onProgress) {
         if (this.worker.enabled) {
-            return await this.worker.execute("postObjectForBuffer", [path, obj], onProgress);
+            return await this.worker.execute("postObjectForBuffer", [path, obj, headerMap], onProgress);
         }
         else {
-            return await super.postObjectForBuffer(path, obj, onProgress);
+            return await super._postObjectForBuffer(path, obj, headerMap, onProgress);
         }
     }
-    async getObject(path, onProgress) {
+    async _getObject(path, headerMap, onProgress) {
         if (this.worker.enabled) {
-            return await this.worker.execute("getObject", [path], onProgress);
+            return await this.worker.execute("getObject", [path, headerMap], onProgress);
         }
         else {
-            return await super.getObject(path, onProgress);
+            return await super._getObject(path, headerMap, onProgress);
         }
     }
-    async postObjectForObject(path, obj, onProgress) {
+    async _postObjectForObject(path, obj, headerMap, onProgress) {
         if (this.worker.enabled) {
-            return await this.worker.execute("postObjectForObject", [path, obj], onProgress);
+            return await this.worker.execute("postObjectForObject", [path, headerMap, obj], onProgress);
         }
         else {
-            return await super.postObjectForObject(path, obj, onProgress);
+            return await super._postObjectForObject(path, obj, headerMap, onProgress);
         }
     }
-    async getFile(path, onProgress) {
+    async _getFile(path, headerMap, onProgress) {
         if (this.worker.enabled) {
-            return await this.worker.execute("getFile", [path], onProgress);
+            return await this.worker.execute("getFile", [path, headerMap], onProgress);
         }
         else {
-            return await super.getFile(path, onProgress);
+            return await super._getFile(path, headerMap, onProgress);
         }
     }
-    async postObjectForFile(path, obj, onProgress) {
+    async _postObjectForFile(path, obj, headerMap, onProgress) {
         if (this.worker.enabled) {
-            return await this.worker.execute("postObjectForFile", [path, obj], onProgress);
+            return await this.worker.execute("postObjectForFile", [path, headerMap, obj], onProgress);
         }
         else {
-            return await super.postObjectForFile(path, obj, onProgress);
+            return await super._postObjectForFile(path, obj, headerMap, onProgress);
         }
     }
-    async getImageBitmap(path, onProgress) {
+    async _getImageBitmap(path, headerMap, onProgress) {
         if (this.worker.enabled) {
-            return await this.worker.execute("getImageBitmap", [path], onProgress);
+            return await this.worker.execute("getImageBitmap", [path, headerMap], onProgress);
         }
         else {
-            return await super.getImageBitmap(path, onProgress);
+            return await super._getImageBitmap(path, headerMap, onProgress);
         }
     }
-    async postObjectForImageBitmap(path, obj, onProgress) {
+    async _postObjectForImageBitmap(path, obj, headerMap, onProgress) {
         if (this.worker.enabled && hasImageBitmap) {
-            return await this.worker.execute("postObjectForImageBitmap", [path, obj], onProgress);
+            return await this.worker.execute("postObjectForImageBitmap", [path, headerMap, obj], onProgress);
         }
         else {
-            return await super.postObjectForImageBitmap(path, obj, onProgress);
+            return await super._postObjectForImageBitmap(path, obj, headerMap, onProgress);
         }
     }
-    async getCubes(path, onProgress) {
+    async _getCubes(path, headerMap, onProgress) {
         if (this.worker.enabled
             && hasImageBitmap
             && hasOffscreenCanvasRenderingContext2D) {
-            return await this.worker.execute("getCubes", [path], onProgress);
+            return await this.worker.execute("getCubes", [path, headerMap], onProgress);
         }
         else {
-            return await super.getCubes(path, onProgress);
+            return await super._getCubes(path, headerMap, onProgress);
         }
     }
-    async getEquiMaps(path, interpolation, maxWidth, onProgress) {
+    async _getEquiMaps(path, interpolation, maxWidth, headerMap, onProgress) {
         if (this.worker.enabled
             && hasImageBitmap
             && hasOffscreenCanvasRenderingContext2D) {
             const splits = splitProgress(onProgress, [1, 6]);
-            const imgData = await this.getImageData(path, splits.shift());
+            const imgData = await this._getImageData(path, headerMap, splits.shift());
             return await renderImageBitmapFaces((readData, faceName, interpolation, maxWidth, onProgress) => this.worker.execute("renderFace", [readData, faceName, interpolation, maxWidth], onProgress), imgData, interpolation, maxWidth, splits.shift());
         }
         else {
