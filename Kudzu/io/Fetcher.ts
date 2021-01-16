@@ -242,9 +242,10 @@ export class Fetcher implements IFetcher {
     }
 
     async getCubesViaImageBitmaps(path: string, onProgress?: progressCallback): Promise<ImageBitmap[]> {
-        const img = await this.getImageBitmap(path, onProgress);
-        const canvs = sliceCubeMap(img);
-        return await Promise.all(canvs.map((canv) => createImageBitmap(canv)));
+        return await usingAsync(await this._getImageBitmap(path, headerMap, onProgress), async (img: ImageBitmap) => {
+            const canvs = sliceCubeMap(img);
+            return await Promise.all(canvs.map((canv) => createImageBitmap(canv)));
+        });
     }
 
     private async getCubesViaImage(path: string, onProgress?: progressCallback): Promise<CanvasTypes[]> {
