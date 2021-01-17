@@ -4097,82 +4097,6 @@ var Calla = (function (exports) {
     const isOculusGo = isOculus && /pacific/.test(navigator.userAgent);
     const isOculusQuest = isOculus && /quest/.test(navigator.userAgent);
 
-    function add(a, b) {
-        return async (v) => {
-            await a(v);
-            await b(v);
-        };
-    }
-
-    function once(target, resolveEvt, rejectEvt, timeout) {
-        if (timeout == null
-            && isGoodNumber(rejectEvt)) {
-            timeout = rejectEvt;
-            rejectEvt = undefined;
-        }
-        const hasResolveEvt = isString(resolveEvt);
-        const hasRejectEvt = isString(rejectEvt);
-        const hasTimeout = timeout != null;
-        return new Promise((resolve, reject) => {
-            if (hasResolveEvt) {
-                const remove = () => {
-                    target.removeEventListener(resolveEvt, resolve);
-                };
-                resolve = add(remove, resolve);
-                reject = add(remove, reject);
-            }
-            if (hasRejectEvt) {
-                const remove = () => {
-                    target.removeEventListener(rejectEvt, reject);
-                };
-                resolve = add(remove, resolve);
-                reject = add(remove, reject);
-            }
-            if (hasTimeout) {
-                const timer = setTimeout(reject, timeout, `'${resolveEvt}' has timed out.`), cancel = () => clearTimeout(timer);
-                resolve = add(cancel, resolve);
-                reject = add(cancel, reject);
-            }
-            if (hasResolveEvt) {
-                target.addEventListener(resolveEvt, resolve);
-            }
-            if (hasRejectEvt) {
-                target.addEventListener(rejectEvt, () => {
-                    reject("Rejection event found");
-                });
-            }
-        });
-    }
-
-    const windows = [];
-    if ("window" in globalThis) {
-        // Closes all the windows.
-        window.addEventListener("unload", () => {
-            for (const w of windows) {
-                w.close();
-            }
-        });
-    }
-    /**
-     * Opens a window that will be closed when the window that opened it is closed.
-     * @param href - the location to load in the window
-     * @param x - the screen position horizontal component
-     * @param y - the screen position vertical component
-     * @param width - the screen size horizontal component
-     * @param height - the screen size vertical component
-     */
-    function openWindow(href, x, y, width, height) {
-        if ("window" in globalThis) {
-            const w = window.open(href, "_blank", `left=${x},top=${y},width=${width},height=${height}`);
-            if (w) {
-                windows.push(w);
-            }
-        }
-        else {
-            throw new Error("Cannot open a window from a Worker.");
-        }
-    }
-
     /**
      * A setter functor for HTML attributes.
      **/
@@ -4230,10 +4154,6 @@ var Calla = (function (exports) {
       **/
     function controls(value) { return new Attr("controls", value, "audio", "video"); }
     /**
-     * Specifies the height of elements listed here. For all other elements, use the CSS height property.
-      **/
-    function height(value) { return new Attr("height", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
-    /**
      * Indicates whether the audio will be initially silenced on page load.
       **/
     function muted(value) { return new Attr("muted", value, "audio", "video"); }
@@ -4249,10 +4169,6 @@ var Calla = (function (exports) {
      * A MediaStream object to use as a source for an HTML video or audio element
       **/
     function srcObject(value) { return new Attr("srcObject", value, "audio", "video"); }
-    /**
-     * For the elements listed here, this establishes the element's width.
-      **/
-    function width(value) { return new Attr("width", value, "canvas", "embed", "iframe", "img", "input", "object", "video"); }
     class CssPropSet {
         constructor(...rest) {
             this.set = new Map();
@@ -4297,23 +4213,6 @@ var Calla = (function (exports) {
         return new CssPropSet(...rest);
     }
     function display(v) { return new Attr("display", v); }
-    function fontFamily(v) { return new Attr("fontFamily", v); }
-    /**
-     * A selection of fonts for preferred monospace rendering.
-     **/
-    const monospaceFonts = "'Droid Sans Mono', 'Consolas', 'Lucida Console', 'Courier New', 'Courier', monospace";
-    /**
-     * A selection of fonts for preferred monospace rendering.
-     **/
-    const monospaceFamily = fontFamily(monospaceFonts);
-    /**
-     * A selection of fonts that should match whatever the user's operating system normally uses.
-     **/
-    const systemFonts = "-apple-system, '.SFNSText-Regular', 'San Francisco', 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Lucida Grande', sans-serif";
-    /**
-     * A selection of fonts that should match whatever the user's operating system normally uses.
-     **/
-    const systemFamily = fontFamily(systemFonts);
 
     function hasNode(obj) {
         return !isNullOrUndefined(obj)
@@ -4373,529 +4272,44 @@ var Calla = (function (exports) {
         return elem;
     }
     function Audio(...rest) { return tag("audio", ...rest); }
-    function Canvas(...rest) { return tag("canvas", ...rest); }
     function Script(...rest) { return tag("script", ...rest); }
-
-    const hasOffscreenCanvas = "OffscreenCanvas" in globalThis;
-    const hasImageBitmap = "createImageBitmap" in globalThis;
-    const hasOffscreenCanvasRenderingContext2D = hasOffscreenCanvas && (function () {
-        try {
-            const canv = new OffscreenCanvas(1, 1);
-            const g = canv.getContext("2d");
-            return g != null;
-        }
-        catch (exp) {
-            return false;
-        }
-    })();
-    const hasImageBitmapRenderingContext = hasImageBitmap && (function () {
-        try {
-            const canv = hasOffscreenCanvas
-                ? new OffscreenCanvas(1, 1)
-                : Canvas();
-            const g = canv.getContext("bitmaprenderer");
-            return g != null;
-        }
-        catch (exp) {
-            return false;
-        }
-    })();
-    function drawImageBitmapToCanvas2D(canv, img) {
-        const g = canv.getContext("2d");
-        if (isNullOrUndefined(g)) {
-            throw new Error("Could not create 2d context for canvas");
-        }
-        g.drawImage(img, 0, 0);
-    }
-    function copyImageBitmapToCanvas(canv, img) {
-        const g = canv.getContext("bitmaprenderer");
-        if (isNullOrUndefined(g)) {
-            throw new Error("Could not create bitmaprenderer context for canvas");
-        }
-        g.transferFromImageBitmap(img);
-    }
-    const drawImageBitmapToCanvas = hasImageBitmapRenderingContext
-        ? copyImageBitmapToCanvas
-        : drawImageBitmapToCanvas2D;
-    function createOffscreenCanvas(width, height) {
-        return new OffscreenCanvas(width, height);
-    }
-    function createCanvas(w, h) {
-        return Canvas(width(w), height(h));
-    }
-    const createUtilityCanvas = hasOffscreenCanvasRenderingContext2D
-        ? createOffscreenCanvas
-        : createCanvas;
-    function createOffscreenCanvasFromImageBitmap(img) {
-        const canv = createOffscreenCanvas(img.width, img.height);
-        drawImageBitmapToCanvas(canv, img);
-        return canv;
-    }
-    function createCanvasFromImageBitmap(img) {
-        const canv = createCanvas(img.width, img.height);
-        drawImageBitmapToCanvas(canv, img);
-        return canv;
-    }
-    const createUtilityCanvasFromImageBitmap = hasOffscreenCanvasRenderingContext2D
-        ? createOffscreenCanvasFromImageBitmap
-        : createCanvasFromImageBitmap;
-    function drawImageToCanvas(canv, img) {
-        const g = canv.getContext("2d");
-        if (isNullOrUndefined(g)) {
-            throw new Error("Could not create 2d context for canvas");
-        }
-        g.drawImage(img, 0, 0);
-    }
-    function createOffscreenCanvasFromImage(img) {
-        const canv = createOffscreenCanvas(img.width, img.height);
-        drawImageToCanvas(canv, img);
-        return canv;
-    }
-    function createCanvasFromImage(img) {
-        const canv = createCanvas(img.width, img.height);
-        drawImageToCanvas(canv, img);
-        return canv;
-    }
-    const createUtilityCanvasFromImage = hasOffscreenCanvasRenderingContext2D
-        ? createOffscreenCanvasFromImage
-        : createCanvasFromImage;
-    if ("HTMLCanvasElement" in globalThis) {
-        HTMLCanvasElement.prototype.view = function () {
-            const url = this.toDataURL();
-            openWindow(url, 0, 0, this.width + 10, this.height + 100);
-        };
-    }
-    if (hasOffscreenCanvas) {
-        OffscreenCanvas.prototype.view = async function () {
-            const blob = await this.convertToBlob();
-            const url = URL.createObjectURL(blob);
-            openWindow(url, 0, 0, this.width + 10, this.height + 100);
-        };
-    }
-
-    const Tau = 2 * Math.PI;
-    function angleClamp(v) {
-        return ((v % Tau) + Tau) % Tau;
-    }
-
-    function splitProgress(onProgress, weights) {
-        let subProgressWeights;
-        if (isNumber(weights)) {
-            subProgressWeights = new Array(weights);
-            for (let i = 0; i < subProgressWeights.length; ++i) {
-                subProgressWeights[i] = 1 / weights;
-            }
-        }
-        else {
-            subProgressWeights = weights;
-        }
-        let weightTotal = 0;
-        for (let i = 0; i < subProgressWeights.length; ++i) {
-            weightTotal += subProgressWeights[i];
-        }
-        const subProgressValues = new Array(subProgressWeights.length);
-        const subProgressCallbacks = new Array(subProgressWeights.length);
-        const start = performance.now();
-        const update = (i, subSoFar, subTotal, msg) => {
-            if (onProgress) {
-                subProgressValues[i] = subSoFar / subTotal;
-                let soFar = 0;
-                for (let j = 0; j < subProgressWeights.length; ++j) {
-                    soFar += subProgressValues[j] * subProgressWeights[j];
-                }
-                const end = performance.now();
-                const delta = end - start;
-                const est = start - end + delta * weightTotal / soFar;
-                onProgress(soFar, weightTotal, msg, est);
-            }
-        };
-        for (let i = 0; i < subProgressWeights.length; ++i) {
-            subProgressValues[i] = 0;
-            subProgressCallbacks[i] = (soFar, total, msg) => update(i, soFar, total, msg);
-        }
-        return subProgressCallbacks;
-    }
-
-    async function arrayProgress(onProgress, items, callback) {
-        const progs = splitProgress(onProgress, items.length);
-        const tasks = items.map((item, i) => callback(item, progs[i]));
-        return await Promise.all(tasks);
-    }
-
-    /**
-     * Force a value onto a range
-     */
-    function clamp(v, min, max) {
-        return Math.min(max, Math.max(min, v));
-    }
-
-    // performs a discrete convolution with a provided kernel
-    function kernelResample(read, write, filterSize, kernel) {
-        const { width, height, data } = read;
-        const readIndex = (x, y) => 4 * (y * width + x);
-        const twoFilterSize = 2 * filterSize;
-        const xMax = width - 1;
-        const yMax = height - 1;
-        const xKernel = new Array(4);
-        const yKernel = new Array(4);
-        return (xFrom, yFrom, to) => {
-            const xl = Math.floor(xFrom);
-            const yl = Math.floor(yFrom);
-            const xStart = xl - filterSize + 1;
-            const yStart = yl - filterSize + 1;
-            for (let i = 0; i < twoFilterSize; i++) {
-                xKernel[i] = kernel(xFrom - (xStart + i));
-                yKernel[i] = kernel(yFrom - (yStart + i));
-            }
-            for (let channel = 0; channel < 3; channel++) {
-                let q = 0;
-                for (let i = 0; i < twoFilterSize; i++) {
-                    const y = yStart + i;
-                    const yClamped = clamp(y, 0, yMax);
-                    let p = 0;
-                    for (let j = 0; j < twoFilterSize; j++) {
-                        const x = xStart + j;
-                        const index = readIndex(clamp(x, 0, xMax), yClamped);
-                        p += data[index + channel] * xKernel[j];
-                    }
-                    q += p * yKernel[i];
-                }
-                write.data[to + channel] = Math.round(q);
-            }
-        };
-    }
-
-    function copyPixelBicubic(read, write) {
-        const b = -0.5;
-        const kernel = (x) => {
-            x = Math.abs(x);
-            const x2 = x * x;
-            const x3 = x * x * x;
-            return x <= 1 ?
-                (b + 2) * x3 - (b + 3) * x2 + 1 :
-                b * x3 - 5 * b * x2 + 8 * b * x - 4 * b;
-        };
-        return kernelResample(read, write, 2, kernel);
-    }
-
-    function copyPixelBilinear(read, write) {
-        const { width, height, data } = read;
-        const readIndex = (x, y) => 4 * (y * width + x);
-        return (xFrom, yFrom, to) => {
-            const xl = clamp(Math.floor(xFrom), 0, width - 1);
-            const xr = clamp(Math.ceil(xFrom), 0, width - 1);
-            const xf = xFrom - xl;
-            const yl = clamp(Math.floor(yFrom), 0, height - 1);
-            const yr = clamp(Math.ceil(yFrom), 0, height - 1);
-            const yf = yFrom - yl;
-            const p00 = readIndex(xl, yl);
-            const p10 = readIndex(xr, yl);
-            const p01 = readIndex(xl, yr);
-            const p11 = readIndex(xr, yr);
-            for (let channel = 0; channel < 3; channel++) {
-                const p0 = data[p00 + channel] * (1 - xf) + data[p10 + channel] * xf;
-                const p1 = data[p01 + channel] * (1 - xf) + data[p11 + channel] * xf;
-                write.data[to + channel] = Math.ceil(p0 * (1 - yf) + p1 * yf);
-            }
-        };
-    }
-
-    function copyPixelLanczos(read, write) {
-        const filterSize = 5;
-        const kernel = (x) => {
-            if (x === 0) {
-                return 1;
-            }
-            else {
-                const xp = Math.PI * x;
-                return filterSize * Math.sin(xp) * Math.sin(xp / filterSize) / (xp * xp);
-            }
-        };
-        return kernelResample(read, write, filterSize, kernel);
-    }
-
-    function copyPixelNearest(read, write) {
-        const { width, height, data } = read;
-        const readIndex = (x, y) => 4 * (y * width + x);
-        return (xFrom, yFrom, to) => {
-            const nearest = readIndex(clamp(Math.round(xFrom), 0, width - 1), clamp(Math.round(yFrom), 0, height - 1));
-            for (let channel = 0; channel < 3; channel++) {
-                write.data[to + channel] = data[nearest + channel];
-            }
-        };
-    }
-
-    var CubeMapFace;
-    (function (CubeMapFace) {
-        CubeMapFace["PositiveZ"] = "pz";
-        CubeMapFace["NegativeZ"] = "nz";
-        CubeMapFace["PositiveX"] = "px";
-        CubeMapFace["NegativeX"] = "nx";
-        CubeMapFace["PositiveY"] = "py";
-        CubeMapFace["NegativeY"] = "ny";
-    })(CubeMapFace || (CubeMapFace = {}));
-    const CubeMapFaceNames = [
-        CubeMapFace.PositiveZ,
-        CubeMapFace.NegativeZ,
-        CubeMapFace.PositiveY,
-        CubeMapFace.NegativeY,
-        CubeMapFace.NegativeX,
-        CubeMapFace.PositiveX
-    ];
-
-    var InterpolationType;
-    (function (InterpolationType) {
-        InterpolationType["Bilinear"] = "bilinear";
-        InterpolationType["Bicubic"] = "bicubic";
-        InterpolationType["Lanczos"] = "lanczos";
-        InterpolationType["Nearest"] = "nearest";
-    })(InterpolationType || (InterpolationType = {}));
-
-    const rotations = new Map();
-    rotations.set(CubeMapFace.PositiveY, 3);
-    rotations.set(CubeMapFace.NegativeY, 1);
-    const faceOrienters = new Map([
-        [CubeMapFace.PositiveZ, (x, y) => {
-                return {
-                    x: -1,
-                    y: -x,
-                    z: -y
-                };
-            }],
-        [CubeMapFace.NegativeZ, (x, y) => {
-                return {
-                    x: 1,
-                    y: x,
-                    z: -y
-                };
-            }],
-        [CubeMapFace.PositiveX, (x, y) => {
-                return {
-                    x: x,
-                    y: -1,
-                    z: -y
-                };
-            }],
-        [CubeMapFace.NegativeX, (x, y) => {
-                return {
-                    x: -x,
-                    y: 1,
-                    z: -y
-                };
-            }],
-        [CubeMapFace.PositiveY, (x, y) => {
-                return {
-                    x: -y,
-                    y: -x,
-                    z: 1
-                };
-            }],
-        [CubeMapFace.NegativeY, (x, y) => {
-                return {
-                    x: y,
-                    y: -x,
-                    z: -1
-                };
-            }]
-    ]);
-    const pixelCopiers = new Map([
-        [InterpolationType.Bilinear, copyPixelBilinear],
-        [InterpolationType.Bicubic, copyPixelBicubic],
-        [InterpolationType.Lanczos, copyPixelLanczos],
-        [InterpolationType.Nearest, copyPixelNearest]
-    ]);
-    async function renderCanvasFace(readData, faceName, interpolation, maxWidth, onProgress) {
-        const faceOrienter = faceOrienters.get(faceName);
-        if (!faceOrienter) {
-            throw new Error("Invalid face name: " + faceName);
-        }
-        const pixelCopier = pixelCopiers.get(interpolation);
-        if (!pixelCopier) {
-            throw new Error("Invalid interpolation type: " + interpolation);
-        }
-        const faceWidth = Math.min(maxWidth || Number.MAX_VALUE, readData.width / 2);
-        const faceHeight = faceWidth;
-        const writeData = new ImageData(faceWidth, faceHeight);
-        if (!pixelCopiers.has(interpolation)) {
-            interpolation = InterpolationType.Nearest;
-        }
-        const copyPixels = pixelCopier(readData, writeData);
-        for (let y = 0; y < faceHeight; y++) {
-            if (isFunction(onProgress)) {
-                onProgress(y, faceHeight, faceName);
-            }
-            for (let x = 0; x < faceWidth; x++) {
-                const to = 4 * (y * faceWidth + x);
-                // fill alpha channel
-                writeData.data[to + 3] = 255;
-                // get position on cube face
-                // cube is centered at the origin with a side length of 2
-                const cube = faceOrienter((2 * (x + 0.5) / faceWidth - 1), (2 * (y + 0.5) / faceHeight - 1));
-                // project cube face onto unit sphere by converting cartesian to spherical coordinates
-                const r = Math.sqrt(cube.x * cube.x + cube.y * cube.y + cube.z * cube.z);
-                const lon = angleClamp(Math.atan2(cube.y, cube.x));
-                const lat = Math.acos(cube.z / r);
-                copyPixels(readData.width * lon / Math.PI / 2 - 0.5, readData.height * lat / Math.PI - 0.5, to);
-            }
-        }
-        const canv = createUtilityCanvas(faceWidth, faceHeight);
-        const g = canv.getContext("2d");
-        if (!g) {
-            throw new Error("Couldn't create a 2D canvas context");
-        }
-        g.putImageData(writeData, 0, 0);
-        if (rotations.has(faceName)) {
-            const rotation = rotations.get(faceName);
-            const halfW = faceWidth / 2;
-            const halfH = faceHeight / 2;
-            g.translate(halfW, halfH);
-            g.rotate(rotation * Math.PI / 2);
-            g.translate(-halfW, -halfH);
-            g.drawImage(canv, 0, 0);
-        }
-        if (isFunction(onProgress)) {
-            onProgress(faceHeight, faceHeight, faceName);
-        }
-        return canv;
-    }
-    async function renderImageBitmapFace(readData, faceName, interpolation, maxWidth, onProgress) {
-        const canv = await renderCanvasFace(readData, faceName, interpolation, maxWidth, onProgress);
-        return await createImageBitmap(canv);
-    }
-    async function renderCanvasFaces(renderFace, imgData, interpolation, maxWidth, onProgress) {
-        return await arrayProgress(onProgress, CubeMapFaceNames, (faceName, onProg) => renderFace(imgData, faceName, interpolation, maxWidth, onProg));
-    }
-    async function renderImageBitmapFaces(renderFace, imgData, interpolation, maxWidth, onProgress) {
-        return await arrayProgress(onProgress, CubeMapFaceNames, (faceName, onProg) => renderFace(imgData, faceName, interpolation, maxWidth, onProg));
-    }
-
-    function nextPowerOf2(v) {
-        return Math.pow(2, Math.ceil(Math.log2(v)));
-    }
-
-    function sliceImage(img, x, y, w1, h1, w2, h2, rotation) {
-        const canv = createUtilityCanvas(w2, h2);
-        const g = canv.getContext("2d");
-        if (!g) {
-            throw new Error("Couldn't create a 2D canvas context");
-        }
-        const halfW = w2 / 2;
-        const halfH = h2 / 2;
-        if (rotation > 0) {
-            if ((rotation % 2) === 0) {
-                g.translate(halfW, halfH);
-            }
-            else {
-                g.translate(halfH, halfW);
-            }
-            g.rotate(rotation * Math.PI / 2);
-            g.translate(-halfW, -halfH);
-        }
-        g.drawImage(img, x, y, w1, h1, 0, 0, w2, h2);
-        return canv;
-    }
-
-    var CubeMapFaceIndex;
-    (function (CubeMapFaceIndex) {
-        CubeMapFaceIndex[CubeMapFaceIndex["None"] = -1] = "None";
-        CubeMapFaceIndex[CubeMapFaceIndex["Left"] = 0] = "Left";
-        CubeMapFaceIndex[CubeMapFaceIndex["Right"] = 1] = "Right";
-        CubeMapFaceIndex[CubeMapFaceIndex["Up"] = 2] = "Up";
-        CubeMapFaceIndex[CubeMapFaceIndex["Down"] = 3] = "Down";
-        CubeMapFaceIndex[CubeMapFaceIndex["Back"] = 4] = "Back";
-        CubeMapFaceIndex[CubeMapFaceIndex["Front"] = 5] = "Front";
-    })(CubeMapFaceIndex || (CubeMapFaceIndex = {}));
-    const cubemapPattern = {
-        rows: 3,
-        columns: 4,
-        indices: [
-            [CubeMapFaceIndex.None, CubeMapFaceIndex.Up, CubeMapFaceIndex.None, CubeMapFaceIndex.None],
-            [CubeMapFaceIndex.Left, CubeMapFaceIndex.Front, CubeMapFaceIndex.Right, CubeMapFaceIndex.Back],
-            [CubeMapFaceIndex.None, CubeMapFaceIndex.Down, CubeMapFaceIndex.None, CubeMapFaceIndex.None]
-        ],
-        rotations: [
-            [0, 2, 0, 0],
-            [0, 0, 0, 0],
-            [0, 2, 0, 0]
-        ]
-    };
-    function sliceCubeMap(img) {
-        const w1 = img.width / cubemapPattern.columns;
-        const h1 = img.height / cubemapPattern.rows;
-        const w2 = nextPowerOf2(w1);
-        const h2 = nextPowerOf2(h1);
-        const images = new Array(6);
-        for (let r = 0; r < cubemapPattern.rows; ++r) {
-            const indices = cubemapPattern.indices[r];
-            const rotations = cubemapPattern.rotations[r];
-            for (let c = 0; c < cubemapPattern.columns; ++c) {
-                const index = indices[c];
-                if (index > -1) {
-                    images[index] = sliceImage(img, c * w1, r * h1, w1, h1, w2, h2, rotations[c]);
-                }
-            }
-        }
-        return images;
-    }
 
     function createScript(file) {
         const script = Script(src(file));
         document.body.appendChild(script);
     }
 
-    function isDisposable(obj) {
-        return isObject(obj)
-            && "dispose" in obj
-            && isFunction(obj.dispose);
-    }
-    function isClosable(obj) {
-        return isObject(obj)
-            && "close" in obj
-            && isFunction(obj.close);
-    }
-    function dispose(val) {
-        if (isDisposable(val)) {
-            val.dispose();
-        }
-        else if (isClosable(val)) {
-            val.close();
-        }
-    }
-    function using(val, thunk) {
-        try {
-            return thunk(val);
-        }
-        finally {
-            dispose(val);
-        }
-    }
-
     class Fetcher {
-        constructor() {
-            this._getCanvas = hasImageBitmap
-                ? this.getCanvasViaImageBitmap
-                : this.getCanvasViaImage;
-            this._getImageData = hasImageBitmap
-                ? this.getImageDataViaImageBitmap
-                : this.getImageDataViaImage;
-            this._getCubes = hasImageBitmap
-                ? this.getCubesViaImageBitmaps
-                : this.getCubesViaImage;
-            this._getEquiMaps = hasImageBitmap
-                ? this.getEquiMapViaImageBitmaps
-                : this.getEquiMapViaImage;
+        async getResponse(path, headerMap) {
+            const headers = {};
+            if (headerMap instanceof Map) {
+                for (const pair of headerMap.entries()) {
+                    headers[pair[0]] = pair[1];
+                }
+            }
+            return await this.readRequestResponse(path, fetch(path, {
+                headers
+            }));
         }
-        async getCanvas(path, onProgress) {
-            return await this._getCanvas(path, onProgress);
-        }
-        async getImageData(path, onProgress) {
-            return await this._getImageData(path, onProgress);
-        }
-        async getCubes(path, onProgress) {
-            return await this._getCubes(path, onProgress);
-        }
-        async getEquiMaps(path, interpolation, maxWidth, onProgress) {
-            return await this._getEquiMaps(path, interpolation, maxWidth, onProgress);
+        async postObjectForResponse(path, obj, headerMap) {
+            const headers = {
+                "Content-Type": obj instanceof FormData
+                    ? "multipart/form-data"
+                    : "application/json"
+            };
+            if (headerMap instanceof Map) {
+                for (const pair of headerMap.entries()) {
+                    headers[pair[0]] = pair[1];
+                }
+            }
+            const body = obj instanceof FormData
+                ? obj
+                : JSON.stringify(obj);
+            return await this.readRequestResponse(path, fetch(path, {
+                method: "POST",
+                headers,
+                body
+            }));
         }
         async readRequestResponse(path, request) {
             const response = await request;
@@ -4903,18 +4317,6 @@ var Calla = (function (exports) {
                 throw new Error(`[${response.status}] - ${response.statusText}. Path ${path}`);
             }
             return response;
-        }
-        async getResponse(path) {
-            return await this.readRequestResponse(path, fetch(path));
-        }
-        async postObjectForResponse(path, obj) {
-            return await this.readRequestResponse(path, fetch(path, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(obj)
-            }));
         }
         async readResponseBuffer(path, response, onProgress) {
             const contentType = response.headers.get("Content-Type");
@@ -4968,135 +4370,113 @@ var Calla = (function (exports) {
             }
             return { buffer, contentType };
         }
-        async getBuffer(path, onProgress) {
-            const response = await this.getResponse(path);
+        async _getBuffer(path, headerMap, onProgress) {
+            const response = await this.getResponse(path, headerMap);
             return await this.readResponseBuffer(path, response, onProgress);
         }
-        async postObjectForBuffer(path, obj, onProgress) {
-            const response = await this.postObjectForResponse(path, obj);
+        async getBuffer(path, headerMap, onProgress) {
+            return await this._getBuffer(path, headerMap, onProgress);
+        }
+        async _postObjectForBuffer(path, obj, headerMap, onProgress) {
+            if (!isNullOrUndefined(headerMap)
+                && !(headerMap instanceof Map)) {
+                onProgress = headerMap;
+                headerMap = undefined;
+            }
+            const response = await this.postObjectForResponse(path, obj, headerMap);
             return await this.readResponseBuffer(path, response, onProgress);
         }
-        async getBlob(path, onProgress) {
-            const { buffer, contentType } = await this.getBuffer(path, onProgress);
+        async postObjectForBuffer(path, obj, headerMap, onProgress) {
+            return await this._postObjectForBuffer(path, obj, headerMap, onProgress);
+        }
+        async _getBlob(path, headerMap, onProgress) {
+            const { buffer, contentType } = await this._getBuffer(path, headerMap, onProgress);
             return new Blob([buffer], { type: contentType });
         }
-        async postObjectForBlob(path, obj, onProgress) {
-            const { buffer, contentType } = await this.postObjectForBuffer(path, obj, onProgress);
+        async getBlob(path, headerMap, onProgress) {
+            return this._getBlob(path, headerMap, onProgress);
+        }
+        async _postObjectForBlob(path, obj, headerMap, onProgress) {
+            if (!isNullOrUndefined(headerMap)
+                && !(headerMap instanceof Map)) {
+                onProgress = headerMap;
+                headerMap = undefined;
+            }
+            const { buffer, contentType } = await this._postObjectForBuffer(path, obj, headerMap, onProgress);
             return new Blob([buffer], { type: contentType });
         }
-        async getFile(path, onProgress) {
-            const blob = await this.getBlob(path, onProgress);
+        async postObjectForBlob(path, obj, headerMap, onProgress) {
+            return this._postObjectForBlob(path, obj, headerMap, onProgress);
+        }
+        async _getFile(path, headerMap, onProgress) {
+            const blob = await this._getBlob(path, headerMap, onProgress);
             return URL.createObjectURL(blob);
         }
-        async postObjectForFile(path, obj, onProgress) {
-            const blob = await this.postObjectForBlob(path, obj, onProgress);
+        async getFile(path, headerMap, onProgress) {
+            return await this._getFile(path, headerMap, onProgress);
+        }
+        async _postObjectForFile(path, obj, headerMap, onProgress) {
+            if (!isNullOrUndefined(headerMap)
+                && !(headerMap instanceof Map)) {
+                onProgress = headerMap;
+                headerMap = undefined;
+            }
+            const blob = await this._postObjectForBlob(path, obj, headerMap, onProgress);
             return URL.createObjectURL(blob);
         }
-        async readFileImage(file) {
-            const img = new Image();
-            img.src = file;
-            if (!img.complete) {
-                await once(img, "load", "error");
-            }
-            return img;
-        }
-        async getImageBitmap(path, onProgress) {
-            const blob = await this.getBlob(path, onProgress);
-            return await createImageBitmap(blob);
-        }
-        async getImage(path, onProgress) {
-            const file = await this.getFile(path, onProgress);
-            return await this.readFileImage(file);
-        }
-        async postObjectForImageBitmap(path, obj, onProgress) {
-            const blob = await this.postObjectForBlob(path, obj, onProgress);
-            return await createImageBitmap(blob);
-        }
-        async postObjectForImage(path, obj, onProgress) {
-            const file = await this.postObjectForFile(path, obj, onProgress);
-            return await this.readFileImage(file);
-        }
-        async getCanvasViaImageBitmap(path, onProgress) {
-            return using(await this.getImageBitmap(path, onProgress), (img) => {
-                return createUtilityCanvasFromImageBitmap(img);
-            });
-        }
-        async getCanvasViaImage(path, onProgress) {
-            const img = await this.getImage(path, onProgress);
-            return createUtilityCanvasFromImage(img);
-        }
-        readImageData(img) {
-            const canv = createUtilityCanvas(img.width, img.height);
-            const g = canv.getContext("2d");
-            if (!g) {
-                throw new Error("Couldn't create a 2D canvas context");
-            }
-            g.drawImage(img, 0, 0);
-            return g.getImageData(0, 0, canv.width, canv.height);
-        }
-        async getImageDataViaImageBitmap(path, onProgress) {
-            return using(await this.getImageBitmap(path, onProgress), (img) => {
-                return this.readImageData(img);
-            });
-        }
-        async getImageDataViaImage(path, onProgress) {
-            const img = await this.getImage(path, onProgress);
-            return this.readImageData(img);
-        }
-        async getCubesViaImageBitmaps(path, onProgress) {
-            const img = await this.getImageBitmap(path, onProgress);
-            const canvs = sliceCubeMap(img);
-            return await Promise.all(canvs.map((canv) => createImageBitmap(canv)));
-        }
-        async getCubesViaImage(path, onProgress) {
-            const img = await this.getImage(path, onProgress);
-            return sliceCubeMap(img);
-        }
-        async getEquiMapViaImageBitmaps(path, interpolation, maxWidth, onProgress) {
-            const splits = splitProgress(onProgress, [1, 6]);
-            const imgData = await this.getImageDataViaImageBitmap(path, splits.shift());
-            return await renderImageBitmapFaces(renderImageBitmapFace, imgData, interpolation, maxWidth, splits.shift());
-        }
-        async getEquiMapViaImage(path, interpolation, maxWidth, onProgress) {
-            const splits = splitProgress(onProgress, [1, 6]);
-            const imgData = await this.getImageDataViaImage(path, splits.shift());
-            return await renderCanvasFaces(renderCanvasFace, imgData, interpolation, maxWidth, splits.shift());
+        async postObjectForFile(path, obj, headerMap, onProgress) {
+            return await this._postObjectForFile(path, obj, headerMap, onProgress);
         }
         readBufferText(buffer) {
             const decoder = new TextDecoder("utf-8");
             const text = decoder.decode(buffer);
             return text;
         }
-        async getText(path, onProgress) {
-            const { buffer } = await this.getBuffer(path, onProgress);
+        async _getText(path, headerMap, onProgress) {
+            const { buffer } = await this._getBuffer(path, headerMap, onProgress);
             return this.readBufferText(buffer);
         }
-        async postObjectForText(path, obj, onProgress) {
-            const { buffer } = await this.postObjectForBuffer(path, obj, onProgress);
+        async getText(path, headerMap, onProgress) {
+            return await this._getText(path, headerMap, onProgress);
+        }
+        async _postObjectForText(path, obj, headerMap, onProgress) {
+            const { buffer } = await this._postObjectForBuffer(path, obj, headerMap, onProgress);
             return this.readBufferText(buffer);
         }
-        async getObject(path, onProgress) {
-            const text = await this.getText(path, onProgress);
+        async postObjectForText(path, obj, headerMap, onProgress) {
+            return await this._postObjectForText(path, obj, headerMap, onProgress);
+        }
+        async _getObject(path, headerMap, onProgress) {
+            const text = await this._getText(path, headerMap, onProgress);
             return JSON.parse(text);
         }
-        async postObjectForObject(path, obj, onProgress) {
-            const text = await this.postObjectForText(path, obj, onProgress);
+        async getObject(path, headerMap, onProgress) {
+            return await this._getObject(path, headerMap, onProgress);
+        }
+        async _postObjectForObject(path, obj, headerMap, onProgress) {
+            const text = await this._postObjectForText(path, obj, headerMap, onProgress);
             return JSON.parse(text);
         }
-        async postObject(path, obj) {
-            await this.postObjectForResponse(path, obj);
+        async postObjectForObject(path, obj, headerMap, onProgress) {
+            return await this._postObjectForObject(path, obj, headerMap, onProgress);
+        }
+        async postObject(path, obj, headerMap) {
+            await this.postObjectForResponse(path, obj, headerMap);
         }
         readTextXml(text) {
             const parser = new DOMParser();
             const xml = parser.parseFromString(text, "text/xml");
             return xml.documentElement;
         }
-        async getXml(path, onProgress) {
-            const text = await this.getText(path, onProgress);
+        async _getXml(path, headerMap, onProgress) {
+            const text = await this._getText(path, headerMap, onProgress);
             return this.readTextXml(text);
         }
-        async postObjectForXml(path, obj, onProgress) {
-            const text = await this.postObjectForText(path, obj, onProgress);
+        async getXml(path, headerMap, onProgress) {
+            return await this._getXml(path, headerMap, onProgress);
+        }
+        async postObjectForXml(path, obj, headerMap, onProgress) {
+            const text = await this._postObjectForText(path, obj, headerMap, onProgress);
             return this.readTextXml(text);
         }
         async loadScript(path, test, onProgress) {
@@ -5109,9 +4489,6 @@ var Calla = (function (exports) {
             else if (onProgress) {
                 onProgress(1, 1, "skip");
             }
-        }
-        async renderImageBitmapFace(readData, faceName, interpolation, maxWidth, onProgress) {
-            return await renderImageBitmapFace(readData, faceName, interpolation, maxWidth, onProgress);
         }
     }
 
@@ -5210,6 +4587,40 @@ var Calla = (function (exports) {
         }
     }
 
+    function isDisposable(obj) {
+        return isObject(obj)
+            && "dispose" in obj
+            && isFunction(obj.dispose);
+    }
+    function isClosable(obj) {
+        return isObject(obj)
+            && "close" in obj
+            && isFunction(obj.close);
+    }
+    function dispose(val) {
+        if (isDisposable(val)) {
+            val.dispose();
+        }
+        else if (isClosable(val)) {
+            val.close();
+        }
+    }
+    function using(val, thunk) {
+        try {
+            return thunk(val);
+        }
+        finally {
+            dispose(val);
+        }
+    }
+
+    /**
+     * Force a value onto a range
+     */
+    function clamp(v, min, max) {
+        return Math.min(max, Math.max(min, v));
+    }
+
     /**
      * An Event class for tracking changes to audio activity.
      **/
@@ -5237,6 +4648,53 @@ var Calla = (function (exports) {
      */
     function arrayClear(arr) {
         return arr.splice(0);
+    }
+
+    function add(a, b) {
+        return async (v) => {
+            await a(v);
+            await b(v);
+        };
+    }
+
+    function once(target, resolveEvt, rejectEvt, timeout) {
+        if (timeout == null
+            && isGoodNumber(rejectEvt)) {
+            timeout = rejectEvt;
+            rejectEvt = undefined;
+        }
+        const hasResolveEvt = isString(resolveEvt);
+        const hasRejectEvt = isString(rejectEvt);
+        const hasTimeout = timeout != null;
+        return new Promise((resolve, reject) => {
+            if (hasResolveEvt) {
+                const remove = () => {
+                    target.removeEventListener(resolveEvt, resolve);
+                };
+                resolve = add(remove, resolve);
+                reject = add(remove, reject);
+            }
+            if (hasRejectEvt) {
+                const remove = () => {
+                    target.removeEventListener(rejectEvt, reject);
+                };
+                resolve = add(remove, resolve);
+                reject = add(remove, reject);
+            }
+            if (hasTimeout) {
+                const timer = setTimeout(reject, timeout, `'${resolveEvt}' has timed out.`), cancel = () => clearTimeout(timer);
+                resolve = add(cancel, resolve);
+                reject = add(cancel, reject);
+            }
+            if (hasResolveEvt) {
+                target.addEventListener(resolveEvt, resolve);
+            }
+            if (hasRejectEvt) {
+                target.addEventListener(rejectEvt, () => {
+                    reject("Rejection event found");
+                });
+            }
+        });
     }
 
     /**
@@ -11550,6 +11008,44 @@ var Calla = (function (exports) {
         async disconnect() {
             this.setConnectionState(ConnectionState.Disconnecting);
         }
+    }
+
+    function splitProgress(onProgress, weights) {
+        let subProgressWeights;
+        if (isNumber(weights)) {
+            subProgressWeights = new Array(weights);
+            for (let i = 0; i < subProgressWeights.length; ++i) {
+                subProgressWeights[i] = 1 / weights;
+            }
+        }
+        else {
+            subProgressWeights = weights;
+        }
+        let weightTotal = 0;
+        for (let i = 0; i < subProgressWeights.length; ++i) {
+            weightTotal += subProgressWeights[i];
+        }
+        const subProgressValues = new Array(subProgressWeights.length);
+        const subProgressCallbacks = new Array(subProgressWeights.length);
+        const start = performance.now();
+        const update = (i, subSoFar, subTotal, msg) => {
+            if (onProgress) {
+                subProgressValues[i] = subSoFar / subTotal;
+                let soFar = 0;
+                for (let j = 0; j < subProgressWeights.length; ++j) {
+                    soFar += subProgressValues[j] * subProgressWeights[j];
+                }
+                const end = performance.now();
+                const delta = end - start;
+                const est = start - end + delta * weightTotal / soFar;
+                onProgress(soFar, weightTotal, msg, est);
+            }
+        };
+        for (let i = 0; i < subProgressWeights.length; ++i) {
+            subProgressValues[i] = 0;
+            subProgressCallbacks[i] = (soFar, total, msg) => update(i, soFar, total, msg);
+        }
+        return subProgressCallbacks;
     }
 
     const JITSI_HAX_FINGERPRINT = "Calla";

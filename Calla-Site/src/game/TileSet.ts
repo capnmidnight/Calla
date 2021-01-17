@@ -1,5 +1,5 @@
 import type { CanvasTypes, Context2D } from "kudzu/html/canvas";
-import { IFetcher } from "kudzu/io/IFetcher";
+import { IImageFetcher } from "kudzu/io/IImageFetcher";
 
 export class TileSet {
     name: string = null;
@@ -10,7 +10,7 @@ export class TileSet {
     image: CanvasTypes = null;
     collision = new Map<number, boolean>();
 
-    constructor(private url: URL, private fetcher: IFetcher) {
+    constructor(private url: URL, private fetcher: IImageFetcher) {
     }
 
     async load(): Promise<void> {

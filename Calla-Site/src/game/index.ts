@@ -4,7 +4,7 @@ import { Emoji } from "kudzu/emoji/Emoji";
 import { allPeople as people } from "kudzu/emoji/emojis";
 import { loadFont, makeFont } from "kudzu/graphics2d/fonts";
 import { disabled } from "kudzu/html/attrs";
-import { Fetcher } from "kudzu/io/Fetcher";
+import { ImageFetcher } from "kudzu/io/ImageFetcher";
 import { TimerTickEvent } from "kudzu/timers/BaseTimer";
 import { RequestAnimationFrameTimer } from "kudzu/timers/RequestAnimationFrameTimer";
 import { JITSI_HOST, JVB_HOST, JVB_MUC } from "../constants";
@@ -22,7 +22,7 @@ import { Settings } from "./Settings";
 const CAMERA_ZOOM_MIN = 0.5,
     CAMERA_ZOOM_MAX = 20,
     settings = new Settings(),
-    fetcher = new Fetcher(),
+    fetcher = new ImageFetcher(),
     audio = new AudioManager(fetcher, SpatializerType.High),
     client = new Calla(fetcher, audio),
     game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
