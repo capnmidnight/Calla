@@ -1,6 +1,8 @@
 import { isBoolean, isDate, isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { Attr, IAppliable, type, margin, styles } from "./attrs";
 
+export type HTMLValuedElement = HTMLElement & { value: string; };
+
 interface HasNode {
     element: HTMLElement;
 }

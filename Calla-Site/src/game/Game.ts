@@ -6,7 +6,6 @@ import { id } from "kudzu/html/attrs";
 import { resizeCanvas } from "kudzu/html/canvas";
 import { Canvas } from "kudzu/html/tags";
 import { EventedGamepad } from "kudzu/input/EventedGamepad";
-import { IFetcher } from "kudzu/io/IFetcher";
 import { IImageFetcher } from "kudzu/io/IImageFetcher";
 import { clamp } from "kudzu/math/clamp";
 import { lerp } from "kudzu/math/lerp";
