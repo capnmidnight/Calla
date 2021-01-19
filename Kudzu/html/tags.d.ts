@@ -2,10 +2,6 @@ import { IAppliable } from "./attrs";
 export declare type HTMLValuedElement = HTMLElement & {
     value: string;
 };
-export declare type HTMLInputlikeElement = HTMLValuedElement & {
-    type: string;
-    name: string;
-};
 interface HasNode {
     element: HTMLElement;
 }
