@@ -48,7 +48,14 @@ export class Fetcher implements IFetcher {
         const response = await request;
 
         if (!response.ok) {
-            throw new Error(`[${response.status}] - ${response.statusText}. Path ${path}`);
+            let message = response.statusText;
+            if (response.body) {
+                message += " ";
+                message += await response.text();
+                message = message.trim();
+            }
+
+            throw new Error(`[${response.status}] - ${message} . Path ${path}`);
         }
 
         return response;
