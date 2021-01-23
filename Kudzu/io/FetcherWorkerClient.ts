@@ -39,6 +39,12 @@ export class FetcherWorkerClient extends Fetcher {
     }
 
     protected async _getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         if (this.worker.enabled) {
             return await this.worker.execute("getBuffer", [path, headerMap], onProgress);
         }
@@ -48,6 +54,12 @@ export class FetcherWorkerClient extends Fetcher {
     }
 
     protected async _postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         if (this.worker.enabled) {
             return await this.worker.execute("postObjectForBuffer", [path, obj, headerMap], onProgress);
         }
@@ -57,6 +69,12 @@ export class FetcherWorkerClient extends Fetcher {
     }
 
     protected async _getObject<T>(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<T> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         if (this.worker.enabled) {
             return await this.worker.execute("getObject", [path, headerMap], onProgress);
         }
@@ -66,6 +84,12 @@ export class FetcherWorkerClient extends Fetcher {
     }
 
     protected async _postObjectForObject<T, U>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<U> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         if (this.worker.enabled) {
             return await this.worker.execute("postObjectForObject", [path, headerMap, obj], onProgress);
         }
@@ -75,6 +99,12 @@ export class FetcherWorkerClient extends Fetcher {
     }
 
     protected async _getFile(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         if (this.worker.enabled) {
             return await this.worker.execute("getFile", [path, headerMap], onProgress);
         }
@@ -84,6 +114,12 @@ export class FetcherWorkerClient extends Fetcher {
     }
 
     protected async _postObjectForFile<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         if (this.worker.enabled) {
             return await this.worker.execute("postObjectForFile", [path, headerMap, obj], onProgress);
         }

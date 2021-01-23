@@ -4314,7 +4314,13 @@ var Calla = (function (exports) {
         async readRequestResponse(path, request) {
             const response = await request;
             if (!response.ok) {
-                throw new Error(`[${response.status}] - ${response.statusText}. Path ${path}`);
+                let message = response.statusText;
+                if (response.body) {
+                    message += " ";
+                    message += await response.text();
+                    message = message.trim();
+                }
+                throw new Error(`[${response.status}] - ${message} . Path ${path}`);
             }
             return response;
         }
@@ -4371,6 +4377,11 @@ var Calla = (function (exports) {
             return { buffer, contentType };
         }
         async _getBuffer(path, headerMap, onProgress) {
+            if (!isNullOrUndefined(headerMap)
+                && !(headerMap instanceof Map)) {
+                onProgress = headerMap;
+                headerMap = undefined;
+            }
             const response = await this.getResponse(path, headerMap);
             return await this.readResponseBuffer(path, response, onProgress);
         }
@@ -4390,6 +4401,11 @@ var Calla = (function (exports) {
             return await this._postObjectForBuffer(path, obj, headerMap, onProgress);
         }
         async _getBlob(path, headerMap, onProgress) {
+            if (!isNullOrUndefined(headerMap)
+                && !(headerMap instanceof Map)) {
+                onProgress = headerMap;
+                headerMap = undefined;
+            }
             const { buffer, contentType } = await this._getBuffer(path, headerMap, onProgress);
             return new Blob([buffer], { type: contentType });
         }
@@ -4409,6 +4425,11 @@ var Calla = (function (exports) {
             return this._postObjectForBlob(path, obj, headerMap, onProgress);
         }
         async _getFile(path, headerMap, onProgress) {
+            if (!isNullOrUndefined(headerMap)
+                && !(headerMap instanceof Map)) {
+                onProgress = headerMap;
+                headerMap = undefined;
+            }
             const blob = await this._getBlob(path, headerMap, onProgress);
             return URL.createObjectURL(blob);
         }
@@ -4433,6 +4454,11 @@ var Calla = (function (exports) {
             return text;
         }
         async _getText(path, headerMap, onProgress) {
+            if (!isNullOrUndefined(headerMap)
+                && !(headerMap instanceof Map)) {
+                onProgress = headerMap;
+                headerMap = undefined;
+            }
             const { buffer } = await this._getBuffer(path, headerMap, onProgress);
             return this.readBufferText(buffer);
         }
@@ -4440,6 +4466,11 @@ var Calla = (function (exports) {
             return await this._getText(path, headerMap, onProgress);
         }
         async _postObjectForText(path, obj, headerMap, onProgress) {
+            if (!isNullOrUndefined(headerMap)
+                && !(headerMap instanceof Map)) {
+                onProgress = headerMap;
+                headerMap = undefined;
+            }
             const { buffer } = await this._postObjectForBuffer(path, obj, headerMap, onProgress);
             return this.readBufferText(buffer);
         }
@@ -4447,6 +4478,11 @@ var Calla = (function (exports) {
             return await this._postObjectForText(path, obj, headerMap, onProgress);
         }
         async _getObject(path, headerMap, onProgress) {
+            if (!isNullOrUndefined(headerMap)
+                && !(headerMap instanceof Map)) {
+                onProgress = headerMap;
+                headerMap = undefined;
+            }
             const text = await this._getText(path, headerMap, onProgress);
             return JSON.parse(text);
         }
@@ -4454,6 +4490,11 @@ var Calla = (function (exports) {
             return await this._getObject(path, headerMap, onProgress);
         }
         async _postObjectForObject(path, obj, headerMap, onProgress) {
+            if (!isNullOrUndefined(headerMap)
+                && !(headerMap instanceof Map)) {
+                onProgress = headerMap;
+                headerMap = undefined;
+            }
             const text = await this._postObjectForText(path, obj, headerMap, onProgress);
             return JSON.parse(text);
         }
@@ -4469,6 +4510,11 @@ var Calla = (function (exports) {
             return xml.documentElement;
         }
         async _getXml(path, headerMap, onProgress) {
+            if (!isNullOrUndefined(headerMap)
+                && !(headerMap instanceof Map)) {
+                onProgress = headerMap;
+                headerMap = undefined;
+            }
             const text = await this._getText(path, headerMap, onProgress);
             return this.readTextXml(text);
         }

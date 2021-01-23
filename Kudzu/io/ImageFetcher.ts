@@ -18,6 +18,7 @@ import {
 } from "../html/canvas";
 import type { progressCallback } from "../tasks/progressCallback";
 import { splitProgress } from "../tasks/splitProgress";
+import { isNullOrUndefined } from "../typeChecks";
 import { using, usingAsync } from "../using";
 import { Fetcher } from "./Fetcher";
 import { IImageFetcher } from "./IImageFetcher";
@@ -65,6 +66,12 @@ export class ImageFetcher
     }
 
     protected async _getImageBitmap(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<ImageBitmap> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         const blob = await this._getBlob(path, headerMap, onProgress);
         return await createImageBitmap(blob);
     }
@@ -78,6 +85,12 @@ export class ImageFetcher
     }
 
     protected async _getImage(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<HTMLImageElement> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         const file = await this._getFile(path, headerMap, onProgress);
         return await this.readFileImage(file);
     }
@@ -91,6 +104,12 @@ export class ImageFetcher
     }
 
     protected async _postObjectForImageBitmap<T>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         const blob = await this._postObjectForBlob(path, obj, headerMap, onProgress);
         return await createImageBitmap(blob);
     }
@@ -104,6 +123,12 @@ export class ImageFetcher
     }
 
     protected async _postObjectForImage<T>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<HTMLImageElement> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         const file = await this._postObjectForFile(path, obj, headerMap, onProgress);
         return await this.readFileImage(file);
     }
@@ -117,28 +142,58 @@ export class ImageFetcher
     }
 
     private async _getCanvasViaImageBitmap(path: string, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<CanvasTypes> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         return using(await this._getImageBitmap(path, headerMap, onProgress), (img: ImageBitmap) => {
             return createUtilityCanvasFromImageBitmap(img);
         });
     }
 
-    private async _getCanvasViaImage(path: string, onProgress?: progressCallback): Promise<CanvasTypes> {
-        const img = await this.getImage(path, onProgress);
+    private async _getCanvasViaImage(path: string, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<CanvasTypes> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
+        const img = await this._getImage(path, headerMap, onProgress);
         return createUtilityCanvasFromImage(img);
     }
 
     private async _getImageDataViaImageBitmap(path: string, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<ImageData> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         return using(await this._getImageBitmap(path, headerMap, onProgress), (img: ImageBitmap) => {
             return this.readImageData(img);
         });
     }
 
     private async _getImageDataViaImage(path: string, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<ImageData> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         const img = await this._getImage(path, headerMap, onProgress);
         return this.readImageData(img);
     }
 
     async _getCubesViaImageBitmaps(path: string, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap[]> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         return await usingAsync(await this._getImageBitmap(path, headerMap, onProgress), async (img: ImageBitmap) => {
             const canvs = sliceCubeMap(img);
             return await Promise.all(canvs.map((canv) => createImageBitmap(canv)));
@@ -146,24 +201,48 @@ export class ImageFetcher
     }
 
     private async _getCubesViaImage(path: string, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<CanvasTypes[]> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         const img = await this._getImage(path, headerMap, onProgress);
         return sliceCubeMap(img);
     }
 
     private async _getEquiMapViaImageBitmaps(path: string, interpolation: InterpolationType, maxWidth: number, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap[]> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         const splits = splitProgress(onProgress, [1, 6]);
         const imgData = await this._getImageDataViaImageBitmap(path, headerMap, splits.shift());
         return await renderImageBitmapFaces(renderImageBitmapFace, imgData, interpolation, maxWidth, splits.shift());
     }
 
     private async _getEquiMapViaImage(path: string, interpolation: InterpolationType, maxWidth: number, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<CanvasTypes[]> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         const splits = splitProgress(onProgress, [1, 6]);
         const imgData = await this._getImageDataViaImage(path, headerMap, splits.shift());
         return await renderCanvasFaces(renderCanvasFace, imgData, interpolation, maxWidth, splits.shift());
     }
 
     private __getCanvas: (path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback) => Promise<CanvasTypes>;
-    protected async _getCanvas(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<CanvasTypes>{
+    protected async _getCanvas(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<CanvasTypes> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         return await this.__getCanvas(path, headerMap, onProgress);
     }
 
@@ -177,6 +256,12 @@ export class ImageFetcher
 
     private __getImageData: (path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback) => Promise<ImageData>;
     protected async _getImageData(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<ImageData> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         return await this.__getImageData(path, headerMap, onProgress);
     }
 
@@ -190,6 +275,12 @@ export class ImageFetcher
 
     private __getCubes: (path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback) => Promise<MemoryImageTypes[]>;
     protected async _getCubes(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         return await this.__getCubes(path, headerMap, onProgress);
     }
 
@@ -203,6 +294,12 @@ export class ImageFetcher
 
     private __getEquiMaps: (path: string, interpolation: InterpolationType, maxWidth: number, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback) => Promise<MemoryImageTypes[]>;
     protected async _getEquiMaps(path: string, interpolation: InterpolationType, maxWidth: number, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         return await this.__getEquiMaps(path, interpolation, maxWidth, headerMap, onProgress);
     }
 

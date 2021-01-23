@@ -99,6 +99,11 @@ export class Fetcher {
         return { buffer, contentType };
     }
     async _getBuffer(path, headerMap, onProgress) {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
         const response = await this.getResponse(path, headerMap);
         return await this.readResponseBuffer(path, response, onProgress);
     }
@@ -118,6 +123,11 @@ export class Fetcher {
         return await this._postObjectForBuffer(path, obj, headerMap, onProgress);
     }
     async _getBlob(path, headerMap, onProgress) {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
         const { buffer, contentType } = await this._getBuffer(path, headerMap, onProgress);
         return new Blob([buffer], { type: contentType });
     }
@@ -137,6 +147,11 @@ export class Fetcher {
         return this._postObjectForBlob(path, obj, headerMap, onProgress);
     }
     async _getFile(path, headerMap, onProgress) {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
         const blob = await this._getBlob(path, headerMap, onProgress);
         return URL.createObjectURL(blob);
     }
@@ -161,6 +176,11 @@ export class Fetcher {
         return text;
     }
     async _getText(path, headerMap, onProgress) {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
         const { buffer } = await this._getBuffer(path, headerMap, onProgress);
         return this.readBufferText(buffer);
     }
@@ -168,6 +188,11 @@ export class Fetcher {
         return await this._getText(path, headerMap, onProgress);
     }
     async _postObjectForText(path, obj, headerMap, onProgress) {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
         const { buffer } = await this._postObjectForBuffer(path, obj, headerMap, onProgress);
         return this.readBufferText(buffer);
     }
@@ -175,6 +200,11 @@ export class Fetcher {
         return await this._postObjectForText(path, obj, headerMap, onProgress);
     }
     async _getObject(path, headerMap, onProgress) {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
         const text = await this._getText(path, headerMap, onProgress);
         return JSON.parse(text);
     }
@@ -182,6 +212,11 @@ export class Fetcher {
         return await this._getObject(path, headerMap, onProgress);
     }
     async _postObjectForObject(path, obj, headerMap, onProgress) {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
         const text = await this._postObjectForText(path, obj, headerMap, onProgress);
         return JSON.parse(text);
     }
@@ -197,6 +232,11 @@ export class Fetcher {
         return xml.documentElement;
     }
     async _getXml(path, headerMap, onProgress) {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
         const text = await this._getText(path, headerMap, onProgress);
         return this.readTextXml(text);
     }

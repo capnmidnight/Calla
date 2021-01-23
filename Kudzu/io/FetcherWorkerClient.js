@@ -19,6 +19,11 @@ export class FetcherWorkerClient extends Fetcher {
         }
     }
     async _getBuffer(path, headerMap, onProgress) {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
         if (this.worker.enabled) {
             return await this.worker.execute("getBuffer", [path, headerMap], onProgress);
         }
@@ -27,6 +32,11 @@ export class FetcherWorkerClient extends Fetcher {
         }
     }
     async _postObjectForBuffer(path, obj, headerMap, onProgress) {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
         if (this.worker.enabled) {
             return await this.worker.execute("postObjectForBuffer", [path, obj, headerMap], onProgress);
         }
@@ -35,6 +45,11 @@ export class FetcherWorkerClient extends Fetcher {
         }
     }
     async _getObject(path, headerMap, onProgress) {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
         if (this.worker.enabled) {
             return await this.worker.execute("getObject", [path, headerMap], onProgress);
         }
@@ -43,6 +58,11 @@ export class FetcherWorkerClient extends Fetcher {
         }
     }
     async _postObjectForObject(path, obj, headerMap, onProgress) {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
         if (this.worker.enabled) {
             return await this.worker.execute("postObjectForObject", [path, headerMap, obj], onProgress);
         }
@@ -51,6 +71,11 @@ export class FetcherWorkerClient extends Fetcher {
         }
     }
     async _getFile(path, headerMap, onProgress) {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
         if (this.worker.enabled) {
             return await this.worker.execute("getFile", [path, headerMap], onProgress);
         }
@@ -59,6 +84,11 @@ export class FetcherWorkerClient extends Fetcher {
         }
     }
     async _postObjectForFile(path, obj, headerMap, onProgress) {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
         if (this.worker.enabled) {
             return await this.worker.execute("postObjectForFile", [path, headerMap, obj], onProgress);
         }

@@ -123,6 +123,12 @@ export class Fetcher implements IFetcher {
     }
 
     protected async _getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         const response = await this.getResponse(path, headerMap);
         return await this.readResponseBuffer(path, response, onProgress);
     }
@@ -155,6 +161,12 @@ export class Fetcher implements IFetcher {
     }
 
     protected async _getBlob(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<Blob> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         const { buffer, contentType } = await this._getBuffer(path, headerMap, onProgress);
         return new Blob([buffer], { type: contentType });
     }
@@ -187,6 +199,12 @@ export class Fetcher implements IFetcher {
     }
 
     protected async _getFile(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         const blob = await this._getBlob(path, headerMap, onProgress);
         return URL.createObjectURL(blob);
     }
@@ -225,6 +243,12 @@ export class Fetcher implements IFetcher {
     }
 
     protected async _getText(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         const { buffer } = await this._getBuffer(path, headerMap, onProgress);
         return this.readBufferText(buffer);
     }
@@ -238,6 +262,12 @@ export class Fetcher implements IFetcher {
     }
 
     private async _postObjectForText<T>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<string> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         const { buffer } = await this._postObjectForBuffer(path, obj, headerMap, onProgress);
         return this.readBufferText(buffer);
     }
@@ -251,6 +281,12 @@ export class Fetcher implements IFetcher {
     }
 
     protected async _getObject<T>(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<T> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         const text = await this._getText(path, headerMap, onProgress);
         return JSON.parse(text) as T;
     }
@@ -264,6 +300,12 @@ export class Fetcher implements IFetcher {
     }
 
     protected async _postObjectForObject<T, U>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<U> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         const text = await this._postObjectForText(path, obj, headerMap, onProgress);
         return JSON.parse(text) as U;
     }
@@ -287,6 +329,12 @@ export class Fetcher implements IFetcher {
     }
 
     protected async _getXml(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<HTMLElement> {
+        if (!isNullOrUndefined(headerMap)
+            && !(headerMap instanceof Map)) {
+            onProgress = headerMap;
+            headerMap = undefined;
+        }
+
         const text = await this._getText(path, headerMap, onProgress);
         return this.readTextXml(text);
     }
