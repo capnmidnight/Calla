@@ -7,27 +7,45 @@ import { IFetcher } from "./IFetcher";
 
 export class Fetcher implements IFetcher {
 
-    private async getResponse(path: string, headerMap?: Map<string, string> | progressCallback): Promise<Response> {
+    protected normalizeOnProgress(headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): progressCallback | undefined {
+        if (isNullOrUndefined(onProgress)
+            && headerMap instanceof Function) {
+            onProgress = headerMap;
+        }
+
+        return onProgress;
+    }
+
+    protected normalizeHeaderMap(headerMap?: Map<string, string> | progressCallback): Map<string, string> | undefined {
+        if (headerMap instanceof Map) {
+            return headerMap;
+        }
+
+        return undefined;
+    }
+
+    private async getResponse(path: string, headerMap?: Map<string, string>): Promise<Response> {
         const headers = {};
 
-        if (headerMap instanceof Map) {
+        if (headerMap) {
             for (const pair of headerMap.entries()) {
                 (headers as any)[pair[0]] = pair[1];
             }
         }
+
         return await this.readRequestResponse(path, fetch(path, {
             headers
         }));
     }
 
-    private async postObjectForResponse<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback): Promise<Response> {
+    private async postObjectForResponse<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<Response> {
         const headers = {
             "Content-Type": obj instanceof FormData
                 ? "multipart/form-data"
                 : "application/json"
         };
 
-        if (headerMap instanceof Map) {
+        if (headerMap) {
             for (const pair of headerMap.entries()) {
                 (headers as any)[pair[0]] = pair[1];
             }
@@ -123,11 +141,8 @@ export class Fetcher implements IFetcher {
     }
 
     protected async _getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         const response = await this.getResponse(path, headerMap);
         return await this.readResponseBuffer(path, response, onProgress);
@@ -142,11 +157,8 @@ export class Fetcher implements IFetcher {
     }
 
     protected async _postObjectForBuffer<T>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<getPartsReturnType> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         const response = await this.postObjectForResponse(path, obj, headerMap);
         return await this.readResponseBuffer(path, response, onProgress);
@@ -161,11 +173,8 @@ export class Fetcher implements IFetcher {
     }
 
     protected async _getBlob(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<Blob> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         const { buffer, contentType } = await this._getBuffer(path, headerMap, onProgress);
         return new Blob([buffer], { type: contentType });
@@ -180,11 +189,8 @@ export class Fetcher implements IFetcher {
     }
 
     protected async _postObjectForBlob<T>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback) {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         const { buffer, contentType } = await this._postObjectForBuffer(path, obj, headerMap, onProgress);
         return new Blob([buffer], { type: contentType });
@@ -199,11 +205,8 @@ export class Fetcher implements IFetcher {
     }
 
     protected async _getFile(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         const blob = await this._getBlob(path, headerMap, onProgress);
         return URL.createObjectURL(blob);
@@ -218,11 +221,8 @@ export class Fetcher implements IFetcher {
     }
 
     protected async _postObjectForFile<T>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<string> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         const blob = await this._postObjectForBlob(path, obj, headerMap, onProgress);
         return URL.createObjectURL(blob);
@@ -243,11 +243,8 @@ export class Fetcher implements IFetcher {
     }
 
     protected async _getText(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         const { buffer } = await this._getBuffer(path, headerMap, onProgress);
         return this.readBufferText(buffer);
@@ -262,11 +259,8 @@ export class Fetcher implements IFetcher {
     }
 
     private async _postObjectForText<T>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<string> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         const { buffer } = await this._postObjectForBuffer(path, obj, headerMap, onProgress);
         return this.readBufferText(buffer);
@@ -281,10 +275,8 @@ export class Fetcher implements IFetcher {
     }
 
     protected async _getObject<T>(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<T> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
         }
 
         const text = await this._getText(path, headerMap, onProgress);
@@ -300,11 +292,8 @@ export class Fetcher implements IFetcher {
     }
 
     protected async _postObjectForObject<T, U>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<U> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         const text = await this._postObjectForText(path, obj, headerMap, onProgress);
         return JSON.parse(text) as U;
@@ -329,11 +318,8 @@ export class Fetcher implements IFetcher {
     }
 
     protected async _getXml(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<HTMLElement> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         const text = await this._getText(path, headerMap, onProgress);
         return this.readTextXml(text);

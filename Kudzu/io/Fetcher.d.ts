@@ -2,6 +2,8 @@ import type { progressCallback } from "../tasks/progressCallback";
 import { getPartsReturnType } from "./getPartsReturnType";
 import { IFetcher } from "./IFetcher";
 export declare class Fetcher implements IFetcher {
+    protected normalizeOnProgress(headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): progressCallback | undefined;
+    protected normalizeHeaderMap(headerMap?: Map<string, string> | progressCallback): Map<string, string> | undefined;
     private getResponse;
     private postObjectForResponse;
     private readRequestResponse;

@@ -44,11 +44,8 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
     }
 
     protected async _getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         if (this.worker.enabled) {
             return await this.worker.execute("getBuffer", [path, headerMap], onProgress);
@@ -59,11 +56,8 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
     }
 
     protected async _postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         if (this.worker.enabled) {
             return await this.worker.execute("postObjectForBuffer", [path, obj, headerMap], onProgress);
@@ -74,11 +68,8 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
     }
 
     protected async _getObject<T>(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<T> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         if (this.worker.enabled) {
             return await this.worker.execute("getObject", [path, headerMap], onProgress);
@@ -89,11 +80,8 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
     }
 
     protected async _postObjectForObject<T, U>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<U> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         if (this.worker.enabled) {
             return await this.worker.execute("postObjectForObject", [path, headerMap, obj], onProgress);
@@ -104,11 +92,8 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
     }
 
     protected async _getFile(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         if (this.worker.enabled) {
             return await this.worker.execute("getFile", [path, headerMap], onProgress);
@@ -119,11 +104,8 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
     }
 
     protected async _postObjectForFile<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         if (this.worker.enabled) {
             return await this.worker.execute("postObjectForFile", [path, headerMap, obj], onProgress);
@@ -134,11 +116,8 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
     }
 
     protected async _getImageBitmap(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<ImageBitmap> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         if (this.worker.enabled) {
             return await this.worker.execute("getImageBitmap", [path, headerMap], onProgress);
@@ -149,11 +128,8 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
     }
 
     protected async _postObjectForImageBitmap<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<ImageBitmap> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         if (this.worker.enabled && hasImageBitmap) {
             return await this.worker.execute("postObjectForImageBitmap", [path, headerMap, obj], onProgress);
@@ -164,11 +140,8 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
     }
 
     protected async _getCubes(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         if (this.worker.enabled
             && hasImageBitmap
@@ -181,11 +154,8 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
     }
 
     protected async _getEquiMaps(path: string, interpolation: InterpolationType, maxWidth: number, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]> {
-        if (!isNullOrUndefined(headerMap)
-            && !(headerMap instanceof Map)) {
-            onProgress = headerMap;
-            headerMap = undefined;
-        }
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
 
         if (this.worker.enabled
             && hasImageBitmap
