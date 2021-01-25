@@ -274,16 +274,21 @@ export class Fetcher implements IFetcher {
         return await this._postObjectForText(path, obj, headerMap, onProgress);
     }
 
-    protected async _getObject<T>(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<T> {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
-
-        if (isNullOrUndefined(headerMap)) {
+    private setDefaultAcceptType(headerMap?: Map<string, string>, type: string): Map<string, string> {
+        if (!headerMap) {
             headerMap = new Map<string, string>();
         }
 
-        headerMap.set("Accept", "application/json");
+        if (!headerMap.has("Accept")) {
+            headerMap.set("Accept", type);
+        }
 
+        return headerMap;
+    }
+    protected async _getObject<T>(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<T> {
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
+        headerMap = this.setDefaultAcceptType(headerMap, "application/json");
         const text = await this._getText(path, headerMap, onProgress);
         return JSON.parse(text) as T;
     }
@@ -299,13 +304,7 @@ export class Fetcher implements IFetcher {
     protected async _postObjectForObject<T, U>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<U> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
-
-        if (isNullOrUndefined(headerMap)) {
-            headerMap = new Map<string, string>();
-        }
-
-        headerMap.set("Accept", "application/json");
-
+        headerMap = this.setDefaultAcceptType(headerMap, "application/json");
         const text = await this._postObjectForText(path, obj, headerMap, onProgress);
         return JSON.parse(text) as U;
     }
