@@ -274,7 +274,7 @@ export class Fetcher implements IFetcher {
         return await this._postObjectForText(path, obj, headerMap, onProgress);
     }
 
-    private setDefaultAcceptType(headerMap?: Map<string, string>, type: string): Map<string, string> {
+    private setDefaultAcceptType(headerMap: Map<string, string>, type: string): Map<string, string> {
         if (!headerMap) {
             headerMap = new Map<string, string>();
         }

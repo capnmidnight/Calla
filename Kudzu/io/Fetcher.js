@@ -188,13 +188,19 @@ export class Fetcher {
     async postObjectForText(path, obj, headerMap, onProgress) {
         return await this._postObjectForText(path, obj, headerMap, onProgress);
     }
+    setDefaultAcceptType(headerMap, type) {
+        if (!headerMap) {
+            headerMap = new Map();
+        }
+        if (!headerMap.has("Accept")) {
+            headerMap.set("Accept", type);
+        }
+        return headerMap;
+    }
     async _getObject(path, headerMap, onProgress) {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
-        if (isNullOrUndefined(headerMap)) {
-            headerMap = new Map();
-        }
-        headerMap.set("Accept", "application/json");
+        headerMap = this.setDefaultAcceptType(headerMap, "application/json");
         const text = await this._getText(path, headerMap, onProgress);
         return JSON.parse(text);
     }
@@ -204,10 +210,7 @@ export class Fetcher {
     async _postObjectForObject(path, obj, headerMap, onProgress) {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
-        if (isNullOrUndefined(headerMap)) {
-            headerMap = new Map();
-        }
-        headerMap.set("Accept", "application/json");
+        headerMap = this.setDefaultAcceptType(headerMap, "application/json");
         const text = await this._postObjectForText(path, obj, headerMap, onProgress);
         return JSON.parse(text);
     }

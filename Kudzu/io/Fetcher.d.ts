@@ -49,6 +49,7 @@ export declare class Fetcher implements IFetcher {
     postObjectForText<T>(path: string, obj: T, onProgress?: progressCallback): Promise<string>;
     postObjectForText<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<string>;
     postObjectForText<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<string>;
+    private setDefaultAcceptType;
     protected _getObject<T>(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<T>;
     getObject<T>(path: string): Promise<T>;
     getObject<T>(path: string, onProgress?: progressCallback): Promise<T>;
