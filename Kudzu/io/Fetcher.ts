@@ -277,7 +277,12 @@ export class Fetcher implements IFetcher {
     protected async _getObject<T>(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<T> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
+
+        if (isNullOrUndefined(headerMap)) {
+            headerMap = new Map<string, string>();
         }
+
+        headerMap.set("Accept", "application/json");
 
         const text = await this._getText(path, headerMap, onProgress);
         return JSON.parse(text) as T;
@@ -294,6 +299,12 @@ export class Fetcher implements IFetcher {
     protected async _postObjectForObject<T, U>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<U> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
+
+        if (isNullOrUndefined(headerMap)) {
+            headerMap = new Map<string, string>();
+        }
+
+        headerMap.set("Accept", "application/json");
 
         const text = await this._postObjectForText(path, obj, headerMap, onProgress);
         return JSON.parse(text) as U;
