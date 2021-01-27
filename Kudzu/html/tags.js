@@ -57,6 +57,10 @@ export function tag(name, ...rest) {
     }
     return elem;
 }
+export function isDisableable(element) {
+    return "disabled" in element
+        && typeof element.disabled === "boolean";
+}
 /**
  * Empty an element of all children. This is faster than setting `innerHTML = ""`.
  */

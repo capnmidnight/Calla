@@ -18,6 +18,10 @@ export declare type TagChild = Node | HasNode | IAppliable | makesIAppliable | s
  * @returns
  */
 export declare function tag(name: string, ...rest: TagChild[]): HTMLElement;
+export interface IDisableable {
+    disabled: boolean;
+}
+export declare function isDisableable(element: any): element is IDisableable;
 /**
  * Empty an element of all children. This is faster than setting `innerHTML = ""`.
  */

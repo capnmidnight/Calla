@@ -85,6 +85,15 @@ export function tag(name: string, ...rest: TagChild[]) {
     return elem;
 }
 
+export interface IDisableable {
+    disabled: boolean;
+}
+
+export function isDisableable(element: any): element is IDisableable {
+    return "disabled" in element
+        && typeof element.disabled === "boolean";
+}
+
 /**
  * Empty an element of all children. This is faster than setting `innerHTML = ""`.
  */
