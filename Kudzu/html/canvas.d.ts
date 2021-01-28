@@ -71,3 +71,5 @@ export declare function resizeCanvas(canv: HTMLCanvasElement, superscale?: numbe
  * @returns true, if the canvas size changed, false if the given size (with super sampling) resulted in the same size.
  */
 export declare function resizeContext(ctx: CanvasRenderingContext2D, superscale?: number): boolean;
+export declare function canvasView(canvas: CanvasTypes): Promise<void>;
+export declare function canvasToBlob(canvas: CanvasTypes, type?: string, quality?: number): Promise<Blob | null>;

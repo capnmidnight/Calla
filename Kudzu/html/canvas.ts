@@ -241,17 +241,44 @@ export function resizeContext(ctx: CanvasRenderingContext2D, superscale = 1) {
         superscale);
 }
 
-if ("HTMLCanvasElement" in globalThis) {
-    (HTMLCanvasElement.prototype as any).view = function (this: HTMLCanvasElement) {
-        const url = this.toDataURL();
-        openWindow(url, 0, 0, this.width + 10, this.height + 100);
+export async function canvasView(canvas: CanvasTypes): Promise<void> {
+    let url: string;
+    if (isOffscreenCanvas(canvas)) {
+        const blob = await canvas.convertToBlob();
+        url = URL.createObjectURL(blob);
+    }
+    else {
+        url = canvas.toDataURL();
+    }
+    openWindow(url, 0, 0, canvas.width + 10, canvas.height + 100);
+}
+
+export async function canvasToBlob(canvas: CanvasTypes, type?: string, quality?: number): Promise<Blob|null> {
+    if (isOffscreenCanvas(canvas)) {
+        return await canvas.convertToBlob({ type, quality });
+    }
+    else {
+        return await new Promise((resolve: (blob: Blob|null) => void) => {
+            canvas.toBlob(resolve, type, quality);
+        });
+    }
+}
+
+if (hasHTMLCanvas) {
+    (HTMLCanvasElement.prototype as any).view = async function (this: HTMLCanvasElement) {
+        return await canvasView(this);
+    };
+    (HTMLCanvasElement.prototype as any).convertToBlob = async function (this: HTMLCanvasElement, opts?: ImageEncodeOptions) {
+        return await canvasToBlob(this, opts && opts.type || undefined, opts && opts.quality || undefined);
     };
 }
 
 if (hasOffscreenCanvas) {
-    (OffscreenCanvas.prototype as any).view =async function (this: OffscreenCanvas) {
-        const blob = await this.convertToBlob();
-        const url = URL.createObjectURL(blob);
-        openWindow(url, 0, 0, this.width + 10, this.height + 100);
+    (OffscreenCanvas.prototype as any).view = async function (this: OffscreenCanvas) {
+        return await canvasView(this);
+    };
+    (OffscreenCanvas.prototype as any).toBlob = function (this: OffscreenCanvas, callback: (blob: Blob | null) => void, type?: string, quality?: number) {
+        canvasToBlob(this, type, quality)
+            .then(callback);
     };
 }

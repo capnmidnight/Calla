@@ -181,17 +181,42 @@ export function resizeCanvas(canv, superscale = 1) {
 export function resizeContext(ctx, superscale = 1) {
     return setContextSize(ctx, ctx.canvas.clientWidth, ctx.canvas.clientHeight, superscale);
 }
-if ("HTMLCanvasElement" in globalThis) {
-    HTMLCanvasElement.prototype.view = function () {
-        const url = this.toDataURL();
-        openWindow(url, 0, 0, this.width + 10, this.height + 100);
+export async function canvasView(canvas) {
+    let url;
+    if (isOffscreenCanvas(canvas)) {
+        const blob = await canvas.convertToBlob();
+        url = URL.createObjectURL(blob);
+    }
+    else {
+        url = canvas.toDataURL();
+    }
+    openWindow(url, 0, 0, canvas.width + 10, canvas.height + 100);
+}
+export async function canvasToBlob(canvas, type, quality) {
+    if (isOffscreenCanvas(canvas)) {
+        return await canvas.convertToBlob({ type, quality });
+    }
+    else {
+        return await new Promise((resolve) => {
+            canvas.toBlob(resolve, type, quality);
+        });
+    }
+}
+if (hasHTMLCanvas) {
+    HTMLCanvasElement.prototype.view = async function () {
+        return await canvasView(this);
+    };
+    HTMLCanvasElement.prototype.convertToBlob = async function (opts) {
+        return await canvasToBlob(this, opts && opts.type || undefined, opts && opts.quality || undefined);
     };
 }
 if (hasOffscreenCanvas) {
     OffscreenCanvas.prototype.view = async function () {
-        const blob = await this.convertToBlob();
-        const url = URL.createObjectURL(blob);
-        openWindow(url, 0, 0, this.width + 10, this.height + 100);
+        return await canvasView(this);
+    };
+    OffscreenCanvas.prototype.toBlob = function (callback, type, quality) {
+        canvasToBlob(this, type, quality)
+            .then(callback);
     };
 }
 //# sourceMappingURL=canvas.js.map
