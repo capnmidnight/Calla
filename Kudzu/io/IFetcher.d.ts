@@ -37,7 +37,10 @@ export interface IFetcher {
     getObject<T>(path: string, onProgress?: progressCallback): Promise<T>;
     getObject<T>(path: string, headerMap?: Map<string, string>): Promise<T>;
     getObject<T>(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<T>;
+    postObject<T>(path: string, obj: T): Promise<void>;
     postObject<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<void>;
+    postObject<T>(path: string, obj: T, onProgress?: progressCallback): Promise<void>;
+    postObject<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<void>;
     postObjectForObject<T, U>(path: string, obj: T): Promise<U>;
     postObjectForObject<T, U>(path: string, obj: T, onProgress?: progressCallback): Promise<U>;
     postObjectForObject<T, U>(path: string, obj: T, headerMap?: Map<string, string>): Promise<U>;

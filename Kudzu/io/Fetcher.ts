@@ -39,11 +39,10 @@ export class Fetcher implements IFetcher {
     }
 
     private async postObjectForResponse<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<Response> {
-        const headers = {
-            "Content-Type": obj instanceof FormData
-                ? "multipart/form-data"
-                : "application/json"
-        };
+        const headers: any = {};
+        if (!(obj instanceof FormData)) {
+            headers["Content-Type"] = "application/json";
+        }
 
         if (headerMap) {
             for (const pair of headerMap.entries()) {
@@ -156,7 +155,7 @@ export class Fetcher implements IFetcher {
         return await this._getBuffer(path, headerMap, onProgress);
     }
 
-    protected async _postObjectForBuffer<T>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<getPartsReturnType> {
+    protected async _postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
 
@@ -168,7 +167,7 @@ export class Fetcher implements IFetcher {
     async postObjectForBuffer<T>(path: string, obj: T, onProgress?: progressCallback): Promise<getPartsReturnType>;
     async postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<getPartsReturnType>;
     async postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<getPartsReturnType>;
-    async postObjectForBuffer<T>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<getPartsReturnType> {
+    async postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType> {
         return await this._postObjectForBuffer(path, obj, headerMap, onProgress);
     }
 
@@ -188,7 +187,7 @@ export class Fetcher implements IFetcher {
         return this._getBlob(path, headerMap, onProgress);
     }
 
-    protected async _postObjectForBlob<T>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback) {
+    protected async _postObjectForBlob<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback) {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
 
@@ -200,7 +199,7 @@ export class Fetcher implements IFetcher {
     async postObjectForBlob<T>(path: string, obj: T, onProgress?: progressCallback): Promise<Blob>;
     async postObjectForBlob<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<Blob>;
     async postObjectForBlob<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<Blob>;
-    async postObjectForBlob<T>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback) {
+    async postObjectForBlob<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback) {
         return this._postObjectForBlob(path, obj, headerMap, onProgress);
     }
 
@@ -220,7 +219,7 @@ export class Fetcher implements IFetcher {
         return await this._getFile(path, headerMap, onProgress);
     }
 
-    protected async _postObjectForFile<T>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<string> {
+    protected async _postObjectForFile<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
 
@@ -232,7 +231,7 @@ export class Fetcher implements IFetcher {
     async postObjectForFile<T>(path: string, obj: T, onProgress?: progressCallback): Promise<string>;
     async postObjectForFile<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<string>;
     async postObjectForFile<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<string>;
-    async postObjectForFile<T>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<string> {
+    async postObjectForFile<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
         return await this._postObjectForFile(path, obj, headerMap, onProgress);
     }
 
@@ -258,7 +257,7 @@ export class Fetcher implements IFetcher {
         return await this._getText(path, headerMap, onProgress);
     }
 
-    private async _postObjectForText<T>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<string> {
+    private async _postObjectForText<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
 
@@ -270,7 +269,7 @@ export class Fetcher implements IFetcher {
     async postObjectForText<T>(path: string, obj: T, onProgress?: progressCallback): Promise<string>;
     async postObjectForText<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<string>;
     async postObjectForText<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<string>;
-    async postObjectForText<T>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<string> {
+    async postObjectForText<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<string> {
         return await this._postObjectForText(path, obj, headerMap, onProgress);
     }
 
@@ -301,7 +300,7 @@ export class Fetcher implements IFetcher {
         return await this._getObject<T>(path, headerMap, onProgress);
     }
 
-    protected async _postObjectForObject<T, U>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<U> {
+    protected async _postObjectForObject<T, U>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<U> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
         headerMap = this.setDefaultAcceptType(headerMap, "application/json");
@@ -313,12 +312,70 @@ export class Fetcher implements IFetcher {
     async postObjectForObject<T, U>(path: string, obj: T, onProgress?: progressCallback): Promise<U>;
     async postObjectForObject<T, U>(path: string, obj: T, headerMap?: Map<string, string>): Promise<U>;
     async postObjectForObject<T, U>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<U>;
-    async postObjectForObject<T, U>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<U> {
+    async postObjectForObject<T, U>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<U> {
         return await this._postObjectForObject<T, U>(path, obj, headerMap, onProgress);
     }
 
-    async postObject<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<void> {
-        await this.postObjectForResponse(path, obj, headerMap);
+    async postObject<T>(path: string, obj: T): Promise<void>;
+    async postObject<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<void>;
+    async postObject<T>(path: string, obj: T, onProgress?: progressCallback): Promise<void>;
+    async postObject<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<void>;
+    async postObject<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<void> {
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
+        if (onProgress instanceof Function) {
+            const prog: progressCallback = onProgress;
+            let headers: Map<string, string> | undefined = headerMap;
+            await new Promise((resolve: (_?:unknown) => void, reject: (status: number) => void) => {
+                const xhr = new XMLHttpRequest();
+                let done = false;
+                let loaded = false;
+                function maybeResolve() {
+                    if (loaded && done) {
+                        resolve();
+                    }
+                }
+
+                xhr.upload.addEventListener("loadstart", () => {
+                    prog(0, 1);
+                });
+
+                xhr.upload.addEventListener("progress", (evt) => {
+                    prog(evt.loaded, evt.total);
+                    if (evt.loaded === evt.total) {
+                        loaded = true;
+                        maybeResolve();
+                    }
+                });
+
+                xhr.upload.addEventListener("load", () => {
+                    prog(1, 1);
+                    done = true;
+                    maybeResolve();
+                });
+
+                xhr.upload.addEventListener("error", () => reject(xhr.status));
+
+                xhr.open("POST", path);
+
+                if (headers) {
+                    for (const [key, value] of headers) {
+                        xhr.setRequestHeader(key, value);
+                    }
+                }
+
+                if (obj instanceof FormData) {
+                    xhr.send(obj);
+                }
+                else {
+                    const json = JSON.stringify(obj);
+                    xhr.send(json);
+                }
+            });
+        }
+        else {
+            await this.postObjectForResponse(path, obj, headerMap);
+        }
     }
 
     private readTextXml(text: string): HTMLElement {
@@ -347,7 +404,7 @@ export class Fetcher implements IFetcher {
     async postObjectForXml<T>(path: string, obj: T, onProgress?: progressCallback): Promise<HTMLElement>;
     async postObjectForXml<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<HTMLElement>;
     async postObjectForXml<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<HTMLElement>;
-    async postObjectForXml<T>(path: string, obj: T, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<HTMLElement> {
+    async postObjectForXml<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<HTMLElement> {
         const text = await this._postObjectForText(path, obj, headerMap, onProgress);
         return this.readTextXml(text);
     }

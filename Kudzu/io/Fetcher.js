@@ -27,11 +27,10 @@ export class Fetcher {
         }));
     }
     async postObjectForResponse(path, obj, headerMap) {
-        const headers = {
-            "Content-Type": obj instanceof FormData
-                ? "multipart/form-data"
-                : "application/json"
-        };
+        const headers = {};
+        if (!(obj instanceof FormData)) {
+            headers["Content-Type"] = "application/json";
+        }
         if (headerMap) {
             for (const pair of headerMap.entries()) {
                 headers[pair[0]] = pair[1];
@@ -217,8 +216,55 @@ export class Fetcher {
     async postObjectForObject(path, obj, headerMap, onProgress) {
         return await this._postObjectForObject(path, obj, headerMap, onProgress);
     }
-    async postObject(path, obj, headerMap) {
-        await this.postObjectForResponse(path, obj, headerMap);
+    async postObject(path, obj, headerMap, onProgress) {
+        onProgress = this.normalizeOnProgress(headerMap, onProgress);
+        headerMap = this.normalizeHeaderMap(headerMap);
+        if (onProgress instanceof Function) {
+            const prog = onProgress;
+            let headers = headerMap;
+            await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                let done = false;
+                let loaded = false;
+                function maybeResolve() {
+                    if (loaded && done) {
+                        resolve();
+                    }
+                }
+                xhr.upload.addEventListener("loadstart", () => {
+                    prog(0, 1);
+                });
+                xhr.upload.addEventListener("progress", (evt) => {
+                    prog(evt.loaded, evt.total);
+                    if (evt.loaded === evt.total) {
+                        loaded = true;
+                        maybeResolve();
+                    }
+                });
+                xhr.upload.addEventListener("load", () => {
+                    prog(1, 1);
+                    done = true;
+                    maybeResolve();
+                });
+                xhr.upload.addEventListener("error", () => reject(xhr.status));
+                xhr.open("POST", path);
+                if (headers) {
+                    for (const [key, value] of headers) {
+                        xhr.setRequestHeader(key, value);
+                    }
+                }
+                if (obj instanceof FormData) {
+                    xhr.send(obj);
+                }
+                else {
+                    const json = JSON.stringify(obj);
+                    xhr.send(json);
+                }
+            });
+        }
+        else {
+            await this.postObjectForResponse(path, obj, headerMap);
+        }
     }
     readTextXml(text) {
         const parser = new DOMParser();
