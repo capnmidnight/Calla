@@ -1,6 +1,7 @@
 import { waitFor } from "../events/waitFor";
 import { createScript } from "../html/script";
 import type { progressCallback } from "../tasks/progressCallback";
+import { splitProgress } from "../tasks/splitProgress";
 import { isGoodNumber, isNullOrUndefined } from "../typeChecks";
 import { getPartsReturnType } from "./getPartsReturnType";
 import { IFetcher } from "./IFetcher";
@@ -324,54 +325,73 @@ export class Fetcher implements IFetcher {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
         if (onProgress instanceof Function) {
-            const prog: progressCallback = onProgress;
+            const [upProg, downProg] = splitProgress(onProgress, 2);
             let headers: Map<string, string> | undefined = headerMap;
-            await new Promise((resolve: (_?:unknown) => void, reject: (status: number) => void) => {
-                const xhr = new XMLHttpRequest();
-                let done = false;
-                let loaded = false;
-                function maybeResolve() {
-                    if (loaded && done) {
-                        resolve();
+            const xhr = new XMLHttpRequest();
+
+            function makeTask(name: string, target: (XMLHttpRequest | XMLHttpRequestUpload), onProgress: progressCallback, skipLoading: boolean, prevTask: Promise<void>): Promise<void> {
+                return new Promise((resolve: () => void, reject: (status: number) => void) => {
+                    let done = false;
+                    let loaded = skipLoading;
+                    function maybeResolve() {
+                        if (loaded && done) {
+                            resolve();
+                        }
                     }
-                }
 
-                xhr.upload.addEventListener("loadstart", () => {
-                    prog(0, 1);
-                });
+                    async function onError() {
+                        await prevTask;
+                        reject(xhr.status);
+                    }
 
-                xhr.upload.addEventListener("progress", (evt) => {
-                    prog(evt.loaded, evt.total);
-                    if (evt.loaded === evt.total) {
-                        loaded = true;
+                    target.addEventListener("loadstart", async () => {
+                        await prevTask;
+                        onProgress(0, 1, name);
+                    });
+
+                    target.addEventListener("progress", async (ev: Event) => {
+                        const evt = ev as ProgressEvent<XMLHttpRequestEventTarget>;
+                        await prevTask;
+                        onProgress(evt.loaded, evt.total, name);
+                        if (evt.loaded === evt.total) {
+                            loaded = true;
+                            maybeResolve();
+                        }
+                    });
+
+                    target.addEventListener("load", async () => {
+                        await prevTask;
+                        onProgress(1, 1, name);
+                        done = true;
                         maybeResolve();
-                    }
+                    });
+
+                    target.addEventListener("error", onError);
+                    target.addEventListener("abort", onError);
                 });
+            }
 
-                xhr.upload.addEventListener("load", () => {
-                    prog(1, 1);
-                    done = true;
-                    maybeResolve();
-                });
+            const upload = makeTask("uploading", xhr.upload, upProg, false, Promise.resolve());
+            const download = makeTask("saving", xhr, downProg, true, upload);
 
-                xhr.upload.addEventListener("error", () => reject(xhr.status));
+            xhr.open("POST", path);
 
-                xhr.open("POST", path);
-
-                if (headers) {
-                    for (const [key, value] of headers) {
-                        xhr.setRequestHeader(key, value);
-                    }
+            if (headers) {
+                for (const [key, value] of headers) {
+                    xhr.setRequestHeader(key, value);
                 }
+            }
 
-                if (obj instanceof FormData) {
-                    xhr.send(obj);
-                }
-                else {
-                    const json = JSON.stringify(obj);
-                    xhr.send(json);
-                }
-            });
+            if (obj instanceof FormData) {
+                xhr.send(obj);
+            }
+            else {
+                const json = JSON.stringify(obj);
+                xhr.send(json);
+            }
+
+            await upload;
+            await download;
         }
         else {
             await this.postObjectForResponse(path, obj, headerMap);
