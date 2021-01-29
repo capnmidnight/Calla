@@ -1,5 +1,5 @@
 import type { ErsatzEventTarget } from "./ErsatzEventTarget";
-import { TypedEventBase } from "./EventBase";
+import type { TypedEventBase } from "./EventBase";
 /**
  * Wait for a specific event, one time.
  * @param target - the event target.

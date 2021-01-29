@@ -1,7 +1,7 @@
 import { isGoodNumber, isString } from "../typeChecks";
 import { add } from "./add";
 import type { ErsatzEventTarget } from "./ErsatzEventTarget";
-import { TypedEventBase } from "./EventBase";
+import type { EventBase, TypedEventBase } from "./EventBase";
 
 /**
  * Wait for a specific event, one time.
@@ -13,7 +13,7 @@ import { TypedEventBase } from "./EventBase";
 export function once<EventBaseT, EventKeyT extends string & keyof EventBaseT, EventT extends Event & EventBaseT[EventKeyT]>(target: TypedEventBase<EventBaseT>, resolveEvt: EventKeyT, rejectEvt?: EventKeyT, timeout?: number): Promise<EventT>;
 export function once(target: EventTarget, resolveEvt: string, rejectEvt?: string, timeout?: number): Promise<Event>;
 export function once(target: ErsatzEventTarget, resolveEvt: string, rejectEvt?: string, timeout?: number): Promise<unknown>;
-export function once(target: any, resolveEvt: string, rejectEvt?: string, timeout?: number): Promise<any> {
+export function once(target: (EventBase | EventTarget | ErsatzEventTarget), resolveEvt: string, rejectEvt?: string, timeout?: number): Promise<any> {
 
     if (timeout == null
         && isGoodNumber(rejectEvt)) {
@@ -21,22 +21,19 @@ export function once(target: any, resolveEvt: string, rejectEvt?: string, timeou
         rejectEvt = undefined;
     }
 
-    const hasResolveEvt = isString(resolveEvt);
-    const hasRejectEvt = isString(rejectEvt);
     const hasTimeout = timeout != null;
 
     return new Promise((resolve: (value: any) => void, reject) => {
-        if (hasResolveEvt) {
-            const remove = () => {
-                target.removeEventListener(resolveEvt, resolve);
-            };
-            resolve = add(remove, resolve);
-            reject = add(remove, reject);
-        }
+        const remove = () => {
+            target.removeEventListener(resolveEvt, resolve);
+        };
+        resolve = add(remove, resolve);
+        reject = add(remove, reject);
 
-        if (hasRejectEvt) {
+        if (isString(rejectEvt)) {
+            const rejectEvt2 = rejectEvt;
             const remove = () => {
-                target.removeEventListener(rejectEvt, reject);
+                target.removeEventListener(rejectEvt2, reject);
             };
 
             resolve = add(remove, resolve);
@@ -50,11 +47,9 @@ export function once(target: any, resolveEvt: string, rejectEvt?: string, timeou
             reject = add(cancel, reject);
         }
 
-        if (hasResolveEvt) {
-            target.addEventListener(resolveEvt, resolve);
-        }
+        target.addEventListener(resolveEvt, resolve);
 
-        if (hasRejectEvt) {
+        if (isString(rejectEvt)) {
             target.addEventListener(rejectEvt, () => {
                 reject("Rejection event found");
             });

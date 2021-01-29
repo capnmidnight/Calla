@@ -6,20 +6,17 @@ export function once(target, resolveEvt, rejectEvt, timeout) {
         timeout = rejectEvt;
         rejectEvt = undefined;
     }
-    const hasResolveEvt = isString(resolveEvt);
-    const hasRejectEvt = isString(rejectEvt);
     const hasTimeout = timeout != null;
     return new Promise((resolve, reject) => {
-        if (hasResolveEvt) {
+        const remove = () => {
+            target.removeEventListener(resolveEvt, resolve);
+        };
+        resolve = add(remove, resolve);
+        reject = add(remove, reject);
+        if (isString(rejectEvt)) {
+            const rejectEvt2 = rejectEvt;
             const remove = () => {
-                target.removeEventListener(resolveEvt, resolve);
-            };
-            resolve = add(remove, resolve);
-            reject = add(remove, reject);
-        }
-        if (hasRejectEvt) {
-            const remove = () => {
-                target.removeEventListener(rejectEvt, reject);
+                target.removeEventListener(rejectEvt2, reject);
             };
             resolve = add(remove, resolve);
             reject = add(remove, reject);
@@ -29,10 +26,8 @@ export function once(target, resolveEvt, rejectEvt, timeout) {
             resolve = add(cancel, resolve);
             reject = add(cancel, reject);
         }
-        if (hasResolveEvt) {
-            target.addEventListener(resolveEvt, resolve);
-        }
-        if (hasRejectEvt) {
+        target.addEventListener(resolveEvt, resolve);
+        if (isString(rejectEvt)) {
             target.addEventListener(rejectEvt, () => {
                 reject("Rejection event found");
             });
