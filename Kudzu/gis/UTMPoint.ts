@@ -1,5 +1,8 @@
 import { isNumber } from "util";
+import { rad2deg } from "../math/rad2deg";
 import { isNullOrUndefined } from "../typeChecks";
+import { DatumWGS_84 } from "./Datum";
+import { LatLngPoint } from "./LatLngPoint";
 
 /**
  * The globe hemispheres in which the UTM point could sit.
@@ -71,14 +74,24 @@ export class UTMPoint implements IUTMPoint {
     private _hemisphere: GlobeHemisphere;
 
 
-    /// <summary>
-    /// Initialize a new UTMPoint with the given components.
-    /// </summary>
-    /// <param name="x">The number of x</param>
-    /// <param name="y">The number of y</param>
-    /// <param name="z">The number of z</param>
-    /// <param name="zone">The number of zone</param>
-    /// <param name="hemisphere">The hemisphere in which the UTM point sits</param>
+    /**
+     * Initialize a zero UTMPoint
+     */
+    constructor();
+    /**
+     * Initializes a UTMPoint as a copy of another UTMPoint
+     * @param x
+     */
+    constructor(x: IUTMPoint);
+    /**
+     * Initialize a UTMPoint from the given components
+     * @param x
+     * @param y
+     * @param z
+     * @param zone
+     * @param hemisphere
+     */
+    constructor(x: number, y: number, z: number, zone: number, hemisphere: GlobeHemisphere);
     constructor(x?: number | IUTMPoint, y?: number, z?: number, zone?: number, hemisphere?: GlobeHemisphere) {
         if (!isNullOrUndefined(x)
             && !isNumber(x)) {
@@ -110,70 +123,60 @@ export class UTMPoint implements IUTMPoint {
     toString(): string {
         return `(${this.x}, ${this.y}, ${this.z}) zone ${this.zone}`;
     }
+
+    equals(other: IUTMPoint): boolean {
+        return !isNullOrUndefined(other)
+            && this.hemisphere == other.hemisphere
+            && this.x == other.x
+            && this.y == other.y
+            && this.z == other.z
+            && this.zone == other.zone;
+    }
+
     /**
+     * Converts this UTMPoint to a Latitude/Longitude point using the WGS-84 datum. The
+     * coordinate pair's units will be in meters, and should be usable to make distance
+     * calculations over short distances.
+     * reference: http://www.uwgb.edu/dutchs/usefuldata/utmformulas.htm
+     **/
+    toLatLng(): LatLngPoint {
+        const N0 = this.hemisphere == GlobeHemisphere.Northern ? 0.0 : DatumWGS_84.FalseNorthing;
+        const xi = (this.y - N0) / (DatumWGS_84.pointScaleFactor * DatumWGS_84.A);
+        const eta = (this.x - DatumWGS_84.E0) / (DatumWGS_84.pointScaleFactor * DatumWGS_84.A);
+        let xiPrime = xi;
+        let etaPrime = eta;
+        //let sigmaPrime = 1;
+        //let tauPrime = 0;
 
-    public bool Equals(UTMPoint other);
-{
-    return other is object
-        && Hemisphere == other.Hemisphere
-        && X == other.X
-        && Y == other.Y
-        && Z == other.Z
-        && Zone == other.Zone;
-}
+        for (var j = 1; j <= 3; ++j) {
+            var beta = DatumWGS_84.beta[j - 1];
+            var je2 = 2 * j * xi;
+            var jn2 = 2 * j * eta;
+            var sinje2 = Math.sin(je2);
+            var coshjn2 = Math.cosh(jn2);
+            var cosje2 = Math.cos(je2);
+            var sinhjn2 = Math.sinh(jn2);
 
-        /// <summary>
-        /// Converts this UTMPoint to a Latitude/Longitude point using the WGS-84 datum. The
-        /// coordinate pair's units will be in meters, and should be usable to make distance
-        /// calculations over short distances. /// reference: http://www.uwgb.edu/dutchs/usefuldata/utmformulas.htm
-        /// </summary>
-        /// <param name="utm">The UTM point to convert</param>
-        /// <returns>The latitude/longitude</returns>
-        public static LatLngPoint ToLatLng(this UTMPoint utm);
-{
-    if (utm is null)
-    {
-        throw new ArgumentNullException(nameof(utm));
+            xiPrime -= beta * sinje2 * coshjn2;
+            etaPrime -= beta * cosje2 * sinhjn2;
+            //sigmaPrime -= 2 * j * beta * cosje2 * coshjn2;
+            //tauPrime -= 2 * j * beta * sinje2 * sinhjn2;
+        }
+
+        var chi = Math.asin(Math.sin(xiPrime) / Math.cosh(etaPrime));
+
+        var lat = chi;
+
+        for (var j = 1; j <= 3; ++j) {
+            lat += DatumWGS_84.delta[j - 1] * Math.sin(2 * j * chi);
+        }
+
+        const long0 = (this.zone * 6) - 183;
+        const lng = Math.atan(Math.sinh(etaPrime) / Math.cos(xiPrime));
+
+        return new LatLngPoint(
+            rad2deg(lat),
+            long0 + rad2deg(lng),
+            this.z);
     }
-
-    var N0 = utm.Hemisphere == UTMPoint.GlobeHemisphere.Northern ? 0.0 : DatumWGS_84.FalseNorthing;
-    var xi = (utm.Y - N0) / (DatumWGS_84.pointScaleFactor * DatumWGS_84.A);
-    var eta = (utm.X - DatumWGS_84.E0) / (DatumWGS_84.pointScaleFactor * DatumWGS_84.A);
-    var xiPrime = xi;
-    var etaPrime = eta;
-    double sigmaPrime = 1;
-    double tauPrime = 0;
-
-    for (var j = 1; j <= 3; ++j) {
-        var beta = DatumWGS_84.beta[j - 1];
-        var je2 = 2 * j * xi;
-        var jn2 = 2 * j * eta;
-        var sinje2 = Sin(je2);
-        var coshjn2 = Cosh(jn2);
-        var cosje2 = Cos(je2);
-        var sinhjn2 = Sinh(jn2);
-
-        xiPrime -= beta * sinje2 * coshjn2;
-        etaPrime -= beta * cosje2 * sinhjn2;
-        sigmaPrime -= 2 * j * beta * cosje2 * coshjn2;
-        tauPrime -= 2 * j * beta * sinje2 * sinhjn2;
-    }
-
-    var chi = Asin(Sin(xiPrime) / Cosh(etaPrime));
-
-    var lat = chi;
-
-    for (var j = 1; j <= 3; ++j) {
-        lat += DatumWGS_84.delta[j - 1] * Sin(2 * j * chi);
-    }
-
-    float long0 = (utm.Zone * 6) - 183;
-    var lng = Atan(Sinh(etaPrime) / Cos(xiPrime));
-
-    return new LatLngPoint(
-        Radians.Degrees((float)lat),
-        long0 + Radians.Degrees((float)lng),
-        utm.Z);
-}
-**/
 }

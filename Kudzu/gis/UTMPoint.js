@@ -1,5 +1,8 @@
 import { isNumber } from "util";
+import { rad2deg } from "../math/rad2deg";
 import { isNullOrUndefined } from "../typeChecks";
+import { DatumWGS_84 } from "./Datum";
+import { LatLngPoint } from "./LatLngPoint";
 /**
  * The globe hemispheres in which the UTM point could sit.
  **/
@@ -20,14 +23,6 @@ export var GlobeHemisphere;
  * projection in each zone.
  **/
 export class UTMPoint {
-    /// <summary>
-    /// Initialize a new UTMPoint with the given components.
-    /// </summary>
-    /// <param name="x">The number of x</param>
-    /// <param name="y">The number of y</param>
-    /// <param name="z">The number of z</param>
-    /// <param name="zone">The number of zone</param>
-    /// <param name="hemisphere">The hemisphere in which the UTM point sits</param>
     constructor(x, y, z, zone, hemisphere) {
         if (!isNullOrUndefined(x)
             && !isNumber(x)) {
@@ -86,6 +81,50 @@ export class UTMPoint {
     }
     toString() {
         return `(${this.x}, ${this.y}, ${this.z}) zone ${this.zone}`;
+    }
+    equals(other) {
+        return !isNullOrUndefined(other)
+            && this.hemisphere == other.hemisphere
+            && this.x == other.x
+            && this.y == other.y
+            && this.z == other.z
+            && this.zone == other.zone;
+    }
+    /**
+     * Converts this UTMPoint to a Latitude/Longitude point using the WGS-84 datum. The
+     * coordinate pair's units will be in meters, and should be usable to make distance
+     * calculations over short distances.
+     * reference: http://www.uwgb.edu/dutchs/usefuldata/utmformulas.htm
+     **/
+    toLatLng() {
+        const N0 = this.hemisphere == GlobeHemisphere.Northern ? 0.0 : DatumWGS_84.FalseNorthing;
+        const xi = (this.y - N0) / (DatumWGS_84.pointScaleFactor * DatumWGS_84.A);
+        const eta = (this.x - DatumWGS_84.E0) / (DatumWGS_84.pointScaleFactor * DatumWGS_84.A);
+        let xiPrime = xi;
+        let etaPrime = eta;
+        //let sigmaPrime = 1;
+        //let tauPrime = 0;
+        for (var j = 1; j <= 3; ++j) {
+            var beta = DatumWGS_84.beta[j - 1];
+            var je2 = 2 * j * xi;
+            var jn2 = 2 * j * eta;
+            var sinje2 = Math.sin(je2);
+            var coshjn2 = Math.cosh(jn2);
+            var cosje2 = Math.cos(je2);
+            var sinhjn2 = Math.sinh(jn2);
+            xiPrime -= beta * sinje2 * coshjn2;
+            etaPrime -= beta * cosje2 * sinhjn2;
+            //sigmaPrime -= 2 * j * beta * cosje2 * coshjn2;
+            //tauPrime -= 2 * j * beta * sinje2 * sinhjn2;
+        }
+        var chi = Math.asin(Math.sin(xiPrime) / Math.cosh(etaPrime));
+        var lat = chi;
+        for (var j = 1; j <= 3; ++j) {
+            lat += DatumWGS_84.delta[j - 1] * Math.sin(2 * j * chi);
+        }
+        const long0 = (this.zone * 6) - 183;
+        const lng = Math.atan(Math.sinh(etaPrime) / Math.cos(xiPrime));
+        return new LatLngPoint(rad2deg(lat), long0 + rad2deg(lng), this.z);
     }
 }
 //# sourceMappingURL=UTMPoint.js.map

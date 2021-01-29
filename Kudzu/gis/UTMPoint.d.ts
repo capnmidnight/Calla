@@ -1,3 +1,4 @@
+import { LatLngPoint } from "./LatLngPoint";
 /**
  * The globe hemispheres in which the UTM point could sit.
  **/
@@ -49,7 +50,32 @@ export declare class UTMPoint implements IUTMPoint {
      **/
     get hemisphere(): GlobeHemisphere;
     private _hemisphere;
-    constructor(x?: number | IUTMPoint, y?: number, z?: number, zone?: number, hemisphere?: GlobeHemisphere);
+    /**
+     * Initialize a zero UTMPoint
+     */
+    constructor();
+    /**
+     * Initializes a UTMPoint as a copy of another UTMPoint
+     * @param x
+     */
+    constructor(x: IUTMPoint);
+    /**
+     * Initialize a UTMPoint from the given components
+     * @param x
+     * @param y
+     * @param z
+     * @param zone
+     * @param hemisphere
+     */
+    constructor(x: number, y: number, z: number, zone: number, hemisphere: GlobeHemisphere);
     toJSON(): string;
     toString(): string;
+    equals(other: IUTMPoint): boolean;
+    /**
+     * Converts this UTMPoint to a Latitude/Longitude point using the WGS-84 datum. The
+     * coordinate pair's units will be in meters, and should be usable to make distance
+     * calculations over short distances.
+     * reference: http://www.uwgb.edu/dutchs/usefuldata/utmformulas.htm
+     **/
+    toLatLng(): LatLngPoint;
 }
