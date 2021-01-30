@@ -290,4 +290,10 @@ export class LatLngPoint implements ILatLngPoint {
             utmz,
             hemisphere);
     }
+
+    copy(other: ILatLngPoint) {
+        this._latitude = other.latitude;
+        this._longitude = other.longitude;
+        this._altitude = other.altitude;
+    }
 }

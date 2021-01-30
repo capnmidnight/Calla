@@ -1,6 +1,7 @@
+import { vec2, vec3 } from "gl-matrix";
 import { isNumber } from "util";
 import { rad2deg } from "../math/rad2deg";
-import { isNullOrUndefined } from "../typeChecks";
+import { isArray, isNullOrUndefined } from "../typeChecks";
 import { DatumWGS_84 } from "./Datum";
 import { LatLngPoint } from "./LatLngPoint";
 
@@ -178,5 +179,48 @@ export class UTMPoint implements IUTMPoint {
             rad2deg(lat),
             long0 + rad2deg(lng),
             this.z);
+    }
+
+    set(arr: vec2): void;
+    set(x: number, y: number): void;
+    set(x: number, y: number, z: number): void;
+    set(x: (vec2 | number), y?: number, z?: number): void {
+        if (x instanceof Float32Array
+            || isArray(x)) {
+            this._x = x[0];
+            this._y = x[1];
+            if (x.length > 2) {
+                this._z = x[2];
+            }
+        }
+        else {
+            this._x = x;
+            if (!isNullOrUndefined(y)) {
+                this._y = y;
+            }
+            if (!isNullOrUndefined(z)) {
+                this._z = z;
+            }
+        }
+    }
+
+    copy(other: IUTMPoint): void {
+        this._x = other.x;
+        this._y = other.y;
+        this._z = other.z;
+        this._zone = other.zone;
+        this._hemisphere = other.hemisphere;
+    }
+
+    toVec2() {
+        const v = vec2.create();
+        vec2.set(v, this.x, this.y);
+        return v;
+    }
+
+    toVec3() {
+        const v = vec3.create();
+        vec3.set(v, this.x, this.y, this.z);
+        return v;
     }
 }

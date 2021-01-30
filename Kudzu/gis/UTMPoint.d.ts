@@ -1,3 +1,4 @@
+import { vec2, vec3 } from "gl-matrix";
 import { LatLngPoint } from "./LatLngPoint";
 /**
  * The globe hemispheres in which the UTM point could sit.
@@ -78,4 +79,10 @@ export declare class UTMPoint implements IUTMPoint {
      * reference: http://www.uwgb.edu/dutchs/usefuldata/utmformulas.htm
      **/
     toLatLng(): LatLngPoint;
+    set(arr: vec2): void;
+    set(x: number, y: number): void;
+    set(x: number, y: number, z: number): void;
+    copy(other: IUTMPoint): void;
+    toVec2(): vec2;
+    toVec3(): vec3;
 }

@@ -87,4 +87,5 @@ export declare class LatLngPoint implements ILatLngPoint {
      * @see http://www.uwgb.edu/dutchs/usefuldata/utmformulas.htm
      **/
     toUTM(): UTMPoint;
+    copy(other: ILatLngPoint): void;
 }

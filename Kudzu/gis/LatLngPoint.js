@@ -226,5 +226,10 @@ export class LatLngPoint {
         }
         return new UTMPoint(easting, northing, this.altitude, utmz, hemisphere);
     }
+    copy(other) {
+        this._latitude = other.latitude;
+        this._longitude = other.longitude;
+        this._altitude = other.altitude;
+    }
 }
 //# sourceMappingURL=LatLngPoint.js.map
