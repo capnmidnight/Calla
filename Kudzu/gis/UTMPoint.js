@@ -1,7 +1,6 @@
 import { vec2, vec3 } from "gl-matrix";
-import { isNumber } from "util";
 import { rad2deg } from "../math/rad2deg";
-import { isArray, isNullOrUndefined } from "../typeChecks";
+import { isArray, isNullOrUndefined, isNumber } from "../typeChecks";
 import { DatumWGS_84 } from "./Datum";
 import { LatLngPoint } from "./LatLngPoint";
 /**
