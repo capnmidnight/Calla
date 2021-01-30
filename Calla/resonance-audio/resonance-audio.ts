@@ -20,6 +20,7 @@
  */
 
 import { vec3 } from "gl-matrix";
+import { arrayRemoveAt } from "kudzu/arrays/arrayRemoveAt";
 import type { IDisposable } from "kudzu/using";
 import type { RenderingMode } from "../omnitone/rendering-mode";
 import { Encoder } from './encoder';
@@ -194,7 +195,7 @@ export class ResonanceAudio implements IDisposable {
     removeSource(source: Source) {
         const sourceIdx = this._sources.findIndex((s) => s === source);
         if (sourceIdx > -1) {
-            this._sources.splice(sourceIdx, 1);
+            arrayRemoveAt(this._sources, sourceIdx);
             source.dispose();
         }
     }

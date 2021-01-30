@@ -1,5 +1,6 @@
 import { isBoolean, isNullOrUndefined, isFunction } from "../typeChecks";
 import { arrayBinarySearch } from "./arrayBinarySearch";
+import { arrayInsertAt } from "./arrayInsertAt";
 
 /**
  * Performs an insert operation that maintains the sort
@@ -28,7 +29,7 @@ export function arraySortedInsert<T, V>(arr: T[], item: T, keySelector?: ((obj: 
     const found = (idx % 1) === 0;
     idx = idx | 0;
     if (!found || allowDuplicates) {
-        arr.splice(idx, 0, item);
+        arrayInsertAt(arr, item, idx);
     }
 
     return idx;
@@ -42,7 +43,7 @@ export function arraySortedInsert<T, V>(arr: T[], item: T, keySelector?: ((obj: 
  * @param keySelector
  */
 export function arraySortByKey<T, V>(arr: T[], keySelector: (obj: T) => V): T[] {
-    const newArr = new Array<T>(arr.length);
+    const newArr = new Array<T>();
     for (const obj of arr) {
         arraySortedInsert(newArr, obj, keySelector);
     }

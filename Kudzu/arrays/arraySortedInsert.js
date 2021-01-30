@@ -1,5 +1,6 @@
 import { isBoolean, isNullOrUndefined, isFunction } from "../typeChecks";
 import { arrayBinarySearch } from "./arrayBinarySearch";
+import { arrayInsertAt } from "./arrayInsertAt";
 export function arraySortedInsert(arr, item, keySelector, allowDuplicates) {
     let ks;
     if (isFunction(keySelector)) {
@@ -15,7 +16,7 @@ export function arraySortedInsert(arr, item, keySelector, allowDuplicates) {
     const found = (idx % 1) === 0;
     idx = idx | 0;
     if (!found || allowDuplicates) {
-        arr.splice(idx, 0, item);
+        arrayInsertAt(arr, item, idx);
     }
     return idx;
 }
@@ -27,7 +28,7 @@ export function arraySortedInsert(arr, item, keySelector, allowDuplicates) {
  * @param keySelector
  */
 export function arraySortByKey(arr, keySelector) {
-    const newArr = new Array(arr.length);
+    const newArr = new Array();
     for (const obj of arr) {
         arraySortedInsert(newArr, obj, keySelector);
     }

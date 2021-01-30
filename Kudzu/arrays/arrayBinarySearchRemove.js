@@ -1,8 +1,8 @@
 import { arrayBinarySearch, arrayBinarySearchByKey } from "./arrayBinarySearch";
 import { arrayRemoveAt } from "./arrayRemoveAt";
 function removeAtIndex(arr, idx) {
-    if (idx > -1) {
-        arrayRemoveAt(arr, idx);
+    if (Number.isInteger(idx)) {
+        arrayRemoveAt(arr, idx - 1);
         return true;
     }
     return false;

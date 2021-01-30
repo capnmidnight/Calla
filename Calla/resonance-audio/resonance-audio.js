@@ -18,6 +18,7 @@
  * @author Andrew Allen <bitllama@google.com>
  */
 import { vec3 } from "gl-matrix";
+import { arrayRemoveAt } from "kudzu/arrays/arrayRemoveAt";
 import { Encoder } from './encoder';
 import { Listener } from './listener';
 import { Room } from './room';
@@ -104,7 +105,7 @@ export class ResonanceAudio {
     removeSource(source) {
         const sourceIdx = this._sources.findIndex((s) => s === source);
         if (sourceIdx > -1) {
-            this._sources.splice(sourceIdx, 1);
+            arrayRemoveAt(this._sources, sourceIdx);
             source.dispose();
         }
     }

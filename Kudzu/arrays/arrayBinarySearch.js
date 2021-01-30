@@ -11,7 +11,6 @@ function defaultKeySelector(obj) {
  * the index at which it should be inserted.
  */
 export function arrayBinarySearchByKey(arr, itemKey, keySelector) {
-    keySelector = keySelector || defaultKeySelector;
     let left = 0;
     let right = arr.length;
     let idx = Math.floor((left + right) / 2);

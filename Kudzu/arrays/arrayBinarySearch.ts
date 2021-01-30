@@ -12,8 +12,7 @@ function defaultKeySelector<T>(obj: T): any {
  * If the item is not found, the returned insertion index will be 0.5 greater than
  * the index at which it should be inserted.
  */
-export function arrayBinarySearchByKey<T, V>(arr: T[], itemKey: V, keySelector?: (obj: T) => V): number {
-    keySelector = keySelector || defaultKeySelector;
+export function arrayBinarySearchByKey<T, V>(arr: T[], itemKey: V, keySelector: (obj: T) => V): number {
     let left = 0;
     let right = arr.length;
     let idx = Math.floor((left + right) / 2);
