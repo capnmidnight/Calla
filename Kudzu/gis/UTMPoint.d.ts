@@ -1,5 +1,5 @@
 import { vec2, vec3 } from "gl-matrix";
-import { LatLngPoint } from "./LatLngPoint";
+import { ILatLngPoint, LatLngPoint } from "./LatLngPoint";
 /**
  * The globe hemispheres in which the UTM point could sit.
  **/
@@ -72,6 +72,13 @@ export declare class UTMPoint implements IUTMPoint {
     toJSON(): string;
     toString(): string;
     equals(other: IUTMPoint): boolean;
+    /**
+     * Converts this UTMPoint to a Latitude/Longitude point using the WGS-84 datum. The
+     * coordinate pair's units will be in meters, and should be usable to make distance
+     * calculations over short distances.
+     * reference: http://www.uwgb.edu/dutchs/usefuldata/utmformulas.htm
+     **/
+    fromLatLng(latLng: ILatLngPoint): UTMPoint;
     /**
      * Converts this UTMPoint to a Latitude/Longitude point using the WGS-84 datum. The
      * coordinate pair's units will be in meters, and should be usable to make distance

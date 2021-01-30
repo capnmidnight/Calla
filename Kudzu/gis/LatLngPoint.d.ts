@@ -1,4 +1,4 @@
-import { UTMPoint } from "./UTMPoint";
+import { IUTMPoint, UTMPoint } from "./UTMPoint";
 export interface ILatLngPoint {
     latitude: number;
     longitude: number;
@@ -79,6 +79,13 @@ export declare class LatLngPoint implements ILatLngPoint {
      * @param other
      */
     distance(other: LatLngPoint): number;
+    /**
+     * Converts this UTMPoint to a Latitude/Longitude point using the WGS-84 datum. The
+     * coordinate pair's units will be in meters, and should be usable to make distance
+     * calculations over short distances.
+     * reference: http://www.uwgb.edu/dutchs/usefuldata/utmformulas.htm
+     **/
+    fromUTM(utm: IUTMPoint): LatLngPoint;
     /**
      * Converts this LatLngPoint to a Universal Transverse Mercator point using the WGS-84
      * datum. The coordinate pair's units will be in meters, and should be usable to make
