@@ -1,3 +1,4 @@
+export declare function arrayBinarySearchFind<T, V>(arr: T[], key: V, keySelector: (obj: T) => V): T | undefined;
 /**
  * Performs a binary search on a list to find where the item should be inserted.
  *

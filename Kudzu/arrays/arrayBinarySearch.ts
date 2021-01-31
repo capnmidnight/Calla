@@ -4,6 +4,15 @@ function defaultKeySelector<T>(obj: T): any {
     return obj;
 }
 
+export function arrayBinarySearchFind<T, V>(arr: T[], key: V, keySelector: (obj: T) => V): T | undefined {
+    const idx = arrayBinarySearchByKey(arr, key, keySelector);
+    if (Number.isInteger(idx)) {
+        return arr[idx - 1];
+    }
+
+    return undefined;
+}
+
 /**
  * Performs a binary search on a list to find where the item should be inserted.
  *

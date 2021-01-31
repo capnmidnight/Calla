@@ -2,6 +2,13 @@ import { isNullOrUndefined } from "../typeChecks";
 function defaultKeySelector(obj) {
     return obj;
 }
+export function arrayBinarySearchFind(arr, key, keySelector) {
+    const idx = arrayBinarySearchByKey(arr, key, keySelector);
+    if (Number.isInteger(idx)) {
+        return arr[idx - 1];
+    }
+    return undefined;
+}
 /**
  * Performs a binary search on a list to find where the item should be inserted.
  *
