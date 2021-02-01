@@ -1,8 +1,26 @@
 import { vec2, vec3 } from "gl-matrix";
 import { deg2rad } from "../math/deg2rad";
-import { isArray, isNullOrUndefined, isNumber } from "../typeChecks";
+import { isNullOrUndefined, isNumber } from "../typeChecks";
 import { DatumWGS_84 } from "./Datum";
 import { ILatLngPoint, LatLngPoint } from "./LatLngPoint";
+
+type trueArrayTypes = vec2
+    | vec3
+    | Float32Array
+    | number[];
+type arrayTypes = trueArrayTypes
+    | [number, number]
+    | [number, number, number];
+
+function has2Components(arr: arrayTypes | number)
+    : arr is trueArrayTypes | [number, number] {
+    return !isNumber(arr) && arr.length === 2;
+}
+
+function has3Components(arr: arrayTypes | number)
+    : arr is trueArrayTypes | [number, number, number] {
+    return !isNumber(arr) && arr.length === 3;
+}
 
 /**
  * The globe hemispheres in which the UTM point could sit.
@@ -13,9 +31,9 @@ export enum GlobeHemisphere {
 }
 
 export interface IUTMPoint {
-    x: number;
-    y: number;
-    z: number;
+    easting: number;
+    northing: number;
+    altitude: number;
     zone: number;
     hemisphere: GlobeHemisphere;
 }
@@ -36,26 +54,26 @@ export class UTMPoint implements IUTMPoint {
     /**
      * The east/west component of the coordinate.
      **/
-    get x() {
-        return this._x;
+    get easting() {
+        return this._easting;
     }
-    private _x: number;
+    private _easting: number;
 
     /**
      * The north/south component of the coordinate.
      **/
-    get y() {
-        return this._y;
+    get northing() {
+        return this._northing;
     }
-    private _y: number;
+    private _northing: number;
 
     /**
      * An altitude component.
      **/
-    get z() {
-        return this._z;
+    get altitude() {
+        return this._altitude;
     }
-    private _z: number;
+    private _altitude: number;
 
     /**
      * The UTM Zone for which this coordinate represents.
@@ -80,31 +98,31 @@ export class UTMPoint implements IUTMPoint {
     constructor();
     /**
      * Initializes a UTMPoint as a copy of another UTMPoint
-     * @param x
+     * @param copy
      */
-    constructor(x: IUTMPoint);
+    constructor(copy: IUTMPoint);
     /**
-     * Initialize a UTMPoint from the given components
-     * @param x
-     * @param y
-     * @param z
+     * InitialnorthingTMPoint from the given components
+     * @param easting
+     * @param northing
+     * @param altitude
      * @param zone
      * @param hemisphere
      */
-    constructor(x: number, y: number, z: number, zone: number, hemisphere: GlobeHemisphere);
-    constructor(x?: number | IUTMPoint, y?: number, z?: number, zone?: number, hemisphere?: GlobeHemisphere) {
-        if (!isNullOrUndefined(x)
-            && !isNumber(x)) {
-            this._x = x.x;
-            this._y = x.y;
-            this._z = x.z;
-            this._zone = x.zone;
-            this._hemisphere = x.hemisphere;
+    constructor(easting: number, northing: number, altitude: number, zone: number, hemisphere: GlobeHemisphere);
+    constructor(eastingOrCopy?: number | IUTMPoint, northing?: number, altitude?: number, zone?: number, hemisphere?: GlobeHemisphere) {
+        if (!isNullOrUndefined(eastingOrCopy)
+            && !isNumber(eastingOrCopy)) {
+            this._easting = eastingOrCopy.easting;
+            this._northing = eastingOrCopy.northing;
+            this._altitude = eastingOrCopy.altitude;
+            this._zone = eastingOrCopy.zone;
+            this._hemisphere = eastingOrCopy.hemisphere;
         }
         else {
-            this._x = x || 0;
-            this._y = y || 0;
-            this._z = z || 0;
+            this._easting = eastingOrCopy || 0;
+            this._northing = northing || 0;
+            this._altitude = altitude || 0;
             this._zone = zone || 0;
             this._hemisphere = hemisphere || GlobeHemisphere.Northern;
         }
@@ -112,24 +130,24 @@ export class UTMPoint implements IUTMPoint {
 
     toJSON(): string {
         return JSON.stringify({
-            x: this.x,
-            y: this.y,
-            z: this.z,
+            x: this.easting,
+            y: this.northing,
+            z: this.altitude,
             zone: this.zone,
             hemisphere: this.hemisphere
         });
     }
 
     toString(): string {
-        return `(${this.x}, ${this.y}, ${this.z}) zone ${this.zone}`;
+        return `(${this.easting}, ${this.northing}, ${this.altitude}) zone ${this.zone}`;
     }
 
     equals(other: IUTMPoint): boolean {
         return !isNullOrUndefined(other)
             && this.hemisphere == other.hemisphere
-            && this.x == other.x
-            && this.y == other.y
-            && this.z == other.z
+            && this.easting == other.easting
+            && this.northing == other.northing
+            && this.altitude == other.altitude
             && this.zone == other.zone;
     }
 
@@ -186,9 +204,9 @@ export class UTMPoint implements IUTMPoint {
             northing += DatumWGS_84.FalseNorthing;
         }
 
-        this._x = easting;
-        this._y = northing;
-        this._z = latLng.altitude || 0;
+        this._easting = easting;
+        this._northing = northing;
+        this._altitude = latLng.altitude || 0;
         this._zone = utmz;
         this._hemisphere = hemisphere;
 
@@ -207,45 +225,51 @@ export class UTMPoint implements IUTMPoint {
 
     set(arr: vec2): void;
     set(arr: vec3): void;
-    set(x: number, y: number): void;
-    set(x: number, y: number, z: number): void;
-    set(x: (vec2 | vec3 | number), y?: number, z?: number): void {
-        if (x instanceof Float32Array
-            || isArray(x)) {
-            this._x = x[0];
-            this._y = x[1];
-            if (x.length > 2) {
-                this._z = x[2] as number;
-            }
+    set(arr: [number, number]): void;
+    set(arr: [number, number, number]): void;
+    set(arr: number[]): void;
+    set(arr: Float32Array): void;
+    set(easting: number, northing: number): void;
+    set(easting: number, northing: number, altitude: number): void;
+    set(eastingOrArray: (arrayTypes | number), northing?: number, altitude?: number): void {
+        if (has2Components(eastingOrArray)) {
+            this._easting = eastingOrArray[0];
+            this._northing = eastingOrArray[1];
+            this._altitude = 0;
+        }
+        else if (has3Components(eastingOrArray)) {
+            this._easting = eastingOrArray[0];
+            this._northing = eastingOrArray[2];
+            this._altitude = eastingOrArray[1];
         }
         else {
-            this._x = x;
-            if (!isNullOrUndefined(y)) {
-                this._y = y;
+            this._easting = eastingOrArray;
+            if (!isNullOrUndefined(northing)) {
+                this._northing = northing;
             }
-            if (!isNullOrUndefined(z)) {
-                this._z = z;
+            if (!isNullOrUndefined(altitude)) {
+                this._altitude = altitude;
             }
         }
     }
 
     copy(other: IUTMPoint): void {
-        this._x = other.x;
-        this._y = other.y;
-        this._z = other.z;
+        this._easting = other.easting;
+        this._northing = other.northing;
+        this._altitude = other.altitude;
         this._zone = other.zone;
         this._hemisphere = other.hemisphere;
     }
 
     toVec2() {
         const v = vec2.create();
-        vec2.set(v, this.x, this.y);
+        vec2.set(v, this.easting, this.northing);
         return v;
     }
 
     toVec3() {
         const v = vec3.create();
-        vec3.set(v, this.x, this.y, this.z);
+        vec3.set(v, this.easting, this.altitude, this.northing);
         return v;
     }
 }

@@ -179,8 +179,8 @@ export class LatLngPoint {
     distance(other) {
         const a = this.toUTM();
         const b = other.toUTM();
-        const dx = b.x - a.x;
-        const dy = b.y - a.y;
+        const dx = b.easting - a.easting;
+        const dy = b.northing - a.northing;
         return Math.sqrt((dx * dx) + (dy * dy));
     }
     /**
@@ -191,8 +191,8 @@ export class LatLngPoint {
      **/
     fromUTM(utm) {
         const N0 = utm.hemisphere == GlobeHemisphere.Northern ? 0.0 : DatumWGS_84.FalseNorthing;
-        const xi = (utm.y - N0) / (DatumWGS_84.pointScaleFactor * DatumWGS_84.A);
-        const eta = (utm.x - DatumWGS_84.E0) / (DatumWGS_84.pointScaleFactor * DatumWGS_84.A);
+        const xi = (utm.northing - N0) / (DatumWGS_84.pointScaleFactor * DatumWGS_84.A);
+        const eta = (utm.easting - DatumWGS_84.E0) / (DatumWGS_84.pointScaleFactor * DatumWGS_84.A);
         let xiPrime = xi;
         let etaPrime = eta;
         //let sigmaPrime = 1;
@@ -219,7 +219,7 @@ export class LatLngPoint {
         const lng = Math.atan(Math.sinh(etaPrime) / Math.cos(xiPrime));
         this._latitude = rad2deg(lat);
         this._longitude = long0 + rad2deg(lng);
-        this._altitude = utm.z;
+        this._altitude = utm.altitude;
         return this;
     }
     /**

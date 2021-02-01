@@ -1,8 +1,14 @@
 import { vec2, vec3 } from "gl-matrix";
 import { deg2rad } from "../math/deg2rad";
-import { isArray, isNullOrUndefined, isNumber } from "../typeChecks";
+import { isNullOrUndefined, isNumber } from "../typeChecks";
 import { DatumWGS_84 } from "./Datum";
 import { LatLngPoint } from "./LatLngPoint";
+function has2Components(arr) {
+    return !isNumber(arr) && arr.length === 2;
+}
+function has3Components(arr) {
+    return !isNumber(arr) && arr.length === 3;
+}
 /**
  * The globe hemispheres in which the UTM point could sit.
  **/
@@ -23,40 +29,40 @@ export var GlobeHemisphere;
  * projection in each zone.
  **/
 export class UTMPoint {
-    constructor(x, y, z, zone, hemisphere) {
-        if (!isNullOrUndefined(x)
-            && !isNumber(x)) {
-            this._x = x.x;
-            this._y = x.y;
-            this._z = x.z;
-            this._zone = x.zone;
-            this._hemisphere = x.hemisphere;
+    constructor(eastingOrCopy, northing, altitude, zone, hemisphere) {
+        if (!isNullOrUndefined(eastingOrCopy)
+            && !isNumber(eastingOrCopy)) {
+            this._easting = eastingOrCopy.easting;
+            this._northing = eastingOrCopy.northing;
+            this._altitude = eastingOrCopy.altitude;
+            this._zone = eastingOrCopy.zone;
+            this._hemisphere = eastingOrCopy.hemisphere;
         }
         else {
-            this._x = x || 0;
-            this._y = y || 0;
-            this._z = z || 0;
+            this._easting = eastingOrCopy || 0;
+            this._northing = northing || 0;
+            this._altitude = altitude || 0;
             this._zone = zone || 0;
             this._hemisphere = hemisphere || GlobeHemisphere.Northern;
         }
     }
     /**
-     * The east/west component of the coordinate.
+     * The enorthingt component of the coordinate.
      **/
-    get x() {
-        return this._x;
+    get easting() {
+        return this._easting;
     }
     /**
      * The north/south component of the coordinate.
      **/
-    get y() {
-        return this._y;
+    get northing() {
+        return this._northing;
     }
     /**
      * An altitude component.
      **/
-    get z() {
-        return this._z;
+    get altitude() {
+        return this._altitude;
     }
     /**
      * The UTM Zone for which this coordinate represents.
@@ -72,22 +78,22 @@ export class UTMPoint {
     }
     toJSON() {
         return JSON.stringify({
-            x: this.x,
-            y: this.y,
-            z: this.z,
+            x: this.easting,
+            y: this.northing,
+            z: this.altitude,
             zone: this.zone,
             hemisphere: this.hemisphere
         });
     }
     toString() {
-        return `(${this.x}, ${this.y}, ${this.z}) zone ${this.zone}`;
+        return `(${this.easting}, ${this.northing}, ${this.altitude}) zone ${this.zone}`;
     }
     equals(other) {
         return !isNullOrUndefined(other)
             && this.hemisphere == other.hemisphere
-            && this.x == other.x
-            && this.y == other.y
-            && this.z == other.z
+            && this.easting == other.easting
+            && this.northing == other.northing
+            && this.altitude == other.altitude
             && this.zone == other.zone;
     }
     /**
@@ -135,9 +141,9 @@ export class UTMPoint {
         if (hemisphere == GlobeHemisphere.Southern) {
             northing += DatumWGS_84.FalseNorthing;
         }
-        this._x = easting;
-        this._y = northing;
-        this._z = latLng.altitude || 0;
+        this._easting = easting;
+        this._northing = northing;
+        this._altitude = latLng.altitude || 0;
         this._zone = utmz;
         this._hemisphere = hemisphere;
         return this;
@@ -151,40 +157,42 @@ export class UTMPoint {
     toLatLng() {
         return new LatLngPoint().fromUTM(this);
     }
-    set(x, y, z) {
-        if (x instanceof Float32Array
-            || isArray(x)) {
-            this._x = x[0];
-            this._y = x[1];
-            if (x.length > 2) {
-                this._z = x[2];
-            }
+    set(eastingOrArray, northing, altitude) {
+        if (has2Components(eastingOrArray)) {
+            this._easting = eastingOrArray[0];
+            this._northing = eastingOrArray[1];
+            this._altitude = 0;
+        }
+        else if (has3Components(eastingOrArray)) {
+            this._easting = eastingOrArray[0];
+            this._northing = eastingOrArray[2];
+            this._altitude = eastingOrArray[1];
         }
         else {
-            this._x = x;
-            if (!isNullOrUndefined(y)) {
-                this._y = y;
+            this._easting = eastingOrArray;
+            if (!isNullOrUndefined(northing)) {
+                this._northing = northing;
             }
-            if (!isNullOrUndefined(z)) {
-                this._z = z;
+            if (!isNullOrUndefined(altitude)) {
+                this._altitude = altitude;
             }
         }
     }
     copy(other) {
-        this._x = other.x;
-        this._y = other.y;
-        this._z = other.z;
+        this._easting = other.easting;
+        this._northing = other.northing;
+        this._altitude = other.altitude;
         this._zone = other.zone;
         this._hemisphere = other.hemisphere;
     }
     toVec2() {
         const v = vec2.create();
-        vec2.set(v, this.x, this.y);
+        vec2.set(v, this.easting, this.northing);
         return v;
     }
     toVec3() {
         const v = vec3.create();
-        vec3.set(v, this.x, this.y, this.z);
+        vec3.set(v, this.easting, this.altitude, this.northing);
         return v;
     }
 }

@@ -8,9 +8,9 @@ export declare enum GlobeHemisphere {
     Southern = 1
 }
 export interface IUTMPoint {
-    x: number;
-    y: number;
-    z: number;
+    easting: number;
+    northing: number;
+    altitude: number;
     zone: number;
     hemisphere: GlobeHemisphere;
 }
@@ -27,20 +27,20 @@ export interface IUTMPoint {
  **/
 export declare class UTMPoint implements IUTMPoint {
     /**
-     * The east/west component of the coordinate.
+     * The enorthingt component of the coordinate.
      **/
-    get x(): number;
-    private _x;
+    get easting(): number;
+    private _easting;
     /**
      * The north/south component of the coordinate.
      **/
-    get y(): number;
-    private _y;
+    get northing(): number;
+    private _northing;
     /**
      * An altitude component.
      **/
-    get z(): number;
-    private _z;
+    get altitude(): number;
+    private _altitude;
     /**
      * The UTM Zone for which this coordinate represents.
      **/
@@ -57,18 +57,18 @@ export declare class UTMPoint implements IUTMPoint {
     constructor();
     /**
      * Initializes a UTMPoint as a copy of another UTMPoint
-     * @param x
+     * @param copy
      */
-    constructor(x: IUTMPoint);
+    constructor(copy: IUTMPoint);
     /**
-     * Initialize a UTMPoint from the given components
-     * @param x
-     * @param y
-     * @param z
+     * InitialnorthingTMPoint from the given components
+     * @param easting
+     * @param northing
+     * @param altitude
      * @param zone
      * @param hemisphere
      */
-    constructor(x: number, y: number, z: number, zone: number, hemisphere: GlobeHemisphere);
+    constructor(easting: number, northing: number, altitude: number, zone: number, hemisphere: GlobeHemisphere);
     toJSON(): string;
     toString(): string;
     equals(other: IUTMPoint): boolean;
@@ -88,8 +88,12 @@ export declare class UTMPoint implements IUTMPoint {
     toLatLng(): LatLngPoint;
     set(arr: vec2): void;
     set(arr: vec3): void;
-    set(x: number, y: number): void;
-    set(x: number, y: number, z: number): void;
+    set(arr: [number, number]): void;
+    set(arr: [number, number, number]): void;
+    set(arr: number[]): void;
+    set(arr: Float32Array): void;
+    set(easting: number, northing: number): void;
+    set(easting: number, northing: number, altitude: number): void;
     copy(other: IUTMPoint): void;
     toVec2(): vec2;
     toVec3(): vec3;
