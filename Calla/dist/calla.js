@@ -258,7 +258,7 @@ var Calla = (function (exports) {
     };
     // Version token that will be replaced by the prepack command
     /** The version of the SignalR client. */
-    var VERSION = "5.0.1";
+    var VERSION = "5.0.2";
     /** @private */
     var Arg = /** @class */ (function () {
         function Arg() {
@@ -4279,10 +4279,61 @@ var Calla = (function (exports) {
         document.body.appendChild(script);
     }
 
+    function splitProgress(onProgress, weights) {
+        let subProgressWeights;
+        if (isNumber(weights)) {
+            subProgressWeights = new Array(weights);
+            for (let i = 0; i < subProgressWeights.length; ++i) {
+                subProgressWeights[i] = 1 / weights;
+            }
+        }
+        else {
+            subProgressWeights = weights;
+        }
+        let weightTotal = 0;
+        for (let i = 0; i < subProgressWeights.length; ++i) {
+            weightTotal += subProgressWeights[i];
+        }
+        const subProgressValues = new Array(subProgressWeights.length);
+        const subProgressCallbacks = new Array(subProgressWeights.length);
+        const start = performance.now();
+        const update = (i, subSoFar, subTotal, msg) => {
+            if (onProgress) {
+                subProgressValues[i] = subSoFar / subTotal;
+                let soFar = 0;
+                for (let j = 0; j < subProgressWeights.length; ++j) {
+                    soFar += subProgressValues[j] * subProgressWeights[j];
+                }
+                const end = performance.now();
+                const delta = end - start;
+                const est = start - end + delta * weightTotal / soFar;
+                onProgress(soFar, weightTotal, msg, est);
+            }
+        };
+        for (let i = 0; i < subProgressWeights.length; ++i) {
+            subProgressValues[i] = 0;
+            subProgressCallbacks[i] = (soFar, total, msg) => update(i, soFar, total, msg);
+        }
+        return subProgressCallbacks;
+    }
+
     class Fetcher {
+        normalizeOnProgress(headerMap, onProgress) {
+            if (isNullOrUndefined(onProgress)
+                && headerMap instanceof Function) {
+                onProgress = headerMap;
+            }
+            return onProgress;
+        }
+        normalizeHeaderMap(headerMap) {
+            if (headerMap instanceof Map) {
+                return headerMap;
+            }
+            return undefined;
+        }
         async getResponse(path, headerMap) {
             const headers = {};
-            if (headerMap instanceof Map) {
+            if (headerMap) {
                 for (const pair of headerMap.entries()) {
                     headers[pair[0]] = pair[1];
                 }
@@ -4292,12 +4343,11 @@ var Calla = (function (exports) {
             }));
         }
         async postObjectForResponse(path, obj, headerMap) {
-            const headers = {
-                "Content-Type": obj instanceof FormData
-                    ? "multipart/form-data"
-                    : "application/json"
-            };
-            if (headerMap instanceof Map) {
+            const headers = {};
+            if (!(obj instanceof FormData)) {
+                headers["Content-Type"] = "application/json";
+            }
+            if (headerMap) {
                 for (const pair of headerMap.entries()) {
                     headers[pair[0]] = pair[1];
                 }
@@ -4377,11 +4427,8 @@ var Calla = (function (exports) {
             return { buffer, contentType };
         }
         async _getBuffer(path, headerMap, onProgress) {
-            if (!isNullOrUndefined(headerMap)
-                && !(headerMap instanceof Map)) {
-                onProgress = headerMap;
-                headerMap = undefined;
-            }
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
             const response = await this.getResponse(path, headerMap);
             return await this.readResponseBuffer(path, response, onProgress);
         }
@@ -4389,11 +4436,8 @@ var Calla = (function (exports) {
             return await this._getBuffer(path, headerMap, onProgress);
         }
         async _postObjectForBuffer(path, obj, headerMap, onProgress) {
-            if (!isNullOrUndefined(headerMap)
-                && !(headerMap instanceof Map)) {
-                onProgress = headerMap;
-                headerMap = undefined;
-            }
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
             const response = await this.postObjectForResponse(path, obj, headerMap);
             return await this.readResponseBuffer(path, response, onProgress);
         }
@@ -4401,11 +4445,8 @@ var Calla = (function (exports) {
             return await this._postObjectForBuffer(path, obj, headerMap, onProgress);
         }
         async _getBlob(path, headerMap, onProgress) {
-            if (!isNullOrUndefined(headerMap)
-                && !(headerMap instanceof Map)) {
-                onProgress = headerMap;
-                headerMap = undefined;
-            }
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
             const { buffer, contentType } = await this._getBuffer(path, headerMap, onProgress);
             return new Blob([buffer], { type: contentType });
         }
@@ -4413,11 +4454,8 @@ var Calla = (function (exports) {
             return this._getBlob(path, headerMap, onProgress);
         }
         async _postObjectForBlob(path, obj, headerMap, onProgress) {
-            if (!isNullOrUndefined(headerMap)
-                && !(headerMap instanceof Map)) {
-                onProgress = headerMap;
-                headerMap = undefined;
-            }
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
             const { buffer, contentType } = await this._postObjectForBuffer(path, obj, headerMap, onProgress);
             return new Blob([buffer], { type: contentType });
         }
@@ -4425,11 +4463,8 @@ var Calla = (function (exports) {
             return this._postObjectForBlob(path, obj, headerMap, onProgress);
         }
         async _getFile(path, headerMap, onProgress) {
-            if (!isNullOrUndefined(headerMap)
-                && !(headerMap instanceof Map)) {
-                onProgress = headerMap;
-                headerMap = undefined;
-            }
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
             const blob = await this._getBlob(path, headerMap, onProgress);
             return URL.createObjectURL(blob);
         }
@@ -4437,11 +4472,8 @@ var Calla = (function (exports) {
             return await this._getFile(path, headerMap, onProgress);
         }
         async _postObjectForFile(path, obj, headerMap, onProgress) {
-            if (!isNullOrUndefined(headerMap)
-                && !(headerMap instanceof Map)) {
-                onProgress = headerMap;
-                headerMap = undefined;
-            }
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
             const blob = await this._postObjectForBlob(path, obj, headerMap, onProgress);
             return URL.createObjectURL(blob);
         }
@@ -4454,11 +4486,8 @@ var Calla = (function (exports) {
             return text;
         }
         async _getText(path, headerMap, onProgress) {
-            if (!isNullOrUndefined(headerMap)
-                && !(headerMap instanceof Map)) {
-                onProgress = headerMap;
-                headerMap = undefined;
-            }
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
             const { buffer } = await this._getBuffer(path, headerMap, onProgress);
             return this.readBufferText(buffer);
         }
@@ -4466,23 +4495,27 @@ var Calla = (function (exports) {
             return await this._getText(path, headerMap, onProgress);
         }
         async _postObjectForText(path, obj, headerMap, onProgress) {
-            if (!isNullOrUndefined(headerMap)
-                && !(headerMap instanceof Map)) {
-                onProgress = headerMap;
-                headerMap = undefined;
-            }
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
             const { buffer } = await this._postObjectForBuffer(path, obj, headerMap, onProgress);
             return this.readBufferText(buffer);
         }
         async postObjectForText(path, obj, headerMap, onProgress) {
             return await this._postObjectForText(path, obj, headerMap, onProgress);
         }
-        async _getObject(path, headerMap, onProgress) {
-            if (!isNullOrUndefined(headerMap)
-                && !(headerMap instanceof Map)) {
-                onProgress = headerMap;
-                headerMap = undefined;
+        setDefaultAcceptType(headerMap, type) {
+            if (!headerMap) {
+                headerMap = new Map();
             }
+            if (!headerMap.has("Accept")) {
+                headerMap.set("Accept", type);
+            }
+            return headerMap;
+        }
+        async _getObject(path, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            headerMap = this.setDefaultAcceptType(headerMap, "application/json");
             const text = await this._getText(path, headerMap, onProgress);
             return JSON.parse(text);
         }
@@ -4490,19 +4523,79 @@ var Calla = (function (exports) {
             return await this._getObject(path, headerMap, onProgress);
         }
         async _postObjectForObject(path, obj, headerMap, onProgress) {
-            if (!isNullOrUndefined(headerMap)
-                && !(headerMap instanceof Map)) {
-                onProgress = headerMap;
-                headerMap = undefined;
-            }
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            headerMap = this.setDefaultAcceptType(headerMap, "application/json");
             const text = await this._postObjectForText(path, obj, headerMap, onProgress);
             return JSON.parse(text);
         }
         async postObjectForObject(path, obj, headerMap, onProgress) {
             return await this._postObjectForObject(path, obj, headerMap, onProgress);
         }
-        async postObject(path, obj, headerMap) {
-            await this.postObjectForResponse(path, obj, headerMap);
+        async postObject(path, obj, headerMap, onProgress) {
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
+            if (onProgress instanceof Function) {
+                const [upProg, downProg] = splitProgress(onProgress, 2);
+                let headers = headerMap;
+                const xhr = new XMLHttpRequest();
+                function makeTask(name, target, onProgress, skipLoading, prevTask) {
+                    return new Promise((resolve, reject) => {
+                        let done = false;
+                        let loaded = skipLoading;
+                        function maybeResolve() {
+                            if (loaded && done) {
+                                resolve();
+                            }
+                        }
+                        async function onError() {
+                            await prevTask;
+                            reject(xhr.status);
+                        }
+                        target.addEventListener("loadstart", async () => {
+                            await prevTask;
+                            onProgress(0, 1, name);
+                        });
+                        target.addEventListener("progress", async (ev) => {
+                            const evt = ev;
+                            await prevTask;
+                            onProgress(evt.loaded, evt.total, name);
+                            if (evt.loaded === evt.total) {
+                                loaded = true;
+                                maybeResolve();
+                            }
+                        });
+                        target.addEventListener("load", async () => {
+                            await prevTask;
+                            onProgress(1, 1, name);
+                            done = true;
+                            maybeResolve();
+                        });
+                        target.addEventListener("error", onError);
+                        target.addEventListener("abort", onError);
+                    });
+                }
+                const upload = makeTask("uploading", xhr.upload, upProg, false, Promise.resolve());
+                const download = makeTask("saving", xhr, downProg, true, upload);
+                xhr.open("POST", path);
+                if (headers) {
+                    for (const [key, value] of headers) {
+                        xhr.setRequestHeader(key, value);
+                    }
+                }
+                if (obj instanceof FormData) {
+                    xhr.send(obj);
+                }
+                else {
+                    const json = JSON.stringify(obj);
+                    xhr.send(json);
+                }
+                await upload;
+                await download;
+            }
+            else {
+                await this.postObjectForResponse(path, obj, headerMap);
+            }
         }
         readTextXml(text) {
             const parser = new DOMParser();
@@ -4510,11 +4603,8 @@ var Calla = (function (exports) {
             return xml.documentElement;
         }
         async _getXml(path, headerMap, onProgress) {
-            if (!isNullOrUndefined(headerMap)
-                && !(headerMap instanceof Map)) {
-                onProgress = headerMap;
-                headerMap = undefined;
-            }
+            onProgress = this.normalizeOnProgress(headerMap, onProgress);
+            headerMap = this.normalizeHeaderMap(headerMap);
             const text = await this._getText(path, headerMap, onProgress);
             return this.readTextXml(text);
         }
@@ -4550,6 +4640,9 @@ var Calla = (function (exports) {
         return false;
     }
 
+    function defaultKeySelector(obj) {
+        return obj;
+    }
     /**
      * Performs a binary search on a list to find where the item should be inserted.
      *
@@ -4558,19 +4651,22 @@ var Calla = (function (exports) {
      * If the item is not found, the returned insertion index will be 0.5 greater than
      * the index at which it should be inserted.
      */
-    function arrayBinarySearch(arr, item) {
+    function arrayBinarySearchByKey(arr, itemKey, keySelector) {
         let left = 0;
         let right = arr.length;
         let idx = Math.floor((left + right) / 2);
         let found = false;
         while (left < right && idx < arr.length) {
             const compareTo = arr[idx];
-            if (!isNullOrUndefined(compareTo)
-                && item < compareTo) {
+            const compareToKey = isNullOrUndefined(compareTo)
+                ? null
+                : keySelector(compareTo);
+            if (!isNullOrUndefined(compareToKey)
+                && itemKey < compareToKey) {
                 right = idx;
             }
             else {
-                if (item === compareTo) {
+                if (itemKey === compareToKey) {
                     found = true;
                 }
                 left = idx + 1;
@@ -4582,18 +4678,46 @@ var Calla = (function (exports) {
         }
         return idx;
     }
+    /**
+     * Performs a binary search on a list to find where the item should be inserted.
+     *
+     * If the item is found, the returned index will be an exact integer.
+     *
+     * If the item is not found, the returned insertion index will be 0.5 greater than
+     * the index at which it should be inserted.
+     */
+    function arrayBinarySearch(arr, item, keySelector) {
+        keySelector = keySelector || defaultKeySelector;
+        const itemKey = keySelector(item);
+        return arrayBinarySearchByKey(arr, itemKey, keySelector);
+    }
 
     /**
-     * Performs an insert operation that maintains the sort
-     * order of the array, returning the index at which the
-     * item was inserted.
+     * Inserts an item at the given index into an array.
+     * @param arr
+     * @param item
+     * @param idx
      */
-    function arraySortedInsert(arr, item, allowDuplicates = true) {
-        let idx = arrayBinarySearch(arr, item);
+    function arrayInsertAt(arr, item, idx) {
+        arr.splice(idx, 0, item);
+    }
+
+    function arraySortedInsert(arr, item, keySelector, allowDuplicates) {
+        let ks;
+        if (isFunction(keySelector)) {
+            ks = keySelector;
+        }
+        else if (isBoolean(keySelector)) {
+            allowDuplicates = keySelector;
+        }
+        if (isNullOrUndefined(allowDuplicates)) {
+            allowDuplicates = true;
+        }
+        let idx = arrayBinarySearch(arr, item, ks);
         const found = (idx % 1) === 0;
         idx = idx | 0;
         if (!found || allowDuplicates) {
-            arr.splice(idx, 0, item);
+            arrayInsertAt(arr, item, idx);
         }
         return idx;
     }
@@ -4709,20 +4833,17 @@ var Calla = (function (exports) {
             timeout = rejectEvt;
             rejectEvt = undefined;
         }
-        const hasResolveEvt = isString(resolveEvt);
-        const hasRejectEvt = isString(rejectEvt);
         const hasTimeout = timeout != null;
         return new Promise((resolve, reject) => {
-            if (hasResolveEvt) {
+            const remove = () => {
+                target.removeEventListener(resolveEvt, resolve);
+            };
+            resolve = add(remove, resolve);
+            reject = add(remove, reject);
+            if (isString(rejectEvt)) {
+                const rejectEvt2 = rejectEvt;
                 const remove = () => {
-                    target.removeEventListener(resolveEvt, resolve);
-                };
-                resolve = add(remove, resolve);
-                reject = add(remove, reject);
-            }
-            if (hasRejectEvt) {
-                const remove = () => {
-                    target.removeEventListener(rejectEvt, reject);
+                    target.removeEventListener(rejectEvt2, reject);
                 };
                 resolve = add(remove, resolve);
                 reject = add(remove, reject);
@@ -4732,10 +4853,8 @@ var Calla = (function (exports) {
                 resolve = add(cancel, resolve);
                 reject = add(cancel, reject);
             }
-            if (hasResolveEvt) {
-                target.addEventListener(resolveEvt, resolve);
-            }
-            if (hasRejectEvt) {
+            target.addEventListener(resolveEvt, resolve);
+            if (isString(rejectEvt)) {
                 target.addEventListener(rejectEvt, () => {
                     reject("Rejection event found");
                 });
@@ -9789,7 +9908,7 @@ var Calla = (function (exports) {
         removeSource(source) {
             const sourceIdx = this._sources.findIndex((s) => s === source);
             if (sourceIdx > -1) {
-                this._sources.splice(sourceIdx, 1);
+                arrayRemoveAt(this._sources, sourceIdx);
                 source.dispose();
             }
         }
@@ -11054,44 +11173,6 @@ var Calla = (function (exports) {
         async disconnect() {
             this.setConnectionState(ConnectionState.Disconnecting);
         }
-    }
-
-    function splitProgress(onProgress, weights) {
-        let subProgressWeights;
-        if (isNumber(weights)) {
-            subProgressWeights = new Array(weights);
-            for (let i = 0; i < subProgressWeights.length; ++i) {
-                subProgressWeights[i] = 1 / weights;
-            }
-        }
-        else {
-            subProgressWeights = weights;
-        }
-        let weightTotal = 0;
-        for (let i = 0; i < subProgressWeights.length; ++i) {
-            weightTotal += subProgressWeights[i];
-        }
-        const subProgressValues = new Array(subProgressWeights.length);
-        const subProgressCallbacks = new Array(subProgressWeights.length);
-        const start = performance.now();
-        const update = (i, subSoFar, subTotal, msg) => {
-            if (onProgress) {
-                subProgressValues[i] = subSoFar / subTotal;
-                let soFar = 0;
-                for (let j = 0; j < subProgressWeights.length; ++j) {
-                    soFar += subProgressValues[j] * subProgressWeights[j];
-                }
-                const end = performance.now();
-                const delta = end - start;
-                const est = start - end + delta * weightTotal / soFar;
-                onProgress(soFar, weightTotal, msg, est);
-            }
-        };
-        for (let i = 0; i < subProgressWeights.length; ++i) {
-            subProgressValues[i] = 0;
-            subProgressCallbacks[i] = (soFar, total, msg) => update(i, soFar, total, msg);
-        }
-        return subProgressCallbacks;
     }
 
     const JITSI_HAX_FINGERPRINT = "Calla";
