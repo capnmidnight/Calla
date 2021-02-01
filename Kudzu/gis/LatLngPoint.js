@@ -16,7 +16,7 @@ export class LatLngPoint {
         else {
             this._latitude = lat || 0;
             this._longitude = lng || 0;
-            this._altitude = alt || 0;
+            this._altitude = alt;
         }
     }
     /**
