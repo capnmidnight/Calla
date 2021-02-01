@@ -87,6 +87,7 @@ export declare class UTMPoint implements IUTMPoint {
      **/
     toLatLng(): LatLngPoint;
     set(arr: vec2): void;
+    set(arr: vec3): void;
     set(x: number, y: number): void;
     set(x: number, y: number, z: number): void;
     copy(other: IUTMPoint): void;

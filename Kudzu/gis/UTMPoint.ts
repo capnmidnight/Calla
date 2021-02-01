@@ -206,15 +206,16 @@ export class UTMPoint implements IUTMPoint {
     }
 
     set(arr: vec2): void;
+    set(arr: vec3): void;
     set(x: number, y: number): void;
     set(x: number, y: number, z: number): void;
-    set(x: (vec2 | number), y?: number, z?: number): void {
+    set(x: (vec2 | vec3 | number), y?: number, z?: number): void {
         if (x instanceof Float32Array
             || isArray(x)) {
             this._x = x[0];
             this._y = x[1];
             if (x.length > 2) {
-                this._z = x[2];
+                this._z = x[2] as number;
             }
         }
         else {
