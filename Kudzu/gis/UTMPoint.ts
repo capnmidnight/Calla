@@ -188,7 +188,7 @@ export class UTMPoint implements IUTMPoint {
 
         this._x = easting;
         this._y = northing;
-        this._z = latLng.altitude;
+        this._z = latLng.altitude || 0;
         this._zone = utmz;
         this._hemisphere = hemisphere;
 
