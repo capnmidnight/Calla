@@ -1,4 +1,4 @@
-import { isBoolean, isDate, isNullOrUndefined, isNumber, isString } from "../typeChecks";
+import { isBoolean, isDate, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { Attr, type, margin, styles } from "./attrs";
 function hasNode(obj) {
     return !isNullOrUndefined(obj)
@@ -8,6 +8,9 @@ function hasNode(obj) {
         && !isDate(obj)
         && "element" in obj
         && obj.element instanceof Node;
+}
+export function isFocusable(elem) {
+    return "focus" in elem && isFunction(elem.focus);
 }
 /**
  * Creates an HTML element for a given tag name.

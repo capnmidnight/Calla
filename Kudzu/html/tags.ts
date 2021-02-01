@@ -1,4 +1,4 @@
-import { isBoolean, isDate, isNullOrUndefined, isNumber, isString } from "../typeChecks";
+import { isBoolean, isDate, isFunction, isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { Attr, IAppliable, type, margin, styles } from "./attrs";
 
 export type HTMLValuedElement = HTMLElement & { value: string; };
@@ -27,6 +27,14 @@ function hasNode(obj: any): obj is HasNode {
         && !isDate(obj)
         && "element" in obj
         && obj.element instanceof Node;
+}
+
+export interface IFocusable {
+    focus(): void;
+}
+
+export function isFocusable(elem: any): elem is IFocusable {
+    return "focus" in elem && isFunction((elem as IFocusable).focus);
 }
 
 /**

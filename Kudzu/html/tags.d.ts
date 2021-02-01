@@ -7,6 +7,10 @@ interface HasNode {
 }
 declare type makesIAppliable = (v: any) => IAppliable;
 export declare type TagChild = Node | HasNode | IAppliable | makesIAppliable | string | number | boolean | Date;
+export interface IFocusable {
+    focus(): void;
+}
+export declare function isFocusable(elem: any): elem is IFocusable;
 /**
  * Creates an HTML element for a given tag name.
  *
