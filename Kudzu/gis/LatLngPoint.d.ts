@@ -2,7 +2,7 @@ import { IUTMPoint, UTMPoint } from "./UTMPoint";
 export interface ILatLngPoint {
     latitude: number;
     longitude: number;
-    altitude: number;
+    altitude: number | undefined;
 }
 /**
  * A point in geographic space on a radial coordinate system.
@@ -12,7 +12,7 @@ export declare class LatLngPoint implements ILatLngPoint {
      * An altitude value thrown in just for kicks. It makes some calculations and conversions
      * easier if we keep the Altitude value.
      **/
-    get altitude(): number;
+    get altitude(): number | undefined;
     private _altitude;
     /**
      * Lines of latitude run east/west around the globe, parallel to the equator, never

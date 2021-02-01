@@ -6,7 +6,7 @@ import { GlobeHemisphere, IUTMPoint, UTMPoint } from "./UTMPoint";
 export interface ILatLngPoint {
     latitude: number;
     longitude: number;
-    altitude: number;
+    altitude: number|undefined;
 }
 
 /**
@@ -21,7 +21,7 @@ export class LatLngPoint implements ILatLngPoint {
     get altitude() {
         return this._altitude;
     }
-    private _altitude: number;
+    private _altitude: number|undefined;
 
 
 
@@ -146,8 +146,13 @@ export class LatLngPoint implements ILatLngPoint {
     toDMS(sigfigs: number): string {
         const latStr = LatLngPoint.toDMS(this.latitude, "S", "N", sigfigs);
         const lngStr = LatLngPoint.toDMS(this.longitude, "W", "E", sigfigs);
-        const altStr = this.altitude.toFixed(sigfigs) + "m";
-        return `<${latStr}, ${lngStr}> alt ${altStr}`;
+        if (this.altitude) {
+            const altStr = this.altitude.toFixed(sigfigs) + "m";
+            return `<${latStr}, ${lngStr}> alt ${altStr}`;
+        }
+        else {
+            return `<${latStr}, ${lngStr}>`;
+        }
     }
 
     /**
@@ -202,7 +207,7 @@ export class LatLngPoint implements ILatLngPoint {
         else {
             const byLat = this.latitude - other.latitude;
             const byLng = this.longitude - other.longitude;
-            const byAlt = this.altitude - other.altitude;
+            const byAlt = (this.altitude || 0) - (other.altitude || 0);
 
             if (byLat == 0
                 && byLng == 0) {

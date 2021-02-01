@@ -104,8 +104,13 @@ export class LatLngPoint {
     toDMS(sigfigs) {
         const latStr = LatLngPoint.toDMS(this.latitude, "S", "N", sigfigs);
         const lngStr = LatLngPoint.toDMS(this.longitude, "W", "E", sigfigs);
-        const altStr = this.altitude.toFixed(sigfigs) + "m";
-        return `<${latStr}, ${lngStr}> alt ${altStr}`;
+        if (this.altitude) {
+            const altStr = this.altitude.toFixed(sigfigs) + "m";
+            return `<${latStr}, ${lngStr}> alt ${altStr}`;
+        }
+        else {
+            return `<${latStr}, ${lngStr}>`;
+        }
     }
     /**
      * Pretty-print the Degrees/Minutes/Second version of the Latitude/Longitude angles.
@@ -154,7 +159,7 @@ export class LatLngPoint {
         else {
             const byLat = this.latitude - other.latitude;
             const byLng = this.longitude - other.longitude;
-            const byAlt = this.altitude - other.altitude;
+            const byAlt = (this.altitude || 0) - (other.altitude || 0);
             if (byLat == 0
                 && byLng == 0) {
                 return byAlt;
