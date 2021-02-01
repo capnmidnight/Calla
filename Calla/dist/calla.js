@@ -4083,20 +4083,6 @@ var Calla = (function (exports) {
         return null;
     }
 
-    const isChrome = "chrome" in globalThis && !navigator.userAgent.match("CriOS");
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    const isOpera = /Opera/.test(navigator.userAgent);
-    const isAndroid = /Android/.test(navigator.userAgent);
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.platform)
-        || /Macintosh(.*?) FxiOS(.*?)\//.test(navigator.platform)
-        || navigator.platform === "MacIntel" && navigator.maxTouchPoints > 2;
-    const isBlackberry = /BlackBerry/.test(navigator.userAgent);
-    const isUCBrowser = /(UC Browser |UCWEB)/.test(navigator.userAgent);
-    const isMobileVR = /Mobile VR/.test(navigator.userAgent);
-    const isOculus = /oculus/.test(navigator.userAgent);
-    const isOculusGo = isOculus && /pacific/.test(navigator.userAgent);
-    const isOculusQuest = isOculus && /quest/.test(navigator.userAgent);
-
     /**
      * A setter functor for HTML attributes.
      **/
@@ -10975,9 +10961,7 @@ var Calla = (function (exports) {
             this.hasAudioPermission = false;
             this.hasVideoPermission = false;
             this.fetcher = fetcher || new Fetcher();
-            this.audio = audio || new AudioManager(fetcher, isOculusQuest
-                ? SpatializerType.High
-                : SpatializerType.Medium);
+            this.audio = audio || new AudioManager(fetcher);
             this.addEventListener("serverConnected", this.setConnectionState.bind(this, ConnectionState.Connected));
             this.addEventListener("serverFailed", this.setConnectionState.bind(this, ConnectionState.Disconnected));
             this.addEventListener("serverDisconnected", this.setConnectionState.bind(this, ConnectionState.Disconnected));
