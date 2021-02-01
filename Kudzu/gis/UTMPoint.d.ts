@@ -27,7 +27,7 @@ export interface IUTMPoint {
  **/
 export declare class UTMPoint implements IUTMPoint {
     /**
-     * The enorthingt component of the coordinate.
+     * The east/west component of the coordinate.
      **/
     get easting(): number;
     private _easting;

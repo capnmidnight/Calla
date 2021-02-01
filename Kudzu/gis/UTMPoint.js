@@ -47,7 +47,7 @@ export class UTMPoint {
         }
     }
     /**
-     * The enorthingt component of the coordinate.
+     * The east/west component of the coordinate.
      **/
     get easting() {
         return this._easting;
@@ -165,8 +165,8 @@ export class UTMPoint {
         }
         else if (has3Components(eastingOrArray)) {
             this._easting = eastingOrArray[0];
-            this._northing = eastingOrArray[2];
             this._altitude = eastingOrArray[1];
+            this._northing = eastingOrArray[2];
         }
         else {
             this._easting = eastingOrArray;
