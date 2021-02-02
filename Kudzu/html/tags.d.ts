@@ -11,6 +11,8 @@ export interface IFocusable {
     focus(): void;
 }
 export declare function isFocusable(elem: any): elem is IFocusable;
+export declare function elementSetDisplay(elem: HTMLElement, visible: boolean, visibleDisplayType?: string): void;
+export declare function elementIsDisplayed(elem: HTMLElement): boolean;
 /**
  * Creates an HTML element for a given tag name.
  *

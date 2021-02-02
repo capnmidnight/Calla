@@ -12,6 +12,12 @@ function hasNode(obj) {
 export function isFocusable(elem) {
     return "focus" in elem && isFunction(elem.focus);
 }
+export function elementSetDisplay(elem, visible, visibleDisplayType = "block") {
+    elem.style.display = visible ? visibleDisplayType : "none";
+}
+export function elementIsDisplayed(elem) {
+    return elem.style.display !== "none";
+}
 /**
  * Creates an HTML element for a given tag name.
  *

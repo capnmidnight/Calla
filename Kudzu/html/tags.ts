@@ -37,6 +37,14 @@ export function isFocusable(elem: any): elem is IFocusable {
     return "focus" in elem && isFunction((elem as IFocusable).focus);
 }
 
+export function elementSetDisplay(elem: HTMLElement, visible: boolean, visibleDisplayType: string = "block"): void {
+    elem.style.display = visible ? visibleDisplayType : "none";
+}
+
+export function elementIsDisplayed(elem: HTMLElement): boolean {
+    return elem.style.display !== "none";
+}
+
 /**
  * Creates an HTML element for a given tag name.
  * 
