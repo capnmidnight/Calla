@@ -4,24 +4,6 @@ import { isNullOrUndefined, isNumber } from "../typeChecks";
 import { DatumWGS_84 } from "./Datum";
 import { ILatLngPoint, LatLngPoint } from "./LatLngPoint";
 
-type trueArrayTypes = vec2
-    | vec3
-    | Float32Array
-    | number[];
-type arrayTypes = trueArrayTypes
-    | [number, number]
-    | [number, number, number];
-
-function has2Components(arr: arrayTypes | number)
-    : arr is trueArrayTypes | [number, number] {
-    return !isNumber(arr) && arr.length === 2;
-}
-
-function has3Components(arr: arrayTypes | number)
-    : arr is trueArrayTypes | [number, number, number] {
-    return !isNumber(arr) && arr.length === 3;
-}
-
 /**
  * The globe hemispheres in which the UTM point could sit.
  **/
@@ -130,9 +112,9 @@ export class UTMPoint implements IUTMPoint {
 
     toJSON(): string {
         return JSON.stringify({
-            x: this.easting,
-            y: this.northing,
-            z: this.altitude,
+            easting: this.easting,
+            northing: this.northing,
+            altitude: this.altitude,
             zone: this.zone,
             hemisphere: this.hemisphere
         });
@@ -176,7 +158,7 @@ export class UTMPoint implements IUTMPoint {
         const ePhi = DatumWGS_84.e * sinPhi;
         const N = DatumWGS_84.equatorialRadius / Math.sqrt(1 - (ePhi * ePhi));
 
-        const utmz = 1 + Math.floor((latLng.longitude + 180) / 6.0);
+        const utmz = 1 + ((latLng.longitude + 180) / 6.0) | 0;
         const zcm = 3 + (6.0 * (utmz - 1)) - 180;
         const A = deg2rad(latLng.longitude - zcm) * cosPhi;
 
@@ -223,34 +205,15 @@ export class UTMPoint implements IUTMPoint {
         return new LatLngPoint().fromUTM(this);
     }
 
-    set(arr: vec2): void;
-    set(arr: vec3): void;
-    set(arr: [number, number]): void;
-    set(arr: [number, number, number]): void;
-    set(arr: number[]): void;
-    set(arr: Float32Array): void;
-    set(easting: number, northing: number): void;
-    set(easting: number, northing: number, altitude: number): void;
-    set(eastingOrArray: (arrayTypes | number), northing?: number, altitude?: number): void {
-        if (has2Components(eastingOrArray)) {
-            this._easting = eastingOrArray[0];
-            this._northing = eastingOrArray[1];
-            this._altitude = 0;
-        }
-        else if (has3Components(eastingOrArray)) {
-            this._easting = eastingOrArray[0];
-            this._altitude = eastingOrArray[1];
-            this._northing = eastingOrArray[2];
-        }
-        else {
-            this._easting = eastingOrArray;
-            if (!isNullOrUndefined(northing)) {
-                this._northing = northing;
-            }
-            if (!isNullOrUndefined(altitude)) {
-                this._altitude = altitude;
-            }
-        }
+    fromVec2(arr: vec2): void {
+        this._easting = arr[0];
+        this._northing = -arr[1];
+    }
+
+    fromVec3(arr: vec3): void {
+        this._easting = arr[0];
+        this._altitude = arr[1];
+        this._northing = -arr[2];
     }
 
     copy(other: IUTMPoint): void {
@@ -263,13 +226,13 @@ export class UTMPoint implements IUTMPoint {
 
     toVec2() {
         const v = vec2.create();
-        vec2.set(v, this.easting, this.northing);
+        vec2.set(v, this.easting, -this.northing);
         return v;
     }
 
     toVec3() {
         const v = vec3.create();
-        vec3.set(v, this.easting, this.altitude, this.northing);
+        vec3.set(v, this.easting, this.altitude, -this.northing);
         return v;
     }
 }

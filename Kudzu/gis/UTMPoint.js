@@ -3,12 +3,6 @@ import { deg2rad } from "../math/deg2rad";
 import { isNullOrUndefined, isNumber } from "../typeChecks";
 import { DatumWGS_84 } from "./Datum";
 import { LatLngPoint } from "./LatLngPoint";
-function has2Components(arr) {
-    return !isNumber(arr) && arr.length === 2;
-}
-function has3Components(arr) {
-    return !isNumber(arr) && arr.length === 3;
-}
 /**
  * The globe hemispheres in which the UTM point could sit.
  **/
@@ -78,9 +72,9 @@ export class UTMPoint {
     }
     toJSON() {
         return JSON.stringify({
-            x: this.easting,
-            y: this.northing,
-            z: this.altitude,
+            easting: this.easting,
+            northing: this.northing,
+            altitude: this.altitude,
             zone: this.zone,
             hemisphere: this.hemisphere
         });
@@ -118,7 +112,7 @@ export class UTMPoint {
         const tanPhi = sinPhi / cosPhi;
         const ePhi = DatumWGS_84.e * sinPhi;
         const N = DatumWGS_84.equatorialRadius / Math.sqrt(1 - (ePhi * ePhi));
-        const utmz = 1 + Math.floor((latLng.longitude + 180) / 6.0);
+        const utmz = 1 + ((latLng.longitude + 180) / 6.0) | 0;
         const zcm = 3 + (6.0 * (utmz - 1)) - 180;
         const A = deg2rad(latLng.longitude - zcm) * cosPhi;
         const M = DatumWGS_84.equatorialRadius * ((phi * DatumWGS_84.alpha1)
@@ -157,26 +151,14 @@ export class UTMPoint {
     toLatLng() {
         return new LatLngPoint().fromUTM(this);
     }
-    set(eastingOrArray, northing, altitude) {
-        if (has2Components(eastingOrArray)) {
-            this._easting = eastingOrArray[0];
-            this._northing = eastingOrArray[1];
-            this._altitude = 0;
-        }
-        else if (has3Components(eastingOrArray)) {
-            this._easting = eastingOrArray[0];
-            this._altitude = eastingOrArray[1];
-            this._northing = eastingOrArray[2];
-        }
-        else {
-            this._easting = eastingOrArray;
-            if (!isNullOrUndefined(northing)) {
-                this._northing = northing;
-            }
-            if (!isNullOrUndefined(altitude)) {
-                this._altitude = altitude;
-            }
-        }
+    fromVec2(arr) {
+        this._easting = arr[0];
+        this._northing = -arr[1];
+    }
+    fromVec3(arr) {
+        this._easting = arr[0];
+        this._altitude = arr[1];
+        this._northing = -arr[2];
     }
     copy(other) {
         this._easting = other.easting;
@@ -187,12 +169,12 @@ export class UTMPoint {
     }
     toVec2() {
         const v = vec2.create();
-        vec2.set(v, this.easting, this.northing);
+        vec2.set(v, this.easting, -this.northing);
         return v;
     }
     toVec3() {
         const v = vec3.create();
-        vec3.set(v, this.easting, this.altitude, this.northing);
+        vec3.set(v, this.easting, this.altitude, -this.northing);
         return v;
     }
 }
