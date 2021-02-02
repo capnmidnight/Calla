@@ -203,32 +203,35 @@ export class UTMPoint implements IUTMPoint {
         return new LatLngPoint().fromUTM(this);
     }
 
-    fromVec2(arr: vec2): void {
+    fromVec2(arr: vec2): UTMPoint {
         this._easting = arr[0];
         this._northing = -arr[1];
+        return this;
     }
 
-    fromVec3(arr: vec3): void {
+    fromVec3(arr: vec3): UTMPoint {
         this._easting = arr[0];
         this._altitude = arr[1];
         this._northing = -arr[2];
+        return this;
     }
 
-    copy(other: IUTMPoint): void {
+    copy(other: IUTMPoint): UTMPoint {
         this._easting = other.easting;
         this._northing = other.northing;
         this._altitude = other.altitude;
         this._zone = other.zone;
         this._hemisphere = other.hemisphere;
+        return this;
     }
 
-    toVec2() {
+    toVec2(): vec2 {
         const v = vec2.create();
         vec2.set(v, this.easting, -this.northing);
         return v;
     }
 
-    toVec3() {
+    toVec3(): vec3 {
         const v = vec3.create();
         vec3.set(v, this.easting, this.altitude, -this.northing);
         return v;

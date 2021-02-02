@@ -153,11 +153,13 @@ export class UTMPoint {
     fromVec2(arr) {
         this._easting = arr[0];
         this._northing = -arr[1];
+        return this;
     }
     fromVec3(arr) {
         this._easting = arr[0];
         this._altitude = arr[1];
         this._northing = -arr[2];
+        return this;
     }
     copy(other) {
         this._easting = other.easting;
@@ -165,6 +167,7 @@ export class UTMPoint {
         this._altitude = other.altitude;
         this._zone = other.zone;
         this._hemisphere = other.hemisphere;
+        return this;
     }
     toVec2() {
         const v = vec2.create();

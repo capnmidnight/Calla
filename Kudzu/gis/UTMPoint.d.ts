@@ -86,9 +86,9 @@ export declare class UTMPoint implements IUTMPoint {
      * reference: http://www.uwgb.edu/dutchs/usefuldata/utmformulas.htm
      **/
     toLatLng(): LatLngPoint;
-    fromVec2(arr: vec2): void;
-    fromVec3(arr: vec3): void;
-    copy(other: IUTMPoint): void;
+    fromVec2(arr: vec2): UTMPoint;
+    fromVec3(arr: vec3): UTMPoint;
+    copy(other: IUTMPoint): UTMPoint;
     toVec2(): vec2;
     toVec3(): vec3;
 }

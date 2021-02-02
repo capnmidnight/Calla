@@ -236,6 +236,7 @@ export class LatLngPoint {
         this._latitude = other.latitude;
         this._longitude = other.longitude;
         this._altitude = other.altitude;
+        return this;
     }
 }
 //# sourceMappingURL=LatLngPoint.js.map
