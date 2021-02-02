@@ -1,4 +1,4 @@
-const FalseNorthing: number = 10000000.0;
+const FalseNorthing: number = 10000000;
 const invF: number = 298.257223563;
 const equatorialRadius: number = 6378137;
 const pointScaleFactor: number = 0.9996;
@@ -13,10 +13,10 @@ const e: number = Math.sqrt(1 - (flatteningComp * flatteningComp));
 const esq: number = 1 - (flatteningComp * flatteningComp);
 const e0sq: number = e * e / (1 - (e * e));
 
-const alpha1: number = 1 - (esq * ((1.0 / 4.0) + (esq * ((3.0 / 64.0) + (5.0 * esq / 256.0)))));
-const alpha2: number = esq * ((3.0 / 8.0) + (esq * ((3.0 / 32.0) + (45.0 * esq / 1024.0))));
-const alpha3: number = esq * esq * ((15.0 / 256.0) + (esq * 45.0 / 1024.0));
-const alpha4: number = esq * esq * esq * (35.0 / 3072.0);
+const alpha1: number = 1 - (esq * (0.25 + (esq * ((3 / 64) + (5 * esq / 256)))));
+const alpha2: number = esq * ((3 / 8) + (esq * ((3 / 32) + (45 * esq / 1024))));
+const alpha3: number = esq * esq * ((15 / 256) + (esq * 45 / 1024));
+const alpha4: number = esq * esq * esq * (35 / 3072);
 
 const beta: number[] = [
     (n / 2) - (2 * n * n / 3) + (37 * n * n * n / 96),

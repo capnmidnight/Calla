@@ -100,7 +100,6 @@ export class UTMPoint {
         const hemisphere = latLng.latitude < 0
             ? GlobeHemisphere.Southern
             : GlobeHemisphere.Northern;
-        const k0 = 0.9996;
         const phi = deg2rad(latLng.latitude);
         const sinPhi = Math.sin(phi);
         const cosPhi = Math.cos(phi);
@@ -112,8 +111,8 @@ export class UTMPoint {
         const tanPhi = sinPhi / cosPhi;
         const ePhi = DatumWGS_84.e * sinPhi;
         const N = DatumWGS_84.equatorialRadius / Math.sqrt(1 - (ePhi * ePhi));
-        const utmz = 1 + ((latLng.longitude + 180) / 6.0) | 0;
-        const zcm = 3 + (6.0 * (utmz - 1)) - 180;
+        const utmz = 1 + ((latLng.longitude + 180) / 6) | 0;
+        const zcm = 3 + (6 * (utmz - 1)) - 180;
         const A = deg2rad(latLng.longitude - zcm) * cosPhi;
         const M = DatumWGS_84.equatorialRadius * ((phi * DatumWGS_84.alpha1)
             - (sin2Phi * DatumWGS_84.alpha2)
@@ -125,13 +124,13 @@ export class UTMPoint {
         const Asqr = A * A;
         const Tsqr = T * T;
         const x0 = 1 - T + C;
-        const x1 = 5 - (18 * T) + Tsqr + (72.0 * C) - (58 * DatumWGS_84.e0sq);
-        const x2 = Asqr * x1 / 120.0;
+        const x1 = 5 - (18 * T) + Tsqr + (72 * C) - (58 * DatumWGS_84.e0sq);
+        const x2 = Asqr * x1 / 120;
         const x3 = (x0 / 6) + x2;
         const x4 = 1 + (Asqr * x3);
-        const easting = k0 * N * A * x4 + DatumWGS_84.E0;
+        const easting = DatumWGS_84.pointScaleFactor * N * A * x4 + DatumWGS_84.E0;
         // Northing
-        let northing = k0 * (M + (N * tanPhi * (Asqr * ((1 / 2.0) + (Asqr * (((5 - T + (9 * C) + (4 * C * C)) / 24.0) + (Asqr * (61 - (58 * T) + Tsqr + (600 * C) - (330 * DatumWGS_84.e0sq)) / 720.0)))))));
+        let northing = DatumWGS_84.pointScaleFactor * (M + (N * tanPhi * (Asqr * (0.5 + (Asqr * (((5 - T + (9 * C) + (4 * C * C)) / 24) + (Asqr * (61 - (58 * T) + Tsqr + (600 * C) - (330 * DatumWGS_84.e0sq)) / 720)))))));
         if (hemisphere == GlobeHemisphere.Southern) {
             northing += DatumWGS_84.FalseNorthing;
         }

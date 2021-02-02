@@ -1,4 +1,4 @@
-const FalseNorthing = 10000000.0;
+const FalseNorthing = 10000000;
 const invF = 298.257223563;
 const equatorialRadius = 6378137;
 const pointScaleFactor = 0.9996;
@@ -10,10 +10,10 @@ const A = (equatorialRadius / (1 + n)) * (1 + (n * n / 4) + (n * n * n * n / 64)
 const e = Math.sqrt(1 - (flatteningComp * flatteningComp));
 const esq = 1 - (flatteningComp * flatteningComp);
 const e0sq = e * e / (1 - (e * e));
-const alpha1 = 1 - (esq * ((1.0 / 4.0) + (esq * ((3.0 / 64.0) + (5.0 * esq / 256.0)))));
-const alpha2 = esq * ((3.0 / 8.0) + (esq * ((3.0 / 32.0) + (45.0 * esq / 1024.0))));
-const alpha3 = esq * esq * ((15.0 / 256.0) + (esq * 45.0 / 1024.0));
-const alpha4 = esq * esq * esq * (35.0 / 3072.0);
+const alpha1 = 1 - (esq * (0.25 + (esq * ((3 / 64) + (5 * esq / 256)))));
+const alpha2 = esq * ((3 / 8) + (esq * ((3 / 32) + (45 * esq / 1024))));
+const alpha3 = esq * esq * ((15 / 256) + (esq * 45 / 1024));
+const alpha4 = esq * esq * esq * (35 / 3072);
 const beta = [
     (n / 2) - (2 * n * n / 3) + (37 * n * n * n / 96),
     (n * n / 48) + (n * n * n / 15),
