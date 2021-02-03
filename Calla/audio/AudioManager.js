@@ -232,7 +232,7 @@ export class AudioManager extends TypedEventBase {
         }
     }
     getAudioOutputDeviceID() {
-        return this.element?.sinkId;
+        return this.element && this.element.sinkId;
     }
     async setAudioOutputDeviceID(deviceID) {
         this._audioOutputDeviceID = deviceID || "";

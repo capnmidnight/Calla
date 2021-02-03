@@ -41,10 +41,10 @@ export class EarlyReflections {
             depth: 0.5 * DEFAULT_ROOM_DIMENSIONS.depth,
         };
         if (options) {
-            if (isGoodNumber(options?.speedOfSound)) {
+            if (isGoodNumber(options.speedOfSound)) {
                 this.speedOfSound = options.speedOfSound;
             }
-            if (isArray(options?.listenerPosition)
+            if (isArray(options.listenerPosition)
                 && options.listenerPosition.length === 3
                 && isGoodNumber(options.listenerPosition[0])
                 && isGoodNumber(options.listenerPosition[1])
@@ -122,7 +122,7 @@ export class EarlyReflections {
         this.inverters.back.connect(this.merger, 0, 3);
         this.merger.connect(this.output);
         // Initialize.
-        this.setRoomProperties(options?.dimensions, options?.coefficients);
+        this.setRoomProperties(options && options.dimensions, options && options.coefficients);
     }
     /**
      * Set the room's properties which determines the characteristics of
@@ -136,7 +136,7 @@ export class EarlyReflections {
      * DEFAULT_REFLECTION_COEFFICIENTS}.
      */
     setRoomProperties(dimensions, coefficients) {
-        if (dimensions == undefined) {
+        if (!dimensions) {
             dimensions = {
                 width: DEFAULT_ROOM_DIMENSIONS.width,
                 height: DEFAULT_ROOM_DIMENSIONS.height,
@@ -150,7 +150,7 @@ export class EarlyReflections {
             this.halfDimensions.height = 0.5 * dimensions.height;
             this.halfDimensions.depth = 0.5 * dimensions.depth;
         }
-        if (coefficients == undefined) {
+        if (!coefficients) {
             coefficients = {
                 left: DEFAULT_REFLECTION_COEFFICIENTS.left,
                 right: DEFAULT_REFLECTION_COEFFICIENTS.right,

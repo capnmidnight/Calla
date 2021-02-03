@@ -298,7 +298,7 @@ export class AudioManager extends TypedEventBase<AudioManagerEvents> {
     }
 
     getAudioOutputDeviceID(): string {
-        return this.element?.sinkId;
+        return this.element && this.element.sinkId;
     }
 
     async setAudioOutputDeviceID(deviceID: string): Promise<void> {
