@@ -150,15 +150,20 @@ export class UTMPoint {
     toLatLng() {
         return new LatLngPoint().fromUTM(this);
     }
-    fromVec2(arr) {
+    fromVec2(arr, zone, hemisphere) {
         this._easting = arr[0];
         this._northing = -arr[1];
+        this._altitude = 0;
+        this._zone = zone;
+        this._hemisphere = hemisphere;
         return this;
     }
-    fromVec3(arr) {
+    fromVec3(arr, zone, hemisphere) {
         this._easting = arr[0];
         this._altitude = arr[1];
         this._northing = -arr[2];
+        this._zone = zone;
+        this._hemisphere = hemisphere;
         return this;
     }
     copy(other) {
