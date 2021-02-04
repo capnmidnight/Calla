@@ -13,6 +13,7 @@ export interface IFocusable {
 export declare function isFocusable(elem: any): elem is IFocusable;
 export declare function elementSetDisplay(elem: HTMLElement, visible: boolean, visibleDisplayType?: string): void;
 export declare function elementIsDisplayed(elem: HTMLElement): boolean;
+export declare function nodeList2Array<T extends Node>(list: NodeListOf<T>): Array<T>;
 /**
  * Creates an HTML element for a given tag name.
  *

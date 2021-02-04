@@ -18,6 +18,13 @@ export function elementSetDisplay(elem, visible, visibleDisplayType = "block") {
 export function elementIsDisplayed(elem) {
     return elem.style.display !== "none";
 }
+export function nodeList2Array(list) {
+    const arr = new Array(list.length);
+    for (let i = 0; i < list.length; ++i) {
+        arr[i] = list[i];
+    }
+    return arr;
+}
 /**
  * Creates an HTML element for a given tag name.
  *

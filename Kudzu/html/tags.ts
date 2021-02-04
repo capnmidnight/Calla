@@ -45,6 +45,14 @@ export function elementIsDisplayed(elem: HTMLElement): boolean {
     return elem.style.display !== "none";
 }
 
+export function nodeList2Array<T extends Node>(list: NodeListOf<T>): Array<T> {
+    const arr = new Array<T>(list.length);
+    for (let i = 0; i < list.length; ++i) {
+        arr[i] = list[i];
+    }
+    return arr;
+}
+
 /**
  * Creates an HTML element for a given tag name.
  * 
