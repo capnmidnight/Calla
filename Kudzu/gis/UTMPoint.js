@@ -97,10 +97,10 @@ export class UTMPoint {
      * reference: http://www.uwgb.edu/dutchs/usefuldata/utmformulas.htm
      **/
     fromLatLng(latLng) {
-        const hemisphere = latLng.latitude < 0
+        const hemisphere = latLng.lat < 0
             ? GlobeHemisphere.Southern
             : GlobeHemisphere.Northern;
-        const phi = deg2rad(latLng.latitude);
+        const phi = deg2rad(latLng.lat);
         const sinPhi = Math.sin(phi);
         const cosPhi = Math.cos(phi);
         const sin2Phi = 2 * sinPhi * cosPhi;
@@ -111,9 +111,9 @@ export class UTMPoint {
         const tanPhi = sinPhi / cosPhi;
         const ePhi = DatumWGS_84.e * sinPhi;
         const N = DatumWGS_84.equatorialRadius / Math.sqrt(1 - (ePhi * ePhi));
-        const utmz = 1 + ((latLng.longitude + 180) / 6) | 0;
+        const utmz = 1 + ((latLng.lng + 180) / 6) | 0;
         const zcm = 3 + (6 * (utmz - 1)) - 180;
-        const A = deg2rad(latLng.longitude - zcm) * cosPhi;
+        const A = deg2rad(latLng.lng - zcm) * cosPhi;
         const M = DatumWGS_84.equatorialRadius * ((phi * DatumWGS_84.alpha1)
             - (sin2Phi * DatumWGS_84.alpha2)
             + (sin4Phi * DatumWGS_84.alpha3)
@@ -136,7 +136,7 @@ export class UTMPoint {
         }
         this._easting = easting;
         this._northing = northing;
-        this._altitude = latLng.altitude || 0;
+        this._altitude = latLng.alt || 0;
         this._zone = utmz;
         this._hemisphere = hemisphere;
         return this;

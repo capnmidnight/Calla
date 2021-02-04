@@ -4,9 +4,9 @@ import { DatumWGS_84 } from "./Datum";
 import { GlobeHemisphere, IUTMPoint, UTMPoint } from "./UTMPoint";
 
 export interface ILatLngPoint {
-    latitude: number;
-    longitude: number;
-    altitude: number|undefined;
+    lat: number;
+    lng: number;
+    alt?: number;
 }
 
 /**
@@ -18,10 +18,10 @@ export class LatLngPoint implements ILatLngPoint {
      * An altitude value thrown in just for kicks. It makes some calculations and conversions
      * easier if we keep the Altitude value.
      **/
-    get altitude() {
-        return this._altitude;
+    get alt() {
+        return this._alt;
     }
-    private _altitude: number|undefined;
+    private _alt: number|undefined;
 
 
 
@@ -29,19 +29,19 @@ export class LatLngPoint implements ILatLngPoint {
      * Lines of latitude run east/west around the globe, parallel to the equator, never
      * intersecting. They measure angular distance north/south.
      **/
-    get latitude() {
-        return this._latitude;
+    get lat() {
+        return this._lat;
     }
-    private _latitude: number;
+    private _lat: number;
 
     /**
      * Lines of longitude run north/south around the globe, intersecting at the poles. They
      * measure angular distance east/west.
      **/
-    get longitude() {
-        return this._longitude;
+    get lng() {
+        return this._lng;
     }
-    private _longitude: number;
+    private _lng: number;
 
     /**
      * Initializes a zero LatLngPoint.
@@ -62,22 +62,22 @@ export class LatLngPoint implements ILatLngPoint {
     constructor(lat?: number | ILatLngPoint, lng?: number, alt?: number) {
         if (!isNullOrUndefined(lat)
             && !isNumber(lat)) {
-            this._latitude = lat.latitude;
-            this._longitude = lat.longitude;
-            this._altitude = lat.altitude;
+            this._lat = lat.lat;
+            this._lng = lat.lng;
+            this._alt = lat.alt;
         }
         else {
-            this._latitude = lat || 0;
-            this._longitude = lng || 0;
-            this._altitude = alt;
+            this._lat = lat || 0;
+            this._lng = lng || 0;
+            this._alt = alt;
         }
     }
 
     toJSON(): string {
         return JSON.stringify({
-            latitude: this.latitude,
-            longitude: this.longitude,
-            altitude: this.altitude
+            lat: this.lat,
+            lng: this.lng,
+            alt: this.alt
         });
     }
 
@@ -144,10 +144,10 @@ export class LatLngPoint implements ILatLngPoint {
      * @param sigfigs
      */
     toDMS(sigfigs: number): string {
-        const latStr = LatLngPoint.toDMS(this.latitude, "S", "N", sigfigs);
-        const lngStr = LatLngPoint.toDMS(this.longitude, "W", "E", sigfigs);
-        if (this.altitude) {
-            const altStr = this.altitude.toFixed(sigfigs) + "m";
+        const latStr = LatLngPoint.toDMS(this.lat, "S", "N", sigfigs);
+        const lngStr = LatLngPoint.toDMS(this.lng, "W", "E", sigfigs);
+        if (this.alt) {
+            const altStr = this.alt.toFixed(sigfigs) + "m";
             return `<${latStr}, ${lngStr}> alt ${altStr}`;
         }
         else {
@@ -186,7 +186,7 @@ export class LatLngPoint implements ILatLngPoint {
      */
     toString(sigfigs?: number): string {
         sigfigs = sigfigs || 6;
-        return `(${this.latitude.toFixed(sigfigs)}°, ${this.longitude.toFixed(sigfigs)}°)`;
+        return `(${this.lat.toFixed(sigfigs)}°, ${this.lng.toFixed(sigfigs)}°)`;
     }
 
     /**
@@ -195,9 +195,9 @@ export class LatLngPoint implements ILatLngPoint {
      */
     equals(other?: ILatLngPoint | null): boolean {
         return !isNullOrUndefined(other)
-            && this.latitude == other.latitude
-            && this.longitude == other.longitude
-            && this.altitude == other.altitude;
+            && this.lat == other.lat
+            && this.lng == other.lng
+            && this.alt == other.alt;
     }
 
     compareTo(other?: ILatLngPoint | null): number {
@@ -205,9 +205,9 @@ export class LatLngPoint implements ILatLngPoint {
             return -1;
         }
         else {
-            const byLat = this.latitude - other.latitude;
-            const byLng = this.longitude - other.longitude;
-            const byAlt = (this.altitude || 0) - (other.altitude || 0);
+            const byLat = this.lat - other.lat;
+            const byLng = this.lng - other.lng;
+            const byAlt = (this.alt || 0) - (other.alt || 0);
 
             if (byLat == 0
                 && byLng == 0) {
@@ -275,9 +275,9 @@ export class LatLngPoint implements ILatLngPoint {
         const long0 = (utm.zone * 6) - 183;
         const lng = Math.atan(Math.sinh(etaPrime) / Math.cos(xiPrime));
 
-        this._latitude = rad2deg(lat);
-        this._longitude = long0 + rad2deg(lng);
-        this._altitude = utm.altitude;
+        this._lat = rad2deg(lat);
+        this._lng = long0 + rad2deg(lng);
+        this._alt = utm.altitude;
 
         return this;
     }
@@ -294,9 +294,9 @@ export class LatLngPoint implements ILatLngPoint {
     }
 
     copy(other: ILatLngPoint): LatLngPoint {
-        this._latitude = other.latitude;
-        this._longitude = other.longitude;
-        this._altitude = other.altitude;
+        this._lat = other.lat;
+        this._lng = other.lng;
+        this._alt = other.alt;
         return this;
     }
 }
