@@ -14,4 +14,4 @@ export declare function arraySortedInsert<T, V>(arr: T[], item: T, keySelector?:
  * @param arr
  * @param keySelector
  */
-export declare function arraySortByKey<T, V>(arr: T[], keySelector: (obj: T) => V): T[];
+export declare function arraySortByKey<T, V>(arr: ReadonlyArray<T>, keySelector: (obj: T) => V): T[];

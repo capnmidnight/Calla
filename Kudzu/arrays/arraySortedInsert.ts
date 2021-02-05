@@ -42,7 +42,7 @@ export function arraySortedInsert<T, V>(arr: T[], item: T, keySelector?: ((obj: 
  * @param arr
  * @param keySelector
  */
-export function arraySortByKey<T, V>(arr: T[], keySelector: (obj: T) => V): T[] {
+export function arraySortByKey<T, V>(arr: ReadonlyArray<T>, keySelector: (obj: T) => V): T[] {
     const newArr = new Array<T>();
     for (const obj of arr) {
         arraySortedInsert(newArr, obj, keySelector);
