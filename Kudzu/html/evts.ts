@@ -3,6 +3,19 @@ import { IAppliable } from "./attrs";
 
 type EventListenerOpts = boolean | AddEventListenerOptions;
 
+export function makeEnterKeyEventHandler(callback: (evt: KeyboardEvent) => void) {
+    return (ev: Event) => {
+        const evt = ev as KeyboardEvent;
+        if (!evt.shiftKey
+            && !evt.ctrlKey
+            && !evt.altKey
+            && !evt.metaKey
+            && evt.key === "Enter") {
+            callback(evt);
+        }
+    };
+}
+
 /**
  * A setter functor for HTML element events.
  **/
@@ -205,16 +218,3 @@ export function onVisibilityChange(callback: (evt: Event) => void, opts?: EventL
 export function onVolumeChange(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("volumechange", callback, opts); }
 export function onWaiting(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("waiting", callback, opts); }
 export function onWheel(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt { return new HtmlEvt("wheel", callback, opts); }
-
-export function addEnterKeyEvent(element: HTMLElement, callback: (evt: KeyboardEvent) => void) {
-    element.addEventListener("keyup", (ev: Event) => {
-        const evt = ev as KeyboardEvent;
-        if (!evt.shiftKey
-            && !evt.ctrlKey
-            && !evt.altKey
-            && !evt.metaKey
-            && evt.key === "Enter") {
-            callback(evt);
-        }
-    });
-}

@@ -1,5 +1,6 @@
 import { IAppliable } from "./attrs";
 declare type EventListenerOpts = boolean | AddEventListenerOptions;
+export declare function makeEnterKeyEventHandler(callback: (evt: KeyboardEvent) => void): (ev: Event) => void;
 /**
  * A setter functor for HTML element events.
  **/
@@ -183,5 +184,4 @@ export declare function onVisibilityChange(callback: (evt: Event) => void, opts?
 export declare function onVolumeChange(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt;
 export declare function onWaiting(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt;
 export declare function onWheel(callback: (evt: Event) => void, opts?: EventListenerOpts): HtmlEvt;
-export declare function addEnterKeyEvent(element: HTMLElement, callback: (evt: KeyboardEvent) => void): void;
 export {};

@@ -1,4 +1,16 @@
 import { isFunction, isHTMLElement } from "../typeChecks";
+export function makeEnterKeyEventHandler(callback) {
+    return (ev) => {
+        const evt = ev;
+        if (!evt.shiftKey
+            && !evt.ctrlKey
+            && !evt.altKey
+            && !evt.metaKey
+            && evt.key === "Enter") {
+            callback(evt);
+        }
+    };
+}
 /**
  * A setter functor for HTML element events.
  **/
@@ -195,16 +207,4 @@ export function onVisibilityChange(callback, opts) { return new HtmlEvt("visibil
 export function onVolumeChange(callback, opts) { return new HtmlEvt("volumechange", callback, opts); }
 export function onWaiting(callback, opts) { return new HtmlEvt("waiting", callback, opts); }
 export function onWheel(callback, opts) { return new HtmlEvt("wheel", callback, opts); }
-export function addEnterKeyEvent(element, callback) {
-    element.addEventListener("keyup", (ev) => {
-        const evt = ev;
-        if (!evt.shiftKey
-            && !evt.ctrlKey
-            && !evt.altKey
-            && !evt.metaKey
-            && evt.key === "Enter") {
-            callback(evt);
-        }
-    });
-}
 //# sourceMappingURL=evts.js.map
