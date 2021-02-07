@@ -66,6 +66,9 @@ export abstract class BaseTeleconferenceClient
     private _connectionState = ConnectionState.Disconnected;
     private _conferenceState = ConnectionState.Disconnected;
 
+    hasAudioPermission = false;
+    hasVideoPermission = false;
+
     get connectionState(): ConnectionState {
         return this._connectionState;
     }
@@ -82,7 +85,7 @@ export abstract class BaseTeleconferenceClient
         this._conferenceState = state;
     }
 
-    constructor(fetcher: IFetcher, audio: AudioManager) {
+    constructor(fetcher: IFetcher, audio: AudioManager, public needsAudioDevice = true, public needsVideoDevice = false) {
         super();
 
         this.fetcher = fetcher;
@@ -202,7 +205,10 @@ export abstract class BaseTeleconferenceClient
             }
 
             try {
-                await navigator.mediaDevices.getUserMedia({ audio: !this.hasAudioPermission, video: !this.hasVideoPermission });
+                await navigator.mediaDevices.getUserMedia({
+                    audio: this.needsAudioDevice && !this.hasAudioPermission,
+                    video: this.needsVideoDevice && !this.hasVideoPermission
+                });
             }
             catch (exp) {
                 console.warn(exp);
@@ -211,9 +217,6 @@ export abstract class BaseTeleconferenceClient
 
         return devices || [];
     }
-
-    hasAudioPermission = false;
-    hasVideoPermission = false;
 
     async getMediaPermissions(): Promise<MediaPermissionSet> {
         await this.getDevices();

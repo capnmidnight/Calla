@@ -32,8 +32,10 @@ export const DEFAULT_LOCAL_USER_ID = "local-user";
 let loggingEnabled = window.location.hostname === "localhost"
     || /\bdebug\b/.test(window.location.search);
 export class BaseTeleconferenceClient extends TypedEventBase {
-    constructor(fetcher, audio) {
+    constructor(fetcher, audio, needsAudioDevice = true, needsVideoDevice = false) {
         super();
+        this.needsAudioDevice = needsAudioDevice;
+        this.needsVideoDevice = needsVideoDevice;
         this.localUserID = null;
         this.localUserName = null;
         this.roomName = null;
@@ -144,7 +146,10 @@ export class BaseTeleconferenceClient extends TypedEventBase {
                 break;
             }
             try {
-                await navigator.mediaDevices.getUserMedia({ audio: !this.hasAudioPermission, video: !this.hasVideoPermission });
+                await navigator.mediaDevices.getUserMedia({
+                    audio: this.needsAudioDevice && !this.hasAudioPermission,
+                    video: this.needsVideoDevice && !this.hasVideoPermission
+                });
             }
             catch (exp) {
                 console.warn(exp);
