@@ -168,7 +168,7 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
                 imgData, interpolation, maxWidth, splits.shift());
         }
         else {
-            return await super.getEquiMaps(path, interpolation, maxWidth, onProgress);
+            return await super._getEquiMaps(path, interpolation, maxWidth, onProgress);
         }
     }
 }

@@ -124,7 +124,7 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
             return await renderImageBitmapFaces((readData, faceName, interpolation, maxWidth, onProgress) => this.worker.execute("renderFace", [readData, faceName, interpolation, maxWidth], onProgress), imgData, interpolation, maxWidth, splits.shift());
         }
         else {
-            return await super.getEquiMaps(path, interpolation, maxWidth, onProgress);
+            return await super._getEquiMaps(path, interpolation, maxWidth, onProgress);
         }
     }
 }
