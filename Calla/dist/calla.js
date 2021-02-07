@@ -3967,8 +3967,10 @@ var Calla = (function (exports) {
     let loggingEnabled = window.location.hostname === "localhost"
         || /\bdebug\b/.test(window.location.search);
     class BaseTeleconferenceClient extends TypedEventBase {
-        constructor(fetcher, audio) {
+        constructor(fetcher, audio, needsAudioDevice = true, needsVideoDevice = false) {
             super();
+            this.needsAudioDevice = needsAudioDevice;
+            this.needsVideoDevice = needsVideoDevice;
             this.localUserID = null;
             this.localUserName = null;
             this.roomName = null;
@@ -4079,7 +4081,10 @@ var Calla = (function (exports) {
                     break;
                 }
                 try {
-                    await navigator.mediaDevices.getUserMedia({ audio: !this.hasAudioPermission, video: !this.hasVideoPermission });
+                    await navigator.mediaDevices.getUserMedia({
+                        audio: this.needsAudioDevice && !this.hasAudioPermission,
+                        video: this.needsVideoDevice && !this.hasVideoPermission
+                    });
                 }
                 catch (exp) {
                     console.warn(exp);
