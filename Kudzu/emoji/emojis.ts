@@ -1,5 +1,6 @@
-import { Emoji } from "./Emoji";
-import { EmojiGroup } from "./EmojiGroup";
+import type { Emoji } from "./Emoji";
+import { e, E } from "./Emoji";
+import { C, g, G, J } from "./EmojiGroup";
 
 export function isSurfer(e: Emoji | string) {
     return surfers.contains(e)
@@ -8,93 +9,14 @@ export function isSurfer(e: Emoji | string) {
         || merpeople.contains(e);
 }
 
-/**
- * Shorthand for `new Emoji`, which saves significantly on bundle size.
- * @param v - a Unicode sequence.
- * @param d - an English text description of the pictogram.
- * @param [o] - an optional set of properties to set on the Emoji object.
- */
-function e(v: string, d: string, o: any = null) {
-    return new Emoji(v, d, o);
-}
-
-/**
- * Shorthand for `new Emoji`, which saves significantly on bundle size.
- * @param v - a Unicode sequence.
- * @param d - an English text description of the pictogram.
- * @param [o] - an optional set of properties to set on the Emoji object.
- */
-function E(v: string, d: string, o: any = null): Emoji {
-    return new Emoji(v + emojiStyle.value, d, o);
-}
-
-/**
- * Shorthand for `new EmojiGroup`, which saves significantly on bundle size.
- * @param v - a Unicode sequence.
- * @param d - an English text description of the pictogram.
- * @param r - the emoji that are contained in this group.
- */
-function g(v: string, d: string, ...r: (Emoji | EmojiGroup)[]) {
-    return new EmojiGroup(v, d, ...r);
-}
-
-/**
- * A shorthand for `new EmojiGroup` that allows for setting optional properties
- * on the EmojiGroup object.
- */
-function gg(v: string, d: string, o: any, ...r: Emoji[]) {
-    const emojis = Object.values(o)
-        .filter(oo => oo instanceof Emoji)
-        .map(oo => oo as Emoji)
-        .concat(...r);
-    return Object.assign(
-        g(
-            v,
-            d,
-            ...emojis),
-        o) as EmojiGroup;
-}
-
-function combo(a: any, b: any, altDesc: string | null = null): any {
-    if (a instanceof Array) {
-        return a.map(c => combo(c, b));
-    }
-    else if (a instanceof EmojiGroup) {
-        const { value, desc } = combo(e(a.value, a.desc), b);
-        return g(value, desc, ...combo(a.alts, b));
-    }
-    else if (b instanceof Array) {
-        return b.map(c => combo(a, c));
-    }
-    else {
-        return e(a.value + b.value, altDesc || (a.desc + ": " + b.desc));
-    }
-}
-
-function join(a: any, b: any, altDesc: string | null = null): any {
-    if (a instanceof Array) {
-        return a.map(c => join(c, b));
-    }
-    else if (a instanceof EmojiGroup) {
-        const { value, desc } = join(e(a.value, a.desc), b);
-        return g(value, desc, ...join(a.alts, b));
-    }
-    else if (b instanceof Array) {
-        return b.map(c => join(a, c));
-    }
-    else {
-        return e(a.value + zeroWidthJoiner.value + b.value, altDesc || (a.desc + ": " + b.desc));
-    }
-}
-
 function skin(v: string, d: string, ...rest: Emoji[]) {
     const person = e(v, d),
-        light = combo(person, skinL),
-        mediumLight = combo(person, skinML),
-        medium = combo(person, skinM),
-        mediumDark = combo(person, skinMD),
-        dark = combo(person, skinD);
-    return gg(person.value, person.desc, {
+        light = C(person, skinL),
+        mediumLight = C(person, skinML),
+        medium = C(person, skinM),
+        mediumDark = C(person, skinMD),
+        dark = C(person, skinD);
+    return G(person.value, person.desc, {
         default: person,
         light,
         mediumLight,
@@ -105,10 +27,10 @@ function skin(v: string, d: string, ...rest: Emoji[]) {
 }
 
 function sex(person: Emoji) {
-    const man = join(person, male),
-        woman = join(person, female);
+    const man = J(person, male),
+        woman = J(person, female);
 
-    return gg(person.value, person.desc, {
+    return G(person.value, person.desc, {
         default: person,
         man,
         woman
@@ -121,11 +43,11 @@ function skinAndSex(v: string, d: string) {
 
 function skinAndHair(v: string, d: string, ...rest: Emoji[]) {
     const people = skin(v, d),
-        red = join(people, hairRed),
-        curly = join(people, hairCurly),
-        white = join(people, hairWhite),
-        bald = join(people, hairBald);
-    return gg(people.value, people.desc, {
+        red = J(people, hairRed),
+        curly = J(people, hairCurly),
+        white = J(people, hairWhite),
+        bald = J(people, hairBald);
+    return G(people.value, people.desc, {
         default: people,
         red,
         curly,
@@ -136,9 +58,9 @@ function skinAndHair(v: string, d: string, ...rest: Emoji[]) {
 
 function sym(symbol: Emoji, name: string) {
     const j = e(symbol.value, name),
-        men = join((man as any).default as Emoji, j),
-        women = join((woman as any).default as Emoji, j);
-    return gg(symbol.value, symbol.desc, {
+        men = J((man as any).default as Emoji, j),
+        women = J((woman as any).default as Emoji, j);
+    return G(symbol.value, symbol.desc, {
         symbol,
         men,
         women
@@ -238,7 +160,7 @@ export const baby = skin("\u{1F476}", "Baby");
 export const child = skin("\u{1F9D2}", "Child");
 export const boy = skin("\u{1F466}", "Boy");
 export const girl = skin("\u{1F467}", "Girl");
-export const children = gg(child.value, child.desc, {
+export const children = G(child.value, child.desc, {
     default: child,
     male: boy,
     female: girl
@@ -273,7 +195,7 @@ export const woman = skinAndHair("\u{1F469}", "Woman",
     womanWithHeadscarf,
     (wearingTurban as any).woman as Emoji,
     brideWithVeil);
-export const adults = gg(
+export const adults = G(
     person.value, "Adult", {
     default: person,
     male: man,
@@ -283,7 +205,7 @@ export const adults = gg(
 export const olderPerson = skin("\u{1F9D3}", "Older Person");
 export const oldMan = skin("\u{1F474}", "Old Man");
 export const oldWoman = skin("\u{1F475}", "Old Woman");
-export const elderly = gg(
+export const elderly = G(
     olderPerson.value, olderPerson.desc, {
     default: olderPerson,
     male: oldMan,
@@ -341,14 +263,14 @@ export const scientists = sym(microscope, "Scientist");
 export const crown = e("\u{1F451}", "Crown");
 export const prince = skin("\u{1F934}", "Prince");
 export const princess = skin("\u{1F478}", "Princess");
-export const royalty = gg(
+export const royalty = G(
     crown.value, crown.desc, {
     symbol: crown,
     male: prince,
     female: princess
 });
 
-export const roles = gg(
+export const roles = G(
     "Roles", "Depictions of people working", {
     healthCareWorkers,
     students,
@@ -379,7 +301,7 @@ export const mrsClaus = skin("\u{1F936}", "Mrs. Claus");
 export const genies = sex(e("\u{1F9DE}", "Genie"));
 export const zombies = sex(e("\u{1F9DF}", "Zombie"));
 
-export const fantasy = gg(
+export const fantasy = G(
     "Fantasy", "Depictions of fantasy characters", {
     cherub,
     santaClaus,
@@ -408,7 +330,7 @@ export const inManualWheelchair = sym(manualWheelchair, "In Manual Wheelchair");
 
 export const manDancing = skin("\u{1F57A}", "Man Dancing");
 export const womanDancing = skin("\u{1F483}", "Woman Dancing");
-export const dancers = gg(
+export const dancers = G(
     manDancing.value, "Dancing", {
     male: manDancing,
     female: womanDancing
@@ -434,7 +356,7 @@ export const wrestlers = sex(e("\u{1F93C}", "Wrestler"));
 export const waterPoloers = skinAndSex("\u{1F93D}", "Water Polo Player");
 export const handBallers = skinAndSex("\u{1F93E}", "Hand Baller");
 
-export const inMotion = gg(
+export const inMotion = G(
     "In Motion", "Depictions of people in motion", {
     walking,
     standing,
@@ -468,7 +390,7 @@ export const inLotusPosition = skinAndSex("\u{1F9D8}", "In Lotus Position");
 export const inBath = skin("\u{1F6C0}", "In Bath");
 export const inBed = skin("\u{1F6CC}", "In Bed");
 export const inSauna = skinAndSex("\u{1F9D6}", "In Sauna");
-export const resting = gg(
+export const resting = G(
     "Resting", "Depictions of people at rest", {
     inLotusPosition,
     inBath,
@@ -477,7 +399,7 @@ export const resting = gg(
 });
 
 export const babies = g(baby.value, baby.desc, baby, cherub);
-export const people = gg(
+export const people = G(
     "People", "People", {
     babies,
     children,
@@ -485,7 +407,7 @@ export const people = gg(
     elderly
 });
 
-export const allPeople = gg(
+export const allPeople = G(
     "All People", "All People", {
     people,
     gestures,
@@ -613,7 +535,7 @@ export const frowningFace = E("\u2639", "Frowning Face");
 export const smilingFace = E("\u263A", "Smiling Face");
 export const speakingHead = E("\u{1F5E3}", "Speaking Head");
 export const bust = e("\u{1F464}", "Bust in Silhouette");
-export const faces = gg(
+export const faces = G(
     "Faces", "Round emoji faces", {
     ogre,
     goblin,
@@ -756,7 +678,7 @@ export const brownHeart = e("\u{1F90E}", "Brown Heart");
 export const orangeHeart = e("\u{1F9E1}", "Orange Heart");
 export const heartExclamation = E("\u2763", "Heart Exclamation");
 export const redHeart = E("\u2764", "Red Heart");
-export const love = gg(
+export const love = G(
     "Love", "Hearts and kisses", {
     kissMark,
     loveLetter,
@@ -1007,7 +929,7 @@ export const shapes = g(
     diamondWithADot);
 
 export const eye = E("\u{1F441}", "Eye");
-export const eyeInSpeechBubble = join(eye, leftSpeechBubble, "Eye in Speech Bubble");
+export const eyeInSpeechBubble = J(eye, leftSpeechBubble, "Eye in Speech Bubble");
 export const bodyParts = g(
     "Body Parts", "General body parts",
     e("\u{1F440}", "Eyes"),
@@ -1065,11 +987,11 @@ export const weather = g(
     E("\u{1F321}", "Thermometer"));
 
 export const cat = e("\u{1F408}", "Cat");
-export const blackCat = join(cat, blackLargeSquare, "Black Cat");
+export const blackCat = J(cat, blackLargeSquare, "Black Cat");
 export const dog = e("\u{1F415}", "Dog");
-export const serviceDog = join(dog, safetyVest, "Service Dog");
+export const serviceDog = J(dog, safetyVest, "Service Dog");
 export const bear = e("\u{1F43B}", "Bear");
-export const polarBear = join(bear, snowflake, "Polar Bear");
+export const polarBear = J(bear, snowflake, "Polar Bear");
 export const animals = g(
     "Animals", "Animals and insects",
     e("\u{1F400}", "Rat"),
@@ -1612,10 +1534,10 @@ export const nations = g(
     e("\u{1F1FF}\u{1F1FC}", "Flag: Zimbabwe"));
 
 export const whiteFlag = E("\u{1F3F3}", "White Flag");
-export const rainbowFlag = join(whiteFlag, rainbow, "Rainbow Flag");
-export const transgenderFlag = join(whiteFlag, transgender, "Transgender Flag");
+export const rainbowFlag = J(whiteFlag, rainbow, "Rainbow Flag");
+export const transgenderFlag = J(whiteFlag, transgender, "Transgender Flag");
 export const blackFlag = e("\u{1F3F4}", "Black Flag");
-export const pirateFlag = join(blackFlag, skullAndCrossbones, "Pirate Flag");
+export const pirateFlag = J(blackFlag, skullAndCrossbones, "Pirate Flag");
 export const flags = g(
     "Flags", "Basic flags",
     e("\u{1F38C}", "Crossed Flags"),
@@ -2006,18 +1928,18 @@ export const digit9 = E("9", "Digit Nine");
 export const asterisk = E("\u002A", "Asterisk");
 export const numberSign = E("\u0023", "Number Sign");
 
-export const keycapDigit0 = combo(digit0, combiningEnclosingKeycap, "Keycap Digit Zero");
-export const keycapDigit1 = combo(digit1, combiningEnclosingKeycap, "Keycap Digit One");
-export const keycapDigit2 = combo(digit2, combiningEnclosingKeycap, "Keycap Digit Two");
-export const keycapDigit3 = combo(digit3, combiningEnclosingKeycap, "Keycap Digit Three");
-export const keycapDigit4 = combo(digit4, combiningEnclosingKeycap, "Keycap Digit Four");
-export const keycapDigit5 = combo(digit5, combiningEnclosingKeycap, "Keycap Digit Five");
-export const keycapDigit6 = combo(digit6, combiningEnclosingKeycap, "Keycap Digit Six");
-export const keycapDigit7 = combo(digit7, combiningEnclosingKeycap, "Keycap Digit Seven");
-export const keycapDigit8 = combo(digit8, combiningEnclosingKeycap, "Keycap Digit Eight");
-export const keycapDigit9 = combo(digit9, combiningEnclosingKeycap, "Keycap Digit Nine");
-export const keycapAsterisk = combo(asterisk, combiningEnclosingKeycap, "Keycap Asterisk");
-export const keycapNumberSign = combo(numberSign, combiningEnclosingKeycap, "Keycap Number Sign");
+export const keycapDigit0 = C(digit0, combiningEnclosingKeycap, "Keycap Digit Zero");
+export const keycapDigit1 = C(digit1, combiningEnclosingKeycap, "Keycap Digit One");
+export const keycapDigit2 = C(digit2, combiningEnclosingKeycap, "Keycap Digit Two");
+export const keycapDigit3 = C(digit3, combiningEnclosingKeycap, "Keycap Digit Three");
+export const keycapDigit4 = C(digit4, combiningEnclosingKeycap, "Keycap Digit Four");
+export const keycapDigit5 = C(digit5, combiningEnclosingKeycap, "Keycap Digit Five");
+export const keycapDigit6 = C(digit6, combiningEnclosingKeycap, "Keycap Digit Six");
+export const keycapDigit7 = C(digit7, combiningEnclosingKeycap, "Keycap Digit Seven");
+export const keycapDigit8 = C(digit8, combiningEnclosingKeycap, "Keycap Digit Eight");
+export const keycapDigit9 = C(digit9, combiningEnclosingKeycap, "Keycap Digit Nine");
+export const keycapAsterisk = C(asterisk, combiningEnclosingKeycap, "Keycap Asterisk");
+export const keycapNumberSign = C(numberSign, combiningEnclosingKeycap, "Keycap Number Sign");
 export const keycap10 = e("\u{1F51F}", "Keycap: 10");
 
 export const numbers = g(
@@ -2760,7 +2682,7 @@ export const copyright = E("\u00A9", "Copyright");
 export const registered = E("\u00AE", "Registered");
 export const squareFourCourners = E("\u26F6", "Square: Four Corners");
 
-export const marks = gg(
+export const marks = G(
     "Marks", "Marks", {
     doubleExclamationMark,
     interrobang,
@@ -2797,7 +2719,7 @@ export const abacus = e("\u{1F9EE}", "Abacus");
 export const magnet = e("\u{1F9F2}", "Magnet");
 export const telescope = e("\u{1F52D}", "Telescope");
 
-export const science = gg(
+export const science = G(
     "Science", "Science", {
     droplet,
     dropOfBlood,
@@ -2826,7 +2748,7 @@ export const whiteChessRook = e("\u2656", "White Chess Rook");
 export const whiteChessBishop = e("\u2657", "White Chess Bishop");
 export const whiteChessKnight = e("\u2658", "White Chess Knight");
 export const whiteChessPawn = e("\u2659", "White Chess Pawn");
-export const whiteChessPieces = gg(whiteChessKing.value + whiteChessQueen.value + whiteChessRook.value + whiteChessBishop.value + whiteChessKnight.value + whiteChessPawn.value, "White Chess Pieces", {
+export const whiteChessPieces = G(whiteChessKing.value + whiteChessQueen.value + whiteChessRook.value + whiteChessBishop.value + whiteChessKnight.value + whiteChessPawn.value, "White Chess Pieces", {
     width: "auto",
     king: whiteChessKing,
     queen: whiteChessQueen,
@@ -2841,7 +2763,7 @@ export const blackChessRook = e("\u265C", "Black Chess Rook");
 export const blackChessBishop = e("\u265D", "Black Chess Bishop");
 export const blackChessKnight = e("\u265E", "Black Chess Knight");
 export const blackChessPawn = e("\u265F", "Black Chess Pawn");
-export const blackChessPieces = gg(blackChessKing.value + blackChessQueen.value + blackChessRook.value + blackChessBishop.value + blackChessKnight.value + blackChessPawn.value, "Black Chess Pieces", {
+export const blackChessPieces = G(blackChessKing.value + blackChessQueen.value + blackChessRook.value + blackChessBishop.value + blackChessKnight.value + blackChessPawn.value, "Black Chess Pieces", {
     width: "auto",
     king: blackChessKing,
     queen: blackChessQueen,
@@ -2850,38 +2772,38 @@ export const blackChessPieces = gg(blackChessKing.value + blackChessQueen.value 
     knight: blackChessKnight,
     pawn: blackChessPawn
 });
-export const chessPawns = gg(whiteChessPawn.value + blackChessPawn.value, "Chess Pawns", {
+export const chessPawns = G(whiteChessPawn.value + blackChessPawn.value, "Chess Pawns", {
     width: "auto",
     white: whiteChessPawn,
     black: blackChessPawn
 });
-export const chessRooks = gg(whiteChessRook.value + blackChessRook.value, "Chess Rooks", {
+export const chessRooks = G(whiteChessRook.value + blackChessRook.value, "Chess Rooks", {
     width: "auto",
     white: whiteChessRook,
     black: blackChessRook
 });
-export const chessBishops = gg(whiteChessBishop.value + blackChessBishop.value, "Chess Bishops", {
+export const chessBishops = G(whiteChessBishop.value + blackChessBishop.value, "Chess Bishops", {
     width: "auto",
     white: whiteChessBishop,
     black: blackChessBishop
 });
-export const chessKnights = gg(whiteChessKnight.value + blackChessKnight.value, "Chess Knights", {
+export const chessKnights = G(whiteChessKnight.value + blackChessKnight.value, "Chess Knights", {
     width: "auto",
     white: whiteChessKnight,
     black: blackChessKnight
 });
-export const chessQueens = gg(whiteChessQueen.value + blackChessQueen.value, "Chess Queens", {
+export const chessQueens = G(whiteChessQueen.value + blackChessQueen.value, "Chess Queens", {
     width: "auto",
     white: whiteChessQueen,
     black: blackChessQueen
 });
-export const chessKings = gg(whiteChessKing.value + blackChessKing.value, "Chess Kings", {
+export const chessKings = G(whiteChessKing.value + blackChessKing.value, "Chess Kings", {
     width: "auto",
     white: whiteChessKing,
     black: blackChessKing
 });
 
-export const chess = gg("Chess Pieces", "Chess Pieces", {
+export const chess = G("Chess Pieces", "Chess Pieces", {
     width: "auto",
     white: whiteChessPieces,
     black: blackChessPieces,
@@ -2899,7 +2821,7 @@ export const dice3 = e("\u2682", "Dice: Side 3");
 export const dice4 = e("\u2683", "Dice: Side 4");
 export const dice5 = e("\u2684", "Dice: Side 5");
 export const dice6 = e("\u2685", "Dice: Side 6");
-export const dice = gg("Dice", "Dice", {
+export const dice = G("Dice", "Dice", {
     dice1,
     dice2,
     dice3,
@@ -2908,7 +2830,7 @@ export const dice = gg("Dice", "Dice", {
     dice6
 });
 
-export const allIcons = gg(
+export const allIcons = G(
     "All Icons", "All Icons", {
     faces,
     love,

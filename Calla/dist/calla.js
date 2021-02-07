@@ -3516,6 +3516,12 @@ var Calla = (function (exports) {
     }
 
     /**
+     * Shorthand for `new Emoji`, which saves significantly on bundle size.
+     * @param v - a Unicode sequence.
+     * @param d - an English text description of the pictogram.
+     * @param [o] - an optional set of properties to set on the Emoji object.
+     */
+    /**
      * Unicode-standardized pictograms.
      **/
     class Emoji {

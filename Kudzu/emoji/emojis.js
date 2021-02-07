@@ -1,82 +1,14 @@
-import { Emoji } from "./Emoji";
-import { EmojiGroup } from "./EmojiGroup";
+import { e, E } from "./Emoji";
+import { C, g, G, J } from "./EmojiGroup";
 export function isSurfer(e) {
     return surfers.contains(e)
         || rowers.contains(e)
         || swimmers.contains(e)
         || merpeople.contains(e);
 }
-/**
- * Shorthand for `new Emoji`, which saves significantly on bundle size.
- * @param v - a Unicode sequence.
- * @param d - an English text description of the pictogram.
- * @param [o] - an optional set of properties to set on the Emoji object.
- */
-function e(v, d, o = null) {
-    return new Emoji(v, d, o);
-}
-/**
- * Shorthand for `new Emoji`, which saves significantly on bundle size.
- * @param v - a Unicode sequence.
- * @param d - an English text description of the pictogram.
- * @param [o] - an optional set of properties to set on the Emoji object.
- */
-function E(v, d, o = null) {
-    return new Emoji(v + emojiStyle.value, d, o);
-}
-/**
- * Shorthand for `new EmojiGroup`, which saves significantly on bundle size.
- * @param v - a Unicode sequence.
- * @param d - an English text description of the pictogram.
- * @param r - the emoji that are contained in this group.
- */
-function g(v, d, ...r) {
-    return new EmojiGroup(v, d, ...r);
-}
-/**
- * A shorthand for `new EmojiGroup` that allows for setting optional properties
- * on the EmojiGroup object.
- */
-function gg(v, d, o, ...r) {
-    const emojis = Object.values(o)
-        .filter(oo => oo instanceof Emoji)
-        .map(oo => oo)
-        .concat(...r);
-    return Object.assign(g(v, d, ...emojis), o);
-}
-function combo(a, b, altDesc = null) {
-    if (a instanceof Array) {
-        return a.map(c => combo(c, b));
-    }
-    else if (a instanceof EmojiGroup) {
-        const { value, desc } = combo(e(a.value, a.desc), b);
-        return g(value, desc, ...combo(a.alts, b));
-    }
-    else if (b instanceof Array) {
-        return b.map(c => combo(a, c));
-    }
-    else {
-        return e(a.value + b.value, altDesc || (a.desc + ": " + b.desc));
-    }
-}
-function join(a, b, altDesc = null) {
-    if (a instanceof Array) {
-        return a.map(c => join(c, b));
-    }
-    else if (a instanceof EmojiGroup) {
-        const { value, desc } = join(e(a.value, a.desc), b);
-        return g(value, desc, ...join(a.alts, b));
-    }
-    else if (b instanceof Array) {
-        return b.map(c => join(a, c));
-    }
-    else {
-        return e(a.value + zeroWidthJoiner.value + b.value, altDesc || (a.desc + ": " + b.desc));
-    }
-}
 function skin(v, d, ...rest) {
-    const person = e(v, d), light = combo(person, skinL), mediumLight = combo(person, skinML), medium = combo(person, skinM), mediumDark = combo(person, skinMD), dark = combo(person, skinD);
-    return gg(person.value, person.desc, {
+    const person = e(v, d), light = C(person, skinL), mediumLight = C(person, skinML), medium = C(person, skinM), mediumDark = C(person, skinMD), dark = C(person, skinD);
+    return G(person.value, person.desc, {
         default: person,
         light,
         mediumLight,
@@ -86,8 +18,8 @@ function skin(v, d, ...rest) {
     }, ...rest);
 }
 function sex(person) {
-    const man = join(person, male), woman = join(person, female);
-    return gg(person.value, person.desc, {
+    const man = J(person, male), woman = J(person, female);
+    return G(person.value, person.desc, {
         default: person,
         man,
         woman
@@ -97,8 +29,8 @@ function skinAndSex(v, d) {
     return sex(skin(v, d));
 }
 function skinAndHair(v, d, ...rest) {
-    const people = skin(v, d), red = join(people, hairRed), curly = join(people, hairCurly), white = join(people, hairWhite), bald = join(people, hairBald);
-    return gg(people.value, people.desc, {
+    const people = skin(v, d), red = J(people, hairRed), curly = J(people, hairCurly), white = J(people, hairWhite), bald = J(people, hairBald);
+    return G(people.value, people.desc, {
         default: people,
         red,
         curly,
@@ -107,8 +39,8 @@ function skinAndHair(v, d, ...rest) {
     }, ...rest);
 }
 function sym(symbol, name) {
-    const j = e(symbol.value, name), men = join(man.default, j), women = join(woman.default, j);
-    return gg(symbol.value, symbol.desc, {
+    const j = e(symbol.value, name), men = J(man.default, j), women = J(woman.default, j);
+    return G(symbol.value, symbol.desc, {
         symbol,
         men,
         women
@@ -187,7 +119,7 @@ export const baby = skin("\u{1F476}", "Baby");
 export const child = skin("\u{1F9D2}", "Child");
 export const boy = skin("\u{1F466}", "Boy");
 export const girl = skin("\u{1F467}", "Girl");
-export const children = gg(child.value, child.desc, {
+export const children = G(child.value, child.desc, {
     default: child,
     male: boy,
     female: girl
@@ -204,7 +136,7 @@ export const breastFeeding = skin("\u{1F931}", "Breast-Feeding");
 export const womanWithHeadscarf = skin("\u{1F9D5}", "Woman With Headscarf");
 export const brideWithVeil = skin("\u{1F470}", "Bride With Veil");
 export const woman = skinAndHair("\u{1F469}", "Woman", blondes.woman, pregnantWoman, breastFeeding, womanWithHeadscarf, wearingTurban.woman, brideWithVeil);
-export const adults = gg(person.value, "Adult", {
+export const adults = G(person.value, "Adult", {
     default: person,
     male: man,
     female: woman
@@ -212,7 +144,7 @@ export const adults = gg(person.value, "Adult", {
 export const olderPerson = skin("\u{1F9D3}", "Older Person");
 export const oldMan = skin("\u{1F474}", "Old Man");
 export const oldWoman = skin("\u{1F475}", "Old Woman");
-export const elderly = gg(olderPerson.value, olderPerson.desc, {
+export const elderly = G(olderPerson.value, olderPerson.desc, {
     default: olderPerson,
     male: oldMan,
     female: oldWoman
@@ -252,12 +184,12 @@ export const scientists = sym(microscope, "Scientist");
 export const crown = e("\u{1F451}", "Crown");
 export const prince = skin("\u{1F934}", "Prince");
 export const princess = skin("\u{1F478}", "Princess");
-export const royalty = gg(crown.value, crown.desc, {
+export const royalty = G(crown.value, crown.desc, {
     symbol: crown,
     male: prince,
     female: princess
 });
-export const roles = gg("Roles", "Depictions of people working", {
+export const roles = G("Roles", "Depictions of people working", {
     healthCareWorkers,
     students,
     teachers,
@@ -284,7 +216,7 @@ export const santaClaus = skin("\u{1F385}", "Santa Claus");
 export const mrsClaus = skin("\u{1F936}", "Mrs. Claus");
 export const genies = sex(e("\u{1F9DE}", "Genie"));
 export const zombies = sex(e("\u{1F9DF}", "Zombie"));
-export const fantasy = gg("Fantasy", "Depictions of fantasy characters", {
+export const fantasy = G("Fantasy", "Depictions of fantasy characters", {
     cherub,
     santaClaus,
     mrsClaus,
@@ -307,7 +239,7 @@ export const manualWheelchair = e("\u{1F9BD}", "Manual Wheelchair");
 export const inManualWheelchair = sym(manualWheelchair, "In Manual Wheelchair");
 export const manDancing = skin("\u{1F57A}", "Man Dancing");
 export const womanDancing = skin("\u{1F483}", "Woman Dancing");
-export const dancers = gg(manDancing.value, "Dancing", {
+export const dancers = G(manDancing.value, "Dancing", {
     male: manDancing,
     female: womanDancing
 });
@@ -329,7 +261,7 @@ export const cartwheelers = skinAndSex("\u{1F938}", "Cartwheeler");
 export const wrestlers = sex(e("\u{1F93C}", "Wrestler"));
 export const waterPoloers = skinAndSex("\u{1F93D}", "Water Polo Player");
 export const handBallers = skinAndSex("\u{1F93E}", "Hand Baller");
-export const inMotion = gg("In Motion", "Depictions of people in motion", {
+export const inMotion = G("In Motion", "Depictions of people in motion", {
     walking,
     standing,
     kneeling,
@@ -361,20 +293,20 @@ export const inLotusPosition = skinAndSex("\u{1F9D8}", "In Lotus Position");
 export const inBath = skin("\u{1F6C0}", "In Bath");
 export const inBed = skin("\u{1F6CC}", "In Bed");
 export const inSauna = skinAndSex("\u{1F9D6}", "In Sauna");
-export const resting = gg("Resting", "Depictions of people at rest", {
+export const resting = G("Resting", "Depictions of people at rest", {
     inLotusPosition,
     inBath,
     inBed,
     inSauna
 });
 export const babies = g(baby.value, baby.desc, baby, cherub);
-export const people = gg("People", "People", {
+export const people = G("People", "People", {
     babies,
     children,
     adults,
     elderly
 });
-export const allPeople = gg("All People", "All People", {
+export const allPeople = G("All People", "All People", {
     people,
     gestures,
     inMotion,
@@ -500,7 +432,7 @@ export const frowningFace = E("\u2639", "Frowning Face");
 export const smilingFace = E("\u263A", "Smiling Face");
 export const speakingHead = E("\u{1F5E3}", "Speaking Head");
 export const bust = e("\u{1F464}", "Bust in Silhouette");
-export const faces = gg("Faces", "Round emoji faces", {
+export const faces = G("Faces", "Round emoji faces", {
     ogre,
     goblin,
     ghost,
@@ -641,7 +573,7 @@ export const brownHeart = e("\u{1F90E}", "Brown Heart");
 export const orangeHeart = e("\u{1F9E1}", "Orange Heart");
 export const heartExclamation = E("\u2763", "Heart Exclamation");
 export const redHeart = E("\u2764", "Red Heart");
-export const love = gg("Love", "Hearts and kisses", {
+export const love = G("Love", "Hearts and kisses", {
     kissMark,
     loveLetter,
     beatingHeart,
@@ -775,17 +707,17 @@ export const star = e("\u2B50", "Star");
 export const diamondWithADot = e("\u{1F4A0}", "Diamond with a Dot");
 export const shapes = g("Shapes", "Colored shapes", redCircle, blueCircle, largeOrangeDiamond, largeBlueDiamond, smallOrangeDiamond, smallBlueDiamond, redTrianglePointedUp, redTrianglePointedDown, orangeCircle, yellowCircle, greenCircle, purpleCircle, brownCircle, hollowRedCircle, whiteCircle, blackCircle, redSquare, blueSquare, orangeSquare, yellowSquare, greenSquare, purpleSquare, brownSquare, blackSquareButton, whiteSquareButton, blackSmallSquare, whiteSmallSquare, whiteMediumSmallSquare, blackMediumSmallSquare, whiteMediumSquare, blackMediumSquare, blackLargeSquare, whiteLargeSquare, star, diamondWithADot);
 export const eye = E("\u{1F441}", "Eye");
-export const eyeInSpeechBubble = join(eye, leftSpeechBubble, "Eye in Speech Bubble");
+export const eyeInSpeechBubble = J(eye, leftSpeechBubble, "Eye in Speech Bubble");
 export const bodyParts = g("Body Parts", "General body parts", e("\u{1F440}", "Eyes"), eye, eyeInSpeechBubble, e("\u{1F442}", "Ear"), e("\u{1F443}", "Nose"), e("\u{1F444}", "Mouth"), e("\u{1F445}", "Tongue"), e("\u{1F4AA}", "Flexed Biceps"), e("\u{1F933}", "Selfie"), e("\u{1F9B4}", "Bone"), e("\u{1F9B5}", "Leg"), e("\u{1F9B6}", "Foot"), e("\u{1F9B7}", "Tooth"), e("\u{1F9BB}", "Ear with Hearing Aid"), e("\u{1F9BE}", "Mechanical Arm"), e("\u{1F9BF}", "Mechanical Leg"), e("\u{1FAC0}", "Anatomical Heart"), e("\u{1FAC1}", "Lungs"), e("\u{1F9E0}", "Brain"));
 export const snowflake = E("\u2744", "Snowflake");
 export const rainbow = e("\u{1F308}", "Rainbow");
 export const weather = g("Weather", "Weather", e("\u{1F304}", "Sunrise Over Mountains"), e("\u{1F305}", "Sunrise"), e("\u{1F306}", "Cityscape at Dusk"), e("\u{1F307}", "Sunset"), e("\u{1F303}", "Night with Stars"), e("\u{1F302}", "Closed Umbrella"), E("\u2602", "Umbrella"), E("\u2614", "Umbrella with Rain Drops"), E("\u2603", "Snowman"), e("\u26C4", "Snowman Without Snow"), E("\u2600", "Sun"), E("\u2601", "Cloud"), E("\u{1F324}", "Sun Behind Small Cloud"), e("\u26C5", "Sun Behind Cloud"), E("\u{1F325}", "Sun Behind Large Cloud"), E("\u{1F326}", "Sun Behind Rain Cloud"), E("\u{1F327}", "Cloud with Rain"), E("\u{1F328}", "Cloud with Snow"), E("\u{1F329}", "Cloud with Lightning"), E("\u26C8", "Cloud with Lightning and Rain"), snowflake, e("\u{1F300}", "Cyclone"), E("\u{1F32A}", "Tornado"), E("\u{1F32C}", "Wind Face"), e("\u{1F30A}", "Water Wave"), E("\u{1F32B}", "Fog"), e("\u{1F301}", "Foggy"), rainbow, E("\u{1F321}", "Thermometer"));
 export const cat = e("\u{1F408}", "Cat");
-export const blackCat = join(cat, blackLargeSquare, "Black Cat");
+export const blackCat = J(cat, blackLargeSquare, "Black Cat");
 export const dog = e("\u{1F415}", "Dog");
-export const serviceDog = join(dog, safetyVest, "Service Dog");
+export const serviceDog = J(dog, safetyVest, "Service Dog");
 export const bear = e("\u{1F43B}", "Bear");
-export const polarBear = join(bear, snowflake, "Polar Bear");
+export const polarBear = J(bear, snowflake, "Polar Bear");
 export const animals = g("Animals", "Animals and insects", e("\u{1F400}", "Rat"), e("\u{1F401}", "Mouse"), e("\u{1F402}", "Ox"), e("\u{1F403}", "Water Buffalo"), e("\u{1F404}", "Cow"), e("\u{1F405}", "Tiger"), e("\u{1F406}", "Leopard"), e("\u{1F407}", "Rabbit"), cat, blackCat, e("\u{1F409}", "Dragon"), e("\u{1F40A}", "Crocodile"), e("\u{1F40B}", "Whale"), e("\u{1F40C}", "Snail"), e("\u{1F40D}", "Snake"), e("\u{1F40E}", "Horse"), e("\u{1F40F}", "Ram"), e("\u{1F410}", "Goat"), e("\u{1F411}", "Ewe"), e("\u{1F412}", "Monkey"), e("\u{1F413}", "Rooster"), e("\u{1F414}", "Chicken"), dog, serviceDog, e("\u{1F416}", "Pig"), e("\u{1F417}", "Boar"), e("\u{1F418}", "Elephant"), e("\u{1F419}", "Octopus"), e("\u{1F41A}", "Spiral Shell"), e("\u{1F41B}", "Bug"), e("\u{1F41C}", "Ant"), e("\u{1F41D}", "Honeybee"), e("\u{1F41E}", "Lady Beetle"), e("\u{1F41F}", "Fish"), e("\u{1F420}", "Tropical Fish"), e("\u{1F421}", "Blowfish"), e("\u{1F422}", "Turtle"), e("\u{1F423}", "Hatching Chick"), e("\u{1F424}", "Baby Chick"), e("\u{1F425}", "Front-Facing Baby Chick"), e("\u{1F426}", "Bird"), e("\u{1F427}", "Penguin"), e("\u{1F428}", "Koala"), e("\u{1F429}", "Poodle"), e("\u{1F42A}", "Camel"), e("\u{1F42B}", "Two-Hump Camel"), e("\u{1F42C}", "Dolphin"), e("\u{1F42D}", "Mouse Face"), e("\u{1F42E}", "Cow Face"), e("\u{1F42F}", "Tiger Face"), e("\u{1F430}", "Rabbit Face"), e("\u{1F431}", "Cat Face"), e("\u{1F432}", "Dragon Face"), e("\u{1F433}", "Spouting Whale"), e("\u{1F434}", "Horse Face"), e("\u{1F435}", "Monkey Face"), e("\u{1F436}", "Dog Face"), e("\u{1F437}", "Pig Face"), e("\u{1F438}", "Frog"), e("\u{1F439}", "Hamster"), e("\u{1F43A}", "Wolf"), bear, polarBear, e("\u{1F43C}", "Panda"), e("\u{1F43D}", "Pig Nose"), e("\u{1F43E}", "Paw Prints"), E("\u{1F43F}", "Chipmunk"), E("\u{1F54A}", "Dove"), E("\u{1F577}", "Spider"), E("\u{1F578}", "Spider Web"), e("\u{1F981}", "Lion"), e("\u{1F982}", "Scorpion"), e("\u{1F983}", "Turkey"), e("\u{1F984}", "Unicorn"), e("\u{1F985}", "Eagle"), e("\u{1F986}", "Duck"), e("\u{1F987}", "Bat"), e("\u{1F988}", "Shark"), e("\u{1F989}", "Owl"), e("\u{1F98A}", "Fox"), e("\u{1F98B}", "Butterfly"), e("\u{1F98C}", "Deer"), e("\u{1F98D}", "Gorilla"), e("\u{1F98E}", "Lizard"), e("\u{1F98F}", "Rhinoceros"), e("\u{1F992}", "Giraffe"), e("\u{1F993}", "Zebra"), e("\u{1F994}", "Hedgehog"), e("\u{1F995}", "Sauropod"), e("\u{1F996}", "T-Rex"), e("\u{1F997}", "Cricket"), e("\u{1F998}", "Kangaroo"), e("\u{1F999}", "Llama"), e("\u{1F99A}", "Peacock"), e("\u{1F99B}", "Hippopotamus"), e("\u{1F99C}", "Parrot"), e("\u{1F99D}", "Raccoon"), e("\u{1F99F}", "Mosquito"), e("\u{1F9A0}", "Microbe"), e("\u{1F9A1}", "Badger"), e("\u{1F9A2}", "Swan"), 
 //e("\u{1F9A3}", "Mammoth"),
 //e("\u{1F9A4}", "Dodo"),
@@ -817,10 +749,10 @@ e("\u{1F366}", "Soft Ice Cream"), e("\u{1F367}", "Shaved Ice"), e("\u{1F368}", "
 e("\u2615", "Hot Beverage"), e("\u{1F374}", "Fork and Knife"), E("\u{1F37D}", "Fork and Knife with Plate"), e("\u{1F3FA}", "Amphora"), e("\u{1F52A}", "Kitchen Knife"), e("\u{1F944}", "Spoon"), e("\u{1F962}", "Chopsticks"));
 export const nations = g("National Flags", "Flags of countries from around the world", e("\u{1F1E6}\u{1F1E8}", "Flag: Ascension Island"), e("\u{1F1E6}\u{1F1E9}", "Flag: Andorra"), e("\u{1F1E6}\u{1F1EA}", "Flag: United Arab Emirates"), e("\u{1F1E6}\u{1F1EB}", "Flag: Afghanistan"), e("\u{1F1E6}\u{1F1EC}", "Flag: Antigua & Barbuda"), e("\u{1F1E6}\u{1F1EE}", "Flag: Anguilla"), e("\u{1F1E6}\u{1F1F1}", "Flag: Albania"), e("\u{1F1E6}\u{1F1F2}", "Flag: Armenia"), e("\u{1F1E6}\u{1F1F4}", "Flag: Angola"), e("\u{1F1E6}\u{1F1F6}", "Flag: Antarctica"), e("\u{1F1E6}\u{1F1F7}", "Flag: Argentina"), e("\u{1F1E6}\u{1F1F8}", "Flag: American Samoa"), e("\u{1F1E6}\u{1F1F9}", "Flag: Austria"), e("\u{1F1E6}\u{1F1FA}", "Flag: Australia"), e("\u{1F1E6}\u{1F1FC}", "Flag: Aruba"), e("\u{1F1E6}\u{1F1FD}", "Flag: Åland Islands"), e("\u{1F1E6}\u{1F1FF}", "Flag: Azerbaijan"), e("\u{1F1E7}\u{1F1E6}", "Flag: Bosnia & Herzegovina"), e("\u{1F1E7}\u{1F1E7}", "Flag: Barbados"), e("\u{1F1E7}\u{1F1E9}", "Flag: Bangladesh"), e("\u{1F1E7}\u{1F1EA}", "Flag: Belgium"), e("\u{1F1E7}\u{1F1EB}", "Flag: Burkina Faso"), e("\u{1F1E7}\u{1F1EC}", "Flag: Bulgaria"), e("\u{1F1E7}\u{1F1ED}", "Flag: Bahrain"), e("\u{1F1E7}\u{1F1EE}", "Flag: Burundi"), e("\u{1F1E7}\u{1F1EF}", "Flag: Benin"), e("\u{1F1E7}\u{1F1F1}", "Flag: St. Barthélemy"), e("\u{1F1E7}\u{1F1F2}", "Flag: Bermuda"), e("\u{1F1E7}\u{1F1F3}", "Flag: Brunei"), e("\u{1F1E7}\u{1F1F4}", "Flag: Bolivia"), e("\u{1F1E7}\u{1F1F6}", "Flag: Caribbean Netherlands"), e("\u{1F1E7}\u{1F1F7}", "Flag: Brazil"), e("\u{1F1E7}\u{1F1F8}", "Flag: Bahamas"), e("\u{1F1E7}\u{1F1F9}", "Flag: Bhutan"), e("\u{1F1E7}\u{1F1FB}", "Flag: Bouvet Island"), e("\u{1F1E7}\u{1F1FC}", "Flag: Botswana"), e("\u{1F1E7}\u{1F1FE}", "Flag: Belarus"), e("\u{1F1E7}\u{1F1FF}", "Flag: Belize"), e("\u{1F1E8}\u{1F1E6}", "Flag: Canada"), e("\u{1F1E8}\u{1F1E8}", "Flag: Cocos (Keeling) Islands"), e("\u{1F1E8}\u{1F1E9}", "Flag: Congo - Kinshasa"), e("\u{1F1E8}\u{1F1EB}", "Flag: Central African Republic"), e("\u{1F1E8}\u{1F1EC}", "Flag: Congo - Brazzaville"), e("\u{1F1E8}\u{1F1ED}", "Flag: Switzerland"), e("\u{1F1E8}\u{1F1EE}", "Flag: Côte d’Ivoire"), e("\u{1F1E8}\u{1F1F0}", "Flag: Cook Islands"), e("\u{1F1E8}\u{1F1F1}", "Flag: Chile"), e("\u{1F1E8}\u{1F1F2}", "Flag: Cameroon"), e("\u{1F1E8}\u{1F1F3}", "Flag: China"), e("\u{1F1E8}\u{1F1F4}", "Flag: Colombia"), e("\u{1F1E8}\u{1F1F5}", "Flag: Clipperton Island"), e("\u{1F1E8}\u{1F1F7}", "Flag: Costa Rica"), e("\u{1F1E8}\u{1F1FA}", "Flag: Cuba"), e("\u{1F1E8}\u{1F1FB}", "Flag: Cape Verde"), e("\u{1F1E8}\u{1F1FC}", "Flag: Curaçao"), e("\u{1F1E8}\u{1F1FD}", "Flag: Christmas Island"), e("\u{1F1E8}\u{1F1FE}", "Flag: Cyprus"), e("\u{1F1E8}\u{1F1FF}", "Flag: Czechia"), e("\u{1F1E9}\u{1F1EA}", "Flag: Germany"), e("\u{1F1E9}\u{1F1EC}", "Flag: Diego Garcia"), e("\u{1F1E9}\u{1F1EF}", "Flag: Djibouti"), e("\u{1F1E9}\u{1F1F0}", "Flag: Denmark"), e("\u{1F1E9}\u{1F1F2}", "Flag: Dominica"), e("\u{1F1E9}\u{1F1F4}", "Flag: Dominican Republic"), e("\u{1F1E9}\u{1F1FF}", "Flag: Algeria"), e("\u{1F1EA}\u{1F1E6}", "Flag: Ceuta & Melilla"), e("\u{1F1EA}\u{1F1E8}", "Flag: Ecuador"), e("\u{1F1EA}\u{1F1EA}", "Flag: Estonia"), e("\u{1F1EA}\u{1F1EC}", "Flag: Egypt"), e("\u{1F1EA}\u{1F1ED}", "Flag: Western Sahara"), e("\u{1F1EA}\u{1F1F7}", "Flag: Eritrea"), e("\u{1F1EA}\u{1F1F8}", "Flag: Spain"), e("\u{1F1EA}\u{1F1F9}", "Flag: Ethiopia"), e("\u{1F1EA}\u{1F1FA}", "Flag: European Union"), e("\u{1F1EB}\u{1F1EE}", "Flag: Finland"), e("\u{1F1EB}\u{1F1EF}", "Flag: Fiji"), e("\u{1F1EB}\u{1F1F0}", "Flag: Falkland Islands"), e("\u{1F1EB}\u{1F1F2}", "Flag: Micronesia"), e("\u{1F1EB}\u{1F1F4}", "Flag: Faroe Islands"), e("\u{1F1EB}\u{1F1F7}", "Flag: France"), e("\u{1F1EC}\u{1F1E6}", "Flag: Gabon"), e("\u{1F1EC}\u{1F1E7}", "Flag: United Kingdom"), e("\u{1F1EC}\u{1F1E9}", "Flag: Grenada"), e("\u{1F1EC}\u{1F1EA}", "Flag: Georgia"), e("\u{1F1EC}\u{1F1EB}", "Flag: French Guiana"), e("\u{1F1EC}\u{1F1EC}", "Flag: Guernsey"), e("\u{1F1EC}\u{1F1ED}", "Flag: Ghana"), e("\u{1F1EC}\u{1F1EE}", "Flag: Gibraltar"), e("\u{1F1EC}\u{1F1F1}", "Flag: Greenland"), e("\u{1F1EC}\u{1F1F2}", "Flag: Gambia"), e("\u{1F1EC}\u{1F1F3}", "Flag: Guinea"), e("\u{1F1EC}\u{1F1F5}", "Flag: Guadeloupe"), e("\u{1F1EC}\u{1F1F6}", "Flag: Equatorial Guinea"), e("\u{1F1EC}\u{1F1F7}", "Flag: Greece"), e("\u{1F1EC}\u{1F1F8}", "Flag: South Georgia & South Sandwich Islands"), e("\u{1F1EC}\u{1F1F9}", "Flag: Guatemala"), e("\u{1F1EC}\u{1F1FA}", "Flag: Guam"), e("\u{1F1EC}\u{1F1FC}", "Flag: Guinea-Bissau"), e("\u{1F1EC}\u{1F1FE}", "Flag: Guyana"), e("\u{1F1ED}\u{1F1F0}", "Flag: Hong Kong SAR China"), e("\u{1F1ED}\u{1F1F2}", "Flag: Heard & McDonald Islands"), e("\u{1F1ED}\u{1F1F3}", "Flag: Honduras"), e("\u{1F1ED}\u{1F1F7}", "Flag: Croatia"), e("\u{1F1ED}\u{1F1F9}", "Flag: Haiti"), e("\u{1F1ED}\u{1F1FA}", "Flag: Hungary"), e("\u{1F1EE}\u{1F1E8}", "Flag: Canary Islands"), e("\u{1F1EE}\u{1F1E9}", "Flag: Indonesia"), e("\u{1F1EE}\u{1F1EA}", "Flag: Ireland"), e("\u{1F1EE}\u{1F1F1}", "Flag: Israel"), e("\u{1F1EE}\u{1F1F2}", "Flag: Isle of Man"), e("\u{1F1EE}\u{1F1F3}", "Flag: India"), e("\u{1F1EE}\u{1F1F4}", "Flag: British Indian Ocean Territory"), e("\u{1F1EE}\u{1F1F6}", "Flag: Iraq"), e("\u{1F1EE}\u{1F1F7}", "Flag: Iran"), e("\u{1F1EE}\u{1F1F8}", "Flag: Iceland"), e("\u{1F1EE}\u{1F1F9}", "Flag: Italy"), e("\u{1F1EF}\u{1F1EA}", "Flag: Jersey"), e("\u{1F1EF}\u{1F1F2}", "Flag: Jamaica"), e("\u{1F1EF}\u{1F1F4}", "Flag: Jordan"), e("\u{1F1EF}\u{1F1F5}", "Flag: Japan"), e("\u{1F1F0}\u{1F1EA}", "Flag: Kenya"), e("\u{1F1F0}\u{1F1EC}", "Flag: Kyrgyzstan"), e("\u{1F1F0}\u{1F1ED}", "Flag: Cambodia"), e("\u{1F1F0}\u{1F1EE}", "Flag: Kiribati"), e("\u{1F1F0}\u{1F1F2}", "Flag: Comoros"), e("\u{1F1F0}\u{1F1F3}", "Flag: St. Kitts & Nevis"), e("\u{1F1F0}\u{1F1F5}", "Flag: North Korea"), e("\u{1F1F0}\u{1F1F7}", "Flag: South Korea"), e("\u{1F1F0}\u{1F1FC}", "Flag: Kuwait"), e("\u{1F1F0}\u{1F1FE}", "Flag: Cayman Islands"), e("\u{1F1F0}\u{1F1FF}", "Flag: Kazakhstan"), e("\u{1F1F1}\u{1F1E6}", "Flag: Laos"), e("\u{1F1F1}\u{1F1E7}", "Flag: Lebanon"), e("\u{1F1F1}\u{1F1E8}", "Flag: St. Lucia"), e("\u{1F1F1}\u{1F1EE}", "Flag: Liechtenstein"), e("\u{1F1F1}\u{1F1F0}", "Flag: Sri Lanka"), e("\u{1F1F1}\u{1F1F7}", "Flag: Liberia"), e("\u{1F1F1}\u{1F1F8}", "Flag: Lesotho"), e("\u{1F1F1}\u{1F1F9}", "Flag: Lithuania"), e("\u{1F1F1}\u{1F1FA}", "Flag: Luxembourg"), e("\u{1F1F1}\u{1F1FB}", "Flag: Latvia"), e("\u{1F1F1}\u{1F1FE}", "Flag: Libya"), e("\u{1F1F2}\u{1F1E6}", "Flag: Morocco"), e("\u{1F1F2}\u{1F1E8}", "Flag: Monaco"), e("\u{1F1F2}\u{1F1E9}", "Flag: Moldova"), e("\u{1F1F2}\u{1F1EA}", "Flag: Montenegro"), e("\u{1F1F2}\u{1F1EB}", "Flag: St. Martin"), e("\u{1F1F2}\u{1F1EC}", "Flag: Madagascar"), e("\u{1F1F2}\u{1F1ED}", "Flag: Marshall Islands"), e("\u{1F1F2}\u{1F1F0}", "Flag: North Macedonia"), e("\u{1F1F2}\u{1F1F1}", "Flag: Mali"), e("\u{1F1F2}\u{1F1F2}", "Flag: Myanmar (Burma)"), e("\u{1F1F2}\u{1F1F3}", "Flag: Mongolia"), e("\u{1F1F2}\u{1F1F4}", "Flag: Macao Sar China"), e("\u{1F1F2}\u{1F1F5}", "Flag: Northern Mariana Islands"), e("\u{1F1F2}\u{1F1F6}", "Flag: Martinique"), e("\u{1F1F2}\u{1F1F7}", "Flag: Mauritania"), e("\u{1F1F2}\u{1F1F8}", "Flag: Montserrat"), e("\u{1F1F2}\u{1F1F9}", "Flag: Malta"), e("\u{1F1F2}\u{1F1FA}", "Flag: Mauritius"), e("\u{1F1F2}\u{1F1FB}", "Flag: Maldives"), e("\u{1F1F2}\u{1F1FC}", "Flag: Malawi"), e("\u{1F1F2}\u{1F1FD}", "Flag: Mexico"), e("\u{1F1F2}\u{1F1FE}", "Flag: Malaysia"), e("\u{1F1F2}\u{1F1FF}", "Flag: Mozambique"), e("\u{1F1F3}\u{1F1E6}", "Flag: Namibia"), e("\u{1F1F3}\u{1F1E8}", "Flag: New Caledonia"), e("\u{1F1F3}\u{1F1EA}", "Flag: Niger"), e("\u{1F1F3}\u{1F1EB}", "Flag: Norfolk Island"), e("\u{1F1F3}\u{1F1EC}", "Flag: Nigeria"), e("\u{1F1F3}\u{1F1EE}", "Flag: Nicaragua"), e("\u{1F1F3}\u{1F1F1}", "Flag: Netherlands"), e("\u{1F1F3}\u{1F1F4}", "Flag: Norway"), e("\u{1F1F3}\u{1F1F5}", "Flag: Nepal"), e("\u{1F1F3}\u{1F1F7}", "Flag: Nauru"), e("\u{1F1F3}\u{1F1FA}", "Flag: Niue"), e("\u{1F1F3}\u{1F1FF}", "Flag: New Zealand"), e("\u{1F1F4}\u{1F1F2}", "Flag: Oman"), e("\u{1F1F5}\u{1F1E6}", "Flag: Panama"), e("\u{1F1F5}\u{1F1EA}", "Flag: Peru"), e("\u{1F1F5}\u{1F1EB}", "Flag: French Polynesia"), e("\u{1F1F5}\u{1F1EC}", "Flag: Papua New Guinea"), e("\u{1F1F5}\u{1F1ED}", "Flag: Philippines"), e("\u{1F1F5}\u{1F1F0}", "Flag: Pakistan"), e("\u{1F1F5}\u{1F1F1}", "Flag: Poland"), e("\u{1F1F5}\u{1F1F2}", "Flag: St. Pierre & Miquelon"), e("\u{1F1F5}\u{1F1F3}", "Flag: Pitcairn Islands"), e("\u{1F1F5}\u{1F1F7}", "Flag: Puerto Rico"), e("\u{1F1F5}\u{1F1F8}", "Flag: Palestinian Territories"), e("\u{1F1F5}\u{1F1F9}", "Flag: Portugal"), e("\u{1F1F5}\u{1F1FC}", "Flag: Palau"), e("\u{1F1F5}\u{1F1FE}", "Flag: Paraguay"), e("\u{1F1F6}\u{1F1E6}", "Flag: Qatar"), e("\u{1F1F7}\u{1F1EA}", "Flag: Réunion"), e("\u{1F1F7}\u{1F1F4}", "Flag: Romania"), e("\u{1F1F7}\u{1F1F8}", "Flag: Serbia"), e("\u{1F1F7}\u{1F1FA}", "Flag: Russia"), e("\u{1F1F7}\u{1F1FC}", "Flag: Rwanda"), e("\u{1F1F8}\u{1F1E6}", "Flag: Saudi Arabia"), e("\u{1F1F8}\u{1F1E7}", "Flag: Solomon Islands"), e("\u{1F1F8}\u{1F1E8}", "Flag: Seychelles"), e("\u{1F1F8}\u{1F1E9}", "Flag: Sudan"), e("\u{1F1F8}\u{1F1EA}", "Flag: Sweden"), e("\u{1F1F8}\u{1F1EC}", "Flag: Singapore"), e("\u{1F1F8}\u{1F1ED}", "Flag: St. Helena"), e("\u{1F1F8}\u{1F1EE}", "Flag: Slovenia"), e("\u{1F1F8}\u{1F1EF}", "Flag: Svalbard & Jan Mayen"), e("\u{1F1F8}\u{1F1F0}", "Flag: Slovakia"), e("\u{1F1F8}\u{1F1F1}", "Flag: Sierra Leone"), e("\u{1F1F8}\u{1F1F2}", "Flag: San Marino"), e("\u{1F1F8}\u{1F1F3}", "Flag: Senegal"), e("\u{1F1F8}\u{1F1F4}", "Flag: Somalia"), e("\u{1F1F8}\u{1F1F7}", "Flag: Suriname"), e("\u{1F1F8}\u{1F1F8}", "Flag: South Sudan"), e("\u{1F1F8}\u{1F1F9}", "Flag: São Tomé & Príncipe"), e("\u{1F1F8}\u{1F1FB}", "Flag: El Salvador"), e("\u{1F1F8}\u{1F1FD}", "Flag: Sint Maarten"), e("\u{1F1F8}\u{1F1FE}", "Flag: Syria"), e("\u{1F1F8}\u{1F1FF}", "Flag: Eswatini"), e("\u{1F1F9}\u{1F1E6}", "Flag: Tristan Da Cunha"), e("\u{1F1F9}\u{1F1E8}", "Flag: Turks & Caicos Islands"), e("\u{1F1F9}\u{1F1E9}", "Flag: Chad"), e("\u{1F1F9}\u{1F1EB}", "Flag: French Southern Territories"), e("\u{1F1F9}\u{1F1EC}", "Flag: Togo"), e("\u{1F1F9}\u{1F1ED}", "Flag: Thailand"), e("\u{1F1F9}\u{1F1EF}", "Flag: Tajikistan"), e("\u{1F1F9}\u{1F1F0}", "Flag: Tokelau"), e("\u{1F1F9}\u{1F1F1}", "Flag: Timor-Leste"), e("\u{1F1F9}\u{1F1F2}", "Flag: Turkmenistan"), e("\u{1F1F9}\u{1F1F3}", "Flag: Tunisia"), e("\u{1F1F9}\u{1F1F4}", "Flag: Tonga"), e("\u{1F1F9}\u{1F1F7}", "Flag: Turkey"), e("\u{1F1F9}\u{1F1F9}", "Flag: Trinidad & Tobago"), e("\u{1F1F9}\u{1F1FB}", "Flag: Tuvalu"), e("\u{1F1F9}\u{1F1FC}", "Flag: Taiwan"), e("\u{1F1F9}\u{1F1FF}", "Flag: Tanzania"), e("\u{1F1FA}\u{1F1E6}", "Flag: Ukraine"), e("\u{1F1FA}\u{1F1EC}", "Flag: Uganda"), e("\u{1F1FA}\u{1F1F2}", "Flag: U.S. Outlying Islands"), e("\u{1F1FA}\u{1F1F3}", "Flag: United Nations"), e("\u{1F1FA}\u{1F1F8}", "Flag: United States"), e("\u{1F1FA}\u{1F1FE}", "Flag: Uruguay"), e("\u{1F1FA}\u{1F1FF}", "Flag: Uzbekistan"), e("\u{1F1FB}\u{1F1E6}", "Flag: Vatican City"), e("\u{1F1FB}\u{1F1E8}", "Flag: St. Vincent & Grenadines"), e("\u{1F1FB}\u{1F1EA}", "Flag: Venezuela"), e("\u{1F1FB}\u{1F1EC}", "Flag: British Virgin Islands"), e("\u{1F1FB}\u{1F1EE}", "Flag: U.S. Virgin Islands"), e("\u{1F1FB}\u{1F1F3}", "Flag: Vietnam"), e("\u{1F1FB}\u{1F1FA}", "Flag: Vanuatu"), e("\u{1F1FC}\u{1F1EB}", "Flag: Wallis & Futuna"), e("\u{1F1FC}\u{1F1F8}", "Flag: Samoa"), e("\u{1F1FD}\u{1F1F0}", "Flag: Kosovo"), e("\u{1F1FE}\u{1F1EA}", "Flag: Yemen"), e("\u{1F1FE}\u{1F1F9}", "Flag: Mayotte"), e("\u{1F1FF}\u{1F1E6}", "Flag: South Africa"), e("\u{1F1FF}\u{1F1F2}", "Flag: Zambia"), e("\u{1F1FF}\u{1F1FC}", "Flag: Zimbabwe"));
 export const whiteFlag = E("\u{1F3F3}", "White Flag");
-export const rainbowFlag = join(whiteFlag, rainbow, "Rainbow Flag");
-export const transgenderFlag = join(whiteFlag, transgender, "Transgender Flag");
+export const rainbowFlag = J(whiteFlag, rainbow, "Rainbow Flag");
+export const transgenderFlag = J(whiteFlag, transgender, "Transgender Flag");
 export const blackFlag = e("\u{1F3F4}", "Black Flag");
-export const pirateFlag = join(blackFlag, skullAndCrossbones, "Pirate Flag");
+export const pirateFlag = J(blackFlag, skullAndCrossbones, "Pirate Flag");
 export const flags = g("Flags", "Basic flags", e("\u{1F38C}", "Crossed Flags"), e("\u{1F3C1}", "Chequered Flag"), whiteFlag, rainbowFlag, transgenderFlag, blackFlag, pirateFlag, e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}", "Flag: England"), e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}", "Flag: Scotland"), e("\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}", "Flag: Wales"), e("\u{1F6A9}", "Triangular Flag"));
 export const motorcycle = E("\u{1F3CD}", "Motorcycle");
 export const racingCar = E("\u{1F3CE}", "Racing Car");
@@ -968,18 +900,18 @@ export const digit8 = E("8", "Digit Eight");
 export const digit9 = E("9", "Digit Nine");
 export const asterisk = E("\u002A", "Asterisk");
 export const numberSign = E("\u0023", "Number Sign");
-export const keycapDigit0 = combo(digit0, combiningEnclosingKeycap, "Keycap Digit Zero");
-export const keycapDigit1 = combo(digit1, combiningEnclosingKeycap, "Keycap Digit One");
-export const keycapDigit2 = combo(digit2, combiningEnclosingKeycap, "Keycap Digit Two");
-export const keycapDigit3 = combo(digit3, combiningEnclosingKeycap, "Keycap Digit Three");
-export const keycapDigit4 = combo(digit4, combiningEnclosingKeycap, "Keycap Digit Four");
-export const keycapDigit5 = combo(digit5, combiningEnclosingKeycap, "Keycap Digit Five");
-export const keycapDigit6 = combo(digit6, combiningEnclosingKeycap, "Keycap Digit Six");
-export const keycapDigit7 = combo(digit7, combiningEnclosingKeycap, "Keycap Digit Seven");
-export const keycapDigit8 = combo(digit8, combiningEnclosingKeycap, "Keycap Digit Eight");
-export const keycapDigit9 = combo(digit9, combiningEnclosingKeycap, "Keycap Digit Nine");
-export const keycapAsterisk = combo(asterisk, combiningEnclosingKeycap, "Keycap Asterisk");
-export const keycapNumberSign = combo(numberSign, combiningEnclosingKeycap, "Keycap Number Sign");
+export const keycapDigit0 = C(digit0, combiningEnclosingKeycap, "Keycap Digit Zero");
+export const keycapDigit1 = C(digit1, combiningEnclosingKeycap, "Keycap Digit One");
+export const keycapDigit2 = C(digit2, combiningEnclosingKeycap, "Keycap Digit Two");
+export const keycapDigit3 = C(digit3, combiningEnclosingKeycap, "Keycap Digit Three");
+export const keycapDigit4 = C(digit4, combiningEnclosingKeycap, "Keycap Digit Four");
+export const keycapDigit5 = C(digit5, combiningEnclosingKeycap, "Keycap Digit Five");
+export const keycapDigit6 = C(digit6, combiningEnclosingKeycap, "Keycap Digit Six");
+export const keycapDigit7 = C(digit7, combiningEnclosingKeycap, "Keycap Digit Seven");
+export const keycapDigit8 = C(digit8, combiningEnclosingKeycap, "Keycap Digit Eight");
+export const keycapDigit9 = C(digit9, combiningEnclosingKeycap, "Keycap Digit Nine");
+export const keycapAsterisk = C(asterisk, combiningEnclosingKeycap, "Keycap Asterisk");
+export const keycapNumberSign = C(numberSign, combiningEnclosingKeycap, "Keycap Number Sign");
 export const keycap10 = e("\u{1F51F}", "Keycap: 10");
 export const numbers = g("Numbers", "Numbers", digit0, digit1, digit2, digit3, digit4, digit5, digit6, digit7, digit8, digit9, asterisk, numberSign, keycapDigit0, keycapDigit1, keycapDigit2, keycapDigit3, keycapDigit4, keycapDigit5, keycapDigit6, keycapDigit7, keycapDigit8, keycapDigit9, keycapAsterisk, keycapNumberSign, keycap10);
 export const tagPlusSign = e("\u{E002B}", "Tag Plus Sign");
@@ -1126,7 +1058,7 @@ export const tradeMark = E("\u2122", "Trade Mark");
 export const copyright = E("\u00A9", "Copyright");
 export const registered = E("\u00AE", "Registered");
 export const squareFourCourners = E("\u26F6", "Square: Four Corners");
-export const marks = gg("Marks", "Marks", {
+export const marks = G("Marks", "Marks", {
     doubleExclamationMark,
     interrobang,
     information,
@@ -1160,7 +1092,7 @@ export const dna = e("\u{1F9EC}", "DNA");
 export const abacus = e("\u{1F9EE}", "Abacus");
 export const magnet = e("\u{1F9F2}", "Magnet");
 export const telescope = e("\u{1F52D}", "Telescope");
-export const science = gg("Science", "Science", {
+export const science = G("Science", "Science", {
     droplet,
     dropOfBlood,
     adhesiveBandage,
@@ -1188,7 +1120,7 @@ export const whiteChessRook = e("\u2656", "White Chess Rook");
 export const whiteChessBishop = e("\u2657", "White Chess Bishop");
 export const whiteChessKnight = e("\u2658", "White Chess Knight");
 export const whiteChessPawn = e("\u2659", "White Chess Pawn");
-export const whiteChessPieces = gg(whiteChessKing.value + whiteChessQueen.value + whiteChessRook.value + whiteChessBishop.value + whiteChessKnight.value + whiteChessPawn.value, "White Chess Pieces", {
+export const whiteChessPieces = G(whiteChessKing.value + whiteChessQueen.value + whiteChessRook.value + whiteChessBishop.value + whiteChessKnight.value + whiteChessPawn.value, "White Chess Pieces", {
     width: "auto",
     king: whiteChessKing,
     queen: whiteChessQueen,
@@ -1203,7 +1135,7 @@ export const blackChessRook = e("\u265C", "Black Chess Rook");
 export const blackChessBishop = e("\u265D", "Black Chess Bishop");
 export const blackChessKnight = e("\u265E", "Black Chess Knight");
 export const blackChessPawn = e("\u265F", "Black Chess Pawn");
-export const blackChessPieces = gg(blackChessKing.value + blackChessQueen.value + blackChessRook.value + blackChessBishop.value + blackChessKnight.value + blackChessPawn.value, "Black Chess Pieces", {
+export const blackChessPieces = G(blackChessKing.value + blackChessQueen.value + blackChessRook.value + blackChessBishop.value + blackChessKnight.value + blackChessPawn.value, "Black Chess Pieces", {
     width: "auto",
     king: blackChessKing,
     queen: blackChessQueen,
@@ -1212,37 +1144,37 @@ export const blackChessPieces = gg(blackChessKing.value + blackChessQueen.value 
     knight: blackChessKnight,
     pawn: blackChessPawn
 });
-export const chessPawns = gg(whiteChessPawn.value + blackChessPawn.value, "Chess Pawns", {
+export const chessPawns = G(whiteChessPawn.value + blackChessPawn.value, "Chess Pawns", {
     width: "auto",
     white: whiteChessPawn,
     black: blackChessPawn
 });
-export const chessRooks = gg(whiteChessRook.value + blackChessRook.value, "Chess Rooks", {
+export const chessRooks = G(whiteChessRook.value + blackChessRook.value, "Chess Rooks", {
     width: "auto",
     white: whiteChessRook,
     black: blackChessRook
 });
-export const chessBishops = gg(whiteChessBishop.value + blackChessBishop.value, "Chess Bishops", {
+export const chessBishops = G(whiteChessBishop.value + blackChessBishop.value, "Chess Bishops", {
     width: "auto",
     white: whiteChessBishop,
     black: blackChessBishop
 });
-export const chessKnights = gg(whiteChessKnight.value + blackChessKnight.value, "Chess Knights", {
+export const chessKnights = G(whiteChessKnight.value + blackChessKnight.value, "Chess Knights", {
     width: "auto",
     white: whiteChessKnight,
     black: blackChessKnight
 });
-export const chessQueens = gg(whiteChessQueen.value + blackChessQueen.value, "Chess Queens", {
+export const chessQueens = G(whiteChessQueen.value + blackChessQueen.value, "Chess Queens", {
     width: "auto",
     white: whiteChessQueen,
     black: blackChessQueen
 });
-export const chessKings = gg(whiteChessKing.value + blackChessKing.value, "Chess Kings", {
+export const chessKings = G(whiteChessKing.value + blackChessKing.value, "Chess Kings", {
     width: "auto",
     white: whiteChessKing,
     black: blackChessKing
 });
-export const chess = gg("Chess Pieces", "Chess Pieces", {
+export const chess = G("Chess Pieces", "Chess Pieces", {
     width: "auto",
     white: whiteChessPieces,
     black: blackChessPieces,
@@ -1259,7 +1191,7 @@ export const dice3 = e("\u2682", "Dice: Side 3");
 export const dice4 = e("\u2683", "Dice: Side 4");
 export const dice5 = e("\u2684", "Dice: Side 5");
 export const dice6 = e("\u2685", "Dice: Side 6");
-export const dice = gg("Dice", "Dice", {
+export const dice = G("Dice", "Dice", {
     dice1,
     dice2,
     dice3,
@@ -1267,7 +1199,7 @@ export const dice = gg("Dice", "Dice", {
     dice5,
     dice6
 });
-export const allIcons = gg("All Icons", "All Icons", {
+export const allIcons = G("All Icons", "All Icons", {
     faces,
     love,
     cartoon,
