@@ -18,7 +18,6 @@ export declare abstract class BaseTeleconferenceClient extends TypedEventBase<Ca
     roomName: string;
     protected fetcher: IFetcher;
     audio: AudioManager;
-    protected currentStream: MediaStream;
     private _connectionState;
     private _conferenceState;
     hasAudioPermission: boolean;
