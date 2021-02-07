@@ -27,11 +27,11 @@ export class SignalRMetadataClient
     private currentRoom: string = null;
     private currentUserID: string = null;
 
-    constructor() {
+    constructor(signalRPath: string) {
         super(50);
 
         this.hub = new HubConnectionBuilder()
-            .withUrl("/calla", HttpTransportType.WebSockets)
+            .withUrl(signalRPath, HttpTransportType.WebSockets)
             .build();
 
         this.hub.onclose(() => {

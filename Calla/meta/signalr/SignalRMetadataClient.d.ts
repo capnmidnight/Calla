@@ -7,7 +7,7 @@ export declare class SignalRMetadataClient extends BaseMetadataClient {
     private lastUserID;
     private currentRoom;
     private currentUserID;
-    constructor();
+    constructor(signalRPath: string);
     get metadataState(): ConnectionState;
     private maybeStart;
     private maybeJoin;

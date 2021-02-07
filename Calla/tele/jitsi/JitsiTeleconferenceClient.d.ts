@@ -1,23 +1,21 @@
 import { IFetcher } from "kudzu/io/IFetcher";
-import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { AudioManager } from "../../audio/AudioManager";
 import type JitsiConference from "../../lib-jitsi-meet/JitsiConference";
 import type { IMetadataClientExt } from "../../meta/IMetadataClient";
 import { BaseTeleconferenceClient } from "../BaseTeleconferenceClient";
 export declare class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
-    private usingDefaultMetadataClient;
     private host;
     private bridgeHost;
     private bridgeMUC;
+    private usingDefaultMetadataClient;
     private connection;
     conference: JitsiConference;
     private tracks;
     private listenersForObjs;
-    constructor(fetcher?: IFetcher, audio?: AudioManager);
+    constructor(fetcher: IFetcher, audio: AudioManager, host: string, bridgeHost: string, bridgeMUC: string);
     private _on;
     private _off;
     getDefaultMetadataClient(): IMetadataClientExt;
-    prepare(JITSI_HOST: string, JVB_HOST: string, JVB_MUC: string, onProgress?: progressCallback): Promise<void>;
     connect(): Promise<void>;
     join(roomName: string, password?: string): Promise<void>;
     identify(userName: string): Promise<void>;

@@ -1,5 +1,4 @@
 import type { TypedEventBase } from "kudzu/events/EventBase";
-import type { progressCallback } from "kudzu/tasks/progressCallback";
 import type { AudioManager } from "../audio/AudioManager";
 import type { MediaPermissionSet } from "../Calla";
 import type { CallaTeleconferenceEvents } from "../CallaEvents";
@@ -15,14 +14,6 @@ export interface ITeleconferenceClient extends TypedEventBase<CallaTeleconferenc
     getUserNames(): string[][];
     connectionState: ConnectionState;
     conferenceState: ConnectionState;
-    /**
-     * Get the client ready to connect to the teleconferencing server.
-     * @param JITSI_HOST
-     * @param JVB_HOST
-     * @param JVB_MUC
-     * @param onProgress
-     */
-    prepare(JITSI_HOST: string, JVB_HOST: string, JVB_MUC: string, onProgress?: progressCallback): Promise<void>;
     preferredAudioOutputID: string;
     preferredAudioInputID: string;
     preferredVideoInputID: string;

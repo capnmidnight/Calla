@@ -1,9 +1,7 @@
 import { TypedEventBase } from "kudzu/events/EventBase";
-import { isNullOrUndefined } from "kudzu/typeChecks";
 import { AudioActivityEvent } from "./audio/AudioActivityEvent";
 import { canChangeAudioOutput } from "./audio/canChangeAudioOutput";
 import { ConnectionState } from "./ConnectionState";
-import { JitsiTeleconferenceClient } from "./tele/jitsi/JitsiTeleconferenceClient";
 export var ClientState;
 (function (ClientState) {
     ClientState["InConference"] = "in-conference";
@@ -16,50 +14,43 @@ export var ClientState;
 })(ClientState || (ClientState = {}));
 const audioActivityEvt = new AudioActivityEvent();
 export class Calla extends TypedEventBase {
-    constructor(fetcher, audio, TeleClientType, MetaClientType) {
+    constructor(_fetcher, _tele, _meta) {
         super();
+        this._fetcher = _fetcher;
+        this._tele = _tele;
+        this._meta = _meta;
         this.isAudioMuted = null;
         this.isVideoMuted = null;
-        if (isNullOrUndefined(TeleClientType)) {
-            TeleClientType = JitsiTeleconferenceClient;
-        }
-        this.tele = new TeleClientType(fetcher, audio);
-        if (isNullOrUndefined(MetaClientType)) {
-            this.meta = this.tele.getDefaultMetadataClient();
-        }
-        else {
-            this.meta = new MetaClientType(this.tele);
-        }
         const fwd = this.dispatchEvent.bind(this);
-        this.tele.addEventListener("serverConnected", fwd);
-        this.tele.addEventListener("serverDisconnected", fwd);
-        this.tele.addEventListener("serverFailed", fwd);
-        this.tele.addEventListener("conferenceFailed", fwd);
-        this.tele.addEventListener("conferenceRestored", fwd);
-        this.tele.addEventListener("audioMuteStatusChanged", fwd);
-        this.tele.addEventListener("videoMuteStatusChanged", fwd);
-        this.tele.addEventListener("conferenceJoined", async (evt) => {
+        this._tele.addEventListener("serverConnected", fwd);
+        this._tele.addEventListener("serverDisconnected", fwd);
+        this._tele.addEventListener("serverFailed", fwd);
+        this._tele.addEventListener("conferenceFailed", fwd);
+        this._tele.addEventListener("conferenceRestored", fwd);
+        this._tele.addEventListener("audioMuteStatusChanged", fwd);
+        this._tele.addEventListener("videoMuteStatusChanged", fwd);
+        this._tele.addEventListener("conferenceJoined", async (evt) => {
             const user = this.audio.createLocalUser(evt.id);
             evt.pose = user.pose;
             this.dispatchEvent(evt);
             await this.setPreferredDevices();
         });
-        this.tele.addEventListener("conferenceLeft", (evt) => {
+        this._tele.addEventListener("conferenceLeft", (evt) => {
             this.audio.createLocalUser(evt.id);
             this.dispatchEvent(evt);
         });
-        this.tele.addEventListener("participantJoined", async (joinEvt) => {
+        this._tele.addEventListener("participantJoined", async (joinEvt) => {
             joinEvt.source = this.audio.createUser(joinEvt.id);
             this.dispatchEvent(joinEvt);
         });
-        this.tele.addEventListener("participantLeft", (evt) => {
+        this._tele.addEventListener("participantLeft", (evt) => {
             this.dispatchEvent(evt);
             this.audio.removeUser(evt.id);
         });
-        this.tele.addEventListener("userNameChanged", fwd);
-        this.tele.addEventListener("videoAdded", fwd);
-        this.tele.addEventListener("videoRemoved", fwd);
-        this.tele.addEventListener("audioAdded", (evt) => {
+        this._tele.addEventListener("userNameChanged", fwd);
+        this._tele.addEventListener("videoAdded", fwd);
+        this._tele.addEventListener("videoRemoved", fwd);
+        this._tele.addEventListener("audioAdded", (evt) => {
             const user = this.audio.getUser(evt.id);
             if (user) {
                 let stream = user.streams.get(evt.kind);
@@ -68,26 +59,26 @@ export class Calla extends TypedEventBase {
                 }
                 stream = evt.stream;
                 user.streams.set(evt.kind, stream);
-                if (evt.id !== this.tele.localUserID) {
+                if (evt.id !== this._tele.localUserID) {
                     this.audio.setUserStream(evt.id, stream);
                 }
                 this.dispatchEvent(evt);
             }
         });
-        this.tele.addEventListener("audioRemoved", (evt) => {
+        this._tele.addEventListener("audioRemoved", (evt) => {
             const user = this.audio.getUser(evt.id);
             if (user && user.streams.has(evt.kind)) {
                 user.streams.delete(evt.kind);
             }
-            if (evt.id !== this.tele.localUserID) {
+            if (evt.id !== this._tele.localUserID) {
                 this.audio.setUserStream(evt.id, null);
             }
             this.dispatchEvent(evt);
         });
-        this.meta.addEventListener("avatarChanged", fwd);
-        this.meta.addEventListener("chat", fwd);
-        this.meta.addEventListener("emote", fwd);
-        this.meta.addEventListener("setAvatarEmoji", fwd);
+        this._meta.addEventListener("avatarChanged", fwd);
+        this._meta.addEventListener("chat", fwd);
+        this._meta.addEventListener("emote", fwd);
+        this._meta.addEventListener("setAvatarEmoji", fwd);
         const offsetEvt = (poseEvt) => {
             const O = this.audio.getUserOffset(poseEvt.id);
             if (O) {
@@ -97,8 +88,8 @@ export class Calla extends TypedEventBase {
             }
             this.dispatchEvent(poseEvt);
         };
-        this.meta.addEventListener("userPointer", offsetEvt);
-        this.meta.addEventListener("userPosed", (evt) => {
+        this._meta.addEventListener("userPointer", offsetEvt);
+        this._meta.addEventListener("userPosed", (evt) => {
             this.audio.setUserPose(evt.id, evt.px, evt.py, evt.pz, evt.fx, evt.fy, evt.fz, evt.ux, evt.uy, evt.uz);
             offsetEvt(evt);
         });
@@ -114,46 +105,55 @@ export class Calla extends TypedEventBase {
         Object.seal(this);
     }
     get connectionState() {
-        return this.tele.connectionState;
+        return this._tele.connectionState;
     }
     get conferenceState() {
-        return this.tele.conferenceState;
+        return this._tele.conferenceState;
+    }
+    get fetcher() {
+        return this._fetcher;
+    }
+    get tele() {
+        return this._tele;
+    }
+    get meta() {
+        return this._meta;
     }
     get audio() {
-        return this.tele.audio;
+        return this._tele.audio;
     }
     get preferredAudioOutputID() {
-        return this.tele.preferredAudioOutputID;
+        return this._tele.preferredAudioOutputID;
     }
     set preferredAudioOutputID(v) {
-        this.tele.preferredAudioOutputID = v;
+        this._tele.preferredAudioOutputID = v;
     }
     get preferredAudioInputID() {
-        return this.tele.preferredAudioInputID;
+        return this._tele.preferredAudioInputID;
     }
     set preferredAudioInputID(v) {
-        this.tele.preferredAudioInputID = v;
+        this._tele.preferredAudioInputID = v;
     }
     get preferredVideoInputID() {
-        return this.tele.preferredVideoInputID;
+        return this._tele.preferredVideoInputID;
     }
     set preferredVideoInputID(v) {
-        this.tele.preferredVideoInputID = v;
+        this._tele.preferredVideoInputID = v;
     }
     async getCurrentAudioOutputDevice() {
-        return await this.tele.getCurrentAudioOutputDevice();
+        return await this._tele.getCurrentAudioOutputDevice();
     }
     async getMediaPermissions() {
-        return await this.tele.getMediaPermissions();
+        return await this._tele.getMediaPermissions();
     }
     async getAudioOutputDevices(filterDuplicates) {
-        return await this.tele.getAudioOutputDevices(filterDuplicates);
+        return await this._tele.getAudioOutputDevices(filterDuplicates);
     }
     async getAudioInputDevices(filterDuplicates) {
-        return await this.tele.getAudioInputDevices(filterDuplicates);
+        return await this._tele.getAudioInputDevices(filterDuplicates);
     }
     async getVideoInputDevices(filterDuplicates) {
-        return await this.tele.getVideoInputDevices(filterDuplicates);
+        return await this._tele.getVideoInputDevices(filterDuplicates);
     }
     dispose() {
         this.leave();
@@ -167,106 +167,103 @@ export class Calla extends TypedEventBase {
     }
     setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz) {
         this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz, 0);
-        this.meta.setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz);
+        this._meta.setLocalPose(px, py, pz, fx, fy, fz, ux, uy, uz);
     }
     setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz) {
         this.audio.setUserPose(this.localUserID, px, py, pz, fx, fy, fz, ux, uy, uz, 0);
-        this.meta.setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz);
+        this._meta.setLocalPoseImmediate(px, py, pz, fx, fy, fz, ux, uy, uz);
     }
     setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz) {
-        this.meta.setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz);
+        this._meta.setLocalPointer(name, px, py, pz, fx, fy, fz, ux, uy, uz);
     }
     setAvatarEmoji(emoji) {
-        this.meta.setAvatarEmoji(emoji);
+        this._meta.setAvatarEmoji(emoji);
     }
     setAvatarURL(url) {
-        this.meta.setAvatarURL(url);
+        this._meta.setAvatarURL(url);
     }
     emote(emoji) {
-        this.meta.emote(emoji);
+        this._meta.emote(emoji);
     }
     chat(text) {
-        this.meta.chat(text);
+        this._meta.chat(text);
     }
     async setPreferredDevices() {
-        await this.tele.setPreferredDevices();
+        await this._tele.setPreferredDevices();
     }
     async setAudioInputDevice(device) {
-        await this.tele.setAudioInputDevice(device);
+        await this._tele.setAudioInputDevice(device);
     }
     async setVideoInputDevice(device) {
-        await this.tele.setVideoInputDevice(device);
+        await this._tele.setVideoInputDevice(device);
     }
     async getCurrentAudioInputDevice() {
-        return await this.tele.getCurrentAudioInputDevice();
+        return await this._tele.getCurrentAudioInputDevice();
     }
     async getCurrentVideoInputDevice() {
-        return await this.tele.getCurrentVideoInputDevice();
+        return await this._tele.getCurrentVideoInputDevice();
     }
     async toggleAudioMuted() {
-        return await this.tele.toggleAudioMuted();
+        return await this._tele.toggleAudioMuted();
     }
     async toggleVideoMuted() {
-        return await this.tele.toggleVideoMuted();
+        return await this._tele.toggleVideoMuted();
     }
     async getAudioMuted() {
-        return await this.tele.getAudioMuted();
+        return await this._tele.getAudioMuted();
     }
     async getVideoMuted() {
-        return await this.tele.getVideoMuted();
+        return await this._tele.getVideoMuted();
     }
     get metadataState() {
-        return this.meta.metadataState;
+        return this._meta.metadataState;
     }
     get localUserID() {
-        return this.tele.localUserID;
+        return this._tele.localUserID;
     }
     get localUserName() {
-        return this.tele.localUserName;
+        return this._tele.localUserName;
     }
     get roomName() {
-        return this.tele.roomName;
+        return this._tele.roomName;
     }
     userExists(id) {
-        return this.tele.userExists(id);
+        return this._tele.userExists(id);
     }
     getUserNames() {
-        return this.tele.getUserNames();
-    }
-    async prepare(JITSI_HOST, JVB_HOST, JVB_MUC, onProgress) {
-        await this.tele.prepare(JITSI_HOST, JVB_HOST, JVB_MUC, onProgress);
+        return this._tele.getUserNames();
     }
     async connect() {
-        await this.tele.connect();
-        if (this.tele.connectionState === ConnectionState.Connected) {
-            await this.meta.connect();
+        await this._tele.connect();
+        if (this._tele.connectionState === ConnectionState.Connected) {
+            await this._meta.connect();
         }
     }
     async join(roomName) {
-        await this.tele.join(roomName);
-        if (this.tele.conferenceState === ConnectionState.Connected) {
-            await this.meta.join(roomName);
+        await this._tele.join(roomName);
+        if (this._tele.conferenceState === ConnectionState.Connected) {
+            await this._meta.join(roomName);
         }
     }
     async identify(userName) {
-        await this.tele.identify(userName);
-        await this.meta.identify(this.localUserID);
+        await this._tele.identify(userName);
+        await this._meta.identify(this.localUserID);
     }
     async leave() {
-        await this.meta.leave();
-        await this.tele.leave();
+        await this._meta.leave();
+        await this._tele.leave();
     }
     async disconnect() {
-        await this.meta.disconnect();
-        await this.tele.disconnect();
+        await this._meta.disconnect();
+        await this._tele.disconnect();
     }
     update() {
         this.audio.update();
     }
     async setAudioOutputDevice(device) {
-        this.tele.setAudioOutputDevice(device);
+        this._tele.setAudioOutputDevice(device);
         if (canChangeAudioOutput) {
-            await this.audio.setAudioOutputDeviceID(this.tele.preferredAudioOutputID);
+            await this.audio.setAudioOutputDeviceID(this._tele.preferredAudioOutputID);
         }
     }
     async setAudioMuted(muted) {

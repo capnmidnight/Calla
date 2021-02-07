@@ -1,9 +1,7 @@
 import { arrayScan } from "kudzu/arrays/arrayScan";
 import type { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
 import { TypedEventBase } from "kudzu/events/EventBase";
-import { Fetcher } from "kudzu/io/Fetcher";
 import { IFetcher } from "kudzu/io/IFetcher";
-import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { AudioManager } from "../audio/AudioManager";
 import { canChangeAudioOutput } from "../audio/canChangeAudioOutput";
 import type { MediaDeviceSet, MediaPermissionSet } from "../Calla";
@@ -61,7 +59,6 @@ export abstract class BaseTeleconferenceClient
     localUserName: string = null;
     roomName: string = null;
 
-    protected _prepared = false;
     protected fetcher: IFetcher;
 
     audio: AudioManager;
@@ -85,12 +82,12 @@ export abstract class BaseTeleconferenceClient
         this._conferenceState = state;
     }
 
-    constructor(fetcher: IFetcher, audio?: AudioManager) {
+    constructor(fetcher: IFetcher, audio: AudioManager) {
         super();
 
-        this.fetcher = fetcher || new Fetcher();
+        this.fetcher = fetcher;
 
-        this.audio = audio || new AudioManager(fetcher);
+        this.audio = audio;
 
         this.addEventListener("serverConnected", this.setConnectionState.bind(this, ConnectionState.Connected));
         this.addEventListener("serverFailed", this.setConnectionState.bind(this, ConnectionState.Disconnected));
@@ -333,7 +330,6 @@ export abstract class BaseTeleconferenceClient
 
     abstract userExists(id: string): boolean;
     abstract getUserNames(): string[][];
-    abstract prepare(JITSI_HOST: string, JVB_HOST: string, JVB_MUC: string, onProgress?: progressCallback): Promise<void>;
     abstract identify(userNameOrID: string): Promise<void>;
     abstract getCurrentAudioInputDevice(): Promise<MediaDeviceInfo>;
     abstract getCurrentVideoInputDevice(): Promise<MediaDeviceInfo>;

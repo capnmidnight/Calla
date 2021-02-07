@@ -1,7 +1,6 @@
 import type { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
 import { TypedEventBase } from "kudzu/events/EventBase";
 import { IFetcher } from "kudzu/io/IFetcher";
-import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { AudioManager } from "../audio/AudioManager";
 import type { MediaPermissionSet } from "../Calla";
 import type { CallaTeleconferenceEvents } from "../CallaEvents";
@@ -15,7 +14,6 @@ export declare abstract class BaseTeleconferenceClient extends TypedEventBase<Ca
     localUserID: string;
     localUserName: string;
     roomName: string;
-    protected _prepared: boolean;
     protected fetcher: IFetcher;
     audio: AudioManager;
     private _connectionState;
@@ -24,7 +22,7 @@ export declare abstract class BaseTeleconferenceClient extends TypedEventBase<Ca
     private setConnectionState;
     get conferenceState(): ConnectionState;
     private setConferenceState;
-    constructor(fetcher: IFetcher, audio?: AudioManager);
+    constructor(fetcher: IFetcher, audio: AudioManager);
     dispatchEvent<K extends string & keyof CallaTeleconferenceEvents>(evt: CallaTeleconferenceEvents[K] & Event): boolean;
     getNext<T extends keyof CallaTeleconferenceEvents>(evtName: T, userID: string): Promise<CallaTeleconferenceEvents[T]>;
     get preferredAudioInputID(): string;
@@ -58,7 +56,6 @@ export declare abstract class BaseTeleconferenceClient extends TypedEventBase<Ca
     disconnect(): Promise<void>;
     abstract userExists(id: string): boolean;
     abstract getUserNames(): string[][];
-    abstract prepare(JITSI_HOST: string, JVB_HOST: string, JVB_MUC: string, onProgress?: progressCallback): Promise<void>;
     abstract identify(userNameOrID: string): Promise<void>;
     abstract getCurrentAudioInputDevice(): Promise<MediaDeviceInfo>;
     abstract getCurrentVideoInputDevice(): Promise<MediaDeviceInfo>;

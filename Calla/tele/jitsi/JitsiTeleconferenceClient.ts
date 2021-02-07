@@ -2,8 +2,6 @@ import { arrayClear } from "kudzu/arrays/arrayClear";
 import { ErsatzEventTarget } from "kudzu/events/ErsatzEventTarget";
 import { once } from "kudzu/events/once";
 import { IFetcher } from "kudzu/io/IFetcher";
-import type { progressCallback } from "kudzu/tasks/progressCallback";
-import { splitProgress } from "kudzu/tasks/splitProgress";
 import { using } from "kudzu/using";
 import { AudioManager } from "../../audio/AudioManager";
 import type { CallaTeleconferenceEvents } from "../../CallaEvents";
@@ -40,9 +38,6 @@ import {
 } from "../BaseTeleconferenceClient";
 
 
-const jQueryPath = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js";
-
-
 function encodeUserName(v: string) {
     try {
         return encodeURIComponent(v);
@@ -65,16 +60,13 @@ export class JitsiTeleconferenceClient
     extends BaseTeleconferenceClient {
 
     private usingDefaultMetadataClient = false;
-    private host: string = null;
-    private bridgeHost: string = null;
-    private bridgeMUC: string = null;
     private connection: JitsiConnection = null;
     conference: JitsiConference = null;
 
     private tracks = new Map<string, Map<StreamType, JitsiLocalTrack | JitsiRemoteTrack>>();
     private listenersForObjs = new Map<ErsatzEventTarget, Map<string, Function[]>>();
 
-    constructor(fetcher?: IFetcher, audio?: AudioManager) {
+    constructor(fetcher: IFetcher, audio: AudioManager, private host: string, private bridgeHost: string, private bridgeMUC: string) {
         super(fetcher, audio);
     }
 
@@ -110,26 +102,6 @@ export class JitsiTeleconferenceClient
     getDefaultMetadataClient(): IMetadataClientExt {
         this.usingDefaultMetadataClient = true;
         return new JitsiMetadataClient(this);
-    }
-
-    async prepare(JITSI_HOST: string, JVB_HOST: string, JVB_MUC: string, onProgress?: progressCallback): Promise<void> {
-        if (!this._prepared) {
-            this.host = JITSI_HOST;
-            this.bridgeHost = JVB_HOST;
-            this.bridgeMUC = JVB_MUC;
-            console.info("Connecting to:", this.host);
-            const progs = splitProgress(onProgress, 2);
-            await this.fetcher.loadScript(jQueryPath, () => "jQuery" in globalThis, progs.shift());
-            await this.fetcher.loadScript(`https://${this.host}/libs/lib-jitsi-meet.min.js`, () => "JitsiMeetJS" in globalThis, progs.shift());
-            if (process.env.NODE_ENV === "development") {
-                JitsiMeetJS.setLogLevel(JitsiMeetJS.logLevels.ERROR);
-            }
-            else {
-                JitsiMeetJS.setLogLevel(JitsiMeetJS.logLevels.ERROR);
-            }
-            JitsiMeetJS.init();
-            this._prepared = true;
-        }
     }
 
     async connect(): Promise<void> {

@@ -5,14 +5,14 @@ import { CallaAvatarChangedEvent, CallaChatEvent, CallaEmojiAvatarEvent, CallaEm
 import { ConnectionState } from "../../ConnectionState";
 import { BaseMetadataClient } from "../BaseMetadataClient";
 export class SignalRMetadataClient extends BaseMetadataClient {
-    constructor() {
+    constructor(signalRPath) {
         super(50);
         this.lastRoom = null;
         this.lastUserID = null;
         this.currentRoom = null;
         this.currentUserID = null;
         this.hub = new HubConnectionBuilder()
-            .withUrl("/calla", HttpTransportType.WebSockets)
+            .withUrl(signalRPath, HttpTransportType.WebSockets)
             .build();
         this.hub.onclose(() => {
             this.lastRoom = null;

@@ -1,7 +1,5 @@
 import { arrayScan } from "kudzu/arrays/arrayScan";
 import { TypedEventBase } from "kudzu/events/EventBase";
-import { Fetcher } from "kudzu/io/Fetcher";
-import { AudioManager } from "../audio/AudioManager";
 import { canChangeAudioOutput } from "../audio/canChangeAudioOutput";
 import { CallaUserEvent } from "../CallaEvents";
 import { ConnectionState } from "../ConnectionState";
@@ -39,13 +37,12 @@ export class BaseTeleconferenceClient extends TypedEventBase {
         this.localUserID = null;
         this.localUserName = null;
         this.roomName = null;
-        this._prepared = false;
         this._connectionState = ConnectionState.Disconnected;
         this._conferenceState = ConnectionState.Disconnected;
         this.hasAudioPermission = false;
         this.hasVideoPermission = false;
-        this.fetcher = fetcher || new Fetcher();
-        this.audio = audio || new AudioManager(fetcher);
+        this.fetcher = fetcher;
+        this.audio = audio;
         this.addEventListener("serverConnected", this.setConnectionState.bind(this, ConnectionState.Connected));
         this.addEventListener("serverFailed", this.setConnectionState.bind(this, ConnectionState.Disconnected));
         this.addEventListener("serverDisconnected", this.setConnectionState.bind(this, ConnectionState.Disconnected));

@@ -1,13 +1,12 @@
 import type { Emoji } from "kudzu/emoji/Emoji";
 import { TypedEventBase } from "kudzu/events/EventBase";
 import type { IFetcher } from "kudzu/io/IFetcher";
-import type { progressCallback } from "kudzu/tasks/progressCallback";
 import type { IDisposable } from "kudzu/using";
 import type { AudioManager } from "./audio/AudioManager";
 import type { CallaClientEvents } from "./CallaEvents";
 import { ConnectionState } from "./ConnectionState";
 import type { ICombinedClient } from "./ICombinedClient";
-import type { IMetadataClientExt } from "./meta/IMetadataClient";
+import type { IMetadataClient, IMetadataClientExt } from "./meta/IMetadataClient";
 import type { ITeleconferenceClient, ITeleconferenceClientExt } from "./tele/ITeleconferenceClient";
 export interface MediaPermissionSet {
     audio: boolean;
@@ -28,13 +27,17 @@ export declare enum ClientState {
     Unprepared = "unprepaired"
 }
 export declare class Calla extends TypedEventBase<CallaClientEvents> implements ICombinedClient, IDisposable {
+    private _fetcher;
+    private _tele;
+    private _meta;
     isAudioMuted: boolean;
     isVideoMuted: boolean;
-    tele: ITeleconferenceClientExt;
-    meta: IMetadataClientExt;
-    constructor(fetcher?: IFetcher, audio?: AudioManager, TeleClientType?: new (fetcher?: IFetcher, audio?: AudioManager) => ITeleconferenceClientExt, MetaClientType?: new (tele: ITeleconferenceClient) => IMetadataClientExt);
+    constructor(_fetcher: IFetcher, _tele: ITeleconferenceClientExt, _meta: IMetadataClientExt);
     get connectionState(): ConnectionState;
     get conferenceState(): ConnectionState;
+    get fetcher(): IFetcher;
+    get tele(): ITeleconferenceClient;
+    get meta(): IMetadataClient;
     get audio(): AudioManager;
     get preferredAudioOutputID(): string;
     set preferredAudioOutputID(v: string);
@@ -72,7 +75,6 @@ export declare class Calla extends TypedEventBase<CallaClientEvents> implements 
     get roomName(): string;
     userExists(id: string): boolean;
     getUserNames(): string[][];
-    prepare(JITSI_HOST: string, JVB_HOST: string, JVB_MUC: string, onProgress?: progressCallback): Promise<void>;
     connect(): Promise<void>;
     join(roomName: string): Promise<void>;
     identify(userName: string): Promise<void>;

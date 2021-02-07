@@ -1,12 +1,10 @@
 import { arrayClear } from "kudzu/arrays/arrayClear";
 import { once } from "kudzu/events/once";
-import { splitProgress } from "kudzu/tasks/splitProgress";
 import { using } from "kudzu/using";
 import { CallaAudioStreamAddedEvent, CallaAudioStreamRemovedEvent, CallaConferenceFailedEvent, CallaConferenceJoinedEvent, CallaConferenceLeftEvent, CallaParticipantJoinedEvent, CallaParticipantLeftEvent, CallaParticipantNameChangeEvent, CallaTeleconferenceServerConnectedEvent, CallaTeleconferenceServerDisconnectedEvent, CallaTeleconferenceServerFailedEvent, CallaUserAudioMutedEvent, CallaUserVideoMutedEvent, CallaVideoStreamAddedEvent, CallaVideoStreamRemovedEvent, StreamType } from "../../CallaEvents";
 import { ConnectionState } from "../../ConnectionState";
 import { JitsiMetadataClient } from "../../meta/jitsi/JitsiMetadataClient";
 import { addLogger, BaseTeleconferenceClient, DEFAULT_LOCAL_USER_ID } from "../BaseTeleconferenceClient";
-const jQueryPath = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js";
 function encodeUserName(v) {
     try {
         return encodeURIComponent(v);
@@ -24,12 +22,12 @@ function decodeUserName(v) {
     }
 }
 export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
-    constructor(fetcher, audio) {
+    constructor(fetcher, audio, host, bridgeHost, bridgeMUC) {
         super(fetcher, audio);
+        this.host = host;
+        this.bridgeHost = bridgeHost;
+        this.bridgeMUC = bridgeMUC;
         this.usingDefaultMetadataClient = false;
-        this.host = null;
-        this.bridgeHost = null;
-        this.bridgeMUC = null;
         this.connection = null;
         this.conference = null;
         this.tracks = new Map();
@@ -63,25 +61,6 @@ export class JitsiTeleconferenceClient extends BaseTeleconferenceClient {
     getDefaultMetadataClient() {
         this.usingDefaultMetadataClient = true;
         return new JitsiMetadataClient(this);
-    }
-    async prepare(JITSI_HOST, JVB_HOST, JVB_MUC, onProgress) {
-        if (!this._prepared) {
-            this.host = JITSI_HOST;
-            this.bridgeHost = JVB_HOST;
-            this.bridgeMUC = JVB_MUC;
-            console.info("Connecting to:", this.host);
-            const progs = splitProgress(onProgress, 2);
-            await this.fetcher.loadScript(jQueryPath, () => "jQuery" in globalThis, progs.shift());
-            await this.fetcher.loadScript(`https://${this.host}/libs/lib-jitsi-meet.min.js`, () => "JitsiMeetJS" in globalThis, progs.shift());
-            if (process.env.NODE_ENV === "development") {
-                JitsiMeetJS.setLogLevel(JitsiMeetJS.logLevels.ERROR);
-            }
-            else {
-                JitsiMeetJS.setLogLevel(JitsiMeetJS.logLevels.ERROR);
-            }
-            JitsiMeetJS.init();
-            this._prepared = true;
-        }
     }
     async connect() {
         await super.connect();
