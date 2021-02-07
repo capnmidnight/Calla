@@ -588,6 +588,7 @@ export declare const sportsEquipment: import("./EmojiGroup").EmojiGroup;
 export declare const clothing: import("./EmojiGroup").EmojiGroup;
 export declare const town: import("./EmojiGroup").EmojiGroup;
 export declare const music: import("./EmojiGroup").EmojiGroup;
+export declare const globeShowingAmericas: Emoji;
 export declare const astro: import("./EmojiGroup").EmojiGroup;
 export declare const finance: import("./EmojiGroup").EmojiGroup;
 export declare const writing: import("./EmojiGroup").EmojiGroup;

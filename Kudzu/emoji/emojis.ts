@@ -2219,11 +2219,13 @@ export const music = g(
     //e("\u{1FA98}", "Long Drum"),
     e("\u{1FA95}", "Banjo"));
 
+export const globeShowingAmericas = e("\u{1F30E}", "Globe Showing Americas");
+
 export const astro = g(
     "Astronomy", "Astronomy",
     e("\u{1F30C}", "Milky Way"),
     e("\u{1F30D}", "Globe Showing Europe-Africa"),
-    e("\u{1F30E}", "Globe Showing Americas"),
+    globeShowingAmericas,
     e("\u{1F30F}", "Globe Showing Asia-Australia"),
     e("\u{1F310}", "Globe with Meridians"),
     e("\u{1F311}", "New Moon"),
