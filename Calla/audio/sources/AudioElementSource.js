@@ -1,3 +1,4 @@
+import { once } from "kudzu/events/once";
 import { BaseAudioSource } from "./BaseAudioSource";
 export class AudioElementSource extends BaseAudioSource {
     constructor(id, audioContext, source, spatializer) {
@@ -9,7 +10,10 @@ export class AudioElementSource extends BaseAudioSource {
     async play() {
         this.isPlaying = true;
         await this.source.mediaElement.play();
-        this.isPlaying = false;
+        if (!this.source.mediaElement.loop) {
+            await once(this.source.mediaElement, "ended");
+            this.isPlaying = false;
+        }
     }
     stop() {
         this.source.mediaElement.pause();

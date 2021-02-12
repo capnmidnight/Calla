@@ -1,3 +1,4 @@
+import { once } from "kudzu/events/once";
 import { BaseAudioSource } from "./BaseAudioSource";
 import { IPlayableSource } from "./IPlayableSource";
 import { BaseEmitter } from "./spatializers/BaseEmitter";
@@ -19,7 +20,11 @@ export class AudioElementSource
     async play(): Promise<void> {
         this.isPlaying = true;
         await this.source.mediaElement.play();
-        this.isPlaying = false;
+
+        if (!this.source.mediaElement.loop) {
+            await once(this.source.mediaElement, "ended");
+            this.isPlaying = false;
+        }
     }
 
     stop(): void {
