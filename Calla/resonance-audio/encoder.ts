@@ -64,7 +64,7 @@ export interface EncoderOptions {
  * Spatially encodes input using weighted spherical harmonics.
  */
 export class Encoder implements IDisposable {
-    private context: AudioContext;
+    private context: BaseAudioContext;
     private channelGain = new Array<GainNode>();
     private merger: ChannelMergerNode = null;
     private ambisonicOrder: number;
@@ -102,7 +102,7 @@ export class Encoder implements IDisposable {
     /**
      * Spatially encodes input using weighted spherical harmonics.
      */
-    constructor(context: AudioContext, options?: EncoderOptions) {
+    constructor(context: BaseAudioContext, options?: EncoderOptions) {
         // Use defaults for undefined arguments.
         options = Object.assign({
             ambisonicOrder: DEFAULT_AMBISONIC_ORDER,

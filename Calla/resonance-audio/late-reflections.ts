@@ -81,7 +81,7 @@ export interface LateReflectionsOptions {
 export class LateReflections implements IDisposable {
     private bandwidthCoeff: number;
     private tailonsetSamples: number;
-    private context: AudioContext;
+    private context: BaseAudioContext;
     private predelay: DelayNode;
     private convolver: ConvolverNode;
 
@@ -90,7 +90,7 @@ export class LateReflections implements IDisposable {
     /**
     * Late-reflections reverberation filter for Ambisonic content.
     */
-    constructor(context: AudioContext, options?: LateReflectionsOptions) {
+    constructor(context: BaseAudioContext, options?: LateReflectionsOptions) {
         // Use defaults for undefined arguments.
         options = Object.assign({
             durations: DEFAULT_REVERB_DURATIONS.slice(),

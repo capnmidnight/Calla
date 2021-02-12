@@ -81,7 +81,7 @@ export class Listener implements IDisposable {
     /**
      * Listener model to spatialize sources in an environment.
      */
-    constructor(context: AudioContext, options?: ListenerOptions) {
+    constructor(context: BaseAudioContext, options?: ListenerOptions) {
         // Use defaults for undefined arguments.
         options = Object.assign({
             ambisonicOrder: DEFAULT_AMBISONIC_ORDER,

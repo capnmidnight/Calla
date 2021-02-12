@@ -63,7 +63,7 @@ export class Attenuation {
     /**
      * Distance-based attenuation filter.
      */
-    constructor(context: AudioContext, options?: Partial<AttenuationOptions>) {
+    constructor(context: BaseAudioContext, options?: Partial<AttenuationOptions>) {
         if (options) {
             if (isGoodNumber(options.minDistance)) {
                 this.minDistance = options.minDistance;

@@ -43,7 +43,7 @@ export class HOAConvolver {
     output: GainNode;
     /**
      * A convolver network for N-channel HOA stream.
-      * @param context - Associated AudioContext.
+      * @param context - Associated BaseAudioContext.
      * @param ambisonicOrder - Ambisonic order. (2 or 3)
      * @param [hrirBufferList] - An ordered-list of stereo
      * AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)

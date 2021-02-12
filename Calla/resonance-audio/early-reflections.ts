@@ -101,7 +101,7 @@ export class EarlyReflections implements IDisposable {
     /**
      * Ray-tracing-based early reflections model.
      */
-    constructor(context: AudioContext, options?: Partial<EarlyReflectionsOptions>) {
+    constructor(context: BaseAudioContext, options?: Partial<EarlyReflectionsOptions>) {
         if (options) {
             if (isGoodNumber(options.speedOfSound)) {
                 this.speedOfSound = options.speedOfSound;

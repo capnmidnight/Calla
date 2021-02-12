@@ -53,14 +53,14 @@ export interface DirectivityOptions {
 export class Directivity {
     private alpha: number;
     private sharpness: number;
-    private context: AudioContext;
+    private context: BaseAudioContext;
     private lowpass: BiquadFilterNode;
     private cosTheta = 0;
 
     input: BiquadFilterNode;
     output: BiquadFilterNode;
 
-    constructor(context: AudioContext, options?: DirectivityOptions) {
+    constructor(context: BaseAudioContext, options?: DirectivityOptions) {
         // Use defaults for undefined arguments.
         options = Object.assign({
             alpha: DEFAULT_DIRECTIVITY_ALPHA,

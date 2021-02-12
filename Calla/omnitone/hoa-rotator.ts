@@ -280,7 +280,7 @@ export class HOARotator implements IDisposable {
      *      http://pubs.acs.org/doi/pdf/10.1021/jp953350u
      *  [2b] Corrections to initial publication:
      *       http://pubs.acs.org/doi/pdf/10.1021/jp9833350
-     * @param context - Associated AudioContext.
+     * @param context - Associated BaseAudioContext.
      * @param ambisonicOrder - Ambisonic order.
      */
     constructor(context: BaseAudioContext, ambisonicOrder: number) {

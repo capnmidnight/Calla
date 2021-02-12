@@ -257,7 +257,7 @@ export class Room implements IDisposable {
     output: GainNode;
     private _merger: ChannelMergerNode;
 
-    constructor(context: AudioContext, options?: RoomOptions) {
+    constructor(context: BaseAudioContext, options?: RoomOptions) {
         // Use defaults for undefined arguments.
         options = Object.assign({
             listenerPosition: vec3.copy(vec3.create(), DEFAULT_POSITION),
