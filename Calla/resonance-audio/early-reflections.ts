@@ -36,6 +36,7 @@ import {
     DirectionToAxis,
     DirectionToDimension
 } from "./utils";
+import { connect, disconnect } from "../audio/GraphVisualizer";
 
 export interface EarlyReflectionsOptions {
 
@@ -158,9 +159,9 @@ export class EarlyReflections implements IDisposable {
             this.delays[direction] = delay;
             this.gains[direction] = gain;
 
-            this.lowpass.connect(delay);
-            delay.connect(gain);
-            gain.connect(this.merger, 0, 0);
+            connect(this.lowpass, delay);
+            connect(delay, gain);
+            connect(gain, this.merger, 0, 0);
 
             // Initialize inverters for opposite walls ('right', 'down', 'back' only).
             if (direction === Direction.Right
@@ -170,7 +171,7 @@ export class EarlyReflections implements IDisposable {
             }
         }
 
-        this.input.connect(this.lowpass);
+        connect(this.input, this.lowpass);
 
         // Initialize lowpass filter.
         this.lowpass.type = 'lowpass';
@@ -186,24 +187,59 @@ export class EarlyReflections implements IDisposable {
         // Down: [1 0 -1 0]
         // Front: [1 0 0 1]
         // Back: [1 0 0 -1]
-        this.gains.left.connect(this.merger, 0, 1);
+        connect(this.gains.left, this.merger, 0, 1);
 
-        this.gains.right.connect(this.inverters.right);
-        this.inverters.right.connect(this.merger, 0, 1);
+        connect(this.gains.right, this.inverters.right);
+        connect(this.inverters.right, this.merger, 0, 1);
 
-        this.gains.up.connect(this.merger, 0, 2);
+        connect(this.gains.up, this.merger, 0, 2);
 
-        this.gains.down.connect(this.inverters.down);
-        this.inverters.down.connect(this.merger, 0, 2);
+        connect(this.gains.down, this.inverters.down);
+        connect(this.inverters.down, this.merger, 0, 2);
 
-        this.gains.front.connect(this.merger, 0, 3);
+        connect(this.gains.front, this.merger, 0, 3);
 
-        this.gains.back.connect(this.inverters.back);
-        this.inverters.back.connect(this.merger, 0, 3);
-        this.merger.connect(this.output);
+        connect(this.gains.back, this.inverters.back);
+        connect(this.inverters.back, this.merger, 0, 3);
+        connect(this.merger, this.output);
 
         // Initialize.
         this.setRoomProperties(options && options.dimensions, options && options.coefficients);
+    }
+
+    dispose(): void {
+        // Connect nodes.
+        disconnect(this.input, this.lowpass);
+        for (const property of Object.values(Direction)) {
+            const delay = this.delays[property];
+            const gain = this.gains[property];
+            disconnect(this.lowpass, delay);
+            disconnect(delay, gain);
+            disconnect(gain, this.merger, 0, 0);
+        }
+
+        // Connect gains to ambisonic channel output.
+        // Left: [1 1 0 0]
+        // Right: [1 -1 0 0]
+        // Up: [1 0 1 0]
+        // Down: [1 0 -1 0]
+        // Front: [1 0 0 1]
+        // Back: [1 0 0 -1]
+        disconnect(this.gains.left, this.merger, 0, 1);
+
+        disconnect(this.gains.right, this.inverters.right);
+        disconnect(this.inverters.right, this.merger, 0, 1);
+
+        disconnect(this.gains.up, this.merger, 0, 2);
+
+        disconnect(this.gains.down, this.inverters.down);
+        disconnect(this.inverters.down, this.merger, 0, 2);
+
+        disconnect(this.gains.front, this.merger, 0, 3);
+
+        disconnect(this.gains.back, this.inverters.back);
+        disconnect(this.inverters.back, this.merger, 0, 3);
+        disconnect(this.merger, this.output);
     }
 
 
@@ -262,41 +298,6 @@ export class EarlyReflections implements IDisposable {
 
         // Update listener position with new room properties.
         this.setListenerPosition(this.listenerPosition);
-    }
-
-    dispose(): void {
-        // Connect nodes.
-        this.input.disconnect(this.lowpass);
-        for (const property of Object.values(Direction)) {
-            const delay = this.delays[property];
-            const gain = this.gains[property];
-            this.lowpass.disconnect(delay);
-            delay.disconnect(gain);
-            gain.disconnect(this.merger, 0, 0);
-        }
-
-        // Connect gains to ambisonic channel output.
-        // Left: [1 1 0 0]
-        // Right: [1 -1 0 0]
-        // Up: [1 0 1 0]
-        // Down: [1 0 -1 0]
-        // Front: [1 0 0 1]
-        // Back: [1 0 0 -1]
-        this.gains.left.disconnect(this.merger, 0, 1);
-
-        this.gains.right.disconnect(this.inverters.right);
-        this.inverters.right.disconnect(this.merger, 0, 1);
-
-        this.gains.up.disconnect(this.merger, 0, 2);
-
-        this.gains.down.disconnect(this.inverters.down);
-        this.inverters.down.disconnect(this.merger, 0, 2);
-
-        this.gains.front.disconnect(this.merger, 0, 3);
-
-        this.gains.back.disconnect(this.inverters.back);
-        this.inverters.back.disconnect(this.merger, 0, 3);
-        this.merger.disconnect(this.output);
     }
 
 

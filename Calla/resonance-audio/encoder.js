@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { connect, disconnect } from "../audio/GraphVisualizer";
 import { MAX_RE_WEIGHTS, SPHERICAL_HARMONICS, SPHERICAL_HARMONICS_MAX_ORDER } from "./tables";
 import { DEFAULT_AMBISONIC_ORDER, DEFAULT_AZIMUTH, DEFAULT_ELEVATION, DEFAULT_SOURCE_WIDTH, log } from "./utils";
 /**
@@ -68,30 +69,27 @@ export class Encoder {
      */
     setAmbisonicOrder(ambisonicOrder) {
         this.ambisonicOrder = Encoder.validateAmbisonicOrder(ambisonicOrder);
-        this.input.disconnect();
-        for (let i = 0; i < this.channelGain.length; i++) {
-            this.channelGain[i].disconnect();
-        }
-        if (this.merger != null) {
-            this.merger.disconnect();
-        }
+        this.dispose();
         // Create audio graph.
         let numChannels = (this.ambisonicOrder + 1) * (this.ambisonicOrder + 1);
         this.merger = this.context.createChannelMerger(numChannels);
         this.channelGain = new Array(numChannels);
         for (let i = 0; i < numChannels; i++) {
             this.channelGain[i] = this.context.createGain();
-            this.input.connect(this.channelGain[i]);
-            this.channelGain[i].connect(this.merger, 0, i);
+            connect(this.input, this.channelGain[i]);
+            connect(this.channelGain[i], this.merger, 0, i);
         }
-        this.merger.connect(this.output);
+        connect(this.merger, this.output);
     }
     dispose() {
-        this.merger.disconnect(this.output);
-        let numChannels = (this.ambisonicOrder + 1) * (this.ambisonicOrder + 1);
-        for (let i = 0; i < numChannels; ++i) {
-            this.channelGain[i].disconnect(this.merger, 0, i);
-            this.input.disconnect(this.channelGain[i]);
+        for (let i = 0; i < this.channelGain.length; i++) {
+            disconnect(this.input, this.channelGain[i]);
+            if (this.merger) {
+                disconnect(this.channelGain[i], this.merger, 0, i);
+            }
+        }
+        if (this.merger) {
+            disconnect(this.merger, this.output);
         }
     }
     /**

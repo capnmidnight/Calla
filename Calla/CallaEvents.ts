@@ -1,7 +1,7 @@
 import { Emoji } from "kudzu/emoji/Emoji";
 import type { AudioActivityEvent } from "./audio/AudioActivityEvent";
-import type { AudioSource } from "./audio/AudioSource";
 import type { InterpolatedPose } from "./audio/positions/InterpolatedPose";
+import { AudioStreamSource } from "./audio/sources/AudioStreamSource";
 
 export type CallaTeleconferenceEventType = "serverConnected"
     | "serverDisconnected"
@@ -107,7 +107,7 @@ export class CallaConferenceRestoredEvent extends CallaEvent<"conferenceRestored
 }
 
 export class CallaParticipantJoinedEvent extends CallaParticipantEvent<"participantJoined"> {
-    constructor(id: string, displayName: string, public source: AudioSource) {
+    constructor(id: string, displayName: string, public source: AudioStreamSource) {
         super("participantJoined", id, displayName);
     }
 }

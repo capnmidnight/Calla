@@ -19,6 +19,7 @@
  */
 import { vec3 } from "gl-matrix";
 import { arrayRemoveAt } from "kudzu/arrays/arrayRemoveAt";
+import { connect, disconnect } from "../audio/GraphVisualizer";
 import { Encoder } from './encoder';
 import { Listener } from './listener';
 import { Room } from './room';
@@ -70,9 +71,9 @@ export class ResonanceAudio {
         this.ambisonicOutput = context.createGain();
         this.ambisonicInput = this.listener.input;
         // Connect audio graph.
-        this.room.output.connect(this.listener.input);
-        this.listener.output.connect(this.output);
-        this.listener.ambisonicOutput.connect(this.ambisonicOutput);
+        connect(this.room.output, this.listener.input);
+        connect(this.listener.output, this.output);
+        connect(this.listener.ambisonicOutput, this.ambisonicOutput);
     }
     getRenderingMode() {
         return this.listener.getRenderingMode();
@@ -81,9 +82,9 @@ export class ResonanceAudio {
         this.listener.setRenderingMode(mode);
     }
     dispose() {
-        this.room.output.disconnect(this.listener.input);
-        this.listener.output.disconnect(this.output);
-        this.listener.ambisonicOutput.disconnect(this.ambisonicOutput);
+        disconnect(this.room.output, this.listener.input);
+        disconnect(this.listener.output, this.output);
+        disconnect(this.listener.ambisonicOutput, this.ambisonicOutput);
     }
     /**
      * Create a new source for the scene.

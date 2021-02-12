@@ -1,15 +1,20 @@
 import { isFunction, isObject } from "./typeChecks";
-function isDisposable(obj) {
+export function isDisposable(obj) {
     return isObject(obj)
         && "dispose" in obj
         && isFunction(obj.dispose);
 }
-function isClosable(obj) {
+export function isClosable(obj) {
     return isObject(obj)
         && "close" in obj
         && isFunction(obj.close);
 }
-function dispose(val) {
+export function isCloneable(obj) {
+    return isObject(obj)
+        && "clone" in obj
+        && isFunction(obj.clone);
+}
+export function dispose(val) {
     if (isDisposable(val)) {
         val.dispose();
     }

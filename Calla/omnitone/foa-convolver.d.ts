@@ -39,7 +39,7 @@ export declare class FOAConvolver implements IDisposable {
     output: GainNode;
     /**
      * FOAConvolver. A collection of 2 stereo convolvers for 4-channel FOA stream.
-     * @param context The associated AudioContext.
+     * @param context The associated BaseAudioContext.
      * @param hrirBufferList - An ordered-list of stereo AudioBuffers for convolution. (i.e. 2 stereo AudioBuffers for FOA)
      */
     constructor(context: BaseAudioContext, hrirBufferList?: AudioBuffer[]);

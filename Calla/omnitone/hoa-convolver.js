@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { connect, disconnect } from "../audio/GraphVisualizer";
 /**
  * @file A collection of convolvers. Can be used for the optimized HOA binaural
  * rendering. (e.g. SH-MaxRe HRTFs)
@@ -23,7 +24,7 @@
 export class HOAConvolver {
     /**
      * A convolver network for N-channel HOA stream.
-      * @param context - Associated AudioContext.
+      * @param context - Associated BaseAudioContext.
      * @param ambisonicOrder - Ambisonic order. (2 or 3)
      * @param [hrirBufferList] - An ordered-list of stereo
      * AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)
@@ -75,27 +76,27 @@ export class HOAConvolver {
                 const stereoIndex = Math.floor(acnIndex / 2);
                 // Split channels from input into array of stereo convolvers.
                 // Then create a network of mergers that produces the stereo output.
-                this._inputSplitter.connect(this._stereoMergers[stereoIndex], acnIndex, acnIndex % 2);
-                this._stereoMergers[stereoIndex].connect(this._convolvers[stereoIndex]);
-                this._convolvers[stereoIndex].connect(this._stereoSplitters[stereoIndex]);
+                connect(this._inputSplitter, this._stereoMergers[stereoIndex], acnIndex, acnIndex % 2);
+                connect(this._stereoMergers[stereoIndex], this._convolvers[stereoIndex]);
+                connect(this._convolvers[stereoIndex], this._stereoSplitters[stereoIndex]);
                 // Positive index (m >= 0) spherical harmonics are symmetrical around the
                 // front axis, while negative index (m < 0) spherical harmonics are
                 // anti-symmetrical around the front axis. We will exploit this symmetry
                 // to reduce the number of convolutions required when rendering to a
                 // symmetrical binaural renderer.
                 if (m >= 0) {
-                    this._stereoSplitters[stereoIndex].connect(this._positiveIndexSphericalHarmonics, acnIndex % 2);
+                    connect(this._stereoSplitters[stereoIndex], this._positiveIndexSphericalHarmonics, acnIndex % 2);
                 }
                 else {
-                    this._stereoSplitters[stereoIndex].connect(this._negativeIndexSphericalHarmonics, acnIndex % 2);
+                    connect(this._stereoSplitters[stereoIndex], this._negativeIndexSphericalHarmonics, acnIndex % 2);
                 }
             }
         }
-        this._positiveIndexSphericalHarmonics.connect(this._binauralMerger, 0, 0);
-        this._positiveIndexSphericalHarmonics.connect(this._binauralMerger, 0, 1);
-        this._negativeIndexSphericalHarmonics.connect(this._binauralMerger, 0, 0);
-        this._negativeIndexSphericalHarmonics.connect(this._inverter);
-        this._inverter.connect(this._binauralMerger, 0, 1);
+        connect(this._positiveIndexSphericalHarmonics, this._binauralMerger, 0, 0);
+        connect(this._positiveIndexSphericalHarmonics, this._binauralMerger, 0, 1);
+        connect(this._negativeIndexSphericalHarmonics, this._binauralMerger, 0, 0);
+        connect(this._negativeIndexSphericalHarmonics, this._inverter);
+        connect(this._inverter, this._binauralMerger, 0, 1);
         // For asymmetric index.
         this._inverter.gain.value = -1;
         // Input/Output proxy.
@@ -114,27 +115,27 @@ export class HOAConvolver {
                 const stereoIndex = Math.floor(acnIndex / 2);
                 // Split channels from input into array of stereo convolvers.
                 // Then create a network of mergers that produces the stereo output.
-                this._inputSplitter.disconnect(this._stereoMergers[stereoIndex], acnIndex, acnIndex % 2);
-                this._stereoMergers[stereoIndex].disconnect(this._convolvers[stereoIndex]);
-                this._convolvers[stereoIndex].disconnect(this._stereoSplitters[stereoIndex]);
+                disconnect(this._inputSplitter, this._stereoMergers[stereoIndex], acnIndex, acnIndex % 2);
+                disconnect(this._stereoMergers[stereoIndex], this._convolvers[stereoIndex]);
+                disconnect(this._convolvers[stereoIndex], this._stereoSplitters[stereoIndex]);
                 // Positive index (m >= 0) spherical harmonics are symmetrical around the
                 // front axis, while negative index (m < 0) spherical harmonics are
                 // anti-symmetrical around the front axis. We will exploit this symmetry
                 // to reduce the number of convolutions required when rendering to a
                 // symmetrical binaural renderer.
                 if (m >= 0) {
-                    this._stereoSplitters[stereoIndex].disconnect(this._positiveIndexSphericalHarmonics, acnIndex % 2);
+                    disconnect(this._stereoSplitters[stereoIndex], this._positiveIndexSphericalHarmonics, acnIndex % 2);
                 }
                 else {
-                    this._stereoSplitters[stereoIndex].disconnect(this._negativeIndexSphericalHarmonics, acnIndex % 2);
+                    disconnect(this._stereoSplitters[stereoIndex], this._negativeIndexSphericalHarmonics, acnIndex % 2);
                 }
             }
         }
-        this._positiveIndexSphericalHarmonics.disconnect(this._binauralMerger, 0, 0);
-        this._positiveIndexSphericalHarmonics.disconnect(this._binauralMerger, 0, 1);
-        this._negativeIndexSphericalHarmonics.disconnect(this._binauralMerger, 0, 0);
-        this._negativeIndexSphericalHarmonics.disconnect(this._inverter);
-        this._inverter.disconnect(this._binauralMerger, 0, 1);
+        disconnect(this._positiveIndexSphericalHarmonics, this._binauralMerger, 0, 0);
+        disconnect(this._positiveIndexSphericalHarmonics, this._binauralMerger, 0, 1);
+        disconnect(this._negativeIndexSphericalHarmonics, this._binauralMerger, 0, 0);
+        disconnect(this._negativeIndexSphericalHarmonics, this._inverter);
+        disconnect(this._inverter, this._binauralMerger, 0, 1);
     }
     /**
      * Assigns N HRIR AudioBuffers to N convolvers: Note that we use 2 stereo
@@ -162,7 +163,7 @@ export class HOAConvolver {
      * the WebAudio engine. (i.e. consume CPU cycle)
      */
     enable() {
-        this._binauralMerger.connect(this._outputGain);
+        connect(this._binauralMerger, this._outputGain);
         this._active = true;
     }
     /**
@@ -170,7 +171,7 @@ export class HOAConvolver {
      * audio destination, thus no CPU cycle will be consumed.
      */
     disable() {
-        this._binauralMerger.disconnect();
+        disconnect(this._binauralMerger, this._outputGain);
         this._active = false;
     }
 }

@@ -61,7 +61,7 @@ export declare class Encoder implements IDisposable {
     /**
      * Spatially encodes input using weighted spherical harmonics.
      */
-    constructor(context: AudioContext, options?: EncoderOptions);
+    constructor(context: BaseAudioContext, options?: EncoderOptions);
     /**
      * Set the desired ambisonic order.
      * @param ambisonicOrder Desired ambisonic order.

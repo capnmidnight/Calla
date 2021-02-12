@@ -1,12 +1,5 @@
 import { Emoji } from "./Emoji";
 /**
- * Shorthand for `new EmojiGroup`, which saves significantly on bundle size.
- * @param v - a Unicode sequence.
- * @param d - an English text description of the pictogram.
- * @param r - the emoji that are contained in this group.
- */
-export declare function g(v: string, d: string, ...r: (Emoji | EmojiGroup)[]): EmojiGroup;
-/**
  * A shorthand for `new EmojiGroup` that allows for setting optional properties
  * on the EmojiGroup object.
  */

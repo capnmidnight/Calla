@@ -15,6 +15,7 @@
  */
 
 import type { IDisposable } from "kudzu/using";
+import { connect, disconnect } from "../audio/GraphVisualizer";
 
 
 /**
@@ -80,25 +81,25 @@ export class FOAConvolver implements IDisposable {
         this._summingBus = this._context.createGain();
 
         // Group W and Y, then Z and X.
-        this._splitterWYZX.connect(this._mergerWY, 0, 0);
-        this._splitterWYZX.connect(this._mergerWY, 1, 1);
-        this._splitterWYZX.connect(this._mergerZX, 2, 0);
-        this._splitterWYZX.connect(this._mergerZX, 3, 1);
+        connect(this._splitterWYZX, this._mergerWY, 0, 0);
+        connect(this._splitterWYZX, this._mergerWY, 1, 1);
+        connect(this._splitterWYZX, this._mergerZX, 2, 0);
+        connect(this._splitterWYZX, this._mergerZX, 3, 1);
 
         // Create a network of convolvers using splitter/merger.
-        this._mergerWY.connect(this._convolverWY);
-        this._mergerZX.connect(this._convolverZX);
-        this._convolverWY.connect(this._splitterWY);
-        this._convolverZX.connect(this._splitterZX);
-        this._splitterWY.connect(this._mergerBinaural, 0, 0);
-        this._splitterWY.connect(this._mergerBinaural, 0, 1);
-        this._splitterWY.connect(this._mergerBinaural, 1, 0);
-        this._splitterWY.connect(this._inverter, 1, 0);
-        this._inverter.connect(this._mergerBinaural, 0, 1);
-        this._splitterZX.connect(this._mergerBinaural, 0, 0);
-        this._splitterZX.connect(this._mergerBinaural, 0, 1);
-        this._splitterZX.connect(this._mergerBinaural, 1, 0);
-        this._splitterZX.connect(this._mergerBinaural, 1, 1);
+        connect(this._mergerWY, this._convolverWY);
+        connect(this._mergerZX, this._convolverZX);
+        connect(this._convolverWY, this._splitterWY);
+        connect(this._convolverZX, this._splitterZX);
+        connect(this._splitterWY, this._mergerBinaural, 0, 0);
+        connect(this._splitterWY, this._mergerBinaural, 0, 1);
+        connect(this._splitterWY, this._mergerBinaural, 1, 0);
+        connect(this._splitterWY, this._inverter, 1, 0);
+        connect(this._inverter, this._mergerBinaural, 0, 1);
+        connect(this._splitterZX, this._mergerBinaural, 0, 0);
+        connect(this._splitterZX, this._mergerBinaural, 0, 1);
+        connect(this._splitterZX, this._mergerBinaural, 1, 0);
+        connect(this._splitterZX, this._mergerBinaural, 1, 1);
 
         // By default, WebAudio's convolver does the normalization based on IR's
         // energy. For the precise convolution, it must be disabled before the buffer
@@ -120,25 +121,25 @@ export class FOAConvolver implements IDisposable {
         }
 
         // Group W and Y, then Z and X.
-        this._splitterWYZX.disconnect(this._mergerWY, 0, 0);
-        this._splitterWYZX.disconnect(this._mergerWY, 1, 1);
-        this._splitterWYZX.disconnect(this._mergerZX, 2, 0);
-        this._splitterWYZX.disconnect(this._mergerZX, 3, 1);
+        disconnect(this._splitterWYZX, this._mergerWY, 0, 0);
+        disconnect(this._splitterWYZX, this._mergerWY, 1, 1);
+        disconnect(this._splitterWYZX, this._mergerZX, 2, 0);
+        disconnect(this._splitterWYZX, this._mergerZX, 3, 1);
 
         // Create a network of convolvers using splitter/merger.
-        this._mergerWY.disconnect(this._convolverWY);
-        this._mergerZX.disconnect(this._convolverZX);
-        this._convolverWY.disconnect(this._splitterWY);
-        this._convolverZX.disconnect(this._splitterZX);
-        this._splitterWY.disconnect(this._mergerBinaural, 0, 0);
-        this._splitterWY.disconnect(this._mergerBinaural, 0, 1);
-        this._splitterWY.disconnect(this._mergerBinaural, 1, 0);
-        this._splitterWY.disconnect(this._inverter, 1, 0);
-        this._inverter.disconnect(this._mergerBinaural, 0, 1);
-        this._splitterZX.disconnect(this._mergerBinaural, 0, 0);
-        this._splitterZX.disconnect(this._mergerBinaural, 0, 1);
-        this._splitterZX.disconnect(this._mergerBinaural, 1, 0);
-        this._splitterZX.disconnect(this._mergerBinaural, 1, 1);
+        disconnect(this._mergerWY, this._convolverWY);
+        disconnect(this._mergerZX, this._convolverZX);
+        disconnect(this._convolverWY, this._splitterWY);
+        disconnect(this._convolverZX, this._splitterZX);
+        disconnect(this._splitterWY, this._mergerBinaural, 0, 0);
+        disconnect(this._splitterWY, this._mergerBinaural, 0, 1);
+        disconnect(this._splitterWY, this._mergerBinaural, 1, 0);
+        disconnect(this._splitterWY, this._inverter, 1, 0);
+        disconnect(this._inverter, this._mergerBinaural, 0, 1);
+        disconnect(this._splitterZX, this._mergerBinaural, 0, 0);
+        disconnect(this._splitterZX, this._mergerBinaural, 0, 1);
+        disconnect(this._splitterZX, this._mergerBinaural, 1, 0);
+        disconnect(this._splitterZX, this._mergerBinaural, 1, 1);
     }
 
 
@@ -170,7 +171,7 @@ export class FOAConvolver implements IDisposable {
      * the WebAudio engine. (i.e. consume CPU cycle)
      */
     enable(): void {
-        this._mergerBinaural.connect(this._summingBus);
+        connect(this._mergerBinaural, this._summingBus);
         this._active = true;
     }
 
@@ -180,7 +181,7 @@ export class FOAConvolver implements IDisposable {
      * audio destination, thus no CPU cycle will be consumed.
      */
     disable(): void {
-        this._mergerBinaural.disconnect();
+        disconnect(this._mergerBinaural, this._summingBus);
         this._active = false;
     }
 }

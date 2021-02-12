@@ -1,0 +1,10 @@
+export declare function connect(a: AudioNode, destinationNode: AudioNode, output?: number, input?: number): boolean;
+export declare function connect(a: AudioNode, destinationParam: AudioParam, output?: number): boolean;
+export declare function disconnect(a: AudioNode): boolean;
+export declare function disconnect(a: AudioNode, output: number): boolean;
+export declare function disconnect(a: AudioNode, destinationNode: AudioNode, output: number, input: number): boolean;
+export declare function disconnect(a: AudioNode, destinationNode: AudioNode, output: number): boolean;
+export declare function disconnect(a: AudioNode, destinationNode: AudioNode): boolean;
+export declare function disconnect(a: AudioNode, destinationParam: AudioParam, output: number): boolean;
+export declare function disconnect(a: AudioNode, destinationParam: AudioParam): boolean;
+export declare function print(): void;

@@ -109,6 +109,7 @@ export declare class Source implements IDisposable {
      * Options for constructing a new Source.
      */
     constructor(scene: ResonanceAudio, options?: SourceOptions);
+    get output(): GainNode;
     dispose(): void;
     update(): void;
     /**

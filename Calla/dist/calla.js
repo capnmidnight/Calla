@@ -8,8 +8,8 @@ var Calla = (function (exports) {
     function isFunction(obj) {
         return t(obj, "function", Function);
     }
-    function assertNever(x) {
-        throw new Error("Unexpected object: " + x);
+    function assertNever(x, msg) {
+        throw new Error((msg || "Unexpected object: ") + x);
     }
 
     /**
@@ -3516,12 +3516,6 @@ var Calla = (function (exports) {
     }
 
     /**
-     * Shorthand for `new Emoji`, which saves significantly on bundle size.
-     * @param v - a Unicode sequence.
-     * @param d - an English text description of the pictogram.
-     * @param [o] - an optional set of properties to set on the Emoji object.
-     */
-    /**
      * Unicode-standardized pictograms.
      **/
     class Emoji {
@@ -4236,13 +4230,13 @@ var Calla = (function (exports) {
             this._tele.addEventListener("audioMuteStatusChanged", fwd);
             this._tele.addEventListener("videoMuteStatusChanged", fwd);
             this._tele.addEventListener("conferenceJoined", async (evt) => {
-                const user = this.audio.createLocalUser(evt.id);
+                const user = this.audio.setLocalUserID(evt.id);
                 evt.pose = user.pose;
                 this.dispatchEvent(evt);
                 await this.setPreferredDevices();
             });
             this._tele.addEventListener("conferenceLeft", (evt) => {
-                this.audio.createLocalUser(evt.id);
+                this.audio.setLocalUserID(evt.id);
                 this.dispatchEvent(evt);
             });
             this._tele.addEventListener("participantJoined", async (joinEvt) => {

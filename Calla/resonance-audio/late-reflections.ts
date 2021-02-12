@@ -15,6 +15,7 @@
  */
 
 import type { IDisposable } from "kudzu/using";
+import { connect, disconnect } from "../audio/GraphVisualizer";
 import {
     DEFAULT_REVERB_BANDWIDTH,
     DEFAULT_REVERB_DURATIONS,
@@ -119,18 +120,18 @@ export class LateReflections implements IDisposable {
         this.convolver.normalize = false;
 
         // Connect nodes.
-        this.input.connect(this.predelay);
-        this.predelay.connect(this.convolver);
-        this.convolver.connect(this.output);
+        connect(this.input, this.predelay);
+        connect(this.predelay, this.convolver);
+        connect(this.convolver, this.output);
 
         // Compute IR using RT60 values.
         this.setDurations(options.durations);
     }
 
     dispose(): void {
-        this.input.disconnect(this.predelay);
-        this.predelay.disconnect(this.convolver);
-        this.convolver.disconnect(this.output);
+        disconnect(this.input, this.predelay);
+        disconnect(this.predelay, this.convolver);
+        disconnect(this.convolver, this.output);
     }
 
 

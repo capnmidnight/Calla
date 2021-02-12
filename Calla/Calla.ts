@@ -69,14 +69,14 @@ export class Calla
         this._tele.addEventListener("videoMuteStatusChanged", fwd);
 
         this._tele.addEventListener("conferenceJoined", async (evt: CallaConferenceJoinedEvent) => {
-            const user = this.audio.createLocalUser(evt.id);
+            const user = this.audio.setLocalUserID(evt.id);
             evt.pose = user.pose;
             this.dispatchEvent(evt);
             await this.setPreferredDevices();
         });
 
         this._tele.addEventListener("conferenceLeft", (evt: CallaConferenceLeftEvent) => {
-            this.audio.createLocalUser(evt.id);
+            this.audio.setLocalUserID(evt.id);
             this.dispatchEvent(evt);
         });
 

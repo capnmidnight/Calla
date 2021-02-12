@@ -41,7 +41,7 @@ export declare class Attenuation {
     /**
      * Distance-based attenuation filter.
      */
-    constructor(context: AudioContext, options?: Partial<AttenuationOptions>);
+    constructor(context: BaseAudioContext, options?: Partial<AttenuationOptions>);
     /**
      * Set distance from the listener.
      * @param distance Distance (in meters).

@@ -16,6 +16,7 @@
 
 import { mat3, mat4, ReadonlyMat3, ReadonlyMat4, vec3 } from "gl-matrix";
 import type { IDisposable } from "kudzu/using";
+import { connect, disconnect } from "../audio/GraphVisualizer";
 
 
 /**
@@ -317,16 +318,14 @@ export class HOARotator implements IDisposable {
                     const outputIndex = orderOffset + k;
                     const matrixIndex = j * rows + k;
                     this._gainNodeMatrix[i - 1][matrixIndex] = this._context.createGain();
-                    this._splitter.connect(
-                        this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
-                    this._gainNodeMatrix[i - 1][matrixIndex].connect(
-                        this._merger, 0, outputIndex);
+                    connect(this._splitter, this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
+                    connect(this._gainNodeMatrix[i - 1][matrixIndex], this._merger, 0, outputIndex);
                 }
             }
         }
 
         // W-channel is not involved in rotation, skip straight to ouput.
-        this._splitter.connect(this._merger, 0, 0);
+        connect(this._splitter, this._merger, 0, 0);
 
         // Default Identity matrix.
         this.setRotationMatrix3(mat3.identity(mat3.create()));
@@ -354,16 +353,14 @@ export class HOARotator implements IDisposable {
                 for (let k = 0; k < rows; k++) {
                     const outputIndex = orderOffset + k;
                     const matrixIndex = j * rows + k;
-                    this._splitter.disconnect(
-                        this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
-                    this._gainNodeMatrix[i - 1][matrixIndex].disconnect(
-                        this._merger, 0, outputIndex);
+                    disconnect(this._splitter, this._gainNodeMatrix[i - 1][matrixIndex], inputIndex);
+                    disconnect(this._gainNodeMatrix[i - 1][matrixIndex], this._merger, 0, outputIndex);
                 }
             }
         }
 
         // W-channel is not involved in rotation, skip straight to ouput.
-        this._splitter.disconnect(this._merger, 0, 0);
+        disconnect(this._splitter, this._merger, 0, 0);
     }
 
 

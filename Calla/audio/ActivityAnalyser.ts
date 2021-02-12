@@ -3,8 +3,8 @@ import { clamp } from "kudzu/math/clamp";
 import { isGoodNumber } from "kudzu/typeChecks";
 import type { IDisposable } from "kudzu/using";
 import { AudioActivityEvent } from "./AudioActivityEvent";
-import type { AudioSource } from "./AudioSource";
-import { BaseNode } from "./spatializers/nodes/BaseNode";
+import { connect, disconnect } from "./GraphVisualizer";
+import { AudioStreamSource } from "./sources/AudioStreamSource";
 
 const audioActivityEvt = new AudioActivityEvent();
 const activityCounterMin = 0;
@@ -43,7 +43,7 @@ export class ActivityAnalyser
     private activityCounter: number;
     private analyser: AnalyserNode = null;
 
-    constructor(source: AudioSource, audioContext: AudioContext, bufferSize: number) {
+    constructor(private source: AudioStreamSource, audioContext: BaseAudioContext, bufferSize: number) {
         super();
 
         if (!isGoodNumber(bufferSize)
@@ -60,12 +60,12 @@ export class ActivityAnalyser
         this.activityCounter = 0;
 
         const checkSource = () => {
-            if (source.spatializer instanceof BaseNode
-                && source.spatializer.source) {
+            if (source.spatializer
+                && source.source) {
                 this.analyser = audioContext.createAnalyser();
                 this.analyser.fftSize = 2 * this.bufferSize;
                 this.analyser.smoothingTimeConstant = 0.2;
-                source.spatializer.source.connect(this.analyser);
+                connect(source.source, this.analyser);
             }
             else {
                 setTimeout(checkSource, 0);
@@ -77,7 +77,7 @@ export class ActivityAnalyser
 
     dispose(): void {
         if (this.analyser) {
-            this.analyser.disconnect();
+            disconnect(this.source.source, this.analyser);
             this.analyser = null;
         }
         this.buffer = null;

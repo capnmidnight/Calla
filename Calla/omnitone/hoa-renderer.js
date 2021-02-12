@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { assertNever } from "kudzu/typeChecks";
+import { connect, disconnect } from "../audio/GraphVisualizer";
 import { BufferDataType, BufferList } from './buffer-list';
 import { HOAConvolver } from './hoa-convolver';
 import { HOARotator } from './hoa-rotator';
@@ -62,22 +62,22 @@ export class HOARenderer {
         this.rotator = new HOARotator(this.context, this.config.ambisonicOrder);
         this.convolver =
             new HOAConvolver(this.context, this.config.ambisonicOrder);
-        this.input.connect(this.rotator.input);
-        this.input.connect(this.bypass);
-        this.rotator.output.connect(this.convolver.input);
-        this.convolver.output.connect(this.output);
+        connect(this.input, this.rotator.input);
+        connect(this.input, this.bypass);
+        connect(this.rotator.output, this.convolver.input);
+        connect(this.convolver.output, this.output);
         this.input.channelCount = this.config.numberOfChannels;
         this.input.channelCountMode = 'explicit';
         this.input.channelInterpretation = 'discrete';
     }
     dispose() {
         if (this.getRenderingMode() === RenderingMode.Bypass) {
-            this.bypass.connect(this.output);
+            disconnect(this.bypass, this.output);
         }
-        this.input.disconnect(this.rotator.input);
-        this.input.disconnect(this.bypass);
-        this.rotator.output.disconnect(this.convolver.input);
-        this.convolver.output.disconnect(this.output);
+        disconnect(this.input, this.rotator.input);
+        disconnect(this.input, this.bypass);
+        disconnect(this.rotator.output, this.convolver.input);
+        disconnect(this.convolver.output, this.output);
         this.rotator.dispose();
         this.convolver.dispose();
     }
@@ -134,20 +134,17 @@ export class HOARenderer {
         if (mode === this.config.renderingMode) {
             return;
         }
-        switch (mode) {
-            case RenderingMode.Ambisonic:
-                this.convolver.enable();
-                this.bypass.disconnect();
-                break;
-            case RenderingMode.Bypass:
-                this.convolver.disable();
-                this.bypass.connect(this.output);
-                break;
-            case RenderingMode.None:
-                this.convolver.disable();
-                this.bypass.disconnect();
-                break;
-            default: assertNever(mode);
+        if (mode === RenderingMode.Ambisonic) {
+            this.convolver.enable;
+        }
+        else {
+            this.convolver.disable();
+        }
+        if (mode === RenderingMode.Bypass) {
+            connect(this.bypass, this.output);
+        }
+        else {
+            disconnect(this.bypass, this.output);
         }
         this.config.renderingMode = mode;
     }

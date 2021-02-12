@@ -52,7 +52,7 @@ export declare class Room implements IDisposable {
     speedOfSound: number;
     output: GainNode;
     private _merger;
-    constructor(context: AudioContext, options?: RoomOptions);
+    constructor(context: BaseAudioContext, options?: RoomOptions);
     dispose(): void;
     /**
      * Set the room's dimensions and wall materials.

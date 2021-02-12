@@ -1,15 +1,4 @@
-import { e, Emoji } from "./Emoji";
-
-/**
- * Shorthand for `new EmojiGroup`, which saves significantly on bundle size.
- * @param v - a Unicode sequence.
- * @param d - an English text description of the pictogram.
- * @param r - the emoji that are contained in this group.
- */
-export function g(v: string, d: string, ...r: (Emoji | EmojiGroup)[]) {
-    return new EmojiGroup(v, d, ...r);
-}
-
+import { Emoji } from "./Emoji";
 
 /**
  * A shorthand for `new EmojiGroup` that allows for setting optional properties
@@ -21,7 +10,7 @@ export function G(v: string, d: string, o: any, ...r: Emoji[]) {
         .map(oo => oo as Emoji)
         .concat(...r);
     return Object.assign(
-        g(
+        new EmojiGroup(
             v,
             d,
             ...emojis),
@@ -33,14 +22,14 @@ export function C(a: any, b: any, altDesc: string | null = null): any {
         return a.map(c => C(c, b));
     }
     else if (a instanceof EmojiGroup) {
-        const { value, desc } = C(e(a.value, a.desc), b);
-        return g(value, desc, ...C(a.alts, b));
+        const { value, desc } = C(new Emoji(a.value, a.desc), b);
+        return new EmojiGroup(value, desc, ...C(a.alts, b));
     }
     else if (b instanceof Array) {
         return b.map(c => C(a, c));
     }
     else {
-        return e(a.value + b.value, altDesc || (a.desc + ": " + b.desc));
+        return new Emoji(a.value + b.value, altDesc || (a.desc + ": " + b.desc));
     }
 }
 
@@ -49,14 +38,14 @@ export function J(a: any, b: any, altDesc: string | null = null): any {
         return a.map(c => J(c, b));
     }
     else if (a instanceof EmojiGroup) {
-        const { value, desc } = J(e(a.value, a.desc), b);
-        return g(value, desc, ...J(a.alts, b));
+        const { value, desc } = J(new Emoji(a.value, a.desc), b);
+        return new EmojiGroup(value, desc, ...J(a.alts, b));
     }
     else if (b instanceof Array) {
         return b.map(c => J(a, c));
     }
     else {
-        return e(a.value + "\u200D" + b.value, altDesc || (a.desc + ": " + b.desc));
+        return new Emoji(a.value + "\u200D" + b.value, altDesc || (a.desc + ": " + b.desc));
     }
 }
 

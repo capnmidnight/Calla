@@ -35,7 +35,7 @@ export declare class FOARouter implements IDisposable {
     private _channelMap;
     /**
      * Channel router for FOA stream.
-     * @param context - Associated AudioContext.
+     * @param context - Associated BaseAudioContext.
      * @param channelMap - Routing destination array.
      */
     constructor(context: BaseAudioContext, channelMap: ChannelMap | number[]);

@@ -22,8 +22,8 @@
 
 
 import { mat3, mat4 } from "gl-matrix";
-import { assertNever } from "kudzu/typeChecks";
 import type { IDisposable } from "kudzu/using";
+import { connect, disconnect } from "../audio/GraphVisualizer";
 import { BufferDataType, BufferList } from './buffer-list';
 import { FOAConvolver } from './foa-convolver';
 import { FOARotator } from './foa-rotator';
@@ -93,11 +93,11 @@ export class FOARenderer implements IDisposable {
         this.router = new FOARouter(this.context, this.config.channelMap);
         this.rotator = new FOARotator(this.context);
         this.convolver = new FOAConvolver(this.context);
-        this.input.connect(this.router.input);
-        this.input.connect(this.bypass);
-        this.router.output.connect(this.rotator.input);
-        this.rotator.output.connect(this.convolver.input);
-        this.convolver.output.connect(this.output);
+        connect(this.input, this.router.input);
+        connect(this.input, this.bypass);
+        connect(this.router.output, this.rotator.input);
+        connect(this.rotator.output, this.convolver.input);
+        connect(this.convolver.output, this.output);
 
         this.input.channelCount = 4;
         this.input.channelCountMode = 'explicit';
@@ -106,14 +106,14 @@ export class FOARenderer implements IDisposable {
 
     dispose(): void {
         if (this.getRenderingMode() === RenderingMode.Bypass) {
-            this.bypass.connect(this.output);
+            disconnect(this.bypass, this.output);
         }
 
-        this.input.disconnect(this.router.input);
-        this.input.disconnect(this.bypass);
-        this.router.output.disconnect(this.rotator.input);
-        this.rotator.output.disconnect(this.convolver.input);
-        this.convolver.output.disconnect(this.output);
+        disconnect(this.input, this.router.input);
+        disconnect(this.input, this.bypass);
+        disconnect(this.router.output, this.rotator.input);
+        disconnect(this.rotator.output, this.convolver.input);
+        disconnect(this.convolver.output, this.output);
         this.convolver.dispose();
         this.rotator.dispose();
         this.router.dispose();
@@ -192,20 +192,18 @@ export class FOARenderer implements IDisposable {
             return;
         }
 
-        switch (mode) {
-            case RenderingMode.Ambisonic:
-                this.convolver.enable();
-                this.bypass.disconnect();
-                break;
-            case RenderingMode.Bypass:
-                this.convolver.disable();
-                this.bypass.connect(this.output);
-                break;
-            case RenderingMode.None:
-                this.convolver.disable();
-                this.bypass.disconnect();
-                break;
-            default: assertNever(mode);
+        if (mode === RenderingMode.Ambisonic) {
+            this.convolver.enable;
+        }
+        else {
+            this.convolver.disable();
+        }
+
+        if (mode === RenderingMode.Bypass) {
+            connect(this.bypass, this.output);
+        }
+        else {
+            disconnect(this.bypass, this.output);
         }
 
         this.config.renderingMode = mode;

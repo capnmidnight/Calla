@@ -44,7 +44,7 @@ export declare class Directivity {
     private cosTheta;
     input: BiquadFilterNode;
     output: BiquadFilterNode;
-    constructor(context: AudioContext, options?: DirectivityOptions);
+    constructor(context: BaseAudioContext, options?: DirectivityOptions);
     /**
      * Compute the filter using the source's forward orientation and the listener's
      * position.

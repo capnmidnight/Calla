@@ -19,6 +19,7 @@
  */
 // Internal dependencies.
 import { vec3 } from "gl-matrix";
+import { connect, disconnect } from "../audio/GraphVisualizer";
 import { Dimension } from "./Dimension";
 import { Direction } from "./Direction";
 import { EarlyReflections } from './early-reflections';
@@ -210,15 +211,15 @@ export class Room {
         this.speedOfSound = options.speedOfSound;
         // Construct auxillary audio nodes.
         this.output = context.createGain();
-        this.early.output.connect(this.output);
+        connect(this.early.output, this.output);
         this._merger = context.createChannelMerger(4);
-        this.late.output.connect(this._merger, 0, 0);
-        this._merger.connect(this.output);
+        connect(this.late.output, this._merger, 0, 0);
+        connect(this._merger, this.output);
     }
     dispose() {
-        this.early.output.disconnect(this.output);
-        this.late.output.disconnect(this._merger, 0, 0);
-        this._merger.disconnect(this.output);
+        disconnect(this.early.output, this.output);
+        disconnect(this.late.output, this._merger, 0, 0);
+        disconnect(this._merger, this.output);
     }
     /**
      * Set the room's dimensions and wall materials.

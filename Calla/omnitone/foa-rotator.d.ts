@@ -44,7 +44,7 @@ export declare class FOARotator implements IDisposable {
     output: ChannelMergerNode;
     /**
      * First-order-ambisonic decoder based on gain node network.
-     * @param context - Associated AudioContext.
+     * @param context - Associated BaseAudioContext.
      */
     constructor(context: BaseAudioContext);
     dispose(): void;

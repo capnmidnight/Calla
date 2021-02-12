@@ -1,0 +1,27 @@
+import { dice } from "./dice";
+import { EmojiGroup } from "./EmojiGroup";
+export const allIcons = new EmojiGroup("All Icons", "All Icons", 
+//faces,
+//love,
+//cartoon,
+//hands,
+//bodyParts,
+//people,
+//gestures,
+//inMotion,
+//resting,
+//roles,
+//fantasy,
+//animals,
+//plants,
+//food,
+//flags,
+//vehicles,
+//clocks,
+//arrows,
+//shapes,
+//buttons,
+//zodiac,
+//chess,
+dice);
+//# sourceMappingURL=allIcons.js.map

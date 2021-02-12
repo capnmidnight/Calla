@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { connect, disconnect } from "../audio/GraphVisualizer";
 /**
  * @file An audio channel router to resolve different channel layouts between
  * browsers.
@@ -41,7 +42,7 @@ const ChannelMaps = {
 export class FOARouter {
     /**
      * Channel router for FOA stream.
-     * @param context - Associated AudioContext.
+     * @param context - Associated BaseAudioContext.
      * @param channelMap - Routing destination array.
      */
     constructor(context, channelMap) {
@@ -64,17 +65,16 @@ export class FOARouter {
         else {
             this._channelMap = ChannelMaps[channelMap];
         }
-        this._splitter.disconnect();
-        this._splitter.connect(this._merger, 0, this._channelMap[0]);
-        this._splitter.connect(this._merger, 1, this._channelMap[1]);
-        this._splitter.connect(this._merger, 2, this._channelMap[2]);
-        this._splitter.connect(this._merger, 3, this._channelMap[3]);
+        connect(this._splitter, this._merger, 0, this._channelMap[0]);
+        connect(this._splitter, this._merger, 1, this._channelMap[1]);
+        connect(this._splitter, this._merger, 2, this._channelMap[2]);
+        connect(this._splitter, this._merger, 3, this._channelMap[3]);
     }
     dispose() {
-        this._splitter.disconnect(this._merger, 0, this._channelMap[0]);
-        this._splitter.disconnect(this._merger, 1, this._channelMap[1]);
-        this._splitter.disconnect(this._merger, 2, this._channelMap[2]);
-        this._splitter.disconnect(this._merger, 3, this._channelMap[3]);
+        disconnect(this._splitter, this._merger, 0, this._channelMap[0]);
+        disconnect(this._splitter, this._merger, 1, this._channelMap[1]);
+        disconnect(this._splitter, this._merger, 2, this._channelMap[2]);
+        disconnect(this._splitter, this._merger, 3, this._channelMap[3]);
     }
 }
 //# sourceMappingURL=foa-router.js.map

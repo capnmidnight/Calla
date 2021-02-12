@@ -8,19 +8,29 @@ export interface IClosable {
     close(): void;
 }
 
-function isDisposable(obj: any): obj is IDisposable {
+export interface ICloneable {
+    clone(): unknown;
+}
+
+export function isDisposable(obj: any): obj is IDisposable {
     return isObject(obj)
         && "dispose" in obj
         && isFunction((obj as IDisposable).dispose);
 }
 
-function isClosable(obj: any): obj is IClosable {
+export function isClosable(obj: any): obj is IClosable {
     return isObject(obj)
         && "close" in obj
         && isFunction((obj as IClosable).close);
 }
 
-function dispose<T extends IDisposable | IClosable>(val: T): void {
+export function isCloneable(obj: any): obj is ICloneable {
+    return isObject(obj)
+        && "clone" in obj
+        && isFunction((obj as ICloneable).clone);
+}
+
+export function dispose<T extends IDisposable | IClosable>(val: T): void {
     if (isDisposable(val)) {
         val.dispose();
     }

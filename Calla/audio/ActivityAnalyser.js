@@ -2,7 +2,7 @@ import { TypedEventBase } from "kudzu/events/EventBase";
 import { clamp } from "kudzu/math/clamp";
 import { isGoodNumber } from "kudzu/typeChecks";
 import { AudioActivityEvent } from "./AudioActivityEvent";
-import { BaseNode } from "./spatializers/nodes/BaseNode";
+import { connect, disconnect } from "./GraphVisualizer";
 const audioActivityEvt = new AudioActivityEvent();
 const activityCounterMin = 0;
 const activityCounterMax = 60;
@@ -23,6 +23,7 @@ function analyserFrequencyAverage(analyser, frequencies, minHz, maxHz, bufferSiz
 export class ActivityAnalyser extends TypedEventBase {
     constructor(source, audioContext, bufferSize) {
         super();
+        this.source = source;
         this.wasActive = false;
         this.analyser = null;
         if (!isGoodNumber(bufferSize)
@@ -35,12 +36,12 @@ export class ActivityAnalyser extends TypedEventBase {
         this.wasActive = false;
         this.activityCounter = 0;
         const checkSource = () => {
-            if (source.spatializer instanceof BaseNode
-                && source.spatializer.source) {
+            if (source.spatializer
+                && source.source) {
                 this.analyser = audioContext.createAnalyser();
                 this.analyser.fftSize = 2 * this.bufferSize;
                 this.analyser.smoothingTimeConstant = 0.2;
-                source.spatializer.source.connect(this.analyser);
+                connect(source.source, this.analyser);
             }
             else {
                 setTimeout(checkSource, 0);
@@ -50,7 +51,7 @@ export class ActivityAnalyser extends TypedEventBase {
     }
     dispose() {
         if (this.analyser) {
-            this.analyser.disconnect();
+            disconnect(this.source.source, this.analyser);
             this.analyser = null;
         }
         this.buffer = null;

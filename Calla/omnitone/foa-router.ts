@@ -15,6 +15,7 @@
  */
 
 import type { IDisposable } from "kudzu/using";
+import { connect, disconnect } from "../audio/GraphVisualizer";
 
 /**
  * @file An audio channel router to resolve different channel layouts between
@@ -80,18 +81,18 @@ export class FOARouter implements IDisposable {
         else {
             this._channelMap = ChannelMaps[channelMap];
         }
-        this._splitter.disconnect();
-        this._splitter.connect(this._merger, 0, this._channelMap[0]);
-        this._splitter.connect(this._merger, 1, this._channelMap[1]);
-        this._splitter.connect(this._merger, 2, this._channelMap[2]);
-        this._splitter.connect(this._merger, 3, this._channelMap[3]);
+
+        connect(this._splitter, this._merger, 0, this._channelMap[0]);
+        connect(this._splitter, this._merger, 1, this._channelMap[1]);
+        connect(this._splitter, this._merger, 2, this._channelMap[2]);
+        connect(this._splitter, this._merger, 3, this._channelMap[3]);
     }
 
     dispose(): void {
-        this._splitter.disconnect(this._merger, 0, this._channelMap[0]);
-        this._splitter.disconnect(this._merger, 1, this._channelMap[1]);
-        this._splitter.disconnect(this._merger, 2, this._channelMap[2]);
-        this._splitter.disconnect(this._merger, 3, this._channelMap[3]);
+        disconnect(this._splitter, this._merger, 0, this._channelMap[0]);
+        disconnect(this._splitter, this._merger, 1, this._channelMap[1]);
+        disconnect(this._splitter, this._merger, 2, this._channelMap[2]);
+        disconnect(this._splitter, this._merger, 3, this._channelMap[3]);
     }
 
 }

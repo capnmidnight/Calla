@@ -18,6 +18,7 @@
  * @author Andrew Allen <bitllama@google.com>
  */
 import { mat3, vec3 } from "gl-matrix";
+import { connect, disconnect } from "../audio/GraphVisualizer";
 import { createFOARenderer, createHOARenderer } from "../omnitone/omnitone";
 import { Encoder } from "./encoder";
 import { DEFAULT_AMBISONIC_ORDER, DEFAULT_FORWARD, DEFAULT_POSITION, DEFAULT_RENDERING_MODE, DEFAULT_UP } from "./utils";
@@ -64,29 +65,29 @@ export class Listener {
         // Initialize Omnitone (async) and connect to audio graph when complete.
         this.renderer.initialize().then(() => {
             // Connect pre-rotated soundfield to renderer.
-            this.input.connect(this.renderer.input);
+            connect(this.input, this.renderer.input);
             // Connect rotated soundfield to ambisonic output.
-            this.renderer.rotator.output.connect(this.ambisonicOutput);
+            connect(this.renderer.rotator.output, this.ambisonicOutput);
             // Connect binaurally-rendered soundfield to binaural output.
-            this.renderer.output.connect(this.output);
+            connect(this.renderer.output, this.output);
         });
         // Set orientation and update rotation matrix accordingly.
         this.setOrientation(options.forward, options.up);
+    }
+    dispose() {
+        // Connect pre-rotated soundfield to renderer.
+        disconnect(this.input, this.renderer.input);
+        // Connect rotated soundfield to ambisonic output.
+        disconnect(this.renderer.rotator.output, this.ambisonicOutput);
+        // Connect binaurally-rendered soundfield to binaural output.
+        disconnect(this.renderer.output, this.output);
+        this.renderer.dispose();
     }
     getRenderingMode() {
         return this.renderer.getRenderingMode();
     }
     setRenderingMode(mode) {
         this.renderer.setRenderingMode(mode);
-    }
-    dispose() {
-        // Connect pre-rotated soundfield to renderer.
-        this.input.disconnect(this.renderer.input);
-        // Connect rotated soundfield to ambisonic output.
-        this.renderer.rotator.output.disconnect(this.ambisonicOutput);
-        // Connect binaurally-rendered soundfield to binaural output.
-        this.renderer.output.disconnect(this.output);
-        this.renderer.dispose();
     }
     /**
      * Set the source's orientation using forward and up vectors.

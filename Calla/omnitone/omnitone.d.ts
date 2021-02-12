@@ -40,33 +40,33 @@ export declare function createBufferList(context: BaseAudioContext, bufferData: 
 /**
  * Creates an instance of FOA Convolver.
  * @see FOAConvolver
- * @param context The associated AudioContext.
+ * @param context The associated BaseAudioContext.
  * @param [hrirBufferList] - An ordered-list of stereo
  */
 export declare function createFOAConvolver(context: BaseAudioContext, hrirBufferList?: AudioBuffer[]): FOAConvolver;
 /**
  * Create an instance of FOA Router.
  * @see FOARouter
- * @param context - Associated AudioContext.
+ * @param context - Associated BaseAudioContext.
  * @param channelMap - Routing destination array.
  */
 export declare function createFOARouter(context: BaseAudioContext, channelMap: ChannelMap | number[]): FOARouter;
 /**
  * Create an instance of FOA Rotator.
  * @see FOARotator
- * @param context - Associated AudioContext.
+ * @param context - Associated BaseAudioContext.
  */
 export declare function createFOARotator(context: BaseAudioContext): FOARotator;
 /**
  * Creates HOARotator for higher-order ambisonics rotation.
- * @param context - Associated AudioContext.
+ * @param context - Associated BaseAudioContext.
  * @param ambisonicOrder - Ambisonic order.
  */
 export declare function createHOARotator(context: BaseAudioContext, ambisonicOrder: number): HOARotator;
 /**
  * Creates HOAConvolver performs the multi-channel convolution for the optmized
  * binaural rendering.
- * @param context - Associated AudioContext.
+ * @param context - Associated BaseAudioContext.
  * @param ambisonicOrder - Ambisonic order. (2 or 3)
  * @param [hrirBufferList] - An ordered-list of stereo AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)
  */

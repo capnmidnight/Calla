@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import { mat3, mat4 } from "gl-matrix";
+import { connect, disconnect } from "../audio/GraphVisualizer";
 /**
  * @file Sound field rotator for first-order-ambisonics decoding.
  */
@@ -23,7 +24,7 @@ import { mat3, mat4 } from "gl-matrix";
 export class FOARotator {
     /**
      * First-order-ambisonic decoder based on gain node network.
-     * @param context - Associated AudioContext.
+     * @param context - Associated BaseAudioContext.
      */
     constructor(context) {
         this._context = context;
@@ -46,11 +47,11 @@ export class FOARotator {
         this._merger = this._context.createChannelMerger(4);
         // ACN channel ordering: [1, 2, 3] => [X, Y, Z]
         // X (from channel 1)
-        this._splitter.connect(this._inX, 1);
+        connect(this._splitter, this._inX, 1);
         // Y (from channel 2)
-        this._splitter.connect(this._inY, 2);
+        connect(this._splitter, this._inY, 2);
         // Z (from channel 3)
-        this._splitter.connect(this._inZ, 3);
+        connect(this._splitter, this._inZ, 3);
         this._inX.gain.value = -1;
         this._inY.gain.value = -1;
         this._inZ.gain.value = -1;
@@ -58,33 +59,33 @@ export class FOARotator {
         // |X|   | m0  m3  m6 |   | X * m0 + Y * m3 + Z * m6 |   | Xr |
         // |Y| * | m1  m4  m7 | = | X * m1 + Y * m4 + Z * m7 | = | Yr |
         // |Z|   | m2  m5  m8 |   | X * m2 + Y * m5 + Z * m8 |   | Zr |
-        this._inX.connect(this._m0);
-        this._inX.connect(this._m1);
-        this._inX.connect(this._m2);
-        this._inY.connect(this._m3);
-        this._inY.connect(this._m4);
-        this._inY.connect(this._m5);
-        this._inZ.connect(this._m6);
-        this._inZ.connect(this._m7);
-        this._inZ.connect(this._m8);
-        this._m0.connect(this._outX);
-        this._m1.connect(this._outY);
-        this._m2.connect(this._outZ);
-        this._m3.connect(this._outX);
-        this._m4.connect(this._outY);
-        this._m5.connect(this._outZ);
-        this._m6.connect(this._outX);
-        this._m7.connect(this._outY);
-        this._m8.connect(this._outZ);
+        connect(this._inX, this._m0);
+        connect(this._inX, this._m1);
+        connect(this._inX, this._m2);
+        connect(this._inY, this._m3);
+        connect(this._inY, this._m4);
+        connect(this._inY, this._m5);
+        connect(this._inZ, this._m6);
+        connect(this._inZ, this._m7);
+        connect(this._inZ, this._m8);
+        connect(this._m0, this._outX);
+        connect(this._m1, this._outY);
+        connect(this._m2, this._outZ);
+        connect(this._m3, this._outX);
+        connect(this._m4, this._outY);
+        connect(this._m5, this._outZ);
+        connect(this._m6, this._outX);
+        connect(this._m7, this._outY);
+        connect(this._m8, this._outZ);
         // Transform 3: world space to audio space.
         // W -> W (to channel 0)
-        this._splitter.connect(this._merger, 0, 0);
+        connect(this._splitter, this._merger, 0, 0);
         // X (to channel 1)
-        this._outX.connect(this._merger, 0, 1);
+        connect(this._outX, this._merger, 0, 1);
         // Y (to channel 2)
-        this._outY.connect(this._merger, 0, 2);
+        connect(this._outY, this._merger, 0, 2);
         // Z (to channel 3)
-        this._outZ.connect(this._merger, 0, 3);
+        connect(this._outZ, this._merger, 0, 3);
         this._outX.gain.value = -1;
         this._outY.gain.value = -1;
         this._outZ.gain.value = -1;
@@ -96,42 +97,42 @@ export class FOARotator {
     dispose() {
         // ACN channel ordering: [1, 2, 3] => [X, Y, Z]
         // X (from channel 1)
-        this._splitter.disconnect(this._inX, 1);
+        disconnect(this._splitter, this._inX, 1);
         // Y (from channel 2)
-        this._splitter.disconnect(this._inY, 2);
+        disconnect(this._splitter, this._inY, 2);
         // Z (from channel 3)
-        this._splitter.disconnect(this._inZ, 3);
+        disconnect(this._splitter, this._inZ, 3);
         // Apply the rotation in the world space.
         // |X|   | m0  m3  m6 |   | X * m0 + Y * m3 + Z * m6 |   | Xr |
         // |Y| * | m1  m4  m7 | = | X * m1 + Y * m4 + Z * m7 | = | Yr |
         // |Z|   | m2  m5  m8 |   | X * m2 + Y * m5 + Z * m8 |   | Zr |
-        this._inX.disconnect(this._m0);
-        this._inX.disconnect(this._m1);
-        this._inX.disconnect(this._m2);
-        this._inY.disconnect(this._m3);
-        this._inY.disconnect(this._m4);
-        this._inY.disconnect(this._m5);
-        this._inZ.disconnect(this._m6);
-        this._inZ.disconnect(this._m7);
-        this._inZ.disconnect(this._m8);
-        this._m0.disconnect(this._outX);
-        this._m1.disconnect(this._outY);
-        this._m2.disconnect(this._outZ);
-        this._m3.disconnect(this._outX);
-        this._m4.disconnect(this._outY);
-        this._m5.disconnect(this._outZ);
-        this._m6.disconnect(this._outX);
-        this._m7.disconnect(this._outY);
-        this._m8.disconnect(this._outZ);
+        disconnect(this._inX, this._m0);
+        disconnect(this._inX, this._m1);
+        disconnect(this._inX, this._m2);
+        disconnect(this._inY, this._m3);
+        disconnect(this._inY, this._m4);
+        disconnect(this._inY, this._m5);
+        disconnect(this._inZ, this._m6);
+        disconnect(this._inZ, this._m7);
+        disconnect(this._inZ, this._m8);
+        disconnect(this._m0, this._outX);
+        disconnect(this._m1, this._outY);
+        disconnect(this._m2, this._outZ);
+        disconnect(this._m3, this._outX);
+        disconnect(this._m4, this._outY);
+        disconnect(this._m5, this._outZ);
+        disconnect(this._m6, this._outX);
+        disconnect(this._m7, this._outY);
+        disconnect(this._m8, this._outZ);
         // Transform 3: world space to audio space.
         // W -> W (to channel 0)
-        this._splitter.disconnect(this._merger, 0, 0);
+        disconnect(this._splitter, this._merger, 0, 0);
         // X (to channel 1)
-        this._outX.disconnect(this._merger, 0, 1);
+        disconnect(this._outX, this._merger, 0, 1);
         // Y (to channel 2)
-        this._outY.disconnect(this._merger, 0, 2);
+        disconnect(this._outY, this._merger, 0, 2);
         // Z (to channel 3)
-        this._outZ.disconnect(this._merger, 0, 3);
+        disconnect(this._outZ, this._merger, 0, 3);
     }
     /**
      * Updates the rotation matrix with 3x3 matrix.

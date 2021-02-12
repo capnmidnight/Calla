@@ -3,21 +3,25 @@ import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { IFetcher } from "kudzu/io/IFetcher";
 import type { progressCallback } from "kudzu/tasks/progressCallback";
 import { AudioActivityEvent } from "./AudioActivityEvent";
-import { AudioSource } from "./AudioSource";
-import type { BaseNode } from "./spatializers/nodes/BaseNode";
+import { AudioDestination } from "./destinations/AudioDestination";
+import { AudioStreamSource } from "./sources/AudioStreamSource";
+import { IPlayableSource } from "./sources/IPlayableSource";
+import { BaseEmitter } from "./sources/spatializers/BaseEmitter";
 interface AudioManagerEvents {
     audioReady: TypedEvent<"audioReady">;
     audioActivity: AudioActivityEvent;
 }
 export declare enum SpatializerType {
-    Low = "volumescale",
-    Medium = "webaudiopanner",
-    High = "resonance"
+    None = "none",
+    Low = "low",
+    Medium = "medium",
+    High = "high"
 }
 /**
  * A manager of audio sources, destinations, and their spatialization.
  **/
 export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
+    private analyzeAudio;
     private minDistance;
     private maxDistance;
     private rolloff;
@@ -27,8 +31,9 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
     private clips;
     private users;
     private analysers;
+    localUserID: string;
     private sortedUserIDs;
-    private localUserID;
+    private localUser;
     private listener;
     private audioContext;
     private element;
@@ -36,11 +41,11 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
     private _audioOutputDeviceID;
     private onAudioActivity;
     private fetcher;
-    private type;
+    private _type;
     /**
      * Creates a new manager of audio sources, destinations, and their spatialization.
      **/
-    constructor(fetcher?: IFetcher, type?: SpatializerType);
+    constructor(fetcher?: IFetcher, type?: SpatializerType, analyzeAudio?: boolean);
     get offsetRadius(): number;
     set offsetRadius(v: number);
     get algorithm(): string;
@@ -51,23 +56,16 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
      **/
     start(): Promise<void>;
     update(): void;
-    /**
-     * If no audio context is currently available, creates one, and initializes the
-     * spatialization of its listener.
-     *
-     * If WebAudio isn't available, a mock audio context is created that provides
-     * ersatz playback timing.
-     **/
-    createContext(): void;
+    get type(): SpatializerType;
+    set type(type: SpatializerType);
     getAudioOutputDeviceID(): string;
     setAudioOutputDeviceID(deviceID: string): Promise<void>;
     /**
      * Creates a spatialzer for an audio source.
-     * @param id
      * @param source - the audio element that is being spatialized.
      * @param spatialize - whether or not the audio stream should be spatialized. Stereo audio streams that are spatialized will get down-mixed to a single channel.
      */
-    createSpatializer(id: string, source: AudioNode, spatialize: boolean): BaseNode;
+    createSpatializer(spatialize: boolean): BaseEmitter;
     /**
      * Gets the current playback time.
      */
@@ -75,11 +73,11 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
     /**
      * Create a new user for audio processing.
      */
-    createUser(id: string): AudioSource;
+    createUser(id: string): AudioStreamSource;
     /**
      * Create a new user for the audio listener.
      */
-    createLocalUser(id: string): AudioSource;
+    setLocalUserID(id: string): AudioDestination;
     /**
      * Creates a new sound effect from a series of fallback paths
      * for media files.
@@ -91,7 +89,9 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
      * @param path - a path for loading the media of the sound effect.
      * @param onProgress - an optional callback function to use for tracking progress of loading the clip.
      */
-    createClip(name: string, looping: boolean, autoPlaying: boolean, spatialize: boolean, vol: number, path: string, onProgress?: progressCallback): Promise<AudioSource>;
+    createClip(name: string, looping: boolean, autoPlaying: boolean, spatialize: boolean, vol: number, path: string, onProgress?: progressCallback): Promise<IPlayableSource>;
+    private createAudioElementSource;
+    private createAudioBufferSource;
     hasClip(name: string): boolean;
     /**
      * Plays a named sound effect.
@@ -100,19 +100,13 @@ export declare class AudioManager extends TypedEventBase<AudioManagerEvents> {
     playClip(name: string): Promise<void>;
     stopClip(name: string): void;
     /**
-     * Get an audio source.
-     * @param sources - the collection of audio sources from which to retrieve.
-     * @param id - the id of the audio source to get
-     **/
-    private getSource;
-    /**
      * Get an existing user.
      */
-    getUser(id: string): AudioSource;
+    getUser(id: string): AudioStreamSource;
     /**
      * Get an existing audio clip.
      */
-    getClip(id: string): AudioSource;
+    getClip(id: string): IPlayableSource;
     /**
      * Remove an audio source from audio processing.
      * @param sources - the collection of audio sources from which to remove.

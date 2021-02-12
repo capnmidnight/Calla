@@ -6,7 +6,7 @@ export declare function isObject(obj: any): obj is object;
 export declare function isDate(obj: any): obj is Date;
 export declare function isArray(obj: any): obj is Array<any>;
 export declare function isHTMLElement(obj: any): obj is HTMLElement;
-export declare function assertNever(x: never): never;
+export declare function assertNever(x: never, msg?: string): never;
 /**
  * Check a value to see if it is of a number type
  * and is not the special NaN value.

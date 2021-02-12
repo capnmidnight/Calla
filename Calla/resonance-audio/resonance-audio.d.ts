@@ -80,7 +80,7 @@ export declare class ResonanceAudio implements IDisposable {
     listener: Listener;
     room: Room;
     ambisonicOrder: number;
-    context: AudioContext;
+    context: BaseAudioContext;
     output: GainNode;
     ambisonicOutput: GainNode;
     ambisonicInput: GainNode;
@@ -92,7 +92,7 @@ export declare class ResonanceAudio implements IDisposable {
      * @param options
      * Options for constructing a new ResonanceAudio scene.
      */
-    constructor(context: AudioContext, options?: ResonanceAudioOptions);
+    constructor(context: BaseAudioContext, options?: ResonanceAudioOptions);
     getRenderingMode(): string;
     setRenderingMode(mode: string): void;
     dispose(): void;

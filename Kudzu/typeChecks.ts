@@ -35,8 +35,8 @@ export function isHTMLElement(obj: any): obj is HTMLElement {
     return obj instanceof HTMLElement;
 }
 
-export function assertNever(x: never): never {
-    throw new Error("Unexpected object: " + x);
+export function assertNever(x: never, msg?: string): never {
+    throw new Error((msg || "Unexpected object: ") + x);
 }
 
 /**
