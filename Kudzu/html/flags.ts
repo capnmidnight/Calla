@@ -16,9 +16,11 @@ export const isMobile = isAndroid
     || isUCBrowser;
 export const isDesktop = !isMobile;
 
-export const isMobileVR = /Mobile VR/.test(navigator.userAgent);
 export const isOculus = /oculus/.test(navigator.userAgent);
 export const isOculusGo = isOculus && /pacific/.test(navigator.userAgent);
 export const isOculusQuest = isOculus && /quest/.test(navigator.userAgent);
+export const isMobileVR = /Mobile VR/.test(navigator.userAgent)
+    || isOculusGo
+    || isOculusQuest;
 export const hasWebXR = "xr" in navigator;
 export const hasWebVR = "getVRDisplays" in navigator;
