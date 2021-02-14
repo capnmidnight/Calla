@@ -1,6 +1,7 @@
 import { Emoji } from "kudzu/emoji/Emoji";
 import { EmojiGroup } from "kudzu/emoji/EmojiGroup";
-import { allIcons as icons, emojiStyle, textStyle } from "kudzu/emoji/emojis";
+import { emojiStyle, textStyle } from "kudzu/emoji/emojis";
+import { allIcons as icons } from "kudzu/emoji/allIcons";
 import { TypedEvent } from "kudzu/events/EventBase";
 import { className, disabled, href, htmlFor, title } from "kudzu/html/attrs";
 import { onClick } from "kudzu/html/evts";

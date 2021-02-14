@@ -7,6 +7,7 @@ export function isSurfer(e) {
         || merpeople.contains(e);
 }
 function skin(v, d, ...rest) {
+    v = v instanceof Emoji ? v.value : v;
     const person = new Emoji(v, d), light = C(person, skinL), mediumLight = C(person, skinML), medium = C(person, skinM), mediumDark = C(person, skinMD), dark = C(person, skinD);
     return G(person.value, person.desc, {
         default: person,
@@ -26,9 +27,11 @@ function sex(person) {
     });
 }
 function skinAndSex(v, d) {
+    v = v instanceof Emoji ? v.value : v;
     return sex(skin(v, d));
 }
 function skinAndHair(v, d, ...rest) {
+    v = v instanceof Emoji ? v.value : v;
     const people = skin(v, d), red = J(people, hairRed), curly = J(people, hairCurly), white = J(people, hairWhite), bald = J(people, hairBald);
     return G(people.value, people.desc, {
         default: people,
@@ -50,12 +53,6 @@ export const textStyle = new Emoji("\uFE0E", "Variation Selector-15: text style"
 export const emojiStyle = new Emoji("\uFE0F", "Variation Selector-16: emoji style");
 export const zeroWidthJoiner = new Emoji("\u200D", "Zero Width Joiner");
 export const combiningEnclosingKeycap = new Emoji("\u20E3", "Combining Enclosing Keycap");
-export const combiners = [
-    textStyle,
-    emojiStyle,
-    zeroWidthJoiner,
-    combiningEnclosingKeycap,
-];
 export const female = new Emoji("\u2640\uFE0F", "Female");
 export const male = new Emoji("\u2642\uFE0F", "Male");
 export const transgender = new Emoji("\u26A7\uFE0F", "Transgender Symbol");
@@ -86,7 +83,8 @@ export const hairColors = [
     hairWhite,
     hairBald,
 ];
-export const frowners = skinAndSex("\u{1F64D}", "Frowning");
+export const frowning = new Emoji("\u{1F64D}", "Frowning");
+export const frowners = skinAndSex(frowning, "Frowning");
 export const pouters = skinAndSex("\u{1F64E}", "Pouting");
 export const gesturingNo = skinAndSex("\u{1F645}", "Gesturing NO");
 export const gesturingOK = skinAndSex("\u{1F646}", "Gesturing OK");
@@ -182,12 +180,20 @@ export const technologists = sym(laptop, "Technologist");
 export const microscope = new Emoji("\u{1F52C}", "Microscope");
 export const scientists = sym(microscope, "Scientist");
 export const crown = new Emoji("\u{1F451}", "Crown");
-export const prince = skin("\u{1F934}", "Prince");
-export const princess = skin("\u{1F478}", "Princess");
+export const genie = new Emoji("\u{1F9DE}", "Genie");
+export const zombie = new Emoji("\u{1F9DF}", "Zombie");
+export const safetyVest = new Emoji("\u{1F9BA}", "Safety Vest");
+export const whiteCane = new Emoji("\u{1F9AF}", "Probing Cane");
+export const motorizedWheelchair = new Emoji("\u{1F9BC}", "Motorized Wheelchair");
+export const manualWheelchair = new Emoji("\u{1F9BD}", "Manual Wheelchair");
+export const fencer = new Emoji("\u{1F93A}", "Fencer");
+export const skier = new Emoji("\u26F7\uFE0F", "Skier");
+export const princes = skin("\u{1F934}", "Princes");
+export const princesses = skin("\u{1F478}", "Princesses");
 export const royalty = G(crown.value, crown.desc, {
     symbol: crown,
-    male: prince,
-    female: princess
+    male: princes,
+    female: princesses
 });
 export const roles = G("Roles", "Depictions of people working", {
     healthCareWorkers,
@@ -211,15 +217,15 @@ export const roles = G("Roles", "Depictions of people working", {
     constructionWorkers,
     royalty
 });
-export const cherub = skin("\u{1F47C}", "Cherub");
-export const santaClaus = skin("\u{1F385}", "Santa Claus");
-export const mrsClaus = skin("\u{1F936}", "Mrs. Claus");
-export const genies = sex(new Emoji("\u{1F9DE}", "Genie"));
-export const zombies = sex(new Emoji("\u{1F9DF}", "Zombie"));
+export const cherubs = skin("\u{1F47C}", "Cherub");
+export const santaClauses = skin("\u{1F385}", "Santa Claus");
+export const mrsClauses = skin("\u{1F936}", "Mrs. Claus");
+export const genies = sex(genie);
+export const zombies = sex(zombie);
 export const fantasy = G("Fantasy", "Depictions of fantasy characters", {
-    cherub,
-    santaClaus,
-    mrsClaus,
+    cherubs,
+    santaClauses,
+    mrsClauses,
     superheroes,
     supervillains,
     mages,
@@ -230,12 +236,8 @@ export const fantasy = G("Fantasy", "Depictions of fantasy characters", {
     genies,
     zombies
 });
-export const safetyVest = new Emoji("\u{1F9BA}", "Safety Vest");
-export const whiteCane = new Emoji("\u{1F9AF}", "Probing Cane");
 export const withProbingCane = sym(whiteCane, "Probing");
-export const motorizedWheelchair = new Emoji("\u{1F9BC}", "Motorized Wheelchair");
 export const inMotorizedWheelchair = sym(motorizedWheelchair, "In Motorized Wheelchair");
-export const manualWheelchair = new Emoji("\u{1F9BD}", "Manual Wheelchair");
 export const inManualWheelchair = sym(manualWheelchair, "In Manual Wheelchair");
 export const manDancing = skin("\u{1F57A}", "Man Dancing");
 export const womanDancing = skin("\u{1F483}", "Woman Dancing");
@@ -245,9 +247,7 @@ export const dancers = G(manDancing.value, "Dancing", {
 });
 export const jugglers = skinAndSex("\u{1F939}", "Juggler");
 export const climbers = skinAndSex("\u{1F9D7}", "Climber");
-export const fencer = new Emoji("\u{1F93A}", "Fencer");
 export const jockeys = skin("\u{1F3C7}", "Jockey");
-export const skier = new Emoji("\u26F7\uFE0F", "Skier");
 export const snowboarders = skin("\u{1F3C2}", "Snowboarder");
 export const golfers = skinAndSex("\u{1F3CC}" + emojiStyle.value, "Golfer");
 export const surfers = skinAndSex("\u{1F3C4}", "Surfing");
@@ -299,7 +299,7 @@ export const resting = G("Resting", "Depictions of people at rest", {
     inBed,
     inSauna
 });
-export const babies = new EmojiGroup(baby.value, baby.desc, baby, cherub);
+export const babies = new EmojiGroup(baby.value, baby.desc, baby, cherubs);
 export const people = G("People", "People", {
     babies,
     children,
@@ -432,126 +432,6 @@ export const frowningFace = new Emoji("\u2639\uFE0F", "Frowning Face");
 export const smilingFace = new Emoji("\u263A\uFE0F", "Smiling Face");
 export const speakingHead = new Emoji("\u{1F5E3}\uFE0F", "Speaking Head");
 export const bust = new Emoji("\u{1F464}", "Bust in Silhouette");
-export const faces = G("Faces", "Round emoji faces", {
-    ogre,
-    goblin,
-    ghost,
-    alien,
-    alienMonster,
-    angryFaceWithHorns,
-    skull,
-    pileOfPoo,
-    grinningFace,
-    beamingFaceWithSmilingEyes,
-    faceWithTearsOfJoy,
-    grinningFaceWithBigEyes,
-    grinningFaceWithSmilingEyes,
-    grinningFaceWithSweat,
-    grinningSquitingFace,
-    smillingFaceWithHalo,
-    smilingFaceWithHorns,
-    winkingFace,
-    smilingFaceWithSmilingEyes,
-    faceSavoringFood,
-    relievedFace,
-    smilingFaceWithHeartEyes,
-    smilingFaceWithSunglasses,
-    smirkingFace,
-    neutralFace,
-    expressionlessFace,
-    unamusedFace,
-    downcastFaceWithSweat,
-    pensiveFace,
-    confusedFace,
-    confoundedFace,
-    kissingFace,
-    faceBlowingAKiss,
-    kissingFaceWithSmilingEyes,
-    kissingFaceWithClosedEyes,
-    faceWithTongue,
-    winkingFaceWithTongue,
-    squintingFaceWithTongue,
-    disappointedFace,
-    worriedFace,
-    angryFace,
-    poutingFace,
-    cryingFace,
-    perseveringFace,
-    faceWithSteamFromNose,
-    sadButRelievedFace,
-    frowningFaceWithOpenMouth,
-    anguishedFace,
-    fearfulFace,
-    wearyFace,
-    sleepyFace,
-    tiredFace,
-    grimacingFace,
-    loudlyCryingFace,
-    faceWithOpenMouth,
-    hushedFace,
-    anxiousFaceWithSweat,
-    faceScreamingInFear,
-    astonishedFace,
-    flushedFace,
-    sleepingFace,
-    dizzyFace,
-    faceWithoutMouth,
-    faceWithMedicalMask,
-    grinningCatWithSmilingEyes,
-    catWithTearsOfJoy,
-    grinningCat,
-    smilingCatWithHeartEyes,
-    catWithWrySmile,
-    kissingCat,
-    poutingCat,
-    cryingCat,
-    wearyCat,
-    slightlyFrowningFace,
-    slightlySmilingFace,
-    updisdeDownFace,
-    faceWithRollingEyes,
-    seeNoEvilMonkey,
-    hearNoEvilMonkey,
-    speakNoEvilMonkey,
-    zipperMouthFace,
-    moneyMouthFace,
-    faceWithThermometer,
-    nerdFace,
-    thinkingFace,
-    faceWithHeadBandage,
-    robot,
-    huggingFace,
-    cowboyHatFace,
-    clownFace,
-    nauseatedFace,
-    rollingOnTheFloorLaughing,
-    droolingFace,
-    lyingFace,
-    sneezingFace,
-    faceWithRaisedEyebrow,
-    starStruck,
-    zanyFace,
-    shushingFace,
-    faceWithSymbolsOnMouth,
-    faceWithHandOverMouth,
-    faceVomitting,
-    explodingHead,
-    smilingFaceWithHearts,
-    yawningFace,
-    //smilingFaceWithTear,
-    partyingFace,
-    woozyFace,
-    hotFace,
-    coldFace,
-    //disguisedFace,
-    pleadingFace,
-    faceWithMonocle,
-    skullAndCrossbones,
-    frowningFace,
-    smilingFace,
-    speakingHead,
-    bust,
-});
 export const kissMark = new Emoji("\u{1F48B}", "Kiss Mark");
 export const loveLetter = new Emoji("\u{1F48C}", "Love Letter");
 export const beatingHeart = new Emoji("\u{1F493}", "Beating Heart");
@@ -573,29 +453,6 @@ export const brownHeart = new Emoji("\u{1F90E}", "Brown Heart");
 export const orangeHeart = new Emoji("\u{1F9E1}", "Orange Heart");
 export const heartExclamation = new Emoji("\u2763\uFE0F", "Heart Exclamation");
 export const redHeart = new Emoji("\u2764\uFE0F", "Red Heart");
-export const love = G("Love", "Hearts and kisses", {
-    kissMark,
-    loveLetter,
-    beatingHeart,
-    brokenHeart,
-    twoHearts,
-    sparklingHeart,
-    growingHeart,
-    heartWithArrow,
-    blueHeart,
-    greenHeart,
-    yellowHeart,
-    purpleHeart,
-    heartWithRibbon,
-    revolvingHearts,
-    heartDecoration,
-    blackHeart,
-    whiteHeart,
-    brownHeart,
-    orangeHeart,
-    heartExclamation,
-    redHeart,
-});
 export const angerSymbol = new Emoji("\u{1F4A2}", "Anger Symbol");
 export const bomb = new Emoji("\u{1F4A3}", "Bomb");
 export const zzz = new Emoji("\u{1F4A4}", "Zzz");
@@ -618,7 +475,6 @@ export const rightAngerBubble = new Emoji("\u{1F5EF}\uFE0F", "Right Anger Bubble
 export const angerBubble = new Emoji("\u{1F5F0}\uFE0F", "Anger Bubble");
 export const angerBubbleLightningBolt = new Emoji("\u{1F5F1}\uFE0F", "Anger Bubble Lightning");
 export const lightningBolt = new Emoji("\u{1F5F2}\uFE0F", "Lightning Bolt");
-export const cartoon = new EmojiGroup("Cartoon", "Cartoon symbols", angerSymbol, bomb, zzz, collision, sweatDroplets, dashingAway, dizzy, speechBalloon, thoughtBalloon, hundredPoints, hole, leftSpeechBubble, rightSpeechBubble, conversationBubbles2, conversationBubbles3, leftThoughtBubble, rightThoughtBubble, leftAngerBubble, rightAngerBubble, angerBubble, angerBubbleLightningBolt, lightningBolt);
 export const backhandIndexPointingUp = new Emoji("\u{1F446}", "Backhand Index Pointing Up");
 export const backhandIndexPointingDown = new Emoji("\u{1F447}", "Backhand Index Pointing Down");
 export const backhandIndexPointingLeft = new Emoji("\u{1F448}", "Backhand Index Pointing Left");
@@ -669,7 +525,6 @@ export const raisedFist = new Emoji("\u270A", "Raised Fist");
 export const raisedHand = new Emoji("\u270B", "Raised Hand");
 export const victoryHand = new Emoji("\u270C\uFE0F", "Victory Hand");
 export const writingHand = new Emoji("\u270D\uFE0F", "Writing Hand");
-export const hands = new EmojiGroup("Hands", "Hands pointing at things", backhandIndexPointingUp, backhandIndexPointingDown, backhandIndexPointingLeft, backhandIndexPointingRight, oncomingFist, wavingHand, okHand, thumbsUp, thumbsDown, clappingHands, openHands, nailPolish, handsWithFingersSplayed, handsWithFingersSplayed2, handsWithFingersSplayed2, thumbsUp2, thumbsDown2, peaceFingers, middleFinger, vulcanSalute, handPointingDown, handPointingLeft, handPointingRight, handPointingLeft2, handPointingRight2, indexPointingLeft, indexPointingRight, indexPointingUp, indexPointingDown, indexPointingUp2, indexPointingDown2, indexPointingUp3, indexPointingDown3, raisingHands, foldedHands, pinchedFingers, pinchingHand, signOfTheHorns, callMeHand, rasiedBackOfHand, leftFacingFist, rightFacingFist, handshake, crossedFingers, loveYouGesture, palmsUpTogether, indexPointingUp4, raisedFist, raisedHand, victoryHand, writingHand);
 export const redCircle = new Emoji("\u{1F534}", "Red Circle");
 export const blueCircle = new Emoji("\u{1F535}", "Blue Circle");
 export const largeOrangeDiamond = new Emoji("\u{1F536}", "Large Orange Diamond");
@@ -705,55 +560,590 @@ export const blackLargeSquare = new Emoji("\u2B1B", "Black Large Square");
 export const whiteLargeSquare = new Emoji("\u2B1C", "White Large Square");
 export const star = new Emoji("\u2B50", "Star");
 export const diamondWithADot = new Emoji("\u{1F4A0}", "Diamond with a Dot");
-export const shapes = new EmojiGroup("Shapes", "Colored shapes", redCircle, blueCircle, largeOrangeDiamond, largeBlueDiamond, smallOrangeDiamond, smallBlueDiamond, redTrianglePointedUp, redTrianglePointedDown, orangeCircle, yellowCircle, greenCircle, purpleCircle, brownCircle, hollowRedCircle, whiteCircle, blackCircle, redSquare, blueSquare, orangeSquare, yellowSquare, greenSquare, purpleSquare, brownSquare, blackSquareButton, whiteSquareButton, blackSmallSquare, whiteSmallSquare, whiteMediumSmallSquare, blackMediumSmallSquare, whiteMediumSquare, blackMediumSquare, blackLargeSquare, whiteLargeSquare, star, diamondWithADot);
 export const eye = new Emoji("\u{1F441}\uFE0F", "Eye");
 export const eyeInSpeechBubble = J(eye, leftSpeechBubble, "Eye in Speech Bubble");
-export const bodyParts = new EmojiGroup("Body Parts", "General body parts", new Emoji("\u{1F440}", "Eyes"), eye, eyeInSpeechBubble, new Emoji("\u{1F442}", "Ear"), new Emoji("\u{1F443}", "Nose"), new Emoji("\u{1F444}", "Mouth"), new Emoji("\u{1F445}", "Tongue"), new Emoji("\u{1F4AA}", "Flexed Biceps"), new Emoji("\u{1F933}", "Selfie"), new Emoji("\u{1F9B4}", "Bone"), new Emoji("\u{1F9B5}", "Leg"), new Emoji("\u{1F9B6}", "Foot"), new Emoji("\u{1F9B7}", "Tooth"), new Emoji("\u{1F9BB}", "Ear with Hearing Aid"), new Emoji("\u{1F9BE}", "Mechanical Arm"), new Emoji("\u{1F9BF}", "Mechanical Leg"), new Emoji("\u{1FAC0}", "Anatomical Heart"), new Emoji("\u{1FAC1}", "Lungs"), new Emoji("\u{1F9E0}", "Brain"));
+export const eyes = new Emoji("\u{1F440}", "Eyes");
+export const ear = new Emoji("\u{1F442}", "Ear");
+export const nose = new Emoji("\u{1F443}", "Nose");
+export const mouth = new Emoji("\u{1F444}", "Mouth");
+export const tongue = new Emoji("\u{1F445}", "Tongue");
+export const flexedBiceps = new Emoji("\u{1F4AA}", "Flexed Biceps");
+export const selfie = new Emoji("\u{1F933}", "Selfie");
+export const bone = new Emoji("\u{1F9B4}", "Bone");
+export const leg = new Emoji("\u{1F9B5}", "Leg");
+export const foot = new Emoji("\u{1F9B6}", "Foot");
+export const tooth = new Emoji("\u{1F9B7}", "Tooth");
+export const earWithHearingAid = new Emoji("\u{1F9BB}", "Ear with Hearing Aid");
+export const mechanicalArm = new Emoji("\u{1F9BE}", "Mechanical Arm");
+export const mechanicalLeg = new Emoji("\u{1F9BF}", "Mechanical Leg");
+export const anatomicalHeart = new Emoji("\u{1FAC0}", "Anatomical Heart");
+export const lungs = new Emoji("\u{1FAC1}", "Lungs");
+export const brain = new Emoji("\u{1F9E0}", "Brain");
 export const snowflake = new Emoji("\u2744\uFE0F", "Snowflake");
 export const rainbow = new Emoji("\u{1F308}", "Rainbow");
-export const weather = new EmojiGroup("Weather", "Weather", new Emoji("\u{1F304}", "Sunrise Over Mountains"), new Emoji("\u{1F305}", "Sunrise"), new Emoji("\u{1F306}", "Cityscape at Dusk"), new Emoji("\u{1F307}", "Sunset"), new Emoji("\u{1F303}", "Night with Stars"), new Emoji("\u{1F302}", "Closed Umbrella"), new Emoji("\u2602\uFE0F", "Umbrella"), new Emoji("\u2614\uFE0F", "Umbrella with Rain Drops"), new Emoji("\u2603\uFE0F", "Snowman"), new Emoji("\u26C4", "Snowman Without Snow"), new Emoji("\u2600\uFE0F", "Sun"), new Emoji("\u2601\uFE0F", "Cloud"), new Emoji("\u{1F324}\uFE0F", "Sun Behind Small Cloud"), new Emoji("\u26C5", "Sun Behind Cloud"), new Emoji("\u{1F325}\uFE0F", "Sun Behind Large Cloud"), new Emoji("\u{1F326}\uFE0F", "Sun Behind Rain Cloud"), new Emoji("\u{1F327}\uFE0F", "Cloud with Rain"), new Emoji("\u{1F328}\uFE0F", "Cloud with Snow"), new Emoji("\u{1F329}\uFE0F", "Cloud with Lightning"), new Emoji("\u26C8\uFE0F", "Cloud with Lightning and Rain"), snowflake, new Emoji("\u{1F300}", "Cyclone"), new Emoji("\u{1F32A}\uFE0F", "Tornado"), new Emoji("\u{1F32C}\uFE0F", "Wind Face"), new Emoji("\u{1F30A}", "Water Wave"), new Emoji("\u{1F32B}\uFE0F", "Fog"), new Emoji("\u{1F301}", "Foggy"), rainbow, new Emoji("\u{1F321}\uFE0F", "Thermometer"));
+export const sunriseOverMountains = new Emoji("\u{1F304}", "Sunrise Over Mountains");
+export const sunrise = new Emoji("\u{1F305}", "Sunrise");
+export const cityscapeAtDusk = new Emoji("\u{1F306}", "Cityscape at Dusk");
+export const sunset = new Emoji("\u{1F307}", "Sunset");
+export const nightWithStars = new Emoji("\u{1F303}", "Night with Stars");
+export const closedUmbrella = new Emoji("\u{1F302}", "Closed Umbrella");
+export const umbrella = new Emoji("\u2602\uFE0F", "Umbrella");
+export const umbrellaWithRainDrops = new Emoji("\u2614\uFE0F", "Umbrella with Rain Drops");
+export const snowman = new Emoji("\u2603\uFE0F", "Snowman");
+export const snowmanWithoutSnow = new Emoji("\u26C4", "Snowman Without Snow");
+export const sun = new Emoji("\u2600\uFE0F", "Sun");
+export const cloud = new Emoji("\u2601\uFE0F", "Cloud");
+export const sunBehindSmallCloud = new Emoji("\u{1F324}\uFE0F", "Sun Behind Small Cloud");
+export const sunBehindCloud = new Emoji("\u26C5", "Sun Behind Cloud");
+export const sunBehindLargeCloud = new Emoji("\u{1F325}\uFE0F", "Sun Behind Large Cloud");
+export const sunBehindRainCloud = new Emoji("\u{1F326}\uFE0F", "Sun Behind Rain Cloud");
+export const cloudWithRain = new Emoji("\u{1F327}\uFE0F", "Cloud with Rain");
+export const cloudWithSnow = new Emoji("\u{1F328}\uFE0F", "Cloud with Snow");
+export const cloudWithLightning = new Emoji("\u{1F329}\uFE0F", "Cloud with Lightning");
+export const cloudWithLightningAndRain = new Emoji("\u26C8\uFE0F", "Cloud with Lightning and Rain");
+export const cyclone = new Emoji("\u{1F300}", "Cyclone");
+export const tornado = new Emoji("\u{1F32A}\uFE0F", "Tornado");
+export const windFace = new Emoji("\u{1F32C}\uFE0F", "Wind Face");
+export const waterWave = new Emoji("\u{1F30A}", "Water Wave");
+export const fog = new Emoji("\u{1F32B}\uFE0F", "Fog");
+export const foggy = new Emoji("\u{1F301}", "Foggy");
+export const thermometer = new Emoji("\u{1F321}\uFE0F", "Thermometer");
 export const cat = new Emoji("\u{1F408}", "Cat");
 export const blackCat = J(cat, blackLargeSquare, "Black Cat");
 export const dog = new Emoji("\u{1F415}", "Dog");
 export const serviceDog = J(dog, safetyVest, "Service Dog");
 export const bear = new Emoji("\u{1F43B}", "Bear");
 export const polarBear = J(bear, snowflake, "Polar Bear");
-export const animals = new EmojiGroup("Animals", "Animals and insects", new Emoji("\u{1F400}", "Rat"), new Emoji("\u{1F401}", "Mouse"), new Emoji("\u{1F402}", "Ox"), new Emoji("\u{1F403}", "Water Buffalo"), new Emoji("\u{1F404}", "Cow"), new Emoji("\u{1F405}", "Tiger"), new Emoji("\u{1F406}", "Leopard"), new Emoji("\u{1F407}", "Rabbit"), cat, blackCat, new Emoji("\u{1F409}", "Dragon"), new Emoji("\u{1F40A}", "Crocodile"), new Emoji("\u{1F40B}", "Whale"), new Emoji("\u{1F40C}", "Snail"), new Emoji("\u{1F40D}", "Snake"), new Emoji("\u{1F40E}", "Horse"), new Emoji("\u{1F40F}", "Ram"), new Emoji("\u{1F410}", "Goat"), new Emoji("\u{1F411}", "Ewe"), new Emoji("\u{1F412}", "Monkey"), new Emoji("\u{1F413}", "Rooster"), new Emoji("\u{1F414}", "Chicken"), dog, serviceDog, new Emoji("\u{1F416}", "Pig"), new Emoji("\u{1F417}", "Boar"), new Emoji("\u{1F418}", "Elephant"), new Emoji("\u{1F419}", "Octopus"), new Emoji("\u{1F41A}", "Spiral Shell"), new Emoji("\u{1F41B}", "Bug"), new Emoji("\u{1F41C}", "Ant"), new Emoji("\u{1F41D}", "Honeybee"), new Emoji("\u{1F41E}", "Lady Beetle"), new Emoji("\u{1F41F}", "Fish"), new Emoji("\u{1F420}", "Tropical Fish"), new Emoji("\u{1F421}", "Blowfish"), new Emoji("\u{1F422}", "Turtle"), new Emoji("\u{1F423}", "Hatching Chick"), new Emoji("\u{1F424}", "Baby Chick"), new Emoji("\u{1F425}", "Front-Facing Baby Chick"), new Emoji("\u{1F426}", "Bird"), new Emoji("\u{1F427}", "Penguin"), new Emoji("\u{1F428}", "Koala"), new Emoji("\u{1F429}", "Poodle"), new Emoji("\u{1F42A}", "Camel"), new Emoji("\u{1F42B}", "Two-Hump Camel"), new Emoji("\u{1F42C}", "Dolphin"), new Emoji("\u{1F42D}", "Mouse Face"), new Emoji("\u{1F42E}", "Cow Face"), new Emoji("\u{1F42F}", "Tiger Face"), new Emoji("\u{1F430}", "Rabbit Face"), new Emoji("\u{1F431}", "Cat Face"), new Emoji("\u{1F432}", "Dragon Face"), new Emoji("\u{1F433}", "Spouting Whale"), new Emoji("\u{1F434}", "Horse Face"), new Emoji("\u{1F435}", "Monkey Face"), new Emoji("\u{1F436}", "Dog Face"), new Emoji("\u{1F437}", "Pig Face"), new Emoji("\u{1F438}", "Frog"), new Emoji("\u{1F439}", "Hamster"), new Emoji("\u{1F43A}", "Wolf"), bear, polarBear, new Emoji("\u{1F43C}", "Panda"), new Emoji("\u{1F43D}", "Pig Nose"), new Emoji("\u{1F43E}", "Paw Prints"), new Emoji("\u{1F43F}\uFE0F", "Chipmunk"), new Emoji("\u{1F54A}\uFE0F", "Dove"), new Emoji("\u{1F577}\uFE0F", "Spider"), new Emoji("\u{1F578}\uFE0F", "Spider Web"), new Emoji("\u{1F981}", "Lion"), new Emoji("\u{1F982}", "Scorpion"), new Emoji("\u{1F983}", "Turkey"), new Emoji("\u{1F984}", "Unicorn"), new Emoji("\u{1F985}", "Eagle"), new Emoji("\u{1F986}", "Duck"), new Emoji("\u{1F987}", "Bat"), new Emoji("\u{1F988}", "Shark"), new Emoji("\u{1F989}", "Owl"), new Emoji("\u{1F98A}", "Fox"), new Emoji("\u{1F98B}", "Butterfly"), new Emoji("\u{1F98C}", "Deer"), new Emoji("\u{1F98D}", "Gorilla"), new Emoji("\u{1F98E}", "Lizard"), new Emoji("\u{1F98F}", "Rhinoceros"), new Emoji("\u{1F992}", "Giraffe"), new Emoji("\u{1F993}", "Zebra"), new Emoji("\u{1F994}", "Hedgehog"), new Emoji("\u{1F995}", "Sauropod"), new Emoji("\u{1F996}", "T-Rex"), new Emoji("\u{1F997}", "Cricket"), new Emoji("\u{1F998}", "Kangaroo"), new Emoji("\u{1F999}", "Llama"), new Emoji("\u{1F99A}", "Peacock"), new Emoji("\u{1F99B}", "Hippopotamus"), new Emoji("\u{1F99C}", "Parrot"), new Emoji("\u{1F99D}", "Raccoon"), new Emoji("\u{1F99F}", "Mosquito"), new Emoji("\u{1F9A0}", "Microbe"), new Emoji("\u{1F9A1}", "Badger"), new Emoji("\u{1F9A2}", "Swan"), 
-//new Emoji("\u{1F9A3}", "Mammoth"),
-//new Emoji("\u{1F9A4}", "Dodo"),
-new Emoji("\u{1F9A5}", "Sloth"), new Emoji("\u{1F9A6}", "Otter"), new Emoji("\u{1F9A7}", "Orangutan"), new Emoji("\u{1F9A8}", "Skunk"), new Emoji("\u{1F9A9}", "Flamingo"), 
-//new Emoji("\u{1F9AB}", "Beaver"),
-//new Emoji("\u{1F9AC}", "Bison"),
-//new Emoji("\u{1F9AD}", "Seal"),
-//new Emoji("\u{1FAB0}", "Fly"),
-//new Emoji("\u{1FAB1}", "Worm"),
-//new Emoji("\u{1FAB2}", "Beetle"),
-//new Emoji("\u{1FAB3}", "Cockroach"),
-//new Emoji("\u{1FAB6}", "Feather"),
-new Emoji("\u{1F9AE}", "Guide Dog"));
+export const rat = new Emoji("\u{1F400}", "Rat");
+export const mouse = new Emoji("\u{1F401}", "Mouse");
+export const ox = new Emoji("\u{1F402}", "Ox");
+export const waterBuffalo = new Emoji("\u{1F403}", "Water Buffalo");
+export const cow = new Emoji("\u{1F404}", "Cow");
+export const tiger = new Emoji("\u{1F405}", "Tiger");
+export const leopard = new Emoji("\u{1F406}", "Leopard");
+export const rabbit = new Emoji("\u{1F407}", "Rabbit");
+export const dragon = new Emoji("\u{1F409}", "Dragon");
+export const crocodile = new Emoji("\u{1F40A}", "Crocodile");
+export const whale = new Emoji("\u{1F40B}", "Whale");
+export const snail = new Emoji("\u{1F40C}", "Snail");
+export const snake = new Emoji("\u{1F40D}", "Snake");
+export const horse = new Emoji("\u{1F40E}", "Horse");
+export const ram = new Emoji("\u{1F40F}", "Ram");
+export const goat = new Emoji("\u{1F410}", "Goat");
+export const ewe = new Emoji("\u{1F411}", "Ewe");
+export const monkey = new Emoji("\u{1F412}", "Monkey");
+export const rooster = new Emoji("\u{1F413}", "Rooster");
+export const chicken = new Emoji("\u{1F414}", "Chicken");
+export const pig = new Emoji("\u{1F416}", "Pig");
+export const boar = new Emoji("\u{1F417}", "Boar");
+export const elephant = new Emoji("\u{1F418}", "Elephant");
+export const octopus = new Emoji("\u{1F419}", "Octopus");
+export const spiralShell = new Emoji("\u{1F41A}", "Spiral Shell");
+export const bug = new Emoji("\u{1F41B}", "Bug");
+export const ant = new Emoji("\u{1F41C}", "Ant");
+export const honeybee = new Emoji("\u{1F41D}", "Honeybee");
+export const ladyBeetle = new Emoji("\u{1F41E}", "Lady Beetle");
+export const fish = new Emoji("\u{1F41F}", "Fish");
+export const tropicalFish = new Emoji("\u{1F420}", "Tropical Fish");
+export const blowfish = new Emoji("\u{1F421}", "Blowfish");
+export const turtle = new Emoji("\u{1F422}", "Turtle");
+export const hatchingChick = new Emoji("\u{1F423}", "Hatching Chick");
+export const babyChick = new Emoji("\u{1F424}", "Baby Chick");
+export const frontFacingBabyChick = new Emoji("\u{1F425}", "Front-Facing Baby Chick");
+export const bird = new Emoji("\u{1F426}", "Bird");
+export const penguin = new Emoji("\u{1F427}", "Penguin");
+export const koala = new Emoji("\u{1F428}", "Koala");
+export const poodle = new Emoji("\u{1F429}", "Poodle");
+export const camel = new Emoji("\u{1F42A}", "Camel");
+export const twoHumpCamel = new Emoji("\u{1F42B}", "Two-Hump Camel");
+export const dolphin = new Emoji("\u{1F42C}", "Dolphin");
+export const mouseFace = new Emoji("\u{1F42D}", "Mouse Face");
+export const cowFace = new Emoji("\u{1F42E}", "Cow Face");
+export const tigerFace = new Emoji("\u{1F42F}", "Tiger Face");
+export const rabbitFace = new Emoji("\u{1F430}", "Rabbit Face");
+export const catFace = new Emoji("\u{1F431}", "Cat Face");
+export const dragonFace = new Emoji("\u{1F432}", "Dragon Face");
+export const spoutingWhale = new Emoji("\u{1F433}", "Spouting Whale");
+export const horseFace = new Emoji("\u{1F434}", "Horse Face");
+export const monkeyFace = new Emoji("\u{1F435}", "Monkey Face");
+export const dogFace = new Emoji("\u{1F436}", "Dog Face");
+export const pigFace = new Emoji("\u{1F437}", "Pig Face");
+export const frog = new Emoji("\u{1F438}", "Frog");
+export const hamster = new Emoji("\u{1F439}", "Hamster");
+export const wolf = new Emoji("\u{1F43A}", "Wolf");
+export const panda = new Emoji("\u{1F43C}", "Panda");
+export const pigNose = new Emoji("\u{1F43D}", "Pig Nose");
+export const pawPrints = new Emoji("\u{1F43E}", "Paw Prints");
+export const chipmunk = new Emoji("\u{1F43F}\uFE0F", "Chipmunk");
+export const dove = new Emoji("\u{1F54A}\uFE0F", "Dove");
+export const spider = new Emoji("\u{1F577}\uFE0F", "Spider");
+export const spiderWeb = new Emoji("\u{1F578}\uFE0F", "Spider Web");
+export const lion = new Emoji("\u{1F981}", "Lion");
+export const scorpion = new Emoji("\u{1F982}", "Scorpion");
+export const turkey = new Emoji("\u{1F983}", "Turkey");
+export const unicorn = new Emoji("\u{1F984}", "Unicorn");
+export const eagle = new Emoji("\u{1F985}", "Eagle");
+export const duck = new Emoji("\u{1F986}", "Duck");
+export const bat = new Emoji("\u{1F987}", "Bat");
+export const shark = new Emoji("\u{1F988}", "Shark");
+export const owl = new Emoji("\u{1F989}", "Owl");
+export const fox = new Emoji("\u{1F98A}", "Fox");
+export const butterfly = new Emoji("\u{1F98B}", "Butterfly");
+export const deer = new Emoji("\u{1F98C}", "Deer");
+export const gorilla = new Emoji("\u{1F98D}", "Gorilla");
+export const lizard = new Emoji("\u{1F98E}", "Lizard");
+export const rhinoceros = new Emoji("\u{1F98F}", "Rhinoceros");
+export const giraffe = new Emoji("\u{1F992}", "Giraffe");
+export const zebra = new Emoji("\u{1F993}", "Zebra");
+export const hedgehog = new Emoji("\u{1F994}", "Hedgehog");
+export const sauropod = new Emoji("\u{1F995}", "Sauropod");
+export const tRex = new Emoji("\u{1F996}", "T-Rex");
+export const cricket = new Emoji("\u{1F997}", "Cricket");
+export const kangaroo = new Emoji("\u{1F998}", "Kangaroo");
+export const llama = new Emoji("\u{1F999}", "Llama");
+export const peacock = new Emoji("\u{1F99A}", "Peacock");
+export const hippopotamus = new Emoji("\u{1F99B}", "Hippopotamus");
+export const parrot = new Emoji("\u{1F99C}", "Parrot");
+export const raccoon = new Emoji("\u{1F99D}", "Raccoon");
+export const mosquito = new Emoji("\u{1F99F}", "Mosquito");
+export const microbe = new Emoji("\u{1F9A0}", "Microbe");
+export const badger = new Emoji("\u{1F9A1}", "Badger");
+export const swan = new Emoji("\u{1F9A2}", "Swan");
+//export const mammoth = new Emoji("\u{1F9A3}", "Mammoth");
+//export const dodo = new Emoji("\u{1F9A4}", "Dodo");
+export const sloth = new Emoji("\u{1F9A5}", "Sloth");
+export const otter = new Emoji("\u{1F9A6}", "Otter");
+export const orangutan = new Emoji("\u{1F9A7}", "Orangutan");
+export const skunk = new Emoji("\u{1F9A8}", "Skunk");
+export const flamingo = new Emoji("\u{1F9A9}", "Flamingo");
+//export const beaver = new Emoji("\u{1F9AB}", "Beaver");
+//export const bison = new Emoji("\u{1F9AC}", "Bison");
+//export const seal = new Emoji("\u{1F9AD}", "Seal");
+//export const fly = new Emoji("\u{1FAB0}", "Fly");
+//export const worm = new Emoji("\u{1FAB1}", "Worm");
+//export const beetle = new Emoji("\u{1FAB2}", "Beetle");
+//export const cockroach = new Emoji("\u{1FAB3}", "Cockroach");
+//export const feather = new Emoji("\u{1FAB6}", "Feather");
+export const guideDog = new Emoji("\u{1F9AE}", "Guide Dog");
 export const whiteFlower = new Emoji("\u{1F4AE}", "White Flower");
-export const plants = new EmojiGroup("Plants", "Flowers, trees, and things", new Emoji("\u{1F331}", "Seedling"), new Emoji("\u{1F332}", "Evergreen Tree"), new Emoji("\u{1F333}", "Deciduous Tree"), new Emoji("\u{1F334}", "Palm Tree"), new Emoji("\u{1F335}", "Cactus"), new Emoji("\u{1F337}", "Tulip"), new Emoji("\u{1F338}", "Cherry Blossom"), new Emoji("\u{1F339}", "Rose"), new Emoji("\u{1F33A}", "Hibiscus"), new Emoji("\u{1F33B}", "Sunflower"), new Emoji("\u{1F33C}", "Blossom"), sheafOfRice, new Emoji("\u{1F33F}", "Herb"), new Emoji("\u{1F340}", "Four Leaf Clover"), new Emoji("\u{1F341}", "Maple Leaf"), new Emoji("\u{1F342}", "Fallen Leaf"), new Emoji("\u{1F343}", "Leaf Fluttering in Wind"), new Emoji("\u{1F3F5}\uFE0F", "Rosette"), new Emoji("\u{1F490}", "Bouquet"), whiteFlower, new Emoji("\u{1F940}", "Wilted Flower"), 
-//new Emoji("\u{1FAB4}", "Potted Plant"),
-new Emoji("\u2618\uFE0F", "Shamrock"));
+export const seedling = new Emoji("\u{1F331}", "Seedling");
+export const evergreenTree = new Emoji("\u{1F332}", "Evergreen Tree");
+export const deciduousTree = new Emoji("\u{1F333}", "Deciduous Tree");
+export const palmTree = new Emoji("\u{1F334}", "Palm Tree");
+export const cactus = new Emoji("\u{1F335}", "Cactus");
+export const tulip = new Emoji("\u{1F337}", "Tulip");
+export const cherryBlossom = new Emoji("\u{1F338}", "Cherry Blossom");
+export const rose = new Emoji("\u{1F339}", "Rose");
+export const hibiscus = new Emoji("\u{1F33A}", "Hibiscus");
+export const sunflower = new Emoji("\u{1F33B}", "Sunflower");
+export const blossom = new Emoji("\u{1F33C}", "Blossom");
+export const herb = new Emoji("\u{1F33F}", "Herb");
+export const fourLeafClover = new Emoji("\u{1F340}", "Four Leaf Clover");
+export const mapleLeaf = new Emoji("\u{1F341}", "Maple Leaf");
+export const fallenLeaf = new Emoji("\u{1F342}", "Fallen Leaf");
+export const leafFlutteringInWind = new Emoji("\u{1F343}", "Leaf Fluttering in Wind");
+export const rosette = new Emoji("\u{1F3F5}\uFE0F", "Rosette");
+export const bouquet = new Emoji("\u{1F490}", "Bouquet");
+export const wiltedFlower = new Emoji("\u{1F940}", "Wilted Flower");
+//export const pottedPlant = new Emoji("\u{1FAB4}", "Potted Plant");
+export const shamrock = new Emoji("\u2618\uFE0F", "Shamrock");
 export const banana = new Emoji("\u{1F34C}", "Banana");
-export const food = new EmojiGroup("Food", "Food, drink, and utensils", new Emoji("\u{1F32D}", "Hot Dog"), new Emoji("\u{1F32E}", "Taco"), new Emoji("\u{1F32F}", "Burrito"), new Emoji("\u{1F330}", "Chestnut"), new Emoji("\u{1F336}\uFE0F", "Hot Pepper"), new Emoji("\u{1F33D}", "Ear of Corn"), new Emoji("\u{1F344}", "Mushroom"), new Emoji("\u{1F345}", "Tomato"), new Emoji("\u{1F346}", "Eggplant"), new Emoji("\u{1F347}", "Grapes"), new Emoji("\u{1F348}", "Melon"), new Emoji("\u{1F349}", "Watermelon"), new Emoji("\u{1F34A}", "Tangerine"), new Emoji("\u{1F34B}", "Lemon"), banana, new Emoji("\u{1F34D}", "Pineapple"), new Emoji("\u{1F34E}", "Red Apple"), new Emoji("\u{1F34F}", "Green Apple"), new Emoji("\u{1F350}", "Pear"), new Emoji("\u{1F351}", "Peach"), new Emoji("\u{1F352}", "Cherries"), new Emoji("\u{1F353}", "Strawberry"), new Emoji("\u{1F354}", "Hamburger"), new Emoji("\u{1F355}", "Pizza"), new Emoji("\u{1F356}", "Meat on Bone"), new Emoji("\u{1F357}", "Poultry Leg"), new Emoji("\u{1F358}", "Rice Cracker"), new Emoji("\u{1F359}", "Rice Ball"), new Emoji("\u{1F35A}", "Cooked Rice"), new Emoji("\u{1F35B}", "Curry Rice"), new Emoji("\u{1F35C}", "Steaming Bowl"), new Emoji("\u{1F35D}", "Spaghetti"), new Emoji("\u{1F35E}", "Bread"), new Emoji("\u{1F35F}", "French Fries"), new Emoji("\u{1F360}", "Roasted Sweet Potato"), new Emoji("\u{1F361}", "Dango"), new Emoji("\u{1F362}", "Oden"), new Emoji("\u{1F363}", "Sushi"), new Emoji("\u{1F364}", "Fried Shrimp"), new Emoji("\u{1F365}", "Fish Cake with Swirl"), new Emoji("\u{1F371}", "Bento Box"), new Emoji("\u{1F372}", "Pot of Food"), cooking, new Emoji("\u{1F37F}", "Popcorn"), new Emoji("\u{1F950}", "Croissant"), new Emoji("\u{1F951}", "Avocado"), new Emoji("\u{1F952}", "Cucumber"), new Emoji("\u{1F953}", "Bacon"), new Emoji("\u{1F954}", "Potato"), new Emoji("\u{1F955}", "Carrot"), new Emoji("\u{1F956}", "Baguette Bread"), new Emoji("\u{1F957}", "Green Salad"), new Emoji("\u{1F958}", "Shallow Pan of Food"), new Emoji("\u{1F959}", "Stuffed Flatbread"), new Emoji("\u{1F95A}", "Egg"), new Emoji("\u{1F95C}", "Peanuts"), new Emoji("\u{1F95D}", "Kiwi Fruit"), new Emoji("\u{1F95E}", "Pancakes"), new Emoji("\u{1F95F}", "Dumpling"), new Emoji("\u{1F960}", "Fortune Cookie"), new Emoji("\u{1F961}", "Takeout Box"), new Emoji("\u{1F963}", "Bowl with Spoon"), new Emoji("\u{1F965}", "Coconut"), new Emoji("\u{1F966}", "Broccoli"), new Emoji("\u{1F968}", "Pretzel"), new Emoji("\u{1F969}", "Cut of Meat"), new Emoji("\u{1F96A}", "Sandwich"), new Emoji("\u{1F96B}", "Canned Food"), new Emoji("\u{1F96C}", "Leafy Green"), new Emoji("\u{1F96D}", "Mango"), new Emoji("\u{1F96E}", "Moon Cake"), new Emoji("\u{1F96F}", "Bagel"), new Emoji("\u{1F980}", "Crab"), new Emoji("\u{1F990}", "Shrimp"), new Emoji("\u{1F991}", "Squid"), new Emoji("\u{1F99E}", "Lobster"), new Emoji("\u{1F9AA}", "Oyster"), new Emoji("\u{1F9C0}", "Cheese Wedge"), new Emoji("\u{1F9C2}", "Salt"), new Emoji("\u{1F9C4}", "Garlic"), new Emoji("\u{1F9C5}", "Onion"), new Emoji("\u{1F9C6}", "Falafel"), new Emoji("\u{1F9C7}", "Waffle"), new Emoji("\u{1F9C8}", "Butter"), 
-//new Emoji("\u{1FAD0}", "Blueberries"),
-//new Emoji("\u{1FAD1}", "Bell Pepper"),
-//new Emoji("\u{1FAD2}", "Olive"),
-//new Emoji("\u{1FAD3}", "Flatbread"),
-//new Emoji("\u{1FAD4}", "Tamale"),
-//new Emoji("\u{1FAD5}", "Fondue"),
-new Emoji("\u{1F366}", "Soft Ice Cream"), new Emoji("\u{1F367}", "Shaved Ice"), new Emoji("\u{1F368}", "Ice Cream"), new Emoji("\u{1F369}", "Doughnut"), new Emoji("\u{1F36A}", "Cookie"), new Emoji("\u{1F36B}", "Chocolate Bar"), new Emoji("\u{1F36C}", "Candy"), new Emoji("\u{1F36D}", "Lollipop"), new Emoji("\u{1F36E}", "Custard"), new Emoji("\u{1F36F}", "Honey Pot"), new Emoji("\u{1F370}", "Shortcake"), new Emoji("\u{1F382}", "Birthday Cake"), new Emoji("\u{1F967}", "Pie"), new Emoji("\u{1F9C1}", "Cupcake"), new Emoji("\u{1F375}", "Teacup Without Handle"), new Emoji("\u{1F376}", "Sake"), new Emoji("\u{1F377}", "Wine Glass"), new Emoji("\u{1F378}", "Cocktail Glass"), new Emoji("\u{1F379}", "Tropical Drink"), new Emoji("\u{1F37A}", "Beer Mug"), new Emoji("\u{1F37B}", "Clinking Beer Mugs"), new Emoji("\u{1F37C}", "Baby Bottle"), new Emoji("\u{1F37E}", "Bottle with Popping Cork"), new Emoji("\u{1F942}", "Clinking Glasses"), new Emoji("\u{1F943}", "Tumbler Glass"), new Emoji("\u{1F95B}", "Glass of Milk"), new Emoji("\u{1F964}", "Cup with Straw"), new Emoji("\u{1F9C3}", "Beverage Box"), new Emoji("\u{1F9C9}", "Mate"), new Emoji("\u{1F9CA}", "Ice"), 
-//new Emoji("\u{1F9CB}", "Bubble Tea"),
-//new Emoji("\u{1FAD6}", "Teapot"),
-new Emoji("\u2615", "Hot Beverage"), new Emoji("\u{1F374}", "Fork and Knife"), new Emoji("\u{1F37D}\uFE0F", "Fork and Knife with Plate"), new Emoji("\u{1F3FA}", "Amphora"), new Emoji("\u{1F52A}", "Kitchen Knife"), new Emoji("\u{1F944}", "Spoon"), new Emoji("\u{1F962}", "Chopsticks"));
-export const nations = new EmojiGroup("National Flags", "Flags of countries from around the world", new Emoji("\u{1F1E6}\u{1F1E8}", "Flag: Ascension Island"), new Emoji("\u{1F1E6}\u{1F1E9}", "Flag: Andorra"), new Emoji("\u{1F1E6}\u{1F1EA}", "Flag: United Arab Emirates"), new Emoji("\u{1F1E6}\u{1F1EB}", "Flag: Afghanistan"), new Emoji("\u{1F1E6}\u{1F1EC}", "Flag: Antigua & Barbuda"), new Emoji("\u{1F1E6}\u{1F1EE}", "Flag: Anguilla"), new Emoji("\u{1F1E6}\u{1F1F1}", "Flag: Albania"), new Emoji("\u{1F1E6}\u{1F1F2}", "Flag: Armenia"), new Emoji("\u{1F1E6}\u{1F1F4}", "Flag: Angola"), new Emoji("\u{1F1E6}\u{1F1F6}", "Flag: Antarctica"), new Emoji("\u{1F1E6}\u{1F1F7}", "Flag: Argentina"), new Emoji("\u{1F1E6}\u{1F1F8}", "Flag: American Samoa"), new Emoji("\u{1F1E6}\u{1F1F9}", "Flag: Austria"), new Emoji("\u{1F1E6}\u{1F1FA}", "Flag: Australia"), new Emoji("\u{1F1E6}\u{1F1FC}", "Flag: Aruba"), new Emoji("\u{1F1E6}\u{1F1FD}", "Flag: Åland Islands"), new Emoji("\u{1F1E6}\u{1F1FF}", "Flag: Azerbaijan"), new Emoji("\u{1F1E7}\u{1F1E6}", "Flag: Bosnia & Herzegovina"), new Emoji("\u{1F1E7}\u{1F1E7}", "Flag: Barbados"), new Emoji("\u{1F1E7}\u{1F1E9}", "Flag: Bangladesh"), new Emoji("\u{1F1E7}\u{1F1EA}", "Flag: Belgium"), new Emoji("\u{1F1E7}\u{1F1EB}", "Flag: Burkina Faso"), new Emoji("\u{1F1E7}\u{1F1EC}", "Flag: Bulgaria"), new Emoji("\u{1F1E7}\u{1F1ED}", "Flag: Bahrain"), new Emoji("\u{1F1E7}\u{1F1EE}", "Flag: Burundi"), new Emoji("\u{1F1E7}\u{1F1EF}", "Flag: Benin"), new Emoji("\u{1F1E7}\u{1F1F1}", "Flag: St. Barthélemy"), new Emoji("\u{1F1E7}\u{1F1F2}", "Flag: Bermuda"), new Emoji("\u{1F1E7}\u{1F1F3}", "Flag: Brunei"), new Emoji("\u{1F1E7}\u{1F1F4}", "Flag: Bolivia"), new Emoji("\u{1F1E7}\u{1F1F6}", "Flag: Caribbean Netherlands"), new Emoji("\u{1F1E7}\u{1F1F7}", "Flag: Brazil"), new Emoji("\u{1F1E7}\u{1F1F8}", "Flag: Bahamas"), new Emoji("\u{1F1E7}\u{1F1F9}", "Flag: Bhutan"), new Emoji("\u{1F1E7}\u{1F1FB}", "Flag: Bouvet Island"), new Emoji("\u{1F1E7}\u{1F1FC}", "Flag: Botswana"), new Emoji("\u{1F1E7}\u{1F1FE}", "Flag: Belarus"), new Emoji("\u{1F1E7}\u{1F1FF}", "Flag: Belize"), new Emoji("\u{1F1E8}\u{1F1E6}", "Flag: Canada"), new Emoji("\u{1F1E8}\u{1F1E8}", "Flag: Cocos (Keeling) Islands"), new Emoji("\u{1F1E8}\u{1F1E9}", "Flag: Congo - Kinshasa"), new Emoji("\u{1F1E8}\u{1F1EB}", "Flag: Central African Republic"), new Emoji("\u{1F1E8}\u{1F1EC}", "Flag: Congo - Brazzaville"), new Emoji("\u{1F1E8}\u{1F1ED}", "Flag: Switzerland"), new Emoji("\u{1F1E8}\u{1F1EE}", "Flag: Côte d’Ivoire"), new Emoji("\u{1F1E8}\u{1F1F0}", "Flag: Cook Islands"), new Emoji("\u{1F1E8}\u{1F1F1}", "Flag: Chile"), new Emoji("\u{1F1E8}\u{1F1F2}", "Flag: Cameroon"), new Emoji("\u{1F1E8}\u{1F1F3}", "Flag: China"), new Emoji("\u{1F1E8}\u{1F1F4}", "Flag: Colombia"), new Emoji("\u{1F1E8}\u{1F1F5}", "Flag: Clipperton Island"), new Emoji("\u{1F1E8}\u{1F1F7}", "Flag: Costa Rica"), new Emoji("\u{1F1E8}\u{1F1FA}", "Flag: Cuba"), new Emoji("\u{1F1E8}\u{1F1FB}", "Flag: Cape Verde"), new Emoji("\u{1F1E8}\u{1F1FC}", "Flag: Curaçao"), new Emoji("\u{1F1E8}\u{1F1FD}", "Flag: Christmas Island"), new Emoji("\u{1F1E8}\u{1F1FE}", "Flag: Cyprus"), new Emoji("\u{1F1E8}\u{1F1FF}", "Flag: Czechia"), new Emoji("\u{1F1E9}\u{1F1EA}", "Flag: Germany"), new Emoji("\u{1F1E9}\u{1F1EC}", "Flag: Diego Garcia"), new Emoji("\u{1F1E9}\u{1F1EF}", "Flag: Djibouti"), new Emoji("\u{1F1E9}\u{1F1F0}", "Flag: Denmark"), new Emoji("\u{1F1E9}\u{1F1F2}", "Flag: Dominica"), new Emoji("\u{1F1E9}\u{1F1F4}", "Flag: Dominican Republic"), new Emoji("\u{1F1E9}\u{1F1FF}", "Flag: Algeria"), new Emoji("\u{1F1EA}\u{1F1E6}", "Flag: Ceuta & Melilla"), new Emoji("\u{1F1EA}\u{1F1E8}", "Flag: Ecuador"), new Emoji("\u{1F1EA}\u{1F1EA}", "Flag: Estonia"), new Emoji("\u{1F1EA}\u{1F1EC}", "Flag: Egypt"), new Emoji("\u{1F1EA}\u{1F1ED}", "Flag: Western Sahara"), new Emoji("\u{1F1EA}\u{1F1F7}", "Flag: Eritrea"), new Emoji("\u{1F1EA}\u{1F1F8}", "Flag: Spain"), new Emoji("\u{1F1EA}\u{1F1F9}", "Flag: Ethiopia"), new Emoji("\u{1F1EA}\u{1F1FA}", "Flag: European Union"), new Emoji("\u{1F1EB}\u{1F1EE}", "Flag: Finland"), new Emoji("\u{1F1EB}\u{1F1EF}", "Flag: Fiji"), new Emoji("\u{1F1EB}\u{1F1F0}", "Flag: Falkland Islands"), new Emoji("\u{1F1EB}\u{1F1F2}", "Flag: Micronesia"), new Emoji("\u{1F1EB}\u{1F1F4}", "Flag: Faroe Islands"), new Emoji("\u{1F1EB}\u{1F1F7}", "Flag: France"), new Emoji("\u{1F1EC}\u{1F1E6}", "Flag: Gabon"), new Emoji("\u{1F1EC}\u{1F1E7}", "Flag: United Kingdom"), new Emoji("\u{1F1EC}\u{1F1E9}", "Flag: Grenada"), new Emoji("\u{1F1EC}\u{1F1EA}", "Flag: Georgia"), new Emoji("\u{1F1EC}\u{1F1EB}", "Flag: French Guiana"), new Emoji("\u{1F1EC}\u{1F1EC}", "Flag: Guernsey"), new Emoji("\u{1F1EC}\u{1F1ED}", "Flag: Ghana"), new Emoji("\u{1F1EC}\u{1F1EE}", "Flag: Gibraltar"), new Emoji("\u{1F1EC}\u{1F1F1}", "Flag: Greenland"), new Emoji("\u{1F1EC}\u{1F1F2}", "Flag: Gambia"), new Emoji("\u{1F1EC}\u{1F1F3}", "Flag: Guinea"), new Emoji("\u{1F1EC}\u{1F1F5}", "Flag: Guadeloupe"), new Emoji("\u{1F1EC}\u{1F1F6}", "Flag: Equatorial Guinea"), new Emoji("\u{1F1EC}\u{1F1F7}", "Flag: Greece"), new Emoji("\u{1F1EC}\u{1F1F8}", "Flag: South Georgia & South Sandwich Islands"), new Emoji("\u{1F1EC}\u{1F1F9}", "Flag: Guatemala"), new Emoji("\u{1F1EC}\u{1F1FA}", "Flag: Guam"), new Emoji("\u{1F1EC}\u{1F1FC}", "Flag: Guinea-Bissau"), new Emoji("\u{1F1EC}\u{1F1FE}", "Flag: Guyana"), new Emoji("\u{1F1ED}\u{1F1F0}", "Flag: Hong Kong SAR China"), new Emoji("\u{1F1ED}\u{1F1F2}", "Flag: Heard & McDonald Islands"), new Emoji("\u{1F1ED}\u{1F1F3}", "Flag: Honduras"), new Emoji("\u{1F1ED}\u{1F1F7}", "Flag: Croatia"), new Emoji("\u{1F1ED}\u{1F1F9}", "Flag: Haiti"), new Emoji("\u{1F1ED}\u{1F1FA}", "Flag: Hungary"), new Emoji("\u{1F1EE}\u{1F1E8}", "Flag: Canary Islands"), new Emoji("\u{1F1EE}\u{1F1E9}", "Flag: Indonesia"), new Emoji("\u{1F1EE}\u{1F1EA}", "Flag: Ireland"), new Emoji("\u{1F1EE}\u{1F1F1}", "Flag: Israel"), new Emoji("\u{1F1EE}\u{1F1F2}", "Flag: Isle of Man"), new Emoji("\u{1F1EE}\u{1F1F3}", "Flag: India"), new Emoji("\u{1F1EE}\u{1F1F4}", "Flag: British Indian Ocean Territory"), new Emoji("\u{1F1EE}\u{1F1F6}", "Flag: Iraq"), new Emoji("\u{1F1EE}\u{1F1F7}", "Flag: Iran"), new Emoji("\u{1F1EE}\u{1F1F8}", "Flag: Iceland"), new Emoji("\u{1F1EE}\u{1F1F9}", "Flag: Italy"), new Emoji("\u{1F1EF}\u{1F1EA}", "Flag: Jersey"), new Emoji("\u{1F1EF}\u{1F1F2}", "Flag: Jamaica"), new Emoji("\u{1F1EF}\u{1F1F4}", "Flag: Jordan"), new Emoji("\u{1F1EF}\u{1F1F5}", "Flag: Japan"), new Emoji("\u{1F1F0}\u{1F1EA}", "Flag: Kenya"), new Emoji("\u{1F1F0}\u{1F1EC}", "Flag: Kyrgyzstan"), new Emoji("\u{1F1F0}\u{1F1ED}", "Flag: Cambodia"), new Emoji("\u{1F1F0}\u{1F1EE}", "Flag: Kiribati"), new Emoji("\u{1F1F0}\u{1F1F2}", "Flag: Comoros"), new Emoji("\u{1F1F0}\u{1F1F3}", "Flag: St. Kitts & Nevis"), new Emoji("\u{1F1F0}\u{1F1F5}", "Flag: North Korea"), new Emoji("\u{1F1F0}\u{1F1F7}", "Flag: South Korea"), new Emoji("\u{1F1F0}\u{1F1FC}", "Flag: Kuwait"), new Emoji("\u{1F1F0}\u{1F1FE}", "Flag: Cayman Islands"), new Emoji("\u{1F1F0}\u{1F1FF}", "Flag: Kazakhstan"), new Emoji("\u{1F1F1}\u{1F1E6}", "Flag: Laos"), new Emoji("\u{1F1F1}\u{1F1E7}", "Flag: Lebanon"), new Emoji("\u{1F1F1}\u{1F1E8}", "Flag: St. Lucia"), new Emoji("\u{1F1F1}\u{1F1EE}", "Flag: Liechtenstein"), new Emoji("\u{1F1F1}\u{1F1F0}", "Flag: Sri Lanka"), new Emoji("\u{1F1F1}\u{1F1F7}", "Flag: Liberia"), new Emoji("\u{1F1F1}\u{1F1F8}", "Flag: Lesotho"), new Emoji("\u{1F1F1}\u{1F1F9}", "Flag: Lithuania"), new Emoji("\u{1F1F1}\u{1F1FA}", "Flag: Luxembourg"), new Emoji("\u{1F1F1}\u{1F1FB}", "Flag: Latvia"), new Emoji("\u{1F1F1}\u{1F1FE}", "Flag: Libya"), new Emoji("\u{1F1F2}\u{1F1E6}", "Flag: Morocco"), new Emoji("\u{1F1F2}\u{1F1E8}", "Flag: Monaco"), new Emoji("\u{1F1F2}\u{1F1E9}", "Flag: Moldova"), new Emoji("\u{1F1F2}\u{1F1EA}", "Flag: Montenegro"), new Emoji("\u{1F1F2}\u{1F1EB}", "Flag: St. Martin"), new Emoji("\u{1F1F2}\u{1F1EC}", "Flag: Madagascar"), new Emoji("\u{1F1F2}\u{1F1ED}", "Flag: Marshall Islands"), new Emoji("\u{1F1F2}\u{1F1F0}", "Flag: North Macedonia"), new Emoji("\u{1F1F2}\u{1F1F1}", "Flag: Mali"), new Emoji("\u{1F1F2}\u{1F1F2}", "Flag: Myanmar (Burma)"), new Emoji("\u{1F1F2}\u{1F1F3}", "Flag: Mongolia"), new Emoji("\u{1F1F2}\u{1F1F4}", "Flag: Macao Sar China"), new Emoji("\u{1F1F2}\u{1F1F5}", "Flag: Northern Mariana Islands"), new Emoji("\u{1F1F2}\u{1F1F6}", "Flag: Martinique"), new Emoji("\u{1F1F2}\u{1F1F7}", "Flag: Mauritania"), new Emoji("\u{1F1F2}\u{1F1F8}", "Flag: Montserrat"), new Emoji("\u{1F1F2}\u{1F1F9}", "Flag: Malta"), new Emoji("\u{1F1F2}\u{1F1FA}", "Flag: Mauritius"), new Emoji("\u{1F1F2}\u{1F1FB}", "Flag: Maldives"), new Emoji("\u{1F1F2}\u{1F1FC}", "Flag: Malawi"), new Emoji("\u{1F1F2}\u{1F1FD}", "Flag: Mexico"), new Emoji("\u{1F1F2}\u{1F1FE}", "Flag: Malaysia"), new Emoji("\u{1F1F2}\u{1F1FF}", "Flag: Mozambique"), new Emoji("\u{1F1F3}\u{1F1E6}", "Flag: Namibia"), new Emoji("\u{1F1F3}\u{1F1E8}", "Flag: New Caledonia"), new Emoji("\u{1F1F3}\u{1F1EA}", "Flag: Niger"), new Emoji("\u{1F1F3}\u{1F1EB}", "Flag: Norfolk Island"), new Emoji("\u{1F1F3}\u{1F1EC}", "Flag: Nigeria"), new Emoji("\u{1F1F3}\u{1F1EE}", "Flag: Nicaragua"), new Emoji("\u{1F1F3}\u{1F1F1}", "Flag: Netherlands"), new Emoji("\u{1F1F3}\u{1F1F4}", "Flag: Norway"), new Emoji("\u{1F1F3}\u{1F1F5}", "Flag: Nepal"), new Emoji("\u{1F1F3}\u{1F1F7}", "Flag: Nauru"), new Emoji("\u{1F1F3}\u{1F1FA}", "Flag: Niue"), new Emoji("\u{1F1F3}\u{1F1FF}", "Flag: New Zealand"), new Emoji("\u{1F1F4}\u{1F1F2}", "Flag: Oman"), new Emoji("\u{1F1F5}\u{1F1E6}", "Flag: Panama"), new Emoji("\u{1F1F5}\u{1F1EA}", "Flag: Peru"), new Emoji("\u{1F1F5}\u{1F1EB}", "Flag: French Polynesia"), new Emoji("\u{1F1F5}\u{1F1EC}", "Flag: Papua New Guinea"), new Emoji("\u{1F1F5}\u{1F1ED}", "Flag: Philippines"), new Emoji("\u{1F1F5}\u{1F1F0}", "Flag: Pakistan"), new Emoji("\u{1F1F5}\u{1F1F1}", "Flag: Poland"), new Emoji("\u{1F1F5}\u{1F1F2}", "Flag: St. Pierre & Miquelon"), new Emoji("\u{1F1F5}\u{1F1F3}", "Flag: Pitcairn Islands"), new Emoji("\u{1F1F5}\u{1F1F7}", "Flag: Puerto Rico"), new Emoji("\u{1F1F5}\u{1F1F8}", "Flag: Palestinian Territories"), new Emoji("\u{1F1F5}\u{1F1F9}", "Flag: Portugal"), new Emoji("\u{1F1F5}\u{1F1FC}", "Flag: Palau"), new Emoji("\u{1F1F5}\u{1F1FE}", "Flag: Paraguay"), new Emoji("\u{1F1F6}\u{1F1E6}", "Flag: Qatar"), new Emoji("\u{1F1F7}\u{1F1EA}", "Flag: Réunion"), new Emoji("\u{1F1F7}\u{1F1F4}", "Flag: Romania"), new Emoji("\u{1F1F7}\u{1F1F8}", "Flag: Serbia"), new Emoji("\u{1F1F7}\u{1F1FA}", "Flag: Russia"), new Emoji("\u{1F1F7}\u{1F1FC}", "Flag: Rwanda"), new Emoji("\u{1F1F8}\u{1F1E6}", "Flag: Saudi Arabia"), new Emoji("\u{1F1F8}\u{1F1E7}", "Flag: Solomon Islands"), new Emoji("\u{1F1F8}\u{1F1E8}", "Flag: Seychelles"), new Emoji("\u{1F1F8}\u{1F1E9}", "Flag: Sudan"), new Emoji("\u{1F1F8}\u{1F1EA}", "Flag: Sweden"), new Emoji("\u{1F1F8}\u{1F1EC}", "Flag: Singapore"), new Emoji("\u{1F1F8}\u{1F1ED}", "Flag: St. Helena"), new Emoji("\u{1F1F8}\u{1F1EE}", "Flag: Slovenia"), new Emoji("\u{1F1F8}\u{1F1EF}", "Flag: Svalbard & Jan Mayen"), new Emoji("\u{1F1F8}\u{1F1F0}", "Flag: Slovakia"), new Emoji("\u{1F1F8}\u{1F1F1}", "Flag: Sierra Leone"), new Emoji("\u{1F1F8}\u{1F1F2}", "Flag: San Marino"), new Emoji("\u{1F1F8}\u{1F1F3}", "Flag: Senegal"), new Emoji("\u{1F1F8}\u{1F1F4}", "Flag: Somalia"), new Emoji("\u{1F1F8}\u{1F1F7}", "Flag: Suriname"), new Emoji("\u{1F1F8}\u{1F1F8}", "Flag: South Sudan"), new Emoji("\u{1F1F8}\u{1F1F9}", "Flag: São Tomé & Príncipe"), new Emoji("\u{1F1F8}\u{1F1FB}", "Flag: El Salvador"), new Emoji("\u{1F1F8}\u{1F1FD}", "Flag: Sint Maarten"), new Emoji("\u{1F1F8}\u{1F1FE}", "Flag: Syria"), new Emoji("\u{1F1F8}\u{1F1FF}", "Flag: Eswatini"), new Emoji("\u{1F1F9}\u{1F1E6}", "Flag: Tristan Da Cunha"), new Emoji("\u{1F1F9}\u{1F1E8}", "Flag: Turks & Caicos Islands"), new Emoji("\u{1F1F9}\u{1F1E9}", "Flag: Chad"), new Emoji("\u{1F1F9}\u{1F1EB}", "Flag: French Southern Territories"), new Emoji("\u{1F1F9}\u{1F1EC}", "Flag: Togo"), new Emoji("\u{1F1F9}\u{1F1ED}", "Flag: Thailand"), new Emoji("\u{1F1F9}\u{1F1EF}", "Flag: Tajikistan"), new Emoji("\u{1F1F9}\u{1F1F0}", "Flag: Tokelau"), new Emoji("\u{1F1F9}\u{1F1F1}", "Flag: Timor-Leste"), new Emoji("\u{1F1F9}\u{1F1F2}", "Flag: Turkmenistan"), new Emoji("\u{1F1F9}\u{1F1F3}", "Flag: Tunisia"), new Emoji("\u{1F1F9}\u{1F1F4}", "Flag: Tonga"), new Emoji("\u{1F1F9}\u{1F1F7}", "Flag: Turkey"), new Emoji("\u{1F1F9}\u{1F1F9}", "Flag: Trinidad & Tobago"), new Emoji("\u{1F1F9}\u{1F1FB}", "Flag: Tuvalu"), new Emoji("\u{1F1F9}\u{1F1FC}", "Flag: Taiwan"), new Emoji("\u{1F1F9}\u{1F1FF}", "Flag: Tanzania"), new Emoji("\u{1F1FA}\u{1F1E6}", "Flag: Ukraine"), new Emoji("\u{1F1FA}\u{1F1EC}", "Flag: Uganda"), new Emoji("\u{1F1FA}\u{1F1F2}", "Flag: U.S. Outlying Islands"), new Emoji("\u{1F1FA}\u{1F1F3}", "Flag: United Nations"), new Emoji("\u{1F1FA}\u{1F1F8}", "Flag: United States"), new Emoji("\u{1F1FA}\u{1F1FE}", "Flag: Uruguay"), new Emoji("\u{1F1FA}\u{1F1FF}", "Flag: Uzbekistan"), new Emoji("\u{1F1FB}\u{1F1E6}", "Flag: Vatican City"), new Emoji("\u{1F1FB}\u{1F1E8}", "Flag: St. Vincent & Grenadines"), new Emoji("\u{1F1FB}\u{1F1EA}", "Flag: Venezuela"), new Emoji("\u{1F1FB}\u{1F1EC}", "Flag: British Virgin Islands"), new Emoji("\u{1F1FB}\u{1F1EE}", "Flag: U.S. Virgin Islands"), new Emoji("\u{1F1FB}\u{1F1F3}", "Flag: Vietnam"), new Emoji("\u{1F1FB}\u{1F1FA}", "Flag: Vanuatu"), new Emoji("\u{1F1FC}\u{1F1EB}", "Flag: Wallis & Futuna"), new Emoji("\u{1F1FC}\u{1F1F8}", "Flag: Samoa"), new Emoji("\u{1F1FD}\u{1F1F0}", "Flag: Kosovo"), new Emoji("\u{1F1FE}\u{1F1EA}", "Flag: Yemen"), new Emoji("\u{1F1FE}\u{1F1F9}", "Flag: Mayotte"), new Emoji("\u{1F1FF}\u{1F1E6}", "Flag: South Africa"), new Emoji("\u{1F1FF}\u{1F1F2}", "Flag: Zambia"), new Emoji("\u{1F1FF}\u{1F1FC}", "Flag: Zimbabwe"));
+export const hotDog = new Emoji("\u{1F32D}", "Hot Dog");
+export const taco = new Emoji("\u{1F32E}", "Taco");
+export const burrito = new Emoji("\u{1F32F}", "Burrito");
+export const chestnut = new Emoji("\u{1F330}", "Chestnut");
+export const hotPepper = new Emoji("\u{1F336}\uFE0F", "Hot Pepper");
+export const earOfCorn = new Emoji("\u{1F33D}", "Ear of Corn");
+export const mushroom = new Emoji("\u{1F344}", "Mushroom");
+export const tomato = new Emoji("\u{1F345}", "Tomato");
+export const eggplant = new Emoji("\u{1F346}", "Eggplant");
+export const grapes = new Emoji("\u{1F347}", "Grapes");
+export const melon = new Emoji("\u{1F348}", "Melon");
+export const watermelon = new Emoji("\u{1F349}", "Watermelon");
+export const tangerine = new Emoji("\u{1F34A}", "Tangerine");
+export const lemon = new Emoji("\u{1F34B}", "Lemon");
+export const pineapple = new Emoji("\u{1F34D}", "Pineapple");
+export const redApple = new Emoji("\u{1F34E}", "Red Apple");
+export const greenApple = new Emoji("\u{1F34F}", "Green Apple");
+export const pear = new Emoji("\u{1F350}", "Pear");
+export const peach = new Emoji("\u{1F351}", "Peach");
+export const cherries = new Emoji("\u{1F352}", "Cherries");
+export const strawberry = new Emoji("\u{1F353}", "Strawberry");
+export const hamburger = new Emoji("\u{1F354}", "Hamburger");
+export const pizza = new Emoji("\u{1F355}", "Pizza");
+export const meatOnBone = new Emoji("\u{1F356}", "Meat on Bone");
+export const poultryLeg = new Emoji("\u{1F357}", "Poultry Leg");
+export const riceCracker = new Emoji("\u{1F358}", "Rice Cracker");
+export const riceBall = new Emoji("\u{1F359}", "Rice Ball");
+export const cookedRice = new Emoji("\u{1F35A}", "Cooked Rice");
+export const curryRice = new Emoji("\u{1F35B}", "Curry Rice");
+export const steamingBowl = new Emoji("\u{1F35C}", "Steaming Bowl");
+export const spaghetti = new Emoji("\u{1F35D}", "Spaghetti");
+export const bread = new Emoji("\u{1F35E}", "Bread");
+export const frenchFries = new Emoji("\u{1F35F}", "French Fries");
+export const roastedSweetPotato = new Emoji("\u{1F360}", "Roasted Sweet Potato");
+export const dango = new Emoji("\u{1F361}", "Dango");
+export const oden = new Emoji("\u{1F362}", "Oden");
+export const sushi = new Emoji("\u{1F363}", "Sushi");
+export const friedShrimp = new Emoji("\u{1F364}", "Fried Shrimp");
+export const fishCakeWithSwirl = new Emoji("\u{1F365}", "Fish Cake with Swirl");
+export const bentoBox = new Emoji("\u{1F371}", "Bento Box");
+export const potOfFood = new Emoji("\u{1F372}", "Pot of Food");
+export const popcorn = new Emoji("\u{1F37F}", "Popcorn");
+export const croissant = new Emoji("\u{1F950}", "Croissant");
+export const avocado = new Emoji("\u{1F951}", "Avocado");
+export const cucumber = new Emoji("\u{1F952}", "Cucumber");
+export const bacon = new Emoji("\u{1F953}", "Bacon");
+export const potato = new Emoji("\u{1F954}", "Potato");
+export const carrot = new Emoji("\u{1F955}", "Carrot");
+export const baguetteBread = new Emoji("\u{1F956}", "Baguette Bread");
+export const greenSalad = new Emoji("\u{1F957}", "Green Salad");
+export const shallowPanOfFood = new Emoji("\u{1F958}", "Shallow Pan of Food");
+export const stuffedFlatbread = new Emoji("\u{1F959}", "Stuffed Flatbread");
+export const egg = new Emoji("\u{1F95A}", "Egg");
+export const peanuts = new Emoji("\u{1F95C}", "Peanuts");
+export const kiwiFruit = new Emoji("\u{1F95D}", "Kiwi Fruit");
+export const pancakes = new Emoji("\u{1F95E}", "Pancakes");
+export const dumpling = new Emoji("\u{1F95F}", "Dumpling");
+export const fortuneCookie = new Emoji("\u{1F960}", "Fortune Cookie");
+export const takeoutBox = new Emoji("\u{1F961}", "Takeout Box");
+export const bowlWithSpoon = new Emoji("\u{1F963}", "Bowl with Spoon");
+export const coconut = new Emoji("\u{1F965}", "Coconut");
+export const broccoli = new Emoji("\u{1F966}", "Broccoli");
+export const pretzel = new Emoji("\u{1F968}", "Pretzel");
+export const cutOfMeat = new Emoji("\u{1F969}", "Cut of Meat");
+export const sandwich = new Emoji("\u{1F96A}", "Sandwich");
+export const cannedFood = new Emoji("\u{1F96B}", "Canned Food");
+export const leafyGreen = new Emoji("\u{1F96C}", "Leafy Green");
+export const mango = new Emoji("\u{1F96D}", "Mango");
+export const moonCake = new Emoji("\u{1F96E}", "Moon Cake");
+export const bagel = new Emoji("\u{1F96F}", "Bagel");
+export const crab = new Emoji("\u{1F980}", "Crab");
+export const shrimp = new Emoji("\u{1F990}", "Shrimp");
+export const squid = new Emoji("\u{1F991}", "Squid");
+export const lobster = new Emoji("\u{1F99E}", "Lobster");
+export const oyster = new Emoji("\u{1F9AA}", "Oyster");
+export const cheeseWedge = new Emoji("\u{1F9C0}", "Cheese Wedge");
+export const salt = new Emoji("\u{1F9C2}", "Salt");
+export const garlic = new Emoji("\u{1F9C4}", "Garlic");
+export const onion = new Emoji("\u{1F9C5}", "Onion");
+export const falafel = new Emoji("\u{1F9C6}", "Falafel");
+export const waffle = new Emoji("\u{1F9C7}", "Waffle");
+export const butter = new Emoji("\u{1F9C8}", "Butter");
+//export const blueberries = new Emoji("\u{1FAD0}", "Blueberries");
+//export const bellPepper = new Emoji("\u{1FAD1}", "Bell Pepper");
+//export const olive = new Emoji("\u{1FAD2}", "Olive");
+//export const flatbread = new Emoji("\u{1FAD3}", "Flatbread");
+//export const tamale = new Emoji("\u{1FAD4}", "Tamale");
+//export const fondue = new Emoji("\u{1FAD5}", "Fondue");
+export const softIceCream = new Emoji("\u{1F366}", "Soft Ice Cream");
+export const shavedIce = new Emoji("\u{1F367}", "Shaved Ice");
+export const iceCream = new Emoji("\u{1F368}", "Ice Cream");
+export const doughnut = new Emoji("\u{1F369}", "Doughnut");
+export const cookie = new Emoji("\u{1F36A}", "Cookie");
+export const chocolateBar = new Emoji("\u{1F36B}", "Chocolate Bar");
+export const candy = new Emoji("\u{1F36C}", "Candy");
+export const lollipop = new Emoji("\u{1F36D}", "Lollipop");
+export const custard = new Emoji("\u{1F36E}", "Custard");
+export const honeyPot = new Emoji("\u{1F36F}", "Honey Pot");
+export const shortcake = new Emoji("\u{1F370}", "Shortcake");
+export const birthdayCake = new Emoji("\u{1F382}", "Birthday Cake");
+export const pie = new Emoji("\u{1F967}", "Pie");
+export const cupcake = new Emoji("\u{1F9C1}", "Cupcake");
+export const teacupWithoutHandle = new Emoji("\u{1F375}", "Teacup Without Handle");
+export const sake = new Emoji("\u{1F376}", "Sake");
+export const wineGlass = new Emoji("\u{1F377}", "Wine Glass");
+export const cocktailGlass = new Emoji("\u{1F378}", "Cocktail Glass");
+export const tropicalDrink = new Emoji("\u{1F379}", "Tropical Drink");
+export const beerMug = new Emoji("\u{1F37A}", "Beer Mug");
+export const clinkingBeerMugs = new Emoji("\u{1F37B}", "Clinking Beer Mugs");
+export const babyBottle = new Emoji("\u{1F37C}", "Baby Bottle");
+export const bottleWithPoppingCork = new Emoji("\u{1F37E}", "Bottle with Popping Cork");
+export const clinkingGlasses = new Emoji("\u{1F942}", "Clinking Glasses");
+export const tumblerGlass = new Emoji("\u{1F943}", "Tumbler Glass");
+export const glassOfMilk = new Emoji("\u{1F95B}", "Glass of Milk");
+export const cupWithStraw = new Emoji("\u{1F964}", "Cup with Straw");
+export const beverageBox = new Emoji("\u{1F9C3}", "Beverage Box");
+export const mate = new Emoji("\u{1F9C9}", "Mate");
+export const ice = new Emoji("\u{1F9CA}", "Ice");
+//export const bubbleTea = new Emoji("\u{1F9CB}", "Bubble Tea");
+//export const teapot = new Emoji("\u{1FAD6}", "Teapot");
+export const hotBeverage = new Emoji("\u2615", "Hot Beverage");
+export const forkAndKnife = new Emoji("\u{1F374}", "Fork and Knife");
+export const forkAndKnifeWithPlate = new Emoji("\u{1F37D}\uFE0F", "Fork and Knife with Plate");
+export const amphora = new Emoji("\u{1F3FA}", "Amphora");
+export const kitchenKnife = new Emoji("\u{1F52A}", "Kitchen Knife");
+export const spoon = new Emoji("\u{1F944}", "Spoon");
+export const chopsticks = new Emoji("\u{1F962}", "Chopsticks");
+export const flagAscensionIsland = new Emoji("\u{1F1E6}\u{1F1E8}", "Flag: Ascension Island");
+export const flagAndorra = new Emoji("\u{1F1E6}\u{1F1E9}", "Flag: Andorra");
+export const flagUnitedArabEmirates = new Emoji("\u{1F1E6}\u{1F1EA}", "Flag: United Arab Emirates");
+export const flagAfghanistan = new Emoji("\u{1F1E6}\u{1F1EB}", "Flag: Afghanistan");
+export const flagAntiguaBarbuda = new Emoji("\u{1F1E6}\u{1F1EC}", "Flag: Antigua & Barbuda");
+export const flagAnguilla = new Emoji("\u{1F1E6}\u{1F1EE}", "Flag: Anguilla");
+export const flagAlbania = new Emoji("\u{1F1E6}\u{1F1F1}", "Flag: Albania");
+export const flagArmenia = new Emoji("\u{1F1E6}\u{1F1F2}", "Flag: Armenia");
+export const flagAngola = new Emoji("\u{1F1E6}\u{1F1F4}", "Flag: Angola");
+export const flagAntarctica = new Emoji("\u{1F1E6}\u{1F1F6}", "Flag: Antarctica");
+export const flagArgentina = new Emoji("\u{1F1E6}\u{1F1F7}", "Flag: Argentina");
+export const flagAmericanSamoa = new Emoji("\u{1F1E6}\u{1F1F8}", "Flag: American Samoa");
+export const flagAustria = new Emoji("\u{1F1E6}\u{1F1F9}", "Flag: Austria");
+export const flagAustralia = new Emoji("\u{1F1E6}\u{1F1FA}", "Flag: Australia");
+export const flagAruba = new Emoji("\u{1F1E6}\u{1F1FC}", "Flag: Aruba");
+export const flagLandIslands = new Emoji("\u{1F1E6}\u{1F1FD}", "Flag: Åland Islands");
+export const flagAzerbaijan = new Emoji("\u{1F1E6}\u{1F1FF}", "Flag: Azerbaijan");
+export const flagBosniaHerzegovina = new Emoji("\u{1F1E7}\u{1F1E6}", "Flag: Bosnia & Herzegovina");
+export const flagBarbados = new Emoji("\u{1F1E7}\u{1F1E7}", "Flag: Barbados");
+export const flagBangladesh = new Emoji("\u{1F1E7}\u{1F1E9}", "Flag: Bangladesh");
+export const flagBelgium = new Emoji("\u{1F1E7}\u{1F1EA}", "Flag: Belgium");
+export const flagBurkinaFaso = new Emoji("\u{1F1E7}\u{1F1EB}", "Flag: Burkina Faso");
+export const flagBulgaria = new Emoji("\u{1F1E7}\u{1F1EC}", "Flag: Bulgaria");
+export const flagBahrain = new Emoji("\u{1F1E7}\u{1F1ED}", "Flag: Bahrain");
+export const flagBurundi = new Emoji("\u{1F1E7}\u{1F1EE}", "Flag: Burundi");
+export const flagBenin = new Emoji("\u{1F1E7}\u{1F1EF}", "Flag: Benin");
+export const flagStBarthlemy = new Emoji("\u{1F1E7}\u{1F1F1}", "Flag: St. Barthélemy");
+export const flagBermuda = new Emoji("\u{1F1E7}\u{1F1F2}", "Flag: Bermuda");
+export const flagBrunei = new Emoji("\u{1F1E7}\u{1F1F3}", "Flag: Brunei");
+export const flagBolivia = new Emoji("\u{1F1E7}\u{1F1F4}", "Flag: Bolivia");
+export const flagCaribbeanNetherlands = new Emoji("\u{1F1E7}\u{1F1F6}", "Flag: Caribbean Netherlands");
+export const flagBrazil = new Emoji("\u{1F1E7}\u{1F1F7}", "Flag: Brazil");
+export const flagBahamas = new Emoji("\u{1F1E7}\u{1F1F8}", "Flag: Bahamas");
+export const flagBhutan = new Emoji("\u{1F1E7}\u{1F1F9}", "Flag: Bhutan");
+export const flagBouvetIsland = new Emoji("\u{1F1E7}\u{1F1FB}", "Flag: Bouvet Island");
+export const flagBotswana = new Emoji("\u{1F1E7}\u{1F1FC}", "Flag: Botswana");
+export const flagBelarus = new Emoji("\u{1F1E7}\u{1F1FE}", "Flag: Belarus");
+export const flagBelize = new Emoji("\u{1F1E7}\u{1F1FF}", "Flag: Belize");
+export const flagCanada = new Emoji("\u{1F1E8}\u{1F1E6}", "Flag: Canada");
+export const flagCocosKeelingIslands = new Emoji("\u{1F1E8}\u{1F1E8}", "Flag: Cocos (Keeling) Islands");
+export const flagCongoKinshasa = new Emoji("\u{1F1E8}\u{1F1E9}", "Flag: Congo - Kinshasa");
+export const flagCentralAfricanRepublic = new Emoji("\u{1F1E8}\u{1F1EB}", "Flag: Central African Republic");
+export const flagCongoBrazzaville = new Emoji("\u{1F1E8}\u{1F1EC}", "Flag: Congo - Brazzaville");
+export const flagSwitzerland = new Emoji("\u{1F1E8}\u{1F1ED}", "Flag: Switzerland");
+export const flagCteDIvoire = new Emoji("\u{1F1E8}\u{1F1EE}", "Flag: Côte d’Ivoire");
+export const flagCookIslands = new Emoji("\u{1F1E8}\u{1F1F0}", "Flag: Cook Islands");
+export const flagChile = new Emoji("\u{1F1E8}\u{1F1F1}", "Flag: Chile");
+export const flagCameroon = new Emoji("\u{1F1E8}\u{1F1F2}", "Flag: Cameroon");
+export const flagChina = new Emoji("\u{1F1E8}\u{1F1F3}", "Flag: China");
+export const flagColombia = new Emoji("\u{1F1E8}\u{1F1F4}", "Flag: Colombia");
+export const flagClippertonIsland = new Emoji("\u{1F1E8}\u{1F1F5}", "Flag: Clipperton Island");
+export const flagCostaRica = new Emoji("\u{1F1E8}\u{1F1F7}", "Flag: Costa Rica");
+export const flagCuba = new Emoji("\u{1F1E8}\u{1F1FA}", "Flag: Cuba");
+export const flagCapeVerde = new Emoji("\u{1F1E8}\u{1F1FB}", "Flag: Cape Verde");
+export const flagCuraao = new Emoji("\u{1F1E8}\u{1F1FC}", "Flag: Curaçao");
+export const flagChristmasIsland = new Emoji("\u{1F1E8}\u{1F1FD}", "Flag: Christmas Island");
+export const flagCyprus = new Emoji("\u{1F1E8}\u{1F1FE}", "Flag: Cyprus");
+export const flagCzechia = new Emoji("\u{1F1E8}\u{1F1FF}", "Flag: Czechia");
+export const flagGermany = new Emoji("\u{1F1E9}\u{1F1EA}", "Flag: Germany");
+export const flagDiegoGarcia = new Emoji("\u{1F1E9}\u{1F1EC}", "Flag: Diego Garcia");
+export const flagDjibouti = new Emoji("\u{1F1E9}\u{1F1EF}", "Flag: Djibouti");
+export const flagDenmark = new Emoji("\u{1F1E9}\u{1F1F0}", "Flag: Denmark");
+export const flagDominica = new Emoji("\u{1F1E9}\u{1F1F2}", "Flag: Dominica");
+export const flagDominicanRepublic = new Emoji("\u{1F1E9}\u{1F1F4}", "Flag: Dominican Republic");
+export const flagAlgeria = new Emoji("\u{1F1E9}\u{1F1FF}", "Flag: Algeria");
+export const flagCeutaMelilla = new Emoji("\u{1F1EA}\u{1F1E6}", "Flag: Ceuta & Melilla");
+export const flagEcuador = new Emoji("\u{1F1EA}\u{1F1E8}", "Flag: Ecuador");
+export const flagEstonia = new Emoji("\u{1F1EA}\u{1F1EA}", "Flag: Estonia");
+export const flagEgypt = new Emoji("\u{1F1EA}\u{1F1EC}", "Flag: Egypt");
+export const flagWesternSahara = new Emoji("\u{1F1EA}\u{1F1ED}", "Flag: Western Sahara");
+export const flagEritrea = new Emoji("\u{1F1EA}\u{1F1F7}", "Flag: Eritrea");
+export const flagSpain = new Emoji("\u{1F1EA}\u{1F1F8}", "Flag: Spain");
+export const flagEthiopia = new Emoji("\u{1F1EA}\u{1F1F9}", "Flag: Ethiopia");
+export const flagEuropeanUnion = new Emoji("\u{1F1EA}\u{1F1FA}", "Flag: European Union");
+export const flagFinland = new Emoji("\u{1F1EB}\u{1F1EE}", "Flag: Finland");
+export const flagFiji = new Emoji("\u{1F1EB}\u{1F1EF}", "Flag: Fiji");
+export const flagFalklandIslands = new Emoji("\u{1F1EB}\u{1F1F0}", "Flag: Falkland Islands");
+export const flagMicronesia = new Emoji("\u{1F1EB}\u{1F1F2}", "Flag: Micronesia");
+export const flagFaroeIslands = new Emoji("\u{1F1EB}\u{1F1F4}", "Flag: Faroe Islands");
+export const flagFrance = new Emoji("\u{1F1EB}\u{1F1F7}", "Flag: France");
+export const flagGabon = new Emoji("\u{1F1EC}\u{1F1E6}", "Flag: Gabon");
+export const flagUnitedKingdom = new Emoji("\u{1F1EC}\u{1F1E7}", "Flag: United Kingdom");
+export const flagGrenada = new Emoji("\u{1F1EC}\u{1F1E9}", "Flag: Grenada");
+export const flagGeorgia = new Emoji("\u{1F1EC}\u{1F1EA}", "Flag: Georgia");
+export const flagFrenchGuiana = new Emoji("\u{1F1EC}\u{1F1EB}", "Flag: French Guiana");
+export const flagGuernsey = new Emoji("\u{1F1EC}\u{1F1EC}", "Flag: Guernsey");
+export const flagGhana = new Emoji("\u{1F1EC}\u{1F1ED}", "Flag: Ghana");
+export const flagGibraltar = new Emoji("\u{1F1EC}\u{1F1EE}", "Flag: Gibraltar");
+export const flagGreenland = new Emoji("\u{1F1EC}\u{1F1F1}", "Flag: Greenland");
+export const flagGambia = new Emoji("\u{1F1EC}\u{1F1F2}", "Flag: Gambia");
+export const flagGuinea = new Emoji("\u{1F1EC}\u{1F1F3}", "Flag: Guinea");
+export const flagGuadeloupe = new Emoji("\u{1F1EC}\u{1F1F5}", "Flag: Guadeloupe");
+export const flagEquatorialGuinea = new Emoji("\u{1F1EC}\u{1F1F6}", "Flag: Equatorial Guinea");
+export const flagGreece = new Emoji("\u{1F1EC}\u{1F1F7}", "Flag: Greece");
+export const flagSouthGeorgiaSouthSandwichIslands = new Emoji("\u{1F1EC}\u{1F1F8}", "Flag: South Georgia & South Sandwich Islands");
+export const flagGuatemala = new Emoji("\u{1F1EC}\u{1F1F9}", "Flag: Guatemala");
+export const flagGuam = new Emoji("\u{1F1EC}\u{1F1FA}", "Flag: Guam");
+export const flagGuineaBissau = new Emoji("\u{1F1EC}\u{1F1FC}", "Flag: Guinea-Bissau");
+export const flagGuyana = new Emoji("\u{1F1EC}\u{1F1FE}", "Flag: Guyana");
+export const flagHongKongSARChina = new Emoji("\u{1F1ED}\u{1F1F0}", "Flag: Hong Kong SAR China");
+export const flagHeardMcDonaldIslands = new Emoji("\u{1F1ED}\u{1F1F2}", "Flag: Heard & McDonald Islands");
+export const flagHonduras = new Emoji("\u{1F1ED}\u{1F1F3}", "Flag: Honduras");
+export const flagCroatia = new Emoji("\u{1F1ED}\u{1F1F7}", "Flag: Croatia");
+export const flagHaiti = new Emoji("\u{1F1ED}\u{1F1F9}", "Flag: Haiti");
+export const flagHungary = new Emoji("\u{1F1ED}\u{1F1FA}", "Flag: Hungary");
+export const flagCanaryIslands = new Emoji("\u{1F1EE}\u{1F1E8}", "Flag: Canary Islands");
+export const flagIndonesia = new Emoji("\u{1F1EE}\u{1F1E9}", "Flag: Indonesia");
+export const flagIreland = new Emoji("\u{1F1EE}\u{1F1EA}", "Flag: Ireland");
+export const flagIsrael = new Emoji("\u{1F1EE}\u{1F1F1}", "Flag: Israel");
+export const flagIsleOfMan = new Emoji("\u{1F1EE}\u{1F1F2}", "Flag: Isle of Man");
+export const flagIndia = new Emoji("\u{1F1EE}\u{1F1F3}", "Flag: India");
+export const flagBritishIndianOceanTerritory = new Emoji("\u{1F1EE}\u{1F1F4}", "Flag: British Indian Ocean Territory");
+export const flagIraq = new Emoji("\u{1F1EE}\u{1F1F6}", "Flag: Iraq");
+export const flagIran = new Emoji("\u{1F1EE}\u{1F1F7}", "Flag: Iran");
+export const flagIceland = new Emoji("\u{1F1EE}\u{1F1F8}", "Flag: Iceland");
+export const flagItaly = new Emoji("\u{1F1EE}\u{1F1F9}", "Flag: Italy");
+export const flagJersey = new Emoji("\u{1F1EF}\u{1F1EA}", "Flag: Jersey");
+export const flagJamaica = new Emoji("\u{1F1EF}\u{1F1F2}", "Flag: Jamaica");
+export const flagJordan = new Emoji("\u{1F1EF}\u{1F1F4}", "Flag: Jordan");
+export const flagJapan = new Emoji("\u{1F1EF}\u{1F1F5}", "Flag: Japan");
+export const flagKenya = new Emoji("\u{1F1F0}\u{1F1EA}", "Flag: Kenya");
+export const flagKyrgyzstan = new Emoji("\u{1F1F0}\u{1F1EC}", "Flag: Kyrgyzstan");
+export const flagCambodia = new Emoji("\u{1F1F0}\u{1F1ED}", "Flag: Cambodia");
+export const flagKiribati = new Emoji("\u{1F1F0}\u{1F1EE}", "Flag: Kiribati");
+export const flagComoros = new Emoji("\u{1F1F0}\u{1F1F2}", "Flag: Comoros");
+export const flagStKittsNevis = new Emoji("\u{1F1F0}\u{1F1F3}", "Flag: St. Kitts & Nevis");
+export const flagNorthKorea = new Emoji("\u{1F1F0}\u{1F1F5}", "Flag: North Korea");
+export const flagSouthKorea = new Emoji("\u{1F1F0}\u{1F1F7}", "Flag: South Korea");
+export const flagKuwait = new Emoji("\u{1F1F0}\u{1F1FC}", "Flag: Kuwait");
+export const flagCaymanIslands = new Emoji("\u{1F1F0}\u{1F1FE}", "Flag: Cayman Islands");
+export const flagKazakhstan = new Emoji("\u{1F1F0}\u{1F1FF}", "Flag: Kazakhstan");
+export const flagLaos = new Emoji("\u{1F1F1}\u{1F1E6}", "Flag: Laos");
+export const flagLebanon = new Emoji("\u{1F1F1}\u{1F1E7}", "Flag: Lebanon");
+export const flagStLucia = new Emoji("\u{1F1F1}\u{1F1E8}", "Flag: St. Lucia");
+export const flagLiechtenstein = new Emoji("\u{1F1F1}\u{1F1EE}", "Flag: Liechtenstein");
+export const flagSriLanka = new Emoji("\u{1F1F1}\u{1F1F0}", "Flag: Sri Lanka");
+export const flagLiberia = new Emoji("\u{1F1F1}\u{1F1F7}", "Flag: Liberia");
+export const flagLesotho = new Emoji("\u{1F1F1}\u{1F1F8}", "Flag: Lesotho");
+export const flagLithuania = new Emoji("\u{1F1F1}\u{1F1F9}", "Flag: Lithuania");
+export const flagLuxembourg = new Emoji("\u{1F1F1}\u{1F1FA}", "Flag: Luxembourg");
+export const flagLatvia = new Emoji("\u{1F1F1}\u{1F1FB}", "Flag: Latvia");
+export const flagLibya = new Emoji("\u{1F1F1}\u{1F1FE}", "Flag: Libya");
+export const flagMorocco = new Emoji("\u{1F1F2}\u{1F1E6}", "Flag: Morocco");
+export const flagMonaco = new Emoji("\u{1F1F2}\u{1F1E8}", "Flag: Monaco");
+export const flagMoldova = new Emoji("\u{1F1F2}\u{1F1E9}", "Flag: Moldova");
+export const flagMontenegro = new Emoji("\u{1F1F2}\u{1F1EA}", "Flag: Montenegro");
+export const flagStMartin = new Emoji("\u{1F1F2}\u{1F1EB}", "Flag: St. Martin");
+export const flagMadagascar = new Emoji("\u{1F1F2}\u{1F1EC}", "Flag: Madagascar");
+export const flagMarshallIslands = new Emoji("\u{1F1F2}\u{1F1ED}", "Flag: Marshall Islands");
+export const flagNorthMacedonia = new Emoji("\u{1F1F2}\u{1F1F0}", "Flag: North Macedonia");
+export const flagMali = new Emoji("\u{1F1F2}\u{1F1F1}", "Flag: Mali");
+export const flagMyanmarBurma = new Emoji("\u{1F1F2}\u{1F1F2}", "Flag: Myanmar (Burma)");
+export const flagMongolia = new Emoji("\u{1F1F2}\u{1F1F3}", "Flag: Mongolia");
+export const flagMacaoSarChina = new Emoji("\u{1F1F2}\u{1F1F4}", "Flag: Macao Sar China");
+export const flagNorthernMarianaIslands = new Emoji("\u{1F1F2}\u{1F1F5}", "Flag: Northern Mariana Islands");
+export const flagMartinique = new Emoji("\u{1F1F2}\u{1F1F6}", "Flag: Martinique");
+export const flagMauritania = new Emoji("\u{1F1F2}\u{1F1F7}", "Flag: Mauritania");
+export const flagMontserrat = new Emoji("\u{1F1F2}\u{1F1F8}", "Flag: Montserrat");
+export const flagMalta = new Emoji("\u{1F1F2}\u{1F1F9}", "Flag: Malta");
+export const flagMauritius = new Emoji("\u{1F1F2}\u{1F1FA}", "Flag: Mauritius");
+export const flagMaldives = new Emoji("\u{1F1F2}\u{1F1FB}", "Flag: Maldives");
+export const flagMalawi = new Emoji("\u{1F1F2}\u{1F1FC}", "Flag: Malawi");
+export const flagMexico = new Emoji("\u{1F1F2}\u{1F1FD}", "Flag: Mexico");
+export const flagMalaysia = new Emoji("\u{1F1F2}\u{1F1FE}", "Flag: Malaysia");
+export const flagMozambique = new Emoji("\u{1F1F2}\u{1F1FF}", "Flag: Mozambique");
+export const flagNamibia = new Emoji("\u{1F1F3}\u{1F1E6}", "Flag: Namibia");
+export const flagNewCaledonia = new Emoji("\u{1F1F3}\u{1F1E8}", "Flag: New Caledonia");
+export const flagNiger = new Emoji("\u{1F1F3}\u{1F1EA}", "Flag: Niger");
+export const flagNorfolkIsland = new Emoji("\u{1F1F3}\u{1F1EB}", "Flag: Norfolk Island");
+export const flagNigeria = new Emoji("\u{1F1F3}\u{1F1EC}", "Flag: Nigeria");
+export const flagNicaragua = new Emoji("\u{1F1F3}\u{1F1EE}", "Flag: Nicaragua");
+export const flagNetherlands = new Emoji("\u{1F1F3}\u{1F1F1}", "Flag: Netherlands");
+export const flagNorway = new Emoji("\u{1F1F3}\u{1F1F4}", "Flag: Norway");
+export const flagNepal = new Emoji("\u{1F1F3}\u{1F1F5}", "Flag: Nepal");
+export const flagNauru = new Emoji("\u{1F1F3}\u{1F1F7}", "Flag: Nauru");
+export const flagNiue = new Emoji("\u{1F1F3}\u{1F1FA}", "Flag: Niue");
+export const flagNewZealand = new Emoji("\u{1F1F3}\u{1F1FF}", "Flag: New Zealand");
+export const flagOman = new Emoji("\u{1F1F4}\u{1F1F2}", "Flag: Oman");
+export const flagPanama = new Emoji("\u{1F1F5}\u{1F1E6}", "Flag: Panama");
+export const flagPeru = new Emoji("\u{1F1F5}\u{1F1EA}", "Flag: Peru");
+export const flagFrenchPolynesia = new Emoji("\u{1F1F5}\u{1F1EB}", "Flag: French Polynesia");
+export const flagPapuaNewGuinea = new Emoji("\u{1F1F5}\u{1F1EC}", "Flag: Papua New Guinea");
+export const flagPhilippines = new Emoji("\u{1F1F5}\u{1F1ED}", "Flag: Philippines");
+export const flagPakistan = new Emoji("\u{1F1F5}\u{1F1F0}", "Flag: Pakistan");
+export const flagPoland = new Emoji("\u{1F1F5}\u{1F1F1}", "Flag: Poland");
+export const flagStPierreMiquelon = new Emoji("\u{1F1F5}\u{1F1F2}", "Flag: St. Pierre & Miquelon");
+export const flagPitcairnIslands = new Emoji("\u{1F1F5}\u{1F1F3}", "Flag: Pitcairn Islands");
+export const flagPuertoRico = new Emoji("\u{1F1F5}\u{1F1F7}", "Flag: Puerto Rico");
+export const flagPalestinianTerritories = new Emoji("\u{1F1F5}\u{1F1F8}", "Flag: Palestinian Territories");
+export const flagPortugal = new Emoji("\u{1F1F5}\u{1F1F9}", "Flag: Portugal");
+export const flagPalau = new Emoji("\u{1F1F5}\u{1F1FC}", "Flag: Palau");
+export const flagParaguay = new Emoji("\u{1F1F5}\u{1F1FE}", "Flag: Paraguay");
+export const flagQatar = new Emoji("\u{1F1F6}\u{1F1E6}", "Flag: Qatar");
+export const flagRunion = new Emoji("\u{1F1F7}\u{1F1EA}", "Flag: Réunion");
+export const flagRomania = new Emoji("\u{1F1F7}\u{1F1F4}", "Flag: Romania");
+export const flagSerbia = new Emoji("\u{1F1F7}\u{1F1F8}", "Flag: Serbia");
+export const flagRussia = new Emoji("\u{1F1F7}\u{1F1FA}", "Flag: Russia");
+export const flagRwanda = new Emoji("\u{1F1F7}\u{1F1FC}", "Flag: Rwanda");
+export const flagSaudiArabia = new Emoji("\u{1F1F8}\u{1F1E6}", "Flag: Saudi Arabia");
+export const flagSolomonIslands = new Emoji("\u{1F1F8}\u{1F1E7}", "Flag: Solomon Islands");
+export const flagSeychelles = new Emoji("\u{1F1F8}\u{1F1E8}", "Flag: Seychelles");
+export const flagSudan = new Emoji("\u{1F1F8}\u{1F1E9}", "Flag: Sudan");
+export const flagSweden = new Emoji("\u{1F1F8}\u{1F1EA}", "Flag: Sweden");
+export const flagSingapore = new Emoji("\u{1F1F8}\u{1F1EC}", "Flag: Singapore");
+export const flagStHelena = new Emoji("\u{1F1F8}\u{1F1ED}", "Flag: St. Helena");
+export const flagSlovenia = new Emoji("\u{1F1F8}\u{1F1EE}", "Flag: Slovenia");
+export const flagSvalbardJanMayen = new Emoji("\u{1F1F8}\u{1F1EF}", "Flag: Svalbard & Jan Mayen");
+export const flagSlovakia = new Emoji("\u{1F1F8}\u{1F1F0}", "Flag: Slovakia");
+export const flagSierraLeone = new Emoji("\u{1F1F8}\u{1F1F1}", "Flag: Sierra Leone");
+export const flagSanMarino = new Emoji("\u{1F1F8}\u{1F1F2}", "Flag: San Marino");
+export const flagSenegal = new Emoji("\u{1F1F8}\u{1F1F3}", "Flag: Senegal");
+export const flagSomalia = new Emoji("\u{1F1F8}\u{1F1F4}", "Flag: Somalia");
+export const flagSuriname = new Emoji("\u{1F1F8}\u{1F1F7}", "Flag: Suriname");
+export const flagSouthSudan = new Emoji("\u{1F1F8}\u{1F1F8}", "Flag: South Sudan");
+export const flagSoTomPrncipe = new Emoji("\u{1F1F8}\u{1F1F9}", "Flag: São Tomé & Príncipe");
+export const flagElSalvador = new Emoji("\u{1F1F8}\u{1F1FB}", "Flag: El Salvador");
+export const flagSintMaarten = new Emoji("\u{1F1F8}\u{1F1FD}", "Flag: Sint Maarten");
+export const flagSyria = new Emoji("\u{1F1F8}\u{1F1FE}", "Flag: Syria");
+export const flagEswatini = new Emoji("\u{1F1F8}\u{1F1FF}", "Flag: Eswatini");
+export const flagTristanDaCunha = new Emoji("\u{1F1F9}\u{1F1E6}", "Flag: Tristan Da Cunha");
+export const flagTurksCaicosIslands = new Emoji("\u{1F1F9}\u{1F1E8}", "Flag: Turks & Caicos Islands");
+export const flagChad = new Emoji("\u{1F1F9}\u{1F1E9}", "Flag: Chad");
+export const flagFrenchSouthernTerritories = new Emoji("\u{1F1F9}\u{1F1EB}", "Flag: French Southern Territories");
+export const flagTogo = new Emoji("\u{1F1F9}\u{1F1EC}", "Flag: Togo");
+export const flagThailand = new Emoji("\u{1F1F9}\u{1F1ED}", "Flag: Thailand");
+export const flagTajikistan = new Emoji("\u{1F1F9}\u{1F1EF}", "Flag: Tajikistan");
+export const flagTokelau = new Emoji("\u{1F1F9}\u{1F1F0}", "Flag: Tokelau");
+export const flagTimorLeste = new Emoji("\u{1F1F9}\u{1F1F1}", "Flag: Timor-Leste");
+export const flagTurkmenistan = new Emoji("\u{1F1F9}\u{1F1F2}", "Flag: Turkmenistan");
+export const flagTunisia = new Emoji("\u{1F1F9}\u{1F1F3}", "Flag: Tunisia");
+export const flagTonga = new Emoji("\u{1F1F9}\u{1F1F4}", "Flag: Tonga");
+export const flagTurkey = new Emoji("\u{1F1F9}\u{1F1F7}", "Flag: Turkey");
+export const flagTrinidadTobago = new Emoji("\u{1F1F9}\u{1F1F9}", "Flag: Trinidad & Tobago");
+export const flagTuvalu = new Emoji("\u{1F1F9}\u{1F1FB}", "Flag: Tuvalu");
+export const flagTaiwan = new Emoji("\u{1F1F9}\u{1F1FC}", "Flag: Taiwan");
+export const flagTanzania = new Emoji("\u{1F1F9}\u{1F1FF}", "Flag: Tanzania");
+export const flagUkraine = new Emoji("\u{1F1FA}\u{1F1E6}", "Flag: Ukraine");
+export const flagUganda = new Emoji("\u{1F1FA}\u{1F1EC}", "Flag: Uganda");
+export const flagUSOutlyingIslands = new Emoji("\u{1F1FA}\u{1F1F2}", "Flag: U.S. Outlying Islands");
+export const flagUnitedNations = new Emoji("\u{1F1FA}\u{1F1F3}", "Flag: United Nations");
+export const flagUnitedStates = new Emoji("\u{1F1FA}\u{1F1F8}", "Flag: United States");
+export const flagUruguay = new Emoji("\u{1F1FA}\u{1F1FE}", "Flag: Uruguay");
+export const flagUzbekistan = new Emoji("\u{1F1FA}\u{1F1FF}", "Flag: Uzbekistan");
+export const flagVaticanCity = new Emoji("\u{1F1FB}\u{1F1E6}", "Flag: Vatican City");
+export const flagStVincentGrenadines = new Emoji("\u{1F1FB}\u{1F1E8}", "Flag: St. Vincent & Grenadines");
+export const flagVenezuela = new Emoji("\u{1F1FB}\u{1F1EA}", "Flag: Venezuela");
+export const flagBritishVirginIslands = new Emoji("\u{1F1FB}\u{1F1EC}", "Flag: British Virgin Islands");
+export const flagUSVirginIslands = new Emoji("\u{1F1FB}\u{1F1EE}", "Flag: U.S. Virgin Islands");
+export const flagVietnam = new Emoji("\u{1F1FB}\u{1F1F3}", "Flag: Vietnam");
+export const flagVanuatu = new Emoji("\u{1F1FB}\u{1F1FA}", "Flag: Vanuatu");
+export const flagWallisFutuna = new Emoji("\u{1F1FC}\u{1F1EB}", "Flag: Wallis & Futuna");
+export const flagSamoa = new Emoji("\u{1F1FC}\u{1F1F8}", "Flag: Samoa");
+export const flagKosovo = new Emoji("\u{1F1FD}\u{1F1F0}", "Flag: Kosovo");
+export const flagYemen = new Emoji("\u{1F1FE}\u{1F1EA}", "Flag: Yemen");
+export const flagMayotte = new Emoji("\u{1F1FE}\u{1F1F9}", "Flag: Mayotte");
+export const flagSouthAfrica = new Emoji("\u{1F1FF}\u{1F1E6}", "Flag: South Africa");
+export const flagZambia = new Emoji("\u{1F1FF}\u{1F1F2}", "Flag: Zambia");
+export const flagZimbabwe = new Emoji("\u{1F1FF}\u{1F1FC}", "Flag: Zimbabwe");
 export const whiteFlag = new Emoji("\u{1F3F3}\uFE0F", "White Flag");
 export const rainbowFlag = J(whiteFlag, rainbow, "Rainbow Flag");
 export const transgenderFlag = J(whiteFlag, transgender, "Transgender Flag");
 export const blackFlag = new Emoji("\u{1F3F4}", "Black Flag");
 export const pirateFlag = J(blackFlag, skullAndCrossbones, "Pirate Flag");
-export const flags = new EmojiGroup("Flags", "Basic flags", new Emoji("\u{1F38C}", "Crossed Flags"), new Emoji("\u{1F3C1}", "Chequered Flag"), whiteFlag, rainbowFlag, transgenderFlag, blackFlag, pirateFlag, new Emoji("\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}", "Flag: England"), new Emoji("\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}", "Flag: Scotland"), new Emoji("\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}", "Flag: Wales"), new Emoji("\u{1F6A9}", "Triangular Flag"));
+export const crossedFlags = new Emoji("\u{1F38C}", "Crossed Flags");
+export const chequeredFlag = new Emoji("\u{1F3C1}", "Chequered Flag");
+export const flagEngland = new Emoji("\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}", "Flag: England");
+export const flagScotland = new Emoji("\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}", "Flag: Scotland");
+export const flagWales = new Emoji("\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}", "Flag: Wales");
+export const triangularFlag = new Emoji("\u{1F6A9}", "Triangular Flag");
 export const motorcycle = new Emoji("\u{1F3CD}\uFE0F", "Motorcycle");
 export const racingCar = new Emoji("\u{1F3CE}\uFE0F", "Racing Car");
 export const seat = new Emoji("\u{1F4BA}", "Seat");
@@ -819,14 +1209,85 @@ export const anchor = new Emoji("\u2693", "Anchor");
 export const ferry = new Emoji("\u26F4\uFE0F", "Ferry");
 export const sailboat = new Emoji("\u26F5", "Sailboat");
 export const fuelPump = new Emoji("\u26FD", "Fuel Pump");
-export const vehicles = new EmojiGroup("Vehicles", "Things that go", motorcycle, racingCar, seat, rocket, helicopter, locomotive, railwayCar, highspeedTrain, bulletTrain, train, metro, lightRail, station, tram, tramCar, bus, oncomingBus, trolleyBus, busStop, miniBus, ambulance, fireEngine, taxi, oncomingTaxi, automobile, oncomingAutomobile, sportUtilityVehicle, deliveryTruck, articulatedLorry, tractor, monorail, mountainRailway, suspensionRailway, mountainCableway, aerialTramway, ship, speedBoat, horizontalTrafficLight, verticalTrafficLight, construction, bicycle, stopSign, oilDrum, motorway, railwayTrack, motorBoat, smallAirplane, airplaneDeparture, airplaneArrival, satellite, passengerShip, kickScooter, motorScooter, canoe, flyingSaucer, skateboard, autoRickshaw, 
-//pickupTruck,
-//rollerSkate,
-motorizedWheelchair, manualWheelchair, parachute, anchor, ferry, sailboat, fuelPump, airplane);
-export const bloodTypes = new EmojiGroup("Blood Types", "Blood types", new Emoji("\u{1F170}", "A Button (Blood Type)"), new Emoji("\u{1F171}", "B Button (Blood Type)"), new Emoji("\u{1F17E}", "O Button (Blood Type)"), new Emoji("\u{1F18E}", "AB Button (Blood Type)"));
-export const regionIndicators = new EmojiGroup("Regions", "Region indicators", new Emoji("\u{1F1E6}", "Regional Indicator Symbol Letter A"), new Emoji("\u{1F1E7}", "Regional Indicator Symbol Letter B"), new Emoji("\u{1F1E8}", "Regional Indicator Symbol Letter C"), new Emoji("\u{1F1E9}", "Regional Indicator Symbol Letter D"), new Emoji("\u{1F1EA}", "Regional Indicator Symbol Letter E"), new Emoji("\u{1F1EB}", "Regional Indicator Symbol Letter F"), new Emoji("\u{1F1EC}", "Regional Indicator Symbol Letter G"), new Emoji("\u{1F1ED}", "Regional Indicator Symbol Letter H"), new Emoji("\u{1F1EE}", "Regional Indicator Symbol Letter I"), new Emoji("\u{1F1EF}", "Regional Indicator Symbol Letter J"), new Emoji("\u{1F1F0}", "Regional Indicator Symbol Letter K"), new Emoji("\u{1F1F1}", "Regional Indicator Symbol Letter L"), new Emoji("\u{1F1F2}", "Regional Indicator Symbol Letter M"), new Emoji("\u{1F1F3}", "Regional Indicator Symbol Letter N"), new Emoji("\u{1F1F4}", "Regional Indicator Symbol Letter O"), new Emoji("\u{1F1F5}", "Regional Indicator Symbol Letter P"), new Emoji("\u{1F1F6}", "Regional Indicator Symbol Letter Q"), new Emoji("\u{1F1F7}", "Regional Indicator Symbol Letter R"), new Emoji("\u{1F1F8}", "Regional Indicator Symbol Letter S"), new Emoji("\u{1F1F9}", "Regional Indicator Symbol Letter T"), new Emoji("\u{1F1FA}", "Regional Indicator Symbol Letter U"), new Emoji("\u{1F1FB}", "Regional Indicator Symbol Letter V"), new Emoji("\u{1F1FC}", "Regional Indicator Symbol Letter W"), new Emoji("\u{1F1FD}", "Regional Indicator Symbol Letter X"), new Emoji("\u{1F1FE}", "Regional Indicator Symbol Letter Y"), new Emoji("\u{1F1FF}", "Regional Indicator Symbol Letter Z"));
-export const japanese = new EmojiGroup("Japanese", "Japanse symbology", new Emoji("\u{1F530}", "Japanese Symbol for Beginner"), new Emoji("\u{1F201}", "Japanese “Here” Button"), new Emoji("\u{1F202}\uFE0F", "Japanese “Service Charge” Button"), new Emoji("\u{1F21A}", "Japanese “Free of Charge” Button"), new Emoji("\u{1F22F}", "Japanese “Reserved” Button"), new Emoji("\u{1F232}", "Japanese “Prohibited” Button"), new Emoji("\u{1F233}", "Japanese “Vacancy” Button"), new Emoji("\u{1F234}", "Japanese “Passing Grade” Button"), new Emoji("\u{1F235}", "Japanese “No Vacancy” Button"), new Emoji("\u{1F236}", "Japanese “Not Free of Charge” Button"), new Emoji("\u{1F237}\uFE0F", "Japanese “Monthly Amount” Button"), new Emoji("\u{1F238}", "Japanese “Application” Button"), new Emoji("\u{1F239}", "Japanese “Discount” Button"), new Emoji("\u{1F23A}", "Japanese “Open for Business” Button"), new Emoji("\u{1F250}", "Japanese “Bargain” Button"), new Emoji("\u{1F251}", "Japanese “Acceptable” Button"), new Emoji("\u3297\uFE0F", "Japanese “Congratulations” Button"), new Emoji("\u3299\uFE0F", "Japanese “Secret” Button"));
-export const clocks = new EmojiGroup("Clocks", "Time-keeping pieces", new Emoji("\u{1F550}", "One O’Clock"), new Emoji("\u{1F551}", "Two O’Clock"), new Emoji("\u{1F552}", "Three O’Clock"), new Emoji("\u{1F553}", "Four O’Clock"), new Emoji("\u{1F554}", "Five O’Clock"), new Emoji("\u{1F555}", "Six O’Clock"), new Emoji("\u{1F556}", "Seven O’Clock"), new Emoji("\u{1F557}", "Eight O’Clock"), new Emoji("\u{1F558}", "Nine O’Clock"), new Emoji("\u{1F559}", "Ten O’Clock"), new Emoji("\u{1F55A}", "Eleven O’Clock"), new Emoji("\u{1F55B}", "Twelve O’Clock"), new Emoji("\u{1F55C}", "One-Thirty"), new Emoji("\u{1F55D}", "Two-Thirty"), new Emoji("\u{1F55E}", "Three-Thirty"), new Emoji("\u{1F55F}", "Four-Thirty"), new Emoji("\u{1F560}", "Five-Thirty"), new Emoji("\u{1F561}", "Six-Thirty"), new Emoji("\u{1F562}", "Seven-Thirty"), new Emoji("\u{1F563}", "Eight-Thirty"), new Emoji("\u{1F564}", "Nine-Thirty"), new Emoji("\u{1F565}", "Ten-Thirty"), new Emoji("\u{1F566}", "Eleven-Thirty"), new Emoji("\u{1F567}", "Twelve-Thirty"), new Emoji("\u{1F570}\uFE0F", "Mantelpiece Clock"), new Emoji("\u231A", "Watch"), new Emoji("\u23F0", "Alarm Clock"), new Emoji("\u23F1\uFE0F", "Stopwatch"), new Emoji("\u23F2\uFE0F", "Timer Clock"), new Emoji("\u231B", "Hourglass Done"), new Emoji("\u23F3", "Hourglass Not Done"));
+export const bloodTypeAButton = new Emoji("\u{1F170}", "A Button (Blood Type)");
+export const bButtonBloodType = new Emoji("\u{1F171}", "B Button (Blood Type)");
+export const oButtonBloodType = new Emoji("\u{1F17E}", "O Button (Blood Type)");
+export const aBButtonBloodType = new Emoji("\u{1F18E}", "AB Button (Blood Type)");
+export const regionalIndicatorSymbolLetterA = new Emoji("\u{1F1E6}", "Regional Indicator Symbol Letter A");
+export const regionalIndicatorSymbolLetterB = new Emoji("\u{1F1E7}", "Regional Indicator Symbol Letter B");
+export const regionalIndicatorSymbolLetterC = new Emoji("\u{1F1E8}", "Regional Indicator Symbol Letter C");
+export const regionalIndicatorSymbolLetterD = new Emoji("\u{1F1E9}", "Regional Indicator Symbol Letter D");
+export const regionalIndicatorSymbolLetterE = new Emoji("\u{1F1EA}", "Regional Indicator Symbol Letter E");
+export const regionalIndicatorSymbolLetterF = new Emoji("\u{1F1EB}", "Regional Indicator Symbol Letter F");
+export const regionalIndicatorSymbolLetterG = new Emoji("\u{1F1EC}", "Regional Indicator Symbol Letter G");
+export const regionalIndicatorSymbolLetterH = new Emoji("\u{1F1ED}", "Regional Indicator Symbol Letter H");
+export const regionalIndicatorSymbolLetterI = new Emoji("\u{1F1EE}", "Regional Indicator Symbol Letter I");
+export const regionalIndicatorSymbolLetterJ = new Emoji("\u{1F1EF}", "Regional Indicator Symbol Letter J");
+export const regionalIndicatorSymbolLetterK = new Emoji("\u{1F1F0}", "Regional Indicator Symbol Letter K");
+export const regionalIndicatorSymbolLetterL = new Emoji("\u{1F1F1}", "Regional Indicator Symbol Letter L");
+export const regionalIndicatorSymbolLetterM = new Emoji("\u{1F1F2}", "Regional Indicator Symbol Letter M");
+export const regionalIndicatorSymbolLetterN = new Emoji("\u{1F1F3}", "Regional Indicator Symbol Letter N");
+export const regionalIndicatorSymbolLetterO = new Emoji("\u{1F1F4}", "Regional Indicator Symbol Letter O");
+export const regionalIndicatorSymbolLetterP = new Emoji("\u{1F1F5}", "Regional Indicator Symbol Letter P");
+export const regionalIndicatorSymbolLetterQ = new Emoji("\u{1F1F6}", "Regional Indicator Symbol Letter Q");
+export const regionalIndicatorSymbolLetterR = new Emoji("\u{1F1F7}", "Regional Indicator Symbol Letter R");
+export const regionalIndicatorSymbolLetterS = new Emoji("\u{1F1F8}", "Regional Indicator Symbol Letter S");
+export const regionalIndicatorSymbolLetterT = new Emoji("\u{1F1F9}", "Regional Indicator Symbol Letter T");
+export const regionalIndicatorSymbolLetterU = new Emoji("\u{1F1FA}", "Regional Indicator Symbol Letter U");
+export const regionalIndicatorSymbolLetterV = new Emoji("\u{1F1FB}", "Regional Indicator Symbol Letter V");
+export const regionalIndicatorSymbolLetterW = new Emoji("\u{1F1FC}", "Regional Indicator Symbol Letter W");
+export const regionalIndicatorSymbolLetterX = new Emoji("\u{1F1FD}", "Regional Indicator Symbol Letter X");
+export const regionalIndicatorSymbolLetterY = new Emoji("\u{1F1FE}", "Regional Indicator Symbol Letter Y");
+export const regionalIndicatorSymbolLetterZ = new Emoji("\u{1F1FF}", "Regional Indicator Symbol Letter Z");
+export const japaneseSymbolForBeginner = new Emoji("\u{1F530}", "Japanese Symbol for Beginner");
+export const japaneseHereButton = new Emoji("\u{1F201}", "Japanese “Here” Button");
+export const japaneseServiceChargeButton = new Emoji("\u{1F202}\uFE0F", "Japanese “Service Charge” Button");
+export const japaneseFreeOfChargeButton = new Emoji("\u{1F21A}", "Japanese “Free of Charge” Button");
+export const japaneseReservedButton = new Emoji("\u{1F22F}", "Japanese “Reserved” Button");
+export const japaneseProhibitedButton = new Emoji("\u{1F232}", "Japanese “Prohibited” Button");
+export const japaneseVacancyButton = new Emoji("\u{1F233}", "Japanese “Vacancy” Button");
+export const japanesePassingGradeButton = new Emoji("\u{1F234}", "Japanese “Passing Grade” Button");
+export const japaneseNoVacancyButton = new Emoji("\u{1F235}", "Japanese “No Vacancy” Button");
+export const japaneseNotFreeOfChargeButton = new Emoji("\u{1F236}", "Japanese “Not Free of Charge” Button");
+export const japaneseMonthlyAmountButton = new Emoji("\u{1F237}\uFE0F", "Japanese “Monthly Amount” Button");
+export const japaneseApplicationButton = new Emoji("\u{1F238}", "Japanese “Application” Button");
+export const japaneseDiscountButton = new Emoji("\u{1F239}", "Japanese “Discount” Button");
+export const japaneseOpenForBusinessButton = new Emoji("\u{1F23A}", "Japanese “Open for Business” Button");
+export const japaneseBargainButton = new Emoji("\u{1F250}", "Japanese “Bargain” Button");
+export const japaneseAcceptableButton = new Emoji("\u{1F251}", "Japanese “Acceptable” Button");
+export const japaneseCongratulationsButton = new Emoji("\u3297\uFE0F", "Japanese “Congratulations” Button");
+export const japaneseSecretButton = new Emoji("\u3299\uFE0F", "Japanese “Secret” Button");
+export const oneOClock = new Emoji("\u{1F550}", "One O’Clock");
+export const twoOClock = new Emoji("\u{1F551}", "Two O’Clock");
+export const threeOClock = new Emoji("\u{1F552}", "Three O’Clock");
+export const fourOClock = new Emoji("\u{1F553}", "Four O’Clock");
+export const fiveOClock = new Emoji("\u{1F554}", "Five O’Clock");
+export const sixOClock = new Emoji("\u{1F555}", "Six O’Clock");
+export const sevenOClock = new Emoji("\u{1F556}", "Seven O’Clock");
+export const eightOClock = new Emoji("\u{1F557}", "Eight O’Clock");
+export const nineOClock = new Emoji("\u{1F558}", "Nine O’Clock");
+export const tenOClock = new Emoji("\u{1F559}", "Ten O’Clock");
+export const elevenOClock = new Emoji("\u{1F55A}", "Eleven O’Clock");
+export const twelveOClock = new Emoji("\u{1F55B}", "Twelve O’Clock");
+export const oneThirty = new Emoji("\u{1F55C}", "One-Thirty");
+export const twoThirty = new Emoji("\u{1F55D}", "Two-Thirty");
+export const threeThirty = new Emoji("\u{1F55E}", "Three-Thirty");
+export const fourThirty = new Emoji("\u{1F55F}", "Four-Thirty");
+export const fiveThirty = new Emoji("\u{1F560}", "Five-Thirty");
+export const sixThirty = new Emoji("\u{1F561}", "Six-Thirty");
+export const sevenThirty = new Emoji("\u{1F562}", "Seven-Thirty");
+export const eightThirty = new Emoji("\u{1F563}", "Eight-Thirty");
+export const nineThirty = new Emoji("\u{1F564}", "Nine-Thirty");
+export const tenThirty = new Emoji("\u{1F565}", "Ten-Thirty");
+export const elevenThirty = new Emoji("\u{1F566}", "Eleven-Thirty");
+export const twelveThirty = new Emoji("\u{1F567}", "Twelve-Thirty");
+export const mantelpieceClock = new Emoji("\u{1F570}\uFE0F", "Mantelpiece Clock");
+export const watch = new Emoji("\u231A", "Watch");
+export const alarmClock = new Emoji("\u23F0", "Alarm Clock");
+export const stopwatch = new Emoji("\u23F1\uFE0F", "Stopwatch");
+export const timerClock = new Emoji("\u23F2\uFE0F", "Timer Clock");
+export const hourglassDone = new Emoji("\u231B", "Hourglass Done");
+export const hourglassNotDone = new Emoji("\u23F3", "Hourglass Not Done");
 export const clockwiseVerticalArrows = new Emoji("\u{1F503}\uFE0F", "Clockwise Vertical Arrows");
 export const counterclockwiseArrowsButton = new Emoji("\u{1F504}\uFE0F", "Counterclockwise Arrows Button");
 export const leftRightArrow = new Emoji("\u2194\uFE0F", "Left-Right Arrow");
@@ -845,7 +1306,6 @@ export const rightArrowCurvingDown = new Emoji("\u2935\uFE0F", "Right Arrow Curv
 export const leftArrow = new Emoji("\u2B05\uFE0F", "Left Arrow");
 export const upArrow = new Emoji("\u2B06\uFE0F", "Up Arrow");
 export const downArrow = new Emoji("\u2B07\uFE0F", "Down Arrow");
-export const arrows = new EmojiGroup("Arrows", "Arrows pointing in different directions", clockwiseVerticalArrows, counterclockwiseArrowsButton, leftRightArrow, upDownArrow, upLeftArrow, upRightArrow, downRightArrowEmoji, downLeftArrow, rightArrowCurvingLeft, leftArrowCurvingRight, rightArrow, rightArrowCurvingUp, rightArrowCurvingDown, leftArrow, upArrow, downArrow);
 export const clearButton = new Emoji("\u{1F191}", "CL Button");
 export const coolButton = new Emoji("\u{1F192}", "Cool Button");
 export const freeButton = new Emoji("\u{1F193}", "Free Button");
@@ -886,8 +1346,19 @@ export const playOrPauseButton = new Emoji("\u23EF\uFE0F", "Play or Pause Button
 export const pauseButton = new Emoji("\u23F8\uFE0F", "Pause Button");
 export const stopButton = new Emoji("\u23F9\uFE0F", "Stop Button");
 export const recordButton = new Emoji("\u23FA\uFE0F", "Record Button");
-export const buttons = new EmojiGroup("Buttons", "Buttons", clearButton, coolButton, freeButton, idButton, newButton, ngButton, okButton, sosButton, upButton, vsButton, radioButton, backArrow, endArrow, onArrow, soonArrow, topArrow, checkBoxWithCheck, inputLatinUppercase, inputLatinLowercase, inputNumbers, inputSymbols, inputLatinLetters, shuffleTracksButton, repeatButton, repeatSingleButton, upwardsButton, downwardsButton, playButton, pauseButton, reverseButton, ejectButton, fastForwardButton, fastReverseButton, fastUpButton, fastDownButton, nextTrackButton, lastTrackButton, playOrPauseButton, pauseButton, stopButton, recordButton);
-export const zodiac = new EmojiGroup("Zodiac", "The symbology of astrology", new Emoji("\u2648", "Aries"), new Emoji("\u2649", "Taurus"), new Emoji("\u264A", "Gemini"), new Emoji("\u264B", "Cancer"), new Emoji("\u264C", "Leo"), new Emoji("\u264D", "Virgo"), new Emoji("\u264E", "Libra"), new Emoji("\u264F", "Scorpio"), new Emoji("\u2650", "Sagittarius"), new Emoji("\u2651", "Capricorn"), new Emoji("\u2652", "Aquarius"), new Emoji("\u2653", "Pisces"), new Emoji("\u26CE", "Ophiuchus"));
+export const aries = new Emoji("\u2648", "Aries");
+export const taurus = new Emoji("\u2649", "Taurus");
+export const gemini = new Emoji("\u264A", "Gemini");
+export const cancer = new Emoji("\u264B", "Cancer");
+export const leo = new Emoji("\u264C", "Leo");
+export const virgo = new Emoji("\u264D", "Virgo");
+export const libra = new Emoji("\u264E", "Libra");
+export const scorpio = new Emoji("\u264F", "Scorpio");
+export const sagittarius = new Emoji("\u2650", "Sagittarius");
+export const capricorn = new Emoji("\u2651", "Capricorn");
+export const aquarius = new Emoji("\u2652", "Aquarius");
+export const pisces = new Emoji("\u2653", "Pisces");
+export const ophiuchus = new Emoji("\u26CE", "Ophiuchus");
 export const digit0 = new Emoji("0\uFE0F", "Digit Zero");
 export const digit1 = new Emoji("1\uFE0F", "Digit One");
 export const digit2 = new Emoji("2\uFE0F", "Digit Two");
@@ -913,28 +1384,268 @@ export const keycapDigit9 = C(digit9, combiningEnclosingKeycap, "Keycap Digit Ni
 export const keycapAsterisk = C(asterisk, combiningEnclosingKeycap, "Keycap Asterisk");
 export const keycapNumberSign = C(numberSign, combiningEnclosingKeycap, "Keycap Number Sign");
 export const keycap10 = new Emoji("\u{1F51F}", "Keycap: 10");
-export const numbers = new EmojiGroup("Numbers", "Numbers", digit0, digit1, digit2, digit3, digit4, digit5, digit6, digit7, digit8, digit9, asterisk, numberSign, keycapDigit0, keycapDigit1, keycapDigit2, keycapDigit3, keycapDigit4, keycapDigit5, keycapDigit6, keycapDigit7, keycapDigit8, keycapDigit9, keycapAsterisk, keycapNumberSign, keycap10);
 export const tagPlusSign = new Emoji("\u{E002B}", "Tag Plus Sign");
 export const tagMinusHyphen = new Emoji("\u{E002D}", "Tag Hyphen-Minus");
-export const tags = new EmojiGroup("Tags", "Tags", new Emoji("\u{E0020}", "Tag Space"), new Emoji("\u{E0021}", "Tag Exclamation Mark"), new Emoji("\u{E0022}", "Tag Quotation Mark"), new Emoji("\u{E0023}", "Tag Number Sign"), new Emoji("\u{E0024}", "Tag Dollar Sign"), new Emoji("\u{E0025}", "Tag Percent Sign"), new Emoji("\u{E0026}", "Tag Ampersand"), new Emoji("\u{E0027}", "Tag Apostrophe"), new Emoji("\u{E0028}", "Tag Left Parenthesis"), new Emoji("\u{E0029}", "Tag Right Parenthesis"), new Emoji("\u{E002A}", "Tag Asterisk"), tagPlusSign, new Emoji("\u{E002C}", "Tag Comma"), tagMinusHyphen, new Emoji("\u{E002E}", "Tag Full Stop"), new Emoji("\u{E002F}", "Tag Solidus"), new Emoji("\u{E0030}", "Tag Digit Zero"), new Emoji("\u{E0031}", "Tag Digit One"), new Emoji("\u{E0032}", "Tag Digit Two"), new Emoji("\u{E0033}", "Tag Digit Three"), new Emoji("\u{E0034}", "Tag Digit Four"), new Emoji("\u{E0035}", "Tag Digit Five"), new Emoji("\u{E0036}", "Tag Digit Six"), new Emoji("\u{E0037}", "Tag Digit Seven"), new Emoji("\u{E0038}", "Tag Digit Eight"), new Emoji("\u{E0039}", "Tag Digit Nine"), new Emoji("\u{E003A}", "Tag Colon"), new Emoji("\u{E003B}", "Tag Semicolon"), new Emoji("\u{E003C}", "Tag Less-Than Sign"), new Emoji("\u{E003D}", "Tag Equals Sign"), new Emoji("\u{E003E}", "Tag Greater-Than Sign"), new Emoji("\u{E003F}", "Tag Question Mark"), new Emoji("\u{E0040}", "Tag Commercial at"), new Emoji("\u{E0041}", "Tag Latin Capital Letter a"), new Emoji("\u{E0042}", "Tag Latin Capital Letter B"), new Emoji("\u{E0043}", "Tag Latin Capital Letter C"), new Emoji("\u{E0044}", "Tag Latin Capital Letter D"), new Emoji("\u{E0045}", "Tag Latin Capital Letter E"), new Emoji("\u{E0046}", "Tag Latin Capital Letter F"), new Emoji("\u{E0047}", "Tag Latin Capital Letter G"), new Emoji("\u{E0048}", "Tag Latin Capital Letter H"), new Emoji("\u{E0049}", "Tag Latin Capital Letter I"), new Emoji("\u{E004A}", "Tag Latin Capital Letter J"), new Emoji("\u{E004B}", "Tag Latin Capital Letter K"), new Emoji("\u{E004C}", "Tag Latin Capital Letter L"), new Emoji("\u{E004D}", "Tag Latin Capital Letter M"), new Emoji("\u{E004E}", "Tag Latin Capital Letter N"), new Emoji("\u{E004F}", "Tag Latin Capital Letter O"), new Emoji("\u{E0050}", "Tag Latin Capital Letter P"), new Emoji("\u{E0051}", "Tag Latin Capital Letter Q"), new Emoji("\u{E0052}", "Tag Latin Capital Letter R"), new Emoji("\u{E0053}", "Tag Latin Capital Letter S"), new Emoji("\u{E0054}", "Tag Latin Capital Letter T"), new Emoji("\u{E0055}", "Tag Latin Capital Letter U"), new Emoji("\u{E0056}", "Tag Latin Capital Letter V"), new Emoji("\u{E0057}", "Tag Latin Capital Letter W"), new Emoji("\u{E0058}", "Tag Latin Capital Letter X"), new Emoji("\u{E0059}", "Tag Latin Capital Letter Y"), new Emoji("\u{E005A}", "Tag Latin Capital Letter Z"), new Emoji("\u{E005B}", "Tag Left Square Bracket"), new Emoji("\u{E005C}", "Tag Reverse Solidus"), new Emoji("\u{E005D}", "Tag Right Square Bracket"), new Emoji("\u{E005E}", "Tag Circumflex Accent"), new Emoji("\u{E005F}", "Tag Low Line"), new Emoji("\u{E0060}", "Tag Grave Accent"), new Emoji("\u{E0061}", "Tag Latin Small Letter a"), new Emoji("\u{E0062}", "Tag Latin Small Letter B"), new Emoji("\u{E0063}", "Tag Latin Small Letter C"), new Emoji("\u{E0064}", "Tag Latin Small Letter D"), new Emoji("\u{E0065}", "Tag Latin Small Letter E"), new Emoji("\u{E0066}", "Tag Latin Small Letter F"), new Emoji("\u{E0067}", "Tag Latin Small Letter G"), new Emoji("\u{E0068}", "Tag Latin Small Letter H"), new Emoji("\u{E0069}", "Tag Latin Small Letter I"), new Emoji("\u{E006A}", "Tag Latin Small Letter J"), new Emoji("\u{E006B}", "Tag Latin Small Letter K"), new Emoji("\u{E006C}", "Tag Latin Small Letter L"), new Emoji("\u{E006D}", "Tag Latin Small Letter M"), new Emoji("\u{E006E}", "Tag Latin Small Letter N"), new Emoji("\u{E006F}", "Tag Latin Small Letter O"), new Emoji("\u{E0070}", "Tag Latin Small Letter P"), new Emoji("\u{E0071}", "Tag Latin Small Letter Q"), new Emoji("\u{E0072}", "Tag Latin Small Letter R"), new Emoji("\u{E0073}", "Tag Latin Small Letter S"), new Emoji("\u{E0074}", "Tag Latin Small Letter T"), new Emoji("\u{E0075}", "Tag Latin Small Letter U"), new Emoji("\u{E0076}", "Tag Latin Small Letter V"), new Emoji("\u{E0077}", "Tag Latin Small Letter W"), new Emoji("\u{E0078}", "Tag Latin Small Letter X"), new Emoji("\u{E0079}", "Tag Latin Small Letter Y"), new Emoji("\u{E007A}", "Tag Latin Small Letter Z"), new Emoji("\u{E007B}", "Tag Left Curly Bracket"), new Emoji("\u{E007C}", "Tag Vertical Line"), new Emoji("\u{E007D}", "Tag Right Curly Bracket"), new Emoji("\u{E007E}", "Tag Tilde"), new Emoji("\u{E007F}", "Cancel Tag"));
-export const math = new EmojiGroup("Math", "Math", new Emoji("\u2716\uFE0F", "Multiply"), new Emoji("\u2795", "Plus"), new Emoji("\u2796", "Minus"), new Emoji("\u2797", "Divide"));
-export const games = new EmojiGroup("Games", "Games", new Emoji("\u2660\uFE0F", "Spade Suit"), new Emoji("\u2663\uFE0F", "Club Suit"), new Emoji("\u2665\uFE0F", "Heart Suit", { color: "red" }), new Emoji("\u2666\uFE0F", "Diamond Suit", { color: "red" }), new Emoji("\u{1F004}", "Mahjong Red Dragon"), new Emoji("\u{1F0CF}", "Joker"), new Emoji("\u{1F3AF}", "Direct Hit"), new Emoji("\u{1F3B0}", "Slot Machine"), new Emoji("\u{1F3B1}", "Pool 8 Ball"), new Emoji("\u{1F3B2}", "Game Die"), new Emoji("\u{1F3B3}", "Bowling"), new Emoji("\u{1F3B4}", "Flower Playing Cards"), new Emoji("\u{1F9E9}", "Puzzle Piece"), new Emoji("\u265F\uFE0F", "Chess Pawn"), new Emoji("\u{1FA80}", "Yo-Yo"), 
-//new Emoji("\u{1FA83}", "Boomerang"),
-//new Emoji("\u{1FA86}", "Nesting Dolls"),
-new Emoji("\u{1FA81}", "Kite"));
-export const sportsEquipment = new EmojiGroup("Sports Equipment", "Sports equipment", new Emoji("\u{1F3BD}", "Running Shirt"), new Emoji("\u{1F3BE}", "Tennis"), new Emoji("\u{1F3BF}", "Skis"), new Emoji("\u{1F3C0}", "Basketball"), new Emoji("\u{1F3C5}", "Sports Medal"), new Emoji("\u{1F3C6}", "Trophy"), new Emoji("\u{1F3C8}", "American Football"), new Emoji("\u{1F3C9}", "Rugby Football"), new Emoji("\u{1F3CF}", "Cricket Game"), new Emoji("\u{1F3D0}", "Volleyball"), new Emoji("\u{1F3D1}", "Field Hockey"), new Emoji("\u{1F3D2}", "Ice Hockey"), new Emoji("\u{1F3D3}", "Ping Pong"), new Emoji("\u{1F3F8}", "Badminton"), new Emoji("\u{1F6F7}", "Sled"), new Emoji("\u{1F945}", "Goal Net"), new Emoji("\u{1F947}", "1st Place Medal"), new Emoji("\u{1F948}", "2nd Place Medal"), new Emoji("\u{1F949}", "3rd Place Medal"), new Emoji("\u{1F94A}", "Boxing Glove"), new Emoji("\u{1F94C}", "Curling Stone"), new Emoji("\u{1F94D}", "Lacrosse"), new Emoji("\u{1F94E}", "Softball"), new Emoji("\u{1F94F}", "Flying Disc"), new Emoji("\u26BD", "Soccer Ball"), new Emoji("\u26BE", "Baseball"), new Emoji("\u26F8\uFE0F", "Ice Skate"));
-export const clothing = new EmojiGroup("Clothing", "Clothing", new Emoji("\u{1F3A9}", "Top Hat"), new Emoji("\u{1F93F}", "Diving Mask"), new Emoji("\u{1F452}", "Woman’s Hat"), new Emoji("\u{1F453}", "Glasses"), new Emoji("\u{1F576}\uFE0F", "Sunglasses"), new Emoji("\u{1F454}", "Necktie"), new Emoji("\u{1F455}", "T-Shirt"), new Emoji("\u{1F456}", "Jeans"), new Emoji("\u{1F457}", "Dress"), new Emoji("\u{1F458}", "Kimono"), new Emoji("\u{1F459}", "Bikini"), new Emoji("\u{1F45A}", "Woman’s Clothes"), new Emoji("\u{1F45B}", "Purse"), new Emoji("\u{1F45C}", "Handbag"), new Emoji("\u{1F45D}", "Clutch Bag"), new Emoji("\u{1F45E}", "Man’s Shoe"), new Emoji("\u{1F45F}", "Running Shoe"), new Emoji("\u{1F460}", "High-Heeled Shoe"), new Emoji("\u{1F461}", "Woman’s Sandal"), new Emoji("\u{1F462}", "Woman’s Boot"), new Emoji("\u{1F94B}", "Martial Arts Uniform"), new Emoji("\u{1F97B}", "Sari"), new Emoji("\u{1F97C}", "Lab Coat"), new Emoji("\u{1F97D}", "Goggles"), new Emoji("\u{1F97E}", "Hiking Boot"), new Emoji("\u{1F97F}", "Flat Shoe"), whiteCane, safetyVest, new Emoji("\u{1F9E2}", "Billed Cap"), new Emoji("\u{1F9E3}", "Scarf"), new Emoji("\u{1F9E4}", "Gloves"), new Emoji("\u{1F9E5}", "Coat"), new Emoji("\u{1F9E6}", "Socks"), new Emoji("\u{1F9FF}", "Nazar Amulet"), new Emoji("\u{1FA70}", "Ballet Shoes"), new Emoji("\u{1FA71}", "One-Piece Swimsuit"), new Emoji("\u{1FA72}", "Briefs"), new Emoji("\u{1FA73}", "Shorts"));
-export const town = new EmojiGroup("Town", "Town", new Emoji("\u{1F3D7}\uFE0F", "Building Construction"), new Emoji("\u{1F3D8}\uFE0F", "Houses"), new Emoji("\u{1F3D9}\uFE0F", "Cityscape"), new Emoji("\u{1F3DA}\uFE0F", "Derelict House"), new Emoji("\u{1F3DB}\uFE0F", "Classical Building"), new Emoji("\u{1F3DC}\uFE0F", "Desert"), new Emoji("\u{1F3DD}\uFE0F", "Desert Island"), new Emoji("\u{1F3DE}\uFE0F", "National Park"), new Emoji("\u{1F3DF}\uFE0F", "Stadium"), new Emoji("\u{1F3E0}", "House"), new Emoji("\u{1F3E1}", "House with Garden"), new Emoji("\u{1F3E2}", "Office Building"), new Emoji("\u{1F3E3}", "Japanese Post Office"), new Emoji("\u{1F3E4}", "Post Office"), new Emoji("\u{1F3E5}", "Hospital"), new Emoji("\u{1F3E6}", "Bank"), new Emoji("\u{1F3E7}", "ATM Sign"), new Emoji("\u{1F3E8}", "Hotel"), new Emoji("\u{1F3E9}", "Love Hotel"), new Emoji("\u{1F3EA}", "Convenience Store"), school, new Emoji("\u{1F3EC}", "Department Store"), factory, new Emoji("\u{1F309}", "Bridge at Night"), new Emoji("\u26F2", "Fountain"), new Emoji("\u{1F6CD}\uFE0F", "Shopping Bags"), new Emoji("\u{1F9FE}", "Receipt"), new Emoji("\u{1F6D2}", "Shopping Cart"), new Emoji("\u{1F488}", "Barber Pole"), new Emoji("\u{1F492}", "Wedding"), new Emoji("\u{1F5F3}\uFE0F", "Ballot Box with Ballot"));
-export const music = new EmojiGroup("Music", "Music", new Emoji("\u{1F3BC}", "Musical Score"), new Emoji("\u{1F3B6}", "Musical Notes"), new Emoji("\u{1F3B5}", "Musical Note"), new Emoji("\u{1F3B7}", "Saxophone"), new Emoji("\u{1F3B8}", "Guitar"), new Emoji("\u{1F3B9}", "Musical Keyboard"), new Emoji("\u{1F3BA}", "Trumpet"), new Emoji("\u{1F3BB}", "Violin"), new Emoji("\u{1F941}", "Drum"), 
-//new Emoji("\u{1FA97}", "Accordion"),
-//new Emoji("\u{1FA98}", "Long Drum"),
-new Emoji("\u{1FA95}", "Banjo"));
+export const tagSpace = new Emoji("\u{E0020}", "Tag Space");
+export const tagExclamationMark = new Emoji("\u{E0021}", "Tag Exclamation Mark");
+export const tagQuotationMark = new Emoji("\u{E0022}", "Tag Quotation Mark");
+export const tagNumberSign = new Emoji("\u{E0023}", "Tag Number Sign");
+export const tagDollarSign = new Emoji("\u{E0024}", "Tag Dollar Sign");
+export const tagPercentSign = new Emoji("\u{E0025}", "Tag Percent Sign");
+export const tagAmpersand = new Emoji("\u{E0026}", "Tag Ampersand");
+export const tagApostrophe = new Emoji("\u{E0027}", "Tag Apostrophe");
+export const tagLeftParenthesis = new Emoji("\u{E0028}", "Tag Left Parenthesis");
+export const tagRightParenthesis = new Emoji("\u{E0029}", "Tag Right Parenthesis");
+export const tagAsterisk = new Emoji("\u{E002A}", "Tag Asterisk");
+export const tagComma = new Emoji("\u{E002C}", "Tag Comma");
+export const tagFullStop = new Emoji("\u{E002E}", "Tag Full Stop");
+export const tagSolidus = new Emoji("\u{E002F}", "Tag Solidus");
+export const tagDigitZero = new Emoji("\u{E0030}", "Tag Digit Zero");
+export const tagDigitOne = new Emoji("\u{E0031}", "Tag Digit One");
+export const tagDigitTwo = new Emoji("\u{E0032}", "Tag Digit Two");
+export const tagDigitThree = new Emoji("\u{E0033}", "Tag Digit Three");
+export const tagDigitFour = new Emoji("\u{E0034}", "Tag Digit Four");
+export const tagDigitFive = new Emoji("\u{E0035}", "Tag Digit Five");
+export const tagDigitSix = new Emoji("\u{E0036}", "Tag Digit Six");
+export const tagDigitSeven = new Emoji("\u{E0037}", "Tag Digit Seven");
+export const tagDigitEight = new Emoji("\u{E0038}", "Tag Digit Eight");
+export const tagDigitNine = new Emoji("\u{E0039}", "Tag Digit Nine");
+export const tagColon = new Emoji("\u{E003A}", "Tag Colon");
+export const tagSemicolon = new Emoji("\u{E003B}", "Tag Semicolon");
+export const tagLessThanSign = new Emoji("\u{E003C}", "Tag Less-Than Sign");
+export const tagEqualsSign = new Emoji("\u{E003D}", "Tag Equals Sign");
+export const tagGreaterThanSign = new Emoji("\u{E003E}", "Tag Greater-Than Sign");
+export const tagQuestionMark = new Emoji("\u{E003F}", "Tag Question Mark");
+export const tagCommercialAt = new Emoji("\u{E0040}", "Tag Commercial at");
+export const tagLatinCapitalLetterA = new Emoji("\u{E0041}", "Tag Latin Capital Letter a");
+export const tagLatinCapitalLetterB = new Emoji("\u{E0042}", "Tag Latin Capital Letter B");
+export const tagLatinCapitalLetterC = new Emoji("\u{E0043}", "Tag Latin Capital Letter C");
+export const tagLatinCapitalLetterD = new Emoji("\u{E0044}", "Tag Latin Capital Letter D");
+export const tagLatinCapitalLetterE = new Emoji("\u{E0045}", "Tag Latin Capital Letter E");
+export const tagLatinCapitalLetterF = new Emoji("\u{E0046}", "Tag Latin Capital Letter F");
+export const tagLatinCapitalLetterG = new Emoji("\u{E0047}", "Tag Latin Capital Letter G");
+export const tagLatinCapitalLetterH = new Emoji("\u{E0048}", "Tag Latin Capital Letter H");
+export const tagLatinCapitalLetterI = new Emoji("\u{E0049}", "Tag Latin Capital Letter I");
+export const tagLatinCapitalLetterJ = new Emoji("\u{E004A}", "Tag Latin Capital Letter J");
+export const tagLatinCapitalLetterK = new Emoji("\u{E004B}", "Tag Latin Capital Letter K");
+export const tagLatinCapitalLetterL = new Emoji("\u{E004C}", "Tag Latin Capital Letter L");
+export const tagLatinCapitalLetterM = new Emoji("\u{E004D}", "Tag Latin Capital Letter M");
+export const tagLatinCapitalLetterN = new Emoji("\u{E004E}", "Tag Latin Capital Letter N");
+export const tagLatinCapitalLetterO = new Emoji("\u{E004F}", "Tag Latin Capital Letter O");
+export const tagLatinCapitalLetterP = new Emoji("\u{E0050}", "Tag Latin Capital Letter P");
+export const tagLatinCapitalLetterQ = new Emoji("\u{E0051}", "Tag Latin Capital Letter Q");
+export const tagLatinCapitalLetterR = new Emoji("\u{E0052}", "Tag Latin Capital Letter R");
+export const tagLatinCapitalLetterS = new Emoji("\u{E0053}", "Tag Latin Capital Letter S");
+export const tagLatinCapitalLetterT = new Emoji("\u{E0054}", "Tag Latin Capital Letter T");
+export const tagLatinCapitalLetterU = new Emoji("\u{E0055}", "Tag Latin Capital Letter U");
+export const tagLatinCapitalLetterV = new Emoji("\u{E0056}", "Tag Latin Capital Letter V");
+export const tagLatinCapitalLetterW = new Emoji("\u{E0057}", "Tag Latin Capital Letter W");
+export const tagLatinCapitalLetterX = new Emoji("\u{E0058}", "Tag Latin Capital Letter X");
+export const tagLatinCapitalLetterY = new Emoji("\u{E0059}", "Tag Latin Capital Letter Y");
+export const tagLatinCapitalLetterZ = new Emoji("\u{E005A}", "Tag Latin Capital Letter Z");
+export const tagLeftSquareBracket = new Emoji("\u{E005B}", "Tag Left Square Bracket");
+export const tagReverseSolidus = new Emoji("\u{E005C}", "Tag Reverse Solidus");
+export const tagRightSquareBracket = new Emoji("\u{E005D}", "Tag Right Square Bracket");
+export const tagCircumflexAccent = new Emoji("\u{E005E}", "Tag Circumflex Accent");
+export const tagLowLine = new Emoji("\u{E005F}", "Tag Low Line");
+export const tagGraveAccent = new Emoji("\u{E0060}", "Tag Grave Accent");
+export const tagLatinSmallLetterA = new Emoji("\u{E0061}", "Tag Latin Small Letter a");
+export const tagLatinSmallLetterB = new Emoji("\u{E0062}", "Tag Latin Small Letter B");
+export const tagLatinSmallLetterC = new Emoji("\u{E0063}", "Tag Latin Small Letter C");
+export const tagLatinSmallLetterD = new Emoji("\u{E0064}", "Tag Latin Small Letter D");
+export const tagLatinSmallLetterE = new Emoji("\u{E0065}", "Tag Latin Small Letter E");
+export const tagLatinSmallLetterF = new Emoji("\u{E0066}", "Tag Latin Small Letter F");
+export const tagLatinSmallLetterG = new Emoji("\u{E0067}", "Tag Latin Small Letter G");
+export const tagLatinSmallLetterH = new Emoji("\u{E0068}", "Tag Latin Small Letter H");
+export const tagLatinSmallLetterI = new Emoji("\u{E0069}", "Tag Latin Small Letter I");
+export const tagLatinSmallLetterJ = new Emoji("\u{E006A}", "Tag Latin Small Letter J");
+export const tagLatinSmallLetterK = new Emoji("\u{E006B}", "Tag Latin Small Letter K");
+export const tagLatinSmallLetterL = new Emoji("\u{E006C}", "Tag Latin Small Letter L");
+export const tagLatinSmallLetterM = new Emoji("\u{E006D}", "Tag Latin Small Letter M");
+export const tagLatinSmallLetterN = new Emoji("\u{E006E}", "Tag Latin Small Letter N");
+export const tagLatinSmallLetterO = new Emoji("\u{E006F}", "Tag Latin Small Letter O");
+export const tagLatinSmallLetterP = new Emoji("\u{E0070}", "Tag Latin Small Letter P");
+export const tagLatinSmallLetterQ = new Emoji("\u{E0071}", "Tag Latin Small Letter Q");
+export const tagLatinSmallLetterR = new Emoji("\u{E0072}", "Tag Latin Small Letter R");
+export const tagLatinSmallLetterS = new Emoji("\u{E0073}", "Tag Latin Small Letter S");
+export const tagLatinSmallLetterT = new Emoji("\u{E0074}", "Tag Latin Small Letter T");
+export const tagLatinSmallLetterU = new Emoji("\u{E0075}", "Tag Latin Small Letter U");
+export const tagLatinSmallLetterV = new Emoji("\u{E0076}", "Tag Latin Small Letter V");
+export const tagLatinSmallLetterW = new Emoji("\u{E0077}", "Tag Latin Small Letter W");
+export const tagLatinSmallLetterX = new Emoji("\u{E0078}", "Tag Latin Small Letter X");
+export const tagLatinSmallLetterY = new Emoji("\u{E0079}", "Tag Latin Small Letter Y");
+export const tagLatinSmallLetterZ = new Emoji("\u{E007A}", "Tag Latin Small Letter Z");
+export const tagLeftCurlyBracket = new Emoji("\u{E007B}", "Tag Left Curly Bracket");
+export const tagVerticalLine = new Emoji("\u{E007C}", "Tag Vertical Line");
+export const tagRightCurlyBracket = new Emoji("\u{E007D}", "Tag Right Curly Bracket");
+export const tagTilde = new Emoji("\u{E007E}", "Tag Tilde");
+export const cancelTag = new Emoji("\u{E007F}", "Cancel Tag");
+export const multiply = new Emoji("\u2716\uFE0F", "Multiply");
+export const plus = new Emoji("\u2795", "Plus");
+export const minus = new Emoji("\u2796", "Minus");
+export const divide = new Emoji("\u2797", "Divide");
+export const spadeSuit = new Emoji("\u2660\uFE0F", "Spade Suit");
+export const clubSuit = new Emoji("\u2663\uFE0F", "Club Suit");
+export const heartSuit = new Emoji("\u2665\uFE0F", "Heart Suit", { color: "red" });
+export const diamondSuit = new Emoji("\u2666\uFE0F", "Diamond Suit", { color: "red" });
+export const mahjongRedDragon = new Emoji("\u{1F004}", "Mahjong Red Dragon");
+export const joker = new Emoji("\u{1F0CF}", "Joker");
+export const directHit = new Emoji("\u{1F3AF}", "Direct Hit");
+export const slotMachine = new Emoji("\u{1F3B0}", "Slot Machine");
+export const poolBall = new Emoji("\u{1F3B1}", "Pool 8 Ball");
+export const gameDie = new Emoji("\u{1F3B2}", "Game Die");
+export const bowling = new Emoji("\u{1F3B3}", "Bowling");
+export const flowerPlayingCards = new Emoji("\u{1F3B4}", "Flower Playing Cards");
+export const puzzlePiece = new Emoji("\u{1F9E9}", "Puzzle Piece");
+export const chessPawn = new Emoji("\u265F\uFE0F", "Chess Pawn");
+export const yoYo = new Emoji("\u{1FA80}", "Yo-Yo");
+//export const boomerang = new Emoji("\u{1FA83}", "Boomerang");
+//export const nestingDolls = new Emoji("\u{1FA86}", "Nesting Dolls");
+export const kite = new Emoji("\u{1FA81}", "Kite");
+export const runningShirt = new Emoji("\u{1F3BD}", "Running Shirt");
+export const tennis = new Emoji("\u{1F3BE}", "Tennis");
+export const skis = new Emoji("\u{1F3BF}", "Skis");
+export const basketball = new Emoji("\u{1F3C0}", "Basketball");
+export const sportsMedal = new Emoji("\u{1F3C5}", "Sports Medal");
+export const trophy = new Emoji("\u{1F3C6}", "Trophy");
+export const americanFootball = new Emoji("\u{1F3C8}", "American Football");
+export const rugbyFootball = new Emoji("\u{1F3C9}", "Rugby Football");
+export const cricketGame = new Emoji("\u{1F3CF}", "Cricket Game");
+export const volleyball = new Emoji("\u{1F3D0}", "Volleyball");
+export const fieldHockey = new Emoji("\u{1F3D1}", "Field Hockey");
+export const iceHockey = new Emoji("\u{1F3D2}", "Ice Hockey");
+export const pingPong = new Emoji("\u{1F3D3}", "Ping Pong");
+export const badminton = new Emoji("\u{1F3F8}", "Badminton");
+export const sled = new Emoji("\u{1F6F7}", "Sled");
+export const goalNet = new Emoji("\u{1F945}", "Goal Net");
+export const stPlaceMedal = new Emoji("\u{1F947}", "1st Place Medal");
+export const ndPlaceMedal = new Emoji("\u{1F948}", "2nd Place Medal");
+export const rdPlaceMedal = new Emoji("\u{1F949}", "3rd Place Medal");
+export const boxingGlove = new Emoji("\u{1F94A}", "Boxing Glove");
+export const curlingStone = new Emoji("\u{1F94C}", "Curling Stone");
+export const lacrosse = new Emoji("\u{1F94D}", "Lacrosse");
+export const softball = new Emoji("\u{1F94E}", "Softball");
+export const flyingDisc = new Emoji("\u{1F94F}", "Flying Disc");
+export const soccerBall = new Emoji("\u26BD", "Soccer Ball");
+export const baseball = new Emoji("\u26BE", "Baseball");
+export const iceSkate = new Emoji("\u26F8\uFE0F", "Ice Skate");
+export const topHat = new Emoji("\u{1F3A9}", "Top Hat");
+export const divingMask = new Emoji("\u{1F93F}", "Diving Mask");
+export const womansHat = new Emoji("\u{1F452}", "Woman’s Hat");
+export const glasses = new Emoji("\u{1F453}", "Glasses");
+export const sunglasses = new Emoji("\u{1F576}\uFE0F", "Sunglasses");
+export const necktie = new Emoji("\u{1F454}", "Necktie");
+export const tShirt = new Emoji("\u{1F455}", "T-Shirt");
+export const jeans = new Emoji("\u{1F456}", "Jeans");
+export const dress = new Emoji("\u{1F457}", "Dress");
+export const kimono = new Emoji("\u{1F458}", "Kimono");
+export const bikini = new Emoji("\u{1F459}", "Bikini");
+export const womansClothes = new Emoji("\u{1F45A}", "Woman’s Clothes");
+export const purse = new Emoji("\u{1F45B}", "Purse");
+export const handbag = new Emoji("\u{1F45C}", "Handbag");
+export const clutchBag = new Emoji("\u{1F45D}", "Clutch Bag");
+export const mansShoe = new Emoji("\u{1F45E}", "Man’s Shoe");
+export const runningShoe = new Emoji("\u{1F45F}", "Running Shoe");
+export const highHeeledShoe = new Emoji("\u{1F460}", "High-Heeled Shoe");
+export const womansSandal = new Emoji("\u{1F461}", "Woman’s Sandal");
+export const womansBoot = new Emoji("\u{1F462}", "Woman’s Boot");
+export const martialArtsUniform = new Emoji("\u{1F94B}", "Martial Arts Uniform");
+export const sari = new Emoji("\u{1F97B}", "Sari");
+export const labCoat = new Emoji("\u{1F97C}", "Lab Coat");
+export const goggles = new Emoji("\u{1F97D}", "Goggles");
+export const hikingBoot = new Emoji("\u{1F97E}", "Hiking Boot");
+export const flatShoe = new Emoji("\u{1F97F}", "Flat Shoe");
+export const billedCap = new Emoji("\u{1F9E2}", "Billed Cap");
+export const scarf = new Emoji("\u{1F9E3}", "Scarf");
+export const gloves = new Emoji("\u{1F9E4}", "Gloves");
+export const coat = new Emoji("\u{1F9E5}", "Coat");
+export const socks = new Emoji("\u{1F9E6}", "Socks");
+export const nazarAmulet = new Emoji("\u{1F9FF}", "Nazar Amulet");
+export const balletShoes = new Emoji("\u{1FA70}", "Ballet Shoes");
+export const onePieceSwimsuit = new Emoji("\u{1FA71}", "One-Piece Swimsuit");
+export const briefs = new Emoji("\u{1FA72}", "Briefs");
+export const shorts = new Emoji("\u{1FA73}", "Shorts");
+export const buildingConstruction = new Emoji("\u{1F3D7}\uFE0F", "Building Construction");
+export const houses = new Emoji("\u{1F3D8}\uFE0F", "Houses");
+export const cityscape = new Emoji("\u{1F3D9}\uFE0F", "Cityscape");
+export const derelictHouse = new Emoji("\u{1F3DA}\uFE0F", "Derelict House");
+export const classicalBuilding = new Emoji("\u{1F3DB}\uFE0F", "Classical Building");
+export const desert = new Emoji("\u{1F3DC}\uFE0F", "Desert");
+export const desertIsland = new Emoji("\u{1F3DD}\uFE0F", "Desert Island");
+export const nationalPark = new Emoji("\u{1F3DE}\uFE0F", "National Park");
+export const stadium = new Emoji("\u{1F3DF}\uFE0F", "Stadium");
+export const house = new Emoji("\u{1F3E0}", "House");
+export const houseWithGarden = new Emoji("\u{1F3E1}", "House with Garden");
+export const officeBuilding = new Emoji("\u{1F3E2}", "Office Building");
+export const japanesePostOffice = new Emoji("\u{1F3E3}", "Japanese Post Office");
+export const postOffice = new Emoji("\u{1F3E4}", "Post Office");
+export const hospital = new Emoji("\u{1F3E5}", "Hospital");
+export const bank = new Emoji("\u{1F3E6}", "Bank");
+export const aTMSign = new Emoji("\u{1F3E7}", "ATM Sign");
+export const hotel = new Emoji("\u{1F3E8}", "Hotel");
+export const loveHotel = new Emoji("\u{1F3E9}", "Love Hotel");
+export const convenienceStore = new Emoji("\u{1F3EA}", "Convenience Store");
+export const departmentStore = new Emoji("\u{1F3EC}", "Department Store");
+export const bridgeAtNight = new Emoji("\u{1F309}", "Bridge at Night");
+export const fountain = new Emoji("\u26F2", "Fountain");
+export const shoppingBags = new Emoji("\u{1F6CD}\uFE0F", "Shopping Bags");
+export const receipt = new Emoji("\u{1F9FE}", "Receipt");
+export const shoppingCart = new Emoji("\u{1F6D2}", "Shopping Cart");
+export const barberPole = new Emoji("\u{1F488}", "Barber Pole");
+export const wedding = new Emoji("\u{1F492}", "Wedding");
+export const ballotBoxWithBallot = new Emoji("\u{1F5F3}\uFE0F", "Ballot Box with Ballot");
+export const musicalScore = new Emoji("\u{1F3BC}", "Musical Score");
+export const musicalNotes = new Emoji("\u{1F3B6}", "Musical Notes");
+export const musicalNote = new Emoji("\u{1F3B5}", "Musical Note");
+export const saxophone = new Emoji("\u{1F3B7}", "Saxophone");
+export const guitar = new Emoji("\u{1F3B8}", "Guitar");
+export const musicalKeyboard = new Emoji("\u{1F3B9}", "Musical Keyboard");
+export const trumpet = new Emoji("\u{1F3BA}", "Trumpet");
+export const violin = new Emoji("\u{1F3BB}", "Violin");
+export const drum = new Emoji("\u{1F941}", "Drum");
+//export const accordion = new Emoji("\u{1FA97}", "Accordion");
+//export const longDrum = new Emoji("\u{1FA98}", "Long Drum");
+export const banjo = new Emoji("\u{1FA95}", "Banjo");
 export const globeShowingAmericas = new Emoji("\u{1F30E}", "Globe Showing Americas");
-export const astro = new EmojiGroup("Astronomy", "Astronomy", new Emoji("\u{1F30C}", "Milky Way"), new Emoji("\u{1F30D}", "Globe Showing Europe-Africa"), globeShowingAmericas, new Emoji("\u{1F30F}", "Globe Showing Asia-Australia"), new Emoji("\u{1F310}", "Globe with Meridians"), new Emoji("\u{1F311}", "New Moon"), new Emoji("\u{1F312}", "Waxing Crescent Moon"), new Emoji("\u{1F313}", "First Quarter Moon"), new Emoji("\u{1F314}", "Waxing Gibbous Moon"), new Emoji("\u{1F315}", "Full Moon"), new Emoji("\u{1F316}", "Waning Gibbous Moon"), new Emoji("\u{1F317}", "Last Quarter Moon"), new Emoji("\u{1F318}", "Waning Crescent Moon"), new Emoji("\u{1F319}", "Crescent Moon"), new Emoji("\u{1F31A}", "New Moon Face"), new Emoji("\u{1F31B}", "First Quarter Moon Face"), new Emoji("\u{1F31C}", "Last Quarter Moon Face"), new Emoji("\u{1F31D}", "Full Moon Face"), new Emoji("\u{1F31E}", "Sun with Face"), new Emoji("\u{1F31F}", "Glowing Star"), new Emoji("\u{1F320}", "Shooting Star"), new Emoji("\u2604\uFE0F", "Comet"), new Emoji("\u{1FA90}", "Ringed Planet"));
-export const finance = new EmojiGroup("Finance", "Finance", new Emoji("\u{1F4B0}", "Money Bag"), new Emoji("\u{1F4B1}", "Currency Exchange"), new Emoji("\u{1F4B2}", "Heavy Dollar Sign"), new Emoji("\u{1F4B3}", "Credit Card"), new Emoji("\u{1F4B4}", "Yen Banknote"), new Emoji("\u{1F4B5}", "Dollar Banknote"), new Emoji("\u{1F4B6}", "Euro Banknote"), new Emoji("\u{1F4B7}", "Pound Banknote"), new Emoji("\u{1F4B8}", "Money with Wings"), 
-//new Emoji("\u{1FA99}", "Coin"),
-new Emoji("\u{1F4B9}", "Chart Increasing with Yen"));
-export const writing = new EmojiGroup("Writing", "Writing", new Emoji("\u{1F58A}\uFE0F", "Pen"), new Emoji("\u{1F58B}\uFE0F", "Fountain Pen"), new Emoji("\u{1F58C}\uFE0F", "Paintbrush"), new Emoji("\u{1F58D}\uFE0F", "Crayon"), new Emoji("\u270F\uFE0F", "Pencil"), new Emoji("\u2712\uFE0F", "Black Nib"));
+export const milkyWay = new Emoji("\u{1F30C}", "Milky Way");
+export const globeShowingEuropeAfrica = new Emoji("\u{1F30D}", "Globe Showing Europe-Africa");
+export const globeShowingAsiaAustralia = new Emoji("\u{1F30F}", "Globe Showing Asia-Australia");
+export const globeWithMeridians = new Emoji("\u{1F310}", "Globe with Meridians");
+export const newMoon = new Emoji("\u{1F311}", "New Moon");
+export const waxingCrescentMoon = new Emoji("\u{1F312}", "Waxing Crescent Moon");
+export const firstQuarterMoon = new Emoji("\u{1F313}", "First Quarter Moon");
+export const waxingGibbousMoon = new Emoji("\u{1F314}", "Waxing Gibbous Moon");
+export const fullMoon = new Emoji("\u{1F315}", "Full Moon");
+export const waningGibbousMoon = new Emoji("\u{1F316}", "Waning Gibbous Moon");
+export const lastQuarterMoon = new Emoji("\u{1F317}", "Last Quarter Moon");
+export const waningCrescentMoon = new Emoji("\u{1F318}", "Waning Crescent Moon");
+export const crescentMoon = new Emoji("\u{1F319}", "Crescent Moon");
+export const newMoonFace = new Emoji("\u{1F31A}", "New Moon Face");
+export const firstQuarterMoonFace = new Emoji("\u{1F31B}", "First Quarter Moon Face");
+export const lastQuarterMoonFace = new Emoji("\u{1F31C}", "Last Quarter Moon Face");
+export const fullMoonFace = new Emoji("\u{1F31D}", "Full Moon Face");
+export const sunWithFace = new Emoji("\u{1F31E}", "Sun with Face");
+export const glowingStar = new Emoji("\u{1F31F}", "Glowing Star");
+export const shootingStar = new Emoji("\u{1F320}", "Shooting Star");
+export const comet = new Emoji("\u2604\uFE0F", "Comet");
+export const ringedPlanet = new Emoji("\u{1FA90}", "Ringed Planet");
+export const moneyBag = new Emoji("\u{1F4B0}", "Money Bag");
+export const currencyExchange = new Emoji("\u{1F4B1}", "Currency Exchange");
+export const heavyDollarSign = new Emoji("\u{1F4B2}", "Heavy Dollar Sign");
+export const creditCard = new Emoji("\u{1F4B3}", "Credit Card");
+export const yenBanknote = new Emoji("\u{1F4B4}", "Yen Banknote");
+export const dollarBanknote = new Emoji("\u{1F4B5}", "Dollar Banknote");
+export const euroBanknote = new Emoji("\u{1F4B6}", "Euro Banknote");
+export const poundBanknote = new Emoji("\u{1F4B7}", "Pound Banknote");
+export const moneyWithWings = new Emoji("\u{1F4B8}", "Money with Wings");
+//export const coin = new Emoji("\u{1FA99}", "Coin");
+export const chartIncreasingWithYen = new Emoji("\u{1F4B9}", "Chart Increasing with Yen");
+export const pen = new Emoji("\u{1F58A}\uFE0F", "Pen");
+export const fountainPen = new Emoji("\u{1F58B}\uFE0F", "Fountain Pen");
+export const paintbrush = new Emoji("\u{1F58C}\uFE0F", "Paintbrush");
+export const crayon = new Emoji("\u{1F58D}\uFE0F", "Crayon");
+export const pencil = new Emoji("\u270F\uFE0F", "Pencil");
+export const blackNib = new Emoji("\u2712\uFE0F", "Black Nib");
 export const alembic = new Emoji("\u2697\uFE0F", "Alembic");
 export const gear = new Emoji("\u2699\uFE0F", "Gear");
 export const atomSymbol = new Emoji("\u269B\uFE0F", "Atom Symbol");
@@ -1026,18 +1737,201 @@ export const increaseFontSize = new Emoji("\u{1F5DA}", "Increase Font Size");
 export const decreaseFontSize = new Emoji("\u{1F5DB}", "Decrease Font Size");
 export const compression = new Emoji("\u{1F5DC}", "Compression");
 export const oldKey = new Emoji("\u{1F5DD}", "Old Key");
-export const tech = new EmojiGroup("Technology", "Technology", joystick, videoGame, lightBulb, laptop, briefcase, computerDisk, floppyDisk, opticalDisk, dvd, desktopComputer, keyboard, printer, computerMouse, trackball, telephone, telephoneReceiver, pager, faxMachine, satelliteAntenna, loudspeaker, megaphone, television, radio, videocassette, filmProjector, studioMicrophone, levelSlider, controlKnobs, microphone, movieCamera, headphone, camera, cameraWithFlash, videoCamera, mobilePhone, mobilePhoneOff, mobilePhoneWithArrow, lockedWithPen, lockedWithKey, locked, unlocked, bell, bellWithSlash, bookmark, link, mobilePhoneVibrating, antennaBars, dimButton, brightButton, mutedSpeaker, speakerLowVolume, speakerMediumVolume, speakerHighVolume, battery, electricPlug);
-export const mail = new EmojiGroup("Mail", "Mail", new Emoji("\u{1F4E4}", "Outbox Tray"), new Emoji("\u{1F4E5}", "Inbox Tray"), new Emoji("\u{1F4E6}", "Package"), new Emoji("\u{1F4E7}", "E-Mail"), new Emoji("\u{1F4E8}", "Incoming Envelope"), new Emoji("\u{1F4E9}", "Envelope with Arrow"), new Emoji("\u{1F4EA}", "Closed Mailbox with Lowered Flag"), new Emoji("\u{1F4EB}", "Closed Mailbox with Raised Flag"), new Emoji("\u{1F4EC}", "Open Mailbox with Raised Flag"), new Emoji("\u{1F4ED}", "Open Mailbox with Lowered Flag"), new Emoji("\u{1F4EE}", "Postbox"), new Emoji("\u{1F4EF}", "Postal Horn"));
-export const celebration = new EmojiGroup("Celebration", "Celebration", new Emoji("\u{1F380}", "Ribbon"), new Emoji("\u{1F381}", "Wrapped Gift"), new Emoji("\u{1F383}", "Jack-O-Lantern"), new Emoji("\u{1F384}", "Christmas Tree"), new Emoji("\u{1F9E8}", "Firecracker"), new Emoji("\u{1F386}", "Fireworks"), new Emoji("\u{1F387}", "Sparkler"), new Emoji("\u2728", "Sparkles"), new Emoji("\u2747\uFE0F", "Sparkle"), new Emoji("\u{1F388}", "Balloon"), new Emoji("\u{1F389}", "Party Popper"), new Emoji("\u{1F38A}", "Confetti Ball"), new Emoji("\u{1F38B}", "Tanabata Tree"), new Emoji("\u{1F38D}", "Pine Decoration"), new Emoji("\u{1F38E}", "Japanese Dolls"), new Emoji("\u{1F38F}", "Carp Streamer"), new Emoji("\u{1F390}", "Wind Chime"), new Emoji("\u{1F391}", "Moon Viewing Ceremony"), new Emoji("\u{1F392}", "Backpack"), graduationCap, new Emoji("\u{1F9E7}", "Red Envelope"), new Emoji("\u{1F3EE}", "Red Paper Lantern"), new Emoji("\u{1F396}\uFE0F", "Military Medal"));
-export const tools = new EmojiGroup("Tools", "Tools", new Emoji("\u{1F3A3}", "Fishing Pole"), new Emoji("\u{1F526}", "Flashlight"), wrench, new Emoji("\u{1F528}", "Hammer"), new Emoji("\u{1F529}", "Nut and Bolt"), new Emoji("\u{1F6E0}\uFE0F", "Hammer and Wrench"), new Emoji("\u{1F9ED}", "Compass"), new Emoji("\u{1F9EF}", "Fire Extinguisher"), new Emoji("\u{1F9F0}", "Toolbox"), new Emoji("\u{1F9F1}", "Brick"), new Emoji("\u{1FA93}", "Axe"), new Emoji("\u2692\uFE0F", "Hammer and Pick"), new Emoji("\u26CF\uFE0F", "Pick"), new Emoji("\u26D1\uFE0F", "Rescue Worker’s Helmet"), new Emoji("\u26D3\uFE0F", "Chains"), compression);
-export const office = new EmojiGroup("Office", "Office", new Emoji("\u{1F4C1}", "File Folder"), new Emoji("\u{1F4C2}", "Open File Folder"), new Emoji("\u{1F4C3}", "Page with Curl"), new Emoji("\u{1F4C4}", "Page Facing Up"), new Emoji("\u{1F4C5}", "Calendar"), new Emoji("\u{1F4C6}", "Tear-Off Calendar"), new Emoji("\u{1F4C7}", "Card Index"), cardIndexDividers, cardFileBox, fileCabinet, wastebasket, spiralNotePad, spiralCalendar, new Emoji("\u{1F4C8}", "Chart Increasing"), new Emoji("\u{1F4C9}", "Chart Decreasing"), new Emoji("\u{1F4CA}", "Bar Chart"), new Emoji("\u{1F4CB}", "Clipboard"), new Emoji("\u{1F4CC}", "Pushpin"), new Emoji("\u{1F4CD}", "Round Pushpin"), new Emoji("\u{1F4CE}", "Paperclip"), new Emoji("\u{1F587}\uFE0F", "Linked Paperclips"), new Emoji("\u{1F4CF}", "Straight Ruler"), new Emoji("\u{1F4D0}", "Triangular Ruler"), new Emoji("\u{1F4D1}", "Bookmark Tabs"), new Emoji("\u{1F4D2}", "Ledger"), new Emoji("\u{1F4D3}", "Notebook"), new Emoji("\u{1F4D4}", "Notebook with Decorative Cover"), new Emoji("\u{1F4D5}", "Closed Book"), new Emoji("\u{1F4D6}", "Open Book"), new Emoji("\u{1F4D7}", "Green Book"), new Emoji("\u{1F4D8}", "Blue Book"), new Emoji("\u{1F4D9}", "Orange Book"), new Emoji("\u{1F4DA}", "Books"), new Emoji("\u{1F4DB}", "Name Badge"), new Emoji("\u{1F4DC}", "Scroll"), new Emoji("\u{1F4DD}", "Memo"), new Emoji("\u2702\uFE0F", "Scissors"), new Emoji("\u2709\uFE0F", "Envelope"));
-export const signs = new EmojiGroup("Signs", "Signs", new Emoji("\u{1F3A6}", "Cinema"), noMobilePhone, new Emoji("\u{1F51E}", "No One Under Eighteen"), new Emoji("\u{1F6AB}", "Prohibited"), new Emoji("\u{1F6AC}", "Cigarette"), new Emoji("\u{1F6AD}", "No Smoking"), new Emoji("\u{1F6AE}", "Litter in Bin Sign"), new Emoji("\u{1F6AF}", "No Littering"), new Emoji("\u{1F6B0}", "Potable Water"), new Emoji("\u{1F6B1}", "Non-Potable Water"), new Emoji("\u{1F6B3}", "No Bicycles"), new Emoji("\u{1F6B7}", "No Pedestrians"), new Emoji("\u{1F6B8}", "Children Crossing"), new Emoji("\u{1F6B9}", "Men’s Room"), new Emoji("\u{1F6BA}", "Women’s Room"), new Emoji("\u{1F6BB}", "Restroom"), new Emoji("\u{1F6BC}", "Baby Symbol"), new Emoji("\u{1F6BE}", "Water Closet"), new Emoji("\u{1F6C2}", "Passport Control"), new Emoji("\u{1F6C3}", "Customs"), new Emoji("\u{1F6C4}", "Baggage Claim"), new Emoji("\u{1F6C5}", "Left Luggage"), new Emoji("\u{1F17F}\uFE0F", "Parking Button"), new Emoji("\u267F", "Wheelchair Symbol"), new Emoji("\u2622\uFE0F", "Radioactive"), new Emoji("\u2623\uFE0F", "Biohazard"), new Emoji("\u26A0\uFE0F", "Warning"), new Emoji("\u26A1", "High Voltage"), new Emoji("\u26D4", "No Entry"), new Emoji("\u267B\uFE0F", "Recycling Symbol"), female, male, transgender);
-export const religion = new EmojiGroup("Religion", "Religion", new Emoji("\u{1F52F}", "Dotted Six-Pointed Star"), new Emoji("\u2721\uFE0F", "Star of David"), new Emoji("\u{1F549}\uFE0F", "Om"), new Emoji("\u{1F54B}", "Kaaba"), new Emoji("\u{1F54C}", "Mosque"), new Emoji("\u{1F54D}", "Synagogue"), new Emoji("\u{1F54E}", "Menorah"), new Emoji("\u{1F6D0}", "Place of Worship"), new Emoji("\u{1F6D5}", "Hindu Temple"), new Emoji("\u2626\uFE0F", "Orthodox Cross"), new Emoji("\u271D\uFE0F", "Latin Cross"), new Emoji("\u262A\uFE0F", "Star and Crescent"), new Emoji("\u262E\uFE0F", "Peace Symbol"), new Emoji("\u262F\uFE0F", "Yin Yang"), new Emoji("\u2638\uFE0F", "Wheel of Dharma"), new Emoji("\u267E\uFE0F", "Infinity"), new Emoji("\u{1FA94}", "Diya Lamp"), new Emoji("\u26E9\uFE0F", "Shinto Shrine"), new Emoji("\u26EA", "Church"), new Emoji("\u2734\uFE0F", "Eight-Pointed Star"), new Emoji("\u{1F4FF}", "Prayer Beads"));
+export const outboxTray = new Emoji("\u{1F4E4}", "Outbox Tray");
+export const inboxTray = new Emoji("\u{1F4E5}", "Inbox Tray");
+export const packageBox = new Emoji("\u{1F4E6}", "Package");
+export const eMail = new Emoji("\u{1F4E7}", "E-Mail");
+export const incomingEnvelope = new Emoji("\u{1F4E8}", "Incoming Envelope");
+export const envelopeWithArrow = new Emoji("\u{1F4E9}", "Envelope with Arrow");
+export const closedMailboxWithLoweredFlag = new Emoji("\u{1F4EA}", "Closed Mailbox with Lowered Flag");
+export const closedMailboxWithRaisedFlag = new Emoji("\u{1F4EB}", "Closed Mailbox with Raised Flag");
+export const openMailboxWithRaisedFlag = new Emoji("\u{1F4EC}", "Open Mailbox with Raised Flag");
+export const openMailboxWithLoweredFlag = new Emoji("\u{1F4ED}", "Open Mailbox with Lowered Flag");
+export const postbox = new Emoji("\u{1F4EE}", "Postbox");
+export const postalHorn = new Emoji("\u{1F4EF}", "Postal Horn");
+export const ribbon = new Emoji("\u{1F380}", "Ribbon");
+export const wrappedGift = new Emoji("\u{1F381}", "Wrapped Gift");
+export const jackOLantern = new Emoji("\u{1F383}", "Jack-O-Lantern");
+export const christmasTree = new Emoji("\u{1F384}", "Christmas Tree");
+export const firecracker = new Emoji("\u{1F9E8}", "Firecracker");
+export const fireworks = new Emoji("\u{1F386}", "Fireworks");
+export const sparkler = new Emoji("\u{1F387}", "Sparkler");
+export const sparkles = new Emoji("\u2728", "Sparkles");
+export const sparkle = new Emoji("\u2747\uFE0F", "Sparkle");
+export const balloon = new Emoji("\u{1F388}", "Balloon");
+export const partyPopper = new Emoji("\u{1F389}", "Party Popper");
+export const confettiBall = new Emoji("\u{1F38A}", "Confetti Ball");
+export const tanabataTree = new Emoji("\u{1F38B}", "Tanabata Tree");
+export const pineDecoration = new Emoji("\u{1F38D}", "Pine Decoration");
+export const japaneseDolls = new Emoji("\u{1F38E}", "Japanese Dolls");
+export const carpStreamer = new Emoji("\u{1F38F}", "Carp Streamer");
+export const windChime = new Emoji("\u{1F390}", "Wind Chime");
+export const moonViewingCeremony = new Emoji("\u{1F391}", "Moon Viewing Ceremony");
+export const backpack = new Emoji("\u{1F392}", "Backpack");
+export const redEnvelope = new Emoji("\u{1F9E7}", "Red Envelope");
+export const redPaperLantern = new Emoji("\u{1F3EE}", "Red Paper Lantern");
+export const militaryMedal = new Emoji("\u{1F396}\uFE0F", "Military Medal");
+export const fishingPole = new Emoji("\u{1F3A3}", "Fishing Pole");
+export const flashlight = new Emoji("\u{1F526}", "Flashlight");
+export const hammer = new Emoji("\u{1F528}", "Hammer");
+export const nutAndBolt = new Emoji("\u{1F529}", "Nut and Bolt");
+export const hammerAndWrench = new Emoji("\u{1F6E0}\uFE0F", "Hammer and Wrench");
+export const compass = new Emoji("\u{1F9ED}", "Compass");
+export const fireExtinguisher = new Emoji("\u{1F9EF}", "Fire Extinguisher");
+export const toolbox = new Emoji("\u{1F9F0}", "Toolbox");
+export const brick = new Emoji("\u{1F9F1}", "Brick");
+export const axe = new Emoji("\u{1FA93}", "Axe");
+export const hammerAndPick = new Emoji("\u2692\uFE0F", "Hammer and Pick");
+export const pick = new Emoji("\u26CF\uFE0F", "Pick");
+export const rescueWorkersHelmet = new Emoji("\u26D1\uFE0F", "Rescue Worker’s Helmet");
+export const chains = new Emoji("\u26D3\uFE0F", "Chains");
+export const fileFolder = new Emoji("\u{1F4C1}", "File Folder");
+export const openFileFolder = new Emoji("\u{1F4C2}", "Open File Folder");
+export const pageWithCurl = new Emoji("\u{1F4C3}", "Page with Curl");
+export const pageFacingUp = new Emoji("\u{1F4C4}", "Page Facing Up");
+export const calendar = new Emoji("\u{1F4C5}", "Calendar");
+export const tearOffCalendar = new Emoji("\u{1F4C6}", "Tear-Off Calendar");
+export const cardIndex = new Emoji("\u{1F4C7}", "Card Index");
+export const chartIncreasing = new Emoji("\u{1F4C8}", "Chart Increasing");
+export const chartDecreasing = new Emoji("\u{1F4C9}", "Chart Decreasing");
+export const barChart = new Emoji("\u{1F4CA}", "Bar Chart");
+export const clipboard = new Emoji("\u{1F4CB}", "Clipboard");
+export const pushpin = new Emoji("\u{1F4CC}", "Pushpin");
+export const roundPushpin = new Emoji("\u{1F4CD}", "Round Pushpin");
+export const paperclip = new Emoji("\u{1F4CE}", "Paperclip");
+export const linkedPaperclips = new Emoji("\u{1F587}\uFE0F", "Linked Paperclips");
+export const straightRuler = new Emoji("\u{1F4CF}", "Straight Ruler");
+export const triangularRuler = new Emoji("\u{1F4D0}", "Triangular Ruler");
+export const bookmarkTabs = new Emoji("\u{1F4D1}", "Bookmark Tabs");
+export const ledger = new Emoji("\u{1F4D2}", "Ledger");
+export const notebook = new Emoji("\u{1F4D3}", "Notebook");
+export const notebookWithDecorativeCover = new Emoji("\u{1F4D4}", "Notebook with Decorative Cover");
+export const closedBook = new Emoji("\u{1F4D5}", "Closed Book");
+export const openBook = new Emoji("\u{1F4D6}", "Open Book");
+export const greenBook = new Emoji("\u{1F4D7}", "Green Book");
+export const blueBook = new Emoji("\u{1F4D8}", "Blue Book");
+export const orangeBook = new Emoji("\u{1F4D9}", "Orange Book");
+export const books = new Emoji("\u{1F4DA}", "Books");
+export const nameBadge = new Emoji("\u{1F4DB}", "Name Badge");
+export const scroll = new Emoji("\u{1F4DC}", "Scroll");
+export const memo = new Emoji("\u{1F4DD}", "Memo");
+export const scissors = new Emoji("\u2702\uFE0F", "Scissors");
+export const envelope = new Emoji("\u2709\uFE0F", "Envelope");
+export const cinema = new Emoji("\u{1F3A6}", "Cinema");
+export const noOneUnderEighteen = new Emoji("\u{1F51E}", "No One Under Eighteen");
+export const prohibited = new Emoji("\u{1F6AB}", "Prohibited");
+export const cigarette = new Emoji("\u{1F6AC}", "Cigarette");
+export const noSmoking = new Emoji("\u{1F6AD}", "No Smoking");
+export const litterInBinSign = new Emoji("\u{1F6AE}", "Litter in Bin Sign");
+export const noLittering = new Emoji("\u{1F6AF}", "No Littering");
+export const potableWater = new Emoji("\u{1F6B0}", "Potable Water");
+export const nonPotableWater = new Emoji("\u{1F6B1}", "Non-Potable Water");
+export const noBicycles = new Emoji("\u{1F6B3}", "No Bicycles");
+export const noPedestrians = new Emoji("\u{1F6B7}", "No Pedestrians");
+export const childrenCrossing = new Emoji("\u{1F6B8}", "Children Crossing");
+export const mensRoom = new Emoji("\u{1F6B9}", "Men’s Room");
+export const womensRoom = new Emoji("\u{1F6BA}", "Women’s Room");
+export const restroom = new Emoji("\u{1F6BB}", "Restroom");
+export const babySymbol = new Emoji("\u{1F6BC}", "Baby Symbol");
+export const waterCloset = new Emoji("\u{1F6BE}", "Water Closet");
+export const passportControl = new Emoji("\u{1F6C2}", "Passport Control");
+export const customs = new Emoji("\u{1F6C3}", "Customs");
+export const baggageClaim = new Emoji("\u{1F6C4}", "Baggage Claim");
+export const leftLuggage = new Emoji("\u{1F6C5}", "Left Luggage");
+export const parkingButton = new Emoji("\u{1F17F}\uFE0F", "Parking Button");
+export const wheelchairSymbol = new Emoji("\u267F", "Wheelchair Symbol");
+export const radioactive = new Emoji("\u2622\uFE0F", "Radioactive");
+export const biohazard = new Emoji("\u2623\uFE0F", "Biohazard");
+export const warning = new Emoji("\u26A0\uFE0F", "Warning");
+export const highVoltage = new Emoji("\u26A1", "High Voltage");
+export const noEntry = new Emoji("\u26D4", "No Entry");
+export const recyclingSymbol = new Emoji("\u267B\uFE0F", "Recycling Symbol");
+export const dottedSixPointedStar = new Emoji("\u{1F52F}", "Dotted Six-Pointed Star");
+export const starOfDavid = new Emoji("\u2721\uFE0F", "Star of David");
+export const om = new Emoji("\u{1F549}\uFE0F", "Om");
+export const kaaba = new Emoji("\u{1F54B}", "Kaaba");
+export const mosque = new Emoji("\u{1F54C}", "Mosque");
+export const synagogue = new Emoji("\u{1F54D}", "Synagogue");
+export const menorah = new Emoji("\u{1F54E}", "Menorah");
+export const placeOfWorship = new Emoji("\u{1F6D0}", "Place of Worship");
+export const hinduTemple = new Emoji("\u{1F6D5}", "Hindu Temple");
+export const orthodoxCross = new Emoji("\u2626\uFE0F", "Orthodox Cross");
+export const latinCross = new Emoji("\u271D\uFE0F", "Latin Cross");
+export const starAndCrescent = new Emoji("\u262A\uFE0F", "Star and Crescent");
+export const peaceSymbol = new Emoji("\u262E\uFE0F", "Peace Symbol");
+export const yinYang = new Emoji("\u262F\uFE0F", "Yin Yang");
+export const wheelOfDharma = new Emoji("\u2638\uFE0F", "Wheel of Dharma");
+export const infinity = new Emoji("\u267E\uFE0F", "Infinity");
+export const diyaLamp = new Emoji("\u{1FA94}", "Diya Lamp");
+export const shintoShrine = new Emoji("\u26E9\uFE0F", "Shinto Shrine");
+export const church = new Emoji("\u26EA", "Church");
+export const eightPointedStar = new Emoji("\u2734\uFE0F", "Eight-Pointed Star");
+export const prayerBeads = new Emoji("\u{1F4FF}", "Prayer Beads");
 export const door = new Emoji("\u{1F6AA}", "Door");
-export const household = new EmojiGroup("Household", "Household", new Emoji("\u{1F484}", "Lipstick"), new Emoji("\u{1F48D}", "Ring"), new Emoji("\u{1F48E}", "Gem Stone"), new Emoji("\u{1F4F0}", "Newspaper"), key, new Emoji("\u{1F525}", "Fire"), new Emoji("\u{1F52B}", "Pistol"), new Emoji("\u{1F56F}\uFE0F", "Candle"), new Emoji("\u{1F5BC}\uFE0F", "Framed Picture"), oldKey, new Emoji("\u{1F5DE}\uFE0F", "Rolled-Up Newspaper"), new Emoji("\u{1F5FA}\uFE0F", "World Map"), door, new Emoji("\u{1F6BD}", "Toilet"), new Emoji("\u{1F6BF}", "Shower"), new Emoji("\u{1F6C1}", "Bathtub"), new Emoji("\u{1F6CB}\uFE0F", "Couch and Lamp"), new Emoji("\u{1F6CF}\uFE0F", "Bed"), new Emoji("\u{1F9F4}", "Lotion Bottle"), new Emoji("\u{1F9F5}", "Thread"), new Emoji("\u{1F9F6}", "Yarn"), new Emoji("\u{1F9F7}", "Safety Pin"), new Emoji("\u{1F9F8}", "Teddy Bear"), new Emoji("\u{1F9F9}", "Broom"), new Emoji("\u{1F9FA}", "Basket"), new Emoji("\u{1F9FB}", "Roll of Paper"), new Emoji("\u{1F9FC}", "Soap"), new Emoji("\u{1F9FD}", "Sponge"), new Emoji("\u{1FA91}", "Chair"), new Emoji("\u{1FA92}", "Razor"), new Emoji("\u{1F397}\uFE0F", "Reminder Ribbon"));
-export const activities = new EmojiGroup("Activities", "Activities", new Emoji("\u{1F39E}\uFE0F", "Film Frames"), new Emoji("\u{1F39F}\uFE0F", "Admission Tickets"), new Emoji("\u{1F3A0}", "Carousel Horse"), new Emoji("\u{1F3A1}", "Ferris Wheel"), new Emoji("\u{1F3A2}", "Roller Coaster"), artistPalette, new Emoji("\u{1F3AA}", "Circus Tent"), new Emoji("\u{1F3AB}", "Ticket"), new Emoji("\u{1F3AC}", "Clapper Board"), new Emoji("\u{1F3AD}", "Performing Arts"));
-export const travel = new EmojiGroup("Travel", "Travel", new Emoji("\u{1F3F7}\uFE0F", "Label"), new Emoji("\u{1F30B}", "Volcano"), new Emoji("\u{1F3D4}\uFE0F", "Snow-Capped Mountain"), new Emoji("\u26F0\uFE0F", "Mountain"), new Emoji("\u{1F3D5}\uFE0F", "Camping"), new Emoji("\u{1F3D6}\uFE0F", "Beach with Umbrella"), new Emoji("\u26F1\uFE0F", "Umbrella on Ground"), new Emoji("\u{1F3EF}", "Japanese Castle"), new Emoji("\u{1F463}", "Footprints"), new Emoji("\u{1F5FB}", "Mount Fuji"), new Emoji("\u{1F5FC}", "Tokyo Tower"), new Emoji("\u{1F5FD}", "Statue of Liberty"), new Emoji("\u{1F5FE}", "Map of Japan"), new Emoji("\u{1F5FF}", "Moai"), new Emoji("\u{1F6CE}\uFE0F", "Bellhop Bell"), new Emoji("\u{1F9F3}", "Luggage"), new Emoji("\u26F3", "Flag in Hole"), new Emoji("\u26FA", "Tent"), new Emoji("\u2668\uFE0F", "Hot Springs"));
-export const medieval = new EmojiGroup("Medieval", "Medieval", new Emoji("\u{1F3F0}", "Castle"), new Emoji("\u{1F3F9}", "Bow and Arrow"), crown, new Emoji("\u{1F531}", "Trident Emblem"), new Emoji("\u{1F5E1}\uFE0F", "Dagger"), new Emoji("\u{1F6E1}\uFE0F", "Shield"), new Emoji("\u{1F52E}", "Crystal Ball"), new Emoji("\u2694\uFE0F", "Crossed Swords"), new Emoji("\u269C\uFE0F", "Fleur-de-lis"));
+export const lipstick = new Emoji("\u{1F484}", "Lipstick");
+export const ring = new Emoji("\u{1F48D}", "Ring");
+export const gemStone = new Emoji("\u{1F48E}", "Gem Stone");
+export const newspaper = new Emoji("\u{1F4F0}", "Newspaper");
+export const fire = new Emoji("\u{1F525}", "Fire");
+export const pistol = new Emoji("\u{1F52B}", "Pistol");
+export const candle = new Emoji("\u{1F56F}\uFE0F", "Candle");
+export const framedPicture = new Emoji("\u{1F5BC}\uFE0F", "Framed Picture");
+export const rolledUpNewspaper = new Emoji("\u{1F5DE}\uFE0F", "Rolled-Up Newspaper");
+export const worldMap = new Emoji("\u{1F5FA}\uFE0F", "World Map");
+export const toilet = new Emoji("\u{1F6BD}", "Toilet");
+export const shower = new Emoji("\u{1F6BF}", "Shower");
+export const bathtub = new Emoji("\u{1F6C1}", "Bathtub");
+export const couchAndLamp = new Emoji("\u{1F6CB}\uFE0F", "Couch and Lamp");
+export const bed = new Emoji("\u{1F6CF}\uFE0F", "Bed");
+export const lotionBottle = new Emoji("\u{1F9F4}", "Lotion Bottle");
+export const thread = new Emoji("\u{1F9F5}", "Thread");
+export const yarn = new Emoji("\u{1F9F6}", "Yarn");
+export const safetyPin = new Emoji("\u{1F9F7}", "Safety Pin");
+export const teddyBear = new Emoji("\u{1F9F8}", "Teddy Bear");
+export const broom = new Emoji("\u{1F9F9}", "Broom");
+export const basket = new Emoji("\u{1F9FA}", "Basket");
+export const rollOfPaper = new Emoji("\u{1F9FB}", "Roll of Paper");
+export const soap = new Emoji("\u{1F9FC}", "Soap");
+export const sponge = new Emoji("\u{1F9FD}", "Sponge");
+export const chair = new Emoji("\u{1FA91}", "Chair");
+export const razor = new Emoji("\u{1FA92}", "Razor");
+export const reminderRibbon = new Emoji("\u{1F397}\uFE0F", "Reminder Ribbon");
+export const filmFrames = new Emoji("\u{1F39E}\uFE0F", "Film Frames");
+export const admissionTickets = new Emoji("\u{1F39F}\uFE0F", "Admission Tickets");
+export const carouselHorse = new Emoji("\u{1F3A0}", "Carousel Horse");
+export const ferrisWheel = new Emoji("\u{1F3A1}", "Ferris Wheel");
+export const rollerCoaster = new Emoji("\u{1F3A2}", "Roller Coaster");
+export const circusTent = new Emoji("\u{1F3AA}", "Circus Tent");
+export const ticket = new Emoji("\u{1F3AB}", "Ticket");
+export const clapperBoard = new Emoji("\u{1F3AC}", "Clapper Board");
+export const performingArts = new Emoji("\u{1F3AD}", "Performing Arts");
+export const label = new Emoji("\u{1F3F7}\uFE0F", "Label");
+export const volcano = new Emoji("\u{1F30B}", "Volcano");
+export const snowCappedMountain = new Emoji("\u{1F3D4}\uFE0F", "Snow-Capped Mountain");
+export const mountain = new Emoji("\u26F0\uFE0F", "Mountain");
+export const camping = new Emoji("\u{1F3D5}\uFE0F", "Camping");
+export const beachWithUmbrella = new Emoji("\u{1F3D6}\uFE0F", "Beach with Umbrella");
+export const umbrellaOnGround = new Emoji("\u26F1\uFE0F", "Umbrella on Ground");
+export const japaneseCastle = new Emoji("\u{1F3EF}", "Japanese Castle");
+export const footprints = new Emoji("\u{1F463}", "Footprints");
+export const mountFuji = new Emoji("\u{1F5FB}", "Mount Fuji");
+export const tokyoTower = new Emoji("\u{1F5FC}", "Tokyo Tower");
+export const statueOfLiberty = new Emoji("\u{1F5FD}", "Statue of Liberty");
+export const mapOfJapan = new Emoji("\u{1F5FE}", "Map of Japan");
+export const moai = new Emoji("\u{1F5FF}", "Moai");
+export const bellhopBell = new Emoji("\u{1F6CE}\uFE0F", "Bellhop Bell");
+export const luggage = new Emoji("\u{1F9F3}", "Luggage");
+export const flagInHole = new Emoji("\u26F3", "Flag in Hole");
+export const tent = new Emoji("\u26FA", "Tent");
+export const hotSprings = new Emoji("\u2668\uFE0F", "Hot Springs");
+export const castle = new Emoji("\u{1F3F0}", "Castle");
+export const bowAndArrow = new Emoji("\u{1F3F9}", "Bow and Arrow");
+export const tridentEmblem = new Emoji("\u{1F531}", "Trident Emblem");
+export const dagger = new Emoji("\u{1F5E1}\uFE0F", "Dagger");
+export const shield = new Emoji("\u{1F6E1}\uFE0F", "Shield");
+export const crystalBall = new Emoji("\u{1F52E}", "Crystal Ball");
+export const crossedSwords = new Emoji("\u2694\uFE0F", "Crossed Swords");
+export const fleurDeLis = new Emoji("\u269C\uFE0F", "Fleur-de-lis");
 export const doubleExclamationMark = new Emoji("\u203C\uFE0F", "Double Exclamation Mark");
 export const interrobang = new Emoji("\u2049\uFE0F", "Exclamation Question Mark");
 export const information = new Emoji("\u2139\uFE0F", "Information");
@@ -1059,28 +1953,6 @@ export const tradeMark = new Emoji("\u2122\uFE0F", "Trade Mark");
 export const copyright = new Emoji("\u00A9\uFE0F", "Copyright");
 export const registered = new Emoji("\u00AE\uFE0F", "Registered");
 export const squareFourCourners = new Emoji("\u26F6\uFE0F", "Square: Four Corners");
-export const marks = G("Marks", "Marks", {
-    doubleExclamationMark,
-    interrobang,
-    information,
-    circledM,
-    checkMarkButton,
-    checkMark,
-    eightSpokedAsterisk,
-    crossMark,
-    crossMarkButton,
-    questionMark,
-    whiteQuestionMark,
-    whiteExclamationMark,
-    exclamationMark,
-    curlyLoop,
-    doubleCurlyLoop,
-    wavyDash,
-    partAlternationMark,
-    tradeMark,
-    copyright,
-    registered,
-});
 export const droplet = new Emoji("\u{1F4A7}", "Droplet");
 export const dropOfBlood = new Emoji("\u{1FA78}", "Drop of Blood");
 export const adhesiveBandage = new Emoji("\u{1FA79}", "Adhesive Bandage");
@@ -1093,97 +1965,16 @@ export const dna = new Emoji("\u{1F9EC}", "DNA");
 export const abacus = new Emoji("\u{1F9EE}", "Abacus");
 export const magnet = new Emoji("\u{1F9F2}", "Magnet");
 export const telescope = new Emoji("\u{1F52D}", "Telescope");
-export const science = G("Science", "Science", {
-    droplet,
-    dropOfBlood,
-    adhesiveBandage,
-    stethoscope,
-    syringe,
-    pill,
-    microscope,
-    testTube,
-    petriDish,
-    dna,
-    abacus,
-    magnet,
-    telescope,
-    medical,
-    balanceScale,
-    alembic,
-    gear,
-    atomSymbol,
-    magnifyingGlassTiltedLeft,
-    magnifyingGlassTiltedRight,
-});
 export const whiteChessKing = new Emoji("\u2654", "White Chess King");
 export const whiteChessQueen = new Emoji("\u2655", "White Chess Queen");
 export const whiteChessRook = new Emoji("\u2656", "White Chess Rook");
 export const whiteChessBishop = new Emoji("\u2657", "White Chess Bishop");
 export const whiteChessKnight = new Emoji("\u2658", "White Chess Knight");
 export const whiteChessPawn = new Emoji("\u2659", "White Chess Pawn");
-export const whiteChessPieces = G(whiteChessKing.value + whiteChessQueen.value + whiteChessRook.value + whiteChessBishop.value + whiteChessKnight.value + whiteChessPawn.value, "White Chess Pieces", {
-    width: "auto",
-    king: whiteChessKing,
-    queen: whiteChessQueen,
-    rook: whiteChessRook,
-    bishop: whiteChessBishop,
-    knight: whiteChessKnight,
-    pawn: whiteChessPawn
-});
 export const blackChessKing = new Emoji("\u265A", "Black Chess King");
 export const blackChessQueen = new Emoji("\u265B", "Black Chess Queen");
 export const blackChessRook = new Emoji("\u265C", "Black Chess Rook");
 export const blackChessBishop = new Emoji("\u265D", "Black Chess Bishop");
 export const blackChessKnight = new Emoji("\u265E", "Black Chess Knight");
 export const blackChessPawn = new Emoji("\u265F", "Black Chess Pawn");
-export const blackChessPieces = G(blackChessKing.value + blackChessQueen.value + blackChessRook.value + blackChessBishop.value + blackChessKnight.value + blackChessPawn.value, "Black Chess Pieces", {
-    width: "auto",
-    king: blackChessKing,
-    queen: blackChessQueen,
-    rook: blackChessRook,
-    bishop: blackChessBishop,
-    knight: blackChessKnight,
-    pawn: blackChessPawn
-});
-export const chessPawns = G(whiteChessPawn.value + blackChessPawn.value, "Chess Pawns", {
-    width: "auto",
-    white: whiteChessPawn,
-    black: blackChessPawn
-});
-export const chessRooks = G(whiteChessRook.value + blackChessRook.value, "Chess Rooks", {
-    width: "auto",
-    white: whiteChessRook,
-    black: blackChessRook
-});
-export const chessBishops = G(whiteChessBishop.value + blackChessBishop.value, "Chess Bishops", {
-    width: "auto",
-    white: whiteChessBishop,
-    black: blackChessBishop
-});
-export const chessKnights = G(whiteChessKnight.value + blackChessKnight.value, "Chess Knights", {
-    width: "auto",
-    white: whiteChessKnight,
-    black: blackChessKnight
-});
-export const chessQueens = G(whiteChessQueen.value + blackChessQueen.value, "Chess Queens", {
-    width: "auto",
-    white: whiteChessQueen,
-    black: blackChessQueen
-});
-export const chessKings = G(whiteChessKing.value + blackChessKing.value, "Chess Kings", {
-    width: "auto",
-    white: whiteChessKing,
-    black: blackChessKing
-});
-export const chess = G("Chess Pieces", "Chess Pieces", {
-    width: "auto",
-    white: whiteChessPieces,
-    black: blackChessPieces,
-    pawns: chessPawns,
-    rooks: chessRooks,
-    bishops: chessBishops,
-    knights: chessKnights,
-    queens: chessQueens,
-    kings: chessKings
-});
 //# sourceMappingURL=emojis.js.map

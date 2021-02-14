@@ -1,0 +1,4 @@
+import { EmojiGroup } from "./EmojiGroup";
+import { topHat, divingMask, womansHat, glasses, sunglasses, necktie, tShirt, jeans, dress, kimono, bikini, womansClothes, purse, handbag, clutchBag, mansShoe, runningShoe, highHeeledShoe, womansSandal, womansBoot, martialArtsUniform, sari, labCoat, goggles, hikingBoot, flatShoe, whiteCane, safetyVest, billedCap, scarf, gloves, coat, socks, nazarAmulet, balletShoes, onePieceSwimsuit, briefs, shorts } from "./emojis";
+export const clothing = new EmojiGroup("Clothing", "Clothing", topHat, divingMask, womansHat, glasses, sunglasses, necktie, tShirt, jeans, dress, kimono, bikini, womansClothes, purse, handbag, clutchBag, mansShoe, runningShoe, highHeeledShoe, womansSandal, womansBoot, martialArtsUniform, sari, labCoat, goggles, hikingBoot, flatShoe, whiteCane, safetyVest, billedCap, scarf, gloves, coat, socks, nazarAmulet, balletShoes, onePieceSwimsuit, briefs, shorts);
+//# sourceMappingURL=clothing.js.map

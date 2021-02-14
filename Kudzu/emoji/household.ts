@@ -1,0 +1,37 @@
+﻿import { EmojiGroup } from "./EmojiGroup";
+import { lipstick, ring, gemStone, newspaper, key, fire, pistol, candle, framedPicture, oldKey, rolledUpNewspaper, worldMap, door, toilet, shower, bathtub, couchAndLamp, bed, lotionBottle, thread, yarn, safetyPin, teddyBear, broom, basket, rollOfPaper, soap, sponge, chair, razor, reminderRibbon } from "./emojis";
+
+
+export const household = new EmojiGroup(
+    "Household", "Household",
+    lipstick,
+    ring,
+    gemStone,
+    newspaper,
+    key,
+    fire,
+    pistol,
+    candle,
+    framedPicture,
+    oldKey,
+    rolledUpNewspaper,
+    worldMap,
+    door,
+    toilet,
+    shower,
+    bathtub,
+    couchAndLamp,
+    bed,
+    lotionBottle,
+    thread,
+    yarn,
+    safetyPin,
+    teddyBear,
+    broom,
+    basket,
+    rollOfPaper,
+    soap,
+    sponge,
+    chair,
+    razor,
+    reminderRibbon);

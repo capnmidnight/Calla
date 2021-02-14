@@ -1,0 +1,14 @@
+import { EmojiGroup } from "./EmojiGroup";
+import { hotDog, taco, burrito, chestnut, hotPepper, earOfCorn, mushroom, tomato, eggplant, grapes, melon, watermelon, tangerine, lemon, banana, pineapple, redApple, greenApple, pear, peach, cherries, strawberry, hamburger, pizza, meatOnBone, poultryLeg, riceCracker, riceBall, cookedRice, curryRice, steamingBowl, spaghetti, bread, frenchFries, roastedSweetPotato, dango, oden, sushi, friedShrimp, fishCakeWithSwirl, bentoBox, potOfFood, cooking, popcorn, croissant, avocado, cucumber, bacon, potato, carrot, baguetteBread, greenSalad, shallowPanOfFood, stuffedFlatbread, egg, peanuts, kiwiFruit, pancakes, dumpling, fortuneCookie, takeoutBox, bowlWithSpoon, coconut, broccoli, pretzel, cutOfMeat, sandwich, cannedFood, leafyGreen, mango, moonCake, bagel, crab, shrimp, squid, lobster, oyster, cheeseWedge, salt, garlic, onion, falafel, waffle, butter, softIceCream, shavedIce, iceCream, doughnut, cookie, chocolateBar, candy, lollipop, custard, honeyPot, shortcake, birthdayCake, pie, cupcake, teacupWithoutHandle, sake, wineGlass, cocktailGlass, tropicalDrink, beerMug, clinkingBeerMugs, babyBottle, bottleWithPoppingCork, clinkingGlasses, tumblerGlass, glassOfMilk, cupWithStraw, beverageBox, mate, ice, hotBeverage, forkAndKnife, forkAndKnifeWithPlate, amphora, kitchenKnife, spoon, chopsticks } from "./emojis";
+export const food = new EmojiGroup("Food", "Food, drink, and utensils", hotDog, taco, burrito, chestnut, hotPepper, earOfCorn, mushroom, tomato, eggplant, grapes, melon, watermelon, tangerine, lemon, banana, pineapple, redApple, greenApple, pear, peach, cherries, strawberry, hamburger, pizza, meatOnBone, poultryLeg, riceCracker, riceBall, cookedRice, curryRice, steamingBowl, spaghetti, bread, frenchFries, roastedSweetPotato, dango, oden, sushi, friedShrimp, fishCakeWithSwirl, bentoBox, potOfFood, cooking, popcorn, croissant, avocado, cucumber, bacon, potato, carrot, baguetteBread, greenSalad, shallowPanOfFood, stuffedFlatbread, egg, peanuts, kiwiFruit, pancakes, dumpling, fortuneCookie, takeoutBox, bowlWithSpoon, coconut, broccoli, pretzel, cutOfMeat, sandwich, cannedFood, leafyGreen, mango, moonCake, bagel, crab, shrimp, squid, lobster, oyster, cheeseWedge, salt, garlic, onion, falafel, waffle, butter, 
+//blueberries,
+//bellPepper,
+//olive,
+//flatbread,
+//tamale,
+//fondue,
+softIceCream, shavedIce, iceCream, doughnut, cookie, chocolateBar, candy, lollipop, custard, honeyPot, shortcake, birthdayCake, pie, cupcake, teacupWithoutHandle, sake, wineGlass, cocktailGlass, tropicalDrink, beerMug, clinkingBeerMugs, babyBottle, bottleWithPoppingCork, clinkingGlasses, tumblerGlass, glassOfMilk, cupWithStraw, beverageBox, mate, ice, 
+//bubbleTea,
+//teapot,
+hotBeverage, forkAndKnife, forkAndKnifeWithPlate, amphora, kitchenKnife, spoon, chopsticks);
+//# sourceMappingURL=food.js.map
