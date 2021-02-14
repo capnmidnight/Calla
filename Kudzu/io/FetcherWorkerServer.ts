@@ -1,7 +1,7 @@
 import { progressCallback } from "../tasks/progressCallback";
 import { WorkerServer } from "../workers/WorkerServer";
 import { Fetcher } from "./Fetcher";
-import { getPartsReturnType } from "./getPartsReturnType";
+import { BufferAndContentType } from "./BufferAndContentType";
 
 export class FetcherWorkerServer extends WorkerServer {
 
@@ -14,13 +14,13 @@ export class FetcherWorkerServer extends WorkerServer {
             "getBuffer",
             (path: string, headerMap: Map<string, string>, onProgress: progressCallback) =>
                 fetcher.getBuffer(path, headerMap, onProgress),
-            (parts: getPartsReturnType) => [parts.buffer]);
+            (parts: BufferAndContentType) => [parts.buffer]);
 
         this.add(
             "postObjectForBuffer",
             (path: string, obj: any, headerMap: Map<string, string>, onProgress: progressCallback) =>
                 fetcher.postObjectForBuffer(path, obj, headerMap, onProgress),
-            (parts: getPartsReturnType) => [parts.buffer]);
+            (parts: BufferAndContentType) => [parts.buffer]);
 
         this.add(
             "getObject",

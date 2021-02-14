@@ -1,5 +1,5 @@
 import type { progressCallback } from "../tasks/progressCallback";
-import { getPartsReturnType } from "./getPartsReturnType";
+import { BufferAndContentType } from "./BufferAndContentType";
 import { IFetcher } from "./IFetcher";
 export declare class Fetcher implements IFetcher {
     protected normalizeOnProgress(headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): progressCallback | undefined;
@@ -8,16 +8,16 @@ export declare class Fetcher implements IFetcher {
     private postObjectForResponse;
     private readRequestResponse;
     private readResponseBuffer;
-    protected _getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType>;
-    getBuffer(path: string): Promise<getPartsReturnType>;
-    getBuffer(path: string, onProgress?: progressCallback): Promise<getPartsReturnType>;
-    getBuffer(path: string, headerMap?: Map<string, string>): Promise<getPartsReturnType>;
-    getBuffer(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<getPartsReturnType>;
-    protected _postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType>;
-    postObjectForBuffer<T>(path: string, obj: T): Promise<getPartsReturnType>;
-    postObjectForBuffer<T>(path: string, obj: T, onProgress?: progressCallback): Promise<getPartsReturnType>;
-    postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<getPartsReturnType>;
-    postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<getPartsReturnType>;
+    protected _getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    getBuffer(path: string): Promise<BufferAndContentType>;
+    getBuffer(path: string, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    getBuffer(path: string, headerMap?: Map<string, string>): Promise<BufferAndContentType>;
+    getBuffer(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    protected _postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    postObjectForBuffer<T>(path: string, obj: T): Promise<BufferAndContentType>;
+    postObjectForBuffer<T>(path: string, obj: T, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<BufferAndContentType>;
+    postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
     protected _getBlob(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<Blob>;
     getBlob(path: string): Promise<Blob>;
     getBlob(path: string, onProgress?: progressCallback): Promise<Blob>;

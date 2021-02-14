@@ -1,14 +1,14 @@
 import type { progressCallback } from "../tasks/progressCallback";
-import type { getPartsReturnType } from "./getPartsReturnType";
+import type { BufferAndContentType } from "./BufferAndContentType";
 export interface IFetcher {
-    getBuffer(path: string): Promise<getPartsReturnType>;
-    getBuffer(path: string, onProgress?: progressCallback): Promise<getPartsReturnType>;
-    getBuffer(path: string, headerMap?: Map<string, string>): Promise<getPartsReturnType>;
-    getBuffer(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<getPartsReturnType>;
-    postObjectForBuffer<T>(path: string, obj: T): Promise<getPartsReturnType>;
-    postObjectForBuffer<T>(path: string, obj: T, onProgress?: progressCallback): Promise<getPartsReturnType>;
-    postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<getPartsReturnType>;
-    postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<getPartsReturnType>;
+    getBuffer(path: string): Promise<BufferAndContentType>;
+    getBuffer(path: string, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    getBuffer(path: string, headerMap?: Map<string, string>): Promise<BufferAndContentType>;
+    getBuffer(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    postObjectForBuffer<T>(path: string, obj: T): Promise<BufferAndContentType>;
+    postObjectForBuffer<T>(path: string, obj: T, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<BufferAndContentType>;
+    postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
     getBlob(path: string): Promise<Blob>;
     getBlob(path: string, onProgress?: progressCallback): Promise<Blob>;
     getBlob(path: string, headerMap?: Map<string, string>): Promise<Blob>;

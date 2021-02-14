@@ -6,7 +6,7 @@ import { progressCallback } from "../tasks/progressCallback";
 import { splitProgress } from "../tasks/splitProgress";
 import { isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { WorkerClient } from "../workers/WorkerClient";
-import { getPartsReturnType } from "./getPartsReturnType";
+import { BufferAndContentType } from "./BufferAndContentType";
 import { ImageFetcher } from "./ImageFetcher";
 
 export class ImageFetcherWorkerClient extends ImageFetcher {
@@ -43,7 +43,7 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
         }
     }
 
-    protected async _getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType> {
+    protected async _getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
 
@@ -55,7 +55,7 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
         }
     }
 
-    protected async _postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType> {
+    protected async _postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
 

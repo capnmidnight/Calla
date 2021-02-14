@@ -2,7 +2,7 @@ import { progressCallback } from "../tasks/progressCallback";
 import { isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { WorkerClient } from "../workers/WorkerClient";
 import { Fetcher } from "./Fetcher";
-import { getPartsReturnType } from "./getPartsReturnType";
+import { BufferAndContentType } from "./BufferAndContentType";
 
 export class FetcherWorkerClient extends Fetcher {
 
@@ -38,7 +38,7 @@ export class FetcherWorkerClient extends Fetcher {
         }
     }
 
-    protected async _getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType> {
+    protected async _getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
 
@@ -50,7 +50,7 @@ export class FetcherWorkerClient extends Fetcher {
         }
     }
 
-    protected async _postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType> {
+    protected async _postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
 

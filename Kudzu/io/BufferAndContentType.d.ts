@@ -1,4 +1,4 @@
-export declare type getPartsReturnType = {
+export declare type BufferAndContentType = {
     buffer: ArrayBuffer;
     contentType: string;
 };

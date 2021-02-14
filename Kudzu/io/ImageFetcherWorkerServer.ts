@@ -1,7 +1,7 @@
 import { hasImageBitmap, hasOffscreenCanvasRenderingContext2D } from "../html/canvas";
 import { progressCallback } from "../tasks/progressCallback";
 import { WorkerServer } from "../workers/WorkerServer";
-import { getPartsReturnType } from "./getPartsReturnType";
+import { BufferAndContentType } from "./BufferAndContentType";
 import { ImageFetcher } from "./ImageFetcher";
 
 export class ImageFetcherWorkerServer extends WorkerServer {
@@ -14,13 +14,13 @@ export class ImageFetcherWorkerServer extends WorkerServer {
             "getBuffer",
             (path: string, headerMap: Map<string, string>, onProgress: progressCallback) =>
                 fetcher.getBuffer(path, headerMap, onProgress),
-            (parts: getPartsReturnType) => [parts.buffer]);
+            (parts: BufferAndContentType) => [parts.buffer]);
 
         this.add(
             "postObjectForBuffer",
             (path: string, obj: any, headerMap: Map<string, string>, onProgress: progressCallback) =>
                 fetcher.postObjectForBuffer(path, obj, headerMap, onProgress),
-            (parts: getPartsReturnType) => [parts.buffer]);
+            (parts: BufferAndContentType) => [parts.buffer]);
 
         this.add(
             "getObject",

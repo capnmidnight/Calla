@@ -3,7 +3,7 @@ import { createScript } from "../html/script";
 import type { progressCallback } from "../tasks/progressCallback";
 import { splitProgress } from "../tasks/splitProgress";
 import { isGoodNumber, isNullOrUndefined } from "../typeChecks";
-import { getPartsReturnType } from "./getPartsReturnType";
+import { BufferAndContentType } from "./BufferAndContentType";
 import { IFetcher } from "./IFetcher";
 
 export class Fetcher implements IFetcher {
@@ -79,7 +79,7 @@ export class Fetcher implements IFetcher {
         return response;
     }
 
-    private async readResponseBuffer(path: string, response: Response, onProgress?: progressCallback): Promise<getPartsReturnType> {
+    private async readResponseBuffer(path: string, response: Response, onProgress?: progressCallback): Promise<BufferAndContentType> {
         const contentType = response.headers.get("Content-Type");
         if (!contentType) {
             throw new Error("Server did not provide a content type");
@@ -140,7 +140,7 @@ export class Fetcher implements IFetcher {
         return { buffer, contentType };
     }
 
-    protected async _getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType> {
+    protected async _getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
 
@@ -148,15 +148,15 @@ export class Fetcher implements IFetcher {
         return await this.readResponseBuffer(path, response, onProgress);
     }
 
-    async getBuffer(path: string): Promise<getPartsReturnType>;
-    async getBuffer(path: string, onProgress?: progressCallback): Promise<getPartsReturnType>;
-    async getBuffer(path: string, headerMap?: Map<string, string>): Promise<getPartsReturnType>;
-    async getBuffer(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<getPartsReturnType>;
-    async getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType> {
+    async getBuffer(path: string): Promise<BufferAndContentType>;
+    async getBuffer(path: string, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    async getBuffer(path: string, headerMap?: Map<string, string>): Promise<BufferAndContentType>;
+    async getBuffer(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    async getBuffer(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
         return await this._getBuffer(path, headerMap, onProgress);
     }
 
-    protected async _postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType> {
+    protected async _postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
 
@@ -164,11 +164,11 @@ export class Fetcher implements IFetcher {
         return await this.readResponseBuffer(path, response, onProgress);
     }
 
-    async postObjectForBuffer<T>(path: string, obj: T): Promise<getPartsReturnType>;
-    async postObjectForBuffer<T>(path: string, obj: T, onProgress?: progressCallback): Promise<getPartsReturnType>;
-    async postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<getPartsReturnType>;
-    async postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<getPartsReturnType>;
-    async postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<getPartsReturnType> {
+    async postObjectForBuffer<T>(path: string, obj: T): Promise<BufferAndContentType>;
+    async postObjectForBuffer<T>(path: string, obj: T, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    async postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string>): Promise<BufferAndContentType>;
+    async postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<BufferAndContentType>;
+    async postObjectForBuffer<T>(path: string, obj: T, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<BufferAndContentType> {
         return await this._postObjectForBuffer(path, obj, headerMap, onProgress);
     }
 
