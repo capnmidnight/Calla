@@ -1,5 +1,5 @@
-﻿import { EmojiGroup } from "./EmojiGroup";
-import { flagAscensionIsland, flagAndorra, flagUnitedArabEmirates, flagAfghanistan, flagAntiguaBarbuda, flagAnguilla, flagAlbania, flagArmenia, flagAngola, flagAntarctica, flagArgentina, flagAmericanSamoa, flagAustria, flagAustralia, flagAruba, flagLandIslands, flagAzerbaijan, flagBosniaHerzegovina, flagBarbados, flagBangladesh, flagBelgium, flagBurkinaFaso, flagBulgaria, flagBahrain, flagBurundi, flagBenin, flagStBarthlemy, flagBermuda, flagBrunei, flagBolivia, flagCaribbeanNetherlands, flagBrazil, flagBahamas, flagBhutan, flagBouvetIsland, flagBotswana, flagBelarus, flagBelize, flagCanada, flagCocosKeelingIslands, flagCongoKinshasa, flagCentralAfricanRepublic, flagCongoBrazzaville, flagSwitzerland, flagCteDIvoire, flagCookIslands, flagChile, flagCameroon, flagChina, flagColombia, flagClippertonIsland, flagCostaRica, flagCuba, flagCapeVerde, flagCuraao, flagChristmasIsland, flagCyprus, flagCzechia, flagGermany, flagDiegoGarcia, flagDjibouti, flagDenmark, flagDominica, flagDominicanRepublic, flagAlgeria, flagCeutaMelilla, flagEcuador, flagEstonia, flagEgypt, flagWesternSahara, flagEritrea, flagSpain, flagEthiopia, flagEuropeanUnion, flagFinland, flagFiji, flagFalklandIslands, flagMicronesia, flagFaroeIslands, flagFrance, flagGabon, flagUnitedKingdom, flagGrenada, flagGeorgia, flagFrenchGuiana, flagGuernsey, flagGhana, flagGibraltar, flagGreenland, flagGambia, flagGuinea, flagGuadeloupe, flagEquatorialGuinea, flagGreece, flagSouthGeorgiaSouthSandwichIslands, flagGuatemala, flagGuam, flagGuineaBissau, flagGuyana, flagHongKongSARChina, flagHeardMcDonaldIslands, flagHonduras, flagCroatia, flagHaiti, flagHungary, flagCanaryIslands, flagIndonesia, flagIreland, flagIsrael, flagIsleOfMan, flagIndia, flagBritishIndianOceanTerritory, flagIraq, flagIran, flagIceland, flagItaly, flagJersey, flagJamaica, flagJordan, flagJapan, flagKenya, flagKyrgyzstan, flagCambodia, flagKiribati, flagComoros, flagStKittsNevis, flagNorthKorea, flagSouthKorea, flagKuwait, flagCaymanIslands, flagKazakhstan, flagLaos, flagLebanon, flagStLucia, flagLiechtenstein, flagSriLanka, flagLiberia, flagLesotho, flagLithuania, flagLuxembourg, flagLatvia, flagLibya, flagMorocco, flagMonaco, flagMoldova, flagMontenegro, flagStMartin, flagMadagascar, flagMarshallIslands, flagNorthMacedonia, flagMali, flagMyanmarBurma, flagMongolia, flagMacaoSarChina, flagNorthernMarianaIslands, flagMartinique, flagMauritania, flagMontserrat, flagMalta, flagMauritius, flagMaldives, flagMalawi, flagMexico, flagMalaysia, flagMozambique, flagNamibia, flagNewCaledonia, flagNiger, flagNorfolkIsland, flagNigeria, flagNicaragua, flagNetherlands, flagNorway, flagNepal, flagNauru, flagNiue, flagNewZealand, flagOman, flagPanama, flagPeru, flagFrenchPolynesia, flagPapuaNewGuinea, flagPhilippines, flagPakistan, flagPoland, flagStPierreMiquelon, flagPitcairnIslands, flagPuertoRico, flagPalestinianTerritories, flagPortugal, flagPalau, flagParaguay, flagQatar, flagRunion, flagRomania, flagSerbia, flagRussia, flagRwanda, flagSaudiArabia, flagSolomonIslands, flagSeychelles, flagSudan, flagSweden, flagSingapore, flagStHelena, flagSlovenia, flagSvalbardJanMayen, flagSlovakia, flagSierraLeone, flagSanMarino, flagSenegal, flagSomalia, flagSuriname, flagSouthSudan, flagSoTomPrncipe, flagElSalvador, flagSintMaarten, flagSyria, flagEswatini, flagTristanDaCunha, flagTurksCaicosIslands, flagChad, flagFrenchSouthernTerritories, flagTogo, flagThailand, flagTajikistan, flagTokelau, flagTimorLeste, flagTurkmenistan, flagTunisia, flagTonga, flagTurkey, flagTrinidadTobago, flagTuvalu, flagTaiwan, flagTanzania, flagUkraine, flagUganda, flagUSOutlyingIslands, flagUnitedNations, flagUnitedStates, flagUruguay, flagUzbekistan, flagVaticanCity, flagStVincentGrenadines, flagVenezuela, flagBritishVirginIslands, flagUSVirginIslands, flagVietnam, flagVanuatu, flagWallisFutuna, flagSamoa, flagKosovo, flagYemen, flagMayotte, flagSouthAfrica, flagZambia, flagZimbabwe } from "./emojis";
+import { EmojiGroup } from "./EmojiGroup";
+import { flagAscensionIsland, flagAndorra, flagUnitedArabEmirates, flagAfghanistan, flagAntiguaBarbuda, flagAnguilla, flagAlbania, flagArmenia, flagAngola, flagAntarctica, flagArgentina, flagAmericanSamoa, flagAustria, flagAustralia, flagAruba, flagLandIslands, flagAzerbaijan, flagBosniaHerzegovina, flagBarbados, flagBangladesh, flagBelgium, flagBurkinaFaso, flagBulgaria, flagBahrain, flagBurundi, flagBenin, flagStBarthLemy, flagBermuda, flagBrunei, flagBolivia, flagCaribbeanNetherlands, flagBrazil, flagBahamas, flagBhutan, flagBouvetIsland, flagBotswana, flagBelarus, flagBelize, flagCanada, flagCocosKeelingIslands, flagCongoKinshasa, flagCentralAfricanRepublic, flagCongoBrazzaville, flagSwitzerland, flagCTeDIvoire, flagCookIslands, flagChile, flagCameroon, flagChina, flagColombia, flagClippertonIsland, flagCostaRica, flagCuba, flagCapeVerde, flagCuraAo, flagChristmasIsland, flagCyprus, flagCzechia, flagGermany, flagDiegoGarcia, flagDjibouti, flagDenmark, flagDominica, flagDominicanRepublic, flagAlgeria, flagCeutaMelilla, flagEcuador, flagEstonia, flagEgypt, flagWesternSahara, flagEritrea, flagSpain, flagEthiopia, flagEuropeanUnion, flagFinland, flagFiji, flagFalklandIslands, flagMicronesia, flagFaroeIslands, flagFrance, flagGabon, flagUnitedKingdom, flagGrenada, flagGeorgia, flagFrenchGuiana, flagGuernsey, flagGhana, flagGibraltar, flagGreenland, flagGambia, flagGuinea, flagGuadeloupe, flagEquatorialGuinea, flagGreece, flagSouthGeorgiaSouthSandwichIslands, flagGuatemala, flagGuam, flagGuineaBissau, flagGuyana, flagHongKongSARChina, flagHeardMcDonaldIslands, flagHonduras, flagCroatia, flagHaiti, flagHungary, flagCanaryIslands, flagIndonesia, flagIreland, flagIsrael, flagIsleOfMan, flagIndia, flagBritishIndianOceanTerritory, flagIraq, flagIran, flagIceland, flagItaly, flagJersey, flagJamaica, flagJordan, flagJapan, flagKenya, flagKyrgyzstan, flagCambodia, flagKiribati, flagComoros, flagStKittsNevis, flagNorthKorea, flagSouthKorea, flagKuwait, flagCaymanIslands, flagKazakhstan, flagLaos, flagLebanon, flagStLucia, flagLiechtenstein, flagSriLanka, flagLiberia, flagLesotho, flagLithuania, flagLuxembourg, flagLatvia, flagLibya, flagMorocco, flagMonaco, flagMoldova, flagMontenegro, flagStMartin, flagMadagascar, flagMarshallIslands, flagNorthMacedonia, flagMali, flagMyanmarBurma, flagMongolia, flagMacaoSarChina, flagNorthernMarianaIslands, flagMartinique, flagMauritania, flagMontserrat, flagMalta, flagMauritius, flagMaldives, flagMalawi, flagMexico, flagMalaysia, flagMozambique, flagNamibia, flagNewCaledonia, flagNiger, flagNorfolkIsland, flagNigeria, flagNicaragua, flagNetherlands, flagNorway, flagNepal, flagNauru, flagNiue, flagNewZealand, flagOman, flagPanama, flagPeru, flagFrenchPolynesia, flagPapuaNewGuinea, flagPhilippines, flagPakistan, flagPoland, flagStPierreMiquelon, flagPitcairnIslands, flagPuertoRico, flagPalestinianTerritories, flagPortugal, flagPalau, flagParaguay, flagQatar, flagRUnion, flagRomania, flagSerbia, flagRussia, flagRwanda, flagSaudiArabia, flagSolomonIslands, flagSeychelles, flagSudan, flagSweden, flagSingapore, flagStHelena, flagSlovenia, flagSvalbardJanMayen, flagSlovakia, flagSierraLeone, flagSanMarino, flagSenegal, flagSomalia, flagSuriname, flagSouthSudan, flagSOTomPrNcipe, flagElSalvador, flagSintMaarten, flagSyria, flagEswatini, flagTristanDaCunha, flagTurksCaicosIslands, flagChad, flagFrenchSouthernTerritories, flagTogo, flagThailand, flagTajikistan, flagTokelau, flagTimorLeste, flagTurkmenistan, flagTunisia, flagTonga, flagTurkey, flagTrinidadTobago, flagTuvalu, flagTaiwan, flagTanzania, flagUkraine, flagUganda, flagUSOutlyingIslands, flagUnitedNations, flagUnitedStates, flagUruguay, flagUzbekistan, flagVaticanCity, flagStVincentGrenadines, flagVenezuela, flagBritishVirginIslands, flagUSVirginIslands, flagVietnam, flagVanuatu, flagWallisFutuna, flagSamoa, flagKosovo, flagYemen, flagMayotte, flagSouthAfrica, flagZambia, flagZimbabwe } from "./emojis";
 
 
 export const nations = new EmojiGroup(
@@ -30,7 +30,7 @@ export const nations = new EmojiGroup(
     flagBahrain,
     flagBurundi,
     flagBenin,
-    flagStBarthlemy,
+    flagStBarthLemy,
     flagBermuda,
     flagBrunei,
     flagBolivia,
@@ -48,7 +48,7 @@ export const nations = new EmojiGroup(
     flagCentralAfricanRepublic,
     flagCongoBrazzaville,
     flagSwitzerland,
-    flagCteDIvoire,
+    flagCTeDIvoire,
     flagCookIslands,
     flagChile,
     flagCameroon,
@@ -58,7 +58,7 @@ export const nations = new EmojiGroup(
     flagCostaRica,
     flagCuba,
     flagCapeVerde,
-    flagCuraao,
+    flagCuraAo,
     flagChristmasIsland,
     flagCyprus,
     flagCzechia,
@@ -197,7 +197,7 @@ export const nations = new EmojiGroup(
     flagPalau,
     flagParaguay,
     flagQatar,
-    flagRunion,
+    flagRUnion,
     flagRomania,
     flagSerbia,
     flagRussia,
@@ -218,7 +218,7 @@ export const nations = new EmojiGroup(
     flagSomalia,
     flagSuriname,
     flagSouthSudan,
-    flagSoTomPrncipe,
+    flagSOTomPrNcipe,
     flagElSalvador,
     flagSintMaarten,
     flagSyria,

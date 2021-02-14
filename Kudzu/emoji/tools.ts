@@ -1,5 +1,5 @@
-﻿import { EmojiGroup } from "./EmojiGroup";
-import { fishingPole, flashlight, wrench, hammer, nutAndBolt, hammerAndWrench, compass, fireExtinguisher, toolbox, brick, axe, hammerAndPick, pick, rescueWorkersHelmet, chains, compression } from "./emojis";
+import { EmojiGroup } from "./EmojiGroup";
+import { fishingPole, flashlight, wrench, hammer, nutAndBolt, hammerAndWrench, compass, fireExtinguisher, toolbox, brick, axe, hammerAndPick, pick, rescueWorkerSHelmet, chains, compression } from "./emojis";
 
 
 export const tools = new EmojiGroup(
@@ -17,6 +17,6 @@ export const tools = new EmojiGroup(
     axe,
     hammerAndPick,
     pick,
-    rescueWorkersHelmet,
+    rescueWorkerSHelmet,
     chains,
     compression);

@@ -1,5 +1,5 @@
-﻿import { EmojiGroup } from "./EmojiGroup";
-import { runningShirt, tennis, skis, basketball, sportsMedal, trophy, americanFootball, rugbyFootball, cricketGame, volleyball, fieldHockey, iceHockey, pingPong, badminton, sled, goalNet, stPlaceMedal, ndPlaceMedal, rdPlaceMedal, boxingGlove, curlingStone, lacrosse, softball, flyingDisc, soccerBall, baseball, iceSkate } from "./emojis";
+import { EmojiGroup } from "./EmojiGroup";
+import { runningShirt, tennis, skis, basketball, sportsMedal, trophy, americanFootball, rugbyFootball, cricketGame, volleyball, fieldHockey, iceHockey, pingPong, badminton, sled, goalNet, boxingGlove, curlingStone, lacrosse, softball, flyingDisc, soccerBall, baseball, iceSkate, medal1stPlace, medal2ndPlace, medal3rdPlace } from "./emojis";
 
 
 export const sportsEquipment = new EmojiGroup(
@@ -20,9 +20,9 @@ export const sportsEquipment = new EmojiGroup(
     badminton,
     sled,
     goalNet,
-    stPlaceMedal,
-    ndPlaceMedal,
-    rdPlaceMedal,
+    medal1stPlace,
+    medal2ndPlace,
+    medal3rdPlace,
     boxingGlove,
     curlingStone,
     lacrosse,

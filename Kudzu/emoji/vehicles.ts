@@ -1,5 +1,5 @@
-﻿import { EmojiGroup } from "./EmojiGroup";
-import { motorcycle, racingCar, seat, rocket, helicopter, locomotive, railwayCar, highspeedTrain, bulletTrain, train, metro, lightRail, station, tram, tramCar, bus, oncomingBus, trolleyBus, busStop, miniBus, ambulance, fireEngine, taxi, oncomingTaxi, automobile, oncomingAutomobile, sportUtilityVehicle, deliveryTruck, articulatedLorry, tractor, monorail, mountainRailway, suspensionRailway, mountainCableway, aerialTramway, ship, speedBoat, horizontalTrafficLight, verticalTrafficLight, construction, bicycle, stopSign, oilDrum, motorway, railwayTrack, motorBoat, smallAirplane, airplaneDeparture, airplaneArrival, satellite, passengerShip, kickScooter, motorScooter, canoe, flyingSaucer, skateboard, autoRickshaw, motorizedWheelchair, manualWheelchair, parachute, anchor, ferry, sailboat, fuelPump, airplane } from "./emojis";
+import { EmojiGroup } from "./EmojiGroup";
+import { motorcycle, racingCar, seat, rocket, helicopter, locomotive, railwayCar, highSpeedTrain, bulletTrain, train, metro, lightRail, station, tram, tramCar, bus, oncomingBus, trolleybus, busStop, minibus, ambulance, fireEngine, taxi, oncomingTaxi, automobile, oncomingAutomobile, sportUtilityVehicle, deliveryTruck, articulatedLorry, tractor, monorail, mountainRailway, suspensionRailway, mountainCableway, aerialTramway, ship, speedboat, horizontalTrafficLight, verticalTrafficLight, construction, bicycle, stopSign, oilDrum, motorway, railwayTrack, motorBoat, smallAirplane, airplaneDeparture, airplaneArrival, satellite, passengerShip, kickScooter, motorScooter, canoe, flyingSaucer, skateboard, autoRickshaw, motorizedWheelchair, manualWheelchair, parachute, anchor, ferry, sailboat, fuelPump, airplane } from "./emojis";
 
 export const vehicles = new EmojiGroup(
     "Vehicles", "Things that go",
@@ -10,7 +10,7 @@ export const vehicles = new EmojiGroup(
     helicopter,
     locomotive,
     railwayCar,
-    highspeedTrain,
+    highSpeedTrain,
     bulletTrain,
     train,
     metro,
@@ -20,9 +20,9 @@ export const vehicles = new EmojiGroup(
     tramCar,
     bus,
     oncomingBus,
-    trolleyBus,
+    trolleybus,
     busStop,
-    miniBus,
+    minibus,
     ambulance,
     fireEngine,
     taxi,
@@ -39,7 +39,7 @@ export const vehicles = new EmojiGroup(
     mountainCableway,
     aerialTramway,
     ship,
-    speedBoat,
+    speedboat,
     horizontalTrafficLight,
     verticalTrafficLight,
     construction,

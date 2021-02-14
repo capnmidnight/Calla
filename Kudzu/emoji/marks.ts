@@ -9,10 +9,10 @@ import {
     curlyLoop,
     doubleCurlyLoop,
     doubleExclamationMark,
+    exclamationQuestionMark,
     eightSpokedAsterisk,
     exclamationMark,
     information,
-    interrobang,
     partAlternationMark,
     questionMark,
     registered,
@@ -26,7 +26,7 @@ import {
 export const marks = G(
     "Marks", "Marks", {
     doubleExclamationMark,
-    interrobang,
+    exclamationQuestionMark,
     information,
     circledM,
     checkMarkButton,

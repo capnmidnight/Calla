@@ -1,5 +1,5 @@
 import { EmojiGroup } from "./EmojiGroup";
-import { backhandIndexPointingUp, backhandIndexPointingDown, backhandIndexPointingLeft, backhandIndexPointingRight, oncomingFist, wavingHand, okHand, thumbsUp, thumbsDown, clappingHands, openHands, nailPolish, handsWithFingersSplayed, handsWithFingersSplayed2, thumbsUp2, thumbsDown2, peaceFingers, middleFinger, vulcanSalute, handPointingDown, handPointingLeft, handPointingRight, handPointingLeft2, handPointingRight2, indexPointingLeft, indexPointingRight, indexPointingUp, indexPointingDown, indexPointingUp2, indexPointingDown2, indexPointingUp3, indexPointingDown3, raisingHands, foldedHands, pinchedFingers, pinchingHand, signOfTheHorns, callMeHand, rasiedBackOfHand, leftFacingFist, rightFacingFist, handshake, crossedFingers, loveYouGesture, palmsUpTogether, indexPointingUp4, raisedFist, raisedHand, victoryHand, writingHand } from "./emojis";
+import { backhandIndexPointingUp, backhandIndexPointingDown, backhandIndexPointingLeft, backhandIndexPointingRight, oncomingFist, wavingHand, oKHand, thumbsUp, thumbsDown, clappingHands, openHands, nailPolish, handWithFingersSplayed, handWithFingersSplayed2, thumbsUp2, thumbsDown2, peaceFingers, middleFinger, vulcanSalute, handPointingDown, handPointingLeft, handPointingRight, handPointingLeft2, handPointingRight2, indexPointingLeft, indexPointingRight, indexPointingUp, indexPointingDown, indexPointingUp2, indexPointingDown2, indexPointingUp3, indexPointingDown3, raisingHands, foldedHands, pinchedFingers, pinchingHand, signOfTheHorns, callMeHand, raisedBackOfHand, leftFacingFist, rightFacingFist, handshake, crossedFingers, loveYouGesture, palmsUpTogether, indexPointingUp4, raisedFist, raisedHand, victoryHand, writingHand } from "./emojis";
 
 export const hands = new EmojiGroup(
     "Hands", "Hands pointing at things",
@@ -9,15 +9,14 @@ export const hands = new EmojiGroup(
     backhandIndexPointingRight,
     oncomingFist,
     wavingHand,
-    okHand,
+    oKHand,
     thumbsUp,
     thumbsDown,
     clappingHands,
     openHands,
     nailPolish,
-    handsWithFingersSplayed,
-    handsWithFingersSplayed2,
-    handsWithFingersSplayed2,
+    handWithFingersSplayed,
+    handWithFingersSplayed2,
     thumbsUp2,
     thumbsDown2,
     peaceFingers,
@@ -42,7 +41,7 @@ export const hands = new EmojiGroup(
     pinchingHand,
     signOfTheHorns,
     callMeHand,
-    rasiedBackOfHand,
+    raisedBackOfHand,
     leftFacingFist,
     rightFacingFist,
     handshake,

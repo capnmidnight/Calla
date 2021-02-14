@@ -1,4 +1,4 @@
-import { bust, mutedSpeaker, speakerMediumVolume } from "kudzu/emoji/emojis";
+import { bustInSilhouette, mutedSpeaker, speakerMediumVolume } from "kudzu/emoji/emojis";
 import { TypedEvent, TypedEventBase } from "kudzu/events/EventBase";
 import { getTransform } from "kudzu/graphics2d/getTransform";
 import { TextImage } from "kudzu/graphics2d/TextImage";
@@ -49,7 +49,7 @@ export class User extends TypedEventBase {
         this._avatarEmoji = null;
         this.userMovedEvt = new UserMovedEvent(id);
         this.label = isMe ? "(Me)" : `(${this.id})`;
-        this.setAvatarEmoji(bust.value);
+        this.setAvatarEmoji(bustInSilhouette.value);
         this.lastPositionRequestTime = performance.now() / 1000 - POSITION_REQUEST_DEBOUNCE_TIME;
         this.userNameText = new TextImage();
         this.userNameText.fillColor = "white";

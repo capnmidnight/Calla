@@ -10,7 +10,7 @@ import {
     questionMark,
     speakerHighVolume,
     speakingHead,
-    squareFourCourners,
+    squareFourCorners,
     upwardsButton,
     videoCamera,
     whiteFlower
@@ -123,7 +123,7 @@ export class ButtonLayer
                 title("Toggle fullscreen"),
                 onClick(() => this.dispatchEvent(toggleFullscreenEvt)),
                 onClick(() => this.isFullscreen = !this.isFullscreen),
-                Run(squareFourCourners.value),
+                Run(squareFourCorners.value),
                 Run("Expand")),
 
 
@@ -217,7 +217,7 @@ export class ButtonLayer
             this.fullscreenButton,
             value,
             downRightArrow.value,
-            squareFourCourners.value);
+            squareFourCorners.value);
     }
 
     get style() {

@@ -1,8 +1,8 @@
 import { G } from "./EmojiGroup";
-import { checkMark, checkMarkButton, circledM, copyright, crossMark, crossMarkButton, curlyLoop, doubleCurlyLoop, doubleExclamationMark, eightSpokedAsterisk, exclamationMark, information, interrobang, partAlternationMark, questionMark, registered, tradeMark, wavyDash, whiteExclamationMark, whiteQuestionMark } from "./emojis";
+import { checkMark, checkMarkButton, circledM, copyright, crossMark, crossMarkButton, curlyLoop, doubleCurlyLoop, doubleExclamationMark, exclamationQuestionMark, eightSpokedAsterisk, exclamationMark, information, partAlternationMark, questionMark, registered, tradeMark, wavyDash, whiteExclamationMark, whiteQuestionMark } from "./emojis";
 export const marks = G("Marks", "Marks", {
     doubleExclamationMark,
-    interrobang,
+    exclamationQuestionMark,
     information,
     circledM,
     checkMarkButton,

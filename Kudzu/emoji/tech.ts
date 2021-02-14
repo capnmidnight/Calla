@@ -1,5 +1,5 @@
-﻿import { EmojiGroup } from "./EmojiGroup";
-import { joystick, videoGame, lightBulb, laptop, briefcase, computerDisk, floppyDisk, opticalDisk, dvd, desktopComputer, keyboard, printer, computerMouse, trackball, telephone, telephoneReceiver, pager, faxMachine, satelliteAntenna, loudspeaker, megaphone, television, radio, videocassette, filmProjector, studioMicrophone, levelSlider, controlKnobs, microphone, movieCamera, headphone, camera, cameraWithFlash, videoCamera, mobilePhone, mobilePhoneOff, mobilePhoneWithArrow, lockedWithPen, lockedWithKey, locked, unlocked, bell, bellWithSlash, bookmark, link, mobilePhoneVibrating, antennaBars, dimButton, brightButton, mutedSpeaker, speakerLowVolume, speakerMediumVolume, speakerHighVolume, battery, electricPlug } from "./emojis";
+import { EmojiGroup } from "./EmojiGroup";
+import { joystick, videoGame, lightBulb, laptop, briefcase, computerDisk, floppyDisk, opticalDisk, desktopComputer, keyboard, printer, computerMouse, trackball, telephone, telephoneReceiver, pager, faxMachine, satelliteAntenna, loudspeaker, megaphone, television, radio, videocassette, filmProjector, studioMicrophone, levelSlider, controlKnobs, microphone, movieCamera, headphone, camera, cameraWithFlash, videoCamera, mobilePhone, mobilePhoneOff, mobilePhoneWithArrow, lockedWithPen, lockedWithKey, locked, unlocked, bell, bellWithSlash, bookmark, link, mobilePhoneVibrating, antennaBars, dimButton, brightButton, mutedSpeaker, speakerLowVolume, speakerMediumVolume, speakerHighVolume, battery, electricPlug, dVD } from "./emojis";
 
 export const tech = new EmojiGroup(
     "Technology", "Technology",
@@ -11,7 +11,7 @@ export const tech = new EmojiGroup(
     computerDisk,
     floppyDisk,
     opticalDisk,
-    dvd,
+    dVD,
     desktopComputer,
     keyboard,
     printer,

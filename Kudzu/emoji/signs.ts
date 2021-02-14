@@ -1,5 +1,5 @@
-﻿import { EmojiGroup } from "./EmojiGroup";
-import { cinema, noMobilePhone, noOneUnderEighteen, prohibited, cigarette, noSmoking, litterInBinSign, noLittering, potableWater, nonPotableWater, noBicycles, noPedestrians, childrenCrossing, mensRoom, womensRoom, restroom, babySymbol, waterCloset, passportControl, customs, baggageClaim, leftLuggage, parkingButton, wheelchairSymbol, radioactive, biohazard, warning, highVoltage, noEntry, recyclingSymbol, female, male, transgender } from "./emojis";
+import { EmojiGroup } from "./EmojiGroup";
+import { cinema, noMobilePhone, noOneUnderEighteen, prohibited, cigarette, noSmoking, litterInBinSign, noLittering, potableWater, nonPotableWater, noBicycles, noPedestrians, childrenCrossing, menSRoom, womenSRoom, restroom, babySymbol, waterCloset, passportControl, customs, baggageClaim, leftLuggage, parkingButton, wheelchairSymbol, radioactive, biohazard, warning, highVoltage, noEntry, recyclingSymbol, female, male, transgenderSymbol } from "./emojis";
 
 
 export const signs = new EmojiGroup(
@@ -17,8 +17,8 @@ export const signs = new EmojiGroup(
     noBicycles,
     noPedestrians,
     childrenCrossing,
-    mensRoom,
-    womensRoom,
+    menSRoom,
+    womenSRoom,
     restroom,
     babySymbol,
     waterCloset,
@@ -36,4 +36,4 @@ export const signs = new EmojiGroup(
     recyclingSymbol,
     female,
     male,
-    transgender);
+    transgenderSymbol);

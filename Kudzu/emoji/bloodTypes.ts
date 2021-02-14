@@ -1,10 +1,10 @@
-﻿import { EmojiGroup } from "./EmojiGroup";
-import { bloodTypeAButton, bButtonBloodType, oButtonBloodType, aBButtonBloodType } from "./emojis";
+import { EmojiGroup } from "./EmojiGroup";
+import { aButtonBloodType, bButtonBloodType, oButtonBloodType, aBButtonBloodType } from "./emojis";
 
 
 export const bloodTypes = new EmojiGroup(
     "Blood Types", "Blood types",
-    bloodTypeAButton,
+    aButtonBloodType,
     bButtonBloodType,
     oButtonBloodType,
     aBButtonBloodType);

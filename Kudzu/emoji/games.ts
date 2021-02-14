@@ -1,5 +1,5 @@
-﻿import { EmojiGroup } from "./EmojiGroup";
-import { spadeSuit, clubSuit, heartSuit, diamondSuit, mahjongRedDragon, joker, directHit, slotMachine, poolBall, gameDie, bowling, flowerPlayingCards, puzzlePiece, chessPawn, yoYo, kite } from "./emojis";
+import { EmojiGroup } from "./EmojiGroup";
+import { spadeSuit, clubSuit, heartSuit, diamondSuit, mahjongRedDragon, joker, directHit, slotMachine, pool8Ball, gameDie, bowling, flowerPlayingCards, puzzlePiece, chessPawn, yoYo, kite } from "./emojis";
 
 export const games = new EmojiGroup(
     "Games", "Games",
@@ -11,7 +11,7 @@ export const games = new EmojiGroup(
     joker,
     directHit,
     slotMachine,
-    poolBall,
+    pool8Ball,
     gameDie,
     bowling,
     flowerPlayingCards,

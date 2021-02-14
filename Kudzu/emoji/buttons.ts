@@ -1,16 +1,16 @@
-﻿import { EmojiGroup } from "./EmojiGroup";
-import { clearButton, coolButton, freeButton, idButton, newButton, ngButton, okButton, sosButton, upButton, vsButton, radioButton, backArrow, endArrow, onArrow, soonArrow, topArrow, checkBoxWithCheck, inputLatinUppercase, inputLatinLowercase, inputNumbers, inputSymbols, inputLatinLetters, shuffleTracksButton, repeatButton, repeatSingleButton, upwardsButton, downwardsButton, playButton, pauseButton, reverseButton, ejectButton, fastForwardButton, fastReverseButton, fastUpButton, fastDownButton, nextTrackButton, lastTrackButton, playOrPauseButton, stopButton, recordButton } from "./emojis";
+import { EmojiGroup } from "./EmojiGroup";
+import { coolButton, freeButton, newButton, upButton, vsButton, radioButton, backArrow, endArrow, onArrow, soonArrow, topArrow, checkBoxWithCheck, inputLatinUppercase, inputLatinLowercase, inputNumbers, inputSymbols, inputLatinLetters, shuffleTracksButton, repeatButton, repeatSingleButton, upwardsButton, downwardsButton, playButton, pauseButton, reverseButton, ejectButton, fastForwardButton, fastReverseButton, fastUpButton, fastDownButton, nextTrackButton, lastTrackButton, playOrPauseButton, stopButton, recordButton, cLButton, iDButton, nGButton, oKButton, sOSButton } from "./emojis";
 
 export const buttons = new EmojiGroup(
     "Buttons", "Buttons",
-    clearButton,
+    cLButton,
     coolButton,
     freeButton,
-    idButton,
+    iDButton,
     newButton,
-    ngButton,
-    okButton,
-    sosButton,
+    nGButton,
+    oKButton,
+    sOSButton,
     upButton,
     vsButton,
     radioButton,

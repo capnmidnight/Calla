@@ -1,5 +1,5 @@
 import { EmojiGroup } from "./EmojiGroup";
-import { angerSymbol, bomb, zzz, collision, sweatDroplets, dashingAway, dizzy, speechBalloon, thoughtBalloon, hundredPoints, hole, leftSpeechBubble, rightSpeechBubble, conversationBubbles2, conversationBubbles3, leftThoughtBubble, rightThoughtBubble, leftAngerBubble, rightAngerBubble, angerBubble, angerBubbleLightningBolt, lightningBolt } from "./emojis";
+import { angerSymbol, bomb, zzz, collision, sweatDroplets, dashingAway, dizzy, speechBalloon, thoughtBalloon, hundredPoints, hole, leftSpeechBubble, rightSpeechBubble, conversationBubbles2, conversationBubbles3, leftThoughtBubble, rightThoughtBubble, leftAngerBubble, rightAngerBubble, angerBubble, angerBubbleLightning, lightningBolt } from "./emojis";
 
 
 export const cartoon = new EmojiGroup(
@@ -24,5 +24,5 @@ export const cartoon = new EmojiGroup(
     leftAngerBubble,
     rightAngerBubble,
     angerBubble,
-    angerBubbleLightningBolt,
+    angerBubbleLightning,
     lightningBolt);

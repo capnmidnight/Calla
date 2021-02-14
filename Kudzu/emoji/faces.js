@@ -1,9 +1,9 @@
 import { G } from "./EmojiGroup";
-import { ogre, goblin, ghost, alien, alienMonster, angryFaceWithHorns, skull, pileOfPoo, grinningFace, beamingFaceWithSmilingEyes, faceWithTearsOfJoy, grinningFaceWithBigEyes, grinningFaceWithSmilingEyes, grinningFaceWithSweat, grinningSquitingFace, smillingFaceWithHalo, smilingFaceWithHorns, winkingFace, smilingFaceWithSmilingEyes, faceSavoringFood, relievedFace, smilingFaceWithHeartEyes, smilingFaceWithSunglasses, smirkingFace, neutralFace, expressionlessFace, unamusedFace, downcastFaceWithSweat, pensiveFace, confusedFace, confoundedFace, kissingFace, faceBlowingAKiss, kissingFaceWithSmilingEyes, kissingFaceWithClosedEyes, faceWithTongue, winkingFaceWithTongue, squintingFaceWithTongue, disappointedFace, worriedFace, angryFace, poutingFace, cryingFace, perseveringFace, faceWithSteamFromNose, sadButRelievedFace, frowningFaceWithOpenMouth, anguishedFace, fearfulFace, wearyFace, sleepyFace, tiredFace, grimacingFace, loudlyCryingFace, faceWithOpenMouth, hushedFace, anxiousFaceWithSweat, faceScreamingInFear, astonishedFace, flushedFace, sleepingFace, dizzyFace, faceWithoutMouth, faceWithMedicalMask, grinningCatWithSmilingEyes, catWithTearsOfJoy, grinningCat, smilingCatWithHeartEyes, catWithWrySmile, kissingCat, poutingCat, cryingCat, wearyCat, slightlyFrowningFace, slightlySmilingFace, updisdeDownFace, faceWithRollingEyes, seeNoEvilMonkey, hearNoEvilMonkey, speakNoEvilMonkey, zipperMouthFace, moneyMouthFace, faceWithThermometer, nerdFace, thinkingFace, faceWithHeadBandage, robot, huggingFace, cowboyHatFace, clownFace, nauseatedFace, rollingOnTheFloorLaughing, droolingFace, lyingFace, sneezingFace, faceWithRaisedEyebrow, starStruck, zanyFace, shushingFace, faceWithSymbolsOnMouth, faceWithHandOverMouth, faceVomitting, explodingHead, smilingFaceWithHearts, yawningFace, 
+import { ogre, goblin, ghost, alien, alienMonster, angryFaceWithHorns, skull, pileOfPoo, grinningFace, beamingFaceWithSmilingEyes, faceWithTearsOfJoy, grinningFaceWithBigEyes, grinningFaceWithSmilingEyes, grinningFaceWithSweat, grinningSquintingFace, smilingFaceWithHalo, smilingFaceWithHorns, winkingFace, smilingFaceWithSmilingEyes, faceSavoringFood, relievedFace, smilingFaceWithHeartEyes, smilingFaceWithSunglasses, smirkingFace, neutralFace, expressionlessFace, unamusedFace, downcastFaceWithSweat, pensiveFace, confusedFace, confoundedFace, kissingFace, faceBlowingAKiss, kissingFaceWithSmilingEyes, kissingFaceWithClosedEyes, faceWithTongue, winkingFaceWithTongue, squintingFaceWithTongue, disappointedFace, worriedFace, angryFace, poutingFace, cryingFace, perseveringFace, faceWithSteamFromNose, sadButRelievedFace, frowningFaceWithOpenMouth, anguishedFace, fearfulFace, wearyFace, sleepyFace, tiredFace, grimacingFace, loudlyCryingFace, faceWithOpenMouth, hushedFace, anxiousFaceWithSweat, faceScreamingInFear, astonishedFace, flushedFace, sleepingFace, dizzyFace, faceWithoutMouth, faceWithMedicalMask, grinningCatWithSmilingEyes, catWithTearsOfJoy, grinningCat, smilingCatWithHeartEyes, catWithWrySmile, kissingCat, poutingCat, cryingCat, wearyCat, slightlyFrowningFace, slightlySmilingFace, upsideDownFace, faceWithRollingEyes, seeNoEvilMonkey, hearNoEvilMonkey, speakNoEvilMonkey, zipperMouthFace, moneyMouthFace, faceWithThermometer, nerdFace, thinkingFace, faceWithHeadBandage, robot, huggingFace, cowboyHatFace, clownFace, nauseatedFace, rollingOnTheFloorLaughing, droolingFace, lyingFace, sneezingFace, faceWithRaisedEyebrow, starStruck, zanyFace, shushingFace, faceWithSymbolsOnMouth, faceWithHandOverMouth, faceVomiting, explodingHead, smilingFaceWithHearts, yawningFace, 
 //smilingFaceWithTear,
 partyingFace, woozyFace, hotFace, coldFace, 
 //disguisedFace,
-pleadingFace, faceWithMonocle, skullAndCrossbones, frowningFace, smilingFace, speakingHead, bust, } from "./emojis";
+pleadingFace, faceWithMonocle, skullAndCrossbones, frowningFace, smilingFace, speakingHead, bustInSilhouette, } from "./emojis";
 export const faces = G("Faces", "Round emoji faces", {
     ogre,
     goblin,
@@ -19,8 +19,8 @@ export const faces = G("Faces", "Round emoji faces", {
     grinningFaceWithBigEyes,
     grinningFaceWithSmilingEyes,
     grinningFaceWithSweat,
-    grinningSquitingFace,
-    smillingFaceWithHalo,
+    grinningSquintingFace,
+    smilingFaceWithHalo,
     smilingFaceWithHorns,
     winkingFace,
     smilingFaceWithSmilingEyes,
@@ -80,7 +80,7 @@ export const faces = G("Faces", "Round emoji faces", {
     wearyCat,
     slightlyFrowningFace,
     slightlySmilingFace,
-    updisdeDownFace,
+    upsideDownFace,
     faceWithRollingEyes,
     seeNoEvilMonkey,
     hearNoEvilMonkey,
@@ -106,7 +106,7 @@ export const faces = G("Faces", "Round emoji faces", {
     shushingFace,
     faceWithSymbolsOnMouth,
     faceWithHandOverMouth,
-    faceVomitting,
+    faceVomiting,
     explodingHead,
     smilingFaceWithHearts,
     yawningFace,
@@ -122,6 +122,6 @@ export const faces = G("Faces", "Round emoji faces", {
     frowningFace,
     smilingFace,
     speakingHead,
-    bust,
+    bustInSilhouette,
 });
 //# sourceMappingURL=faces.js.map
