@@ -1,8 +1,321 @@
-import { waitFor } from "../events/waitFor";
-import { createScript } from "../html/script";
-import { splitProgress } from "../tasks/splitProgress";
-import { isGoodNumber, isNullOrUndefined } from "../typeChecks";
-export class Fetcher {
+var WorkerMethodMessageType;
+(function (WorkerMethodMessageType) {
+    WorkerMethodMessageType["Error"] = "error";
+    WorkerMethodMessageType["Progress"] = "progress";
+    WorkerMethodMessageType["Return"] = "return";
+    WorkerMethodMessageType["ReturnValue"] = "returnValue";
+})(WorkerMethodMessageType || (WorkerMethodMessageType = {}));
+class WorkerServer {
+    /**
+     * Creates a new worker thread method call listener.
+     * @param self - the worker scope in which to listen.
+     */
+    constructor(self) {
+        this.self = self;
+        this.methods = new Map();
+        this.self.onmessage = (evt) => {
+            const data = evt.data;
+            const method = this.methods.get(data.methodName);
+            if (method) {
+                method(data.taskID, ...data.params);
+            }
+            else {
+                this.onError(data.taskID, "method not found: " + data.methodName);
+            }
+        };
+        this.add("methodExists", async (methodName) => this.methods.has(methodName));
+    }
+    /**
+     * Report an error back to the calling thread.
+     * @param taskID - the invocation ID of the method that errored.
+     * @param errorMessage - what happened?
+     */
+    onError(taskID, errorMessage) {
+        this.self.postMessage({
+            taskID,
+            methodName: WorkerMethodMessageType.Error,
+            errorMessage
+        });
+    }
+    /**
+     * Report progress through long-running invocations.
+     * @param taskID - the invocation ID of the method that is updating.
+     * @param soFar - how much of the process we've gone through.
+     * @param total - the total amount we need to go through.
+     * @param msg - an optional message to include as part of the progress update.
+     */
+    onProgress(taskID, soFar, total, msg) {
+        this.self.postMessage({
+            taskID,
+            methodName: WorkerMethodMessageType.Progress,
+            soFar,
+            total,
+            msg
+        });
+    }
+    /**
+     * Return the results back to the invoker.
+     * @param taskID - the invocation ID of the method that has completed.
+     * @param returnValue - the (optional) value that is being returned.
+     * @param transferables - an (optional) array of values that appear in the return value that should be transfered back to the calling thread, rather than copied.
+     */
+    onReturn(taskID, returnValue, transferables) {
+        if (returnValue === undefined) {
+            this.self.postMessage({
+                taskID,
+                methodName: WorkerMethodMessageType.Return
+            });
+        }
+        else if (transferables === undefined) {
+            this.self.postMessage({
+                taskID,
+                methodName: WorkerMethodMessageType.ReturnValue,
+                returnValue
+            });
+        }
+        else {
+            this.self.postMessage({
+                taskID,
+                methodName: WorkerMethodMessageType.ReturnValue,
+                returnValue
+            }, transferables);
+        }
+    }
+    /**
+     * Registers a function call for cross-thread invocation.
+     * @param methodName - the name of the method to use during invocations.
+     * @param asyncFunc - the function to execute when the method is invoked.
+     * @param transferReturnValue - an (optional) function that reports on which values in the `returnValue` should be transfered instead of copied.
+     */
+    add(methodName, asyncFunc, transferReturnValue) {
+        this.methods.set(methodName, async (taskID, ...params) => {
+            // If your invocable functions don't report progress, this can be safely ignored.
+            const onProgress = (soFar, total, msg) => {
+                this.onProgress(taskID, soFar, total, msg);
+            };
+            try {
+                // Even functions returning void and functions returning bare, unPromised values, can be awaited.
+                // This creates a convenient fallback where we don't have to consider the exact return type of the function.
+                const returnValue = await asyncFunc(...params, onProgress);
+                if (returnValue === undefined) {
+                    this.onReturn(taskID);
+                }
+                else {
+                    if (transferReturnValue) {
+                        const transferables = transferReturnValue(returnValue);
+                        this.onReturn(taskID, returnValue, transferables);
+                    }
+                    else {
+                        this.onReturn(taskID, returnValue);
+                    }
+                }
+            }
+            catch (exp) {
+                this.onError(taskID, exp.message);
+            }
+        });
+    }
+}
+
+function waitFor(test) {
+    return new Promise((resolve) => {
+        const handle = setInterval(() => {
+            if (test()) {
+                clearInterval(handle);
+                resolve();
+            }
+        }, 100);
+    });
+}
+
+function t(o, s, c) {
+    return typeof o === s
+        || o instanceof c;
+}
+function isString(obj) {
+    return t(obj, "string", String);
+}
+function isBoolean(obj) {
+    return t(obj, "boolean", Boolean);
+}
+function isNumber(obj) {
+    return t(obj, "number", Number);
+}
+function isDate(obj) {
+    return obj instanceof Date;
+}
+function isHTMLElement(obj) {
+    return obj instanceof HTMLElement;
+}
+/**
+ * Check a value to see if it is of a number type
+ * and is not the special NaN value.
+ */
+function isGoodNumber(obj) {
+    return isNumber(obj)
+        && !Number.isNaN(obj);
+}
+function isNullOrUndefined(obj) {
+    return obj === null
+        || obj === undefined;
+}
+
+/**
+ * A setter functor for HTML attributes.
+ **/
+class Attr {
+    /**
+     * Creates a new setter functor for HTML Attributes
+     * @param key - the attribute name.
+     * @param value - the value to set for the attribute.
+     * @param tags - the HTML tags that support this attribute.
+     */
+    constructor(key, value, ...tags) {
+        this.key = key;
+        this.value = value;
+        this.tags = tags.map(t => t.toLocaleUpperCase());
+        Object.freeze(this);
+    }
+    /**
+     * Set the attribute value on an HTMLElement
+     * @param elem - the element on which to set the attribute.
+     */
+    apply(elem) {
+        if (isHTMLElement(elem)) {
+            const isValid = this.tags.length === 0
+                || this.tags.indexOf(elem.tagName) > -1;
+            if (!isValid) {
+                console.warn(`Element ${elem.tagName} does not support Attribute ${this.key}`);
+            }
+            else if (this.key === "style") {
+                Object.assign(elem.style, this.value);
+            }
+            else if (this.key in elem) {
+                elem[this.key] = this.value;
+            }
+            else if (this.value === false) {
+                elem.removeAttribute(this.key);
+            }
+            else if (this.value === true) {
+                elem.setAttribute(this.key, "");
+            }
+            else {
+                elem.setAttribute(this.key, this.value);
+            }
+        }
+        else {
+            elem[this.key] = this.value;
+        }
+    }
+}
+/**
+ * The URL of the embeddable content.
+  **/
+function src(value) { return new Attr("src", value, "audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"); }
+
+function hasNode(obj) {
+    return !isNullOrUndefined(obj)
+        && !isString(obj)
+        && !isNumber(obj)
+        && !isBoolean(obj)
+        && !isDate(obj)
+        && "element" in obj
+        && obj.element instanceof Node;
+}
+/**
+ * Creates an HTML element for a given tag name.
+ *
+ * Boolean attributes that you want to default to true can be passed
+ * as just the attribute creating function,
+ *   e.g. `Audio(autoPlay)` vs `Audio(autoPlay(true))`
+ * @param name - the name of the tag
+ * @param rest - optional attributes, child elements, and text
+ * @returns
+ */
+function tag(name, ...rest) {
+    let elem = null;
+    for (const attr of rest) {
+        if (attr instanceof Attr
+            && attr.key === "id") {
+            elem = document.getElementById(attr.value);
+            break;
+        }
+    }
+    if (elem == null) {
+        elem = document.createElement(name);
+    }
+    for (let x of rest) {
+        if (x != null) {
+            if (isString(x)
+                || isNumber(x)
+                || isBoolean(x)
+                || x instanceof Date
+                || x instanceof Node
+                || hasNode(x)) {
+                if (hasNode(x)) {
+                    x = x.element;
+                }
+                else if (!(x instanceof Node)) {
+                    x = document.createTextNode(x.toLocaleString());
+                }
+                elem.appendChild(x);
+            }
+            else {
+                if (x instanceof Function) {
+                    x = x(true);
+                }
+                x.apply(elem);
+            }
+        }
+    }
+    return elem;
+}
+function Script(...rest) { return tag("script", ...rest); }
+
+function createScript(file) {
+    const script = Script(src(file));
+    document.body.appendChild(script);
+}
+
+function splitProgress(onProgress, weights) {
+    let subProgressWeights;
+    if (isNumber(weights)) {
+        subProgressWeights = new Array(weights);
+        for (let i = 0; i < subProgressWeights.length; ++i) {
+            subProgressWeights[i] = 1 / weights;
+        }
+    }
+    else {
+        subProgressWeights = weights;
+    }
+    let weightTotal = 0;
+    for (let i = 0; i < subProgressWeights.length; ++i) {
+        weightTotal += subProgressWeights[i];
+    }
+    const subProgressValues = new Array(subProgressWeights.length);
+    const subProgressCallbacks = new Array(subProgressWeights.length);
+    const start = performance.now();
+    const update = (i, subSoFar, subTotal, msg) => {
+        if (onProgress) {
+            subProgressValues[i] = subSoFar / subTotal;
+            let soFar = 0;
+            for (let j = 0; j < subProgressWeights.length; ++j) {
+                soFar += subProgressValues[j] * subProgressWeights[j];
+            }
+            const end = performance.now();
+            const delta = end - start;
+            const est = start - end + delta * weightTotal / soFar;
+            onProgress(soFar, weightTotal, msg, est);
+        }
+    };
+    for (let i = 0; i < subProgressWeights.length; ++i) {
+        subProgressValues[i] = 0;
+        subProgressCallbacks[i] = (soFar, total, msg) => update(i, soFar, total, msg);
+    }
+    return subProgressCallbacks;
+}
+
+class Fetcher {
     normalizeOnProgress(headerMap, onProgress) {
         if (isNullOrUndefined(onProgress)
             && headerMap instanceof Function) {
@@ -320,4 +633,19 @@ export class Fetcher {
         return wasmModule.instance.exports;
     }
 }
-//# sourceMappingURL=Fetcher.js.map
+
+class FetcherWorkerServer extends WorkerServer {
+    constructor(self) {
+        super(self);
+        const fetcher = new Fetcher();
+        this.add("getBuffer", (path, headerMap, onProgress) => fetcher.getBuffer(path, headerMap, onProgress), (parts) => [parts.buffer]);
+        this.add("postObjectForBuffer", (path, obj, headerMap, onProgress) => fetcher.postObjectForBuffer(path, obj, headerMap, onProgress), (parts) => [parts.buffer]);
+        this.add("getObject", (path, headerMap, onProgress) => fetcher.getObject(path, headerMap, onProgress));
+        this.add("postObjectForObject", (path, obj, headerMap, onProgress) => fetcher.postObjectForObject(path, obj, headerMap, onProgress));
+        this.add("getFile", (path, headerMap, onProgress) => fetcher.getFile(path, headerMap, onProgress));
+        this.add("postObjectForFile", (path, obj, headerMap, onProgress) => fetcher.postObjectForFile(path, obj, headerMap, onProgress));
+    }
+}
+
+globalThis.server = new FetcherWorkerServer(globalThis);
+//# sourceMappingURL=fetcher.js.map

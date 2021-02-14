@@ -440,4 +440,13 @@ export class Fetcher implements IFetcher {
             onProgress(1, 1, "skip");
         }
     }
+
+    async getWASM<T>(path: string, imports: Record<string, Record<string, WebAssembly.ImportValue>>, onProgress?: progressCallback): Promise<T> {
+        const wasmBuffer = await this.getBuffer(path, onProgress);
+        if (wasmBuffer.contentType !== "application/wasm") {
+            throw new Error("Server did not respond with WASM file. Was: " + wasmBuffer.contentType);
+        }
+        const wasmModule = await WebAssembly.instantiate(wasmBuffer.buffer, imports);
+        return (wasmModule.instance.exports as any) as T;
+    }
 }

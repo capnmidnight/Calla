@@ -1,0 +1,28 @@
+{
+  "version": "0.0.1",
+  "name": "testassemblyscript",
+  "private": true,
+  "scripts": {
+    "_restore": "npm install && tsc --build",
+    "_build": "npm run _restore && rollup -c --environment",
+    "_watch": "npm run _restore && rollup -w -c --environment",
+    "build": "npm run _build -- BUILD:all,PROJECT:all",
+    "build:debug": "npm run _build -- BUILD:development,PROJECT:all",
+    "build:release": "npm run _build -- BUILD:production,PROJECT:all",
+    "watch": "npm run _watch -- BUILD:development,PROJECT:all",
+    "asbuild:debug": "asc asm/index.ts --target debug",
+    "asbuild:release": "asc asm/index.ts --target release",
+    "asbuild": "npm run asbuild:debug && npm run asbuild:release"
+  },
+  "devDependencies": {
+    "assemblyscript": "^0.18.8",
+    "my-rollup": "file:../MyRollup",
+    "rollup-plugin-assemblyscript": "^1.3.0",
+    "typescript": "^4.1.3"
+  },
+  "dependencies": {
+    "@types/node": "^14.14.22",
+    "calla": "file:../Calla",
+    "kudzu": "file:../Kudzu"
+  }
+}

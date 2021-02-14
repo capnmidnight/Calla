@@ -1,0 +1,119 @@
+{
+  "help": "https://go.microsoft.com/fwlink/?linkid=866610",
+  "root": true,
+
+  "dependentFileProviders": {
+    "add": {
+      "pathSegment": {
+        "add": {
+          ".*": [
+            ".js",
+            ".css",
+            ".html",
+            ".htm",
+            ".less",
+            ".scss",
+            ".coffee",
+            ".iced",
+            ".config",
+            ".cs",
+            ".vb",
+            ".json"
+          ]
+        }
+      },
+      "extensionToExtension": {
+        "add": {
+          ".d.ts": [
+            ".ts"
+          ],
+          ".js": [
+            ".coffee",
+            ".iced",
+            ".ts",
+            ".tsx",
+            ".jsx"
+          ],
+          ".css": [
+            ".less",
+            ".scss",
+            ".sass",
+            ".styl"
+          ],
+          ".html": [
+            ".md",
+            ".mdown",
+            ".markdown",
+            ".mdwn"
+          ],
+          ".css.map": [
+            ".css"
+          ],
+          ".js.map": [
+            ".js"
+          ],
+          ".svgz": [
+            ".svg"
+          ],
+          ".designer.cs": [
+            ".resx"
+          ],
+          ".cs.d.ts": [
+            ".cs"
+          ]
+        }
+      },
+      "fileToFile": {
+        "add": {
+          ".bowerrc": [
+            "bower.json"
+          ],
+          ".npmrc": [
+            "package.json"
+          ],
+          "npm-shrinkwrap.json": [
+            "package.json"
+          ],
+          "yarn.lock": [
+            "package.json"
+          ],
+          ".yarnclean": [
+            "package.json"
+          ],
+          ".yarnignore": [
+            "package.json"
+          ],
+          ".yarn-integrity": [
+            "package.json"
+          ],
+          ".yarnrc": [
+            "package.json"
+          ],
+          "package-lock.json": [
+            "package.json"
+          ]
+        }
+      },
+      "fileSuffixToExtension": {
+        "add": {
+          "-vsdoc.js": [
+            ".js"
+          ],
+          "-colors.css": [
+            ".css"
+          ],
+          "-fonts.css": [
+            ".css"
+          ],
+          "-shapes.css": [
+            ".css"
+          ]
+        }
+      },
+      "allExtensions": {
+        "add": {
+        }
+      }
+    }
+  }
+}

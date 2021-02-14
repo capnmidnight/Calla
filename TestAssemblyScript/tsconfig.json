@@ -1,0 +1,51 @@
+{
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.glsl",
+    "src/**/*.frag",
+    "src/**/*.vert",
+    "package.json"
+  ],
+  "exclude": [
+    "bin",
+    "obj",
+    "wwwroot"
+  ],
+  "compileOnSave": true,
+  "compilerOptions": {
+    "lib": [ "ESNext", "DOM", "WebWorker" ],
+
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+
+    "disableSizeLimit": true,
+    "downlevelIteration": true,
+    "removeComments": false,
+    "resolveJsonModule": true,
+    "skipDefaultLibCheck": true,
+    "sourceMap": true,
+    "declaration": true,
+
+    "allowJs": false,
+    "allowSyntheticDefaultImports": true,
+    "allowUmdGlobalAccess": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+
+    "noEmit": false,
+    "noEmitOnError": false,
+    "noErrorTruncation": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "strictNullChecks": false,
+    "strictPropertyInitialization": false
+  }
+}
