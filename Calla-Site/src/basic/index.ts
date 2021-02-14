@@ -6,9 +6,10 @@ import type { InterpolatedPose } from "calla/audio/positions/InterpolatedPose";
 // hardcoding the project to a specific browser.
 import { canChangeAudioOutput } from "calla/audio/canChangeAudioOutput";
 
-// Strictly speaking, this is the only class that needs to be
-// imported, if you are consuming Calla through a vanilla
-// JavaScript project.
+
+// Strictly speaking, these are the only classes that needs to be
+// imported, if you are consuming Calla through a vanilla JavaScript project.
+import { JitsiOnlyClientLoader } from "calla/client-loader/JitsiOnlyClientLoader";
 import { Calla } from "calla/Calla";
 
 // The type names of the events we will be handling in the demo.
@@ -45,10 +46,18 @@ const controls = {
 };
 
 /**
- * The Calla interface, through which teleconferencing sessions and
- * user audio positioning is managed.
+ * The Calla loader makes sure all the necessary parts for Calla (specifically,
+ * lib-jitsi-meet, and its transient dependency jQuery) get loaded before
+ * the Calla client is created.
  **/
-const client = new Calla();
+const loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC);
+
+/**
+ * The Calla interface, through which teleconferencing sessions and
+ * user audio positioning is managed. We'll get an instance of it
+ * after calling loader.load()
+ **/
+let client: Calla = null;
 
 /**
  * A place to stow references to our users.
@@ -430,6 +439,7 @@ function deviceSelector(addNone: boolean, select: HTMLSelectElement, values: Med
     // detect there is no option to change outputs.
     controls.speakers.disabled = !canChangeAudioOutput;
 
+    client = await loader.load();
     await client.getMediaPermissions();
 
     deviceSelector(
@@ -453,7 +463,6 @@ function deviceSelector(addNone: boolean, select: HTMLSelectElement, values: Med
         client.preferredAudioOutputID,
         (device) => client.setAudioOutputDevice(device));
 
-    await client.prepare(JITSI_HOST, JVB_HOST, JVB_MUC);
     await client.connect();
 
     // At this point, everything is ready, so we can let 

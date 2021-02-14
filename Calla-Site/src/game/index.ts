@@ -1,4 +1,5 @@
 import { AudioManager, SpatializerType } from "calla/audio/AudioManager";
+import { JitsiOnlyClientLoader } from "calla/client-loader/JitsiOnlyClientLoader";
 import { Calla } from "calla/Calla";
 import { Emoji } from "kudzu/emoji/Emoji";
 import { allPeople as people } from "kudzu/emoji/emojis";
@@ -24,7 +25,7 @@ const CAMERA_ZOOM_MIN = 0.5,
     settings = new Settings(),
     fetcher = new ImageFetcher(),
     audio = new AudioManager(fetcher, SpatializerType.High),
-    client = new Calla(fetcher, audio),
+    loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC),
     game = new Game(fetcher, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX),
     login = new LoginForm(),
     directory = new UserDirectoryForm(),
@@ -38,20 +39,7 @@ const CAMERA_ZOOM_MIN = 0.5,
     enabler = disabled(false);
 
 let waitingForEmoji = false;
-
-Object.assign(window, {
-    settings,
-    fetcher,
-    client,
-    game,
-    login,
-    directory,
-    controls,
-    devices,
-    options,
-    emoji,
-    instructions
-});
+let client: Calla = null;
 
 async function recordJoin(Name: string, Email: string, Room: string) {
     await fetcher.postObject("/Contacts", { Name, Email, Room });
@@ -447,7 +435,21 @@ timer.start();
         fontSize: 100
     }));
 
+    client = await loader.load(fetcher, audio);
     await client.getMediaPermissions();
-    await client.prepare(JITSI_HOST, JVB_HOST, JVB_MUC);
     await client.connect();
+
+    Object.assign(window, {
+        settings,
+        fetcher,
+        client,
+        game,
+        login,
+        directory,
+        controls,
+        devices,
+        options,
+        emoji,
+        instructions
+    });
 })();

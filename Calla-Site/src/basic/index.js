@@ -3,10 +3,9 @@
 // we are in a browser that supports such a feature, without
 // hardcoding the project to a specific browser.
 import { canChangeAudioOutput } from "calla/audio/canChangeAudioOutput";
-// Strictly speaking, this is the only class that needs to be
-// imported, if you are consuming Calla through a vanilla
-// JavaScript project.
-import { Calla } from "calla/Calla";
+// Strictly speaking, these are the only classes that needs to be
+// imported, if you are consuming Calla through a vanilla JavaScript project.
+import { JitsiOnlyClientLoader } from "calla/client-loader/JitsiOnlyClientLoader";
 // Calla provides a convient means of pumping animation events.
 import { RequestAnimationFrameTimer } from "kudzu/timers/RequestAnimationFrameTimer";
 // Import the configuration parameters.
@@ -24,10 +23,17 @@ const controls = {
     speakers: document.getElementById("speakers")
 };
 /**
- * The Calla interface, through which teleconferencing sessions and
- * user audio positioning is managed.
+ * The Calla loader makes sure all the necessary parts for Calla (specifically,
+ * lib-jitsi-meet, and its transient dependency jQuery) get loaded before
+ * the Calla client is created.
  **/
-const client = new Calla();
+const loader = new JitsiOnlyClientLoader(JITSI_HOST, JVB_HOST, JVB_MUC);
+/**
+ * The Calla interface, through which teleconferencing sessions and
+ * user audio positioning is managed. We'll get an instance of it
+ * after calling loader.load()
+ **/
+let client = null;
 /**
  * A place to stow references to our users.
  **/
@@ -341,11 +347,11 @@ function deviceSelector(addNone, select, values, preferredDeviceID, onSelect) {
     // audio outputs at this time, so disable the control if we
     // detect there is no option to change outputs.
     controls.speakers.disabled = !canChangeAudioOutput;
+    client = await loader.load();
     await client.getMediaPermissions();
     deviceSelector(true, controls.cams, await client.getVideoInputDevices(true), client.preferredVideoInputID, (device) => client.setVideoInputDevice(device));
     deviceSelector(true, controls.mics, await client.getAudioInputDevices(true), client.preferredAudioInputID, (device) => client.setAudioInputDevice(device));
     deviceSelector(false, controls.speakers, await client.getAudioOutputDevices(true), client.preferredAudioOutputID, (device) => client.setAudioOutputDevice(device));
-    await client.prepare(JITSI_HOST, JVB_HOST, JVB_MUC);
     await client.connect();
     // At this point, everything is ready, so we can let 
     // the user attempt to connect to the conference now.
