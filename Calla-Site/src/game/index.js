@@ -1,7 +1,7 @@
 import { AudioManager, SpatializerType } from "calla/audio/AudioManager";
 import { JitsiOnlyClientLoader } from "calla/client-loader/JitsiOnlyClientLoader";
 import { Emoji } from "kudzu/emoji/Emoji";
-import { allAllPersonGroupGroup as people } from "kudzu/emoji/emojis";
+import { allPeopleGroup as people } from "kudzu/emoji/people";
 import { loadFont, makeFont } from "kudzu/graphics2d/fonts";
 import { disabled } from "kudzu/html/attrs";
 import { ImageFetcher } from "kudzu/io/ImageFetcher";

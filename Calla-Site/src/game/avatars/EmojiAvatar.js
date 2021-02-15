@@ -1,4 +1,4 @@
-import { isSurfer } from "kudzu/emoji/emojis";
+import { isSurfer } from "kudzu/emoji/isSurfer";
 import { TextImage } from "kudzu/graphics2d/TextImage";
 import { setContextSize } from "kudzu/html/canvas";
 import { AvatarMode } from "./AvatarMode";

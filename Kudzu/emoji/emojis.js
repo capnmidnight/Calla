@@ -1,11 +1,4 @@
 import { Emoji } from "./Emoji";
-import { EmojiGroup } from "./EmojiGroup";
-export function isSurfer(e) {
-    return allAllSurfingGroupGroup.contains(e)
-        || allAllRowingBoatGroupGroup.contains(e)
-        || allAllSwimmingGroupGroup.contains(e)
-        || allAllMerpersonGroupGroup.contains(e);
-}
 export const textStyle = new Emoji("\uFE0E", "Variation Selector-15: text style");
 export const emojiStyle = new Emoji("\uFE0F", "Variation Selector-16: emoji style");
 export const zeroWidthJoiner = new Emoji("\u200D", "Zero Width Joiner");
@@ -13,1625 +6,573 @@ export const combiningEnclosingKeycap = new Emoji("\u20E3", "Combining Enclosing
 export const female = new Emoji("\u2640\uFE0F", "Female");
 export const male = new Emoji("\u2642\uFE0F", "Male");
 export const transgenderSymbol = new Emoji("\u26A7\uFE0F", "Transgender Symbol");
-export const allFemale = [
-    female,
-    male,
-    transgenderSymbol
-];
 export const lightSkinTone = new Emoji("\u{1F3FB}\uDFFB", "Light Skin Tone");
 export const mediumLightSkinTone = new Emoji("\u{1F3FC}\uDFFC", "Medium-Light Skin Tone");
 export const mediumSkinTone = new Emoji("\u{1F3FD}\uDFFD", "Medium Skin Tone");
 export const mediumDarkSkinTone = new Emoji("\u{1F3FE}\uDFFE", "Medium-Dark Skin Tone");
 export const darkSkinTone = new Emoji("\u{1F3FF}\uDFFF", "Dark Skin Tone");
-export const allLightSkinTone = [
-    lightSkinTone,
-    mediumLightSkinTone,
-    mediumSkinTone,
-    mediumDarkSkinTone,
-    darkSkinTone
-];
 export const redHair = new Emoji("\u{1F9B0}\uDDB0", "Red Hair");
 export const curlyHair = new Emoji("\u{1F9B1}\uDDB1", "Curly Hair");
 export const whiteHair = new Emoji("\u{1F9B3}\uDDB3", "White Hair");
 export const bald = new Emoji("\u{1F9B2}\uDDB2", "Bald");
-export const allRedHair = [
-    redHair,
-    curlyHair,
-    whiteHair,
-    bald
-];
 export const frowning = new Emoji("\u{1F64D}\uDE4D", "Frowning");
 export const frowningLightSkinTone = new Emoji("\u{1F64D}\uDE4D\u{1F3FB}\uDFFB", "Frowning: Light Skin Tone");
 export const frowningMediumLightSkinTone = new Emoji("\u{1F64D}\uDE4D\u{1F3FC}\uDFFC", "Frowning: Medium-Light Skin Tone");
 export const frowningMediumSkinTone = new Emoji("\u{1F64D}\uDE4D\u{1F3FD}\uDFFD", "Frowning: Medium Skin Tone");
 export const frowningMediumDarkSkinTone = new Emoji("\u{1F64D}\uDE4D\u{1F3FE}\uDFFE", "Frowning: Medium-Dark Skin Tone");
 export const frowningDarkSkinTone = new Emoji("\u{1F64D}\uDE4D\u{1F3FF}\uDFFF", "Frowning: Dark Skin Tone");
-export const allFrowning = [
-    frowning,
-    frowningLightSkinTone,
-    frowningMediumLightSkinTone,
-    frowningMediumSkinTone,
-    frowningMediumDarkSkinTone,
-    frowningDarkSkinTone
-];
-export const allFrowningGroup = new EmojiGroup("\u{1F64D}\uDE4D", "Frowning", ...allFrowning);
 export const frowningMale = new Emoji("\u{1F64D}\uDE4D\u200D\u2642\uFE0F", "Frowning: Male");
 export const frowningLightSkinToneMale = new Emoji("\u{1F64D}\uDE4D\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Frowning: Light Skin Tone: Male");
 export const frowningMediumLightSkinToneMale = new Emoji("\u{1F64D}\uDE4D\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Frowning: Medium-Light Skin Tone: Male");
 export const frowningMediumSkinToneMale = new Emoji("\u{1F64D}\uDE4D\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Frowning: Medium Skin Tone: Male");
 export const frowningMediumDarkSkinToneMale = new Emoji("\u{1F64D}\uDE4D\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Frowning: Medium-Dark Skin Tone: Male");
 export const frowningDarkSkinToneMale = new Emoji("\u{1F64D}\uDE4D\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Frowning: Dark Skin Tone: Male");
-export const allFrowningMale = [
-    frowningMale,
-    frowningLightSkinToneMale,
-    frowningMediumLightSkinToneMale,
-    frowningMediumSkinToneMale,
-    frowningMediumDarkSkinToneMale,
-    frowningDarkSkinToneMale
-];
-export const allFrowningMaleGroup = new EmojiGroup("\u{1F64D}\uDE4D\u200D\u2642\uFE0F", "Frowning: Male", ...allFrowningMale);
 export const frowningFemale = new Emoji("\u{1F64D}\uDE4D\u200D\u2640\uFE0F", "Frowning: Female");
 export const frowningLightSkinToneFemale = new Emoji("\u{1F64D}\uDE4D\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Frowning: Light Skin Tone: Female");
 export const frowningMediumLightSkinToneFemale = new Emoji("\u{1F64D}\uDE4D\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Frowning: Medium-Light Skin Tone: Female");
 export const frowningMediumSkinToneFemale = new Emoji("\u{1F64D}\uDE4D\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Frowning: Medium Skin Tone: Female");
 export const frowningMediumDarkSkinToneFemale = new Emoji("\u{1F64D}\uDE4D\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Frowning: Medium-Dark Skin Tone: Female");
 export const frowningDarkSkinToneFemale = new Emoji("\u{1F64D}\uDE4D\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Frowning: Dark Skin Tone: Female");
-export const allFrowningFemale = [
-    frowningFemale,
-    frowningLightSkinToneFemale,
-    frowningMediumLightSkinToneFemale,
-    frowningMediumSkinToneFemale,
-    frowningMediumDarkSkinToneFemale,
-    frowningDarkSkinToneFemale
-];
-export const allFrowningFemaleGroup = new EmojiGroup("\u{1F64D}\uDE4D\u200D\u2640\uFE0F", "Frowning: Female", ...allFrowningFemale);
-export const allAllFrowningGroup = [
-    allFrowningGroup,
-    allFrowningMaleGroup,
-    allFrowningFemaleGroup
-];
-export const allAllFrowningGroupGroup = new EmojiGroup("\u{1F64D}\uDE4D", "Frowning", ...allAllFrowningGroup);
 export const pouting = new Emoji("\u{1F64E}\uDE4E", "Pouting");
 export const poutingLightSkinTone = new Emoji("\u{1F64E}\uDE4E\u{1F3FB}\uDFFB", "Pouting: Light Skin Tone");
 export const poutingMediumLightSkinTone = new Emoji("\u{1F64E}\uDE4E\u{1F3FC}\uDFFC", "Pouting: Medium-Light Skin Tone");
 export const poutingMediumSkinTone = new Emoji("\u{1F64E}\uDE4E\u{1F3FD}\uDFFD", "Pouting: Medium Skin Tone");
 export const poutingMediumDarkSkinTone = new Emoji("\u{1F64E}\uDE4E\u{1F3FE}\uDFFE", "Pouting: Medium-Dark Skin Tone");
 export const poutingDarkSkinTone = new Emoji("\u{1F64E}\uDE4E\u{1F3FF}\uDFFF", "Pouting: Dark Skin Tone");
-export const allPouting = [
-    pouting,
-    poutingLightSkinTone,
-    poutingMediumLightSkinTone,
-    poutingMediumSkinTone,
-    poutingMediumDarkSkinTone,
-    poutingDarkSkinTone
-];
-export const allPoutingGroup = new EmojiGroup("\u{1F64E}\uDE4E", "Pouting", ...allPouting);
 export const poutingMale = new Emoji("\u{1F64E}\uDE4E\u200D\u2642\uFE0F", "Pouting: Male");
 export const poutingLightSkinToneMale = new Emoji("\u{1F64E}\uDE4E\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Pouting: Light Skin Tone: Male");
 export const poutingMediumLightSkinToneMale = new Emoji("\u{1F64E}\uDE4E\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Pouting: Medium-Light Skin Tone: Male");
 export const poutingMediumSkinToneMale = new Emoji("\u{1F64E}\uDE4E\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Pouting: Medium Skin Tone: Male");
 export const poutingMediumDarkSkinToneMale = new Emoji("\u{1F64E}\uDE4E\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Pouting: Medium-Dark Skin Tone: Male");
 export const poutingDarkSkinToneMale = new Emoji("\u{1F64E}\uDE4E\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Pouting: Dark Skin Tone: Male");
-export const allPoutingMale = [
-    poutingMale,
-    poutingLightSkinToneMale,
-    poutingMediumLightSkinToneMale,
-    poutingMediumSkinToneMale,
-    poutingMediumDarkSkinToneMale,
-    poutingDarkSkinToneMale
-];
-export const allPoutingMaleGroup = new EmojiGroup("\u{1F64E}\uDE4E\u200D\u2642\uFE0F", "Pouting: Male", ...allPoutingMale);
 export const poutingFemale = new Emoji("\u{1F64E}\uDE4E\u200D\u2640\uFE0F", "Pouting: Female");
 export const poutingLightSkinToneFemale = new Emoji("\u{1F64E}\uDE4E\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Pouting: Light Skin Tone: Female");
 export const poutingMediumLightSkinToneFemale = new Emoji("\u{1F64E}\uDE4E\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Pouting: Medium-Light Skin Tone: Female");
 export const poutingMediumSkinToneFemale = new Emoji("\u{1F64E}\uDE4E\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Pouting: Medium Skin Tone: Female");
 export const poutingMediumDarkSkinToneFemale = new Emoji("\u{1F64E}\uDE4E\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Pouting: Medium-Dark Skin Tone: Female");
 export const poutingDarkSkinToneFemale = new Emoji("\u{1F64E}\uDE4E\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Pouting: Dark Skin Tone: Female");
-export const allPoutingFemale = [
-    poutingFemale,
-    poutingLightSkinToneFemale,
-    poutingMediumLightSkinToneFemale,
-    poutingMediumSkinToneFemale,
-    poutingMediumDarkSkinToneFemale,
-    poutingDarkSkinToneFemale
-];
-export const allPoutingFemaleGroup = new EmojiGroup("\u{1F64E}\uDE4E\u200D\u2640\uFE0F", "Pouting: Female", ...allPoutingFemale);
-export const allAllPoutingGroup = [
-    allPoutingGroup,
-    allPoutingMaleGroup,
-    allPoutingFemaleGroup
-];
-export const allAllPoutingGroupGroup = new EmojiGroup("\u{1F64E}\uDE4E", "Pouting", ...allAllPoutingGroup);
 export const gesturingNO = new Emoji("\u{1F645}\uDE45", "Gesturing NO");
 export const gesturingNOLightSkinTone = new Emoji("\u{1F645}\uDE45\u{1F3FB}\uDFFB", "Gesturing NO: Light Skin Tone");
 export const gesturingNOMediumLightSkinTone = new Emoji("\u{1F645}\uDE45\u{1F3FC}\uDFFC", "Gesturing NO: Medium-Light Skin Tone");
 export const gesturingNOMediumSkinTone = new Emoji("\u{1F645}\uDE45\u{1F3FD}\uDFFD", "Gesturing NO: Medium Skin Tone");
 export const gesturingNOMediumDarkSkinTone = new Emoji("\u{1F645}\uDE45\u{1F3FE}\uDFFE", "Gesturing NO: Medium-Dark Skin Tone");
 export const gesturingNODarkSkinTone = new Emoji("\u{1F645}\uDE45\u{1F3FF}\uDFFF", "Gesturing NO: Dark Skin Tone");
-export const allGesturingNO = [
-    gesturingNO,
-    gesturingNOLightSkinTone,
-    gesturingNOMediumLightSkinTone,
-    gesturingNOMediumSkinTone,
-    gesturingNOMediumDarkSkinTone,
-    gesturingNODarkSkinTone
-];
-export const allGesturingNOGroup = new EmojiGroup("\u{1F645}\uDE45", "Gesturing NO", ...allGesturingNO);
 export const gesturingNOMale = new Emoji("\u{1F645}\uDE45\u200D\u2642\uFE0F", "Gesturing NO: Male");
 export const gesturingNOLightSkinToneMale = new Emoji("\u{1F645}\uDE45\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Gesturing NO: Light Skin Tone: Male");
 export const gesturingNOMediumLightSkinToneMale = new Emoji("\u{1F645}\uDE45\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Gesturing NO: Medium-Light Skin Tone: Male");
 export const gesturingNOMediumSkinToneMale = new Emoji("\u{1F645}\uDE45\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Gesturing NO: Medium Skin Tone: Male");
 export const gesturingNOMediumDarkSkinToneMale = new Emoji("\u{1F645}\uDE45\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Gesturing NO: Medium-Dark Skin Tone: Male");
 export const gesturingNODarkSkinToneMale = new Emoji("\u{1F645}\uDE45\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Gesturing NO: Dark Skin Tone: Male");
-export const allGesturingNOMale = [
-    gesturingNOMale,
-    gesturingNOLightSkinToneMale,
-    gesturingNOMediumLightSkinToneMale,
-    gesturingNOMediumSkinToneMale,
-    gesturingNOMediumDarkSkinToneMale,
-    gesturingNODarkSkinToneMale
-];
-export const allGesturingNOMaleGroup = new EmojiGroup("\u{1F645}\uDE45\u200D\u2642\uFE0F", "Gesturing NO: Male", ...allGesturingNOMale);
 export const gesturingNOFemale = new Emoji("\u{1F645}\uDE45\u200D\u2640\uFE0F", "Gesturing NO: Female");
 export const gesturingNOLightSkinToneFemale = new Emoji("\u{1F645}\uDE45\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Gesturing NO: Light Skin Tone: Female");
 export const gesturingNOMediumLightSkinToneFemale = new Emoji("\u{1F645}\uDE45\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Gesturing NO: Medium-Light Skin Tone: Female");
 export const gesturingNOMediumSkinToneFemale = new Emoji("\u{1F645}\uDE45\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Gesturing NO: Medium Skin Tone: Female");
 export const gesturingNOMediumDarkSkinToneFemale = new Emoji("\u{1F645}\uDE45\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Gesturing NO: Medium-Dark Skin Tone: Female");
 export const gesturingNODarkSkinToneFemale = new Emoji("\u{1F645}\uDE45\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Gesturing NO: Dark Skin Tone: Female");
-export const allGesturingNOFemale = [
-    gesturingNOFemale,
-    gesturingNOLightSkinToneFemale,
-    gesturingNOMediumLightSkinToneFemale,
-    gesturingNOMediumSkinToneFemale,
-    gesturingNOMediumDarkSkinToneFemale,
-    gesturingNODarkSkinToneFemale
-];
-export const allGesturingNOFemaleGroup = new EmojiGroup("\u{1F645}\uDE45\u200D\u2640\uFE0F", "Gesturing NO: Female", ...allGesturingNOFemale);
-export const allAllGesturingNOGroup = [
-    allGesturingNOGroup,
-    allGesturingNOMaleGroup,
-    allGesturingNOFemaleGroup
-];
-export const allAllGesturingNOGroupGroup = new EmojiGroup("\u{1F645}\uDE45", "Gesturing NO", ...allAllGesturingNOGroup);
 export const gesturingOK = new Emoji("\u{1F646}\uDE46", "Gesturing OK");
 export const gesturingOKLightSkinTone = new Emoji("\u{1F646}\uDE46\u{1F3FB}\uDFFB", "Gesturing OK: Light Skin Tone");
 export const gesturingOKMediumLightSkinTone = new Emoji("\u{1F646}\uDE46\u{1F3FC}\uDFFC", "Gesturing OK: Medium-Light Skin Tone");
 export const gesturingOKMediumSkinTone = new Emoji("\u{1F646}\uDE46\u{1F3FD}\uDFFD", "Gesturing OK: Medium Skin Tone");
 export const gesturingOKMediumDarkSkinTone = new Emoji("\u{1F646}\uDE46\u{1F3FE}\uDFFE", "Gesturing OK: Medium-Dark Skin Tone");
 export const gesturingOKDarkSkinTone = new Emoji("\u{1F646}\uDE46\u{1F3FF}\uDFFF", "Gesturing OK: Dark Skin Tone");
-export const allGesturingOK = [
-    gesturingOK,
-    gesturingOKLightSkinTone,
-    gesturingOKMediumLightSkinTone,
-    gesturingOKMediumSkinTone,
-    gesturingOKMediumDarkSkinTone,
-    gesturingOKDarkSkinTone
-];
-export const allGesturingOKGroup = new EmojiGroup("\u{1F646}\uDE46", "Gesturing OK", ...allGesturingOK);
 export const gesturingOKMale = new Emoji("\u{1F646}\uDE46\u200D\u2642\uFE0F", "Gesturing OK: Male");
 export const gesturingOKLightSkinToneMale = new Emoji("\u{1F646}\uDE46\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Gesturing OK: Light Skin Tone: Male");
 export const gesturingOKMediumLightSkinToneMale = new Emoji("\u{1F646}\uDE46\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Gesturing OK: Medium-Light Skin Tone: Male");
 export const gesturingOKMediumSkinToneMale = new Emoji("\u{1F646}\uDE46\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Gesturing OK: Medium Skin Tone: Male");
 export const gesturingOKMediumDarkSkinToneMale = new Emoji("\u{1F646}\uDE46\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Gesturing OK: Medium-Dark Skin Tone: Male");
 export const gesturingOKDarkSkinToneMale = new Emoji("\u{1F646}\uDE46\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Gesturing OK: Dark Skin Tone: Male");
-export const allGesturingOKMale = [
-    gesturingOKMale,
-    gesturingOKLightSkinToneMale,
-    gesturingOKMediumLightSkinToneMale,
-    gesturingOKMediumSkinToneMale,
-    gesturingOKMediumDarkSkinToneMale,
-    gesturingOKDarkSkinToneMale
-];
-export const allGesturingOKMaleGroup = new EmojiGroup("\u{1F646}\uDE46\u200D\u2642\uFE0F", "Gesturing OK: Male", ...allGesturingOKMale);
 export const gesturingOKFemale = new Emoji("\u{1F646}\uDE46\u200D\u2640\uFE0F", "Gesturing OK: Female");
 export const gesturingOKLightSkinToneFemale = new Emoji("\u{1F646}\uDE46\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Gesturing OK: Light Skin Tone: Female");
 export const gesturingOKMediumLightSkinToneFemale = new Emoji("\u{1F646}\uDE46\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Gesturing OK: Medium-Light Skin Tone: Female");
 export const gesturingOKMediumSkinToneFemale = new Emoji("\u{1F646}\uDE46\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Gesturing OK: Medium Skin Tone: Female");
 export const gesturingOKMediumDarkSkinToneFemale = new Emoji("\u{1F646}\uDE46\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Gesturing OK: Medium-Dark Skin Tone: Female");
 export const gesturingOKDarkSkinToneFemale = new Emoji("\u{1F646}\uDE46\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Gesturing OK: Dark Skin Tone: Female");
-export const allGesturingOKFemale = [
-    gesturingOKFemale,
-    gesturingOKLightSkinToneFemale,
-    gesturingOKMediumLightSkinToneFemale,
-    gesturingOKMediumSkinToneFemale,
-    gesturingOKMediumDarkSkinToneFemale,
-    gesturingOKDarkSkinToneFemale
-];
-export const allGesturingOKFemaleGroup = new EmojiGroup("\u{1F646}\uDE46\u200D\u2640\uFE0F", "Gesturing OK: Female", ...allGesturingOKFemale);
-export const allAllGesturingOKGroup = [
-    allGesturingOKGroup,
-    allGesturingOKMaleGroup,
-    allGesturingOKFemaleGroup
-];
-export const allAllGesturingOKGroupGroup = new EmojiGroup("\u{1F646}\uDE46", "Gesturing OK", ...allAllGesturingOKGroup);
 export const tippingHand = new Emoji("\u{1F481}\uDC81", "Tipping Hand");
 export const tippingHandLightSkinTone = new Emoji("\u{1F481}\uDC81\u{1F3FB}\uDFFB", "Tipping Hand: Light Skin Tone");
 export const tippingHandMediumLightSkinTone = new Emoji("\u{1F481}\uDC81\u{1F3FC}\uDFFC", "Tipping Hand: Medium-Light Skin Tone");
 export const tippingHandMediumSkinTone = new Emoji("\u{1F481}\uDC81\u{1F3FD}\uDFFD", "Tipping Hand: Medium Skin Tone");
 export const tippingHandMediumDarkSkinTone = new Emoji("\u{1F481}\uDC81\u{1F3FE}\uDFFE", "Tipping Hand: Medium-Dark Skin Tone");
 export const tippingHandDarkSkinTone = new Emoji("\u{1F481}\uDC81\u{1F3FF}\uDFFF", "Tipping Hand: Dark Skin Tone");
-export const allTippingHand = [
-    tippingHand,
-    tippingHandLightSkinTone,
-    tippingHandMediumLightSkinTone,
-    tippingHandMediumSkinTone,
-    tippingHandMediumDarkSkinTone,
-    tippingHandDarkSkinTone
-];
-export const allTippingHandGroup = new EmojiGroup("\u{1F481}\uDC81", "Tipping Hand", ...allTippingHand);
 export const tippingHandMale = new Emoji("\u{1F481}\uDC81\u200D\u2642\uFE0F", "Tipping Hand: Male");
 export const tippingHandLightSkinToneMale = new Emoji("\u{1F481}\uDC81\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Tipping Hand: Light Skin Tone: Male");
 export const tippingHandMediumLightSkinToneMale = new Emoji("\u{1F481}\uDC81\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Tipping Hand: Medium-Light Skin Tone: Male");
 export const tippingHandMediumSkinToneMale = new Emoji("\u{1F481}\uDC81\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Tipping Hand: Medium Skin Tone: Male");
 export const tippingHandMediumDarkSkinToneMale = new Emoji("\u{1F481}\uDC81\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Tipping Hand: Medium-Dark Skin Tone: Male");
 export const tippingHandDarkSkinToneMale = new Emoji("\u{1F481}\uDC81\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Tipping Hand: Dark Skin Tone: Male");
-export const allTippingHandMale = [
-    tippingHandMale,
-    tippingHandLightSkinToneMale,
-    tippingHandMediumLightSkinToneMale,
-    tippingHandMediumSkinToneMale,
-    tippingHandMediumDarkSkinToneMale,
-    tippingHandDarkSkinToneMale
-];
-export const allTippingHandMaleGroup = new EmojiGroup("\u{1F481}\uDC81\u200D\u2642\uFE0F", "Tipping Hand: Male", ...allTippingHandMale);
 export const tippingHandFemale = new Emoji("\u{1F481}\uDC81\u200D\u2640\uFE0F", "Tipping Hand: Female");
 export const tippingHandLightSkinToneFemale = new Emoji("\u{1F481}\uDC81\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Tipping Hand: Light Skin Tone: Female");
 export const tippingHandMediumLightSkinToneFemale = new Emoji("\u{1F481}\uDC81\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Tipping Hand: Medium-Light Skin Tone: Female");
 export const tippingHandMediumSkinToneFemale = new Emoji("\u{1F481}\uDC81\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Tipping Hand: Medium Skin Tone: Female");
 export const tippingHandMediumDarkSkinToneFemale = new Emoji("\u{1F481}\uDC81\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Tipping Hand: Medium-Dark Skin Tone: Female");
 export const tippingHandDarkSkinToneFemale = new Emoji("\u{1F481}\uDC81\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Tipping Hand: Dark Skin Tone: Female");
-export const allTippingHandFemale = [
-    tippingHandFemale,
-    tippingHandLightSkinToneFemale,
-    tippingHandMediumLightSkinToneFemale,
-    tippingHandMediumSkinToneFemale,
-    tippingHandMediumDarkSkinToneFemale,
-    tippingHandDarkSkinToneFemale
-];
-export const allTippingHandFemaleGroup = new EmojiGroup("\u{1F481}\uDC81\u200D\u2640\uFE0F", "Tipping Hand: Female", ...allTippingHandFemale);
-export const allAllTippingHandGroup = [
-    allTippingHandGroup,
-    allTippingHandMaleGroup,
-    allTippingHandFemaleGroup
-];
-export const allAllTippingHandGroupGroup = new EmojiGroup("\u{1F481}\uDC81", "Tipping Hand", ...allAllTippingHandGroup);
 export const raisingHand = new Emoji("\u{1F64B}\uDE4B", "Raising Hand");
 export const raisingHandLightSkinTone = new Emoji("\u{1F64B}\uDE4B\u{1F3FB}\uDFFB", "Raising Hand: Light Skin Tone");
 export const raisingHandMediumLightSkinTone = new Emoji("\u{1F64B}\uDE4B\u{1F3FC}\uDFFC", "Raising Hand: Medium-Light Skin Tone");
 export const raisingHandMediumSkinTone = new Emoji("\u{1F64B}\uDE4B\u{1F3FD}\uDFFD", "Raising Hand: Medium Skin Tone");
 export const raisingHandMediumDarkSkinTone = new Emoji("\u{1F64B}\uDE4B\u{1F3FE}\uDFFE", "Raising Hand: Medium-Dark Skin Tone");
 export const raisingHandDarkSkinTone = new Emoji("\u{1F64B}\uDE4B\u{1F3FF}\uDFFF", "Raising Hand: Dark Skin Tone");
-export const allRaisingHand = [
-    raisingHand,
-    raisingHandLightSkinTone,
-    raisingHandMediumLightSkinTone,
-    raisingHandMediumSkinTone,
-    raisingHandMediumDarkSkinTone,
-    raisingHandDarkSkinTone
-];
-export const allRaisingHandGroup = new EmojiGroup("\u{1F64B}\uDE4B", "Raising Hand", ...allRaisingHand);
 export const raisingHandMale = new Emoji("\u{1F64B}\uDE4B\u200D\u2642\uFE0F", "Raising Hand: Male");
 export const raisingHandLightSkinToneMale = new Emoji("\u{1F64B}\uDE4B\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Raising Hand: Light Skin Tone: Male");
 export const raisingHandMediumLightSkinToneMale = new Emoji("\u{1F64B}\uDE4B\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Raising Hand: Medium-Light Skin Tone: Male");
 export const raisingHandMediumSkinToneMale = new Emoji("\u{1F64B}\uDE4B\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Raising Hand: Medium Skin Tone: Male");
 export const raisingHandMediumDarkSkinToneMale = new Emoji("\u{1F64B}\uDE4B\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Raising Hand: Medium-Dark Skin Tone: Male");
 export const raisingHandDarkSkinToneMale = new Emoji("\u{1F64B}\uDE4B\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Raising Hand: Dark Skin Tone: Male");
-export const allRaisingHandMale = [
-    raisingHandMale,
-    raisingHandLightSkinToneMale,
-    raisingHandMediumLightSkinToneMale,
-    raisingHandMediumSkinToneMale,
-    raisingHandMediumDarkSkinToneMale,
-    raisingHandDarkSkinToneMale
-];
-export const allRaisingHandMaleGroup = new EmojiGroup("\u{1F64B}\uDE4B\u200D\u2642\uFE0F", "Raising Hand: Male", ...allRaisingHandMale);
 export const raisingHandFemale = new Emoji("\u{1F64B}\uDE4B\u200D\u2640\uFE0F", "Raising Hand: Female");
 export const raisingHandLightSkinToneFemale = new Emoji("\u{1F64B}\uDE4B\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Raising Hand: Light Skin Tone: Female");
 export const raisingHandMediumLightSkinToneFemale = new Emoji("\u{1F64B}\uDE4B\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Raising Hand: Medium-Light Skin Tone: Female");
 export const raisingHandMediumSkinToneFemale = new Emoji("\u{1F64B}\uDE4B\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Raising Hand: Medium Skin Tone: Female");
 export const raisingHandMediumDarkSkinToneFemale = new Emoji("\u{1F64B}\uDE4B\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Raising Hand: Medium-Dark Skin Tone: Female");
 export const raisingHandDarkSkinToneFemale = new Emoji("\u{1F64B}\uDE4B\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Raising Hand: Dark Skin Tone: Female");
-export const allRaisingHandFemale = [
-    raisingHandFemale,
-    raisingHandLightSkinToneFemale,
-    raisingHandMediumLightSkinToneFemale,
-    raisingHandMediumSkinToneFemale,
-    raisingHandMediumDarkSkinToneFemale,
-    raisingHandDarkSkinToneFemale
-];
-export const allRaisingHandFemaleGroup = new EmojiGroup("\u{1F64B}\uDE4B\u200D\u2640\uFE0F", "Raising Hand: Female", ...allRaisingHandFemale);
-export const allAllRaisingHandGroup = [
-    allRaisingHandGroup,
-    allRaisingHandMaleGroup,
-    allRaisingHandFemaleGroup
-];
-export const allAllRaisingHandGroupGroup = new EmojiGroup("\u{1F64B}\uDE4B", "Raising Hand", ...allAllRaisingHandGroup);
 export const bowing = new Emoji("\u{1F647}\uDE47", "Bowing");
 export const bowingLightSkinTone = new Emoji("\u{1F647}\uDE47\u{1F3FB}\uDFFB", "Bowing: Light Skin Tone");
 export const bowingMediumLightSkinTone = new Emoji("\u{1F647}\uDE47\u{1F3FC}\uDFFC", "Bowing: Medium-Light Skin Tone");
 export const bowingMediumSkinTone = new Emoji("\u{1F647}\uDE47\u{1F3FD}\uDFFD", "Bowing: Medium Skin Tone");
 export const bowingMediumDarkSkinTone = new Emoji("\u{1F647}\uDE47\u{1F3FE}\uDFFE", "Bowing: Medium-Dark Skin Tone");
 export const bowingDarkSkinTone = new Emoji("\u{1F647}\uDE47\u{1F3FF}\uDFFF", "Bowing: Dark Skin Tone");
-export const allBowing = [
-    bowing,
-    bowingLightSkinTone,
-    bowingMediumLightSkinTone,
-    bowingMediumSkinTone,
-    bowingMediumDarkSkinTone,
-    bowingDarkSkinTone
-];
-export const allBowingGroup = new EmojiGroup("\u{1F647}\uDE47", "Bowing", ...allBowing);
 export const bowingMale = new Emoji("\u{1F647}\uDE47\u200D\u2642\uFE0F", "Bowing: Male");
 export const bowingLightSkinToneMale = new Emoji("\u{1F647}\uDE47\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Bowing: Light Skin Tone: Male");
 export const bowingMediumLightSkinToneMale = new Emoji("\u{1F647}\uDE47\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Bowing: Medium-Light Skin Tone: Male");
 export const bowingMediumSkinToneMale = new Emoji("\u{1F647}\uDE47\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Bowing: Medium Skin Tone: Male");
 export const bowingMediumDarkSkinToneMale = new Emoji("\u{1F647}\uDE47\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Bowing: Medium-Dark Skin Tone: Male");
 export const bowingDarkSkinToneMale = new Emoji("\u{1F647}\uDE47\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Bowing: Dark Skin Tone: Male");
-export const allBowingMale = [
-    bowingMale,
-    bowingLightSkinToneMale,
-    bowingMediumLightSkinToneMale,
-    bowingMediumSkinToneMale,
-    bowingMediumDarkSkinToneMale,
-    bowingDarkSkinToneMale
-];
-export const allBowingMaleGroup = new EmojiGroup("\u{1F647}\uDE47\u200D\u2642\uFE0F", "Bowing: Male", ...allBowingMale);
 export const bowingFemale = new Emoji("\u{1F647}\uDE47\u200D\u2640\uFE0F", "Bowing: Female");
 export const bowingLightSkinToneFemale = new Emoji("\u{1F647}\uDE47\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Bowing: Light Skin Tone: Female");
 export const bowingMediumLightSkinToneFemale = new Emoji("\u{1F647}\uDE47\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Bowing: Medium-Light Skin Tone: Female");
 export const bowingMediumSkinToneFemale = new Emoji("\u{1F647}\uDE47\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Bowing: Medium Skin Tone: Female");
 export const bowingMediumDarkSkinToneFemale = new Emoji("\u{1F647}\uDE47\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Bowing: Medium-Dark Skin Tone: Female");
 export const bowingDarkSkinToneFemale = new Emoji("\u{1F647}\uDE47\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Bowing: Dark Skin Tone: Female");
-export const allBowingFemale = [
-    bowingFemale,
-    bowingLightSkinToneFemale,
-    bowingMediumLightSkinToneFemale,
-    bowingMediumSkinToneFemale,
-    bowingMediumDarkSkinToneFemale,
-    bowingDarkSkinToneFemale
-];
-export const allBowingFemaleGroup = new EmojiGroup("\u{1F647}\uDE47\u200D\u2640\uFE0F", "Bowing: Female", ...allBowingFemale);
-export const allAllBowingGroup = [
-    allBowingGroup,
-    allBowingMaleGroup,
-    allBowingFemaleGroup
-];
-export const allAllBowingGroupGroup = new EmojiGroup("\u{1F647}\uDE47", "Bowing", ...allAllBowingGroup);
 export const facepalming = new Emoji("\u{1F926}\uDD26", "Facepalming");
 export const facepalmingLightSkinTone = new Emoji("\u{1F926}\uDD26\u{1F3FB}\uDFFB", "Facepalming: Light Skin Tone");
 export const facepalmingMediumLightSkinTone = new Emoji("\u{1F926}\uDD26\u{1F3FC}\uDFFC", "Facepalming: Medium-Light Skin Tone");
 export const facepalmingMediumSkinTone = new Emoji("\u{1F926}\uDD26\u{1F3FD}\uDFFD", "Facepalming: Medium Skin Tone");
 export const facepalmingMediumDarkSkinTone = new Emoji("\u{1F926}\uDD26\u{1F3FE}\uDFFE", "Facepalming: Medium-Dark Skin Tone");
 export const facepalmingDarkSkinTone = new Emoji("\u{1F926}\uDD26\u{1F3FF}\uDFFF", "Facepalming: Dark Skin Tone");
-export const allFacepalming = [
-    facepalming,
-    facepalmingLightSkinTone,
-    facepalmingMediumLightSkinTone,
-    facepalmingMediumSkinTone,
-    facepalmingMediumDarkSkinTone,
-    facepalmingDarkSkinTone
-];
-export const allFacepalmingGroup = new EmojiGroup("\u{1F926}\uDD26", "Facepalming", ...allFacepalming);
 export const facepalmingMale = new Emoji("\u{1F926}\uDD26\u200D\u2642\uFE0F", "Facepalming: Male");
 export const facepalmingLightSkinToneMale = new Emoji("\u{1F926}\uDD26\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Facepalming: Light Skin Tone: Male");
 export const facepalmingMediumLightSkinToneMale = new Emoji("\u{1F926}\uDD26\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Facepalming: Medium-Light Skin Tone: Male");
 export const facepalmingMediumSkinToneMale = new Emoji("\u{1F926}\uDD26\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Facepalming: Medium Skin Tone: Male");
 export const facepalmingMediumDarkSkinToneMale = new Emoji("\u{1F926}\uDD26\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Facepalming: Medium-Dark Skin Tone: Male");
 export const facepalmingDarkSkinToneMale = new Emoji("\u{1F926}\uDD26\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Facepalming: Dark Skin Tone: Male");
-export const allFacepalmingMale = [
-    facepalmingMale,
-    facepalmingLightSkinToneMale,
-    facepalmingMediumLightSkinToneMale,
-    facepalmingMediumSkinToneMale,
-    facepalmingMediumDarkSkinToneMale,
-    facepalmingDarkSkinToneMale
-];
-export const allFacepalmingMaleGroup = new EmojiGroup("\u{1F926}\uDD26\u200D\u2642\uFE0F", "Facepalming: Male", ...allFacepalmingMale);
 export const facepalmingFemale = new Emoji("\u{1F926}\uDD26\u200D\u2640\uFE0F", "Facepalming: Female");
 export const facepalmingLightSkinToneFemale = new Emoji("\u{1F926}\uDD26\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Facepalming: Light Skin Tone: Female");
 export const facepalmingMediumLightSkinToneFemale = new Emoji("\u{1F926}\uDD26\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Facepalming: Medium-Light Skin Tone: Female");
 export const facepalmingMediumSkinToneFemale = new Emoji("\u{1F926}\uDD26\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Facepalming: Medium Skin Tone: Female");
 export const facepalmingMediumDarkSkinToneFemale = new Emoji("\u{1F926}\uDD26\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Facepalming: Medium-Dark Skin Tone: Female");
 export const facepalmingDarkSkinToneFemale = new Emoji("\u{1F926}\uDD26\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Facepalming: Dark Skin Tone: Female");
-export const allFacepalmingFemale = [
-    facepalmingFemale,
-    facepalmingLightSkinToneFemale,
-    facepalmingMediumLightSkinToneFemale,
-    facepalmingMediumSkinToneFemale,
-    facepalmingMediumDarkSkinToneFemale,
-    facepalmingDarkSkinToneFemale
-];
-export const allFacepalmingFemaleGroup = new EmojiGroup("\u{1F926}\uDD26\u200D\u2640\uFE0F", "Facepalming: Female", ...allFacepalmingFemale);
-export const allAllFacepalmingGroup = [
-    allFacepalmingGroup,
-    allFacepalmingMaleGroup,
-    allFacepalmingFemaleGroup
-];
-export const allAllFacepalmingGroupGroup = new EmojiGroup("\u{1F926}\uDD26", "Facepalming", ...allAllFacepalmingGroup);
 export const shrugging = new Emoji("\u{1F937}\uDD37", "Shrugging");
 export const shruggingLightSkinTone = new Emoji("\u{1F937}\uDD37\u{1F3FB}\uDFFB", "Shrugging: Light Skin Tone");
 export const shruggingMediumLightSkinTone = new Emoji("\u{1F937}\uDD37\u{1F3FC}\uDFFC", "Shrugging: Medium-Light Skin Tone");
 export const shruggingMediumSkinTone = new Emoji("\u{1F937}\uDD37\u{1F3FD}\uDFFD", "Shrugging: Medium Skin Tone");
 export const shruggingMediumDarkSkinTone = new Emoji("\u{1F937}\uDD37\u{1F3FE}\uDFFE", "Shrugging: Medium-Dark Skin Tone");
 export const shruggingDarkSkinTone = new Emoji("\u{1F937}\uDD37\u{1F3FF}\uDFFF", "Shrugging: Dark Skin Tone");
-export const allShrugging = [
-    shrugging,
-    shruggingLightSkinTone,
-    shruggingMediumLightSkinTone,
-    shruggingMediumSkinTone,
-    shruggingMediumDarkSkinTone,
-    shruggingDarkSkinTone
-];
-export const allShruggingGroup = new EmojiGroup("\u{1F937}\uDD37", "Shrugging", ...allShrugging);
 export const shruggingMale = new Emoji("\u{1F937}\uDD37\u200D\u2642\uFE0F", "Shrugging: Male");
 export const shruggingLightSkinToneMale = new Emoji("\u{1F937}\uDD37\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Shrugging: Light Skin Tone: Male");
 export const shruggingMediumLightSkinToneMale = new Emoji("\u{1F937}\uDD37\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Shrugging: Medium-Light Skin Tone: Male");
 export const shruggingMediumSkinToneMale = new Emoji("\u{1F937}\uDD37\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Shrugging: Medium Skin Tone: Male");
 export const shruggingMediumDarkSkinToneMale = new Emoji("\u{1F937}\uDD37\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Shrugging: Medium-Dark Skin Tone: Male");
 export const shruggingDarkSkinToneMale = new Emoji("\u{1F937}\uDD37\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Shrugging: Dark Skin Tone: Male");
-export const allShruggingMale = [
-    shruggingMale,
-    shruggingLightSkinToneMale,
-    shruggingMediumLightSkinToneMale,
-    shruggingMediumSkinToneMale,
-    shruggingMediumDarkSkinToneMale,
-    shruggingDarkSkinToneMale
-];
-export const allShruggingMaleGroup = new EmojiGroup("\u{1F937}\uDD37\u200D\u2642\uFE0F", "Shrugging: Male", ...allShruggingMale);
 export const shruggingFemale = new Emoji("\u{1F937}\uDD37\u200D\u2640\uFE0F", "Shrugging: Female");
 export const shruggingLightSkinToneFemale = new Emoji("\u{1F937}\uDD37\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Shrugging: Light Skin Tone: Female");
 export const shruggingMediumLightSkinToneFemale = new Emoji("\u{1F937}\uDD37\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Shrugging: Medium-Light Skin Tone: Female");
 export const shruggingMediumSkinToneFemale = new Emoji("\u{1F937}\uDD37\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Shrugging: Medium Skin Tone: Female");
 export const shruggingMediumDarkSkinToneFemale = new Emoji("\u{1F937}\uDD37\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Shrugging: Medium-Dark Skin Tone: Female");
 export const shruggingDarkSkinToneFemale = new Emoji("\u{1F937}\uDD37\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Shrugging: Dark Skin Tone: Female");
-export const allShruggingFemale = [
-    shruggingFemale,
-    shruggingLightSkinToneFemale,
-    shruggingMediumLightSkinToneFemale,
-    shruggingMediumSkinToneFemale,
-    shruggingMediumDarkSkinToneFemale,
-    shruggingDarkSkinToneFemale
-];
-export const allShruggingFemaleGroup = new EmojiGroup("\u{1F937}\uDD37\u200D\u2640\uFE0F", "Shrugging: Female", ...allShruggingFemale);
-export const allAllShruggingGroup = [
-    allShruggingGroup,
-    allShruggingMaleGroup,
-    allShruggingFemaleGroup
-];
-export const allAllShruggingGroupGroup = new EmojiGroup("\u{1F937}\uDD37", "Shrugging", ...allAllShruggingGroup);
-export const canTHear = new Emoji("\u{1F9CF}\uDDCF", "Can't Hear");
-export const canTHearLightSkinTone = new Emoji("\u{1F9CF}\uDDCF\u{1F3FB}\uDFFB", "Can't Hear: Light Skin Tone");
-export const canTHearMediumLightSkinTone = new Emoji("\u{1F9CF}\uDDCF\u{1F3FC}\uDFFC", "Can't Hear: Medium-Light Skin Tone");
-export const canTHearMediumSkinTone = new Emoji("\u{1F9CF}\uDDCF\u{1F3FD}\uDFFD", "Can't Hear: Medium Skin Tone");
-export const canTHearMediumDarkSkinTone = new Emoji("\u{1F9CF}\uDDCF\u{1F3FE}\uDFFE", "Can't Hear: Medium-Dark Skin Tone");
-export const canTHearDarkSkinTone = new Emoji("\u{1F9CF}\uDDCF\u{1F3FF}\uDFFF", "Can't Hear: Dark Skin Tone");
-export const allCanTHear = [
-    canTHear,
-    canTHearLightSkinTone,
-    canTHearMediumLightSkinTone,
-    canTHearMediumSkinTone,
-    canTHearMediumDarkSkinTone,
-    canTHearDarkSkinTone
-];
-export const allCanTHearGroup = new EmojiGroup("\u{1F9CF}\uDDCF", "Can't Hear", ...allCanTHear);
-export const canTHearMale = new Emoji("\u{1F9CF}\uDDCF\u200D\u2642\uFE0F", "Can't Hear: Male");
-export const canTHearLightSkinToneMale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Can't Hear: Light Skin Tone: Male");
-export const canTHearMediumLightSkinToneMale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Can't Hear: Medium-Light Skin Tone: Male");
-export const canTHearMediumSkinToneMale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Can't Hear: Medium Skin Tone: Male");
-export const canTHearMediumDarkSkinToneMale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Can't Hear: Medium-Dark Skin Tone: Male");
-export const canTHearDarkSkinToneMale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Can't Hear: Dark Skin Tone: Male");
-export const allCanTHearMale = [
-    canTHearMale,
-    canTHearLightSkinToneMale,
-    canTHearMediumLightSkinToneMale,
-    canTHearMediumSkinToneMale,
-    canTHearMediumDarkSkinToneMale,
-    canTHearDarkSkinToneMale
-];
-export const allCanTHearMaleGroup = new EmojiGroup("\u{1F9CF}\uDDCF\u200D\u2642\uFE0F", "Can't Hear: Male", ...allCanTHearMale);
-export const canTHearFemale = new Emoji("\u{1F9CF}\uDDCF\u200D\u2640\uFE0F", "Can't Hear: Female");
-export const canTHearLightSkinToneFemale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Can't Hear: Light Skin Tone: Female");
-export const canTHearMediumLightSkinToneFemale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Can't Hear: Medium-Light Skin Tone: Female");
-export const canTHearMediumSkinToneFemale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Can't Hear: Medium Skin Tone: Female");
-export const canTHearMediumDarkSkinToneFemale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Can't Hear: Medium-Dark Skin Tone: Female");
-export const canTHearDarkSkinToneFemale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Can't Hear: Dark Skin Tone: Female");
-export const allCanTHearFemale = [
-    canTHearFemale,
-    canTHearLightSkinToneFemale,
-    canTHearMediumLightSkinToneFemale,
-    canTHearMediumSkinToneFemale,
-    canTHearMediumDarkSkinToneFemale,
-    canTHearDarkSkinToneFemale
-];
-export const allCanTHearFemaleGroup = new EmojiGroup("\u{1F9CF}\uDDCF\u200D\u2640\uFE0F", "Can't Hear: Female", ...allCanTHearFemale);
-export const allAllCanTHearGroup = [
-    allCanTHearGroup,
-    allCanTHearMaleGroup,
-    allCanTHearFemaleGroup
-];
-export const allAllCanTHearGroupGroup = new EmojiGroup("\u{1F9CF}\uDDCF", "Can't Hear", ...allAllCanTHearGroup);
+export const cantHear = new Emoji("\u{1F9CF}\uDDCF", "Can't Hear");
+export const cantHearLightSkinTone = new Emoji("\u{1F9CF}\uDDCF\u{1F3FB}\uDFFB", "Can't Hear: Light Skin Tone");
+export const cantHearMediumLightSkinTone = new Emoji("\u{1F9CF}\uDDCF\u{1F3FC}\uDFFC", "Can't Hear: Medium-Light Skin Tone");
+export const cantHearMediumSkinTone = new Emoji("\u{1F9CF}\uDDCF\u{1F3FD}\uDFFD", "Can't Hear: Medium Skin Tone");
+export const cantHearMediumDarkSkinTone = new Emoji("\u{1F9CF}\uDDCF\u{1F3FE}\uDFFE", "Can't Hear: Medium-Dark Skin Tone");
+export const cantHearDarkSkinTone = new Emoji("\u{1F9CF}\uDDCF\u{1F3FF}\uDFFF", "Can't Hear: Dark Skin Tone");
+export const cantHearMale = new Emoji("\u{1F9CF}\uDDCF\u200D\u2642\uFE0F", "Can't Hear: Male");
+export const cantHearLightSkinToneMale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Can't Hear: Light Skin Tone: Male");
+export const cantHearMediumLightSkinToneMale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Can't Hear: Medium-Light Skin Tone: Male");
+export const cantHearMediumSkinToneMale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Can't Hear: Medium Skin Tone: Male");
+export const cantHearMediumDarkSkinToneMale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Can't Hear: Medium-Dark Skin Tone: Male");
+export const cantHearDarkSkinToneMale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Can't Hear: Dark Skin Tone: Male");
+export const cantHearFemale = new Emoji("\u{1F9CF}\uDDCF\u200D\u2640\uFE0F", "Can't Hear: Female");
+export const cantHearLightSkinToneFemale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Can't Hear: Light Skin Tone: Female");
+export const cantHearMediumLightSkinToneFemale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Can't Hear: Medium-Light Skin Tone: Female");
+export const cantHearMediumSkinToneFemale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Can't Hear: Medium Skin Tone: Female");
+export const cantHearMediumDarkSkinToneFemale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Can't Hear: Medium-Dark Skin Tone: Female");
+export const cantHearDarkSkinToneFemale = new Emoji("\u{1F9CF}\uDDCF\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Can't Hear: Dark Skin Tone: Female");
 export const gettingMassage = new Emoji("\u{1F486}\uDC86", "Getting Massage");
 export const gettingMassageLightSkinTone = new Emoji("\u{1F486}\uDC86\u{1F3FB}\uDFFB", "Getting Massage: Light Skin Tone");
 export const gettingMassageMediumLightSkinTone = new Emoji("\u{1F486}\uDC86\u{1F3FC}\uDFFC", "Getting Massage: Medium-Light Skin Tone");
 export const gettingMassageMediumSkinTone = new Emoji("\u{1F486}\uDC86\u{1F3FD}\uDFFD", "Getting Massage: Medium Skin Tone");
 export const gettingMassageMediumDarkSkinTone = new Emoji("\u{1F486}\uDC86\u{1F3FE}\uDFFE", "Getting Massage: Medium-Dark Skin Tone");
 export const gettingMassageDarkSkinTone = new Emoji("\u{1F486}\uDC86\u{1F3FF}\uDFFF", "Getting Massage: Dark Skin Tone");
-export const allGettingMassage = [
-    gettingMassage,
-    gettingMassageLightSkinTone,
-    gettingMassageMediumLightSkinTone,
-    gettingMassageMediumSkinTone,
-    gettingMassageMediumDarkSkinTone,
-    gettingMassageDarkSkinTone
-];
-export const allGettingMassageGroup = new EmojiGroup("\u{1F486}\uDC86", "Getting Massage", ...allGettingMassage);
 export const gettingMassageMale = new Emoji("\u{1F486}\uDC86\u200D\u2642\uFE0F", "Getting Massage: Male");
 export const gettingMassageLightSkinToneMale = new Emoji("\u{1F486}\uDC86\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Getting Massage: Light Skin Tone: Male");
 export const gettingMassageMediumLightSkinToneMale = new Emoji("\u{1F486}\uDC86\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Getting Massage: Medium-Light Skin Tone: Male");
 export const gettingMassageMediumSkinToneMale = new Emoji("\u{1F486}\uDC86\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Getting Massage: Medium Skin Tone: Male");
 export const gettingMassageMediumDarkSkinToneMale = new Emoji("\u{1F486}\uDC86\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Getting Massage: Medium-Dark Skin Tone: Male");
 export const gettingMassageDarkSkinToneMale = new Emoji("\u{1F486}\uDC86\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Getting Massage: Dark Skin Tone: Male");
-export const allGettingMassageMale = [
-    gettingMassageMale,
-    gettingMassageLightSkinToneMale,
-    gettingMassageMediumLightSkinToneMale,
-    gettingMassageMediumSkinToneMale,
-    gettingMassageMediumDarkSkinToneMale,
-    gettingMassageDarkSkinToneMale
-];
-export const allGettingMassageMaleGroup = new EmojiGroup("\u{1F486}\uDC86\u200D\u2642\uFE0F", "Getting Massage: Male", ...allGettingMassageMale);
 export const gettingMassageFemale = new Emoji("\u{1F486}\uDC86\u200D\u2640\uFE0F", "Getting Massage: Female");
 export const gettingMassageLightSkinToneFemale = new Emoji("\u{1F486}\uDC86\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Getting Massage: Light Skin Tone: Female");
 export const gettingMassageMediumLightSkinToneFemale = new Emoji("\u{1F486}\uDC86\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Getting Massage: Medium-Light Skin Tone: Female");
 export const gettingMassageMediumSkinToneFemale = new Emoji("\u{1F486}\uDC86\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Getting Massage: Medium Skin Tone: Female");
 export const gettingMassageMediumDarkSkinToneFemale = new Emoji("\u{1F486}\uDC86\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Getting Massage: Medium-Dark Skin Tone: Female");
 export const gettingMassageDarkSkinToneFemale = new Emoji("\u{1F486}\uDC86\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Getting Massage: Dark Skin Tone: Female");
-export const allGettingMassageFemale = [
-    gettingMassageFemale,
-    gettingMassageLightSkinToneFemale,
-    gettingMassageMediumLightSkinToneFemale,
-    gettingMassageMediumSkinToneFemale,
-    gettingMassageMediumDarkSkinToneFemale,
-    gettingMassageDarkSkinToneFemale
-];
-export const allGettingMassageFemaleGroup = new EmojiGroup("\u{1F486}\uDC86\u200D\u2640\uFE0F", "Getting Massage: Female", ...allGettingMassageFemale);
-export const allAllGettingMassageGroup = [
-    allGettingMassageGroup,
-    allGettingMassageMaleGroup,
-    allGettingMassageFemaleGroup
-];
-export const allAllGettingMassageGroupGroup = new EmojiGroup("\u{1F486}\uDC86", "Getting Massage", ...allAllGettingMassageGroup);
 export const gettingHaircut = new Emoji("\u{1F487}\uDC87", "Getting Haircut");
 export const gettingHaircutLightSkinTone = new Emoji("\u{1F487}\uDC87\u{1F3FB}\uDFFB", "Getting Haircut: Light Skin Tone");
 export const gettingHaircutMediumLightSkinTone = new Emoji("\u{1F487}\uDC87\u{1F3FC}\uDFFC", "Getting Haircut: Medium-Light Skin Tone");
 export const gettingHaircutMediumSkinTone = new Emoji("\u{1F487}\uDC87\u{1F3FD}\uDFFD", "Getting Haircut: Medium Skin Tone");
 export const gettingHaircutMediumDarkSkinTone = new Emoji("\u{1F487}\uDC87\u{1F3FE}\uDFFE", "Getting Haircut: Medium-Dark Skin Tone");
 export const gettingHaircutDarkSkinTone = new Emoji("\u{1F487}\uDC87\u{1F3FF}\uDFFF", "Getting Haircut: Dark Skin Tone");
-export const allGettingHaircut = [
-    gettingHaircut,
-    gettingHaircutLightSkinTone,
-    gettingHaircutMediumLightSkinTone,
-    gettingHaircutMediumSkinTone,
-    gettingHaircutMediumDarkSkinTone,
-    gettingHaircutDarkSkinTone
-];
-export const allGettingHaircutGroup = new EmojiGroup("\u{1F487}\uDC87", "Getting Haircut", ...allGettingHaircut);
 export const gettingHaircutMale = new Emoji("\u{1F487}\uDC87\u200D\u2642\uFE0F", "Getting Haircut: Male");
 export const gettingHaircutLightSkinToneMale = new Emoji("\u{1F487}\uDC87\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Getting Haircut: Light Skin Tone: Male");
 export const gettingHaircutMediumLightSkinToneMale = new Emoji("\u{1F487}\uDC87\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Getting Haircut: Medium-Light Skin Tone: Male");
 export const gettingHaircutMediumSkinToneMale = new Emoji("\u{1F487}\uDC87\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Getting Haircut: Medium Skin Tone: Male");
 export const gettingHaircutMediumDarkSkinToneMale = new Emoji("\u{1F487}\uDC87\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Getting Haircut: Medium-Dark Skin Tone: Male");
 export const gettingHaircutDarkSkinToneMale = new Emoji("\u{1F487}\uDC87\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Getting Haircut: Dark Skin Tone: Male");
-export const allGettingHaircutMale = [
-    gettingHaircutMale,
-    gettingHaircutLightSkinToneMale,
-    gettingHaircutMediumLightSkinToneMale,
-    gettingHaircutMediumSkinToneMale,
-    gettingHaircutMediumDarkSkinToneMale,
-    gettingHaircutDarkSkinToneMale
-];
-export const allGettingHaircutMaleGroup = new EmojiGroup("\u{1F487}\uDC87\u200D\u2642\uFE0F", "Getting Haircut: Male", ...allGettingHaircutMale);
 export const gettingHaircutFemale = new Emoji("\u{1F487}\uDC87\u200D\u2640\uFE0F", "Getting Haircut: Female");
 export const gettingHaircutLightSkinToneFemale = new Emoji("\u{1F487}\uDC87\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Getting Haircut: Light Skin Tone: Female");
 export const gettingHaircutMediumLightSkinToneFemale = new Emoji("\u{1F487}\uDC87\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Getting Haircut: Medium-Light Skin Tone: Female");
 export const gettingHaircutMediumSkinToneFemale = new Emoji("\u{1F487}\uDC87\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Getting Haircut: Medium Skin Tone: Female");
 export const gettingHaircutMediumDarkSkinToneFemale = new Emoji("\u{1F487}\uDC87\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Getting Haircut: Medium-Dark Skin Tone: Female");
 export const gettingHaircutDarkSkinToneFemale = new Emoji("\u{1F487}\uDC87\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Getting Haircut: Dark Skin Tone: Female");
-export const allGettingHaircutFemale = [
-    gettingHaircutFemale,
-    gettingHaircutLightSkinToneFemale,
-    gettingHaircutMediumLightSkinToneFemale,
-    gettingHaircutMediumSkinToneFemale,
-    gettingHaircutMediumDarkSkinToneFemale,
-    gettingHaircutDarkSkinToneFemale
-];
-export const allGettingHaircutFemaleGroup = new EmojiGroup("\u{1F487}\uDC87\u200D\u2640\uFE0F", "Getting Haircut: Female", ...allGettingHaircutFemale);
-export const allAllGettingHaircutGroup = [
-    allGettingHaircutGroup,
-    allGettingHaircutMaleGroup,
-    allGettingHaircutFemaleGroup
-];
-export const allAllGettingHaircutGroupGroup = new EmojiGroup("\u{1F487}\uDC87", "Getting Haircut", ...allAllGettingHaircutGroup);
 export const constructionWorker = new Emoji("\u{1F477}\uDC77", "Construction Worker");
 export const constructionWorkerLightSkinTone = new Emoji("\u{1F477}\uDC77\u{1F3FB}\uDFFB", "Construction Worker: Light Skin Tone");
 export const constructionWorkerMediumLightSkinTone = new Emoji("\u{1F477}\uDC77\u{1F3FC}\uDFFC", "Construction Worker: Medium-Light Skin Tone");
 export const constructionWorkerMediumSkinTone = new Emoji("\u{1F477}\uDC77\u{1F3FD}\uDFFD", "Construction Worker: Medium Skin Tone");
 export const constructionWorkerMediumDarkSkinTone = new Emoji("\u{1F477}\uDC77\u{1F3FE}\uDFFE", "Construction Worker: Medium-Dark Skin Tone");
 export const constructionWorkerDarkSkinTone = new Emoji("\u{1F477}\uDC77\u{1F3FF}\uDFFF", "Construction Worker: Dark Skin Tone");
-export const allConstructionWorker = [
-    constructionWorker,
-    constructionWorkerLightSkinTone,
-    constructionWorkerMediumLightSkinTone,
-    constructionWorkerMediumSkinTone,
-    constructionWorkerMediumDarkSkinTone,
-    constructionWorkerDarkSkinTone
-];
-export const allConstructionWorkerGroup = new EmojiGroup("\u{1F477}\uDC77", "Construction Worker", ...allConstructionWorker);
 export const constructionWorkerMale = new Emoji("\u{1F477}\uDC77\u200D\u2642\uFE0F", "Construction Worker: Male");
 export const constructionWorkerLightSkinToneMale = new Emoji("\u{1F477}\uDC77\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Construction Worker: Light Skin Tone: Male");
 export const constructionWorkerMediumLightSkinToneMale = new Emoji("\u{1F477}\uDC77\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Construction Worker: Medium-Light Skin Tone: Male");
 export const constructionWorkerMediumSkinToneMale = new Emoji("\u{1F477}\uDC77\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Construction Worker: Medium Skin Tone: Male");
 export const constructionWorkerMediumDarkSkinToneMale = new Emoji("\u{1F477}\uDC77\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Construction Worker: Medium-Dark Skin Tone: Male");
 export const constructionWorkerDarkSkinToneMale = new Emoji("\u{1F477}\uDC77\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Construction Worker: Dark Skin Tone: Male");
-export const allConstructionWorkerMale = [
-    constructionWorkerMale,
-    constructionWorkerLightSkinToneMale,
-    constructionWorkerMediumLightSkinToneMale,
-    constructionWorkerMediumSkinToneMale,
-    constructionWorkerMediumDarkSkinToneMale,
-    constructionWorkerDarkSkinToneMale
-];
-export const allConstructionWorkerMaleGroup = new EmojiGroup("\u{1F477}\uDC77\u200D\u2642\uFE0F", "Construction Worker: Male", ...allConstructionWorkerMale);
 export const constructionWorkerFemale = new Emoji("\u{1F477}\uDC77\u200D\u2640\uFE0F", "Construction Worker: Female");
 export const constructionWorkerLightSkinToneFemale = new Emoji("\u{1F477}\uDC77\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Construction Worker: Light Skin Tone: Female");
 export const constructionWorkerMediumLightSkinToneFemale = new Emoji("\u{1F477}\uDC77\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Construction Worker: Medium-Light Skin Tone: Female");
 export const constructionWorkerMediumSkinToneFemale = new Emoji("\u{1F477}\uDC77\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Construction Worker: Medium Skin Tone: Female");
 export const constructionWorkerMediumDarkSkinToneFemale = new Emoji("\u{1F477}\uDC77\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Construction Worker: Medium-Dark Skin Tone: Female");
 export const constructionWorkerDarkSkinToneFemale = new Emoji("\u{1F477}\uDC77\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Construction Worker: Dark Skin Tone: Female");
-export const allConstructionWorkerFemale = [
-    constructionWorkerFemale,
-    constructionWorkerLightSkinToneFemale,
-    constructionWorkerMediumLightSkinToneFemale,
-    constructionWorkerMediumSkinToneFemale,
-    constructionWorkerMediumDarkSkinToneFemale,
-    constructionWorkerDarkSkinToneFemale
-];
-export const allConstructionWorkerFemaleGroup = new EmojiGroup("\u{1F477}\uDC77\u200D\u2640\uFE0F", "Construction Worker: Female", ...allConstructionWorkerFemale);
-export const allAllConstructionWorkerGroup = [
-    allConstructionWorkerGroup,
-    allConstructionWorkerMaleGroup,
-    allConstructionWorkerFemaleGroup
-];
-export const allAllConstructionWorkerGroupGroup = new EmojiGroup("\u{1F477}\uDC77", "Construction Worker", ...allAllConstructionWorkerGroup);
 export const guard = new Emoji("\u{1F482}\uDC82", "Guard");
 export const guardLightSkinTone = new Emoji("\u{1F482}\uDC82\u{1F3FB}\uDFFB", "Guard: Light Skin Tone");
 export const guardMediumLightSkinTone = new Emoji("\u{1F482}\uDC82\u{1F3FC}\uDFFC", "Guard: Medium-Light Skin Tone");
 export const guardMediumSkinTone = new Emoji("\u{1F482}\uDC82\u{1F3FD}\uDFFD", "Guard: Medium Skin Tone");
 export const guardMediumDarkSkinTone = new Emoji("\u{1F482}\uDC82\u{1F3FE}\uDFFE", "Guard: Medium-Dark Skin Tone");
 export const guardDarkSkinTone = new Emoji("\u{1F482}\uDC82\u{1F3FF}\uDFFF", "Guard: Dark Skin Tone");
-export const allGuard = [
-    guard,
-    guardLightSkinTone,
-    guardMediumLightSkinTone,
-    guardMediumSkinTone,
-    guardMediumDarkSkinTone,
-    guardDarkSkinTone
-];
-export const allGuardGroup = new EmojiGroup("\u{1F482}\uDC82", "Guard", ...allGuard);
 export const guardMale = new Emoji("\u{1F482}\uDC82\u200D\u2642\uFE0F", "Guard: Male");
 export const guardLightSkinToneMale = new Emoji("\u{1F482}\uDC82\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Guard: Light Skin Tone: Male");
 export const guardMediumLightSkinToneMale = new Emoji("\u{1F482}\uDC82\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Guard: Medium-Light Skin Tone: Male");
 export const guardMediumSkinToneMale = new Emoji("\u{1F482}\uDC82\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Guard: Medium Skin Tone: Male");
 export const guardMediumDarkSkinToneMale = new Emoji("\u{1F482}\uDC82\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Guard: Medium-Dark Skin Tone: Male");
 export const guardDarkSkinToneMale = new Emoji("\u{1F482}\uDC82\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Guard: Dark Skin Tone: Male");
-export const allGuardMale = [
-    guardMale,
-    guardLightSkinToneMale,
-    guardMediumLightSkinToneMale,
-    guardMediumSkinToneMale,
-    guardMediumDarkSkinToneMale,
-    guardDarkSkinToneMale
-];
-export const allGuardMaleGroup = new EmojiGroup("\u{1F482}\uDC82\u200D\u2642\uFE0F", "Guard: Male", ...allGuardMale);
 export const guardFemale = new Emoji("\u{1F482}\uDC82\u200D\u2640\uFE0F", "Guard: Female");
 export const guardLightSkinToneFemale = new Emoji("\u{1F482}\uDC82\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Guard: Light Skin Tone: Female");
 export const guardMediumLightSkinToneFemale = new Emoji("\u{1F482}\uDC82\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Guard: Medium-Light Skin Tone: Female");
 export const guardMediumSkinToneFemale = new Emoji("\u{1F482}\uDC82\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Guard: Medium Skin Tone: Female");
 export const guardMediumDarkSkinToneFemale = new Emoji("\u{1F482}\uDC82\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Guard: Medium-Dark Skin Tone: Female");
 export const guardDarkSkinToneFemale = new Emoji("\u{1F482}\uDC82\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Guard: Dark Skin Tone: Female");
-export const allGuardFemale = [
-    guardFemale,
-    guardLightSkinToneFemale,
-    guardMediumLightSkinToneFemale,
-    guardMediumSkinToneFemale,
-    guardMediumDarkSkinToneFemale,
-    guardDarkSkinToneFemale
-];
-export const allGuardFemaleGroup = new EmojiGroup("\u{1F482}\uDC82\u200D\u2640\uFE0F", "Guard: Female", ...allGuardFemale);
-export const allAllGuardGroup = [
-    allGuardGroup,
-    allGuardMaleGroup,
-    allGuardFemaleGroup
-];
-export const allAllGuardGroupGroup = new EmojiGroup("\u{1F482}\uDC82", "Guard", ...allAllGuardGroup);
 export const spy = new Emoji("\u{1F575}\uDD75", "Spy");
 export const spyLightSkinTone = new Emoji("\u{1F575}\uDD75\u{1F3FB}\uDFFB", "Spy: Light Skin Tone");
 export const spyMediumLightSkinTone = new Emoji("\u{1F575}\uDD75\u{1F3FC}\uDFFC", "Spy: Medium-Light Skin Tone");
 export const spyMediumSkinTone = new Emoji("\u{1F575}\uDD75\u{1F3FD}\uDFFD", "Spy: Medium Skin Tone");
 export const spyMediumDarkSkinTone = new Emoji("\u{1F575}\uDD75\u{1F3FE}\uDFFE", "Spy: Medium-Dark Skin Tone");
 export const spyDarkSkinTone = new Emoji("\u{1F575}\uDD75\u{1F3FF}\uDFFF", "Spy: Dark Skin Tone");
-export const allSpy = [
-    spy,
-    spyLightSkinTone,
-    spyMediumLightSkinTone,
-    spyMediumSkinTone,
-    spyMediumDarkSkinTone,
-    spyDarkSkinTone
-];
-export const allSpyGroup = new EmojiGroup("\u{1F575}\uDD75", "Spy", ...allSpy);
 export const spyMale = new Emoji("\u{1F575}\uDD75\u200D\u2642\uFE0F", "Spy: Male");
 export const spyLightSkinToneMale = new Emoji("\u{1F575}\uDD75\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Spy: Light Skin Tone: Male");
 export const spyMediumLightSkinToneMale = new Emoji("\u{1F575}\uDD75\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Spy: Medium-Light Skin Tone: Male");
 export const spyMediumSkinToneMale = new Emoji("\u{1F575}\uDD75\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Spy: Medium Skin Tone: Male");
 export const spyMediumDarkSkinToneMale = new Emoji("\u{1F575}\uDD75\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Spy: Medium-Dark Skin Tone: Male");
 export const spyDarkSkinToneMale = new Emoji("\u{1F575}\uDD75\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Spy: Dark Skin Tone: Male");
-export const allSpyMale = [
-    spyMale,
-    spyLightSkinToneMale,
-    spyMediumLightSkinToneMale,
-    spyMediumSkinToneMale,
-    spyMediumDarkSkinToneMale,
-    spyDarkSkinToneMale
-];
-export const allSpyMaleGroup = new EmojiGroup("\u{1F575}\uDD75\u200D\u2642\uFE0F", "Spy: Male", ...allSpyMale);
 export const spyFemale = new Emoji("\u{1F575}\uDD75\u200D\u2640\uFE0F", "Spy: Female");
 export const spyLightSkinToneFemale = new Emoji("\u{1F575}\uDD75\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Spy: Light Skin Tone: Female");
 export const spyMediumLightSkinToneFemale = new Emoji("\u{1F575}\uDD75\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Spy: Medium-Light Skin Tone: Female");
 export const spyMediumSkinToneFemale = new Emoji("\u{1F575}\uDD75\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Spy: Medium Skin Tone: Female");
 export const spyMediumDarkSkinToneFemale = new Emoji("\u{1F575}\uDD75\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Spy: Medium-Dark Skin Tone: Female");
 export const spyDarkSkinToneFemale = new Emoji("\u{1F575}\uDD75\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Spy: Dark Skin Tone: Female");
-export const allSpyFemale = [
-    spyFemale,
-    spyLightSkinToneFemale,
-    spyMediumLightSkinToneFemale,
-    spyMediumSkinToneFemale,
-    spyMediumDarkSkinToneFemale,
-    spyDarkSkinToneFemale
-];
-export const allSpyFemaleGroup = new EmojiGroup("\u{1F575}\uDD75\u200D\u2640\uFE0F", "Spy: Female", ...allSpyFemale);
-export const allAllSpyGroup = [
-    allSpyGroup,
-    allSpyMaleGroup,
-    allSpyFemaleGroup
-];
-export const allAllSpyGroupGroup = new EmojiGroup("\u{1F575}\uDD75", "Spy", ...allAllSpyGroup);
 export const police = new Emoji("\u{1F46E}\uDC6E", "Police");
 export const policeLightSkinTone = new Emoji("\u{1F46E}\uDC6E\u{1F3FB}\uDFFB", "Police: Light Skin Tone");
 export const policeMediumLightSkinTone = new Emoji("\u{1F46E}\uDC6E\u{1F3FC}\uDFFC", "Police: Medium-Light Skin Tone");
 export const policeMediumSkinTone = new Emoji("\u{1F46E}\uDC6E\u{1F3FD}\uDFFD", "Police: Medium Skin Tone");
 export const policeMediumDarkSkinTone = new Emoji("\u{1F46E}\uDC6E\u{1F3FE}\uDFFE", "Police: Medium-Dark Skin Tone");
 export const policeDarkSkinTone = new Emoji("\u{1F46E}\uDC6E\u{1F3FF}\uDFFF", "Police: Dark Skin Tone");
-export const allPolice = [
-    police,
-    policeLightSkinTone,
-    policeMediumLightSkinTone,
-    policeMediumSkinTone,
-    policeMediumDarkSkinTone,
-    policeDarkSkinTone
-];
-export const allPoliceGroup = new EmojiGroup("\u{1F46E}\uDC6E", "Police", ...allPolice);
 export const policeMale = new Emoji("\u{1F46E}\uDC6E\u200D\u2642\uFE0F", "Police: Male");
 export const policeLightSkinToneMale = new Emoji("\u{1F46E}\uDC6E\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Police: Light Skin Tone: Male");
 export const policeMediumLightSkinToneMale = new Emoji("\u{1F46E}\uDC6E\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Police: Medium-Light Skin Tone: Male");
 export const policeMediumSkinToneMale = new Emoji("\u{1F46E}\uDC6E\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Police: Medium Skin Tone: Male");
 export const policeMediumDarkSkinToneMale = new Emoji("\u{1F46E}\uDC6E\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Police: Medium-Dark Skin Tone: Male");
 export const policeDarkSkinToneMale = new Emoji("\u{1F46E}\uDC6E\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Police: Dark Skin Tone: Male");
-export const allPoliceMale = [
-    policeMale,
-    policeLightSkinToneMale,
-    policeMediumLightSkinToneMale,
-    policeMediumSkinToneMale,
-    policeMediumDarkSkinToneMale,
-    policeDarkSkinToneMale
-];
-export const allPoliceMaleGroup = new EmojiGroup("\u{1F46E}\uDC6E\u200D\u2642\uFE0F", "Police: Male", ...allPoliceMale);
 export const policeFemale = new Emoji("\u{1F46E}\uDC6E\u200D\u2640\uFE0F", "Police: Female");
 export const policeLightSkinToneFemale = new Emoji("\u{1F46E}\uDC6E\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Police: Light Skin Tone: Female");
 export const policeMediumLightSkinToneFemale = new Emoji("\u{1F46E}\uDC6E\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Police: Medium-Light Skin Tone: Female");
 export const policeMediumSkinToneFemale = new Emoji("\u{1F46E}\uDC6E\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Police: Medium Skin Tone: Female");
 export const policeMediumDarkSkinToneFemale = new Emoji("\u{1F46E}\uDC6E\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Police: Medium-Dark Skin Tone: Female");
 export const policeDarkSkinToneFemale = new Emoji("\u{1F46E}\uDC6E\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Police: Dark Skin Tone: Female");
-export const allPoliceFemale = [
-    policeFemale,
-    policeLightSkinToneFemale,
-    policeMediumLightSkinToneFemale,
-    policeMediumSkinToneFemale,
-    policeMediumDarkSkinToneFemale,
-    policeDarkSkinToneFemale
-];
-export const allPoliceFemaleGroup = new EmojiGroup("\u{1F46E}\uDC6E\u200D\u2640\uFE0F", "Police: Female", ...allPoliceFemale);
-export const allAllPoliceGroup = [
-    allPoliceGroup,
-    allPoliceMaleGroup,
-    allPoliceFemaleGroup
-];
-export const allAllPoliceGroupGroup = new EmojiGroup("\u{1F46E}\uDC6E", "Police", ...allAllPoliceGroup);
 export const wearingTurban = new Emoji("\u{1F473}\uDC73", "Wearing Turban");
 export const wearingTurbanLightSkinTone = new Emoji("\u{1F473}\uDC73\u{1F3FB}\uDFFB", "Wearing Turban: Light Skin Tone");
 export const wearingTurbanMediumLightSkinTone = new Emoji("\u{1F473}\uDC73\u{1F3FC}\uDFFC", "Wearing Turban: Medium-Light Skin Tone");
 export const wearingTurbanMediumSkinTone = new Emoji("\u{1F473}\uDC73\u{1F3FD}\uDFFD", "Wearing Turban: Medium Skin Tone");
 export const wearingTurbanMediumDarkSkinTone = new Emoji("\u{1F473}\uDC73\u{1F3FE}\uDFFE", "Wearing Turban: Medium-Dark Skin Tone");
 export const wearingTurbanDarkSkinTone = new Emoji("\u{1F473}\uDC73\u{1F3FF}\uDFFF", "Wearing Turban: Dark Skin Tone");
-export const allWearingTurban = [
-    wearingTurban,
-    wearingTurbanLightSkinTone,
-    wearingTurbanMediumLightSkinTone,
-    wearingTurbanMediumSkinTone,
-    wearingTurbanMediumDarkSkinTone,
-    wearingTurbanDarkSkinTone
-];
-export const allWearingTurbanGroup = new EmojiGroup("\u{1F473}\uDC73", "Wearing Turban", ...allWearingTurban);
 export const wearingTurbanMale = new Emoji("\u{1F473}\uDC73\u200D\u2642\uFE0F", "Wearing Turban: Male");
 export const wearingTurbanLightSkinToneMale = new Emoji("\u{1F473}\uDC73\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Wearing Turban: Light Skin Tone: Male");
 export const wearingTurbanMediumLightSkinToneMale = new Emoji("\u{1F473}\uDC73\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Wearing Turban: Medium-Light Skin Tone: Male");
 export const wearingTurbanMediumSkinToneMale = new Emoji("\u{1F473}\uDC73\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Wearing Turban: Medium Skin Tone: Male");
 export const wearingTurbanMediumDarkSkinToneMale = new Emoji("\u{1F473}\uDC73\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Wearing Turban: Medium-Dark Skin Tone: Male");
 export const wearingTurbanDarkSkinToneMale = new Emoji("\u{1F473}\uDC73\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Wearing Turban: Dark Skin Tone: Male");
-export const allWearingTurbanMale = [
-    wearingTurbanMale,
-    wearingTurbanLightSkinToneMale,
-    wearingTurbanMediumLightSkinToneMale,
-    wearingTurbanMediumSkinToneMale,
-    wearingTurbanMediumDarkSkinToneMale,
-    wearingTurbanDarkSkinToneMale
-];
-export const allWearingTurbanMaleGroup = new EmojiGroup("\u{1F473}\uDC73\u200D\u2642\uFE0F", "Wearing Turban: Male", ...allWearingTurbanMale);
 export const wearingTurbanFemale = new Emoji("\u{1F473}\uDC73\u200D\u2640\uFE0F", "Wearing Turban: Female");
 export const wearingTurbanLightSkinToneFemale = new Emoji("\u{1F473}\uDC73\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Wearing Turban: Light Skin Tone: Female");
 export const wearingTurbanMediumLightSkinToneFemale = new Emoji("\u{1F473}\uDC73\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Wearing Turban: Medium-Light Skin Tone: Female");
 export const wearingTurbanMediumSkinToneFemale = new Emoji("\u{1F473}\uDC73\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Wearing Turban: Medium Skin Tone: Female");
 export const wearingTurbanMediumDarkSkinToneFemale = new Emoji("\u{1F473}\uDC73\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Wearing Turban: Medium-Dark Skin Tone: Female");
 export const wearingTurbanDarkSkinToneFemale = new Emoji("\u{1F473}\uDC73\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Wearing Turban: Dark Skin Tone: Female");
-export const allWearingTurbanFemale = [
-    wearingTurbanFemale,
-    wearingTurbanLightSkinToneFemale,
-    wearingTurbanMediumLightSkinToneFemale,
-    wearingTurbanMediumSkinToneFemale,
-    wearingTurbanMediumDarkSkinToneFemale,
-    wearingTurbanDarkSkinToneFemale
-];
-export const allWearingTurbanFemaleGroup = new EmojiGroup("\u{1F473}\uDC73\u200D\u2640\uFE0F", "Wearing Turban: Female", ...allWearingTurbanFemale);
-export const allAllWearingTurbanGroup = [
-    allWearingTurbanGroup,
-    allWearingTurbanMaleGroup,
-    allWearingTurbanFemaleGroup
-];
-export const allAllWearingTurbanGroupGroup = new EmojiGroup("\u{1F473}\uDC73", "Wearing Turban", ...allAllWearingTurbanGroup);
 export const superhero = new Emoji("\u{1F9B8}\uDDB8", "Superhero");
 export const superheroLightSkinTone = new Emoji("\u{1F9B8}\uDDB8\u{1F3FB}\uDFFB", "Superhero: Light Skin Tone");
 export const superheroMediumLightSkinTone = new Emoji("\u{1F9B8}\uDDB8\u{1F3FC}\uDFFC", "Superhero: Medium-Light Skin Tone");
 export const superheroMediumSkinTone = new Emoji("\u{1F9B8}\uDDB8\u{1F3FD}\uDFFD", "Superhero: Medium Skin Tone");
 export const superheroMediumDarkSkinTone = new Emoji("\u{1F9B8}\uDDB8\u{1F3FE}\uDFFE", "Superhero: Medium-Dark Skin Tone");
 export const superheroDarkSkinTone = new Emoji("\u{1F9B8}\uDDB8\u{1F3FF}\uDFFF", "Superhero: Dark Skin Tone");
-export const allSuperhero = [
-    superhero,
-    superheroLightSkinTone,
-    superheroMediumLightSkinTone,
-    superheroMediumSkinTone,
-    superheroMediumDarkSkinTone,
-    superheroDarkSkinTone
-];
-export const allSuperheroGroup = new EmojiGroup("\u{1F9B8}\uDDB8", "Superhero", ...allSuperhero);
 export const superheroMale = new Emoji("\u{1F9B8}\uDDB8\u200D\u2642\uFE0F", "Superhero: Male");
 export const superheroLightSkinToneMale = new Emoji("\u{1F9B8}\uDDB8\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Superhero: Light Skin Tone: Male");
 export const superheroMediumLightSkinToneMale = new Emoji("\u{1F9B8}\uDDB8\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Superhero: Medium-Light Skin Tone: Male");
 export const superheroMediumSkinToneMale = new Emoji("\u{1F9B8}\uDDB8\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Superhero: Medium Skin Tone: Male");
 export const superheroMediumDarkSkinToneMale = new Emoji("\u{1F9B8}\uDDB8\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Superhero: Medium-Dark Skin Tone: Male");
 export const superheroDarkSkinToneMale = new Emoji("\u{1F9B8}\uDDB8\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Superhero: Dark Skin Tone: Male");
-export const allSuperheroMale = [
-    superheroMale,
-    superheroLightSkinToneMale,
-    superheroMediumLightSkinToneMale,
-    superheroMediumSkinToneMale,
-    superheroMediumDarkSkinToneMale,
-    superheroDarkSkinToneMale
-];
-export const allSuperheroMaleGroup = new EmojiGroup("\u{1F9B8}\uDDB8\u200D\u2642\uFE0F", "Superhero: Male", ...allSuperheroMale);
 export const superheroFemale = new Emoji("\u{1F9B8}\uDDB8\u200D\u2640\uFE0F", "Superhero: Female");
 export const superheroLightSkinToneFemale = new Emoji("\u{1F9B8}\uDDB8\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Superhero: Light Skin Tone: Female");
 export const superheroMediumLightSkinToneFemale = new Emoji("\u{1F9B8}\uDDB8\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Superhero: Medium-Light Skin Tone: Female");
 export const superheroMediumSkinToneFemale = new Emoji("\u{1F9B8}\uDDB8\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Superhero: Medium Skin Tone: Female");
 export const superheroMediumDarkSkinToneFemale = new Emoji("\u{1F9B8}\uDDB8\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Superhero: Medium-Dark Skin Tone: Female");
 export const superheroDarkSkinToneFemale = new Emoji("\u{1F9B8}\uDDB8\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Superhero: Dark Skin Tone: Female");
-export const allSuperheroFemale = [
-    superheroFemale,
-    superheroLightSkinToneFemale,
-    superheroMediumLightSkinToneFemale,
-    superheroMediumSkinToneFemale,
-    superheroMediumDarkSkinToneFemale,
-    superheroDarkSkinToneFemale
-];
-export const allSuperheroFemaleGroup = new EmojiGroup("\u{1F9B8}\uDDB8\u200D\u2640\uFE0F", "Superhero: Female", ...allSuperheroFemale);
-export const allAllSuperheroGroup = [
-    allSuperheroGroup,
-    allSuperheroMaleGroup,
-    allSuperheroFemaleGroup
-];
-export const allAllSuperheroGroupGroup = new EmojiGroup("\u{1F9B8}\uDDB8", "Superhero", ...allAllSuperheroGroup);
 export const supervillain = new Emoji("\u{1F9B9}\uDDB9", "Supervillain");
 export const supervillainLightSkinTone = new Emoji("\u{1F9B9}\uDDB9\u{1F3FB}\uDFFB", "Supervillain: Light Skin Tone");
 export const supervillainMediumLightSkinTone = new Emoji("\u{1F9B9}\uDDB9\u{1F3FC}\uDFFC", "Supervillain: Medium-Light Skin Tone");
 export const supervillainMediumSkinTone = new Emoji("\u{1F9B9}\uDDB9\u{1F3FD}\uDFFD", "Supervillain: Medium Skin Tone");
 export const supervillainMediumDarkSkinTone = new Emoji("\u{1F9B9}\uDDB9\u{1F3FE}\uDFFE", "Supervillain: Medium-Dark Skin Tone");
 export const supervillainDarkSkinTone = new Emoji("\u{1F9B9}\uDDB9\u{1F3FF}\uDFFF", "Supervillain: Dark Skin Tone");
-export const allSupervillain = [
-    supervillain,
-    supervillainLightSkinTone,
-    supervillainMediumLightSkinTone,
-    supervillainMediumSkinTone,
-    supervillainMediumDarkSkinTone,
-    supervillainDarkSkinTone
-];
-export const allSupervillainGroup = new EmojiGroup("\u{1F9B9}\uDDB9", "Supervillain", ...allSupervillain);
 export const supervillainMale = new Emoji("\u{1F9B9}\uDDB9\u200D\u2642\uFE0F", "Supervillain: Male");
 export const supervillainLightSkinToneMale = new Emoji("\u{1F9B9}\uDDB9\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Supervillain: Light Skin Tone: Male");
 export const supervillainMediumLightSkinToneMale = new Emoji("\u{1F9B9}\uDDB9\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Supervillain: Medium-Light Skin Tone: Male");
 export const supervillainMediumSkinToneMale = new Emoji("\u{1F9B9}\uDDB9\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Supervillain: Medium Skin Tone: Male");
 export const supervillainMediumDarkSkinToneMale = new Emoji("\u{1F9B9}\uDDB9\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Supervillain: Medium-Dark Skin Tone: Male");
 export const supervillainDarkSkinToneMale = new Emoji("\u{1F9B9}\uDDB9\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Supervillain: Dark Skin Tone: Male");
-export const allSupervillainMale = [
-    supervillainMale,
-    supervillainLightSkinToneMale,
-    supervillainMediumLightSkinToneMale,
-    supervillainMediumSkinToneMale,
-    supervillainMediumDarkSkinToneMale,
-    supervillainDarkSkinToneMale
-];
-export const allSupervillainMaleGroup = new EmojiGroup("\u{1F9B9}\uDDB9\u200D\u2642\uFE0F", "Supervillain: Male", ...allSupervillainMale);
 export const supervillainFemale = new Emoji("\u{1F9B9}\uDDB9\u200D\u2640\uFE0F", "Supervillain: Female");
 export const supervillainLightSkinToneFemale = new Emoji("\u{1F9B9}\uDDB9\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Supervillain: Light Skin Tone: Female");
 export const supervillainMediumLightSkinToneFemale = new Emoji("\u{1F9B9}\uDDB9\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Supervillain: Medium-Light Skin Tone: Female");
 export const supervillainMediumSkinToneFemale = new Emoji("\u{1F9B9}\uDDB9\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Supervillain: Medium Skin Tone: Female");
 export const supervillainMediumDarkSkinToneFemale = new Emoji("\u{1F9B9}\uDDB9\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Supervillain: Medium-Dark Skin Tone: Female");
 export const supervillainDarkSkinToneFemale = new Emoji("\u{1F9B9}\uDDB9\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Supervillain: Dark Skin Tone: Female");
-export const allSupervillainFemale = [
-    supervillainFemale,
-    supervillainLightSkinToneFemale,
-    supervillainMediumLightSkinToneFemale,
-    supervillainMediumSkinToneFemale,
-    supervillainMediumDarkSkinToneFemale,
-    supervillainDarkSkinToneFemale
-];
-export const allSupervillainFemaleGroup = new EmojiGroup("\u{1F9B9}\uDDB9\u200D\u2640\uFE0F", "Supervillain: Female", ...allSupervillainFemale);
-export const allAllSupervillainGroup = [
-    allSupervillainGroup,
-    allSupervillainMaleGroup,
-    allSupervillainFemaleGroup
-];
-export const allAllSupervillainGroupGroup = new EmojiGroup("\u{1F9B9}\uDDB9", "Supervillain", ...allAllSupervillainGroup);
 export const mage = new Emoji("\u{1F9D9}\uDDD9", "Mage");
 export const mageLightSkinTone = new Emoji("\u{1F9D9}\uDDD9\u{1F3FB}\uDFFB", "Mage: Light Skin Tone");
 export const mageMediumLightSkinTone = new Emoji("\u{1F9D9}\uDDD9\u{1F3FC}\uDFFC", "Mage: Medium-Light Skin Tone");
 export const mageMediumSkinTone = new Emoji("\u{1F9D9}\uDDD9\u{1F3FD}\uDFFD", "Mage: Medium Skin Tone");
 export const mageMediumDarkSkinTone = new Emoji("\u{1F9D9}\uDDD9\u{1F3FE}\uDFFE", "Mage: Medium-Dark Skin Tone");
 export const mageDarkSkinTone = new Emoji("\u{1F9D9}\uDDD9\u{1F3FF}\uDFFF", "Mage: Dark Skin Tone");
-export const allMage = [
-    mage,
-    mageLightSkinTone,
-    mageMediumLightSkinTone,
-    mageMediumSkinTone,
-    mageMediumDarkSkinTone,
-    mageDarkSkinTone
-];
-export const allMageGroup = new EmojiGroup("\u{1F9D9}\uDDD9", "Mage", ...allMage);
 export const mageMale = new Emoji("\u{1F9D9}\uDDD9\u200D\u2642\uFE0F", "Mage: Male");
 export const mageLightSkinToneMale = new Emoji("\u{1F9D9}\uDDD9\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Mage: Light Skin Tone: Male");
 export const mageMediumLightSkinToneMale = new Emoji("\u{1F9D9}\uDDD9\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Mage: Medium-Light Skin Tone: Male");
 export const mageMediumSkinToneMale = new Emoji("\u{1F9D9}\uDDD9\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Mage: Medium Skin Tone: Male");
 export const mageMediumDarkSkinToneMale = new Emoji("\u{1F9D9}\uDDD9\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Mage: Medium-Dark Skin Tone: Male");
 export const mageDarkSkinToneMale = new Emoji("\u{1F9D9}\uDDD9\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Mage: Dark Skin Tone: Male");
-export const allMageMale = [
-    mageMale,
-    mageLightSkinToneMale,
-    mageMediumLightSkinToneMale,
-    mageMediumSkinToneMale,
-    mageMediumDarkSkinToneMale,
-    mageDarkSkinToneMale
-];
-export const allMageMaleGroup = new EmojiGroup("\u{1F9D9}\uDDD9\u200D\u2642\uFE0F", "Mage: Male", ...allMageMale);
 export const mageFemale = new Emoji("\u{1F9D9}\uDDD9\u200D\u2640\uFE0F", "Mage: Female");
 export const mageLightSkinToneFemale = new Emoji("\u{1F9D9}\uDDD9\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Mage: Light Skin Tone: Female");
 export const mageMediumLightSkinToneFemale = new Emoji("\u{1F9D9}\uDDD9\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Mage: Medium-Light Skin Tone: Female");
 export const mageMediumSkinToneFemale = new Emoji("\u{1F9D9}\uDDD9\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Mage: Medium Skin Tone: Female");
 export const mageMediumDarkSkinToneFemale = new Emoji("\u{1F9D9}\uDDD9\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Mage: Medium-Dark Skin Tone: Female");
 export const mageDarkSkinToneFemale = new Emoji("\u{1F9D9}\uDDD9\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Mage: Dark Skin Tone: Female");
-export const allMageFemale = [
-    mageFemale,
-    mageLightSkinToneFemale,
-    mageMediumLightSkinToneFemale,
-    mageMediumSkinToneFemale,
-    mageMediumDarkSkinToneFemale,
-    mageDarkSkinToneFemale
-];
-export const allMageFemaleGroup = new EmojiGroup("\u{1F9D9}\uDDD9\u200D\u2640\uFE0F", "Mage: Female", ...allMageFemale);
-export const allAllMageGroup = [
-    allMageGroup,
-    allMageMaleGroup,
-    allMageFemaleGroup
-];
-export const allAllMageGroupGroup = new EmojiGroup("\u{1F9D9}\uDDD9", "Mage", ...allAllMageGroup);
 export const fairy = new Emoji("\u{1F9DA}\uDDDA", "Fairy");
 export const fairyLightSkinTone = new Emoji("\u{1F9DA}\uDDDA\u{1F3FB}\uDFFB", "Fairy: Light Skin Tone");
 export const fairyMediumLightSkinTone = new Emoji("\u{1F9DA}\uDDDA\u{1F3FC}\uDFFC", "Fairy: Medium-Light Skin Tone");
 export const fairyMediumSkinTone = new Emoji("\u{1F9DA}\uDDDA\u{1F3FD}\uDFFD", "Fairy: Medium Skin Tone");
 export const fairyMediumDarkSkinTone = new Emoji("\u{1F9DA}\uDDDA\u{1F3FE}\uDFFE", "Fairy: Medium-Dark Skin Tone");
 export const fairyDarkSkinTone = new Emoji("\u{1F9DA}\uDDDA\u{1F3FF}\uDFFF", "Fairy: Dark Skin Tone");
-export const allFairy = [
-    fairy,
-    fairyLightSkinTone,
-    fairyMediumLightSkinTone,
-    fairyMediumSkinTone,
-    fairyMediumDarkSkinTone,
-    fairyDarkSkinTone
-];
-export const allFairyGroup = new EmojiGroup("\u{1F9DA}\uDDDA", "Fairy", ...allFairy);
 export const fairyMale = new Emoji("\u{1F9DA}\uDDDA\u200D\u2642\uFE0F", "Fairy: Male");
 export const fairyLightSkinToneMale = new Emoji("\u{1F9DA}\uDDDA\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Fairy: Light Skin Tone: Male");
 export const fairyMediumLightSkinToneMale = new Emoji("\u{1F9DA}\uDDDA\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Fairy: Medium-Light Skin Tone: Male");
 export const fairyMediumSkinToneMale = new Emoji("\u{1F9DA}\uDDDA\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Fairy: Medium Skin Tone: Male");
 export const fairyMediumDarkSkinToneMale = new Emoji("\u{1F9DA}\uDDDA\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Fairy: Medium-Dark Skin Tone: Male");
 export const fairyDarkSkinToneMale = new Emoji("\u{1F9DA}\uDDDA\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Fairy: Dark Skin Tone: Male");
-export const allFairyMale = [
-    fairyMale,
-    fairyLightSkinToneMale,
-    fairyMediumLightSkinToneMale,
-    fairyMediumSkinToneMale,
-    fairyMediumDarkSkinToneMale,
-    fairyDarkSkinToneMale
-];
-export const allFairyMaleGroup = new EmojiGroup("\u{1F9DA}\uDDDA\u200D\u2642\uFE0F", "Fairy: Male", ...allFairyMale);
 export const fairyFemale = new Emoji("\u{1F9DA}\uDDDA\u200D\u2640\uFE0F", "Fairy: Female");
 export const fairyLightSkinToneFemale = new Emoji("\u{1F9DA}\uDDDA\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Fairy: Light Skin Tone: Female");
 export const fairyMediumLightSkinToneFemale = new Emoji("\u{1F9DA}\uDDDA\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Fairy: Medium-Light Skin Tone: Female");
 export const fairyMediumSkinToneFemale = new Emoji("\u{1F9DA}\uDDDA\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Fairy: Medium Skin Tone: Female");
 export const fairyMediumDarkSkinToneFemale = new Emoji("\u{1F9DA}\uDDDA\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Fairy: Medium-Dark Skin Tone: Female");
 export const fairyDarkSkinToneFemale = new Emoji("\u{1F9DA}\uDDDA\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Fairy: Dark Skin Tone: Female");
-export const allFairyFemale = [
-    fairyFemale,
-    fairyLightSkinToneFemale,
-    fairyMediumLightSkinToneFemale,
-    fairyMediumSkinToneFemale,
-    fairyMediumDarkSkinToneFemale,
-    fairyDarkSkinToneFemale
-];
-export const allFairyFemaleGroup = new EmojiGroup("\u{1F9DA}\uDDDA\u200D\u2640\uFE0F", "Fairy: Female", ...allFairyFemale);
-export const allAllFairyGroup = [
-    allFairyGroup,
-    allFairyMaleGroup,
-    allFairyFemaleGroup
-];
-export const allAllFairyGroupGroup = new EmojiGroup("\u{1F9DA}\uDDDA", "Fairy", ...allAllFairyGroup);
 export const vampire = new Emoji("\u{1F9DB}\uDDDB", "Vampire");
 export const vampireLightSkinTone = new Emoji("\u{1F9DB}\uDDDB\u{1F3FB}\uDFFB", "Vampire: Light Skin Tone");
 export const vampireMediumLightSkinTone = new Emoji("\u{1F9DB}\uDDDB\u{1F3FC}\uDFFC", "Vampire: Medium-Light Skin Tone");
 export const vampireMediumSkinTone = new Emoji("\u{1F9DB}\uDDDB\u{1F3FD}\uDFFD", "Vampire: Medium Skin Tone");
 export const vampireMediumDarkSkinTone = new Emoji("\u{1F9DB}\uDDDB\u{1F3FE}\uDFFE", "Vampire: Medium-Dark Skin Tone");
 export const vampireDarkSkinTone = new Emoji("\u{1F9DB}\uDDDB\u{1F3FF}\uDFFF", "Vampire: Dark Skin Tone");
-export const allVampire = [
-    vampire,
-    vampireLightSkinTone,
-    vampireMediumLightSkinTone,
-    vampireMediumSkinTone,
-    vampireMediumDarkSkinTone,
-    vampireDarkSkinTone
-];
-export const allVampireGroup = new EmojiGroup("\u{1F9DB}\uDDDB", "Vampire", ...allVampire);
 export const vampireMale = new Emoji("\u{1F9DB}\uDDDB\u200D\u2642\uFE0F", "Vampire: Male");
 export const vampireLightSkinToneMale = new Emoji("\u{1F9DB}\uDDDB\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Vampire: Light Skin Tone: Male");
 export const vampireMediumLightSkinToneMale = new Emoji("\u{1F9DB}\uDDDB\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Vampire: Medium-Light Skin Tone: Male");
 export const vampireMediumSkinToneMale = new Emoji("\u{1F9DB}\uDDDB\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Vampire: Medium Skin Tone: Male");
 export const vampireMediumDarkSkinToneMale = new Emoji("\u{1F9DB}\uDDDB\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Vampire: Medium-Dark Skin Tone: Male");
 export const vampireDarkSkinToneMale = new Emoji("\u{1F9DB}\uDDDB\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Vampire: Dark Skin Tone: Male");
-export const allVampireMale = [
-    vampireMale,
-    vampireLightSkinToneMale,
-    vampireMediumLightSkinToneMale,
-    vampireMediumSkinToneMale,
-    vampireMediumDarkSkinToneMale,
-    vampireDarkSkinToneMale
-];
-export const allVampireMaleGroup = new EmojiGroup("\u{1F9DB}\uDDDB\u200D\u2642\uFE0F", "Vampire: Male", ...allVampireMale);
 export const vampireFemale = new Emoji("\u{1F9DB}\uDDDB\u200D\u2640\uFE0F", "Vampire: Female");
 export const vampireLightSkinToneFemale = new Emoji("\u{1F9DB}\uDDDB\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Vampire: Light Skin Tone: Female");
 export const vampireMediumLightSkinToneFemale = new Emoji("\u{1F9DB}\uDDDB\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Vampire: Medium-Light Skin Tone: Female");
 export const vampireMediumSkinToneFemale = new Emoji("\u{1F9DB}\uDDDB\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Vampire: Medium Skin Tone: Female");
 export const vampireMediumDarkSkinToneFemale = new Emoji("\u{1F9DB}\uDDDB\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Vampire: Medium-Dark Skin Tone: Female");
 export const vampireDarkSkinToneFemale = new Emoji("\u{1F9DB}\uDDDB\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Vampire: Dark Skin Tone: Female");
-export const allVampireFemale = [
-    vampireFemale,
-    vampireLightSkinToneFemale,
-    vampireMediumLightSkinToneFemale,
-    vampireMediumSkinToneFemale,
-    vampireMediumDarkSkinToneFemale,
-    vampireDarkSkinToneFemale
-];
-export const allVampireFemaleGroup = new EmojiGroup("\u{1F9DB}\uDDDB\u200D\u2640\uFE0F", "Vampire: Female", ...allVampireFemale);
-export const allAllVampireGroup = [
-    allVampireGroup,
-    allVampireMaleGroup,
-    allVampireFemaleGroup
-];
-export const allAllVampireGroupGroup = new EmojiGroup("\u{1F9DB}\uDDDB", "Vampire", ...allAllVampireGroup);
 export const merperson = new Emoji("\u{1F9DC}\uDDDC", "Merperson");
 export const merpersonLightSkinTone = new Emoji("\u{1F9DC}\uDDDC\u{1F3FB}\uDFFB", "Merperson: Light Skin Tone");
 export const merpersonMediumLightSkinTone = new Emoji("\u{1F9DC}\uDDDC\u{1F3FC}\uDFFC", "Merperson: Medium-Light Skin Tone");
 export const merpersonMediumSkinTone = new Emoji("\u{1F9DC}\uDDDC\u{1F3FD}\uDFFD", "Merperson: Medium Skin Tone");
 export const merpersonMediumDarkSkinTone = new Emoji("\u{1F9DC}\uDDDC\u{1F3FE}\uDFFE", "Merperson: Medium-Dark Skin Tone");
 export const merpersonDarkSkinTone = new Emoji("\u{1F9DC}\uDDDC\u{1F3FF}\uDFFF", "Merperson: Dark Skin Tone");
-export const allMerperson = [
-    merperson,
-    merpersonLightSkinTone,
-    merpersonMediumLightSkinTone,
-    merpersonMediumSkinTone,
-    merpersonMediumDarkSkinTone,
-    merpersonDarkSkinTone
-];
-export const allMerpersonGroup = new EmojiGroup("\u{1F9DC}\uDDDC", "Merperson", ...allMerperson);
 export const merpersonMale = new Emoji("\u{1F9DC}\uDDDC\u200D\u2642\uFE0F", "Merperson: Male");
 export const merpersonLightSkinToneMale = new Emoji("\u{1F9DC}\uDDDC\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Merperson: Light Skin Tone: Male");
 export const merpersonMediumLightSkinToneMale = new Emoji("\u{1F9DC}\uDDDC\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Merperson: Medium-Light Skin Tone: Male");
 export const merpersonMediumSkinToneMale = new Emoji("\u{1F9DC}\uDDDC\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Merperson: Medium Skin Tone: Male");
 export const merpersonMediumDarkSkinToneMale = new Emoji("\u{1F9DC}\uDDDC\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Merperson: Medium-Dark Skin Tone: Male");
 export const merpersonDarkSkinToneMale = new Emoji("\u{1F9DC}\uDDDC\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Merperson: Dark Skin Tone: Male");
-export const allMerpersonMale = [
-    merpersonMale,
-    merpersonLightSkinToneMale,
-    merpersonMediumLightSkinToneMale,
-    merpersonMediumSkinToneMale,
-    merpersonMediumDarkSkinToneMale,
-    merpersonDarkSkinToneMale
-];
-export const allMerpersonMaleGroup = new EmojiGroup("\u{1F9DC}\uDDDC\u200D\u2642\uFE0F", "Merperson: Male", ...allMerpersonMale);
 export const merpersonFemale = new Emoji("\u{1F9DC}\uDDDC\u200D\u2640\uFE0F", "Merperson: Female");
 export const merpersonLightSkinToneFemale = new Emoji("\u{1F9DC}\uDDDC\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Merperson: Light Skin Tone: Female");
 export const merpersonMediumLightSkinToneFemale = new Emoji("\u{1F9DC}\uDDDC\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Merperson: Medium-Light Skin Tone: Female");
 export const merpersonMediumSkinToneFemale = new Emoji("\u{1F9DC}\uDDDC\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Merperson: Medium Skin Tone: Female");
 export const merpersonMediumDarkSkinToneFemale = new Emoji("\u{1F9DC}\uDDDC\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Merperson: Medium-Dark Skin Tone: Female");
 export const merpersonDarkSkinToneFemale = new Emoji("\u{1F9DC}\uDDDC\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Merperson: Dark Skin Tone: Female");
-export const allMerpersonFemale = [
-    merpersonFemale,
-    merpersonLightSkinToneFemale,
-    merpersonMediumLightSkinToneFemale,
-    merpersonMediumSkinToneFemale,
-    merpersonMediumDarkSkinToneFemale,
-    merpersonDarkSkinToneFemale
-];
-export const allMerpersonFemaleGroup = new EmojiGroup("\u{1F9DC}\uDDDC\u200D\u2640\uFE0F", "Merperson: Female", ...allMerpersonFemale);
-export const allAllMerpersonGroup = [
-    allMerpersonGroup,
-    allMerpersonMaleGroup,
-    allMerpersonFemaleGroup
-];
-export const allAllMerpersonGroupGroup = new EmojiGroup("\u{1F9DC}\uDDDC", "Merperson", ...allAllMerpersonGroup);
 export const elf = new Emoji("\u{1F9DD}\uDDDD", "Elf");
 export const elfLightSkinTone = new Emoji("\u{1F9DD}\uDDDD\u{1F3FB}\uDFFB", "Elf: Light Skin Tone");
 export const elfMediumLightSkinTone = new Emoji("\u{1F9DD}\uDDDD\u{1F3FC}\uDFFC", "Elf: Medium-Light Skin Tone");
 export const elfMediumSkinTone = new Emoji("\u{1F9DD}\uDDDD\u{1F3FD}\uDFFD", "Elf: Medium Skin Tone");
 export const elfMediumDarkSkinTone = new Emoji("\u{1F9DD}\uDDDD\u{1F3FE}\uDFFE", "Elf: Medium-Dark Skin Tone");
 export const elfDarkSkinTone = new Emoji("\u{1F9DD}\uDDDD\u{1F3FF}\uDFFF", "Elf: Dark Skin Tone");
-export const allElf = [
-    elf,
-    elfLightSkinTone,
-    elfMediumLightSkinTone,
-    elfMediumSkinTone,
-    elfMediumDarkSkinTone,
-    elfDarkSkinTone
-];
-export const allElfGroup = new EmojiGroup("\u{1F9DD}\uDDDD", "Elf", ...allElf);
 export const elfMale = new Emoji("\u{1F9DD}\uDDDD\u200D\u2642\uFE0F", "Elf: Male");
 export const elfLightSkinToneMale = new Emoji("\u{1F9DD}\uDDDD\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Elf: Light Skin Tone: Male");
 export const elfMediumLightSkinToneMale = new Emoji("\u{1F9DD}\uDDDD\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Elf: Medium-Light Skin Tone: Male");
 export const elfMediumSkinToneMale = new Emoji("\u{1F9DD}\uDDDD\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Elf: Medium Skin Tone: Male");
 export const elfMediumDarkSkinToneMale = new Emoji("\u{1F9DD}\uDDDD\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Elf: Medium-Dark Skin Tone: Male");
 export const elfDarkSkinToneMale = new Emoji("\u{1F9DD}\uDDDD\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Elf: Dark Skin Tone: Male");
-export const allElfMale = [
-    elfMale,
-    elfLightSkinToneMale,
-    elfMediumLightSkinToneMale,
-    elfMediumSkinToneMale,
-    elfMediumDarkSkinToneMale,
-    elfDarkSkinToneMale
-];
-export const allElfMaleGroup = new EmojiGroup("\u{1F9DD}\uDDDD\u200D\u2642\uFE0F", "Elf: Male", ...allElfMale);
 export const elfFemale = new Emoji("\u{1F9DD}\uDDDD\u200D\u2640\uFE0F", "Elf: Female");
 export const elfLightSkinToneFemale = new Emoji("\u{1F9DD}\uDDDD\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Elf: Light Skin Tone: Female");
 export const elfMediumLightSkinToneFemale = new Emoji("\u{1F9DD}\uDDDD\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Elf: Medium-Light Skin Tone: Female");
 export const elfMediumSkinToneFemale = new Emoji("\u{1F9DD}\uDDDD\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Elf: Medium Skin Tone: Female");
 export const elfMediumDarkSkinToneFemale = new Emoji("\u{1F9DD}\uDDDD\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Elf: Medium-Dark Skin Tone: Female");
 export const elfDarkSkinToneFemale = new Emoji("\u{1F9DD}\uDDDD\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Elf: Dark Skin Tone: Female");
-export const allElfFemale = [
-    elfFemale,
-    elfLightSkinToneFemale,
-    elfMediumLightSkinToneFemale,
-    elfMediumSkinToneFemale,
-    elfMediumDarkSkinToneFemale,
-    elfDarkSkinToneFemale
-];
-export const allElfFemaleGroup = new EmojiGroup("\u{1F9DD}\uDDDD\u200D\u2640\uFE0F", "Elf: Female", ...allElfFemale);
-export const allAllElfGroup = [
-    allElfGroup,
-    allElfMaleGroup,
-    allElfFemaleGroup
-];
-export const allAllElfGroupGroup = new EmojiGroup("\u{1F9DD}\uDDDD", "Elf", ...allAllElfGroup);
 export const walking = new Emoji("\u{1F6B6}\uDEB6", "Walking");
 export const walkingLightSkinTone = new Emoji("\u{1F6B6}\uDEB6\u{1F3FB}\uDFFB", "Walking: Light Skin Tone");
 export const walkingMediumLightSkinTone = new Emoji("\u{1F6B6}\uDEB6\u{1F3FC}\uDFFC", "Walking: Medium-Light Skin Tone");
 export const walkingMediumSkinTone = new Emoji("\u{1F6B6}\uDEB6\u{1F3FD}\uDFFD", "Walking: Medium Skin Tone");
 export const walkingMediumDarkSkinTone = new Emoji("\u{1F6B6}\uDEB6\u{1F3FE}\uDFFE", "Walking: Medium-Dark Skin Tone");
 export const walkingDarkSkinTone = new Emoji("\u{1F6B6}\uDEB6\u{1F3FF}\uDFFF", "Walking: Dark Skin Tone");
-export const allWalking = [
-    walking,
-    walkingLightSkinTone,
-    walkingMediumLightSkinTone,
-    walkingMediumSkinTone,
-    walkingMediumDarkSkinTone,
-    walkingDarkSkinTone
-];
-export const allWalkingGroup = new EmojiGroup("\u{1F6B6}\uDEB6", "Walking", ...allWalking);
 export const walkingMale = new Emoji("\u{1F6B6}\uDEB6\u200D\u2642\uFE0F", "Walking: Male");
 export const walkingLightSkinToneMale = new Emoji("\u{1F6B6}\uDEB6\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Walking: Light Skin Tone: Male");
 export const walkingMediumLightSkinToneMale = new Emoji("\u{1F6B6}\uDEB6\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Walking: Medium-Light Skin Tone: Male");
 export const walkingMediumSkinToneMale = new Emoji("\u{1F6B6}\uDEB6\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Walking: Medium Skin Tone: Male");
 export const walkingMediumDarkSkinToneMale = new Emoji("\u{1F6B6}\uDEB6\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Walking: Medium-Dark Skin Tone: Male");
 export const walkingDarkSkinToneMale = new Emoji("\u{1F6B6}\uDEB6\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Walking: Dark Skin Tone: Male");
-export const allWalkingMale = [
-    walkingMale,
-    walkingLightSkinToneMale,
-    walkingMediumLightSkinToneMale,
-    walkingMediumSkinToneMale,
-    walkingMediumDarkSkinToneMale,
-    walkingDarkSkinToneMale
-];
-export const allWalkingMaleGroup = new EmojiGroup("\u{1F6B6}\uDEB6\u200D\u2642\uFE0F", "Walking: Male", ...allWalkingMale);
 export const walkingFemale = new Emoji("\u{1F6B6}\uDEB6\u200D\u2640\uFE0F", "Walking: Female");
 export const walkingLightSkinToneFemale = new Emoji("\u{1F6B6}\uDEB6\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Walking: Light Skin Tone: Female");
 export const walkingMediumLightSkinToneFemale = new Emoji("\u{1F6B6}\uDEB6\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Walking: Medium-Light Skin Tone: Female");
 export const walkingMediumSkinToneFemale = new Emoji("\u{1F6B6}\uDEB6\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Walking: Medium Skin Tone: Female");
 export const walkingMediumDarkSkinToneFemale = new Emoji("\u{1F6B6}\uDEB6\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Walking: Medium-Dark Skin Tone: Female");
 export const walkingDarkSkinToneFemale = new Emoji("\u{1F6B6}\uDEB6\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Walking: Dark Skin Tone: Female");
-export const allWalkingFemale = [
-    walkingFemale,
-    walkingLightSkinToneFemale,
-    walkingMediumLightSkinToneFemale,
-    walkingMediumSkinToneFemale,
-    walkingMediumDarkSkinToneFemale,
-    walkingDarkSkinToneFemale
-];
-export const allWalkingFemaleGroup = new EmojiGroup("\u{1F6B6}\uDEB6\u200D\u2640\uFE0F", "Walking: Female", ...allWalkingFemale);
-export const allAllWalkingGroup = [
-    allWalkingGroup,
-    allWalkingMaleGroup,
-    allWalkingFemaleGroup
-];
-export const allAllWalkingGroupGroup = new EmojiGroup("\u{1F6B6}\uDEB6", "Walking", ...allAllWalkingGroup);
 export const standing = new Emoji("\u{1F9CD}\uDDCD", "Standing");
 export const standingLightSkinTone = new Emoji("\u{1F9CD}\uDDCD\u{1F3FB}\uDFFB", "Standing: Light Skin Tone");
 export const standingMediumLightSkinTone = new Emoji("\u{1F9CD}\uDDCD\u{1F3FC}\uDFFC", "Standing: Medium-Light Skin Tone");
 export const standingMediumSkinTone = new Emoji("\u{1F9CD}\uDDCD\u{1F3FD}\uDFFD", "Standing: Medium Skin Tone");
 export const standingMediumDarkSkinTone = new Emoji("\u{1F9CD}\uDDCD\u{1F3FE}\uDFFE", "Standing: Medium-Dark Skin Tone");
 export const standingDarkSkinTone = new Emoji("\u{1F9CD}\uDDCD\u{1F3FF}\uDFFF", "Standing: Dark Skin Tone");
-export const allStanding = [
-    standing,
-    standingLightSkinTone,
-    standingMediumLightSkinTone,
-    standingMediumSkinTone,
-    standingMediumDarkSkinTone,
-    standingDarkSkinTone
-];
-export const allStandingGroup = new EmojiGroup("\u{1F9CD}\uDDCD", "Standing", ...allStanding);
 export const standingMale = new Emoji("\u{1F9CD}\uDDCD\u200D\u2642\uFE0F", "Standing: Male");
 export const standingLightSkinToneMale = new Emoji("\u{1F9CD}\uDDCD\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Standing: Light Skin Tone: Male");
 export const standingMediumLightSkinToneMale = new Emoji("\u{1F9CD}\uDDCD\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Standing: Medium-Light Skin Tone: Male");
 export const standingMediumSkinToneMale = new Emoji("\u{1F9CD}\uDDCD\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Standing: Medium Skin Tone: Male");
 export const standingMediumDarkSkinToneMale = new Emoji("\u{1F9CD}\uDDCD\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Standing: Medium-Dark Skin Tone: Male");
 export const standingDarkSkinToneMale = new Emoji("\u{1F9CD}\uDDCD\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Standing: Dark Skin Tone: Male");
-export const allStandingMale = [
-    standingMale,
-    standingLightSkinToneMale,
-    standingMediumLightSkinToneMale,
-    standingMediumSkinToneMale,
-    standingMediumDarkSkinToneMale,
-    standingDarkSkinToneMale
-];
-export const allStandingMaleGroup = new EmojiGroup("\u{1F9CD}\uDDCD\u200D\u2642\uFE0F", "Standing: Male", ...allStandingMale);
 export const standingFemale = new Emoji("\u{1F9CD}\uDDCD\u200D\u2640\uFE0F", "Standing: Female");
 export const standingLightSkinToneFemale = new Emoji("\u{1F9CD}\uDDCD\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Standing: Light Skin Tone: Female");
 export const standingMediumLightSkinToneFemale = new Emoji("\u{1F9CD}\uDDCD\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Standing: Medium-Light Skin Tone: Female");
 export const standingMediumSkinToneFemale = new Emoji("\u{1F9CD}\uDDCD\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Standing: Medium Skin Tone: Female");
 export const standingMediumDarkSkinToneFemale = new Emoji("\u{1F9CD}\uDDCD\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Standing: Medium-Dark Skin Tone: Female");
 export const standingDarkSkinToneFemale = new Emoji("\u{1F9CD}\uDDCD\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Standing: Dark Skin Tone: Female");
-export const allStandingFemale = [
-    standingFemale,
-    standingLightSkinToneFemale,
-    standingMediumLightSkinToneFemale,
-    standingMediumSkinToneFemale,
-    standingMediumDarkSkinToneFemale,
-    standingDarkSkinToneFemale
-];
-export const allStandingFemaleGroup = new EmojiGroup("\u{1F9CD}\uDDCD\u200D\u2640\uFE0F", "Standing: Female", ...allStandingFemale);
-export const allAllStandingGroup = [
-    allStandingGroup,
-    allStandingMaleGroup,
-    allStandingFemaleGroup
-];
-export const allAllStandingGroupGroup = new EmojiGroup("\u{1F9CD}\uDDCD", "Standing", ...allAllStandingGroup);
 export const kneeling = new Emoji("\u{1F9CE}\uDDCE", "Kneeling");
 export const kneelingLightSkinTone = new Emoji("\u{1F9CE}\uDDCE\u{1F3FB}\uDFFB", "Kneeling: Light Skin Tone");
 export const kneelingMediumLightSkinTone = new Emoji("\u{1F9CE}\uDDCE\u{1F3FC}\uDFFC", "Kneeling: Medium-Light Skin Tone");
 export const kneelingMediumSkinTone = new Emoji("\u{1F9CE}\uDDCE\u{1F3FD}\uDFFD", "Kneeling: Medium Skin Tone");
 export const kneelingMediumDarkSkinTone = new Emoji("\u{1F9CE}\uDDCE\u{1F3FE}\uDFFE", "Kneeling: Medium-Dark Skin Tone");
 export const kneelingDarkSkinTone = new Emoji("\u{1F9CE}\uDDCE\u{1F3FF}\uDFFF", "Kneeling: Dark Skin Tone");
-export const allKneeling = [
-    kneeling,
-    kneelingLightSkinTone,
-    kneelingMediumLightSkinTone,
-    kneelingMediumSkinTone,
-    kneelingMediumDarkSkinTone,
-    kneelingDarkSkinTone
-];
-export const allKneelingGroup = new EmojiGroup("\u{1F9CE}\uDDCE", "Kneeling", ...allKneeling);
 export const kneelingMale = new Emoji("\u{1F9CE}\uDDCE\u200D\u2642\uFE0F", "Kneeling: Male");
 export const kneelingLightSkinToneMale = new Emoji("\u{1F9CE}\uDDCE\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Kneeling: Light Skin Tone: Male");
 export const kneelingMediumLightSkinToneMale = new Emoji("\u{1F9CE}\uDDCE\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Kneeling: Medium-Light Skin Tone: Male");
 export const kneelingMediumSkinToneMale = new Emoji("\u{1F9CE}\uDDCE\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Kneeling: Medium Skin Tone: Male");
 export const kneelingMediumDarkSkinToneMale = new Emoji("\u{1F9CE}\uDDCE\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Kneeling: Medium-Dark Skin Tone: Male");
 export const kneelingDarkSkinToneMale = new Emoji("\u{1F9CE}\uDDCE\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Kneeling: Dark Skin Tone: Male");
-export const allKneelingMale = [
-    kneelingMale,
-    kneelingLightSkinToneMale,
-    kneelingMediumLightSkinToneMale,
-    kneelingMediumSkinToneMale,
-    kneelingMediumDarkSkinToneMale,
-    kneelingDarkSkinToneMale
-];
-export const allKneelingMaleGroup = new EmojiGroup("\u{1F9CE}\uDDCE\u200D\u2642\uFE0F", "Kneeling: Male", ...allKneelingMale);
 export const kneelingFemale = new Emoji("\u{1F9CE}\uDDCE\u200D\u2640\uFE0F", "Kneeling: Female");
 export const kneelingLightSkinToneFemale = new Emoji("\u{1F9CE}\uDDCE\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Kneeling: Light Skin Tone: Female");
 export const kneelingMediumLightSkinToneFemale = new Emoji("\u{1F9CE}\uDDCE\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Kneeling: Medium-Light Skin Tone: Female");
 export const kneelingMediumSkinToneFemale = new Emoji("\u{1F9CE}\uDDCE\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Kneeling: Medium Skin Tone: Female");
 export const kneelingMediumDarkSkinToneFemale = new Emoji("\u{1F9CE}\uDDCE\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Kneeling: Medium-Dark Skin Tone: Female");
 export const kneelingDarkSkinToneFemale = new Emoji("\u{1F9CE}\uDDCE\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Kneeling: Dark Skin Tone: Female");
-export const allKneelingFemale = [
-    kneelingFemale,
-    kneelingLightSkinToneFemale,
-    kneelingMediumLightSkinToneFemale,
-    kneelingMediumSkinToneFemale,
-    kneelingMediumDarkSkinToneFemale,
-    kneelingDarkSkinToneFemale
-];
-export const allKneelingFemaleGroup = new EmojiGroup("\u{1F9CE}\uDDCE\u200D\u2640\uFE0F", "Kneeling: Female", ...allKneelingFemale);
-export const allAllKneelingGroup = [
-    allKneelingGroup,
-    allKneelingMaleGroup,
-    allKneelingFemaleGroup
-];
-export const allAllKneelingGroupGroup = new EmojiGroup("\u{1F9CE}\uDDCE", "Kneeling", ...allAllKneelingGroup);
 export const running = new Emoji("\u{1F3C3}\uDFC3", "Running");
 export const runningLightSkinTone = new Emoji("\u{1F3C3}\uDFC3\u{1F3FB}\uDFFB", "Running: Light Skin Tone");
 export const runningMediumLightSkinTone = new Emoji("\u{1F3C3}\uDFC3\u{1F3FC}\uDFFC", "Running: Medium-Light Skin Tone");
 export const runningMediumSkinTone = new Emoji("\u{1F3C3}\uDFC3\u{1F3FD}\uDFFD", "Running: Medium Skin Tone");
 export const runningMediumDarkSkinTone = new Emoji("\u{1F3C3}\uDFC3\u{1F3FE}\uDFFE", "Running: Medium-Dark Skin Tone");
 export const runningDarkSkinTone = new Emoji("\u{1F3C3}\uDFC3\u{1F3FF}\uDFFF", "Running: Dark Skin Tone");
-export const allRunning = [
-    running,
-    runningLightSkinTone,
-    runningMediumLightSkinTone,
-    runningMediumSkinTone,
-    runningMediumDarkSkinTone,
-    runningDarkSkinTone
-];
-export const allRunningGroup = new EmojiGroup("\u{1F3C3}\uDFC3", "Running", ...allRunning);
 export const runningMale = new Emoji("\u{1F3C3}\uDFC3\u200D\u2642\uFE0F", "Running: Male");
 export const runningLightSkinToneMale = new Emoji("\u{1F3C3}\uDFC3\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Running: Light Skin Tone: Male");
 export const runningMediumLightSkinToneMale = new Emoji("\u{1F3C3}\uDFC3\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Running: Medium-Light Skin Tone: Male");
 export const runningMediumSkinToneMale = new Emoji("\u{1F3C3}\uDFC3\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Running: Medium Skin Tone: Male");
 export const runningMediumDarkSkinToneMale = new Emoji("\u{1F3C3}\uDFC3\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Running: Medium-Dark Skin Tone: Male");
 export const runningDarkSkinToneMale = new Emoji("\u{1F3C3}\uDFC3\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Running: Dark Skin Tone: Male");
-export const allRunningMale = [
-    runningMale,
-    runningLightSkinToneMale,
-    runningMediumLightSkinToneMale,
-    runningMediumSkinToneMale,
-    runningMediumDarkSkinToneMale,
-    runningDarkSkinToneMale
-];
-export const allRunningMaleGroup = new EmojiGroup("\u{1F3C3}\uDFC3\u200D\u2642\uFE0F", "Running: Male", ...allRunningMale);
 export const runningFemale = new Emoji("\u{1F3C3}\uDFC3\u200D\u2640\uFE0F", "Running: Female");
 export const runningLightSkinToneFemale = new Emoji("\u{1F3C3}\uDFC3\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Running: Light Skin Tone: Female");
 export const runningMediumLightSkinToneFemale = new Emoji("\u{1F3C3}\uDFC3\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Running: Medium-Light Skin Tone: Female");
 export const runningMediumSkinToneFemale = new Emoji("\u{1F3C3}\uDFC3\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Running: Medium Skin Tone: Female");
 export const runningMediumDarkSkinToneFemale = new Emoji("\u{1F3C3}\uDFC3\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Running: Medium-Dark Skin Tone: Female");
 export const runningDarkSkinToneFemale = new Emoji("\u{1F3C3}\uDFC3\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Running: Dark Skin Tone: Female");
-export const allRunningFemale = [
-    runningFemale,
-    runningLightSkinToneFemale,
-    runningMediumLightSkinToneFemale,
-    runningMediumSkinToneFemale,
-    runningMediumDarkSkinToneFemale,
-    runningDarkSkinToneFemale
-];
-export const allRunningFemaleGroup = new EmojiGroup("\u{1F3C3}\uDFC3\u200D\u2640\uFE0F", "Running: Female", ...allRunningFemale);
-export const allAllRunningGroup = [
-    allRunningGroup,
-    allRunningMaleGroup,
-    allRunningFemaleGroup
-];
-export const allAllRunningGroupGroup = new EmojiGroup("\u{1F3C3}\uDFC3", "Running", ...allAllRunningGroup);
-export const allAllAllFrowningGroupGroup = [
-    allAllFrowningGroupGroup,
-    allAllPoutingGroupGroup,
-    allAllGesturingNOGroupGroup,
-    allAllGesturingOKGroupGroup,
-    allAllTippingHandGroupGroup,
-    allAllRaisingHandGroupGroup,
-    allAllBowingGroupGroup,
-    allAllFacepalmingGroupGroup,
-    allAllShruggingGroupGroup,
-    allAllCanTHearGroupGroup,
-    allAllGettingMassageGroupGroup,
-    allAllGettingHaircutGroupGroup
-];
-export const allAllAllFrowningGroupGroupGroup = new EmojiGroup("\u0047\u0065\u0073\u0074\u0075\u0072\u0065\u0073", "Gestures", ...allAllAllFrowningGroupGroup);
 export const baby = new Emoji("\u{1F476}\uDC76", "Baby");
 export const babyLightSkinTone = new Emoji("\u{1F476}\uDC76\u{1F3FB}\uDFFB", "Baby: Light Skin Tone");
 export const babyMediumLightSkinTone = new Emoji("\u{1F476}\uDC76\u{1F3FC}\uDFFC", "Baby: Medium-Light Skin Tone");
 export const babyMediumSkinTone = new Emoji("\u{1F476}\uDC76\u{1F3FD}\uDFFD", "Baby: Medium Skin Tone");
 export const babyMediumDarkSkinTone = new Emoji("\u{1F476}\uDC76\u{1F3FE}\uDFFE", "Baby: Medium-Dark Skin Tone");
 export const babyDarkSkinTone = new Emoji("\u{1F476}\uDC76\u{1F3FF}\uDFFF", "Baby: Dark Skin Tone");
-export const allBaby = [
-    baby,
-    babyLightSkinTone,
-    babyMediumLightSkinTone,
-    babyMediumSkinTone,
-    babyMediumDarkSkinTone,
-    babyDarkSkinTone
-];
-export const allBabyGroup = new EmojiGroup("\u{1F476}\uDC76", "Baby", ...allBaby);
 export const child = new Emoji("\u{1F9D2}\uDDD2", "Child");
 export const childLightSkinTone = new Emoji("\u{1F9D2}\uDDD2\u{1F3FB}\uDFFB", "Child: Light Skin Tone");
 export const childMediumLightSkinTone = new Emoji("\u{1F9D2}\uDDD2\u{1F3FC}\uDFFC", "Child: Medium-Light Skin Tone");
 export const childMediumSkinTone = new Emoji("\u{1F9D2}\uDDD2\u{1F3FD}\uDFFD", "Child: Medium Skin Tone");
 export const childMediumDarkSkinTone = new Emoji("\u{1F9D2}\uDDD2\u{1F3FE}\uDFFE", "Child: Medium-Dark Skin Tone");
 export const childDarkSkinTone = new Emoji("\u{1F9D2}\uDDD2\u{1F3FF}\uDFFF", "Child: Dark Skin Tone");
-export const allChild = [
-    child,
-    childLightSkinTone,
-    childMediumLightSkinTone,
-    childMediumSkinTone,
-    childMediumDarkSkinTone,
-    childDarkSkinTone
-];
-export const allChildGroup = new EmojiGroup("\u{1F9D2}\uDDD2", "Child", ...allChild);
 export const boy = new Emoji("\u{1F466}\uDC66", "Boy");
 export const boyLightSkinTone = new Emoji("\u{1F466}\uDC66\u{1F3FB}\uDFFB", "Boy: Light Skin Tone");
 export const boyMediumLightSkinTone = new Emoji("\u{1F466}\uDC66\u{1F3FC}\uDFFC", "Boy: Medium-Light Skin Tone");
 export const boyMediumSkinTone = new Emoji("\u{1F466}\uDC66\u{1F3FD}\uDFFD", "Boy: Medium Skin Tone");
 export const boyMediumDarkSkinTone = new Emoji("\u{1F466}\uDC66\u{1F3FE}\uDFFE", "Boy: Medium-Dark Skin Tone");
 export const boyDarkSkinTone = new Emoji("\u{1F466}\uDC66\u{1F3FF}\uDFFF", "Boy: Dark Skin Tone");
-export const allBoy = [
-    boy,
-    boyLightSkinTone,
-    boyMediumLightSkinTone,
-    boyMediumSkinTone,
-    boyMediumDarkSkinTone,
-    boyDarkSkinTone
-];
-export const allBoyGroup = new EmojiGroup("\u{1F466}\uDC66", "Boy", ...allBoy);
 export const girl = new Emoji("\u{1F467}\uDC67", "Girl");
 export const girlLightSkinTone = new Emoji("\u{1F467}\uDC67\u{1F3FB}\uDFFB", "Girl: Light Skin Tone");
 export const girlMediumLightSkinTone = new Emoji("\u{1F467}\uDC67\u{1F3FC}\uDFFC", "Girl: Medium-Light Skin Tone");
 export const girlMediumSkinTone = new Emoji("\u{1F467}\uDC67\u{1F3FD}\uDFFD", "Girl: Medium Skin Tone");
 export const girlMediumDarkSkinTone = new Emoji("\u{1F467}\uDC67\u{1F3FE}\uDFFE", "Girl: Medium-Dark Skin Tone");
 export const girlDarkSkinTone = new Emoji("\u{1F467}\uDC67\u{1F3FF}\uDFFF", "Girl: Dark Skin Tone");
-export const allGirl = [
-    girl,
-    girlLightSkinTone,
-    girlMediumLightSkinTone,
-    girlMediumSkinTone,
-    girlMediumDarkSkinTone,
-    girlDarkSkinTone
-];
-export const allGirlGroup = new EmojiGroup("\u{1F467}\uDC67", "Girl", ...allGirl);
-export const allAllChildGroup = [
-    allChildGroup,
-    allBoyGroup,
-    allGirlGroup
-];
-export const allAllChildGroupGroup = new EmojiGroup("\u{1F9D2}\uDDD2", "Child", ...allAllChildGroup);
 export const blondPerson = new Emoji("\u{1F471}\uDC71", "Blond Person");
 export const blondPersonLightSkinTone = new Emoji("\u{1F471}\uDC71\u{1F3FB}\uDFFB", "Blond Person: Light Skin Tone");
 export const blondPersonMediumLightSkinTone = new Emoji("\u{1F471}\uDC71\u{1F3FC}\uDFFC", "Blond Person: Medium-Light Skin Tone");
 export const blondPersonMediumSkinTone = new Emoji("\u{1F471}\uDC71\u{1F3FD}\uDFFD", "Blond Person: Medium Skin Tone");
 export const blondPersonMediumDarkSkinTone = new Emoji("\u{1F471}\uDC71\u{1F3FE}\uDFFE", "Blond Person: Medium-Dark Skin Tone");
 export const blondPersonDarkSkinTone = new Emoji("\u{1F471}\uDC71\u{1F3FF}\uDFFF", "Blond Person: Dark Skin Tone");
-export const allBlondPerson = [
-    blondPerson,
-    blondPersonLightSkinTone,
-    blondPersonMediumLightSkinTone,
-    blondPersonMediumSkinTone,
-    blondPersonMediumDarkSkinTone,
-    blondPersonDarkSkinTone
-];
-export const allBlondPersonGroup = new EmojiGroup("\u{1F471}\uDC71", "Blond Person", ...allBlondPerson);
 export const blondPersonMale = new Emoji("\u{1F471}\uDC71\u200D\u2642\uFE0F", "Blond Person: Male");
 export const blondPersonLightSkinToneMale = new Emoji("\u{1F471}\uDC71\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Blond Person: Light Skin Tone: Male");
 export const blondPersonMediumLightSkinToneMale = new Emoji("\u{1F471}\uDC71\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Blond Person: Medium-Light Skin Tone: Male");
 export const blondPersonMediumSkinToneMale = new Emoji("\u{1F471}\uDC71\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Blond Person: Medium Skin Tone: Male");
 export const blondPersonMediumDarkSkinToneMale = new Emoji("\u{1F471}\uDC71\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Blond Person: Medium-Dark Skin Tone: Male");
 export const blondPersonDarkSkinToneMale = new Emoji("\u{1F471}\uDC71\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Blond Person: Dark Skin Tone: Male");
-export const allBlondPersonMale = [
-    blondPersonMale,
-    blondPersonLightSkinToneMale,
-    blondPersonMediumLightSkinToneMale,
-    blondPersonMediumSkinToneMale,
-    blondPersonMediumDarkSkinToneMale,
-    blondPersonDarkSkinToneMale
-];
-export const allBlondPersonMaleGroup = new EmojiGroup("\u{1F471}\uDC71\u200D\u2642\uFE0F", "Blond Person: Male", ...allBlondPersonMale);
 export const blondPersonFemale = new Emoji("\u{1F471}\uDC71\u200D\u2640\uFE0F", "Blond Person: Female");
 export const blondPersonLightSkinToneFemale = new Emoji("\u{1F471}\uDC71\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Blond Person: Light Skin Tone: Female");
 export const blondPersonMediumLightSkinToneFemale = new Emoji("\u{1F471}\uDC71\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Blond Person: Medium-Light Skin Tone: Female");
 export const blondPersonMediumSkinToneFemale = new Emoji("\u{1F471}\uDC71\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Blond Person: Medium Skin Tone: Female");
 export const blondPersonMediumDarkSkinToneFemale = new Emoji("\u{1F471}\uDC71\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Blond Person: Medium-Dark Skin Tone: Female");
 export const blondPersonDarkSkinToneFemale = new Emoji("\u{1F471}\uDC71\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Blond Person: Dark Skin Tone: Female");
-export const allBlondPersonFemale = [
-    blondPersonFemale,
-    blondPersonLightSkinToneFemale,
-    blondPersonMediumLightSkinToneFemale,
-    blondPersonMediumSkinToneFemale,
-    blondPersonMediumDarkSkinToneFemale,
-    blondPersonDarkSkinToneFemale
-];
-export const allBlondPersonFemaleGroup = new EmojiGroup("\u{1F471}\uDC71\u200D\u2640\uFE0F", "Blond Person: Female", ...allBlondPersonFemale);
-export const allAllBlondPersonGroup = [
-    allBlondPersonGroup,
-    allBlondPersonMaleGroup,
-    allBlondPersonFemaleGroup
-];
-export const allAllBlondPersonGroupGroup = new EmojiGroup("\u{1F471}\uDC71", "Blond Person", ...allAllBlondPersonGroup);
 export const person = new Emoji("\u{1F9D1}\uDDD1", "Person");
 export const personLightSkinTone = new Emoji("\u{1F9D1}\uDDD1\u{1F3FB}\uDFFB", "Person: Light Skin Tone");
 export const personMediumLightSkinTone = new Emoji("\u{1F9D1}\uDDD1\u{1F3FC}\uDFFC", "Person: Medium-Light Skin Tone");
 export const personMediumSkinTone = new Emoji("\u{1F9D1}\uDDD1\u{1F3FD}\uDFFD", "Person: Medium Skin Tone");
 export const personMediumDarkSkinTone = new Emoji("\u{1F9D1}\uDDD1\u{1F3FE}\uDFFE", "Person: Medium-Dark Skin Tone");
 export const personDarkSkinTone = new Emoji("\u{1F9D1}\uDDD1\u{1F3FF}\uDFFF", "Person: Dark Skin Tone");
-export const allPerson = [
-    person,
-    personLightSkinTone,
-    personMediumLightSkinTone,
-    personMediumSkinTone,
-    personMediumDarkSkinTone,
-    personDarkSkinTone,
-    allBlondPersonGroup,
-    allWearingTurbanGroup
-];
-export const allPersonGroup = new EmojiGroup("\u{1F9D1}\uDDD1", "Person", ...allPerson);
 export const beardedMan = new Emoji("\u{1F9D4}\uDDD4", "Bearded Man");
 export const beardedManLightSkinTone = new Emoji("\u{1F9D4}\uDDD4\u{1F3FB}\uDFFB", "Bearded Man: Light Skin Tone");
 export const beardedManMediumLightSkinTone = new Emoji("\u{1F9D4}\uDDD4\u{1F3FC}\uDFFC", "Bearded Man: Medium-Light Skin Tone");
 export const beardedManMediumSkinTone = new Emoji("\u{1F9D4}\uDDD4\u{1F3FD}\uDFFD", "Bearded Man: Medium Skin Tone");
 export const beardedManMediumDarkSkinTone = new Emoji("\u{1F9D4}\uDDD4\u{1F3FE}\uDFFE", "Bearded Man: Medium-Dark Skin Tone");
 export const beardedManDarkSkinTone = new Emoji("\u{1F9D4}\uDDD4\u{1F3FF}\uDFFF", "Bearded Man: Dark Skin Tone");
-export const allBeardedMan = [
-    beardedMan,
-    beardedManLightSkinTone,
-    beardedManMediumLightSkinTone,
-    beardedManMediumSkinTone,
-    beardedManMediumDarkSkinTone,
-    beardedManDarkSkinTone
-];
-export const allBeardedManGroup = new EmojiGroup("\u{1F9D4}\uDDD4", "Bearded Man", ...allBeardedMan);
 export const manInSuitLevitating = new Emoji("\u{1F574}\uDD74\uFE0F", "Man in Suit, Levitating");
 export const manWithChineseCap = new Emoji("\u{1F472}\uDC72", "Man With Chinese Cap");
 export const manWithChineseCapLightSkinTone = new Emoji("\u{1F472}\uDC72\u{1F3FB}\uDFFB", "Man With Chinese Cap: Light Skin Tone");
@@ -1639,325 +580,114 @@ export const manWithChineseCapMediumLightSkinTone = new Emoji("\u{1F472}\uDC72\u
 export const manWithChineseCapMediumSkinTone = new Emoji("\u{1F472}\uDC72\u{1F3FD}\uDFFD", "Man With Chinese Cap: Medium Skin Tone");
 export const manWithChineseCapMediumDarkSkinTone = new Emoji("\u{1F472}\uDC72\u{1F3FE}\uDFFE", "Man With Chinese Cap: Medium-Dark Skin Tone");
 export const manWithChineseCapDarkSkinTone = new Emoji("\u{1F472}\uDC72\u{1F3FF}\uDFFF", "Man With Chinese Cap: Dark Skin Tone");
-export const allManWithChineseCap = [
-    manWithChineseCap,
-    manWithChineseCapLightSkinTone,
-    manWithChineseCapMediumLightSkinTone,
-    manWithChineseCapMediumSkinTone,
-    manWithChineseCapMediumDarkSkinTone,
-    manWithChineseCapDarkSkinTone
-];
-export const allManWithChineseCapGroup = new EmojiGroup("\u{1F472}\uDC72", "Man With Chinese Cap", ...allManWithChineseCap);
 export const manInTuxedo = new Emoji("\u{1F935}\uDD35", "Man in Tuxedo");
 export const manInTuxedoLightSkinTone = new Emoji("\u{1F935}\uDD35\u{1F3FB}\uDFFB", "Man in Tuxedo: Light Skin Tone");
 export const manInTuxedoMediumLightSkinTone = new Emoji("\u{1F935}\uDD35\u{1F3FC}\uDFFC", "Man in Tuxedo: Medium-Light Skin Tone");
 export const manInTuxedoMediumSkinTone = new Emoji("\u{1F935}\uDD35\u{1F3FD}\uDFFD", "Man in Tuxedo: Medium Skin Tone");
 export const manInTuxedoMediumDarkSkinTone = new Emoji("\u{1F935}\uDD35\u{1F3FE}\uDFFE", "Man in Tuxedo: Medium-Dark Skin Tone");
 export const manInTuxedoDarkSkinTone = new Emoji("\u{1F935}\uDD35\u{1F3FF}\uDFFF", "Man in Tuxedo: Dark Skin Tone");
-export const allManInTuxedo = [
-    manInTuxedo,
-    manInTuxedoLightSkinTone,
-    manInTuxedoMediumLightSkinTone,
-    manInTuxedoMediumSkinTone,
-    manInTuxedoMediumDarkSkinTone,
-    manInTuxedoDarkSkinTone
-];
-export const allManInTuxedoGroup = new EmojiGroup("\u{1F935}\uDD35", "Man in Tuxedo", ...allManInTuxedo);
 export const man = new Emoji("\u{1F468}\uDC68", "Man");
 export const manLightSkinTone = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB", "Man: Light Skin Tone");
 export const manMediumLightSkinTone = new Emoji("\u{1F468}\uDC68\u{1F3FC}\uDFFC", "Man: Medium-Light Skin Tone");
 export const manMediumSkinTone = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD", "Man: Medium Skin Tone");
 export const manMediumDarkSkinTone = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE", "Man: Medium-Dark Skin Tone");
 export const manDarkSkinTone = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF", "Man: Dark Skin Tone");
-export const allMan = [
-    man,
-    manLightSkinTone,
-    manMediumLightSkinTone,
-    manMediumSkinTone,
-    manMediumDarkSkinTone,
-    manDarkSkinTone
-];
-export const allManGroup = new EmojiGroup("\u{1F468}\uDC68", "Man", ...allMan);
 export const manRedHair = new Emoji("\u{1F468}\uDC68\u200D\u{1F9B0}\uDDB0", "Man: Red Hair");
 export const manLightSkinToneRedHair = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F9B0}\uDDB0", "Man: Light Skin Tone: Red Hair");
 export const manMediumLightSkinToneRedHair = new Emoji("\u{1F468}\uDC68\u{1F3FC}\uDFFC\u200D\u{1F9B0}\uDDB0", "Man: Medium-Light Skin Tone: Red Hair");
 export const manMediumSkinToneRedHair = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F9B0}\uDDB0", "Man: Medium Skin Tone: Red Hair");
 export const manMediumDarkSkinToneRedHair = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F9B0}\uDDB0", "Man: Medium-Dark Skin Tone: Red Hair");
 export const manDarkSkinToneRedHair = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F9B0}\uDDB0", "Man: Dark Skin Tone: Red Hair");
-export const allManRedHair = [
-    manRedHair,
-    manLightSkinToneRedHair,
-    manMediumLightSkinToneRedHair,
-    manMediumSkinToneRedHair,
-    manMediumDarkSkinToneRedHair,
-    manDarkSkinToneRedHair
-];
-export const allManRedHairGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F9B0}\uDDB0", "Man: Red Hair", ...allManRedHair);
 export const manCurlyHair = new Emoji("\u{1F468}\uDC68\u200D\u{1F9B1}\uDDB1", "Man: Curly Hair");
 export const manLightSkinToneCurlyHair = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F9B1}\uDDB1", "Man: Light Skin Tone: Curly Hair");
 export const manMediumLightSkinToneCurlyHair = new Emoji("\u{1F468}\uDC68\u{1F3FC}\uDFFC\u200D\u{1F9B1}\uDDB1", "Man: Medium-Light Skin Tone: Curly Hair");
 export const manMediumSkinToneCurlyHair = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F9B1}\uDDB1", "Man: Medium Skin Tone: Curly Hair");
 export const manMediumDarkSkinToneCurlyHair = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F9B1}\uDDB1", "Man: Medium-Dark Skin Tone: Curly Hair");
 export const manDarkSkinToneCurlyHair = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F9B1}\uDDB1", "Man: Dark Skin Tone: Curly Hair");
-export const allManCurlyHair = [
-    manCurlyHair,
-    manLightSkinToneCurlyHair,
-    manMediumLightSkinToneCurlyHair,
-    manMediumSkinToneCurlyHair,
-    manMediumDarkSkinToneCurlyHair,
-    manDarkSkinToneCurlyHair
-];
-export const allManCurlyHairGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F9B1}\uDDB1", "Man: Curly Hair", ...allManCurlyHair);
 export const manWhiteHair = new Emoji("\u{1F468}\uDC68\u200D\u{1F9B3}\uDDB3", "Man: White Hair");
 export const manLightSkinToneWhiteHair = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F9B3}\uDDB3", "Man: Light Skin Tone: White Hair");
 export const manMediumLightSkinToneWhiteHair = new Emoji("\u{1F468}\uDC68\u{1F3FC}\uDFFC\u200D\u{1F9B3}\uDDB3", "Man: Medium-Light Skin Tone: White Hair");
 export const manMediumSkinToneWhiteHair = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F9B3}\uDDB3", "Man: Medium Skin Tone: White Hair");
 export const manMediumDarkSkinToneWhiteHair = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F9B3}\uDDB3", "Man: Medium-Dark Skin Tone: White Hair");
 export const manDarkSkinToneWhiteHair = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F9B3}\uDDB3", "Man: Dark Skin Tone: White Hair");
-export const allManWhiteHair = [
-    manWhiteHair,
-    manLightSkinToneWhiteHair,
-    manMediumLightSkinToneWhiteHair,
-    manMediumSkinToneWhiteHair,
-    manMediumDarkSkinToneWhiteHair,
-    manDarkSkinToneWhiteHair
-];
-export const allManWhiteHairGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F9B3}\uDDB3", "Man: White Hair", ...allManWhiteHair);
 export const manBald = new Emoji("\u{1F468}\uDC68\u200D\u{1F9B2}\uDDB2", "Man: Bald");
 export const manLightSkinToneBald = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F9B2}\uDDB2", "Man: Light Skin Tone: Bald");
 export const manMediumLightSkinToneBald = new Emoji("\u{1F468}\uDC68\u{1F3FC}\uDFFC\u200D\u{1F9B2}\uDDB2", "Man: Medium-Light Skin Tone: Bald");
 export const manMediumSkinToneBald = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F9B2}\uDDB2", "Man: Medium Skin Tone: Bald");
 export const manMediumDarkSkinToneBald = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F9B2}\uDDB2", "Man: Medium-Dark Skin Tone: Bald");
 export const manDarkSkinToneBald = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F9B2}\uDDB2", "Man: Dark Skin Tone: Bald");
-export const allManBald = [
-    manBald,
-    manLightSkinToneBald,
-    manMediumLightSkinToneBald,
-    manMediumSkinToneBald,
-    manMediumDarkSkinToneBald,
-    manDarkSkinToneBald
-];
-export const allManBaldGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F9B2}\uDDB2", "Man: Bald", ...allManBald);
-export const allAllManGroup = [
-    allManGroup,
-    allManRedHairGroup,
-    allManCurlyHairGroup,
-    allManWhiteHairGroup,
-    allManBaldGroup,
-    allBlondPersonMaleGroup,
-    allBeardedManGroup,
-    manInSuitLevitating,
-    allManWithChineseCapGroup,
-    allWearingTurbanMaleGroup,
-    allManInTuxedoGroup
-];
-export const allAllManGroupGroup = new EmojiGroup("\u{1F468}\uDC68", "Man", ...allAllManGroup);
 export const pregnantWoman = new Emoji("\u{1F930}\uDD30", "Pregnant Woman");
 export const pregnantWomanLightSkinTone = new Emoji("\u{1F930}\uDD30\u{1F3FB}\uDFFB", "Pregnant Woman: Light Skin Tone");
 export const pregnantWomanMediumLightSkinTone = new Emoji("\u{1F930}\uDD30\u{1F3FC}\uDFFC", "Pregnant Woman: Medium-Light Skin Tone");
 export const pregnantWomanMediumSkinTone = new Emoji("\u{1F930}\uDD30\u{1F3FD}\uDFFD", "Pregnant Woman: Medium Skin Tone");
 export const pregnantWomanMediumDarkSkinTone = new Emoji("\u{1F930}\uDD30\u{1F3FE}\uDFFE", "Pregnant Woman: Medium-Dark Skin Tone");
 export const pregnantWomanDarkSkinTone = new Emoji("\u{1F930}\uDD30\u{1F3FF}\uDFFF", "Pregnant Woman: Dark Skin Tone");
-export const allPregnantWoman = [
-    pregnantWoman,
-    pregnantWomanLightSkinTone,
-    pregnantWomanMediumLightSkinTone,
-    pregnantWomanMediumSkinTone,
-    pregnantWomanMediumDarkSkinTone,
-    pregnantWomanDarkSkinTone
-];
-export const allPregnantWomanGroup = new EmojiGroup("\u{1F930}\uDD30", "Pregnant Woman", ...allPregnantWoman);
 export const breastFeeding = new Emoji("\u{1F931}\uDD31", "Breast-Feeding");
 export const breastFeedingLightSkinTone = new Emoji("\u{1F931}\uDD31\u{1F3FB}\uDFFB", "Breast-Feeding: Light Skin Tone");
 export const breastFeedingMediumLightSkinTone = new Emoji("\u{1F931}\uDD31\u{1F3FC}\uDFFC", "Breast-Feeding: Medium-Light Skin Tone");
 export const breastFeedingMediumSkinTone = new Emoji("\u{1F931}\uDD31\u{1F3FD}\uDFFD", "Breast-Feeding: Medium Skin Tone");
 export const breastFeedingMediumDarkSkinTone = new Emoji("\u{1F931}\uDD31\u{1F3FE}\uDFFE", "Breast-Feeding: Medium-Dark Skin Tone");
 export const breastFeedingDarkSkinTone = new Emoji("\u{1F931}\uDD31\u{1F3FF}\uDFFF", "Breast-Feeding: Dark Skin Tone");
-export const allBreastFeeding = [
-    breastFeeding,
-    breastFeedingLightSkinTone,
-    breastFeedingMediumLightSkinTone,
-    breastFeedingMediumSkinTone,
-    breastFeedingMediumDarkSkinTone,
-    breastFeedingDarkSkinTone
-];
-export const allBreastFeedingGroup = new EmojiGroup("\u{1F931}\uDD31", "Breast-Feeding", ...allBreastFeeding);
 export const womanWithHeadscarf = new Emoji("\u{1F9D5}\uDDD5", "Woman With Headscarf");
 export const womanWithHeadscarfLightSkinTone = new Emoji("\u{1F9D5}\uDDD5\u{1F3FB}\uDFFB", "Woman With Headscarf: Light Skin Tone");
 export const womanWithHeadscarfMediumLightSkinTone = new Emoji("\u{1F9D5}\uDDD5\u{1F3FC}\uDFFC", "Woman With Headscarf: Medium-Light Skin Tone");
 export const womanWithHeadscarfMediumSkinTone = new Emoji("\u{1F9D5}\uDDD5\u{1F3FD}\uDFFD", "Woman With Headscarf: Medium Skin Tone");
 export const womanWithHeadscarfMediumDarkSkinTone = new Emoji("\u{1F9D5}\uDDD5\u{1F3FE}\uDFFE", "Woman With Headscarf: Medium-Dark Skin Tone");
 export const womanWithHeadscarfDarkSkinTone = new Emoji("\u{1F9D5}\uDDD5\u{1F3FF}\uDFFF", "Woman With Headscarf: Dark Skin Tone");
-export const allWomanWithHeadscarf = [
-    womanWithHeadscarf,
-    womanWithHeadscarfLightSkinTone,
-    womanWithHeadscarfMediumLightSkinTone,
-    womanWithHeadscarfMediumSkinTone,
-    womanWithHeadscarfMediumDarkSkinTone,
-    womanWithHeadscarfDarkSkinTone
-];
-export const allWomanWithHeadscarfGroup = new EmojiGroup("\u{1F9D5}\uDDD5", "Woman With Headscarf", ...allWomanWithHeadscarf);
 export const brideWithVeil = new Emoji("\u{1F470}\uDC70", "Bride With Veil");
 export const brideWithVeilLightSkinTone = new Emoji("\u{1F470}\uDC70\u{1F3FB}\uDFFB", "Bride With Veil: Light Skin Tone");
 export const brideWithVeilMediumLightSkinTone = new Emoji("\u{1F470}\uDC70\u{1F3FC}\uDFFC", "Bride With Veil: Medium-Light Skin Tone");
 export const brideWithVeilMediumSkinTone = new Emoji("\u{1F470}\uDC70\u{1F3FD}\uDFFD", "Bride With Veil: Medium Skin Tone");
 export const brideWithVeilMediumDarkSkinTone = new Emoji("\u{1F470}\uDC70\u{1F3FE}\uDFFE", "Bride With Veil: Medium-Dark Skin Tone");
 export const brideWithVeilDarkSkinTone = new Emoji("\u{1F470}\uDC70\u{1F3FF}\uDFFF", "Bride With Veil: Dark Skin Tone");
-export const allBrideWithVeil = [
-    brideWithVeil,
-    brideWithVeilLightSkinTone,
-    brideWithVeilMediumLightSkinTone,
-    brideWithVeilMediumSkinTone,
-    brideWithVeilMediumDarkSkinTone,
-    brideWithVeilDarkSkinTone
-];
-export const allBrideWithVeilGroup = new EmojiGroup("\u{1F470}\uDC70", "Bride With Veil", ...allBrideWithVeil);
 export const woman = new Emoji("\u{1F469}\uDC69", "Woman");
 export const womanLightSkinTone = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB", "Woman: Light Skin Tone");
 export const womanMediumLightSkinTone = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC", "Woman: Medium-Light Skin Tone");
 export const womanMediumSkinTone = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD", "Woman: Medium Skin Tone");
 export const womanMediumDarkSkinTone = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE", "Woman: Medium-Dark Skin Tone");
 export const womanDarkSkinTone = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF", "Woman: Dark Skin Tone");
-export const allWoman = [
-    woman,
-    womanLightSkinTone,
-    womanMediumLightSkinTone,
-    womanMediumSkinTone,
-    womanMediumDarkSkinTone,
-    womanDarkSkinTone
-];
-export const allWomanGroup = new EmojiGroup("\u{1F469}\uDC69", "Woman", ...allWoman);
 export const womanRedHair = new Emoji("\u{1F469}\uDC69\u200D\u{1F9B0}\uDDB0", "Woman: Red Hair");
 export const womanLightSkinToneRedHair = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F9B0}\uDDB0", "Woman: Light Skin Tone: Red Hair");
 export const womanMediumLightSkinToneRedHair = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F9B0}\uDDB0", "Woman: Medium-Light Skin Tone: Red Hair");
 export const womanMediumSkinToneRedHair = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F9B0}\uDDB0", "Woman: Medium Skin Tone: Red Hair");
 export const womanMediumDarkSkinToneRedHair = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F9B0}\uDDB0", "Woman: Medium-Dark Skin Tone: Red Hair");
 export const womanDarkSkinToneRedHair = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F9B0}\uDDB0", "Woman: Dark Skin Tone: Red Hair");
-export const allWomanRedHair = [
-    womanRedHair,
-    womanLightSkinToneRedHair,
-    womanMediumLightSkinToneRedHair,
-    womanMediumSkinToneRedHair,
-    womanMediumDarkSkinToneRedHair,
-    womanDarkSkinToneRedHair
-];
-export const allWomanRedHairGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F9B0}\uDDB0", "Woman: Red Hair", ...allWomanRedHair);
 export const womanCurlyHair = new Emoji("\u{1F469}\uDC69\u200D\u{1F9B1}\uDDB1", "Woman: Curly Hair");
 export const womanLightSkinToneCurlyHair = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F9B1}\uDDB1", "Woman: Light Skin Tone: Curly Hair");
 export const womanMediumLightSkinToneCurlyHair = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F9B1}\uDDB1", "Woman: Medium-Light Skin Tone: Curly Hair");
 export const womanMediumSkinToneCurlyHair = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F9B1}\uDDB1", "Woman: Medium Skin Tone: Curly Hair");
 export const womanMediumDarkSkinToneCurlyHair = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F9B1}\uDDB1", "Woman: Medium-Dark Skin Tone: Curly Hair");
 export const womanDarkSkinToneCurlyHair = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F9B1}\uDDB1", "Woman: Dark Skin Tone: Curly Hair");
-export const allWomanCurlyHair = [
-    womanCurlyHair,
-    womanLightSkinToneCurlyHair,
-    womanMediumLightSkinToneCurlyHair,
-    womanMediumSkinToneCurlyHair,
-    womanMediumDarkSkinToneCurlyHair,
-    womanDarkSkinToneCurlyHair
-];
-export const allWomanCurlyHairGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F9B1}\uDDB1", "Woman: Curly Hair", ...allWomanCurlyHair);
 export const womanWhiteHair = new Emoji("\u{1F469}\uDC69\u200D\u{1F9B3}\uDDB3", "Woman: White Hair");
 export const womanLightSkinToneWhiteHair = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F9B3}\uDDB3", "Woman: Light Skin Tone: White Hair");
 export const womanMediumLightSkinToneWhiteHair = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F9B3}\uDDB3", "Woman: Medium-Light Skin Tone: White Hair");
 export const womanMediumSkinToneWhiteHair = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F9B3}\uDDB3", "Woman: Medium Skin Tone: White Hair");
 export const womanMediumDarkSkinToneWhiteHair = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F9B3}\uDDB3", "Woman: Medium-Dark Skin Tone: White Hair");
 export const womanDarkSkinToneWhiteHair = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F9B3}\uDDB3", "Woman: Dark Skin Tone: White Hair");
-export const allWomanWhiteHair = [
-    womanWhiteHair,
-    womanLightSkinToneWhiteHair,
-    womanMediumLightSkinToneWhiteHair,
-    womanMediumSkinToneWhiteHair,
-    womanMediumDarkSkinToneWhiteHair,
-    womanDarkSkinToneWhiteHair
-];
-export const allWomanWhiteHairGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F9B3}\uDDB3", "Woman: White Hair", ...allWomanWhiteHair);
 export const womanBald = new Emoji("\u{1F469}\uDC69\u200D\u{1F9B2}\uDDB2", "Woman: Bald");
 export const womanLightSkinToneBald = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F9B2}\uDDB2", "Woman: Light Skin Tone: Bald");
 export const womanMediumLightSkinToneBald = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F9B2}\uDDB2", "Woman: Medium-Light Skin Tone: Bald");
 export const womanMediumSkinToneBald = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F9B2}\uDDB2", "Woman: Medium Skin Tone: Bald");
 export const womanMediumDarkSkinToneBald = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F9B2}\uDDB2", "Woman: Medium-Dark Skin Tone: Bald");
 export const womanDarkSkinToneBald = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F9B2}\uDDB2", "Woman: Dark Skin Tone: Bald");
-export const allWomanBald = [
-    womanBald,
-    womanLightSkinToneBald,
-    womanMediumLightSkinToneBald,
-    womanMediumSkinToneBald,
-    womanMediumDarkSkinToneBald,
-    womanDarkSkinToneBald
-];
-export const allWomanBaldGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F9B2}\uDDB2", "Woman: Bald", ...allWomanBald);
-export const allAllWomanGroup = [
-    allWomanGroup,
-    allWomanRedHairGroup,
-    allWomanCurlyHairGroup,
-    allWomanWhiteHairGroup,
-    allWomanBaldGroup,
-    allBlondPersonFemaleGroup,
-    allPregnantWomanGroup,
-    allBreastFeedingGroup,
-    allWomanWithHeadscarfGroup,
-    allWearingTurbanFemaleGroup,
-    allBrideWithVeilGroup
-];
-export const allAllWomanGroupGroup = new EmojiGroup("\u{1F469}\uDC69", "Woman", ...allAllWomanGroup);
-export const allAllPersonGroup = [
-    allPersonGroup,
-    allAllManGroupGroup,
-    allAllWomanGroupGroup
-];
-export const allAllPersonGroupGroup = new EmojiGroup("\u{1F9D1}\uDDD1", "Adult", ...allAllPersonGroup);
 export const olderPerson = new Emoji("\u{1F9D3}\uDDD3", "Older Person");
 export const olderPersonLightSkinTone = new Emoji("\u{1F9D3}\uDDD3\u{1F3FB}\uDFFB", "Older Person: Light Skin Tone");
 export const olderPersonMediumLightSkinTone = new Emoji("\u{1F9D3}\uDDD3\u{1F3FC}\uDFFC", "Older Person: Medium-Light Skin Tone");
 export const olderPersonMediumSkinTone = new Emoji("\u{1F9D3}\uDDD3\u{1F3FD}\uDFFD", "Older Person: Medium Skin Tone");
 export const olderPersonMediumDarkSkinTone = new Emoji("\u{1F9D3}\uDDD3\u{1F3FE}\uDFFE", "Older Person: Medium-Dark Skin Tone");
 export const olderPersonDarkSkinTone = new Emoji("\u{1F9D3}\uDDD3\u{1F3FF}\uDFFF", "Older Person: Dark Skin Tone");
-export const allOlderPerson = [
-    olderPerson,
-    olderPersonLightSkinTone,
-    olderPersonMediumLightSkinTone,
-    olderPersonMediumSkinTone,
-    olderPersonMediumDarkSkinTone,
-    olderPersonDarkSkinTone
-];
-export const allOlderPersonGroup = new EmojiGroup("\u{1F9D3}\uDDD3", "Older Person", ...allOlderPerson);
 export const oldMan = new Emoji("\u{1F474}\uDC74", "Old Man");
 export const oldManLightSkinTone = new Emoji("\u{1F474}\uDC74\u{1F3FB}\uDFFB", "Old Man: Light Skin Tone");
 export const oldManMediumLightSkinTone = new Emoji("\u{1F474}\uDC74\u{1F3FC}\uDFFC", "Old Man: Medium-Light Skin Tone");
 export const oldManMediumSkinTone = new Emoji("\u{1F474}\uDC74\u{1F3FD}\uDFFD", "Old Man: Medium Skin Tone");
 export const oldManMediumDarkSkinTone = new Emoji("\u{1F474}\uDC74\u{1F3FE}\uDFFE", "Old Man: Medium-Dark Skin Tone");
 export const oldManDarkSkinTone = new Emoji("\u{1F474}\uDC74\u{1F3FF}\uDFFF", "Old Man: Dark Skin Tone");
-export const allOldMan = [
-    oldMan,
-    oldManLightSkinTone,
-    oldManMediumLightSkinTone,
-    oldManMediumSkinTone,
-    oldManMediumDarkSkinTone,
-    oldManDarkSkinTone
-];
-export const allOldManGroup = new EmojiGroup("\u{1F474}\uDC74", "Old Man", ...allOldMan);
 export const oldWoman = new Emoji("\u{1F475}\uDC75", "Old Woman");
 export const oldWomanLightSkinTone = new Emoji("\u{1F475}\uDC75\u{1F3FB}\uDFFB", "Old Woman: Light Skin Tone");
 export const oldWomanMediumLightSkinTone = new Emoji("\u{1F475}\uDC75\u{1F3FC}\uDFFC", "Old Woman: Medium-Light Skin Tone");
 export const oldWomanMediumSkinTone = new Emoji("\u{1F475}\uDC75\u{1F3FD}\uDFFD", "Old Woman: Medium Skin Tone");
 export const oldWomanMediumDarkSkinTone = new Emoji("\u{1F475}\uDC75\u{1F3FE}\uDFFE", "Old Woman: Medium-Dark Skin Tone");
 export const oldWomanDarkSkinTone = new Emoji("\u{1F475}\uDC75\u{1F3FF}\uDFFF", "Old Woman: Dark Skin Tone");
-export const allOldWoman = [
-    oldWoman,
-    oldWomanLightSkinTone,
-    oldWomanMediumLightSkinTone,
-    oldWomanMediumSkinTone,
-    oldWomanMediumDarkSkinTone,
-    oldWomanDarkSkinTone
-];
-export const allOldWomanGroup = new EmojiGroup("\u{1F475}\uDC75", "Old Woman", ...allOldWoman);
-export const allAllOlderPersonGroup = [
-    allOlderPersonGroup,
-    allOldManGroup,
-    allOldWomanGroup
-];
-export const allAllOlderPersonGroupGroup = new EmojiGroup("\u{1F9D3}\uDDD3", "Older Person", ...allAllOlderPersonGroup);
 export const medical = new Emoji("\u2695\uFE0F", "Medical");
 export const manHealthCare = new Emoji("\u{1F468}\uDC68\u200D\u2695\uFE0F", "Man: Health Care");
 export const manLightSkinToneHealthCare = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u2695\uFE0F", "Man: Light Skin Tone: Health Care");
@@ -1965,36 +695,12 @@ export const manMediumLightSkinToneHealthCare = new Emoji("\u{1F468}\uDC68\u{1F3
 export const manMediumSkinToneHealthCare = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u2695\uFE0F", "Man: Medium Skin Tone: Health Care");
 export const manMediumDarkSkinToneHealthCare = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u2695\uFE0F", "Man: Medium-Dark Skin Tone: Health Care");
 export const manDarkSkinToneHealthCare = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u2695\uFE0F", "Man: Dark Skin Tone: Health Care");
-export const allManHealthCare = [
-    manHealthCare,
-    manLightSkinToneHealthCare,
-    manMediumLightSkinToneHealthCare,
-    manMediumSkinToneHealthCare,
-    manMediumDarkSkinToneHealthCare,
-    manDarkSkinToneHealthCare
-];
-export const allManHealthCareGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u2695\uFE0F", "Man: Health Care", ...allManHealthCare);
 export const womanHealthCare = new Emoji("\u{1F469}\uDC69\u200D\u2695\uFE0F", "Woman: Health Care");
 export const womanLightSkinToneHealthCare = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u2695\uFE0F", "Woman: Light Skin Tone: Health Care");
 export const womanMediumLightSkinToneHealthCare = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u2695\uFE0F", "Woman: Medium-Light Skin Tone: Health Care");
 export const womanMediumSkinToneHealthCare = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u2695\uFE0F", "Woman: Medium Skin Tone: Health Care");
 export const womanMediumDarkSkinToneHealthCare = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u2695\uFE0F", "Woman: Medium-Dark Skin Tone: Health Care");
 export const womanDarkSkinToneHealthCare = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u2695\uFE0F", "Woman: Dark Skin Tone: Health Care");
-export const allWomanHealthCare = [
-    womanHealthCare,
-    womanLightSkinToneHealthCare,
-    womanMediumLightSkinToneHealthCare,
-    womanMediumSkinToneHealthCare,
-    womanMediumDarkSkinToneHealthCare,
-    womanDarkSkinToneHealthCare
-];
-export const allWomanHealthCareGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u2695\uFE0F", "Woman: Health Care", ...allWomanHealthCare);
-export const allMedical = [
-    medical,
-    allManHealthCareGroup,
-    allWomanHealthCareGroup
-];
-export const allMedicalGroup = new EmojiGroup("\u2695\uFE0F", "Medical", ...allMedical);
 export const graduationCap = new Emoji("\u{1F393}\uDF93", "Graduation Cap");
 export const manStudent = new Emoji("\u{1F468}\uDC68\u200D\u{1F393}\uDF93", "Man: Student");
 export const manLightSkinToneStudent = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F393}\uDF93", "Man: Light Skin Tone: Student");
@@ -2002,36 +708,12 @@ export const manMediumLightSkinToneStudent = new Emoji("\u{1F468}\uDC68\u{1F3FC}
 export const manMediumSkinToneStudent = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F393}\uDF93", "Man: Medium Skin Tone: Student");
 export const manMediumDarkSkinToneStudent = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F393}\uDF93", "Man: Medium-Dark Skin Tone: Student");
 export const manDarkSkinToneStudent = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F393}\uDF93", "Man: Dark Skin Tone: Student");
-export const allManStudent = [
-    manStudent,
-    manLightSkinToneStudent,
-    manMediumLightSkinToneStudent,
-    manMediumSkinToneStudent,
-    manMediumDarkSkinToneStudent,
-    manDarkSkinToneStudent
-];
-export const allManStudentGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F393}\uDF93", "Man: Student", ...allManStudent);
 export const womanStudent = new Emoji("\u{1F469}\uDC69\u200D\u{1F393}\uDF93", "Woman: Student");
 export const womanLightSkinToneStudent = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F393}\uDF93", "Woman: Light Skin Tone: Student");
 export const womanMediumLightSkinToneStudent = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F393}\uDF93", "Woman: Medium-Light Skin Tone: Student");
 export const womanMediumSkinToneStudent = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F393}\uDF93", "Woman: Medium Skin Tone: Student");
 export const womanMediumDarkSkinToneStudent = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F393}\uDF93", "Woman: Medium-Dark Skin Tone: Student");
 export const womanDarkSkinToneStudent = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F393}\uDF93", "Woman: Dark Skin Tone: Student");
-export const allWomanStudent = [
-    womanStudent,
-    womanLightSkinToneStudent,
-    womanMediumLightSkinToneStudent,
-    womanMediumSkinToneStudent,
-    womanMediumDarkSkinToneStudent,
-    womanDarkSkinToneStudent
-];
-export const allWomanStudentGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F393}\uDF93", "Woman: Student", ...allWomanStudent);
-export const allGraduationCap = [
-    graduationCap,
-    allManStudentGroup,
-    allWomanStudentGroup
-];
-export const allGraduationCapGroup = new EmojiGroup("\u{1F393}\uDF93", "Graduation Cap", ...allGraduationCap);
 export const school = new Emoji("\u{1F3EB}\uDFEB", "School");
 export const manTeacher = new Emoji("\u{1F468}\uDC68\u200D\u{1F3EB}\uDFEB", "Man: Teacher");
 export const manLightSkinToneTeacher = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F3EB}\uDFEB", "Man: Light Skin Tone: Teacher");
@@ -2039,36 +721,12 @@ export const manMediumLightSkinToneTeacher = new Emoji("\u{1F468}\uDC68\u{1F3FC}
 export const manMediumSkinToneTeacher = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F3EB}\uDFEB", "Man: Medium Skin Tone: Teacher");
 export const manMediumDarkSkinToneTeacher = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F3EB}\uDFEB", "Man: Medium-Dark Skin Tone: Teacher");
 export const manDarkSkinToneTeacher = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F3EB}\uDFEB", "Man: Dark Skin Tone: Teacher");
-export const allManTeacher = [
-    manTeacher,
-    manLightSkinToneTeacher,
-    manMediumLightSkinToneTeacher,
-    manMediumSkinToneTeacher,
-    manMediumDarkSkinToneTeacher,
-    manDarkSkinToneTeacher
-];
-export const allManTeacherGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F3EB}\uDFEB", "Man: Teacher", ...allManTeacher);
 export const womanTeacher = new Emoji("\u{1F469}\uDC69\u200D\u{1F3EB}\uDFEB", "Woman: Teacher");
 export const womanLightSkinToneTeacher = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F3EB}\uDFEB", "Woman: Light Skin Tone: Teacher");
 export const womanMediumLightSkinToneTeacher = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F3EB}\uDFEB", "Woman: Medium-Light Skin Tone: Teacher");
 export const womanMediumSkinToneTeacher = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F3EB}\uDFEB", "Woman: Medium Skin Tone: Teacher");
 export const womanMediumDarkSkinToneTeacher = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F3EB}\uDFEB", "Woman: Medium-Dark Skin Tone: Teacher");
 export const womanDarkSkinToneTeacher = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F3EB}\uDFEB", "Woman: Dark Skin Tone: Teacher");
-export const allWomanTeacher = [
-    womanTeacher,
-    womanLightSkinToneTeacher,
-    womanMediumLightSkinToneTeacher,
-    womanMediumSkinToneTeacher,
-    womanMediumDarkSkinToneTeacher,
-    womanDarkSkinToneTeacher
-];
-export const allWomanTeacherGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F3EB}\uDFEB", "Woman: Teacher", ...allWomanTeacher);
-export const allSchool = [
-    school,
-    allManTeacherGroup,
-    allWomanTeacherGroup
-];
-export const allSchoolGroup = new EmojiGroup("\u{1F3EB}\uDFEB", "School", ...allSchool);
 export const balanceScale = new Emoji("\u2696\uFE0F", "Balance Scale");
 export const manJudge = new Emoji("\u{1F468}\uDC68\u200D\u2696\uFE0F", "Man: Judge");
 export const manLightSkinToneJudge = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u2696\uFE0F", "Man: Light Skin Tone: Judge");
@@ -2076,36 +734,12 @@ export const manMediumLightSkinToneJudge = new Emoji("\u{1F468}\uDC68\u{1F3FC}\u
 export const manMediumSkinToneJudge = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u2696\uFE0F", "Man: Medium Skin Tone: Judge");
 export const manMediumDarkSkinToneJudge = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u2696\uFE0F", "Man: Medium-Dark Skin Tone: Judge");
 export const manDarkSkinToneJudge = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u2696\uFE0F", "Man: Dark Skin Tone: Judge");
-export const allManJudge = [
-    manJudge,
-    manLightSkinToneJudge,
-    manMediumLightSkinToneJudge,
-    manMediumSkinToneJudge,
-    manMediumDarkSkinToneJudge,
-    manDarkSkinToneJudge
-];
-export const allManJudgeGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u2696\uFE0F", "Man: Judge", ...allManJudge);
 export const womanJudge = new Emoji("\u{1F469}\uDC69\u200D\u2696\uFE0F", "Woman: Judge");
 export const womanLightSkinToneJudge = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u2696\uFE0F", "Woman: Light Skin Tone: Judge");
 export const womanMediumLightSkinToneJudge = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u2696\uFE0F", "Woman: Medium-Light Skin Tone: Judge");
 export const womanMediumSkinToneJudge = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u2696\uFE0F", "Woman: Medium Skin Tone: Judge");
 export const womanMediumDarkSkinToneJudge = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u2696\uFE0F", "Woman: Medium-Dark Skin Tone: Judge");
 export const womanDarkSkinToneJudge = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u2696\uFE0F", "Woman: Dark Skin Tone: Judge");
-export const allWomanJudge = [
-    womanJudge,
-    womanLightSkinToneJudge,
-    womanMediumLightSkinToneJudge,
-    womanMediumSkinToneJudge,
-    womanMediumDarkSkinToneJudge,
-    womanDarkSkinToneJudge
-];
-export const allWomanJudgeGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u2696\uFE0F", "Woman: Judge", ...allWomanJudge);
-export const allBalanceScale = [
-    balanceScale,
-    allManJudgeGroup,
-    allWomanJudgeGroup
-];
-export const allBalanceScaleGroup = new EmojiGroup("\u2696\uFE0F", "Balance Scale", ...allBalanceScale);
 export const sheafOfRice = new Emoji("\u{1F33E}\uDF3E", "Sheaf of Rice");
 export const manFarmer = new Emoji("\u{1F468}\uDC68\u200D\u{1F33E}\uDF3E", "Man: Farmer");
 export const manLightSkinToneFarmer = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F33E}\uDF3E", "Man: Light Skin Tone: Farmer");
@@ -2113,36 +747,12 @@ export const manMediumLightSkinToneFarmer = new Emoji("\u{1F468}\uDC68\u{1F3FC}\
 export const manMediumSkinToneFarmer = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F33E}\uDF3E", "Man: Medium Skin Tone: Farmer");
 export const manMediumDarkSkinToneFarmer = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F33E}\uDF3E", "Man: Medium-Dark Skin Tone: Farmer");
 export const manDarkSkinToneFarmer = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F33E}\uDF3E", "Man: Dark Skin Tone: Farmer");
-export const allManFarmer = [
-    manFarmer,
-    manLightSkinToneFarmer,
-    manMediumLightSkinToneFarmer,
-    manMediumSkinToneFarmer,
-    manMediumDarkSkinToneFarmer,
-    manDarkSkinToneFarmer
-];
-export const allManFarmerGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F33E}\uDF3E", "Man: Farmer", ...allManFarmer);
 export const womanFarmer = new Emoji("\u{1F469}\uDC69\u200D\u{1F33E}\uDF3E", "Woman: Farmer");
 export const womanLightSkinToneFarmer = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F33E}\uDF3E", "Woman: Light Skin Tone: Farmer");
 export const womanMediumLightSkinToneFarmer = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F33E}\uDF3E", "Woman: Medium-Light Skin Tone: Farmer");
 export const womanMediumSkinToneFarmer = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F33E}\uDF3E", "Woman: Medium Skin Tone: Farmer");
 export const womanMediumDarkSkinToneFarmer = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F33E}\uDF3E", "Woman: Medium-Dark Skin Tone: Farmer");
 export const womanDarkSkinToneFarmer = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F33E}\uDF3E", "Woman: Dark Skin Tone: Farmer");
-export const allWomanFarmer = [
-    womanFarmer,
-    womanLightSkinToneFarmer,
-    womanMediumLightSkinToneFarmer,
-    womanMediumSkinToneFarmer,
-    womanMediumDarkSkinToneFarmer,
-    womanDarkSkinToneFarmer
-];
-export const allWomanFarmerGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F33E}\uDF3E", "Woman: Farmer", ...allWomanFarmer);
-export const allSheafOfRice = [
-    sheafOfRice,
-    allManFarmerGroup,
-    allWomanFarmerGroup
-];
-export const allSheafOfRiceGroup = new EmojiGroup("\u{1F33E}\uDF3E", "Sheaf of Rice", ...allSheafOfRice);
 export const cooking = new Emoji("\u{1F373}\uDF73", "Cooking");
 export const manCook = new Emoji("\u{1F468}\uDC68\u200D\u{1F373}\uDF73", "Man: Cook");
 export const manLightSkinToneCook = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F373}\uDF73", "Man: Light Skin Tone: Cook");
@@ -2150,36 +760,12 @@ export const manMediumLightSkinToneCook = new Emoji("\u{1F468}\uDC68\u{1F3FC}\uD
 export const manMediumSkinToneCook = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F373}\uDF73", "Man: Medium Skin Tone: Cook");
 export const manMediumDarkSkinToneCook = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F373}\uDF73", "Man: Medium-Dark Skin Tone: Cook");
 export const manDarkSkinToneCook = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F373}\uDF73", "Man: Dark Skin Tone: Cook");
-export const allManCook = [
-    manCook,
-    manLightSkinToneCook,
-    manMediumLightSkinToneCook,
-    manMediumSkinToneCook,
-    manMediumDarkSkinToneCook,
-    manDarkSkinToneCook
-];
-export const allManCookGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F373}\uDF73", "Man: Cook", ...allManCook);
 export const womanCook = new Emoji("\u{1F469}\uDC69\u200D\u{1F373}\uDF73", "Woman: Cook");
 export const womanLightSkinToneCook = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F373}\uDF73", "Woman: Light Skin Tone: Cook");
 export const womanMediumLightSkinToneCook = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F373}\uDF73", "Woman: Medium-Light Skin Tone: Cook");
 export const womanMediumSkinToneCook = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F373}\uDF73", "Woman: Medium Skin Tone: Cook");
 export const womanMediumDarkSkinToneCook = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F373}\uDF73", "Woman: Medium-Dark Skin Tone: Cook");
 export const womanDarkSkinToneCook = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F373}\uDF73", "Woman: Dark Skin Tone: Cook");
-export const allWomanCook = [
-    womanCook,
-    womanLightSkinToneCook,
-    womanMediumLightSkinToneCook,
-    womanMediumSkinToneCook,
-    womanMediumDarkSkinToneCook,
-    womanDarkSkinToneCook
-];
-export const allWomanCookGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F373}\uDF73", "Woman: Cook", ...allWomanCook);
-export const allCooking = [
-    cooking,
-    allManCookGroup,
-    allWomanCookGroup
-];
-export const allCookingGroup = new EmojiGroup("\u{1F373}\uDF73", "Cooking", ...allCooking);
 export const wrench = new Emoji("\u{1F527}\uDD27", "Wrench");
 export const manMechanic = new Emoji("\u{1F468}\uDC68\u200D\u{1F527}\uDD27", "Man: Mechanic");
 export const manLightSkinToneMechanic = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F527}\uDD27", "Man: Light Skin Tone: Mechanic");
@@ -2187,36 +773,12 @@ export const manMediumLightSkinToneMechanic = new Emoji("\u{1F468}\uDC68\u{1F3FC
 export const manMediumSkinToneMechanic = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F527}\uDD27", "Man: Medium Skin Tone: Mechanic");
 export const manMediumDarkSkinToneMechanic = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F527}\uDD27", "Man: Medium-Dark Skin Tone: Mechanic");
 export const manDarkSkinToneMechanic = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F527}\uDD27", "Man: Dark Skin Tone: Mechanic");
-export const allManMechanic = [
-    manMechanic,
-    manLightSkinToneMechanic,
-    manMediumLightSkinToneMechanic,
-    manMediumSkinToneMechanic,
-    manMediumDarkSkinToneMechanic,
-    manDarkSkinToneMechanic
-];
-export const allManMechanicGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F527}\uDD27", "Man: Mechanic", ...allManMechanic);
 export const womanMechanic = new Emoji("\u{1F469}\uDC69\u200D\u{1F527}\uDD27", "Woman: Mechanic");
 export const womanLightSkinToneMechanic = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F527}\uDD27", "Woman: Light Skin Tone: Mechanic");
 export const womanMediumLightSkinToneMechanic = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F527}\uDD27", "Woman: Medium-Light Skin Tone: Mechanic");
 export const womanMediumSkinToneMechanic = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F527}\uDD27", "Woman: Medium Skin Tone: Mechanic");
 export const womanMediumDarkSkinToneMechanic = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F527}\uDD27", "Woman: Medium-Dark Skin Tone: Mechanic");
 export const womanDarkSkinToneMechanic = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F527}\uDD27", "Woman: Dark Skin Tone: Mechanic");
-export const allWomanMechanic = [
-    womanMechanic,
-    womanLightSkinToneMechanic,
-    womanMediumLightSkinToneMechanic,
-    womanMediumSkinToneMechanic,
-    womanMediumDarkSkinToneMechanic,
-    womanDarkSkinToneMechanic
-];
-export const allWomanMechanicGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F527}\uDD27", "Woman: Mechanic", ...allWomanMechanic);
-export const allWrench = [
-    wrench,
-    allManMechanicGroup,
-    allWomanMechanicGroup
-];
-export const allWrenchGroup = new EmojiGroup("\u{1F527}\uDD27", "Wrench", ...allWrench);
 export const factory = new Emoji("\u{1F3ED}\uDFED", "Factory");
 export const manFactoryWorker = new Emoji("\u{1F468}\uDC68\u200D\u{1F3ED}\uDFED", "Man: Factory Worker");
 export const manLightSkinToneFactoryWorker = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F3ED}\uDFED", "Man: Light Skin Tone: Factory Worker");
@@ -2224,36 +786,12 @@ export const manMediumLightSkinToneFactoryWorker = new Emoji("\u{1F468}\uDC68\u{
 export const manMediumSkinToneFactoryWorker = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F3ED}\uDFED", "Man: Medium Skin Tone: Factory Worker");
 export const manMediumDarkSkinToneFactoryWorker = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F3ED}\uDFED", "Man: Medium-Dark Skin Tone: Factory Worker");
 export const manDarkSkinToneFactoryWorker = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F3ED}\uDFED", "Man: Dark Skin Tone: Factory Worker");
-export const allManFactoryWorker = [
-    manFactoryWorker,
-    manLightSkinToneFactoryWorker,
-    manMediumLightSkinToneFactoryWorker,
-    manMediumSkinToneFactoryWorker,
-    manMediumDarkSkinToneFactoryWorker,
-    manDarkSkinToneFactoryWorker
-];
-export const allManFactoryWorkerGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F3ED}\uDFED", "Man: Factory Worker", ...allManFactoryWorker);
 export const womanFactoryWorker = new Emoji("\u{1F469}\uDC69\u200D\u{1F3ED}\uDFED", "Woman: Factory Worker");
 export const womanLightSkinToneFactoryWorker = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F3ED}\uDFED", "Woman: Light Skin Tone: Factory Worker");
 export const womanMediumLightSkinToneFactoryWorker = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F3ED}\uDFED", "Woman: Medium-Light Skin Tone: Factory Worker");
 export const womanMediumSkinToneFactoryWorker = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F3ED}\uDFED", "Woman: Medium Skin Tone: Factory Worker");
 export const womanMediumDarkSkinToneFactoryWorker = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F3ED}\uDFED", "Woman: Medium-Dark Skin Tone: Factory Worker");
 export const womanDarkSkinToneFactoryWorker = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F3ED}\uDFED", "Woman: Dark Skin Tone: Factory Worker");
-export const allWomanFactoryWorker = [
-    womanFactoryWorker,
-    womanLightSkinToneFactoryWorker,
-    womanMediumLightSkinToneFactoryWorker,
-    womanMediumSkinToneFactoryWorker,
-    womanMediumDarkSkinToneFactoryWorker,
-    womanDarkSkinToneFactoryWorker
-];
-export const allWomanFactoryWorkerGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F3ED}\uDFED", "Woman: Factory Worker", ...allWomanFactoryWorker);
-export const allFactory = [
-    factory,
-    allManFactoryWorkerGroup,
-    allWomanFactoryWorkerGroup
-];
-export const allFactoryGroup = new EmojiGroup("\u{1F3ED}\uDFED", "Factory", ...allFactory);
 export const briefcase = new Emoji("\u{1F4BC}\uDCBC", "Briefcase");
 export const manOfficeWorker = new Emoji("\u{1F468}\uDC68\u200D\u{1F4BC}\uDCBC", "Man: Office Worker");
 export const manLightSkinToneOfficeWorker = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F4BC}\uDCBC", "Man: Light Skin Tone: Office Worker");
@@ -2261,36 +799,12 @@ export const manMediumLightSkinToneOfficeWorker = new Emoji("\u{1F468}\uDC68\u{1
 export const manMediumSkinToneOfficeWorker = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F4BC}\uDCBC", "Man: Medium Skin Tone: Office Worker");
 export const manMediumDarkSkinToneOfficeWorker = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F4BC}\uDCBC", "Man: Medium-Dark Skin Tone: Office Worker");
 export const manDarkSkinToneOfficeWorker = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F4BC}\uDCBC", "Man: Dark Skin Tone: Office Worker");
-export const allManOfficeWorker = [
-    manOfficeWorker,
-    manLightSkinToneOfficeWorker,
-    manMediumLightSkinToneOfficeWorker,
-    manMediumSkinToneOfficeWorker,
-    manMediumDarkSkinToneOfficeWorker,
-    manDarkSkinToneOfficeWorker
-];
-export const allManOfficeWorkerGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F4BC}\uDCBC", "Man: Office Worker", ...allManOfficeWorker);
 export const womanOfficeWorker = new Emoji("\u{1F469}\uDC69\u200D\u{1F4BC}\uDCBC", "Woman: Office Worker");
 export const womanLightSkinToneOfficeWorker = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F4BC}\uDCBC", "Woman: Light Skin Tone: Office Worker");
 export const womanMediumLightSkinToneOfficeWorker = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F4BC}\uDCBC", "Woman: Medium-Light Skin Tone: Office Worker");
 export const womanMediumSkinToneOfficeWorker = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F4BC}\uDCBC", "Woman: Medium Skin Tone: Office Worker");
 export const womanMediumDarkSkinToneOfficeWorker = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F4BC}\uDCBC", "Woman: Medium-Dark Skin Tone: Office Worker");
 export const womanDarkSkinToneOfficeWorker = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F4BC}\uDCBC", "Woman: Dark Skin Tone: Office Worker");
-export const allWomanOfficeWorker = [
-    womanOfficeWorker,
-    womanLightSkinToneOfficeWorker,
-    womanMediumLightSkinToneOfficeWorker,
-    womanMediumSkinToneOfficeWorker,
-    womanMediumDarkSkinToneOfficeWorker,
-    womanDarkSkinToneOfficeWorker
-];
-export const allWomanOfficeWorkerGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F4BC}\uDCBC", "Woman: Office Worker", ...allWomanOfficeWorker);
-export const allBriefcase = [
-    briefcase,
-    allManOfficeWorkerGroup,
-    allWomanOfficeWorkerGroup
-];
-export const allBriefcaseGroup = new EmojiGroup("\u{1F4BC}\uDCBC", "Briefcase", ...allBriefcase);
 export const fireEngine = new Emoji("\u{1F692}\uDE92", "Fire Engine");
 export const manFireFighter = new Emoji("\u{1F468}\uDC68\u200D\u{1F692}\uDE92", "Man: Fire Fighter");
 export const manLightSkinToneFireFighter = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F692}\uDE92", "Man: Light Skin Tone: Fire Fighter");
@@ -2298,36 +812,12 @@ export const manMediumLightSkinToneFireFighter = new Emoji("\u{1F468}\uDC68\u{1F
 export const manMediumSkinToneFireFighter = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F692}\uDE92", "Man: Medium Skin Tone: Fire Fighter");
 export const manMediumDarkSkinToneFireFighter = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F692}\uDE92", "Man: Medium-Dark Skin Tone: Fire Fighter");
 export const manDarkSkinToneFireFighter = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F692}\uDE92", "Man: Dark Skin Tone: Fire Fighter");
-export const allManFireFighter = [
-    manFireFighter,
-    manLightSkinToneFireFighter,
-    manMediumLightSkinToneFireFighter,
-    manMediumSkinToneFireFighter,
-    manMediumDarkSkinToneFireFighter,
-    manDarkSkinToneFireFighter
-];
-export const allManFireFighterGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F692}\uDE92", "Man: Fire Fighter", ...allManFireFighter);
 export const womanFireFighter = new Emoji("\u{1F469}\uDC69\u200D\u{1F692}\uDE92", "Woman: Fire Fighter");
 export const womanLightSkinToneFireFighter = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F692}\uDE92", "Woman: Light Skin Tone: Fire Fighter");
 export const womanMediumLightSkinToneFireFighter = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F692}\uDE92", "Woman: Medium-Light Skin Tone: Fire Fighter");
 export const womanMediumSkinToneFireFighter = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F692}\uDE92", "Woman: Medium Skin Tone: Fire Fighter");
 export const womanMediumDarkSkinToneFireFighter = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F692}\uDE92", "Woman: Medium-Dark Skin Tone: Fire Fighter");
 export const womanDarkSkinToneFireFighter = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F692}\uDE92", "Woman: Dark Skin Tone: Fire Fighter");
-export const allWomanFireFighter = [
-    womanFireFighter,
-    womanLightSkinToneFireFighter,
-    womanMediumLightSkinToneFireFighter,
-    womanMediumSkinToneFireFighter,
-    womanMediumDarkSkinToneFireFighter,
-    womanDarkSkinToneFireFighter
-];
-export const allWomanFireFighterGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F692}\uDE92", "Woman: Fire Fighter", ...allWomanFireFighter);
-export const allFireEngine = [
-    fireEngine,
-    allManFireFighterGroup,
-    allWomanFireFighterGroup
-];
-export const allFireEngineGroup = new EmojiGroup("\u{1F692}\uDE92", "Fire Engine", ...allFireEngine);
 export const rocket = new Emoji("\u{1F680}\uDE80", "Rocket");
 export const manAstronaut = new Emoji("\u{1F468}\uDC68\u200D\u{1F680}\uDE80", "Man: Astronaut");
 export const manLightSkinToneAstronaut = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F680}\uDE80", "Man: Light Skin Tone: Astronaut");
@@ -2335,36 +825,12 @@ export const manMediumLightSkinToneAstronaut = new Emoji("\u{1F468}\uDC68\u{1F3F
 export const manMediumSkinToneAstronaut = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F680}\uDE80", "Man: Medium Skin Tone: Astronaut");
 export const manMediumDarkSkinToneAstronaut = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F680}\uDE80", "Man: Medium-Dark Skin Tone: Astronaut");
 export const manDarkSkinToneAstronaut = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F680}\uDE80", "Man: Dark Skin Tone: Astronaut");
-export const allManAstronaut = [
-    manAstronaut,
-    manLightSkinToneAstronaut,
-    manMediumLightSkinToneAstronaut,
-    manMediumSkinToneAstronaut,
-    manMediumDarkSkinToneAstronaut,
-    manDarkSkinToneAstronaut
-];
-export const allManAstronautGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F680}\uDE80", "Man: Astronaut", ...allManAstronaut);
 export const womanAstronaut = new Emoji("\u{1F469}\uDC69\u200D\u{1F680}\uDE80", "Woman: Astronaut");
 export const womanLightSkinToneAstronaut = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F680}\uDE80", "Woman: Light Skin Tone: Astronaut");
 export const womanMediumLightSkinToneAstronaut = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F680}\uDE80", "Woman: Medium-Light Skin Tone: Astronaut");
 export const womanMediumSkinToneAstronaut = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F680}\uDE80", "Woman: Medium Skin Tone: Astronaut");
 export const womanMediumDarkSkinToneAstronaut = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F680}\uDE80", "Woman: Medium-Dark Skin Tone: Astronaut");
 export const womanDarkSkinToneAstronaut = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F680}\uDE80", "Woman: Dark Skin Tone: Astronaut");
-export const allWomanAstronaut = [
-    womanAstronaut,
-    womanLightSkinToneAstronaut,
-    womanMediumLightSkinToneAstronaut,
-    womanMediumSkinToneAstronaut,
-    womanMediumDarkSkinToneAstronaut,
-    womanDarkSkinToneAstronaut
-];
-export const allWomanAstronautGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F680}\uDE80", "Woman: Astronaut", ...allWomanAstronaut);
-export const allRocket = [
-    rocket,
-    allManAstronautGroup,
-    allWomanAstronautGroup
-];
-export const allRocketGroup = new EmojiGroup("\u{1F680}\uDE80", "Rocket", ...allRocket);
 export const airplane = new Emoji("\u2708\uFE0F", "Airplane");
 export const manPilot = new Emoji("\u{1F468}\uDC68\u200D\u2708\uFE0F", "Man: Pilot");
 export const manLightSkinTonePilot = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u2708\uFE0F", "Man: Light Skin Tone: Pilot");
@@ -2372,36 +838,12 @@ export const manMediumLightSkinTonePilot = new Emoji("\u{1F468}\uDC68\u{1F3FC}\u
 export const manMediumSkinTonePilot = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u2708\uFE0F", "Man: Medium Skin Tone: Pilot");
 export const manMediumDarkSkinTonePilot = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u2708\uFE0F", "Man: Medium-Dark Skin Tone: Pilot");
 export const manDarkSkinTonePilot = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u2708\uFE0F", "Man: Dark Skin Tone: Pilot");
-export const allManPilot = [
-    manPilot,
-    manLightSkinTonePilot,
-    manMediumLightSkinTonePilot,
-    manMediumSkinTonePilot,
-    manMediumDarkSkinTonePilot,
-    manDarkSkinTonePilot
-];
-export const allManPilotGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u2708\uFE0F", "Man: Pilot", ...allManPilot);
 export const womanPilot = new Emoji("\u{1F469}\uDC69\u200D\u2708\uFE0F", "Woman: Pilot");
 export const womanLightSkinTonePilot = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u2708\uFE0F", "Woman: Light Skin Tone: Pilot");
 export const womanMediumLightSkinTonePilot = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u2708\uFE0F", "Woman: Medium-Light Skin Tone: Pilot");
 export const womanMediumSkinTonePilot = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u2708\uFE0F", "Woman: Medium Skin Tone: Pilot");
 export const womanMediumDarkSkinTonePilot = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u2708\uFE0F", "Woman: Medium-Dark Skin Tone: Pilot");
 export const womanDarkSkinTonePilot = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u2708\uFE0F", "Woman: Dark Skin Tone: Pilot");
-export const allWomanPilot = [
-    womanPilot,
-    womanLightSkinTonePilot,
-    womanMediumLightSkinTonePilot,
-    womanMediumSkinTonePilot,
-    womanMediumDarkSkinTonePilot,
-    womanDarkSkinTonePilot
-];
-export const allWomanPilotGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u2708\uFE0F", "Woman: Pilot", ...allWomanPilot);
-export const allAirplane = [
-    airplane,
-    allManPilotGroup,
-    allWomanPilotGroup
-];
-export const allAirplaneGroup = new EmojiGroup("\u2708\uFE0F", "Airplane", ...allAirplane);
 export const artistPalette = new Emoji("\u{1F3A8}\uDFA8", "Artist Palette");
 export const manArtist = new Emoji("\u{1F468}\uDC68\u200D\u{1F3A8}\uDFA8", "Man: Artist");
 export const manLightSkinToneArtist = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F3A8}\uDFA8", "Man: Light Skin Tone: Artist");
@@ -2409,36 +851,12 @@ export const manMediumLightSkinToneArtist = new Emoji("\u{1F468}\uDC68\u{1F3FC}\
 export const manMediumSkinToneArtist = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F3A8}\uDFA8", "Man: Medium Skin Tone: Artist");
 export const manMediumDarkSkinToneArtist = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F3A8}\uDFA8", "Man: Medium-Dark Skin Tone: Artist");
 export const manDarkSkinToneArtist = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F3A8}\uDFA8", "Man: Dark Skin Tone: Artist");
-export const allManArtist = [
-    manArtist,
-    manLightSkinToneArtist,
-    manMediumLightSkinToneArtist,
-    manMediumSkinToneArtist,
-    manMediumDarkSkinToneArtist,
-    manDarkSkinToneArtist
-];
-export const allManArtistGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F3A8}\uDFA8", "Man: Artist", ...allManArtist);
 export const womanArtist = new Emoji("\u{1F469}\uDC69\u200D\u{1F3A8}\uDFA8", "Woman: Artist");
 export const womanLightSkinToneArtist = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F3A8}\uDFA8", "Woman: Light Skin Tone: Artist");
 export const womanMediumLightSkinToneArtist = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F3A8}\uDFA8", "Woman: Medium-Light Skin Tone: Artist");
 export const womanMediumSkinToneArtist = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F3A8}\uDFA8", "Woman: Medium Skin Tone: Artist");
 export const womanMediumDarkSkinToneArtist = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F3A8}\uDFA8", "Woman: Medium-Dark Skin Tone: Artist");
 export const womanDarkSkinToneArtist = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F3A8}\uDFA8", "Woman: Dark Skin Tone: Artist");
-export const allWomanArtist = [
-    womanArtist,
-    womanLightSkinToneArtist,
-    womanMediumLightSkinToneArtist,
-    womanMediumSkinToneArtist,
-    womanMediumDarkSkinToneArtist,
-    womanDarkSkinToneArtist
-];
-export const allWomanArtistGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F3A8}\uDFA8", "Woman: Artist", ...allWomanArtist);
-export const allArtistPalette = [
-    artistPalette,
-    allManArtistGroup,
-    allWomanArtistGroup
-];
-export const allArtistPaletteGroup = new EmojiGroup("\u{1F3A8}\uDFA8", "Artist Palette", ...allArtistPalette);
 export const microphone = new Emoji("\u{1F3A4}\uDFA4", "Microphone");
 export const manSinger = new Emoji("\u{1F468}\uDC68\u200D\u{1F3A4}\uDFA4", "Man: Singer");
 export const manLightSkinToneSinger = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F3A4}\uDFA4", "Man: Light Skin Tone: Singer");
@@ -2446,36 +864,12 @@ export const manMediumLightSkinToneSinger = new Emoji("\u{1F468}\uDC68\u{1F3FC}\
 export const manMediumSkinToneSinger = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F3A4}\uDFA4", "Man: Medium Skin Tone: Singer");
 export const manMediumDarkSkinToneSinger = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F3A4}\uDFA4", "Man: Medium-Dark Skin Tone: Singer");
 export const manDarkSkinToneSinger = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F3A4}\uDFA4", "Man: Dark Skin Tone: Singer");
-export const allManSinger = [
-    manSinger,
-    manLightSkinToneSinger,
-    manMediumLightSkinToneSinger,
-    manMediumSkinToneSinger,
-    manMediumDarkSkinToneSinger,
-    manDarkSkinToneSinger
-];
-export const allManSingerGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F3A4}\uDFA4", "Man: Singer", ...allManSinger);
 export const womanSinger = new Emoji("\u{1F469}\uDC69\u200D\u{1F3A4}\uDFA4", "Woman: Singer");
 export const womanLightSkinToneSinger = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F3A4}\uDFA4", "Woman: Light Skin Tone: Singer");
 export const womanMediumLightSkinToneSinger = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F3A4}\uDFA4", "Woman: Medium-Light Skin Tone: Singer");
 export const womanMediumSkinToneSinger = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F3A4}\uDFA4", "Woman: Medium Skin Tone: Singer");
 export const womanMediumDarkSkinToneSinger = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F3A4}\uDFA4", "Woman: Medium-Dark Skin Tone: Singer");
 export const womanDarkSkinToneSinger = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F3A4}\uDFA4", "Woman: Dark Skin Tone: Singer");
-export const allWomanSinger = [
-    womanSinger,
-    womanLightSkinToneSinger,
-    womanMediumLightSkinToneSinger,
-    womanMediumSkinToneSinger,
-    womanMediumDarkSkinToneSinger,
-    womanDarkSkinToneSinger
-];
-export const allWomanSingerGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F3A4}\uDFA4", "Woman: Singer", ...allWomanSinger);
-export const allMicrophone = [
-    microphone,
-    allManSingerGroup,
-    allWomanSingerGroup
-];
-export const allMicrophoneGroup = new EmojiGroup("\u{1F3A4}\uDFA4", "Microphone", ...allMicrophone);
 export const laptop = new Emoji("\u{1F4BB}\uDCBB", "Laptop");
 export const manTechnologist = new Emoji("\u{1F468}\uDC68\u200D\u{1F4BB}\uDCBB", "Man: Technologist");
 export const manLightSkinToneTechnologist = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F4BB}\uDCBB", "Man: Light Skin Tone: Technologist");
@@ -2483,36 +877,12 @@ export const manMediumLightSkinToneTechnologist = new Emoji("\u{1F468}\uDC68\u{1
 export const manMediumSkinToneTechnologist = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F4BB}\uDCBB", "Man: Medium Skin Tone: Technologist");
 export const manMediumDarkSkinToneTechnologist = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F4BB}\uDCBB", "Man: Medium-Dark Skin Tone: Technologist");
 export const manDarkSkinToneTechnologist = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F4BB}\uDCBB", "Man: Dark Skin Tone: Technologist");
-export const allManTechnologist = [
-    manTechnologist,
-    manLightSkinToneTechnologist,
-    manMediumLightSkinToneTechnologist,
-    manMediumSkinToneTechnologist,
-    manMediumDarkSkinToneTechnologist,
-    manDarkSkinToneTechnologist
-];
-export const allManTechnologistGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F4BB}\uDCBB", "Man: Technologist", ...allManTechnologist);
 export const womanTechnologist = new Emoji("\u{1F469}\uDC69\u200D\u{1F4BB}\uDCBB", "Woman: Technologist");
 export const womanLightSkinToneTechnologist = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F4BB}\uDCBB", "Woman: Light Skin Tone: Technologist");
 export const womanMediumLightSkinToneTechnologist = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F4BB}\uDCBB", "Woman: Medium-Light Skin Tone: Technologist");
 export const womanMediumSkinToneTechnologist = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F4BB}\uDCBB", "Woman: Medium Skin Tone: Technologist");
 export const womanMediumDarkSkinToneTechnologist = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F4BB}\uDCBB", "Woman: Medium-Dark Skin Tone: Technologist");
 export const womanDarkSkinToneTechnologist = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F4BB}\uDCBB", "Woman: Dark Skin Tone: Technologist");
-export const allWomanTechnologist = [
-    womanTechnologist,
-    womanLightSkinToneTechnologist,
-    womanMediumLightSkinToneTechnologist,
-    womanMediumSkinToneTechnologist,
-    womanMediumDarkSkinToneTechnologist,
-    womanDarkSkinToneTechnologist
-];
-export const allWomanTechnologistGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F4BB}\uDCBB", "Woman: Technologist", ...allWomanTechnologist);
-export const allLaptop = [
-    laptop,
-    allManTechnologistGroup,
-    allWomanTechnologistGroup
-];
-export const allLaptopGroup = new EmojiGroup("\u{1F4BB}\uDCBB", "Laptop", ...allLaptop);
 export const microscope = new Emoji("\u{1F52C}\uDD2C", "Microscope");
 export const manScientist = new Emoji("\u{1F468}\uDC68\u200D\u{1F52C}\uDD2C", "Man: Scientist");
 export const manLightSkinToneScientist = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F52C}\uDD2C", "Man: Light Skin Tone: Scientist");
@@ -2520,36 +890,12 @@ export const manMediumLightSkinToneScientist = new Emoji("\u{1F468}\uDC68\u{1F3F
 export const manMediumSkinToneScientist = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F52C}\uDD2C", "Man: Medium Skin Tone: Scientist");
 export const manMediumDarkSkinToneScientist = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F52C}\uDD2C", "Man: Medium-Dark Skin Tone: Scientist");
 export const manDarkSkinToneScientist = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F52C}\uDD2C", "Man: Dark Skin Tone: Scientist");
-export const allManScientist = [
-    manScientist,
-    manLightSkinToneScientist,
-    manMediumLightSkinToneScientist,
-    manMediumSkinToneScientist,
-    manMediumDarkSkinToneScientist,
-    manDarkSkinToneScientist
-];
-export const allManScientistGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F52C}\uDD2C", "Man: Scientist", ...allManScientist);
 export const womanScientist = new Emoji("\u{1F469}\uDC69\u200D\u{1F52C}\uDD2C", "Woman: Scientist");
 export const womanLightSkinToneScientist = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F52C}\uDD2C", "Woman: Light Skin Tone: Scientist");
 export const womanMediumLightSkinToneScientist = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F52C}\uDD2C", "Woman: Medium-Light Skin Tone: Scientist");
 export const womanMediumSkinToneScientist = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F52C}\uDD2C", "Woman: Medium Skin Tone: Scientist");
 export const womanMediumDarkSkinToneScientist = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F52C}\uDD2C", "Woman: Medium-Dark Skin Tone: Scientist");
 export const womanDarkSkinToneScientist = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F52C}\uDD2C", "Woman: Dark Skin Tone: Scientist");
-export const allWomanScientist = [
-    womanScientist,
-    womanLightSkinToneScientist,
-    womanMediumLightSkinToneScientist,
-    womanMediumSkinToneScientist,
-    womanMediumDarkSkinToneScientist,
-    womanDarkSkinToneScientist
-];
-export const allWomanScientistGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F52C}\uDD2C", "Woman: Scientist", ...allWomanScientist);
-export const allMicroscope = [
-    microscope,
-    allManScientistGroup,
-    allWomanScientistGroup
-];
-export const allMicroscopeGroup = new EmojiGroup("\u{1F52C}\uDD2C", "Microscope", ...allMicroscope);
 export const crown = new Emoji("\u{1F451}\uDC51", "Crown");
 export const genie = new Emoji("\u{1F9DE}\uDDDE", "Genie");
 export const zombie = new Emoji("\u{1F9DF}\uDDDF", "Zombie");
@@ -2559,1175 +905,385 @@ export const motorizedWheelchair = new Emoji("\u{1F9BC}\uDDBC", "Motorized Wheel
 export const manualWheelchair = new Emoji("\u{1F9BD}\uDDBD", "Manual Wheelchair");
 export const fencer = new Emoji("\u{1F93A}\uDD3A", "Fencer");
 export const skier = new Emoji("\u26F7\uFE0F", "Skier");
-export const princes = new Emoji("\u{1F934}\uDD34", "Princes");
-export const princesLightSkinTone = new Emoji("\u{1F934}\uDD34\u{1F3FB}\uDFFB", "Princes: Light Skin Tone");
-export const princesMediumLightSkinTone = new Emoji("\u{1F934}\uDD34\u{1F3FC}\uDFFC", "Princes: Medium-Light Skin Tone");
-export const princesMediumSkinTone = new Emoji("\u{1F934}\uDD34\u{1F3FD}\uDFFD", "Princes: Medium Skin Tone");
-export const princesMediumDarkSkinTone = new Emoji("\u{1F934}\uDD34\u{1F3FE}\uDFFE", "Princes: Medium-Dark Skin Tone");
-export const princesDarkSkinTone = new Emoji("\u{1F934}\uDD34\u{1F3FF}\uDFFF", "Princes: Dark Skin Tone");
-export const allPrinces = [
-    princes,
-    princesLightSkinTone,
-    princesMediumLightSkinTone,
-    princesMediumSkinTone,
-    princesMediumDarkSkinTone,
-    princesDarkSkinTone
-];
-export const allPrincesGroup = new EmojiGroup("\u{1F934}\uDD34", "Princes", ...allPrinces);
-export const princesses = new Emoji("\u{1F478}\uDC78", "Princesses");
-export const princessesLightSkinTone = new Emoji("\u{1F478}\uDC78\u{1F3FB}\uDFFB", "Princesses: Light Skin Tone");
-export const princessesMediumLightSkinTone = new Emoji("\u{1F478}\uDC78\u{1F3FC}\uDFFC", "Princesses: Medium-Light Skin Tone");
-export const princessesMediumSkinTone = new Emoji("\u{1F478}\uDC78\u{1F3FD}\uDFFD", "Princesses: Medium Skin Tone");
-export const princessesMediumDarkSkinTone = new Emoji("\u{1F478}\uDC78\u{1F3FE}\uDFFE", "Princesses: Medium-Dark Skin Tone");
-export const princessesDarkSkinTone = new Emoji("\u{1F478}\uDC78\u{1F3FF}\uDFFF", "Princesses: Dark Skin Tone");
-export const allPrincesses = [
-    princesses,
-    princessesLightSkinTone,
-    princessesMediumLightSkinTone,
-    princessesMediumSkinTone,
-    princessesMediumDarkSkinTone,
-    princessesDarkSkinTone
-];
-export const allPrincessesGroup = new EmojiGroup("\u{1F478}\uDC78", "Princesses", ...allPrincesses);
-export const allCrown = [
-    crown,
-    allPrincesGroup,
-    allPrincessesGroup
-];
-export const allCrownGroup = new EmojiGroup("\u{1F451}\uDC51", "Crown", ...allCrown);
-export const allAllMedicalGroup = [
-    allMedicalGroup,
-    allGraduationCapGroup,
-    allSchoolGroup,
-    allBalanceScaleGroup,
-    allSheafOfRiceGroup,
-    allCookingGroup,
-    allWrenchGroup,
-    allFactoryGroup,
-    allBriefcaseGroup,
-    allMicroscopeGroup,
-    allLaptopGroup,
-    allMicrophoneGroup,
-    allArtistPaletteGroup,
-    allAirplaneGroup,
-    allRocketGroup,
-    allFireEngineGroup,
-    allAllSpyGroupGroup,
-    allAllGuardGroupGroup,
-    allAllConstructionWorkerGroupGroup,
-    allCrownGroup
-];
-export const allAllMedicalGroupGroup = new EmojiGroup("\u0052\u006F\u006C\u0065\u0073", "Depictions of people working", ...allAllMedicalGroup);
+export const prince = new Emoji("\u{1F934}\uDD34", "Prince");
+export const princeLightSkinTone = new Emoji("\u{1F934}\uDD34\u{1F3FB}\uDFFB", "Prince: Light Skin Tone");
+export const princeMediumLightSkinTone = new Emoji("\u{1F934}\uDD34\u{1F3FC}\uDFFC", "Prince: Medium-Light Skin Tone");
+export const princeMediumSkinTone = new Emoji("\u{1F934}\uDD34\u{1F3FD}\uDFFD", "Prince: Medium Skin Tone");
+export const princeMediumDarkSkinTone = new Emoji("\u{1F934}\uDD34\u{1F3FE}\uDFFE", "Prince: Medium-Dark Skin Tone");
+export const princeDarkSkinTone = new Emoji("\u{1F934}\uDD34\u{1F3FF}\uDFFF", "Prince: Dark Skin Tone");
+export const princess = new Emoji("\u{1F478}\uDC78", "Princess");
+export const princessLightSkinTone = new Emoji("\u{1F478}\uDC78\u{1F3FB}\uDFFB", "Princess: Light Skin Tone");
+export const princessMediumLightSkinTone = new Emoji("\u{1F478}\uDC78\u{1F3FC}\uDFFC", "Princess: Medium-Light Skin Tone");
+export const princessMediumSkinTone = new Emoji("\u{1F478}\uDC78\u{1F3FD}\uDFFD", "Princess: Medium Skin Tone");
+export const princessMediumDarkSkinTone = new Emoji("\u{1F478}\uDC78\u{1F3FE}\uDFFE", "Princess: Medium-Dark Skin Tone");
+export const princessDarkSkinTone = new Emoji("\u{1F478}\uDC78\u{1F3FF}\uDFFF", "Princess: Dark Skin Tone");
 export const cherub = new Emoji("\u{1F47C}\uDC7C", "Cherub");
 export const cherubLightSkinTone = new Emoji("\u{1F47C}\uDC7C\u{1F3FB}\uDFFB", "Cherub: Light Skin Tone");
 export const cherubMediumLightSkinTone = new Emoji("\u{1F47C}\uDC7C\u{1F3FC}\uDFFC", "Cherub: Medium-Light Skin Tone");
 export const cherubMediumSkinTone = new Emoji("\u{1F47C}\uDC7C\u{1F3FD}\uDFFD", "Cherub: Medium Skin Tone");
 export const cherubMediumDarkSkinTone = new Emoji("\u{1F47C}\uDC7C\u{1F3FE}\uDFFE", "Cherub: Medium-Dark Skin Tone");
 export const cherubDarkSkinTone = new Emoji("\u{1F47C}\uDC7C\u{1F3FF}\uDFFF", "Cherub: Dark Skin Tone");
-export const allCherub = [
-    cherub,
-    cherubLightSkinTone,
-    cherubMediumLightSkinTone,
-    cherubMediumSkinTone,
-    cherubMediumDarkSkinTone,
-    cherubDarkSkinTone
-];
-export const allCherubGroup = new EmojiGroup("\u{1F47C}\uDC7C", "Cherub", ...allCherub);
 export const santaClaus = new Emoji("\u{1F385}\uDF85", "Santa Claus");
 export const santaClausLightSkinTone = new Emoji("\u{1F385}\uDF85\u{1F3FB}\uDFFB", "Santa Claus: Light Skin Tone");
 export const santaClausMediumLightSkinTone = new Emoji("\u{1F385}\uDF85\u{1F3FC}\uDFFC", "Santa Claus: Medium-Light Skin Tone");
 export const santaClausMediumSkinTone = new Emoji("\u{1F385}\uDF85\u{1F3FD}\uDFFD", "Santa Claus: Medium Skin Tone");
 export const santaClausMediumDarkSkinTone = new Emoji("\u{1F385}\uDF85\u{1F3FE}\uDFFE", "Santa Claus: Medium-Dark Skin Tone");
 export const santaClausDarkSkinTone = new Emoji("\u{1F385}\uDF85\u{1F3FF}\uDFFF", "Santa Claus: Dark Skin Tone");
-export const allSantaClaus = [
-    santaClaus,
-    santaClausLightSkinTone,
-    santaClausMediumLightSkinTone,
-    santaClausMediumSkinTone,
-    santaClausMediumDarkSkinTone,
-    santaClausDarkSkinTone
-];
-export const allSantaClausGroup = new EmojiGroup("\u{1F385}\uDF85", "Santa Claus", ...allSantaClaus);
 export const mrsClaus = new Emoji("\u{1F936}\uDD36", "Mrs. Claus");
 export const mrsClausLightSkinTone = new Emoji("\u{1F936}\uDD36\u{1F3FB}\uDFFB", "Mrs. Claus: Light Skin Tone");
 export const mrsClausMediumLightSkinTone = new Emoji("\u{1F936}\uDD36\u{1F3FC}\uDFFC", "Mrs. Claus: Medium-Light Skin Tone");
 export const mrsClausMediumSkinTone = new Emoji("\u{1F936}\uDD36\u{1F3FD}\uDFFD", "Mrs. Claus: Medium Skin Tone");
 export const mrsClausMediumDarkSkinTone = new Emoji("\u{1F936}\uDD36\u{1F3FE}\uDFFE", "Mrs. Claus: Medium-Dark Skin Tone");
 export const mrsClausDarkSkinTone = new Emoji("\u{1F936}\uDD36\u{1F3FF}\uDFFF", "Mrs. Claus: Dark Skin Tone");
-export const allMrsClaus = [
-    mrsClaus,
-    mrsClausLightSkinTone,
-    mrsClausMediumLightSkinTone,
-    mrsClausMediumSkinTone,
-    mrsClausMediumDarkSkinTone,
-    mrsClausDarkSkinTone
-];
-export const allMrsClausGroup = new EmojiGroup("\u{1F936}\uDD36", "Mrs. Claus", ...allMrsClaus);
 export const genieMale = new Emoji("\u{1F9DE}\uDDDE\u200D\u2642\uFE0F", "Genie: Male");
 export const genieFemale = new Emoji("\u{1F9DE}\uDDDE\u200D\u2640\uFE0F", "Genie: Female");
-export const allGenie = [
-    genie,
-    genieMale,
-    genieFemale
-];
-export const allGenieGroup = new EmojiGroup("\u{1F9DE}\uDDDE", "Genie", ...allGenie);
 export const zombieMale = new Emoji("\u{1F9DF}\uDDDF\u200D\u2642\uFE0F", "Zombie: Male");
 export const zombieFemale = new Emoji("\u{1F9DF}\uDDDF\u200D\u2640\uFE0F", "Zombie: Female");
-export const allZombie = [
-    zombie,
-    zombieMale,
-    zombieFemale
-];
-export const allZombieGroup = new EmojiGroup("\u{1F9DF}\uDDDF", "Zombie", ...allZombie);
-export const allAllCherubGroup = [
-    allCherubGroup,
-    allSantaClausGroup,
-    allMrsClausGroup,
-    allAllSuperheroGroupGroup,
-    allAllSupervillainGroupGroup,
-    allAllMageGroupGroup,
-    allAllFairyGroupGroup,
-    allAllVampireGroupGroup,
-    allAllMerpersonGroupGroup,
-    allAllElfGroupGroup,
-    allGenieGroup,
-    allZombieGroup
-];
-export const allAllCherubGroupGroup = new EmojiGroup("\u0046\u0061\u006E\u0074\u0061\u0073\u0079", "Depictions of fantasy characters", ...allAllCherubGroup);
 export const manProbing = new Emoji("\u{1F468}\uDC68\u200D\u{1F9AF}\uDDAF", "Man: Probing");
 export const manLightSkinToneProbing = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F9AF}\uDDAF", "Man: Light Skin Tone: Probing");
 export const manMediumLightSkinToneProbing = new Emoji("\u{1F468}\uDC68\u{1F3FC}\uDFFC\u200D\u{1F9AF}\uDDAF", "Man: Medium-Light Skin Tone: Probing");
 export const manMediumSkinToneProbing = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F9AF}\uDDAF", "Man: Medium Skin Tone: Probing");
 export const manMediumDarkSkinToneProbing = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F9AF}\uDDAF", "Man: Medium-Dark Skin Tone: Probing");
 export const manDarkSkinToneProbing = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F9AF}\uDDAF", "Man: Dark Skin Tone: Probing");
-export const allManProbing = [
-    manProbing,
-    manLightSkinToneProbing,
-    manMediumLightSkinToneProbing,
-    manMediumSkinToneProbing,
-    manMediumDarkSkinToneProbing,
-    manDarkSkinToneProbing
-];
-export const allManProbingGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F9AF}\uDDAF", "Man: Probing", ...allManProbing);
 export const womanProbing = new Emoji("\u{1F469}\uDC69\u200D\u{1F9AF}\uDDAF", "Woman: Probing");
 export const womanLightSkinToneProbing = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F9AF}\uDDAF", "Woman: Light Skin Tone: Probing");
 export const womanMediumLightSkinToneProbing = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F9AF}\uDDAF", "Woman: Medium-Light Skin Tone: Probing");
 export const womanMediumSkinToneProbing = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F9AF}\uDDAF", "Woman: Medium Skin Tone: Probing");
 export const womanMediumDarkSkinToneProbing = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F9AF}\uDDAF", "Woman: Medium-Dark Skin Tone: Probing");
 export const womanDarkSkinToneProbing = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F9AF}\uDDAF", "Woman: Dark Skin Tone: Probing");
-export const allWomanProbing = [
-    womanProbing,
-    womanLightSkinToneProbing,
-    womanMediumLightSkinToneProbing,
-    womanMediumSkinToneProbing,
-    womanMediumDarkSkinToneProbing,
-    womanDarkSkinToneProbing
-];
-export const allWomanProbingGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F9AF}\uDDAF", "Woman: Probing", ...allWomanProbing);
-export const allProbingCane = [
-    probingCane,
-    allManProbingGroup,
-    allWomanProbingGroup
-];
-export const allProbingCaneGroup = new EmojiGroup("\u{1F9AF}\uDDAF", "Probing Cane", ...allProbingCane);
 export const manInMotorizedWheelchair = new Emoji("\u{1F468}\uDC68\u200D\u{1F9BC}\uDDBC", "Man: In Motorized Wheelchair");
 export const manLightSkinToneInMotorizedWheelchair = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F9BC}\uDDBC", "Man: Light Skin Tone: In Motorized Wheelchair");
 export const manMediumLightSkinToneInMotorizedWheelchair = new Emoji("\u{1F468}\uDC68\u{1F3FC}\uDFFC\u200D\u{1F9BC}\uDDBC", "Man: Medium-Light Skin Tone: In Motorized Wheelchair");
 export const manMediumSkinToneInMotorizedWheelchair = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F9BC}\uDDBC", "Man: Medium Skin Tone: In Motorized Wheelchair");
 export const manMediumDarkSkinToneInMotorizedWheelchair = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F9BC}\uDDBC", "Man: Medium-Dark Skin Tone: In Motorized Wheelchair");
 export const manDarkSkinToneInMotorizedWheelchair = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F9BC}\uDDBC", "Man: Dark Skin Tone: In Motorized Wheelchair");
-export const allManInMotorizedWheelchair = [
-    manInMotorizedWheelchair,
-    manLightSkinToneInMotorizedWheelchair,
-    manMediumLightSkinToneInMotorizedWheelchair,
-    manMediumSkinToneInMotorizedWheelchair,
-    manMediumDarkSkinToneInMotorizedWheelchair,
-    manDarkSkinToneInMotorizedWheelchair
-];
-export const allManInMotorizedWheelchairGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F9BC}\uDDBC", "Man: In Motorized Wheelchair", ...allManInMotorizedWheelchair);
 export const womanInMotorizedWheelchair = new Emoji("\u{1F469}\uDC69\u200D\u{1F9BC}\uDDBC", "Woman: In Motorized Wheelchair");
 export const womanLightSkinToneInMotorizedWheelchair = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F9BC}\uDDBC", "Woman: Light Skin Tone: In Motorized Wheelchair");
 export const womanMediumLightSkinToneInMotorizedWheelchair = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F9BC}\uDDBC", "Woman: Medium-Light Skin Tone: In Motorized Wheelchair");
 export const womanMediumSkinToneInMotorizedWheelchair = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F9BC}\uDDBC", "Woman: Medium Skin Tone: In Motorized Wheelchair");
 export const womanMediumDarkSkinToneInMotorizedWheelchair = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F9BC}\uDDBC", "Woman: Medium-Dark Skin Tone: In Motorized Wheelchair");
 export const womanDarkSkinToneInMotorizedWheelchair = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F9BC}\uDDBC", "Woman: Dark Skin Tone: In Motorized Wheelchair");
-export const allWomanInMotorizedWheelchair = [
-    womanInMotorizedWheelchair,
-    womanLightSkinToneInMotorizedWheelchair,
-    womanMediumLightSkinToneInMotorizedWheelchair,
-    womanMediumSkinToneInMotorizedWheelchair,
-    womanMediumDarkSkinToneInMotorizedWheelchair,
-    womanDarkSkinToneInMotorizedWheelchair
-];
-export const allWomanInMotorizedWheelchairGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F9BC}\uDDBC", "Woman: In Motorized Wheelchair", ...allWomanInMotorizedWheelchair);
-export const allMotorizedWheelchair = [
-    motorizedWheelchair,
-    allManInMotorizedWheelchairGroup,
-    allWomanInMotorizedWheelchairGroup
-];
-export const allMotorizedWheelchairGroup = new EmojiGroup("\u{1F9BC}\uDDBC", "Motorized Wheelchair", ...allMotorizedWheelchair);
 export const manInManualWheelchair = new Emoji("\u{1F468}\uDC68\u200D\u{1F9BD}\uDDBD", "Man: In Manual Wheelchair");
 export const manLightSkinToneInManualWheelchair = new Emoji("\u{1F468}\uDC68\u{1F3FB}\uDFFB\u200D\u{1F9BD}\uDDBD", "Man: Light Skin Tone: In Manual Wheelchair");
 export const manMediumLightSkinToneInManualWheelchair = new Emoji("\u{1F468}\uDC68\u{1F3FC}\uDFFC\u200D\u{1F9BD}\uDDBD", "Man: Medium-Light Skin Tone: In Manual Wheelchair");
 export const manMediumSkinToneInManualWheelchair = new Emoji("\u{1F468}\uDC68\u{1F3FD}\uDFFD\u200D\u{1F9BD}\uDDBD", "Man: Medium Skin Tone: In Manual Wheelchair");
 export const manMediumDarkSkinToneInManualWheelchair = new Emoji("\u{1F468}\uDC68\u{1F3FE}\uDFFE\u200D\u{1F9BD}\uDDBD", "Man: Medium-Dark Skin Tone: In Manual Wheelchair");
 export const manDarkSkinToneInManualWheelchair = new Emoji("\u{1F468}\uDC68\u{1F3FF}\uDFFF\u200D\u{1F9BD}\uDDBD", "Man: Dark Skin Tone: In Manual Wheelchair");
-export const allManInManualWheelchair = [
-    manInManualWheelchair,
-    manLightSkinToneInManualWheelchair,
-    manMediumLightSkinToneInManualWheelchair,
-    manMediumSkinToneInManualWheelchair,
-    manMediumDarkSkinToneInManualWheelchair,
-    manDarkSkinToneInManualWheelchair
-];
-export const allManInManualWheelchairGroup = new EmojiGroup("\u{1F468}\uDC68\u200D\u{1F9BD}\uDDBD", "Man: In Manual Wheelchair", ...allManInManualWheelchair);
 export const womanInManualWheelchair = new Emoji("\u{1F469}\uDC69\u200D\u{1F9BD}\uDDBD", "Woman: In Manual Wheelchair");
 export const womanLightSkinToneInManualWheelchair = new Emoji("\u{1F469}\uDC69\u{1F3FB}\uDFFB\u200D\u{1F9BD}\uDDBD", "Woman: Light Skin Tone: In Manual Wheelchair");
 export const womanMediumLightSkinToneInManualWheelchair = new Emoji("\u{1F469}\uDC69\u{1F3FC}\uDFFC\u200D\u{1F9BD}\uDDBD", "Woman: Medium-Light Skin Tone: In Manual Wheelchair");
 export const womanMediumSkinToneInManualWheelchair = new Emoji("\u{1F469}\uDC69\u{1F3FD}\uDFFD\u200D\u{1F9BD}\uDDBD", "Woman: Medium Skin Tone: In Manual Wheelchair");
 export const womanMediumDarkSkinToneInManualWheelchair = new Emoji("\u{1F469}\uDC69\u{1F3FE}\uDFFE\u200D\u{1F9BD}\uDDBD", "Woman: Medium-Dark Skin Tone: In Manual Wheelchair");
 export const womanDarkSkinToneInManualWheelchair = new Emoji("\u{1F469}\uDC69\u{1F3FF}\uDFFF\u200D\u{1F9BD}\uDDBD", "Woman: Dark Skin Tone: In Manual Wheelchair");
-export const allWomanInManualWheelchair = [
-    womanInManualWheelchair,
-    womanLightSkinToneInManualWheelchair,
-    womanMediumLightSkinToneInManualWheelchair,
-    womanMediumSkinToneInManualWheelchair,
-    womanMediumDarkSkinToneInManualWheelchair,
-    womanDarkSkinToneInManualWheelchair
-];
-export const allWomanInManualWheelchairGroup = new EmojiGroup("\u{1F469}\uDC69\u200D\u{1F9BD}\uDDBD", "Woman: In Manual Wheelchair", ...allWomanInManualWheelchair);
-export const allManualWheelchair = [
-    manualWheelchair,
-    allManInManualWheelchairGroup,
-    allWomanInManualWheelchairGroup
-];
-export const allManualWheelchairGroup = new EmojiGroup("\u{1F9BD}\uDDBD", "Manual Wheelchair", ...allManualWheelchair);
 export const manDancing = new Emoji("\u{1F57A}\uDD7A", "Man Dancing");
 export const manDancingLightSkinTone = new Emoji("\u{1F57A}\uDD7A\u{1F3FB}\uDFFB", "Man Dancing: Light Skin Tone");
 export const manDancingMediumLightSkinTone = new Emoji("\u{1F57A}\uDD7A\u{1F3FC}\uDFFC", "Man Dancing: Medium-Light Skin Tone");
 export const manDancingMediumSkinTone = new Emoji("\u{1F57A}\uDD7A\u{1F3FD}\uDFFD", "Man Dancing: Medium Skin Tone");
 export const manDancingMediumDarkSkinTone = new Emoji("\u{1F57A}\uDD7A\u{1F3FE}\uDFFE", "Man Dancing: Medium-Dark Skin Tone");
 export const manDancingDarkSkinTone = new Emoji("\u{1F57A}\uDD7A\u{1F3FF}\uDFFF", "Man Dancing: Dark Skin Tone");
-export const allManDancing = [
-    manDancing,
-    manDancingLightSkinTone,
-    manDancingMediumLightSkinTone,
-    manDancingMediumSkinTone,
-    manDancingMediumDarkSkinTone,
-    manDancingDarkSkinTone
-];
-export const allManDancingGroup = new EmojiGroup("\u{1F57A}\uDD7A", "Man Dancing", ...allManDancing);
 export const womanDancing = new Emoji("\u{1F483}\uDC83", "Woman Dancing");
 export const womanDancingLightSkinTone = new Emoji("\u{1F483}\uDC83\u{1F3FB}\uDFFB", "Woman Dancing: Light Skin Tone");
 export const womanDancingMediumLightSkinTone = new Emoji("\u{1F483}\uDC83\u{1F3FC}\uDFFC", "Woman Dancing: Medium-Light Skin Tone");
 export const womanDancingMediumSkinTone = new Emoji("\u{1F483}\uDC83\u{1F3FD}\uDFFD", "Woman Dancing: Medium Skin Tone");
 export const womanDancingMediumDarkSkinTone = new Emoji("\u{1F483}\uDC83\u{1F3FE}\uDFFE", "Woman Dancing: Medium-Dark Skin Tone");
 export const womanDancingDarkSkinTone = new Emoji("\u{1F483}\uDC83\u{1F3FF}\uDFFF", "Woman Dancing: Dark Skin Tone");
-export const allWomanDancing = [
-    womanDancing,
-    womanDancingLightSkinTone,
-    womanDancingMediumLightSkinTone,
-    womanDancingMediumSkinTone,
-    womanDancingMediumDarkSkinTone,
-    womanDancingDarkSkinTone
-];
-export const allWomanDancingGroup = new EmojiGroup("\u{1F483}\uDC83", "Woman Dancing", ...allWomanDancing);
-export const allAllManDancingGroup = [
-    allManDancingGroup,
-    allWomanDancingGroup
-];
-export const allAllManDancingGroupGroup = new EmojiGroup("\u{1F57A}\uDD7A", "Dancing", ...allAllManDancingGroup);
 export const juggler = new Emoji("\u{1F939}\uDD39", "Juggler");
 export const jugglerLightSkinTone = new Emoji("\u{1F939}\uDD39\u{1F3FB}\uDFFB", "Juggler: Light Skin Tone");
 export const jugglerMediumLightSkinTone = new Emoji("\u{1F939}\uDD39\u{1F3FC}\uDFFC", "Juggler: Medium-Light Skin Tone");
 export const jugglerMediumSkinTone = new Emoji("\u{1F939}\uDD39\u{1F3FD}\uDFFD", "Juggler: Medium Skin Tone");
 export const jugglerMediumDarkSkinTone = new Emoji("\u{1F939}\uDD39\u{1F3FE}\uDFFE", "Juggler: Medium-Dark Skin Tone");
 export const jugglerDarkSkinTone = new Emoji("\u{1F939}\uDD39\u{1F3FF}\uDFFF", "Juggler: Dark Skin Tone");
-export const allJuggler = [
-    juggler,
-    jugglerLightSkinTone,
-    jugglerMediumLightSkinTone,
-    jugglerMediumSkinTone,
-    jugglerMediumDarkSkinTone,
-    jugglerDarkSkinTone
-];
-export const allJugglerGroup = new EmojiGroup("\u{1F939}\uDD39", "Juggler", ...allJuggler);
 export const jugglerMale = new Emoji("\u{1F939}\uDD39\u200D\u2642\uFE0F", "Juggler: Male");
 export const jugglerLightSkinToneMale = new Emoji("\u{1F939}\uDD39\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Juggler: Light Skin Tone: Male");
 export const jugglerMediumLightSkinToneMale = new Emoji("\u{1F939}\uDD39\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Juggler: Medium-Light Skin Tone: Male");
 export const jugglerMediumSkinToneMale = new Emoji("\u{1F939}\uDD39\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Juggler: Medium Skin Tone: Male");
 export const jugglerMediumDarkSkinToneMale = new Emoji("\u{1F939}\uDD39\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Juggler: Medium-Dark Skin Tone: Male");
 export const jugglerDarkSkinToneMale = new Emoji("\u{1F939}\uDD39\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Juggler: Dark Skin Tone: Male");
-export const allJugglerMale = [
-    jugglerMale,
-    jugglerLightSkinToneMale,
-    jugglerMediumLightSkinToneMale,
-    jugglerMediumSkinToneMale,
-    jugglerMediumDarkSkinToneMale,
-    jugglerDarkSkinToneMale
-];
-export const allJugglerMaleGroup = new EmojiGroup("\u{1F939}\uDD39\u200D\u2642\uFE0F", "Juggler: Male", ...allJugglerMale);
 export const jugglerFemale = new Emoji("\u{1F939}\uDD39\u200D\u2640\uFE0F", "Juggler: Female");
 export const jugglerLightSkinToneFemale = new Emoji("\u{1F939}\uDD39\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Juggler: Light Skin Tone: Female");
 export const jugglerMediumLightSkinToneFemale = new Emoji("\u{1F939}\uDD39\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Juggler: Medium-Light Skin Tone: Female");
 export const jugglerMediumSkinToneFemale = new Emoji("\u{1F939}\uDD39\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Juggler: Medium Skin Tone: Female");
 export const jugglerMediumDarkSkinToneFemale = new Emoji("\u{1F939}\uDD39\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Juggler: Medium-Dark Skin Tone: Female");
 export const jugglerDarkSkinToneFemale = new Emoji("\u{1F939}\uDD39\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Juggler: Dark Skin Tone: Female");
-export const allJugglerFemale = [
-    jugglerFemale,
-    jugglerLightSkinToneFemale,
-    jugglerMediumLightSkinToneFemale,
-    jugglerMediumSkinToneFemale,
-    jugglerMediumDarkSkinToneFemale,
-    jugglerDarkSkinToneFemale
-];
-export const allJugglerFemaleGroup = new EmojiGroup("\u{1F939}\uDD39\u200D\u2640\uFE0F", "Juggler: Female", ...allJugglerFemale);
-export const allAllJugglerGroup = [
-    allJugglerGroup,
-    allJugglerMaleGroup,
-    allJugglerFemaleGroup
-];
-export const allAllJugglerGroupGroup = new EmojiGroup("\u{1F939}\uDD39", "Juggler", ...allAllJugglerGroup);
 export const climber = new Emoji("\u{1F9D7}\uDDD7", "Climber");
 export const climberLightSkinTone = new Emoji("\u{1F9D7}\uDDD7\u{1F3FB}\uDFFB", "Climber: Light Skin Tone");
 export const climberMediumLightSkinTone = new Emoji("\u{1F9D7}\uDDD7\u{1F3FC}\uDFFC", "Climber: Medium-Light Skin Tone");
 export const climberMediumSkinTone = new Emoji("\u{1F9D7}\uDDD7\u{1F3FD}\uDFFD", "Climber: Medium Skin Tone");
 export const climberMediumDarkSkinTone = new Emoji("\u{1F9D7}\uDDD7\u{1F3FE}\uDFFE", "Climber: Medium-Dark Skin Tone");
 export const climberDarkSkinTone = new Emoji("\u{1F9D7}\uDDD7\u{1F3FF}\uDFFF", "Climber: Dark Skin Tone");
-export const allClimber = [
-    climber,
-    climberLightSkinTone,
-    climberMediumLightSkinTone,
-    climberMediumSkinTone,
-    climberMediumDarkSkinTone,
-    climberDarkSkinTone
-];
-export const allClimberGroup = new EmojiGroup("\u{1F9D7}\uDDD7", "Climber", ...allClimber);
 export const climberMale = new Emoji("\u{1F9D7}\uDDD7\u200D\u2642\uFE0F", "Climber: Male");
 export const climberLightSkinToneMale = new Emoji("\u{1F9D7}\uDDD7\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Climber: Light Skin Tone: Male");
 export const climberMediumLightSkinToneMale = new Emoji("\u{1F9D7}\uDDD7\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Climber: Medium-Light Skin Tone: Male");
 export const climberMediumSkinToneMale = new Emoji("\u{1F9D7}\uDDD7\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Climber: Medium Skin Tone: Male");
 export const climberMediumDarkSkinToneMale = new Emoji("\u{1F9D7}\uDDD7\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Climber: Medium-Dark Skin Tone: Male");
 export const climberDarkSkinToneMale = new Emoji("\u{1F9D7}\uDDD7\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Climber: Dark Skin Tone: Male");
-export const allClimberMale = [
-    climberMale,
-    climberLightSkinToneMale,
-    climberMediumLightSkinToneMale,
-    climberMediumSkinToneMale,
-    climberMediumDarkSkinToneMale,
-    climberDarkSkinToneMale
-];
-export const allClimberMaleGroup = new EmojiGroup("\u{1F9D7}\uDDD7\u200D\u2642\uFE0F", "Climber: Male", ...allClimberMale);
 export const climberFemale = new Emoji("\u{1F9D7}\uDDD7\u200D\u2640\uFE0F", "Climber: Female");
 export const climberLightSkinToneFemale = new Emoji("\u{1F9D7}\uDDD7\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Climber: Light Skin Tone: Female");
 export const climberMediumLightSkinToneFemale = new Emoji("\u{1F9D7}\uDDD7\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Climber: Medium-Light Skin Tone: Female");
 export const climberMediumSkinToneFemale = new Emoji("\u{1F9D7}\uDDD7\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Climber: Medium Skin Tone: Female");
 export const climberMediumDarkSkinToneFemale = new Emoji("\u{1F9D7}\uDDD7\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Climber: Medium-Dark Skin Tone: Female");
 export const climberDarkSkinToneFemale = new Emoji("\u{1F9D7}\uDDD7\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Climber: Dark Skin Tone: Female");
-export const allClimberFemale = [
-    climberFemale,
-    climberLightSkinToneFemale,
-    climberMediumLightSkinToneFemale,
-    climberMediumSkinToneFemale,
-    climberMediumDarkSkinToneFemale,
-    climberDarkSkinToneFemale
-];
-export const allClimberFemaleGroup = new EmojiGroup("\u{1F9D7}\uDDD7\u200D\u2640\uFE0F", "Climber: Female", ...allClimberFemale);
-export const allAllClimberGroup = [
-    allClimberGroup,
-    allClimberMaleGroup,
-    allClimberFemaleGroup
-];
-export const allAllClimberGroupGroup = new EmojiGroup("\u{1F9D7}\uDDD7", "Climber", ...allAllClimberGroup);
 export const jockey = new Emoji("\u{1F3C7}\uDFC7", "Jockey");
 export const jockeyLightSkinTone = new Emoji("\u{1F3C7}\uDFC7\u{1F3FB}\uDFFB", "Jockey: Light Skin Tone");
 export const jockeyMediumLightSkinTone = new Emoji("\u{1F3C7}\uDFC7\u{1F3FC}\uDFFC", "Jockey: Medium-Light Skin Tone");
 export const jockeyMediumSkinTone = new Emoji("\u{1F3C7}\uDFC7\u{1F3FD}\uDFFD", "Jockey: Medium Skin Tone");
 export const jockeyMediumDarkSkinTone = new Emoji("\u{1F3C7}\uDFC7\u{1F3FE}\uDFFE", "Jockey: Medium-Dark Skin Tone");
 export const jockeyDarkSkinTone = new Emoji("\u{1F3C7}\uDFC7\u{1F3FF}\uDFFF", "Jockey: Dark Skin Tone");
-export const allJockey = [
-    jockey,
-    jockeyLightSkinTone,
-    jockeyMediumLightSkinTone,
-    jockeyMediumSkinTone,
-    jockeyMediumDarkSkinTone,
-    jockeyDarkSkinTone
-];
-export const allJockeyGroup = new EmojiGroup("\u{1F3C7}\uDFC7", "Jockey", ...allJockey);
 export const snowboarder = new Emoji("\u{1F3C2}\uDFC2", "Snowboarder");
 export const snowboarderLightSkinTone = new Emoji("\u{1F3C2}\uDFC2\u{1F3FB}\uDFFB", "Snowboarder: Light Skin Tone");
 export const snowboarderMediumLightSkinTone = new Emoji("\u{1F3C2}\uDFC2\u{1F3FC}\uDFFC", "Snowboarder: Medium-Light Skin Tone");
 export const snowboarderMediumSkinTone = new Emoji("\u{1F3C2}\uDFC2\u{1F3FD}\uDFFD", "Snowboarder: Medium Skin Tone");
 export const snowboarderMediumDarkSkinTone = new Emoji("\u{1F3C2}\uDFC2\u{1F3FE}\uDFFE", "Snowboarder: Medium-Dark Skin Tone");
 export const snowboarderDarkSkinTone = new Emoji("\u{1F3C2}\uDFC2\u{1F3FF}\uDFFF", "Snowboarder: Dark Skin Tone");
-export const allSnowboarder = [
-    snowboarder,
-    snowboarderLightSkinTone,
-    snowboarderMediumLightSkinTone,
-    snowboarderMediumSkinTone,
-    snowboarderMediumDarkSkinTone,
-    snowboarderDarkSkinTone
-];
-export const allSnowboarderGroup = new EmojiGroup("\u{1F3C2}\uDFC2", "Snowboarder", ...allSnowboarder);
 export const golfer = new Emoji("\u{1F3CC}\uDFCC\uFE0F", "Golfer");
 export const golferLightSkinTone = new Emoji("\u{1F3CC}\uDFCC\uFE0F\u{1F3FB}\uDFFB", "Golfer: Light Skin Tone");
 export const golferMediumLightSkinTone = new Emoji("\u{1F3CC}\uDFCC\uFE0F\u{1F3FC}\uDFFC", "Golfer: Medium-Light Skin Tone");
 export const golferMediumSkinTone = new Emoji("\u{1F3CC}\uDFCC\uFE0F\u{1F3FD}\uDFFD", "Golfer: Medium Skin Tone");
 export const golferMediumDarkSkinTone = new Emoji("\u{1F3CC}\uDFCC\uFE0F\u{1F3FE}\uDFFE", "Golfer: Medium-Dark Skin Tone");
 export const golferDarkSkinTone = new Emoji("\u{1F3CC}\uDFCC\uFE0F\u{1F3FF}\uDFFF", "Golfer: Dark Skin Tone");
-export const allGolfer = [
-    golfer,
-    golferLightSkinTone,
-    golferMediumLightSkinTone,
-    golferMediumSkinTone,
-    golferMediumDarkSkinTone,
-    golferDarkSkinTone
-];
-export const allGolferGroup = new EmojiGroup("\u{1F3CC}\uDFCC\uFE0F", "Golfer", ...allGolfer);
 export const golferMale = new Emoji("\u{1F3CC}\uDFCC\uFE0F\u200D\u2642\uFE0F", "Golfer: Male");
 export const golferLightSkinToneMale = new Emoji("\u{1F3CC}\uDFCC\uFE0F\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Golfer: Light Skin Tone: Male");
 export const golferMediumLightSkinToneMale = new Emoji("\u{1F3CC}\uDFCC\uFE0F\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Golfer: Medium-Light Skin Tone: Male");
 export const golferMediumSkinToneMale = new Emoji("\u{1F3CC}\uDFCC\uFE0F\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Golfer: Medium Skin Tone: Male");
 export const golferMediumDarkSkinToneMale = new Emoji("\u{1F3CC}\uDFCC\uFE0F\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Golfer: Medium-Dark Skin Tone: Male");
 export const golferDarkSkinToneMale = new Emoji("\u{1F3CC}\uDFCC\uFE0F\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Golfer: Dark Skin Tone: Male");
-export const allGolferMale = [
-    golferMale,
-    golferLightSkinToneMale,
-    golferMediumLightSkinToneMale,
-    golferMediumSkinToneMale,
-    golferMediumDarkSkinToneMale,
-    golferDarkSkinToneMale
-];
-export const allGolferMaleGroup = new EmojiGroup("\u{1F3CC}\uDFCC\uFE0F\u200D\u2642\uFE0F", "Golfer: Male", ...allGolferMale);
 export const golferFemale = new Emoji("\u{1F3CC}\uDFCC\uFE0F\u200D\u2640\uFE0F", "Golfer: Female");
 export const golferLightSkinToneFemale = new Emoji("\u{1F3CC}\uDFCC\uFE0F\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Golfer: Light Skin Tone: Female");
 export const golferMediumLightSkinToneFemale = new Emoji("\u{1F3CC}\uDFCC\uFE0F\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Golfer: Medium-Light Skin Tone: Female");
 export const golferMediumSkinToneFemale = new Emoji("\u{1F3CC}\uDFCC\uFE0F\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Golfer: Medium Skin Tone: Female");
 export const golferMediumDarkSkinToneFemale = new Emoji("\u{1F3CC}\uDFCC\uFE0F\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Golfer: Medium-Dark Skin Tone: Female");
 export const golferDarkSkinToneFemale = new Emoji("\u{1F3CC}\uDFCC\uFE0F\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Golfer: Dark Skin Tone: Female");
-export const allGolferFemale = [
-    golferFemale,
-    golferLightSkinToneFemale,
-    golferMediumLightSkinToneFemale,
-    golferMediumSkinToneFemale,
-    golferMediumDarkSkinToneFemale,
-    golferDarkSkinToneFemale
-];
-export const allGolferFemaleGroup = new EmojiGroup("\u{1F3CC}\uDFCC\uFE0F\u200D\u2640\uFE0F", "Golfer: Female", ...allGolferFemale);
-export const allAllGolferGroup = [
-    allGolferGroup,
-    allGolferMaleGroup,
-    allGolferFemaleGroup
-];
-export const allAllGolferGroupGroup = new EmojiGroup("\u{1F3CC}\uDFCC\uFE0F", "Golfer", ...allAllGolferGroup);
 export const surfing = new Emoji("\u{1F3C4}\uDFC4", "Surfing");
 export const surfingLightSkinTone = new Emoji("\u{1F3C4}\uDFC4\u{1F3FB}\uDFFB", "Surfing: Light Skin Tone");
 export const surfingMediumLightSkinTone = new Emoji("\u{1F3C4}\uDFC4\u{1F3FC}\uDFFC", "Surfing: Medium-Light Skin Tone");
 export const surfingMediumSkinTone = new Emoji("\u{1F3C4}\uDFC4\u{1F3FD}\uDFFD", "Surfing: Medium Skin Tone");
 export const surfingMediumDarkSkinTone = new Emoji("\u{1F3C4}\uDFC4\u{1F3FE}\uDFFE", "Surfing: Medium-Dark Skin Tone");
 export const surfingDarkSkinTone = new Emoji("\u{1F3C4}\uDFC4\u{1F3FF}\uDFFF", "Surfing: Dark Skin Tone");
-export const allSurfing = [
-    surfing,
-    surfingLightSkinTone,
-    surfingMediumLightSkinTone,
-    surfingMediumSkinTone,
-    surfingMediumDarkSkinTone,
-    surfingDarkSkinTone
-];
-export const allSurfingGroup = new EmojiGroup("\u{1F3C4}\uDFC4", "Surfing", ...allSurfing);
 export const surfingMale = new Emoji("\u{1F3C4}\uDFC4\u200D\u2642\uFE0F", "Surfing: Male");
 export const surfingLightSkinToneMale = new Emoji("\u{1F3C4}\uDFC4\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Surfing: Light Skin Tone: Male");
 export const surfingMediumLightSkinToneMale = new Emoji("\u{1F3C4}\uDFC4\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Surfing: Medium-Light Skin Tone: Male");
 export const surfingMediumSkinToneMale = new Emoji("\u{1F3C4}\uDFC4\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Surfing: Medium Skin Tone: Male");
 export const surfingMediumDarkSkinToneMale = new Emoji("\u{1F3C4}\uDFC4\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Surfing: Medium-Dark Skin Tone: Male");
 export const surfingDarkSkinToneMale = new Emoji("\u{1F3C4}\uDFC4\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Surfing: Dark Skin Tone: Male");
-export const allSurfingMale = [
-    surfingMale,
-    surfingLightSkinToneMale,
-    surfingMediumLightSkinToneMale,
-    surfingMediumSkinToneMale,
-    surfingMediumDarkSkinToneMale,
-    surfingDarkSkinToneMale
-];
-export const allSurfingMaleGroup = new EmojiGroup("\u{1F3C4}\uDFC4\u200D\u2642\uFE0F", "Surfing: Male", ...allSurfingMale);
 export const surfingFemale = new Emoji("\u{1F3C4}\uDFC4\u200D\u2640\uFE0F", "Surfing: Female");
 export const surfingLightSkinToneFemale = new Emoji("\u{1F3C4}\uDFC4\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Surfing: Light Skin Tone: Female");
 export const surfingMediumLightSkinToneFemale = new Emoji("\u{1F3C4}\uDFC4\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Surfing: Medium-Light Skin Tone: Female");
 export const surfingMediumSkinToneFemale = new Emoji("\u{1F3C4}\uDFC4\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Surfing: Medium Skin Tone: Female");
 export const surfingMediumDarkSkinToneFemale = new Emoji("\u{1F3C4}\uDFC4\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Surfing: Medium-Dark Skin Tone: Female");
 export const surfingDarkSkinToneFemale = new Emoji("\u{1F3C4}\uDFC4\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Surfing: Dark Skin Tone: Female");
-export const allSurfingFemale = [
-    surfingFemale,
-    surfingLightSkinToneFemale,
-    surfingMediumLightSkinToneFemale,
-    surfingMediumSkinToneFemale,
-    surfingMediumDarkSkinToneFemale,
-    surfingDarkSkinToneFemale
-];
-export const allSurfingFemaleGroup = new EmojiGroup("\u{1F3C4}\uDFC4\u200D\u2640\uFE0F", "Surfing: Female", ...allSurfingFemale);
-export const allAllSurfingGroup = [
-    allSurfingGroup,
-    allSurfingMaleGroup,
-    allSurfingFemaleGroup
-];
-export const allAllSurfingGroupGroup = new EmojiGroup("\u{1F3C4}\uDFC4", "Surfing", ...allAllSurfingGroup);
 export const rowingBoat = new Emoji("\u{1F6A3}\uDEA3", "Rowing Boat");
 export const rowingBoatLightSkinTone = new Emoji("\u{1F6A3}\uDEA3\u{1F3FB}\uDFFB", "Rowing Boat: Light Skin Tone");
 export const rowingBoatMediumLightSkinTone = new Emoji("\u{1F6A3}\uDEA3\u{1F3FC}\uDFFC", "Rowing Boat: Medium-Light Skin Tone");
 export const rowingBoatMediumSkinTone = new Emoji("\u{1F6A3}\uDEA3\u{1F3FD}\uDFFD", "Rowing Boat: Medium Skin Tone");
 export const rowingBoatMediumDarkSkinTone = new Emoji("\u{1F6A3}\uDEA3\u{1F3FE}\uDFFE", "Rowing Boat: Medium-Dark Skin Tone");
 export const rowingBoatDarkSkinTone = new Emoji("\u{1F6A3}\uDEA3\u{1F3FF}\uDFFF", "Rowing Boat: Dark Skin Tone");
-export const allRowingBoat = [
-    rowingBoat,
-    rowingBoatLightSkinTone,
-    rowingBoatMediumLightSkinTone,
-    rowingBoatMediumSkinTone,
-    rowingBoatMediumDarkSkinTone,
-    rowingBoatDarkSkinTone
-];
-export const allRowingBoatGroup = new EmojiGroup("\u{1F6A3}\uDEA3", "Rowing Boat", ...allRowingBoat);
 export const rowingBoatMale = new Emoji("\u{1F6A3}\uDEA3\u200D\u2642\uFE0F", "Rowing Boat: Male");
 export const rowingBoatLightSkinToneMale = new Emoji("\u{1F6A3}\uDEA3\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Rowing Boat: Light Skin Tone: Male");
 export const rowingBoatMediumLightSkinToneMale = new Emoji("\u{1F6A3}\uDEA3\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Rowing Boat: Medium-Light Skin Tone: Male");
 export const rowingBoatMediumSkinToneMale = new Emoji("\u{1F6A3}\uDEA3\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Rowing Boat: Medium Skin Tone: Male");
 export const rowingBoatMediumDarkSkinToneMale = new Emoji("\u{1F6A3}\uDEA3\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Rowing Boat: Medium-Dark Skin Tone: Male");
 export const rowingBoatDarkSkinToneMale = new Emoji("\u{1F6A3}\uDEA3\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Rowing Boat: Dark Skin Tone: Male");
-export const allRowingBoatMale = [
-    rowingBoatMale,
-    rowingBoatLightSkinToneMale,
-    rowingBoatMediumLightSkinToneMale,
-    rowingBoatMediumSkinToneMale,
-    rowingBoatMediumDarkSkinToneMale,
-    rowingBoatDarkSkinToneMale
-];
-export const allRowingBoatMaleGroup = new EmojiGroup("\u{1F6A3}\uDEA3\u200D\u2642\uFE0F", "Rowing Boat: Male", ...allRowingBoatMale);
 export const rowingBoatFemale = new Emoji("\u{1F6A3}\uDEA3\u200D\u2640\uFE0F", "Rowing Boat: Female");
 export const rowingBoatLightSkinToneFemale = new Emoji("\u{1F6A3}\uDEA3\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Rowing Boat: Light Skin Tone: Female");
 export const rowingBoatMediumLightSkinToneFemale = new Emoji("\u{1F6A3}\uDEA3\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Rowing Boat: Medium-Light Skin Tone: Female");
 export const rowingBoatMediumSkinToneFemale = new Emoji("\u{1F6A3}\uDEA3\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Rowing Boat: Medium Skin Tone: Female");
 export const rowingBoatMediumDarkSkinToneFemale = new Emoji("\u{1F6A3}\uDEA3\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Rowing Boat: Medium-Dark Skin Tone: Female");
 export const rowingBoatDarkSkinToneFemale = new Emoji("\u{1F6A3}\uDEA3\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Rowing Boat: Dark Skin Tone: Female");
-export const allRowingBoatFemale = [
-    rowingBoatFemale,
-    rowingBoatLightSkinToneFemale,
-    rowingBoatMediumLightSkinToneFemale,
-    rowingBoatMediumSkinToneFemale,
-    rowingBoatMediumDarkSkinToneFemale,
-    rowingBoatDarkSkinToneFemale
-];
-export const allRowingBoatFemaleGroup = new EmojiGroup("\u{1F6A3}\uDEA3\u200D\u2640\uFE0F", "Rowing Boat: Female", ...allRowingBoatFemale);
-export const allAllRowingBoatGroup = [
-    allRowingBoatGroup,
-    allRowingBoatMaleGroup,
-    allRowingBoatFemaleGroup
-];
-export const allAllRowingBoatGroupGroup = new EmojiGroup("\u{1F6A3}\uDEA3", "Rowing Boat", ...allAllRowingBoatGroup);
 export const swimming = new Emoji("\u{1F3CA}\uDFCA", "Swimming");
 export const swimmingLightSkinTone = new Emoji("\u{1F3CA}\uDFCA\u{1F3FB}\uDFFB", "Swimming: Light Skin Tone");
 export const swimmingMediumLightSkinTone = new Emoji("\u{1F3CA}\uDFCA\u{1F3FC}\uDFFC", "Swimming: Medium-Light Skin Tone");
 export const swimmingMediumSkinTone = new Emoji("\u{1F3CA}\uDFCA\u{1F3FD}\uDFFD", "Swimming: Medium Skin Tone");
 export const swimmingMediumDarkSkinTone = new Emoji("\u{1F3CA}\uDFCA\u{1F3FE}\uDFFE", "Swimming: Medium-Dark Skin Tone");
 export const swimmingDarkSkinTone = new Emoji("\u{1F3CA}\uDFCA\u{1F3FF}\uDFFF", "Swimming: Dark Skin Tone");
-export const allSwimming = [
-    swimming,
-    swimmingLightSkinTone,
-    swimmingMediumLightSkinTone,
-    swimmingMediumSkinTone,
-    swimmingMediumDarkSkinTone,
-    swimmingDarkSkinTone
-];
-export const allSwimmingGroup = new EmojiGroup("\u{1F3CA}\uDFCA", "Swimming", ...allSwimming);
 export const swimmingMale = new Emoji("\u{1F3CA}\uDFCA\u200D\u2642\uFE0F", "Swimming: Male");
 export const swimmingLightSkinToneMale = new Emoji("\u{1F3CA}\uDFCA\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Swimming: Light Skin Tone: Male");
 export const swimmingMediumLightSkinToneMale = new Emoji("\u{1F3CA}\uDFCA\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Swimming: Medium-Light Skin Tone: Male");
 export const swimmingMediumSkinToneMale = new Emoji("\u{1F3CA}\uDFCA\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Swimming: Medium Skin Tone: Male");
 export const swimmingMediumDarkSkinToneMale = new Emoji("\u{1F3CA}\uDFCA\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Swimming: Medium-Dark Skin Tone: Male");
 export const swimmingDarkSkinToneMale = new Emoji("\u{1F3CA}\uDFCA\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Swimming: Dark Skin Tone: Male");
-export const allSwimmingMale = [
-    swimmingMale,
-    swimmingLightSkinToneMale,
-    swimmingMediumLightSkinToneMale,
-    swimmingMediumSkinToneMale,
-    swimmingMediumDarkSkinToneMale,
-    swimmingDarkSkinToneMale
-];
-export const allSwimmingMaleGroup = new EmojiGroup("\u{1F3CA}\uDFCA\u200D\u2642\uFE0F", "Swimming: Male", ...allSwimmingMale);
 export const swimmingFemale = new Emoji("\u{1F3CA}\uDFCA\u200D\u2640\uFE0F", "Swimming: Female");
 export const swimmingLightSkinToneFemale = new Emoji("\u{1F3CA}\uDFCA\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Swimming: Light Skin Tone: Female");
 export const swimmingMediumLightSkinToneFemale = new Emoji("\u{1F3CA}\uDFCA\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Swimming: Medium-Light Skin Tone: Female");
 export const swimmingMediumSkinToneFemale = new Emoji("\u{1F3CA}\uDFCA\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Swimming: Medium Skin Tone: Female");
 export const swimmingMediumDarkSkinToneFemale = new Emoji("\u{1F3CA}\uDFCA\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Swimming: Medium-Dark Skin Tone: Female");
 export const swimmingDarkSkinToneFemale = new Emoji("\u{1F3CA}\uDFCA\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Swimming: Dark Skin Tone: Female");
-export const allSwimmingFemale = [
-    swimmingFemale,
-    swimmingLightSkinToneFemale,
-    swimmingMediumLightSkinToneFemale,
-    swimmingMediumSkinToneFemale,
-    swimmingMediumDarkSkinToneFemale,
-    swimmingDarkSkinToneFemale
-];
-export const allSwimmingFemaleGroup = new EmojiGroup("\u{1F3CA}\uDFCA\u200D\u2640\uFE0F", "Swimming: Female", ...allSwimmingFemale);
-export const allAllSwimmingGroup = [
-    allSwimmingGroup,
-    allSwimmingMaleGroup,
-    allSwimmingFemaleGroup
-];
-export const allAllSwimmingGroupGroup = new EmojiGroup("\u{1F3CA}\uDFCA", "Swimming", ...allAllSwimmingGroup);
 export const basketBaller = new Emoji("\u26F9\uFE0F", "Basket Baller");
 export const basketBallerLightSkinTone = new Emoji("\u26F9\uFE0F\u{1F3FB}\uDFFB", "Basket Baller: Light Skin Tone");
 export const basketBallerMediumLightSkinTone = new Emoji("\u26F9\uFE0F\u{1F3FC}\uDFFC", "Basket Baller: Medium-Light Skin Tone");
 export const basketBallerMediumSkinTone = new Emoji("\u26F9\uFE0F\u{1F3FD}\uDFFD", "Basket Baller: Medium Skin Tone");
 export const basketBallerMediumDarkSkinTone = new Emoji("\u26F9\uFE0F\u{1F3FE}\uDFFE", "Basket Baller: Medium-Dark Skin Tone");
 export const basketBallerDarkSkinTone = new Emoji("\u26F9\uFE0F\u{1F3FF}\uDFFF", "Basket Baller: Dark Skin Tone");
-export const allBasketBaller = [
-    basketBaller,
-    basketBallerLightSkinTone,
-    basketBallerMediumLightSkinTone,
-    basketBallerMediumSkinTone,
-    basketBallerMediumDarkSkinTone,
-    basketBallerDarkSkinTone
-];
-export const allBasketBallerGroup = new EmojiGroup("\u26F9\uFE0F", "Basket Baller", ...allBasketBaller);
 export const basketBallerMale = new Emoji("\u26F9\uFE0F\u200D\u2642\uFE0F", "Basket Baller: Male");
 export const basketBallerLightSkinToneMale = new Emoji("\u26F9\uFE0F\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Basket Baller: Light Skin Tone: Male");
 export const basketBallerMediumLightSkinToneMale = new Emoji("\u26F9\uFE0F\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Basket Baller: Medium-Light Skin Tone: Male");
 export const basketBallerMediumSkinToneMale = new Emoji("\u26F9\uFE0F\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Basket Baller: Medium Skin Tone: Male");
 export const basketBallerMediumDarkSkinToneMale = new Emoji("\u26F9\uFE0F\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Basket Baller: Medium-Dark Skin Tone: Male");
 export const basketBallerDarkSkinToneMale = new Emoji("\u26F9\uFE0F\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Basket Baller: Dark Skin Tone: Male");
-export const allBasketBallerMale = [
-    basketBallerMale,
-    basketBallerLightSkinToneMale,
-    basketBallerMediumLightSkinToneMale,
-    basketBallerMediumSkinToneMale,
-    basketBallerMediumDarkSkinToneMale,
-    basketBallerDarkSkinToneMale
-];
-export const allBasketBallerMaleGroup = new EmojiGroup("\u26F9\uFE0F\u200D\u2642\uFE0F", "Basket Baller: Male", ...allBasketBallerMale);
 export const basketBallerFemale = new Emoji("\u26F9\uFE0F\u200D\u2640\uFE0F", "Basket Baller: Female");
 export const basketBallerLightSkinToneFemale = new Emoji("\u26F9\uFE0F\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Basket Baller: Light Skin Tone: Female");
 export const basketBallerMediumLightSkinToneFemale = new Emoji("\u26F9\uFE0F\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Basket Baller: Medium-Light Skin Tone: Female");
 export const basketBallerMediumSkinToneFemale = new Emoji("\u26F9\uFE0F\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Basket Baller: Medium Skin Tone: Female");
 export const basketBallerMediumDarkSkinToneFemale = new Emoji("\u26F9\uFE0F\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Basket Baller: Medium-Dark Skin Tone: Female");
 export const basketBallerDarkSkinToneFemale = new Emoji("\u26F9\uFE0F\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Basket Baller: Dark Skin Tone: Female");
-export const allBasketBallerFemale = [
-    basketBallerFemale,
-    basketBallerLightSkinToneFemale,
-    basketBallerMediumLightSkinToneFemale,
-    basketBallerMediumSkinToneFemale,
-    basketBallerMediumDarkSkinToneFemale,
-    basketBallerDarkSkinToneFemale
-];
-export const allBasketBallerFemaleGroup = new EmojiGroup("\u26F9\uFE0F\u200D\u2640\uFE0F", "Basket Baller: Female", ...allBasketBallerFemale);
-export const allAllBasketBallerGroup = [
-    allBasketBallerGroup,
-    allBasketBallerMaleGroup,
-    allBasketBallerFemaleGroup
-];
-export const allAllBasketBallerGroupGroup = new EmojiGroup("\u26F9\uFE0F", "Basket Baller", ...allAllBasketBallerGroup);
 export const weightLifter = new Emoji("\u{1F3CB}\uDFCB\uFE0F", "Weight Lifter");
 export const weightLifterLightSkinTone = new Emoji("\u{1F3CB}\uDFCB\uFE0F\u{1F3FB}\uDFFB", "Weight Lifter: Light Skin Tone");
 export const weightLifterMediumLightSkinTone = new Emoji("\u{1F3CB}\uDFCB\uFE0F\u{1F3FC}\uDFFC", "Weight Lifter: Medium-Light Skin Tone");
 export const weightLifterMediumSkinTone = new Emoji("\u{1F3CB}\uDFCB\uFE0F\u{1F3FD}\uDFFD", "Weight Lifter: Medium Skin Tone");
 export const weightLifterMediumDarkSkinTone = new Emoji("\u{1F3CB}\uDFCB\uFE0F\u{1F3FE}\uDFFE", "Weight Lifter: Medium-Dark Skin Tone");
 export const weightLifterDarkSkinTone = new Emoji("\u{1F3CB}\uDFCB\uFE0F\u{1F3FF}\uDFFF", "Weight Lifter: Dark Skin Tone");
-export const allWeightLifter = [
-    weightLifter,
-    weightLifterLightSkinTone,
-    weightLifterMediumLightSkinTone,
-    weightLifterMediumSkinTone,
-    weightLifterMediumDarkSkinTone,
-    weightLifterDarkSkinTone
-];
-export const allWeightLifterGroup = new EmojiGroup("\u{1F3CB}\uDFCB\uFE0F", "Weight Lifter", ...allWeightLifter);
 export const weightLifterMale = new Emoji("\u{1F3CB}\uDFCB\uFE0F\u200D\u2642\uFE0F", "Weight Lifter: Male");
 export const weightLifterLightSkinToneMale = new Emoji("\u{1F3CB}\uDFCB\uFE0F\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Weight Lifter: Light Skin Tone: Male");
 export const weightLifterMediumLightSkinToneMale = new Emoji("\u{1F3CB}\uDFCB\uFE0F\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Weight Lifter: Medium-Light Skin Tone: Male");
 export const weightLifterMediumSkinToneMale = new Emoji("\u{1F3CB}\uDFCB\uFE0F\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Weight Lifter: Medium Skin Tone: Male");
 export const weightLifterMediumDarkSkinToneMale = new Emoji("\u{1F3CB}\uDFCB\uFE0F\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Weight Lifter: Medium-Dark Skin Tone: Male");
 export const weightLifterDarkSkinToneMale = new Emoji("\u{1F3CB}\uDFCB\uFE0F\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Weight Lifter: Dark Skin Tone: Male");
-export const allWeightLifterMale = [
-    weightLifterMale,
-    weightLifterLightSkinToneMale,
-    weightLifterMediumLightSkinToneMale,
-    weightLifterMediumSkinToneMale,
-    weightLifterMediumDarkSkinToneMale,
-    weightLifterDarkSkinToneMale
-];
-export const allWeightLifterMaleGroup = new EmojiGroup("\u{1F3CB}\uDFCB\uFE0F\u200D\u2642\uFE0F", "Weight Lifter: Male", ...allWeightLifterMale);
 export const weightLifterFemale = new Emoji("\u{1F3CB}\uDFCB\uFE0F\u200D\u2640\uFE0F", "Weight Lifter: Female");
 export const weightLifterLightSkinToneFemale = new Emoji("\u{1F3CB}\uDFCB\uFE0F\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Weight Lifter: Light Skin Tone: Female");
 export const weightLifterMediumLightSkinToneFemale = new Emoji("\u{1F3CB}\uDFCB\uFE0F\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Weight Lifter: Medium-Light Skin Tone: Female");
 export const weightLifterMediumSkinToneFemale = new Emoji("\u{1F3CB}\uDFCB\uFE0F\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Weight Lifter: Medium Skin Tone: Female");
 export const weightLifterMediumDarkSkinToneFemale = new Emoji("\u{1F3CB}\uDFCB\uFE0F\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Weight Lifter: Medium-Dark Skin Tone: Female");
 export const weightLifterDarkSkinToneFemale = new Emoji("\u{1F3CB}\uDFCB\uFE0F\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Weight Lifter: Dark Skin Tone: Female");
-export const allWeightLifterFemale = [
-    weightLifterFemale,
-    weightLifterLightSkinToneFemale,
-    weightLifterMediumLightSkinToneFemale,
-    weightLifterMediumSkinToneFemale,
-    weightLifterMediumDarkSkinToneFemale,
-    weightLifterDarkSkinToneFemale
-];
-export const allWeightLifterFemaleGroup = new EmojiGroup("\u{1F3CB}\uDFCB\uFE0F\u200D\u2640\uFE0F", "Weight Lifter: Female", ...allWeightLifterFemale);
-export const allAllWeightLifterGroup = [
-    allWeightLifterGroup,
-    allWeightLifterMaleGroup,
-    allWeightLifterFemaleGroup
-];
-export const allAllWeightLifterGroupGroup = new EmojiGroup("\u{1F3CB}\uDFCB\uFE0F", "Weight Lifter", ...allAllWeightLifterGroup);
 export const biker = new Emoji("\u{1F6B4}\uDEB4", "Biker");
 export const bikerLightSkinTone = new Emoji("\u{1F6B4}\uDEB4\u{1F3FB}\uDFFB", "Biker: Light Skin Tone");
 export const bikerMediumLightSkinTone = new Emoji("\u{1F6B4}\uDEB4\u{1F3FC}\uDFFC", "Biker: Medium-Light Skin Tone");
 export const bikerMediumSkinTone = new Emoji("\u{1F6B4}\uDEB4\u{1F3FD}\uDFFD", "Biker: Medium Skin Tone");
 export const bikerMediumDarkSkinTone = new Emoji("\u{1F6B4}\uDEB4\u{1F3FE}\uDFFE", "Biker: Medium-Dark Skin Tone");
 export const bikerDarkSkinTone = new Emoji("\u{1F6B4}\uDEB4\u{1F3FF}\uDFFF", "Biker: Dark Skin Tone");
-export const allBiker = [
-    biker,
-    bikerLightSkinTone,
-    bikerMediumLightSkinTone,
-    bikerMediumSkinTone,
-    bikerMediumDarkSkinTone,
-    bikerDarkSkinTone
-];
-export const allBikerGroup = new EmojiGroup("\u{1F6B4}\uDEB4", "Biker", ...allBiker);
 export const bikerMale = new Emoji("\u{1F6B4}\uDEB4\u200D\u2642\uFE0F", "Biker: Male");
 export const bikerLightSkinToneMale = new Emoji("\u{1F6B4}\uDEB4\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Biker: Light Skin Tone: Male");
 export const bikerMediumLightSkinToneMale = new Emoji("\u{1F6B4}\uDEB4\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Biker: Medium-Light Skin Tone: Male");
 export const bikerMediumSkinToneMale = new Emoji("\u{1F6B4}\uDEB4\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Biker: Medium Skin Tone: Male");
 export const bikerMediumDarkSkinToneMale = new Emoji("\u{1F6B4}\uDEB4\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Biker: Medium-Dark Skin Tone: Male");
 export const bikerDarkSkinToneMale = new Emoji("\u{1F6B4}\uDEB4\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Biker: Dark Skin Tone: Male");
-export const allBikerMale = [
-    bikerMale,
-    bikerLightSkinToneMale,
-    bikerMediumLightSkinToneMale,
-    bikerMediumSkinToneMale,
-    bikerMediumDarkSkinToneMale,
-    bikerDarkSkinToneMale
-];
-export const allBikerMaleGroup = new EmojiGroup("\u{1F6B4}\uDEB4\u200D\u2642\uFE0F", "Biker: Male", ...allBikerMale);
 export const bikerFemale = new Emoji("\u{1F6B4}\uDEB4\u200D\u2640\uFE0F", "Biker: Female");
 export const bikerLightSkinToneFemale = new Emoji("\u{1F6B4}\uDEB4\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Biker: Light Skin Tone: Female");
 export const bikerMediumLightSkinToneFemale = new Emoji("\u{1F6B4}\uDEB4\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Biker: Medium-Light Skin Tone: Female");
 export const bikerMediumSkinToneFemale = new Emoji("\u{1F6B4}\uDEB4\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Biker: Medium Skin Tone: Female");
 export const bikerMediumDarkSkinToneFemale = new Emoji("\u{1F6B4}\uDEB4\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Biker: Medium-Dark Skin Tone: Female");
 export const bikerDarkSkinToneFemale = new Emoji("\u{1F6B4}\uDEB4\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Biker: Dark Skin Tone: Female");
-export const allBikerFemale = [
-    bikerFemale,
-    bikerLightSkinToneFemale,
-    bikerMediumLightSkinToneFemale,
-    bikerMediumSkinToneFemale,
-    bikerMediumDarkSkinToneFemale,
-    bikerDarkSkinToneFemale
-];
-export const allBikerFemaleGroup = new EmojiGroup("\u{1F6B4}\uDEB4\u200D\u2640\uFE0F", "Biker: Female", ...allBikerFemale);
-export const allAllBikerGroup = [
-    allBikerGroup,
-    allBikerMaleGroup,
-    allBikerFemaleGroup
-];
-export const allAllBikerGroupGroup = new EmojiGroup("\u{1F6B4}\uDEB4", "Biker", ...allAllBikerGroup);
 export const mountainBiker = new Emoji("\u{1F6B5}\uDEB5", "Mountain Biker");
 export const mountainBikerLightSkinTone = new Emoji("\u{1F6B5}\uDEB5\u{1F3FB}\uDFFB", "Mountain Biker: Light Skin Tone");
 export const mountainBikerMediumLightSkinTone = new Emoji("\u{1F6B5}\uDEB5\u{1F3FC}\uDFFC", "Mountain Biker: Medium-Light Skin Tone");
 export const mountainBikerMediumSkinTone = new Emoji("\u{1F6B5}\uDEB5\u{1F3FD}\uDFFD", "Mountain Biker: Medium Skin Tone");
 export const mountainBikerMediumDarkSkinTone = new Emoji("\u{1F6B5}\uDEB5\u{1F3FE}\uDFFE", "Mountain Biker: Medium-Dark Skin Tone");
 export const mountainBikerDarkSkinTone = new Emoji("\u{1F6B5}\uDEB5\u{1F3FF}\uDFFF", "Mountain Biker: Dark Skin Tone");
-export const allMountainBiker = [
-    mountainBiker,
-    mountainBikerLightSkinTone,
-    mountainBikerMediumLightSkinTone,
-    mountainBikerMediumSkinTone,
-    mountainBikerMediumDarkSkinTone,
-    mountainBikerDarkSkinTone
-];
-export const allMountainBikerGroup = new EmojiGroup("\u{1F6B5}\uDEB5", "Mountain Biker", ...allMountainBiker);
 export const mountainBikerMale = new Emoji("\u{1F6B5}\uDEB5\u200D\u2642\uFE0F", "Mountain Biker: Male");
 export const mountainBikerLightSkinToneMale = new Emoji("\u{1F6B5}\uDEB5\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Mountain Biker: Light Skin Tone: Male");
 export const mountainBikerMediumLightSkinToneMale = new Emoji("\u{1F6B5}\uDEB5\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Mountain Biker: Medium-Light Skin Tone: Male");
 export const mountainBikerMediumSkinToneMale = new Emoji("\u{1F6B5}\uDEB5\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Mountain Biker: Medium Skin Tone: Male");
 export const mountainBikerMediumDarkSkinToneMale = new Emoji("\u{1F6B5}\uDEB5\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Mountain Biker: Medium-Dark Skin Tone: Male");
 export const mountainBikerDarkSkinToneMale = new Emoji("\u{1F6B5}\uDEB5\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Mountain Biker: Dark Skin Tone: Male");
-export const allMountainBikerMale = [
-    mountainBikerMale,
-    mountainBikerLightSkinToneMale,
-    mountainBikerMediumLightSkinToneMale,
-    mountainBikerMediumSkinToneMale,
-    mountainBikerMediumDarkSkinToneMale,
-    mountainBikerDarkSkinToneMale
-];
-export const allMountainBikerMaleGroup = new EmojiGroup("\u{1F6B5}\uDEB5\u200D\u2642\uFE0F", "Mountain Biker: Male", ...allMountainBikerMale);
 export const mountainBikerFemale = new Emoji("\u{1F6B5}\uDEB5\u200D\u2640\uFE0F", "Mountain Biker: Female");
 export const mountainBikerLightSkinToneFemale = new Emoji("\u{1F6B5}\uDEB5\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Mountain Biker: Light Skin Tone: Female");
 export const mountainBikerMediumLightSkinToneFemale = new Emoji("\u{1F6B5}\uDEB5\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Mountain Biker: Medium-Light Skin Tone: Female");
 export const mountainBikerMediumSkinToneFemale = new Emoji("\u{1F6B5}\uDEB5\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Mountain Biker: Medium Skin Tone: Female");
 export const mountainBikerMediumDarkSkinToneFemale = new Emoji("\u{1F6B5}\uDEB5\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Mountain Biker: Medium-Dark Skin Tone: Female");
 export const mountainBikerDarkSkinToneFemale = new Emoji("\u{1F6B5}\uDEB5\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Mountain Biker: Dark Skin Tone: Female");
-export const allMountainBikerFemale = [
-    mountainBikerFemale,
-    mountainBikerLightSkinToneFemale,
-    mountainBikerMediumLightSkinToneFemale,
-    mountainBikerMediumSkinToneFemale,
-    mountainBikerMediumDarkSkinToneFemale,
-    mountainBikerDarkSkinToneFemale
-];
-export const allMountainBikerFemaleGroup = new EmojiGroup("\u{1F6B5}\uDEB5\u200D\u2640\uFE0F", "Mountain Biker: Female", ...allMountainBikerFemale);
-export const allAllMountainBikerGroup = [
-    allMountainBikerGroup,
-    allMountainBikerMaleGroup,
-    allMountainBikerFemaleGroup
-];
-export const allAllMountainBikerGroupGroup = new EmojiGroup("\u{1F6B5}\uDEB5", "Mountain Biker", ...allAllMountainBikerGroup);
 export const cartwheeler = new Emoji("\u{1F938}\uDD38", "Cartwheeler");
 export const cartwheelerLightSkinTone = new Emoji("\u{1F938}\uDD38\u{1F3FB}\uDFFB", "Cartwheeler: Light Skin Tone");
 export const cartwheelerMediumLightSkinTone = new Emoji("\u{1F938}\uDD38\u{1F3FC}\uDFFC", "Cartwheeler: Medium-Light Skin Tone");
 export const cartwheelerMediumSkinTone = new Emoji("\u{1F938}\uDD38\u{1F3FD}\uDFFD", "Cartwheeler: Medium Skin Tone");
 export const cartwheelerMediumDarkSkinTone = new Emoji("\u{1F938}\uDD38\u{1F3FE}\uDFFE", "Cartwheeler: Medium-Dark Skin Tone");
 export const cartwheelerDarkSkinTone = new Emoji("\u{1F938}\uDD38\u{1F3FF}\uDFFF", "Cartwheeler: Dark Skin Tone");
-export const allCartwheeler = [
-    cartwheeler,
-    cartwheelerLightSkinTone,
-    cartwheelerMediumLightSkinTone,
-    cartwheelerMediumSkinTone,
-    cartwheelerMediumDarkSkinTone,
-    cartwheelerDarkSkinTone
-];
-export const allCartwheelerGroup = new EmojiGroup("\u{1F938}\uDD38", "Cartwheeler", ...allCartwheeler);
 export const cartwheelerMale = new Emoji("\u{1F938}\uDD38\u200D\u2642\uFE0F", "Cartwheeler: Male");
 export const cartwheelerLightSkinToneMale = new Emoji("\u{1F938}\uDD38\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Cartwheeler: Light Skin Tone: Male");
 export const cartwheelerMediumLightSkinToneMale = new Emoji("\u{1F938}\uDD38\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Cartwheeler: Medium-Light Skin Tone: Male");
 export const cartwheelerMediumSkinToneMale = new Emoji("\u{1F938}\uDD38\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Cartwheeler: Medium Skin Tone: Male");
 export const cartwheelerMediumDarkSkinToneMale = new Emoji("\u{1F938}\uDD38\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Cartwheeler: Medium-Dark Skin Tone: Male");
 export const cartwheelerDarkSkinToneMale = new Emoji("\u{1F938}\uDD38\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Cartwheeler: Dark Skin Tone: Male");
-export const allCartwheelerMale = [
-    cartwheelerMale,
-    cartwheelerLightSkinToneMale,
-    cartwheelerMediumLightSkinToneMale,
-    cartwheelerMediumSkinToneMale,
-    cartwheelerMediumDarkSkinToneMale,
-    cartwheelerDarkSkinToneMale
-];
-export const allCartwheelerMaleGroup = new EmojiGroup("\u{1F938}\uDD38\u200D\u2642\uFE0F", "Cartwheeler: Male", ...allCartwheelerMale);
 export const cartwheelerFemale = new Emoji("\u{1F938}\uDD38\u200D\u2640\uFE0F", "Cartwheeler: Female");
 export const cartwheelerLightSkinToneFemale = new Emoji("\u{1F938}\uDD38\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Cartwheeler: Light Skin Tone: Female");
 export const cartwheelerMediumLightSkinToneFemale = new Emoji("\u{1F938}\uDD38\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Cartwheeler: Medium-Light Skin Tone: Female");
 export const cartwheelerMediumSkinToneFemale = new Emoji("\u{1F938}\uDD38\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Cartwheeler: Medium Skin Tone: Female");
 export const cartwheelerMediumDarkSkinToneFemale = new Emoji("\u{1F938}\uDD38\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Cartwheeler: Medium-Dark Skin Tone: Female");
 export const cartwheelerDarkSkinToneFemale = new Emoji("\u{1F938}\uDD38\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Cartwheeler: Dark Skin Tone: Female");
-export const allCartwheelerFemale = [
-    cartwheelerFemale,
-    cartwheelerLightSkinToneFemale,
-    cartwheelerMediumLightSkinToneFemale,
-    cartwheelerMediumSkinToneFemale,
-    cartwheelerMediumDarkSkinToneFemale,
-    cartwheelerDarkSkinToneFemale
-];
-export const allCartwheelerFemaleGroup = new EmojiGroup("\u{1F938}\uDD38\u200D\u2640\uFE0F", "Cartwheeler: Female", ...allCartwheelerFemale);
-export const allAllCartwheelerGroup = [
-    allCartwheelerGroup,
-    allCartwheelerMaleGroup,
-    allCartwheelerFemaleGroup
-];
-export const allAllCartwheelerGroupGroup = new EmojiGroup("\u{1F938}\uDD38", "Cartwheeler", ...allAllCartwheelerGroup);
 export const wrestler = new Emoji("\u{1F93C}\uDD3C", "Wrestler");
 export const wrestlerMale = new Emoji("\u{1F93C}\uDD3C\u200D\u2642\uFE0F", "Wrestler: Male");
 export const wrestlerFemale = new Emoji("\u{1F93C}\uDD3C\u200D\u2640\uFE0F", "Wrestler: Female");
-export const allWrestler = [
-    wrestler,
-    wrestlerMale,
-    wrestlerFemale
-];
-export const allWrestlerGroup = new EmojiGroup("\u{1F93C}\uDD3C", "Wrestler", ...allWrestler);
 export const waterPoloPlayer = new Emoji("\u{1F93D}\uDD3D", "Water Polo Player");
 export const waterPoloPlayerLightSkinTone = new Emoji("\u{1F93D}\uDD3D\u{1F3FB}\uDFFB", "Water Polo Player: Light Skin Tone");
 export const waterPoloPlayerMediumLightSkinTone = new Emoji("\u{1F93D}\uDD3D\u{1F3FC}\uDFFC", "Water Polo Player: Medium-Light Skin Tone");
 export const waterPoloPlayerMediumSkinTone = new Emoji("\u{1F93D}\uDD3D\u{1F3FD}\uDFFD", "Water Polo Player: Medium Skin Tone");
 export const waterPoloPlayerMediumDarkSkinTone = new Emoji("\u{1F93D}\uDD3D\u{1F3FE}\uDFFE", "Water Polo Player: Medium-Dark Skin Tone");
 export const waterPoloPlayerDarkSkinTone = new Emoji("\u{1F93D}\uDD3D\u{1F3FF}\uDFFF", "Water Polo Player: Dark Skin Tone");
-export const allWaterPoloPlayer = [
-    waterPoloPlayer,
-    waterPoloPlayerLightSkinTone,
-    waterPoloPlayerMediumLightSkinTone,
-    waterPoloPlayerMediumSkinTone,
-    waterPoloPlayerMediumDarkSkinTone,
-    waterPoloPlayerDarkSkinTone
-];
-export const allWaterPoloPlayerGroup = new EmojiGroup("\u{1F93D}\uDD3D", "Water Polo Player", ...allWaterPoloPlayer);
 export const waterPoloPlayerMale = new Emoji("\u{1F93D}\uDD3D\u200D\u2642\uFE0F", "Water Polo Player: Male");
 export const waterPoloPlayerLightSkinToneMale = new Emoji("\u{1F93D}\uDD3D\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Water Polo Player: Light Skin Tone: Male");
 export const waterPoloPlayerMediumLightSkinToneMale = new Emoji("\u{1F93D}\uDD3D\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Water Polo Player: Medium-Light Skin Tone: Male");
 export const waterPoloPlayerMediumSkinToneMale = new Emoji("\u{1F93D}\uDD3D\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Water Polo Player: Medium Skin Tone: Male");
 export const waterPoloPlayerMediumDarkSkinToneMale = new Emoji("\u{1F93D}\uDD3D\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Water Polo Player: Medium-Dark Skin Tone: Male");
 export const waterPoloPlayerDarkSkinToneMale = new Emoji("\u{1F93D}\uDD3D\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Water Polo Player: Dark Skin Tone: Male");
-export const allWaterPoloPlayerMale = [
-    waterPoloPlayerMale,
-    waterPoloPlayerLightSkinToneMale,
-    waterPoloPlayerMediumLightSkinToneMale,
-    waterPoloPlayerMediumSkinToneMale,
-    waterPoloPlayerMediumDarkSkinToneMale,
-    waterPoloPlayerDarkSkinToneMale
-];
-export const allWaterPoloPlayerMaleGroup = new EmojiGroup("\u{1F93D}\uDD3D\u200D\u2642\uFE0F", "Water Polo Player: Male", ...allWaterPoloPlayerMale);
 export const waterPoloPlayerFemale = new Emoji("\u{1F93D}\uDD3D\u200D\u2640\uFE0F", "Water Polo Player: Female");
 export const waterPoloPlayerLightSkinToneFemale = new Emoji("\u{1F93D}\uDD3D\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Water Polo Player: Light Skin Tone: Female");
 export const waterPoloPlayerMediumLightSkinToneFemale = new Emoji("\u{1F93D}\uDD3D\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Water Polo Player: Medium-Light Skin Tone: Female");
 export const waterPoloPlayerMediumSkinToneFemale = new Emoji("\u{1F93D}\uDD3D\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Water Polo Player: Medium Skin Tone: Female");
 export const waterPoloPlayerMediumDarkSkinToneFemale = new Emoji("\u{1F93D}\uDD3D\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Water Polo Player: Medium-Dark Skin Tone: Female");
 export const waterPoloPlayerDarkSkinToneFemale = new Emoji("\u{1F93D}\uDD3D\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Water Polo Player: Dark Skin Tone: Female");
-export const allWaterPoloPlayerFemale = [
-    waterPoloPlayerFemale,
-    waterPoloPlayerLightSkinToneFemale,
-    waterPoloPlayerMediumLightSkinToneFemale,
-    waterPoloPlayerMediumSkinToneFemale,
-    waterPoloPlayerMediumDarkSkinToneFemale,
-    waterPoloPlayerDarkSkinToneFemale
-];
-export const allWaterPoloPlayerFemaleGroup = new EmojiGroup("\u{1F93D}\uDD3D\u200D\u2640\uFE0F", "Water Polo Player: Female", ...allWaterPoloPlayerFemale);
-export const allAllWaterPoloPlayerGroup = [
-    allWaterPoloPlayerGroup,
-    allWaterPoloPlayerMaleGroup,
-    allWaterPoloPlayerFemaleGroup
-];
-export const allAllWaterPoloPlayerGroupGroup = new EmojiGroup("\u{1F93D}\uDD3D", "Water Polo Player", ...allAllWaterPoloPlayerGroup);
 export const handBaller = new Emoji("\u{1F93E}\uDD3E", "Hand Baller");
 export const handBallerLightSkinTone = new Emoji("\u{1F93E}\uDD3E\u{1F3FB}\uDFFB", "Hand Baller: Light Skin Tone");
 export const handBallerMediumLightSkinTone = new Emoji("\u{1F93E}\uDD3E\u{1F3FC}\uDFFC", "Hand Baller: Medium-Light Skin Tone");
 export const handBallerMediumSkinTone = new Emoji("\u{1F93E}\uDD3E\u{1F3FD}\uDFFD", "Hand Baller: Medium Skin Tone");
 export const handBallerMediumDarkSkinTone = new Emoji("\u{1F93E}\uDD3E\u{1F3FE}\uDFFE", "Hand Baller: Medium-Dark Skin Tone");
 export const handBallerDarkSkinTone = new Emoji("\u{1F93E}\uDD3E\u{1F3FF}\uDFFF", "Hand Baller: Dark Skin Tone");
-export const allHandBaller = [
-    handBaller,
-    handBallerLightSkinTone,
-    handBallerMediumLightSkinTone,
-    handBallerMediumSkinTone,
-    handBallerMediumDarkSkinTone,
-    handBallerDarkSkinTone
-];
-export const allHandBallerGroup = new EmojiGroup("\u{1F93E}\uDD3E", "Hand Baller", ...allHandBaller);
 export const handBallerMale = new Emoji("\u{1F93E}\uDD3E\u200D\u2642\uFE0F", "Hand Baller: Male");
 export const handBallerLightSkinToneMale = new Emoji("\u{1F93E}\uDD3E\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "Hand Baller: Light Skin Tone: Male");
 export const handBallerMediumLightSkinToneMale = new Emoji("\u{1F93E}\uDD3E\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "Hand Baller: Medium-Light Skin Tone: Male");
 export const handBallerMediumSkinToneMale = new Emoji("\u{1F93E}\uDD3E\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "Hand Baller: Medium Skin Tone: Male");
 export const handBallerMediumDarkSkinToneMale = new Emoji("\u{1F93E}\uDD3E\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "Hand Baller: Medium-Dark Skin Tone: Male");
 export const handBallerDarkSkinToneMale = new Emoji("\u{1F93E}\uDD3E\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "Hand Baller: Dark Skin Tone: Male");
-export const allHandBallerMale = [
-    handBallerMale,
-    handBallerLightSkinToneMale,
-    handBallerMediumLightSkinToneMale,
-    handBallerMediumSkinToneMale,
-    handBallerMediumDarkSkinToneMale,
-    handBallerDarkSkinToneMale
-];
-export const allHandBallerMaleGroup = new EmojiGroup("\u{1F93E}\uDD3E\u200D\u2642\uFE0F", "Hand Baller: Male", ...allHandBallerMale);
 export const handBallerFemale = new Emoji("\u{1F93E}\uDD3E\u200D\u2640\uFE0F", "Hand Baller: Female");
 export const handBallerLightSkinToneFemale = new Emoji("\u{1F93E}\uDD3E\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "Hand Baller: Light Skin Tone: Female");
 export const handBallerMediumLightSkinToneFemale = new Emoji("\u{1F93E}\uDD3E\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "Hand Baller: Medium-Light Skin Tone: Female");
 export const handBallerMediumSkinToneFemale = new Emoji("\u{1F93E}\uDD3E\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "Hand Baller: Medium Skin Tone: Female");
 export const handBallerMediumDarkSkinToneFemale = new Emoji("\u{1F93E}\uDD3E\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "Hand Baller: Medium-Dark Skin Tone: Female");
 export const handBallerDarkSkinToneFemale = new Emoji("\u{1F93E}\uDD3E\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "Hand Baller: Dark Skin Tone: Female");
-export const allHandBallerFemale = [
-    handBallerFemale,
-    handBallerLightSkinToneFemale,
-    handBallerMediumLightSkinToneFemale,
-    handBallerMediumSkinToneFemale,
-    handBallerMediumDarkSkinToneFemale,
-    handBallerDarkSkinToneFemale
-];
-export const allHandBallerFemaleGroup = new EmojiGroup("\u{1F93E}\uDD3E\u200D\u2640\uFE0F", "Hand Baller: Female", ...allHandBallerFemale);
-export const allAllHandBallerGroup = [
-    allHandBallerGroup,
-    allHandBallerMaleGroup,
-    allHandBallerFemaleGroup
-];
-export const allAllHandBallerGroupGroup = new EmojiGroup("\u{1F93E}\uDD3E", "Hand Baller", ...allAllHandBallerGroup);
-export const allAllAllWalkingGroupGroup = [
-    allAllWalkingGroupGroup,
-    allAllStandingGroupGroup,
-    allAllKneelingGroupGroup,
-    allProbingCaneGroup,
-    allMotorizedWheelchairGroup,
-    allManualWheelchairGroup,
-    allAllManDancingGroupGroup,
-    allAllJugglerGroupGroup,
-    allAllClimberGroupGroup,
-    fencer,
-    allJockeyGroup,
-    skier,
-    allSnowboarderGroup,
-    allAllGolferGroupGroup,
-    allAllSurfingGroupGroup,
-    allAllRowingBoatGroupGroup,
-    allAllSwimmingGroupGroup,
-    allAllRunningGroupGroup,
-    allAllBasketBallerGroupGroup,
-    allAllWeightLifterGroupGroup,
-    allAllBikerGroupGroup,
-    allAllMountainBikerGroupGroup,
-    allAllCartwheelerGroupGroup,
-    allWrestlerGroup,
-    allAllWaterPoloPlayerGroupGroup,
-    allAllHandBallerGroupGroup
-];
-export const allAllAllWalkingGroupGroupGroup = new EmojiGroup("\u0049\u006E\u0020\u004D\u006F\u0074\u0069\u006F\u006E", "Depictions of people in motion", ...allAllAllWalkingGroupGroup);
 export const inLotusPosition = new Emoji("\u{1F9D8}\uDDD8", "In Lotus Position");
 export const inLotusPositionLightSkinTone = new Emoji("\u{1F9D8}\uDDD8\u{1F3FB}\uDFFB", "In Lotus Position: Light Skin Tone");
 export const inLotusPositionMediumLightSkinTone = new Emoji("\u{1F9D8}\uDDD8\u{1F3FC}\uDFFC", "In Lotus Position: Medium-Light Skin Tone");
 export const inLotusPositionMediumSkinTone = new Emoji("\u{1F9D8}\uDDD8\u{1F3FD}\uDFFD", "In Lotus Position: Medium Skin Tone");
 export const inLotusPositionMediumDarkSkinTone = new Emoji("\u{1F9D8}\uDDD8\u{1F3FE}\uDFFE", "In Lotus Position: Medium-Dark Skin Tone");
 export const inLotusPositionDarkSkinTone = new Emoji("\u{1F9D8}\uDDD8\u{1F3FF}\uDFFF", "In Lotus Position: Dark Skin Tone");
-export const allInLotusPosition = [
-    inLotusPosition,
-    inLotusPositionLightSkinTone,
-    inLotusPositionMediumLightSkinTone,
-    inLotusPositionMediumSkinTone,
-    inLotusPositionMediumDarkSkinTone,
-    inLotusPositionDarkSkinTone
-];
-export const allInLotusPositionGroup = new EmojiGroup("\u{1F9D8}\uDDD8", "In Lotus Position", ...allInLotusPosition);
 export const inLotusPositionMale = new Emoji("\u{1F9D8}\uDDD8\u200D\u2642\uFE0F", "In Lotus Position: Male");
 export const inLotusPositionLightSkinToneMale = new Emoji("\u{1F9D8}\uDDD8\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "In Lotus Position: Light Skin Tone: Male");
 export const inLotusPositionMediumLightSkinToneMale = new Emoji("\u{1F9D8}\uDDD8\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "In Lotus Position: Medium-Light Skin Tone: Male");
 export const inLotusPositionMediumSkinToneMale = new Emoji("\u{1F9D8}\uDDD8\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "In Lotus Position: Medium Skin Tone: Male");
 export const inLotusPositionMediumDarkSkinToneMale = new Emoji("\u{1F9D8}\uDDD8\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "In Lotus Position: Medium-Dark Skin Tone: Male");
 export const inLotusPositionDarkSkinToneMale = new Emoji("\u{1F9D8}\uDDD8\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "In Lotus Position: Dark Skin Tone: Male");
-export const allInLotusPositionMale = [
-    inLotusPositionMale,
-    inLotusPositionLightSkinToneMale,
-    inLotusPositionMediumLightSkinToneMale,
-    inLotusPositionMediumSkinToneMale,
-    inLotusPositionMediumDarkSkinToneMale,
-    inLotusPositionDarkSkinToneMale
-];
-export const allInLotusPositionMaleGroup = new EmojiGroup("\u{1F9D8}\uDDD8\u200D\u2642\uFE0F", "In Lotus Position: Male", ...allInLotusPositionMale);
 export const inLotusPositionFemale = new Emoji("\u{1F9D8}\uDDD8\u200D\u2640\uFE0F", "In Lotus Position: Female");
 export const inLotusPositionLightSkinToneFemale = new Emoji("\u{1F9D8}\uDDD8\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "In Lotus Position: Light Skin Tone: Female");
 export const inLotusPositionMediumLightSkinToneFemale = new Emoji("\u{1F9D8}\uDDD8\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "In Lotus Position: Medium-Light Skin Tone: Female");
 export const inLotusPositionMediumSkinToneFemale = new Emoji("\u{1F9D8}\uDDD8\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "In Lotus Position: Medium Skin Tone: Female");
 export const inLotusPositionMediumDarkSkinToneFemale = new Emoji("\u{1F9D8}\uDDD8\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "In Lotus Position: Medium-Dark Skin Tone: Female");
 export const inLotusPositionDarkSkinToneFemale = new Emoji("\u{1F9D8}\uDDD8\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "In Lotus Position: Dark Skin Tone: Female");
-export const allInLotusPositionFemale = [
-    inLotusPositionFemale,
-    inLotusPositionLightSkinToneFemale,
-    inLotusPositionMediumLightSkinToneFemale,
-    inLotusPositionMediumSkinToneFemale,
-    inLotusPositionMediumDarkSkinToneFemale,
-    inLotusPositionDarkSkinToneFemale
-];
-export const allInLotusPositionFemaleGroup = new EmojiGroup("\u{1F9D8}\uDDD8\u200D\u2640\uFE0F", "In Lotus Position: Female", ...allInLotusPositionFemale);
-export const allAllInLotusPositionGroup = [
-    allInLotusPositionGroup,
-    allInLotusPositionMaleGroup,
-    allInLotusPositionFemaleGroup
-];
-export const allAllInLotusPositionGroupGroup = new EmojiGroup("\u{1F9D8}\uDDD8", "In Lotus Position", ...allAllInLotusPositionGroup);
 export const inBath = new Emoji("\u{1F6C0}\uDEC0", "In Bath");
 export const inBathLightSkinTone = new Emoji("\u{1F6C0}\uDEC0\u{1F3FB}\uDFFB", "In Bath: Light Skin Tone");
 export const inBathMediumLightSkinTone = new Emoji("\u{1F6C0}\uDEC0\u{1F3FC}\uDFFC", "In Bath: Medium-Light Skin Tone");
 export const inBathMediumSkinTone = new Emoji("\u{1F6C0}\uDEC0\u{1F3FD}\uDFFD", "In Bath: Medium Skin Tone");
 export const inBathMediumDarkSkinTone = new Emoji("\u{1F6C0}\uDEC0\u{1F3FE}\uDFFE", "In Bath: Medium-Dark Skin Tone");
 export const inBathDarkSkinTone = new Emoji("\u{1F6C0}\uDEC0\u{1F3FF}\uDFFF", "In Bath: Dark Skin Tone");
-export const allInBath = [
-    inBath,
-    inBathLightSkinTone,
-    inBathMediumLightSkinTone,
-    inBathMediumSkinTone,
-    inBathMediumDarkSkinTone,
-    inBathDarkSkinTone
-];
-export const allInBathGroup = new EmojiGroup("\u{1F6C0}\uDEC0", "In Bath", ...allInBath);
 export const inBed = new Emoji("\u{1F6CC}\uDECC", "In Bed");
 export const inBedLightSkinTone = new Emoji("\u{1F6CC}\uDECC\u{1F3FB}\uDFFB", "In Bed: Light Skin Tone");
 export const inBedMediumLightSkinTone = new Emoji("\u{1F6CC}\uDECC\u{1F3FC}\uDFFC", "In Bed: Medium-Light Skin Tone");
 export const inBedMediumSkinTone = new Emoji("\u{1F6CC}\uDECC\u{1F3FD}\uDFFD", "In Bed: Medium Skin Tone");
 export const inBedMediumDarkSkinTone = new Emoji("\u{1F6CC}\uDECC\u{1F3FE}\uDFFE", "In Bed: Medium-Dark Skin Tone");
 export const inBedDarkSkinTone = new Emoji("\u{1F6CC}\uDECC\u{1F3FF}\uDFFF", "In Bed: Dark Skin Tone");
-export const allInBed = [
-    inBed,
-    inBedLightSkinTone,
-    inBedMediumLightSkinTone,
-    inBedMediumSkinTone,
-    inBedMediumDarkSkinTone,
-    inBedDarkSkinTone
-];
-export const allInBedGroup = new EmojiGroup("\u{1F6CC}\uDECC", "In Bed", ...allInBed);
 export const inSauna = new Emoji("\u{1F9D6}\uDDD6", "In Sauna");
 export const inSaunaLightSkinTone = new Emoji("\u{1F9D6}\uDDD6\u{1F3FB}\uDFFB", "In Sauna: Light Skin Tone");
 export const inSaunaMediumLightSkinTone = new Emoji("\u{1F9D6}\uDDD6\u{1F3FC}\uDFFC", "In Sauna: Medium-Light Skin Tone");
 export const inSaunaMediumSkinTone = new Emoji("\u{1F9D6}\uDDD6\u{1F3FD}\uDFFD", "In Sauna: Medium Skin Tone");
 export const inSaunaMediumDarkSkinTone = new Emoji("\u{1F9D6}\uDDD6\u{1F3FE}\uDFFE", "In Sauna: Medium-Dark Skin Tone");
 export const inSaunaDarkSkinTone = new Emoji("\u{1F9D6}\uDDD6\u{1F3FF}\uDFFF", "In Sauna: Dark Skin Tone");
-export const allInSauna = [
-    inSauna,
-    inSaunaLightSkinTone,
-    inSaunaMediumLightSkinTone,
-    inSaunaMediumSkinTone,
-    inSaunaMediumDarkSkinTone,
-    inSaunaDarkSkinTone
-];
-export const allInSaunaGroup = new EmojiGroup("\u{1F9D6}\uDDD6", "In Sauna", ...allInSauna);
 export const inSaunaMale = new Emoji("\u{1F9D6}\uDDD6\u200D\u2642\uFE0F", "In Sauna: Male");
 export const inSaunaLightSkinToneMale = new Emoji("\u{1F9D6}\uDDD6\u{1F3FB}\uDFFB\u200D\u2642\uFE0F", "In Sauna: Light Skin Tone: Male");
 export const inSaunaMediumLightSkinToneMale = new Emoji("\u{1F9D6}\uDDD6\u{1F3FC}\uDFFC\u200D\u2642\uFE0F", "In Sauna: Medium-Light Skin Tone: Male");
 export const inSaunaMediumSkinToneMale = new Emoji("\u{1F9D6}\uDDD6\u{1F3FD}\uDFFD\u200D\u2642\uFE0F", "In Sauna: Medium Skin Tone: Male");
 export const inSaunaMediumDarkSkinToneMale = new Emoji("\u{1F9D6}\uDDD6\u{1F3FE}\uDFFE\u200D\u2642\uFE0F", "In Sauna: Medium-Dark Skin Tone: Male");
 export const inSaunaDarkSkinToneMale = new Emoji("\u{1F9D6}\uDDD6\u{1F3FF}\uDFFF\u200D\u2642\uFE0F", "In Sauna: Dark Skin Tone: Male");
-export const allInSaunaMale = [
-    inSaunaMale,
-    inSaunaLightSkinToneMale,
-    inSaunaMediumLightSkinToneMale,
-    inSaunaMediumSkinToneMale,
-    inSaunaMediumDarkSkinToneMale,
-    inSaunaDarkSkinToneMale
-];
-export const allInSaunaMaleGroup = new EmojiGroup("\u{1F9D6}\uDDD6\u200D\u2642\uFE0F", "In Sauna: Male", ...allInSaunaMale);
 export const inSaunaFemale = new Emoji("\u{1F9D6}\uDDD6\u200D\u2640\uFE0F", "In Sauna: Female");
 export const inSaunaLightSkinToneFemale = new Emoji("\u{1F9D6}\uDDD6\u{1F3FB}\uDFFB\u200D\u2640\uFE0F", "In Sauna: Light Skin Tone: Female");
 export const inSaunaMediumLightSkinToneFemale = new Emoji("\u{1F9D6}\uDDD6\u{1F3FC}\uDFFC\u200D\u2640\uFE0F", "In Sauna: Medium-Light Skin Tone: Female");
 export const inSaunaMediumSkinToneFemale = new Emoji("\u{1F9D6}\uDDD6\u{1F3FD}\uDFFD\u200D\u2640\uFE0F", "In Sauna: Medium Skin Tone: Female");
 export const inSaunaMediumDarkSkinToneFemale = new Emoji("\u{1F9D6}\uDDD6\u{1F3FE}\uDFFE\u200D\u2640\uFE0F", "In Sauna: Medium-Dark Skin Tone: Female");
 export const inSaunaDarkSkinToneFemale = new Emoji("\u{1F9D6}\uDDD6\u{1F3FF}\uDFFF\u200D\u2640\uFE0F", "In Sauna: Dark Skin Tone: Female");
-export const allInSaunaFemale = [
-    inSaunaFemale,
-    inSaunaLightSkinToneFemale,
-    inSaunaMediumLightSkinToneFemale,
-    inSaunaMediumSkinToneFemale,
-    inSaunaMediumDarkSkinToneFemale,
-    inSaunaDarkSkinToneFemale
-];
-export const allInSaunaFemaleGroup = new EmojiGroup("\u{1F9D6}\uDDD6\u200D\u2640\uFE0F", "In Sauna: Female", ...allInSaunaFemale);
-export const allAllInSaunaGroup = [
-    allInSaunaGroup,
-    allInSaunaMaleGroup,
-    allInSaunaFemaleGroup
-];
-export const allAllInSaunaGroupGroup = new EmojiGroup("\u{1F9D6}\uDDD6", "In Sauna", ...allAllInSaunaGroup);
-export const allAllAllInLotusPositionGroupGroup = [
-    allAllInLotusPositionGroupGroup,
-    allInBathGroup,
-    allInBedGroup,
-    allAllInSaunaGroupGroup
-];
-export const allAllAllInLotusPositionGroupGroupGroup = new EmojiGroup("\u0052\u0065\u0073\u0074\u0069\u006E\u0067", "Depictions of people at rest", ...allAllAllInLotusPositionGroupGroup);
-export const allAllBabyGroup = [
-    allBabyGroup,
-    allCherubGroup
-];
-export const allAllBabyGroupGroup = new EmojiGroup("\u{1F476}\uDC76", "Baby", ...allAllBabyGroup);
-export const allAllAllBabyGroupGroup = [
-    allAllBabyGroupGroup,
-    allAllChildGroupGroup,
-    allAllPersonGroupGroup,
-    allAllOlderPersonGroupGroup
-];
-export const allAllAllBabyGroupGroupGroup = new EmojiGroup("\u0050\u0065\u006F\u0070\u006C\u0065", "People", ...allAllAllBabyGroupGroup);
-export const allAllAllAllBabyGroupGroupGroup = [
-    allAllAllBabyGroupGroupGroup,
-    allAllAllFrowningGroupGroupGroup,
-    allAllAllWalkingGroupGroupGroup,
-    allAllAllInLotusPositionGroupGroupGroup,
-    allAllMedicalGroupGroup,
-    allAllCherubGroupGroup
-];
-export const allAllAllAllBabyGroupGroupGroupGroup = new EmojiGroup("\u0041\u006C\u006C\u0020\u0050\u0065\u006F\u0070\u006C\u0065", "All People", ...allAllAllAllBabyGroupGroupGroup);
 export const ogre = new Emoji("\u{1F479}\uDC79", "Ogre");
 export const goblin = new Emoji("\u{1F47A}\uDC7A", "Goblin");
 export const ghost = new Emoji("\u{1F47B}\uDC7B", "Ghost");
@@ -4708,7 +2264,7 @@ export const leftRightArrow = new Emoji("\u2194\uFE0F", "Left-Right Arrow");
 export const upDownArrow = new Emoji("\u2195\uFE0F", "Up-Down Arrow");
 export const upLeftArrow = new Emoji("\u2196\uFE0F", "Up-Left Arrow");
 export const upRightArrow = new Emoji("\u2197\uFE0F", "Up-Right Arrow");
-export const downRightArrow = new Emoji("\u2198", "Down-Right Arrow");
+export const downRightArrow = new Emoji("\u2198\uFE0F", "Down-Right Arrow");
 export const downLeftArrow = new Emoji("\u2199\uFE0F", "Down-Left Arrow");
 export const rightArrowCurvingLeft = new Emoji("\u21A9\uFE0F", "Right Arrow Curving Left");
 export const leftArrowCurvingRight = new Emoji("\u21AA\uFE0F", "Left Arrow Curving Right");
