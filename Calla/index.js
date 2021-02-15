@@ -1,5 +1,4 @@
 export * from "./audio/canChangeAudioOutput";
-export * from "./meta/signalr/SignalRMetadataClient";
 export * from "./meta/BaseMetadataClient";
 export * from "./tele/BaseTeleconferenceClient";
 export { Calla as Client } from "./Calla";
