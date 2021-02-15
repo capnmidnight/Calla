@@ -1,8 +1,6 @@
-import {
-    HttpTransportType,
-    HubConnection,
-    HubConnectionBuilder, HubConnectionState
-} from "@microsoft/signalr";
+import { HubConnection, HubConnectionState } from "../../signalr/HubConnection";
+import { HubConnectionBuilder } from "../../signalr/HubConnectionBuilder";
+import { HttpTransportType } from "../../signalr/ITransport";
 import type { Emoji } from "kudzu/emoji/Emoji";
 import { waitFor } from "kudzu/events/waitFor";
 import { assertNever } from "kudzu/typeChecks";

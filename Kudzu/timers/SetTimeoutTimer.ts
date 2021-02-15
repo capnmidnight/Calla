@@ -1,6 +1,6 @@
 import { BaseTimer } from "./BaseTimer";
 
-export class SetTimeoutTimer extends BaseTimer<NodeJS.Timeout> {
+export class SetTimeoutTimer extends BaseTimer<number> {
 
     constructor(targetFrameRate: number) {
         super(targetFrameRate);

@@ -1,4 +1,6 @@
-import { HttpTransportType, HubConnectionBuilder, HubConnectionState } from "@microsoft/signalr";
+import { HubConnectionState } from "../../signalr/HubConnection";
+import { HubConnectionBuilder } from "../../signalr/HubConnectionBuilder";
+import { HttpTransportType } from "../../signalr/ITransport";
 import { waitFor } from "kudzu/events/waitFor";
 import { assertNever } from "kudzu/typeChecks";
 import { CallaAvatarChangedEvent, CallaChatEvent, CallaEmojiAvatarEvent, CallaEmoteEvent, CallaUserPointerEvent, CallaUserPosedEvent } from "../../CallaEvents";

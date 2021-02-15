@@ -1,2 +1,2 @@
 export {};
-//# sourceMappingURL=getPartsReturnType.js.map
+//# sourceMappingURL=BufferAndContentType.js.map
