@@ -12,7 +12,7 @@ export declare class LatLngPoint implements ILatLngPoint {
      * An altitude value thrown in just for kicks. It makes some calculations and conversions
      * easier if we keep the Altitude value.
      **/
-    get alt(): number | undefined;
+    get alt(): number;
     private _alt;
     /**
      * Lines of latitude run east/west around the globe, parallel to the equator, never

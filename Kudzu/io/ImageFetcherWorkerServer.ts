@@ -63,9 +63,10 @@ export class ImageFetcherWorkerServer extends WorkerServer {
                     (imgBmps: ImageBitmap[]) => imgBmps);
 
                 this.add(
-                    "renderFace",
-                    fetcher.renderImageBitmapFace,
-                    (imgBmp: ImageBitmap) => [imgBmp]);
+                    "getEquiMaps",
+                    (path: string, maxWidth: number, headerMap: Map<string, string>, onProgress: progressCallback) =>
+                        fetcher._getEquiMapViaImageBitmaps(path, maxWidth, headerMap, onProgress),
+                    (imgBmps: ImageBitmap[]) => imgBmps);
             }
         }
     }

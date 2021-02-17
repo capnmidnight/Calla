@@ -1,9 +1,5 @@
-import { CubeMapFace } from "../graphics2d/CubeMapFace";
-import { InterpolationType } from "../graphics2d/InterpolationType";
-import { renderImageBitmapFaces } from "../graphics2d/renderFace";
 import { hasImageBitmap, hasOffscreenCanvasRenderingContext2D, MemoryImageTypes } from "../html/canvas";
 import { progressCallback } from "../tasks/progressCallback";
-import { splitProgress } from "../tasks/splitProgress";
 import { isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { WorkerClient } from "../workers/WorkerClient";
 import { BufferAndContentType } from "./BufferAndContentType";
@@ -153,22 +149,17 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
         }
     }
 
-    protected async _getEquiMaps(path: string, interpolation: InterpolationType, maxWidth: number, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]> {
+    protected async _getEquiMaps(path: string, maxWidth: number, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]> {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
 
         if (this.worker.enabled
             && hasImageBitmap
             && hasOffscreenCanvasRenderingContext2D) {
-            const splits = splitProgress(onProgress, [1, 6]);
-            const imgData = await this._getImageData(path, headerMap, splits.shift());
-            return await renderImageBitmapFaces(
-                (readData: ImageData, faceName: CubeMapFace, interpolation: InterpolationType, maxWidth: number, onProgress?: progressCallback) =>
-                    this.worker.execute("renderFace", [readData, faceName, interpolation, maxWidth], onProgress),
-                imgData, interpolation, maxWidth, splits.shift());
+            return await this.worker.execute("getEquiMaps", [path, maxWidth, headerMap], onProgress);
         }
         else {
-            return await super._getEquiMaps(path, interpolation, maxWidth, onProgress);
+            return await super._getEquiMaps(path, maxWidth, headerMap, onProgress);
         }
     }
 }

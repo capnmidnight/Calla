@@ -1,9 +1,9 @@
 import { once } from "../events/once";
-import { renderCanvasFace, renderCanvasFaces, renderImageBitmapFace, renderImageBitmapFaces } from "../graphics2d/renderFace";
-import { sliceCubeMap } from "../graphics2d/sliceCubeMap";
-import { createUtilityCanvas, createUtilityCanvasFromImage, createUtilityCanvasFromImageBitmap, hasImageBitmap } from "../html/canvas";
+import { sliceCubeMap, sliceCubeMapToImageBitmaps } from "../graphics2d/sliceCubeMap";
+import { createUtilityCanvasFromImage, createUtilityCanvasFromImageBitmap, hasImageBitmap } from "../html/canvas";
 import { splitProgress } from "../tasks/splitProgress";
 import { using, usingAsync } from "../using";
+import { equirectangularToCubemap } from "../webgl/equirectangularToCubemap";
 import { Fetcher } from "./Fetcher";
 export class ImageFetcher extends Fetcher {
     constructor() {
@@ -11,9 +11,6 @@ export class ImageFetcher extends Fetcher {
         this.__getCanvas = hasImageBitmap
             ? this._getCanvasViaImageBitmap
             : this._getCanvasViaImage;
-        this.__getImageData = hasImageBitmap
-            ? this._getImageDataViaImageBitmap
-            : this._getImageDataViaImage;
         this.__getCubes = hasImageBitmap
             ? this._getCubesViaImageBitmaps
             : this._getCubesViaImage;
@@ -28,15 +25,6 @@ export class ImageFetcher extends Fetcher {
             await once(img, "load", "error");
         }
         return img;
-    }
-    readImageData(img) {
-        const canv = createUtilityCanvas(img.width, img.height);
-        const g = canv.getContext("2d");
-        if (!g) {
-            throw new Error("Couldn't create a 2D canvas context");
-        }
-        g.drawImage(img, 0, 0);
-        return g.getImageData(0, 0, canv.width, canv.height);
     }
     async _getImageBitmap(path, headerMap, onProgress) {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
@@ -87,26 +75,10 @@ export class ImageFetcher extends Fetcher {
         const img = await this._getImage(path, headerMap, onProgress);
         return createUtilityCanvasFromImage(img);
     }
-    async _getImageDataViaImageBitmap(path, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
-        return using(await this._getImageBitmap(path, headerMap, onProgress), (img) => {
-            return this.readImageData(img);
-        });
-    }
-    async _getImageDataViaImage(path, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
-        const img = await this._getImage(path, headerMap, onProgress);
-        return this.readImageData(img);
-    }
     async _getCubesViaImageBitmaps(path, headerMap, onProgress) {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
-        return await usingAsync(await this._getImageBitmap(path, headerMap, onProgress), async (img) => {
-            const canvs = sliceCubeMap(img);
-            return await Promise.all(canvs.map((canv) => createImageBitmap(canv)));
-        });
+        return await usingAsync(await this._getImageBitmap(path, headerMap, onProgress), sliceCubeMapToImageBitmaps);
     }
     async _getCubesViaImage(path, headerMap, onProgress) {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
@@ -114,19 +86,22 @@ export class ImageFetcher extends Fetcher {
         const img = await this._getImage(path, headerMap, onProgress);
         return sliceCubeMap(img);
     }
-    async _getEquiMapViaImageBitmaps(path, interpolation, maxWidth, headerMap, onProgress) {
+    async _getEquiMapViaImageBitmaps(path, maxWidth, headerMap, onProgress) {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
-        const splits = splitProgress(onProgress, [1, 6]);
-        const imgData = await this._getImageDataViaImageBitmap(path, headerMap, splits.shift());
-        return await renderImageBitmapFaces(renderImageBitmapFace, imgData, interpolation, maxWidth, splits.shift());
+        const splits = splitProgress(onProgress, [10, 1]);
+        return await usingAsync(await this._getImageBitmap(path, headerMap, splits.shift()), async (img) => {
+            const canv = await equirectangularToCubemap(img, maxWidth, splits.shift());
+            return sliceCubeMapToImageBitmaps(canv);
+        });
     }
-    async _getEquiMapViaImage(path, interpolation, maxWidth, headerMap, onProgress) {
+    async _getEquiMapViaImage(path, maxWidth, headerMap, onProgress) {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
-        const splits = splitProgress(onProgress, [1, 6]);
-        const imgData = await this._getImageDataViaImage(path, headerMap, splits.shift());
-        return await renderCanvasFaces(renderCanvasFace, imgData, interpolation, maxWidth, splits.shift());
+        const splits = splitProgress(onProgress, [10, 1]);
+        const img = await this._getImage(path, headerMap, splits.shift());
+        const canv = await equirectangularToCubemap(img, maxWidth, splits.shift());
+        return sliceCubeMap(canv);
     }
     async _getCanvas(path, headerMap, onProgress) {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
@@ -136,14 +111,6 @@ export class ImageFetcher extends Fetcher {
     async getCanvas(path, headerMap, onProgress) {
         return await this._getCanvas(path, headerMap, onProgress);
     }
-    async _getImageData(path, headerMap, onProgress) {
-        onProgress = this.normalizeOnProgress(headerMap, onProgress);
-        headerMap = this.normalizeHeaderMap(headerMap);
-        return await this.__getImageData(path, headerMap, onProgress);
-    }
-    async getImageData(path, headerMap, onProgress) {
-        return await this._getImageData(path, headerMap, onProgress);
-    }
     async _getCubes(path, headerMap, onProgress) {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
@@ -152,16 +119,13 @@ export class ImageFetcher extends Fetcher {
     async getCubes(path, headerMap, onProgress) {
         return await this._getCubes(path, headerMap, onProgress);
     }
-    async _getEquiMaps(path, interpolation, maxWidth, headerMap, onProgress) {
+    async _getEquiMaps(path, maxWidth, headerMap, onProgress) {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
-        return await this.__getEquiMaps(path, interpolation, maxWidth, headerMap, onProgress);
+        return await this.__getEquiMaps(path, maxWidth, headerMap, onProgress);
     }
-    async getEquiMaps(path, interpolation, maxWidth, headerMap, onProgress) {
-        return await this._getEquiMaps(path, interpolation, maxWidth, headerMap, onProgress);
-    }
-    async renderImageBitmapFace(readData, faceName, interpolation, maxWidth, onProgress) {
-        return await renderImageBitmapFace(readData, faceName, interpolation, maxWidth, onProgress);
+    async getEquiMaps(path, maxWidth, headerMap, onProgress) {
+        return await this._getEquiMaps(path, maxWidth, headerMap, onProgress);
     }
 }
 //# sourceMappingURL=ImageFetcher.js.map

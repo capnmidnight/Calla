@@ -1,13 +1,15 @@
 {
   "include": [
     "**/*.ts",
+    "**/*.glsl",
+    "**/*.frag",
+    "**/*.vert",
     "package.json"
   ],
   "exclude": [
     "bin",
     "dist",
     "doc",
-    "node_modules",
     "obj"
   ],
   "compileOnSave": true,
@@ -23,12 +25,12 @@
     "declaration": true,
     "disableSizeLimit": true,
     "downlevelIteration": true,
-    "forceConsistentCasingInFileNames": true,
     "removeComments": false,
     "resolveJsonModule": true,
+    "skipDefaultLibCheck": true,
     "skipLibCheck": true,
 
-    "allowJs": true,
+    "allowJs": false,
     "allowSyntheticDefaultImports": true,
     "allowUmdGlobalAccess": true,
     "allowUnreachableCode": false,
@@ -36,7 +38,7 @@
 
     "noEmit": false,
     "noEmitHelpers": true,
-    "noEmitOnError": true,
+    "noEmitOnError": false,
     "noErrorTruncation": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": true,

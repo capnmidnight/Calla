@@ -27,7 +27,7 @@ const cubemapPattern = {
     ]
 };
 
-export function sliceCubeMap(img: CanvasImageSource) {
+export function sliceCubeMap(img: CanvasImageSource): CanvasTypes[] {
     const w1 = img.width as number / cubemapPattern.columns;
     const h1 = img.height as number / cubemapPattern.rows;
     const w2 = nextPowerOf2(w1);
@@ -50,4 +50,9 @@ export function sliceCubeMap(img: CanvasImageSource) {
     }
 
     return images;
+}
+
+export function sliceCubeMapToImageBitmaps(img: CanvasImageSource): Promise<ImageBitmap[]> {
+    const canvs = sliceCubeMap(img);
+    return Promise.all(canvs.map(c => createImageBitmap(c)));
 }

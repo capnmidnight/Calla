@@ -5,7 +5,7 @@ export declare class LRUCache<KeyT, ValueT> {
     constructor(size: number);
     set(key: KeyT, value: ValueT): Map<KeyT, ValueT>;
     has(key: KeyT): boolean;
-    get(key: KeyT): ValueT | undefined;
+    get(key: KeyT): ValueT;
     delete(key: KeyT): boolean;
     clear(): void;
     keys(): IterableIterator<KeyT>;

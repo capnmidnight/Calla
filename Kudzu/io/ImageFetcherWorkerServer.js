@@ -16,7 +16,7 @@ export class ImageFetcherWorkerServer extends WorkerServer {
             this.add("postObjectForImageBitmap", (path, obj, headerMap, onProgress) => fetcher.postObjectForImageBitmap(path, obj, headerMap, onProgress), (imgBmp) => [imgBmp]);
             if (hasOffscreenCanvasRenderingContext2D) {
                 this.add("getCubes", (path, headerMap, onProgress) => fetcher._getCubesViaImageBitmaps(path, headerMap, onProgress), (imgBmps) => imgBmps);
-                this.add("renderFace", fetcher.renderImageBitmapFace, (imgBmp) => [imgBmp]);
+                this.add("getEquiMaps", (path, maxWidth, headerMap, onProgress) => fetcher._getEquiMapViaImageBitmaps(path, maxWidth, headerMap, onProgress), (imgBmps) => imgBmps);
             }
         }
     }

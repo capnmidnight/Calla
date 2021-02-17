@@ -4,6 +4,7 @@ const { nodeResolve } = require("@rollup/plugin-node-resolve");
 const replace = require("@rollup/plugin-replace");
 const sourcemaps = require("rollup-plugin-sourcemaps");
 const { terser } = require("rollup-plugin-terser");
+const glslify = require("rollup-plugin-glslify");
 
 module.exports.warnings = {
     and(a, b) {
@@ -58,6 +59,16 @@ function makeBundle(name, input, outputDir, format, isProduction, options) {
     const opts = {
         input,
         plugins: [
+            glslify({
+                include: [
+                    /\.vs$/,
+                    /\.fs$/,
+                    /\.vert$/,
+                    /\.frag$/,
+                    /\.glsl$/
+                ],
+                compress: true
+            }),
             nodeResolve(),
             commonjs(),
             replace({

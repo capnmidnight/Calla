@@ -1,5 +1,3 @@
-import { CubeMapFace } from "../graphics2d/CubeMapFace";
-import type { InterpolationType } from "../graphics2d/InterpolationType";
 import { CanvasTypes, MemoryImageTypes } from "../html/canvas";
 import type { progressCallback } from "../tasks/progressCallback";
 import { Fetcher } from "./Fetcher";
@@ -7,7 +5,6 @@ import { IImageFetcher } from "./IImageFetcher";
 export declare class ImageFetcher extends Fetcher implements IImageFetcher {
     constructor();
     private readFileImage;
-    private readImageData;
     protected _getImageBitmap(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<ImageBitmap>;
     getImageBitmap(path: string): Promise<ImageBitmap>;
     getImageBitmap(path: string, onProgress?: progressCallback): Promise<ImageBitmap>;
@@ -30,11 +27,9 @@ export declare class ImageFetcher extends Fetcher implements IImageFetcher {
     postObjectForImage<T>(path: string, obj: T, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<HTMLImageElement>;
     private _getCanvasViaImageBitmap;
     private _getCanvasViaImage;
-    private _getImageDataViaImageBitmap;
-    private _getImageDataViaImage;
     _getCubesViaImageBitmaps(path: string, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap[]>;
     private _getCubesViaImage;
-    private _getEquiMapViaImageBitmaps;
+    _getEquiMapViaImageBitmaps(path: string, maxWidth: number, headerMap?: progressCallback | Map<string, string>, onProgress?: progressCallback): Promise<ImageBitmap[]>;
     private _getEquiMapViaImage;
     private __getCanvas;
     protected _getCanvas(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<CanvasTypes>;
@@ -42,12 +37,6 @@ export declare class ImageFetcher extends Fetcher implements IImageFetcher {
     getCanvas(path: string, onProgress?: progressCallback): Promise<CanvasTypes>;
     getCanvas(path: string, headerMap?: Map<string, string>): Promise<CanvasTypes>;
     getCanvas(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<CanvasTypes>;
-    private __getImageData;
-    protected _getImageData(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<ImageData>;
-    getImageData(path: string): Promise<ImageData>;
-    getImageData(path: string, onProgress?: progressCallback): Promise<ImageData>;
-    getImageData(path: string, headerMap?: Map<string, string>): Promise<ImageData>;
-    getImageData(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<ImageData>;
     private __getCubes;
     protected _getCubes(path: string, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
     getCubes(path: string): Promise<MemoryImageTypes[]>;
@@ -55,10 +44,9 @@ export declare class ImageFetcher extends Fetcher implements IImageFetcher {
     getCubes(path: string, headerMap?: Map<string, string>): Promise<MemoryImageTypes[]>;
     getCubes(path: string, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
     private __getEquiMaps;
-    protected _getEquiMaps(path: string, interpolation: InterpolationType, maxWidth: number, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
-    getEquiMaps(path: string, interpolation: InterpolationType, maxWidth: number): Promise<MemoryImageTypes[]>;
-    getEquiMaps(path: string, interpolation: InterpolationType, maxWidth: number, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
-    getEquiMaps(path: string, interpolation: InterpolationType, maxWidth: number, headerMap?: Map<string, string>): Promise<MemoryImageTypes[]>;
-    getEquiMaps(path: string, interpolation: InterpolationType, maxWidth: number, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
-    renderImageBitmapFace(readData: ImageData, faceName: CubeMapFace, interpolation: InterpolationType, maxWidth: number, onProgress?: progressCallback): Promise<ImageBitmap>;
+    protected _getEquiMaps(path: string, maxWidth: number, headerMap?: Map<string, string> | progressCallback, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
+    getEquiMaps(path: string, maxWidth: number): Promise<MemoryImageTypes[]>;
+    getEquiMaps(path: string, maxWidth: number, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
+    getEquiMaps(path: string, maxWidth: number, headerMap?: Map<string, string>): Promise<MemoryImageTypes[]>;
+    getEquiMaps(path: string, maxWidth: number, headerMap?: Map<string, string>, onProgress?: progressCallback): Promise<MemoryImageTypes[]>;
 }

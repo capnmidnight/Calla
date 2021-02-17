@@ -1,6 +1,4 @@
-import { renderImageBitmapFaces } from "../graphics2d/renderFace";
 import { hasImageBitmap, hasOffscreenCanvasRenderingContext2D } from "../html/canvas";
-import { splitProgress } from "../tasks/splitProgress";
 import { isNullOrUndefined, isNumber, isString } from "../typeChecks";
 import { WorkerClient } from "../workers/WorkerClient";
 import { ImageFetcher } from "./ImageFetcher";
@@ -113,18 +111,16 @@ export class ImageFetcherWorkerClient extends ImageFetcher {
             return await super._getCubes(path, headerMap, onProgress);
         }
     }
-    async _getEquiMaps(path, interpolation, maxWidth, headerMap, onProgress) {
+    async _getEquiMaps(path, maxWidth, headerMap, onProgress) {
         onProgress = this.normalizeOnProgress(headerMap, onProgress);
         headerMap = this.normalizeHeaderMap(headerMap);
         if (this.worker.enabled
             && hasImageBitmap
             && hasOffscreenCanvasRenderingContext2D) {
-            const splits = splitProgress(onProgress, [1, 6]);
-            const imgData = await this._getImageData(path, headerMap, splits.shift());
-            return await renderImageBitmapFaces((readData, faceName, interpolation, maxWidth, onProgress) => this.worker.execute("renderFace", [readData, faceName, interpolation, maxWidth], onProgress), imgData, interpolation, maxWidth, splits.shift());
+            return await this.worker.execute("getEquiMaps", [path, maxWidth, headerMap], onProgress);
         }
         else {
-            return await super._getEquiMaps(path, interpolation, maxWidth, onProgress);
+            return await super._getEquiMaps(path, maxWidth, headerMap, onProgress);
         }
     }
 }

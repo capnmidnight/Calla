@@ -42,4 +42,8 @@ export function sliceCubeMap(img) {
     }
     return images;
 }
+export function sliceCubeMapToImageBitmaps(img) {
+    const canvs = sliceCubeMap(img);
+    return Promise.all(canvs.map(c => createImageBitmap(c)));
+}
 //# sourceMappingURL=sliceCubeMap.js.map
