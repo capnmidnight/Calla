@@ -1,4 +1,3 @@
-import { isNullOrUndefined } from "../typeChecks";
 import { CanvasTypes, createUtilityCanvas } from "../html/canvas";
 import { progressCallback } from "../tasks/progressCallback";
 import { usingAsync } from "../using";
@@ -36,9 +35,6 @@ export async function equirectangularToCubemap(image: TexImageSource, size: numb
 
     const output = createUtilityCanvas(size * 4, size * 3);
     const ctx2d = output.getContext("2d");
-    if (isNullOrUndefined(ctx2d)) {
-        throw new Error("Could not create 2D canvas context");
-    }
 
     const cam = new Camera(ctx3d, 90);
 

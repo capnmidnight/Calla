@@ -71,7 +71,7 @@ export class Context3D extends TypedEventBase {
         }
         const canvas = this.gl.canvas;
         // If we're dealing with HTML canvases, then setup the auto-resizer.
-        if (canvas instanceof HTMLCanvasElement) {
+        if (isHTMLCanvas(canvas)) {
             const resize = () => {
                 this.resize(canvas.clientWidth * devicePixelRatio, canvas.clientHeight * devicePixelRatio);
             };

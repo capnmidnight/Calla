@@ -1,4 +1,3 @@
-import { isNullOrUndefined } from "../typeChecks";
 import { createUtilityCanvas } from "../html/canvas";
 import { usingAsync } from "../using";
 import { Camera } from "./Camera";
@@ -31,9 +30,6 @@ export async function equirectangularToCubemap(image, size, onProgress) {
     ctx3d.gl.depthFunc(ctx3d.gl.LEQUAL);
     const output = createUtilityCanvas(size * 4, size * 3);
     const ctx2d = output.getContext("2d");
-    if (isNullOrUndefined(ctx2d)) {
-        throw new Error("Could not create 2D canvas context");
-    }
     const cam = new Camera(ctx3d, 90);
     return await usingAsync(new Texture(ctx3d.gl, image), async (texture) => await usingAsync(new MaterialEquirectangular(ctx3d.gl, texture), async (material) => await usingAsync(new Geometry(ctx3d.gl, invCube.verts, invCube.indices, ctx3d.gl.TRIANGLES), async (geom) => {
         const mesh = new Mesh(ctx3d.gl, material, geom);

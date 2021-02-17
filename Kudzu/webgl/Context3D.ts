@@ -88,7 +88,7 @@ export class Context3D extends TypedEventBase<Context3DEvents> {
         }
 
         // If we have a canvas, get the graphics context
-        if (isHTMLCanvas(spec) || isOffscreenCanvas(spec)) {
+        if (isOffscreenCanvas(spec) || isHTMLCanvas(spec)) {
             spec = spec.getContext("webgl2", opts) as WebGL2RenderingContext;
         }
 
@@ -104,7 +104,7 @@ export class Context3D extends TypedEventBase<Context3DEvents> {
         const canvas = this.gl.canvas;
 
         // If we're dealing with HTML canvases, then setup the auto-resizer.
-        if (canvas instanceof HTMLCanvasElement) {
+        if (!isOffscreenCanvas(canvas)) {
             const resize = () => {
                 this.resize(
                     canvas.clientWidth * devicePixelRatio,
